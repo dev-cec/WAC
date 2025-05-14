@@ -1,0 +1,27 @@
+var struct_win32___scheduled_job =
+[
+    [ "Caption", "struct_win32___scheduled_job.html#a189e89638c95dc7773576db3e4896a76", null ],
+    [ "Command", "struct_win32___scheduled_job.html#a542a074670498e0b618059a4cc19eae5", null ],
+    [ "DaysOfMonth", "struct_win32___scheduled_job.html#a1975deedbddca3e4fd3dd1d84c12e62c", null ],
+    [ "DaysOfWeek", "struct_win32___scheduled_job.html#a3d7a8f1a98340ec72490db393c02e3fd", null ],
+    [ "Description", "struct_win32___scheduled_job.html#afe028e635202b5c864d858203a4270b6", null ],
+    [ "ElapsedTime", "struct_win32___scheduled_job.html#a7fa89864cc466dd64bc9ce2f6dbef791", null ],
+    [ "ElapsedTime_utc", "struct_win32___scheduled_job.html#acf14d80b07b61a95a0bd67ceefb584b3", null ],
+    [ "InstallDate", "struct_win32___scheduled_job.html#a802a4c6bdc8a1b272db7314b56ac3f51", null ],
+    [ "InstallDate_utc", "struct_win32___scheduled_job.html#a42a1f7d115276ab15f97f792a23037c6", null ],
+    [ "InteractWithDesktop", "struct_win32___scheduled_job.html#ab75b9b7843782555a8aa1e8b87b41f47", null ],
+    [ "JobId", "struct_win32___scheduled_job.html#af85a35a78a073f1738128b7166ff1818", null ],
+    [ "JobStatus", "struct_win32___scheduled_job.html#ac90cfe1db79786756125bae74069f6ad", null ],
+    [ "Name", "struct_win32___scheduled_job.html#ab37f9e26caab16b90cdeb3c913977a62", null ],
+    [ "Notify", "struct_win32___scheduled_job.html#a9756da98703ad342452494783df93b37", null ],
+    [ "Owner", "struct_win32___scheduled_job.html#a49042383c215b7539feee0870b748c85", null ],
+    [ "Priority", "struct_win32___scheduled_job.html#a6696b5729cd4e09206164bada090460a", null ],
+    [ "RunRepeatedly", "struct_win32___scheduled_job.html#aff1b46f0734013881bcc0c7dd292f6db", null ],
+    [ "StartTime", "struct_win32___scheduled_job.html#ae42c02198b5d9ab86e70cd70d9e6e265", null ],
+    [ "StartTime_utc", "struct_win32___scheduled_job.html#ac6d0eaafde0185cd3d94f0aedf325516", null ],
+    [ "Status", "struct_win32___scheduled_job.html#a9cea01c16ad51b64193dcc1c33af126e", null ],
+    [ "TimeSubmitted", "struct_win32___scheduled_job.html#a2341dc08c33234a08121f2910234bf2d", null ],
+    [ "TimeSubmitted_utc", "struct_win32___scheduled_job.html#a30e95866b8ed7b73fa6bcabfab1b50e4", null ],
+    [ "UntilTime", "struct_win32___scheduled_job.html#ac72787f14370bf7f1e5d6c6558fe75a8", null ],
+    [ "UntilTime_utc", "struct_win32___scheduled_job.html#a1ab0a3afc4f3866ae0114d0aa4710c43", null ]
+];

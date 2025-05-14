@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['last_5fruns_0',['last_runs',['../struct_prefetch.html#a7ba15f3534ae66c4d3a476cccd182c36',1,'Prefetch']]],
+  ['last_5frunsutc_1',['last_runsUtc',['../struct_prefetch.html#a66a1f6711c9ce2f321f7d5f29e85d268',1,'Prefetch']]],
+  ['lastbootuptime_2',['lastBootUpTime',['../struct_system.html#a7ae959c609653861dd887ad750d23fa4',1,'System']]],
+  ['lastbootuptimeutc_3',['lastBootUpTimeUtc',['../struct_system.html#a986d165bbfcdbc45ab0b92757cde0dd1',1,'System']]],
+  ['lastinsertion_4',['LastInsertion',['../struct_usbstor.html#a90f1866a42a0d9ab8083e24154eec1bb',1,'Usbstor']]],
+  ['lastinsertionutc_5',['LastInsertionUtc',['../struct_usbstor.html#a11d525a3df22a079be5be56ad6f1ac50',1,'Usbstor']]],
+  ['lastmodification_6',['lastModification',['../struct_shimcache.html#a77fc05093c063c490216a9ae50d78e6e',1,'Shimcache']]],
+  ['lastmodificationtime_7',['lastModificationTime',['../struct_dest_file.html#a8c03e2d46a9cd3f7cb053aecb6bdc8e4',1,'DestFile']]],
+  ['lastmodificationtimeutc_8',['lastModificationTimeUtc',['../struct_dest_file.html#a64f8a7d687d7711bb44cfc3ec557ac0f',1,'DestFile']]],
+  ['lastmodificationutc_9',['lastModificationUtc',['../struct_shimcache.html#ad10e36f246dc6c743e6a7ae324b55914',1,'Shimcache']]],
+  ['linkdate_10',['LinkDate',['../struct_amcache_application_file.html#a1f41085ac189e7ff14b0aa78b2065592',1,'AmcacheApplicationFile']]],
+  ['linkdateutc_11',['LinkDateUtc',['../struct_amcache_application_file.html#a62bd51d3f1ec845d102c097ab66c1e07',1,'AmcacheApplicationFile']]],
+  ['littleindian_12',['littleIndian',['../structole_header.html#ae03af53e39d079956fd8c70b57f350ea',1,'oleHeader']]],
+  ['localdatetime_13',['localDateTime',['../struct_system.html#a85563f51da744ab0982cd484c66ce144',1,'System']]],
+  ['localdatetimeutc_14',['localDateTimeUtc',['../struct_system.html#a1a3a9e9aedeca07530e8a72df25f05df',1,'System']]],
+  ['localdisk_15',['LocalDisk',['../struct_shell_volume_flags.html#a07bd01fce052605e54ee23860581fbc7',1,'ShellVolumeFlags']]],
+  ['localizedname_16',['localizedName',['../struct_beef0004.html#a002714466b3446ae8f4e68cc040cb756',1,'Beef0004']]],
+  ['location_17',['location',['../struct_network_shell_item.html#ae88b3271394128f6eb5a009126538dd3',1,'NetworkShellItem::location'],['../struct_archive_file_content.html#a401e8ddeb89a48ebbe36d8b3d4b95a78',1,'ArchiveFileContent::location']]],
+  ['logondomainname_18',['logonDomainName',['../struct_session.html#ae915ae0f7771f6cb1aac2ff7262c3d7f',1,'Session']]],
+  ['logonname_19',['logonName',['../struct_session.html#a52880b7b4dc23cd4ab8998df60901719',1,'Session']]],
+  ['logontype_20',['logonType',['../struct_session.html#aa57393e024125d6899bb6c069adf7db1',1,'Session']]],
+  ['logontypename_21',['logonTypeName',['../struct_session.html#a2321e7ddc4a990932cf1cc0ec6ec9caa',1,'Session']]],
+  ['longname_22',['longName',['../struct_beef0004.html#aec93d123f81b5dafccbdd4ba1fc159d0',1,'Beef0004']]],
+  ['longpath_23',['LongPath',['../struct_amcache_application_file.html#a92feaf3097f6813acba829024bf0bbae',1,'AmcacheApplicationFile']]]
+];

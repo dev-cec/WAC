@@ -1,0 +1,284 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.13.2"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector):  Fichier source de C:/laragon/prog/c++/WAC/WAC/system.hpp</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('system_8hpp_source.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">system.hpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="system_8hpp.html">Aller à la documentation de ce fichier.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;filesystem&gt;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;fstream&gt;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;<a class="code" href="tools_8h.html">tools.h</a>&quot;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &quot;<a class="code" href="trans__id_8h.html">trans_id.h</a>&quot;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span></div>
+<div class="foldopen" id="foldopen00017" data-start="{" data-end="};">
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno"><a class="line" href="struct_system.html">   17</a></span><span class="keyword">struct </span><a class="code hl_struct" href="struct_system.html">System</a> {</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="struct_system.html#ad23527e9c0c2c0b6c7ffff45e3e5f619">   18</a></span>    std::wstring <a class="code hl_variable" href="struct_system.html#ad23527e9c0c2c0b6c7ffff45e3e5f619">osArchitecture</a> = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="struct_system.html#a2ece31792fd8b12b757131ccd696b9a2">   19</a></span>    std::wstring <a class="code hl_variable" href="struct_system.html#a2ece31792fd8b12b757131ccd696b9a2">computerName</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno"><a class="line" href="struct_system.html#a248b38d4c2d3f0832fd3876c35deeb84">   20</a></span>    std::wstring <a class="code hl_variable" href="struct_system.html#a248b38d4c2d3f0832fd3876c35deeb84">domainName</a> = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno"><a class="line" href="struct_system.html#a875871b9a87ab249f5f4725985a0ee45">   21</a></span>    std::wstring <a class="code hl_variable" href="struct_system.html#a875871b9a87ab249f5f4725985a0ee45">currentTimeZoneCaption</a> = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno"><a class="line" href="struct_system.html#a483d3d02fd67e075668d3b4edd20cc3b">   22</a></span>    std::wstring <a class="code hl_variable" href="struct_system.html#a483d3d02fd67e075668d3b4edd20cc3b">currentTimeZone</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno"><a class="line" href="struct_system.html#ae23e07ea3700350d1aa5650278d8a64a">   23</a></span>    std::wstring <a class="code hl_variable" href="struct_system.html#ae23e07ea3700350d1aa5650278d8a64a">osName</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno"><a class="line" href="struct_system.html#a0728e3c62304af299d67bb28489b3c06">   24</a></span>    std::wstring <a class="code hl_variable" href="struct_system.html#a0728e3c62304af299d67bb28489b3c06">version</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno"><a class="line" href="struct_system.html#afc87e71e0508e20c1ba946fdf3c79b7c">   25</a></span>    std::wstring <a class="code hl_variable" href="struct_system.html#afc87e71e0508e20c1ba946fdf3c79b7c">servicePack</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno"><a class="line" href="struct_system.html#a85563f51da744ab0982cd484c66ce144">   26</a></span>    SYSTEMTIME <a class="code hl_variable" href="struct_system.html#a85563f51da744ab0982cd484c66ce144">localDateTime</a> = { 0 }; </div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno"><a class="line" href="struct_system.html#a1a3a9e9aedeca07530e8a72df25f05df">   27</a></span>    SYSTEMTIME <a class="code hl_variable" href="struct_system.html#a1a3a9e9aedeca07530e8a72df25f05df">localDateTimeUtc</a> = { 0 };</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="struct_system.html#a7ae959c609653861dd887ad750d23fa4">   28</a></span>    SYSTEMTIME <a class="code hl_variable" href="struct_system.html#a7ae959c609653861dd887ad750d23fa4">lastBootUpTime</a> = { 0 }; </div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno"><a class="line" href="struct_system.html#a986d165bbfcdbc45ab0b92757cde0dd1">   29</a></span>    SYSTEMTIME <a class="code hl_variable" href="struct_system.html#a986d165bbfcdbc45ab0b92757cde0dd1">lastBootUpTimeUtc</a> = { 0 };</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno"><a class="line" href="struct_system.html#adde9a39e31ccd8af46c7bb3691b62640">   30</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="struct_system.html#adde9a39e31ccd8af46c7bb3691b62640">currentBias</a> = 0; </div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno"><a class="line" href="struct_system.html#aa6adc9aca36077c1f2f3a838e04b57af">   31</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="struct_system.html#aa6adc9aca36077c1f2f3a838e04b57af">daylightInEffect</a>; </div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno"><a class="line" href="struct_system.html#a390c340d3514b54eaae80a5b6a2e9ea9">   32</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="struct_system.html#a390c340d3514b54eaae80a5b6a2e9ea9">_debug</a>;</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span></div>
+<div class="foldopen" id="foldopen00037" data-start="{" data-end="}">
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno"><a class="line" href="struct_system.html#a3ce7bde40e204408f49d2127d68b7e93">   37</a></span>    HRESULT <a class="code hl_function" href="struct_system.html#a3ce7bde40e204408f49d2127d68b7e93">getData</a>(<span class="keywordtype">bool</span> pdebug) {</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>        <a class="code hl_variable" href="struct_system.html#a390c340d3514b54eaae80a5b6a2e9ea9">_debug</a> = pdebug;</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>        DWORD nSize = 0;</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        LPWSTR buffer = NULL;</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>        <span class="comment">//architecture su système</span></div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>        SYSTEM_INFO systemInfos;</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>        GetSystemInfo(&amp;systemInfos);</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>        <a class="code hl_variable" href="struct_system.html#ad23527e9c0c2c0b6c7ffff45e3e5f619">osArchitecture</a> = <a class="code hl_function" href="trans__id_8cpp.html#ad20837d9d2ee65fdb4efd65e64574c5c">os_architecture</a>(systemInfos.wProcessorArchitecture);</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>        <span class="comment">// nom de l&#39;ordinateur</span></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>        <span class="keywordflow">do</span> {</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span> </div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>            buffer = (LPWSTR)malloc(nSize);</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>            GetComputerNameExW(ComputerNameDnsHostname, buffer, &amp;nSize);</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>        } <span class="keywordflow">while</span> (GetLastError() == ERROR_MORE_DATA);</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>        <a class="code hl_variable" href="struct_system.html#a2ece31792fd8b12b757131ccd696b9a2">computerName</a> = std::wstring(buffer);</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>        <span class="comment">// nom de domaine</span></div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>        nSize = 0;</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>        <span class="keywordflow">do</span> {</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>            buffer = (LPWSTR)malloc(nSize);</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>            GetComputerNameExW(ComputerNameDnsDomain, buffer, &amp;nSize);</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>        } <span class="keywordflow">while</span> (GetLastError() == ERROR_MORE_DATA);</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>        <a class="code hl_variable" href="struct_system.html#a248b38d4c2d3f0832fd3876c35deeb84">domainName</a> = std::wstring(buffer);</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>        <span class="keywordflow">if</span> (<a class="code hl_variable" href="struct_system.html#a248b38d4c2d3f0832fd3876c35deeb84">domainName</a>.length() == 0)</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>            <a class="code hl_variable" href="struct_system.html#a248b38d4c2d3f0832fd3876c35deeb84">domainName</a> = L<span class="stringliteral">&quot;WORKGROUP&quot;</span>;</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>        free(buffer);</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>        <span class="comment">// timezone</span></div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>        DYNAMIC_TIME_ZONE_INFORMATION timezoneInformations;</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>        TIME_ZONE_INFORMATION timezone;</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>        GetDynamicTimeZoneInformation(&amp;timezoneInformations);</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>        GetTimeZoneInformation(&amp;timezone);</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>        <a class="code hl_variable" href="struct_system.html#a875871b9a87ab249f5f4725985a0ee45">currentTimeZoneCaption</a> = std::wstring(timezoneInformations.StandardName);</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>        <a class="code hl_variable" href="struct_system.html#a483d3d02fd67e075668d3b4edd20cc3b">currentTimeZone</a> = std::wstring(timezoneInformations.TimeZoneKeyName);</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>        time_t rawtime = time(&amp;rawtime); <span class="comment">// heure actuelle </span></div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>        <span class="keyword">struct </span>tm* timeinfo = localtime(&amp;rawtime);<span class="comment">//localtime pour savoir si heure d&#39;été active ou non</span></div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>        <span class="keywordflow">if</span> (timeinfo-&gt;tm_isdst) {<span class="comment">//si heure d&#39;été actif</span></div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>            <a class="code hl_variable" href="struct_system.html#aa6adc9aca36077c1f2f3a838e04b57af">daylightInEffect</a> = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>            <a class="code hl_variable" href="struct_system.html#adde9a39e31ccd8af46c7bb3691b62640">currentBias</a> = timezoneInformations.Bias + timezoneInformations.DaylightBias;</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>        }</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>        <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>            <a class="code hl_variable" href="struct_system.html#aa6adc9aca36077c1f2f3a838e04b57af">daylightInEffect</a> = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>            <a class="code hl_variable" href="struct_system.html#adde9a39e31ccd8af46c7bb3691b62640">currentBias</a> = timezoneInformations.Bias + +timezoneInformations.StandardBias;</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>        }</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span> </div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>        <span class="comment">//heure système</span></div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>        GetSystemTime(&amp;<a class="code hl_variable" href="struct_system.html#a1a3a9e9aedeca07530e8a72df25f05df">localDateTimeUtc</a>);</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>        SystemTimeToTzSpecificLocalTime(&amp;timezone, &amp;<a class="code hl_variable" href="struct_system.html#a1a3a9e9aedeca07530e8a72df25f05df">localDateTimeUtc</a>, &amp;<a class="code hl_variable" href="struct_system.html#a85563f51da744ab0982cd484c66ce144">localDateTime</a>);</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span> </div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>        <span class="comment">//Version</span></div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>        HMODULE hDll = LoadLibrary(TEXT(<span class="stringliteral">&quot;ntdll.dll&quot;</span>));</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>        <span class="keyword">typedef</span> NTSTATUS(CALLBACK* RTLGETVERSION) (PRTL_OSVERSIONINFOW lpVersionInformation);</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>        RTLGETVERSION pRtlGetVersion;</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        pRtlGetVersion = (RTLGETVERSION)GetProcAddress(hDll, <span class="stringliteral">&quot;RtlGetVersion&quot;</span>);</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>        <span class="keywordflow">if</span> (pRtlGetVersion)</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>        {</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>            RTL_OSVERSIONINFOW ovi = { 0 };</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>            ovi.dwOSVersionInfoSize = <span class="keyword">sizeof</span>(ovi);</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>            NTSTATUS ntStatus = pRtlGetVersion(&amp;ovi);</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>            <span class="keywordflow">if</span> (ntStatus == 0)</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>            {</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>                <a class="code hl_variable" href="struct_system.html#a0728e3c62304af299d67bb28489b3c06">version</a> = std::to_wstring(ovi.dwMajorVersion) + L<span class="stringliteral">&quot;.&quot;</span> + std::to_wstring(ovi.dwMinorVersion) + L<span class="stringliteral">&quot;.&quot;</span> + std::to_wstring(ovi.dwBuildNumber);</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>                <a class="code hl_variable" href="struct_system.html#afc87e71e0508e20c1ba946fdf3c79b7c">servicePack</a> = std::wstring(ovi.szCSDVersion);</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>            }</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>        }</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>        FreeLibrary(hDll);</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>        HMODULE hMod = LoadLibraryEx(L<span class="stringliteral">&quot;winbrand.dll&quot;</span>, NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>        <span class="keywordflow">if</span> (hMod)</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>        {</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>            PWSTR(WINAPI * pfnBrandingFormatString)(PCWSTR pstrFormat);</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>            (FARPROC&amp;)pfnBrandingFormatString = GetProcAddress(hMod, <span class="stringliteral">&quot;BrandingFormatString&quot;</span>);</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>            <span class="keywordflow">if</span> (pfnBrandingFormatString)</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>                <a class="code hl_variable" href="struct_system.html#ae23e07ea3700350d1aa5650278d8a64a">osName</a> = std::wstring(pfnBrandingFormatString(L<span class="stringliteral">&quot;%WINDOWS_LONG%&quot;</span>));</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>            FreeLibrary(hMod);</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>        }</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>        <span class="keywordflow">return</span> ERROR_SUCCESS;</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    }</div>
+</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span></div>
+<div class="foldopen" id="foldopen00120" data-start="{" data-end="}">
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno"><a class="line" href="struct_system.html#a24691f8a36c97927d74ea0d9da407bbd">  120</a></span>    HRESULT <a class="code hl_function" href="struct_system.html#a24691f8a36c97927d74ea0d9da407bbd">to_json</a>() {</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>        std::wstring result = L<span class="stringliteral">&quot;{ \n&quot;</span></div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>            L<span class="stringliteral">&quot;\t\&quot;OsArchitecture\&quot;:\&quot;&quot;</span> + <a class="code hl_variable" href="struct_system.html#ad23527e9c0c2c0b6c7ffff45e3e5f619">osArchitecture</a> + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>            L<span class="stringliteral">&quot;\t\&quot;OsName\&quot;:\&quot;&quot;</span> + <a class="code hl_variable" href="struct_system.html#ae23e07ea3700350d1aa5650278d8a64a">osName</a> + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>            L<span class="stringliteral">&quot;\t\&quot;ComputerName\&quot;:\&quot;&quot;</span> + <a class="code hl_variable" href="struct_system.html#a2ece31792fd8b12b757131ccd696b9a2">computerName</a> + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>            L<span class="stringliteral">&quot;\t\&quot;DomainName\&quot;:\&quot;&quot;</span> + <a class="code hl_variable" href="struct_system.html#a248b38d4c2d3f0832fd3876c35deeb84">domainName</a> + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>            L<span class="stringliteral">&quot;\t\&quot;LocalDateTime\&quot;:\&quot;&quot;</span> + <a class="code hl_function" href="tools_8cpp.html#addbcf94a622e9fa893340802b75f789f">time_to_wstring</a>(<a class="code hl_variable" href="struct_system.html#a85563f51da744ab0982cd484c66ce144">localDateTime</a>) + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>            L<span class="stringliteral">&quot;\t\&quot;LocalDateTimeUtc\&quot;:\&quot;&quot;</span> + <a class="code hl_function" href="tools_8cpp.html#addbcf94a622e9fa893340802b75f789f">time_to_wstring</a>(<a class="code hl_variable" href="struct_system.html#a1a3a9e9aedeca07530e8a72df25f05df">localDateTimeUtc</a>) + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>            L<span class="stringliteral">&quot;\t\&quot;CurrentTimeZoneId\&quot;:\&quot;&quot;</span> + <a class="code hl_variable" href="struct_system.html#a483d3d02fd67e075668d3b4edd20cc3b">currentTimeZone</a> + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>            L<span class="stringliteral">&quot;\t\&quot;CurrentTimeZoneCaption\&quot;:\&quot;&quot;</span> + <a class="code hl_variable" href="struct_system.html#a875871b9a87ab249f5f4725985a0ee45">currentTimeZoneCaption</a> + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>            L<span class="stringliteral">&quot;\t\&quot;CurrentBias\&quot;:\&quot;&quot;</span> + std::to_wstring(<a class="code hl_variable" href="struct_system.html#adde9a39e31ccd8af46c7bb3691b62640">currentBias</a>) + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>            L<span class="stringliteral">&quot;\t\&quot;DaylightInEffect\&quot;:\&quot;&quot;</span> + <a class="code hl_function" href="tools_8cpp.html#a60ee9433903019ec436ff2efcef4ea0d">bool_to_wstring</a>(<a class="code hl_variable" href="struct_system.html#aa6adc9aca36077c1f2f3a838e04b57af">daylightInEffect</a>) + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>            L<span class="stringliteral">&quot;\t\&quot;Version\&quot;:\&quot;&quot;</span> + <a class="code hl_variable" href="struct_system.html#a0728e3c62304af299d67bb28489b3c06">version</a> + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>            L<span class="stringliteral">&quot;\t\&quot;ServicePack\&quot;:\&quot;&quot;</span> + <a class="code hl_variable" href="struct_system.html#afc87e71e0508e20c1ba946fdf3c79b7c">servicePack</a> + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>            L<span class="stringliteral">&quot;}&quot;</span>;</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span> </div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span> </div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>        <span class="comment">//enregistrement dans fichier json</span></div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>        std::filesystem::create_directory(<span class="stringliteral">&quot;sortie&quot;</span>); <span class="comment">//crée le repertoire, pas d&#39;erreur s&#39;il existe déjà</span></div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>        std::wofstream myfile;</div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>        myfile.open(<span class="stringliteral">&quot;sortie/OperatingSystem.json&quot;</span>);</div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>        myfile &lt;&lt; result;</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>        myfile.close();</div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span> </div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>        <span class="keywordflow">return</span> ERROR_SUCCESS;</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>    }</div>
+</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>};</div>
+</div>
+<div class="ttc" id="astruct_system_html"><div class="ttname"><a href="struct_system.html">System</a></div><div class="ttdef"><b>Definition</b> system.hpp:17</div></div>
+<div class="ttc" id="astruct_system_html_a0728e3c62304af299d67bb28489b3c06"><div class="ttname"><a href="struct_system.html#a0728e3c62304af299d67bb28489b3c06">System::version</a></div><div class="ttdeci">std::wstring version</div><div class="ttdoc">version de l&#39;OS</div><div class="ttdef"><b>Definition</b> system.hpp:24</div></div>
+<div class="ttc" id="astruct_system_html_a1a3a9e9aedeca07530e8a72df25f05df"><div class="ttname"><a href="struct_system.html#a1a3a9e9aedeca07530e8a72df25f05df">System::localDateTimeUtc</a></div><div class="ttdeci">SYSTEMTIME localDateTimeUtc</div><div class="ttdoc">heure du système au moment de lexécution du programme au format UTC</div><div class="ttdef"><b>Definition</b> system.hpp:27</div></div>
+<div class="ttc" id="astruct_system_html_a24691f8a36c97927d74ea0d9da407bbd"><div class="ttname"><a href="struct_system.html#a24691f8a36c97927d74ea0d9da407bbd">System::to_json</a></div><div class="ttdeci">HRESULT to_json()</div><div class="ttdef"><b>Definition</b> system.hpp:120</div></div>
+<div class="ttc" id="astruct_system_html_a248b38d4c2d3f0832fd3876c35deeb84"><div class="ttname"><a href="struct_system.html#a248b38d4c2d3f0832fd3876c35deeb84">System::domainName</a></div><div class="ttdeci">std::wstring domainName</div><div class="ttdoc">nom du domain de l&#39;ordinateur</div><div class="ttdef"><b>Definition</b> system.hpp:20</div></div>
+<div class="ttc" id="astruct_system_html_a2ece31792fd8b12b757131ccd696b9a2"><div class="ttname"><a href="struct_system.html#a2ece31792fd8b12b757131ccd696b9a2">System::computerName</a></div><div class="ttdeci">std::wstring computerName</div><div class="ttdoc">nom de l&#39;ordinateur</div><div class="ttdef"><b>Definition</b> system.hpp:19</div></div>
+<div class="ttc" id="astruct_system_html_a390c340d3514b54eaae80a5b6a2e9ea9"><div class="ttname"><a href="struct_system.html#a390c340d3514b54eaae80a5b6a2e9ea9">System::_debug</a></div><div class="ttdeci">bool _debug</div><div class="ttdoc">paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fich...</div><div class="ttdef"><b>Definition</b> system.hpp:32</div></div>
+<div class="ttc" id="astruct_system_html_a3ce7bde40e204408f49d2127d68b7e93"><div class="ttname"><a href="struct_system.html#a3ce7bde40e204408f49d2127d68b7e93">System::getData</a></div><div class="ttdeci">HRESULT getData(bool pdebug)</div><div class="ttdef"><b>Definition</b> system.hpp:37</div></div>
+<div class="ttc" id="astruct_system_html_a483d3d02fd67e075668d3b4edd20cc3b"><div class="ttname"><a href="struct_system.html#a483d3d02fd67e075668d3b4edd20cc3b">System::currentTimeZone</a></div><div class="ttdeci">std::wstring currentTimeZone</div><div class="ttdoc">identifiant de la timezone</div><div class="ttdef"><b>Definition</b> system.hpp:22</div></div>
+<div class="ttc" id="astruct_system_html_a7ae959c609653861dd887ad750d23fa4"><div class="ttname"><a href="struct_system.html#a7ae959c609653861dd887ad750d23fa4">System::lastBootUpTime</a></div><div class="ttdeci">SYSTEMTIME lastBootUpTime</div><div class="ttdoc">heure du dernier démarrage du system</div><div class="ttdef"><b>Definition</b> system.hpp:28</div></div>
+<div class="ttc" id="astruct_system_html_a85563f51da744ab0982cd484c66ce144"><div class="ttname"><a href="struct_system.html#a85563f51da744ab0982cd484c66ce144">System::localDateTime</a></div><div class="ttdeci">SYSTEMTIME localDateTime</div><div class="ttdoc">heure du système au moment de lexécution du programme</div><div class="ttdef"><b>Definition</b> system.hpp:26</div></div>
+<div class="ttc" id="astruct_system_html_a875871b9a87ab249f5f4725985a0ee45"><div class="ttname"><a href="struct_system.html#a875871b9a87ab249f5f4725985a0ee45">System::currentTimeZoneCaption</a></div><div class="ttdeci">std::wstring currentTimeZoneCaption</div><div class="ttdoc">nom de la timezone</div><div class="ttdef"><b>Definition</b> system.hpp:21</div></div>
+<div class="ttc" id="astruct_system_html_a986d165bbfcdbc45ab0b92757cde0dd1"><div class="ttname"><a href="struct_system.html#a986d165bbfcdbc45ab0b92757cde0dd1">System::lastBootUpTimeUtc</a></div><div class="ttdeci">SYSTEMTIME lastBootUpTimeUtc</div><div class="ttdoc">heure du dernier démarrage du system au format UTC</div><div class="ttdef"><b>Definition</b> system.hpp:29</div></div>
+<div class="ttc" id="astruct_system_html_aa6adc9aca36077c1f2f3a838e04b57af"><div class="ttname"><a href="struct_system.html#aa6adc9aca36077c1f2f3a838e04b57af">System::daylightInEffect</a></div><div class="ttdeci">bool daylightInEffect</div><div class="ttdoc">Heure d&#39;été active si true.</div><div class="ttdef"><b>Definition</b> system.hpp:31</div></div>
+<div class="ttc" id="astruct_system_html_ad23527e9c0c2c0b6c7ffff45e3e5f619"><div class="ttname"><a href="struct_system.html#ad23527e9c0c2c0b6c7ffff45e3e5f619">System::osArchitecture</a></div><div class="ttdeci">std::wstring osArchitecture</div><div class="ttdoc">architecture de l&#39;OS</div><div class="ttdef"><b>Definition</b> system.hpp:18</div></div>
+<div class="ttc" id="astruct_system_html_adde9a39e31ccd8af46c7bb3691b62640"><div class="ttname"><a href="struct_system.html#adde9a39e31ccd8af46c7bb3691b62640">System::currentBias</a></div><div class="ttdeci">int currentBias</div><div class="ttdoc">décalage horaire actuel</div><div class="ttdef"><b>Definition</b> system.hpp:30</div></div>
+<div class="ttc" id="astruct_system_html_ae23e07ea3700350d1aa5650278d8a64a"><div class="ttname"><a href="struct_system.html#ae23e07ea3700350d1aa5650278d8a64a">System::osName</a></div><div class="ttdeci">std::wstring osName</div><div class="ttdoc">version de l&#39;OS</div><div class="ttdef"><b>Definition</b> system.hpp:23</div></div>
+<div class="ttc" id="astruct_system_html_afc87e71e0508e20c1ba946fdf3c79b7c"><div class="ttname"><a href="struct_system.html#afc87e71e0508e20c1ba946fdf3c79b7c">System::servicePack</a></div><div class="ttdeci">std::wstring servicePack</div><div class="ttdoc">version du service pack installé si non null</div><div class="ttdef"><b>Definition</b> system.hpp:25</div></div>
+<div class="ttc" id="atools_8cpp_html_a60ee9433903019ec436ff2efcef4ea0d"><div class="ttname"><a href="tools_8cpp.html#a60ee9433903019ec436ff2efcef4ea0d">bool_to_wstring</a></div><div class="ttdeci">std::wstring bool_to_wstring(bool b)</div><div class="ttdef"><b>Definition</b> tools.cpp:291</div></div>
+<div class="ttc" id="atools_8cpp_html_addbcf94a622e9fa893340802b75f789f"><div class="ttname"><a href="tools_8cpp.html#addbcf94a622e9fa893340802b75f789f">time_to_wstring</a></div><div class="ttdeci">std::wstring time_to_wstring(const SYSTEMTIME systemtime)</div><div class="ttdef"><b>Definition</b> tools.cpp:326</div></div>
+<div class="ttc" id="atools_8h_html"><div class="ttname"><a href="tools_8h.html">tools.h</a></div></div>
+<div class="ttc" id="atrans__id_8cpp_html_ad20837d9d2ee65fdb4efd65e64574c5c"><div class="ttname"><a href="trans__id_8cpp.html#ad20837d9d2ee65fdb4efd65e64574c5c">os_architecture</a></div><div class="ttdeci">std::wstring os_architecture(DWORD archi)</div><div class="ttdef"><b>Definition</b> trans_id.cpp:62</div></div>
+<div class="ttc" id="atrans__id_8h_html"><div class="ttname"><a href="trans__id_8h.html">trans_id.h</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="system_8hpp.html">system.hpp</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>

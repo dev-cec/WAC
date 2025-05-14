@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['i_0',['i',['../struct_fat_date_time.html#acdd6fefe7f54805c17b0c6dce4f79654',1,'FatDateTime']]],
+  ['iconindex_1',['iconIndex',['../struct_recent_doc.html#ad7d42cf54034e5c2f7ceda5dc9565b01',1,'RecentDoc']]],
+  ['iconlocation_2',['iconLocation',['../struct_recent_doc.html#a7f76b08187b367da1c8c59de952b2a2a',1,'RecentDoc']]],
+  ['id_3',['id',['../struct_s_p_s_value.html#a61a45278407f06fe98866cd06c911194',1,'SPSValue::id'],['../struct_control_panel_category.html#a81a10e276ec7b64704be461cc6e59aa9',1,'ControlPanelCategory::id'],['../struct_property.html#a22ee278ce42b51bdbf6fcb884845a6d6',1,'Property::id'],['../struct_mru.html#af746689a9e8341c4b48f5b00909a6bfa',1,'Mru::id'],['../struct_mru_app.html#a3acfe13b45cebba6414ba3c1091576d9',1,'MruApp::id'],['../struct_shellbag.html#ab11dbf19048320459e11fe43dd69c469',1,'Shellbag::id']]],
+  ['identifier_4',['identifier',['../struct_beef0003.html#ad3afacaaa08312d026fe7c3771753ac9',1,'Beef0003::identifier'],['../struct_beef000e.html#a5ab1723e9b6e81f3a848934139dcf88e',1,'Beef000e::identifier'],['../struct_volume_shell_item.html#a1579f5c1faff7e704ba299f3c77cc789',1,'VolumeShellItem::identifier'],['../struct_control_panel.html#a0c13f4feb5a50720bfbc87d8a9399f36',1,'ControlPanel::identifier'],['../struct_user_property_view0x10312005.html#a0559dd15068d57dd6b7d7b1e5d6a1797',1,'UserPropertyView0x10312005::identifier'],['../struct_users_property_view.html#aa1d1b1cf5180c5c28aa4e6ba92904275',1,'UsersPropertyView::identifier'],['../struct_root_folder.html#aa2ddfc02c0374b1832a37d1d3ad4881f',1,'RootFolder::identifier']]],
+  ['identifier1_5',['identifier1',['../struct_beef0000.html#a0e95d71b0593c83015e43c10f0c1a607',1,'Beef0000::identifier1'],['../struct_beef0019.html#a6d2c48f832e234c33dc4d66f348e3179',1,'Beef0019::identifier1']]],
+  ['identifier2_6',['identifier2',['../struct_beef0000.html#a258f48c2b7f6a62b17a82571cb6e2798',1,'Beef0000::identifier2'],['../struct_beef0019.html#aef40bc682f92944035f87edd78169873',1,'Beef0019::identifier2']]],
+  ['identifiersize_7',['identifierSize',['../struct_users_property_view.html#afbd2e68c09e2fe8c1dca693bc486d302',1,'UsersPropertyView']]],
+  ['idlist_8',['idlist',['../struct_beef0026.html#a1f97d4098fbef461a5406827088b1bb0',1,'Beef0026']]],
+  ['idlists_9',['idLists',['../struct_recent_doc.html#adabdbaa8a33122b9df676452dfc052e1',1,'RecentDoc']]],
+  ['installdate_10',['InstallDate',['../struct_amcache_application.html#ae1eb1f14a433aba71a252e5db4c98f29',1,'AmcacheApplication']]],
+  ['installdateutc_11',['InstallDateUtc',['../struct_amcache_application.html#a6683e37f1d6ec04074f44bf93fab3209',1,'AmcacheApplication']]],
+  ['interval_12',['interval',['../struct_trigger.html#a54cceba33e80998106a2a518233ca1d8',1,'Trigger']]],
+  ['is_5fdirectory_13',['IS_DIRECTORY',['../struct_fs_flags.html#aadd8ca0ac03768f5b363c7cc534a8148',1,'FsFlags']]],
+  ['is_5ffile_14',['IS_FILE',['../struct_fs_flags.html#a831a0d1582a203cb6eafeeb8b6b96526',1,'FsFlags']]],
+  ['is_5funicode_15',['IS_UNICODE',['../struct_fs_flags.html#ad8880c6d36b6ab7e791a2cc426960d6f',1,'FsFlags']]],
+  ['is_5fzip_16',['is_zip',['../struct_i_shell_item.html#a7e314fccf68f010c8647d465d6c43be8',1,'IShellItem']]],
+  ['ishellitems_17',['ishellitems',['../struct_beef000e.html#a19009e112c55e7c77e1f512723841fde',1,'Beef000e']]],
+  ['isoscomponent_18',['IsOsComponent',['../struct_amcache_application_file.html#ab60569ad29ba0ac39b0804f299f73af4',1,'AmcacheApplicationFile']]],
+  ['ispresent_19',['isPresent',['../struct_i_extension_block.html#a21e17ece2d238afbb69bed9fdb0c19d7',1,'IExtensionBlock::isPresent'],['../struct_volume_shell_item.html#a4eecad28c0de78b7a0dfebd4410a1ba2',1,'VolumeShellItem::isPresent'],['../struct_control_panel.html#a445c6de7707c6d07d691dcaebb7ba006',1,'ControlPanel::isPresent'],['../struct_control_panel_category.html#a78763bd76fd6abc4ff90660213297326',1,'ControlPanelCategory::isPresent'],['../struct_users_property_view.html#aebda60bf6fe01727e8c894534d402c9e',1,'UsersPropertyView::isPresent'],['../struct_root_folder.html#af341008e42f22a082a618d498fed9f97',1,'RootFolder::isPresent'],['../struct_network_shell_item.html#a1ae68af6a37790a333ec6233738c3f42',1,'NetworkShellItem::isPresent'],['../struct_archive_file_content.html#af3e4c284f506e95d236435d098a8aff1',1,'ArchiveFileContent::isPresent'],['../struct_u_r_i_shell_item.html#a6e288d19d43ffbe10f75b464aff65fc2',1,'URIShellItem::isPresent'],['../struct_file_entry_shell_item.html#acc3ae8eefcfb7047bf7a386d72066600',1,'FileEntryShellItem::isPresent'],['../struct_users_files_folder.html#ad0b7544b4f9f1c22100ddf2e4b7e49f7',1,'UsersFilesFolder::isPresent'],['../struct_favorite_shellitem.html#ac066432eade08d925e4d8ac993dbd19b',1,'FavoriteShellitem::isPresent'],['../struct_unknown_shell_item.html#ac17b724ac9fcd947ef3f7fae6ffea8e1',1,'UnknownShellItem::isPresent']]],
+  ['isunicode_20',['IsUnicode',['../struct_link_flags.html#aaff35570f8ef8fe51ceab08b184b9f29',1,'LinkFlags']]],
+  ['item_5fsize_21',['item_size',['../struct_id_list.html#af8eb27c406e8600f6adbb6791896a3a6',1,'IdList']]]
+];

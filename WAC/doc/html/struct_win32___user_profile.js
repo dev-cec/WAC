@@ -1,0 +1,26 @@
+var struct_win32___user_profile =
+[
+    [ "HealthStatus", "struct_win32___user_profile.html#adc9db7d147cfd9cf66611a4a14f778fc", null ],
+    [ "LastAttemptedProfileDownloadTime", "struct_win32___user_profile.html#a02bfc8df58a59d3946ed3b94618cb2bb", null ],
+    [ "LastAttemptedProfileDownloadTime_utc", "struct_win32___user_profile.html#a1b98e501f55eb4b5bb8a5181b3335bb7", null ],
+    [ "LastAttemptedProfileUploadTime", "struct_win32___user_profile.html#a188c00d7232841ad801fd57d3a982130", null ],
+    [ "LastAttemptedProfileUploadTime_utc", "struct_win32___user_profile.html#a18f1ecbbfcad95a439c798d01b1c9c05", null ],
+    [ "LastBackgroundRegistryUploadTime", "struct_win32___user_profile.html#a1b5cd59099570e49ca3c17cc553b6095", null ],
+    [ "LastBackgroundRegistryUploadTime_utc", "struct_win32___user_profile.html#ae04c92c725b92a713ace97f0fce1e7c0", null ],
+    [ "LastDownloadTime", "struct_win32___user_profile.html#aaf787cb175ac44146d720e5ada44bc37", null ],
+    [ "LastDownloadTime_utc", "struct_win32___user_profile.html#ab11bd7d7f924e6427cfc18025485d6e8", null ],
+    [ "LastUploadTime", "struct_win32___user_profile.html#aabd8f3f004fb594d125da7e82fb5bb34", null ],
+    [ "LastUploadTime_utc", "struct_win32___user_profile.html#aad064cedeab9e6a89aa3489c799e49b9", null ],
+    [ "LastUseTime", "struct_win32___user_profile.html#adc67716c316dcabddc5f7709be1e95b2", null ],
+    [ "LastUseTime_utc", "struct_win32___user_profile.html#a4b5420a7d0f0fbb8563855c2f7cf4fee", null ],
+    [ "Loaded", "struct_win32___user_profile.html#a7a87e21ab7c372e416b4cc025091f164", null ],
+    [ "LocalPath", "struct_win32___user_profile.html#a233d09e484ec86437cdd23ab44c7a57d", null ],
+    [ "LocalPathEscaped", "struct_win32___user_profile.html#a8a0ad6b0a26b86e465224d018122e9e0", null ],
+    [ "refCount", "struct_win32___user_profile.html#a7b7fa1c02fe10e53649b602021e20199", null ],
+    [ "RoamingConfigured", "struct_win32___user_profile.html#a03f60aede3780d1551f2f8d5aa3aa378", null ],
+    [ "RoamingPath", "struct_win32___user_profile.html#a5750766d9a1cb372496131b85fe1f148", null ],
+    [ "RoamingPreference", "struct_win32___user_profile.html#ae7d29d7c59316b3402397fb5c3ddef00", null ],
+    [ "Sid", "struct_win32___user_profile.html#a6b3eecfb06c621169efe84b41ee0faa3", null ],
+    [ "Special", "struct_win32___user_profile.html#a99a512de16308df57d46d6caf5175e4e", null ],
+    [ "Status", "struct_win32___user_profile.html#aa6ad04e4e1f4b84fae34852393d68072", null ]
+];

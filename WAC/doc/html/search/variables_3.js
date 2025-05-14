@@ -1,0 +1,28 @@
+var searchData=
+[
+  ['categorie_0',['categorie',['../struct_custom_destination.html#af5166addb4ff8db607f429b4a4f49fb9',1,'CustomDestination']]],
+  ['childs_1',['childs',['../struct_shellbag.html#a2043681af0c230a086f829280dfa79cd',1,'Shellbag']]],
+  ['class_2',['Class',['../struct_user_assist.html#afa49227090ce0422a8ee62e67caa82e5',1,'UserAssist']]],
+  ['classguid_3',['ClassGuid',['../struct_usbstor.html#a493c78ec85ab590646638663a8ce3010',1,'Usbstor']]],
+  ['classid_4',['classId',['../struct_directory.html#a2e7ab0401b21213fec1fb1d343074376',1,'Directory::classId'],['../struct_action.html#a7415eec54ae809a2daf2f9ffe9aa0a8d',1,'Action::classId']]],
+  ['command_5',['command',['../struct_action.html#a273dbf6443232387765252060f968999',1,'Action']]],
+  ['command_5fescaped_6',['command_escaped',['../struct_action.html#ab7f001cd0364b1eaf345410301c463a0',1,'Action']]],
+  ['commandoption_7',['commandOption',['../struct_recent_doc.html#ab31d7e8885ec6621f352615135841c33',1,'RecentDoc']]],
+  ['comments_8',['comments',['../struct_network_shell_item.html#a83e38becadc7d467f1a25368a048ebee',1,'NetworkShellItem']]],
+  ['compatibleids_9',['CompatibleIds',['../struct_usbstor.html#aacd3a29a49056960317a2adaafb6cb42',1,'Usbstor']]],
+  ['compressed_10',['Compressed',['../struct_file_attributes.html#ab6f23132dd4d25d359437f701afda504',1,'FileAttributes']]],
+  ['computername_11',['computerName',['../struct_system.html#a2ece31792fd8b12b757131ccd696b9a2',1,'System']]],
+  ['count_12',['Count',['../struct_user_assist.html#a25f060e1fa0a1ad2b68a711fd6f56db5',1,'UserAssist']]],
+  ['created_13',['created',['../struct_user_property_view0x07192006.html#a7e86a8d2000abffab0ab37212d60de21',1,'UserPropertyView0x07192006::created'],['../struct_automatic_destination.html#ae5c7cd18a93b33788e46cace980683d5',1,'AutomaticDestination::created'],['../struct_custom_destination.html#a7f6369105e63e44cfb01d84de6198747',1,'CustomDestination::created'],['../struct_directory.html#a63997621361dd8c746c72fdff8c44e18',1,'Directory::created'],['../struct_prefetch.html#adb755f7784d23054c34dc3654cab5d0c',1,'Prefetch::created']]],
+  ['createdutc_14',['createdUtc',['../struct_user_property_view0x07192006.html#a023644572160cb601b4bf6ef2fb88482',1,'UserPropertyView0x07192006::createdUtc'],['../struct_automatic_destination.html#ab3f03a5fec0fa2b4fa81cbee1fbc42df',1,'AutomaticDestination::createdUtc'],['../struct_custom_destination.html#adaac772e30c7185b10fb0b6243b11691',1,'CustomDestination::createdUtc'],['../struct_directory.html#aba79cd3cb10383fcb2ba9151c2b99526',1,'Directory::createdUtc'],['../struct_prefetch.html#ab7a1741d109c27bbd72b516b79435cb8',1,'Prefetch::createdUtc']]],
+  ['creationdate_15',['creationDate',['../struct_beef0004.html#aee25527734903ddac642d84517941133',1,'Beef0004']]],
+  ['creationdateutc_16',['creationDateUtc',['../struct_beef0004.html#aadd2f5be135d9bb4fbb5e2513894aadb',1,'Beef0004']]],
+  ['creationtime_17',['creationTime',['../struct_volume_info.html#abfd81bc350ea89d4a990a61dbae5aaaa',1,'VolumeInfo']]],
+  ['creationtimeutc_18',['creationTimeUtc',['../struct_volume_info.html#a176d1cb6073a84b8904b31725c98291b',1,'VolumeInfo']]],
+  ['ctime_19',['ctime',['../struct_beef0026.html#af77830aaf49cde5a57d6db72533b647c',1,'Beef0026']]],
+  ['ctimeutc_20',['ctimeUtc',['../struct_beef0026.html#a4b54cad68e3fef78a0fc5cdb1a122fef',1,'Beef0026']]],
+  ['currentbias_21',['currentBias',['../struct_system.html#adde9a39e31ccd8af46c7bb3691b62640',1,'System']]],
+  ['currenttimezone_22',['currentTimeZone',['../struct_system.html#a483d3d02fd67e075668d3b4edd20cc3b',1,'System']]],
+  ['currenttimezonecaption_23',['currentTimeZoneCaption',['../struct_system.html#a875871b9a87ab249f5f4725985a0ee45',1,'System']]],
+  ['customdestinations_24',['customDestinations',['../struct_jumplist_customs.html#abc21f6a05008aade524d71f19b6436c5',1,'JumplistCustoms']]]
+];

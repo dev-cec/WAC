@@ -1,0 +1,546 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.13.2"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector): Référence de la structure ScheduledTask</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('struct_scheduled_task.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Fonctions membres publiques</a> &#124;
+<a href="#pub-attribs">Attributs publics</a> &#124;
+<a href="struct_scheduled_task-members.html">Liste de tous les membres</a>  </div>
+  <div class="headertitle"><div class="title">Référence de la structure ScheduledTask</div></div>
+</div><!--header-->
+<div class="contents">
+
+<p><code>#include &lt;<a class="el" href="schedules_tasks_8hpp_source.html">schedulesTasks.hpp</a>&gt;</code></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Fonctions membres publiques</h2></td></tr>
+<tr class="memitem:a97a77016fc99079c636194c8fe41648c" id="r_a97a77016fc99079c636194c8fe41648c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a97a77016fc99079c636194c8fe41648c">ScheduledTask</a> (IRegisteredTask *task, BSTR pFolder)</td></tr>
+<tr class="separator:a97a77016fc99079c636194c8fe41648c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d3f75445c4a02b99bf420a0f2e4ea99" id="r_a8d3f75445c4a02b99bf420a0f2e4ea99"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8d3f75445c4a02b99bf420a0f2e4ea99">to_json</a> ()</td></tr>
+<tr class="separator:a8d3f75445c4a02b99bf420a0f2e4ea99"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
+Attributs publics</h2></td></tr>
+<tr class="memitem:a42375ec87df2614b3fdc0cc34dfe9544" id="r_a42375ec87df2614b3fdc0cc34dfe9544"><td class="memItemLeft" align="right" valign="top">ITaskDefinition *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a42375ec87df2614b3fdc0cc34dfe9544">ppDefinition</a> = NULL</td></tr>
+<tr class="memdesc:a42375ec87df2614b3fdc0cc34dfe9544"><td class="mdescLeft">&#160;</td><td class="mdescRight">la définition de la tâche.  <br /></td></tr>
+<tr class="separator:a42375ec87df2614b3fdc0cc34dfe9544"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a22a2ba655b04c16693f70e5b71225971" id="r_a22a2ba655b04c16693f70e5b71225971"><td class="memItemLeft" align="right" valign="top">VARIANT_BOOL&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a22a2ba655b04c16693f70e5b71225971">pEnabled</a> = false</td></tr>
+<tr class="memdesc:a22a2ba655b04c16693f70e5b71225971"><td class="mdescLeft">&#160;</td><td class="mdescRight">valeur booléenne qui indique si la tâche inscrite est activée.  <br /></td></tr>
+<tr class="separator:a22a2ba655b04c16693f70e5b71225971"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac308032670897596764fac886e324145" id="r_ac308032670897596764fac886e324145"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac308032670897596764fac886e324145">pLastRunTime</a> = { 0 }</td></tr>
+<tr class="memdesc:ac308032670897596764fac886e324145"><td class="mdescLeft">&#160;</td><td class="mdescRight">heure à laquelle la tâche inscrite a été exécutée pour la dernière fois.  <br /></td></tr>
+<tr class="separator:ac308032670897596764fac886e324145"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff0979de4da688e4d22fe02b70220172" id="r_aff0979de4da688e4d22fe02b70220172"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aff0979de4da688e4d22fe02b70220172">pLastRunTimeUtc</a> = { 0 }</td></tr>
+<tr class="memdesc:aff0979de4da688e4d22fe02b70220172"><td class="mdescLeft">&#160;</td><td class="mdescRight">heure à laquelle la tâche inscrite a été exécutée pour la dernière fois au format UTC.  <br /></td></tr>
+<tr class="separator:aff0979de4da688e4d22fe02b70220172"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7af4b412048bb496cae555760c2d255d" id="r_a7af4b412048bb496cae555760c2d255d"><td class="memItemLeft" align="right" valign="top">LONG&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7af4b412048bb496cae555760c2d255d">pLastTaskResult</a> = 0</td></tr>
+<tr class="memdesc:a7af4b412048bb496cae555760c2d255d"><td class="mdescLeft">&#160;</td><td class="mdescRight">les résultats qui ont été retournés lors de la dernière exécution de la tâche inscrite.  <br /></td></tr>
+<tr class="separator:a7af4b412048bb496cae555760c2d255d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:add472c3d96e987805200609e18eaee71" id="r_add472c3d96e987805200609e18eaee71"><td class="memItemLeft" align="right" valign="top">BSTR&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#add472c3d96e987805200609e18eaee71">pName</a> = BSTR(L&quot;&quot;)</td></tr>
+<tr class="memdesc:add472c3d96e987805200609e18eaee71"><td class="mdescLeft">&#160;</td><td class="mdescRight">le nom de la tâche inscrite.  <br /></td></tr>
+<tr class="separator:add472c3d96e987805200609e18eaee71"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab4c0668d4f3f92d6286ceb7e211b0b53" id="r_ab4c0668d4f3f92d6286ceb7e211b0b53"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab4c0668d4f3f92d6286ceb7e211b0b53">pNextRunTime</a> = { 0 }</td></tr>
+<tr class="memdesc:ab4c0668d4f3f92d6286ceb7e211b0b53"><td class="mdescLeft">&#160;</td><td class="mdescRight">lheure à laquelle lexécution prochaine de la tâche inscrite est planifiée.  <br /></td></tr>
+<tr class="separator:ab4c0668d4f3f92d6286ceb7e211b0b53"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa18846339b02cf79f27ae7369021ea32" id="r_aa18846339b02cf79f27ae7369021ea32"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa18846339b02cf79f27ae7369021ea32">pNextRunTimeUtc</a> = { 0 }</td></tr>
+<tr class="memdesc:aa18846339b02cf79f27ae7369021ea32"><td class="mdescLeft">&#160;</td><td class="mdescRight">lheure à laquelle lexécution prochaine de la tâche inscrite est planifiée au format UTC.  <br /></td></tr>
+<tr class="separator:aa18846339b02cf79f27ae7369021ea32"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3ca74a9a83a15f7f3624fd75392f9e84" id="r_a3ca74a9a83a15f7f3624fd75392f9e84"><td class="memItemLeft" align="right" valign="top">LONG&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3ca74a9a83a15f7f3624fd75392f9e84">pNumberOfMissedRuns</a> = 0</td></tr>
+<tr class="memdesc:a3ca74a9a83a15f7f3624fd75392f9e84"><td class="mdescLeft">&#160;</td><td class="mdescRight">le nombre de fois où la tâche inscrite a manqué une exécution planifiée.  <br /></td></tr>
+<tr class="separator:a3ca74a9a83a15f7f3624fd75392f9e84"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7aa55d570cb3e473a9f8e55b41e3a91e" id="r_a7aa55d570cb3e473a9f8e55b41e3a91e"><td class="memItemLeft" align="right" valign="top">BSTR&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7aa55d570cb3e473a9f8e55b41e3a91e">pPath</a> = BSTR(L&quot;&quot;)</td></tr>
+<tr class="memdesc:a7aa55d570cb3e473a9f8e55b41e3a91e"><td class="mdescLeft">&#160;</td><td class="mdescRight">le chemin daccès à lemplacement où la tâche inscrite est stockée.  <br /></td></tr>
+<tr class="separator:a7aa55d570cb3e473a9f8e55b41e3a91e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69d8cd7d76d569d17788af374e3be912" id="r_a69d8cd7d76d569d17788af374e3be912"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a69d8cd7d76d569d17788af374e3be912">escapedPath</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a69d8cd7d76d569d17788af374e3be912"><td class="mdescLeft">&#160;</td><td class="mdescRight">le chemin daccès à lemplacement où la tâche inscrite est stockée.  <br /></td></tr>
+<tr class="separator:a69d8cd7d76d569d17788af374e3be912"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a68515035d64c315bee25ce52a601f254" id="r_a68515035d64c315bee25ce52a601f254"><td class="memItemLeft" align="right" valign="top">TASK_STATE&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a68515035d64c315bee25ce52a601f254">pState</a></td></tr>
+<tr class="memdesc:a68515035d64c315bee25ce52a601f254"><td class="mdescLeft">&#160;</td><td class="mdescRight">Létat opérationnel de la tâche inscrite.  <br /></td></tr>
+<tr class="separator:a68515035d64c315bee25ce52a601f254"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aab0055afc2fe03cd07e7fa53ac3bab26" id="r_aab0055afc2fe03cd07e7fa53ac3bab26"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="struct_action.html">Action</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aab0055afc2fe03cd07e7fa53ac3bab26">pActions</a></td></tr>
+<tr class="memdesc:aab0055afc2fe03cd07e7fa53ac3bab26"><td class="mdescLeft">&#160;</td><td class="mdescRight">Contient les actions effectuées par la tâche..  <br /></td></tr>
+<tr class="separator:aab0055afc2fe03cd07e7fa53ac3bab26"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac99c1bb5e545a62bff7ccd6997483904" id="r_ac99c1bb5e545a62bff7ccd6997483904"><td class="memItemLeft" align="right" valign="top">BSTR&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac99c1bb5e545a62bff7ccd6997483904">pAuthor</a> = BSTR(L&quot;&quot;)</td></tr>
+<tr class="memdesc:ac99c1bb5e545a62bff7ccd6997483904"><td class="mdescLeft">&#160;</td><td class="mdescRight">créateur de la tâche planifiée  <br /></td></tr>
+<tr class="separator:ac99c1bb5e545a62bff7ccd6997483904"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a629a5716e0e8c56c0541f0b6429a4116" id="r_a629a5716e0e8c56c0541f0b6429a4116"><td class="memItemLeft" align="right" valign="top">BSTR&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a629a5716e0e8c56c0541f0b6429a4116">pDescription</a> = BSTR(L&quot;&quot;)</td></tr>
+<tr class="memdesc:a629a5716e0e8c56c0541f0b6429a4116"><td class="mdescLeft">&#160;</td><td class="mdescRight">description de la tâche planifiée  <br /></td></tr>
+<tr class="separator:a629a5716e0e8c56c0541f0b6429a4116"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf24474e4f24d668addf7c6c10c3b3e9" id="r_abf24474e4f24d668addf7c6c10c3b3e9"><td class="memItemLeft" align="right" valign="top">BSTR&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abf24474e4f24d668addf7c6c10c3b3e9">pRunAs</a> = BSTR(L&quot;&quot;)</td></tr>
+<tr class="memdesc:abf24474e4f24d668addf7c6c10c3b3e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">compte utilisé pour exécutée la tâche  <br /></td></tr>
+<tr class="separator:abf24474e4f24d668addf7c6c10c3b3e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0bf232d0b6dd66390547d7387ee71b4d" id="r_a0bf232d0b6dd66390547d7387ee71b4d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0bf232d0b6dd66390547d7387ee71b4d">runAsSid</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a0bf232d0b6dd66390547d7387ee71b4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">SID du compte utilisé pour exécutée la tâche.  <br /></td></tr>
+<tr class="separator:a0bf232d0b6dd66390547d7387ee71b4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2c57666845b795666960c2a355bc0f5" id="r_ac2c57666845b795666960c2a355bc0f5"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="struct_trigger.html">Trigger</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac2c57666845b795666960c2a355bc0f5">triggers</a></td></tr>
+<tr class="memdesc:ac2c57666845b795666960c2a355bc0f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">triggers de a tâche planifiée  <br /></td></tr>
+<tr class="separator:ac2c57666845b795666960c2a355bc0f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<h2 class="groupheader">Documentation des constructeurs et destructeur</h2>
+<a id="a97a77016fc99079c636194c8fe41648c" name="a97a77016fc99079c636194c8fe41648c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a97a77016fc99079c636194c8fe41648c">&#9670;&#160;</a></span>ScheduledTask()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">ScheduledTask::ScheduledTask </td>
+          <td>(</td>
+          <td class="paramtype">IRegisteredTask *</td>          <td class="paramname"><span class="paramname"><em>task</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">BSTR</td>          <td class="paramname"><span class="paramname"><em>pFolder</em></span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Constructeur </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">task</td><td>est une tâche planifiée au format virtuel IRegisteredTask. Ce format étant complexe à manipuler on en extrait les infos qui nous intéressent. </td></tr>
+    <tr><td class="paramname">pfolder</td><td>est le sous-repertoire contenant la tâche planifiée </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Documentation des fonctions membres</h2>
+<a id="a8d3f75445c4a02b99bf420a0f2e4ea99" name="a8d3f75445c4a02b99bf420a0f2e4ea99"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8d3f75445c4a02b99bf420a0f2e4ea99">&#9670;&#160;</a></span>to_json()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring ScheduledTask::to_json </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>conversion de l'objet au format json </p><dl class="section return"><dt>Renvoie</dt><dd>wstring le code json </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Documentation des données membres</h2>
+<a id="a69d8cd7d76d569d17788af374e3be912" name="a69d8cd7d76d569d17788af374e3be912"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a69d8cd7d76d569d17788af374e3be912">&#9670;&#160;</a></span>escapedPath</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring ScheduledTask::escapedPath = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>le chemin daccès à lemplacement où la tâche inscrite est stockée. </p>
+
+</div>
+</div>
+<a id="aab0055afc2fe03cd07e7fa53ac3bab26" name="aab0055afc2fe03cd07e7fa53ac3bab26"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aab0055afc2fe03cd07e7fa53ac3bab26">&#9670;&#160;</a></span>pActions</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;<a class="el" href="struct_action.html">Action</a>&gt; ScheduledTask::pActions</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Contient les actions effectuées par la tâche.. </p>
+
+</div>
+</div>
+<a id="ac99c1bb5e545a62bff7ccd6997483904" name="ac99c1bb5e545a62bff7ccd6997483904"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac99c1bb5e545a62bff7ccd6997483904">&#9670;&#160;</a></span>pAuthor</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">BSTR ScheduledTask::pAuthor = BSTR(L&quot;&quot;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>créateur de la tâche planifiée </p>
+
+</div>
+</div>
+<a id="a629a5716e0e8c56c0541f0b6429a4116" name="a629a5716e0e8c56c0541f0b6429a4116"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a629a5716e0e8c56c0541f0b6429a4116">&#9670;&#160;</a></span>pDescription</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">BSTR ScheduledTask::pDescription = BSTR(L&quot;&quot;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>description de la tâche planifiée </p>
+
+</div>
+</div>
+<a id="a22a2ba655b04c16693f70e5b71225971" name="a22a2ba655b04c16693f70e5b71225971"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a22a2ba655b04c16693f70e5b71225971">&#9670;&#160;</a></span>pEnabled</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">VARIANT_BOOL ScheduledTask::pEnabled = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>valeur booléenne qui indique si la tâche inscrite est activée. </p>
+
+</div>
+</div>
+<a id="ac308032670897596764fac886e324145" name="ac308032670897596764fac886e324145"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac308032670897596764fac886e324145">&#9670;&#160;</a></span>pLastRunTime</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME ScheduledTask::pLastRunTime = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>heure à laquelle la tâche inscrite a été exécutée pour la dernière fois. </p>
+
+</div>
+</div>
+<a id="aff0979de4da688e4d22fe02b70220172" name="aff0979de4da688e4d22fe02b70220172"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff0979de4da688e4d22fe02b70220172">&#9670;&#160;</a></span>pLastRunTimeUtc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME ScheduledTask::pLastRunTimeUtc = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>heure à laquelle la tâche inscrite a été exécutée pour la dernière fois au format UTC. </p>
+
+</div>
+</div>
+<a id="a7af4b412048bb496cae555760c2d255d" name="a7af4b412048bb496cae555760c2d255d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7af4b412048bb496cae555760c2d255d">&#9670;&#160;</a></span>pLastTaskResult</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">LONG ScheduledTask::pLastTaskResult = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>les résultats qui ont été retournés lors de la dernière exécution de la tâche inscrite. </p>
+
+</div>
+</div>
+<a id="add472c3d96e987805200609e18eaee71" name="add472c3d96e987805200609e18eaee71"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#add472c3d96e987805200609e18eaee71">&#9670;&#160;</a></span>pName</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">BSTR ScheduledTask::pName = BSTR(L&quot;&quot;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>le nom de la tâche inscrite. </p>
+
+</div>
+</div>
+<a id="ab4c0668d4f3f92d6286ceb7e211b0b53" name="ab4c0668d4f3f92d6286ceb7e211b0b53"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab4c0668d4f3f92d6286ceb7e211b0b53">&#9670;&#160;</a></span>pNextRunTime</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME ScheduledTask::pNextRunTime = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>lheure à laquelle lexécution prochaine de la tâche inscrite est planifiée. </p>
+
+</div>
+</div>
+<a id="aa18846339b02cf79f27ae7369021ea32" name="aa18846339b02cf79f27ae7369021ea32"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa18846339b02cf79f27ae7369021ea32">&#9670;&#160;</a></span>pNextRunTimeUtc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME ScheduledTask::pNextRunTimeUtc = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>lheure à laquelle lexécution prochaine de la tâche inscrite est planifiée au format UTC. </p>
+
+</div>
+</div>
+<a id="a3ca74a9a83a15f7f3624fd75392f9e84" name="a3ca74a9a83a15f7f3624fd75392f9e84"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3ca74a9a83a15f7f3624fd75392f9e84">&#9670;&#160;</a></span>pNumberOfMissedRuns</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">LONG ScheduledTask::pNumberOfMissedRuns = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>le nombre de fois où la tâche inscrite a manqué une exécution planifiée. </p>
+
+</div>
+</div>
+<a id="a7aa55d570cb3e473a9f8e55b41e3a91e" name="a7aa55d570cb3e473a9f8e55b41e3a91e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7aa55d570cb3e473a9f8e55b41e3a91e">&#9670;&#160;</a></span>pPath</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">BSTR ScheduledTask::pPath = BSTR(L&quot;&quot;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>le chemin daccès à lemplacement où la tâche inscrite est stockée. </p>
+
+</div>
+</div>
+<a id="a42375ec87df2614b3fdc0cc34dfe9544" name="a42375ec87df2614b3fdc0cc34dfe9544"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a42375ec87df2614b3fdc0cc34dfe9544">&#9670;&#160;</a></span>ppDefinition</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ITaskDefinition* ScheduledTask::ppDefinition = NULL</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>la définition de la tâche. </p>
+
+</div>
+</div>
+<a id="abf24474e4f24d668addf7c6c10c3b3e9" name="abf24474e4f24d668addf7c6c10c3b3e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abf24474e4f24d668addf7c6c10c3b3e9">&#9670;&#160;</a></span>pRunAs</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">BSTR ScheduledTask::pRunAs = BSTR(L&quot;&quot;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>compte utilisé pour exécutée la tâche </p>
+
+</div>
+</div>
+<a id="a68515035d64c315bee25ce52a601f254" name="a68515035d64c315bee25ce52a601f254"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a68515035d64c315bee25ce52a601f254">&#9670;&#160;</a></span>pState</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">TASK_STATE ScheduledTask::pState</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Létat opérationnel de la tâche inscrite. </p>
+
+</div>
+</div>
+<a id="a0bf232d0b6dd66390547d7387ee71b4d" name="a0bf232d0b6dd66390547d7387ee71b4d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0bf232d0b6dd66390547d7387ee71b4d">&#9670;&#160;</a></span>runAsSid</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring ScheduledTask::runAsSid = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>SID du compte utilisé pour exécutée la tâche. </p>
+
+</div>
+</div>
+<a id="ac2c57666845b795666960c2a355bc0f5" name="ac2c57666845b795666960c2a355bc0f5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac2c57666845b795666960c2a355bc0f5">&#9670;&#160;</a></span>triggers</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;<a class="el" href="struct_trigger.html">Trigger</a>&gt; ScheduledTask::triggers</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>triggers de a tâche planifiée </p>
+
+</div>
+</div>
+<hr/>La documentation de cette structure a été générée à partir du fichier suivant :<ul>
+<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="schedules_tasks_8hpp_source.html">schedulesTasks.hpp</a></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="struct_scheduled_task.html">ScheduledTask</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.13.2"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector): Référence de la structure FatDateTime</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('struct_fat_date_time.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Fonctions membres publiques</a> &#124;
+<a href="#pub-attribs">Attributs publics</a> &#124;
+<a href="struct_fat_date_time-members.html">Liste de tous les membres</a>  </div>
+  <div class="headertitle"><div class="title">Référence de la structure FatDateTime</div></div>
+</div><!--header-->
+<div class="contents">
+
+<p>structure de données permettant de stocker les dates au format FAT DOS time  
+ <a href="#details">Plus de détails...</a></p>
+
+<p><code>#include &lt;<a class="el" href="tools_8h_source.html">tools.h</a>&gt;</code></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Fonctions membres publiques</h2></td></tr>
+<tr class="memitem:a1a6bd9bbb3518c18ba407bc7b7aaa19a" id="r_a1a6bd9bbb3518c18ba407bc7b7aaa19a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1a6bd9bbb3518c18ba407bc7b7aaa19a">FatDateTime</a> (unsigned int _i)</td></tr>
+<tr class="memdesc:a1a6bd9bbb3518c18ba407bc7b7aaa19a"><td class="mdescLeft">&#160;</td><td class="mdescRight">constructeur à partir d'un timestamp, permet de parser la date  <br /></td></tr>
+<tr class="separator:a1a6bd9bbb3518c18ba407bc7b7aaa19a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e42568d1a7900968da731c54fd256c2" id="r_a4e42568d1a7900968da731c54fd256c2"><td class="memItemLeft" align="right" valign="top">SYSTEMTIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4e42568d1a7900968da731c54fd256c2">to_systemtime</a> ()</td></tr>
+<tr class="memdesc:a4e42568d1a7900968da731c54fd256c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">conversion FAT DOS TIME vers SYSTEM TIME  <br /></td></tr>
+<tr class="separator:a4e42568d1a7900968da731c54fd256c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f824fddf52806265724302c7633595b" id="r_a2f824fddf52806265724302c7633595b"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2f824fddf52806265724302c7633595b">to_filetime</a> ()</td></tr>
+<tr class="memdesc:a2f824fddf52806265724302c7633595b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Conversion FAT DOS TIME vers FILETIME.  <br /></td></tr>
+<tr class="separator:a2f824fddf52806265724302c7633595b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
+Attributs publics</h2></td></tr>
+<tr class="memitem:acdd6fefe7f54805c17b0c6dce4f79654" id="r_acdd6fefe7f54805c17b0c6dce4f79654"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acdd6fefe7f54805c17b0c6dce4f79654">i</a> =0</td></tr>
+<tr class="memdesc:acdd6fefe7f54805c17b0c6dce4f79654"><td class="mdescLeft">&#160;</td><td class="mdescRight">entier d'origine utilisé par le constructeur, correspond à la concaténation des 2 parties de 16 bits chacune  <br /></td></tr>
+<tr class="separator:acdd6fefe7f54805c17b0c6dce4f79654"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95e034c5f40d196bea5f5d11836d98a6" id="r_a95e034c5f40d196bea5f5d11836d98a6"><td class="memItemLeft" align="right" valign="top">unsigned short int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a95e034c5f40d196bea5f5d11836d98a6">date</a> =0</td></tr>
+<tr class="memdesc:a95e034c5f40d196bea5f5d11836d98a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">première partie de 16 bits consacrée à la date : 7 bits pour l'année, 4 bits pour le mois, 5 bits pour le jour du mois  <br /></td></tr>
+<tr class="separator:a95e034c5f40d196bea5f5d11836d98a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6654768b2369d55b606627146a22cbf0" id="r_a6654768b2369d55b606627146a22cbf0"><td class="memItemLeft" align="right" valign="top">unsigned short int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6654768b2369d55b606627146a22cbf0">time</a> =0</td></tr>
+<tr class="memdesc:a6654768b2369d55b606627146a22cbf0"><td class="mdescLeft">&#160;</td><td class="mdescRight">seconde partie de 16 bits consacrée à l'heure : 5 bits pour l'heure, 6 bits pour les minutes, 5 bits pour les secondes (x2)  <br /></td></tr>
+<tr class="separator:a6654768b2369d55b606627146a22cbf0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
+<div class="textblock"><p>structure de données permettant de stocker les dates au format FAT DOS time </p>
+<p>Note sur les dates et heures:</p>
+<p>DOS stocke les dates et heures de modification de fichiers comme une paire de nombre de 16-bit: </p><pre class="fragment">7 bits pour l'année, 4 bits pour le mois, 5 bits pour le jour du mois
+5 bits pour l'heure, 6 bits pour les minutes, 5 bits pour les secondes (x2)
+</pre><p>Tous les systèmes de fichiers utilisent des dates relatives à une époque (heure zéro). Pour DOS, l'époque est minuit, le réveillon du Nouvel An, le 1er janvier 1980. Un champ de sept bits pour les années signifie que le calendrier DOS ne fonctionne que jusqu'en 2107. </p>
+</div><h2 class="groupheader">Documentation des constructeurs et destructeur</h2>
+<a id="a1a6bd9bbb3518c18ba407bc7b7aaa19a" name="a1a6bd9bbb3518c18ba407bc7b7aaa19a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1a6bd9bbb3518c18ba407bc7b7aaa19a">&#9670;&#160;</a></span>FatDateTime()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FatDateTime::FatDateTime </td>
+          <td>(</td>
+          <td class="paramtype">unsigned int</td>          <td class="paramname"><span class="paramname"><em>_i</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>constructeur à partir d'un timestamp, permet de parser la date </p>
+
+</div>
+</div>
+<h2 class="groupheader">Documentation des fonctions membres</h2>
+<a id="a2f824fddf52806265724302c7633595b" name="a2f824fddf52806265724302c7633595b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2f824fddf52806265724302c7633595b">&#9670;&#160;</a></span>to_filetime()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME FatDateTime::to_filetime </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Conversion FAT DOS TIME vers FILETIME. </p>
+
+</div>
+</div>
+<a id="a4e42568d1a7900968da731c54fd256c2" name="a4e42568d1a7900968da731c54fd256c2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4e42568d1a7900968da731c54fd256c2">&#9670;&#160;</a></span>to_systemtime()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">SYSTEMTIME FatDateTime::to_systemtime </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>conversion FAT DOS TIME vers SYSTEM TIME </p>
+
+</div>
+</div>
+<h2 class="groupheader">Documentation des données membres</h2>
+<a id="a95e034c5f40d196bea5f5d11836d98a6" name="a95e034c5f40d196bea5f5d11836d98a6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a95e034c5f40d196bea5f5d11836d98a6">&#9670;&#160;</a></span>date</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned short int FatDateTime::date =0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>première partie de 16 bits consacrée à la date : 7 bits pour l'année, 4 bits pour le mois, 5 bits pour le jour du mois </p>
+
+</div>
+</div>
+<a id="acdd6fefe7f54805c17b0c6dce4f79654" name="acdd6fefe7f54805c17b0c6dce4f79654"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acdd6fefe7f54805c17b0c6dce4f79654">&#9670;&#160;</a></span>i</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned int FatDateTime::i =0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>entier d'origine utilisé par le constructeur, correspond à la concaténation des 2 parties de 16 bits chacune </p>
+
+</div>
+</div>
+<a id="a6654768b2369d55b606627146a22cbf0" name="a6654768b2369d55b606627146a22cbf0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6654768b2369d55b606627146a22cbf0">&#9670;&#160;</a></span>time</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned short int FatDateTime::time =0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>seconde partie de 16 bits consacrée à l'heure : 5 bits pour l'heure, 6 bits pour les minutes, 5 bits pour les secondes (x2) </p>
+
+</div>
+</div>
+<hr/>La documentation de cette structure a été générée à partir des fichiers suivants :<ul>
+<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="tools_8h_source.html">tools.h</a></li>
+<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="tools_8cpp.html">tools.cpp</a></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="struct_fat_date_time.html">FatDateTime</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>

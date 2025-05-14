@@ -1,0 +1,311 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.13.2"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector):  Fichier source de C:/laragon/prog/c++/WAC/WAC/services.hpp</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('services_8hpp_source.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">services.hpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="services_8hpp.html">Aller à la documentation de ce fichier.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;tlhelp32.h&gt;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;cstdio&gt;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &lt;fstream&gt;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &lt;filesystem&gt;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &lt;sstream&gt;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;<a class="code" href="trans__id_8h.html">trans_id.h</a>&quot;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;<a class="code" href="tools_8h.html">tools.h</a>&quot;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
+<div class="foldopen" id="foldopen00015" data-start="{" data-end="};">
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="struct_service_struct.html">   15</a></span><span class="keyword">struct </span><a class="code hl_function" href="struct_service_struct.html#a2f58af9fcd7ec1c792158955f35c8353">ServiceStruct</a></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>{</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno"><a class="line" href="struct_service_struct.html#a143f89f9dda1dcfbfb84a6cb9334d78f">   17</a></span>    std::wstring <a class="code hl_variable" href="struct_service_struct.html#a143f89f9dda1dcfbfb84a6cb9334d78f">serviceName</a>=L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="struct_service_struct.html#ae0c384c5d08c953ca3cad6ca96bf07b6">   18</a></span>    std::wstring <a class="code hl_variable" href="struct_service_struct.html#ae0c384c5d08c953ca3cad6ca96bf07b6">serviceDisplayName</a>=L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="struct_service_struct.html#aec6f298661d2ebace596702f042f35ee">   19</a></span>    std::wstring <a class="code hl_variable" href="struct_service_struct.html#aec6f298661d2ebace596702f042f35ee">serviceType</a>=L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno"><a class="line" href="struct_service_struct.html#adc14d1350ea234e7799b8dd1336e2199">   20</a></span>    std::wstring <a class="code hl_variable" href="struct_service_struct.html#adc14d1350ea234e7799b8dd1336e2199">serviceStatus</a>=L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno"><a class="line" href="struct_service_struct.html#ab763f930bdb140f9d2616701f57e8bca">   21</a></span>    std::wstring <a class="code hl_variable" href="struct_service_struct.html#ab763f930bdb140f9d2616701f57e8bca">serviceProcessId</a>=L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno"><a class="line" href="struct_service_struct.html#a441aa5efcf90371ca76612da56d581ae">   22</a></span>    std::wstring <a class="code hl_variable" href="struct_service_struct.html#a441aa5efcf90371ca76612da56d581ae">serviceStartType</a>=L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno"><a class="line" href="struct_service_struct.html#a3f73d964f88bb0fb94e7ddd99ae89073">   23</a></span>    std::wstring <a class="code hl_variable" href="struct_service_struct.html#a3f73d964f88bb0fb94e7ddd99ae89073">serviceOwner</a>=L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno"><a class="line" href="struct_service_struct.html#ad6feca349802e0a18f887f2f5ec5b2dc">   24</a></span>    std::wstring <a class="code hl_variable" href="struct_service_struct.html#ad6feca349802e0a18f887f2f5ec5b2dc">serviceBinary</a>=L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno"><a class="line" href="struct_service_struct.html#a7a0e700362fd5e5d3547becee19aea6b">   25</a></span>    std::wstring <a class="code hl_variable" href="struct_service_struct.html#a7a0e700362fd5e5d3547becee19aea6b">serviceAccessMessage</a>=L<span class="stringliteral">&quot;OK&quot;</span>;</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span></div>
+<div class="foldopen" id="foldopen00031" data-start="{" data-end="}">
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno"><a class="line" href="struct_service_struct.html#a2f58af9fcd7ec1c792158955f35c8353">   31</a></span>    <a class="code hl_function" href="struct_service_struct.html#a2f58af9fcd7ec1c792158955f35c8353">ServiceStruct</a>(SC_HANDLE hSCM, ENUM_SERVICE_STATUS_PROCESS service) {</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>        DWORD bufSize = 0;</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>        DWORD moreBytesNeeded;</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>        <a class="code hl_variable" href="struct_service_struct.html#a143f89f9dda1dcfbfb84a6cb9334d78f">serviceName</a> =  std::wstring(service.lpServiceName);</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>        <a class="code hl_variable" href="struct_service_struct.html#ae0c384c5d08c953ca3cad6ca96bf07b6">serviceDisplayName</a>= <a class="code hl_function" href="tools_8cpp.html#a0f20577b4f90e4d40f33250f74928ded">ansi_to_utf8</a>(std::wstring(service.lpDisplayName)) ;</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>        <a class="code hl_variable" href="struct_service_struct.html#aec6f298661d2ebace596702f042f35ee">serviceType</a>= <a class="code hl_function" href="trans__id_8cpp.html#aa4c2df15f897b200a02c0ec8a1742e2e">serviceType_to_wstring</a>(service.ServiceStatusProcess.dwServiceType) ;</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>        <a class="code hl_variable" href="struct_service_struct.html#adc14d1350ea234e7799b8dd1336e2199">serviceStatus</a>= <a class="code hl_function" href="trans__id_8cpp.html#a70038cbd763c613bb2dfebf3740a0d0f">serviceState_to_wstring</a>(service.ServiceStatusProcess.dwCurrentState) ;</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>        <a class="code hl_variable" href="struct_service_struct.html#ab763f930bdb140f9d2616701f57e8bca">serviceProcessId</a> = std::to_wstring(service.ServiceStatusProcess.dwProcessId);</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>        SC_HANDLE hService = OpenServiceW(hSCM, service.lpServiceName, SC_MANAGER_ALL_ACCESS);</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>        QueryServiceConfigW(hService, NULL, 0, &amp;moreBytesNeeded); <span class="comment">//get size of buffer</span></div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>        LPQUERY_SERVICE_CONFIG sData = (LPQUERY_SERVICE_CONFIG)malloc(moreBytesNeeded);</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>        bufSize = moreBytesNeeded;</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>        <span class="keywordflow">if</span> (QueryServiceConfigW(hService, sData, bufSize, &amp;moreBytesNeeded)) { <span class="comment">//get service info</span></div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>            <a class="code hl_variable" href="struct_service_struct.html#a441aa5efcf90371ca76612da56d581ae">serviceStartType</a> = <a class="code hl_function" href="trans__id_8cpp.html#ab8778d28e18d3faba83fa6e187f7e88b">serviceStart_to_wstring</a>(sData-&gt;dwStartType) ;</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>            <a class="code hl_variable" href="struct_service_struct.html#a3f73d964f88bb0fb94e7ddd99ae89073">serviceOwner</a> = std::wstring(sData-&gt;lpServiceStartName) ;</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>            <a class="code hl_variable" href="struct_service_struct.html#a3f73d964f88bb0fb94e7ddd99ae89073">serviceOwner</a> = <a class="code hl_function" href="tools_8cpp.html#ac0b13fc24e7bc07ec4a03384acd92539">replaceAll</a>(<a class="code hl_variable" href="struct_service_struct.html#a3f73d964f88bb0fb94e7ddd99ae89073">serviceOwner</a>, L<span class="stringliteral">&quot;\\&quot;</span>, L<span class="stringliteral">&quot;\\\\&quot;</span>);</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>            <a class="code hl_variable" href="struct_service_struct.html#ad6feca349802e0a18f887f2f5ec5b2dc">serviceBinary</a> = std::wstring(sData-&gt;lpBinaryPathName);</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>            <a class="code hl_variable" href="struct_service_struct.html#ad6feca349802e0a18f887f2f5ec5b2dc">serviceBinary</a> = <a class="code hl_function" href="tools_8cpp.html#ac0b13fc24e7bc07ec4a03384acd92539">replaceAll</a>(<a class="code hl_variable" href="struct_service_struct.html#ad6feca349802e0a18f887f2f5ec5b2dc">serviceBinary</a>, L<span class="stringliteral">&quot;\\&quot;</span>, L<span class="stringliteral">&quot;\\\\&quot;</span>);</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>            <a class="code hl_variable" href="struct_service_struct.html#ad6feca349802e0a18f887f2f5ec5b2dc">serviceBinary</a> = <a class="code hl_function" href="tools_8cpp.html#ac0b13fc24e7bc07ec4a03384acd92539">replaceAll</a>(<a class="code hl_variable" href="struct_service_struct.html#ad6feca349802e0a18f887f2f5ec5b2dc">serviceBinary</a>, L<span class="stringliteral">&quot;\&quot;&quot;</span>, L<span class="stringliteral">&quot;\\\&quot;&quot;</span>);</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>        }</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>        <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>            <a class="code hl_variable" href="struct_service_struct.html#a7a0e700362fd5e5d3547becee19aea6b">serviceAccessMessage</a> = <a class="code hl_function" href="tools_8cpp.html#a0f20577b4f90e4d40f33250f74928ded">ansi_to_utf8</a>(<a class="code hl_function" href="tools_8cpp.html#ae5bae328744d0cda312be7564b935ca1">getErrorWstring</a>(GetLastError()));</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>        }</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    }</div>
+</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span></div>
+<div class="foldopen" id="foldopen00061" data-start="{" data-end="}">
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno"><a class="line" href="struct_service_struct.html#a37e6aedfca8912981d0c581607cd097c">   61</a></span>    std::wstring <a class="code hl_function" href="struct_service_struct.html#a37e6aedfca8912981d0c581607cd097c">to_json</a>() {</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>        std::wstring result = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>        result += <a class="code hl_function" href="tools_8cpp.html#a238702c13cab5b487c46812cd980e7d6">tab</a>(1) + L<span class="stringliteral">&quot;{ \n&quot;</span></div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>            + <a class="code hl_function" href="tools_8cpp.html#a238702c13cab5b487c46812cd980e7d6">tab</a>(2) + L<span class="stringliteral">&quot;\&quot;Name\&quot;:\&quot;&quot;</span> + <a class="code hl_variable" href="struct_service_struct.html#a143f89f9dda1dcfbfb84a6cb9334d78f">serviceName</a> + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>            + <a class="code hl_function" href="tools_8cpp.html#a238702c13cab5b487c46812cd980e7d6">tab</a>(2) + L<span class="stringliteral">&quot;\&quot;DislayName\&quot;:\&quot;&quot;</span> + <a class="code hl_variable" href="struct_service_struct.html#ae0c384c5d08c953ca3cad6ca96bf07b6">serviceDisplayName</a> + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>            + <a class="code hl_function" href="tools_8cpp.html#a238702c13cab5b487c46812cd980e7d6">tab</a>(2) + L<span class="stringliteral">&quot;\&quot;Status\&quot;:\&quot;&quot;</span> + <a class="code hl_variable" href="struct_service_struct.html#adc14d1350ea234e7799b8dd1336e2199">serviceStatus</a> + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>            + <a class="code hl_function" href="tools_8cpp.html#a238702c13cab5b487c46812cd980e7d6">tab</a>(2) + L<span class="stringliteral">&quot;\&quot;AccessMessage\&quot;:\&quot;&quot;</span> + <a class="code hl_variable" href="struct_service_struct.html#a7a0e700362fd5e5d3547becee19aea6b">serviceAccessMessage</a> + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>            + <a class="code hl_function" href="tools_8cpp.html#a238702c13cab5b487c46812cd980e7d6">tab</a>(2) + L<span class="stringliteral">&quot;\&quot;ProcessId\&quot;:\&quot;&quot;</span> + <a class="code hl_variable" href="struct_service_struct.html#ab763f930bdb140f9d2616701f57e8bca">serviceProcessId</a> + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>            + <a class="code hl_function" href="tools_8cpp.html#a238702c13cab5b487c46812cd980e7d6">tab</a>(2) + L<span class="stringliteral">&quot;\&quot;StartType\&quot;:\&quot;&quot;</span> + <a class="code hl_variable" href="struct_service_struct.html#a441aa5efcf90371ca76612da56d581ae">serviceStartType</a> + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>            + <a class="code hl_function" href="tools_8cpp.html#a238702c13cab5b487c46812cd980e7d6">tab</a>(2) + L<span class="stringliteral">&quot;\&quot;Owner\&quot;:\&quot;&quot;</span> + <a class="code hl_variable" href="struct_service_struct.html#a3f73d964f88bb0fb94e7ddd99ae89073">serviceOwner</a> + L<span class="stringliteral">&quot;\&quot;, \n&quot;</span></div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>            + <a class="code hl_function" href="tools_8cpp.html#a238702c13cab5b487c46812cd980e7d6">tab</a>(2) + L<span class="stringliteral">&quot;\&quot;Binary\&quot;:\&quot;&quot;</span> + <a class="code hl_variable" href="struct_service_struct.html#ad6feca349802e0a18f887f2f5ec5b2dc">serviceBinary</a> + L<span class="stringliteral">&quot;\&quot; \n&quot;</span></div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>            + <a class="code hl_function" href="tools_8cpp.html#a238702c13cab5b487c46812cd980e7d6">tab</a>(1) + L<span class="stringliteral">&quot;}&quot;</span>;</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>        <span class="keywordflow">return</span> result;</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    }</div>
+</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>};</div>
+</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span> </div>
+<div class="foldopen" id="foldopen00078" data-start="{" data-end="};">
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno"><a class="line" href="struct_services.html">   78</a></span><span class="keyword">struct </span><a class="code hl_struct" href="struct_services.html">Services</a></div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>{</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno"><a class="line" href="struct_services.html#a39cd220d8e418fa3f8a066ed40043c26">   80</a></span>    std::vector&lt;ServiceStruct&gt; <a class="code hl_variable" href="struct_services.html#a39cd220d8e418fa3f8a066ed40043c26">services</a>; </div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno"><a class="line" href="struct_services.html#a82a55b7795976a18736665109043fa59">   81</a></span>    std::vector&lt;std::tuple&lt;std::wstring, HRESULT&gt;&gt; <a class="code hl_variable" href="struct_services.html#a82a55b7795976a18736665109043fa59">errors</a>;</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno"><a class="line" href="struct_services.html#ac0d81d1f43dd2f451aa9df06f034e4ac">   82</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="struct_services.html#ac0d81d1f43dd2f451aa9df06f034e4ac">_debug</a> = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span></div>
+<div class="foldopen" id="foldopen00087" data-start="{" data-end="}">
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno"><a class="line" href="struct_services.html#abca4ebfbe22c1bcceb94525bf436f519">   87</a></span>    HRESULT <a class="code hl_function" href="struct_services.html#abca4ebfbe22c1bcceb94525bf436f519">getData</a>(<span class="keywordtype">bool</span> pdebug)</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    {</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>        SC_HANDLE hSCM = NULL;</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>        PUCHAR  pBuf = NULL;</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>        ULONG  dwBufSize = 0x00;</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        ULONG  dwBufNeed = 0x00;</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>        ULONG  dwNumberOfService = 0x00;</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>        LPENUM_SERVICE_STATUS_PROCESS servicesBuf = NULL;</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>        DWORD bufSize = 0;</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>        DWORD moreBytesNeeded, serviceCount;</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span> </div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>        <a class="code hl_variable" href="struct_services.html#ac0d81d1f43dd2f451aa9df06f034e4ac">_debug</a> = pdebug;</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span> </div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>        hSCM = OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE | SC_MANAGER_CONNECT);</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>        <span class="keywordflow">if</span> (hSCM == NULL)</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>        {</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>            <a class="code hl_variable" href="struct_services.html#a82a55b7795976a18736665109043fa59">errors</a>.push_back({L<span class="stringliteral">&quot;Could not open Service Control Manager&quot;</span>,ERROR_UNIDENTIFIED_ERROR });</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>            <span class="keywordflow">return</span> ERROR_UNIDENTIFIED_ERROR;</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>        }</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span> </div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>        <span class="comment">// et buffer size needed</span></div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>        EnumServicesStatusExW(hSCM, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, NULL, bufSize, &amp;moreBytesNeeded, &amp;serviceCount, 0, NULL);</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>        servicesBuf = (LPENUM_SERVICE_STATUS_PROCESS)malloc(moreBytesNeeded);</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>        bufSize = moreBytesNeeded;</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>        <span class="keywordflow">if</span> (EnumServicesStatusExW(hSCM, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, (LPBYTE)servicesBuf, bufSize, &amp;moreBytesNeeded, &amp;serviceCount, 0, NULL)) {</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>            <span class="keywordflow">for</span> (DWORD i = 0; i &lt; serviceCount; ++i) {</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span> </div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>                <a class="code hl_variable" href="struct_services.html#a39cd220d8e418fa3f8a066ed40043c26">services</a>.push_back(<a class="code hl_struct" href="struct_service_struct.html">ServiceStruct</a>(hSCM, (ENUM_SERVICE_STATUS_PROCESS)servicesBuf[i]));</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>            }</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>            free(servicesBuf);</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>            <span class="keywordflow">return</span> 0;</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>        }</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>        <span class="keywordtype">int</span> err = GetLastError();</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>        <span class="keywordflow">if</span> (ERROR_MORE_DATA != err) {</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>            free(servicesBuf);</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>            <span class="keywordflow">return</span> err;</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>        }</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>        free(servicesBuf);</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span> </div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>        <span class="keywordflow">return</span> 0;</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    }</div>
+</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span></div>
+<div class="foldopen" id="foldopen00131" data-start="{" data-end="}">
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno"><a class="line" href="struct_services.html#ae4213a6196a5279bfd8a5f354bf91d22">  131</a></span>    HRESULT <a class="code hl_function" href="struct_services.html#ae4213a6196a5279bfd8a5f354bf91d22">to_json</a>()</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>    {</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>        std::wstring result = L<span class="stringliteral">&quot;[ \n&quot;</span>;</div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>        std::vector&lt;ServiceStruct&gt;::iterator it;</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>        <span class="keywordflow">for</span> (it = <a class="code hl_variable" href="struct_services.html#a39cd220d8e418fa3f8a066ed40043c26">services</a>.begin(); it != <a class="code hl_variable" href="struct_services.html#a39cd220d8e418fa3f8a066ed40043c26">services</a>.end(); it++) {</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>            result += it-&gt;to_json();</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>            <span class="keywordflow">if</span> (it != <a class="code hl_variable" href="struct_services.html#a39cd220d8e418fa3f8a066ed40043c26">services</a>.end() - 1)</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>                result += L<span class="stringliteral">&quot;,&quot;</span>;</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>            result += L<span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>        }</div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>        result += L<span class="stringliteral">&quot;\n]&quot;</span>;</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span> </div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>        <span class="comment">//enregistrement dans fichier json</span></div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>        std::filesystem::create_directory(<span class="stringliteral">&quot;sortie&quot;</span>); <span class="comment">//crée le repertoire, pas d&#39;erreur s&#39;il existe déjà</span></div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>        std::wofstream myfile;</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>        myfile.open(<span class="stringliteral">&quot;sortie/services.json&quot;</span>);</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>        myfile &lt;&lt; result;</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>        myfile.close();</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span> </div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>        <span class="keywordflow">if</span> (<a class="code hl_variable" href="struct_services.html#ac0d81d1f43dd2f451aa9df06f034e4ac">_debug</a> == <span class="keyword">true</span> &amp;&amp; <a class="code hl_variable" href="struct_services.html#a82a55b7795976a18736665109043fa59">errors</a>.size() &gt; 0) {</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>            <span class="comment">//errors</span></div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>            result = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>            <span class="keywordflow">for</span> (<span class="keyword">auto</span> e : <a class="code hl_variable" href="struct_services.html#a82a55b7795976a18736665109043fa59">errors</a>) {</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>                result += L<span class="stringliteral">&quot;&quot;</span> + std::get&lt;0&gt;(e) + L<span class="stringliteral">&quot; : &quot;</span> + <a class="code hl_function" href="tools_8cpp.html#ae5bae328744d0cda312be7564b935ca1">getErrorWstring</a>(get&lt;1&gt;(e)) + L<span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>            }</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>            std::filesystem::create_directory(<span class="stringliteral">&quot;erreurs&quot;</span>); <span class="comment">//crée le repertoire, pas d&#39;erreur s&#39;il existe déjà</span></div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>            myfile.open(<span class="stringliteral">&quot;erreurs/services_errors.txt&quot;</span>);</div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>            myfile &lt;&lt; result;</div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>            myfile.close();</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>        }</div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span> </div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>        <span class="keywordflow">return</span> ERROR_SUCCESS;</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>    }</div>
+</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>};</div>
+</div>
+<div class="ttc" id="astruct_service_struct_html"><div class="ttname"><a href="struct_service_struct.html">ServiceStruct</a></div><div class="ttdef"><b>Definition</b> services.hpp:16</div></div>
+<div class="ttc" id="astruct_service_struct_html_a143f89f9dda1dcfbfb84a6cb9334d78f"><div class="ttname"><a href="struct_service_struct.html#a143f89f9dda1dcfbfb84a6cb9334d78f">ServiceStruct::serviceName</a></div><div class="ttdeci">std::wstring serviceName</div><div class="ttdef"><b>Definition</b> services.hpp:17</div></div>
+<div class="ttc" id="astruct_service_struct_html_a2f58af9fcd7ec1c792158955f35c8353"><div class="ttname"><a href="struct_service_struct.html#a2f58af9fcd7ec1c792158955f35c8353">ServiceStruct::ServiceStruct</a></div><div class="ttdeci">ServiceStruct(SC_HANDLE hSCM, ENUM_SERVICE_STATUS_PROCESS service)</div><div class="ttdef"><b>Definition</b> services.hpp:31</div></div>
+<div class="ttc" id="astruct_service_struct_html_a37e6aedfca8912981d0c581607cd097c"><div class="ttname"><a href="struct_service_struct.html#a37e6aedfca8912981d0c581607cd097c">ServiceStruct::to_json</a></div><div class="ttdeci">std::wstring to_json()</div><div class="ttdef"><b>Definition</b> services.hpp:61</div></div>
+<div class="ttc" id="astruct_service_struct_html_a3f73d964f88bb0fb94e7ddd99ae89073"><div class="ttname"><a href="struct_service_struct.html#a3f73d964f88bb0fb94e7ddd99ae89073">ServiceStruct::serviceOwner</a></div><div class="ttdeci">std::wstring serviceOwner</div><div class="ttdef"><b>Definition</b> services.hpp:23</div></div>
+<div class="ttc" id="astruct_service_struct_html_a441aa5efcf90371ca76612da56d581ae"><div class="ttname"><a href="struct_service_struct.html#a441aa5efcf90371ca76612da56d581ae">ServiceStruct::serviceStartType</a></div><div class="ttdeci">std::wstring serviceStartType</div><div class="ttdef"><b>Definition</b> services.hpp:22</div></div>
+<div class="ttc" id="astruct_service_struct_html_a7a0e700362fd5e5d3547becee19aea6b"><div class="ttname"><a href="struct_service_struct.html#a7a0e700362fd5e5d3547becee19aea6b">ServiceStruct::serviceAccessMessage</a></div><div class="ttdeci">std::wstring serviceAccessMessage</div><div class="ttdef"><b>Definition</b> services.hpp:25</div></div>
+<div class="ttc" id="astruct_service_struct_html_ab763f930bdb140f9d2616701f57e8bca"><div class="ttname"><a href="struct_service_struct.html#ab763f930bdb140f9d2616701f57e8bca">ServiceStruct::serviceProcessId</a></div><div class="ttdeci">std::wstring serviceProcessId</div><div class="ttdef"><b>Definition</b> services.hpp:21</div></div>
+<div class="ttc" id="astruct_service_struct_html_ad6feca349802e0a18f887f2f5ec5b2dc"><div class="ttname"><a href="struct_service_struct.html#ad6feca349802e0a18f887f2f5ec5b2dc">ServiceStruct::serviceBinary</a></div><div class="ttdeci">std::wstring serviceBinary</div><div class="ttdef"><b>Definition</b> services.hpp:24</div></div>
+<div class="ttc" id="astruct_service_struct_html_adc14d1350ea234e7799b8dd1336e2199"><div class="ttname"><a href="struct_service_struct.html#adc14d1350ea234e7799b8dd1336e2199">ServiceStruct::serviceStatus</a></div><div class="ttdeci">std::wstring serviceStatus</div><div class="ttdef"><b>Definition</b> services.hpp:20</div></div>
+<div class="ttc" id="astruct_service_struct_html_ae0c384c5d08c953ca3cad6ca96bf07b6"><div class="ttname"><a href="struct_service_struct.html#ae0c384c5d08c953ca3cad6ca96bf07b6">ServiceStruct::serviceDisplayName</a></div><div class="ttdeci">std::wstring serviceDisplayName</div><div class="ttdef"><b>Definition</b> services.hpp:18</div></div>
+<div class="ttc" id="astruct_service_struct_html_aec6f298661d2ebace596702f042f35ee"><div class="ttname"><a href="struct_service_struct.html#aec6f298661d2ebace596702f042f35ee">ServiceStruct::serviceType</a></div><div class="ttdeci">std::wstring serviceType</div><div class="ttdef"><b>Definition</b> services.hpp:19</div></div>
+<div class="ttc" id="astruct_services_html"><div class="ttname"><a href="struct_services.html">Services</a></div><div class="ttdef"><b>Definition</b> services.hpp:79</div></div>
+<div class="ttc" id="astruct_services_html_a39cd220d8e418fa3f8a066ed40043c26"><div class="ttname"><a href="struct_services.html#a39cd220d8e418fa3f8a066ed40043c26">Services::services</a></div><div class="ttdeci">std::vector&lt; ServiceStruct &gt; services</div><div class="ttdoc">tableau contenant tout les processus</div><div class="ttdef"><b>Definition</b> services.hpp:80</div></div>
+<div class="ttc" id="astruct_services_html_a82a55b7795976a18736665109043fa59"><div class="ttname"><a href="struct_services.html#a82a55b7795976a18736665109043fa59">Services::errors</a></div><div class="ttdeci">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; errors</div><div class="ttdoc">tableau contenant les erreurs remontées lors du traitement des objets</div><div class="ttdef"><b>Definition</b> services.hpp:81</div></div>
+<div class="ttc" id="astruct_services_html_abca4ebfbe22c1bcceb94525bf436f519"><div class="ttname"><a href="struct_services.html#abca4ebfbe22c1bcceb94525bf436f519">Services::getData</a></div><div class="ttdeci">HRESULT getData(bool pdebug)</div><div class="ttdef"><b>Definition</b> services.hpp:87</div></div>
+<div class="ttc" id="astruct_services_html_ac0d81d1f43dd2f451aa9df06f034e4ac"><div class="ttname"><a href="struct_services.html#ac0d81d1f43dd2f451aa9df06f034e4ac">Services::_debug</a></div><div class="ttdeci">bool _debug</div><div class="ttdoc">paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fich...</div><div class="ttdef"><b>Definition</b> services.hpp:82</div></div>
+<div class="ttc" id="astruct_services_html_ae4213a6196a5279bfd8a5f354bf91d22"><div class="ttname"><a href="struct_services.html#ae4213a6196a5279bfd8a5f354bf91d22">Services::to_json</a></div><div class="ttdeci">HRESULT to_json()</div><div class="ttdef"><b>Definition</b> services.hpp:131</div></div>
+<div class="ttc" id="atools_8cpp_html_a0f20577b4f90e4d40f33250f74928ded"><div class="ttname"><a href="tools_8cpp.html#a0f20577b4f90e4d40f33250f74928ded">ansi_to_utf8</a></div><div class="ttdeci">std::string ansi_to_utf8(std::string in)</div><div class="ttdef"><b>Definition</b> tools.cpp:127</div></div>
+<div class="ttc" id="atools_8cpp_html_a238702c13cab5b487c46812cd980e7d6"><div class="ttname"><a href="tools_8cpp.html#a238702c13cab5b487c46812cd980e7d6">tab</a></div><div class="ttdeci">std::wstring tab(int i)</div><div class="ttdef"><b>Definition</b> tools.cpp:261</div></div>
+<div class="ttc" id="atools_8cpp_html_ac0b13fc24e7bc07ec4a03384acd92539"><div class="ttname"><a href="tools_8cpp.html#ac0b13fc24e7bc07ec4a03384acd92539">replaceAll</a></div><div class="ttdeci">std::wstring replaceAll(std::wstring src, std::wstring search, std::wstring replacement)</div><div class="ttdef"><b>Definition</b> tools.cpp:189</div></div>
+<div class="ttc" id="atools_8cpp_html_ae5bae328744d0cda312be7564b935ca1"><div class="ttname"><a href="tools_8cpp.html#ae5bae328744d0cda312be7564b935ca1">getErrorWstring</a></div><div class="ttdeci">std::wstring getErrorWstring(HRESULT hresult)</div><div class="ttdef"><b>Definition</b> tools.cpp:101</div></div>
+<div class="ttc" id="atools_8h_html"><div class="ttname"><a href="tools_8h.html">tools.h</a></div></div>
+<div class="ttc" id="atrans__id_8cpp_html_a70038cbd763c613bb2dfebf3740a0d0f"><div class="ttname"><a href="trans__id_8cpp.html#a70038cbd763c613bb2dfebf3740a0d0f">serviceState_to_wstring</a></div><div class="ttdeci">std::wstring serviceState_to_wstring(int type)</div><div class="ttdef"><b>Definition</b> trans_id.cpp:37</div></div>
+<div class="ttc" id="atrans__id_8cpp_html_aa4c2df15f897b200a02c0ec8a1742e2e"><div class="ttname"><a href="trans__id_8cpp.html#aa4c2df15f897b200a02c0ec8a1742e2e">serviceType_to_wstring</a></div><div class="ttdeci">std::wstring serviceType_to_wstring(int type)</div><div class="ttdef"><b>Definition</b> trans_id.cpp:9</div></div>
+<div class="ttc" id="atrans__id_8cpp_html_ab8778d28e18d3faba83fa6e187f7e88b"><div class="ttname"><a href="trans__id_8cpp.html#ab8778d28e18d3faba83fa6e187f7e88b">serviceStart_to_wstring</a></div><div class="ttdeci">std::wstring serviceStart_to_wstring(int type)</div><div class="ttdef"><b>Definition</b> trans_id.cpp:27</div></div>
+<div class="ttc" id="atrans__id_8h_html"><div class="ttname"><a href="trans__id_8h.html">trans_id.h</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="services_8hpp.html">services.hpp</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>

@@ -1,0 +1,433 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.13.2"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector): Référence de la structure FileAttributes</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('struct_file_attributes.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Fonctions membres publiques</a> &#124;
+<a href="#pub-attribs">Attributs publics</a> &#124;
+<a href="struct_file_attributes-members.html">Liste de tous les membres</a>  </div>
+  <div class="headertitle"><div class="title">Référence de la structure FileAttributes</div></div>
+</div><!--header-->
+<div class="contents">
+
+<p><code>#include &lt;<a class="el" href="id_list_8h_source.html">idList.h</a>&gt;</code></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Fonctions membres publiques</h2></td></tr>
+<tr class="memitem:a797b365758b7ed48c36b0a117cce1e36" id="r_a797b365758b7ed48c36b0a117cce1e36"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a797b365758b7ed48c36b0a117cce1e36">FileAttributes</a> (unsigned int attr)</td></tr>
+<tr class="separator:a797b365758b7ed48c36b0a117cce1e36"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af0d60c571baed410d212e9ee1884ea0c" id="r_af0d60c571baed410d212e9ee1884ea0c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af0d60c571baed410d212e9ee1884ea0c">to_wstring</a> ()</td></tr>
+<tr class="separator:af0d60c571baed410d212e9ee1884ea0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
+Attributs publics</h2></td></tr>
+<tr class="memitem:ad671b5f257b0564084b0957c317366f9" id="r_ad671b5f257b0564084b0957c317366f9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad671b5f257b0564084b0957c317366f9">ReadOnly</a> = false</td></tr>
+<tr class="memdesc:ad671b5f257b0564084b0957c317366f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Le fichier est en lecture seule.  <br /></td></tr>
+<tr class="separator:ad671b5f257b0564084b0957c317366f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a29db09f5af7030fdd03b94b8b08e27d0" id="r_a29db09f5af7030fdd03b94b8b08e27d0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a29db09f5af7030fdd03b94b8b08e27d0">Hidden</a> = false</td></tr>
+<tr class="memdesc:a29db09f5af7030fdd03b94b8b08e27d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Le fichier est masqué et nest donc pas compris dans un listing de répertoires ordinaire.  <br /></td></tr>
+<tr class="separator:a29db09f5af7030fdd03b94b8b08e27d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab22f06f43a3c8464ccf05abe37be9fa5" id="r_ab22f06f43a3c8464ccf05abe37be9fa5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab22f06f43a3c8464ccf05abe37be9fa5">System</a> = false</td></tr>
+<tr class="memdesc:ab22f06f43a3c8464ccf05abe37be9fa5"><td class="mdescLeft">&#160;</td><td class="mdescRight">le fichier est un fichier system.  <br /></td></tr>
+<tr class="separator:ab22f06f43a3c8464ccf05abe37be9fa5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3bfc41633eed27ebfe1d770ab011c950" id="r_a3bfc41633eed27ebfe1d770ab011c950"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3bfc41633eed27ebfe1d770ab011c950">Directory</a> = false</td></tr>
+<tr class="memdesc:a3bfc41633eed27ebfe1d770ab011c950"><td class="mdescLeft">&#160;</td><td class="mdescRight">Le fichier est un répertoire.  <br /></td></tr>
+<tr class="separator:a3bfc41633eed27ebfe1d770ab011c950"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1bd109da24c6d924ca0816c93f86893a" id="r_a1bd109da24c6d924ca0816c93f86893a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1bd109da24c6d924ca0816c93f86893a">Archive</a> = false</td></tr>
+<tr class="memdesc:a1bd109da24c6d924ca0816c93f86893a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Ce fichier est marqué à inclure dans une opération de sauvegarde incrémentielle.  <br /></td></tr>
+<tr class="separator:a1bd109da24c6d924ca0816c93f86893a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f804972ce8c834ba7740e3fdbad96f5" id="r_a7f804972ce8c834ba7740e3fdbad96f5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7f804972ce8c834ba7740e3fdbad96f5">Normal</a> = false</td></tr>
+<tr class="memdesc:a7f804972ce8c834ba7740e3fdbad96f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Le fichier est un fichier standard qui na pas dattributs spéciaux. Cet attribut est valide uniquement sil est utilisé seul.  <br /></td></tr>
+<tr class="separator:a7f804972ce8c834ba7740e3fdbad96f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13a8452e8009e8840932261047969adf" id="r_a13a8452e8009e8840932261047969adf"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a13a8452e8009e8840932261047969adf">Temporary</a> = false</td></tr>
+<tr class="memdesc:a13a8452e8009e8840932261047969adf"><td class="mdescLeft">&#160;</td><td class="mdescRight">e fichier est temporaire. Un fichier temporaire contient les données nécessaires quand une application sexécute, mais qui ne le sont plus une fois lexécution terminée.  <br /></td></tr>
+<tr class="separator:a13a8452e8009e8840932261047969adf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8428db47b2e862cc99178a8309fb3346" id="r_a8428db47b2e862cc99178a8309fb3346"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8428db47b2e862cc99178a8309fb3346">SparseFile</a> = false</td></tr>
+<tr class="memdesc:a8428db47b2e862cc99178a8309fb3346"><td class="mdescLeft">&#160;</td><td class="mdescRight">Le fichier est un fichier partiellement alloué.Les fichiers partiellement alloués sont généralement de gros fichiers dont les données sont principalement des zéros.  <br /></td></tr>
+<tr class="separator:a8428db47b2e862cc99178a8309fb3346"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8046f60767d2c3113cdae79ed5e989c1" id="r_a8046f60767d2c3113cdae79ed5e989c1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8046f60767d2c3113cdae79ed5e989c1">ReparsePoint</a> = false</td></tr>
+<tr class="memdesc:a8046f60767d2c3113cdae79ed5e989c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Le fichier contient un point danalyse, qui est un bloc de données définies par lutilisateur associé à un fichier ou à un répertoire.  <br /></td></tr>
+<tr class="separator:a8046f60767d2c3113cdae79ed5e989c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6f23132dd4d25d359437f701afda504" id="r_ab6f23132dd4d25d359437f701afda504"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab6f23132dd4d25d359437f701afda504">Compressed</a> = false</td></tr>
+<tr class="memdesc:ab6f23132dd4d25d359437f701afda504"><td class="mdescLeft">&#160;</td><td class="mdescRight">Le fichier est compressé.  <br /></td></tr>
+<tr class="separator:ab6f23132dd4d25d359437f701afda504"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7524f1cdb271b689b17ee6fb59303574" id="r_a7524f1cdb271b689b17ee6fb59303574"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7524f1cdb271b689b17ee6fb59303574">Offline</a> = false</td></tr>
+<tr class="memdesc:a7524f1cdb271b689b17ee6fb59303574"><td class="mdescLeft">&#160;</td><td class="mdescRight">Le fichier est hors connexion. Les données du fichier ne sont pas immédiatement disponibles.  <br /></td></tr>
+<tr class="separator:a7524f1cdb271b689b17ee6fb59303574"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3bfd1988eec70dcb64a5e17e75edea2" id="r_ad3bfd1988eec70dcb64a5e17e75edea2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad3bfd1988eec70dcb64a5e17e75edea2">NotContentIndexed</a> = false</td></tr>
+<tr class="memdesc:ad3bfd1988eec70dcb64a5e17e75edea2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Le fichier ne sera pas indexé par le service dindexation de contenu du système dexploitation.  <br /></td></tr>
+<tr class="separator:ad3bfd1988eec70dcb64a5e17e75edea2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a7499f13137954e4c6b30b8cc21dc32" id="r_a6a7499f13137954e4c6b30b8cc21dc32"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6a7499f13137954e4c6b30b8cc21dc32">Encrypted</a> = false</td></tr>
+<tr class="memdesc:a6a7499f13137954e4c6b30b8cc21dc32"><td class="mdescLeft">&#160;</td><td class="mdescRight">Le fichier ou le répertoire est chiffré.Cela signifie pour un fichier, que toutes ses données sont chiffrées.Pour un répertoire, cela signifie que tous les fichiers et répertoires créés sont chiffrés par défaut.  <br /></td></tr>
+<tr class="separator:a6a7499f13137954e4c6b30b8cc21dc32"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
+<div class="textblock"><p>La structure FileAttributesFlags définit des bits qui spécifient les attributs de fichier du lien cible, si la cible est un élément de système de fichiers. Les attributs du fichier peuvent être utilisés si la cible de liaison n'est pas disponible, ou si l'accès à la cible serait inefficaces. Il est possible que les attributs d'éléments cibles ne soient pas synchronisés avec cette valeur. Documentation à l'adresse <a href="https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/378f485c-0be9-47a4-a261-7df467c3c9c6">https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/378f485c-0be9-47a4-a261-7df467c3c9c6</a> </p>
+</div><h2 class="groupheader">Documentation des constructeurs et destructeur</h2>
+<a id="a797b365758b7ed48c36b0a117cce1e36" name="a797b365758b7ed48c36b0a117cce1e36"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a797b365758b7ed48c36b0a117cce1e36">&#9670;&#160;</a></span>FileAttributes()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FileAttributes::FileAttributes </td>
+          <td>(</td>
+          <td class="paramtype">unsigned int</td>          <td class="paramname"><span class="paramname"><em>attr</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>constructeur </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">attr</td><td>entier contenant les attribut du fichier. Le constructeur extrait les attributs de cet entier à l'aide masques binaires. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Documentation des fonctions membres</h2>
+<a id="af0d60c571baed410d212e9ee1884ea0c" name="af0d60c571baed410d212e9ee1884ea0c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af0d60c571baed410d212e9ee1884ea0c">&#9670;&#160;</a></span>to_wstring()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring FileAttributes::to_wstring </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>conversion de l'objet au format json </p><dl class="section return"><dt>Renvoie</dt><dd>wstring le code json </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Documentation des données membres</h2>
+<a id="a1bd109da24c6d924ca0816c93f86893a" name="a1bd109da24c6d924ca0816c93f86893a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1bd109da24c6d924ca0816c93f86893a">&#9670;&#160;</a></span>Archive</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool FileAttributes::Archive = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Ce fichier est marqué à inclure dans une opération de sauvegarde incrémentielle. </p>
+
+</div>
+</div>
+<a id="ab6f23132dd4d25d359437f701afda504" name="ab6f23132dd4d25d359437f701afda504"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab6f23132dd4d25d359437f701afda504">&#9670;&#160;</a></span>Compressed</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool FileAttributes::Compressed = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Le fichier est compressé. </p>
+
+</div>
+</div>
+<a id="a3bfc41633eed27ebfe1d770ab011c950" name="a3bfc41633eed27ebfe1d770ab011c950"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3bfc41633eed27ebfe1d770ab011c950">&#9670;&#160;</a></span>Directory</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool FileAttributes::Directory = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Le fichier est un répertoire. </p>
+
+</div>
+</div>
+<a id="a6a7499f13137954e4c6b30b8cc21dc32" name="a6a7499f13137954e4c6b30b8cc21dc32"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6a7499f13137954e4c6b30b8cc21dc32">&#9670;&#160;</a></span>Encrypted</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool FileAttributes::Encrypted = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Le fichier ou le répertoire est chiffré.Cela signifie pour un fichier, que toutes ses données sont chiffrées.Pour un répertoire, cela signifie que tous les fichiers et répertoires créés sont chiffrés par défaut. </p>
+
+</div>
+</div>
+<a id="a29db09f5af7030fdd03b94b8b08e27d0" name="a29db09f5af7030fdd03b94b8b08e27d0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a29db09f5af7030fdd03b94b8b08e27d0">&#9670;&#160;</a></span>Hidden</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool FileAttributes::Hidden = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Le fichier est masqué et nest donc pas compris dans un listing de répertoires ordinaire. </p>
+
+</div>
+</div>
+<a id="a7f804972ce8c834ba7740e3fdbad96f5" name="a7f804972ce8c834ba7740e3fdbad96f5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7f804972ce8c834ba7740e3fdbad96f5">&#9670;&#160;</a></span>Normal</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool FileAttributes::Normal = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Le fichier est un fichier standard qui na pas dattributs spéciaux. Cet attribut est valide uniquement sil est utilisé seul. </p>
+
+</div>
+</div>
+<a id="ad3bfd1988eec70dcb64a5e17e75edea2" name="ad3bfd1988eec70dcb64a5e17e75edea2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad3bfd1988eec70dcb64a5e17e75edea2">&#9670;&#160;</a></span>NotContentIndexed</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool FileAttributes::NotContentIndexed = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Le fichier ne sera pas indexé par le service dindexation de contenu du système dexploitation. </p>
+
+</div>
+</div>
+<a id="a7524f1cdb271b689b17ee6fb59303574" name="a7524f1cdb271b689b17ee6fb59303574"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7524f1cdb271b689b17ee6fb59303574">&#9670;&#160;</a></span>Offline</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool FileAttributes::Offline = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Le fichier est hors connexion. Les données du fichier ne sont pas immédiatement disponibles. </p>
+
+</div>
+</div>
+<a id="ad671b5f257b0564084b0957c317366f9" name="ad671b5f257b0564084b0957c317366f9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad671b5f257b0564084b0957c317366f9">&#9670;&#160;</a></span>ReadOnly</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool FileAttributes::ReadOnly = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Le fichier est en lecture seule. </p>
+
+</div>
+</div>
+<a id="a8046f60767d2c3113cdae79ed5e989c1" name="a8046f60767d2c3113cdae79ed5e989c1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8046f60767d2c3113cdae79ed5e989c1">&#9670;&#160;</a></span>ReparsePoint</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool FileAttributes::ReparsePoint = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Le fichier contient un point danalyse, qui est un bloc de données définies par lutilisateur associé à un fichier ou à un répertoire. </p>
+
+</div>
+</div>
+<a id="a8428db47b2e862cc99178a8309fb3346" name="a8428db47b2e862cc99178a8309fb3346"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8428db47b2e862cc99178a8309fb3346">&#9670;&#160;</a></span>SparseFile</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool FileAttributes::SparseFile = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Le fichier est un fichier partiellement alloué.Les fichiers partiellement alloués sont généralement de gros fichiers dont les données sont principalement des zéros. </p>
+
+</div>
+</div>
+<a id="ab22f06f43a3c8464ccf05abe37be9fa5" name="ab22f06f43a3c8464ccf05abe37be9fa5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab22f06f43a3c8464ccf05abe37be9fa5">&#9670;&#160;</a></span>System</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool FileAttributes::System = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>le fichier est un fichier system. </p>
+
+</div>
+</div>
+<a id="a13a8452e8009e8840932261047969adf" name="a13a8452e8009e8840932261047969adf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a13a8452e8009e8840932261047969adf">&#9670;&#160;</a></span>Temporary</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool FileAttributes::Temporary = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>e fichier est temporaire. Un fichier temporaire contient les données nécessaires quand une application sexécute, mais qui ne le sont plus une fois lexécution terminée. </p>
+
+</div>
+</div>
+<hr/>La documentation de cette structure a été générée à partir des fichiers suivants :<ul>
+<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="id_list_8h_source.html">idList.h</a></li>
+<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="id_list_8cpp.html">idList.cpp</a></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="struct_file_attributes.html">FileAttributes</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>

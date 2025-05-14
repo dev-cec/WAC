@@ -1,0 +1,26 @@
+var struct_event =
+[
+    [ "Event", "struct_event.html#a723328e15a646c2353b5b0ff01f47d74", null ],
+    [ "to_json", "struct_event.html#a0e5f614644faad83d31512916a2da74a", null ],
+    [ "evtEventData", "struct_event.html#a3ed3266c901984313a080d2987ca63f7", null ],
+    [ "evtEventMessage", "struct_event.html#ae929099be43be124e9c5afe1a3b5e163", null ],
+    [ "evtSystemActivityID", "struct_event.html#ae7ae1a66829516cbc3cf5777662f3d2e", null ],
+    [ "evtSystemChannel", "struct_event.html#adeaf6484b32caaf2402d70ced999cc28", null ],
+    [ "evtSystemComputer", "struct_event.html#a25c8e29a2ffed176f32df653419ee8ce", null ],
+    [ "evtSystemEventID", "struct_event.html#a91b826cfa79134bafd6c171c9b5de980", null ],
+    [ "evtSystemEventRecordId", "struct_event.html#a6344374aa5e5e7d417d3e47d6aaf0b2b", null ],
+    [ "evtSystemKeywords", "struct_event.html#a05ede3ce8bf999f745f9e076947f2c4a", null ],
+    [ "evtSystemLevel", "struct_event.html#aba42a3fbabe5602a7b9c8e39b6d029bc", null ],
+    [ "evtSystemOpcode", "struct_event.html#a3a2e21b8980cd860149471c220b74273", null ],
+    [ "evtSystemProcessID", "struct_event.html#a9b32856aee68bb0de9a2acebe131e162", null ],
+    [ "evtSystemProviderGuid", "struct_event.html#a7112edc89c3c0f8645d35035cdc5c39e", null ],
+    [ "evtSystemProviderName", "struct_event.html#a58e55da5acd73169cfb4990700738d2f", null ],
+    [ "evtSystemQualifiers", "struct_event.html#a15eddff76235d7575f13fea47dcfd39a", null ],
+    [ "evtSystemRelatedActivityID", "struct_event.html#ae2ad35d022da41a9c383d3aea806fc4a", null ],
+    [ "evtSystemTask", "struct_event.html#a2452321660d97743ade1dff232f94192", null ],
+    [ "evtSystemThreadID", "struct_event.html#af3aa85efd841f1ca9ee16edaa1d435b9", null ],
+    [ "evtSystemTimeCreated", "struct_event.html#ab2b6912469f021118c01948cd27de863", null ],
+    [ "evtSystemTimeCreatedUtc", "struct_event.html#aecd4ef0c0b44a55703af4f9f1601f453", null ],
+    [ "evtSystemUserID", "struct_event.html#a69863df1c52fd974176fda11246e436b", null ],
+    [ "evtSystemVersion", "struct_event.html#a89e7f8872126d5a097648fef704b0530", null ]
+];

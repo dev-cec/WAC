@@ -1,0 +1,962 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.13.2"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector): Référence de la structure RecentDoc</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('struct_recent_doc.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Fonctions membres publiques</a> &#124;
+<a href="#pub-attribs">Attributs publics</a> &#124;
+<a href="struct_recent_doc-members.html">Liste de tous les membres</a>  </div>
+  <div class="headertitle"><div class="title">Référence de la structure RecentDoc</div></div>
+</div><!--header-->
+<div class="contents">
+
+<p><code>#include &lt;<a class="el" href="recent__docs_8hpp_source.html">recent_docs.hpp</a>&gt;</code></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Fonctions membres publiques</h2></td></tr>
+<tr class="memitem:ab389f32e43171a4f2ad5419d3f58d13f" id="r_ab389f32e43171a4f2ad5419d3f58d13f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab389f32e43171a4f2ad5419d3f58d13f">parseLNK</a> (LPBYTE buffer, bool _debug, bool _dump, std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *errors)</td></tr>
+<tr class="separator:ab389f32e43171a4f2ad5419d3f58d13f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaa5ae32d9e8dc61e95a124ea4f075807" id="r_aaa5ae32d9e8dc61e95a124ea4f075807"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaa5ae32d9e8dc61e95a124ea4f075807">RecentDoc</a> (std::filesystem::path _path, std::wstring _sid, bool _debug, bool _dump, std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *errors)</td></tr>
+<tr class="separator:aaa5ae32d9e8dc61e95a124ea4f075807"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a8cf0a40e74e1bd9be2c980d51c8be3" id="r_a6a8cf0a40e74e1bd9be2c980d51c8be3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6a8cf0a40e74e1bd9be2c980d51c8be3">RecentDoc</a> (LPBYTE buffer, std::wstring _path, std::wstring _sid, bool _debug, bool _dump, std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *_errors)</td></tr>
+<tr class="separator:a6a8cf0a40e74e1bd9be2c980d51c8be3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e5a788a2ada5f31454ef29eeac7f46b" id="r_a7e5a788a2ada5f31454ef29eeac7f46b"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7e5a788a2ada5f31454ef29eeac7f46b">to_json</a> (int i)</td></tr>
+<tr class="separator:a7e5a788a2ada5f31454ef29eeac7f46b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
+Attributs publics</h2></td></tr>
+<tr class="memitem:a397637d1a8327fc757a878aa74092d9b" id="r_a397637d1a8327fc757a878aa74092d9b"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a397637d1a8327fc757a878aa74092d9b">Sid</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a397637d1a8327fc757a878aa74092d9b"><td class="mdescLeft">&#160;</td><td class="mdescRight">SID de l'utilisateur propriétaire de l'objet.  <br /></td></tr>
+<tr class="separator:a397637d1a8327fc757a878aa74092d9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adda135ddc56a1cea2e7933e16fbfe349" id="r_adda135ddc56a1cea2e7933e16fbfe349"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adda135ddc56a1cea2e7933e16fbfe349">path</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:adda135ddc56a1cea2e7933e16fbfe349"><td class="mdescLeft">&#160;</td><td class="mdescRight">chemin d'accès à l'objet sur le disque  <br /></td></tr>
+<tr class="separator:adda135ddc56a1cea2e7933e16fbfe349"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae4ad99b84c20dfa86edf61aba90425eb" id="r_ae4ad99b84c20dfa86edf61aba90425eb"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae4ad99b84c20dfa86edf61aba90425eb">target</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:ae4ad99b84c20dfa86edf61aba90425eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">chemin pour accéder à l'objet d'origine  <br /></td></tr>
+<tr class="separator:ae4ad99b84c20dfa86edf61aba90425eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af327ac0e33f4fffe6a0cb2e1c4e73337" id="r_af327ac0e33f4fffe6a0cb2e1c4e73337"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af327ac0e33f4fffe6a0cb2e1c4e73337">description</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:af327ac0e33f4fffe6a0cb2e1c4e73337"><td class="mdescLeft">&#160;</td><td class="mdescRight">description du recentDoc  <br /></td></tr>
+<tr class="separator:af327ac0e33f4fffe6a0cb2e1c4e73337"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf2fe815a5eff7a3a38d839744f5f2ff" id="r_acf2fe815a5eff7a3a38d839744f5f2ff"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acf2fe815a5eff7a3a38d839744f5f2ff">relativePath</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:acf2fe815a5eff7a3a38d839744f5f2ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">chemin relatif d'accès au fichier d'origine  <br /></td></tr>
+<tr class="separator:acf2fe815a5eff7a3a38d839744f5f2ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acd48e8314380f759b7b471c3d59294c7" id="r_acd48e8314380f759b7b471c3d59294c7"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acd48e8314380f759b7b471c3d59294c7">workingDirectory</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:acd48e8314380f759b7b471c3d59294c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">repertoire contenant le fichier d'origine  <br /></td></tr>
+<tr class="separator:acd48e8314380f759b7b471c3d59294c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a165143ed1a74dc733f5a2d09d81bce2a" id="r_a165143ed1a74dc733f5a2d09d81bce2a"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a165143ed1a74dc733f5a2d09d81bce2a">arguments</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a165143ed1a74dc733f5a2d09d81bce2a"><td class="mdescLeft">&#160;</td><td class="mdescRight">arguments du fichier d'origine  <br /></td></tr>
+<tr class="separator:a165143ed1a74dc733f5a2d09d81bce2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f76b08187b367da1c8c59de952b2a2a" id="r_a7f76b08187b367da1c8c59de952b2a2a"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7f76b08187b367da1c8c59de952b2a2a">iconLocation</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a7f76b08187b367da1c8c59de952b2a2a"><td class="mdescLeft">&#160;</td><td class="mdescRight">chemin de l’icône représentatif du type de fichier si différent des icônes standards  <br /></td></tr>
+<tr class="separator:a7f76b08187b367da1c8c59de952b2a2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c94e5c1eb168d195846a16e90485e35" id="r_a5c94e5c1eb168d195846a16e90485e35"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5c94e5c1eb168d195846a16e90485e35">fileSize</a> = 0</td></tr>
+<tr class="memdesc:a5c94e5c1eb168d195846a16e90485e35"><td class="mdescLeft">&#160;</td><td class="mdescRight">taille du fichier d'origine  <br /></td></tr>
+<tr class="separator:a5c94e5c1eb168d195846a16e90485e35"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad7d42cf54034e5c2f7ceda5dc9565b01" id="r_ad7d42cf54034e5c2f7ceda5dc9565b01"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad7d42cf54034e5c2f7ceda5dc9565b01">iconIndex</a> = 0</td></tr>
+<tr class="separator:ad7d42cf54034e5c2f7ceda5dc9565b01"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab31d7e8885ec6621f352615135841c33" id="r_ab31d7e8885ec6621f352615135841c33"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab31d7e8885ec6621f352615135841c33">commandOption</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:ab31d7e8885ec6621f352615135841c33"><td class="mdescLeft">&#160;</td><td class="mdescRight">index de l’icône  <br /></td></tr>
+<tr class="separator:ab31d7e8885ec6621f352615135841c33"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad78011471393491ab2ca80afdb874d4f" id="r_ad78011471393491ab2ca80afdb874d4f"><td class="memItemLeft" align="right" valign="top">GUID&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad78011471393491ab2ca80afdb874d4f">guid</a> = { 0 }</td></tr>
+<tr class="separator:ad78011471393491ab2ca80afdb874d4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7766eb767830c0e69bc8b40cf81fb18" id="r_ab7766eb767830c0e69bc8b40cf81fb18"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab7766eb767830c0e69bc8b40cf81fb18">sourceCreated</a> = { 0 }</td></tr>
+<tr class="memdesc:ab7766eb767830c0e69bc8b40cf81fb18"><td class="mdescLeft">&#160;</td><td class="mdescRight">date de création du recentdoc  <br /></td></tr>
+<tr class="separator:ab7766eb767830c0e69bc8b40cf81fb18"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a861dd789a087129de7786b191ee26daa" id="r_a861dd789a087129de7786b191ee26daa"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a861dd789a087129de7786b191ee26daa">sourceCreatedUtc</a> = { 0 }</td></tr>
+<tr class="memdesc:a861dd789a087129de7786b191ee26daa"><td class="mdescLeft">&#160;</td><td class="mdescRight">date de création du recentdoc au format UTC  <br /></td></tr>
+<tr class="separator:a861dd789a087129de7786b191ee26daa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3b0ac7a72010df97ad4db97a653838c6" id="r_a3b0ac7a72010df97ad4db97a653838c6"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3b0ac7a72010df97ad4db97a653838c6">sourceModified</a> = { 0 }</td></tr>
+<tr class="memdesc:a3b0ac7a72010df97ad4db97a653838c6"><td class="mdescLeft">&#160;</td><td class="mdescRight">date de modification du recentdoc  <br /></td></tr>
+<tr class="separator:a3b0ac7a72010df97ad4db97a653838c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af119de4955d7ef94b5517e546c5db78c" id="r_af119de4955d7ef94b5517e546c5db78c"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af119de4955d7ef94b5517e546c5db78c">sourceModifiedUtc</a> = { 0 }</td></tr>
+<tr class="memdesc:af119de4955d7ef94b5517e546c5db78c"><td class="mdescLeft">&#160;</td><td class="mdescRight">date de modification du recentdoc au format UTC  <br /></td></tr>
+<tr class="separator:af119de4955d7ef94b5517e546c5db78c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a55bad6c7f74330a4a993ab526a21dedc" id="r_a55bad6c7f74330a4a993ab526a21dedc"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a55bad6c7f74330a4a993ab526a21dedc">sourceAccessed</a> = { 0 }</td></tr>
+<tr class="memdesc:a55bad6c7f74330a4a993ab526a21dedc"><td class="mdescLeft">&#160;</td><td class="mdescRight">date d'accès du recentdoc  <br /></td></tr>
+<tr class="separator:a55bad6c7f74330a4a993ab526a21dedc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad11a343964c0d120109bab32e7da0d4d" id="r_ad11a343964c0d120109bab32e7da0d4d"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad11a343964c0d120109bab32e7da0d4d">sourceAccessedUtc</a> = { 0 }</td></tr>
+<tr class="memdesc:ad11a343964c0d120109bab32e7da0d4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">date d'accès du recentdoc au format UTC  <br /></td></tr>
+<tr class="separator:ad11a343964c0d120109bab32e7da0d4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e7afaf79c5a830b2e8d1e57f0683016" id="r_a0e7afaf79c5a830b2e8d1e57f0683016"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0e7afaf79c5a830b2e8d1e57f0683016">targetCreated</a> = { 0 }</td></tr>
+<tr class="memdesc:a0e7afaf79c5a830b2e8d1e57f0683016"><td class="mdescLeft">&#160;</td><td class="mdescRight">date de création du fichier d'origine  <br /></td></tr>
+<tr class="separator:a0e7afaf79c5a830b2e8d1e57f0683016"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa1b3d579b7833bc1b2d02afe8683cca5" id="r_aa1b3d579b7833bc1b2d02afe8683cca5"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa1b3d579b7833bc1b2d02afe8683cca5">targetCreatedUtc</a> = { 0 }</td></tr>
+<tr class="memdesc:aa1b3d579b7833bc1b2d02afe8683cca5"><td class="mdescLeft">&#160;</td><td class="mdescRight">date de création du fichier d'origine au format UTC  <br /></td></tr>
+<tr class="separator:aa1b3d579b7833bc1b2d02afe8683cca5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a112fda06187ec2a627a3bb4484464355" id="r_a112fda06187ec2a627a3bb4484464355"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a112fda06187ec2a627a3bb4484464355">targetModified</a> = { 0 }</td></tr>
+<tr class="memdesc:a112fda06187ec2a627a3bb4484464355"><td class="mdescLeft">&#160;</td><td class="mdescRight">date de modification du fichier d'origine  <br /></td></tr>
+<tr class="separator:a112fda06187ec2a627a3bb4484464355"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae09213f9106bb74ccf5c5b7edf3c6eb0" id="r_ae09213f9106bb74ccf5c5b7edf3c6eb0"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae09213f9106bb74ccf5c5b7edf3c6eb0">targetModifiedUtc</a> = { 0 }</td></tr>
+<tr class="memdesc:ae09213f9106bb74ccf5c5b7edf3c6eb0"><td class="mdescLeft">&#160;</td><td class="mdescRight">date de modification du fichier d'origine au format UTC  <br /></td></tr>
+<tr class="separator:ae09213f9106bb74ccf5c5b7edf3c6eb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5feeefabf31e1c1ae6fa32e4093a813e" id="r_a5feeefabf31e1c1ae6fa32e4093a813e"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5feeefabf31e1c1ae6fa32e4093a813e">targetAccessed</a> = { 0 }</td></tr>
+<tr class="memdesc:a5feeefabf31e1c1ae6fa32e4093a813e"><td class="mdescLeft">&#160;</td><td class="mdescRight">date d'accès au fichier d'origine  <br /></td></tr>
+<tr class="separator:a5feeefabf31e1c1ae6fa32e4093a813e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa986df48ff42cf8bdcb721110bb94f60" id="r_aa986df48ff42cf8bdcb721110bb94f60"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa986df48ff42cf8bdcb721110bb94f60">targetAccessedUtc</a> = { 0 }</td></tr>
+<tr class="memdesc:aa986df48ff42cf8bdcb721110bb94f60"><td class="mdescLeft">&#160;</td><td class="mdescRight">date d'accès au fichier d'origine au format UTC  <br /></td></tr>
+<tr class="separator:aa986df48ff42cf8bdcb721110bb94f60"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab20c6d686e2000ce40f21a42485c59d6" id="r_ab20c6d686e2000ce40f21a42485c59d6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_link_flags.html">LinkFlags</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab20c6d686e2000ce40f21a42485c59d6">flags</a> = { 0 }</td></tr>
+<tr class="memdesc:ab20c6d686e2000ce40f21a42485c59d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">attributs du recentDoc  <br /></td></tr>
+<tr class="separator:ab20c6d686e2000ce40f21a42485c59d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc6bffd0fdde7cea1d0e23989584a2ab" id="r_adc6bffd0fdde7cea1d0e23989584a2ab"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_file_attributes.html">FileAttributes</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adc6bffd0fdde7cea1d0e23989584a2ab">attributes</a> = { 0 }</td></tr>
+<tr class="memdesc:adc6bffd0fdde7cea1d0e23989584a2ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">attributs du fichier d'origine  <br /></td></tr>
+<tr class="separator:adc6bffd0fdde7cea1d0e23989584a2ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61273f968fccbd29d381eca133ade648" id="r_a61273f968fccbd29d381eca133ade648"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a61273f968fccbd29d381eca133ade648">volumeDriveType</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a61273f968fccbd29d381eca133ade648"><td class="mdescLeft">&#160;</td><td class="mdescRight">type de volume de disque  <br /></td></tr>
+<tr class="separator:a61273f968fccbd29d381eca133ade648"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a280d45cab21459d7460a80763bb8b4a9" id="r_a280d45cab21459d7460a80763bb8b4a9"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a280d45cab21459d7460a80763bb8b4a9">volumeSerial</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a280d45cab21459d7460a80763bb8b4a9"><td class="mdescLeft">&#160;</td><td class="mdescRight">numéro de série du volume  <br /></td></tr>
+<tr class="separator:a280d45cab21459d7460a80763bb8b4a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a416af338d58ea9ba73fd34efb0e31f6d" id="r_a416af338d58ea9ba73fd34efb0e31f6d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a416af338d58ea9ba73fd34efb0e31f6d">volumeLabel</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a416af338d58ea9ba73fd34efb0e31f6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">label du volume  <br /></td></tr>
+<tr class="separator:a416af338d58ea9ba73fd34efb0e31f6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a32eed3664b67b62f799e4ed4decd3eb9" id="r_a32eed3664b67b62f799e4ed4decd3eb9"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a32eed3664b67b62f799e4ed4decd3eb9">netName</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a32eed3664b67b62f799e4ed4decd3eb9"><td class="mdescLeft">&#160;</td><td class="mdescRight">nom du réseau  <br /></td></tr>
+<tr class="separator:a32eed3664b67b62f799e4ed4decd3eb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59f0c7d8e36b3bd01ced2498786c592b" id="r_a59f0c7d8e36b3bd01ced2498786c592b"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a59f0c7d8e36b3bd01ced2498786c592b">netDeviceName</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a59f0c7d8e36b3bd01ced2498786c592b"><td class="mdescLeft">&#160;</td><td class="mdescRight">nom du périphérique réseau  <br /></td></tr>
+<tr class="separator:a59f0c7d8e36b3bd01ced2498786c592b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adbced5afce9df0450e353d412c1270a4" id="r_adbced5afce9df0450e353d412c1270a4"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adbced5afce9df0450e353d412c1270a4">netProviderType</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:adbced5afce9df0450e353d412c1270a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">type de provider de réseau  <br /></td></tr>
+<tr class="separator:adbced5afce9df0450e353d412c1270a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adabdbaa8a33122b9df676452dfc052e1" id="r_adabdbaa8a33122b9df676452dfc052e1"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="struct_id_list.html">IdList</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adabdbaa8a33122b9df676452dfc052e1">idLists</a></td></tr>
+<tr class="memdesc:adabdbaa8a33122b9df676452dfc052e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">tableau contenant des Idlist  <br /></td></tr>
+<tr class="separator:adabdbaa8a33122b9df676452dfc052e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<h2 class="groupheader">Documentation des constructeurs et destructeur</h2>
+<a id="aaa5ae32d9e8dc61e95a124ea4f075807" name="aaa5ae32d9e8dc61e95a124ea4f075807"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaa5ae32d9e8dc61e95a124ea4f075807">&#9670;&#160;</a></span>RecentDoc() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">RecentDoc::RecentDoc </td>
+          <td>(</td>
+          <td class="paramtype">std::filesystem::path</td>          <td class="paramname"><span class="paramname"><em>_path</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>_sid</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>_debug</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>_dump</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *</td>          <td class="paramname"><span class="paramname"><em>errors</em></span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>constructeur à partir d'un fichier </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">_path</td><td>contient le chemin vers le fichier à parser </td></tr>
+    <tr><td class="paramname">_sid</td><td>contient le SID de l'utilisateur propriétaire du fichier </td></tr>
+    <tr><td class="paramname">_debug</td><td>est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré </td></tr>
+    <tr><td class="paramname">_dump</td><td>est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal </td></tr>
+    <tr><td class="paramname">errors</td><td>est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a6a8cf0a40e74e1bd9be2c980d51c8be3" name="a6a8cf0a40e74e1bd9be2c980d51c8be3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6a8cf0a40e74e1bd9be2c980d51c8be3">&#9670;&#160;</a></span>RecentDoc() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">RecentDoc::RecentDoc </td>
+          <td>(</td>
+          <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>buffer</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>_path</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>_sid</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>_debug</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>_dump</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *</td>          <td class="paramname"><span class="paramname"><em>_errors</em></span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>constructeur à partir d'un buffer </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">buffer</td><td>contient les données à parser </td></tr>
+    <tr><td class="paramname">_path</td><td>contient le chemin vers le fichier contenant le buffer </td></tr>
+    <tr><td class="paramname">_sid</td><td>contient le SID de l'utilisateur propriétaire de la donnée </td></tr>
+    <tr><td class="paramname">_debug</td><td>est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré </td></tr>
+    <tr><td class="paramname">_dump</td><td>est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal </td></tr>
+    <tr><td class="paramname">errors</td><td>est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Documentation des fonctions membres</h2>
+<a id="ab389f32e43171a4f2ad5419d3f58d13f" name="ab389f32e43171a4f2ad5419d3f58d13f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab389f32e43171a4f2ad5419d3f58d13f">&#9670;&#160;</a></span>parseLNK()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void RecentDoc::parseLNK </td>
+          <td>(</td>
+          <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>buffer</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>_debug</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>_dump</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *</td>          <td class="paramname"><span class="paramname"><em>errors</em></span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>fonction permettant de parser un fichier LNK </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">buffer</td><td>contient les données à parser </td></tr>
+    <tr><td class="paramname">_debug</td><td>est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré </td></tr>
+    <tr><td class="paramname">_dump</td><td>est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal </td></tr>
+    <tr><td class="paramname">errors</td><td>est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a7e5a788a2ada5f31454ef29eeac7f46b" name="a7e5a788a2ada5f31454ef29eeac7f46b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7e5a788a2ada5f31454ef29eeac7f46b">&#9670;&#160;</a></span>to_json()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::to_json </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>i</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>conversion de l'objet au format json </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">i</td><td>nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>wstring le code json </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Documentation des données membres</h2>
+<a id="a165143ed1a74dc733f5a2d09d81bce2a" name="a165143ed1a74dc733f5a2d09d81bce2a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a165143ed1a74dc733f5a2d09d81bce2a">&#9670;&#160;</a></span>arguments</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::arguments = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>arguments du fichier d'origine </p>
+
+</div>
+</div>
+<a id="adc6bffd0fdde7cea1d0e23989584a2ab" name="adc6bffd0fdde7cea1d0e23989584a2ab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adc6bffd0fdde7cea1d0e23989584a2ab">&#9670;&#160;</a></span>attributes</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_file_attributes.html">FileAttributes</a> RecentDoc::attributes = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>attributs du fichier d'origine </p>
+
+</div>
+</div>
+<a id="ab31d7e8885ec6621f352615135841c33" name="ab31d7e8885ec6621f352615135841c33"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab31d7e8885ec6621f352615135841c33">&#9670;&#160;</a></span>commandOption</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::commandOption = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>index de l’icône </p>
+<p>option d'ouverture du fichier d'origine </p>
+
+</div>
+</div>
+<a id="af327ac0e33f4fffe6a0cb2e1c4e73337" name="af327ac0e33f4fffe6a0cb2e1c4e73337"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af327ac0e33f4fffe6a0cb2e1c4e73337">&#9670;&#160;</a></span>description</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::description = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>description du recentDoc </p>
+
+</div>
+</div>
+<a id="a5c94e5c1eb168d195846a16e90485e35" name="a5c94e5c1eb168d195846a16e90485e35"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5c94e5c1eb168d195846a16e90485e35">&#9670;&#160;</a></span>fileSize</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned int RecentDoc::fileSize = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>taille du fichier d'origine </p>
+
+</div>
+</div>
+<a id="ab20c6d686e2000ce40f21a42485c59d6" name="ab20c6d686e2000ce40f21a42485c59d6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab20c6d686e2000ce40f21a42485c59d6">&#9670;&#160;</a></span>flags</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_link_flags.html">LinkFlags</a> RecentDoc::flags = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>attributs du recentDoc </p>
+
+</div>
+</div>
+<a id="ad78011471393491ab2ca80afdb874d4f" name="ad78011471393491ab2ca80afdb874d4f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad78011471393491ab2ca80afdb874d4f">&#9670;&#160;</a></span>guid</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">GUID RecentDoc::guid = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ad7d42cf54034e5c2f7ceda5dc9565b01" name="ad7d42cf54034e5c2f7ceda5dc9565b01"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad7d42cf54034e5c2f7ceda5dc9565b01">&#9670;&#160;</a></span>iconIndex</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned int RecentDoc::iconIndex = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a7f76b08187b367da1c8c59de952b2a2a" name="a7f76b08187b367da1c8c59de952b2a2a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7f76b08187b367da1c8c59de952b2a2a">&#9670;&#160;</a></span>iconLocation</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::iconLocation = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>chemin de l’icône représentatif du type de fichier si différent des icônes standards </p>
+
+</div>
+</div>
+<a id="adabdbaa8a33122b9df676452dfc052e1" name="adabdbaa8a33122b9df676452dfc052e1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adabdbaa8a33122b9df676452dfc052e1">&#9670;&#160;</a></span>idLists</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;<a class="el" href="struct_id_list.html">IdList</a>&gt; RecentDoc::idLists</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>tableau contenant des Idlist </p>
+
+</div>
+</div>
+<a id="a59f0c7d8e36b3bd01ced2498786c592b" name="a59f0c7d8e36b3bd01ced2498786c592b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a59f0c7d8e36b3bd01ced2498786c592b">&#9670;&#160;</a></span>netDeviceName</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::netDeviceName = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>nom du périphérique réseau </p>
+
+</div>
+</div>
+<a id="a32eed3664b67b62f799e4ed4decd3eb9" name="a32eed3664b67b62f799e4ed4decd3eb9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a32eed3664b67b62f799e4ed4decd3eb9">&#9670;&#160;</a></span>netName</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::netName = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>nom du réseau </p>
+
+</div>
+</div>
+<a id="adbced5afce9df0450e353d412c1270a4" name="adbced5afce9df0450e353d412c1270a4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adbced5afce9df0450e353d412c1270a4">&#9670;&#160;</a></span>netProviderType</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::netProviderType = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>type de provider de réseau </p>
+
+</div>
+</div>
+<a id="adda135ddc56a1cea2e7933e16fbfe349" name="adda135ddc56a1cea2e7933e16fbfe349"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adda135ddc56a1cea2e7933e16fbfe349">&#9670;&#160;</a></span>path</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::path = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>chemin d'accès à l'objet sur le disque </p>
+
+</div>
+</div>
+<a id="acf2fe815a5eff7a3a38d839744f5f2ff" name="acf2fe815a5eff7a3a38d839744f5f2ff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acf2fe815a5eff7a3a38d839744f5f2ff">&#9670;&#160;</a></span>relativePath</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::relativePath = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>chemin relatif d'accès au fichier d'origine </p>
+
+</div>
+</div>
+<a id="a397637d1a8327fc757a878aa74092d9b" name="a397637d1a8327fc757a878aa74092d9b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a397637d1a8327fc757a878aa74092d9b">&#9670;&#160;</a></span>Sid</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::Sid = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>SID de l'utilisateur propriétaire de l'objet. </p>
+
+</div>
+</div>
+<a id="a55bad6c7f74330a4a993ab526a21dedc" name="a55bad6c7f74330a4a993ab526a21dedc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a55bad6c7f74330a4a993ab526a21dedc">&#9670;&#160;</a></span>sourceAccessed</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME RecentDoc::sourceAccessed = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>date d'accès du recentdoc </p>
+
+</div>
+</div>
+<a id="ad11a343964c0d120109bab32e7da0d4d" name="ad11a343964c0d120109bab32e7da0d4d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad11a343964c0d120109bab32e7da0d4d">&#9670;&#160;</a></span>sourceAccessedUtc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME RecentDoc::sourceAccessedUtc = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>date d'accès du recentdoc au format UTC </p>
+
+</div>
+</div>
+<a id="ab7766eb767830c0e69bc8b40cf81fb18" name="ab7766eb767830c0e69bc8b40cf81fb18"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab7766eb767830c0e69bc8b40cf81fb18">&#9670;&#160;</a></span>sourceCreated</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME RecentDoc::sourceCreated = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>date de création du recentdoc </p>
+
+</div>
+</div>
+<a id="a861dd789a087129de7786b191ee26daa" name="a861dd789a087129de7786b191ee26daa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a861dd789a087129de7786b191ee26daa">&#9670;&#160;</a></span>sourceCreatedUtc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME RecentDoc::sourceCreatedUtc = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>date de création du recentdoc au format UTC </p>
+
+</div>
+</div>
+<a id="a3b0ac7a72010df97ad4db97a653838c6" name="a3b0ac7a72010df97ad4db97a653838c6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3b0ac7a72010df97ad4db97a653838c6">&#9670;&#160;</a></span>sourceModified</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME RecentDoc::sourceModified = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>date de modification du recentdoc </p>
+
+</div>
+</div>
+<a id="af119de4955d7ef94b5517e546c5db78c" name="af119de4955d7ef94b5517e546c5db78c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af119de4955d7ef94b5517e546c5db78c">&#9670;&#160;</a></span>sourceModifiedUtc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME RecentDoc::sourceModifiedUtc = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>date de modification du recentdoc au format UTC </p>
+
+</div>
+</div>
+<a id="ae4ad99b84c20dfa86edf61aba90425eb" name="ae4ad99b84c20dfa86edf61aba90425eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae4ad99b84c20dfa86edf61aba90425eb">&#9670;&#160;</a></span>target</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::target = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>chemin pour accéder à l'objet d'origine </p>
+
+</div>
+</div>
+<a id="a5feeefabf31e1c1ae6fa32e4093a813e" name="a5feeefabf31e1c1ae6fa32e4093a813e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5feeefabf31e1c1ae6fa32e4093a813e">&#9670;&#160;</a></span>targetAccessed</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME RecentDoc::targetAccessed = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>date d'accès au fichier d'origine </p>
+
+</div>
+</div>
+<a id="aa986df48ff42cf8bdcb721110bb94f60" name="aa986df48ff42cf8bdcb721110bb94f60"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa986df48ff42cf8bdcb721110bb94f60">&#9670;&#160;</a></span>targetAccessedUtc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME RecentDoc::targetAccessedUtc = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>date d'accès au fichier d'origine au format UTC </p>
+
+</div>
+</div>
+<a id="a0e7afaf79c5a830b2e8d1e57f0683016" name="a0e7afaf79c5a830b2e8d1e57f0683016"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e7afaf79c5a830b2e8d1e57f0683016">&#9670;&#160;</a></span>targetCreated</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME RecentDoc::targetCreated = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>date de création du fichier d'origine </p>
+
+</div>
+</div>
+<a id="aa1b3d579b7833bc1b2d02afe8683cca5" name="aa1b3d579b7833bc1b2d02afe8683cca5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa1b3d579b7833bc1b2d02afe8683cca5">&#9670;&#160;</a></span>targetCreatedUtc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME RecentDoc::targetCreatedUtc = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>date de création du fichier d'origine au format UTC </p>
+
+</div>
+</div>
+<a id="a112fda06187ec2a627a3bb4484464355" name="a112fda06187ec2a627a3bb4484464355"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a112fda06187ec2a627a3bb4484464355">&#9670;&#160;</a></span>targetModified</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME RecentDoc::targetModified = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>date de modification du fichier d'origine </p>
+
+</div>
+</div>
+<a id="ae09213f9106bb74ccf5c5b7edf3c6eb0" name="ae09213f9106bb74ccf5c5b7edf3c6eb0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae09213f9106bb74ccf5c5b7edf3c6eb0">&#9670;&#160;</a></span>targetModifiedUtc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME RecentDoc::targetModifiedUtc = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>date de modification du fichier d'origine au format UTC </p>
+
+</div>
+</div>
+<a id="a61273f968fccbd29d381eca133ade648" name="a61273f968fccbd29d381eca133ade648"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a61273f968fccbd29d381eca133ade648">&#9670;&#160;</a></span>volumeDriveType</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::volumeDriveType = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>type de volume de disque </p>
+
+</div>
+</div>
+<a id="a416af338d58ea9ba73fd34efb0e31f6d" name="a416af338d58ea9ba73fd34efb0e31f6d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a416af338d58ea9ba73fd34efb0e31f6d">&#9670;&#160;</a></span>volumeLabel</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::volumeLabel = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>label du volume </p>
+
+</div>
+</div>
+<a id="a280d45cab21459d7460a80763bb8b4a9" name="a280d45cab21459d7460a80763bb8b4a9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a280d45cab21459d7460a80763bb8b4a9">&#9670;&#160;</a></span>volumeSerial</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::volumeSerial = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>numéro de série du volume </p>
+
+</div>
+</div>
+<a id="acd48e8314380f759b7b471c3d59294c7" name="acd48e8314380f759b7b471c3d59294c7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acd48e8314380f759b7b471c3d59294c7">&#9670;&#160;</a></span>workingDirectory</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::workingDirectory = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>repertoire contenant le fichier d'origine </p>
+
+</div>
+</div>
+<hr/>La documentation de cette structure a été générée à partir du fichier suivant :<ul>
+<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="recent__docs_8hpp_source.html">recent_docs.hpp</a></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="struct_recent_doc.html">RecentDoc</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+var struct_win32___operating_system =
+[
+    [ "getWmiData", "struct_win32___operating_system.html#a638c96378e2de8802118b0fafb863107", null ],
+    [ "to_json", "struct_win32___operating_system.html#a79401c1379f7686ade6bb37d10681e03", null ],
+    [ "BootDevice", "struct_win32___operating_system.html#abd502c8a6f883b7c5b65627253d1a956", null ],
+    [ "BuildNumber", "struct_win32___operating_system.html#a59c4ab5abaa897075a203c95d08341a7", null ],
+    [ "Caption", "struct_win32___operating_system.html#ac68a7caf03cd30c344f20fb7099c653b", null ],
+    [ "CsName", "struct_win32___operating_system.html#a29379192c1c054aa520f17459d761d31", null ],
+    [ "CurrentTimeZone", "struct_win32___operating_system.html#ad5bb983b6a1453e3e624c960acf1abcd", null ],
+    [ "InstallDate", "struct_win32___operating_system.html#ad87be6b064ede0f294b5638bcf949f80", null ],
+    [ "InstallDate_utc", "struct_win32___operating_system.html#a24544ec4f1c3fa989c928a246e348a3e", null ],
+    [ "LastBootUpTime", "struct_win32___operating_system.html#ab8c165a5219df244d1cccd8457b660f7", null ],
+    [ "LastBootUpTime_utc", "struct_win32___operating_system.html#aff6dce6c661cc982b1e6836aea166849", null ],
+    [ "LocalDateTime", "struct_win32___operating_system.html#a204e84a0fccb0ad08e81452900ae4ca8", null ],
+    [ "LocalDateTime_utc", "struct_win32___operating_system.html#a2435640d609fff63c2045b460f70833e", null ],
+    [ "Organization", "struct_win32___operating_system.html#ade4d72556e95676435489f0d83578c79", null ],
+    [ "OsArchitecture", "struct_win32___operating_system.html#ae324786e1433c3501864a4daa706d2bf", null ],
+    [ "RegisteredUser", "struct_win32___operating_system.html#aa005d8db3ecd14ed72388dbbfc024819", null ],
+    [ "SerialNumber", "struct_win32___operating_system.html#a664a7ada9657c7461f4514c235df8123", null ],
+    [ "ServicePackMajorVersion", "struct_win32___operating_system.html#a755cca3d2863cbb909bd1b79424f095d", null ],
+    [ "ServicePackMinorVersion", "struct_win32___operating_system.html#a0f074d2aa426f5b010b4b96e69b10555", null ],
+    [ "SystemDevice", "struct_win32___operating_system.html#ac14cc77ac9338f76997af929347b4e13", null ],
+    [ "SystemDirectory", "struct_win32___operating_system.html#abba974aff4da643ea5ac0c87593511dc", null ],
+    [ "SystemDrive", "struct_win32___operating_system.html#ad18f6bd82496a7b6f37333c9cc902f80", null ],
+    [ "Version", "struct_win32___operating_system.html#a158734598050c5211735b448119a66d2", null ],
+    [ "WindowsDirectory", "struct_win32___operating_system.html#acb9eed8ef741d1d46aebc0206837da61", null ]
+];
