@@ -12,7 +12,7 @@ The export is in **JSON format** 🧾, making it easy to integrate the data into
 WAC is a forensic tool for **Windows 10 and later**, written in **C++ (Visual Studio 2022)**.  
 It extracts various artefacts in **JSON format**, including:
 
-- **Using the Win32 API**:
+- **Using the Win32 API** :
   - 🖥️ System information (including timezone and runtime)
   - ⏰ Scheduled tasks  
   - 🔐 Open sessions  
@@ -21,7 +21,7 @@ It extracts various artefacts in **JSON format**, including:
   - 🧩 Services  
   - 📑 Event logs (optional)
 
-- **By parsing the registry**:
+- **By parsing the registry** :
   - 🧭 UserAssist  
   - 🗂️ MUICache  
   - 🕵️ Background Activity Monitor (BAM)  
@@ -33,7 +33,7 @@ It extracts various artefacts in **JSON format**, including:
   - 🗃️ Amcache  
   - 🧷 Jumplists  
 
-- **By parsing disk files**:
+- **By parsing disk files** :
   - 📄 Prefetch files  
   - 📝 Recent documents
 
@@ -45,7 +45,7 @@ To minimize disk traces, this standalone tool should be run **as administrator**
 Regparser_cpp --dump --debug
 ```
 
-### ⚙️ Options:
+### ⚙️ Options :
 
 - `--dump` : Adds a hexadecimal dump of binary registry values to the output file  
 - `--debug` : Logs processing errors to a separate JSON error file  
@@ -83,7 +83,7 @@ Example of extracted system information:
 }
 ```
 
-Output files are saved in:  
+Output files are saved in :  
 - 📁 The `output` directory for standard results  
 - ⚠️ The `errors` directory for logs when using `--debug`
 
