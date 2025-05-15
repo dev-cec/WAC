@@ -96,3 +96,4 @@ Output files are saved in :
 
 - Requires **Windows SDK 10** and **Windows WDK 10**  
 - 📥 Download: [Microsoft WDK](https://learn.microsoft.com/en-us/windows-hardware/drivers/download-the-wdk)
+- **Include path** and **lib path** of **project properties directories** must be updated with WKD correct path dependent of WDK installed version. Actually, the configured WDK version is 10.0.26100.0.
