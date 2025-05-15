@@ -82,6 +82,12 @@ void printError(std::wstring  errorText);
 */
 std::wstring getErrorWstring(HRESULT hresult);
 
+/*! extraction du message d'erreur d'un HRESULT retourné par une commande
+* @param hresult résultat retourné par un commande
+* @return wstring correspondant au texte associé au code erreur HRESULT
+*/
+LPWSTR getErrorMessage(HRESULT hresult);
+
 /*! converti un texte ANSI vers UTF8
 * @param in chaîne de caractères encodé en ANSI
 * @return chaîne de caractères encodée en UTF8

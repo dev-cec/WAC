@@ -29,7 +29,7 @@ struct SystemInfo {
 	SYSTEMTIME lastBootUpTime = { 0 }; //!< heure du dernier démarrage du system
 	SYSTEMTIME lastBootUpTimeUtc = { 0 };//!< heure du dernier démarrage du system au format UTC
 	int currentBias = 0; //!< décalage horaire actuel
-	bool daylightInEffect; //!< Heure d'été active si true
+	bool daylightInEffect=false; //!< Heure d'été active si true
 	AppliConf _conf = { 0 };//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
@@ -43,29 +43,31 @@ struct SystemInfo {
 		SYSTEM_INFO systemInfos = { 0 };
 		GetSystemInfo(&systemInfos);
 		osArchitecture = os_architecture(systemInfos.wProcessorArchitecture);
-		// nom de l'ordinateur
+		//// nom de l'ordinateur
 		do {
-			buffer = (LPWSTR)malloc(nSize);
+			buffer = (LPWSTR)malloc(nSize*sizeof(wchar_t));
 			GetComputerNameExW(ComputerNameDnsHostname, buffer, &nSize);
+			computerName = std::wstring(buffer);
 		} while (GetLastError() == ERROR_MORE_DATA);
-		computerName = std::wstring(buffer);
+		
 		free(buffer);
-
+		
 		// nom de domaine
 		nSize = 0;
 		do {
-			buffer = (LPWSTR)malloc(nSize);
+			buffer = (LPWSTR)malloc(nSize*sizeof(wchar_t));
 			GetComputerNameExW(ComputerNameDnsDomain, buffer, &nSize);
+			domainName = std::wstring(buffer);
 		} while (GetLastError() == ERROR_MORE_DATA);
-		domainName = std::wstring(buffer);
+		
 		if (domainName.length() == 0)
 			domainName = L"WORKGROUP";
-
+		
 		free(buffer);
-
+		
 		// timezone
-
-
+		
+		
 		DYNAMIC_TIME_ZONE_INFORMATION timezoneInformations;
 		TIME_ZONE_INFORMATION timezone;
 		GetDynamicTimeZoneInformation(&timezoneInformations);
@@ -82,11 +84,11 @@ struct SystemInfo {
 			daylightInEffect = false;
 			currentBias = timezoneInformations.Bias + +timezoneInformations.StandardBias;
 		}
-
+		
 		//heure système
 		GetSystemTime(&localDateTimeUtc);
 		SystemTimeToTzSpecificLocalTime(&timezone, &localDateTimeUtc, &localDateTime);
-
+		
 		//Version
 		HMODULE hDll = LoadLibrary(TEXT("ntdll.dll"));
 		typedef NTSTATUS(CALLBACK* RTLGETVERSION) (PRTL_OSVERSIONINFOW lpVersionInformation);
@@ -104,7 +106,7 @@ struct SystemInfo {
 			}
 		}
 		FreeLibrary(hDll);
-
+		
 		HMODULE hMod = LoadLibraryEx(L"winbrand.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
 		if (hMod)
 		{

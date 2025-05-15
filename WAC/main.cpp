@@ -81,7 +81,6 @@ int main(int argc, char* argv[])
 	/************************
 	* fonctions utiles
 	*************************/
-	
 
 	/************************
 	* Arguments
@@ -97,7 +96,7 @@ int main(int argc, char* argv[])
 			else if (arg == "--debug") conf._debug = true;
 			else if (arg == "--events") conf._events = true;
 			else if (arg.substr(0, 9) == "--output=") {
-				std::string temp =std::string(arg.substr(9));
+				std::string temp = std::string(arg.substr(9));
 				if (temp.length() > 0) conf._outputDir = temp;
 				else {
 					SetConsoleTextAttribute(hConsole, 12); // rouge

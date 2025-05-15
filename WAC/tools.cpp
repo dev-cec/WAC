@@ -84,18 +84,45 @@ void printSuccess() {
 	SetConsoleTextAttribute(hConsole, 7);
 }
 
-
-
-void printError(HRESULT  hresult) {
-	std::wstring errorText = NULL;
+void printError(std::wstring errorText) {
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-	errorText = getErrorWstring(hresult);
 	SetConsoleTextAttribute(hConsole, 12);
 	SetConsoleOutputCP(CP_UTF8);
-	//DWORD written;
-	std::wcout << ansi_to_utf8(errorText) << std::endl;
-	//WriteConsoleW(hConsole, errorText, wcslen(errorText), &written, nullptr); //std::wcout ne fonctionne pas pour les accents avec le format retourné par FormatmessageW
+	std::wcout << errorText << std::endl;
 	SetConsoleTextAttribute(hConsole, 7);
+}
+
+void printError(HRESULT  hresult) {
+	LPWSTR errorText = NULL;
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	errorText = getErrorMessage(hresult);
+	SetConsoleTextAttribute(hConsole, 12);
+	SetConsoleOutputCP(CP_UTF8);
+	DWORD written=0;
+	//std::wcout << ansi_to_utf8(errorText) << std::endl;
+	WriteConsoleW(hConsole, errorText, wcslen(errorText), &written, nullptr); //std::wcout ne fonctionne pas pour les accents avec le format retourné par FormatmessageW
+	SetConsoleTextAttribute(hConsole, 7);
+}
+
+LPWSTR getErrorMessage(HRESULT hresult)
+{
+	LPWSTR errorText = NULL;
+	FormatMessageW(
+		FORMAT_MESSAGE_FROM_SYSTEM
+		| FORMAT_MESSAGE_ALLOCATE_BUFFER
+		| FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		hresult,
+		LANG_SYSTEM_DEFAULT,
+		//MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), 
+		(LPWSTR)&errorText,
+		0,
+		NULL);
+	return errorText;
+}
+
+std::wstring getErrorWString(HRESULT hresult) {
+	return ansi_to_utf8(std::wstring(getErrorMessage(hresult)));
 }
 
 std::wstring getErrorWstring(HRESULT hresult)
@@ -116,13 +143,7 @@ std::wstring getErrorWstring(HRESULT hresult)
 	return L"";
 }
 
-void printError(std::wstring errorText) {
-	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleTextAttribute(hConsole, 12);
-	SetConsoleOutputCP(CP_UTF8);
-	std::wcout << errorText << std::endl;
-	SetConsoleTextAttribute(hConsole, 7);
-}
+
 
 std::string ansi_to_utf8(std::string in)
 {
