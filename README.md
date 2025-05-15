@@ -93,7 +93,7 @@ Output files are saved in :
 |                              **Architecture**                              | **Without events** | **With Events** |
 |:--------------------------------------------------------------------------:|:------------------:|:---------------:|
 | - Intel Core I7-8750 2.20 GHz<br>- 16 Go RAM<br>- Installed since 162 days |         ⌛5s        |   ⌛19 min 37s   |
-
+ 
 ## 🧰 BUILD REQUIREMENTS
 
 - Requires **Windows SDK 10** and **Windows WDK 10**  
