@@ -41,7 +41,6 @@ public:
             NULL                         // Reserved
         );
 
-
         if (FAILED(hres))
         {
             std::cout << "Failed to initialize security. Error code = 0x"

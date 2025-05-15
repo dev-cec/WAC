@@ -37,15 +37,15 @@ struct Runs {
 public:
 	std::vector<Run> runs;//!< tableau contenant les objets
 	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs de traitement des objets
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
+	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
 	* @param mountpoint est le point de montage du snapshot du système
 	* @param userprofiles contient les profils des utilisateurs de la machine
 	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
 	*/
-	HRESULT getData(std::wstring mountpoint, ORHKEY hklm, Users userprofiles, bool pdebug) {
-		_debug = pdebug;
+	HRESULT getData(AppliConf conf) {
+		_conf = conf;
 		HRESULT hresult;
 		ORHKEY hKey;
 		DWORD nSubkeys;
@@ -58,7 +58,7 @@ public:
 		std::wstring runKeys[2] = { L"Run",L"RunOnce" };
 
 		for (std::wstring runKey : runKeys) {
-			hresult = OROpenKey(hklm, (L"Microsoft\\Windows\\CurrentVersion\\" + runKey).c_str(), &hKey);
+			hresult = OROpenKey(_conf.Software, (L"Microsoft\\Windows\\CurrentVersion\\" + runKey).c_str(), &hKey);
 			if (hresult != ERROR_SUCCESS) {
 				errors.push_back({ L"Unable to open key : HKLM\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult });
 				continue;
@@ -91,24 +91,24 @@ public:
 				//save
 				runs.push_back(run);
 			}
-			for (User userprofile : userprofiles.users) {
+			for (std::tuple<std::wstring, std::wstring> profile : _conf.profiles) {
 				//ouverture de la ruche user
-				ruche = mountpoint + replaceAll(userprofile.profile, L"C:", L"") + L"\\\\ntuser.dat";
+				ruche = _conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\\\ntuser.dat";
 				hresult = OROpenHive(ruche.c_str(), &Offhive);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L" Unable to open hive : " + userprofile.SID + L" / " + replaceAll(userprofile.profile,L"\\",L"\\\\") + L"\\\\ntuser.dat", hresult});
+					errors.push_back({ L" Unable to open hive : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat", hresult});
 					continue;
 				}
 
 				hresult = OROpenKey(Offhive, (L"Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey).c_str(), &hKey);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"Unable to open key : " + userprofile.SID + L" / " + replaceAll(userprofile.profile,L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult});
+					errors.push_back({ L"Unable to open key : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult});
 					continue;
 				}
 
 				hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"Unable to get info key : " + userprofile.SID + L" / " + replaceAll(userprofile.profile,L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult});
+					errors.push_back({ L"Unable to get info key : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult});
 					continue;
 				}
 
@@ -119,11 +119,11 @@ public:
 					hresult = OREnumValue(hKey, i, szValue, &nSize, &dType, NULL, &cData);
 					if (dType != REG_SZ) continue;
 					if (hresult != ERROR_SUCCESS) {
-						errors.push_back({ L"Unable to open key : " + userprofile.SID + L"/ NTUSER.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey + L"\\" + szValue, hresult});
+						errors.push_back({ L"Unable to open key : " + get<0>(profile) + L"/ NTUSER.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey + L"\\" + szValue, hresult});
 						continue;
 					}
-					run.Sid = userprofile.SID;
-					run.SidName = userprofile.name;
+					run.Sid = get<0>(profile);
+					run.SidName = getNameFromSid(run.Sid);
 					run.Key = runKey;
 					run.Name = szValue;
 					run.Name = replaceAll(run.Name, L"\\", L"\\\\");// escape \ in std::string
@@ -157,20 +157,20 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory("output"); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
-		myfile.open("output/run.json");
+		myfile.open(_conf._outputDir + "/run.json");
 		myfile << result;
 		myfile.close();
 
-		if (_debug == true && errors.size() > 0) {
+		if (_conf._debug == true && errors.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errors) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory("errors"); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open("errors/run_errors.txt");
+			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(_conf._errorOutputDir +"/run_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

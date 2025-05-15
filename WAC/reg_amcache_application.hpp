@@ -11,6 +11,7 @@
 #include "usb.h"
 
 
+
 /*! structure représentant un AMCACHE APPLICATION
 */
 struct AmcacheApplication {
@@ -65,14 +66,14 @@ struct AmcacheApplications {
 public:
 	std::vector<AmcacheApplication> amcacheapplications; //!< tableau contenant tous les AMCACHE APPLICATIONS
 	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
+	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
 	* @param mountpoint contient le point de montage du snapshot du disque
 	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
 	*/
-	HRESULT getData(std::wstring mountpoint, bool pdebug) {
-		_debug = pdebug;
+	HRESULT getData(AppliConf conf) {
+		_conf = conf;
 		HRESULT hresult = NULL;
 		ORHKEY hKey = NULL;
 		ORHKEY hKey_amcache = NULL;
@@ -82,7 +83,7 @@ public:
 		DWORD nSize = 0;
 		WCHAR szValue[MAX_VALUE_NAME];
 		WCHAR szSubKey[MAX_VALUE_NAME];
-		std::wstring ruche = mountpoint + L"\\Windows\\AppCompat\\Programs\\Amcache.hve";
+		std::wstring ruche = _conf.mountpoint + L"\\Windows\\AppCompat\\Programs\\Amcache.hve";
 
 		hresult = OROpenHive(ruche.c_str(), &Offhive);
 		if (hresult != ERROR_SUCCESS) {
@@ -136,20 +137,20 @@ public:
 		result += L"]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory("output"); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
-		myfile.open("output/amcache_applications.json");
+		myfile.open(_conf._outputDir + "/amcache_applications.json");
 		myfile << result;
 		myfile.close();
 
-		if (_debug == true && errors.size() > 0) {
+		if (_conf._debug == true && errors.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errors) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory("errors"); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open("errors/amcache_applications_errors.txt");
+			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(_conf._errorOutputDir + "/amcache_applications_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

@@ -56,8 +56,7 @@ public:
 	std::vector<Mru> Mrus; //!< contient l'ensemble des objets
 	unsigned int niveau = 0; //!< profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
 	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-	bool _debug;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump;//!< paramètre de la ligne de commande, si true alors on sauvegarde contenu du buffer au format hexadecimal dans un fichier json
+	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
 	* @param mountpoint contient le point de montage du snapshot du disque
@@ -65,9 +64,8 @@ public:
 	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
 	* @param pdump est issu de la ligne de commande. Si true alors le fichier de sortie contiendra le dump hexa de l'objet
 	*/
-	HRESULT getData(std::wstring mountpoint, Users userprofiles, bool pdebug, bool pdump, int _niveau = 0) {
-		_debug = pdebug;
-		_dump = pdump;
+	HRESULT getData(AppliConf conf, int _niveau = 0) {
+		_conf = conf;
 		HRESULT hresult = NULL;
 		ORHKEY hKey;
 		ORHKEY hSubKey;
@@ -80,26 +78,26 @@ public:
 		std::wstring ruche = L"";
 		niveau = _niveau;
 		//HKEY_USERS
-		for (User userprofile : userprofiles.users) {
+		for (std::tuple<std::wstring, std::wstring> profile : _conf.profiles) {
 			std::wstring keynames[2] = { L"OpenSavePidlMRU",L"OpenSaveMRU" };
 			for (std::wstring keyname : keynames) {
 				//ouverture de la ruche user
-				ruche = mountpoint + replaceAll(userprofile.profile, L"C:", L"") + L"\\\\ntuser.dat";
+				ruche = _conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\\\ntuser.dat";
 				hresult = OROpenHive(ruche.c_str(), &Offhive);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"unable to open hive : " + userprofile.SID + L" / " + replaceAll(userprofile.profile,L"\\",L"\\\\")+ L"\\\\ntuser.dat" , hresult });
+					errors.push_back({ L"unable to open hive : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\")+ L"\\\\ntuser.dat" , hresult });
 					continue;
 				}
 
 				hresult = OROpenKey(Offhive, (L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\" + keyname).c_str(), &hKey);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"unable to open key " + userprofile.SID + L" / " + replaceAll(userprofile.profile,L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\" + keyname, hresult });
+					errors.push_back({ L"unable to open key " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\" + keyname, hresult });
 					continue;
 				}
 
 				hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"unable to get info key " + userprofile.SID + L" / " + replaceAll(userprofile.profile,L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\" + keyname, hresult });
+					errors.push_back({ L"unable to get info key " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\" + keyname, hresult });
 					continue;
 				}
 
@@ -112,7 +110,7 @@ public:
 						errors.push_back({ L"unable to open key Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\" + keyname + L"\\" + szValue, hresult});
 						continue;
 					}
-					hresult = parse(hSubKey, userprofile.SID, keyname, &Mrus, 1, false, szValue);
+					hresult = parse(hSubKey, get<0>(profile), keyname, &Mrus, 1, false, szValue);
 					if (hresult != ERROR_SUCCESS) {
 						errors.push_back({ L"unable to get info key Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\" + keyname + L"\\" + szValue, hresult });
 						continue;
@@ -156,8 +154,8 @@ public:
 			Mru.sid = sid;
 			Mru.sidName = getNameFromSid(sid);
 			Mru.source = source;
-			Mru._debug = _debug;
-			Mru._dump = _dump;
+			Mru._debug = _conf._debug;
+			Mru._dump = _conf._dump;
 			getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), pData);
 			unsigned int offset = 0;
 			while (true) {
@@ -166,7 +164,7 @@ public:
 				if (size == 0) break;
 				else {
 
-					IdList* shellitem = new IdList(pData + offset, niveau + 2, _debug, _dump, &errors, Parentiszip);
+					IdList* shellitem = new IdList(pData + offset, niveau + 2, _conf._debug, _conf._dump, &errors, Parentiszip);
 					if (shellitem->shellItem->is_zip == true)
 						Parentiszip = true;
 					offset += size;
@@ -195,20 +193,20 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory("output"); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
-		myfile.open("output/mrus.json");
+		myfile.open(_conf._outputDir +"/mrus.json");
 		myfile << result;
 		myfile.close();
 
-		if (_debug == true && errors.size() > 0) {
+		if(_conf._debug == true && errors.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errors) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory("errors"); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open("errors/mrus_errors.txt");
+			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(_conf._errorOutputDir +"/mrus_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

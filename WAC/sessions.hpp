@@ -16,7 +16,7 @@
 */
 struct Session {
 
-	FILETIME startTime = {0};
+	FILETIME startTime = { 0 };
 	FILETIME startTimeUtc = { 0 };
 	std::wstring authenticationPackage = L"";
 	std::wstring logonName = L"";
@@ -28,11 +28,11 @@ struct Session {
 	/*! Constructeur
 	* @param id est l'id de session
 	*/
-	Session(LUID* id){
-		PSECURITY_LOGON_SESSION_DATA data=new SECURITY_LOGON_SESSION_DATA();
+	Session(LUID* id) {
+		PSECURITY_LOGON_SESSION_DATA data = new SECURITY_LOGON_SESSION_DATA();
 		_LARGE_INTEGER temp = { 0 };
 
-		if (LsaGetLogonSessionData(id, &data)== ERROR_SUCCESS) {
+		if (LsaGetLogonSessionData(id, &data) == ERROR_SUCCESS) {
 			temp = data->LogonTime;
 			memcpy(&startTime, &temp, sizeof(startTime));
 			LocalFileTimeToFileTime(&startTime, &startTimeUtc);
@@ -49,9 +49,9 @@ struct Session {
 	/*! conversion de l'objet au format json
 	*/
 	std::wstring to_json() {
-		LPWSTR lpsid_wstring=NULL;
-		std::wstring sid_wstring=L"";
-		if(ConvertSidToStringSid(sid, &lpsid_wstring)!=0)
+		LPWSTR lpsid_wstring = NULL;
+		std::wstring sid_wstring = L"";
+		if (ConvertSidToStringSid(sid, &lpsid_wstring) != 0)
 			sid_wstring = std::wstring(lpsid_wstring);
 
 		std::wstring result = tab(1) + L"{ \n"
@@ -73,20 +73,20 @@ struct Session {
 */
 struct Sessions {
 	std::vector<Session> sessions; //!< tableau contenant tout les Session
-	bool _debug;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
+	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
 	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
 	*/
-	HRESULT getData(bool pdebug) {
-		_debug = pdebug;
+	HRESULT getData(AppliConf conf) {
+		_conf = conf;
 		PLUID pointer;
 		ULONG nbSessions;
 		NTSTATUS hr;
 		hr = LsaEnumerateLogonSessions(&nbSessions, &pointer);
 		if (hr != ERROR_SUCCESS)
 			return hr;
-		for (int i = 0;i < nbSessions;i++) {
+		for (int i = 0; i < nbSessions; i++) {
 			sessions.push_back(Session(&pointer[i]));
 		}
 
@@ -107,8 +107,8 @@ struct Sessions {
 		}
 		result += L"]";
 		//enregistrement dans fichier json
-		std::filesystem::create_directory("output"); //crée le repertoire, pas d'erreur s'il existe déjà
-		myfile.open("output/Sessions.json");
+		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		myfile.open(_conf._outputDir + "/Sessions.json");
 		myfile << result;
 		myfile.close();
 		return ERROR_SUCCESS;

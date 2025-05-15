@@ -16,6 +16,7 @@
 #include "tools.h"
 #include "trans_id.h"
 
+
 /*structure représentant une trigger d'une tâche planifiée
 */
 struct Trigger {
@@ -273,7 +274,7 @@ struct ScheduledTask {
 struct ScheduledTasks {
 	std::vector<ScheduledTask> scheduledTasks; //!< tableau contenant tout les ScheduledTask
 	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-	bool _debug;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
+	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	HRESULT getFolders(std::vector<BSTR>* folders, BSTR folder, ITaskService* pService) {
 		ITaskFolder* pRootFolder = NULL;
@@ -284,7 +285,7 @@ struct ScheduledTasks {
 		if (FAILED(hr))
 		{
 			errors.push_back({ L"Unable to get folder pointer", hr });
-			CoUninitialize();
+			
 			return ERROR_UNIDENTIFIED_ERROR;
 		}
 		pRootFolder->GetFolders(0, &pRootFoldersCollection);
@@ -308,59 +309,53 @@ struct ScheduledTasks {
 	/*! Fonction permettant de parser les objets
 	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
 	*/
-	HRESULT getData(bool pdebug) {
-		_debug = pdebug;
+	HRESULT getData(AppliConf conf) {
+		_conf = conf;
 		HRESULT hr;
 
 		//  ------------------------------------------------------
 		//  Create an instance of the Task Service. 
 		ITaskService* pService = NULL;
-		hr = CoCreateInstance(CLSID_TaskScheduler,
-			NULL,
-			CLSCTX_INPROC_SERVER,
-			IID_ITaskService,
-			(void**)&pService);
-		if (FAILED(hr))
+
+		hr = CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void**)&pService); 
+		if (hr!=S_OK)
 		{
 			errors.push_back({ L"Failed to co-create an instance of the TaskService class", hr });
-			CoUninitialize();
-			return 1;
+			return hr;
 		}
+		
 		//  Connect to the task service.CLSID_TaskScheduler
-		hr = pService->Connect(_variant_t(), _variant_t(),
-			_variant_t(), _variant_t());
-		if (FAILED(hr))
+		hr = pService->Connect(VARIANT(), VARIANT(), VARIANT(), VARIANT());
+		if (hr!=S_OK)
 		{
 			errors.push_back({ L"Failed to connect to ITaskService", hr });
 			pService->Release();
-			CoUninitialize();
-			return 1;
+			return hr;
 		}
-
 		//  ------------------------------------------------------
 		//  Get the folders list 
 		ITaskFolder* pRootFolder = NULL;
 		std::vector<BSTR> folders; // continent la liste des repertoires
 		getFolders(&folders, _bstr_t(L""), pService);
+
 		//Pour chaque repertoire
 		for (BSTR f : folders) {
 			hr = pService->GetFolder(_bstr_t(f), &pRootFolder);
-
-			if (FAILED(hr))
+			
+			if (hr!=S_OK)
 			{
 				errors.push_back({ L"Unable to get folder pointer", hr });
-				CoUninitialize();
-				return 1;
+				return hr;
 			}
 			//  -------------------------------------------------------
 			//  Get the registered tasks in the folder.
 			IRegisteredTaskCollection* pTaskCollection = NULL;
 			hr = pRootFolder->GetTasks(NULL, &pTaskCollection);
 			pRootFolder->Release();
-			if (FAILED(hr))
+			if (hr != S_OK)
 			{
 				errors.push_back({ L"Unable to get saved tasks", hr });
-				CoUninitialize();
+				
 				return 1;
 			}
 			LONG numTasks = 0;
@@ -397,19 +392,19 @@ struct ScheduledTasks {
 		}
 		result += L"]";
 		//enregistrement dans fichier json
-		std::filesystem::create_directory("output"); //crée le repertoire, pas d'erreur s'il existe déjà
-		myfile.open("output/ScheduledTasks.json");
+		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		myfile.open(_conf._outputDir + "/ScheduledTasks.json");
 		myfile << result;
 		myfile.close();
 
-		if (_debug == true && errors.size() > 0) {
+		if (_conf._debug == true && errors.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errors) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory("errors"); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open("errors/ScheduledTasks_errors.txt");
+			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(_conf._errorOutputDir + "/ScheduledTasks_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

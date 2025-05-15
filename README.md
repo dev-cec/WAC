@@ -50,6 +50,7 @@ Regparser_cpp --dump --debug
 - `--dump` : Adds a hexadecimal dump of binary registry values to the output file  
 - `--debug` : Logs processing errors to a separate JSON error file  
 - `--events` : Converts event logs to JSON (may take several minutes)  
+- `--help` : show help 
 
 All options are optional and **disabled by default**.
 

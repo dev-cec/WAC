@@ -66,8 +66,7 @@ public:
 	std::vector<Shellbag> shellbags;//!< tableau contenant les objets
 	unsigned int niveau = 0;//!< profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
 	std::vector<std::tuple<std::wstring,HRESULT>> errors;//!< tableau contenant les erreurs de traitement des objets
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde contenu du buffer au format hexadecimal dans un fichier json
+	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
 	* @param mountpoint est le point de montage du snapshot du système
@@ -76,9 +75,8 @@ public:
 	* @param pdump est issu de la ligne de commande. Si true alors le fichier de sortie contiendra le dump hexa de l'objet
 	* @param _niveau, profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
 	*/
-	HRESULT getData(std::wstring mountpoint, Users userprofiles, bool pdebug, bool pdump, int _niveau = 0) {
-		_debug = pdebug;
-		_dump = pdump;
+	HRESULT getData(AppliConf conf, int _niveau = 0) {
+		_conf = conf;
 		HRESULT hresult = NULL;
 		ORHKEY hKey;
 		ORHKEY hSubKey;
@@ -91,24 +89,24 @@ public:
 		std::wstring ruche = L"";
 		niveau = _niveau;
 		//HKEY_USERS
-		for (User userprofile : userprofiles.users) {
+		for (std::tuple<std::wstring, std::wstring> profile : _conf.profiles) {
 			//ouverture de la ruche user
-			ruche = mountpoint + replaceAll(userprofile.profile, L"C:", L"") + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat";
+			ruche = _conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat";
 			hresult = OROpenHive(ruche.c_str(), &Offhive);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"unable to open hive " + userprofile.SID + L" / " + replaceAll(userprofile.profile,L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat", hresult });
+				errors.push_back({ L"unable to open hive " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat", hresult });
 				continue;
 			}
 
 			hresult = OROpenKey(Offhive, L"Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU", &hKey);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"unable to open key " + userprofile.SID + L" / " + replaceAll(userprofile.profile,L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat / Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\BagMRU de la ruche " + ruche, hresult });
+				errors.push_back({ L"unable to open key " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat / Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\BagMRU de la ruche " + ruche, hresult });
 				continue;
 			}
 
-			hresult = parse(hKey, userprofile.SID, L"BagMRU", &shellbags, 1, false);
+			hresult = parse(hKey, get<0>(profile), L"BagMRU", &shellbags, 1, false);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"unable to parse key " + userprofile.SID + L" / " + replaceAll(userprofile.profile,L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat / Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\BagMRU de la ruche " + ruche, hresult });
+				errors.push_back({ L"unable to parse key " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat / Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\BagMRU de la ruche " + ruche, hresult });
 				continue;
 			}
 		}
@@ -148,8 +146,8 @@ public:
 			shellbag.sid = sid;
 			shellbag.sidName = getNameFromSid(sid);
 			shellbag.source = source;
-			shellbag._debug = _debug;
-			shellbag._dump = _dump;
+			shellbag._debug = _conf._debug;
+			shellbag._dump = _conf._dump;
 			getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), pData);
 			unsigned int offset = 0;
 			while (true) {
@@ -158,7 +156,7 @@ public:
 				if (size == 0) break;
 				else {
 
-					IdList* shellitem = new IdList(pData + offset, niveau + 2, _debug, _dump, &errors, Parentiszip);
+					IdList* shellitem = new IdList(pData + offset, niveau + 2, _conf._debug, _conf._dump, &errors, Parentiszip);
 					if (shellitem->shellItem->is_zip == true)
 						Parentiszip = true;
 					offset += size;
@@ -196,20 +194,20 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory("output"); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
-		myfile.open("output/shellbags.json");
+		myfile.open(_conf._outputDir +"/shellbags.json");
 		myfile << result;
 		myfile.close();
 
-		if (_debug == true && errors.size() > 0) {
+		if(_conf._debug == true && errors.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errors) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory("errors"); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open("errors/shellbags_errors.txt");
+			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(_conf._errorOutputDir +"/shellbags_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

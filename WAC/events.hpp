@@ -90,13 +90,13 @@ std::wstring VariantType_to_wstring(PEVT_VARIANT data) {
 		break;
 	}
 	case EvtVarTypeFileTime: {
-		return L"\"" + time_to_wstring(FILETIME(data->FileTimeVal)) + L"\""; 
+		return L"\"" + time_to_wstring(FILETIME(data->FileTimeVal)) + L"\"";
 		break;
 	}
 	case EvtVarTypeSysTime: {
 		FILETIME temp;
 		SystemTimeToFileTime(data->SysTimeVal, &temp);
-		return L"\"" + time_to_wstring(temp) + L"\""; 
+		return L"\"" + time_to_wstring(temp) + L"\"";
 		break;
 	}
 	case EvtVarTypeSid: {
@@ -106,11 +106,11 @@ std::wstring VariantType_to_wstring(PEVT_VARIANT data) {
 		break;
 	}
 	case EvtVarTypeHexInt32: {
-		return L"\"" + to_hex(data->Int32Val) + L"\""; 
+		return L"\"" + to_hex(data->Int32Val) + L"\"";
 		break;
 	}
 	case EvtVarTypeHexInt64: {
-		return L"\"" + to_hex(data->Int64Val) + L"\""; 
+		return L"\"" + to_hex(data->Int64Val) + L"\"";
 		break;
 	}
 
@@ -282,7 +282,7 @@ struct Event {
 				temp = replaceAll(temp, L"\r", L"\\r");
 				temp = replaceAll(temp, L"\n", L"\\n");
 				temp = replaceAll(temp, L"\t", L"\\t");
-				evtEventMessage = L"\""+temp+ L"\"";
+				evtEventMessage = L"\"" + temp + L"\"";
 			}
 		} while (status == ERROR_INSUFFICIENT_BUFFER);
 		EvtClose(hmetadata);
@@ -321,12 +321,12 @@ struct Events {
 
 	std::vector<Event> events; //!< tableau contenant tout les Events
 	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
+	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
 	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
 	*/
-	HRESULT getData(bool pdebug) {
+	HRESULT getData(AppliConf conf) {
 		EVT_RPC_LOGIN login = { NULL };
 		EVT_HANDLE hevt = NULL;
 		EVT_HANDLE hChannel = NULL;
@@ -336,7 +336,7 @@ struct Events {
 		DWORD bufferLength1 = 0, bufferLengthNeeded1 = 0, count = 0;
 		HRESULT status;
 
-		_debug = pdebug;
+		_conf = conf;
 		hevt = EvtOpenSession(EvtRpcLogin, &login, 0, 0);
 		hChannel = EvtOpenChannelEnum(hevt, 0);
 		wprintf(L"\n", buffer);
@@ -368,25 +368,25 @@ struct Events {
 			}
 			else {
 				status = ERROR_SUCCESS;
-				
+
 				wprintf(L"\t%s : ", buffer);
 				//if (std::wstring(buffer) == L"System") { // for test purpose only
-					hQuery = EvtQuery(NULL, buffer, NULL, EvtQueryChannelPath);
-					if (hQuery == NULL) {
-						status = GetLastError();
-						if (status != ERROR_INSUFFICIENT_BUFFER)
-							errors.push_back({ std::wstring(buffer) + L" / EvtQuery : ", status });
-					}
+				hQuery = EvtQuery(NULL, buffer, NULL, EvtQueryChannelPath);
+				if (hQuery == NULL) {
+					status = GetLastError();
+					if (status != ERROR_INSUFFICIENT_BUFFER)
+						errors.push_back({ std::wstring(buffer) + L" / EvtQuery : ", status });
+				}
 
-					//
-					// Read each event and render it as XML.
-					//
+				//
+				// Read each event and render it as XML.
+				//
 
 
-					while (EvtNext(hQuery, 1, &hEvent, INFINITE, 0, &count) != FALSE) {
-						events.push_back(Event(hevt, buffer, hEvent, &errors));
-						EvtClose(hEvent);
-					}
+				while (EvtNext(hQuery, 1, &hEvent, INFINITE, 0, &count) != FALSE) {
+					events.push_back(Event(hevt, buffer, hEvent, &errors));
+					EvtClose(hEvent);
+				}
 				//}
 				printSuccess();
 			}
@@ -413,20 +413,20 @@ struct Events {
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory("output"); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
-		myfile.open("output/events.json");
+		myfile.open(_conf._outputDir + "/events.json");
 		myfile << result;
 		myfile.close();
 
-		if (_debug == true && errors.size() > 0) {
+		if (_conf._debug == true && errors.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errors) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory("errors"); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open("errors/events_errors.txt");
+			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(_conf._errorOutputDir + "/events_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

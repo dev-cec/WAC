@@ -55,15 +55,15 @@ struct Bams {
 public:
 	std::vector<Bam> bams;//!< tableau contenant tous les objets
 	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
+	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
 	* @param CurrentControlSet contient la ruche CURRENT CONTROL SET
 	* @param userprofiles contient les profils utilisateur de la machine
 	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
 	*/
-	HRESULT getData(ORHKEY CurrentControlSet, Users userprofiles, bool pdebug) {
-		_debug = pdebug;
+	HRESULT getData(AppliConf conf) {
+		_conf = conf;
 		//variables
 		HRESULT hresult = NULL;
 		ORHKEY hKey = NULL;
@@ -76,12 +76,10 @@ public:
 		WCHAR szValue[MAX_VALUE_NAME];
 		std::wstring bam_keys[2] = { L"bam",L"bam\\state" };
 		for (std::wstring key : bam_keys) {
-			for (User userprofile : userprofiles.users)
-			{
-				std::string sid(userprofile.SID.begin(), userprofile.SID.end());
-				std::wstring temp = L"Services\\" + key + L"\\UserSettings\\" + userprofile.SID;
+			for (std::tuple<std::wstring, std::wstring> profile : _conf.profiles) {
+				std::wstring temp = L"Services\\" + key + L"\\UserSettings\\" + get<0>(profile);
 				CONST wchar_t* regkey = temp.c_str();
-				hresult = OROpenKey(CurrentControlSet, regkey, &hKey);
+				hresult = OROpenKey(_conf.CurrentControlSet, regkey, &hKey);
 				if (hresult != ERROR_SUCCESS) {
 					errors.push_back({ L"Unable to open key : SYSTEM\\\\CurrentControlSet\\\\" + replaceAll(std::wstring(regkey),L"\\",L"\\\\"), hresult});
 					continue;
@@ -104,7 +102,7 @@ public:
 					memset(pData, 0, cData + 2);
 					// get the name, type, and data 
 					OREnumValue(hKey, i, szValue, &nSize, NULL, pData, &cData);
-					Bam bam(pData, std::wstring(szValue), userprofile.SID);
+					Bam bam(pData, std::wstring(szValue), std::wstring(get<0>(profile)));
 
 					//save
 					bams.push_back(bam);
@@ -129,20 +127,20 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory("output"); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
-		myfile.open("output/bams.json");
+		myfile.open(_conf._outputDir + "/bams.json");
 		myfile << result;
 		myfile.close();
 
-		if (_debug == true && errors.size() > 0) {
+		if (_conf._debug == true && errors.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errors) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory("errors"); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open("errors/bams_errors.txt");
+			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(_conf._errorOutputDir + "/bams_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

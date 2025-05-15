@@ -68,7 +68,7 @@ struct Process {
 
 		// Take a snapshot of all modules in the specified process.
 		hModuleSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId);
-		
+
 		if (hModuleSnap == INVALID_HANDLE_VALUE)
 		{
 			HRESULT error = GetLastError();
@@ -79,7 +79,7 @@ struct Process {
 
 			return(ERROR_INVALID_HANDLE);
 		}
-		
+
 		// Set the size of the structure before using it.
 		me32.dwSize = sizeof(MODULEENTRY32);
 
@@ -138,18 +138,18 @@ struct Process {
 struct Processes {
 	std::vector<Process> processes; //!< tableau contenant tout les processus
 	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
+	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
 	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
 	*/
-	HRESULT getData(bool pdebug)
+	HRESULT getData(AppliConf conf)
 	{
 		HANDLE hProcessSnap;
 		HANDLE hProcess;
 		PROCESSENTRY32 pe32;
 
-		_debug = pdebug;
+		_conf = conf;
 		// Take a snapshot of all processes in the system.
 		hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 		if (hProcessSnap == INVALID_HANDLE_VALUE)
@@ -176,7 +176,7 @@ struct Processes {
 				errors.push_back({ L"Error " + std::wstring(pe32.szExeFile) + L" : OpenProcess" ,GetLastError() });// show cause of failure
 			if (GetLastError() != 87) { // ERROR_INVALID_PARAMETER
 				processes.push_back(Process(&pe32, hProcess, &errors));
-				
+
 			}
 			CloseHandle(hProcess);
 		} while (Process32Next(hProcessSnap, &pe32));
@@ -201,20 +201,20 @@ struct Processes {
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory("output"); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
-		myfile.open("output/processes.json");
+		myfile.open(_conf._outputDir + "/processes.json");
 		myfile << result;
 		myfile.close();
 
-		if (_debug == true && errors.size() > 0) {
+		if (_conf._debug == true && errors.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errors) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory("errors"); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open("errors/processes_errors.txt");
+			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(_conf._errorOutputDir + "/processes_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

@@ -10,12 +10,27 @@
 #define MAX_VALUE_NAME 16383 //!< plus long nom de valeur en base de registre
 #define MAX_DATA 1024000 //!< taille maximale des données pour une valeur en base de registre
 
+//! Structure de données contenant la configuration de l'application
+struct AppliConf {
+	bool _debug = false;//! True if debug is active
+	bool _dump = false;//! True if dump is active
+	bool _events = false;//! True is events must be extracted
+	std::string name = ""; //! name of the program, obtained from command line
+	std::string _outputDir = "output"; //! directory to store output JSON
+	std::string _errorOutputDir = "errors";//! directory to store output error JSON if debug is rue
+	std::wstring mountpoint = L""; //! mount point path to access the snapshot made during execution
+	ORHKEY CurrentControlSet = { 0 }; //! Reg Key to access Current Control Set Hive
+	ORHKEY System = { 0 }; //! Reg Key to access to System Hive
+	ORHKEY Software = { 0 };//! Reg Key to access CurrentControlSet/Software hive
+	std::vector<std::tuple<std::wstring, std::wstring>> profiles;//! vector to store SID and profiles of users present on the machine
+};
+
 ///////////////////////////////////////////////////////
 // Format de données
 //////////////////////////////////////////////////////
 
-//! structure de données  permettant de stocker les dates au format FAT DOS time
-/*!
+/*! structure de données  permettant de stocker les dates au format FAT DOS time
+*
 * Note sur les dates et heures:
 * 
 * DOS stocke les dates et heures de modification de fichiers comme une paire de nombre de 16-bit:

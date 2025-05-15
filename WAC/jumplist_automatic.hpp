@@ -155,25 +155,23 @@ struct AutomaticDestination {
 struct JumplistAutomatics {
 	std::vector<AutomaticDestination> automaticDestinations; //!< tableau contenant les objets
 	std::vector<std::tuple<std::wstring, HRESULT>> errorsAutomaticDestinations;//!< tableau contenant les erreurs de traitement des objets
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false; //!< si true alors le fichier de sortie contiendra le dump hexa de l'objet
+	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
 	* @param userprofiles contient les profiles utilisateurs de la machine
 	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	*/
-	HRESULT getData(Users userprofiles, bool pdebug, bool pdump) {
-		_debug = pdebug;
-		_dump = pdump;
+	HRESULT getData(AppliConf conf) {
+		_conf=conf;
 		std::string rep = "\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\AutomaticDestinations";
-		for (User up : userprofiles.users) {
-			std::string path = wstring_to_string(up.profile) + rep;
+		for (std::tuple<std::wstring, std::wstring> profile : _conf.profiles) {
+			std::string path = wstring_to_string(get<1>(profile)) + rep;
 			struct stat sb;
 			if (stat(path.c_str(), &sb) == 0) { // directory Exists
 				for (const auto& entry : std::filesystem::directory_iterator(path)) {
 					if (entry.is_regular_file() && (entry.path().extension() == ".automaticDestinations-ms")) {
-						automaticDestinations.push_back(AutomaticDestination(entry.path(), up.SID, _debug, _dump, &errorsAutomaticDestinations));
+						automaticDestinations.push_back(AutomaticDestination(entry.path(), get<0>(profile), _conf._debug, _conf._dump, &errorsAutomaticDestinations));
 					}
 				}
 			}
@@ -200,19 +198,19 @@ struct JumplistAutomatics {
 		}
 		result += L"]\n";
 		//enregistrement dans fichier json
-		std::filesystem::create_directory("output"); //crée le repertoire, pas d'erreur s'il existe déjà
-		myfile.open("output/jumplistAutomaticDestinations.json");
+		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		myfile.open(_conf._outputDir +"/jumplistAutomaticDestinations.json");
 		myfile << result;
 		myfile.close();
 
-		if (_debug == true && errorsAutomaticDestinations.size() > 0) {
+		if(_conf._debug == true && errorsAutomaticDestinations.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errorsAutomaticDestinations) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory("errors"); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open("errors/jumplistAutomaticDestinations_errors.txt");
+			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(_conf._errorOutputDir +"/jumplistAutomaticDestinations_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

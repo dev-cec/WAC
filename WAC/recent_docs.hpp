@@ -370,26 +370,24 @@ public:
 struct RecentDocs {
 	std::vector<RecentDoc> recentdocs; //!< tableau contenant l'ensemble des objets
 	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-	bool _debug;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump;//!< paramètre de la ligne de commande, si true alors on sauvegarde contenu du buffer au format hexadecimal dans un fichier json
+	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
 	* @param userprofiles contient les profiles des utilisateurs de la machine
 	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
 	* @param pdump est issu de la ligne de commande. Si true alors le fichier de sortie contiendra le dump hexa de l'objet
 	*/
-	HRESULT getData(Users userprofiles, bool pdebug, bool pdump) {
-		_debug = pdebug;
-		_dump = pdump;
+	HRESULT getData(AppliConf conf) {
+		_conf=conf;
 		std::string reps[2] = { "\\AppData\\Roaming\\Microsoft\\Windows\\Recent","\\AppData\\Roaming\\Microsoft\\Office\\Recent" };
 		for (std::string rep : reps) {
-			for (User up : userprofiles.users) {
-				std::string path = wstring_to_string(up.profile) + rep;
+			for (std::tuple<std::wstring, std::wstring> profile : _conf.profiles) {
+				std::string path = wstring_to_string(get<1>(profile)) + rep;
 				struct stat sb;
 				if (stat(path.c_str(), &sb) == 0) { // directory Exists
 					for (const auto& entry : std::filesystem::directory_iterator(path)) {
 						if (entry.is_regular_file() && ((entry.path().extension() == ".lnk" || entry.path().extension() == ".LNK") || (entry.path().extension() == ".url" || entry.path().extension() == ".URL"))) {
-							recentdocs.push_back(RecentDoc(entry.path(), up.SID, _debug, _dump, &errors));
+							recentdocs.push_back(RecentDoc(entry.path(), get<0>(profile), _conf._debug, _conf._dump, &errors));
 						}
 					}
 				}
@@ -416,19 +414,19 @@ struct RecentDocs {
 		}
 		result += L"]\n";
 		//enregistrement dans fichier json
-		std::filesystem::create_directory("output"); //crée le repertoire, pas d'erreur s'il existe déjà
-		myfile.open("output/recentdocs.json");
+		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		myfile.open(_conf._outputDir +"/recentdocs.json");
 		myfile << result;
 		myfile.close();
 
-		if (_debug == true && errors.size() > 0) {
+		if(_conf._debug == true && errors.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errors) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory("errors"); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open("errors/recentdocs_errors.txt");
+			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(_conf._errorOutputDir +"/recentdocs_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

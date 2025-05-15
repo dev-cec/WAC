@@ -14,17 +14,17 @@
 
 struct ServiceStruct
 {
-	std::wstring serviceName=L"";
-	std::wstring serviceDisplayName=L"";
-	std::wstring serviceType=L"";
-	std::wstring serviceStatus=L"";
-	std::wstring serviceProcessId=L"";
-	std::wstring serviceStartType=L"";
-	std::wstring serviceOwner=L"";
-	std::wstring serviceBinary=L"";
-	std::wstring serviceAccessMessage=L"OK";
+	std::wstring serviceName = L"";
+	std::wstring serviceDisplayName = L"";
+	std::wstring serviceType = L"";
+	std::wstring serviceStatus = L"";
+	std::wstring serviceProcessId = L"";
+	std::wstring serviceStartType = L"";
+	std::wstring serviceOwner = L"";
+	std::wstring serviceBinary = L"";
+	std::wstring serviceAccessMessage = L"OK";
 
-	/*! Constructeur 
+	/*! Constructeur
 	* @param hSCM contient le pointeur sur le manager de contrôle de service
 	* @param service contient les données du service
 	*/
@@ -32,10 +32,10 @@ struct ServiceStruct
 		DWORD bufSize = 0;
 		DWORD moreBytesNeeded;
 
-		serviceName =  std::wstring(service.lpServiceName);
-		serviceDisplayName= ansi_to_utf8(std::wstring(service.lpDisplayName)) ;
-		serviceType= serviceType_to_wstring(service.ServiceStatusProcess.dwServiceType) ;
-		serviceStatus= serviceState_to_wstring(service.ServiceStatusProcess.dwCurrentState) ;
+		serviceName = std::wstring(service.lpServiceName);
+		serviceDisplayName = ansi_to_utf8(std::wstring(service.lpDisplayName));
+		serviceType = serviceType_to_wstring(service.ServiceStatusProcess.dwServiceType);
+		serviceStatus = serviceState_to_wstring(service.ServiceStatusProcess.dwCurrentState);
 		serviceProcessId = std::to_wstring(service.ServiceStatusProcess.dwProcessId);
 
 		SC_HANDLE hService = OpenServiceW(hSCM, service.lpServiceName, SC_MANAGER_ALL_ACCESS);
@@ -43,8 +43,8 @@ struct ServiceStruct
 		LPQUERY_SERVICE_CONFIG sData = (LPQUERY_SERVICE_CONFIG)malloc(moreBytesNeeded);
 		bufSize = moreBytesNeeded;
 		if (QueryServiceConfigW(hService, sData, bufSize, &moreBytesNeeded)) { //get service info
-			serviceStartType = serviceStart_to_wstring(sData->dwStartType) ;
-			serviceOwner = std::wstring(sData->lpServiceStartName) ;
+			serviceStartType = serviceStart_to_wstring(sData->dwStartType);
+			serviceOwner = std::wstring(sData->lpServiceStartName);
 			serviceOwner = replaceAll(serviceOwner, L"\\", L"\\\\");
 			serviceBinary = std::wstring(sData->lpBinaryPathName);
 			serviceBinary = replaceAll(serviceBinary, L"\\", L"\\\\");
@@ -79,12 +79,12 @@ struct Services
 {
 	std::vector<ServiceStruct> services; //!< tableau contenant tout les processus
 	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
+	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
 	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
 	*/
-	HRESULT getData(bool pdebug)
+	HRESULT getData(AppliConf conf)
 	{
 		SC_HANDLE hSCM = NULL;
 		PUCHAR  pBuf = NULL;
@@ -95,12 +95,12 @@ struct Services
 		DWORD bufSize = 0;
 		DWORD moreBytesNeeded, serviceCount;
 
-		_debug = pdebug;
+		_conf = conf;
 
 		hSCM = OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE | SC_MANAGER_CONNECT);
 		if (hSCM == NULL)
 		{
-			errors.push_back({L"Could not open Service Control Manager",ERROR_UNIDENTIFIED_ERROR });
+			errors.push_back({ L"Could not open Service Control Manager",ERROR_UNIDENTIFIED_ERROR });
 			return ERROR_UNIDENTIFIED_ERROR;
 		}
 
@@ -141,20 +141,20 @@ struct Services
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory("output"); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
-		myfile.open("output/services.json");
+		myfile.open(_conf._outputDir + "/services.json");
 		myfile << result;
 		myfile.close();
 
-		if (_debug == true && errors.size() > 0) {
+		if (_conf._debug == true && errors.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errors) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory("errors"); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open("errors/services_errors.txt");
+			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(_conf._errorOutputDir + "/services_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

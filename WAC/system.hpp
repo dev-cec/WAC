@@ -9,12 +9,13 @@
 #include "trans_id.h"
 
 
+
 /*! structure contenant les information du système
 * Documentation : https://learn.microsoft.com/fr-fr/windows-hardware/drivers/ddi/wdm/nf-wdm-rtlgetversion
 * Documentation : https://learn.microsoft.com/fr-fr/windows/win32/api/timezoneapi/nf-timezoneapi-getdynamictimezoneinformation
 * Documentation : https://learn.microsoft.com/fr-fr/windows/win32/api/sysinfoapi/nf-sysinfoapi-getcomputernameexw
 */
-struct System {
+struct SystemInfo {
 	std::wstring osArchitecture = L"";//!< architecture de l'OS
 	std::wstring computerName = L""; //!< nom de l'ordinateur
 	std::wstring domainName = L"";//!< nom du domain de l'ordinateur
@@ -29,20 +30,19 @@ struct System {
 	SYSTEMTIME lastBootUpTimeUtc = { 0 };//!< heure du dernier démarrage du system au format UTC
 	int currentBias = 0; //!< décalage horaire actuel
 	bool daylightInEffect; //!< Heure d'été active si true
-	bool _debug;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
+	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
 	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
 	*/
-	HRESULT getData(bool pdebug) {
-		_debug = pdebug;
+	HRESULT getData(AppliConf conf) {
+		_conf = conf;
 		DWORD nSize = 0;
 		LPWSTR buffer = NULL;
 		//architecture su système
 		SYSTEM_INFO systemInfos;
 		GetSystemInfo(&systemInfos);
 		osArchitecture = os_architecture(systemInfos.wProcessorArchitecture);
-
 		// nom de l'ordinateur
 		do {
 
@@ -62,6 +62,7 @@ struct System {
 			domainName = L"WORKGROUP";
 
 		free(buffer);
+
 		// timezone
 		DYNAMIC_TIME_ZONE_INFORMATION timezoneInformations;
 		TIME_ZONE_INFORMATION timezone;
@@ -69,9 +70,8 @@ struct System {
 		GetTimeZoneInformation(&timezone);
 		currentTimeZoneCaption = std::wstring(timezoneInformations.StandardName);
 		currentTimeZone = std::wstring(timezoneInformations.TimeZoneKeyName);
-		time_t rawtime = time(&rawtime); // heure actuelle 
+		time_t rawtime = time(nullptr); // heure actuelle 
 		struct tm* timeinfo = localtime(&rawtime);//localtime pour savoir si heure d'été active ou non
-
 		if (timeinfo->tm_isdst) {//si heure d'été actif
 			daylightInEffect = true;
 			currentBias = timezoneInformations.Bias + timezoneInformations.DaylightBias;
@@ -135,9 +135,9 @@ struct System {
 
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory("output"); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
-		myfile.open("output/OperatingSystem.json");
+		myfile.open(_conf._outputDir + "/OperatingSystem.json");
 		myfile << result;
 		myfile.close();
 

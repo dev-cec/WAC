@@ -70,9 +70,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="libs\include\offreg.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
