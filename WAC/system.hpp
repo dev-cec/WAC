@@ -30,7 +30,7 @@ struct SystemInfo {
 	SYSTEMTIME lastBootUpTimeUtc = { 0 };//!< heure du dernier démarrage du system au format UTC
 	int currentBias = 0; //!< décalage horaire actuel
 	bool daylightInEffect; //!< Heure d'été active si true
-	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
+	AppliConf _conf = { 0 };//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
 	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
@@ -40,16 +40,16 @@ struct SystemInfo {
 		DWORD nSize = 0;
 		LPWSTR buffer = NULL;
 		//architecture su système
-		SYSTEM_INFO systemInfos;
+		SYSTEM_INFO systemInfos = { 0 };
 		GetSystemInfo(&systemInfos);
 		osArchitecture = os_architecture(systemInfos.wProcessorArchitecture);
 		// nom de l'ordinateur
 		do {
-
 			buffer = (LPWSTR)malloc(nSize);
 			GetComputerNameExW(ComputerNameDnsHostname, buffer, &nSize);
 		} while (GetLastError() == ERROR_MORE_DATA);
 		computerName = std::wstring(buffer);
+		free(buffer);
 
 		// nom de domaine
 		nSize = 0;
@@ -64,6 +64,8 @@ struct SystemInfo {
 		free(buffer);
 
 		// timezone
+
+
 		DYNAMIC_TIME_ZONE_INFORMATION timezoneInformations;
 		TIME_ZONE_INFORMATION timezone;
 		GetDynamicTimeZoneInformation(&timezoneInformations);
