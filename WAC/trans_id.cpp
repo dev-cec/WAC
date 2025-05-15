@@ -57,6 +57,7 @@ std::wstring logon_type(ULONG type) {
 	if (type == 11) return L"CachedInteractive";
 	if (type == 12) return L"CachedRemoteInteractive";
 	if (type == 13) return L"CachedUnloc";
+	return L"Unlnown";
 }
 
 std::wstring os_architecture(DWORD archi){
@@ -66,6 +67,7 @@ std::wstring os_architecture(DWORD archi){
 	if (archi == PROCESSOR_ARCHITECTURE_IA64) return L"Intel Itanium";
 	if (archi == PROCESSOR_ARCHITECTURE_INTEL) return L"x86";
 	if (archi == PROCESSOR_ARCHITECTURE_UNKNOWN) return L"Architecture inconnue";
+	return L"Architecture inconnue";
 }
 
 std::wstring task_trigger_type(TASK_TRIGGER_TYPE2 type) {
@@ -81,6 +83,7 @@ std::wstring task_trigger_type(TASK_TRIGGER_TYPE2 type) {
 	if (type == TASK_TRIGGER_LOGON) return L"TASK_TRIGGER_LOGON";
 	if (type == TASK_TRIGGER_SESSION_STATE_CHANGE) return L"TASK_TRIGGER_SESSION_STATE_CHANGE";
 	if (type == TASK_TRIGGER_CUSTOM_TRIGGER_01) return L"TASK_TRIGGER_CUSTOM_TRIGGER_01";
+	return L"Unlnown";
 }
 
 std::wstring task_action_type(TASK_ACTION_TYPE type) {
@@ -88,6 +91,7 @@ std::wstring task_action_type(TASK_ACTION_TYPE type) {
 	if (type == TASK_ACTION_COM_HANDLER) return L"TASK_ACTION_COM_HANDLER";
 	if (type == TASK_ACTION_SEND_EMAIL) return L"TASK_ACTION_SEND_EMAIL";
 	if (type == TASK_ACTION_SHOW_MESSAGE) return L"TASK_ACTION_SHOW_MESSAGE";
+	return L"Unlnown";
 }
 
 std::wstring task_state(TASK_STATE state) {
@@ -96,6 +100,7 @@ std::wstring task_state(TASK_STATE state) {
 	if (state== TASK_STATE_QUEUED) return L"TASK_STATE_QUEUED";
 	if (state== TASK_STATE_READY) return L"TASK_STATE_READY";
 	if (state== TASK_STATE_RUNNING) return L"TASK_STATE_RUNNING";
+	return L"Unlnown";
 }
 
 std::wstring from_appId(std::wstring appId) {
