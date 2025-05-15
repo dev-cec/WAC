@@ -38,7 +38,8 @@
 
 void showHelp(HANDLE hConsole, AppliConf conf) {
 	SetConsoleTextAttribute(hConsole, 7); // blanc
-	std::cout << "usage: " << conf.name << " [--dump] [--debug] \n";
+	std::cout << "\nusage: " << conf.name << " [--dump] [--debug] [--events] [--ouput=ouput] [--errorOuput=errors]\n";
+	std::cout << "\t--help or /? : show this help \n";
 	std::cout << "\t--dump : add std::hexa value in json files for shellbags and LNK files \n";
 	std::cout << "\t--debug : add error output files\n";
 	std::cout << "\t--events : converts events to json (long time)\n";
@@ -121,7 +122,7 @@ int main(int argc, char* argv[])
 			}
 			else { //argument inconnu
 				SetConsoleOutputCP(CP_UTF8);
-				if (arg != "--help") { // Si pas argument --help alors argument invalide
+				if (arg != "--help" && arg !="/?") { // Si pas argument --help ou /? alors argument invalide
 					SetConsoleTextAttribute(hConsole, 12); // rouge
 					std::cerr << "Invalid argument " << arg << "\n";
 				}
