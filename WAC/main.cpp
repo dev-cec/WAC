@@ -267,8 +267,8 @@ int main(int argc, char* argv[])
 
 	// création du VSS
 	IVssBackupComponents* pBackup = NULL; // pointeur sur le snapshot
-	VSS_ID snapshotSetId;
-	LPCWSTR lpMountpoint = L".\\vss";
+	VSS_ID snapshotSetId = { 0 };
+	LPCWSTR lpMountpoint = L"";
 
 	std::wcout << " - Creating the snapshot : ";
 	hresult = GetSnapshots(&lpMountpoint, &snapshotSetId, pBackup);

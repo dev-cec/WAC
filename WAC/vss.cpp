@@ -134,7 +134,6 @@ HRESULT GetSnapshots(LPCWSTR* mountpoint, VSS_ID* snapshotSetId, IVssBackupCompo
 			}
 		}
 		pBackup->FreeWriterMetadata();
-		CoUninitialize();
 	return S_OK;
 	}
 	return S_FALSE;
