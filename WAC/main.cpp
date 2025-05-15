@@ -76,11 +76,15 @@ int main(int argc, char* argv[])
 	Events events;
 	AppliConf conf;
 
+	time_t start = 0, end = 0;
+
 	SetConsoleOutputCP(CP_UTF8); // format UTF8 pour la prise en compte des accents dans la console car retour en UTF8
 
 	/************************
 	* fonctions utiles
 	*************************/
+
+	start = time(nullptr);//heure de depart du logiciel pour benchmark
 
 	/************************
 	* Arguments
@@ -524,6 +528,9 @@ int main(int argc, char* argv[])
 	}
 
 	std::cout.flush();
-	std::wcout << L"END" << std::endl;
+
+	end = time(nullptr);
+
+	std::wcout << L"END, Time elapsed : " << end - start << " s" << std::endl;
 	return ERROR_SUCCESS;
 }

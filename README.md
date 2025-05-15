@@ -90,8 +90,9 @@ Output files are saved in :
 
 ## 🚀 PERFORMANCE
 
-- Without event logs: ~10 seconds ⏱️  
-- With event logs: ~10 minutes ⌛
+|                              **Architecture**                              | **Without events** | **With Events** |
+|:--------------------------------------------------------------------------:|:------------------:|:---------------:|
+| - Intel Core I7-8750 2.20 GHz<br>- 16 Go RAM<br>- Installed since 162 days |         ⌛5s        |   ⌛19 min 37s   |
 
 ## 🧰 BUILD REQUIREMENTS
 

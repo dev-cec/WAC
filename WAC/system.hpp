@@ -107,6 +107,7 @@ struct SystemInfo {
 		}
 		FreeLibrary(hDll);
 		
+		// OS NAME
 		HMODULE hMod = LoadLibraryEx(L"winbrand.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
 		if (hMod)
 		{
@@ -116,6 +117,7 @@ struct SystemInfo {
 				osName = std::wstring(pfnBrandingFormatString(L"%WINDOWS_LONG%"));
 			FreeLibrary(hMod);
 		}
+
 		return ERROR_SUCCESS;
 	}
 
@@ -134,7 +136,7 @@ struct SystemInfo {
 			L"\t\"CurrentBias\":\"" + std::to_wstring(currentBias) + L"\", \n"
 			L"\t\"DaylightInEffect\":\"" + bool_to_wstring(daylightInEffect) + L"\", \n"
 			L"\t\"Version\":\"" + version + L"\", \n"
-			L"\t\"ServicePack\":\"" + servicePack + L"\", \n"
+			L"\t\"ServicePack\":\"" + servicePack + L"\" \n"
 			L"}";
 
 
