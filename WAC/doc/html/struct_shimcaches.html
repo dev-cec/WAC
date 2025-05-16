@@ -115,8 +115,9 @@ $(function(){initNavTree('struct_shimcaches.html',''); initResizable(true); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Fonctions membres publiques</h2></td></tr>
-<tr class="memitem:a3a874f7c9a3629001e45a7acc4655de3" id="r_a3a874f7c9a3629001e45a7acc4655de3"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3a874f7c9a3629001e45a7acc4655de3">getData</a> (ORHKEY CurrentControlSet, bool pdebug)</td></tr>
-<tr class="separator:a3a874f7c9a3629001e45a7acc4655de3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae4bf31f2633cc4858419109d885a4549" id="r_ae4bf31f2633cc4858419109d885a4549"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae4bf31f2633cc4858419109d885a4549">getData</a> (<a class="el" href="struct_appli_conf.html">AppliConf</a> conf)</td></tr>
+<tr class="memdesc:ae4bf31f2633cc4858419109d885a4549"><td class="mdescLeft">&#160;</td><td class="mdescRight">contient les paramètres de l'application issue des paramètres de la ligne de commande  <br /></td></tr>
+<tr class="separator:ae4bf31f2633cc4858419109d885a4549"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8c61a711ce79444a7f7543fa4aeb8c95" id="r_a8c61a711ce79444a7f7543fa4aeb8c95"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8c61a711ce79444a7f7543fa4aeb8c95">to_json</a> ()</td></tr>
 <tr class="separator:a8c61a711ce79444a7f7543fa4aeb8c95"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -128,15 +129,14 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:af947a68178218d3515bc4c8c48295bbb" id="r_af947a68178218d3515bc4c8c48295bbb"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af947a68178218d3515bc4c8c48295bbb">errors</a></td></tr>
 <tr class="memdesc:af947a68178218d3515bc4c8c48295bbb"><td class="mdescLeft">&#160;</td><td class="mdescRight">tableau contenant les erreurs de traitement des objets  <br /></td></tr>
 <tr class="separator:af947a68178218d3515bc4c8c48295bbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11a60f44de84b329ead6bc2af3af756f" id="r_a11a60f44de84b329ead6bc2af3af756f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a11a60f44de84b329ead6bc2af3af756f">_debug</a> = false</td></tr>
-<tr class="memdesc:a11a60f44de84b329ead6bc2af3af756f"><td class="mdescLeft">&#160;</td><td class="mdescRight">paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json  <br /></td></tr>
-<tr class="separator:a11a60f44de84b329ead6bc2af3af756f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8f39853b3406f72d27e09fb560e1b741" id="r_a8f39853b3406f72d27e09fb560e1b741"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_appli_conf.html">AppliConf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8f39853b3406f72d27e09fb560e1b741">_conf</a> = {0}</td></tr>
+<tr class="separator:a8f39853b3406f72d27e09fb560e1b741"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>structure contenant l'ensemble des artefacts </p>
 </div><h2 class="groupheader">Documentation des fonctions membres</h2>
-<a id="a3a874f7c9a3629001e45a7acc4655de3" name="a3a874f7c9a3629001e45a7acc4655de3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3a874f7c9a3629001e45a7acc4655de3">&#9670;&#160;</a></span>getData()</h2>
+<a id="ae4bf31f2633cc4858419109d885a4549" name="ae4bf31f2633cc4858419109d885a4549"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae4bf31f2633cc4858419109d885a4549">&#9670;&#160;</a></span>getData()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -147,12 +147,8 @@ Attributs publics</h2></td></tr>
         <tr>
           <td class="memname">HRESULT Shimcaches::getData </td>
           <td>(</td>
-          <td class="paramtype">ORHKEY</td>          <td class="paramname"><span class="paramname"><em>CurrentControlSet</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramtype"><a class="el" href="struct_appli_conf.html">AppliConf</a></td>          <td class="paramname"><span class="paramname"><em>conf</em></span></td><td>)</td>
           <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>pdebug</em></span>&#160;)</td>
         </tr>
       </table>
   </td>
@@ -161,10 +157,11 @@ Attributs publics</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>contient les paramètres de l'application issue des paramètres de la ligne de commande </p>
 <p>Fonction permettant de parser les objets </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
-    <tr><td class="paramname">CurrentControlSet</td><td>contient la ruche HKEY_LOCAL_MACHINE/SYSTEM/CURRENTCONTROLSET </td></tr>
-    <tr><td class="paramname">pdebug</td><td>est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré </td></tr>
+    <tr><td class="paramname">conf</td><td>contient les paramètres de l'application issue des paramètres de la ligne de commande </td></tr>
   </table>
   </dd>
 </dl>
@@ -198,19 +195,17 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
-<a id="a11a60f44de84b329ead6bc2af3af756f" name="a11a60f44de84b329ead6bc2af3af756f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a11a60f44de84b329ead6bc2af3af756f">&#9670;&#160;</a></span>_debug</h2>
+<a id="a8f39853b3406f72d27e09fb560e1b741" name="a8f39853b3406f72d27e09fb560e1b741"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8f39853b3406f72d27e09fb560e1b741">&#9670;&#160;</a></span>_conf</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool Shimcaches::_debug = false</td>
+          <td class="memname"><a class="el" href="struct_appli_conf.html">AppliConf</a> Shimcaches::_conf = {0}</td>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json </p>
 
 </div>
 </div>

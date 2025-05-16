@@ -115,8 +115,9 @@ $(function(){initNavTree('struct_processes.html',''); initResizable(true); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Fonctions membres publiques</h2></td></tr>
-<tr class="memitem:a5809845991274bfb0b729ebbcb9ad1da" id="r_a5809845991274bfb0b729ebbcb9ad1da"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5809845991274bfb0b729ebbcb9ad1da">getData</a> (bool pdebug)</td></tr>
-<tr class="separator:a5809845991274bfb0b729ebbcb9ad1da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff01eced94d4cae8c2b106bf1f1748e4" id="r_aff01eced94d4cae8c2b106bf1f1748e4"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aff01eced94d4cae8c2b106bf1f1748e4">getData</a> (<a class="el" href="struct_appli_conf.html">AppliConf</a> conf)</td></tr>
+<tr class="memdesc:aff01eced94d4cae8c2b106bf1f1748e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">contient les paramètres de l'application issue des paramètres de la ligne de commande  <br /></td></tr>
+<tr class="separator:aff01eced94d4cae8c2b106bf1f1748e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaded6be9bb9ea47a96086466aa246214" id="r_aaded6be9bb9ea47a96086466aa246214"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaded6be9bb9ea47a96086466aa246214">to_json</a> ()</td></tr>
 <tr class="separator:aaded6be9bb9ea47a96086466aa246214"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -128,15 +129,14 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:a681279504724acc72596face56034fc3" id="r_a681279504724acc72596face56034fc3"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a681279504724acc72596face56034fc3">errors</a></td></tr>
 <tr class="memdesc:a681279504724acc72596face56034fc3"><td class="mdescLeft">&#160;</td><td class="mdescRight">tableau contenant les erreurs remontées lors du traitement des objets  <br /></td></tr>
 <tr class="separator:a681279504724acc72596face56034fc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7f7ad34abc4171ab840f0c806fbf23d3" id="r_a7f7ad34abc4171ab840f0c806fbf23d3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7f7ad34abc4171ab840f0c806fbf23d3">_debug</a> = false</td></tr>
-<tr class="memdesc:a7f7ad34abc4171ab840f0c806fbf23d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json  <br /></td></tr>
-<tr class="separator:a7f7ad34abc4171ab840f0c806fbf23d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3de686f30a67284c9584989b3f633155" id="r_a3de686f30a67284c9584989b3f633155"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_appli_conf.html">AppliConf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3de686f30a67284c9584989b3f633155">_conf</a> = {0}</td></tr>
+<tr class="separator:a3de686f30a67284c9584989b3f633155"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>structure contenant l'ensemble des objets </p>
 </div><h2 class="groupheader">Documentation des fonctions membres</h2>
-<a id="a5809845991274bfb0b729ebbcb9ad1da" name="a5809845991274bfb0b729ebbcb9ad1da"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5809845991274bfb0b729ebbcb9ad1da">&#9670;&#160;</a></span>getData()</h2>
+<a id="aff01eced94d4cae8c2b106bf1f1748e4" name="aff01eced94d4cae8c2b106bf1f1748e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff01eced94d4cae8c2b106bf1f1748e4">&#9670;&#160;</a></span>getData()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -147,7 +147,7 @@ Attributs publics</h2></td></tr>
         <tr>
           <td class="memname">HRESULT Processes::getData </td>
           <td>(</td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>pdebug</em></span></td><td>)</td>
+          <td class="paramtype"><a class="el" href="struct_appli_conf.html">AppliConf</a></td>          <td class="paramname"><span class="paramname"><em>conf</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -157,9 +157,11 @@ Attributs publics</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>contient les paramètres de l'application issue des paramètres de la ligne de commande </p>
 <p>Fonction permettant de parser les objets </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
-    <tr><td class="paramname">pdebug</td><td>est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré </td></tr>
+    <tr><td class="paramname">conf</td><td>contient les paramètres de l'application issue des paramètres de la ligne de commande </td></tr>
   </table>
   </dd>
 </dl>
@@ -193,19 +195,17 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
-<a id="a7f7ad34abc4171ab840f0c806fbf23d3" name="a7f7ad34abc4171ab840f0c806fbf23d3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7f7ad34abc4171ab840f0c806fbf23d3">&#9670;&#160;</a></span>_debug</h2>
+<a id="a3de686f30a67284c9584989b3f633155" name="a3de686f30a67284c9584989b3f633155"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3de686f30a67284c9584989b3f633155">&#9670;&#160;</a></span>_conf</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool Processes::_debug = false</td>
+          <td class="memname"><a class="el" href="struct_appli_conf.html">AppliConf</a> Processes::_conf = {0}</td>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json </p>
 
 </div>
 </div>

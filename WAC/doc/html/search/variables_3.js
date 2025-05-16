@@ -11,7 +11,7 @@ var searchData=
   ['comments_8',['comments',['../struct_network_shell_item.html#a83e38becadc7d467f1a25368a048ebee',1,'NetworkShellItem']]],
   ['compatibleids_9',['CompatibleIds',['../struct_usbstor.html#aacd3a29a49056960317a2adaafb6cb42',1,'Usbstor']]],
   ['compressed_10',['Compressed',['../struct_file_attributes.html#ab6f23132dd4d25d359437f701afda504',1,'FileAttributes']]],
-  ['computername_11',['computerName',['../struct_system.html#a2ece31792fd8b12b757131ccd696b9a2',1,'System']]],
+  ['computername_11',['computerName',['../struct_system_info.html#a076b6619e9293c8f3a6d122d5e96b7fc',1,'SystemInfo']]],
   ['count_12',['Count',['../struct_user_assist.html#a25f060e1fa0a1ad2b68a711fd6f56db5',1,'UserAssist']]],
   ['created_13',['created',['../struct_user_property_view0x07192006.html#a7e86a8d2000abffab0ab37212d60de21',1,'UserPropertyView0x07192006::created'],['../struct_automatic_destination.html#ae5c7cd18a93b33788e46cace980683d5',1,'AutomaticDestination::created'],['../struct_custom_destination.html#a7f6369105e63e44cfb01d84de6198747',1,'CustomDestination::created'],['../struct_directory.html#a63997621361dd8c746c72fdff8c44e18',1,'Directory::created'],['../struct_prefetch.html#adb755f7784d23054c34dc3654cab5d0c',1,'Prefetch::created']]],
   ['createdutc_14',['createdUtc',['../struct_user_property_view0x07192006.html#a023644572160cb601b4bf6ef2fb88482',1,'UserPropertyView0x07192006::createdUtc'],['../struct_automatic_destination.html#ab3f03a5fec0fa2b4fa81cbee1fbc42df',1,'AutomaticDestination::createdUtc'],['../struct_custom_destination.html#adaac772e30c7185b10fb0b6243b11691',1,'CustomDestination::createdUtc'],['../struct_directory.html#aba79cd3cb10383fcb2ba9151c2b99526',1,'Directory::createdUtc'],['../struct_prefetch.html#ab7a1741d109c27bbd72b516b79435cb8',1,'Prefetch::createdUtc']]],
@@ -21,8 +21,9 @@ var searchData=
   ['creationtimeutc_18',['creationTimeUtc',['../struct_volume_info.html#a176d1cb6073a84b8904b31725c98291b',1,'VolumeInfo']]],
   ['ctime_19',['ctime',['../struct_beef0026.html#af77830aaf49cde5a57d6db72533b647c',1,'Beef0026']]],
   ['ctimeutc_20',['ctimeUtc',['../struct_beef0026.html#a4b54cad68e3fef78a0fc5cdb1a122fef',1,'Beef0026']]],
-  ['currentbias_21',['currentBias',['../struct_system.html#adde9a39e31ccd8af46c7bb3691b62640',1,'System']]],
-  ['currenttimezone_22',['currentTimeZone',['../struct_system.html#a483d3d02fd67e075668d3b4edd20cc3b',1,'System']]],
-  ['currenttimezonecaption_23',['currentTimeZoneCaption',['../struct_system.html#a875871b9a87ab249f5f4725985a0ee45',1,'System']]],
-  ['customdestinations_24',['customDestinations',['../struct_jumplist_customs.html#abc21f6a05008aade524d71f19b6436c5',1,'JumplistCustoms']]]
+  ['currentbias_21',['currentBias',['../struct_system_info.html#a7f2fb03bc040834c45f3e4e210b92921',1,'SystemInfo']]],
+  ['currentcontrolset_22',['CurrentControlSet',['../struct_appli_conf.html#a0de471ec727ec98a44470b1804c959de',1,'AppliConf']]],
+  ['currenttimezone_23',['currentTimeZone',['../struct_system_info.html#a4971c9dbf9099db35f638dd23bc886f4',1,'SystemInfo']]],
+  ['currenttimezonecaption_24',['currentTimeZoneCaption',['../struct_system_info.html#a598c9aa39978d9010d0a3a45f634bcbd',1,'SystemInfo']]],
+  ['customdestinations_25',['customDestinations',['../struct_jumplist_customs.html#abc21f6a05008aade524d71f19b6436c5',1,'JumplistCustoms']]]
 ];

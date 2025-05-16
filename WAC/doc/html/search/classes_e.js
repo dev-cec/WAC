@@ -13,5 +13,5 @@ var searchData=
   ['shimcaches_10',['Shimcaches',['../struct_shimcaches.html',1,'']]],
   ['sps_11',['SPS',['../struct_s_p_s.html',1,'']]],
   ['spsvalue_12',['SPSValue',['../struct_s_p_s_value.html',1,'']]],
-  ['system_13',['System',['../struct_system.html',1,'']]]
+  ['systeminfo_13',['SystemInfo',['../struct_system_info.html',1,'']]]
 ];

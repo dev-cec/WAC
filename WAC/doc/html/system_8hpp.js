@@ -1,4 +1,4 @@
 var system_8hpp =
 [
-    [ "System", "struct_system.html", "struct_system" ]
+    [ "SystemInfo", "struct_system_info.html", "struct_system_info" ]
 ];

@@ -115,8 +115,9 @@ $(function(){initNavTree('struct_shellbags.html',''); initResizable(true); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Fonctions membres publiques</h2></td></tr>
-<tr class="memitem:a567be83fed7519e2c928fd1e0fe3bbfa" id="r_a567be83fed7519e2c928fd1e0fe3bbfa"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a567be83fed7519e2c928fd1e0fe3bbfa">getData</a> (std::wstring mountpoint, <a class="el" href="struct_users.html">Users</a> userprofiles, bool pdebug, bool pdump, int _niveau=0)</td></tr>
-<tr class="separator:a567be83fed7519e2c928fd1e0fe3bbfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa4d5f1c9b8f14654e0d5bef60560d0d9" id="r_aa4d5f1c9b8f14654e0d5bef60560d0d9"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa4d5f1c9b8f14654e0d5bef60560d0d9">getData</a> (<a class="el" href="struct_appli_conf.html">AppliConf</a> conf, int _niveau=0)</td></tr>
+<tr class="memdesc:aa4d5f1c9b8f14654e0d5bef60560d0d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">contient les paramètres de l'application issue des paramètres de la ligne de commande  <br /></td></tr>
+<tr class="separator:aa4d5f1c9b8f14654e0d5bef60560d0d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aba4c45f41e6132bc7615b60110358810" id="r_aba4c45f41e6132bc7615b60110358810"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aba4c45f41e6132bc7615b60110358810">parse</a> (ORHKEY hKey, std::wstring sid, std::wstring source, std::vector&lt; <a class="el" href="struct_shellbag.html">Shellbag</a> &gt; *<a class="el" href="#aff35832acef2d1e49bcb90a77e78dff5">shellbags</a>, unsigned int <a class="el" href="#aecbae0d878913ec4434b8c67adf75d4a">niveau</a>, bool _Parentiszip, unsigned int Parent=NULL)</td></tr>
 <tr class="separator:aba4c45f41e6132bc7615b60110358810"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a60edef4697d26145f7a8d183d113c4c3" id="r_a60edef4697d26145f7a8d183d113c4c3"><td class="memItemLeft" align="right" valign="top">virtual HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a60edef4697d26145f7a8d183d113c4c3">to_json</a> ()</td></tr>
@@ -133,18 +134,14 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:a5ef01c3c44ae97728a67eba99f82b14d" id="r_a5ef01c3c44ae97728a67eba99f82b14d"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5ef01c3c44ae97728a67eba99f82b14d">errors</a></td></tr>
 <tr class="memdesc:a5ef01c3c44ae97728a67eba99f82b14d"><td class="mdescLeft">&#160;</td><td class="mdescRight">tableau contenant les erreurs de traitement des objets  <br /></td></tr>
 <tr class="separator:a5ef01c3c44ae97728a67eba99f82b14d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac342ae734712b7d16359ee6d81e0d0da" id="r_ac342ae734712b7d16359ee6d81e0d0da"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac342ae734712b7d16359ee6d81e0d0da">_debug</a> = false</td></tr>
-<tr class="memdesc:ac342ae734712b7d16359ee6d81e0d0da"><td class="mdescLeft">&#160;</td><td class="mdescRight">paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json  <br /></td></tr>
-<tr class="separator:ac342ae734712b7d16359ee6d81e0d0da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab864bf22ef6284bab9a57a4b7ffd7752" id="r_ab864bf22ef6284bab9a57a4b7ffd7752"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab864bf22ef6284bab9a57a4b7ffd7752">_dump</a> = false</td></tr>
-<tr class="memdesc:ab864bf22ef6284bab9a57a4b7ffd7752"><td class="mdescLeft">&#160;</td><td class="mdescRight">paramètre de la ligne de commande, si true alors on sauvegarde contenu du buffer au format hexadecimal dans un fichier json  <br /></td></tr>
-<tr class="separator:ab864bf22ef6284bab9a57a4b7ffd7752"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae1643028956f6031f8b21362248b4548" id="r_ae1643028956f6031f8b21362248b4548"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_appli_conf.html">AppliConf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae1643028956f6031f8b21362248b4548">_conf</a> = {0}</td></tr>
+<tr class="separator:ae1643028956f6031f8b21362248b4548"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>structure contenant l'ensemble des artefacts </p>
 </div><h2 class="groupheader">Documentation des fonctions membres</h2>
-<a id="a567be83fed7519e2c928fd1e0fe3bbfa" name="a567be83fed7519e2c928fd1e0fe3bbfa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a567be83fed7519e2c928fd1e0fe3bbfa">&#9670;&#160;</a></span>getData()</h2>
+<a id="aa4d5f1c9b8f14654e0d5bef60560d0d9" name="aa4d5f1c9b8f14654e0d5bef60560d0d9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa4d5f1c9b8f14654e0d5bef60560d0d9">&#9670;&#160;</a></span>getData()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -155,22 +152,7 @@ Attributs publics</h2></td></tr>
         <tr>
           <td class="memname">HRESULT Shellbags::getData </td>
           <td>(</td>
-          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>mountpoint</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="struct_users.html">Users</a></td>          <td class="paramname"><span class="paramname"><em>userprofiles</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>pdebug</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>pdump</em></span>, </td>
+          <td class="paramtype"><a class="el" href="struct_appli_conf.html">AppliConf</a></td>          <td class="paramname"><span class="paramname"><em>conf</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -184,13 +166,11 @@ Attributs publics</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>contient les paramètres de l'application issue des paramètres de la ligne de commande </p>
 <p>Fonction permettant de parser les objets </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
-    <tr><td class="paramname">mountpoint</td><td>est le point de montage du snapshot du système </td></tr>
-    <tr><td class="paramname">userprofiles</td><td>contient les profils des utilisateurs de la machine </td></tr>
-    <tr><td class="paramname">pdebug</td><td>est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré </td></tr>
-    <tr><td class="paramname">pdump</td><td>est issu de la ligne de commande. Si true alors le fichier de sortie contiendra le dump hexa de l'objet </td></tr>
-    <tr><td class="paramname">_niveau,profondeur</td><td>dans l'arborescence utilisé pour la mise en forme du fichier json de sortie </td></tr>
+    <tr><td class="paramname">conf</td><td>contient les paramètres de l'application issue des paramètres de la ligne de commande param _niveau est utilisé pour la mie en forme de la hiérarchie des objet dans le json de sortie </td></tr>
   </table>
   </dd>
 </dl>
@@ -290,35 +270,17 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
-<a id="ac342ae734712b7d16359ee6d81e0d0da" name="ac342ae734712b7d16359ee6d81e0d0da"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac342ae734712b7d16359ee6d81e0d0da">&#9670;&#160;</a></span>_debug</h2>
+<a id="ae1643028956f6031f8b21362248b4548" name="ae1643028956f6031f8b21362248b4548"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae1643028956f6031f8b21362248b4548">&#9670;&#160;</a></span>_conf</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool Shellbags::_debug = false</td>
+          <td class="memname"><a class="el" href="struct_appli_conf.html">AppliConf</a> Shellbags::_conf = {0}</td>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json </p>
-
-</div>
-</div>
-<a id="ab864bf22ef6284bab9a57a4b7ffd7752" name="ab864bf22ef6284bab9a57a4b7ffd7752"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab864bf22ef6284bab9a57a4b7ffd7752">&#9670;&#160;</a></span>_dump</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool Shellbags::_dump = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>paramètre de la ligne de commande, si true alors on sauvegarde contenu du buffer au format hexadecimal dans un fichier json </p>
 
 </div>
 </div>

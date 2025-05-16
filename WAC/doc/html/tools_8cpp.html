@@ -128,12 +128,16 @@ Fonctions</h2></td></tr>
 <tr class="memitem:abfb8057ef624b69b47bf30c6db4e3875" id="r_abfb8057ef624b69b47bf30c6db4e3875"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abfb8057ef624b69b47bf30c6db4e3875">printSuccess</a> ()</td></tr>
 <tr class="memdesc:abfb8057ef624b69b47bf30c6db4e3875"><td class="mdescLeft">&#160;</td><td class="mdescRight">affichage du mot OK en vert dans la console  <br /></td></tr>
 <tr class="separator:abfb8057ef624b69b47bf30c6db4e3875"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad857742196348d0e4b3ee1d9474b6638" id="r_ad857742196348d0e4b3ee1d9474b6638"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad857742196348d0e4b3ee1d9474b6638">printError</a> (HRESULT hresult)</td></tr>
-<tr class="separator:ad857742196348d0e4b3ee1d9474b6638"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae5bae328744d0cda312be7564b935ca1" id="r_ae5bae328744d0cda312be7564b935ca1"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae5bae328744d0cda312be7564b935ca1">getErrorWstring</a> (HRESULT hresult)</td></tr>
-<tr class="separator:ae5bae328744d0cda312be7564b935ca1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a52b8e5827ab36d1d9f31335c0ec301fd" id="r_a52b8e5827ab36d1d9f31335c0ec301fd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a52b8e5827ab36d1d9f31335c0ec301fd">printError</a> (std::wstring errorText)</td></tr>
 <tr class="separator:a52b8e5827ab36d1d9f31335c0ec301fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad857742196348d0e4b3ee1d9474b6638" id="r_ad857742196348d0e4b3ee1d9474b6638"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad857742196348d0e4b3ee1d9474b6638">printError</a> (HRESULT hresult)</td></tr>
+<tr class="separator:ad857742196348d0e4b3ee1d9474b6638"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:affed6ff4e2a6ecb7897484a7e9119aaf" id="r_affed6ff4e2a6ecb7897484a7e9119aaf"><td class="memItemLeft" align="right" valign="top">LPWSTR&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#affed6ff4e2a6ecb7897484a7e9119aaf">getErrorMessage</a> (HRESULT hresult)</td></tr>
+<tr class="separator:affed6ff4e2a6ecb7897484a7e9119aaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61d1b2de44e48fcc7fb1084e4ad53078" id="r_a61d1b2de44e48fcc7fb1084e4ad53078"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a61d1b2de44e48fcc7fb1084e4ad53078">getErrorWString</a> (HRESULT hresult)</td></tr>
+<tr class="separator:a61d1b2de44e48fcc7fb1084e4ad53078"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae5bae328744d0cda312be7564b935ca1" id="r_ae5bae328744d0cda312be7564b935ca1"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae5bae328744d0cda312be7564b935ca1">getErrorWstring</a> (HRESULT hresult)</td></tr>
+<tr class="separator:ae5bae328744d0cda312be7564b935ca1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f20577b4f90e4d40f33250f74928ded" id="r_a0f20577b4f90e4d40f33250f74928ded"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0f20577b4f90e4d40f33250f74928ded">ansi_to_utf8</a> (std::string in)</td></tr>
 <tr class="separator:a0f20577b4f90e4d40f33250f74928ded"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2253bdea61c15807680646f199e57082" id="r_a2253bdea61c15807680646f199e57082"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2253bdea61c15807680646f199e57082">ansi_to_utf8</a> (std::wstring in)</td></tr>
@@ -696,6 +700,47 @@ Fonctions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>void </dd></dl>
+
+</div>
+</div>
+<a id="affed6ff4e2a6ecb7897484a7e9119aaf" name="affed6ff4e2a6ecb7897484a7e9119aaf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#affed6ff4e2a6ecb7897484a7e9119aaf">&#9670;&#160;</a></span>getErrorMessage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">LPWSTR getErrorMessage </td>
+          <td>(</td>
+          <td class="paramtype">HRESULT</td>          <td class="paramname"><span class="paramname"><em>hresult</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>extraction du message d'erreur d'un HRESULT retourné par une commande </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">hresult</td><td>résultat retourné par un commande </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>wstring correspondant au texte associé au code erreur HRESULT </dd></dl>
+
+</div>
+</div>
+<a id="a61d1b2de44e48fcc7fb1084e4ad53078" name="a61d1b2de44e48fcc7fb1084e4ad53078"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a61d1b2de44e48fcc7fb1084e4ad53078">&#9670;&#160;</a></span>getErrorWString()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring getErrorWString </td>
+          <td>(</td>
+          <td class="paramtype">HRESULT</td>          <td class="paramname"><span class="paramname"><em>hresult</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>

@@ -8,7 +8,7 @@ var searchData=
   ['datelocaleutc_5',['DateLocaleUtc',['../struct_user_assist.html#a6db3fa3f51c5e1dc69db4b33001b1224',1,'UserAssist']]],
   ['datetime_6',['datetime',['../struct_bam.html#ad8c8105e8633620cbf48fa7befb3aa82',1,'Bam']]],
   ['datetimeutc_7',['datetimeUtc',['../struct_bam.html#acf84477fc7f33c7397b3179fba8130a4',1,'Bam']]],
-  ['daylightineffect_8',['daylightInEffect',['../struct_system.html#aa6adc9aca36077c1f2f3a838e04b57af',1,'System']]],
+  ['daylightineffect_8',['daylightInEffect',['../struct_system_info.html#ac68565ff8b2269300180dac5edf4e99d',1,'SystemInfo']]],
   ['delegate_9',['delegate',['../struct_users_property_view.html#a2543f9e4bd29975bf3f1c23b336146d9',1,'UsersPropertyView']]],
   ['description_10',['description',['../struct_network_shell_item.html#a5334b8839c3e915beb1f44d0158106e5',1,'NetworkShellItem::description'],['../struct_recent_doc.html#af327ac0e33f4fffe6a0cb2e1c4e73337',1,'RecentDoc::description']]],
   ['destfiles_11',['destfiles',['../struct_dest_file_directory.html#afd18c616f5ba9ac128cb93eee92ff323',1,'DestFileDirectory']]],
@@ -23,6 +23,6 @@ var searchData=
   ['disableknownfolderalias_20',['DisableKnownFolderAlias',['../struct_link_flags.html#a7a1bab8836b39ef0d30f0376cc7438a4',1,'LinkFlags']]],
   ['disableknownfoldertracking_21',['DisableKnownFolderTracking',['../struct_link_flags.html#a069c580935d432f416530b622daa5297',1,'LinkFlags']]],
   ['disablelinkpathtracking_22',['DisableLinkPathTracking',['../struct_link_flags.html#ac95e8da4f7c2dd54847aa9899025a0b1',1,'LinkFlags']]],
-  ['domainname_23',['domainName',['../struct_system.html#a248b38d4c2d3f0832fd3876c35deeb84',1,'System']]],
+  ['domainname_23',['domainName',['../struct_system_info.html#ab2b9887e2012f48242e8b8435e68fceb',1,'SystemInfo']]],
   ['drive_24',['drive',['../struct_mounted_device.html#a6ccc8582a2373e19f9b17df597383a42',1,'MountedDevice']]]
 ];

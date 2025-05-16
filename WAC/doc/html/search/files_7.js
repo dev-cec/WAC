@@ -13,5 +13,6 @@ var searchData=
   ['reg_5fshellbags_2ehpp_10',['reg_shellbags.hpp',['../reg__shellbags_8hpp.html',1,'']]],
   ['reg_5fshimcache_2ehpp_11',['reg_shimcache.hpp',['../reg__shimcache_8hpp.html',1,'']]],
   ['reg_5fusbstors_2ehpp_12',['reg_usbstors.hpp',['../reg__usbstors_8hpp.html',1,'']]],
-  ['reg_5fuserassists_2ehpp_13',['reg_userassists.hpp',['../reg__userassists_8hpp.html',1,'']]]
+  ['reg_5fuserassists_2ehpp_13',['reg_userassists.hpp',['../reg__userassists_8hpp.html',1,'']]],
+  ['resource_2eh_14',['resource.h',['../resource_8h.html',1,'']]]
 ];

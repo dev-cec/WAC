@@ -14,7 +14,7 @@ var searchData=
   ['comments_11',['comments',['../struct_network_shell_item.html#a83e38becadc7d467f1a25368a048ebee',1,'NetworkShellItem']]],
   ['compatibleids_12',['CompatibleIds',['../struct_usbstor.html#aacd3a29a49056960317a2adaafb6cb42',1,'Usbstor']]],
   ['compressed_13',['Compressed',['../struct_file_attributes.html#ab6f23132dd4d25d359437f701afda504',1,'FileAttributes']]],
-  ['computername_14',['computerName',['../struct_system.html#a2ece31792fd8b12b757131ccd696b9a2',1,'System']]],
+  ['computername_14',['computerName',['../struct_system_info.html#a076b6619e9293c8f3a6d122d5e96b7fc',1,'SystemInfo']]],
   ['connect_15',['connect',['../struct_c_o_m.html#abad732de9b9e973599f939a6968e7a0b',1,'COM']]],
   ['controlpanel_16',['ControlPanel',['../struct_control_panel.html',1,'ControlPanel'],['../struct_control_panel.html#a55697710bec4604ae4c7245ced224942',1,'ControlPanel::ControlPanel()']]],
   ['controlpanelcategory_17',['ControlPanelCategory',['../struct_control_panel_category.html',1,'ControlPanelCategory'],['../struct_control_panel_category.html#aab817e135dfec089d8eda8d1ca364745',1,'ControlPanelCategory::ControlPanelCategory()']]],
@@ -27,10 +27,11 @@ var searchData=
   ['creationtimeutc_24',['creationTimeUtc',['../struct_volume_info.html#a176d1cb6073a84b8904b31725c98291b',1,'VolumeInfo']]],
   ['ctime_25',['ctime',['../struct_beef0026.html#af77830aaf49cde5a57d6db72533b647c',1,'Beef0026']]],
   ['ctimeutc_26',['ctimeUtc',['../struct_beef0026.html#a4b54cad68e3fef78a0fc5cdb1a122fef',1,'Beef0026']]],
-  ['currentbias_27',['currentBias',['../struct_system.html#adde9a39e31ccd8af46c7bb3691b62640',1,'System']]],
-  ['currenttimezone_28',['currentTimeZone',['../struct_system.html#a483d3d02fd67e075668d3b4edd20cc3b',1,'System']]],
-  ['currenttimezonecaption_29',['currentTimeZoneCaption',['../struct_system.html#a875871b9a87ab249f5f4725985a0ee45',1,'System']]],
-  ['customdestination_30',['CustomDestination',['../struct_custom_destination.html',1,'CustomDestination'],['../struct_custom_destination.html#afc8f2d70cffcd084ac20a4103a191add',1,'CustomDestination::CustomDestination()'],['../struct_custom_destination.html#a44c74b2f0f4c3713cf56b9e11b0d790c',1,'CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _sid, bool _debug, bool _dump, std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *_errors)']]],
-  ['customdestinationcategory_31',['CustomDestinationCategory',['../struct_custom_destination_category.html',1,'CustomDestinationCategory'],['../struct_custom_destination_category.html#ac2cd75cd2cb290e3263ac3cc932cdc23',1,'CustomDestinationCategory::CustomDestinationCategory()'],['../struct_custom_destination_category.html#a5a32616aed9a1efe863ec2d42315a869',1,'CustomDestinationCategory::CustomDestinationCategory(LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid, bool _debug, bool _dump, std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *_errors)']]],
-  ['customdestinations_32',['customDestinations',['../struct_jumplist_customs.html#abc21f6a05008aade524d71f19b6436c5',1,'JumplistCustoms']]]
+  ['currentbias_27',['currentBias',['../struct_system_info.html#a7f2fb03bc040834c45f3e4e210b92921',1,'SystemInfo']]],
+  ['currentcontrolset_28',['CurrentControlSet',['../struct_appli_conf.html#a0de471ec727ec98a44470b1804c959de',1,'AppliConf']]],
+  ['currenttimezone_29',['currentTimeZone',['../struct_system_info.html#a4971c9dbf9099db35f638dd23bc886f4',1,'SystemInfo']]],
+  ['currenttimezonecaption_30',['currentTimeZoneCaption',['../struct_system_info.html#a598c9aa39978d9010d0a3a45f634bcbd',1,'SystemInfo']]],
+  ['customdestination_31',['CustomDestination',['../struct_custom_destination.html',1,'CustomDestination'],['../struct_custom_destination.html#afc8f2d70cffcd084ac20a4103a191add',1,'CustomDestination::CustomDestination()'],['../struct_custom_destination.html#a44c74b2f0f4c3713cf56b9e11b0d790c',1,'CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _sid, bool _debug, bool _dump, std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *_errors)']]],
+  ['customdestinationcategory_32',['CustomDestinationCategory',['../struct_custom_destination_category.html',1,'CustomDestinationCategory'],['../struct_custom_destination_category.html#ac2cd75cd2cb290e3263ac3cc932cdc23',1,'CustomDestinationCategory::CustomDestinationCategory()'],['../struct_custom_destination_category.html#a5a32616aed9a1efe863ec2d42315a869',1,'CustomDestinationCategory::CustomDestinationCategory(LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid, bool _debug, bool _dump, std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *_errors)']]],
+  ['customdestinations_33',['customDestinations',['../struct_jumplist_customs.html#abc21f6a05008aade524d71f19b6436c5',1,'JumplistCustoms']]]
 ];

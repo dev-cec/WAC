@@ -115,8 +115,9 @@ $(function(){initNavTree('struct_jumplist_automatics.html',''); initResizable(tr
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Fonctions membres publiques</h2></td></tr>
-<tr class="memitem:aaaeca4a1477ae3397cf12923bc02dfc2" id="r_aaaeca4a1477ae3397cf12923bc02dfc2"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaaeca4a1477ae3397cf12923bc02dfc2">getData</a> (<a class="el" href="struct_users.html">Users</a> userprofiles, bool pdebug, bool pdump)</td></tr>
-<tr class="separator:aaaeca4a1477ae3397cf12923bc02dfc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a974a54c08fc15d5ac777cc341b5a8f16" id="r_a974a54c08fc15d5ac777cc341b5a8f16"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a974a54c08fc15d5ac777cc341b5a8f16">getData</a> (<a class="el" href="struct_appli_conf.html">AppliConf</a> conf)</td></tr>
+<tr class="memdesc:a974a54c08fc15d5ac777cc341b5a8f16"><td class="mdescLeft">&#160;</td><td class="mdescRight">contient les paramètres de l'application issue des paramètres de la ligne de commande  <br /></td></tr>
+<tr class="separator:a974a54c08fc15d5ac777cc341b5a8f16"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a141239c0ed61972b769f296f58a95a6d" id="r_a141239c0ed61972b769f296f58a95a6d"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a141239c0ed61972b769f296f58a95a6d">to_json</a> ()</td></tr>
 <tr class="separator:a141239c0ed61972b769f296f58a95a6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -128,18 +129,14 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:a99d35fff080dda99109153f0683ddf31" id="r_a99d35fff080dda99109153f0683ddf31"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a99d35fff080dda99109153f0683ddf31">errorsAutomaticDestinations</a></td></tr>
 <tr class="memdesc:a99d35fff080dda99109153f0683ddf31"><td class="mdescLeft">&#160;</td><td class="mdescRight">tableau contenant les erreurs de traitement des objets  <br /></td></tr>
 <tr class="separator:a99d35fff080dda99109153f0683ddf31"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0b1af8dcbb77ccee5d27b87280dc6541" id="r_a0b1af8dcbb77ccee5d27b87280dc6541"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0b1af8dcbb77ccee5d27b87280dc6541">_debug</a> = false</td></tr>
-<tr class="memdesc:a0b1af8dcbb77ccee5d27b87280dc6541"><td class="mdescLeft">&#160;</td><td class="mdescRight">paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json  <br /></td></tr>
-<tr class="separator:a0b1af8dcbb77ccee5d27b87280dc6541"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a688b154ab9cb650bbaeeaa38c74a9ccc" id="r_a688b154ab9cb650bbaeeaa38c74a9ccc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a688b154ab9cb650bbaeeaa38c74a9ccc">_dump</a> = false</td></tr>
-<tr class="memdesc:a688b154ab9cb650bbaeeaa38c74a9ccc"><td class="mdescLeft">&#160;</td><td class="mdescRight">si true alors le fichier de sortie contiendra le dump hexa de l'objet  <br /></td></tr>
-<tr class="separator:a688b154ab9cb650bbaeeaa38c74a9ccc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:addd0609ae30455090b3ca0170bf15be8" id="r_addd0609ae30455090b3ca0170bf15be8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_appli_conf.html">AppliConf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#addd0609ae30455090b3ca0170bf15be8">_conf</a> = {0}</td></tr>
+<tr class="separator:addd0609ae30455090b3ca0170bf15be8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>Représente un objet représentant un objet Jumplist contenant les Automatic Destinations </p>
 </div><h2 class="groupheader">Documentation des fonctions membres</h2>
-<a id="aaaeca4a1477ae3397cf12923bc02dfc2" name="aaaeca4a1477ae3397cf12923bc02dfc2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaaeca4a1477ae3397cf12923bc02dfc2">&#9670;&#160;</a></span>getData()</h2>
+<a id="a974a54c08fc15d5ac777cc341b5a8f16" name="a974a54c08fc15d5ac777cc341b5a8f16"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a974a54c08fc15d5ac777cc341b5a8f16">&#9670;&#160;</a></span>getData()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -150,17 +147,8 @@ Attributs publics</h2></td></tr>
         <tr>
           <td class="memname">HRESULT JumplistAutomatics::getData </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="struct_users.html">Users</a></td>          <td class="paramname"><span class="paramname"><em>userprofiles</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramtype"><a class="el" href="struct_appli_conf.html">AppliConf</a></td>          <td class="paramname"><span class="paramname"><em>conf</em></span></td><td>)</td>
           <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>pdebug</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>pdump</em></span>&#160;)</td>
         </tr>
       </table>
   </td>
@@ -169,11 +157,11 @@ Attributs publics</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>contient les paramètres de l'application issue des paramètres de la ligne de commande </p>
 <p>Fonction permettant de parser les objets </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
-    <tr><td class="paramname">userprofiles</td><td>contient les profiles utilisateurs de la machine </td></tr>
-    <tr><td class="paramname">pdebug</td><td>est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré </td></tr>
-    <tr><td class="paramname">pdump</td><td>est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal </td></tr>
+    <tr><td class="paramname">conf</td><td>contient les paramètres de l'application issue des paramètres de la ligne de commande </td></tr>
   </table>
   </dd>
 </dl>
@@ -207,35 +195,17 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
-<a id="a0b1af8dcbb77ccee5d27b87280dc6541" name="a0b1af8dcbb77ccee5d27b87280dc6541"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0b1af8dcbb77ccee5d27b87280dc6541">&#9670;&#160;</a></span>_debug</h2>
+<a id="addd0609ae30455090b3ca0170bf15be8" name="addd0609ae30455090b3ca0170bf15be8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#addd0609ae30455090b3ca0170bf15be8">&#9670;&#160;</a></span>_conf</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool JumplistAutomatics::_debug = false</td>
+          <td class="memname"><a class="el" href="struct_appli_conf.html">AppliConf</a> JumplistAutomatics::_conf = {0}</td>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json </p>
-
-</div>
-</div>
-<a id="a688b154ab9cb650bbaeeaa38c74a9ccc" name="a688b154ab9cb650bbaeeaa38c74a9ccc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a688b154ab9cb650bbaeeaa38c74a9ccc">&#9670;&#160;</a></span>_dump</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool JumplistAutomatics::_dump = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>si true alors le fichier de sortie contiendra le dump hexa de l'objet </p>
 
 </div>
 </div>

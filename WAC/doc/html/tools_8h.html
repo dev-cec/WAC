@@ -110,8 +110,9 @@ $(function(){initNavTree('tools_8h.html',''); initResizable(true); });
   <div class="headertitle"><div class="title">Référence du fichier tools.h</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &lt;string&gt;</code><br />
-<code>#include &quot;offreg.h&quot;</code><br />
+<div class="textblock"><code>#include &lt;iostream&gt;</code><br />
+<code>#include &lt;string&gt;</code><br />
+<code>#include &lt;offreg.h&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
 <code>#include &lt;time.h&gt;</code><br />
 </div>
@@ -119,8 +120,10 @@ $(function(){initNavTree('tools_8h.html',''); initResizable(true); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_appli_conf.html">AppliConf</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure de données contenant la configuration de l'application.  <a href="struct_appli_conf.html#details">Plus de détails...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_fat_date_time.html">FatDateTime</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">structure de données permettant de stocker les dates au format FAT DOS time  <a href="struct_fat_date_time.html#details">Plus de détails...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
@@ -146,6 +149,8 @@ Fonctions</h2></td></tr>
 <tr class="separator:a52b8e5827ab36d1d9f31335c0ec301fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae5bae328744d0cda312be7564b935ca1" id="r_ae5bae328744d0cda312be7564b935ca1"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae5bae328744d0cda312be7564b935ca1">getErrorWstring</a> (HRESULT hresult)</td></tr>
 <tr class="separator:ae5bae328744d0cda312be7564b935ca1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:affed6ff4e2a6ecb7897484a7e9119aaf" id="r_affed6ff4e2a6ecb7897484a7e9119aaf"><td class="memItemLeft" align="right" valign="top">LPWSTR&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#affed6ff4e2a6ecb7897484a7e9119aaf">getErrorMessage</a> (HRESULT hresult)</td></tr>
+<tr class="separator:affed6ff4e2a6ecb7897484a7e9119aaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f20577b4f90e4d40f33250f74928ded" id="r_a0f20577b4f90e4d40f33250f74928ded"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0f20577b4f90e4d40f33250f74928ded">ansi_to_utf8</a> (std::string in)</td></tr>
 <tr class="separator:a0f20577b4f90e4d40f33250f74928ded"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2253bdea61c15807680646f199e57082" id="r_a2253bdea61c15807680646f199e57082"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2253bdea61c15807680646f199e57082">ansi_to_utf8</a> (std::wstring in)</td></tr>
@@ -755,6 +760,30 @@ Fonctions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>void </dd></dl>
+
+</div>
+</div>
+<a id="affed6ff4e2a6ecb7897484a7e9119aaf" name="affed6ff4e2a6ecb7897484a7e9119aaf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#affed6ff4e2a6ecb7897484a7e9119aaf">&#9670;&#160;</a></span>getErrorMessage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">LPWSTR getErrorMessage </td>
+          <td>(</td>
+          <td class="paramtype">HRESULT</td>          <td class="paramname"><span class="paramname"><em>hresult</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>extraction du message d'erreur d'un HRESULT retourné par une commande </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">hresult</td><td>résultat retourné par un commande </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>wstring correspondant au texte associé au code erreur HRESULT </dd></dl>
 
 </div>
 </div>

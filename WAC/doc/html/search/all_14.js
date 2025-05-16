@@ -11,7 +11,7 @@ var searchData=
   ['usbs_8',['usbs',['../struct_usbstors.html#a8db49a85aca68f8604cca00b453b974d',1,'Usbstors']]],
   ['usbstor_9',['Usbstor',['../struct_usbstor.html',1,'']]],
   ['usbstors_10',['Usbstors',['../struct_usbstors.html',1,'']]],
-  ['user_11',['User',['../struct_user.html',1,'User'],['../struct_user.html#af88899cbfb56f94cfb2786a513f165b4',1,'User::User()']]],
+  ['user_11',['User',['../struct_user.html',1,'User'],['../struct_user.html#a4a0137053e591fbb79d9057dd7d2283d',1,'User::User()'],['../struct_user.html#af88899cbfb56f94cfb2786a513f165b4',1,'User::User(LPWSTR profilName)']]],
   ['userassist_12',['UserAssist',['../struct_user_assist.html',1,'']]],
   ['userassists_13',['UserAssists',['../struct_user_assists.html',1,'']]],
   ['userassists_14',['userassists',['../struct_user_assists.html#a29e9396d468ac93eb48e19e559fd2d7e',1,'UserAssists']]],

@@ -147,28 +147,27 @@ $(function(){initNavTree('com_8hpp_source.html',''); initResizable(true); });
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>            NULL                         <span class="comment">// Reserved</span></div>
 <div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>        );</div>
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>        <span class="keywordflow">if</span> (FAILED(hres))</div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>        {</div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>            std::cout &lt;&lt; <span class="stringliteral">&quot;Failed to initialize security. Error code = 0x&quot;</span></div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>                &lt;&lt; std::hex &lt;&lt; hres &lt;&lt; std::endl;</div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>            <a class="code hl_function" href="struct_c_o_m.html#a0cc2fdf1d3573721454eb2084b837224">clear</a>();</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>            <span class="keywordflow">return</span> ERROR_UNIDENTIFIED_ERROR;                    <span class="comment">// Program has failed.</span></div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>        }</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> </div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>        <span class="keywordflow">return</span> ERROR_SUCCESS;</div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    }</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>        <span class="keywordflow">if</span> (FAILED(hres))</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>        {</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>            std::cout &lt;&lt; <span class="stringliteral">&quot;Failed to initialize security. Error code = 0x&quot;</span></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>                &lt;&lt; std::hex &lt;&lt; hres &lt;&lt; std::endl;</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>            <a class="code hl_function" href="struct_c_o_m.html#a0cc2fdf1d3573721454eb2084b837224">clear</a>();</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>            <span class="keywordflow">return</span> ERROR_UNIDENTIFIED_ERROR;                    <span class="comment">// Program has failed.</span></div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>        }</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>        <span class="keywordflow">return</span> ERROR_SUCCESS;</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    }</div>
 </div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
-<div class="foldopen" id="foldopen00056" data-start="{" data-end="}">
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno"><a class="line" href="struct_c_o_m.html#a0cc2fdf1d3573721454eb2084b837224">   56</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="struct_c_o_m.html#a0cc2fdf1d3573721454eb2084b837224">clear</a>() {</div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>        CoUninitialize();</div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    }</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span> </div>
+<div class="foldopen" id="foldopen00055" data-start="{" data-end="}">
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="struct_c_o_m.html#a0cc2fdf1d3573721454eb2084b837224">   55</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="struct_c_o_m.html#a0cc2fdf1d3573721454eb2084b837224">clear</a>() {</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>        CoUninitialize();</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    }</div>
 </div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>};</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>};</div>
 </div>
 <div class="ttc" id="astruct_c_o_m_html"><div class="ttname"><a href="struct_c_o_m.html">COM</a></div><div class="ttdef"><b>Definition</b> com.hpp:12</div></div>
-<div class="ttc" id="astruct_c_o_m_html_a0cc2fdf1d3573721454eb2084b837224"><div class="ttname"><a href="struct_c_o_m.html#a0cc2fdf1d3573721454eb2084b837224">COM::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdef"><b>Definition</b> com.hpp:56</div></div>
+<div class="ttc" id="astruct_c_o_m_html_a0cc2fdf1d3573721454eb2084b837224"><div class="ttname"><a href="struct_c_o_m.html#a0cc2fdf1d3573721454eb2084b837224">COM::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdef"><b>Definition</b> com.hpp:55</div></div>
 <div class="ttc" id="astruct_c_o_m_html_abad732de9b9e973599f939a6968e7a0b"><div class="ttname"><a href="struct_c_o_m.html#abad732de9b9e973599f939a6968e7a0b">COM::connect</a></div><div class="ttdeci">HRESULT connect()</div><div class="ttdef"><b>Definition</b> com.hpp:17</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->

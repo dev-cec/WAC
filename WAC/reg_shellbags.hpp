@@ -69,11 +69,8 @@ public:
 	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
-	* @param mountpoint est le point de montage du snapshot du système
-	* @param userprofiles contient les profils des utilisateurs de la machine
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issu de la ligne de commande. Si true alors le fichier de sortie contiendra le dump hexa de l'objet
-	* @param _niveau, profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
+	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
+	* param _niveau est utilisé pour la mie en forme de la hiérarchie des objet dans le json de sortie
 	*/
 	HRESULT getData(AppliConf conf, int _niveau = 0) {
 		_conf = conf;

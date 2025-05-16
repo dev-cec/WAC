@@ -19,6 +19,8 @@ var tools_8cpp =
     [ "decodeURIComponent", "tools_8cpp.html#a897a3625e4fa6aa492efd7beaeaa1d75", null ],
     [ "dump", "tools_8cpp.html#ac4c0694f9ff1125a48aa8c09d96d18dc", null ],
     [ "dump_wstring", "tools_8cpp.html#a40d9f5d680f3b777ad0eac00c00bdc98", null ],
+    [ "getErrorMessage", "tools_8cpp.html#affed6ff4e2a6ecb7897484a7e9119aaf", null ],
+    [ "getErrorWString", "tools_8cpp.html#a61d1b2de44e48fcc7fb1084e4ad53078", null ],
     [ "getErrorWstring", "tools_8cpp.html#ae5bae328744d0cda312be7564b935ca1", null ],
     [ "getNameFromSid", "tools_8cpp.html#ab29ec2bd73a4de1536739ac5cd16ecff", null ],
     [ "getRegBinaryValue", "tools_8cpp.html#ae17c83c47efcb167d7885f0ebc3fc1eb", null ],

@@ -1,5 +1,6 @@
 var tools_8h =
 [
+    [ "AppliConf", "struct_appli_conf.html", "struct_appli_conf" ],
     [ "FatDateTime", "struct_fat_date_time.html", "struct_fat_date_time" ],
     [ "MAX_DATA", "tools_8h.html#aaf06a3762adb0aa04b8a5f8f016ca5e9", null ],
     [ "MAX_KEY_NAME", "tools_8h.html#a59a60f1c130d5c23de0982c16d962ce3", null ],
@@ -23,6 +24,7 @@ var tools_8h =
     [ "decodeURIComponent", "tools_8h.html#a897a3625e4fa6aa492efd7beaeaa1d75", null ],
     [ "dump", "tools_8h.html#ac4c0694f9ff1125a48aa8c09d96d18dc", null ],
     [ "dump_wstring", "tools_8h.html#a40d9f5d680f3b777ad0eac00c00bdc98", null ],
+    [ "getErrorMessage", "tools_8h.html#affed6ff4e2a6ecb7897484a7e9119aaf", null ],
     [ "getErrorWstring", "tools_8h.html#ae5bae328744d0cda312be7564b935ca1", null ],
     [ "getNameFromSid", "tools_8h.html#ab29ec2bd73a4de1536739ac5cd16ecff", null ],
     [ "getRegBinaryValue", "tools_8h.html#ae17c83c47efcb167d7885f0ebc3fc1eb", null ],

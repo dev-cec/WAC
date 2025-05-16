@@ -24,6 +24,7 @@ var dir_59651bc50cd52202dfd7c76305c5d752 =
     [ "reg_shimcache.hpp", "reg__shimcache_8hpp.html", "reg__shimcache_8hpp" ],
     [ "reg_usbstors.hpp", "reg__usbstors_8hpp.html", "reg__usbstors_8hpp" ],
     [ "reg_userassists.hpp", "reg__userassists_8hpp.html", "reg__userassists_8hpp" ],
+    [ "resource.h", "resource_8h.html", "resource_8h" ],
     [ "schedulesTasks.hpp", "schedules_tasks_8hpp.html", "schedules_tasks_8hpp" ],
     [ "services.hpp", "services_8hpp.html", "services_8hpp" ],
     [ "sessions.hpp", "sessions_8hpp.html", "sessions_8hpp" ],
