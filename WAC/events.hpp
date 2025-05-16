@@ -134,8 +134,6 @@ std::wstring VariantType_to_wstring(PEVT_VARIANT data) {
 	}
 
 	default: {
-		if (data->Type != 0)
-			std::wcout << data->Type << std::endl;
 		return L"\"\"";
 		break;
 	}
