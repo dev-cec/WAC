@@ -257,6 +257,9 @@ struct Event {
 		temp = replaceAll(temp, L"\n", L"\n\t\t");
 		evtEventData = L"[\n\t\t" + temp + L"\n\t]"; // pour garantir d'avoir toujours un tableau formaté même si chaîne unique
 
+		free(bufferEvt);
+		free(bufferEvt2);
+
 		//Message
 		EVT_HANDLE hmetadata = EvtOpenPublisherMetadata(hevt, buffer, NULL, 0, 0);
 		DWORD messagesize = 0, messageSizeNeeded = 0;
@@ -281,8 +284,10 @@ struct Event {
 				temp = replaceAll(temp, L"\n", L"\\n");
 				temp = replaceAll(temp, L"\t", L"\\t");
 				evtEventMessage = L"\"" + temp + L"\"";
+				free(bufferMessage);
 			}
 		} while (status == ERROR_INSUFFICIENT_BUFFER);
+
 		EvtClose(hmetadata);
 	}
 
@@ -390,6 +395,7 @@ struct Events {
 			}
 
 		} while ((status == ERROR_SUCCESS) || (status == ERROR_INSUFFICIENT_BUFFER));
+		free(buffer);
 		EvtClose(hQuery);
 		EvtClose(hChannel);
 		EvtClose(hevt);

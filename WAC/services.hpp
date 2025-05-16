@@ -49,6 +49,7 @@ struct ServiceStruct
 			serviceBinary = std::wstring(sData->lpBinaryPathName);
 			serviceBinary = replaceAll(serviceBinary, L"\\", L"\\\\");
 			serviceBinary = replaceAll(serviceBinary, L"\"", L"\\\"");
+			free(sData);
 		}
 
 		else {
@@ -114,7 +115,7 @@ struct Services
 				services.push_back(ServiceStruct(hSCM, (ENUM_SERVICE_STATUS_PROCESS)servicesBuf[i]));
 			}
 			free(servicesBuf);
-			return 0;
+			return ERROR_SUCCESS;
 		}
 		int err = GetLastError();
 		if (ERROR_MORE_DATA != err) {

@@ -52,6 +52,7 @@ struct User {
 			data = (LPWSTR)malloc(dataSize);
 			hresult = RegQueryValueExW(hKey, L"ProfileImagePath", NULL, NULL, (LPBYTE)data, &dataSize);
 			profile = ansi_to_utf8(std::wstring(data));
+			free(data);
 		}
 		else
 			profile = L"";
