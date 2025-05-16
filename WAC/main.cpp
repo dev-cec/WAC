@@ -44,8 +44,8 @@ void showHelp(HANDLE hConsole, AppliConf conf) {
 	std::cout << "\t--dump : add std::hexa value in json files for shellbags and LNK files \n";
 	std::cout << "\t--debug : add error output files\n";
 	std::cout << "\t--events : converts events to json (long time)\n";
-	std::cout << "\t--output=[path] : relative directory path to store output files starting from current directory. By default the directory is 'output'\n";
-	std::cout << "\t--errorOutput=[path] : relative directory path to store error output files starting from current directory. By default the directory is 'errors'\n";
+	std::cout << "\t--output=[directory name] : directory name to store output files starting from current directory. By default the directory is 'output'\n";
+	std::cout << "\t--errorOutput=[directory name] : directory name to store error output files starting from current directory. By default the directory is 'errors'\n";
 };
 
 int main(int argc, char* argv[])
