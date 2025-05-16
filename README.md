@@ -46,12 +46,11 @@ It extracts various artefacts in **JSON format**, including:
 To minimize disk traces, this standalone tool should be run **as administrator** 🔐 from a USB stick using the command:
 
 ```
-Regparser_cpp [--dump --debug
+WAC.exe [--dump] [--debug] [--events] [--output=output] [--errorOutput=errors]
 ```
 
 ### ⚙️ Options :
 
-- `WAV.exe [--dump] [--debug] [--events] [--output=output] [--errorOutput=errors]`
 - `--help` or /?` : show this help 
 - `--dump` : add std::hexa value in json files for shellbags and LNK files 
 - `--debug` : add error output files
