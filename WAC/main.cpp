@@ -86,6 +86,7 @@ int main(int argc, char* argv[])
 	* fonctions utiles
 	*************************/
 	//ASCII ART
+	SetConsoleOutputCP(CP_UTF8); // format UTF8 pour la prise en compte des accents dans la console car retour en UTF8
 	system("cls");//clear screen
 
 	std::cout << R"(
@@ -112,8 +113,6 @@ int main(int argc, char* argv[])
 	)" << std::endl;
 
 	std::cout.flush();
-
-	SetConsoleOutputCP(CP_UTF8); // format UTF8 pour la prise en compte des accents dans la console car retour en UTF8
 
 	start = time(nullptr);//heure de depart du logiciel pour benchmark
 
