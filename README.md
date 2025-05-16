@@ -2,6 +2,10 @@
 ![version](https://img.shields.io/badge/Architecture-64bit-red)  
 ![CPP](https://img.shields.io/badge/Microsoft_Visual_C++-2022-blue)
 
+## 🔎 PROVIDER
+![Ecole de l'air et de l'espace](WAC/img/EAE.png "Ecole de l'air et de l'espace")
+![Centre d'Excellence Cyberdéfense aérospatiale](WAC/img/CEC.png "Centre d'Excellence Cyberdéfense aérospatiale")
+ 
 ## 🔎 OVERVIEW
 
 The idea behind this tool is to provide a **fast extraction** ⚡ of numerous artefacts and event logs from a running Windows machine.  
@@ -87,7 +91,7 @@ Example of extracted system information:
 }
 ```
 
-Output files are saved in :  
+**Default output files are saved in :** 
 - 📁 The `output` directory for standard results  
 - ⚠️ The `errors` directory for logs when using `--debug`
 
@@ -95,7 +99,8 @@ Output files are saved in :
 
 |                              **Architecture**                              | **Without events** | **With Events** |
 |:--------------------------------------------------------------------------:|:------------------:|:---------------:|
-| - Intel Core I7-8750 2.20 GHz<br>- 16 Go RAM<br>- Installed since 162 days |         ⌛5s        |   ⌛19 min 37s   |
+| - Intel Core i7-8750 2.20 GHz<br>- 16 Go RAM<br>- Windows 11 home Edition <br>- Installed since 162 days |         ⌛5s        |   ⌛19 min 37s   |
+| - Intel Core i7-8665U 2.11 GHz<br>- 16 Go RAM<br>- Windows 10 Pro 22H2<br>- Installed since 1323 days  |         ⌛9s        |   ⌛1 min 42s   |
  
 ## 🧰 BUILD REQUIREMENTS
 
