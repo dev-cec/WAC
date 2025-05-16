@@ -237,8 +237,9 @@ public:
 			const int decompressed_size = bytes_to_int(buffer + 4);
 			buffer += 8;
 			ULONG compressed_buffer_workspace_size, compress_fragment_workspace_size;
-			if (compression_workspace_size(CompressionFormatXpressHuff, &compressed_buffer_workspace_size, &compress_fragment_workspace_size) != 0)
-				return ERROR_UNIDENTIFIED_ERROR;
+			HRESULT hr = compression_workspace_size(CompressionFormatXpressHuff, &compressed_buffer_workspace_size, &compress_fragment_workspace_size);
+			if (hr != ERROR_SUCCESS)
+				return hr;
 
 			data = new BYTE[decompressed_size];
 
@@ -246,7 +247,7 @@ public:
 
 			auto* const workspace = malloc(compressed_buffer_workspace_size);
 			if (!workspace)
-				return ERROR_UNIDENTIFIED_ERROR;
+				return ERROR_DECRYPTION_FAILED;
 
 
 			decompress_buffer_ex(

@@ -77,7 +77,7 @@ public:
 			commandOption = showCommandOption(bytes_to_unsigned_int(buffer + 60)); //
 			//debug
 			if (commandOption == L"UNKOWN" && _debug == true)
-				errors->push_back({ L"commandOption Unknown 0x" + to_hex(bytes_to_unsigned_int(buffer + 60)),ERROR_UNIDENTIFIED_ERROR });
+				errors->push_back({ L"commandOption Unknown 0x" + to_hex(bytes_to_unsigned_int(buffer + 60)),ERROR_UNSUPPORTED_TYPE });
 
 			//-------------------------------------------------------------------------
 			// Shell item id list (starts at 76 with 2 byte length -> so we can skip):
@@ -123,7 +123,7 @@ public:
 					volumeDriveType = driveType_to_wstring(driveType);
 					//debug
 					if (volumeDriveType == L"BAD TYPE" && _debug == true)
-						errors->push_back({ L"volumeDriveType BAD TYPE 0x" + to_hex(driveType),ERROR_UNIDENTIFIED_ERROR });
+						errors->push_back({ L"volumeDriveType BAD TYPE 0x" + to_hex(driveType),ERROR_UNSUPPORTED_TYPE });
 					unsigned int serial = bytes_to_unsigned_int(buffer + LinkInfo_offset + volumeId_offset + 8);
 					std::stringstream ss;
 					ss << std::hex << serial;
@@ -165,7 +165,7 @@ public:
 						netProviderType = networkProvider_to_wstring(bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 14));
 						//debug
 						if (netProviderType == L"BAD NET PROVIDER" && _debug == true)
-							errors->push_back({ L"netProviderType Unknown 0x" + to_hex(bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 14)),ERROR_UNIDENTIFIED_ERROR });
+							errors->push_back({ L"netProviderType Unknown 0x" + to_hex(bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 14)),ERROR_UNSUPPORTED_TYPE });
 					}
 				}
 			}

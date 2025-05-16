@@ -147,12 +147,12 @@ struct CustomDestination {
 			typeInt = bytes_to_unsigned_int(buffer);
 			switch (typeInt) {
 			case 0: {
-				_errors->push_back({ replaceAll(path,L"\\",L"\\\\") + L" : Custom category not supported",ERROR_UNIDENTIFIED_ERROR});
+				_errors->push_back({ replaceAll(path,L"\\",L"\\\\") + L" : Custom category not supported",ERROR_UNSUPPORTED_TYPE});
 				type = L"Custom category";
 				break;
 			}
 			case 1: {
-				_errors->push_back({ replaceAll(path,L"\\",L"\\\\") + L" : Known category not supported",ERROR_UNIDENTIFIED_ERROR });
+				_errors->push_back({ replaceAll(path,L"\\",L"\\\\") + L" : Known category not supported",ERROR_UNSUPPORTED_TYPE });
 				type = L"Known category";
 				break;
 			}
@@ -168,7 +168,7 @@ struct CustomDestination {
 				categorie = new CustomDestinationCategory(buffer, size, path, _sid, _debug, _dump, _errors);
 			}
 			else {
-				_errors->push_back({ replaceAll(path,L"\\",L"\\\\") + L" : Empty customdestination, no LNK to parse",ERROR_UNIDENTIFIED_ERROR });
+				_errors->push_back({ replaceAll(path,L"\\",L"\\\\") + L" : Empty customdestination, no LNK to parse",ERROR_INVALID_DATA });
 			}
 
 		}

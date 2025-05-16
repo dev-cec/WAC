@@ -5,6 +5,7 @@
 #include <iostream>
 #include <comdef.h>
 #include <string>
+#include "tools.h"
 
 
 /*! structure permettant de se connecter sur le système pour par la suite exécuter des requête WMI et WIN32 API
@@ -21,9 +22,8 @@ public:
         hres = CoInitializeEx(0, COINIT_MULTITHREADED);
         if (FAILED(hres))
         {
-            std::cout << "Failed to initialize COM library. Error code = 0x"
-                << std::hex << hres << std::endl;
-            return ERROR_UNIDENTIFIED_ERROR;                  // Program has failed.
+            std::wcout << L"Failed to initialize COM library : " << getErrorMessage(hres) << std::endl;
+            return hres;                  // Program has failed.
         }
 
         // Step 2: --------------------------------------------------
@@ -43,10 +43,9 @@ public:
 
         if (FAILED(hres))
         {
-            std::cout << "Failed to initialize security. Error code = 0x"
-                << std::hex << hres << std::endl;
+            std::wcout << L"Failed to initialize security : " << getErrorMessage(hres) << std::endl;
             clear();
-            return ERROR_UNIDENTIFIED_ERROR;                    // Program has failed.
+            return hres;                    // Program has failed.
         }
 
         return ERROR_SUCCESS;

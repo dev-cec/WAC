@@ -507,7 +507,7 @@ SPSValue::SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau, bool pdebug, 
 			valueType = bytes_to_unsigned_short(buffer + 9);
 			name = to_FriendlyName(guid, id_int);
 			if (name == L"(Undefined)" && pdebug == true) {
-				errors->push_back({ L"SPS Value : Friendlyname Unknown " + guid + L"/" + std::to_wstring(id_int), ERROR_UNIDENTIFIED_ERROR });
+				errors->push_back({ L"SPS Value : Friendlyname Unknown " + guid + L"/" + std::to_wstring(id_int), ERROR_UNKNOWN_COMPONENT });
 			}
 			id = std::to_wstring(id_int);
 
@@ -1310,7 +1310,7 @@ void getExtensionBlock(LPBYTE buffer, std::vector<IExtensionBlock*>* extensionBl
 		extensionBlocks->push_back(block);
 	}
 	else {
-		errors->push_back({ L"Extension block unknown 0x" + to_hex(signature) + L" : " + dump_wstring(buffer, 0, size),ERROR_UNIDENTIFIED_ERROR });
+		errors->push_back({ L"Extension block unknown 0x" + to_hex(signature) + L" : " + dump_wstring(buffer, 0, size),ERROR_UNKNOWN_COMPONENT });
 	}
 }
 
@@ -1379,7 +1379,7 @@ VolumeShellItem::VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _ni
 		identifier = replaceAll(identifier, L"\\", L"\\\\");
 	}
 	else if (flags.None != true)
-		errors->push_back({ L"VolumeShellItem flag unknown : " + to_hex(type_char),ERROR_UNIDENTIFIED_ERROR });
+		errors->push_back({ L"VolumeShellItem flag unknown : " + to_hex(type_char),ERROR_UNKNOWN_COMPONENT });
 
 }
 
@@ -1513,7 +1513,7 @@ Property::Property(LPBYTE buffer, int _niveau, bool pdebug, bool pdump, std::vec
 	pos += 4;
 	FriendlyName = to_FriendlyName(guid, id);
 	if (FriendlyName == L"(Undefined)" && pdebug == true) {
-		errors->push_back({ L"Property : Friendlyname Unknown " + guid + L"/" + std::to_wstring(id),ERROR_UNIDENTIFIED_ERROR });
+		errors->push_back({ L"Property : Friendlyname Unknown " + guid + L"/" + std::to_wstring(id),ERROR_UNKNOWN_COMPONENT });
 	}
 	type = bytes_to_unsigned_int(buffer + pos);
 	pos += 4;
@@ -1750,7 +1750,7 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau, bool pdebug, bo
 		}
 	}
 	else {
-		errors->push_back({ L"UsersPropertyView Signature 0x" + to_hex(signature) + L" unknown : " + dump_wstring(buffer, 0, totalsize),ERROR_UNIDENTIFIED_ERROR });
+		errors->push_back({ L"UsersPropertyView Signature 0x" + to_hex(signature) + L" unknown : " + dump_wstring(buffer, 0, totalsize),ERROR_UNKNOWN_COMPONENT });
 	}
 
 	unsigned short int extensionOffset = bytes_to_unsigned_short(buffer + totalsize - 2);
@@ -1855,7 +1855,7 @@ RootFolder::RootFolder(LPBYTE buffer, int _niveau, bool pdebug, bool pdump, std:
 		}
 	}
 	if (sortIndex == L"UNKNOWN" && _debug == true)
-		errors->push_back({ L"RootFolder : sortIndex Unknown 0x" + to_hex(type),ERROR_UNIDENTIFIED_ERROR });
+		errors->push_back({ L"RootFolder : sortIndex Unknown 0x" + to_hex(type),ERROR_UNKNOWN_COMPONENT });
 	/* TODO: C'est une version simplifiée qui semble suffire pour le moment
 	* conforme à la documentation Windows Shell Item format specification https://github.com/libyal/libfwsi/blob/main/documentation/Windows%20Shell%20Item%20format.asciidoc#43-control-panel-shell-items
 	* Le code à l'adresse ci dessous est plus complet
@@ -1903,7 +1903,7 @@ NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _niveau, bool pdebug, bool
 	subtypename = networkSubType(subtype);
 	//debug
 	if (subtypename == L"Unknown" && pdebug == true)
-		errors->push_back({ L"NetworkShellItem : Subtype Unknown 0x" + to_hex(subtype),ERROR_UNIDENTIFIED_ERROR });
+		errors->push_back({ L"NetworkShellItem : Subtype Unknown 0x" + to_hex(subtype),ERROR_UNKNOWN_COMPONENT });
 	if (subtype == 0xC3) {
 		location = string_to_wstring(ansi_to_utf8(std::string((char*)buffer + 5)));
 		location = replaceAll(location, L"\\", L"\\\\");
@@ -2156,7 +2156,7 @@ void getShellItem(LPBYTE buffer, IShellItem** p, int _niveau, bool pdebug, bool 
 		if (type == L"FAVORITE_SHELL_ITEM") *p = new FavoriteShellitem(buffer, _niveau, pdebug, pdump, errors);
 		if (type == L"UNKNOWN")*p = new UnknownShellItem(buffer, _niveau, pdebug, pdump, errors);
 		if (type == L"UNKNOWN") {
-			errors->push_back({ L"Unknown Shell Item 0x" + to_hex(type_char) + L" : " + dump_wstring(buffer, 0, item_size),ERROR_UNIDENTIFIED_ERROR });
+			errors->push_back({ L"Unknown Shell Item 0x" + to_hex(type_char) + L" : " + dump_wstring(buffer, 0, item_size),ERROR_UNKNOWN_COMPONENT });
 		}
 	}
 	else {

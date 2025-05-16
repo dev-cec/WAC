@@ -102,8 +102,9 @@ struct Services
 		hSCM = OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE | SC_MANAGER_CONNECT);
 		if (hSCM == NULL)
 		{
-			errors.push_back({ L"Could not open Service Control Manager",ERROR_UNIDENTIFIED_ERROR });
-			return ERROR_UNIDENTIFIED_ERROR;
+			HRESULT error = GetLastError();
+			errors.push_back({ L"Could not open Service Control Manager",error });
+			return error;
 		}
 
 		// et buffer size needed

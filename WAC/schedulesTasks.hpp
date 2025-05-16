@@ -284,7 +284,7 @@ struct ScheduledTasks {
 		{
 			errors.push_back({ L"Unable to get folder pointer", hr });
 			
-			return ERROR_UNIDENTIFIED_ERROR;
+			return hr;
 		}
 		pRootFolder->GetFolders(0, &pRootFoldersCollection);
 		// on récupère tous les sous-repertoires

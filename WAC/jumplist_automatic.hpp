@@ -90,7 +90,7 @@ struct AutomaticDestination {
 				ole = oleParser(buffer, size);
 			}
 			catch (const std::exception e) {
-				_errors->push_back({ L"Error parsing " + path + L" : " + string_to_wstring(e.what()),ERROR_UNIDENTIFIED_ERROR });
+				_errors->push_back({ L"Error parsing " + path + L" : " + string_to_wstring(e.what()),ERROR_INVALID_DATA });
 				return;
 			}
 
