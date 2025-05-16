@@ -44,6 +44,7 @@ struct Session {
 			sid = data->Sid;
 			sessionId = (data->LogonId.HighPart << 32) + data->LogonId.LowPart;
 		}
+		LsaFreeReturnBuffer(data);
 	}
 
 	/*! conversion de l'objet au format json
@@ -89,7 +90,7 @@ struct Sessions {
 		for (int i = 0; i < nbSessions; i++) {
 			sessions.push_back(Session(&pointer[i]));
 		}
-
+		LsaFreeReturnBuffer(&pointer);
 		return ERROR_SUCCESS;
 	}
 	/*! conversion de l'objet au format json

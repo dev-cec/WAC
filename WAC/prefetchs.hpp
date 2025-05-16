@@ -240,7 +240,7 @@ public:
 			if (compression_workspace_size(CompressionFormatXpressHuff, &compressed_buffer_workspace_size, &compress_fragment_workspace_size) != 0)
 				return ERROR_UNIDENTIFIED_ERROR;
 
-			LPBYTE decompressed_data = new BYTE[decompressed_size];
+			data = new BYTE[decompressed_size];
 
 			ULONG final_uncompressed_size;
 
@@ -251,21 +251,21 @@ public:
 
 			decompress_buffer_ex(
 				CompressionFormatXpressHuff,
-				reinterpret_cast<PUCHAR>(decompressed_data),
+				reinterpret_cast<PUCHAR>(data),
 				decompressed_size,
 				reinterpret_cast<PUCHAR>(buffer),
 				size,
 				&final_uncompressed_size,
 				workspace);
-
 			free(workspace);
-			data = decompressed_data;
-
+			
 		}
 		else { // PAS DE COMPRESSION
 			data = buffer;
 		}
+
 		
+
 		version = bytes_to_int(data);
 		signature = bytes_to_int(data + 4);
 		hash_string = std::wstring(data + 76, data + 80);
@@ -278,9 +278,8 @@ public:
 
 		//verification de la version
 		if (version <30) {
-			return ERROR_INVALID_DATA; // signature invalide ou version non prise en charge (<win10)
+			return ERROR_INVALID_DATA; // version non prise en charge (<win10)
 		}
-
 		//LECTURE DES DONNEES
 		//FILE INFORMATION
 		int start = bytes_to_int(data + 84);
@@ -296,7 +295,6 @@ public:
 		int nb_volumes = bytes_to_int(data + 84 + 28);
 
 		int volume_size = bytes_to_int(data + 84 + 32);
-
 		//run times
 		for (int i = 0; i < 8; i++) {
 			FILETIME tempUtc = bytes_to_filetime(data + 84 + 44 + i * 8);
@@ -308,7 +306,6 @@ public:
 				last_runs.push_back(temp_locale);
 			}
 		}
-
 		if (bytes_to_int(data + 84 + 120) == 0) // old_format
 		{
 			run_count = bytes_to_int(data + 84 + 124);
@@ -316,15 +313,12 @@ public:
 		else { // new format
 			run_count = bytes_to_int(data + 84 + 116);
 		}
-
 		//FILENAMES
 		filenames = multiWstring_to_vector(data + filename_offset, filename_size);
-
 		//VOLUMES
 		for (int i = 0; i < nb_volumes; i++) {
 			volumes.push_back(VolumeInfo(data + volume_offset, i));
 		}
-
 
 		return ERROR_SUCCESS;
 	}

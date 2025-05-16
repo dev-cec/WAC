@@ -71,13 +71,13 @@ public:
 			errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\", hresult });
 			return hresult;
 		}
-
+		
 		hresult = ORQueryInfoKey(hkey, NULL, NULL, &nSubkeys_usbstor, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
 			errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\", hresult });
 			return hresult;
 		};
-
+		
 		for (int i = 0; i < (int)nSubkeys_usbstor; i++) {
 			memset(szSubKey_usbstor, 0, sizeof(szSubKey_usbstor));
 			nSize = MAX_KEY_NAME;
@@ -87,11 +87,13 @@ public:
 				errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor), hresult });
 				continue;
 			}
+			
 			hresult = OROpenKey(hkey, szSubKey_usbstor, &hKey_fabricant); // on ouvre la clé du fabricant
 			if (hresult != ERROR_SUCCESS) {
 				errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor), hresult });
 				continue;
 			}
+
 			hresult = ORQueryInfoKey(hKey_fabricant, NULL, NULL, &nSubkeys_fabricant, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 			if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
 				errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor), hresult });
@@ -106,6 +108,7 @@ public:
 					errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant), hresult });
 					continue;
 				}
+
 				hresult = OROpenKey(hKey_fabricant, szSubKey_fabricant, &hKey_usb);
 				if (hresult != ERROR_SUCCESS) {
 					errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant), hresult });
@@ -118,11 +121,9 @@ public:
 				usb.CompatibleIds = replaceAll(usb.CompatibleIds, L"\\", L"\\\\"); // replace\ by \\ in std::string
 				hresult = getRegSzValue(hKey_usb, nullptr, L"ClassGuid", &usb.ClassGuid);
 				hresult = getRegSzValue(hKey_usb, nullptr, L"SerialNumber", &usb.SerialNumber);
-
 				FILETIME tempFiletime = { 0 };
 				hresult = OROpenKey(hKey_usb, L"Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0066", &hkey_time);
 				if (hresult == ERROR_SUCCESS) {
-
 					hresult = getRegFiletimeValue(hkey_time, nullptr, L"", &tempFiletime);
 					if (hresult != ERROR_SUCCESS) {
 						errors.push_back({ L"Unable to get Filetime Value : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant) + L"\\Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0066" , hresult });
@@ -131,7 +132,6 @@ public:
 					usb.LastInsertion = time_to_wstring(tempFiletime);
 					usb.LastInsertionUtc = time_to_wstring(tempFiletime, true);
 				}
-
 				hresult = OROpenKey(hKey_usb, L"Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0064", &hkey_time);
 				if (hresult == ERROR_SUCCESS) {
 					tempFiletime = { 0 };

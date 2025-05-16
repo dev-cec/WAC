@@ -91,6 +91,7 @@ struct CustomDestination {
 	FILETIME accessed = { 0 };//!< date d'accès du fichier
 	FILETIME accessedUtc = { 0 };//!< date d'accès du fichier au format utc
 
+	
 	/*! constructeur par défaut
 	*/
 	CustomDestination() {};
@@ -169,6 +170,8 @@ struct CustomDestination {
 			else {
 				_errors->push_back({ replaceAll(path,L"\\",L"\\\\") + L" : Empty customdestination, no LNK to parse",ERROR_UNIDENTIFIED_ERROR });
 			}
+
+			delete buffer;
 		}
 	};
 

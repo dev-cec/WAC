@@ -286,6 +286,7 @@ struct IdList {
 	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
 	bool _dump = false;//!< si true alors le fichier de sortie contiendra le dump hexa de l'objet
 
+
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
@@ -913,6 +914,7 @@ struct ControlPanel : IShellItem {
 	std::wstring identifier = L""; //!< nom associé au GUID
 	std::vector <IExtensionBlock*> extensionBlocks; //!< tableau d'Extension Block
 
+
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param item_size est la taille totale de l'objet
@@ -935,6 +937,7 @@ struct ControlPanelCategory :IShellItem {
 	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
 	std::wstring id = L""; //!< identifiant
 	std::vector <IExtensionBlock*> extensionBlocks; //!< tableau d'Extension Block
+
 
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item

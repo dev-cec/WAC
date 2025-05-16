@@ -55,6 +55,7 @@ struct ServiceStruct
 		else {
 			serviceAccessMessage = ansi_to_utf8(getErrorWstring(GetLastError()));
 		}
+		CloseServiceHandle(hService);
 	}
 
 	/*! conversion de l'objet au format json

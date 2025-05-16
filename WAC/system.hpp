@@ -48,9 +48,8 @@ struct SystemInfo {
 			buffer = (LPWSTR)malloc(nSize*sizeof(wchar_t));
 			GetComputerNameExW(ComputerNameDnsHostname, buffer, &nSize);
 			computerName = std::wstring(buffer);
+			free(buffer);
 		} while (GetLastError() == ERROR_MORE_DATA);
-		
-		free(buffer);
 		
 		// nom de domaine
 		nSize = 0;
@@ -58,12 +57,11 @@ struct SystemInfo {
 			buffer = (LPWSTR)malloc(nSize*sizeof(wchar_t));
 			GetComputerNameExW(ComputerNameDnsDomain, buffer, &nSize);
 			domainName = std::wstring(buffer);
+			free(buffer);
 		} while (GetLastError() == ERROR_MORE_DATA);
 		
 		if (domainName.length() == 0)
 			domainName = L"WORKGROUP";
-		
-		free(buffer);
 		
 		// timezone
 		
@@ -91,21 +89,23 @@ struct SystemInfo {
 		
 		//Version
 		HMODULE hDll = LoadLibrary(TEXT("ntdll.dll"));
-		typedef NTSTATUS(CALLBACK* RTLGETVERSION) (PRTL_OSVERSIONINFOW lpVersionInformation);
-		RTLGETVERSION pRtlGetVersion;
-		pRtlGetVersion = (RTLGETVERSION)GetProcAddress(hDll, "RtlGetVersion");
-		if (pRtlGetVersion)
-		{
-			RTL_OSVERSIONINFOW ovi = { 0 };
-			ovi.dwOSVersionInfoSize = sizeof(ovi);
-			NTSTATUS ntStatus = pRtlGetVersion(&ovi);
-			if (ntStatus == 0)
+		if (hDll) {
+			typedef NTSTATUS(CALLBACK* RTLGETVERSION) (PRTL_OSVERSIONINFOW lpVersionInformation);
+			RTLGETVERSION pRtlGetVersion;
+			pRtlGetVersion = (RTLGETVERSION)GetProcAddress(hDll, "RtlGetVersion");
+			if (pRtlGetVersion)
 			{
-				version = std::to_wstring(ovi.dwMajorVersion) + L"." + std::to_wstring(ovi.dwMinorVersion) + L"." + std::to_wstring(ovi.dwBuildNumber);
-				servicePack = std::wstring(ovi.szCSDVersion);
+				RTL_OSVERSIONINFOW ovi = { 0 };
+				ovi.dwOSVersionInfoSize = sizeof(ovi);
+				NTSTATUS ntStatus = pRtlGetVersion(&ovi);
+				if (ntStatus == 0)
+				{
+					version = std::to_wstring(ovi.dwMajorVersion) + L"." + std::to_wstring(ovi.dwMinorVersion) + L"." + std::to_wstring(ovi.dwBuildNumber);
+					servicePack = std::wstring(ovi.szCSDVersion);
+				}
 			}
+			FreeLibrary(hDll);
 		}
-		FreeLibrary(hDll);
 		
 		// OS NAME
 		HMODULE hMod = LoadLibraryEx(L"winbrand.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);

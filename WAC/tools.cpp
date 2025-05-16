@@ -590,6 +590,7 @@ HRESULT getRegboolValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, bool* pbool
 	hresult = ORGetValue(key, szSubKey, szValue, &dwType, pBytes, &dwSize); //lecture des données
 	if (hresult != ERROR_SUCCESS) return hresult;
 	*pbool = (bool)pBytes[0];
+
 	return ERROR_SUCCESS;
 }
 
@@ -610,6 +611,7 @@ HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, FILETIM
 	FILETIME temp = { 0 };
 	temp = bytes_to_filetime(pData);
 	*filetime = temp;
+
 	return ERROR_SUCCESS;
 }
 
@@ -638,5 +640,6 @@ HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::vec
 		pos += ws.length() + 1;//position du premier caractère de la chaîne suivante après le \0 de fin de chaîne de la suivante
 		data += ws.length() + 1;
 	}
+
 	return ERROR_SUCCESS;
 }

@@ -10,6 +10,7 @@
 #include <sstream>
 #include <windows.h>
 #include <taskschd.h>
+#include <lm.h>
 #include <comdef.h>
 #include <sddl.h>
 #include <lmerr.h>
@@ -103,6 +104,7 @@ struct ScheduledTask {
 			if(NetUserGetInfo(NULL, bstr_to_wstring(pRunAs).c_str(), 4, (LPBYTE*)&info4) == NERR_Success){
 				ConvertSidToStringSidW(info4->usri4_user_sid, &temp);
 				runAsSid = std::wstring(temp);
+				NetApiBufferFree(info4);
 			}
 		}
 
@@ -147,9 +149,7 @@ struct ScheduledTask {
 				}
 				pActions.push_back(a);
 				pAction->Release();
-				pAction = NULL;
 				pDisp->Release();
-				pDisp = NULL;
 			}
 			VariantClear(&var);
 			VariantInit(&var);
@@ -181,9 +181,7 @@ struct ScheduledTask {
 				pTrigger->get_Type(&trigger.type);
 				triggers.push_back(trigger);
 				pTrigger->Release();
-				pTrigger = NULL;
 				pDisp->Release();
-				pDisp = NULL;
 			}
 			VariantClear(&var);
 			VariantInit(&var);
@@ -289,7 +287,6 @@ struct ScheduledTasks {
 			return ERROR_UNIDENTIFIED_ERROR;
 		}
 		pRootFolder->GetFolders(0, &pRootFoldersCollection);
-		pRootFolder->Release();
 		// on récupère tous les sous-repertoires
 		LONG numFolders = 0;
 		hr = pRootFoldersCollection->get_Count(&numFolders);
@@ -303,6 +300,7 @@ struct ScheduledTasks {
 			finale = bstr_concat(finale, bstr);
 			getFolders(folders, finale, pService);
 		}
+		pRootFolder->Release();
 		return ERROR_SUCCESS;
 	}
 
@@ -329,7 +327,6 @@ struct ScheduledTasks {
 		if (hr!=S_OK)
 		{
 			errors.push_back({ L"Failed to connect to ITaskService", hr });
-			pService->Release();
 			return hr;
 		}
 		//  ------------------------------------------------------

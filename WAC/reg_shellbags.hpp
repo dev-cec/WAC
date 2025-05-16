@@ -126,7 +126,6 @@ public:
 		LPBYTE pData = new BYTE[MAX_DATA];
 		unsigned int pos = 0;
 
-
 		getRegBinaryValue(hKey, L"", L"MRUListEx", pData);
 		while (true) {
 			int id = bytes_to_int(pData + pos);

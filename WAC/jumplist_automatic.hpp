@@ -94,6 +94,7 @@ struct AutomaticDestination {
 				return;
 			}
 
+			delete buffer;
 
 			// 2. Find DestList
 			Directory destlistDirectory = ole.findDirectory(L"destlist");

@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <lmaccess.h>
 #include <sddl.h>
+#include <LM.h>
 #include "tools.h"
 #include "trans_id.h"
 
@@ -44,6 +45,9 @@ struct User {
 		//sid to wstring
 		ConvertSidToStringSidW(info4->usri4_user_sid, &temp);
 		SID = std::wstring(temp);
+
+		NetApiBufferFree(info4);
+
 		//profile path présent uniquement en base de registre
 		std::wstring key = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList\\" + SID;
 		hresult = RegOpenKeyExW(HKEY_LOCAL_MACHINE, key.c_str(), 0, KEY_READ, &hKey);

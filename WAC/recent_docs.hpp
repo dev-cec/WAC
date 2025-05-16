@@ -258,12 +258,14 @@ public:
 				file.seekg(0, std::ios::end);
 				const size_t size = file.tellg();
 				file.seekg(0, std::ios::beg);
+
 				LPBYTE buffer = new BYTE[size];
 				file.read(reinterpret_cast<CHAR*>(buffer), size);
 				file.close();
 
 				parseLNK(buffer, _debug, _dump, errors);
 
+				delete buffer;
 			}
 		}
 		if (_path.extension() == ".url" || _path.extension() == ".URL") {
