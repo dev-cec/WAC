@@ -55,8 +55,8 @@ WAC.exe [--dump] [--debug] [--events] [--output=output] [--errorOutput=errors]
 - `--dump` : add std::hexa value in json files for shellbags and LNK files 
 - `--debug` : add error output files
 - `--events` : converts events to json (long time)
-- `--output=[path]` : relative directory path to store output files starting from current directory. By default the directory is 'output'
-- `--errorOutput=[path]` : relative directory path to store error output files starting from current directory. By default the directory is 'errors'
+- `--output=[directory name]` : directory name to store output files starting from current directory. By default the directory is 'output'
+- `--errorOutput=[directory name]` : directory name to store error output files starting from current directory. By default the directory is 'errors'
 
 All options are optional and **disabled by default**.
 
