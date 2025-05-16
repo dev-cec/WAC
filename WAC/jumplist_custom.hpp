@@ -171,7 +171,6 @@ struct CustomDestination {
 				_errors->push_back({ replaceAll(path,L"\\",L"\\\\") + L" : Empty customdestination, no LNK to parse",ERROR_UNIDENTIFIED_ERROR });
 			}
 
-			delete buffer;
 		}
 	};
 

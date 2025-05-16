@@ -374,7 +374,6 @@ struct oleParser {
 				header.SATSectors.push_back(sectorId);
 			}
 
-			delete remainingBytes;
 		}
 
 		//We need to get all the bytes that make up the SectorAllocationTable

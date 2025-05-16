@@ -105,7 +105,6 @@ public:
 					//save
 					bams.push_back(bam);
 
-					delete pData;
 				}
 			}
 		}

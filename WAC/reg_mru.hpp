@@ -173,7 +173,6 @@ public:
 			//save
 			Mrus->push_back(Mru);
 
-			delete pData;
 		}
 		return ERROR_SUCCESS;
 	}

@@ -97,7 +97,7 @@ public:
 			}
 		}
 
-		delete pData;
+
 		return ERROR_SUCCESS;
 	}
 
