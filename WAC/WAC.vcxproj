@@ -191,6 +191,7 @@
     <ClInclude Include="reg_mru_apps.hpp" />
     <ClInclude Include="reg_mru.hpp" />
     <ClInclude Include="reg_shellbags.hpp" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="services.hpp" />
     <ClInclude Include="sessions.hpp" />
     <ClInclude Include="trans_id.h" />
@@ -207,6 +208,10 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="doc\modele de donnees.png" />
+    <Image Include="icon\WAC.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="WAC.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
