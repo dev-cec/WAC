@@ -42,15 +42,18 @@ It extracts various artefacts in **JSON format**, including:
 To minimize disk traces, this standalone tool should be run **as administrator** 🔐 from a USB stick using the command:
 
 ```
-Regparser_cpp --dump --debug
+Regparser_cpp [--dump --debug
 ```
 
 ### ⚙️ Options :
 
-- `--dump` : Adds a hexadecimal dump of binary registry values to the output file  
-- `--debug` : Logs processing errors to a separate JSON error file  
-- `--events` : Converts event logs to JSON (may take several minutes)  
-- `--help` : show help 
+- `WAV.exe [--dump] [--debug] [--events] [--output=output] [--errorOutput=errors]`
+- `--help` or /?` : show this help 
+- `--dump` : add std::hexa value in json files for shellbags and LNK files 
+- `--debug` : add error output files
+- `--events` : converts events to json (long time)
+- `--output=[path]` : relative directory path to store output files starting from current directory. By default the directory is 'output'
+- `--errorOutput=[path]` : relative directory path to store error output files starting from current directory. By default the directory is 'errors'
 
 All options are optional and **disabled by default**.
 
