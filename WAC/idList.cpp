@@ -457,7 +457,9 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 		*value += L"\n";
 		*value += tab(niveau + 1) + L"]";
 
-
+		delete sps1;
+		delete sps2;
+		delete sps3;
 	}
 	else if (valueType == VT_STREAM) {    // VT_STREAM, TODO calcul size pour maj pos
 		*value = L"VT_STREAM not implemented";

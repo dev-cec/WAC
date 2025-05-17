@@ -373,7 +373,7 @@ struct oleParser {
 				int sectorId = bytes_to_int(remainingBytes + i * 4) * header.sectorSize + 512; // 512 is for the header
 				header.SATSectors.push_back(sectorId);
 			}
-
+			delete remainingBytes;
 		}
 
 		//We need to get all the bytes that make up the SectorAllocationTable

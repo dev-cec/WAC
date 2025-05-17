@@ -60,7 +60,7 @@ public:
 			return hresult;
 		}
 
-		DWORD dwSize;
+		DWORD dwSize=0;
 		hresult = ORGetValue(hKey, NULL, L"AppCompatCache", NULL, nullptr, &dwSize); //taille des donnes à lire
 		LPBYTE pData = new BYTE[dwSize]; // Buffer de données
 		hresult = getRegBinaryValue(hKey, NULL, L"AppCompatCache", pData);
@@ -97,7 +97,7 @@ public:
 			}
 		}
 
-
+		delete [] pData;
 		return ERROR_SUCCESS;
 	}
 

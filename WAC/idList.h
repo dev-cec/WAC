@@ -399,7 +399,7 @@ struct Beef0004 : IExtensionBlock {
 	FILETIME creationDateUtc = { 0 };//!< date de création au format UTC
 	FILETIME accessedDate = { 0 }; //!< date d'accès
 	FILETIME accessedDateUtc = { 0 }; //!< date d'accès au format UTC
-	unsigned short int ExtensionVersion;
+	unsigned short int ExtensionVersion=0;
 	std::wstring longName = L"";
 	std::wstring localizedName = L"";
 

@@ -25,7 +25,7 @@ struct AutomaticDestination {
 	std::wstring Sid = L"";//!< SID de l'utilisateur propriétaire du fichier
 	std::wstring SidName = L"";//!< nom de l'utilisateur propriétaire du fichier
 	std::wstring application = L"";//!< nom de l'application liée
-	size_t bufferSize = 0; //!< taille du buffer
+	
 	oleParser ole; //!< Parser ole utilisé pour décompresser l'objet ole
 	std::vector<RecentDoc> recentDocs; //!< tableau contenant les objets Shell Entries du fichier
 	FILETIME created = { 0 }; //!< date de création du fichier
@@ -44,6 +44,7 @@ struct AutomaticDestination {
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	AutomaticDestination(std::filesystem::path _path, std::wstring _sid, bool _debug, bool _dump, std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
+		size_t bufferSize = 0; // taille du buffer
 		Sid = _sid;
 		SidName = getNameFromSid(Sid);
 		//path retourne un codage ANSI mais on veut de l'UTF8
@@ -115,6 +116,7 @@ struct AutomaticDestination {
 					recentDocs.push_back(s);
 				}
 			}
+			delete buffer;
 		}
 	};
 

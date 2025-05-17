@@ -71,13 +71,13 @@ public:
 			errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\", hresult });
 			return hresult;
 		}
-		
+
 		hresult = ORQueryInfoKey(hkey, NULL, NULL, &nSubkeys_usbstor, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
 			errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\", hresult });
 			return hresult;
 		};
-		
+
 		for (int i = 0; i < (int)nSubkeys_usbstor; i++) {
 			memset(szSubKey_usbstor, 0, sizeof(szSubKey_usbstor));
 			nSize = MAX_KEY_NAME;
@@ -87,7 +87,7 @@ public:
 				errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor), hresult });
 				continue;
 			}
-			
+
 			hresult = OROpenKey(hkey, szSubKey_usbstor, &hKey_fabricant); // on ouvre la clé du fabricant
 			if (hresult != ERROR_SUCCESS) {
 				errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor), hresult });
@@ -114,6 +114,7 @@ public:
 					errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant), hresult });
 					continue;
 				}
+
 				Usbstor usb;
 				hresult = getRegMultiSzValue(hKey_usb, NULL, L"HardwareId", &usb.HardwareId);
 				hresult = getRegSzValue(hKey_usb, nullptr, L"FriendlyName", &usb.FriendlyName);
@@ -125,6 +126,7 @@ public:
 				hresult = OROpenKey(hKey_usb, L"Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0066", &hkey_time);
 				if (hresult == ERROR_SUCCESS) {
 					hresult = getRegFiletimeValue(hkey_time, nullptr, L"", &tempFiletime);
+					
 					if (hresult != ERROR_SUCCESS) {
 						errors.push_back({ L"Unable to get Filetime Value : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant) + L"\\Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0066" , hresult });
 						continue;
@@ -136,6 +138,7 @@ public:
 				if (hresult == ERROR_SUCCESS) {
 					tempFiletime = { 0 };
 					hresult = getRegFiletimeValue(hkey_time, nullptr, L"", &tempFiletime);
+					
 					if (hresult != ERROR_SUCCESS) {
 						errors.push_back({ L"Unable to gt Filetime Value : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant) + L"\\Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0064" , hresult });
 						continue;

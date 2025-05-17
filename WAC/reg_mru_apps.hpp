@@ -156,7 +156,7 @@ public:
 			//save
 			MruApps->push_back(MruApp);
 		}
-
+		delete [] pData;
 		return ERROR_SUCCESS;
 	}
 

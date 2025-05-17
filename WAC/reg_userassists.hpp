@@ -127,7 +127,7 @@ public:
 					//save
 					userassists.push_back(userassist);
 
-
+					delete [] pData;
 				}
 			}
 		}

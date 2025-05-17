@@ -146,8 +146,6 @@ struct VolumeInfo {
 struct Prefetch {
 public:
 	std::wstring path = L""; //!< chemin du prefetch
-	LPBYTE buffer = NULL; //!< buffer contenant le prefetch
-	LPBYTE data = NULL;//!< buffer contenant les données du prefetch
 	//HEADER
 	std::wstring filename = L"";//!< nom du fichier
 	int signature = 0; //!< signature du prefetch
@@ -182,7 +180,9 @@ public:
 	*/
 	HRESULT read() {
 		const int sig = 0x41434353;
-		
+		LPBYTE buffer = NULL; // buffer contenant le prefetch
+		LPBYTE data = NULL;// buffer contenant les données du prefetch
+		DWORD posBuffer = 0;
 		std::ifstream file(path, std::ios::binary);
 		if (!file.good()) {
 			return ERROR_FILE_CORRUPT;
@@ -235,7 +235,7 @@ public:
 			static auto decompress_buffer_ex = reinterpret_cast<RtlDecompressBufferEx>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "RtlDecompressBufferEx"));
 
 			const int decompressed_size = bytes_to_int(buffer + 4);
-			buffer += 8;
+			posBuffer += 8;
 			ULONG compressed_buffer_workspace_size, compress_fragment_workspace_size;
 			HRESULT hr = compression_workspace_size(CompressionFormatXpressHuff, &compressed_buffer_workspace_size, &compress_fragment_workspace_size);
 			if (hr != ERROR_SUCCESS)
@@ -254,12 +254,11 @@ public:
 				CompressionFormatXpressHuff,
 				reinterpret_cast<PUCHAR>(data),
 				decompressed_size,
-				reinterpret_cast<PUCHAR>(buffer),
+				reinterpret_cast<PUCHAR>(buffer+ posBuffer),
 				size,
 				&final_uncompressed_size,
 				workspace);
 			free(workspace);
-			
 		}
 		else { // PAS DE COMPRESSION
 			data = buffer;
@@ -320,7 +319,8 @@ public:
 		for (int i = 0; i < nb_volumes; i++) {
 			volumes.push_back(VolumeInfo(data + volume_offset, i));
 		}
-
+		delete[] data;
+		delete[] buffer;
 		return ERROR_SUCCESS;
 	}
 

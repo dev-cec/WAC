@@ -173,6 +173,7 @@ public:
 			//save
 			shellbags->push_back(shellbag);
 		}
+		delete [] pData;
 		return ERROR_SUCCESS;
 	}
 

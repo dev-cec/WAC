@@ -223,7 +223,7 @@ int main(int argc, char* argv[])
 	SetConsoleTextAttribute(hConsole, 14);
 	std::wcout << "[SEARCHING FOR ARTIFACTS IN WINDOWS API]" << std::endl;
 	SetConsoleTextAttribute(hConsole, 7);
-
+	
 	std::wcout << " - Extraction of SYSTEM INFORMATION: ";
 	hresult = systemInfo.getData(conf);
 	if (hresult != ERROR_SUCCESS) printError(hresult);
@@ -241,6 +241,8 @@ int main(int argc, char* argv[])
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else printSuccess();
 	}
+	
+	scheduledTasks.scheduledTasks.clear(); // free memory
 
 	std::wcout << " - Extraction of SESSIONS: ";
 	hresult = sessions.getData(conf);
@@ -250,6 +252,8 @@ int main(int argc, char* argv[])
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else printSuccess();
 	}
+	
+	sessions.sessions.clear();// free memory
 
 	std::wcout << " - Extraction of PROCESS: ";
 	hresult = processes.getData(conf);
@@ -259,6 +263,8 @@ int main(int argc, char* argv[])
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else printSuccess();
 	}
+	
+	processes.processes.clear(); // free memory
 
 	std::wcout << " - Extraction of SERVICES: ";
 	std::wcout.flush();
@@ -270,6 +276,8 @@ int main(int argc, char* argv[])
 		else printSuccess();
 	}
 
+	services.services.clear();//free memory
+	
 	std::wcout << " - Extraction of USERS: ";
 	std::wcout.flush();
 	hresult = users.getData(&conf);
@@ -279,6 +287,8 @@ int main(int argc, char* argv[])
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else printSuccess();
 	}
+	
+	users.users.clear(); // free memory
 
 	if (conf._events) {
 		std::wcout << " - Extraction of EVENTS: ";
@@ -290,6 +300,9 @@ int main(int argc, char* argv[])
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 		}
 	}
+
+	events.events.clear(); // free memory
+
 	/************************
 	*  BASE DE REGISTRE
 	*************************/

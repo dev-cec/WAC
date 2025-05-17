@@ -264,7 +264,7 @@ public:
 				file.close();
 
 				parseLNK(buffer, _debug, _dump, errors);
-
+				delete [] buffer;
 			}
 		}
 		if (_path.extension() == ".url" || _path.extension() == ".URL") {

@@ -174,6 +174,7 @@ public:
 			Mrus->push_back(Mru);
 
 		}
+		delete [] pData;
 		return ERROR_SUCCESS;
 	}
 

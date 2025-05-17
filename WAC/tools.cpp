@@ -521,7 +521,6 @@ std::vector<std::wstring> multiWstring_to_vector(LPBYTE data, int size)
 			out.push_back(ws);
 		}
 	}
-	pos = 0;
 
 	return out;
 }
@@ -557,6 +556,7 @@ HRESULT getRegSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::wstring*
 	data[dwSize / sizeof(wchar_t)] = '\0'; // Ensure std::string terminate with \0
 	checkWstring(data); // ensure std::string is printable
 	*ws = std::wstring(data);
+	delete [] data;
 	return ERROR_SUCCESS;
 }
 
@@ -590,7 +590,7 @@ HRESULT getRegboolValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, bool* pbool
 	hresult = ORGetValue(key, szSubKey, szValue, &dwType, pBytes, &dwSize); //lecture des données
 	if (hresult != ERROR_SUCCESS) return hresult;
 	*pbool = (bool)pBytes[0];
-
+	delete [] pBytes;
 	return ERROR_SUCCESS;
 }
 
@@ -612,6 +612,7 @@ HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, FILETIM
 	temp = bytes_to_filetime(pData);
 	*filetime = temp;
 
+	delete [] pData;
 	return ERROR_SUCCESS;
 }
 
@@ -622,12 +623,11 @@ HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::vec
 	//les REG_MULTI_SZ sont stockées sous forme de wchar_t = 16 bit par caractère et d'un succession de chaîne séparées par \0 et à la fin \0\0
 	DWORD dwType = 0;
 	DWORD dwSize = 0;
-
 	HRESULT hresult = ORGetValue(key, szSubKey, szValue, &dwType, nullptr, &dwSize); //taille des donnes à lire
 	if (hresult != ERROR_SUCCESS) return hresult;
 	int nbChar = dwSize / sizeof(wchar_t);// dwSize en BYTES et 1 wchar_t = 2 BYTES
 
-	wchar_t* data = new wchar_t[nbChar];
+	LPWSTR data = new wchar_t[nbChar];
 	if (!data) return 1;
 	hresult = ORGetValue(key, szSubKey, szValue, &dwType, (LPBYTE)data, &dwSize); //lecture des données
 	checkWstring(data);
@@ -635,11 +635,10 @@ HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::vec
 	DWORD pos = 0;
 	while (pos < nbChar)
 	{
-		std::wstring ws = std::wstring(data);
+		std::wstring ws = std::wstring(data+pos);
 		if (!ws.empty()) out->push_back(ws);
 		pos += ws.length() + 1;//position du premier caractère de la chaîne suivante après le \0 de fin de chaîne de la suivante
-		data += ws.length() + 1;
 	}
-
+	delete[] data;
 	return ERROR_SUCCESS;
 }
