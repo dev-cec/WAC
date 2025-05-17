@@ -21039,7 +21039,7 @@ std::wstring trans_guid_to_wstring(std::wstring guid) {
 	if (guid == L"{012b0db7-d4c1-45d6-b081-94b87779614f}") return L"WPD_CONTENT_TYPE_VIDEO_ALBUM";
 	if (guid == L"{0bac070a-9f5f-4da4-a8f6-3de44d68fd6c}") return L"WPD_CONTENT_TYPE_WIRELESS_PROFILE";
 
-
+	if (guid == L"{D5CDD505-2E9C-101B-9397-08002B2CF9AE}") return L"FMTID_UserDefinedProperties";
 	//Known folders                                      
 	if (guid == L"{3b193882-d3ad-4eab-965a-69829d1fb59f}") return L"Saved Pictures";
 	if (guid == L"{ab5fb87b-7ce2-4f83-915d-550846c9537b}") return L"Camera Roll";

@@ -501,7 +501,7 @@ SPSValue::SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau, bool pdebug, 
 		unsigned int pos = 13;
 		if (guid == L"{D5CDD505-2E9C-101B-9397-08002B2CF9AE}") {
 			id = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 9)));
-			name = L"";
+			name = trans_guid_to_wstring(guid);
 			valueType = bytes_to_unsigned_short(buffer + 9 + id_int); // id_int contient la taille de la std::string 
 			pos = 9 + id_int + 2 + 2; // 2 de padding ?
 		}
