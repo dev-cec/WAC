@@ -47,6 +47,12 @@ public:
 			+ tab(niveau) + L"}";
 		return result;
 	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (IdList* temp : shellitems)
+			temp->clear();
+	}
 };
 
 /* Structure contenant l'ensemble des artefacts
@@ -212,5 +218,11 @@ public:
 		}
 
 		return ERROR_SUCCESS;
+	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (Mru temp : Mrus)
+			temp.clear();
 	}
 };

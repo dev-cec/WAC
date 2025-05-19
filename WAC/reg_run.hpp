@@ -29,6 +29,9 @@ public:
 			L"\t\t\"Value\":\"" + Value + L"\"\n"
 			L"\t}";
 	}
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 /*! structure contenant l'ensemble des artefacts
@@ -143,7 +146,6 @@ public:
 	*/
 	HRESULT to_json()
 	{
-		std::vector<Run>::iterator run;
 		std::wstring result = L"[ \n";
 		std::vector<Run>::iterator it;
 		for (it = runs.begin(); it != runs.end(); it++) {
@@ -174,5 +176,11 @@ public:
 		}
 
 		return ERROR_SUCCESS;
+	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (Run temp : runs)
+			temp.clear();
 	}
 };

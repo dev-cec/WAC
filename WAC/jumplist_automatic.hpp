@@ -150,6 +150,12 @@ struct AutomaticDestination {
 		// TODO le reste
 		return result;
 	};
+
+	/* liberation mémoire */
+	void clear() {
+		for (RecentDoc temp : recentDocs)
+			temp.clear();
+	}
 };
 
 /*! Représente un objet représentant un objet Jumplist contenant les Automatic Destinations
@@ -216,4 +222,10 @@ struct JumplistAutomatics {
 		}
 		return ERROR_SUCCESS;
 	};
+
+	/* liberation mémoire */
+	void clear() {
+		for (AutomaticDestination temp : automaticDestinations)
+			temp.clear();
+	}
 };

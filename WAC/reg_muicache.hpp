@@ -29,6 +29,9 @@ public:
 			L"\t\t\"Data\":\"" + data + L"\" \n"
 			L"\t}";
 	}
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 /*! structure contenant l'ensemble des artefacts
@@ -133,5 +136,11 @@ public:
 		}
 
 		return ERROR_SUCCESS;
+	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (Muicache temp : muicaches)
+			temp.clear();
 	}
 };

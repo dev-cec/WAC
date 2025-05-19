@@ -149,4 +149,7 @@ struct SystemInfo {
 
 		return ERROR_SUCCESS;
 	}
+
+	/* libération mémoire */
+	void clear(){}
 };

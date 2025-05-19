@@ -200,6 +200,11 @@ struct CustomDestination {
 		result += tab(i) + L"}";
 		return result;
 	};
+
+	/* liberation mémoire */
+	void clear() {
+		delete categorie;
+	}
 };
 
 /*! Représente un objet représentant un objet Jumplist contenant les Custom Destinations
@@ -266,4 +271,10 @@ struct JumplistCustoms {
 
 		return ERROR_SUCCESS;
 	};
+
+	/* liberation mémoire */
+	void clear() {
+		for (CustomDestination temp : customDestinations)
+			temp.clear();
+	}
 };

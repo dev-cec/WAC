@@ -44,6 +44,9 @@ public:
 			L"\t\t\"DateLocaleUtc\":\"" + DateLocaleUtc + L"\"\n"
 			L"\t}";
 	}
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 /*! structure contenant l'ensemble des artefacts
@@ -168,5 +171,11 @@ public:
 		}
 
 		return ERROR_SUCCESS;
+	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (UserAssist temp : userassists)
+			temp.clear();
 	}
 };

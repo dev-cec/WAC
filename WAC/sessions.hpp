@@ -68,6 +68,9 @@ struct Session {
 			+ tab(1) + L"}";
 		return result;
 	}
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 /*! structure contenant les artefacts
@@ -114,4 +117,11 @@ struct Sessions {
 		myfile.close();
 		return ERROR_SUCCESS;
 	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (Session temp : sessions)
+			temp.clear();
+	}
+
 };

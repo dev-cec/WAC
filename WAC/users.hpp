@@ -75,6 +75,9 @@ struct User {
 		return result;
 	}
 
+	/* liberation mémoire */
+	void clear() {}
+
 };
 
 /*! structure contenant la liste des objets */
@@ -136,5 +139,11 @@ struct Users {
 		}
 
 		return ERROR_SUCCESS;
+	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (User temp : users)
+			temp.clear();
 	}
 };

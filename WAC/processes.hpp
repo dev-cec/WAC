@@ -131,6 +131,9 @@ struct Process {
 		result += tab(1) + L"} \n";
 		return result;
 	}
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 /*! structure contenant l'ensemble des objets
@@ -220,6 +223,12 @@ struct Processes {
 		}
 
 		return ERROR_SUCCESS;
+	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (Process temp : processes)
+			temp.clear();
 	}
 };
 

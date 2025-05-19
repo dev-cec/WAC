@@ -75,6 +75,9 @@ struct ServiceStruct
 			+ tab(1) + L"}";
 		return result;
 	}
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 struct Services
@@ -163,5 +166,11 @@ struct Services
 		}
 
 		return ERROR_SUCCESS;
+	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (ServiceStruct temp : services)
+			temp.clear();
 	}
 };

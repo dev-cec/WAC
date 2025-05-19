@@ -59,6 +59,9 @@ public:
 			L"\t\t\"IsOsComponent\":" + bool_to_wstring(IsOsComponent) + L"\n"
 			L"\t}";
 	}
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 /*! *structure contenant l'ensemble des AMCACHE APPLICATION FILES
@@ -155,5 +158,11 @@ public:
 		}
 
 		return ERROR_SUCCESS;
+	}
+
+	/*liberation mémoire */
+	void clear() {
+		for (AmcacheApplicationFile temp : amcacheapplicationfiles)
+			temp.clear();
 	}
 };

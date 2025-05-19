@@ -57,6 +57,10 @@ public:
 			+ tab(niveau) + L"}";
 		return result;
 	}
+
+	/* libération mémoire */
+	void clear(){}
+
 };
 
 /*! structure contenant l'ensemble des artefacts
@@ -210,5 +214,11 @@ public:
 		}
 
 		return ERROR_SUCCESS;
+	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (Shellbag temp : shellbags)
+			temp.clear();
 	}
 };

@@ -23,6 +23,9 @@
 struct Trigger {
 	TASK_TRIGGER_TYPE2 type; //!< type de trigger pour l’exécution de la tâche
 	BSTR interval=BSTR(L"");//!< délai entre 2 exécution
+
+	/* liberation mémoire */
+	void clear() {}
 };
 /*structure représentant une action d'une tâche planifiée
 */
@@ -34,6 +37,9 @@ struct Action {
 	std::wstring arguments_escaped = L"";//!< arguments de la ligne de commande exécutée
 	BSTR classId = BSTR(L"");//!< classId pour ACTION COM HANDLER
 	BSTR data = BSTR(L"");//!< data pour ACTION COM HANDLER
+
+	/*liberation mémoire */
+	void clear(){}
 };
 
 /*structure représentant une tâche planifiée
@@ -191,8 +197,6 @@ struct ScheduledTask {
 		if (pEnum) pEnum->Release();
 	}
 
-	
-
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -264,6 +268,12 @@ struct ScheduledTask {
 		result += tab(1) + L"}";
 
 		return result;
+	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (Trigger temp : triggers)
+			temp.clear();
 	}
 };
 
@@ -406,6 +416,12 @@ struct ScheduledTasks {
 			myfile.close();
 		}
 		return ERROR_SUCCESS;
+	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (ScheduledTask temp : scheduledTasks)
+			temp.clear();
 	}
 };
 

@@ -55,6 +55,9 @@ struct MFTInformation {
 			+ tab(5) + L"}";
 		return result;
 	}
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 struct VolumeInfo {
@@ -137,6 +140,12 @@ struct VolumeInfo {
 		//result += tab(i + 1) + L"] \n";
 		result += tab(i) + L"}";
 		return result;
+	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (MFTInformation temp : fileReferences)
+			temp.clear();
 	}
 };
 
@@ -358,6 +367,12 @@ public:
 		result += tab(i) + L"}";
 		return result;
 	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (VolumeInfo temp : volumes)
+			temp.clear();
+	}
 };
 
 /*! structure contenant l'ensemble des objets
@@ -418,5 +433,11 @@ struct Prefetchs {
 			myfile.close();
 		}
 		return ERROR_SUCCESS;
+	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (Prefetch temp : prefetchs)
+			temp.clear();
 	}
 };

@@ -47,6 +47,9 @@ public:
 			L"\t\t\"DatetimeUtc\":\"" + datetimeUtc + L"\"\n"
 			L"\t}";
 	}
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 /*! *structure contenant l'ensemble des BAM
@@ -145,5 +148,11 @@ public:
 			myfile.close();
 		}
 		return ERROR_SUCCESS;
+	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (Bam temp : bams)
+			temp.clear();
 	}
 };

@@ -43,6 +43,9 @@ public:
 			L"\t\t\"Device\":\"" + device + L"\"\n"
 			L"\t}";
 	}
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 /*! *structure contenant l'ensemble des objets
@@ -122,5 +125,11 @@ public:
 		}
 
 		return ERROR_SUCCESS;
+	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (MountedDevice temp : mounteddevices)
+			temp.clear();
 	}
 };

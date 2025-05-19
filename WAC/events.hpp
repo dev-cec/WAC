@@ -318,6 +318,9 @@ struct Event {
 		result += L"}";
 		return result;
 	}
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 struct Events {
@@ -436,5 +439,11 @@ struct Events {
 		}
 
 		return ERROR_SUCCESS;
+	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (Event temp : events)
+			temp.clear();
 	}
 };

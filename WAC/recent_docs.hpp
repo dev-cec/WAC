@@ -364,6 +364,12 @@ public:
 			+ tab(i) + L"}";
 		return result;
 	}
+
+	/*liberation mémoire */
+	void clear() {
+		for (IdList temp : idLists)
+			temp.clear();
+	}
 };
 
 /*! structure contenant l'ensemble des objets
@@ -430,6 +436,12 @@ struct RecentDocs {
 			myfile.close();
 		}
 		return ERROR_SUCCESS;
+	}
+
+	/*liberation mémoire */
+	void clear() {
+		for (RecentDoc temp : recentdocs)
+			temp.clear();
 	}
 
 };

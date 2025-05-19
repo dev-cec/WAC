@@ -33,6 +33,9 @@ public:
 			L"\t\t\"Executes\":" + bool_to_wstring(executed) + L" \n"
 			L"\t}";
 	}
+	/* liberation mémoire */
+	void clear() {}
+
 };
 
 /*! structure contenant l'ensemble des artefacts
@@ -105,7 +108,6 @@ public:
 	*/
 	HRESULT to_json()
 	{
-		std::vector<Shimcache>::iterator shimcache;
 		std::wstring result = L"[ \n";
 		std::vector<Shimcache>::iterator it;
 		for (it = shimcaches.begin(); it != shimcaches.end(); it++) {
@@ -136,5 +138,11 @@ public:
 		}
 
 		return ERROR_SUCCESS;
+	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (Shimcache temp : shimcaches)
+			temp.clear();
 	}
 };

@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 	COM com;
 	Services services;
 	Usbstors usbs;
-	MountedDevices mouteddevices;
+	MountedDevices mounteddevices;
 	Bams bams;
 	Muicaches muicaches;
 	AmcacheApplications amcacheapplications;
@@ -231,7 +231,9 @@ int main(int argc, char* argv[])
 		hresult = systemInfo.to_json();
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else printSuccess();
+		systemInfo.clear();// free memory
 	}
+	
 
 	std::wcout << " - Extraction of SCHEDULED TASKS: ";
 	hresult = scheduledTasks.getData(conf);
@@ -240,9 +242,10 @@ int main(int argc, char* argv[])
 		hresult = scheduledTasks.to_json();
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else printSuccess();
+		scheduledTasks.clear(); // free memory
 	}
 	
-	scheduledTasks.scheduledTasks.clear(); // free memory
+	
 
 	std::wcout << " - Extraction of SESSIONS: ";
 	hresult = sessions.getData(conf);
@@ -251,9 +254,10 @@ int main(int argc, char* argv[])
 		hresult = sessions.to_json();
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else printSuccess();
+		sessions.clear();// free memory
 	}
 	
-	sessions.sessions.clear();// free memory
+	
 
 	std::wcout << " - Extraction of PROCESS: ";
 	hresult = processes.getData(conf);
@@ -262,9 +266,10 @@ int main(int argc, char* argv[])
 		hresult = processes.to_json();
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else printSuccess();
+		processes.clear(); // free memory
 	}
 	
-	processes.processes.clear(); // free memory
+	
 
 	std::wcout << " - Extraction of SERVICES: ";
 	std::wcout.flush();
@@ -274,9 +279,10 @@ int main(int argc, char* argv[])
 		hresult = services.to_json();
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else printSuccess();
+		services.clear();//free memory
 	}
 
-	services.services.clear();//free memory
+	
 	
 	std::wcout << " - Extraction of USERS: ";
 	std::wcout.flush();
@@ -286,9 +292,10 @@ int main(int argc, char* argv[])
 		hresult = users.to_json();
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else printSuccess();
+		users.clear(); // free memory
 	}
 	
-	users.users.clear(); // free memory
+	
 
 	if (conf._events) {
 		std::wcout << " - Extraction of EVENTS: ";
@@ -298,10 +305,12 @@ int main(int argc, char* argv[])
 		else {
 			hresult = events.to_json();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
+			events.clear(); // free memory
 		}
+
 	}
 
-	events.events.clear(); // free memory
+	
 
 	/************************
 	*  BASE DE REGISTRE
@@ -426,17 +435,19 @@ int main(int argc, char* argv[])
 				hresult = usbs.to_json();
 				if (hresult != ERROR_SUCCESS) printError(hresult);
 				else printSuccess();
+				usbs.clear();
 			}
 
 			std::wcout << " - Extracting the MOUNTED DEVICE registry keys : ";
-			hresult = mouteddevices.getData(conf);
+			hresult = mounteddevices.getData(conf);
 			if (hresult != ERROR_SUCCESS) {
 				printError(hresult);
 			}
 			else {
-				hresult = mouteddevices.to_json();
+				hresult = mounteddevices.to_json();
 				if (hresult != ERROR_SUCCESS) printError(hresult);
 				else printSuccess();
+				mounteddevices.clear();
 			}
 
 
@@ -447,6 +458,7 @@ int main(int argc, char* argv[])
 				hresult = bams.to_json();
 				if (hresult != ERROR_SUCCESS) printError(hresult);
 				else printSuccess();
+				bams.clear();
 			}
 
 			std::wcout << " - Extracting MUICACHE Registry Keys : ";
@@ -456,6 +468,7 @@ int main(int argc, char* argv[])
 				hresult = muicaches.to_json();
 				if (hresult != ERROR_SUCCESS) printError(hresult);
 				else printSuccess();
+				muicaches.clear();
 			}
 
 			std::wcout << " - Extracting AMCACHE APPLICATION Registry Keys : ";
@@ -465,6 +478,7 @@ int main(int argc, char* argv[])
 				hresult = amcacheapplications.to_json();
 				if (hresult != ERROR_SUCCESS) printError(hresult);
 				else printSuccess();
+				amcacheapplicationfiles.clear();
 			}
 
 			std::wcout << " - Extracting AMCACHE APPLICATIONFILE Registry Keys : ";
@@ -474,6 +488,7 @@ int main(int argc, char* argv[])
 				hresult = amcacheapplicationfiles.to_json();
 				if (hresult != ERROR_SUCCESS) printError(hresult);
 				else printSuccess();
+				amcacheapplicationfiles.clear();
 			}
 
 			std::wcout << " - Extracting USERASSIST Registry Keys : ";
@@ -483,6 +498,7 @@ int main(int argc, char* argv[])
 				hresult = userassists.to_json();
 				if (hresult != ERROR_SUCCESS) printError(hresult);
 				else printSuccess();
+				userassists.clear();
 			}
 
 			std::wcout << " - Extracting RUN Registry Keys : ";
@@ -492,6 +508,7 @@ int main(int argc, char* argv[])
 				hresult = runs.to_json();
 				if (hresult != ERROR_SUCCESS) printError(hresult);
 				else printSuccess();
+				runs.clear();
 			}
 
 			std::wcout << " - Extracting SHIMCACHE Registry Keys : ";
@@ -501,6 +518,7 @@ int main(int argc, char* argv[])
 				hresult = shimcaches.to_json();
 				if (hresult != ERROR_SUCCESS) printError(hresult);
 				else printSuccess();
+				shimcaches.clear();
 			}
 
 			std::wcout << " - Extracting SHELLBAGS Registry Keys : ";
@@ -510,6 +528,7 @@ int main(int argc, char* argv[])
 				hresult = shellbags.to_json();
 				if (hresult != ERROR_SUCCESS) printError(hresult);
 				else printSuccess();
+				shellbags.clear();
 			}
 
 			std::wcout << " - Extracting MRU Registry Keys : ";
@@ -519,6 +538,7 @@ int main(int argc, char* argv[])
 				hresult = mrus.to_json();
 				if (hresult != ERROR_SUCCESS) printError(hresult);
 				else printSuccess();
+				mrus.clear();
 			}
 
 			std::wcout << " - Extracting MRUAPPS Registry Keys : ";
@@ -528,6 +548,7 @@ int main(int argc, char* argv[])
 				hresult = mruapps.to_json();
 				if (hresult != ERROR_SUCCESS) printError(hresult);
 				else printSuccess();
+				mruapps.clear();
 			}
 		}
 	}
@@ -556,6 +577,7 @@ int main(int argc, char* argv[])
 		hresult = recentdocs.to_json();
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else printSuccess();
+		recentdocs.clear();
 	}
 
 	std::wcout << " - Extracting PREFETCHS : ";
@@ -565,6 +587,7 @@ int main(int argc, char* argv[])
 		hresult = prefetchs.to_json();
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else printSuccess();
+		prefetchs.clear();
 	}
 
 	std::wcout << " - Extracting JUMPLIST AUTOMATIC: ";
@@ -574,6 +597,7 @@ int main(int argc, char* argv[])
 		hresult = jumplistAutomatics.to_json();
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else printSuccess();
+		jumplistAutomatics.clear();
 	}
 
 	std::wcout << " - Extracting JUMPLIST CUSTOM: ";
@@ -583,6 +607,7 @@ int main(int argc, char* argv[])
 		hresult = jumplistCustoms.to_json();
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else printSuccess();
+		jumplistCustoms.clear();
 	}
 
 	std::cout.flush();

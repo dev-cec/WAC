@@ -58,6 +58,9 @@ public:
 			L"\t\t\"InstallDateUtc\":\"" + InstallDateUtc + L"\"\n"
 			L"\t}";
 	}
+
+	/*liberation mémoire */
+	void clear() {}
 };
 
 /*! *structure contenant l'ensemble des AMCACHE APPLICATION
@@ -154,5 +157,11 @@ public:
 			myfile.close();
 		}
 		return ERROR_SUCCESS;
+	}
+
+	/*liberation mémoire */
+	void clear() {
+		for (AmcacheApplication temp : amcacheapplications)
+			temp.clear();
 	}
 };

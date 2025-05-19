@@ -34,6 +34,9 @@ public:
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0) = 0;
+
+	/* liberation mémoire */
+	virtual void clear() = 0;
 };
 
 /*! Type de base virtuel pour les extension Block.
@@ -52,6 +55,9 @@ public:
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0) = 0;
+
+	/* liberation mémoire */
+	virtual void clear() = 0;
 };
 
 /*! User Property View Delegate Shell Item
@@ -66,6 +72,9 @@ struct UserPropertyViewDelegate {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0) = 0;
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 /***************************************************************************************************
@@ -117,6 +126,9 @@ struct FileAttributes {
 	* @return wstring le code json
 	*/
 	std::wstring to_wstring();
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 /*! La structure LinkFlags définit des bits qui spécifient quelles structures de liaison de coquille sont Présents dans le format de fichier après la structure ShellLinkHeader.
@@ -160,6 +172,9 @@ struct LinkFlags {
 	* @return wstring le code json
 	*/
 	std::wstring to_wstring();
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 
@@ -179,6 +194,9 @@ struct ShellVolumeFlags {
 	* @return wstring le code json
 	*/
 	std::wstring to_wstring();
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 /*! La structure FsFlags définit des bits qui spécifient le type de lien.
@@ -199,6 +217,9 @@ struct FsFlags {
 	* @return wstring le code json
 	*/
 	std::wstring to_wstring();
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 
@@ -235,6 +256,9 @@ struct SPSValue {
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 /*! Structure représentent un Serialized Property Sets.
@@ -266,6 +290,9 @@ struct SPS {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 void getShellItem(LPBYTE buffer, IShellItem** p, int _niveau, bool pdebug, bool pdump, std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool Parentiszip = false);
@@ -286,7 +313,6 @@ struct IdList {
 	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
 	bool _dump = false;//!< si true alors le fichier de sortie contiendra le dump hexa de l'objet
 
-
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
@@ -300,6 +326,11 @@ struct IdList {
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	void clear() {
+		delete shellItem;
+	}
 };
 
 /***************************************************************************************************
@@ -326,6 +357,9 @@ struct Beef0000 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*!  Extension block related to CFileUrlStub object. Used for display name?
@@ -346,6 +380,9 @@ struct Beef0001 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to CFileUrlStub object. Used for display name?
@@ -366,6 +403,9 @@ struct Beef0002 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to CFSFolder and CFileSysItemString object. Used for junction information?
@@ -387,6 +427,9 @@ struct Beef0003 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to CFSFolder and CFileSysItem object.
@@ -418,6 +461,9 @@ struct Beef0004 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to CFSFolder and CFileSysItem object. Used for personalized name?
@@ -438,6 +484,9 @@ struct Beef0006 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to CBitBucket object.
@@ -458,6 +507,9 @@ struct Beef0008 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to CBitBucket object. Used for original path?
@@ -478,6 +530,9 @@ struct Beef0009 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to CMergedFolder object. Used for source count or sub shell item list?
@@ -498,6 +553,9 @@ struct Beef000a : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block  related to CControlPanelFolder object. Used for display name/CPL category?
@@ -518,6 +576,9 @@ struct Beef000c : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to unknown.
@@ -543,6 +604,14 @@ struct Beef000e : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {
+		for (IExtensionBlock* temp : extensionblocks)
+			delete temp;
+		for (IShellItem* temp : ishellitems)
+			delete temp;
+	}
 };
 
 /*! Extension block related to unknown.
@@ -563,6 +632,9 @@ struct Beef0010 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to unknown.
@@ -583,6 +655,9 @@ struct Beef0013 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! The extension block has seen to be used with the CUri class identifier which is the GUID "df2fce13-25ec-45bb-9d4c-cecd47c2430c". The CUri data could be a Vista and/or MSIE 7 specific extension.
@@ -603,6 +678,9 @@ struct Beef0014 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to unknown.
@@ -623,6 +701,9 @@ struct Beef0016 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*!  Extension block  related to Shell item from Windows 7 BagMRU (Search Home).
@@ -643,6 +724,9 @@ struct Beef0017 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block  seen in  HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FolderTypes\{0B2BAAEB-0042-4DCA-AA4D-3EE8648D03E5}
@@ -666,6 +750,9 @@ struct Beef0019 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to unknown.
@@ -686,6 +773,9 @@ struct Beef001a : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to unknown.
@@ -706,6 +796,9 @@ struct Beef001b : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to unknown.
@@ -726,6 +819,9 @@ struct Beef001d : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to unknown.
@@ -746,6 +842,9 @@ struct Beef001e : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to unknown.
@@ -766,6 +865,9 @@ struct Beef0021 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to unknown.
@@ -786,6 +888,9 @@ struct Beef0024 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to unknown.
@@ -807,6 +912,9 @@ struct Beef0025 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to unknown.
@@ -835,6 +943,13 @@ struct Beef0026 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {
+		delete shellitem;
+		delete sps;
+		delete idlist;
+	}
 };
 
 /*! Extension block related to unknown.
@@ -855,6 +970,9 @@ struct Beef0027 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Extension block related to unknown.
@@ -875,6 +993,9 @@ struct Beef0029 : IExtensionBlock {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /********************************************************************************************************************
@@ -904,6 +1025,9 @@ struct VolumeShellItem : IShellItem {
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Control panel Shell Item
@@ -929,6 +1053,12 @@ struct ControlPanel : IShellItem {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {
+		for (IExtensionBlock* temp : extensionBlocks)
+			delete temp;
+	}
 };
 
 /*! Control Panel Category Shell Item
@@ -952,6 +1082,12 @@ struct ControlPanelCategory :IShellItem {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {
+		for (IExtensionBlock* temp : extensionBlocks)
+			delete temp;
+	}
 };
 
 /*! Retourne le type de valeur de la SPSVALUE à partir du code hexa
@@ -989,6 +1125,9 @@ struct Property {
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Structure définissant le format d'un UserPropertyView de signature 0xC01
@@ -1012,6 +1151,9 @@ struct UserPropertyView0xC01 : UserPropertyViewDelegate {
 	*/
 	std::wstring to_json(int i = 0);
 
+	/* liberation mémoire */
+	virtual void clear() {}
+
 };
 
 /*! Structure définissant le format d'un UserPropertyView de type 0x23febee
@@ -1034,6 +1176,9 @@ struct UserPropertyView0x23febbee : UserPropertyViewDelegate {
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Structure définissant le format d'un UserPropertyView de type 0x7192006
@@ -1064,6 +1209,9 @@ struct UserPropertyView0x07192006 : UserPropertyViewDelegate {
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Structure définissant le format d'un UserPropertyView de type 0x10312005
@@ -1091,6 +1239,9 @@ struct UserPropertyView0x10312005 : UserPropertyViewDelegate {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Structure définissant le format d'un UserPropertyView shell item
@@ -1129,6 +1280,13 @@ struct UsersPropertyView :IShellItem {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {
+		for (IExtensionBlock* temp : extensionBlocks)
+			delete temp;
+		delete delegate;
+	}
 };
 
 /*! Structure définissant le format d'un RootFolder Shell Item
@@ -1154,6 +1312,9 @@ struct RootFolder :IShellItem {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Structure définissant le format d'un Network Shell Item
@@ -1180,6 +1341,9 @@ struct NetworkShellItem :IShellItem {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Structure définissant le format d'un Archive File Shell Item
@@ -1205,6 +1369,9 @@ struct ArchiveFileContent :IShellItem {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Structure définissant le format d'un URL Shell Item
@@ -1226,6 +1393,9 @@ struct URIShellItem :IShellItem {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Structure définissant le format d'un File Entry Shell Item
@@ -1255,6 +1425,12 @@ struct FileEntryShellItem :IShellItem {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {
+		for (IExtensionBlock* temp : extensionBlocks)
+			delete temp;
+	}
 };
 
 /*! Structure définissant le format d'un Users Files Folder Shell Item
@@ -1280,6 +1456,11 @@ public:
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {
+		delete extensionBlock;
+	}
 };
 
 /*! Structure définissant le format d'un Favorites Shell Item
@@ -1302,6 +1483,9 @@ struct FavoriteShellitem :IShellItem { // TODO A TESTER
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 /*! Structure définissant le format d'un UNKNOWN Shell Item
@@ -1323,6 +1507,9 @@ struct UnknownShellItem :IShellItem {
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
+
+	/* liberation mémoire */
+	virtual void clear() {}
 };
 
 

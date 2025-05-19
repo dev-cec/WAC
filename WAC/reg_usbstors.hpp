@@ -41,6 +41,9 @@ public:
 			+ tab(2) + L"\"FirstInsertionUtc\":\"" + FirstInsertionUtc + L"\" \n"
 			+ tab(1) + L"}";
 	}
+
+	/* liberation mémoire */
+	void clear() {}
 };
 
 /*! structure contenant l'ensemble des artefacts
@@ -189,5 +192,11 @@ public:
 		}
 
 		return ERROR_SUCCESS;
+	}
+
+	/* liberation mémoire */
+	void clear() {
+		for (Usbstor temp : usbs)
+			temp.clear();
 	}
 };
