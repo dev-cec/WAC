@@ -139,7 +139,7 @@ std::wstring getErrorWstring(HRESULT hresult)
 		(LPWSTR)&errorText,
 		0,
 		NULL))
-		return replaceAll(ansi_to_utf8(std::wstring(errorText)), L"\r\n", L"");
+		return replaceAll(std::wstring(errorText), L"\r\n", L"");
 	return L"";
 }
 

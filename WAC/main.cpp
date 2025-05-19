@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
 	conf.name = argv[0];
 	if (argc > 1) { // au moins un argument, argv[0] étant le nom du logiciel
 		// Prise en compte des arguments de la ligne de commande
-		const std::vector<std::string_view> args(argv + 1, argv + argc);
+		const std::vector<std::string> args(argv + 1, argv + argc);
 		for (const auto& arg : args) {
 
 			if (arg == "--dump") conf._dump = true;
@@ -627,7 +627,7 @@ int main(int argc, char* argv[])
 	std::wcout << "[SNAPSHOT]" << std::endl;
 	SetConsoleTextAttribute(hConsole, 7);
 	std::wcout << " - Snapshot disassembly : ";
-	if (!RemoveDirectory(lpMountpoint)) printError(GetLastError());
+	if (!RemoveDirectoryW(lpMountpoint)) printError(GetLastError());
 	else printSuccess();
 
 	std::cout.flush();

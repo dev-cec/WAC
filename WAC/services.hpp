@@ -49,12 +49,12 @@ struct ServiceStruct
 			serviceBinary = std::wstring(sData->lpBinaryPathName);
 			serviceBinary = replaceAll(serviceBinary, L"\\", L"\\\\");
 			serviceBinary = replaceAll(serviceBinary, L"\"", L"\\\"");
-			free(sData);
 		}
 
 		else {
 			serviceAccessMessage = ansi_to_utf8(getErrorWstring(GetLastError()));
 		}
+		free(sData);
 		CloseServiceHandle(hService);
 	}
 
@@ -84,7 +84,7 @@ struct Services
 {
 	std::vector<ServiceStruct> services; //!< tableau contenant tout les processus
 	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
+	AppliConf _conf = { 0 };//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
@@ -111,24 +111,21 @@ struct Services
 		}
 
 		// et buffer size needed
-		EnumServicesStatusExW(hSCM, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, NULL, bufSize, &moreBytesNeeded, &serviceCount, 0, NULL);
+		EnumServicesStatusExW(hSCM, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, NULL, 0, &moreBytesNeeded, &serviceCount, 0, NULL);
 		servicesBuf = (LPENUM_SERVICE_STATUS_PROCESS)malloc(moreBytesNeeded);
 		bufSize = moreBytesNeeded;
 		if (EnumServicesStatusExW(hSCM, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, (LPBYTE)servicesBuf, bufSize, &moreBytesNeeded, &serviceCount, 0, NULL)) {
 			for (DWORD i = 0; i < serviceCount; ++i) {
-
 				services.push_back(ServiceStruct(hSCM, (ENUM_SERVICE_STATUS_PROCESS)servicesBuf[i]));
 			}
-			free(servicesBuf);
 			return ERROR_SUCCESS;
 		}
 		int err = GetLastError();
 		if (ERROR_MORE_DATA != err) {
-			free(servicesBuf);
 			return err;
 		}
 		free(servicesBuf);
-
+		CloseServiceHandle(hSCM);
 		return 0;
 	}
 
