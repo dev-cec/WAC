@@ -113,6 +113,8 @@ int main(int argc, char* argv[])
 	╚██████╗╚██████╔╝███████╗███████╗███████╗╚██████╗   ██║   ╚██████╔╝██║  ██║
 	 ╚═════╝ ╚═════╝ ╚══════╝╚══════╝╚══════╝ ╚═════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝
 	
+	=> V 1.0.1 By Reygiss from CEC 
+
 	)" << std::endl;
 
 	std::cout.flush();
@@ -209,6 +211,11 @@ int main(int argc, char* argv[])
 	/**********************************
 	* CONNECTION COM
 	**********************************/
+
+	SetConsoleTextAttribute(hConsole, 14);
+	std::wcout << "[COM COMPONENT]" << std::endl;
+	SetConsoleTextAttribute(hConsole, 7);
+
 	std::wcout << " - Connection to COM : ";
 	hresult = com.connect();
 	if (hresult != ERROR_SUCCESS) {
@@ -310,6 +317,27 @@ int main(int argc, char* argv[])
 
 	}
 
+	/************************
+	*  CREATION SNAPSHOT
+	*************************/
+	IVssBackupComponents* pBackup = NULL; // pointeur sur le snapshot
+	VSS_ID snapshotSetId = { 0 };
+	LPCWSTR lpMountpoint = L"";
+
+	SetConsoleTextAttribute(hConsole, 14);
+	std::wcout << "[SNAPSHOT]" << std::endl;
+	SetConsoleTextAttribute(hConsole, 7);
+
+	std::wcout << " - Creating the snapshot : ";
+	hresult = GetSnapshots(&lpMountpoint, &snapshotSetId, pBackup);
+	if (hresult != S_OK) {
+		printError(hresult);
+		return(hresult);
+	}
+	else {
+		conf.mountpoint = std::wstring(lpMountpoint);
+		printSuccess();
+	}
 	
 
 	/************************
@@ -332,24 +360,6 @@ int main(int argc, char* argv[])
 	WCHAR szSubKey[MAX_KEY_NAME];
 	WCHAR szNextKey[MAX_KEY_NAME];
 	DWORD dwSize = 0;
-
-
-
-	// création du VSS
-	IVssBackupComponents* pBackup = NULL; // pointeur sur le snapshot
-	VSS_ID snapshotSetId = { 0 };
-	LPCWSTR lpMountpoint = L"";
-
-	std::wcout << " - Creating the snapshot : ";
-	hresult = GetSnapshots(&lpMountpoint, &snapshotSetId, pBackup);
-	if (hresult != S_OK) {
-		printError(hresult);
-		return(hresult);
-	}
-	else {
-		conf.mountpoint = std::wstring(lpMountpoint);
-		printSuccess();
-	}
 
 
 	//chargement de la clé HKLM\SYSTEM
@@ -552,13 +562,14 @@ int main(int argc, char* argv[])
 			}
 		}
 	}
-	std::wcout << " - Snapshot disassembly : ";
-	if (!RemoveDirectory(lpMountpoint)) printError(GetLastError());
-	else printSuccess();
+	
 
 	/**************************************************
 	* DECONNEXION COM
 	***************************************************/
+	SetConsoleTextAttribute(hConsole, 14);
+	std::wcout << "[COM COMPONENT]" << std::endl;
+	SetConsoleTextAttribute(hConsole, 7);
 	std::wcout << " - Disconnecting COM : ";
 	std::wcout.flush();
 	com.clear();
@@ -609,6 +620,15 @@ int main(int argc, char* argv[])
 		else printSuccess();
 		jumplistCustoms.clear();
 	}
+	/*****************************************
+	*            DEMONTAGE SNAPSHOT 
+	******************************************/
+	SetConsoleTextAttribute(hConsole, 14);
+	std::wcout << "[SNAPSHOT]" << std::endl;
+	SetConsoleTextAttribute(hConsole, 7);
+	std::wcout << " - Snapshot disassembly : ";
+	if (!RemoveDirectory(lpMountpoint)) printError(GetLastError());
+	else printSuccess();
 
 	std::cout.flush();
 

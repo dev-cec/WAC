@@ -16,7 +16,8 @@
 struct RecentDoc {
 public:
 	std::wstring Sid = L""; //!< SID de l'utilisateur propriétaire de l'objet
-	std::wstring path = L"";//!< chemin d'accès à l'objet sur le disque
+	std::wstring path_original = L"";//!< chemin d'accès à l'objet sur le disque
+	std::wstring path = L"";//!< chemin d'accès à l'objet dans le snapshot
 	std::wstring target = L"";//!< chemin pour accéder à l'objet d'origine
 	std::wstring description = L""; //!< description du recentDoc
 	std::wstring relativePath = L"";//!< chemin relatif d'accès au fichier d'origine
@@ -55,7 +56,7 @@ public:
 	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	void parseLNK(LPBYTE buffer, bool _debug, bool _dump, std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
+	void parseLNK(LPBYTE buffer, AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
 		unsigned int header_size = *reinterpret_cast<unsigned int*>(buffer);
 		guid = *reinterpret_cast<GUID*>(buffer + 4);
 		if (guid_to_wstring(guid).compare(L"{00021401-0000-0000-C000-000000000046}") == 0) {
@@ -76,7 +77,7 @@ public:
 			iconIndex = bytes_to_unsigned_int(buffer + 56);
 			commandOption = showCommandOption(bytes_to_unsigned_int(buffer + 60)); //
 			//debug
-			if (commandOption == L"UNKOWN" && _debug == true)
+			if (commandOption == L"UNKOWN" && conf._debug == true)
 				errors->push_back({ L"commandOption Unknown 0x" + to_hex(bytes_to_unsigned_int(buffer + 60)),ERROR_UNSUPPORTED_TYPE });
 
 			//-------------------------------------------------------------------------
@@ -94,7 +95,7 @@ public:
 				while (item_size != 0 && offset < LinkTargetIDList_size) {
 					item_size = bytes_to_unsigned_short(buffer + offset);
 					if (item_size != 0) {
-						idLists.push_back(IdList(buffer + offset, 2, _debug, _dump, errors)); // lvl 1 is object itself
+						idLists.push_back(IdList(buffer + offset, 2,conf, errors)); // lvl 1 is object itself
 					}
 					offset += item_size;
 				}
@@ -122,7 +123,7 @@ public:
 					unsigned int driveType = bytes_to_unsigned_int(buffer + LinkInfo_offset + volumeId_offset + 4);
 					volumeDriveType = driveType_to_wstring(driveType);
 					//debug
-					if (volumeDriveType == L"BAD TYPE" && _debug == true)
+					if (volumeDriveType == L"BAD TYPE" && conf._debug == true)
 						errors->push_back({ L"volumeDriveType BAD TYPE 0x" + to_hex(driveType),ERROR_UNSUPPORTED_TYPE });
 					unsigned int serial = bytes_to_unsigned_int(buffer + LinkInfo_offset + volumeId_offset + 8);
 					std::stringstream ss;
@@ -164,7 +165,7 @@ public:
 					if (ValidNetType == true) {
 						netProviderType = networkProvider_to_wstring(bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 14));
 						//debug
-						if (netProviderType == L"BAD NET PROVIDER" && _debug == true)
+						if (netProviderType == L"BAD NET PROVIDER" && conf._debug == true)
 							errors->push_back({ L"netProviderType Unknown 0x" + to_hex(bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 14)),ERROR_UNSUPPORTED_TYPE });
 					}
 				}
@@ -242,13 +243,14 @@ public:
 	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	RecentDoc(std::filesystem::path _path, std::wstring _sid, bool _debug, bool _dump, std::vector<std::tuple<std::wstring, HRESULT>>* errors)
+	RecentDoc(std::filesystem::path _path, std::wstring _sid, AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors)
 	{
 		//Parsing
 		Sid = _sid;
 		//path retourne un codage ANSI mais on veut de l'UTF8
 		path = ansi_to_utf8(_path.wstring());
 		path = replaceAll(path, L"\\", L"\\\\");//escape \ in std::string
+		path_original = replaceAll(path, conf.mountpoint, L"C:");
 		target = L"";
 		if (_path.extension() == ".lnk" || _path.extension() == ".LNK") {
 			std::ifstream file(_path.wstring(), std::ios::binary);
@@ -263,7 +265,7 @@ public:
 				file.read(reinterpret_cast<CHAR*>(buffer), size);
 				file.close();
 
-				parseLNK(buffer, _debug, _dump, errors);
+				parseLNK(buffer, conf, errors);
 				delete [] buffer;
 			}
 		}
@@ -309,11 +311,11 @@ public:
 	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	RecentDoc(LPBYTE buffer, std::wstring _path, std::wstring _sid, bool _debug, bool _dump, std::vector<std::tuple<std::wstring,HRESULT>>* _errors) {
+	RecentDoc(LPBYTE buffer, std::wstring _path, std::wstring _sid, AppliConf conf, std::vector<std::tuple<std::wstring,HRESULT>>* _errors) {
 		Sid = _sid;
 		path = _path;
 		target = L"";
-		parseLNK(buffer, _debug, _dump, _errors);
+		parseLNK(buffer, conf, _errors);
 	}
 
 	/*! conversion de l'objet au format json
@@ -323,7 +325,7 @@ public:
 	std::wstring to_json(int i) {
 		std::wstring result = L"";
 		result += tab(i) + L"{ \n"
-			+ tab(i + 1) + L"\"Path\":\"" + replaceAll(path, L"\\", L"\\\\") + L"\", \n"
+			+ tab(i + 1) + L"\"Path\":\"" + path_original+ L"\", \n"
 			+ tab(i + 1) + L"\"Target\":\"" + target + L"\", \n"
 			+ tab(i + 1) + L"\"SourceCreated\":\"" + time_to_wstring(sourceCreated) + L"\", \n"
 			+ tab(i + 1) + L"\"SourceCreatedUtc\":\"" + time_to_wstring(sourceCreatedUtc) + L"\", \n"
@@ -387,12 +389,13 @@ struct RecentDocs {
 		std::string reps[2] = { "\\AppData\\Roaming\\Microsoft\\Windows\\Recent","\\AppData\\Roaming\\Microsoft\\Office\\Recent" };
 		for (std::string rep : reps) {
 			for (std::tuple<std::wstring, std::wstring> profile : _conf.profiles) {
-				std::string path = wstring_to_string(get<1>(profile)) + rep;
+				std::string path = wstring_to_string(_conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"")) + rep;
 				struct stat sb;
 				if (stat(path.c_str(), &sb) == 0) { // directory Exists
 					for (const auto& entry : std::filesystem::directory_iterator(path)) {
 						if (entry.is_regular_file() && ((entry.path().extension() == ".lnk" || entry.path().extension() == ".LNK") || (entry.path().extension() == ".url" || entry.path().extension() == ".URL"))) {
-							recentdocs.push_back(RecentDoc(entry.path(), get<0>(profile), _conf._debug, _conf._dump, &errors));
+							
+							recentdocs.push_back(RecentDoc(entry.path(), get<0>(profile), _conf, &errors));
 						}
 					}
 				}

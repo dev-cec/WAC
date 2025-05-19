@@ -21,7 +21,8 @@
 /*! Représente un objet représentant un objet Automatic Destination
 */
 struct AutomaticDestination {
-	std::wstring path=L""; //!< chemin du fichier 
+	std::wstring path=L""; //!< chemin du fichier dans le snapshot
+	std::wstring pathOriginal=L""; //!< chemin du fichier sur le disque
 	std::wstring Sid = L"";//!< SID de l'utilisateur propriétaire du fichier
 	std::wstring SidName = L"";//!< nom de l'utilisateur propriétaire du fichier
 	std::wstring application = L"";//!< nom de l'application liée
@@ -43,13 +44,14 @@ struct AutomaticDestination {
 	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	AutomaticDestination(std::filesystem::path _path, std::wstring _sid, bool _debug, bool _dump, std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
+	AutomaticDestination(std::filesystem::path _path, std::wstring _sid, AppliConf conf,  std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
 		size_t bufferSize = 0; // taille du buffer
 		Sid = _sid;
 		SidName = getNameFromSid(Sid);
 		//path retourne un codage ANSI mais on veut de l'UTF8
 		path = ansi_to_utf8(_path.wstring());
 		path = replaceAll(path, L"\\", L"\\\\");//escape \ in std::string
+		pathOriginal = replaceAll(path, conf.mountpoint, L"C:");
 		std::ifstream file(_path.wstring(), std::ios::binary);
 		//conversion de l'appid contenu dans le nom de fichier en nom d'application
 		std::wstring::size_type const p(_path.filename().wstring().find_last_of('.'));
@@ -112,7 +114,7 @@ struct AutomaticDestination {
 				if (d.name != L"") {
 					// TODO 5. Once we have the Directory entry for the lnk file, we can go get the bytes that make up the lnk file.
 					std::vector<BYTE> directoryBytes = ole.Getdata(d);
-					RecentDoc s = RecentDoc(&directoryBytes[0], path, _sid, _debug, _dump, _errors);
+					RecentDoc s = RecentDoc(&directoryBytes[0], path, _sid, conf, _errors);
 					recentDocs.push_back(s);
 				}
 			}
@@ -127,7 +129,7 @@ struct AutomaticDestination {
 	std::wstring to_json(int i) {
 		std::wstring result = L"";
 		result += tab(i) + L"{ \n"
-			+ tab(i + 1) + L"\"File\":\"" + path + L"\", \n"
+			+ tab(i + 1) + L"\"File\":\"" + pathOriginal + L"\", \n"
 			+ tab(i + 1) + L"\"SID\":\"" + Sid + L"\", \n"
 			+ tab(i + 1) + L"\"SIDName\":\"" + SidName + L"\", \n"
 			+ tab(i + 1) + L"\"Application\":\"" + application + L"\", \n"
@@ -172,12 +174,13 @@ struct JumplistAutomatics {
 		_conf=conf;
 		std::string rep = "\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\AutomaticDestinations";
 		for (std::tuple<std::wstring, std::wstring> profile : _conf.profiles) {
-			std::string path = wstring_to_string(get<1>(profile)) + rep;
+			std::string path = wstring_to_string(_conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"")) + rep;
+			//std::string path = wstring_to_string(get<1>(profile)) + rep;
 			struct stat sb;
 			if (stat(path.c_str(), &sb) == 0) { // directory Exists
 				for (const auto& entry : std::filesystem::directory_iterator(path)) {
 					if (entry.is_regular_file() && (entry.path().extension() == ".automaticDestinations-ms")) {
-						automaticDestinations.push_back(AutomaticDestination(entry.path(), get<0>(profile), _conf._debug, _conf._dump, &errorsAutomaticDestinations));
+						automaticDestinations.push_back(AutomaticDestination(entry.path(), get<0>(profile), _conf, &errorsAutomaticDestinations));
 					}
 				}
 			}

@@ -152,7 +152,7 @@ public:
 				if (size == 0) break;
 				else {
 
-					IdList* shellitem = new IdList(pData + offset, niveau + 2, _conf._debug, _conf._dump, &errors, Parentiszip);
+					IdList* shellitem = new IdList(pData + offset, niveau + 2, _conf, &errors, Parentiszip);
 					if (shellitem->shellItem->is_zip == true)
 						Parentiszip = true;
 					offset += size;

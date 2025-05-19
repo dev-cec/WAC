@@ -387,7 +387,8 @@ struct Prefetchs {
 	*/
 	HRESULT getData(AppliConf conf) {
 		_conf=conf;
-		std::string path = "C:\\Windows\\Prefetch";
+		std::string path = wstring_to_string(_conf.mountpoint + L"\\Windows\\Prefetch");
+
 		for (const auto& entry : std::filesystem::directory_iterator(path)) {
 			if (entry.is_regular_file() && entry.path().extension() == ".pf") {
 				Prefetch p(entry.path().wstring());

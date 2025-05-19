@@ -62,14 +62,15 @@ public:
 	*/
 	HRESULT getData(AppliConf conf) {
 		_conf = conf;
-		HRESULT hresult;
-		ORHKEY hKey;
-		DWORD nSubkeys;
-		DWORD nValues, dType;
+		HRESULT hresult = 0;
+		ORHKEY hKey = NULL;
+		DWORD nSubkeys = 0;
+		DWORD nValues = 0;
+		DWORD dType = 0;
 		WCHAR szValue[MAX_VALUE_NAME];
 		WCHAR szSubKey[MAX_VALUE_NAME];
 		DWORD nSize = 0;
-		ORHKEY Offhive;
+		ORHKEY Offhive = NULL;
 		std::wstring ruche = L"";
 		std::wstring userassitsKey[2] = { L"{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}", L"{F4E57C4B-2036-45F0-A9AB-443BCFE33D9F}" }; // les GUID à lire pour les userassists
 		for (std::wstring key : userassitsKey) {
@@ -92,8 +93,7 @@ public:
 					errors.push_back({ L"Unable to open key : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\UserAssist\\\\" + key + L"\\\\count\\\\" , hresult });
 					continue;
 				}
-
-				for (int i = 0; i < (int)nValues; i++) {
+				for (DWORD i = 0; i < nValues; i++) {
 					UserAssist userassist;
 					nSize = MAX_VALUE_NAME;
 					DWORD cData = MAX_DATA;
@@ -104,10 +104,8 @@ public:
 					userassist.Sid = get<0>(profile);
 					userassist.SidName = getNameFromSid(userassist.Sid);
 					userassist.Class = key;
-
 					// Codage ANSI mais on veut de l'utf8
 					userassist.Name = ansi_to_utf8(ROT13(szValue)); // Rot13 du nom de la Value pour récupérer le nom de l’exécutable
-
 					//conversion des GUID Directory
 					std::wsmatch pieces_match;
 					std::wregex key(L"[\{][a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}[\}]");
@@ -129,8 +127,7 @@ public:
 					}
 					//save
 					userassists.push_back(userassist);
-
-					delete [] pData;
+					delete[] pData;
 				}
 			}
 		}

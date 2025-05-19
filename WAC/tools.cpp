@@ -98,7 +98,7 @@ void printError(HRESULT  hresult) {
 	errorText = getErrorMessage(hresult);
 	SetConsoleTextAttribute(hConsole, 12);
 	SetConsoleOutputCP(CP_UTF8);
-	DWORD written=0;
+	DWORD written = 0;
 	//std::wcout << ansi_to_utf8(errorText) << std::endl;
 	WriteConsoleW(hConsole, errorText, wcslen(errorText), &written, nullptr); //std::wcout ne fonctionne pas pour les accents avec le format retourné par FormatmessageW
 	SetConsoleTextAttribute(hConsole, 7);
@@ -128,7 +128,7 @@ std::wstring getErrorWString(HRESULT hresult) {
 std::wstring getErrorWstring(HRESULT hresult)
 {
 	LPWSTR errorText = NULL;
-	if(FormatMessageW(
+	if (FormatMessageW(
 		FORMAT_MESSAGE_FROM_SYSTEM
 		| FORMAT_MESSAGE_ALLOCATE_BUFFER
 		| FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -220,17 +220,23 @@ std::wstring replaceAll(std::wstring src, std::wstring search, std::wstring repl
 std::wstring ROT13(std::wstring source)
 {
 	std::wstring transformed;
-	for (size_t i = 0; i < source.size(); ++i) {
-		if (isalpha(source[i])) {
-			if ((tolower(source[i]) - 'a') < 13)
-				transformed.append(1, source[i] + 13);
-			else
-				transformed.append(1, source[i] - 13);
+	for (int i = 0; i < source.length(); ++i) {
+		// a-z -> n-m
+		if (97 <= source[i] && source[i] <= 122) {
+			transformed.append(1, (source[i] - 97 + 13) % 26 + 97);
 		}
+
+		// A-Z -> N-M
+		else if (65 <= source[i] && source[i] <= 90) {
+			transformed.append(1, (source[i] - 65 + 13) % 26 + 65);
+		}
+
+		// PAS alpha
 		else {
 			transformed.append(1, source[i]);
 		}
 	}
+	std::wcout << "A5" << std::endl;
 	return transformed;
 }
 
@@ -556,7 +562,7 @@ HRESULT getRegSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::wstring*
 	data[dwSize / sizeof(wchar_t)] = '\0'; // Ensure std::string terminate with \0
 	checkWstring(data); // ensure std::string is printable
 	*ws = std::wstring(data);
-	delete [] data;
+	delete[] data;
 	return ERROR_SUCCESS;
 }
 
@@ -590,7 +596,7 @@ HRESULT getRegboolValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, bool* pbool
 	hresult = ORGetValue(key, szSubKey, szValue, &dwType, pBytes, &dwSize); //lecture des données
 	if (hresult != ERROR_SUCCESS) return hresult;
 	*pbool = (bool)pBytes[0];
-	delete [] pBytes;
+	delete[] pBytes;
 	return ERROR_SUCCESS;
 }
 
@@ -612,7 +618,7 @@ HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, FILETIM
 	temp = bytes_to_filetime(pData);
 	*filetime = temp;
 
-	delete [] pData;
+	delete[] pData;
 	return ERROR_SUCCESS;
 }
 
@@ -635,7 +641,7 @@ HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::vec
 	DWORD pos = 0;
 	while (pos < nbChar)
 	{
-		std::wstring ws = std::wstring(data+pos);
+		std::wstring ws = std::wstring(data + pos);
 		if (!ws.empty()) out->push_back(ws);
 		pos += ws.length() + 1;//position du premier caractère de la chaîne suivante après le \0 de fin de chaîne de la suivante
 	}

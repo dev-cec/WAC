@@ -39,7 +39,7 @@ struct CustomDestinationCategory {
 	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	CustomDestinationCategory(LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid, bool _debug, bool _dump, std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
+	CustomDestinationCategory(LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid,  AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
 		int pos = 0;
 		nbentries = bytes_to_unsigned_int(buffer + 4);
 		pos += 4;
@@ -52,7 +52,7 @@ struct CustomDestinationCategory {
 				std::wstring wguid = guid_to_wstring(guid);
 
 				if (guid_to_wstring(guid).compare(L"{00021401-0000-0000-C000-000000000046}") == 0) {
-					RecentDoc i = RecentDoc(buffer + pos + x, _path, _sid, _debug, _dump, _errors);
+					RecentDoc i = RecentDoc(buffer + pos + x, _path, _sid, conf, _errors);
 					recentDocs.push_back(i);
 				}
 			}
@@ -80,7 +80,8 @@ struct CustomDestination {
 	std::wstring Sid = L""; //!< SID de l'utilisateur propriétaire du custom Destination
 	std::wstring SidName = L""; //!< nom de l'utilisateur propriétaire du custom Destination
 	std::wstring application = L"";//!< nom de l'application liée au Custom Destination
-	std::wstring path = L"";//!< Chemin du custom Destination
+	std::wstring path = L"";//!< Chemin du custom Destination dans la snapshot
+	std::wstring pathOriginal = L"";//!< Chemin du custom Destination sur le disque
 	unsigned int typeInt = 0;//!< type de custom Destination en entier
 	std::wstring type = L"";//!< nom du type de Custom Destination
 	CustomDestinationCategory* categorie = NULL; //! Pointeur vers un une Custom Destination Catégorie sur un fichier lnk est présent
@@ -103,11 +104,13 @@ struct CustomDestination {
 	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	CustomDestination(std::filesystem::path _path, std::wstring _sid, bool _debug, bool _dump, std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
+	CustomDestination(std::filesystem::path _path, std::wstring _sid,  AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
 		Sid = _sid;
 		SidName = getNameFromSid(Sid);
 		//path retourne un codage ANSI mais on veut de l'UTF8
 		path = ansi_to_utf8(_path.wstring());
+		replaceAll(path, L"\\", L"\\\\");
+		pathOriginal = replaceAll(path, conf.mountpoint, L"C:");
 		std::ifstream file(_path.wstring(), std::ios::binary);
 		if (file.good())
 		{
@@ -164,7 +167,7 @@ struct CustomDestination {
 
 			//Control de la taille du fichier pour recherche de fichier LNK
 			if ((size > 24) && (typeInt == 2)) {
-				categorie = new CustomDestinationCategory(buffer, size, path, _sid, _debug, _dump, _errors);
+				categorie = new CustomDestinationCategory(buffer, size, path, _sid, conf, _errors);
 			}
 			else {
 				_errors->push_back({ replaceAll(path,L"\\",L"\\\\") + L" : Empty customdestination, no LNK to parse",ERROR_INVALID_DATA });
@@ -182,7 +185,7 @@ struct CustomDestination {
 			+ tab(i + 1) + L"\"SID\":\"" + Sid + L"\", \n"
 			+ tab(i + 1) + L"\"SIDName\":\"" + SidName + L"\", \n"
 			+ tab(i + 1) + L"\"Application\":\"" + application + L"\", \n"
-			+ tab(i + 1) + L"\"Path\":\"" + replaceAll(path, L"\\", L"\\\\") + L"\", \n"
+			+ tab(i + 1) + L"\"Path\":\"" + pathOriginal + L"\", \n"
 			+ tab(i + 1) + L"\"Type\":\"" + type + L"\", \n"
 			+ tab(i + 1) + L"\"Created\":\"" + time_to_wstring(created) + L"\", \n"
 			+ tab(i + 1) + L"\"CreatedUtc\":\"" + time_to_wstring(createdUtc) + L"\", \n"
@@ -221,12 +224,12 @@ struct JumplistCustoms {
 		_conf = conf;
 		std::string rep = "\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\CustomDestinations";
 		for (std::tuple<std::wstring, std::wstring> profile : _conf.profiles) {
-			std::string path = wstring_to_string(get<1>(profile)) + rep;
+			std::string path = wstring_to_string(_conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"")) + rep;
 			struct stat sb;
 			if (stat(path.c_str(), &sb) == 0) { // directory Exists
 				for (const auto& entry : std::filesystem::directory_iterator(path)) {
 					if (entry.is_regular_file() && (entry.path().extension() == ".customDestinations-ms")) {
-						customDestinations.push_back(CustomDestination(entry.path(), get<0>(profile), _conf._debug, _conf._dump, &errorsCustomDestinations));
+						customDestinations.push_back(CustomDestination(entry.path(), get<0>(profile), _conf, &errorsCustomDestinations));
 					}
 				}
 			}
