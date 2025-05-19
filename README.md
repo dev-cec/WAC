@@ -3,8 +3,7 @@
 ![CPP](https://img.shields.io/badge/Microsoft_Visual_C++-2022-blue)
 
 ## :thumbsup: PROVIDER
-![Ecole de l'air et de l'espace](WAC/img/EAE.png "Ecole de l'air et de l'espace")
-![Centre d'Excellence Cyberdéfense aérospatiale](WAC/img/CEC.png "Centre d'Excellence Cyberdéfense aérospatiale")
+This tool is developed by the Aerospace Cyber ​​Defense Center of Excellence of the Air and Space School in Salon-de-Provence on air base 701.
  
 ## 🔎 OVERVIEW
 
