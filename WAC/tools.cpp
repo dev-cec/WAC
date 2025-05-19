@@ -236,7 +236,6 @@ std::wstring ROT13(std::wstring source)
 			transformed.append(1, source[i]);
 		}
 	}
-	std::wcout << "A5" << std::endl;
 	return transformed;
 }
 
