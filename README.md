@@ -100,9 +100,6 @@ Example of extracted system information:
 |:--------------------------------------------------------------------------:|:------------------:|:---------------:|
 | - Intel Core i7-8750 2.20 GHz<br>- 16 Go RAM<br>- Windows 11 home Edition <br>- Installed since 162 days |         ⌛5s        |   ⌛19 min 37s   |
 | - Intel Core i7-8665U 2.11 GHz<br>- 16 Go RAM<br>- Windows 10 Pro 22H2<br>- Installed since 1323 days  |         ⌛9s        |   ⌛1 min 42s   |
-| - 11th generation Intel Core i7-11850H 2.50 GHz<br>- 32 Go RAM<br>- Windows 10 Pro 22H2<br>- Installed since 1326 days  |         ⌛24s        |   ⌛1 min 8s   |
-| - Intel Core i7-1185G7 3GHz<br>- 32Go RAM<br>- Windows 11 Pro 24H2<br>- Installed since 121 days  |         ⌛33s        |   ⌛12 min 33s   |
-| - VM 2 vCore<br>- 4Go RAM<br>- Windows 10 Pro 22H2 FR<br>- Installed since 2 days|         ⌛14s        |   ⌛45s   |
  
 ## 🧰 BUILD REQUIREMENTS
 
