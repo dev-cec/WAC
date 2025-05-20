@@ -37,8 +37,6 @@ struct CustomDestinationCategory {
 	* @param buffersize en entrée contient la taille du buffer
 	* @param _path est le chemin contenant les custom Destinations
 	* @param _sid est le SID de l'utilisateur propriétaire du LNK
-	* @param _debug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	CustomDestinationCategory(LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid,   std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
@@ -102,8 +100,6 @@ struct CustomDestination {
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _path est le chemin contenant les Automatic Destinations
 	* @param _sid est le SID de l'utilisateur propriétaire du LNK
-	* @param _debug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	CustomDestination(std::filesystem::path _path, std::wstring _sid,   std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {

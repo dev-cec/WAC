@@ -139,6 +139,7 @@ struct DestFile {
 	* @param buffer contient un pointeur sur les données à parser
 	*/
 	DestFile(LPBYTE buffer) {
+		std::wcout << dump_wstring(buffer, 0, 64);
 		guidDroidVolume = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8));
 		guidDroidFile = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 24));
 		guidBirthDroidVolume = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 56));
@@ -203,8 +204,7 @@ struct DestFileDirectory {
 		formatVersion = bytes_to_int(buffer);
 		numberOfEntries = bytes_to_int(buffer + 4);
 		numberPinnedEntries = bytes_to_int(buffer + 8);
-		buffer += 32; //en-tête
-		int offset = 0;
+		int offset = 32;
 		for (int x = 0; x < numberOfEntries; x++) {
 			DestFile d = DestFile(buffer + offset);
 			offset += d.size; //size variable en fonction des entrée à cause de la longueur du path

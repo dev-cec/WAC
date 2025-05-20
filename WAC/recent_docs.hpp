@@ -53,8 +53,6 @@ public:
 
 	/*! fonction permettant de parser un fichier LNK
 	* @param buffer contient les données à parser
-	* @param _debug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	void parseLNK(LPBYTE buffer,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
@@ -240,8 +238,6 @@ public:
 	/*! constructeur à partir d'un fichier
 	* @param _path contient le chemin vers le fichier à parser
 	* @param _sid contient le SID de l'utilisateur propriétaire du fichier
-	* @param _debug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	RecentDoc(std::filesystem::path _path, std::wstring _sid,  std::vector<std::tuple<std::wstring, HRESULT>>* errors)
@@ -309,8 +305,6 @@ public:
 	* @param buffer contient les données à parser
 	* @param _path contient le chemin vers le fichier contenant le buffer
 	* @param _sid contient le SID de l'utilisateur propriétaire de la donnée
-	* @param _debug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	RecentDoc(LPBYTE buffer, std::wstring _path, std::wstring _sid,  std::vector<std::tuple<std::wstring,HRESULT>>* _errors) {

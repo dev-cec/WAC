@@ -23,12 +23,12 @@
 /*! Représente un objet représentant un objet Automatic Destination
 */
 struct AutomaticDestination {
-	std::wstring path=L""; //!< chemin du fichier dans le snapshot
-	std::wstring pathOriginal=L""; //!< chemin du fichier sur le disque
+	std::wstring path = L""; //!< chemin du fichier dans le snapshot
+	std::wstring pathOriginal = L""; //!< chemin du fichier sur le disque
 	std::wstring Sid = L"";//!< SID de l'utilisateur propriétaire du fichier
 	std::wstring SidName = L"";//!< nom de l'utilisateur propriétaire du fichier
 	std::wstring application = L"";//!< nom de l'application liée
-	
+
 	oleParser ole; //!< Parser ole utilisé pour décompresser l'objet ole
 	std::vector<RecentDoc> recentDocs; //!< tableau contenant les objets Shell Entries du fichier
 	FILETIME created = { 0 }; //!< date de création du fichier
@@ -42,11 +42,9 @@ struct AutomaticDestination {
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _path est le chemin contenant les Automatic Destinations
 	* @param _sid est le SID de l'utilisateur propriétaire du LNK
-	* @param _debug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	AutomaticDestination(std::filesystem::path _path, std::wstring _sid,   std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
+	AutomaticDestination(std::filesystem::path _path, std::wstring _sid, std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
 		size_t bufferSize = 0; // taille du buffer
 		Sid = _sid;
 		SidName = getNameFromSid(Sid);
@@ -54,13 +52,13 @@ struct AutomaticDestination {
 		path = ansi_to_utf8(_path.wstring());
 		path = replaceAll(path, L"\\", L"\\\\");//escape \ in std::string
 		pathOriginal = replaceAll(path, conf.mountpoint, L"C:");
-		std::ifstream file(_path.wstring(), std::ios::binary);
 		//conversion de l'appid contenu dans le nom de fichier en nom d'application
 		std::wstring::size_type const p(_path.filename().wstring().find_last_of('.'));
 		std::wstring baseName = _path.filename().wstring().substr(0, p);
 		application = ansi_to_utf8(from_appId(baseName));
 
 		//ouverture du fichier
+		std::ifstream file(_path.wstring(), std::ios::binary);
 		if (file.good()) {
 			file.unsetf(std::ios::skipws);
 			file.seekg(0, std::ios::end);
@@ -70,7 +68,6 @@ struct AutomaticDestination {
 			LPBYTE buffer = new BYTE[size];
 			file.read(reinterpret_cast<CHAR*>(buffer), size);
 			file.close();
-
 			//récupération des dates
 			HANDLE hFile = CreateFile(_path.wstring().c_str(),  // name of the write
 				GENERIC_READ,          // open for reading
@@ -81,16 +78,16 @@ struct AutomaticDestination {
 				NULL);                  // no attr. template
 			if (hFile != INVALID_HANDLE_VALUE) {
 				FILE_BASIC_INFO fileInfo;
-				GetFileInformationByHandleEx(hFile, FileBasicInfo, &fileInfo, sizeof(FILE_BASIC_INFO));
-				memcpy(&createdUtc, &fileInfo.CreationTime, sizeof(createdUtc));
-				memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
-				memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
-				FileTimeToLocalFileTime(&createdUtc, &created);
-				FileTimeToLocalFileTime(&modifiedUtc, &modified);
-				FileTimeToLocalFileTime(&accessedUtc, &accessed);
+				if (GetFileInformationByHandleEx(hFile, FileBasicInfo, &fileInfo, sizeof(FILE_BASIC_INFO))) {
+					memcpy(&createdUtc, &fileInfo.CreationTime, sizeof(createdUtc));
+					memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
+					memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
+					FileTimeToLocalFileTime(&createdUtc, &created);
+					FileTimeToLocalFileTime(&modifiedUtc, &modified);
+					FileTimeToLocalFileTime(&accessedUtc, &accessed);
+				}
 			}
 			CloseHandle(hFile);
-
 			//parsing
 			try {
 				ole = oleParser(buffer, size);
@@ -100,14 +97,16 @@ struct AutomaticDestination {
 				return;
 			}
 
-
 			// 2. Find DestList
 			Directory destlistDirectory = ole.findDirectory(L"destlist");
 			std::vector<BYTE> destlistDirectoryBytes;
-			if (destlistDirectory.directorySize == 0) // Directory vide, rien à faire
+			if (destlistDirectory.directorySize <= 0) // Directory vide, rien à faire
 				return;
 			destlistDirectoryBytes = ole.Getdata(destlistDirectory);
-
+			if (destlistDirectoryBytes.empty()) {// rien à faire
+				_errors->push_back({ L"Error while retrieving destlist Directory data, maybe empty destlist ?",ERROR_INVALID_DATA });
+				return;
+			}
 			// 3. Process DestList entries
 			DestFileDirectory destlistArray = DestFileDirectory(&destlistDirectoryBytes[0]);
 
@@ -117,11 +116,11 @@ struct AutomaticDestination {
 				if (d.name != L"") {
 					// TODO 5. Once we have the Directory entry for the lnk file, we can go get the bytes that make up the lnk file.
 					std::vector<BYTE> directoryBytes = ole.Getdata(d);
-					RecentDoc s = RecentDoc(&directoryBytes[0], path, _sid,  _errors);
+					RecentDoc s = RecentDoc(&directoryBytes[0], path, _sid, _errors);
 					recentDocs.push_back(s);
 				}
 			}
-			delete buffer;
+			delete[] buffer;
 		}
 	};
 
@@ -169,12 +168,11 @@ struct JumplistAutomatics {
 	std::vector<AutomaticDestination> automaticDestinations; //!< tableau contenant les objets
 	std::vector<std::tuple<std::wstring, HRESULT>> errorsAutomaticDestinations;//!< tableau contenant les erreurs de traitement des objets
 
-
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData() {
-		conf=conf;
+		conf = conf;
 		std::string rep = "\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\AutomaticDestinations";
 		for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
 			std::string path = wstring_to_string(conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"")) + rep;
@@ -183,7 +181,7 @@ struct JumplistAutomatics {
 			if (stat(path.c_str(), &sb) == 0) { // directory Exists
 				for (const auto& entry : std::filesystem::directory_iterator(path)) {
 					if (entry.is_regular_file() && (entry.path().extension() == ".automaticDestinations-ms")) {
-						automaticDestinations.push_back(AutomaticDestination(entry.path(), get<0>(profile),  &errorsAutomaticDestinations));
+						automaticDestinations.push_back(AutomaticDestination(entry.path(), get<0>(profile), &errorsAutomaticDestinations));
 					}
 				}
 			}
@@ -211,18 +209,18 @@ struct JumplistAutomatics {
 		result += L"]\n";
 		//enregistrement dans fichier json
 		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-		myfile.open(conf._outputDir +"/jumplistAutomaticDestinations.json");
+		myfile.open(conf._outputDir + "/jumplistAutomaticDestinations.json");
 		myfile << result;
 		myfile.close();
 
-		if(conf._debug == true && errorsAutomaticDestinations.size() > 0) {
+		if (conf._debug == true && errorsAutomaticDestinations.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errorsAutomaticDestinations) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
 			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir +"/jumplistAutomaticDestinations_errors.txt");
+			myfile.open(conf._errorOutputDir + "/jumplistAutomaticDestinations_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

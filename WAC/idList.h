@@ -85,8 +85,6 @@ struct UserPropertyViewDelegate {
 * @param buffer en entrée contient les bits à parser des extensionblock
 * @param extensionBlocks pointeur sur un vecteur de Iextensionblock utiliser pour stocker les extensionBlock extraits du buffer
 * @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 * @param is_zip précise si le shell item est un fichier zip, utilisé dans le traitement des extensionblocks, si le fichier est un zip ou assimilé alors les fils ont un format spécial, ne concerne que les fichiers, certains zip sont identifiés comme directory et dans ce cas pas de format special, ne concerne que les extensionblock beef0004
 * @param is_file précise si le shell item père est un fichier, utilisé dans le traitement des extensionblocks
 * @return void
@@ -245,8 +243,6 @@ struct SPSValue {
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _guid guid correspondant au SPS auquel appartient le SPSVALUE
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -280,8 +276,6 @@ struct SPS {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	SPS(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -316,8 +310,6 @@ struct IdList {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	IdList(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool Parentiszip = false);
@@ -347,8 +339,6 @@ struct Beef0000 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0000(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -370,8 +360,6 @@ struct Beef0001 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0001(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -393,8 +381,6 @@ struct Beef0002 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0002(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -417,8 +403,6 @@ struct Beef0003 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0003(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -449,8 +433,6 @@ struct Beef0004 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	* @param is_zip est un booléen indiquant que l'objet est une archive compressée
 	* @param is_file est un booléen indiquant que l'objet est un fichier
@@ -474,8 +456,6 @@ struct Beef0006 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0006(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -497,8 +477,6 @@ struct Beef0008 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0008(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -520,8 +498,6 @@ struct Beef0009 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0009(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -543,8 +519,6 @@ struct Beef000a : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef000a(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -566,8 +540,6 @@ struct Beef000c : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef000c(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -594,8 +566,6 @@ struct Beef000e : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef000e(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -622,8 +592,6 @@ struct Beef0010 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0010(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -645,8 +613,6 @@ struct Beef0013 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0013(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -668,8 +634,6 @@ struct Beef0014 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0014(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -691,8 +655,6 @@ struct Beef0016 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0016(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -714,8 +676,6 @@ struct Beef0017 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0017(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -740,8 +700,6 @@ struct Beef0019 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0019(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -763,8 +721,6 @@ struct Beef001a : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef001a(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -786,8 +742,6 @@ struct Beef001b : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef001b(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -809,8 +763,6 @@ struct Beef001d : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef001d(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -832,8 +784,6 @@ struct Beef001e : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef001e(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -855,8 +805,6 @@ struct Beef0021 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0021(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -878,8 +826,6 @@ struct Beef0024 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0024(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -902,8 +848,6 @@ struct Beef0025 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0025(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -933,8 +877,6 @@ struct Beef0026 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0026(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -960,8 +902,6 @@ struct Beef0027 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0027(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -983,8 +923,6 @@ struct Beef0029 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Beef0029(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -1015,8 +953,6 @@ struct VolumeShellItem : IShellItem {
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param type_char est le type d'objet au format character
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -1043,8 +979,6 @@ struct ControlPanel : IShellItem {
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param item_size est la taille totale de l'objet
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -1072,8 +1006,6 @@ struct ControlPanelCategory :IShellItem {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	ControlPanelCategory(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -1115,8 +1047,6 @@ struct Property {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	Property(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -1140,8 +1070,6 @@ struct UserPropertyView0xC01 : UserPropertyViewDelegate {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	UserPropertyView0xC01(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -1166,8 +1094,6 @@ struct UserPropertyView0x23febbee : UserPropertyViewDelegate {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	UserPropertyView0x23febbee(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -1199,8 +1125,6 @@ struct UserPropertyView0x07192006 : UserPropertyViewDelegate {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	UserPropertyView0x07192006(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -1229,8 +1153,6 @@ struct UserPropertyView0x10312005 : UserPropertyViewDelegate {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	UserPropertyView0x10312005(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -1269,8 +1191,6 @@ struct UsersPropertyView :IShellItem {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	UsersPropertyView(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -1302,8 +1222,6 @@ struct RootFolder :IShellItem {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	RootFolder(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -1331,8 +1249,6 @@ struct NetworkShellItem :IShellItem {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	NetworkShellItem(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -1359,8 +1275,6 @@ struct ArchiveFileContent :IShellItem {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	ArchiveFileContent(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -1383,8 +1297,6 @@ struct URIShellItem :IShellItem {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	URIShellItem(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -1415,8 +1327,6 @@ struct FileEntryShellItem :IShellItem {
 	* @param item_size est la taille de l'objet
 	* @param shell_item_type_char est le type de shell item au format character
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	FileEntryShellItem(LPBYTE buffer, unsigned short int itemSize, unsigned char shell_item_type_char, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -1446,8 +1356,6 @@ public:
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	UsersFilesFolder(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -1473,8 +1381,6 @@ struct FavoriteShellitem :IShellItem { // TODO A TESTER
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	FavoriteShellitem(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
@@ -1497,8 +1403,6 @@ struct UnknownShellItem :IShellItem {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param pdebug est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré
-	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
 	UnknownShellItem(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
