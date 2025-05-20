@@ -30,13 +30,13 @@ struct SystemInfo {
 	SYSTEMTIME lastBootUpTimeUtc = { 0 };//!< heure du dernier démarrage du system au format UTC
 	int currentBias = 0; //!< décalage horaire actuel
 	bool daylightInEffect=false; //!< Heure d'été active si true
-	AppliConf _conf = { 0 };//! contient les paramètres de l'application issue des paramètres de la ligne de commande
+	AppliConf conf = { 0 };//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
-	HRESULT getData(AppliConf conf) {
-		_conf = conf;
+	HRESULT getData() {
+		
 		DWORD nSize = 0;
 		LPWSTR buffer = NULL;
 		//architecture su système
@@ -141,9 +141,9 @@ struct SystemInfo {
 
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
-		myfile.open(_conf._outputDir + "/OperatingSystem.json");
+		myfile.open(conf._outputDir + "/OperatingSystem.json");
 		myfile << result;
 		myfile.close();
 

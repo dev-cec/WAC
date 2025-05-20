@@ -77,31 +77,28 @@ FILETIME FatDateTime::to_filetime() {
 *****************************************************/
 
 void printSuccess() {
-	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleTextAttribute(hConsole, 10);
+	SetConsoleTextAttribute(conf.hConsole, 10);
 	std::cout << "OK" << std::endl;
 	std::cout.flush();
-	SetConsoleTextAttribute(hConsole, 7);
+	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
 void printError(std::wstring errorText) {
-	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleTextAttribute(hConsole, 12);
+	SetConsoleTextAttribute(conf.hConsole, 12);
 	SetConsoleOutputCP(CP_UTF8);
-	std::wcout << errorText << std::endl;
-	SetConsoleTextAttribute(hConsole, 7);
+	std::wcerr << errorText << std::endl;
+	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
-void printError(HRESULT  hresult) {
+void printError( HRESULT  hresult) {
 	LPWSTR errorText = NULL;
-	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	errorText = getErrorMessage(hresult);
-	SetConsoleTextAttribute(hConsole, 12);
+	SetConsoleTextAttribute(conf.hConsole, 12);
 	SetConsoleOutputCP(CP_UTF8);
 	DWORD written = 0;
 	//std::wcout << ansi_to_utf8(errorText) << std::endl;
-	WriteConsoleW(hConsole, errorText, wcslen(errorText), &written, nullptr); //std::wcout ne fonctionne pas pour les accents avec le format retourné par FormatmessageW
-	SetConsoleTextAttribute(hConsole, 7);
+	WriteConsoleW(conf.hConsole, errorText, wcslen(errorText), &written, nullptr); //std::wcout ne fonctionne pas pour les accents avec le format retourné par FormatmessageW
+	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
 LPWSTR getErrorMessage(HRESULT hresult)

@@ -12,6 +12,7 @@
 #include "trans_id.h"
 
 
+
 #pragma comment(lib, "netapi32.lib")
 
 /*! structure contenant les informations d'un utilisateur*/
@@ -84,23 +85,22 @@ struct User {
 struct Users {
 	std::vector<User> users;//!< tableau contenant tous les utilisateurs
 	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
+
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient un pointeur sur les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
-	HRESULT getData(AppliConf* conf) {
+	HRESULT getData() {
 		LPUSER_INFO_3 usersBuf = NULL;
 
 		DWORD nbUsers, nbTotal;
 
-		_conf = *conf; // ICI pas besoin de conserver les profiles dans _conf et le reste est constant
 		NetUserEnum(NULL, 3, 0, (LPBYTE*)&usersBuf, MAX_PREFERRED_LENGTH, &nbUsers, &nbTotal, NULL);
 		for (int i = 0; i < nbUsers; i++) {
 			User temp = User(usersBuf[i].usri3_name);
 			users.push_back(temp);
 			if(temp.profile!=L"")
-				conf->profiles.push_back({ temp.SID,temp.profile });
+				conf.profiles.push_back({ temp.SID,temp.profile });
 		}
 		return ERROR_SUCCESS;
 	}
@@ -120,20 +120,20 @@ struct Users {
 		}
 		result += L"\n]";
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
-		myfile.open(_conf._outputDir + "/users.json");
+		myfile.open(conf._outputDir + "/users.json");
 		myfile << result;
 		myfile.close();
 
-		if (_conf._debug == true && errors.size() > 0) {
+		if (conf._debug == true && errors.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errors) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(_conf._errorOutputDir + "/users_errors.txt");
+			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(conf._errorOutputDir + "/users_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

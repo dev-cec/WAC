@@ -7,7 +7,6 @@
 #include <string>
 #include <stdio.h>
 #include <offreg.h>
-
 #include <io.h>
 #include <fcntl.h>
 #include "tools.h"
@@ -37,8 +36,10 @@
 #include "users.hpp"
 #include "events.hpp"
 
-void showHelp(HANDLE hConsole, AppliConf conf) {
-	SetConsoleTextAttribute(hConsole, 7); // blanc
+AppliConf conf;// variable globale pour la conf de l'application
+
+void showHelp() {
+	SetConsoleTextAttribute(conf.hConsole, 7); // blanc
 	std::cout << "\nusage: " << conf.name << " [--dump] [--debug] [--events] [--output=output] [--errorOutput=errors]\n";
 	std::cout << "\t--help or /? : show this help \n";
 	std::cout << "\t--dump : add std::hexa value in json files for shellbags and LNK files \n";
@@ -70,17 +71,13 @@ int main(int argc, char* argv[])
 	JumplistAutomatics jumplistAutomatics;
 	JumplistCustoms jumplistCustoms;
 	ScheduledTasks scheduledTasks;
-	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	SystemInfo systemInfo;
 	Sessions sessions;
 	Processes processes;
 	Users users;
 	Events events;
-	AppliConf conf;
-
-	time_t start = 0, end = 0;
-
 	
+	time_t start = 0, end = 0;
 
 	/************************
 	* fonctions utiles
@@ -138,15 +135,15 @@ int main(int argc, char* argv[])
 				std::string temp = std::string(arg.substr(9));
 				if (temp.length() > 0) conf._outputDir = temp;
 				else {
-					SetConsoleTextAttribute(hConsole, 12); // rouge
+					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
 					std::cerr << "Invalid length for output param " << arg << "\n";
-					showHelp(hConsole, conf);
+					showHelp();
 					exit(1);
 				}
 				if (conf._outputDir.find("\\") != std::string::npos) {
-					SetConsoleTextAttribute(hConsole, 12); // rouge
+					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
 					std::cerr << "Invalid character \ for param " << arg << "\n";
-					showHelp(hConsole, conf);
+					showHelp();
 					exit(1);
 				}
 			}
@@ -154,26 +151,23 @@ int main(int argc, char* argv[])
 				std::string temp = std::string(arg.substr(14));
 				if (temp.length() > 0) conf._errorOutputDir = temp;
 				else {
-					SetConsoleTextAttribute(hConsole, 12); // rouge
-					std::cerr << "Invalid length for errorOutput param " << arg << "\n";
-					showHelp(hConsole, conf);
+					printError( L"Invalid length for errorOutput param " + string_to_wstring(arg)) ;
+					showHelp();
 					exit(1);
 				}
 				if (conf._errorOutputDir.find("\\") != std::string::npos) {
-					SetConsoleTextAttribute(hConsole, 12); // rouge
-					std::cerr << "Invalid character \ for param " << arg << "\n";
-					showHelp(hConsole, conf);
+					printError( L"Invalid character \ for param " + string_to_wstring(arg));
+					showHelp();
 					exit(1);
 				}
 			}
 			else { //argument inconnu
 				SetConsoleOutputCP(CP_UTF8);
 				if (arg != "--help" && arg !="/?") { // Si pas argument --help ou /? alors argument invalide
-					SetConsoleTextAttribute(hConsole, 12); // rouge
-					std::cerr << "Invalid argument " << arg << "\n";
+					printError( L"Invalid argument  " + string_to_wstring(arg));
 				}
 
-				showHelp(hConsole, conf);
+				showHelp();
 				exit(1);
 			}
 		}
@@ -183,9 +177,9 @@ int main(int argc, char* argv[])
 	* Prérequis
 	*************************/
 
-	SetConsoleTextAttribute(hConsole, 14);
+	SetConsoleTextAttribute(conf.hConsole, 14);
 	std::wcout << "[PREREQUISITE VERIFICATION]" << std::endl;
-	SetConsoleTextAttribute(hConsole, 7);
+	SetConsoleTextAttribute(conf.hConsole, 7);
 	std::wcout << " - Check OS >= Windows 10 : ";
 #if (_WIN32_WINNT >= _WIN32_WINNT_WIN10)
 	printSuccess();
@@ -199,9 +193,10 @@ int main(int argc, char* argv[])
 	GetTokenInformation(hToken, TokenElevation, &elevation, sizeof(elevation), &infoLen);
 	if (!elevation.TokenIsElevated)
 	{
-		printError(ERROR_ELEVATION_REQUIRED);
+		printError( ERROR_ELEVATION_REQUIRED);
 		return 3;
 	}
+	CloseHandle(hToken);
 	printSuccess();
 #else
 	printError(ERROR_APP_WRONG_OS);
@@ -212,9 +207,9 @@ int main(int argc, char* argv[])
 	* CONNECTION COM
 	**********************************/
 
-	SetConsoleTextAttribute(hConsole, 14);
+	SetConsoleTextAttribute(conf.hConsole, 14);
 	std::wcout << "[COM COMPONENT]" << std::endl;
-	SetConsoleTextAttribute(hConsole, 7);
+	SetConsoleTextAttribute(conf.hConsole, 7);
 
 	std::wcout << " - Connection to COM : ";
 	hresult = com.connect();
@@ -227,12 +222,12 @@ int main(int argc, char* argv[])
 	/************************
 	* WIN32 API
 	*************************/
-	SetConsoleTextAttribute(hConsole, 14);
+	SetConsoleTextAttribute(conf.hConsole, 14);
 	std::wcout << "[SEARCHING FOR ARTIFACTS IN WINDOWS API]" << std::endl;
-	SetConsoleTextAttribute(hConsole, 7);
+	SetConsoleTextAttribute(conf.hConsole, 7);
 	
 	std::wcout << " - Extraction of SYSTEM INFORMATION: ";
-	hresult = systemInfo.getData(conf);
+	hresult = systemInfo.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
 		hresult = systemInfo.to_json();
@@ -243,7 +238,7 @@ int main(int argc, char* argv[])
 	
 
 	std::wcout << " - Extraction of SCHEDULED TASKS: ";
-	hresult = scheduledTasks.getData(conf);
+	hresult = scheduledTasks.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
 		hresult = scheduledTasks.to_json();
@@ -255,7 +250,7 @@ int main(int argc, char* argv[])
 	
 
 	std::wcout << " - Extraction of SESSIONS: ";
-	hresult = sessions.getData(conf);
+	hresult = sessions.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
 		hresult = sessions.to_json();
@@ -267,7 +262,7 @@ int main(int argc, char* argv[])
 	
 
 	std::wcout << " - Extraction of PROCESS: ";
-	hresult = processes.getData(conf);
+	hresult = processes.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
 		hresult = processes.to_json();
@@ -280,7 +275,7 @@ int main(int argc, char* argv[])
 
 	std::wcout << " - Extraction of SERVICES: ";
 	std::wcout.flush();
-	hresult = services.getData(conf);
+	hresult = services.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
 		hresult = services.to_json();
@@ -293,7 +288,7 @@ int main(int argc, char* argv[])
 	
 	std::wcout << " - Extraction of USERS: ";
 	std::wcout.flush();
-	hresult = users.getData(&conf);
+	hresult = users.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
 		hresult = users.to_json();
@@ -307,7 +302,7 @@ int main(int argc, char* argv[])
 	if (conf._events) {
 		std::wcout << " - Extraction of EVENTS: ";
 		std::wcout.flush();
-		hresult = events.getData(conf);
+		hresult = events.getData();
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else {
 			hresult = events.to_json();
@@ -324,9 +319,9 @@ int main(int argc, char* argv[])
 	VSS_ID snapshotSetId = { 0 };
 	LPCWSTR lpMountpoint = L"";
 
-	SetConsoleTextAttribute(hConsole, 14);
+	SetConsoleTextAttribute(conf.hConsole, 14);
 	std::wcout << "[SNAPSHOT]" << std::endl;
-	SetConsoleTextAttribute(hConsole, 7);
+	SetConsoleTextAttribute(conf.hConsole, 7);
 
 	std::wcout << " - Creating the snapshot : ";
 	hresult = GetSnapshots(&lpMountpoint, &snapshotSetId, pBackup);
@@ -344,9 +339,9 @@ int main(int argc, char* argv[])
 	*  BASE DE REGISTRE
 	*************************/
 
-	SetConsoleTextAttribute(hConsole, 14);
+	SetConsoleTextAttribute(conf.hConsole, 14);
 	std::wcout << "[SEARCHING FOR ARTIFACTS IN THE REGISTRY]" << std::endl;
-	SetConsoleTextAttribute(hConsole, 7);
+	SetConsoleTextAttribute(conf.hConsole, 7);
 	//variables
 	ORHKEY hKey;
 	LPTSTR errorText = NULL;
@@ -437,7 +432,7 @@ int main(int argc, char* argv[])
 			printSuccess();
 
 			std::wcout << " - Extracting USBSTOR Registry Keys : ";
-			hresult = usbs.getData(conf);
+			hresult = usbs.getData();
 			if (hresult != ERROR_SUCCESS) {
 				printError(hresult);
 			}
@@ -449,7 +444,7 @@ int main(int argc, char* argv[])
 			}
 
 			std::wcout << " - Extracting the MOUNTED DEVICE registry keys : ";
-			hresult = mounteddevices.getData(conf);
+			hresult = mounteddevices.getData();
 			if (hresult != ERROR_SUCCESS) {
 				printError(hresult);
 			}
@@ -462,7 +457,7 @@ int main(int argc, char* argv[])
 
 
 			std::wcout << " - Extracting BAM Registry Keys : ";
-			hresult = bams.getData(conf);
+			hresult = bams.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
 				hresult = bams.to_json();
@@ -472,7 +467,7 @@ int main(int argc, char* argv[])
 			}
 
 			std::wcout << " - Extracting MUICACHE Registry Keys : ";
-			hresult = muicaches.getData(conf);
+			hresult = muicaches.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
 				hresult = muicaches.to_json();
@@ -482,7 +477,7 @@ int main(int argc, char* argv[])
 			}
 
 			std::wcout << " - Extracting AMCACHE APPLICATION Registry Keys : ";
-			hresult = amcacheapplications.getData(conf);
+			hresult = amcacheapplications.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
 				hresult = amcacheapplications.to_json();
@@ -492,7 +487,7 @@ int main(int argc, char* argv[])
 			}
 
 			std::wcout << " - Extracting AMCACHE APPLICATIONFILE Registry Keys : ";
-			hresult = amcacheapplicationfiles.getData(conf);
+			hresult = amcacheapplicationfiles.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
 				hresult = amcacheapplicationfiles.to_json();
@@ -502,7 +497,7 @@ int main(int argc, char* argv[])
 			}
 
 			std::wcout << " - Extracting USERASSIST Registry Keys : ";
-			hresult = userassists.getData(conf);
+			hresult = userassists.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
 				hresult = userassists.to_json();
@@ -512,7 +507,7 @@ int main(int argc, char* argv[])
 			}
 
 			std::wcout << " - Extracting RUN Registry Keys : ";
-			hresult = runs.getData(conf);
+			hresult = runs.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
 				hresult = runs.to_json();
@@ -522,7 +517,7 @@ int main(int argc, char* argv[])
 			}
 
 			std::wcout << " - Extracting SHIMCACHE Registry Keys : ";
-			hresult = shimcaches.getData(conf);
+			hresult = shimcaches.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
 				hresult = shimcaches.to_json();
@@ -532,7 +527,7 @@ int main(int argc, char* argv[])
 			}
 
 			std::wcout << " - Extracting SHELLBAGS Registry Keys : ";
-			hresult = shellbags.getData(conf);
+			hresult = shellbags.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
 				hresult = shellbags.to_json();
@@ -542,7 +537,7 @@ int main(int argc, char* argv[])
 			}
 
 			std::wcout << " - Extracting MRU Registry Keys : ";
-			hresult = mrus.getData(conf);
+			hresult = mrus.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
 				hresult = mrus.to_json();
@@ -552,7 +547,7 @@ int main(int argc, char* argv[])
 			}
 
 			std::wcout << " - Extracting MRUAPPS Registry Keys : ";
-			hresult = mruapps.getData(conf);
+			hresult = mruapps.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
 				hresult = mruapps.to_json();
@@ -567,9 +562,9 @@ int main(int argc, char* argv[])
 	/**************************************************
 	* DECONNEXION COM
 	***************************************************/
-	SetConsoleTextAttribute(hConsole, 14);
+	SetConsoleTextAttribute(conf.hConsole, 14);
 	std::wcout << "[COM COMPONENT]" << std::endl;
-	SetConsoleTextAttribute(hConsole, 7);
+	SetConsoleTextAttribute(conf.hConsole, 7);
 	std::wcout << " - Disconnecting COM : ";
 	std::wcout.flush();
 	com.clear();
@@ -578,11 +573,11 @@ int main(int argc, char* argv[])
 	/************************
 	*  FICHIERS
 	*************************/
-	SetConsoleTextAttribute(hConsole, 14);
+	SetConsoleTextAttribute(conf.hConsole, 14);
 	std::wcout << "[SEARCHING FOR ARTIFACTS IN FILES]" << std::endl;
-	SetConsoleTextAttribute(hConsole, 7);
+	SetConsoleTextAttribute(conf.hConsole, 7);
 	std::wcout << " - Extracting RECENT DOCS : ";
-	hresult = recentdocs.getData(conf);
+	hresult = recentdocs.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
 		hresult = recentdocs.to_json();
@@ -592,7 +587,7 @@ int main(int argc, char* argv[])
 	}
 
 	std::wcout << " - Extracting PREFETCHS : ";
-	hresult = prefetchs.getData(conf);
+	hresult = prefetchs.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
 		hresult = prefetchs.to_json();
@@ -602,7 +597,7 @@ int main(int argc, char* argv[])
 	}
 
 	std::wcout << " - Extracting JUMPLIST AUTOMATIC: ";
-	hresult = jumplistAutomatics.getData(conf);
+	hresult = jumplistAutomatics.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
 		hresult = jumplistAutomatics.to_json();
@@ -612,7 +607,7 @@ int main(int argc, char* argv[])
 	}
 
 	std::wcout << " - Extracting JUMPLIST CUSTOM: ";
-	hresult = jumplistCustoms.getData(conf);
+	hresult = jumplistCustoms.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
 		hresult = jumplistCustoms.to_json();
@@ -623,9 +618,9 @@ int main(int argc, char* argv[])
 	/*****************************************
 	*            DEMONTAGE SNAPSHOT 
 	******************************************/
-	SetConsoleTextAttribute(hConsole, 14);
+	SetConsoleTextAttribute(conf.hConsole, 14);
 	std::wcout << "[SNAPSHOT]" << std::endl;
-	SetConsoleTextAttribute(hConsole, 7);
+	SetConsoleTextAttribute(conf.hConsole, 7);
 	std::wcout << " - Snapshot disassembly : ";
 	if (!RemoveDirectoryW(lpMountpoint)) printError(GetLastError());
 	else printSuccess();
@@ -635,5 +630,7 @@ int main(int argc, char* argv[])
 	end = time(nullptr);
 
 	std::wcout << L"END, Time elapsed : " << end - start << " s" << std::endl;
+
+	CloseHandle(conf.hConsole);
 	return ERROR_SUCCESS;
 }

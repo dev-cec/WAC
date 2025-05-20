@@ -8,6 +8,7 @@
 #include "tools.h"
 
 
+
 /*! structure permettant de se connecter sur le système pour par la suite exécuter des requête WMI et WIN32 API
 */
 struct COM {

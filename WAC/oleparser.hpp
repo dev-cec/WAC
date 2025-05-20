@@ -10,6 +10,8 @@
 #include <stdexcept>
 #include "tools.h"
 
+
+
 /*!
 * OLE PARSER
 * Documentation : https://binaryforay.blogspot.com/2016/02/jump-lists-in-depth-understand-format.html

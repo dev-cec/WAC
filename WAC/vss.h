@@ -3,6 +3,7 @@
 #include "stdafx.h"
 
 
+
 /*! libère une interface si son identifiant n'est pas NULL
 * @param unkn identifiant de l'interface
 * @return void

@@ -4,6 +4,8 @@
 #include <taskschd.h>
 #include <lmaccess.h>
 
+
+
 /*! Conversion d'un service type au format enum en nom wstring
 * @param type est le type au format numérique
 * @return wstring correspondant au nom du type

@@ -12,6 +12,8 @@
 #include "idList.h"
 #include "recent_docs.hpp"
 
+
+
 ////////////////////////////////////////////////////
 // Documentation : https://binaryforay.blogspot.com/2016/02/jump-lists-in-depth-understand-format.html
 // Documentation : https://github.com/libyal/dtformats/blob/main/documentation/Jump%20lists%20format.asciidoc
@@ -39,7 +41,7 @@ struct CustomDestinationCategory {
 	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	CustomDestinationCategory(LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid,  AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
+	CustomDestinationCategory(LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid,   std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
 		int pos = 0;
 		nbentries = bytes_to_unsigned_int(buffer + 4);
 		pos += 4;
@@ -52,7 +54,7 @@ struct CustomDestinationCategory {
 				std::wstring wguid = guid_to_wstring(guid);
 
 				if (guid_to_wstring(guid).compare(L"{00021401-0000-0000-C000-000000000046}") == 0) {
-					RecentDoc i = RecentDoc(buffer + pos + x, _path, _sid, conf, _errors);
+					RecentDoc i = RecentDoc(buffer + pos + x, _path, _sid,  _errors);
 					recentDocs.push_back(i);
 				}
 			}
@@ -104,7 +106,7 @@ struct CustomDestination {
 	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	CustomDestination(std::filesystem::path _path, std::wstring _sid,  AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
+	CustomDestination(std::filesystem::path _path, std::wstring _sid,   std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
 		Sid = _sid;
 		SidName = getNameFromSid(Sid);
 		//path retourne un codage ANSI mais on veut de l'UTF8
@@ -140,6 +142,7 @@ struct CustomDestination {
 				FileTimeToLocalFileTime(&modifiedUtc, &modified);
 				FileTimeToLocalFileTime(&accessedUtc, &accessed);
 			}
+			CloseHandle(hFile);
 
 			//conversion de l'appid contenu dans le nom de fichier en nom d'application
 			std::wstring::size_type const p(_path.filename().wstring().find_last_of('.')); // position du point de l'extension
@@ -167,7 +170,7 @@ struct CustomDestination {
 
 			//Control de la taille du fichier pour recherche de fichier LNK
 			if ((size > 24) && (typeInt == 2)) {
-				categorie = new CustomDestinationCategory(buffer, size, path, _sid, conf, _errors);
+				categorie = new CustomDestinationCategory(buffer, size, path, _sid,  _errors);
 			}
 			else {
 				_errors->push_back({ replaceAll(path,L"\\",L"\\\\") + L" : Empty customdestination, no LNK to parse",ERROR_INVALID_DATA });
@@ -215,21 +218,21 @@ struct CustomDestination {
 struct JumplistCustoms {
 	std::vector<CustomDestination> customDestinations; //!< tableau contenant les objets
 	std::vector<std::tuple<std::wstring, HRESULT>> errorsCustomDestinations;//!< tableau contenant les erreurs de traitement des objets
-	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
+
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
-	HRESULT getData(AppliConf conf) {
-		_conf = conf;
+	HRESULT getData() {
+		
 		std::string rep = "\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\CustomDestinations";
-		for (std::tuple<std::wstring, std::wstring> profile : _conf.profiles) {
-			std::string path = wstring_to_string(_conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"")) + rep;
+		for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
+			std::string path = wstring_to_string(conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"")) + rep;
 			struct stat sb;
 			if (stat(path.c_str(), &sb) == 0) { // directory Exists
 				for (const auto& entry : std::filesystem::directory_iterator(path)) {
 					if (entry.is_regular_file() && (entry.path().extension() == ".customDestinations-ms")) {
-						customDestinations.push_back(CustomDestination(entry.path(), get<0>(profile), _conf, &errorsCustomDestinations));
+						customDestinations.push_back(CustomDestination(entry.path(), get<0>(profile),  &errorsCustomDestinations));
 					}
 				}
 			}
@@ -255,19 +258,19 @@ struct JumplistCustoms {
 		}
 		result += L"]\n";
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-		myfile.open(_conf._outputDir +"/jumplistCustomDestinations.json");
+		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		myfile.open(conf._outputDir +"/jumplistCustomDestinations.json");
 		myfile << result;
 		myfile.close();
 
-		if(_conf._debug == true && errorsCustomDestinations.size() > 0) {
+		if(conf._debug == true && errorsCustomDestinations.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errorsCustomDestinations) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(_conf._errorOutputDir +"/jumplistCustomDestinations_errors.txt");
+			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(conf._errorOutputDir +"/jumplistCustomDestinations_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

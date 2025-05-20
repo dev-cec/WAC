@@ -12,6 +12,8 @@
 #include "recent_docs.hpp"
 #include "oleParser.hpp"
 
+
+
 ////////////////////////////////////////////////////
 // Documentation : https://binaryforay.blogspot.com/2016/02/jump-lists-in-depth-understand-format.html
 // Documentation : https://github.com/libyal/dtformats/blob/main/documentation/Jump%20lists%20format.asciidoc
@@ -44,7 +46,7 @@ struct AutomaticDestination {
 	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	AutomaticDestination(std::filesystem::path _path, std::wstring _sid, AppliConf conf,  std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
+	AutomaticDestination(std::filesystem::path _path, std::wstring _sid,   std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
 		size_t bufferSize = 0; // taille du buffer
 		Sid = _sid;
 		SidName = getNameFromSid(Sid);
@@ -87,6 +89,7 @@ struct AutomaticDestination {
 				FileTimeToLocalFileTime(&modifiedUtc, &modified);
 				FileTimeToLocalFileTime(&accessedUtc, &accessed);
 			}
+			CloseHandle(hFile);
 
 			//parsing
 			try {
@@ -114,7 +117,7 @@ struct AutomaticDestination {
 				if (d.name != L"") {
 					// TODO 5. Once we have the Directory entry for the lnk file, we can go get the bytes that make up the lnk file.
 					std::vector<BYTE> directoryBytes = ole.Getdata(d);
-					RecentDoc s = RecentDoc(&directoryBytes[0], path, _sid, conf, _errors);
+					RecentDoc s = RecentDoc(&directoryBytes[0], path, _sid,  _errors);
 					recentDocs.push_back(s);
 				}
 			}
@@ -165,22 +168,22 @@ struct AutomaticDestination {
 struct JumplistAutomatics {
 	std::vector<AutomaticDestination> automaticDestinations; //!< tableau contenant les objets
 	std::vector<std::tuple<std::wstring, HRESULT>> errorsAutomaticDestinations;//!< tableau contenant les erreurs de traitement des objets
-	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
+
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
-	HRESULT getData(AppliConf conf) {
-		_conf=conf;
+	HRESULT getData() {
+		conf=conf;
 		std::string rep = "\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\AutomaticDestinations";
-		for (std::tuple<std::wstring, std::wstring> profile : _conf.profiles) {
-			std::string path = wstring_to_string(_conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"")) + rep;
+		for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
+			std::string path = wstring_to_string(conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"")) + rep;
 			//std::string path = wstring_to_string(get<1>(profile)) + rep;
 			struct stat sb;
 			if (stat(path.c_str(), &sb) == 0) { // directory Exists
 				for (const auto& entry : std::filesystem::directory_iterator(path)) {
 					if (entry.is_regular_file() && (entry.path().extension() == ".automaticDestinations-ms")) {
-						automaticDestinations.push_back(AutomaticDestination(entry.path(), get<0>(profile), _conf, &errorsAutomaticDestinations));
+						automaticDestinations.push_back(AutomaticDestination(entry.path(), get<0>(profile),  &errorsAutomaticDestinations));
 					}
 				}
 			}
@@ -207,19 +210,19 @@ struct JumplistAutomatics {
 		}
 		result += L"]\n";
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-		myfile.open(_conf._outputDir +"/jumplistAutomaticDestinations.json");
+		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		myfile.open(conf._outputDir +"/jumplistAutomaticDestinations.json");
 		myfile << result;
 		myfile.close();
 
-		if(_conf._debug == true && errorsAutomaticDestinations.size() > 0) {
+		if(conf._debug == true && errorsAutomaticDestinations.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errorsAutomaticDestinations) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(_conf._errorOutputDir +"/jumplistAutomaticDestinations_errors.txt");
+			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(conf._errorOutputDir +"/jumplistAutomaticDestinations_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

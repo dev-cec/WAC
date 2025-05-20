@@ -12,6 +12,8 @@
 #include "trans_id.h"
 #include "tools.h"
 
+
+
 struct ServiceStruct
 {
 	std::wstring serviceName = L"";
@@ -84,12 +86,12 @@ struct Services
 {
 	std::vector<ServiceStruct> services; //!< tableau contenant tout les processus
 	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-	AppliConf _conf = { 0 };//! contient les paramètres de l'application issue des paramètres de la ligne de commande
+	AppliConf conf = { 0 };//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
-	HRESULT getData(AppliConf conf)
+	HRESULT getData()
 	{
 		SC_HANDLE hSCM = NULL;
 		PUCHAR  pBuf = NULL;
@@ -100,7 +102,7 @@ struct Services
 		DWORD bufSize = 0;
 		DWORD moreBytesNeeded, serviceCount;
 
-		_conf = conf;
+		
 
 		hSCM = OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE | SC_MANAGER_CONNECT);
 		if (hSCM == NULL)
@@ -144,20 +146,20 @@ struct Services
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
-		myfile.open(_conf._outputDir + "/services.json");
+		myfile.open(conf._outputDir + "/services.json");
 		myfile << result;
 		myfile.close();
 
-		if (_conf._debug == true && errors.size() > 0) {
+		if (conf._debug == true && errors.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errors) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(_conf._errorOutputDir + "/services_errors.txt");
+			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(conf._errorOutputDir + "/services_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

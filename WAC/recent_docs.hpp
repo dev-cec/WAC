@@ -11,6 +11,7 @@
 #include "idList.h"
 
 
+
 /* structure représentant un document récent
 */
 struct RecentDoc {
@@ -56,7 +57,7 @@ public:
 	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	void parseLNK(LPBYTE buffer, AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
+	void parseLNK(LPBYTE buffer,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
 		unsigned int header_size = *reinterpret_cast<unsigned int*>(buffer);
 		guid = *reinterpret_cast<GUID*>(buffer + 4);
 		if (guid_to_wstring(guid).compare(L"{00021401-0000-0000-C000-000000000046}") == 0) {
@@ -95,7 +96,7 @@ public:
 				while (item_size != 0 && offset < LinkTargetIDList_size) {
 					item_size = bytes_to_unsigned_short(buffer + offset);
 					if (item_size != 0) {
-						idLists.push_back(IdList(buffer + offset, 2,conf, errors)); // lvl 1 is object itself
+						idLists.push_back(IdList(buffer + offset, 2, errors)); // lvl 1 is object itself
 					}
 					offset += item_size;
 				}
@@ -243,7 +244,7 @@ public:
 	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	RecentDoc(std::filesystem::path _path, std::wstring _sid, AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors)
+	RecentDoc(std::filesystem::path _path, std::wstring _sid,  std::vector<std::tuple<std::wstring, HRESULT>>* errors)
 	{
 		//Parsing
 		Sid = _sid;
@@ -265,7 +266,7 @@ public:
 				file.read(reinterpret_cast<CHAR*>(buffer), size);
 				file.close();
 
-				parseLNK(buffer, conf, errors);
+				parseLNK(buffer,  errors);
 				delete [] buffer;
 			}
 		}
@@ -301,6 +302,7 @@ public:
 			FileTimeToLocalFileTime(&sourceModifiedUtc, &sourceModified);
 			FileTimeToLocalFileTime(&sourceAccessedUtc, &sourceAccessed);
 		}
+		CloseHandle(hFile);
 	}
 
 	/*! constructeur à partir d'un buffer
@@ -311,11 +313,11 @@ public:
 	* @param _dump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	RecentDoc(LPBYTE buffer, std::wstring _path, std::wstring _sid, AppliConf conf, std::vector<std::tuple<std::wstring,HRESULT>>* _errors) {
+	RecentDoc(LPBYTE buffer, std::wstring _path, std::wstring _sid,  std::vector<std::tuple<std::wstring,HRESULT>>* _errors) {
 		Sid = _sid;
 		path = _path;
 		target = L"";
-		parseLNK(buffer, conf, _errors);
+		parseLNK(buffer,  _errors);
 	}
 
 	/*! conversion de l'objet au format json
@@ -379,23 +381,23 @@ public:
 struct RecentDocs {
 	std::vector<RecentDoc> recentdocs; //!< tableau contenant l'ensemble des objets
 	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
+
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
-	HRESULT getData(AppliConf conf) {
-		_conf=conf;
+	HRESULT getData() {
+		conf=conf;
 		std::string reps[2] = { "\\AppData\\Roaming\\Microsoft\\Windows\\Recent","\\AppData\\Roaming\\Microsoft\\Office\\Recent" };
 		for (std::string rep : reps) {
-			for (std::tuple<std::wstring, std::wstring> profile : _conf.profiles) {
-				std::string path = wstring_to_string(_conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"")) + rep;
+			for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
+				std::string path = wstring_to_string(conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"")) + rep;
 				struct stat sb;
 				if (stat(path.c_str(), &sb) == 0) { // directory Exists
 					for (const auto& entry : std::filesystem::directory_iterator(path)) {
 						if (entry.is_regular_file() && ((entry.path().extension() == ".lnk" || entry.path().extension() == ".LNK") || (entry.path().extension() == ".url" || entry.path().extension() == ".URL"))) {
 							
-							recentdocs.push_back(RecentDoc(entry.path(), get<0>(profile), _conf, &errors));
+							recentdocs.push_back(RecentDoc(entry.path(), get<0>(profile),  &errors));
 						}
 					}
 				}
@@ -422,19 +424,19 @@ struct RecentDocs {
 		}
 		result += L"]\n";
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-		myfile.open(_conf._outputDir +"/recentdocs.json");
+		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		myfile.open(conf._outputDir +"/recentdocs.json");
 		myfile << result;
 		myfile.close();
 
-		if(_conf._debug == true && errors.size() > 0) {
+		if(conf._debug == true && errors.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errors) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(_conf._errorOutputDir +"/recentdocs_errors.txt");
+			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(conf._errorOutputDir +"/recentdocs_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

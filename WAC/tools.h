@@ -5,7 +5,6 @@
 #include <vector>
 #include <time.h>
 
-
 //constantes globales 
 #define MAX_KEY_NAME 255 //!< plus longue key name en base de registre
 #define MAX_VALUE_NAME 16383 //!< plus long nom de valeur en base de registre
@@ -13,18 +12,21 @@
 
 //! Structure de données contenant la configuration de l'application
 struct AppliConf {
-	bool _debug = false;//! True if debug is active
-	bool _dump = false;//! True if dump is active
-	bool _events = false;//! True is events must be extracted
-	std::string name = ""; //! name of the program, obtained from command line
-	std::string _outputDir = "output"; //! directory to store output JSON
+	bool _debug = false;//!< True if debug is active
+	bool _dump = false;//!< True if dump is active
+	bool _events = false;//!< True is events must be extracted
+	std::string name = ""; //!< name of the program, obtained from command line
+	std::string _outputDir = "output"; //!< directory to store output JSON
 	std::string _errorOutputDir = "errors";//! directory to store output error JSON if debug is rue
-	std::wstring mountpoint = L""; //! mount point path to access the snapshot made during execution
-	ORHKEY CurrentControlSet = { 0 }; //! Reg Key to access Current Control Set Hive
-	ORHKEY System = { 0 }; //! Reg Key to access to System Hive
-	ORHKEY Software = { 0 };//! Reg Key to access CurrentControlSet/Software hive
-	std::vector<std::tuple<std::wstring, std::wstring>> profiles;//! vector to store SID and profiles of users present on the machine
+	std::wstring mountpoint = L""; //!< mount point path to access the snapshot made during execution
+	ORHKEY CurrentControlSet = { 0 }; //!< Reg Key to access Current Control Set Hive
+	ORHKEY System = { 0 }; //!< Reg Key to access to System Hive
+	ORHKEY Software = { 0 };//!< Reg Key to access CurrentControlSet/Software hive
+	std::vector<std::tuple<std::wstring, std::wstring>> profiles;//!< vector to store SID and profiles of users present on the machine
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);//!< Handle de la console
 };
+
+extern AppliConf conf;// variable globale pour la conf de l'application
 
 ///////////////////////////////////////////////////////
 // Format de données
@@ -68,13 +70,13 @@ void printSuccess();
 * @param hresult résultat retourné par un commande
 * @return void
 */
-void printError(HRESULT  hresult);
+void printError( HRESULT  hresult);
 
 /*! affichage du message errortext en ROUGE dans la console
 * @param errorText texte à afficher
 * @return void
 */
-void printError(std::wstring  errorText);
+void printError( std::wstring  errorText);
 
 /*! extraction du message d'erreur d'un HRESULT retourné par une commande
 * @param hresult résultat retourné par un commande

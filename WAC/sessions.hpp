@@ -7,10 +7,12 @@
 #include <Sddl.h>
 #include <wtsapi32.h>
 #include <winternl.h>
-#define _NTDEF_ //pour éviter les conflits de type avec winternl.h
+#define _NTDEF_ //pour éviter les conflits de type entre ntsecapi.h et winternl.h
 #include <ntsecapi.h>
 #include "tools.h"
 #include "trans_id.h"
+
+
 
 /*! structure contenant les informations d'une session
 */
@@ -77,13 +79,13 @@ struct Session {
 */
 struct Sessions {
 	std::vector<Session> sessions; //!< tableau contenant tout les Session
-	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
+
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
-	HRESULT getData(AppliConf conf) {
-		_conf = conf;
+	HRESULT getData() {
+		
 		PLUID pointer;
 		ULONG nbSessions;
 		NTSTATUS hr;
@@ -111,8 +113,8 @@ struct Sessions {
 		}
 		result += L"]";
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-		myfile.open(_conf._outputDir + "/Sessions.json");
+		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		myfile.open(conf._outputDir + "/Sessions.json");
 		myfile << result;
 		myfile.close();
 		return ERROR_SUCCESS;

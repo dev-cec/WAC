@@ -10,6 +10,8 @@
 #include "usb.h"
 #include "idList.h"
 
+
+
 /*! structure représentant un artefact Shellbag
 */
 struct Shellbag {
@@ -70,14 +72,14 @@ public:
 	std::vector<Shellbag> shellbags;//!< tableau contenant les objets
 	unsigned int niveau = 0;//!< profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
 	std::vector<std::tuple<std::wstring,HRESULT>> errors;//!< tableau contenant les erreurs de traitement des objets
-	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
+
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	* param _niveau est utilisé pour la mie en forme de la hiérarchie des objet dans le json de sortie
 	*/
-	HRESULT getData(AppliConf conf, int _niveau = 0) {
-		_conf = conf;
+	HRESULT getData( int _niveau = 0) {
+		
 		HRESULT hresult = NULL;
 		ORHKEY hKey;
 		ORHKEY hSubKey;
@@ -90,9 +92,9 @@ public:
 		std::wstring ruche = L"";
 		niveau = _niveau;
 		//HKEY_USERS
-		for (std::tuple<std::wstring, std::wstring> profile : _conf.profiles) {
+		for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
 			//ouverture de la ruche user
-			ruche = _conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat";
+			ruche = conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat";
 			hresult = OROpenHive(ruche.c_str(), &Offhive);
 			if (hresult != ERROR_SUCCESS) {
 				errors.push_back({ L"unable to open hive " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat", hresult });
@@ -146,8 +148,8 @@ public:
 			shellbag.sid = sid;
 			shellbag.sidName = getNameFromSid(sid);
 			shellbag.source = source;
-			shellbag._debug = _conf._debug;
-			shellbag._dump = _conf._dump;
+			shellbag._debug = conf._debug;
+			shellbag._dump = conf._dump;
 			getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), pData);
 			unsigned int offset = 0;
 			while (true) {
@@ -156,7 +158,7 @@ public:
 				if (size == 0) break;
 				else {
 
-					IdList* shellitem = new IdList(pData + offset, niveau + 2, _conf, &errors, Parentiszip);
+					IdList* shellitem = new IdList(pData + offset, niveau + 2,  &errors, Parentiszip);
 					if (shellitem->shellItem->is_zip == true)
 						Parentiszip = true;
 					offset += size;
@@ -195,20 +197,20 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
-		myfile.open(_conf._outputDir +"/shellbags.json");
+		myfile.open(conf._outputDir +"/shellbags.json");
 		myfile << result;
 		myfile.close();
 
-		if(_conf._debug == true && errors.size() > 0) {
+		if(conf._debug == true && errors.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errors) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(_conf._errorOutputDir +"/shellbags_errors.txt");
+			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(conf._errorOutputDir +"/shellbags_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

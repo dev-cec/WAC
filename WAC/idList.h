@@ -91,7 +91,7 @@ struct UserPropertyViewDelegate {
 * @param is_file précise si le shell item père est un fichier, utilisé dans le traitement des extensionblocks
 * @return void
 */
-void getExtensionBlock(LPBYTE buffer, std::vector<IExtensionBlock*>* extensionBlocks, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool* is_zip, bool is_file);
+void getExtensionBlock(LPBYTE buffer, std::vector<IExtensionBlock*>* extensionBlocks, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool* is_zip, bool is_file);
 
 /***************************************************************************************************
 * FLAGS
@@ -249,7 +249,7 @@ struct SPSValue {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
@@ -284,7 +284,7 @@ struct SPS {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	SPS(LPBYTE buffer, int _niveau, AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	SPS(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -295,7 +295,7 @@ struct SPS {
 	void clear() {}
 };
 
-void getShellItem(LPBYTE buffer, IShellItem** p, int _niveau, AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool Parentiszip = false);
+void getShellItem(LPBYTE buffer, IShellItem** p, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool Parentiszip = false);
 
 /***************************************************************************************************
 * ID LIST
@@ -320,7 +320,7 @@ struct IdList {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	IdList(LPBYTE buffer, int _niveau, AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool Parentiszip = false);
+	IdList(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool Parentiszip = false);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -351,7 +351,7 @@ struct Beef0000 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0000(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0000(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -374,7 +374,7 @@ struct Beef0001 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0001(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0001(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -397,7 +397,7 @@ struct Beef0002 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0002(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0002(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -421,7 +421,7 @@ struct Beef0003 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0003(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0003(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -455,7 +455,7 @@ struct Beef0004 : IExtensionBlock {
 	* @param is_zip est un booléen indiquant que l'objet est une archive compressée
 	* @param is_file est un booléen indiquant que l'objet est un fichier
 	*/
-	Beef0004(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool* is_zip, bool is_file);
+	Beef0004(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool* is_zip, bool is_file);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -478,7 +478,7 @@ struct Beef0006 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0006(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0006(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -501,7 +501,7 @@ struct Beef0008 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0008(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0008(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -524,7 +524,7 @@ struct Beef0009 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0009(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0009(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -547,7 +547,7 @@ struct Beef000a : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef000a(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef000a(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -570,7 +570,7 @@ struct Beef000c : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef000c(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef000c(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -598,7 +598,7 @@ struct Beef000e : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef000e(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef000e(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -626,7 +626,7 @@ struct Beef0010 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0010(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0010(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -649,7 +649,7 @@ struct Beef0013 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0013(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0013(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -672,7 +672,7 @@ struct Beef0014 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0014(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0014(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -695,7 +695,7 @@ struct Beef0016 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0016(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0016(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -718,7 +718,7 @@ struct Beef0017 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0017(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0017(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -744,7 +744,7 @@ struct Beef0019 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0019(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0019(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -767,7 +767,7 @@ struct Beef001a : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef001a(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef001a(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -790,7 +790,7 @@ struct Beef001b : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef001b(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef001b(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -813,7 +813,7 @@ struct Beef001d : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef001d(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef001d(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -836,7 +836,7 @@ struct Beef001e : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef001e(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef001e(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -859,7 +859,7 @@ struct Beef0021 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0021(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0021(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -882,7 +882,7 @@ struct Beef0024 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0024(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0024(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -906,7 +906,7 @@ struct Beef0025 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0025(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0025(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -937,7 +937,7 @@ struct Beef0026 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0026(LPBYTE buffer, int _niveau, AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0026(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -964,7 +964,7 @@ struct Beef0027 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0027(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0027(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -987,7 +987,7 @@ struct Beef0029 : IExtensionBlock {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Beef0029(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0029(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1019,7 +1019,7 @@ struct VolumeShellItem : IShellItem {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1047,7 +1047,7 @@ struct ControlPanel : IShellItem {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1076,7 +1076,7 @@ struct ControlPanelCategory :IShellItem {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	ControlPanelCategory(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	ControlPanelCategory(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1096,7 +1096,7 @@ std::wstring get_type(unsigned int type);
 
 /*!  Retourne le valeur de la SPSVALUE à partir de son type
 */
-void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int niveau, std::wstring* value, bool* valueIsObject,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int niveau, std::wstring* value, bool* valueIsObject, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 
 /*! Structure définissant le format d'un Property à l’intérieur des UserPropertyView
 */
@@ -1119,7 +1119,7 @@ struct Property {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	Property(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Property(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1144,7 +1144,7 @@ struct UserPropertyView0xC01 : UserPropertyViewDelegate {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	UserPropertyView0xC01(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UserPropertyView0xC01(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1170,7 +1170,7 @@ struct UserPropertyView0x23febbee : UserPropertyViewDelegate {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	UserPropertyView0x23febbee(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UserPropertyView0x23febbee(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1203,7 +1203,7 @@ struct UserPropertyView0x07192006 : UserPropertyViewDelegate {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	UserPropertyView0x07192006(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UserPropertyView0x07192006(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1233,7 +1233,7 @@ struct UserPropertyView0x10312005 : UserPropertyViewDelegate {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	UserPropertyView0x10312005(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UserPropertyView0x10312005(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1273,7 +1273,7 @@ struct UsersPropertyView :IShellItem {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	UsersPropertyView(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UsersPropertyView(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
@@ -1306,7 +1306,7 @@ struct RootFolder :IShellItem {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	RootFolder(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	RootFolder(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1335,7 +1335,7 @@ struct NetworkShellItem :IShellItem {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	NetworkShellItem(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	NetworkShellItem(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1363,7 +1363,7 @@ struct ArchiveFileContent :IShellItem {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	ArchiveFileContent(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	ArchiveFileContent(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1387,7 +1387,7 @@ struct URIShellItem :IShellItem {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	URIShellItem(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	URIShellItem(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1419,7 +1419,7 @@ struct FileEntryShellItem :IShellItem {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	FileEntryShellItem(LPBYTE buffer, unsigned short int itemSize, unsigned char shell_item_type_char, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	FileEntryShellItem(LPBYTE buffer, unsigned short int itemSize, unsigned char shell_item_type_char, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1450,7 +1450,7 @@ public:
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	UsersFilesFolder(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UsersFilesFolder(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1477,7 +1477,7 @@ struct FavoriteShellitem :IShellItem { // TODO A TESTER
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	FavoriteShellitem(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	FavoriteShellitem(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1501,7 +1501,7 @@ struct UnknownShellItem :IShellItem {
 	* @param pdump est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal
 	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
 	*/
-	UnknownShellItem(LPBYTE buffer, int _niveau,AppliConf conf, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UnknownShellItem(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json

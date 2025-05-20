@@ -16,6 +16,7 @@
 #include "users.hpp"
 
 
+
 /*! structure représentant un artefact userassist
 */
 struct UserAssist {
@@ -55,13 +56,13 @@ struct UserAssists {
 public:
 	std::vector<UserAssist> userassists;//!< tableau contenant les objets
 	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs de traitement des objets
-	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
+
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
-	HRESULT getData(AppliConf conf) {
-		_conf = conf;
+	HRESULT getData() {
+		
 		HRESULT hresult = 0;
 		ORHKEY hKey = NULL;
 		DWORD nSubkeys = 0;
@@ -74,9 +75,9 @@ public:
 		std::wstring ruche = L"";
 		std::wstring userassitsKey[2] = { L"{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}", L"{F4E57C4B-2036-45F0-A9AB-443BCFE33D9F}" }; // les GUID à lire pour les userassists
 		for (std::wstring key : userassitsKey) {
-			for (std::tuple<std::wstring, std::wstring> profile: _conf.profiles) {
+			for (std::tuple<std::wstring, std::wstring> profile: conf.profiles) {
 				//ouverture de la ruche user
-				ruche = _conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\\\ntuser.dat";
+				ruche = conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\\\ntuser.dat";
 				hresult = OROpenHive(ruche.c_str(), &Offhive);
 				if (hresult != ERROR_SUCCESS) {
 					errors.push_back({ L"Unable to open hive : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat" , hresult });
@@ -149,20 +150,20 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
-		myfile.open(_conf._outputDir + "/userassists.json");
+		myfile.open(conf._outputDir + "/userassists.json");
 		myfile << result;
 		myfile.close();
 
-		if (_conf._debug == true && errors.size() > 0) {
+		if (conf._debug == true && errors.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errors) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(_conf._errorOutputDir + "/userassists_errors.txt");
+			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(conf._errorOutputDir + "/userassists_errors.txt");
 			myfile << result;
 			myfile.close();
 		}

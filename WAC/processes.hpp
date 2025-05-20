@@ -10,6 +10,9 @@
 #include <sddl.h>
 #include "tools.h"
 
+
+
+/*! structure représentant un process */
 struct Process {
 	std::wstring processName = L""; //!< Nom du processus
 	DWORD processId = 0; //!< Id du processus
@@ -55,7 +58,7 @@ struct Process {
 
 		// List the modules and threads associated with this process
 		HRESULT result = ListProcessModules(errors);
-
+		CloseHandle(tokenHandle);
 	}
 
 	/*! Fonction récupérant la liste des modules (Dlls) du processus
@@ -141,18 +144,18 @@ struct Process {
 struct Processes {
 	std::vector<Process> processes; //!< tableau contenant tout les processus
 	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-	AppliConf _conf = {0};//! contient les paramètres de l'application issue des paramètres de la ligne de commande
+
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
-	HRESULT getData(AppliConf conf)
+	HRESULT getData()
 	{
 		HANDLE hProcessSnap;
 		HANDLE hProcess;
 		PROCESSENTRY32 pe32;
 
-		_conf = conf;
+		
 		// Take a snapshot of all processes in the system.
 		hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 		if (hProcessSnap == INVALID_HANDLE_VALUE)
@@ -204,20 +207,20 @@ struct Processes {
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(_conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
-		myfile.open(_conf._outputDir + "/processes.json");
+		myfile.open(conf._outputDir + "/processes.json");
 		myfile << result;
 		myfile.close();
 
-		if (_conf._debug == true && errors.size() > 0) {
+		if (conf._debug == true && errors.size() > 0) {
 			//errors
 			result = L"";
 			for (auto e : errors) {
 				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
 			}
-			std::filesystem::create_directory(_conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(_conf._errorOutputDir + "/processes_errors.txt");
+			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+			myfile.open(conf._errorOutputDir + "/processes_errors.txt");
 			myfile << result;
 			myfile.close();
 		}
