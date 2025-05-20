@@ -81,10 +81,10 @@ public:
 		ORHKEY hKey_amcache = NULL;
 		ORHKEY Offhive = NULL;
 		DWORD nSubkeys = 0;
-		DWORD nValues = 0, dTyp0;
+		DWORD nValues = 0;
 		DWORD nSize = 0;
-		WCHAR szValue[MAX_VALUE_NAME];
-		WCHAR szSubKey[MAX_VALUE_NAME];
+		WCHAR szValue[MAX_VALUE_NAME]=L"";
+		WCHAR szSubKey[MAX_VALUE_NAME]=L"";
 		std::wstring ruche = conf.mountpoint + L"\\Windows\\AppCompat\\Programs\\Amcache.hve";
 
 		hresult = OROpenHive(ruche.c_str(), &Offhive);

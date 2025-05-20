@@ -75,8 +75,8 @@ public:
 		DWORD nValues = 0;
 		DWORD dType = 0;
 		DWORD nSize = 0;
-		WCHAR szSubKey[MAX_KEY_NAME];
-		WCHAR szValue[MAX_VALUE_NAME];
+		WCHAR szSubKey[MAX_KEY_NAME]=L"";
+		WCHAR szValue[MAX_VALUE_NAME]=L"";
 		std::wstring bam_keys[2] = { L"bam",L"bam\\state" };
 		for (std::wstring key : bam_keys) {
 			for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {

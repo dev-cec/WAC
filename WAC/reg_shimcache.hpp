@@ -53,10 +53,10 @@ public:
 	HRESULT getData() {
 		
 		//variables
-		HRESULT hresult;
-		ORHKEY hKey;
-		DWORD nSubkeys;
-		DWORD nValues;
+		HRESULT hresult=0;
+		ORHKEY hKey=NULL;
+		DWORD nSubkeys=0;
+		DWORD nValues=0;
 
 		hresult = OROpenKey(conf.CurrentControlSet, L"Control\\Session Manager\\AppCompatCache", &hKey);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {

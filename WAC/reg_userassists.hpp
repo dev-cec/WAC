@@ -68,8 +68,8 @@ public:
 		DWORD nSubkeys = 0;
 		DWORD nValues = 0;
 		DWORD dType = 0;
-		WCHAR szValue[MAX_VALUE_NAME];
-		WCHAR szSubKey[MAX_VALUE_NAME];
+		WCHAR szValue[MAX_VALUE_NAME]=L"";
+		WCHAR szSubKey[MAX_VALUE_NAME]=L"";
 		DWORD nSize = 0;
 		ORHKEY Offhive = NULL;
 		std::wstring ruche = L"";

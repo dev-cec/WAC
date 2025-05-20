@@ -13,7 +13,7 @@ void ReleaseInterface(IUnknown* unkn)
 
 }
 
-HRESULT GetSnapshots(LPCWSTR* mountpoint, VSS_ID* snapshotSetId, IVssBackupComponents* pBackup)
+HRESULT GetSnapshots(VSS_ID* snapshotSetId, IVssBackupComponents* pBackup)
 {
 	TCHAR volumeName[MAX_PATH]=TEXT("c:\\");
 	// declare all the interfaces used in this program.
@@ -118,8 +118,9 @@ HRESULT GetSnapshots(LPCWSTR* mountpoint, VSS_ID* snapshotSetId, IVssBackupCompo
 									wcsncat(snapVol, L"\\", 1);
 									OLECHAR* guidString;
 									result = StringFromCLSID(prop.m_SnapshotId, &guidString);
-									*mountpoint = (L"C:\\windows\\temp\\" + std::wstring((LPCWSTR)guidString)).c_str();
-									if (CreateSymbolicLink(*mountpoint, snapVol, SYMBOLIC_LINK_FLAG_DIRECTORY) == 0) {
+									conf.mountpoint = std::wstring(L"C:\\Windows\\temp\\mountpoint") + std::wstring(guidString);
+									//*mountpoint = (std::wstring(L"C:\\windows\\temp\\") + std::wstring((wchar_t*)guidString)).c_str();
+									if (CreateSymbolicLink(conf.mountpoint.c_str(), snapVol, SYMBOLIC_LINK_FLAG_DIRECTORY) == 0) {
 										printf("Error CreateSymbolicLink\n");
 									}
 									VssFreeSnapshotProperties(&prop);

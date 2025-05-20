@@ -317,24 +317,21 @@ int main(int argc, char* argv[])
 	*************************/
 	IVssBackupComponents* pBackup = NULL; // pointeur sur le snapshot
 	VSS_ID snapshotSetId = { 0 };
-	LPCWSTR lpMountpoint = L"";
 
 	SetConsoleTextAttribute(conf.hConsole, 14);
 	std::wcout << "[SNAPSHOT]" << std::endl;
 	SetConsoleTextAttribute(conf.hConsole, 7);
 
 	std::wcout << " - Creating the snapshot : ";
-	hresult = GetSnapshots(&lpMountpoint, &snapshotSetId, pBackup);
+	hresult = GetSnapshots(&snapshotSetId, pBackup);
 	if (hresult != S_OK) {
 		printError(hresult);
 		return(hresult);
 	}
 	else {
-		conf.mountpoint = std::wstring(lpMountpoint);
 		printSuccess();
 	}
 	
-
 	/************************
 	*  BASE DE REGISTRE
 	*************************/
@@ -343,17 +340,17 @@ int main(int argc, char* argv[])
 	std::wcout << "[SEARCHING FOR ARTIFACTS IN THE REGISTRY]" << std::endl;
 	SetConsoleTextAttribute(conf.hConsole, 7);
 	//variables
-	ORHKEY hKey;
+	ORHKEY hKey=NULL;
 	LPTSTR errorText = NULL;
 	DWORD nSubkeys = 0;
 	DWORD nValues = 0;
 	DWORD nSize = 0;
 	DWORD dwType = 0;
 	DWORD cbData = 0;
-	ORHKEY OffKeyNext;
-	WCHAR szValue[MAX_VALUE_NAME];
-	WCHAR szSubKey[MAX_KEY_NAME];
-	WCHAR szNextKey[MAX_KEY_NAME];
+	ORHKEY OffKeyNext=NULL;
+	WCHAR szValue[MAX_VALUE_NAME]=L"";
+	WCHAR szSubKey[MAX_KEY_NAME]=L"";
+	WCHAR szNextKey[MAX_KEY_NAME]=L"";
 	DWORD dwSize = 0;
 
 
@@ -396,7 +393,7 @@ int main(int argc, char* argv[])
 		printError(hresult);
 		return(hresult);
 	}
-	DWORD current;
+	DWORD current=0;
 	hresult = ORGetValue(hKey, nullptr, L"Current", &dwType, &current, &dwSize);
 	if (hresult != ERROR_SUCCESS)
 	{
@@ -622,7 +619,7 @@ int main(int argc, char* argv[])
 	std::wcout << "[SNAPSHOT]" << std::endl;
 	SetConsoleTextAttribute(conf.hConsole, 7);
 	std::wcout << " - Snapshot disassembly : ";
-	if (!RemoveDirectoryW(lpMountpoint)) printError(GetLastError());
+	if (!RemoveDirectoryW(conf.mountpoint.c_str())) printError(GetLastError());
 	else printSuccess();
 
 	std::cout.flush();

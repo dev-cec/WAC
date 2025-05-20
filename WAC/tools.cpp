@@ -32,7 +32,7 @@ SYSTEMTIME FatDateTime::to_systemtime() {
 	/* The year value is stored in bits 9 - 15 of the date (7 bits)
  * A year value of 0 represents 1980
  */
-	SYSTEMTIME date_time_values;
+	SYSTEMTIME date_time_values = { 0 };
 	date_time_values.wYear = (uint16_t)(1980 + ((date >> 9) & 0x7f));
 
 	/* The month value is stored in bits 5 - 8 of the date (4 bits)
@@ -319,7 +319,7 @@ std::wstring bool_to_wstring(bool b)
 
 FILETIME timet_to_fileTime(time_t t)
 {
-	FILETIME ft;
+	FILETIME ft = { 0 };
 	LONGLONG time_value = Int32x32To64(t, 10000000) + 116444736000000000;
 	ft.dwLowDateTime = (DWORD)time_value;
 	ft.dwHighDateTime = time_value >> 32;

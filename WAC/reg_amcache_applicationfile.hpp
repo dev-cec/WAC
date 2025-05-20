@@ -78,14 +78,14 @@ public:
 	*/
 	HRESULT getData() {
 		
-		HRESULT hresult;
-		ORHKEY hKey, hKey_amcache;
-		DWORD nSubkeys;
-		DWORD nValues, dType;
-		WCHAR szValue[MAX_VALUE_NAME];
-		WCHAR szSubKey[MAX_VALUE_NAME];
+		HRESULT hresult=0;
+		ORHKEY hKey=NULL, hKey_amcache=NULL;
+		DWORD nSubkeys=0;
+		DWORD nValues=0;
+		WCHAR szValue[MAX_VALUE_NAME]=L"";
+		WCHAR szSubKey[MAX_VALUE_NAME]=L"";
 		DWORD nSize = 0;
-		ORHKEY Offhive;
+		ORHKEY Offhive=NULL;
 		std::wstring ruche = conf.mountpoint + L"\\Windows\\AppCompat\\Programs\\Amcache.hve";
 
 		hresult = OROpenHive(ruche.c_str(), &Offhive);
