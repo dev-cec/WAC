@@ -139,7 +139,6 @@ struct DestFile {
 	* @param buffer contient un pointeur sur les données à parser
 	*/
 	DestFile(LPBYTE buffer) {
-		std::wcout << dump_wstring(buffer, 0, 64);
 		guidDroidVolume = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8));
 		guidDroidFile = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 24));
 		guidBirthDroidVolume = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 56));

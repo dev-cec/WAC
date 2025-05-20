@@ -12,7 +12,8 @@ The export is in **JSON format** 🧾, making it easy to integrate the data into
 
 ## 📄 DESCRIPTION
 
-WAC is a forensic tool for **Windows 10 and later**, written in **C++ (Visual Studio 2022)**.  
+WAC is a forensic tool for **Windows 10 and later**, written in **C++ (Visual Studio 2022)**. 
+for now, it requires Users Profils to be stored on C drive.
 It extracts various artefacts in **JSON format**, including:
 
 - **Using the Win32 API** :

@@ -118,7 +118,7 @@ HRESULT GetSnapshots(LPCWSTR* mountpoint, VSS_ID* snapshotSetId, IVssBackupCompo
 									wcsncat(snapVol, L"\\", 1);
 									OLECHAR* guidString;
 									result = StringFromCLSID(prop.m_SnapshotId, &guidString);
-									*mountpoint = (LPCWSTR)guidString;
+									*mountpoint = (L"C:\\windows\\temp\\" + std::wstring((LPCWSTR)guidString)).c_str();
 									if (CreateSymbolicLink(*mountpoint, snapVol, SYMBOLIC_LINK_FLAG_DIRECTORY) == 0) {
 										printf("Error CreateSymbolicLink\n");
 									}
