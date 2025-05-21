@@ -44,7 +44,6 @@ struct Process {
 			if (GetTokenInformation(tokenHandle, TokenOwner, infos, returnSize, &returnSize)) { // get data
 				if (ConvertSidToStringSid(((PTOKEN_OWNER)infos)->Owner, &lpsid_wstring) != 0) {
 					processSID = std::wstring(lpsid_wstring);
-					free(lpsid_wstring);
 					processSidName = getNameFromSid(processSID);
 				}
 				else

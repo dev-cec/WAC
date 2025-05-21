@@ -56,7 +56,6 @@ struct Session {
 		std::wstring sid_wstring = L"";
 		if (ConvertSidToStringSid(sid, &lpsid_wstring) != 0) {
 			sid_wstring = std::wstring(lpsid_wstring);
-			free(lpsid_wstring);
 		}
 
 		std::wstring result = tab(1) + L"{ \n"

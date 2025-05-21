@@ -105,7 +105,6 @@ std::wstring VariantType_to_wstring(PEVT_VARIANT data) {
 		LPWSTR temp;
 		ConvertSidToStringSidW(data->SidVal, &temp);
 		return L"\"" + std::wstring(temp) + L"\"";
-		free(temp);
 		break;
 	}
 	case EvtVarTypeHexInt32: {
@@ -395,13 +394,13 @@ struct Events {
 					events.push_back(Event(hevt, buffer, hEvent, &errors));
 					EvtClose(hEvent);
 				}
+				EvtClose(hQuery);
 				//}
 				printSuccess();
 			}
 
 		} while ((status == ERROR_SUCCESS) || (status == ERROR_INSUFFICIENT_BUFFER));
 		free(buffer);
-		EvtClose(hQuery);
 		EvtClose(hChannel);
 		EvtClose(hevt);
 		return ERROR_SUCCESS;
