@@ -99,6 +99,7 @@ void printError( HRESULT  hresult) {
 	//std::wcout << ansi_to_utf8(errorText) << std::endl;
 	WriteConsoleW(conf.hConsole, errorText, wcslen(errorText), &written, nullptr); //std::wcout ne fonctionne pas pour les accents avec le format retourné par FormatmessageW
 	SetConsoleTextAttribute(conf.hConsole, 7);
+	free(errorText);
 }
 
 LPWSTR getErrorMessage(HRESULT hresult)
@@ -125,6 +126,7 @@ std::wstring getErrorWString(HRESULT hresult) {
 std::wstring getErrorWstring(HRESULT hresult)
 {
 	LPWSTR errorText = NULL;
+	std::wstring result = L"";
 	if (FormatMessageW(
 		FORMAT_MESSAGE_FROM_SYSTEM
 		| FORMAT_MESSAGE_ALLOCATE_BUFFER
@@ -136,8 +138,9 @@ std::wstring getErrorWstring(HRESULT hresult)
 		(LPWSTR)&errorText,
 		0,
 		NULL))
-		return replaceAll(std::wstring(errorText), L"\r\n", L"");
-	return L"";
+		result =  replaceAll(std::wstring(errorText), L"\r\n", L"");
+	free(errorText);
+	return result;
 }
 
 

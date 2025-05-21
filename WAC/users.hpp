@@ -46,7 +46,7 @@ struct User {
 		//sid to wstring
 		ConvertSidToStringSidW(info4->usri4_user_sid, &temp);
 		SID = std::wstring(temp);
-
+		free(temp);
 		NetApiBufferFree(info4);
 
 		//profile path présent uniquement en base de registre

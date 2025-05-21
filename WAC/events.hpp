@@ -105,6 +105,7 @@ std::wstring VariantType_to_wstring(PEVT_VARIANT data) {
 		LPWSTR temp;
 		ConvertSidToStringSidW(data->SidVal, &temp);
 		return L"\"" + std::wstring(temp) + L"\"";
+		free(temp);
 		break;
 	}
 	case EvtVarTypeHexInt32: {

@@ -54,8 +54,10 @@ struct Session {
 	std::wstring to_json() {
 		LPWSTR lpsid_wstring = NULL;
 		std::wstring sid_wstring = L"";
-		if (ConvertSidToStringSid(sid, &lpsid_wstring) != 0)
+		if (ConvertSidToStringSid(sid, &lpsid_wstring) != 0) {
 			sid_wstring = std::wstring(lpsid_wstring);
+			free(lpsid_wstring);
+		}
 
 		std::wstring result = tab(1) + L"{ \n"
 			+ tab(2) + L"\"SessionId\":\"" + std::to_wstring(sessionId) + L"\", \n"
