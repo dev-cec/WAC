@@ -18,23 +18,24 @@ public:
     */
     HRESULT connect() {
         log(0, L"*******************************************************************************************************************");
-        log(0, L"ℹ️ COM COMPONENT");
+        log(0, L"ℹ️Com component :");
         log(0, L"*******************************************************************************************************************");
-
+        log(1, L"➕Connection");
 
         // Step 1: --------------------------------------------------
         // Initialize COM. ------------------------------------------
         HRESULT hres;
+        log(3, L"🔈CoInitializeEx");
         hres = CoInitializeEx(0, COINIT_MULTITHREADED);
         if (FAILED(hres))
         {
-            log(1,L"Failed to initialize COM library", hres);
+            log(1,L"CoInitializeEx", hres);
             return hres;                  // Program has failed.
         }
 
         // Step 2: --------------------------------------------------
         // Set general COM security levels --------------------------
-
+        log(3, L"🔈CoInitializeSecurity");
         hres = CoInitializeSecurity(
             NULL,
             -1,                          // COM authentication
@@ -49,7 +50,7 @@ public:
 
         if (FAILED(hres))
         {
-            log(1, L"🔥 Failed to initialize security", hres);
+            log(2, L"🔥CoInitializeSecurity", hres);
             clear();
             return hres;                    // Program has failed.
         }
@@ -58,6 +59,7 @@ public:
     }
 
     void clear() {
+        log(3, L"🔈CoUninitialize");
         CoUninitialize();
     }
 };
