@@ -44,8 +44,6 @@ public:
 struct Shimcaches {
 public:
 	std::vector<Shimcache> shimcaches;//!< tableau contenant les objets
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs de traitement des objets
-
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
@@ -60,7 +58,7 @@ public:
 
 		hresult = OROpenKey(conf.CurrentControlSet, L"Control\\Session Manager\\AppCompatCache", &hKey);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
-			errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\AppCompatCache", hresult });
+			log(1,  L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\AppCompatCache", hresult );
 			return hresult;
 		}
 
@@ -69,7 +67,7 @@ public:
 		LPBYTE pData = new BYTE[dwSize]; // Buffer de données
 		hresult = getRegBinaryValue(hKey, NULL, L"AppCompatCache", pData);
 		if (hresult != ERROR_SUCCESS) {
-			errors.push_back({ L"Unable to get value : HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\AppCompatCache\\AppCompatCache", hresult });
+			log(1,  L"Unable to get value : HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\AppCompatCache\\AppCompatCache", hresult );
 			return hresult;
 		}
 		int offset = bytes_to_int(pData);
@@ -125,18 +123,6 @@ public:
 		myfile.open(conf._outputDir + "/shimcache.json");
 		myfile << result;
 		myfile.close();
-
-		if (conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir + "/shimcache_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 
 		return ERROR_SUCCESS;
 	}

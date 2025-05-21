@@ -26,8 +26,6 @@ struct IShellItem {
 public:
 	int niveau = 0; //!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	bool is_zip = false; //!< utile pour les shellbags, permet de définir les fils comm des archive_contents
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false; //!< si true alors le fichier de sortie contiendra le dump hexa de l'objet
 
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
@@ -47,8 +45,6 @@ public:
 	int niveau = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	bool isPresent = false;//!< true si un block d’extension est présent sinon false
 	std::wstring signature = L"";//!< la signature du block d’extension, identifie sa structure d'appartenance
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false; //!< si true alors le fichier de sortie contiendra le dump hexa de l'objet
 
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
@@ -63,9 +59,6 @@ public:
 /*! User Property View Delegate Shell Item
 */
 struct UserPropertyViewDelegate {
-
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false;//!< si true alors le fichier de sortie contiendra le dump hexa de l'objet
 
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
@@ -89,7 +82,7 @@ struct UserPropertyViewDelegate {
 * @param is_file précise si le shell item père est un fichier, utilisé dans le traitement des extensionblocks
 * @return void
 */
-void getExtensionBlock(LPBYTE buffer, std::vector<IExtensionBlock*>* extensionBlocks, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool* is_zip, bool is_file);
+void getExtensionBlock(LPBYTE buffer, std::vector<IExtensionBlock*>* extensionBlocks, int _niveau, bool* is_zip, bool is_file);
 
 /***************************************************************************************************
 * FLAGS
@@ -236,16 +229,14 @@ struct SPSValue {
 	std::wstring name = L""; // nom de la valeur
 	std::wstring value = L""; // valeur de la valeur, peut être un objet auquel cas il est stocké au format json pour compatibilité avec le format json de sortie.
 	bool valueIsObject = false; // true si le contenu du champ value est un objet. Utilisé pour la mise en forme du fichier json de sortie.
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false; //!< si true alors le fichier de sortie contiendra le dump hexa de l'objet
 
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _guid guid correspondant au SPS auquel appartient le SPSVALUE
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau);
 
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
@@ -266,8 +257,6 @@ struct SPS {
 	std::wstring guid = L""; //!< GUID de l'objet
 	std::wstring FriendlyName = L"";//!< nom associé au GUID
 	std::vector<SPSValue> values; //!< Tableau contenant les différents SPSVALUE de l'objet SPS
-	bool _debug = false; //!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false;//!< si true alors le fichier de sortie contiendra le dump hexa de l'objet
 
 	/*! constructeur par défaut
 	*/
@@ -276,9 +265,9 @@ struct SPS {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	SPS(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	SPS(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -289,7 +278,7 @@ struct SPS {
 	void clear() {}
 };
 
-void getShellItem(LPBYTE buffer, IShellItem** p, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool Parentiszip = false);
+void getShellItem(LPBYTE buffer, IShellItem** p, int _niveau, bool Parentiszip = false);
 
 /***************************************************************************************************
 * ID LIST
@@ -304,15 +293,13 @@ struct IdList {
 	std::wstring type = L""; //!< nom correspondant au type de l'objet
 	std::wstring pData = L""; //!< dump hexa de l'objet si besoin de l'include dans le json de sortie
 	IShellItem* shellItem = NULL; //!< pointeur vers l'objet shell item correspondant au type
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false;//!< si true alors le fichier de sortie contiendra le dump hexa de l'objet
 
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	IdList(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool Parentiszip = false);
+	IdList(LPBYTE buffer, int _niveau, bool Parentiszip = false);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -339,9 +326,9 @@ struct Beef0000 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0000(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0000(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -360,9 +347,9 @@ struct Beef0001 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0001(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0001(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -381,9 +368,9 @@ struct Beef0002 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0002(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0002(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -403,9 +390,9 @@ struct Beef0003 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0003(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0003(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -433,11 +420,11 @@ struct Beef0004 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	* @param is_zip est un booléen indiquant que l'objet est une archive compressée
 	* @param is_file est un booléen indiquant que l'objet est un fichier
 	*/
-	Beef0004(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool* is_zip, bool is_file);
+	Beef0004(LPBYTE buffer, int _niveau, bool* is_zip, bool is_file);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -456,9 +443,9 @@ struct Beef0006 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0006(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0006(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -477,9 +464,9 @@ struct Beef0008 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0008(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0008(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -498,9 +485,9 @@ struct Beef0009 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0009(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0009(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -519,9 +506,9 @@ struct Beef000a : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef000a(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef000a(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -540,9 +527,9 @@ struct Beef000c : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef000c(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef000c(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -566,9 +553,9 @@ struct Beef000e : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef000e(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef000e(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -592,9 +579,9 @@ struct Beef0010 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0010(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0010(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -613,9 +600,9 @@ struct Beef0013 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0013(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0013(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -634,9 +621,9 @@ struct Beef0014 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0014(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0014(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -655,9 +642,9 @@ struct Beef0016 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0016(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0016(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -676,9 +663,9 @@ struct Beef0017 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0017(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0017(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -700,9 +687,9 @@ struct Beef0019 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0019(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0019(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -721,9 +708,9 @@ struct Beef001a : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef001a(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef001a(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -742,9 +729,9 @@ struct Beef001b : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef001b(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef001b(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -763,9 +750,9 @@ struct Beef001d : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef001d(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef001d(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -784,9 +771,9 @@ struct Beef001e : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef001e(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef001e(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -805,9 +792,9 @@ struct Beef0021 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0021(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0021(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -826,9 +813,9 @@ struct Beef0024 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0024(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0024(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -848,9 +835,9 @@ struct Beef0025 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0025(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0025(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -877,9 +864,9 @@ struct Beef0026 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0026(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0026(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -902,9 +889,9 @@ struct Beef0027 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0027(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0027(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -923,9 +910,9 @@ struct Beef0029 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Beef0029(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0029(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -953,9 +940,9 @@ struct VolumeShellItem : IShellItem {
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param type_char est le type d'objet au format character
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -979,9 +966,9 @@ struct ControlPanel : IShellItem {
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param item_size est la taille totale de l'objet
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1006,9 +993,9 @@ struct ControlPanelCategory :IShellItem {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	ControlPanelCategory(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	ControlPanelCategory(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1028,7 +1015,7 @@ std::wstring get_type(unsigned int type);
 
 /*!  Retourne le valeur de la SPSVALUE à partir de son type
 */
-void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int niveau, std::wstring* value, bool* valueIsObject, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int niveau, std::wstring* value, bool* valueIsObject);
 
 /*! Structure définissant le format d'un Property à l’intérieur des UserPropertyView
 */
@@ -1041,15 +1028,15 @@ struct Property {
 	std::wstring FriendlyName = L""; //!< nom associé au guid
 	std::wstring value = L"";//!< valeur de la property
 	bool valueIsObject = false; //! vrai si la valeur est un objet, sinon la valeur est un string
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false;//!< si true alors le fichier de sortie contiendra le dump hexa de l'objet
+	
+	
 
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	Property(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Property(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1070,9 +1057,9 @@ struct UserPropertyView0xC01 : UserPropertyViewDelegate {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	UserPropertyView0xC01(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UserPropertyView0xC01(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1094,9 +1081,9 @@ struct UserPropertyView0x23febbee : UserPropertyViewDelegate {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	UserPropertyView0x23febbee(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UserPropertyView0x23febbee(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1125,9 +1112,9 @@ struct UserPropertyView0x07192006 : UserPropertyViewDelegate {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	UserPropertyView0x07192006(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UserPropertyView0x07192006(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1153,9 +1140,9 @@ struct UserPropertyView0x10312005 : UserPropertyViewDelegate {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	UserPropertyView0x10312005(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UserPropertyView0x10312005(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1191,9 +1178,9 @@ struct UsersPropertyView :IShellItem {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	UsersPropertyView(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UsersPropertyView(LPBYTE buffer, int _niveau);
 
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
@@ -1222,9 +1209,9 @@ struct RootFolder :IShellItem {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	RootFolder(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	RootFolder(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1249,9 +1236,9 @@ struct NetworkShellItem :IShellItem {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	NetworkShellItem(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	NetworkShellItem(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1275,9 +1262,9 @@ struct ArchiveFileContent :IShellItem {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	ArchiveFileContent(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	ArchiveFileContent(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1297,9 +1284,9 @@ struct URIShellItem :IShellItem {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	URIShellItem(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	URIShellItem(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1327,9 +1314,9 @@ struct FileEntryShellItem :IShellItem {
 	* @param item_size est la taille de l'objet
 	* @param shell_item_type_char est le type de shell item au format character
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	FileEntryShellItem(LPBYTE buffer, unsigned short int itemSize, unsigned char shell_item_type_char, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	FileEntryShellItem(LPBYTE buffer, unsigned short int itemSize, unsigned char shell_item_type_char, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1356,9 +1343,9 @@ public:
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	UsersFilesFolder(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UsersFilesFolder(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1381,9 +1368,9 @@ struct FavoriteShellitem :IShellItem { // TODO A TESTER
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	FavoriteShellitem(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	FavoriteShellitem(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
@@ -1403,9 +1390,9 @@ struct UnknownShellItem :IShellItem {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	UnknownShellItem(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UnknownShellItem(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
 	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json

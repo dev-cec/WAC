@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <offreg.h>
 #include <vector>
@@ -17,13 +18,14 @@ struct AppliConf {
 	bool _events = false;//!< True is events must be extracted
 	std::string name = ""; //!< name of the program, obtained from command line
 	std::string _outputDir = "output"; //!< directory to store output JSON
-	std::string _errorOutputDir = "errors";//! directory to store output error JSON if debug is rue
 	std::wstring mountpoint = L""; //!< mount point path to access the snapshot made during execution
 	ORHKEY CurrentControlSet = { 0 }; //!< Reg Key to access Current Control Set Hive
 	ORHKEY System = { 0 }; //!< Reg Key to access to System Hive
 	ORHKEY Software = { 0 };//!< Reg Key to access CurrentControlSet/Software hive
 	std::vector<std::tuple<std::wstring, std::wstring>> profiles;//!< vector to store SID and profiles of users present on the machine
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);//!< Handle de la console
+	std::wofstream log;//!< handle sur le fichier de log de sortie pour mode debug
+	int loglevel = 0; //!< niveau de journalisation (0 par defaut) definit par la ligne de commande
 };
 
 extern AppliConf conf;// variable globale pour la conf de l'application
@@ -82,13 +84,25 @@ void printError( std::wstring  errorText);
 * @param hresult résultat retourné par un commande
 * @return wstring correspondant au texte associé au code erreur HRESULT
 */
-std::wstring getErrorWstring(HRESULT hresult);
+std::wstring getErrorMessage(HRESULT hresult);
+
+/*! enregistrement d'un message dans le ficier de log de sortie
+* @param message message a enregistré dans le fichier
+*/
+void log(int loglevel, std::wstring message);
+
+/*! enregistrement d'un message dans le ficier de log de  complété par un code erreur
+* @param message message a enregistré dans le fichier donnant du contexte
+* @param result code erreur a tranformé en message d'ereur
+*/
+void log(int loglevel, std::wstring message, HRESULT result);
+
 
 /*! extraction du message d'erreur d'un HRESULT retourné par une commande
 * @param hresult résultat retourné par un commande
 * @return wstring correspondant au texte associé au code erreur HRESULT
 */
-LPWSTR getErrorMessage(HRESULT hresult);
+std::wstring getErrorMessage(HRESULT hresult);
 
 /*! converti un texte ANSI vers UTF8
 * @param in chaîne de caractères encodé en ANSI

@@ -1,4 +1,4 @@
-//com.hpp
+﻿//com.hpp
 #pragma once
 
 #define _WIN32_DCOM
@@ -9,7 +9,7 @@
 
 
 
-/*! structure permettant de se connecter sur le syst�me pour par la suite ex�cuter des requ�te WMI et WIN32 API
+/*! structure permettant de se connecter sur le système pour par la suite exécuter des requête WMI et WIN32 API
 */
 struct COM {
 public:
@@ -17,13 +17,18 @@ public:
     /*! Connexion au service WMI
     */
     HRESULT connect() {
+        log(0, L"*******************************************************************************************************************");
+        log(0, L"ℹ️ COM COMPONENT");
+        log(0, L"*******************************************************************************************************************");
+
+
         // Step 1: --------------------------------------------------
         // Initialize COM. ------------------------------------------
         HRESULT hres;
         hres = CoInitializeEx(0, COINIT_MULTITHREADED);
         if (FAILED(hres))
         {
-            std::wcout << L"Failed to initialize COM library : " << getErrorMessage(hres) << std::endl;
+            log(1,L"Failed to initialize COM library", hres);
             return hres;                  // Program has failed.
         }
 
@@ -44,7 +49,7 @@ public:
 
         if (FAILED(hres))
         {
-            std::wcout << L"Failed to initialize security : " << getErrorMessage(hres) << std::endl;
+            log(1, L"🔥 Failed to initialize security", hres);
             clear();
             return hres;                    // Program has failed.
         }

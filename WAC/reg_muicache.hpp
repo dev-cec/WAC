@@ -41,8 +41,6 @@ public:
 struct Muicaches {
 public:
 	std::vector<Muicache> muicaches;//!< tableau contenant les objets
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs de traitement des objets
-
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
@@ -63,19 +61,19 @@ public:
 			ruche = conf.mountpoint + replaceAll(get<0>(profile), L"C:", L"") + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat";
 			hresult = OROpenHive(ruche.c_str(), &Offhive);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"Unable to open hive : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat", hresult });
+				log(1,  L"Unable to open hive : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat", hresult );
 				continue;
 			};
 
 			hresult = OROpenKey(Offhive, L"Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache", &hKey);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"Unable to open key : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat / " + L"Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\MuiCache", hresult });
+				log(1,  L"Unable to open key : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat / " + L"Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\MuiCache", hresult );
 				continue;
 			};
 
 			hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"Unable to get info key : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat / " + L"Local Settings\\\\Software\\\\Microsoft\\\\Windows\\Shell\\\\MuiCache", hresult });
+				log(1,  L"Unable to get info key : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat / " + L"Local Settings\\\\Software\\\\Microsoft\\\\Windows\\Shell\\\\MuiCache", hresult );
 				continue;
 			};
 
@@ -85,7 +83,7 @@ public:
 				DWORD cData = MAX_DATA;
 				hresult = OREnumValue(hKey, i, szValue, &nSize, &dType, NULL, &cData);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"Unable to open key : " + get<0>(profile) + L"/ USERCLASS.dat / " + L"Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache\\" + szValue, hresult });
+					log(1,  L"Unable to open key : " + get<0>(profile) + L"/ USERCLASS.dat / " + L"Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache\\" + szValue, hresult );
 					continue;
 				};
 				if (dType != REG_SZ) continue;
@@ -124,18 +122,6 @@ public:
 		myfile.open(conf._outputDir + "/muicache.json");
 		myfile << result;
 		myfile.close();
-
-		if (conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir + "/muicache_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 
 		return ERROR_SUCCESS;
 	}

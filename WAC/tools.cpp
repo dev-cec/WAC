@@ -78,30 +78,28 @@ FILETIME FatDateTime::to_filetime() {
 
 void printSuccess() {
 	SetConsoleTextAttribute(conf.hConsole, 10);
-	std::cout << "OK" << std::endl;
-	std::cout.flush();
+	std::wcout << L"OK" << std::endl;
+	std::wcout.flush();
 	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
 void printError(std::wstring errorText) {
 	SetConsoleTextAttribute(conf.hConsole, 12);
 	SetConsoleOutputCP(CP_UTF8);
-	std::wcerr << errorText << std::endl;
+	std::wcout << errorText << std::endl;
 	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
-void printError( HRESULT  hresult) {
-	LPWSTR errorText = NULL;
-	errorText = getErrorMessage(hresult);
+void printError(HRESULT  hresult) {
+	std::wstring errorText = getErrorMessage(hresult);
 	SetConsoleTextAttribute(conf.hConsole, 12);
 	SetConsoleOutputCP(CP_UTF8);
 	DWORD written = 0;
-	//std::wcout << ansi_to_utf8(errorText) << std::endl;
-	WriteConsoleW(conf.hConsole, errorText, wcslen(errorText), &written, nullptr); //std::wcout ne fonctionne pas pour les accents avec le format retourné par FormatmessageW
+	std::wcout << ansi_to_utf8(errorText) << std::endl;
 	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
-LPWSTR getErrorMessage(HRESULT hresult)
+std::wstring getErrorMessage(HRESULT hresult)
 {
 	LPWSTR errorText = NULL;
 	FormatMessageW(
@@ -115,33 +113,30 @@ LPWSTR getErrorMessage(HRESULT hresult)
 		(LPWSTR)&errorText,
 		0,
 		NULL);
-	return errorText;
-}
+	std::wstring result(errorText);
+	result.erase(std::remove(result.begin(), result.end(), '\r'), result.cend()); // pas de retour à la ligne
+	result.erase(std::remove(result.begin(), result.end(), '\n'), result.cend()); // pas de retour à la ligne
 
-std::wstring getErrorWString(HRESULT hresult) {
-	return ansi_to_utf8(std::wstring(getErrorMessage(hresult)));
-}
-
-std::wstring getErrorWstring(HRESULT hresult)
-{
-	LPWSTR errorText = NULL;
-	std::wstring result = L"";
-	if (FormatMessageW(
-		FORMAT_MESSAGE_FROM_SYSTEM
-		| FORMAT_MESSAGE_ALLOCATE_BUFFER
-		| FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL,
-		hresult,
-		LANG_SYSTEM_DEFAULT,
-		//MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), 
-		(LPWSTR)&errorText,
-		0,
-		NULL))
-		result =  replaceAll(std::wstring(errorText), L"\r\n", L"");
 	return result;
 }
 
 
+void log(int loglevel, std::wstring message) {
+	if (conf.loglevel >= loglevel && conf.loglevel > 0) {
+		conf.log.open(conf.name + ".log", std::ios::app);
+		conf.log << tab(loglevel) << ansi_to_utf8(message) << std::endl;
+		conf.log.close();
+	}
+}
+
+void log(int loglevel, std::wstring message, HRESULT result) {
+	if (conf.loglevel >= loglevel && conf.loglevel > 0) {
+		std::wstring errorMsg = tab(loglevel) + message + L" : " + getErrorMessage(result);
+		conf.log.open(conf.name + ".log", std::ios::app);
+		conf.log << ansi_to_utf8(errorMsg) << std::endl;;
+		conf.log.close();
+	}
+}
 
 std::string ansi_to_utf8(std::string in)
 {

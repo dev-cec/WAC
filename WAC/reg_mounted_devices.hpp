@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <iostream>
 #include <windows.h>
@@ -13,24 +13,29 @@
 
 
 
-/*! structure représentant un MOUNTED DEVICE
+/*! structure reprÃ©sentant un MOUNTED DEVICE
 */
 struct MountedDevice {
 public:
-	std::wstring drive = L""; //!< Lettre du Drive sur laquelle est montée le périphérique
-	std::wstring device = L"";//!< identifiant du périphérique monté
+	std::wstring drive = L""; //!< Lettre du Drive sur laquelle est montÃ©e le pÃ©riphÃ©rique
+	std::wstring device = L"";//!< identifiant du pÃ©riphÃ©rique montÃ©
 
 	/* constructeur
-	* @param hkey représente la clé de registre
-	* @param szSubValue représente la valeur de la clé de registre
+	* @param hkey reprÃ©sente la clÃ© de registre
+	* @param szSubValue reprÃ©sente la valeur de la clÃ© de registre
 	*/
 	MountedDevice(ORHKEY hKey, PCWSTR szSubValue)
 	{
 		if (wcswcs(szSubValue, L"DosDevices") != NULL) {
 			drive = std::wstring(szSubValue);
 			drive = replaceAll(drive, L"\\", L"\\\\");
-			getRegSzValue(hKey, NULL, szSubValue, &device);
-			device = replaceAll(device, L"\\", L"\\\\");
+			log(1, L"âž• Drive " + drive);
+			HRESULT hr = getRegSzValue(hKey, NULL, szSubValue, &device);
+			if(hr==ERROR_SUCCESS)
+				device = replaceAll(device, L"\\", L"\\\\");
+			else {
+				log(2, L"ðŸ”¥ getRegSzValue", hr);
+			}
 		}
 	}
 
@@ -44,7 +49,7 @@ public:
 			L"\t}";
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {}
 };
 
@@ -53,11 +58,10 @@ public:
 struct MountedDevices {
 public:
 	std::vector<MountedDevice> mounteddevices; //!< *structure contenant l'ensemble des objets
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-
+	
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
+	* @param conf contient les paramÃ¨tres de l'application issue des paramÃ¨tres de la ligne de commande
 	*/
 	HRESULT getData() {
 		
@@ -67,14 +71,18 @@ public:
 		DWORD nSubkeys;
 		DWORD nValues;
 
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"â„¹ï¸ USBSTOR");
+		log(0, L"*******************************************************************************************************************");
+
 		hresult = OROpenKey(conf.System, L"MountedDevices", &hKey);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
-			errors.push_back({ L"Unable to open key : MountedDevices", hresult });
+			log(1,  L"Unable to open key : MountedDevices", hresult );
 			return hresult;
 		};
 		hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
-			errors.push_back({ L"Unable to get info key : MountedDevices", hresult });
+			log(1,  L"Unable to get info key : MountedDevices", hresult );
 			return hresult;
 		};
 
@@ -83,10 +91,14 @@ public:
 			DWORD cData = MAX_DATA;
 			WCHAR  szSubValue[MAX_VALUE_NAME];
 			hresult = OREnumValue(hKey, i, szSubValue, &nSize, NULL, NULL, &cData);
-			MountedDevice mounteddevice(hKey, szSubValue);
-			//save
-			if (mounteddevice.device != L"")
-				mounteddevices.push_back(mounteddevice);
+			if (hresult == ERROR_SUCCESS) {
+				MountedDevice mounteddevice(hKey, szSubValue);
+				//save
+				if (mounteddevice.device != L"")
+					mounteddevices.push_back(mounteddevice);
+			}
+			else
+				log(1, L"ðŸ”¥ MountedDevices OREnumValue " + std::wstring(szSubValue), hresult);
 		}
 		return ERROR_SUCCESS;
 	}
@@ -106,28 +118,16 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crÃ©e le repertoire, pas d'erreur s'il existe dÃ©jÃ 
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/mounted_device.json");
 		myfile << result;
 		myfile.close();
 
-		if (conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir + "/mounted_device_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
-
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
 		for (MountedDevice temp : mounteddevices)
 			temp.clear();

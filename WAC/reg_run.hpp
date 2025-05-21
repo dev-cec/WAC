@@ -41,8 +41,6 @@ public:
 struct Runs {
 public:
 	std::vector<Run> runs;//!< tableau contenant les objets
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs de traitement des objets
-
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
@@ -63,12 +61,12 @@ public:
 		for (std::wstring runKey : runKeys) {
 			hresult = OROpenKey(conf.Software, (L"Microsoft\\Windows\\CurrentVersion\\" + runKey).c_str(), &hKey);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"Unable to open key : HKLM\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult });
+				log(1,  L"Unable to open key : HKLM\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult );
 				continue;
 			}
 			hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"Unable to get info key : HKLM\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult });
+				log(1,  L"Unable to get info key : HKLM\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult );
 				continue;
 			}
 			for (int i = 0; i < (int)nValues; i++) {
@@ -83,7 +81,7 @@ public:
 				run.Name = szValue;
 				hresult = getRegSzValue(hKey, nullptr, szValue, &run.Value);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"Unable to get value : HKLM\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey + L"\\" + szValue, hresult });
+					log(1,  L"Unable to get value : HKLM\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey + L"\\" + szValue, hresult );
 					continue;
 				}
 				run.Value = replaceAll(run.Value, L"\"", L"\\\""); // remplace les " dans les lignes de commande par \"
@@ -99,19 +97,19 @@ public:
 				ruche = conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\\\ntuser.dat";
 				hresult = OROpenHive(ruche.c_str(), &Offhive);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L" Unable to open hive : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat", hresult});
+					log(1,  L" Unable to open hive : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat", hresult);
 					continue;
 				}
 
 				hresult = OROpenKey(Offhive, (L"Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey).c_str(), &hKey);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"Unable to open key : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult});
+					log(1,  L"Unable to open key : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult);
 					continue;
 				}
 
 				hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"Unable to get info key : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult});
+					log(1,  L"Unable to get info key : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult);
 					continue;
 				}
 
@@ -122,7 +120,7 @@ public:
 					hresult = OREnumValue(hKey, i, szValue, &nSize, &dType, NULL, &cData);
 					if (dType != REG_SZ) continue;
 					if (hresult != ERROR_SUCCESS) {
-						errors.push_back({ L"Unable to open key : " + get<0>(profile) + L"/ NTUSER.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey + L"\\" + szValue, hresult});
+						log(1,  L"Unable to open key : " + get<0>(profile) + L"/ NTUSER.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey + L"\\" + szValue, hresult);
 						continue;
 					}
 					run.Sid = get<0>(profile);
@@ -164,18 +162,6 @@ public:
 		myfile.open(conf._outputDir + "/run.json");
 		myfile << result;
 		myfile.close();
-
-		if (conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir +"/run_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 
 		return ERROR_SUCCESS;
 	}

@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <windows.h>
 #include <tlhelp32.h>
@@ -27,37 +27,44 @@ struct ServiceStruct
 	std::wstring serviceAccessMessage = L"OK";
 
 	/*! Constructeur
-	* @param hSCM contient le pointeur sur le manager de contrôle de service
-	* @param service contient les données du service
+	* @param hSCM contient le pointeur sur le manager de contrÃ´le de service
+	* @param service contient les donnÃ©es du service
 	*/
 	ServiceStruct(SC_HANDLE hSCM, ENUM_SERVICE_STATUS_PROCESS service) {
 		DWORD bufSize = 0;
 		DWORD moreBytesNeeded;
 
 		serviceName = std::wstring(service.lpServiceName);
+		log(1, L"âž• Service " + serviceName);
 		serviceDisplayName = ansi_to_utf8(std::wstring(service.lpDisplayName));
 		serviceType = serviceType_to_wstring(service.ServiceStatusProcess.dwServiceType);
 		serviceStatus = serviceState_to_wstring(service.ServiceStatusProcess.dwCurrentState);
 		serviceProcessId = std::to_wstring(service.ServiceStatusProcess.dwProcessId);
 
 		SC_HANDLE hService = OpenServiceW(hSCM, service.lpServiceName, SC_MANAGER_ALL_ACCESS);
-		QueryServiceConfigW(hService, NULL, 0, &moreBytesNeeded); //get size of buffer
-		LPQUERY_SERVICE_CONFIG sData = (LPQUERY_SERVICE_CONFIG)malloc(moreBytesNeeded);
-		bufSize = moreBytesNeeded;
-		if (QueryServiceConfigW(hService, sData, bufSize, &moreBytesNeeded)) { //get service info
-			serviceStartType = serviceStart_to_wstring(sData->dwStartType);
-			serviceOwner = std::wstring(sData->lpServiceStartName);
-			serviceOwner = replaceAll(serviceOwner, L"\\", L"\\\\");
-			serviceBinary = std::wstring(sData->lpBinaryPathName);
-			serviceBinary = replaceAll(serviceBinary, L"\\", L"\\\\");
-			serviceBinary = replaceAll(serviceBinary, L"\"", L"\\\"");
+		if (hService) {
+			QueryServiceConfigW(hService, NULL, 0, &moreBytesNeeded); //get size of buffer
+			LPQUERY_SERVICE_CONFIG sData = (LPQUERY_SERVICE_CONFIG)malloc(moreBytesNeeded);
+			bufSize = moreBytesNeeded;
+			if (QueryServiceConfigW(hService, sData, bufSize, &moreBytesNeeded)) { //get service info
+				serviceStartType = serviceStart_to_wstring(sData->dwStartType);
+				serviceOwner = std::wstring(sData->lpServiceStartName);
+				serviceOwner = replaceAll(serviceOwner, L"\\", L"\\\\");
+				serviceBinary = std::wstring(sData->lpBinaryPathName);
+				serviceBinary = replaceAll(serviceBinary, L"\\", L"\\\\");
+				serviceBinary = replaceAll(serviceBinary, L"\"", L"\\\"");
+			}
+			else {
+				serviceAccessMessage = ansi_to_utf8(getErrorMessage(GetLastError()));
+				log(2, L"ðŸ”¥ QueryServiceConfigW", GetLastError());
+			}
+			free(sData);
+			CloseServiceHandle(hService);
 		}
-
 		else {
-			serviceAccessMessage = ansi_to_utf8(getErrorWstring(GetLastError()));
+			serviceAccessMessage = ansi_to_utf8(getErrorMessage(GetLastError()));
+			log(2, L"ðŸ”¥ OpenServiceW", GetLastError());
 		}
-		free(sData);
-		CloseServiceHandle(hService);
 	}
 
 	/*! conversion de l'objet au format json
@@ -69,8 +76,8 @@ struct ServiceStruct
 			+ tab(2) + L"\"Name\":\"" + serviceName + L"\", \n"
 			+ tab(2) + L"\"DislayName\":\"" + serviceDisplayName + L"\", \n"
 			+ tab(2) + L"\"Status\":\"" + serviceStatus + L"\", \n"
-			+ tab(2) + L"\"AccessMessage\":\"" + serviceAccessMessage + L"\", \n"
 			+ tab(2) + L"\"ProcessId\":\"" + serviceProcessId + L"\", \n"
+			+ tab(2) + L"\"AccessMessage\":\"" + serviceAccessMessage + L"\", \n"
 			+ tab(2) + L"\"StartType\":\"" + serviceStartType + L"\", \n"
 			+ tab(2) + L"\"Owner\":\"" + serviceOwner + L"\", \n"
 			+ tab(2) + L"\"Binary\":\"" + serviceBinary + L"\" \n"
@@ -78,18 +85,16 @@ struct ServiceStruct
 		return result;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {}
 };
 
 struct Services
 {
 	std::vector<ServiceStruct> services; //!< tableau contenant tout les processus
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-	AppliConf conf = { 0 };//! contient les paramètres de l'application issue des paramètres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
+	* @param conf contient les paramÃ¨tres de l'application issue des paramÃ¨tres de la ligne de commande
 	*/
 	HRESULT getData()
 	{
@@ -102,13 +107,15 @@ struct Services
 		DWORD bufSize = 0;
 		DWORD moreBytesNeeded, serviceCount;
 
-		
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"â„¹ï¸ Services :");
+		log(0, L"*******************************************************************************************************************");
 
 		hSCM = OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE | SC_MANAGER_CONNECT);
 		if (hSCM == NULL)
 		{
 			HRESULT error = GetLastError();
-			errors.push_back({ L"Could not open Service Control Manager",error });
+			log(1,  L"Could not open Service Control Manager",error );
 			return error;
 		}
 
@@ -122,8 +129,9 @@ struct Services
 			}
 			return ERROR_SUCCESS;
 		}
-		int err = GetLastError();
-		if (ERROR_MORE_DATA != err) {
+		else{
+			int err = GetLastError();
+			log(1, L"ðŸ”¥ EnumServicesStatusExW",err);
 			return err;
 		}
 		free(servicesBuf);
@@ -146,28 +154,16 @@ struct Services
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crÃ©e le repertoire, pas d'erreur s'il existe dÃ©jÃ 
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/services.json");
 		myfile << result;
 		myfile.close();
 
-		if (conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir + "/services_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
-
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
 		for (ServiceStruct temp : services)
 			temp.clear();

@@ -68,8 +68,7 @@ public:
 struct AmcacheApplications {
 public:
 	std::vector<AmcacheApplication> amcacheapplications; //!< tableau contenant tous les AMCACHE APPLICATIONS
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-
+	
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
@@ -89,19 +88,19 @@ public:
 
 		hresult = OROpenHive(ruche.c_str(), &Offhive);
 		if (hresult != ERROR_SUCCESS) {
-			errors.push_back({ L"Unable to open hive : C:\\Windows\\AppCompat\\Programs\\Amcache.hve", hresult });
+			log(1,  L"Unable to open hive : C:\\Windows\\AppCompat\\Programs\\Amcache.hve", hresult );
 			return hresult;
 		}
 
 		hresult = OROpenKey(Offhive, L"Root\\InventoryApplication", &hKey);
 		if (hresult != ERROR_SUCCESS) {
-			errors.push_back({ L"Unable to open key :C:\\Windows\\AppCompat\\Programs\\Amcache.hve / Root\\InventoryApplication", hresult });
+			log(1,  L"Unable to open key :C:\\Windows\\AppCompat\\Programs\\Amcache.hve / Root\\InventoryApplication", hresult );
 			return hresult;
 		}
 
 		hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 		if (hresult != ERROR_SUCCESS) {
-			errors.push_back({ L"Unable to get info key : C:\\Windows\\AppCompat\\Programs\\Amcache.hve / Root\\InventoryApplication" , hresult });
+			log(1,  L"Unable to get info key : C:\\Windows\\AppCompat\\Programs\\Amcache.hve / Root\\InventoryApplication" , hresult );
 			return hresult;
 		};
 
@@ -109,12 +108,12 @@ public:
 			nSize = MAX_VALUE_NAME;
 			hresult = OREnumKey(hKey, i, szSubKey, &nSize, NULL, NULL, NULL);
 			if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
-				errors.push_back({ L"Unable to open key : " + ruche + L"Root\\InventoryApplication\\" + szSubKey, hresult });
+				log(1,  L"Unable to open key : " + ruche + L"Root\\InventoryApplication\\" + szSubKey, hresult );
 				continue;
 			}
 			hresult = OROpenKey(hKey, szSubKey, &hKey_amcache);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"Unable to open key : " + ruche + L"Root\\InventoryApplication\\" + szSubKey, hresult });
+				log(1,  L"Unable to open key : " + ruche + L"Root\\InventoryApplication\\" + szSubKey, hresult );
 				continue;
 			}
 			AmcacheApplication amcacheapplication(hKey_amcache);
@@ -145,17 +144,6 @@ public:
 		myfile << result;
 		myfile.close();
 
-		if (conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir + "/amcache_applications_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 		return ERROR_SUCCESS;
 	}
 

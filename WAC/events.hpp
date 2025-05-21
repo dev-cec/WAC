@@ -12,7 +12,6 @@
 #pragma comment(lib, "Wevtapi.lib")
 
 
-
 /*! conversion d'un VARIANT_TYPE en wstring
 * @param data est la donnée à transformée
 */
@@ -169,9 +168,9 @@ struct Event {
 	* @param hevt est un handle sur la session ouverte par EvtOpenSession
 	* @param buffer st le nom du channel contenant les événements
 	* @hevent est un handle sur un événement
-	* @param errors pointeur vers un tableau contenant les erreurs de traitement
+	
 	*/
-	Event(EVT_HANDLE hevt, LPWSTR buffer, EVT_HANDLE hEvent, std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
+	Event(EVT_HANDLE hevt, LPWSTR buffer, EVT_HANDLE hEvent) {
 		PEVT_VARIANT event = NULL, event2 = NULL;
 		PEVT_VARIANT bufferEvt = NULL;
 		PEVT_VARIANT bufferEvt2 = NULL;
@@ -202,7 +201,7 @@ struct Event {
 				else {
 					status = GetLastError();
 					if (status != ERROR_INSUFFICIENT_BUFFER)
-						errors->push_back({ std::wstring(buffer) + L" / LEvtCreateRenderContext : ", status });
+						log(1,  std::wstring(buffer) + L" / LEvtCreateRenderContext : ", status );
 
 				}
 		} while (status == ERROR_INSUFFICIENT_BUFFER && hContext != NULL);
@@ -232,7 +231,7 @@ struct Event {
 			else {
 				status = GetLastError();
 				if (status != ERROR_INSUFFICIENT_BUFFER)
-					errors->push_back({ std::wstring(buffer) + L" / EvtRender : ", status });
+					log(1,  std::wstring(buffer) + L" / EvtRender : ", status );
 
 			}
 		} while (status == ERROR_INSUFFICIENT_BUFFER);
@@ -273,7 +272,7 @@ struct Event {
 			if (!EvtFormatMessage(hmetadata, hEvent, NULL, 0, NULL, EvtFormatMessageEvent, messagesize, bufferMessage, &messageSizeNeeded)) {
 				status = GetLastError();
 				if (status != ERROR_INSUFFICIENT_BUFFER) {
-					errors->push_back({ std::wstring(buffer) + L" / EvtFormatMessage : ", status });
+					log(1,  std::wstring(buffer) + L" / EvtFormatMessage : ", status );
 					evtEventMessage = L"\"\"";
 				}
 			}
@@ -328,8 +327,7 @@ struct Event {
 struct Events {
 
 	std::vector<Event> events; //!< tableau contenant tout les Events
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-
+	
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
@@ -359,7 +357,7 @@ struct Events {
 				buffer = (LPWSTR)malloc(bufferLength1 * sizeof(WCHAR));
 				if (buffer == NULL) {
 					status = GetLastError();
-					errors.push_back({ L" buffer malloc : ", status });
+					log(1,  L" buffer malloc : ", status );
 					break;
 				}
 			}
@@ -371,7 +369,7 @@ struct Events {
 			if (EvtNextChannelPath(hChannel, bufferLength1, buffer, &bufferLengthNeeded1) == FALSE) {
 				status = GetLastError();
 				if (status != ERROR_INSUFFICIENT_BUFFER)
-					errors.push_back({ L" EvtNextChannelPath : ", status });
+					log(1,  L" EvtNextChannelPath : ", status );
 			}
 			else {
 				status = ERROR_SUCCESS;
@@ -382,7 +380,7 @@ struct Events {
 				if (hQuery == NULL) {
 					status = GetLastError();
 					if (status != ERROR_INSUFFICIENT_BUFFER)
-						errors.push_back({ std::wstring(buffer) + L" / EvtQuery : ", status });
+						log(1,  std::wstring(buffer) + L" / EvtQuery : ", status );
 				}
 
 				//
@@ -391,7 +389,7 @@ struct Events {
 
 
 				while (EvtNext(hQuery, 1, &hEvent, INFINITE, 0, &count) != FALSE) {
-					events.push_back(Event(hevt, buffer, hEvent, &errors));
+					events.push_back(Event(hevt, buffer, hEvent));
 					EvtClose(hEvent);
 				}
 				EvtClose(hQuery);
@@ -426,18 +424,6 @@ struct Events {
 		myfile.open(conf._outputDir + "/events.json");
 		myfile << result;
 		myfile.close();
-
-		if (conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir + "/events_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 
 		return ERROR_SUCCESS;
 	}

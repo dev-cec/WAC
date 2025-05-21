@@ -37,9 +37,9 @@ struct CustomDestinationCategory {
 	* @param buffersize en entrée contient la taille du buffer
 	* @param _path est le chemin contenant les custom Destinations
 	* @param _sid est le SID de l'utilisateur propriétaire du LNK
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	CustomDestinationCategory(LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid,   std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
+	CustomDestinationCategory(LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid) {
 		int pos = 0;
 		nbentries = bytes_to_unsigned_int(buffer + 4);
 		pos += 4;
@@ -52,7 +52,7 @@ struct CustomDestinationCategory {
 				std::wstring wguid = guid_to_wstring(guid);
 
 				if (guid_to_wstring(guid).compare(L"{00021401-0000-0000-C000-000000000046}") == 0) {
-					RecentDoc i = RecentDoc(buffer + pos + x, _path, _sid,  _errors);
+					RecentDoc i = RecentDoc(buffer + pos + x, _path, _sid);
 					recentDocs.push_back(i);
 				}
 			}
@@ -100,9 +100,9 @@ struct CustomDestination {
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _path est le chemin contenant les Automatic Destinations
 	* @param _sid est le SID de l'utilisateur propriétaire du LNK
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	CustomDestination(std::filesystem::path _path, std::wstring _sid,   std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
+	CustomDestination(std::filesystem::path _path, std::wstring _sid) {
 		Sid = _sid;
 		SidName = getNameFromSid(Sid);
 		//path retourne un codage ANSI mais on veut de l'UTF8
@@ -148,12 +148,12 @@ struct CustomDestination {
 			typeInt = bytes_to_unsigned_int(buffer);
 			switch (typeInt) {
 			case 0: {
-				_errors->push_back({ replaceAll(path,L"\\",L"\\\\") + L" : Custom category not supported",ERROR_UNSUPPORTED_TYPE});
+				log(1,  replaceAll(path,L"\\",L"\\\\") + L" : Custom category not supported",ERROR_UNSUPPORTED_TYPE);
 				type = L"Custom category";
 				break;
 			}
 			case 1: {
-				_errors->push_back({ replaceAll(path,L"\\",L"\\\\") + L" : Known category not supported",ERROR_UNSUPPORTED_TYPE });
+				log(1,  replaceAll(path,L"\\",L"\\\\") + L" : Known category not supported",ERROR_UNSUPPORTED_TYPE );
 				type = L"Known category";
 				break;
 			}
@@ -166,10 +166,10 @@ struct CustomDestination {
 
 			//Control de la taille du fichier pour recherche de fichier LNK
 			if ((size > 24) && (typeInt == 2)) {
-				categorie = new CustomDestinationCategory(buffer, size, path, _sid,  _errors);
+				categorie = new CustomDestinationCategory(buffer, size, path, _sid);
 			}
 			else {
-				_errors->push_back({ replaceAll(path,L"\\",L"\\\\") + L" : Empty customdestination, no LNK to parse",ERROR_INVALID_DATA });
+				log(1,  replaceAll(path,L"\\",L"\\\\") + L" : Empty customdestination, no LNK to parse",ERROR_INVALID_DATA );
 			}
 			delete [] buffer;
 		}
@@ -213,8 +213,7 @@ struct CustomDestination {
 */
 struct JumplistCustoms {
 	std::vector<CustomDestination> customDestinations; //!< tableau contenant les objets
-	std::vector<std::tuple<std::wstring, HRESULT>> errorsCustomDestinations;//!< tableau contenant les erreurs de traitement des objets
-
+	
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
@@ -228,7 +227,7 @@ struct JumplistCustoms {
 			if (stat(path.c_str(), &sb) == 0) { // directory Exists
 				for (const auto& entry : std::filesystem::directory_iterator(path)) {
 					if (entry.is_regular_file() && (entry.path().extension() == ".customDestinations-ms")) {
-						customDestinations.push_back(CustomDestination(entry.path(), get<0>(profile),  &errorsCustomDestinations));
+						customDestinations.push_back(CustomDestination(entry.path(), get<0>(profile)));
 					}
 				}
 			}
@@ -258,18 +257,6 @@ struct JumplistCustoms {
 		myfile.open(conf._outputDir +"/jumplistCustomDestinations.json");
 		myfile << result;
 		myfile.close();
-
-		if(conf._debug == true && errorsCustomDestinations.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errorsCustomDestinations) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir +"/jumplistCustomDestinations_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 
 		return ERROR_SUCCESS;
 	};

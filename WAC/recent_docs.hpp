@@ -53,9 +53,9 @@ public:
 
 	/*! fonction permettant de parser un fichier LNK
 	* @param buffer contient les données à parser
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	void parseLNK(LPBYTE buffer,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
+	void parseLNK(LPBYTE buffer) {
 		unsigned int header_size = *reinterpret_cast<unsigned int*>(buffer);
 		guid = *reinterpret_cast<GUID*>(buffer + 4);
 		if (guid_to_wstring(guid).compare(L"{00021401-0000-0000-C000-000000000046}") == 0) {
@@ -76,8 +76,8 @@ public:
 			iconIndex = bytes_to_unsigned_int(buffer + 56);
 			commandOption = showCommandOption(bytes_to_unsigned_int(buffer + 60)); //
 			//debug
-			if (commandOption == L"UNKOWN" && conf._debug == true)
-				errors->push_back({ L"commandOption Unknown 0x" + to_hex(bytes_to_unsigned_int(buffer + 60)),ERROR_UNSUPPORTED_TYPE });
+			if (commandOption == L"UNKOWN" )
+				log(1,  L"commandOption Unknown 0x" + to_hex(bytes_to_unsigned_int(buffer + 60)),ERROR_UNSUPPORTED_TYPE );
 
 			//-------------------------------------------------------------------------
 			// Shell item id list (starts at 76 with 2 byte length -> so we can skip):
@@ -94,7 +94,7 @@ public:
 				while (item_size != 0 && offset < LinkTargetIDList_size) {
 					item_size = bytes_to_unsigned_short(buffer + offset);
 					if (item_size != 0) {
-						idLists.push_back(IdList(buffer + offset, 2, errors)); // lvl 1 is object itself
+						idLists.push_back(IdList(buffer + offset, 2)); // lvl 1 is object itself
 					}
 					offset += item_size;
 				}
@@ -122,8 +122,8 @@ public:
 					unsigned int driveType = bytes_to_unsigned_int(buffer + LinkInfo_offset + volumeId_offset + 4);
 					volumeDriveType = driveType_to_wstring(driveType);
 					//debug
-					if (volumeDriveType == L"BAD TYPE" && conf._debug == true)
-						errors->push_back({ L"volumeDriveType BAD TYPE 0x" + to_hex(driveType),ERROR_UNSUPPORTED_TYPE });
+					if (volumeDriveType == L"BAD TYPE" )
+						log(1,  L"volumeDriveType BAD TYPE 0x" + to_hex(driveType),ERROR_UNSUPPORTED_TYPE );
 					unsigned int serial = bytes_to_unsigned_int(buffer + LinkInfo_offset + volumeId_offset + 8);
 					std::stringstream ss;
 					ss << std::hex << serial;
@@ -164,8 +164,8 @@ public:
 					if (ValidNetType == true) {
 						netProviderType = networkProvider_to_wstring(bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 14));
 						//debug
-						if (netProviderType == L"BAD NET PROVIDER" && conf._debug == true)
-							errors->push_back({ L"netProviderType Unknown 0x" + to_hex(bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 14)),ERROR_UNSUPPORTED_TYPE });
+						if (netProviderType == L"BAD NET PROVIDER" )
+							log(1,  L"netProviderType Unknown 0x" + to_hex(bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 14)),ERROR_UNSUPPORTED_TYPE );
 					}
 				}
 			}
@@ -238,9 +238,9 @@ public:
 	/*! constructeur à partir d'un fichier
 	* @param _path contient le chemin vers le fichier à parser
 	* @param _sid contient le SID de l'utilisateur propriétaire du fichier
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	RecentDoc(std::filesystem::path _path, std::wstring _sid,  std::vector<std::tuple<std::wstring, HRESULT>>* errors)
+	RecentDoc(std::filesystem::path _path, std::wstring _sid)
 	{
 		//Parsing
 		Sid = _sid;
@@ -262,7 +262,7 @@ public:
 				file.read(reinterpret_cast<CHAR*>(buffer), size);
 				file.close();
 
-				parseLNK(buffer,  errors);
+				parseLNK(buffer);
 				delete [] buffer;
 			}
 		}
@@ -305,13 +305,13 @@ public:
 	* @param buffer contient les données à parser
 	* @param _path contient le chemin vers le fichier contenant le buffer
 	* @param _sid contient le SID de l'utilisateur propriétaire de la donnée
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	RecentDoc(LPBYTE buffer, std::wstring _path, std::wstring _sid,  std::vector<std::tuple<std::wstring,HRESULT>>* _errors) {
+	RecentDoc(LPBYTE buffer, std::wstring _path, std::wstring _sid) {
 		Sid = _sid;
 		path = _path;
 		target = L"";
-		parseLNK(buffer,  _errors);
+		parseLNK(buffer);
 	}
 
 	/*! conversion de l'objet au format json
@@ -374,14 +374,11 @@ public:
 */
 struct RecentDocs {
 	std::vector<RecentDoc> recentdocs; //!< tableau contenant l'ensemble des objets
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData() {
-		conf=conf;
 		std::string reps[2] = { "\\AppData\\Roaming\\Microsoft\\Windows\\Recent","\\AppData\\Roaming\\Microsoft\\Office\\Recent" };
 		for (std::string rep : reps) {
 			for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
@@ -391,7 +388,7 @@ struct RecentDocs {
 					for (const auto& entry : std::filesystem::directory_iterator(path)) {
 						if (entry.is_regular_file() && ((entry.path().extension() == ".lnk" || entry.path().extension() == ".LNK") || (entry.path().extension() == ".url" || entry.path().extension() == ".URL"))) {
 							
-							recentdocs.push_back(RecentDoc(entry.path(), get<0>(profile),  &errors));
+							recentdocs.push_back(RecentDoc(entry.path(), get<0>(profile)));
 						}
 					}
 				}
@@ -423,17 +420,6 @@ struct RecentDocs {
 		myfile << result;
 		myfile.close();
 
-		if(conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir +"/recentdocs_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 		return ERROR_SUCCESS;
 	}
 

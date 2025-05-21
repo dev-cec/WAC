@@ -23,7 +23,7 @@ public:
 	std::wstring sidName = L"";//!< nom de l'utilisateur propriétaire de l'objet
 	std::wstring source = L"";//!< origine de l'artefact
 	std::vector<IdList*> shellitems;//!< tableau de IdList
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
+	
 	bool _dump = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde contenu du buffer au format hexadecimal dans un fichier json
 
 	/*! conversion de l'objet au format json
@@ -64,8 +64,7 @@ struct MruApps {
 public:
 	std::vector<MruApp> MruApps;//!< contient l'ensemble des objets
 	unsigned int niveau = 0;//!< profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-
+	
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
@@ -92,19 +91,19 @@ public:
 				ruche = conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\\\ntuser.dat";
 				hresult = OROpenHive(ruche.c_str(), &Offhive);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"unable to open hive " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat", hresult});
+					log(1,  L"unable to open hive " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat", hresult);
 					continue;
 				}
 
 				hresult = OROpenKey(Offhive, (L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\" + keyname).c_str(), &hKey);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"unable to open key " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\" + keyname, hresult });
+					log(1,  L"unable to open key " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\" + keyname, hresult );
 					continue;
 				}
 
 				hresult = parse(hKey, get<0>(profile), keyname, &MruApps, 1, false);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"unable to parse key " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\" + keyname, hresult });
+					log(1,  L"unable to parse key " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\" + keyname, hresult );
 					continue;
 				};
 			}
@@ -143,8 +142,6 @@ public:
 			MruApp.sid = sid;
 			MruApp.sidName = getNameFromSid(sid);
 			MruApp.source = source;
-			MruApp._debug = conf._debug;
-			MruApp._dump = conf._dump;
 			getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), pData);
 			unsigned int offset = 0;
 			MruApp.name = ansi_to_utf8(std::wstring((wchar_t*)(pData + offset)));
@@ -154,7 +151,7 @@ public:
 				if (size == 0) break;
 				else {
 
-					IdList* shellitem = new IdList(pData + offset, niveau + 2,  &errors, Parentiszip);
+					IdList* shellitem = new IdList(pData + offset, niveau + 2, Parentiszip);
 					if (shellitem->shellItem->is_zip == true)
 						Parentiszip = true;
 					offset += size;
@@ -187,18 +184,6 @@ public:
 		myfile.open(conf._outputDir +"/mruApps.json");
 		myfile << result;
 		myfile.close();
-
-		if(conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir +"/mruApps_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 
 		return ERROR_SUCCESS;
 	}

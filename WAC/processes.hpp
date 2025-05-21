@@ -1,4 +1,4 @@
-#include <windows.h>
+ï»¿#include <windows.h>
 #include <tlhelp32.h>
 #include <iostream>
 #include <cstdio>
@@ -12,21 +12,21 @@
 
 
 
-/*! structure représentant un process */
+/*! structure reprÃ©sentant un process */
 struct Process {
 	std::wstring processName = L""; //!< Nom du processus
 	DWORD processId = 0; //!< Id du processus
 	DWORD processParentId = 0;//!< Id du processus Parent
 	DWORD processThreadCount = 0;//!< Nombre de threads
-	std::wstring processSidName = L"";//!< nom de l'utilisateur propriétaire du processus
-	std::wstring processSID = L"";//!< sid de l'utilisateur propriétaire du processus
+	std::wstring processSidName = L"";//!< nom de l'utilisateur propriÃ©taire du processus
+	std::wstring processSID = L"";//!< sid de l'utilisateur propriÃ©taire du processus
 	std::wstring processModulesAccess = L"OK";
-	std::vector<std::wstring> processModules; //!< Liste des Dlls chargées par le programme. La première entrée contient le chemin de l’exécutable
+	std::vector<std::wstring> processModules; //!< Liste des Dlls chargÃ©es par le programme. La premiÃ¨re entrÃ©e contient le chemin de lâ€™exÃ©cutable
 	/*! Constructeur
 	* @param pe32 est un pointeur sur le processus
-	* @param errors est un vector contenant les erreurs de traitement
+
 	*/
-	Process(PROCESSENTRY32W* pe32, HANDLE handle, std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
+	Process(PROCESSENTRY32W* pe32, HANDLE handle) {
 		HANDLE tokenHandle = NULL;
 		LPVOID  infos = NULL;
 		DWORD returnSize = 0;
@@ -37,34 +37,37 @@ struct Process {
 		processParentId = pe32->th32ParentProcessID;
 		processThreadCount = pe32->cntThreads;
 		//get owner of process
-
-		if (OpenProcessToken(handle, TOKEN_ALL_ACCESS, &tokenHandle)) {
-			GetTokenInformation(tokenHandle, TokenOwner, NULL, 0, &returnSize);  // get data size
-			infos = (LPVOID)malloc(returnSize);
-			if (GetTokenInformation(tokenHandle, TokenOwner, infos, returnSize, &returnSize)) { // get data
-				if (ConvertSidToStringSid(((PTOKEN_OWNER)infos)->Owner, &lpsid_wstring) != 0) {
-					processSID = std::wstring(lpsid_wstring);
-					processSidName = getNameFromSid(processSID);
+		if (handle) {
+			if (OpenProcessToken(handle, TOKEN_ALL_ACCESS, &tokenHandle)) {
+				GetTokenInformation(tokenHandle, TokenOwner, NULL, 0, &returnSize);  // get data size
+				infos = (LPVOID)malloc(returnSize);
+				if (GetTokenInformation(tokenHandle, TokenOwner, infos, returnSize, &returnSize)) { // get data
+					if (ConvertSidToStringSid(((PTOKEN_OWNER)infos)->Owner, &lpsid_wstring) != 0) {
+						processSID = std::wstring(lpsid_wstring);
+						processSidName = getNameFromSid(processSID);
+					}
+					else
+						log(2, L"ðŸ”¥ ConvertSidToStringSid : ", GetLastError());
 				}
 				else
-					errors->push_back({ L"Process" + processName + L" ConvertSidToStringSid : ", GetLastError() });
+					log(2, L"ðŸ”¥ GetTokenInformation : ", GetLastError());
+				free(infos);
 			}
-			else
-				errors->push_back({ L"Process" + processName + L" GetTokenInformation : ", GetLastError() });
-			free(infos);
+			else {
+				log(2, L"ðŸ”¥ OpenProcessToken : ", GetLastError());
+				return;
+			}
 		}
-		else
-			errors->push_back({ L"Process" + processName + L" OpenProcessToken : ", GetLastError() });
 
 		// List the modules and threads associated with this process
-		HRESULT result = ListProcessModules(errors);
+		HRESULT result = ListProcessModules();
 		CloseHandle(tokenHandle);
 	}
 
-	/*! Fonction récupérant la liste des modules (Dlls) du processus
-	 * @param errors est un vector contenant les erreurs de traitement
+	/*! Fonction rÃ©cupÃ©rant la liste des modules (Dlls) du processus
+
 	*/
-	HRESULT ListProcessModules(std::vector<std::tuple<std::wstring, HRESULT>>* errors)
+	HRESULT ListProcessModules()
 	{
 		HANDLE hModuleSnap = INVALID_HANDLE_VALUE;
 		MODULEENTRY32 me32;
@@ -76,9 +79,9 @@ struct Process {
 		{
 			HRESULT error = GetLastError();
 
-			processModulesAccess = ansi_to_utf8(getErrorWstring(error));
+			processModulesAccess = ansi_to_utf8(getErrorMessage(error));
 
-			errors->push_back({ L"Error " + processName + L" : CreateToolhelp32Snapshot (of modules)",error });
+			log(2, L"ðŸ”¥ CreateToolhelp32Snapshot (of modules)", error);
 
 			return(ERROR_INVALID_HANDLE);
 		}
@@ -135,7 +138,7 @@ struct Process {
 		return result;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {}
 };
 
@@ -143,11 +146,10 @@ struct Process {
 */
 struct Processes {
 	std::vector<Process> processes; //!< tableau contenant tout les processus
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
 
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
+	* @param conf contient les paramÃ¨tres de l'application issue des paramÃ¨tres de la ligne de commande
 	*/
 	HRESULT getData()
 	{
@@ -155,11 +157,16 @@ struct Processes {
 		HANDLE hProcess;
 		PROCESSENTRY32 pe32;
 
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"â„¹ï¸ Processes : ");
+		log(0, L"*******************************************************************************************************************");
 		
 		// Take a snapshot of all processes in the system.
 		hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-		if (hProcessSnap == INVALID_HANDLE_VALUE)
-			errors.push_back({ L"Error CreateToolhelp32Snapshot (of processes)" ,GetLastError() });
+		if (hProcessSnap == INVALID_HANDLE_VALUE) {
+			log(1, L"ðŸ”¥ CreateToolhelp32Snapshot (of processes)", GetLastError());
+			return ERROR_INVALID_HANDLE;
+		}
 
 		// Set the size of the structure before using it.
 		pe32.dwSize = sizeof(PROCESSENTRY32);
@@ -168,23 +175,23 @@ struct Processes {
 		// and exit if unsuccessful
 		if (!Process32First(hProcessSnap, &pe32))
 		{
-
-			errors.push_back({ L"Error " + std::wstring(pe32.szExeFile) + L" : Process32First" ,GetLastError() });// show cause of failure
+			log(2, L"ðŸ”¥ Process32First", GetLastError());// show cause of failure
 			CloseHandle(hProcessSnap);          // clean the snapshot object
+			return ERROR_INVALID_HANDLE;
 		}
-
 		// Now walk the snapshot of processes, and
 		// display information about each process in turn
 		do
 		{
+			log(1, L"âž• Process " + std::wstring(pe32.szExeFile) + L" (PID " + std::to_wstring(pe32.th32ProcessID) + L")");
 			hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pe32.th32ProcessID);
 			if (hProcess == NULL)
-				errors.push_back({ L"Error " + std::wstring(pe32.szExeFile) + L" : OpenProcess" ,GetLastError() });// show cause of failure
+				log(2, L"ðŸ”¥ OpenProcess", GetLastError());// show cause of failure
 			if (GetLastError() != 87) { // ERROR_INVALID_PARAMETER
-				processes.push_back(Process(&pe32, hProcess, &errors));
-
+				processes.push_back(Process(&pe32, hProcess));
+				CloseHandle(hProcess);
 			}
-			CloseHandle(hProcess);
+
 		} while (Process32Next(hProcessSnap, &pe32));
 
 
@@ -207,28 +214,16 @@ struct Processes {
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crÃ©e le repertoire, pas d'erreur s'il existe dÃ©jÃ 
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/processes.json");
 		myfile << result;
 		myfile.close();
 
-		if (conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir + "/processes_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
-
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
 		for (Process temp : processes)
 			temp.clear();

@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <iostream>
 #include <windows.h>
 #include <stdio.h>
@@ -12,19 +12,19 @@
 
 
 
-/*! structure représentant un artefact Usbstor
+/*! structure reprÃ©sentant un artefact Usbstor
 */
 struct Usbstor {
 public:
-	std::vector<std::wstring> HardwareId; //!< tableau de chaîne de texte représentant les identifiant hardware du périphérique
-	std::wstring FriendlyName = L""; //!< nom du périphérique
-	std::wstring CompatibleIds = L"";//!< id compatibles avec le périphérique
+	std::vector<std::wstring> HardwareId; //!< tableau de chaÃ®ne de texte reprÃ©sentant les identifiant hardware du pÃ©riphÃ©rique
+	std::wstring FriendlyName = L""; //!< nom du pÃ©riphÃ©rique
+	std::wstring CompatibleIds = L"";//!< id compatibles avec le pÃ©riphÃ©rique
 	std::wstring ClassGuid = L""; //!< identifiant GUID de la classe
-	std::wstring SerialNumber = L"";//!< numéro de série du périphérique
-	std::wstring LastInsertion = L"";//!< date de dernière insertion du périphérique
-	std::wstring LastInsertionUtc = L"";//!< date de dernière insertion du périphérique au format UTC
-	std::wstring FirstInsertion = L"";//!< date de première insertion du périphérique
-	std::wstring FirstInsertionUtc = L"";//!< date de première insertion du périphérique au format UTC
+	std::wstring SerialNumber = L"";//!< numÃ©ro de sÃ©rie du pÃ©riphÃ©rique
+	std::wstring LastInsertion = L"";//!< date de derniÃ¨re insertion du pÃ©riphÃ©rique
+	std::wstring LastInsertionUtc = L"";//!< date de derniÃ¨re insertion du pÃ©riphÃ©rique au format UTC
+	std::wstring FirstInsertion = L"";//!< date de premiÃ¨re insertion du pÃ©riphÃ©rique
+	std::wstring FirstInsertionUtc = L"";//!< date de premiÃ¨re insertion du pÃ©riphÃ©rique au format UTC
 
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
@@ -43,7 +43,7 @@ public:
 			+ tab(1) + L"}";
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {}
 };
 
@@ -52,11 +52,10 @@ public:
 struct Usbstors {
 public:
 	std::vector<Usbstor> usbs;//!< tableau contenant les objets
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs de traitement des objets
-
+	
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
+	* @param conf contient les paramÃ¨tres de l'application issue des paramÃ¨tres de la ligne de commande
 	*/
 	HRESULT getData() {
 		
@@ -70,15 +69,19 @@ public:
 		WCHAR szSubKey_fabricant[MAX_KEY_NAME];
 		DWORD nSize = MAX_VALUE_NAME;
 
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"â„¹ï¸ USBSTOR");
+		log(0, L"*******************************************************************************************************************");
+
 		hresult = OROpenKey(conf.CurrentControlSet, L"Enum\\USBSTOR\\", &hkey);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
-			errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\", hresult });
+			log(1,  L"UOROpenKey : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\", hresult );
 			return hresult;
 		}
 
 		hresult = ORQueryInfoKey(hkey, NULL, NULL, &nSubkeys_usbstor, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
-			errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\", hresult });
+			log(1,  L"ORQueryInfoKey : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\", hresult );
 			return hresult;
 		};
 
@@ -88,19 +91,19 @@ public:
 			hresult = OREnumKey(hkey, i, szSubKey_usbstor, &nSize, NULL, NULL, NULL);
 
 			if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
-				errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor), hresult });
+				log(1,  L"OREnumKey : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor), hresult );
 				continue;
 			}
 
-			hresult = OROpenKey(hkey, szSubKey_usbstor, &hKey_fabricant); // on ouvre la clé du fabricant
+			hresult = OROpenKey(hkey, szSubKey_usbstor, &hKey_fabricant); // on ouvre la clÃ© du fabricant
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor), hresult });
+				log(1,  L"OROpenKey : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor), hresult );
 				continue;
 			}
 
 			hresult = ORQueryInfoKey(hKey_fabricant, NULL, NULL, &nSubkeys_fabricant, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 			if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
-				errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor), hresult });
+				log(1,  L"ORQueryInfoKey : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor), hresult );
 				continue;
 			}
 
@@ -109,46 +112,59 @@ public:
 				nSize = MAX_KEY_NAME;
 				hresult = OREnumKey(hKey_fabricant, j, szSubKey_fabricant, &nSize, NULL, NULL, NULL);
 				if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
-					errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant), hresult });
+					log(1,  L"OREnumKey : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant), hresult );
 					continue;
 				}
 
 				hresult = OROpenKey(hKey_fabricant, szSubKey_fabricant, &hKey_usb);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant), hresult });
+					log(1,  L"OROpenKey : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant), hresult );
 					continue;
 				}
 
 				Usbstor usb;
 				hresult = getRegMultiSzValue(hKey_usb, NULL, L"HardwareId", &usb.HardwareId);
 				hresult = getRegSzValue(hKey_usb, nullptr, L"FriendlyName", &usb.FriendlyName);
+				log(1, L"âž• USB " + usb.FriendlyName);
 				hresult = getRegSzValue(hKey_usb, nullptr, L"CompatibleIds", &usb.CompatibleIds);
 				usb.CompatibleIds = replaceAll(usb.CompatibleIds, L"\\", L"\\\\"); // replace\ by \\ in std::string
 				hresult = getRegSzValue(hKey_usb, nullptr, L"ClassGuid", &usb.ClassGuid);
 				hresult = getRegSzValue(hKey_usb, nullptr, L"SerialNumber", &usb.SerialNumber);
 				FILETIME tempFiletime = { 0 };
 				hresult = OROpenKey(hKey_usb, L"Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0066", &hkey_time);
-				if (hresult == ERROR_SUCCESS) {
-					hresult = getRegFiletimeValue(hkey_time, nullptr, L"", &tempFiletime);
+				if (hresult != ERROR_SUCCESS) {
+					log(2, L"ðŸ”¥ OROpenKey : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant) + L"\\Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0066", hresult);
+					continue;
+				}
+				else {
 					
+					hresult = getRegFiletimeValue(hkey_time, nullptr, L"", &tempFiletime);
 					if (hresult != ERROR_SUCCESS) {
-						errors.push_back({ L"Unable to get Filetime Value : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant) + L"\\Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0066" , hresult });
+						log(2, L"ðŸ”¥ getRegFiletimeValue : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant) + L"\\Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0066", hresult);
 						continue;
 					}
-					usb.LastInsertion = time_to_wstring(tempFiletime);
-					usb.LastInsertionUtc = time_to_wstring(tempFiletime, true);
+					else {
+						usb.LastInsertion = time_to_wstring(tempFiletime);
+						usb.LastInsertionUtc = time_to_wstring(tempFiletime, true);
+					}
 				}
+
 				hresult = OROpenKey(hKey_usb, L"Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0064", &hkey_time);
-				if (hresult == ERROR_SUCCESS) {
+				if (hresult != ERROR_SUCCESS) {
+					log(2, L"ðŸ”¥ OROpenKey : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant) + L"\\Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0064", hresult);
+					continue;
+				}else{
 					tempFiletime = { 0 };
 					hresult = getRegFiletimeValue(hkey_time, nullptr, L"", &tempFiletime);
 					
 					if (hresult != ERROR_SUCCESS) {
-						errors.push_back({ L"Unable to gt Filetime Value : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant) + L"\\Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0064" , hresult });
+						log(2,  L"getRegFiletimeValue : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant) + L"\\Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0064" , hresult );
 						continue;
 					}
-					usb.FirstInsertion = time_to_wstring(tempFiletime);
-					usb.FirstInsertionUtc = time_to_wstring(tempFiletime, true);
+					else {
+						usb.FirstInsertion = time_to_wstring(tempFiletime);
+						usb.FirstInsertionUtc = time_to_wstring(tempFiletime, true);
+					}
 				}
 
 				//save
@@ -174,28 +190,16 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crÃ©e le repertoire, pas d'erreur s'il existe dÃ©jÃ 
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/Usbstor.json");
 		myfile << result;
 		myfile.close();
 
-		if (conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir + "/usbstor_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
-
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
 		for (Usbstor temp : usbs)
 			temp.clear();

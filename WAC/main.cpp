@@ -40,13 +40,17 @@ AppliConf conf;// variable globale pour la conf de l'application
 
 void showHelp() {
 	SetConsoleTextAttribute(conf.hConsole, 7); // blanc
-	std::cout << "\nusage: " << conf.name << " [--dump] [--debug] [--events] [--output=output] [--errorOutput=errors]\n";
-	std::cout << "\t--help or /? : show this help \n";
-	std::cout << "\t--dump : add std::hexa value in json files for shellbags and LNK files \n";
-	std::cout << "\t--debug : add error output files\n";
-	std::cout << "\t--events : converts events to json (long time)\n";
-	std::cout << "\t--output=[directory name] : directory name to store output files starting from current directory. By default the directory is 'output'\n";
-	std::cout << "\t--errorOutput=[directory name] : directory name to store error output files starting from current directory. By default the directory is 'errors'\n";
+	std::cout << "\nusage: " << conf.name << " [--dump] [--events] [--output=output] [--loglevel=2]" << std::endl;
+	std::cout << "\t--help or /? : show this help " << std::endl;
+	std::cout << "\t--dump : add hexa value in json files for shellbags and LNK files " << std::endl;
+	std::cout << "\t--events : converts events to json (long time)" << std::endl;
+	std::cout << "\t--output=[directory name] : directory name to store output files starting from current directory. By default the directory is 'output'" << std::endl;
+	std::cout << "\t--loglevel=[0] : define level of details in logfile and activate logging in " << conf.name << ".log" << std::endl;
+	std::cout << std::endl;
+	std::cout << "\t loglevel = 0 => no logging" << std::endl;
+	std::cout << "\t loglevel = 1 => activate loggin for each artefact type treated" << std::endl;
+	std::cout << "\t loglevel = 2 => activate loggin for each artefact treated" << std::endl;
+	std::cout << "\t loglevel = 3 => activate loggin for each subfunction called (used for debug only)" << std::endl;
 };
 
 int main(int argc, char* argv[])
@@ -129,7 +133,6 @@ int main(int argc, char* argv[])
 		for (const auto& arg : args) {
 
 			if (arg == "--dump") conf._dump = true;
-			else if (arg == "--debug") conf._debug = true;
 			else if (arg == "--events") conf._events = true;
 			else if (arg.substr(0, 9) == "--output=") {
 				std::string temp = std::string(arg.substr(9));
@@ -142,25 +145,24 @@ int main(int argc, char* argv[])
 				}
 				if (conf._outputDir.find("\\") != std::string::npos) {
 					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
-					std::cerr << "Invalid character \ for param " << arg << "\n";
+					std::cerr << "Invalid character for param " << arg << "\n";
 					showHelp();
 					exit(1);
 				}
 			}
-			else if (arg.substr(0, 14) == "--errorOutput=") {
-				std::string temp = std::string(arg.substr(14));
-				if (temp.length() > 0) conf._errorOutputDir = temp;
-				else {
-					printError( L"Invalid length for errorOutput param " + string_to_wstring(arg)) ;
-					showHelp();
-					exit(1);
-				}
-				if (conf._errorOutputDir.find("\\") != std::string::npos) {
-					printError( L"Invalid character \ for param " + string_to_wstring(arg));
+			else if (arg.substr(0, 11) == "--loglevel=") {
+				std::string temp = std::string(arg.substr(11));
+				try {
+					conf.loglevel = stoi(temp);
+				}catch(...)
+				{
+					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
+					std::cerr << "Invalid numeric value for output param " << arg << "\n";
 					showHelp();
 					exit(1);
 				}
 			}
+	
 			else { //argument inconnu
 				SetConsoleOutputCP(CP_UTF8);
 				if (arg != "--help" && arg !="/?") { // Si pas argument --help ou /? alors argument invalide
@@ -620,14 +622,17 @@ int main(int argc, char* argv[])
 	SetConsoleTextAttribute(conf.hConsole, 7);
 	std::wcout << " - Snapshot disassembly : ";
 	if (!RemoveDirectoryW(conf.mountpoint.c_str())) printError(GetLastError());
-	else printSuccess();
+	else {
+		ReleaseInterface(pBackup);
+		printSuccess();
+	}
 
-	std::cout.flush();
 
 	end = time(nullptr);
 
 	std::wcout << L"END, Time elapsed : " << end - start << " s" << std::endl;
 
 	CloseHandle(conf.hConsole);
+	
 	return ERROR_SUCCESS;
 }

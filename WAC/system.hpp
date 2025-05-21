@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <iostream>
 #include <string>
@@ -10,7 +10,7 @@
 
 
 
-/*! structure contenant les information du système
+/*! structure contenant les information du systÃ¨me
 * Documentation : https://learn.microsoft.com/fr-fr/windows-hardware/drivers/ddi/wdm/nf-wdm-rtlgetversion
 * Documentation : https://learn.microsoft.com/fr-fr/windows/win32/api/timezoneapi/nf-timezoneapi-getdynamictimezoneinformation
 * Documentation : https://learn.microsoft.com/fr-fr/windows/win32/api/sysinfoapi/nf-sysinfoapi-getcomputernameexw
@@ -23,73 +23,105 @@ struct SystemInfo {
 	std::wstring currentTimeZone = L""; //!< identifiant de la timezone
 	std::wstring osName = L""; //!< version de l'OS
 	std::wstring version = L""; //!< version de l'OS
-	std::wstring servicePack = L""; //!< version du service pack installé si non null
-	SYSTEMTIME localDateTime = { 0 }; //!< heure du système au moment de l’exécution du programme
-	SYSTEMTIME localDateTimeUtc = { 0 };//!< heure du système au moment de l’exécution du programme au format UTC
-	SYSTEMTIME lastBootUpTime = { 0 }; //!< heure du dernier démarrage du system
-	SYSTEMTIME lastBootUpTimeUtc = { 0 };//!< heure du dernier démarrage du system au format UTC
-	int currentBias = 0; //!< décalage horaire actuel
-	bool daylightInEffect=false; //!< Heure d'été active si true
-	AppliConf conf = { 0 };//! contient les paramètres de l'application issue des paramètres de la ligne de commande
+	std::wstring servicePack = L""; //!< version du service pack installÃ© si non null
+	SYSTEMTIME localDateTime = { 0 }; //!< heure du systÃ¨me au moment de lâ€™exÃ©cution du programme
+	SYSTEMTIME localDateTimeUtc = { 0 };//!< heure du systÃ¨me au moment de lâ€™exÃ©cution du programme au format UTC
+	SYSTEMTIME lastBootUpTime = { 0 }; //!< heure du dernier dÃ©marrage du system
+	SYSTEMTIME lastBootUpTimeUtc = { 0 };//!< heure du dernier dÃ©marrage du system au format UTC
+	int currentBias = 0; //!< dÃ©calage horaire actuel
+	bool daylightInEffect = false; //!< Heure d'Ã©tÃ© active si true
+	AppliConf conf = { 0 };//! contient les paramÃ¨tres de l'application issue des paramÃ¨tres de la ligne de commande
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
+	* @param conf contient les paramÃ¨tres de l'application issue des paramÃ¨tres de la ligne de commande
 	*/
 	HRESULT getData() {
-		
+
 		DWORD nSize = 0;
 		LPWSTR buffer = NULL;
-		//architecture su système
 		SYSTEM_INFO systemInfos = { 0 };
+
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"â„¹ï¸ Operating System :");
+		log(0, L"*******************************************************************************************************************");
+		log(1, L"âž• System");
+		log(3, L"ðŸ”ˆ GetData");
+		log(3, L"ðŸ”ˆ GetSystemInfo");
 		GetSystemInfo(&systemInfos);
+
+		//architecture su systÃ¨me
+		log(3, L"ðŸ”ˆ os_architecture");
 		osArchitecture = os_architecture(systemInfos.wProcessorArchitecture);
-		//// nom de l'ordinateur
+		// nom de l'ordinateur
 		do {
-			buffer = (LPWSTR)malloc(nSize*sizeof(wchar_t));
-			GetComputerNameExW(ComputerNameDnsHostname, buffer, &nSize);
-			computerName = std::wstring(buffer);
+			buffer = (LPWSTR)malloc(nSize * sizeof(wchar_t));
+			log(3, L"ðŸ”ˆ GetComputerNameExW ComputerNameDnsHostname");
+			bool r = GetComputerNameExW(ComputerNameDnsHostname, buffer, &nSize);
+			if (GetLastError() != ERROR_MORE_DATA && !r) {
+				log(2, L"ðŸ”¥ GetComputerNameExW ComputerNameDnsHostname", GetLastError());
+				computerName = L"";
+			}
+			else
+				computerName = std::wstring(buffer);
 			free(buffer);
 		} while (GetLastError() == ERROR_MORE_DATA);
-		
+		log(3, L"â‡ï¸ Computer name : " + computerName);
+
 		// nom de domaine
 		nSize = 0;
 		do {
-			buffer = (LPWSTR)malloc(nSize*sizeof(wchar_t));
-			GetComputerNameExW(ComputerNameDnsDomain, buffer, &nSize);
-			domainName = std::wstring(buffer);
+			buffer = (LPWSTR)malloc(nSize * sizeof(wchar_t));
+			log(3, L"ðŸ”ˆ GetComputerNameExW ComputerNameDnsDomain");
+			bool r = GetComputerNameExW(ComputerNameDnsDomain, buffer, &nSize);
+			if (GetLastError() != ERROR_MORE_DATA && !r) {
+				log(2, L"ðŸ”¥ GetComputerNameExW ComputerNameDnsHostname", GetLastError());
+				domainName = L"";
+			}
+			else
+				domainName = std::wstring(buffer);
 			free(buffer);
 		} while (GetLastError() == ERROR_MORE_DATA);
-		
+
 		if (domainName.length() == 0)
 			domainName = L"WORKGROUP";
-		
+
 		// timezone
-		
-		
+
+
 		DYNAMIC_TIME_ZONE_INFORMATION timezoneInformations;
 		TIME_ZONE_INFORMATION timezone;
-		GetDynamicTimeZoneInformation(&timezoneInformations);
-		GetTimeZoneInformation(&timezone);
-		currentTimeZoneCaption = std::wstring(timezoneInformations.StandardName);
-		currentTimeZone = std::wstring(timezoneInformations.TimeZoneKeyName);
-		time_t rawtime = time(nullptr); // heure actuelle 
-		struct tm* timeinfo = localtime(&rawtime);//localtime pour savoir si heure d'été active ou non
-		if (timeinfo->tm_isdst) {//si heure d'été actif
-			daylightInEffect = true;
-			currentBias = timezoneInformations.Bias + timezoneInformations.DaylightBias;
+		log(3, L"ðŸ”ˆ GetDynamicTimeZoneInformation");
+		int r = GetDynamicTimeZoneInformation(&timezoneInformations);
+		if (r != 0) {
+			if (r != 0) {
+				currentTimeZoneCaption = std::wstring(timezoneInformations.StandardName);
+				currentTimeZone = std::wstring(timezoneInformations.TimeZoneKeyName);
+				if (r==2) {//si heure d'Ã©tÃ© actif
+					daylightInEffect = true;
+					currentBias = timezoneInformations.Bias + timezoneInformations.DaylightBias;
+				}
+				else {
+					daylightInEffect = false;
+					currentBias = timezoneInformations.Bias + +timezoneInformations.StandardBias;
+				}
+			}
 		}
-		else {
-			daylightInEffect = false;
-			currentBias = timezoneInformations.Bias + +timezoneInformations.StandardBias;
-		}
-		
-		//heure système
+		//heure systÃ¨me
+		log(3, L"ðŸ”ˆ GetSystemTime");
 		GetSystemTime(&localDateTimeUtc);
-		SystemTimeToTzSpecificLocalTime(&timezone, &localDateTimeUtc, &localDateTime);
-		
+		log(3, L"ðŸ”ˆ GetTimeZoneInformation");
+		r = GetTimeZoneInformation(&timezone);
+		if (r != 0) {
+			log(3, L"ðŸ”ˆ SystemTimeToTzSpecificLocalTime");
+			SystemTimeToTzSpecificLocalTime(&timezone, &localDateTimeUtc, &localDateTime);
+		}
+		else
+			log(2, L"ðŸ”¥ GetTimeZoneInformation", TIME_ZONE_ID_UNKNOWN);
 		//Version
+		log(3, L"ðŸ”ˆ LoadLibrary(TEXT(\"ntdll.dll\")");
 		HMODULE hDll = LoadLibrary(TEXT("ntdll.dll"));
 		if (hDll) {
+			log(3, L"ðŸ”ˆ Chargement de RTLGETVERSION");
 			typedef NTSTATUS(CALLBACK* RTLGETVERSION) (PRTL_OSVERSIONINFOW lpVersionInformation);
 			RTLGETVERSION pRtlGetVersion;
 			pRtlGetVersion = (RTLGETVERSION)GetProcAddress(hDll, "RtlGetVersion");
@@ -97,26 +129,38 @@ struct SystemInfo {
 			{
 				RTL_OSVERSIONINFOW ovi = { 0 };
 				ovi.dwOSVersionInfoSize = sizeof(ovi);
+				log(3, L"ðŸ”ˆ Appel de RTLGETVERSION");
 				NTSTATUS ntStatus = pRtlGetVersion(&ovi);
-				if (ntStatus == 0)
+				if (ntStatus == 0)//STATUS_SUCCESS
 				{
 					version = std::to_wstring(ovi.dwMajorVersion) + L"." + std::to_wstring(ovi.dwMinorVersion) + L"." + std::to_wstring(ovi.dwBuildNumber);
 					servicePack = std::wstring(ovi.szCSDVersion);
 				}
 			}
+			else
+				log(2, L"ðŸ”¥ Chargement de RTLGETVERSION", GetLastError());
 			FreeLibrary(hDll);
 		}
+		else 
+			log(2, L"ðŸ”¥ LoadLibrary(TEXT(\"ntdll.dll\")", GetLastError());
 		
+
 		// OS NAME
+		log(3, L"ðŸ”ˆ LoadLibrary(TEXT(\"winbrand.dll\")");
 		HMODULE hMod = LoadLibraryEx(L"winbrand.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
 		if (hMod)
 		{
+			log(3, L"ðŸ”ˆ Chargement de BrandingFormatString");
 			PWSTR(WINAPI * pfnBrandingFormatString)(PCWSTR pstrFormat);
 			(FARPROC&)pfnBrandingFormatString = GetProcAddress(hMod, "BrandingFormatString");
 			if (pfnBrandingFormatString)
 				osName = std::wstring(pfnBrandingFormatString(L"%WINDOWS_LONG%"));
+			else
+				log(2, L"ðŸ”¥ Chargement de BrandingFormatString", GetLastError());
 			FreeLibrary(hMod);
 		}
+		else
+			log(2, L"ðŸ”¥ LoadLibrary(TEXT(\"winbrand.dll\")", GetLastError());
 
 		return ERROR_SUCCESS;
 	}
@@ -124,6 +168,7 @@ struct SystemInfo {
 	/*! conversion de l'objet au format json
 	*/
 	HRESULT to_json() {
+		log(3, L"ðŸ”ˆ to_json");
 		std::wstring result = L"{ \n"
 			L"\t\"OsArchitecture\":\"" + osArchitecture + L"\", \n"
 			L"\t\"OsName\":\"" + osName + L"\", \n"
@@ -141,7 +186,7 @@ struct SystemInfo {
 
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crÃ©e le repertoire, pas d'erreur s'il existe dÃ©jÃ 
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/OperatingSystem.json");
 		myfile << result;
@@ -150,6 +195,8 @@ struct SystemInfo {
 		return ERROR_SUCCESS;
 	}
 
-	/* libération mémoire */
-	void clear(){}
+	/* libÃ©ration mÃ©moire */
+	void clear() {
+		log(3, L"ðŸ”ˆ clear");
+	}
 };

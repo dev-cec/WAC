@@ -8,7 +8,7 @@
 * @param unkn identifiant de l'interface
 * @return void
 */
-void ReleaseInterface(IUnknown* unkn);
+void ReleaseInterface(IVssBackupComponents* pBackup);
 
 /*! Créer un snapshot temporaire et créer un lien symbolique pour y accéder
 * @param mountpoint point de montage du snapshots

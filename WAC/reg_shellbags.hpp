@@ -24,8 +24,6 @@ public:
 	std::wstring source = L""; //!< origine de l'artefact
 	std::vector<IdList*> shellitems; //!< tableau de IdList
 	std::vector<Shellbag> childs; //!< tableau contenant les shellbags enfant
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde contenu du buffer au format hexadecimal dans un fichier json
 
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
@@ -71,8 +69,7 @@ struct Shellbags {
 public:
 	std::vector<Shellbag> shellbags;//!< tableau contenant les objets
 	unsigned int niveau = 0;//!< profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
-	std::vector<std::tuple<std::wstring,HRESULT>> errors;//!< tableau contenant les erreurs de traitement des objets
-
+	
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
@@ -97,19 +94,19 @@ public:
 			ruche = conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat";
 			hresult = OROpenHive(ruche.c_str(), &Offhive);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"unable to open hive " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat", hresult });
+				log(1,  L"unable to open hive " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat", hresult );
 				continue;
 			}
 
 			hresult = OROpenKey(Offhive, L"Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU", &hKey);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"unable to open key " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat / Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\BagMRU de la ruche " + ruche, hresult });
+				log(1,  L"unable to open key " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat / Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\BagMRU de la ruche " + ruche, hresult );
 				continue;
 			}
 
 			hresult = parse(hKey, get<0>(profile), L"BagMRU", &shellbags, 1, false);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"unable to parse key " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat / Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\BagMRU de la ruche " + ruche, hresult });
+				log(1,  L"unable to parse key " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat / Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\BagMRU de la ruche " + ruche, hresult );
 				continue;
 			}
 		}
@@ -148,8 +145,6 @@ public:
 			shellbag.sid = sid;
 			shellbag.sidName = getNameFromSid(sid);
 			shellbag.source = source;
-			shellbag._debug = conf._debug;
-			shellbag._dump = conf._dump;
 			getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), pData);
 			unsigned int offset = 0;
 			while (true) {
@@ -158,7 +153,7 @@ public:
 				if (size == 0) break;
 				else {
 
-					IdList* shellitem = new IdList(pData + offset, niveau + 2,  &errors, Parentiszip);
+					IdList* shellitem = new IdList(pData + offset, niveau + 2, Parentiszip);
 					if (shellitem->shellItem->is_zip == true)
 						Parentiszip = true;
 					offset += size;
@@ -168,12 +163,12 @@ public:
 			//Childs
 			hresult = OROpenKey(hKey, std::to_wstring(id).c_str(), &hKeyChilds);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"unable to open key " + std::to_wstring(id), hresult });
+				log(1,  L"unable to open key " + std::to_wstring(id), hresult );
 				continue;
 			}
 			hresult = parse(hKeyChilds, sid, source, &shellbag.childs, niveau + 3, Parentiszip, id);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"unable to parse key " + std::to_wstring(id), hresult });
+				log(1,  L"unable to parse key " + std::to_wstring(id), hresult );
 				continue;
 			}
 			//save
@@ -202,18 +197,6 @@ public:
 		myfile.open(conf._outputDir +"/shellbags.json");
 		myfile << result;
 		myfile.close();
-
-		if(conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir +"/shellbags_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 
 		return ERROR_SUCCESS;
 	}

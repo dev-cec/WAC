@@ -1,4 +1,4 @@
-#pragma once
+Ôªø#pragma once
 
 #include <iostream>
 #include <filesystem>
@@ -7,7 +7,7 @@
 #include <Sddl.h>
 #include <wtsapi32.h>
 #include <winternl.h>
-#define _NTDEF_ //pour Èviter les conflits de type entre ntsecapi.h et winternl.h
+#define _NTDEF_ //pour √©viter les conflits de type entre ntsecapi.h et winternl.h
 #include <ntsecapi.h>
 #include "tools.h"
 #include "trans_id.h"
@@ -26,15 +26,20 @@ struct Session {
 	std::wstring logonTypeName = L"";
 	ULONG logonType = 0;
 	PSID sid = { 0 };
-	LONG sessionId = 0;
+	LONGLONG sessionId = 0;
 	/*! Constructeur
 	* @param id est l'id de session
 	*/
 	Session(LUID* id) {
 		PSECURITY_LOGON_SESSION_DATA data = new SECURITY_LOGON_SESSION_DATA();
 		_LARGE_INTEGER temp = { 0 };
+		HRESULT hresult = 0;
 
-		if (LsaGetLogonSessionData(id, &data) == ERROR_SUCCESS) {
+		sessionId = ((LONGLONG)(id->HighPart) << 32) + id->LowPart;
+		log(1, L"‚ûï Session : " + std::to_wstring(sessionId));
+
+		hresult = LsaGetLogonSessionData(id, &data);
+		if (hresult  == ERROR_SUCCESS) {
 			temp = data->LogonTime;
 			memcpy(&startTime, &temp, sizeof(startTime));
 			LocalFileTimeToFileTime(&startTime, &startTimeUtc);
@@ -44,7 +49,9 @@ struct Session {
 			logonTypeName = logon_type(logonType);
 			authenticationPackage = std::wstring(data->AuthenticationPackage.Buffer);
 			sid = data->Sid;
-			sessionId = (data->LogonId.HighPart << 32) + data->LogonId.LowPart;
+		}
+		else {
+			log(2, L"üî• LsaGetLogonSessionData", hresult);
 		}
 		LsaFreeReturnBuffer(data);
 	}
@@ -72,7 +79,7 @@ struct Session {
 		return result;
 	}
 
-	/* liberation mÈmoire */
+	/* liberation m√©moire */
 	void clear() {}
 };
 
@@ -83,16 +90,23 @@ struct Sessions {
 
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramËtres de l'application issue des paramËtres de la ligne de commande
+	* @param conf contient les param√®tres de l'application issue des param√®tres de la ligne de commande
 	*/
 	HRESULT getData() {
 		
 		PLUID pointer;
 		ULONG nbSessions;
 		NTSTATUS hr;
+
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"‚ÑπÔ∏è Sessions :");
+		log(0, L"*******************************************************************************************************************");
+
 		hr = LsaEnumerateLogonSessions(&nbSessions, &pointer);
-		if (hr != ERROR_SUCCESS)
+		if (hr != ERROR_SUCCESS) {
+			log(1, L"üî• LsaEnumerateLogonSessions", hr);
 			return hr;
+		}
 		for (int i = 0; i < nbSessions; i++) {
 			sessions.push_back(Session(&pointer[i]));
 		}
@@ -114,14 +128,14 @@ struct Sessions {
 		}
 		result += L"]";
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //crÈe le repertoire, pas d'erreur s'il existe dÈj‡
+		std::filesystem::create_directory(conf._outputDir); //cr√©e le repertoire, pas d'erreur s'il existe d√©j√†
 		myfile.open(conf._outputDir + "/Sessions.json");
 		myfile << result;
 		myfile.close();
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation mÈmoire */
+	/* liberation m√©moire */
 	void clear() {
 		for (Session temp : sessions)
 			temp.clear();

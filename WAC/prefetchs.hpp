@@ -381,14 +381,11 @@ public:
 */
 struct Prefetchs {
 	std::vector<Prefetch> prefetchs; //!< tableau contenant tout les prefetch
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData() {
-		conf=conf;
 		std::string path = wstring_to_string(conf.mountpoint + L"\\Windows\\Prefetch");
 
 		for (const auto& entry : std::filesystem::directory_iterator(path)) {
@@ -396,7 +393,7 @@ struct Prefetchs {
 				Prefetch p(entry.path().wstring());
 				HRESULT hresult = p.read();
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"Error " + entry.path().wstring(), hresult});
+					log(1,  L"Error " + entry.path().wstring(), hresult);
 					continue;
 				} // prefetch non lisible
 				else prefetchs.push_back(p);
@@ -424,17 +421,6 @@ struct Prefetchs {
 		myfile << result;
 		myfile.close();
 
-		if(conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir +"/prefetchs_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 		return ERROR_SUCCESS;
 	}
 
