@@ -39,14 +39,16 @@ struct User {
 		LPUSER_INFO_4 info4 = NULL;
 		LPWSTR temp = NULL;
 
-		log(1, L"➕ User " + std::wstring(profilName));
-
+		log(1, L"➕ User");
+		log(2, L"❇️ User name : " + std::wstring(profilName));
+		log(3, L"🔈 NetUserGetInfo");
 		int r = NetUserGetInfo(NULL, profilName, 4, (LPBYTE*)&info4);
 		if (r == NERR_Success) {
 			name = ansi_to_utf8(std::wstring(info4->usri4_name));
 			fullName = ansi_to_utf8(std::wstring(info4->usri4_full_name));
 			flags = info4->usri4_flags;
 			//sid to wstring
+			log(3, L"🔈 ConvertSidToStringSidW");
 			if (ConvertSidToStringSidW(info4->usri4_user_sid, &temp)) {
 				SID = std::wstring(temp);
 			}
@@ -57,8 +59,10 @@ struct User {
 
 			//profile path présent uniquement en base de registre
 			std::wstring key = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList\\" + SID;
+			log(3, L"🔈 RegOpenKeyExW");
 			hresult = RegOpenKeyExW(HKEY_LOCAL_MACHINE, key.c_str(), 0, KEY_READ, &hKey);
 			if (hresult == ERROR_SUCCESS) {
+				log(3, L"🔈 RegQueryValueExW");
 				hresult = RegQueryValueExW(hKey, L"ProfileImagePath", NULL, NULL, NULL, &dataSize); // get dataSize;
 				data = (LPWSTR)malloc(dataSize);
 				hresult = RegQueryValueExW(hKey, L"ProfileImagePath", NULL, NULL, (LPBYTE)data, &dataSize);
@@ -83,6 +87,7 @@ struct User {
 	/*! conversion de l'objet au format json
 	*/
 	std::wstring to_json() {
+		log(3, L"🔈 to_json");
 		std::wstring result = tab(1) + L"{ \n"
 			+ tab(2) + L"\"Name\":\"" + name + L"\", \n"
 			+ tab(2) + L"\"FullName\":\"" + fullName + L"\", \n"
@@ -94,7 +99,9 @@ struct User {
 	}
 
 	/* liberation mémoire */
-	void clear() {}
+	void clear() {
+		log(3, L"🔈 User clear");
+	}
 
 };
 
@@ -114,6 +121,7 @@ struct Users {
 		log(0, L"ℹ️ Users :");
 		log(0, L"*******************************************************************************************************************");
 
+		log(3, L"🔈 NetUserEnum");
 		int r = NetUserEnum(NULL, 3, 0, (LPBYTE*)&usersBuf, MAX_PREFERRED_LENGTH, &nbUsers, &nbTotal, NULL);
 		if (r!= NERR_Success) {
 			log(1, L"🔥 No user found",r);
@@ -137,6 +145,7 @@ struct Users {
 		HRESULT hresult;
 		std::wstring result = L"[ \n";
 
+		log(3, L"🔈 to_json");
 		for (it = users.begin(); it != users.end(); it++) {
 			result += it->to_json();
 			if (it != users.end() - 1)
@@ -156,6 +165,7 @@ struct Users {
 
 	/* liberation mémoire */
 	void clear() {
+		log(3, L"🔈 Users clear");
 		for (User temp : users)
 			temp.clear();
 	}

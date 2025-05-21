@@ -39,11 +39,14 @@ struct Process {
 		//get owner of process
 		if (handle) {
 			if (OpenProcessToken(handle, TOKEN_ALL_ACCESS, &tokenHandle)) {
+				log(3, L"🔈 GetTokenInformation");
 				GetTokenInformation(tokenHandle, TokenOwner, NULL, 0, &returnSize);  // get data size
 				infos = (LPVOID)malloc(returnSize);
 				if (GetTokenInformation(tokenHandle, TokenOwner, infos, returnSize, &returnSize)) { // get data
+					log(3, L"🔈 ConvertSidToStringSid");
 					if (ConvertSidToStringSid(((PTOKEN_OWNER)infos)->Owner, &lpsid_wstring) != 0) {
 						processSID = std::wstring(lpsid_wstring);
+						log(3, L"🔈 getNameFromSid");
 						processSidName = getNameFromSid(processSID);
 					}
 					else
@@ -60,7 +63,10 @@ struct Process {
 		}
 
 		// List the modules and threads associated with this process
+		log(3, L"🔈 ListProcessModules");
 		HRESULT result = ListProcessModules();
+		if (result != ERROR_SUCCESS)
+			log(2, L"🔥 ListProcessModules : ", result);
 		CloseHandle(tokenHandle);
 	}
 
@@ -73,16 +79,13 @@ struct Process {
 		MODULEENTRY32 me32;
 
 		// Take a snapshot of all modules in the specified process.
+		log(3, L"🔈 CreateToolhelp32Snapshot");
 		hModuleSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId);
-
 		if (hModuleSnap == INVALID_HANDLE_VALUE)
 		{
 			HRESULT error = GetLastError();
-
 			processModulesAccess = ansi_to_utf8(getErrorMessage(error));
-
 			log(2, L"🔥 CreateToolhelp32Snapshot (of modules)", error);
-
 			return(ERROR_INVALID_HANDLE);
 		}
 
@@ -91,23 +94,24 @@ struct Process {
 
 		// Retrieve information about the first module,
 		// and exit if unsuccessful
-		HRESULT result;
-		do {
-			result = Module32First(hModuleSnap, &me32);
-		} while (result == ERROR_BAD_LENGTH);
-
+		bool result;
+		log(3, L"🔈 Module32First");
+		if (!Module32First(hModuleSnap, &me32)) {
+			log(2, L"🔥 Module32First", GetLastError());
+			CloseHandle(hModuleSnap);
+			return ERROR_INVALID_HANDLE;
+		}
 		// Now walk the module list of the process,
 		// and display information about each module
-		do
-		{
-			std::wstring temp = ansi_to_utf8(std::wstring(me32.szExePath));
-			temp = replaceAll(temp, L"\\", L"\\\\");
-			processModules.push_back(temp);
-			do {
-				result = Module32Next(hModuleSnap, &me32);
-			} while (result == ERROR_BAD_LENGTH);
 
-		} while (result);
+		do {
+			std::wstring temp = ansi_to_utf8(std::wstring(me32.szExePath));
+			log(3, L"🔈 replaceAll szExePath");
+			temp = replaceAll(temp, L"\\", L"\\\\");
+			log(2, L"❇️ Module exePath : " + temp);
+			processModules.push_back(temp);
+			log(3, L"🔈 Module32Next");
+		} while (Module32Next(hModuleSnap, &me32));
 
 		CloseHandle(hModuleSnap);
 		return(ERROR_SUCCESS);
@@ -118,6 +122,7 @@ struct Process {
 	std::wstring to_json() {
 		std::wstring result = L"";
 
+		log(3, L"🔈 to_json");
 		result += tab(1) + L"{ \n"
 			+ tab(2) + L"\"Nom\":\"" + processName + L"\", \n"
 			+ tab(2) + L"\"SID\":\"" + processSID + L"\", \n"
@@ -139,7 +144,9 @@ struct Process {
 	}
 
 	/* liberation mémoire */
-	void clear() {}
+	void clear() {
+		log(3, L"🔈 clear Process");
+	}
 };
 
 /*! structure contenant l'ensemble des objets
@@ -160,8 +167,9 @@ struct Processes {
 		log(0, L"*******************************************************************************************************************");
 		log(0, L"ℹ️ Processes : ");
 		log(0, L"*******************************************************************************************************************");
-		
+
 		// Take a snapshot of all processes in the system.
+		log(3, L"🔈 CreateToolhelp32Snapshot");
 		hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 		if (hProcessSnap == INVALID_HANDLE_VALUE) {
 			log(1, L"🔥 CreateToolhelp32Snapshot (of processes)", GetLastError());
@@ -173,6 +181,7 @@ struct Processes {
 
 		// Retrieve information about the first process,
 		// and exit if unsuccessful
+		log(3, L"🔈 Process32First");
 		if (!Process32First(hProcessSnap, &pe32))
 		{
 			log(2, L"🔥 Process32First", GetLastError());// show cause of failure
@@ -183,15 +192,18 @@ struct Processes {
 		// display information about each process in turn
 		do
 		{
-			log(1, L"➕ Process " + std::wstring(pe32.szExeFile) + L" (PID " + std::to_wstring(pe32.th32ProcessID) + L")");
+			log(1, L"➕ Process");
+			log(2, L"❇️ Process Name : " + std::wstring(pe32.szExeFile) + L" (PID " + std::to_wstring(pe32.th32ProcessID) + L")");
+			log(3, L"🔈 OpenProcess");
 			hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pe32.th32ProcessID);
+			DWORD r = GetLastError();
 			if (hProcess == NULL)
 				log(2, L"🔥 OpenProcess", GetLastError());// show cause of failure
-			if (GetLastError() != 87) { // ERROR_INVALID_PARAMETER
+			if (r != 87) { // ERROR_INVALID_PARAMETER, si hProcess est null on push tout de meme
 				processes.push_back(Process(&pe32, hProcess));
 				CloseHandle(hProcess);
 			}
-
+			log(3, L"🔈 Process32Next");
 		} while (Process32Next(hProcessSnap, &pe32));
 
 
@@ -205,6 +217,7 @@ struct Processes {
 	{
 		std::wstring result = L"[ \n";
 		std::vector<Process>::iterator it;
+		log(3, L"🔈 to_json");
 		for (it = processes.begin(); it != processes.end(); it++) {
 			result += it->to_json();
 			if (it != processes.end() - 1)
@@ -225,6 +238,7 @@ struct Processes {
 
 	/* liberation mémoire */
 	void clear() {
+		log(3, L"🔈 clear processes");
 		for (Process temp : processes)
 			temp.clear();
 	}

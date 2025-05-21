@@ -45,7 +45,6 @@ struct SystemInfo {
 		log(0, L"ℹ️ Operating System :");
 		log(0, L"*******************************************************************************************************************");
 		log(1, L"➕ System");
-		log(3, L"🔈 GetData");
 		log(3, L"🔈 GetSystemInfo");
 		GetSystemInfo(&systemInfos);
 
@@ -65,7 +64,7 @@ struct SystemInfo {
 				computerName = std::wstring(buffer);
 			free(buffer);
 		} while (GetLastError() == ERROR_MORE_DATA);
-		log(3, L"❇️ Computer name : " + computerName);
+		log(2, L"❇️ Computer name : " + computerName);
 
 		// nom de domaine
 		nSize = 0;
