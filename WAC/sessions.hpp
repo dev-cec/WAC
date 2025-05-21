@@ -36,14 +36,14 @@ struct Session {
 		HRESULT hresult = 0;
 
 		sessionId = ((LONGLONG)(id->HighPart) << 32) + id->LowPart;
-		log(1, L"➕ Session : ");
+		log(1, L"➕Session : ");
 		log(2, L"❇️ Session Id : " + std::to_wstring(sessionId));
-		log(3, L"🔈 LsaGetLogonSessionData");
+		log(3, L"🔈LsaGetLogonSessionData");
 		hresult = LsaGetLogonSessionData(id, &data);
 		if (hresult  == ERROR_SUCCESS) {
 			temp = data->LogonTime;
 			memcpy(&startTime, &temp, sizeof(startTime));
-			log(3, L"🔈 LocalFileTimeToFileTime");
+			log(3, L"🔈LocalFileTimeToFileTime");
 			LocalFileTimeToFileTime(&startTime, &startTimeUtc);
 			logonName = std::wstring(data->UserName.Buffer);
 			logonDomainName = std::wstring(data->LogonDomain.Buffer);
@@ -53,7 +53,7 @@ struct Session {
 			sid = data->Sid;
 		}
 		else {
-			log(2, L"🔥 LsaGetLogonSessionData", hresult);
+			log(2, L"🔥LsaGetLogonSessionData", hresult);
 		}
 		LsaFreeReturnBuffer(data);
 	}
@@ -64,8 +64,8 @@ struct Session {
 		LPWSTR lpsid_wstring = NULL;
 		std::wstring sid_wstring = L"";
 
-		log(3, L"🔈 to_json");
-		log(3, L"🔈 ConvertSidToStringSid");
+		log(3, L"🔈to_json");
+		log(3, L"🔈ConvertSidToStringSid");
 		if (ConvertSidToStringSid(sid, &lpsid_wstring) != 0) {
 			sid_wstring = std::wstring(lpsid_wstring);
 		}
@@ -106,13 +106,13 @@ struct Sessions {
 		NTSTATUS hr;
 
 		log(0, L"*******************************************************************************************************************");
-		log(0, L"ℹ️ Sessions :");
+		log(0, L"ℹ️Sessions :");
 		log(0, L"*******************************************************************************************************************");
 
-		log(3, L"🔈 LsaEnumerateLogonSessions");
+		log(3, L"🔈LsaEnumerateLogonSessions");
 		hr = LsaEnumerateLogonSessions(&nbSessions, &pointer);
 		if (hr != ERROR_SUCCESS) {
-			log(1, L"🔥 LsaEnumerateLogonSessions", hr);
+			log(2, L"🔥LsaEnumerateLogonSessions", hr);
 			return hr;
 		}
 		for (int i = 0; i < nbSessions; i++) {
@@ -124,7 +124,7 @@ struct Sessions {
 	/*! conversion de l'objet au format json
 	*/
 	HRESULT to_json() {
-		log(3, L"🔈 to_json");
+		log(3, L"🔈to_json");
 		std::wofstream myfile;
 		std::wstring result = L"[\n";
 		std::vector<Session>::iterator it;

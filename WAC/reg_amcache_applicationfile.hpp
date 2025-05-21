@@ -89,7 +89,7 @@ public:
 
 		hresult = OROpenHive(ruche.c_str(), &Offhive);
 		if (hresult != ERROR_SUCCESS) {
-			log(1, L"🔥 Unable to open hive : C:\\Windows\\AppCompat\\Programs\\Amcache.hve" , hresult);
+			log(2, L"🔥Unable to open hive : C:\\Windows\\AppCompat\\Programs\\Amcache.hve" , hresult);
 			return hresult;
 		};
 

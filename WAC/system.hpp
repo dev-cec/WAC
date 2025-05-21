@@ -42,22 +42,22 @@ struct SystemInfo {
 		SYSTEM_INFO systemInfos = { 0 };
 
 		log(0, L"*******************************************************************************************************************");
-		log(0, L"ℹ️ Operating System :");
+		log(0, L"ℹ️Operating System :");
 		log(0, L"*******************************************************************************************************************");
-		log(1, L"➕ System");
-		log(3, L"🔈 GetSystemInfo");
+		log(1, L"➕System");
+		log(3, L"🔈GetSystemInfo");
 		GetSystemInfo(&systemInfos);
 
 		//architecture su système
-		log(3, L"🔈 os_architecture");
+		log(3, L"🔈os_architecture");
 		osArchitecture = os_architecture(systemInfos.wProcessorArchitecture);
 		// nom de l'ordinateur
 		do {
 			buffer = (LPWSTR)malloc(nSize * sizeof(wchar_t));
-			log(3, L"🔈 GetComputerNameExW ComputerNameDnsHostname");
+			log(3, L"🔈GetComputerNameExW ComputerNameDnsHostname");
 			bool r = GetComputerNameExW(ComputerNameDnsHostname, buffer, &nSize);
 			if (GetLastError() != ERROR_MORE_DATA && !r) {
-				log(2, L"🔥 GetComputerNameExW ComputerNameDnsHostname", GetLastError());
+				log(2, L"🔥GetComputerNameExW ComputerNameDnsHostname", GetLastError());
 				computerName = L"";
 			}
 			else
@@ -70,10 +70,10 @@ struct SystemInfo {
 		nSize = 0;
 		do {
 			buffer = (LPWSTR)malloc(nSize * sizeof(wchar_t));
-			log(3, L"🔈 GetComputerNameExW ComputerNameDnsDomain");
+			log(3, L"🔈GetComputerNameExW ComputerNameDnsDomain");
 			bool r = GetComputerNameExW(ComputerNameDnsDomain, buffer, &nSize);
 			if (GetLastError() != ERROR_MORE_DATA && !r) {
-				log(2, L"🔥 GetComputerNameExW ComputerNameDnsHostname", GetLastError());
+				log(2, L"🔥GetComputerNameExW ComputerNameDnsHostname", GetLastError());
 				domainName = L"";
 			}
 			else
@@ -89,7 +89,7 @@ struct SystemInfo {
 
 		DYNAMIC_TIME_ZONE_INFORMATION timezoneInformations;
 		TIME_ZONE_INFORMATION timezone;
-		log(3, L"🔈 GetDynamicTimeZoneInformation");
+		log(3, L"🔈GetDynamicTimeZoneInformation");
 		int r = GetDynamicTimeZoneInformation(&timezoneInformations);
 		if (r != 0) {
 			if (r != 0) {
@@ -106,21 +106,21 @@ struct SystemInfo {
 			}
 		}
 		//heure système
-		log(3, L"🔈 GetSystemTime");
+		log(3, L"🔈GetSystemTime");
 		GetSystemTime(&localDateTimeUtc);
-		log(3, L"🔈 GetTimeZoneInformation");
+		log(3, L"🔈GetTimeZoneInformation");
 		r = GetTimeZoneInformation(&timezone);
 		if (r != 0) {
-			log(3, L"🔈 SystemTimeToTzSpecificLocalTime");
+			log(3, L"🔈SystemTimeToTzSpecificLocalTime");
 			SystemTimeToTzSpecificLocalTime(&timezone, &localDateTimeUtc, &localDateTime);
 		}
 		else
-			log(2, L"🔥 GetTimeZoneInformation", TIME_ZONE_ID_UNKNOWN);
+			log(2, L"🔥GetTimeZoneInformation", TIME_ZONE_ID_UNKNOWN);
 		//Version
-		log(3, L"🔈 LoadLibrary(TEXT(\"ntdll.dll\")");
+		log(3, L"🔈LoadLibrary(TEXT(\"ntdll.dll\")");
 		HMODULE hDll = LoadLibrary(TEXT("ntdll.dll"));
 		if (hDll) {
-			log(3, L"🔈 Chargement de RTLGETVERSION");
+			log(3, L"🔈Chargement de RTLGETVERSION");
 			typedef NTSTATUS(CALLBACK* RTLGETVERSION) (PRTL_OSVERSIONINFOW lpVersionInformation);
 			RTLGETVERSION pRtlGetVersion;
 			pRtlGetVersion = (RTLGETVERSION)GetProcAddress(hDll, "RtlGetVersion");
@@ -128,7 +128,7 @@ struct SystemInfo {
 			{
 				RTL_OSVERSIONINFOW ovi = { 0 };
 				ovi.dwOSVersionInfoSize = sizeof(ovi);
-				log(3, L"🔈 Appel de RTLGETVERSION");
+				log(3, L"🔈Appel de RTLGETVERSION");
 				NTSTATUS ntStatus = pRtlGetVersion(&ovi);
 				if (ntStatus == 0)//STATUS_SUCCESS
 				{
@@ -137,29 +137,29 @@ struct SystemInfo {
 				}
 			}
 			else
-				log(2, L"🔥 Chargement de RTLGETVERSION", GetLastError());
+				log(2, L"🔥Chargement de RTLGETVERSION", GetLastError());
 			FreeLibrary(hDll);
 		}
 		else 
-			log(2, L"🔥 LoadLibrary(TEXT(\"ntdll.dll\")", GetLastError());
+			log(2, L"🔥LoadLibrary(TEXT(\"ntdll.dll\")", GetLastError());
 		
 
 		// OS NAME
-		log(3, L"🔈 LoadLibrary(TEXT(\"winbrand.dll\")");
+		log(3, L"🔈LoadLibrary(TEXT(\"winbrand.dll\")");
 		HMODULE hMod = LoadLibraryEx(L"winbrand.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
 		if (hMod)
 		{
-			log(3, L"🔈 Chargement de BrandingFormatString");
+			log(3, L"🔈Chargement de BrandingFormatString");
 			PWSTR(WINAPI * pfnBrandingFormatString)(PCWSTR pstrFormat);
 			(FARPROC&)pfnBrandingFormatString = GetProcAddress(hMod, "BrandingFormatString");
 			if (pfnBrandingFormatString)
 				osName = std::wstring(pfnBrandingFormatString(L"%WINDOWS_LONG%"));
 			else
-				log(2, L"🔥 Chargement de BrandingFormatString", GetLastError());
+				log(2, L"🔥Chargement de BrandingFormatString", GetLastError());
 			FreeLibrary(hMod);
 		}
 		else
-			log(2, L"🔥 LoadLibrary(TEXT(\"winbrand.dll\")", GetLastError());
+			log(2, L"🔥LoadLibrary(TEXT(\"winbrand.dll\")", GetLastError());
 
 		return ERROR_SUCCESS;
 	}
@@ -167,7 +167,7 @@ struct SystemInfo {
 	/*! conversion de l'objet au format json
 	*/
 	HRESULT to_json() {
-		log(3, L"🔈 to_json");
+		log(3, L"🔈to_json");
 		std::wstring result = L"{ \n"
 			L"\t\"OsArchitecture\":\"" + osArchitecture + L"\", \n"
 			L"\t\"OsName\":\"" + osName + L"\", \n"
@@ -196,6 +196,6 @@ struct SystemInfo {
 
 	/* libération mémoire */
 	void clear() {
-		log(3, L"🔈 clear");
+		log(3, L"🔈clear");
 	}
 };

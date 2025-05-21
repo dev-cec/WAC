@@ -36,42 +36,42 @@ struct ServiceStruct
 
 		serviceName = std::wstring(service.lpServiceName);
 		serviceDisplayName = ansi_to_utf8(std::wstring(service.lpDisplayName));
-		log(1, L"➕ Service");
+		log(1, L"➕Service");
 		log(2, L"❇️ Service name : " + serviceDisplayName);
-		log(3, L"🔈 serviceType_to_wstring");
+		log(3, L"🔈serviceType_to_wstring");
 		serviceType = serviceType_to_wstring(service.ServiceStatusProcess.dwServiceType);
-		log(3, L"🔈 serviceState_to_wstring");
+		log(3, L"🔈serviceState_to_wstring");
 		serviceStatus = serviceState_to_wstring(service.ServiceStatusProcess.dwCurrentState);
 		serviceProcessId = std::to_wstring(service.ServiceStatusProcess.dwProcessId);
 
-		log(3, L"🔈 OpenServiceW");
+		log(3, L"🔈OpenServiceW");
 		SC_HANDLE hService = OpenServiceW(hSCM, service.lpServiceName, SC_MANAGER_ALL_ACCESS);
 		if (hService) {
-			log(3, L"🔈 QueryServiceConfigW");
+			log(3, L"🔈QueryServiceConfigW");
 			QueryServiceConfigW(hService, NULL, 0, &moreBytesNeeded); //get size of buffer
 			LPQUERY_SERVICE_CONFIG sData = (LPQUERY_SERVICE_CONFIG)malloc(moreBytesNeeded);
 			bufSize = moreBytesNeeded;
 			if (QueryServiceConfigW(hService, sData, bufSize, &moreBytesNeeded)) { //get service info
-				log(3, L"🔈 serviceStart_to_wstring");
+				log(3, L"🔈serviceStart_to_wstring");
 				serviceStartType = serviceStart_to_wstring(sData->dwStartType);
 				serviceOwner = std::wstring(sData->lpServiceStartName);
-				log(3, L"🔈 replaceAll serviceOwner");
+				log(3, L"🔈replaceAll serviceOwner");
 				serviceOwner = replaceAll(serviceOwner, L"\\", L"\\\\");
 				serviceBinary = std::wstring(sData->lpBinaryPathName);
-				log(3, L"🔈 replaceAll serviceBinary");
+				log(3, L"🔈replaceAll serviceBinary");
 				serviceBinary = replaceAll(serviceBinary, L"\\", L"\\\\");
 				serviceBinary = replaceAll(serviceBinary, L"\"", L"\\\"");
 			}
 			else {
 				serviceAccessMessage = ansi_to_utf8(getErrorMessage(GetLastError()));
-				log(2, L"🔥 QueryServiceConfigW", GetLastError());
+				log(2, L"🔥QueryServiceConfigW", GetLastError());
 			}
 			free(sData);
 			CloseServiceHandle(hService);
 		}
 		else {
 			serviceAccessMessage = ansi_to_utf8(getErrorMessage(GetLastError()));
-			log(2, L"🔥 OpenServiceW", GetLastError());
+			log(2, L"🔥OpenServiceW", GetLastError());
 		}
 	}
 
@@ -80,7 +80,7 @@ struct ServiceStruct
 	std::wstring to_json() {
 		std::wstring result = L"";
 
-		log(3, L"🔈 to_json");
+		log(3, L"🔈to_json");
 		result += tab(1) + L"{ \n"
 			+ tab(2) + L"\"Name\":\"" + serviceName + L"\", \n"
 			+ tab(2) + L"\"DislayName\":\"" + serviceDisplayName + L"\", \n"
@@ -96,7 +96,7 @@ struct ServiceStruct
 
 	/* liberation mémoire */
 	void clear() {
-		log(3, L"🔈 clear service");
+		log(3, L"🔈clear service");
 	}
 };
 
@@ -119,10 +119,10 @@ struct Services
 		DWORD moreBytesNeeded, serviceCount;
 
 		log(0, L"*******************************************************************************************************************");
-		log(0, L"ℹ️ Services :");
+		log(0, L"ℹ️Services :");
 		log(0, L"*******************************************************************************************************************");
 
-		log(3, L"🔈 OpenSCManager");
+		log(3, L"🔈OpenSCManager");
 		hSCM = OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE | SC_MANAGER_CONNECT);
 		if (hSCM == NULL)
 		{
@@ -132,7 +132,7 @@ struct Services
 		}
 
 		// et buffer size needed
-		log(3, L"🔈 EnumServicesStatusExW");
+		log(3, L"🔈EnumServicesStatusExW");
 		EnumServicesStatusExW(hSCM, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, NULL, 0, &moreBytesNeeded, &serviceCount, 0, NULL);
 		servicesBuf = (LPENUM_SERVICE_STATUS_PROCESS)malloc(moreBytesNeeded);
 		bufSize = moreBytesNeeded;
@@ -144,7 +144,7 @@ struct Services
 		}
 		else{
 			int err = GetLastError();
-			log(1, L"🔥 EnumServicesStatusExW",err);
+			log(2, L"🔥EnumServicesStatusExW",err);
 			return err;
 		}
 		free(servicesBuf);
@@ -159,7 +159,7 @@ struct Services
 		std::wstring result = L"[ \n";
 		std::vector<ServiceStruct>::iterator it;
 
-		log(3, L"🔈 to_json");
+		log(3, L"🔈to_json");
 		for (it = services.begin(); it != services.end(); it++) {
 			result += it->to_json();
 			if (it != services.end() - 1)
@@ -180,7 +180,7 @@ struct Services
 
 	/* liberation mémoire */
 	void clear() {
-		log(3, L"🔈 clear services");
+		log(3, L"🔈clear services");
 		for (ServiceStruct temp : services)
 			temp.clear();
 	}

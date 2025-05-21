@@ -91,7 +91,7 @@ struct ScheduledTask {
 		LPUSER_INFO_4 info4 = NULL;
 		LPWSTR temp = NULL;
 
-		log(1, L"➕ Scheduled task ");
+		log(1, L"➕Scheduled task ");
 		hr = task->get_Name(&pName);
 		log(2, L"❇️ Scheduled task name : " + bstr_to_wstring(pName));
 		hr = task->get_Enabled(&pEnabled);
@@ -119,7 +119,7 @@ struct ScheduledTask {
 				NetApiBufferFree(info4);
 			}
 			else {
-				log(2, L"🔥 NetUserGetInfo", GetLastError());
+				log(2, L"🔥NetUserGetInfo", GetLastError());
 			}
 		}
 
@@ -146,7 +146,7 @@ struct ScheduledTask {
 				infos->get_Description(&pDescription);
 			}
 			else {
-				log(2, L"🔥 get_RegistrationInfo", hr);
+				log(2, L"🔥get_RegistrationInfo", hr);
 			}
 			log(3, L"🔈get_Principal");
 			hr = ppDefinition->get_Principal(&principal);
@@ -154,7 +154,7 @@ struct ScheduledTask {
 				principal->get_UserId(&pRunAs);
 			}
 			else {
-				log(2, L"🔥 get_Principal", hr);
+				log(2, L"🔥get_Principal", hr);
 			}
 
 			//Liste des actions
@@ -200,7 +200,7 @@ struct ScheduledTask {
 									pDisp->Release();
 								}
 								else {
-									log(2, L"🔥 QueryInterface pAction", hr);
+									log(2, L"🔥QueryInterface pAction", hr);
 								}
 							}
 							VariantClear(&var);
@@ -209,15 +209,15 @@ struct ScheduledTask {
 						}
 					}
 					else {
-						log(2, L"🔥 QueryInterface penum", hr);
+						log(2, L"🔥QueryInterface penum", hr);
 					}
 				}
 				else {
-					log(2, L"🔥 get__NewEnum ppEnum", hr);
+					log(2, L"🔥get__NewEnum ppEnum", hr);
 				}
 			}
 			else {
-				log(2, L"🔥 get_Actions", hr);
+				log(2, L"🔥get_Actions", hr);
 			}
 			//Triggers
 			log(3, L"🔈get_Triggers");
@@ -252,7 +252,7 @@ struct ScheduledTask {
 									pDisp->Release();
 								}
 								else {
-									log(2, L"🔥 QueryInterface pTrigger", hr);
+									log(2, L"🔥QueryInterface pTrigger", hr);
 								}
 							}
 							VariantClear(&var);
@@ -263,19 +263,19 @@ struct ScheduledTask {
 						if (pEnum) pEnum->Release();
 					}
 					else {
-						log(2, L"🔥 QueryInterface pEnum", hr);
+						log(2, L"🔥QueryInterface pEnum", hr);
 					}
 				}
 				else {
-					log(2, L"🔥 get__NewEnum ppEnum", hr);
+					log(2, L"🔥get__NewEnum ppEnum", hr);
 				}
 			}
 			else {
-				log(2, L"🔥 get_Triggers", hr);
+				log(2, L"🔥get_Triggers", hr);
 			}
 		}
 		else {
-			log(2, L"🔥 get_Definition", hr);
+			log(2, L"🔥get_Definition", hr);
 		}
 	}
 
@@ -366,7 +366,7 @@ struct ScheduledTasks {
 	std::vector<ScheduledTask> scheduledTasks; //!< tableau contenant tout les ScheduledTask
 
 	HRESULT getFolders(std::vector<BSTR>* folders, BSTR folder, ITaskService* pService) {
-		log(1, L"➕ Folder");
+		log(1, L"➕Folder");
 		log(2, L"❇️ Folder Name : Root" + bstr_to_wstring(folder));
 		ITaskFolder* pRootFolder = NULL;
 		ITaskFolder* pFolder = NULL;
@@ -378,7 +378,7 @@ struct ScheduledTasks {
 		hr = pService->GetFolder(_bstr_t(folder), &pRootFolder);
 		if (hr != S_OK)
 		{
-			log(2, L"🔥 GetFolder", hr);
+			log(2, L"🔥GetFolder", hr);
 			return hr;
 		}
 		//  -------------------------------------------------------
@@ -388,7 +388,7 @@ struct ScheduledTasks {
 		hr = pRootFolder->GetTasks(NULL, &pTaskCollection);
 		if (hr != S_OK)
 		{
-			log(2, L"🔥 GetTasks", hr);
+			log(2, L"🔥GetTasks", hr);
 			return hr;
 		}
 		LONG numTasks = 0;
@@ -407,18 +407,18 @@ struct ScheduledTasks {
 					scheduledTasks.push_back(s);
 				}
 				else {
-					log(2, L"🔥 get_Item pRegisteredTask ", hr);
+					log(2, L"🔥get_Item pRegisteredTask ", hr);
 					continue;
 				}
 			}
 		}
 		else {
-			log(2, L"🔥 get_Count numTasks", hr);
+			log(2, L"🔥get_Count numTasks", hr);
 			return hr;
 		}
 
 		// on récupère tous les sous-repertoires
-		log(1, L"➕ Subfolders");
+		log(1, L"➕Subfolders");
 		log(3, L"🔈GetFolders pRootFoldersCollection");
 		hr = pRootFolder->GetFolders(0, &pRootFoldersCollection);
 		if (SUCCEEDED(hr)) {
@@ -444,19 +444,19 @@ struct ScheduledTasks {
 						}
 					}
 					else {
-						log(2, L"🔥 get_Item pFolder", hr);
+						log(2, L"🔥get_Item pFolder", hr);
 						continue;
 					}
 				}
 			}
 			else {
-				log(2, L"🔥 get_Count numFolders", hr);
+				log(2, L"🔥get_Count numFolders", hr);
 				return hr;
 			}
 
 		}
 		else {
-			log(2, L"🔥 GetFolder pRootFoldersCollection", hr);
+			log(2, L"🔥GetFolder pRootFoldersCollection", hr);
 			return hr;
 		}
 		pRootFolder->Release();
@@ -473,7 +473,7 @@ struct ScheduledTasks {
 
 
 		log(0, L"*******************************************************************************************************************");
-		log(0, L"ℹ️ Scheduled Tasks :");
+		log(0, L"ℹ️Scheduled Tasks :");
 		log(0, L"*******************************************************************************************************************");
 
 		//  Create an instance of the Task Service. 
@@ -481,7 +481,7 @@ struct ScheduledTasks {
 		hr = CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void**)&pService);
 		if (hr != S_OK)
 		{
-			log(2, L"🔥 CoCreateInstance", hr);
+			log(2, L"🔥CoCreateInstance", hr);
 			return hr;
 		}
 
@@ -490,7 +490,7 @@ struct ScheduledTasks {
 		hr = pService->Connect(VARIANT(), VARIANT(), VARIANT(), VARIANT());
 		if (hr != S_OK)
 		{
-			log(2, L"🔥 Connect pService", hr);
+			log(2, L"🔥Connect pService", hr);
 			return hr;
 		}
 		//  ------------------------------------------------------

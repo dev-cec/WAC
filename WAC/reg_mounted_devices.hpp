@@ -29,12 +29,12 @@ public:
 		if (wcswcs(szSubValue, L"DosDevices") != NULL) {
 			drive = std::wstring(szSubValue);
 			drive = replaceAll(drive, L"\\", L"\\\\");
-			log(1, L"➕ Drive " + drive);
+			log(1, L"➕Drive " + drive);
 			HRESULT hr = getRegSzValue(hKey, NULL, szSubValue, &device);
 			if(hr==ERROR_SUCCESS)
 				device = replaceAll(device, L"\\", L"\\\\");
 			else {
-				log(2, L"🔥 getRegSzValue", hr);
+				log(2, L"🔥getRegSzValue", hr);
 			}
 		}
 	}
@@ -72,7 +72,7 @@ public:
 		DWORD nValues;
 
 		log(0, L"*******************************************************************************************************************");
-		log(0, L"ℹ️ USBSTOR");
+		log(0, L"ℹ️USBSTOR");
 		log(0, L"*******************************************************************************************************************");
 
 		hresult = OROpenKey(conf.System, L"MountedDevices", &hKey);
@@ -98,7 +98,7 @@ public:
 					mounteddevices.push_back(mounteddevice);
 			}
 			else
-				log(1, L"🔥 MountedDevices OREnumValue " + std::wstring(szSubValue), hresult);
+				log(2, L"🔥MountedDevices OREnumValue " + std::wstring(szSubValue), hresult);
 		}
 		return ERROR_SUCCESS;
 	}

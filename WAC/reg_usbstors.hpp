@@ -70,7 +70,7 @@ public:
 		DWORD nSize = MAX_VALUE_NAME;
 
 		log(0, L"*******************************************************************************************************************");
-		log(0, L"ℹ️ USBSTOR");
+		log(0, L"ℹ️USBSTOR");
 		log(0, L"*******************************************************************************************************************");
 
 		hresult = OROpenKey(conf.CurrentControlSet, L"Enum\\USBSTOR\\", &hkey);
@@ -125,7 +125,7 @@ public:
 				Usbstor usb;
 				hresult = getRegMultiSzValue(hKey_usb, NULL, L"HardwareId", &usb.HardwareId);
 				hresult = getRegSzValue(hKey_usb, nullptr, L"FriendlyName", &usb.FriendlyName);
-				log(1, L"➕ USB " + usb.FriendlyName);
+				log(1, L"➕USB " + usb.FriendlyName);
 				hresult = getRegSzValue(hKey_usb, nullptr, L"CompatibleIds", &usb.CompatibleIds);
 				usb.CompatibleIds = replaceAll(usb.CompatibleIds, L"\\", L"\\\\"); // replace\ by \\ in std::string
 				hresult = getRegSzValue(hKey_usb, nullptr, L"ClassGuid", &usb.ClassGuid);
@@ -133,14 +133,14 @@ public:
 				FILETIME tempFiletime = { 0 };
 				hresult = OROpenKey(hKey_usb, L"Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0066", &hkey_time);
 				if (hresult != ERROR_SUCCESS) {
-					log(2, L"🔥 OROpenKey : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant) + L"\\Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0066", hresult);
+					log(2, L"🔥OROpenKey : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant) + L"\\Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0066", hresult);
 					continue;
 				}
 				else {
 					
 					hresult = getRegFiletimeValue(hkey_time, nullptr, L"", &tempFiletime);
 					if (hresult != ERROR_SUCCESS) {
-						log(2, L"🔥 getRegFiletimeValue : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant) + L"\\Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0066", hresult);
+						log(2, L"🔥getRegFiletimeValue : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant) + L"\\Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0066", hresult);
 						continue;
 					}
 					else {
@@ -151,7 +151,7 @@ public:
 
 				hresult = OROpenKey(hKey_usb, L"Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0064", &hkey_time);
 				if (hresult != ERROR_SUCCESS) {
-					log(2, L"🔥 OROpenKey : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant) + L"\\Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0064", hresult);
+					log(2, L"🔥OROpenKey : HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L"\\" + std::wstring(szSubKey_fabricant) + L"\\Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0064", hresult);
 					continue;
 				}else{
 					tempFiletime = { 0 };
