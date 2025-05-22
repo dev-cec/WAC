@@ -34,14 +34,14 @@ public:
 		std::wstring result = tab(1) + L"{ \n";
 		log(3, L"🔈multiSz_to_json HardwareId");
 		result += tab(2) + L"\"HardwareId\":" + multiSz_to_json(HardwareId, 2) + L", \n";
-		result += tab(2) + L"\"FriendlyName\":\"" + ansi_to_utf8(FriendlyName) + L"\", \n";
-		result += tab(2) + L"\"CompatibleIds\":\"" + ansi_to_utf8(CompatibleIds) + L"\", \n";
-		result += tab(2) + L"\"ClassGuid\":\"" + ansi_to_utf8(ClassGuid) + L"\", \n";
-		result += tab(2) + L"\"SerialNumber\":\"" + ansi_to_utf8(SerialNumber) + L"\", \n";
-		result += tab(2) + L"\"LastInsertion\":\"" + ansi_to_utf8(LastInsertion) + L"\", \n";
-		result += tab(2) + L"\"LastInsertionUtc\":\"" + ansi_to_utf8(LastInsertionUtc) + L"\", \n";
-		result += tab(2) + L"\"FirstInsertion\":\"" + ansi_to_utf8(FirstInsertion) + L"\", \n";
-		result += tab(2) + L"\"FirstInsertionUtc\":\"" + ansi_to_utf8(FirstInsertionUtc) + L"\" \n";
+		result += tab(2) + L"\"FriendlyName\":\"" + FriendlyName + L"\", \n";
+		result += tab(2) + L"\"CompatibleIds\":\"" + CompatibleIds + L"\", \n";
+		result += tab(2) + L"\"ClassGuid\":\"" + ClassGuid + L"\", \n";
+		result += tab(2) + L"\"SerialNumber\":\"" + SerialNumber + L"\", \n";
+		result += tab(2) + L"\"LastInsertion\":\"" + LastInsertion + L"\", \n";
+		result += tab(2) + L"\"LastInsertionUtc\":\"" + LastInsertionUtc + L"\", \n";
+		result += tab(2) + L"\"FirstInsertion\":\"" + FirstInsertion + L"\", \n";
+		result += tab(2) + L"\"FirstInsertionUtc\":\"" + FirstInsertionUtc + L"\" \n";
 		result += tab(1) + L"}";
 		return result;
 	}
@@ -159,7 +159,9 @@ public:
 						continue;
 					}
 					else {
+						log(3, L"🔈time_to_wstring tempFiletime");
 						usb.LastInsertion = time_to_wstring(tempFiletime);
+						log(3, L"🔈time_to_wstring LastInsertionUtc");
 						usb.LastInsertionUtc = time_to_wstring(tempFiletime, true);
 					}
 				}
@@ -213,7 +215,8 @@ public:
 		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/Usbstor.json");
-		myfile << result;
+		log(3, L"🔈ansi_to_utf8 result");
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
 		return ERROR_SUCCESS;
