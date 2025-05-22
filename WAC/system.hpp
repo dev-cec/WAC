@@ -192,7 +192,8 @@ struct SystemInfo {
 		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/OperatingSystem.json");
-		myfile << result;
+		log(3, L"🔈ansi_to_utf8 result");
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
 		return ERROR_SUCCESS;

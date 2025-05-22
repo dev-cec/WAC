@@ -44,10 +44,8 @@ struct User {
 		log(3, L"🔈NetUserGetInfo");
 		int r = NetUserGetInfo(NULL, profilName, 4, (LPBYTE*)&info4);
 		if (r == NERR_Success) {
-			log(3, L"🔈ansi_to_utf8 usri4_name");
-			name = ansi_to_utf8(std::wstring(info4->usri4_name));
-			log(3, L"🔈ansi_to_utf8 usri4_full_name");
-			fullName = ansi_to_utf8(std::wstring(info4->usri4_full_name));
+			name = std::wstring(info4->usri4_name);
+			fullName = std::wstring(info4->usri4_full_name);
 			flags = info4->usri4_flags;
 			//sid to wstring
 			log(3, L"🔈ConvertSidToStringSidW");
@@ -69,8 +67,7 @@ struct User {
 				data = (LPWSTR)malloc(dataSize);
 				hresult = RegQueryValueExW(hKey, L"ProfileImagePath", NULL, NULL, (LPBYTE)data, &dataSize);
 				if (hresult == ERROR_SUCCESS) {
-					log(3, L"🔈ansi_to_utf8 data");
-					profile = ansi_to_utf8(std::wstring(data));
+					profile = std::wstring(data);
 				}
 				else {
 					profile = L"";
@@ -162,7 +159,8 @@ struct Users {
 		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/users.json");
-		myfile << result;
+		log(3, L"🔈ansi_to_utf8 result");
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
 		return ERROR_SUCCESS;

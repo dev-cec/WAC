@@ -35,8 +35,7 @@ struct ServiceStruct
 		DWORD moreBytesNeeded;
 
 		serviceName = std::wstring(service.lpServiceName);
-		log(3, L"🔈ansi_to_utf8");
-		serviceDisplayName = ansi_to_utf8(std::wstring(service.lpDisplayName));
+		serviceDisplayName = std::wstring(service.lpDisplayName);
 		log(1, L"➕Service");
 		log(2, L"❇️ Service name : " + serviceDisplayName);
 		log(3, L"🔈serviceType_to_wstring");
@@ -65,8 +64,7 @@ struct ServiceStruct
 			}
 			else {
 				log(3, L"🔈getErrorMessage");
-				log(3, L"🔈ansi_to_utf8");
-				serviceAccessMessage = ansi_to_utf8(getErrorMessage(GetLastError()));
+				serviceAccessMessage = getErrorMessage(GetLastError());
 				log(2, L"🔥QueryServiceConfigW", GetLastError());
 			}
 			free(sData);
@@ -74,8 +72,7 @@ struct ServiceStruct
 		}
 		else {
 			log(3, L"🔈getErrorMessage");
-			log(3, L"🔈ansi_to_utf8");
-			serviceAccessMessage = ansi_to_utf8(getErrorMessage(GetLastError()));
+			serviceAccessMessage = getErrorMessage(GetLastError());
 			log(2, L"🔥OpenServiceW", GetLastError());
 		}
 	}
@@ -177,7 +174,8 @@ struct Services
 		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/services.json");
-		myfile << result;
+		log(3, L"🔈ansi_to_utf8 result");
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
 		return ERROR_SUCCESS;

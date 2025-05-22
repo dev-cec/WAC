@@ -86,8 +86,7 @@ struct Process {
 		{
 			HRESULT error = GetLastError();
 			log(3, L"🔈getErrorMessage error");
-			log(3, L"🔈ansi_to_utf8");
-			processModulesAccess = ansi_to_utf8(getErrorMessage(error));
+			processModulesAccess = getErrorMessage(error);
 			log(2, L"🔥CreateToolhelp32Snapshot (of modules)", error);
 			return(ERROR_INVALID_HANDLE);
 		}
@@ -108,7 +107,7 @@ struct Process {
 		// and display information about each module
 
 		do {
-			std::wstring temp = ansi_to_utf8(std::wstring(me32.szExePath));
+			std::wstring temp = std::wstring(me32.szExePath);
 			log(3, L"🔈replaceAll szExePath");
 			temp = replaceAll(temp, L"\\", L"\\\\");
 			log(2, L"❇️ Module exePath : " + temp);
@@ -233,7 +232,8 @@ struct Processes {
 		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/processes.json");
-		myfile << result;
+		log(3, L"🔈ansi_to_utf8 result");
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
 		return ERROR_SUCCESS;

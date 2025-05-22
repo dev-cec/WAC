@@ -141,7 +141,8 @@ struct Sessions {
 		//enregistrement dans fichier json
 		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		myfile.open(conf._outputDir + "/Sessions.json");
-		myfile << result;
+		log(3, L"🔈ansi_to_utf8 result");
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 		return ERROR_SUCCESS;
 	}
