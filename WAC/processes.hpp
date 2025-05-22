@@ -46,7 +46,6 @@ struct Process {
 					log(3, L"🔈ConvertSidToStringSid");
 					if (ConvertSidToStringSid(((PTOKEN_OWNER)infos)->Owner, &lpsid_wstring) != 0) {
 						processSID = std::wstring(lpsid_wstring);
-						log(3, L"🔈getNameFromSid");
 						processSidName = getNameFromSid(processSID);
 					}
 					else
@@ -63,7 +62,7 @@ struct Process {
 		}
 
 		// List the modules and threads associated with this process
-		log(3, L"🔈ListProcessModules");
+		
 		HRESULT result = ListProcessModules();
 		if (result != ERROR_SUCCESS)
 			log(2, L"🔥ListProcessModules : ", result);
@@ -75,6 +74,7 @@ struct Process {
 	*/
 	HRESULT ListProcessModules()
 	{
+		log(3, L"🔈ListProcessModules");
 		HANDLE hModuleSnap = INVALID_HANDLE_VALUE;
 		MODULEENTRY32 me32;
 
@@ -106,7 +106,6 @@ struct Process {
 
 		do {
 			std::wstring temp = ansi_to_utf8(std::wstring(me32.szExePath));
-			log(3, L"🔈replaceAll szExePath");
 			temp = replaceAll(temp, L"\\", L"\\\\");
 			log(2, L"❇️ Module exePath : " + temp);
 			processModules.push_back(temp);
@@ -122,7 +121,7 @@ struct Process {
 	std::wstring to_json() {
 		std::wstring result = L"";
 
-		log(3, L"🔈to_json");
+		log(3, L"🔈process to_json");
 		result += tab(1) + L"{ \n"
 			+ tab(2) + L"\"Nom\":\"" + processName + L"\", \n"
 			+ tab(2) + L"\"SID\":\"" + processSID + L"\", \n"
@@ -145,7 +144,7 @@ struct Process {
 
 	/* liberation mémoire */
 	void clear() {
-		log(3, L"🔈clear Process");
+		log(3, L"🔈process clear");
 	}
 };
 
@@ -217,7 +216,7 @@ struct Processes {
 	{
 		std::wstring result = L"[ \n";
 		std::vector<Process>::iterator it;
-		log(3, L"🔈to_json");
+		log(3, L"🔈processes to_json");
 		for (it = processes.begin(); it != processes.end(); it++) {
 			result += it->to_json();
 			if (it != processes.end() - 1)
@@ -238,7 +237,7 @@ struct Processes {
 
 	/* liberation mémoire */
 	void clear() {
-		log(3, L"🔈clear processes");
+		log(3, L"🔈processes clear");
 		for (Process temp : processes)
 			temp.clear();
 	}

@@ -87,7 +87,7 @@ struct User {
 	/*! conversion de l'objet au format json
 	*/
 	std::wstring to_json() {
-		log(3, L"🔈to_json");
+		log(3, L"🔈user to_json");
 		std::wstring result = tab(1) + L"{ \n"
 			+ tab(2) + L"\"Name\":\"" + name + L"\", \n"
 			+ tab(2) + L"\"FullName\":\"" + fullName + L"\", \n"
@@ -100,7 +100,7 @@ struct User {
 
 	/* liberation mémoire */
 	void clear() {
-		log(3, L"🔈User clear");
+		log(3, L"🔈user clear");
 	}
 
 };
@@ -145,7 +145,7 @@ struct Users {
 		HRESULT hresult;
 		std::wstring result = L"[ \n";
 
-		log(3, L"🔈to_json");
+		log(3, L"🔈users to_json");
 		for (it = users.begin(); it != users.end(); it++) {
 			result += it->to_json();
 			if (it != users.end() - 1)
@@ -165,7 +165,7 @@ struct Users {
 
 	/* liberation mémoire */
 	void clear() {
-		log(3, L"🔈Users clear");
+		log(3, L"🔈users clear");
 		for (User temp : users)
 			temp.clear();
 	}

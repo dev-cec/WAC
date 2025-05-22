@@ -38,9 +38,7 @@ struct ServiceStruct
 		serviceDisplayName = ansi_to_utf8(std::wstring(service.lpDisplayName));
 		log(1, L"➕Service");
 		log(2, L"❇️ Service name : " + serviceDisplayName);
-		log(3, L"🔈serviceType_to_wstring");
 		serviceType = serviceType_to_wstring(service.ServiceStatusProcess.dwServiceType);
-		log(3, L"🔈serviceState_to_wstring");
 		serviceStatus = serviceState_to_wstring(service.ServiceStatusProcess.dwCurrentState);
 		serviceProcessId = std::to_wstring(service.ServiceStatusProcess.dwProcessId);
 
@@ -52,13 +50,10 @@ struct ServiceStruct
 			LPQUERY_SERVICE_CONFIG sData = (LPQUERY_SERVICE_CONFIG)malloc(moreBytesNeeded);
 			bufSize = moreBytesNeeded;
 			if (QueryServiceConfigW(hService, sData, bufSize, &moreBytesNeeded)) { //get service info
-				log(3, L"🔈serviceStart_to_wstring");
 				serviceStartType = serviceStart_to_wstring(sData->dwStartType);
 				serviceOwner = std::wstring(sData->lpServiceStartName);
-				log(3, L"🔈replaceAll serviceOwner");
 				serviceOwner = replaceAll(serviceOwner, L"\\", L"\\\\");
 				serviceBinary = std::wstring(sData->lpBinaryPathName);
-				log(3, L"🔈replaceAll serviceBinary");
 				serviceBinary = replaceAll(serviceBinary, L"\\", L"\\\\");
 				serviceBinary = replaceAll(serviceBinary, L"\"", L"\\\"");
 			}
@@ -80,7 +75,7 @@ struct ServiceStruct
 	std::wstring to_json() {
 		std::wstring result = L"";
 
-		log(3, L"🔈to_json");
+		log(3, L"🔈service to_json");
 		result += tab(1) + L"{ \n"
 			+ tab(2) + L"\"Name\":\"" + serviceName + L"\", \n"
 			+ tab(2) + L"\"DislayName\":\"" + serviceDisplayName + L"\", \n"
@@ -96,7 +91,7 @@ struct ServiceStruct
 
 	/* liberation mémoire */
 	void clear() {
-		log(3, L"🔈clear service");
+		log(3, L"🔈service clear");
 	}
 };
 
@@ -159,7 +154,7 @@ struct Services
 		std::wstring result = L"[ \n";
 		std::vector<ServiceStruct>::iterator it;
 
-		log(3, L"🔈to_json");
+		log(3, L"🔈 services to_json");
 		for (it = services.begin(); it != services.end(); it++) {
 			result += it->to_json();
 			if (it != services.end() - 1)
@@ -180,7 +175,7 @@ struct Services
 
 	/* liberation mémoire */
 	void clear() {
-		log(3, L"🔈clear services");
+		log(3, L"🔈services clear");
 		for (ServiceStruct temp : services)
 			temp.clear();
 	}
