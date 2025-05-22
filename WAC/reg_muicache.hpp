@@ -47,14 +47,15 @@ public:
 	*/
 	HRESULT getData() {
 		
-		HRESULT hresult;
-		ORHKEY hKey;
-		DWORD nSubkeys;
-		DWORD nValues, dType;
-		WCHAR szValue[MAX_VALUE_NAME];
-		WCHAR szSubKey[MAX_VALUE_NAME];
+		HRESULT hresult=0;
+		ORHKEY hKey=NULL;
+		ORHKEY Offhive=NULL;
+		DWORD nSubkeys = 0;
+		DWORD nValues=0;
 		DWORD nSize = 0;
-		ORHKEY Offhive;
+		DWORD dType = 0;
+		WCHAR szValue[MAX_VALUE_NAME]=L"";
+		WCHAR szSubKey[MAX_VALUE_NAME]=L"";
 		std::wstring ruche = L"";
 		for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
 			//ouverture de la ruche user

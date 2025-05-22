@@ -229,7 +229,7 @@ struct DestFileDirectory {
 */
 struct oleHeader {
 	bool littleIndian = false; //!< format littleindian ou Bigindian
-	unsigned long _signature = 0xe11ab1a1e011cfd0; //!< signature attendue de l'objet OLE
+	unsigned long long _signature = 0xe11ab1a1e011cfd0; //!< signature attendue de l'objet OLE
 	unsigned long signature = 0; //!< signature de l'objet OLE
 	short int sectorSize = 0; //!< taille des secteurs de l'objet OLE
 	short int shortSectorSize = 0; //!< taille des petits secteurs de l'objet OLE
@@ -261,8 +261,8 @@ struct oleHeader {
 			throw std::runtime_error("Big indian Format not Handle, please handle this file specifically");
 		}
 
-		sectorSize = pow(2, bytes_to_short(buffer + 30)); // Sector size at offset 30, en puissance de 2
-		shortSectorSize = pow(2, bytes_to_short(buffer + 32)); // Short sector size at offset 32, en puissance de 2
+		sectorSize = (short)pow(2, bytes_to_short(buffer + 30)); // Sector size at offset 30, en puissance de 2
+		shortSectorSize = (short)pow(2, bytes_to_short(buffer + 32)); // Short sector size at offset 32, en puissance de 2
 		totalSATSectors = bytes_to_int(buffer + 44); // Total Sector Allocation Table(SAT) sectors at offset 44
 		directoryStreamFirstSectorId = bytes_to_int(buffer + 48); // Sector ID of first sector used by Directory at offset 48
 		minimumStandardStreamSize = bytes_to_unsigned_int(buffer + 56); // Minimum size of a standard stream in bytes at offset 56
@@ -320,7 +320,7 @@ struct oleParser {
 	std::vector<int> sat; //!< liste des secteurs de la sat
 	std::vector<int> ssat;//!< liste des secteurs de la ssat
 	LPBYTE buffer = NULL; //!< buffer contenant les données de l'objet ole à parser
-	int bufferSize = 0;//!< taille du buffer
+	size_t bufferSize = 0;//!< taille du buffer
 
 
 	/*! Constructeur par défaut
@@ -331,7 +331,7 @@ struct oleParser {
 	* @param buffer contient un pointeur sur les données à parser
 	* @param _bufferSize contient la taille du buffer
 	*/
-	oleParser(LPBYTE _buffer, int _bufferSize) {
+	oleParser(LPBYTE _buffer, size_t _bufferSize) {
 		buffer = _buffer;
 		bufferSize = _bufferSize;
 

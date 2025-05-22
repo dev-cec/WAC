@@ -92,7 +92,7 @@ struct VolumeInfo {
 
 		int dirsOffset = bytes_to_int(indVolume + 28);
 		int nbDirs = bytes_to_int(indVolume + 32);
-		int pos = 1;
+		size_t pos = 1;
 		for (int k = 0; k < nbDirs; k++) {
 			std::wstring temp = std::wstring((wchar_t*)(data + dirsOffset) + pos);
 			// codage ANSI mais on veut de l'UTF8
@@ -200,7 +200,7 @@ public:
 
 		file.unsetf(std::ios::skipws);
 		file.seekg(0, std::ios::end);
-		const size_t size = file.tellg();
+		const ULONG size = file.tellg();
 		file.seekg(0, std::ios::beg);
 		buffer = new BYTE[size];
 		file.read(reinterpret_cast<char*>(buffer), size);

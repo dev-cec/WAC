@@ -177,8 +177,8 @@ struct Event {
 		DWORD bufferLengthNeeded2 = 0;
 		DWORD bufferLength2 = 0;
 		DWORD count = 0;
-		DWORD nbEvents;
-		HRESULT status;
+		DWORD nbEvents = 0;
+		HRESULT status = 0;
 
 		EVT_HANDLE hContext = NULL;
 		do {
@@ -344,7 +344,7 @@ struct Events {
 		
 		hevt = EvtOpenSession(EvtRpcLogin, &login, 0, 0);
 		hChannel = EvtOpenChannelEnum(hevt, 0);
-		wprintf(L"\n", buffer);
+		wprintf(L"%s\n", buffer);
 		do {
 
 			//

@@ -64,23 +64,25 @@ struct Session {
 		LPWSTR lpsid_wstring = NULL;
 		std::wstring sid_wstring = L"";
 
-		log(3, L"🔈to_json");
+		log(3, L"🔈session to_json");
 		log(3, L"🔈ConvertSidToStringSid");
 		if (ConvertSidToStringSid(sid, &lpsid_wstring) != 0) {
 			sid_wstring = std::wstring(lpsid_wstring);
 		}
 
-		std::wstring result = tab(1) + L"{ \n"
-			+ tab(2) + L"\"SessionId\":\"" + std::to_wstring(sessionId) + L"\", \n"
-			+ tab(2) + L"\"SID\":\"" + sid_wstring + L"\", \n"
-			+ tab(2) + L"\"LogonName\":\"" + logonName + L"\", \n"
-			+ tab(2) + L"\"LogonDomainName\":\"" + logonDomainName + L"\", \n"
-			+ tab(2) + L"\"LogonType\":\"" + std::to_wstring(logonType) + L"\", \n"
-			+ tab(2) + L"\"LogonTypeName\":\"" + logonTypeName + L"\", \n"
-			+ tab(2) + L"\"AuthenticationPackage\":\"" + authenticationPackage + L"\", \n"
-			+ tab(2) + L"\"StartTime\":\"" + time_to_wstring(startTime) + L"\", \n"
-			+ tab(2) + L"\"StartTimeUtc\":\"" + time_to_wstring(startTimeUtc) + L"\", \n"
-			+ tab(1) + L"}";
+		std::wstring result = tab(1) + L"{ \n";
+			result+= tab(2) + L"\"SessionId\":\"" + std::to_wstring(sessionId) + L"\", \n";
+			result+= tab(2) + L"\"SID\":\"" + sid_wstring + L"\", \n";
+			result+= tab(2) + L"\"LogonName\":\"" + logonName + L"\", \n";
+			result+= tab(2) + L"\"LogonDomainName\":\"" + logonDomainName + L"\", \n";
+			result+= tab(2) + L"\"LogonType\":\"" + std::to_wstring(logonType) + L"\", \n";
+			result+= tab(2) + L"\"LogonTypeName\":\"" + logonTypeName + L"\", \n";
+			result+= tab(2) + L"\"AuthenticationPackage\":\"" + authenticationPackage + L"\", \n";
+			log(3, L"🔈time_to_wstring startTime");
+			result+= tab(2) + L"\"StartTime\":\"" + time_to_wstring(startTime) + L"\", \n";
+			log(3, L"🔈time_to_wstring startTimeUtc");
+			result+= tab(2) + L"\"StartTimeUtc\":\"" + time_to_wstring(startTimeUtc) + L"\", \n";
+			result += tab(1) + L"}";
 		return result;
 	}
 
@@ -115,7 +117,7 @@ struct Sessions {
 			log(2, L"🔥LsaEnumerateLogonSessions", hr);
 			return hr;
 		}
-		for (int i = 0; i < nbSessions; i++) {
+		for (ULONG i = 0; i < nbSessions; i++) {
 			sessions.push_back(Session(&pointer[i]));
 		}
 		LsaFreeReturnBuffer(&pointer);
@@ -124,7 +126,7 @@ struct Sessions {
 	/*! conversion de l'objet au format json
 	*/
 	HRESULT to_json() {
-		log(3, L"🔈to_json");
+		log(3, L"🔈sessions to_json");
 		std::wofstream myfile;
 		std::wstring result = L"[\n";
 		std::vector<Session>::iterator it;

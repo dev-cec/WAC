@@ -35,10 +35,13 @@ struct ServiceStruct
 		DWORD moreBytesNeeded;
 
 		serviceName = std::wstring(service.lpServiceName);
+		log(3, L"🔈ansi_to_utf8");
 		serviceDisplayName = ansi_to_utf8(std::wstring(service.lpDisplayName));
 		log(1, L"➕Service");
 		log(2, L"❇️ Service name : " + serviceDisplayName);
+		log(3, L"🔈serviceType_to_wstring");
 		serviceType = serviceType_to_wstring(service.ServiceStatusProcess.dwServiceType);
+		log(3, L"🔈serviceState_to_wstring");
 		serviceStatus = serviceState_to_wstring(service.ServiceStatusProcess.dwCurrentState);
 		serviceProcessId = std::to_wstring(service.ServiceStatusProcess.dwProcessId);
 
@@ -50,14 +53,19 @@ struct ServiceStruct
 			LPQUERY_SERVICE_CONFIG sData = (LPQUERY_SERVICE_CONFIG)malloc(moreBytesNeeded);
 			bufSize = moreBytesNeeded;
 			if (QueryServiceConfigW(hService, sData, bufSize, &moreBytesNeeded)) { //get service info
+				log(3, L"🔈serviceStart_to_wstring");
 				serviceStartType = serviceStart_to_wstring(sData->dwStartType);
 				serviceOwner = std::wstring(sData->lpServiceStartName);
+				log(3, L"🔈replaceAll lpServiceStartName");
 				serviceOwner = replaceAll(serviceOwner, L"\\", L"\\\\");
 				serviceBinary = std::wstring(sData->lpBinaryPathName);
+				log(3, L"🔈replaceAll serviceBinary");
 				serviceBinary = replaceAll(serviceBinary, L"\\", L"\\\\");
 				serviceBinary = replaceAll(serviceBinary, L"\"", L"\\\"");
 			}
 			else {
+				log(3, L"🔈getErrorMessage");
+				log(3, L"🔈ansi_to_utf8");
 				serviceAccessMessage = ansi_to_utf8(getErrorMessage(GetLastError()));
 				log(2, L"🔥QueryServiceConfigW", GetLastError());
 			}
@@ -65,6 +73,8 @@ struct ServiceStruct
 			CloseServiceHandle(hService);
 		}
 		else {
+			log(3, L"🔈getErrorMessage");
+			log(3, L"🔈ansi_to_utf8");
 			serviceAccessMessage = ansi_to_utf8(getErrorMessage(GetLastError()));
 			log(2, L"🔥OpenServiceW", GetLastError());
 		}
@@ -76,16 +86,16 @@ struct ServiceStruct
 		std::wstring result = L"";
 
 		log(3, L"🔈service to_json");
-		result += tab(1) + L"{ \n"
-			+ tab(2) + L"\"Name\":\"" + serviceName + L"\", \n"
-			+ tab(2) + L"\"DislayName\":\"" + serviceDisplayName + L"\", \n"
-			+ tab(2) + L"\"Status\":\"" + serviceStatus + L"\", \n"
-			+ tab(2) + L"\"ProcessId\":\"" + serviceProcessId + L"\", \n"
-			+ tab(2) + L"\"AccessMessage\":\"" + serviceAccessMessage + L"\", \n"
-			+ tab(2) + L"\"StartType\":\"" + serviceStartType + L"\", \n"
-			+ tab(2) + L"\"Owner\":\"" + serviceOwner + L"\", \n"
-			+ tab(2) + L"\"Binary\":\"" + serviceBinary + L"\" \n"
-			+ tab(1) + L"}";
+		result += tab(1) + L"{ \n";
+		result += tab(2) + L"\"Name\":\"" + serviceName + L"\", \n";
+		result += tab(2) + L"\"DislayName\":\"" + serviceDisplayName + L"\", \n";
+		result += tab(2) + L"\"Status\":\"" + serviceStatus + L"\", \n";
+		result += tab(2) + L"\"ProcessId\":\"" + serviceProcessId + L"\", \n";
+		result += tab(2) + L"\"AccessMessage\":\"" + serviceAccessMessage + L"\", \n";
+		result += tab(2) + L"\"StartType\":\"" + serviceStartType + L"\", \n";
+		result += tab(2) + L"\"Owner\":\"" + serviceOwner + L"\", \n";
+		result += tab(2) + L"\"Binary\":\"" + serviceBinary + L"\" \n";
+		result += tab(1) + L"}";
 		return result;
 	}
 
@@ -122,7 +132,7 @@ struct Services
 		if (hSCM == NULL)
 		{
 			HRESULT error = GetLastError();
-			log(1,  L"Could not open Service Control Manager",error );
+			log(1, L"Could not open Service Control Manager", error);
 			return error;
 		}
 
@@ -137,9 +147,9 @@ struct Services
 			}
 			return ERROR_SUCCESS;
 		}
-		else{
+		else {
 			int err = GetLastError();
-			log(2, L"🔥EnumServicesStatusExW",err);
+			log(2, L"🔥EnumServicesStatusExW", err);
 			return err;
 		}
 		free(servicesBuf);
@@ -149,12 +159,12 @@ struct Services
 
 	/*! conversion de l'objet au format json
 	*/
-	HRESULT to_json()
-	{
+	HRESULT to_json() {
+		log(3, L"🔈 services to_json");
+
 		std::wstring result = L"[ \n";
 		std::vector<ServiceStruct>::iterator it;
 
-		log(3, L"🔈 services to_json");
 		for (it = services.begin(); it != services.end(); it++) {
 			result += it->to_json();
 			if (it != services.end() - 1)

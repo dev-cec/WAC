@@ -107,7 +107,7 @@ public:
 					userassist.Name = ansi_to_utf8(ROT13(szValue)); // Rot13 du nom de la Value pour récupérer le nom de l’exécutable
 					//conversion des GUID Directory
 					std::wsmatch pieces_match;
-					std::wregex key(L"[\{][a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}[\}]");
+					std::wregex key(L"[\\{][a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}[\\}]");
 					if (std::regex_search(userassist.Name, pieces_match, key)) {
 						for (std::wstring s : pieces_match) {
 							std::wstring n = trans_guid_to_wstring(s);

@@ -24,7 +24,7 @@
 
 
 FatDateTime::FatDateTime(unsigned int _i) {
-	log(3, L"🔈FatDateTime");
+	
 	i = _i;
 	date = (uint16_t)(_i & 0x0ffffL);
 	time = (uint16_t)(_i >> 16);
@@ -32,7 +32,7 @@ FatDateTime::FatDateTime(unsigned int _i) {
 
 
 SYSTEMTIME FatDateTime::to_systemtime() {
-	log(3, L"🔈FatDateTime to_systemtime");
+
 	/* The year value is stored in bits 9 - 15 of the date (7 bits)
  * A year value of 0 represents 1980
  */
@@ -66,10 +66,12 @@ SYSTEMTIME FatDateTime::to_systemtime() {
 }
 
 FILETIME FatDateTime::to_filetime() {
-	log(3, L"🔈FatDateTime to_filetime");
+	
 	FILETIME f;
 	if (i != 0) {
+		log(3, L"🔈to_systemtime s");
 		const SYSTEMTIME s = to_systemtime();
+		log(3, L"🔈SystemTimeToFileTime f");
 		SystemTimeToFileTime(&s, &f);
 	}
 	else
@@ -82,7 +84,7 @@ FILETIME FatDateTime::to_filetime() {
 *****************************************************/
 
 void printSuccess() {
-	log(3, L"🔈printSuccess");
+	
 	SetConsoleTextAttribute(conf.hConsole, 10);
 	std::wcout << L"OK" << std::endl;
 	std::wcout.flush();
@@ -90,18 +92,16 @@ void printSuccess() {
 }
 
 void printError(std::wstring errorText) {
-	log(3, L"🔈printError wstring");
+	
 	SetConsoleTextAttribute(conf.hConsole, 12);
-	SetConsoleOutputCP(CP_UTF8);
 	std::wcout << errorText << std::endl;
 	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
 void printError(HRESULT  hresult) {
-	log(3, L"🔈printError hresult");
+	
 	std::wstring errorText = getErrorMessage(hresult);
 	SetConsoleTextAttribute(conf.hConsole, 12);
-	SetConsoleOutputCP(CP_UTF8);
 	DWORD written = 0;
 	std::wcout << ansi_to_utf8(errorText) << std::endl;
 	SetConsoleTextAttribute(conf.hConsole, 7);
@@ -109,7 +109,7 @@ void printError(HRESULT  hresult) {
 
 std::wstring getErrorMessage(HRESULT hresult)
 {
-	log(3, L"🔈getErrorMessage");
+	//used to log, so no log to this call function
 	LPWSTR errorText = NULL;
 	FormatMessageW(
 		FORMAT_MESSAGE_FROM_SYSTEM
@@ -149,10 +149,12 @@ void log(int loglevel, std::wstring message, HRESULT result) {
 
 std::string ansi_to_utf8(std::string in)
 {
-	log(3, L"🔈ansi_to_utf8 string");
+	//used to log, so no log to this call function
+
 	int size = MultiByteToWideChar(CP_ACP, WC_COMPOSITECHECK || WC_DEFAULTCHAR, in.c_str(),
 		in.length(), nullptr, 0);
 	std::wstring utf16_str(size, '\0');
+
 	MultiByteToWideChar(CP_ACP, WC_COMPOSITECHECK || WC_DEFAULTCHAR, in.c_str(),
 		in.length(), &utf16_str[0], size);
 
@@ -160,6 +162,7 @@ std::string ansi_to_utf8(std::string in)
 		utf16_str.length(), nullptr, 0,
 		nullptr, nullptr);
 	std::string utf8_str(utf8_size, '\0');
+
 	WideCharToMultiByte(CP_UTF8, 0, utf16_str.c_str(),
 		utf16_str.length(), &utf8_str[0], utf8_size,
 		nullptr, nullptr);
@@ -168,11 +171,13 @@ std::string ansi_to_utf8(std::string in)
 
 std::wstring ansi_to_utf8(std::wstring in)
 {
-	log(3, L"🔈ansi_to_utf8 wstring");
+	//used to log, so no log to this call function
+
 	int utf8_size = WideCharToMultiByte(CP_UTF8, 0, in.c_str(),
 		in.length(), nullptr, 0,
 		nullptr, nullptr);
 	std::string utf8_str(utf8_size, '\0');
+
 	WideCharToMultiByte(CP_UTF8, 0, in.c_str(),
 		in.length(), &utf8_str[0], utf8_size,
 		nullptr, nullptr);
@@ -180,33 +185,21 @@ std::wstring ansi_to_utf8(std::wstring in)
 	return string_to_wstring(utf8_str);
 }
 
-BSTR bstr_concat(BSTR a, BSTR b)
-{
-	log(3, L"🔈bstr_concat");
-	auto lengthA = SysStringLen(a);
-	auto lengthB = SysStringLen(b);
-
-	auto result = SysAllocStringLen(NULL, lengthA + lengthB);
-
-	memcpy(result, a, lengthA * sizeof(OLECHAR));
-	memcpy(result + lengthA, b, lengthB * sizeof(OLECHAR));
-
-	result[lengthA + lengthB] = 0;
-	return result;
-}
-
 void dump(LPBYTE buffer, int start, int end) {
-	log(3, L"🔈dump wcout");
+	
 	for (int x = start; x <= end; x++)
 		std::wcout << to_hex(buffer[x]) << " ";
 	std::wcout << std::endl;
 }
 
 std::wstring dump_wstring(LPBYTE buffer, int start, int end) {
-	log(3, L"🔈dump wstring");
+	
 	std::stringstream ss;
-	for (int x = start; x <= end; x++)
+	for (int x = start; x <= end; x++) {
+		log(3, L"🔈to_hex buffer[x]");
+		log(3, L"🔈wstring_to_string buffer[x]");
 		ss << wstring_to_string(to_hex(buffer[x])) << " ";
+	}
 	return string_to_wstring(ss.str());
 
 }
@@ -216,18 +209,19 @@ std::wstring dump_wstring(LPBYTE buffer, int start, int end) {
 
 std::wstring replaceAll(std::wstring src, std::wstring search, std::wstring replacement)
 {
-	log(3, L"🔈replaceAll");
-	size_t pos = 0;
-	while ((pos = src.find(search, pos)) != std::wstring::npos) {
-		src.replace(pos, search.length(), replacement);
-		pos += replacement.length();
+	if (src.length() > 0) {
+		size_t pos = 0;
+		while ((pos = src.find(search, pos)) != std::wstring::npos) {
+			src.replace(pos, search.length(), replacement);
+			pos += replacement.length();
+		}
 	}
 	return src;
 }
 
 std::wstring ROT13(std::wstring source)
 {
-	log(3, L"🔈ROT13");
+	
 	std::wstring transformed;
 	for (int i = 0; i < source.length(); ++i) {
 		// a-z -> n-m
@@ -250,7 +244,7 @@ std::wstring ROT13(std::wstring source)
 
 void static checkWstring(wchar_t* s)
 {
-	log(3, L"🔈checkWstring");
+	
 	for (int x = 0; x < wcslen(s); x++) {
 		if (!isascii(s[x]))
 			s[x] = L'?';
@@ -260,7 +254,7 @@ void static checkWstring(wchar_t* s)
 
 
 std::string decodeURIComponent(std::string encoded) {
-	log(3, L"🔈decodeURIComponent");
+	
 	std::string decoded = encoded;
 	std::smatch sm;
 	std::string haystack;
@@ -289,14 +283,14 @@ std::string decodeURIComponent(std::string encoded) {
 }
 
 std::wstring to_hex(long long i) {
-	log(3, L"🔈to_hex long long");
+	
 	std::stringstream ss;
 	ss << std::setw(2) << std::setfill('0') << std::hex << i;
 	return string_to_wstring(ss.str());
 }
 
 std::wstring tab(int i) {
-	log(3, L"🔈tab");
+	//used to log, so no log to this call function
 	std::wstring result = L"";
 	for (int x = 0; x < i; x++)
 		result += L"\t";
@@ -308,7 +302,7 @@ std::wstring tab(int i) {
 *****************************************************/
 
 std::wstring getNameFromSid(std::wstring _sid) {
-	log(3, L"🔈getNameFromSid");
+	
 	SID_NAME_USE SidType;
 	wchar_t lpName[256];
 	wchar_t lpDomain[256];
@@ -316,28 +310,30 @@ std::wstring getNameFromSid(std::wstring _sid) {
 	if (_sid != L"") {
 		ConvertStringSidToSidW(_sid.c_str(), &pSID);
 		DWORD dwSize = 256;
+		log(3, L"🔈LookupAccountSidW lpName");
 		LookupAccountSidW(NULL, pSID, lpName, &dwSize, lpDomain, &dwSize, &SidType);
+		log(3, L"🔈ansi_to_utf8 lpName");
 		return ansi_to_utf8(std::wstring(lpName));
 	}
 	return L"";
 }
 
 std::wstring luid_to_wstring(LUID luid) {
-	log(3, L"🔈luid_to_wstring");
+	
 	ULONG value = ((ULONG)luid.HighPart << 32) + luid.LowPart;
 	return std::to_wstring(value);
 }
 
 std::wstring bool_to_wstring(bool b)
 {
-	log(3, L"🔈bool_to_wstring");
+	
 	if (b) return L"true";
 	else return L"false";
 }
 
 FILETIME timet_to_fileTime(time_t t)
 {
-	log(3, L"🔈timet_to_fileTime");
+	
 	FILETIME ft = { 0 };
 	LONGLONG time_value = Int32x32To64(t, 10000000) + 116444736000000000;
 	ft.dwLowDateTime = (DWORD)time_value;
@@ -346,7 +342,7 @@ FILETIME timet_to_fileTime(time_t t)
 }
 
 FILETIME wstring_to_filetime(std::wstring input) {
-	log(3, L"🔈wstring_to_filetime");
+	
 	std::istringstream istr(wstring_to_string(input));
 	SYSTEMTIME st = { 0 };
 	FILETIME ft = { 0 };
@@ -362,13 +358,14 @@ FILETIME wstring_to_filetime(std::wstring input) {
 	istr.ignore(1, ':');
 	istr >> st.wSecond;
 	st.wMilliseconds = 0;
+	log(3, L"🔈SystemTimeToFileTime ft");
 	SystemTimeToFileTime(&st, &ft);
 	return ft;
 }
 
 std::wstring time_to_wstring(const SYSTEMTIME systemtime)
 {
-	log(3, L"🔈time_to_wstring SYSTEMTIME");
+	
 	std::wstring result = std::to_wstring(systemtime.wDay) + L"/" + std::to_wstring(systemtime.wMonth) + L"/" + std::to_wstring(systemtime.wYear)
 		+ L" " + std::to_wstring(systemtime.wHour) + L"h" + std::to_wstring(systemtime.wMinute) + L"m" + std::to_wstring(systemtime.wSecond) + L"s";
 	if (result == L"1/1/1601 0h0m0s")
@@ -378,29 +375,34 @@ std::wstring time_to_wstring(const SYSTEMTIME systemtime)
 }
 
 std::wstring time_to_wstring(const FILETIME filetime, bool convertUtc) {
-	log(3, L"🔈time_to_wstring FILETIME");
+	
 	SYSTEMTIME systemtime;
 	if (convertUtc) {
 		FILETIME utc;
+		log(3, L"🔈LocalFileTimeToFileTime utc");
 		LocalFileTimeToFileTime(&filetime, &utc);
+		log(3, L"🔈FileTimeToSystemTime systemtime");
 		FileTimeToSystemTime(&utc, &systemtime); //conversion filetime to systemtime
 	}
-	else
+	else {
+		log(3, L"🔈FileTimeToSystemTime systemtime");
 		FileTimeToSystemTime(&filetime, &systemtime); //conversion filetime to systemtime
+		log(3, L"🔈time_to_wstring systemtime");
+	}
 	return time_to_wstring(systemtime);
 
 }
 
 FILETIME bytes_to_filetime(LPBYTE bytes)
 {
-	log(3, L"🔈bytes_to_filetime");
+	
 	FILETIME* temp = (FILETIME*)bytes;
 	return *temp;
 }
 
 int bytes_to_int(LPBYTE bytes)
 {
-	log(3, L"🔈bytes_to_int");
+	
 	int val;
 	memcpy(&val, bytes, sizeof val);
 	return val;
@@ -408,7 +410,7 @@ int bytes_to_int(LPBYTE bytes)
 
 unsigned int bytes_to_unsigned_int(LPBYTE bytes)
 {
-	log(3, L"🔈bytes_to_unsigned_int");
+	
 	unsigned int val;
 	memcpy(&val, bytes, sizeof val);
 	return val;
@@ -416,7 +418,7 @@ unsigned int bytes_to_unsigned_int(LPBYTE bytes)
 
 short int bytes_to_short(LPBYTE bytes)
 {
-	log(3, L"🔈bytes_to_short");
+	
 	short int val;
 	memcpy(&val, bytes, sizeof val);
 	return val;
@@ -424,7 +426,7 @@ short int bytes_to_short(LPBYTE bytes)
 
 unsigned short int bytes_to_unsigned_short(LPBYTE bytes)
 {
-	log(3, L"🔈bytes_to_unsigned_short");
+	
 	unsigned short int val;
 	memcpy(&val, bytes, sizeof val);
 	return val;
@@ -432,7 +434,7 @@ unsigned short int bytes_to_unsigned_short(LPBYTE bytes)
 
 double bytes_to_double(LPBYTE bytes)
 {
-	log(3, L"🔈bytes_to_double");
+	
 	double val;
 	memcpy(&val, bytes, sizeof val);
 	return val;
@@ -440,7 +442,7 @@ double bytes_to_double(LPBYTE bytes)
 
 long bytes_to_long(LPBYTE bytes)
 {
-	log(3, L"🔈bytes_to_long");
+	
 	long val;
 	memcpy(&val, bytes, sizeof val);
 	return val;
@@ -448,7 +450,7 @@ long bytes_to_long(LPBYTE bytes)
 
 unsigned long bytes_to_unsigned_long(LPBYTE bytes)
 {
-	log(3, L"🔈bytes_to_unsigned_long");
+	
 	unsigned long val;
 	memcpy(&val, bytes, sizeof val);
 	return val;
@@ -456,7 +458,7 @@ unsigned long bytes_to_unsigned_long(LPBYTE bytes)
 
 unsigned long long bytes_to_unsigned_long_long(LPBYTE bytes)
 {
-	log(3, L"🔈bytes_to_unsigned_long_long");
+	
 	unsigned long long val;
 	memcpy(&val, bytes, sizeof val);
 	return val;
@@ -464,7 +466,7 @@ unsigned long long bytes_to_unsigned_long_long(LPBYTE bytes)
 
 long long bytes_to_long_long(LPBYTE bytes)
 {
-	log(3, L"🔈bytes_to_long_long");
+	
 	long long val;
 	memcpy(&val, bytes, sizeof val);
 	return val;
@@ -472,22 +474,22 @@ long long bytes_to_long_long(LPBYTE bytes)
 
 unsigned char bytes_to_unsigned_char(LPBYTE bytes)
 {
-	log(3, L"🔈bytes_to_unsigned_char");
+	
 	unsigned char val;
 	memcpy(&val, bytes, sizeof val);
 	return val;
 }
+
+BSTR wstring_to_bstr(std::wstring ws) {
+	if(!ws.empty())
+		return SysAllocStringLen(ws.data(), ws.size());
+	return BSTR(L"");
+}
+
 std::wstring bstr_to_wstring(BSTR bstr)
 {
-	log(3, L"🔈bstr_to_wstring");
-	if (_bstr_t(bstr).length() > 0) {
+	if (bstr != nullptr) {
 		std::wstring ws(bstr, SysStringLen(bstr));
-		// codage ANSI mais on veut de l'UTF8
-		ws = ansi_to_utf8(ws);
-		ws = replaceAll(ws, L"’", L"'");
-		//on doit tester si la chaîne comprend des guillemets ou des antislash pour le json final
-		ws = replaceAll(ws, L"\\", L"\\\\");
-		ws = replaceAll(ws, L"\"", L"\\\"");
 		return ws;
 	}
 	else return L"";
@@ -495,7 +497,7 @@ std::wstring bstr_to_wstring(BSTR bstr)
 
 std::wstring string_to_wstring(const std::string& str)
 {
-	log(3, L"🔈string_to_wstring");
+	//used to log, so no log to this call function
 	std::wstring wstr;
 	size_t size;
 	wstr.resize(str.length());
@@ -505,7 +507,7 @@ std::wstring string_to_wstring(const std::string& str)
 
 std::string wstring_to_string(const std::wstring& wstr)
 {
-	log(3, L"🔈wstring_to_string");
+	
 	std::string str;
 	size_t size;
 	str.resize(wstr.length());
@@ -515,10 +517,11 @@ std::string wstring_to_string(const std::wstring& wstr)
 
 std::wstring multiSz_to_json(std::vector<std::wstring> vec, int niveau)
 {
-	log(3, L"🔈multiSz_to_json");
-	int nbelments = vec.size();
 	std::wstring out = L"[\n";
 	for (int i = 0; i < vec.size(); i++) { // se termine par 2 chaîne \0\0
+		log(3, L"🔈ansi_to_utf8 vec[i]");
+		vec[i] = ansi_to_utf8(vec[i]);
+		log(3, L"🔈replaceAll vec[i]");
 		vec[i] = replaceAll(vec[i], L"\\", L"\\\\");
 		out += tab(niveau + 1) + L"\"" + vec[i] + L"\"";
 		if (i < vec.size() - 1) out += L",\n";
@@ -530,10 +533,9 @@ std::wstring multiSz_to_json(std::vector<std::wstring> vec, int niveau)
 
 std::wstring multiFiletime_to_json(std::vector<FILETIME> vec, int niveau)
 {
-	log(3, L"🔈multiFiletime_to_json");
-	int nbelments = vec.size();
 	std::wstring out = L"[\n";
 	for (int i = 0; i < vec.size(); i++) { // se termine par 2 chaîne \0\0
+		log(3, L"🔈time_to_wstring vec[i]");
 		out += tab(niveau + 1) + L"\"" + time_to_wstring(vec[i]) + L"\"";
 		if (i < vec.size() - 1) out += L",\n";
 		else out += L"\n";
@@ -544,7 +546,7 @@ std::wstring multiFiletime_to_json(std::vector<FILETIME> vec, int niveau)
 
 std::vector<std::wstring> multiWstring_to_vector(LPBYTE data, int size)
 {
-	log(3, L"🔈multiWstring_to_vector");
+	
 	std::vector<std::wstring> out;
 	wchar_t* d = (wchar_t*)data;
 	int pos = 0;
@@ -554,6 +556,7 @@ std::vector<std::wstring> multiWstring_to_vector(LPBYTE data, int size)
 
 		std::wstring ws = std::wstring(d);
 		// codage ANSI mais on veut de l'UTF8
+		log(3, L"🔈ansi_to_utf8 ws");
 		ws = ansi_to_utf8(ws);
 		pos += ws.length() + 1;//position du premier caractère de la chaîne suivante après le \0 de fin de chaîne de la suivante
 		d += ws.length() + 1;
@@ -567,6 +570,7 @@ std::vector<std::wstring> multiWstring_to_vector(LPBYTE data, int size)
 
 std::wstring guid_to_wstring(GUID guid) {
 	OLECHAR* result;
+	log(3, L"🔈tringFromCLSID result");
 	HRESULT r = StringFromCLSID(guid, &result);
 	if (r == ERROR_SUCCESS)
 		return std::wstring(result);
@@ -584,17 +588,19 @@ std::wstring guid_to_wstring(GUID guid) {
 // S'assure que la chaîne est printable et se termine par \0. Si un caractère n'est pas imprimable il est remplacé par ?
 HRESULT getRegSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::wstring* ws)
 {
-	log(3, L"🔈getRegSzValue");
+	
 	//les REG_SZ sont stockées sous forme de wchar_t = 16 bit par caractère
 	DWORD dwType = 0;
 	DWORD dwSize = 0;
-
+	log(3, L"🔈ORGetValue data");
 	HRESULT hresult = ORGetValue(key, szSubKey, szValue, &dwType, nullptr, &dwSize);//taille des donnes à lire
 	wchar_t* data = new wchar_t[dwSize + 1];
 	if (!data) return 1;
+	log(3, L"🔈2nd ORGetValue data");
 	hresult = ORGetValue(key, szSubKey, szValue, &dwType, (LPBYTE)data, &dwSize); //lecture des données
 	if (hresult != ERROR_SUCCESS) return hresult;
 	data[dwSize / sizeof(wchar_t)] = '\0'; // Ensure std::string terminate with \0
+	log(3, L"🔈checkWstring data");
 	checkWstring(data); // ensure std::string is printable
 	*ws = std::wstring(data);
 	delete[] data;
@@ -604,15 +610,17 @@ HRESULT getRegSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::wstring*
 // Lire une donnée au format binaire en base de données
 HRESULT getRegBinaryValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, LPBYTE pBytes)
 {
-	log(3, L"🔈getRegBinaryValue");
+	
 	//Attention pBytes doit être suffisamment grand pour accepter les données LPBYTE pBytes = new BYTE[MAX_DATA]; si la taille n'est pas connue
 	//les REG_BINARY sont stockées sous forme de bytes 
 	DWORD dwType = 0;
 	DWORD dwSize = MAX_DATA;
 
+	log(3, L"🔈ORGetValue pBytes");
 	HRESULT hresult = ORGetValue(key, szSubKey, szValue, &dwType, nullptr, &dwSize); //taille des donnes à lire
 	if (hresult != ERROR_SUCCESS) return hresult;
 
+	log(3, L"🔈2nd ORGetValue pBytes");
 	hresult = ORGetValue(key, szSubKey, szValue, &dwType, pBytes, &dwSize); //lecture des données
 	if (hresult != ERROR_SUCCESS) return hresult;
 	return ERROR_SUCCESS;
@@ -621,15 +629,18 @@ HRESULT getRegBinaryValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, LPBYTE pB
 // Lire une valeur booléenne en base de registre
 HRESULT getRegboolValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, bool* pbool)
 {
-	log(3, L"🔈getRegboolValue");
+	
 	//les REG_BINARY sont stockées sous forme de bytes 
 	DWORD dwType = 0;
 	DWORD dwSize = 0;
 
+	log(3, L"🔈ORGetValue pBytes");
 	HRESULT hresult = ORGetValue(key, szSubKey, szValue, &dwType, nullptr, &dwSize); //taille des donnes à lire
 	if (hresult != ERROR_SUCCESS) return hresult;
 
 	LPBYTE pBytes = new BYTE[dwSize];
+
+	log(3, L"🔈2nd ORGetValue pBytes");
 	hresult = ORGetValue(key, szSubKey, szValue, &dwType, pBytes, &dwSize); //lecture des données
 	if (hresult != ERROR_SUCCESS) return hresult;
 	*pbool = (bool)pBytes[0];
@@ -640,17 +651,19 @@ HRESULT getRegboolValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, bool* pbool
 // Lit une valeur FILETIME en base de registre
 HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, FILETIME* filetime)
 {
-	log(3, L"🔈getRegFiletimeValue");
+	
 	//les REG_FILETIME  sont stockées sous forme de bytes
 	// leur type est soit REG_BINARY soi REG_FILETIME(16) 
 	DWORD dwSize = MAX_DATA;
 	DWORD dwType;
+	log(3, L"🔈2nd ORGetValue pData");
 	HRESULT hresult = ORGetValue(key, szSubKey, szValue, &dwType, nullptr, &dwSize); //taille des donnes à lire
 	// allocate memory to store the name
 	LPBYTE pData = new BYTE[dwSize + 2];
 
 	memset(pData, 0, dwSize + 2);
 	// get the name, type, and data 
+	log(3, L"🔈2nd ORGetValue pData");
 	hresult = ORGetValue(key, szSubKey, szValue, &dwType, pData, &dwSize); //lecture des données
 	FILETIME temp = { 0 };
 	temp = bytes_to_filetime(pData);
@@ -664,17 +677,20 @@ HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, FILETIM
 // Les caractères non imprimable sont remplacés par ?
 HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::vector<std::wstring>* out)
 {
-	log(3, L"🔈getRegMultiSzValue");
+	
 	//les REG_MULTI_SZ sont stockées sous forme de wchar_t = 16 bit par caractère et d'un succession de chaîne séparées par \0 et à la fin \0\0
 	DWORD dwType = 0;
 	DWORD dwSize = 0;
+	log(3, L"🔈ORGetValue data");
 	HRESULT hresult = ORGetValue(key, szSubKey, szValue, &dwType, nullptr, &dwSize); //taille des donnes à lire
 	if (hresult != ERROR_SUCCESS) return hresult;
 	int nbChar = dwSize / sizeof(wchar_t);// dwSize en BYTES et 1 wchar_t = 2 BYTES
 
 	LPWSTR data = new wchar_t[nbChar];
 	if (!data) return 1;
+	log(3, L"🔈2nd ORGetValue data");
 	hresult = ORGetValue(key, szSubKey, szValue, &dwType, (LPBYTE)data, &dwSize); //lecture des données
+	log(3, L"🔈checkWstring data");
 	checkWstring(data);
 	if (hresult != ERROR_SUCCESS) return hresult;
 	DWORD pos = 0;

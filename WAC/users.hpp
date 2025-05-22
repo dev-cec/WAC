@@ -44,7 +44,9 @@ struct User {
 		log(3, L"🔈NetUserGetInfo");
 		int r = NetUserGetInfo(NULL, profilName, 4, (LPBYTE*)&info4);
 		if (r == NERR_Success) {
+			log(3, L"🔈ansi_to_utf8 usri4_name");
 			name = ansi_to_utf8(std::wstring(info4->usri4_name));
+			log(3, L"🔈ansi_to_utf8 usri4_full_name");
 			fullName = ansi_to_utf8(std::wstring(info4->usri4_full_name));
 			flags = info4->usri4_flags;
 			//sid to wstring
@@ -67,6 +69,7 @@ struct User {
 				data = (LPWSTR)malloc(dataSize);
 				hresult = RegQueryValueExW(hKey, L"ProfileImagePath", NULL, NULL, (LPBYTE)data, &dataSize);
 				if (hresult == ERROR_SUCCESS) {
+					log(3, L"🔈ansi_to_utf8 data");
 					profile = ansi_to_utf8(std::wstring(data));
 				}
 				else {
@@ -88,13 +91,15 @@ struct User {
 	*/
 	std::wstring to_json() {
 		log(3, L"🔈user to_json");
-		std::wstring result = tab(1) + L"{ \n"
-			+ tab(2) + L"\"Name\":\"" + name + L"\", \n"
-			+ tab(2) + L"\"FullName\":\"" + fullName + L"\", \n"
-			+ tab(2) + L"\"SID\":\"" + SID + L"\", \n"
-			+ tab(2) + L"\"Disabled\":\"" + bool_to_wstring((flags & UF_ACCOUNTDISABLE) ? true : false) + L"\", \n"
-			+ tab(2) + L"\"Profile\":\"" + replaceAll(profile, L"\\", L"\\\\") +L"\" \n"
-			+ tab(1) + L"}";
+		std::wstring result = tab(1) + L"{ \n";
+			result+= tab(2) + L"\"Name\":\"" + name + L"\", \n";
+			result+= tab(2) + L"\"FullName\":\"" + fullName + L"\", \n";
+			result+= tab(2) + L"\"SID\":\"" + SID + L"\", \n";
+			log(3, L"🔈bool_to_wstring flags");
+			result+= tab(2) + L"\"Disabled\":\"" + bool_to_wstring((flags & UF_ACCOUNTDISABLE) ? true : false) + L"\", \n";
+			log(3, L"🔈replaceAll profile");
+			result+= tab(2) + L"\"Profile\":\"" + replaceAll(profile, L"\\", L"\\\\") +L"\" \n";
+			result += tab(1) + L"}";
 		return result;
 	}
 
@@ -128,7 +133,7 @@ struct Users {
 			return ERROR_EMPTY;
 		}
 		else {
-			for (int i = 0; i < nbUsers; i++) {
+			for (DWORD i = 0; i < nbUsers; i++) {
 				User temp = User(usersBuf[i].usri3_name);
 				users.push_back(temp);
 				if (temp.profile != L"")
@@ -142,7 +147,7 @@ struct Users {
 	*/
 	HRESULT to_json() {
 		std::vector<User>::iterator it;
-		HRESULT hresult;
+		HRESULT hresult = 0;
 		std::wstring result = L"[ \n";
 
 		log(3, L"🔈users to_json");

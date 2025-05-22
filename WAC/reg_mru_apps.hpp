@@ -73,14 +73,14 @@ public:
 	HRESULT getData( int _niveau = 0) {
 		
 		HRESULT hresult = NULL;
-		ORHKEY hKey;
-		ORHKEY hSubKey;
-		DWORD nSubkeys;
-		DWORD nValues, dType;
-		WCHAR szValue[MAX_VALUE_NAME];
-		WCHAR szSubKey[MAX_VALUE_NAME];
+		ORHKEY hKey = NULL;
+		ORHKEY hSubKey = NULL;
+		ORHKEY Offhive = NULL;
+		DWORD nSubkeys = NULL;
+		DWORD nValues = 0;
 		DWORD nSize = 0;
-		ORHKEY Offhive;
+		WCHAR szValue[MAX_VALUE_NAME] = L"";
+		WCHAR szSubKey[MAX_VALUE_NAME] = L"";
 		std::wstring ruche = L"";
 		niveau = _niveau;
 		//HKEY_USERS
@@ -121,7 +121,7 @@ public:
 	*/
 	HRESULT parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vector<MruApp>* MruApps, unsigned int niveau, bool _Parentiszip) {
 		HRESULT hresult = NULL;
-		ORHKEY hKeyChilds;
+		ORHKEY hKeyChilds = NULL;
 		std::vector<unsigned int> ids;
 		LPBYTE pData = new BYTE[MAX_DATA];
 		unsigned int pos = 0;
@@ -143,7 +143,7 @@ public:
 			MruApp.sidName = getNameFromSid(sid);
 			MruApp.source = source;
 			getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), pData);
-			unsigned int offset = 0;
+			size_t offset = 0;
 			MruApp.name = ansi_to_utf8(std::wstring((wchar_t*)(pData + offset)));
 			offset += MruApp.name.size() * 2 + 2;
 			while (true) {

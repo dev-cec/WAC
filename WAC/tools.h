@@ -5,6 +5,7 @@
 #include <offreg.h>
 #include <vector>
 #include <time.h>
+#include <comutil.h>
 
 //constantes globales 
 #define MAX_KEY_NAME 255 //!< plus longue key name en base de registre
@@ -115,13 +116,6 @@ std::string ansi_to_utf8(std::string in);
 * @return chaîne de caractères encodé en UTF8
 */
 std::wstring ansi_to_utf8(std::wstring in);
-
-/*! concatenation de 2 BSTR
-* @param a 1ére chaîne de caractères
-* @param a 2nd chaîne de caractères
-* @return chaîne de caractères concaténée
-*/
-BSTR bstr_concat(BSTR a, BSTR b);
 
 /*! affiche en hexadecimal le contenu du buffer dans la console
 * @param buffer pointeur sur un buffer contenu les données à afficher
@@ -288,6 +282,12 @@ long long bytes_to_long_long(LPBYTE bytes);
 * @return unsigned char issu de la conversion
 */
 unsigned char bytes_to_unsigned_char(LPBYTE bytes);
+
+/*! Conversion une chaîne de caractères wstring en chaine binaire
+* @param bstr la chaîne de caractère binaire
+* @return wstring issue de la conversion
+*/
+BSTR wstring_to_bstr(std::wstring ws);
 
 /*! Conversion une chaîne de caractères binaire en wstring
 * @param bstr la chaîne de caractère binaire

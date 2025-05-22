@@ -78,14 +78,14 @@ public:
 	HRESULT getData( int _niveau = 0) {
 		
 		HRESULT hresult = NULL;
-		ORHKEY hKey;
-		ORHKEY hSubKey;
-		DWORD nSubkeys;
-		DWORD nValues, dType;
-		WCHAR szValue[MAX_VALUE_NAME];
-		WCHAR szSubKey[MAX_VALUE_NAME];
+		ORHKEY hKey = NULL;
+		ORHKEY hSubKey = NULL;
+		ORHKEY Offhive=NULL;
+		DWORD nSubkeys = 0;
+		DWORD nValues=0;
 		DWORD nSize = 0;
-		ORHKEY Offhive;
+		WCHAR szValue[MAX_VALUE_NAME]=L"";
+		WCHAR szSubKey[MAX_VALUE_NAME]=L"";
 		std::wstring ruche = L"";
 		niveau = _niveau;
 		//HKEY_USERS

@@ -38,6 +38,7 @@ struct Process {
 		processThreadCount = pe32->cntThreads;
 		//get owner of process
 		if (handle) {
+			log(3, L"🔈OpenProcessToken");
 			if (OpenProcessToken(handle, TOKEN_ALL_ACCESS, &tokenHandle)) {
 				log(3, L"🔈GetTokenInformation");
 				GetTokenInformation(tokenHandle, TokenOwner, NULL, 0, &returnSize);  // get data size
@@ -46,6 +47,7 @@ struct Process {
 					log(3, L"🔈ConvertSidToStringSid");
 					if (ConvertSidToStringSid(((PTOKEN_OWNER)infos)->Owner, &lpsid_wstring) != 0) {
 						processSID = std::wstring(lpsid_wstring);
+						log(3, L"🔈getNameFromSid lpsid_wstring");
 						processSidName = getNameFromSid(processSID);
 					}
 					else
@@ -62,7 +64,7 @@ struct Process {
 		}
 
 		// List the modules and threads associated with this process
-		
+		log(3, L"🔈ListProcessModules");
 		HRESULT result = ListProcessModules();
 		if (result != ERROR_SUCCESS)
 			log(2, L"🔥ListProcessModules : ", result);
@@ -74,7 +76,6 @@ struct Process {
 	*/
 	HRESULT ListProcessModules()
 	{
-		log(3, L"🔈ListProcessModules");
 		HANDLE hModuleSnap = INVALID_HANDLE_VALUE;
 		MODULEENTRY32 me32;
 
@@ -84,6 +85,8 @@ struct Process {
 		if (hModuleSnap == INVALID_HANDLE_VALUE)
 		{
 			HRESULT error = GetLastError();
+			log(3, L"🔈getErrorMessage error");
+			log(3, L"🔈ansi_to_utf8");
 			processModulesAccess = ansi_to_utf8(getErrorMessage(error));
 			log(2, L"🔥CreateToolhelp32Snapshot (of modules)", error);
 			return(ERROR_INVALID_HANDLE);
@@ -94,7 +97,7 @@ struct Process {
 
 		// Retrieve information about the first module,
 		// and exit if unsuccessful
-		bool result;
+		bool result=false;
 		log(3, L"🔈Module32First");
 		if (!Module32First(hModuleSnap, &me32)) {
 			log(2, L"🔥Module32First", GetLastError());
@@ -106,6 +109,7 @@ struct Process {
 
 		do {
 			std::wstring temp = ansi_to_utf8(std::wstring(me32.szExePath));
+			log(3, L"🔈replaceAll szExePath");
 			temp = replaceAll(temp, L"\\", L"\\\\");
 			log(2, L"❇️ Module exePath : " + temp);
 			processModules.push_back(temp);
@@ -122,14 +126,14 @@ struct Process {
 		std::wstring result = L"";
 
 		log(3, L"🔈process to_json");
-		result += tab(1) + L"{ \n"
-			+ tab(2) + L"\"Nom\":\"" + processName + L"\", \n"
-			+ tab(2) + L"\"SID\":\"" + processSID + L"\", \n"
-			+ tab(2) + L"\"Owner\":\"" + processSidName + L"\", \n"
-			+ tab(2) + L"\"PID\":\"" + std::to_wstring(processId) + L"\", \n"
-			+ tab(2) + L"\"PPId\":\"" + std::to_wstring(processParentId) + L"\", \n"
-			+ tab(2) + L"\"ModulesMessage\":\"" + processModulesAccess + L"\", \n"
-			+ tab(2) + L"\"Modules\":[\n";
+		result += tab(1) + L"{ \n";
+			result += tab(2) + L"\"Nom\":\"" + processName + L"\", \n";
+			result += tab(2) + L"\"SID\":\"" + processSID + L"\", \n";
+			result += tab(2) + L"\"Owner\":\"" + processSidName + L"\", \n";
+			result += tab(2) + L"\"PID\":\"" + std::to_wstring(processId) + L"\", \n";
+			result += tab(2) + L"\"PPId\":\"" + std::to_wstring(processParentId) + L"\", \n";
+			result += tab(2) + L"\"ModulesMessage\":\"" + processModulesAccess + L"\", \n";
+			result += tab(2) + L"\"Modules\":[\n";
 		std::vector<std::wstring>::iterator it;
 		for (it = processModules.begin(); it != processModules.end(); it++) {
 			result += tab(3) + L"\"" + it->data() + L"\"";

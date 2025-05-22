@@ -151,6 +151,7 @@ struct SystemInfo {
 		{
 			log(3, L"🔈Chargement de BrandingFormatString");
 			PWSTR(WINAPI * pfnBrandingFormatString)(PCWSTR pstrFormat);
+			log(3, L"🔈Appel de GetProcAddress");
 			(FARPROC&)pfnBrandingFormatString = GetProcAddress(hMod, "BrandingFormatString");
 			if (pfnBrandingFormatString)
 				osName = std::wstring(pfnBrandingFormatString(L"%WINDOWS_LONG%"));
@@ -167,21 +168,24 @@ struct SystemInfo {
 	/*! conversion de l'objet au format json
 	*/
 	HRESULT to_json() {
-		log(3, L"🔈to_json");
-		std::wstring result = L"{ \n"
-			L"\t\"OsArchitecture\":\"" + osArchitecture + L"\", \n"
-			L"\t\"OsName\":\"" + osName + L"\", \n"
-			L"\t\"ComputerName\":\"" + computerName + L"\", \n"
-			L"\t\"DomainName\":\"" + domainName + L"\", \n"
-			L"\t\"LocalDateTime\":\"" + time_to_wstring(localDateTime) + L"\", \n"
-			L"\t\"LocalDateTimeUtc\":\"" + time_to_wstring(localDateTimeUtc) + L"\", \n"
-			L"\t\"CurrentTimeZoneId\":\"" + currentTimeZone + L"\", \n"
-			L"\t\"CurrentTimeZoneCaption\":\"" + currentTimeZoneCaption + L"\", \n"
-			L"\t\"CurrentBias\":\"" + std::to_wstring(currentBias) + L"\", \n"
-			L"\t\"DaylightInEffect\":\"" + bool_to_wstring(daylightInEffect) + L"\", \n"
-			L"\t\"Version\":\"" + version + L"\", \n"
-			L"\t\"ServicePack\":\"" + servicePack + L"\" \n"
-			L"}";
+		log(3, L"🔈system to_json");
+		std::wstring result = L"{ \n";
+			result+=L"\t\"OsArchitecture\":\"" + osArchitecture + L"\", \n";
+			result+=L"\t\"OsName\":\"" + osName + L"\", \n";
+			result+=L"\t\"ComputerName\":\"" + computerName + L"\", \n";
+			result+=L"\t\"DomainName\":\"" + domainName + L"\", \n";
+			log(3, L"🔈time_to_wstring localDateTime ");
+			result+=L"\t\"LocalDateTime\":\"" + time_to_wstring(localDateTime) + L"\", \n";
+			log(3, L"🔈time_to_wstring localDateTimeUtc ");
+			result+=L"\t\"LocalDateTimeUtc\":\"" + time_to_wstring(localDateTimeUtc) + L"\", \n";
+			result+=L"\t\"CurrentTimeZoneId\":\"" + currentTimeZone + L"\", \n";
+			result+=L"\t\"CurrentTimeZoneCaption\":\"" + currentTimeZoneCaption + L"\", \n";
+			result+=L"\t\"CurrentBias\":\"" + std::to_wstring(currentBias) + L"\", \n";
+			log(3, L"🔈bool_to_wstring daylightInEffect ");
+			result+=L"\t\"DaylightInEffect\":\"" + bool_to_wstring(daylightInEffect) + L"\", \n";
+			result+=L"\t\"Version\":\"" + version + L"\", \n";
+			result+=L"\t\"ServicePack\":\"" + servicePack + L"\" \n";
+			result += L"}";
 
 
 		//enregistrement dans fichier json
@@ -196,6 +200,6 @@ struct SystemInfo {
 
 	/* libération mémoire */
 	void clear() {
-		log(3, L"🔈clear");
+		log(3, L"🔈system clear");
 	}
 };

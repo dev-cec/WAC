@@ -70,7 +70,7 @@ public:
 			log(1,  L"Unable to get value : HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\AppCompatCache\\AppCompatCache", hresult );
 			return hresult;
 		}
-		int offset = bytes_to_int(pData);
+		DWORD offset = bytes_to_int(pData);
 
 
 		while (offset < dwSize) {
