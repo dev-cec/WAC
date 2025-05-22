@@ -324,6 +324,7 @@ struct ScheduledTasks {
 				ScheduledTask s = ScheduledTask(pRegisteredTask);
 				scheduledTasks.push_back(s);
 			}
+			pRegisteredTask->Release();
 		}
 		pfolder->Release();
 		return ERROR_SUCCESS;
