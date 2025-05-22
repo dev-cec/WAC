@@ -1,4 +1,4 @@
-#include "idList.h"
+ï»¿#include "idList.h"
 #include <exception>
 
 
@@ -7,6 +7,7 @@
 *********************************************************************************************************************/
 
 FileAttributes::FileAttributes(unsigned int attr) {
+	log(3, L"ðŸ”ˆFileAttributes");
 	ReadOnly = (attr & FILE_ATTRIBUTE_READONLY) ? true : false;
 	Hidden = (attr & FILE_ATTRIBUTE_HIDDEN) ? true : false;
 	System = (attr & FILE_ATTRIBUTE_SYSTEM) ? true : false;
@@ -23,6 +24,7 @@ FileAttributes::FileAttributes(unsigned int attr) {
 } 
 
 std::wstring FileAttributes::to_wstring() {
+	log(3, L"ðŸ”ˆFileAttributes to_wstring");
 	std::wstring result = L"";
 	if (ReadOnly == true) result += L"READONLY, ";
 	if (Hidden == true) result += L"HIDDEN, ";
@@ -38,12 +40,13 @@ std::wstring FileAttributes::to_wstring() {
 	if (NotContentIndexed == true) result += L"NOT_CONTENT_INDEXED, ";
 	if (Encrypted == true) result += L"ENCRYPTED, ";
 	if (result.size() > 0)
-		return std::wstring(&result[0], &result[0] + result.size() - 2);//suppression de la dernière virgule et espace
+		return std::wstring(&result[0], &result[0] + result.size() - 2);//suppression de la derniÃ¨re virgule et espace
 	else
 		return result;
 }
 
 LinkFlags::LinkFlags(unsigned int _flags) {
+	log(3, L"ðŸ”ˆLinkFlags");
 	HasLinkTargetIDList = (_flags & 0x1) ? true : false;
 	HasLinkInfo = (_flags & 0x2) ? true : false;
 	HasName = (_flags & 0x4) ? true : false;
@@ -74,6 +77,7 @@ LinkFlags::LinkFlags(unsigned int _flags) {
 }
 
 std::wstring LinkFlags::to_wstring() {
+	log(3, L"ðŸ”ˆLinkFlags to_wstring");
 	std::wstring result = L"";
 	if (HasLinkTargetIDList == true) result += L"HAS_LINK_TARGET_ID_LIST, ";
 	if (HasLinkInfo == true) result += L"HAS_LINK_INFO, ";
@@ -103,7 +107,7 @@ std::wstring LinkFlags::to_wstring() {
 	if (PreferEnvironmentPath == true) result += L"PREFER_ENVIRONMENT_PATH, ";
 	if (KeepLocalIDListForUNCTarget == true) result += L"KEEP_LOCAL_IDLIST_FOR_UNC_TARGET, ";
 	if (result.size() > 0)
-		return std::wstring(&result[0], &result[0] + result.size() - 2);//suppression de la dernière virgule et espace
+		return std::wstring(&result[0], &result[0] + result.size() - 2);//suppression de la derniÃ¨re virgule et espace
 	else
 		return result;
 }
@@ -113,6 +117,7 @@ std::wstring LinkFlags::to_wstring() {
 *********************************************************************************************************************/
 
 IdList::IdList(LPBYTE buffer, int _niveau, bool Parentiszip) {
+	log(3, L"ðŸ”ˆIdList");
 	type_char = NULL;
 	niveau = _niveau;
 	shellItem = NULL;
@@ -134,7 +139,8 @@ IdList::IdList(LPBYTE buffer, int _niveau, bool Parentiszip) {
 }
 
 std::wstring IdList::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆIdList to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	result += tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"TypeHex\" : \"0x" + type_hex + L"\",\n"
@@ -261,6 +267,7 @@ enum VARENUM
 	VT_TYPEMASK = 0xfff
 };*/
 std::wstring get_type(unsigned int type) {
+	log(3, L"ðŸ”ˆget_type");
 	if (type == 0) return L"VT_EMPTY";
 	else if (type == 1) return L"VT_NULL";
 	else if (type == 2) return L"VT_I2";
@@ -319,6 +326,7 @@ std::wstring get_type(unsigned int type) {
 }
 
 void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int niveau, std::wstring* value, bool* valueIsObject) {
+	log(3, L"ðŸ”ˆget_value");
 	if (valueType == VT_EMPTY) { // VT_NULL
 		*value = L"";
 	}
@@ -417,7 +425,7 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 			*valueIsObject = true;
 			*value = SPS(buffer + *pos + 0x8, niveau + 2).to_json();
 		}
-		else *value = L"Not implemented"; //TODO Vector<VT_UI1>, il s'agit d'un std::vector de byte (LPBYTE) mais contenu unknown, il faudrait trouver à quoi correspond system.delegateidlist
+		else *value = L"Not implemented"; //TODO Vector<VT_UI1>, il s'agit d'un std::vector de byte (LPBYTE) mais contenu unknown, il faudrait trouver Ã  quoi correspond system.delegateidlist
 
 		*pos += itemsize;
 
@@ -445,7 +453,7 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 
 		*pos += pos2;
 
-		//résultat
+		//rÃ©sultat
 		*value = L"[\n";
 		*value += sps1->to_json();
 		*value += L",\n";
@@ -485,6 +493,7 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 }
 
 SPSValue::SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau) {
+	log(3, L"ðŸ”ˆSPSValue");
 	niveau = _niveau;
 	guid = _guid;
 	valueIsObject = false;
@@ -515,7 +524,8 @@ SPSValue::SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau) {
 }
 
 std::wstring SPSValue::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆSPSValue to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"ID\" : \"" + guid + L"/" + id + L"\",\n"
 		+ tab(niveau + 1) + L"\"Name\" : \"" + name + L"\",\n"
@@ -529,6 +539,7 @@ std::wstring SPSValue::to_json(int i) {
 }
 
 SPS::SPS(LPBYTE buffer, int _niveau) {
+	log(3, L"ðŸ”ˆSPS");
 	niveau = _niveau;
 	size = bytes_to_unsigned_int(buffer);
 	version = bytes_to_unsigned_int(buffer + 4);
@@ -549,7 +560,8 @@ SPS::SPS(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring SPS::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆSPS to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Values\" : [\n";
 	std::vector<SPSValue>::iterator it;
@@ -569,6 +581,7 @@ std::wstring SPS::to_json(int i) {
 *********************************************************************************************************************/
 
 Beef0000::Beef0000(LPBYTE buffer, int _niveau) {
+	log(3, L"ðŸ”ˆBeef0000");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0000";
@@ -579,7 +592,8 @@ Beef0000::Beef0000(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0000::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0000 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Guid1\" : \"" + guid1 + L"\",\n"
@@ -591,6 +605,7 @@ std::wstring Beef0000::to_json(int i) {
 }
 
 Beef0001::Beef0001(LPBYTE buffer, int _niveau) {
+	log(3, L"ðŸ”ˆBeef0001");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0001";
@@ -598,7 +613,8 @@ Beef0001::Beef0001(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0001::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0001 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message \" : \"" + message + L"\"\n"
@@ -608,7 +624,7 @@ std::wstring Beef0001::to_json(int i) {
 
 Beef0002::Beef0002(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef0002");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0002";
@@ -616,7 +632,8 @@ Beef0002::Beef0002(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0002::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0002 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message \" : \"" + message + L"\"\n"
@@ -626,7 +643,7 @@ std::wstring Beef0002::to_json(int i) {
 
 Beef0003::Beef0003(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef0003");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0003";
@@ -635,7 +652,8 @@ Beef0003::Beef0003(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0003::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0003 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Guid\" : \"" + guid + L"\",\n"
@@ -645,9 +663,8 @@ std::wstring Beef0003::to_json(int i) {
 }
 
 Beef0004::Beef0004(LPBYTE buffer, int _niveau, bool* is_zip, bool is_file) {
+	log(3, L"ðŸ”ˆBeef0004 ");
 	ExtensionVersion = 0;
-	
-	
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0004";
@@ -662,7 +679,7 @@ Beef0004::Beef0004(LPBYTE buffer, int _niveau, bool* is_zip, bool is_file) {
 	longNameSize = bytes_to_unsigned_short(buffer + off + 18);
 	longName = ansi_to_utf8(std::wstring((wchar_t*)(buffer + off + 28)));
 	// le contenu des ZIP et autres archives ont un contenu format special, il faut donc identifier les archives.
-	// L'attribut ARCHIVE ne signifie pas ZIP mais "prêt à être archivé" au sens l'explorer
+	// L'attribut ARCHIVE ne signifie pas ZIP mais "prÃªt Ã  Ãªtre archivÃ©" au sens l'explorer
 	std::wstring extension = L"";
 	if (longName.length() > 3)
 		extension = longName.substr(longName.length() - 3, 3);
@@ -677,7 +694,8 @@ Beef0004::Beef0004(LPBYTE buffer, int _niveau, bool* is_zip, bool is_file) {
 }
 
 std::wstring Beef0004::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0004 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"CreatedDate\" : \"" + time_to_wstring(accessedDate) + L"\",\n"
@@ -692,7 +710,7 @@ std::wstring Beef0004::to_json(int i) {
 
 Beef0006::Beef0006(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef0006");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0006";
@@ -703,7 +721,8 @@ Beef0006::Beef0006(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0006::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0006 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Username\" : \"" + username + L"\"\n"
@@ -713,7 +732,7 @@ std::wstring Beef0006::to_json(int i) {
 
 Beef0008::Beef0008(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef0008");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef008";
@@ -721,7 +740,8 @@ Beef0008::Beef0008(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0008::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0008 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
@@ -731,7 +751,7 @@ std::wstring Beef0008::to_json(int i) {
 
 Beef0009::Beef0009(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef0009");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0009";
@@ -739,7 +759,8 @@ Beef0009::Beef0009(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0009::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0009 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
@@ -749,7 +770,7 @@ std::wstring Beef0009::to_json(int i) {
 
 Beef000a::Beef000a(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef000a");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef000a";
@@ -757,7 +778,8 @@ Beef000a::Beef000a(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef000a::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef000a to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
@@ -767,7 +789,7 @@ std::wstring Beef000a::to_json(int i) {
 
 Beef000c::Beef000c(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef000c");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef000c";
@@ -775,7 +797,8 @@ Beef000c::Beef000c(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef000c::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef000c to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
@@ -785,7 +808,7 @@ std::wstring Beef000c::to_json(int i) {
 
 Beef000e::Beef000e(LPBYTE buffer, int _niveau) { // TODO A TESTER
 	
-	
+	log(3, L"ðŸ”ˆBeef000e");
 	niveau = _niveau;
 	message = L"";
 	isPresent = true;
@@ -833,7 +856,8 @@ Beef000e::Beef000e(LPBYTE buffer, int _niveau) { // TODO A TESTER
 }
 
 std::wstring Beef000e::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef000e to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"IdLists\" : [\n";
@@ -852,7 +876,7 @@ std::wstring Beef000e::to_json(int i) {
 
 Beef0010::Beef0010(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef0010");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0010";
@@ -860,7 +884,8 @@ Beef0010::Beef0010(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0010::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0010 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"SPS\" :\n"
@@ -872,7 +897,7 @@ std::wstring Beef0010::to_json(int i) {
 
 Beef0013::Beef0013(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef0013");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0013";
@@ -880,7 +905,8 @@ Beef0013::Beef0013(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0013::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0013 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
@@ -890,7 +916,7 @@ std::wstring Beef0013::to_json(int i) {
 
 Beef0014::Beef0014(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef0014");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0014";
@@ -898,7 +924,8 @@ Beef0014::Beef0014(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0014::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0014 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
@@ -908,7 +935,7 @@ std::wstring Beef0014::to_json(int i) {
 
 Beef0016::Beef0016(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef0016");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0016";
@@ -916,7 +943,8 @@ Beef0016::Beef0016(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0016::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0016 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Value\" : \"" + value + L"\"\n"
@@ -926,7 +954,7 @@ std::wstring Beef0016::to_json(int i) {
 
 Beef0017::Beef0017(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef0017");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0017";
@@ -934,7 +962,8 @@ Beef0017::Beef0017(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0017::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0017 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
@@ -944,7 +973,7 @@ std::wstring Beef0017::to_json(int i) {
 
 Beef0019::Beef0019(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef0019");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0019";
@@ -955,7 +984,8 @@ Beef0019::Beef0019(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0019::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0019 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Guid1\" : \"" + guid1 + L"\",\n"
@@ -968,7 +998,7 @@ std::wstring Beef0019::to_json(int i) {
 
 Beef001a::Beef001a(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef001a");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef001a";
@@ -976,7 +1006,8 @@ Beef001a::Beef001a(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef001a::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef001a to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"FileDocumentType\" : \"" + fileDocumentTypeString + L"\"\n"
@@ -986,7 +1017,7 @@ std::wstring Beef001a::to_json(int i) {
 
 Beef001b::Beef001b(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef001b");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef001b";
@@ -994,7 +1025,8 @@ Beef001b::Beef001b(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef001b::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef001b to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"FileDocumentType\" : \"" + fileDocumentTypeString + L"\"\n"
@@ -1004,7 +1036,7 @@ std::wstring Beef001b::to_json(int i) {
 
 Beef001d::Beef001d(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef001d");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef001d";
@@ -1012,7 +1044,8 @@ Beef001d::Beef001d(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef001d::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef001d to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Executable\" : \"" + executable + L"\"\n"
@@ -1022,7 +1055,7 @@ std::wstring Beef001d::to_json(int i) {
 
 Beef001e::Beef001e(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef001e");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef001e";
@@ -1030,7 +1063,8 @@ Beef001e::Beef001e(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef001e::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef001e to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"PinType\" : \"" + pinType + L"\"\n"
@@ -1040,7 +1074,7 @@ std::wstring Beef001e::to_json(int i) {
 
 Beef0021::Beef0021(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef0021");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0021";
@@ -1048,7 +1082,8 @@ Beef0021::Beef0021(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0021::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0021 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"SPS\" : \n" + sps.to_json(i) + L"\n"
@@ -1058,7 +1093,7 @@ std::wstring Beef0021::to_json(int i) {
 
 Beef0024::Beef0024(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef0024");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0024";
@@ -1066,7 +1101,8 @@ Beef0024::Beef0024(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0024::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0024 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"SPS\" : \n" + sps.to_json(i) + L"\n"
@@ -1076,7 +1112,7 @@ std::wstring Beef0024::to_json(int i) {
 
 Beef0025::Beef0025(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef0025");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0025";
@@ -1085,7 +1121,8 @@ Beef0025::Beef0025(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0025::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0025 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Filetime1\" : \"" + time_to_wstring(filetime1) + L"\",\n"
@@ -1096,7 +1133,7 @@ std::wstring Beef0025::to_json(int i) {
 
 Beef0026::Beef0026(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef0026");
 	sps = NULL;
 	niveau = _niveau;
 	isPresent = true;
@@ -1126,7 +1163,8 @@ Beef0026::Beef0026(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0026::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0026 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"CreationDate\" : \"" + time_to_wstring(ctime) + L"\",\n"
@@ -1155,7 +1193,7 @@ std::wstring Beef0026::to_json(int i) {
 
 Beef0027::Beef0027(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef0027");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0027";
@@ -1163,7 +1201,8 @@ Beef0027::Beef0027(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0027::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0027 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"SPS\" : \n" + sps.to_json(i) + L"\n"
@@ -1173,7 +1212,7 @@ std::wstring Beef0027::to_json(int i) {
 
 Beef0029::Beef0029(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆBeef0029");
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0029";
@@ -1181,7 +1220,8 @@ Beef0029::Beef0029(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Beef0029::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆBeef0029 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
@@ -1190,6 +1230,7 @@ std::wstring Beef0029::to_json(int i) {
 }
 
 void getExtensionBlock(LPBYTE buffer, std::vector<IExtensionBlock*>* extensionBlocks, int _niveau, bool* is_zip, bool is_file) {
+	log(3, L"ðŸ”ˆgetExtensionBlock");
 	IExtensionBlock* block = NULL;
 	unsigned int signature = bytes_to_unsigned_int(buffer + 4);
 	unsigned short int size = bytes_to_unsigned_short(buffer);
@@ -1311,12 +1352,14 @@ void getExtensionBlock(LPBYTE buffer, std::vector<IExtensionBlock*>* extensionBl
 *********************************************************************************************************************/
 
 ShellVolumeFlags::ShellVolumeFlags(unsigned char i) {
+	log(3, L"ðŸ”ˆShellVolumeFlags");
 	None = (i & (unsigned char)0x8f) == (unsigned char)0x00 ? true : false;
 	SystemFolder = (i & (unsigned char)0x8f) == (unsigned char)0x0e ? true : false;
 	LocalDisk = (i & (unsigned char)0x8f) == (unsigned char)0x0f ? true : false;
 }
 
 std::wstring ShellVolumeFlags::to_wstring() {
+	log(3, L"ðŸ”ˆShellVolumeFlags to_wstring");
 	std::wstring result = L"";
 	if (None == true) result += L"NONE, ";
 	if (SystemFolder == true) result += L"SYSTEMFOLDER, ";
@@ -1328,6 +1371,7 @@ std::wstring ShellVolumeFlags::to_wstring() {
 }
 
 FsFlags::FsFlags(unsigned char i) {
+	log(3, L"ðŸ”ˆFsFlags");
 	IS_DIRECTORY = (i & (unsigned char)0x01) ? true : false;
 	IS_FILE = (i & (unsigned char)0x02) ? true : false;
 	IS_UNICODE = (i & (unsigned char)0x04) ? true : false;
@@ -1336,6 +1380,7 @@ FsFlags::FsFlags(unsigned char i) {
 }
 
 std::wstring FsFlags::to_wstring() {
+	log(3, L"ðŸ”ˆFsFlags to_wstring");
 	std::wstring result = L"";
 	if (IS_DIRECTORY == true) result += L"IS_DIRECTORY, ";
 	if (IS_FILE == true) result += L"IS_FILE, ";
@@ -1344,14 +1389,14 @@ std::wstring FsFlags::to_wstring() {
 	if (UNKNOWN == true) result += L"UNKNOWN, ";
 
 	if (result.size() > 0)
-		return std::wstring(&result[0], &result[0] + result.size() - 2);//suppression de la dernière virgule et espace
+		return std::wstring(&result[0], &result[0] + result.size() - 2);//suppression de la derniÃ¨re virgule et espace
 	else
 		return result;
 }
 
 VolumeShellItem::VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆVolumeShellItem");
 	niveau = _niveau;
 	isPresent = true;
 	name = L"";
@@ -1376,7 +1421,8 @@ VolumeShellItem::VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _ni
 }
 
 std::wstring VolumeShellItem::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆVolumeShellItem to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent) {
 		result += tab(niveau) + L"\"Flags\" : \"" + flags.to_wstring() + L"\",\n"
@@ -1395,7 +1441,7 @@ std::wstring VolumeShellItem::to_json(int i) {
 
 ControlPanel::ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆControlPanel");
 	niveau = _niveau;
 	isPresent = true;
 	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 14));
@@ -1416,7 +1462,8 @@ ControlPanel::ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _nive
 }
 
 std::wstring ControlPanel::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆControlPanel to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent == true) {
 		result += tab(niveau) + L"\"GUID\" : \"" + guid + L"\",\n"
@@ -1438,7 +1485,7 @@ std::wstring ControlPanel::to_json(int i) {
 
 ControlPanelCategory::ControlPanelCategory(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆControlPanelCategory");
 	niveau = _niveau;
 	isPresent = true;
 	unsigned short int totalsize = bytes_to_unsigned_short(buffer);
@@ -1472,7 +1519,8 @@ ControlPanelCategory::ControlPanelCategory(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring ControlPanelCategory::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆControlPanelCategory to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent == true) {
 		result += tab(niveau) + L"\"ID\" : \"" + id + L"\",\n"
@@ -1493,7 +1541,7 @@ std::wstring ControlPanelCategory::to_json(int i) {
 
 Property::Property(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆProperty");
 	niveau = _niveau;
 	id = 0;
 	type = 0;
@@ -1514,7 +1562,8 @@ Property::Property(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring Property::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆProperty to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n";
 	if (guid == L"{4D545058-4FCE-4578-95C8-8698A9BC0F49}" || guid == L"{4D545058-8900-40b3-8F1D-DC246E1E8370}")
 		result += tab(niveau + 1) + L"\"ID\" : \"" + guid + L"/" + to_hex(id) + L"\",\n";
@@ -1532,7 +1581,7 @@ std::wstring Property::to_json(int i) {
 
 UserPropertyView0xC01::UserPropertyView0xC01(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆUserPropertyView0xC01");
 	niveau = _niveau;
 	unsigned int pos = 0x14;//unknown
 	unsigned int wstring1Size = bytes_to_unsigned_int(buffer + pos);
@@ -1546,7 +1595,8 @@ UserPropertyView0xC01::UserPropertyView0xC01(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring UserPropertyView0xC01::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆUserPropertyView0xC01 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"\"Folder\" : \"" + folder + L"\",\n"
 		+ tab(niveau) + L"\"FullUrl\" : \"" + fullurl + L"\"";
 	return result;
@@ -1554,7 +1604,7 @@ std::wstring UserPropertyView0xC01::to_json(int i) {
 
 UserPropertyView0x23febbee::UserPropertyView0x23febbee(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆUserPropertyView0x23febbee");
 	niveau = _niveau;
 	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 0xE));
 	FriendlyName = trans_guid_to_wstring(guid);
@@ -1562,7 +1612,8 @@ UserPropertyView0x23febbee::UserPropertyView0x23febbee(LPBYTE buffer, int _nivea
 }
 
 std::wstring UserPropertyView0x23febbee::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆUserPropertyView0x23febbee to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"\"GUID\" : \"" + guid + L"\",\n"
 		+ tab(niveau) + L"\"FriendlyName\" : \"" + FriendlyName + L"\"";
 	return result;
@@ -1570,7 +1621,7 @@ std::wstring UserPropertyView0x23febbee::to_json(int i) {
 
 UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆUserPropertyView0x07192006");
 	unsigned int pos = 0;
 	niveau = _niveau;
 	modifiedUtc = bytes_to_filetime(buffer + 26);
@@ -1607,7 +1658,8 @@ UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _nivea
 }
 
 std::wstring UserPropertyView0x07192006::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆUserPropertyView0x07192006 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"\"Folder1\" : \"" + folderName1 + L"\",\n"
 		+ tab(niveau) + L"\"Folder2\" : \"" + folderName2 + L"\",\n"
 		+ tab(niveau) + L"\"FolderIdentifier\" : \"" + folderIdentifier + L"\",\n"
@@ -1631,7 +1683,7 @@ std::wstring UserPropertyView0x07192006::to_json(int i) {
 
 UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆUserPropertyView0x10312005");
 	unsigned int pos = 0;
 	niveau = _niveau;
 	int namesize = bytes_to_unsigned_int(buffer + 0x26);
@@ -1655,7 +1707,7 @@ UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _nivea
 	FriendlyName = trans_guid_to_wstring(guidClass);
 	pos += 16;
 
-	unsigned int numberProperties = bytes_to_unsigned_int(buffer + pos);// ?? TODO  seules les 4 premieres sont exploitables, est-ce vraiment le nombre de propriétés ?........
+	unsigned int numberProperties = bytes_to_unsigned_int(buffer + pos);// ?? TODO  seules les 4 premieres sont exploitables, est-ce vraiment le nombre de propriÃ©tÃ©s ?........
 	pos += 4;
 	for (unsigned int x = 0; x < numberProperties; x++) {
 		Property temp(buffer + pos, niveau + 1);
@@ -1665,7 +1717,8 @@ UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _nivea
 }
 
 std::wstring UserPropertyView0x10312005::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆUserPropertyView0x10312005 to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"\"Name\" : \"" + name + L"\",\n"
 		+ tab(niveau) + L"\"Identifier\" : \"" + identifier + L"\",\n"
 		+ tab(niveau) + L"\"Star-system\" : \"" + filesystem + L"\",\n"
@@ -1698,7 +1751,7 @@ std::wstring UserPropertyView0x10312005::to_json(int i) {
 
 UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆUsersPropertyView");
 	niveau = _niveau;
 	isPresent = true;
 	extensionOffset = 0;
@@ -1709,7 +1762,7 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau) {
 	totalsize = bytes_to_unsigned_short(buffer + 0);
 	dataSize = bytes_to_unsigned_short(buffer + 4);
 	signature = bytes_to_unsigned_int(buffer + 6);
-	unsigned short int signature_short = bytes_to_unsigned_short(buffer + 6); // Certaines signatures sont identifiées par leurs 2 premiers octets
+	unsigned short int signature_short = bytes_to_unsigned_short(buffer + 6); // Certaines signatures sont identifiÃ©es par leurs 2 premiers octets
 	SPSDataSize = bytes_to_unsigned_short(buffer + 10);
 	identifierSize = bytes_to_unsigned_short(buffer + 12);
 	dataOffset = 14;
@@ -1761,7 +1814,8 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring UsersPropertyView::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆUsersPropertyView to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent) {
 		result += tab(niveau) + L"\"Signature\" : \"0x" + to_hex(signature) + L"\"";
@@ -1771,7 +1825,7 @@ std::wstring UsersPropertyView::to_json(int i) {
 		}
 
 		if (SPSs.size() > 0) {
-			result += L",\n"; // block SPS donc il nous faut une "," après identifier
+			result += L",\n"; // block SPS donc il nous faut une "," aprÃ¨s identifier
 			result += tab(niveau) + L"\"SPS\" : [\n";
 			std::vector<SPS>::iterator it;
 			for (it = SPSs.begin(); it != SPSs.end(); it++) {
@@ -1784,7 +1838,7 @@ std::wstring UsersPropertyView::to_json(int i) {
 		}
 
 		if (extensionBlocks.size() > 0) {
-			result += L",\n"; // block Extension donc il nous faut une "," après identifier
+			result += L",\n"; // block Extension donc il nous faut une "," aprÃ¨s identifier
 			result += tab(niveau) + L"\"Extension Blocks Count\" : \"" + std::to_wstring(extensionBlocks.size()) + L"\",\n";
 			result += tab(niveau) + L"\"Extension Blocks\" : [\n";
 			std::vector<IExtensionBlock*>::iterator it;
@@ -1806,7 +1860,7 @@ std::wstring UsersPropertyView::to_json(int i) {
 
 RootFolder::RootFolder(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆRootFolder");
 	niveau = _niveau;
 	isPresent = true;
 	unsigned short int size = bytes_to_unsigned_short(buffer);
@@ -1847,16 +1901,17 @@ RootFolder::RootFolder(LPBYTE buffer, int _niveau) {
 	}
 	if (sortIndex == L"UNKNOWN" )
 		log(1,  L"RootFolder : sortIndex Unknown 0x" + to_hex(type),ERROR_UNKNOWN_COMPONENT );
-	/* TODO: C'est une version simplifiée qui semble suffire pour le moment
-	* conforme à la documentation Windows Shell Item format specification https://github.com/libyal/libfwsi/blob/main/documentation/Windows%20Shell%20Item%20format.asciidoc#43-control-panel-shell-items
-	* Le code à l'adresse ci dessous est plus complet
+	/* TODO: C'est une version simplifiÃ©e qui semble suffire pour le moment
+	* conforme Ã  la documentation Windows Shell Item format specification https://github.com/libyal/libfwsi/blob/main/documentation/Windows%20Shell%20Item%20format.asciidoc#43-control-panel-shell-items
+	* Le code Ã  l'adresse ci dessous est plus complet
 	* https://github.com/49374/OverTheShellbags/blob/main/OverTheShellbags/shell_item_parser.py#L11
 	*/
 
 }
 
 std::wstring RootFolder::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆRootFolder to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent) {
 		result += tab(niveau) + L"\"SortIndex\" : \"" + sortIndex + L"\"";
@@ -1887,7 +1942,7 @@ std::wstring RootFolder::to_json(int i) {
 
 NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆNetworkShellItem");
 	niveau = _niveau;
 	isPresent = true;
 	unsigned char subtype = *reinterpret_cast<unsigned char*>(buffer + 2);
@@ -1922,7 +1977,8 @@ NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring NetworkShellItem::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆNetworkShellItem to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent) {
 		result += tab(niveau) + L"\"Type\" : \"" + subtypename + L"\",\n";
@@ -1938,6 +1994,7 @@ std::wstring NetworkShellItem::to_json(int i) {
 }
 
 ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _niveau) {
+	log(3, L"ðŸ”ˆArchiveFileContent");
 	isPresent = true;
 	niveau = _niveau;
 	unsigned int date = bytes_to_unsigned_int(buffer + 8);
@@ -1971,7 +2028,8 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring ArchiveFileContent::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆArchiveFileContent to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent) {
 		result += tab(niveau) + L"\"ModifiedUtc\" : \"" + time_to_wstring(modifiedUtc) + L"\",\n"
@@ -1983,7 +2041,7 @@ std::wstring ArchiveFileContent::to_json(int i) {
 
 URIShellItem::URIShellItem(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆURIShellItem");
 	niveau = _niveau;
 	isPresent = true;
 	unsigned short int size = bytes_to_unsigned_short(buffer);
@@ -1994,7 +2052,8 @@ URIShellItem::URIShellItem(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring URIShellItem::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆURIShellItem to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent) {
 		result += tab(niveau) + L"\"Uri\" : \"" + uri + L"\"\n";
@@ -2004,7 +2063,7 @@ std::wstring URIShellItem::to_json(int i) {
 
 FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSize, unsigned char shell_item_type_char, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆFileEntryShellItem");
 	niveau = _niveau;
 	isPresent = true;
 	fsFileSize = bytes_to_unsigned_int(buffer + 4);
@@ -2037,7 +2096,8 @@ FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSiz
 }
 
 std::wstring FileEntryShellItem::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆFileEntryShellItem to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent == true) {
 		result += tab(niveau) + L"\"Attributes\" : \"" + fsFileAttributes.to_wstring() + L"\",\n"
@@ -2063,7 +2123,7 @@ std::wstring FileEntryShellItem::to_json(int i) {
 
 UsersFilesFolder::UsersFilesFolder(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆUsersFilesFolder");
 	niveau = _niveau;
 	isPresent = true;
 	unsigned short int size = bytes_to_unsigned_short(buffer);
@@ -2075,7 +2135,8 @@ UsersFilesFolder::UsersFilesFolder(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring UsersFilesFolder::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆUsersFilesFolder to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent) {
 		result += tab(niveau) + L"\"PrimaryName\" : \"" + primaryName + L"\",\n"
@@ -2095,14 +2156,15 @@ std::wstring UsersFilesFolder::to_json(int i) {
 
 FavoriteShellitem::FavoriteShellitem(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆFavoriteShellitem");
 	niveau = _niveau;
 	isPresent = true;
 	UPV = UsersPropertyView(buffer, niveau + 1);
 }
 
 std::wstring FavoriteShellitem::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆFavoriteShellitem to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent) {
 		if (UPV.isPresent == true) {
@@ -2114,7 +2176,7 @@ std::wstring FavoriteShellitem::to_json(int i) {
 
 UnknownShellItem::UnknownShellItem(LPBYTE buffer, int _niveau) {
 	
-	
+	log(3, L"ðŸ”ˆUnknownShellItem");
 	niveau = _niveau;
 	isPresent = true;
 	unsigned short int size = bytes_to_unsigned_short(buffer);
@@ -2122,7 +2184,8 @@ UnknownShellItem::UnknownShellItem(LPBYTE buffer, int _niveau) {
 }
 
 std::wstring UnknownShellItem::to_json(int i) {
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	log(3, L"ðŸ”ˆUnknownShellItem to_json");
+	niveau += i; // dÃ©calage supplÃ©mentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (!conf._dump)
 		tab(niveau) + L"\"Data\" : \"" + data + L"\"\n"; //sinon dump deja present donc pas besoin de data
@@ -2130,6 +2193,7 @@ std::wstring UnknownShellItem::to_json(int i) {
 }
 
 void getShellItem(LPBYTE buffer, IShellItem** p, int _niveau, bool Parentiszip) {
+	log(3, L"ðŸ”ˆgetShellItem");
 	unsigned int item_size = bytes_to_unsigned_short(buffer);
 	if (Parentiszip == false) {
 		unsigned char type_char = *reinterpret_cast<unsigned char*>(buffer + 2);
