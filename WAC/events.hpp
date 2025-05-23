@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <cstdio>
 #include <windows.h>
 #include <fstream>
@@ -13,13 +13,14 @@
 
 
 /*! conversion d'un VARIANT_TYPE en wstring
-* @param data est la donn�e � transform�e
+* @param data est la donnée à transformée
 */
 std::wstring VariantType_to_wstring(PEVT_VARIANT data) {
 
 	switch (data->Type) {
 	case EvtVarTypeString: {
-		std::wstring temp = ansi_to_utf8(std::wstring(data->StringVal));
+		std::wstring temp = std::wstring(data->StringVal);
+		log(3, L"🔈replaceAll EvtVarTypeString");
 		temp = replaceAll(temp, L"\\", L"\\\\");
 		temp = replaceAll(temp, L"\"", L"\\\"");
 		temp = replaceAll(temp, L"\r", L"\\r");
@@ -29,7 +30,8 @@ std::wstring VariantType_to_wstring(PEVT_VARIANT data) {
 		break;
 	}
 	case EvtVarTypeAnsiString: {
-		std::wstring temp = ansi_to_utf8(string_to_wstring(std::string(data->AnsiStringVal)));
+		std::wstring temp = string_to_wstring(std::string(data->AnsiStringVal));
+		log(3, L"🔈replaceAll EvtVarTypeAnsiString");
 		temp = replaceAll(temp, L"\\", L"\\\\");
 		temp = replaceAll(temp, L"\"", L"\\\"");
 		temp = replaceAll(temp, L"\r", L"\\r");
@@ -83,6 +85,7 @@ std::wstring VariantType_to_wstring(PEVT_VARIANT data) {
 		break;
 	}
 	case EvtVarTypeGuid: {
+		log(3, L"🔈guid_to_wstring EvtVarTypeGuid");
 		return L"\"" + guid_to_wstring(*data->GuidVal) + L"\"";
 		break;
 	}
@@ -91,26 +94,31 @@ std::wstring VariantType_to_wstring(PEVT_VARIANT data) {
 		break;
 	}
 	case EvtVarTypeFileTime: {
+		log(3, L"🔈time_to_wstring EvtVarTypeFileTime");
 		return L"\"" + time_to_wstring(FILETIME(data->FileTimeVal)) + L"\"";
 		break;
 	}
 	case EvtVarTypeSysTime: {
 		FILETIME temp;
+		log(3, L"🔈SystemTimeToFileTime EvtVarTypeSysTime");
 		SystemTimeToFileTime(data->SysTimeVal, &temp);
 		return L"\"" + time_to_wstring(temp) + L"\"";
 		break;
 	}
 	case EvtVarTypeSid: {
 		LPWSTR temp;
+		log(3, L"🔈ConvertSidToStringSidW EvtVarTypeSid");
 		ConvertSidToStringSidW(data->SidVal, &temp);
 		return L"\"" + std::wstring(temp) + L"\"";
 		break;
 	}
 	case EvtVarTypeHexInt32: {
+		log(3, L"🔈to_hex EvtVarTypeHexInt32");
 		return L"\"" + to_hex(data->Int32Val) + L"\"";
 		break;
 	}
 	case EvtVarTypeHexInt64: {
+		log(3, L"🔈to_hex EvtVarTypeHexInt64");
 		return L"\"" + to_hex(data->Int64Val) + L"\"";
 		break;
 	}
@@ -118,7 +126,8 @@ std::wstring VariantType_to_wstring(PEVT_VARIANT data) {
 	case 129: { // ARRAY STRING
 		std::wstring result = L"";
 		for (DWORD iElement = 0; iElement < data->Count; iElement++) {
-			std::wstring temp = ansi_to_utf8(std::wstring(data->StringArr[iElement]));
+			std::wstring temp = std::wstring(data->StringArr[iElement]);
+			log(3, L"🔈replaceAll ARRAY STRING");
 			temp = replaceAll(temp, L"\\", L"\\\\");
 			temp = replaceAll(temp, L"\"", L"\\\"");
 			temp = replaceAll(temp, L"\r", L"\\r");
@@ -135,43 +144,45 @@ std::wstring VariantType_to_wstring(PEVT_VARIANT data) {
 	}
 
 	default: {
+		log(2, L"🔥VariantType_to_wstring unknown : " + std::to_wstring(data->Type));
 		return L"\"\"";
 		break;
 	}
 	}
 }
-/*! structure contenant un �v�nement */
+/*! structure contenant un événement */
 struct Event {
 	std::wstring evtSystemProviderName = L"";//!< nom du provider
 	std::wstring evtSystemProviderGuid = L"";//!< GUID du provider
-	std::wstring evtSystemEventID = L"";//!< id de l��v�nement
-	std::wstring evtSystemQualifiers = L"";//!< qualificatifs de l'�v�nement
-	std::wstring evtSystemLevel = L"";//!< niveau de l'�v�nement
+	std::wstring evtSystemEventID = L"";//!< id de l’événement
+	std::wstring evtSystemQualifiers = L"";//!< qualificatifs de l'événement
+	std::wstring evtSystemLevel = L"";//!< niveau de l'événement
 	std::wstring evtSystemTask = L"";//!< tache
-	std::wstring evtSystemOpcode = L"";//!< code d'op�ration
-	std::wstring evtSystemKeywords = L"";//!< mots cl�s
-	std::wstring evtSystemTimeCreated = L"";//!< date de cr�ation
-	std::wstring evtSystemTimeCreatedUtc = L"";//!< date de cr�ation au format UTC
+	std::wstring evtSystemOpcode = L"";//!< code d'opération
+	std::wstring evtSystemKeywords = L"";//!< mots clés
+	std::wstring evtSystemTimeCreated = L"";//!< date de création
+	std::wstring evtSystemTimeCreatedUtc = L"";//!< date de création au format UTC
 	std::wstring evtSystemEventRecordId = L"";//!< id de l'enregistrement
-	std::wstring evtSystemActivityID = L"";//!< id de l'activit�
-	std::wstring evtSystemRelatedActivityID = L"";//!< id de l'activit� en relation
-	std::wstring evtSystemProcessID = L"";//!< id du process ayant g�n�r� l'�v�nement
-	std::wstring evtSystemThreadID = L"";//!< id du thread ayant g�n�r� l'�v�nement
+	std::wstring evtSystemActivityID = L"";//!< id de l'activité
+	std::wstring evtSystemRelatedActivityID = L"";//!< id de l'activité en relation
+	std::wstring evtSystemProcessID = L"";//!< id du process ayant généré l'événement
+	std::wstring evtSystemThreadID = L"";//!< id du thread ayant généré l'événement
 	std::wstring evtSystemChannel = L"";//!< nom du channel
 	std::wstring evtSystemComputer = L""; //!< nom de l'ordinateur
 	std::wstring evtSystemUserID = L"";//!< SID de l'utilisateur
 	std::wstring evtSystemVersion = L"";//!< version
-	std::wstring evtEventData = L""; //!<  Data suppl�mentaires de l��v�nement
-	std::wstring evtEventMessage = L""; //!< message de l��v�nement
+	std::wstring evtEventData = L""; //!<  Data supplémentaires de l’événement
+	std::wstring evtEventMessage = L""; //!< message de l’événement
 
 	/*! Constructeur
 	* @param hevt est un handle sur la session ouverte par EvtOpenSession
-	* @param buffer st le nom du channel contenant les �v�nements
-	* @hevent est un handle sur un �v�nement
+	* @param buffer st le nom du channel contenant les événements
+	* @hevent est un handle sur un événement
 	
 	*/
 	Event(EVT_HANDLE hevt, LPWSTR buffer, EVT_HANDLE hEvent) {
-		PEVT_VARIANT event = NULL, event2 = NULL;
+		PEVT_VARIANT event = NULL;
+		PEVT_VARIANT event2 = NULL;
 		PEVT_VARIANT bufferEvt = NULL;
 		PEVT_VARIANT bufferEvt2 = NULL;
 		DWORD bufferLengthNeeded2 = 0;
@@ -187,8 +198,10 @@ struct Event {
 				bufferLength2 = bufferLengthNeeded2;
 				bufferEvt = (PEVT_VARIANT)malloc(bufferLength2);
 			}
+			log(3, L"🔈EvtCreateRenderContext hContext");
 			hContext = EvtCreateRenderContext(0, NULL, EvtRenderContextSystem);
-			if (hContext)
+			if (hContext) {
+				log(3, L"🔈EvtRender hContext");
 				if (EvtRender(hContext,
 					hEvent,
 					EvtRenderEventValues,
@@ -201,9 +214,16 @@ struct Event {
 				else {
 					status = GetLastError();
 					if (status != ERROR_INSUFFICIENT_BUFFER)
-						log(1,  std::wstring(buffer) + L" / LEvtCreateRenderContext : ", status );
+						log(2, L"🔥EvtRender hContext", status);
 
 				}
+			}
+			else {
+				status = GetLastError();
+				if (status != ERROR_INSUFFICIENT_BUFFER)
+					log(2, L"🔥EvtCreateRenderContext hContext", status);
+
+			}
 		} while (status == ERROR_INSUFFICIENT_BUFFER && hContext != NULL);
 
 		bufferLength2 = 0;
@@ -219,44 +239,92 @@ struct Event {
 				L"Event/EventData/Data",
 			};
 			DWORD count = sizeof(ppValues) / sizeof(LPWSTR);
-			if (EvtRender(EvtCreateRenderContext(count, ppValues, EvtRenderContextValues),
-				hEvent,
-				EvtRenderEventValues,
-				bufferLength2,
-				bufferEvt2,
-				&bufferLengthNeeded2,
-				&nbEvents) != FALSE) {
-				status = ERROR_SUCCESS;
+			log(3, L"🔈EvtCreateRenderContext hContext");
+			hContext = EvtCreateRenderContext(count, ppValues, EvtRenderContextValues);
+			if (hContext) {
+				log(3, L"🔈EvtRender hContext");
+				if (EvtRender(hContext,
+					hEvent,
+					EvtRenderEventValues,
+					bufferLength2,
+					bufferEvt2,
+					&bufferLengthNeeded2,
+					&nbEvents) != FALSE) {
+					status = ERROR_SUCCESS;
+				}
+				else {
+					status = GetLastError();
+					if (status != ERROR_INSUFFICIENT_BUFFER)
+						log(2, L"🔥EvtRender hContext", status);
+				}
 			}
 			else {
 				status = GetLastError();
 				if (status != ERROR_INSUFFICIENT_BUFFER)
-					log(1,  std::wstring(buffer) + L" / EvtRender : ", status );
+					log(2, L"🔥EvtCreateRenderContext hContext", status);
 
 			}
 		} while (status == ERROR_INSUFFICIENT_BUFFER);
 
+		log(3, L"🔈VariantType_to_wstring evtSystemProviderName");
 		evtSystemProviderName = VariantType_to_wstring(&bufferEvt[0]);
+		
+		log(3, L"🔈VariantType_to_wstring evtSystemProviderGuid");
 		evtSystemProviderGuid = VariantType_to_wstring(&bufferEvt[1]); // GUID
+		
+		log(3, L"🔈VariantType_to_wstring evtSystemEventID");
 		evtSystemEventID = VariantType_to_wstring(&bufferEvt[2]);
+		
+		log(3, L"🔈VariantType_to_wstring evtSystemQualifiers");
 		evtSystemQualifiers = VariantType_to_wstring(&bufferEvt[3]);
+		
+		log(3, L"🔈VariantType_to_wstring evtSystemLevel");
 		evtSystemLevel = VariantType_to_wstring(&bufferEvt[4]);
+		
+		log(3, L"🔈VariantType_to_wstring evtSystemTask");
 		evtSystemTask = VariantType_to_wstring(&bufferEvt[5]);
+		
+		log(3, L"🔈VariantType_to_wstring evtSystemOpcode");
 		evtSystemOpcode = VariantType_to_wstring(&bufferEvt[6]);
+		
+		log(3, L"🔈VariantType_to_wstring evtSystemKeywords");
 		evtSystemKeywords = VariantType_to_wstring(&bufferEvt[7]); // HEX
+		
+		log(3, L"🔈VariantType_to_wstring evtSystemTimeCreated");
 		evtSystemTimeCreated = VariantType_to_wstring(&bufferEvt[8]); // FILETIME
+		
+		log(3, L"🔈VariantType_to_wstring evtSystemEventRecordId");
 		evtSystemEventRecordId = VariantType_to_wstring(&bufferEvt[9]);
+		
+		log(3, L"🔈VariantType_to_wstring evtSystemActivityID");
 		evtSystemActivityID = VariantType_to_wstring(&bufferEvt[10]); // GUID
+		
+		log(3, L"🔈VariantType_to_wstring evtSystemRelatedActivityID");
 		evtSystemRelatedActivityID = VariantType_to_wstring(&bufferEvt[11]); // GUID
+		
+		log(3, L"🔈VariantType_to_wstring evtSystemProcessID");
 		evtSystemProcessID = VariantType_to_wstring(&bufferEvt[12]);
+		
+		log(3, L"🔈VariantType_to_wstring evtSystemThreadID");
 		evtSystemThreadID = VariantType_to_wstring(&bufferEvt[13]);
+		
+		log(3, L"🔈VariantType_to_wstring evtSystemChannel");
 		evtSystemChannel = VariantType_to_wstring(&bufferEvt[14]);
+		
+		log(3, L"🔈VariantType_to_wstring evtSystemComputer");
 		evtSystemComputer = VariantType_to_wstring(&bufferEvt[15]);
+		
+		log(3, L"🔈VariantType_to_wstring evtSystemUserID");
 		evtSystemUserID = VariantType_to_wstring(&bufferEvt[16]); //SID
+		
+		log(3, L"🔈VariantType_to_wstring evtSystemVersion");
 		evtSystemVersion = VariantType_to_wstring(&bufferEvt[17]);
+		
+		log(3, L"🔈VariantType_to_wstring evtEventData");
 		std::wstring temp = VariantType_to_wstring(&bufferEvt2[0]);
+		log(3, L"🔈replaceAll evtEventData");
 		temp = replaceAll(temp, L"\n", L"\n\t\t");
-		evtEventData = L"[\n\t\t" + temp + L"\n\t]"; // pour garantir d'avoir toujours un tableau format� m�me si cha�ne unique
+		evtEventData = L"[\n\t\t" + temp + L"\n\t]"; // pour garantir d'avoir toujours un tableau formaté même si chaîne unique
 
 		free(bufferEvt);
 		free(bufferEvt2);
@@ -269,16 +337,18 @@ struct Event {
 			free(bufferMessage);
 			bufferMessage = (LPWSTR)malloc(messageSizeNeeded * sizeof(wchar_t));
 			messagesize = messageSizeNeeded;
+			log(3, L"🔈EvtFormatMessage hmetadata");
 			if (!EvtFormatMessage(hmetadata, hEvent, NULL, 0, NULL, EvtFormatMessageEvent, messagesize, bufferMessage, &messageSizeNeeded)) {
 				status = GetLastError();
 				if (status != ERROR_INSUFFICIENT_BUFFER) {
-					log(1,  std::wstring(buffer) + L" / EvtFormatMessage : ", status );
+					log(2, L"🔥EvtFormatMessage hmetadata", status);
 					evtEventMessage = L"\"\"";
 				}
 			}
 			else {
 				status = ERROR_SUCCESS;
-				std::wstring temp = ansi_to_utf8(std::wstring(bufferMessage));
+				std::wstring temp = std::wstring(bufferMessage);
+				log(3, L"🔈replaceAll evtEventMessage");
 				temp = replaceAll(temp, L"\\", L"\\\\");
 				temp = replaceAll(temp, L"\"", L"\\\"");
 				temp = replaceAll(temp, L"\r", L"\\r");
@@ -295,6 +365,7 @@ struct Event {
 	/*! conversion de l'objet au format json
 	*/
 	std::wstring to_json() {
+		log(3, L"🔈event clear");
 		std::wstring result = L"{\n";
 		result += L"\t\"EvtSystemProviderName\" : " + evtSystemProviderName + L",\n";
 		result += L"\t\"EvtSystemProviderGuid\" : " + evtSystemProviderGuid + L",\n"; // GUID
@@ -320,7 +391,7 @@ struct Event {
 		return result;
 	}
 
-	/* liberation m�moire */
+	/* liberation mémoire */
 	void clear() {}
 };
 
@@ -329,7 +400,7 @@ struct Events {
 	std::vector<Event> events; //!< tableau contenant tout les Events
 	
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les param�tres de l'application issue des param�tres de la ligne de commande
+	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData() {
 		EVT_RPC_LOGIN login = { NULL };
@@ -341,12 +412,17 @@ struct Events {
 		DWORD bufferLength1 = 0, bufferLengthNeeded1 = 0, count = 0;
 		HRESULT status;
 
-		
-		hevt = EvtOpenSession(EvtRpcLogin, &login, 0, 0);
-		hChannel = EvtOpenChannelEnum(hevt, 0);
-		wprintf(L"%s\n", buffer);
-		do {
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"ℹ️Events : ");
+		log(0, L"*******************************************************************************************************************");
 
+		log(3, L"🔈EvtOpenSession");
+		hevt = EvtOpenSession(EvtRpcLogin, &login, 0, 0);
+		log(3, L"🔈EvtOpenChannelEnum");
+		hChannel = EvtOpenChannelEnum(hevt, 0);
+
+		do {
+			log(1, L"➕Channel");
 			//
 			// Expand the buffer size if needed.
 			//
@@ -355,45 +431,40 @@ struct Events {
 				free(buffer);
 				bufferLength1 = bufferLengthNeeded1;
 				buffer = (LPWSTR)malloc(bufferLength1 * sizeof(WCHAR));
-				if (buffer == NULL) {
-					status = GetLastError();
-					log(1,  L" buffer malloc : ", status );
-					break;
-				}
 			}
 
 			//
 			// Try to get the next channel name.
 			//
-
+			log(3, L"🔈EvtNextChannelPath");
 			if (EvtNextChannelPath(hChannel, bufferLength1, buffer, &bufferLengthNeeded1) == FALSE) {
 				status = GetLastError();
 				if (status != ERROR_INSUFFICIENT_BUFFER)
-					log(1,  L" EvtNextChannelPath : ", status );
+					log(2, L"🔥Process32First", status);// show cause of failure
 			}
 			else {
 				status = ERROR_SUCCESS;
-
-				wprintf(L"\t%s : ", buffer);
-				//if (std::wstring(buffer) == L"System") { // for test purpose only
+				
+				log(2, L"❇️ Channel Name : " + std::wstring(buffer));
+				std::wcout << tab(1) << std::wstring(buffer) << std::endl;
+				log(3, L"🔈EvtQuery EvtQueryChannelPath");
 				hQuery = EvtQuery(NULL, buffer, NULL, EvtQueryChannelPath);
 				if (hQuery == NULL) {
 					status = GetLastError();
 					if (status != ERROR_INSUFFICIENT_BUFFER)
-						log(1,  std::wstring(buffer) + L" / EvtQuery : ", status );
+						log(2, L"🔥EvtQuery EvtQueryChannelPath", status);// show cause of failure
 				}
 
 				//
 				// Read each event and render it as XML.
 				//
 
-
+				log(3, L"🔈EvtNext hQuery");
 				while (EvtNext(hQuery, 1, &hEvent, INFINITE, 0, &count) != FALSE) {
 					events.push_back(Event(hevt, buffer, hEvent));
 					EvtClose(hEvent);
 				}
 				EvtClose(hQuery);
-				//}
 				printSuccess();
 			}
 
@@ -408,6 +479,7 @@ struct Events {
 	*/
 	HRESULT to_json()
 	{
+		log(3, L"🔈events to_json");
 		std::wstring result = L"[ \n";
 		std::vector<Event>::iterator it;
 		for (it = events.begin(); it != events.end(); it++) {
@@ -419,17 +491,18 @@ struct Events {
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //cr�e le repertoire, pas d'erreur s'il existe d�j�
+		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/events.json");
-		myfile << result;
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation m�moire */
+	/* liberation mémoire */
 	void clear() {
+		log(3, L"🔈events clear");
 		for (Event temp : events)
 			temp.clear();
 	}

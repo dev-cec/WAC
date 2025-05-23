@@ -95,11 +95,11 @@ public:
 				for (DWORD i = 0; i < nValues; i++) {
 					UserAssist userassist;
 					nSize = MAX_VALUE_NAME;
-					DWORD cData = MAX_DATA;
-					hresult = OREnumValue(hKey, i, szValue, &nSize, &dType, NULL, &cData);
+
+					hresult = OREnumValue(hKey, i, szValue, &nSize, &dType, NULL, NULL);
 					// allocate memory to store the name
-					LPBYTE pData = new BYTE[cData];
-					getRegBinaryValue(hKey, nullptr, szValue, pData);
+					LPBYTE pData =NULL;
+					getRegBinaryValue(hKey, nullptr, szValue, pData); // TODO UTILE ? peut-on récupérer les données directement dans EnumValue avec OREnumValue(hKey, i, szValue, &nSize, &dType, pData, &dataSize); ?
 					userassist.Sid = get<0>(profile);
 					userassist.SidName = getNameFromSid(userassist.Sid);
 					userassist.Class = key;
@@ -151,7 +151,7 @@ public:
 		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/userassists.json");
-		myfile << result;
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
 		return ERROR_SUCCESS;

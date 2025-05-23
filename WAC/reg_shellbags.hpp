@@ -136,6 +136,10 @@ public:
 			ids.push_back(id);
 			pos += 4;
 		}
+
+		delete[] pData;
+		pData = NULL;
+
 		for (int id : ids) {
 			bool Parentiszip = false | _Parentiszip;
 			Shellbag shellbag;
@@ -160,6 +164,9 @@ public:
 					shellbag.shellitems.push_back(shellitem);
 				}
 			}
+			delete[] pData;
+			pData = NULL;
+
 			//Childs
 			hresult = OROpenKey(hKey, std::to_wstring(id).c_str(), &hKeyChilds);
 			if (hresult != ERROR_SUCCESS) {
@@ -174,7 +181,7 @@ public:
 			//save
 			shellbags->push_back(shellbag);
 		}
-		delete [] pData;
+
 		return ERROR_SUCCESS;
 	}
 
@@ -195,7 +202,7 @@ public:
 		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
 		myfile.open(conf._outputDir +"/shellbags.json");
-		myfile << result;
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
 		return ERROR_SUCCESS;

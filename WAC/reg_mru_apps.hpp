@@ -134,6 +134,8 @@ public:
 			ids.push_back(id);
 			pos += 4;
 		}
+		delete[] pData;
+		pData = NULL;
 		for (int id : ids) {
 			bool Parentiszip = false | _Parentiszip;
 			MruApp MruApp;
@@ -158,11 +160,12 @@ public:
 					MruApp.shellitems.push_back(shellitem);
 				}
 			}
+			delete[] pData;
+			pData = NULL;
 
 			//save
 			MruApps->push_back(MruApp);
 		}
-		delete [] pData;
 		return ERROR_SUCCESS;
 	}
 
@@ -182,7 +185,7 @@ public:
 		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
 		myfile.open(conf._outputDir +"/mruApps.json");
-		myfile << result;
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
 		return ERROR_SUCCESS;

@@ -138,7 +138,7 @@ public:
 		HRESULT hresult = NULL;
 		ORHKEY hKeyChilds;
 		std::vector<unsigned int> ids;
-		LPBYTE pData = new BYTE[MAX_DATA];
+		LPBYTE pData = NULL;
 		unsigned int pos = 0;
 
 
@@ -149,6 +149,8 @@ public:
 			ids.push_back(id);
 			pos += 4;
 		}
+		delete[] pData;
+		pData = NULL;
 		for (int id : ids) {
 			bool Parentiszip = false | _Parentiszip;
 			Mru Mru;
@@ -173,12 +175,13 @@ public:
 					Mru.shellitems.push_back(shellitem);
 				}
 			}
+			delete[] pData;
+			pData = NULL;
 
 			//save
 			Mrus->push_back(Mru);
 
 		}
-		delete [] pData;
 		return ERROR_SUCCESS;
 	}
 
@@ -200,7 +203,7 @@ public:
 		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
 		myfile.open(conf._outputDir +"/mrus.json");
-		myfile << result;
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
 		return ERROR_SUCCESS;

@@ -418,7 +418,7 @@ struct Prefetchs {
 		//enregistrement dans fichier json
 		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		myfile.open(conf._outputDir +"/prefetchs.json");
-		myfile << result;
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
 		return ERROR_SUCCESS;

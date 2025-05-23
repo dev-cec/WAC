@@ -55,6 +55,7 @@ public:
 		ORHKEY hKey=NULL;
 		DWORD nSubkeys=0;
 		DWORD nValues=0;
+		LPBYTE pData = NULL;
 
 		hresult = OROpenKey(conf.CurrentControlSet, L"Control\\Session Manager\\AppCompatCache", &hKey);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
@@ -64,7 +65,7 @@ public:
 
 		DWORD dwSize=0;
 		hresult = ORGetValue(hKey, NULL, L"AppCompatCache", NULL, nullptr, &dwSize); //taille des donnes à lire
-		LPBYTE pData = new BYTE[dwSize]; // Buffer de données
+
 		hresult = getRegBinaryValue(hKey, NULL, L"AppCompatCache", pData);
 		if (hresult != ERROR_SUCCESS) {
 			log(1,  L"Unable to get value : HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\AppCompatCache\\AppCompatCache", hresult );
@@ -121,7 +122,7 @@ public:
 		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/shimcache.json");
-		myfile << result;
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
 		return ERROR_SUCCESS;

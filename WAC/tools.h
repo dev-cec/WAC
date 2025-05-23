@@ -151,13 +151,6 @@ std::wstring replaceAll(std::wstring src, std::wstring search, std::wstring repl
 */
 std::wstring ROT13(std::wstring source);
 
-/*! ensure std::wstring is printable car beaucoup de caractère ne le sont pas et peuvent faire planter certaines opérations sur les chaînes ou casser le format JSON de sortie
-* Les caractères non imprimables sont remplacés par ?
-* @param source chaîne de caractères à traiter
-* @return wstring resultant de l'opération
-*/
-void static checkWstring(wchar_t* s);
-
 /*! décodage d'URL
 * @param encoded représente l’URL à décoder
 * @return string resultant de l'opération
@@ -357,6 +350,7 @@ HRESULT getRegSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::wstring*
 HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, FILETIME* filetime);
 
 /*! Lecture d'une valeur binaire en base de registre
+* nécessite d'utiliser delete[] pBytes pour libérer la mémoire
 * @param key clé de la base de registre
 * @param szsubkey sous-clé de la base de registre
 * @param szvalue contient la nom de la valeur à lire en base de registre

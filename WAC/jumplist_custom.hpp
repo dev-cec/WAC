@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <iostream>
 #include <cstdio>
@@ -20,46 +20,51 @@
 // Documentation : https://github.com/EricZimmerman/JumpList/blob/master/JumpList/Resources/AppIDs.txt
 ///////////////////////////////////////////////////
 
-/*! Représente un objet représentant un objet Custom Destination Category
+/*! ReprÃ©sente un objet reprÃ©sentant un objet Custom Destination Category
 */
 struct CustomDestinationCategory {
-	unsigned short int nameSize = 0; //!< taille du nom de la catégorie
-	std::wstring name = L""; //!< nom de la catégorie
-	unsigned int nbentries = 0; //!< nombre d'entrées dans la catégorie
+	unsigned short int nameSize = 0; //!< taille du nom de la catÃ©gorie
+	std::wstring name = L""; //!< nom de la catÃ©gorie
+	unsigned int nbentries = 0; //!< nombre d'entrÃ©es dans la catÃ©gorie
 	std::vector<RecentDoc> recentDocs; //!< tableau des recentDoc
 
-	/*! Constructeur par défaut
+	/*! Constructeur par dÃ©faut
 	*/
 	CustomDestinationCategory() {};
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param buffersize en entrée contient la taille du buffer
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param buffersize en entrÃ©e contient la taille du buffer
 	* @param _path est le chemin contenant les custom Destinations
-	* @param _sid est le SID de l'utilisateur propriétaire du LNK
+	* @param _sid est le SID de l'utilisateur propriÃ©taire du LNK
 
 	*/
 	CustomDestinationCategory(LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid) {
 		int pos = 0;
+		int y = 0;
+
+		log(3, L"ðŸ”ˆbytes_to_unsigned_int nbentries");
 		nbentries = bytes_to_unsigned_int(buffer + 4);
 		pos += 4;
 		//decoupage du fichier pour identifier tous les fichiers LNK
-		int y = 0;
 		for (int x = 0; x < buffersize - pos - 23; x++) {
+			log(3, L"ðŸ”ˆbytes_to_int s");
 			int s = bytes_to_int(buffer + pos + x); // = 0x4C = 76 pour un LNK
 			if (s == 76) {
 				GUID guid = *reinterpret_cast<GUID*>(buffer + pos + x + 4);
+				log(3, L"ðŸ”ˆguid_to_wstring guid");
 				std::wstring wguid = guid_to_wstring(guid);
 
-				if (guid_to_wstring(guid).compare(L"{00021401-0000-0000-C000-000000000046}") == 0) {
-					RecentDoc i = RecentDoc(buffer + pos + x, _path, _sid);
-					recentDocs.push_back(i);
+				if (wguid.compare(L"{00021401-0000-0000-C000-000000000046}") == 0) {
+					log(3, L"ðŸ”ˆRecentDoc");
+					recentDocs.push_back(RecentDoc(buffer + pos + x, _path, _sid));
 				}
 			}
 		}
 	};
 
 	virtual std::wstring to_json(int i) {
+		log(3, L"ðŸ”ˆCusteomDestination to_json");
 		std::wstring result = tab(i + 1) + L"\"recentDocs\": [ \n";
 		std::vector<RecentDoc>::iterator it;
 		for (it = recentDocs.begin(); it != recentDocs.end(); it++) {
@@ -74,42 +79,47 @@ struct CustomDestinationCategory {
 	};
 };
 
-/*! Représente un objet représentant un objet Custom Destination
+/*! ReprÃ©sente un objet reprÃ©sentant un objet Custom Destination
 */
 struct CustomDestination {
-	std::wstring Sid = L""; //!< SID de l'utilisateur propriétaire du custom Destination
-	std::wstring SidName = L""; //!< nom de l'utilisateur propriétaire du custom Destination
-	std::wstring application = L"";//!< nom de l'application liée au Custom Destination
+	std::wstring Sid = L""; //!< SID de l'utilisateur propriÃ©taire du custom Destination
+	std::wstring SidName = L""; //!< nom de l'utilisateur propriÃ©taire du custom Destination
+	std::wstring application = L"";//!< nom de l'application liÃ©e au Custom Destination
 	std::wstring path = L"";//!< Chemin du custom Destination dans la snapshot
+	std::wstring pathEscaped = L"";//!< Chemin du custom Destination dans la snapshot escaped
 	std::wstring pathOriginal = L"";//!< Chemin du custom Destination sur le disque
 	unsigned int typeInt = 0;//!< type de custom Destination en entier
 	std::wstring type = L"";//!< nom du type de Custom Destination
-	CustomDestinationCategory* categorie = NULL; //! Pointeur vers un une Custom Destination Catégorie sur un fichier lnk est présent
-	FILETIME created = { 0 }; //!< date de création du fichier
-	FILETIME createdUtc = { 0 }; //!< date de création du fichier au format utc
+	CustomDestinationCategory* categorie = NULL; //! Pointeur vers un une Custom Destination CatÃ©gorie sur un fichier lnk est prÃ©sent
+	FILETIME created = { 0 }; //!< date de crÃ©ation du fichier
+	FILETIME createdUtc = { 0 }; //!< date de crÃ©ation du fichier au format utc
 	FILETIME modified = { 0 };//!< date de modification  du fichier
 	FILETIME modifiedUtc = { 0 };//!< date de modification du fichier au format utc
-	FILETIME accessed = { 0 };//!< date d'accès du fichier
-	FILETIME accessedUtc = { 0 };//!< date d'accès du fichier au format utc
+	FILETIME accessed = { 0 };//!< date d'accÃ¨s du fichier
+	FILETIME accessedUtc = { 0 };//!< date d'accÃ¨s du fichier au format utc
 
-	/*! constructeur par défaut
+	/*! constructeur par dÃ©faut
 	*/
 	CustomDestination() {};
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
 	* @param _path est le chemin contenant les Automatic Destinations
-	* @param _sid est le SID de l'utilisateur propriétaire du LNK
+	* @param _sid est le SID de l'utilisateur propriÃ©taire du LNK
 
 	*/
 	CustomDestination(std::filesystem::path _path, std::wstring _sid) {
 		Sid = _sid;
+		log(3, L"ðŸ”ˆgetNameFromSid Sid");
 		SidName = getNameFromSid(Sid);
 		//path retourne un codage ANSI mais on veut de l'UTF8
-		path = ansi_to_utf8(_path.wstring());
-		replaceAll(path, L"\\", L"\\\\");
-		pathOriginal = replaceAll(path, conf.mountpoint, L"C:");
-		std::ifstream file(_path.wstring(), std::ios::binary);
+		path = _path.wstring();
+		log(3, L"ðŸ”ˆreplaceAll path");
+		pathEscaped = replaceAll(path, L"\\", L"\\\\");
+		log(3, L"ðŸ”ˆreplaceAll pathOriginal");
+		pathOriginal = replaceAll(pathEscaped, conf.mountpoint, L"C:");
+		log(2, L"â‡ï¸CustomDestination Path : " + pathOriginal);
+		std::ifstream file(path, std::ios::binary);
 		if (file.good())
 		{
 			file.unsetf(std::ios::skipws);
@@ -120,8 +130,9 @@ struct CustomDestination {
 			file.read(reinterpret_cast<CHAR*>(buffer), size);
 			file.close();
 
-			//récupération des dates
-			HANDLE hFile = CreateFile(_path.wstring().c_str(),  // name of the write
+			//rÃ©cupÃ©ration des dates
+			log(3, L"ðŸ”ˆCreateFile hFile");
+			HANDLE hFile = CreateFile(path.c_str(),  // name of the write
 				GENERIC_READ,          // open for reading
 				0,                      // do not share
 				NULL,                   // default security
@@ -138,22 +149,26 @@ struct CustomDestination {
 				FileTimeToLocalFileTime(&modifiedUtc, &modified);
 				FileTimeToLocalFileTime(&accessedUtc, &accessed);
 			}
+			else {
+				log(2, L"ðŸ”¥CreateFile hFile ",GetLastError());
+			}
 			CloseHandle(hFile);
 
 			//conversion de l'appid contenu dans le nom de fichier en nom d'application
-			std::wstring::size_type const p(_path.filename().wstring().find_last_of('.')); // position du point de l'extension
-			std::wstring baseName = _path.filename().wstring().substr(0, p); // nom de fichier sans extension
-			application = ansi_to_utf8(from_appId(baseName));
-
+			std::wstring::size_type const p(path.find_last_of('.')); // position du point de l'extension
+			std::wstring baseName = path.substr(0, p); // nom de fichier sans extension
+			log(3, L"ðŸ”ˆfrom_appId application");
+			application = from_appId(baseName);
+			log(3, L"ðŸ”ˆbytes_to_unsigned_int typeInt");
 			typeInt = bytes_to_unsigned_int(buffer);
 			switch (typeInt) {
 			case 0: {
-				log(1,  replaceAll(path,L"\\",L"\\\\") + L" : Custom category not supported",ERROR_UNSUPPORTED_TYPE);
+				log(2, L"ðŸ”¥"+ pathEscaped + L" : Custom category", ERROR_UNSUPPORTED_TYPE);
 				type = L"Custom category";
 				break;
 			}
 			case 1: {
-				log(1,  replaceAll(path,L"\\",L"\\\\") + L" : Known category not supported",ERROR_UNSUPPORTED_TYPE );
+				log(2, L"ðŸ”¥" + pathEscaped + L" : Known category",ERROR_UNSUPPORTED_TYPE );
 				type = L"Known category";
 				break;
 			}
@@ -166,32 +181,40 @@ struct CustomDestination {
 
 			//Control de la taille du fichier pour recherche de fichier LNK
 			if ((size > 24) && (typeInt == 2)) {
+				log(3, L"ðŸ”ˆCustomDestinationCategory");
 				categorie = new CustomDestinationCategory(buffer, size, path, _sid);
 			}
 			else {
-				log(1,  replaceAll(path,L"\\",L"\\\\") + L" : Empty customdestination, no LNK to parse",ERROR_INVALID_DATA );
+				log(2, L"ðŸ”¥" + pathEscaped + L" : no LNK to parse",ERROR_EMPTY );
 			}
-			delete [] buffer;
+			delete[] buffer;
 		}
 	};
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i) {
-		std::wstring result = tab(i) + L"{ \n"
-			+ tab(i + 1) + L"\"SID\":\"" + Sid + L"\", \n"
-			+ tab(i + 1) + L"\"SIDName\":\"" + SidName + L"\", \n"
-			+ tab(i + 1) + L"\"Application\":\"" + application + L"\", \n"
-			+ tab(i + 1) + L"\"Path\":\"" + pathOriginal + L"\", \n"
-			+ tab(i + 1) + L"\"Type\":\"" + type + L"\", \n"
-			+ tab(i + 1) + L"\"Created\":\"" + time_to_wstring(created) + L"\", \n"
-			+ tab(i + 1) + L"\"CreatedUtc\":\"" + time_to_wstring(createdUtc) + L"\", \n"
-			+ tab(i + 1) + L"\"Modified\":\"" + time_to_wstring(modified) + L"\", \n"
-			+ tab(i + 1) + L"\"ModifiedUtc\":\"" + time_to_wstring(modifiedUtc) + L"\", \n"
-			+ tab(i + 1) + L"\"Accessed\":\"" + time_to_wstring(accessed) + L"\", \n"
-			+ tab(i + 1) + L"\"AccessedUtc\":\"" + time_to_wstring(accessedUtc) + L"\"";
+		log(3, L"ðŸ”ˆCustomDestination to_json");
+		std::wstring result = tab(i) + L"{ \n";
+			result += tab(i + 1) + L"\"SID\":\"" + Sid + L"\", \n";
+			result += tab(i + 1) + L"\"SIDName\":\"" + SidName + L"\", \n";
+			result += tab(i + 1) + L"\"Application\":\"" + application + L"\", \n";
+			result += tab(i + 1) + L"\"Path\":\"" + pathOriginal + L"\", \n";
+			result += tab(i + 1) + L"\"Type\":\"" + type + L"\", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring created");
+			result += tab(i + 1) + L"\"Created\":\"" + time_to_wstring(created) + L"\", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring createdUtc");
+			result += tab(i + 1) + L"\"CreatedUtc\":\"" + time_to_wstring(createdUtc) + L"\", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring modified");
+			result += tab(i + 1) + L"\"Modified\":\"" + time_to_wstring(modified) + L"\", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring modifiedUtc");
+			result += tab(i + 1) + L"\"ModifiedUtc\":\"" + time_to_wstring(modifiedUtc) + L"\", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring accessed");
+			result += tab(i + 1) + L"\"Accessed\":\"" + time_to_wstring(accessed) + L"\", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring accessedUtc");
+			result += tab(i + 1) + L"\"AccessedUtc\":\"" + time_to_wstring(accessedUtc) + L"\"";
 		if (categorie != NULL) {
 			result += L",\n";
 			result += categorie->to_json(i);
@@ -203,30 +226,35 @@ struct CustomDestination {
 		return result;
 	};
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
+		log(3, L"ðŸ”ˆCustomDestination clear");
 		delete categorie;
 	}
 };
 
-/*! Représente un objet représentant un objet Jumplist contenant les Custom Destinations
+/*! ReprÃ©sente un objet reprÃ©sentant un objet Jumplist contenant les Custom Destinations
 */
 struct JumplistCustoms {
 	std::vector<CustomDestination> customDestinations; //!< tableau contenant les objets
 	
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
+	* @param conf contient les paramÃ¨tres de l'application issue des paramÃ¨tres de la ligne de commande
 	*/
 	HRESULT getData() {
 		
 		std::string rep = "\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\CustomDestinations";
 		for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
-			std::string path = wstring_to_string(conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"")) + rep;
+			log(3, L"ðŸ”ˆreplaceAll profile");
+			std::wstring profilePath = replaceAll(get<1>(profile), L"C:", L"");
+			log(3, L"ðŸ”ˆwstring_to_string path");
+			std::string path = wstring_to_string(conf.mountpoint + profilePath) + rep;
 			struct stat sb;
 			if (stat(path.c_str(), &sb) == 0) { // directory Exists
 				for (const auto& entry : std::filesystem::directory_iterator(path)) {
 					if (entry.is_regular_file() && (entry.path().extension() == ".customDestinations-ms")) {
+						log(1, L"âž•CustomDestination");
 						customDestinations.push_back(CustomDestination(entry.path(), get<0>(profile)));
 					}
 				}
@@ -253,15 +281,15 @@ struct JumplistCustoms {
 		}
 		result += L"]\n";
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crÃ©e le repertoire, pas d'erreur s'il existe dÃ©jÃ 
 		myfile.open(conf._outputDir +"/jumplistCustomDestinations.json");
-		myfile << result;
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
 		return ERROR_SUCCESS;
 	};
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
 		for (CustomDestination temp : customDestinations)
 			temp.clear();
