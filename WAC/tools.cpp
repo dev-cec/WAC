@@ -149,7 +149,6 @@ void log(int loglevel, std::wstring message, HRESULT result) {
 
 std::string ansi_to_utf8(std::string in)
 {
-	//check isansi ? à voir si plantage
 	// 
 	//used to log, so no log to this call function
 
@@ -294,18 +293,17 @@ std::wstring tab(int i) {
 *****************************************************/
 
 std::wstring getNameFromSid(std::wstring _sid) {
-
 	SID_NAME_USE SidType;
 	wchar_t lpName[256];
 	wchar_t lpDomain[256];
 	PSID pSID = NULL;
 	if (_sid != L"") {
+		log(3, L"🔈ConvertStringSidToSidW");
 		ConvertStringSidToSidW(_sid.c_str(), &pSID);
 		DWORD dwSize = 256;
-		log(3, L"🔈LookupAccountSidW lpName");
+		log(3, L"🔈LookupAccountSidW");
 		LookupAccountSidW(NULL, pSID, lpName, &dwSize, lpDomain, &dwSize, &SidType);
-		log(3, L"🔈ansi_to_utf8 lpName");
-		return ansi_to_utf8(std::wstring(lpName));
+		return std::wstring(lpName);
 	}
 	return L"";
 }
@@ -511,8 +509,6 @@ std::wstring multiSz_to_json(std::vector<std::wstring> vec, int niveau)
 {
 	std::wstring out = L"[\n";
 	for (int i = 0; i < vec.size(); i++) { // se termine par 2 chaîne \0\0
-		log(3, L"🔈ansi_to_utf8 vec[i]");
-		vec[i] = ansi_to_utf8(vec[i]);
 		log(3, L"🔈replaceAll vec[i]");
 		vec[i] = replaceAll(vec[i], L"\\", L"\\\\");
 		out += tab(niveau + 1) + L"\"" + vec[i] + L"\"";
@@ -547,9 +543,6 @@ std::vector<std::wstring> multiWstring_to_vector(LPBYTE data, int size)
 	{
 
 		std::wstring ws = std::wstring(d);
-		// codage ANSI mais on veut de l'UTF8
-		log(3, L"🔈ansi_to_utf8 ws");
-		ws = ansi_to_utf8(ws);
 		pos += ws.length() + 1;//position du premier caractère de la chaîne suivante après le \0 de fin de chaîne de la suivante
 		d += ws.length() + 1;
 		if (!ws.empty()) {

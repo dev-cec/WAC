@@ -34,6 +34,8 @@ struct Process {
 
 		processName = std::wstring(pe32->szExeFile);
 		processId = pe32->th32ProcessID;
+
+		log(2, L"❇️ Process Name : " + processName + L" (PID " + std::to_wstring(processId) + L")");
 		processParentId = pe32->th32ParentProcessID;
 		processThreadCount = pe32->cntThreads;
 		//get owner of process
@@ -195,7 +197,6 @@ struct Processes {
 		do
 		{
 			log(1, L"➕Process");
-			log(2, L"❇️ Process Name : " + std::wstring(pe32.szExeFile) + L" (PID " + std::to_wstring(pe32.th32ProcessID) + L")");
 			log(3, L"🔈OpenProcess");
 			hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pe32.th32ProcessID);
 			DWORD r = GetLastError();
