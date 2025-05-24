@@ -71,7 +71,7 @@ public:
 			log(1,  L"Unable to get value : HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\AppCompatCache\\AppCompatCache", hresult );
 			return hresult;
 		}
-		DWORD offset = bytes_to_int(pData);
+		DWORD offset = *reinterpret_cast<int*>(pData);
 
 
 		while (offset < dwSize) {
@@ -79,19 +79,19 @@ public:
 			std::wstring signature = std::wstring(pData + offset, pData + offset + 4);
 			if (signature == L"10ts") {
 				offset += 12;//unused
-				short int name_length = bytes_to_short(pData + offset);
+				short int name_length = *reinterpret_cast<short int*>(pData + offset);
 				offset += 2;
 				shimcache.path = std::wstring((LPWSTR)(pData + offset), (LPWSTR)(pData + offset) + name_length / sizeof(wchar_t));
 				shimcache.path = replaceAll(shimcache.path, L"\\", L"\\\\");
 				shimcache.path = replaceAll(shimcache.path, L"\t", L" "); // replace tab by space. seen in values
 				offset += name_length;
-				FILETIME filetime = bytes_to_filetime(pData + offset);
+				FILETIME filetime = *reinterpret_cast<FILETIME*>(pData + offset);
 				shimcache.lastModification = time_to_wstring(filetime);
 				shimcache.lastModificationUtc = time_to_wstring(filetime, true);
 				offset += 8;
-				int data_length = bytes_to_int(pData + offset);
+				int data_length = *reinterpret_cast<int*>(pData + offset);
 				offset += data_length;
-				short int executed = bytes_to_short(pData + offset);
+				short int executed = *reinterpret_cast<short int*>(pData + offset);
 				shimcache.executed = executed;
 				offset += 4; // 2 unused
 

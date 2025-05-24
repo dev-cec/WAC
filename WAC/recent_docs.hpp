@@ -59,25 +59,25 @@ public:
 		unsigned int header_size = *reinterpret_cast<unsigned int*>(buffer);
 		guid = *reinterpret_cast<GUID*>(buffer + 4);
 		if (guid_to_wstring(guid).compare(L"{00021401-0000-0000-C000-000000000046}") == 0) {
-			flags = LinkFlags(bytes_to_unsigned_int(buffer + 20));
-			unsigned int fileAttributes = bytes_to_unsigned_int(buffer + 24);
+			flags = LinkFlags(*reinterpret_cast<unsigned int*>(buffer + 20));
+			unsigned int fileAttributes = *reinterpret_cast<unsigned int*>(buffer + 24);
 			attributes = FileAttributes(fileAttributes);
-			targetCreated = bytes_to_filetime(buffer + 28);
+			targetCreated = *reinterpret_cast<FILETIME*>(buffer + 28);
 			if (time_to_wstring(targetCreated) != L"")
 				LocalFileTimeToFileTime(&targetCreated, &targetCreatedUtc);
 
-			targetAccessed = bytes_to_filetime(buffer + 36);
+			targetAccessed = *reinterpret_cast<FILETIME*>(buffer + 36);
 			if (time_to_wstring(targetAccessed) != L"")
 				LocalFileTimeToFileTime(&targetAccessed, &targetAccessedUtc);
 
-			targetModified = bytes_to_filetime(buffer + 44);
+			targetModified = *reinterpret_cast<FILETIME*>(buffer + 44);
 			if (time_to_wstring(targetModified) != L"")
 				LocalFileTimeToFileTime(&targetModified, &targetModifiedUtc);
-			iconIndex = bytes_to_unsigned_int(buffer + 56);
-			commandOption = showCommandOption(bytes_to_unsigned_int(buffer + 60)); //
+			iconIndex = *reinterpret_cast<unsigned int*>(buffer + 56);
+			commandOption = showCommandOption(*reinterpret_cast<unsigned int*>(buffer + 60)); //
 			//debug
 			if (commandOption == L"UNKOWN" )
-				log(1,  L"commandOption Unknown 0x" + to_hex(bytes_to_unsigned_int(buffer + 60)),ERROR_UNSUPPORTED_TYPE );
+				log(1,  L"commandOption Unknown 0x" + to_hex(*reinterpret_cast<unsigned int*>(buffer + 60)),ERROR_UNSUPPORTED_TYPE );
 
 			//-------------------------------------------------------------------------
 			// Shell item id list (starts at 76 with 2 byte length -> so we can skip):
@@ -87,12 +87,12 @@ public:
 			int LinkTargetIDList_offset = header_size;
 			if (flags.HasLinkTargetIDList)
 			{
-				LinkTargetIDList_size = bytes_to_unsigned_short(buffer + LinkTargetIDList_offset); //size of item id list
+				LinkTargetIDList_size = *reinterpret_cast<unsigned short int*>(buffer + LinkTargetIDList_offset); //size of item id list
 
 				int offset = LinkTargetIDList_offset + 2;
 				unsigned short int item_size = 1;
 				while (item_size != 0 && offset < LinkTargetIDList_size) {
-					item_size = bytes_to_unsigned_short(buffer + offset);
+					item_size = *reinterpret_cast<unsigned short int*>(buffer + offset);
 					if (item_size != 0) {
 						idLists.push_back(IdList(buffer + offset, 2)); // lvl 1 is object itself
 					}
@@ -110,62 +110,62 @@ public:
 			int LinkInfo_offset = LinkTargetIDList_offset + 2 + LinkTargetIDList_size;
 
 			if (flags.HasLinkInfo) {
-				LinkInfo_size = bytes_to_unsigned_int(buffer + LinkInfo_offset);
-				unsigned int link_flags = bytes_to_unsigned_int(buffer + LinkInfo_offset + 8);
+				LinkInfo_size = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset);
+				unsigned int link_flags = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + 8);
 				bool VolumeIDAndLocalBasePath = link_flags & 0x1;
 				bool CommonNetworkRelativeLinkAndPathSuffix = link_flags & 0x2;
 				//-------------------------------------------------------------------------
 				// Volume Id info:
 				//-------------------------------------------------------------------------
-				unsigned int volumeId_offset = bytes_to_unsigned_int(buffer + LinkInfo_offset + 12); //volume id offset
+				unsigned int volumeId_offset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + 12); //volume id offset
 				if (VolumeIDAndLocalBasePath == true && volumeId_offset != 0) {
-					unsigned int driveType = bytes_to_unsigned_int(buffer + LinkInfo_offset + volumeId_offset + 4);
+					unsigned int driveType = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + volumeId_offset + 4);
 					volumeDriveType = driveType_to_wstring(driveType);
 					//debug
 					if (volumeDriveType == L"BAD TYPE" )
 						log(1,  L"volumeDriveType BAD TYPE 0x" + to_hex(driveType),ERROR_UNSUPPORTED_TYPE );
-					unsigned int serial = bytes_to_unsigned_int(buffer + LinkInfo_offset + volumeId_offset + 8);
+					unsigned int serial = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + volumeId_offset + 8);
 					std::stringstream ss;
 					ss << std::hex << serial;
 					volumeSerial = string_to_wstring((ss.str()));
 					transform(volumeSerial.begin(), volumeSerial.end(), volumeSerial.begin(), ::toupper);
-					unsigned int labeloffset = bytes_to_unsigned_int(buffer + LinkInfo_offset + volumeId_offset + 12);
+					unsigned int labeloffset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + volumeId_offset + 12);
 					if (labeloffset != 0x14) {
 						volumeLabel = string_to_wstring(ansi_to_utf8(std::string((char*)(buffer + LinkInfo_offset + volumeId_offset + labeloffset))));
 					}
 					else {
-						unsigned int labeloffsetunicode = bytes_to_unsigned_int(buffer + LinkInfo_offset + volumeId_offset + 16);
+						unsigned int labeloffsetunicode = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + volumeId_offset + 16);
 						volumeLabel = string_to_wstring(std::string((char*)(buffer + LinkInfo_offset + volumeId_offset + labeloffset)));
 					}
 				}
 				//-------------------------------------------------------------------------
 				// Local path std::string (ending with 0x00):
 				//-------------------------------------------------------------------------
-				unsigned int LocalPath_offset = bytes_to_unsigned_int(buffer + LinkInfo_offset + 16); //local path offset from start of fileinfo
+				unsigned int LocalPath_offset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + 16); //local path offset from start of fileinfo
 
 				target = string_to_wstring(ansi_to_utf8((char*)(buffer + LinkInfo_offset + LocalPath_offset)));
 				target = replaceAll(target, L"\\", L"\\\\"); ; // escape \ in std::string
 				//-------------------------------------------------------------------------
 				// Common Network Relative Link info:
 				//-------------------------------------------------------------------------
-				unsigned int network_offset = bytes_to_unsigned_int(buffer + LinkInfo_offset + 20); //common network offset
+				unsigned int network_offset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + 20); //common network offset
 				if (CommonNetworkRelativeLinkAndPathSuffix && network_offset != 0) {
-					unsigned int net_flags = bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 4);
+					unsigned int net_flags = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + network_offset + 4);
 					bool ValidDevice = net_flags && 0x1;
 					bool ValidNetType = net_flags && 0x2;
-					unsigned int NetNameOffset = bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 8);
+					unsigned int NetNameOffset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + network_offset + 8);
 					netName = string_to_wstring(ansi_to_utf8(std::string((char*)(buffer + LinkInfo_offset + network_offset + NetNameOffset))));
 					netName = replaceAll(netName, L"\\", L"\\\\"); // escape \ in std::string
-					unsigned int DeviceNameOffset = bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 12);
+					unsigned int DeviceNameOffset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + network_offset + 12);
 					if (ValidDevice == true && DeviceNameOffset != 0) {
 						netDeviceName = string_to_wstring(ansi_to_utf8(std::string((char*)(buffer + LinkInfo_offset + network_offset + NetNameOffset))));
 						netDeviceName = replaceAll(netDeviceName, L"\\", L"\\\\"); // escape \ in std::string
 					}
 					if (ValidNetType == true) {
-						netProviderType = networkProvider_to_wstring(bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 14));
+						netProviderType = networkProvider_to_wstring(*reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + network_offset + 14));
 						//debug
 						if (netProviderType == L"BAD NET PROVIDER" )
-							log(1,  L"netProviderType Unknown 0x" + to_hex(bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 14)),ERROR_UNSUPPORTED_TYPE );
+							log(1,  L"netProviderType Unknown 0x" + to_hex(*reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + network_offset + 14)),ERROR_UNSUPPORTED_TYPE );
 					}
 				}
 			}
@@ -181,7 +181,7 @@ public:
 			int nameString_offset = stringData_offset;
 			int relativePath_offset = stringData_offset;
 			if (flags.HasName == true) {
-				namestring_size = bytes_to_unsigned_short(buffer + nameString_offset);
+				namestring_size = *reinterpret_cast<unsigned short int*>(buffer + nameString_offset);
 				description = ansi_to_utf8(std::wstring((wchar_t*)(buffer + stringData_offset + 2), (wchar_t*)(buffer + stringData_offset + 2 + namestring_size * 2)));
 				description = replaceAll(description, L"\\", L"\\\\");//escape \ in std::string
 				relativePath_offset = nameString_offset + 2 + namestring_size * 2;
@@ -193,7 +193,7 @@ public:
 			unsigned short int relativePath_size = 0;
 			int workingDirectory_offset = relativePath_offset;
 			if (flags.HasRelativePath == true) {
-				relativePath_size = bytes_to_unsigned_short(buffer + relativePath_offset);
+				relativePath_size = *reinterpret_cast<unsigned short int*>(buffer + relativePath_offset);
 				relativePath = ansi_to_utf8(std::wstring((wchar_t*)(buffer + relativePath_offset + 2), (wchar_t*)(buffer + relativePath_offset + 2 + relativePath_size * 2)));
 				relativePath = replaceAll(relativePath, L"\\", L"\\\\");//escape \ in std::string
 				workingDirectory_offset = relativePath_offset + 2 + relativePath_size * 2;
@@ -203,7 +203,7 @@ public:
 			unsigned short int workingDirectory_size = 0;
 			int arguments_offset = workingDirectory_offset;
 			if (flags.HasWorkingDir == true) {
-				workingDirectory_size = bytes_to_unsigned_short(buffer + workingDirectory_offset);
+				workingDirectory_size = *reinterpret_cast<unsigned short int*>(buffer + workingDirectory_offset);
 				workingDirectory = ansi_to_utf8(std::wstring((wchar_t*)(buffer + workingDirectory_offset + 2), (wchar_t*)(buffer + workingDirectory_offset + 2 + workingDirectory_size * 2)));
 				workingDirectory = replaceAll(workingDirectory, L"\\", L"\\\\");//escape \ in std::string
 				arguments_offset = workingDirectory_offset + 2 + workingDirectory_size * 2;
@@ -214,7 +214,7 @@ public:
 			unsigned short int arguments_size = 0;
 			int iconLocation_offset = arguments_offset;
 			if (flags.HasArguments == true) {
-				arguments_size = bytes_to_unsigned_short(buffer + workingDirectory_offset);
+				arguments_size = *reinterpret_cast<unsigned short int*>(buffer + workingDirectory_offset);
 				arguments = ansi_to_utf8(std::wstring((wchar_t*)(buffer + arguments_offset + 2), (wchar_t*)(buffer + arguments_offset + 2 + arguments_size * 2)));
 				arguments = replaceAll(arguments, L"\\", L"\\\\");//escape \ in std::string
 				arguments = replaceAll(arguments, L"\"", L"\\\"");//escape " in std::string
@@ -225,7 +225,7 @@ public:
 
 			unsigned short int iconLocation_size = 0;
 			if (flags.HasIconLocation == true) {
-				iconLocation_size = bytes_to_unsigned_short(buffer + iconLocation_offset);
+				iconLocation_size = *reinterpret_cast<unsigned short int*>(buffer + iconLocation_offset);
 				iconLocation = ansi_to_utf8(std::wstring((wchar_t*)(buffer + iconLocation_offset + 2), (wchar_t*)(buffer + iconLocation_offset + 2 + iconLocation_size * 2)));
 				iconLocation = replaceAll(iconLocation, L"\\", L"\\\\");//escape \ in std::string
 			}

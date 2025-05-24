@@ -28,9 +28,9 @@ struct MFTInformation {
 	*/
 	MFTInformation(LPBYTE data)
 	{
-		sequenceNumber = bytes_to_unsigned_int(data + 6);
-		unsigned int entryIndex1 = bytes_to_unsigned_int(data);
-		unsigned short int entryIndex2 = bytes_to_unsigned_short(data + 4);
+		sequenceNumber = *reinterpret_cast<unsigned int*>(data + 6);
+		unsigned int entryIndex1 = *reinterpret_cast<unsigned int*>(data);
+		unsigned short int entryIndex2 = *reinterpret_cast<unsigned short int*>(data + 4);
 		if (entryIndex2 == 0)
 		{
 			entryIndex = entryIndex1;
@@ -79,9 +79,9 @@ struct VolumeInfo {
 	*/
 	VolumeInfo(LPBYTE data, int indice) {
 		LPBYTE indVolume = data + indice * 96;
-		unsigned int offset = bytes_to_unsigned_int(indVolume);
-		unsigned int numChar = bytes_to_unsigned_int(indVolume + 4);
-		creationTimeUtc = bytes_to_filetime(indVolume + 8);
+		unsigned int offset = *reinterpret_cast<unsigned int*>(indVolume);
+		unsigned int numChar = *reinterpret_cast<unsigned int*>(indVolume + 4);
+		creationTimeUtc = *reinterpret_cast<FILETIME*>(indVolume + 8);
 		FileTimeToLocalFileTime(&creationTimeUtc, &creationTime);
 		deviceName = std::wstring((wchar_t*)(data + offset));
 		deviceName = replaceAll(deviceName, L"\\", L"\\\\");//on échappe les \ dans le path
@@ -90,8 +90,8 @@ struct VolumeInfo {
 		temp << std::hex << indVolume[19] << indVolume[18] << indVolume[17] << indVolume[16]; // serialnumber in std::hexa little indian
 		serialNumber = temp.str();
 
-		int dirsOffset = bytes_to_int(indVolume + 28);
-		int nbDirs = bytes_to_int(indVolume + 32);
+		int dirsOffset = *reinterpret_cast<int*>(indVolume + 28);
+		int nbDirs = *reinterpret_cast<int*>(indVolume + 32);
 		size_t pos = 1;
 		for (int k = 0; k < nbDirs; k++) {
 			std::wstring temp = std::wstring((wchar_t*)(data + dirsOffset) + pos);
@@ -103,11 +103,11 @@ struct VolumeInfo {
 
 
 
-		int fileRefOffset = bytes_to_int(indVolume + 20);
-		int fileRefSize = bytes_to_int(indVolume + 24);
+		int fileRefOffset = *reinterpret_cast<int*>(indVolume + 20);
+		int fileRefSize = *reinterpret_cast<int*>(indVolume + 24);
 		LPBYTE fileRefsIndex = indVolume + fileRefOffset;
-		int fileRefVer = bytes_to_int(fileRefsIndex);
-		int numFileRefs = bytes_to_int(fileRefsIndex + 4);
+		int fileRefVer = *reinterpret_cast<int*>(fileRefsIndex);
+		int numFileRefs = *reinterpret_cast<int*>(fileRefsIndex + 4);
 		if (fileRefVer == 3) {
 			for (int k = 0; k < numFileRefs; k++) {
 				fileReferences.push_back(MFTInformation(fileRefsIndex + 16 + k * 8));
@@ -245,7 +245,7 @@ public:
 			static auto compression_workspace_size = reinterpret_cast<RtlGetCompressionWorkSpaceSize>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "RtlGetCompressionWorkSpaceSize"));
 			static auto decompress_buffer_ex = reinterpret_cast<RtlDecompressBufferEx>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "RtlDecompressBufferEx"));
 
-			const int decompressed_size = bytes_to_int(buffer + 4);
+			const int decompressed_size = *reinterpret_cast<int*>(buffer + 4);
 			posBuffer += 8;
 			ULONG compressed_buffer_workspace_size, compress_fragment_workspace_size;
 			HRESULT hr = compression_workspace_size(CompressionFormatXpressHuff, &compressed_buffer_workspace_size, &compress_fragment_workspace_size);
@@ -277,8 +277,8 @@ public:
 
 		
 
-		version = bytes_to_int(data);
-		signature = bytes_to_int(data + 4);
+		version = *reinterpret_cast<int*>(data);
+		signature = *reinterpret_cast<int*>(data + 4);
 		hash_string = std::wstring(data + 76, data + 80);
 		filename = std::wstring((wchar_t*)data + 8);
 
@@ -293,22 +293,22 @@ public:
 		}
 		//LECTURE DES DONNEES
 		//FILE INFORMATION
-		int start = bytes_to_int(data + 84);
-		int nb_entries = bytes_to_int(data + 84 + 4);
+		int start = *reinterpret_cast<int*>(data + 84);
+		int nb_entries = *reinterpret_cast<int*>(data + 84 + 4);
 
-		int trace_offset = bytes_to_int(data + 84 + 8);
-		int nb_traces = bytes_to_int(data + 84 + 12);
+		int trace_offset = *reinterpret_cast<int*>(data + 84 + 8);
+		int nb_traces = *reinterpret_cast<int*>(data + 84 + 12);
 
-		int filename_offset = bytes_to_int(data + 84 + 16);
-		int filename_size = bytes_to_int(data + 84 + 20);
+		int filename_offset = *reinterpret_cast<int*>(data + 84 + 16);
+		int filename_size = *reinterpret_cast<int*>(data + 84 + 20);
 
-		int volume_offset = bytes_to_int(data + 84 + 24);
-		int nb_volumes = bytes_to_int(data + 84 + 28);
+		int volume_offset = *reinterpret_cast<int*>(data + 84 + 24);
+		int nb_volumes = *reinterpret_cast<int*>(data + 84 + 28);
 
-		int volume_size = bytes_to_int(data + 84 + 32);
+		int volume_size = *reinterpret_cast<int*>(data + 84 + 32);
 		//run times
 		for (int i = 0; i < 8; i++) {
-			FILETIME tempUtc = bytes_to_filetime(data + 84 + 44 + i * 8);
+			FILETIME tempUtc = *reinterpret_cast<FILETIME*>(data + 84 + 44 + i * 8);
 			FILETIME temp_locale;
 			// on ne garde pas les date nulles, il n'y a pas toujours 8 dates
 			if (time_to_wstring(tempUtc) != L"") {
@@ -317,12 +317,12 @@ public:
 				last_runs.push_back(temp_locale);
 			}
 		}
-		if (bytes_to_int(data + 84 + 120) == 0) // old_format
+		if (*reinterpret_cast<int*>(data + 84 + 120) == 0) // old_format
 		{
-			run_count = bytes_to_int(data + 84 + 124);
+			run_count = *reinterpret_cast<int*>(data + 84 + 124);
 		}
 		else { // new format
-			run_count = bytes_to_int(data + 84 + 116);
+			run_count = *reinterpret_cast<int*>(data + 84 + 116);
 		}
 		//FILENAMES
 		filenames = multiWstring_to_vector(data + filename_offset, filename_size);

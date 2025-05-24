@@ -43,13 +43,11 @@ struct CustomDestinationCategory {
 		int pos = 0;
 		int y = 0;
 
-		log(3, L"🔈bytes_to_unsigned_int nbentries");
-		nbentries = bytes_to_unsigned_int(buffer + 4);
+		nbentries = *reinterpret_cast<unsigned int*>(buffer + 4);
 		pos += 4;
 		//decoupage du fichier pour identifier tous les fichiers LNK
 		for (int x = 0; x < buffersize - pos - 23; x++) {
-			log(3, L"🔈bytes_to_int s");
-			int s = bytes_to_int(buffer + pos + x); // = 0x4C = 76 pour un LNK
+			int s = *reinterpret_cast<int*>(buffer + pos + x); // = 0x4C = 76 pour un LNK
 			if (s == 76) {
 				GUID guid = *reinterpret_cast<GUID*>(buffer + pos + x + 4);
 				log(3, L"🔈guid_to_wstring guid");
@@ -159,8 +157,7 @@ struct CustomDestination {
 			std::wstring baseName = path.substr(0, p); // nom de fichier sans extension
 			log(3, L"🔈from_appId application");
 			application = from_appId(baseName);
-			log(3, L"🔈bytes_to_unsigned_int typeInt");
-			typeInt = bytes_to_unsigned_int(buffer);
+			typeInt = *reinterpret_cast<unsigned int*>(buffer);
 			switch (typeInt) {
 			case 0: {
 				log(2, L"🔥"+ pathEscaped + L" : Custom category", ERROR_UNSUPPORTED_TYPE);

@@ -121,7 +121,7 @@ IdList::IdList(LPBYTE buffer, int _niveau, bool Parentiszip) {
 	type_char = NULL;
 	niveau = _niveau;
 	shellItem = NULL;
-	item_size = bytes_to_unsigned_short(buffer);
+	item_size = *reinterpret_cast<unsigned short int*>(buffer);
 	if (conf._dump == true)
 		pData = dump_wstring(buffer, 0, item_size);
 	else
@@ -334,11 +334,11 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 		*value = L"NULL";
 	}
 	else if (valueType == VT_I2) {     // VT_I2(signed 16 - bit)
-		*value = std::to_wstring(bytes_to_short(buffer + *pos));
+		*value = std::to_wstring(*reinterpret_cast<short int*>(buffer + *pos));
 		*pos += 2;
 	}
 	else if (valueType == VT_I4 || valueType == VT_INT) {  // VT_I4, VT_INT(signed 32 - bit)
-		*value = std::to_wstring(bytes_to_int(buffer + *pos));
+		*value = std::to_wstring(*reinterpret_cast<int*>(buffer + *pos));
 		*pos += 4;
 	}
 	else if (valueType == VT_BSTR) {    // VT_BSTR
@@ -347,23 +347,23 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 		*pos += 4 + value->size() * 2 + 2;
 	}
 	else if (valueType == VT_DATE) {
-		double t = bytes_to_double(buffer + *pos);
+		double t = *reinterpret_cast<double*>(buffer + *pos);
 		SYSTEMTIME s;
 		VariantTimeToSystemTime(t, &s);
 		*value = time_to_wstring(s);
 		*pos += 8;
 	}
 	else if (valueType == VT_BOOL) {    // VT_BOOL
-		if (bytes_to_unsigned_short(buffer + *pos) == 0xFFFF)
+		if (*reinterpret_cast<unsigned short int*>(buffer + *pos) == 0xFFFF)
 			*value = bool_to_wstring(true);
-		else if (bytes_to_unsigned_short(buffer + *pos) == 0x0000)
+		else if (*reinterpret_cast<unsigned short int*>(buffer + *pos) == 0x0000)
 			*value = bool_to_wstring(false);
 		else
 			*value = L"";
 		*pos += 2;
 	}
 	else if (valueType == VT_R8) {
-		*value = std::to_wstring(bytes_to_double(buffer + *pos));
+		*value = std::to_wstring(*reinterpret_cast<double*>(buffer + *pos));
 		*pos += 8;
 	}
 	else if (valueType == VT_I1) {    // VT_I1(signed 8 - bit)
@@ -375,19 +375,19 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 		*pos += 1;
 	}
 	else if (valueType == VT_UI2) {    // VT_UI2(unsigned 16 - bit)
-		*value = std::to_wstring(bytes_to_unsigned_short(buffer + *pos));
+		*value = std::to_wstring(*reinterpret_cast<unsigned short int*>(buffer + *pos));
 		*pos += 2;
 	}
 	else if (valueType == VT_UI4 || valueType == VT_UINT) {   // VT_UI4, VT_UINT(unsigned 32 - bit)
-		*value = std::to_wstring(bytes_to_unsigned_int(buffer + *pos));
+		*value = std::to_wstring(*reinterpret_cast<unsigned int*>(buffer + *pos));
 		*pos += 4;
 	}
 	else if (valueType == VT_I8) {    // VT_I8(signed 64 - bit)
-		*value = std::to_wstring(bytes_to_long_long(buffer + *pos));
+		*value = std::to_wstring(*reinterpret_cast<long long*>(buffer + *pos));
 		*pos += 8;
 	}
 	else if (valueType == VT_UI8) {  // VT_UI8(unsigned 64 - bit)
-		*value = std::to_wstring(bytes_to_unsigned_long_long(buffer + *pos));
+		*value = std::to_wstring(*reinterpret_cast<unsigned long long*>(buffer + *pos));
 		*pos += 8;
 	}
 	else if (valueType == VT_LPWSTR) {    // VT_LPWSTR(Unicode std::string)
@@ -400,9 +400,9 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 	else if (valueType == 0x101F) {    // Vector<VT_LPWSTR> (Unicode std::string)
 		*valueIsObject = true;
 		*value = L"[";
-		unsigned int nbStrings = bytes_to_unsigned_int(buffer + *pos);
+		unsigned int nbStrings = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		for (unsigned int x = 0; x < nbStrings; x++) {
-			unsigned int stringsize = bytes_to_unsigned_int(buffer + *pos + 4);
+			unsigned int stringsize = *reinterpret_cast<unsigned int*>(buffer + *pos + 4);
 			std::wstring temp = ansi_to_utf8(std::wstring((wchar_t*)(buffer + *pos + 8)));
 			*value += L"\"" + temp + L"\"";
 			if (x != nbStrings - 1)
@@ -416,12 +416,12 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 	{
 		*value = L"";
 		*valueIsObject = false;
-		unsigned short int itemsize = bytes_to_unsigned_short(buffer + *pos);
-		if (bytes_to_unsigned_int(buffer + *pos + 0x8) == 0x53505331) { // SPS
+		unsigned short int itemsize = *reinterpret_cast<unsigned short int*>(buffer + *pos);
+		if (*reinterpret_cast<unsigned int*>(buffer + *pos + 0x8) == 0x53505331) { // SPS
 			*valueIsObject = true;
 			*value = SPS(buffer + *pos + 0x4, niveau + 2).to_json();
 		}
-		else if (bytes_to_unsigned_int(buffer + *pos + 0x1c) == 0x53505331) { // SPS
+		else if (*reinterpret_cast<unsigned int*>(buffer + *pos + 0x1c) == 0x53505331) { // SPS
 			*valueIsObject = true;
 			*value = SPS(buffer + *pos + 0x8, niveau + 2).to_json();
 		}
@@ -469,12 +469,12 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 	}
 	else if (valueType == VT_STREAM) {    // VT_STREAM, TODO calcul size pour maj pos
 		*value = L"VT_STREAM not implemented";
-		unsigned int stringsize = bytes_to_unsigned_int(buffer + *pos);
+		unsigned int stringsize = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		*pos += 4;
 		*value = ansi_to_utf8(std::wstring((wchar_t*)(buffer + *pos)));
 		*pos += stringsize;
 		*pos += 2;//padding
-		unsigned int steamdatasize = bytes_to_unsigned_int(buffer + *pos);
+		unsigned int steamdatasize = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		*pos += steamdatasize;
 		*pos += 0;
 	}
@@ -497,21 +497,21 @@ SPSValue::SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau) {
 	niveau = _niveau;
 	guid = _guid;
 	valueIsObject = false;
-	size = bytes_to_unsigned_int(buffer);
+	size = *reinterpret_cast<unsigned int*>(buffer);
 	valueType = 0;
 	if (size > 0) {
-		unsigned int id_int = bytes_to_unsigned_int(buffer + 4);
+		unsigned int id_int = *reinterpret_cast<unsigned int*>(buffer + 4);
 		id = std::to_wstring(id_int);
 		//recherche value
 		unsigned int pos = 13;
 		if (guid == L"{D5CDD505-2E9C-101B-9397-08002B2CF9AE}") {
 			id = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 9)));
 			name = trans_guid_to_wstring(guid);
-			valueType = bytes_to_unsigned_short(buffer + 9 + id_int); // id_int contient la taille de la std::string 
+			valueType = *reinterpret_cast<unsigned short int*>(buffer + 9 + id_int); // id_int contient la taille de la std::string 
 			pos = 9 + id_int + 2 + 2; // 2 de padding ?
 		}
 		else {
-			valueType = bytes_to_unsigned_short(buffer + 9);
+			valueType = *reinterpret_cast<unsigned short int*>(buffer + 9);
 			name = to_FriendlyName(guid, id_int);
 			if (name == L"(Undefined)") {
 				log(1,  L"SPS Value : Friendlyname Unknown " + guid + L"/" + std::to_wstring(id_int), ERROR_UNKNOWN_COMPONENT );
@@ -541,8 +541,8 @@ std::wstring SPSValue::to_json(int i) {
 SPS::SPS(LPBYTE buffer, int _niveau) {
 	log(3, L"🔈SPS");
 	niveau = _niveau;
-	size = bytes_to_unsigned_int(buffer);
-	version = bytes_to_unsigned_int(buffer + 4);
+	size = *reinterpret_cast<unsigned int*>(buffer);
+	version = *reinterpret_cast<unsigned int*>(buffer + 4);
 	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8));
 	FriendlyName = trans_guid_to_wstring(guid);
 	unsigned int pos = 24;
@@ -668,15 +668,15 @@ Beef0004::Beef0004(LPBYTE buffer, int _niveau, bool* is_zip, bool is_file) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0004";
-	creationDateUtc = FatDateTime(bytes_to_unsigned_int(buffer + 8)).to_filetime();
+	creationDateUtc = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 8)).to_filetime();
 	if (time_to_wstring(creationDateUtc) != L"")
 		FileTimeToLocalFileTime(&creationDateUtc, &creationDate);
-	accessedDateUtc = FatDateTime(bytes_to_unsigned_int(buffer + 12)).to_filetime();
+	accessedDateUtc = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 12)).to_filetime();
 	if (time_to_wstring(accessedDateUtc) != L"")
 		FileTimeToLocalFileTime(&accessedDateUtc, &accessedDate);
 	unsigned int off = 18;  //start of data part
 	unsigned short int longNameSize = 0;
-	longNameSize = bytes_to_unsigned_short(buffer + off + 18);
+	longNameSize = *reinterpret_cast<unsigned short int*>(buffer + off + 18);
 	longName = ansi_to_utf8(std::wstring((wchar_t*)(buffer + off + 28)));
 	// le contenu des ZIP et autres archives ont un contenu format special, il faut donc identifier les archives.
 	// L'attribut ARCHIVE ne signifie pas ZIP mais "prêt à être archivé" au sens l'explorer
@@ -715,7 +715,7 @@ Beef0006::Beef0006(LPBYTE buffer, int _niveau) {
 	isPresent = true;
 	signature = L"0xbeef0006";
 	int pos = 0;
-	while (bytes_to_short(buffer + pos) != 0x0000)
+	while (*reinterpret_cast<short int*>(buffer + pos) != 0x0000)
 		pos += 1;
 	username = ansi_to_utf8(std::wstring((wchar_t*)(buffer + pos + 2)));
 }
@@ -833,7 +833,7 @@ Beef000e::Beef000e(LPBYTE buffer, int _niveau) { // TODO A TESTER
 	pos += 1;
 
 	for (int x = 0; x < 2; x++) { // 2 extension block
-		unsigned short int size = bytes_to_unsigned_short(buffer + pos);
+		unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
 		if (size > 0) {
 			getExtensionBlock(buffer + pos, &extensionblocks, niveau + 1, NULL, false);
 			pos += size;
@@ -842,7 +842,7 @@ Beef000e::Beef000e(LPBYTE buffer, int _niveau) { // TODO A TESTER
 			break;
 	}
 	while (true) {
-		unsigned short int size = bytes_to_unsigned_short(buffer + pos); // recherche de idlist
+		unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos); // recherche de idlist
 		if (size > 0) {
 
 			IShellItem* i;
@@ -1116,8 +1116,8 @@ Beef0025::Beef0025(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0025";
-	filetime1 = bytes_to_filetime(buffer + 12);
-	filetime2 = bytes_to_filetime(buffer + 20);
+	filetime1 = *reinterpret_cast<FILETIME*>(buffer + 12);
+	filetime2 = *reinterpret_cast<FILETIME*>(buffer + 20);
 }
 
 std::wstring Beef0025::to_json(int i) {
@@ -1141,11 +1141,11 @@ Beef0026::Beef0026(LPBYTE buffer, int _niveau) {
 	idlist = NULL;
 	shellitem = NULL;
 	if ((short int)buffer[8] == 0x11 || (short int)buffer[8] == 0x10 || (short int)buffer[8] == 0x12 || (short int)buffer[8] == 0x34 || (short int)buffer[8] == 0x31) {
-		ctimeUtc = bytes_to_filetime(buffer + 12);
+		ctimeUtc = *reinterpret_cast<FILETIME*>(buffer + 12);
 		LocalFileTimeToFileTime(&ctimeUtc, &ctime);
-		mtimeUtc = bytes_to_filetime(buffer + 20);
+		mtimeUtc = *reinterpret_cast<FILETIME*>(buffer + 20);
 		LocalFileTimeToFileTime(&mtimeUtc, &mtime);
-		atimeUtc = bytes_to_filetime(buffer + 28);
+		atimeUtc = *reinterpret_cast<FILETIME*>(buffer + 28);
 		LocalFileTimeToFileTime(&atimeUtc, &atime);
 		// 2 octets Unknown
 		idlist = new IdList(buffer + 38, niveau + 2);
@@ -1232,8 +1232,8 @@ std::wstring Beef0029::to_json(int i) {
 void getExtensionBlock(LPBYTE buffer, std::vector<IExtensionBlock*>* extensionBlocks, int _niveau, bool* is_zip, bool is_file) {
 	log(3, L"🔈getExtensionBlock");
 	IExtensionBlock* block = NULL;
-	unsigned int signature = bytes_to_unsigned_int(buffer + 4);
-	unsigned short int size = bytes_to_unsigned_short(buffer);
+	unsigned int signature = *reinterpret_cast<unsigned int*>(buffer + 4);
+	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	if (signature == (unsigned int)0xBeef0000) {
 		block = new Beef0000(buffer, _niveau + 1);
 		extensionBlocks->push_back(block);
@@ -1446,11 +1446,11 @@ ControlPanel::ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _nive
 	isPresent = true;
 	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 14));
 	identifier = trans_guid_to_wstring(guid);
-	unsigned short int extensionOffset = bytes_to_unsigned_short(buffer + itemSize - 2);
+	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + itemSize - 2);
 	if (extensionOffset != 0x00) {
 		unsigned short int pos = extensionOffset;
 		while (pos < itemSize) {
-			unsigned short int size = bytes_to_unsigned_short(buffer + pos);
+			unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
 			if (size > 0 && pos < itemSize) {
 				getExtensionBlock(buffer + pos, &extensionBlocks, niveau + 1, NULL, false);
 				pos += size;
@@ -1488,8 +1488,8 @@ ControlPanelCategory::ControlPanelCategory(LPBYTE buffer, int _niveau) {
 	log(3, L"🔈ControlPanelCategory");
 	niveau = _niveau;
 	isPresent = true;
-	unsigned short int totalsize = bytes_to_unsigned_short(buffer);
-	switch (bytes_to_unsigned_int(buffer + 8)) {
+	unsigned short int totalsize = *reinterpret_cast<unsigned short int*>(buffer);
+	switch (*reinterpret_cast<unsigned int*>(buffer + 8)) {
 	case 0: id = L"All Control Panel Items"; break;
 	case 1: id = L"Appearance and Personalization"; break;
 	case 2: id = L"Hardware and Sound"; break;
@@ -1507,7 +1507,7 @@ ControlPanelCategory::ControlPanelCategory(LPBYTE buffer, int _niveau) {
 	if (totalsize > 14) { // extension Block is present
 		int pos = 12;
 		while (true) {
-			unsigned short int size = bytes_to_unsigned_short(buffer + pos);
+			unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
 			if (size > 0 && pos < totalsize) {
 				getExtensionBlock(buffer + pos, &extensionBlocks, niveau + 1, NULL, false);
 				pos += size;
@@ -1549,13 +1549,13 @@ Property::Property(LPBYTE buffer, int _niveau) {
 	unsigned int pos = 0;
 	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + pos));
 	pos += 16;
-	id = bytes_to_unsigned_int(buffer + pos);
+	id = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
 	FriendlyName = to_FriendlyName(guid, id);
 	if (FriendlyName == L"(Undefined)" ) {
 		log(1,  L"Property : Friendlyname Unknown " + guid + L"/" + std::to_wstring(id),ERROR_UNKNOWN_COMPONENT );
 	}
-	type = bytes_to_unsigned_int(buffer + pos);
+	type = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
 	get_value(buffer, &pos, type, niveau, &value, &valueIsObject);
 	size = pos;
@@ -1584,12 +1584,12 @@ UserPropertyView0xC01::UserPropertyView0xC01(LPBYTE buffer, int _niveau) {
 	log(3, L"🔈UserPropertyView0xC01");
 	niveau = _niveau;
 	unsigned int pos = 0x14;//unknown
-	unsigned int wstring1Size = bytes_to_unsigned_int(buffer + pos);
+	unsigned int wstring1Size = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
 	folder = ansi_to_utf8(std::wstring((wchar_t*)(buffer + pos)));
 	pos += wstring1Size;
 	pos += 16;//unknown
-	unsigned int wstring2Size = bytes_to_unsigned_int(buffer + pos);
+	unsigned int wstring2Size = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
 	fullurl = ansi_to_utf8(std::wstring((wchar_t*)(buffer + pos)));
 }
@@ -1624,8 +1624,8 @@ UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _nivea
 	log(3, L"🔈UserPropertyView0x07192006");
 	unsigned int pos = 0;
 	niveau = _niveau;
-	modifiedUtc = bytes_to_filetime(buffer + 26);
-	createdUtc = bytes_to_filetime(buffer + 34);
+	modifiedUtc = *reinterpret_cast<FILETIME*>(buffer + 26);
+	createdUtc = *reinterpret_cast<FILETIME*>(buffer + 34);
 	if (!time_to_wstring(modifiedUtc).empty())
 		FileTimeToLocalFileTime(&modifiedUtc, &modified);
 	else
@@ -1634,9 +1634,9 @@ UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _nivea
 		FileTimeToLocalFileTime(&createdUtc, &created);
 	else
 		created = { 0 };
-	int folderName1Size = bytes_to_unsigned_int(buffer + 62);
-	int folderName2Size = bytes_to_unsigned_int(buffer + 66);
-	int folderIdentifiersize = bytes_to_unsigned_int(buffer + 70);
+	int folderName1Size = *reinterpret_cast<unsigned int*>(buffer + 62);
+	int folderName2Size = *reinterpret_cast<unsigned int*>(buffer + 66);
+	int folderIdentifiersize = *reinterpret_cast<unsigned int*>(buffer + 70);
 
 	folderName1 = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 74)));
 	folderName2 = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 74) + folderName1Size));
@@ -1648,7 +1648,7 @@ UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _nivea
 	FriendlyName = trans_guid_to_wstring(guidClass);
 	pos += 16;
 
-	unsigned int numberProperties = bytes_to_unsigned_int(buffer + pos);
+	unsigned int numberProperties = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
 	for (unsigned int x = 0; x < numberProperties; x++) {
 		Property temp(buffer + pos, niveau + 1);
@@ -1686,10 +1686,10 @@ UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _nivea
 	log(3, L"🔈UserPropertyView0x10312005");
 	unsigned int pos = 0;
 	niveau = _niveau;
-	int namesize = bytes_to_unsigned_int(buffer + 0x26);
-	int identifiersize = bytes_to_unsigned_int(buffer + 0x2A);
-	int filesystemsize = bytes_to_unsigned_int(buffer + 0x2E);
-	int nbGUIDStrings = bytes_to_unsigned_int(buffer + 0x32);
+	int namesize = *reinterpret_cast<unsigned int*>(buffer + 0x26);
+	int identifiersize = *reinterpret_cast<unsigned int*>(buffer + 0x2A);
+	int filesystemsize = *reinterpret_cast<unsigned int*>(buffer + 0x2E);
+	int nbGUIDStrings = *reinterpret_cast<unsigned int*>(buffer + 0x32);
 
 	name = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 0x36)));
 	identifier = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 0x36 + namesize * 2)));
@@ -1707,7 +1707,7 @@ UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _nivea
 	FriendlyName = trans_guid_to_wstring(guidClass);
 	pos += 16;
 
-	unsigned int numberProperties = bytes_to_unsigned_int(buffer + pos);// ?? TODO  seules les 4 premieres sont exploitables, est-ce vraiment le nombre de propriétés ?........
+	unsigned int numberProperties = *reinterpret_cast<unsigned int*>(buffer + pos);// ?? TODO  seules les 4 premieres sont exploitables, est-ce vraiment le nombre de propriétés ?........
 	pos += 4;
 	for (unsigned int x = 0; x < numberProperties; x++) {
 		Property temp(buffer + pos, niveau + 1);
@@ -1759,12 +1759,12 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau) {
 	delegate = NULL;
 	unsigned int pos = 0;
 
-	totalsize = bytes_to_unsigned_short(buffer + 0);
-	dataSize = bytes_to_unsigned_short(buffer + 4);
-	signature = bytes_to_unsigned_int(buffer + 6);
-	unsigned short int signature_short = bytes_to_unsigned_short(buffer + 6); // Certaines signatures sont identifiées par leurs 2 premiers octets
-	SPSDataSize = bytes_to_unsigned_short(buffer + 10);
-	identifierSize = bytes_to_unsigned_short(buffer + 12);
+	totalsize = *reinterpret_cast<unsigned short int*>(buffer + 0);
+	dataSize = *reinterpret_cast<unsigned short int*>(buffer + 4);
+	signature = *reinterpret_cast<unsigned int*>(buffer + 6);
+	unsigned short int signature_short = *reinterpret_cast<unsigned short int*>(buffer + 6); // Certaines signatures sont identifiées par leurs 2 premiers octets
+	SPSDataSize = *reinterpret_cast<unsigned short int*>(buffer + 10);
+	identifierSize = *reinterpret_cast<unsigned short int*>(buffer + 12);
 	dataOffset = 14;
 
 	if (signature == (unsigned int)0x23febbee) {
@@ -1798,11 +1798,11 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau) {
 		log(1,  L"UsersPropertyView Signature 0x" + to_hex(signature) + L" unknown : " + dump_wstring(buffer, 0, totalsize),ERROR_UNKNOWN_COMPONENT );
 	}
 
-	unsigned short int extensionOffset = bytes_to_unsigned_short(buffer + totalsize - 2);
+	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + totalsize - 2);
 	if (extensionOffset != 0x00) {
 		pos = extensionOffset;
 		while (pos < totalsize) {
-			unsigned short int size = bytes_to_unsigned_short(buffer + pos);
+			unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
 			if (size > 0 && pos < totalsize) {
 				getExtensionBlock(buffer + pos, &extensionBlocks, niveau + 1, NULL, false);
 				pos += size;
@@ -1863,7 +1863,7 @@ RootFolder::RootFolder(LPBYTE buffer, int _niveau) {
 	log(3, L"🔈RootFolder");
 	niveau = _niveau;
 	isPresent = true;
-	unsigned short int size = bytes_to_unsigned_short(buffer);
+	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	unsigned char type = *reinterpret_cast<unsigned char*>(buffer + 3);
 	sortIndex = sort_index(type); 
 	
@@ -1878,7 +1878,7 @@ RootFolder::RootFolder(LPBYTE buffer, int _niveau) {
 		int pos = 0;
 	}
 	else if (size > (unsigned short int)0x3a) {
-		unsigned int signature = bytes_to_unsigned_int(buffer + 6);
+		unsigned int signature = *reinterpret_cast<unsigned int*>(buffer + 6);
 		if (signature == (unsigned int)0xf5a6b710) {
 			sortIndex = L"DRIVE";
 			identifier = string_to_wstring(ansi_to_utf8(std::string((char*)(buffer + 13))));
@@ -1958,8 +1958,8 @@ NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _niveau) {
 
 		modifiedUtc = wstring_to_filetime(std::wstring((wchar_t*)(buffer + 0x24)));
 		FileTimeToLocalFileTime(&modifiedUtc, &modified);
-		unsigned int descriptionsize = bytes_to_unsigned_int(buffer + 0x54);
-		unsigned int commentssize = bytes_to_unsigned_int(buffer + 0x58);
+		unsigned int descriptionsize = *reinterpret_cast<unsigned int*>(buffer + 0x54);
+		unsigned int commentssize = *reinterpret_cast<unsigned int*>(buffer + 0x58);
 		int pos = 0x5c;
 		if (descriptionsize > 0)
 		{
@@ -1997,11 +1997,11 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _niveau) {
 	log(3, L"🔈ArchiveFileContent");
 	isPresent = true;
 	niveau = _niveau;
-	unsigned int date = bytes_to_unsigned_int(buffer + 8);
+	unsigned int date = *reinterpret_cast<unsigned int*>(buffer + 8);
 
 	if (date == 0) {
-		if (bytes_to_unsigned_int(buffer + 0x10) != 0) { // FILETIME
-			modifiedUtc = bytes_to_filetime(buffer + 0x10);
+		if (*reinterpret_cast<unsigned int*>(buffer + 0x10) != 0) { // FILETIME
+			modifiedUtc = *reinterpret_cast<FILETIME*>(buffer + 0x10);
 			if (time_to_wstring(modifiedUtc) != L"")
 				FileTimeToLocalFileTime(&modifiedUtc, &modified);
 			else
@@ -2044,8 +2044,8 @@ URIShellItem::URIShellItem(LPBYTE buffer, int _niveau) {
 	log(3, L"🔈URIShellItem");
 	niveau = _niveau;
 	isPresent = true;
-	unsigned short int size = bytes_to_unsigned_short(buffer);
-	unsigned short int datasize = bytes_to_unsigned_short(buffer + 4);
+	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
+	unsigned short int datasize = *reinterpret_cast<unsigned short int*>(buffer + 4);
 	if (datasize == 0) {
 		uri = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 8)));
 	}
@@ -2066,25 +2066,25 @@ FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSiz
 	log(3, L"🔈FileEntryShellItem");
 	niveau = _niveau;
 	isPresent = true;
-	fsFileSize = bytes_to_unsigned_int(buffer + 4);
-	fsFileModificationUtc = FatDateTime(bytes_to_unsigned_int(buffer + 8)).to_filetime();
+	fsFileSize = *reinterpret_cast<unsigned int*>(buffer + 4);
+	fsFileModificationUtc = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 8)).to_filetime();
 	if (time_to_wstring(fsFileModificationUtc) != L"")
 		FileTimeToLocalFileTime(&fsFileModificationUtc, &fsFileModification);
 	else
 		fsFileModification = { 0 };
 	fsFlags = FsFlags(shell_item_type_char);
-	fsFileAttributes = FileAttributes((unsigned int)bytes_to_unsigned_short(buffer + 12));
+	fsFileAttributes = FileAttributes((unsigned int)*reinterpret_cast<unsigned short int*>(buffer + 12));
 
 	if (fsFlags.IS_UNICODE)  //Unicode
 		fsPrimaryName = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 14)));
 	else
 		fsPrimaryName = ansi_to_utf8(string_to_wstring(std::string((char*)(buffer + 14))));
 
-	unsigned short int extensionOffset = bytes_to_unsigned_short(buffer + itemSize - 2);
+	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + itemSize - 2);
 	unsigned short int pos = extensionOffset;
 	if (extensionOffset != 0x00) {
 		while (pos < itemSize) {
-			unsigned short int size = bytes_to_unsigned_short(buffer + pos);
+			unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
 			if (size > 0 && pos < itemSize) {
 				getExtensionBlock(buffer + pos, &extensionBlocks, niveau + 1, &is_zip, fsFlags.IS_FILE);
 				pos += size;
@@ -2126,9 +2126,9 @@ UsersFilesFolder::UsersFilesFolder(LPBYTE buffer, int _niveau) {
 	log(3, L"🔈UsersFilesFolder");
 	niveau = _niveau;
 	isPresent = true;
-	unsigned short int size = bytes_to_unsigned_short(buffer);
-	unsigned short int extensionOffset = bytes_to_unsigned_short(buffer + size - 2);
-	modifiedUtc = FatDateTime(bytes_to_unsigned_int(buffer + 0x12)).to_filetime();
+	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
+	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + size - 2);
+	modifiedUtc = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 0x12)).to_filetime();
 	FileTimeToLocalFileTime(&modifiedUtc, &modified);
 	primaryName = string_to_wstring(ansi_to_utf8(std::string((char*)buffer + 0x18)));
 	extensionBlock = new Beef0004(buffer + extensionOffset, niveau + 1, NULL, false); // Le bloc suit 
@@ -2179,7 +2179,7 @@ UnknownShellItem::UnknownShellItem(LPBYTE buffer, int _niveau) {
 	log(3, L"🔈UnknownShellItem");
 	niveau = _niveau;
 	isPresent = true;
-	unsigned short int size = bytes_to_unsigned_short(buffer);
+	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	data = dump_wstring(buffer, 0, size);
 }
 
@@ -2194,7 +2194,7 @@ std::wstring UnknownShellItem::to_json(int i) {
 
 void getShellItem(LPBYTE buffer, IShellItem** p, int _niveau, bool Parentiszip) {
 	log(3, L"🔈getShellItem");
-	unsigned int item_size = bytes_to_unsigned_short(buffer);
+	unsigned int item_size = *reinterpret_cast<unsigned short int*>(buffer);
 	if (Parentiszip == false) {
 		unsigned char type_char = *reinterpret_cast<unsigned char*>(buffer + 2);
 		std::wstring type = shell_item_class(type_char);

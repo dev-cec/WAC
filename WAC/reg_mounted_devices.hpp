@@ -26,19 +26,20 @@ public:
 	*/
 	MountedDevice(ORHKEY hKey, PCWSTR szSubValue)
 	{
-			drive = std::wstring(szSubValue);
-			log(3, L"🔈replaceAll drive");
-			drive = replaceAll(drive, L"\\", L"\\\\");
-			log(1, L"➕Drive " + drive);
-			HRESULT hr = getRegSzValue(hKey, NULL, szSubValue, &device);
-			if (hr == ERROR_SUCCESS) {
-				log(3, L"🔈replaceAll device");
-				device = replaceAll(device, L"\\", L"\\\\");
-				log(2, L"❇️MountedDEvice device : " + device);
-			}
-			else {
-				log(2, L"🔥getRegSzValue", hr);
-			}
+		log(3, L"🔈getRegSzValue device");
+		HRESULT hr = getRegSzValue(hKey, NULL, szSubValue, &device);
+		if (hr == ERROR_SUCCESS) {
+			log(3, L"🔈replaceAll device");
+			device = replaceAll(device, L"\\", L"\\\\");
+			log(2, L"❇️MountedDEvice device : " + device);
+		}
+		else {
+			log(2, L"🔥getRegSzValue", hr);
+		}
+		drive = std::wstring(szSubValue);
+		log(3, L"🔈replaceAll drive");
+		drive = replaceAll(drive, L"\\", L"\\\\");
+		log(1, L"➕Drive " + drive);
 	}
 
 	/*! conversion de l'objet au format json
@@ -63,12 +64,12 @@ public:
 struct MountedDevices {
 public:
 	std::vector<MountedDevice> mounteddevices; //!< *structure contenant l'ensemble des objets
-	
+
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData() {
-		
+
 		//variables
 		HRESULT hresult;
 		ORHKEY hKey;
@@ -79,17 +80,17 @@ public:
 		log(0, L"ℹ️Mounted devices :");
 		log(0, L"*******************************************************************************************************************");
 
-		log(3, L"🔈OROpenKey hKey");
+		log(3, L"🔈OROpenKey System\\MountedDevices");
 		hresult = OROpenKey(conf.System, L"MountedDevices", &hKey);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
-			log(2, L"🔥OROpenKey hKey", hresult);
+			log(2, L"🔥OROpenKey System\\MountedDevices", hresult);
 			return hresult;
 		};
 
-		log(3, L"🔈ORQueryInfoKey hKey");
+		log(3, L"🔈ORQueryInfoKey System\\MountedDevices");
 		hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
-			log(2, L"🔥ORQueryInfoKey hKey", hresult);
+			log(2, L"🔥ORQueryInfoKey System\\MountedDevices", hresult);
 			return hresult;
 		};
 
@@ -97,16 +98,16 @@ public:
 			DWORD nSize = MAX_VALUE_NAME;
 			DWORD cData = MAX_DATA;
 			WCHAR  szSubValue[MAX_VALUE_NAME];
-			log(3, L"🔈OREnumValue hKey");
+			log(3, L"🔈OREnumValue System\\MountedDevices Value " + std::to_wstring(i));
 			hresult = OREnumValue(hKey, i, szSubValue, &nSize, NULL, NULL, &cData);
-			if (hresult == ERROR_SUCCESS) {
-				MountedDevice mounteddevice(hKey, szSubValue);
-				//save
-					log(1, L"➕MountedDevice");
-					mounteddevices.push_back(mounteddevice);
+			if (hresult != ERROR_SUCCESS) {
+				log(2, L"🔥OREnumValue System\\MountedDevices Value " + std::to_wstring(i), hresult);
+				continue;
 			}
-			else
-				log(2, L"🔥MountedDevices OREnumValue szSubValue", hresult);
+			//save
+			log(1, L"➕MountedDevice");
+			mounteddevices.push_back(MountedDevice(hKey, szSubValue));
+
 		}
 		return ERROR_SUCCESS;
 	}

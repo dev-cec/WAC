@@ -129,7 +129,7 @@ public:
 
 		getRegBinaryValue(hKey, L"", L"MRUListEx", pData);
 		while (true) {
-			int id = bytes_to_int(pData + pos);
+			int id = *reinterpret_cast<int*>(pData + pos);
 			if (id == 0xffffffff) break;
 			ids.push_back(id);
 			pos += 4;
@@ -149,7 +149,7 @@ public:
 			MruApp.name = ansi_to_utf8(std::wstring((wchar_t*)(pData + offset)));
 			offset += MruApp.name.size() * 2 + 2;
 			while (true) {
-				unsigned short int size = bytes_to_unsigned_short(pData + offset);
+				unsigned short int size = *reinterpret_cast<unsigned short int*>(pData + offset);
 				if (size == 0) break;
 				else {
 

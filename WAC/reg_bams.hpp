@@ -30,8 +30,7 @@ public:
 		log(3, L"🔈replaceAll name");
 		name = replaceAll(name, L"\\", L"\\\\"); //escape _ in strings
 		log(2, L"❇️ Bam Name : " + name);
-		log(3, L"🔈bytes_to_filetime datetime");
-		FILETIME temp = bytes_to_filetime(pData);
+		FILETIME temp = *reinterpret_cast<FILETIME*>(pData);
 		log(3, L"🔈time_to_wstring datetime");
 		datetime = time_to_wstring(temp);
 		log(3, L"🔈time_to_wstring datetimeUtc");
@@ -91,17 +90,17 @@ public:
 			for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
 				std::wstring temp = L"Services\\" + key + L"\\UserSettings\\" + get<0>(profile);
 				CONST wchar_t* regkey = temp.c_str();
-				log(3, L"🔈OROpenKey hKey");
+				log(3, L"🔈OROpenKey CurrentControlSet\\" + std::wstring(regkey));
 				hresult = OROpenKey(conf.CurrentControlSet, regkey, &hKey);
 				if (hresult != ERROR_SUCCESS) {
-					log(2,  L"🔥OROpenKey hKey", hresult);
+					log(2,  L"🔥OROpenKey CurrentControlSet\\" + std::wstring(regkey), hresult);
 					continue;
 				};
 
-				log(3, L"🔈ORQueryInfoKey hKey");
+				log(3, L"🔈ORQueryInfoKey CurrentControlSet\\" + std::wstring(regkey));
 				hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 				if (hresult != ERROR_SUCCESS) {
-					log(2, L"🔥ORQueryInfoKey hKey", hresult);
+					log(2, L"🔥ORQueryInfoKey CurrentControlSet\\" + std::wstring(regkey), hresult);
 					continue;
 				};
 
@@ -114,15 +113,15 @@ public:
 						if (pData != NULL)
 							delete[] pData;
 						pData = new BYTE[cData];
-						log(3, L"🔈OREnumValue hKey");
+						log(3, L"🔈OREnumValue CurrentControlSet\\" + std::wstring(regkey));
 						hresult = OREnumValue(hKey, i, szValue, &nSize, &dType, (LPBYTE)pData, &cData);
 					} while (hresult == ERROR_MORE_DATA);
 					if (dType != REG_BINARY) {
-						log(2, L"🔥OREnumValue hKey not a REG_BINARY value");
+						log(2, L"🔥OREnumValue "+ std::wstring(szValue) + L" not a REG_BINARY value");
 					}
 					else {
 						if (hresult != ERROR_SUCCESS) {
-							log(2, L"🔥OREnumValue hKey", hresult);
+							log(2, L"🔥OREnumValue OREnumValue CurrentControlSet\\" + std::wstring(regkey), hresult);
 						}
 						else {
 							log(1, L"➕Bam");

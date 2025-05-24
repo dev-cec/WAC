@@ -197,12 +197,6 @@ FILETIME timet_to_fileTime(time_t t);
 */
 FILETIME wstring_to_filetime(std::wstring input);
 
-/*! Conversion un tableau de BYTES ne FILETIME.
-* @param bytes pointeur vers le tableau contenant les BYTES à convertir. le pointeur doit représenter le premier octet utile à la conversion
-* @return FILETIME issue de la conversion
-*/
-FILETIME bytes_to_filetime(LPBYTE bytes);
-
 /*! Conversion un FILETIME en wstring.
 * @param filetime FILETIME à convertir en wstring
 * @param convertUTC si true alors date sera convertie en UTC
@@ -215,66 +209,6 @@ std::wstring time_to_wstring(const FILETIME filetime, bool convertUtc = false);
 * @return chaîne de caractères issue de la conversion
 */
 std::wstring time_to_wstring(const SYSTEMTIME systemtime);
-
-/*! Conversion un tableau de BYTES en int. la conversion considère uniquement les 4 premiers octets du tableau pour la conversion
-* @param bytes pointeur de tableau contenant les BYTE à convertir
-* @return int issu de la conversion
-*/
-int bytes_to_int(LPBYTE bytes);
-
-/*! Conversion un tableau de BYTES en unsigned int. la conversion considère uniquement les 4 premiers octets du tableau pour la conversion
-* @param bytes pointeur de tableau contenant les BYTE à convertir
-* @return unsigned int issu de la conversion
-*/
-unsigned int bytes_to_unsigned_int(LPBYTE bytes);
-
-/*! Conversion un tableau de BYTES en short int. la conversion considère uniquement les 2 premiers octets du tableau pour la conversion
-* @param bytes pointeur de tableau contenant les BYTE à convertir
-* @return short int issu de la conversion
-*/
-short int bytes_to_short(LPBYTE bytes);
-
-/*! Conversion un tableau de BYTES en unsigned short int. la conversion considère uniquement les 2 premiers octets du tableau pour la conversion
-* @param bytes pointeur de tableau contenant les BYTE à convertir
-* @return unsigned short int issu de la conversion
-*/
-unsigned short int bytes_to_unsigned_short(LPBYTE bytes);
-
-/*! Conversion un tableau de BYTES en double. la conversion considère uniquement les 8 premiers octets du tableau pour la conversion
-* @param bytes pointeur de tableau contenant les BYTE à convertir
-* @return double issu de la conversion
-*/
-double bytes_to_double(LPBYTE bytes);
-
-/*! Conversion un tableau de BYTES en long. la conversion considère uniquement les 4 premiers octets du tableau pour la conversion
-* @param bytes pointeur de tableau contenant les BYTE à convertir
-* @return long issu de la conversion
-*/
-long bytes_to_long(LPBYTE bytes);
-
-/*! Conversion un tableau de BYTES en unsigned long. la conversion considère uniquement les 4 premiers octets du tableau pour la conversion
-* @param bytes pointeur de tableau contenant les BYTE à convertir
-* @return unsigned long issu de la conversion
-*/
-unsigned long bytes_to_unsigned_long(LPBYTE bytes);
-
-/*! Conversion un tableau de BYTES en unsigned long long. la conversion considère uniquement les 8 premiers octets du tableau pour la conversion
-* @param bytes pointeur de tableau contenant les BYTE à convertir
-* @return unsigned long long issu de la conversion
-*/
-unsigned long long bytes_to_unsigned_long_long(LPBYTE bytes);
-
-/*! Conversion un tableau de BYTES en long long. la conversion considère uniquement les 8 premiers octets du tableau pour la conversion
-* @param bytes pointeur de tableau contenant les BYTE à convertir
-* @return long long issu de la conversion
-*/
-long long bytes_to_long_long(LPBYTE bytes);
-
-/*! Conversion un tableau de BYTES en unsigned char. la conversion considère uniquement le premier octets du tableau pour la conversion
-* @param bytes pointeur de tableau contenant les BYTE à convertir
-* @return unsigned char issu de la conversion
-*/
-unsigned char bytes_to_unsigned_char(LPBYTE bytes);
 
 /*! Conversion une chaîne de caractères wstring en chaine binaire
 * @param bstr la chaîne de caractère binaire

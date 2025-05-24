@@ -70,36 +70,26 @@ struct Directory {
 	* @param data contient un pointeur sur les données à parser
 	*/
 	Directory(LPBYTE data) {
-		log(3, L"🔈bytes_to_short nameLength");
-		nameLength = bytes_to_short(data + 64);
-		log(3, L"🔈bytes_to_short nameLength");
+		nameLength = *reinterpret_cast<short int*>(data + 64);
 		name = std::wstring((wchar_t*)(data));
 		log(3, L"🔈getType type");
 		type = getType(data[66]);
 		log(3, L"🔈getNodeColor nodeColor");
 		nodeColor = getNodeColor(data[67]);
-		log(3, L"🔈bytes_to_int previousDirectoryId");
-		previousDirectoryId = bytes_to_int(data + 68);
-		log(3, L"🔈bytes_to_int nextDirectoryId");
-		nextDirectoryId = bytes_to_int(data + 72);
-		log(3, L"🔈bytes_to_int subDirectoryId");
-		subDirectoryId = bytes_to_int(data + 76);
+		previousDirectoryId = *reinterpret_cast<int*>(data + 68);
+		nextDirectoryId = *reinterpret_cast<int*>(data + 72);
+		subDirectoryId = *reinterpret_cast<int*>(data + 76);
 		log(3, L"🔈guid_to_wstring classId");
 		classId = guid_to_wstring(*reinterpret_cast<GUID*>(data + 80));
-		log(3, L"🔈bytes_to_unsigned_int userFlags");
-		userFlags = bytes_to_unsigned_int(data + 96);
-		log(3, L"🔈bytes_to_filetime created");
-		created = bytes_to_filetime(data + 100);
+		userFlags = *reinterpret_cast<unsigned int*>(data + 96);
+		created = *reinterpret_cast<FILETIME*>(data + 100);
 		log(3, L"🔈LocalFileTimeToFileTime createdUtc");
 		LocalFileTimeToFileTime(&created, &createdUtc);
-		log(3, L"🔈bytes_to_filetime modified");
-		modified = bytes_to_filetime(data + 108);
+		modified = *reinterpret_cast<FILETIME*>(data + 108);
 		log(3, L"🔈LocalFileTimeToFileTime modifiedUtc");
 		LocalFileTimeToFileTime(&modified, &modifiedUtc);
-		log(3, L"🔈bytes_to_unsigned_int firstSectorID");
-		firstSectorID = bytes_to_unsigned_int(data + 116);
-		log(3, L"🔈bytes_to_unsigned_int directorySize");
-		directorySize = bytes_to_unsigned_int(data + 120);
+		firstSectorID = *reinterpret_cast<unsigned int*>(data + 116);
+		directorySize = *reinterpret_cast<unsigned int*>(data + 120);
 	};
 
 	/*! conversion de l'objet au format json
@@ -165,19 +155,15 @@ struct DestFile {
 		guidBirthDroidFile = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 56));
 		log(3, L"🔈string_to_wstring hostname");
 		hostname = string_to_wstring(std::string((char*)(buffer + 72)));
-		log(3, L"🔈bytes_to_unsigned_int entryNumber");
-		entryNumber = bytes_to_unsigned_int(buffer + 88);
-		log(3, L"🔈bytes_to_filetime lastModificationTimeUtc");
-		lastModificationTimeUtc = bytes_to_filetime(buffer + 100);
+		entryNumber = *reinterpret_cast<unsigned int*>(buffer + 88);
+		lastModificationTimeUtc = *reinterpret_cast<FILETIME*>(buffer + 100);
 		log(3, L"🔈time_to_wstring lastModificationTimeUtc");
 		if (time_to_wstring(lastModificationTimeUtc) != L"") {
 			log(3, L"🔈FileTimeToLocalFileTime lastModificationTimeUtc");
 			FileTimeToLocalFileTime(&lastModificationTimeUtc, &lastModificationTime);
 		}
-		log(3, L"🔈bytes_to_int pinStatus");
-		pinStatus = bytes_to_int(buffer + 108);
-		log(3, L"🔈bytes_to_unsigned_short pathObjectSize");
-		pathObjectSize = bytes_to_unsigned_short(buffer + 128);
+		pinStatus = *reinterpret_cast<int*>(buffer + 108);
+		pathObjectSize = *reinterpret_cast<unsigned short int*>(buffer + 128);
 		pathObject = std::wstring((wchar_t*)(buffer + 130));
 		size = 130 + pathObjectSize * 2 + 4; // +2 fin de chaîne +2 Unknown 
 	};
@@ -231,12 +217,9 @@ struct DestFileDirectory {
 	* @param buffer contient un pointeur sur les données à parser
 	*/
 	DestFileDirectory(LPBYTE buffer) {
-		log(3, L"🔈bytes_to_int formatVersion");
-		formatVersion = bytes_to_int(buffer);
-		log(3, L"🔈bytes_to_int numberOfEntries");
-		numberOfEntries = bytes_to_int(buffer + 4);
-		log(3, L"🔈bytes_to_int numberPinnedEntries");
-		numberPinnedEntries = bytes_to_int(buffer + 8);
+		formatVersion = *reinterpret_cast<int*>(buffer);
+		numberOfEntries = *reinterpret_cast<int*>(buffer + 4);
+		numberPinnedEntries = *reinterpret_cast<int*>(buffer + 8);
 		int offset = 32;
 		for (int x = 0; x < numberOfEntries; x++) {
 			log(3, L"🔈DestFile");
@@ -288,45 +271,32 @@ struct oleHeader {
 	* @param _bufferSize contient la taille du buffer
 	*/
 	oleHeader(LPBYTE buffer, size_t _bufferSize) {
-		log(3, L"🔈bytes_to_unsigned_long signature");
-		signature = bytes_to_unsigned_long(buffer);
+		signature = *reinterpret_cast<unsigned long*>(buffer);
 		if (signature != _signature) {
 			log(2, L"🔥oleHeader signature ", ERROR_NDIS_BAD_VERSION);
 			throw std::runtime_error("bad signature");
 		}
-
-		log(3, L"🔈bytes_to_short littleIndian");
-		littleIndian = (bytes_to_short(buffer + 28) == (short)0xfffe); //0xfeff = big indian
+		littleIndian = (*reinterpret_cast<short int*>(buffer + 28) == (short)0xfffe); //0xfeff = big indian
 		if (littleIndian == false) {
 			log(2, L"🔥Big indian Format not Handle, please handle this file specifically");
 			throw std::runtime_error("Big indian Format not Handle, please handle this file specifically");
 		}
 
-		log(3, L"🔈bytes_to_short sectorSize");
-		sectorSize = (short)pow(2, bytes_to_short(buffer + 30)); // Sector size at offset 30, en puissance de 2
-		log(3, L"🔈bytes_to_short shortSectorSize");
-		shortSectorSize = (short)pow(2, bytes_to_short(buffer + 32)); // Short sector size at offset 32, en puissance de 2
-		log(3, L"🔈bytes_to_int totalSATSectors");
-		totalSATSectors = bytes_to_int(buffer + 44); // Total Sector Allocation Table(SAT) sectors at offset 44
-		log(3, L"🔈bytes_to_int directoryStreamFirstSectorId");
-		directoryStreamFirstSectorId = bytes_to_int(buffer + 48); // Sector ID of first sector used by Directory at offset 48
-		log(3, L"🔈bytes_to_unsigned_int minimumStandardStreamSize");
-		minimumStandardStreamSize = bytes_to_unsigned_int(buffer + 56); // Minimum size of a standard stream in bytes at offset 56
-		log(3, L"🔈bytes_to_int SSATFirstSectorId");
-		SSATFirstSectorId = bytes_to_int(buffer + 60); // Sector ID of the first sector used for the Short Sector Allocation Table(SSAT) at offset 60
-		log(3, L"🔈bytes_to_unsigned_int totalSSATSectors");
-		totalSSATSectors = bytes_to_unsigned_int(buffer + 64); // Total sectors used for SSAT at offset 64
-		log(3, L"🔈bytes_to_int MSATFirstSectorId");
-		MSATFirstSectorId = bytes_to_int(buffer + 68);
-		log(3, L"🔈bytes_to_int MSATTotalSectors");
-		MSATTotalSectors = bytes_to_int(buffer + 72);
+		sectorSize = (short)pow(2, *reinterpret_cast<short int*>(buffer + 30)); // Sector size at offset 30, en puissance de 2
+		shortSectorSize = (short)pow(2, *reinterpret_cast<short int*>(buffer + 32)); // Short sector size at offset 32, en puissance de 2
+		totalSATSectors = *reinterpret_cast<int*>(buffer + 44); // Total Sector Allocation Table(SAT) sectors at offset 44
+		directoryStreamFirstSectorId = *reinterpret_cast<int*>(buffer + 48); // Sector ID of first sector used by Directory at offset 48
+		minimumStandardStreamSize = *reinterpret_cast<unsigned int*>(buffer + 56); // Minimum size of a standard stream in bytes at offset 56
+		SSATFirstSectorId = *reinterpret_cast<int*>(buffer + 60); // Sector ID of the first sector used for the Short Sector Allocation Table(SSAT) at offset 60
+		totalSSATSectors = *reinterpret_cast<unsigned int*>(buffer + 64); // Total sectors used for SSAT at offset 64
+		MSATFirstSectorId = *reinterpret_cast<int*>(buffer + 68);
+		MSATTotalSectors = *reinterpret_cast<int*>(buffer + 72);
 		// Process MSAT
 		if (_bufferSize < 516)
 			throw std::length_error("File corrupt - file smaller than header size"); // header = 76 + 109*4 + 4
 
 		for (int i = 0; i < 109; i++) {
-			log(3, L"🔈bytes_to_int addr");
-			int addr = bytes_to_int(buffer + 76 + i * 4);
+			int addr = *reinterpret_cast<int*>(buffer + 76 + i * 4);
 
 			if (addr >= 0) {
 				if (i < totalSATSectors) {
@@ -409,8 +379,7 @@ struct oleParser {
 						remainingBytes[x] = buffer[msatOffset + x];
 					}
 					remainingSlots -= maxSlotsPerBlock - 1;
-					log(3, L"🔈bytes_to_int newOffset");
-					int newOffset = bytes_to_int(buffer + msatOffset + (4 * (maxSlotsPerBlock - 1)));
+					int newOffset = *reinterpret_cast<int*>(buffer + msatOffset + (4 * (maxSlotsPerBlock - 1)));
 					msatOffset = (newOffset + 1) * header.sectorSize;
 					startOffset += (maxSlotsPerBlock - 1) * 4;
 				}
@@ -427,8 +396,7 @@ struct oleParser {
 
 			for (int i = 0; i < remainingSlots; i += 4)
 			{
-				log(3, L"🔈bytes_to_int sectorId");
-				int sectorId = bytes_to_int(remainingBytes + i * 4) * header.sectorSize + 512; // 512 is for the header
+				int sectorId = *reinterpret_cast<int*>(remainingBytes + i * 4) * header.sectorSize + 512; // 512 is for the header
 				header.SATSectors.push_back(sectorId);
 			}
 			delete[] remainingBytes;
@@ -445,8 +413,8 @@ struct oleParser {
 
 			//fill the Sat
 			for (int x = 0; x < header.sectorSize; x += 4) { // a chaque "sector" on copie sectorSize entiers
-				log(3, L"🔈 bytes_to_int sat");
-				sat.push_back(bytes_to_int(buffer + sector + x));
+				log(3, L"🔈 *reinterpret_cast<int*> sat");
+				sat.push_back(*reinterpret_cast<int*>(buffer + sector + x));
 			}
 		}
 
@@ -469,8 +437,8 @@ struct oleParser {
 
 		while (dirIndex < dirBytes.size())
 		{
-			log(3, L"🔈 bytes_to_short dirLen");
-			int dirLen = bytes_to_short(pDirBytes + dirIndex + 64);
+			log(3, L"🔈 *reinterpret_cast<short int*> dirLen");
+			int dirLen = *reinterpret_cast<short int*>(pDirBytes + dirIndex + 64);
 			if (pDirBytes[dirIndex + 66] != 0 && dirLen > 0) { //0 is empty directory structure
 				log(3, L"🔈 Directory d");
 				Directory d = Directory(pDirBytes + dirIndex);
@@ -542,8 +510,8 @@ struct oleParser {
 				if (index + readSize > bufferSize)
 					throw std::length_error("file corrupt - Error retrieving data from SAT");
 				for (int x = 0; x < readSize; x += 4) {
-					log(3, L"🔈 bytes_to_int retBytes");
-					retBytes.push_back(bytes_to_int(buffer + index + x));
+					log(3, L"🔈 *reinterpret_cast<int*> retBytes");
+					retBytes.push_back(*reinterpret_cast<int*>(buffer + index + x));
 				}
 			}
 		}

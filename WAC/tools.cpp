@@ -383,93 +383,6 @@ std::wstring time_to_wstring(const FILETIME filetime, bool convertUtc) {
 
 }
 
-FILETIME bytes_to_filetime(LPBYTE bytes)
-{
-
-	FILETIME* temp = (FILETIME*)bytes;
-	return *temp;
-}
-
-int bytes_to_int(LPBYTE bytes)
-{
-
-	int val;
-	memcpy(&val, bytes, sizeof val);
-	return val;
-}
-
-unsigned int bytes_to_unsigned_int(LPBYTE bytes)
-{
-
-	unsigned int val;
-	memcpy(&val, bytes, sizeof val);
-	return val;
-}
-
-short int bytes_to_short(LPBYTE bytes)
-{
-
-	short int val;
-	memcpy(&val, bytes, sizeof val);
-	return val;
-}
-
-unsigned short int bytes_to_unsigned_short(LPBYTE bytes)
-{
-
-	unsigned short int val;
-	memcpy(&val, bytes, sizeof val);
-	return val;
-}
-
-double bytes_to_double(LPBYTE bytes)
-{
-
-	double val;
-	memcpy(&val, bytes, sizeof val);
-	return val;
-}
-
-long bytes_to_long(LPBYTE bytes)
-{
-
-	long val;
-	memcpy(&val, bytes, sizeof val);
-	return val;
-}
-
-unsigned long bytes_to_unsigned_long(LPBYTE bytes)
-{
-
-	unsigned long val;
-	memcpy(&val, bytes, sizeof val);
-	return val;
-}
-
-unsigned long long bytes_to_unsigned_long_long(LPBYTE bytes)
-{
-
-	unsigned long long val;
-	memcpy(&val, bytes, sizeof val);
-	return val;
-}
-
-long long bytes_to_long_long(LPBYTE bytes)
-{
-
-	long long val;
-	memcpy(&val, bytes, sizeof val);
-	return val;
-}
-
-unsigned char bytes_to_unsigned_char(LPBYTE bytes)
-{
-
-	unsigned char val;
-	memcpy(&val, bytes, sizeof val);
-	return val;
-}
-
 BSTR wstring_to_bstr(std::wstring ws) {
 	if (!ws.empty())
 		return SysAllocStringLen(ws.data(), ws.size());
@@ -636,7 +549,7 @@ HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, FILETIM
 	}
 	else {
 		FILETIME temp = { 0 };
-		temp = bytes_to_filetime(pData);
+		temp = *reinterpret_cast<FILETIME*>(pData);
 		*filetime = temp;
 	}
 
