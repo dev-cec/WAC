@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <windows.h>
 #include <stdio.h>
 #include <offreg.h>
@@ -13,16 +13,17 @@
 
 struct Run {
 public:
-	std::wstring Sid = L""; //!< Sid de l'utilisateur propri�taire de l'objet
-	std::wstring SidName = L""; //!< nom de l'utilisateur propri�taire de l'objet
+	std::wstring Sid = L""; //!< Sid de l'utilisateur propriétaire de l'objet
+	std::wstring SidName = L""; //!< nom de l'utilisateur propriétaire de l'objet
 	std::wstring Key = L""; //!< origine de l'artefact, run ou runonce
-	std::wstring Name = L""; //!< nom de la cl�
-	std::wstring Value = L"";//!< valeur de la cl�
+	std::wstring Name = L""; //!< nom de la clé
+	std::wstring Value = L"";//!< valeur de la clé
 
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
 	std::wstring to_json() {
+		log(3, L"🔈Run to_jon");
 		return L"\t{ \n"
 			L"\t\t\"SID\":\"" + Sid + L"\", \n"
 			L"\t\t\"SIDName\":\"" + SidName + L"\", \n"
@@ -32,8 +33,10 @@ public:
 			L"\t}";
 	}
 
-	/* liberation m�moire */
-	void clear() {}
+	/* liberation mémoire */
+	void clear() {
+		log(3, L"🔈Run clear");
+	}
 };
 
 /*! structure contenant l'ensemble des artefacts
@@ -43,15 +46,18 @@ public:
 	std::vector<Run> runs;//!< tableau contenant les objets
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les param�tres de l'application issue des param�tres de la ligne de commande
+	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData() {
-		
-		HRESULT hresult =0;
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"ℹ️Runs :");
+		log(0, L"*******************************************************************************************************************");
+
+		HRESULT hresult = 0;
 		ORHKEY hKey = NULL;
 		ORHKEY Offhive = NULL;
 		DWORD nSubkeys = 0;
-		DWORD nValues=0;
+		DWORD nValues = 0;
 		DWORD nSize = 0;
 		DWORD dType = 0;
 		WCHAR szValue[MAX_VALUE_NAME] = L"";
@@ -60,82 +66,109 @@ public:
 		std::wstring runKeys[2] = { L"Run",L"RunOnce" };
 
 		for (std::wstring runKey : runKeys) {
+			log(3, L"🔈OROpenKey HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey);
 			hresult = OROpenKey(conf.Software, (L"Microsoft\\Windows\\CurrentVersion\\" + runKey).c_str(), &hKey);
 			if (hresult != ERROR_SUCCESS) {
-				log(1,  L"Unable to open key : HKLM\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult );
+				log(2, L"🔥OROpenKey HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey, hresult);
 				continue;
 			}
+		
+			log(3, L"🔈ORQueryInfoKey Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey);
 			hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 			if (hresult != ERROR_SUCCESS) {
-				log(1,  L"Unable to get info key : HKLM\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult );
+				log(2, L"🔥ORQueryInfoKey HKLM\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult );
 				continue;
 			}
 			for (int i = 0; i < (int)nValues; i++) {
 				Run run;
+				run.Name = szValue;
 				nSize = MAX_VALUE_NAME;
-				DWORD cData = MAX_DATA;
-				hresult = OREnumValue(hKey, i, szValue, &nSize, &dType, NULL, &cData);
-				if (dType != REG_SZ) continue;
 				run.Sid = L"";
 				run.SidName = L"HKLM";
 				run.Key = runKey;
-				run.Name = szValue;
-				hresult = getRegSzValue(hKey, nullptr, szValue, &run.Value);
+				
+				DWORD cData = MAX_DATA;
+				log(3, L"🔈OREnumValue Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey + L" " + std::to_wstring(i));
+				hresult = OREnumValue(hKey, i, szValue, &nSize, &dType, NULL, &cData);
 				if (hresult != ERROR_SUCCESS) {
-					log(1,  L"Unable to get value : HKLM\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey + L"\\" + szValue, hresult );
+					log(2, L"🔥OREnumValue Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey + L" " + std::to_wstring(i), hresult);
+				}
+				if (dType != REG_SZ) {
+					log(2, L"🔥OREnumValue " + std::wstring(szValue) + L" not REG_SZ type");
 					continue;
 				}
-				run.Value = replaceAll(run.Value, L"\"", L"\\\""); // remplace les " dans les lignes de commande par \"
+				log(3, L"🔈getRegSzValue " + std::wstring(szValue));
+				hresult = getRegSzValue(hKey, nullptr, szValue, &run.Value);
+				if (hresult != ERROR_SUCCESS) {
+					log(2, L"🔥getRegSzValue " + std::wstring(szValue), hresult);
+				}
+				log(3, L"🔈replaceAll Value");
 				run.Value = replaceAll(run.Value, L"\\", L"\\\\");// escape \ in std::string
-				run.Value = replaceAll(run.Value, L"\\\\\"", L"\\\""); // corrige \\" to \"
-				if (hresult != ERROR_SUCCESS) continue;
-
+				run.Value = replaceAll(run.Value, L"\"", L"\\\""); // remplace les " dans les lignes de commande par \"
 				//save
+				log(1, L"➕Run ");
+				log(2, L"❇️Run Name : " + run.Name);
 				runs.push_back(run);
 			}
 			for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
 				//ouverture de la ruche user
+				log(3, L"🔈replaceAll Profile");
 				ruche = conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\\\ntuser.dat";
+				log(3, L"🔈OROpenHive " + get<1>(profile) + L"\\ntuser.dat");
 				hresult = OROpenHive(ruche.c_str(), &Offhive);
 				if (hresult != ERROR_SUCCESS) {
-					log(1,  L" Unable to open hive : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat", hresult);
+					log(2, L"🔥OROpenHive " + get<1>(profile) + L"\\ntuser.dat", hresult);
 					continue;
 				}
-
+				
+				log(3, L"🔈OROpenKey Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey);
 				hresult = OROpenKey(Offhive, (L"Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey).c_str(), &hKey);
 				if (hresult != ERROR_SUCCESS) {
-					log(1,  L"Unable to open key : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult);
+					log(2, L"🔥OROpenKey Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey, hresult);
 					continue;
 				}
-
+		
+				log(3, L"🔈ORQueryInfoKey Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey);
 				hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 				if (hresult != ERROR_SUCCESS) {
-					log(1,  L"Unable to get info key : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult);
+					log(2, L"🔥ORQueryInfoKey Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey, hresult);
 					continue;
 				}
-
+		
 				for (int i = 0; i < (int)nValues; i++) {
 					Run run;
 					nSize = MAX_VALUE_NAME;
 					DWORD cData = MAX_DATA;
-					hresult = OREnumValue(hKey, i, szValue, &nSize, &dType, NULL, &cData);
-					if (dType != REG_SZ) continue;
-					if (hresult != ERROR_SUCCESS) {
-						log(1,  L"Unable to open key : " + get<0>(profile) + L"/ NTUSER.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey + L"\\" + szValue, hresult);
-						continue;
-					}
+					wchar_t pData[MAX_DATA]=L"";
+					run.Name = szValue;
+					log(3, L"🔈replaceAll Name");
+					run.Name = replaceAll(run.Name, L"\\", L"\\\\");// escape \ in std::string
+		
 					run.Sid = get<0>(profile);
+					log(3, L"🔈getNameFromSid Sid");
 					run.SidName = getNameFromSid(run.Sid);
 					run.Key = runKey;
-					run.Name = szValue;
-					run.Name = replaceAll(run.Name, L"\\", L"\\\\");// escape \ in std::string
-					
-					getRegSzValue(hKey, nullptr, szValue, &run.Value);
-					run.Value = replaceAll(run.Value, L"\"", L"\\\""); // remplace les " dans les lignes de commande par \"
+					log(3, L"🔈OREnumValue Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey + L" " + std::to_wstring(i));
+					hresult = OREnumValue(hKey, i, szValue, &nSize, &dType, NULL, &cData);
+					if (hresult != ERROR_SUCCESS) {
+						log(2, L"🔥OREnumValue Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey + L" " + std::to_wstring(i), hresult);
+					}
+					if (dType != REG_SZ) {
+						log(2, L"🔥OREnumValue " + std::wstring(szValue) + L" not REG_SZ type");
+						continue;
+					}
+					log(3, L"🔈getRegSzValue " + std::wstring(szValue));
+					hresult = getRegSzValue(hKey, nullptr, szValue, &run.Value);
+					if (hresult != ERROR_SUCCESS) {
+						log(2, L"🔥getRegSzValue " + std::wstring(szValue), hresult);
+					}
+					log(3, L"🔈replaceAll Value");
 					run.Value = replaceAll(run.Value, L"\\", L"\\\\");// escape \ in std::string
-					run.Value = replaceAll(run.Value, L"\\\\\"", L"\\\""); // corrige \\" to \"
-
+					run.Value = replaceAll(run.Value, L"\"", L"\\\""); // remplace les " dans les lignes de commande par \"
+		
 					//save
+					log(1, L"➕Run ");
+					log(2, L"❇️Run Name : " + run.Name);
 					runs.push_back(run);
 				}
 			}
@@ -147,6 +180,7 @@ public:
 	*/
 	HRESULT to_json()
 	{
+		log(3, L"🔈Runs to_jon");
 		std::wstring result = L"[ \n";
 		std::vector<Run>::iterator it;
 		for (it = runs.begin(); it != runs.end(); it++) {
@@ -158,7 +192,7 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //cr�e le repertoire, pas d'erreur s'il existe d�j�
+		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/run.json");
 		myfile << ansi_to_utf8(result);
@@ -167,8 +201,9 @@ public:
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation m�moire */
+	/* liberation mémoire */
 	void clear() {
+		log(3, L"🔈Runs clear");
 		for (Run temp : runs)
 			temp.clear();
 	}

@@ -1,4 +1,4 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <windows.h>
 #include <stdio.h>
 #include <offreg.h>
@@ -12,15 +12,15 @@
 
 
 
-/*! structure représentant un artefact Shellbag
+/*! structure reprÃ©sentant un artefact Shellbag
 */
 struct Shellbag {
 public:
 	unsigned int id = 0; //!< identifiant de l'objet
 	unsigned int Parent = 0;//!< identifiant du Parent
-	unsigned int niveau = 0;//! niveau de profondeur de l'arborescence utilisé pour la mise en forme du json
-	std::wstring sid = L""; //!< Sid de l'utilisateur propriétaire de l'objet
-	std::wstring sidName = L""; //!< nom de l'utilisateur propriétaire de l'objet
+	unsigned int niveau = 0;//! niveau de profondeur de l'arborescence utilisÃ© pour la mise en forme du json
+	std::wstring sid = L""; //!< Sid de l'utilisateur propriÃ©taire de l'objet
+	std::wstring sidName = L""; //!< nom de l'utilisateur propriÃ©taire de l'objet
 	std::wstring source = L""; //!< origine de l'artefact
 	std::vector<IdList*> shellitems; //!< tableau de IdList
 	std::vector<Shellbag> childs; //!< tableau contenant les shellbags enfant
@@ -58,7 +58,7 @@ public:
 		return result;
 	}
 
-	/* libération mémoire */
+	/* libÃ©ration mÃ©moire */
 	void clear(){}
 
 };
@@ -68,12 +68,12 @@ public:
 struct Shellbags {
 public:
 	std::vector<Shellbag> shellbags;//!< tableau contenant les objets
-	unsigned int niveau = 0;//!< profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
+	unsigned int niveau = 0;//!< profondeur dans l'arborescence utilisÃ© pour la mise en forme du fichier json de sortie
 	
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
-	* param _niveau est utilisé pour la mie en forme de la hiérarchie des objet dans le json de sortie
+	* @param conf contient les paramÃ¨tres de l'application issue des paramÃ¨tres de la ligne de commande
+	* param _niveau est utilisÃ© pour la mie en forme de la hiÃ©rarchie des objet dans le json de sortie
 	*/
 	HRESULT getData( int _niveau = 0) {
 		
@@ -91,6 +91,7 @@ public:
 		//HKEY_USERS
 		for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
 			//ouverture de la ruche user
+			log(3, L"ðŸ”ˆreplaceAll profile");
 			ruche = conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat";
 			hresult = OROpenHive(ruche.c_str(), &Offhive);
 			if (hresult != ERROR_SUCCESS) {
@@ -113,13 +114,13 @@ public:
 		return ERROR_SUCCESS;
 	}
 
-	/*! Fonction permettant de parser une clé de la base de registre
-	* @param hKey contient la clé à parser
-	* @param sid contient le sid de l'utilisateur propriétaire de la clé
+	/*! Fonction permettant de parser une clÃ© de la base de registre
+	* @param hKey contient la clÃ© Ã  parser
+	* @param sid contient le sid de l'utilisateur propriÃ©taire de la clÃ©
 	* @param source contient l'origine de l'artefact
-	* @param shellbags contient l'ensemble des mru parsés pour stocker le résultat
-	* @param niveau, profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
-	* @param _Parentiszip sit le père de l'artefact est un fichier zip
+	* @param shellbags contient l'ensemble des mru parsÃ©s pour stocker le rÃ©sultat
+	* @param niveau, profondeur dans l'arborescence utilisÃ© pour la mise en forme du fichier json de sortie
+	* @param _Parentiszip sit le pÃ¨re de l'artefact est un fichier zip
 	* @param Parent est le shellbag Parent si present
 	*/
 	HRESULT parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vector<Shellbag>* shellbags, unsigned int niveau, bool _Parentiszip, unsigned int Parent = NULL) {
@@ -199,7 +200,7 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crÃ©e le repertoire, pas d'erreur s'il existe dÃ©jÃ 
 		std::wofstream myfile;
 		myfile.open(conf._outputDir +"/shellbags.json");
 		myfile << ansi_to_utf8(result);
@@ -208,7 +209,7 @@ public:
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
 		for (Shellbag temp : shellbags)
 			temp.clear();

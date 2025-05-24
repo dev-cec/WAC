@@ -123,6 +123,7 @@ public:
 		for (std::wstring key : userassitsKey) {
 			for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
 				//ouverture de la ruche user
+				log(3, L"🔈replaceAll profile");
 				ruche = conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\\\ntuser.dat";
 				log(3, L"🔈OROpenHive " + get<1>(profile) + L"\\ntuser.dat");
 				hresult = OROpenHive(ruche.c_str(), &Offhive);

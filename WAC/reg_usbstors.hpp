@@ -33,11 +33,11 @@ public:
 		HRESULT hresult = 0;
 		ORHKEY hkey_time = NULL;
 
-		log(3, L"🔈getRegMultiSzValue HardwareId");
-		hresult = getRegMultiSzValue(hKey_usb, NULL, L"HardwareId", &HardwareId);
 		log(3, L"🔈getRegSzValue FriendlyName");
 		hresult = getRegSzValue(hKey_usb, nullptr, L"FriendlyName", &FriendlyName);
 		log(2, L"❇️USB Friendlyname : " + FriendlyName);
+		log(3, L"🔈getRegMultiSzValue HardwareId");
+		hresult = getRegMultiSzValue(hKey_usb, NULL, L"HardwareId", &HardwareId);
 		log(3, L"🔈getRegSzValue CompatibleIds");
 		hresult = getRegSzValue(hKey_usb, nullptr, L"CompatibleIds", &CompatibleIds);
 		log(3, L"🔈replaceAll CompatibleIds");

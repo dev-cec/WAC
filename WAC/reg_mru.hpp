@@ -1,4 +1,4 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <windows.h>
 #include <stdio.h>
 #include <offreg.h>
@@ -12,12 +12,12 @@
 
 
 
-/* structure représentant l'artefact Most REcently Used
+/* structure reprÃ©sentant l'artefact Most REcently Used
 */
 struct Mru {
 public:
 	unsigned int id = 0; //!< identifiant de l'objet
-	unsigned int niveau = 0;//!< profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
+	unsigned int niveau = 0;//!< profondeur dans l'arborescence utilisÃ© pour la mise en forme du fichier json de sortie
 	std::wstring extension = L""; //!< extension du fichier
 	std::wstring sid = L""; //!<SID de l'utilisateur ayant ouvert le fichier
 	std::wstring sidName = L""; //!<nom de l'utilisateur ayant ouvert le fichier
@@ -50,7 +50,7 @@ public:
 		return result;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
 		for (IdList* temp : shellitems)
 			temp->clear();
@@ -62,11 +62,11 @@ public:
 struct Mrus {
 public:
 	std::vector<Mru> Mrus; //!< contient l'ensemble des objets
-	unsigned int niveau = 0; //!< profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
+	unsigned int niveau = 0; //!< profondeur dans l'arborescence utilisÃ© pour la mise en forme du fichier json de sortie
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
-	* param _niveau est utilisé pour la mie en forme de la hiérarchie des objet dans le json de sortie
+	* @param conf contient les paramÃ¨tres de l'application issue des paramÃ¨tres de la ligne de commande
+	* param _niveau est utilisÃ© pour la mie en forme de la hiÃ©rarchie des objet dans le json de sortie
 	*/
 	HRESULT getData( int _niveau = 0) {
 		
@@ -86,6 +86,7 @@ public:
 			std::wstring keynames[2] = { L"OpenSavePidlMRU",L"OpenSaveMRU" };
 			for (std::wstring keyname : keynames) {
 				//ouverture de la ruche user
+				log(3, L"ğŸ”ˆreplaceAll profile");
 				ruche = conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\\\ntuser.dat";
 				hresult = OROpenHive(ruche.c_str(), &Offhive);
 				if (hresult != ERROR_SUCCESS) {
@@ -125,12 +126,12 @@ public:
 		return ERROR_SUCCESS;
 	}
 
-	/*! Fonction permettant de parser une clé MRUListEx
-	* @param hKey contient le clé de la base de registre à parser
+	/*! Fonction permettant de parser une clÃ© MRUListEx
+	* @param hKey contient le clÃ© de la base de registre Ã  parser
 	* @param sid contient le sid de l'utilisateur
-	* @param source contient l'origine de l’artefact (provient de "OpenSavePidlMRU " ou "OpenSaveMRU")
-	* @param Mrus est un tableau contenant les MRUS parsés
-	* @param niveau est utilisé par la mise en forme du json de sortie
+	* @param source contient l'origine de lâ€™artefact (provient de "OpenSavePidlMRU " ou "OpenSaveMRU")
+	* @param Mrus est un tableau contenant les MRUS parsÃ©s
+	* @param niveau est utilisÃ© par la mise en forme du json de sortie
 	* @param _Parentiszip indique le Parent est un fichier zip
 	* @param extension contient l'extension de fichier
 	*/
@@ -200,7 +201,7 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crÃ©e le repertoire, pas d'erreur s'il existe dÃ©jÃ 
 		std::wofstream myfile;
 		myfile.open(conf._outputDir +"/mrus.json");
 		myfile << ansi_to_utf8(result);
@@ -209,7 +210,7 @@ public:
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
 		for (Mru temp : Mrus)
 			temp.clear();

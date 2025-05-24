@@ -1,4 +1,4 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <windows.h>
 #include <stdio.h>
 #include <offreg.h>
@@ -12,19 +12,19 @@
 
 
 
-/*! structure représentant l'artefact MRU Application
+/*! structure reprÃ©sentant l'artefact MRU Application
 */
 struct MruApp {
 public:
 	unsigned int id = 0; //!< identifiant de l'objet
-	unsigned int niveau = 0;//!< profondeur de l’arborescence, utilisé pour la mise en forme de json de sortie
+	unsigned int niveau = 0;//!< profondeur de lâ€™arborescence, utilisÃ© pour la mise en forme de json de sortie
 	std::wstring name = L"";//!w nom de l'application
-	std::wstring sid = L"";//!< sid de l'utilisateur propriétaire de l'objet
-	std::wstring sidName = L"";//!< nom de l'utilisateur propriétaire de l'objet
+	std::wstring sid = L"";//!< sid de l'utilisateur propriÃ©taire de l'objet
+	std::wstring sidName = L"";//!< nom de l'utilisateur propriÃ©taire de l'objet
 	std::wstring source = L"";//!< origine de l'artefact
 	std::vector<IdList*> shellitems;//!< tableau de IdList
 	
-	bool _dump = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde contenu du buffer au format hexadecimal dans un fichier json
+	bool _dump = false;//!< paramÃ¨tre de la ligne de commande, si true alors on sauvegarde contenu du buffer au format hexadecimal dans un fichier json
 
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
@@ -50,7 +50,7 @@ public:
 		return result;
 	}
 	
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
 		for (IdList* temp : shellitems)
 			temp->clear();
@@ -63,12 +63,12 @@ public:
 struct MruApps {
 public:
 	std::vector<MruApp> MruApps;//!< contient l'ensemble des objets
-	unsigned int niveau = 0;//!< profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
+	unsigned int niveau = 0;//!< profondeur dans l'arborescence utilisÃ© pour la mise en forme du fichier json de sortie
 	
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
-	* param _niveau est utilisé pour la mie en forme de la hiérarchie des objet dans le json de sortie
+	* @param conf contient les paramÃ¨tres de l'application issue des paramÃ¨tres de la ligne de commande
+	* param _niveau est utilisÃ© pour la mie en forme de la hiÃ©rarchie des objet dans le json de sortie
 	*/
 	HRESULT getData( int _niveau = 0) {
 		
@@ -88,6 +88,7 @@ public:
 			std::wstring keynames[3] = { L"LastVisitedMRU",L"LastVisitedPidlMRU",L"LastVisitedPidlMRULegacy" };
 			for (std::wstring keyname : keynames) {
 				//ouverture de la ruche user
+				log(3, L"ğŸ”ˆreplaceAll profile");
 				ruche = conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\\\ntuser.dat";
 				hresult = OROpenHive(ruche.c_str(), &Offhive);
 				if (hresult != ERROR_SUCCESS) {
@@ -111,13 +112,13 @@ public:
 		return ERROR_SUCCESS;
 	}
 
-	/*! Fonction permettant de parser une clé de la base de registre
-	* @param hKey contient la clé à parser
-	* @param sid contient le sid de l'utilisateur propriétaire de la clé
+	/*! Fonction permettant de parser une clÃ© de la base de registre
+	* @param hKey contient la clÃ© Ã  parser
+	* @param sid contient le sid de l'utilisateur propriÃ©taire de la clÃ©
 	* @param source contient l'origine de l'artefact
-	* @param MruApps contient l'ensemble des mru parsés pour stocker le résultat
-	* @param _niveau, profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
-	* @param _Parentiszip sit le père de l'artefact est un fichier zip
+	* @param MruApps contient l'ensemble des mru parsÃ©s pour stocker le rÃ©sultat
+	* @param _niveau, profondeur dans l'arborescence utilisÃ© pour la mise en forme du fichier json de sortie
+	* @param _Parentiszip sit le pÃ¨re de l'artefact est un fichier zip
 	*/
 	HRESULT parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vector<MruApp>* MruApps, unsigned int niveau, bool _Parentiszip) {
 		HRESULT hresult = NULL;
@@ -182,7 +183,7 @@ public:
 		}
 		result += L"\n]";
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crÃ©e le repertoire, pas d'erreur s'il existe dÃ©jÃ 
 		std::wofstream myfile;
 		myfile.open(conf._outputDir +"/mruApps.json");
 		myfile << ansi_to_utf8(result);
@@ -191,7 +192,7 @@ public:
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
 		for (MruApp temp : MruApps)
 			temp.clear();

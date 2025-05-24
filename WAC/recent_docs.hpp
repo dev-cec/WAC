@@ -382,7 +382,10 @@ struct RecentDocs {
 		std::string reps[2] = { "\\AppData\\Roaming\\Microsoft\\Windows\\Recent","\\AppData\\Roaming\\Microsoft\\Office\\Recent" };
 		for (std::string rep : reps) {
 			for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
-				std::string path = wstring_to_string(conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"")) + rep;
+				log(3, L"🔈replaceAll Profile");
+				std::wstring temp = replaceAll(get<1>(profile), L"C:", L"");
+				log(3, L"🔈wstring_to_string path");
+				std::string path = wstring_to_string(conf.mountpoint + temp) + rep;
 				struct stat sb;
 				if (stat(path.c_str(), &sb) == 0) { // directory Exists
 					for (const auto& entry : std::filesystem::directory_iterator(path)) {
