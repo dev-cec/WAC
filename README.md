@@ -46,17 +46,18 @@ It extracts various artefacts in **JSON format**, including:
 To minimize disk traces, this standalone tool should be run **as administrator** 🔐 from a USB stick using the command:
 
 ```
-WAC.exe [--dump] [--debug] [--events] [--output=output] [--errorOutput=errors]
+usage: wac [--dump] [--events] [--output=output] [--loglevel=2]
+        --help or /? : show this help
+        --dump : add hexa value in json files for shellbags and LNK files
+        --events : converts events to json (long time)
+        --output=[directory name] : directory name to store output files starting from current directory. By default the directory is 'output'
+        --loglevel=[0] : define level of details in logfile and activate logging in wac.log
+
+         loglevel = 0 => no logging
+         loglevel = 1 => activate loggin for each artefact type treated
+         loglevel = 2 => activate loggin for each artefact treated
+         loglevel = 3 => activate loggin for each subfunction called (used for debug only)
 ```
-
-### ⚙️ Options :
-
-- `--help` or /?` : show this help 
-- `--dump` : add std::hexa value in json files for shellbags and LNK files 
-- `--debug` : add error output files
-- `--events` : converts events to json (long time)
-- `--output=[directory name]` : directory name to store output files starting from current directory. By default the directory is 'output'
-- `--errorOutput=[directory name]` : directory name to store error output files starting from current directory. By default the directory is 'errors'
 
 All options are optional and **disabled by default**.
 
