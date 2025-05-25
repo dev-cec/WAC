@@ -184,6 +184,7 @@
     <None Include="doc\modele de donnees.drawio" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="asciiart.hpp" />
     <ClInclude Include="events.hpp" />
     <ClInclude Include="jumplist_automatic.hpp" />
     <ClInclude Include="jumplist_custom.hpp" />
