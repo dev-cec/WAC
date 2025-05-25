@@ -20,6 +20,8 @@ public:
 	std::wstring sid = L""; //!<SID de l'utilisateur ayant ouvert le fichier
 	std::wstring sidName = L""; //!<nom de l'utilisateur ayant ouvert le fichier
 	std::wstring source = L"";//!< provient de "OpenSavePidlMRU " ou "OpenSaveMRU"
+	FILETIME lastWriteTime = { 0 }; //!< dernière modification de la clé
+	FILETIME lastWriteTimeUtc = { 0 }; //!< dernière modification de la clé au format UTC
 	std::vector<IdList*> shellitems; //!< tableau contenant les Idlist
 
 	/*! conversion de l'objet au format json
@@ -27,13 +29,17 @@ public:
 	*/
 	std::wstring to_json() {
 		log(3, L"🔈Mru to_json");
-		std::wstring result = tab(niveau) + L"{ \n"
-			+ tab(niveau + 1) + L"\"ID\":" + std::to_wstring(id) + L", \n"
-			+ tab(niveau + 1) + L"\"Extension\":\"" + extension + L"\", \n"
-			+ tab(niveau + 1) + L"\"SID\":\"" + sid + L"\", \n"
-			+ tab(niveau + 1) + L"\"SIDName\":\"" + sidName + L"\", \n"
-			+ tab(niveau + 1) + L"\"Source\":\"" + source + L"\", \n"
-			+ tab(niveau + 1) + L"\"ShellItems\" : [\n";
+		std::wstring result = tab(niveau) + L"{ \n";
+		result += tab(niveau + 1) + L"\"ID\":" + std::to_wstring(id) + L", \n";
+		result += tab(niveau + 1) + L"\"Extension\":\"" + extension + L"\", \n";
+		result += tab(niveau + 1) + L"\"SID\":\"" + sid + L"\", \n";
+		result += tab(niveau + 1) + L"\"SIDName\":\"" + sidName + L"\", \n";
+		result += tab(niveau + 1) + L"\"Source\":\"" + source + L"\", \n";
+		log(3, L"🔈time_to_wstring lastWriteTime");
+		result += L"\t\t\"LastWriteTime\":\"" + time_to_wstring(lastWriteTime) + L"\", \n";
+		log(3, L"🔈time_to_wstring lastWriteTimeUtc");
+		result += L"\t\t\"LastWriteTimeUtc\":\"" + time_to_wstring(lastWriteTimeUtc) + L"\", \n";
+		result += tab(niveau + 1) + L"\"ShellItems\" : [\n";
 		std::vector<IdList*>::iterator it;
 		for (it = shellitems.begin(); it != shellitems.end(); it++) {
 			IdList* temp = *it;
@@ -69,7 +75,7 @@ public:
 	HRESULT getData(int _niveau = 0) {
 
 		log(0, L"*******************************************************************************************************************");
-		log(0, L"ℹ️Bams : ");
+		log(0, L"ℹ️Mrus : ");
 		log(0, L"*******************************************************************************************************************");
 
 		HRESULT hresult = NULL;
@@ -150,8 +156,19 @@ public:
 		ORHKEY hKeyChilds;
 		std::vector<unsigned int> ids;
 		LPBYTE pData = NULL;
+		FILETIME lastWriteTimeUtc = { 0 };
+		DWORD nSubkeys = 0, nValues = 0;
+
 		unsigned int pos = 0;
 		DWORD dwSize = 0;
+
+		log(3, L"🔈ORQueryInfoKey hKey");
+		hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, &lastWriteTimeUtc);
+		if (hresult != ERROR_SUCCESS) {
+			log(2, L"🔥ORQueryInfoKey hKey", hresult);
+			return hresult;
+		}
+
 		log(3, L"🔈getRegBinaryValue hkey\\MRUListEx");
 		hresult = getRegBinaryValue(hKey, L"", L"MRUListEx", &pData, &dwSize);
 		if (hresult != ERROR_SUCCESS) {
@@ -164,21 +181,25 @@ public:
 			ids.push_back(id);
 			pos += 4;
 		}
+
 		delete[] pData;
 		pData = NULL;
 		for (int id : ids) {
 			bool Parentiszip = false | _Parentiszip;
 			log(1, L"➕Mru");
-			Mru Mru;
-			Mru.id = id;
+			Mru mru;
+			mru.id = id;
 			log(2, L"❇️Mru id" + id);
-			Mru.extension = extension;
-			Mru.niveau = niveau;
-			Mru.sid = sid;
+			mru.lastWriteTimeUtc = lastWriteTimeUtc;
+			log(3, L"🔈FileTimeToLocalFileTime lastWriteTime");
+			FileTimeToLocalFileTime(&lastWriteTimeUtc, &mru.lastWriteTime);
+			mru.extension = extension;
+			mru.niveau = niveau;
+			mru.sid = sid;
 			log(3, L"🔈getNameFromSid sidName");
-			Mru.sidName = getNameFromSid(sid);
-			Mru.source = source;
-			log(3, L"🔈getRegBinaryValue hkey\\"+ std::to_wstring(id));
+			mru.sidName = getNameFromSid(sid);
+			mru.source = source;
+			log(3, L"🔈getRegBinaryValue hkey\\" + std::to_wstring(id));
 			hresult = getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), &pData, &dwSize);
 			if (hresult != ERROR_SUCCESS) {
 				log(2, L"🔥getRegBinaryValue hkey\\" + std::to_wstring(id), hresult);
@@ -194,14 +215,14 @@ public:
 					if (shellitem->shellItem->is_zip == true)
 						Parentiszip = true;
 					offset += size;
-					Mru.shellitems.push_back(shellitem);
+					mru.shellitems.push_back(shellitem);
 				}
 			}
 			delete[] pData;
 			pData = NULL;
 
 			//save
-			Mrus->push_back(Mru);
+			Mrus->push_back(mru);
 
 		}
 		return ERROR_SUCCESS;

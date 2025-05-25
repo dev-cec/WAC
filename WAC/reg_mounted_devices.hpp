@@ -36,6 +36,7 @@ public:
 		else {
 			log(2, L"🔥getRegSzValue", hr);
 		}
+
 		drive = std::wstring(szSubValue);
 		log(3, L"🔈replaceAll drive");
 		drive = replaceAll(drive, L"\\", L"\\\\");
@@ -47,10 +48,11 @@ public:
    */
 	std::wstring to_json() {
 		log(3, L"🔈MountedDevice to_json");
-		return L"\t{ \n"
-			L"\t\t\"Drive\":\"" + drive + L"\", \n"
-			L"\t\t\"Device\":\"" + device + L"\"\n"
-			L"\t}";
+		std::wstring result = L"\t{ \n";
+		result += L"\t\t\"Drive\":\"" + drive + L"\", \n";
+		result += L"\t\t\"Device\":\"" + device + L"\" \n";
+		result += L"\t}";
+		return result;
 	}
 
 	/* liberation mémoire */
@@ -75,6 +77,7 @@ public:
 		ORHKEY hKey;
 		DWORD nSubkeys;
 		DWORD nValues;
+		FILETIME lastWriteTimeUtc = { 0 };
 
 		log(0, L"*******************************************************************************************************************");
 		log(0, L"ℹ️Mounted devices :");
@@ -88,7 +91,7 @@ public:
 		};
 
 		log(3, L"🔈ORQueryInfoKey System\\MountedDevices");
-		hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
+		hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, &lastWriteTimeUtc);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
 			log(2, L"🔥ORQueryInfoKey System\\MountedDevices", hresult);
 			return hresult;

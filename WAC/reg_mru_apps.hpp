@@ -22,20 +22,26 @@ public:
 	std::wstring sid = L"";//!< sid de l'utilisateur propriétaire de l'objet
 	std::wstring sidName = L"";//!< nom de l'utilisateur propriétaire de l'objet
 	std::wstring source = L"";//!< origine de l'artefact
+	FILETIME lastWriteTime = { 0 }; //!< dernière modification de la clé
+	FILETIME lastWriteTimeUtc = { 0 }; //!< dernière modification de la clé au format UTC
 	std::vector<IdList*> shellitems;//!< tableau de IdList
-	
+
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
 	std::wstring to_json() {
 		log(3, L"🔈Mru to_json");
-		std::wstring result = tab(niveau) + L"{ \n"
-			+ tab(niveau + 1) + L"\"ID\":" + std::to_wstring(id) + L", \n"
-			+ tab(niveau + 1) + L"\"Name\":\"" + name + L"\", \n"
-			+ tab(niveau + 1) + L"\"SID\":\"" + sid + L"\", \n"
-			+ tab(niveau + 1) + L"\"SIDName\":\"" + sidName + L"\", \n"
-			+ tab(niveau + 1) + L"\"Source\":\"" + source + L"\", \n"
-			+ tab(niveau + 1) + L"\"ShellItems\" : [\n";
+		std::wstring result = tab(niveau) + L"{ \n";
+		result += tab(niveau + 1) + L"\"ID\":" + std::to_wstring(id) + L", \n";
+		result += tab(niveau + 1) + L"\"Name\":\"" + name + L"\", \n";
+		result += tab(niveau + 1) + L"\"SID\":\"" + sid + L"\", \n";
+		result += tab(niveau + 1) + L"\"SIDName\":\"" + sidName + L"\", \n";
+		result += tab(niveau + 1) + L"\"Source\":\"" + source + L"\", \n";
+		log(3, L"🔈time_to_wstring lastWriteTime");
+		result += L"\t\t\"LastWriteTime\":\"" + time_to_wstring(lastWriteTime) + L"\", \n";
+		log(3, L"🔈time_to_wstring lastWriteTimeUtc");
+		result += L"\t\t\"LastWriteTimeUtc\":\"" + time_to_wstring(lastWriteTimeUtc) + L"\", \n";
+		result += tab(niveau + 1) + L"\"ShellItems\" : [\n";
 		std::vector<IdList*>::iterator it;
 		for (it = shellitems.begin(); it != shellitems.end(); it++) {
 			IdList* temp = *it;
@@ -48,7 +54,7 @@ public:
 			+ tab(niveau) + L"}";
 		return result;
 	}
-	
+
 	/* liberation mémoire */
 	void clear() {
 		log(3, L"🔈Mru clear");
@@ -64,13 +70,17 @@ struct MruApps {
 public:
 	std::vector<MruApp> MruApps;//!< contient l'ensemble des objets
 	unsigned int niveau = 0;//!< profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
-	
+
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	* param _niveau est utilisé pour la mie en forme de la hiérarchie des objet dans le json de sortie
 	*/
-	HRESULT getData( int _niveau = 0) {
-		
+	HRESULT getData(int _niveau = 0) {
+
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"ℹ️Mru Apps : ");
+		log(0, L"*******************************************************************************************************************");
+
 		HRESULT hresult = NULL;
 		ORHKEY hKey = NULL;
 		ORHKEY hSubKey = NULL;
@@ -82,6 +92,7 @@ public:
 		WCHAR szSubKey[MAX_VALUE_NAME] = L"";
 		std::wstring ruche = L"";
 		niveau = _niveau;
+
 		//HKEY_USERS
 		for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
 			std::wstring keynames[3] = { L"LastVisitedMRU",L"LastVisitedPidlMRU",L"LastVisitedPidlMRULegacy" };
@@ -105,7 +116,7 @@ public:
 				log(3, L"🔈parse");
 				hresult = parse(hKey, get<0>(profile), keyname, &MruApps, 1, false);
 				if (hresult != ERROR_SUCCESS) {
-					log(2, L"🔥parse", hresult );
+					log(2, L"🔥parse", hresult);
 					continue;
 				};
 			}
@@ -128,6 +139,15 @@ public:
 		LPBYTE pData = new BYTE[MAX_DATA];
 		unsigned int pos = 0;
 		DWORD dwSize = 0;
+		FILETIME lastWriteTimeUtc = { 0 };
+		DWORD nSubkeys = 0, nValues = 0;
+
+		log(3, L"🔈ORQueryInfoKey hKey");
+		hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, &lastWriteTimeUtc);
+		if (hresult != ERROR_SUCCESS) {
+			log(2, L"🔥ORQueryInfoKey hKey", hresult);
+			return hresult;
+		}
 
 		log(3, L"🔈getRegBinaryValue hKey\\MRUListEx");
 		hresult = getRegBinaryValue(hKey, L"", L"MRUListEx", &pData, &dwSize);
@@ -141,22 +161,25 @@ public:
 			ids.push_back(id);
 			pos += 4;
 		}
-		
+
 		delete[] pData;
 		pData = NULL;
-		
+
 		for (int id : ids) {
 			bool Parentiszip = false | _Parentiszip;
 			log(1, L"➕MruApp");
 			MruApp mruApp;
 			mruApp.id = id;
 			log(2, L"❇️MruApp id" + id);
+			mruApp.lastWriteTimeUtc = lastWriteTimeUtc;
+			log(3, L"🔈FileTimeToLocalFileTime lastWriteTime");
+			FileTimeToLocalFileTime(&lastWriteTimeUtc, &mruApp.lastWriteTime);
 			mruApp.niveau = niveau;
 			mruApp.sid = sid;
 			log(3, L"🔈getNameFromSid sidName");
 			mruApp.sidName = getNameFromSid(sid);
 			mruApp.source = source;
-			log(3, L"🔈getRegBinaryValue hKey\\"+ std::to_wstring(id));
+			log(3, L"🔈getRegBinaryValue hKey\\" + std::to_wstring(id));
 			hresult = getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), &pData, &dwSize);
 			if (hresult != ERROR_SUCCESS) {
 				log(2, L"🔥getRegBinaryValue hKey\\" + std::to_wstring(id), hresult);
@@ -202,7 +225,7 @@ public:
 		//enregistrement dans fichier json
 		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
-		myfile.open(conf._outputDir +"/mruApps.json");
+		myfile.open(conf._outputDir + "/mruApps.json");
 		myfile << ansi_to_utf8(result);
 		myfile.close();
 

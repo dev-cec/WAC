@@ -17,8 +17,8 @@ public:
 	std::wstring sid = L""; //!< SID de l'utilisateur
 	std::wstring sidName = L""; //!< nom de l'utilisateur
 	std::wstring name = L"";//!< nom de l'objet
-	std::wstring datetime = L"";//!< date de création de l'objet
-	std::wstring datetimeUtc = L"";//!< date de création de l'objet au format UTC
+	std::wstring executionTime = L"";//!< date de création de l'objet
+	std::wstring executionTimeUtc = L"";//!< date de création de l'objet au format UTC
 
 	/*! Constructeur
 	* @param pData contient timestamps à transformer en datetime
@@ -32,9 +32,9 @@ public:
 		log(2, L"❇️Bam Name : " + name);
 		FILETIME temp = *reinterpret_cast<FILETIME*>(pData);
 		log(3, L"🔈time_to_wstring datetime");
-		datetime = time_to_wstring(temp);
+		executionTime = time_to_wstring(temp);
 		log(3, L"🔈time_to_wstring datetimeUtc");
-		datetimeUtc = time_to_wstring(temp, true);
+		executionTimeUtc = time_to_wstring(temp, true);
 		sid = psid;
 		log(3, L"🔈getNameFromSid sidName");
 		sidName = getNameFromSid(sid);
@@ -49,8 +49,8 @@ public:
 			L"\t\t\"SID\":\"" + sid + L"\", \n"
 			L"\t\t\"SIDName\":\"" + sidName + L"\", \n"
 			L"\t\t\"Name\":\"" + name + L"\", \n"
-			L"\t\t\"Datetime\":\"" + datetime + L"\", \n"
-			L"\t\t\"DatetimeUtc\":\"" + datetimeUtc + L"\"\n"
+			L"\t\t\"executionTime\":\"" + executionTime + L"\", \n"
+			L"\t\t\"executionTimeUtc\":\"" + executionTimeUtc + L"\"\n"
 			L"\t}";
 	}
 

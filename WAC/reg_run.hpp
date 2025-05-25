@@ -18,19 +18,26 @@ public:
 	std::wstring Key = L""; //!< origine de l'artefact, run ou runonce
 	std::wstring Name = L""; //!< nom de la clé
 	std::wstring Value = L"";//!< valeur de la clé
+	FILETIME lastWriteTime = { 0 }; //!< dernière modification de la clé
+	FILETIME lastWriteTimeUtc = { 0 }; //!< dernière modification de la clé au format UTC
 
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
 	std::wstring to_json() {
 		log(3, L"🔈Run to_jon");
-		return L"\t{ \n"
-			L"\t\t\"SID\":\"" + Sid + L"\", \n"
-			L"\t\t\"SIDName\":\"" + SidName + L"\", \n"
-			L"\t\t\"Key\":\"" + Key + L"\", \n"
-			L"\t\t\"Name\":\"" + Name + L"\", \n"
-			L"\t\t\"Value\":\"" + Value + L"\"\n"
-			L"\t}";
+		std::wstring result = L"\t{ \n";
+		result += L"\t\t\"SID\":\"" + Sid + L"\", \n";
+		result += L"\t\t\"SIDName\":\"" + SidName + L"\", \n";
+		result += L"\t\t\"Key\":\"" + Key + L"\", \n";
+		result += L"\t\t\"Name\":\"" + Name + L"\", \n";
+		result += L"\t\t\"Value\":\"" + Value + L"\", \n";
+		log(3, L"🔈time_to_wstring lastWriteTime");
+		result += L"\t\t\"LastWriteTime\":\"" + time_to_wstring(lastWriteTime) + L"\", \n";
+		log(3, L"🔈time_to_wstring lastWriteTimeUtc");
+		result += L"\t\t\"LastWriteTimeUtc\":\"" + time_to_wstring(lastWriteTimeUtc) + L"\"\n";
+		result += L"\t}";
+		return result;
 	}
 
 	/* liberation mémoire */
@@ -62,6 +69,7 @@ public:
 		DWORD dType = 0;
 		WCHAR szValue[MAX_VALUE_NAME] = L"";
 		WCHAR szSubKey[MAX_VALUE_NAME] = L"";
+		FILETIME lastWriteTimeUtc = { 0 };
 		std::wstring ruche = L"";
 		std::wstring runKeys[2] = { L"Run",L"RunOnce" };
 		for (std::wstring runKey : runKeys) {
@@ -71,18 +79,20 @@ public:
 				log(2, L"🔥OROpenKey HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey, hresult);
 				continue;
 			}
-		
+
 			log(3, L"🔈ORQueryInfoKey Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey);
-			hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
+			hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, &lastWriteTimeUtc);
 			if (hresult != ERROR_SUCCESS) {
-				log(2, L"🔥ORQueryInfoKey HKLM\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult );
+				log(2, L"🔥ORQueryInfoKey HKLM\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\" + runKey, hresult);
 				continue;
 			}
 			for (int i = 0; i < (int)nValues; i++) {
 				log(1, L"➕Run ");
 				Run run;
 				nSize = MAX_VALUE_NAME;
-				
+				run.lastWriteTimeUtc = lastWriteTimeUtc;
+				log(3, L"🔈FileTimeToLocalFileTime lastWriteTime");
+				FileTimeToLocalFileTime(&lastWriteTimeUtc, &run.lastWriteTime);
 				DWORD cData = MAX_DATA;
 				log(3, L"🔈OREnumValue Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey + L" " + std::to_wstring(i));
 				hresult = OREnumValue(hKey, i, szValue, &nSize, &dType, NULL, &cData);
@@ -119,26 +129,29 @@ public:
 					log(2, L"🔥OROpenHive " + get<1>(profile) + L"\\ntuser.dat", hresult);
 					continue;
 				}
-				
+
 				log(3, L"🔈OROpenKey Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey);
 				hresult = OROpenKey(Offhive, (L"Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey).c_str(), &hKey);
 				if (hresult != ERROR_SUCCESS) {
 					log(2, L"🔥OROpenKey Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey, hresult);
 					continue;
 				}
-			
+
 				log(3, L"🔈ORQueryInfoKey Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey);
-				hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
+				hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, &lastWriteTimeUtc);
 				if (hresult != ERROR_SUCCESS) {
 					log(2, L"🔥ORQueryInfoKey Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey, hresult);
 					continue;
 				}
-			
+
 				for (int i = 0; i < (int)nValues; i++) {
 					log(1, L"➕Run ");
 					Run run;
 					nSize = MAX_VALUE_NAME;
 					DWORD cData = MAX_DATA;
+					run.lastWriteTimeUtc = lastWriteTimeUtc;
+					log(3, L"🔈FileTimeToLocalFileTime lastWriteTime");
+					FileTimeToLocalFileTime(&lastWriteTimeUtc, &run.lastWriteTime);
 					log(3, L"🔈OREnumValue Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey + L" " + std::to_wstring(i));
 					hresult = OREnumValue(hKey, i, szValue, &nSize, &dType, NULL, &cData);
 					if (hresult != ERROR_SUCCESS) {
