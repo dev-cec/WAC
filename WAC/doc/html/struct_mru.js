@@ -1,8 +1,7 @@
 var struct_mru =
 [
+    [ "clear", "struct_mru.html#a3e6dd56999aef71459054ae9de5cbe3c", null ],
     [ "to_json", "struct_mru.html#a3d7dee95aec47ef92dd3f640fe4814a6", null ],
-    [ "_debug", "struct_mru.html#a20dfb7a5df912190984e798785fd0486", null ],
-    [ "_dump", "struct_mru.html#a328a8001ed04e0aa33040a5eaa9fda41", null ],
     [ "extension", "struct_mru.html#abe65ffa5426b7737af0da5c543ae2a50", null ],
     [ "id", "struct_mru.html#af746689a9e8341c4b48f5b00909a6bfa", null ],
     [ "niveau", "struct_mru.html#abe6fab6e3a85adc69c5226c33c28e9f9", null ],

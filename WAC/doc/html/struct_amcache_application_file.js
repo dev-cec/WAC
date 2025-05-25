@@ -1,6 +1,7 @@
 var struct_amcache_application_file =
 [
     [ "AmcacheApplicationFile", "struct_amcache_application_file.html#a9a3bfd104c89eb829fec7a12e77103a9", null ],
+    [ "clear", "struct_amcache_application_file.html#a639e3cd82fc9b1d29dbef77e8a104689", null ],
     [ "to_json", "struct_amcache_application_file.html#af0946dd310e2a01ce543012822a79e23", null ],
     [ "IsOsComponent", "struct_amcache_application_file.html#ab60569ad29ba0ac39b0804f299f73af4", null ],
     [ "LinkDate", "struct_amcache_application_file.html#a1f41085ac189e7ff14b0aa78b2065592", null ],

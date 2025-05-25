@@ -117,10 +117,12 @@ $(function(){initNavTree('struct_custom_destination.html',''); initResizable(tru
 Fonctions membres publiques</h2></td></tr>
 <tr class="memitem:afc8f2d70cffcd084ac20a4103a191add" id="r_afc8f2d70cffcd084ac20a4103a191add"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afc8f2d70cffcd084ac20a4103a191add">CustomDestination</a> ()</td></tr>
 <tr class="separator:afc8f2d70cffcd084ac20a4103a191add"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44c74b2f0f4c3713cf56b9e11b0d790c" id="r_a44c74b2f0f4c3713cf56b9e11b0d790c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a44c74b2f0f4c3713cf56b9e11b0d790c">CustomDestination</a> (std::filesystem::path _path, std::wstring _sid, bool _debug, bool _dump, std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *_errors)</td></tr>
-<tr class="separator:a44c74b2f0f4c3713cf56b9e11b0d790c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a11297e16dc88ac061e33913ac3343380" id="r_a11297e16dc88ac061e33913ac3343380"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a11297e16dc88ac061e33913ac3343380">CustomDestination</a> (std::filesystem::path _path, std::wstring _sid)</td></tr>
+<tr class="separator:a11297e16dc88ac061e33913ac3343380"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a97341eb46c7d6a1c5956c617a1b9b179" id="r_a97341eb46c7d6a1c5956c617a1b9b179"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a97341eb46c7d6a1c5956c617a1b9b179">to_json</a> (int i)</td></tr>
 <tr class="separator:a97341eb46c7d6a1c5956c617a1b9b179"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a792dc8de17270b06aad8d8de2a46a26f" id="r_a792dc8de17270b06aad8d8de2a46a26f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a792dc8de17270b06aad8d8de2a46a26f">clear</a> ()</td></tr>
+<tr class="separator:a792dc8de17270b06aad8d8de2a46a26f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
@@ -134,8 +136,14 @@ Attributs publics</h2></td></tr>
 <tr class="memdesc:a99f14e1b8737748200e0fe6a12762ce6"><td class="mdescLeft">&#160;</td><td class="mdescRight">nom de l'application liée au Custom Destination  <br /></td></tr>
 <tr class="separator:a99f14e1b8737748200e0fe6a12762ce6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a15778c3061c186d87cccf4d881dabf2c" id="r_a15778c3061c186d87cccf4d881dabf2c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a15778c3061c186d87cccf4d881dabf2c">path</a> = L&quot;&quot;</td></tr>
-<tr class="memdesc:a15778c3061c186d87cccf4d881dabf2c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Chemin du custom Destination.  <br /></td></tr>
+<tr class="memdesc:a15778c3061c186d87cccf4d881dabf2c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Chemin du custom Destination dans la snapshot.  <br /></td></tr>
 <tr class="separator:a15778c3061c186d87cccf4d881dabf2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7fc854ec81a4bfc9c41f0971d014d2c" id="r_aa7fc854ec81a4bfc9c41f0971d014d2c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa7fc854ec81a4bfc9c41f0971d014d2c">pathEscaped</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:aa7fc854ec81a4bfc9c41f0971d014d2c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Chemin du custom Destination dans la snapshot escaped.  <br /></td></tr>
+<tr class="separator:aa7fc854ec81a4bfc9c41f0971d014d2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96c0aa32da5e3ecc8d71daae8822b70b" id="r_a96c0aa32da5e3ecc8d71daae8822b70b"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a96c0aa32da5e3ecc8d71daae8822b70b">pathOriginal</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a96c0aa32da5e3ecc8d71daae8822b70b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Chemin du custom Destination sur le disque.  <br /></td></tr>
+<tr class="separator:a96c0aa32da5e3ecc8d71daae8822b70b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af047fe2b69bbe3494821f54b350e0dfe" id="r_af047fe2b69bbe3494821f54b350e0dfe"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af047fe2b69bbe3494821f54b350e0dfe">typeInt</a> = 0</td></tr>
 <tr class="memdesc:af047fe2b69bbe3494821f54b350e0dfe"><td class="mdescLeft">&#160;</td><td class="mdescRight">type de custom Destination en entier  <br /></td></tr>
 <tr class="separator:af047fe2b69bbe3494821f54b350e0dfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -192,8 +200,8 @@ Attributs publics</h2></td></tr>
 
 </div>
 </div>
-<a id="a44c74b2f0f4c3713cf56b9e11b0d790c" name="a44c74b2f0f4c3713cf56b9e11b0d790c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a44c74b2f0f4c3713cf56b9e11b0d790c">&#9670;&#160;</a></span>CustomDestination() <span class="overload">[2/2]</span></h2>
+<a id="a11297e16dc88ac061e33913ac3343380" name="a11297e16dc88ac061e33913ac3343380"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a11297e16dc88ac061e33913ac3343380">&#9670;&#160;</a></span>CustomDestination() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -209,22 +217,7 @@ Attributs publics</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>_sid</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>_debug</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>_dump</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *</td>          <td class="paramname"><span class="paramname"><em>_errors</em></span>&#160;)</td>
+          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>_sid</em></span>&#160;)</td>
         </tr>
       </table>
   </td>
@@ -238,9 +231,6 @@ Attributs publics</h2></td></tr>
     <tr><td class="paramname">buffer</td><td>en entrée contient les bits à parser des extensionblock </td></tr>
     <tr><td class="paramname">_path</td><td>est le chemin contenant les Automatic Destinations </td></tr>
     <tr><td class="paramname">_sid</td><td>est le SID de l'utilisateur propriétaire du LNK </td></tr>
-    <tr><td class="paramname">_debug</td><td>est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré </td></tr>
-    <tr><td class="paramname">_dump</td><td>est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal </td></tr>
-    <tr><td class="paramname">errors</td><td>est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction </td></tr>
   </table>
   </dd>
 </dl>
@@ -248,6 +238,31 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des fonctions membres</h2>
+<a id="a792dc8de17270b06aad8d8de2a46a26f" name="a792dc8de17270b06aad8d8de2a46a26f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a792dc8de17270b06aad8d8de2a46a26f">&#9670;&#160;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void CustomDestination::clear </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a97341eb46c7d6a1c5956c617a1b9b179" name="a97341eb46c7d6a1c5956c617a1b9b179"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a97341eb46c7d6a1c5956c617a1b9b179">&#9670;&#160;</a></span>to_json()</h2>
 
@@ -420,7 +435,39 @@ Attributs publics</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Chemin du custom Destination. </p>
+<p>Chemin du custom Destination dans la snapshot. </p>
+
+</div>
+</div>
+<a id="aa7fc854ec81a4bfc9c41f0971d014d2c" name="aa7fc854ec81a4bfc9c41f0971d014d2c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa7fc854ec81a4bfc9c41f0971d014d2c">&#9670;&#160;</a></span>pathEscaped</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring CustomDestination::pathEscaped = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Chemin du custom Destination dans la snapshot escaped. </p>
+
+</div>
+</div>
+<a id="a96c0aa32da5e3ecc8d71daae8822b70b" name="a96c0aa32da5e3ecc8d71daae8822b70b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a96c0aa32da5e3ecc8d71daae8822b70b">&#9670;&#160;</a></span>pathOriginal</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring CustomDestination::pathOriginal = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Chemin du custom Destination sur le disque. </p>
 
 </div>
 </div>
@@ -489,7 +536,7 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <hr/>La documentation de cette structure a été générée à partir du fichier suivant :<ul>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="jumplist__custom_8hpp_source.html">jumplist_custom.hpp</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="jumplist__custom_8hpp_source.html">jumplist_custom.hpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

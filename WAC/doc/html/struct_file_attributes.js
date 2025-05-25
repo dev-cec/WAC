@@ -1,6 +1,7 @@
 var struct_file_attributes =
 [
     [ "FileAttributes", "struct_file_attributes.html#a797b365758b7ed48c36b0a117cce1e36", null ],
+    [ "clear", "struct_file_attributes.html#a76228ea012949d5b413405bc403c1b08", null ],
     [ "to_wstring", "struct_file_attributes.html#af0d60c571baed410d212e9ee1884ea0c", null ],
     [ "Archive", "struct_file_attributes.html#a1bd109da24c6d924ca0816c93f86893a", null ],
     [ "Compressed", "struct_file_attributes.html#ab6f23132dd4d25d359437f701afda504", null ],

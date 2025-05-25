@@ -115,10 +115,13 @@ $(function(){initNavTree('struct_property.html',''); initResizable(true); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Fonctions membres publiques</h2></td></tr>
-<tr class="memitem:a53de6e60bf720c02d398efade848f1fc" id="r_a53de6e60bf720c02d398efade848f1fc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a53de6e60bf720c02d398efade848f1fc">Property</a> (LPBYTE buffer, int _niveau, bool pdebug, bool pdump, std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *errors)</td></tr>
-<tr class="separator:a53de6e60bf720c02d398efade848f1fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8db3a41e6d13822855fa49392ba5f3ba" id="r_a8db3a41e6d13822855fa49392ba5f3ba"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8db3a41e6d13822855fa49392ba5f3ba">Property</a> (LPBYTE buffer, int _niveau)</td></tr>
+<tr class="memdesc:a8db3a41e6d13822855fa49392ba5f3ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">vrai si la valeur est un objet, sinon la valeur est un string  <br /></td></tr>
+<tr class="separator:a8db3a41e6d13822855fa49392ba5f3ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aee0bfb9a916079b1c7db6368ed223239" id="r_aee0bfb9a916079b1c7db6368ed223239"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aee0bfb9a916079b1c7db6368ed223239">to_json</a> (int i=0)</td></tr>
 <tr class="separator:aee0bfb9a916079b1c7db6368ed223239"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a46cc3c0c06bb74bea747b5acbcac6cee" id="r_a46cc3c0c06bb74bea747b5acbcac6cee"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a46cc3c0c06bb74bea747b5acbcac6cee">clear</a> ()</td></tr>
+<tr class="separator:a46cc3c0c06bb74bea747b5acbcac6cee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
@@ -144,18 +147,12 @@ Attributs publics</h2></td></tr>
 <tr class="separator:aad83119243b8ae568387312f98b9de70"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a186fb75d5daa432c894575578dc15e4c" id="r_a186fb75d5daa432c894575578dc15e4c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a186fb75d5daa432c894575578dc15e4c">valueIsObject</a> = false</td></tr>
 <tr class="separator:a186fb75d5daa432c894575578dc15e4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af9dae78a0245eca9bc65da3762f07e2d" id="r_af9dae78a0245eca9bc65da3762f07e2d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af9dae78a0245eca9bc65da3762f07e2d">_debug</a> = false</td></tr>
-<tr class="memdesc:af9dae78a0245eca9bc65da3762f07e2d"><td class="mdescLeft">&#160;</td><td class="mdescRight">vrai si la valeur est un objet, sinon la valeur est un string  <br /></td></tr>
-<tr class="separator:af9dae78a0245eca9bc65da3762f07e2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aee6e369bc525ef38d6398374360aaf25" id="r_aee6e369bc525ef38d6398374360aaf25"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aee6e369bc525ef38d6398374360aaf25">_dump</a> = false</td></tr>
-<tr class="memdesc:aee6e369bc525ef38d6398374360aaf25"><td class="mdescLeft">&#160;</td><td class="mdescRight">si true alors le fichier de sortie contiendra le dump hexa de l'objet  <br /></td></tr>
-<tr class="separator:aee6e369bc525ef38d6398374360aaf25"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
-<div class="textblock"><p>Structure définissant le format d'un <a class="el" href="struct_property.html">Property</a> à lintérieur des UserPropertyView </p>
+<div class="textblock"><p>Structure définissant le format d'un <a class="el" href="struct_property.html">Property</a> à l’intérieur des UserPropertyView </p>
 </div><h2 class="groupheader">Documentation des constructeurs et destructeur</h2>
-<a id="a53de6e60bf720c02d398efade848f1fc" name="a53de6e60bf720c02d398efade848f1fc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a53de6e60bf720c02d398efade848f1fc">&#9670;&#160;</a></span>Property()</h2>
+<a id="a8db3a41e6d13822855fa49392ba5f3ba" name="a8db3a41e6d13822855fa49392ba5f3ba"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8db3a41e6d13822855fa49392ba5f3ba">&#9670;&#160;</a></span>Property()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -168,32 +165,16 @@ Attributs publics</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>_niveau</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>pdebug</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>pdump</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *</td>          <td class="paramname"><span class="paramname"><em>errors</em></span>&#160;)</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>_niveau</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>vrai si la valeur est un objet, sinon la valeur est un string </p>
 <p>constructeur </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
     <tr><td class="paramname">buffer</td><td>en entrée contient les bits à parser de l'item </td></tr>
     <tr><td class="paramname">_niveau</td><td>est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie </td></tr>
-    <tr><td class="paramname">pdebug</td><td>est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré </td></tr>
-    <tr><td class="paramname">pdump</td><td>est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal </td></tr>
-    <tr><td class="paramname">errors</td><td>est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction </td></tr>
   </table>
   </dd>
 </dl>
@@ -201,6 +182,31 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des fonctions membres</h2>
+<a id="a46cc3c0c06bb74bea747b5acbcac6cee" name="a46cc3c0c06bb74bea747b5acbcac6cee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a46cc3c0c06bb74bea747b5acbcac6cee">&#9670;&#160;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void Property::clear </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel virtual">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="aee0bfb9a916079b1c7db6368ed223239" name="aee0bfb9a916079b1c7db6368ed223239"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aee0bfb9a916079b1c7db6368ed223239">&#9670;&#160;</a></span>to_json()</h2>
 
@@ -226,39 +232,6 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
-<a id="af9dae78a0245eca9bc65da3762f07e2d" name="af9dae78a0245eca9bc65da3762f07e2d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af9dae78a0245eca9bc65da3762f07e2d">&#9670;&#160;</a></span>_debug</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool Property::_debug = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>vrai si la valeur est un objet, sinon la valeur est un string </p>
-<p>paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json </p>
-
-</div>
-</div>
-<a id="aee6e369bc525ef38d6398374360aaf25" name="aee6e369bc525ef38d6398374360aaf25"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aee6e369bc525ef38d6398374360aaf25">&#9670;&#160;</a></span>_dump</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool Property::_dump = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>si true alors le fichier de sortie contiendra le dump hexa de l'objet </p>
-
-</div>
-</div>
 <a id="a1746e45a53911810a954b8a9b49a358a" name="a1746e45a53911810a954b8a9b49a358a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1746e45a53911810a954b8a9b49a358a">&#9670;&#160;</a></span>FriendlyName</h2>
 
@@ -385,8 +358,8 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <hr/>La documentation de cette structure a été générée à partir des fichiers suivants :<ul>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="id_list_8h_source.html">idList.h</a></li>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="id_list_8cpp.html">idList.cpp</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="id_list_8h_source.html">idList.h</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="id_list_8cpp.html">idList.cpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

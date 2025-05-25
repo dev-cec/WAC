@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <iostream>
 #include <filesystem>
@@ -7,7 +7,7 @@
 #include <Sddl.h>
 #include <wtsapi32.h>
 #include <winternl.h>
-#define _NTDEF_ //pour �viter les conflits de type entre ntsecapi.h et winternl.h
+#define _NTDEF_ //pour éviter les conflits de type entre ntsecapi.h et winternl.h
 #include <ntsecapi.h>
 #include "tools.h"
 #include "trans_id.h"
@@ -26,17 +26,24 @@ struct Session {
 	std::wstring logonTypeName = L"";
 	ULONG logonType = 0;
 	PSID sid = { 0 };
-	LONG sessionId = 0;
+	LONGLONG sessionId = 0;
 	/*! Constructeur
 	* @param id est l'id de session
 	*/
 	Session(LUID* id) {
 		PSECURITY_LOGON_SESSION_DATA data = new SECURITY_LOGON_SESSION_DATA();
 		_LARGE_INTEGER temp = { 0 };
+		HRESULT hresult = 0;
 
-		if (LsaGetLogonSessionData(id, &data) == ERROR_SUCCESS) {
+		sessionId = ((LONGLONG)(id->HighPart) << 32) + id->LowPart;
+		log(1, L"➕Session : ");
+		log(2, L"❇️Session Id : " + std::to_wstring(sessionId));
+		log(3, L"🔈LsaGetLogonSessionData");
+		hresult = LsaGetLogonSessionData(id, &data);
+		if (hresult  == ERROR_SUCCESS) {
 			temp = data->LogonTime;
 			memcpy(&startTime, &temp, sizeof(startTime));
+			log(3, L"🔈LocalFileTimeToFileTime");
 			LocalFileTimeToFileTime(&startTime, &startTimeUtc);
 			logonName = std::wstring(data->UserName.Buffer);
 			logonDomainName = std::wstring(data->LogonDomain.Buffer);
@@ -44,7 +51,9 @@ struct Session {
 			logonTypeName = logon_type(logonType);
 			authenticationPackage = std::wstring(data->AuthenticationPackage.Buffer);
 			sid = data->Sid;
-			sessionId = (data->LogonId.HighPart << 32) + data->LogonId.LowPart;
+		}
+		else {
+			log(2, L"🔥LsaGetLogonSessionData", hresult);
 		}
 		LsaFreeReturnBuffer(data);
 	}
@@ -54,26 +63,33 @@ struct Session {
 	std::wstring to_json() {
 		LPWSTR lpsid_wstring = NULL;
 		std::wstring sid_wstring = L"";
+
+		log(3, L"🔈session to_json");
+		log(3, L"🔈ConvertSidToStringSid");
 		if (ConvertSidToStringSid(sid, &lpsid_wstring) != 0) {
 			sid_wstring = std::wstring(lpsid_wstring);
 		}
 
-		std::wstring result = tab(1) + L"{ \n"
-			+ tab(2) + L"\"SessionId\":\"" + std::to_wstring(sessionId) + L"\", \n"
-			+ tab(2) + L"\"SID\":\"" + sid_wstring + L"\", \n"
-			+ tab(2) + L"\"LogonName\":\"" + logonName + L"\", \n"
-			+ tab(2) + L"\"LogonDomainName\":\"" + logonDomainName + L"\", \n"
-			+ tab(2) + L"\"LogonType\":\"" + std::to_wstring(logonType) + L"\", \n"
-			+ tab(2) + L"\"LogonTypeName\":\"" + logonTypeName + L"\", \n"
-			+ tab(2) + L"\"AuthenticationPackage\":\"" + authenticationPackage + L"\", \n"
-			+ tab(2) + L"\"StartTime\":\"" + time_to_wstring(startTime) + L"\", \n"
-			+ tab(2) + L"\"StartTimeUtc\":\"" + time_to_wstring(startTimeUtc) + L"\", \n"
-			+ tab(1) + L"}";
+		std::wstring result = tab(1) + L"{ \n";
+			result+= tab(2) + L"\"SessionId\":\"" + std::to_wstring(sessionId) + L"\", \n";
+			result+= tab(2) + L"\"SID\":\"" + sid_wstring + L"\", \n";
+			result+= tab(2) + L"\"LogonName\":\"" + logonName + L"\", \n";
+			result+= tab(2) + L"\"LogonDomainName\":\"" + logonDomainName + L"\", \n";
+			result+= tab(2) + L"\"LogonType\":\"" + std::to_wstring(logonType) + L"\", \n";
+			result+= tab(2) + L"\"LogonTypeName\":\"" + logonTypeName + L"\", \n";
+			result+= tab(2) + L"\"AuthenticationPackage\":\"" + authenticationPackage + L"\", \n";
+			log(3, L"🔈time_to_wstring startTime");
+			result+= tab(2) + L"\"StartTime\":\"" + time_to_wstring(startTime) + L"\", \n";
+			log(3, L"🔈time_to_wstring startTimeUtc");
+			result+= tab(2) + L"\"StartTimeUtc\":\"" + time_to_wstring(startTimeUtc) + L"\", \n";
+			result += tab(1) + L"}";
 		return result;
 	}
 
-	/* liberation m�moire */
-	void clear() {}
+	/* liberation mémoire */
+	void clear() {
+		log(3, L"🔈session clear");
+	}
 };
 
 /*! structure contenant les artefacts
@@ -83,17 +99,25 @@ struct Sessions {
 
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les param�tres de l'application issue des param�tres de la ligne de commande
+	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData() {
 		
 		PLUID pointer;
 		ULONG nbSessions;
 		NTSTATUS hr;
+
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"ℹ️Sessions :");
+		log(0, L"*******************************************************************************************************************");
+
+		log(3, L"🔈LsaEnumerateLogonSessions");
 		hr = LsaEnumerateLogonSessions(&nbSessions, &pointer);
-		if (hr != ERROR_SUCCESS)
+		if (hr != ERROR_SUCCESS) {
+			log(2, L"🔥LsaEnumerateLogonSessions", hr);
 			return hr;
-		for (int i = 0; i < nbSessions; i++) {
+		}
+		for (ULONG i = 0; i < nbSessions; i++) {
 			sessions.push_back(Session(&pointer[i]));
 		}
 		LsaFreeReturnBuffer(&pointer);
@@ -102,6 +126,7 @@ struct Sessions {
 	/*! conversion de l'objet au format json
 	*/
 	HRESULT to_json() {
+		log(3, L"🔈sessions to_json");
 		std::wofstream myfile;
 		std::wstring result = L"[\n";
 		std::vector<Session>::iterator it;
@@ -114,15 +139,17 @@ struct Sessions {
 		}
 		result += L"]";
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //cr�e le repertoire, pas d'erreur s'il existe d�j�
+		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		myfile.open(conf._outputDir + "/Sessions.json");
-		myfile << result;
+		log(3, L"🔈ansi_to_utf8 result");
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation m�moire */
+	/* liberation mémoire */
 	void clear() {
+		log(3, L"🔈sessions clear");
 		for (Session temp : sessions)
 			temp.clear();
 	}

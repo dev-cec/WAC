@@ -137,6 +137,8 @@ Graphe d'héritage de IShellItem:</div>
 Fonctions membres publiques</h2></td></tr>
 <tr class="memitem:a4ed7579484037ab0440af87cbfb4092d" id="r_a4ed7579484037ab0440af87cbfb4092d"><td class="memItemLeft" align="right" valign="top">virtual std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4ed7579484037ab0440af87cbfb4092d">to_json</a> (int i=0)=0</td></tr>
 <tr class="separator:a4ed7579484037ab0440af87cbfb4092d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9e4ac78b678f2956922aa27f478ac2c" id="r_ac9e4ac78b678f2956922aa27f478ac2c"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac9e4ac78b678f2956922aa27f478ac2c">clear</a> ()=0</td></tr>
+<tr class="separator:ac9e4ac78b678f2956922aa27f478ac2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
@@ -146,16 +148,37 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:a7e314fccf68f010c8647d465d6c43be8" id="r_a7e314fccf68f010c8647d465d6c43be8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7e314fccf68f010c8647d465d6c43be8">is_zip</a> = false</td></tr>
 <tr class="memdesc:a7e314fccf68f010c8647d465d6c43be8"><td class="mdescLeft">&#160;</td><td class="mdescRight">utile pour les shellbags, permet de définir les fils comm des archive_contents  <br /></td></tr>
 <tr class="separator:a7e314fccf68f010c8647d465d6c43be8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a88bf6bb086f590c7ea87227294330928" id="r_a88bf6bb086f590c7ea87227294330928"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a88bf6bb086f590c7ea87227294330928">_debug</a> = false</td></tr>
-<tr class="memdesc:a88bf6bb086f590c7ea87227294330928"><td class="mdescLeft">&#160;</td><td class="mdescRight">paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json  <br /></td></tr>
-<tr class="separator:a88bf6bb086f590c7ea87227294330928"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a16c63453666902b7d45868b76e2debf2" id="r_a16c63453666902b7d45868b76e2debf2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a16c63453666902b7d45868b76e2debf2">_dump</a> = false</td></tr>
-<tr class="memdesc:a16c63453666902b7d45868b76e2debf2"><td class="mdescLeft">&#160;</td><td class="mdescRight">si true alors le fichier de sortie contiendra le dump hexa de l'objet  <br /></td></tr>
-<tr class="separator:a16c63453666902b7d45868b76e2debf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>Type de base virtuel pour les shell Items. tous les shells items hérite de ce type de base permettant ainsi d'inclure un type de shell virtuel dans les autres classes </p>
 </div><h2 class="groupheader">Documentation des fonctions membres</h2>
+<a id="ac9e4ac78b678f2956922aa27f478ac2c" name="ac9e4ac78b678f2956922aa27f478ac2c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac9e4ac78b678f2956922aa27f478ac2c">&#9670;&#160;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void IShellItem::clear </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel pure-virtual">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implémenté dans <a class="el" href="struct_archive_file_content.html#a702b5976ad8f1eb5c2c70bc822241b94">ArchiveFileContent</a>, <a class="el" href="struct_control_panel.html#aa6c37a5c3d0848ac5d32b1ca9f6ee4ba">ControlPanel</a>, <a class="el" href="struct_control_panel_category.html#a77d47c0acbfef879eeb67edb19f4d4e3">ControlPanelCategory</a>, <a class="el" href="struct_favorite_shellitem.html#a497b8e71d6ab1f3d83a93468e0efb880">FavoriteShellitem</a>, <a class="el" href="struct_file_entry_shell_item.html#ad9a24732e29385c68715eb9258b9b440">FileEntryShellItem</a>, <a class="el" href="struct_network_shell_item.html#a5264af37d93e96386227e60ee256fa0a">NetworkShellItem</a>, <a class="el" href="struct_root_folder.html#a261651055f9826346ab76984d6abd0cb">RootFolder</a>, <a class="el" href="struct_unknown_shell_item.html#ac648feda229c957f2573e7c0400e045d">UnknownShellItem</a>, <a class="el" href="struct_u_r_i_shell_item.html#a4fe9eed075b419c6d4f178b778629ddb">URIShellItem</a>, <a class="el" href="struct_users_files_folder.html#ad9b3dba32079c5e4f4a0c157c18e310d">UsersFilesFolder</a>, <a class="el" href="struct_users_property_view.html#a5027c41e4a487089f4c7bd130f58328b">UsersPropertyView</a>, et <a class="el" href="struct_volume_shell_item.html#a9df809e3f854a60915076dafeeea7a6c">VolumeShellItem</a>.</p>
+
+</div>
+</div>
 <a id="a4ed7579484037ab0440af87cbfb4092d" name="a4ed7579484037ab0440af87cbfb4092d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4ed7579484037ab0440af87cbfb4092d">&#9670;&#160;</a></span>to_json()</h2>
 
@@ -191,38 +214,6 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
-<a id="a88bf6bb086f590c7ea87227294330928" name="a88bf6bb086f590c7ea87227294330928"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a88bf6bb086f590c7ea87227294330928">&#9670;&#160;</a></span>_debug</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool IShellItem::_debug = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json </p>
-
-</div>
-</div>
-<a id="a16c63453666902b7d45868b76e2debf2" name="a16c63453666902b7d45868b76e2debf2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a16c63453666902b7d45868b76e2debf2">&#9670;&#160;</a></span>_dump</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool IShellItem::_dump = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>si true alors le fichier de sortie contiendra le dump hexa de l'objet </p>
-
-</div>
-</div>
 <a id="a7e314fccf68f010c8647d465d6c43be8" name="a7e314fccf68f010c8647d465d6c43be8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7e314fccf68f010c8647d465d6c43be8">&#9670;&#160;</a></span>is_zip</h2>
 
@@ -256,7 +247,7 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <hr/>La documentation de cette structure a été générée à partir du fichier suivant :<ul>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="id_list_8h_source.html">idList.h</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="id_list_8h_source.html">idList.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

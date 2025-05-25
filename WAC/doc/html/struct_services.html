@@ -115,26 +115,22 @@ $(function(){initNavTree('struct_services.html',''); initResizable(true); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Fonctions membres publiques</h2></td></tr>
-<tr class="memitem:a4c945aa2beb097dc1c293a2e9fb0393f" id="r_a4c945aa2beb097dc1c293a2e9fb0393f"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4c945aa2beb097dc1c293a2e9fb0393f">getData</a> (<a class="el" href="struct_appli_conf.html">AppliConf</a> conf)</td></tr>
-<tr class="memdesc:a4c945aa2beb097dc1c293a2e9fb0393f"><td class="mdescLeft">&#160;</td><td class="mdescRight">contient les paramètres de l'application issue des paramètres de la ligne de commande  <br /></td></tr>
-<tr class="separator:a4c945aa2beb097dc1c293a2e9fb0393f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afaf4f2a1f183ff5cf30acc7cc9f16eed" id="r_afaf4f2a1f183ff5cf30acc7cc9f16eed"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afaf4f2a1f183ff5cf30acc7cc9f16eed">getData</a> ()</td></tr>
+<tr class="separator:afaf4f2a1f183ff5cf30acc7cc9f16eed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae4213a6196a5279bfd8a5f354bf91d22" id="r_ae4213a6196a5279bfd8a5f354bf91d22"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae4213a6196a5279bfd8a5f354bf91d22">to_json</a> ()</td></tr>
 <tr class="separator:ae4213a6196a5279bfd8a5f354bf91d22"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a427c1ef8557375d77167f16442d5b689" id="r_a427c1ef8557375d77167f16442d5b689"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a427c1ef8557375d77167f16442d5b689">clear</a> ()</td></tr>
+<tr class="separator:a427c1ef8557375d77167f16442d5b689"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
 <tr class="memitem:a39cd220d8e418fa3f8a066ed40043c26" id="r_a39cd220d8e418fa3f8a066ed40043c26"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="struct_service_struct.html">ServiceStruct</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a39cd220d8e418fa3f8a066ed40043c26">services</a></td></tr>
 <tr class="memdesc:a39cd220d8e418fa3f8a066ed40043c26"><td class="mdescLeft">&#160;</td><td class="mdescRight">tableau contenant tout les processus  <br /></td></tr>
 <tr class="separator:a39cd220d8e418fa3f8a066ed40043c26"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a82a55b7795976a18736665109043fa59" id="r_a82a55b7795976a18736665109043fa59"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a82a55b7795976a18736665109043fa59">errors</a></td></tr>
-<tr class="memdesc:a82a55b7795976a18736665109043fa59"><td class="mdescLeft">&#160;</td><td class="mdescRight">tableau contenant les erreurs remontées lors du traitement des objets  <br /></td></tr>
-<tr class="separator:a82a55b7795976a18736665109043fa59"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab54699d7a75144e299d565d90d1dfa12" id="r_ab54699d7a75144e299d565d90d1dfa12"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_appli_conf.html">AppliConf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab54699d7a75144e299d565d90d1dfa12">_conf</a> = {0}</td></tr>
-<tr class="separator:ab54699d7a75144e299d565d90d1dfa12"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Documentation des fonctions membres</h2>
-<a id="a4c945aa2beb097dc1c293a2e9fb0393f" name="a4c945aa2beb097dc1c293a2e9fb0393f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4c945aa2beb097dc1c293a2e9fb0393f">&#9670;&#160;</a></span>getData()</h2>
+<a id="a427c1ef8557375d77167f16442d5b689" name="a427c1ef8557375d77167f16442d5b689"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a427c1ef8557375d77167f16442d5b689">&#9670;&#160;</a></span>clear()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -143,9 +139,9 @@ Attributs publics</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">HRESULT Services::getData </td>
+          <td class="memname">void Services::clear </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="struct_appli_conf.html">AppliConf</a></td>          <td class="paramname"><span class="paramname"><em>conf</em></span></td><td>)</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -156,7 +152,30 @@ Attributs publics</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>contient les paramètres de l'application issue des paramètres de la ligne de commande </p>
+</div>
+</div>
+<a id="afaf4f2a1f183ff5cf30acc7cc9f16eed" name="afaf4f2a1f183ff5cf30acc7cc9f16eed"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afaf4f2a1f183ff5cf30acc7cc9f16eed">&#9670;&#160;</a></span>getData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT Services::getData </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
 <p>Fonction permettant de parser les objets </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
     <tr><td class="paramname">conf</td><td>contient les paramètres de l'application issue des paramètres de la ligne de commande </td></tr>
@@ -193,36 +212,6 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
-<a id="ab54699d7a75144e299d565d90d1dfa12" name="ab54699d7a75144e299d565d90d1dfa12"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab54699d7a75144e299d565d90d1dfa12">&#9670;&#160;</a></span>_conf</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="struct_appli_conf.html">AppliConf</a> Services::_conf = {0}</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a82a55b7795976a18736665109043fa59" name="a82a55b7795976a18736665109043fa59"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a82a55b7795976a18736665109043fa59">&#9670;&#160;</a></span>errors</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::vector&lt;std::tuple&lt;std::wstring, HRESULT&gt; &gt; Services::errors</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>tableau contenant les erreurs remontées lors du traitement des objets </p>
-
-</div>
-</div>
 <a id="a39cd220d8e418fa3f8a066ed40043c26" name="a39cd220d8e418fa3f8a066ed40043c26"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a39cd220d8e418fa3f8a066ed40043c26">&#9670;&#160;</a></span>services</h2>
 
@@ -240,7 +229,7 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <hr/>La documentation de cette structure a été générée à partir du fichier suivant :<ul>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="services_8hpp_source.html">services.hpp</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="services_8hpp_source.html">services.hpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

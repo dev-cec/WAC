@@ -1,4 +1,4 @@
-// main.cpp : Ce fichier contient la fonction 'main'. L'exécution du programme commence et se termine à cet endroit.
+﻿// main.cpp : Ce fichier contient la fonction 'main'. L'exécution du programme commence et se termine à cet endroit.
 //
 
 #include <iostream>
@@ -9,6 +9,7 @@
 #include <offreg.h>
 #include <io.h>
 #include <fcntl.h>
+#include "asciiart.hpp"
 #include "tools.h"
 #include "vss.h"
 #include "com.hpp"
@@ -40,13 +41,17 @@ AppliConf conf;// variable globale pour la conf de l'application
 
 void showHelp() {
 	SetConsoleTextAttribute(conf.hConsole, 7); // blanc
-	std::cout << "\nusage: " << conf.name << " [--dump] [--debug] [--events] [--output=output] [--errorOutput=errors]\n";
-	std::cout << "\t--help or /? : show this help \n";
-	std::cout << "\t--dump : add std::hexa value in json files for shellbags and LNK files \n";
-	std::cout << "\t--debug : add error output files\n";
-	std::cout << "\t--events : converts events to json (long time)\n";
-	std::cout << "\t--output=[directory name] : directory name to store output files starting from current directory. By default the directory is 'output'\n";
-	std::cout << "\t--errorOutput=[directory name] : directory name to store error output files starting from current directory. By default the directory is 'errors'\n";
+	std::cout << "\nusage: " << conf.name << " [--dump] [--events] [--output=output] [--loglevel=2]" << std::endl;
+	std::cout << "\t--help or /? : show this help " << std::endl;
+	std::cout << "\t--dump : add hexa value in json files for shellbags and LNK files " << std::endl;
+	std::cout << "\t--events : converts events to json (long time)" << std::endl;
+	std::cout << "\t--output=[directory name] : directory name to store output files starting from current directory. By default the directory is 'output'" << std::endl;
+	std::cout << "\t--loglevel=[0] : define level of details in logfile and activate logging in " << conf.name << ".log" << std::endl;
+	std::cout << std::endl;
+	std::cout << "\t loglevel = 0 => no logging" << std::endl;
+	std::cout << "\t loglevel = 1 => activate loggin for each artefact type treated" << std::endl;
+	std::cout << "\t loglevel = 2 => activate loggin for each artefact treated" << std::endl;
+	std::cout << "\t loglevel = 3 => activate loggin for each subfunction called (used for debug only)" << std::endl;
 };
 
 int main(int argc, char* argv[])
@@ -76,7 +81,7 @@ int main(int argc, char* argv[])
 	Processes processes;
 	Users users;
 	Events events;
-	
+
 	time_t start = 0, end = 0;
 
 	/************************
@@ -86,35 +91,8 @@ int main(int argc, char* argv[])
 	SetConsoleOutputCP(CP_UTF8); // format UTF8 pour la prise en compte des accents dans la console car retour en UTF8
 	system("cls");//clear screen
 
-	std::cout << R"(
-	
-
-	██╗    ██╗██╗███╗   ██╗██████╗  ██████╗ ██╗    ██╗███████╗                 
-	██║    ██║██║████╗  ██║██╔══██╗██╔═══██╗██║    ██║██╔════╝                 
-	██║ █╗ ██║██║██╔██╗ ██║██║  ██║██║   ██║██║ █╗ ██║███████╗                 
-	██║███╗██║██║██║╚██╗██║██║  ██║██║   ██║██║███╗██║╚════██║                 
-	╚███╔███╔╝██║██║ ╚████║██████╔╝╚██████╔╝╚███╔███╔╝███████║                 
-	 ╚══╝╚══╝ ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝  ╚══╝╚══╝ ╚══════╝                 
-	                                                                           
-	 █████╗ ██████╗ ████████╗███████╗███████╗ █████╗  ██████╗████████╗███████╗ 
-	██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██╔════╝██╔══██╗██╔════╝╚══██╔══╝██╔════╝ 
-	███████║██████╔╝   ██║   █████╗  █████╗  ███████║██║        ██║   ███████╗ 
-	██╔══██║██╔══██╗   ██║   ██╔══╝  ██╔══╝  ██╔══██║██║        ██║   ╚════██║ 
-	██║  ██║██║  ██║   ██║   ███████╗██║     ██║  ██║╚██████╗   ██║   ███████║ 
-	╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝     ╚═╝  ╚═╝ ╚═════╝   ╚═╝   ╚══════╝ 
-	                                                                           
-	 ██████╗ ██████╗ ██╗     ██╗     ███████╗ ██████╗████████╗ ██████╗ ██████╗ 
-	██╔════╝██╔═══██╗██║     ██║     ██╔════╝██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗
-	██║     ██║   ██║██║     ██║     █████╗  ██║        ██║   ██║   ██║██████╔╝
-	██║     ██║   ██║██║     ██║     ██╔══╝  ██║        ██║   ██║   ██║██╔══██╗
-	╚██████╗╚██████╔╝███████╗███████╗███████╗╚██████╗   ██║   ╚██████╔╝██║  ██║
-	 ╚═════╝ ╚═════╝ ╚══════╝╚══════╝╚══════╝ ╚═════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝
-	
-	=> V 1.1.1 By Reygiss from CEC 
-
-	)" << std::endl;
-
-	std::cout.flush();
+	log(3, L"🔈asciiart");
+	asciiart();
 
 	start = time(nullptr);//heure de depart du logiciel pour benchmark
 
@@ -129,7 +107,6 @@ int main(int argc, char* argv[])
 		for (const auto& arg : args) {
 
 			if (arg == "--dump") conf._dump = true;
-			else if (arg == "--debug") conf._debug = true;
 			else if (arg == "--events") conf._events = true;
 			else if (arg.substr(0, 9) == "--output=") {
 				std::string temp = std::string(arg.substr(9));
@@ -137,36 +114,38 @@ int main(int argc, char* argv[])
 				else {
 					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
 					std::cerr << "Invalid length for output param " << arg << "\n";
+					log(3, L"🔈showHelp");
 					showHelp();
 					exit(1);
 				}
 				if (conf._outputDir.find("\\") != std::string::npos) {
 					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
-					std::cerr << "Invalid character \ for param " << arg << "\n";
+					std::cerr << "Invalid character for param " << arg << "\n";
+					log(3, L"🔈showHelp");
 					showHelp();
 					exit(1);
 				}
 			}
-			else if (arg.substr(0, 14) == "--errorOutput=") {
-				std::string temp = std::string(arg.substr(14));
-				if (temp.length() > 0) conf._errorOutputDir = temp;
-				else {
-					printError( L"Invalid length for errorOutput param " + string_to_wstring(arg)) ;
-					showHelp();
-					exit(1);
+			else if (arg.substr(0, 11) == "--loglevel=") {
+				std::string temp = std::string(arg.substr(11));
+				try {
+					conf.loglevel = stoi(temp);
 				}
-				if (conf._errorOutputDir.find("\\") != std::string::npos) {
-					printError( L"Invalid character \ for param " + string_to_wstring(arg));
+				catch (...)
+				{
+					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
+					std::cerr << "Invalid numeric value for output param " << arg << "\n";
+					log(3, L"🔈showHelp");
 					showHelp();
 					exit(1);
 				}
 			}
-			else { //argument inconnu
-				SetConsoleOutputCP(CP_UTF8);
-				if (arg != "--help" && arg !="/?") { // Si pas argument --help ou /? alors argument invalide
-					printError( L"Invalid argument  " + string_to_wstring(arg));
-				}
 
+			else { //argument inconnu
+				if (arg != "--help" && arg != "/?") { // Si pas argument --help ou /? alors argument invalide
+					printError(L"Invalid argument  " + string_to_wstring(arg));
+				}
+				log(3, L"🔈showHelp");
 				showHelp();
 				exit(1);
 			}
@@ -177,31 +156,54 @@ int main(int argc, char* argv[])
 	* Prérequis
 	*************************/
 
+	log(0, L"*******************************************************************************************************************");
+	log(0, L"ℹ️Prerequisites :");
+	log(0, L"*******************************************************************************************************************");
+
+	log(1, L"➕Check OS");
 	SetConsoleTextAttribute(conf.hConsole, 14);
 	std::wcout << "[PREREQUISITE VERIFICATION]" << std::endl;
 	SetConsoleTextAttribute(conf.hConsole, 7);
 	std::wcout << " - Check OS >= Windows 10 : ";
 #if (_WIN32_WINNT >= _WIN32_WINNT_WIN10)
 	printSuccess();
-	std::wcout << " - Check administrator rights : ";
-	/* A program using VSS must run in elevated mode */
-	HANDLE hToken;
-	OpenProcessToken(GetCurrentProcess(), TOKEN_READ, &hToken);
-	DWORD infoLen;
-
-	TOKEN_ELEVATION elevation = { 0 };
-	GetTokenInformation(hToken, TokenElevation, &elevation, sizeof(elevation), &infoLen);
-	if (!elevation.TokenIsElevated)
-	{
-		printError( ERROR_ELEVATION_REQUIRED);
-		return 3;
-	}
-	CloseHandle(hToken);
-	printSuccess();
 #else
 	printError(ERROR_APP_WRONG_OS);
 	return 1;
 #endif
+	log(1, L"➕Check administrator rights");
+	std::wcout << " - Check administrator rights : ";
+	/* A program using VSS must run in elevated mode */
+	HANDLE hToken;
+	log(3, L"🔈GetCurrentProcess()");
+	log(3, L"🔈OpenProcessToken");
+	if (OpenProcessToken(GetCurrentProcess(), TOKEN_READ, &hToken)) {
+		DWORD infoLen;
+
+		TOKEN_ELEVATION elevation = { 0 };
+		log(3, L"🔈GetTokenInformation");
+		if (GetTokenInformation(hToken, TokenElevation, &elevation, sizeof(elevation), &infoLen)) {
+			if (!elevation.TokenIsElevated)
+			{
+				printError(ERROR_ELEVATION_REQUIRED);
+				return 3;
+			}
+			CloseHandle(hToken);
+			printSuccess();
+		}
+		else {
+			log(2, L"🔈GetTokenInformation", GetLastError());
+			printError(GetLastError());
+			CloseHandle(hToken);
+			return GetLastError();
+		}
+	}
+	else {
+		log(2, L"🔈OpenProcessToken", GetLastError());
+		printError(GetLastError());
+		return GetLastError();
+	}
+
 
 	/**********************************
 	* CONNECTION COM
@@ -212,6 +214,7 @@ int main(int argc, char* argv[])
 	SetConsoleTextAttribute(conf.hConsole, 7);
 
 	std::wcout << " - Connection to COM : ";
+	log(3, L"🔈connect com");
 	hresult = com.connect();
 	if (hresult != ERROR_SUCCESS) {
 		printError(hresult);
@@ -225,7 +228,7 @@ int main(int argc, char* argv[])
 	SetConsoleTextAttribute(conf.hConsole, 14);
 	std::wcout << "[SEARCHING FOR ARTIFACTS IN WINDOWS API]" << std::endl;
 	SetConsoleTextAttribute(conf.hConsole, 7);
-	
+
 	std::wcout << " - Extraction of SYSTEM INFORMATION: ";
 	hresult = systemInfo.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
@@ -235,7 +238,7 @@ int main(int argc, char* argv[])
 		else printSuccess();
 		systemInfo.clear();// free memory
 	}
-	
+
 
 	std::wcout << " - Extraction of SCHEDULED TASKS: ";
 	hresult = scheduledTasks.getData();
@@ -246,8 +249,8 @@ int main(int argc, char* argv[])
 		else printSuccess();
 		scheduledTasks.clear(); // free memory
 	}
-	
-	
+
+
 
 	std::wcout << " - Extraction of SESSIONS: ";
 	hresult = sessions.getData();
@@ -258,8 +261,8 @@ int main(int argc, char* argv[])
 		else printSuccess();
 		sessions.clear();// free memory
 	}
-	
-	
+
+
 
 	std::wcout << " - Extraction of PROCESS: ";
 	hresult = processes.getData();
@@ -270,8 +273,8 @@ int main(int argc, char* argv[])
 		else printSuccess();
 		processes.clear(); // free memory
 	}
-	
-	
+
+
 
 	std::wcout << " - Extraction of SERVICES: ";
 	std::wcout.flush();
@@ -284,8 +287,8 @@ int main(int argc, char* argv[])
 		services.clear();//free memory
 	}
 
-	
-	
+
+
 	std::wcout << " - Extraction of USERS: ";
 	std::wcout.flush();
 	hresult = users.getData();
@@ -296,8 +299,8 @@ int main(int argc, char* argv[])
 		else printSuccess();
 		users.clear(); // free memory
 	}
-	
-	
+
+
 
 	if (conf._events) {
 		std::wcout << " - Extraction of EVENTS: ";
@@ -323,6 +326,7 @@ int main(int argc, char* argv[])
 	SetConsoleTextAttribute(conf.hConsole, 7);
 
 	std::wcout << " - Creating the snapshot : ";
+	log(3, L"🔈GetSnapshots pBackup");
 	hresult = GetSnapshots(&snapshotSetId, pBackup);
 	if (hresult != S_OK) {
 		printError(hresult);
@@ -331,7 +335,7 @@ int main(int argc, char* argv[])
 	else {
 		printSuccess();
 	}
-	
+
 	/************************
 	*  BASE DE REGISTRE
 	*************************/
@@ -340,23 +344,24 @@ int main(int argc, char* argv[])
 	std::wcout << "[SEARCHING FOR ARTIFACTS IN THE REGISTRY]" << std::endl;
 	SetConsoleTextAttribute(conf.hConsole, 7);
 	//variables
-	ORHKEY hKey=NULL;
+	ORHKEY hKey = NULL;
 	LPTSTR errorText = NULL;
 	DWORD nSubkeys = 0;
 	DWORD nValues = 0;
 	DWORD nSize = 0;
 	DWORD dwType = 0;
 	DWORD cbData = 0;
-	ORHKEY OffKeyNext=NULL;
-	WCHAR szValue[MAX_VALUE_NAME]=L"";
-	WCHAR szSubKey[MAX_KEY_NAME]=L"";
-	WCHAR szNextKey[MAX_KEY_NAME]=L"";
+	ORHKEY OffKeyNext = NULL;
+	WCHAR szValue[MAX_VALUE_NAME] = L"";
+	WCHAR szSubKey[MAX_KEY_NAME] = L"";
+	WCHAR szNextKey[MAX_KEY_NAME] = L"";
 	DWORD dwSize = 0;
 
 
 	//chargement de la clé HKLM\SYSTEM
 	std::wcout << " - loading the HKLM\\SYSTEM key : ";
 	std::wstring rucheSystem = conf.mountpoint + L"\\Windows\\system32\\config\\SYSTEM";
+	log(3, L"🔈OROpenHive System");
 	hresult = OROpenHive(rucheSystem.c_str(), &conf.System);
 	if (hresult != ERROR_SUCCESS) {
 		printError(hresult);
@@ -369,6 +374,7 @@ int main(int argc, char* argv[])
 	//chargement de la clé HKLM\SOFTWARE
 	std::wcout << " - loading the HKLM\\SOFTWARE key : ";
 	std::wstring rucheSoftware = conf.mountpoint + L"\\Windows\\system32\\config\\SOFTWARE";
+	log(3, L"🔈OROpenHive Software");
 	hresult = OROpenHive(rucheSoftware.c_str(), &conf.Software);
 	if (hresult != ERROR_SUCCESS) {
 		printError(hresult);
@@ -380,20 +386,22 @@ int main(int argc, char* argv[])
 
 	//recherche de la bonne sous-clé ControlSet correspondant à CurrentControlSet
 	std::wcout << " - Searching for the CurrentControlSet subkey : ";
+	log(3, L"🔈OROpenKey System/Select");
 	hresult = OROpenKey(conf.System, L"Select", &hKey);
 	if (hresult != ERROR_SUCCESS) {
 		printError(hresult);
 		return(hresult);
 	}
-
-
 	hresult = ORGetValue(hKey, nullptr, L"Current", &dwType, nullptr, &dwSize);
 	if (hresult != ERROR_SUCCESS)
 	{
 		printError(hresult);
 		return(hresult);
 	}
-	DWORD current=0;
+
+	DWORD current = 0;
+
+	log(3, L"🔈ORGetValue System/Select/Current");
 	hresult = ORGetValue(hKey, nullptr, L"Current", &dwType, &current, &dwSize);
 	if (hresult != ERROR_SUCCESS)
 	{
@@ -420,6 +428,7 @@ int main(int argc, char* argv[])
 
 		//ouverture de la clé HKLM\\SYSTEM\\CurrentControlSet
 		std::wcout << " - Opening the CurrentControlSet subkey : ";
+		log(3, L"🔈OROpenKey System/CurrentControlSet");
 		hresult = OROpenKey(conf.System, subkey.c_str(), &conf.CurrentControlSet);
 		if (hresult != ERROR_SUCCESS) {
 			printError(hresult);
@@ -554,7 +563,7 @@ int main(int argc, char* argv[])
 			}
 		}
 	}
-	
+
 
 	/**************************************************
 	* DECONNEXION COM
@@ -564,6 +573,7 @@ int main(int argc, char* argv[])
 	SetConsoleTextAttribute(conf.hConsole, 7);
 	std::wcout << " - Disconnecting COM : ";
 	std::wcout.flush();
+	log(3, L"🔈COM clear");
 	com.clear();
 	printSuccess();
 
@@ -613,21 +623,25 @@ int main(int argc, char* argv[])
 		jumplistCustoms.clear();
 	}
 	/*****************************************
-	*            DEMONTAGE SNAPSHOT 
+	*            DEMONTAGE SNAPSHOT
 	******************************************/
 	SetConsoleTextAttribute(conf.hConsole, 14);
 	std::wcout << "[SNAPSHOT]" << std::endl;
 	SetConsoleTextAttribute(conf.hConsole, 7);
 	std::wcout << " - Snapshot disassembly : ";
+	log(3, L"🔈RemoveDirectoryW mountpoint");
 	if (!RemoveDirectoryW(conf.mountpoint.c_str())) printError(GetLastError());
-	else printSuccess();
+	else {
+		ReleaseInterface(pBackup);
+		printSuccess();
+	}
 
-	std::cout.flush();
 
 	end = time(nullptr);
 
 	std::wcout << L"END, Time elapsed : " << end - start << " s" << std::endl;
 
 	CloseHandle(conf.hConsole);
+
 	return ERROR_SUCCESS;
 }

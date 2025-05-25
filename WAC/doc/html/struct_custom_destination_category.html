@@ -117,10 +117,12 @@ $(function(){initNavTree('struct_custom_destination_category.html',''); initResi
 Fonctions membres publiques</h2></td></tr>
 <tr class="memitem:ac2cd75cd2cb290e3263ac3cc932cdc23" id="r_ac2cd75cd2cb290e3263ac3cc932cdc23"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac2cd75cd2cb290e3263ac3cc932cdc23">CustomDestinationCategory</a> ()</td></tr>
 <tr class="separator:ac2cd75cd2cb290e3263ac3cc932cdc23"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5a32616aed9a1efe863ec2d42315a869" id="r_a5a32616aed9a1efe863ec2d42315a869"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5a32616aed9a1efe863ec2d42315a869">CustomDestinationCategory</a> (LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid, bool _debug, bool _dump, std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *_errors)</td></tr>
-<tr class="separator:a5a32616aed9a1efe863ec2d42315a869"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1eef033ae6a8befeb207a1f44eb9c03c" id="r_a1eef033ae6a8befeb207a1f44eb9c03c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1eef033ae6a8befeb207a1f44eb9c03c">CustomDestinationCategory</a> (LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid)</td></tr>
+<tr class="separator:a1eef033ae6a8befeb207a1f44eb9c03c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07d6bbe2f705799a0cca997830e1994c" id="r_a07d6bbe2f705799a0cca997830e1994c"><td class="memItemLeft" align="right" valign="top">virtual std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a07d6bbe2f705799a0cca997830e1994c">to_json</a> (int i)</td></tr>
 <tr class="separator:a07d6bbe2f705799a0cca997830e1994c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab8c09eb5dea9980fa6f2df7f287943ef" id="r_ab8c09eb5dea9980fa6f2df7f287943ef"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab8c09eb5dea9980fa6f2df7f287943ef">clear</a> ()</td></tr>
+<tr class="separator:ab8c09eb5dea9980fa6f2df7f287943ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
@@ -166,8 +168,8 @@ Attributs publics</h2></td></tr>
 
 </div>
 </div>
-<a id="a5a32616aed9a1efe863ec2d42315a869" name="a5a32616aed9a1efe863ec2d42315a869"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5a32616aed9a1efe863ec2d42315a869">&#9670;&#160;</a></span>CustomDestinationCategory() <span class="overload">[2/2]</span></h2>
+<a id="a1eef033ae6a8befeb207a1f44eb9c03c" name="a1eef033ae6a8befeb207a1f44eb9c03c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1eef033ae6a8befeb207a1f44eb9c03c">&#9670;&#160;</a></span>CustomDestinationCategory() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -193,22 +195,7 @@ Attributs publics</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>_sid</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>_debug</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>_dump</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *</td>          <td class="paramname"><span class="paramname"><em>_errors</em></span>&#160;)</td>
+          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>_sid</em></span>&#160;)</td>
         </tr>
       </table>
   </td>
@@ -223,9 +210,6 @@ Attributs publics</h2></td></tr>
     <tr><td class="paramname">buffersize</td><td>en entrée contient la taille du buffer </td></tr>
     <tr><td class="paramname">_path</td><td>est le chemin contenant les custom Destinations </td></tr>
     <tr><td class="paramname">_sid</td><td>est le SID de l'utilisateur propriétaire du LNK </td></tr>
-    <tr><td class="paramname">_debug</td><td>est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré </td></tr>
-    <tr><td class="paramname">_dump</td><td>est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal </td></tr>
-    <tr><td class="paramname">errors</td><td>est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction </td></tr>
   </table>
   </dd>
 </dl>
@@ -233,6 +217,31 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des fonctions membres</h2>
+<a id="ab8c09eb5dea9980fa6f2df7f287943ef" name="ab8c09eb5dea9980fa6f2df7f287943ef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab8c09eb5dea9980fa6f2df7f287943ef">&#9670;&#160;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void CustomDestinationCategory::clear </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a07d6bbe2f705799a0cca997830e1994c" name="a07d6bbe2f705799a0cca997830e1994c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a07d6bbe2f705799a0cca997830e1994c">&#9670;&#160;</a></span>to_json()</h2>
 
@@ -324,7 +333,7 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <hr/>La documentation de cette structure a été générée à partir du fichier suivant :<ul>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="jumplist__custom_8hpp_source.html">jumplist_custom.hpp</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="jumplist__custom_8hpp_source.html">jumplist_custom.hpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

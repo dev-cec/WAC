@@ -115,8 +115,12 @@ $(function(){initNavTree('struct_muicache.html',''); initResizable(true); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Fonctions membres publiques</h2></td></tr>
+<tr class="memitem:abbc8f9894e81fa79911f3ae1aa482e7b" id="r_abbc8f9894e81fa79911f3ae1aa482e7b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abbc8f9894e81fa79911f3ae1aa482e7b">Muicache</a> (ORHKEY hKey, std::wstring szValue, std::wstring profile)</td></tr>
+<tr class="separator:abbc8f9894e81fa79911f3ae1aa482e7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a84bace558db9ea049a8c8ca546affe5b" id="r_a84bace558db9ea049a8c8ca546affe5b"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a84bace558db9ea049a8c8ca546affe5b">to_json</a> ()</td></tr>
 <tr class="separator:a84bace558db9ea049a8c8ca546affe5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1564e040d1070bc415898d611496aa77" id="r_a1564e040d1070bc415898d611496aa77"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1564e040d1070bc415898d611496aa77">clear</a> ()</td></tr>
+<tr class="separator:a1564e040d1070bc415898d611496aa77"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
@@ -127,7 +131,7 @@ Attributs publics</h2></td></tr>
 <tr class="memdesc:a3adf07e845f58e5f6c866951f0fc8c96"><td class="mdescLeft">&#160;</td><td class="mdescRight">nom de l'utilisateur propriétaire de l'objet  <br /></td></tr>
 <tr class="separator:a3adf07e845f58e5f6c866951f0fc8c96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4a410c185199ddb48554ad7fb544c584" id="r_a4a410c185199ddb48554ad7fb544c584"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4a410c185199ddb48554ad7fb544c584">name</a> = L&quot;&quot;</td></tr>
-<tr class="memdesc:a4a410c185199ddb48554ad7fb544c584"><td class="mdescLeft">&#160;</td><td class="mdescRight">chemin et nom de lexécutable  <br /></td></tr>
+<tr class="memdesc:a4a410c185199ddb48554ad7fb544c584"><td class="mdescLeft">&#160;</td><td class="mdescRight">chemin et nom de l’exécutable  <br /></td></tr>
 <tr class="separator:a4a410c185199ddb48554ad7fb544c584"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad18520c39dc4b05028409e321382db0f" id="r_ad18520c39dc4b05028409e321382db0f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad18520c39dc4b05028409e321382db0f">data</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:ad18520c39dc4b05028409e321382db0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">nom de l'application  <br /></td></tr>
@@ -135,7 +139,73 @@ Attributs publics</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>structure représentant l'artefact MUICACHE </p>
-</div><h2 class="groupheader">Documentation des fonctions membres</h2>
+</div><h2 class="groupheader">Documentation des constructeurs et destructeur</h2>
+<a id="abbc8f9894e81fa79911f3ae1aa482e7b" name="abbc8f9894e81fa79911f3ae1aa482e7b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abbc8f9894e81fa79911f3ae1aa482e7b">&#9670;&#160;</a></span>Muicache()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">Muicache::Muicache </td>
+          <td>(</td>
+          <td class="paramtype">ORHKEY</td>          <td class="paramname"><span class="paramname"><em>hKey</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>szValue</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>profile</em></span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Constructeur </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">hKey</td><td>est la cle de registre contenant les valeurs szValue est la nom de la valeur de la cle de registre contenant les informations profile est le profile de l'utilisateur proprietaire de l'artefact </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Documentation des fonctions membres</h2>
+<a id="a1564e040d1070bc415898d611496aa77" name="a1564e040d1070bc415898d611496aa77"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1564e040d1070bc415898d611496aa77">&#9670;&#160;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Muicache::clear </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a84bace558db9ea049a8c8ca546affe5b" name="a84bace558db9ea049a8c8ca546affe5b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a84bace558db9ea049a8c8ca546affe5b">&#9670;&#160;</a></span>to_json()</h2>
 
@@ -191,7 +261,7 @@ Attributs publics</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>chemin et nom de lexécutable </p>
+<p>chemin et nom de l’exécutable </p>
 
 </div>
 </div>
@@ -228,7 +298,7 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <hr/>La documentation de cette structure a été générée à partir du fichier suivant :<ul>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="reg__muicache_8hpp_source.html">reg_muicache.hpp</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="reg__muicache_8hpp_source.html">reg_muicache.hpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

@@ -1,6 +1,7 @@
 var struct_service_struct =
 [
     [ "ServiceStruct", "struct_service_struct.html#a2f58af9fcd7ec1c792158955f35c8353", null ],
+    [ "clear", "struct_service_struct.html#ab9cb149c42d1ee5f303d1e7c732361d9", null ],
     [ "to_json", "struct_service_struct.html#a37e6aedfca8912981d0c581607cd097c", null ],
     [ "serviceAccessMessage", "struct_service_struct.html#a7a0e700362fd5e5d3547becee19aea6b", null ],
     [ "serviceBinary", "struct_service_struct.html#ad6feca349802e0a18f887f2f5ec5b2dc", null ],

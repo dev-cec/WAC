@@ -18,10 +18,12 @@ var searchData=
   ['localdisk_15',['LocalDisk',['../struct_shell_volume_flags.html#a07bd01fce052605e54ee23860581fbc7',1,'ShellVolumeFlags']]],
   ['localizedname_16',['localizedName',['../struct_beef0004.html#a002714466b3446ae8f4e68cc040cb756',1,'Beef0004']]],
   ['location_17',['location',['../struct_network_shell_item.html#ae88b3271394128f6eb5a009126538dd3',1,'NetworkShellItem::location'],['../struct_archive_file_content.html#a401e8ddeb89a48ebbe36d8b3d4b95a78',1,'ArchiveFileContent::location']]],
-  ['logondomainname_18',['logonDomainName',['../struct_session.html#ae915ae0f7771f6cb1aac2ff7262c3d7f',1,'Session']]],
-  ['logonname_19',['logonName',['../struct_session.html#a52880b7b4dc23cd4ab8998df60901719',1,'Session']]],
-  ['logontype_20',['logonType',['../struct_session.html#aa57393e024125d6899bb6c069adf7db1',1,'Session']]],
-  ['logontypename_21',['logonTypeName',['../struct_session.html#a2321e7ddc4a990932cf1cc0ec6ec9caa',1,'Session']]],
-  ['longname_22',['longName',['../struct_beef0004.html#aec93d123f81b5dafccbdd4ba1fc159d0',1,'Beef0004']]],
-  ['longpath_23',['LongPath',['../struct_amcache_application_file.html#a92feaf3097f6813acba829024bf0bbae',1,'AmcacheApplicationFile']]]
+  ['log_18',['log',['../struct_appli_conf.html#ac9cea4573fac59eb9a52ad2a3b349733',1,'AppliConf']]],
+  ['loglevel_19',['loglevel',['../struct_appli_conf.html#a2087631ac415bdd43de5ad3b5f704076',1,'AppliConf']]],
+  ['logondomainname_20',['logonDomainName',['../struct_session.html#ae915ae0f7771f6cb1aac2ff7262c3d7f',1,'Session']]],
+  ['logonname_21',['logonName',['../struct_session.html#a52880b7b4dc23cd4ab8998df60901719',1,'Session']]],
+  ['logontype_22',['logonType',['../struct_session.html#aa57393e024125d6899bb6c069adf7db1',1,'Session']]],
+  ['logontypename_23',['logonTypeName',['../struct_session.html#a2321e7ddc4a990932cf1cc0ec6ec9caa',1,'Session']]],
+  ['longname_24',['longName',['../struct_beef0004.html#aec93d123f81b5dafccbdd4ba1fc159d0',1,'Beef0004']]],
+  ['longpath_25',['LongPath',['../struct_amcache_application_file.html#a92feaf3097f6813acba829024bf0bbae',1,'AmcacheApplicationFile']]]
 ];

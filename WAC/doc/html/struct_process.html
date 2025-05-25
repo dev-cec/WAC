@@ -115,12 +115,14 @@ $(function(){initNavTree('struct_process.html',''); initResizable(true); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Fonctions membres publiques</h2></td></tr>
-<tr class="memitem:a3eb3a227a28c353ba7f79872111f3f0f" id="r_a3eb3a227a28c353ba7f79872111f3f0f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3eb3a227a28c353ba7f79872111f3f0f">Process</a> (PROCESSENTRY32W *pe32, HANDLE handle, std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *errors)</td></tr>
-<tr class="separator:a3eb3a227a28c353ba7f79872111f3f0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af944a5c0fc9ef856b6ede566f2c7b1d8" id="r_af944a5c0fc9ef856b6ede566f2c7b1d8"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af944a5c0fc9ef856b6ede566f2c7b1d8">ListProcessModules</a> (std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *errors)</td></tr>
-<tr class="separator:af944a5c0fc9ef856b6ede566f2c7b1d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ea9e98b384a7d0c0814c35308cc4c22" id="r_a9ea9e98b384a7d0c0814c35308cc4c22"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9ea9e98b384a7d0c0814c35308cc4c22">Process</a> (PROCESSENTRY32W *pe32, HANDLE handle)</td></tr>
+<tr class="separator:a9ea9e98b384a7d0c0814c35308cc4c22"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a6a600d33cfcb0562b343387d18142c" id="r_a7a6a600d33cfcb0562b343387d18142c"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7a6a600d33cfcb0562b343387d18142c">ListProcessModules</a> ()</td></tr>
+<tr class="separator:a7a6a600d33cfcb0562b343387d18142c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab4a2522d4b66e7d21c4e6b3f4519fecb" id="r_ab4a2522d4b66e7d21c4e6b3f4519fecb"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab4a2522d4b66e7d21c4e6b3f4519fecb">to_json</a> ()</td></tr>
 <tr class="separator:ab4a2522d4b66e7d21c4e6b3f4519fecb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a914fe881f9306f2c6ac060d24d6b56c9" id="r_a914fe881f9306f2c6ac060d24d6b56c9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a914fe881f9306f2c6ac060d24d6b56c9">clear</a> ()</td></tr>
+<tr class="separator:a914fe881f9306f2c6ac060d24d6b56c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
@@ -145,12 +147,14 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:a8b3911da4331faf0010b9d0b2cee0094" id="r_a8b3911da4331faf0010b9d0b2cee0094"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8b3911da4331faf0010b9d0b2cee0094">processModulesAccess</a> = L&quot;OK&quot;</td></tr>
 <tr class="separator:a8b3911da4331faf0010b9d0b2cee0094"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af5cfb626c462aff996f17dfa4ead5d11" id="r_af5cfb626c462aff996f17dfa4ead5d11"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af5cfb626c462aff996f17dfa4ead5d11">processModules</a></td></tr>
-<tr class="memdesc:af5cfb626c462aff996f17dfa4ead5d11"><td class="mdescLeft">&#160;</td><td class="mdescRight">Liste des Dlls chargées par le programme. La première entrée contient le chemin de lexécutable.  <br /></td></tr>
+<tr class="memdesc:af5cfb626c462aff996f17dfa4ead5d11"><td class="mdescLeft">&#160;</td><td class="mdescRight">Liste des Dlls chargées par le programme. La première entrée contient le chemin de l’exécutable.  <br /></td></tr>
 <tr class="separator:af5cfb626c462aff996f17dfa4ead5d11"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Documentation des constructeurs et destructeur</h2>
-<a id="a3eb3a227a28c353ba7f79872111f3f0f" name="a3eb3a227a28c353ba7f79872111f3f0f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3eb3a227a28c353ba7f79872111f3f0f">&#9670;&#160;</a></span>Process()</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
+<div class="textblock"><p>structure représentant un process </p>
+</div><h2 class="groupheader">Documentation des constructeurs et destructeur</h2>
+<a id="a9ea9e98b384a7d0c0814c35308cc4c22" name="a9ea9e98b384a7d0c0814c35308cc4c22"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9ea9e98b384a7d0c0814c35308cc4c22">&#9670;&#160;</a></span>Process()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -166,12 +170,7 @@ Attributs publics</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">HANDLE</td>          <td class="paramname"><span class="paramname"><em>handle</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *</td>          <td class="paramname"><span class="paramname"><em>errors</em></span>&#160;)</td>
+          <td class="paramtype">HANDLE</td>          <td class="paramname"><span class="paramname"><em>handle</em></span>&#160;)</td>
         </tr>
       </table>
   </td>
@@ -183,7 +182,6 @@ Attributs publics</h2></td></tr>
 <p>Constructeur </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
     <tr><td class="paramname">pe32</td><td>est un pointeur sur le processus </td></tr>
-    <tr><td class="paramname">errors</td><td>est un vector contenant les erreurs de traitement </td></tr>
   </table>
   </dd>
 </dl>
@@ -191,8 +189,33 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des fonctions membres</h2>
-<a id="af944a5c0fc9ef856b6ede566f2c7b1d8" name="af944a5c0fc9ef856b6ede566f2c7b1d8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af944a5c0fc9ef856b6ede566f2c7b1d8">&#9670;&#160;</a></span>ListProcessModules()</h2>
+<a id="a914fe881f9306f2c6ac060d24d6b56c9" name="a914fe881f9306f2c6ac060d24d6b56c9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a914fe881f9306f2c6ac060d24d6b56c9">&#9670;&#160;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Process::clear </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a7a6a600d33cfcb0562b343387d18142c" name="a7a6a600d33cfcb0562b343387d18142c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a6a600d33cfcb0562b343387d18142c">&#9670;&#160;</a></span>ListProcessModules()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -203,7 +226,7 @@ Attributs publics</h2></td></tr>
         <tr>
           <td class="memname">HRESULT Process::ListProcessModules </td>
           <td>(</td>
-          <td class="paramtype">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *</td>          <td class="paramname"><span class="paramname"><em>errors</em></span></td><td>)</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -213,12 +236,7 @@ Attributs publics</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Fonction récupérant la liste des modules (Dlls) du processus </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">errors</td><td>est un vector contenant les erreurs de traitement </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Fonction récupérant la liste des modules (Dlls) du processus </p>
 
 </div>
 </div>
@@ -277,7 +295,7 @@ Attributs publics</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Liste des Dlls chargées par le programme. La première entrée contient le chemin de lexécutable. </p>
+<p>Liste des Dlls chargées par le programme. La première entrée contient le chemin de l’exécutable. </p>
 
 </div>
 </div>
@@ -376,7 +394,7 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <hr/>La documentation de cette structure a été générée à partir du fichier suivant :<ul>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="processes_8hpp_source.html">processes.hpp</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="processes_8hpp_source.html">processes.hpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

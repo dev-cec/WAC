@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <iostream>
 #include <windows.h>
@@ -13,39 +13,50 @@
 
 
 
-/*! structure représentant un MOUNTED DEVICE
+/*! structure reprÃ©sentant un MOUNTED DEVICE
 */
 struct MountedDevice {
 public:
-	std::wstring drive = L""; //!< Lettre du Drive sur laquelle est montée le périphérique
-	std::wstring device = L"";//!< identifiant du périphérique monté
+	std::wstring drive = L""; //!< Lettre du Drive sur laquelle est montÃ©e le pÃ©riphÃ©rique
+	std::wstring device = L"";//!< identifiant du pÃ©riphÃ©rique montÃ©
 
 	/* constructeur
-	* @param hkey représente la clé de registre
-	* @param szSubValue représente la valeur de la clé de registre
+	* @param hkey reprÃ©sente la clÃ© de registre
+	* @param szSubValue reprÃ©sente la valeur de la clÃ© de registre
 	*/
 	MountedDevice(ORHKEY hKey, PCWSTR szSubValue)
 	{
-		if (wcswcs(szSubValue, L"DosDevices") != NULL) {
-			drive = std::wstring(szSubValue);
-			drive = replaceAll(drive, L"\\", L"\\\\");
-			getRegSzValue(hKey, NULL, szSubValue, &device);
+		log(3, L"ðŸ”ˆgetRegSzValue device");
+		HRESULT hr = getRegSzValue(hKey, NULL, szSubValue, &device);
+		if (hr == ERROR_SUCCESS) {
+			log(3, L"ðŸ”ˆreplaceAll device");
 			device = replaceAll(device, L"\\", L"\\\\");
+			log(2, L"â‡ï¸MountedDEvice device : " + device);
 		}
+		else {
+			log(2, L"ðŸ”¥getRegSzValue", hr);
+		}
+		drive = std::wstring(szSubValue);
+		log(3, L"ðŸ”ˆreplaceAll drive");
+		drive = replaceAll(drive, L"\\", L"\\\\");
+		log(1, L"âž•Drive " + drive);
 	}
 
 	/*! conversion de l'objet au format json
    * @return wstring le code json
    */
 	std::wstring to_json() {
+		log(3, L"ðŸ”ˆMountedDevice to_json");
 		return L"\t{ \n"
 			L"\t\t\"Drive\":\"" + drive + L"\", \n"
 			L"\t\t\"Device\":\"" + device + L"\"\n"
 			L"\t}";
 	}
 
-	/* liberation mémoire */
-	void clear() {}
+	/* liberation mÃ©moire */
+	void clear() {
+		log(3, L"ðŸ”ˆMountedDevice clear");
+	}
 };
 
 /*! *structure contenant l'ensemble des objets
@@ -53,28 +64,33 @@ public:
 struct MountedDevices {
 public:
 	std::vector<MountedDevice> mounteddevices; //!< *structure contenant l'ensemble des objets
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
+	* @param conf contient les paramÃ¨tres de l'application issue des paramÃ¨tres de la ligne de commande
 	*/
 	HRESULT getData() {
-		
+
 		//variables
 		HRESULT hresult;
 		ORHKEY hKey;
 		DWORD nSubkeys;
 		DWORD nValues;
 
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"â„¹ï¸Mounted devices :");
+		log(0, L"*******************************************************************************************************************");
+
+		log(3, L"ðŸ”ˆOROpenKey System\\MountedDevices");
 		hresult = OROpenKey(conf.System, L"MountedDevices", &hKey);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
-			errors.push_back({ L"Unable to open key : MountedDevices", hresult });
+			log(2, L"ðŸ”¥OROpenKey System\\MountedDevices", hresult);
 			return hresult;
 		};
+
+		log(3, L"ðŸ”ˆORQueryInfoKey System\\MountedDevices");
 		hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
-			errors.push_back({ L"Unable to get info key : MountedDevices", hresult });
+			log(2, L"ðŸ”¥ORQueryInfoKey System\\MountedDevices", hresult);
 			return hresult;
 		};
 
@@ -82,19 +98,24 @@ public:
 			DWORD nSize = MAX_VALUE_NAME;
 			DWORD cData = MAX_DATA;
 			WCHAR  szSubValue[MAX_VALUE_NAME];
+			log(3, L"ðŸ”ˆOREnumValue System\\MountedDevices Value " + std::to_wstring(i));
 			hresult = OREnumValue(hKey, i, szSubValue, &nSize, NULL, NULL, &cData);
-			MountedDevice mounteddevice(hKey, szSubValue);
+			if (hresult != ERROR_SUCCESS) {
+				log(2, L"ðŸ”¥OREnumValue System\\MountedDevices Value " + std::to_wstring(i), hresult);
+				continue;
+			}
 			//save
-			if (mounteddevice.device != L"")
-				mounteddevices.push_back(mounteddevice);
+			log(1, L"âž•MountedDevice");
+			mounteddevices.push_back(MountedDevice(hKey, szSubValue));
+
 		}
 		return ERROR_SUCCESS;
 	}
 
-	/*! conversion de l'objet au format json
-   */
+	/*! conversion de l'objet au format json */
 	HRESULT to_json()
 	{
+		log(3, L"ðŸ”ˆMountedDevices to_json");
 		std::wstring result = L"[ \n";
 		std::vector<MountedDevice>::iterator it;
 		for (it = mounteddevices.begin(); it != mounteddevices.end(); it++) {
@@ -106,29 +127,18 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crÃ©e le repertoire, pas d'erreur s'il existe dÃ©jÃ 
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/mounted_device.json");
-		myfile << result;
+		myfile << ansi_to_utf8(result);
 		myfile.close();
-
-		if (conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir + "/mounted_device_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
+		log(3, L"ðŸ”ˆMountedDevices clear");
 		for (MountedDevice temp : mounteddevices)
 			temp.clear();
 	}

@@ -1,6 +1,7 @@
 var struct_link_flags =
 [
     [ "LinkFlags", "struct_link_flags.html#a7c7461f315b6323e27b5d947a4f02476", null ],
+    [ "clear", "struct_link_flags.html#ad2f634d9305f4aa582565214402899d0", null ],
     [ "to_wstring", "struct_link_flags.html#a9dd322ac950b41cf87082f2a8a20caf4", null ],
     [ "AllowLinkToLink", "struct_link_flags.html#a8b77d06c30a268a062e1a1e1dad9abe0", null ],
     [ "DisableKnownFolderAlias", "struct_link_flags.html#a7a1bab8836b39ef0d30f0376cc7438a4", null ],

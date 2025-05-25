@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <iostream>
 #include <windows.h>
@@ -17,37 +17,81 @@
 
 
 
-/*! structure représentant un artefact userassist
+/*! structure reprÃ©sentant un artefact userassist
 */
 struct UserAssist {
 public:
-	std::wstring Sid = L""; //!< SID de l'utilisateur propriétaire de l'objet
-	std::wstring SidName = L""; //!< nom de l'utilisateur propriétaire de l'objet
+	std::wstring Sid = L""; //!< SID de l'utilisateur propriÃ©taire de l'objet
+	std::wstring SidName = L""; //!< nom de l'utilisateur propriÃ©taire de l'objet
 	std::wstring Class = L""; //!< identifiant GUID de classe du UserAssist
-	std::wstring Name = L"";//§< nom associé au GUID
-	int Count = 0;//!< nombre d’exécutions
-	int FocusCount = 0;//! nombre de fois ou le fichier à reçu un focus
-	std::wstring DateLocale = L"";//!< date de dernière exécution
-	std::wstring DateLocaleUtc = L"";//! date de dernière exécution au format UTC
+	std::wstring Name = L"";//Â§< nom associÃ© au GUID
+	int Count = 0;//!< nombre dâ€™exÃ©cutions
+	int FocusCount = 0;//! nombre de fois ou le fichier Ã  reÃ§u un focus
+	std::wstring DateLocale = L"";//!< date de derniÃ¨re exÃ©cution
+	std::wstring DateLocaleUtc = L"";//! date de derniÃ¨re exÃ©cution au format UTC
+
+	/*! Constructeur
+	* @param hKey clÃ© de registre contenant l'artefact
+	* @param szValue nom de la valeur contenant les donnÃ©es
+	* @param pData buffer contenant les donnÃ©es
+	* @param _sid proprietaire des donnÃ©es
+	*/
+	UserAssist(std::wstring hKey, LPWSTR szValue, LPBYTE pData, std::wstring _sid) {
+		// Codage ANSI mais on veut de l'utf8
+		log(3, L"ðŸ”ˆROT13 Name");
+		Name = ROT13(szValue); // Rot13 du nom de la Value pour rÃ©cupÃ©rer le nom de lâ€™exÃ©cutable
+		log(2, L"â‡ï¸UserAssist Name : " + Name);
+		Sid = _sid;
+		log(3, L"ðŸ”ˆgetNameFromSid SidName");
+		SidName = getNameFromSid(Sid);
+		Class = hKey;
+		//conversion des GUID Directory
+		std::wsmatch pieces_match;
+		std::wregex key(L"[\\{][a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}[\\}]");
+		log(3, L"ðŸ”ˆregex_search Name");
+		if (std::regex_search(Name, pieces_match, key)) {
+			for (std::wstring s : pieces_match) {
+				std::wstring n = trans_guid_to_wstring(s);
+				log(3, L"ðŸ”ˆreplaceAll Regex Name");
+				Name = replaceAll(Name, s, n);
+			}
+		}
+		log(3, L"ðŸ”ˆreplaceAll Name");
+		Name = replaceAll(Name, L"\\", L"\\\\"); // escape \ in std::string
+		Count = *reinterpret_cast<int*>(pData + 4); // conversion en integer du nombre d'exÃ©cutions Ã  partir du little endian
+		FocusCount = *reinterpret_cast<int*>(pData + 8); // conversion en integer du nombre d'exÃ©cutions Ã  partir du little endian
+		FILETIME filetime = *reinterpret_cast<FILETIME*>(pData + 60);
+		log(3, L"ðŸ”ˆtime_to_wstring DateLocale");
+		DateLocale = time_to_wstring(filetime); // rÃ©cupÃ©ration de la date de derniÃ¨re exÃ©cution sous forme de tableau de bytes
+		if (DateLocale != L"") { // si la date est vide
+			// sinon on la convertie en UTC
+			log(3, L"ðŸ”ˆtime_to_wstring DateLocaleUtc");
+			DateLocaleUtc = time_to_wstring(filetime, true); // rÃ©cupÃ©ration de la date de derniÃ¨re exÃ©cution sous forme de tableau de bytes
+		}
+	}
 
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
 	std::wstring to_json() {
-		return L"\t{ \n"
-			L"\t\t\"SID\":\"" + Sid + L"\", \n"
-			L"\t\t\"SIDName\":\"" + SidName + L"\", \n"
-			L"\t\t\"Class\":\"" + Class + L"\", \n"
-			L"\t\t\"Name\":\"" + Name + L"\", \n"
-			L"\t\t\"Count\":" + std::to_wstring(Count) + L", \n"
-			L"\t\t\"FocusCount\":" + std::to_wstring(FocusCount) + L", \n"
-			L"\t\t\"DateLocale\":\"" + DateLocale + L"\", \n"
-			L"\t\t\"DateLocaleUtc\":\"" + DateLocaleUtc + L"\"\n"
-			L"\t}";
+		log(3, L"ðŸ”ˆUserAssist to_json");
+		std::wstring result = L"\t{ \n";
+		result += L"\t\t\"SID\":\"" + Sid + L"\", \n";
+		result += L"\t\t\"SIDName\":\"" + SidName + L"\", \n";
+		result += L"\t\t\"Class\":\"" + Class + L"\", \n";
+		result += L"\t\t\"Name\":\"" + Name + L"\", \n";
+		result += L"\t\t\"Count\":" + std::to_wstring(Count) + L", \n";
+		result += L"\t\t\"FocusCount\":" + std::to_wstring(FocusCount) + L", \n";
+		result += L"\t\t\"DateLocale\":\"" + DateLocale + L"\", \n";
+		result += L"\t\t\"DateLocaleUtc\":\"" + DateLocaleUtc + L"\"\n";
+		result += L"\t}";
+		return result;
 	}
 
-	/* liberation mémoire */
-	void clear() {}
+	/* liberation mÃ©moire */
+	void clear() {
+		log(3, L"ðŸ”ˆUserAssist clear");
+	}
 };
 
 /*! structure contenant l'ensemble des artefacts
@@ -55,79 +99,71 @@ public:
 struct UserAssists {
 public:
 	std::vector<UserAssist> userassists;//!< tableau contenant les objets
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs de traitement des objets
-
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
+	* @param conf contient les paramÃ¨tres de l'application issue des paramÃ¨tres de la ligne de commande
 	*/
 	HRESULT getData() {
-		
+
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"â„¹ï¸User assists :");
+		log(0, L"*******************************************************************************************************************");
+
 		HRESULT hresult = 0;
 		ORHKEY hKey = NULL;
 		DWORD nSubkeys = 0;
 		DWORD nValues = 0;
 		DWORD dType = 0;
-		WCHAR szValue[MAX_VALUE_NAME]=L"";
-		WCHAR szSubKey[MAX_VALUE_NAME]=L"";
+		WCHAR szValue[MAX_VALUE_NAME] = L"";
+		WCHAR szSubKey[MAX_VALUE_NAME] = L"";
 		DWORD nSize = 0;
 		ORHKEY Offhive = NULL;
 		std::wstring ruche = L"";
-		std::wstring userassitsKey[2] = { L"{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}", L"{F4E57C4B-2036-45F0-A9AB-443BCFE33D9F}" }; // les GUID à lire pour les userassists
+		std::wstring userassitsKey[2] = { L"{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}", L"{F4E57C4B-2036-45F0-A9AB-443BCFE33D9F}" }; // les GUID Ã  lire pour les userassists
 		for (std::wstring key : userassitsKey) {
-			for (std::tuple<std::wstring, std::wstring> profile: conf.profiles) {
+			for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
 				//ouverture de la ruche user
+				log(3, L"ðŸ”ˆreplaceAll profile");
 				ruche = conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\\\ntuser.dat";
+				log(3, L"ðŸ”ˆOROpenHive " + get<1>(profile) + L"\\ntuser.dat");
 				hresult = OROpenHive(ruche.c_str(), &Offhive);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"Unable to open hive : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat" , hresult });
+					log(2, L"ðŸ”¥OROpenHive " + get<1>(profile) + L"\\ntuser.dat", hresult);
 					continue;
 				}
+
 				std::wstring subkey = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist\\" + key + L"\\count\\";
+				log(3, L"ðŸ”ˆOROpenKey " + subkey);
 				hresult = OROpenKey(Offhive, subkey.c_str(), &hKey);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"Unable to open key : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\UserAssist\\\\" + key + L"\\count\\" , hresult });
+					log(2, L"ðŸ”¥OROpenKey " + subkey);
 					continue;
 				}
+
+				log(3, L"ðŸ”ˆORQueryInfoKey " + subkey);
 				hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"Unable to open key : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\UserAssist\\\\" + key + L"\\\\count\\\\" , hresult });
+					log(2, L"ðŸ”¥ORQueryInfoKey " + subkey);
 					continue;
 				}
 				for (DWORD i = 0; i < nValues; i++) {
-					UserAssist userassist;
-					nSize = MAX_VALUE_NAME;
-					DWORD cData = MAX_DATA;
-					hresult = OREnumValue(hKey, i, szValue, &nSize, &dType, NULL, &cData);
-					// allocate memory to store the name
-					LPBYTE pData = new BYTE[cData];
-					getRegBinaryValue(hKey, nullptr, szValue, pData);
-					userassist.Sid = get<0>(profile);
-					userassist.SidName = getNameFromSid(userassist.Sid);
-					userassist.Class = key;
-					// Codage ANSI mais on veut de l'utf8
-					userassist.Name = ansi_to_utf8(ROT13(szValue)); // Rot13 du nom de la Value pour récupérer le nom de l’exécutable
-					//conversion des GUID Directory
-					std::wsmatch pieces_match;
-					std::wregex key(L"[\{][a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}[\}]");
-					if (std::regex_search(userassist.Name, pieces_match, key)) {
-						for (std::wstring s : pieces_match) {
-							std::wstring n = trans_guid_to_wstring(s);
-							userassist.Name = replaceAll(userassist.Name, s, n);
-						}
-					}
-					userassist.Name = replaceAll(userassist.Name, L"\\", L"\\\\"); // escape \ in std::string
-
-					userassist.Count = bytes_to_int(&pData[4]); // conversion en integer du nombre d'exécutions à partir du little endian
-					userassist.FocusCount = bytes_to_int(&pData[8]); // conversion en integer du nombre d'exécutions à partir du little endian
-					FILETIME filetime = bytes_to_filetime(&pData[60]);
-					userassist.DateLocale = time_to_wstring(filetime); // récupération de la date de dernière exécution sous forme de tableau de bytes
-					if (userassist.DateLocale != L"") { // si la date est vide
-						// sinon on la convertie en UTC
-						userassist.DateLocaleUtc = time_to_wstring(filetime, true); // récupération de la date de dernière exécution sous forme de tableau de bytes
+					DWORD dataSize = 0;
+					LPBYTE pData = NULL;
+					do {
+						if (pData != NULL)
+							delete[] pData;
+						pData = new BYTE[dataSize];
+						log(3, L"ðŸ”ˆOREnumValue " + subkey + L" " + std::to_wstring(i));
+						hresult = OREnumValue(hKey, i, szValue, &nSize, &dType, pData, &dataSize);
+					} while (hresult == ERROR_MORE_DATA);
+					if (hresult != ERROR_SUCCESS) {
+						log(2, L"ðŸ”¥OREnumValue " + subkey + L" " + std::to_wstring(i), hresult);
+						continue;
 					}
 					//save
-					userassists.push_back(userassist);
+					log(1, L"âž•UserAssist ");
+					userassists.push_back(UserAssist(key, szValue, pData, get<0>(profile)));
+
 					delete[] pData;
 				}
 			}
@@ -139,6 +175,7 @@ public:
 	*/
 	HRESULT to_json()
 	{
+		log(3, L"ðŸ”ˆUserAssists to_json");
 		std::vector<UserAssist>::iterator usersassist;
 		std::wstring result = L"[ \n";
 		for (usersassist = userassists.begin(); usersassist != userassists.end(); usersassist++) {
@@ -150,29 +187,18 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crÃ©e le repertoire, pas d'erreur s'il existe dÃ©jÃ 
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/userassists.json");
-		myfile << result;
+		myfile << ansi_to_utf8(result);
 		myfile.close();
-
-		if (conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir + "/userassists_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
+		log(3, L"ðŸ”ˆUserAssists clear");
 		for (UserAssist temp : userassists)
 			temp.clear();
 	}

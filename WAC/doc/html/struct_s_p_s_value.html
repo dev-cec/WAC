@@ -115,10 +115,12 @@ $(function(){initNavTree('struct_s_p_s_value.html',''); initResizable(true); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Fonctions membres publiques</h2></td></tr>
-<tr class="memitem:a8eec5647c9d8b9693d75b3f05bb446c9" id="r_a8eec5647c9d8b9693d75b3f05bb446c9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8eec5647c9d8b9693d75b3f05bb446c9">SPSValue</a> (LPBYTE buffer, std::wstring _guid, int _niveau, bool pdebug, bool pdump, std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *errors)</td></tr>
-<tr class="separator:a8eec5647c9d8b9693d75b3f05bb446c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab8fcb87c87b173c424a1132d8c58b296" id="r_ab8fcb87c87b173c424a1132d8c58b296"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab8fcb87c87b173c424a1132d8c58b296">SPSValue</a> (LPBYTE buffer, std::wstring _guid, int _niveau)</td></tr>
+<tr class="separator:ab8fcb87c87b173c424a1132d8c58b296"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac5bfa29fe4cfb5dcd18710259d86c79" id="r_aac5bfa29fe4cfb5dcd18710259d86c79"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aac5bfa29fe4cfb5dcd18710259d86c79">to_json</a> (int i=0)</td></tr>
 <tr class="separator:aac5bfa29fe4cfb5dcd18710259d86c79"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a903648531c1eb841e03e4c70bab9e453" id="r_a903648531c1eb841e03e4c70bab9e453"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a903648531c1eb841e03e4c70bab9e453">clear</a> ()</td></tr>
+<tr class="separator:a903648531c1eb841e03e4c70bab9e453"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
@@ -142,18 +144,12 @@ Attributs publics</h2></td></tr>
 <tr class="separator:abd4e997a950551db977e4dbb4b77b937"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae1783bf80c3d692d450f4bc0d0577a66" id="r_ae1783bf80c3d692d450f4bc0d0577a66"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae1783bf80c3d692d450f4bc0d0577a66">valueIsObject</a> = false</td></tr>
 <tr class="separator:ae1783bf80c3d692d450f4bc0d0577a66"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a762ea23f8717877ed92f0d4706af438e" id="r_a762ea23f8717877ed92f0d4706af438e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a762ea23f8717877ed92f0d4706af438e">_debug</a> = false</td></tr>
-<tr class="memdesc:a762ea23f8717877ed92f0d4706af438e"><td class="mdescLeft">&#160;</td><td class="mdescRight">paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json  <br /></td></tr>
-<tr class="separator:a762ea23f8717877ed92f0d4706af438e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a587fc2ca15e0acb74d59de219046a20b" id="r_a587fc2ca15e0acb74d59de219046a20b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a587fc2ca15e0acb74d59de219046a20b">_dump</a> = false</td></tr>
-<tr class="memdesc:a587fc2ca15e0acb74d59de219046a20b"><td class="mdescLeft">&#160;</td><td class="mdescRight">si true alors le fichier de sortie contiendra le dump hexa de l'objet  <br /></td></tr>
-<tr class="separator:a587fc2ca15e0acb74d59de219046a20b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>Structure représentent une des valeurs d'un <a class="el" href="struct_s_p_s.html">SPS</a>. </p>
 </div><h2 class="groupheader">Documentation des constructeurs et destructeur</h2>
-<a id="a8eec5647c9d8b9693d75b3f05bb446c9" name="a8eec5647c9d8b9693d75b3f05bb446c9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8eec5647c9d8b9693d75b3f05bb446c9">&#9670;&#160;</a></span>SPSValue()</h2>
+<a id="ab8fcb87c87b173c424a1132d8c58b296" name="ab8fcb87c87b173c424a1132d8c58b296"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab8fcb87c87b173c424a1132d8c58b296">&#9670;&#160;</a></span>SPSValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -171,22 +167,7 @@ Attributs publics</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>_niveau</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>pdebug</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>pdump</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *</td>          <td class="paramname"><span class="paramname"><em>errors</em></span>&#160;)</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>_niveau</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -195,9 +176,6 @@ Attributs publics</h2></td></tr>
     <tr><td class="paramname">buffer</td><td>en entrée contient les bits à parser des extensionblock </td></tr>
     <tr><td class="paramname">_guid</td><td>guid correspondant au <a class="el" href="struct_s_p_s.html">SPS</a> auquel appartient le SPSVALUE </td></tr>
     <tr><td class="paramname">_niveau</td><td>est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie </td></tr>
-    <tr><td class="paramname">pdebug</td><td>est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré </td></tr>
-    <tr><td class="paramname">pdump</td><td>est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal </td></tr>
-    <tr><td class="paramname">errors</td><td>est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction </td></tr>
   </table>
   </dd>
 </dl>
@@ -205,6 +183,31 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des fonctions membres</h2>
+<a id="a903648531c1eb841e03e4c70bab9e453" name="a903648531c1eb841e03e4c70bab9e453"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a903648531c1eb841e03e4c70bab9e453">&#9670;&#160;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void SPSValue::clear </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="aac5bfa29fe4cfb5dcd18710259d86c79" name="aac5bfa29fe4cfb5dcd18710259d86c79"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aac5bfa29fe4cfb5dcd18710259d86c79">&#9670;&#160;</a></span>to_json()</h2>
 
@@ -230,38 +233,6 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
-<a id="a762ea23f8717877ed92f0d4706af438e" name="a762ea23f8717877ed92f0d4706af438e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a762ea23f8717877ed92f0d4706af438e">&#9670;&#160;</a></span>_debug</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool SPSValue::_debug = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json </p>
-
-</div>
-</div>
-<a id="a587fc2ca15e0acb74d59de219046a20b" name="a587fc2ca15e0acb74d59de219046a20b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a587fc2ca15e0acb74d59de219046a20b">&#9670;&#160;</a></span>_dump</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool SPSValue::_dump = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>si true alors le fichier de sortie contiendra le dump hexa de l'objet </p>
-
-</div>
-</div>
 <a id="a815313d23f2a1d44a5a2d248a0e725b9" name="a815313d23f2a1d44a5a2d248a0e725b9"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a815313d23f2a1d44a5a2d248a0e725b9">&#9670;&#160;</a></span>guid</h2>
 
@@ -383,8 +354,8 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <hr/>La documentation de cette structure a été générée à partir des fichiers suivants :<ul>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="id_list_8h_source.html">idList.h</a></li>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="id_list_8cpp.html">idList.cpp</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="id_list_8h_source.html">idList.h</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="id_list_8cpp.html">idList.cpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

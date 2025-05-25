@@ -1,6 +1,7 @@
 var struct_network_shell_item =
 [
-    [ "NetworkShellItem", "struct_network_shell_item.html#ab986dfdf31bce4e491078eba3c2efec8", null ],
+    [ "NetworkShellItem", "struct_network_shell_item.html#a2cb699fa798a2ce40468ac7ccf66a456", null ],
+    [ "clear", "struct_network_shell_item.html#a5264af37d93e96386227e60ee256fa0a", null ],
     [ "to_json", "struct_network_shell_item.html#a2152790af490875dda1b3b8c44dae6a1", null ],
     [ "comments", "struct_network_shell_item.html#a83e38becadc7d467f1a25368a048ebee", null ],
     [ "description", "struct_network_shell_item.html#a5334b8839c3e915beb1f44d0158106e5", null ],

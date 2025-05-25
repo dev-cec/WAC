@@ -13,7 +13,7 @@ var searchData=
   ['volumelabel_10',['volumeLabel',['../struct_recent_doc.html#a416af338d58ea9ba73fd34efb0e31f6d',1,'RecentDoc']]],
   ['volumes_11',['volumes',['../struct_prefetch.html#a77b4dfb38277a26b079563c7a8fe911a',1,'Prefetch']]],
   ['volumeserial_12',['volumeSerial',['../struct_recent_doc.html#a280d45cab21459d7460a80763bb8b4a9',1,'RecentDoc']]],
-  ['volumeshellitem_13',['VolumeShellItem',['../struct_volume_shell_item.html',1,'VolumeShellItem'],['../struct_volume_shell_item.html#a5f42ee811357a0e6d60fbc422180ed56',1,'VolumeShellItem::VolumeShellItem()']]],
+  ['volumeshellitem_13',['VolumeShellItem',['../struct_volume_shell_item.html',1,'VolumeShellItem'],['../struct_volume_shell_item.html#aad4404ca114335ef479909ca8285ce98',1,'VolumeShellItem::VolumeShellItem()']]],
   ['vss_2ecpp_14',['vss.cpp',['../vss_8cpp.html',1,'']]],
   ['vss_2eh_15',['vss.h',['../vss_8h.html',1,'']]]
 ];

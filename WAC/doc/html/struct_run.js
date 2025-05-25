@@ -1,5 +1,6 @@
 var struct_run =
 [
+    [ "clear", "struct_run.html#a053648e7a7d86cb262b8080b77305369", null ],
     [ "to_json", "struct_run.html#aa52fabed467fe6863568dcb3f0fb0214", null ],
     [ "Key", "struct_run.html#a199906bea1d643678ed961eacf53c6c5", null ],
     [ "Name", "struct_run.html#a8aac1b40b1c849c309b727cb2c7dc10e", null ],

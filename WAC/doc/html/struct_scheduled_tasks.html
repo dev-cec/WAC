@@ -115,30 +115,53 @@ $(function(){initNavTree('struct_scheduled_tasks.html',''); initResizable(true);
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Fonctions membres publiques</h2></td></tr>
-<tr class="memitem:ab9cf389c6cbe06ecfcee55e19ded3dea" id="r_ab9cf389c6cbe06ecfcee55e19ded3dea"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab9cf389c6cbe06ecfcee55e19ded3dea">getFolders</a> (std::vector&lt; BSTR &gt; *folders, BSTR folder, ITaskService *pService)</td></tr>
-<tr class="memdesc:ab9cf389c6cbe06ecfcee55e19ded3dea"><td class="mdescLeft">&#160;</td><td class="mdescRight">contient les paramètres de l'application issue des paramètres de la ligne de commande  <br /></td></tr>
-<tr class="separator:ab9cf389c6cbe06ecfcee55e19ded3dea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2987067a04f612686cbfc39d7cb6a3da" id="r_a2987067a04f612686cbfc39d7cb6a3da"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2987067a04f612686cbfc39d7cb6a3da">getData</a> (<a class="el" href="struct_appli_conf.html">AppliConf</a> conf)</td></tr>
-<tr class="separator:a2987067a04f612686cbfc39d7cb6a3da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c9f274ff3f63fae3be74389114a0cbc" id="r_a9c9f274ff3f63fae3be74389114a0cbc"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9c9f274ff3f63fae3be74389114a0cbc">getTasks</a> (ITaskFolder *pfolder, ITaskService *pService)</td></tr>
+<tr class="separator:a9c9f274ff3f63fae3be74389114a0cbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a98608ce532d63a8e66a7b21dd3294fe8" id="r_a98608ce532d63a8e66a7b21dd3294fe8"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a98608ce532d63a8e66a7b21dd3294fe8">getFolders</a> (std::wstring folder, ITaskService *pService)</td></tr>
+<tr class="separator:a98608ce532d63a8e66a7b21dd3294fe8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2d992fa98db77e5060b039f8a213478" id="r_ac2d992fa98db77e5060b039f8a213478"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac2d992fa98db77e5060b039f8a213478">getData</a> ()</td></tr>
+<tr class="separator:ac2d992fa98db77e5060b039f8a213478"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad6ae11612cb4acc2425fecffb847729c" id="r_ad6ae11612cb4acc2425fecffb847729c"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad6ae11612cb4acc2425fecffb847729c">to_json</a> ()</td></tr>
 <tr class="separator:ad6ae11612cb4acc2425fecffb847729c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca7b24c654a8851c8f6f50b60b6c805d" id="r_aca7b24c654a8851c8f6f50b60b6c805d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aca7b24c654a8851c8f6f50b60b6c805d">clear</a> ()</td></tr>
+<tr class="separator:aca7b24c654a8851c8f6f50b60b6c805d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
 <tr class="memitem:a30c5a3007d280892cd73e157cea1c9e2" id="r_a30c5a3007d280892cd73e157cea1c9e2"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="struct_scheduled_task.html">ScheduledTask</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a30c5a3007d280892cd73e157cea1c9e2">scheduledTasks</a></td></tr>
 <tr class="memdesc:a30c5a3007d280892cd73e157cea1c9e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">tableau contenant tout les <a class="el" href="struct_scheduled_task.html">ScheduledTask</a>  <br /></td></tr>
 <tr class="separator:a30c5a3007d280892cd73e157cea1c9e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a859b20031f8fd832c29b9577a518663c" id="r_a859b20031f8fd832c29b9577a518663c"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a859b20031f8fd832c29b9577a518663c">errors</a></td></tr>
-<tr class="memdesc:a859b20031f8fd832c29b9577a518663c"><td class="mdescLeft">&#160;</td><td class="mdescRight">tableau contenant les erreurs remontées lors du traitement des objets  <br /></td></tr>
-<tr class="separator:a859b20031f8fd832c29b9577a518663c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7bedb3f50dfdcebf0ed17790be1223a4" id="r_a7bedb3f50dfdcebf0ed17790be1223a4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_appli_conf.html">AppliConf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7bedb3f50dfdcebf0ed17790be1223a4">_conf</a> = {0}</td></tr>
-<tr class="separator:a7bedb3f50dfdcebf0ed17790be1223a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>structure contenant l'ensemble des artefacts </p>
 </div><h2 class="groupheader">Documentation des fonctions membres</h2>
-<a id="a2987067a04f612686cbfc39d7cb6a3da" name="a2987067a04f612686cbfc39d7cb6a3da"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2987067a04f612686cbfc39d7cb6a3da">&#9670;&#160;</a></span>getData()</h2>
+<a id="aca7b24c654a8851c8f6f50b60b6c805d" name="aca7b24c654a8851c8f6f50b60b6c805d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aca7b24c654a8851c8f6f50b60b6c805d">&#9670;&#160;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ScheduledTasks::clear </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ac2d992fa98db77e5060b039f8a213478" name="ac2d992fa98db77e5060b039f8a213478"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac2d992fa98db77e5060b039f8a213478">&#9670;&#160;</a></span>getData()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -149,7 +172,7 @@ Attributs publics</h2></td></tr>
         <tr>
           <td class="memname">HRESULT ScheduledTasks::getData </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="struct_appli_conf.html">AppliConf</a></td>          <td class="paramname"><span class="paramname"><em>conf</em></span></td><td>)</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -168,8 +191,8 @@ Attributs publics</h2></td></tr>
 
 </div>
 </div>
-<a id="ab9cf389c6cbe06ecfcee55e19ded3dea" name="ab9cf389c6cbe06ecfcee55e19ded3dea"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab9cf389c6cbe06ecfcee55e19ded3dea">&#9670;&#160;</a></span>getFolders()</h2>
+<a id="a98608ce532d63a8e66a7b21dd3294fe8" name="a98608ce532d63a8e66a7b21dd3294fe8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a98608ce532d63a8e66a7b21dd3294fe8">&#9670;&#160;</a></span>getFolders()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -180,12 +203,7 @@ Attributs publics</h2></td></tr>
         <tr>
           <td class="memname">HRESULT ScheduledTasks::getFolders </td>
           <td>(</td>
-          <td class="paramtype">std::vector&lt; BSTR &gt; *</td>          <td class="paramname"><span class="paramname"><em>folders</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">BSTR</td>          <td class="paramname"><span class="paramname"><em>folder</em></span>, </td>
+          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>folder</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -199,8 +217,47 @@ Attributs publics</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+<p>Fonction permettant de parcourir les dossiers contenant des taches planifiées </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">folder</td><td>est le dossier à parcourir @pService est le service de tâches planifiées </td></tr>
+  </table>
+  </dd>
+</dl>
 
-<p>contient les paramètres de l'application issue des paramètres de la ligne de commande </p>
+</div>
+</div>
+<a id="a9c9f274ff3f63fae3be74389114a0cbc" name="a9c9f274ff3f63fae3be74389114a0cbc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9c9f274ff3f63fae3be74389114a0cbc">&#9670;&#160;</a></span>getTasks()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT ScheduledTasks::getTasks </td>
+          <td>(</td>
+          <td class="paramtype">ITaskFolder *</td>          <td class="paramname"><span class="paramname"><em>pfolder</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">ITaskService *</td>          <td class="paramname"><span class="paramname"><em>pService</em></span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Fonction permettant de parcourir les taches planifiées d'un dossier </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">pRootFolder</td><td>est le dossier à parcourir @pService est le service de tâches planifiées </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -231,36 +288,6 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
-<a id="a7bedb3f50dfdcebf0ed17790be1223a4" name="a7bedb3f50dfdcebf0ed17790be1223a4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7bedb3f50dfdcebf0ed17790be1223a4">&#9670;&#160;</a></span>_conf</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="struct_appli_conf.html">AppliConf</a> ScheduledTasks::_conf = {0}</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a859b20031f8fd832c29b9577a518663c" name="a859b20031f8fd832c29b9577a518663c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a859b20031f8fd832c29b9577a518663c">&#9670;&#160;</a></span>errors</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::vector&lt;std::tuple&lt;std::wstring, HRESULT&gt; &gt; ScheduledTasks::errors</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>tableau contenant les erreurs remontées lors du traitement des objets </p>
-
-</div>
-</div>
 <a id="a30c5a3007d280892cd73e157cea1c9e2" name="a30c5a3007d280892cd73e157cea1c9e2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a30c5a3007d280892cd73e157cea1c9e2">&#9670;&#160;</a></span>scheduledTasks</h2>
 
@@ -278,7 +305,7 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <hr/>La documentation de cette structure a été générée à partir du fichier suivant :<ul>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="schedules_tasks_8hpp_source.html">schedulesTasks.hpp</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="schedules_tasks_8hpp_source.html">schedulesTasks.hpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

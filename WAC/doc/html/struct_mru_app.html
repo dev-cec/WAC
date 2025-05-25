@@ -117,6 +117,8 @@ $(function(){initNavTree('struct_mru_app.html',''); initResizable(true); });
 Fonctions membres publiques</h2></td></tr>
 <tr class="memitem:a38729e5f56ca532fe67c4ae1ab9e0dac" id="r_a38729e5f56ca532fe67c4ae1ab9e0dac"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a38729e5f56ca532fe67c4ae1ab9e0dac">to_json</a> ()</td></tr>
 <tr class="separator:a38729e5f56ca532fe67c4ae1ab9e0dac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff80364a9d2138398346b6eb2d8d8e32" id="r_aff80364a9d2138398346b6eb2d8d8e32"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aff80364a9d2138398346b6eb2d8d8e32">clear</a> ()</td></tr>
+<tr class="separator:aff80364a9d2138398346b6eb2d8d8e32"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
@@ -124,7 +126,7 @@ Attributs publics</h2></td></tr>
 <tr class="memdesc:a3acfe13b45cebba6414ba3c1091576d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">identifiant de l'objet  <br /></td></tr>
 <tr class="separator:a3acfe13b45cebba6414ba3c1091576d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae6e920dcce8546c4b57b4f7ba5d45d96" id="r_ae6e920dcce8546c4b57b4f7ba5d45d96"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae6e920dcce8546c4b57b4f7ba5d45d96">niveau</a> = 0</td></tr>
-<tr class="memdesc:ae6e920dcce8546c4b57b4f7ba5d45d96"><td class="mdescLeft">&#160;</td><td class="mdescRight">profondeur de larborescence, utilisé pour la mise en forme de json de sortie  <br /></td></tr>
+<tr class="memdesc:ae6e920dcce8546c4b57b4f7ba5d45d96"><td class="mdescLeft">&#160;</td><td class="mdescRight">profondeur de l’arborescence, utilisé pour la mise en forme de json de sortie  <br /></td></tr>
 <tr class="separator:ae6e920dcce8546c4b57b4f7ba5d45d96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a48f7da71b5e9c95df0ac5be8d6fca4e8" id="r_a48f7da71b5e9c95df0ac5be8d6fca4e8"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a48f7da71b5e9c95df0ac5be8d6fca4e8">name</a> = L&quot;&quot;</td></tr>
 <tr class="separator:a48f7da71b5e9c95df0ac5be8d6fca4e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -140,16 +142,35 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:a791c3bea211749a5a2f3de5cb42e08f1" id="r_a791c3bea211749a5a2f3de5cb42e08f1"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="struct_id_list.html">IdList</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a791c3bea211749a5a2f3de5cb42e08f1">shellitems</a></td></tr>
 <tr class="memdesc:a791c3bea211749a5a2f3de5cb42e08f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">tableau de <a class="el" href="struct_id_list.html">IdList</a>  <br /></td></tr>
 <tr class="separator:a791c3bea211749a5a2f3de5cb42e08f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa9fa2d0a99d65a534e5a9604c7fd9ad8" id="r_aa9fa2d0a99d65a534e5a9604c7fd9ad8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa9fa2d0a99d65a534e5a9604c7fd9ad8">_debug</a> = false</td></tr>
-<tr class="memdesc:aa9fa2d0a99d65a534e5a9604c7fd9ad8"><td class="mdescLeft">&#160;</td><td class="mdescRight">paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json  <br /></td></tr>
-<tr class="separator:aa9fa2d0a99d65a534e5a9604c7fd9ad8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a822446c004ebb25581b968ec6a75a487" id="r_a822446c004ebb25581b968ec6a75a487"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a822446c004ebb25581b968ec6a75a487">_dump</a> = false</td></tr>
-<tr class="memdesc:a822446c004ebb25581b968ec6a75a487"><td class="mdescLeft">&#160;</td><td class="mdescRight">paramètre de la ligne de commande, si true alors on sauvegarde contenu du buffer au format hexadecimal dans un fichier json  <br /></td></tr>
-<tr class="separator:a822446c004ebb25581b968ec6a75a487"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>structure représentant l'artefact MRU Application </p>
 </div><h2 class="groupheader">Documentation des fonctions membres</h2>
+<a id="aff80364a9d2138398346b6eb2d8d8e32" name="aff80364a9d2138398346b6eb2d8d8e32"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff80364a9d2138398346b6eb2d8d8e32">&#9670;&#160;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void MruApp::clear </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a38729e5f56ca532fe67c4ae1ab9e0dac" name="a38729e5f56ca532fe67c4ae1ab9e0dac"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a38729e5f56ca532fe67c4ae1ab9e0dac">&#9670;&#160;</a></span>to_json()</h2>
 
@@ -177,38 +198,6 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
-<a id="aa9fa2d0a99d65a534e5a9604c7fd9ad8" name="aa9fa2d0a99d65a534e5a9604c7fd9ad8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa9fa2d0a99d65a534e5a9604c7fd9ad8">&#9670;&#160;</a></span>_debug</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool MruApp::_debug = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json </p>
-
-</div>
-</div>
-<a id="a822446c004ebb25581b968ec6a75a487" name="a822446c004ebb25581b968ec6a75a487"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a822446c004ebb25581b968ec6a75a487">&#9670;&#160;</a></span>_dump</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool MruApp::_dump = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>paramètre de la ligne de commande, si true alors on sauvegarde contenu du buffer au format hexadecimal dans un fichier json </p>
-
-</div>
-</div>
 <a id="a3acfe13b45cebba6414ba3c1091576d9" name="a3acfe13b45cebba6414ba3c1091576d9"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3acfe13b45cebba6414ba3c1091576d9">&#9670;&#160;</a></span>id</h2>
 
@@ -251,7 +240,7 @@ Attributs publics</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>profondeur de larborescence, utilisé pour la mise en forme de json de sortie </p>
+<p>profondeur de l’arborescence, utilisé pour la mise en forme de json de sortie </p>
 
 </div>
 </div>
@@ -321,7 +310,7 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <hr/>La documentation de cette structure a été générée à partir du fichier suivant :<ul>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="reg__mru__apps_8hpp_source.html">reg_mru_apps.hpp</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="reg__mru__apps_8hpp_source.html">reg_mru_apps.hpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

@@ -1,4 +1,4 @@
-#pragma once
+Ôªø#pragma once
 
 #include <iostream>
 #include <windows.h>
@@ -12,30 +12,33 @@
 #include "tools.h"
 #include "usb.h"
 
-
-
-/*! structure reprÈsentant un artefact ShimCache
+/*! structure repr√©sentant un artefact ShimCache
 */
 struct Shimcache {
 public:
 	std::wstring path = L""; //!< chemin vers le fichier cible de l'artefact
 	std::wstring lastModification = L""; //!< date de modification
 	std::wstring lastModificationUtc = L"";//!< date de modification au format json
-	bool executed = false;//!< true si le fichier a ÈtÈ exÈcutÈ, non fiable
+	bool executed = false;//!< true si le fichier a √©t√© ex√©cut√©, non fiable
 
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
 	std::wstring to_json() {
-		return L"\t{ \n"
-			L"\t\t\"Path\":\"" + path + L"\", \n"
-			L"\t\t\"LastModification\":\"" + lastModification + L"\", \n"
-			L"\t\t\"LastModificationUtc\":\"" + lastModificationUtc + L"\", \n"
-			L"\t\t\"Executes\":" + bool_to_wstring(executed) + L" \n"
-			L"\t}";
+		log(3, L"üîàShimcache to_json");
+		std::wstring result = L"\t{ \n";
+		result += L"\t\t\"Path\":\"" + path + L"\", \n";
+		result += L"\t\t\"LastModification\":\"" + lastModification + L"\", \n";
+		result += L"\t\t\"LastModificationUtc\":\"" + lastModificationUtc + L"\", \n";
+		log(3, L"üîàbool_to_wstring Executes");
+		result += L"\t\t\"Executes\":" + bool_to_wstring(executed) + L" \n";
+		result += L"\t}";
+		return result;
 	}
-	/* liberation mÈmoire */
-	void clear() {}
+	/* liberation m√©moire */
+	void clear() {
+		log(3, L"üîàShimcache clear");
+	}
 
 };
 
@@ -44,59 +47,65 @@ public:
 struct Shimcaches {
 public:
 	std::vector<Shimcache> shimcaches;//!< tableau contenant les objets
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs de traitement des objets
-
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramËtres de l'application issue des paramËtres de la ligne de commande
+	* @param conf contient les param√®tres de l'application issue des param√®tres de la ligne de commande
 	*/
 	HRESULT getData() {
 		
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"‚ÑπÔ∏èShimcaches :");
+		log(0, L"*******************************************************************************************************************");
+
 		//variables
 		HRESULT hresult=0;
 		ORHKEY hKey=NULL;
 		DWORD nSubkeys=0;
 		DWORD nValues=0;
+		LPBYTE pData = NULL;
 
+		log(3, L"üîàOROpenKey CurrentControlSet\\Control\\Session Manager\\AppCompatCache");
 		hresult = OROpenKey(conf.CurrentControlSet, L"Control\\Session Manager\\AppCompatCache", &hKey);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
-			errors.push_back({ L"Unable to open key : HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\AppCompatCache", hresult });
+			log(2, L"üî•OROpenKey CurrentControlSet\\Control\\Session Manager\\AppCompatCache", hresult );
 			return hresult;
 		}
 
 		DWORD dwSize=0;
-		hresult = ORGetValue(hKey, NULL, L"AppCompatCache", NULL, nullptr, &dwSize); //taille des donnes ‡ lire
-		LPBYTE pData = new BYTE[dwSize]; // Buffer de donnÈes
-		hresult = getRegBinaryValue(hKey, NULL, L"AppCompatCache", pData);
+		log(3, L"üîàgetRegBinaryValue AppCompatCache");
+		hresult = getRegBinaryValue(hKey, nullptr, L"AppCompatCache", &pData, &dwSize);
 		if (hresult != ERROR_SUCCESS) {
-			errors.push_back({ L"Unable to get value : HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\AppCompatCache\\AppCompatCache", hresult });
+			log(2, L"üî•getRegBinaryValue AppCompatCache", hresult );
 			return hresult;
 		}
-		int offset = bytes_to_int(pData);
-
-
+		int offset = *reinterpret_cast<int*>(pData);
 		while (offset < dwSize) {
 			Shimcache shimcache;
 			std::wstring signature = std::wstring(pData + offset, pData + offset + 4);
 			if (signature == L"10ts") {
 				offset += 12;//unused
-				short int name_length = bytes_to_short(pData + offset);
+				short int name_length = *reinterpret_cast<short int*>(pData + offset);
 				offset += 2;
-				shimcache.path = std::wstring((LPWSTR)(pData + offset), (LPWSTR)(pData + offset) + name_length / sizeof(wchar_t));
+				shimcache.path = std::wstring((LPWSTR)(pData + offset));
+				log(3, L"üîàreplaceAll path");
 				shimcache.path = replaceAll(shimcache.path, L"\\", L"\\\\");
 				shimcache.path = replaceAll(shimcache.path, L"\t", L" "); // replace tab by space. seen in values
 				offset += name_length;
-				FILETIME filetime = bytes_to_filetime(pData + offset);
+				FILETIME filetime = *reinterpret_cast<FILETIME*>(pData + offset);
+				log(3, L"üîàtime_to_wstring lastModification");
 				shimcache.lastModification = time_to_wstring(filetime);
+				log(3, L"üîàtime_to_wstring lastModificationUtc");
 				shimcache.lastModificationUtc = time_to_wstring(filetime, true);
 				offset += 8;
-				int data_length = bytes_to_int(pData + offset);
+				int data_length = *reinterpret_cast<int*>(pData + offset);
 				offset += data_length;
-				short int executed = bytes_to_short(pData + offset);
+				short int executed = *reinterpret_cast<short int*>(pData + offset);
 				shimcache.executed = executed;
 				offset += 4; // 2 unused
 
 				//save 
+				log(1, L"‚ûïShimecache ");
+				log(2, L"‚ùáÔ∏èShimecache Path : " + shimcache.path);
 				shimcaches.push_back(shimcache);
 			}
 		}
@@ -109,6 +118,7 @@ public:
 	*/
 	HRESULT to_json()
 	{
+		log(3, L"üîàShimcaches to_json");
 		std::wstring result = L"[ \n";
 		std::vector<Shimcache>::iterator it;
 		for (it = shimcaches.begin(); it != shimcaches.end(); it++) {
@@ -120,29 +130,18 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //crÈe le repertoire, pas d'erreur s'il existe dÈj‡
+		std::filesystem::create_directory(conf._outputDir); //cr√©e le repertoire, pas d'erreur s'il existe d√©j√†
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/shimcache.json");
-		myfile << result;
+		myfile << ansi_to_utf8(result);
 		myfile.close();
-
-		if (conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crÈe le repertoire, pas d'erreur s'il existe dÈj‡
-			myfile.open(conf._errorOutputDir + "/shimcache_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation mÈmoire */
+	/* liberation m√©moire */
 	void clear() {
+		log(3, L"üîàShimcaches clear");
 		for (Shimcache temp : shimcaches)
 			temp.clear();
 	}

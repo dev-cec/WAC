@@ -115,10 +115,12 @@ $(function(){initNavTree('struct_id_list.html',''); initResizable(true); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Fonctions membres publiques</h2></td></tr>
-<tr class="memitem:aa0a7b5536a191b2f46b1bfd53fd6d15b" id="r_aa0a7b5536a191b2f46b1bfd53fd6d15b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa0a7b5536a191b2f46b1bfd53fd6d15b">IdList</a> (LPBYTE buffer, int _niveau, bool pdebug, bool pdump, std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *errors, bool Parentiszip=false)</td></tr>
-<tr class="separator:aa0a7b5536a191b2f46b1bfd53fd6d15b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af28801b80b247264be97f0f157f6977a" id="r_af28801b80b247264be97f0f157f6977a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af28801b80b247264be97f0f157f6977a">IdList</a> (LPBYTE buffer, int _niveau, bool Parentiszip=false)</td></tr>
+<tr class="separator:af28801b80b247264be97f0f157f6977a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0d2329bea030f456a7a9546c86ffb108" id="r_a0d2329bea030f456a7a9546c86ffb108"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0d2329bea030f456a7a9546c86ffb108">to_json</a> (int i=0)</td></tr>
 <tr class="separator:a0d2329bea030f456a7a9546c86ffb108"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeaeb93735333257995a807662d5fb34a" id="r_aeaeb93735333257995a807662d5fb34a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aeaeb93735333257995a807662d5fb34a">clear</a> ()</td></tr>
+<tr class="separator:aeaeb93735333257995a807662d5fb34a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
@@ -143,18 +145,12 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:aeb94cf5102fbbdfa7c009548e7947e42" id="r_aeb94cf5102fbbdfa7c009548e7947e42"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_i_shell_item.html">IShellItem</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aeb94cf5102fbbdfa7c009548e7947e42">shellItem</a> = NULL</td></tr>
 <tr class="memdesc:aeb94cf5102fbbdfa7c009548e7947e42"><td class="mdescLeft">&#160;</td><td class="mdescRight">pointeur vers l'objet shell item correspondant au type  <br /></td></tr>
 <tr class="separator:aeb94cf5102fbbdfa7c009548e7947e42"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7f76f4dca3a6f389676d969a0c6725c7" id="r_a7f76f4dca3a6f389676d969a0c6725c7"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7f76f4dca3a6f389676d969a0c6725c7">_debug</a> = false</td></tr>
-<tr class="memdesc:a7f76f4dca3a6f389676d969a0c6725c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json  <br /></td></tr>
-<tr class="separator:a7f76f4dca3a6f389676d969a0c6725c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a18ea013d3624df749cb6ded08f7344ae" id="r_a18ea013d3624df749cb6ded08f7344ae"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a18ea013d3624df749cb6ded08f7344ae">_dump</a> = false</td></tr>
-<tr class="memdesc:a18ea013d3624df749cb6ded08f7344ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">si true alors le fichier de sortie contiendra le dump hexa de l'objet  <br /></td></tr>
-<tr class="separator:a18ea013d3624df749cb6ded08f7344ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>type représentant une liste de Shell Item </p>
 </div><h2 class="groupheader">Documentation des constructeurs et destructeur</h2>
-<a id="aa0a7b5536a191b2f46b1bfd53fd6d15b" name="aa0a7b5536a191b2f46b1bfd53fd6d15b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa0a7b5536a191b2f46b1bfd53fd6d15b">&#9670;&#160;</a></span>IdList()</h2>
+<a id="af28801b80b247264be97f0f157f6977a" name="af28801b80b247264be97f0f157f6977a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af28801b80b247264be97f0f157f6977a">&#9670;&#160;</a></span>IdList()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -172,21 +168,6 @@ Attributs publics</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>pdebug</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>pdump</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *</td>          <td class="paramname"><span class="paramname"><em>errors</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>Parentiszip</em></span><span class="paramdefsep"> = </span><span class="paramdefval">false</span>&#160;)</td>
         </tr>
       </table>
@@ -195,9 +176,6 @@ Attributs publics</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">buffer</td><td>en entrée contient les bits à parser des extensionblock </td></tr>
     <tr><td class="paramname">_niveau</td><td>est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie </td></tr>
-    <tr><td class="paramname">pdebug</td><td>est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré </td></tr>
-    <tr><td class="paramname">pdump</td><td>est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal </td></tr>
-    <tr><td class="paramname">errors</td><td>est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction </td></tr>
   </table>
   </dd>
 </dl>
@@ -205,6 +183,31 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des fonctions membres</h2>
+<a id="aeaeb93735333257995a807662d5fb34a" name="aeaeb93735333257995a807662d5fb34a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeaeb93735333257995a807662d5fb34a">&#9670;&#160;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void IdList::clear </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a0d2329bea030f456a7a9546c86ffb108" name="a0d2329bea030f456a7a9546c86ffb108"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0d2329bea030f456a7a9546c86ffb108">&#9670;&#160;</a></span>to_json()</h2>
 
@@ -230,38 +233,6 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
-<a id="a7f76f4dca3a6f389676d969a0c6725c7" name="a7f76f4dca3a6f389676d969a0c6725c7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7f76f4dca3a6f389676d969a0c6725c7">&#9670;&#160;</a></span>_debug</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool IdList::_debug = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json </p>
-
-</div>
-</div>
-<a id="a18ea013d3624df749cb6ded08f7344ae" name="a18ea013d3624df749cb6ded08f7344ae"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a18ea013d3624df749cb6ded08f7344ae">&#9670;&#160;</a></span>_dump</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool IdList::_dump = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>si true alors le fichier de sortie contiendra le dump hexa de l'objet </p>
-
-</div>
-</div>
 <a id="af8eb27c406e8600f6adbb6791896a3a6" name="af8eb27c406e8600f6adbb6791896a3a6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af8eb27c406e8600f6adbb6791896a3a6">&#9670;&#160;</a></span>item_size</h2>
 
@@ -375,8 +346,8 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <hr/>La documentation de cette structure a été générée à partir des fichiers suivants :<ul>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="id_list_8h_source.html">idList.h</a></li>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="id_list_8cpp.html">idList.cpp</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="id_list_8h_source.html">idList.h</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="id_list_8cpp.html">idList.cpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

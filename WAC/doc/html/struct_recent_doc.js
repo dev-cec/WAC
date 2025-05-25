@@ -1,8 +1,9 @@
 var struct_recent_doc =
 [
-    [ "RecentDoc", "struct_recent_doc.html#aaa5ae32d9e8dc61e95a124ea4f075807", null ],
-    [ "RecentDoc", "struct_recent_doc.html#a6a8cf0a40e74e1bd9be2c980d51c8be3", null ],
-    [ "parseLNK", "struct_recent_doc.html#ab389f32e43171a4f2ad5419d3f58d13f", null ],
+    [ "RecentDoc", "struct_recent_doc.html#ae78978ce7653746cb933ad97bdc04cef", null ],
+    [ "RecentDoc", "struct_recent_doc.html#aeb18adfaec60e073ece2d53b7950fe72", null ],
+    [ "clear", "struct_recent_doc.html#af15bb7889021d9d5d94a142add483ab2", null ],
+    [ "parseLNK", "struct_recent_doc.html#a2687c796640288746e509f2e376b64cc", null ],
     [ "to_json", "struct_recent_doc.html#a7e5a788a2ada5f31454ef29eeac7f46b", null ],
     [ "arguments", "struct_recent_doc.html#a165143ed1a74dc733f5a2d09d81bce2a", null ],
     [ "attributes", "struct_recent_doc.html#adc6bffd0fdde7cea1d0e23989584a2ab", null ],
@@ -18,6 +19,7 @@ var struct_recent_doc =
     [ "netName", "struct_recent_doc.html#a32eed3664b67b62f799e4ed4decd3eb9", null ],
     [ "netProviderType", "struct_recent_doc.html#adbced5afce9df0450e353d412c1270a4", null ],
     [ "path", "struct_recent_doc.html#adda135ddc56a1cea2e7933e16fbfe349", null ],
+    [ "path_original", "struct_recent_doc.html#ab8106f8455ec36c226098afadf520035", null ],
     [ "relativePath", "struct_recent_doc.html#acf2fe815a5eff7a3a38d839744f5f2ff", null ],
     [ "Sid", "struct_recent_doc.html#a397637d1a8327fc757a878aa74092d9b", null ],
     [ "sourceAccessed", "struct_recent_doc.html#a55bad6c7f74330a4a993ab526a21dedc", null ],

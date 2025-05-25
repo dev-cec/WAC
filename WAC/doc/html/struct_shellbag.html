@@ -117,6 +117,8 @@ $(function(){initNavTree('struct_shellbag.html',''); initResizable(true); });
 Fonctions membres publiques</h2></td></tr>
 <tr class="memitem:aaaeb782744f84b2f5cb0f935f7afb5f6" id="r_aaaeb782744f84b2f5cb0f935f7afb5f6"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaaeb782744f84b2f5cb0f935f7afb5f6">to_json</a> ()</td></tr>
 <tr class="separator:aaaeb782744f84b2f5cb0f935f7afb5f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a42c4d09a155594201f7a36fe1f2345d1" id="r_a42c4d09a155594201f7a36fe1f2345d1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a42c4d09a155594201f7a36fe1f2345d1">clear</a> ()</td></tr>
+<tr class="separator:a42c4d09a155594201f7a36fe1f2345d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
@@ -143,16 +145,35 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:a2043681af0c230a086f829280dfa79cd" id="r_a2043681af0c230a086f829280dfa79cd"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="struct_shellbag.html">Shellbag</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2043681af0c230a086f829280dfa79cd">childs</a></td></tr>
 <tr class="memdesc:a2043681af0c230a086f829280dfa79cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">tableau contenant les shellbags enfant  <br /></td></tr>
 <tr class="separator:a2043681af0c230a086f829280dfa79cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3e0118bd5bcbb783795e93b09f17785a" id="r_a3e0118bd5bcbb783795e93b09f17785a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3e0118bd5bcbb783795e93b09f17785a">_debug</a> = false</td></tr>
-<tr class="memdesc:a3e0118bd5bcbb783795e93b09f17785a"><td class="mdescLeft">&#160;</td><td class="mdescRight">paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json  <br /></td></tr>
-<tr class="separator:a3e0118bd5bcbb783795e93b09f17785a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4bea0fb8e72624a206df83a6daf6a878" id="r_a4bea0fb8e72624a206df83a6daf6a878"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4bea0fb8e72624a206df83a6daf6a878">_dump</a> = false</td></tr>
-<tr class="memdesc:a4bea0fb8e72624a206df83a6daf6a878"><td class="mdescLeft">&#160;</td><td class="mdescRight">paramètre de la ligne de commande, si true alors on sauvegarde contenu du buffer au format hexadecimal dans un fichier json  <br /></td></tr>
-<tr class="separator:a4bea0fb8e72624a206df83a6daf6a878"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>structure représentant un artefact <a class="el" href="struct_shellbag.html">Shellbag</a> </p>
 </div><h2 class="groupheader">Documentation des fonctions membres</h2>
+<a id="a42c4d09a155594201f7a36fe1f2345d1" name="a42c4d09a155594201f7a36fe1f2345d1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a42c4d09a155594201f7a36fe1f2345d1">&#9670;&#160;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Shellbag::clear </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="aaaeb782744f84b2f5cb0f935f7afb5f6" name="aaaeb782744f84b2f5cb0f935f7afb5f6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aaaeb782744f84b2f5cb0f935f7afb5f6">&#9670;&#160;</a></span>to_json()</h2>
 
@@ -180,38 +201,6 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
-<a id="a3e0118bd5bcbb783795e93b09f17785a" name="a3e0118bd5bcbb783795e93b09f17785a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3e0118bd5bcbb783795e93b09f17785a">&#9670;&#160;</a></span>_debug</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool Shellbag::_debug = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json </p>
-
-</div>
-</div>
-<a id="a4bea0fb8e72624a206df83a6daf6a878" name="a4bea0fb8e72624a206df83a6daf6a878"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4bea0fb8e72624a206df83a6daf6a878">&#9670;&#160;</a></span>_dump</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool Shellbag::_dump = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>paramètre de la ligne de commande, si true alors on sauvegarde contenu du buffer au format hexadecimal dans un fichier json </p>
-
-</div>
-</div>
 <a id="a2043681af0c230a086f829280dfa79cd" name="a2043681af0c230a086f829280dfa79cd"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2043681af0c230a086f829280dfa79cd">&#9670;&#160;</a></span>childs</h2>
 
@@ -340,7 +329,7 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <hr/>La documentation de cette structure a été générée à partir du fichier suivant :<ul>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="reg__shellbags_8hpp_source.html">reg_shellbags.hpp</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="reg__shellbags_8hpp_source.html">reg_shellbags.hpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

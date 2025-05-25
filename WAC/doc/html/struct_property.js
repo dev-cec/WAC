@@ -1,9 +1,8 @@
 var struct_property =
 [
-    [ "Property", "struct_property.html#a53de6e60bf720c02d398efade848f1fc", null ],
+    [ "Property", "struct_property.html#a8db3a41e6d13822855fa49392ba5f3ba", null ],
+    [ "clear", "struct_property.html#a46cc3c0c06bb74bea747b5acbcac6cee", null ],
     [ "to_json", "struct_property.html#aee0bfb9a916079b1c7db6368ed223239", null ],
-    [ "_debug", "struct_property.html#af9dae78a0245eca9bc65da3762f07e2d", null ],
-    [ "_dump", "struct_property.html#aee6e369bc525ef38d6398374360aaf25", null ],
     [ "FriendlyName", "struct_property.html#a1746e45a53911810a954b8a9b49a358a", null ],
     [ "guid", "struct_property.html#adf36976b951f11992ca5ebf82dcd10d3", null ],
     [ "id", "struct_property.html#a22ee278ce42b51bdbf6fcb884845a6d6", null ],

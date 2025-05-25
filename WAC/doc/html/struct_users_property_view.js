@@ -1,7 +1,8 @@
 var struct_users_property_view =
 [
     [ "UsersPropertyView", "struct_users_property_view.html#acd16a21f5de8fac8b9db8fd7f9f48a8c", null ],
-    [ "UsersPropertyView", "struct_users_property_view.html#a5fca4da7bbe33fe5713ae25f1fb53faa", null ],
+    [ "UsersPropertyView", "struct_users_property_view.html#aa1dac3ce329cd3cf512a3d1b48076e76", null ],
+    [ "clear", "struct_users_property_view.html#a5027c41e4a487089f4c7bd130f58328b", null ],
     [ "to_json", "struct_users_property_view.html#a63f34236f11f21c4bbe41734145f3379", null ],
     [ "dataOffset", "struct_users_property_view.html#a885db6cfd016e960339bba4218becbc9", null ],
     [ "dataSize", "struct_users_property_view.html#aea414d30401455e2fe24960c937c662c", null ],

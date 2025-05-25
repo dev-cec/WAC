@@ -1,6 +1,7 @@
 var struct_user_property_view0x10312005 =
 [
-    [ "UserPropertyView0x10312005", "struct_user_property_view0x10312005.html#a5f985c5538eb65692a4f274621b9f50e", null ],
+    [ "UserPropertyView0x10312005", "struct_user_property_view0x10312005.html#ab5c9cc02dca9132acf4d67de35289714", null ],
+    [ "clear", "struct_user_property_view0x10312005.html#a154f83b212afd2530f29cf518b27786d", null ],
     [ "to_json", "struct_user_property_view0x10312005.html#a52aa09e1c5ea0a2f9f4a4b284a29ad32", null ],
     [ "filesystem", "struct_user_property_view0x10312005.html#aaf21943db69f045de4eeb939c907adf4", null ],
     [ "FriendlyName", "struct_user_property_view0x10312005.html#ad7cdafe75d583a55c76358b963876a05", null ],

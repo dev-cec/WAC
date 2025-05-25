@@ -1,7 +1,8 @@
 var struct_process =
 [
-    [ "Process", "struct_process.html#a3eb3a227a28c353ba7f79872111f3f0f", null ],
-    [ "ListProcessModules", "struct_process.html#af944a5c0fc9ef856b6ede566f2c7b1d8", null ],
+    [ "Process", "struct_process.html#a9ea9e98b384a7d0c0814c35308cc4c22", null ],
+    [ "clear", "struct_process.html#a914fe881f9306f2c6ac060d24d6b56c9", null ],
+    [ "ListProcessModules", "struct_process.html#a7a6a600d33cfcb0562b343387d18142c", null ],
     [ "to_json", "struct_process.html#ab4a2522d4b66e7d21c4e6b3f4519fecb", null ],
     [ "processId", "struct_process.html#a4b57a7a4812659dba500cf10dde16a41", null ],
     [ "processModules", "struct_process.html#af5cfb626c462aff996f17dfa4ead5d11", null ],

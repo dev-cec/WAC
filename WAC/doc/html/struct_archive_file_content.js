@@ -1,6 +1,7 @@
 var struct_archive_file_content =
 [
-    [ "ArchiveFileContent", "struct_archive_file_content.html#a88c28372fa08912d0fea44f635b2db14", null ],
+    [ "ArchiveFileContent", "struct_archive_file_content.html#ab4ac4a1a23567ef47b54d59e8b188d29", null ],
+    [ "clear", "struct_archive_file_content.html#a702b5976ad8f1eb5c2c70bc822241b94", null ],
     [ "to_json", "struct_archive_file_content.html#a0b87b457d7b5c592e64e7c20ea0f1f3c", null ],
     [ "isPresent", "struct_archive_file_content.html#af3e4c284f506e95d236435d098a8aff1", null ],
     [ "location", "struct_archive_file_content.html#a401e8ddeb89a48ebbe36d8b3d4b95a78", null ],

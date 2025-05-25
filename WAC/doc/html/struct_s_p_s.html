@@ -117,10 +117,12 @@ $(function(){initNavTree('struct_s_p_s.html',''); initResizable(true); });
 Fonctions membres publiques</h2></td></tr>
 <tr class="memitem:a2d03e5f0ea4268a8bd752db53c3c07a1" id="r_a2d03e5f0ea4268a8bd752db53c3c07a1"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2d03e5f0ea4268a8bd752db53c3c07a1">SPS</a> ()</td></tr>
 <tr class="separator:a2d03e5f0ea4268a8bd752db53c3c07a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab93e399a1b9e1ab0ef8aa8eaf014ed19" id="r_ab93e399a1b9e1ab0ef8aa8eaf014ed19"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab93e399a1b9e1ab0ef8aa8eaf014ed19">SPS</a> (LPBYTE buffer, int _niveau, bool pdebug, bool pdump, std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *errors)</td></tr>
-<tr class="separator:ab93e399a1b9e1ab0ef8aa8eaf014ed19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a79c12125ff775ef4998e68fe9142cb07" id="r_a79c12125ff775ef4998e68fe9142cb07"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a79c12125ff775ef4998e68fe9142cb07">SPS</a> (LPBYTE buffer, int _niveau)</td></tr>
+<tr class="separator:a79c12125ff775ef4998e68fe9142cb07"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5bbf69444b1c87e9e9e275472185278d" id="r_a5bbf69444b1c87e9e9e275472185278d"><td class="memItemLeft" align="right" valign="top">virtual std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5bbf69444b1c87e9e9e275472185278d">to_json</a> (int i=0)</td></tr>
 <tr class="separator:a5bbf69444b1c87e9e9e275472185278d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c81d43291716f66c5f8b9c7fee41de0" id="r_a9c81d43291716f66c5f8b9c7fee41de0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9c81d43291716f66c5f8b9c7fee41de0">clear</a> ()</td></tr>
+<tr class="separator:a9c81d43291716f66c5f8b9c7fee41de0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
@@ -142,12 +144,6 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:aeb937ecfffc8f3c17ed6f4fb5b7863ec" id="r_aeb937ecfffc8f3c17ed6f4fb5b7863ec"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="struct_s_p_s_value.html">SPSValue</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aeb937ecfffc8f3c17ed6f4fb5b7863ec">values</a></td></tr>
 <tr class="memdesc:aeb937ecfffc8f3c17ed6f4fb5b7863ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tableau contenant les différents SPSVALUE de l'objet <a class="el" href="struct_s_p_s.html">SPS</a>.  <br /></td></tr>
 <tr class="separator:aeb937ecfffc8f3c17ed6f4fb5b7863ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a75949d25a80f22b068f4d56c7c884d77" id="r_a75949d25a80f22b068f4d56c7c884d77"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a75949d25a80f22b068f4d56c7c884d77">_debug</a> = false</td></tr>
-<tr class="memdesc:a75949d25a80f22b068f4d56c7c884d77"><td class="mdescLeft">&#160;</td><td class="mdescRight">paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json  <br /></td></tr>
-<tr class="separator:a75949d25a80f22b068f4d56c7c884d77"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afd30b63bcf30db5e5d4e4aeff41b114d" id="r_afd30b63bcf30db5e5d4e4aeff41b114d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afd30b63bcf30db5e5d4e4aeff41b114d">_dump</a> = false</td></tr>
-<tr class="memdesc:afd30b63bcf30db5e5d4e4aeff41b114d"><td class="mdescLeft">&#160;</td><td class="mdescRight">si true alors le fichier de sortie contiendra le dump hexa de l'objet  <br /></td></tr>
-<tr class="separator:afd30b63bcf30db5e5d4e4aeff41b114d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>Structure représentent un Serialized <a class="el" href="struct_property.html">Property</a> Sets. </p>
@@ -178,8 +174,8 @@ Attributs publics</h2></td></tr>
 
 </div>
 </div>
-<a id="ab93e399a1b9e1ab0ef8aa8eaf014ed19" name="ab93e399a1b9e1ab0ef8aa8eaf014ed19"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab93e399a1b9e1ab0ef8aa8eaf014ed19">&#9670;&#160;</a></span>SPS() <span class="overload">[2/2]</span></h2>
+<a id="a79c12125ff775ef4998e68fe9142cb07" name="a79c12125ff775ef4998e68fe9142cb07"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a79c12125ff775ef4998e68fe9142cb07">&#9670;&#160;</a></span>SPS() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -192,22 +188,7 @@ Attributs publics</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>_niveau</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>pdebug</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>pdump</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *</td>          <td class="paramname"><span class="paramname"><em>errors</em></span>&#160;)</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>_niveau</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -215,9 +196,6 @@ Attributs publics</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">buffer</td><td>en entrée contient les bits à parser des extensionblock </td></tr>
     <tr><td class="paramname">_niveau</td><td>est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie </td></tr>
-    <tr><td class="paramname">pdebug</td><td>est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré </td></tr>
-    <tr><td class="paramname">pdump</td><td>est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal </td></tr>
-    <tr><td class="paramname">errors</td><td>est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction </td></tr>
   </table>
   </dd>
 </dl>
@@ -225,6 +203,31 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des fonctions membres</h2>
+<a id="a9c81d43291716f66c5f8b9c7fee41de0" name="a9c81d43291716f66c5f8b9c7fee41de0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9c81d43291716f66c5f8b9c7fee41de0">&#9670;&#160;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void SPS::clear </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a5bbf69444b1c87e9e9e275472185278d" name="a5bbf69444b1c87e9e9e275472185278d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5bbf69444b1c87e9e9e275472185278d">&#9670;&#160;</a></span>to_json()</h2>
 
@@ -258,38 +261,6 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
-<a id="a75949d25a80f22b068f4d56c7c884d77" name="a75949d25a80f22b068f4d56c7c884d77"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a75949d25a80f22b068f4d56c7c884d77">&#9670;&#160;</a></span>_debug</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool SPS::_debug = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json </p>
-
-</div>
-</div>
-<a id="afd30b63bcf30db5e5d4e4aeff41b114d" name="afd30b63bcf30db5e5d4e4aeff41b114d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afd30b63bcf30db5e5d4e4aeff41b114d">&#9670;&#160;</a></span>_dump</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool SPS::_dump = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>si true alors le fichier de sortie contiendra le dump hexa de l'objet </p>
-
-</div>
-</div>
 <a id="ae1ad2763480648b35d3a9da2aa9b58b6" name="ae1ad2763480648b35d3a9da2aa9b58b6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae1ad2763480648b35d3a9da2aa9b58b6">&#9670;&#160;</a></span>FriendlyName</h2>
 
@@ -387,8 +358,8 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <hr/>La documentation de cette structure a été générée à partir des fichiers suivants :<ul>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="id_list_8h_source.html">idList.h</a></li>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="id_list_8cpp.html">idList.cpp</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="id_list_8h_source.html">idList.h</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="id_list_8cpp.html">idList.cpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

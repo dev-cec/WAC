@@ -9,11 +9,10 @@ var searchData=
   ['amcacheapplications_6',['amcacheapplications',['../struct_amcache_applications.html#ac47023b2f7cd6b65f1a4986976cb49a2',1,'AmcacheApplications']]],
   ['application_7',['application',['../struct_automatic_destination.html#ab9f64a818e4bfb12581b2408cf913d23',1,'AutomaticDestination::application'],['../struct_custom_destination.html#a99f14e1b8737748200e0fe6a12762ce6',1,'CustomDestination::application']]],
   ['archive_8',['Archive',['../struct_file_attributes.html#a1bd109da24c6d924ca0816c93f86893a',1,'FileAttributes']]],
-  ['arguments_9',['arguments',['../struct_recent_doc.html#a165143ed1a74dc733f5a2d09d81bce2a',1,'RecentDoc::arguments'],['../struct_action.html#a6598e425cae1b6fc143ee598a313edcb',1,'Action::arguments']]],
-  ['arguments_5fescaped_10',['arguments_escaped',['../struct_action.html#a43c5edd79998a832e3ce9c1e563019dc',1,'Action']]],
-  ['atime_11',['atime',['../struct_beef0026.html#a74b55af1cfc3c821b3f8640dd1e2dbf5',1,'Beef0026']]],
-  ['atimeutc_12',['atimeUtc',['../struct_beef0026.html#adad228a28953421de4d348ba3e9e1f0e',1,'Beef0026']]],
-  ['attributes_13',['attributes',['../struct_recent_doc.html#adc6bffd0fdde7cea1d0e23989584a2ab',1,'RecentDoc']]],
-  ['authenticationpackage_14',['authenticationPackage',['../struct_session.html#aac73fe2f2daced116de5019feeb7defb',1,'Session']]],
-  ['automaticdestinations_15',['automaticDestinations',['../struct_jumplist_automatics.html#a23f6fc14a0e80fa27a9c3b7f20684598',1,'JumplistAutomatics']]]
+  ['arguments_9',['arguments',['../struct_recent_doc.html#a165143ed1a74dc733f5a2d09d81bce2a',1,'RecentDoc::arguments'],['../struct_action.html#a2dc221d7488424a28fe4327b6f893d18',1,'Action::arguments']]],
+  ['atime_10',['atime',['../struct_beef0026.html#a74b55af1cfc3c821b3f8640dd1e2dbf5',1,'Beef0026']]],
+  ['atimeutc_11',['atimeUtc',['../struct_beef0026.html#adad228a28953421de4d348ba3e9e1f0e',1,'Beef0026']]],
+  ['attributes_12',['attributes',['../struct_recent_doc.html#adc6bffd0fdde7cea1d0e23989584a2ab',1,'RecentDoc']]],
+  ['authenticationpackage_13',['authenticationPackage',['../struct_session.html#aac73fe2f2daced116de5019feeb7defb',1,'Session']]],
+  ['automaticdestinations_14',['automaticDestinations',['../struct_jumplist_automatics.html#a23f6fc14a0e80fa27a9c3b7f20684598',1,'JumplistAutomatics']]]
 ];

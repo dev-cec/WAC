@@ -1,6 +1,7 @@
 var struct_users_files_folder =
 [
-    [ "UsersFilesFolder", "struct_users_files_folder.html#ad6094f7e5b6a89c776c854e40b73097d", null ],
+    [ "UsersFilesFolder", "struct_users_files_folder.html#a6dc8ab997bc55c0f911e56acbbe57e96", null ],
+    [ "clear", "struct_users_files_folder.html#ad9b3dba32079c5e4f4a0c157c18e310d", null ],
     [ "to_json", "struct_users_files_folder.html#a60602bd767a40fe7bae5f17eab63efe2", null ],
     [ "extensionBlock", "struct_users_files_folder.html#a7461473bd28dd38b5b66ea68c7dca2e8", null ],
     [ "isPresent", "struct_users_files_folder.html#ad0b7544b4f9f1c22100ddf2e4b7e49f7", null ],

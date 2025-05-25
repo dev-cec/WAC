@@ -115,13 +115,14 @@ $(function(){initNavTree('struct_shellbags.html',''); initResizable(true); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Fonctions membres publiques</h2></td></tr>
-<tr class="memitem:aa4d5f1c9b8f14654e0d5bef60560d0d9" id="r_aa4d5f1c9b8f14654e0d5bef60560d0d9"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa4d5f1c9b8f14654e0d5bef60560d0d9">getData</a> (<a class="el" href="struct_appli_conf.html">AppliConf</a> conf, int _niveau=0)</td></tr>
-<tr class="memdesc:aa4d5f1c9b8f14654e0d5bef60560d0d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">contient les paramètres de l'application issue des paramètres de la ligne de commande  <br /></td></tr>
-<tr class="separator:aa4d5f1c9b8f14654e0d5bef60560d0d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a0bcbbeade2ff9d1af986510a7ffe7d" id="r_a1a0bcbbeade2ff9d1af986510a7ffe7d"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1a0bcbbeade2ff9d1af986510a7ffe7d">getData</a> (int _niveau=0)</td></tr>
+<tr class="separator:a1a0bcbbeade2ff9d1af986510a7ffe7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aba4c45f41e6132bc7615b60110358810" id="r_aba4c45f41e6132bc7615b60110358810"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aba4c45f41e6132bc7615b60110358810">parse</a> (ORHKEY hKey, std::wstring sid, std::wstring source, std::vector&lt; <a class="el" href="struct_shellbag.html">Shellbag</a> &gt; *<a class="el" href="#aff35832acef2d1e49bcb90a77e78dff5">shellbags</a>, unsigned int <a class="el" href="#aecbae0d878913ec4434b8c67adf75d4a">niveau</a>, bool _Parentiszip, unsigned int Parent=NULL)</td></tr>
 <tr class="separator:aba4c45f41e6132bc7615b60110358810"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a60edef4697d26145f7a8d183d113c4c3" id="r_a60edef4697d26145f7a8d183d113c4c3"><td class="memItemLeft" align="right" valign="top">virtual HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a60edef4697d26145f7a8d183d113c4c3">to_json</a> ()</td></tr>
 <tr class="separator:a60edef4697d26145f7a8d183d113c4c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae33184c997d0a1e12eae959064cd3dc6" id="r_ae33184c997d0a1e12eae959064cd3dc6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae33184c997d0a1e12eae959064cd3dc6">clear</a> ()</td></tr>
+<tr class="separator:ae33184c997d0a1e12eae959064cd3dc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
@@ -131,17 +132,37 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:aecbae0d878913ec4434b8c67adf75d4a" id="r_aecbae0d878913ec4434b8c67adf75d4a"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aecbae0d878913ec4434b8c67adf75d4a">niveau</a> = 0</td></tr>
 <tr class="memdesc:aecbae0d878913ec4434b8c67adf75d4a"><td class="mdescLeft">&#160;</td><td class="mdescRight">profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie  <br /></td></tr>
 <tr class="separator:aecbae0d878913ec4434b8c67adf75d4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5ef01c3c44ae97728a67eba99f82b14d" id="r_a5ef01c3c44ae97728a67eba99f82b14d"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5ef01c3c44ae97728a67eba99f82b14d">errors</a></td></tr>
-<tr class="memdesc:a5ef01c3c44ae97728a67eba99f82b14d"><td class="mdescLeft">&#160;</td><td class="mdescRight">tableau contenant les erreurs de traitement des objets  <br /></td></tr>
-<tr class="separator:a5ef01c3c44ae97728a67eba99f82b14d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae1643028956f6031f8b21362248b4548" id="r_ae1643028956f6031f8b21362248b4548"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_appli_conf.html">AppliConf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae1643028956f6031f8b21362248b4548">_conf</a> = {0}</td></tr>
-<tr class="separator:ae1643028956f6031f8b21362248b4548"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>structure contenant l'ensemble des artefacts </p>
 </div><h2 class="groupheader">Documentation des fonctions membres</h2>
-<a id="aa4d5f1c9b8f14654e0d5bef60560d0d9" name="aa4d5f1c9b8f14654e0d5bef60560d0d9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa4d5f1c9b8f14654e0d5bef60560d0d9">&#9670;&#160;</a></span>getData()</h2>
+<a id="ae33184c997d0a1e12eae959064cd3dc6" name="ae33184c997d0a1e12eae959064cd3dc6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae33184c997d0a1e12eae959064cd3dc6">&#9670;&#160;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Shellbags::clear </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a1a0bcbbeade2ff9d1af986510a7ffe7d" name="a1a0bcbbeade2ff9d1af986510a7ffe7d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1a0bcbbeade2ff9d1af986510a7ffe7d">&#9670;&#160;</a></span>getData()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -152,12 +173,8 @@ Attributs publics</h2></td></tr>
         <tr>
           <td class="memname">HRESULT Shellbags::getData </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="struct_appli_conf.html">AppliConf</a></td>          <td class="paramname"><span class="paramname"><em>conf</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>_niveau</em></span><span class="paramdefsep"> = </span><span class="paramdefval">0</span></td><td>)</td>
           <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>_niveau</em></span><span class="paramdefsep"> = </span><span class="paramdefval">0</span>&#160;)</td>
         </tr>
       </table>
   </td>
@@ -166,8 +183,6 @@ Attributs publics</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-
-<p>contient les paramètres de l'application issue des paramètres de la ligne de commande </p>
 <p>Fonction permettant de parser les objets </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
     <tr><td class="paramname">conf</td><td>contient les paramètres de l'application issue des paramètres de la ligne de commande param _niveau est utilisé pour la mie en forme de la hiérarchie des objet dans le json de sortie </td></tr>
@@ -270,36 +285,6 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
-<a id="ae1643028956f6031f8b21362248b4548" name="ae1643028956f6031f8b21362248b4548"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae1643028956f6031f8b21362248b4548">&#9670;&#160;</a></span>_conf</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="struct_appli_conf.html">AppliConf</a> Shellbags::_conf = {0}</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a5ef01c3c44ae97728a67eba99f82b14d" name="a5ef01c3c44ae97728a67eba99f82b14d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5ef01c3c44ae97728a67eba99f82b14d">&#9670;&#160;</a></span>errors</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::vector&lt;std::tuple&lt;std::wstring,HRESULT&gt; &gt; Shellbags::errors</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>tableau contenant les erreurs de traitement des objets </p>
-
-</div>
-</div>
 <a id="aecbae0d878913ec4434b8c67adf75d4a" name="aecbae0d878913ec4434b8c67adf75d4a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aecbae0d878913ec4434b8c67adf75d4a">&#9670;&#160;</a></span>niveau</h2>
 
@@ -333,7 +318,7 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <hr/>La documentation de cette structure a été générée à partir du fichier suivant :<ul>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="reg__shellbags_8hpp_source.html">reg_shellbags.hpp</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="reg__shellbags_8hpp_source.html">reg_shellbags.hpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

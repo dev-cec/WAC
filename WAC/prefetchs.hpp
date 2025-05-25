@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <iostream>
 #include <cstdio>
@@ -13,24 +13,24 @@
 
 
 
-/*structure représentant les informations liée à la MFT
+/*structure reprÃ©sentant les informations liÃ©e Ã  la MFT
 */
 struct MFTInformation {
-	unsigned int entryIndex = 0; //!< numéro d'entrée dans la MFT
-	unsigned int sequenceNumber = 0;//!< numéro de séquence dans la MFT
+	unsigned int entryIndex = 0; //!< numÃ©ro d'entrÃ©e dans la MFT
+	unsigned int sequenceNumber = 0;//!< numÃ©ro de sÃ©quence dans la MFT
 
-	/*! constructeur par défaut
+	/*! constructeur par dÃ©faut
 	*/
 	MFTInformation() {}
 
 	/*!Constructeur
-	* @param data contient un pointeur sur les données à parser
+	* @param data contient un pointeur sur les donnÃ©es Ã  parser
 	*/
 	MFTInformation(LPBYTE data)
 	{
-		sequenceNumber = bytes_to_unsigned_int(data + 6);
-		unsigned int entryIndex1 = bytes_to_unsigned_int(data);
-		unsigned short int entryIndex2 = bytes_to_unsigned_short(data + 4);
+		sequenceNumber = *reinterpret_cast<unsigned int*>(data + 6);
+		unsigned int entryIndex1 = *reinterpret_cast<unsigned int*>(data);
+		unsigned short int entryIndex2 = *reinterpret_cast<unsigned short int*>(data + 4);
 		if (entryIndex2 == 0)
 		{
 			entryIndex = entryIndex1;
@@ -50,6 +50,7 @@ struct MFTInformation {
 	* @return wstring le code json
 	*/
 	std::wstring to_json() {
+		log(3, L"ðŸ”ˆMFTInformation to_json");
 		std::wstring result = tab(5) + L"{\n"
 			+ tab(6) + L"\"EntryIndex\":" + std::to_wstring(entryIndex) + L",\n"
 			+ tab(6) + L"\"SequenceNumber\":" + std::to_wstring(sequenceNumber) + L"\n"
@@ -57,69 +58,71 @@ struct MFTInformation {
 		return result;
 	}
 
-	/* liberation mémoire */
-	void clear() {}
+	/* liberation mÃ©moire */
+	void clear() {
+		log(3, L"ðŸ”ˆMFTInformation clear");
+	}
 };
 
 struct VolumeInfo {
-	FILETIME creationTime = { 0 }; //!< date de création
-	FILETIME creationTimeUtc = { 0 };//!< date de création au format UTC
-	std::wstring serialNumber = L""; //!< numéro de série du volume
-	std::wstring deviceName = L""; //!< nom du périphérique
-	std::vector<std::wstring> dirStrings; //!< tableau de strings liées au volume
-	std::vector<MFTInformation> fileReferences; //!< inutile pour l'investigation numérique
+	FILETIME creationTime = { 0 }; //!< date de crÃ©ation
+	FILETIME creationTimeUtc = { 0 };//!< date de crÃ©ation au format UTC
+	std::wstring serialNumber = L""; //!< numÃ©ro de sÃ©rie du volume
+	std::wstring deviceName = L""; //!< nom du pÃ©riphÃ©rique
+	std::vector<std::wstring> dirStrings; //!< tableau de strings liÃ©es au volume
+	std::vector<MFTInformation> fileReferences; //!< inutile pour l'investigation numÃ©rique
 
 	/*!Constructeur
-	* @param data contient un pointeur sur les données à parser
+	* @param data contient un pointeur sur les donnÃ©es Ã  parser
 	*/
 	VolumeInfo() {}
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	*/
 	VolumeInfo(LPBYTE data, int indice) {
 		LPBYTE indVolume = data + indice * 96;
-		unsigned int offset = bytes_to_unsigned_int(indVolume);
-		unsigned int numChar = bytes_to_unsigned_int(indVolume + 4);
-		creationTimeUtc = bytes_to_filetime(indVolume + 8);
+		unsigned int offset = *reinterpret_cast<unsigned int*>(indVolume);
+		unsigned int numChar = *reinterpret_cast<unsigned int*>(indVolume + 4);
+		creationTimeUtc = *reinterpret_cast<FILETIME*>(indVolume + 8);
+		log(3, L"ðŸ”ˆFileTimeToLocalFileTime creationTime");
 		FileTimeToLocalFileTime(&creationTimeUtc, &creationTime);
 		deviceName = std::wstring((wchar_t*)(data + offset));
-		deviceName = replaceAll(deviceName, L"\\", L"\\\\");//on échappe les \ dans le path
-		//récupération du serialnumber en std::hexa
+		log(3, L"ðŸ”ˆreplaceAll deviceName");
+		deviceName = replaceAll(deviceName, L"\\", L"\\\\");//on Ã©chappe les \ dans le path
+		//rÃ©cupÃ©ration du serialnumber en std::hexa
 		std::wostringstream temp;
 		temp << std::hex << indVolume[19] << indVolume[18] << indVolume[17] << indVolume[16]; // serialnumber in std::hexa little indian
 		serialNumber = temp.str();
-
-		int dirsOffset = bytes_to_int(indVolume + 28);
-		int nbDirs = bytes_to_int(indVolume + 32);
-		int pos = 1;
+		
+		int dirsOffset = *reinterpret_cast<int*>(indVolume + 28);
+		int nbDirs = *reinterpret_cast<int*>(indVolume + 32);
+		size_t pos = 1;
 		for (int k = 0; k < nbDirs; k++) {
 			std::wstring temp = std::wstring((wchar_t*)(data + dirsOffset) + pos);
-			// codage ANSI mais on veut de l'UTF8
-			temp = ansi_to_utf8(temp);
 			pos += temp.size() + 2;//+2 pour \x0000
 			dirStrings.push_back(temp);
 		}
 
-
-
-		int fileRefOffset = bytes_to_int(indVolume + 20);
-		int fileRefSize = bytes_to_int(indVolume + 24);
+		int fileRefOffset = *reinterpret_cast<int*>(indVolume + 20);
+		int fileRefSize = *reinterpret_cast<int*>(indVolume + 24);
 		LPBYTE fileRefsIndex = indVolume + fileRefOffset;
-		int fileRefVer = bytes_to_int(fileRefsIndex);
-		int numFileRefs = bytes_to_int(fileRefsIndex + 4);
+		int fileRefVer = *reinterpret_cast<int*>(fileRefsIndex);
+		int numFileRefs = *reinterpret_cast<int*>(fileRefsIndex + 4);
 		if (fileRefVer == 3) {
 			for (int k = 0; k < numFileRefs; k++) {
+				log(3, L"ðŸ”ˆMFTInformation");
 				fileReferences.push_back(MFTInformation(fileRefsIndex + 16 + k * 8));
 			}
 		}
 	}
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i) {
+		log(3, L"ðŸ”ˆVolumeInfo to_json");
 		std::wstring result = L"";
 		result += tab(i) + L"{\n"
 			+ tab(i + 1) + L"\"DeviceName\":\"" + deviceName + L"\", \n"
@@ -129,7 +132,7 @@ struct VolumeInfo {
 			+ tab(i + 1) + L"\"NbDirs\":\"" + std::to_wstring(dirStrings.size()) + L"\", \n"
 			+ tab(i + 1) + L"\"Dirs\":" + multiSz_to_json(dirStrings, i + 1) + L"\n";
 
-		//File refs n'apporte rien à l'investigation numérique, juste commenter pour le réactiver si besoin
+		//File refs n'apporte rien Ã  l'investigation numÃ©rique, juste commenter pour le rÃ©activer si besoin
 		//+ tab(i + 1) + L"\"Dirs\":" + multiSz_to_json(dirStrings, i + 1) + L",\n"
 		//+ tab(i + 1) + L"\"FileReferences\":[\n";
 		//std::vector<MFTInformation>::iterator it;
@@ -143,34 +146,36 @@ struct VolumeInfo {
 		return result;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
+		log(3, L"ðŸ”ˆVolumeInfo clear");
 		for (MFTInformation temp : fileReferences)
 			temp.clear();
 	}
 };
 
-/*! structure représentant un prefecth windows
+/*! structure reprÃ©sentant un prefecth windows
 * documentation : https://github.com/libyal/libscca/blob/main/documentation/Windows%20Prefetch%20File%20(PF)%20format.asciidoc
 */
 struct Prefetch {
 public:
-	std::wstring path = L""; //!< chemin du prefetch
+	std::wstring path = L""; //!< chemin du prefetch dans le mountpoint
+	std::wstring pathOriginal = L""; //!< chemin du prefetch sur le disque
 	//HEADER
 	std::wstring filename = L"";//!< nom du fichier
 	int signature = 0; //!< signature du prefetch
 	int version = 0; //!< version du prefetch
 	int size = 0; //!< taille du prefetch
 	// FILE INFORMATION
-	FILETIME created = { 0 }; //!< date de création du fichier
-	FILETIME createdUtc = { 0 }; //!< date de création du fichier au format utc
+	FILETIME created = { 0 }; //!< date de crÃ©ation du fichier
+	FILETIME createdUtc = { 0 }; //!< date de crÃ©ation du fichier au format utc
 	FILETIME modified = { 0 };//!< date de modification  du fichier
 	FILETIME modifiedUtc = { 0 };//!< date de modification du fichier au format utc
-	FILETIME accessed = { 0 };//!< date d'accès du fichier
-	FILETIME accessedUtc = { 0 };//!< date d'accès du fichier au format utc
-	std::vector<FILETIME> last_runs; //!< liste des dates des dernières executions
-	std::vector<FILETIME> last_runsUtc; //!< liste des dates des dernières executions au format UTC
-	int run_count = 0; //!< nombre d’exécutions
+	FILETIME accessed = { 0 };//!< date d'accÃ¨s du fichier
+	FILETIME accessedUtc = { 0 };//!< date d'accÃ¨s du fichier au format utc
+	std::vector<FILETIME> last_runs; //!< liste des dates des derniÃ¨res executions
+	std::vector<FILETIME> last_runsUtc; //!< liste des dates des derniÃ¨res executions au format UTC
+	int run_count = 0; //!< nombre dâ€™exÃ©cutions
 	std::wstring hash_string = L"";//!< hash du chemin contenant le prefetch
 
 	//Filename strings
@@ -180,10 +185,12 @@ public:
 	std::vector<VolumeInfo> volumes; //!< tableau contenant des information de volumes
 
 	/*! constructeur
-	* @param file_path en entrée contient le chemin vers le fichier prefetch à parser
+	* @param file_path en entrÃ©e contient le chemin vers le fichier prefetch Ã  parser
 	*/
 	Prefetch(const std::wstring file_path) {
 		path = file_path;
+		log(3, L"ðŸ”ˆreplaceAll pathOriginal");
+		pathOriginal = replaceAll(path, conf.mountpoint, L"C:");
 	}
 
 	/* lecture du fichier prefetch
@@ -191,7 +198,7 @@ public:
 	HRESULT read() {
 		const int sig = 0x41434353;
 		LPBYTE buffer = NULL; // buffer contenant le prefetch
-		LPBYTE data = NULL;// buffer contenant les données du prefetch
+		LPBYTE data = NULL;// buffer contenant les donnÃ©es du prefetch
 		DWORD posBuffer = 0;
 		std::ifstream file(path, std::ios::binary);
 		if (!file.good()) {
@@ -200,13 +207,13 @@ public:
 
 		file.unsetf(std::ios::skipws);
 		file.seekg(0, std::ios::end);
-		const size_t size = file.tellg();
+		const ULONG size = file.tellg();
 		file.seekg(0, std::ios::beg);
 		buffer = new BYTE[size];
 		file.read(reinterpret_cast<char*>(buffer), size);
 		file.close();
 
-		//récupération des dates
+		//rÃ©cupÃ©ration des dates
 		HANDLE hFile = CreateFile(path.c_str(),  // name of the write
 			GENERIC_READ,          // open for writing
 			0,                      // do not share
@@ -216,12 +223,16 @@ public:
 			NULL);                  // no attr. template
 		if (hFile != INVALID_HANDLE_VALUE) {
 			FILE_BASIC_INFO fileInfo;
+			log(3, L"ðŸ”ˆGetFileInformationByHandleEx hFile");
 			GetFileInformationByHandleEx(hFile, FileBasicInfo, &fileInfo, sizeof(FILE_BASIC_INFO));
 			memcpy(&createdUtc, &fileInfo.CreationTime, sizeof(createdUtc));
 			memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
 			memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
+			log(3, L"ðŸ”ˆFileTimeToLocalFileTime created");
 			FileTimeToLocalFileTime(&createdUtc, &created);
+			log(3, L"ðŸ”ˆFileTimeToLocalFileTime modified");
 			FileTimeToLocalFileTime(&modifiedUtc, &modified);
+			log(3, L"ðŸ”ˆFileTimeToLocalFileTime accessed");
 			FileTimeToLocalFileTime(&accessedUtc, &accessed);
 		}
 		CloseHandle(hFile);
@@ -245,9 +256,10 @@ public:
 			static auto compression_workspace_size = reinterpret_cast<RtlGetCompressionWorkSpaceSize>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "RtlGetCompressionWorkSpaceSize"));
 			static auto decompress_buffer_ex = reinterpret_cast<RtlDecompressBufferEx>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "RtlDecompressBufferEx"));
 
-			const int decompressed_size = bytes_to_int(buffer + 4);
+			const int decompressed_size = *reinterpret_cast<int*>(buffer + 4);
 			posBuffer += 8;
 			ULONG compressed_buffer_workspace_size, compress_fragment_workspace_size;
+			log(3, L"ðŸ”ˆcompression_workspace_size");
 			HRESULT hr = compression_workspace_size(CompressionFormatXpressHuff, &compressed_buffer_workspace_size, &compress_fragment_workspace_size);
 			if (hr != ERROR_SUCCESS)
 				return hr;
@@ -260,7 +272,7 @@ public:
 			if (!workspace)
 				return ERROR_DECRYPTION_FAILED;
 
-
+			log(3, L"ðŸ”ˆdecompress_buffer_ex");
 			decompress_buffer_ex(
 				CompressionFormatXpressHuff,
 				reinterpret_cast<PUCHAR>(data),
@@ -277,57 +289,62 @@ public:
 
 		
 
-		version = bytes_to_int(data);
-		signature = bytes_to_int(data + 4);
+		version = *reinterpret_cast<int*>(data);
+		signature = *reinterpret_cast<int*>(data + 4);
 		hash_string = std::wstring(data + 76, data + 80);
 		filename = std::wstring((wchar_t*)data + 8);
 
-		//récupération du hash en std::hexa
+		//rÃ©cupÃ©ration du hash en std::hexa
 		std::wostringstream temp;
 		temp << std::hex << data[79] << data[78] << data[77] << data[76]; // HASH in std::hexa little indian
 		hash_string = temp.str();
 
 		//verification de la version
 		if (version <30) {
+			log(2, L"ðŸ”¥Prefetch version before 30 not supported", ERROR_INVALID_DATA);
 			return ERROR_INVALID_DATA; // version non prise en charge (<win10)
 		}
 		//LECTURE DES DONNEES
 		//FILE INFORMATION
-		int start = bytes_to_int(data + 84);
-		int nb_entries = bytes_to_int(data + 84 + 4);
+		int start = *reinterpret_cast<int*>(data + 84);
+		int nb_entries = *reinterpret_cast<int*>(data + 84 + 4);
 
-		int trace_offset = bytes_to_int(data + 84 + 8);
-		int nb_traces = bytes_to_int(data + 84 + 12);
+		int trace_offset = *reinterpret_cast<int*>(data + 84 + 8);
+		int nb_traces = *reinterpret_cast<int*>(data + 84 + 12);
 
-		int filename_offset = bytes_to_int(data + 84 + 16);
-		int filename_size = bytes_to_int(data + 84 + 20);
+		int filename_offset = *reinterpret_cast<int*>(data + 84 + 16);
+		int filename_size = *reinterpret_cast<int*>(data + 84 + 20);
 
-		int volume_offset = bytes_to_int(data + 84 + 24);
-		int nb_volumes = bytes_to_int(data + 84 + 28);
+		int volume_offset = *reinterpret_cast<int*>(data + 84 + 24);
+		int nb_volumes = *reinterpret_cast<int*>(data + 84 + 28);
 
-		int volume_size = bytes_to_int(data + 84 + 32);
+		int volume_size = *reinterpret_cast<int*>(data + 84 + 32);
 		//run times
 		for (int i = 0; i < 8; i++) {
-			FILETIME tempUtc = bytes_to_filetime(data + 84 + 44 + i * 8);
+			FILETIME tempUtc = *reinterpret_cast<FILETIME*>(data + 84 + 44 + i * 8);
 			FILETIME temp_locale;
 			// on ne garde pas les date nulles, il n'y a pas toujours 8 dates
+			log(3, L"ðŸ”ˆtime_to_wstring last_runsUtc");
 			if (time_to_wstring(tempUtc) != L"") {
 				last_runsUtc.push_back(tempUtc);
+				log(3, L"ðŸ”ˆFileTimeToLocalFileTime last_runs");
 				FileTimeToLocalFileTime(&tempUtc, &temp_locale);
 				last_runs.push_back(temp_locale);
 			}
 		}
-		if (bytes_to_int(data + 84 + 120) == 0) // old_format
+		if (*reinterpret_cast<int*>(data + 84 + 120) == 0) // old_format
 		{
-			run_count = bytes_to_int(data + 84 + 124);
+			run_count = *reinterpret_cast<int*>(data + 84 + 124);
 		}
 		else { // new format
-			run_count = bytes_to_int(data + 84 + 116);
+			run_count = *reinterpret_cast<int*>(data + 84 + 116);
 		}
 		//FILENAMES
+		log(3, L"ðŸ”ˆmultiWstring_to_vector filenames");
 		filenames = multiWstring_to_vector(data + filename_offset, filename_size);
 		//VOLUMES
 		for (int i = 0; i < nb_volumes; i++) {
+			log(3, L"ðŸ”ˆVolumeInfo");
 			volumes.push_back(VolumeInfo(data + volume_offset, i));
 		}
 		delete[] data;
@@ -336,26 +353,36 @@ public:
 	}
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i) {
+		log(3, L"ðŸ”ˆPrefetch to_json");
 		std::wstring result = L"";
 
-		result += tab(i) + L"{ \n"
-			+ tab(i + 1) + L"\"Filename\":\"" + filename + L"\", \n"
-			+ tab(i + 1) + L"\"Hash\":\"" + hash_string + L"\", \n"
-			+ tab(i + 1) + L"\"Created\":\"" + time_to_wstring(created) + L"\", \n"
-			+ tab(i + 1) + L"\"CreatedUtc\":\"" + time_to_wstring(createdUtc) + L"\", \n"
-			+ tab(i + 1) + L"\"Modified\":\"" + time_to_wstring(modified) + L"\", \n"
-			+ tab(i + 1) + L"\"ModifiedUtc\":\"" + time_to_wstring(modifiedUtc) + L"\", \n"
-			+ tab(i + 1) + L"\"Accessed\":\"" + time_to_wstring(accessed) + L"\", \n"
-			+ tab(i + 1) + L"\"AccessedUtc\":\"" + time_to_wstring(accessedUtc) + L"\", \n"
-			+ tab(i + 1) + L"\"RunCount\":\"" + std::to_wstring(run_count) + L"\", \n"
-			+ tab(i + 1) + L"\"Runs\":" + multiFiletime_to_json(last_runs, i + 1) + L",\n"
-			+ tab(i + 1) + L"\"RunsUtc\":" + multiFiletime_to_json(last_runsUtc, i + 1) + L",\n"
-			+ tab(i + 1) + L"\"NbVolumes\":\"" + std::to_wstring(volumes.size()) + L"\",\n"
-			+ tab(i + 1) + L"\"Volumes\":[\n";
+		result += tab(i) + L"{ \n";
+			result += tab(i + 1) + L"\"Path\":\"" + pathOriginal+ L"\", \n";
+			result += tab(i + 1) + L"\"Filename\":\"" + filename + L"\", \n";
+			result += tab(i + 1) + L"\"Hash\":\"" + hash_string + L"\", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring created");
+			result += tab(i + 1) + L"\"Created\":\"" + time_to_wstring(created) + L"\", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring createdUtc");
+			result += tab(i + 1) + L"\"CreatedUtc\":\"" + time_to_wstring(createdUtc) + L"\", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring modified");
+			result += tab(i + 1) + L"\"Modified\":\"" + time_to_wstring(modified) + L"\", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring modifiedUtc");
+			result += tab(i + 1) + L"\"ModifiedUtc\":\"" + time_to_wstring(modifiedUtc) + L"\", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring accessed");
+			result += tab(i + 1) + L"\"Accessed\":\"" + time_to_wstring(accessed) + L"\", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring accessedUtc");
+			result += tab(i + 1) + L"\"AccessedUtc\":\"" + time_to_wstring(accessedUtc) + L"\", \n";
+			result += tab(i + 1) + L"\"RunCount\":\"" + std::to_wstring(run_count) + L"\", \n";
+			log(3, L"ðŸ”ˆmultiFiletime_to_json last_runs");
+			result += tab(i + 1) + L"\"Runs\":" + multiFiletime_to_json(last_runs, i + 1) + L",\n";
+			log(3, L"ðŸ”ˆmultiFiletime_to_json last_runsUtc");
+			result += tab(i + 1) + L"\"RunsUtc\":" + multiFiletime_to_json(last_runsUtc, i + 1) + L",\n";
+			result += tab(i + 1) + L"\"NbVolumes\":\"" + std::to_wstring(volumes.size()) + L"\",\n";
+			result += tab(i + 1) + L"\"Volumes\":[\n";
 		std::vector<VolumeInfo>::iterator it;
 		for (it = volumes.begin(); it != volumes.end(); it++) {
 			result += it->to_json(i + 2);
@@ -365,13 +392,15 @@ public:
 		}
 		result += tab(i + 1) + L"],\n";
 		result += tab(i + 1) + L"\"NbFilesStrings\":\"" + std::to_wstring(filenames.size()) + L"\",\n";
+		log(3, L"ðŸ”ˆmultiSz_to_json filenames");
 		result += tab(i + 1) + L"\"FilesStrings\":" + multiSz_to_json(filenames, i + 1) + L"\n";
 		result += tab(i) + L"}";
 		return result;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
+		log(3, L"ðŸ”ˆPrefetch clear");
 		for (VolumeInfo temp : volumes)
 			temp.clear();
 	}
@@ -381,22 +410,27 @@ public:
 */
 struct Prefetchs {
 	std::vector<Prefetch> prefetchs; //!< tableau contenant tout les prefetch
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
+	* @param conf contient les paramÃ¨tres de l'application issue des paramÃ¨tres de la ligne de commande
 	*/
 	HRESULT getData() {
-		conf=conf;
+
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"â„¹ï¸Prefetchs : ");
+		log(0, L"*******************************************************************************************************************");
+
+
+		log(3, L"ðŸ”ˆwstring_to_string path");
 		std::string path = wstring_to_string(conf.mountpoint + L"\\Windows\\Prefetch");
 
 		for (const auto& entry : std::filesystem::directory_iterator(path)) {
 			if (entry.is_regular_file() && entry.path().extension() == ".pf") {
+				log(1, L"âž•Prefetch");
 				Prefetch p(entry.path().wstring());
 				HRESULT hresult = p.read();
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"Error " + entry.path().wstring(), hresult});
+					log(2, L"ðŸ”¥" + entry.path().wstring(), hresult);
 					continue;
 				} // prefetch non lisible
 				else prefetchs.push_back(p);
@@ -408,6 +442,7 @@ struct Prefetchs {
 	/*! conversion de l'objet au format json
 	*/
 	HRESULT to_json() {
+		log(3, L"ðŸ”ˆPrefetchs to_json");
 		std::wofstream myfile;
 		std::wstring result = L"[\n";
 		std::vector<Prefetch>::iterator it;
@@ -419,27 +454,17 @@ struct Prefetchs {
 		}
 		result += L"]";
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crÃ©e le repertoire, pas d'erreur s'il existe dÃ©jÃ 
 		myfile.open(conf._outputDir +"/prefetchs.json");
-		myfile << result;
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
-		if(conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir +"/prefetchs_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
+		log(3, L"ðŸ”ˆPrefetchs clear");
 		for (Prefetch temp : prefetchs)
 			temp.clear();
 	}

@@ -1,4 +1,4 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <windows.h>
 #include <stdio.h>
 #include <offreg.h>
@@ -10,26 +10,23 @@
 #include "usb.h"
 #include "idList.h"
 
-
-
-/* structure représentant l'artefact Most REcently Used
+/* structure reprÃ©sentant l'artefact Most REcently Used
 */
 struct Mru {
 public:
 	unsigned int id = 0; //!< identifiant de l'objet
-	unsigned int niveau = 0;//!< profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
+	unsigned int niveau = 0;//!< profondeur dans l'arborescence utilisÃ© pour la mise en forme du fichier json de sortie
 	std::wstring extension = L""; //!< extension du fichier
 	std::wstring sid = L""; //!<SID de l'utilisateur ayant ouvert le fichier
 	std::wstring sidName = L""; //!<nom de l'utilisateur ayant ouvert le fichier
 	std::wstring source = L"";//!< provient de "OpenSavePidlMRU " ou "OpenSaveMRU"
 	std::vector<IdList*> shellitems; //!< tableau contenant les Idlist
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde contenu du buffer au format hexadecimal dans un fichier json
 
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
 	std::wstring to_json() {
+		log(3, L"ğŸ”ˆMru to_json");
 		std::wstring result = tab(niveau) + L"{ \n"
 			+ tab(niveau + 1) + L"\"ID\":" + std::to_wstring(id) + L", \n"
 			+ tab(niveau + 1) + L"\"Extension\":\"" + extension + L"\", \n"
@@ -50,8 +47,9 @@ public:
 		return result;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
+		log(3, L"ğŸ”ˆMru clear");
 		for (IdList* temp : shellitems)
 			temp->clear();
 	}
@@ -62,16 +60,18 @@ public:
 struct Mrus {
 public:
 	std::vector<Mru> Mrus; //!< contient l'ensemble des objets
-	unsigned int niveau = 0; //!< profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-
+	unsigned int niveau = 0; //!< profondeur dans l'arborescence utilisÃ© pour la mise en forme du fichier json de sortie
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
-	* param _niveau est utilisé pour la mie en forme de la hiérarchie des objet dans le json de sortie
+	* @param conf contient les paramÃ¨tres de l'application issue des paramÃ¨tres de la ligne de commande
+	* param _niveau est utilisÃ© pour la mie en forme de la hiÃ©rarchie des objet dans le json de sortie
 	*/
-	HRESULT getData( int _niveau = 0) {
-		
+	HRESULT getData(int _niveau = 0) {
+
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"â„¹ï¸Bams : ");
+		log(0, L"*******************************************************************************************************************");
+
 		HRESULT hresult = NULL;
 		ORHKEY hKey;
 		ORHKEY hSubKey;
@@ -88,37 +88,46 @@ public:
 			std::wstring keynames[2] = { L"OpenSavePidlMRU",L"OpenSaveMRU" };
 			for (std::wstring keyname : keynames) {
 				//ouverture de la ruche user
+				log(3, L"ğŸ”ˆreplaceAll profile");
 				ruche = conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\\\ntuser.dat";
+				log(3, L"ğŸ”ˆOROpenHive " + get<1>(profile) + L"\\ntuser.dat");
 				hresult = OROpenHive(ruche.c_str(), &Offhive);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"unable to open hive : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\")+ L"\\\\ntuser.dat" , hresult });
+					log(2, L"ğŸ”¥OROpenHive " + get<1>(profile) + L"\\ntuser.dat", hresult);
 					continue;
 				}
-
+				log(3, L"ğŸ”ˆOROpenKey Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\" + keyname);
 				hresult = OROpenKey(Offhive, (L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\" + keyname).c_str(), &hKey);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"unable to open key " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\" + keyname, hresult });
+					log(2, L"ğŸ”¥OROpenKey Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\" + keyname, hresult);
 					continue;
 				}
 
+				log(3, L"ğŸ”ˆORQueryInfoKey hKey");
 				hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"unable to get info key " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\" + keyname, hresult });
+					log(2, L"ğŸ”¥ORQueryInfoKey hKey", hresult);
 					continue;
 				}
 
 				for (int i = 1; i < (int)nSubkeys; i++) {//i=0 = *, on passe
 					nSize = MAX_KEY_NAME;
 					DWORD cData = 0;
+					log(3, L"ğŸ”ˆOREnumKey hKey");
 					hresult = OREnumKey(hKey, i, szValue, &nSize, NULL, NULL, NULL);
+					if (hresult != ERROR_SUCCESS) {
+						log(2, L"ğŸ”¥OREnumKey hkey", hresult);
+						continue;
+					}
+					log(3, L"ğŸ”ˆOROpenKey hkey\\" + std::wstring(szValue));
 					hresult = OROpenKey(hKey, szValue, &hSubKey);
 					if (hresult != ERROR_SUCCESS) {
-						errors.push_back({ L"unable to open key Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\" + keyname + L"\\" + szValue, hresult});
+						log(2, L"ğŸ”¥OROpenKey hkey\\" + std::wstring(szValue), hresult);
 						continue;
 					}
 					hresult = parse(hSubKey, get<0>(profile), keyname, &Mrus, 1, false, szValue);
 					if (hresult != ERROR_SUCCESS) {
-						errors.push_back({ L"unable to get info key Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\" + keyname + L"\\" + szValue, hresult });
+						log(2, L"ğŸ”¥parse", hresult);
 						continue;
 					}
 				}
@@ -127,12 +136,12 @@ public:
 		return ERROR_SUCCESS;
 	}
 
-	/*! Fonction permettant de parser une clé MRUListEx
-	* @param hKey contient le clé de la base de registre à parser
+	/*! Fonction permettant de parser une clÃ© MRUListEx
+	* @param hKey contient le clÃ© de la base de registre Ã  parser
 	* @param sid contient le sid de l'utilisateur
-	* @param source contient l'origine de l’artefact (provient de "OpenSavePidlMRU " ou "OpenSaveMRU")
-	* @param Mrus est un tableau contenant les MRUS parsés
-	* @param niveau est utilisé par la mise en forme du json de sortie
+	* @param source contient l'origine de lâ€™artefact (provient de "OpenSavePidlMRU " ou "OpenSaveMRU")
+	* @param Mrus est un tableau contenant les MRUS parsÃ©s
+	* @param niveau est utilisÃ© par la mise en forme du json de sortie
 	* @param _Parentiszip indique le Parent est un fichier zip
 	* @param extension contient l'extension de fichier
 	*/
@@ -140,49 +149,61 @@ public:
 		HRESULT hresult = NULL;
 		ORHKEY hKeyChilds;
 		std::vector<unsigned int> ids;
-		LPBYTE pData = new BYTE[MAX_DATA];
+		LPBYTE pData = NULL;
 		unsigned int pos = 0;
-
-
-		getRegBinaryValue(hKey, L"", L"MRUListEx", pData);
-		while (true) {
-			int id = bytes_to_int(pData + pos);
+		DWORD dwSize = 0;
+		log(3, L"ğŸ”ˆgetRegBinaryValue hkey\\MRUListEx");
+		hresult = getRegBinaryValue(hKey, L"", L"MRUListEx", &pData, &dwSize);
+		if (hresult != ERROR_SUCCESS) {
+			log(2, L"ğŸ”¥getRegBinaryValue hkey\\MRUListEx", hresult);
+			return hresult;
+		}
+		while (pos < dwSize) {
+			int id = *reinterpret_cast<int*>(pData + pos);
 			if (id == 0xffffffff) break;
 			ids.push_back(id);
 			pos += 4;
 		}
+		delete[] pData;
+		pData = NULL;
 		for (int id : ids) {
 			bool Parentiszip = false | _Parentiszip;
+			log(1, L"â•Mru");
 			Mru Mru;
 			Mru.id = id;
+			log(2, L"â‡ï¸Mru id" + id);
 			Mru.extension = extension;
 			Mru.niveau = niveau;
 			Mru.sid = sid;
+			log(3, L"ğŸ”ˆgetNameFromSid sidName");
 			Mru.sidName = getNameFromSid(sid);
 			Mru.source = source;
-			Mru._debug = conf._debug;
-			Mru._dump = conf._dump;
-			getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), pData);
+			log(3, L"ğŸ”ˆgetRegBinaryValue hkey\\"+ std::to_wstring(id));
+			hresult = getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), &pData, &dwSize);
+			if (hresult != ERROR_SUCCESS) {
+				log(2, L"ğŸ”¥getRegBinaryValue hkey\\" + std::to_wstring(id), hresult);
+				continue;
+			}
 			unsigned int offset = 0;
-			while (true) {
-
-				unsigned short int size = bytes_to_unsigned_short(pData + offset);
+			while (offset < dwSize) {
+				unsigned short int size = *reinterpret_cast<unsigned short int*>(pData + offset);
 				if (size == 0) break;
 				else {
-
-					IdList* shellitem = new IdList(pData + offset, niveau + 2,  &errors, Parentiszip);
+					log(3, L"ğŸ”ˆIdList");
+					IdList* shellitem = new IdList(pData + offset, niveau + 2, Parentiszip);
 					if (shellitem->shellItem->is_zip == true)
 						Parentiszip = true;
 					offset += size;
 					Mru.shellitems.push_back(shellitem);
 				}
 			}
+			delete[] pData;
+			pData = NULL;
 
 			//save
 			Mrus->push_back(Mru);
 
 		}
-		delete [] pData;
 		return ERROR_SUCCESS;
 	}
 
@@ -190,6 +211,7 @@ public:
 	*/
 
 	virtual HRESULT to_json() {
+		log(3, L"ğŸ”ˆMrus to_json");
 		std::wstring result = L"[ \n";
 		std::vector<Mru>::iterator it;
 		for (it = Mrus.begin(); it != Mrus.end(); it++) {
@@ -201,29 +223,18 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crÃ©e le repertoire, pas d'erreur s'il existe dÃ©jÃ 
 		std::wofstream myfile;
-		myfile.open(conf._outputDir +"/mrus.json");
-		myfile << result;
+		myfile.open(conf._outputDir + "/mrus.json");
+		myfile << ansi_to_utf8(result);
 		myfile.close();
-
-		if(conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir +"/mrus_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
+		log(3, L"ğŸ”ˆMrus clear");
 		for (Mru temp : Mrus)
 			temp.clear();
 	}

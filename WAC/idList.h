@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <iostream>
 #include <cstdio>
 #include <windows.h>
@@ -13,50 +13,46 @@
 
 
 /********************************************************************************************************************
-* Impossible de scinder le document en plusieurs fichiers car des références cycliques entre les types l'en empêche
+* Impossible de scinder le document en plusieurs fichiers car des rÃ©fÃ©rences cycliques entre les types l'en empÃªche
 *********************************************************************************************************************/
 
 /***************************************************************************************************
 * STRUCUTRES VRTUELLES
 ****************************************************************************************************/
 /*! Type de base virtuel pour les shell Items.
-*  tous les shells items hérite de ce type de base permettant ainsi d'inclure un type de shell virtuel dans les autres classes
+*  tous les shells items hÃ©rite de ce type de base permettant ainsi d'inclure un type de shell virtuel dans les autres classes
 */
 struct IShellItem {
 public:
-	int niveau = 0; //!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
-	bool is_zip = false; //!< utile pour les shellbags, permet de définir les fils comm des archive_contents
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false; //!< si true alors le fichier de sortie contiendra le dump hexa de l'objet
+	int niveau = 0; //!< hiÃ©rarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	bool is_zip = false; //!< utile pour les shellbags, permet de dÃ©finir les fils comm des archive_contents
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0) = 0;
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	virtual void clear() = 0;
 };
 
 /*! Type de base virtuel pour les extension Block.
-*  tous les shells items hérite de ce type de base permettant ainsi d'inclure un type de shell virtuel dans les autres classes
+*  tous les shells items hÃ©rite de ce type de base permettant ainsi d'inclure un type de shell virtuel dans les autres classes
 */
 struct IExtensionBlock {
 public:
-	int niveau = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
-	bool isPresent = false;//!< true si un block d’extension est présent sinon false
-	std::wstring signature = L"";//!< la signature du block d’extension, identifie sa structure d'appartenance
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false; //!< si true alors le fichier de sortie contiendra le dump hexa de l'objet
+	int niveau = 0;//!< hiÃ©rarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	bool isPresent = false;//!< true si un block dâ€™extension est prÃ©sent sinon false
+	std::wstring signature = L"";//!< la signature du block dâ€™extension, identifie sa structure d'appartenance
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0) = 0;
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	virtual void clear() = 0;
 };
 
@@ -64,17 +60,16 @@ public:
 */
 struct UserPropertyViewDelegate {
 
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false;//!< si true alors le fichier de sortie contiendra le dump hexa de l'objet
-
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0) = 0;
 
-	/* liberation mémoire */
-	void clear() {}
+	/* liberation mÃ©moire */
+	void clear() {
+		log(3, L"ðŸ”ˆUserPropertyViewDelegate clear");
+	}
 };
 
 /***************************************************************************************************
@@ -82,41 +77,41 @@ struct UserPropertyViewDelegate {
 ****************************************************************************************************/
 
 /*! Permet d'extraire des extensionBlock d'un Buffer en fonction de leur signature
-* @param buffer en entrée contient les bits à parser des extensionblock
+* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
 * @param extensionBlocks pointeur sur un vecteur de Iextensionblock utiliser pour stocker les extensionBlock extraits du buffer
-* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-* @param is_zip précise si le shell item est un fichier zip, utilisé dans le traitement des extensionblocks, si le fichier est un zip ou assimilé alors les fils ont un format spécial, ne concerne que les fichiers, certains zip sont identifiés comme directory et dans ce cas pas de format special, ne concerne que les extensionblock beef0004
-* @param is_file précise si le shell item père est un fichier, utilisé dans le traitement des extensionblocks
+* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+* @param is_zip prÃ©cise si le shell item est un fichier zip, utilisÃ© dans le traitement des extensionblocks, si le fichier est un zip ou assimilÃ© alors les fils ont un format spÃ©cial, ne concerne que les fichiers, certains zip sont identifiÃ©s comme directory et dans ce cas pas de format special, ne concerne que les extensionblock beef0004
+* @param is_file prÃ©cise si le shell item pÃ¨re est un fichier, utilisÃ© dans le traitement des extensionblocks
 * @return void
 */
-void getExtensionBlock(LPBYTE buffer, std::vector<IExtensionBlock*>* extensionBlocks, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool* is_zip, bool is_file);
+void getExtensionBlock(LPBYTE buffer, std::vector<IExtensionBlock*>* extensionBlocks, int _niveau, bool* is_zip, bool is_file);
 
 /***************************************************************************************************
 * FLAGS
 ****************************************************************************************************/
 
-/*! La structure FileAttributesFlags définit des bits qui spécifient les attributs de fichier du lien cible, si la cible est un élément de système de fichiers. Les attributs du fichier peuvent être utilisés si la cible de liaison n'est pas disponible, ou si l'accès à la cible serait inefficaces.
-* Il est possible que les attributs d'éléments cibles ne soient pas synchronisés avec cette valeur.
-* Documentation à l'adresse https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/378f485c-0be9-47a4-a261-7df467c3c9c6
+/*! La structure FileAttributesFlags dÃ©finit des bits qui spÃ©cifient les attributs de fichier du lien cible, si la cible est un Ã©lÃ©ment de systÃ¨me de fichiers. Les attributs du fichier peuvent Ãªtre utilisÃ©s si la cible de liaison n'est pas disponible, ou si l'accÃ¨s Ã  la cible serait inefficaces.
+* Il est possible que les attributs d'Ã©lÃ©ments cibles ne soient pas synchronisÃ©s avec cette valeur.
+* Documentation Ã  l'adresse https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/378f485c-0be9-47a4-a261-7df467c3c9c6
 */
 struct FileAttributes {
 	bool ReadOnly = false; //!< Le fichier est en lecture seule.
-	bool Hidden = false; //!< Le fichier est masqué et n’est donc pas compris dans un listing de répertoires ordinaire. 
+	bool Hidden = false; //!< Le fichier est masquÃ© et nâ€™est donc pas compris dans un listing de rÃ©pertoires ordinaire. 
 	bool System = false; //!< le fichier est un fichier system.
-	bool Directory = false; //!< Le fichier est un répertoire. 
-	bool Archive = false; //!< Ce fichier est marqué à inclure dans une opération de sauvegarde incrémentielle.
-	bool Normal = false; //!< Le fichier est un fichier standard qui n’a pas d’attributs spéciaux. Cet attribut est valide uniquement s’il est utilisé seul.
-	bool Temporary = false; //!< e fichier est temporaire. Un fichier temporaire contient les données nécessaires quand une application s’exécute, mais qui ne le sont plus une fois l’exécution terminée. 
-	bool SparseFile = false; //!< Le fichier est un fichier partiellement alloué.Les fichiers partiellement alloués sont généralement de gros fichiers dont les données sont principalement des zéros.
-	bool ReparsePoint = false; //!< Le fichier contient un point d’analyse, qui est un bloc de données définies par l’utilisateur associé à un fichier ou à un répertoire. 
-	bool Compressed = false; //!< Le fichier est compressé.
-	bool Offline = false; //!< Le fichier est hors connexion. Les données du fichier ne sont pas immédiatement disponibles.
-	bool NotContentIndexed = false; //!< Le fichier ne sera pas indexé par le service d’indexation de contenu du système d’exploitation.
-	bool Encrypted = false; //!< Le fichier ou le répertoire est chiffré.Cela signifie pour un fichier, que toutes ses données sont chiffrées.Pour un répertoire, cela signifie que tous les fichiers et répertoires créés sont chiffrés par défaut.
+	bool Directory = false; //!< Le fichier est un rÃ©pertoire. 
+	bool Archive = false; //!< Ce fichier est marquÃ© Ã  inclure dans une opÃ©ration de sauvegarde incrÃ©mentielle.
+	bool Normal = false; //!< Le fichier est un fichier standard qui nâ€™a pas dâ€™attributs spÃ©ciaux. Cet attribut est valide uniquement sâ€™il est utilisÃ© seul.
+	bool Temporary = false; //!< e fichier est temporaire. Un fichier temporaire contient les donnÃ©es nÃ©cessaires quand une application sâ€™exÃ©cute, mais qui ne le sont plus une fois lâ€™exÃ©cution terminÃ©e. 
+	bool SparseFile = false; //!< Le fichier est un fichier partiellement allouÃ©.Les fichiers partiellement allouÃ©s sont gÃ©nÃ©ralement de gros fichiers dont les donnÃ©es sont principalement des zÃ©ros.
+	bool ReparsePoint = false; //!< Le fichier contient un point dâ€™analyse, qui est un bloc de donnÃ©es dÃ©finies par lâ€™utilisateur associÃ© Ã  un fichier ou Ã  un rÃ©pertoire. 
+	bool Compressed = false; //!< Le fichier est compressÃ©.
+	bool Offline = false; //!< Le fichier est hors connexion. Les donnÃ©es du fichier ne sont pas immÃ©diatement disponibles.
+	bool NotContentIndexed = false; //!< Le fichier ne sera pas indexÃ© par le service dâ€™indexation de contenu du systÃ¨me dâ€™exploitation.
+	bool Encrypted = false; //!< Le fichier ou le rÃ©pertoire est chiffrÃ©.Cela signifie pour un fichier, que toutes ses donnÃ©es sont chiffrÃ©es.Pour un rÃ©pertoire, cela signifie que tous les fichiers et rÃ©pertoires crÃ©Ã©s sont chiffrÃ©s par dÃ©faut.
 
 
 	/*! constructeur
-	* @param attr entier contenant les attribut du fichier. Le constructeur extrait les attributs de cet entier à l'aide masques binaires.
+	* @param attr entier contenant les attribut du fichier. Le constructeur extrait les attributs de cet entier Ã  l'aide masques binaires.
 	*/
 	FileAttributes(unsigned int attr);
 
@@ -125,44 +120,46 @@ struct FileAttributes {
 	*/
 	std::wstring to_wstring();
 
-	/* liberation mémoire */
-	void clear() {}
+	/* liberation mÃ©moire */
+	void clear() {
+		log(3, L"ðŸ”ˆFileAttributes clear");
+	}
 };
 
-/*! La structure LinkFlags définit des bits qui spécifient quelles structures de liaison de coquille sont Présents dans le format de fichier après la structure ShellLinkHeader.
-* Documentation à l'adresse https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/ae350202-3ba9-4790-9e9e-98935f4ee5af
+/*! La structure LinkFlags dÃ©finit des bits qui spÃ©cifient quelles structures de liaison de coquille sont PrÃ©sents dans le format de fichier aprÃ¨s la structure ShellLinkHeader.
+* Documentation Ã  l'adresse https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/ae350202-3ba9-4790-9e9e-98935f4ee5af
 */
 struct LinkFlags {
-	bool HasLinkTargetIDList = false; //!< Le lien shell est sauvegardé avec une liste d'identification d'objets (IDList). Si Ce bit est réglé, une LinkTargetIDList Structure DOIT suivre la ShellLinkHeader. Si ce bit n'est pas set, cette structure NE DOIT PAS être présente.
-	bool HasLinkInfo = false; //!< La liaison shell est sauvegardée avec des informations de lien. Si cette bit est réglé, un LinkInfo structure DOIT être présent. Si ce bit n'est pas réglé, cette structure NE DOIT PAS être présente.
-	bool HasName = false; //!< La liaison shell est sauvegardée avec une chaîne de nom. Si cette bit est réglé, une structure de String-STRING StringData DOIT être présent. Si ce bit n'est pas réglé, cette structure NE DOIT PAS être présente.
+	bool HasLinkTargetIDList = false; //!< Le lien shell est sauvegardÃ© avec une liste d'identification d'objets (IDList). Si Ce bit est rÃ©glÃ©, une LinkTargetIDList Structure DOIT suivre la ShellLinkHeader. Si ce bit n'est pas set, cette structure NE DOIT PAS Ãªtre prÃ©sente.
+	bool HasLinkInfo = false; //!< La liaison shell est sauvegardÃ©e avec des informations de lien. Si cette bit est rÃ©glÃ©, un LinkInfo structure DOIT Ãªtre prÃ©sent. Si ce bit n'est pas rÃ©glÃ©, cette structure NE DOIT PAS Ãªtre prÃ©sente.
+	bool HasName = false; //!< La liaison shell est sauvegardÃ©e avec une chaÃ®ne de nom. Si cette bit est rÃ©glÃ©, une structure de String-STRING StringData DOIT Ãªtre prÃ©sent. Si ce bit n'est pas rÃ©glÃ©, cette structure NE DOIT PAS Ãªtre prÃ©sente.
 	bool HasRelativePath = false; //!< The shell link is saved with a relative path string. If this bit is set, a RELATIVE_PATH StringData structure MUST be present. If this bit is not set, this structure MUST NOT be present.
-	bool HasWorkingDir = false; //!< La liaison shell est sauvegardée avec un répertoire de travail. Si ce bit est réglé, une structure de TRAVANT-DIR StringData DOIT être présent. Si ce bit n'est pas réglé, cette structure NE DOIT PAS être présente.
-	bool HasArguments = false;  //!< La liaison shell est sauvegardée avec des arguments de ligne de commande. Si ce bit est réglé, une structure de chaîne COMMAND-LINE-ARGUMENTS DOIT être présent. Si ce bit n'est pas réglé, cette structure NE DOIT PAS être présente.
-	bool HasIconLocation = false; //!< La liaison shell est sauvegardée avec une chaîne de localisation d'icône. Si ce bit est réglé, une structure de strate de chaîne ICON-LOCATIONDOIT être présent. Si ce bit n'est pas réglé, cette structure NE DOIT PAS être présente.
-	bool IsUnicode = false; //!< Le lien shell contient des chaînes codées Unicode. C'est ce que bit DEVRAIT être réglé. Si ce bit est défini, la section StringData contient Chaînes codées en codées par un code d'Unicode; sinon, il contient des chaînes qui sont codées en utilisant la page de code par défaut du système.
-	bool ForceNoLinkInfo = false; //!< La structure LinkInfo est ignorée.
-	bool HasExpString = false; //!< La liaison shell est sauvegardée avec un bloc de données EnvironnementVariable
-	bool RunInSeparateProcess = false; //!< La cible est exécutée dans une machine virtuelle séparée lorsque lancement d'une cible de liaison c'est une application de 16 bits.
-	bool Unused1 = false; //!< Un bit qui n'est pas défini et DOIT être ignoré.
-	bool HasDarwinID = false; //!< La liaison à coque est sauvegardée avec un DarwinDataBlock
-	bool RunAsUser = false; //!< L'application est exécutée en tant qu'utilisateur différent lorsque le Une cible de la liaison de l'obus est activée.
-	bool HasExpIcon = false; //!< La liaison shell est sauvegardée avec un IconEnvironmentDataBlock
-	bool NoPidlAlias = false; //! L'emplacement du système de fichiers est représenté dans l'espace de noms de shell lorsque le chemin à un article est analysé en une liste d'ID.
-	bool Unused2 = false; //!< Un bit qui n'est pas défini et DOIT être ignoré.
-	bool RunWithShimLayer = false; //!< La liaison shell est sauvegardée avec un ShimDataBlock
-	bool ForceNoLinkTrack = false; //!< Le TrackerDataBlock est ignorée.
-	bool EnableTargetMetadata = false; //!< La liaison à l'obus tente de collecter les propriétés cibles et les stocker dans le PropertyStoreDataBlock lorsque la cible de liaison est définie.
-	bool DisableLinkPathTracking = false; //!< Le EnvironmentVariableDataBlock est ignoré.
-	bool DisableKnownFolderTracking = false; //!< Le SpecialFolderDataBlock et le KnownFolderDataBlock sont ignorés lors du chargement de la liaison de la coque. Si ce bit est défini, ces données supplémentaires blocs NE DEVRAIT PAS être sauvegardés lors de la sauvegarde de la liaison shell.
-	bool DisableKnownFolderAlias = false; //!< Si le lien a une KnownFolderDataBlock, la forme nonalias de la connue IDList du dossier souhaite être utilisée lors de la traduction de la cible IDList à la le temps de chargement de la liaison.
-	bool AllowLinkToLink = false; //!< Création d'un lien qui fait référence à un autre lien est activé. Sinon, en spécifier un lien comme IDList cible NE DEVRAIT PAS être autorisés.
-	bool UnaliasOnSave = false; //!< Lors de la sauvegarde d'un lien pour lequel la cible IDList est sous un dossier connu, soit la forme nonalias de ce dossier connu, soit le dossier connu de l'IDList de cible DEVRAIT être utilisé.
-	bool PreferEnvironmentPath = false; //!< La cible L'IDLIST NE DEVRAIT PAS être stockée; à la place, le chemin spécifié dans le bloc de données de l'environnement DEVRAIT être utilisé pour se référer à la cible.
-	bool KeepLocalIDListForUNCTarget = false; //!< Lorsque l'objectif est un nom UNC qui fait référence à un sur une machine locale, le chemin local IDLIST dans le PropertyStoreDataBlock DEVRAIT être stocké, de sorte qu'il puisse être utilisé lorsque la liaison est chargée sur la machine locale.
+	bool HasWorkingDir = false; //!< La liaison shell est sauvegardÃ©e avec un rÃ©pertoire de travail. Si ce bit est rÃ©glÃ©, une structure de TRAVANT-DIR StringData DOIT Ãªtre prÃ©sent. Si ce bit n'est pas rÃ©glÃ©, cette structure NE DOIT PAS Ãªtre prÃ©sente.
+	bool HasArguments = false;  //!< La liaison shell est sauvegardÃ©e avec des arguments de ligne de commande. Si ce bit est rÃ©glÃ©, une structure de chaÃ®ne COMMAND-LINE-ARGUMENTS DOIT Ãªtre prÃ©sent. Si ce bit n'est pas rÃ©glÃ©, cette structure NE DOIT PAS Ãªtre prÃ©sente.
+	bool HasIconLocation = false; //!< La liaison shell est sauvegardÃ©e avec une chaÃ®ne de localisation d'icÃ´ne. Si ce bit est rÃ©glÃ©, une structure de strate de chaÃ®ne ICON-LOCATIONDOIT Ãªtre prÃ©sent. Si ce bit n'est pas rÃ©glÃ©, cette structure NE DOIT PAS Ãªtre prÃ©sente.
+	bool IsUnicode = false; //!< Le lien shell contient des chaÃ®nes codÃ©es Unicode. C'est ce que bit DEVRAIT Ãªtre rÃ©glÃ©. Si ce bit est dÃ©fini, la section StringData contient ChaÃ®nes codÃ©es en codÃ©es par un code d'Unicode; sinon, il contient des chaÃ®nes qui sont codÃ©es en utilisant la page de code par dÃ©faut du systÃ¨me.
+	bool ForceNoLinkInfo = false; //!< La structure LinkInfo est ignorÃ©e.
+	bool HasExpString = false; //!< La liaison shell est sauvegardÃ©e avec un bloc de donnÃ©es EnvironnementVariable
+	bool RunInSeparateProcess = false; //!< La cible est exÃ©cutÃ©e dans une machine virtuelle sÃ©parÃ©e lorsque lancement d'une cible de liaison c'est une application de 16 bits.
+	bool Unused1 = false; //!< Un bit qui n'est pas dÃ©fini et DOIT Ãªtre ignorÃ©.
+	bool HasDarwinID = false; //!< La liaison Ã  coque est sauvegardÃ©e avec un DarwinDataBlock
+	bool RunAsUser = false; //!< L'application est exÃ©cutÃ©e en tant qu'utilisateur diffÃ©rent lorsque le Une cible de la liaison de l'obus est activÃ©e.
+	bool HasExpIcon = false; //!< La liaison shell est sauvegardÃ©e avec un IconEnvironmentDataBlock
+	bool NoPidlAlias = false; //! L'emplacement du systÃ¨me de fichiers est reprÃ©sentÃ© dans l'espace de noms de shell lorsque le chemin Ã  un article est analysÃ© en une liste d'ID.
+	bool Unused2 = false; //!< Un bit qui n'est pas dÃ©fini et DOIT Ãªtre ignorÃ©.
+	bool RunWithShimLayer = false; //!< La liaison shell est sauvegardÃ©e avec un ShimDataBlock
+	bool ForceNoLinkTrack = false; //!< Le TrackerDataBlock est ignorÃ©e.
+	bool EnableTargetMetadata = false; //!< La liaison Ã  l'obus tente de collecter les propriÃ©tÃ©s cibles et les stocker dans le PropertyStoreDataBlock lorsque la cible de liaison est dÃ©finie.
+	bool DisableLinkPathTracking = false; //!< Le EnvironmentVariableDataBlock est ignorÃ©.
+	bool DisableKnownFolderTracking = false; //!< Le SpecialFolderDataBlock et le KnownFolderDataBlock sont ignorÃ©s lors du chargement de la liaison de la coque. Si ce bit est dÃ©fini, ces donnÃ©es supplÃ©mentaires blocs NE DEVRAIT PAS Ãªtre sauvegardÃ©s lors de la sauvegarde de la liaison shell.
+	bool DisableKnownFolderAlias = false; //!< Si le lien a une KnownFolderDataBlock, la forme nonalias de la connue IDList du dossier souhaite Ãªtre utilisÃ©e lors de la traduction de la cible IDList Ã  la le temps de chargement de la liaison.
+	bool AllowLinkToLink = false; //!< CrÃ©ation d'un lien qui fait rÃ©fÃ©rence Ã  un autre lien est activÃ©. Sinon, en spÃ©cifier un lien comme IDList cible NE DEVRAIT PAS Ãªtre autorisÃ©s.
+	bool UnaliasOnSave = false; //!< Lors de la sauvegarde d'un lien pour lequel la cible IDList est sous un dossier connu, soit la forme nonalias de ce dossier connu, soit le dossier connu de l'IDList de cible DEVRAIT Ãªtre utilisÃ©.
+	bool PreferEnvironmentPath = false; //!< La cible L'IDLIST NE DEVRAIT PAS Ãªtre stockÃ©e; Ã  la place, le chemin spÃ©cifiÃ© dans le bloc de donnÃ©es de l'environnement DEVRAIT Ãªtre utilisÃ© pour se rÃ©fÃ©rer Ã  la cible.
+	bool KeepLocalIDListForUNCTarget = false; //!< Lorsque l'objectif est un nom UNC qui fait rÃ©fÃ©rence Ã  un sur une machine locale, le chemin local IDLIST dans le PropertyStoreDataBlock DEVRAIT Ãªtre stockÃ©, de sorte qu'il puisse Ãªtre utilisÃ© lorsque la liaison est chargÃ©e sur la machine locale.
 
 	/*! constructeur
-	* @param _flags entier contenant les flags du lien. Le constructeur extrait les flags de cet entier à l'aide masques binaires.
+	* @param _flags entier contenant les flags du lien. Le constructeur extrait les flags de cet entier Ã  l'aide masques binaires.
 	*/
 	LinkFlags(unsigned int _flags);
 
@@ -171,20 +168,22 @@ struct LinkFlags {
 	*/
 	std::wstring to_wstring();
 
-	/* liberation mémoire */
-	void clear() {}
+	/* liberation mÃ©moire */
+	void clear() {
+		log(3, L"ðŸ”ˆLinkFlags clear");
+	}
 };
 
 
-/*! La structure ShellVolumeFlags définit des bits qui spécifient le type de volume shell.
+/*! La structure ShellVolumeFlags dÃ©finit des bits qui spÃ©cifient le type de volume shell.
 */
 struct ShellVolumeFlags {
 	bool None = false; //!< Pas d'information sur le volume
-	bool SystemFolder = false; //!< le volume est répertoire system
+	bool SystemFolder = false; //!< le volume est rÃ©pertoire system
 	bool LocalDisk = false; //!< le volume et un disque local
 
 	/*! constructeur
-	* @param i octet contenant les données à traiter. Le constructeur extrait les données de cette valeur à l'aide masques binaires.
+	* @param i octet contenant les donnÃ©es Ã  traiter. Le constructeur extrait les donnÃ©es de cette valeur Ã  l'aide masques binaires.
 	*/
 	ShellVolumeFlags(unsigned char i);
 
@@ -193,11 +192,13 @@ struct ShellVolumeFlags {
 	*/
 	std::wstring to_wstring();
 
-	/* liberation mémoire */
-	void clear() {}
+	/* liberation mÃ©moire */
+	void clear() {
+		log(3, L"ðŸ”ˆShellVolumeFlags clear");
+	}
 };
 
-/*! La structure FsFlags définit des bits qui spécifient le type de lien.
+/*! La structure FsFlags dÃ©finit des bits qui spÃ©cifient le type de lien.
 */
 struct FsFlags {
 	bool IS_DIRECTORY = false; //!< il s'agit d'un repertoire
@@ -207,7 +208,7 @@ struct FsFlags {
 	bool HAS_CLSID = false; //!< le lien a un guid de classe
 
 	/*! constructeur
-	* @param i octet contenant les données à traiter. Le constructeur extrait les données de cette valeur à l'aide masques binaires.
+	* @param i octet contenant les donnÃ©es Ã  traiter. Le constructeur extrait les donnÃ©es de cette valeur Ã  l'aide masques binaires.
 	*/
 	FsFlags(unsigned char i);
 
@@ -216,8 +217,10 @@ struct FsFlags {
 	*/
 	std::wstring to_wstring();
 
-	/* liberation mémoire */
-	void clear() {}
+	/* liberation mÃ©moire */
+	void clear() {
+		log(3, L"ðŸ”ˆFsFlags clear");
+	}
 };
 
 
@@ -225,102 +228,101 @@ struct FsFlags {
 * SPS
 ****************************************************************************************************/
 
-/*! Structure représentent une des valeurs d'un SPS.
+/*! Structure reprÃ©sentent une des valeurs d'un SPS.
 */
 struct SPSValue {
-	int niveau = 0; //!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	int niveau = 0; //!< hiÃ©rarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	unsigned int size = 0; //! taille de l'objet
 	unsigned short int valueType = 0; //! identifie le type de valeur
 	std::wstring guid = L""; //! guid de la valeur
 	std::wstring id = L""; // id de la valeur
 	std::wstring name = L""; // nom de la valeur
-	std::wstring value = L""; // valeur de la valeur, peut être un objet auquel cas il est stocké au format json pour compatibilité avec le format json de sortie.
-	bool valueIsObject = false; // true si le contenu du champ value est un objet. Utilisé pour la mise en forme du fichier json de sortie.
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false; //!< si true alors le fichier de sortie contiendra le dump hexa de l'objet
+	std::wstring value = L""; // valeur de la valeur, peut Ãªtre un objet auquel cas il est stockÃ© au format json pour compatibilitÃ© avec le format json de sortie.
+	bool valueIsObject = false; // true si le contenu du champ value est un objet. UtilisÃ© pour la mise en forme du fichier json de sortie.
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
 	* @param _guid guid correspondant au SPS auquel appartient le SPSVALUE
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau);
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	void clear() {}
+	/* liberation mÃ©moire */
+	void clear() {
+		log(3, L"ðŸ”ˆSPSValue clear");
+	}
 };
 
-/*! Structure représentent un Serialized Property Sets.
+/*! Structure reprÃ©sentent un Serialized Property Sets.
 */
 struct SPS {
-	int niveau = 0; //!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	int niveau = 0; //!< hiÃ©rarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	unsigned int size = 0; //!< Taille de l'objet en octets
-	unsigned int version = 0; //!< version de l'objet permettant de définir sa structure interne
+	unsigned int version = 0; //!< version de l'objet permettant de dÃ©finir sa structure interne
 	std::wstring guid = L""; //!< GUID de l'objet
-	std::wstring FriendlyName = L"";//!< nom associé au GUID
-	std::vector<SPSValue> values; //!< Tableau contenant les différents SPSVALUE de l'objet SPS
-	bool _debug = false; //!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false;//!< si true alors le fichier de sortie contiendra le dump hexa de l'objet
+	std::wstring FriendlyName = L"";//!< nom associÃ© au GUID
+	std::vector<SPSValue> values; //!< Tableau contenant les diffÃ©rents SPSVALUE de l'objet SPS
 
-	/*! constructeur par défaut
+	/*! constructeur par dÃ©faut
 	*/
 	SPS() {};
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	SPS(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	SPS(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	void clear() {}
+	/* liberation mÃ©moire */
+	void clear() {
+		log(3, L"ðŸ”ˆSPS clear");
+	}
 };
 
-void getShellItem(LPBYTE buffer, IShellItem** p, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool Parentiszip = false);
+void getShellItem(LPBYTE buffer, IShellItem** p, int _niveau, bool Parentiszip = false);
 
 /***************************************************************************************************
 * ID LIST
 ****************************************************************************************************/
-/*! type représentant une liste de Shell Item
+/*! type reprÃ©sentant une liste de Shell Item
 */
 struct IdList {
-	int niveau = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	int niveau = 0;//!< hiÃ©rarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	unsigned int item_size = 0; //!< Taille de l'objet en octets
 	unsigned char type_char = NULL; //!< Type de l'objet
 	std::wstring type_hex = L""; //!< type de l'objet en hexa
 	std::wstring type = L""; //!< nom correspondant au type de l'objet
 	std::wstring pData = L""; //!< dump hexa de l'objet si besoin de l'include dans le json de sortie
 	IShellItem* shellItem = NULL; //!< pointeur vers l'objet shell item correspondant au type
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false;//!< si true alors le fichier de sortie contiendra le dump hexa de l'objet
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	IdList(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool Parentiszip = false);
+	IdList(LPBYTE buffer, int _niveau, bool Parentiszip = false);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
+		log(3, L"ðŸ”ˆIdList clear");
 		delete shellItem;
 	}
 };
@@ -337,115 +339,125 @@ struct Beef0000 : IExtensionBlock {
 	std::wstring identifier2 = L""; //!< nom correspondant au GUID
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0000(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0000(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0000 clear");
+	}
 };
 
 /*!  Extension block related to CFileUrlStub object. Used for display name?
 */
 struct Beef0001 : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block"; //!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block"; //!< message Ã  afficher dans le json
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0001(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0001(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0001 clear");
+	}
 };
 
 /*! Extension block related to CFileUrlStub object. Used for display name?
 */
 struct Beef0002 : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block"; //!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block"; //!< message Ã  afficher dans le json
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0002(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0002(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0002 clear");
+	}
 };
 
 /*! Extension block related to CFSFolder and CFileSysItemString object. Used for junction information?
 */
 struct Beef0003 : IExtensionBlock {
 	std::wstring guid = L""; //!< identifiant GUID
-	std::wstring identifier = L"";//!< nom associé au GUID
+	std::wstring identifier = L"";//!< nom associÃ© au GUID
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0003(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0003(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0003 clear");
+	}
 };
 
 /*! Extension block related to CFSFolder and CFileSysItem object.
-	* pour les shellbags, si le père est un zip ou assimilé alors les fils ont un format spécial, il faut donc identifier si le père est un zip
-	* ne concerne que les fichiers, certains zip sont identifiés comme directory et dans ce cas pas de format special
+	* pour les shellbags, si le pÃ¨re est un zip ou assimilÃ© alors les fils ont un format spÃ©cial, il faut donc identifier si le pÃ¨re est un zip
+	* ne concerne que les fichiers, certains zip sont identifiÃ©s comme directory et dans ce cas pas de format special
 	* ne concerne que les extensionblock beef0004
 */
 struct Beef0004 : IExtensionBlock {
-	FILETIME creationDate = { 0 }; //!< date de création
-	FILETIME creationDateUtc = { 0 };//!< date de création au format UTC
-	FILETIME accessedDate = { 0 }; //!< date d'accès
-	FILETIME accessedDateUtc = { 0 }; //!< date d'accès au format UTC
+	FILETIME creationDate = { 0 }; //!< date de crÃ©ation
+	FILETIME creationDateUtc = { 0 };//!< date de crÃ©ation au format UTC
+	FILETIME accessedDate = { 0 }; //!< date d'accÃ¨s
+	FILETIME accessedDateUtc = { 0 }; //!< date d'accÃ¨s au format UTC
 	unsigned short int ExtensionVersion=0;
 	std::wstring longName = L"";
 	std::wstring localizedName = L"";
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
-	* @param is_zip est un booléen indiquant que l'objet est une archive compressée
-	* @param is_file est un booléen indiquant que l'objet est un fichier
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
+	* @param is_zip est un boolÃ©en indiquant que l'objet est une archive compressÃ©e
+	* @param is_file est un boolÃ©en indiquant que l'objet est un fichier
 	*/
-	Beef0004(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool* is_zip, bool is_file);
+	Beef0004(LPBYTE buffer, int _niveau, bool* is_zip, bool is_file);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0004 clear");
+	}
 };
 
 /*! Extension block related to CFSFolder and CFileSysItem object. Used for personalized name?
@@ -454,109 +466,119 @@ struct Beef0006 : IExtensionBlock {
 	std::wstring username = L"";
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0006(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0006(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0006 clear");
+	}
 };
 
 /*! Extension block related to CBitBucket object.
 */
 struct Beef0008 : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block"; //!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block"; //!< message Ã  afficher dans le json
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0008(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0008(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0008 clear");
+	}
 };
 
 /*! Extension block related to CBitBucket object. Used for original path?
 */
 struct Beef0009 : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block"; //!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block"; //!< message Ã  afficher dans le json
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0009(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0009(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0009 clear");
+	}
 };
 
 /*! Extension block related to CMergedFolder object. Used for source count or sub shell item list?
 */
 struct Beef000a : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block"; //!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block"; //!< message Ã  afficher dans le json
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef000a(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef000a(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef000a clear");
+	}
 };
 
 /*! Extension block  related to CControlPanelFolder object. Used for display name/CPL category?
 */
 struct Beef000c : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block"; //!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block"; //!< message Ã  afficher dans le json
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef000c(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef000c(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef000c clear");
+	}
 };
 
 /*! Extension block related to unknown.
 */
 struct Beef000e : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block"; //!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block"; //!< message Ã  afficher dans le json
 	std::wstring guid = L"";//!< Identifiant GUID
 	std::wstring identifier = L"";//!< com correspondant au GUID
 	std::vector<IExtensionBlock*> extensionblocks; //!< tableau d'extension blocks
@@ -564,19 +586,20 @@ struct Beef000e : IExtensionBlock {
 	std::vector<IShellItem*> ishellitems;//!< tableau de shellitems
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef000e(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef000e(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef000e clear");
 		for (IExtensionBlock* temp : extensionblocks)
 			delete temp;
 		for (IShellItem* temp : ishellitems)
@@ -590,61 +613,67 @@ struct Beef0010 : IExtensionBlock {
 	SPS sps;
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0010(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0010(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0010 clear");
+	}
 };
 
 /*! Extension block related to unknown.
 */
 struct Beef0013 : IExtensionBlock {
-	std::wstring message = L"The purpose of this extension block is unknown"; //!< message à afficher dans le json
+	std::wstring message = L"The purpose of this extension block is unknown"; //!< message Ã  afficher dans le json
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0013(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0013(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0013 clear");
+	}
 };
 
 /*! The extension block has seen to be used with the CUri class identifier which is the GUID "df2fce13-25ec-45bb-9d4c-cecd47c2430c". The CUri data could be a Vista and/or MSIE 7 specific extension.
 */
 struct Beef0014 : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block";//!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block";//!< message Ã  afficher dans le json
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0014(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0014(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0014 clear");
+	}
 };
 
 /*! Extension block related to unknown.
@@ -653,40 +682,44 @@ struct Beef0016 : IExtensionBlock {
 	std::wstring value = L"";
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0016(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0016(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0016 clear");
+	}
 };
 
 /*!  Extension block  related to Shell item from Windows 7 BagMRU (Search Home).
 */
 struct Beef0017 : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block";//!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block";//!< message Ã  afficher dans le json
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0017(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0017(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0017 clear");
+	}
 };
 
 /*! Extension block  seen in  HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FolderTypes\{0B2BAAEB-0042-4DCA-AA4D-3EE8648D03E5}
@@ -698,19 +731,21 @@ struct Beef0019 : IExtensionBlock {
 	std::wstring identifier2 = L"";//!< nom correspondant au GUID
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0019(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0019(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0019 clear");
+	}
 };
 
 /*! Extension block related to unknown.
@@ -719,40 +754,44 @@ struct Beef001a : IExtensionBlock {
 	std::wstring fileDocumentTypeString = L"";
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef001a(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef001a(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef001a clear");
+	}
 };
 
 /*! Extension block related to unknown.
 */
 struct Beef001b : IExtensionBlock {
-	std::wstring fileDocumentTypeString = L""; //!< chaîne indiquant le type de document
+	std::wstring fileDocumentTypeString = L""; //!< chaÃ®ne indiquant le type de document
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef001b(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef001b(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef001b clear");
+	}
 };
 
 /*! Extension block related to unknown.
@@ -761,19 +800,21 @@ struct Beef001d : IExtensionBlock {
 	std::wstring executable = L"";
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef001d(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef001d(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef001d clear");
+	}
 };
 
 /*! Extension block related to unknown.
@@ -782,19 +823,21 @@ struct Beef001e : IExtensionBlock {
 	std::wstring pinType = L"";
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef001e(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef001e(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef001e clear");
+	}
 };
 
 /*! Extension block related to unknown.
@@ -803,19 +846,21 @@ struct Beef0021 : IExtensionBlock {
 	SPS sps;  //!< un objet SPS
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0021(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0021(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0021 clear");
+	}
 };
 
 /*! Extension block related to unknown.
@@ -824,19 +869,21 @@ struct Beef0024 : IExtensionBlock {
 	SPS sps;  //!< un objet SPS
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0024(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0024(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0024 clear");
+	}
 };
 
 /*! Extension block related to unknown.
@@ -846,48 +893,51 @@ struct Beef0025 : IExtensionBlock {
 	FILETIME filetime2 = { 0 };//!< date  au format filetime
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0025(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0025(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0025 clear");
+	}
 };
 
 /*! Extension block related to unknown.
 */
 struct Beef0026 : IExtensionBlock {
-	FILETIME ctimeUtc = { 0 }; //!< date de création
-	FILETIME ctime = { 0 };//!< date de création au format UTC
+	FILETIME ctimeUtc = { 0 }; //!< date de crÃ©ation
+	FILETIME ctime = { 0 };//!< date de crÃ©ation au format UTC
 	FILETIME mtimeUtc = { 0 };//!< date de modification
 	FILETIME mtime = { 0 };//!< date de modification au format UTC
-	FILETIME atimeUtc = { 0 };//!< date d'accès
-	FILETIME atime = { 0 };//!< date d'accès au format UTC
+	FILETIME atimeUtc = { 0 };//!< date d'accÃ¨s
+	FILETIME atime = { 0 };//!< date d'accÃ¨s au format UTC
 	IdList* idlist = NULL;//pointeur vers une liste de shell item (idlist)
 	IShellItem* shellitem = NULL;//pointeur vers un shelitem
 	SPS* sps = NULL;//pointeur vers un SPS
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0026(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0026(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0026 clear");
 		delete shellitem;
 		delete sps;
 		delete idlist;
@@ -900,40 +950,44 @@ struct Beef0027 : IExtensionBlock {
 	SPS sps; //!< un objet SPS
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0027(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0027(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0027 clear");
+	}
 };
 
 /*! Extension block related to unknown.
 */
 struct Beef0029 : IExtensionBlock {
-	std::wstring message = L"The purpose of this extension block is unknown"; //!< message à afficher dans le json
+	std::wstring message = L"The purpose of this extension block is unknown"; //!< message Ã  afficher dans le json
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser des extensionblock
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Beef0029(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Beef0029(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆBeef0029 clear");
+	}
 };
 
 /********************************************************************************************************************
@@ -943,53 +997,56 @@ struct Beef0029 : IExtensionBlock {
 /*! Volume Shell Item
 */
 struct VolumeShellItem : IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
+	bool isPresent = false; //!< l'objet est-il prÃ©sent, utilisÃ© pour le formatage du json
 	ShellVolumeFlags flags = { 0 }; //!< drapeaux correspondant aux options du type de volume flags
 	std::wstring name = L""; //!< nom du volume
 	std::wstring guid = L""; //!< GUID du volume
-	std::wstring identifier = L""; //!< nom associé au GUID
+	std::wstring identifier = L""; //!< nom associÃ© au GUID
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
+	* @param buffer en entrÃ©e contient les bits Ã  parser de l'item
 	* @param type_char est le type d'objet au format character
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆVolumeShellItem clear");
+	}
 };
 
 /*! Control panel Shell Item
 */
 struct ControlPanel : IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
+	bool isPresent = false; //!< l'objet est-il prÃ©sent, utilisÃ© pour le formatage du json
 	std::wstring guid = L"";//!< identifiant GUID
-	std::wstring identifier = L""; //!< nom associé au GUID
+	std::wstring identifier = L""; //!< nom associÃ© au GUID
 	std::vector <IExtensionBlock*> extensionBlocks; //!< tableau d'Extension Block
 
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
+	* @param buffer en entrÃ©e contient les bits Ã  parser de l'item
 	* @param item_size est la taille totale de l'objet
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	virtual void clear() {
+		log(3, L"ðŸ”ˆControlPanel clear");
 		for (IExtensionBlock* temp : extensionBlocks)
 			delete temp;
 	}
@@ -998,274 +1055,288 @@ struct ControlPanel : IShellItem {
 /*! Control Panel Category Shell Item
 */
 struct ControlPanelCategory :IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
+	bool isPresent = false; //!< l'objet est-il prÃ©sent, utilisÃ© pour le formatage du json
 	std::wstring id = L""; //!< identifiant
 	std::vector <IExtensionBlock*> extensionBlocks; //!< tableau d'Extension Block
 
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser de l'item
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	ControlPanelCategory(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	ControlPanelCategory(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	virtual void clear() {
+		log(3, L"ðŸ”ˆControlPanelCategory clear");
 		for (IExtensionBlock* temp : extensionBlocks)
 			delete temp;
 	}
 };
 
-/*! Retourne le type de valeur de la SPSVALUE à partir du code hexa
+/*! Retourne le type de valeur de la SPSVALUE Ã  partir du code hexa
 */
 std::wstring get_type(unsigned int type);
 
-/*!  Retourne le valeur de la SPSVALUE à partir de son type
+/*!  Retourne le valeur de la SPSVALUE Ã  partir de son type
 */
-void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int niveau, std::wstring* value, bool* valueIsObject, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int niveau, std::wstring* value, bool* valueIsObject);
 
-/*! Structure définissant le format d'un Property à l’intérieur des UserPropertyView
+/*! Structure dÃ©finissant le format d'un Property Ã  lâ€™intÃ©rieur des UserPropertyView
 */
 struct Property {
-	int niveau = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	int niveau = 0;//!< hiÃ©rarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	unsigned int id = 0; //!< identifiant de la property
 	unsigned short int type = 0; //!< type de la property
 	unsigned int size = 0; //!< taille de la property
 	std::wstring guid = L""; //! identifiant GUID
-	std::wstring FriendlyName = L""; //!< nom associé au guid
+	std::wstring FriendlyName = L""; //!< nom associÃ© au guid
 	std::wstring value = L"";//!< valeur de la property
 	bool valueIsObject = false; //! vrai si la valeur est un objet, sinon la valeur est un string
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false;//!< si true alors le fichier de sortie contiendra le dump hexa de l'objet
-
+	
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser de l'item
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	Property(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	Property(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆProperty clear");
+	}
 };
 
-/*! Structure définissant le format d'un UserPropertyView de signature 0xC01
+/*! Structure dÃ©finissant le format d'un UserPropertyView de signature 0xC01
 */
 struct UserPropertyView0xC01 : UserPropertyViewDelegate {
-	unsigned int niveau = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	unsigned int niveau = 0;//!< hiÃ©rarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	std::wstring folder = L""; //!< nom du repertoire
 	std::wstring fullurl = L""; //! url correspondante
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser de l'item
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	UserPropertyView0xC01(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UserPropertyView0xC01(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆUserPropertyView0xC01 clear");
+	}
 
 };
 
-/*! Structure définissant le format d'un UserPropertyView de type 0x23febee
+/*! Structure dÃ©finissant le format d'un UserPropertyView de type 0x23febee
 */
 struct UserPropertyView0x23febbee : UserPropertyViewDelegate {
-	unsigned int niveau = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	unsigned int niveau = 0;//!< hiÃ©rarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	std::wstring guid = L""; //!< identifiant GUID
-	std::wstring FriendlyName = L""; //!< nom associé au GUID
+	std::wstring FriendlyName = L""; //!< nom associÃ© au GUID
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser de l'item
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	UserPropertyView0x23febbee(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UserPropertyView0x23febbee(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆUserPropertyView0x23febbee clear");
+	}
 };
 
-/*! Structure définissant le format d'un UserPropertyView de type 0x7192006
+/*! Structure dÃ©finissant le format d'un UserPropertyView de type 0x7192006
 */
 struct UserPropertyView0x07192006 : UserPropertyViewDelegate {
-	unsigned int niveau = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	unsigned int niveau = 0;//!< hiÃ©rarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	FILETIME modified = { 0 }; //!< date de modification
 	FILETIME modifiedUtc = { 0 };//!< date de modification au format UTC
-	FILETIME created = { 0 }; //!< date de création
-	FILETIME createdUtc = { 0 }; //!< date de création au format UTC
+	FILETIME created = { 0 }; //!< date de crÃ©ation
+	FILETIME createdUtc = { 0 }; //!< date de crÃ©ation au format UTC
 	std::wstring folderName1 = L""; //!< nom du repertoire
 	std::wstring folderName2 = L""; //!< nom du repertoire
 	std::wstring folderIdentifier = L""; //!< identifiant du repertoire
 	std::wstring guidClass = L""; //!< identifiant GUID de la classe
-	std::wstring FriendlyName = L""; //!< nom associé au GUID de la classe
+	std::wstring FriendlyName = L""; //!< nom associÃ© au GUID de la classe
 	std::vector<Property> properties; //!< Tableau de Property
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser de l'item
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	UserPropertyView0x07192006(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UserPropertyView0x07192006(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆUserPropertyView0x07192006 clear");
+	}
 };
 
-/*! Structure définissant le format d'un UserPropertyView de type 0x10312005
+/*! Structure dÃ©finissant le format d'un UserPropertyView de type 0x10312005
 */
 struct UserPropertyView0x10312005 : UserPropertyViewDelegate {
-	unsigned int niveau = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
-	std::wstring name = L"";//!< nom  de la propriété
-	std::wstring identifier = L""; //!< identifiant de la propriété
-	std::wstring filesystem = L"";//!< nom du système de fichier
+	unsigned int niveau = 0;//!< hiÃ©rarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	std::wstring name = L"";//!< nom  de la propriÃ©tÃ©
+	std::wstring identifier = L""; //!< identifiant de la propriÃ©tÃ©
+	std::wstring filesystem = L"";//!< nom du systÃ¨me de fichier
 	std::wstring guidClass = L""; //!< identifiant GUID de classe
-	std::wstring FriendlyName = L""; //!< nom associé au GUID de classe
+	std::wstring FriendlyName = L""; //!< nom associÃ© au GUID de classe
 	std::vector<std::wstring> guidstrings; //!< tableau de GUID
 	std::vector<Property> properties;//!< tableau de Property
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser de l'item
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	UserPropertyView0x10312005(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UserPropertyView0x10312005(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆUserPropertyView0x10312005 clear");
+	}
 };
 
-/*! Structure définissant le format d'un UserPropertyView shell item
+/*! Structure dÃ©finissant le format d'un UserPropertyView shell item
 */
 struct UsersPropertyView :IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
-	unsigned short int totalsize = 0; //!< taille totale de l’objet
-	unsigned short int dataSize = 0; //!< taille des données
+	bool isPresent = false; //!< l'objet est-il prÃ©sent, utilisÃ© pour le formatage du json
+	unsigned short int totalsize = 0; //!< taille totale de lâ€™objet
+	unsigned short int dataSize = 0; //!< taille des donnÃ©es
 	unsigned int signature = 0; //!< signature de l"objet
-	unsigned short int SPSDataSize = 0; //!< taille des données SPS
+	unsigned short int SPSDataSize = 0; //!< taille des donnÃ©es SPS
 	unsigned short int identifierSize = 0;//!< taille de l'identifier
-	unsigned int dataOffset = 0; //!< Offset des données
+	unsigned int dataOffset = 0; //!< Offset des donnÃ©es
 	unsigned short int extensionOffset = 0; //!< Offset des extension blocks
 	unsigned short int spsOffset = 0;//!< offset des SPS
 	std::vector<SPS> SPSs; //!< tableau contenant les SPS
 	std::vector<IExtensionBlock*> extensionBlocks; //!< tableau contenant les extension blocks
 	std::wstring guid = L"";//!< identifiant GUID
-	std::wstring identifier = L"";//!< nom associé au GUID
-	UserPropertyViewDelegate* delegate = NULL; //! UsersPropertyView déléguée
+	std::wstring identifier = L"";//!< nom associÃ© au GUID
+	UserPropertyViewDelegate* delegate = NULL; //! UsersPropertyView dÃ©lÃ©guÃ©e
 
-	/*! constructeur par défaut
+	/*! constructeur par dÃ©faut
 	*/
 	UsersPropertyView() {};
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser de l'item
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	UsersPropertyView(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UsersPropertyView(LPBYTE buffer, int _niveau);
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	virtual void clear() {
+		log(3, L"ðŸ”ˆUsersPropertyView clear");
 		for (IExtensionBlock* temp : extensionBlocks)
 			delete temp;
 		delete delegate;
 	}
 };
 
-/*! Structure définissant le format d'un RootFolder Shell Item
+/*! Structure dÃ©finissant le format d'un RootFolder Shell Item
 */
 struct RootFolder :IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
+	bool isPresent = false; //!< l'objet est-il prÃ©sent, utilisÃ© pour le formatage du json
 	std::wstring sortIndex = L""; //!w index de tri
 	std::wstring guid = L"";//!< identifiant GUID
-	std::wstring identifier = L"";//!< nom associé au GUID
+	std::wstring identifier = L"";//!< nom associÃ© au GUID
 	std::vector<SPS> SPSs; //!< tableau de SPS
-	//std::vector<IExtensionBlock*> extensionBlocks; // TODO des extension blocks sont présent avec le type GUID mais on retrouve les même datas dans les SPS donc on passe
+	//std::vector<IExtensionBlock*> extensionBlocks; // TODO des extension blocks sont prÃ©sent avec le type GUID mais on retrouve les mÃªme datas dans les SPS donc on passe
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser de l'item
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	RootFolder(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	RootFolder(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆRootFolder clear");
+	}
 };
 
-/*! Structure définissant le format d'un Network Shell Item
+/*! Structure dÃ©finissant le format d'un Network Shell Item
 */
 struct NetworkShellItem :IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
+	bool isPresent = false; //!< l'objet est-il prÃ©sent, utilisÃ© pour le formatage du json
 	std::wstring subtypename = L"";//!< nom du sous-type
 	std::wstring location = L"";//!< emplacement 
 	std::wstring description = L"";//!< description de l'objet
-	std::wstring comments = L"";//!< commentaires de l’objet
+	std::wstring comments = L"";//!< commentaires de lâ€™objet
 	FILETIME modifiedUtc = { 0 };//!< date de modification au format UTC
 	FILETIME modified = { 0 };//!< date de modification
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser de l'item
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	NetworkShellItem(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	NetworkShellItem(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆNetworkShellItem clear");
+	}
 };
 
-/*! Structure définissant le format d'un Archive File Shell Item
+/*! Structure dÃ©finissant le format d'un Archive File Shell Item
 */
 struct ArchiveFileContent :IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
+	bool isPresent = false; //!< l'objet est-il prÃ©sent, utilisÃ© pour le formatage du json
 	std::wstring subtypename = L"";//!< nom du sous-type
 	std::wstring location = L"";//!< emplacement 
 	std::wstring name = L"";//!< nom de l'archive
@@ -1273,147 +1344,157 @@ struct ArchiveFileContent :IShellItem {
 	FILETIME modified = { 0 };//!< date de modification
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser de l'item
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	ArchiveFileContent(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	ArchiveFileContent(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆArchiveFileContent clear");
+	}
 };
 
-/*! Structure définissant le format d'un URL Shell Item
+/*! Structure dÃ©finissant le format d'un URL Shell Item
 */
 struct URIShellItem :IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
+	bool isPresent = false; //!< l'objet est-il prÃ©sent, utilisÃ© pour le formatage du json
 	std::wstring uri = L""; //!< URI 
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser de l'item
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	URIShellItem(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	URIShellItem(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆURIShellItem clear");
+	}
 };
 
-/*! Structure définissant le format d'un File Entry Shell Item
+/*! Structure dÃ©finissant le format d'un File Entry Shell Item
 */
 struct FileEntryShellItem :IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
+	bool isPresent = false; //!< l'objet est-il prÃ©sent, utilisÃ© pour le formatage du json
 	unsigned short int fsFileSize = 0; //!< taille du fichier
 	FILETIME fsFileModificationUtc = { 0 };//!< date de modification UTC
 	FILETIME fsFileModification = { 0 };//!< date de modification
 	std::wstring fsPrimaryName = L"";//!< nom primaire
-	FsFlags fsFlags = { 0 }; //!< drapeaux décrivant les options de l'entrée
-	FileAttributes fsFileAttributes = { 0 }; //!< drapeaux décrivant les attributs de l'entrée
+	FsFlags fsFlags = { 0 }; //!< drapeaux dÃ©crivant les options de l'entrÃ©e
+	FileAttributes fsFileAttributes = { 0 }; //!< drapeaux dÃ©crivant les attributs de l'entrÃ©e
 	std::vector <IExtensionBlock*> extensionBlocks; //!< tableau contenant les extension blocks
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
+	* @param buffer en entrÃ©e contient les bits Ã  parser de l'item
 	* @param item_size est la taille de l'objet
 	* @param shell_item_type_char est le type de shell item au format character
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	FileEntryShellItem(LPBYTE buffer, unsigned short int itemSize, unsigned char shell_item_type_char, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	FileEntryShellItem(LPBYTE buffer, unsigned short int itemSize, unsigned char shell_item_type_char, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	virtual void clear() {
+		log(3, L"ðŸ”ˆFileEntryShellItem clear");
 		for (IExtensionBlock* temp : extensionBlocks)
 			delete temp;
 	}
 };
 
-/*! Structure définissant le format d'un Users Files Folder Shell Item
+/*! Structure dÃ©finissant le format d'un Users Files Folder Shell Item
 */
 struct UsersFilesFolder :IShellItem {
 public:
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
+	bool isPresent = false; //!< l'objet est-il prÃ©sent, utilisÃ© pour le formatage du json
 	std::wstring primaryName = L"";//!< nom primaire
 	FILETIME modifiedUtc = { 0 };//!< date de modification au format UTC
 	FILETIME modified = { 0 };//!< date de modification
 	IExtensionBlock* extensionBlock; //!< block d'extension
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser de l'item
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	UsersFilesFolder(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UsersFilesFolder(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	virtual void clear() {
+		log(3, L"ðŸ”ˆUsersFilesFolder clear");
 		delete extensionBlock;
 	}
 };
 
-/*! Structure définissant le format d'un Favorites Shell Item
+/*! Structure dÃ©finissant le format d'un Favorites Shell Item
 */
 
 struct FavoriteShellitem :IShellItem { // TODO A TESTER
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
+	bool isPresent = false; //!< l'objet est-il prÃ©sent, utilisÃ© pour le formatage du json
 	UsersPropertyView UPV; //! Objet UsersPropertyView
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser de l'item
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	FavoriteShellitem(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	FavoriteShellitem(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆFavoriteShellitem clear");
+	}
 };
 
-/*! Structure définissant le format d'un UNKNOWN Shell Item
+/*! Structure dÃ©finissant le format d'un UNKNOWN Shell Item
 */
 struct UnknownShellItem :IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
-	std::wstring data = L"";//!< chaîne contenant les données
+	bool isPresent = false; //!< l'objet est-il prÃ©sent, utilisÃ© pour le formatage du json
+	std::wstring data = L"";//!< chaÃ®ne contenant les donnÃ©es
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param buffer en entrÃ©e contient les bits Ã  parser de l'item
+	* @param _niveau est le niveau dans l'arborescence d'Ã©lÃ©ment utilisÃ© pour la mise en forme du fichier json de sortie
+
 	*/
-	UnknownShellItem(LPBYTE buffer, int _niveau, std::vector<std::tuple<std::wstring, HRESULT>>* errors);
+	UnknownShellItem(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual std::wstring to_json(int i = 0);
 
-	/* liberation mémoire */
-	virtual void clear() {}
+	/* liberation mÃ©moire */
+	virtual void clear() {
+		log(3, L"ðŸ”ˆUnknownShellItem clear");
+	}
 };
 
 

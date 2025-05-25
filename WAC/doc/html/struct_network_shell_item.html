@@ -124,10 +124,12 @@ Graphe d'héritage de NetworkShellItem:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Fonctions membres publiques</h2></td></tr>
-<tr class="memitem:ab986dfdf31bce4e491078eba3c2efec8" id="r_ab986dfdf31bce4e491078eba3c2efec8"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab986dfdf31bce4e491078eba3c2efec8">NetworkShellItem</a> (LPBYTE buffer, int _niveau, bool pdebug, bool pdump, std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *errors)</td></tr>
-<tr class="separator:ab986dfdf31bce4e491078eba3c2efec8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2cb699fa798a2ce40468ac7ccf66a456" id="r_a2cb699fa798a2ce40468ac7ccf66a456"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2cb699fa798a2ce40468ac7ccf66a456">NetworkShellItem</a> (LPBYTE buffer, int _niveau)</td></tr>
+<tr class="separator:a2cb699fa798a2ce40468ac7ccf66a456"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2152790af490875dda1b3b8c44dae6a1" id="r_a2152790af490875dda1b3b8c44dae6a1"><td class="memItemLeft" align="right" valign="top">virtual std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2152790af490875dda1b3b8c44dae6a1">to_json</a> (int i=0)</td></tr>
 <tr class="separator:a2152790af490875dda1b3b8c44dae6a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5264af37d93e96386227e60ee256fa0a" id="r_a5264af37d93e96386227e60ee256fa0a"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5264af37d93e96386227e60ee256fa0a">clear</a> ()</td></tr>
+<tr class="separator:a5264af37d93e96386227e60ee256fa0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
@@ -144,7 +146,7 @@ Attributs publics</h2></td></tr>
 <tr class="memdesc:a5334b8839c3e915beb1f44d0158106e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">description de l'objet  <br /></td></tr>
 <tr class="separator:a5334b8839c3e915beb1f44d0158106e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a83e38becadc7d467f1a25368a048ebee" id="r_a83e38becadc7d467f1a25368a048ebee"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a83e38becadc7d467f1a25368a048ebee">comments</a> = L&quot;&quot;</td></tr>
-<tr class="memdesc:a83e38becadc7d467f1a25368a048ebee"><td class="mdescLeft">&#160;</td><td class="mdescRight">commentaires de lobjet  <br /></td></tr>
+<tr class="memdesc:a83e38becadc7d467f1a25368a048ebee"><td class="mdescLeft">&#160;</td><td class="mdescRight">commentaires de l’objet  <br /></td></tr>
 <tr class="separator:a83e38becadc7d467f1a25368a048ebee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a83abc0a914e1d508f698ffa3bc87decc" id="r_a83abc0a914e1d508f698ffa3bc87decc"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a83abc0a914e1d508f698ffa3bc87decc">modifiedUtc</a> = { 0 }</td></tr>
 <tr class="memdesc:a83abc0a914e1d508f698ffa3bc87decc"><td class="mdescLeft">&#160;</td><td class="mdescRight">date de modification au format UTC  <br /></td></tr>
@@ -159,18 +161,12 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:a7e314fccf68f010c8647d465d6c43be8 inherit pub_attribs_struct_i_shell_item" id="r_a7e314fccf68f010c8647d465d6c43be8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_i_shell_item.html#a7e314fccf68f010c8647d465d6c43be8">is_zip</a> = false</td></tr>
 <tr class="memdesc:a7e314fccf68f010c8647d465d6c43be8 inherit pub_attribs_struct_i_shell_item"><td class="mdescLeft">&#160;</td><td class="mdescRight">utile pour les shellbags, permet de définir les fils comm des archive_contents  <br /></td></tr>
 <tr class="separator:a7e314fccf68f010c8647d465d6c43be8 inherit pub_attribs_struct_i_shell_item"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a88bf6bb086f590c7ea87227294330928 inherit pub_attribs_struct_i_shell_item" id="r_a88bf6bb086f590c7ea87227294330928"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_i_shell_item.html#a88bf6bb086f590c7ea87227294330928">_debug</a> = false</td></tr>
-<tr class="memdesc:a88bf6bb086f590c7ea87227294330928 inherit pub_attribs_struct_i_shell_item"><td class="mdescLeft">&#160;</td><td class="mdescRight">paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json  <br /></td></tr>
-<tr class="separator:a88bf6bb086f590c7ea87227294330928 inherit pub_attribs_struct_i_shell_item"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a16c63453666902b7d45868b76e2debf2 inherit pub_attribs_struct_i_shell_item" id="r_a16c63453666902b7d45868b76e2debf2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_i_shell_item.html#a16c63453666902b7d45868b76e2debf2">_dump</a> = false</td></tr>
-<tr class="memdesc:a16c63453666902b7d45868b76e2debf2 inherit pub_attribs_struct_i_shell_item"><td class="mdescLeft">&#160;</td><td class="mdescRight">si true alors le fichier de sortie contiendra le dump hexa de l'objet  <br /></td></tr>
-<tr class="separator:a16c63453666902b7d45868b76e2debf2 inherit pub_attribs_struct_i_shell_item"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>Structure définissant le format d'un Network Shell Item </p>
 </div><h2 class="groupheader">Documentation des constructeurs et destructeur</h2>
-<a id="ab986dfdf31bce4e491078eba3c2efec8" name="ab986dfdf31bce4e491078eba3c2efec8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab986dfdf31bce4e491078eba3c2efec8">&#9670;&#160;</a></span>NetworkShellItem()</h2>
+<a id="a2cb699fa798a2ce40468ac7ccf66a456" name="a2cb699fa798a2ce40468ac7ccf66a456"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2cb699fa798a2ce40468ac7ccf66a456">&#9670;&#160;</a></span>NetworkShellItem()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -183,22 +179,7 @@ Attributs publics</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>_niveau</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>pdebug</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>pdump</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt; *</td>          <td class="paramname"><span class="paramname"><em>errors</em></span>&#160;)</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>_niveau</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -206,9 +187,6 @@ Attributs publics</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">buffer</td><td>en entrée contient les bits à parser de l'item </td></tr>
     <tr><td class="paramname">_niveau</td><td>est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie </td></tr>
-    <tr><td class="paramname">pdebug</td><td>est issu de la ligne de commande. Si true alors un fichier de sortie contenant les erreurs de traitement sera généré </td></tr>
-    <tr><td class="paramname">pdump</td><td>est issue de la ligne de commande. Si true le contenu du buffer sera ajouté au fichier de sortie au format hexadécimal </td></tr>
-    <tr><td class="paramname">errors</td><td>est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction </td></tr>
   </table>
   </dd>
 </dl>
@@ -216,6 +194,33 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des fonctions membres</h2>
+<a id="a5264af37d93e96386227e60ee256fa0a" name="a5264af37d93e96386227e60ee256fa0a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5264af37d93e96386227e60ee256fa0a">&#9670;&#160;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void NetworkShellItem::clear </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel virtual">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implémente <a class="el" href="struct_i_shell_item.html#ac9e4ac78b678f2956922aa27f478ac2c">IShellItem</a>.</p>
+
+</div>
+</div>
 <a id="a2152790af490875dda1b3b8c44dae6a1" name="a2152790af490875dda1b3b8c44dae6a1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2152790af490875dda1b3b8c44dae6a1">&#9670;&#160;</a></span>to_json()</h2>
 
@@ -263,7 +268,7 @@ Attributs publics</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>commentaires de lobjet </p>
+<p>commentaires de l’objet </p>
 
 </div>
 </div>
@@ -364,8 +369,8 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <hr/>La documentation de cette structure a été générée à partir des fichiers suivants :<ul>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="id_list_8h_source.html">idList.h</a></li>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="id_list_8cpp.html">idList.cpp</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="id_list_8h_source.html">idList.h</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="id_list_8cpp.html">idList.cpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

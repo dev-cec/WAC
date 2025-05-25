@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <windows.h>
 #include <stdio.h>
 #include <offreg.h>
@@ -9,21 +9,49 @@
 #include "tools.h"
 #include "usb.h"
 
-
-
-/*! structure repr�sentant l'artefact MUICACHE
+/*! structure représentant l'artefact MUICACHE
 */
 struct Muicache {
 public:
-	std::wstring sid = L""; //!< SID de l'utilisateur propri�taire de l'objet
-	std::wstring sidName = L""; //!< nom de l'utilisateur propri�taire de l'objet
-	std::wstring name = L""; //!< chemin et nom de l�ex�cutable
+	std::wstring sid = L""; //!< SID de l'utilisateur propriétaire de l'objet
+	std::wstring sidName = L""; //!< nom de l'utilisateur propriétaire de l'objet
+	std::wstring name = L""; //!< chemin et nom de l’exécutable
 	std::wstring data = L""; //!< nom de l'application
+
+	/*! Constructeur
+	* @param hKey est la cle de registre contenant les valeurs
+	* szValue est la nom de la valeur de la cle de registre contenant les informations
+	* profile est le profile de l'utilisateur proprietaire de l'artefact
+	*/
+	Muicache(ORHKEY hKey, std::wstring szValue, std::wstring profile) {
+		
+		DWORD dType = 0;
+		HRESULT hresult = 0;
+
+		name = szValue;
+		log(3, L"🔈replaceAll name");
+		name = replaceAll(name, L"\\", L"\\\\");//escape \ in std::string
+		log(2, L"❇️muicache Name : " + name);
+		sid = profile;
+		log(3, L"🔈getNameFromSid sidName");
+		sidName = getNameFromSid(sid);
+
+		log(3, L"🔈getRegSzValue szValue");
+		hresult = getRegSzValue(hKey, nullptr, szValue.c_str(), &data);
+		if (hresult != ERROR_SUCCESS) {
+			log(2, L"🔥getRegSzValue Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache\\" + std::wstring(szValue), hresult);
+		}
+		else {
+			log(3, L"🔈replaceAll data");
+			data = replaceAll(data, L"\"", L"\\\"");//escape " in std::string
+		}
+	}
 
 	/*! conversion de l'objet au format json
    * @return wstring le code json
    */
 	std::wstring to_json() {
+		log(3, L"🔈Muicache to_json");
 		return L"\t{ \n"
 			L"\t\t\"SID\":\"" + sid + L"\", \n"
 			L"\t\t\"SIDName\":\"" + sidName + L"\", \n"
@@ -32,8 +60,10 @@ public:
 			L"\t}";
 	}
 
-	/* liberation m�moire */
-	void clear() {}
+	/* liberation mémoire */
+	void clear() {
+		log(3, L"🔈Muicache clear");
+	}
 };
 
 /*! structure contenant l'ensemble des artefacts
@@ -41,64 +71,69 @@ public:
 struct Muicaches {
 public:
 	std::vector<Muicache> muicaches;//!< tableau contenant les objets
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs de traitement des objets
-
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les param�tres de l'application issue des param�tres de la ligne de commande
+	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData() {
 		
-		HRESULT hresult;
-		ORHKEY hKey;
-		DWORD nSubkeys;
-		DWORD nValues, dType;
-		WCHAR szValue[MAX_VALUE_NAME];
-		WCHAR szSubKey[MAX_VALUE_NAME];
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"ℹ️Muicache : ");
+		log(0, L"*******************************************************************************************************************");
+
+
+		HRESULT hresult=0;
+		ORHKEY hKey=NULL;
+		ORHKEY Offhive=NULL;
+		DWORD nSubkeys = 0;
+		DWORD nValues=0;
 		DWORD nSize = 0;
-		ORHKEY Offhive;
+		DWORD dType = 0;
+		WCHAR szValue[MAX_VALUE_NAME]=L"";
+		WCHAR szSubKey[MAX_VALUE_NAME]=L"";
+
 		std::wstring ruche = L"";
 		for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
 			//ouverture de la ruche user
-			ruche = conf.mountpoint + replaceAll(get<0>(profile), L"C:", L"") + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat";
+			log(3, L"🔈replaceAll profile");
+			ruche = conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat";
+			log(3, L"🔈OROpenHive " + get<1>(profile) + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat");
 			hresult = OROpenHive(ruche.c_str(), &Offhive);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"Unable to open hive : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat", hresult });
+				log(2, L"🔥OROpenHive " + get<1>(profile) + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat", GetLastError());
 				continue;
 			};
 
+			log(3, L"🔈OROpenKey Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\MuiCache");
 			hresult = OROpenKey(Offhive, L"Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache", &hKey);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"Unable to open key : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat / " + L"Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\MuiCache", hresult });
+				log(2, L"🔥OROpenKey Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\MuiCache", hresult );
 				continue;
 			};
 
+			log(3, L"🔈ORQueryInfoKey MuiCache");
 			hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"Unable to get info key : " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\usrClass.dat / " + L"Local Settings\\\\Software\\\\Microsoft\\\\Windows\\Shell\\\\MuiCache", hresult });
+				log(2, L"🔥ORQueryInfoKey MuiCache", hresult );
 				continue;
 			};
 
 			for (int i = 0; i < (int)nValues; i++) {
-				Muicache muicache;
-				nSize = MAX_VALUE_NAME;
+				DWORD nSize = MAX_VALUE_NAME;
 				DWORD cData = MAX_DATA;
+				log(3, L"🔈OREnumValue " + std::to_wstring(i));
 				hresult = OREnumValue(hKey, i, szValue, &nSize, &dType, NULL, &cData);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"Unable to open key : " + get<0>(profile) + L"/ USERCLASS.dat / " + L"Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache\\" + szValue, hresult });
+					log(2, L"🔥OREnumValue " + std::to_wstring(i), hresult);
 					continue;
 				};
-				if (dType != REG_SZ) continue;
-				getRegSzValue(hKey, nullptr, szValue, &muicache.data);
-				muicache.data = replaceAll(muicache.data, L"\"", L"\\\"");//escape " in std::string
-
-
-				muicache.sid = get<0>(profile);
-				muicache.sidName = getNameFromSid(muicache.sid);
-				muicache.name = szValue;
-				muicache.name = replaceAll(muicache.name, L"\\", L"\\\\");//escape \ in std::string
+				if (dType != REG_SZ) {
+					log(2, L"🔥OREnumValue " + std::wstring(szValue) + L" not REG_SZ type");
+					continue;
+				}
 				//save
-				muicaches.push_back(muicache);
+				log(1, L"➕Muicache");
+				muicaches.push_back(Muicache(hKey, szValue, get<0>(profile)));
 			}
 		}
 		return ERROR_SUCCESS;
@@ -108,6 +143,7 @@ public:
 	*/
 	HRESULT to_json()
 	{
+		log(3, L"🔈Muicaches to_json");
 		std::wstring result = L"[ \n";
 		std::vector<Muicache>::iterator it;
 		for (it = muicaches.begin(); it != muicaches.end(); it++) {
@@ -119,29 +155,18 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //cr�e le repertoire, pas d'erreur s'il existe d�j�
+		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/muicache.json");
-		myfile << result;
+		myfile << ansi_to_utf8(result);
 		myfile.close();
-
-		if (conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //cr�e le repertoire, pas d'erreur s'il existe d�j�
-			myfile.open(conf._errorOutputDir + "/muicache_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation m�moire */
+	/* liberation mémoire */
 	void clear() {
+		log(3, L"🔈Muicaches clear");
 		for (Muicache temp : muicaches)
 			temp.clear();
 	}

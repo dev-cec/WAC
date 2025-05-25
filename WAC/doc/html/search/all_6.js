@@ -1,10 +1,10 @@
 var searchData=
 [
   ['fatdatetime_0',['FatDateTime',['../struct_fat_date_time.html',1,'FatDateTime'],['../struct_fat_date_time.html#a1a6bd9bbb3518c18ba407bc7b7aaa19a',1,'FatDateTime::FatDateTime()']]],
-  ['favoriteshellitem_1',['FavoriteShellitem',['../struct_favorite_shellitem.html',1,'FavoriteShellitem'],['../struct_favorite_shellitem.html#a52638b2fa067111d325fef8bd46b2bd7',1,'FavoriteShellitem::FavoriteShellitem()']]],
+  ['favoriteshellitem_1',['FavoriteShellitem',['../struct_favorite_shellitem.html',1,'FavoriteShellitem'],['../struct_favorite_shellitem.html#a78ecd239184ebc9a01711a8f467fbaac',1,'FavoriteShellitem::FavoriteShellitem()']]],
   ['fileattributes_2',['FileAttributes',['../struct_file_attributes.html',1,'FileAttributes'],['../struct_file_attributes.html#a797b365758b7ed48c36b0a117cce1e36',1,'FileAttributes::FileAttributes()']]],
   ['filedocumenttypestring_3',['fileDocumentTypeString',['../struct_beef001a.html#a8d08eb0cc21dd4697442805a3b0f8db5',1,'Beef001a::fileDocumentTypeString'],['../struct_beef001b.html#accae6bd0b2019986bbfdf4d78e597b7e',1,'Beef001b::fileDocumentTypeString']]],
-  ['fileentryshellitem_4',['FileEntryShellItem',['../struct_file_entry_shell_item.html',1,'FileEntryShellItem'],['../struct_file_entry_shell_item.html#a02921edf01342e324a22ca456b31e379',1,'FileEntryShellItem::FileEntryShellItem()']]],
+  ['fileentryshellitem_4',['FileEntryShellItem',['../struct_file_entry_shell_item.html',1,'FileEntryShellItem'],['../struct_file_entry_shell_item.html#aae555f30e574e6ef5b2543c300f35cf1',1,'FileEntryShellItem::FileEntryShellItem()']]],
   ['filename_5',['filename',['../struct_prefetch.html#ac25fee7f3395655f17dd9759fcf1663b',1,'Prefetch']]],
   ['filenames_6',['filenames',['../struct_prefetch.html#ae856f67245a4d6cd30ccf3185daaa08e',1,'Prefetch']]],
   ['filereferences_7',['fileReferences',['../struct_volume_info.html#aff7e0c3f75d038693f831d80cc87647c',1,'VolumeInfo']]],

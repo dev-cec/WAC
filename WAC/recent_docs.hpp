@@ -53,31 +53,43 @@ public:
 
 	/*! fonction permettant de parser un fichier LNK
 	* @param buffer contient les données à parser
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	void parseLNK(LPBYTE buffer,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
+	void parseLNK(LPBYTE buffer) {
 		unsigned int header_size = *reinterpret_cast<unsigned int*>(buffer);
 		guid = *reinterpret_cast<GUID*>(buffer + 4);
+		log(3, L"🔈guid_to_wstring guid");
 		if (guid_to_wstring(guid).compare(L"{00021401-0000-0000-C000-000000000046}") == 0) {
-			flags = LinkFlags(bytes_to_unsigned_int(buffer + 20));
-			unsigned int fileAttributes = bytes_to_unsigned_int(buffer + 24);
+			flags = LinkFlags(*reinterpret_cast<unsigned int*>(buffer + 20));
+			unsigned int fileAttributes = *reinterpret_cast<unsigned int*>(buffer + 24);
+			log(3, L"🔈FileAttributes");
 			attributes = FileAttributes(fileAttributes);
-			targetCreated = bytes_to_filetime(buffer + 28);
-			if (time_to_wstring(targetCreated) != L"")
+			targetCreated = *reinterpret_cast<FILETIME*>(buffer + 28);
+			log(3, L"🔈time_to_wstring targetCreated");
+			if (time_to_wstring(targetCreated) != L"") {
+				log(3, L"🔈LocalFileTimeToFileTime targetCreatedUtc");
 				LocalFileTimeToFileTime(&targetCreated, &targetCreatedUtc);
+			}
 
-			targetAccessed = bytes_to_filetime(buffer + 36);
-			if (time_to_wstring(targetAccessed) != L"")
+			targetAccessed = *reinterpret_cast<FILETIME*>(buffer + 36);
+			log(3, L"🔈time_to_wstring targetCreated");
+			if (time_to_wstring(targetAccessed) != L"") {
+				log(3, L"🔈LocalFileTimeToFileTime targetAccessedUtc");
 				LocalFileTimeToFileTime(&targetAccessed, &targetAccessedUtc);
+			}
 
-			targetModified = bytes_to_filetime(buffer + 44);
-			if (time_to_wstring(targetModified) != L"")
+			targetModified = *reinterpret_cast<FILETIME*>(buffer + 44);
+			log(3, L"🔈time_to_wstring targetModified");
+			if (time_to_wstring(targetModified) != L"") {
+				log(3, L"🔈LocalFileTimeToFileTime targetModifiedUtc");
 				LocalFileTimeToFileTime(&targetModified, &targetModifiedUtc);
-			iconIndex = bytes_to_unsigned_int(buffer + 56);
-			commandOption = showCommandOption(bytes_to_unsigned_int(buffer + 60)); //
+			}
+			iconIndex = *reinterpret_cast<unsigned int*>(buffer + 56);
+			log(3, L"🔈showCommandOption commandOption");
+			commandOption = showCommandOption(*reinterpret_cast<unsigned int*>(buffer + 60)); //
 			//debug
-			if (commandOption == L"UNKOWN" && conf._debug == true)
-				errors->push_back({ L"commandOption Unknown 0x" + to_hex(bytes_to_unsigned_int(buffer + 60)),ERROR_UNSUPPORTED_TYPE });
+			if (commandOption == L"UNKOWN")
+				log(2, L"🔥commandOption Unknown 0x" + to_hex(*reinterpret_cast<unsigned int*>(buffer + 60)));
 
 			//-------------------------------------------------------------------------
 			// Shell item id list (starts at 76 with 2 byte length -> so we can skip):
@@ -87,14 +99,14 @@ public:
 			int LinkTargetIDList_offset = header_size;
 			if (flags.HasLinkTargetIDList)
 			{
-				LinkTargetIDList_size = bytes_to_unsigned_short(buffer + LinkTargetIDList_offset); //size of item id list
+				LinkTargetIDList_size = *reinterpret_cast<unsigned short int*>(buffer + LinkTargetIDList_offset); //size of item id list
 
 				int offset = LinkTargetIDList_offset + 2;
 				unsigned short int item_size = 1;
 				while (item_size != 0 && offset < LinkTargetIDList_size) {
-					item_size = bytes_to_unsigned_short(buffer + offset);
+					item_size = *reinterpret_cast<unsigned short int*>(buffer + offset);
 					if (item_size != 0) {
-						idLists.push_back(IdList(buffer + offset, 2, errors)); // lvl 1 is object itself
+						idLists.push_back(IdList(buffer + offset, 2)); // lvl 1 is object itself
 					}
 					offset += item_size;
 				}
@@ -110,62 +122,72 @@ public:
 			int LinkInfo_offset = LinkTargetIDList_offset + 2 + LinkTargetIDList_size;
 
 			if (flags.HasLinkInfo) {
-				LinkInfo_size = bytes_to_unsigned_int(buffer + LinkInfo_offset);
-				unsigned int link_flags = bytes_to_unsigned_int(buffer + LinkInfo_offset + 8);
+				LinkInfo_size = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset);
+				unsigned int link_flags = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + 8);
 				bool VolumeIDAndLocalBasePath = link_flags & 0x1;
 				bool CommonNetworkRelativeLinkAndPathSuffix = link_flags & 0x2;
 				//-------------------------------------------------------------------------
 				// Volume Id info:
 				//-------------------------------------------------------------------------
-				unsigned int volumeId_offset = bytes_to_unsigned_int(buffer + LinkInfo_offset + 12); //volume id offset
+				unsigned int volumeId_offset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + 12); //volume id offset
 				if (VolumeIDAndLocalBasePath == true && volumeId_offset != 0) {
-					unsigned int driveType = bytes_to_unsigned_int(buffer + LinkInfo_offset + volumeId_offset + 4);
+					unsigned int driveType = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + volumeId_offset + 4);
+					log(3, L"🔈driveType_to_wstring volumeDriveType");
 					volumeDriveType = driveType_to_wstring(driveType);
 					//debug
-					if (volumeDriveType == L"BAD TYPE" && conf._debug == true)
-						errors->push_back({ L"volumeDriveType BAD TYPE 0x" + to_hex(driveType),ERROR_UNSUPPORTED_TYPE });
-					unsigned int serial = bytes_to_unsigned_int(buffer + LinkInfo_offset + volumeId_offset + 8);
-					std::stringstream ss;
-					ss << std::hex << serial;
-					volumeSerial = string_to_wstring((ss.str()));
+					if (volumeDriveType == L"BAD TYPE")
+						log(2, L"🔥volumeDriveType BAD TYPE 0x" + to_hex(driveType), ERROR_UNSUPPORTED_TYPE);
+					unsigned int serial = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + volumeId_offset + 8);
+					
+					log(3, L"🔈to_hex volumeSerial");
+					volumeSerial = to_hex(serial);
 					transform(volumeSerial.begin(), volumeSerial.end(), volumeSerial.begin(), ::toupper);
-					unsigned int labeloffset = bytes_to_unsigned_int(buffer + LinkInfo_offset + volumeId_offset + 12);
+					
+					unsigned int labeloffset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + volumeId_offset + 12);
 					if (labeloffset != 0x14) {
-						volumeLabel = string_to_wstring(ansi_to_utf8(std::string((char*)(buffer + LinkInfo_offset + volumeId_offset + labeloffset))));
+						log(3, L"🔈string_to_wstring volumeSerial");
+						volumeLabel = string_to_wstring(std::string((char*)(buffer + LinkInfo_offset + volumeId_offset + labeloffset)));
 					}
 					else {
-						unsigned int labeloffsetunicode = bytes_to_unsigned_int(buffer + LinkInfo_offset + volumeId_offset + 16);
+						unsigned int labeloffsetunicode = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + volumeId_offset + 16);
+						log(3, L"🔈string_to_wstring volumeLabel");
 						volumeLabel = string_to_wstring(std::string((char*)(buffer + LinkInfo_offset + volumeId_offset + labeloffset)));
 					}
 				}
 				//-------------------------------------------------------------------------
 				// Local path std::string (ending with 0x00):
 				//-------------------------------------------------------------------------
-				unsigned int LocalPath_offset = bytes_to_unsigned_int(buffer + LinkInfo_offset + 16); //local path offset from start of fileinfo
-
-				target = string_to_wstring(ansi_to_utf8((char*)(buffer + LinkInfo_offset + LocalPath_offset)));
+				unsigned int LocalPath_offset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + 16); //local path offset from start of fileinfo
+				log(3, L"🔈string_to_wstring target");
+				target = string_to_wstring((char*)(buffer + LinkInfo_offset + LocalPath_offset));
+				log(3, L"🔈replaceAll target");
 				target = replaceAll(target, L"\\", L"\\\\"); ; // escape \ in std::string
 				//-------------------------------------------------------------------------
 				// Common Network Relative Link info:
 				//-------------------------------------------------------------------------
-				unsigned int network_offset = bytes_to_unsigned_int(buffer + LinkInfo_offset + 20); //common network offset
+				unsigned int network_offset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + 20); //common network offset
 				if (CommonNetworkRelativeLinkAndPathSuffix && network_offset != 0) {
-					unsigned int net_flags = bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 4);
+					unsigned int net_flags = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + network_offset + 4);
 					bool ValidDevice = net_flags && 0x1;
 					bool ValidNetType = net_flags && 0x2;
-					unsigned int NetNameOffset = bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 8);
-					netName = string_to_wstring(ansi_to_utf8(std::string((char*)(buffer + LinkInfo_offset + network_offset + NetNameOffset))));
+					unsigned int NetNameOffset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + network_offset + 8);
+					log(3, L"🔈string_to_wstring netName");
+					netName = string_to_wstring(std::string((char*)(buffer + LinkInfo_offset + network_offset + NetNameOffset)));
+					log(3, L"🔈replaceAll netName");
 					netName = replaceAll(netName, L"\\", L"\\\\"); // escape \ in std::string
-					unsigned int DeviceNameOffset = bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 12);
+					unsigned int DeviceNameOffset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + network_offset + 12);
 					if (ValidDevice == true && DeviceNameOffset != 0) {
-						netDeviceName = string_to_wstring(ansi_to_utf8(std::string((char*)(buffer + LinkInfo_offset + network_offset + NetNameOffset))));
+						log(3, L"🔈string_to_wstring netDeviceName");
+						netDeviceName = string_to_wstring(std::string((char*)(buffer + LinkInfo_offset + network_offset + NetNameOffset)));
+						log(3, L"🔈replaceAll netDeviceName");
 						netDeviceName = replaceAll(netDeviceName, L"\\", L"\\\\"); // escape \ in std::string
 					}
 					if (ValidNetType == true) {
-						netProviderType = networkProvider_to_wstring(bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 14));
+						log(3, L"🔈networkProvider_to_wstring netProviderType");
+						netProviderType = networkProvider_to_wstring(*reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + network_offset + 14));
 						//debug
-						if (netProviderType == L"BAD NET PROVIDER" && conf._debug == true)
-							errors->push_back({ L"netProviderType Unknown 0x" + to_hex(bytes_to_unsigned_int(buffer + LinkInfo_offset + network_offset + 14)),ERROR_UNSUPPORTED_TYPE });
+						if (netProviderType == L"BAD NET PROVIDER")
+							log(2, L"🔥netProviderType Unknown 0x" + to_hex(*reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + network_offset + 14)), ERROR_UNSUPPORTED_TYPE);
 					}
 				}
 			}
@@ -181,8 +203,9 @@ public:
 			int nameString_offset = stringData_offset;
 			int relativePath_offset = stringData_offset;
 			if (flags.HasName == true) {
-				namestring_size = bytes_to_unsigned_short(buffer + nameString_offset);
-				description = ansi_to_utf8(std::wstring((wchar_t*)(buffer + stringData_offset + 2), (wchar_t*)(buffer + stringData_offset + 2 + namestring_size * 2)));
+				namestring_size = *reinterpret_cast<unsigned short int*>(buffer + nameString_offset);
+				description = std::wstring((wchar_t*)(buffer + stringData_offset + 2));
+				log(3, L"🔈replaceAll description");
 				description = replaceAll(description, L"\\", L"\\\\");//escape \ in std::string
 				relativePath_offset = nameString_offset + 2 + namestring_size * 2;
 			}
@@ -193,8 +216,9 @@ public:
 			unsigned short int relativePath_size = 0;
 			int workingDirectory_offset = relativePath_offset;
 			if (flags.HasRelativePath == true) {
-				relativePath_size = bytes_to_unsigned_short(buffer + relativePath_offset);
-				relativePath = ansi_to_utf8(std::wstring((wchar_t*)(buffer + relativePath_offset + 2), (wchar_t*)(buffer + relativePath_offset + 2 + relativePath_size * 2)));
+				relativePath_size = *reinterpret_cast<unsigned short int*>(buffer + relativePath_offset);
+				relativePath = std::wstring((wchar_t*)(buffer + relativePath_offset + 2));
+				log(3, L"🔈replaceAll relativePath");
 				relativePath = replaceAll(relativePath, L"\\", L"\\\\");//escape \ in std::string
 				workingDirectory_offset = relativePath_offset + 2 + relativePath_size * 2;
 			}
@@ -203,8 +227,9 @@ public:
 			unsigned short int workingDirectory_size = 0;
 			int arguments_offset = workingDirectory_offset;
 			if (flags.HasWorkingDir == true) {
-				workingDirectory_size = bytes_to_unsigned_short(buffer + workingDirectory_offset);
-				workingDirectory = ansi_to_utf8(std::wstring((wchar_t*)(buffer + workingDirectory_offset + 2), (wchar_t*)(buffer + workingDirectory_offset + 2 + workingDirectory_size * 2)));
+				workingDirectory_size = *reinterpret_cast<unsigned short int*>(buffer + workingDirectory_offset);
+				workingDirectory = std::wstring((wchar_t*)(buffer + workingDirectory_offset + 2));
+				log(3, L"🔈replaceAll workingDirectory");
 				workingDirectory = replaceAll(workingDirectory, L"\\", L"\\\\");//escape \ in std::string
 				arguments_offset = workingDirectory_offset + 2 + workingDirectory_size * 2;
 			}
@@ -214,8 +239,9 @@ public:
 			unsigned short int arguments_size = 0;
 			int iconLocation_offset = arguments_offset;
 			if (flags.HasArguments == true) {
-				arguments_size = bytes_to_unsigned_short(buffer + workingDirectory_offset);
-				arguments = ansi_to_utf8(std::wstring((wchar_t*)(buffer + arguments_offset + 2), (wchar_t*)(buffer + arguments_offset + 2 + arguments_size * 2)));
+				arguments_size = *reinterpret_cast<unsigned short int*>(buffer + workingDirectory_offset);
+				arguments = std::wstring((wchar_t*)(buffer + arguments_offset + 2));
+				log(3, L"🔈replaceAll arguments");
 				arguments = replaceAll(arguments, L"\\", L"\\\\");//escape \ in std::string
 				arguments = replaceAll(arguments, L"\"", L"\\\"");//escape " in std::string
 				iconLocation_offset = arguments_offset + 2 + arguments_size * 2;
@@ -225,8 +251,9 @@ public:
 
 			unsigned short int iconLocation_size = 0;
 			if (flags.HasIconLocation == true) {
-				iconLocation_size = bytes_to_unsigned_short(buffer + iconLocation_offset);
-				iconLocation = ansi_to_utf8(std::wstring((wchar_t*)(buffer + iconLocation_offset + 2), (wchar_t*)(buffer + iconLocation_offset + 2 + iconLocation_size * 2)));
+				iconLocation_size = *reinterpret_cast<unsigned short int*>(buffer + iconLocation_offset);
+				iconLocation = std::wstring((wchar_t*)(buffer + iconLocation_offset + 2));
+				log(3, L"🔈replaceAll iconLocation");
 				iconLocation = replaceAll(iconLocation, L"\\", L"\\\\");//escape \ in std::string
 			}
 			else
@@ -238,16 +265,19 @@ public:
 	/*! constructeur à partir d'un fichier
 	* @param _path contient le chemin vers le fichier à parser
 	* @param _sid contient le SID de l'utilisateur propriétaire du fichier
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	RecentDoc(std::filesystem::path _path, std::wstring _sid,  std::vector<std::tuple<std::wstring, HRESULT>>* errors)
+	RecentDoc(std::filesystem::path _path, std::wstring _sid)
 	{
 		//Parsing
 		Sid = _sid;
 		//path retourne un codage ANSI mais on veut de l'UTF8
-		path = ansi_to_utf8(_path.wstring());
+		path = _path.wstring();
+		log(3, L"🔈replaceAll path");
 		path = replaceAll(path, L"\\", L"\\\\");//escape \ in std::string
+		log(3, L"🔈replaceAll path_original");
 		path_original = replaceAll(path, conf.mountpoint, L"C:");
+		log(2, L"❇️RecentDoc path " + path_original);
 		target = L"";
 		if (_path.extension() == ".lnk" || _path.extension() == ".LNK") {
 			std::ifstream file(_path.wstring(), std::ios::binary);
@@ -261,9 +291,9 @@ public:
 				LPBYTE buffer = new BYTE[size];
 				file.read(reinterpret_cast<CHAR*>(buffer), size);
 				file.close();
-
-				parseLNK(buffer,  errors);
-				delete [] buffer;
+				log(3, L"🔈parseLNK");
+				parseLNK(buffer);
+				delete[] buffer;
 			}
 		}
 		if (_path.extension() == ".url" || _path.extension() == ".URL") {
@@ -272,9 +302,10 @@ public:
 			if (file.is_open()) {
 				getline(file, line); //skip first line
 				getline(file, line);
-				line = ansi_to_utf8(line); //ensure utf8
 				line = line.substr(4);//suppression de URL= en début de ligne
+				log(3, L"🔈decodeURIComponent line");
 				line = decodeURIComponent(line);
+				log(3, L"🔈string_to_wstring line");
 				target = string_to_wstring(line);
 				file.close();
 			}
@@ -290,12 +321,16 @@ public:
 			NULL);                  // no attr. template
 		if (hFile != INVALID_HANDLE_VALUE) {
 			FILE_BASIC_INFO fileInfo;
+			log(3, L"🔈GetFileInformationByHandleEx hFile");
 			GetFileInformationByHandleEx(hFile, FileBasicInfo, &fileInfo, sizeof(FILE_BASIC_INFO));
 			memcpy(&sourceCreatedUtc, &fileInfo.CreationTime, sizeof(sourceCreatedUtc));
 			memcpy(&sourceModifiedUtc, &fileInfo.LastWriteTime, sizeof(sourceModifiedUtc));
 			memcpy(&sourceAccessedUtc, &fileInfo.LastAccessTime, sizeof(sourceAccessedUtc));
+			log(3, L"🔈FileTimeToLocalFileTime sourceCreated");
 			FileTimeToLocalFileTime(&sourceCreatedUtc, &sourceCreated);
+			log(3, L"🔈FileTimeToLocalFileTime sourceModified");
 			FileTimeToLocalFileTime(&sourceModifiedUtc, &sourceModified);
+			log(3, L"🔈FileTimeToLocalFileTime sourceAccessed");
 			FileTimeToLocalFileTime(&sourceAccessedUtc, &sourceAccessed);
 		}
 		CloseHandle(hFile);
@@ -305,13 +340,16 @@ public:
 	* @param buffer contient les données à parser
 	* @param _path contient le chemin vers le fichier contenant le buffer
 	* @param _sid contient le SID de l'utilisateur propriétaire de la donnée
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+
 	*/
-	RecentDoc(LPBYTE buffer, std::wstring _path, std::wstring _sid,  std::vector<std::tuple<std::wstring,HRESULT>>* _errors) {
+	RecentDoc(LPBYTE buffer, std::wstring _path, std::wstring _sid) {
 		Sid = _sid;
 		path = _path;
+		path_original = replaceAll(_path, conf.mountpoint, L"C:");
+		log(2, L"❇️RecentDoc path " + path_original);
 		target = L"";
-		parseLNK(buffer,  _errors);
+		log(3, L"🔈parseLNK");
+		parseLNK(buffer);
 	}
 
 	/*! conversion de l'objet au format json
@@ -319,24 +357,39 @@ public:
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i) {
+		log(3, L"🔈RecentDoc to_json");
 		std::wstring result = L"";
-		result += tab(i) + L"{ \n"
-			+ tab(i + 1) + L"\"Path\":\"" + path_original+ L"\", \n"
-			+ tab(i + 1) + L"\"Target\":\"" + target + L"\", \n"
-			+ tab(i + 1) + L"\"SourceCreated\":\"" + time_to_wstring(sourceCreated) + L"\", \n"
-			+ tab(i + 1) + L"\"SourceCreatedUtc\":\"" + time_to_wstring(sourceCreatedUtc) + L"\", \n"
-			+ tab(i + 1) + L"\"SourceModified\":\"" + time_to_wstring(sourceModified) + L"\", \n"
-			+ tab(i + 1) + L"\"SourceModifiedUtc\":\"" + time_to_wstring(sourceModifiedUtc) + L"\", \n"
-			+ tab(i + 1) + L"\"SourceAccessed\":\"" + time_to_wstring(sourceAccessed) + L"\", \n"
-			+ tab(i + 1) + L"\"SourceAccessedUtc\":\"" + time_to_wstring(sourceAccessedUtc) + L"\", \n"
-			+ tab(i + 1) + L"\"TargetCreated\":\"" + time_to_wstring(targetCreated) + L"\", \n"
-			+ tab(i + 1) + L"\"TargetCreatedUtc\":\"" + time_to_wstring(targetCreatedUtc) + L"\", \n"
-			+ tab(i + 1) + L"\"TargetModified\":\"" + time_to_wstring(targetModified) + L"\", \n"
-			+ tab(i + 1) + L"\"TargetModifiedUtc\":\"" + time_to_wstring(targetModifiedUtc) + L"\", \n"
-			+ tab(i + 1) + L"\"TargetAccessed\":\"" + time_to_wstring(targetAccessed) + L"\", \n"
-			+ tab(i + 1) + L"\"TargetAccessedUtc\":\"" + time_to_wstring(targetAccessedUtc) + L"\", \n"
-			+ tab(i + 1) + L"\"LNKFlags\":\"" + flags.to_wstring() + L"\", \n"
-			+ tab(i + 1) + L"\"FileAttributes\":\"" + attributes.to_wstring() + L"\", \n"
+		result += tab(i) + L"{ \n";
+		result += tab(i + 1) + L"\"Path\":\"" + path_original + L"\", \n";
+		result += tab(i + 1) + L"\"Target\":\"" + target + L"\", \n";
+		log(3, L"🔈time_to_wstring sourceCreated");
+		result += tab(i + 1) + L"\"SourceCreated\":\"" + time_to_wstring(sourceCreated) + L"\", \n";
+		log(3, L"🔈time_to_wstring sourceCreatedUtc");
+		result += tab(i + 1) + L"\"SourceCreatedUtc\":\"" + time_to_wstring(sourceCreatedUtc) + L"\", \n";
+		log(3, L"🔈time_to_wstring sourceModified");
+		result += tab(i + 1) + L"\"SourceModified\":\"" + time_to_wstring(sourceModified) + L"\", \n";
+		log(3, L"🔈time_to_wstring sourceModifiedUtc");
+		result += tab(i + 1) + L"\"SourceModifiedUtc\":\"" + time_to_wstring(sourceModifiedUtc) + L"\", \n";
+		log(3, L"🔈time_to_wstring sourceAccessed");
+		result += tab(i + 1) + L"\"SourceAccessed\":\"" + time_to_wstring(sourceAccessed) + L"\", \n";
+		log(3, L"🔈time_to_wstring sourceAccessedUtc");
+		result += tab(i + 1) + L"\"SourceAccessedUtc\":\"" + time_to_wstring(sourceAccessedUtc) + L"\", \n";
+		log(3, L"🔈time_to_wstring targetCreated");
+		result += tab(i + 1) + L"\"TargetCreated\":\"" + time_to_wstring(targetCreated) + L"\", \n";
+		log(3, L"🔈time_to_wstring targetCreatedUtc");
+		result += tab(i + 1) + L"\"TargetCreatedUtc\":\"" + time_to_wstring(targetCreatedUtc) + L"\", \n";
+		log(3, L"🔈time_to_wstring targetModified");
+		result += tab(i + 1) + L"\"TargetModified\":\"" + time_to_wstring(targetModified) + L"\", \n";
+		log(3, L"🔈time_to_wstring targetModifiedUtc");
+		result += tab(i + 1) + L"\"TargetModifiedUtc\":\"" + time_to_wstring(targetModifiedUtc) + L"\", \n";
+		log(3, L"🔈time_to_wstring targetAccessed");
+		result += tab(i + 1) + L"\"TargetAccessed\":\"" + time_to_wstring(targetAccessed) + L"\", \n";
+		log(3, L"🔈time_to_wstring targetAccessedUtc");
+		result += tab(i + 1) + L"\"TargetAccessedUtc\":\"" + time_to_wstring(targetAccessedUtc) + L"\", \n";
+		log(3, L"🔈to_wstring flags");
+		result += tab(i + 1) + L"\"LNKFlags\":\"" + flags.to_wstring() + L"\", \n";
+		log(3, L"🔈to_wstring attributes");
+		result += tab(i + 1) + L"\"FileAttributes\":\"" + attributes.to_wstring() + L"\", \n"
 			+ tab(i + 1) + L"\"IconIndex\":\"" + std::to_wstring(iconIndex) + L"\", \n"
 			+ tab(i + 1) + L"\"CommandOption\":\"" + commandOption + L"\", \n"
 			+ tab(i + 1) + L"\"Description\":\"" + description + L"\", \n"
@@ -365,6 +418,7 @@ public:
 
 	/*liberation mémoire */
 	void clear() {
+		log(3, L"🔈RecentDoc clear");
 		for (IdList temp : idLists)
 			temp.clear();
 	}
@@ -374,24 +428,28 @@ public:
 */
 struct RecentDocs {
 	std::vector<RecentDoc> recentdocs; //!< tableau contenant l'ensemble des objets
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-
 
 	/*! Fonction permettant de parser les objets
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData() {
-		conf=conf;
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"ℹ️Recent Docs : ");
+		log(0, L"*******************************************************************************************************************");
+
 		std::string reps[2] = { "\\AppData\\Roaming\\Microsoft\\Windows\\Recent","\\AppData\\Roaming\\Microsoft\\Office\\Recent" };
 		for (std::string rep : reps) {
 			for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
-				std::string path = wstring_to_string(conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"")) + rep;
+				log(3, L"🔈replaceAll Profile");
+				std::wstring temp = replaceAll(get<1>(profile), L"C:", L"");
+				log(3, L"🔈wstring_to_string path");
+				std::string path = wstring_to_string(conf.mountpoint + temp) + rep;
 				struct stat sb;
 				if (stat(path.c_str(), &sb) == 0) { // directory Exists
 					for (const auto& entry : std::filesystem::directory_iterator(path)) {
 						if (entry.is_regular_file() && ((entry.path().extension() == ".lnk" || entry.path().extension() == ".LNK") || (entry.path().extension() == ".url" || entry.path().extension() == ".URL"))) {
-							
-							recentdocs.push_back(RecentDoc(entry.path(), get<0>(profile),  &errors));
+							log(1, L"➕RecentDoc");
+							recentdocs.push_back(RecentDoc(entry.path(), get<0>(profile)));
 						}
 					}
 				}
@@ -406,6 +464,7 @@ struct RecentDocs {
 	/*! conversion de l'objet au format json
 	*/
 	HRESULT to_json() {
+		log(3, L"🔈RecentDocs to_json");
 		std::wofstream myfile;
 		std::wstring result = L"[\n";
 
@@ -419,26 +478,16 @@ struct RecentDocs {
 		result += L"]\n";
 		//enregistrement dans fichier json
 		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-		myfile.open(conf._outputDir +"/recentdocs.json");
-		myfile << result;
+		myfile.open(conf._outputDir + "/recentdocs.json");
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
-		if(conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir +"/recentdocs_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 		return ERROR_SUCCESS;
 	}
 
 	/*liberation mémoire */
 	void clear() {
+		log(3, L"🔈RecentDocs clear");
 		for (RecentDoc temp : recentdocs)
 			temp.clear();
 	}

@@ -2,6 +2,7 @@ var struct_volume_info =
 [
     [ "VolumeInfo", "struct_volume_info.html#a99d7451b1e666040acd79d87d173d20c", null ],
     [ "VolumeInfo", "struct_volume_info.html#a55bcfcb20e244a3900e5f28de4624ac9", null ],
+    [ "clear", "struct_volume_info.html#a650b617488d49b303d518366a0f5d294", null ],
     [ "to_json", "struct_volume_info.html#ac432d26421faf08cff157e9344af496f", null ],
     [ "creationTime", "struct_volume_info.html#abfd81bc350ea89d4a990a61dbae5aaaa", null ],
     [ "creationTimeUtc", "struct_volume_info.html#a176d1cb6073a84b8904b31725c98291b", null ],

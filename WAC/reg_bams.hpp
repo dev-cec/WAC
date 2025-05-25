@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <windows.h>
 #include <stdio.h>
 #include <offreg.h>
@@ -10,37 +10,41 @@
 #include "usb.h"
 #include "users.hpp"
 
-
-
-/*!structure repr�sentant un artefact Background Activity Monitor (BAM)
+/*!structure représentant un artefact Background Activity Monitor (BAM)
 */
 struct Bam {
 public:
 	std::wstring sid = L""; //!< SID de l'utilisateur
 	std::wstring sidName = L""; //!< nom de l'utilisateur
 	std::wstring name = L"";//!< nom de l'objet
-	std::wstring datetime = L"";//!< date de cr�ation de l'objet
-	std::wstring datetimeUtc = L"";//!< date de cr�ation de l'objet au format UTC
+	std::wstring datetime = L"";//!< date de création de l'objet
+	std::wstring datetimeUtc = L"";//!< date de création de l'objet au format UTC
 
 	/*! Constructeur
-	* @param pData contient timestamps � transformer en datetime
-	* @param szValue contient le nom de la cl� de registre contenant le BAM
+	* @param pData contient timestamps à transformer en datetime
+	* @param szValue contient le nom de la clé de registre contenant le BAM
 	* @param psid contient le SID de l'utilisateur
 	*/
 	Bam(LPBYTE pData, std::wstring szValue, std::wstring psid) {
-		FILETIME temp = bytes_to_filetime(pData);
+		name = szValue;
+		log(3, L"🔈replaceAll name");
+		name = replaceAll(name, L"\\", L"\\\\"); //escape _ in strings
+		log(2, L"❇️Bam Name : " + name);
+		FILETIME temp = *reinterpret_cast<FILETIME*>(pData);
+		log(3, L"🔈time_to_wstring datetime");
 		datetime = time_to_wstring(temp);
+		log(3, L"🔈time_to_wstring datetimeUtc");
 		datetimeUtc = time_to_wstring(temp, true);
 		sid = psid;
-		sidName = getNameFromSid(psid);
-		name = szValue;
-		name = replaceAll(name, L"\\", L"\\\\"); //escape _ in strings
+		log(3, L"🔈getNameFromSid sidName");
+		sidName = getNameFromSid(sid);
 	}
 
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
 	std::wstring to_json() {
+		log(3, L"🔈Bam to_json");
 		return L"\t{ \n"
 			L"\t\t\"SID\":\"" + sid + L"\", \n"
 			L"\t\t\"SIDName\":\"" + sidName + L"\", \n"
@@ -50,8 +54,10 @@ public:
 			L"\t}";
 	}
 
-	/* liberation m�moire */
-	void clear() {}
+	/* liberation mémoire */
+	void clear() {
+		log(3, L"🔈Bam clear");
+	}
 };
 
 /*! *structure contenant l'ensemble des BAM
@@ -59,14 +65,16 @@ public:
 struct Bams {
 public:
 	std::vector<Bam> bams;//!< tableau contenant tous les objets
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remont�es lors du traitement des objets
-
-
+	
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les param�tres de l'application issue des param�tres de la ligne de commande
+	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData() {
 		
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"ℹ️Bams : ");
+		log(0, L"*******************************************************************************************************************");
+
 		//variables
 		HRESULT hresult = NULL;
 		ORHKEY hKey = NULL;
@@ -82,35 +90,47 @@ public:
 			for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
 				std::wstring temp = L"Services\\" + key + L"\\UserSettings\\" + get<0>(profile);
 				CONST wchar_t* regkey = temp.c_str();
+				log(3, L"🔈OROpenKey CurrentControlSet\\" + std::wstring(regkey));
 				hresult = OROpenKey(conf.CurrentControlSet, regkey, &hKey);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"Unable to open key : SYSTEM\\\\CurrentControlSet\\\\" + replaceAll(std::wstring(regkey),L"\\",L"\\\\"), hresult});
+					log(2,  L"🔥OROpenKey CurrentControlSet\\" + std::wstring(regkey), hresult);
 					continue;
 				};
 
+				log(3, L"🔈ORQueryInfoKey CurrentControlSet\\" + std::wstring(regkey));
 				hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"Unable to get info key : SYSTEM\\\\CurrentControlSet\\\\" + replaceAll(std::wstring(regkey),L"\\",L"\\\\"), hresult });
+					log(2, L"🔥ORQueryInfoKey CurrentControlSet\\" + std::wstring(regkey), hresult);
 					continue;
 				};
 
 				for (int i = 0; i < (int)nValues; i++) {
 					nSize = MAX_KEY_NAME;
 					DWORD cData = 0;
-					hresult = OREnumValue(hKey, i, szValue, &nSize, &dType, NULL, &cData);
-					if (dType != REG_BINARY) continue;
-					// allocate memory to store the name
-					LPBYTE pData = new BYTE[cData + 2];
+					LPBYTE pData = NULL;
 
-					memset(pData, 0, cData + 2);
-					// get the name, type, and data 
-					OREnumValue(hKey, i, szValue, &nSize, NULL, pData, &cData);
-					Bam bam(pData, std::wstring(szValue), std::wstring(get<0>(profile)));
-
-					//save
-					bams.push_back(bam);
-					delete [] pData;
-
+					do {
+						if (pData != NULL)
+							delete[] pData;
+						pData = new BYTE[cData];
+						log(3, L"🔈OREnumValue CurrentControlSet\\" + std::wstring(regkey));
+						hresult = OREnumValue(hKey, i, szValue, &nSize, &dType, (LPBYTE)pData, &cData);
+					} while (hresult == ERROR_MORE_DATA);
+					if (dType != REG_BINARY) {
+						log(2, L"🔥OREnumValue "+ std::wstring(szValue) + L" not a REG_BINARY value");
+					}
+					else {
+						if (hresult != ERROR_SUCCESS) {
+							log(2, L"🔥OREnumValue OREnumValue CurrentControlSet\\" + std::wstring(regkey), hresult);
+						}
+						else {
+							log(1, L"➕Bam");
+							Bam bam(pData, std::wstring(szValue), std::wstring(get<0>(profile)));
+							//save
+							bams.push_back(bam);
+						}
+					}
+					delete[] pData;
 				}
 			}
 		}
@@ -121,6 +141,7 @@ public:
 	*/
 	HRESULT to_json()
 	{
+		log(3, L"🔈Bams to_json");
 		std::wstring result = L"[ \n";
 		std::vector<Bam>::iterator it;
 		for (it = bams.begin(); it != bams.end(); it++) {
@@ -132,28 +153,18 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //cr�e le repertoire, pas d'erreur s'il existe d�j�
+		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/bams.json");
-		myfile << result;
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
-		if (conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //cr�e le repertoire, pas d'erreur s'il existe d�j�
-			myfile.open(conf._errorOutputDir + "/bams_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation m�moire */
+	/* liberation mémoire */
 	void clear() {
+		log(3, L"🔈Bams clear");
 		for (Bam temp : bams)
 			temp.clear();
 	}

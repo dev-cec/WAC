@@ -40,6 +40,7 @@ var NAVTREE =
       [ "Membres de fichier", "globals.html", [
         [ "Tout", "globals.html", null ],
         [ "Fonctions", "globals_func.html", null ],
+        [ "Variables", "globals_vars.html", null ],
         [ "Macros", "globals_defs.html", null ]
       ] ]
     ] ]
@@ -49,11 +50,11 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "_read_lnk_file_8cpp.html",
-"struct_beef0001.html#aab1480d701255b1f4aa14620ecf229bc",
-"struct_favorite_shellitem.html",
-"struct_recent_doc.html#a397637d1a8327fc757a878aa74092d9b",
-"struct_user_assist.html#abe9dc21d04b68c680b154d46fdde3fdd",
-"trans__id_8h.html"
+"struct_beef0000.html#a0e95d71b0593c83015e43c10f0c1a607",
+"struct_directory.html#ac54612c2b78dc10b7cca4f770afbe5a5",
+"struct_prefetchs.html#ab0ccddbf110b4a15d991926da93b9d97",
+"struct_u_r_i_shell_item.html#a6e288d19d43ffbe10f75b464aff65fc2",
+"tools_8h.html#aaf06a3762adb0aa04b8a5f8f016ca5e9"
 ];
 
 var SYNCONMSG = 'cliquez pour désactiver la synchronisation du panel';

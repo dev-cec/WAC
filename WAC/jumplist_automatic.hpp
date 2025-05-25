@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <iostream>
 #include <cstdio>
@@ -12,50 +12,57 @@
 #include "recent_docs.hpp"
 #include "oleParser.hpp"
 
-
-
 ////////////////////////////////////////////////////
 // Documentation : https://binaryforay.blogspot.com/2016/02/jump-lists-in-depth-understand-format.html
 // Documentation : https://github.com/libyal/dtformats/blob/main/documentation/Jump%20lists%20format.asciidoc
 // Documentation : https://github.com/EricZimmerman/JumpList/blob/master/JumpList/Resources/AppIDs.txt
 ///////////////////////////////////////////////////
 
-/*! Repr�sente un objet repr�sentant un objet Automatic Destination
+/*! Représente un objet représentant un objet Automatic Destination
 */
 struct AutomaticDestination {
 	std::wstring path = L""; //!< chemin du fichier dans le snapshot
 	std::wstring pathOriginal = L""; //!< chemin du fichier sur le disque
-	std::wstring Sid = L"";//!< SID de l'utilisateur propri�taire du fichier
-	std::wstring SidName = L"";//!< nom de l'utilisateur propri�taire du fichier
-	std::wstring application = L"";//!< nom de l'application li�e
+	std::wstring Sid = L"";//!< SID de l'utilisateur propriétaire du fichier
+	std::wstring SidName = L"";//!< nom de l'utilisateur propriétaire du fichier
+	std::wstring application = L"";//!< nom de l'application liée
 
-	oleParser ole; //!< Parser ole utilis� pour d�compresser l'objet ole
+	oleParser ole; //!< Parser ole utilisé pour décompresser l'objet ole
 	std::vector<RecentDoc> recentDocs; //!< tableau contenant les objets Shell Entries du fichier
-	FILETIME created = { 0 }; //!< date de cr�ation du fichier
-	FILETIME createdUtc = { 0 }; //!< date de cr�ation du fichier au format utc
+	FILETIME created = { 0 }; //!< date de création du fichier
+	FILETIME createdUtc = { 0 }; //!< date de création du fichier au format utc
 	FILETIME modified = { 0 };//!< date de modification  du fichier
 	FILETIME modifiedUtc = { 0 };//!< date de modification du fichier au format utc
-	FILETIME accessed = { 0 };//!< date d'acc�s du fichier
-	FILETIME accessedUtc = { 0 };//!< date d'acc�s du fichier au format utc
+	FILETIME accessed = { 0 };//!< date d'accès du fichier
+	FILETIME accessedUtc = { 0 };//!< date d'accès du fichier au format utc
 
 	/*! constructeur
-	* @param buffer en entr�e contient les bits � parser des extensionblock
+	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _path est le chemin contenant les Automatic Destinations
-	* @param _sid est le SID de l'utilisateur propri�taire du LNK
-	* @param errors est un pointeur sur un vecteur de wstring contenant les erreurs de traitements de la fonction
+	* @param _sid est le SID de l'utilisateur propriétaire du LNK
+
 	*/
-	AutomaticDestination(std::filesystem::path _path, std::wstring _sid, std::vector<std::tuple<std::wstring, HRESULT>>* _errors) {
+	AutomaticDestination(std::filesystem::path _path, std::wstring _sid) {
 		size_t bufferSize = 0; // taille du buffer
 		Sid = _sid;
-		SidName = getNameFromSid(Sid);
+		
 		//path retourne un codage ANSI mais on veut de l'UTF8
-		path = ansi_to_utf8(_path.wstring());
+		path = _path.wstring();
+		log(3, L"🔈replaceAll path");
 		path = replaceAll(path, L"\\", L"\\\\");//escape \ in std::string
+		log(3, L"🔈replaceAll pathOriginal");
 		pathOriginal = replaceAll(path, conf.mountpoint, L"C:");
+		log(2, L"❇️AutomaticDestination Path : " + pathOriginal);
+
+		// get user name
+		log(3, L"🔈getNameFromSid SidName");
+		SidName = getNameFromSid(Sid);
+
 		//conversion de l'appid contenu dans le nom de fichier en nom d'application
 		std::wstring::size_type const p(_path.filename().wstring().find_last_of('.'));
 		std::wstring baseName = _path.filename().wstring().substr(0, p);
-		application = ansi_to_utf8(from_appId(baseName));
+		log(3, L"🔈from_appId application");
+		application = from_appId(baseName);
 
 		//ouverture du fichier
 		std::ifstream file(_path.wstring(), std::ios::binary);
@@ -68,7 +75,8 @@ struct AutomaticDestination {
 			LPBYTE buffer = new BYTE[size];
 			file.read(reinterpret_cast<CHAR*>(buffer), size);
 			file.close();
-			//r�cup�ration des dates
+			//récupération des dates
+			log(3, L"🔈CreateFile hFile");
 			HANDLE hFile = CreateFile(_path.wstring().c_str(),  // name of the write
 				GENERIC_READ,          // open for reading
 				0,                      // do not share
@@ -78,46 +86,67 @@ struct AutomaticDestination {
 				NULL);                  // no attr. template
 			if (hFile != INVALID_HANDLE_VALUE) {
 				FILE_BASIC_INFO fileInfo;
+				log(3, L"🔈GetFileInformationByHandleEx hFile");
 				if (GetFileInformationByHandleEx(hFile, FileBasicInfo, &fileInfo, sizeof(FILE_BASIC_INFO))) {
 					memcpy(&createdUtc, &fileInfo.CreationTime, sizeof(createdUtc));
 					memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
 					memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
+					log(3, L"🔈FileTimeToLocalFileTime createdUtc");
 					FileTimeToLocalFileTime(&createdUtc, &created);
+					log(3, L"🔈FileTimeToLocalFileTime modifiedUtc");
 					FileTimeToLocalFileTime(&modifiedUtc, &modified);
+					log(3, L"🔈FileTimeToLocalFileTime accessedUtc");
 					FileTimeToLocalFileTime(&accessedUtc, &accessed);
 				}
+				else {
+					log(2, L"🔥GetFileInformationByHandleEx hFile", GetLastError());// show cause of failure
+				}
+			}
+			else {
+				log(2, L"🔥CreateFile hFile", GetLastError());// show cause of failure
 			}
 			CloseHandle(hFile);
 			//parsing
 			try {
+				log(3, L"🔈oleParser buffer");
 				ole = oleParser(buffer, size);
 			}
 			catch (const std::exception e) {
-				_errors->push_back({ L"Error parsing " + path + L" : " + string_to_wstring(e.what()),ERROR_INVALID_DATA });
+				log(2, L"🔥oleparser", ERROR_INVALID_DATA);// show cause of failure
 				return;
 			}
 
 			// 2. Find DestList
+			log(3, L"🔈ole.findDirectory destlistDirectory");
 			Directory destlistDirectory = ole.findDirectory(L"destlist");
 			std::vector<BYTE> destlistDirectoryBytes;
-			if (destlistDirectory.directorySize <= 0) // Directory vide, rien � faire
+			if (destlistDirectory.directorySize <= 0) // Directory vide, rien à faire
 				return;
+			log(3, L"🔈ole.Getdata destlistDirectory");
 			destlistDirectoryBytes = ole.Getdata(destlistDirectory);
-			if (destlistDirectoryBytes.empty()) {// rien � faire
-				_errors->push_back({ L"Error while retrieving destlist Directory data, maybe empty destlist ?",ERROR_INVALID_DATA });
+			if (destlistDirectoryBytes.empty()) {// rien à faire
+				log(2, L"🔥ole.Getdata destlistDirectory", ERROR_EMPTY);// show cause of failure
 				return;
 			}
 			// 3. Process DestList entries
+			log(3, L"🔈DestFileDirectory destlistArray");
 			DestFileDirectory destlistArray = DestFileDirectory(&destlistDirectoryBytes[0]);
 
-			// TODO 4. For each DestList entry, find the corresponding Directory entry where DestListEntry.EntryNumber == DirectoryEntry.Name
+			// 4. For each DestList entry, find the corresponding Directory entry where DestListEntry.EntryNumber == DirectoryEntry.Name
 			for (DestFile df : destlistArray.destfiles) {
+				
+				log(3, L"🔈ole.findDirectory d");
 				Directory d = ole.findDirectory(to_hex(df.entryNumber));
 				if (d.name != L"") {
-					// TODO 5. Once we have the Directory entry for the lnk file, we can go get the bytes that make up the lnk file.
+					// 5. Once we have the Directory entry for the lnk file, we can go get the bytes that make up the lnk file.
+					log(3, L"🔈ole.Getdata d");
 					std::vector<BYTE> directoryBytes = ole.Getdata(d);
-					RecentDoc s = RecentDoc(&directoryBytes[0], path, _sid, _errors);
-					recentDocs.push_back(s);
+					log(3, L"🔈RecentDoc");
+					recentDocs.push_back(RecentDoc(&directoryBytes[0], path, _sid));
+				}
+				else {
+					log(2, L"🔥ole.findDirectory d", ERROR_EMPTY);// show cause of failure
+					return;
 				}
 			}
 			delete[] buffer;
@@ -125,23 +154,30 @@ struct AutomaticDestination {
 	};
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation n�cessaire en d�but de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i) {
+		log(3, L"🔈AutomaticDestination to_json");
 		std::wstring result = L"";
-		result += tab(i) + L"{ \n"
-			+ tab(i + 1) + L"\"File\":\"" + pathOriginal + L"\", \n"
-			+ tab(i + 1) + L"\"SID\":\"" + Sid + L"\", \n"
-			+ tab(i + 1) + L"\"SIDName\":\"" + SidName + L"\", \n"
-			+ tab(i + 1) + L"\"Application\":\"" + application + L"\", \n"
-			+ tab(i + 1) + L"\"Created\":\"" + time_to_wstring(created) + L"\", \n"
-			+ tab(i + 1) + L"\"CreatedUtc\":\"" + time_to_wstring(createdUtc) + L"\", \n"
-			+ tab(i + 1) + L"\"Modified\":\"" + time_to_wstring(modified) + L"\", \n"
-			+ tab(i + 1) + L"\"ModifiedUtc\":\"" + time_to_wstring(modifiedUtc) + L"\", \n"
-			+ tab(i + 1) + L"\"Accessed\":\"" + time_to_wstring(accessed) + L"\", \n"
-			+ tab(i + 1) + L"\"AccessedUtc\":\"" + time_to_wstring(accessedUtc) + L"\", \n"
-			+ tab(i + 1) + L"\"LNKs\" : [\n";
+		result += tab(i) + L"{ \n";
+			result+= tab(i + 1) + L"\"File\":\"" + pathOriginal + L"\", \n";
+			result+= tab(i + 1) + L"\"SID\":\"" + Sid + L"\", \n";
+			result+= tab(i + 1) + L"\"SIDName\":\"" + SidName + L"\", \n";
+			result+= tab(i + 1) + L"\"Application\":\"" + application + L"\", \n";
+			log(3, L"🔈time_to_wstring created");
+			result+= tab(i + 1) + L"\"Created\":\"" + time_to_wstring(created) + L"\", \n";
+			log(3, L"🔈time_to_wstring createdUtc");
+			result+= tab(i + 1) + L"\"CreatedUtc\":\"" + time_to_wstring(createdUtc) + L"\", \n";
+			log(3, L"🔈time_to_wstring modified");
+			result+= tab(i + 1) + L"\"Modified\":\"" + time_to_wstring(modified) + L"\", \n";
+			log(3, L"🔈time_to_wstring modifiedUtc");
+			result+= tab(i + 1) + L"\"ModifiedUtc\":\"" + time_to_wstring(modifiedUtc) + L"\", \n";
+			log(3, L"🔈time_to_wstring accessed");
+			result+= tab(i + 1) + L"\"Accessed\":\"" + time_to_wstring(accessed) + L"\", \n";
+			log(3, L"🔈time_to_wstring accessedUtc");
+			result+= tab(i + 1) + L"\"AccessedUtc\":\"" + time_to_wstring(accessedUtc) + L"\", \n";
+			result += tab(i + 1) + L"\"LNKs\" : [\n";
 		std::vector<RecentDoc>::iterator it;
 		for (it = recentDocs.begin(); it != recentDocs.end(); it++) {
 			result += it->to_json(i + 2);
@@ -155,37 +191,45 @@ struct AutomaticDestination {
 		return result;
 	};
 
-	/* liberation m�moire */
+	/* liberation mémoire */
 	void clear() {
+		log(3, L"🔈AutomaticDestination clear");
 		for (RecentDoc temp : recentDocs)
 			temp.clear();
 	}
 };
 
-/*! Repr�sente un objet repr�sentant un objet Jumplist contenant les Automatic Destinations
+/*! Représente un objet représentant un objet Jumplist contenant les Automatic Destinations
 */
 struct JumplistAutomatics {
 	std::vector<AutomaticDestination> automaticDestinations; //!< tableau contenant les objets
-	std::vector<std::tuple<std::wstring, HRESULT>> errorsAutomaticDestinations;//!< tableau contenant les erreurs de traitement des objets
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les param�tres de l'application issue des param�tres de la ligne de commande
+	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData() {
-		conf = conf;
+
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"ℹ️JumplistAutomatics : ");
+		log(0, L"*******************************************************************************************************************");
+
 		std::string rep = "\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\AutomaticDestinations";
 		for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
-			std::string path = wstring_to_string(conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"")) + rep;
-			//std::string path = wstring_to_string(get<1>(profile)) + rep;
+			log(3, L"🔈replaceAll Profile");
+			std::wstring temp = replaceAll(get<1>(profile), L"C:", L"");
+			log(3, L"🔈wstring_to_string path");
+			std::string path = wstring_to_string(conf.mountpoint + temp) + rep;
 			struct stat sb;
 			if (stat(path.c_str(), &sb) == 0) { // directory Exists
 				for (const auto& entry : std::filesystem::directory_iterator(path)) {
 					if (entry.is_regular_file() && (entry.path().extension() == ".automaticDestinations-ms")) {
-						automaticDestinations.push_back(AutomaticDestination(entry.path(), get<0>(profile), &errorsAutomaticDestinations));
+						log(1, L"➕AutomaticDestination");
+						automaticDestinations.push_back(AutomaticDestination(entry.path(), get<0>(profile)));
 					}
 				}
 			}
 			else {
+				log(2, L"🔥Directory " + string_to_wstring(path), ERROR_DIRECTORY);// show cause of failure
 				continue;
 			}
 		}
@@ -195,6 +239,7 @@ struct JumplistAutomatics {
 	/*! conversion de l'objet au format json
 	*/
 	HRESULT to_json() {
+		log(3, L"🔈AutomaticDestinations to_json");
 		std::wofstream myfile;
 
 		std::wstring result = L"[\n";
@@ -208,27 +253,17 @@ struct JumplistAutomatics {
 		}
 		result += L"]\n";
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //cr�e le repertoire, pas d'erreur s'il existe d�j�
+		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		myfile.open(conf._outputDir + "/jumplistAutomaticDestinations.json");
-		myfile << result;
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
-		if (conf._debug == true && errorsAutomaticDestinations.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errorsAutomaticDestinations) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //cr�e le repertoire, pas d'erreur s'il existe d�j�
-			myfile.open(conf._errorOutputDir + "/jumplistAutomaticDestinations_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 		return ERROR_SUCCESS;
 	};
 
-	/* liberation m�moire */
+	/* liberation mémoire */
 	void clear() {
+		log(3, L"🔈AutomaticDestinations clear");
 		for (AutomaticDestination temp : automaticDestinations)
 			temp.clear();
 	}

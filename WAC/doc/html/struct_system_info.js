@@ -1,9 +1,10 @@
 var struct_system_info =
 [
-    [ "getData", "struct_system_info.html#a19f5762aa3a08e9cf9eda1270863b04e", null ],
+    [ "clear", "struct_system_info.html#a71ad6e847cd0db030452d3a58e4545ec", null ],
+    [ "getData", "struct_system_info.html#a30d08c80ceb0a7549eedf65598a581d0", null ],
     [ "to_json", "struct_system_info.html#a916931c4d1e3f29a7575b085ad524bc6", null ],
-    [ "_conf", "struct_system_info.html#a634377fcbd1f8d5445f301e58eedc987", null ],
     [ "computerName", "struct_system_info.html#a076b6619e9293c8f3a6d122d5e96b7fc", null ],
+    [ "conf", "struct_system_info.html#af4a84a944cac1e7b6633570c2dce8a6b", null ],
     [ "currentBias", "struct_system_info.html#a7f2fb03bc040834c45f3e4e210b92921", null ],
     [ "currentTimeZone", "struct_system_info.html#a4971c9dbf9099db35f638dd23bc886f4", null ],
     [ "currentTimeZoneCaption", "struct_system_info.html#a598c9aa39978d9010d0a3a45f634bcbd", null ],

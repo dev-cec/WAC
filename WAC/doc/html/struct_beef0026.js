@@ -1,6 +1,7 @@
 var struct_beef0026 =
 [
-    [ "Beef0026", "struct_beef0026.html#a5ff93a8f5570854a349949953ec038ab", null ],
+    [ "Beef0026", "struct_beef0026.html#a529907bd2420405de9a32054ca2cdf99", null ],
+    [ "clear", "struct_beef0026.html#a70d46dea8be322b47b497043aceab2ec", null ],
     [ "to_json", "struct_beef0026.html#a5b9a5d605db583ca9bafb1e241f5e9fc", null ],
     [ "atime", "struct_beef0026.html#a74b55af1cfc3c821b3f8640dd1e2dbf5", null ],
     [ "atimeUtc", "struct_beef0026.html#adad228a28953421de4d348ba3e9e1f0e", null ],

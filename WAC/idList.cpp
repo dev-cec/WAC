@@ -1,4 +1,4 @@
-#include "idList.h"
+﻿#include "idList.h"
 #include <exception>
 
 
@@ -20,9 +20,10 @@ FileAttributes::FileAttributes(unsigned int attr) {
 	Offline = (attr & FILE_ATTRIBUTE_OFFLINE) ? true : false;
 	NotContentIndexed = (attr & FILE_ATTRIBUTE_NOT_CONTENT_INDEXED) ? true : false;
 	Encrypted = (attr & FILE_ATTRIBUTE_ENCRYPTED) ? true : false;
-} 
+}
 
 std::wstring FileAttributes::to_wstring() {
+	log(3, L"🔈FileAttributes to_wstring");
 	std::wstring result = L"";
 	if (ReadOnly == true) result += L"READONLY, ";
 	if (Hidden == true) result += L"HIDDEN, ";
@@ -38,7 +39,7 @@ std::wstring FileAttributes::to_wstring() {
 	if (NotContentIndexed == true) result += L"NOT_CONTENT_INDEXED, ";
 	if (Encrypted == true) result += L"ENCRYPTED, ";
 	if (result.size() > 0)
-		return std::wstring(&result[0], &result[0] + result.size() - 2);//suppression de la derni�re virgule et espace
+		return std::wstring(&result[0], &result[0] + result.size() - 2);//suppression de la dernière virgule et espace
 	else
 		return result;
 }
@@ -74,6 +75,7 @@ LinkFlags::LinkFlags(unsigned int _flags) {
 }
 
 std::wstring LinkFlags::to_wstring() {
+	log(3, L"🔈LinkFlags to_wstring");
 	std::wstring result = L"";
 	if (HasLinkTargetIDList == true) result += L"HAS_LINK_TARGET_ID_LIST, ";
 	if (HasLinkInfo == true) result += L"HAS_LINK_INFO, ";
@@ -103,7 +105,7 @@ std::wstring LinkFlags::to_wstring() {
 	if (PreferEnvironmentPath == true) result += L"PREFER_ENVIRONMENT_PATH, ";
 	if (KeepLocalIDListForUNCTarget == true) result += L"KEEP_LOCAL_IDLIST_FOR_UNC_TARGET, ";
 	if (result.size() > 0)
-		return std::wstring(&result[0], &result[0] + result.size() - 2);//suppression de la derni�re virgule et espace
+		return std::wstring(&result[0], &result[0] + result.size() - 2);//suppression de la dernière virgule et espace
 	else
 		return result;
 }
@@ -112,36 +114,40 @@ std::wstring LinkFlags::to_wstring() {
 * SPS (Property STORE)
 *********************************************************************************************************************/
 
-IdList::IdList(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool Parentiszip) {
+IdList::IdList(LPBYTE buffer, int _niveau, bool Parentiszip) {
 	type_char = NULL;
-	_debug = conf._debug;
-	_dump = conf._dump;
 	niveau = _niveau;
 	shellItem = NULL;
-	item_size = bytes_to_unsigned_short(buffer);
-	if (_dump == true)
+	item_size = *reinterpret_cast<unsigned short int*>(buffer);
+	if (conf._dump == true) {
+		log(3, L"🔈dump_wstring idlist");
 		pData = dump_wstring(buffer, 0, item_size);
+	}
 	else
 		pData = L"";
 	if (item_size != 0) {
 		type_char = *reinterpret_cast<unsigned char*>(buffer + 2);
+		log(3, L"🔈to_hex type_char");
 		type_hex = to_hex((int)type_char);
 		if (Parentiszip)
 			type = L"ARCHIVE_FILE_CONTENT";
 		else {
+			log(3, L"🔈shell_item_class type_char");
 			type = shell_item_class(type_char);
 		}
-		getShellItem(buffer, &shellItem, niveau + 1, errors, Parentiszip);
+		log(3, L"🔈getShellItem idlist");
+		getShellItem(buffer, &shellItem, niveau + 1, Parentiszip);
 	}
 }
 
 std::wstring IdList::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈IdList to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	result += tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"TypeHex\" : \"0x" + type_hex + L"\",\n"
 		+ tab(niveau + 1) + L"\"Type\" : \"" + type + L"\",\n";
-	if (_dump == true)
+	if (conf._dump == true)
 		result += tab(niveau + 1) + L"\"Dump\" : \"" + pData + L"\",\n";
 	result += shellItem->to_json(i);
 	result += tab(niveau) + L"}";
@@ -320,7 +326,7 @@ std::wstring get_type(unsigned int type) {
 	else return L"0x" + to_hex(type);
 }
 
-void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int niveau, std::wstring* value, bool* valueIsObject,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
+void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int niveau, std::wstring* value, bool* valueIsObject) {
 	if (valueType == VT_EMPTY) { // VT_NULL
 		*value = L"";
 	}
@@ -328,36 +334,43 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 		*value = L"NULL";
 	}
 	else if (valueType == VT_I2) {     // VT_I2(signed 16 - bit)
-		*value = std::to_wstring(bytes_to_short(buffer + *pos));
+		*value = std::to_wstring(*reinterpret_cast<short int*>(buffer + *pos));
 		*pos += 2;
 	}
 	else if (valueType == VT_I4 || valueType == VT_INT) {  // VT_I4, VT_INT(signed 32 - bit)
-		*value = std::to_wstring(bytes_to_int(buffer + *pos));
+		*value = std::to_wstring(*reinterpret_cast<int*>(buffer + *pos));
 		*pos += 4;
 	}
 	else if (valueType == VT_BSTR) {    // VT_BSTR
-		*value = ansi_to_utf8(std::wstring((wchar_t*)(buffer + *pos + 4)));
+		*value = std::wstring((wchar_t*)(buffer + *pos + 4));
+		log(3, L"🔈replaceAll value");
 		*value = replaceAll(*value, L"\\", L"\\\\"); //escape \ in std::string like path
 		*pos += 4 + value->size() * 2 + 2;
 	}
 	else if (valueType == VT_DATE) {
-		double t = bytes_to_double(buffer + *pos);
+		double t = *reinterpret_cast<double*>(buffer + *pos);
 		SYSTEMTIME s;
+		log(3, L"🔈VariantTimeToSystemTime value");
 		VariantTimeToSystemTime(t, &s);
+		log(3, L"🔈time_to_wstring value");
 		*value = time_to_wstring(s);
 		*pos += 8;
 	}
 	else if (valueType == VT_BOOL) {    // VT_BOOL
-		if (bytes_to_unsigned_short(buffer + *pos) == 0xFFFF)
+		if (*reinterpret_cast<unsigned short int*>(buffer + *pos) == 0xFFFF) {
+			log(3, L"🔈bool_to_wstring value");
 			*value = bool_to_wstring(true);
-		else if (bytes_to_unsigned_short(buffer + *pos) == 0x0000)
+		}
+		else if (*reinterpret_cast<unsigned short int*>(buffer + *pos) == 0x0000) {
+			log(3, L"🔈bool_to_wstring value");
 			*value = bool_to_wstring(false);
+		}
 		else
 			*value = L"";
 		*pos += 2;
 	}
 	else if (valueType == VT_R8) {
-		*value = std::to_wstring(bytes_to_double(buffer + *pos));
+		*value = std::to_wstring(*reinterpret_cast<double*>(buffer + *pos));
 		*pos += 8;
 	}
 	else if (valueType == VT_I1) {    // VT_I1(signed 8 - bit)
@@ -369,23 +382,24 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 		*pos += 1;
 	}
 	else if (valueType == VT_UI2) {    // VT_UI2(unsigned 16 - bit)
-		*value = std::to_wstring(bytes_to_unsigned_short(buffer + *pos));
+		*value = std::to_wstring(*reinterpret_cast<unsigned short int*>(buffer + *pos));
 		*pos += 2;
 	}
 	else if (valueType == VT_UI4 || valueType == VT_UINT) {   // VT_UI4, VT_UINT(unsigned 32 - bit)
-		*value = std::to_wstring(bytes_to_unsigned_int(buffer + *pos));
+		*value = std::to_wstring(*reinterpret_cast<unsigned int*>(buffer + *pos));
 		*pos += 4;
 	}
 	else if (valueType == VT_I8) {    // VT_I8(signed 64 - bit)
-		*value = std::to_wstring(bytes_to_long_long(buffer + *pos));
+		*value = std::to_wstring(*reinterpret_cast<long long*>(buffer + *pos));
 		*pos += 8;
 	}
 	else if (valueType == VT_UI8) {  // VT_UI8(unsigned 64 - bit)
-		*value = std::to_wstring(bytes_to_unsigned_long_long(buffer + *pos));
+		*value = std::to_wstring(*reinterpret_cast<unsigned long long*>(buffer + *pos));
 		*pos += 8;
 	}
 	else if (valueType == VT_LPWSTR) {    // VT_LPWSTR(Unicode std::string)
-		*value = ansi_to_utf8(std::wstring((wchar_t*)(buffer + *pos + 4)));
+		*value = std::wstring((wchar_t*)(buffer + *pos + 4));
+		log(3, L"🔈replaceAll value");
 		*value = replaceAll(*value, L"\\", L"\\\\"); //escape \ in std::string like path
 		*pos += 4 + value->size() * 2;
 		while (buffer[*pos] == 0x00)
@@ -394,37 +408,41 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 	else if (valueType == 0x101F) {    // Vector<VT_LPWSTR> (Unicode std::string)
 		*valueIsObject = true;
 		*value = L"[";
-		unsigned int nbStrings = bytes_to_unsigned_int(buffer + *pos);
+		unsigned int nbStrings = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		for (unsigned int x = 0; x < nbStrings; x++) {
-			unsigned int stringsize = bytes_to_unsigned_int(buffer + *pos + 4);
-			std::wstring temp = ansi_to_utf8(std::wstring((wchar_t*)(buffer + *pos + 8)));
+			unsigned int stringsize = *reinterpret_cast<unsigned int*>(buffer + *pos + 4);
+			std::wstring temp((wchar_t*)(buffer + *pos + 8));
 			*value += L"\"" + temp + L"\"";
 			if (x != nbStrings - 1)
 				*value += L",";
 			*pos += 4 + stringsize * 2;
 		}
 		*value += L"]";
+		log(3, L"🔈replaceAll value");
 		*value = replaceAll(*value, L"\\", L"\\\\"); //escape \ in std::string like path
 	}
 	else if (valueType == 0x1011) // Vector<VT_UI1> TABLEAU byte
 	{
 		*value = L"";
 		*valueIsObject = false;
-		unsigned short int itemsize = bytes_to_unsigned_short(buffer + *pos);
-		if (bytes_to_unsigned_int(buffer + *pos + 0x8) == 0x53505331) { // SPS
+		unsigned short int itemsize = *reinterpret_cast<unsigned short int*>(buffer + *pos);
+		if (*reinterpret_cast<unsigned int*>(buffer + *pos + 0x8) == 0x53505331) { // SPS
 			*valueIsObject = true;
-			*value = SPS(buffer + *pos + 0x4, niveau + 2,  errors).to_json();
+			log(3, L"🔈SPS");
+			*value = SPS(buffer + *pos + 0x4, niveau + 2).to_json();
 		}
-		else if (bytes_to_unsigned_int(buffer + *pos + 0x1c) == 0x53505331) { // SPS
+		else if (*reinterpret_cast<unsigned int*>(buffer + *pos + 0x1c) == 0x53505331) { // SPS
 			*valueIsObject = true;
-			*value = SPS(buffer + *pos + 0x8, niveau + 2,  errors).to_json();
+			log(3, L"🔈SPS value");
+			*value = SPS(buffer + *pos + 0x8, niveau + 2).to_json();
 		}
-		else *value = L"Not implemented"; //TODO Vector<VT_UI1>, il s'agit d'un std::vector de byte (LPBYTE) mais contenu unknown, il faudrait trouver � quoi correspond system.delegateidlist
+		else *value = L"Not implemented"; //TODO Vector<VT_UI1>, il s'agit d'un std::vector de byte (LPBYTE) mais contenu unknown, il faudrait trouver à quoi correspond system.delegateidlist
 
 		*pos += itemsize;
 
 	}
 	else if (valueType == VT_FILETIME) {    // VT_FILETIME(aka.Windows 64 - bit timestamp)
+		log(3, L"🔈time_to_wstring value");
 		*value = time_to_wstring(*reinterpret_cast<FILETIME*>(buffer + *pos));
 		*pos += 8;
 	}
@@ -434,20 +452,23 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 
 		//SPS
 		pos2 = 17;
-		SPS* sps1 = new SPS(buffer + pos2, niveau + 2,  errors);
+		log(3, L"🔈SPS sps1");
+		SPS* sps1 = new SPS(buffer + pos2, niveau + 2);
 		pos2 += sps1->size;
 
 		//SPS
-		SPS* sps2 = new SPS(buffer + pos2, niveau + 2,  errors);
+		log(3, L"🔈SPS sps2");
+		SPS* sps2 = new SPS(buffer + pos2, niveau + 2);
 		pos2 += sps2->size;
 
 		//SPS
-		SPS* sps3 = new SPS(buffer + pos2, niveau + 2,  errors);
+		log(3, L"🔈SPS sps3");
+		SPS* sps3 = new SPS(buffer + pos2, niveau + 2);
 		pos2 += sps3->size;
 
 		*pos += pos2;
 
-		//r�sultat
+		//résultat
 		*value = L"[\n";
 		*value += sps1->to_json();
 		*value += L",\n";
@@ -463,17 +484,19 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 	}
 	else if (valueType == VT_STREAM) {    // VT_STREAM, TODO calcul size pour maj pos
 		*value = L"VT_STREAM not implemented";
-		unsigned int stringsize = bytes_to_unsigned_int(buffer + *pos);
+		unsigned int stringsize = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		*pos += 4;
-		*value = ansi_to_utf8(std::wstring((wchar_t*)(buffer + *pos)));
+		*value = std::wstring((wchar_t*)(buffer + *pos));
 		*pos += stringsize;
 		*pos += 2;//padding
-		unsigned int steamdatasize = bytes_to_unsigned_int(buffer + *pos);
+		unsigned int steamdatasize = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		*pos += steamdatasize;
 		*pos += 0;
 	}
 	else if (valueType == VT_CLSID) {
+		log(3, L"🔈guid_to_wstring guid");
 		std::wstring guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + *pos));
+		log(3, L"🔈trans_guid_to_wstring FriendlyName");
 		std::wstring FriendlyName = trans_guid_to_wstring(guid);
 		*valueIsObject = true;
 		*value = L"{\n"
@@ -486,44 +509,48 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 		*value = L"";
 }
 
-SPSValue::SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+SPSValue::SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau) {
+	log(3, L"🔈SPSValue");
 	niveau = _niveau;
 	guid = _guid;
 	valueIsObject = false;
-	size = bytes_to_unsigned_int(buffer);
+	size = *reinterpret_cast<unsigned int*>(buffer);
 	valueType = 0;
 	if (size > 0) {
-		unsigned int id_int = bytes_to_unsigned_int(buffer + 4);
+		unsigned int id_int = *reinterpret_cast<unsigned int*>(buffer + 4);
 		id = std::to_wstring(id_int);
 		//recherche value
 		unsigned int pos = 13;
 		if (guid == L"{D5CDD505-2E9C-101B-9397-08002B2CF9AE}") {
-			id = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 9)));
+			id = std::wstring((wchar_t*)(buffer + 9));
+			log(3, L"🔈trans_guid_to_wstring name");
 			name = trans_guid_to_wstring(guid);
-			valueType = bytes_to_unsigned_short(buffer + 9 + id_int); // id_int contient la taille de la std::string 
+			valueType = *reinterpret_cast<unsigned short int*>(buffer + 9 + id_int); // id_int contient la taille de la std::string 
 			pos = 9 + id_int + 2 + 2; // 2 de padding ?
 		}
 		else {
-			valueType = bytes_to_unsigned_short(buffer + 9);
+			valueType = *reinterpret_cast<unsigned short int*>(buffer + 9);
+			log(3, L"🔈to_FriendlyName name");
 			name = to_FriendlyName(guid, id_int);
-			if (name == L"(Undefined)" && conf._debug == true) {
-				errors->push_back({ L"SPS Value : Friendlyname Unknown " + guid + L"/" + std::to_wstring(id_int), ERROR_UNKNOWN_COMPONENT });
+			if (name == L"(Undefined)") {
+				log(2, L"🔥SPS Value : Friendlyname Unknown " + guid + L"/" + std::to_wstring(id_int));
 			}
 			id = std::to_wstring(id_int);
 
 		}
-		get_value(buffer, &pos, valueType, niveau, &value, &valueIsObject,  errors);
+		log(3, L"🔈get_value");
+		get_value(buffer, &pos, valueType, niveau, &value, &valueIsObject);
 	}
 }
 
 std::wstring SPSValue::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"ID\" : \"" + guid + L"/" + id + L"\",\n"
-		+ tab(niveau + 1) + L"\"Name\" : \"" + name + L"\",\n"
-		+ tab(niveau + 1) + L"\"Type\" : \"" + get_type(valueType) + L"\",\n";
+	log(3, L"🔈SPSValue to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	std::wstring result = tab(niveau) + L"{\n";
+	result += tab(niveau + 1) + L"\"ID\" : \"" + guid + L"/" + id + L"\",\n";
+	result += tab(niveau + 1) + L"\"Name\" : \"" + name + L"\",\n";
+	log(3, L"🔈get_type valueType");
+	result += tab(niveau + 1) + L"\"Type\" : \"" + get_type(valueType) + L"\",\n";
 	if (valueIsObject == false)
 		result += tab(niveau + 1) + L"\"Value\" : \"" + value + L"\"\n"; // std::string
 	else
@@ -532,19 +559,20 @@ std::wstring SPSValue::to_json(int i) {
 	return result;
 }
 
-SPS::SPS(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+SPS::SPS(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
-	size = bytes_to_unsigned_int(buffer);
-	version = bytes_to_unsigned_int(buffer + 4);
+	size = *reinterpret_cast<unsigned int*>(buffer);
+	version = *reinterpret_cast<unsigned int*>(buffer + 4);
+	log(3, L"🔈guid_to_wstring guid");
 	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8));
+	log(3, L"🔈trans_guid_to_wstring FriendlyName");
 	FriendlyName = trans_guid_to_wstring(guid);
 	unsigned int pos = 24;
 	while (true) {
 		if (pos >= size)
 			break; //fin
-		SPSValue block(buffer + pos, guid, niveau + 2,  errors); // concordance avec to_json
+		log(3, L"🔈SPSValue");
+		SPSValue block(buffer + pos, guid, niveau + 2); // concordance avec to_json
 		if (block.size == 0) { //vide
 			break;
 		}
@@ -555,7 +583,8 @@ SPS::SPS(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESU
 }
 
 std::wstring SPS::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈SPS to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Values\" : [\n";
 	std::vector<SPSValue>::iterator it;
@@ -574,20 +603,23 @@ std::wstring SPS::to_json(int i) {
 * Extension blocks
 *********************************************************************************************************************/
 
-Beef0000::Beef0000(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0000::Beef0000(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0000";
+	log(3, L"🔈guid_to_wstring guid1");
 	guid1 = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8));
+	log(3, L"🔈trans_guid_to_wstring identifier1");
 	identifier1 = trans_guid_to_wstring(guid1);
+	log(3, L"🔈guid_to_wstring guid2");
 	guid2 = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 24));
+	log(3, L"🔈trans_guid_to_wstring identifier2");
 	identifier2 = trans_guid_to_wstring(guid2);
 }
 
 std::wstring Beef0000::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0000 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Guid1\" : \"" + guid1 + L"\",\n"
@@ -598,9 +630,7 @@ std::wstring Beef0000::to_json(int i) {
 	return result;
 }
 
-Beef0001::Beef0001(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0001::Beef0001(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0001";
@@ -608,7 +638,8 @@ Beef0001::Beef0001(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstr
 }
 
 std::wstring Beef0001::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0001 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message \" : \"" + message + L"\"\n"
@@ -616,9 +647,7 @@ std::wstring Beef0001::to_json(int i) {
 	return result;
 }
 
-Beef0002::Beef0002(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0002::Beef0002(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0002";
@@ -626,7 +655,8 @@ Beef0002::Beef0002(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstr
 }
 
 std::wstring Beef0002::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0002 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message \" : \"" + message + L"\"\n"
@@ -634,18 +664,19 @@ std::wstring Beef0002::to_json(int i) {
 	return result;
 }
 
-Beef0003::Beef0003(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0003::Beef0003(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0003";
+	log(3, L"🔈guid_to_wstring guid");
 	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8));
+	log(3, L"🔈trans_guid_to_wstring identifier");
 	identifier = trans_guid_to_wstring(guid);
 }
 
 std::wstring Beef0003::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0003 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Guid\" : \"" + guid + L"\",\n"
@@ -654,25 +685,28 @@ std::wstring Beef0003::to_json(int i) {
 	return result;
 }
 
-Beef0004::Beef0004(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool* is_zip, bool is_file) {
+Beef0004::Beef0004(LPBYTE buffer, int _niveau, bool* is_zip, bool is_file) {
 	ExtensionVersion = 0;
-	_debug = conf._debug;
-	_dump = conf._dump;
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0004";
-	creationDateUtc = FatDateTime(bytes_to_unsigned_int(buffer + 8)).to_filetime();
-	if (time_to_wstring(creationDateUtc) != L"")
+	creationDateUtc = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 8)).to_filetime();
+	log(3, L"🔈time_to_wstring creationDateUtc");
+	if (time_to_wstring(creationDateUtc) != L"") {
+		log(3, L"🔈FileTimeToLocalFileTime creationDateUtc");
 		FileTimeToLocalFileTime(&creationDateUtc, &creationDate);
-	accessedDateUtc = FatDateTime(bytes_to_unsigned_int(buffer + 12)).to_filetime();
-	if (time_to_wstring(accessedDateUtc) != L"")
+	}
+	accessedDateUtc = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 12)).to_filetime();
+	if (time_to_wstring(accessedDateUtc) != L"") {
+		log(3, L"🔈FileTimeToLocalFileTime accessedDateUtc");
 		FileTimeToLocalFileTime(&accessedDateUtc, &accessedDate);
+	}
 	unsigned int off = 18;  //start of data part
 	unsigned short int longNameSize = 0;
-	longNameSize = bytes_to_unsigned_short(buffer + off + 18);
-	longName = ansi_to_utf8(std::wstring((wchar_t*)(buffer + off + 28)));
+	longNameSize = *reinterpret_cast<unsigned short int*>(buffer + off + 18);
+	longName = std::wstring((wchar_t*)(buffer + off + 28));
 	// le contenu des ZIP et autres archives ont un contenu format special, il faut donc identifier les archives.
-	// L'attribut ARCHIVE ne signifie pas ZIP mais "pr�t � �tre archiv�" au sens l'explorer
+	// L'attribut ARCHIVE ne signifie pas ZIP mais "prêt à être archivé" au sens l'explorer
 	std::wstring extension = L"";
 	if (longName.length() > 3)
 		extension = longName.substr(longName.length() - 3, 3);
@@ -681,39 +715,44 @@ Beef0004::Beef0004(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstr
 		*is_zip = true;
 	if (longNameSize > longName.size())
 	{
-		localizedName = ansi_to_utf8(std::wstring((wchar_t*)(buffer + off + 28 + (longName.size() + 1) * 2)));
+		localizedName = std::wstring((wchar_t*)(buffer + off + 28 + (longName.size() + 1) * 2));
+		log(3, L"🔈replaceAll localizedName");
 		localizedName = replaceAll(localizedName, L"\\", L"\\\\");
 	}
 }
 
 std::wstring Beef0004::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"CreatedDate\" : \"" + time_to_wstring(accessedDate) + L"\",\n"
-		+ tab(niveau + 1) + L"\"CreatedDateUtc\" : \"" + time_to_wstring(accessedDateUtc) + L"\",\n"
-		+ tab(niveau + 1) + L"\"AccessedDate\" : \"" + time_to_wstring(accessedDate) + L"\",\n"
-		+ tab(niveau + 1) + L"\"AccessedDateUtc\" : \"" + time_to_wstring(accessedDateUtc) + L"\",\n"
-		+ tab(niveau + 1) + L"\"LongName\" : \"" + longName + L"\",\n"
-		+ tab(niveau + 1) + L"\"LocalizedName\" : \"" + localizedName + L"\"\n"
-		+ tab(niveau) + L"}";
+	log(3, L"🔈Beef0004 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	std::wstring result = tab(niveau) + L"{\n";
+	result += tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n";
+	log(3, L"🔈time_to_wstring accessedDate");
+	result += tab(niveau + 1) + L"\"CreatedDate\" : \"" + time_to_wstring(accessedDate) + L"\",\n";
+	log(3, L"🔈time_to_wstring accessedDateUtc");
+	result += tab(niveau + 1) + L"\"CreatedDateUtc\" : \"" + time_to_wstring(accessedDateUtc) + L"\",\n";
+	log(3, L"🔈time_to_wstring accessedDate");
+	result += tab(niveau + 1) + L"\"AccessedDate\" : \"" + time_to_wstring(accessedDate) + L"\",\n";
+	log(3, L"🔈time_to_wstring accessedDateUtc");
+	result += tab(niveau + 1) + L"\"AccessedDateUtc\" : \"" + time_to_wstring(accessedDateUtc) + L"\",\n";
+	result += tab(niveau + 1) + L"\"LongName\" : \"" + longName + L"\",\n";
+	result += tab(niveau + 1) + L"\"LocalizedName\" : \"" + localizedName + L"\"\n";
+	result += tab(niveau) + L"}";
 	return result;
 }
 
-Beef0006::Beef0006(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0006::Beef0006(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0006";
 	int pos = 0;
-	while (bytes_to_short(buffer + pos) != 0x0000)
+	while (*reinterpret_cast<short int*>(buffer + pos) != 0x0000)
 		pos += 1;
-	username = ansi_to_utf8(std::wstring((wchar_t*)(buffer + pos + 2)));
+	username = std::wstring((wchar_t*)(buffer + pos + 2));
 }
 
 std::wstring Beef0006::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0006 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Username\" : \"" + username + L"\"\n"
@@ -721,9 +760,7 @@ std::wstring Beef0006::to_json(int i) {
 	return result;
 }
 
-Beef0008::Beef0008(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0008::Beef0008(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef008";
@@ -731,7 +768,8 @@ Beef0008::Beef0008(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstr
 }
 
 std::wstring Beef0008::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0008 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
@@ -739,9 +777,7 @@ std::wstring Beef0008::to_json(int i) {
 	return result;
 }
 
-Beef0009::Beef0009(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0009::Beef0009(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0009";
@@ -749,7 +785,8 @@ Beef0009::Beef0009(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstr
 }
 
 std::wstring Beef0009::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0009 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
@@ -757,9 +794,7 @@ std::wstring Beef0009::to_json(int i) {
 	return result;
 }
 
-Beef000a::Beef000a(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef000a::Beef000a(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef000a";
@@ -767,7 +802,8 @@ Beef000a::Beef000a(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstr
 }
 
 std::wstring Beef000a::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef000a to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
@@ -775,9 +811,7 @@ std::wstring Beef000a::to_json(int i) {
 	return result;
 }
 
-Beef000c::Beef000c(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef000c::Beef000c(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef000c";
@@ -785,7 +819,8 @@ Beef000c::Beef000c(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstr
 }
 
 std::wstring Beef000c::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef000c to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
@@ -793,18 +828,19 @@ std::wstring Beef000c::to_json(int i) {
 	return result;
 }
 
-Beef000e::Beef000e(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) { // TODO A TESTER
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef000e::Beef000e(LPBYTE buffer, int _niveau) { // TODO A TESTER
 	niveau = _niveau;
 	message = L"";
 	isPresent = true;
 	signature = L"0xbeef000e";
+	log(3, L"🔈guid_to_wstring guid");
 	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 16));
+	log(3, L"🔈trans_guid_to_wstring identifier");
 	identifier = trans_guid_to_wstring(guid);
 	int pos = 50;
 	for (int x = 0; x < 3; x++) {
-		SPS s = SPS(buffer + pos, niveau + 1,  errors);
+		log(3, L"🔈SPS");
+		SPS s = SPS(buffer + pos, niveau + 1);
 		SPSs.push_back(s);
 		pos += s.size;
 	}
@@ -820,20 +856,22 @@ Beef000e::Beef000e(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstr
 	pos += 1;
 
 	for (int x = 0; x < 2; x++) { // 2 extension block
-		unsigned short int size = bytes_to_unsigned_short(buffer + pos);
+		unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
 		if (size > 0) {
-			getExtensionBlock(buffer + pos, &extensionblocks, niveau + 1,  errors, NULL, false);
+			log(3, L"🔈getExtensionBlock");
+			getExtensionBlock(buffer + pos, &extensionblocks, niveau + 1, NULL, false);
 			pos += size;
 		}
 		else
 			break;
 	}
 	while (true) {
-		unsigned short int size = bytes_to_unsigned_short(buffer + pos); // recherche de idlist
+		unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos); // recherche de idlist
 		if (size > 0) {
-
+			log(3, L"🔈IShellItem");
 			IShellItem* i;
-			getShellItem(buffer + pos, &i, niveau + 1,  errors);
+			log(3, L"🔈getShellItem");
+			getShellItem(buffer + pos, &i, niveau + 1);
 			ishellitems.push_back(i);
 			pos += size;
 		}
@@ -843,7 +881,8 @@ Beef000e::Beef000e(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstr
 }
 
 std::wstring Beef000e::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef000e to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"IdLists\" : [\n";
@@ -860,17 +899,17 @@ std::wstring Beef000e::to_json(int i) {
 	return result;
 }
 
-Beef0010::Beef0010(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0010::Beef0010(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0010";
-	sps = SPS(buffer + 16, niveau + 1,  errors);
+	log(3, L"🔈SPS");
+	sps = SPS(buffer + 16, niveau + 1);
 }
 
 std::wstring Beef0010::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0010 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"SPS\" :\n"
@@ -880,9 +919,7 @@ std::wstring Beef0010::to_json(int i) {
 	return result;
 }
 
-Beef0013::Beef0013(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0013::Beef0013(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0013";
@@ -890,7 +927,8 @@ Beef0013::Beef0013(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstr
 }
 
 std::wstring Beef0013::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0013 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
@@ -898,9 +936,7 @@ std::wstring Beef0013::to_json(int i) {
 	return result;
 }
 
-Beef0014::Beef0014(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0014::Beef0014(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0014";
@@ -908,7 +944,8 @@ Beef0014::Beef0014(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstr
 }
 
 std::wstring Beef0014::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0014 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
@@ -916,17 +953,16 @@ std::wstring Beef0014::to_json(int i) {
 	return result;
 }
 
-Beef0016::Beef0016(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0016::Beef0016(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0016";
-	value = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 10)));
+	value = std::wstring((wchar_t*)(buffer + 10));
 }
 
 std::wstring Beef0016::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0016 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Value\" : \"" + value + L"\"\n"
@@ -934,9 +970,7 @@ std::wstring Beef0016::to_json(int i) {
 	return result;
 }
 
-Beef0017::Beef0017(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0017::Beef0017(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0017";
@@ -944,7 +978,8 @@ Beef0017::Beef0017(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstr
 }
 
 std::wstring Beef0017::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0017 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
@@ -952,20 +987,23 @@ std::wstring Beef0017::to_json(int i) {
 	return result;
 }
 
-Beef0019::Beef0019(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0019::Beef0019(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0019";
+	log(3, L"🔈guid_to_wstring guid1");
 	guid1 = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8));
+	log(3, L"🔈trans_guid_to_wstring identifier1");
 	identifier1 = trans_guid_to_wstring(guid1);
+	log(3, L"🔈guid_to_wstring guid2");
 	guid2 = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 24));
+	log(3, L"🔈trans_guid_to_wstring identifier2");
 	identifier2 = trans_guid_to_wstring(guid2);
 }
 
 std::wstring Beef0019::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0019 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Guid1\" : \"" + guid1 + L"\",\n"
@@ -976,17 +1014,16 @@ std::wstring Beef0019::to_json(int i) {
 	return result;
 }
 
-Beef001a::Beef001a(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef001a::Beef001a(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef001a";
-	fileDocumentTypeString = ansi_to_utf8(std::wstring((wchar_t*)(buffer+10)));
+	fileDocumentTypeString = std::wstring((wchar_t*)(buffer + 10));
 }
 
 std::wstring Beef001a::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef001a to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"FileDocumentType\" : \"" + fileDocumentTypeString + L"\"\n"
@@ -994,17 +1031,16 @@ std::wstring Beef001a::to_json(int i) {
 	return result;
 }
 
-Beef001b::Beef001b(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef001b::Beef001b(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef001b";
-	fileDocumentTypeString = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 10)));
+	fileDocumentTypeString = std::wstring((wchar_t*)(buffer + 10));
 }
 
 std::wstring Beef001b::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef001b to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"FileDocumentType\" : \"" + fileDocumentTypeString + L"\"\n"
@@ -1012,17 +1048,16 @@ std::wstring Beef001b::to_json(int i) {
 	return result;
 }
 
-Beef001d::Beef001d(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef001d::Beef001d(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef001d";
-	executable = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 10)));
+	executable = std::wstring((wchar_t*)(buffer + 10));
 }
 
 std::wstring Beef001d::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef001d to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Executable\" : \"" + executable + L"\"\n"
@@ -1030,17 +1065,16 @@ std::wstring Beef001d::to_json(int i) {
 	return result;
 }
 
-Beef001e::Beef001e(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef001e::Beef001e(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef001e";
-	pinType = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 10)));
+	pinType = std::wstring((wchar_t*)(buffer + 10));
 }
 
 std::wstring Beef001e::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef001e to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"PinType\" : \"" + pinType + L"\"\n"
@@ -1048,17 +1082,17 @@ std::wstring Beef001e::to_json(int i) {
 	return result;
 }
 
-Beef0021::Beef0021(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0021::Beef0021(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0021";
-	sps = SPS(buffer + 8, niveau + 1,  errors);
+	log(3, L"🔈SPS");
+	sps = SPS(buffer + 8, niveau + 1);
 }
 
 std::wstring Beef0021::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0021 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"SPS\" : \n" + sps.to_json(i) + L"\n"
@@ -1066,17 +1100,17 @@ std::wstring Beef0021::to_json(int i) {
 	return result;
 }
 
-Beef0024::Beef0024(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0024::Beef0024(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0024";
-	sps = SPS(buffer + 8, niveau + 1,  errors);
+	log(3, L"🔈SPS");
+	sps = SPS(buffer + 8, niveau + 1);
 }
 
 std::wstring Beef0024::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0024 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"SPS\" : \n" + sps.to_json(i) + L"\n"
@@ -1084,18 +1118,17 @@ std::wstring Beef0024::to_json(int i) {
 	return result;
 }
 
-Beef0025::Beef0025(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0025::Beef0025(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0025";
-	filetime1 = bytes_to_filetime(buffer + 12);
-	filetime2 = bytes_to_filetime(buffer + 20);
+	filetime1 = *reinterpret_cast<FILETIME*>(buffer + 12);
+	filetime2 = *reinterpret_cast<FILETIME*>(buffer + 20);
 }
 
 std::wstring Beef0025::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0025 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Filetime1\" : \"" + time_to_wstring(filetime1) + L"\",\n"
@@ -1104,9 +1137,7 @@ std::wstring Beef0025::to_json(int i) {
 	return result;
 }
 
-Beef0026::Beef0026(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0026::Beef0026(LPBYTE buffer, int _niveau) {
 	sps = NULL;
 	niveau = _niveau;
 	isPresent = true;
@@ -1114,14 +1145,18 @@ Beef0026::Beef0026(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstr
 	idlist = NULL;
 	shellitem = NULL;
 	if ((short int)buffer[8] == 0x11 || (short int)buffer[8] == 0x10 || (short int)buffer[8] == 0x12 || (short int)buffer[8] == 0x34 || (short int)buffer[8] == 0x31) {
-		ctimeUtc = bytes_to_filetime(buffer + 12);
+		ctimeUtc = *reinterpret_cast<FILETIME*>(buffer + 12);
+		log(3, L"🔈LocalFileTimeToFileTime ctimeUtc");
 		LocalFileTimeToFileTime(&ctimeUtc, &ctime);
-		mtimeUtc = bytes_to_filetime(buffer + 20);
+		mtimeUtc = *reinterpret_cast<FILETIME*>(buffer + 20);
+		log(3, L"🔈LocalFileTimeToFileTime mtimeUtc");
 		LocalFileTimeToFileTime(&mtimeUtc, &mtime);
-		atimeUtc = bytes_to_filetime(buffer + 28);
-		LocalFileTimeToFileTime(&atimeUtc, &atime);
+		atimeUtc = *reinterpret_cast<FILETIME*>(buffer + 28);
+		log(3, L"🔈LocalFileTimeToFileTime mtimeUtc");
+		LocalFileTimeToFileTime(&mtimeUtc, &atime);
 		// 2 octets Unknown
-		idlist = new IdList(buffer + 38, niveau + 2,  errors);
+		log(3, L"🔈IdList");
+		idlist = new IdList(buffer + 38, niveau + 2);
 	}
 	else {
 		ctimeUtc = { 0 };
@@ -1130,21 +1165,29 @@ Beef0026::Beef0026(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstr
 		mtime = { 0 };
 		atimeUtc = { 0 };
 		atime = { 0 };
-		sps = new SPS(buffer + 8, niveau + 2,  errors);
+		log(3, L"🔈SPS");
+		sps = new SPS(buffer + 8, niveau + 2);
 	}
 
 }
 
 std::wstring Beef0026::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"CreationDate\" : \"" + time_to_wstring(ctime) + L"\",\n"
-		+ tab(niveau + 1) + L"\"CreationDateUtc\" : \"" + time_to_wstring(ctimeUtc) + L"\",\n"
-		+ tab(niveau + 1) + L"\"ModificationDate\" : \"" + time_to_wstring(mtime) + L"\",\n"
-		+ tab(niveau + 1) + L"\"ModificationDateUtc\" : \"" + time_to_wstring(mtimeUtc) + L"\",\n"
-		+ tab(niveau + 1) + L"\"AccessedDate\" : \"" + time_to_wstring(atime) + L"\",\n"
-		+ tab(niveau + 1) + L"\"AccessedDateUtc\" : \"" + time_to_wstring(atimeUtc) + L"\"";
+	log(3, L"🔈Beef0026 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	std::wstring result = tab(niveau) + L"{\n";
+	result += tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n";
+	log(3, L"🔈time_to_wstring ctime");
+	result += tab(niveau + 1) + L"\"CreationDate\" : \"" + time_to_wstring(ctime) + L"\",\n";
+	log(3, L"🔈time_to_wstring ctimeUtc");
+	result += tab(niveau + 1) + L"\"CreationDateUtc\" : \"" + time_to_wstring(ctimeUtc) + L"\",\n";
+	log(3, L"🔈time_to_wstring mtime");
+	result += tab(niveau + 1) + L"\"ModificationDate\" : \"" + time_to_wstring(mtime) + L"\",\n";
+	log(3, L"🔈time_to_wstring mtimeUtc");
+	result += tab(niveau + 1) + L"\"ModificationDateUtc\" : \"" + time_to_wstring(mtimeUtc) + L"\",\n";
+	log(3, L"🔈time_to_wstring atime");
+	result += tab(niveau + 1) + L"\"AccessedDate\" : \"" + time_to_wstring(atime) + L"\",\n";
+	log(3, L"🔈time_to_wstring atimeUtc");
+	result += tab(niveau + 1) + L"\"AccessedDateUtc\" : \"" + time_to_wstring(atimeUtc) + L"\"";
 	if (sps != NULL) {
 		result += L",\n";
 		result += tab(niveau + 1) + L"\"SPS\" : " + sps->to_json(i) + L"\n";
@@ -1163,17 +1206,17 @@ std::wstring Beef0026::to_json(int i) {
 	return result;
 }
 
-Beef0027::Beef0027(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0027::Beef0027(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0027";
-	sps = SPS(buffer + 8, niveau + 1,  errors);
+	log(3, L"🔈SPS");
+	sps = SPS(buffer + 8, niveau + 1);
 }
 
 std::wstring Beef0027::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0027 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"SPS\" : \n" + sps.to_json(i) + L"\n"
@@ -1181,9 +1224,7 @@ std::wstring Beef0027::to_json(int i) {
 	return result;
 }
 
-Beef0029::Beef0029(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Beef0029::Beef0029(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0029";
@@ -1191,7 +1232,8 @@ Beef0029::Beef0029(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstr
 }
 
 std::wstring Beef0029::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Beef0029 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n"
 		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
 		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
@@ -1199,120 +1241,150 @@ std::wstring Beef0029::to_json(int i) {
 	return result;
 }
 
-void getExtensionBlock(LPBYTE buffer, std::vector<IExtensionBlock*>* extensionBlocks, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool* is_zip, bool is_file) {
+void getExtensionBlock(LPBYTE buffer, std::vector<IExtensionBlock*>* extensionBlocks, int _niveau, bool* is_zip, bool is_file) {
 	IExtensionBlock* block = NULL;
-	unsigned int signature = bytes_to_unsigned_int(buffer + 4);
-	unsigned short int size = bytes_to_unsigned_short(buffer);
+	unsigned int signature = *reinterpret_cast<unsigned int*>(buffer + 4);
+	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	if (signature == (unsigned int)0xBeef0000) {
-		block = new Beef0000(buffer, _niveau + 1,  errors);
+		log(3, L"🔈Beef0000");
+		block = new Beef0000(buffer, _niveau + 1);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0001) {
-		block = new Beef0001(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0001");
+		block = new Beef0001(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0002) {
-		block = new Beef0002(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0002");
+		block = new Beef0002(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0003) {
-		block = new Beef0003(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0003");
+		block = new Beef0003(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0004) {
-		block = new Beef0004(buffer, _niveau,  errors, is_zip, is_file);
+		log(3, L"🔈Beef0004");
+		block = new Beef0004(buffer, _niveau, is_zip, is_file);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0006) {
-		block = new Beef0006(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0006");
+		block = new Beef0006(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0008) {
-		block = new Beef0008(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0008");
+		block = new Beef0008(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0009) {
-		block = new Beef0009(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0009");
+		block = new Beef0009(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef000a) {
-		block = new Beef000a(buffer, _niveau,  errors);
+		log(3, L"🔈Beef000a");
+		block = new Beef000a(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef000c) {
-		block = new Beef000c(buffer, _niveau,  errors);
+		log(3, L"🔈Beef000c");
+		block = new Beef000c(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef000e) {
-		block = new Beef000e(buffer, _niveau,  errors);
+		log(3, L"🔈Beef000e");
+		block = new Beef000e(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0010) {
-		block = new Beef0010(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0010");
+		block = new Beef0010(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0013) {
-		block = new Beef0013(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0013");
+		block = new Beef0013(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0014) {
-		block = new Beef0014(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0014");
+		block = new Beef0014(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0016) {
-		block = new Beef0016(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0016");
+		block = new Beef0016(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0017) {
-		block = new Beef0017(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0017");
+		block = new Beef0017(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0019) {
-		block = new Beef0019(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0019");
+		block = new Beef0019(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef001a) {
-		block = new Beef001a(buffer, _niveau,  errors);
+		log(3, L"🔈Beef001a");
+		block = new Beef001a(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef001b) {
-		block = new Beef001b(buffer, _niveau,  errors);
+		log(3, L"🔈Beef001b");
+		block = new Beef001b(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef001d) {
-		block = new Beef001d(buffer, _niveau,  errors);
+		log(3, L"🔈Beef001d");
+		block = new Beef001d(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef001e) {
-		block = new Beef001e(buffer, _niveau,  errors);
+		log(3, L"🔈Beef001e");
+		block = new Beef001e(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0021) {
-		block = new Beef0021(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0021");
+		block = new Beef0021(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0024) {
-		block = new Beef0024(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0024");
+		block = new Beef0024(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0025) {
-		block = new Beef0025(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0025");
+		block = new Beef0025(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0026) {
-		block = new Beef0026(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0026");
+		block = new Beef0026(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0027) {
-		block = new Beef0027(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0027");
+		block = new Beef0027(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else if (signature == (unsigned int)0xBeef0029) {
-		block = new Beef0029(buffer, _niveau,  errors);
+		log(3, L"🔈Beef0029");
+		block = new Beef0029(buffer, _niveau);
 		extensionBlocks->push_back(block);
 	}
 	else {
-		errors->push_back({ L"Extension block unknown 0x" + to_hex(signature) + L" : " + dump_wstring(buffer, 0, size),ERROR_UNKNOWN_COMPONENT });
+		log(3, L"🔈dump_wstring unknown extension block");
+		std::wstring d = dump_wstring(buffer, 0, size);
+		log(3, L"🔈to_hex signature");
+		log(2, L"🔥Extension block unknown 0x" + to_hex(signature) + L" : " + d);
 	}
 }
 
@@ -1354,41 +1426,51 @@ std::wstring FsFlags::to_wstring() {
 	if (UNKNOWN == true) result += L"UNKNOWN, ";
 
 	if (result.size() > 0)
-		return std::wstring(&result[0], &result[0] + result.size() - 2);//suppression de la derni�re virgule et espace
+		return std::wstring(&result[0], &result[0] + result.size() - 2);//suppression de la dernière virgule et espace
 	else
 		return result;
 }
 
-VolumeShellItem::VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+VolumeShellItem::VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _niveau) {
+
 	niveau = _niveau;
 	isPresent = true;
 	name = L"";
 	guid = L"";
 	identifier = L"";
+	log(3, L"🔈ShellVolumeFlags");
 	flags = ShellVolumeFlags(type_char);
 	std::wstring volumeName = L"";
 	if (flags.LocalDisk == true) {
-		name = ansi_to_utf8(string_to_wstring(std::string((char*)buffer + 3)));
+		log(3, L"🔈string_to_wstring name");
+		name = string_to_wstring(std::string((char*)buffer + 3));
+		log(3, L"🔈replaceAll name");
 		name = replaceAll(name, L"\\", L"\\\\");
 	}
 	else if (flags.SystemFolder == true) {
-		name = trans_guid_to_wstring(guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 4)));
-		name = replaceAll(name, L"\\", L"\\\\");
+		log(3, L"🔈guid_to_wstring guid");
 		guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 4));
+		log(3, L"🔈trans_guid_to_wstring name");
+		name = trans_guid_to_wstring(guid);
+		log(3, L"🔈replaceAll name");
+		name = replaceAll(name, L"\\", L"\\\\");
+		log(3, L"🔈trans_guid_to_wstring identifier");
 		identifier = trans_guid_to_wstring(guid);
+		log(3, L"🔈replaceAll identifier");
 		identifier = replaceAll(identifier, L"\\", L"\\\\");
 	}
-	else if (flags.None != true)
-		errors->push_back({ L"VolumeShellItem flag unknown : " + to_hex(type_char),ERROR_UNKNOWN_COMPONENT });
+	else if (flags.None != true) {
+		log(2, L"🔥OROpenKey VolumeShellItem flag unknown : " + to_hex(type_char));
+	}
 
 }
 
 std::wstring VolumeShellItem::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈VolumeShellItem to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent) {
+		log(3, L"🔈to_wstring flags");
 		result += tab(niveau) + L"\"Flags\" : \"" + flags.to_wstring() + L"\",\n"
 			+ tab(niveau) + L"\"Name\" : \"" + name + L"\"";
 		if (!guid.empty()) {
@@ -1403,20 +1485,21 @@ std::wstring VolumeShellItem::to_json(int i) {
 	return result;
 }
 
-ControlPanel::ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+ControlPanel::ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
+	log(3, L"🔈guid_to_wstring guid");
 	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 14));
+	log(3, L"🔈trans_guid_to_wstring identifier");
 	identifier = trans_guid_to_wstring(guid);
-	unsigned short int extensionOffset = bytes_to_unsigned_short(buffer + itemSize - 2);
+	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + itemSize - 2);
 	if (extensionOffset != 0x00) {
 		unsigned short int pos = extensionOffset;
 		while (pos < itemSize) {
-			unsigned short int size = bytes_to_unsigned_short(buffer + pos);
+			unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
 			if (size > 0 && pos < itemSize) {
-				getExtensionBlock(buffer + pos, &extensionBlocks, niveau + 1,  errors, NULL, false);
+				log(3, L"🔈getExtensionBlock");
+				getExtensionBlock(buffer + pos, &extensionBlocks, niveau + 1, NULL, false);
 				pos += size;
 			}
 			else
@@ -1426,7 +1509,8 @@ ControlPanel::ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _nive
 }
 
 std::wstring ControlPanel::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈ControlPanel to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent == true) {
 		result += tab(niveau) + L"\"GUID\" : \"" + guid + L"\",\n"
@@ -1446,13 +1530,11 @@ std::wstring ControlPanel::to_json(int i) {
 	return result;
 }
 
-ControlPanelCategory::ControlPanelCategory(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+ControlPanelCategory::ControlPanelCategory(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
-	unsigned short int totalsize = bytes_to_unsigned_short(buffer);
-	switch (bytes_to_unsigned_int(buffer + 8)) {
+	unsigned short int totalsize = *reinterpret_cast<unsigned short int*>(buffer);
+	switch (*reinterpret_cast<unsigned int*>(buffer + 8)) {
 	case 0: id = L"All Control Panel Items"; break;
 	case 1: id = L"Appearance and Personalization"; break;
 	case 2: id = L"Hardware and Sound"; break;
@@ -1470,9 +1552,10 @@ ControlPanelCategory::ControlPanelCategory(LPBYTE buffer, int _niveau,  std::vec
 	if (totalsize > 14) { // extension Block is present
 		int pos = 12;
 		while (true) {
-			unsigned short int size = bytes_to_unsigned_short(buffer + pos);
+			unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
 			if (size > 0 && pos < totalsize) {
-				getExtensionBlock(buffer + pos, &extensionBlocks, niveau + 1,  errors, NULL, false);
+				log(3, L"🔈getExtensionBlock");
+				getExtensionBlock(buffer + pos, &extensionBlocks, niveau + 1, NULL, false);
 				pos += size;
 			}
 			else
@@ -1482,7 +1565,8 @@ ControlPanelCategory::ControlPanelCategory(LPBYTE buffer, int _niveau,  std::vec
 }
 
 std::wstring ControlPanelCategory::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈ControlPanelCategory to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent == true) {
 		result += tab(niveau) + L"\"ID\" : \"" + id + L"\",\n"
@@ -1501,35 +1585,38 @@ std::wstring ControlPanelCategory::to_json(int i) {
 	return result;
 }
 
-Property::Property(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+Property::Property(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	id = 0;
 	type = 0;
 	valueIsObject = false;
 	unsigned int pos = 0;
+	log(3, L"🔈guid_to_wstring guid");
 	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + pos));
 	pos += 16;
-	id = bytes_to_unsigned_int(buffer + pos);
+	id = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
+	log(3, L"🔈to_FriendlyName FriendlyName");
 	FriendlyName = to_FriendlyName(guid, id);
-	if (FriendlyName == L"(Undefined)" && conf._debug == true) {
-		errors->push_back({ L"Property : Friendlyname Unknown " + guid + L"/" + std::to_wstring(id),ERROR_UNKNOWN_COMPONENT });
+	if (FriendlyName == L"(Undefined)") {
+		log(2, L"🔥Property : Friendlyname Unknown " + guid + L"/" + std::to_wstring(id));
 	}
-	type = bytes_to_unsigned_int(buffer + pos);
+	type = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
-	get_value(buffer, &pos, type, niveau, &value, &valueIsObject,  errors);
+	log(3, L"🔈get_value");
+	get_value(buffer, &pos, type, niveau, &value, &valueIsObject);
 	size = pos;
 }
 
 std::wstring Property::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈Property to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"{\n";
 	if (guid == L"{4D545058-4FCE-4578-95C8-8698A9BC0F49}" || guid == L"{4D545058-8900-40b3-8F1D-DC246E1E8370}")
 		result += tab(niveau + 1) + L"\"ID\" : \"" + guid + L"/" + to_hex(id) + L"\",\n";
 	else
 		result += tab(niveau + 1) + L"\"ID\" : \"" + guid + L"/" + std::to_wstring(id) + L"\",\n";
+	log(3, L"🔈get_type type");
 	result += tab(niveau + 1) + L"\"Type\" : \"" + get_type(type) + L"\",\n"
 		+ tab(niveau + 1) + L"\"FriendlyName\" : \"" + FriendlyName + L"\",\n";
 	if (valueIsObject == false)
@@ -1540,94 +1627,107 @@ std::wstring Property::to_json(int i) {
 	return result;
 }
 
-UserPropertyView0xC01::UserPropertyView0xC01(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+UserPropertyView0xC01::UserPropertyView0xC01(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	unsigned int pos = 0x14;//unknown
-	unsigned int wstring1Size = bytes_to_unsigned_int(buffer + pos);
+	unsigned int wstring1Size = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
-	folder = ansi_to_utf8(std::wstring((wchar_t*)(buffer + pos)));
+	folder = std::wstring((wchar_t*)(buffer + pos));
 	pos += wstring1Size;
 	pos += 16;//unknown
-	unsigned int wstring2Size = bytes_to_unsigned_int(buffer + pos);
+	unsigned int wstring2Size = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
-	fullurl = ansi_to_utf8(std::wstring((wchar_t*)(buffer + pos)));
+	fullurl = std::wstring((wchar_t*)(buffer + pos));
 }
 
 std::wstring UserPropertyView0xC01::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈UserPropertyView0xC01 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"\"Folder\" : \"" + folder + L"\",\n"
 		+ tab(niveau) + L"\"FullUrl\" : \"" + fullurl + L"\"";
 	return result;
 }
 
-UserPropertyView0x23febbee::UserPropertyView0x23febbee(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+UserPropertyView0x23febbee::UserPropertyView0x23febbee(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
+	log(3, L"🔈guid_to_wstring guid");
 	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 0xE));
+	log(3, L"🔈trans_guid_to_wstring FriendlyName");
 	FriendlyName = trans_guid_to_wstring(guid);
+	log(3, L"🔈replaceAll FriendlyName");
 	FriendlyName = replaceAll(FriendlyName, L"\\", L"\\\\"); // escape \ by \\ in std::string
 }
 
 std::wstring UserPropertyView0x23febbee::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈UserPropertyView0x23febbee to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"\"GUID\" : \"" + guid + L"\",\n"
 		+ tab(niveau) + L"\"FriendlyName\" : \"" + FriendlyName + L"\"";
 	return result;
 }
 
-UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _niveau) {
 	unsigned int pos = 0;
 	niveau = _niveau;
-	modifiedUtc = bytes_to_filetime(buffer + 26);
-	createdUtc = bytes_to_filetime(buffer + 34);
-	if (!time_to_wstring(modifiedUtc).empty())
+	modifiedUtc = *reinterpret_cast<FILETIME*>(buffer + 26);
+	createdUtc = *reinterpret_cast<FILETIME*>(buffer + 34);
+	log(3, L"🔈time_to_wstring modifiedUtc");
+	if (!time_to_wstring(modifiedUtc).empty()) {
+		log(3, L"🔈FileTimeToLocalFileTime modifiedUtc");
 		FileTimeToLocalFileTime(&modifiedUtc, &modified);
+	}
 	else
 		modified = { 0 };
-	if (!time_to_wstring(createdUtc).empty())
+	log(3, L"🔈time_to_wstring createdUtc");
+	if (!time_to_wstring(createdUtc).empty()) {
+		log(3, L"🔈FileTimeToLocalFileTime created");
 		FileTimeToLocalFileTime(&createdUtc, &created);
+	}
 	else
 		created = { 0 };
-	int folderName1Size = bytes_to_unsigned_int(buffer + 62);
-	int folderName2Size = bytes_to_unsigned_int(buffer + 66);
-	int folderIdentifiersize = bytes_to_unsigned_int(buffer + 70);
+	int folderName1Size = *reinterpret_cast<unsigned int*>(buffer + 62);
+	int folderName2Size = *reinterpret_cast<unsigned int*>(buffer + 66);
+	int folderIdentifiersize = *reinterpret_cast<unsigned int*>(buffer + 70);
 
-	folderName1 = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 74)));
-	folderName2 = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 74) + folderName1Size));
-	folderIdentifier = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 74) + folderName1Size + folderName2Size));
+	folderName1 = std::wstring((wchar_t*)(buffer + 74));
+	folderName2 = std::wstring((wchar_t*)(buffer + 74) + folderName1Size);
+	folderIdentifier = std::wstring((wchar_t*)(buffer + 74) + folderName1Size + folderName2Size);
 
 	pos = 74 + folderName1Size * 2 + folderName2Size * 2 + folderIdentifiersize * 2;
 	pos += 4;//unknown
+	log(3, L"🔈guid_to_wstring guidClass");
 	guidClass = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + pos));
+	log(3, L"🔈trans_guid_to_wstring FriendlyName");
 	FriendlyName = trans_guid_to_wstring(guidClass);
 	pos += 16;
 
-	unsigned int numberProperties = bytes_to_unsigned_int(buffer + pos);
+	unsigned int numberProperties = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
 	for (unsigned int x = 0; x < numberProperties; x++) {
-		Property temp(buffer + pos, niveau + 1,  errors);
+		log(3, L"🔈Property");
+		Property temp(buffer + pos, niveau + 1);
 		properties.push_back(temp);
 		pos += temp.size;
 	}
 }
 
 std::wstring UserPropertyView0x07192006::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"\"Folder1\" : \"" + folderName1 + L"\",\n"
-		+ tab(niveau) + L"\"Folder2\" : \"" + folderName2 + L"\",\n"
-		+ tab(niveau) + L"\"FolderIdentifier\" : \"" + folderIdentifier + L"\",\n"
-		+ tab(niveau) + L"\"CreatedDate\" : \"" + time_to_wstring(created) + L"\",\n"
-		+ tab(niveau) + L"\"CreatedDateUtc\" : \"" + time_to_wstring(createdUtc) + L"\",\n"
-		+ tab(niveau) + L"\"ModifiedDate\" : \"" + time_to_wstring(modified) + L"\",\n"
-		+ tab(niveau) + L"\"ModifiedDateUtc\" : \"" + time_to_wstring(modifiedUtc) + L"\",\n"
-		+ tab(niveau) + L"\"GUIDClass\" : \"" + guidClass + L"\",\n"
-		+ tab(niveau) + L"\"FriendlyName\" : \"" + FriendlyName + L"\",\n"
-		+ tab(niveau) + L"\"Properties\" : [\n";
+	log(3, L"🔈UserPropertyView0x07192006 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
+	std::wstring result = tab(niveau) + L"\"Folder1\" : \"" + folderName1 + L"\",\n";
+	result += tab(niveau) + L"\"Folder2\" : \"" + folderName2 + L"\",\n";
+	result += tab(niveau) + L"\"FolderIdentifier\" : \"" + folderIdentifier + L"\",\n";
+	log(3, L"🔈time_to_wstring created");
+	result += tab(niveau) + L"\"CreatedDate\" : \"" + time_to_wstring(created) + L"\",\n";
+	log(3, L"🔈time_to_wstring createdUtc");
+	result += tab(niveau) + L"\"CreatedDateUtc\" : \"" + time_to_wstring(createdUtc) + L"\",\n";
+	log(3, L"🔈time_to_wstring modified");
+	result += tab(niveau) + L"\"ModifiedDate\" : \"" + time_to_wstring(modified) + L"\",\n";
+	log(3, L"🔈time_to_wstring modifiedUtc");
+	result += tab(niveau) + L"\"ModifiedDateUtc\" : \"" + time_to_wstring(modifiedUtc) + L"\",\n";
+	result += tab(niveau) + L"\"GUIDClass\" : \"" + guidClass + L"\",\n";
+	result += tab(niveau) + L"\"FriendlyName\" : \"" + FriendlyName + L"\",\n";
+	result += tab(niveau) + L"\"Properties\" : [\n";;
 	std::vector<Property>::iterator it2;
 	for (it2 = properties.begin(); it2 != properties.end(); it2++) {
 		result += it2->to_json(i);
@@ -1639,53 +1739,55 @@ std::wstring UserPropertyView0x07192006::to_json(int i) {
 	return result;
 }
 
-UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _niveau) {
 	unsigned int pos = 0;
 	niveau = _niveau;
-	int namesize = bytes_to_unsigned_int(buffer + 0x26);
-	int identifiersize = bytes_to_unsigned_int(buffer + 0x2A);
-	int filesystemsize = bytes_to_unsigned_int(buffer + 0x2E);
-	int nbGUIDStrings = bytes_to_unsigned_int(buffer + 0x32);
+	int namesize = *reinterpret_cast<unsigned int*>(buffer + 0x26);
+	int identifiersize = *reinterpret_cast<unsigned int*>(buffer + 0x2A);
+	int filesystemsize = *reinterpret_cast<unsigned int*>(buffer + 0x2E);
+	int nbGUIDStrings = *reinterpret_cast<unsigned int*>(buffer + 0x32);
 
-	name = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 0x36)));
-	identifier = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 0x36 + namesize * 2)));
-	filesystem = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 0x36 + namesize * 2 + identifiersize * 2)));
+	name = std::wstring((wchar_t*)(buffer + 0x36));
+	identifier = std::wstring((wchar_t*)(buffer + 0x36 + namesize * 2));
+	filesystem = std::wstring((wchar_t*)(buffer + 0x36 + namesize * 2 + identifiersize * 2));
 
 	pos = 0x36 + namesize * 2 + identifiersize * 2 + filesystemsize * 2;
 	for (int x = 0; x < nbGUIDStrings; x++) {
-		guidstrings.push_back(ansi_to_utf8(std::wstring((wchar_t*)(buffer + pos))));
+		guidstrings.push_back(std::wstring((wchar_t*)(buffer + pos)));
 		pos += 78;
 	}
 	pos += 4;//unknown
 
-
+	log(3, L"🔈guid_to_wstring guidClass");
 	guidClass = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + pos));
+	log(3, L"🔈trans_guid_to_wstring FriendlyName");
 	FriendlyName = trans_guid_to_wstring(guidClass);
 	pos += 16;
 
-	unsigned int numberProperties = bytes_to_unsigned_int(buffer + pos);// ?? TODO  seules les 4 premieres sont exploitables, est-ce vraiment le nombre de propri�t�s ?........
+	unsigned int numberProperties = *reinterpret_cast<unsigned int*>(buffer + pos);// ?? TODO  seules les 4 premieres sont exploitables, est-ce vraiment le nombre de propriétés ?........
 	pos += 4;
 	for (unsigned int x = 0; x < numberProperties; x++) {
-		Property temp(buffer + pos, niveau + 1,  errors);
+		log(3, L"🔈Property");
+		Property temp(buffer + pos, niveau + 1);
 		properties.push_back(temp);
 		pos += temp.size;
 	}
 }
 
 std::wstring UserPropertyView0x10312005::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈UserPropertyView0x10312005 to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = tab(niveau) + L"\"Name\" : \"" + name + L"\",\n"
 		+ tab(niveau) + L"\"Identifier\" : \"" + identifier + L"\",\n"
 		+ tab(niveau) + L"\"Star-system\" : \"" + filesystem + L"\",\n"
 		+ tab(niveau) + L"\"GUIDStrings\" : [\n";
 	std::vector<std::wstring>::iterator it;
 	for (it = guidstrings.begin(); it != guidstrings.end(); it++) {
-		result += tab(niveau + 1) + L"{\n"
-			+ tab(niveau + 2) + L"\"Guid\" : \"" + *it + L"\",\n"
-			+ tab(niveau + 2) + L"\"FriendlyName\" : \"" + trans_guid_to_wstring(*it) + L"\"\n"
-			+ tab(niveau + 1) + L"}";
+		result += tab(niveau + 1) + L"{\n";
+		result += tab(niveau + 2) + L"\"Guid\" : \"" + *it + L"\",\n";
+		log(3, L"🔈trans_guid_to_wstring FriendlyName");
+		result += tab(niveau + 2) + L"\"FriendlyName\" : \"" + trans_guid_to_wstring(*it) + L"\"\n";
+		result += tab(niveau + 1) + L"}";
 		if (it != guidstrings.end() - 1)
 			result += L",";
 		result += L"\n";
@@ -1706,9 +1808,7 @@ std::wstring UserPropertyView0x10312005::to_json(int i) {
 
 }
 
-UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	extensionOffset = 0;
@@ -1716,33 +1816,38 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau,  std::vector<st
 	delegate = NULL;
 	unsigned int pos = 0;
 
-	totalsize = bytes_to_unsigned_short(buffer + 0);
-	dataSize = bytes_to_unsigned_short(buffer + 4);
-	signature = bytes_to_unsigned_int(buffer + 6);
-	unsigned short int signature_short = bytes_to_unsigned_short(buffer + 6); // Certaines signatures sont identifi�es par leurs 2 premiers octets
-	SPSDataSize = bytes_to_unsigned_short(buffer + 10);
-	identifierSize = bytes_to_unsigned_short(buffer + 12);
+	totalsize = *reinterpret_cast<unsigned short int*>(buffer + 0);
+	dataSize = *reinterpret_cast<unsigned short int*>(buffer + 4);
+	signature = *reinterpret_cast<unsigned int*>(buffer + 6);
+	unsigned short int signature_short = *reinterpret_cast<unsigned short int*>(buffer + 6); // Certaines signatures sont identifiées par leurs 2 premiers octets
+	SPSDataSize = *reinterpret_cast<unsigned short int*>(buffer + 10);
+	identifierSize = *reinterpret_cast<unsigned short int*>(buffer + 12);
 	dataOffset = 14;
 
 	if (signature == (unsigned int)0x23febbee) {
-		delegate = new UserPropertyView0x23febbee(buffer, niveau,  errors);
+		log(3, L"🔈UserPropertyView0x23febbee");
+		delegate = new UserPropertyView0x23febbee(buffer, niveau);
 		identifierSize += 2;
 	}
 	else if (signature == (unsigned int)0x10312005) {
-		delegate = new UserPropertyView0x10312005(buffer, niveau,  errors);
+		log(3, L"🔈UserPropertyView0x10312005");
+		delegate = new UserPropertyView0x10312005(buffer, niveau);
 	}
 	else if (signature == (unsigned int)0x07192006) {
-		delegate = new UserPropertyView0x07192006(buffer, niveau,  errors);
+		log(3, L"🔈UserPropertyView0x07192006");
+		delegate = new UserPropertyView0x07192006(buffer, niveau);
 	}
 	else if (signature_short == (unsigned int)0xC001) {
-		delegate = new UserPropertyView0xC01(buffer, niveau,  errors);
+		log(3, L"🔈UserPropertyView0xC01");
+		delegate = new UserPropertyView0xC01(buffer, niveau);
 		signature = signature_short;
 	}
 
 	else if (SPSDataSize > 0) {
 		spsOffset = dataOffset + identifierSize;
 		while (true) {
-			SPS block(buffer + spsOffset + pos, niveau + 1,  errors);
+			log(3, L"🔈SPS");
+			SPS block(buffer + spsOffset + pos, niveau + 1);
 			if (block.size && pos < SPSDataSize) {
 				SPSs.push_back(block);
 			}
@@ -1752,16 +1857,17 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau,  std::vector<st
 		}
 	}
 	else {
-		errors->push_back({ L"UsersPropertyView Signature 0x" + to_hex(signature) + L" unknown : " + dump_wstring(buffer, 0, totalsize),ERROR_UNKNOWN_COMPONENT });
+		log(2, L"🔥UsersPropertyView Signature 0x" + to_hex(signature) + L" unknown : " + dump_wstring(buffer, 0, totalsize));
 	}
 
-	unsigned short int extensionOffset = bytes_to_unsigned_short(buffer + totalsize - 2);
+	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + totalsize - 2);
 	if (extensionOffset != 0x00) {
 		pos = extensionOffset;
 		while (pos < totalsize) {
-			unsigned short int size = bytes_to_unsigned_short(buffer + pos);
+			unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
 			if (size > 0 && pos < totalsize) {
-				getExtensionBlock(buffer + pos, &extensionBlocks, niveau + 1,  errors, NULL, false);
+				log(3, L"🔈getExtensionBlock");
+				getExtensionBlock(buffer + pos, &extensionBlocks, niveau + 1, NULL, false);
 				pos += size;
 			}
 			else
@@ -1771,9 +1877,11 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau,  std::vector<st
 }
 
 std::wstring UsersPropertyView::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈UsersPropertyView to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent) {
+		log(3, L"🔈to_hex signature");
 		result += tab(niveau) + L"\"Signature\" : \"0x" + to_hex(signature) + L"\"";
 		if (delegate != NULL) {
 			result += L",\n"
@@ -1781,7 +1889,7 @@ std::wstring UsersPropertyView::to_json(int i) {
 		}
 
 		if (SPSs.size() > 0) {
-			result += L",\n"; // block SPS donc il nous faut une "," apr�s identifier
+			result += L",\n"; // block SPS donc il nous faut une "," après identifier
 			result += tab(niveau) + L"\"SPS\" : [\n";
 			std::vector<SPS>::iterator it;
 			for (it = SPSs.begin(); it != SPSs.end(); it++) {
@@ -1794,7 +1902,7 @@ std::wstring UsersPropertyView::to_json(int i) {
 		}
 
 		if (extensionBlocks.size() > 0) {
-			result += L",\n"; // block Extension donc il nous faut une "," apr�s identifier
+			result += L",\n"; // block Extension donc il nous faut une "," après identifier
 			result += tab(niveau) + L"\"Extension Blocks Count\" : \"" + std::to_wstring(extensionBlocks.size()) + L"\",\n";
 			result += tab(niveau) + L"\"Extension Blocks\" : [\n";
 			std::vector<IExtensionBlock*>::iterator it;
@@ -1814,31 +1922,34 @@ std::wstring UsersPropertyView::to_json(int i) {
 	return result;
 }
 
-RootFolder::RootFolder(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+RootFolder::RootFolder(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
-	unsigned short int size = bytes_to_unsigned_short(buffer);
+	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	unsigned char type = *reinterpret_cast<unsigned char*>(buffer + 3);
-	sortIndex = sort_index(type); //
-	//debug
-	
+	log(3, L"🔈sort_index type");
+	sortIndex = sort_index(type);
+
 	guid = L"";
 	identifier = L"";
 
 	if (size >= (unsigned short int)0x14 && size <= (unsigned short int)0x3a) {
 		sortIndex = L"GUID";
+		log(3, L"🔈guid_to_wstring guid");
 		guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 4));
+		log(3, L"🔈trans_guid_to_wstring identifier");
 		identifier = trans_guid_to_wstring(guid);
+		log(3, L"🔈replaceAll identifier");
 		identifier = replaceAll(identifier, L"\\", L"\\\\");
 		int pos = 0;
 	}
 	else if (size > (unsigned short int)0x3a) {
-		unsigned int signature = bytes_to_unsigned_int(buffer + 6);
+		unsigned int signature = *reinterpret_cast<unsigned int*>(buffer + 6);
 		if (signature == (unsigned int)0xf5a6b710) {
 			sortIndex = L"DRIVE";
-			identifier = string_to_wstring(ansi_to_utf8(std::string((char*)(buffer + 13))));
+			log(3, L"🔈string_to_wstring identifier");
+			identifier = string_to_wstring(std::string((char*)(buffer + 13)));
+			log(3, L"🔈replaceAll identifier");
 			identifier = replaceAll(identifier, L"\\", L"\\\\");
 
 		}
@@ -1846,7 +1957,8 @@ RootFolder::RootFolder(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::
 			sortIndex = L"SEARCH_FOLDER";
 			unsigned int pos = 0x12;
 			while (true) {
-				SPS block(buffer + pos, niveau + 1,  errors);
+				log(3, L"🔈SPS");
+				SPS block(buffer + pos, niveau + 1);
 				if (block.size > 0 && pos < size) {
 					SPSs.push_back(block);
 				}
@@ -1856,18 +1968,20 @@ RootFolder::RootFolder(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::
 			}
 		}
 	}
-	if (sortIndex == L"UNKNOWN" && _debug == true)
-		errors->push_back({ L"RootFolder : sortIndex Unknown 0x" + to_hex(type),ERROR_UNKNOWN_COMPONENT });
-	/* TODO: C'est une version simplifi�e qui semble suffire pour le moment
-	* conforme � la documentation Windows Shell Item format specification https://github.com/libyal/libfwsi/blob/main/documentation/Windows%20Shell%20Item%20format.asciidoc#43-control-panel-shell-items
-	* Le code � l'adresse ci dessous est plus complet
+	if (sortIndex == L"UNKNOWN") {
+		log(2, L"🔥RootFolder : sortIndex Unknown 0x" + to_hex(type));
+	}
+	/* TODO: C'est une version simplifiée qui semble suffire pour le moment
+	* conforme à la documentation Windows Shell Item format specification https://github.com/libyal/libfwsi/blob/main/documentation/Windows%20Shell%20Item%20format.asciidoc#43-control-panel-shell-items
+	* Le code à l'adresse ci dessous est plus complet
 	* https://github.com/49374/OverTheShellbags/blob/main/OverTheShellbags/shell_item_parser.py#L11
 	*/
 
 }
 
 std::wstring RootFolder::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈RootFolder to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent) {
 		result += tab(niveau) + L"\"SortIndex\" : \"" + sortIndex + L"\"";
@@ -1896,36 +2010,40 @@ std::wstring RootFolder::to_json(int i) {
 	return result;
 }
 
-NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	unsigned char subtype = *reinterpret_cast<unsigned char*>(buffer + 2);
+	log(3, L"🔈networkSubType");
 	subtypename = networkSubType(subtype);
-	//debug
-	if (subtypename == L"Unknown" && conf._debug == true)
-		errors->push_back({ L"NetworkShellItem : Subtype Unknown 0x" + to_hex(subtype),ERROR_UNKNOWN_COMPONENT });
+
+	if (subtypename == L"Unknown")
+		log(2, L"🔥NetworkShellItem : Subtype Unknown 0x" + to_hex(subtype));
 	if (subtype == 0xC3) {
-		location = string_to_wstring(ansi_to_utf8(std::string((char*)buffer + 5)));
+		log(3, L"🔈string_to_wstring location");
+		location = string_to_wstring(std::string((char*)buffer + 5));
+		log(3, L"🔈replaceAll location");
 		location = replaceAll(location, L"\\", L"\\\\");
 	}
 	else {
-
+		log(3, L"🔈wstring_to_filetime modifiedUtc");
 		modifiedUtc = wstring_to_filetime(std::wstring((wchar_t*)(buffer + 0x24)));
+		log(3, L"🔈FileTimeToLocalFileTime modified");
 		FileTimeToLocalFileTime(&modifiedUtc, &modified);
-		unsigned int descriptionsize = bytes_to_unsigned_int(buffer + 0x54);
-		unsigned int commentssize = bytes_to_unsigned_int(buffer + 0x58);
+		unsigned int descriptionsize = *reinterpret_cast<unsigned int*>(buffer + 0x54);
+		unsigned int commentssize = *reinterpret_cast<unsigned int*>(buffer + 0x58);
 		int pos = 0x5c;
 		if (descriptionsize > 0)
 		{
-			description = ansi_to_utf8(std::wstring((wchar_t*)(buffer + pos)));
+			description = std::wstring((wchar_t*)(buffer + pos));
+			log(3, L"🔈replaceAll description");
 			description = replaceAll(description, L"\\", L"\\\\");
 			pos += descriptionsize * 2 + 2;
 		}
 		if (commentssize > 0)
 		{
-			comments = ansi_to_utf8(std::wstring((wchar_t*)(buffer + pos)));
+			comments = std::wstring((wchar_t*)(buffer + pos));
+			log(3, L"🔈replaceAll comments");
 			comments = replaceAll(comments, L"\\", L"\\\\");
 			pos += commentssize * 2 + 2;
 		}
@@ -1933,79 +2051,97 @@ NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _niveau,  std::vector<std:
 }
 
 std::wstring NetworkShellItem::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈NetworkShellItem to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent) {
 		result += tab(niveau) + L"\"Type\" : \"" + subtypename + L"\",\n";
 		if (!location.empty())
 			result += tab(niveau) + L"\"Location\" : \"" + location + L"\"\n";
-		else
-			result += tab(niveau) + L"\"ModifiedUtc\" : \"" + time_to_wstring(modifiedUtc) + L"\",\n"
-			+ tab(niveau) + L"\"Modified\" : \"" + time_to_wstring(modified) + L"\",\n"
-			+ tab(niveau) + L"\"Description\" : \"" + description + L"\",\n"
-			+ tab(niveau) + L"\"Comments\" : \"" + comments + L"\"\n";
+		else {
+			log(3, L"🔈time_to_wstring modifiedUtc");
+			result += tab(niveau) + L"\"ModifiedUtc\" : \"" + time_to_wstring(modifiedUtc) + L"\",\n";
+			log(3, L"🔈time_to_wstring modified");
+			result += tab(niveau) + L"\"Modified\" : \"" + time_to_wstring(modified) + L"\",\n";
+			result += tab(niveau) + L"\"Description\" : \"" + description + L"\",\n";
+			result += tab(niveau) + L"\"Comments\" : \"" + comments + L"\"\n";
+		}
 	}
 	return result;
 }
 
-ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
+ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _niveau) {
 	isPresent = true;
 	niveau = _niveau;
-	unsigned int date = bytes_to_unsigned_int(buffer + 8);
+	unsigned int date = *reinterpret_cast<unsigned int*>(buffer + 8);
 
 	if (date == 0) {
-		if (bytes_to_unsigned_int(buffer + 0x10) != 0) { // FILETIME
-			modifiedUtc = bytes_to_filetime(buffer + 0x10);
-			if (time_to_wstring(modifiedUtc) != L"")
+		if (*reinterpret_cast<unsigned int*>(buffer + 0x10) != 0) { // FILETIME
+			modifiedUtc = *reinterpret_cast<FILETIME*>(buffer + 0x10);
+
+			log(3, L"🔈time_to_wstring modifiedUtc");
+			if (time_to_wstring(modifiedUtc) != L"") {
+				log(3, L"🔈FileTimeToLocalFileTime modified");
 				FileTimeToLocalFileTime(&modifiedUtc, &modified);
+			}
 			else
 				modifiedUtc = { 0 };
-			name = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 0x20)));
+			name = std::wstring((wchar_t*)(buffer + 0x20));
 		}
 		else { // DATE EN WSTRING
-			modifiedUtc = wstring_to_filetime(ansi_to_utf8(std::wstring((wchar_t*)(buffer + 0x24))));
-			if (time_to_wstring(modifiedUtc) != L"")
+			log(3, L"🔈wstring_to_filetime modifiedUtc");
+			modifiedUtc = wstring_to_filetime(std::wstring((wchar_t*)(buffer + 0x24)));
+			log(3, L"🔈time_to_wstring modifiedUtc");
+			if (time_to_wstring(modifiedUtc) != L"") {
+				log(3, L"🔈FileTimeToLocalFileTime modified");
 				FileTimeToLocalFileTime(&modifiedUtc, &modified);
+			}
 			else
 				modifiedUtc = { 0 };
-			name = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 0x5C)));
+			name = std::wstring((wchar_t*)(buffer + 0x5C));
 		}
 	}
 	else {
 		modifiedUtc = FatDateTime(date).to_filetime();
-		if (time_to_wstring(modifiedUtc) != L"")
+		log(3, L"🔈time_to_wstring modifiedUtc");
+		if (time_to_wstring(modifiedUtc) != L"") {
+			log(3, L"🔈FileTimeToLocalFileTime modified");
 			FileTimeToLocalFileTime(&modifiedUtc, &modified);
+		}
 		else
 			modifiedUtc = { 0 };
-		name = string_to_wstring(ansi_to_utf8(std::string((char*)(buffer + 0x1C))));
+		log(3, L"🔈string_to_wstring modified");
+		name = string_to_wstring(std::string((char*)(buffer + 0x1C)));
 	}
 }
 
 std::wstring ArchiveFileContent::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈ArchiveFileContent to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent) {
-		result += tab(niveau) + L"\"ModifiedUtc\" : \"" + time_to_wstring(modifiedUtc) + L"\",\n"
-			+ tab(niveau) + L"\"Modified\" : \"" + time_to_wstring(modified) + L"\",\n"
-			+ tab(niveau) + L"\"Name\" : \"" + name + L"\",\n";
+		log(3, L"🔈time_to_wstring modifiedUtc");
+		result += tab(niveau) + L"\"ModifiedUtc\" : \"" + time_to_wstring(modifiedUtc) + L"\",\n";
+		log(3, L"🔈time_to_wstring modified");
+		result += tab(niveau) + L"\"Modified\" : \"" + time_to_wstring(modified) + L"\",\n";
+		result += tab(niveau) + L"\"Name\" : \"" + name + L"\",\n";
 	}
 	return result;
 }
 
-URIShellItem::URIShellItem(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+URIShellItem::URIShellItem(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
-	unsigned short int size = bytes_to_unsigned_short(buffer);
-	unsigned short int datasize = bytes_to_unsigned_short(buffer + 4);
+	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
+	unsigned short int datasize = *reinterpret_cast<unsigned short int*>(buffer + 4);
 	if (datasize == 0) {
-		uri = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 8)));
+		uri = std::wstring((wchar_t*)(buffer + 8));
 	}
 }
 
 std::wstring URIShellItem::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈URIShellItem to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent) {
 		result += tab(niveau) + L"\"Uri\" : \"" + uri + L"\"\n";
@@ -2013,32 +2149,39 @@ std::wstring URIShellItem::to_json(int i) {
 	return result;
 }
 
-FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSize, unsigned char shell_item_type_char, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSize, unsigned char shell_item_type_char, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
-	fsFileSize = bytes_to_unsigned_int(buffer + 4);
-	fsFileModificationUtc = FatDateTime(bytes_to_unsigned_int(buffer + 8)).to_filetime();
-	if (time_to_wstring(fsFileModificationUtc) != L"")
+	fsFileSize = *reinterpret_cast<unsigned int*>(buffer + 4);
+	log(3, L"🔈FatDateTime");
+	fsFileModificationUtc = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 8)).to_filetime();
+	log(3, L"🔈time_to_wstring fsFileModificationUtc");
+	if (time_to_wstring(fsFileModificationUtc) != L"") {
+		log(3, L"🔈FileTimeToLocalFileTime fsFileModification");
 		FileTimeToLocalFileTime(&fsFileModificationUtc, &fsFileModification);
+	}
 	else
 		fsFileModification = { 0 };
+	log(3, L"🔈FsFlags");
 	fsFlags = FsFlags(shell_item_type_char);
-	fsFileAttributes = FileAttributes((unsigned int)bytes_to_unsigned_short(buffer + 12));
+	log(3, L"🔈FileAttributes");
+	fsFileAttributes = FileAttributes((unsigned int)*reinterpret_cast<unsigned short int*>(buffer + 12));
 
 	if (fsFlags.IS_UNICODE)  //Unicode
-		fsPrimaryName = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 14)));
-	else
-		fsPrimaryName = ansi_to_utf8(string_to_wstring(std::string((char*)(buffer + 14))));
+		fsPrimaryName = std::wstring((wchar_t*)(buffer + 14));
+	else {
+		log(3, L"🔈string_to_wstring fsPrimaryName");
+		fsPrimaryName = string_to_wstring(std::string((char*)(buffer + 14)));
+	}
 
-	unsigned short int extensionOffset = bytes_to_unsigned_short(buffer + itemSize - 2);
+	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + itemSize - 2);
 	unsigned short int pos = extensionOffset;
 	if (extensionOffset != 0x00) {
 		while (pos < itemSize) {
-			unsigned short int size = bytes_to_unsigned_short(buffer + pos);
+			unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
 			if (size > 0 && pos < itemSize) {
-				getExtensionBlock(buffer + pos, &extensionBlocks, niveau + 1,  errors, &is_zip, fsFlags.IS_FILE);
+				log(3, L"🔈getExtensionBlock");
+				getExtensionBlock(buffer + pos, &extensionBlocks, niveau + 1, &is_zip, fsFlags.IS_FILE);
 				pos += size;
 			}
 			else
@@ -2048,17 +2191,22 @@ FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSiz
 }
 
 std::wstring FileEntryShellItem::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈FileEntryShellItem to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent == true) {
-		result += tab(niveau) + L"\"Attributes\" : \"" + fsFileAttributes.to_wstring() + L"\",\n"
-			+ tab(niveau) + L"\"Flags\" : \"" + fsFlags.to_wstring() + L"\",\n"
-			+ tab(niveau) + L"\"ModificationDate\" : \"" + time_to_wstring(fsFileModification) + L"\",\n"
-			+ tab(niveau) + L"\"ModificationDateUtc\" : \"" + time_to_wstring(fsFileModificationUtc) + L"\",\n"
-			+ tab(niveau) + L"\"Size\" : \"" + std::to_wstring(fsFileSize) + L"\",\n"
-			+ tab(niveau) + L"\"Name\" : \"" + fsPrimaryName + L"\",\n"
-			+ tab(niveau) + L"\"ExtensionBlocksCount\" : \"" + std::to_wstring(extensionBlocks.size()) + L"\",\n"
-			+ tab(niveau) + L"\"ExtensionBlocks\" : [\n";
+		log(3, L"🔈to_wstring fsFileAttributes");
+		result += tab(niveau) + L"\"Attributes\" : \"" + fsFileAttributes.to_wstring() + L"\",\n";
+		log(3, L"🔈to_wstring flags");
+		result += tab(niveau) + L"\"Flags\" : \"" + fsFlags.to_wstring() + L"\",\n";
+		log(3, L"🔈time_to_wstring fsFileModification");
+		result += tab(niveau) + L"\"ModificationDate\" : \"" + time_to_wstring(fsFileModification) + L"\",\n";
+		log(3, L"🔈time_to_wstring fsFileModificationUtc");
+		result += tab(niveau) + L"\"ModificationDateUtc\" : \"" + time_to_wstring(fsFileModificationUtc) + L"\",\n";
+		result += tab(niveau) + L"\"Size\" : \"" + std::to_wstring(fsFileSize) + L"\",\n";
+		result += tab(niveau) + L"\"Name\" : \"" + fsPrimaryName + L"\",\n";
+		result += tab(niveau) + L"\"ExtensionBlocksCount\" : \"" + std::to_wstring(extensionBlocks.size()) + L"\",\n";
+		result += tab(niveau) + L"\"ExtensionBlocks\" : [\n";
 		std::vector<IExtensionBlock*>::iterator it;
 		for (it = extensionBlocks.begin(); it != extensionBlocks.end(); it++) {
 			IExtensionBlock* temp = *it;
@@ -2072,26 +2220,30 @@ std::wstring FileEntryShellItem::to_json(int i) {
 	return result;
 }
 
-UsersFilesFolder::UsersFilesFolder(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+UsersFilesFolder::UsersFilesFolder(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
-	unsigned short int size = bytes_to_unsigned_short(buffer);
-	unsigned short int extensionOffset = bytes_to_unsigned_short(buffer + size - 2);
-	modifiedUtc = FatDateTime(bytes_to_unsigned_int(buffer + 0x12)).to_filetime();
+	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
+	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + size - 2);
+	modifiedUtc = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 0x12)).to_filetime();
+	log(3, L"🔈FileTimeToLocalFileTime modified");
 	FileTimeToLocalFileTime(&modifiedUtc, &modified);
-	primaryName = string_to_wstring(ansi_to_utf8(std::string((char*)buffer + 0x18)));
-	extensionBlock = new Beef0004(buffer + extensionOffset, niveau + 1,  errors, NULL, false); // Le bloc suit 
+	log(3, L"🔈string_to_wstring primaryName");
+	primaryName = string_to_wstring(std::string((char*)buffer + 0x18));
+	log(3, L"🔈Beef0004");
+	extensionBlock = new Beef0004(buffer + extensionOffset, niveau + 1, NULL, false); // Le bloc suit 
 }
 
 std::wstring UsersFilesFolder::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈UsersFilesFolder to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent) {
-		result += tab(niveau) + L"\"PrimaryName\" : \"" + primaryName + L"\",\n"
-			+ tab(niveau) + L"\"ModifiedDateUtc\" : \"" + time_to_wstring(modifiedUtc) + L"\",\n"
-			+ tab(niveau) + L"\"ModifiedDate\" : \"" + time_to_wstring(modified) + L"\"";
+		result += tab(niveau) + L"\"PrimaryName\" : \"" + primaryName + L"\",\n";
+		log(3, L"🔈time_to_wstring modifiedUtc");
+		result += tab(niveau) + L"\"ModifiedDateUtc\" : \"" + time_to_wstring(modifiedUtc) + L"\",\n";
+		log(3, L"🔈time_to_wstring modified");
+		result += tab(niveau) + L"\"ModifiedDate\" : \"" + time_to_wstring(modified) + L"\"";
 		if (extensionBlock->isPresent == true) {
 			result += L",\n";
 			result += tab(niveau) + L"\"ExtensionBlock\" : \n";
@@ -2104,16 +2256,16 @@ std::wstring UsersFilesFolder::to_json(int i) {
 	return result;
 }
 
-FavoriteShellitem::FavoriteShellitem(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+FavoriteShellitem::FavoriteShellitem(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
-	UPV = UsersPropertyView(buffer, niveau + 1,  errors);
+	log(3, L"🔈UsersPropertyView");
+	UPV = UsersPropertyView(buffer, niveau + 1);
 }
 
 std::wstring FavoriteShellitem::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈FavoriteShellitem to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
 	if (isPresent) {
 		if (UPV.isPresent == true) {
@@ -2123,45 +2275,81 @@ std::wstring FavoriteShellitem::to_json(int i) {
 	return result;
 }
 
-UnknownShellItem::UnknownShellItem(LPBYTE buffer, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors) {
-	_debug = conf._debug;
-	_dump = conf._dump;
+UnknownShellItem::UnknownShellItem(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
-	unsigned short int size = bytes_to_unsigned_short(buffer);
+	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
+	log(3, L"🔈dump_wstring data");
 	data = dump_wstring(buffer, 0, size);
 }
 
 std::wstring UnknownShellItem::to_json(int i) {
-	niveau += i; // d�calage suppl�mentaire si besoin notamment pour les jumplist
+	log(3, L"🔈UnknownShellItem to_json");
+	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
 	std::wstring result = L"";
-	if (!_dump)
+	if (!conf._dump)
 		tab(niveau) + L"\"Data\" : \"" + data + L"\"\n"; //sinon dump deja present donc pas besoin de data
 	return result;
 }
 
-void getShellItem(LPBYTE buffer, IShellItem** p, int _niveau,  std::vector<std::tuple<std::wstring, HRESULT>>* errors, bool Parentiszip) {
-	unsigned int item_size = bytes_to_unsigned_short(buffer);
+void getShellItem(LPBYTE buffer, IShellItem** p, int _niveau, bool Parentiszip) {
+
+	unsigned int item_size = *reinterpret_cast<unsigned short int*>(buffer);
 	if (Parentiszip == false) {
 		unsigned char type_char = *reinterpret_cast<unsigned char*>(buffer + 2);
+		log(3, L"🔈shell_item_class");
 		std::wstring type = shell_item_class(type_char);
-		if (type == L"VOLUME_SHELL_ITEM") *p = new VolumeShellItem(buffer, type_char, _niveau,  errors);
-		if (type == L"CONTROL_PANEL")  *p = new ControlPanel(buffer, item_size, _niveau,  errors);
-		if (type == L"CONTROL_PANEL_CATEGORY")  *p = new ControlPanelCategory(buffer, _niveau,  errors);
-		if (type == L"ROOT_FOLDER") *p = new RootFolder(buffer, _niveau,  errors);
-		if (type == L"FILE_ENTRY_SHELL_ITEM") *p = new FileEntryShellItem(buffer, item_size, type_char, _niveau,  errors);
-		if (type == L"USERS_PROPERTY_VIEW") *p = new UsersPropertyView(buffer, _niveau,  errors);
-		if (type == L"NETWORK_LOCATION_SHELL_ITEM") *p = new NetworkShellItem(buffer, _niveau,  errors);
-		if (type == L"URI") *p = new URIShellItem(buffer, _niveau,  errors);
-		if (type == L"ARCHIVE_FILE_CONTENT") *p = new ArchiveFileContent(buffer, _niveau,  errors);
-		if (type == L"USERS_FILES_FOLDER") *p = new UsersFilesFolder(buffer, _niveau,  errors);
-		if (type == L"FAVORITE_SHELL_ITEM") *p = new FavoriteShellitem(buffer, _niveau,  errors);
-		if (type == L"UNKNOWN")*p = new UnknownShellItem(buffer, _niveau,  errors);
+		if (type == L"VOLUME_SHELL_ITEM") {
+			log(3, L"🔈VolumeShellItem");
+			*p = new VolumeShellItem(buffer, type_char, _niveau);
+		}
+		if (type == L"CONTROL_PANEL") {
+			log(3, L"🔈ControlPanel");
+			*p = new ControlPanel(buffer, item_size, _niveau);
+		}
+		if (type == L"CONTROL_PANEL_CATEGORY") {
+			log(3, L"🔈ControlPanelCategory");
+			*p = new ControlPanelCategory(buffer, _niveau);
+		}
+		if (type == L"ROOT_FOLDER") {
+			log(3, L"🔈RootFolder");
+			*p = new RootFolder(buffer, _niveau);
+		}
+		if (type == L"FILE_ENTRY_SHELL_ITEM") {
+			log(3, L"🔈FileEntryShellItem");
+			*p = new FileEntryShellItem(buffer, item_size, type_char, _niveau);
+		}
+		if (type == L"USERS_PROPERTY_VIEW") {
+			log(3, L"🔈UsersPropertyView");
+			*p = new UsersPropertyView(buffer, _niveau);
+		}
+		if (type == L"NETWORK_LOCATION_SHELL_ITEM") {
+			log(3, L"🔈NetworkShellItem");
+			*p = new NetworkShellItem(buffer, _niveau);
+		}
+		if (type == L"URI") {
+			log(3, L"🔈URIShellItem");
+			*p = new URIShellItem(buffer, _niveau);
+		}
+		if (type == L"ARCHIVE_FILE_CONTENT") {
+			log(3, L"🔈ArchiveFileContent");
+			*p = new ArchiveFileContent(buffer, _niveau);
+		}
+		if (type == L"USERS_FILES_FOLDER") {
+			log(3, L"🔈UsersFilesFolder");
+			*p = new UsersFilesFolder(buffer, _niveau);
+		}
+		if (type == L"FAVORITE_SHELL_ITEM") {
+			log(3, L"🔈FavoriteShellitem");
+			*p = new FavoriteShellitem(buffer, _niveau);
+		}
 		if (type == L"UNKNOWN") {
-			errors->push_back({ L"Unknown Shell Item 0x" + to_hex(type_char) + L" : " + dump_wstring(buffer, 0, item_size),ERROR_UNKNOWN_COMPONENT });
+			log(3, L"🔈UnknownShellItem");
+			*p = new UnknownShellItem(buffer, _niveau);
 		}
 	}
 	else {
-		*p = new ArchiveFileContent(buffer, _niveau,  errors);
+		log(3, L"🔈ArchiveFileContent");
+		*p = new ArchiveFileContent(buffer, _niveau);
 	}
 }

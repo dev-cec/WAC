@@ -1,4 +1,4 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <windows.h>
 #include <stdio.h>
 #include <offreg.h>
@@ -12,24 +12,23 @@
 
 
 
-/*! structure représentant l'artefact MRU Application
+/*! structure reprÃ©sentant l'artefact MRU Application
 */
 struct MruApp {
 public:
 	unsigned int id = 0; //!< identifiant de l'objet
-	unsigned int niveau = 0;//!< profondeur de l’arborescence, utilisé pour la mise en forme de json de sortie
+	unsigned int niveau = 0;//!< profondeur de lâ€™arborescence, utilisÃ© pour la mise en forme de json de sortie
 	std::wstring name = L"";//!w nom de l'application
-	std::wstring sid = L"";//!< sid de l'utilisateur propriétaire de l'objet
-	std::wstring sidName = L"";//!< nom de l'utilisateur propriétaire de l'objet
+	std::wstring sid = L"";//!< sid de l'utilisateur propriÃ©taire de l'objet
+	std::wstring sidName = L"";//!< nom de l'utilisateur propriÃ©taire de l'objet
 	std::wstring source = L"";//!< origine de l'artefact
 	std::vector<IdList*> shellitems;//!< tableau de IdList
-	bool _debug = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json
-	bool _dump = false;//!< paramètre de la ligne de commande, si true alors on sauvegarde contenu du buffer au format hexadecimal dans un fichier json
-
+	
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
 	std::wstring to_json() {
+		log(3, L"ğŸ”ˆMru to_json");
 		std::wstring result = tab(niveau) + L"{ \n"
 			+ tab(niveau + 1) + L"\"ID\":" + std::to_wstring(id) + L", \n"
 			+ tab(niveau + 1) + L"\"Name\":\"" + name + L"\", \n"
@@ -50,8 +49,9 @@ public:
 		return result;
 	}
 	
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
+		log(3, L"ğŸ”ˆMru clear");
 		for (IdList* temp : shellitems)
 			temp->clear();
 	}
@@ -63,25 +63,23 @@ public:
 struct MruApps {
 public:
 	std::vector<MruApp> MruApps;//!< contient l'ensemble des objets
-	unsigned int niveau = 0;//!< profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
-
-
+	unsigned int niveau = 0;//!< profondeur dans l'arborescence utilisÃ© pour la mise en forme du fichier json de sortie
+	
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
-	* param _niveau est utilisé pour la mie en forme de la hiérarchie des objet dans le json de sortie
+	* @param conf contient les paramÃ¨tres de l'application issue des paramÃ¨tres de la ligne de commande
+	* param _niveau est utilisÃ© pour la mie en forme de la hiÃ©rarchie des objet dans le json de sortie
 	*/
 	HRESULT getData( int _niveau = 0) {
 		
 		HRESULT hresult = NULL;
-		ORHKEY hKey;
-		ORHKEY hSubKey;
-		DWORD nSubkeys;
-		DWORD nValues, dType;
-		WCHAR szValue[MAX_VALUE_NAME];
-		WCHAR szSubKey[MAX_VALUE_NAME];
+		ORHKEY hKey = NULL;
+		ORHKEY hSubKey = NULL;
+		ORHKEY Offhive = NULL;
+		DWORD nSubkeys = NULL;
+		DWORD nValues = 0;
 		DWORD nSize = 0;
-		ORHKEY Offhive;
+		WCHAR szValue[MAX_VALUE_NAME] = L"";
+		WCHAR szSubKey[MAX_VALUE_NAME] = L"";
 		std::wstring ruche = L"";
 		niveau = _niveau;
 		//HKEY_USERS
@@ -89,22 +87,25 @@ public:
 			std::wstring keynames[3] = { L"LastVisitedMRU",L"LastVisitedPidlMRU",L"LastVisitedPidlMRULegacy" };
 			for (std::wstring keyname : keynames) {
 				//ouverture de la ruche user
+				log(3, L"ğŸ”ˆreplaceAll profile");
 				ruche = conf.mountpoint + replaceAll(get<1>(profile), L"C:", L"") + L"\\\\ntuser.dat";
+				log(3, L"ğŸ”ˆOROpenHive " + get<1>(profile) + L"\\ntuser.dat");
 				hresult = OROpenHive(ruche.c_str(), &Offhive);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"unable to open hive " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat", hresult});
+					log(2, L"ğŸ”¥OROpenHive " + get<1>(profile) + L"\\ntuser.dat", hresult);
 					continue;
 				}
-
+				log(3, L"ğŸ”ˆOROpenHive Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\" + keyname);
 				hresult = OROpenKey(Offhive, (L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\" + keyname).c_str(), &hKey);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"unable to open key " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\" + keyname, hresult });
+					log(2, L"ğŸ”¥OROpenHive Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\" + keyname, hresult);
 					continue;
 				}
 
+				log(3, L"ğŸ”ˆparse");
 				hresult = parse(hKey, get<0>(profile), keyname, &MruApps, 1, false);
 				if (hresult != ERROR_SUCCESS) {
-					errors.push_back({ L"unable to parse key " + get<0>(profile) + L" / " + replaceAll(get<1>(profile),L"\\",L"\\\\") + L"\\\\ntuser.dat / Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\ComDlg32\\\\" + keyname, hresult });
+					log(2, L"ğŸ”¥parse", hresult );
 					continue;
 				};
 			}
@@ -112,66 +113,83 @@ public:
 		return ERROR_SUCCESS;
 	}
 
-	/*! Fonction permettant de parser une clé de la base de registre
-	* @param hKey contient la clé à parser
-	* @param sid contient le sid de l'utilisateur propriétaire de la clé
+	/*! Fonction permettant de parser une clÃ© de la base de registre
+	* @param hKey contient la clÃ© Ã  parser
+	* @param sid contient le sid de l'utilisateur propriÃ©taire de la clÃ©
 	* @param source contient l'origine de l'artefact
-	* @param MruApps contient l'ensemble des mru parsés pour stocker le résultat
-	* @param _niveau, profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
-	* @param _Parentiszip sit le père de l'artefact est un fichier zip
+	* @param MruApps contient l'ensemble des mru parsÃ©s pour stocker le rÃ©sultat
+	* @param _niveau, profondeur dans l'arborescence utilisÃ© pour la mise en forme du fichier json de sortie
+	* @param _Parentiszip sit le pÃ¨re de l'artefact est un fichier zip
 	*/
 	HRESULT parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vector<MruApp>* MruApps, unsigned int niveau, bool _Parentiszip) {
 		HRESULT hresult = NULL;
-		ORHKEY hKeyChilds;
+		ORHKEY hKeyChilds = NULL;
 		std::vector<unsigned int> ids;
 		LPBYTE pData = new BYTE[MAX_DATA];
 		unsigned int pos = 0;
+		DWORD dwSize = 0;
 
-
-		getRegBinaryValue(hKey, L"", L"MRUListEx", pData);
-		while (true) {
-			int id = bytes_to_int(pData + pos);
+		log(3, L"ğŸ”ˆgetRegBinaryValue hKey\\MRUListEx");
+		hresult = getRegBinaryValue(hKey, L"", L"MRUListEx", &pData, &dwSize);
+		if (hresult != ERROR_SUCCESS) {
+			log(2, L"ğŸ”¥parse", hresult);
+			return hresult;
+		}
+		while (pos < dwSize) {
+			int id = *reinterpret_cast<int*>(pData + pos);
 			if (id == 0xffffffff) break;
 			ids.push_back(id);
 			pos += 4;
 		}
+		
+		delete[] pData;
+		pData = NULL;
+		
 		for (int id : ids) {
 			bool Parentiszip = false | _Parentiszip;
-			MruApp MruApp;
-			MruApp.id = id;
-			MruApp.niveau = niveau;
-			MruApp.sid = sid;
-			MruApp.sidName = getNameFromSid(sid);
-			MruApp.source = source;
-			MruApp._debug = conf._debug;
-			MruApp._dump = conf._dump;
-			getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), pData);
-			unsigned int offset = 0;
-			MruApp.name = ansi_to_utf8(std::wstring((wchar_t*)(pData + offset)));
-			offset += MruApp.name.size() * 2 + 2;
-			while (true) {
-				unsigned short int size = bytes_to_unsigned_short(pData + offset);
+			log(1, L"â•MruApp");
+			MruApp mruApp;
+			mruApp.id = id;
+			log(2, L"â‡ï¸MruApp id" + id);
+			mruApp.niveau = niveau;
+			mruApp.sid = sid;
+			log(3, L"ğŸ”ˆgetNameFromSid sidName");
+			mruApp.sidName = getNameFromSid(sid);
+			mruApp.source = source;
+			log(3, L"ğŸ”ˆgetRegBinaryValue hKey\\"+ std::to_wstring(id));
+			hresult = getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), &pData, &dwSize);
+			if (hresult != ERROR_SUCCESS) {
+				log(2, L"ğŸ”¥getRegBinaryValue hKey\\" + std::to_wstring(id), hresult);
+				continue;
+			}
+			size_t offset = 0;
+			mruApp.name = std::wstring((wchar_t*)(pData));
+			offset += mruApp.name.size() * 2 + 2;
+			while (offset < dwSize) {
+				unsigned short int size = *reinterpret_cast<unsigned short int*>(pData + offset);
 				if (size == 0) break;
 				else {
-
-					IdList* shellitem = new IdList(pData + offset, niveau + 2,  &errors, Parentiszip);
+					log(3, L"ğŸ”ˆIdList");
+					IdList* shellitem = new IdList(pData + offset, niveau + 2, Parentiszip);
 					if (shellitem->shellItem->is_zip == true)
 						Parentiszip = true;
 					offset += size;
-					MruApp.shellitems.push_back(shellitem);
+					mruApp.shellitems.push_back(shellitem);
 				}
 			}
+			delete[] pData;
+			pData = NULL;
 
 			//save
-			MruApps->push_back(MruApp);
+			MruApps->push_back(mruApp);
 		}
-		delete [] pData;
 		return ERROR_SUCCESS;
 	}
 
 	/*! conversion de l'objet au format json
 	*/
 	virtual HRESULT to_json() {
+		log(3, L"ğŸ”ˆMruApps to_json");
 		std::wstring result = L"[ \n";
 		std::vector<MruApp>::iterator it;
 		for (it = MruApps.begin(); it != MruApps.end(); it++) {
@@ -182,29 +200,18 @@ public:
 		}
 		result += L"\n]";
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crÃ©e le repertoire, pas d'erreur s'il existe dÃ©jÃ 
 		std::wofstream myfile;
 		myfile.open(conf._outputDir +"/mruApps.json");
-		myfile << result;
+		myfile << ansi_to_utf8(result);
 		myfile.close();
-
-		if(conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir +"/mruApps_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
+		log(3, L"ğŸ”ˆMruApps clear");
 		for (MruApp temp : MruApps)
 			temp.clear();
 	}

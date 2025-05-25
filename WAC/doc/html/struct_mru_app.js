@@ -1,8 +1,7 @@
 var struct_mru_app =
 [
+    [ "clear", "struct_mru_app.html#aff80364a9d2138398346b6eb2d8d8e32", null ],
     [ "to_json", "struct_mru_app.html#a38729e5f56ca532fe67c4ae1ab9e0dac", null ],
-    [ "_debug", "struct_mru_app.html#aa9fa2d0a99d65a534e5a9604c7fd9ad8", null ],
-    [ "_dump", "struct_mru_app.html#a822446c004ebb25581b968ec6a75a487", null ],
     [ "id", "struct_mru_app.html#a3acfe13b45cebba6414ba3c1091576d9", null ],
     [ "name", "struct_mru_app.html#a48f7da71b5e9c95df0ac5be8d6fca4e8", null ],
     [ "niveau", "struct_mru_app.html#ae6e920dcce8546c4b57b4f7ba5d45d96", null ],

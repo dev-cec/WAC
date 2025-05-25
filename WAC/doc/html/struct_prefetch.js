@@ -1,14 +1,13 @@
 var struct_prefetch =
 [
     [ "Prefetch", "struct_prefetch.html#a5a82cad97ff9893c88978b44d3228880", null ],
+    [ "clear", "struct_prefetch.html#a9791863eb49a3167bbd9035cca585b5d", null ],
     [ "read", "struct_prefetch.html#ab3a26c6ee678f13bf066da4879b55ae7", null ],
     [ "to_json", "struct_prefetch.html#a2305e920341f2273358a3c6f563974e9", null ],
     [ "accessed", "struct_prefetch.html#a42c733380fdfcc7c8de7cfa79c30b7f0", null ],
     [ "accessedUtc", "struct_prefetch.html#aa5a538216fa96b46ced116e294f074b1", null ],
-    [ "buffer", "struct_prefetch.html#af60a99413ef743c49b8bbe905eeddcba", null ],
     [ "created", "struct_prefetch.html#adb755f7784d23054c34dc3654cab5d0c", null ],
     [ "createdUtc", "struct_prefetch.html#ab7a1741d109c27bbd72b516b79435cb8", null ],
-    [ "data", "struct_prefetch.html#a09d667dc6211d8195a037a6a83272294", null ],
     [ "filename", "struct_prefetch.html#ac25fee7f3395655f17dd9759fcf1663b", null ],
     [ "filenames", "struct_prefetch.html#ae856f67245a4d6cd30ccf3185daaa08e", null ],
     [ "hash_string", "struct_prefetch.html#a4e7452acd21ad12044d4b3246eaeb331", null ],
@@ -17,6 +16,7 @@ var struct_prefetch =
     [ "modified", "struct_prefetch.html#a29d3c48ebf7859e96225924aeb7002a5", null ],
     [ "modifiedUtc", "struct_prefetch.html#a96b51b7081c0b73ba84582857c6b81d5", null ],
     [ "path", "struct_prefetch.html#a6ed214b73793d3da4ac304a90469cc37", null ],
+    [ "pathOriginal", "struct_prefetch.html#a55ec9d6b0236c8f64e0500f28a51aa64", null ],
     [ "run_count", "struct_prefetch.html#a76b2fe4776446360ac3cb06874dcb150", null ],
     [ "signature", "struct_prefetch.html#a4dfafd4622e287305a023c1d8dca9b6f", null ],
     [ "size", "struct_prefetch.html#a68cf15cba02b871d6df9945b029cf473", null ],

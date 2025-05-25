@@ -152,6 +152,8 @@ Graphe d'héritage de IExtensionBlock:</div>
 Fonctions membres publiques</h2></td></tr>
 <tr class="memitem:acbc2bf975b4385cdb90b324b3fd3a254" id="r_acbc2bf975b4385cdb90b324b3fd3a254"><td class="memItemLeft" align="right" valign="top">virtual std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acbc2bf975b4385cdb90b324b3fd3a254">to_json</a> (int i=0)=0</td></tr>
 <tr class="separator:acbc2bf975b4385cdb90b324b3fd3a254"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abda7217cd65c0e45f85f50189fc3a65d" id="r_abda7217cd65c0e45f85f50189fc3a65d"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abda7217cd65c0e45f85f50189fc3a65d">clear</a> ()=0</td></tr>
+<tr class="separator:abda7217cd65c0e45f85f50189fc3a65d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
@@ -159,21 +161,42 @@ Attributs publics</h2></td></tr>
 <tr class="memdesc:ac022d019511278a7b8dbc41d1908faee"><td class="mdescLeft">&#160;</td><td class="mdescRight">hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json  <br /></td></tr>
 <tr class="separator:ac022d019511278a7b8dbc41d1908faee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a21e17ece2d238afbb69bed9fdb0c19d7" id="r_a21e17ece2d238afbb69bed9fdb0c19d7"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a21e17ece2d238afbb69bed9fdb0c19d7">isPresent</a> = false</td></tr>
-<tr class="memdesc:a21e17ece2d238afbb69bed9fdb0c19d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">true si un block dextension est présent sinon false  <br /></td></tr>
+<tr class="memdesc:a21e17ece2d238afbb69bed9fdb0c19d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">true si un block d’extension est présent sinon false  <br /></td></tr>
 <tr class="separator:a21e17ece2d238afbb69bed9fdb0c19d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5645d364f50f4db62acadb7151b477e" id="r_ad5645d364f50f4db62acadb7151b477e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad5645d364f50f4db62acadb7151b477e">signature</a> = L&quot;&quot;</td></tr>
-<tr class="memdesc:ad5645d364f50f4db62acadb7151b477e"><td class="mdescLeft">&#160;</td><td class="mdescRight">la signature du block dextension, identifie sa structure d'appartenance  <br /></td></tr>
+<tr class="memdesc:ad5645d364f50f4db62acadb7151b477e"><td class="mdescLeft">&#160;</td><td class="mdescRight">la signature du block d’extension, identifie sa structure d'appartenance  <br /></td></tr>
 <tr class="separator:ad5645d364f50f4db62acadb7151b477e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab02519f2f0c37f26c6b45699416ed47b" id="r_ab02519f2f0c37f26c6b45699416ed47b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab02519f2f0c37f26c6b45699416ed47b">_debug</a> = false</td></tr>
-<tr class="memdesc:ab02519f2f0c37f26c6b45699416ed47b"><td class="mdescLeft">&#160;</td><td class="mdescRight">paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json  <br /></td></tr>
-<tr class="separator:ab02519f2f0c37f26c6b45699416ed47b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a54e26b07ac65e6a3ee74a415fb137aec" id="r_a54e26b07ac65e6a3ee74a415fb137aec"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a54e26b07ac65e6a3ee74a415fb137aec">_dump</a> = false</td></tr>
-<tr class="memdesc:a54e26b07ac65e6a3ee74a415fb137aec"><td class="mdescLeft">&#160;</td><td class="mdescRight">si true alors le fichier de sortie contiendra le dump hexa de l'objet  <br /></td></tr>
-<tr class="separator:a54e26b07ac65e6a3ee74a415fb137aec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>Type de base virtuel pour les extension Block. tous les shells items hérite de ce type de base permettant ainsi d'inclure un type de shell virtuel dans les autres classes </p>
 </div><h2 class="groupheader">Documentation des fonctions membres</h2>
+<a id="abda7217cd65c0e45f85f50189fc3a65d" name="abda7217cd65c0e45f85f50189fc3a65d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abda7217cd65c0e45f85f50189fc3a65d">&#9670;&#160;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void IExtensionBlock::clear </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel pure-virtual">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implémenté dans <a class="el" href="struct_beef0000.html#ac74714981c050eee594beb0ef8c30d26">Beef0000</a>, <a class="el" href="struct_beef0001.html#a7cb7a21f9ab77abf923273c553f42bee">Beef0001</a>, <a class="el" href="struct_beef0002.html#a72c88b6c206585cb17fc36806070b61f">Beef0002</a>, <a class="el" href="struct_beef0003.html#a1cccf88607498d385886337e6d60412f">Beef0003</a>, <a class="el" href="struct_beef0004.html#ae56a982fcee68a75dea7803e3c976ccd">Beef0004</a>, <a class="el" href="struct_beef0006.html#ab2405ec25afea209c28cba20868c85b3">Beef0006</a>, <a class="el" href="struct_beef0008.html#a88b47b30cf63912d7f0deeeb9727b8a3">Beef0008</a>, <a class="el" href="struct_beef0009.html#a55a2bbaaa303f2ac0e421c4983f32b58">Beef0009</a>, <a class="el" href="struct_beef000a.html#a75a94eded403e4a2d820d1d16e3926e8">Beef000a</a>, <a class="el" href="struct_beef000c.html#a9679a3ce0b8bb1dd2710436894b73a15">Beef000c</a>, <a class="el" href="struct_beef000e.html#a2c3dbb3f43ffb8f4fe9ea22157c7562e">Beef000e</a>, <a class="el" href="struct_beef0010.html#af501a6849535d4a16dcf21b6f992bd79">Beef0010</a>, <a class="el" href="struct_beef0013.html#a35da31b92d11a689eca9f9b7d89914f3">Beef0013</a>, <a class="el" href="struct_beef0014.html#a5e64a5e09926b6307999fc2040b64c45">Beef0014</a>, <a class="el" href="struct_beef0016.html#a98413c28dc029cfcf00b43c3a9e903a6">Beef0016</a>, <a class="el" href="struct_beef0017.html#ae0fd3b762cd6a74a97c5b32f410a1966">Beef0017</a>, <a class="el" href="struct_beef0019.html#a880d766643191bf04986d162eed51e73">Beef0019</a>, <a class="el" href="struct_beef001a.html#a086d7d8bb0779c386436fcae3b6020b1">Beef001a</a>, <a class="el" href="struct_beef001b.html#a5724455b5c1bdbd98d9039699acc1da1">Beef001b</a>, <a class="el" href="struct_beef001d.html#af954ed83b376268c9d7e167544622702">Beef001d</a>, <a class="el" href="struct_beef001e.html#a5df7e6d709024c13bbb3fbad6413d342">Beef001e</a>, <a class="el" href="struct_beef0021.html#a37030f3ebdeef2b33c20f3f200ef9c03">Beef0021</a>, <a class="el" href="struct_beef0024.html#a5f3e0ad4c212d133098300991e4321ff">Beef0024</a>, <a class="el" href="struct_beef0025.html#a11eee15cadded6305fd8f454696ac085">Beef0025</a>, <a class="el" href="struct_beef0026.html#a70d46dea8be322b47b497043aceab2ec">Beef0026</a>, <a class="el" href="struct_beef0027.html#a1212c6b7e37d03d9076f319baa63df30">Beef0027</a>, et <a class="el" href="struct_beef0029.html#a0df9ba5a4d28a0a90a996c089b70e110">Beef0029</a>.</p>
+
+</div>
+</div>
 <a id="acbc2bf975b4385cdb90b324b3fd3a254" name="acbc2bf975b4385cdb90b324b3fd3a254"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acbc2bf975b4385cdb90b324b3fd3a254">&#9670;&#160;</a></span>to_json()</h2>
 
@@ -209,38 +232,6 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
-<a id="ab02519f2f0c37f26c6b45699416ed47b" name="ab02519f2f0c37f26c6b45699416ed47b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab02519f2f0c37f26c6b45699416ed47b">&#9670;&#160;</a></span>_debug</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool IExtensionBlock::_debug = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>paramètre de la ligne de commande, si true alors on sauvegarde les erreurs de traitement dans un fichier json </p>
-
-</div>
-</div>
-<a id="a54e26b07ac65e6a3ee74a415fb137aec" name="a54e26b07ac65e6a3ee74a415fb137aec"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a54e26b07ac65e6a3ee74a415fb137aec">&#9670;&#160;</a></span>_dump</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool IExtensionBlock::_dump = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>si true alors le fichier de sortie contiendra le dump hexa de l'objet </p>
-
-</div>
-</div>
 <a id="a21e17ece2d238afbb69bed9fdb0c19d7" name="a21e17ece2d238afbb69bed9fdb0c19d7"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a21e17ece2d238afbb69bed9fdb0c19d7">&#9670;&#160;</a></span>isPresent</h2>
 
@@ -253,7 +244,7 @@ Attributs publics</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>true si un block dextension est présent sinon false </p>
+<p>true si un block d’extension est présent sinon false </p>
 
 </div>
 </div>
@@ -285,12 +276,12 @@ Attributs publics</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>la signature du block dextension, identifie sa structure d'appartenance </p>
+<p>la signature du block d’extension, identifie sa structure d'appartenance </p>
 
 </div>
 </div>
 <hr/>La documentation de cette structure a été générée à partir du fichier suivant :<ul>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="id_list_8h_source.html">idList.h</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="id_list_8h_source.html">idList.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

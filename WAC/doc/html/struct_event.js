@@ -1,6 +1,7 @@
 var struct_event =
 [
-    [ "Event", "struct_event.html#a723328e15a646c2353b5b0ff01f47d74", null ],
+    [ "Event", "struct_event.html#a915ece050f329e69399da7a122fa5d9f", null ],
+    [ "clear", "struct_event.html#a0862af1471604bf30a4f50a5e028637a", null ],
     [ "to_json", "struct_event.html#a0e5f614644faad83d31512916a2da74a", null ],
     [ "evtEventData", "struct_event.html#a3ed3266c901984313a080d2987ca63f7", null ],
     [ "evtEventMessage", "struct_event.html#ae929099be43be124e9c5afe1a3b5e163", null ],

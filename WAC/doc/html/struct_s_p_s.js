@@ -1,10 +1,9 @@
 var struct_s_p_s =
 [
     [ "SPS", "struct_s_p_s.html#a2d03e5f0ea4268a8bd752db53c3c07a1", null ],
-    [ "SPS", "struct_s_p_s.html#ab93e399a1b9e1ab0ef8aa8eaf014ed19", null ],
+    [ "SPS", "struct_s_p_s.html#a79c12125ff775ef4998e68fe9142cb07", null ],
+    [ "clear", "struct_s_p_s.html#a9c81d43291716f66c5f8b9c7fee41de0", null ],
     [ "to_json", "struct_s_p_s.html#a5bbf69444b1c87e9e9e275472185278d", null ],
-    [ "_debug", "struct_s_p_s.html#a75949d25a80f22b068f4d56c7c884d77", null ],
-    [ "_dump", "struct_s_p_s.html#afd30b63bcf30db5e5d4e4aeff41b114d", null ],
     [ "FriendlyName", "struct_s_p_s.html#ae1ad2763480648b35d3a9da2aa9b58b6", null ],
     [ "guid", "struct_s_p_s.html#aa9b54a9d79d3d61452f914126837ace5", null ],
     [ "niveau", "struct_s_p_s.html#a0643e12368c4cc920ebcb00bf5f62b1a", null ],

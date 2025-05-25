@@ -2,11 +2,12 @@
 #include <iostream>
 #include <Wbemidl.h>
 #include <wtypes.h>
-
+#include "tools.h"
 #include "trans_id.h"
 #include <propsys.h>
 
 std::wstring serviceType_to_wstring(int type) {
+	log(3, L"🔈serviceType_to_wstring");
 	if (type == SERVICE_WIN32)  return L"SERVICE_WIN32";
 	if (type == SERVICE_DRIVER)  return L"SERVICE_DRIVER";
 	if (type == SERVICE_USER_SHARE_PROCESS)  return L"SERVICE_USER_SHARE_PROCESS";
@@ -24,8 +25,9 @@ std::wstring serviceType_to_wstring(int type) {
 	if (type == SERVICE_TYPE_ALL) return L"SERVICE_TYPE_ALL";
 	return L"SERVICE_TYPE_UNKNOWN";
 }
-std::wstring serviceStart_to_wstring(int type) {
 
+std::wstring serviceStart_to_wstring(int type) {
+	log(3, L"🔈serviceStart_to_wstring");
 	if (type == SERVICE_AUTO_START) return L"SERVICE_AUTO_START";
 	if (type == SERVICE_BOOT_START) return L"SERVICE_BOOT_START";
 	if (type == SERVICE_DEMAND_START) return L"SERVICE_DEMAND_START";
@@ -35,15 +37,15 @@ std::wstring serviceStart_to_wstring(int type) {
 }
 
 std::wstring serviceState_to_wstring(int type) {
-
+	log(3, L"🔈serviceState_to_wstring");
 	if (type == SERVICE_ACTIVE) return L"SERVICE_ACTIVE";
 	if (type == SERVICE_INACTIVE) return L"SERVICE_INACTIVE";
 	if (type == SERVICE_STATE_ALL) return L"SERVICE_STATE_ALL";
 	return L"SERVICE_STATUS_UNKNOWN";
 }
 
-
 std::wstring logon_type(ULONG type) {
+	log(3, L"🔈logon_type");
 	if (type == 0)	return L"UndefinedLogonType";
 	if (type == 2)	return L"Interactive";
 	if (type == 3)	return L"Network";
@@ -61,6 +63,7 @@ std::wstring logon_type(ULONG type) {
 }
 
 std::wstring os_architecture(DWORD archi){
+	log(3, L"🔈os_architecture");
 	if (archi == PROCESSOR_ARCHITECTURE_AMD64) return L"x64(AMD ou Intel)";
 	if (archi == PROCESSOR_ARCHITECTURE_ARM) return L"ARM";
 	if (archi == PROCESSOR_ARCHITECTURE_ARM64) return L"ARM64";
@@ -71,6 +74,7 @@ std::wstring os_architecture(DWORD archi){
 }
 
 std::wstring task_trigger_type(TASK_TRIGGER_TYPE2 type) {
+	log(3, L"🔈task_trigger_type");
 	if (type == TASK_TRIGGER_EVENT) return L"TASK_TRIGGER_EVENT";
 	if (type == TASK_TRIGGER_TIME) return L"TASK_TRIGGER_TIME";
 	if (type == TASK_TRIGGER_DAILY) return L"TASK_TRIGGER_DAILY";
@@ -87,6 +91,7 @@ std::wstring task_trigger_type(TASK_TRIGGER_TYPE2 type) {
 }
 
 std::wstring task_action_type(TASK_ACTION_TYPE type) {
+	log(3, L"🔈task_action_type");
 	if (type == TASK_ACTION_EXEC) return L"TASK_ACTION_EXEC";
 	if (type == TASK_ACTION_COM_HANDLER) return L"TASK_ACTION_COM_HANDLER";
 	if (type == TASK_ACTION_SEND_EMAIL) return L"TASK_ACTION_SEND_EMAIL";
@@ -95,6 +100,7 @@ std::wstring task_action_type(TASK_ACTION_TYPE type) {
 }
 
 std::wstring task_state(TASK_STATE state) {
+	log(3, L"🔈task_state");
 	if (state==TASK_STATE_UNKNOWN) return L"TASK_STATE_UNKNOWN";
 	if (state== TASK_STATE_DISABLED) return L"TASK_STATE_DISABLED";
 	if (state== TASK_STATE_QUEUED) return L"TASK_STATE_QUEUED";
@@ -104,6 +110,7 @@ std::wstring task_state(TASK_STATE state) {
 }
 
 std::wstring from_appId(std::wstring appId) {
+	log(3, L"🔈from_appId");
 	// documentation : https://forensics.wiki/list_of_jump_list_ids/
 	// documentation : https://github.com/EricZimmerman/JumpList/blob/master/JumpList/Resources/AppIDs.txt
 	if (appId == L"0006f647f9488d7a") return L"AIM 7.5.11.9 (custom AppID + JL support)";
@@ -893,7 +900,7 @@ std::wstring from_appId(std::wstring appId) {
 }
 
 std::wstring to_FriendlyName(std::wstring guid, unsigned int key) {
-
+	log(3, L"🔈to_FriendlyName");
 	PROPERTYKEY p;
 	HRESULT hresult = CLSIDFromString(guid.c_str(), &p.fmtid);
 	p.pid = key;
@@ -935,6 +942,7 @@ std::wstring to_FriendlyName(std::wstring guid, unsigned int key) {
 }
 
 std::wstring networkSubType(unsigned char type) {
+	log(3, L"🔈networkSubType");
 	if ((type & (unsigned char)0x0F) == (unsigned char)0x01) return L"Domain/WorkGroup Description";
 	else if ((type & (unsigned char)0x0F) == (unsigned char)0x02) return L"Server UNC Path";
 	else if ((type & (unsigned char)0x0F) == (unsigned char)0x03) return L"Share UNC Path";
@@ -947,6 +955,7 @@ std::wstring networkSubType(unsigned char type) {
 }
 // 
 std::wstring driveType_to_wstring(unsigned int d) {
+	log(3, L"🔈driveType_to_wstring");
 	switch (d) {
 	case DRIVE_UNKNOWN: return L"DRIVE_UNKNOWN"; break;
 	case DRIVE_NO_ROOT_DIR: return L"DRIVE_NO_ROOT_DIR"; break;
@@ -960,6 +969,7 @@ std::wstring driveType_to_wstring(unsigned int d) {
 }
 
 std::wstring networkProvider_to_wstring(unsigned int n) {
+	log(3, L"🔈networkProvider_to_wstring");
 	switch (n) {
 	case WNNC_NET_AVID: return L"WNNC_NET_AVID"; break;
 	case WNNC_NET_DOCUSPACE: return L"WNNC_NET_DOCUSPACE"; break;
@@ -1007,6 +1017,7 @@ std::wstring networkProvider_to_wstring(unsigned int n) {
 }
 
 std::wstring showCommandOption(unsigned int option) {
+	log(3, L"🔈showCommandOption");
 	switch (option) {
 	case 1:return L"SHOWNORMAL"; break;
 	case 3:return L"SHOWMAXIMIZED"; break;
@@ -1016,6 +1027,7 @@ std::wstring showCommandOption(unsigned int option) {
 }
 
 std::wstring sort_index(unsigned char i) {
+	log(3, L"🔈sort_index");
 	if (i == (unsigned char)0x00) return L"INTERNET_EXPLORER";
 	if (i == (unsigned char)0x42) return L"LIBRARIES";
 	if (i == (unsigned char)0x44) return L"USERS";
@@ -1030,6 +1042,7 @@ std::wstring sort_index(unsigned char i) {
 }
 
 std::wstring shell_item_class(unsigned char i) {
+	log(3, L"🔈shell_item_class");
 
 	// 0x00, 0x79
 	if (i == (unsigned char)0x00)  return L"USERS_PROPERTY_VIEW"; //done 
@@ -1085,7 +1098,8 @@ std::wstring shell_item_class(unsigned char i) {
 }
 
 std::wstring trans_guid_to_wstring(std::wstring guid) {
-
+	log(3, L"🔈trans_guid_to_wstring");
+	
 	transform(guid.begin(), guid.end(), guid.begin(), ::tolower);
 
 	//CLSID

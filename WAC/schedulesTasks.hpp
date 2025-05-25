@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #define _WIN32_DCOM
 
@@ -19,121 +19,160 @@
 
 
 
-/*structure représentant une trigger d'une tâche planifiée
+/*structure reprÃ©sentant une trigger d'une tÃ¢che planifiÃ©e
 */
 struct Trigger {
-	TASK_TRIGGER_TYPE2 type; //!< type de trigger pour l’exécution de la tâche
-	BSTR interval=BSTR(L"");//!< délai entre 2 exécution
+	TASK_TRIGGER_TYPE2 type; //!< type de trigger pour lâ€™exÃ©cution de la tÃ¢che
+	std::wstring interval=L"";//!< dÃ©lai entre 2 exÃ©cution
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {}
 };
-/*structure représentant une action d'une tâche planifiée
+/*structure reprÃ©sentant une action d'une tÃ¢che planifiÃ©e
 */
 struct Action {
-	TASK_ACTION_TYPE type; //!< type de l'action au format numérique
-	BSTR command = BSTR(L"");//!< ligne de commande exécutée
-	std::wstring command_escaped = L"";//!< ligne de commande exécutée
-	BSTR arguments = BSTR(L"");//!< arguments de la ligne de commande exécutée
-	std::wstring arguments_escaped = L"";//!< arguments de la ligne de commande exécutée
-	BSTR classId = BSTR(L"");//!< classId pour ACTION COM HANDLER
-	BSTR data = BSTR(L"");//!< data pour ACTION COM HANDLER
+	TASK_ACTION_TYPE type; //!< type de l'action au format numÃ©rique
+	std::wstring command = L"";//!< ligne de commande exÃ©cutÃ©e
+	std::wstring arguments = L"";//!< arguments de la ligne de commande exÃ©cutÃ©e
+	std::wstring classId = L"";//!< classId pour ACTION COM HANDLER
+	std::wstring data = L"";//!< data pour ACTION COM HANDLER
 
-	/*liberation mémoire */
+	/*liberation mÃ©moire */
 	void clear(){}
 };
 
-/*structure représentant une tâche planifiée
+/*structure reprÃ©sentant une tÃ¢che planifiÃ©e
 * Documentation : https://learn.microsoft.com/fr-fr/windows/win32/api/taskschd/nn-taskschd-iregisteredtask
 * Documentation : https://learn.microsoft.com/fr-fr/windows/win32/api/taskschd/nn-taskschd-itaskdefinition
 */
 struct ScheduledTask {
-	ITaskDefinition* ppDefinition = NULL;//!< la définition de la tâche.
-	VARIANT_BOOL pEnabled = false; //!< valeur booléenne qui indique si la tâche inscrite est activée.
-	FILETIME pLastRunTime = { 0 }; //!< heure à laquelle la tâche inscrite a été exécutée pour la dernière fois.
-	FILETIME pLastRunTimeUtc = { 0 }; //!< heure à laquelle la tâche inscrite a été exécutée pour la dernière fois au format UTC.
-	LONG pLastTaskResult = 0; //!< les résultats qui ont été retournés lors de la dernière exécution de la tâche inscrite.
-	BSTR pName = BSTR(L""); //!< le nom de la tâche inscrite.
-	FILETIME pNextRunTime = { 0 }; //!< l’heure à laquelle l’exécution prochaine de la tâche inscrite est planifiée.
-	FILETIME pNextRunTimeUtc = { 0 }; //!< l’heure à laquelle l’exécution prochaine de la tâche inscrite est planifiée au format UTC.
-	LONG pNumberOfMissedRuns = 0; //!< le nombre de fois où la tâche inscrite a manqué une exécution planifiée.
-	BSTR pPath = BSTR(L"");//!<  le chemin d’accès à l’emplacement où la tâche inscrite est stockée.
-	std::wstring escapedPath = L"";//!<  le chemin d’accès à l’emplacement où la tâche inscrite est stockée.
-	TASK_STATE pState; //!< L’état opérationnel de la tâche inscrite.
-	std::vector<Action> pActions; //!< Contient les actions effectuées par la tâche..
-	BSTR pAuthor = BSTR(L"");//!< créateur de la tâche planifiée
-	BSTR pDescription = BSTR(L"");//!< description de la tâche planifiée
-	BSTR pRunAs = BSTR(L"");//!< compte utilisé pour exécutée la tâche
-	std::wstring runAsSid = L"";//!< SID du compte utilisé pour exécutée la tâche
-	std::vector<Trigger> triggers;//!< triggers de a tâche planifiée
+	ITaskDefinition* ppDefinition = NULL;//!< la dÃ©finition de la tÃ¢che.
+	VARIANT_BOOL pEnabled = false; //!< valeur boolÃ©enne qui indique si la tÃ¢che inscrite est activÃ©e.
+	FILETIME pLastRunTime = { 0 }; //!< heure Ã  laquelle la tÃ¢che inscrite a Ã©tÃ© exÃ©cutÃ©e pour la derniÃ¨re fois.
+	FILETIME pLastRunTimeUtc = { 0 }; //!< heure Ã  laquelle la tÃ¢che inscrite a Ã©tÃ© exÃ©cutÃ©e pour la derniÃ¨re fois au format UTC.
+	LONG pLastTaskResult = 0; //!< les rÃ©sultats qui ont Ã©tÃ© retournÃ©s lors de la derniÃ¨re exÃ©cution de la tÃ¢che inscrite.
+	BSTR pName = BSTR(L""); //!< le nom de la tÃ¢che inscrite.
+	FILETIME pNextRunTime = { 0 }; //!< lâ€™heure Ã  laquelle lâ€™exÃ©cution prochaine de la tÃ¢che inscrite est planifiÃ©e.
+	FILETIME pNextRunTimeUtc = { 0 }; //!< lâ€™heure Ã  laquelle lâ€™exÃ©cution prochaine de la tÃ¢che inscrite est planifiÃ©e au format UTC.
+	LONG pNumberOfMissedRuns = 0; //!< le nombre de fois oÃ¹ la tÃ¢che inscrite a manquÃ© une exÃ©cution planifiÃ©e.
+	std::wstring pPath = L"";//!<  le chemin dâ€™accÃ¨s Ã  lâ€™emplacement oÃ¹ la tÃ¢che inscrite est stockÃ©e.
+	std::wstring escapedPath = L"";//!<  le chemin dâ€™accÃ¨s Ã  lâ€™emplacement oÃ¹ la tÃ¢che inscrite est stockÃ©e.
+	TASK_STATE pState; //!< Lâ€™Ã©tat opÃ©rationnel de la tÃ¢che inscrite.
+	std::vector<Action> pActions; //!< Contient les actions effectuÃ©es par la tÃ¢che..
+	std::wstring pAuthor = L"";//!< crÃ©ateur de la tÃ¢che planifiÃ©e
+	std::wstring pDescription = L"";//!< description de la tÃ¢che planifiÃ©e
+	std::wstring pRunAs = L"";//!< compte utilisÃ© pour exÃ©cutÃ©e la tÃ¢che
+	std::wstring runAsSid = L"";//!< SID du compte utilisÃ© pour exÃ©cutÃ©e la tÃ¢che
+	std::vector<Trigger> triggers;//!< triggers de a tÃ¢che planifiÃ©e
 	/*! Constructeur
-	* @param task est une tâche planifiée au format virtuel IRegisteredTask. Ce format étant complexe à manipuler on en extrait les infos qui nous intéressent.
-	* @param pfolder est le sous-repertoire contenant la tâche planifiée
+	* @param task est une tÃ¢che planifiÃ©e au format virtuel IRegisteredTask. Ce format Ã©tant complexe Ã  manipuler on en extrait les infos qui nous intÃ©ressent.
+	* @param pfolder est le sous-repertoire contenant la tÃ¢che planifiÃ©e
 	*/
-	ScheduledTask(IRegisteredTask* task, BSTR pFolder) {
+	ScheduledTask(IRegisteredTask* task) {
 		IActionCollection* pActionCollection = NULL; // Ensemble des actions
-		IUnknown* ppEnum = NULL; // pour itérer la collection
-		IEnumVARIANT* pEnum = NULL; // pour itérer la collection
-		VARIANT var; // pour itérer la collection
-		ULONG lFetch = 0; // pour itérer la collection
-		IAction* pAction = NULL; // pour itérer la collection
-		IDispatch* pDisp = NULL; // pour itérer la collection
-		TASK_ACTION_TYPE pType; // pour itérer la collection
-		DATE tempD; // pour itérer la collection
-		SYSTEMTIME tempST; // pour itérer la collection
-		IRegistrationInfo* infos;// pour itérer la collection
-		IPrincipal* principal;// pour itérer la collection
-		ITriggerCollection* pTriggerCollection;// pour itérer la collection
+		IUnknown* ppEnum = NULL; // pour itÃ©rer la collection
+		IEnumVARIANT* pEnum = NULL; // pour itÃ©rer la collection
+		VARIANT var; // pour itÃ©rer la collection
+		ULONG lFetch = 0; // pour itÃ©rer la collection
+		IAction* pAction = NULL; // pour itÃ©rer la collection
+		IDispatch* pDisp = NULL; // pour itÃ©rer la collection
+		TASK_ACTION_TYPE pType; // pour itÃ©rer la collection
+		DATE tempD; // pour itÃ©rer la collection
+		SYSTEMTIME tempST; // pour itÃ©rer la collection
+		IRegistrationInfo* infos;// pour itÃ©rer la collection
+		IPrincipal* principal;// pour itÃ©rer la collection
+		ITriggerCollection* pTriggerCollection;// pour itÃ©rer la collection
 
+		log(3, L"ðŸ”ˆget_Definition ppDefinition");
 		HRESULT hr = task->get_Definition(&ppDefinition);
+
+		BSTR temp = BSTR(L"");
+		log(3, L"ðŸ”ˆget_Enabled pEnabled");
 		hr = task->get_Enabled(&pEnabled);
+		log(3, L"ðŸ”ˆget_LastRunTime pLastRunTime");
 		hr = task->get_LastRunTime(&tempD);
 		//conversion de DATE en FILETIME
+		log(3, L"ðŸ”ˆVariantTimeToSystemTime pLastRunTime");
 		VariantTimeToSystemTime(tempD, &tempST);
+		log(3, L"ðŸ”ˆSystemTimeToFileTime pLastRunTime");
 		SystemTimeToFileTime(&tempST, &pLastRunTime);
+		log(3, L"ðŸ”ˆLocalFileTimeToFileTime pLastRunTimeUtc");
 		LocalFileTimeToFileTime(&pLastRunTime, &pLastRunTimeUtc);
 
+		log(3, L"ðŸ”ˆget_LastTaskResult pLastTaskResult");
 		hr = task->get_LastTaskResult(&pLastTaskResult);
+		log(3, L"ðŸ”ˆget_Name pName");
 		hr = task->get_Name(&pName);
+		log(2, L"â‡ï¸Scheduled task name : " + bstr_to_wstring(pName));
+		log(3, L"ðŸ”ˆget_NextRunTime pNextRunTime");
 		hr = task->get_NextRunTime(&tempD);
 
+		//conversion de DATE en FILETIME
+		log(3, L"ðŸ”ˆVariantTimeToSystemTime pNextRunTime");
+		VariantTimeToSystemTime(tempD, &tempST);
+		log(3, L"ðŸ”ˆSystemTimeToFileTime pNextRunTime");
+		SystemTimeToFileTime(&tempST, &pNextRunTime);
+		log(3, L"ðŸ”ˆLocalFileTimeToFileTime pNextRunTimeUtc");
+		LocalFileTimeToFileTime(&pNextRunTime, &pNextRunTimeUtc);
+		
+		log(3, L"ðŸ”ˆget_RegistrationInfo infos");
 		ppDefinition->get_RegistrationInfo(&infos);
-		infos->get_Author(&pAuthor);
-		infos->get_Description(&pDescription);
-
+		log(3, L"ðŸ”ˆget_Author pAuthor");
+		infos->get_Author(&temp);
+		log(3, L"ðŸ”ˆbstr_to_wstring pAuthor");
+		pAuthor = bstr_to_wstring(temp);
+		log(3, L"ðŸ”ˆreplaceAll pAuthor");
+		pAuthor = replaceAll(pAuthor, L"\\", L"\\\\");
+		pAuthor= replaceAll(pAuthor, L"\"", L"\\\"");
+		log(3, L"ðŸ”ˆget_Description pDescription");
+		infos->get_Description(&temp);
+		log(3, L"ðŸ”ˆbstr_to_wstring pDescription");
+		pDescription = bstr_to_wstring(temp);
+		log(3, L"ðŸ”ˆget_Principal principal");
 		ppDefinition->get_Principal(&principal);
-		principal->get_UserId(&pRunAs);
+		log(3, L"ðŸ”ˆget_UserId pRunAs");
+		principal->get_UserId(&temp);
+		log(3, L"ðŸ”ˆbstr_to_wstring pRunAs");
+		pRunAs = bstr_to_wstring(temp);
 		LPUSER_INFO_4 info4 = NULL;
-		LPWSTR temp = NULL;
+		LPWSTR tempSid = NULL;
 		std::wstring SID = L"";
 		//get SID of user
-		if (pRunAs != BSTR(L"")) {
-			if(NetUserGetInfo(NULL, bstr_to_wstring(pRunAs).c_str(), 4, (LPBYTE*)&info4) == NERR_Success){
-				ConvertSidToStringSidW(info4->usri4_user_sid, &temp);
-				runAsSid = std::wstring(temp);
+		if (pRunAs != L"") {
+			log(3, L"ðŸ”ˆNetUserGetInfo info4");
+			if(NetUserGetInfo(NULL, pRunAs.c_str(), 4, (LPBYTE*)&info4) == NERR_Success){
+				log(3, L"ðŸ”ˆConvertSidToStringSidW info4");
+				ConvertSidToStringSidW(info4->usri4_user_sid, &tempSid);
+				log(3, L"ðŸ”ˆrunAsSid info4");
+				runAsSid = std::wstring(tempSid);
 				NetApiBufferFree(info4);
 			}
 		}
-
-		//conversion de DATE en FILETIME
-		VariantTimeToSystemTime(tempD, &tempST);
-		SystemTimeToFileTime(&tempST, &pNextRunTime);
-		LocalFileTimeToFileTime(&pNextRunTime, &pNextRunTimeUtc);
-
+		log(3, L"ðŸ”ˆget_NumberOfMissedRuns task");
 		hr = task->get_NumberOfMissedRuns(&pNumberOfMissedRuns);
-		hr = task->get_Path(&pPath);
-		escapedPath = bstr_to_wstring(pPath);//escape
+		log(3, L"ðŸ”ˆget_Path task");
+		hr = task->get_Path(&temp);
+		log(3, L"ðŸ”ˆbstr_to_wstring pPath");
+		pPath = bstr_to_wstring(temp);
+		log(3, L"ðŸ”ˆreplaceAll escapedPath");
+		escapedPath = replaceAll(pPath,L"\\",L"\\\\");//escape
+		escapedPath = replaceAll(escapedPath,L"\"",L"\\\"");//escape
+		log(3, L"ðŸ”ˆget_State pState");
 		hr = task->get_State(&pState);
 
 		//Liste des actions
+		log(3, L"ðŸ”ˆget_Actions pActionCollection");
 		ppDefinition->get_Actions(&pActionCollection);
 
 		// Get the Enumerator object on the collection object.
+		log(3, L"ðŸ”ˆget__NewEnum ppEnum");
 		pActionCollection->get__NewEnum(&ppEnum);
+		log(3, L"ðŸ”ˆQueryInterface pEnum");
 		ppEnum->QueryInterface(IID_IEnumVARIANT, (void**)&pEnum);
 
 		// Enumerate the collection.
 		VariantInit(&var);
+		log(3, L"ðŸ”ˆNext pEnum");
 		hr = pEnum->Next(1, &var, &lFetch);
 		while (hr == S_OK)
 		{
@@ -141,18 +180,34 @@ struct ScheduledTask {
 			{
 				Action a;
 				pDisp = V_DISPATCH(&var);
+				log(3, L"ðŸ”ˆQueryInterface pAction");
 				pDisp->QueryInterface(IID_IAction, (void**)&pAction);
+				log(3, L"ðŸ”ˆget_Type pAction");
 				pAction->get_Type(&a.type);
 				if (a.type == TASK_ACTION_EXEC) {
-					((IExecAction*)pAction)->get_Path(&a.command);
-					a.command_escaped = bstr_to_wstring(a.command);
-					((IExecAction*)pAction)->get_Arguments(&a.arguments);
-					a.arguments_escaped = bstr_to_wstring(a.arguments);
+					log(3, L"ðŸ”ˆget_Path pAction");
+					((IExecAction*)pAction)->get_Path(&temp);
+					log(3, L"ðŸ”ˆbstr_to_wstring command");
+					a.command = bstr_to_wstring(temp);
+					log(3, L"ðŸ”ˆreplaceAll command");
+					a.command= replaceAll(a.command,L"\\",L"\\\\");
+					a.command = replaceAll(a.command,L"\"",L"\\\"");
+					log(3, L"ðŸ”ˆget_Arguments pAction");
+					((IExecAction*)pAction)->get_Arguments(&temp);
+					log(3, L"ðŸ”ˆbstr_to_wstring arguments");
+					a.arguments = bstr_to_wstring(temp);
+					log(3, L"ðŸ”ˆreplaceAll arguments");
+					a.arguments = replaceAll(a.arguments, L"\\", L"\\\\");
+					a.arguments = replaceAll(a.arguments, L"\"", L"\\\"");
 				}
 				if (a.type == TASK_ACTION_COM_HANDLER) {
-					((IComHandlerAction*)pAction)->get_ClassId(&a.classId);
-					((IComHandlerAction*)pAction)->get_Data(&a.data);
-					a.arguments_escaped = bstr_to_wstring(a.arguments);
+					log(3, L"ðŸ”ˆget_ClassId pAction");
+					((IComHandlerAction*)pAction)->get_ClassId(&temp);
+					a.classId = bstr_to_wstring(temp);
+					log(3, L"ðŸ”ˆget_Data pAction");
+					((IComHandlerAction*)pAction)->get_Data(&temp);
+					log(3, L"ðŸ”ˆbstr_to_wstring data");
+					a.data = bstr_to_wstring(temp);
 				}
 				pActions.push_back(a);
 				pAction->Release();
@@ -165,14 +220,18 @@ struct ScheduledTask {
 
 		//Triggers
 		//Liste des actions
+		log(3, L"ðŸ”ˆget_Triggers ppDefinition");
 		ppDefinition->get_Triggers(&pTriggerCollection);
 
 		// Get the Enumerator object on the collection object.
+		log(3, L"ðŸ”ˆget__NewEnum pTriggerCollection");
 		pTriggerCollection->get__NewEnum(&ppEnum);
+		log(3, L"ðŸ”ˆQueryInterface ppEnum");
 		ppEnum->QueryInterface(IID_IEnumVARIANT, (void**)&pEnum);
 
 		// Enumerate the collection.
 		VariantInit(&var);
+		log(3, L"ðŸ”ˆNext pEnum");
 		hr = pEnum->Next(1, &var, &lFetch);
 		while (hr == S_OK)
 		{
@@ -181,11 +240,18 @@ struct ScheduledTask {
 				ITrigger* pTrigger;
 				Trigger trigger;
 				pDisp = V_DISPATCH(&var);
+				log(3, L"ðŸ”ˆQueryInterface pDisp");
 				pDisp->QueryInterface(IID_ITrigger, (void**)&pTrigger);
 				IRepetitionPattern* pattern;
+				log(3, L"ðŸ”ˆget_Repetition pTrigger");
 				pTrigger->get_Repetition(&pattern);
-				pattern->get_Interval(&trigger.interval);
+				log(3, L"ðŸ”ˆget_Interval interval");
+				pattern->get_Interval(&temp);
+				log(3, L"ðŸ”ˆbstr_to_wstring interval");
+				trigger.interval = bstr_to_wstring(temp);
+				log(3, L"ðŸ”ˆget_Type trigger");
 				pTrigger->get_Type(&trigger.type);
+
 				triggers.push_back(trigger);
 				pTrigger->Release();
 				pDisp->Release();
@@ -202,13 +268,13 @@ struct ScheduledTask {
 	* @return wstring le code json
 	*/
 	std::wstring to_json() {
-
+		log(3, L"ðŸ”ˆScheduled task");
 		std::wstring result = tab(1) + L"{\n"
-			+ tab(2) + L"\"Name\":\"" + bstr_to_wstring(pName) + L"\",\n"
-			+ tab(2) + L"\"Description\":\"" + bstr_to_wstring(pDescription) + L"\",\n"
-			+ tab(2) + L"\"Author\":\"" + bstr_to_wstring(pAuthor) + L"\",\n"
+			+ tab(2) + L"\"Name\":\"" + pName + L"\",\n"
+			+ tab(2) + L"\"Description\":\"" + pDescription + L"\",\n"
+			+ tab(2) + L"\"Author\":\"" + pAuthor + L"\",\n"
 			+ tab(2) + L"\"Enabled\":\"" + bool_to_wstring(pEnabled) + L"\",\n"
-			+ tab(2) + L"\"RunAs\":\"" + bstr_to_wstring(pRunAs) + L"\",\n"
+			+ tab(2) + L"\"RunAs\":\"" + pRunAs + L"\",\n"
 			+ tab(2) + L"\"RunAsSID\":\"" + runAsSid + L"\",\n"
 			+ tab(2) + L"\"Path\":\"" + escapedPath + L"\",\n"
 			+ tab(2) + L"\"State\":\"" + task_state(pState) + L"\",\n"
@@ -224,21 +290,27 @@ struct ScheduledTask {
 		for (it = pActions.begin(); it != pActions.end(); it++) {
 			result += tab(3) + L"{\n";
 			if (it->type == TASK_ACTION_EXEC) {
+				log(3, L"ðŸ”ˆtask_action_type");
 				result += tab(4) + L"\"Type\":\"" + task_action_type(it->type) + L"\",\n";
-				result += tab(4) + L"\"Command\":\"" + it->command_escaped + L"\",\n";
-				result += tab(4) + L"\"Arguments\":\"" + it->arguments_escaped + L"\"\n";
+				result += tab(4) + L"\"Command\":\"" + it->command + L"\",\n";
+				result += tab(4) + L"\"Arguments\":\"" + it->arguments + L"\"\n";
 			}
 			else if (it->type == TASK_ACTION_COM_HANDLER) {
+				log(3, L"ðŸ”ˆtask_action_type");
 				result += tab(4) + L"\"Type\":\"" + task_action_type(it->type) + L"\",\n";
-				result += tab(4) + L"\"ClassId\":\"" + bstr_to_wstring(it->classId) + L"\",\n";
-				std::wstring temp = trans_guid_to_wstring(bstr_to_wstring(it->classId));
+				result += tab(4) + L"\"ClassId\":\"" + it->classId + L"\",\n";
+				log(3, L"ðŸ”ˆtrans_guid_to_wstring classId");
+				std::wstring temp = trans_guid_to_wstring(it->classId);
+				log(3, L"ðŸ”ˆreplaceAll classId Name");
 				temp = replaceAll(temp, L"\\", L"\\\\");
 				temp = replaceAll(temp, L"\"", L"\\\"");
 				result += tab(4) + L"\"ClassId Name\":\"" + temp + L"\",\n";
-				result += tab(4) + L"\"data\":\"" + bstr_to_wstring(it->data) + L"\"\n";
+				result += tab(4) + L"\"data\":\"" + it->data + L"\"\n";
 			}
-			else
+			else {
+				log(3, L"ðŸ”ˆtask_action_type");
 				result += tab(4) + L"\"Type\":\"" + task_action_type(it->type) + L"\"\n";
+			}
 
 			result += tab(3) + L"}";
 			if (it != pActions.end() - 1)
@@ -252,10 +324,12 @@ struct ScheduledTask {
 		for (it2 = triggers.begin(); it2 != triggers.end(); it2++) {
 			result += tab(3) + L"{\n";
 			if (it2->type == TASK_TRIGGER_TIME) {
+				log(3, L"ðŸ”ˆtask_trigger_type");
 				result += tab(4) + L"\"Type\":\"" + task_trigger_type(it2->type) + L"\",\n"
-					+ tab(4) + L"\"Interval\":\"" + bstr_to_wstring(it2->interval) + L"\"\n";
+					+ tab(4) + L"\"Interval\":\"" + it2->interval + L"\"\n";
 			}
 			else {
+				log(3, L"ðŸ”ˆtask_trigger_type");
 				result += tab(4) + L"\"Type\":\"" + task_trigger_type(it2->type) + L"\"\n";
 			}
 			result += tab(3) + L"}";
@@ -271,8 +345,9 @@ struct ScheduledTask {
 		return result;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
+		log(3, L"ðŸ”ˆScheduled task clear");
 		for (Trigger temp : triggers)
 			temp.clear();
 	}
@@ -282,106 +357,148 @@ struct ScheduledTask {
 */
 struct ScheduledTasks {
 	std::vector<ScheduledTask> scheduledTasks; //!< tableau contenant tout les ScheduledTask
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remontées lors du traitement des objets
 
-
-	HRESULT getFolders(std::vector<BSTR>* folders, BSTR folder, ITaskService* pService) {
-		ITaskFolder* pRootFolder = NULL;
-		ITaskFolderCollection* pRootFoldersCollection = NULL;
-		HRESULT hr;
-		folders->push_back(folder);
-		hr = pService->GetFolder(_bstr_t(folder), &pRootFolder);
-		if (FAILED(hr))
+	/*! Fonction permettant de parcourir les taches planifiÃ©es d'un dossier
+	* @param pRootFolder est le dossier Ã  parcourir
+	* @pService est le service de tÃ¢ches planifiÃ©es
+	*/
+	HRESULT getTasks(ITaskFolder* pfolder, ITaskService* pService) {
+		
+		//  -------------------------------------------------------
+		//  Get the registered tasks in the folder.
+		IRegisteredTaskCollection* pTaskCollection = NULL;
+		log(3, L"ðŸ”ˆGetTasks pTaskCollection");
+		HRESULT hr = pfolder->GetTasks(NULL, &pTaskCollection);
+		if (hr != S_OK)
 		{
-			errors.push_back({ L"Unable to get folder pointer", hr });
-			
+			log(2, L"ðŸ”¥GetTasks pTaskCollection", hr);
 			return hr;
 		}
-		pRootFolder->GetFolders(0, &pRootFoldersCollection);
-		// on récupère tous les sous-repertoires
-		LONG numFolders = 0;
-		hr = pRootFoldersCollection->get_Count(&numFolders);
-		for (LONG i = 1; i <= numFolders; i++)
+
+		LONG numTasks = 0;
+		log(3, L"ðŸ”ˆget_Count numTasks");
+		hr = pTaskCollection->get_Count(&numTasks);
+		TASK_STATE taskState;
+		for (LONG i = 1; i <= numTasks; i++)
 		{
-			hr = pRootFoldersCollection->get_Item(_variant_t(i), &pRootFolder);
-			BSTR bstr, finale;
-			pRootFolder->get_Name(&bstr);
-			//concatenation
-			finale = bstr_concat(folder, bstr_t(L"\\"));
-			finale = bstr_concat(finale, bstr);
-			getFolders(folders, finale, pService);
+			IRegisteredTask* pRegisteredTask = NULL;
+			log(3, L"ðŸ”ˆget_Item pRegisteredTask");
+			hr = pTaskCollection->get_Item(_variant_t(i), &pRegisteredTask);
+			if (SUCCEEDED(hr))
+			{
+				log(1, L"âž•ScheduledTask");
+				ScheduledTask s = ScheduledTask(pRegisteredTask);
+				scheduledTasks.push_back(s);
+			}
+			else {
+				log(2, L"ðŸ”¥get_Item pRegisteredTask", hr);
+				continue;
+			}
+			pRegisteredTask->Release();
 		}
-		pRootFolder->Release();
+		return ERROR_SUCCESS;
+	}
+
+	/*! Fonction permettant de parcourir les dossiers contenant des taches planifiÃ©es
+	* @param folder est le dossier Ã  parcourir
+	* @pService est le service de tÃ¢ches planifiÃ©es
+	*/
+	HRESULT getFolders(std::wstring folder, ITaskService* pService) {
+		ITaskFolder* pFolder = NULL;
+		ITaskFolderCollection* pRootFoldersCollection = NULL;
+		HRESULT hr=0;
+
+		log(3, L"ðŸ”ˆwstring_to_bstr pRootFolder");
+		BSTR bstrRootFolder = wstring_to_bstr(folder);
+
+		log(3, L"ðŸ”ˆGetFolder pRootFolder");
+		hr = pService->GetFolder(bstrRootFolder, &pFolder);
+		if (SUCCEEDED(hr)) {
+			log(3, L"ðŸ”ˆgetTasks pRootFolder");
+			hr = getTasks(pFolder, pService);
+			if (SUCCEEDED(hr)) {
+				// on rÃ©cupÃ¨re tous les sous-repertoires
+				log(3, L"ðŸ”ˆGetFolders pRootFoldersCollection");
+				hr = pFolder->GetFolders(0, &pRootFoldersCollection);
+				if (SUCCEEDED(hr)) {
+					LONG numFolders = 0;
+					log(3, L"ðŸ”ˆget_Count pRootFoldersCollection");
+					hr = pRootFoldersCollection->get_Count(&numFolders);
+					if (SUCCEEDED(hr)) {
+						for (LONG i = 1; i <= numFolders; i++)
+						{
+							log(3, L"ðŸ”ˆget_Item pRootFoldersCollection");
+							hr = pRootFoldersCollection->get_Item(_variant_t(i), &pFolder);
+							if (SUCCEEDED(hr)) {
+								BSTR bstr;
+								std::wstring finale;
+								log(3, L"ðŸ”ˆget_Name pFolder");
+								pFolder->get_Name(&bstr);
+
+								//concatenation
+								log(3, L"ðŸ”ˆbstr_to_wstring finale");
+								finale = folder + L"\\" + bstr_to_wstring(bstr);
+
+								log(3, L"ðŸ”ˆgetFolders finale");
+								getFolders(finale, pService);
+							}
+						}
+					}
+					else {
+						log(2, L"ðŸ”¥get_Count pRootFoldersCollection", hr);
+					}
+				}
+				else {
+					log(2, L"ðŸ”¥GetFolders pRootFolder", hr);
+				}
+			}
+			else {
+				log(2, L"ðŸ”¥getTasks pRootFolder", hr);
+			}
+		} else{
+			log(2, L"ðŸ”¥GetFolder pRootFolder", hr);
+			return hr;
+		}
+		pFolder->Release();
 		return ERROR_SUCCESS;
 	}
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
+	* @param conf contient les paramÃ¨tres de l'application issue des paramÃ¨tres de la ligne de commande
 	*/
 	HRESULT getData() {
 		
-		HRESULT hr;
+		HRESULT hr=0;
+
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"â„¹ï¸Scheduled tasks : ");
+		log(0, L"*******************************************************************************************************************");
 
 		//  ------------------------------------------------------
 		//  Create an instance of the Task Service. 
 		ITaskService* pService = NULL;
-
+		log(3, L"ðŸ”ˆCoCreateInstance");
 		hr = CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void**)&pService); 
 		if (hr!=S_OK)
 		{
-			errors.push_back({ L"Failed to co-create an instance of the TaskService class", hr });
+			log(2, L"ðŸ”¥CoCreateInstance", hr);
 			return hr;
 		}
 		
 		//  Connect to the task service.CLSID_TaskScheduler
+		log(3, L"ðŸ”ˆConnect pService");
 		hr = pService->Connect(VARIANT(), VARIANT(), VARIANT(), VARIANT());
 		if (hr!=S_OK)
 		{
-			errors.push_back({ L"Failed to connect to ITaskService", hr });
+			log(2, L"ðŸ”¥Connect pService", hr);
 			return hr;
 		}
 		//  ------------------------------------------------------
 		//  Get the folders list 
 		ITaskFolder* pRootFolder = NULL;
-		std::vector<BSTR> folders; // continent la liste des repertoires
-		getFolders(&folders, _bstr_t(L""), pService);
+		log(3, L"ðŸ”ˆgetFolders");
+		getFolders(L"", pService);
 
-		//Pour chaque repertoire
-		for (BSTR f : folders) {
-			hr = pService->GetFolder(_bstr_t(f), &pRootFolder);
-			
-			if (hr!=S_OK)
-			{
-				errors.push_back({ L"Unable to get folder pointer", hr });
-				return hr;
-			}
-			//  -------------------------------------------------------
-			//  Get the registered tasks in the folder.
-			IRegisteredTaskCollection* pTaskCollection = NULL;
-			hr = pRootFolder->GetTasks(NULL, &pTaskCollection);
-			pRootFolder->Release();
-			if (hr != S_OK)
-			{
-				errors.push_back({ L"Unable to get saved tasks", hr });
-				
-				return 1;
-			}
-			LONG numTasks = 0;
-			hr = pTaskCollection->get_Count(&numTasks);
-
-			TASK_STATE taskState;
-			for (LONG i = 1; i <= numTasks; i++)
-			{
-				IRegisteredTask* pRegisteredTask = NULL;
-				hr = pTaskCollection->get_Item(_variant_t(i), &pRegisteredTask);
-
-				if (SUCCEEDED(hr))
-				{
-					ScheduledTask s = ScheduledTask(pRegisteredTask, f);
-					scheduledTasks.push_back(s);
-				}
-			}
-		}
 		pService->Release();
 		return ERROR_SUCCESS;
 	}
@@ -400,27 +517,18 @@ struct ScheduledTasks {
 		}
 		result += L"]";
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
+		std::filesystem::create_directory(conf._outputDir); //crÃ©e le repertoire, pas d'erreur s'il existe dÃ©jÃ 
 		myfile.open(conf._outputDir + "/ScheduledTasks.json");
-		myfile << result;
+		log(3, L"ðŸ”ˆansi_to_utf8 result");
+		myfile << ansi_to_utf8(result);
 		myfile.close();
 
-		if (conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-			myfile.open(conf._errorOutputDir + "/ScheduledTasks_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 		return ERROR_SUCCESS;
 	}
 
-	/* liberation mémoire */
+	/* liberation mÃ©moire */
 	void clear() {
+		log(3, L"ðŸ”ˆscheduled tasks clear");
 		for (ScheduledTask temp : scheduledTasks)
 			temp.clear();
 	}

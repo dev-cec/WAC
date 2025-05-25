@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <iostream>
 #include <cstdio>
@@ -19,26 +19,26 @@
 * Documentation : https://github.com/EricZimmerman/JumpList/blob/master/JumpList/Resources/AppIDs.txt
 */
 
-/*!contient des informations sur les fichiers contenus avec un ID de secteur (SID) pour le secteur de départ d'une chaîne, etc.
+/*!contient des informations sur les fichiers contenus avec un ID de secteur (SID) pour le secteur de dÃ©part d'une chaÃ®ne, etc.
 */
 struct Directory {
 	short int nameLength = 0; //!< longueur du nom
 	unsigned int firstSectorID = 0;//!< id du premier secteur
 	unsigned int userFlags = 0;//!< attributs du directory
 	int directorySize = 0; //!< taille du Directory
-	int previousDirectoryId = 0; //!< Id du précédent Directory
+	int previousDirectoryId = 0; //!< Id du prÃ©cÃ©dent Directory
 	int nextDirectoryId = 0; //!< Id du prochain Directory
 	int subDirectoryId = 0; //!< Id du dubDirectory
-	FILETIME createdUtc = { 0 }; //!< date de création au format UTC
-	FILETIME created = { 0 }; //!< date de création
+	FILETIME createdUtc = { 0 }; //!< date de crÃ©ation au format UTC
+	FILETIME created = { 0 }; //!< date de crÃ©ation
 	FILETIME modifiedUtc = { 0 }; //!< date de modification au format UTC
 	FILETIME modified = { 0 };//!< date de modification
-	std::wstring name;//!< nom du Directory
-	std::wstring type;//!< Type de directory
-	std::wstring classId;//!< Identifiant de classe du Directory
-	std::wstring nodeColor;//!< Couleur du nœud du Directory
+	std::wstring name = L"";//!< nom du Directory
+	std::wstring type = L"";//!< Type de directory
+	std::wstring classId = L"";//!< Identifiant de classe du Directory
+	std::wstring nodeColor = L"";//!< Couleur du nÅ“ud du Directory
 
-	/*! retourne le nom du type de directory à partir d'un entier
+	/*! retourne le nom du type de directory Ã  partir d'un entier
 	*/
 	std::wstring getType(BYTE value) {
 		switch (value) {
@@ -52,7 +52,7 @@ struct Directory {
 		}
 	}
 
-	/*! retourne la couleur du nœud du directory à partir d'un entier
+	/*! retourne la couleur du nÅ“ud du directory Ã  partir d'un entier
 	*/
 	std::wstring getNodeColor(BYTE value) {
 		switch (value) {
@@ -62,99 +62,113 @@ struct Directory {
 		}
 	}
 
-	/*! Constructeur par défaut
+	/*! Constructeur par dÃ©faut
 	*/
 	Directory() {};
 
 	/*!Constructeur
-	* @param data contient un pointeur sur les données à parser
+	* @param data contient un pointeur sur les donnÃ©es Ã  parser
 	*/
 	Directory(LPBYTE data) {
-		nameLength = bytes_to_short(data + 64);
-		name = ansi_to_utf8(std::wstring((wchar_t*)(data)));
+		nameLength = *reinterpret_cast<short int*>(data + 64);
+		name = std::wstring((wchar_t*)(data));
+		log(3, L"ðŸ”ˆgetType type");
 		type = getType(data[66]);
+		log(3, L"ðŸ”ˆgetNodeColor nodeColor");
 		nodeColor = getNodeColor(data[67]);
-
-		previousDirectoryId = bytes_to_int(data + 68);
-		nextDirectoryId = bytes_to_int(data + 72);
-		subDirectoryId = bytes_to_int(data + 76);
-
+		previousDirectoryId = *reinterpret_cast<int*>(data + 68);
+		nextDirectoryId = *reinterpret_cast<int*>(data + 72);
+		subDirectoryId = *reinterpret_cast<int*>(data + 76);
+		log(3, L"ðŸ”ˆguid_to_wstring classId");
 		classId = guid_to_wstring(*reinterpret_cast<GUID*>(data + 80));
-		userFlags = bytes_to_unsigned_int(data + 96);
-		created = bytes_to_filetime(data + 100);
+		userFlags = *reinterpret_cast<unsigned int*>(data + 96);
+		created = *reinterpret_cast<FILETIME*>(data + 100);
+		log(3, L"ðŸ”ˆLocalFileTimeToFileTime createdUtc");
 		LocalFileTimeToFileTime(&created, &createdUtc);
-		modified = bytes_to_filetime(data + 108);
+		modified = *reinterpret_cast<FILETIME*>(data + 108);
+		log(3, L"ðŸ”ˆLocalFileTimeToFileTime modifiedUtc");
 		LocalFileTimeToFileTime(&modified, &modifiedUtc);
-
-		firstSectorID = bytes_to_unsigned_int(data + 116);
-		directorySize = bytes_to_unsigned_int(data + 120);
+		firstSectorID = *reinterpret_cast<unsigned int*>(data + 116);
+		directorySize = *reinterpret_cast<unsigned int*>(data + 120);
 	};
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i) {
-
-		std::wstring result = tab(i) + L"{\n"
-			+ tab(i + 1) + L"\"DirectoryName\":\"" + name + L"\", \n"
-			+ tab(i + 1) + L"\"DirectoryType\":\"" + type + L"\", \n"
-			+ tab(i + 1) + L"\"NodeColor\":\"" + nodeColor + L"\", \n"
-			+ tab(i + 1) + L"\"PreviousDirectoryId\":" + std::to_wstring(previousDirectoryId) + L", \n"
-			+ tab(i + 1) + L"\"NextDirectoryId\":" + std::to_wstring(nextDirectoryId) + L", \n"
-			+ tab(i + 1) + L"\"SubDirectoryId\":" + std::to_wstring(subDirectoryId) + L", \n"
-			+ tab(i + 1) + L"\"ClassId\":\"" + classId + L"\", \n"
-			+ tab(i + 1) + L"\"UserFlags\":" + std::to_wstring(userFlags) + L", \n"
-			+ tab(i + 1) + L"\"CreationTime\":\"" + time_to_wstring(created) + L"\", \n"
-			+ tab(i + 1) + L"\"CreationTimeUtc\":\"" + time_to_wstring(createdUtc) + L"\", \n"
-			+ tab(i + 1) + L"\"ModifiedTime\":\"" + time_to_wstring(modified) + L"\", \n"
-			+ tab(i + 1) + L"\"ModifiedTimeUtc\":\"" + time_to_wstring(modifiedUtc) + L"\", \n"
-			+ tab(i + 1) + L"\"FirstDirectorySectorId\":" + std::to_wstring(firstSectorID) + L", \n"
-			+ tab(i + 1) + L"\"DirectorySize\":" + std::to_wstring(directorySize) + L", \n";
+		log(3, L"ðŸ”ˆDriectory to_json");
+		std::wstring result = tab(i) + L"{\n";
+			result += tab(i + 1) + L"\"DirectoryName\":\"" + name + L"\", \n";
+			result += tab(i + 1) + L"\"DirectoryType\":\"" + type + L"\", \n";
+			result += tab(i + 1) + L"\"NodeColor\":\"" + nodeColor + L"\", \n";
+			result += tab(i + 1) + L"\"PreviousDirectoryId\":" + std::to_wstring(previousDirectoryId) + L", \n";
+			result += tab(i + 1) + L"\"NextDirectoryId\":" + std::to_wstring(nextDirectoryId) + L", \n";
+			result += tab(i + 1) + L"\"SubDirectoryId\":" + std::to_wstring(subDirectoryId) + L", \n";
+			result += tab(i + 1) + L"\"ClassId\":\"" + classId + L"\", \n";
+			result += tab(i + 1) + L"\"UserFlags\":" + std::to_wstring(userFlags) + L", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring created");
+			result += tab(i + 1) + L"\"CreationTime\":\"" + time_to_wstring(created) + L"\", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring createdUtc");
+			result += tab(i + 1) + L"\"CreationTimeUtc\":\"" + time_to_wstring(createdUtc) + L"\", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring modified");
+			result += tab(i + 1) + L"\"ModifiedTime\":\"" + time_to_wstring(modified) + L"\", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring modifiedUtc");
+			result += tab(i + 1) + L"\"ModifiedTimeUtc\":\"" + time_to_wstring(modifiedUtc) + L"\", \n";
+			result += tab(i + 1) + L"\"FirstDirectorySectorId\":" + std::to_wstring(firstSectorID) + L", \n";
+			result += tab(i + 1) + L"\"DirectorySize\":" + std::to_wstring(directorySize) + L", \n";
 		result += tab(i) + L"}";
 		return result;
 	}
 };
 
-/*! représente une structure destfile*/
+/*! reprÃ©sente une structure destfile*/
 struct DestFile {
-	std::wstring guidDroidVolume;//!< GUID containing an NTFS object identifier
-	std::wstring guidDroidFile;//!< GUID containing an NTFS object identifier
-	std::wstring guidBirthDroidVolume;//!< GUID containing an NTFS object identifier
-	std::wstring guidBirthDroidFile;//!< GUID containing an NTFS object identifier
-	std::wstring hostname;//!< Contains an ASCII string unused characters are filled with 0 - byte values
-	std::wstring pathObject;//!< Contains a UTF-16 little-endian string without an end-of-string character
-	FILETIME lastModificationTime = { 0 };//!< date de dernière modification
-	FILETIME lastModificationTimeUtc = { 0 };//!< date de dernière modification au format UTC
+	std::wstring guidDroidVolume=L"";//!< GUID containing an NTFS object identifier
+	std::wstring guidDroidFile=L"";//!< GUID containing an NTFS object identifier
+	std::wstring guidBirthDroidVolume=L"";//!< GUID containing an NTFS object identifier
+	std::wstring guidBirthDroidFile=L"";//!< GUID containing an NTFS object identifier
+	std::wstring hostname=L"";//!< Contains an ASCII string unused characters are filled with 0 - byte values
+	std::wstring pathObject=L"";//!< Contains a UTF-16 little-endian string without an end-of-string character
+	FILETIME lastModificationTime = { 0 };//!< date de derniÃ¨re modification
+	FILETIME lastModificationTimeUtc = { 0 };//!< date de derniÃ¨re modification au format UTC
 	short int pathObjectSize = 0; //!< taille du path object
-	unsigned int entryNumber = 0;//!< numéro de l'entrée
+	unsigned int entryNumber = 0;//!< numÃ©ro de l'entrÃ©e
 	int pinStatus = 0;//!< Where a value of -1 (0xffffffff) indicates unpinned and a value of 0 or greater pinned.
-	int size = 0;//!< taille de l'entrée
+	int size = 0;//!< taille de l'entrÃ©e
 
-	/*! Constructeur par défaut
+	/*! Constructeur par dÃ©faut
 	*/
 	DestFile() {};
 
 	/*!Constructeur
-	* @param buffer contient un pointeur sur les données à parser
+	* @param buffer contient un pointeur sur les donnÃ©es Ã  parser
 	*/
 	DestFile(LPBYTE buffer) {
+		log(3, L"ðŸ”ˆguid_to_wstring guidDroidVolume");
 		guidDroidVolume = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8));
+		log(3, L"ðŸ”ˆguid_to_wstring guidDroidFile");
 		guidDroidFile = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 24));
+		log(3, L"ðŸ”ˆguid_to_wstring guidBirthDroidVolume");
 		guidBirthDroidVolume = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 56));
+		log(3, L"ðŸ”ˆguid_to_wstring guidBirthDroidFile");
 		guidBirthDroidFile = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 56));
-		hostname = string_to_wstring(ansi_to_utf8(std::string((char*)(buffer + 72))));
-		entryNumber = bytes_to_unsigned_int(buffer + 88);
-		lastModificationTimeUtc = bytes_to_filetime(buffer + 100);
-		if (time_to_wstring(lastModificationTimeUtc) != L"")
+		log(3, L"ðŸ”ˆstring_to_wstring hostname");
+		hostname = string_to_wstring(std::string((char*)(buffer + 72)));
+		entryNumber = *reinterpret_cast<unsigned int*>(buffer + 88);
+		lastModificationTimeUtc = *reinterpret_cast<FILETIME*>(buffer + 100);
+		log(3, L"ðŸ”ˆtime_to_wstring lastModificationTimeUtc");
+		if (time_to_wstring(lastModificationTimeUtc) != L"") {
+			log(3, L"ðŸ”ˆFileTimeToLocalFileTime lastModificationTimeUtc");
 			FileTimeToLocalFileTime(&lastModificationTimeUtc, &lastModificationTime);
-		pinStatus = bytes_to_int(buffer + 108);
-		pathObjectSize = bytes_to_unsigned_short(buffer + 128);
-		pathObject = ansi_to_utf8(std::wstring((wchar_t*)(buffer + 130)));
-		size = 130 + pathObjectSize * 2 + 4; // +2 fin de chaîne +2 Unknown 
+		}
+		pinStatus = *reinterpret_cast<int*>(buffer + 108);
+		pathObjectSize = *reinterpret_cast<unsigned short int*>(buffer + 128);
+		pathObject = std::wstring((wchar_t*)(buffer + 130));
+		size = 130 + pathObjectSize * 2 + 4; // +2 fin de chaÃ®ne +2 Unknown 
 	};
 
-	/*! retourne le statut de pinned à partir de la valeur entière
+	/*! retourne le statut de pinned Ã  partir de la valeur entiÃ¨re
 	*/
 	std::wstring getPinnedStatus() {
 		if (pinStatus >= 0)
@@ -164,58 +178,63 @@ struct DestFile {
 	}
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i) {
-
-		std::wstring result = tab(i) + L"{\n"
-			+ tab(i + 1) + L"\"GuidDroidVolume\":\"" + guidDroidVolume + L"\", \n"
-			+ tab(i + 1) + L"\"GuidDroidFile\":\"" + guidDroidFile + L"\", \n"
-			+ tab(i + 1) + L"\"GuidBirthDroidVolume\":\"" + guidBirthDroidVolume + L"\", \n"
-			+ tab(i + 1) + L"\"GuidBirthDroidFile\":\"" + guidBirthDroidFile + L"\", \n"
-			+ tab(i + 1) + L"\"Hostname\":\"" + hostname + L"\", \n"
-			+ tab(i + 1) + L"\"EntryNumber\":" + std::to_wstring(entryNumber) + L", \n"
-			+ tab(i + 1) + L"\"LastModificationTimeUtc\":\"" + time_to_wstring(lastModificationTimeUtc) + L"\", \n"
-			+ tab(i + 1) + L"\"LastModificationTime\":\"" + time_to_wstring(lastModificationTime) + L"\", \n"
-			+ tab(i + 1) + L"\"PinStatus\":" + getPinnedStatus() + L", \n"
-			+ tab(i + 1) + L"\"PathObject\":\"" + pathObject + L"\", \n";
+		log(3, L"ðŸ”ˆDestFile to_json");
+		std::wstring result = tab(i) + L"{\n";
+			result+= tab(i + 1) + L"\"GuidDroidVolume\":\"" + guidDroidVolume + L"\", \n";
+			result+= tab(i + 1) + L"\"GuidDroidFile\":\"" + guidDroidFile + L"\", \n";
+			result+= tab(i + 1) + L"\"GuidBirthDroidVolume\":\"" + guidBirthDroidVolume + L"\", \n";
+			result+= tab(i + 1) + L"\"GuidBirthDroidFile\":\"" + guidBirthDroidFile + L"\", \n";
+			result+= tab(i + 1) + L"\"Hostname\":\"" + hostname + L"\", \n";
+			result+= tab(i + 1) + L"\"EntryNumber\":" + std::to_wstring(entryNumber) + L", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring lastModificationTimeUtc");
+			result+= tab(i + 1) + L"\"LastModificationTimeUtc\":\"" + time_to_wstring(lastModificationTimeUtc) + L"\", \n";
+			log(3, L"ðŸ”ˆtime_to_wstring lastModificationTime");
+			result+= tab(i + 1) + L"\"LastModificationTime\":\"" + time_to_wstring(lastModificationTime) + L"\", \n";
+			log(3, L"ðŸ”ˆgetPinnedStatus PinStatus");
+			result+= tab(i + 1) + L"\"PinStatus\":" + getPinnedStatus() + L", \n";
+			result += tab(i + 1) + L"\"PathObject\":\"" + pathObject + L"\", \n";
 		result += tab(i) + L"}";
 		return result;
 	}
 };
 
-/*! représente une structure destfile Directory contenant un ensemble de DestFiles*/
+/*! reprÃ©sente une structure destfile Directory contenant un ensemble de DestFiles*/
 struct DestFileDirectory {
-	int formatVersion = 0;//!< format de l'entrée
-	int numberOfEntries = 0;//!< nombre d'entrée
-	int numberPinnedEntries = 0;//!< nombre d'entrée pinned
+	int formatVersion = 0;//!< format de l'entrÃ©e
+	int numberOfEntries = 0;//!< nombre d'entrÃ©e
+	int numberPinnedEntries = 0;//!< nombre d'entrÃ©e pinned
 	std::vector<DestFile> destfiles;//!< tableau contenant les objets destfiles
 
-	/*! Constructeur par défaut
+	/*! Constructeur par dÃ©faut
 	*/
 	DestFileDirectory() {};
 
 	/*!Constructeur
-	* @param buffer contient un pointeur sur les données à parser
+	* @param buffer contient un pointeur sur les donnÃ©es Ã  parser
 	*/
 	DestFileDirectory(LPBYTE buffer) {
-		formatVersion = bytes_to_int(buffer);
-		numberOfEntries = bytes_to_int(buffer + 4);
-		numberPinnedEntries = bytes_to_int(buffer + 8);
+		formatVersion = *reinterpret_cast<int*>(buffer);
+		numberOfEntries = *reinterpret_cast<int*>(buffer + 4);
+		numberPinnedEntries = *reinterpret_cast<int*>(buffer + 8);
 		int offset = 32;
 		for (int x = 0; x < numberOfEntries; x++) {
+			log(3, L"ðŸ”ˆDestFile");
 			DestFile d = DestFile(buffer + offset);
-			offset += d.size; //size variable en fonction des entrée à cause de la longueur du path
+			offset += d.size; //size variable en fonction des entrÃ©e Ã  cause de la longueur du path
 			destfiles.push_back(d);
 		}
 	};
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	* @param i nombre de tabulation nÃ©cessaire en dÃ©but de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	std::wstring to_json(int i) {
+		log(3, L"ðŸ”ˆDestFileDirectory to_json");
 		std::wstring result = tab(i) + L"[\n";
 		for (DestFile d : destfiles)
 			result += d.to_json(i + 1) + L",\n";
@@ -225,11 +244,11 @@ struct DestFileDirectory {
 	}
 };
 
-/*! structure représentant l’entête de l'objet OLE
+/*! structure reprÃ©sentant lâ€™entÃªte de l'objet OLE
 */
 struct oleHeader {
 	bool littleIndian = false; //!< format littleindian ou Bigindian
-	unsigned long _signature = 0xe11ab1a1e011cfd0; //!< signature attendue de l'objet OLE
+	unsigned long long _signature = 0xe11ab1a1e011cfd0; //!< signature attendue de l'objet OLE
 	unsigned long signature = 0; //!< signature de l'objet OLE
 	short int sectorSize = 0; //!< taille des secteurs de l'objet OLE
 	short int shortSectorSize = 0; //!< taille des petits secteurs de l'objet OLE
@@ -243,45 +262,51 @@ struct oleHeader {
 	std::vector<int> SATSectors; //!< tableau contenant les secteurs de la SAT
 	std::vector<int> ShortSATSectors;//!< tableau contenant les secteurs de la SSAT
 
-	/*! Constructeur par défaut
+	/*! Constructeur par dÃ©faut
 	*/
 	oleHeader() {}
 
 	/*!Constructeur
-	* @param buffer contient un pointeur sur les données à parser
+	* @param buffer contient un pointeur sur les donnÃ©es Ã  parser
 	* @param _bufferSize contient la taille du buffer
 	*/
 	oleHeader(LPBYTE buffer, size_t _bufferSize) {
-		signature = bytes_to_unsigned_long(buffer);
-		if (signature != _signature)
+		signature = *reinterpret_cast<unsigned long*>(buffer);
+		if (signature != _signature) {
+			log(2, L"ðŸ”¥oleHeader signature ", ERROR_NDIS_BAD_VERSION);
 			throw std::runtime_error("bad signature");
-
-		littleIndian = (bytes_to_short(buffer + 28) == (short)0xfffe); //0xfeff = big indian
+		}
+		littleIndian = (*reinterpret_cast<short int*>(buffer + 28) == (short)0xfffe); //0xfeff = big indian
 		if (littleIndian == false) {
+			log(2, L"ðŸ”¥Big indian Format not Handle, please handle this file specifically");
 			throw std::runtime_error("Big indian Format not Handle, please handle this file specifically");
 		}
 
-		sectorSize = pow(2, bytes_to_short(buffer + 30)); // Sector size at offset 30, en puissance de 2
-		shortSectorSize = pow(2, bytes_to_short(buffer + 32)); // Short sector size at offset 32, en puissance de 2
-		totalSATSectors = bytes_to_int(buffer + 44); // Total Sector Allocation Table(SAT) sectors at offset 44
-		directoryStreamFirstSectorId = bytes_to_int(buffer + 48); // Sector ID of first sector used by Directory at offset 48
-		minimumStandardStreamSize = bytes_to_unsigned_int(buffer + 56); // Minimum size of a standard stream in bytes at offset 56
-		SSATFirstSectorId = bytes_to_int(buffer + 60); // Sector ID of the first sector used for the Short Sector Allocation Table(SSAT) at offset 60
-		totalSSATSectors = bytes_to_unsigned_int(buffer + 64); // Total sectors used for SSAT at offset 64
-		MSATFirstSectorId = bytes_to_int(buffer + 68);
-		MSATTotalSectors = bytes_to_int(buffer + 72);
+		sectorSize = (short)pow(2, *reinterpret_cast<short int*>(buffer + 30)); // Sector size at offset 30, en puissance de 2
+		shortSectorSize = (short)pow(2, *reinterpret_cast<short int*>(buffer + 32)); // Short sector size at offset 32, en puissance de 2
+		totalSATSectors = *reinterpret_cast<int*>(buffer + 44); // Total Sector Allocation Table(SAT) sectors at offset 44
+		directoryStreamFirstSectorId = *reinterpret_cast<int*>(buffer + 48); // Sector ID of first sector used by Directory at offset 48
+		minimumStandardStreamSize = *reinterpret_cast<unsigned int*>(buffer + 56); // Minimum size of a standard stream in bytes at offset 56
+		SSATFirstSectorId = *reinterpret_cast<int*>(buffer + 60); // Sector ID of the first sector used for the Short Sector Allocation Table(SSAT) at offset 60
+		totalSSATSectors = *reinterpret_cast<unsigned int*>(buffer + 64); // Total sectors used for SSAT at offset 64
+		MSATFirstSectorId = *reinterpret_cast<int*>(buffer + 68);
+		MSATTotalSectors = *reinterpret_cast<int*>(buffer + 72);
 		// Process MSAT
 		if (_bufferSize < 516)
 			throw std::length_error("File corrupt - file smaller than header size"); // header = 76 + 109*4 + 4
 
 		for (int i = 0; i < 109; i++) {
-			int addr = bytes_to_int(buffer + 76 + i * 4);
+			int addr = *reinterpret_cast<int*>(buffer + 76 + i * 4);
 
 			if (addr >= 0) {
-				if (i < totalSATSectors)
+				if (i < totalSATSectors) {
+					log(3, L"ðŸ”ˆSATSectors");
 					SATSectors.push_back(addr * sectorSize + 512); // 512 is for the header
-				else
+				}
+				else {
+					log(2, L"ðŸ”¥The total number of sectors was larger than the one expected from the header data",ERROR_FILE_CORRUPT);
 					throw std::length_error("File corrupt - The total number of sectors was larger than the one expected from the header data");
+				}
 			}
 		}
 	}
@@ -290,6 +315,7 @@ struct oleHeader {
 	* @return wstring le code json
 	*/
 	std::wstring to_json() {
+		log(3, L"ðŸ”ˆoleHeader");
 		std::wstring result = L"";
 		result += L"\"SectorSize \": " + std::to_wstring(sectorSize) + L"\n";
 		result += L"\"ShortSectorSize \": " + std::to_wstring(shortSectorSize) + L"\n";
@@ -310,34 +336,33 @@ struct oleHeader {
 	}
 };
 
-/* structure représentant le parser de OLE
+/* structure reprÃ©sentant le parser de OLE
 */
 struct oleParser {
-	oleHeader header; //!< entête du fichier ole
-	Directory rootEntry;//!< entrée principal de l'objet ole
+	oleHeader header; //!< entÃªte du fichier ole
+	Directory rootEntry;//!< entrÃ©e principal de l'objet ole
 	std::vector<Directory> directories;//!< liste des directory de l'objet ole
 	std::vector<std::vector<BYTE>> shortSectors; //!< liste des short sectors de l'objet ole
 	std::vector<int> sat; //!< liste des secteurs de la sat
 	std::vector<int> ssat;//!< liste des secteurs de la ssat
-	LPBYTE buffer = NULL; //!< buffer contenant les données de l'objet ole à parser
-	int bufferSize = 0;//!< taille du buffer
+	LPBYTE buffer = NULL; //!< buffer contenant les donnÃ©es de l'objet ole Ã  parser
+	size_t bufferSize = 0;//!< taille du buffer
 
 
-	/*! Constructeur par défaut
+	/*! Constructeur par dÃ©faut
 	*/
 	oleParser() {};
 
 	/*!Constructeur
-	* @param buffer contient un pointeur sur les données à parser
+	* @param buffer contient un pointeur sur les donnÃ©es Ã  parser
 	* @param _bufferSize contient la taille du buffer
 	*/
-	oleParser(LPBYTE _buffer, int _bufferSize) {
+	oleParser(LPBYTE _buffer, size_t _bufferSize) {
 		buffer = _buffer;
 		bufferSize = _bufferSize;
 
 		// 0. Process header
 		header = oleHeader(buffer, _bufferSize);
-
 
 		//Big Files
 		if (header.MSATFirstSectorId > -2) {
@@ -354,7 +379,7 @@ struct oleParser {
 						remainingBytes[x] = buffer[msatOffset + x];
 					}
 					remainingSlots -= maxSlotsPerBlock - 1;
-					int newOffset = bytes_to_int(buffer + msatOffset + (4 * (maxSlotsPerBlock - 1)));
+					int newOffset = *reinterpret_cast<int*>(buffer + msatOffset + (4 * (maxSlotsPerBlock - 1)));
 					msatOffset = (newOffset + 1) * header.sectorSize;
 					startOffset += (maxSlotsPerBlock - 1) * 4;
 				}
@@ -371,10 +396,10 @@ struct oleParser {
 
 			for (int i = 0; i < remainingSlots; i += 4)
 			{
-				int sectorId = bytes_to_int(remainingBytes + i * 4) * header.sectorSize + 512; // 512 is for the header
+				int sectorId = *reinterpret_cast<int*>(remainingBytes + i * 4) * header.sectorSize + 512; // 512 is for the header
 				header.SATSectors.push_back(sectorId);
 			}
-			delete remainingBytes;
+			delete[] remainingBytes;
 		}
 
 		//We need to get all the bytes that make up the SectorAllocationTable
@@ -386,22 +411,24 @@ struct oleParser {
 			if (sector + header.sectorSize > _bufferSize)
 				throw std::length_error("file corrupt - Error copying data from the Sector Allocation Table");
 
-
 			//fill the Sat
 			for (int x = 0; x < header.sectorSize; x += 4) { // a chaque "sector" on copie sectorSize entiers
-				sat.push_back(bytes_to_int(buffer + sector + x));
+				log(3, L"ðŸ”ˆ*reinterpret_cast<int*> sat");
+				sat.push_back(*reinterpret_cast<int*>(buffer + sector + x));
 			}
 		}
 
 		//Just as with the SAT, but this time, with the SmallSectorAllocationTable
 		if (header.SSATFirstSectorId != -2)
 		{
+			log(3, L"ðŸ”ˆGetIntFromSat ssat");
 			ssat = GetIntFromSat(header.SSATFirstSectorId);
 		}
 
 		// 1. Process all Directory entries
 		// https://github.com/EricZimmerman/OleCf/blob/master/OleCf/OleCfFile.cs#L138
 
+		log(3, L"ðŸ”ˆGetBytesFromSat dirBytes");
 		std::vector<BYTE> dirBytes = GetBytesFromSat(header.directoryStreamFirstSectorId);
 		LPBYTE pDirBytes = &dirBytes[0];
 		int dirIndex = 0;
@@ -410,8 +437,10 @@ struct oleParser {
 
 		while (dirIndex < dirBytes.size())
 		{
-			int dirLen = bytes_to_short(pDirBytes + dirIndex + 64);
+			log(3, L"ðŸ”ˆ*reinterpret_cast<short int*> dirLen");
+			int dirLen = *reinterpret_cast<short int*>(pDirBytes + dirIndex + 64);
 			if (pDirBytes[dirIndex + 66] != 0 && dirLen > 0) { //0 is empty directory structure
+				log(3, L"ðŸ”ˆDirectory d");
 				Directory d = Directory(pDirBytes + dirIndex);
 				directories.push_back(d);
 			}
@@ -421,6 +450,7 @@ struct oleParser {
 		//the Root Entry directory item contains all the sectors we need for small sector stuff, so get the data and cut it up so we can use it later
 	   //when we are done we will have a list of byte arrays, each 64 bytes long, that we can string together later based on SSAT
 
+		log(3, L"ðŸ”ˆfindDirectory rootEntry");
 		rootEntry = findDirectory(L"root entry");
 		if (rootEntry.name != L"" && rootEntry.directorySize > 0) {
 			std::vector<BYTE> b = GetBytesFromSat((int)rootEntry.firstSectorID);
@@ -439,7 +469,7 @@ struct oleParser {
 		}
 	};
 
-	/*! permet de retrouver un Directory dans l'objet ole à partir de son nom
+	/*! permet de retrouver un Directory dans l'objet ole Ã  partir de son nom
 	* @param nom du Directory
 	*/
 	Directory findDirectory(std::wstring name) {
@@ -454,7 +484,7 @@ struct oleParser {
 	}
 
 	/*! permet de parser un secteur de la sat en tableau d'entiers
-	* @param sectorNumber correspond au numéro du secteur à parser
+	* @param sectorNumber correspond au numÃ©ro du secteur Ã  parser
 	*/
 	std::vector<int> GetIntFromSat(int sectorNumber) {
 
@@ -480,7 +510,8 @@ struct oleParser {
 				if (index + readSize > bufferSize)
 					throw std::length_error("file corrupt - Error retrieving data from SAT");
 				for (int x = 0; x < readSize; x += 4) {
-					retBytes.push_back(bytes_to_int(buffer + index + x));
+					log(3, L"ðŸ”ˆ*reinterpret_cast<int*> retBytes");
+					retBytes.push_back(*reinterpret_cast<int*>(buffer + index + x));
 				}
 			}
 		}
@@ -488,7 +519,7 @@ struct oleParser {
 	};
 
 	/*! permet de parser un secteur de la sat en tableau de bytes
-	* @param sectorNumber correspond au numéro du secteur à parser
+	* @param sectorNumber correspond au numÃ©ro du secteur Ã  parser
 	*/
 	std::vector<BYTE> GetBytesFromSat(int sectorNumber) {
 
@@ -521,7 +552,7 @@ struct oleParser {
 	};
 
 	/*! permet de parser un secteur de la ssat en tableau de bytes
-	* @param sectorNumber correspond au numéro du secteur à parser
+	* @param sectorNumber correspond au numÃ©ro du secteur Ã  parser
 	*/
 	std::vector<BYTE> GetBytesFromSSat(int sectorNumber)
 	{
@@ -544,14 +575,18 @@ struct oleParser {
 		return retBytes;
 	}
 
-	/*! permet de parser les données d'un Directory
-	* @param d correspond au directory contenant les données à récupérer
+	/*! permet de parser les donnÃ©es d'un Directory
+	* @param d correspond au directory contenant les donnÃ©es Ã  rÃ©cupÃ©rer
 	*/
-	std::vector<BYTE> Getdata(Directory d) { // Pour récupérer les Bytes correspondant d'un directory
-		if (d.directorySize >= 4096)
+	std::vector<BYTE> Getdata(Directory d) { // Pour rÃ©cupÃ©rer les Bytes correspondant d'un directory
+		if (d.directorySize >= 4096) {
+			log(3, L"ðŸ”ˆGetBytesFromSat firstSectorID");
 			return GetBytesFromSat(d.firstSectorID);
-		else if (d.directorySize > 0)
+		}
+		else if (d.directorySize > 0) {
+			log(3, L"ðŸ”ˆGetBytesFromSSat firstSectorID");
 			return GetBytesFromSSat(d.firstSectorID);
+		}
 		return {};
 	}
 

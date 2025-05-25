@@ -1,6 +1,7 @@
 var struct_root_folder =
 [
-    [ "RootFolder", "struct_root_folder.html#a091f8d3b8cfd2263f9b27e532a4c2bfb", null ],
+    [ "RootFolder", "struct_root_folder.html#a0a8758e7b52a85e7346eed79c754e591", null ],
+    [ "clear", "struct_root_folder.html#a261651055f9826346ab76984d6abd0cb", null ],
     [ "to_json", "struct_root_folder.html#ac9a8d16f5e4c8a0edb4267c987b95e5d", null ],
     [ "guid", "struct_root_folder.html#a78094496e736d8efe856916392b9642d", null ],
     [ "identifier", "struct_root_folder.html#aa2ddfc02c0374b1832a37d1d3ad4881f", null ],

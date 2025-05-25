@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <windows.h>
 #include <stdio.h>
 #include <offreg.h>
@@ -14,34 +14,47 @@
 
 struct AmcacheApplicationFile {
 public:
-	std::wstring Name = L""; //!< nom de l�ex�cutable
+	std::wstring Name = L""; //!< nom de l’exécutable
 	std::wstring Publisher = L"";//!< nom de la compagnie
-	std::wstring LongPath = L""; //!< chemin d'acc�s  � l�ex�cutable
-	std::wstring Version = L"";//!< version de l�ex�cutable
-	std::wstring LinkDate = L"";//!< date de cr�ation de l'AMCACHE APPLICATION FILE
-	std::wstring LinkDateUtc = L"";//!< date de cr�ation de l'AMCACHE APPLICATION FILE au format UTC
-	bool IsOsComponent = false;//!< cet ex�cutable fait-il parti de l'OS ?
+	std::wstring LongPath = L""; //!< chemin d'accès  à l’exécutable
+	std::wstring Version = L"";//!< version de l’exécutable
+	std::wstring LinkDate = L"";//!< date de création de l'AMCACHE APPLICATION FILE
+	std::wstring LinkDateUtc = L"";//!< date de création de l'AMCACHE APPLICATION FILE au format UTC
+	bool IsOsComponent = false;//!< cet exécutable fait-il parti de l'OS ?
 
 	/*! constructeur
-	* @param hKey_amcache repr�sente la cl� de registre � parser
+	* @param hKey_amcache représente la clé de registre à parser
 	*/
 	AmcacheApplicationFile(ORHKEY hKey_amcache)
 	{
+		log(3, L"🔈getRegSzValue Name");
 		getRegSzValue(hKey_amcache, nullptr, L"Name", &Name);
+		log(2, L"❇️AmcacheApplicationFile Name : " + Name);
+		log(3, L"🔈getRegSzValue Publisher");
 		getRegSzValue(hKey_amcache, nullptr, L"Publisher", &Publisher);
+		log(3, L"🔈replaceAll Publisher");
 		Publisher = replaceAll(Publisher, L"\"", L"\\\""); // escape " in std::string
+		log(3, L"🔈getRegSzValue LongPath");
 		getRegSzValue(hKey_amcache, nullptr, L"LowerCaseLongPath", &LongPath);
+		log(3, L"🔈replaceAll LongPath");
 		LongPath = replaceAll(LongPath, L"\\", L"\\\\"); // escape \ in std::string
+		log(3, L"🔈getRegSzValue Version");
 		getRegSzValue(hKey_amcache, nullptr, L"Version", &Version);
+		log(3, L"🔈replaceAll Version");
 		Version = replaceAll(Version, L"\t", L"\\t"); // replace tab in std::string by \t, tab not supported by json in strings
+		log(3, L"🔈getRegboolValue IsOsComponent");
 		getRegboolValue(hKey_amcache, nullptr, L"IsOsComponent", &IsOsComponent);
-		//la date est stock�e en REG_SZ, donc il faut la reconvertir en FILETIME pour avoir le bon format et la bonne timezone
+		//la date est stockée en REG_SZ, donc il faut la reconvertir en FILETIME pour avoir le bon format et la bonne timezone
 		std::wstring temp;
+		log(3, L"🔈getRegSzValue LinkDate");
 		getRegSzValue(hKey_amcache, nullptr, L"LinkDate", &temp);
 		if (!temp.empty()) {
 			FILETIME filetime = { 0 };
+			log(3, L"🔈wstring_to_filetime LinkDate");
 			filetime = wstring_to_filetime(temp);
+			log(3, L"🔈time_to_wstring LinkDate");
 			LinkDate = time_to_wstring(filetime, false);
+			log(3, L"🔈time_to_wstring LinkDateUtc");
 			LinkDateUtc = time_to_wstring(filetime, true);
 		}
 	}
@@ -50,19 +63,24 @@ public:
 	* @return wstring le code json
 	*/
 	std::wstring to_json() {
-		return L"\t{ \n"
-			L"\t\t\"Name\":\"" + Name + L"\", \n"
-			L"\t\t\"Publisher\":\"" + Publisher + L"\", \n"
-			L"\t\t\"LongPath\":\"" + LongPath + L"\", \n"
-			L"\t\t\"Version\":\"" + Version + L"\", \n"
-			L"\t\t\"LinkDate\":\"" + LinkDate + L"\", \n"
-			L"\t\t\"LinkDateUtc\":\"" + LinkDateUtc + L"\", \n"
-			L"\t\t\"IsOsComponent\":" + bool_to_wstring(IsOsComponent) + L"\n"
-			L"\t}";
+		log(3, L"🔈AmcacheApplicationFile to_json");
+		std::wstring result = L"\t{ \n";
+			result += L"\t\t\"Name\":\"" + Name + L"\", \n";
+			result += L"\t\t\"Publisher\":\"" + Publisher + L"\", \n";
+			result += L"\t\t\"LongPath\":\"" + LongPath + L"\", \n";
+			result += L"\t\t\"Version\":\"" + Version + L"\", \n";
+			result += L"\t\t\"LinkDate\":\"" + LinkDate + L"\", \n";
+			result += L"\t\t\"LinkDateUtc\":\"" + LinkDateUtc + L"\", \n";
+			log(3, L"🔈bool_to_wstring IsOsComponent");
+			result += L"\t\t\"IsOsComponent\":" + bool_to_wstring(IsOsComponent) + L"\n";
+			result += L"\t}";
+		return result;
 	}
 
-	/* liberation m�moire */
-	void clear() {}
+	/* liberation mémoire */
+	void clear() {
+		log(3, L"🔈AmcacheApplicationFile to_json");
+	}
 };
 
 /*! *structure contenant l'ensemble des AMCACHE APPLICATION FILES
@@ -70,65 +88,73 @@ public:
 struct AmcacheApplicationFiles {
 public:
 	std::vector<AmcacheApplicationFile> amcacheapplicationfiles;//!< tableau contenant tous les AMCACHE APPLICATIONS FILES
-	std::vector<std::tuple<std::wstring, HRESULT>> errors;//!< tableau contenant les erreurs remont�es lors du traitement des objets
 
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les param�tres de l'application issue des param�tres de la ligne de commande
+	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData() {
-		
-		HRESULT hresult=0;
-		ORHKEY hKey=NULL, hKey_amcache=NULL;
-		DWORD nSubkeys=0;
-		DWORD nValues=0;
-		WCHAR szValue[MAX_VALUE_NAME]=L"";
-		WCHAR szSubKey[MAX_VALUE_NAME]=L"";
+
+		log(0, L"*******************************************************************************************************************");
+		log(0, L"ℹ️Amcache Application Files :");
+		log(0, L"*******************************************************************************************************************");
+
+
+		HRESULT hresult = 0;
+		ORHKEY hKey = NULL, hKey_amcache = NULL;
+		DWORD nSubkeys = 0;
+		DWORD nValues = 0;
+		WCHAR szValue[MAX_VALUE_NAME] = L"";
+		WCHAR szSubKey[MAX_VALUE_NAME] = L"";
 		DWORD nSize = 0;
-		ORHKEY Offhive=NULL;
+		ORHKEY Offhive = NULL;
 		std::wstring ruche = conf.mountpoint + L"\\Windows\\AppCompat\\Programs\\Amcache.hve";
 
+		log(3, L"🔈OROpenHive C:\\Windows\\AppCompat\\Programs\\Amcache.hve");
 		hresult = OROpenHive(ruche.c_str(), &Offhive);
 		if (hresult != ERROR_SUCCESS) {
-			errors.push_back({ L"Unable to open hive : C:\\Windows\\AppCompat\\Programs\\Amcache.hve" , hresult });
+			log(2, L"🔥OROpenHive : C:\\Windows\\AppCompat\\Programs\\Amcache.hve", hresult);
 			return hresult;
-		};
+		}
 
+		log(3, L"🔈OROpenKey Root\\InventoryApplicationFile");
 		hresult = OROpenKey(Offhive, L"Root\\InventoryApplicationFile", &hKey);
 		if (hresult != ERROR_SUCCESS) {
-			errors.push_back({ L"Unable to open key : C:\\Windows\\AppCompat\\Programs\\Amcache.hve / Root\\InventoryApplicationFile" , hresult });
+			log(2, L"🔥OROpenHive : Root\\InventoryApplicationFile", hresult);
 			return hresult;
-		};
+		}
 
+		log(3, L"🔈ORQueryInfoKey Root\\InventoryApplicationFile");
 		hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 		if (hresult != ERROR_SUCCESS) {
-			errors.push_back({ L"Unable to get info key : C:\\Windows\\AppCompat\\Programs\\Amcache.hve / Root\\InventoryApplicationFile" , hresult });
+			log(2, L"🔥ORQueryInfoKey : Root\\InventoryApplicationFile", hresult);
 			return hresult;
-		};
+		}
 		for (DWORD i = 0; i < nSubkeys; i++) {
 			nSize = MAX_VALUE_NAME;
+			log(3, L"🔈OREnumKey Root\\InventoryApplicationFile " + std::to_wstring(i));
 			hresult = OREnumKey(hKey, i, szSubKey, &nSize, NULL, NULL, NULL);
 			if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
-				errors.push_back({ L"Unable to open key : " + std::wstring(szSubKey), hresult });
+				log(2, L"🔥OREnumKey Root\\InventoryApplicationFile " + std::to_wstring(i), hresult);
 				continue;
-			};
+			}
+			log(3, L"🔈OROpenKey  subkey " + std::wstring(szSubKey));
 			hresult = OROpenKey(hKey, szSubKey, &hKey_amcache);
 			if (hresult != ERROR_SUCCESS) {
-				errors.push_back({ L"Unable to open key : " + std::wstring(szSubKey), hresult });
+				log(2, L"🔥OROpenKey  subkey " + std::wstring(szSubKey), hresult);
 				continue;
-			};
-			AmcacheApplicationFile amcacheapplicationfile(hKey_amcache);
-
+			}
+			log(1, L"➕AmcacheApplicationFile ");
 			//save
-			amcacheapplicationfiles.push_back(amcacheapplicationfile);
+			amcacheapplicationfiles.push_back(AmcacheApplicationFile(hKey_amcache));
+			return ERROR_SUCCESS;
 		}
-		return ERROR_SUCCESS;
 	}
 
 	/*! conversion de l'objet au format json
 	*/
-	HRESULT to_json()
-	{
+	HRESULT to_json() {
+		log(3, L"🔈AmcacheApplicationFiles to_json");
 		std::wstring result = L"[ \n";
 		std::vector<AmcacheApplicationFile>::iterator it;
 		for (it = amcacheapplicationfiles.begin(); it != amcacheapplicationfiles.end(); it++) {
@@ -140,29 +166,18 @@ public:
 		result += L"\n]";
 
 		//enregistrement dans fichier json
-		std::filesystem::create_directory(conf._outputDir); //cr�e le repertoire, pas d'erreur s'il existe d�j�
+		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
 		std::wofstream myfile;
 		myfile.open(conf._outputDir + "/amcache_application_files.json");
-		myfile << result;
+		myfile << ansi_to_utf8(result);
 		myfile.close();
-
-		if (conf._debug == true && errors.size() > 0) {
-			//errors
-			result = L"";
-			for (auto e : errors) {
-				result += L"" + std::get<0>(e) + L" : " + getErrorWstring(get<1>(e)) + L"\n";
-			}
-			std::filesystem::create_directory(conf._errorOutputDir); //cr�e le repertoire, pas d'erreur s'il existe d�j�
-			myfile.open(conf._errorOutputDir + "/amcache_application_files_errors.txt");
-			myfile << result;
-			myfile.close();
-		}
 
 		return ERROR_SUCCESS;
 	}
 
-	/*liberation m�moire */
+	/*liberation mémoire */
 	void clear() {
+		log(3, L"🔈AmcacheApplicationFiles clear");
 		for (AmcacheApplicationFile temp : amcacheapplicationfiles)
 			temp.clear();
 	}

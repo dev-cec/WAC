@@ -55,7 +55,7 @@ var id_list_8h =
     [ "FavoriteShellitem", "struct_favorite_shellitem.html", "struct_favorite_shellitem" ],
     [ "UnknownShellItem", "struct_unknown_shell_item.html", "struct_unknown_shell_item" ],
     [ "get_type", "id_list_8h.html#a045d220125172de2493126eecec671ea", null ],
-    [ "get_value", "id_list_8h.html#a6b768a8aa4d22d29fe4f7cf1dd821d5f", null ],
-    [ "getExtensionBlock", "id_list_8h.html#ad947280762682c264916962a995c0f4d", null ],
-    [ "getShellItem", "id_list_8h.html#a9c50889a4b43265ebff65aeca3a03d6c", null ]
+    [ "get_value", "id_list_8h.html#ac1f7735e989e786173360adff3b88556", null ],
+    [ "getExtensionBlock", "id_list_8h.html#ac034a6b6773b821ae22a6f1dff7f391d", null ],
+    [ "getShellItem", "id_list_8h.html#a69dea6dbc7778d6207a9697df2e48d49", null ]
 ];

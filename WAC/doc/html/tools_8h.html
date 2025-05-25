@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.13.2"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>WAC (Windows Artefacts Collector): Référence du fichier C:/laragon/prog/c++/WAC/WAC/tools.h</title>
+<title>WAC (Windows Artefacts Collector): Référence du fichier C:/laragon/prog/WAC/WAC/tools.h</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -106,15 +106,18 @@ $(function(){initNavTree('tools_8h.html',''); initResizable(true); });
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#define-members">Macros</a> &#124;
-<a href="#func-members">Fonctions</a>  </div>
+<a href="#func-members">Fonctions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">Référence du fichier tools.h</div></div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &lt;iostream&gt;</code><br />
+<code>#include &lt;fstream&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;offreg.h&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
 <code>#include &lt;time.h&gt;</code><br />
+<code>#include &lt;comutil.h&gt;</code><br />
 </div>
 <p><a href="tools_8h_source.html">Aller au code source de ce fichier.</a></p>
 <table class="memberdecls">
@@ -137,6 +140,21 @@ Macros</h2></td></tr>
 <tr class="memitem:aaf06a3762adb0aa04b8a5f8f016ca5e9" id="r_aaf06a3762adb0aa04b8a5f8f016ca5e9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaf06a3762adb0aa04b8a5f8f016ca5e9">MAX_DATA</a>&#160;&#160;&#160;1024000</td></tr>
 <tr class="memdesc:aaf06a3762adb0aa04b8a5f8f016ca5e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">taille maximale des données pour une valeur en base de registre  <br /></td></tr>
 <tr class="separator:aaf06a3762adb0aa04b8a5f8f016ca5e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4cef5953feb26b8862337c4f7f0f696a" id="r_a4cef5953feb26b8862337c4f7f0f696a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4cef5953feb26b8862337c4f7f0f696a">LOG_TYPE_ARTEFACT_TYPE</a>&#160;&#160;&#160;0</td></tr>
+<tr class="memdesc:a4cef5953feb26b8862337c4f7f0f696a"><td class="mdescLeft">&#160;</td><td class="mdescRight">log of artefact type  <br /></td></tr>
+<tr class="separator:a4cef5953feb26b8862337c4f7f0f696a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6420c1d8d984de90fa1add81a3785b8c" id="r_a6420c1d8d984de90fa1add81a3785b8c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6420c1d8d984de90fa1add81a3785b8c">LOG_TYPE_ARTEFACT</a>&#160;&#160;&#160;1</td></tr>
+<tr class="memdesc:a6420c1d8d984de90fa1add81a3785b8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">log of new artefact  <br /></td></tr>
+<tr class="separator:a6420c1d8d984de90fa1add81a3785b8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b181b7eaaab11e988e2c6b7cdc0d80a" id="r_a8b181b7eaaab11e988e2c6b7cdc0d80a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8b181b7eaaab11e988e2c6b7cdc0d80a">LOG_TYPE_INFO</a>&#160;&#160;&#160;2</td></tr>
+<tr class="memdesc:a8b181b7eaaab11e988e2c6b7cdc0d80a"><td class="mdescLeft">&#160;</td><td class="mdescRight">log of type info to describe artefact  <br /></td></tr>
+<tr class="separator:a8b181b7eaaab11e988e2c6b7cdc0d80a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c5fd30f5e43b34be24326642d1a4c6d" id="r_a7c5fd30f5e43b34be24326642d1a4c6d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7c5fd30f5e43b34be24326642d1a4c6d">LOG_TYPE_ERROR</a>&#160;&#160;&#160;3</td></tr>
+<tr class="memdesc:a7c5fd30f5e43b34be24326642d1a4c6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">log of type error  <br /></td></tr>
+<tr class="separator:a7c5fd30f5e43b34be24326642d1a4c6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a542529c1654a19379e8db5625bc7801e" id="r_a542529c1654a19379e8db5625bc7801e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a542529c1654a19379e8db5625bc7801e">LOG_TYPE_DEBUG</a>&#160;&#160;&#160;4</td></tr>
+<tr class="memdesc:a542529c1654a19379e8db5625bc7801e"><td class="mdescLeft">&#160;</td><td class="mdescRight">name of function called for debug purpose  <br /></td></tr>
+<tr class="separator:a542529c1654a19379e8db5625bc7801e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Fonctions</h2></td></tr>
@@ -147,16 +165,16 @@ Fonctions</h2></td></tr>
 <tr class="separator:ad857742196348d0e4b3ee1d9474b6638"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a52b8e5827ab36d1d9f31335c0ec301fd" id="r_a52b8e5827ab36d1d9f31335c0ec301fd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a52b8e5827ab36d1d9f31335c0ec301fd">printError</a> (std::wstring errorText)</td></tr>
 <tr class="separator:a52b8e5827ab36d1d9f31335c0ec301fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae5bae328744d0cda312be7564b935ca1" id="r_ae5bae328744d0cda312be7564b935ca1"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae5bae328744d0cda312be7564b935ca1">getErrorWstring</a> (HRESULT hresult)</td></tr>
-<tr class="separator:ae5bae328744d0cda312be7564b935ca1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:affed6ff4e2a6ecb7897484a7e9119aaf" id="r_affed6ff4e2a6ecb7897484a7e9119aaf"><td class="memItemLeft" align="right" valign="top">LPWSTR&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#affed6ff4e2a6ecb7897484a7e9119aaf">getErrorMessage</a> (HRESULT hresult)</td></tr>
-<tr class="separator:affed6ff4e2a6ecb7897484a7e9119aaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6445268d6c87c34c40e723fd1ea23ef" id="r_ac6445268d6c87c34c40e723fd1ea23ef"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac6445268d6c87c34c40e723fd1ea23ef">getErrorMessage</a> (HRESULT hresult)</td></tr>
+<tr class="separator:ac6445268d6c87c34c40e723fd1ea23ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3fd0bef5fa02565cb2da3f612cf978b9" id="r_a3fd0bef5fa02565cb2da3f612cf978b9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3fd0bef5fa02565cb2da3f612cf978b9">log</a> (int loglevel, std::wstring message)</td></tr>
+<tr class="separator:a3fd0bef5fa02565cb2da3f612cf978b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa2fb1cf5cd8710778ba5bad978bba540" id="r_aa2fb1cf5cd8710778ba5bad978bba540"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa2fb1cf5cd8710778ba5bad978bba540">log</a> (int loglevel, std::wstring message, HRESULT result)</td></tr>
+<tr class="separator:aa2fb1cf5cd8710778ba5bad978bba540"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f20577b4f90e4d40f33250f74928ded" id="r_a0f20577b4f90e4d40f33250f74928ded"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0f20577b4f90e4d40f33250f74928ded">ansi_to_utf8</a> (std::string in)</td></tr>
 <tr class="separator:a0f20577b4f90e4d40f33250f74928ded"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2253bdea61c15807680646f199e57082" id="r_a2253bdea61c15807680646f199e57082"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2253bdea61c15807680646f199e57082">ansi_to_utf8</a> (std::wstring in)</td></tr>
 <tr class="separator:a2253bdea61c15807680646f199e57082"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3b8402684f52f8777fa11ad01449a08e" id="r_a3b8402684f52f8777fa11ad01449a08e"><td class="memItemLeft" align="right" valign="top">BSTR&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3b8402684f52f8777fa11ad01449a08e">bstr_concat</a> (BSTR a, BSTR b)</td></tr>
-<tr class="separator:a3b8402684f52f8777fa11ad01449a08e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4c0694f9ff1125a48aa8c09d96d18dc" id="r_ac4c0694f9ff1125a48aa8c09d96d18dc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac4c0694f9ff1125a48aa8c09d96d18dc">dump</a> (LPBYTE buffer, int start, int end)</td></tr>
 <tr class="separator:ac4c0694f9ff1125a48aa8c09d96d18dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a40d9f5d680f3b777ad0eac00c00bdc98" id="r_a40d9f5d680f3b777ad0eac00c00bdc98"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a40d9f5d680f3b777ad0eac00c00bdc98">dump_wstring</a> (LPBYTE buffer, int start, int end)</td></tr>
@@ -179,32 +197,12 @@ Fonctions</h2></td></tr>
 <tr class="separator:a65f1910dd69d412fb7162edf2bdcb50f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac15b36c9a117f211860abb5d7f86d8d4" id="r_ac15b36c9a117f211860abb5d7f86d8d4"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac15b36c9a117f211860abb5d7f86d8d4">wstring_to_filetime</a> (std::wstring input)</td></tr>
 <tr class="separator:ac15b36c9a117f211860abb5d7f86d8d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11ec6b263a6ccebb5a68a8c2d1a5131a" id="r_a11ec6b263a6ccebb5a68a8c2d1a5131a"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a11ec6b263a6ccebb5a68a8c2d1a5131a">bytes_to_filetime</a> (LPBYTE bytes)</td></tr>
-<tr class="separator:a11ec6b263a6ccebb5a68a8c2d1a5131a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:add0a41c5fd2f12417533d112598b8da1" id="r_add0a41c5fd2f12417533d112598b8da1"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#add0a41c5fd2f12417533d112598b8da1">time_to_wstring</a> (const FILETIME filetime, bool convertUtc=false)</td></tr>
 <tr class="separator:add0a41c5fd2f12417533d112598b8da1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:addbcf94a622e9fa893340802b75f789f" id="r_addbcf94a622e9fa893340802b75f789f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#addbcf94a622e9fa893340802b75f789f">time_to_wstring</a> (const SYSTEMTIME systemtime)</td></tr>
 <tr class="separator:addbcf94a622e9fa893340802b75f789f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae0a59a0a34c2b861e11e644cf86911d9" id="r_ae0a59a0a34c2b861e11e644cf86911d9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae0a59a0a34c2b861e11e644cf86911d9">bytes_to_int</a> (LPBYTE bytes)</td></tr>
-<tr class="separator:ae0a59a0a34c2b861e11e644cf86911d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad778236e4724f5d4f4a77a37e162fd06" id="r_ad778236e4724f5d4f4a77a37e162fd06"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad778236e4724f5d4f4a77a37e162fd06">bytes_to_unsigned_int</a> (LPBYTE bytes)</td></tr>
-<tr class="separator:ad778236e4724f5d4f4a77a37e162fd06"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acd5fb5ba60f77cfea82e901ac4e0e43e" id="r_acd5fb5ba60f77cfea82e901ac4e0e43e"><td class="memItemLeft" align="right" valign="top">short int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acd5fb5ba60f77cfea82e901ac4e0e43e">bytes_to_short</a> (LPBYTE bytes)</td></tr>
-<tr class="separator:acd5fb5ba60f77cfea82e901ac4e0e43e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5f3f410635b7c9cb3b493d95f6fc3f3b" id="r_a5f3f410635b7c9cb3b493d95f6fc3f3b"><td class="memItemLeft" align="right" valign="top">unsigned short int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5f3f410635b7c9cb3b493d95f6fc3f3b">bytes_to_unsigned_short</a> (LPBYTE bytes)</td></tr>
-<tr class="separator:a5f3f410635b7c9cb3b493d95f6fc3f3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a71ff97d4d68f2094e38181b3cbaffbfa" id="r_a71ff97d4d68f2094e38181b3cbaffbfa"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a71ff97d4d68f2094e38181b3cbaffbfa">bytes_to_double</a> (LPBYTE bytes)</td></tr>
-<tr class="separator:a71ff97d4d68f2094e38181b3cbaffbfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abf6b3d732905b75254a031b96bed5282" id="r_abf6b3d732905b75254a031b96bed5282"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abf6b3d732905b75254a031b96bed5282">bytes_to_long</a> (LPBYTE bytes)</td></tr>
-<tr class="separator:abf6b3d732905b75254a031b96bed5282"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a805c79a7305e3523dd8169736496e2b8" id="r_a805c79a7305e3523dd8169736496e2b8"><td class="memItemLeft" align="right" valign="top">unsigned long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a805c79a7305e3523dd8169736496e2b8">bytes_to_unsigned_long</a> (LPBYTE bytes)</td></tr>
-<tr class="separator:a805c79a7305e3523dd8169736496e2b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a05f0fb4081b8ef9ca9f5522d7514af8b" id="r_a05f0fb4081b8ef9ca9f5522d7514af8b"><td class="memItemLeft" align="right" valign="top">unsigned long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a05f0fb4081b8ef9ca9f5522d7514af8b">bytes_to_unsigned_long_long</a> (LPBYTE bytes)</td></tr>
-<tr class="separator:a05f0fb4081b8ef9ca9f5522d7514af8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b528d1603bb7393d642600164b50cf8" id="r_a7b528d1603bb7393d642600164b50cf8"><td class="memItemLeft" align="right" valign="top">long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7b528d1603bb7393d642600164b50cf8">bytes_to_long_long</a> (LPBYTE bytes)</td></tr>
-<tr class="separator:a7b528d1603bb7393d642600164b50cf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1333985b1c008e52521c6f3ce89c2310" id="r_a1333985b1c008e52521c6f3ce89c2310"><td class="memItemLeft" align="right" valign="top">unsigned char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1333985b1c008e52521c6f3ce89c2310">bytes_to_unsigned_char</a> (LPBYTE bytes)</td></tr>
-<tr class="separator:a1333985b1c008e52521c6f3ce89c2310"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aecf670c5a3331fe73239c63d494acc70" id="r_aecf670c5a3331fe73239c63d494acc70"><td class="memItemLeft" align="right" valign="top">BSTR&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aecf670c5a3331fe73239c63d494acc70">wstring_to_bstr</a> (std::wstring ws)</td></tr>
+<tr class="separator:aecf670c5a3331fe73239c63d494acc70"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5e053e5aa24ef8dc35fcab0eaf1c5979" id="r_a5e053e5aa24ef8dc35fcab0eaf1c5979"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5e053e5aa24ef8dc35fcab0eaf1c5979">bstr_to_wstring</a> (BSTR bstr)</td></tr>
 <tr class="separator:a5e053e5aa24ef8dc35fcab0eaf1c5979"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad612e1d5a3738c231a1aeefb21c4d36d" id="r_ad612e1d5a3738c231a1aeefb21c4d36d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad612e1d5a3738c231a1aeefb21c4d36d">string_to_wstring</a> (const std::string &amp;str)</td></tr>
@@ -223,14 +221,99 @@ Fonctions</h2></td></tr>
 <tr class="separator:a03071ea00176395299ea4eda5a1e18bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab22725363874f5dd38da01cc9b3b4e20" id="r_ab22725363874f5dd38da01cc9b3b4e20"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab22725363874f5dd38da01cc9b3b4e20">getRegFiletimeValue</a> (ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, FILETIME *filetime)</td></tr>
 <tr class="separator:ab22725363874f5dd38da01cc9b3b4e20"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae17c83c47efcb167d7885f0ebc3fc1eb" id="r_ae17c83c47efcb167d7885f0ebc3fc1eb"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae17c83c47efcb167d7885f0ebc3fc1eb">getRegBinaryValue</a> (ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, LPBYTE pBytes)</td></tr>
-<tr class="separator:ae17c83c47efcb167d7885f0ebc3fc1eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa62fbd54ceeb22f46f23d20f79cb57b4" id="r_aa62fbd54ceeb22f46f23d20f79cb57b4"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa62fbd54ceeb22f46f23d20f79cb57b4">getRegBinaryValue</a> (ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, LPBYTE *pBytes, DWORD *dwSize)</td></tr>
+<tr class="separator:aa62fbd54ceeb22f46f23d20f79cb57b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af532d7e53d1e10fdfdba493dc3edc9b2" id="r_af532d7e53d1e10fdfdba493dc3edc9b2"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af532d7e53d1e10fdfdba493dc3edc9b2">getRegboolValue</a> (ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, bool *pbool)</td></tr>
 <tr class="separator:af532d7e53d1e10fdfdba493dc3edc9b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a299584ee76624fd8777e142cf9a14703" id="r_a299584ee76624fd8777e142cf9a14703"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a299584ee76624fd8777e142cf9a14703">getRegMultiSzValue</a> (ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::vector&lt; std::wstring &gt; *out)</td></tr>
 <tr class="separator:a299584ee76624fd8777e142cf9a14703"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
+Variables</h2></td></tr>
+<tr class="memitem:a0696b00a72abe9d549204f9b105514bc" id="r_a0696b00a72abe9d549204f9b105514bc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_appli_conf.html">AppliConf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0696b00a72abe9d549204f9b105514bc">conf</a></td></tr>
+<tr class="separator:a0696b00a72abe9d549204f9b105514bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Documentation des macros</h2>
+<a id="a6420c1d8d984de90fa1add81a3785b8c" name="a6420c1d8d984de90fa1add81a3785b8c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6420c1d8d984de90fa1add81a3785b8c">&#9670;&#160;</a></span>LOG_TYPE_ARTEFACT</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define LOG_TYPE_ARTEFACT&#160;&#160;&#160;1</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>log of new artefact </p>
+
+</div>
+</div>
+<a id="a4cef5953feb26b8862337c4f7f0f696a" name="a4cef5953feb26b8862337c4f7f0f696a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4cef5953feb26b8862337c4f7f0f696a">&#9670;&#160;</a></span>LOG_TYPE_ARTEFACT_TYPE</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define LOG_TYPE_ARTEFACT_TYPE&#160;&#160;&#160;0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>log of artefact type </p>
+
+</div>
+</div>
+<a id="a542529c1654a19379e8db5625bc7801e" name="a542529c1654a19379e8db5625bc7801e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a542529c1654a19379e8db5625bc7801e">&#9670;&#160;</a></span>LOG_TYPE_DEBUG</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define LOG_TYPE_DEBUG&#160;&#160;&#160;4</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>name of function called for debug purpose </p>
+
+</div>
+</div>
+<a id="a7c5fd30f5e43b34be24326642d1a4c6d" name="a7c5fd30f5e43b34be24326642d1a4c6d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7c5fd30f5e43b34be24326642d1a4c6d">&#9670;&#160;</a></span>LOG_TYPE_ERROR</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define LOG_TYPE_ERROR&#160;&#160;&#160;3</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>log of type error </p>
+
+</div>
+</div>
+<a id="a8b181b7eaaab11e988e2c6b7cdc0d80a" name="a8b181b7eaaab11e988e2c6b7cdc0d80a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8b181b7eaaab11e988e2c6b7cdc0d80a">&#9670;&#160;</a></span>LOG_TYPE_INFO</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define LOG_TYPE_INFO&#160;&#160;&#160;2</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>log of type info to describe artefact </p>
+
+</div>
+</div>
 <a id="aaf06a3762adb0aa04b8a5f8f016ca5e9" name="aaf06a3762adb0aa04b8a5f8f016ca5e9"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aaf06a3762adb0aa04b8a5f8f016ca5e9">&#9670;&#160;</a></span>MAX_DATA</h2>
 
@@ -352,35 +435,6 @@ Fonctions</h2></td></tr>
 
 </div>
 </div>
-<a id="a3b8402684f52f8777fa11ad01449a08e" name="a3b8402684f52f8777fa11ad01449a08e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3b8402684f52f8777fa11ad01449a08e">&#9670;&#160;</a></span>bstr_concat()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">BSTR bstr_concat </td>
-          <td>(</td>
-          <td class="paramtype">BSTR</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">BSTR</td>          <td class="paramname"><span class="paramname"><em>b</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>concatenation de 2 BSTR </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">a</td><td>1ére chaîne de caractères </td></tr>
-    <tr><td class="paramname">a</td><td>2nd chaîne de caractères </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Renvoie</dt><dd>chaîne de caractères concaténée </dd></dl>
-
-</div>
-</div>
 <a id="a5e053e5aa24ef8dc35fcab0eaf1c5979" name="a5e053e5aa24ef8dc35fcab0eaf1c5979"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5e053e5aa24ef8dc35fcab0eaf1c5979">&#9670;&#160;</a></span>bstr_to_wstring()</h2>
 
@@ -405,270 +459,6 @@ Fonctions</h2></td></tr>
 
 </div>
 </div>
-<a id="a71ff97d4d68f2094e38181b3cbaffbfa" name="a71ff97d4d68f2094e38181b3cbaffbfa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a71ff97d4d68f2094e38181b3cbaffbfa">&#9670;&#160;</a></span>bytes_to_double()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">double bytes_to_double </td>
-          <td>(</td>
-          <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>bytes</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Conversion un tableau de BYTES en double. la conversion considère uniquement les 8 premiers octets du tableau pour la conversion </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">bytes</td><td>pointeur de tableau contenant les BYTE à convertir </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Renvoie</dt><dd>double issu de la conversion </dd></dl>
-
-</div>
-</div>
-<a id="a11ec6b263a6ccebb5a68a8c2d1a5131a" name="a11ec6b263a6ccebb5a68a8c2d1a5131a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a11ec6b263a6ccebb5a68a8c2d1a5131a">&#9670;&#160;</a></span>bytes_to_filetime()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">FILETIME bytes_to_filetime </td>
-          <td>(</td>
-          <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>bytes</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Conversion un tableau de BYTES ne FILETIME. </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">bytes</td><td>pointeur vers le tableau contenant les BYTES à convertir. le pointeur doit représenter le premier octet utile à la conversion </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Renvoie</dt><dd>FILETIME issue de la conversion </dd></dl>
-
-</div>
-</div>
-<a id="ae0a59a0a34c2b861e11e644cf86911d9" name="ae0a59a0a34c2b861e11e644cf86911d9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae0a59a0a34c2b861e11e644cf86911d9">&#9670;&#160;</a></span>bytes_to_int()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int bytes_to_int </td>
-          <td>(</td>
-          <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>bytes</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Conversion un tableau de BYTES en int. la conversion considère uniquement les 4 premiers octets du tableau pour la conversion </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">bytes</td><td>pointeur de tableau contenant les BYTE à convertir </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Renvoie</dt><dd>int issu de la conversion </dd></dl>
-
-</div>
-</div>
-<a id="abf6b3d732905b75254a031b96bed5282" name="abf6b3d732905b75254a031b96bed5282"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abf6b3d732905b75254a031b96bed5282">&#9670;&#160;</a></span>bytes_to_long()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">long bytes_to_long </td>
-          <td>(</td>
-          <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>bytes</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Conversion un tableau de BYTES en long. la conversion considère uniquement les 4 premiers octets du tableau pour la conversion </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">bytes</td><td>pointeur de tableau contenant les BYTE à convertir </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Renvoie</dt><dd>long issu de la conversion </dd></dl>
-
-</div>
-</div>
-<a id="a7b528d1603bb7393d642600164b50cf8" name="a7b528d1603bb7393d642600164b50cf8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7b528d1603bb7393d642600164b50cf8">&#9670;&#160;</a></span>bytes_to_long_long()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">long long bytes_to_long_long </td>
-          <td>(</td>
-          <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>bytes</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Conversion un tableau de BYTES en long long. la conversion considère uniquement les 8 premiers octets du tableau pour la conversion </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">bytes</td><td>pointeur de tableau contenant les BYTE à convertir </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Renvoie</dt><dd>long long issu de la conversion </dd></dl>
-
-</div>
-</div>
-<a id="acd5fb5ba60f77cfea82e901ac4e0e43e" name="acd5fb5ba60f77cfea82e901ac4e0e43e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acd5fb5ba60f77cfea82e901ac4e0e43e">&#9670;&#160;</a></span>bytes_to_short()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">short int bytes_to_short </td>
-          <td>(</td>
-          <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>bytes</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Conversion un tableau de BYTES en short int. la conversion considère uniquement les 2 premiers octets du tableau pour la conversion </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">bytes</td><td>pointeur de tableau contenant les BYTE à convertir </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Renvoie</dt><dd>short int issu de la conversion </dd></dl>
-
-</div>
-</div>
-<a id="a1333985b1c008e52521c6f3ce89c2310" name="a1333985b1c008e52521c6f3ce89c2310"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1333985b1c008e52521c6f3ce89c2310">&#9670;&#160;</a></span>bytes_to_unsigned_char()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">unsigned char bytes_to_unsigned_char </td>
-          <td>(</td>
-          <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>bytes</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Conversion un tableau de BYTES en unsigned char. la conversion considère uniquement le premier octets du tableau pour la conversion </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">bytes</td><td>pointeur de tableau contenant les BYTE à convertir </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Renvoie</dt><dd>unsigned char issu de la conversion </dd></dl>
-
-</div>
-</div>
-<a id="ad778236e4724f5d4f4a77a37e162fd06" name="ad778236e4724f5d4f4a77a37e162fd06"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad778236e4724f5d4f4a77a37e162fd06">&#9670;&#160;</a></span>bytes_to_unsigned_int()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">unsigned int bytes_to_unsigned_int </td>
-          <td>(</td>
-          <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>bytes</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Conversion un tableau de BYTES en unsigned int. la conversion considère uniquement les 4 premiers octets du tableau pour la conversion </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">bytes</td><td>pointeur de tableau contenant les BYTE à convertir </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Renvoie</dt><dd>unsigned int issu de la conversion </dd></dl>
-
-</div>
-</div>
-<a id="a805c79a7305e3523dd8169736496e2b8" name="a805c79a7305e3523dd8169736496e2b8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a805c79a7305e3523dd8169736496e2b8">&#9670;&#160;</a></span>bytes_to_unsigned_long()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">unsigned long bytes_to_unsigned_long </td>
-          <td>(</td>
-          <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>bytes</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Conversion un tableau de BYTES en unsigned long. la conversion considère uniquement les 4 premiers octets du tableau pour la conversion </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">bytes</td><td>pointeur de tableau contenant les BYTE à convertir </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Renvoie</dt><dd>unsigned long issu de la conversion </dd></dl>
-
-</div>
-</div>
-<a id="a05f0fb4081b8ef9ca9f5522d7514af8b" name="a05f0fb4081b8ef9ca9f5522d7514af8b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a05f0fb4081b8ef9ca9f5522d7514af8b">&#9670;&#160;</a></span>bytes_to_unsigned_long_long()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">unsigned long long bytes_to_unsigned_long_long </td>
-          <td>(</td>
-          <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>bytes</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Conversion un tableau de BYTES en unsigned long long. la conversion considère uniquement les 8 premiers octets du tableau pour la conversion </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">bytes</td><td>pointeur de tableau contenant les BYTE à convertir </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Renvoie</dt><dd>unsigned long long issu de la conversion </dd></dl>
-
-</div>
-</div>
-<a id="a5f3f410635b7c9cb3b493d95f6fc3f3b" name="a5f3f410635b7c9cb3b493d95f6fc3f3b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5f3f410635b7c9cb3b493d95f6fc3f3b">&#9670;&#160;</a></span>bytes_to_unsigned_short()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">unsigned short int bytes_to_unsigned_short </td>
-          <td>(</td>
-          <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>bytes</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Conversion un tableau de BYTES en unsigned short int. la conversion considère uniquement les 2 premiers octets du tableau pour la conversion </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">bytes</td><td>pointeur de tableau contenant les BYTE à convertir </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Renvoie</dt><dd>unsigned short int issu de la conversion </dd></dl>
-
-</div>
-</div>
 <a id="a897a3625e4fa6aa492efd7beaeaa1d75" name="a897a3625e4fa6aa492efd7beaeaa1d75"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a897a3625e4fa6aa492efd7beaeaa1d75">&#9670;&#160;</a></span>decodeURIComponent()</h2>
 
@@ -685,7 +475,7 @@ Fonctions</h2></td></tr>
 </div><div class="memdoc">
 <p>décodage d'URL </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
-    <tr><td class="paramname">encoded</td><td>représente lURL à décoder </td></tr>
+    <tr><td class="paramname">encoded</td><td>représente l’URL à décoder </td></tr>
   </table>
   </dd>
 </dl>
@@ -763,38 +553,14 @@ Fonctions</h2></td></tr>
 
 </div>
 </div>
-<a id="affed6ff4e2a6ecb7897484a7e9119aaf" name="affed6ff4e2a6ecb7897484a7e9119aaf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#affed6ff4e2a6ecb7897484a7e9119aaf">&#9670;&#160;</a></span>getErrorMessage()</h2>
+<a id="ac6445268d6c87c34c40e723fd1ea23ef" name="ac6445268d6c87c34c40e723fd1ea23ef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac6445268d6c87c34c40e723fd1ea23ef">&#9670;&#160;</a></span>getErrorMessage()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">LPWSTR getErrorMessage </td>
-          <td>(</td>
-          <td class="paramtype">HRESULT</td>          <td class="paramname"><span class="paramname"><em>hresult</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>extraction du message d'erreur d'un HRESULT retourné par une commande </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">hresult</td><td>résultat retourné par un commande </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Renvoie</dt><dd>wstring correspondant au texte associé au code erreur HRESULT </dd></dl>
-
-</div>
-</div>
-<a id="ae5bae328744d0cda312be7564b935ca1" name="ae5bae328744d0cda312be7564b935ca1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae5bae328744d0cda312be7564b935ca1">&#9670;&#160;</a></span>getErrorWstring()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::wstring getErrorWstring </td>
+          <td class="memname">std::wstring getErrorMessage </td>
           <td>(</td>
           <td class="paramtype">HRESULT</td>          <td class="paramname"><span class="paramname"><em>hresult</em></span></td><td>)</td>
           <td></td>
@@ -834,8 +600,8 @@ Fonctions</h2></td></tr>
 
 </div>
 </div>
-<a id="ae17c83c47efcb167d7885f0ebc3fc1eb" name="ae17c83c47efcb167d7885f0ebc3fc1eb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae17c83c47efcb167d7885f0ebc3fc1eb">&#9670;&#160;</a></span>getRegBinaryValue()</h2>
+<a id="aa62fbd54ceeb22f46f23d20f79cb57b4" name="aa62fbd54ceeb22f46f23d20f79cb57b4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa62fbd54ceeb22f46f23d20f79cb57b4">&#9670;&#160;</a></span>getRegBinaryValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -858,11 +624,16 @@ Fonctions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>pBytes</em></span>&#160;)</td>
+          <td class="paramtype">LPBYTE *</td>          <td class="paramname"><span class="paramname"><em>pBytes</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">DWORD *</td>          <td class="paramname"><span class="paramname"><em>dwSize</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Lecture d'une valeur binaire en base de registre </p><dl class="params"><dt>Paramètres</dt><dd>
+<p>Lecture d'une valeur binaire en base de registre nécessite d'utiliser delete[] pBytes pour libérer la mémoire </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
     <tr><td class="paramname">key</td><td>clé de la base de registre </td></tr>
     <tr><td class="paramname">szsubkey</td><td>sous-clé de la base de registre </td></tr>
@@ -1060,6 +831,71 @@ Fonctions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>wstring issue de la conversion </dd></dl>
+
+</div>
+</div>
+<a id="a3fd0bef5fa02565cb2da3f612cf978b9" name="a3fd0bef5fa02565cb2da3f612cf978b9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3fd0bef5fa02565cb2da3f612cf978b9">&#9670;&#160;</a></span>log() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void log </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>loglevel</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>message</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>enregistrement d'un message dans le ficier de log de sortie log(0, L""); =&gt; Simple message log(0, L"ℹ️"); =&gt; Nouveau type d'artefact log(1, L"➕"); =&gt; Nouvel artefact log(2, L"🔥"); =&gt; Error log(2, L"❇️"); =&gt; Identification d'un artefact log(3, L"🔈"); =&gt; Nom de la fonction apperlée </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">loglevel</td><td>est le niveau de log </td></tr>
+    <tr><td class="paramname">message</td><td>message a enregistré dans le fichier donnant du contexte </td></tr>
+    <tr><td class="paramname">type</td><td>est le type de log pour l'emoji. par defaut pas d'emoji </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aa2fb1cf5cd8710778ba5bad978bba540" name="aa2fb1cf5cd8710778ba5bad978bba540"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa2fb1cf5cd8710778ba5bad978bba540">&#9670;&#160;</a></span>log() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void log </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>loglevel</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>message</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">HRESULT</td>          <td class="paramname"><span class="paramname"><em>result</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>enregistrement d'un message dans le ficier de log de complété par un code erreur </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">loglevel</td><td>est le niveau de log </td></tr>
+    <tr><td class="paramname">message</td><td>message a enregistré dans le fichier donnant du contexte </td></tr>
+    <tr><td class="paramname">type</td><td>est le type de log pour l'emoji. par defaut pas d'emoji*</td></tr>
+    <tr><td class="paramname">type</td><td>est le type de log pour l'emoji. par defaut pas d'emoji </td></tr>
+    <tr><td class="paramname">result</td><td>code erreur a tranformé en message d'ereur </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -1424,6 +1260,30 @@ Fonctions</h2></td></tr>
 
 </div>
 </div>
+<a id="aecf670c5a3331fe73239c63d494acc70" name="aecf670c5a3331fe73239c63d494acc70"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aecf670c5a3331fe73239c63d494acc70">&#9670;&#160;</a></span>wstring_to_bstr()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">BSTR wstring_to_bstr </td>
+          <td>(</td>
+          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>ws</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Conversion une chaîne de caractères wstring en chaine binaire </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bstr</td><td>la chaîne de caractère binaire </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>wstring issue de la conversion </dd></dl>
+
+</div>
+</div>
 <a id="ac15b36c9a117f211860abb5d7f86d8d4" name="ac15b36c9a117f211860abb5d7f86d8d4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac15b36c9a117f211860abb5d7f86d8d4">&#9670;&#160;</a></span>wstring_to_filetime()</h2>
 
@@ -1469,6 +1329,29 @@ Fonctions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>string issue de la conversion </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Documentation des variables</h2>
+<a id="a0696b00a72abe9d549204f9b105514bc" name="a0696b00a72abe9d549204f9b105514bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0696b00a72abe9d549204f9b105514bc">&#9670;&#160;</a></span>conf</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_appli_conf.html">AppliConf</a> conf</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel extern">extern</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
 
 </div>
 </div>

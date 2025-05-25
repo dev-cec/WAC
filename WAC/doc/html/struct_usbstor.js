@@ -1,5 +1,7 @@
 var struct_usbstor =
 [
+    [ "Usbstor", "struct_usbstor.html#a399b057c9390590600f1349d7d50de80", null ],
+    [ "clear", "struct_usbstor.html#ac304f28b087714e131f6a0ee97d34bcf", null ],
     [ "to_json", "struct_usbstor.html#a690b61438dee453015e45a6436c64c24", null ],
     [ "ClassGuid", "struct_usbstor.html#a493c78ec85ab590646638663a8ce3010", null ],
     [ "CompatibleIds", "struct_usbstor.html#aacd3a29a49056960317a2adaafb6cb42", null ],

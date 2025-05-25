@@ -1,9 +1,8 @@
 var struct_id_list =
 [
-    [ "IdList", "struct_id_list.html#aa0a7b5536a191b2f46b1bfd53fd6d15b", null ],
+    [ "IdList", "struct_id_list.html#af28801b80b247264be97f0f157f6977a", null ],
+    [ "clear", "struct_id_list.html#aeaeb93735333257995a807662d5fb34a", null ],
     [ "to_json", "struct_id_list.html#a0d2329bea030f456a7a9546c86ffb108", null ],
-    [ "_debug", "struct_id_list.html#a7f76f4dca3a6f389676d969a0c6725c7", null ],
-    [ "_dump", "struct_id_list.html#a18ea013d3624df749cb6ded08f7344ae", null ],
     [ "item_size", "struct_id_list.html#af8eb27c406e8600f6adbb6791896a3a6", null ],
     [ "niveau", "struct_id_list.html#aee6bc930c9226ea45382499005018c29", null ],
     [ "pData", "struct_id_list.html#a66c34678319d341666a9d832f518d1b0", null ],

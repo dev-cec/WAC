@@ -115,13 +115,14 @@ $(function(){initNavTree('struct_mru_apps.html',''); initResizable(true); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Fonctions membres publiques</h2></td></tr>
-<tr class="memitem:abdacab0331cea7df5ccc3d165bcb8c85" id="r_abdacab0331cea7df5ccc3d165bcb8c85"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abdacab0331cea7df5ccc3d165bcb8c85">getData</a> (<a class="el" href="struct_appli_conf.html">AppliConf</a> conf, int _niveau=0)</td></tr>
-<tr class="memdesc:abdacab0331cea7df5ccc3d165bcb8c85"><td class="mdescLeft">&#160;</td><td class="mdescRight">contient les paramètres de l'application issue des paramètres de la ligne de commande  <br /></td></tr>
-<tr class="separator:abdacab0331cea7df5ccc3d165bcb8c85"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa6318270e16e8323664eca7062c0194b" id="r_aa6318270e16e8323664eca7062c0194b"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa6318270e16e8323664eca7062c0194b">getData</a> (int _niveau=0)</td></tr>
+<tr class="separator:aa6318270e16e8323664eca7062c0194b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4e9a56d1997960fc8f45e9732e790d55" id="r_a4e9a56d1997960fc8f45e9732e790d55"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4e9a56d1997960fc8f45e9732e790d55">parse</a> (ORHKEY hKey, std::wstring sid, std::wstring source, std::vector&lt; <a class="el" href="struct_mru_app.html">MruApp</a> &gt; *<a class="el" href="struct_mru_apps.html">MruApps</a>, unsigned int <a class="el" href="#a1169476aee0c5789ba44af983951b807">niveau</a>, bool _Parentiszip)</td></tr>
 <tr class="separator:a4e9a56d1997960fc8f45e9732e790d55"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac6d17f00f3b9df81c57182a14b0e7f57" id="r_ac6d17f00f3b9df81c57182a14b0e7f57"><td class="memItemLeft" align="right" valign="top">virtual HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac6d17f00f3b9df81c57182a14b0e7f57">to_json</a> ()</td></tr>
 <tr class="separator:ac6d17f00f3b9df81c57182a14b0e7f57"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa4c82136394b3ffb7fcac95d76bcb0e3" id="r_aa4c82136394b3ffb7fcac95d76bcb0e3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa4c82136394b3ffb7fcac95d76bcb0e3">clear</a> ()</td></tr>
+<tr class="separator:aa4c82136394b3ffb7fcac95d76bcb0e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
@@ -131,15 +132,35 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:a1169476aee0c5789ba44af983951b807" id="r_a1169476aee0c5789ba44af983951b807"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1169476aee0c5789ba44af983951b807">niveau</a> = 0</td></tr>
 <tr class="memdesc:a1169476aee0c5789ba44af983951b807"><td class="mdescLeft">&#160;</td><td class="mdescRight">profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie  <br /></td></tr>
 <tr class="separator:a1169476aee0c5789ba44af983951b807"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af6068ada5b6ea338b615aaaf0648abb7" id="r_af6068ada5b6ea338b615aaaf0648abb7"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::tuple&lt; std::wstring, HRESULT &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af6068ada5b6ea338b615aaaf0648abb7">errors</a></td></tr>
-<tr class="memdesc:af6068ada5b6ea338b615aaaf0648abb7"><td class="mdescLeft">&#160;</td><td class="mdescRight">tableau contenant les erreurs remontées lors du traitement des objets  <br /></td></tr>
-<tr class="separator:af6068ada5b6ea338b615aaaf0648abb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a842a59acae44f6573584ad805f86df48" id="r_a842a59acae44f6573584ad805f86df48"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_appli_conf.html">AppliConf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a842a59acae44f6573584ad805f86df48">_conf</a> = {0}</td></tr>
-<tr class="separator:a842a59acae44f6573584ad805f86df48"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Documentation des fonctions membres</h2>
-<a id="abdacab0331cea7df5ccc3d165bcb8c85" name="abdacab0331cea7df5ccc3d165bcb8c85"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abdacab0331cea7df5ccc3d165bcb8c85">&#9670;&#160;</a></span>getData()</h2>
+<a id="aa4c82136394b3ffb7fcac95d76bcb0e3" name="aa4c82136394b3ffb7fcac95d76bcb0e3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa4c82136394b3ffb7fcac95d76bcb0e3">&#9670;&#160;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void MruApps::clear </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aa6318270e16e8323664eca7062c0194b" name="aa6318270e16e8323664eca7062c0194b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa6318270e16e8323664eca7062c0194b">&#9670;&#160;</a></span>getData()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -150,12 +171,8 @@ Attributs publics</h2></td></tr>
         <tr>
           <td class="memname">HRESULT MruApps::getData </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="struct_appli_conf.html">AppliConf</a></td>          <td class="paramname"><span class="paramname"><em>conf</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>_niveau</em></span><span class="paramdefsep"> = </span><span class="paramdefval">0</span></td><td>)</td>
           <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>_niveau</em></span><span class="paramdefsep"> = </span><span class="paramdefval">0</span>&#160;)</td>
         </tr>
       </table>
   </td>
@@ -164,8 +181,6 @@ Attributs publics</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-
-<p>contient les paramètres de l'application issue des paramètres de la ligne de commande </p>
 <p>Fonction permettant de parser les objets </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
     <tr><td class="paramname">conf</td><td>contient les paramètres de l'application issue des paramètres de la ligne de commande param _niveau est utilisé pour la mie en forme de la hiérarchie des objet dans le json de sortie </td></tr>
@@ -262,36 +277,6 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
-<a id="a842a59acae44f6573584ad805f86df48" name="a842a59acae44f6573584ad805f86df48"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a842a59acae44f6573584ad805f86df48">&#9670;&#160;</a></span>_conf</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="struct_appli_conf.html">AppliConf</a> MruApps::_conf = {0}</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="af6068ada5b6ea338b615aaaf0648abb7" name="af6068ada5b6ea338b615aaaf0648abb7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af6068ada5b6ea338b615aaaf0648abb7">&#9670;&#160;</a></span>errors</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::vector&lt;std::tuple&lt;std::wstring, HRESULT&gt; &gt; MruApps::errors</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>tableau contenant les erreurs remontées lors du traitement des objets </p>
-
-</div>
-</div>
 <a id="a8abafa58b142c5a25414206892d71a3b" name="a8abafa58b142c5a25414206892d71a3b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8abafa58b142c5a25414206892d71a3b">&#9670;&#160;</a></span>MruApps</h2>
 
@@ -325,7 +310,7 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <hr/>La documentation de cette structure a été générée à partir du fichier suivant :<ul>
-<li>C:/laragon/prog/c++/WAC/WAC/<a class="el" href="reg__mru__apps_8hpp_source.html">reg_mru_apps.hpp</a></li>
+<li>C:/laragon/prog/WAC/WAC/<a class="el" href="reg__mru__apps_8hpp_source.html">reg_mru_apps.hpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
