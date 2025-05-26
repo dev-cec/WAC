@@ -53,7 +53,7 @@ struct CustomDestinationCategory {
 
 				if (wguid.compare(L"{00021401-0000-0000-C000-000000000046}") == 0) {
 					log(3, L"🔈RecentDoc");
-					recentDocs.push_back(RecentDoc(buffer + pos + x, _path, _sid));
+					recentDocs.push_back(RecentDoc(buffer + pos + x, buffersize - pos - x, _path, _sid));
 				}
 			}
 		}
@@ -117,7 +117,9 @@ struct CustomDestination {
 		log(3, L"🔈replaceAll path");
 		pathEscaped = replaceAll(path, L"\\", L"\\\\");
 		log(3, L"🔈replaceAll pathOriginal");
-		pathOriginal = replaceAll(pathEscaped, conf.mountpoint, L"C:");
+		pathOriginal = replaceAll(path, conf.mountpoint, L"C:");
+		log(3, L"🔈replaceAll pathOriginal");
+		pathOriginal = replaceAll(pathOriginal, L"\\", L"\\\\");
 		log(2, L"❇️CustomDestination Path : " + pathOriginal);
 		std::ifstream file(path, std::ios::binary);
 		if (file.good())
@@ -140,7 +142,8 @@ struct CustomDestination {
 				FILE_ATTRIBUTE_NORMAL,  // normal file
 				NULL);                  // no attr. template
 			if (hFile != INVALID_HANDLE_VALUE) {
-				FILE_BASIC_INFO fileInfo;
+				FILE_BASIC_INFO fileInfo = { 0 };
+
 				GetFileInformationByHandleEx(hFile, FileBasicInfo, &fileInfo, sizeof(FILE_BASIC_INFO));
 				memcpy(&createdUtc, &fileInfo.CreationTime, sizeof(createdUtc));
 				memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
@@ -155,8 +158,7 @@ struct CustomDestination {
 			CloseHandle(hFile);
 
 			//conversion de l'appid contenu dans le nom de fichier en nom d'application
-			std::wstring::size_type const p(path.find_last_of('.')); // position du point de l'extension
-			std::wstring baseName = path.substr(0, p); // nom de fichier sans extension
+			std::wstring baseName = _path.stem(); // nom de fichier sans extension
 			log(3, L"🔈from_appId application");
 			application = from_appId(baseName);
 			typeInt = *reinterpret_cast<unsigned int*>(buffer);

@@ -14,12 +14,12 @@
 
 struct AmcacheApplicationFile {
 public:
-	std::wstring Name = L""; //!< nom de l’exécutable
-	std::wstring Publisher = L"";//!< nom de la compagnie
-	std::wstring LongPath = L""; //!< chemin d'accès  à l’exécutable
-	std::wstring Version = L"";//!< version de l’exécutable
-	std::wstring LinkDate = L"";//!< date de création de l'AMCACHE APPLICATION FILE
-	std::wstring LinkDateUtc = L"";//!< date de création de l'AMCACHE APPLICATION FILE au format UTC
+	std::wstring name = L""; //!< nom de l’exécutable
+	std::wstring publisher = L"";//!< nom de la compagnie
+	std::wstring longPath = L""; //!< chemin d'accès  à l’exécutable
+	std::wstring version = L"";//!< version de l’exécutable
+	std::wstring linkDate = L"";//!< date de création de l'AMCACHE APPLICATION FILE
+	std::wstring linkDateUtc = L"";//!< date de création de l'AMCACHE APPLICATION FILE au format UTC
 	bool IsOsComponent = false;//!< cet exécutable fait-il parti de l'OS ?
 
 	/*! constructeur
@@ -28,20 +28,20 @@ public:
 	AmcacheApplicationFile(ORHKEY hKey_amcache)
 	{
 		log(3, L"🔈getRegSzValue Name");
-		getRegSzValue(hKey_amcache, nullptr, L"Name", &Name);
-		log(2, L"❇️AmcacheApplicationFile Name : " + Name);
+		getRegSzValue(hKey_amcache, nullptr, L"Name", &name);
+		log(2, L"❇️AmcacheApplicationFile Name : " + name);
 		log(3, L"🔈getRegSzValue Publisher");
-		getRegSzValue(hKey_amcache, nullptr, L"Publisher", &Publisher);
+		getRegSzValue(hKey_amcache, nullptr, L"Publisher", &publisher);
 		log(3, L"🔈replaceAll Publisher");
-		Publisher = replaceAll(Publisher, L"\"", L"\\\""); // escape " in std::string
+		publisher = replaceAll(publisher, L"\"", L"\\\""); // escape " in std::string
 		log(3, L"🔈getRegSzValue LongPath");
-		getRegSzValue(hKey_amcache, nullptr, L"LowerCaseLongPath", &LongPath);
+		getRegSzValue(hKey_amcache, nullptr, L"LowerCaseLongPath", &longPath);
 		log(3, L"🔈replaceAll LongPath");
-		LongPath = replaceAll(LongPath, L"\\", L"\\\\"); // escape \ in std::string
+		longPath = replaceAll(longPath, L"\\", L"\\\\"); // escape \ in std::string
 		log(3, L"🔈getRegSzValue Version");
-		getRegSzValue(hKey_amcache, nullptr, L"Version", &Version);
+		getRegSzValue(hKey_amcache, nullptr, L"Version", &version);
 		log(3, L"🔈replaceAll Version");
-		Version = replaceAll(Version, L"\t", L"\\t"); // replace tab in std::string by \t, tab not supported by json in strings
+		version = replaceAll(version, L"\t", L"\\t"); // replace tab in std::string by \t, tab not supported by json in strings
 		log(3, L"🔈getRegboolValue IsOsComponent");
 		getRegboolValue(hKey_amcache, nullptr, L"IsOsComponent", &IsOsComponent);
 		//la date est stockée en REG_SZ, donc il faut la reconvertir en FILETIME pour avoir le bon format et la bonne timezone
@@ -53,9 +53,9 @@ public:
 			log(3, L"🔈wstring_to_filetime LinkDate");
 			filetime = wstring_to_filetime(temp);
 			log(3, L"🔈time_to_wstring LinkDate");
-			LinkDate = time_to_wstring(filetime, false);
+			linkDate = time_to_wstring(filetime, false);
 			log(3, L"🔈time_to_wstring LinkDateUtc");
-			LinkDateUtc = time_to_wstring(filetime, true);
+			linkDateUtc = time_to_wstring(filetime, true);
 		}
 	}
 
@@ -65,12 +65,12 @@ public:
 	std::wstring to_json() {
 		log(3, L"🔈AmcacheApplicationFile to_json");
 		std::wstring result = L"\t{ \n";
-			result += L"\t\t\"Name\":\"" + Name + L"\", \n";
-			result += L"\t\t\"Publisher\":\"" + Publisher + L"\", \n";
-			result += L"\t\t\"LongPath\":\"" + LongPath + L"\", \n";
-			result += L"\t\t\"Version\":\"" + Version + L"\", \n";
-			result += L"\t\t\"LinkDate\":\"" + LinkDate + L"\", \n";
-			result += L"\t\t\"LinkDateUtc\":\"" + LinkDateUtc + L"\", \n";
+			result += L"\t\t\"Name\":\"" + name + L"\", \n";
+			result += L"\t\t\"Publisher\":\"" + publisher + L"\", \n";
+			result += L"\t\t\"LongPath\":\"" + longPath + L"\", \n";
+			result += L"\t\t\"Version\":\"" + version + L"\", \n";
+			result += L"\t\t\"LinkDate\":\"" + linkDate + L"\", \n";
+			result += L"\t\t\"LinkDateUtc\":\"" + linkDateUtc + L"\", \n";
 			log(3, L"🔈bool_to_wstring IsOsComponent");
 			result += L"\t\t\"IsOsComponent\":" + bool_to_wstring(IsOsComponent) + L"\n";
 			result += L"\t}";
@@ -147,8 +147,8 @@ public:
 			log(1, L"➕AmcacheApplicationFile ");
 			//save
 			amcacheapplicationfiles.push_back(AmcacheApplicationFile(hKey_amcache));
-			return ERROR_SUCCESS;
 		}
+		return ERROR_SUCCESS;
 	}
 
 	/*! conversion de l'objet au format json

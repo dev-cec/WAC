@@ -249,7 +249,7 @@ struct DestFileDirectory {
 struct oleHeader {
 	bool littleIndian = false; //!< format littleindian ou Bigindian
 	unsigned long long _signature = 0xe11ab1a1e011cfd0; //!< signature attendue de l'objet OLE
-	unsigned long signature = 0; //!< signature de l'objet OLE
+	unsigned long long signature = 0; //!< signature de l'objet OLE
 	short int sectorSize = 0; //!< taille des secteurs de l'objet OLE
 	short int shortSectorSize = 0; //!< taille des petits secteurs de l'objet OLE
 	int totalSATSectors = 0; //!< nombre total de secteurs dans la SAT
@@ -261,7 +261,6 @@ struct oleHeader {
 	int MSATFirstSectorId = 0;//!< id du premier secteur la MSAT
 	std::vector<int> SATSectors; //!< tableau contenant les secteurs de la SAT
 	std::vector<int> ShortSATSectors;//!< tableau contenant les secteurs de la SSAT
-
 	/*! Constructeur par défaut
 	*/
 	oleHeader() {}
@@ -271,9 +270,9 @@ struct oleHeader {
 	* @param _bufferSize contient la taille du buffer
 	*/
 	oleHeader(LPBYTE buffer, size_t _bufferSize) {
-		signature = *reinterpret_cast<unsigned long*>(buffer);
+		signature = *reinterpret_cast<unsigned long long*>(buffer);
 		if (signature != _signature) {
-			log(2, L"🔥oleHeader signature ", ERROR_NDIS_BAD_VERSION);
+			log(2, L"🔥oleHeader signature " + to_hex(signature), ERROR_NDIS_BAD_VERSION);
 			throw std::runtime_error("bad signature");
 		}
 		littleIndian = (*reinterpret_cast<short int*>(buffer + 28) == (short)0xfffe); //0xfeff = big indian

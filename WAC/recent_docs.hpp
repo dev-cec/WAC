@@ -9,8 +9,7 @@
 #include "tools.h"
 #include "trans_id.h"
 #include "idList.h"
-
-
+#include "quickdigest5.hpp"
 
 /* structure représentant un document récent
 */
@@ -19,7 +18,9 @@ public:
 	std::wstring Sid = L""; //!< SID de l'utilisateur propriétaire de l'objet
 	std::wstring path_original = L"";//!< chemin d'accès à l'objet sur le disque
 	std::wstring path = L"";//!< chemin d'accès à l'objet dans le snapshot
+	std::wstring md5Source=L""; //!< hash md5 du fichier source
 	std::wstring target = L"";//!< chemin pour accéder à l'objet d'origine
+	std::wstring md5Target=L""; //!< hash md5 du fichier target
 	std::wstring description = L""; //!< description du recentDoc
 	std::wstring relativePath = L"";//!< chemin relatif d'accès au fichier d'origine
 	std::wstring workingDirectory = L"";//!< repertoire contenant le fichier d'origine
@@ -158,10 +159,13 @@ public:
 				// Local path std::string (ending with 0x00):
 				//-------------------------------------------------------------------------
 				unsigned int LocalPath_offset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + 16); //local path offset from start of fileinfo
+				std::string targetPath((char*)(buffer + LinkInfo_offset + LocalPath_offset));
 				log(3, L"🔈string_to_wstring target");
-				target = string_to_wstring((char*)(buffer + LinkInfo_offset + LocalPath_offset));
+				target = string_to_wstring(targetPath);
 				log(3, L"🔈replaceAll target");
 				target = replaceAll(target, L"\\", L"\\\\"); ; // escape \ in std::string
+				log(3, L"🔈fileToHash md5Target");
+				md5Target = QuickDigest5::fileToHash(targetPath);
 				//-------------------------------------------------------------------------
 				// Common Network Relative Link info:
 				//-------------------------------------------------------------------------
@@ -273,11 +277,11 @@ public:
 		Sid = _sid;
 		//path retourne un codage ANSI mais on veut de l'UTF8
 		path = _path.wstring();
-		log(3, L"🔈replaceAll path");
-		path = replaceAll(path, L"\\", L"\\\\");//escape \ in std::string
 		log(3, L"🔈replaceAll path_original");
 		path_original = replaceAll(path, conf.mountpoint, L"C:");
 		log(2, L"❇️RecentDoc path " + path_original);
+		log(3, L"🔈replaceAll path_original");
+		path_original = replaceAll(path_original, L"\\", L"\\\\");//escape \ in std::wstring
 		target = L"";
 		if (_path.extension() == ".lnk" || _path.extension() == ".LNK") {
 			std::ifstream file(_path.wstring(), std::ios::binary);
@@ -291,6 +295,8 @@ public:
 				LPBYTE buffer = new BYTE[size];
 				file.read(reinterpret_cast<CHAR*>(buffer), size);
 				file.close();
+				log(3, L"🔈fileToHash md5Source");
+				md5Source = QuickDigest5::fileToHash(_path.string());
 				log(3, L"🔈parseLNK");
 				parseLNK(buffer);
 				delete[] buffer;
@@ -342,11 +348,18 @@ public:
 	* @param _sid contient le SID de l'utilisateur propriétaire de la donnée
 
 	*/
-	RecentDoc(LPBYTE buffer, std::wstring _path, std::wstring _sid) {
+	RecentDoc(LPBYTE buffer, size_t size, std::wstring _path, std::wstring _sid) {
 		Sid = _sid;
 		path = _path;
-		path_original = replaceAll(_path, conf.mountpoint, L"C:");
+
+		path_original = replaceAll(path, conf.mountpoint, L"C:");
 		log(2, L"❇️RecentDoc path " + path_original);
+		log(3, L"🔈replaceAll path_original");
+		path_original = replaceAll(path_original, L"\\", L"\\\\");//escape \ in std::wstring
+		
+		log(3, L"🔈fileToHash md5Source");
+		md5Source = QuickDigest5::fileToHash(wstring_to_string(_path));
+
 		target = L"";
 		log(3, L"🔈parseLNK");
 		parseLNK(buffer);
@@ -361,7 +374,9 @@ public:
 		std::wstring result = L"";
 		result += tab(i) + L"{ \n";
 		result += tab(i + 1) + L"\"Path\":\"" + path_original + L"\", \n";
+		result += tab(i + 1) + L"\"md5Source\":\"" + md5Source + L"\", \n";
 		result += tab(i + 1) + L"\"Target\":\"" + target + L"\", \n";
+		result += tab(i + 1) + L"\"md5Target\":\"" + md5Target + L"\", \n";
 		log(3, L"🔈time_to_wstring sourceCreated");
 		result += tab(i + 1) + L"\"SourceCreated\":\"" + time_to_wstring(sourceCreated) + L"\", \n";
 		log(3, L"🔈time_to_wstring sourceCreatedUtc");

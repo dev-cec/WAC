@@ -37,9 +37,9 @@ public:
 		result += tab(niveau + 1) + L"\"SIDName\":\"" + sidName + L"\", \n";
 		result += tab(niveau + 1) + L"\"Source\":\"" + source + L"\", \n";
 		log(3, L"🔈time_to_wstring lastWriteTime");
-		result += tab(niveau + 1) + L"\t\t\"LastWriteTime\":\"" + time_to_wstring(lastWriteTime) + L"\", \n";
+		result += tab(niveau + 1) + L"\"LastWriteTime\":\"" + time_to_wstring(lastWriteTime) + L"\", \n";
 		log(3, L"🔈time_to_wstring lastWriteTimeUtc");
-		result += tab(niveau + 1) + L"LastWriteTimeUtc\":\"" + time_to_wstring(lastWriteTimeUtc) + L"\", \n";
+		result += tab(niveau + 1) + L"\"LastWriteTimeUtc\":\"" + time_to_wstring(lastWriteTimeUtc) + L"\", \n";
 		result += tab(niveau + 1) + L"\"ShellItems\" : [\n";
 
 		std::vector<IdList*>::iterator it;

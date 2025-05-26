@@ -15,9 +15,6 @@
 #include <sddl.h>
 #include "tools.h"
 
-
-
-
 /****************************************************
 *                   FORMAT DE DONNEES               *
 *****************************************************/
@@ -566,7 +563,7 @@ HRESULT getRegSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::wstring*
 	}
 	else {
 		nbChar = dwSize / sizeof(wchar_t);
-		*ws = std::wstring((LPWSTR)(pData), (LPWSTR)(pData)+nbChar);
+		*ws = std::wstring(pData);
 	}
 	delete[] pData;
 	return hresult;

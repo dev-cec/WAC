@@ -191,6 +191,7 @@ public:
 		path = file_path;
 		log(3, L"🔈replaceAll pathOriginal");
 		pathOriginal = replaceAll(path, conf.mountpoint, L"C:");
+		pathOriginal = replaceAll(pathOriginal, L"\\", L"\\\\");
 	}
 
 	/* lecture du fichier prefetch

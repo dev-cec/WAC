@@ -48,10 +48,9 @@ struct AutomaticDestination {
 		
 		//path retourne un codage ANSI mais on veut de l'UTF8
 		path = _path.wstring();
-		log(3, L"🔈replaceAll path");
-		path = replaceAll(path, L"\\", L"\\\\");//escape \ in std::string
 		log(3, L"🔈replaceAll pathOriginal");
 		pathOriginal = replaceAll(path, conf.mountpoint, L"C:");
+		pathOriginal = replaceAll(pathOriginal, L"\\", L"\\\\");//escape \ in std::string
 		log(2, L"❇️AutomaticDestination Path : " + pathOriginal);
 
 		// get user name
@@ -142,7 +141,7 @@ struct AutomaticDestination {
 					log(3, L"🔈ole.Getdata d");
 					std::vector<BYTE> directoryBytes = ole.Getdata(d);
 					log(3, L"🔈RecentDoc");
-					recentDocs.push_back(RecentDoc(&directoryBytes[0], path, _sid));
+					recentDocs.push_back(RecentDoc(&directoryBytes[0], directoryBytes.size(), path, _sid));
 				}
 				else {
 					log(2, L"🔥ole.findDirectory d", ERROR_EMPTY);// show cause of failure
