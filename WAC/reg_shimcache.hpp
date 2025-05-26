@@ -86,7 +86,7 @@ public:
 				offset += 12;//unused
 				short int name_length = *reinterpret_cast<short int*>(pData + offset);
 				offset += 2;
-				shimcache.path = std::wstring((LPWSTR)(pData + offset));
+				shimcache.path = std::wstring((LPWSTR)(pData + offset), (LPWSTR)(pData + offset) + name_length / sizeof(wchar_t));
 				log(3, L"🔈replaceAll path");
 				shimcache.path = replaceAll(shimcache.path, L"\\", L"\\\\");
 				shimcache.path = replaceAll(shimcache.path, L"\t", L" "); // replace tab by space. seen in values
@@ -104,8 +104,8 @@ public:
 				offset += 4; // 2 unused
 
 				//save 
-				log(1, L"➕Shimecache ");
-				log(2, L"❇️Shimecache Path : " + shimcache.path);
+				log(1, L"➕Shimcache ");
+				log(2, L"❇️Shimcache Path : " + shimcache.path);
 				shimcaches.push_back(shimcache);
 			}
 		}

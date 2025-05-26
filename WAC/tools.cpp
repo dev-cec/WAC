@@ -134,6 +134,7 @@ void log(int loglevel, std::wstring message) {
 	if (conf.loglevel >= loglevel && conf.loglevel > 0) {
 		conf.log.open(conf.name + ".log", std::ios::app);
 		conf.log << tab(loglevel) << ansi_to_utf8(message) << std::endl;
+		conf.log.flush(); 
 		conf.log.close();
 	}
 }
@@ -554,6 +555,7 @@ HRESULT getRegSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::wstring*
 	DWORD dwType = 0;
 	DWORD dwSize = 0;
 	wchar_t* pData = NULL;
+	DWORD nbChar = 0;
 	HRESULT hresult = 0;
 	log(3, L"🔈getRegBinaryValue");
 	hresult = getRegBinaryValue(key, szSubKey, szValue, (LPBYTE*)&pData, &dwSize);
@@ -563,7 +565,8 @@ HRESULT getRegSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::wstring*
 		return hresult;
 	}
 	else {
-		*ws = std::wstring(pData);
+		nbChar = dwSize / sizeof(wchar_t);
+		*ws = std::wstring((LPWSTR)(pData), (LPWSTR)(pData)+nbChar);
 	}
 	delete[] pData;
 	return hresult;
@@ -590,7 +593,7 @@ HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::vec
 		DWORD pos = 0;
 		while (pos < nbChar)
 		{
-			std::wstring ws = std::wstring(pData + pos);
+			std::wstring ws = std::wstring((LPWSTR)(pData), (LPWSTR)(pData)+nbChar);
 			if (!ws.empty()) out->push_back(ws);
 			pos += ws.length() + 1;//position du premier caractère de la chaîne suivante après le \0 de fin de chaîne de la suivante
 		}
