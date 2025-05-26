@@ -16,6 +16,7 @@
 struct Process {
 	std::wstring processName = L""; //!< Nom du processus
 	DWORD processId = 0; //!< Id du processus
+	std::wstring md5 = L""; //!< hash md5 du process exe
 	DWORD processParentId = 0;//!< Id du processus Parent
 	DWORD processThreadCount = 0;//!< Nombre de threads
 	std::wstring processSidName = L"";//!< nom de l'utilisateur propriétaire du processus
@@ -39,30 +40,30 @@ struct Process {
 		processParentId = pe32->th32ParentProcessID;
 		processThreadCount = pe32->cntThreads;
 		//get owner of process
-		if (handle) {
-			log(3, L"🔈OpenProcessToken");
-			if (OpenProcessToken(handle, TOKEN_ALL_ACCESS, &tokenHandle)) {
-				log(3, L"🔈GetTokenInformation");
-				GetTokenInformation(tokenHandle, TokenOwner, NULL, 0, &returnSize);  // get data size
-				infos = (LPVOID)malloc(returnSize);
-				if (GetTokenInformation(tokenHandle, TokenOwner, infos, returnSize, &returnSize)) { // get data
-					log(3, L"🔈ConvertSidToStringSid");
-					if (ConvertSidToStringSid(((PTOKEN_OWNER)infos)->Owner, &lpsid_wstring) != 0) {
-						processSID = std::wstring(lpsid_wstring);
-						log(3, L"🔈getNameFromSid lpsid_wstring");
-						processSidName = getNameFromSid(processSID);
-					}
-					else
-						log(2, L"🔥ConvertSidToStringSid : ", GetLastError());
+		log(3, L"🔈OpenProcessToken");
+		if (OpenProcessToken(handle, TOKEN_ALL_ACCESS, &tokenHandle)) {
+			log(3, L"🔈GetTokenInformation");
+			GetTokenInformation(tokenHandle, TokenOwner, NULL, 0, &returnSize);  // get data size
+			infos = (LPVOID)malloc(returnSize);
+			if (GetTokenInformation(tokenHandle, TokenOwner, infos, returnSize, &returnSize)) { // get data
+				log(3, L"🔈ConvertSidToStringSid");
+				if (ConvertSidToStringSid(((PTOKEN_OWNER)infos)->Owner, &lpsid_wstring) != 0) {
+					processSID = std::wstring(lpsid_wstring);
+					log(3, L"🔈getNameFromSid lpsid_wstring");
+					processSidName = getNameFromSid(processSID);
 				}
 				else
-					log(2, L"🔥GetTokenInformation : ", GetLastError());
-				free(infos);
+					log(2, L"🔥ConvertSidToStringSid : ", GetLastError());
 			}
-			else {
-				log(2, L"🔥OpenProcessToken : ", GetLastError());
-				return;
-			}
+			else
+				log(2, L"🔥GetTokenInformation : ", GetLastError());
+			free(infos);
+		}
+		else {
+			log(2, L"🔥OpenProcessToken : ", GetLastError());
+			log(3, L"🔈getErrorMessage error");
+			processModulesAccess = getErrorMessage(GetLastError());
+			return;
 		}
 
 		// List the modules and threads associated with this process
@@ -98,13 +99,19 @@ struct Process {
 
 		// Retrieve information about the first module,
 		// and exit if unsuccessful
-		bool result=false;
+		bool result = false;
 		log(3, L"🔈Module32First");
 		if (!Module32First(hModuleSnap, &me32)) {
 			log(2, L"🔥Module32First", GetLastError());
+			processModulesAccess = getErrorMessage(GetLastError());
 			CloseHandle(hModuleSnap);
 			return ERROR_INVALID_HANDLE;
 		}
+
+		//Le premier module retourne le exe path
+		log(3, L"🔈fileToHash md5Source");
+		md5 = QuickDigest5::fileToHash(wstring_to_string(me32.szExePath));
+
 		// Now walk the module list of the process,
 		// and display information about each module
 
@@ -128,13 +135,14 @@ struct Process {
 
 		log(3, L"🔈process to_json");
 		result += tab(1) + L"{ \n";
-			result += tab(2) + L"\"Nom\":\"" + processName + L"\", \n";
-			result += tab(2) + L"\"SID\":\"" + processSID + L"\", \n";
-			result += tab(2) + L"\"Owner\":\"" + processSidName + L"\", \n";
-			result += tab(2) + L"\"PID\":\"" + std::to_wstring(processId) + L"\", \n";
-			result += tab(2) + L"\"PPId\":\"" + std::to_wstring(processParentId) + L"\", \n";
-			result += tab(2) + L"\"ModulesMessage\":\"" + processModulesAccess + L"\", \n";
-			result += tab(2) + L"\"Modules\":[\n";
+		result += tab(2) + L"\"Nom\":\"" + processName + L"\", \n";
+		result += tab(2) + L"\"md5\":\"" + md5 + L"\", \n";
+		result += tab(2) + L"\"SID\":\"" + processSID + L"\", \n";
+		result += tab(2) + L"\"Owner\":\"" + processSidName + L"\", \n";
+		result += tab(2) + L"\"PID\":\"" + std::to_wstring(processId) + L"\", \n";
+		result += tab(2) + L"\"PPId\":\"" + std::to_wstring(processParentId) + L"\", \n";
+		result += tab(2) + L"\"ModulesMessage\":\"" + processModulesAccess + L"\", \n";
+		result += tab(2) + L"\"Modules\":[\n";
 		std::vector<std::wstring>::iterator it;
 		for (it = processModules.begin(); it != processModules.end(); it++) {
 			result += tab(3) + L"\"" + it->data() + L"\"";
@@ -201,7 +209,7 @@ struct Processes {
 			hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pe32.th32ProcessID);
 			DWORD r = GetLastError();
 			if (hProcess == NULL)
-				log(2, L"🔥OpenProcess", GetLastError());// show cause of failure
+				log(2, L"🔥OpenProcess", r);// show cause of failure
 			if (r != 87) { // ERROR_INVALID_PARAMETER, si hProcess est null on push tout de meme
 				processes.push_back(Process(&pe32, hProcess));
 				CloseHandle(hProcess);

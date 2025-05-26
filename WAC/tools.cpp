@@ -137,7 +137,7 @@ void log(int loglevel, std::wstring message) {
 }
 
 void log(int loglevel, std::wstring message, HRESULT result) {
-	log(loglevel, message + getErrorMessage(result));
+	log(loglevel, message + L" : " + getErrorMessage(result));
 }
 
 std::string ansi_to_utf8(std::string in)

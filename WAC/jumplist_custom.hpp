@@ -86,7 +86,6 @@ struct CustomDestination {
 	std::wstring SidName = L""; //!< nom de l'utilisateur propriétaire du custom Destination
 	std::wstring application = L"";//!< nom de l'application liée au Custom Destination
 	std::wstring path = L"";//!< Chemin du custom Destination dans la snapshot
-	std::wstring pathEscaped = L"";//!< Chemin du custom Destination dans la snapshot escaped
 	std::wstring pathOriginal = L"";//!< Chemin du custom Destination sur le disque
 	unsigned int typeInt = 0;//!< type de custom Destination en entier
 	std::wstring type = L"";//!< nom du type de Custom Destination
@@ -114,8 +113,6 @@ struct CustomDestination {
 		SidName = getNameFromSid(Sid);
 		//path retourne un codage ANSI mais on veut de l'UTF8
 		path = _path.wstring();
-		log(3, L"🔈replaceAll path");
-		pathEscaped = replaceAll(path, L"\\", L"\\\\");
 		log(3, L"🔈replaceAll pathOriginal");
 		pathOriginal = replaceAll(path, conf.mountpoint, L"C:");
 		log(3, L"🔈replaceAll pathOriginal");
@@ -164,12 +161,12 @@ struct CustomDestination {
 			typeInt = *reinterpret_cast<unsigned int*>(buffer);
 			switch (typeInt) {
 			case 0: {
-				log(2, L"🔥"+ pathEscaped + L" : Custom category", ERROR_UNSUPPORTED_TYPE);
+				log(2, L"🔥"+ pathOriginal + L" : Custom category", ERROR_UNSUPPORTED_TYPE);
 				type = L"Custom category";
 				break;
 			}
 			case 1: {
-				log(2, L"🔥" + pathEscaped + L" : Known category",ERROR_UNSUPPORTED_TYPE );
+				log(2, L"🔥" + pathOriginal + L" : Known category",ERROR_UNSUPPORTED_TYPE );
 				type = L"Known category";
 				break;
 			}
@@ -186,7 +183,7 @@ struct CustomDestination {
 				categorie = new CustomDestinationCategory(buffer, size, path, _sid);
 			}
 			else {
-				log(2, L"🔥" + pathEscaped + L" : no LNK to parse",ERROR_EMPTY );
+				log(2, L"🔥" + pathOriginal + L" : no LNK to parse",ERROR_EMPTY );
 			}
 			delete[] buffer;
 		}
