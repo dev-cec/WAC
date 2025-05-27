@@ -634,7 +634,7 @@ std::wstring getVolumeLetter(std::wstring searchSerial) {
 		log(3, L"🔈GetVolumeInformationW");
 		BOOL success = GetVolumeInformationW(VolumeName, NULL, NULL, &serial_number, NULL, NULL, NULL, NULL);
 
-		ss << std::hex << serial_number;
+		ss << std::hex << serial_number; 
 		std::wstring serial = ss.str().c_str();
 		std::wstring result(Names,Names + CharCount);
 		if (serial.compare(searchSerial) == 0)

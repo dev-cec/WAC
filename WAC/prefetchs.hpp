@@ -92,7 +92,7 @@ struct Filename {
 	}
 };
 
-struct VolumeInfo {
+struct VolumeInfo { 
 	FILETIME creationTime = { 0 }; //!< date de création
 	FILETIME creationTimeUtc = { 0 };//!< date de création au format UTC
 	std::wstring serialNumber = L""; //!< numéro de série du volume
