@@ -131,7 +131,7 @@ void log(int loglevel, std::wstring message) {
 	if (conf.loglevel >= loglevel && conf.loglevel > 0) {
 		conf.log.open(conf.name + ".log", std::ios::app);
 		conf.log << tab(loglevel) << ansi_to_utf8(message) << std::endl;
-		conf.log.flush(); 
+		conf.log.flush();
 		conf.log.close();
 	}
 }
@@ -482,7 +482,7 @@ HRESULT getRegBinaryValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, LPBYTE* p
 	DWORD dwType = 0;
 	HRESULT hresult = 0;
 	if (*pBytes != NULL)
-		delete[] *pBytes; // on supprime tout buffer passé en paramètre pour ne pas avoir de memory leak;
+		delete[] * pBytes; // on supprime tout buffer passé en paramètre pour ne pas avoir de memory leak;
 	do {
 		*pBytes = new BYTE[*dwSize];
 		memset(*pBytes, 0, *dwSize);
@@ -526,7 +526,7 @@ HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, FILETIM
 	// leur type est soit REG_BINARY soi REG_FILETIME(16) 
 	DWORD dwSize = 0;
 	DWORD dwType;
-	LPBYTE pData = new BYTE[dwSize+2];
+	LPBYTE pData = new BYTE[dwSize + 2];
 	HRESULT hresult = 0;
 
 	log(3, L"🔈getRegBinaryValue");
@@ -556,13 +556,13 @@ HRESULT getRegSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::wstring*
 	HRESULT hresult = 0;
 	log(3, L"🔈getRegBinaryValue");
 	hresult = getRegBinaryValue(key, szSubKey, szValue, (LPBYTE*)&pData, &dwSize);
- 	if (hresult != ERROR_SUCCESS) {
+	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥getRegBinaryValue", hresult);
 		return hresult;
 	}
 	else {
 		nbChar = dwSize / sizeof(wchar_t);
-		*ws = std::wstring(pData, pData+nbChar).data();
+		*ws = std::wstring(pData, pData + nbChar).data();
 	}
 	delete[] pData;
 	return hresult;
@@ -596,4 +596,57 @@ HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::vec
 	}
 	delete[] pData;
 	return ERROR_SUCCESS;
+}
+
+std::wstring getVolumeLetter(std::wstring searchSerial) {
+	DWORD  CharCount = MAX_PATH;
+	WCHAR  DeviceName[MAX_PATH] = L"";
+	DWORD  Error = ERROR_SUCCESS;
+	HANDLE FindHandle = INVALID_HANDLE_VALUE;
+	BOOL   Success = FALSE;
+	WCHAR  VolumeName[MAX_PATH+1] = L"";
+	wchar_t* Names= NULL;
+	
+	//  Enumerate all volumes in the system.
+	log(3, L"🔈FindFirstVolumeW");
+	FindHandle = FindFirstVolumeW(VolumeName, ARRAYSIZE(VolumeName));
+
+	if (FindHandle == INVALID_HANDLE_VALUE)
+	{
+		log(2, L"🔥getRegBinaryValue", ERROR_INVALID_HANDLE);
+		return Names;
+	}
+
+	do {
+		do {
+			if(Names!=NULL)
+				delete[] Names;
+			Names = new wchar_t[CharCount];
+			log(3, L"🔈GetVolumePathNamesForVolumeNameW");
+			Success = GetVolumePathNamesForVolumeNameW(VolumeName, Names, CharCount, &CharCount);
+		} while (Success == ERROR_MORE_DATA);
+		std::wostringstream ss;
+		// Buffer to receive the volume serial number
+		DWORD serial_number = 0;
+
+		// Size of the file system name buffer
+		DWORD file_system_name_size = MAX_PATH + 1;
+		log(3, L"🔈GetVolumeInformationW");
+		BOOL success = GetVolumeInformationW(VolumeName, NULL, NULL, &serial_number, NULL, NULL, NULL, NULL);
+
+		ss << std::hex << serial_number;
+		std::wstring serial = ss.str().c_str();
+		std::wstring result(Names,Names + CharCount);
+		if (serial.compare(searchSerial) == 0)
+			return replaceAll(result,L"\\",L"").data(); // keep only c: instead of c:\ 
+		
+		//   Move on to the next volume.
+		log(3, L"🔈FindNextVolumeW");
+		Success = FindNextVolumeW(FindHandle, VolumeName, ARRAYSIZE(VolumeName));
+		Error = GetLastError();
+	} while (Error != ERROR_NO_MORE_FILES);
+	log(3, L"🔈FindVolumeClose");
+	FindVolumeClose(FindHandle);
+	delete[] Names;
+	return L"";
 }
