@@ -936,7 +936,7 @@ std::wstring to_FriendlyName(std::wstring guid, unsigned int key) {
 		if (out == NULL)
 			result = L"(Undefined)";
 		else
-			result = std::wstring(out);
+			result = std::wstring(out).data();
 	}
 	return result;
 }

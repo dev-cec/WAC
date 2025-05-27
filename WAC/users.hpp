@@ -44,13 +44,13 @@ struct User {
 		log(3, L"🔈NetUserGetInfo");
 		int r = NetUserGetInfo(NULL, profilName, 4, (LPBYTE*)&info4);
 		if (r == NERR_Success) {
-			name = std::wstring(info4->usri4_name);
-			fullName = std::wstring(info4->usri4_full_name);
+			name = std::wstring(info4->usri4_name).data();
+			fullName = std::wstring(info4->usri4_full_name).data();
 			flags = info4->usri4_flags;
 			//sid to wstring
 			log(3, L"🔈ConvertSidToStringSidW");
 			if (ConvertSidToStringSidW(info4->usri4_user_sid, &temp)) {
-				SID = std::wstring(temp);
+				SID = std::wstring(temp).data();
 			}
 			else {
 				log(2, L"🔥ConvertSidToStringSidW", GetLastError());
@@ -67,7 +67,7 @@ struct User {
 				data = (LPWSTR)malloc(dataSize);
 				hresult = RegQueryValueExW(hKey, L"ProfileImagePath", NULL, NULL, (LPBYTE)data, &dataSize);
 				if (hresult == ERROR_SUCCESS) {
-					profile = std::wstring(data);
+					profile = std::wstring(data).data();
 				}
 				else {
 					profile = L"";

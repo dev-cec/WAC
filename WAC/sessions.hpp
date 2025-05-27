@@ -45,11 +45,11 @@ struct Session {
 			memcpy(&startTime, &temp, sizeof(startTime));
 			log(3, L"🔈LocalFileTimeToFileTime");
 			LocalFileTimeToFileTime(&startTime, &startTimeUtc);
-			logonName = std::wstring(data->UserName.Buffer);
-			logonDomainName = std::wstring(data->LogonDomain.Buffer);
+			logonName = std::wstring(data->UserName.Buffer).data();
+			logonDomainName = std::wstring(data->LogonDomain.Buffer).data();
 			logonType = data->LogonType;
 			logonTypeName = logon_type(logonType);
-			authenticationPackage = std::wstring(data->AuthenticationPackage.Buffer);
+			authenticationPackage = std::wstring(data->AuthenticationPackage.Buffer).data();
 			sid = data->Sid;
 		}
 		else {
@@ -67,7 +67,7 @@ struct Session {
 		log(3, L"🔈session to_json");
 		log(3, L"🔈ConvertSidToStringSid");
 		if (ConvertSidToStringSid(sid, &lpsid_wstring) != 0) {
-			sid_wstring = std::wstring(lpsid_wstring);
+			sid_wstring = std::wstring(lpsid_wstring).data();
 		}
 
 		std::wstring result = tab(1) + L"{ \n";

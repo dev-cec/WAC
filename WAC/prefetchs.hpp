@@ -87,7 +87,7 @@ struct VolumeInfo {
 		creationTimeUtc = *reinterpret_cast<FILETIME*>(indVolume + 8);
 		log(3, L"🔈FileTimeToLocalFileTime creationTime");
 		FileTimeToLocalFileTime(&creationTimeUtc, &creationTime);
-		deviceName = std::wstring((wchar_t*)(data + offset));
+		deviceName = std::wstring((wchar_t*)(data + offset)).data();
 		log(3, L"🔈replaceAll deviceName");
 		deviceName = replaceAll(deviceName, L"\\", L"\\\\");//on échappe les \ dans le path
 		//récupération du serialnumber en std::hexa
@@ -99,7 +99,7 @@ struct VolumeInfo {
 		int nbDirs = *reinterpret_cast<int*>(indVolume + 32);
 		size_t pos = 1;
 		for (int k = 0; k < nbDirs; k++) {
-			std::wstring temp = std::wstring((wchar_t*)(data + dirsOffset) + pos);
+			std::wstring temp = std::wstring((wchar_t*)(data + dirsOffset) + pos).data();
 			pos += temp.size() + 2;//+2 pour \x0000
 			dirStrings.push_back(temp);
 		}
@@ -292,8 +292,8 @@ public:
 
 		version = *reinterpret_cast<int*>(data);
 		signature = *reinterpret_cast<int*>(data + 4);
-		hash_string = std::wstring(data + 76, data + 80);
-		filename = std::wstring((wchar_t*)data + 8);
+		hash_string = std::wstring(data + 76, data + 80).data();
+		filename = std::wstring((wchar_t*)data + 8).data();
 
 		//récupération du hash en std::hexa
 		std::wostringstream temp;

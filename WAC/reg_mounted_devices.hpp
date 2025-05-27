@@ -37,7 +37,7 @@ public:
 			log(2, L"🔥getRegSzValue", hr);
 		}
 
-		drive = std::wstring(szSubValue);
+		drive = std::wstring(szSubValue).data();
 		log(3, L"🔈replaceAll drive");
 		drive = replaceAll(drive, L"\\", L"\\\\");
 		log(1, L"➕Drive " + drive);

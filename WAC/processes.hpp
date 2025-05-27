@@ -33,7 +33,7 @@ struct Process {
 		DWORD returnSize = 0;
 		LPWSTR lpsid_wstring = NULL;
 
-		processName = std::wstring(pe32->szExeFile);
+		processName = std::wstring(pe32->szExeFile).data();
 		processId = pe32->th32ProcessID;
 
 		log(2, L"❇️Process Name : " + processName + L" (PID " + std::to_wstring(processId) + L")");
@@ -48,7 +48,7 @@ struct Process {
 			if (GetTokenInformation(tokenHandle, TokenOwner, infos, returnSize, &returnSize)) { // get data
 				log(3, L"🔈ConvertSidToStringSid");
 				if (ConvertSidToStringSid(((PTOKEN_OWNER)infos)->Owner, &lpsid_wstring) != 0) {
-					processSID = std::wstring(lpsid_wstring);
+					processSID = std::wstring(lpsid_wstring).data();
 					log(3, L"🔈getNameFromSid lpsid_wstring");
 					processSidName = getNameFromSid(processSID);
 				}
@@ -116,7 +116,7 @@ struct Process {
 		// and display information about each module
 
 		do {
-			std::wstring temp = std::wstring(me32.szExePath);
+			std::wstring temp = std::wstring(me32.szExePath).data();
 			log(3, L"🔈replaceAll szExePath");
 			temp = replaceAll(temp, L"\\", L"\\\\");
 			log(2, L"❇️Module exePath : " + temp);

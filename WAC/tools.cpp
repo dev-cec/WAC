@@ -447,7 +447,7 @@ std::vector<std::wstring> multiWstring_to_vector(LPBYTE data, int size)
 	while (pos < size / sizeof(wchar_t))
 	{
 
-		std::wstring ws = std::wstring(d);
+		std::wstring ws = std::wstring(d).data();
 		pos += ws.length() + 1;//position du premier caractère de la chaîne suivante après le \0 de fin de chaîne de la suivante
 		d += ws.length() + 1;
 		if (!ws.empty()) {
@@ -485,8 +485,8 @@ HRESULT getRegBinaryValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, LPBYTE* p
 		delete[] *pBytes; // on supprime tout buffer passé en paramètre pour ne pas avoir de memory leak;
 	do {
 		*pBytes = new BYTE[*dwSize];
+		memset(*pBytes, 0, *dwSize);
 		log(3, L"🔈ORGetValue");
-		
 		hresult = ORGetValue(key, szSubKey, szValue, &dwType, *pBytes, dwSize); //lecture des données
 	} while (hresult == ERROR_MORE_DATA);
 
@@ -526,7 +526,7 @@ HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, FILETIM
 	// leur type est soit REG_BINARY soi REG_FILETIME(16) 
 	DWORD dwSize = 0;
 	DWORD dwType;
-	LPBYTE pData = new BYTE[dwSize];
+	LPBYTE pData = new BYTE[dwSize+2];
 	HRESULT hresult = 0;
 
 	log(3, L"🔈getRegBinaryValue");
@@ -551,19 +551,18 @@ HRESULT getRegSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::wstring*
 	//les REG_SZ sont stockées sous forme de wchar_t = 16 bit par caractère
 	DWORD dwType = 0;
 	DWORD dwSize = 0;
-	wchar_t* pData = NULL;
-	DWORD nbChar = 0;
+	LPWSTR pData = NULL;
+	size_t nbChar = 0;
 	HRESULT hresult = 0;
 	log(3, L"🔈getRegBinaryValue");
 	hresult = getRegBinaryValue(key, szSubKey, szValue, (LPBYTE*)&pData, &dwSize);
-
-	if (hresult != ERROR_SUCCESS) {
+ 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥getRegBinaryValue", hresult);
 		return hresult;
 	}
 	else {
 		nbChar = dwSize / sizeof(wchar_t);
-		*ws = std::wstring(pData);
+		*ws = std::wstring(pData, pData+nbChar).data();
 	}
 	delete[] pData;
 	return hresult;
@@ -581,16 +580,16 @@ HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::vec
 	int nbChar = 0;
 	log(3, L"🔈getRegBinaryValue");
 	hresult = getRegBinaryValue(key, szSubKey, szValue, (LPBYTE*)&pData, &dwSize);
-
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥getRegBinaryValue", hresult);
 		return hresult;
 	}
 	else {
 		DWORD pos = 0;
+		nbChar = dwSize / sizeof(wchar_t);
 		while (pos < nbChar)
 		{
-			std::wstring ws = std::wstring((LPWSTR)(pData), (LPWSTR)(pData)+nbChar);
+			std::wstring ws = std::wstring((LPWSTR)(pData)).data();
 			if (!ws.empty()) out->push_back(ws);
 			pos += ws.length() + 1;//position du premier caractère de la chaîne suivante après le \0 de fin de chaîne de la suivante
 		}

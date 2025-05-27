@@ -208,7 +208,7 @@ public:
 			int relativePath_offset = stringData_offset;
 			if (flags.HasName == true) {
 				namestring_size = *reinterpret_cast<unsigned short int*>(buffer + nameString_offset);
-				description = std::wstring((wchar_t*)(buffer + stringData_offset + 2));
+				description = std::wstring((wchar_t*)(buffer + stringData_offset + 2)).data();
 				log(3, L"🔈replaceAll description");
 				description = replaceAll(description, L"\\", L"\\\\");//escape \ in std::string
 				relativePath_offset = nameString_offset + 2 + namestring_size * 2;
@@ -221,7 +221,7 @@ public:
 			int workingDirectory_offset = relativePath_offset;
 			if (flags.HasRelativePath == true) {
 				relativePath_size = *reinterpret_cast<unsigned short int*>(buffer + relativePath_offset);
-				relativePath = std::wstring((wchar_t*)(buffer + relativePath_offset + 2));
+				relativePath = std::wstring((wchar_t*)(buffer + relativePath_offset + 2)).data();
 				log(3, L"🔈replaceAll relativePath");
 				relativePath = replaceAll(relativePath, L"\\", L"\\\\");//escape \ in std::string
 				workingDirectory_offset = relativePath_offset + 2 + relativePath_size * 2;
@@ -232,7 +232,7 @@ public:
 			int arguments_offset = workingDirectory_offset;
 			if (flags.HasWorkingDir == true) {
 				workingDirectory_size = *reinterpret_cast<unsigned short int*>(buffer + workingDirectory_offset);
-				workingDirectory = std::wstring((wchar_t*)(buffer + workingDirectory_offset + 2));
+				workingDirectory = std::wstring((wchar_t*)(buffer + workingDirectory_offset + 2)).data();
 				log(3, L"🔈replaceAll workingDirectory");
 				workingDirectory = replaceAll(workingDirectory, L"\\", L"\\\\");//escape \ in std::string
 				arguments_offset = workingDirectory_offset + 2 + workingDirectory_size * 2;
@@ -244,7 +244,7 @@ public:
 			int iconLocation_offset = arguments_offset;
 			if (flags.HasArguments == true) {
 				arguments_size = *reinterpret_cast<unsigned short int*>(buffer + workingDirectory_offset);
-				arguments = std::wstring((wchar_t*)(buffer + arguments_offset + 2));
+				arguments = std::wstring((wchar_t*)(buffer + arguments_offset + 2)).data();
 				log(3, L"🔈replaceAll arguments");
 				arguments = replaceAll(arguments, L"\\", L"\\\\");//escape \ in std::string
 				arguments = replaceAll(arguments, L"\"", L"\\\"");//escape " in std::string
@@ -256,7 +256,7 @@ public:
 			unsigned short int iconLocation_size = 0;
 			if (flags.HasIconLocation == true) {
 				iconLocation_size = *reinterpret_cast<unsigned short int*>(buffer + iconLocation_offset);
-				iconLocation = std::wstring((wchar_t*)(buffer + iconLocation_offset + 2));
+				iconLocation = std::wstring((wchar_t*)(buffer + iconLocation_offset + 2)).data();
 				log(3, L"🔈replaceAll iconLocation");
 				iconLocation = replaceAll(iconLocation, L"\\", L"\\\\");//escape \ in std::string
 			}

@@ -20,7 +20,7 @@ std::wstring VariantType_to_wstring(PEVT_VARIANT data) {
 
 	switch (data->Type) {
 	case EvtVarTypeString: {
-		std::wstring temp = std::wstring(data->StringVal);
+		std::wstring temp = std::wstring(data->StringVal).data();
 		log(3, L"🔈replaceAll EvtVarTypeString");
 		temp = replaceAll(temp, L"\\", L"\\\\");
 		temp = replaceAll(temp, L"\"", L"\\\"");
@@ -31,7 +31,7 @@ std::wstring VariantType_to_wstring(PEVT_VARIANT data) {
 		break;
 	}
 	case EvtVarTypeAnsiString: {
-		std::wstring temp = string_to_wstring(std::string(data->AnsiStringVal));
+		std::wstring temp = string_to_wstring(std::string(data->AnsiStringVal)).data();
 		log(3, L"🔈replaceAll EvtVarTypeAnsiString");
 		temp = replaceAll(temp, L"\\", L"\\\\");
 		temp = replaceAll(temp, L"\"", L"\\\"");
@@ -127,7 +127,7 @@ std::wstring VariantType_to_wstring(PEVT_VARIANT data) {
 	case 129: { // ARRAY STRING
 		std::wstring result = L"";
 		for (DWORD iElement = 0; iElement < data->Count; iElement++) {
-			std::wstring temp = std::wstring(data->StringArr[iElement]);
+			std::wstring temp = std::wstring(data->StringArr[iElement]).data();
 			log(3, L"🔈replaceAll ARRAY STRING");
 			temp = replaceAll(temp, L"\\", L"\\\\");
 			temp = replaceAll(temp, L"\"", L"\\\"");
@@ -349,7 +349,7 @@ struct Event {
 			}
 			else {
 				status = ERROR_SUCCESS;
-				std::wstring temp = std::wstring(bufferMessage);
+				std::wstring temp = std::wstring(bufferMessage).data();
 				log(3, L"🔈replaceAll evtEventMessage");
 				temp = replaceAll(temp, L"\\", L"\\\\");
 				temp = replaceAll(temp, L"\"", L"\\\"");

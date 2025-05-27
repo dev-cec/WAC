@@ -144,7 +144,7 @@ struct ScheduledTask {
 				log(3, L"🔈ConvertSidToStringSidW info4");
 				ConvertSidToStringSidW(info4->usri4_user_sid, &tempSid);
 				log(3, L"🔈runAsSid info4");
-				runAsSid = std::wstring(tempSid);
+				runAsSid = std::wstring(tempSid).data();
 				NetApiBufferFree(info4);
 			}
 		}

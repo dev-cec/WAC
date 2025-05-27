@@ -71,7 +71,7 @@ struct Directory {
 	*/
 	Directory(LPBYTE data) {
 		nameLength = *reinterpret_cast<short int*>(data + 64);
-		name = std::wstring((wchar_t*)(data));
+		name = std::wstring((wchar_t*)(data)).data();
 		log(3, L"🔈getType type");
 		type = getType(data[66]);
 		log(3, L"🔈getNodeColor nodeColor");
@@ -164,7 +164,7 @@ struct DestFile {
 		}
 		pinStatus = *reinterpret_cast<int*>(buffer + 108);
 		pathObjectSize = *reinterpret_cast<unsigned short int*>(buffer + 128);
-		pathObject = std::wstring((wchar_t*)(buffer + 130));
+		pathObject = std::wstring((wchar_t*)(buffer + 130)).data();
 		size = 130 + pathObjectSize * 2 + 4; // +2 fin de chaîne +2 Unknown 
 	};
 

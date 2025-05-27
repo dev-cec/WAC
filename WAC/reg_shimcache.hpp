@@ -83,12 +83,12 @@ public:
 		int offset = *reinterpret_cast<int*>(pData);
 		while (offset < dwSize) {
 			Shimcache shimcache;
-			std::wstring signature = std::wstring(pData + offset, pData + offset + 4);
+			std::wstring signature = std::wstring(pData + offset, pData + offset + 4).data();
 			if (signature == L"10ts") {
 				offset += 12;//unused
 				short int name_length = *reinterpret_cast<short int*>(pData + offset);
 				offset += 2;
-				shimcache.path = std::wstring((LPWSTR)(pData + offset), (LPWSTR)(pData + offset) + name_length / sizeof(wchar_t));
+				shimcache.path = std::wstring((LPWSTR)(pData + offset), (LPWSTR)(pData + offset) + name_length / sizeof(wchar_t)).data();
 
 				//calcul hash avant escape
 				char appdata[MAX_PATH];

@@ -143,7 +143,7 @@ HRESULT GetSnapshots(VSS_ID* snapshotSetId, IVssBackupComponents* pBackup)
 									log(3, L"🔈StringFromCLSID");
 									result = StringFromCLSID(prop.m_SnapshotId, &guidString);
 									log(2, L"❇️Snapshot id : " + std::wstring(guidString));
-									conf.mountpoint = std::wstring(L"C:\\Windows\\temp\\") + std::wstring(guidString);
+									conf.mountpoint = std::wstring(L"C:\\Windows\\temp\\" + std::wstring(guidString)).data();
 									//*mountpoint = (std::wstring(L"C:\\windows\\temp\\") + std::wstring((wchar_t*)guidString)).c_str();
 									log(3, L"🔈CreateSymbolicLink");
 									if (CreateSymbolicLink(conf.mountpoint.c_str(), snapVol, SYMBOLIC_LINK_FLAG_DIRECTORY) == 0) {

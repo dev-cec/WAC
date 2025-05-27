@@ -35,8 +35,8 @@ struct ServiceStruct
 		DWORD bufSize = 0;
 		DWORD moreBytesNeeded;
 
-		serviceName = std::wstring(service.lpServiceName);
-		serviceDisplayName = std::wstring(service.lpDisplayName);
+		serviceName = std::wstring(service.lpServiceName).data();
+		serviceDisplayName = std::wstring(service.lpDisplayName).data();
 		log(1, L"➕Service");
 		log(2, L"❇️Service name : " + serviceDisplayName);
 		log(3, L"🔈serviceType_to_wstring");
@@ -55,10 +55,10 @@ struct ServiceStruct
 			if (QueryServiceConfigW(hService, sData, bufSize, &moreBytesNeeded)) { //get service info
 				log(3, L"🔈serviceStart_to_wstring");
 				serviceStartType = serviceStart_to_wstring(sData->dwStartType);
-				serviceOwner = std::wstring(sData->lpServiceStartName);
+				serviceOwner = std::wstring(sData->lpServiceStartName).data();
 				log(3, L"🔈replaceAll lpServiceStartName");
 				serviceOwner = replaceAll(serviceOwner, L"\\", L"\\\\");
-				serviceBinary = std::wstring(sData->lpBinaryPathName);
+				serviceBinary = std::wstring(sData->lpBinaryPathName).data();
 
 				//calcul hash avant escape
 				char appdata[MAX_PATH];

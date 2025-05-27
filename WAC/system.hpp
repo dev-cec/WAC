@@ -61,7 +61,7 @@ struct SystemInfo {
 				computerName = L"";
 			}
 			else
-				computerName = std::wstring(buffer);
+				computerName = std::wstring(buffer).data();
 			free(buffer);
 		} while (GetLastError() == ERROR_MORE_DATA);
 		log(2, L"❇️Computer name : " + computerName);
@@ -77,7 +77,7 @@ struct SystemInfo {
 				domainName = L"";
 			}
 			else
-				domainName = std::wstring(buffer);
+				domainName = std::wstring(buffer).data();
 			free(buffer);
 		} while (GetLastError() == ERROR_MORE_DATA);
 
@@ -93,8 +93,8 @@ struct SystemInfo {
 		int r = GetDynamicTimeZoneInformation(&timezoneInformations);
 		if (r != 0) {
 			if (r != 0) {
-				currentTimeZoneCaption = std::wstring(timezoneInformations.StandardName);
-				currentTimeZone = std::wstring(timezoneInformations.TimeZoneKeyName);
+				currentTimeZoneCaption = std::wstring(timezoneInformations.StandardName).data();
+				currentTimeZone = std::wstring(timezoneInformations.TimeZoneKeyName).data();
 				if (r==2) {//si heure d'été actif
 					daylightInEffect = true;
 					currentBias = timezoneInformations.Bias + timezoneInformations.DaylightBias;
@@ -133,7 +133,7 @@ struct SystemInfo {
 				if (ntStatus == 0)//STATUS_SUCCESS
 				{
 					version = std::to_wstring(ovi.dwMajorVersion) + L"." + std::to_wstring(ovi.dwMinorVersion) + L"." + std::to_wstring(ovi.dwBuildNumber);
-					servicePack = std::wstring(ovi.szCSDVersion);
+					servicePack = std::wstring(ovi.szCSDVersion).data();
 				}
 			}
 			else
@@ -154,7 +154,7 @@ struct SystemInfo {
 			log(3, L"🔈Appel de GetProcAddress");
 			(FARPROC&)pfnBrandingFormatString = GetProcAddress(hMod, "BrandingFormatString");
 			if (pfnBrandingFormatString)
-				osName = std::wstring(pfnBrandingFormatString(L"%WINDOWS_LONG%"));
+				osName = std::wstring(pfnBrandingFormatString(L"%WINDOWS_LONG%")).data();
 			else
 				log(2, L"🔥Chargement de BrandingFormatString", GetLastError());
 			FreeLibrary(hMod);

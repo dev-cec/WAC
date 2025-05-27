@@ -342,7 +342,7 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 		*pos += 4;
 	}
 	else if (valueType == VT_BSTR) {    // VT_BSTR
-		*value = std::wstring((wchar_t*)(buffer + *pos + 4));
+		*value = std::wstring((wchar_t*)(buffer + *pos + 4)).data();
 		log(3, L"🔈replaceAll value");
 		*value = replaceAll(*value, L"\\", L"\\\\"); //escape \ in std::string like path
 		*pos += 4 + value->size() * 2 + 2;
@@ -398,7 +398,7 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 		*pos += 8;
 	}
 	else if (valueType == VT_LPWSTR) {    // VT_LPWSTR(Unicode std::string)
-		*value = std::wstring((wchar_t*)(buffer + *pos + 4));
+		*value = std::wstring((wchar_t*)(buffer + *pos + 4)).data();
 		log(3, L"🔈replaceAll value");
 		*value = replaceAll(*value, L"\\", L"\\\\"); //escape \ in std::string like path
 		*pos += 4 + value->size() * 2;
@@ -486,7 +486,7 @@ void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsig
 		*value = L"VT_STREAM not implemented";
 		unsigned int stringsize = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		*pos += 4;
-		*value = std::wstring((wchar_t*)(buffer + *pos));
+		*value = std::wstring((wchar_t*)(buffer + *pos)).data();
 		*pos += stringsize;
 		*pos += 2;//padding
 		unsigned int steamdatasize = *reinterpret_cast<unsigned int*>(buffer + *pos);
@@ -522,7 +522,7 @@ SPSValue::SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau) {
 		//recherche value
 		unsigned int pos = 13;
 		if (guid == L"{D5CDD505-2E9C-101B-9397-08002B2CF9AE}") {
-			id = std::wstring((wchar_t*)(buffer + 9));
+			id = std::wstring((wchar_t*)(buffer + 9)).data();
 			log(3, L"🔈trans_guid_to_wstring name");
 			name = trans_guid_to_wstring(guid);
 			valueType = *reinterpret_cast<unsigned short int*>(buffer + 9 + id_int); // id_int contient la taille de la std::string 
@@ -704,7 +704,7 @@ Beef0004::Beef0004(LPBYTE buffer, int _niveau, bool* is_zip, bool is_file) {
 	unsigned int off = 18;  //start of data part
 	unsigned short int longNameSize = 0;
 	longNameSize = *reinterpret_cast<unsigned short int*>(buffer + off + 18);
-	longName = std::wstring((wchar_t*)(buffer + off + 28));
+	longName = std::wstring((wchar_t*)(buffer + off + 28)).data();
 	// le contenu des ZIP et autres archives ont un contenu format special, il faut donc identifier les archives.
 	// L'attribut ARCHIVE ne signifie pas ZIP mais "prêt à être archivé" au sens l'explorer
 	std::wstring extension = L"";
@@ -715,7 +715,7 @@ Beef0004::Beef0004(LPBYTE buffer, int _niveau, bool* is_zip, bool is_file) {
 		*is_zip = true;
 	if (longNameSize > longName.size())
 	{
-		localizedName = std::wstring((wchar_t*)(buffer + off + 28 + (longName.size() + 1) * 2));
+		localizedName = std::wstring((wchar_t*)(buffer + off + 28 + (longName.size() + 1) * 2)).data();
 		log(3, L"🔈replaceAll localizedName");
 		localizedName = replaceAll(localizedName, L"\\", L"\\\\");
 	}
@@ -747,7 +747,7 @@ Beef0006::Beef0006(LPBYTE buffer, int _niveau) {
 	int pos = 0;
 	while (*reinterpret_cast<short int*>(buffer + pos) != 0x0000)
 		pos += 1;
-	username = std::wstring((wchar_t*)(buffer + pos + 2));
+	username = std::wstring((wchar_t*)(buffer + pos + 2)).data();
 }
 
 std::wstring Beef0006::to_json(int i) {
@@ -957,7 +957,7 @@ Beef0016::Beef0016(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0016";
-	value = std::wstring((wchar_t*)(buffer + 10));
+	value = std::wstring((wchar_t*)(buffer + 10)).data();
 }
 
 std::wstring Beef0016::to_json(int i) {
@@ -1018,7 +1018,7 @@ Beef001a::Beef001a(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef001a";
-	fileDocumentTypeString = std::wstring((wchar_t*)(buffer + 10));
+	fileDocumentTypeString = std::wstring((wchar_t*)(buffer + 10)).data();
 }
 
 std::wstring Beef001a::to_json(int i) {
@@ -1035,7 +1035,7 @@ Beef001b::Beef001b(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef001b";
-	fileDocumentTypeString = std::wstring((wchar_t*)(buffer + 10));
+	fileDocumentTypeString = std::wstring((wchar_t*)(buffer + 10)).data();
 }
 
 std::wstring Beef001b::to_json(int i) {
@@ -1052,7 +1052,7 @@ Beef001d::Beef001d(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef001d";
-	executable = std::wstring((wchar_t*)(buffer + 10));
+	executable = std::wstring((wchar_t*)(buffer + 10)).data();
 }
 
 std::wstring Beef001d::to_json(int i) {
@@ -1069,7 +1069,7 @@ Beef001e::Beef001e(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef001e";
-	pinType = std::wstring((wchar_t*)(buffer + 10));
+	pinType = std::wstring((wchar_t*)(buffer + 10)).data();
 }
 
 std::wstring Beef001e::to_json(int i) {
@@ -1632,12 +1632,12 @@ UserPropertyView0xC01::UserPropertyView0xC01(LPBYTE buffer, int _niveau) {
 	unsigned int pos = 0x14;//unknown
 	unsigned int wstring1Size = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
-	folder = std::wstring((wchar_t*)(buffer + pos));
+	folder = std::wstring((wchar_t*)(buffer + pos)).data();
 	pos += wstring1Size;
 	pos += 16;//unknown
 	unsigned int wstring2Size = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
-	fullurl = std::wstring((wchar_t*)(buffer + pos));
+	fullurl = std::wstring((wchar_t*)(buffer + pos)).data();
 }
 
 std::wstring UserPropertyView0xC01::to_json(int i) {
@@ -1689,9 +1689,9 @@ UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _nivea
 	int folderName2Size = *reinterpret_cast<unsigned int*>(buffer + 66);
 	int folderIdentifiersize = *reinterpret_cast<unsigned int*>(buffer + 70);
 
-	folderName1 = std::wstring((wchar_t*)(buffer + 74));
-	folderName2 = std::wstring((wchar_t*)(buffer + 74) + folderName1Size);
-	folderIdentifier = std::wstring((wchar_t*)(buffer + 74) + folderName1Size + folderName2Size);
+	folderName1 = std::wstring((wchar_t*)(buffer + 74)).data();
+	folderName2 = std::wstring((wchar_t*)(buffer + 74) + folderName1Size).data();
+	folderIdentifier = std::wstring((wchar_t*)(buffer + 74) + folderName1Size + folderName2Size).data();
 
 	pos = 74 + folderName1Size * 2 + folderName2Size * 2 + folderIdentifiersize * 2;
 	pos += 4;//unknown
@@ -1747,9 +1747,9 @@ UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _nivea
 	int filesystemsize = *reinterpret_cast<unsigned int*>(buffer + 0x2E);
 	int nbGUIDStrings = *reinterpret_cast<unsigned int*>(buffer + 0x32);
 
-	name = std::wstring((wchar_t*)(buffer + 0x36));
-	identifier = std::wstring((wchar_t*)(buffer + 0x36 + namesize * 2));
-	filesystem = std::wstring((wchar_t*)(buffer + 0x36 + namesize * 2 + identifiersize * 2));
+	name = std::wstring((wchar_t*)(buffer + 0x36)).data();
+	identifier = std::wstring((wchar_t*)(buffer + 0x36 + namesize * 2)).data();
+	filesystem = std::wstring((wchar_t*)(buffer + 0x36 + namesize * 2 + identifiersize * 2)).data();
 
 	pos = 0x36 + namesize * 2 + identifiersize * 2 + filesystemsize * 2;
 	for (int x = 0; x < nbGUIDStrings; x++) {
@@ -2035,14 +2035,14 @@ NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _niveau) {
 		int pos = 0x5c;
 		if (descriptionsize > 0)
 		{
-			description = std::wstring((wchar_t*)(buffer + pos));
+			description = std::wstring((wchar_t*)(buffer + pos)).data();
 			log(3, L"🔈replaceAll description");
 			description = replaceAll(description, L"\\", L"\\\\");
 			pos += descriptionsize * 2 + 2;
 		}
 		if (commentssize > 0)
 		{
-			comments = std::wstring((wchar_t*)(buffer + pos));
+			comments = std::wstring((wchar_t*)(buffer + pos)).data();
 			log(3, L"🔈replaceAll comments");
 			comments = replaceAll(comments, L"\\", L"\\\\");
 			pos += commentssize * 2 + 2;
@@ -2086,7 +2086,7 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _niveau) {
 			}
 			else
 				modifiedUtc = { 0 };
-			name = std::wstring((wchar_t*)(buffer + 0x20));
+			name = std::wstring((wchar_t*)(buffer + 0x20)).data();
 		}
 		else { // DATE EN WSTRING
 			log(3, L"🔈wstring_to_filetime modifiedUtc");
@@ -2098,7 +2098,7 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _niveau) {
 			}
 			else
 				modifiedUtc = { 0 };
-			name = std::wstring((wchar_t*)(buffer + 0x5C));
+			name = std::wstring((wchar_t*)(buffer + 0x5C)).data();
 		}
 	}
 	else {
@@ -2135,7 +2135,7 @@ URIShellItem::URIShellItem(LPBYTE buffer, int _niveau) {
 	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	unsigned short int datasize = *reinterpret_cast<unsigned short int*>(buffer + 4);
 	if (datasize == 0) {
-		uri = std::wstring((wchar_t*)(buffer + 8));
+		uri = std::wstring((wchar_t*)(buffer + 8)).data();
 	}
 }
 
@@ -2168,7 +2168,7 @@ FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSiz
 	fsFileAttributes = FileAttributes((unsigned int)*reinterpret_cast<unsigned short int*>(buffer + 12));
 
 	if (fsFlags.IS_UNICODE)  //Unicode
-		fsPrimaryName = std::wstring((wchar_t*)(buffer + 14));
+		fsPrimaryName = std::wstring((wchar_t*)(buffer + 14)).data();
 	else {
 		log(3, L"🔈string_to_wstring fsPrimaryName");
 		fsPrimaryName = string_to_wstring(std::string((char*)(buffer + 14)));

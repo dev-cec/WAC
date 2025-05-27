@@ -186,7 +186,7 @@ public:
 				continue;
 			}
 			size_t offset = 0;
-			mruApp.name = std::wstring((wchar_t*)(pData));
+			mruApp.name = std::wstring((wchar_t*)(pData)).data();
 			offset += mruApp.name.size() * 2 + 2;
 			while (offset < dwSize) {
 				unsigned short int size = *reinterpret_cast<unsigned short int*>(pData + offset);
