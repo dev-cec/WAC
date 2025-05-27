@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstdio>
 #include <windows.h>
+#include <filesystem>
 #include <fstream>
 #include <vector>
 #include <string>
@@ -10,6 +11,7 @@
 #include <sstream>
 #include <sys/stat.h>
 #include "tools.h"
+#include "quickdigest5.hpp"
 
 
 
@@ -64,12 +66,39 @@ struct MFTInformation {
 	}
 };
 
+struct DirStrings {
+	std::wstring dir = L"";//!< original string presents in prefetch
+	std::wstring fullPath = L""; //!< full path on hard drive
+
+	std::wstring to_json(int niveau) {
+		return tab(niveau) + L"{\n"
+			+ tab(niveau + 1) + L"\"Dir\" : \"" + dir + L"\",\n"
+			+ tab(niveau + 1) + L"\"FullPath\" : \"" + fullPath + L"\"\n"
+			+ tab(niveau) + L"\"}";
+	}
+};
+
+struct Filename {
+	std::wstring filename = L"";//!< original string presents in prefetch
+	std::wstring fullPath = L""; //!< full path on hard drive
+	std::wstring md5 = L""; //!< hash md5 of the file
+
+	std::wstring to_json(int niveau) {
+		return tab(niveau) + L"{\n"
+			+ tab(niveau + 1) + L"\"Filename\" : \"" + filename + L"\",\n"
+			+ tab(niveau + 1) + L"\"FullPath\" : \"" + fullPath + L"\",\n"
+			+ tab(niveau + 1) + L"\"Md5\" : \"" + md5 + L"\"\n"
+			+ tab(niveau) + L"\"}";
+	}
+};
+
 struct VolumeInfo {
 	FILETIME creationTime = { 0 }; //!< date de création
 	FILETIME creationTimeUtc = { 0 };//!< date de création au format UTC
 	std::wstring serialNumber = L""; //!< numéro de série du volume
+	std::wstring mountPoint = L""; //!< lettre du point de montage du volume
 	std::wstring deviceName = L""; //!< nom du périphérique
-	std::vector<std::wstring> dirStrings; //!< tableau de strings liées au volume
+	std::vector<DirStrings> dirStrings; //!< tableau de strings liées au volume
 	std::vector<MFTInformation> fileReferences; //!< inutile pour l'investigation numérique
 
 	/*!Constructeur
@@ -94,14 +123,18 @@ struct VolumeInfo {
 		std::wostringstream temp;
 		temp << std::hex << indVolume[19] << indVolume[18] << indVolume[17] << indVolume[16]; // serialnumber in std::hexa little indian
 		serialNumber = temp.str();
-		
+		mountPoint = getVolumeLetter(serialNumber);
 		int dirsOffset = *reinterpret_cast<int*>(indVolume + 28);
 		int nbDirs = *reinterpret_cast<int*>(indVolume + 32);
 		size_t pos = 1;
 		for (int k = 0; k < nbDirs; k++) {
 			std::wstring temp = std::wstring((wchar_t*)(data + dirsOffset) + pos).data();
 			pos += temp.size() + 2;//+2 pour \x0000
-			dirStrings.push_back(temp);
+			DirStrings d;
+			d.dir = temp;
+			d.dir = replaceAll(d.dir, L"\\", L"\\\\");
+			d.fullPath = replaceAll(d.dir, deviceName, mountPoint);
+			dirStrings.push_back(d);
 		}
 
 		int fileRefOffset = *reinterpret_cast<int*>(indVolume + 20);
@@ -127,13 +160,21 @@ struct VolumeInfo {
 		result += tab(i) + L"{\n"
 			+ tab(i + 1) + L"\"DeviceName\":\"" + deviceName + L"\", \n"
 			+ tab(i + 1) + L"\"SerialNumber\":\"" + serialNumber + L"\", \n"
+			+ tab(i + 1) + L"\"MountPoint\":\"" + mountPoint + L"\", \n"
 			+ tab(i + 1) + L"\"CreationTime\":\"" + time_to_wstring(creationTime) + L"\", \n"
 			+ tab(i + 1) + L"\"CreationTimeUtc\":\"" + time_to_wstring(creationTimeUtc) + L"\", \n"
 			+ tab(i + 1) + L"\"NbDirs\":\"" + std::to_wstring(dirStrings.size()) + L"\", \n"
-			+ tab(i + 1) + L"\"Dirs\":" + multiSz_to_json(dirStrings, i + 1) + L"\n";
+			+ tab(i + 1) + L"\"Dirs\":[\n";
+		std::vector<DirStrings>::iterator it;
+		for (it = dirStrings.begin(); it != dirStrings.end(); it++) {
+			result += it->to_json(i + 2);
+			if (it != dirStrings.end() - 1)
+				result += L",";
+			result += L"\n";
+		}
+		result += tab(i + 1) + L"]";
 
 		//File refs n'apporte rien à l'investigation numérique, juste commenter pour le réactiver si besoin
-		//+ tab(i + 1) + L"\"Dirs\":" + multiSz_to_json(dirStrings, i + 1) + L",\n"
 		//+ tab(i + 1) + L"\"FileReferences\":[\n";
 		//std::vector<MFTInformation>::iterator it;
 		//for (it = fileReferences.begin(); it != fileReferences.end(); it++) {
@@ -163,6 +204,8 @@ public:
 	std::wstring pathOriginal = L""; //!< chemin du prefetch sur le disque
 	//HEADER
 	std::wstring filename = L"";//!< nom du fichier
+	std::wstring fullPath = L"";//!< full path du process
+	std::wstring md5 = L"";//!< hash md5 of process
 	int signature = 0; //!< signature du prefetch
 	int version = 0; //!< version du prefetch
 	int size = 0; //!< taille du prefetch
@@ -179,7 +222,7 @@ public:
 	std::wstring hash_string = L"";//!< hash du chemin contenant le prefetch
 
 	//Filename strings
-	std::vector<std::wstring> filenames; //!< liste de nom de fichiers
+	std::vector<Filename> filenames; //!< liste de nom de fichiers
 
 	//volume information
 	std::vector<VolumeInfo> volumes; //!< tableau contenant des information de volumes
@@ -278,7 +321,7 @@ public:
 				CompressionFormatXpressHuff,
 				reinterpret_cast<PUCHAR>(data),
 				decompressed_size,
-				reinterpret_cast<PUCHAR>(buffer+ posBuffer),
+				reinterpret_cast<PUCHAR>(buffer + posBuffer),
 				size,
 				&final_uncompressed_size,
 				workspace);
@@ -288,7 +331,7 @@ public:
 			data = buffer;
 		}
 
-		
+
 
 		version = *reinterpret_cast<int*>(data);
 		signature = *reinterpret_cast<int*>(data + 4);
@@ -301,7 +344,7 @@ public:
 		hash_string = temp.str();
 
 		//verification de la version
-		if (version <30) {
+		if (version < 30) {
 			log(2, L"🔥Prefetch version before 30 not supported", ERROR_INVALID_DATA);
 			return ERROR_INVALID_DATA; // version non prise en charge (<win10)
 		}
@@ -340,13 +383,34 @@ public:
 		else { // new format
 			run_count = *reinterpret_cast<int*>(data + 84 + 116);
 		}
-		//FILENAMES
-		log(3, L"🔈multiWstring_to_vector filenames");
-		filenames = multiWstring_to_vector(data + filename_offset, filename_size);
 		//VOLUMES
 		for (int i = 0; i < nb_volumes; i++) {
 			log(3, L"🔈VolumeInfo");
 			volumes.push_back(VolumeInfo(data + volume_offset, i));
+		}
+		//FILENAMES
+		log(3, L"🔈multiWstring_to_vector filenames");
+		std::vector<std::wstring> tv = multiWstring_to_vector(data + filename_offset, filename_size);
+		for (std::wstring w : tv) {
+			Filename f;
+			f.filename = w.data();
+			f.filename = replaceAll(f.filename, L"\\", L"\\\\").data();
+			for (VolumeInfo v : volumes)
+				if (f.filename.substr(0, 35).compare(v.deviceName) == 0) {
+					f.fullPath = replaceAll(f.filename, v.deviceName, v.mountPoint).data();
+					if (conf.md5) {
+						//Le premier module retourne le exe path
+						log(3, L"🔈fileToHash md5Source");
+						f.md5 = QuickDigest5::fileToHash(wstring_to_string(replaceAll(f.fullPath,L"\\\\",L"\\"))).data();
+					}
+					if (f.fullPath.substr(f.fullPath.find_last_of(L'\\') + 1).compare(filename) == 0) {
+						fullPath = f.fullPath.data();
+						md5 = f.md5;
+					}
+
+					break;
+				}
+			filenames.push_back(f);
 		}
 		delete[] data;
 		delete[] buffer;
@@ -362,28 +426,30 @@ public:
 		std::wstring result = L"";
 
 		result += tab(i) + L"{ \n";
-			result += tab(i + 1) + L"\"Path\":\"" + pathOriginal+ L"\", \n";
-			result += tab(i + 1) + L"\"Filename\":\"" + filename + L"\", \n";
-			result += tab(i + 1) + L"\"Hash\":\"" + hash_string + L"\", \n";
-			log(3, L"🔈time_to_wstring created");
-			result += tab(i + 1) + L"\"Created\":\"" + time_to_wstring(created) + L"\", \n";
-			log(3, L"🔈time_to_wstring createdUtc");
-			result += tab(i + 1) + L"\"CreatedUtc\":\"" + time_to_wstring(createdUtc) + L"\", \n";
-			log(3, L"🔈time_to_wstring modified");
-			result += tab(i + 1) + L"\"Modified\":\"" + time_to_wstring(modified) + L"\", \n";
-			log(3, L"🔈time_to_wstring modifiedUtc");
-			result += tab(i + 1) + L"\"ModifiedUtc\":\"" + time_to_wstring(modifiedUtc) + L"\", \n";
-			log(3, L"🔈time_to_wstring accessed");
-			result += tab(i + 1) + L"\"Accessed\":\"" + time_to_wstring(accessed) + L"\", \n";
-			log(3, L"🔈time_to_wstring accessedUtc");
-			result += tab(i + 1) + L"\"AccessedUtc\":\"" + time_to_wstring(accessedUtc) + L"\", \n";
-			result += tab(i + 1) + L"\"RunCount\":\"" + std::to_wstring(run_count) + L"\", \n";
-			log(3, L"🔈multiFiletime_to_json last_runs");
-			result += tab(i + 1) + L"\"Runs\":" + multiFiletime_to_json(last_runs, i + 1) + L",\n";
-			log(3, L"🔈multiFiletime_to_json last_runsUtc");
-			result += tab(i + 1) + L"\"RunsUtc\":" + multiFiletime_to_json(last_runsUtc, i + 1) + L",\n";
-			result += tab(i + 1) + L"\"NbVolumes\":\"" + std::to_wstring(volumes.size()) + L"\",\n";
-			result += tab(i + 1) + L"\"Volumes\":[\n";
+		result += tab(i + 1) + L"\"Path\":\"" + pathOriginal + L"\", \n";
+		result += tab(i + 1) + L"\"Hash\":\"" + hash_string + L"\", \n";
+		result += tab(i + 1) + L"\"Filename\":\"" + filename + L"\", \n";
+		result += tab(i + 1) + L"\"FullPath\":\"" + fullPath + L"\", \n";
+		result += tab(i + 1) + L"\"Md5\":\"" + md5 + L"\", \n";
+		log(3, L"🔈time_to_wstring created");
+		result += tab(i + 1) + L"\"Created\":\"" + time_to_wstring(created) + L"\", \n";
+		log(3, L"🔈time_to_wstring createdUtc");
+		result += tab(i + 1) + L"\"CreatedUtc\":\"" + time_to_wstring(createdUtc) + L"\", \n";
+		log(3, L"🔈time_to_wstring modified");
+		result += tab(i + 1) + L"\"Modified\":\"" + time_to_wstring(modified) + L"\", \n";
+		log(3, L"🔈time_to_wstring modifiedUtc");
+		result += tab(i + 1) + L"\"ModifiedUtc\":\"" + time_to_wstring(modifiedUtc) + L"\", \n";
+		log(3, L"🔈time_to_wstring accessed");
+		result += tab(i + 1) + L"\"Accessed\":\"" + time_to_wstring(accessed) + L"\", \n";
+		log(3, L"🔈time_to_wstring accessedUtc");
+		result += tab(i + 1) + L"\"AccessedUtc\":\"" + time_to_wstring(accessedUtc) + L"\", \n";
+		result += tab(i + 1) + L"\"RunCount\":\"" + std::to_wstring(run_count) + L"\", \n";
+		log(3, L"🔈multiFiletime_to_json last_runs");
+		result += tab(i + 1) + L"\"Runs\":" + multiFiletime_to_json(last_runs, i + 1) + L",\n";
+		log(3, L"🔈multiFiletime_to_json last_runsUtc");
+		result += tab(i + 1) + L"\"RunsUtc\":" + multiFiletime_to_json(last_runsUtc, i + 1) + L",\n";
+		result += tab(i + 1) + L"\"NbVolumes\":\"" + std::to_wstring(volumes.size()) + L"\",\n";
+		result += tab(i + 1) + L"\"Volumes\":[\n";
 		std::vector<VolumeInfo>::iterator it;
 		for (it = volumes.begin(); it != volumes.end(); it++) {
 			result += it->to_json(i + 2);
@@ -393,8 +459,15 @@ public:
 		}
 		result += tab(i + 1) + L"],\n";
 		result += tab(i + 1) + L"\"NbFilesStrings\":\"" + std::to_wstring(filenames.size()) + L"\",\n";
-		log(3, L"🔈multiSz_to_json filenames");
-		result += tab(i + 1) + L"\"FilesStrings\":" + multiSz_to_json(filenames, i + 1) + L"\n";
+		result += tab(i + 1) + L"\"FilesStrings\":[\n";
+		std::vector<Filename>::iterator it2;
+		for (it2 = filenames.begin(); it2 != filenames.end(); it2++) {
+			result += it2->to_json(i + 2);
+			if (it2 != filenames.end() - 1)
+				result += L",";
+			result += L"\n";
+		}
+		result += tab(i + 1) + L"]\n";
 		result += tab(i) + L"}";
 		return result;
 	}
@@ -456,7 +529,7 @@ struct Prefetchs {
 		result += L"]";
 		//enregistrement dans fichier json
 		std::filesystem::create_directory(conf._outputDir); //crée le repertoire, pas d'erreur s'il existe déjà
-		myfile.open(conf._outputDir +"/prefetchs.json");
+		myfile.open(conf._outputDir + "/prefetchs.json");
 		myfile << ansi_to_utf8(result);
 		myfile.close();
 

@@ -328,3 +328,10 @@ HRESULT getRegboolValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, bool* pbool
 * @return ERROR_SUCCESS en cas de succès sinon un code erreur.
 */
 HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::vector<std::wstring>* out);
+
+
+/*! Lecture d'un MULTISZ (multiple chaînes de caractères concaténées) en base de registre
+* @param searchSerial serial du volume a rechercher
+* @return wstring lettre de lecteur du point de montage du lecteur.
+*/
+std::wstring getVolumeLetter(std::wstring searchSerial);
