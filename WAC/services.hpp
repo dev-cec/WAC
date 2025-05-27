@@ -24,6 +24,7 @@ struct ServiceStruct
 	std::wstring serviceStartType = L"";
 	std::wstring serviceOwner = L"";
 	std::wstring serviceBinary = L"";
+	std::wstring serviceMd5 = L"";
 	std::wstring serviceAccessMessage = L"OK";
 
 	/*! Constructeur
@@ -58,6 +59,25 @@ struct ServiceStruct
 				log(3, L"🔈replaceAll lpServiceStartName");
 				serviceOwner = replaceAll(serviceOwner, L"\\", L"\\\\");
 				serviceBinary = std::wstring(sData->lpBinaryPathName);
+
+				//calcul hash avant escape
+				char appdata[MAX_PATH];
+				log(3, L"🔈replaceAll temp");
+				std::wstring wp(replaceAll(serviceBinary, L"\"", L""));
+				log(3, L"🔈wstring_to_string p");
+				std::string p = wstring_to_string(wp); // remove " in path
+				//retrait des options dans la ligne de commande
+				size_t pos = p.find(" -");
+				p=p.substr(0, pos);
+				pos = p.find(" /");
+				p = p.substr(0, pos);
+
+				log(3, L"🔈ExpandEnvironmentStringsA command");
+				ExpandEnvironmentStringsA(p.c_str(), appdata, MAX_PATH); // replace env variable by their value in path
+
+				log(3, L"🔈fileToHash " + serviceBinary);
+				serviceMd5 = QuickDigest5::fileToHash(appdata); // calcul hash
+
 				log(3, L"🔈replaceAll serviceBinary");
 				serviceBinary = replaceAll(serviceBinary, L"\\", L"\\\\");
 				serviceBinary = replaceAll(serviceBinary, L"\"", L"\\\"");
@@ -91,7 +111,8 @@ struct ServiceStruct
 		result += tab(2) + L"\"AccessMessage\":\"" + serviceAccessMessage + L"\", \n";
 		result += tab(2) + L"\"StartType\":\"" + serviceStartType + L"\", \n";
 		result += tab(2) + L"\"Owner\":\"" + serviceOwner + L"\", \n";
-		result += tab(2) + L"\"Binary\":\"" + serviceBinary + L"\" \n";
+		result += tab(2) + L"\"Binary\":\"" + serviceBinary + L"\", \n";
+		result += tab(2) + L"\"MD5\":\"" + serviceMd5 + L"\" \n";
 		result += tab(1) + L"}";
 		return result;
 	}
