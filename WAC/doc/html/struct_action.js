@@ -5,5 +5,6 @@ var struct_action =
     [ "classId", "struct_action.html#af1fdaf541114523c6fc64161de0d7c55", null ],
     [ "command", "struct_action.html#a5ddd0fe6b5957d3550123542c9455a73", null ],
     [ "data", "struct_action.html#a59d1be201b4640f32ca91b336c4ae304", null ],
+    [ "md5", "struct_action.html#a69358bcbd9328fbf8d5fad29711a5d30", null ],
     [ "type", "struct_action.html#ab393b219bee68b020ba803b0181cc36a", null ]
 ];

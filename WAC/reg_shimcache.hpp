@@ -80,7 +80,7 @@ public:
 			log(2, L"🔥getRegBinaryValue AppCompatCache", hresult );
 			return hresult;
 		}
-		int offset = *reinterpret_cast<int*>(pData);
+		DWORD offset = *reinterpret_cast<DWORD*>(pData);
 		while (offset < dwSize) {
 			Shimcache shimcache;
 			std::wstring signature = std::wstring(pData + offset, pData + offset + 4).data();
@@ -91,15 +91,15 @@ public:
 				shimcache.path = std::wstring((LPWSTR)(pData + offset), (LPWSTR)(pData + offset) + name_length / sizeof(wchar_t)).data();
 
 				//calcul hash avant escape
-				char appdata[MAX_PATH];
+				char appdata[MAX_PATH]="";
 				log(3, L"🔈replaceAll temp");
 				std::wstring wp(replaceAll(shimcache.path, L"\"", L""));
 				log(3, L"🔈wstring_to_string p");
 				std::string p = wstring_to_string(wp); // remove " in path
-
-				log(3, L"🔈fileToHash " + shimcache.path);
-				shimcache.md5 = QuickDigest5::fileToHash(p); // calcul hash
-
+				if (conf.md5) {
+					log(3, L"🔈fileToHash " + shimcache.path);
+					shimcache.md5 = QuickDigest5::fileToHash(p); // calcul hash
+				}
 				log(3, L"🔈replaceAll path");
 				shimcache.path = replaceAll(shimcache.path, L"\\", L"\\\\");
 				shimcache.path = replaceAll(shimcache.path, L"\t", L" "); // replace tab by space. seen in values

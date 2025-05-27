@@ -163,12 +163,5 @@ public:
      */
     static std::wstring fileToHash(const std::string& filepath);
 
-    /**
-    * @brief Computes the MD5 hash of a LPBYTES buffer and returns it as a hex string.
-    *
-    * @param buffer the buffer to hash.
-    * @return A string representing the MD5 hash in hexadecimal format.
-    */
-    static std::wstring bufferToHash(const char* buffer);
 };
 

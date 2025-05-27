@@ -8,6 +8,7 @@ var struct_appli_conf =
     [ "hConsole", "struct_appli_conf.html#a35d53149047512b1e19581415c79bdcd", null ],
     [ "log", "struct_appli_conf.html#ac9cea4573fac59eb9a52ad2a3b349733", null ],
     [ "loglevel", "struct_appli_conf.html#a2087631ac415bdd43de5ad3b5f704076", null ],
+    [ "md5", "struct_appli_conf.html#a669112dd619d8243b6cc14c50075e038", null ],
     [ "mountpoint", "struct_appli_conf.html#a9968074249a92e938580e34c7769e46d", null ],
     [ "name", "struct_appli_conf.html#a3fa41463d0f70cba7c29ef7b8b73f308", null ],
     [ "profiles", "struct_appli_conf.html#acebd5e49e779376202a9766407664256", null ],

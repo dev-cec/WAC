@@ -4,6 +4,8 @@ var struct_mru =
     [ "to_json", "struct_mru.html#a3d7dee95aec47ef92dd3f640fe4814a6", null ],
     [ "extension", "struct_mru.html#abe65ffa5426b7737af0da5c543ae2a50", null ],
     [ "id", "struct_mru.html#af746689a9e8341c4b48f5b00909a6bfa", null ],
+    [ "lastWriteTime", "struct_mru.html#a6708b5e9b85561d50a1af0fbc4e9ce69", null ],
+    [ "lastWriteTimeUtc", "struct_mru.html#a007169e2fd0ba8eca5f9ab72aea9c9cb", null ],
     [ "niveau", "struct_mru.html#abe6fab6e3a85adc69c5226c33c28e9f9", null ],
     [ "shellitems", "struct_mru.html#a5b55535156fbf53e5c4ac76000a4c8f8", null ],
     [ "sid", "struct_mru.html#a999b39c93359008e952e8ffc18430784", null ],

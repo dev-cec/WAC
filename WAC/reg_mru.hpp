@@ -79,14 +79,12 @@ public:
 		log(0, L"*******************************************************************************************************************");
 
 		HRESULT hresult = NULL;
-		ORHKEY hKey;
-		ORHKEY hSubKey;
-		DWORD nSubkeys;
-		DWORD nValues, dType;
-		WCHAR szValue[MAX_VALUE_NAME];
-		WCHAR szSubKey[MAX_VALUE_NAME];
-		DWORD nSize = 0;
-		ORHKEY Offhive;
+		ORHKEY hKey = NULL;
+		ORHKEY hSubKey=NULL;
+		ORHKEY Offhive=NULL;
+		DWORD nSubkeys=0, nValues=0, dType=0, nSize = 0;
+		WCHAR szValue[MAX_VALUE_NAME] = L"";
+		WCHAR szSubKey[MAX_VALUE_NAME] = L"";
 		std::wstring ruche = L"";
 		niveau = _niveau;
 		//HKEY_USERS
@@ -153,7 +151,7 @@ public:
 	*/
 	HRESULT parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vector<Mru>* Mrus, unsigned int niveau, bool _Parentiszip, std::wstring extension) {
 		HRESULT hresult = NULL;
-		ORHKEY hKeyChilds;
+		ORHKEY hKeyChilds = NULL;
 		std::vector<unsigned int> ids;
 		LPBYTE pData = NULL;
 		FILETIME lastWriteTimeUtc = { 0 };

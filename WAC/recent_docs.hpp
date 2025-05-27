@@ -164,8 +164,10 @@ public:
 				target = string_to_wstring(targetPath);
 				log(3, L"🔈replaceAll target");
 				target = replaceAll(target, L"\\", L"\\\\"); ; // escape \ in std::string
-				log(3, L"🔈fileToHash md5Target " + string_to_wstring(targetPath));
-				md5Target = QuickDigest5::fileToHash((char*)(buffer + LinkInfo_offset + LocalPath_offset));
+				if (conf.md5) {
+					log(3, L"🔈fileToHash md5Target " + string_to_wstring(targetPath));
+					md5Target = QuickDigest5::fileToHash((char*)(buffer + LinkInfo_offset + LocalPath_offset));
+				}
 				//-------------------------------------------------------------------------
 				// Common Network Relative Link info:
 				//-------------------------------------------------------------------------
@@ -295,8 +297,10 @@ public:
 				LPBYTE buffer = new BYTE[size];
 				file.read(reinterpret_cast<CHAR*>(buffer), size);
 				file.close();
-				log(3, L"🔈fileToHash md5Source " + _path.wstring());
-				md5Source = QuickDigest5::fileToHash(_path.string());
+				if (conf.md5) {
+					log(3, L"🔈fileToHash md5Source " + _path.wstring());
+					md5Source = QuickDigest5::fileToHash(_path.string());
+				}
 				log(3, L"🔈parseLNK");
 				parseLNK(buffer);
 				delete[] buffer;
@@ -356,10 +360,10 @@ public:
 		log(2, L"❇️RecentDoc path " + path_original);
 		log(3, L"🔈replaceAll path_original");
 		path_original = replaceAll(path_original, L"\\", L"\\\\");//escape \ in std::wstring
-		
-		log(3, L"🔈fileToHash md5Source " + _path);
-		md5Source = QuickDigest5::fileToHash(wstring_to_string(_path));
-
+		if (conf.md5) {
+			log(3, L"🔈fileToHash md5Source " + _path);
+			md5Source = QuickDigest5::fileToHash(wstring_to_string(_path));
+		}
 		target = L"";
 		log(3, L"🔈parseLNK");
 		parseLNK(buffer);

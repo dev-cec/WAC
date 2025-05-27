@@ -34,6 +34,7 @@ struct AppliConf {
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);//!< Handle de la console
 	std::wofstream log;//!< handle sur le fichier de log de sortie pour mode debug
 	int loglevel = 0; //!< niveau de journalisation (0 par defaut) definit par la ligne de commande
+	bool md5;//!< if true, calcul hash md5 of files in artefacts
 };
 
 extern AppliConf conf;// variable globale pour la conf de l'application

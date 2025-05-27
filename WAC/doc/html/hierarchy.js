@@ -83,6 +83,7 @@ var hierarchy =
     [ "Process", "struct_process.html", null ],
     [ "Processes", "struct_processes.html", null ],
     [ "Property", "struct_property.html", null ],
+    [ "QuickDigest5", "class_quick_digest5.html", null ],
     [ "RecentDoc", "struct_recent_doc.html", null ],
     [ "RecentDocs", "struct_recent_docs.html", null ],
     [ "Run", "struct_run.html", null ],

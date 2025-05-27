@@ -208,7 +208,7 @@ public:
 
 		file.unsetf(std::ios::skipws);
 		file.seekg(0, std::ios::end);
-		const ULONG size = file.tellg();
+		const ULONG size = (ULONG)file.tellg();
 		file.seekg(0, std::ios::beg);
 		buffer = new BYTE[size];
 		file.read(reinterpret_cast<char*>(buffer), size);

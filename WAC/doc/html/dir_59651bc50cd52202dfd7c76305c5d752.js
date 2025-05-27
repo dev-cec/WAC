@@ -11,6 +11,8 @@ var dir_59651bc50cd52202dfd7c76305c5d752 =
     [ "oleparser.hpp", "oleparser_8hpp.html", "oleparser_8hpp" ],
     [ "prefetchs.hpp", "prefetchs_8hpp.html", "prefetchs_8hpp" ],
     [ "processes.hpp", "processes_8hpp.html", "processes_8hpp" ],
+    [ "quickdigest5.cpp", "quickdigest5_8cpp.html", null ],
+    [ "quickdigest5.hpp", "quickdigest5_8hpp.html", "quickdigest5_8hpp" ],
     [ "ReadLnkFile.cpp", "_read_lnk_file_8cpp.html", "_read_lnk_file_8cpp" ],
     [ "recent_docs.hpp", "recent__docs_8hpp.html", "recent__docs_8hpp" ],
     [ "reg_amcache_application.hpp", "reg__amcache__application_8hpp.html", "reg__amcache__application_8hpp" ],

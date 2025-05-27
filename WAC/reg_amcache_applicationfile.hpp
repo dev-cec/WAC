@@ -39,15 +39,14 @@ public:
 		getRegSzValue(hKey_amcache, nullptr, L"LowerCaseLongPath", &longPath);
 
 		//calcul hash avant escape
-		char appdata[MAX_PATH];
 		log(3, L"🔈replaceAll temp");
 		std::wstring wp(replaceAll(longPath, L"\"", L""));
 		log(3, L"🔈wstring_to_string p");
 		std::string p = wstring_to_string(wp); // remove " in path
-
-		log(3, L"🔈fileToHash " + longPath);
-		md5 = QuickDigest5::fileToHash(p); // calcul hash
-
+		if (conf.md5) {
+			log(3, L"🔈fileToHash " + longPath);
+			md5 = QuickDigest5::fileToHash(p); // calcul hash
+		}
 
 		log(3, L"🔈replaceAll LongPath");
 		longPath = replaceAll(longPath, L"\\", L"\\\\"); // escape \ in std::string

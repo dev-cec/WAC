@@ -4,6 +4,8 @@ var struct_shellbag =
     [ "to_json", "struct_shellbag.html#aaaeb782744f84b2f5cb0f935f7afb5f6", null ],
     [ "childs", "struct_shellbag.html#a2043681af0c230a086f829280dfa79cd", null ],
     [ "id", "struct_shellbag.html#ab11dbf19048320459e11fe43dd69c469", null ],
+    [ "lastWriteTime", "struct_shellbag.html#afba84f7be99c60cd00b265e1f9ba3bf0", null ],
+    [ "lastWriteTimeUtc", "struct_shellbag.html#ad790ebcca27e10789ed30cca109a4bef", null ],
     [ "niveau", "struct_shellbag.html#a3349c5392ba5c7e6a8657ae6d0043584", null ],
     [ "Parent", "struct_shellbag.html#a449a1a9f7f6c6b0bfdc1eea5e928f58c", null ],
     [ "shellitems", "struct_shellbag.html#a1ee7509fb181b2a5f103da4aee7c4e07", null ],

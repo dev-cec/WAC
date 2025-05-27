@@ -13,7 +13,7 @@ var structole_header =
     [ "sectorSize", "structole_header.html#af42bdcfa5a144f5ae0d9eb9ac53b39e5", null ],
     [ "ShortSATSectors", "structole_header.html#a0a9b15b3c06eee46147b4fb2f1661210", null ],
     [ "shortSectorSize", "structole_header.html#a00d7f21e5bb327d1c3213ca0ddcac1d2", null ],
-    [ "signature", "structole_header.html#a5f52dc86f24c26674e54d65b9e2401c1", null ],
+    [ "signature", "structole_header.html#affeccd731746225f5feb9d03fb43c85b", null ],
     [ "SSATFirstSectorId", "structole_header.html#a4767c5b34d945db43257ac1eee04cd0b", null ],
     [ "totalSATSectors", "structole_header.html#a8d820bf82676eeda34ef7980900cfe72", null ],
     [ "totalSSATSectors", "structole_header.html#a48f7154235d8b1b91a98851a7bf0243e", null ]

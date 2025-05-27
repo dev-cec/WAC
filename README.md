@@ -46,17 +46,18 @@ It extracts various artefacts in **JSON format**, including:
 To minimize disk traces, this standalone tool should be run **as administrator** 🔐 from a USB stick using the command:
 
 ```
-usage: wac [--dump] [--events] [--output=output] [--loglevel=2]
+usage: wac [--dump] [--events] [ --md5] [--output=output] [--loglevel=2]
         --help or /? : show this help
         --dump : add hexa value in json files for shellbags and LNK files
         --events : converts events to json (long time)
+        --md5 : activate hash md5 computing for files referenced in artfacts
         --output=[directory name] : directory name to store output files starting from current directory. By default the directory is 'output'
         --loglevel=[0] : define level of details in logfile and activate logging in wac.log
 
          loglevel = 0 => no logging
-         loglevel = 1 => activate loggin for each artefact type treated
-         loglevel = 2 => activate loggin for each artefact treated
-         loglevel = 3 => activate loggin for each subfunction called (used for debug only)
+         loglevel = 1 => activate logging for each artefact type treated
+         loglevel = 2 => activate logging for each artefact treated
+         loglevel = 3 => activate logging for each subfunction called (used for debug only)
 ```
 
 All options are optional and **disabled by default**.
@@ -93,7 +94,7 @@ Example of extracted system information:
 
 **Default output files are saved in :** 
 - 📁 The `output` directory for standard results  
-- ⚠️ The `errors` directory for logs when using `--debug`
+- ⚠️ The `log` file for logs when using `--loglevel`
 
 ## 🚀 PERFORMANCE
 
@@ -102,6 +103,8 @@ Example of extracted system information:
 | - Intel Core i7-8750 2.20 GHz<br>- 16 Go RAM<br>- Windows 11 home Edition <br>- Installed since 162 days |         ⌛5s        |   ⌛19 min 37s   |
 | - Intel Core i7-8665U 2.11 GHz<br>- 16 Go RAM<br>- Windows 10 Pro 22H2<br>- Installed since 1323 days  |         ⌛9s        |   ⌛1 min 42s   |
  
+**The option --md5 may be pretty long if you have big files on your hard drive, for exemple videos.** 
+
 ## 🧰 BUILD REQUIREMENTS
 
 - Requires **Windows SDK 10** and **Windows WDK 10**  

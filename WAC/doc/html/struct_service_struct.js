@@ -6,6 +6,7 @@ var struct_service_struct =
     [ "serviceAccessMessage", "struct_service_struct.html#a7a0e700362fd5e5d3547becee19aea6b", null ],
     [ "serviceBinary", "struct_service_struct.html#ad6feca349802e0a18f887f2f5ec5b2dc", null ],
     [ "serviceDisplayName", "struct_service_struct.html#ae0c384c5d08c953ca3cad6ca96bf07b6", null ],
+    [ "serviceMd5", "struct_service_struct.html#afb49b276f2eb3088bb96aa3909ecd061", null ],
     [ "serviceName", "struct_service_struct.html#a143f89f9dda1dcfbfb84a6cb9334d78f", null ],
     [ "serviceOwner", "struct_service_struct.html#a3f73d964f88bb0fb94e7ddd99ae89073", null ],
     [ "serviceProcessId", "struct_service_struct.html#ab763f930bdb140f9d2616701f57e8bca", null ],

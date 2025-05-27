@@ -29,10 +29,12 @@ var searchData=
   ['evtsystemversion_26',['evtSystemVersion',['../struct_event.html#a89e7f8872126d5a097648fef704b0530',1,'Event']]],
   ['executable_27',['executable',['../struct_beef001d.html#a799461c2ccb01b3be39fb7032c238b5a',1,'Beef001d']]],
   ['executed_28',['executed',['../struct_shimcache.html#a8b246c0a6d5f4283059b262a333bbefb',1,'Shimcache']]],
-  ['extension_29',['extension',['../struct_mru.html#abe65ffa5426b7737af0da5c543ae2a50',1,'Mru']]],
-  ['extensionblock_30',['extensionBlock',['../struct_users_files_folder.html#a7461473bd28dd38b5b66ea68c7dca2e8',1,'UsersFilesFolder']]],
-  ['extensionblocks_31',['extensionBlocks',['../struct_control_panel.html#a3fbdc5e4169484f32c344d2c30755ac8',1,'ControlPanel::extensionBlocks'],['../struct_control_panel_category.html#aa665eed268d96f4b6f643e4edb3817e9',1,'ControlPanelCategory::extensionBlocks'],['../struct_users_property_view.html#a67374b8244578cd87f9cde43c4eaee51',1,'UsersPropertyView::extensionBlocks'],['../struct_file_entry_shell_item.html#a838897e29fa9773b3b3c2122ceaf3342',1,'FileEntryShellItem::extensionBlocks']]],
-  ['extensionblocks_32',['extensionblocks',['../struct_beef000e.html#abeb4b8cb1794023d71bd29ee46345657',1,'Beef000e']]],
-  ['extensionoffset_33',['extensionOffset',['../struct_users_property_view.html#a22eae8fb892621f9052a769ccd1ddbde',1,'UsersPropertyView']]],
-  ['extensionversion_34',['ExtensionVersion',['../struct_beef0004.html#afb11899bc275cc6593c9eff3741d3cbf',1,'Beef0004']]]
+  ['executiontime_29',['executionTime',['../struct_bam.html#a2d778fb9384e11593ef630ffd93281d2',1,'Bam']]],
+  ['executiontimeutc_30',['executionTimeUtc',['../struct_bam.html#a74647c7edfed15abd55209cef7529e59',1,'Bam']]],
+  ['extension_31',['extension',['../struct_mru.html#abe65ffa5426b7737af0da5c543ae2a50',1,'Mru']]],
+  ['extensionblock_32',['extensionBlock',['../struct_users_files_folder.html#a7461473bd28dd38b5b66ea68c7dca2e8',1,'UsersFilesFolder']]],
+  ['extensionblocks_33',['extensionBlocks',['../struct_control_panel.html#a3fbdc5e4169484f32c344d2c30755ac8',1,'ControlPanel::extensionBlocks'],['../struct_control_panel_category.html#aa665eed268d96f4b6f643e4edb3817e9',1,'ControlPanelCategory::extensionBlocks'],['../struct_users_property_view.html#a67374b8244578cd87f9cde43c4eaee51',1,'UsersPropertyView::extensionBlocks'],['../struct_file_entry_shell_item.html#a838897e29fa9773b3b3c2122ceaf3342',1,'FileEntryShellItem::extensionBlocks']]],
+  ['extensionblocks_34',['extensionblocks',['../struct_beef000e.html#abeb4b8cb1794023d71bd29ee46345657',1,'Beef000e']]],
+  ['extensionoffset_35',['extensionOffset',['../struct_users_property_view.html#a22eae8fb892621f9052a769ccd1ddbde',1,'UsersPropertyView']]],
+  ['extensionversion_36',['ExtensionVersion',['../struct_beef0004.html#afb11899bc275cc6593c9eff3741d3cbf',1,'Beef0004']]]
 ];

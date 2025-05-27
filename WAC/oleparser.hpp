@@ -501,8 +501,8 @@ struct oleParser {
 		std::vector<int>retBytes;
 		for (int i : runInfo)
 		{
-			int index = 512 + sectorSize * i; //header + relative offset
-			int readSize = sectorSize;
+			size_t index = 512 + sectorSize * i; //header + relative offset
+			size_t readSize = sectorSize;
 			if (bufferSize - index < sectorSize)
 				readSize = bufferSize - index;
 			if (readSize > 0) {
@@ -536,13 +536,13 @@ struct oleParser {
 		for (int i : runInfo)
 		{
 			int index = 512 + sectorSize * i; //header + relative offset
-			int readSize = sectorSize;
+			size_t readSize = sectorSize;
 			if (bufferSize - index < sectorSize)
 				readSize = bufferSize - index;
 			if (readSize > 0) {
 				if (index + readSize > bufferSize)
 					throw std::length_error("file corrupt - Error retrieving data from SAT");
-				for (int x = 0; x < readSize; x++) {
+				for (size_t x = 0; x < readSize; x++) {
 					retBytes.push_back(buffer[index + x]);
 				}
 			}

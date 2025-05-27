@@ -152,7 +152,7 @@ public:
 		}
 
 		log(3, L"🔈getRegBinaryValue hKey\\MRUListEx");
-		hresult == getRegBinaryValue(hKey, L"", L"MRUListEx", &pData, &dwSize);
+		hresult = getRegBinaryValue(hKey, L"", L"MRUListEx", &pData, &dwSize);
 		if (hresult == ERROR_SUCCESS) {
 			while (pos < dwSize) {
 				int id = *reinterpret_cast<int*>(pData + pos);

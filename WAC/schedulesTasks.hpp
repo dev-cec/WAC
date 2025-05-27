@@ -21,8 +21,8 @@
 /*structure représentant une trigger d'une tâche planifiée
 */
 struct Trigger {
-	TASK_TRIGGER_TYPE2 type; //!< type de trigger pour l’exécution de la tâche
-	std::wstring interval=L"";//!< délai entre 2 exécution
+	TASK_TRIGGER_TYPE2 type = TASK_TRIGGER_EVENT; //!< type de trigger pour l’exécution de la tâche
+	std::wstring interval = L"";//!< délai entre 2 exécution
 
 	/* liberation mémoire */
 	void clear() {}
@@ -30,7 +30,7 @@ struct Trigger {
 /*structure représentant une action d'une tâche planifiée
 */
 struct Action {
-	TASK_ACTION_TYPE type; //!< type de l'action au format numérique
+	TASK_ACTION_TYPE type = TASK_ACTION_EXEC; //!< type de l'action au format numérique
 	std::wstring command = L"";//!< ligne de commande exécutée
 	std::wstring md5 = L"";//!< hash md5 de l'executable
 	std::wstring arguments = L"";//!< arguments de la ligne de commande exécutée
@@ -38,7 +38,7 @@ struct Action {
 	std::wstring data = L"";//!< data pour ACTION COM HANDLER
 
 	/*liberation mémoire */
-	void clear(){}
+	void clear() {}
 };
 
 /*structure représentant une tâche planifiée
@@ -76,7 +76,7 @@ struct ScheduledTask {
 		ULONG lFetch = 0; // pour itérer la collection
 		IAction* pAction = NULL; // pour itérer la collection
 		IDispatch* pDisp = NULL; // pour itérer la collection
-		TASK_ACTION_TYPE pType; // pour itérer la collection
+		TASK_ACTION_TYPE pType = TASK_ACTION_EXEC; // pour itérer la collection
 		DATE tempD; // pour itérer la collection
 		SYSTEMTIME tempST; // pour itérer la collection
 		IRegistrationInfo* infos;// pour itérer la collection
@@ -114,7 +114,7 @@ struct ScheduledTask {
 		SystemTimeToFileTime(&tempST, &pNextRunTime);
 		log(3, L"🔈LocalFileTimeToFileTime pNextRunTimeUtc");
 		LocalFileTimeToFileTime(&pNextRunTime, &pNextRunTimeUtc);
-		
+
 		log(3, L"🔈get_RegistrationInfo infos");
 		ppDefinition->get_RegistrationInfo(&infos);
 		log(3, L"🔈get_Author pAuthor");
@@ -123,7 +123,7 @@ struct ScheduledTask {
 		pAuthor = bstr_to_wstring(temp);
 		log(3, L"🔈replaceAll pAuthor");
 		pAuthor = replaceAll(pAuthor, L"\\", L"\\\\");
-		pAuthor= replaceAll(pAuthor, L"\"", L"\\\"");
+		pAuthor = replaceAll(pAuthor, L"\"", L"\\\"");
 		log(3, L"🔈get_Description pDescription");
 		infos->get_Description(&temp);
 		log(3, L"🔈bstr_to_wstring pDescription");
@@ -140,7 +140,7 @@ struct ScheduledTask {
 		//get SID of user
 		if (pRunAs != L"") {
 			log(3, L"🔈NetUserGetInfo info4");
-			if(NetUserGetInfo(NULL, pRunAs.c_str(), 4, (LPBYTE*)&info4) == NERR_Success){
+			if (NetUserGetInfo(NULL, pRunAs.c_str(), 4, (LPBYTE*)&info4) == NERR_Success) {
 				log(3, L"🔈ConvertSidToStringSidW info4");
 				ConvertSidToStringSidW(info4->usri4_user_sid, &tempSid);
 				log(3, L"🔈runAsSid info4");
@@ -155,8 +155,8 @@ struct ScheduledTask {
 		log(3, L"🔈bstr_to_wstring pPath");
 		pPath = bstr_to_wstring(temp);
 		log(3, L"🔈replaceAll escapedPath");
-		escapedPath = replaceAll(pPath,L"\\",L"\\\\");//escape
-		escapedPath = replaceAll(escapedPath,L"\"",L"\\\"");//escape
+		escapedPath = replaceAll(pPath, L"\\", L"\\\\");//escape
+		escapedPath = replaceAll(escapedPath, L"\"", L"\\\"");//escape
 		log(3, L"🔈get_State pState");
 		hr = task->get_State(&pState);
 
@@ -190,21 +190,22 @@ struct ScheduledTask {
 					log(3, L"🔈bstr_to_wstring command");
 					a.command = bstr_to_wstring(temp);
 
-					
+
 					//calcul hash avant escape
 					char appdata[MAX_PATH];
 					log(3, L"🔈replaceAll temp");
 					std::wstring wp(replaceAll(a.command, L"\"", L""));
-					log(3, L"🔈wstring_to_string p");
-					std::string p=wstring_to_string(wp); // remove " in path
-					log(3, L"🔈ExpandEnvironmentStringsA command");
-					ExpandEnvironmentStringsA(p.c_str(), appdata, MAX_PATH); // replace env variable by their value in path
-					log(3, L"🔈fileToHash md5Source " + a.command);
-					a.md5 = QuickDigest5::fileToHash(appdata); // calcul hash
-
+					if (conf.md5) {
+						log(3, L"🔈wstring_to_string p");
+						std::string p = wstring_to_string(wp); // remove " in path
+						log(3, L"🔈ExpandEnvironmentStringsA command");
+						ExpandEnvironmentStringsA(p.c_str(), appdata, MAX_PATH); // replace env variable by their value in path
+						log(3, L"🔈fileToHash md5Source " + a.command);
+						a.md5 = QuickDigest5::fileToHash(appdata); // calcul hash
+					}
 					log(3, L"🔈replaceAll command");
-					a.command= replaceAll(a.command,L"\\",L"\\\\");
-					a.command = replaceAll(a.command,L"\"",L"\\\"");
+					a.command = replaceAll(a.command, L"\\", L"\\\\");
+					a.command = replaceAll(a.command, L"\"", L"\\\"");
 					log(3, L"🔈get_Arguments pAction");
 					((IExecAction*)pAction)->get_Arguments(&temp);
 					log(3, L"🔈bstr_to_wstring arguments");
@@ -332,7 +333,7 @@ struct ScheduledTask {
 			result += L"\n";
 		}
 		result += tab(2) + L"],\n"
-		+tab(2) + L"\"Triggers\": [\n";
+			+ tab(2) + L"\"Triggers\": [\n";
 
 		std::vector<Trigger>::iterator it2;
 		for (it2 = triggers.begin(); it2 != triggers.end(); it2++) {
@@ -377,7 +378,7 @@ struct ScheduledTasks {
 	* @pService est le service de tâches planifiées
 	*/
 	HRESULT getTasks(ITaskFolder* pfolder, ITaskService* pService) {
-		
+
 		//  -------------------------------------------------------
 		//  Get the registered tasks in the folder.
 		IRegisteredTaskCollection* pTaskCollection = NULL;
@@ -392,7 +393,7 @@ struct ScheduledTasks {
 		LONG numTasks = 0;
 		log(3, L"🔈get_Count numTasks");
 		hr = pTaskCollection->get_Count(&numTasks);
-		TASK_STATE taskState;
+		TASK_STATE taskState= TASK_STATE_UNKNOWN;
 		for (LONG i = 1; i <= numTasks; i++)
 		{
 			IRegisteredTask* pRegisteredTask = NULL;
@@ -420,7 +421,7 @@ struct ScheduledTasks {
 	HRESULT getFolders(std::wstring folder, ITaskService* pService) {
 		ITaskFolder* pFolder = NULL;
 		ITaskFolderCollection* pRootFoldersCollection = NULL;
-		HRESULT hr=0;
+		HRESULT hr = 0;
 
 		log(3, L"🔈wstring_to_bstr pRootFolder");
 		BSTR bstrRootFolder = wstring_to_bstr(folder);
@@ -469,7 +470,8 @@ struct ScheduledTasks {
 			else {
 				log(2, L"🔥getTasks pRootFolder", hr);
 			}
-		} else{
+		}
+		else {
 			log(2, L"🔥GetFolder pRootFolder", hr);
 			return hr;
 		}
@@ -481,8 +483,8 @@ struct ScheduledTasks {
 	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData() {
-		
-		HRESULT hr=0;
+
+		HRESULT hr = 0;
 
 		log(0, L"*******************************************************************************************************************");
 		log(0, L"ℹ️Scheduled tasks : ");
@@ -492,17 +494,17 @@ struct ScheduledTasks {
 		//  Create an instance of the Task Service. 
 		ITaskService* pService = NULL;
 		log(3, L"🔈CoCreateInstance");
-		hr = CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void**)&pService); 
-		if (hr!=S_OK)
+		hr = CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void**)&pService);
+		if (hr != S_OK)
 		{
 			log(2, L"🔥CoCreateInstance", hr);
 			return hr;
 		}
-		
+
 		//  Connect to the task service.CLSID_TaskScheduler
 		log(3, L"🔈Connect pService");
 		hr = pService->Connect(VARIANT(), VARIANT(), VARIANT(), VARIANT());
-		if (hr!=S_OK)
+		if (hr != S_OK)
 		{
 			log(2, L"🔥Connect pService", hr);
 			return hr;

@@ -75,6 +75,7 @@ var annotated_dup =
     [ "Process", "struct_process.html", "struct_process" ],
     [ "Processes", "struct_processes.html", "struct_processes" ],
     [ "Property", "struct_property.html", "struct_property" ],
+    [ "QuickDigest5", "class_quick_digest5.html", "class_quick_digest5" ],
     [ "RecentDoc", "struct_recent_doc.html", "struct_recent_doc" ],
     [ "RecentDocs", "struct_recent_docs.html", "struct_recent_docs" ],
     [ "RootFolder", "struct_root_folder.html", "struct_root_folder" ],

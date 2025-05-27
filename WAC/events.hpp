@@ -96,7 +96,7 @@ std::wstring VariantType_to_wstring(PEVT_VARIANT data) {
 	}
 	case EvtVarTypeFileTime: {
 		log(3, L"🔈time_to_wstring EvtVarTypeFileTime");
-		return L"\"" + time_to_wstring(FILETIME(data->FileTimeVal)) + L"\"";
+		return L"\"" + time_to_wstring(FILETIME((DWORD)data->FileTimeVal)) + L"\"";
 		break;
 	}
 	case EvtVarTypeSysTime: {

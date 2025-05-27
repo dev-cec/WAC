@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['wstring_5fto_5fbstr_0',['wstring_to_bstr',['../tools_8cpp.html#aecf670c5a3331fe73239c63d494acc70',1,'wstring_to_bstr(std::wstring ws):&#160;tools.cpp'],['../tools_8h.html#aecf670c5a3331fe73239c63d494acc70',1,'wstring_to_bstr(std::wstring ws):&#160;tools.cpp']]],
-  ['wstring_5fto_5ffiletime_1',['wstring_to_filetime',['../tools_8cpp.html#ac15b36c9a117f211860abb5d7f86d8d4',1,'wstring_to_filetime(std::wstring input):&#160;tools.cpp'],['../tools_8h.html#ac15b36c9a117f211860abb5d7f86d8d4',1,'wstring_to_filetime(std::wstring input):&#160;tools.cpp']]],
-  ['wstring_5fto_5fstring_2',['wstring_to_string',['../tools_8cpp.html#a9e8d9796b27a47431c88a5387b1ed2a0',1,'wstring_to_string(const std::wstring &amp;wstr):&#160;tools.cpp'],['../tools_8h.html#a9e8d9796b27a47431c88a5387b1ed2a0',1,'wstring_to_string(const std::wstring &amp;wstr):&#160;tools.cpp']]]
+  ['varianttype_5fto_5fwstring_0',['VariantType_to_wstring',['../events_8hpp.html#a82cd34e1fe87bf4976fda8a55daf4a27',1,'events.hpp']]],
+  ['volumeinfo_1',['VolumeInfo',['../struct_volume_info.html#a99d7451b1e666040acd79d87d173d20c',1,'VolumeInfo::VolumeInfo()'],['../struct_volume_info.html#a55bcfcb20e244a3900e5f28de4624ac9',1,'VolumeInfo::VolumeInfo(LPBYTE data, int indice)']]],
+  ['volumeshellitem_2',['VolumeShellItem',['../struct_volume_shell_item.html#aad4404ca114335ef479909ca8285ce98',1,'VolumeShellItem']]]
 ];

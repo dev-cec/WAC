@@ -41,17 +41,18 @@ AppliConf conf;// variable globale pour la conf de l'application
 
 void showHelp() {
 	SetConsoleTextAttribute(conf.hConsole, 7); // blanc
-	std::cout << "\nusage: " << conf.name << " [--dump] [--events] [--output=output] [--loglevel=2]" << std::endl;
+	std::cout << "\nusage: " << conf.name << " [--dump] [--events] [ --md5] [--output=output] [--loglevel=2]" << std::endl;
 	std::cout << "\t--help or /? : show this help " << std::endl;
 	std::cout << "\t--dump : add hexa value in json files for shellbags and LNK files " << std::endl;
 	std::cout << "\t--events : converts events to json (long time)" << std::endl;
+	std::cout << "\t--md5 : activate hash md5 computing for files referenced in artfacts" << std::endl;
 	std::cout << "\t--output=[directory name] : directory name to store output files starting from current directory. By default the directory is 'output'" << std::endl;
 	std::cout << "\t--loglevel=[0] : define level of details in logfile and activate logging in " << conf.name << ".log" << std::endl;
 	std::cout << std::endl;
 	std::cout << "\t loglevel = 0 => no logging" << std::endl;
-	std::cout << "\t loglevel = 1 => activate loggin for each artefact type treated" << std::endl;
-	std::cout << "\t loglevel = 2 => activate loggin for each artefact treated" << std::endl;
-	std::cout << "\t loglevel = 3 => activate loggin for each subfunction called (used for debug only)" << std::endl;
+	std::cout << "\t loglevel = 1 => activate logging for each artefact type treated" << std::endl;
+	std::cout << "\t loglevel = 2 => activate logging for each artefact treated" << std::endl;
+	std::cout << "\t loglevel = 3 => activate logging for each subfunction called (used for debug only)" << std::endl;
 };
 
 int main(int argc, char* argv[])
@@ -108,6 +109,7 @@ int main(int argc, char* argv[])
 
 			if (arg == "--dump") conf._dump = true;
 			else if (arg == "--events") conf._events = true;
+			else if (arg == "--md5") conf.md5 = true;
 			else if (arg.substr(0, 9) == "--output=") {
 				std::string temp = std::string(arg.substr(9));
 				if (temp.length() > 0) conf._outputDir = temp;

@@ -108,9 +108,11 @@ struct Process {
 			return ERROR_INVALID_HANDLE;
 		}
 
-		//Le premier module retourne le exe path
-		log(3, L"🔈fileToHash md5Source");
-		md5 = QuickDigest5::fileToHash(wstring_to_string(me32.szExePath));
+		if (conf.md5) {
+			//Le premier module retourne le exe path
+			log(3, L"🔈fileToHash md5Source");
+			md5 = QuickDigest5::fileToHash(wstring_to_string(me32.szExePath));
+		}
 
 		// Now walk the module list of the process,
 		// and display information about each module

@@ -1,7 +1,7 @@
 var struct_recent_doc =
 [
     [ "RecentDoc", "struct_recent_doc.html#ae78978ce7653746cb933ad97bdc04cef", null ],
-    [ "RecentDoc", "struct_recent_doc.html#aeb18adfaec60e073ece2d53b7950fe72", null ],
+    [ "RecentDoc", "struct_recent_doc.html#af501edc675fb4bcebe3b08956c862f6e", null ],
     [ "clear", "struct_recent_doc.html#af15bb7889021d9d5d94a142add483ab2", null ],
     [ "parseLNK", "struct_recent_doc.html#a2687c796640288746e509f2e376b64cc", null ],
     [ "to_json", "struct_recent_doc.html#a7e5a788a2ada5f31454ef29eeac7f46b", null ],
@@ -15,6 +15,8 @@ var struct_recent_doc =
     [ "iconIndex", "struct_recent_doc.html#ad7d42cf54034e5c2f7ceda5dc9565b01", null ],
     [ "iconLocation", "struct_recent_doc.html#a7f76b08187b367da1c8c59de952b2a2a", null ],
     [ "idLists", "struct_recent_doc.html#adabdbaa8a33122b9df676452dfc052e1", null ],
+    [ "md5Source", "struct_recent_doc.html#a2ce46f17b97a3b1b2701f27d1e18145f", null ],
+    [ "md5Target", "struct_recent_doc.html#a8c9450c7ae390c37e01f951455396933", null ],
     [ "netDeviceName", "struct_recent_doc.html#a59f0c7d8e36b3bd01ced2498786c592b", null ],
     [ "netName", "struct_recent_doc.html#a32eed3664b67b62f799e4ed4decd3eb9", null ],
     [ "netProviderType", "struct_recent_doc.html#adbced5afce9df0450e353d412c1270a4", null ],

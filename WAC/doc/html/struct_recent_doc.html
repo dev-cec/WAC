@@ -119,8 +119,8 @@ Fonctions membres publiques</h2></td></tr>
 <tr class="separator:a2687c796640288746e509f2e376b64cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae78978ce7653746cb933ad97bdc04cef" id="r_ae78978ce7653746cb933ad97bdc04cef"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae78978ce7653746cb933ad97bdc04cef">RecentDoc</a> (std::filesystem::path _path, std::wstring _sid)</td></tr>
 <tr class="separator:ae78978ce7653746cb933ad97bdc04cef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeb18adfaec60e073ece2d53b7950fe72" id="r_aeb18adfaec60e073ece2d53b7950fe72"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aeb18adfaec60e073ece2d53b7950fe72">RecentDoc</a> (LPBYTE buffer, std::wstring _path, std::wstring _sid)</td></tr>
-<tr class="separator:aeb18adfaec60e073ece2d53b7950fe72"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af501edc675fb4bcebe3b08956c862f6e" id="r_af501edc675fb4bcebe3b08956c862f6e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af501edc675fb4bcebe3b08956c862f6e">RecentDoc</a> (LPBYTE buffer, size_t size, std::wstring _path, std::wstring _sid)</td></tr>
+<tr class="separator:af501edc675fb4bcebe3b08956c862f6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7e5a788a2ada5f31454ef29eeac7f46b" id="r_a7e5a788a2ada5f31454ef29eeac7f46b"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7e5a788a2ada5f31454ef29eeac7f46b">to_json</a> (int i)</td></tr>
 <tr class="separator:a7e5a788a2ada5f31454ef29eeac7f46b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af15bb7889021d9d5d94a142add483ab2" id="r_af15bb7889021d9d5d94a142add483ab2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af15bb7889021d9d5d94a142add483ab2">clear</a> ()</td></tr>
@@ -137,9 +137,15 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:adda135ddc56a1cea2e7933e16fbfe349" id="r_adda135ddc56a1cea2e7933e16fbfe349"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adda135ddc56a1cea2e7933e16fbfe349">path</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:adda135ddc56a1cea2e7933e16fbfe349"><td class="mdescLeft">&#160;</td><td class="mdescRight">chemin d'accès à l'objet dans le snapshot  <br /></td></tr>
 <tr class="separator:adda135ddc56a1cea2e7933e16fbfe349"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ce46f17b97a3b1b2701f27d1e18145f" id="r_a2ce46f17b97a3b1b2701f27d1e18145f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2ce46f17b97a3b1b2701f27d1e18145f">md5Source</a> =L&quot;&quot;</td></tr>
+<tr class="memdesc:a2ce46f17b97a3b1b2701f27d1e18145f"><td class="mdescLeft">&#160;</td><td class="mdescRight">hash md5 du fichier source  <br /></td></tr>
+<tr class="separator:a2ce46f17b97a3b1b2701f27d1e18145f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae4ad99b84c20dfa86edf61aba90425eb" id="r_ae4ad99b84c20dfa86edf61aba90425eb"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae4ad99b84c20dfa86edf61aba90425eb">target</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:ae4ad99b84c20dfa86edf61aba90425eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">chemin pour accéder à l'objet d'origine  <br /></td></tr>
 <tr class="separator:ae4ad99b84c20dfa86edf61aba90425eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c9450c7ae390c37e01f951455396933" id="r_a8c9450c7ae390c37e01f951455396933"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8c9450c7ae390c37e01f951455396933">md5Target</a> =L&quot;&quot;</td></tr>
+<tr class="memdesc:a8c9450c7ae390c37e01f951455396933"><td class="mdescLeft">&#160;</td><td class="mdescRight">hash md5 du fichier target  <br /></td></tr>
+<tr class="separator:a8c9450c7ae390c37e01f951455396933"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af327ac0e33f4fffe6a0cb2e1c4e73337" id="r_af327ac0e33f4fffe6a0cb2e1c4e73337"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af327ac0e33f4fffe6a0cb2e1c4e73337">description</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:af327ac0e33f4fffe6a0cb2e1c4e73337"><td class="mdescLeft">&#160;</td><td class="mdescRight">description du recentDoc  <br /></td></tr>
 <tr class="separator:af327ac0e33f4fffe6a0cb2e1c4e73337"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -266,8 +272,8 @@ Attributs publics</h2></td></tr>
 
 </div>
 </div>
-<a id="aeb18adfaec60e073ece2d53b7950fe72" name="aeb18adfaec60e073ece2d53b7950fe72"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aeb18adfaec60e073ece2d53b7950fe72">&#9670;&#160;</a></span>RecentDoc() <span class="overload">[2/2]</span></h2>
+<a id="af501edc675fb4bcebe3b08956c862f6e" name="af501edc675fb4bcebe3b08956c862f6e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af501edc675fb4bcebe3b08956c862f6e">&#9670;&#160;</a></span>RecentDoc() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -279,6 +285,11 @@ Attributs publics</h2></td></tr>
           <td class="memname">RecentDoc::RecentDoc </td>
           <td>(</td>
           <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>buffer</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t</td>          <td class="paramname"><span class="paramname"><em>size</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -552,6 +563,38 @@ Attributs publics</h2></td></tr>
 </div><div class="memdoc">
 
 <p>tableau contenant des Idlist </p>
+
+</div>
+</div>
+<a id="a2ce46f17b97a3b1b2701f27d1e18145f" name="a2ce46f17b97a3b1b2701f27d1e18145f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2ce46f17b97a3b1b2701f27d1e18145f">&#9670;&#160;</a></span>md5Source</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::md5Source =L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>hash md5 du fichier source </p>
+
+</div>
+</div>
+<a id="a8c9450c7ae390c37e01f951455396933" name="a8c9450c7ae390c37e01f951455396933"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8c9450c7ae390c37e01f951455396933">&#9670;&#160;</a></span>md5Target</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::md5Target =L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>hash md5 du fichier target </p>
 
 </div>
 </div>

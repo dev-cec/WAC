@@ -4,6 +4,7 @@ var struct_process =
     [ "clear", "struct_process.html#a914fe881f9306f2c6ac060d24d6b56c9", null ],
     [ "ListProcessModules", "struct_process.html#a7a6a600d33cfcb0562b343387d18142c", null ],
     [ "to_json", "struct_process.html#ab4a2522d4b66e7d21c4e6b3f4519fecb", null ],
+    [ "md5", "struct_process.html#abde1efae2426b521618cf573f9646dd1", null ],
     [ "processId", "struct_process.html#a4b57a7a4812659dba500cf10dde16a41", null ],
     [ "processModules", "struct_process.html#af5cfb626c462aff996f17dfa4ead5d11", null ],
     [ "processModulesAccess", "struct_process.html#a8b3911da4331faf0010b9d0b2cee0094", null ],
