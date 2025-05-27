@@ -16,8 +16,7 @@
 #include <lmerr.h>
 #include "tools.h"
 #include "trans_id.h"
-
-
+#include "quickdigest5.hpp"
 
 /*structure représentant une trigger d'une tâche planifiée
 */
@@ -33,6 +32,7 @@ struct Trigger {
 struct Action {
 	TASK_ACTION_TYPE type; //!< type de l'action au format numérique
 	std::wstring command = L"";//!< ligne de commande exécutée
+	std::wstring md5 = L"";//!< hash md5 de l'executable
 	std::wstring arguments = L"";//!< arguments de la ligne de commande exécutée
 	std::wstring classId = L"";//!< classId pour ACTION COM HANDLER
 	std::wstring data = L"";//!< data pour ACTION COM HANDLER
@@ -189,6 +189,19 @@ struct ScheduledTask {
 					((IExecAction*)pAction)->get_Path(&temp);
 					log(3, L"🔈bstr_to_wstring command");
 					a.command = bstr_to_wstring(temp);
+
+					
+					//calcul hash avant escape
+					char appdata[MAX_PATH];
+					log(3, L"🔈replaceAll temp");
+					std::wstring wp(replaceAll(a.command, L"\"", L""));
+					log(3, L"🔈wstring_to_string p");
+					std::string p=wstring_to_string(wp); // remove " in path
+					log(3, L"🔈ExpandEnvironmentStringsA command");
+					ExpandEnvironmentStringsA(p.c_str(), appdata, MAX_PATH); // replace env variable by their value in path
+					log(3, L"🔈fileToHash md5Source " + a.command);
+					a.md5 = QuickDigest5::fileToHash(appdata); // calcul hash
+
 					log(3, L"🔈replaceAll command");
 					a.command= replaceAll(a.command,L"\\",L"\\\\");
 					a.command = replaceAll(a.command,L"\"",L"\\\"");
@@ -292,6 +305,7 @@ struct ScheduledTask {
 			if (it->type == TASK_ACTION_EXEC) {
 				log(3, L"🔈task_action_type");
 				result += tab(4) + L"\"Type\":\"" + task_action_type(it->type) + L"\",\n";
+				result += tab(4) + L"\"Md5\":\"" + it->md5 + L"\",\n";
 				result += tab(4) + L"\"Command\":\"" + it->command + L"\",\n";
 				result += tab(4) + L"\"Arguments\":\"" + it->arguments + L"\"\n";
 			}
