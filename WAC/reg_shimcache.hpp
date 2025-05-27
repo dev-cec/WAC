@@ -17,6 +17,7 @@
 struct Shimcache {
 public:
 	std::wstring path = L""; //!< chemin vers le fichier cible de l'artefact
+	std::wstring md5 = L""; //!< hash md5 du fichier cible de l'artefact
 	std::wstring lastModification = L""; //!< date de modification
 	std::wstring lastModificationUtc = L"";//!< date de modification au format json
 	bool executed = false;//!< true si le fichier a été exécuté, non fiable
@@ -28,6 +29,7 @@ public:
 		log(3, L"🔈Shimcache to_json");
 		std::wstring result = L"\t{ \n";
 		result += L"\t\t\"Path\":\"" + path + L"\", \n";
+		result += L"\t\t\"MD5\":\"" + md5 + L"\", \n";
 		result += L"\t\t\"LastModification\":\"" + lastModification + L"\", \n";
 		result += L"\t\t\"LastModificationUtc\":\"" + lastModificationUtc + L"\", \n";
 		log(3, L"🔈bool_to_wstring Executes");
@@ -87,6 +89,17 @@ public:
 				short int name_length = *reinterpret_cast<short int*>(pData + offset);
 				offset += 2;
 				shimcache.path = std::wstring((LPWSTR)(pData + offset), (LPWSTR)(pData + offset) + name_length / sizeof(wchar_t));
+
+				//calcul hash avant escape
+				char appdata[MAX_PATH];
+				log(3, L"🔈replaceAll temp");
+				std::wstring wp(replaceAll(shimcache.path, L"\"", L""));
+				log(3, L"🔈wstring_to_string p");
+				std::string p = wstring_to_string(wp); // remove " in path
+
+				log(3, L"🔈fileToHash " + shimcache.path);
+				shimcache.md5 = QuickDigest5::fileToHash(p); // calcul hash
+
 				log(3, L"🔈replaceAll path");
 				shimcache.path = replaceAll(shimcache.path, L"\\", L"\\\\");
 				shimcache.path = replaceAll(shimcache.path, L"\t", L" "); // replace tab by space. seen in values
