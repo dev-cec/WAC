@@ -9,7 +9,7 @@
 #include <chrono>
 #include "tools.h"
 #include "usb.h"
-
+#include "quickdigest5.hpp"
 
 
 struct AmcacheApplicationFile {
@@ -17,6 +17,7 @@ public:
 	std::wstring name = L""; //!< nom de l’exécutable
 	std::wstring publisher = L"";//!< nom de la compagnie
 	std::wstring longPath = L""; //!< chemin d'accès  à l’exécutable
+	std::wstring md5 = L""; //!< md5 de l’exécutable
 	std::wstring version = L"";//!< version de l’exécutable
 	std::wstring linkDate = L"";//!< date de création de l'AMCACHE APPLICATION FILE
 	std::wstring linkDateUtc = L"";//!< date de création de l'AMCACHE APPLICATION FILE au format UTC
@@ -36,6 +37,18 @@ public:
 		publisher = replaceAll(publisher, L"\"", L"\\\""); // escape " in std::string
 		log(3, L"🔈getRegSzValue LongPath");
 		getRegSzValue(hKey_amcache, nullptr, L"LowerCaseLongPath", &longPath);
+
+		//calcul hash avant escape
+		char appdata[MAX_PATH];
+		log(3, L"🔈replaceAll temp");
+		std::wstring wp(replaceAll(longPath, L"\"", L""));
+		log(3, L"🔈wstring_to_string p");
+		std::string p = wstring_to_string(wp); // remove " in path
+
+		log(3, L"🔈fileToHash " + longPath);
+		md5 = QuickDigest5::fileToHash(p); // calcul hash
+
+
 		log(3, L"🔈replaceAll LongPath");
 		longPath = replaceAll(longPath, L"\\", L"\\\\"); // escape \ in std::string
 		log(3, L"🔈getRegSzValue Version");
@@ -68,6 +81,7 @@ public:
 			result += L"\t\t\"Name\":\"" + name + L"\", \n";
 			result += L"\t\t\"Publisher\":\"" + publisher + L"\", \n";
 			result += L"\t\t\"LongPath\":\"" + longPath + L"\", \n";
+			result += L"\t\t\"MD5\":\"" + md5 + L"\", \n";
 			result += L"\t\t\"Version\":\"" + version + L"\", \n";
 			result += L"\t\t\"LinkDate\":\"" + linkDate + L"\", \n";
 			result += L"\t\t\"LinkDateUtc\":\"" + linkDateUtc + L"\", \n";
