@@ -8,6 +8,7 @@
 #include <vector>
 #include <filesystem>
 #include <fstream>
+#include <ctype.h>
 #include "tools.h"
 #include "usb.h"
 
@@ -26,16 +27,30 @@ public:
 	*/
 	MountedDevice(ORHKEY hKey, PCWSTR szSubValue)
 	{
-		log(3, L"🔈getRegSzValue device");
-		HRESULT hr = getRegSzValue(hKey, NULL, szSubValue, &device);
+		LPBYTE buffer = NULL;
+		DWORD size = 0;
+		log(3, L"🔈getRegBinaryValue device");
+		HRESULT hr = getRegBinaryValue(hKey, NULL, szSubValue, &buffer, &size);
 		if (hr == ERROR_SUCCESS) {
-			log(3, L"🔈replaceAll device");
-			device = replaceAll(device, L"\\", L"\\\\");
-			log(2, L"❇️MountedDEvice device : " + device);
+			if (std::wstring((wchar_t*)buffer,(wchar_t*)buffer+4).compare(L"_??_")==0) {//WSTRING
+				device = std::wstring((wchar_t*)buffer, (wchar_t*)buffer + size / sizeof(wchar_t)).data();
+				log(3, L"🔈replaceAll device");
+				device = replaceAll(device, L"\\", L"\\\\");
+				log(2, L"❇️MountedDevice device : " + device);
+			}
+			else { //STRING
+				if (std::string(buffer, buffer + 8).compare("DMIO:ID:") == 0) {
+					log(3, L"🔈guid_to_wstring device");
+					device = (L"\\\\VOLUME" + guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8))).data();
+				}else{
+					device = string_to_wstring(std::string((char*)buffer, (char*)buffer + size)).data();
+				}
+			}
 		}
 		else {
 			log(2, L"🔥getRegSzValue", hr);
 		}
+		delete[] buffer;
 
 		drive = std::wstring(szSubValue).data();
 		log(3, L"🔈replaceAll drive");
