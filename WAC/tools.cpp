@@ -90,13 +90,13 @@ void printSuccess() {
 void printError(std::wstring errorText) {
 
 	SetConsoleTextAttribute(conf.hConsole, 12);
-	wprintf(L"%S\n",errorText);
+	WriteConsoleW(conf.hConsole, errorText.c_str(), errorText.length(), NULL, NULL);
 	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
 void printError(HRESULT  hresult) {
-
-	std::wstring errorText = getErrorMessage(hresult);
+	
+	std::wstring errorText = getErrorMessage(hresult).data();
 	printError(errorText);
 }
 
