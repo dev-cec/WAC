@@ -110,5 +110,3 @@ Example of extracted system information:
 - Requires **Windows SDK 10** and **Windows WDK 10**  
 - 📥 Download: [Microsoft WDK](https://learn.microsoft.com/en-us/windows-hardware/drivers/download-the-wdk)
 - **Include path** and **lib path** of **project properties directories** must be updated with WKD correct path dependent of WDK installed version. Actually, the configured WDK version is 10.0.26100.0.
-- Requires **OpenSSL**
-- 📥 Download: [OpenSSL](https://kb.firedaemon.com/support/solutions/articles/4000121705#Download-OpenSSL)
