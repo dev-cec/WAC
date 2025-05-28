@@ -422,7 +422,7 @@ struct Events {
 		hevt = EvtOpenSession(EvtRpcLogin, &login, 0, 0);
 		log(3, L"🔈EvtOpenChannelEnum");
 		hChannel = EvtOpenChannelEnum(hevt, 0);
-		std::wcout << std::endl; // pour mise en forme console sinon premier chanel sur mauvaise line
+		wprintf(L"\n"); // pour mise en forme console sinon premier chanel sur mauvaise line
 		do {
 			log(1, L"➕Channel");
 			//
@@ -448,7 +448,7 @@ struct Events {
 				status = ERROR_SUCCESS;
 				
 				log(2, L"❇️Channel Name : " + std::wstring(buffer));
-				std::wcout << tab(1) << std::wstring(buffer) << L": ";
+				wprintf(L"\t%S%s", buffer, L": ");
 				log(3, L"🔈EvtQuery EvtQueryChannelPath");
 				hQuery = EvtQuery(NULL, buffer, NULL, EvtQueryChannelPath);
 				if (hQuery == NULL) {

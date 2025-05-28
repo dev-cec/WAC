@@ -83,25 +83,21 @@ FILETIME FatDateTime::to_filetime() {
 void printSuccess() {
 
 	SetConsoleTextAttribute(conf.hConsole, 10);
-	std::wcout << L"OK" << std::endl;
-	std::wcout.flush();
+	wprintf(L"OK\n");
 	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
 void printError(std::wstring errorText) {
 
 	SetConsoleTextAttribute(conf.hConsole, 12);
-	std::wcout << errorText << std::endl;
+	wprintf(L"%S\n",errorText);
 	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
 void printError(HRESULT  hresult) {
 
 	std::wstring errorText = getErrorMessage(hresult);
-	SetConsoleTextAttribute(conf.hConsole, 12);
-	DWORD written = 0;
-	std::wcout << ansi_to_utf8(errorText) << std::endl;
-	SetConsoleTextAttribute(conf.hConsole, 7);
+	printError(errorText);
 }
 
 std::wstring getErrorMessage(HRESULT hresult)
@@ -182,8 +178,8 @@ std::wstring ansi_to_utf8(std::wstring in)
 void dump(LPBYTE buffer, int start, int end) {
 
 	for (int x = start; x <= end; x++)
-		std::wcout << std::setw(2) << std::setfill(L'0') << std::hex << static_cast<int>(buffer[x]) << " ";
-	std::wcout << std::endl;
+		wprintf(L"%02X ",static_cast<int>(buffer[x]));
+	wprintf(L"\n");
 }
 
 std::wstring dump_wstring(LPBYTE buffer, int start, int end) {

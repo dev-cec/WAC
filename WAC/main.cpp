@@ -41,18 +41,18 @@ AppliConf conf;// variable globale pour la conf de l'application
 
 void showHelp() {
 	SetConsoleTextAttribute(conf.hConsole, 7); // blanc
-	std::cout << "\nusage: " << conf.name << " [--dump] [--events] [ --md5] [--output=output] [--loglevel=2]" << std::endl;
-	std::cout << "\t--help or /? : show this help " << std::endl;
-	std::cout << "\t--dump : add hexa value in json files for shellbags and LNK files " << std::endl;
-	std::cout << "\t--events : converts events to json (long time)" << std::endl;
-	std::cout << "\t--md5 : activate hash md5 computing for files referenced in artfacts" << std::endl;
-	std::cout << "\t--output=[directory name] : directory name to store output files starting from current directory. By default the directory is 'output'" << std::endl;
-	std::cout << "\t--loglevel=[0] : define level of details in logfile and activate logging in " << conf.name << ".log" << std::endl;
-	std::cout << std::endl;
-	std::cout << "\t loglevel = 0 => no logging" << std::endl;
-	std::cout << "\t loglevel = 1 => activate logging for each artefact type treated" << std::endl;
-	std::cout << "\t loglevel = 2 => activate logging for each artefact treated" << std::endl;
-	std::cout << "\t loglevel = 3 => activate logging for each subfunction called (used for debug only)" << std::endl;
+	wprintf(L"%s%S%s\n", L"\nusage: ", conf.name, L" [--dump] [--events] [ --md5] [--output=output] [--loglevel=2]");
+	wprintf(L"%s\n", L"\t--help or /? : show this help ");
+	wprintf(L"%s\n", L"\t--dump : add hexa value in json files for shellbags and LNK files ");
+	wprintf(L"%s\n", L"\t--events : converts events to json (long time)");
+	wprintf(L"%s\n", L"\t--md5 : activate hash md5 computing for files referenced in artfacts");
+	wprintf(L"%s\n", L"\t--output=[directory name] : directory name to store output files starting from current directory. By default the directory is 'output'");
+	wprintf(L"%s%S%s\n", L"\t--loglevel=[0] : define level of details in logfile and activate logging in ", conf.name, L".log");
+	wprintf(L"\n");
+	wprintf(L"%s\n", L"\t loglevel = 0 => no logging");
+	wprintf(L"%s\n", L"\t loglevel = 1 => activate logging for each artefact type treated");
+	wprintf(L"%s\n", L"\t loglevel = 2 => activate logging for each artefact treated");
+	wprintf(L"%s\n", L"\t loglevel = 3 => activate logging for each subfunction called (used for debug only)");
 };
 
 int main(int argc, char* argv[])
@@ -115,14 +115,14 @@ int main(int argc, char* argv[])
 				if (temp.length() > 0) conf._outputDir = temp;
 				else {
 					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
-					std::cerr << "Invalid length for output param " << arg << "\n";
+					wprintf(L"%s%S\n", L"Invalid length for output param " , arg);
 					log(3, L"🔈showHelp");
 					showHelp();
 					exit(1);
 				}
 				if (conf._outputDir.find("\\") != std::string::npos) {
 					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
-					std::cerr << "Invalid character for param " << arg << "\n";
+					wprintf(L"%s%S\n", L"Invalid character for param " ,arg);
 					log(3, L"🔈showHelp");
 					showHelp();
 					exit(1);
@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
 				catch (...)
 				{
 					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
-					std::cerr << "Invalid numeric value for output param " << arg << "\n";
+					wprintf(L"%s%S\n", L"Invalid numeric value for output param " ,arg );
 					log(3, L"🔈showHelp");
 					showHelp();
 					exit(1);
@@ -164,9 +164,9 @@ int main(int argc, char* argv[])
 
 	log(1, L"➕Check OS");
 	SetConsoleTextAttribute(conf.hConsole, 14);
-	std::wcout << "[PREREQUISITE VERIFICATION]" << std::endl;
+	wprintf(L"%s\n", L"[PREREQUISITE VERIFICATION]");
 	SetConsoleTextAttribute(conf.hConsole, 7);
-	std::wcout << " - Check OS >= Windows 10 : ";
+	wprintf(L"%s", L" - Check OS >= Windows 10 : ");
 #if (_WIN32_WINNT >= _WIN32_WINNT_WIN10)
 	printSuccess();
 #else
@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
 	return 1;
 #endif
 	log(1, L"➕Check administrator rights");
-	std::wcout << " - Check administrator rights : ";
+	wprintf(L"%s", L" - Check administrator rights : ");
 	/* A program using VSS must run in elevated mode */
 	HANDLE hToken;
 	log(3, L"🔈GetCurrentProcess()");
@@ -212,10 +212,10 @@ int main(int argc, char* argv[])
 	**********************************/
 
 	SetConsoleTextAttribute(conf.hConsole, 14);
-	std::wcout << "[COM COMPONENT]" << std::endl;
+	wprintf(L"%s\n", L"[COM COMPONENT]");
 	SetConsoleTextAttribute(conf.hConsole, 7);
 
-	std::wcout << " - Connection to COM : ";
+	wprintf(L"%s", L" - Connection to COM : ");
 	log(3, L"🔈connect com");
 	hresult = com.connect();
 	if (hresult != ERROR_SUCCESS) {
@@ -228,10 +228,10 @@ int main(int argc, char* argv[])
 	* WIN32 API
 	*************************/
 	SetConsoleTextAttribute(conf.hConsole, 14);
-	std::wcout << "[SEARCHING FOR ARTIFACTS IN WINDOWS API]" << std::endl;
+	wprintf(L"%s\n", L"[SEARCHING FOR ARTIFACTS IN WINDOWS API]");
 	SetConsoleTextAttribute(conf.hConsole, 7);
 
-	std::wcout << " - Extraction of SYSTEM INFORMATION: ";
+	wprintf(L"%s", L" - Extraction of SYSTEM INFORMATION: ");
 	hresult = systemInfo.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
@@ -242,7 +242,7 @@ int main(int argc, char* argv[])
 	}
 
 
-	std::wcout << " - Extraction of SCHEDULED TASKS: ";
+	wprintf(L"%s", L" - Extraction of SCHEDULED TASKS: ");
 	hresult = scheduledTasks.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
@@ -254,7 +254,7 @@ int main(int argc, char* argv[])
 
 
 
-	std::wcout << " - Extraction of SESSIONS: ";
+	wprintf(L"%s", L" - Extraction of SESSIONS: ");
 	hresult = sessions.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
@@ -266,7 +266,7 @@ int main(int argc, char* argv[])
 
 
 
-	std::wcout << " - Extraction of PROCESS: ";
+	wprintf(L"%s", L" - Extraction of PROCESS: ");
 	hresult = processes.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
@@ -278,8 +278,8 @@ int main(int argc, char* argv[])
 
 
 
-	std::wcout << " - Extraction of SERVICES: ";
-	std::wcout.flush();
+	wprintf(L"%s", L" - Extraction of SERVICES: ");
+	
 	hresult = services.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
@@ -291,8 +291,8 @@ int main(int argc, char* argv[])
 
 
 
-	std::wcout << " - Extraction of USERS: ";
-	std::wcout.flush();
+	wprintf(L"%s", L" - Extraction of USERS: ");
+	
 	hresult = users.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
@@ -305,8 +305,8 @@ int main(int argc, char* argv[])
 
 
 	if (conf._events) {
-		std::wcout << " - Extraction of EVENTS: ";
-		std::wcout.flush();
+		wprintf(L"%s", L" - Extraction of EVENTS: ");
+		
 		hresult = events.getData();
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else {
@@ -324,10 +324,10 @@ int main(int argc, char* argv[])
 	VSS_ID snapshotSetId = { 0 };
 
 	SetConsoleTextAttribute(conf.hConsole, 14);
-	std::wcout << "[SNAPSHOT]" << std::endl;
+	wprintf(L"%s\n", L"[SNAPSHOT]");
 	SetConsoleTextAttribute(conf.hConsole, 7);
 
-	std::wcout << " - Creating the snapshot : ";
+	wprintf(L"%s", L" - Creating the snapshot : ");
 	log(3, L"🔈GetSnapshots pBackup");
 	hresult = GetSnapshots(&snapshotSetId, pBackup);
 	if (hresult != S_OK) {
@@ -343,7 +343,7 @@ int main(int argc, char* argv[])
 	*************************/
 
 	SetConsoleTextAttribute(conf.hConsole, 14);
-	std::wcout << "[SEARCHING FOR ARTIFACTS IN THE REGISTRY]" << std::endl;
+	wprintf(L"%s\n", L"[SEARCHING FOR ARTIFACTS IN THE REGISTRY]");
 	SetConsoleTextAttribute(conf.hConsole, 7);
 	//variables
 	ORHKEY hKey = NULL;
@@ -361,7 +361,7 @@ int main(int argc, char* argv[])
 
 
 	//chargement de la clé HKLM\SYSTEM
-	std::wcout << " - loading the HKLM\\SYSTEM key : ";
+	wprintf(L"%s", L" - loading the HKLM\\SYSTEM key : ");
 	std::wstring rucheSystem = conf.mountpoint + L"\\Windows\\system32\\config\\SYSTEM";
 	log(3, L"🔈OROpenHive System");
 	hresult = OROpenHive(rucheSystem.c_str(), &conf.System);
@@ -374,7 +374,7 @@ int main(int argc, char* argv[])
 	}
 
 	//chargement de la clé HKLM\SOFTWARE
-	std::wcout << " - loading the HKLM\\SOFTWARE key : ";
+	wprintf(L"%s", L" - loading the HKLM\\SOFTWARE key : ");
 	std::wstring rucheSoftware = conf.mountpoint + L"\\Windows\\system32\\config\\SOFTWARE";
 	log(3, L"🔈OROpenHive Software");
 	hresult = OROpenHive(rucheSoftware.c_str(), &conf.Software);
@@ -387,7 +387,7 @@ int main(int argc, char* argv[])
 	}
 
 	//recherche de la bonne sous-clé ControlSet correspondant à CurrentControlSet
-	std::wcout << " - Searching for the CurrentControlSet subkey : ";
+	wprintf(L"%s", L" - Searching for the CurrentControlSet subkey : ");
 	log(3, L"🔈OROpenKey System/Select");
 	hresult = OROpenKey(conf.System, L"Select", &hKey);
 	if (hresult != ERROR_SUCCESS) {
@@ -429,7 +429,7 @@ int main(int argc, char* argv[])
 		printSuccess();
 
 		//ouverture de la clé HKLM\\SYSTEM\\CurrentControlSet
-		std::wcout << " - Opening the CurrentControlSet subkey : ";
+		wprintf(L"%s", L" - Opening the CurrentControlSet subkey : ");
 		log(3, L"🔈OROpenKey System/CurrentControlSet");
 		hresult = OROpenKey(conf.System, subkey.c_str(), &conf.CurrentControlSet);
 		if (hresult != ERROR_SUCCESS) {
@@ -439,7 +439,7 @@ int main(int argc, char* argv[])
 		else {
 			printSuccess();
 
-			std::wcout << " - Extracting USBSTOR Registry Keys : ";
+			wprintf(L"%s", L" - Extracting USBSTOR Registry Keys : ");
 			hresult = usbs.getData();
 			if (hresult != ERROR_SUCCESS) {
 				printError(hresult);
@@ -451,7 +451,7 @@ int main(int argc, char* argv[])
 				usbs.clear();
 			}
 
-			std::wcout << " - Extracting the MOUNTED DEVICE registry keys : ";
+			wprintf(L"%s", L" - Extracting the MOUNTED DEVICE registry keys : ");
 			hresult = mounteddevices.getData();
 			if (hresult != ERROR_SUCCESS) {
 				printError(hresult);
@@ -464,7 +464,7 @@ int main(int argc, char* argv[])
 			}
 
 
-			std::wcout << " - Extracting BAM Registry Keys : ";
+			wprintf(L"%s", L" - Extracting BAM Registry Keys : ");
 			hresult = bams.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
@@ -474,7 +474,7 @@ int main(int argc, char* argv[])
 				bams.clear();
 			}
 
-			std::wcout << " - Extracting MUICACHE Registry Keys : ";
+			wprintf(L"%s", L" - Extracting MUICACHE Registry Keys : ");
 			hresult = muicaches.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
@@ -484,7 +484,7 @@ int main(int argc, char* argv[])
 				muicaches.clear();
 			}
 
-			std::wcout << " - Extracting AMCACHE APPLICATION Registry Keys : ";
+			wprintf(L"%s", L" - Extracting AMCACHE APPLICATION Registry Keys : ");
 			hresult = amcacheapplications.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
@@ -494,7 +494,7 @@ int main(int argc, char* argv[])
 				amcacheapplicationfiles.clear();
 			}
 
-			std::wcout << " - Extracting AMCACHE APPLICATIONFILE Registry Keys : ";
+			wprintf(L"%s", L" - Extracting AMCACHE APPLICATIONFILE Registry Keys : ");
 			hresult = amcacheapplicationfiles.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
@@ -504,7 +504,7 @@ int main(int argc, char* argv[])
 				amcacheapplicationfiles.clear();
 			}
 
-			std::wcout << " - Extracting USERASSIST Registry Keys : ";
+			wprintf(L"%s", L" - Extracting USERASSIST Registry Keys : ");
 			hresult = userassists.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
@@ -514,7 +514,7 @@ int main(int argc, char* argv[])
 				userassists.clear();
 			}
 
-			std::wcout << " - Extracting RUN Registry Keys : ";
+			wprintf(L"%s", L" - Extracting RUN Registry Keys : ");
 			hresult = runs.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
@@ -524,7 +524,7 @@ int main(int argc, char* argv[])
 				runs.clear();
 			}
 
-			std::wcout << " - Extracting SHIMCACHE Registry Keys : ";
+			wprintf(L"%s", L" - Extracting SHIMCACHE Registry Keys : ");
 			hresult = shimcaches.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
@@ -534,7 +534,7 @@ int main(int argc, char* argv[])
 				shimcaches.clear();
 			}
 
-			std::wcout << " - Extracting SHELLBAGS Registry Keys : ";
+			wprintf(L"%s", L" - Extracting SHELLBAGS Registry Keys : ");
 			hresult = shellbags.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
@@ -544,7 +544,7 @@ int main(int argc, char* argv[])
 				shellbags.clear();
 			}
 
-			std::wcout << " - Extracting MRU Registry Keys : ";
+			wprintf(L"%s", L" - Extracting MRU Registry Keys : ");
 			hresult = mrus.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
@@ -554,7 +554,7 @@ int main(int argc, char* argv[])
 				mrus.clear();
 			}
 
-			std::wcout << " - Extracting MRUAPPS Registry Keys : ";
+			wprintf(L"%s", L" - Extracting MRUAPPS Registry Keys : ");
 			hresult = mruapps.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
@@ -571,10 +571,10 @@ int main(int argc, char* argv[])
 	* DECONNEXION COM
 	***************************************************/
 	SetConsoleTextAttribute(conf.hConsole, 14);
-	std::wcout << "[COM COMPONENT]" << std::endl;
+	wprintf(L"%s\n", L"[COM COMPONENT]");
 	SetConsoleTextAttribute(conf.hConsole, 7);
-	std::wcout << " - Disconnecting COM : ";
-	std::wcout.flush();
+	wprintf(L"%s", L" - Disconnecting COM : ");
+	
 	log(3, L"🔈COM clear");
 	com.clear();
 	printSuccess();
@@ -583,9 +583,9 @@ int main(int argc, char* argv[])
 	*  FICHIERS
 	*************************/
 	SetConsoleTextAttribute(conf.hConsole, 14);
-	std::wcout << "[SEARCHING FOR ARTIFACTS IN FILES]" << std::endl;
+	wprintf(L"%s\n", L"[SEARCHING FOR ARTIFACTS IN FILES]");
 	SetConsoleTextAttribute(conf.hConsole, 7);
-	std::wcout << " - Extracting RECENT DOCS : ";
+	wprintf(L"%s", L" - Extracting RECENT DOCS : ");
 	hresult = recentdocs.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
@@ -595,7 +595,7 @@ int main(int argc, char* argv[])
 		recentdocs.clear();
 	}
 
-	std::wcout << " - Extracting PREFETCHS : ";
+	wprintf(L"%s", L" - Extracting PREFETCHS : ");
 	hresult = prefetchs.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
@@ -605,7 +605,7 @@ int main(int argc, char* argv[])
 		prefetchs.clear();
 	}
 
-	std::wcout << " - Extracting JUMPLIST AUTOMATIC: ";
+	wprintf(L"%s", L" - Extracting JUMPLIST AUTOMATIC: ");
 	hresult = jumplistAutomatics.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
@@ -615,7 +615,7 @@ int main(int argc, char* argv[])
 		jumplistAutomatics.clear();
 	}
 
-	std::wcout << " - Extracting JUMPLIST CUSTOM: ";
+	wprintf(L"%s", L" - Extracting JUMPLIST CUSTOM: ");
 	hresult = jumplistCustoms.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
@@ -628,9 +628,9 @@ int main(int argc, char* argv[])
 	*            DEMONTAGE SNAPSHOT
 	******************************************/
 	SetConsoleTextAttribute(conf.hConsole, 14);
-	std::wcout << "[SNAPSHOT]" << std::endl;
+	wprintf(L"%s\n", L"[SNAPSHOT]");
 	SetConsoleTextAttribute(conf.hConsole, 7);
-	std::wcout << " - Snapshot disassembly : ";
+	wprintf(L"%s", L" - Snapshot disassembly : ");
 	log(3, L"🔈RemoveDirectoryW mountpoint");
 	if (!RemoveDirectoryW(conf.mountpoint.c_str())) printError(GetLastError());
 	else {
@@ -641,8 +641,8 @@ int main(int argc, char* argv[])
 
 	end = time(nullptr);
 
-	std::wcout << L"END, Time elapsed : " << end - start << " s" << std::endl;
-	std::wcout << L"<<<Press any key to quit>>>" << std::endl;
+	wprintf(L"%s%d%s\n", L"END, Time elapsed : ", end - start , L" s");
+	wprintf(L"%s\n", L"<<< Press any key to quit >>>");
 
 	CloseHandle(conf.hConsole);
 	system("pause");
