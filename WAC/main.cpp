@@ -642,8 +642,9 @@ int main(int argc, char* argv[])
 	end = time(nullptr);
 
 	std::wcout << L"END, Time elapsed : " << end - start << " s" << std::endl;
+	std::wcout << L"<<<Press any key to quit>>>" << std::endl;
 
 	CloseHandle(conf.hConsole);
-
+	system("pause");
 	return ERROR_SUCCESS;
 }
