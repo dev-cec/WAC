@@ -642,9 +642,8 @@ int main(int argc, char* argv[])
 	end = time(nullptr);
 
 	wprintf(L"%s%d%s\n", L"END, Time elapsed : ", end - start , L" s");
-	wprintf(L"%s\n", L"<<< Press any key to quit >>>");
-
+	wprintf(L"%s\n", L"<<< Press enter to quit >>>");
+	int s = getchar();
 	CloseHandle(conf.hConsole);
-	system("pause");
 	return ERROR_SUCCESS;
 }
