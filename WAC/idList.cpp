@@ -119,6 +119,7 @@ IdList::IdList(LPBYTE buffer, int _niveau, bool Parentiszip) {
 	niveau = _niveau;
 	shellItem = NULL;
 	item_size = *reinterpret_cast<unsigned short int*>(buffer);
+
 	if (conf._dump == true) {
 		log(3, L"🔈dump_wstring idlist");
 		pData = dump_wstring(buffer, 0, item_size);
