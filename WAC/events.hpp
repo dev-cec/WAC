@@ -448,7 +448,7 @@ struct Events {
 				status = ERROR_SUCCESS;
 				
 				log(2, L"❇️Channel Name : " + std::wstring(buffer));
-				wprintf(L"\t%S%s", buffer, L": ");
+				wprintf(L"\t%s%s", buffer, L": ");
 				log(3, L"🔈EvtQuery EvtQueryChannelPath");
 				hQuery = EvtQuery(NULL, buffer, NULL, EvtQueryChannelPath);
 				if (hQuery == NULL) {
