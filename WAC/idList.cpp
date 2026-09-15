@@ -122,10 +122,10 @@ IdList::IdList(LPBYTE buffer, int _niveau, bool Parentiszip) {
 
 	if (conf._dump == true) {
 		log(3, L"🔈dump_wstring idlist");
-		pData = dump_wstring(buffer, 0, item_size);
+		donnees = dump_wstring(buffer, 0, item_size);
 	}
 	else
-		pData = L"";
+		donnees = L"";
 	if (item_size != 0) {
 		type_char = *reinterpret_cast<unsigned char*>(buffer + 2);
 		log(3, L"🔈to_hex type_char");
@@ -136,23 +136,21 @@ IdList::IdList(LPBYTE buffer, int _niveau, bool Parentiszip) {
 			log(3, L"🔈shell_item_class type_char");
 			type = shell_item_class(type_char);
 		}
-		log(3, L"🔈getShellItem idlist");
-		getShellItem(buffer, &shellItem, niveau + 1, Parentiszip);
+		log(3, L"🔈makeShellItem idlist");
+		shellItem = makeShellItem(buffer, niveau + 1, Parentiszip);
 	}
 }
 
-std::wstring IdList::to_json(int i) {
-	log(3, L"🔈IdList to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = L"";
-	result += tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"TypeHex\" : \"0x" + type_hex + L"\",\n"
-		+ tab(niveau + 1) + L"\"Type\" : \"" + type + L"\",\n";
-	if (conf._dump == true)
-		result += tab(niveau + 1) + L"\"Dump\" : \"" + pData + L"\",\n";
-	result += shellItem->to_json(i);
-	result += tab(niveau) + L"}";
-	return result;
+Json IdList::toJson() {
+	log(3, L"🔈IdList toJson");
+	Json o = Json::obj();
+	o.add(L"TypeHex", Json::str(L"0x" + type_hex));
+	o.add(L"Type",    Json::str(type));
+	if (conf._dump) o.add(L"Dump", Json::str(donnees));
+	// Les champs du shell item sont mis a plat dans cet objet (schema d'origine).
+	// Garde : shellItem peut etre nul (item de taille nulle, ou type non reconnu).
+	if (shellItem) o.merge(shellItem->toJson());
+	return o;
 }
 
 /*
@@ -269,7 +267,7 @@ enum VARENUM
 	VT_ILLEGALMASKED = 0xfff,
 	VT_TYPEMASK = 0xfff
 };*/
-std::wstring get_type(unsigned int type) {
+std::wstring getType(unsigned int type) {
 	if (type == 0) return L"VT_EMPTY";
 	else if (type == 1) return L"VT_NULL";
 	else if (type == 2) return L"VT_I2";
@@ -327,194 +325,325 @@ std::wstring get_type(unsigned int type) {
 	else return L"0x" + to_hex(type);
 }
 
-void get_value(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int niveau, std::wstring* value, bool* valueIsObject) {
-	if (valueType == VT_EMPTY) { // VT_NULL
-		*value = L"";
+Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int niveau,
+              unsigned int tailleEntree, bool* typeNonDecode);
+
+/*! Lit UNE valeur scalaire. Voir `getValue`, qui traite en plus les vecteurs. */
+static Json lireScalaire(LPBYTE buffer, unsigned int* pos, unsigned short valueType,
+                         unsigned int niveau, unsigned int tailleEntree, bool* typeNonDecode) {
+	// Renvoie desormais une valeur Json typee (et non une chaine pre-serialisee) :
+	// l'echappement est fait par le writer, une seule fois, a la serialisation.
+	// NB : les backslashes ne sont PLUS doubles ici, ce qui corrige aussi
+	// l'avancement de *pos qui etait calcule sur la chaine echappee (donc faux
+	// pour toute valeur contenant un backslash, c'est-a-dire tout chemin).
+	if (valueType == VT_EMPTY) return Json::str(L"");
+	if (valueType == VT_NULL)  return Json::null();
+	if (valueType == VT_I2) {
+		short v = *reinterpret_cast<short*>(buffer + *pos); *pos += 2; return Json::num((long long)v);
 	}
-	else if (valueType == VT_NULL) { // VT_NULL
-		*value = L"NULL";
+	if (valueType == VT_I4 || valueType == VT_INT) {
+		int v = *reinterpret_cast<int*>(buffer + *pos); *pos += 4; return Json::num((long long)v);
 	}
-	else if (valueType == VT_I2) {     // VT_I2(signed 16 - bit)
-		*value = std::to_wstring(*reinterpret_cast<short int*>(buffer + *pos));
-		*pos += 2;
+	if (valueType == VT_BSTR) {
+		std::wstring v((wchar_t*)(buffer + *pos + 4));
+		*pos += 4 + (unsigned int)v.size() * 2 + 2;
+		return Json::str(v);
 	}
-	else if (valueType == VT_I4 || valueType == VT_INT) {  // VT_I4, VT_INT(signed 32 - bit)
-		*value = std::to_wstring(*reinterpret_cast<int*>(buffer + *pos));
-		*pos += 4;
-	}
-	else if (valueType == VT_BSTR) {    // VT_BSTR
-		*value = std::wstring((wchar_t*)(buffer + *pos + 4)).data();
-		log(3, L"🔈replaceAll value");
-		*value = replaceAll(*value, L"\\", L"\\\\"); //escape \ in std::string like path
-		*pos += 4 + value->size() * 2 + 2;
-	}
-	else if (valueType == VT_DATE) {
+	if (valueType == VT_DATE) {
 		double t = *reinterpret_cast<double*>(buffer + *pos);
-		SYSTEMTIME s;
-		log(3, L"🔈VariantTimeToSystemTime value");
-		VariantTimeToSystemTime(t, &s);
-		log(3, L"🔈time_to_wstring value");
-		*value = time_to_wstring(s);
+		SYSTEMTIME st = { 0 };
+		if (!VariantTimeToSystemTime(t, &st)) { *pos += 8; return Json::null(); }
 		*pos += 8;
+		// Une date VARIANT (VT_DATE) est exprimee en heure LOCALE par convention OLE.
+		return Json::str(timeToIso8601(st, false));
 	}
-	else if (valueType == VT_BOOL) {    // VT_BOOL
-		if (*reinterpret_cast<unsigned short int*>(buffer + *pos) == 0xFFFF) {
-			log(3, L"🔈bool_to_wstring value");
-			*value = bool_to_wstring(true);
+	if (valueType == VT_BOOL) {
+		unsigned short v = *reinterpret_cast<unsigned short*>(buffer + *pos); *pos += 2;
+		if (v == 0xFFFF) return Json::boolean(true);
+		if (v == 0x0000) return Json::boolean(false);
+		/* VARIANT_BOOL hors des deux valeurs canoniques : la valeur brute est
+		   restituée plutôt qu'une chaîne vide, qui perdait la donnée. */
+		log(2, L"🔥VT_BOOL non canonique 0x" + to_hex(v));
+		return Json::str(L"0x" + to_hex(v));
+	}
+	if (valueType == VT_R8) {
+		double v = *reinterpret_cast<double*>(buffer + *pos); *pos += 8;
+		return Json::str(std::to_wstring(v));
+	}
+	if (valueType == VT_I1) {
+		char v = *reinterpret_cast<char*>(buffer + *pos); *pos += 1; return Json::num((long long)v);
+	}
+	if (valueType == VT_UI1) {
+		unsigned char v = *reinterpret_cast<unsigned char*>(buffer + *pos); *pos += 1; return Json::num((long long)v);
+	}
+	if (valueType == VT_UI2) {
+		unsigned short v = *reinterpret_cast<unsigned short*>(buffer + *pos); *pos += 2; return Json::num((long long)v);
+	}
+	if (valueType == VT_UI4 || valueType == VT_UINT) {
+		unsigned int v = *reinterpret_cast<unsigned int*>(buffer + *pos); *pos += 4; return Json::num((unsigned long long)v);
+	}
+	if (valueType == VT_I8) {
+		long long v = *reinterpret_cast<long long*>(buffer + *pos); *pos += 8; return Json::num(v);
+	}
+	if (valueType == VT_UI8) {
+		unsigned long long v = *reinterpret_cast<unsigned long long*>(buffer + *pos); *pos += 8; return Json::num(v);
+	}
+	if (valueType == VT_LPWSTR) {
+		std::wstring v((wchar_t*)(buffer + *pos + 4));
+		*pos += 4 + (unsigned int)v.size() * 2;
+		while (buffer[*pos] == 0x00) *pos += 1;   // rembourrage
+		return Json::str(v);
+	}
+	if (valueType == 0x101F) {                     // Vector<VT_LPWSTR>
+		Json arr = Json::arr();
+		unsigned int nb = *reinterpret_cast<unsigned int*>(buffer + *pos);
+		for (unsigned int x = 0; x < nb; x++) {
+			unsigned int taille = *reinterpret_cast<unsigned int*>(buffer + *pos + 4);
+			arr.push(Json::str(std::wstring((wchar_t*)(buffer + *pos + 8))));
+			*pos += 4 + taille * 2;
 		}
-		else if (*reinterpret_cast<unsigned short int*>(buffer + *pos) == 0x0000) {
-			log(3, L"🔈bool_to_wstring value");
-			*value = bool_to_wstring(false);
+		return arr;
+	}
+	if (valueType == 0x1011) {                     // Vector<VT_UI1>
+		unsigned short taille = *reinterpret_cast<unsigned short*>(buffer + *pos);
+		Json r = Json::str(L"Not implemented");    // contenu inconnu (system.delegateidlist)
+		if (*reinterpret_cast<unsigned int*>(buffer + *pos + 0x8) == 0x53505331)
+			r = SPS(buffer + *pos + 0x4, niveau + 2).toJson();
+		else if (*reinterpret_cast<unsigned int*>(buffer + *pos + 0x1c) == 0x53505331)
+			r = SPS(buffer + *pos + 0x8, niveau + 2).toJson();
+		*pos += taille;
+		return r;
+	}
+	if (valueType == VT_FILETIME) {
+		// Un FILETIME est UTC par definition : etiquette « Z », pas le fuseau local.
+		Json r = Json::str(timeToIso8601Utc(*reinterpret_cast<FILETIME*>(buffer + *pos)));
+		*pos += 8; return r;
+	}
+	if (valueType == VT_BLOB) {
+		/* L'ANCIENNE VERSION SUPPOSAIT TOUJOURS TROIS PROPERTY STORES à
+		   l'offset 17, codé en dur et sans vérifier quoi que ce soit. Sur un
+		   BLOB d'une autre forme — et rien ne garantit celle-là — les trois
+		   lectures partaient dans des octets arbitraires et publiaient des
+		   propriétés inventées. Le contenu brut, lui, n'était jamais rendu.
+
+		   Désormais : la taille annoncée borne la lecture, la signature
+		   « SPS1 » est vérifiée avant de décoder, et l'on enchaîne autant de
+		   stores que le BLOB en contient réellement. À défaut, les octets. */
+		const unsigned int taille = *reinterpret_cast<unsigned int*>(buffer + *pos);
+		const unsigned int debut = *pos + 4;
+		Json o = Json::obj();
+		o.add(L"DataSize", Json::num(taille));
+		const bool bornesOk = (taille > 0)
+		                   && (tailleEntree == 0 || debut + taille <= tailleEntree);
+		if (!bornesOk) {
+			log(2, L"🔥VT_BLOB : taille hors entree (" + std::to_wstring(taille) + L")");
 		}
-		else
-			*value = L"";
-		*pos += 2;
+		/* Le décalage de 13 octets entre le début du BLOB et le premier store a
+		   été relevé empiriquement ; il n'est appliqué que si la signature s'y
+		   trouve effectivement. */
+		else if (*reinterpret_cast<const unsigned int*>(buffer + debut + 13 + 4) == 0x53505331) {
+			Json arr = Json::arr();
+			unsigned int p = debut + 13;
+			const unsigned int fin = debut + taille;
+			while (p + 8 < fin) {
+				if (*reinterpret_cast<const unsigned int*>(buffer + p + 4) != 0x53505331) break;
+				SPS sps(buffer + p, niveau + 2);
+				if (sps.size == 0) break;
+				arr.push(sps.toJson());
+				p += sps.size;
+			}
+			o.add(L"PropertyStores", std::move(arr));
+		}
+		else {
+			log(3, L"🔈dump_wstring VT_BLOB");
+			o.add(L"Data", Json::str(dump_wstring(buffer, (int)debut, (int)taille)));
+		}
+		*pos += 4 + taille;
+		return o;
 	}
-	else if (valueType == VT_R8) {
-		*value = std::to_wstring(*reinterpret_cast<double*>(buffer + *pos));
-		*pos += 8;
-	}
-	else if (valueType == VT_I1) {    // VT_I1(signed 8 - bit)
-		*value = std::to_wstring((int)reinterpret_cast<char>(buffer + *pos));
-		*pos += 1;
-	}
-	else if (valueType == VT_UI1) {    // VT_UI1(unsigned 8 - bit)
-		*value = std::to_wstring((int)reinterpret_cast<unsigned char>(buffer + *pos));
-		*pos += 1;
-	}
-	else if (valueType == VT_UI2) {    // VT_UI2(unsigned 16 - bit)
-		*value = std::to_wstring(*reinterpret_cast<unsigned short int*>(buffer + *pos));
-		*pos += 2;
-	}
-	else if (valueType == VT_UI4 || valueType == VT_UINT) {   // VT_UI4, VT_UINT(unsigned 32 - bit)
-		*value = std::to_wstring(*reinterpret_cast<unsigned int*>(buffer + *pos));
+	if (valueType == VT_STREAM) {
+		/* LE CONTENU DU FLUX ÉTAIT JETÉ. Le code lisait le nom du flux, lisait la
+		   taille des données, avançait d'autant… et ne rendait que le nom. Or ce
+		   nom est un simple identifiant d'indirection : sur une collecte réelle,
+		   les quinze valeurs VT_STREAM rendaient toutes « prop4294967295 ».
+		   Autrement dit l'artefact ne portait rien d'exploitable, alors que les
+		   données étaient là.
+
+		   Le contenu est désormais restitué. Quand il commence par la signature
+		   « SPS1 », c'est un property store imbriqué : il est décodé comme tel —
+		   même cas que Vector<VT_UI1>. Sinon, les octets sont rendus en
+		   hexadécimal. */
+		const unsigned int tailleNom = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		*pos += 4;
-	}
-	else if (valueType == VT_I8) {    // VT_I8(signed 64 - bit)
-		*value = std::to_wstring(*reinterpret_cast<long long*>(buffer + *pos));
-		*pos += 8;
-	}
-	else if (valueType == VT_UI8) {  // VT_UI8(unsigned 64 - bit)
-		*value = std::to_wstring(*reinterpret_cast<unsigned long long*>(buffer + *pos));
-		*pos += 8;
-	}
-	else if (valueType == VT_LPWSTR) {    // VT_LPWSTR(Unicode std::string)
-		*value = std::wstring((wchar_t*)(buffer + *pos + 4)).data();
-		log(3, L"🔈replaceAll value");
-		*value = replaceAll(*value, L"\\", L"\\\\"); //escape \ in std::string like path
-		*pos += 4 + value->size() * 2;
-		while (buffer[*pos] == 0x00)
-			*pos += 1; // unknown
-	}
-	else if (valueType == 0x101F) {    // Vector<VT_LPWSTR> (Unicode std::string)
-		*valueIsObject = true;
-		*value = L"[";
-		unsigned int nbStrings = *reinterpret_cast<unsigned int*>(buffer + *pos);
-		for (unsigned int x = 0; x < nbStrings; x++) {
-			unsigned int stringsize = *reinterpret_cast<unsigned int*>(buffer + *pos + 4);
-			std::wstring temp((wchar_t*)(buffer + *pos + 8));
-			*value += L"\"" + temp + L"\"";
-			if (x != nbStrings - 1)
-				*value += L",";
-			*pos += 4 + stringsize * 2;
+		const std::wstring nom((wchar_t*)(buffer + *pos));
+		*pos += tailleNom + 2;
+		const unsigned int tailleDonnees = *reinterpret_cast<unsigned int*>(buffer + *pos);
+		const unsigned int debutDonnees = *pos + 4;
+
+		Json o = Json::obj();
+		o.add(L"StreamName", Json::str(nom));
+		o.add(L"DataSize",   Json::num(tailleDonnees));
+		const bool bornesOk = (tailleDonnees > 0)
+		                   && (tailleEntree == 0 || debutDonnees + tailleDonnees <= tailleEntree);
+		if (!bornesOk) {
+			if (tailleDonnees > 0)
+				log(2, L"🔥VT_STREAM : taille de donnees hors entree ("
+				     + std::to_wstring(tailleDonnees) + L")");
 		}
-		*value += L"]";
-		log(3, L"🔈replaceAll value");
-		*value = replaceAll(*value, L"\\", L"\\\\"); //escape \ in std::string like path
-	}
-	else if (valueType == 0x1011) // Vector<VT_UI1> TABLEAU byte
-	{
-		*value = L"";
-		*valueIsObject = false;
-		unsigned short int itemsize = *reinterpret_cast<unsigned short int*>(buffer + *pos);
-		if (*reinterpret_cast<unsigned int*>(buffer + *pos + 0x8) == 0x53505331) { // SPS
-			*valueIsObject = true;
-			log(3, L"🔈SPS");
-			*value = SPS(buffer + *pos + 0x4, niveau + 2).to_json();
+		else if (*reinterpret_cast<const unsigned int*>(buffer + debutDonnees + 4) == 0x53505331) {
+			// Property store imbrique : la signature « SPS1 » suit la taille.
+			log(3, L"🔈VT_STREAM : property store imbrique");
+			o.add(L"PropertyStore", SPS(buffer + debutDonnees, niveau + 2).toJson());
 		}
-		else if (*reinterpret_cast<unsigned int*>(buffer + *pos + 0x1c) == 0x53505331) { // SPS
-			*valueIsObject = true;
-			log(3, L"🔈SPS value");
-			*value = SPS(buffer + *pos + 0x8, niveau + 2).to_json();
+		else {
+			log(3, L"🔈dump_wstring VT_STREAM");
+			o.add(L"Data", Json::str(dump_wstring(buffer, (int)debutDonnees,
+			                                      (int)tailleDonnees)));
 		}
-		else *value = L"Not implemented"; //TODO Vector<VT_UI1>, il s'agit d'un std::vector de byte (LPBYTE) mais contenu unknown, il faudrait trouver à quoi correspond system.delegateidlist
-
-		*pos += itemsize;
-
+		*pos += tailleDonnees;
+		return o;
 	}
-	else if (valueType == VT_FILETIME) {    // VT_FILETIME(aka.Windows 64 - bit timestamp)
-		log(3, L"🔈time_to_wstring value");
-		*value = time_to_wstring(*reinterpret_cast<FILETIME*>(buffer + *pos));
-		*pos += 8;
+	/* TYPES AJOUTÉS pour aligner la couverture sur libfwps (libyal), référence du
+	   format des property stores. Ils manquaient tous les cinq, et sortaient
+	   donc sans valeur. Tailles et sémantique d'après MS-OLEPS. */
+	if (valueType == VT_R4) {                      // 0x0004 : flottant 32 bits
+		float v = *reinterpret_cast<float*>(buffer + *pos); *pos += 4;
+		return Json::str(std::to_wstring(v));
 	}
-	else if (valueType == VT_BLOB) {
-		*valueIsObject = true;
-		int pos2 = 0;
-
-		//SPS
-		pos2 = 17;
-		log(3, L"🔈SPS sps1");
-		SPS* sps1 = new SPS(buffer + pos2, niveau + 2);
-		pos2 += sps1->size;
-
-		//SPS
-		log(3, L"🔈SPS sps2");
-		SPS* sps2 = new SPS(buffer + pos2, niveau + 2);
-		pos2 += sps2->size;
-
-		//SPS
-		log(3, L"🔈SPS sps3");
-		SPS* sps3 = new SPS(buffer + pos2, niveau + 2);
-		pos2 += sps3->size;
-
-		*pos += pos2;
-
-		//résultat
-		*value = L"[\n";
-		*value += sps1->to_json();
-		*value += L",\n";
-		*value += sps2->to_json();
-		*value += L",\n";
-		*value += sps3->to_json();
-		*value += L"\n";
-		*value += tab(niveau + 1) + L"]";
-
-		delete sps1;
-		delete sps2;
-		delete sps3;
+	if (valueType == VT_CY) {                      // 0x0006 : monétaire
+		/* Entier signé 64 bits valant le montant multiplié par 10 000. La valeur
+		   brute est conservée : la diviser ici imposerait un format décimal et
+		   perdrait de la précision. */
+		long long v = *reinterpret_cast<long long*>(buffer + *pos); *pos += 8;
+		Json o = Json::obj();
+		o.add(L"ScaledBy10000", Json::num(v));
+		return o;
 	}
-	else if (valueType == VT_STREAM) {    // VT_STREAM, TODO calcul size pour maj pos
-		*value = L"VT_STREAM not implemented";
-		unsigned int stringsize = *reinterpret_cast<unsigned int*>(buffer + *pos);
-		*pos += 4;
-		*value = std::wstring((wchar_t*)(buffer + *pos)).data();
-		*pos += stringsize;
-		*pos += 2;//padding
-		unsigned int steamdatasize = *reinterpret_cast<unsigned int*>(buffer + *pos);
-		*pos += steamdatasize;
-		*pos += 0;
+	if (valueType == VT_ERROR) {                   // 0x000A : HRESULT
+		unsigned int v = *reinterpret_cast<unsigned int*>(buffer + *pos); *pos += 4;
+		return Json::str(L"0x" + to_hex(v));
 	}
-	else if (valueType == VT_CLSID) {
-		log(3, L"🔈guid_to_wstring guid");
-		std::wstring guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + *pos));
-		log(3, L"🔈trans_guid_to_wstring FriendlyName");
-		std::wstring FriendlyName = trans_guid_to_wstring(guid);
-		*valueIsObject = true;
-		*value = L"{\n"
-			+ tab(niveau + 2) + L"\"GUID\" : \"" + guid + L"\",\n"
-			+ tab(niveau + 2) + L"\"FriendlyName\" : \"" + FriendlyName + L"\"\n"
-			+ tab(niveau + 1) + L"}";
+	if (valueType == VT_DECIMAL) {                 // 0x000E : décimal 128 bits
+		/* Structure DECIMAL de Windows : 16 octets. Restituée en octets bruts
+		   plutôt que convertie — une conversion en double perdrait justement la
+		   précision qui fait l'intérêt de ce type. */
+		Json o = Json::obj();
+		o.add(L"Decimal128", Json::str(dump_wstring(buffer, (int)*pos, 16)));
 		*pos += 16;
+		return o;
 	}
-	else
-		*value = L"";
+	if (valueType == VT_LPSTR) {                   // 0x001E : chaîne ASCII
+		/* Taille en OCTETS, terminateur inclus — contrairement à VT_LPWSTR dont
+		   la taille est en caractères. */
+		unsigned int taille = *reinterpret_cast<unsigned int*>(buffer + *pos);
+		std::wstring v = string_to_wstring(std::string((char*)(buffer + *pos + 4)));
+		*pos += 4 + taille;
+		return Json::str(v);
+	}
+	if (valueType == VT_CLSID) {
+		std::wstring guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + *pos));
+		*pos += 16;
+		Json o = Json::obj();
+		o.add(L"GUID",         Json::str(guid));
+		o.add(L"FriendlyName", Json::str(trans_guid_to_wstring(guid)));
+		return o;
+	}
+
+	/* TYPE NON DÉCODÉ : ON REND LES OCTETS.
+	 *
+	 * La version précédente rendait une chaîne vide. La propriété apparaissait
+	 * donc avec son nom et son type, mais SANS valeur — indiscernable d'une
+	 * propriété réellement vide, et la donnée était perdue alors qu'elle est
+	 * présente dans le fichier. Un type que nous ne savons pas lire ne doit pas
+	 * faire disparaître son contenu : on restitue les octets restants de
+	 * l'entrée, en hexadécimal, pour qu'un analyste puisse les décoder — même
+	 * raison d'être que le dump de `UnknownShellItem` et de `BeefUnknown`.
+	 *
+	 * La position n'est pas avancée : elle ne sert qu'à l'intérieur de l'entrée,
+	 * dont le parcours est borné par sa propre taille chez l'appelant. */
+	if (typeNonDecode) *typeNonDecode = true;
+	Json o = Json::obj();
+	o.add(L"UnsupportedValueType", Json::str(L"0x" + to_hex(valueType)));
+	if (tailleEntree > *pos) {
+		log(3, L"🔈dump_wstring valeur de type non pris en charge");
+		// « tailleEntree - pos » est bien une LONGUEUR : les octets restants.
+		o.add(L"Data", Json::str(dump_wstring(buffer, (int)*pos, (int)(tailleEntree - *pos))));
+	}
+	log(2, L"🔥getValue : type de valeur non pris en charge 0x" + to_hex(valueType));
+	return o;
+}
+
+/*! Lit une valeur de property store, scalaire ou VECTEUR.
+*
+*  LES VECTEURS SONT DÉSORMAIS TRAITÉS GÉNÉRIQUEMENT. Le bit `VT_VECTOR`
+*  (0x1000) signale un tableau : un compteur d'éléments sur 32 bits, puis les
+*  éléments du type scalaire correspondant (MS-OLEPS). Deux vecteurs seulement
+*  étaient reconnus — `Vector<VT_UI1>` et `Vector<VT_LPWSTR>` — et tous les
+*  autres (`Vector<VT_FILETIME>`, `Vector<VT_CLSID>`, `Vector<VT_I4>`,
+*  `Vector<VT_LPSTR>`…) tombaient dans le cas « type non pris en charge ».
+*  Décoder le compteur puis déléguer chaque élément au lecteur scalaire les
+*  couvre tous d'un coup, et tout type scalaire ajouté plus tard bénéficie
+*  automatiquement de sa forme vectorielle.
+*
+*  Les deux vecteurs historiques gardent leur traitement propre : celui de
+*  `Vector<VT_UI1>` n'est pas un simple tableau d'octets mais peut contenir un
+*  property store imbriqué (signature « SPS1 »), ce qu'aucune règle générique ne
+*  devinerait.
+*/
+Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int niveau,
+              unsigned int tailleEntree, bool* typeNonDecode) {
+	const unsigned short VT_VECTOR_BIT = 0x1000;
+
+	// Cas particuliers conserves : heuristiques propres a ces deux vecteurs.
+	if (valueType == 0x1011 || valueType == 0x101F)
+		return lireScalaire(buffer, pos, valueType, niveau, tailleEntree, typeNonDecode);
+
+	if ((valueType & VT_VECTOR_BIT) == 0)
+		return lireScalaire(buffer, pos, valueType, niveau, tailleEntree, typeNonDecode);
+
+	const unsigned short typeElement = (unsigned short)(valueType & 0x0FFF);
+	const unsigned int nb = *reinterpret_cast<unsigned int*>(buffer + *pos);
+	*pos += 4;
+	log(3, L"🔈vecteur de " + std::to_wstring(nb) + L" element(s) de type 0x"
+	     + to_hex(typeElement));
+
+	/* Un compteur aberrant vient d'une donnee corrompue ou d'un type mal
+	   identifie : on rend les octets au lieu d'iterer des millions de fois. */
+	const unsigned int MAX_ELEMENTS = 65536;
+	if (nb > MAX_ELEMENTS) {
+		log(2, L"🔥vecteur : compteur aberrant " + std::to_wstring(nb));
+		if (typeNonDecode) *typeNonDecode = true;
+		Json o = Json::obj();
+		o.add(L"UnsupportedValueType", Json::str(L"0x" + to_hex(valueType)));
+		o.add(L"ElementCount",         Json::num(nb));
+		if (tailleEntree > *pos)
+			o.add(L"Data", Json::str(dump_wstring(buffer, (int)*pos,
+			                                      (int)(tailleEntree - *pos))));
+		return o;
+	}
+
+	Json arr = Json::arr();
+	for (unsigned int x = 0; x < nb; ++x) {
+		bool elementNonDecode = false;
+		Json v = lireScalaire(buffer, pos, typeElement, niveau, tailleEntree,
+		                      &elementNonDecode);
+		arr.push(std::move(v));
+		if (elementNonDecode) {
+			/* Sans savoir la taille d'un element, la position n'avance pas :
+			   continuer relirait le meme octet. On s'arrete en le signalant. */
+			if (typeNonDecode) *typeNonDecode = true;
+			log(2, L"🔥vecteur : element de type non decode 0x" + to_hex(typeElement)
+			     + L", arret apres " + std::to_wstring(x + 1) + L"/" + std::to_wstring(nb));
+			break;
+		}
+	}
+	return arr;
 }
 
 SPSValue::SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau) {
 	log(3, L"🔈SPSValue");
 	niveau = _niveau;
 	guid = _guid;
-	valueIsObject = false;
 	size = *reinterpret_cast<unsigned int*>(buffer);
 	valueType = 0;
 	if (size > 0) {
@@ -532,32 +661,26 @@ SPSValue::SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau) {
 		else {
 			valueType = *reinterpret_cast<unsigned short int*>(buffer + 9);
 			log(3, L"🔈to_FriendlyName name");
+			// Le nom inconnu est desormais la CLE BRUTE, journalisee par
+			// to_FriendlyName lui-meme : le test sur « (Undefined) » n'a plus
+			// d'objet et faisait doublon.
 			name = to_FriendlyName(guid, id_int);
-			if (name == L"(Undefined)") {
-				log(2, L"🔥SPS Value : Friendlyname Unknown " + guid + L"/" + std::to_wstring(id_int));
-			}
 			id = std::to_wstring(id_int);
 
 		}
-		log(3, L"🔈get_value");
-		get_value(buffer, &pos, valueType, niveau, &value, &valueIsObject);
+		log(3, L"🔈getValue");
+		value = getValue(buffer, &pos, valueType, niveau, size);
 	}
 }
 
-std::wstring SPSValue::to_json(int i) {
-	log(3, L"🔈SPSValue to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n";
-	result += tab(niveau + 1) + L"\"ID\" : \"" + guid + L"/" + id + L"\",\n";
-	result += tab(niveau + 1) + L"\"Name\" : \"" + name + L"\",\n";
-	log(3, L"🔈get_type valueType");
-	result += tab(niveau + 1) + L"\"Type\" : \"" + get_type(valueType) + L"\",\n";
-	if (valueIsObject == false)
-		result += tab(niveau + 1) + L"\"Value\" : \"" + value + L"\"\n"; // std::string
-	else
-		result += tab(niveau + 1) + L"\"Values\" : " + value + L"\n"; // Object
-	result += tab(niveau) + L"}";
-	return result;
+Json SPSValue::toJson() {
+	log(3, L"🔈SPSValue toJson");
+	Json o = Json::obj();
+	o.add(L"ID",    Json::str(guid + L"/" + id));
+	o.add(L"Name",  Json::str(name));
+	o.add(L"Type",  Json::str(getType(valueType)));
+	o.add(L"Value", value);          // valeur deja typee (chaine, nombre, objet, tableau)
+	return o;
 }
 
 SPS::SPS(LPBYTE buffer, int _niveau) {
@@ -573,7 +696,7 @@ SPS::SPS(LPBYTE buffer, int _niveau) {
 		if (pos >= size)
 			break; //fin
 		log(3, L"🔈SPSValue");
-		SPSValue block(buffer + pos, guid, niveau + 2); // concordance avec to_json
+		SPSValue block(buffer + pos, guid, niveau + 2); // concordance avec toJson
 		if (block.size == 0) { //vide
 			break;
 		}
@@ -583,21 +706,19 @@ SPS::SPS(LPBYTE buffer, int _niveau) {
 	}
 }
 
-std::wstring SPS::to_json(int i) {
-	log(3, L"🔈SPS to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Values\" : [\n";
-	std::vector<SPSValue>::iterator it;
-	for (it = values.begin(); it != values.end(); it++) {
-		result += it->to_json(i);
-		if (it != values.end() - 1)
-			result += L",";
-		result += L"\n";
-	}
-	result += tab(niveau + 1) + L"]\n";
-	result += tab(niveau) + L"}";
-	return result;
+Json SPS::toJson() {
+	log(3, L"🔈SPS toJson");
+	Json arr = Json::arr();
+	for (SPSValue& v : values) arr.push(v.toJson());
+	Json o = Json::obj();
+	/* GUID du property store (son « format ID ») et son libelle : releves par le
+	   constructeur et jamais emis. Chaque valeur porte deja le GUID dans son
+	   champ ID, mais un store SANS valeur perdait toute identification — et le
+	   libelle du store n'apparaissait nulle part. */
+	if (!guid.empty())         o.add(L"GUID",         Json::str(guid));
+	if (!FriendlyName.empty()) o.add(L"FriendlyName", Json::str(FriendlyName));
+	o.add(L"Values", std::move(arr));
+	return o;
 }
 
 /********************************************************************************************************************
@@ -618,17 +739,15 @@ Beef0000::Beef0000(LPBYTE buffer, int _niveau) {
 	identifier2 = trans_guid_to_wstring(guid2);
 }
 
-std::wstring Beef0000::to_json(int i) {
-	log(3, L"🔈Beef0000 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"Guid1\" : \"" + guid1 + L"\",\n"
-		+ tab(niveau + 1) + L"\"Identifier1\" : \"" + identifier1 + L"\",\n"
-		+ tab(niveau + 1) + L"\"Guid2\" : \"" + guid2 + L"\",\n"
-		+ tab(niveau + 1) + L"\"Identifier2\" : \"" + identifier2 + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0000::toJson() {
+	log(3, L"🔈Beef0000 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"Guid1", Json::str(guid1));
+	o.add(L"Identifier1", Json::str(identifier1));
+	o.add(L"Guid2", Json::str(guid2));
+	o.add(L"Identifier2", Json::str(identifier2));
+	return o;
 }
 
 Beef0001::Beef0001(LPBYTE buffer, int _niveau) {
@@ -638,14 +757,12 @@ Beef0001::Beef0001(LPBYTE buffer, int _niveau) {
 	message = L"Unsupported Extension block";
 }
 
-std::wstring Beef0001::to_json(int i) {
-	log(3, L"🔈Beef0001 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"Message \" : \"" + message + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0001::toJson() {
+	log(3, L"🔈Beef0001 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"Message", Json::str(message));
+	return o;
 }
 
 Beef0002::Beef0002(LPBYTE buffer, int _niveau) {
@@ -655,14 +772,12 @@ Beef0002::Beef0002(LPBYTE buffer, int _niveau) {
 	message = L"Unsupported Extension block";
 }
 
-std::wstring Beef0002::to_json(int i) {
-	log(3, L"🔈Beef0002 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"Message \" : \"" + message + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0002::toJson() {
+	log(3, L"🔈Beef0002 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"Message", Json::str(message));
+	return o;
 }
 
 Beef0003::Beef0003(LPBYTE buffer, int _niveau) {
@@ -675,37 +790,73 @@ Beef0003::Beef0003(LPBYTE buffer, int _niveau) {
 	identifier = trans_guid_to_wstring(guid);
 }
 
-std::wstring Beef0003::to_json(int i) {
-	log(3, L"🔈Beef0003 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"Guid\" : \"" + guid + L"\",\n"
-		+ tab(niveau + 1) + L"\"Identifier\" : \"" + identifier + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0003::toJson() {
+	log(3, L"🔈Beef0003 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"Guid", Json::str(guid));
+	o.add(L"Identifier", Json::str(identifier));
+	return o;
 }
 
 Beef0004::Beef0004(LPBYTE buffer, int _niveau, bool* is_zip, bool is_file) {
-	ExtensionVersion = 0;
 	niveau = _niveau;
 	isPresent = true;
 	signature = L"0xbeef0004";
-	creationDateUtc = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 8)).to_filetime();
-	log(3, L"🔈time_to_wstring creationDateUtc");
-	if (time_to_wstring(creationDateUtc) != L"") {
-		log(3, L"🔈FileTimeToLocalFileTime creationDateUtc");
-		FileTimeToLocalFileTime(&creationDateUtc, &creationDate);
+	/* VERSION DU BLOC : elle etait mise a zero et jamais relue, donc ni exploitee
+	   ni emise. Or c'est une donnee d'enquete : elle indique quelle version de
+	   Windows a ECRIT l'entree — 0x0003 (XP), 0x0007 (Vista), 0x0008 (Windows 7),
+	   0x0009 (Windows 8.1 et au-dela) — et determine quels champs le bloc
+	   contient. Offset 2, juste avant la signature lue en 4. */
+	ExtensionVersion = *reinterpret_cast<unsigned short int*>(buffer + 2);
+	/* CORRECTION (double decalage sur les dates FAT, cf. doc §7.3).
+	   Une date FAT/DOS est stockee en HEURE LOCALE, par specification du format.
+	   Le code affectait cette valeur locale a `creationDateUtc`, puis lui
+	   appliquait FileTimeToLocalFileTime — traitant donc du local comme de l'UTC.
+	   Resultat : la cle *Utc publiait une heure locale etiquetee UTC, et la cle
+	   locale une heure decalee une SECONDE fois (+2 h a Paris en ete).
+	   Le sens correct est l'inverse : la valeur native est locale, on en derive
+	   l'UTC. */
+	creationDate = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 8)).toFileTime();
+	log(3, L"🔈LocalFileTimeToFileTime creationDate");
+	LocalFileTimeToFileTime(&creationDate, &creationDateUtc);
+
+	accessedDate = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 12)).toFileTime();
+	log(3, L"🔈LocalFileTimeToFileTime accessedDate");
+	LocalFileTimeToFileTime(&accessedDate, &accessedDateUtc);
+	/* IDENTIFIANT ET RÉFÉRENCE $MFT (versions >= 7), et surtout OFFSETS CALCULÉS
+	 * D'APRÈS LA VERSION.
+	 *
+	 * CE QUI ÉTAIT FAUX. Les offsets du nom long étaient codés en dur (36 et 46)
+	 * — ils ne sont exacts que pour la VERSION 9 du bloc, celle de Windows 8.1
+	 * et au-delà. Sur un bloc de version 3 (Windows XP), 7 (Vista) ou 8
+	 * (Windows 7), le nom long était donc lu au mauvais endroit. C'est
+	 * exactement le genre de défaut qui ne se voit pas sur une machine récente
+	 * et se révèle sur un système ancien, comme l'attribut $ATTRIBUTE_LIST
+	 * (doc §14.10). La version, désormais lue (offset 2), sert à calculer la
+	 * position réelle — même enchaînement que l'implémentation de référence
+	 * d'Eric Zimmerman (ExtensionBlocks). */
+	identifier = *reinterpret_cast<unsigned short int*>(buffer + 16);
+	unsigned int off = 18;                        // fin de la partie fixe
+	if (ExtensionVersion >= 7) {
+		off += 2;                                 // deux octets vides
+		/* Référence de fichier : 6 octets d'index d'entrée, 2 de séquence. */
+		const unsigned long long brut = *reinterpret_cast<unsigned long long*>(buffer + off);
+		mftEntryNumber    = brut & 0x0000FFFFFFFFFFFFULL;
+		mftSequenceNumber = (unsigned short int)(brut >> 48);
+		if (mftEntryNumber != 0 && mftSequenceNumber != 0)      mftNote = L"NTFS";
+		else if (mftEntryNumber != 0 && mftSequenceNumber == 0) mftNote = L"FAT";
+		else                                                    mftNote = L"Network/special item";
+		off += 8;                                 // reference de fichier
+		off += 8;                                 // huit octets inconnus
 	}
-	accessedDateUtc = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 12)).to_filetime();
-	if (time_to_wstring(accessedDateUtc) != L"") {
-		log(3, L"🔈FileTimeToLocalFileTime accessedDateUtc");
-		FileTimeToLocalFileTime(&accessedDateUtc, &accessedDate);
-	}
-	unsigned int off = 18;  //start of data part
+	if (ExtensionVersion >= 3) off += 2;
+	if (ExtensionVersion >= 9) off += 4;
+	if (ExtensionVersion >= 8) off += 4;
+
 	unsigned short int longNameSize = 0;
-	longNameSize = *reinterpret_cast<unsigned short int*>(buffer + off + 18);
-	longName = std::wstring((wchar_t*)(buffer + off + 28)).data();
+	longNameSize = *reinterpret_cast<unsigned short int*>(buffer + 36);
+	longName = std::wstring((wchar_t*)(buffer + off)).data();
 	// le contenu des ZIP et autres archives ont un contenu format special, il faut donc identifier les archives.
 	// L'attribut ARCHIVE ne signifie pas ZIP mais "prêt à être archivé" au sens l'explorer
 	std::wstring extension = L"";
@@ -716,29 +867,34 @@ Beef0004::Beef0004(LPBYTE buffer, int _niveau, bool* is_zip, bool is_file) {
 		*is_zip = true;
 	if (longNameSize > longName.size())
 	{
-		localizedName = std::wstring((wchar_t*)(buffer + off + 28 + (longName.size() + 1) * 2)).data();
-		log(3, L"🔈replaceAll localizedName");
-		localizedName = replaceAll(localizedName, L"\\", L"\\\\");
+		localizedName = std::wstring((wchar_t*)(buffer + off + (longName.size() + 1) * 2)).data();
 	}
 }
 
-std::wstring Beef0004::to_json(int i) {
-	log(3, L"🔈Beef0004 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n";
-	result += tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n";
-	log(3, L"🔈time_to_wstring accessedDate");
-	result += tab(niveau + 1) + L"\"CreatedDate\" : \"" + time_to_wstring(accessedDate) + L"\",\n";
-	log(3, L"🔈time_to_wstring accessedDateUtc");
-	result += tab(niveau + 1) + L"\"CreatedDateUtc\" : \"" + time_to_wstring(accessedDateUtc) + L"\",\n";
-	log(3, L"🔈time_to_wstring accessedDate");
-	result += tab(niveau + 1) + L"\"AccessedDate\" : \"" + time_to_wstring(accessedDate) + L"\",\n";
-	log(3, L"🔈time_to_wstring accessedDateUtc");
-	result += tab(niveau + 1) + L"\"AccessedDateUtc\" : \"" + time_to_wstring(accessedDateUtc) + L"\",\n";
-	result += tab(niveau + 1) + L"\"LongName\" : \"" + longName + L"\",\n";
-	result += tab(niveau + 1) + L"\"LocalizedName\" : \"" + localizedName + L"\"\n";
-	result += tab(niveau) + L"}";
-	return result;
+Json Beef0004::toJson() {
+	log(3, L"🔈Beef0004 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	// Version du bloc : dit quelle version de Windows a ecrit l'entree.
+	o.add(L"ExtensionVersion", Json::str(L"0x" + to_hex(ExtensionVersion)));
+	o.add(L"Identifier",       Json::num(identifier));
+	/* Reference $MFT : n'existe qu'a partir de la version 7 du bloc. Emise
+	   seulement si elle est presente, pour ne pas publier de zeros trompeurs. */
+	if (!mftNote.empty()) {
+		o.add(L"MftEntryNumber",    Json::num(mftEntryNumber));
+		o.add(L"MftSequenceNumber", Json::num(mftSequenceNumber));
+		o.add(L"MftNote",           Json::str(mftNote));
+	}
+	// CORRECTION : les cles Created* publiaient accessedDate/accessedDateUtc,
+	// alors que creationDate/creationDateUtc sont bien parses. La date de
+	// creation etait donc perdue et remplacee par la date d'acces.
+	o.add(L"CreatedDate",     Json::str(timeToIso8601Local(creationDate)));
+	o.add(L"CreatedDateUtc",  Json::str(timeToIso8601Utc(creationDateUtc)));
+	o.add(L"AccessedDate",    Json::str(timeToIso8601Local(accessedDate)));
+	o.add(L"AccessedDateUtc", Json::str(timeToIso8601Utc(accessedDateUtc)));
+	o.add(L"LongName",        Json::str(longName));
+	o.add(L"LocalizedName",   Json::str(localizedName));
+	return o;
 }
 
 Beef0006::Beef0006(LPBYTE buffer, int _niveau) {
@@ -751,14 +907,12 @@ Beef0006::Beef0006(LPBYTE buffer, int _niveau) {
 	username = std::wstring((wchar_t*)(buffer + pos + 2)).data();
 }
 
-std::wstring Beef0006::to_json(int i) {
-	log(3, L"🔈Beef0006 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"Username\" : \"" + username + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0006::toJson() {
+	log(3, L"🔈Beef0006 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"Username", Json::str(username));
+	return o;
 }
 
 Beef0008::Beef0008(LPBYTE buffer, int _niveau) {
@@ -768,14 +922,12 @@ Beef0008::Beef0008(LPBYTE buffer, int _niveau) {
 	message = L"Unsupported Extension block";
 }
 
-std::wstring Beef0008::to_json(int i) {
-	log(3, L"🔈Beef0008 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0008::toJson() {
+	log(3, L"🔈Beef0008 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"Message", Json::str(message));
+	return o;
 }
 
 Beef0009::Beef0009(LPBYTE buffer, int _niveau) {
@@ -785,14 +937,12 @@ Beef0009::Beef0009(LPBYTE buffer, int _niveau) {
 	message = L"Unsupported Extension block";
 }
 
-std::wstring Beef0009::to_json(int i) {
-	log(3, L"🔈Beef0009 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0009::toJson() {
+	log(3, L"🔈Beef0009 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"Message", Json::str(message));
+	return o;
 }
 
 Beef000a::Beef000a(LPBYTE buffer, int _niveau) {
@@ -802,14 +952,12 @@ Beef000a::Beef000a(LPBYTE buffer, int _niveau) {
 	message = L"Unsupported Extension block";
 }
 
-std::wstring Beef000a::to_json(int i) {
-	log(3, L"🔈Beef000a to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef000a::toJson() {
+	log(3, L"🔈Beef000a toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"Message", Json::str(message));
+	return o;
 }
 
 Beef000c::Beef000c(LPBYTE buffer, int _niveau) {
@@ -819,17 +967,23 @@ Beef000c::Beef000c(LPBYTE buffer, int _niveau) {
 	message = L"Unsupported Extension block";
 }
 
-std::wstring Beef000c::to_json(int i) {
-	log(3, L"🔈Beef000c to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef000c::toJson() {
+	log(3, L"🔈Beef000c toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"Message", Json::str(message));
+	return o;
 }
 
-Beef000e::Beef000e(LPBYTE buffer, int _niveau) { // TODO A TESTER
+/* NON COUVERT PAR LES TESTS (vérifié le 2026-09-15).
+ * La VM de validation ne produit que des blocs 0xbeef0004 : ce constructeur n'est
+ * jamais exercé, ses offsets (GUID en +16, 3 SPS à partir de +50, puis +11 avant
+ * 3 chaînes) restent donc des hypothèses non vérifiées.
+ * Pour l'exercer il faut des shellbags contenant ce bloc — ce qui suppose une
+ * session INTERACTIVE dans l'explorateur (les shellbags ne sont pas alimentés par
+ * un processus lancé en service), ou un jeu de ruches de référence.
+ * Tant que ce n'est pas fait : sortie à considérer comme non validée. */
+Beef000e::Beef000e(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	message = L"";
 	isPresent = true;
@@ -869,11 +1023,8 @@ Beef000e::Beef000e(LPBYTE buffer, int _niveau) { // TODO A TESTER
 	while (true) {
 		unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos); // recherche de idlist
 		if (size > 0) {
-			log(3, L"🔈IShellItem");
-			IShellItem* i;
-			log(3, L"🔈getShellItem");
-			getShellItem(buffer + pos, &i, niveau + 1);
-			ishellitems.push_back(i);
+			log(3, L"🔈makeShellItem");
+			ishellitems.push_back(makeShellItem(buffer + pos, niveau + 1));
 			pos += size;
 		}
 		else
@@ -881,23 +1032,33 @@ Beef000e::Beef000e(LPBYTE buffer, int _niveau) { // TODO A TESTER
 	}
 }
 
-std::wstring Beef000e::to_json(int i) {
-	log(3, L"🔈Beef000e to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"IdLists\" : [\n";
-	std::vector<IShellItem*>::iterator it;
-	for (it = ishellitems.begin(); it != ishellitems.end(); it++) {
-		IShellItem* temp = *it;
-		result += temp->to_json(i);
-		if (it != ishellitems.end() - 1)
-			result += L",";
-		result += L"\n";
+Json Beef000e::toJson() {
+	log(3, L"🔈Beef000e toJson");
+	/* MEMBRES COLLECTES ET JAMAIS EMIS. Le constructeur relevait le GUID, son
+	   libelle, TROIS property stores et des blocs d'extension ; toJson ne
+	   publiait que la signature et les shell items. Tout le reste etait lu puis
+	   jete — meme defaut que UsersPropertyView, trouve par le meme audit. */
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	if (!guid.empty())       o.add(L"GUID",         Json::str(guid));
+	if (!identifier.empty()) o.add(L"FriendlyName", Json::str(identifier));
+
+	Json arr = Json::arr();
+	for (const auto& it : ishellitems) arr.push(it->toJson());
+	o.add(L"IdLists", std::move(arr));
+
+	if (!SPSs.empty()) {
+		Json stores = Json::arr();
+		for (SPS& sps : SPSs) stores.push(sps.toJson());
+		o.add(L"PropertyStores", std::move(stores));
 	}
-	result += L"]\n";
-	result += L"}\n";
-	return result;
+	if (!extensionblocks.empty()) {
+		Json blocs = Json::arr();
+		for (const auto& b : extensionblocks) blocs.push(b->toJson());
+		o.add(L"ExtensionBlocksCount", Json::num((unsigned long long)extensionblocks.size()));
+		o.add(L"ExtensionBlocks",      std::move(blocs));
+	}
+	return o;
 }
 
 Beef0010::Beef0010(LPBYTE buffer, int _niveau) {
@@ -908,16 +1069,12 @@ Beef0010::Beef0010(LPBYTE buffer, int _niveau) {
 	sps = SPS(buffer + 16, niveau + 1);
 }
 
-std::wstring Beef0010::to_json(int i) {
-	log(3, L"🔈Beef0010 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"SPS\" :\n"
-		+ sps.to_json(i)
-		+ L"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0010::toJson() {
+	log(3, L"🔈Beef0010 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"SPS",       sps.toJson());
+	return o;
 }
 
 Beef0013::Beef0013(LPBYTE buffer, int _niveau) {
@@ -927,14 +1084,12 @@ Beef0013::Beef0013(LPBYTE buffer, int _niveau) {
 	message = L"The purpose of this extension block is unknown";
 }
 
-std::wstring Beef0013::to_json(int i) {
-	log(3, L"🔈Beef0013 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0013::toJson() {
+	log(3, L"🔈Beef0013 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"Message", Json::str(message));
+	return o;
 }
 
 Beef0014::Beef0014(LPBYTE buffer, int _niveau) {
@@ -944,14 +1099,12 @@ Beef0014::Beef0014(LPBYTE buffer, int _niveau) {
 	message = L"Unsupported Extension block";
 }
 
-std::wstring Beef0014::to_json(int i) {
-	log(3, L"🔈Beef0014 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0014::toJson() {
+	log(3, L"🔈Beef0014 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"Message", Json::str(message));
+	return o;
 }
 
 Beef0016::Beef0016(LPBYTE buffer, int _niveau) {
@@ -961,14 +1114,12 @@ Beef0016::Beef0016(LPBYTE buffer, int _niveau) {
 	value = std::wstring((wchar_t*)(buffer + 10)).data();
 }
 
-std::wstring Beef0016::to_json(int i) {
-	log(3, L"🔈Beef0016 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"Value\" : \"" + value + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0016::toJson() {
+	log(3, L"🔈Beef0016 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"Value", Json::str(value));
+	return o;
 }
 
 Beef0017::Beef0017(LPBYTE buffer, int _niveau) {
@@ -978,14 +1129,12 @@ Beef0017::Beef0017(LPBYTE buffer, int _niveau) {
 	message = L"Unsupported Extension block";
 }
 
-std::wstring Beef0017::to_json(int i) {
-	log(3, L"🔈Beef0017 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0017::toJson() {
+	log(3, L"🔈Beef0017 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"Message", Json::str(message));
+	return o;
 }
 
 Beef0019::Beef0019(LPBYTE buffer, int _niveau) {
@@ -1002,17 +1151,15 @@ Beef0019::Beef0019(LPBYTE buffer, int _niveau) {
 	identifier2 = trans_guid_to_wstring(guid2);
 }
 
-std::wstring Beef0019::to_json(int i) {
-	log(3, L"🔈Beef0019 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"Guid1\" : \"" + guid1 + L"\",\n"
-		+ tab(niveau + 1) + L"\"Identifier1\" : \"" + identifier1 + L"\",\n"
-		+ tab(niveau + 1) + L"\"Guid2\" : \"" + guid2 + L"\",\n"
-		+ tab(niveau + 1) + L"\"Identifier2\" : \"" + identifier2 + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0019::toJson() {
+	log(3, L"🔈Beef0019 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"Guid1", Json::str(guid1));
+	o.add(L"Identifier1", Json::str(identifier1));
+	o.add(L"Guid2", Json::str(guid2));
+	o.add(L"Identifier2", Json::str(identifier2));
+	return o;
 }
 
 Beef001a::Beef001a(LPBYTE buffer, int _niveau) {
@@ -1022,14 +1169,12 @@ Beef001a::Beef001a(LPBYTE buffer, int _niveau) {
 	fileDocumentTypeString = std::wstring((wchar_t*)(buffer + 10)).data();
 }
 
-std::wstring Beef001a::to_json(int i) {
-	log(3, L"🔈Beef001a to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"FileDocumentType\" : \"" + fileDocumentTypeString + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef001a::toJson() {
+	log(3, L"🔈Beef001a toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"FileDocumentType", Json::str(fileDocumentTypeString));
+	return o;
 }
 
 Beef001b::Beef001b(LPBYTE buffer, int _niveau) {
@@ -1039,14 +1184,12 @@ Beef001b::Beef001b(LPBYTE buffer, int _niveau) {
 	fileDocumentTypeString = std::wstring((wchar_t*)(buffer + 10)).data();
 }
 
-std::wstring Beef001b::to_json(int i) {
-	log(3, L"🔈Beef001b to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"FileDocumentType\" : \"" + fileDocumentTypeString + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef001b::toJson() {
+	log(3, L"🔈Beef001b toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"FileDocumentType", Json::str(fileDocumentTypeString));
+	return o;
 }
 
 Beef001d::Beef001d(LPBYTE buffer, int _niveau) {
@@ -1056,14 +1199,12 @@ Beef001d::Beef001d(LPBYTE buffer, int _niveau) {
 	executable = std::wstring((wchar_t*)(buffer + 10)).data();
 }
 
-std::wstring Beef001d::to_json(int i) {
-	log(3, L"🔈Beef001d to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"Executable\" : \"" + executable + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef001d::toJson() {
+	log(3, L"🔈Beef001d toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"Executable", Json::str(executable));
+	return o;
 }
 
 Beef001e::Beef001e(LPBYTE buffer, int _niveau) {
@@ -1073,14 +1214,12 @@ Beef001e::Beef001e(LPBYTE buffer, int _niveau) {
 	pinType = std::wstring((wchar_t*)(buffer + 10)).data();
 }
 
-std::wstring Beef001e::to_json(int i) {
-	log(3, L"🔈Beef001e to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"PinType\" : \"" + pinType + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef001e::toJson() {
+	log(3, L"🔈Beef001e toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"PinType", Json::str(pinType));
+	return o;
 }
 
 Beef0021::Beef0021(LPBYTE buffer, int _niveau) {
@@ -1091,14 +1230,12 @@ Beef0021::Beef0021(LPBYTE buffer, int _niveau) {
 	sps = SPS(buffer + 8, niveau + 1);
 }
 
-std::wstring Beef0021::to_json(int i) {
-	log(3, L"🔈Beef0021 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"SPS\" : \n" + sps.to_json(i) + L"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0021::toJson() {
+	log(3, L"🔈Beef0021 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"SPS",       sps.toJson());
+	return o;
 }
 
 Beef0024::Beef0024(LPBYTE buffer, int _niveau) {
@@ -1109,14 +1246,12 @@ Beef0024::Beef0024(LPBYTE buffer, int _niveau) {
 	sps = SPS(buffer + 8, niveau + 1);
 }
 
-std::wstring Beef0024::to_json(int i) {
-	log(3, L"🔈Beef0024 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"SPS\" : \n" + sps.to_json(i) + L"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0024::toJson() {
+	log(3, L"🔈Beef0024 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"SPS",       sps.toJson());
+	return o;
 }
 
 Beef0025::Beef0025(LPBYTE buffer, int _niveau) {
@@ -1127,15 +1262,14 @@ Beef0025::Beef0025(LPBYTE buffer, int _niveau) {
 	filetime2 = *reinterpret_cast<FILETIME*>(buffer + 20);
 }
 
-std::wstring Beef0025::to_json(int i) {
-	log(3, L"🔈Beef0025 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"Filetime1\" : \"" + time_to_wstring(filetime1) + L"\",\n"
-		+ tab(niveau + 1) + L"\"Filetime2\" : \"" + time_to_wstring(filetime2) + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0025::toJson() {
+	log(3, L"🔈Beef0025 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	// FILETIME bruts lus du buffer : UTC par definition du type.
+	o.add(L"Filetime1", Json::str(timeToIso8601Utc(filetime1)));
+	o.add(L"Filetime2", Json::str(timeToIso8601Utc(filetime2)));
+	return o;
 }
 
 Beef0026::Beef0026(LPBYTE buffer, int _niveau) {
@@ -1157,7 +1291,7 @@ Beef0026::Beef0026(LPBYTE buffer, int _niveau) {
 		LocalFileTimeToFileTime(&mtimeUtc, &atime);
 		// 2 octets Unknown
 		log(3, L"🔈IdList");
-		idlist = new IdList(buffer + 38, niveau + 2);
+		idlist = std::make_unique<IdList>(buffer + 38, niveau + 2);
 	}
 	else {
 		ctimeUtc = { 0 };
@@ -1167,44 +1301,24 @@ Beef0026::Beef0026(LPBYTE buffer, int _niveau) {
 		atimeUtc = { 0 };
 		atime = { 0 };
 		log(3, L"🔈SPS");
-		sps = new SPS(buffer + 8, niveau + 2);
+		sps = std::make_unique<SPS>(buffer + 8, niveau + 2);
 	}
 
 }
 
-std::wstring Beef0026::to_json(int i) {
-	log(3, L"🔈Beef0026 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n";
-	result += tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n";
-	log(3, L"🔈time_to_wstring ctime");
-	result += tab(niveau + 1) + L"\"CreationDate\" : \"" + time_to_wstring(ctime) + L"\",\n";
-	log(3, L"🔈time_to_wstring ctimeUtc");
-	result += tab(niveau + 1) + L"\"CreationDateUtc\" : \"" + time_to_wstring(ctimeUtc) + L"\",\n";
-	log(3, L"🔈time_to_wstring mtime");
-	result += tab(niveau + 1) + L"\"ModificationDate\" : \"" + time_to_wstring(mtime) + L"\",\n";
-	log(3, L"🔈time_to_wstring mtimeUtc");
-	result += tab(niveau + 1) + L"\"ModificationDateUtc\" : \"" + time_to_wstring(mtimeUtc) + L"\",\n";
-	log(3, L"🔈time_to_wstring atime");
-	result += tab(niveau + 1) + L"\"AccessedDate\" : \"" + time_to_wstring(atime) + L"\",\n";
-	log(3, L"🔈time_to_wstring atimeUtc");
-	result += tab(niveau + 1) + L"\"AccessedDateUtc\" : \"" + time_to_wstring(atimeUtc) + L"\"";
-	if (sps != NULL) {
-		result += L",\n";
-		result += tab(niveau + 1) + L"\"SPS\" : " + sps->to_json(i) + L"\n";
-	}
-
-	if (idlist != NULL) {
-		result += L",\n";
-		result += tab(niveau + 1) + L"\"IdList\" : {\n"
-			+ idlist->to_json(i) + L"\n"
-			+ tab(niveau + 1) + L"}\n";
-	}
-	else {
-		result += L"\n";
-	}
-	result += tab(niveau) + L"}";
-	return result;
+Json Beef0026::toJson() {
+	log(3, L"🔈Beef0026 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature",           Json::str(signature));
+	o.add(L"CreationDate",        Json::str(timeToIso8601Local(ctime)));
+	o.add(L"CreationDateUtc",     Json::str(timeToIso8601Utc(ctimeUtc)));
+	o.add(L"ModificationDate",    Json::str(timeToIso8601Local(mtime)));
+	o.add(L"ModificationDateUtc", Json::str(timeToIso8601Utc(mtimeUtc)));
+	o.add(L"AccessedDate",        Json::str(timeToIso8601Local(atime)));
+	o.add(L"AccessedDateUtc",     Json::str(timeToIso8601Utc(atimeUtc)));
+	if (sps)    o.add(L"SPS",    sps->toJson());
+	if (idlist) o.add(L"IdList", idlist->toJson());
+	return o;
 }
 
 Beef0027::Beef0027(LPBYTE buffer, int _niveau) {
@@ -1215,14 +1329,12 @@ Beef0027::Beef0027(LPBYTE buffer, int _niveau) {
 	sps = SPS(buffer + 8, niveau + 1);
 }
 
-std::wstring Beef0027::to_json(int i) {
-	log(3, L"🔈Beef0027 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"SPS\" : \n" + sps.to_json(i) + L"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0027::toJson() {
+	log(3, L"🔈Beef0027 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"SPS",       sps.toJson());
+	return o;
 }
 
 Beef0029::Beef0029(LPBYTE buffer, int _niveau) {
@@ -1232,160 +1344,183 @@ Beef0029::Beef0029(LPBYTE buffer, int _niveau) {
 	message = L"The purpose of this extension block is unknown";
 }
 
-std::wstring Beef0029::to_json(int i) {
-	log(3, L"🔈Beef0029 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n"
-		+ tab(niveau + 1) + L"\"Signature\" : \"" + signature + L"\",\n"
-		+ tab(niveau + 1) + L"\"Message\" : \"" + message + L"\"\n"
-		+ tab(niveau) + L"}";
-	return result;
+Json Beef0029::toJson() {
+	log(3, L"🔈Beef0029 toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"Message", Json::str(message));
+	return o;
 }
 
-void getExtensionBlock(LPBYTE buffer, std::vector<IExtensionBlock*>* extensionBlocks, int _niveau, bool* is_zip, bool is_file) {
-	IExtensionBlock* block = NULL;
+BeefUnknown::BeefUnknown(LPBYTE buffer, int _niveau) {
+	niveau = _niveau;
+	isPresent = true;
+	size = *reinterpret_cast<unsigned short*>(buffer);
+	signature = L"0x" + to_hex(*reinterpret_cast<unsigned int*>(buffer + 4));
+	log(3, L"🔈dump_wstring BeefUnknown");
+	data = dump_wstring(buffer, 0, size);
+}
+
+Json BeefUnknown::toJson() {
+	log(3, L"🔈BeefUnknown toJson");
+	Json o = Json::obj();
+	o.add(L"Signature", Json::str(signature));
+	o.add(L"Unknown",   Json::boolean(true));
+	o.add(L"Size",      Json::num(size));
+	// Les octets, pour que le bloc reste decodable plus tard.
+	o.add(L"Data",      Json::str(data));
+	return o;
+}
+
+void getExtensionBlock(LPBYTE buffer, std::vector<std::unique_ptr<IExtensionBlock>>* extensionBlocks, int _niveau, bool* is_zip, bool is_file) {
+	std::unique_ptr<IExtensionBlock> block;
 	unsigned int signature = *reinterpret_cast<unsigned int*>(buffer + 4);
 	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	if (signature == (unsigned int)0xBeef0000) {
 		log(3, L"🔈Beef0000");
-		block = new Beef0000(buffer, _niveau + 1);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0000>(buffer, _niveau + 1);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0001) {
 		log(3, L"🔈Beef0001");
-		block = new Beef0001(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0001>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0002) {
 		log(3, L"🔈Beef0002");
-		block = new Beef0002(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0002>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0003) {
 		log(3, L"🔈Beef0003");
-		block = new Beef0003(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0003>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0004) {
 		log(3, L"🔈Beef0004");
-		block = new Beef0004(buffer, _niveau, is_zip, is_file);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0004>(buffer, _niveau, is_zip, is_file);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0006) {
 		log(3, L"🔈Beef0006");
-		block = new Beef0006(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0006>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0008) {
 		log(3, L"🔈Beef0008");
-		block = new Beef0008(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0008>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0009) {
 		log(3, L"🔈Beef0009");
-		block = new Beef0009(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0009>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef000a) {
 		log(3, L"🔈Beef000a");
-		block = new Beef000a(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef000a>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef000c) {
 		log(3, L"🔈Beef000c");
-		block = new Beef000c(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef000c>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef000e) {
 		log(3, L"🔈Beef000e");
-		block = new Beef000e(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef000e>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0010) {
 		log(3, L"🔈Beef0010");
-		block = new Beef0010(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0010>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0013) {
 		log(3, L"🔈Beef0013");
-		block = new Beef0013(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0013>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0014) {
 		log(3, L"🔈Beef0014");
-		block = new Beef0014(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0014>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0016) {
 		log(3, L"🔈Beef0016");
-		block = new Beef0016(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0016>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0017) {
 		log(3, L"🔈Beef0017");
-		block = new Beef0017(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0017>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0019) {
 		log(3, L"🔈Beef0019");
-		block = new Beef0019(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0019>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef001a) {
 		log(3, L"🔈Beef001a");
-		block = new Beef001a(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef001a>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef001b) {
 		log(3, L"🔈Beef001b");
-		block = new Beef001b(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef001b>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef001d) {
 		log(3, L"🔈Beef001d");
-		block = new Beef001d(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef001d>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef001e) {
 		log(3, L"🔈Beef001e");
-		block = new Beef001e(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef001e>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0021) {
 		log(3, L"🔈Beef0021");
-		block = new Beef0021(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0021>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0024) {
 		log(3, L"🔈Beef0024");
-		block = new Beef0024(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0024>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0025) {
 		log(3, L"🔈Beef0025");
-		block = new Beef0025(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0025>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0026) {
 		log(3, L"🔈Beef0026");
-		block = new Beef0026(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0026>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0027) {
 		log(3, L"🔈Beef0027");
-		block = new Beef0027(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0027>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0029) {
 		log(3, L"🔈Beef0029");
-		block = new Beef0029(buffer, _niveau);
-		extensionBlocks->push_back(block);
+		block = std::make_unique<Beef0029>(buffer, _niveau);
+		extensionBlocks->push_back(std::move(block));
 	}
 	else {
-		log(3, L"🔈dump_wstring unknown extension block");
-		std::wstring d = dump_wstring(buffer, 0, size);
+		/* Le dump n'allait QUE dans le journal, et le bloc n'était pas ajouté à
+		   la liste : il n'apparaissait donc pas dans le JSON, et disparaissait
+		   entièrement au niveau de journalisation par défaut. Il est désormais
+		   émis comme les autres, avec ses octets (cf. BeefUnknown). */
+		log(3, L"🔈BeefUnknown");
+		block = std::make_unique<BeefUnknown>(buffer, _niveau);
 		log(3, L"🔈to_hex signature");
-		log(2, L"🔥Extension block unknown 0x" + to_hex(signature) + L" : " + d);
+		log(2, L"🔥Extension block unknown 0x" + to_hex(signature));
+		extensionBlocks->push_back(std::move(block));
 	}
 }
 
@@ -1445,20 +1580,14 @@ VolumeShellItem::VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _ni
 	if (flags.LocalDisk == true) {
 		log(3, L"🔈string_to_wstring name");
 		name = string_to_wstring(std::string((char*)buffer + 3));
-		log(3, L"🔈replaceAll name");
-		name = replaceAll(name, L"\\", L"\\\\");
 	}
 	else if (flags.SystemFolder == true) {
 		log(3, L"🔈guid_to_wstring guid");
 		guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 4));
 		log(3, L"🔈trans_guid_to_wstring name");
 		name = trans_guid_to_wstring(guid);
-		log(3, L"🔈replaceAll name");
-		name = replaceAll(name, L"\\", L"\\\\");
 		log(3, L"🔈trans_guid_to_wstring identifier");
 		identifier = trans_guid_to_wstring(guid);
-		log(3, L"🔈replaceAll identifier");
-		identifier = replaceAll(identifier, L"\\", L"\\\\");
 	}
 	else if (flags.None != true) {
 		log(2, L"🔥OROpenKey VolumeShellItem flag unknown : " + to_hex(type_char));
@@ -1466,24 +1595,17 @@ VolumeShellItem::VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _ni
 
 }
 
-std::wstring VolumeShellItem::to_json(int i) {
-	log(3, L"🔈VolumeShellItem to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = L"";
-	if (isPresent) {
-		log(3, L"🔈to_wstring flags");
-		result += tab(niveau) + L"\"Flags\" : \"" + flags.to_wstring() + L"\",\n"
-			+ tab(niveau) + L"\"Name\" : \"" + name + L"\"";
-		if (!guid.empty()) {
-			result += L",\n"
-				+ tab(niveau) + L"\"GUID\" : \"" + guid + L"\",\n"
-				+ tab(niveau) + L"\"Identifier\" : \"" + identifier + L"\"\n";
-		}
-		else {
-			result += L"\n";
-		}
+Json VolumeShellItem::toJson() {
+	log(3, L"🔈VolumeShellItem toJson");
+	Json o = Json::obj();
+	if (!isPresent) return o;
+	o.add(L"Flags", Json::str(flags.to_wstring()));
+	o.add(L"Name",  Json::str(name));
+	if (!guid.empty()) {
+		o.add(L"GUID",       Json::str(guid));
+		o.add(L"Identifier", Json::str(identifier));
 	}
-	return result;
+	return o;
 }
 
 ControlPanel::ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _niveau) {
@@ -1509,26 +1631,17 @@ ControlPanel::ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _nive
 	}
 }
 
-std::wstring ControlPanel::to_json(int i) {
-	log(3, L"🔈ControlPanel to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = L"";
-	if (isPresent == true) {
-		result += tab(niveau) + L"\"GUID\" : \"" + guid + L"\",\n"
-			+ tab(niveau) + L"\"Identifier\" : \"" + identifier + L"\",\n"
-			+ tab(niveau) + L"\"ExtensionBlocksCount\" : \"" + std::to_wstring(extensionBlocks.size()) + L"\",\n"
-			+ tab(niveau) + L"\"ExtensionBlocks\" : [\n";
-		std::vector<IExtensionBlock*>::iterator it;
-		for (it = extensionBlocks.begin(); it != extensionBlocks.end(); it++) {
-			IExtensionBlock* temp = *it;
-			result += temp->to_json(i);
-			if (it != extensionBlocks.end() - 1)
-				result += L",";
-			result += L"\n";
-		}
-		result += tab(niveau) + L"]\n";
-	}
-	return result;
+Json ControlPanel::toJson() {
+	log(3, L"🔈ControlPanel toJson");
+	Json o = Json::obj();
+	if (!isPresent) return o;
+	o.add(L"GUID",       Json::str(guid));
+	o.add(L"Identifier", Json::str(identifier));
+	Json blocs = Json::arr();
+	for (const auto& b : extensionBlocks) blocs.push(b->toJson());
+	o.add(L"ExtensionBlocksCount", Json::num((unsigned long long)extensionBlocks.size()));
+	o.add(L"ExtensionBlocks",      std::move(blocs));
+	return o;
 }
 
 ControlPanelCategory::ControlPanelCategory(LPBYTE buffer, int _niveau) {
@@ -1565,32 +1678,22 @@ ControlPanelCategory::ControlPanelCategory(LPBYTE buffer, int _niveau) {
 	}
 }
 
-std::wstring ControlPanelCategory::to_json(int i) {
-	log(3, L"🔈ControlPanelCategory to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = L"";
-	if (isPresent == true) {
-		result += tab(niveau) + L"\"ID\" : \"" + id + L"\",\n"
-			+ tab(niveau) + L"\"ExtensionBlocksCount\" : \"" + std::to_wstring(extensionBlocks.size()) + L"\",\n"
-			+ tab(niveau) + L"\"ExtensionBlocks\" : [\n";
-		std::vector<IExtensionBlock*>::iterator it;
-		for (it = extensionBlocks.begin(); it != extensionBlocks.end(); it++) {
-			IExtensionBlock* temp = *it;
-			result += temp->to_json(i);
-			if (it != extensionBlocks.end() - 1)
-				result += L",";
-			result += L"\n";
-		}
-		result += tab(niveau) + L"]\n";
-	}
-	return result;
+Json ControlPanelCategory::toJson() {
+	log(3, L"🔈ControlPanelCategory toJson");
+	Json o = Json::obj();
+	if (!isPresent) return o;
+	o.add(L"ID", Json::str(id));
+	Json blocs = Json::arr();
+	for (const auto& b : extensionBlocks) blocs.push(b->toJson());
+	o.add(L"ExtensionBlocksCount", Json::num((unsigned long long)extensionBlocks.size()));
+	o.add(L"ExtensionBlocks",      std::move(blocs));
+	return o;
 }
 
 Property::Property(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	id = 0;
 	type = 0;
-	valueIsObject = false;
 	unsigned int pos = 0;
 	log(3, L"🔈guid_to_wstring guid");
 	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + pos));
@@ -1599,33 +1702,23 @@ Property::Property(LPBYTE buffer, int _niveau) {
 	pos += 4;
 	log(3, L"🔈to_FriendlyName FriendlyName");
 	FriendlyName = to_FriendlyName(guid, id);
-	if (FriendlyName == L"(Undefined)") {
-		log(2, L"🔥Property : Friendlyname Unknown " + guid + L"/" + std::to_wstring(id));
-	}
 	type = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
-	log(3, L"🔈get_value");
-	get_value(buffer, &pos, type, niveau, &value, &valueIsObject);
+	log(3, L"🔈getValue");
+	value = getValue(buffer, &pos, type, niveau, 0, &typeNonDecode);
 	size = pos;
 }
 
-std::wstring Property::to_json(int i) {
-	log(3, L"🔈Property to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"{\n";
-	if (guid == L"{4D545058-4FCE-4578-95C8-8698A9BC0F49}" || guid == L"{4D545058-8900-40b3-8F1D-DC246E1E8370}")
-		result += tab(niveau + 1) + L"\"ID\" : \"" + guid + L"/" + to_hex(id) + L"\",\n";
-	else
-		result += tab(niveau + 1) + L"\"ID\" : \"" + guid + L"/" + std::to_wstring(id) + L"\",\n";
-	log(3, L"🔈get_type type");
-	result += tab(niveau + 1) + L"\"Type\" : \"" + get_type(type) + L"\",\n"
-		+ tab(niveau + 1) + L"\"FriendlyName\" : \"" + FriendlyName + L"\",\n";
-	if (valueIsObject == false)
-		result += tab(niveau + 1) + L"\"Value\" : \"" + value + L"\"\n";
-	else
-		result += tab(niveau + 1) + L"\"Value\" : " + value + L"\n";
-	result += tab(niveau) + L"}";
-	return result;
+Json Property::toJson() {
+	log(3, L"🔈Property toJson");
+	const bool hexId = (guid == L"{4D545058-4FCE-4578-95C8-8698A9BC0F49}"
+	                 || guid == L"{4D545058-8900-40b3-8F1D-DC246E1E8370}");
+	Json o = Json::obj();
+	o.add(L"ID",           Json::str(guid + L"/" + (hexId ? to_hex(id) : std::to_wstring(id))));
+	o.add(L"Type",         Json::str(getType(type)));
+	o.add(L"FriendlyName", Json::str(FriendlyName));
+	o.add(L"Value",        value);
+	return o;
 }
 
 UserPropertyView0xC01::UserPropertyView0xC01(LPBYTE buffer, int _niveau) {
@@ -1641,12 +1734,12 @@ UserPropertyView0xC01::UserPropertyView0xC01(LPBYTE buffer, int _niveau) {
 	fullurl = std::wstring((wchar_t*)(buffer + pos)).data();
 }
 
-std::wstring UserPropertyView0xC01::to_json(int i) {
-	log(3, L"🔈UserPropertyView0xC01 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"\"Folder\" : \"" + folder + L"\",\n"
-		+ tab(niveau) + L"\"FullUrl\" : \"" + fullurl + L"\"";
-	return result;
+Json UserPropertyView0xC01::toJson() {
+	log(3, L"🔈UserPropertyView0xC01 toJson");
+	Json o = Json::obj();
+	o.add(L"Folder",  Json::str(folder));
+	o.add(L"FullUrl", Json::str(fullurl));
+	return o;
 }
 
 UserPropertyView0x23febbee::UserPropertyView0x23febbee(LPBYTE buffer, int _niveau) {
@@ -1655,16 +1748,14 @@ UserPropertyView0x23febbee::UserPropertyView0x23febbee(LPBYTE buffer, int _nivea
 	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 0xE));
 	log(3, L"🔈trans_guid_to_wstring FriendlyName");
 	FriendlyName = trans_guid_to_wstring(guid);
-	log(3, L"🔈replaceAll FriendlyName");
-	FriendlyName = replaceAll(FriendlyName, L"\\", L"\\\\"); // escape \ by \\ in std::string
 }
 
-std::wstring UserPropertyView0x23febbee::to_json(int i) {
-	log(3, L"🔈UserPropertyView0x23febbee to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"\"GUID\" : \"" + guid + L"\",\n"
-		+ tab(niveau) + L"\"FriendlyName\" : \"" + FriendlyName + L"\"";
-	return result;
+Json UserPropertyView0x23febbee::toJson() {
+	log(3, L"🔈UserPropertyView0x23febbee toJson");
+	Json o = Json::obj();
+	o.add(L"GUID",         Json::str(guid));
+	o.add(L"FriendlyName", Json::str(FriendlyName));
+	return o;
 }
 
 UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _niveau) {
@@ -1672,17 +1763,17 @@ UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _nivea
 	niveau = _niveau;
 	modifiedUtc = *reinterpret_cast<FILETIME*>(buffer + 26);
 	createdUtc = *reinterpret_cast<FILETIME*>(buffer + 34);
-	log(3, L"🔈time_to_wstring modifiedUtc");
-	if (!time_to_wstring(modifiedUtc).empty()) {
-		log(3, L"🔈FileTimeToLocalFileTime modifiedUtc");
-		FileTimeToLocalFileTime(&modifiedUtc, &modified);
+	log(3, L"🔈timeToIso8601 modifiedUtc");
+	if (!timeToIso8601Utc(modifiedUtc).empty()) {
+		log(3, L"🔈utcVersLocalSuspect modifiedUtc");
+		utcVersLocalSuspect(modifiedUtc, &modified);
 	}
 	else
 		modified = { 0 };
-	log(3, L"🔈time_to_wstring createdUtc");
-	if (!time_to_wstring(createdUtc).empty()) {
-		log(3, L"🔈FileTimeToLocalFileTime created");
-		FileTimeToLocalFileTime(&createdUtc, &created);
+	log(3, L"🔈timeToIso8601 createdUtc");
+	if (!timeToIso8601Utc(createdUtc).empty()) {
+		log(3, L"🔈utcVersLocalSuspect created");
+		utcVersLocalSuspect(createdUtc, &created);
 	}
 	else
 		created = { 0 };
@@ -1707,46 +1798,65 @@ UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _nivea
 	for (unsigned int x = 0; x < numberProperties; x++) {
 		log(3, L"🔈Property");
 		Property temp(buffer + pos, niveau + 1);
-		properties.push_back(temp);
+		const bool arret = temp.typeNonDecode;   // taille indeterminee, cf. idList.h
 		pos += temp.size;
+		properties.push_back(std::move(temp));
+		if (arret) {
+			log(2, L"🔥Property : type non decode, arret du parcours apres "
+			     + std::to_wstring(x + 1) + L"/" + std::to_wstring(numberProperties),
+			    ERROR_INVALID_DATA);
+			break;
+		}
 	}
 }
 
-std::wstring UserPropertyView0x07192006::to_json(int i) {
-	log(3, L"🔈UserPropertyView0x07192006 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"\"Folder1\" : \"" + folderName1 + L"\",\n";
-	result += tab(niveau) + L"\"Folder2\" : \"" + folderName2 + L"\",\n";
-	result += tab(niveau) + L"\"FolderIdentifier\" : \"" + folderIdentifier + L"\",\n";
-	log(3, L"🔈time_to_wstring created");
-	result += tab(niveau) + L"\"CreatedDate\" : \"" + time_to_wstring(created) + L"\",\n";
-	log(3, L"🔈time_to_wstring createdUtc");
-	result += tab(niveau) + L"\"CreatedDateUtc\" : \"" + time_to_wstring(createdUtc) + L"\",\n";
-	log(3, L"🔈time_to_wstring modified");
-	result += tab(niveau) + L"\"ModifiedDate\" : \"" + time_to_wstring(modified) + L"\",\n";
-	log(3, L"🔈time_to_wstring modifiedUtc");
-	result += tab(niveau) + L"\"ModifiedDateUtc\" : \"" + time_to_wstring(modifiedUtc) + L"\",\n";
-	result += tab(niveau) + L"\"GUIDClass\" : \"" + guidClass + L"\",\n";
-	result += tab(niveau) + L"\"FriendlyName\" : \"" + FriendlyName + L"\",\n";
-	result += tab(niveau) + L"\"Properties\" : [\n";;
-	std::vector<Property>::iterator it2;
-	for (it2 = properties.begin(); it2 != properties.end(); it2++) {
-		result += it2->to_json(i);
-		if (it2 != properties.end() - 1)
-			result += L",";
-		result += L"\n";
-	}
-	result += tab(niveau) + L"]";
-	return result;
+Json UserPropertyView0x07192006::toJson() {
+	log(3, L"🔈UserPropertyView0x07192006 toJson");
+	Json o = Json::obj();
+	o.add(L"Folder1",          Json::str(folderName1));
+	o.add(L"Folder2",          Json::str(folderName2));
+	o.add(L"FolderIdentifier", Json::str(folderIdentifier));
+	o.add(L"CreatedDate",      Json::str(timeToIso8601Local(created)));
+	o.add(L"CreatedDateUtc",   Json::str(timeToIso8601Utc(createdUtc)));
+	o.add(L"ModifiedDate",     Json::str(timeToIso8601Local(modified)));
+	o.add(L"ModifiedDateUtc",  Json::str(timeToIso8601Utc(modifiedUtc)));
+	o.add(L"GUIDClass",        Json::str(guidClass));
+	o.add(L"FriendlyName",     Json::str(FriendlyName));
+	Json props = Json::arr();
+	for (Property& p : properties) props.push(p.toJson());
+	o.add(L"Properties", std::move(props));
+	return o;
 }
 
 UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _niveau) {
+	/* Toutes les longueurs ci-dessous viennent du fichier analysé — donc d'une
+	   source non fiable — et servent à calculer des offsets de lecture. Le
+	   constructeur ne reçoit pas la taille du tampon, il ne peut donc pas les
+	   valider contre elle. On les borne au maximum PLAUSIBLE : un shell item
+	   porte sa taille sur 16 bits, il ne peut pas dépasser 64 Kio, soit 32768
+	   caractères UTF-16. Une valeur au-delà signale une donnée corrompue ou
+	   forgée, et la lecture est abandonnée plutôt que de parcourir la mémoire
+	   au hasard. */
+	constexpr int MAX_CARS = 32768;        // 64 Kio / 2 : taille max d'un shell item
+	constexpr unsigned MAX_ELEMENTS = 1024; // bien au-delà du plausible, mais fini
+
 	unsigned int pos = 0;
 	niveau = _niveau;
 	int namesize = *reinterpret_cast<unsigned int*>(buffer + 0x26);
 	int identifiersize = *reinterpret_cast<unsigned int*>(buffer + 0x2A);
 	int filesystemsize = *reinterpret_cast<unsigned int*>(buffer + 0x2E);
 	int nbGUIDStrings = *reinterpret_cast<unsigned int*>(buffer + 0x32);
+
+	if (namesize < 0 || namesize > MAX_CARS
+	 || identifiersize < 0 || identifiersize > MAX_CARS
+	 || filesystemsize < 0 || filesystemsize > MAX_CARS
+	 || nbGUIDStrings < 0 || (unsigned)nbGUIDStrings > MAX_ELEMENTS) {
+		log(2, L"🔥UserPropertyView0x10312005 : longueurs invalides (nom "
+		     + std::to_wstring(namesize) + L", id " + std::to_wstring(identifiersize)
+		     + L", fs " + std::to_wstring(filesystemsize)
+		     + L", guids " + std::to_wstring(nbGUIDStrings) + L")", ERROR_INVALID_DATA);
+		return;                            // champs laissés vides : rien de douteux n'est publié
+	}
 
 	name = std::wstring((wchar_t*)(buffer + 0x36)).data();
 	identifier = std::wstring((wchar_t*)(buffer + 0x36 + namesize * 2)).data();
@@ -1765,48 +1875,61 @@ UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _nivea
 	FriendlyName = trans_guid_to_wstring(guidClass);
 	pos += 16;
 
-	unsigned int numberProperties = *reinterpret_cast<unsigned int*>(buffer + pos);// ?? TODO  seules les 4 premieres sont exploitables, est-ce vraiment le nombre de propriétés ?........
+	/* L'interprétation de ce champ comme « nombre de propriétés » n'est pas
+	   confirmée par la spécification : à l'observation, seules les 4 premières
+	   entrées sont exploitables. Tant que ce n'est pas tranché, la valeur est
+	   bornée et la boucle s'arrête si une propriété rend une taille nulle —
+	   sinon `pos` n'avancerait plus et on relirait la même zone. */
+	unsigned int numberProperties = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
+	if (numberProperties > MAX_ELEMENTS) {
+		log(2, L"🔥UserPropertyView0x10312005 : nombre de proprietes invraisemblable ("
+		     + std::to_wstring(numberProperties) + L") : lecture abandonnee", ERROR_INVALID_DATA);
+		numberProperties = 0;
+	}
 	for (unsigned int x = 0; x < numberProperties; x++) {
 		log(3, L"🔈Property");
 		Property temp(buffer + pos, niveau + 1);
-		properties.push_back(temp);
+		if (temp.size == 0) {
+			log(2, L"🔥Property de taille nulle : arret du parcours", ERROR_INVALID_DATA);
+			break;
+		}
+		const bool arret = temp.typeNonDecode;   // taille indeterminee, cf. idList.h
 		pos += temp.size;
+		properties.push_back(std::move(temp));
+		if (arret) {
+			log(2, L"🔥Property : type non decode, arret du parcours apres "
+			     + std::to_wstring(x + 1) + L"/" + std::to_wstring(numberProperties),
+			    ERROR_INVALID_DATA);
+			break;
+		}
 	}
 }
 
-std::wstring UserPropertyView0x10312005::to_json(int i) {
-	log(3, L"🔈UserPropertyView0x10312005 to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = tab(niveau) + L"\"Name\" : \"" + name + L"\",\n"
-		+ tab(niveau) + L"\"Identifier\" : \"" + identifier + L"\",\n"
-		+ tab(niveau) + L"\"Star-system\" : \"" + filesystem + L"\",\n"
-		+ tab(niveau) + L"\"GUIDStrings\" : [\n";
-	std::vector<std::wstring>::iterator it;
-	for (it = guidstrings.begin(); it != guidstrings.end(); it++) {
-		result += tab(niveau + 1) + L"{\n";
-		result += tab(niveau + 2) + L"\"Guid\" : \"" + *it + L"\",\n";
-		log(3, L"🔈trans_guid_to_wstring FriendlyName");
-		result += tab(niveau + 2) + L"\"FriendlyName\" : \"" + trans_guid_to_wstring(*it) + L"\"\n";
-		result += tab(niveau + 1) + L"}";
-		if (it != guidstrings.end() - 1)
-			result += L",";
-		result += L"\n";
+Json UserPropertyView0x10312005::toJson() {
+	log(3, L"🔈UserPropertyView0x10312005 toJson");
+	Json o = Json::obj();
+	o.add(L"Name",        Json::str(name));
+	o.add(L"Identifier",  Json::str(identifier));
+	// CORRECTION : la cle d'origine etait « Star-system », vestige d'un
+	// rechercher-remplacer manque. Elle publiait le nom du systeme de fichiers
+	// sous un intitule que personne ne peut deviner : information collectee mais
+	// introuvable a l'analyse.
+	o.add(L"FileSystem",  Json::str(filesystem));
+	Json guids = Json::arr();
+	for (const std::wstring& g : guidstrings) {
+		Json e = Json::obj();
+		e.add(L"Guid",         Json::str(g));
+		e.add(L"FriendlyName", Json::str(trans_guid_to_wstring(g)));
+		guids.push(std::move(e));
 	}
-	result += tab(niveau) + L"],\n";
-	result += tab(niveau) + L"\"GUIDClass\" : \"" + guidClass + L"\",\n"
-		+ tab(niveau) + L"\"Friendlyname\" : \"" + FriendlyName + L"\",\n"
-		+ tab(niveau) + L"\"Properties\" : [\n";
-	std::vector<Property>::iterator it2;
-	for (it2 = properties.begin(); it2 != properties.end(); it2++) {
-		result += it2->to_json(i);
-		if (it2 != properties.end() - 1)
-			result += L",";
-		result += L"\n";
-	}
-	result += tab(niveau) + L"]";
-	return result;
-
+	o.add(L"GUIDStrings",  std::move(guids));
+	o.add(L"GUIDClass",    Json::str(guidClass));
+	o.add(L"Friendlyname", Json::str(FriendlyName));
+	Json props = Json::arr();
+	for (Property& p : properties) props.push(p.toJson());
+	o.add(L"Properties", std::move(props));
+	return o;
 }
 
 UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau) {
@@ -1825,25 +1948,74 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau) {
 	identifierSize = *reinterpret_cast<unsigned short int*>(buffer + 12);
 	dataOffset = 14;
 
+	/* NATURE DE L'ITEM, d'après sa signature.
+	 *
+	 * Chez libyal (libfwsi_users_property_view_values.c) la signature ne sert
+	 * pas seulement à choisir un décodeur : elle IDENTIFIE le type d'item. Deux
+	 * de celles traitées ici ne sont pas des « users property view » du tout :
+	 *   0x10312005 = VOLUME MTP,      0x07192006 = ENTRÉE DE FICHIER MTP,
+	 * c'est-à-dire la trace qu'un téléphone, un appareil photo ou un lecteur
+	 * multimédia a été branché et parcouru. Le nom générique masquait ce fait,
+	 * qui est justement ce qu'une investigation cherche.
+	 * Le champ `itemType` le nomme désormais dans la sortie. */
+	switch (signature) {
+	case 0x10312005: itemType = L"MTP Volume";                          break;
+	case 0x07192006: itemType = L"MTP File Entry";                       break;
+	case 0x23febbee: itemType = L"Users Property View (known folder)";   break;
+	/* Les quatre suivantes sont reconnues par libfwsi et n'étaient pas
+	   traitées : l'item tombait dans la branche « signature inconnue ». */
+	case 0x10141981:
+	case 0x23a3dfd5:
+	case 0x3b93afbb:
+	case 0x49505241:
+	case 0xbeebee00: itemType = L"Users Property View";                  break;
+	default: break;
+	}
+
 	if (signature == (unsigned int)0x23febbee) {
-		log(3, L"🔈UserPropertyView0x23febbee");
-		delegate = new UserPropertyView0x23febbee(buffer, niveau);
+		/* GUID DE DOSSIER CONNU, et seulement si l'identifiant EST un GUID.
+		   libfwsi lit ces 16 octets sous condition `identifier_size == 16` ;
+		   WAC ne vérifiait rien et publiait donc un GUID composé d'octets
+		   arbitraires dès que l'identifiant avait une autre taille. */
+		if (identifierSize == 16) {
+			log(3, L"🔈UserPropertyView0x23febbee");
+			delegate = std::make_unique<UserPropertyView0x23febbee>(buffer, niveau);
+		}
+		else
+			log(2, L"🔥0x23febbee : identifiant de " + std::to_wstring(identifierSize)
+			     + L" octets au lieu de 16, GUID non lu");
 		identifierSize += 2;
 	}
 	else if (signature == (unsigned int)0x10312005) {
-		log(3, L"🔈UserPropertyView0x10312005");
-		delegate = new UserPropertyView0x10312005(buffer, niveau);
+		log(3, L"🔈MTP Volume");
+		delegate = std::make_unique<UserPropertyView0x10312005>(buffer, niveau);
 	}
 	else if (signature == (unsigned int)0x07192006) {
-		log(3, L"🔈UserPropertyView0x07192006");
-		delegate = new UserPropertyView0x07192006(buffer, niveau);
+		log(3, L"🔈MTP File Entry");
+		delegate = std::make_unique<UserPropertyView0x07192006>(buffer, niveau);
 	}
 	else if (signature_short == (unsigned int)0xC001) {
 		log(3, L"🔈UserPropertyView0xC01");
-		delegate = new UserPropertyView0xC01(buffer, niveau);
+		delegate = std::make_unique<UserPropertyView0xC01>(buffer, niveau);
 		signature = signature_short;
 	}
-
+	/* Signatures repertoriees par libfwsi sans structure propre : l'item porte
+	   un identifiant puis son property store. Trois d'entre elles ont un
+	   identifiant de 4 octets, que libfwsi relève. */
+	else if (!itemType.empty()) {
+		if (identifierSize == 4) {
+			identifier32 = *reinterpret_cast<unsigned int*>(buffer + dataOffset);
+			identifier32Lu = true;
+		}
+		spsOffset = dataOffset + identifierSize;
+		while (true) {
+			log(3, L"🔈SPS");
+			SPS block(buffer + spsOffset + pos, niveau + 1);
+			if (block.size && pos < SPSDataSize) SPSs.push_back(block);
+			else break;
+			pos += block.size;
+		}
+	}
 	else if (SPSDataSize > 0) {
 		spsOffset = dataOffset + identifierSize;
 		while (true) {
@@ -1858,7 +2030,13 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau) {
 		}
 	}
 	else {
-		log(2, L"🔥UsersPropertyView Signature 0x" + to_hex(signature) + L" unknown : " + dump_wstring(buffer, 0, totalsize));
+		/* Signature non reconnue : les octets sont conservés DANS LA SORTIE, et
+		   non plus seulement dans le journal (cf. idList.h). Sans quoi l'objet
+		   se réduisait à son type et à une signature, ce qui ne permet ni de
+		   l'analyser ni même de savoir qu'on a perdu quelque chose. */
+		log(3, L"🔈dump_wstring UsersPropertyView signature inconnue");
+		data = dump_wstring(buffer, 0, totalsize);
+		log(2, L"🔥UsersPropertyView Signature 0x" + to_hex(signature) + L" unknown");
 	}
 
 	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + totalsize - 2);
@@ -1877,50 +2055,40 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau) {
 	}
 }
 
-std::wstring UsersPropertyView::to_json(int i) {
-	log(3, L"🔈UsersPropertyView to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = L"";
-	if (isPresent) {
-		log(3, L"🔈to_hex signature");
-		result += tab(niveau) + L"\"Signature\" : \"0x" + to_hex(signature) + L"\"";
-		if (delegate != NULL) {
-			result += L",\n"
-				+ delegate->to_json(i);
-		}
+Json UsersPropertyView::toJson() {
+	log(3, L"🔈UsersPropertyView toJson");
+	Json o = Json::obj();
+	if (!isPresent) return o;
+	o.add(L"Signature", Json::str(L"0x" + to_hex(signature)));
+	// Nature de l'item : « MTP Volume », « MTP File Entry »… cf. idList.h.
+	if (!itemType.empty()) o.add(L"ItemType", Json::str(itemType));
+	if (identifier32Lu)    o.add(L"Identifier", Json::num(identifier32));
+	// les champs du delegue sont mis a plat (schema d'origine)
+	if (delegate) o.merge(delegate->toJson());
 
-		if (SPSs.size() > 0) {
-			result += L",\n"; // block SPS donc il nous faut une "," après identifier
-			result += tab(niveau) + L"\"SPS\" : [\n";
-			std::vector<SPS>::iterator it;
-			for (it = SPSs.begin(); it != SPSs.end(); it++) {
-				result += it->to_json(i);
-				if (it != SPSs.end() - 1)
-					result += L",";
-				result += L"\n";
-			}
-			result += tab(niveau) + L"]\n";
-		}
-
-		if (extensionBlocks.size() > 0) {
-			result += L",\n"; // block Extension donc il nous faut une "," après identifier
-			result += tab(niveau) + L"\"Extension Blocks Count\" : \"" + std::to_wstring(extensionBlocks.size()) + L"\",\n";
-			result += tab(niveau) + L"\"Extension Blocks\" : [\n";
-			std::vector<IExtensionBlock*>::iterator it;
-			for (it = extensionBlocks.begin(); it != extensionBlocks.end(); it++) {
-				IExtensionBlock* temp = *it;
-				result += temp->to_json(i);
-				if (it != extensionBlocks.end() - 1)
-					result += L",";
-				result += L"\n";
-			}
-			result += tab(niveau) + L"]\n";
-		}
-
-		if (extensionBlocks.size() == 0 && SPSs.size() == 0)
-			result += L"\n"; // fin, pas de extension BLock
+	/* SPS et blocs d'extension : ILS ETAIENT COLLECTES ET JAMAIS EMIS.
+	   Le constructeur remplit `SPSs` (branche sans delegue) et `extensionBlocks`
+	   (systematiquement, si l'objet en porte), mais toJson n'en publiait aucun :
+	   tout leur contenu — noms de proprietes, valeurs, dates — etait lu puis
+	   jete. Les delegues portent des `properties`, pas ces deux vecteurs : il
+	   n'y a donc pas de doublon a craindre. */
+	if (!SPSs.empty()) {
+		Json arr = Json::arr();
+		for (SPS& sps : SPSs) arr.push(sps.toJson());
+		o.add(L"PropertyStores", std::move(arr));
 	}
-	return result;
+	if (!extensionBlocks.empty()) {
+		Json arr = Json::arr();
+		for (const auto& b : extensionBlocks) arr.push(b->toJson());
+		o.add(L"ExtensionBlocksCount", Json::num((unsigned long long)extensionBlocks.size()));
+		o.add(L"ExtensionBlocks",      std::move(arr));
+	}
+	// Octets bruts si la signature n'a pas ete reconnue (cf. idList.h).
+	if (!data.empty()) {
+		o.add(L"Unknown", Json::boolean(true));
+		o.add(L"Data",    Json::str(data));
+	}
+	return o;
 }
 
 RootFolder::RootFolder(LPBYTE buffer, int _niveau) {
@@ -1940,9 +2108,6 @@ RootFolder::RootFolder(LPBYTE buffer, int _niveau) {
 		guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 4));
 		log(3, L"🔈trans_guid_to_wstring identifier");
 		identifier = trans_guid_to_wstring(guid);
-		log(3, L"🔈replaceAll identifier");
-		identifier = replaceAll(identifier, L"\\", L"\\\\");
-		int pos = 0;
 	}
 	else if (size > (unsigned short int)0x3a) {
 		unsigned int signature = *reinterpret_cast<unsigned int*>(buffer + 6);
@@ -1950,8 +2115,6 @@ RootFolder::RootFolder(LPBYTE buffer, int _niveau) {
 			sortIndex = L"DRIVE";
 			log(3, L"🔈string_to_wstring identifier");
 			identifier = string_to_wstring(std::string((char*)(buffer + 13)));
-			log(3, L"🔈replaceAll identifier");
-			identifier = replaceAll(identifier, L"\\", L"\\\\");
 
 		}
 		if (signature == (unsigned int)0x23a3dfd5) {
@@ -1980,35 +2143,19 @@ RootFolder::RootFolder(LPBYTE buffer, int _niveau) {
 
 }
 
-std::wstring RootFolder::to_json(int i) {
-	log(3, L"🔈RootFolder to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = L"";
-	if (isPresent) {
-		result += tab(niveau) + L"\"SortIndex\" : \"" + sortIndex + L"\"";
-		if (!guid.empty())
-			result += L",\n"
-			+ tab(niveau) + L"\"GUID\" : \"" + guid + L"\"";
-		if (!identifier.empty())
-			result += L",\n"
-			+ tab(niveau) + L"\"Identifier\" : \"" + identifier + L"\"";
-
-		if (SPSs.size() > 0) {
-			result += L",\n";
-			result += tab(niveau) + L"\"SPS\" : [\n";
-			std::vector<SPS>::iterator it;
-			for (it = SPSs.begin(); it != SPSs.end(); it++) {
-				result += it->to_json(i);
-				if (it != SPSs.end() - 1)
-					result += L",";
-				result += L"\n";
-			}
-			result += tab(niveau) + L"]\n";
-		}
-		else
-			result += L"\n";
+Json RootFolder::toJson() {
+	log(3, L"🔈RootFolder toJson");
+	Json o = Json::obj();
+	if (!isPresent) return o;
+	o.add(L"SortIndex", Json::str(sortIndex));
+	if (!guid.empty())       o.add(L"GUID",       Json::str(guid));
+	if (!identifier.empty()) o.add(L"Identifier", Json::str(identifier));
+	if (!SPSs.empty()) {
+		Json arr = Json::arr();
+		for (SPS& sp : SPSs) arr.push(sp.toJson());
+		o.add(L"SPS", std::move(arr));
 	}
-	return result;
+	return o;
 }
 
 NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _niveau) {
@@ -2023,52 +2170,42 @@ NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _niveau) {
 	if (subtype == 0xC3) {
 		log(3, L"🔈string_to_wstring location");
 		location = string_to_wstring(std::string((char*)buffer + 5));
-		log(3, L"🔈replaceAll location");
-		location = replaceAll(location, L"\\", L"\\\\");
 	}
 	else {
 		log(3, L"🔈wstring_to_filetime modifiedUtc");
 		modifiedUtc = wstring_to_filetime(std::wstring((wchar_t*)(buffer + 0x24)));
-		log(3, L"🔈FileTimeToLocalFileTime modified");
-		FileTimeToLocalFileTime(&modifiedUtc, &modified);
+		log(3, L"🔈utcVersLocalSuspect modified");
+		utcVersLocalSuspect(modifiedUtc, &modified);
 		unsigned int descriptionsize = *reinterpret_cast<unsigned int*>(buffer + 0x54);
 		unsigned int commentssize = *reinterpret_cast<unsigned int*>(buffer + 0x58);
 		int pos = 0x5c;
 		if (descriptionsize > 0)
 		{
 			description = std::wstring((wchar_t*)(buffer + pos)).data();
-			log(3, L"🔈replaceAll description");
-			description = replaceAll(description, L"\\", L"\\\\");
 			pos += descriptionsize * 2 + 2;
 		}
 		if (commentssize > 0)
 		{
 			comments = std::wstring((wchar_t*)(buffer + pos)).data();
-			log(3, L"🔈replaceAll comments");
-			comments = replaceAll(comments, L"\\", L"\\\\");
 			pos += commentssize * 2 + 2;
 		}
 	}
 }
 
-std::wstring NetworkShellItem::to_json(int i) {
-	log(3, L"🔈NetworkShellItem to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = L"";
-	if (isPresent) {
-		result += tab(niveau) + L"\"Type\" : \"" + subtypename + L"\",\n";
-		if (!location.empty())
-			result += tab(niveau) + L"\"Location\" : \"" + location + L"\"\n";
-		else {
-			log(3, L"🔈time_to_wstring modifiedUtc");
-			result += tab(niveau) + L"\"ModifiedUtc\" : \"" + time_to_wstring(modifiedUtc) + L"\",\n";
-			log(3, L"🔈time_to_wstring modified");
-			result += tab(niveau) + L"\"Modified\" : \"" + time_to_wstring(modified) + L"\",\n";
-			result += tab(niveau) + L"\"Description\" : \"" + description + L"\",\n";
-			result += tab(niveau) + L"\"Comments\" : \"" + comments + L"\"\n";
-		}
+Json NetworkShellItem::toJson() {
+	log(3, L"🔈NetworkShellItem toJson");
+	Json o = Json::obj();
+	if (!isPresent) return o;
+	o.add(L"Type", Json::str(subtypename));
+	if (!location.empty()) {
+		o.add(L"Location", Json::str(location));
+	} else {
+		o.add(L"ModifiedUtc", Json::str(timeToIso8601Utc(modifiedUtc)));
+		o.add(L"Modified",    Json::str(timeToIso8601Local(modified)));
+		o.add(L"Description", Json::str(description));
+		o.add(L"Comments",    Json::str(comments));
 	}
-	return result;
+	return o;
 }
 
 ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _niveau) {
@@ -2080,10 +2217,10 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _niveau) {
 		if (*reinterpret_cast<unsigned int*>(buffer + 0x10) != 0) { // FILETIME
 			modifiedUtc = *reinterpret_cast<FILETIME*>(buffer + 0x10);
 
-			log(3, L"🔈time_to_wstring modifiedUtc");
-			if (time_to_wstring(modifiedUtc) != L"") {
-				log(3, L"🔈FileTimeToLocalFileTime modified");
-				FileTimeToLocalFileTime(&modifiedUtc, &modified);
+			log(3, L"🔈timeToIso8601 modifiedUtc");
+			if (timeToIso8601Utc(modifiedUtc) != L"") {
+				log(3, L"🔈utcVersLocalSuspect modified");
+				utcVersLocalSuspect(modifiedUtc, &modified);
 			}
 			else
 				modifiedUtc = { 0 };
@@ -2092,10 +2229,10 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _niveau) {
 		else { // DATE EN WSTRING
 			log(3, L"🔈wstring_to_filetime modifiedUtc");
 			modifiedUtc = wstring_to_filetime(std::wstring((wchar_t*)(buffer + 0x24)));
-			log(3, L"🔈time_to_wstring modifiedUtc");
-			if (time_to_wstring(modifiedUtc) != L"") {
-				log(3, L"🔈FileTimeToLocalFileTime modified");
-				FileTimeToLocalFileTime(&modifiedUtc, &modified);
+			log(3, L"🔈timeToIso8601 modifiedUtc");
+			if (timeToIso8601Utc(modifiedUtc) != L"") {
+				log(3, L"🔈utcVersLocalSuspect modified");
+				utcVersLocalSuspect(modifiedUtc, &modified);
 			}
 			else
 				modifiedUtc = { 0 };
@@ -2103,31 +2240,23 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _niveau) {
 		}
 	}
 	else {
-		modifiedUtc = FatDateTime(date).to_filetime();
-		log(3, L"🔈time_to_wstring modifiedUtc");
-		if (time_to_wstring(modifiedUtc) != L"") {
-			log(3, L"🔈FileTimeToLocalFileTime modified");
-			FileTimeToLocalFileTime(&modifiedUtc, &modified);
-		}
-		else
-			modifiedUtc = { 0 };
+		// Date FAT = heure LOCALE : on en derive l'UTC, pas l'inverse (cf. §7.3).
+		modified = FatDateTime(date).toFileTime();
+		log(3, L"🔈LocalFileTimeToFileTime modified");
+		LocalFileTimeToFileTime(&modified, &modifiedUtc);
 		log(3, L"🔈string_to_wstring modified");
 		name = string_to_wstring(std::string((char*)(buffer + 0x1C)));
 	}
 }
 
-std::wstring ArchiveFileContent::to_json(int i) {
-	log(3, L"🔈ArchiveFileContent to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = L"";
-	if (isPresent) {
-		log(3, L"🔈time_to_wstring modifiedUtc");
-		result += tab(niveau) + L"\"ModifiedUtc\" : \"" + time_to_wstring(modifiedUtc) + L"\",\n";
-		log(3, L"🔈time_to_wstring modified");
-		result += tab(niveau) + L"\"Modified\" : \"" + time_to_wstring(modified) + L"\",\n";
-		result += tab(niveau) + L"\"Name\" : \"" + name + L"\",\n";
-	}
-	return result;
+Json ArchiveFileContent::toJson() {
+	log(3, L"🔈ArchiveFileContent toJson");
+	Json o = Json::obj();
+	if (!isPresent) return o;
+	o.add(L"ModifiedUtc", Json::str(timeToIso8601Utc(modifiedUtc)));
+	o.add(L"Modified",    Json::str(timeToIso8601Local(modified)));
+	o.add(L"Name",        Json::str(name));
+	return o;
 }
 
 URIShellItem::URIShellItem(LPBYTE buffer, int _niveau) {
@@ -2140,14 +2269,11 @@ URIShellItem::URIShellItem(LPBYTE buffer, int _niveau) {
 	}
 }
 
-std::wstring URIShellItem::to_json(int i) {
-	log(3, L"🔈URIShellItem to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = L"";
-	if (isPresent) {
-		result += tab(niveau) + L"\"Uri\" : \"" + uri + L"\"\n";
-	}
-	return result;
+Json URIShellItem::toJson() {
+	log(3, L"🔈URIShellItem toJson");
+	Json o = Json::obj();
+	if (isPresent) o.add(L"Uri", Json::str(uri));
+	return o;
 }
 
 FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSize, unsigned char shell_item_type_char, int _niveau) {
@@ -2155,14 +2281,10 @@ FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSiz
 	isPresent = true;
 	fsFileSize = *reinterpret_cast<unsigned int*>(buffer + 4);
 	log(3, L"🔈FatDateTime");
-	fsFileModificationUtc = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 8)).to_filetime();
-	log(3, L"🔈time_to_wstring fsFileModificationUtc");
-	if (time_to_wstring(fsFileModificationUtc) != L"") {
-		log(3, L"🔈FileTimeToLocalFileTime fsFileModification");
-		FileTimeToLocalFileTime(&fsFileModificationUtc, &fsFileModification);
-	}
-	else
-		fsFileModification = { 0 };
+	// Date FAT = heure LOCALE : on en derive l'UTC, pas l'inverse (cf. §7.3).
+	fsFileModification = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 8)).toFileTime();
+	log(3, L"🔈LocalFileTimeToFileTime fsFileModification");
+	LocalFileTimeToFileTime(&fsFileModification, &fsFileModificationUtc);
 	log(3, L"🔈FsFlags");
 	fsFlags = FsFlags(shell_item_type_char);
 	log(3, L"🔈FileAttributes");
@@ -2191,34 +2313,21 @@ FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSiz
 	}
 }
 
-std::wstring FileEntryShellItem::to_json(int i) {
-	log(3, L"🔈FileEntryShellItem to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = L"";
-	if (isPresent == true) {
-		log(3, L"🔈to_wstring fsFileAttributes");
-		result += tab(niveau) + L"\"Attributes\" : \"" + fsFileAttributes.to_wstring() + L"\",\n";
-		log(3, L"🔈to_wstring flags");
-		result += tab(niveau) + L"\"Flags\" : \"" + fsFlags.to_wstring() + L"\",\n";
-		log(3, L"🔈time_to_wstring fsFileModification");
-		result += tab(niveau) + L"\"ModificationDate\" : \"" + time_to_wstring(fsFileModification) + L"\",\n";
-		log(3, L"🔈time_to_wstring fsFileModificationUtc");
-		result += tab(niveau) + L"\"ModificationDateUtc\" : \"" + time_to_wstring(fsFileModificationUtc) + L"\",\n";
-		result += tab(niveau) + L"\"Size\" : \"" + std::to_wstring(fsFileSize) + L"\",\n";
-		result += tab(niveau) + L"\"Name\" : \"" + fsPrimaryName + L"\",\n";
-		result += tab(niveau) + L"\"ExtensionBlocksCount\" : \"" + std::to_wstring(extensionBlocks.size()) + L"\",\n";
-		result += tab(niveau) + L"\"ExtensionBlocks\" : [\n";
-		std::vector<IExtensionBlock*>::iterator it;
-		for (it = extensionBlocks.begin(); it != extensionBlocks.end(); it++) {
-			IExtensionBlock* temp = *it;
-			result += temp->to_json(i);
-			if (it != extensionBlocks.end() - 1)
-				result += L",";
-			result += L"\n";
-		}
-		result += tab(niveau) + L"]\n";
-	}
-	return result;
+Json FileEntryShellItem::toJson() {
+	log(3, L"🔈FileEntryShellItem toJson");
+	Json o = Json::obj();
+	if (!isPresent) return o;
+	o.add(L"Attributes",          Json::str(fsFileAttributes.to_wstring()));
+	o.add(L"Flags",               Json::str(fsFlags.to_wstring()));
+	o.add(L"ModificationDate",    Json::str(timeToIso8601Local(fsFileModification)));
+	o.add(L"ModificationDateUtc", Json::str(timeToIso8601Utc(fsFileModificationUtc)));
+	o.add(L"Size",                Json::num((unsigned long long)fsFileSize));   // nombre
+	o.add(L"Name",                Json::str(fsPrimaryName));
+	Json blocs = Json::arr();
+	for (const auto& b : extensionBlocks) blocs.push(b->toJson());
+	o.add(L"ExtensionBlocksCount", Json::num((unsigned long long)extensionBlocks.size()));
+	o.add(L"ExtensionBlocks",      std::move(blocs));
+	return o;
 }
 
 UsersFilesFolder::UsersFilesFolder(LPBYTE buffer, int _niveau) {
@@ -2226,35 +2335,27 @@ UsersFilesFolder::UsersFilesFolder(LPBYTE buffer, int _niveau) {
 	isPresent = true;
 	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + size - 2);
-	modifiedUtc = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 0x12)).to_filetime();
-	log(3, L"🔈FileTimeToLocalFileTime modified");
-	FileTimeToLocalFileTime(&modifiedUtc, &modified);
+	// Date FAT = heure LOCALE : on en derive l'UTC, pas l'inverse (cf. §7.3).
+	modified = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 0x12)).toFileTime();
+	log(3, L"🔈LocalFileTimeToFileTime modified");
+	LocalFileTimeToFileTime(&modified, &modifiedUtc);
 	log(3, L"🔈string_to_wstring primaryName");
 	primaryName = string_to_wstring(std::string((char*)buffer + 0x18));
 	log(3, L"🔈Beef0004");
-	extensionBlock = new Beef0004(buffer + extensionOffset, niveau + 1, NULL, false); // Le bloc suit 
+	extensionBlock = std::make_unique<Beef0004>(buffer + extensionOffset, niveau + 1, nullptr, false); // Le bloc suit 
 }
 
-std::wstring UsersFilesFolder::to_json(int i) {
-	log(3, L"🔈UsersFilesFolder to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = L"";
-	if (isPresent) {
-		result += tab(niveau) + L"\"PrimaryName\" : \"" + primaryName + L"\",\n";
-		log(3, L"🔈time_to_wstring modifiedUtc");
-		result += tab(niveau) + L"\"ModifiedDateUtc\" : \"" + time_to_wstring(modifiedUtc) + L"\",\n";
-		log(3, L"🔈time_to_wstring modified");
-		result += tab(niveau) + L"\"ModifiedDate\" : \"" + time_to_wstring(modified) + L"\"";
-		if (extensionBlock->isPresent == true) {
-			result += L",\n";
-			result += tab(niveau) + L"\"ExtensionBlock\" : \n";
-			result += extensionBlock->to_json(i) + L"\n";
-		}
-		else {
-			result += L"\n";
-		}
-	}
-	return result;
+Json UsersFilesFolder::toJson() {
+	log(3, L"🔈UsersFilesFolder toJson");
+	Json o = Json::obj();
+	if (!isPresent) return o;
+	o.add(L"PrimaryName",     Json::str(primaryName));
+	o.add(L"ModifiedDateUtc", Json::str(timeToIso8601Utc(modifiedUtc)));
+	o.add(L"ModifiedDate",    Json::str(timeToIso8601Local(modified)));
+	// garde : extensionBlock peut etre nul
+	if (extensionBlock && extensionBlock->isPresent)
+		o.add(L"ExtensionBlock", extensionBlock->toJson());
+	return o;
 }
 
 FavoriteShellitem::FavoriteShellitem(LPBYTE buffer, int _niveau) {
@@ -2264,16 +2365,70 @@ FavoriteShellitem::FavoriteShellitem(LPBYTE buffer, int _niveau) {
 	UPV = UsersPropertyView(buffer, niveau + 1);
 }
 
-std::wstring FavoriteShellitem::to_json(int i) {
-	log(3, L"🔈FavoriteShellitem to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = L"";
-	if (isPresent) {
-		if (UPV.isPresent == true) {
-			result = UPV.to_json(i);
-		}
+Json FavoriteShellitem::toJson() {
+	log(3, L"🔈FavoriteShellitem toJson");
+	if (isPresent && UPV.isPresent) return UPV.toJson();
+	return Json::obj();
+}
+
+TypedShellItem::TypedShellItem(LPBYTE buffer, unsigned short taille,
+                               const std::wstring& _typeName, int _niveau) {
+	niveau = _niveau;
+	isPresent = true;
+	typeName = _typeName;
+	log(3, L"🔈dump_wstring TypedShellItem");
+	data = dump_wstring(buffer, 0, taille);
+}
+
+Json TypedShellItem::toJson() {
+	log(3, L"🔈TypedShellItem toJson");
+	Json o = Json::obj();
+	o.add(L"ItemType", Json::str(typeName));
+	// Champs non decodes : les octets restent joints (cf. idList.h).
+	o.add(L"Data",     Json::str(data));
+	return o;
+}
+
+DelegateFolder::DelegateFolder(LPBYTE buffer, unsigned short taille, int _niveau) {
+	niveau = _niveau;
+	isPresent = true;
+
+	/* GUID de la classe qui delegue : les 16 derniers octets de l'item. */
+	if (taille >= 16) {
+		log(3, L"🔈guid_to_wstring classGuid");
+		classGuid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + taille - 16));
+		log(3, L"🔈trans_guid_to_wstring classFriendlyName");
+		classFriendlyName = trans_guid_to_wstring(classGuid);
 	}
-	return result;
+
+	/* SHELL ITEM IMBRIQUE : taille sur 4 octets a l'offset 4, contenu a partir
+	   de l'offset 6. Les 32 derniers octets portent le marqueur de delegation et
+	   le GUID de classe, ils ne font pas partie de l'item interne. */
+	const unsigned int tailleInterne = *reinterpret_cast<unsigned int*>(buffer + 4);
+	if (taille > 38 && tailleInterne > 0 && tailleInterne <= (unsigned int)(taille - 38)) {
+		log(3, L"🔈makeShellItem delegue");
+		innerItem = makeShellItem(buffer + 6, niveau + 1, false);
+	}
+	else {
+		log(2, L"🔥DelegateFolder : taille interne incoherente ("
+		     + std::to_wstring(tailleInterne) + L")");
+		log(3, L"🔈dump_wstring DelegateFolder");
+		data = dump_wstring(buffer, 0, taille);
+	}
+}
+
+Json DelegateFolder::toJson() {
+	log(3, L"🔈DelegateFolder toJson");
+	Json o = Json::obj();
+	o.add(L"ItemType", Json::str(L"Delegate Folder"));
+	if (!classGuid.empty()) {
+		o.add(L"ClassGuid",    Json::str(classGuid));
+		o.add(L"FriendlyName", Json::str(classFriendlyName));
+	}
+	// L'item delegue est mis a plat, comme les autres shell items imbriques.
+	if (innerItem) o.add(L"DelegatedItem", innerItem->toJson());
+	if (!data.empty()) o.add(L"Data", Json::str(data));
+	return o;
 }
 
 UnknownShellItem::UnknownShellItem(LPBYTE buffer, int _niveau) {
@@ -2284,73 +2439,138 @@ UnknownShellItem::UnknownShellItem(LPBYTE buffer, int _niveau) {
 	data = dump_wstring(buffer, 0, size);
 }
 
-std::wstring UnknownShellItem::to_json(int i) {
-	log(3, L"🔈UnknownShellItem to_json");
-	niveau += i; // décalage supplémentaire si besoin notamment pour les jumplist
-	std::wstring result = L"";
-	if (!conf._dump)
-		tab(niveau) + L"\"Data\" : \"" + data + L"\"\n"; //sinon dump deja present donc pas besoin de data
-	return result;
+Json UnknownShellItem::toJson() {
+	log(3, L"🔈UnknownShellItem toJson");
+	// CORRECTION : l'ancienne version construisait la chaine sans jamais
+	// l'affecter -> tout shell item de type non reconnu etait silencieusement
+	// perdu. On remonte desormais systematiquement le dump brut, pour qu'un
+	// type inconnu soit visible et analysable au lieu d'etre ignore.
+	Json o = Json::obj();
+	o.add(L"Unknown", Json::boolean(true));
+	o.add(L"Data",    Json::str(data));   // dump hexa de l'item
+	return o;
 }
 
-void getShellItem(LPBYTE buffer, IShellItem** p, int _niveau, bool Parentiszip) {
+std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _niveau, bool Parentiszip) {
 
 	unsigned int item_size = *reinterpret_cast<unsigned short int*>(buffer);
 	if (Parentiszip == false) {
+		/* TYPES RECONNUS PAR UNE SIGNATURE DANS LES DONNÉES, testés AVANT
+		 * l'octet de classe.
+		 *
+		 * CE QUI MANQUAIT. WAC n'identifiait un shell item que par son octet de
+		 * classe. Or six types documentés ne se reconnaissent pas là : ils
+		 * portent une signature dans leurs données, et libfwsi les identifie en
+		 * essayant chaque décodeur (libfwsi_item.c). Tous tombaient donc dans
+		 * « UNKNOWN », le plus coûteux étant le dossier délégué — courant dans
+		 * les shellbags, et qui enveloppe un shell item entièrement décodable.
+		 *
+		 * L'ordre importe : ces tests sont plus spécifiques que l'octet de
+		 * classe, ils doivent primer. Chaque critère est celui de libfwsi, avec
+		 * sa taille minimale — sans quoi la vérification lirait hors de l'item. */
+		const unsigned short taille = (unsigned short)item_size;
+
+		/* Dossier délégué : marqueur de délégation 32 octets avant la fin. */
+		static const unsigned char GUID_DELEGATION[16] = {
+			0x74, 0x1a, 0x59, 0x5e, 0x96, 0xdf, 0xd3, 0x48,
+			0x8d, 0x67, 0x17, 0x33, 0xbc, 0xee, 0x28, 0xba };
+		if (taille >= 38
+		    && memcmp(buffer + taille - 32, GUID_DELEGATION, 16) == 0) {
+			log(3, L"🔈DelegateFolder");
+			return std::make_unique<DelegateFolder>(buffer, taille, _niveau);
+		}
+		// Graveur de CD : signature ASCII « AugM ».
+		if (taille >= 18 && memcmp(buffer + 4, "AugM", 4) == 0) {
+			log(3, L"🔈CD Burn");
+			return std::make_unique<TypedShellItem>(buffer, taille, L"CD Burn", _niveau);
+		}
+		// Dossier de jeux : signature ASCII « GFSI ».
+		if (taille >= 32 && memcmp(buffer + 4, "GFSI", 4) == 0) {
+			log(3, L"🔈Game Folder");
+			return std::make_unique<TypedShellItem>(buffer, taille, L"Game Folder", _niveau);
+		}
+		// Fichier .cpl du panneau de configuration : valeur de 4 octets precise.
+		if (taille >= 24
+		    && *reinterpret_cast<unsigned int*>(buffer + 4) == 0xFFFFFF38UL) {
+			log(3, L"🔈Control Panel CPL File");
+			return std::make_unique<TypedShellItem>(buffer, taille,
+			                                        L"Control Panel CPL File", _niveau);
+		}
+
 		unsigned char type_char = *reinterpret_cast<unsigned char*>(buffer + 2);
 		log(3, L"🔈shell_item_class");
 		std::wstring type = shell_item_class(type_char);
 		if (type == L"VOLUME_SHELL_ITEM") {
 			log(3, L"🔈VolumeShellItem");
-			*p = new VolumeShellItem(buffer, type_char, _niveau);
+			return std::make_unique<VolumeShellItem>(buffer, type_char, _niveau);
 		}
 		if (type == L"CONTROL_PANEL") {
 			log(3, L"🔈ControlPanel");
-			*p = new ControlPanel(buffer, item_size, _niveau);
+			return std::make_unique<ControlPanel>(buffer, item_size, _niveau);
 		}
 		if (type == L"CONTROL_PANEL_CATEGORY") {
 			log(3, L"🔈ControlPanelCategory");
-			*p = new ControlPanelCategory(buffer, _niveau);
+			return std::make_unique<ControlPanelCategory>(buffer, _niveau);
 		}
 		if (type == L"ROOT_FOLDER") {
 			log(3, L"🔈RootFolder");
-			*p = new RootFolder(buffer, _niveau);
+			return std::make_unique<RootFolder>(buffer, _niveau);
 		}
 		if (type == L"FILE_ENTRY_SHELL_ITEM") {
 			log(3, L"🔈FileEntryShellItem");
-			*p = new FileEntryShellItem(buffer, item_size, type_char, _niveau);
+			return std::make_unique<FileEntryShellItem>(buffer, item_size, type_char, _niveau);
 		}
 		if (type == L"USERS_PROPERTY_VIEW") {
 			log(3, L"🔈UsersPropertyView");
-			*p = new UsersPropertyView(buffer, _niveau);
+			return std::make_unique<UsersPropertyView>(buffer, _niveau);
 		}
 		if (type == L"NETWORK_LOCATION_SHELL_ITEM") {
 			log(3, L"🔈NetworkShellItem");
-			*p = new NetworkShellItem(buffer, _niveau);
+			return std::make_unique<NetworkShellItem>(buffer, _niveau);
 		}
 		if (type == L"URI") {
 			log(3, L"🔈URIShellItem");
-			*p = new URIShellItem(buffer, _niveau);
+			return std::make_unique<URIShellItem>(buffer, _niveau);
 		}
 		if (type == L"ARCHIVE_FILE_CONTENT") {
 			log(3, L"🔈ArchiveFileContent");
-			*p = new ArchiveFileContent(buffer, _niveau);
+			return std::make_unique<ArchiveFileContent>(buffer, _niveau);
 		}
 		if (type == L"USERS_FILES_FOLDER") {
 			log(3, L"🔈UsersFilesFolder");
-			*p = new UsersFilesFolder(buffer, _niveau);
+			return std::make_unique<UsersFilesFolder>(buffer, _niveau);
 		}
 		if (type == L"FAVORITE_SHELL_ITEM") {
 			log(3, L"🔈FavoriteShellitem");
-			*p = new FavoriteShellitem(buffer, _niveau);
+			return std::make_unique<FavoriteShellitem>(buffer, _niveau);
 		}
+		/* CRITÈRES FAIBLES, testés en DERNIER — l'ordre suit celui de libfwsi,
+		   qui essaie `file_entry` avant `web_site`.
+		   Celui du site web porte sur quatre octets à l'offset 4, or c'est là
+		   qu'une entrée de fichier écrit sa TAILLE : un fichier de 0xC001B000
+		   octets serait pris pour un site web si ce test venait d'abord. Celui
+		   de l'archive Acronis lit l'octet de classe lui-même. Les deux ne sont
+		   donc consultés que si aucun type de classe n'a répondu. */
+		if (taille >= 24 && buffer[4] == 0x00 && buffer[5] == 0xb0
+		    && buffer[6] == 0x01 && buffer[7] == 0xc0) {
+			log(3, L"🔈Web Site");
+			return std::make_unique<TypedShellItem>(buffer, taille, L"Web Site", _niveau);
+		}
+		if (taille >= 50 && buffer[2] == 0x52 && buffer[3] == 0x67
+		    && buffer[4] == 0xb1 && buffer[5] == 0xac) {
+			log(3, L"🔈Acronis TIB File");
+			return std::make_unique<TypedShellItem>(buffer, taille,
+			                                        L"Acronis TIB File", _niveau);
+		}
+
 		if (type == L"UNKNOWN") {
 			log(3, L"🔈UnknownShellItem");
-			*p = new UnknownShellItem(buffer, _niveau);
+			return std::make_unique<UnknownShellItem>(buffer, _niveau);
 		}
 	}
 	else {
 		log(3, L"🔈ArchiveFileContent");
-		*p = new ArchiveFileContent(buffer, _niveau);
+		return std::make_unique<ArchiveFileContent>(buffer, _niveau);
 	}
+	return nullptr;   // aucun type reconnu : jamais de retour implicite
 }

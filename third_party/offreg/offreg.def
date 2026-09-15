@@ -1,0 +1,12 @@
+LIBRARY offreg.dll
+EXPORTS
+OROpenHive
+OROpenHiveByHandle
+ORCloseHive
+ORSaveHive
+OROpenKey
+ORCloseKey
+OREnumKey
+OREnumValue
+ORGetValue
+ORQueryInfoKey

@@ -1001,7 +1001,10 @@ INPUT                  = ../WAC
 # See also: INPUT_FILE_ENCODING
 # The default value is: UTF-8.
 
-INPUT_ENCODING         = ISO-8859-1
+# UTF-8 : toutes les sources du projet le sont (verifie au 2026-09-15). La valeur
+# ISO-8859-1 qui figurait ici rendait les accents casses dans la documentation
+# generee, alors que les commentaires du code sont en francais accentue.
+INPUT_ENCODING         = UTF-8
 
 # This tag can be used to specify the character encoding of the source files
 # that Doxygen parses. The INPUT_FILE_ENCODING tag can be used to specify

@@ -361,3 +361,20 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# ---------------------------------------------------------------------------
+# Compilation croisée depuis Linux (build-windows.sh) et harnais de test VM.
+# Ajouté le 2026-09-15 : sans ces règles, un `git add -A` versionnait 3 Go —
+# les objets et exécutables produits, et surtout les résultats de collecte du
+# harnais (une seule campagne de tests en accumule plusieurs giga-octets,
+# events.json pesant à lui seul ~70 Mo par exécution).
+# ---------------------------------------------------------------------------
+
+# Produits de la compilation croisée (regénérés par ./build-windows.sh)
+build-windows/
+
+# Sorties du harnais de test en VM : données, non source.
+# Le harnais lui-même (scripts, check-json.py, README) reste versionné.
+vmtest/results/
+
+# Bibliothèque d'import générée au build depuis offreg.def
+third_party/offreg/liboffreg.a

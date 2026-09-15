@@ -16,7 +16,7 @@
  * along with N8. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "quickdigest5.hpp"
+#include "quickdigest5.h"
 #include <algorithm>
 
 uint8_t QuickDigest5::padding[64] = {0x80};
@@ -184,7 +184,7 @@ std::vector<uint8_t> QuickDigest5::digestString(const std::string& input) {
 
 std::vector<uint8_t> QuickDigest5::digestFile(const std::string& filepath) {
     QuickDigest5 QuickDigest5;
-    std::ifstream file(filepath, std::ios::binary);
+    std::ifstream file(std::filesystem::path(filepath), std::ios::binary);
     if (file) {
 
         std::vector<uint8_t> buffer(4096);
@@ -200,6 +200,25 @@ std::vector<uint8_t> QuickDigest5::digestFile(const std::string& filepath) {
         QuickDigest5.finalize();
     }
     return QuickDigest5.digest;
+}
+
+void Md5Stream::update(const uint8_t* data, size_t length) {
+    moteur.update(data, length);
+}
+
+std::wstring Md5Stream::hexDigest() {
+    moteur.finalize();
+    std::wstringstream ss;
+    std::wstring result = L"";
+    if (moteur.digest.size() >= 16) {
+        for (int i = 0; i < 16; ++i) {
+            ss << std::hex << std::setw(2) << std::setfill(L'0')
+               << (int)moteur.digest[(size_t)i];
+        }
+        result = ss.str();
+        std::transform(result.begin(), result.end(), result.begin(), ::toupper);
+    }
+    return result;
 }
 
 std::wstring QuickDigest5::toHash(const std::string& input) {

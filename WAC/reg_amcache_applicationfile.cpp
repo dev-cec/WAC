@@ -1,0 +1,131 @@
+#include "reg_amcache_applicationfile.h"
+
+AmcacheApplicationFile::AmcacheApplicationFile(ORHKEY hKey_amcache) {
+	log(3, L"🔈getRegSzValue Name");
+	getRegSzValue(hKey_amcache, nullptr, L"Name", &name);
+	log(2, L"❇️AmcacheApplicationFile Name : " + name);
+	log(3, L"🔈getRegSzValue Publisher");
+	getRegSzValue(hKey_amcache, nullptr, L"Publisher", &publisher);
+	log(3, L"🔈replaceAll Publisher");
+	log(3, L"🔈getRegSzValue LongPath");
+	getRegSzValue(hKey_amcache, nullptr, L"LowerCaseLongPath", &longPath);
+
+	//calcul hash avant escape
+	log(3, L"🔈replaceAll temp");
+	std::wstring wp(replaceAll(longPath, L"\"", L""));
+	log(3, L"🔈wstring_to_string p");
+	std::string p = wstring_to_string(wp); // remove " in path
+	if (conf.md5) {
+		log(3, L"🔈fileToHash " + longPath);
+		md5 = QuickDigest5::fileToHash(p); // calcul hash
+	}
+
+	log(3, L"🔈replaceAll LongPath");
+	log(3, L"🔈getRegSzValue Version");
+	getRegSzValue(hKey_amcache, nullptr, L"Version", &version);
+	log(3, L"🔈replaceAll Version");
+	version = replaceAll(version, L"\t", L"\\t"); // replace tab in std::string by \t, tab not supported by json in strings
+	log(3, L"🔈getRegboolValue IsOsComponent");
+	getRegboolValue(hKey_amcache, nullptr, L"IsOsComponent", &IsOsComponent);
+	//la date est stockée en REG_SZ, donc il faut la reconvertir en FILETIME pour avoir le bon format et la bonne timezone
+	std::wstring temp;
+	log(3, L"🔈getRegSzValue LinkDate");
+	getRegSzValue(hKey_amcache, nullptr, L"LinkDate", &temp);
+	if (!temp.empty()) {
+		FILETIME filetime = { 0 };
+		log(3, L"🔈wstring_to_filetime LinkDate");
+		filetime = wstring_to_filetime(temp);
+		log(3, L"🔈timeToIso8601 LinkDate");
+		linkDate = timeToIso8601Local(filetime);
+		log(3, L"🔈timeToIso8601 LinkDateUtc");
+		linkDateUtc = localTimeToIso8601Utc(filetime);
+	}
+}
+
+Json AmcacheApplicationFile::toJson() {
+	log(3, L"🔈AmcacheApplicationFile toJson");
+	Json o = Json::obj();
+	o.add(L"Name",          Json::str(name));
+	o.add(L"Publisher",     Json::str(publisher));
+	o.add(L"LongPath",      Json::str(longPath));      // chemin brut
+	if (!md5.empty()) o.add(L"Md5", Json::str(md5));
+	o.add(L"Version",       Json::str(version));
+	o.add(L"LinkDate",      Json::str(linkDate));
+	o.add(L"LinkDateUtc",   Json::str(linkDateUtc));
+	o.add(L"IsOsComponent", Json::boolean(IsOsComponent));   // vrai booleen
+	return o;
+}
+
+void AmcacheApplicationFile::clear() {
+	log(3, L"🔈AmcacheApplicationFile toJson");
+}
+
+HRESULT AmcacheApplicationFiles::getData() {
+
+	log(0, L"*******************************************************************************************************************");
+	log(0, L"ℹ️Amcache Application Files :");
+	log(0, L"*******************************************************************************************************************");
+
+
+	HRESULT hresult = 0;
+	ORHKEY hKey = NULL, hKey_amcache = NULL;
+	DWORD nSubkeys = 0;
+	DWORD nValues = 0;
+	WCHAR sousCle[MAX_VALUE_NAME] = L"";
+	DWORD tailleTampon = 0;
+	ORHKEY Offhive = NULL;
+	std::wstring ruche = conf.mountpoint + L"\\Windows\\AppCompat\\Programs\\Amcache.hve";
+
+	log(3, L"🔈OROpenHive C:\\Windows\\AppCompat\\Programs\\Amcache.hve");
+	hresult = OROpenHive(ruche.c_str(), &Offhive);
+	if (hresult != ERROR_SUCCESS) {
+		log(2, L"🔥OROpenHive : C:\\Windows\\AppCompat\\Programs\\Amcache.hve", hresult);
+		return hresult;
+	}
+
+	log(3, L"🔈OROpenKey Root\\InventoryApplicationFile");
+	hresult = OROpenKey(Offhive, L"Root\\InventoryApplicationFile", &hKey);
+	if (hresult != ERROR_SUCCESS) {
+		log(2, L"🔥OROpenHive : Root\\InventoryApplicationFile", hresult);
+		return hresult;
+	}
+
+	log(3, L"🔈ORQueryInfoKey Root\\InventoryApplicationFile");
+	hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
+	if (hresult != ERROR_SUCCESS) {
+		log(2, L"🔥ORQueryInfoKey : Root\\InventoryApplicationFile", hresult);
+		return hresult;
+	}
+	for (DWORD i = 0; i < nSubkeys; i++) {
+		printProgressStep(L"AmcacheApplicationFile", i + 1, nSubkeys);
+		tailleTampon = MAX_VALUE_NAME;
+		log(3, L"🔈OREnumKey Root\\InventoryApplicationFile " + std::to_wstring(i));
+		hresult = OREnumKey(hKey, i, sousCle, &tailleTampon, NULL, NULL, NULL);
+		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
+			log(2, L"🔥OREnumKey Root\\InventoryApplicationFile " + std::to_wstring(i), hresult);
+			continue;
+		}
+		log(3, L"🔈OROpenKey  subkey " + std::wstring(sousCle));
+		hresult = OROpenKey(hKey, sousCle, &hKey_amcache);
+		if (hresult != ERROR_SUCCESS) {
+			log(2, L"🔥OROpenKey  subkey " + std::wstring(sousCle), hresult);
+			continue;
+		}
+		log(1, L"➕AmcacheApplicationFile ");
+		//save
+		amcacheapplicationfiles.push_back(AmcacheApplicationFile(hKey_amcache));
+	}
+	return ERROR_SUCCESS;
+}
+
+HRESULT AmcacheApplicationFiles::toJson() {
+	log(3, L"🔈AmcacheApplicationFiles toJson");
+	Json arr = Json::arr();
+	for (AmcacheApplicationFile& e : amcacheapplicationfiles) arr.push(e.toJson());
+	return writeJsonFile("amcache_application_files.json", arr);
+}
+
+void AmcacheApplicationFiles::clear() {
+	log(3, L"🔈AmcacheApplicationFiles clear");
+	amcacheapplicationfiles.clear();   // detruit les elements -> libere reellement
+}

@@ -129,7 +129,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>libs\x64\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>offreg.lib;propsys.lib;taskschd.lib;comsupp.lib;Secur32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>offreg.lib;propsys.lib;Secur32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -154,7 +154,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>offreg.lib;propsys.lib;taskschd.lib;comsupp.lib;Secur32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>offreg.lib;propsys.lib;Secur32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <Version>1.0</Version>
     </Link>
@@ -164,52 +164,86 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="com.hpp" />
+    
+    
+    <ClCompile Include="asciiart.cpp" />
+    <ClCompile Include="audit.cpp" />
+    <ClCompile Include="events.cpp" />
+    <ClCompile Include="hive_recover.cpp" />
     <ClCompile Include="idList.cpp" />
-    <ClCompile Include="idList.h" />
-    <ClCompile Include="quickdigest5.cpp" />
-    <ClCompile Include="schedulesTasks.hpp" />
-    <ClCompile Include="system.hpp" />
-    <ClCompile Include="trans_id.cpp" />
+    <ClCompile Include="jumplist_automatic.cpp" />
+    <ClCompile Include="jumplist_custom.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="reg_amcache_application.hpp" />
-    <ClCompile Include="reg_amcache_applicationfile.hpp" />
-    <ClCompile Include="reg_mounted_devices.hpp" />
-    <ClCompile Include="reg_userassists.hpp" />
-    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="oleparser.cpp" />
+    <ClCompile Include="prefetchs.cpp" />
+    <ClCompile Include="processes.cpp" />
+    <ClCompile Include="quickdigest5.cpp" />
+    <ClCompile Include="raw_hive.cpp" />
+    <ClCompile Include="raw_collect.cpp" />
+    <ClCompile Include="recent_docs.cpp" />
+    <ClCompile Include="reg_amcache_application.cpp" />
+    <ClCompile Include="reg_amcache_applicationfile.cpp" />
+    <ClCompile Include="reg_bams.cpp" />
+    <ClCompile Include="reg_mounted_devices.cpp" />
+    <ClCompile Include="reg_mru.cpp" />
+    <ClCompile Include="reg_mru_apps.cpp" />
+    <ClCompile Include="reg_muicache.cpp" />
+    <ClCompile Include="reg_run.cpp" />
+    <ClCompile Include="reg_shellbags.cpp" />
+    <ClCompile Include="reg_shimcache.cpp" />
+    <ClCompile Include="reg_usbstors.cpp" />
+    <ClCompile Include="reg_userassists.cpp" />
+    <ClCompile Include="scheduledTasks.cpp" />
+    <ClCompile Include="services.cpp" />
+    <ClCompile Include="sessions.cpp" />
+    <ClCompile Include="system.cpp" />
     <ClCompile Include="tools.cpp" />
-    <ClCompile Include="reg_usbstors.hpp" />
-    <ClCompile Include="vss.cpp" />
+    <ClCompile Include="xml_light.cpp" />
+    <ClCompile Include="trans_id.cpp" />
+    <ClCompile Include="users.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
     <None Include="doc\modele de donnees.drawio" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="asciiart.hpp" />
-    <ClInclude Include="events.hpp" />
-    <ClInclude Include="jumplist_automatic.hpp" />
-    <ClInclude Include="jumplist_custom.hpp" />
-    <ClInclude Include="oleParser.hpp" />
-    <ClInclude Include="processes.hpp" />
-    <ClInclude Include="quickdigest5.hpp" />
-    <ClInclude Include="reg_mru_apps.hpp" />
-    <ClInclude Include="reg_mru.hpp" />
-    <ClInclude Include="reg_shellbags.hpp" />
+    
+    <ClInclude Include="asciiart.h" />
+    <ClInclude Include="audit.h" />
+    <ClInclude Include="events.h" />
+    <ClInclude Include="hive_recover.h" />
+    <ClInclude Include="idList.h" />
+    <ClInclude Include="json.h" />
+    <ClInclude Include="jumplist_automatic.h" />
+    <ClInclude Include="jumplist_custom.h" />
+    <ClInclude Include="oleparser.h" />
+    <ClInclude Include="prefetchs.h" />
+    <ClInclude Include="processes.h" />
+    <ClInclude Include="quickdigest5.h" />
+    <ClInclude Include="raw_collect.h" />
+    <ClInclude Include="raw_hive.h" />
+    <ClInclude Include="recent_docs.h" />
+    <ClInclude Include="reg_amcache_application.h" />
+    <ClInclude Include="reg_amcache_applicationfile.h" />
+    <ClInclude Include="reg_bams.h" />
+    <ClInclude Include="reg_mounted_devices.h" />
+    <ClInclude Include="reg_mru.h" />
+    <ClInclude Include="reg_mru_apps.h" />
+    <ClInclude Include="reg_muicache.h" />
+    <ClInclude Include="reg_run.h" />
+    <ClInclude Include="reg_shellbags.h" />
+    <ClInclude Include="reg_shimcache.h" />
+    <ClInclude Include="reg_usbstors.h" />
+    <ClInclude Include="reg_userassists.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="services.hpp" />
-    <ClInclude Include="sessions.hpp" />
-    <ClInclude Include="trans_id.h" />
-    <ClInclude Include="prefetchs.hpp" />
-    <ClInclude Include="recent_docs.hpp" />
-    <ClInclude Include="reg_bams.hpp" />
-    <ClInclude Include="reg_muicache.hpp" />
-    <ClInclude Include="reg_run.hpp" />
-    <ClInclude Include="reg_shimcache.hpp" />
-    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="scheduledTasks.h" />
+    <ClInclude Include="services.h" />
+    <ClInclude Include="sessions.h" />
+    <ClInclude Include="system.h" />
     <ClInclude Include="tools.h" />
-    <ClInclude Include="users.hpp" />
-    <ClInclude Include="vss.h" />
+    <ClInclude Include="xml_light.h" />
+    <ClInclude Include="trans_id.h" />
+    <ClInclude Include="users.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="doc\modele de donnees.png" />

@@ -1,19 +1,18 @@
-﻿#pragma once
-
-#include <cstdio>
+﻿#include <cstdio>
 #include <iostream>
 #include <iomanip>
 #include <memory>
 #include <stdexcept>
 #include <sstream>
 #include <array>
+#include <map>
 #include <windows.h>
 #include <ShellAPI.h> 
 #include <stdio.h>
 #include <regex>
-#include <comdef.h>
 #include <sddl.h>
 #include "tools.h"
+#include <filesystem>
 
 /****************************************************
 *                   FORMAT DE DONNEES               *
@@ -28,7 +27,7 @@ FatDateTime::FatDateTime(unsigned int _i) {
 }
 
 
-SYSTEMTIME FatDateTime::to_systemtime() {
+SYSTEMTIME FatDateTime::toSystemTime() {
 
 	/* The year value is stored in bits 9 - 15 of the date (7 bits)
  * A year value of 0 represents 1980
@@ -62,12 +61,12 @@ SYSTEMTIME FatDateTime::to_systemtime() {
 	return date_time_values;
 }
 
-FILETIME FatDateTime::to_filetime() {
+FILETIME FatDateTime::toFileTime() {
 
 	FILETIME f;
 	if (i != 0) {
-		log(3, L"🔈to_systemtime s");
-		const SYSTEMTIME s = to_systemtime();
+		log(3, L"🔈toSystemTime s");
+		const SYSTEMTIME s = toSystemTime();
 		log(3, L"🔈SystemTimeToFileTime f");
 		SystemTimeToFileTime(&s, &f);
 	}
@@ -80,15 +79,87 @@ FILETIME FatDateTime::to_filetime() {
 *                   AFFICHAGE                       *
 *****************************************************/
 
-void printSuccess() {
+namespace {
+//! Vrai si stdout est une console : sinon la progression est inutile et bruyante.
+bool sortieEstConsole() {
+	static const bool console =
+		GetFileType(GetStdHandle(STD_OUTPUT_HANDLE)) == FILE_TYPE_CHAR;
+	return console;
+}
+bool g_progressionEnCours = false;
+std::wstring g_etapeCourante;          //!< dernier libellé posé par printStep
+} // namespace
 
+void printStep(const std::wstring& libelle) {
+	g_etapeCourante = libelle;
+	wprintf(L"%ls", libelle.c_str());
+}
+
+void printProgress(const std::wstring& libelle, unsigned long long fait,
+                   unsigned long long total, const wchar_t* unite) {
+	if (!sortieEstConsole()) return;
+
+	/* Limitation par le TEMPS, et non par le nombre d'éléments.
+	 * Un pas fixe ne peut pas convenir aux deux extrêmes rencontrés : 38
+	 * shellbags dont chacun prend des secondes (un pas de 50 ne se déclenchait
+	 * jamais, d'où une impression de blocage) et 3000 entrées amcache qui
+	 * défilent instantanément (l'affichage coûtait alors plus que le travail).
+	 * Un rafraîchissement toutes les 150 ms reste fluide à l'œil quel que soit
+	 * le rythme. Le dernier appel (fait == total) passe toujours, pour que la
+	 * ligne finisse sur la valeur exacte. */
+	static ULONGLONG dernierAffichage = 0;
+	const ULONGLONG maintenant = GetTickCount64();
+	const bool dernier = (total > 0 && fait >= total);
+	if (!dernier && maintenant - dernierAffichage < 150) return;
+	dernierAffichage = maintenant;
+
+	// Le libelle est tronque pour que la ligne ne depasse pas et ne provoque pas
+	// de retour a la ligne, qui casserait la reecriture sur place.
+	std::wstring court = libelle;
+	if (court.size() > 40) court = L"..." + court.substr(court.size() - 37);
+
+	if (total > 0)
+		wprintf(L"\r   %-40ls %llu/%llu %ls (%llu%%)   ", court.c_str(), fait, total,
+		        unite, (unsigned long long)(fait * 100ULL / total));
+	else
+		wprintf(L"\r   %-40ls %llu %ls   ", court.c_str(), fait, unite);
+	fflush(stdout);
+	g_progressionEnCours = true;
+}
+
+void printProgressEnd() {
+	if (!sortieEstConsole() || !g_progressionEnCours) return;
+	// Efface la ligne de progression, puis remet le libellé de l'étape : sans lui
+	// le « OK » qui suit apparaîtrait seul, sans dire à quoi il se rapporte.
+	wprintf(L"\r%-100ls\r", L"");
+	if (!g_etapeCourante.empty()) wprintf(L"%ls", g_etapeCourante.c_str());
+	fflush(stdout);
+	g_progressionEnCours = false;
+}
+
+void printSuccess() {
+	// Restaure le libelle d'etape si une progression l'a efface, pour que le
+	// « OK » reste rattache a son etape.
+	printProgressEnd();
 	SetConsoleTextAttribute(conf.hConsole, 10);
 	wprintf(L"OK\n");
 	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
-void printError(std::wstring errorText) {
+void printProgressStep(const std::wstring& artefact, unsigned long long fait,
+                       unsigned long long total) {
+	/* La limitation de fréquence est assurée par printProgress (par le temps) :
+	   elle vaut pour tous les rythmes, du shellbag de plusieurs secondes aux
+	   milliers d'entrées amcache instantanées.
+	   Unité en ASCII pur, sans accent : la console est en CP_UTF8, mais wprintf
+	   convertit les wchar_t selon la locale C du programme, qui ne l'est pas — un
+	   caractère accentué y ressortirait en idéogrammes. */
+	printProgress(artefact, fait, total, L"elem");
+}
 
+void printError(std::wstring errorText) {
+	// Comme printSuccess : restaure le libelle d'etape avant d'ecrire l'erreur.
+	printProgressEnd();
 	SetConsoleTextAttribute(conf.hConsole, 12);
 	WriteConsoleW(conf.hConsole, errorText.c_str(), errorText.length(), NULL, NULL);
 	SetConsoleTextAttribute(conf.hConsole, 7);
@@ -182,15 +253,14 @@ void dump(LPBYTE buffer, int start, int end) {
 	wprintf(L"\n");
 }
 
-std::wstring dump_wstring(LPBYTE buffer, int start, int end) {
-
+std::wstring dump_wstring(LPBYTE buffer, int start, int longueur) {
+	// Borne EXCLUSIVE : « longueur » octets depuis « start » (cf. tools.h).
+	if (!buffer || longueur <= 0) return L"";
 	std::wstringstream ss;
-	for (int x = start; x <= end; x++) {
-		log(3, L"🔈to_hex buffer[x]");
-		ss << std::setw(2) << std::setfill(L'0') << std::hex << static_cast<int>(buffer[x]) << " ";
-	}
+	for (int x = start; x < start + longueur; x++)
+		ss << std::setw(2) << std::setfill(L'0') << std::hex
+		   << static_cast<int>(buffer[x]) << L" ";
 	return ss.str();
-
 }
 /****************************************************
 *                     CHAINES                       *
@@ -212,7 +282,7 @@ std::wstring ROT13(std::wstring source)
 {
 
 	std::wstring transformed;
-	for (int i = 0; i < source.length(); ++i) {
+	for (size_t i = 0; i < source.length(); ++i) {
 		// a-z -> n-m
 		if (97 <= source[i] && source[i] <= 122) {
 			transformed.append(1, (source[i] - 97 + 13) % 26 + 97);
@@ -281,24 +351,58 @@ std::wstring tab(int i) {
 *****************************************************/
 
 std::wstring getNameFromSid(std::wstring _sid) {
-	SID_NAME_USE SidType;
-	wchar_t lpName[256];
-	wchar_t lpDomain[256];
+	/* CORRECTIONS et MISE EN CACHE.
+	 *
+	 * Lenteur : LookupAccountSidW(NULL, …) interroge le contrôleur de domaine
+	 * quand le SID n'est pas résoluble localement, avec délai réseau à la clé.
+	 * La fonction était appelée pour CHAQUE shellbag, MRU, userassist et
+	 * processus, alors qu'un même SID revient des centaines de fois — d'où une
+	 * collecte qui semblait figée. Le résultat est donc mémorisé par SID.
+	 * Effet de bord utile : autant de sollicitations réseau en moins, donc
+	 * autant de traces en moins.
+	 *
+	 * Trois défauts corrigés au passage :
+	 *  - le pointeur alloué par ConvertStringSidToSidW n'était jamais libéré ;
+	 *  - la MÊME variable `taille` servait pour le nom ET pour le domaine, alors
+	 *    que l'API écrit dans les deux : la seconde écriture écrasait la première ;
+	 *  - le retour n'était pas vérifié, si bien qu'un échec faisait lire un
+	 *    tampon non initialisé.
+	 */
+	if (_sid.empty()) return L"";
+
+	static std::map<std::wstring, std::wstring> cache;
+	const auto trouve = cache.find(_sid);
+	if (trouve != cache.end()) return trouve->second;
+
+	std::wstring nom;
 	PSID pSID = NULL;
-	if (_sid != L"") {
-		log(3, L"🔈ConvertStringSidToSidW");
-		ConvertStringSidToSidW(_sid.c_str(), &pSID);
-		DWORD dwSize = 256;
+	log(3, L"🔈ConvertStringSidToSidW");
+	if (ConvertStringSidToSidW(_sid.c_str(), &pSID)) {
+		wchar_t lpName[256] = L"";
+		wchar_t lpDomain[256] = L"";
+		DWORD tailleNom = 256, tailleDomaine = 256;   // deux tailles distinctes
+		SID_NAME_USE typeSid = SidTypeUnknown;
 		log(3, L"🔈LookupAccountSidW");
-		LookupAccountSidW(NULL, pSID, lpName, &dwSize, lpDomain, &dwSize, &SidType);
-		return std::wstring(lpName);
+		if (LookupAccountSidW(NULL, pSID, lpName, &tailleNom,
+		                      lpDomain, &tailleDomaine, &typeSid))
+			nom = lpName;
+		else
+			log(3, L"🔈LookupAccountSidW sans correspondance", GetLastError());
+		LocalFree(pSID);                              // alloue par ConvertStringSidToSidW
 	}
-	return L"";
+
+	// Mémorisé même vide : un SID non résoluble le restera, inutile d'attendre
+	// une nouvelle fois le délai réseau à chaque occurrence.
+	cache.emplace(_sid, nom);
+	return nom;
 }
 
 std::wstring luid_to_wstring(LUID luid) {
-
-	ULONG value = ((ULONG)luid.HighPart << 32) + luid.LowPart;
+	/* CORRECTION : un LUID fait 64 bits (LowPart ULONG + HighPart LONG), mais le
+	   calcul se faisait sur un ULONG de 32 bits. Decaler de 32 un type de 32 bits
+	   est un comportement indefini, et HighPart etait perdu : deux LUID ne
+	   differant que par leur partie haute rendaient la meme valeur. */
+	const ULONGLONG value = ((ULONGLONG)(ULONG)luid.HighPart << 32) | (ULONGLONG)luid.LowPart;
 	return std::to_wstring(value);
 }
 
@@ -365,25 +469,250 @@ std::wstring time_to_wstring(const FILETIME filetime, bool convertUtc) {
 	else {
 		log(3, L"🔈FileTimeToSystemTime systemtime");
 		FileTimeToSystemTime(&filetime, &systemtime); //conversion filetime to systemtime
-		log(3, L"🔈time_to_wstring systemtime");
+		log(3, L"🔈timeToIso8601 systemtime");
 	}
 	return time_to_wstring(systemtime);
 
 }
 
-BSTR wstring_to_bstr(std::wstring ws) {
-	if (!ws.empty())
-		return SysAllocStringLen(ws.data(), ws.size());
-	return BSTR(L"");
+///////////////////////////////////////////////////////
+// Horodatages ISO 8601 — voir tools.h pour la justification
+///////////////////////////////////////////////////////
+namespace {
+
+//! Deux chiffres, zéro devant : "07", "15".
+void deuxChiffres(std::wstring& out, unsigned v) {
+	out += (wchar_t)(L'0' + (v / 10) % 10);
+	out += (wchar_t)(L'0' + v % 10);
 }
 
-std::wstring bstr_to_wstring(BSTR bstr)
-{
-	if (bstr != nullptr) {
-		std::wstring ws(bstr, SysStringLen(bstr));
-		return ws;
+//! Quatre chiffres : "2026".
+void quatreChiffres(std::wstring& out, unsigned v) {
+	out += (wchar_t)(L'0' + (v / 1000) % 10);
+	out += (wchar_t)(L'0' + (v / 100) % 10);
+	out += (wchar_t)(L'0' + (v / 10) % 10);
+	out += (wchar_t)(L'0' + v % 10);
+}
+
+//! Vrai si le FILETIME est nul (époque 1601) : pas une date, une absence de date.
+bool dateNulle(const FILETIME& ft) {
+	return ft.dwLowDateTime == 0 && ft.dwHighDateTime == 0;
+}
+
+//! Décalage de la machine d'EXÉCUTION (repli quand la ruche n'est pas lisible).
+long biaisMachineMinutes() {
+	TIME_ZONE_INFORMATION tz = { 0 };
+	const DWORD type = GetTimeZoneInformation(&tz);
+	if (type == TIME_ZONE_ID_INVALID) return 0;
+	// Bias est en minutes à AJOUTER à l'heure locale pour obtenir l'UTC.
+	return tz.Bias + ((type == TIME_ZONE_ID_DAYLIGHT) ? tz.DaylightBias : tz.StandardBias);
+}
+
+} // namespace
+
+std::wstring localUtcOffsetString() {
+	/* Pas de cache : la valeur change en cours d'exécution, au moment où la ruche
+	   SYSTEM du suspect devient lisible. Un cache figerait le décalage de la
+	   machine d'exécution pour toute la collecte. */
+	const long biais = conf.timeZone.valid ? conf.timeZone.activeBiasMinutes
+	                                       : biaisMachineMinutes();
+	const long minutes = -biais;          // minutes à ajouter à l'UTC pour l'heure locale
+	std::wstring s;
+	s += (minutes < 0) ? L'-' : L'+';
+	const long absolu = (minutes < 0) ? -minutes : minutes;
+	deuxChiffres(s, (unsigned)(absolu / 60));
+	s += L':';
+	deuxChiffres(s, (unsigned)(absolu % 60));
+	return s;
+}
+
+HRESULT loadProfileList() {
+	PCWSTR CLE = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList";
+	HKEY hKey = NULL;
+	log(3, L"🔈RegOpenKeyExW ProfileList");
+	HRESULT hresult = RegOpenKeyExW(HKEY_LOCAL_MACHINE, CLE, 0, KEY_READ, &hKey);
+	if (hresult != ERROR_SUCCESS) {
+		log(2, L"🔥RegOpenKeyExW ProfileList", hresult);
+		return hresult;
 	}
-	else return L"";
+
+	for (DWORD i = 0; ; ++i) {
+		WCHAR sid[MAX_KEY_NAME] = L"";
+		DWORD taille = MAX_KEY_NAME;
+		log(3, L"🔈RegEnumKeyExW ProfileList " + std::to_wstring(i));
+		hresult = RegEnumKeyExW(hKey, i, sid, &taille, NULL, NULL, NULL, NULL);
+		if (hresult == ERROR_NO_MORE_ITEMS) break;
+		if (hresult != ERROR_SUCCESS) {
+			log(2, L"🔥RegEnumKeyExW ProfileList", hresult);
+			break;
+		}
+
+		HKEY hProfil = NULL;
+		if (RegOpenKeyExW(hKey, sid, 0, KEY_READ, &hProfil) != ERROR_SUCCESS) continue;
+		DWORD octets = 0;
+		if (RegQueryValueExW(hProfil, L"ProfileImagePath", NULL, NULL, NULL, &octets) == ERROR_SUCCESS
+		    && octets >= sizeof(wchar_t)) {
+			std::vector<BYTE> tampon(octets + sizeof(wchar_t), 0);
+			if (RegQueryValueExW(hProfil, L"ProfileImagePath", NULL, NULL,
+			                     tampon.data(), &octets) == ERROR_SUCCESS) {
+				std::wstring chemin = (PCWSTR)tampon.data();
+				/* `ProfileImagePath` est un REG_EXPAND_SZ : pour les comptes de
+				   service, il vaut litteralement
+				   « %systemroot%\system32\config\systemprofile ». Sans
+				   developpement, le chemin ne designe aucun fichier et
+				   l'extraction brute de leur ntuser.dat echoue en silence — ce
+				   qui s'observait comme une extraction « partielle » sans cause
+				   apparente. */
+				if (chemin.find(L'%') != std::wstring::npos) {
+					wchar_t developpe[MAX_PATH] = L"";
+					const DWORD n = ExpandEnvironmentStringsW(chemin.c_str(),
+					                                          developpe, MAX_PATH);
+					if (n > 0 && n <= MAX_PATH) {
+						log(2, L"❇️Profil developpe : " + chemin + L" -> " + developpe);
+						chemin = developpe;
+					}
+					else
+						log(2, L"🔥ExpandEnvironmentStringsW " + chemin, GetLastError());
+				}
+				if (!chemin.empty()) {
+					conf.profiles.push_back({ sid, chemin });
+					log(2, L"❇️Profil : " + std::wstring(sid) + L" -> " + chemin);
+				}
+			}
+		}
+		RegCloseKey(hProfil);
+	}
+	RegCloseKey(hKey);
+	log(2, L"❇️" + std::to_wstring(conf.profiles.size()) + L" profils utilisateurs releves");
+	return conf.profiles.empty() ? ERROR_EMPTY : ERROR_SUCCESS;
+}
+
+void loadSystemDrive() {
+	/* GetSystemDirectoryW rend "X:\Windows\System32" : les deux premiers
+	   caractères donnent le lecteur. Préféré à la variable d'environnement
+	   %SystemDrive%, qui peut être altérée par le processus appelant. */
+	wchar_t tampon[MAX_PATH] = L"";
+	const UINT n = GetSystemDirectoryW(tampon, MAX_PATH);
+	if (n >= 2 && tampon[1] == L':') {
+		conf.systemDrive = std::wstring(tampon, 2);
+		log(2, L"❇️Lecteur systeme : " + conf.systemDrive);
+	}
+	else {
+		log(2, L"🔥GetSystemDirectoryW : lecteur systeme non determine, "
+		       L"repli sur " + conf.systemDrive, GetLastError());
+	}
+}
+
+HRESULT loadSuspectTimeZone() {
+	conf.timeZone = TimeZoneInfo{};       // repart d'un état propre
+	if (!conf.CurrentControlSet) return ERROR_INVALID_HANDLE;
+
+	PCWSTR cle = L"Control\\TimeZoneInformation";
+	DWORD activeBias = 0;
+	log(3, L"🔈getRegDwordValue ActiveTimeBias");
+	HRESULT hresult = getRegDwordValue(conf.CurrentControlSet, cle, L"ActiveTimeBias", &activeBias);
+	if (hresult != ERROR_SUCCESS) {
+		/* ActiveTimeBias absent : on recompose Bias + biais saisonnier. On ne
+		   peut pas savoir lequel des deux s'appliquait au moment de chaque
+		   artefact, donc on prend Bias seul et on le signale. */
+		DWORD bias = 0;
+		log(3, L"🔈getRegDwordValue Bias");
+		hresult = getRegDwordValue(conf.CurrentControlSet, cle, L"Bias", &bias);
+		if (hresult != ERROR_SUCCESS) {
+			log(2, L"🔥Fuseau du suspect illisible dans la ruche SYSTEM", hresult);
+			return hresult;
+		}
+		activeBias = bias;
+		log(2, L"🔥ActiveTimeBias absent : Bias seul utilise (heure d'ete non prise en compte)");
+	}
+
+	// ActiveTimeBias/Bias sont des DWORD mais portent un entier SIGNE en minutes.
+	conf.timeZone.activeBiasMinutes = (long)(int32_t)activeBias;
+
+	/* Heure d'été active ou non. Non stockée telle quelle : elle se DÉDUIT de
+	   l'écart entre ActiveTimeBias (décalage réellement appliqué) et Bias
+	   (décalage hors saison). Si les deux diffèrent, le biais saisonnier
+	   s'appliquait au moment de la collecte. */
+	DWORD biasStandard = 0;
+	if (getRegDwordValue(conf.CurrentControlSet, cle, L"Bias", &biasStandard) == ERROR_SUCCESS) {
+		conf.timeZone.standardBiasMinutes = (long)(int32_t)biasStandard;
+		conf.timeZone.daylightInEffect =
+			(conf.timeZone.activeBiasMinutes != conf.timeZone.standardBiasMinutes);
+	}
+	else
+		conf.timeZone.standardBiasMinutes = conf.timeZone.activeBiasMinutes;
+
+	getRegSzValue(conf.CurrentControlSet, cle, L"TimeZoneKeyName", &conf.timeZone.keyName);
+	getRegSzValue(conf.CurrentControlSet, cle, L"StandardName",    &conf.timeZone.standardName);
+	getRegSzValue(conf.CurrentControlSet, cle, L"DaylightName",    &conf.timeZone.daylightName);
+	conf.timeZone.fromHive = true;
+	conf.timeZone.valid    = true;
+
+	log(2, L"❇️Fuseau du suspect (ruche SYSTEM) : " + conf.timeZone.keyName
+	     + L", UTC" + localUtcOffsetString());
+	return ERROR_SUCCESS;
+}
+
+std::wstring timeToIso8601(const SYSTEMTIME& st, bool utc) {
+	if (st.wYear <= 1601) return L"";        // date nulle : chaîne vide, pas 1601
+	std::wstring s;
+	s.reserve(25);
+	quatreChiffres(s, st.wYear);   s += L'-';
+	deuxChiffres(s, st.wMonth);    s += L'-';
+	deuxChiffres(s, st.wDay);      s += L'T';
+	deuxChiffres(s, st.wHour);     s += L':';
+	deuxChiffres(s, st.wMinute);   s += L':';
+	deuxChiffres(s, st.wSecond);
+	if (utc) s += L'Z';
+	else     s += localUtcOffsetString();
+	return s;
+}
+
+std::wstring timeToIso8601Utc(const FILETIME& filetime) {
+	if (dateNulle(filetime)) return L"";
+	SYSTEMTIME st = { 0 };
+	if (!FileTimeToSystemTime(&filetime, &st)) return L"";
+	return timeToIso8601(st, true);
+}
+
+std::wstring timeToIso8601Local(const FILETIME& filetime) {
+	if (dateNulle(filetime)) return L"";
+	SYSTEMTIME st = { 0 };
+	if (!FileTimeToSystemTime(&filetime, &st)) return L"";
+	return timeToIso8601(st, false);
+}
+
+bool utcVersLocalSuspect(const FILETIME& filetimeUtc, FILETIME* filetimeLocal) {
+	if (!filetimeLocal) return false;
+	*filetimeLocal = FILETIME{ 0, 0 };
+	if (dateNulle(filetimeUtc)) return false;
+	/* Le biais est en minutes à AJOUTER à l'heure locale pour obtenir l'UTC
+	   (convention de la ruche) : l'heure locale s'obtient donc en le
+	   RETRANCHANT de l'UTC. Même source que localUtcOffsetString(), afin que la
+	   valeur et son étiquette parlent du même fuseau. */
+	const long biais = conf.timeZone.valid ? conf.timeZone.activeBiasMinutes
+	                                       : biaisMachineMinutes();
+	const ULONGLONG utc100ns = ((ULONGLONG)filetimeUtc.dwHighDateTime << 32)
+	                         | filetimeUtc.dwLowDateTime;
+	const long long decalage100ns = (long long)biais * 60LL * 10000000LL;
+	if ((long long)utc100ns < decalage100ns) return false;   // sous l'epoque : aberrant
+	const ULONGLONG local100ns = (ULONGLONG)((long long)utc100ns - decalage100ns);
+	filetimeLocal->dwLowDateTime  = (DWORD)(local100ns & 0xFFFFFFFFULL);
+	filetimeLocal->dwHighDateTime = (DWORD)(local100ns >> 32);
+	return true;
+}
+
+std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc) {
+	FILETIME local = { 0, 0 };
+	if (!utcVersLocalSuspect(filetimeUtc, &local)) return L"";
+	return timeToIso8601Local(local);
+}
+
+std::wstring localTimeToIso8601Utc(const FILETIME& filetimeLocal) {
+	if (dateNulle(filetimeLocal)) return L"";
+	FILETIME utc = { 0, 0 };
+	if (!LocalFileTimeToFileTime(&filetimeLocal, &utc)) return L"";
+	return timeToIso8601Utc(utc);
 }
 
 std::wstring string_to_wstring(const std::string& str)
@@ -396,6 +725,22 @@ std::wstring string_to_wstring(const std::string& str)
 	return wstr;
 }
 
+bool estReferenceMui(const std::wstring& valeur) {
+	/* Forme reconnue : « @<fichier>,-<id> ». Le « @ » initial seul ne suffit
+	   pas : certaines descriptions commencent par une arobase sans être des
+	   références. La virgule suivie du signe moins est le marqueur fiable. */
+	if (valeur.size() < 4 || valeur.front() != L'@') return false;
+	const size_t virgule = valeur.rfind(L',');
+	return virgule != std::wstring::npos
+	    && virgule + 1 < valeur.size()
+	    && valeur[virgule + 1] == L'-';
+}
+
+std::wstring enMinuscules(std::wstring s) {
+	for (wchar_t& c : s) c = (wchar_t)towlower(c);
+	return s;
+}
+
 std::string wstring_to_string(const std::wstring& wstr)
 {
 
@@ -406,41 +751,14 @@ std::string wstring_to_string(const std::wstring& wstr)
 	return str;
 }
 
-std::wstring multiSz_to_json(std::vector<std::wstring> vec, int niveau)
-{
-	std::wstring out = L"[\n";
-	for (int i = 0; i < vec.size(); i++) { // se termine par 2 chaîne \0\0
-		log(3, L"🔈replaceAll vec[i]");
-		vec[i] = replaceAll(vec[i], L"\\", L"\\\\");
-		out += tab(niveau + 1) + L"\"" + vec[i] + L"\"";
-		if (i < vec.size() - 1) out += L",\n";
-		else out += L"\n";
-	}
-	out += tab(niveau) + L"]";
-	return out;
-}
-
-std::wstring multiFiletime_to_json(std::vector<FILETIME> vec, int niveau)
-{
-	std::wstring out = L"[\n";
-	for (int i = 0; i < vec.size(); i++) { // se termine par 2 chaîne \0\0
-		log(3, L"🔈time_to_wstring vec[i]");
-		out += tab(niveau + 1) + L"\"" + time_to_wstring(vec[i]) + L"\"";
-		if (i < vec.size() - 1) out += L",\n";
-		else out += L"\n";
-	}
-	out += tab(niveau) + L"]";
-	return out;
-}
-
 std::vector<std::wstring> multiWstring_to_vector(LPBYTE data, int size)
 {
 
 	std::vector<std::wstring> out;
 	wchar_t* d = (wchar_t*)data;
-	int pos = 0;
+	size_t pos = 0;
 
-	while (pos < size / sizeof(wchar_t))
+	while (pos < (size_t)size / sizeof(wchar_t))
 	{
 
 		std::wstring ws = std::wstring(d).data();
@@ -471,19 +789,19 @@ std::wstring guid_to_wstring(GUID guid) {
 *****************************************************/
 
 // Lire une donnée au format binaire en base de données
-HRESULT getRegBinaryValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, LPBYTE* pBytes, DWORD* dwSize)
+HRESULT getRegBinaryValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, LPBYTE* octets, DWORD* taille)
 {
-	//Attention pBytes doit être suffisamment grand pour accepter les données LPBYTE pBytes = new BYTE[MAX_DATA]; si la taille n'est pas connue
+	//Attention octets doit être suffisamment grand pour accepter les données LPBYTE octets = new BYTE[MAX_DATA]; si la taille n'est pas connue
 	//les REG_BINARY sont stockées sous forme de bytes 
-	DWORD dwType = 0;
+	DWORD typeValeur = 0;
 	HRESULT hresult = 0;
-	if (*pBytes != NULL)
-		delete[] * pBytes; // on supprime tout buffer passé en paramètre pour ne pas avoir de memory leak;
+	if (*octets != NULL)
+		delete[] * octets; // on supprime tout buffer passé en paramètre pour ne pas avoir de memory leak;
 	do {
-		*pBytes = new BYTE[*dwSize];
-		memset(*pBytes, 0, *dwSize);
+		*octets = new BYTE[*taille];
+		memset(*octets, 0, *taille);
 		log(3, L"🔈ORGetValue");
-		hresult = ORGetValue(key, szSubKey, szValue, &dwType, *pBytes, dwSize); //lecture des données
+		hresult = ORGetValue(key, sousCle, nomValeur, &typeValeur, *octets, taille); //lecture des données
 	} while (hresult == ERROR_MORE_DATA);
 
 	if (hresult != ERROR_SUCCESS) {
@@ -495,154 +813,277 @@ HRESULT getRegBinaryValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, LPBYTE* p
 
 
 // Lire une valeur booléenne en base de registre
-HRESULT getRegboolValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, bool* pbool)
+HRESULT getRegboolValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, bool* valeur)
 {
 	//les REG_BINARY sont stockées sous forme de bytes 
-	DWORD dwType = 0;
-	DWORD dwSize = 0;
-	LPBYTE pBytes = NULL;
+	DWORD taille = 0;
+	LPBYTE octets = NULL;
 	HRESULT hresult = 0;
 	log(3, L"🔈getRegBinaryValue");
-	hresult = getRegBinaryValue(key, szSubKey, szValue, &pBytes, &dwSize);
+	hresult = getRegBinaryValue(key, sousCle, nomValeur, &octets, &taille);
 
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥getRegBinaryValue", hresult);
 	}
 	else {
-		*pbool = (bool)pBytes[0];
+		*valeur = (bool)octets[0];
 	}
-	delete[] pBytes;
+	delete[] octets;
 	return hresult;
 }
 
 // Lit une valeur FILETIME en base de registre
-HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, FILETIME* filetime)
+HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, FILETIME* filetime)
 {
 	//les REG_FILETIME  sont stockées sous forme de bytes
 	// leur type est soit REG_BINARY soi REG_FILETIME(16) 
-	DWORD dwSize = 0;
-	DWORD dwType;
-	LPBYTE pData = new BYTE[dwSize + 2];
+	DWORD taille = 0;
+	LPBYTE donnees = new BYTE[taille + 2];
 	HRESULT hresult = 0;
 
 	log(3, L"🔈getRegBinaryValue");
-	hresult = getRegBinaryValue(key, szSubKey, szValue, &pData, &dwSize);
+	hresult = getRegBinaryValue(key, sousCle, nomValeur, &donnees, &taille);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥getRegBinaryValue", hresult);
 	}
 	else {
 		FILETIME temp = { 0 };
-		temp = *reinterpret_cast<FILETIME*>(pData);
+		temp = *reinterpret_cast<FILETIME*>(donnees);
 		*filetime = temp;
 	}
 
-	delete[] pData;
+	delete[] donnees;
 	return hresult;
 }
 
 // Lire une chaîne de caractère en base de registre
 // S'assure que la chaîne est printable et se termine par \0. Si un caractère n'est pas imprimable il est remplacé par ?
-HRESULT getRegSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::wstring* ws)
+HRESULT getRegDwordValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, DWORD* pdword)
+{
+	DWORD taille = 0;
+	LPBYTE donnees = NULL;
+	log(3, L"🔈getRegBinaryValue");
+	HRESULT hresult = getRegBinaryValue(key, sousCle, nomValeur, &donnees, &taille);
+	if (hresult != ERROR_SUCCESS) return hresult;
+	// Une valeur plus courte que 4 octets n'est pas un DWORD exploitable.
+	if (taille < sizeof(DWORD)) { delete[] donnees; return ERROR_INVALID_DATA; }
+	*pdword = *reinterpret_cast<DWORD*>(donnees);
+	delete[] donnees;
+	return ERROR_SUCCESS;
+}
+
+HRESULT getRegQwordValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, unsigned long long* pqword)
+{
+	DWORD taille = 0;
+	LPBYTE donnees = NULL;
+	log(3, L"🔈getRegBinaryValue");
+	HRESULT hresult = getRegBinaryValue(key, sousCle, nomValeur, &donnees, &taille);
+	if (hresult != ERROR_SUCCESS) return hresult;
+	// Une valeur plus courte que 8 octets n'est pas un QWORD exploitable.
+	if (taille < sizeof(unsigned long long)) { delete[] donnees; return ERROR_INVALID_DATA; }
+	memcpy(pqword, donnees, sizeof(unsigned long long));
+	delete[] donnees;
+	return ERROR_SUCCESS;
+}
+
+HRESULT getRegSzValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, std::wstring* ws)
 {
 	//les REG_SZ sont stockées sous forme de wchar_t = 16 bit par caractère
-	DWORD dwType = 0;
-	DWORD dwSize = 0;
-	LPWSTR pData = NULL;
+	DWORD taille = 0;
+	LPWSTR donnees = NULL;
 	size_t nbChar = 0;
 	HRESULT hresult = 0;
 	log(3, L"🔈getRegBinaryValue");
-	hresult = getRegBinaryValue(key, szSubKey, szValue, (LPBYTE*)&pData, &dwSize);
+	hresult = getRegBinaryValue(key, sousCle, nomValeur, (LPBYTE*)&donnees, &taille);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥getRegBinaryValue", hresult);
 		return hresult;
 	}
 	else {
-		nbChar = dwSize / sizeof(wchar_t);
-		*ws = std::wstring(pData, pData + nbChar).data();
+		nbChar = taille / sizeof(wchar_t);
+		*ws = std::wstring(donnees, donnees + nbChar).data();
 	}
-	delete[] pData;
+	delete[] donnees;
 	return hresult;
 }
 
 // Lit une valeur multi chaîne en base de registre. Chaque chaîne se termine par \0
 // Les caractères non imprimable sont remplacés par ?
-HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::vector<std::wstring>* out)
+HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, std::vector<std::wstring>* out)
 {
 	//les REG_MULTI_SZ sont stockées sous forme de wchar_t = 16 bit par caractère et d'un succession de chaîne séparées par \0 et à la fin \0\0
-	DWORD dwType = 0;
-	DWORD dwSize = 0;
-	wchar_t* pData = NULL;
+	DWORD taille = 0;
+	wchar_t* donnees = NULL;
 	HRESULT hresult = 0;
-	int nbChar = 0;
 	log(3, L"🔈getRegBinaryValue");
-	hresult = getRegBinaryValue(key, szSubKey, szValue, (LPBYTE*)&pData, &dwSize);
+	hresult = getRegBinaryValue(key, sousCle, nomValeur, (LPBYTE*)&donnees, &taille);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥getRegBinaryValue", hresult);
 		return hresult;
 	}
 	else {
-		DWORD pos = 0;
-		nbChar = dwSize / sizeof(wchar_t);
-		while (pos < nbChar)
-		{
-			std::wstring ws = std::wstring((LPWSTR)(pData)).data();
-			if (!ws.empty()) out->push_back(ws);
-			pos += ws.length() + 1;//position du premier caractère de la chaîne suivante après le \0 de fin de chaîne de la suivante
+		/* CE QUI ÉTAIT FAUX. La boucle relisait `donnees` à chaque tour sans
+		   jamais avancer le pointeur : seul le compteur de position progressait.
+		   Toute valeur REG_MULTI_SZ ressortait donc comme sa PREMIÈRE chaîne,
+		   répétée autant de fois qu'il y avait de caractères à parcourir —
+		   observé sur `DependOnService` (« RPCSS » cinq fois) et sur
+		   `HardwareId` des périphériques USB.
+
+		   La borne est désormais calculée sur le tampon, sans faire confiance à
+		   un éventuel \0 final : une valeur tronquée dans la ruche ferait sinon
+		   lire au-delà. */
+		const size_t nbCar = taille / sizeof(wchar_t);
+		size_t pos = 0;
+		while (pos < nbCar) {
+			size_t fin = pos;
+			while (fin < nbCar && donnees[fin] != L'\0') ++fin;
+			if (fin > pos) out->push_back(std::wstring(donnees + pos, fin - pos));
+			if (fin >= nbCar) break;          // tampon epuise
+			pos = fin + 1;                    // apres le \0 separateur
+			if (pos < nbCar && donnees[pos] == L'\0') break;   // \0\0 = fin de liste
 		}
 	}
-	delete[] pData;
+	delete[] donnees;
 	return ERROR_SUCCESS;
 }
 
 std::wstring getVolumeLetter(std::wstring searchSerial) {
-	DWORD  CharCount = MAX_PATH;
-	WCHAR  DeviceName[MAX_PATH] = L"";
-	DWORD  Error = ERROR_SUCCESS;
-	HANDLE FindHandle = INVALID_HANDLE_VALUE;
-	BOOL   Success = FALSE;
-	WCHAR  VolumeName[MAX_PATH+1] = L"";
-	wchar_t* Names= NULL;
-	
-	//  Enumerate all volumes in the system.
+	/*  RÉÉCRITE (2026-09-15, doc §14.17). La version d'origine cumulait :
+	 *    - `return Names;` alors que `Names` valait NULL et que la fonction rend
+	 *      un `std::wstring` : construire une chaîne depuis un pointeur nul est
+	 *      un comportement indéfini, sur le chemin même de l'échec ;
+	 *    - le `return` du milieu de boucle abandonnait le tampon `Names` ET le
+	 *      handle de recherche de volumes, jamais fermé ;
+	 *    - `while (Success == ERROR_MORE_DATA)` comparait un BOOL (0 ou 1) au
+	 *      code 234 : la condition était TOUJOURS fausse, donc la boucle de
+	 *      redimensionnement du tampon ne s'exécutait jamais. Si le tampon
+	 *      initial ne suffisait pas, on construisait la chaîne à partir de
+	 *      mémoire non initialisée.
+	 *  Le tampon est désormais un vecteur, le handle fermé sur tous les chemins,
+	 *  et le redimensionnement testé correctement.
+	 */
+	WCHAR volume[MAX_PATH + 1] = L"";
 	log(3, L"🔈FindFirstVolumeW");
-	FindHandle = FindFirstVolumeW(VolumeName, ARRAYSIZE(VolumeName));
-
-	if (FindHandle == INVALID_HANDLE_VALUE)
-	{
-		log(2, L"🔥getRegBinaryValue", ERROR_INVALID_HANDLE);
-		return Names;
+	HANDLE recherche = FindFirstVolumeW(volume, ARRAYSIZE(volume));
+	if (recherche == INVALID_HANDLE_VALUE) {
+		log(2, L"🔥FindFirstVolumeW", GetLastError());
+		return L"";
 	}
 
+	std::wstring trouve;
 	do {
-		do {
-			if(Names!=NULL)
-				delete[] Names;
-			Names = new wchar_t[CharCount];
+		// Points de montage du volume. Le tampon est agrandi tant que l'API le
+		// demande, ce que le test d'origine ne faisait jamais.
+		std::vector<wchar_t> chemins(MAX_PATH);
+		DWORD nbCar = (DWORD)chemins.size();
+		BOOL ok = FALSE;
+		for (int essai = 0; essai < 3; ++essai) {
 			log(3, L"🔈GetVolumePathNamesForVolumeNameW");
-			Success = GetVolumePathNamesForVolumeNameW(VolumeName, Names, CharCount, &CharCount);
-		} while (Success == ERROR_MORE_DATA);
-		std::wostringstream ss;
-		// Buffer to receive the volume serial number
-		DWORD serial_number = 0;
-
-		// Size of the file system name buffer
-		DWORD file_system_name_size = MAX_PATH + 1;
-		log(3, L"🔈GetVolumeInformationW");
-		BOOL success = GetVolumeInformationW(VolumeName, NULL, NULL, &serial_number, NULL, NULL, NULL, NULL);
-
-		ss << std::hex << serial_number; 
-		std::wstring serial = ss.str().c_str();
-		std::wstring result(Names,Names + CharCount);
-		if (serial.compare(searchSerial) == 0)
-			return replaceAll(result,L"\\",L"").data(); // keep only c: instead of c:\ 
-		
-		//   Move on to the next volume.
+			ok = GetVolumePathNamesForVolumeNameW(volume, chemins.data(),
+			                                      (DWORD)chemins.size(), &nbCar);
+			if (ok || GetLastError() != ERROR_MORE_DATA) break;
+			chemins.assign(nbCar ? nbCar : chemins.size() * 2, L'\0');
+		}
+		if (!ok) {
+			log(2, L"🔥GetVolumePathNamesForVolumeNameW " + std::wstring(volume),
+			    GetLastError());
+		}
+		else {
+			DWORD numeroSerie = 0;
+			log(3, L"🔈GetVolumeInformationW");
+			/* Le resultat etait ignore. Sur un volume sans media (lecteur de
+			   carte vide, lecteur optique), l'appel echoue et numeroSerie reste
+			   a zero : on comparait alors un numero de serie nul, si bien qu'une
+			   recherche de « 0 » aurait designe un volume au hasard. */
+			if (!GetVolumeInformationW(volume, NULL, NULL, &numeroSerie,
+			                           NULL, NULL, NULL, NULL)) {
+				log(2, L"🔥GetVolumeInformationW " + std::wstring(volume),
+				    GetLastError());
+			}
+			else {
+				/* %08X, en majuscules et sur huit chiffres : c'est la forme
+				   canonique du numero de serie et, surtout, celle que produit
+				   l'appelant (cf. prefetchs.cpp). Un flux `std::hex` sans
+				   largeur imposee rendait « a1b2c3d » la ou l'autre cote
+				   attendait « 0A1B2C3D » : la comparaison echouait alors en
+				   silence sur tout volume dont le premier octet est < 0x10. */
+				wchar_t hexa[9] = L"";
+				swprintf(hexa, 9, L"%08X", numeroSerie);
+				if (std::wstring(hexa) == searchSerial) {
+					// Premier point de montage, chaine terminee par un zero.
+					const std::wstring chemin(chemins.data());
+					// On ne garde que « C: », sans la barre oblique inverse.
+					trouve = replaceAll(chemin, L"\\", L"");
+					break;
+				}
+			}
+		}
 		log(3, L"🔈FindNextVolumeW");
-		Success = FindNextVolumeW(FindHandle, VolumeName, ARRAYSIZE(VolumeName));
-		Error = GetLastError();
-	} while (Error != ERROR_NO_MORE_FILES);
+	} while (FindNextVolumeW(recherche, volume, ARRAYSIZE(volume)));
+
 	log(3, L"🔈FindVolumeClose");
-	FindVolumeClose(FindHandle);
-	delete[] Names;
-	return L"";
+	FindVolumeClose(recherche);   // ferme sur TOUS les chemins, y compris le succes
+	return trouve;
+}
+
+HRESULT writeJsonFile(const std::string& nom, const Json& valeur) {
+	std::error_code ec;
+	std::filesystem::create_directories(conf._outputDir, ec); // pas d'erreur si présent
+	std::wofstream f;
+	f.open(conf._outputDir + "/" + nom);
+	if (!f) {
+		log(2, L"🔥Ouverture du fichier de sortie impossible : " + string_to_wstring(nom));
+		return E_FAIL;
+	}
+	f << ansi_to_utf8(valeur.dump(0));
+	f.close();
+	return ERROR_SUCCESS;
+}
+
+HRESULT writeNotCollected(const std::string& nom, const std::wstring& artefact,
+                          HRESULT resultat) {
+	Json o = Json::obj();
+	o.add(L"Artifact",         Json::str(artefact));
+	o.add(L"CollectionStatus", Json::str(L"NotCollected"));
+	o.add(L"Error",            Json::str(L"0x" + to_hex(resultat) + L" " + getErrorMessage(resultat)));
+	// Sans cette precision, un tableau vide et une lecture en echec se lisent de
+	// la meme facon : « aucune trace ».
+	o.add(L"Note",             Json::str(L"La lecture de cet artefact a échoué : "
+	                                     L"l'absence de données ci-dessus ne signifie PAS "
+	                                     L"qu'aucune trace n'existe sur le système."));
+	return writeJsonFile(nom, o);
+}
+
+//! Minuscules ASCII : suffisant pour des extensions de fichiers.
+static std::wstring toLowerAscii(std::wstring s) {
+	for (wchar_t& c : s) if (c >= L'A' && c <= L'Z') c = (wchar_t)(c - L'A' + L'a');
+	return s;
+}
+
+std::vector<std::filesystem::path> listFilesByExtension(const std::filesystem::path& repertoire,
+	const std::vector<std::wstring>& extensions) {
+	std::vector<std::filesystem::path> resultats;
+	std::error_code ec;
+	std::filesystem::directory_iterator it(repertoire, ec);
+	if (ec) {                                    // absent ou illisible : cas nominal
+		log(4, L"🔈Repertoire non parcouru : " + repertoire.wstring());
+		return resultats;
+	}
+	std::vector<std::wstring> attendues;         // abaissees une seule fois
+	attendues.reserve(extensions.size());
+	for (const std::wstring& e : extensions) attendues.push_back(toLowerAscii(e));
+
+	for (const std::filesystem::directory_iterator fin; it != fin; it.increment(ec)) {
+		if (ec) {                                // parcours interrompu : on garde l'acquis
+			log(2, L"🔥Parcours interrompu : " + repertoire.wstring());
+			break;
+		}
+		std::error_code ecFichier;
+		if (!it->is_regular_file(ecFichier) || ecFichier) continue;
+		const std::wstring ext = toLowerAscii(it->path().extension().wstring());
+		for (const std::wstring& attendue : attendues) {
+			if (ext == attendue) { resultats.push_back(it->path()); break; }
+		}
+	}
+	return resultats;
 }
