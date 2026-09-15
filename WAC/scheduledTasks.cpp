@@ -281,7 +281,7 @@ HRESULT ScheduledTasks::getData() {
 		// Chemin tel que le planificateur le présente : relatif à Tasks\,
 		// antislashs, préfixé d'un antislash — c'est aussi la clé du TaskCache.
 		t.path = L"\\" + std::filesystem::relative(fichier, racine, ec).wstring();
-		t.sourceXml = replaceAll(fichier.wstring(), conf.mountpoint, conf.systemDrive);
+		t.sourceXml = cheminOriginal(fichier.wstring());
 		log(1, L"➕ScheduledTask");
 		log(2, L"❇️Task : " + t.path);
 

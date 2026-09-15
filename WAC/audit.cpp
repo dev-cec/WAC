@@ -99,7 +99,7 @@ void releverContexte() {
 	}
 
 	// Fuseau de la MACHINE EXAMINEE : indispensable pour reinterpreter les dates
-	// locales des artefacts (cf. doc §7.4 — le fuseau du suspect, pas celui de
+	// locales des artefacts ( — le fuseau du suspect, pas celui de
 	// l'analyste).
 	TIME_ZONE_INFORMATION tz = { 0 };
 	const DWORD type = GetTimeZoneInformation(&tz);

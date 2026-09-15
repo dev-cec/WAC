@@ -37,11 +37,20 @@ def qga(dom, cmd, essais=6):
         time.sleep(2 * (n + 1))          # 2,4,6,8,10 s
     sys.exit(f"[qga] agent injoignable après {essais} essais: {last}")
 
+# Une collecte complète avec --events dure ~10 min sur la VM de test et
+# s'allonge à mesure que le journal d'événements grossit. Le timeout était de
+# 600 s : un run de 604 s a été coupé JUSTE avant l'écriture de events.json et
+# d'investigation.json, et le harnais a rapatrié 22 fichiers sur 24 en
+# signalant « collecte probablement incomplète ». Le diagnostic était juste,
+# mais la cause était le harnais lui-même, pas WAC. Marge portée à 30 min.
+TIMEOUT_DEFAUT = 1800
+
+
 def ping(dom):
     qga(dom, {"execute": "guest-ping"})
     print("agent OK")
 
-def run(dom, argv, capture=True, timeout=600):
+def run(dom, argv, capture=True, timeout=TIMEOUT_DEFAUT):
     """Exécute argv[0] avec argv[1:] dans la VM ; retourne (code, stdout, stderr)."""
     pid = qga(dom, {"execute": "guest-exec", "arguments": {
         "path": argv[0], "arg": argv[1:],
@@ -54,7 +63,8 @@ def run(dom, argv, capture=True, timeout=600):
             err = base64.b64decode(st.get("err-data", "")).decode("utf-8", "replace")
             return st.get("exitcode", 0), out, err
         if time.time() - t0 > timeout:
-            sys.exit("[qga] timeout d'exécution")
+            sys.exit(f"[qga] timeout d'exécution ({timeout} s) — la commande "
+                     f"tourne peut-être encore dans la VM")
         time.sleep(1)
 
 def read_file(dom, guest_path, host_path):

@@ -17570,12 +17570,12 @@ std::wstring from_appId(std::wstring appId) {
 *  Complète `PSGetNameFromPropertyKey`, dont le succès dépend de l'état du
 *  processus (cf. la note dans `to_FriendlyName`). Chaque entrée porte la source
 *  qui l'atteste : une table de libellés saisie au jugé produit des noms
-*  plausibles et faux, ce que rien dans la sortie ne révélerait (cf. §14.11).
+*  plausibles et faux, ce que rien dans la sortie ne révélerait.
 *
 *  GUID en MINUSCULES, avec accolades : `to_FriendlyName` normalise avant
 *  d'appeler.
 *
-*  À COMPLÉTER (doc §14.4). Les propriétés hors table ressortent sous leur clé
+*  À COMPLÉTER. Les propriétés hors table ressortent sous leur clé
 *  brute, ce qui donne une liste de travail fondée sur des collectes réelles.
 */
 static std::wstring propertyKeyConnue(const std::wstring& guidMinuscules, unsigned int key) {
@@ -17611,7 +17611,7 @@ std::wstring to_FriendlyName(std::wstring guid, unsigned int key) {
 	 * NOTE sur COM : CLSIDFromString et PSGetNameFromPropertyKey sont des
 	 * fonctions utilitaires (conversion, lecture du schéma de propriétés) et non
 	 * des activations de composants ; elles n'exigent pas CoInitializeEx, retiré
-	 * de WAC avec la bascule hors ligne des tâches planifiées (doc §9.4). Si
+	 * de WAC avec la bascule hors ligne des tâches planifiées. Si
 	 * l'appel échoue malgré tout, le libellé rendu est « (Undefined) » — donc
 	 * dégradation lisible, pas donnée fausse.
 	 */

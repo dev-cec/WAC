@@ -3,24 +3,22 @@
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
-<meta name="generator" content="Doxygen 1.13.2"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>WAC (Windows Artefacts Collector): Référence du fichier C:/laragon/prog/WAC/WAC/tools.h</title>
+<title>WAC (Windows Artefacts Collector): Référence du fichier /var/www/html/WAC/WAC/tools.h</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
-<script type="text/javascript" src="clipboard.js"></script>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
 <script type="text/javascript" src="navtreedata.js"></script>
 <script type="text/javascript" src="navtree.js"></script>
-<script type="text/javascript" src="resize.js"></script>
-<script type="text/javascript" src="cookie.js"></script>
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-  $(function() { init_search(); });
+  $(document).ready(function() { init_search(); });
 /* @license-end */
 </script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
@@ -53,15 +51,10 @@
 </table>
 </div>
 <!-- end header part -->
-<!-- Généré par Doxygen 1.13.2 -->
+<!-- Généré par Doxygen 1.9.8 -->
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
 var searchBox = new SearchBox("searchBox", "search/",'.html');
-/* @license-end */
-</script>
-<script type="text/javascript">
-/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(function() { codefold.init(0); });
 /* @license-end */
 </script>
 </div><!-- top -->
@@ -77,7 +70,7 @@ $(function() { codefold.init(0); });
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(function(){initNavTree('tools_8h.html',''); initResizable(true); });
+$(document).ready(function(){initNavTree('tools_8h.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -116,121 +109,168 @@ $(function(){initNavTree('tools_8h.html',''); initResizable(true); });
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;offreg.h&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
+<code>#include &lt;filesystem&gt;</code><br />
 <code>#include &lt;time.h&gt;</code><br />
-<code>#include &lt;comutil.h&gt;</code><br />
+<code>#include &quot;<a class="el" href="json_8h_source.html">json.h</a>&quot;</code><br />
 </div>
 <p><a href="tools_8h_source.html">Aller au code source de ce fichier.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_appli_conf.html">AppliConf</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure de données contenant la configuration de l'application.  <a href="struct_appli_conf.html#details">Plus de détails...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTimeZoneInfo.html">TimeZoneInfo</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_fat_date_time.html">FatDateTime</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf.html">AppliConf</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure de données contenant la configuration de l'application.  <a href="structAppliConf.html#details">Plus de détails...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFatDateTime.html">FatDateTime</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a59a60f1c130d5c23de0982c16d962ce3" id="r_a59a60f1c130d5c23de0982c16d962ce3"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a59a60f1c130d5c23de0982c16d962ce3">MAX_KEY_NAME</a>&#160;&#160;&#160;255</td></tr>
+<tr class="memitem:a59a60f1c130d5c23de0982c16d962ce3" id="r_a59a60f1c130d5c23de0982c16d962ce3"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a59a60f1c130d5c23de0982c16d962ce3">MAX_KEY_NAME</a>&#160;&#160;&#160;255</td></tr>
 <tr class="memdesc:a59a60f1c130d5c23de0982c16d962ce3"><td class="mdescLeft">&#160;</td><td class="mdescRight">plus longue key name en base de registre  <br /></td></tr>
 <tr class="separator:a59a60f1c130d5c23de0982c16d962ce3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac91ef938fdbde20051e9a702faa528aa" id="r_ac91ef938fdbde20051e9a702faa528aa"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac91ef938fdbde20051e9a702faa528aa">MAX_VALUE_NAME</a>&#160;&#160;&#160;16383</td></tr>
+<tr class="memitem:ac91ef938fdbde20051e9a702faa528aa" id="r_ac91ef938fdbde20051e9a702faa528aa"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ac91ef938fdbde20051e9a702faa528aa">MAX_VALUE_NAME</a>&#160;&#160;&#160;16383</td></tr>
 <tr class="memdesc:ac91ef938fdbde20051e9a702faa528aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">plus long nom de valeur en base de registre  <br /></td></tr>
 <tr class="separator:ac91ef938fdbde20051e9a702faa528aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaf06a3762adb0aa04b8a5f8f016ca5e9" id="r_aaf06a3762adb0aa04b8a5f8f016ca5e9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaf06a3762adb0aa04b8a5f8f016ca5e9">MAX_DATA</a>&#160;&#160;&#160;1024000</td></tr>
+<tr class="memitem:aaf06a3762adb0aa04b8a5f8f016ca5e9" id="r_aaf06a3762adb0aa04b8a5f8f016ca5e9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#aaf06a3762adb0aa04b8a5f8f016ca5e9">MAX_DATA</a>&#160;&#160;&#160;1024000</td></tr>
 <tr class="memdesc:aaf06a3762adb0aa04b8a5f8f016ca5e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">taille maximale des données pour une valeur en base de registre  <br /></td></tr>
 <tr class="separator:aaf06a3762adb0aa04b8a5f8f016ca5e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4cef5953feb26b8862337c4f7f0f696a" id="r_a4cef5953feb26b8862337c4f7f0f696a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4cef5953feb26b8862337c4f7f0f696a">LOG_TYPE_ARTEFACT_TYPE</a>&#160;&#160;&#160;0</td></tr>
+<tr class="memitem:a4cef5953feb26b8862337c4f7f0f696a" id="r_a4cef5953feb26b8862337c4f7f0f696a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a4cef5953feb26b8862337c4f7f0f696a">LOG_TYPE_ARTEFACT_TYPE</a>&#160;&#160;&#160;0</td></tr>
 <tr class="memdesc:a4cef5953feb26b8862337c4f7f0f696a"><td class="mdescLeft">&#160;</td><td class="mdescRight">log of artefact type  <br /></td></tr>
 <tr class="separator:a4cef5953feb26b8862337c4f7f0f696a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6420c1d8d984de90fa1add81a3785b8c" id="r_a6420c1d8d984de90fa1add81a3785b8c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6420c1d8d984de90fa1add81a3785b8c">LOG_TYPE_ARTEFACT</a>&#160;&#160;&#160;1</td></tr>
+<tr class="memitem:a6420c1d8d984de90fa1add81a3785b8c" id="r_a6420c1d8d984de90fa1add81a3785b8c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a6420c1d8d984de90fa1add81a3785b8c">LOG_TYPE_ARTEFACT</a>&#160;&#160;&#160;1</td></tr>
 <tr class="memdesc:a6420c1d8d984de90fa1add81a3785b8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">log of new artefact  <br /></td></tr>
 <tr class="separator:a6420c1d8d984de90fa1add81a3785b8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8b181b7eaaab11e988e2c6b7cdc0d80a" id="r_a8b181b7eaaab11e988e2c6b7cdc0d80a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8b181b7eaaab11e988e2c6b7cdc0d80a">LOG_TYPE_INFO</a>&#160;&#160;&#160;2</td></tr>
+<tr class="memitem:a8b181b7eaaab11e988e2c6b7cdc0d80a" id="r_a8b181b7eaaab11e988e2c6b7cdc0d80a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a8b181b7eaaab11e988e2c6b7cdc0d80a">LOG_TYPE_INFO</a>&#160;&#160;&#160;2</td></tr>
 <tr class="memdesc:a8b181b7eaaab11e988e2c6b7cdc0d80a"><td class="mdescLeft">&#160;</td><td class="mdescRight">log of type info to describe artefact  <br /></td></tr>
 <tr class="separator:a8b181b7eaaab11e988e2c6b7cdc0d80a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7c5fd30f5e43b34be24326642d1a4c6d" id="r_a7c5fd30f5e43b34be24326642d1a4c6d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7c5fd30f5e43b34be24326642d1a4c6d">LOG_TYPE_ERROR</a>&#160;&#160;&#160;3</td></tr>
+<tr class="memitem:a7c5fd30f5e43b34be24326642d1a4c6d" id="r_a7c5fd30f5e43b34be24326642d1a4c6d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a7c5fd30f5e43b34be24326642d1a4c6d">LOG_TYPE_ERROR</a>&#160;&#160;&#160;3</td></tr>
 <tr class="memdesc:a7c5fd30f5e43b34be24326642d1a4c6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">log of type error  <br /></td></tr>
 <tr class="separator:a7c5fd30f5e43b34be24326642d1a4c6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a542529c1654a19379e8db5625bc7801e" id="r_a542529c1654a19379e8db5625bc7801e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a542529c1654a19379e8db5625bc7801e">LOG_TYPE_DEBUG</a>&#160;&#160;&#160;4</td></tr>
+<tr class="memitem:a542529c1654a19379e8db5625bc7801e" id="r_a542529c1654a19379e8db5625bc7801e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a542529c1654a19379e8db5625bc7801e">LOG_TYPE_DEBUG</a>&#160;&#160;&#160;4</td></tr>
 <tr class="memdesc:a542529c1654a19379e8db5625bc7801e"><td class="mdescLeft">&#160;</td><td class="mdescRight">name of function called for debug purpose  <br /></td></tr>
 <tr class="separator:a542529c1654a19379e8db5625bc7801e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Fonctions</h2></td></tr>
-<tr class="memitem:abfb8057ef624b69b47bf30c6db4e3875" id="r_abfb8057ef624b69b47bf30c6db4e3875"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abfb8057ef624b69b47bf30c6db4e3875">printSuccess</a> ()</td></tr>
+<tr class="memitem:a64af952b26c2e734b7998bd37173b3dc" id="r_a64af952b26c2e734b7998bd37173b3dc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a64af952b26c2e734b7998bd37173b3dc">loadSystemDrive</a> ()</td></tr>
+<tr class="separator:a64af952b26c2e734b7998bd37173b3dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8dd0bb51cdc854f2137aba256aae3d9c" id="r_a8dd0bb51cdc854f2137aba256aae3d9c"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a8dd0bb51cdc854f2137aba256aae3d9c">loadProfileList</a> ()</td></tr>
+<tr class="separator:a8dd0bb51cdc854f2137aba256aae3d9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f3831643296c77d2e38a6da3843683f" id="r_a7f3831643296c77d2e38a6da3843683f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a7f3831643296c77d2e38a6da3843683f">volumeDuChemin</a> (const std::wstring &amp;absolu)</td></tr>
+<tr class="separator:a7f3831643296c77d2e38a6da3843683f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac578daf9658252628413798c3b0420de" id="r_ac578daf9658252628413798c3b0420de"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ac578daf9658252628413798c3b0420de">cheminRelatifAuVolume</a> (const std::wstring &amp;absolu)</td></tr>
+<tr class="separator:ac578daf9658252628413798c3b0420de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ba4ef8ffdededddc22ae3ace933de0e" id="r_a0ba4ef8ffdededddc22ae3ace933de0e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a0ba4ef8ffdededddc22ae3ace933de0e">cheminExtrait</a> (const std::wstring &amp;absolu)</td></tr>
+<tr class="separator:a0ba4ef8ffdededddc22ae3ace933de0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9913832dcd25e0380b2bc196758a627d" id="r_a9913832dcd25e0380b2bc196758a627d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a9913832dcd25e0380b2bc196758a627d">cheminOriginal</a> (const std::wstring &amp;extrait)</td></tr>
+<tr class="separator:a9913832dcd25e0380b2bc196758a627d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abfb8057ef624b69b47bf30c6db4e3875" id="r_abfb8057ef624b69b47bf30c6db4e3875"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#abfb8057ef624b69b47bf30c6db4e3875">printSuccess</a> ()</td></tr>
 <tr class="memdesc:abfb8057ef624b69b47bf30c6db4e3875"><td class="mdescLeft">&#160;</td><td class="mdescRight">affichage du mot OK en vert dans la console  <br /></td></tr>
 <tr class="separator:abfb8057ef624b69b47bf30c6db4e3875"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad857742196348d0e4b3ee1d9474b6638" id="r_ad857742196348d0e4b3ee1d9474b6638"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad857742196348d0e4b3ee1d9474b6638">printError</a> (HRESULT hresult)</td></tr>
+<tr class="memitem:aa0ae02c4934bf605d8077d196098348d" id="r_aa0ae02c4934bf605d8077d196098348d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#aa0ae02c4934bf605d8077d196098348d">printProgress</a> (const std::wstring &amp;libelle, unsigned long long fait, unsigned long long total, const wchar_t *unite)</td></tr>
+<tr class="separator:aa0ae02c4934bf605d8077d196098348d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa58517b7d74263e87094ca227705a8b5" id="r_aa58517b7d74263e87094ca227705a8b5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#aa58517b7d74263e87094ca227705a8b5">printProgressEnd</a> ()</td></tr>
+<tr class="separator:aa58517b7d74263e87094ca227705a8b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7792af9b59051e2b9c68a463b889c33f" id="r_a7792af9b59051e2b9c68a463b889c33f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a7792af9b59051e2b9c68a463b889c33f">printStep</a> (const std::wstring &amp;libelle)</td></tr>
+<tr class="separator:a7792af9b59051e2b9c68a463b889c33f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a71c8c9cc4f1e5998dde36a31f382c7cd" id="r_a71c8c9cc4f1e5998dde36a31f382c7cd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a71c8c9cc4f1e5998dde36a31f382c7cd">printProgressStep</a> (const std::wstring &amp;artefact, unsigned long long fait, unsigned long long total)</td></tr>
+<tr class="separator:a71c8c9cc4f1e5998dde36a31f382c7cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad857742196348d0e4b3ee1d9474b6638" id="r_ad857742196348d0e4b3ee1d9474b6638"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ad857742196348d0e4b3ee1d9474b6638">printError</a> (HRESULT hresult)</td></tr>
 <tr class="separator:ad857742196348d0e4b3ee1d9474b6638"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a52b8e5827ab36d1d9f31335c0ec301fd" id="r_a52b8e5827ab36d1d9f31335c0ec301fd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a52b8e5827ab36d1d9f31335c0ec301fd">printError</a> (std::wstring errorText)</td></tr>
+<tr class="memitem:a52b8e5827ab36d1d9f31335c0ec301fd" id="r_a52b8e5827ab36d1d9f31335c0ec301fd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a52b8e5827ab36d1d9f31335c0ec301fd">printError</a> (std::wstring errorText)</td></tr>
 <tr class="separator:a52b8e5827ab36d1d9f31335c0ec301fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac6445268d6c87c34c40e723fd1ea23ef" id="r_ac6445268d6c87c34c40e723fd1ea23ef"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac6445268d6c87c34c40e723fd1ea23ef">getErrorMessage</a> (HRESULT hresult)</td></tr>
+<tr class="memitem:ac6445268d6c87c34c40e723fd1ea23ef" id="r_ac6445268d6c87c34c40e723fd1ea23ef"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ac6445268d6c87c34c40e723fd1ea23ef">getErrorMessage</a> (HRESULT hresult)</td></tr>
 <tr class="separator:ac6445268d6c87c34c40e723fd1ea23ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3fd0bef5fa02565cb2da3f612cf978b9" id="r_a3fd0bef5fa02565cb2da3f612cf978b9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3fd0bef5fa02565cb2da3f612cf978b9">log</a> (int loglevel, std::wstring message)</td></tr>
+<tr class="memitem:a3fd0bef5fa02565cb2da3f612cf978b9" id="r_a3fd0bef5fa02565cb2da3f612cf978b9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a3fd0bef5fa02565cb2da3f612cf978b9">log</a> (int loglevel, std::wstring message)</td></tr>
 <tr class="separator:a3fd0bef5fa02565cb2da3f612cf978b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa2fb1cf5cd8710778ba5bad978bba540" id="r_aa2fb1cf5cd8710778ba5bad978bba540"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa2fb1cf5cd8710778ba5bad978bba540">log</a> (int loglevel, std::wstring message, HRESULT result)</td></tr>
+<tr class="memitem:aa2fb1cf5cd8710778ba5bad978bba540" id="r_aa2fb1cf5cd8710778ba5bad978bba540"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#aa2fb1cf5cd8710778ba5bad978bba540">log</a> (int loglevel, std::wstring message, HRESULT result)</td></tr>
 <tr class="separator:aa2fb1cf5cd8710778ba5bad978bba540"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f20577b4f90e4d40f33250f74928ded" id="r_a0f20577b4f90e4d40f33250f74928ded"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0f20577b4f90e4d40f33250f74928ded">ansi_to_utf8</a> (std::string in)</td></tr>
+<tr class="memitem:a0f20577b4f90e4d40f33250f74928ded" id="r_a0f20577b4f90e4d40f33250f74928ded"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a0f20577b4f90e4d40f33250f74928ded">ansi_to_utf8</a> (std::string in)</td></tr>
 <tr class="separator:a0f20577b4f90e4d40f33250f74928ded"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2253bdea61c15807680646f199e57082" id="r_a2253bdea61c15807680646f199e57082"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2253bdea61c15807680646f199e57082">ansi_to_utf8</a> (std::wstring in)</td></tr>
+<tr class="memitem:a2253bdea61c15807680646f199e57082" id="r_a2253bdea61c15807680646f199e57082"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a2253bdea61c15807680646f199e57082">ansi_to_utf8</a> (std::wstring in)</td></tr>
 <tr class="separator:a2253bdea61c15807680646f199e57082"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac4c0694f9ff1125a48aa8c09d96d18dc" id="r_ac4c0694f9ff1125a48aa8c09d96d18dc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac4c0694f9ff1125a48aa8c09d96d18dc">dump</a> (LPBYTE buffer, int start, int end)</td></tr>
+<tr class="memitem:ac4c0694f9ff1125a48aa8c09d96d18dc" id="r_ac4c0694f9ff1125a48aa8c09d96d18dc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ac4c0694f9ff1125a48aa8c09d96d18dc">dump</a> (LPBYTE buffer, int start, int end)</td></tr>
 <tr class="separator:ac4c0694f9ff1125a48aa8c09d96d18dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a40d9f5d680f3b777ad0eac00c00bdc98" id="r_a40d9f5d680f3b777ad0eac00c00bdc98"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a40d9f5d680f3b777ad0eac00c00bdc98">dump_wstring</a> (LPBYTE buffer, int start, int end)</td></tr>
-<tr class="separator:a40d9f5d680f3b777ad0eac00c00bdc98"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac0b13fc24e7bc07ec4a03384acd92539" id="r_ac0b13fc24e7bc07ec4a03384acd92539"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac0b13fc24e7bc07ec4a03384acd92539">replaceAll</a> (std::wstring src, std::wstring search, std::wstring replacement)</td></tr>
+<tr class="memitem:a8489916b2e35339262883860a7aa04a7" id="r_a8489916b2e35339262883860a7aa04a7"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a8489916b2e35339262883860a7aa04a7">dump_wstring</a> (LPBYTE buffer, int start, int longueur)</td></tr>
+<tr class="separator:a8489916b2e35339262883860a7aa04a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac0b13fc24e7bc07ec4a03384acd92539" id="r_ac0b13fc24e7bc07ec4a03384acd92539"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ac0b13fc24e7bc07ec4a03384acd92539">replaceAll</a> (std::wstring src, std::wstring search, std::wstring replacement)</td></tr>
 <tr class="separator:ac0b13fc24e7bc07ec4a03384acd92539"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7684efc242e166b53952647faf435f95" id="r_a7684efc242e166b53952647faf435f95"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7684efc242e166b53952647faf435f95">ROT13</a> (std::wstring source)</td></tr>
+<tr class="memitem:a7684efc242e166b53952647faf435f95" id="r_a7684efc242e166b53952647faf435f95"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a7684efc242e166b53952647faf435f95">ROT13</a> (std::wstring source)</td></tr>
 <tr class="separator:a7684efc242e166b53952647faf435f95"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a897a3625e4fa6aa492efd7beaeaa1d75" id="r_a897a3625e4fa6aa492efd7beaeaa1d75"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a897a3625e4fa6aa492efd7beaeaa1d75">decodeURIComponent</a> (std::string encoded)</td></tr>
+<tr class="memitem:a897a3625e4fa6aa492efd7beaeaa1d75" id="r_a897a3625e4fa6aa492efd7beaeaa1d75"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a897a3625e4fa6aa492efd7beaeaa1d75">decodeURIComponent</a> (std::string encoded)</td></tr>
 <tr class="separator:a897a3625e4fa6aa492efd7beaeaa1d75"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7962322204e2574d54ce125ac2055850" id="r_a7962322204e2574d54ce125ac2055850"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7962322204e2574d54ce125ac2055850">to_hex</a> (long long i)</td></tr>
+<tr class="memitem:a7962322204e2574d54ce125ac2055850" id="r_a7962322204e2574d54ce125ac2055850"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a7962322204e2574d54ce125ac2055850">to_hex</a> (long long i)</td></tr>
 <tr class="separator:a7962322204e2574d54ce125ac2055850"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a238702c13cab5b487c46812cd980e7d6" id="r_a238702c13cab5b487c46812cd980e7d6"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a238702c13cab5b487c46812cd980e7d6">tab</a> (int i)</td></tr>
+<tr class="memitem:a238702c13cab5b487c46812cd980e7d6" id="r_a238702c13cab5b487c46812cd980e7d6"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a238702c13cab5b487c46812cd980e7d6">tab</a> (int i)</td></tr>
 <tr class="separator:a238702c13cab5b487c46812cd980e7d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab29ec2bd73a4de1536739ac5cd16ecff" id="r_ab29ec2bd73a4de1536739ac5cd16ecff"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab29ec2bd73a4de1536739ac5cd16ecff">getNameFromSid</a> (std::wstring _sid)</td></tr>
+<tr class="memitem:ab29ec2bd73a4de1536739ac5cd16ecff" id="r_ab29ec2bd73a4de1536739ac5cd16ecff"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ab29ec2bd73a4de1536739ac5cd16ecff">getNameFromSid</a> (std::wstring _sid)</td></tr>
 <tr class="separator:ab29ec2bd73a4de1536739ac5cd16ecff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a60ee9433903019ec436ff2efcef4ea0d" id="r_a60ee9433903019ec436ff2efcef4ea0d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a60ee9433903019ec436ff2efcef4ea0d">bool_to_wstring</a> (bool b)</td></tr>
+<tr class="memitem:a60ee9433903019ec436ff2efcef4ea0d" id="r_a60ee9433903019ec436ff2efcef4ea0d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a60ee9433903019ec436ff2efcef4ea0d">bool_to_wstring</a> (bool b)</td></tr>
 <tr class="separator:a60ee9433903019ec436ff2efcef4ea0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a65f1910dd69d412fb7162edf2bdcb50f" id="r_a65f1910dd69d412fb7162edf2bdcb50f"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a65f1910dd69d412fb7162edf2bdcb50f">timet_to_fileTime</a> (time_t t)</td></tr>
+<tr class="memitem:a65f1910dd69d412fb7162edf2bdcb50f" id="r_a65f1910dd69d412fb7162edf2bdcb50f"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a65f1910dd69d412fb7162edf2bdcb50f">timet_to_fileTime</a> (time_t t)</td></tr>
 <tr class="separator:a65f1910dd69d412fb7162edf2bdcb50f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac15b36c9a117f211860abb5d7f86d8d4" id="r_ac15b36c9a117f211860abb5d7f86d8d4"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac15b36c9a117f211860abb5d7f86d8d4">wstring_to_filetime</a> (std::wstring input)</td></tr>
+<tr class="memitem:ac15b36c9a117f211860abb5d7f86d8d4" id="r_ac15b36c9a117f211860abb5d7f86d8d4"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ac15b36c9a117f211860abb5d7f86d8d4">wstring_to_filetime</a> (std::wstring input)</td></tr>
 <tr class="separator:ac15b36c9a117f211860abb5d7f86d8d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:add0a41c5fd2f12417533d112598b8da1" id="r_add0a41c5fd2f12417533d112598b8da1"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#add0a41c5fd2f12417533d112598b8da1">time_to_wstring</a> (const FILETIME filetime, bool convertUtc=false)</td></tr>
+<tr class="memitem:add0a41c5fd2f12417533d112598b8da1" id="r_add0a41c5fd2f12417533d112598b8da1"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#add0a41c5fd2f12417533d112598b8da1">time_to_wstring</a> (const FILETIME filetime, bool convertUtc=false)</td></tr>
 <tr class="separator:add0a41c5fd2f12417533d112598b8da1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:addbcf94a622e9fa893340802b75f789f" id="r_addbcf94a622e9fa893340802b75f789f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#addbcf94a622e9fa893340802b75f789f">time_to_wstring</a> (const SYSTEMTIME systemtime)</td></tr>
+<tr class="memitem:addbcf94a622e9fa893340802b75f789f" id="r_addbcf94a622e9fa893340802b75f789f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#addbcf94a622e9fa893340802b75f789f">time_to_wstring</a> (const SYSTEMTIME systemtime)</td></tr>
 <tr class="separator:addbcf94a622e9fa893340802b75f789f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aecf670c5a3331fe73239c63d494acc70" id="r_aecf670c5a3331fe73239c63d494acc70"><td class="memItemLeft" align="right" valign="top">BSTR&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aecf670c5a3331fe73239c63d494acc70">wstring_to_bstr</a> (std::wstring ws)</td></tr>
-<tr class="separator:aecf670c5a3331fe73239c63d494acc70"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5e053e5aa24ef8dc35fcab0eaf1c5979" id="r_a5e053e5aa24ef8dc35fcab0eaf1c5979"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5e053e5aa24ef8dc35fcab0eaf1c5979">bstr_to_wstring</a> (BSTR bstr)</td></tr>
-<tr class="separator:a5e053e5aa24ef8dc35fcab0eaf1c5979"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad612e1d5a3738c231a1aeefb21c4d36d" id="r_ad612e1d5a3738c231a1aeefb21c4d36d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad612e1d5a3738c231a1aeefb21c4d36d">string_to_wstring</a> (const std::string &amp;str)</td></tr>
+<tr class="memitem:aed51f7f887c3a9ede2b9ee9dc59e8391" id="r_aed51f7f887c3a9ede2b9ee9dc59e8391"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#aed51f7f887c3a9ede2b9ee9dc59e8391">timeToIso8601Utc</a> (const FILETIME &amp;filetime)</td></tr>
+<tr class="separator:aed51f7f887c3a9ede2b9ee9dc59e8391"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6e9127cec836f464d33dc6ed7aaf93c" id="r_ac6e9127cec836f464d33dc6ed7aaf93c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ac6e9127cec836f464d33dc6ed7aaf93c">timeToIso8601Local</a> (const FILETIME &amp;filetime)</td></tr>
+<tr class="separator:ac6e9127cec836f464d33dc6ed7aaf93c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae52f0c935a795ae5ade2cabe8686f61a" id="r_ae52f0c935a795ae5ade2cabe8686f61a"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ae52f0c935a795ae5ade2cabe8686f61a">localTimeToIso8601Utc</a> (const FILETIME &amp;filetimeLocal)</td></tr>
+<tr class="separator:ae52f0c935a795ae5ade2cabe8686f61a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5efd9b98819f1d7951c8f56c8c005465" id="r_a5efd9b98819f1d7951c8f56c8c005465"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a5efd9b98819f1d7951c8f56c8c005465">utcTimeToIso8601Local</a> (const FILETIME &amp;filetimeUtc)</td></tr>
+<tr class="separator:a5efd9b98819f1d7951c8f56c8c005465"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1768bb8da11c42fa349d6adbe7307af4" id="r_a1768bb8da11c42fa349d6adbe7307af4"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a1768bb8da11c42fa349d6adbe7307af4">utcVersLocalSuspect</a> (const FILETIME &amp;filetimeUtc, FILETIME *filetimeLocal)</td></tr>
+<tr class="separator:a1768bb8da11c42fa349d6adbe7307af4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33256dfbfef8ac9511a35835a5e5b29d" id="r_a33256dfbfef8ac9511a35835a5e5b29d"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a33256dfbfef8ac9511a35835a5e5b29d">loadSuspectTimeZone</a> ()</td></tr>
+<tr class="separator:a33256dfbfef8ac9511a35835a5e5b29d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a299fdb4272ae83c49ad0ac0bad62f1fe" id="r_a299fdb4272ae83c49ad0ac0bad62f1fe"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a299fdb4272ae83c49ad0ac0bad62f1fe">localUtcOffsetString</a> ()</td></tr>
+<tr class="separator:a299fdb4272ae83c49ad0ac0bad62f1fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9bd10ae4fd8c15921a1654452bbd2735" id="r_a9bd10ae4fd8c15921a1654452bbd2735"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a9bd10ae4fd8c15921a1654452bbd2735">timeToIso8601</a> (const SYSTEMTIME &amp;systemtime, bool utc)</td></tr>
+<tr class="separator:a9bd10ae4fd8c15921a1654452bbd2735"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad612e1d5a3738c231a1aeefb21c4d36d" id="r_ad612e1d5a3738c231a1aeefb21c4d36d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ad612e1d5a3738c231a1aeefb21c4d36d">string_to_wstring</a> (const std::string &amp;str)</td></tr>
 <tr class="separator:ad612e1d5a3738c231a1aeefb21c4d36d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9e8d9796b27a47431c88a5387b1ed2a0" id="r_a9e8d9796b27a47431c88a5387b1ed2a0"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9e8d9796b27a47431c88a5387b1ed2a0">wstring_to_string</a> (const std::wstring &amp;wstr)</td></tr>
+<tr class="memitem:a9e8d9796b27a47431c88a5387b1ed2a0" id="r_a9e8d9796b27a47431c88a5387b1ed2a0"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a9e8d9796b27a47431c88a5387b1ed2a0">wstring_to_string</a> (const std::wstring &amp;wstr)</td></tr>
 <tr class="separator:a9e8d9796b27a47431c88a5387b1ed2a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5a8307d3e03f3e7dfca9849a5ac5822b" id="r_a5a8307d3e03f3e7dfca9849a5ac5822b"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5a8307d3e03f3e7dfca9849a5ac5822b">multiSz_to_json</a> (std::vector&lt; std::wstring &gt; vec, int niveau)</td></tr>
-<tr class="separator:a5a8307d3e03f3e7dfca9849a5ac5822b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adade67b0a5b5d19a3069b766e57282e5" id="r_adade67b0a5b5d19a3069b766e57282e5"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adade67b0a5b5d19a3069b766e57282e5">multiFiletime_to_json</a> (std::vector&lt; FILETIME &gt; vec, int niveau)</td></tr>
-<tr class="separator:adade67b0a5b5d19a3069b766e57282e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea71d14f067d69330a32721ca7dc457d" id="r_aea71d14f067d69330a32721ca7dc457d"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aea71d14f067d69330a32721ca7dc457d">multiWstring_to_vector</a> (LPBYTE data, int size)</td></tr>
+<tr class="memitem:a22080c86865dc96553f0fe1d14d8176a" id="r_a22080c86865dc96553f0fe1d14d8176a"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a22080c86865dc96553f0fe1d14d8176a">enMinuscules</a> (std::wstring s)</td></tr>
+<tr class="separator:a22080c86865dc96553f0fe1d14d8176a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a259b7509acf146373857caa3433265b2" id="r_a259b7509acf146373857caa3433265b2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a259b7509acf146373857caa3433265b2">estReferenceMui</a> (const std::wstring &amp;valeur)</td></tr>
+<tr class="separator:a259b7509acf146373857caa3433265b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea71d14f067d69330a32721ca7dc457d" id="r_aea71d14f067d69330a32721ca7dc457d"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#aea71d14f067d69330a32721ca7dc457d">multiWstring_to_vector</a> (LPBYTE data, int size)</td></tr>
 <tr class="separator:aea71d14f067d69330a32721ca7dc457d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af5b5c7829f1299c3b6e2f28f2d543282" id="r_af5b5c7829f1299c3b6e2f28f2d543282"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af5b5c7829f1299c3b6e2f28f2d543282">guid_to_wstring</a> (GUID guid)</td></tr>
+<tr class="memitem:af5b5c7829f1299c3b6e2f28f2d543282" id="r_af5b5c7829f1299c3b6e2f28f2d543282"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#af5b5c7829f1299c3b6e2f28f2d543282">guid_to_wstring</a> (GUID guid)</td></tr>
 <tr class="separator:af5b5c7829f1299c3b6e2f28f2d543282"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a03071ea00176395299ea4eda5a1e18bb" id="r_a03071ea00176395299ea4eda5a1e18bb"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a03071ea00176395299ea4eda5a1e18bb">getRegSzValue</a> (ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::wstring *ws)</td></tr>
-<tr class="separator:a03071ea00176395299ea4eda5a1e18bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab22725363874f5dd38da01cc9b3b4e20" id="r_ab22725363874f5dd38da01cc9b3b4e20"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab22725363874f5dd38da01cc9b3b4e20">getRegFiletimeValue</a> (ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, FILETIME *filetime)</td></tr>
-<tr class="separator:ab22725363874f5dd38da01cc9b3b4e20"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa62fbd54ceeb22f46f23d20f79cb57b4" id="r_aa62fbd54ceeb22f46f23d20f79cb57b4"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa62fbd54ceeb22f46f23d20f79cb57b4">getRegBinaryValue</a> (ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, LPBYTE *pBytes, DWORD *dwSize)</td></tr>
-<tr class="separator:aa62fbd54ceeb22f46f23d20f79cb57b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af532d7e53d1e10fdfdba493dc3edc9b2" id="r_af532d7e53d1e10fdfdba493dc3edc9b2"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af532d7e53d1e10fdfdba493dc3edc9b2">getRegboolValue</a> (ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, bool *pbool)</td></tr>
-<tr class="separator:af532d7e53d1e10fdfdba493dc3edc9b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a299584ee76624fd8777e142cf9a14703" id="r_a299584ee76624fd8777e142cf9a14703"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a299584ee76624fd8777e142cf9a14703">getRegMultiSzValue</a> (ORHKEY key, PCWSTR szSubKey, PCWSTR szValue, std::vector&lt; std::wstring &gt; *out)</td></tr>
-<tr class="separator:a299584ee76624fd8777e142cf9a14703"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a549b02285d5864919488c1d6e803c568" id="r_a549b02285d5864919488c1d6e803c568"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a549b02285d5864919488c1d6e803c568">getRegSzValue</a> (ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, std::wstring *ws)</td></tr>
+<tr class="separator:a549b02285d5864919488c1d6e803c568"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a630ca1d506b3487e3ce3c520fe9b592b" id="r_a630ca1d506b3487e3ce3c520fe9b592b"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a630ca1d506b3487e3ce3c520fe9b592b">getRegFiletimeValue</a> (ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, FILETIME *filetime)</td></tr>
+<tr class="separator:a630ca1d506b3487e3ce3c520fe9b592b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac418d8d47d30969e51ec81d9dce7e34e" id="r_ac418d8d47d30969e51ec81d9dce7e34e"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ac418d8d47d30969e51ec81d9dce7e34e">getRegBinaryValue</a> (ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, LPBYTE *octets, DWORD *taille)</td></tr>
+<tr class="separator:ac418d8d47d30969e51ec81d9dce7e34e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3de3330c9e9e495438c38efc2dff9fb" id="r_ae3de3330c9e9e495438c38efc2dff9fb"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ae3de3330c9e9e495438c38efc2dff9fb">getRegboolValue</a> (ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, bool *valeur)</td></tr>
+<tr class="separator:ae3de3330c9e9e495438c38efc2dff9fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a538271758be7bd67a1b39d00c94f1af1" id="r_a538271758be7bd67a1b39d00c94f1af1"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a538271758be7bd67a1b39d00c94f1af1">getRegDwordValue</a> (ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, DWORD *pdword)</td></tr>
+<tr class="separator:a538271758be7bd67a1b39d00c94f1af1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aafb404be8bf6cb032f93df20ff8626af" id="r_aafb404be8bf6cb032f93df20ff8626af"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#aafb404be8bf6cb032f93df20ff8626af">getRegQwordValue</a> (ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, unsigned long long *pqword)</td></tr>
+<tr class="separator:aafb404be8bf6cb032f93df20ff8626af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3055fee24efaa8f691ebacebc23381f6" id="r_a3055fee24efaa8f691ebacebc23381f6"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a3055fee24efaa8f691ebacebc23381f6">getRegMultiSzValue</a> (ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, std::vector&lt; std::wstring &gt; *out)</td></tr>
+<tr class="separator:a3055fee24efaa8f691ebacebc23381f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3090b036c360d75cf1d37179cd99bee" id="r_af3090b036c360d75cf1d37179cd99bee"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#af3090b036c360d75cf1d37179cd99bee">getVolumeLetter</a> (std::wstring searchSerial)</td></tr>
+<tr class="separator:af3090b036c360d75cf1d37179cd99bee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ac032628289d617e09d03d54a6add70" id="r_a4ac032628289d617e09d03d54a6add70"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a4ac032628289d617e09d03d54a6add70">writeJsonFile</a> (const std::string &amp;nom, const <a class="el" href="classJson.html">Json</a> &amp;valeur)</td></tr>
+<tr class="separator:a4ac032628289d617e09d03d54a6add70"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acdd0ec7f39648e40795a732a339f09e9" id="r_acdd0ec7f39648e40795a732a339f09e9"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#acdd0ec7f39648e40795a732a339f09e9">writeNotCollected</a> (const std::string &amp;nom, const std::wstring &amp;artefact, HRESULT resultat)</td></tr>
+<tr class="separator:acdd0ec7f39648e40795a732a339f09e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a497685aa26f489762e1b7a84932d581c" id="r_a497685aa26f489762e1b7a84932d581c"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::filesystem::path &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a497685aa26f489762e1b7a84932d581c">listFilesByExtension</a> (const std::filesystem::path &amp;repertoire, const std::vector&lt; std::wstring &gt; &amp;extensions)</td></tr>
+<tr class="separator:a497685aa26f489762e1b7a84932d581c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
-<tr class="memitem:a0696b00a72abe9d549204f9b105514bc" id="r_a0696b00a72abe9d549204f9b105514bc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_appli_conf.html">AppliConf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0696b00a72abe9d549204f9b105514bc">conf</a></td></tr>
+<tr class="memitem:a0696b00a72abe9d549204f9b105514bc" id="r_a0696b00a72abe9d549204f9b105514bc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structAppliConf.html">AppliConf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a0696b00a72abe9d549204f9b105514bc">conf</a></td></tr>
 <tr class="separator:a0696b00a72abe9d549204f9b105514bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Documentation des macros</h2>
@@ -372,7 +412,8 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::string ansi_to_utf8 </td>
           <td>(</td>
-          <td class="paramtype">std::string</td>          <td class="paramname"><span class="paramname"><em>in</em></span></td><td>)</td>
+          <td class="paramtype">std::string&#160;</td>
+          <td class="paramname"><em>in</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -396,7 +437,8 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::wstring ansi_to_utf8 </td>
           <td>(</td>
-          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>in</em></span></td><td>)</td>
+          <td class="paramtype">std::wstring&#160;</td>
+          <td class="paramname"><em>in</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -420,7 +462,8 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::wstring bool_to_wstring </td>
           <td>(</td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>b</em></span></td><td>)</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>b</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -435,27 +478,86 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="a5e053e5aa24ef8dc35fcab0eaf1c5979" name="a5e053e5aa24ef8dc35fcab0eaf1c5979"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5e053e5aa24ef8dc35fcab0eaf1c5979">&#9670;&#160;</a></span>bstr_to_wstring()</h2>
+<a id="a0ba4ef8ffdededddc22ae3ace933de0e" name="a0ba4ef8ffdededddc22ae3ace933de0e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0ba4ef8ffdededddc22ae3ace933de0e">&#9670;&#160;</a></span>cheminExtrait()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::wstring bstr_to_wstring </td>
+          <td class="memname">std::wstring cheminExtrait </td>
           <td>(</td>
-          <td class="paramtype">BSTR</td>          <td class="paramname"><span class="paramname"><em>bstr</em></span></td><td>)</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>absolu</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Conversion une chaîne de caractères binaire en wstring </p><dl class="params"><dt>Paramètres</dt><dd>
+<p>Chemin, sur le support de collecte, de la copie extraite d'un fichier.</p>
+<p>Centralise la convention de nommage de l'extraction brute, que neuf collecteurs reconstruisaient chacun de leur côté avec <code>replaceAll(chemin, conf.systemDrive, L"")</code> — donc avec le même défaut multi-volumes (cf. <code>volumeDuChemin</code>).</p>
+<p>Les fichiers du volume SYSTÈME conservent leur emplacement d'origine sous <code>conf.mountpoint</code>, afin que rien ne change pour le cas courant. Ceux d'un autre volume sont rangés sous <code>\_volume_X\</code>, sans quoi deux disques portant le même chemin relatif (<code>\<a class="el" href="structUsers.html">Users</a>\jean</code> sur C: et sur D:) écraseraient leurs copies l'un l'autre.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
-    <tr><td class="paramname">bstr</td><td>la chaîne de caractère binaire </td></tr>
+    <tr><td class="paramname">absolu</td><td>chemin du fichier sur la machine examinée </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Renvoie</dt><dd>wstring issue de la conversion </dd></dl>
+<dl class="section return"><dt>Renvoie</dt><dd>le chemin de sa copie sur le support de collecte </dd></dl>
+
+</div>
+</div>
+<a id="a9913832dcd25e0380b2bc196758a627d" name="a9913832dcd25e0380b2bc196758a627d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9913832dcd25e0380b2bc196758a627d">&#9670;&#160;</a></span>cheminOriginal()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring cheminOriginal </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>extrait</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Chemin d'ORIGINE d'un fichier, à partir de sa copie extraite.</p>
+<p>Opération inverse de <code><a class="el" href="tools_8h.html#a0ba4ef8ffdededddc22ae3ace933de0e">cheminExtrait()</a></code>, utilisée pour publier dans le JSON le chemin qu'avait le fichier sur la machine examinée — et non celui de sa copie sur le support de collecte.</p>
+<p>Le remplacement naïf employé jusqu'ici, <code>replaceAll(chemin, conf.mountpoint, conf.systemDrive)</code>, ignorait le sous-dossier de volume : un fichier venu de <code>D:</code> ressortait sous <code>C:\_volume_D\<a class="el" href="structUsers.html">Users</a>\…</code>, c'est-à-dire un chemin qui n'existe sur aucun disque.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">extrait</td><td>chemin de la copie, sous <code>conf.mountpoint</code> </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>le chemin d'origine, avec sa vraie lettre de lecteur </dd></dl>
+
+</div>
+</div>
+<a id="ac578daf9658252628413798c3b0420de" name="ac578daf9658252628413798c3b0420de"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac578daf9658252628413798c3b0420de">&#9670;&#160;</a></span>cheminRelatifAuVolume()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring cheminRelatifAuVolume </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>absolu</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Rend un chemin absolu relatif à la racine de SON volume.</p>
+<p><code>D:\<a class="el" href="structUsers.html">Users</a>\jean</code> -&gt; <code>\<a class="el" href="structUsers.html">Users</a>\jean</code>. La lettre est retirée quelle qu'elle soit, et en TÊTE uniquement : <code><a class="el" href="tools_8h.html#ac0b13fc24e7bc07ec4a03384acd92539">replaceAll()</a></code>, employé jusqu'ici, en retirait toutes les occurrences, si bien qu'un chemin contenant à nouveau la lettre suivie de deux-points se retrouvait silencieusement altéré.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">absolu</td><td>chemin absolu </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>le chemin sans sa lettre de lecteur </dd></dl>
 
 </div>
 </div>
@@ -468,7 +570,8 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::string decodeURIComponent </td>
           <td>(</td>
-          <td class="paramtype">std::string</td>          <td class="paramname"><span class="paramname"><em>encoded</em></span></td><td>)</td>
+          <td class="paramtype">std::string&#160;</td>
+          <td class="paramname"><em>encoded</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -492,17 +595,25 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">void dump </td>
           <td>(</td>
-          <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>buffer</em></span>, </td>
+          <td class="paramtype">LPBYTE&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>start</em></span>, </td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>start</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>end</em></span>&#160;)</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>end</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -514,12 +625,11 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Renvoie</dt><dd>void </dd></dl>
 
 </div>
 </div>
-<a id="a40d9f5d680f3b777ad0eac00c00bdc98" name="a40d9f5d680f3b777ad0eac00c00bdc98"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a40d9f5d680f3b777ad0eac00c00bdc98">&#9670;&#160;</a></span>dump_wstring()</h2>
+<a id="a8489916b2e35339262883860a7aa04a7" name="a8489916b2e35339262883860a7aa04a7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8489916b2e35339262883860a7aa04a7">&#9670;&#160;</a></span>dump_wstring()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -527,29 +637,93 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::wstring dump_wstring </td>
           <td>(</td>
-          <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>buffer</em></span>, </td>
+          <td class="paramtype">LPBYTE&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>start</em></span>, </td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>start</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>end</em></span>&#160;)</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>longueur</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>converti en wstring hexadecimal le contenu du buffer dans la console </p><dl class="params"><dt>Paramètres</dt><dd>
+<p>Restitue une zone mémoire en hexadécimal, octet par octet.</p>
+<p>ATTENTION À LA SÉMANTIQUE, corrigée le 2026-09-15. Le troisième paramètre s'appelait <code>end</code> et la boucle allait jusqu'à <code>x &lt;= end</code> — un index de fin INCLUS. Or les cinq appelants lui passaient tous une TAILLE : chacun lisait donc un octet au-delà de la zone voulue. C'est désormais une longueur, et la borne est exclusive.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
-    <tr><td class="paramname">buffer</td><td>pointeur sur un buffer contenu les données à convertir </td></tr>
-    <tr><td class="paramname">start</td><td>indique la position du premier octet à traiter dans le buffer </td></tr>
-    <tr><td class="paramname">end</td><td>indique la position du dernier octet à afficher dans le buffer </td></tr>
+    <tr><td class="paramname">buffer</td><td>début de la zone </td></tr>
+    <tr><td class="paramname">start</td><td>décalage du premier octet à restituer </td></tr>
+    <tr><td class="paramname">longueur</td><td>nombre d'octets à restituer depuis <code>start</code> </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Renvoie</dt><dd>void </dd></dl>
+<dl class="section return"><dt>Renvoie</dt><dd>les octets en hexadécimal, séparés par des espaces </dd></dl>
+
+</div>
+</div>
+<a id="a22080c86865dc96553f0fe1d14d8176a" name="a22080c86865dc96553f0fe1d14d8176a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a22080c86865dc96553f0fe1d14d8176a">&#9670;&#160;</a></span>enMinuscules()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring enMinuscules </td>
+          <td>(</td>
+          <td class="paramtype">std::wstring&#160;</td>
+          <td class="paramname"><em>s</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Passe une chaîne en minuscules, pour comparer sans tenir compte de la casse.</p>
+<p>POURQUOI C'EST NÉCESSAIRE. Windows ne s'accorde pas avec lui-même sur la casse : sur une VM Windows 11, l'index NTFS porte « …\Windows\Input\… » quand le registre écrit « …\windows\input\… ». Toute correspondance par chemin ou par nom de service faite à la casse échoue alors EN SILENCE — et une tâche sans historique se lit à tort comme « jamais exécutée ». </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">s</td><td>la chaîne à normaliser </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>la chaîne en minuscules </dd></dl>
+
+</div>
+</div>
+<a id="a259b7509acf146373857caa3433265b2" name="a259b7509acf146373857caa3433265b2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a259b7509acf146373857caa3433265b2">&#9670;&#160;</a></span>estReferenceMui()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool estReferenceMui </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>valeur</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Dit si une valeur de registre est une RÉFÉRENCE de ressource MUI plutôt qu'un texte lisible.</p>
+<p>Windows stocke la plupart des noms affichés sous la forme <code>@SystemRoot%\system32\schedsvc.dll,-100</code> ou <code>@tzres.dll,-301</code> : un fichier et l'identifiant d'une chaîne à l'intérieur. Seul <code>LoadStringW</code> sur le module la résout — donc en chargeant ce module dans le processus de collecte, ce que la lecture hors ligne cherche justement à éviter.</p>
+<p>La référence est donc conservée telle quelle, mais dans un champ qui dit ce qu'elle est : présenter <code>@tzres.dll,-301</code> comme un nom de fuseau reviendrait à afficher un défaut de lecture à la place d'une donnée.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">valeur</td><td>la valeur lue dans la ruche </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>true s'il s'agit d'une référence de ressource </dd></dl>
 
 </div>
 </div>
@@ -562,7 +736,8 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::wstring getErrorMessage </td>
           <td>(</td>
-          <td class="paramtype">HRESULT</td>          <td class="paramname"><span class="paramname"><em>hresult</em></span></td><td>)</td>
+          <td class="paramtype">HRESULT&#160;</td>
+          <td class="paramname"><em>hresult</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -586,7 +761,8 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::wstring getNameFromSid </td>
           <td>(</td>
-          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>_sid</em></span></td><td>)</td>
+          <td class="paramtype">std::wstring&#160;</td>
+          <td class="paramname"><em>_sid</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -600,8 +776,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="aa62fbd54ceeb22f46f23d20f79cb57b4" name="aa62fbd54ceeb22f46f23d20f79cb57b4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa62fbd54ceeb22f46f23d20f79cb57b4">&#9670;&#160;</a></span>getRegBinaryValue()</h2>
+<a id="ac418d8d47d30969e51ec81d9dce7e34e" name="ac418d8d47d30969e51ec81d9dce7e34e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac418d8d47d30969e51ec81d9dce7e34e">&#9670;&#160;</a></span>getRegBinaryValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -609,36 +785,47 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">HRESULT getRegBinaryValue </td>
           <td>(</td>
-          <td class="paramtype">ORHKEY</td>          <td class="paramname"><span class="paramname"><em>key</em></span>, </td>
+          <td class="paramtype">ORHKEY&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">PCWSTR</td>          <td class="paramname"><span class="paramname"><em>szSubKey</em></span>, </td>
+          <td class="paramtype">PCWSTR&#160;</td>
+          <td class="paramname"><em>sousCle</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">PCWSTR</td>          <td class="paramname"><span class="paramname"><em>szValue</em></span>, </td>
+          <td class="paramtype">PCWSTR&#160;</td>
+          <td class="paramname"><em>nomValeur</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">LPBYTE *</td>          <td class="paramname"><span class="paramname"><em>pBytes</em></span>, </td>
+          <td class="paramtype">LPBYTE *&#160;</td>
+          <td class="paramname"><em>octets</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">DWORD *</td>          <td class="paramname"><span class="paramname"><em>dwSize</em></span>&#160;)</td>
+          <td class="paramtype">DWORD *&#160;</td>
+          <td class="paramname"><em>taille</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Lecture d'une valeur binaire en base de registre nécessite d'utiliser delete[] pBytes pour libérer la mémoire </p><dl class="params"><dt>Paramètres</dt><dd>
+<p>Lecture d'une valeur binaire en base de registre nécessite d'utiliser delete[] octets pour libérer la mémoire </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
     <tr><td class="paramname">key</td><td>clé de la base de registre </td></tr>
-    <tr><td class="paramname">szsubkey</td><td>sous-clé de la base de registre </td></tr>
-    <tr><td class="paramname">szvalue</td><td>contient la nom de la valeur à lire en base de registre </td></tr>
-    <tr><td class="paramname">pBytes</td><td>pointeur sur un tableau de BYTE contenant la valeur lue en base de registre </td></tr>
+    <tr><td class="paramname">sousCle</td><td>sous-clé de la base de registre </td></tr>
+    <tr><td class="paramname">nomValeur</td><td>contient la nom de la valeur à lire en base de registre </td></tr>
+    <tr><td class="paramname">octets</td><td>pointeur sur un tableau de BYTE contenant la valeur lue en base de registre </td></tr>
+    <tr><td class="paramname">taille</td><td>en entrée la taille du tampon, en sortie celle de la valeur lue </td></tr>
   </table>
   </dd>
 </dl>
@@ -646,8 +833,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="af532d7e53d1e10fdfdba493dc3edc9b2" name="af532d7e53d1e10fdfdba493dc3edc9b2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af532d7e53d1e10fdfdba493dc3edc9b2">&#9670;&#160;</a></span>getRegboolValue()</h2>
+<a id="ae3de3330c9e9e495438c38efc2dff9fb" name="ae3de3330c9e9e495438c38efc2dff9fb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae3de3330c9e9e495438c38efc2dff9fb">&#9670;&#160;</a></span>getRegboolValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -655,31 +842,40 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">HRESULT getRegboolValue </td>
           <td>(</td>
-          <td class="paramtype">ORHKEY</td>          <td class="paramname"><span class="paramname"><em>key</em></span>, </td>
+          <td class="paramtype">ORHKEY&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">PCWSTR</td>          <td class="paramname"><span class="paramname"><em>szSubKey</em></span>, </td>
+          <td class="paramtype">PCWSTR&#160;</td>
+          <td class="paramname"><em>sousCle</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">PCWSTR</td>          <td class="paramname"><span class="paramname"><em>szValue</em></span>, </td>
+          <td class="paramtype">PCWSTR&#160;</td>
+          <td class="paramname"><em>nomValeur</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">bool *</td>          <td class="paramname"><span class="paramname"><em>pbool</em></span>&#160;)</td>
+          <td class="paramtype">bool *&#160;</td>
+          <td class="paramname"><em>valeur</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Lecture d'un booléen en base de registre </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
     <tr><td class="paramname">key</td><td>clé de la base de registre </td></tr>
-    <tr><td class="paramname">szsubkey</td><td>sous-clé de la base de registre </td></tr>
-    <tr><td class="paramname">szvalue</td><td>contient la nom de la valeur à lire en base de registre </td></tr>
-    <tr><td class="paramname">pbool</td><td>pointeur sur un booléen contenant la valeur lue en base de registre </td></tr>
+    <tr><td class="paramname">sousCle</td><td>sous-clé de la base de registre </td></tr>
+    <tr><td class="paramname">nomValeur</td><td>contient la nom de la valeur à lire en base de registre </td></tr>
+    <tr><td class="paramname">valeur</td><td>pointeur sur un booléen contenant la valeur lue en base de registre </td></tr>
   </table>
   </dd>
 </dl>
@@ -687,8 +883,58 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="ab22725363874f5dd38da01cc9b3b4e20" name="ab22725363874f5dd38da01cc9b3b4e20"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab22725363874f5dd38da01cc9b3b4e20">&#9670;&#160;</a></span>getRegFiletimeValue()</h2>
+<a id="a538271758be7bd67a1b39d00c94f1af1" name="a538271758be7bd67a1b39d00c94f1af1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a538271758be7bd67a1b39d00c94f1af1">&#9670;&#160;</a></span>getRegDwordValue()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT getRegDwordValue </td>
+          <td>(</td>
+          <td class="paramtype">ORHKEY&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">PCWSTR&#160;</td>
+          <td class="paramname"><em>sousCle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">PCWSTR&#160;</td>
+          <td class="paramname"><em>nomValeur</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">DWORD *&#160;</td>
+          <td class="paramname"><em>pdword</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Lit une valeur REG_DWORD (32 bits) en base de registre. </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">key</td><td>clé ouverte </td></tr>
+    <tr><td class="paramname">sousCle</td><td>sous-clé (peut être NULL) </td></tr>
+    <tr><td class="paramname">nomValeur</td><td>nom de la valeur </td></tr>
+    <tr><td class="paramname">pdword</td><td>reçoit la valeur lue </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>ERROR_SUCCESS, ou un code d'erreur </dd></dl>
+
+</div>
+</div>
+<a id="a630ca1d506b3487e3ce3c520fe9b592b" name="a630ca1d506b3487e3ce3c520fe9b592b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a630ca1d506b3487e3ce3c520fe9b592b">&#9670;&#160;</a></span>getRegFiletimeValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -696,30 +942,39 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">HRESULT getRegFiletimeValue </td>
           <td>(</td>
-          <td class="paramtype">ORHKEY</td>          <td class="paramname"><span class="paramname"><em>key</em></span>, </td>
+          <td class="paramtype">ORHKEY&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">PCWSTR</td>          <td class="paramname"><span class="paramname"><em>szSubKey</em></span>, </td>
+          <td class="paramtype">PCWSTR&#160;</td>
+          <td class="paramname"><em>sousCle</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">PCWSTR</td>          <td class="paramname"><span class="paramname"><em>szValue</em></span>, </td>
+          <td class="paramtype">PCWSTR&#160;</td>
+          <td class="paramname"><em>nomValeur</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">FILETIME *</td>          <td class="paramname"><span class="paramname"><em>filetime</em></span>&#160;)</td>
+          <td class="paramtype">FILETIME *&#160;</td>
+          <td class="paramname"><em>filetime</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Lecture d'un FILMETIME en base de registre </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
     <tr><td class="paramname">key</td><td>clé de la base de registre </td></tr>
-    <tr><td class="paramname">szsubkey</td><td>sous-clé de la base de registre </td></tr>
-    <tr><td class="paramname">szvalue</td><td>contient la nom de la valeur à lire en base de registre </td></tr>
+    <tr><td class="paramname">sousCle</td><td>sous-clé de la base de registre </td></tr>
+    <tr><td class="paramname">nomValeur</td><td>contient la nom de la valeur à lire en base de registre </td></tr>
     <tr><td class="paramname">filetime</td><td>pointeur sur un FILETIME contenant la valeur lue en base de registre </td></tr>
   </table>
   </dd>
@@ -728,8 +983,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="a299584ee76624fd8777e142cf9a14703" name="a299584ee76624fd8777e142cf9a14703"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a299584ee76624fd8777e142cf9a14703">&#9670;&#160;</a></span>getRegMultiSzValue()</h2>
+<a id="a3055fee24efaa8f691ebacebc23381f6" name="a3055fee24efaa8f691ebacebc23381f6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3055fee24efaa8f691ebacebc23381f6">&#9670;&#160;</a></span>getRegMultiSzValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -737,30 +992,39 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">HRESULT getRegMultiSzValue </td>
           <td>(</td>
-          <td class="paramtype">ORHKEY</td>          <td class="paramname"><span class="paramname"><em>key</em></span>, </td>
+          <td class="paramtype">ORHKEY&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">PCWSTR</td>          <td class="paramname"><span class="paramname"><em>szSubKey</em></span>, </td>
+          <td class="paramtype">PCWSTR&#160;</td>
+          <td class="paramname"><em>sousCle</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">PCWSTR</td>          <td class="paramname"><span class="paramname"><em>szValue</em></span>, </td>
+          <td class="paramtype">PCWSTR&#160;</td>
+          <td class="paramname"><em>nomValeur</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::vector&lt; std::wstring &gt; *</td>          <td class="paramname"><span class="paramname"><em>out</em></span>&#160;)</td>
+          <td class="paramtype">std::vector&lt; std::wstring &gt; *&#160;</td>
+          <td class="paramname"><em>out</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Lecture d'un MULTISZ (multiple chaînes de caractères concaténées) en base de registre </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
     <tr><td class="paramname">key</td><td>clé de la base de registre </td></tr>
-    <tr><td class="paramname">szsubkey</td><td>sous-clé de la base de registre </td></tr>
-    <tr><td class="paramname">szvalue</td><td>contient la nom de la valeur à lire en base de registre </td></tr>
+    <tr><td class="paramname">sousCle</td><td>sous-clé de la base de registre </td></tr>
+    <tr><td class="paramname">nomValeur</td><td>contient la nom de la valeur à lire en base de registre </td></tr>
     <tr><td class="paramname">out</td><td>pointeur sur un tableau de wstring contenant les valeurs lues en base de registre </td></tr>
   </table>
   </dd>
@@ -769,8 +1033,58 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="a03071ea00176395299ea4eda5a1e18bb" name="a03071ea00176395299ea4eda5a1e18bb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a03071ea00176395299ea4eda5a1e18bb">&#9670;&#160;</a></span>getRegSzValue()</h2>
+<a id="aafb404be8bf6cb032f93df20ff8626af" name="aafb404be8bf6cb032f93df20ff8626af"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aafb404be8bf6cb032f93df20ff8626af">&#9670;&#160;</a></span>getRegQwordValue()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT getRegQwordValue </td>
+          <td>(</td>
+          <td class="paramtype">ORHKEY&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">PCWSTR&#160;</td>
+          <td class="paramname"><em>sousCle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">PCWSTR&#160;</td>
+          <td class="paramname"><em>nomValeur</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long long *&#160;</td>
+          <td class="paramname"><em>pqword</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Lit une valeur REG_QWORD (64 bits) en base de registre. Utile pour les valeurs qui portent un FILETIME brut, comme <code>InstallTime</code> sous <code>SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion</code>. </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">key</td><td>clé ouverte </td></tr>
+    <tr><td class="paramname">sousCle</td><td>sous-clé (peut être NULL) </td></tr>
+    <tr><td class="paramname">nomValeur</td><td>nom de la valeur </td></tr>
+    <tr><td class="paramname">pqword</td><td>reçoit la valeur lue </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>ERROR_SUCCESS, ou un code d'erreur </dd></dl>
+
+</div>
+</div>
+<a id="a549b02285d5864919488c1d6e803c568" name="a549b02285d5864919488c1d6e803c568"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a549b02285d5864919488c1d6e803c568">&#9670;&#160;</a></span>getRegSzValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -778,35 +1092,69 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">HRESULT getRegSzValue </td>
           <td>(</td>
-          <td class="paramtype">ORHKEY</td>          <td class="paramname"><span class="paramname"><em>key</em></span>, </td>
+          <td class="paramtype">ORHKEY&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">PCWSTR</td>          <td class="paramname"><span class="paramname"><em>szSubKey</em></span>, </td>
+          <td class="paramtype">PCWSTR&#160;</td>
+          <td class="paramname"><em>sousCle</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">PCWSTR</td>          <td class="paramname"><span class="paramname"><em>szValue</em></span>, </td>
+          <td class="paramtype">PCWSTR&#160;</td>
+          <td class="paramname"><em>nomValeur</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::wstring *</td>          <td class="paramname"><span class="paramname"><em>ws</em></span>&#160;)</td>
+          <td class="paramtype">std::wstring *&#160;</td>
+          <td class="paramname"><em>ws</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Lecture d'un SZ_VALUE en base de registre et le converti en wstring </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
     <tr><td class="paramname">key</td><td>clé de la base de registre </td></tr>
-    <tr><td class="paramname">szsubkey</td><td>sous-clé de la base de registre </td></tr>
-    <tr><td class="paramname">szvalue</td><td>contient la nom de la valeur à lire en base de registre </td></tr>
+    <tr><td class="paramname">sousCle</td><td>sous-clé de la base de registre </td></tr>
+    <tr><td class="paramname">nomValeur</td><td>contient la nom de la valeur à lire en base de registre </td></tr>
     <tr><td class="paramname">ws</td><td>pointeur sur un wstring contenant la valeur lue en base de registre </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>ERROR_SUCCESS en cas de succès sinon un code erreur. </dd></dl>
+
+</div>
+</div>
+<a id="af3090b036c360d75cf1d37179cd99bee" name="af3090b036c360d75cf1d37179cd99bee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af3090b036c360d75cf1d37179cd99bee">&#9670;&#160;</a></span>getVolumeLetter()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring getVolumeLetter </td>
+          <td>(</td>
+          <td class="paramtype">std::wstring&#160;</td>
+          <td class="paramname"><em>searchSerial</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Lecture d'un MULTISZ (multiple chaînes de caractères concaténées) en base de registre </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">searchSerial</td><td>serial du volume a rechercher </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>wstring lettre de lecteur du point de montage du lecteur. </dd></dl>
 
 </div>
 </div>
@@ -819,7 +1167,8 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::wstring guid_to_wstring </td>
           <td>(</td>
-          <td class="paramtype">GUID</td>          <td class="paramname"><span class="paramname"><em>guid</em></span></td><td>)</td>
+          <td class="paramtype">GUID&#160;</td>
+          <td class="paramname"><em>guid</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -834,6 +1183,145 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a497685aa26f489762e1b7a84932d581c" name="a497685aa26f489762e1b7a84932d581c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a497685aa26f489762e1b7a84932d581c">&#9670;&#160;</a></span>listFilesByExtension()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; std::filesystem::path &gt; listFilesByExtension </td>
+          <td>(</td>
+          <td class="paramtype">const std::filesystem::path &amp;&#160;</td>
+          <td class="paramname"><em>repertoire</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::wstring &gt; &amp;&#160;</td>
+          <td class="paramname"><em>extensions</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Liste les fichiers réguliers d'un répertoire, filtrés par extension. Ne lève jamais d'exception : un répertoire absent ou illisible rend une liste vide. C'est le cas nominal en collecte (tous les profils n'ont pas tous les dossiers, et la copie brute ne contient que ce qui a été extrait) ; une exception non rattrapée y interromprait toute la collecte. La comparaison d'extension est insensible à la casse. </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">repertoire</td><td>répertoire à parcourir (non récursif) </td></tr>
+    <tr><td class="paramname">extensions</td><td>extensions acceptées, point compris (ex. { L".lnk", L".url" }) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>chemins retenus, dans l'ordre du parcours ; éventuellement vide </dd></dl>
+
+</div>
+</div>
+<a id="a8dd0bb51cdc854f2137aba256aae3d9c" name="a8dd0bb51cdc854f2137aba256aae3d9c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8dd0bb51cdc854f2137aba256aae3d9c">&#9670;&#160;</a></span>loadProfileList()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT loadProfileList </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Relève les profils utilisateurs et renseigne <code>conf.profiles</code> (SID, chemin).</p>
+<p>POURQUOI AVANT L'EXTRACTION, ET POURQUOI EN LIVE. Les ruches par utilisateur (<code>ntuser.dat</code>, <code>usrClass.dat</code>) vivent dans le dossier de profil : il faut donc connaître ces chemins AVANT de pouvoir les extraire, c'est-à-dire avant qu'aucune ruche ne soit disponible hors ligne. La source est <code>HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\ProfileList</code>, lue dans le registre vivant : une seule clé, en lecture, sans RPC.</p>
+<p>Remplace l'enchaînement <code>NetUserEnum</code> + <code>NetUserGetInfo</code> par utilisateur, qui sollicitait LSASS autant de fois qu'il y a de comptes pour obtenir la même liste de chemins.</p>
+<dl class="section return"><dt>Renvoie</dt><dd>ERROR_SUCCESS si la clé a pu être énumérée, un code d'erreur sinon </dd></dl>
+
+</div>
+</div>
+<a id="a33256dfbfef8ac9511a35835a5e5b29d" name="a33256dfbfef8ac9511a35835a5e5b29d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a33256dfbfef8ac9511a35835a5e5b29d">&#9670;&#160;</a></span>loadSuspectTimeZone()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT loadSuspectTimeZone </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Relève le fuseau de la machine examinée dans la ruche SYSTEM du suspect.</p>
+<p>Lit <code>Control\TimeZoneInformation</code> sous <code>conf.CurrentControlSet</code> et renseigne <code>conf.timeZone</code>. À appeler dès que <code>conf.CurrentControlSet</code> est ouverte : tous les horodatages locaux formatés ENSUITE porteront le décalage du suspect.</p>
+<p>En cas d'échec, <code>conf.timeZone.valid</code> reste faux et le formatage retombe sur <code>GetTimeZoneInformation()</code> — correct en collecte live, puisque la machine examinée est alors la machine d'exécution.</p>
+<dl class="section return"><dt>Renvoie</dt><dd>ERROR_SUCCESS si le fuseau a été relevé, un code d'erreur sinon </dd></dl>
+
+</div>
+</div>
+<a id="a64af952b26c2e734b7998bd37173b3dc" name="a64af952b26c2e734b7998bd37173b3dc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a64af952b26c2e734b7998bd37173b3dc">&#9670;&#160;</a></span>loadSystemDrive()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void loadSystemDrive </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Relève le lecteur système de la machine et renseigne <code>conf.systemDrive</code>. À appeler au démarrage, avant toute extraction. En cas d'échec, <code>conf.systemDrive</code> conserve sa valeur par défaut ("C:"). </p>
+
+</div>
+</div>
+<a id="ae52f0c935a795ae5ade2cabe8686f61a" name="ae52f0c935a795ae5ade2cabe8686f61a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae52f0c935a795ae5ade2cabe8686f61a">&#9670;&#160;</a></span>localTimeToIso8601Utc()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring localTimeToIso8601Utc </td>
+          <td>(</td>
+          <td class="paramtype">const FILETIME &amp;&#160;</td>
+          <td class="paramname"><em>filetimeLocal</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Convertit un FILETIME <b>exprimé en heure locale</b> vers l'UTC, puis le formate au format ISO 8601 avec le suffixe « Z ». Utile pour les artefacts qui stockent des dates en heure locale (Amcache, BAM, shimcache, USBSTOR, <a class="el" href="structUserAssist.html">UserAssist</a>) et dont on veut aussi la version UTC. </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">filetimeLocal</td><td>l'instant, en heure locale de la machine examinée </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>"AAAA-MM-JJTHH:MM:SSZ", ou "" si la date est nulle </dd></dl>
+
+</div>
+</div>
+<a id="a299fdb4272ae83c49ad0ac0bad62f1fe" name="a299fdb4272ae83c49ad0ac0bad62f1fe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a299fdb4272ae83c49ad0ac0bad62f1fe">&#9670;&#160;</a></span>localUtcOffsetString()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring localUtcOffsetString </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Décalage horaire utilisé pour formater les heures locales, en "+HH:MM". Provient de la ruche du suspect si elle a pu être lue, sinon de la machine d'exécution. </p><dl class="section return"><dt>Renvoie</dt><dd>le décalage, ex. L"+02:00" </dd></dl>
+
+</div>
+</div>
 <a id="a3fd0bef5fa02565cb2da3f612cf978b9" name="a3fd0bef5fa02565cb2da3f612cf978b9"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3fd0bef5fa02565cb2da3f612cf978b9">&#9670;&#160;</a></span>log() <span class="overload">[1/2]</span></h2>
 
@@ -843,20 +1331,26 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">void log </td>
           <td>(</td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>loglevel</em></span>, </td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>loglevel</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>message</em></span>&#160;)</td>
+          <td class="paramtype">std::wstring&#160;</td>
+          <td class="paramname"><em>message</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>enregistrement d'un message dans le ficier de log de sortie log(0, L""); =&gt; Simple message log(0, L"ℹ️"); =&gt; Nouveau type d'artefact log(1, L"➕"); =&gt; Nouvel artefact log(2, L"🔥"); =&gt; Error log(2, L"❇️"); =&gt; Identification d'un artefact log(3, L"🔈"); =&gt; Nom de la fonction apperlée </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
-    <tr><td class="paramname">loglevel</td><td>est le niveau de log </td></tr>
+    <tr><td class="paramname">loglevel</td><td>niveau de journalisation, qui commande aussi l'emoji </td></tr>
     <tr><td class="paramname">message</td><td>message a enregistré dans le fichier donnant du contexte </td></tr>
-    <tr><td class="paramname">type</td><td>est le type de log pour l'emoji. par defaut pas d'emoji </td></tr>
   </table>
   </dd>
 </dl>
@@ -872,87 +1366,36 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">void log </td>
           <td>(</td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>loglevel</em></span>, </td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>loglevel</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>message</em></span>, </td>
+          <td class="paramtype">std::wstring&#160;</td>
+          <td class="paramname"><em>message</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">HRESULT</td>          <td class="paramname"><span class="paramname"><em>result</em></span>&#160;)</td>
+          <td class="paramtype">HRESULT&#160;</td>
+          <td class="paramname"><em>result</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>enregistrement d'un message dans le ficier de log de complété par un code erreur </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
-    <tr><td class="paramname">loglevel</td><td>est le niveau de log </td></tr>
+    <tr><td class="paramname">loglevel</td><td>niveau de journalisation, qui commande aussi l'emoji </td></tr>
     <tr><td class="paramname">message</td><td>message a enregistré dans le fichier donnant du contexte </td></tr>
-    <tr><td class="paramname">type</td><td>est le type de log pour l'emoji. par defaut pas d'emoji*</td></tr>
-    <tr><td class="paramname">type</td><td>est le type de log pour l'emoji. par defaut pas d'emoji </td></tr>
     <tr><td class="paramname">result</td><td>code erreur a tranformé en message d'ereur </td></tr>
   </table>
   </dd>
 </dl>
-
-</div>
-</div>
-<a id="adade67b0a5b5d19a3069b766e57282e5" name="adade67b0a5b5d19a3069b766e57282e5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adade67b0a5b5d19a3069b766e57282e5">&#9670;&#160;</a></span>multiFiletime_to_json()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::wstring multiFiletime_to_json </td>
-          <td>(</td>
-          <td class="paramtype">std::vector&lt; FILETIME &gt;</td>          <td class="paramname"><span class="paramname"><em>vec</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>niveau</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Conversion un tableau de FILETIME au format json </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">vec</td><td>vecteur contenant les FILETIME. une date par ligne dans le fichier json de sortie </td></tr>
-    <tr><td class="paramname">niveau</td><td>hiérarchie dans l'arborescence des objets shell, traduit en nombre de tabulations à insérer pour chaque ligne du fichier json </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Renvoie</dt><dd>wstring issue de la conversion </dd></dl>
-
-</div>
-</div>
-<a id="a5a8307d3e03f3e7dfca9849a5ac5822b" name="a5a8307d3e03f3e7dfca9849a5ac5822b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5a8307d3e03f3e7dfca9849a5ac5822b">&#9670;&#160;</a></span>multiSz_to_json()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::wstring multiSz_to_json </td>
-          <td>(</td>
-          <td class="paramtype">std::vector&lt; std::wstring &gt;</td>          <td class="paramname"><span class="paramname"><em>vec</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>niveau</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Conversion d'un tableau de chaîne de caractère wstring au format json </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">vec</td><td>vecteur contenant les wstring </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Renvoie</dt><dd>wstring issue de la conversion </dd></dl>
 
 </div>
 </div>
@@ -965,19 +1408,26 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::vector&lt; std::wstring &gt; multiWstring_to_vector </td>
           <td>(</td>
-          <td class="paramtype">LPBYTE</td>          <td class="paramname"><span class="paramname"><em>data</em></span>, </td>
+          <td class="paramtype">LPBYTE&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>size</em></span>&#160;)</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Conversion d'une chaîne de multiple wstring concaténés en vecteur de wstring. chaque chaîne doit être séparée de la précédente par \0 </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
     <tr><td class="paramname">data</td><td>pointeur vers le tableau contenant les chaînes de caractères </td></tr>
-    <tr><td class="paramname">size</td><td>taille de la chaîne de caractères contenue dans &lt;data&gt; </td></tr>
+    <tr><td class="paramname">size</td><td>taille de la chaîne de caractères contenue dans <code>data</code> </td></tr>
   </table>
   </dd>
 </dl>
@@ -994,7 +1444,8 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">void printError </td>
           <td>(</td>
-          <td class="paramtype">HRESULT</td>          <td class="paramname"><span class="paramname"><em>hresult</em></span></td><td>)</td>
+          <td class="paramtype">HRESULT&#160;</td>
+          <td class="paramname"><em>hresult</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -1005,7 +1456,6 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Renvoie</dt><dd>void </dd></dl>
 
 </div>
 </div>
@@ -1018,7 +1468,8 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">void printError </td>
           <td>(</td>
-          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>errorText</em></span></td><td>)</td>
+          <td class="paramtype">std::wstring&#160;</td>
+          <td class="paramname"><em>errorText</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -1029,7 +1480,145 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Renvoie</dt><dd>void </dd></dl>
+
+</div>
+</div>
+<a id="aa0ae02c4934bf605d8077d196098348d" name="aa0ae02c4934bf605d8077d196098348d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa0ae02c4934bf605d8077d196098348d">&#9670;&#160;</a></span>printProgress()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void printProgress </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>libelle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long long&#160;</td>
+          <td class="paramname"><em>fait</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long long&#160;</td>
+          <td class="paramname"><em>total</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const wchar_t *&#160;</td>
+          <td class="paramname"><em>unite</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Affiche une ligne de progression réécrite sur place (retour chariot).</p>
+<p>POURQUOI. Sur un système réel, l'extraction d'une grosse ruche ou la lecture du journal System durent plusieurs minutes sans rien afficher : l'opérateur ne distingue pas une collecte qui avance d'une collecte bloquée, et peut l'interrompre — ce qui fait perdre la collecte en cours.</p>
+<p>N'écrit QUE si la sortie standard est une console : redirigée vers un fichier, la progression n'apporterait rien et polluerait le journal de milliers de lignes.</p>
+<p>La progression réécrit la LIGNE COURANTE, donc elle efface le libellé d'étape (ceux-ci sont écrits sans retour à la ligne, en attente de leur « OK »). C'est pourquoi le libellé doit être posé par <a class="el" href="tools_8h.html#a7792af9b59051e2b9c68a463b889c33f">printStep()</a> : <a class="el" href="tools_8h.html#abfb8057ef624b69b47bf30c6db4e3875" title="affichage du mot OK en vert dans la console">printSuccess()</a> et <a class="el" href="tools_8h.html#ad857742196348d0e4b3ee1d9474b6638">printError()</a> le restaurent alors automatiquement, et aucun collecteur n'a à s'en préoccuper.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">libelle</td><td>ce qui est en cours (ex. nom de fichier ou de canal) </td></tr>
+    <tr><td class="paramname">fait</td><td>quantité traitée </td></tr>
+    <tr><td class="paramname">total</td><td>quantité totale attendue, ou 0 si inconnue </td></tr>
+    <tr><td class="paramname">unite</td><td>unité à afficher (ex. L"Kio", L"evt") </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aa58517b7d74263e87094ca227705a8b5" name="aa58517b7d74263e87094ca227705a8b5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa58517b7d74263e87094ca227705a8b5">&#9670;&#160;</a></span>printProgressEnd()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void printProgressEnd </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Termine une ligne de progression et restaure le libellé d'étape. Appelée automatiquement par <a class="el" href="tools_8h.html#abfb8057ef624b69b47bf30c6db4e3875" title="affichage du mot OK en vert dans la console">printSuccess()</a> et <a class="el" href="tools_8h.html#ad857742196348d0e4b3ee1d9474b6638">printError()</a> : à n'appeler directement que pour reprendre la main sur l'affichage en cours de traitement. </p>
+
+</div>
+</div>
+<a id="a71c8c9cc4f1e5998dde36a31f382c7cd" name="a71c8c9cc4f1e5998dde36a31f382c7cd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a71c8c9cc4f1e5998dde36a31f382c7cd">&#9670;&#160;</a></span>printProgressStep()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void printProgressStep </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>artefact</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long long&#160;</td>
+          <td class="paramname"><em>fait</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long long&#160;</td>
+          <td class="paramname"><em>total</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Progression d'un artefact, avec limitation de fréquence.</p>
+<p>Destinée aux boucles de collecte. La limitation de fréquence est faite par printProgress, PAR LE TEMPS : un pas fixe en nombre d'éléments ne peut pas convenir à la fois aux 38 shellbags de plusieurs secondes chacun et aux 3032 entrées amcache instantanées (mesures sur un poste réel). </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">artefact</td><td>nom de l'artefact en cours </td></tr>
+    <tr><td class="paramname">fait</td><td>nombre d'éléments traités </td></tr>
+    <tr><td class="paramname">total</td><td>nombre total attendu, ou 0 si inconnu </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a7792af9b59051e2b9c68a463b889c33f" name="a7792af9b59051e2b9c68a463b889c33f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7792af9b59051e2b9c68a463b889c33f">&#9670;&#160;</a></span>printStep()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void printStep </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>libelle</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Affiche le libellé d'une étape et le mémorise.</p>
+<p>À utiliser à la place d'un wprintf direct pour toute étape susceptible d'afficher une progression : le libellé est réaffiché après coup, si bien que le « OK » ou l'erreur reste rattaché à son étape. </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">libelle</td><td>ex. L" - Extracting SHIMCACHE Registry Keys : " </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -1042,7 +1631,7 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">void printSuccess </td>
           <td>(</td>
-          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -1061,25 +1650,33 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::wstring replaceAll </td>
           <td>(</td>
-          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>src</em></span>, </td>
+          <td class="paramtype">std::wstring&#160;</td>
+          <td class="paramname"><em>src</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>search</em></span>, </td>
+          <td class="paramtype">std::wstring&#160;</td>
+          <td class="paramname"><em>search</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>replacement</em></span>&#160;)</td>
+          <td class="paramtype">std::wstring&#160;</td>
+          <td class="paramname"><em>replacement</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Dans une chaîne de caractères, remplace toutes les occurrences d'une chaîne par une autre </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
     <tr><td class="paramname">src</td><td>chaîne de départ contenant la chaîne à rechercher </td></tr>
-    <tr><td class="paramname">search</td><td>représente la chaîne à rechercher dans &lt;src&gt; </td></tr>
-    <tr><td class="paramname">replacement</td><td>chaîne à insérer en lieu et place de &lt;search&gt; </td></tr>
+    <tr><td class="paramname">search</td><td>représente la chaîne à rechercher dans <code>src</code> </td></tr>
+    <tr><td class="paramname">replacement</td><td>chaîne à insérer en lieu et place de <code>search</code> </td></tr>
   </table>
   </dd>
 </dl>
@@ -1096,7 +1693,8 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::wstring ROT13 </td>
           <td>(</td>
-          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>source</em></span></td><td>)</td>
+          <td class="paramtype">std::wstring&#160;</td>
+          <td class="paramname"><em>source</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -1120,7 +1718,8 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::wstring string_to_wstring </td>
           <td>(</td>
-          <td class="paramtype">const std::string &amp;</td>          <td class="paramname"><span class="paramname"><em>str</em></span></td><td>)</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>str</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -1144,18 +1743,13 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::wstring tab </td>
           <td>(</td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>i</em></span></td><td>)</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>i</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>insertion de n tabulations dans une chaîne de caractères. utiliser pour le formatage du json de sortie </p><dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">i</td><td>nombre de tabulations à insérer </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Renvoie</dt><dd>wstring contenant le nombre de tabulations désiré </dd></dl>
+<p>insertion de n tabulations dans une chaîne de caractères. utiliser pour le formatage du json de sortie </p><dl class="section return"><dt>Renvoie</dt><dd>wstring contenant le nombre de tabulations désiré </dd></dl>
 
 </div>
 </div>
@@ -1168,19 +1762,26 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::wstring time_to_wstring </td>
           <td>(</td>
-          <td class="paramtype">const FILETIME</td>          <td class="paramname"><span class="paramname"><em>filetime</em></span>, </td>
+          <td class="paramtype">const FILETIME&#160;</td>
+          <td class="paramname"><em>filetime</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>convertUtc</em></span><span class="paramdefsep"> = </span><span class="paramdefval">false</span>&#160;)</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>convertUtc</em> = <code>false</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Conversion un FILETIME en wstring. </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
     <tr><td class="paramname">filetime</td><td>FILETIME à convertir en wstring </td></tr>
-    <tr><td class="paramname">convertUTC</td><td>si true alors date sera convertie en UTC </td></tr>
+    <tr><td class="paramname">convertUtc</td><td>si true alors date sera convertie en UTC </td></tr>
   </table>
   </dd>
 </dl>
@@ -1197,14 +1798,15 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::wstring time_to_wstring </td>
           <td>(</td>
-          <td class="paramtype">const SYSTEMTIME</td>          <td class="paramname"><span class="paramname"><em>systemtime</em></span></td><td>)</td>
+          <td class="paramtype">const SYSTEMTIME&#160;</td>
+          <td class="paramname"><em>systemtime</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Conversion un SYSTEMTIME en wstring. </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
-    <tr><td class="paramname">filetime</td><td>SYSTEMTIME à convertir en wstring </td></tr>
+    <tr><td class="paramname">systemtime</td><td>SYSTEMTIME à convertir en wstring </td></tr>
   </table>
   </dd>
 </dl>
@@ -1221,7 +1823,8 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">FILETIME timet_to_fileTime </td>
           <td>(</td>
-          <td class="paramtype">time_t</td>          <td class="paramname"><span class="paramname"><em>t</em></span></td><td>)</td>
+          <td class="paramtype">time_t&#160;</td>
+          <td class="paramname"><em>t</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -1236,6 +1839,92 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a9bd10ae4fd8c15921a1654452bbd2735" name="a9bd10ae4fd8c15921a1654452bbd2735"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9bd10ae4fd8c15921a1654452bbd2735">&#9670;&#160;</a></span>timeToIso8601()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring timeToIso8601 </td>
+          <td>(</td>
+          <td class="paramtype">const SYSTEMTIME &amp;&#160;</td>
+          <td class="paramname"><em>systemtime</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>utc</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Formate un SYSTEMTIME au format ISO 8601. </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">systemtime</td><td>l'instant </td></tr>
+    <tr><td class="paramname">utc</td><td>true si la valeur est en UTC (suffixe « Z »), false si elle est en heure locale (suffixe du fuseau de la machine) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>la date formatée, ou "" si elle est nulle </dd></dl>
+
+</div>
+</div>
+<a id="ac6e9127cec836f464d33dc6ed7aaf93c" name="ac6e9127cec836f464d33dc6ed7aaf93c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac6e9127cec836f464d33dc6ed7aaf93c">&#9670;&#160;</a></span>timeToIso8601Local()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring timeToIso8601Local </td>
+          <td>(</td>
+          <td class="paramtype">const FILETIME &amp;&#160;</td>
+          <td class="paramname"><em>filetime</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Formate un FILETIME <b>exprimé en heure locale</b> au format ISO 8601, avec le décalage du fuseau de la machine (ex. "+02:00"). </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">filetime</td><td>l'instant, en heure locale de la machine examinée </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>"AAAA-MM-JJTHH:MM:SS+HH:MM", ou "" si la date est nulle </dd></dl>
+
+</div>
+</div>
+<a id="aed51f7f887c3a9ede2b9ee9dc59e8391" name="aed51f7f887c3a9ede2b9ee9dc59e8391"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aed51f7f887c3a9ede2b9ee9dc59e8391">&#9670;&#160;</a></span>timeToIso8601Utc()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring timeToIso8601Utc </td>
+          <td>(</td>
+          <td class="paramtype">const FILETIME &amp;&#160;</td>
+          <td class="paramname"><em>filetime</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Formate un FILETIME <b>déjà exprimé en UTC</b> au format ISO 8601, suffixe « Z ». </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">filetime</td><td>l'instant, en UTC </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>"AAAA-MM-JJTHH:MM:SSZ", ou "" si la date est nulle </dd></dl>
+
+</div>
+</div>
 <a id="a7962322204e2574d54ce125ac2055850" name="a7962322204e2574d54ce125ac2055850"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7962322204e2574d54ce125ac2055850">&#9670;&#160;</a></span>to_hex()</h2>
 
@@ -1245,7 +1934,8 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::wstring to_hex </td>
           <td>(</td>
-          <td class="paramtype">long long</td>          <td class="paramname"><span class="paramname"><em>i</em></span></td><td>)</td>
+          <td class="paramtype">long long&#160;</td>
+          <td class="paramname"><em>i</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -1260,27 +1950,176 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="aecf670c5a3331fe73239c63d494acc70" name="aecf670c5a3331fe73239c63d494acc70"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aecf670c5a3331fe73239c63d494acc70">&#9670;&#160;</a></span>wstring_to_bstr()</h2>
+<a id="a5efd9b98819f1d7951c8f56c8c005465" name="a5efd9b98819f1d7951c8f56c8c005465"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5efd9b98819f1d7951c8f56c8c005465">&#9670;&#160;</a></span>utcTimeToIso8601Local()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">BSTR wstring_to_bstr </td>
+          <td class="memname">std::wstring utcTimeToIso8601Local </td>
           <td>(</td>
-          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>ws</em></span></td><td>)</td>
+          <td class="paramtype">const FILETIME &amp;&#160;</td>
+          <td class="paramname"><em>filetimeUtc</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Conversion une chaîne de caractères wstring en chaine binaire </p><dl class="params"><dt>Paramètres</dt><dd>
+<p>Convertit un FILETIME <b>exprimé en UTC</b> vers l'heure locale de la machine EXAMINÉE, puis le formate au format ISO 8601 avec le décalage du fuseau.</p>
+<p>POURQUOI PAS <code>FileTimeToLocalFileTime</code> SUIVI DE <code>timeToIso8601Local</code>. Cette combinaison, employée jusqu'ici, applique le décalage de la machine qui EXÉCUTE WAC tout en apposant l'étiquette du fuseau du SUSPECT : identique en collecte live, contradictoire dès qu'une image est analysée ailleurs — la valeur et son étiquette ne parleraient plus du même fuseau. Ici, le décalage appliqué et l'étiquette proviennent de la MÊME source.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
-    <tr><td class="paramname">bstr</td><td>la chaîne de caractère binaire </td></tr>
+    <tr><td class="paramname">filetimeUtc</td><td>l'instant, en UTC </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Renvoie</dt><dd>wstring issue de la conversion </dd></dl>
+<dl class="section return"><dt>Renvoie</dt><dd>"AAAA-MM-JJTHH:MM:SS+HH:MM", ou "" si la date est nulle </dd></dl>
+
+</div>
+</div>
+<a id="a1768bb8da11c42fa349d6adbe7307af4" name="a1768bb8da11c42fa349d6adbe7307af4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1768bb8da11c42fa349d6adbe7307af4">&#9670;&#160;</a></span>utcVersLocalSuspect()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool utcVersLocalSuspect </td>
+          <td>(</td>
+          <td class="paramtype">const FILETIME &amp;&#160;</td>
+          <td class="paramname"><em>filetimeUtc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">FILETIME *&#160;</td>
+          <td class="paramname"><em>filetimeLocal</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Convertit un FILETIME UTC en heure locale de la machine EXAMINÉE.</p>
+<p>Remplace <code>FileTimeToLocalFileTime()</code>, qui applique le fuseau de la machine d'EXÉCUTION. Les deux coïncident en collecte live, mais divergent dès qu'une image est analysée ailleurs : l'heure serait alors décalée du fuseau de l'examinateur tout en portant l'étiquette du fuseau du suspect — deux fuseaux dans une même valeur. Un seul point de vérité, <code>conf.timeZone</code>, évite ce piège ; le repli sur la machine d'exécution ne s'applique que si la ruche SYSTEM n'a pas (encore) pu être lue.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">filetimeUtc</td><td>l'instant, en UTC </td></tr>
+    <tr><td class="paramname">filetimeLocal</td><td>reçoit l'instant en heure locale du suspect </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>true si la conversion a abouti </dd></dl>
+
+</div>
+</div>
+<a id="a7f3831643296c77d2e38a6da3843683f" name="a7f3831643296c77d2e38a6da3843683f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7f3831643296c77d2e38a6da3843683f">&#9670;&#160;</a></span>volumeDuChemin()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring volumeDuChemin </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>absolu</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Lettre du volume d'un chemin absolu, sans les deux-points ("C").</p>
+<p>POURQUOI CETTE FONCTION EXISTE. WAC ne supposait qu'UN SEUL volume, celui de Windows. Or <code>ProfileImagePath</code> peut désigner un autre disque — configuration courante d'un poste à SSD système et disque de données : Windows sur <code>C:</code>, les profils sur <code>D:</code>. Le code retirait alors le préfixe « C: » d'un chemin commençant par « D: », ne trouvait rien à retirer, et cherchait <code>D:\<a class="el" href="structUsers.html">Users</a>\jean\ntuser.dat</code> <b>dans la table de fichiers de C:</b>. La ruche n'était pas extraite, et TOUS les artefacts de cet utilisateur sortaient à « 0 entrée » — indiscernable de « aucune trace ».</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">absolu</td><td>chemin absolu, avec ou sans lettre de lecteur </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>la lettre en majuscule, ou celle du volume système si le chemin n'en porte pas (chemin déjà relatif à la racine) </dd></dl>
+
+</div>
+</div>
+<a id="a4ac032628289d617e09d03d54a6add70" name="a4ac032628289d617e09d03d54a6add70"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ac032628289d617e09d03d54a6add70">&#9670;&#160;</a></span>writeJsonFile()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT writeJsonFile </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>nom</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classJson.html">Json</a> &amp;&#160;</td>
+          <td class="paramname"><em>valeur</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Écrit une valeur JSON dans <code>_outputDir</code>/<code>nom</code>, en UTF-8. Centralise la création du répertoire de sortie, l'encodage et le chemin, pour que chaque artefact n'ait plus à le refaire. </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">nom</td><td>nom du fichier (ex. "bams.json") </td></tr>
+    <tr><td class="paramname">valeur</td><td>la valeur JSON racine (généralement un <a class="el" href="classJson.html#a02b566a598465cf01e42007be3704233">Json::arr()</a>) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>ERROR_SUCCESS, ou un code d'erreur </dd></dl>
+
+</div>
+</div>
+<a id="acdd0ec7f39648e40795a732a339f09e9" name="acdd0ec7f39648e40795a732a339f09e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acdd0ec7f39648e40795a732a339f09e9">&#9670;&#160;</a></span>writeNotCollected()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT writeNotCollected </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>nom</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>artefact</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">HRESULT&#160;</td>
+          <td class="paramname"><em>resultat</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Écrit un artefact NON COLLECTÉ, en consignant la raison de l'échec.</p>
+<p>POURQUOI. Quand <code>getData()</code> échoue, le fichier JSON n'était pas écrit du tout. À l'analyse, un fichier absent ne distingue pas « la lecture a échoué » de « il n'y avait rien à collecter » — et un analyste peut conclure à tort à l'absence de trace. Écrire le fichier avec le motif lève l'ambiguïté.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">nom</td><td>nom du fichier (ex. "Usbstor.json") </td></tr>
+    <tr><td class="paramname">artefact</td><td>libellé de l'artefact concerné </td></tr>
+    <tr><td class="paramname">resultat</td><td>code d'erreur rencontré </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>ERROR_SUCCESS si le fichier a pu être écrit </dd></dl>
 
 </div>
 </div>
@@ -1293,7 +2132,8 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">FILETIME wstring_to_filetime </td>
           <td>(</td>
-          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>input</em></span></td><td>)</td>
+          <td class="paramtype">std::wstring&#160;</td>
+          <td class="paramname"><em>input</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -1317,7 +2157,8 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::string wstring_to_string </td>
           <td>(</td>
-          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>wstr</em></span></td><td>)</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>wstr</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -1343,12 +2184,12 @@ Variables</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="struct_appli_conf.html">AppliConf</a> conf</td>
+          <td class="memname"><a class="el" href="structAppliConf.html">AppliConf</a> conf</td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel extern">extern</span></span>  </td>
+<span class="mlabels"><span class="mlabel">extern</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -1361,7 +2202,7 @@ Variables</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="tools_8h.html">tools.h</a></li>
-    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>
 </body>

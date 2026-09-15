@@ -8,7 +8,7 @@ This tool is developed by the Aerospace Cyber ​​Defense Center of Excellence
 ## 🔎 OVERVIEW
 
 WAC collects forensic artefacts and event logs from a Windows machine and exports
-them as **JSON** 🧾, ready to feed a monitoring or analysis pipeline.
+them as **JSON**, ready to feed a monitoring or analysis pipeline.
 
 Its guiding principle is **minimal footprint on the machine under examination**:
 what WAC leaves behind should be as close to nothing as the task allows, and
@@ -16,14 +16,24 @@ whatever it cannot avoid must be written down.
 
 ## 🧭 HOW IT WORKS
 
-**The volume is read raw, in read-only.** WAC opens `\\.\C:`, walks the `$MFT`
+**The volume is read raw, in read-only.** WAC opens `\\.\X:`, walks the `$MFT`
 itself and copies the registry hives onto the collection medium. It does **not**
 create a Volume Shadow Copy, and it does **not** use COM or WMI — all of which
 left entries in the event logs of the examined machine.
 
-**Artefacts are then parsed from those copies**, never from the live system. The
-system drive letter is detected at run time, so Windows and the user profiles
-need not be on `C:`.
+**Artefacts are then parsed from those copies**, never from the live system.
+
+**Nothing is assumed to be on `C:`.** The system drive is detected at run time,
+and — this matters on machines with a system SSD and a separate data disk —
+**user profiles may live on a different volume than Windows**. WAC groups the
+files to extract by volume and reads each one in turn, so a profile under
+`D:\Users\…` is collected like any other. The JSON always reports the original
+path, with its real drive letter.
+
+Detecting the drive costs nothing: the path comes from `GetSystemDirectoryW`,
+already in the process's memory — no disk access, no log entry. Scanning each
+volume's `$MFT` to find `\Windows` would be *more* intrusive, since it would
+mean opening a handle on every volume, and that is the auditable part.
 
 Only three readings remain live, because their subject *is* the instant of
 collection and no file can hold it: **running processes**, **open sessions**, and
@@ -47,8 +57,7 @@ what it is and, where it matters, why it is trustworthy.
 
 ## ▶️ USAGE
 
-To minimize disk traces, this standalone tool should be run **as administrator**
-🔐 from a USB stick using the command:
+To minimize disk traces, this standalone tool should be run **as administrator** from a USB stick using the command:
 
 ```
 usage: wac [--dump] [--events] [--md5] [--output=output] [--loglevel=2] [--debug]
@@ -71,8 +80,8 @@ usage: wac [--dump] [--events] [--md5] [--output=output] [--loglevel=2] [--debug
 All options are optional and **disabled by default**.
 
 **Default output files are saved in :**
-- 📁 The `output` directory for standard results
-- ⚠️ The `log` file for logs when using `--loglevel`
+- The `output` directory for standard results
+- The `log` file for logs when using `--loglevel`
 
 ## 🛡️ FOOTPRINT ON THE EXAMINED MACHINE
 
@@ -94,7 +103,7 @@ does to the machine**, operation by operation — including what it cannot avoid
 
 | Operation | Footprint |
 |---|---|
-| **Raw volume read** (`\\.\C:`, `GENERIC_READ`) | one volume handle. **No file is opened**, so no last-access timestamp is touched and no directory is walked by the OS. If *object access auditing* is enabled, opening the volume can be logged (Security 4656/4663) |
+| **Raw volume read** (`\\.\X:`, `GENERIC_READ`) | one handle **per volume actually holding artefacts** — usually one. **No file is opened**, so no last-access timestamp is touched and no directory is walked by the OS. If *object access auditing* is enabled, opening a volume can be logged (Security 4656/4663) |
 | **Writing the collection** | on the **collection medium only** (the USB stick). Nothing is written to the examined disk |
 | **Hive repair** | 8 bytes of the base block, **on the copy**. The original is never opened for writing; its fingerprint is recorded before the patch |
 | **Service state** (1 × `EnumServicesStatusExW`) | one read-only query to the SCM over `\\.\pipe\ntsvcs`. No handle per service, no state change, so no `System` 7036 event |
@@ -206,7 +215,7 @@ which are just files on the volume, would remove both.
 ### Visual Studio 2022 (Windows)
 - Requires **Windows SDK 10** and **Windows WDK 10**
 - 📥 Download: [Microsoft WDK](https://learn.microsoft.com/en-us/windows-hardware/drivers/download-the-wdk)
-- **Include path** and **lib path** of **project properties directories** must be updated with WKD correct path dependent of WDK installed version. Actually, the configured WDK version is 10.0.26100.0.
+- **Include path** and **lib path** of **project properties directories** must be updated with WDK correct path dependent of WDK installed version. Actually, the configured WDK version is 10.0.26100.0.
 
 ### Cross-compiling from Linux (MinGW-w64)
 ```bash
@@ -242,8 +251,13 @@ entries. See `vmtest/README.md`.
 
 ## 📚 DOCUMENTATION
 
-- API documentation: **HTML**, generated with Doxygen (`Doxygen/Doxyfile`).
-- `docs/MIGRATION-VSS-vers-lecture-brute.md` — the engineering log of the move to
-  raw, offline collection: every design decision, and the cause of every defect
-  found along the way. Written to be read by whoever maintains this next.
+- **API documentation**: HTML, generated with Doxygen from the source comments
+  (`Doxygen/Doxyfile`, output in `WAC/doc/html`). Regenerate with
+  `cd Doxygen && doxygen Doxyfile`.
 - `docs/BUILD-LINUX.md` — cross-compilation details.
+
+The design rationale lives **in the code**, next to what it explains: each
+non-obvious choice carries a comment saying why it is that way and what breaks
+otherwise. Several of them record a defect that was actually hit — a hash
+formatted without padding, a length compared against a hard-coded value, a
+pointer read after being freed — because the cause is the part worth keeping.

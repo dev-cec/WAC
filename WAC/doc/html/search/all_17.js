@@ -1,8 +1,13 @@
 var searchData=
 [
-  ['workingdirectory_0',['workingDirectory',['../struct_recent_doc.html#acd48e8314380f759b7b471c3d59294c7',1,'RecentDoc']]],
-  ['wstr_5fguid_5ffmt_1',['WSTR_GUID_FMT',['../stdafx_8h.html#aacfb10dded2051dbc06b81382b318495',1,'stdafx.h']]],
-  ['wstring_5fto_5fbstr_2',['wstring_to_bstr',['../tools_8cpp.html#aecf670c5a3331fe73239c63d494acc70',1,'wstring_to_bstr(std::wstring ws):&#160;tools.cpp'],['../tools_8h.html#aecf670c5a3331fe73239c63d494acc70',1,'wstring_to_bstr(std::wstring ws):&#160;tools.cpp']]],
-  ['wstring_5fto_5ffiletime_3',['wstring_to_filetime',['../tools_8cpp.html#ac15b36c9a117f211860abb5d7f86d8d4',1,'wstring_to_filetime(std::wstring input):&#160;tools.cpp'],['../tools_8h.html#ac15b36c9a117f211860abb5d7f86d8d4',1,'wstring_to_filetime(std::wstring input):&#160;tools.cpp']]],
-  ['wstring_5fto_5fstring_4',['wstring_to_string',['../tools_8cpp.html#a9e8d9796b27a47431c88a5387b1ed2a0',1,'wstring_to_string(const std::wstring &amp;wstr):&#160;tools.cpp'],['../tools_8h.html#a9e8d9796b27a47431c88a5387b1ed2a0',1,'wstring_to_string(const std::wstring &amp;wstr):&#160;tools.cpp']]]
+  ['wasdirty_0',['wasDirty',['../structHiveFixInfo.html#a4a1e11b834a122a20c74f08167eed134',1,'HiveFixInfo']]],
+  ['wmain_1',['wmain',['../raw__hive__test_8cpp.html#aa3a67a95d5205c37194aa17a9e4255e3',1,'raw_hive_test.cpp']]],
+  ['workingdir_2',['workingDir',['../structAction.html#aad978d105e67835d43aa85d9c4ef9177',1,'Action']]],
+  ['workingdirectory_3',['workingDirectory',['../structRecentDoc.html#acd48e8314380f759b7b471c3d59294c7',1,'RecentDoc']]],
+  ['writejsonfile_4',['writejsonfile',['../tools_8cpp.html#a4ac032628289d617e09d03d54a6add70',1,'writeJsonFile(const std::string &amp;nom, const Json &amp;valeur):&#160;tools.cpp'],['../tools_8h.html#a4ac032628289d617e09d03d54a6add70',1,'writeJsonFile(const std::string &amp;nom, const Json &amp;valeur):&#160;tools.cpp']]],
+  ['writenotcollected_5',['writenotcollected',['../tools_8cpp.html#acdd0ec7f39648e40795a732a339f09e9',1,'writeNotCollected(const std::string &amp;nom, const std::wstring &amp;artefact, HRESULT resultat):&#160;tools.cpp'],['../tools_8h.html#acdd0ec7f39648e40795a732a339f09e9',1,'writeNotCollected(const std::string &amp;nom, const std::wstring &amp;artefact, HRESULT resultat):&#160;tools.cpp']]],
+  ['wstring_5fto_5ffiletime_6',['wstring_to_filetime',['../tools_8cpp.html#ac15b36c9a117f211860abb5d7f86d8d4',1,'wstring_to_filetime(std::wstring input):&#160;tools.cpp'],['../tools_8h.html#ac15b36c9a117f211860abb5d7f86d8d4',1,'wstring_to_filetime(std::wstring input):&#160;tools.cpp']]],
+  ['wstring_5fto_5fstring_7',['wstring_to_string',['../tools_8cpp.html#a9e8d9796b27a47431c88a5387b1ed2a0',1,'wstring_to_string(const std::wstring &amp;wstr):&#160;tools.cpp'],['../tools_8h.html#a9e8d9796b27a47431c88a5387b1ed2a0',1,'wstring_to_string(const std::wstring &amp;wstr):&#160;tools.cpp']]],
+  ['wts_5fany_5fsession_8',['WTS_ANY_SESSION',['../processes_8cpp.html#a6b2402faccbf3080047d2e8aab136384',1,'processes.cpp']]],
+  ['wtsenumerateprocessesexw_9',['WTSEnumerateProcessesExW',['../processes_8cpp.html#a33ce55d72052c5a66917a45d0601b7e8',1,'processes.cpp']]]
 ];

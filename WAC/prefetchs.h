@@ -62,18 +62,16 @@ struct VolumeInfo {
 	std::vector<DirStrings> dirStrings; //!< tableau de strings liées au volume
 	std::vector<MFTInformation> fileReferences; //!< inutile pour l'investigation numérique
 
-	/*!Constructeur
-	* @param data contient un pointeur sur les données à parser
-	*/
+	//! Constructeur par défaut
 	VolumeInfo() {}
 
-	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
+	/*! Constructeur
+	* @param data données du bloc de volume à analyser
+	* @param indice rang du volume dans le fichier Prefetch
 	*/
 	VolumeInfo(LPBYTE data, int indice);
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson();
@@ -124,7 +122,6 @@ public:
 	HRESULT read();
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson();
@@ -139,7 +136,6 @@ struct Prefetchs {
 	std::vector<Prefetch> prefetchs; //!< tableau contenant tout les prefetch
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData();
 

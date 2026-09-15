@@ -180,7 +180,7 @@ HRESULT SystemInfo::getData() {
 	 *
 	 * Calculée à partir de GetTickCount64() : heure courante moins la durée
 	 * d'activité. Choisi plutôt que WMI (Win32_OperatingSystem.LastBootUpTime),
-	 * qui laisserait une trace d'exécution WMI pour une seule valeur (cf. §9.4).
+	 * qui laisserait une trace d'exécution WMI pour une seule valeur.
 	 *
 	 * LIMITE À CONNAÎTRE : GetTickCount64() n'inclut PAS le temps passé en veille
 	 * ou en hibernation. Sur une machine mise en veille, l'heure calculée est donc

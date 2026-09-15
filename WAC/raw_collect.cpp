@@ -13,27 +13,16 @@
 
 namespace {
 
-/*! Rend un chemin absolu relatif à la racine du volume système.
-*
-* « C:\Users\jean » -> « \Users\jean ». La lettre de lecteur n'est retirée
-* qu'en TÊTE : `replaceAll()`, employé jusqu'ici, en retirait toutes les
-* occurrences, si bien qu'un chemin contenant à nouveau la lettre suivie de
-* deux-points se retrouvait silencieusement altéré.
-*/
-std::wstring cheminRelatifAuVolume(const std::wstring& absolu) {
-	if (absolu.size() >= conf.systemDrive.size()
-	    && enMinuscules(absolu.substr(0, conf.systemDrive.size()))
-	       == enMinuscules(conf.systemDrive))
-		return absolu.substr(conf.systemDrive.size());
-	return absolu;
-}
-
-} // namespace
-
-namespace {
-
 /*! Lettre du volume système examiné, sans les deux-points ("C").
- *  Dérivée de conf.systemDrive : Windows n'est pas toujours sur C:. */
+ *
+ *  Dérivée de conf.systemDrive : Windows n'est pas toujours sur C:.
+ *
+ *  À N'UTILISER que pour ce qui se trouve nécessairement sur le volume de
+ *  Windows — les définitions de tâches planifiées, par exemple, vivent sous
+ *  `\Windows\System32\Tasks`. Tout ce qui dépend d'un chemin relevé sur la
+ *  machine (profils utilisateurs en tête) doit passer par `volumeDuChemin()` :
+ *  supposer le volume système pour ces chemins était précisément le défaut qui
+ *  faisait perdre en silence les profils situés sur un autre disque. */
 std::wstring volumeSysteme() {
 	return conf.systemDrive.substr(0, 1);
 }
@@ -55,18 +44,27 @@ void rapporterProgression(const wchar_t* item, unsigned long long fait,
 HRESULT ExtractHivesRaw() {
 	conf.mountpoint = dossierExtraction();
 
-	std::vector<std::pair<std::wstring, std::wstring>> items;
+	/* EXTRACTION GROUPEE PAR VOLUME.
+	   Un seul volume etait suppose, celui de Windows : un profil situe sur un
+	   autre disque (« D:\Users\jean », cas d'un poste a SSD systeme + disque de
+	   donnees) etait cherche dans la table de fichiers de C:, donc jamais
+	   extrait — et tous les artefacts de cet utilisateur sortaient vides.
+	   Les fichiers sont desormais regroupes par lettre de volume, et
+	   ExtractFilesRaw appele une fois par volume reellement concerne. */
+	std::map<std::wstring, std::vector<std::pair<std::wstring, std::wstring>>> parVolume;
 	std::vector<std::wstring> ruches;   // chemins locaux des ruches à remettre en état
 
-	auto add = [&](const std::wstring& rel) {
-		items.emplace_back(rel, conf.mountpoint + rel);
+	// `chemin` est absolu (avec lettre) ou relatif au volume systeme.
+	auto add = [&](const std::wstring& chemin) {
+		parVolume[volumeDuChemin(chemin)].emplace_back(cheminRelatifAuVolume(chemin),
+		                                               cheminExtrait(chemin));
 	};
 	// Une ruche + ses deux journaux de transaction.
-	auto addRuche = [&](const std::wstring& rel) {
-		add(rel);
-		add(rel + L".LOG1");
-		add(rel + L".LOG2");
-		ruches.push_back(conf.mountpoint + rel);
+	auto addRuche = [&](const std::wstring& chemin) {
+		add(chemin);
+		add(chemin + L".LOG1");
+		add(chemin + L".LOG2");
+		ruches.push_back(cheminExtrait(chemin));
 	};
 
 	// Ruches système
@@ -78,49 +76,67 @@ HRESULT ExtractHivesRaw() {
 	addRuche(L"\\Windows\\system32\\config\\SAM");
 	addRuche(L"\\Windows\\AppCompat\\Programs\\Amcache.hve");
 
-	// Ruches par profil utilisateur (SID + chemin de profil dans conf.profiles)
-	// cheminRelatifAuVolume() retire la lettre de lecteur en TETE uniquement :
-	// replaceAll() retirait toutes ses occurrences dans le chemin.
+	/* Ruches par profil utilisateur. Le chemin est passe ABSOLU, avec sa lettre :
+	   c'est elle qui determine sur quel volume lire. */
 	for (const std::tuple<std::wstring, std::wstring>& profile : conf.profiles) {
-		std::wstring rel = cheminRelatifAuVolume(std::get<1>(profile)); // "\Users\<nom>"
-		addRuche(rel + L"\\ntuser.dat");
-		addRuche(rel + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat");
+		const std::wstring profil = std::get<1>(profile);   // ex. "D:\Users\jean"
+		addRuche(profil + L"\\ntuser.dat");
+		addRuche(profil + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat");
 	}
 
 	// Créer l'arborescence de destination sur l'USB
-	for (const std::pair<std::wstring, std::wstring>& it : items) {
-		std::error_code ec;
-		std::filesystem::create_directories(std::filesystem::path(it.second).parent_path(), ec);
-	}
+	for (const auto& groupe : parVolume)
+		for (const std::pair<std::wstring, std::wstring>& it : groupe.second) {
+			std::error_code ec;
+			std::filesystem::create_directories(std::filesystem::path(it.second).parent_path(), ec);
+		}
 
-	std::vector<HRESULT> res;
-	std::vector<std::wstring> md5Items;          // empreintes calculees pendant l'ecriture
+	/* Une passe par volume. Un volume inaccessible ne doit pas emporter les
+	   autres : on consigne son echec et on continue, comme pour une ruche
+	   manquante. Le premier echec dur est toutefois memorise pour le retour,
+	   afin que l'appelant sache que la collecte est incomplete. */
+	std::map<std::wstring, std::wstring> md5ParFichier;
+	unsigned manquants = 0;
+	HRESULT hr = ERROR_SUCCESS;
+	HRESULT premierEchecDur = ERROR_SUCCESS;
 	RawHiveSetProgress(&rapporterProgression);   // montre que l'extraction avance
-	HRESULT hr = ExtractFilesRaw(volumeSysteme(), items, &res, &md5Items);
+	for (const auto& groupe : parVolume) {
+		const std::wstring& volume = groupe.first;
+		const auto& items = groupe.second;
+		std::vector<HRESULT> res;
+		std::vector<std::wstring> md5Items;      // empreintes calculees a l'ecriture
+		const HRESULT hrVolume = ExtractFilesRaw(volume, items, &res, &md5Items);
+		// Consigne ici, et non chez l'appelant : l'extraction doit preceder au
+		// journal les patchs qu'elle declenche, sinon l'enchainement se lit a
+		// l'envers.
+		auditRecord(L"Extraction brute des ruches (+ journaux .LOG1/.LOG2)",
+		            std::wstring(L"\\\\.\\") + volume + L": -> " + conf.mountpoint,
+		            hrVolume, Footprint::VOLUME_BRUT);
+		if (FAILED(hrVolume)) {                  // volume inaccessible
+			log(2, L"🔥Volume " + volume + L": inaccessible pour la lecture brute", hrVolume);
+			if (premierEchecDur == ERROR_SUCCESS) premierEchecDur = hrVolume;
+			continue;
+		}
+		if (hrVolume == S_FALSE) hr = S_FALSE;
+
+		// Journaliser les échecs par fichier sans interrompre (journaux parfois
+		// absents, profils système sans UsrClass.dat, etc.)
+		for (size_t i = 0; i < items.size() && i < res.size(); ++i)
+			if (FAILED(res[i])) {
+				++manquants;
+				log(2, L"🔥Extraction brute échouée : " + volume + L":" + items[i].first, res[i]);
+			}
+		/* Empreintes indexees par chemin de sortie : calculees pendant
+		   l'ecriture, donc AVANT tout patch — exactement ce qu'il faut
+		   consigner. On evite ainsi de relire chaque ruche depuis le support. */
+		for (size_t i = 0; i < items.size() && i < md5Items.size(); ++i)
+			if (!md5Items[i].empty()) md5ParFichier.emplace(items[i].second, md5Items[i]);
+	}
 	RawHiveSetProgress(nullptr);
 	printProgressEnd();
-	// Consigne ici, et non chez l'appelant : l'extraction doit preceder au journal
-	// les patchs qu'elle declenche, sinon l'enchainement se lit a l'envers.
-	auditRecord(L"Extraction brute des ruches (+ journaux .LOG1/.LOG2)",
-	            std::wstring(L"\\\\.\\") + volumeSysteme() + L": -> " + conf.mountpoint,
-	            hr, Footprint::VOLUME_BRUT);
-	if (FAILED(hr)) {           // échec dur : volume inaccessible
-		log(2, L"🔥Ouverture du volume impossible pour la lecture brute", hr);
-		return hr;
-	}
-
-	// Journaliser les échecs par fichier sans interrompre (journaux parfois
-	// absents, profils système sans UsrClass.dat, etc.)
-	unsigned manquants = 0;
-	for (size_t i = 0; i < items.size() && i < res.size(); ++i)
-		if (FAILED(res[i])) { ++manquants; log(2, L"🔥Extraction brute échouée : " + items[i].first, res[i]); }
-
-	/* Empreintes indexees par chemin de sortie : elles ont ete calculees pendant
-	   l'ecriture, donc AVANT tout patch — exactement ce qu'il faut consigner. On
-	   evite ainsi de relire chaque ruche depuis le support de collecte. */
-	std::map<std::wstring, std::wstring> md5ParFichier;
-	for (size_t i = 0; i < items.size() && i < md5Items.size(); ++i)
-		if (!md5Items[i].empty()) md5ParFichier.emplace(items[i].second, md5Items[i]);
+	log(2, L"❇️Volumes lus : " + std::to_wstring(parVolume.size()));
+	/* Aucun volume lisible : rien ne suivra, autant le dire tout de suite. */
+	if (md5ParFichier.empty() && premierEchecDur != ERROR_SUCCESS) return premierEchecDur;
 
 	// Remettre chaque ruche en état (dirty -> chargeable), avec traçabilité.
 	log(0, L"*******************************************************************************************************************");
@@ -184,21 +200,34 @@ HRESULT ExtractFileArtefactsRaw() {
 	log(0, L"ℹ️Raw file artefacts :");
 	log(0, L"*******************************************************************************************************************");
 
-	// Répertoires à extraire, avec le filtre d'extension de leur collecteur.
-	struct Cible { std::wstring chemin; std::vector<std::wstring> extensions; };
+	/* Répertoires à extraire, avec le filtre d'extension de leur collecteur.
+	   Chaque cible porte SON volume : les dossiers d'un profil situe sur un
+	   autre disque que Windows etaient lus sur le volume systeme, donc jamais
+	   trouves. */
+	struct Cible {
+		std::wstring volume;       //!< lettre du volume, sans deux-points
+		std::wstring chemin;       //!< chemin relatif a la racine de ce volume
+		std::wstring sortie;       //!< destination sur le support de collecte
+		std::vector<std::wstring> extensions;
+	};
 	std::vector<Cible> cibles;
+	// `absolu` porte sa lettre, ou est relatif au volume systeme.
+	auto addCible = [&](const std::wstring& absolu,
+	                    const std::vector<std::wstring>& ext) {
+		cibles.push_back({ volumeDuChemin(absolu), cheminRelatifAuVolume(absolu),
+		                   cheminExtrait(absolu), ext });
+	};
 
-	cibles.push_back({ L"\\Windows\\Prefetch", { L".pf" } });
-
+	addCible(L"\\Windows\\Prefetch", { L".pf" });
 
 	for (const std::tuple<std::wstring, std::wstring>& profile : conf.profiles) {
-		const std::wstring profil = cheminRelatifAuVolume(std::get<1>(profile));
+		const std::wstring profil = std::get<1>(profile);   // absolu, avec sa lettre
 		const std::wstring recent = profil + L"\\AppData\\Roaming\\Microsoft\\Windows\\Recent";
-		cibles.push_back({ recent + L"\\AutomaticDestinations", { L".automaticDestinations-ms" } });
-		cibles.push_back({ recent + L"\\CustomDestinations",    { L".customDestinations-ms" } });
-		cibles.push_back({ recent,                              { L".lnk", L".url" } });
-		cibles.push_back({ profil + L"\\AppData\\Roaming\\Microsoft\\Office\\Recent",
-		                                                        { L".lnk", L".url" } });
+		addCible(recent + L"\\AutomaticDestinations", { L".automaticDestinations-ms" });
+		addCible(recent + L"\\CustomDestinations",    { L".customDestinations-ms" });
+		addCible(recent,                              { L".lnk", L".url" });
+		addCible(profil + L"\\AppData\\Roaming\\Microsoft\\Office\\Recent",
+		                                              { L".lnk", L".url" });
 	}
 
 	HRESULT global = S_OK;
@@ -207,7 +236,7 @@ HRESULT ExtractFileArtefactsRaw() {
 
 	/* Définitions de tâches planifiées : une arborescence, et les fichiers n'ont
 	   PAS d'extension — d'où l'extraction récursive sans filtre. Elle remplace la
-	   lecture via le Task Scheduler COM (doc §9.4bis), ce qui supprime à la fois
+	   lecture via le Task Scheduler COM, ce qui supprime à la fois
 	   la trace d'exécution et la dépendance à COM. */
 	{
 		size_t tachesExtraites = 0;
@@ -226,14 +255,17 @@ HRESULT ExtractFileArtefactsRaw() {
 	for (const Cible& cible : cibles) {
 		size_t extraits = 0;
 		std::wstring diagnostic;
-		const HRESULT hr = ExtractDirectoryRaw(volumeSysteme(), cible.chemin,
-		                                       conf.mountpoint + cible.chemin,
+		const HRESULT hr = ExtractDirectoryRaw(cible.volume, cible.chemin,
+		                                       cible.sortie,
 		                                       cible.extensions, &extraits, &diagnostic);
-		if (FAILED(hr)) {                       // volume inaccessible : inutile de continuer
-			RawHiveSetProgress(nullptr);        // ne pas laisser le rapporteur installe
-			printProgressEnd();
-			log(2, L"🔥Extraction brute du répertoire impossible : " + cible.chemin, hr);
-			return hr;
+		if (FAILED(hr)) {
+			/* Volume inaccessible. On NE s'arrete plus : avec plusieurs volumes,
+			   un disque illisible emportait toutes les cibles suivantes, y
+			   compris celles du volume systeme. */
+			log(2, L"🔥Extraction brute impossible : " + cible.volume + L":"
+			     + cible.chemin, hr);
+			global = S_FALSE;
+			continue;
 		}
 		if (hr == S_FALSE) global = S_FALSE;    // certains fichiers n'ont pas pu être lus
 		total += extraits;
@@ -243,7 +275,7 @@ HRESULT ExtractFileArtefactsRaw() {
 		// repertoire manque, s'il est vide ou si le filtre a tout ecarte.
 		auditRecord(L"Extraction brute d'un repertoire (" + std::to_wstring(extraits)
 		            + L" fichier(s) — " + diagnostic + L")",
-		            std::wstring(L"\\\\.\\") + volumeSysteme() + L":" + cible.chemin,
+		            std::wstring(L"\\\\.\\") + cible.volume + L":" + cible.chemin,
 		            hr, Footprint::VOLUME_BRUT);
 		log(1, L"➕Directory");
 		log(2, L"❇️" + cible.chemin + L" : " + std::to_wstring(extraits)

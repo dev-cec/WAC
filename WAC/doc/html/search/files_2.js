@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['events_2ehpp_0',['events.hpp',['../events_8hpp.html',1,'']]]
+  ['hive_5frecover_2ecpp_0',['hive_recover.cpp',['../hive__recover_8cpp.html',1,'']]],
+  ['hive_5frecover_2eh_1',['hive_recover.h',['../hive__recover_8h.html',1,'']]]
 ];

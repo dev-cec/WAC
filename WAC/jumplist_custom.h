@@ -32,11 +32,10 @@ struct CustomDestinationCategory {
 	CustomDestinationCategory() {};
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param buffersize en entrée contient la taille du buffer
-	* @param _path est le chemin contenant les custom Destinations
-	* @param _sid est le SID de l'utilisateur propriétaire du LNK
-
+	* @param buffer données de la catégorie à analyser
+	* @param buffersize taille du tampon
+	* @param _path chemin du fichier Custom Destinations
+	* @param _sid SID de l'utilisateur propriétaire du raccourci
 	*/
 	CustomDestinationCategory(LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid);
 
@@ -84,15 +83,13 @@ struct CustomDestination {
 	CustomDestination() {};
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _path est le chemin contenant les Automatic Destinations
+	* @param _path chemin du fichier Custom Destinations
 	* @param _sid est le SID de l'utilisateur propriétaire du LNK
 
 	*/
 	CustomDestination(std::filesystem::path _path, std::wstring _sid);
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson();
@@ -108,7 +105,6 @@ struct JumplistCustoms {
 	
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData();
 

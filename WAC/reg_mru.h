@@ -42,7 +42,7 @@ public:
 	unsigned int niveau = 0; //!< profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
+	* @param _niveau contient les paramètres de l'application issue des paramètres de la ligne de commande
 	* param _niveau est utilisé pour la mie en forme de la hiérarchie des objet dans le json de sortie
 	*/
 	HRESULT getData(int _niveau = 0);

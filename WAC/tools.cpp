@@ -587,6 +587,41 @@ HRESULT loadProfileList() {
 	return conf.profiles.empty() ? ERROR_EMPTY : ERROR_SUCCESS;
 }
 
+std::wstring volumeDuChemin(const std::wstring& absolu) {
+	if (absolu.size() >= 2 && absolu[1] == L':')
+		return std::wstring(1, (wchar_t)towupper(absolu[0]));
+	// Chemin deja relatif a une racine : il appartient au volume systeme.
+	return conf.systemDrive.substr(0, 1);
+}
+
+std::wstring cheminRelatifAuVolume(const std::wstring& absolu) {
+	if (absolu.size() >= 2 && absolu[1] == L':') return absolu.substr(2);
+	return absolu;
+}
+
+std::wstring cheminExtrait(const std::wstring& absolu) {
+	const std::wstring volume   = volumeDuChemin(absolu);
+	const std::wstring relatif  = cheminRelatifAuVolume(absolu);
+	const std::wstring systeme  = conf.systemDrive.substr(0, 1);
+	if (enMinuscules(volume) == enMinuscules(systeme))
+		return conf.mountpoint + relatif;          // cas courant : rien ne change
+	// Volume secondaire : sous-dossier dedie, pour ne pas ecraser une copie
+	// homonyme venant d'un autre disque.
+	return conf.mountpoint + L"\\_volume_" + volume + relatif;
+}
+
+std::wstring cheminOriginal(const std::wstring& extrait) {
+	std::wstring reste = replaceAll(extrait, conf.mountpoint, L"");
+	// « \_volume_D\... » : le fichier venait d'un autre disque que Windows.
+	const std::wstring marque = L"\\_volume_";
+	if (reste.compare(0, marque.size(), marque) == 0
+	    && reste.size() > marque.size()) {
+		const wchar_t lettre = reste[marque.size()];
+		return std::wstring(1, lettre) + L":" + reste.substr(marque.size() + 1);
+	}
+	return conf.systemDrive + reste;
+}
+
 void loadSystemDrive() {
 	/* GetSystemDirectoryW rend "X:\Windows\System32" : les deux premiers
 	   caractères donnent le lecteur. Préféré à la variable d'environnement
@@ -948,7 +983,7 @@ HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, std::ve
 }
 
 std::wstring getVolumeLetter(std::wstring searchSerial) {
-	/*  RÉÉCRITE (2026-09-15, doc §14.17). La version d'origine cumulait :
+	/*  RÉÉCRITE (2026-09-15). La version d'origine cumulait :
 	 *    - `return Names;` alors que `Names` valait NULL et que la fonction rend
 	 *      un `std::wstring` : construire une chaîne depuis un pointeur nul est
 	 *      un comportement indéfini, sur le chemin même de l'échec ;

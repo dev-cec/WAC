@@ -7,7 +7,7 @@
 
 /*! Informations système de la machine examinée.
 *
-*  POURQUOI HORS LIGNE (doc §9.4ter). La version d'origine interrogeait la
+*  POURQUOI HORS LIGNE. La version d'origine interrogeait la
 *  machine vivante : `GetComputerNameExW`, `RtlGetVersion` et surtout
 *  `BrandingFormatString` — qui suppose de CHARGER `winbrand.dll` dans le
 *  processus de collecte. Chargement de module et résolution DNS du nom de
@@ -15,11 +15,11 @@
 *  décrit l'installation est déjà écrit dans les ruches déjà extraites en brut.
 *
 *  SOURCES REGISTRE
-*    - identité   : `SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName`
-*                   et `Services\Tcpip\Parameters` (Hostname, Domain / NV Domain)
-*    - OS         : `SOFTWARE\Microsoft\Windows NT\CurrentVersion`
-*    - architecture : `SYSTEM\CurrentControlSet\Control\Session Manager\Environment`
-*    - identifiant machine : `SOFTWARE\Microsoft\Cryptography\MachineGuid`
+*    - identité   : `SYSTEM\CurrentControlSet\\Control\\ComputerName\\ComputerName`
+*                   et `Services\Tcpip\\Parameters` (Hostname, Domain / NV Domain)
+*    - OS         : `SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion`
+*    - architecture : `SYSTEM\CurrentControlSet\\Control\Session Manager\Environment`
+*    - identifiant machine : `SOFTWARE\\Microsoft\Cryptography\MachineGuid`
 *    - fuseau     : déjà relevé par `loadSuspectTimeZone()` (cf. tools.h)
 *
 *  CE QUI RESTE MESURÉ À CHAUD, ET POURQUOI C'EST LÉGITIME
@@ -37,7 +37,7 @@
 struct SystemInfo {
 	// --- identité de la machine (ruche SYSTEM) ---
 	std::wstring computerName;              //!< nom de l'ordinateur
-	std::wstring netbiosName;               //!< nom NetBIOS (Control\ComputerName)
+	std::wstring netbiosName;               //!< nom NetBIOS (Control\\ComputerName)
 	std::wstring domainName;                //!< domaine DNS, ou "WORKGROUP" hors domaine
 	std::wstring osArchitecture;            //!< architecture de l'OS
 
@@ -53,7 +53,7 @@ struct SystemInfo {
 	std::wstring registeredOwner;           //!< propriétaire déclaré à l'installation
 	std::wstring registeredOrganization;    //!< organisation déclarée à l'installation
 	std::wstring productId;                 //!< identifiant du produit
-	std::wstring systemRoot;                //!< chemin d'installation, ex. "C:\Windows"
+	std::wstring systemRoot;                //!< chemin d'installation, ex. "C:\\Windows"
 	std::wstring machineGuid;               //!< identifiant unique de l'installation
 	FILETIME     installDateUtc = { 0, 0 }; //!< date d'installation de l'OS (UTC)
 

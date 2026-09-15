@@ -368,7 +368,7 @@ HRESULT Events::getData() {
 			log(3, L"🔈EvtNext hQuery");
 			/* Progression par canal : les gros journaux (System, Security,
 			   Application) demandent plusieurs minutes par l'API Win32 sous
-			   Windows 11 (cf. doc §10). Sans indicateur, l'opérateur ne distingue
+			   Windows 11. Sans indicateur, l'opérateur ne distingue
 			   pas une lecture qui avance d'un blocage, et risque d'interrompre la
 			   collecte. Le total est inconnu : on affiche le compte courant. */
 			/* Nombre d'enregistrements du canal, pour afficher un pourcentage

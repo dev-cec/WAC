@@ -1,14 +1,10 @@
 var searchData=
 [
-  ['unknownshellitem_0',['UnknownShellItem',['../struct_unknown_shell_item.html#a3437ff552d7bd9b27d4b1e747a064ee0',1,'UnknownShellItem']]],
-  ['urishellitem_1',['URIShellItem',['../struct_u_r_i_shell_item.html#a7a86fad9d068be8f1bd15fafd65408bb',1,'URIShellItem']]],
-  ['usbstor_2',['Usbstor',['../struct_usbstor.html#a399b057c9390590600f1349d7d50de80',1,'Usbstor']]],
-  ['user_3',['User',['../struct_user.html#a4a0137053e591fbb79d9057dd7d2283d',1,'User::User()'],['../struct_user.html#af88899cbfb56f94cfb2786a513f165b4',1,'User::User(LPWSTR profilName)']]],
-  ['userassist_4',['UserAssist',['../struct_user_assist.html#af5c7c891a0fc9bae13dc2eb81034a141',1,'UserAssist']]],
-  ['userpropertyview0x07192006_5',['UserPropertyView0x07192006',['../struct_user_property_view0x07192006.html#a1210216308a8caf5b06b9060c0cd76fd',1,'UserPropertyView0x07192006']]],
-  ['userpropertyview0x10312005_6',['UserPropertyView0x10312005',['../struct_user_property_view0x10312005.html#ab5c9cc02dca9132acf4d67de35289714',1,'UserPropertyView0x10312005']]],
-  ['userpropertyview0x23febbee_7',['UserPropertyView0x23febbee',['../struct_user_property_view0x23febbee.html#a4b5f7b12ab70d52a43752e86e4fc7cab',1,'UserPropertyView0x23febbee']]],
-  ['userpropertyview0xc01_8',['UserPropertyView0xC01',['../struct_user_property_view0x_c01.html#a4daaef5406edb3c5f2808e2f9f9d87a9',1,'UserPropertyView0xC01']]],
-  ['usersfilesfolder_9',['UsersFilesFolder',['../struct_users_files_folder.html#a6dc8ab997bc55c0f911e56acbbe57e96',1,'UsersFilesFolder']]],
-  ['userspropertyview_10',['UsersPropertyView',['../struct_users_property_view.html#acd16a21f5de8fac8b9db8fd7f9f48a8c',1,'UsersPropertyView::UsersPropertyView()'],['../struct_users_property_view.html#aa1dac3ce329cd3cf512a3d1b48076e76',1,'UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau)']]]
+  ['rawhivesetprogress_0',['rawhivesetprogress',['../raw__hive_8cpp.html#a7c6fcb004a257a7b9bfb351d435286b7',1,'RawHiveSetProgress(RawHiveProgressFn fn):&#160;raw_hive.cpp'],['../raw__hive_8h.html#a7c6fcb004a257a7b9bfb351d435286b7',1,'RawHiveSetProgress(RawHiveProgressFn fn):&#160;raw_hive.cpp']]],
+  ['rawhivesetverbose_1',['rawhivesetverbose',['../raw__hive_8cpp.html#a4f20293fac920e310bfb3c0342a01348',1,'RawHiveSetVerbose(bool on):&#160;raw_hive.cpp'],['../raw__hive_8h.html#a4f20293fac920e310bfb3c0342a01348',1,'RawHiveSetVerbose(bool on):&#160;raw_hive.cpp']]],
+  ['read_2',['read',['../structPrefetch.html#ab3a26c6ee678f13bf066da4879b55ae7',1,'Prefetch']]],
+  ['recentdoc_3',['recentdoc',['../structRecentDoc.html#a629fee533dd5ee75d796f8d287a184fe',1,'RecentDoc::RecentDoc(const RecentDoc &amp;)=delete'],['../structRecentDoc.html#aabf36d17c0f3c85c979834401b38eb88',1,'RecentDoc::RecentDoc(RecentDoc &amp;&amp;)=default'],['../structRecentDoc.html#ae78978ce7653746cb933ad97bdc04cef',1,'RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid)'],['../structRecentDoc.html#af501edc675fb4bcebe3b08956c862f6e',1,'RecentDoc::RecentDoc(LPBYTE buffer, size_t size, std::wstring _path, std::wstring _sid)']]],
+  ['replaceall_4',['replaceall',['../tools_8cpp.html#ac0b13fc24e7bc07ec4a03384acd92539',1,'replaceAll(std::wstring src, std::wstring search, std::wstring replacement):&#160;tools.cpp'],['../tools_8h.html#ac0b13fc24e7bc07ec4a03384acd92539',1,'replaceAll(std::wstring src, std::wstring search, std::wstring replacement):&#160;tools.cpp']]],
+  ['rootfolder_5',['RootFolder',['../structRootFolder.html#a0a8758e7b52a85e7346eed79c754e591',1,'RootFolder']]],
+  ['rot13_6',['rot13',['../tools_8cpp.html#a7684efc242e166b53952647faf435f95',1,'ROT13(std::wstring source):&#160;tools.cpp'],['../tools_8h.html#a7684efc242e166b53952647faf435f95',1,'ROT13(std::wstring source):&#160;tools.cpp']]]
 ];

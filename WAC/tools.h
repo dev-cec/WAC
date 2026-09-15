@@ -27,7 +27,7 @@
 * interprétables qu'avec le fuseau du **suspect**. `GetTimeZoneInformation()`
 * rend celui de la machine qui exécute WAC : identique en collecte live, mais
 * faux dès qu'on analyse une image montée ailleurs. La source d'autorité est donc
-* `SYSTEM\CurrentControlSet\Control\TimeZoneInformation` (cf. doc §7.4).
+* `SYSTEM\CurrentControlSet\\Control\TimeZoneInformation`.
 *
 * Une divergence entre les deux est en soi un signal : image analysée sur une
 * autre machine, ou fuseau modifié depuis la collecte. Les deux sont donc
@@ -52,7 +52,7 @@ struct AppliConf {
 	* quelles valeurs), tandis que --debug éclaire la LECTURE BAS NIVEAU du
 	* volume. Confondre les deux noyait la console en usage normal, alors que
 	* cette trace est précisément ce qui a permis de localiser le défaut
-	* `$INDEX_ALLOCATION` éclaté (doc §14.10). */
+	* `$INDEX_ALLOCATION` éclaté. */
 	bool _debug = false;
 	bool _dump = false;//!< True if dump is active
 	bool _events = false;//!< True is events must be extracted
@@ -88,7 +88,7 @@ void loadSystemDrive();
 * (`ntuser.dat`, `usrClass.dat`) vivent dans le dossier de profil : il faut donc
 * connaître ces chemins AVANT de pouvoir les extraire, c'est-à-dire avant
 * qu'aucune ruche ne soit disponible hors ligne. La source est
-* `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList`, lue dans le
+* `HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\ProfileList`, lue dans le
 * registre vivant : une seule clé, en lecture, sans RPC.
 *
 * Remplace l'enchaînement `NetUserEnum` + `NetUserGetInfo` par utilisateur, qui
@@ -98,6 +98,69 @@ void loadSystemDrive();
 * @return ERROR_SUCCESS si la clé a pu être énumérée, un code d'erreur sinon
 */
 HRESULT loadProfileList();
+
+/*! Lettre du volume d'un chemin absolu, sans les deux-points ("C").
+*
+* POURQUOI CETTE FONCTION EXISTE. WAC ne supposait qu'UN SEUL volume, celui de
+* Windows. Or `ProfileImagePath` peut désigner un autre disque — configuration
+* courante d'un poste à SSD système et disque de données : Windows sur `C:`, les
+* profils sur `D:`. Le code retirait alors le préfixe « C: » d'un chemin
+* commençant par « D: », ne trouvait rien à retirer, et cherchait
+* `D:\Users\jean\ntuser.dat` **dans la table de fichiers de C:**. La ruche
+* n'était pas extraite, et TOUS les artefacts de cet utilisateur sortaient à
+* « 0 entrée » — indiscernable de « aucune trace ».
+*
+* @param absolu chemin absolu, avec ou sans lettre de lecteur
+* @return la lettre en majuscule, ou celle du volume système si le chemin n'en
+*         porte pas (chemin déjà relatif à la racine)
+*/
+std::wstring volumeDuChemin(const std::wstring& absolu);
+
+/*! Rend un chemin absolu relatif à la racine de SON volume.
+*
+* `D:\Users\jean` -> `\Users\jean`. La lettre est retirée quelle qu'elle
+* soit, et en TÊTE uniquement : `replaceAll()`, employé jusqu'ici, en retirait
+* toutes les occurrences, si bien qu'un chemin contenant à nouveau la lettre
+* suivie de deux-points se retrouvait silencieusement altéré.
+*
+* @param absolu chemin absolu
+* @return le chemin sans sa lettre de lecteur
+*/
+std::wstring cheminRelatifAuVolume(const std::wstring& absolu);
+
+/*! Chemin, sur le support de collecte, de la copie extraite d'un fichier.
+*
+* Centralise la convention de nommage de l'extraction brute, que neuf
+* collecteurs reconstruisaient chacun de leur côté avec
+* `replaceAll(chemin, conf.systemDrive, L"")` — donc avec le même défaut
+* multi-volumes (cf. `volumeDuChemin`).
+*
+* Les fichiers du volume SYSTÈME conservent leur emplacement d'origine sous
+* `conf.mountpoint`, afin que rien ne change pour le cas courant. Ceux d'un
+* autre volume sont rangés sous `\_volume_X\`, sans quoi deux disques portant
+* le même chemin relatif (`\Users\jean` sur C: et sur D:) écraseraient leurs
+* copies l'un l'autre.
+*
+* @param absolu chemin du fichier sur la machine examinée
+* @return le chemin de sa copie sur le support de collecte
+*/
+std::wstring cheminExtrait(const std::wstring& absolu);
+
+/*! Chemin d'ORIGINE d'un fichier, à partir de sa copie extraite.
+*
+* Opération inverse de `cheminExtrait()`, utilisée pour publier dans le JSON le
+* chemin qu'avait le fichier sur la machine examinée — et non celui de sa copie
+* sur le support de collecte.
+*
+* Le remplacement naïf employé jusqu'ici, `replaceAll(chemin, conf.mountpoint,
+* conf.systemDrive)`, ignorait le sous-dossier de volume : un fichier venu de
+* `D:` ressortait sous `C:\_volume_D\Users\…`, c'est-à-dire un chemin qui
+* n'existe sur aucun disque.
+*
+* @param extrait chemin de la copie, sous `conf.mountpoint`
+* @return le chemin d'origine, avec sa vraie lettre de lecteur
+*/
+std::wstring cheminOriginal(const std::wstring& extrait);
 
 extern AppliConf conf;// variable globale pour la conf de l'application
 
@@ -194,13 +257,11 @@ void printProgressStep(const std::wstring& artefact, unsigned long long fait,
 
 /*! affichage du message d'erreur correspondant au résultat HRESULT en ROUGE dans la console
 * @param hresult résultat retourné par un commande
-* @return void
 */
 void printError( HRESULT  hresult);
 
 /*! affichage du message errortext en ROUGE dans la console
 * @param errorText texte à afficher
-* @return void
 */
 void printError( std::wstring  errorText);
 
@@ -217,16 +278,14 @@ std::wstring getErrorMessage(HRESULT hresult);
 * log(2, L"🔥"); => Error
 * log(2, L"❇️"); => Identification d'un artefact
 * log(3, L"🔈"); => Nom de la fonction apperlée
-* @param loglevel est le niveau de log
+* @param loglevel niveau de journalisation, qui commande aussi l'emoji
 * @param message message a enregistré dans le fichier donnant du contexte
-* @param type est le type de log pour l'emoji. par defaut pas d'emoji
 */
 void log(int loglevel, std::wstring message);
 
 /*! enregistrement d'un message dans le ficier de log de  complété par un code erreur
-* @param loglevel est le niveau de log
+* @param loglevel niveau de journalisation, qui commande aussi l'emoji
 * @param message message a enregistré dans le fichier donnant du contexte
-* @param type est le type de log pour l'emoji. par defaut pas d'emoji* @param type est le type de log pour l'emoji. par defaut pas d'emoji
 * @param result code erreur a tranformé en message d'ereur
 */
 void log(int loglevel, std::wstring message, HRESULT result);
@@ -254,16 +313,9 @@ std::wstring ansi_to_utf8(std::wstring in);
 * @param buffer pointeur sur un buffer contenu les données à afficher
 * @param start indique la position du premier octet à afficher dans le buffer
 * @param end indique la position du dernier octet à afficher dans le buffer. 
-* @return void
 */
 void dump(LPBYTE buffer, int start, int end);
 
-/*! converti en wstring hexadecimal le contenu du buffer dans la console
-* @param buffer pointeur sur un buffer contenu les données à convertir
-* @param start indique la position du premier octet à traiter dans le buffer
-* @param end indique la position du dernier octet à afficher dans le buffer
-* @return void
-*/
 /*! Restitue une zone mémoire en hexadécimal, octet par octet.
 *
 * ATTENTION À LA SÉMANTIQUE, corrigée le 2026-09-15. Le troisième paramètre
@@ -285,8 +337,8 @@ std::wstring dump_wstring(LPBYTE buffer, int start, int longueur);
 
 /*! Dans une chaîne de caractères, remplace toutes les occurrences d'une chaîne par une autre
 * @param src chaîne de départ contenant la chaîne à rechercher
-* @param search représente la chaîne à rechercher dans <src>
-* @param replacement chaîne à insérer en lieu et place de <search>
+* @param search représente la chaîne à rechercher dans `src`
+* @param replacement chaîne à insérer en lieu et place de `search`
 * @return wstring resultant du remplacement
 */
 std::wstring replaceAll(std::wstring src, std::wstring search, std::wstring replacement);
@@ -310,7 +362,6 @@ std::string decodeURIComponent(std::string encoded);
 std::wstring to_hex(long long i);
 
 /*! insertion de n tabulations dans une chaîne de caractères. utiliser pour le formatage du json de sortie
-* @param i nombre de tabulations à insérer
 * @return wstring contenant le nombre de tabulations désiré
 */
 std::wstring tab(int i);
@@ -345,13 +396,13 @@ FILETIME wstring_to_filetime(std::wstring input);
 
 /*! Conversion un FILETIME en wstring.
 * @param filetime FILETIME à convertir en wstring
-* @param convertUTC si true alors date sera convertie en UTC
+* @param convertUtc si true alors date sera convertie en UTC
 * @return chaîne de caractères issue de la conversion
 */
 std::wstring time_to_wstring(const FILETIME filetime, bool convertUtc = false);
 
 /*! Conversion un SYSTEMTIME en wstring.
-* @param filetime SYSTEMTIME à convertir en wstring
+* @param systemtime SYSTEMTIME à convertir en wstring
 * @return chaîne de caractères issue de la conversion
 */
 std::wstring time_to_wstring(const SYSTEMTIME systemtime);
@@ -475,8 +526,8 @@ std::string wstring_to_string(const std::wstring& wstr);
 /*! Passe une chaîne en minuscules, pour comparer sans tenir compte de la casse.
 *
 * POURQUOI C'EST NÉCESSAIRE. Windows ne s'accorde pas avec lui-même sur la
-* casse : sur une VM Windows 11, l'index NTFS porte « …\Windows\Input\… »
-* quand le registre écrit « …\windows\input\… ». Toute correspondance par
+* casse : sur une VM Windows 11, l'index NTFS porte « …\\Windows\\Input\… »
+* quand le registre écrit « …\\windows\\input\… ». Toute correspondance par
 * chemin ou par nom de service faite à la casse échoue alors EN SILENCE — et une
 * tâche sans historique se lit à tort comme « jamais exécutée ».
 * @param s la chaîne à normaliser
@@ -504,7 +555,7 @@ bool estReferenceMui(const std::wstring& valeur);
 
 /*! Conversion d'une chaîne de multiple wstring concaténés en vecteur de wstring. chaque chaîne doit être séparée de la précédente par \0
 * @param data pointeur vers le tableau contenant les chaînes de caractères
-* @param size taille de la chaîne de caractères contenue dans <data>
+* @param size taille de la chaîne de caractères contenue dans `data`
 * @return vecteur issue de la conversion
 */
 std::vector<std::wstring> multiWstring_to_vector(LPBYTE data, int size);
@@ -522,8 +573,8 @@ std::wstring guid_to_wstring(GUID guid);
 
 /*! Lecture d'un SZ_VALUE en base de registre et le converti en wstring
 * @param key clé de la base de registre
-* @param szsubkey sous-clé de la base de registre
-* @param szvalue contient la nom de la valeur à lire en base de registre
+* @param sousCle sous-clé de la base de registre
+* @param nomValeur contient la nom de la valeur à lire en base de registre
 * @param ws pointeur sur un wstring contenant la valeur lue en base de registre
 * @return ERROR_SUCCESS en cas de succès sinon un code erreur.
 */
@@ -531,8 +582,8 @@ HRESULT getRegSzValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, std::wstring
 
 /*! Lecture d'un FILMETIME en base de registre
 * @param key clé de la base de registre
-* @param szsubkey sous-clé de la base de registre
-* @param szvalue contient la nom de la valeur à lire en base de registre
+* @param sousCle sous-clé de la base de registre
+* @param nomValeur contient la nom de la valeur à lire en base de registre
 * @param filetime pointeur sur un FILETIME contenant la valeur lue en base de registre
 * @return ERROR_SUCCESS en cas de succès sinon un code erreur.
 */
@@ -541,17 +592,18 @@ HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, FILETI
 /*! Lecture d'une valeur binaire en base de registre
 * nécessite d'utiliser delete[] octets pour libérer la mémoire
 * @param key clé de la base de registre
-* @param szsubkey sous-clé de la base de registre
-* @param szvalue contient la nom de la valeur à lire en base de registre
+* @param sousCle sous-clé de la base de registre
+* @param nomValeur contient la nom de la valeur à lire en base de registre
 * @param octets pointeur sur un tableau de BYTE contenant la valeur lue en base de registre
+* @param taille en entrée la taille du tampon, en sortie celle de la valeur lue
 * @return ERROR_SUCCESS en cas de succès sinon un code erreur registre
 */
 HRESULT getRegBinaryValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, LPBYTE* octets, DWORD* taille);
 
 /*! Lecture d'un booléen en base de registre
 * @param key clé de la base de registre
-* @param szsubkey sous-clé de la base de registre
-* @param szvalue contient la nom de la valeur à lire en base de registre
+* @param sousCle sous-clé de la base de registre
+* @param nomValeur contient la nom de la valeur à lire en base de registre
 * @param valeur pointeur sur un booléen contenant la valeur lue en base de registre
 * @return ERROR_SUCCESS en cas de succès sinon un code erreur.
 */
@@ -568,7 +620,7 @@ HRESULT getRegDwordValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, DWORD* pd
 
 /*! Lit une valeur REG_QWORD (64 bits) en base de registre.
 * Utile pour les valeurs qui portent un FILETIME brut, comme `InstallTime` sous
-* `SOFTWARE\Microsoft\Windows NT\CurrentVersion`.
+* `SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion`.
 * @param key clé ouverte
 * @param sousCle sous-clé (peut être NULL)
 * @param nomValeur nom de la valeur
@@ -579,8 +631,8 @@ HRESULT getRegQwordValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, unsigned 
 
 /*! Lecture d'un MULTISZ (multiple chaînes de caractères concaténées) en base de registre
 * @param key clé de la base de registre
-* @param szsubkey sous-clé de la base de registre
-* @param szvalue contient la nom de la valeur à lire en base de registre
+* @param sousCle sous-clé de la base de registre
+* @param nomValeur contient la nom de la valeur à lire en base de registre
 * @param out pointeur sur un tableau de wstring contenant les valeurs lues en base de registre
 * @return ERROR_SUCCESS en cas de succès sinon un code erreur.
 */
@@ -593,7 +645,7 @@ HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, std::ve
 */
 std::wstring getVolumeLetter(std::wstring searchSerial);
 
-/*! Écrit une valeur JSON dans <_outputDir>/<nom>, en UTF-8.
+/*! Écrit une valeur JSON dans `_outputDir`/`nom`, en UTF-8.
 * Centralise la création du répertoire de sortie, l'encodage et le chemin, pour
 * que chaque artefact n'ait plus à le refaire.
 * @param nom nom du fichier (ex. "bams.json")

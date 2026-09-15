@@ -8,14 +8,14 @@
  *      `Microsoft-Windows-TaskScheduler/Operational` ;
  *    - du temps : plusieurs appels d'interface par tâche, sur 217 tâches.
  *  `scheduledTasks` était en outre le SEUL consommateur de COM dans WAC (audit
- *  du 2026-09-15, doc §9.4) : le basculer permet de supprimer COM entièrement.
+ *  du 2026-09-15) : le basculer permet de supprimer COM entièrement.
  *
  *  SOURCES DE DONNÉES
- *    - définition : un fichier XML par tâche sous `\Windows\System32\Tasks\`,
+ *    - définition : un fichier XML par tâche sous `\\Windows\\System32\\Tasks\`,
  *      extrait en brut ; l'arborescence donne le chemin de la tâche ;
  *    - historique : valeur binaire `DynamicInfo` sous
- *      `SOFTWARE\…\CurrentVersion\Schedule\TaskCache\Tasks\{GUID}`, reliée à la
- *      tâche par `TaskCache\Tree\<chemin>\Id`.
+ *      `SOFTWARE\…\\CurrentVersion\\Schedule\\TaskCache\\Tasks\{GUID}`, reliée à la
+ *      tâche par `TaskCache\\Tree\<chemin>\Id`.
  *
  *  CE QUI EST PERDU, ET POURQUOI C'EST ACCEPTABLE
  *  `NextRun` et `NumberOfMissedRuns` ne sont pas stockés : le planificateur les
@@ -57,7 +57,7 @@ struct Action {
 /*! Une tâche planifiée, reconstituée depuis son XML et le TaskCache. */
 struct ScheduledTask {
 	std::wstring name;                 //!< nom de la tâche (nom du fichier)
-	std::wstring path;                 //!< chemin dans l'arborescence (ex. \Microsoft\Windows\…)
+	std::wstring path;                 //!< chemin dans l'arborescence (ex. \\Microsoft\\Windows\…)
 	std::wstring description;
 	std::wstring author;
 	std::wstring runAs;                //!< compte d'exécution (UserId du principal)

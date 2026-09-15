@@ -1,0 +1,27 @@
+var structEvent =
+[
+    [ "Event", "structEvent.html#a915ece050f329e69399da7a122fa5d9f", null ],
+    [ "clear", "structEvent.html#a0862af1471604bf30a4f50a5e028637a", null ],
+    [ "toJson", "structEvent.html#ac83247741a82814a4adcf83cbd9545a8", null ],
+    [ "evtEventData", "structEvent.html#a71647f03eadce96ebc1a8be134997ac1", null ],
+    [ "evtEventMessage", "structEvent.html#aa097f313be20ae3f527b1fea4b952109", null ],
+    [ "evtSystemActivityID", "structEvent.html#a7cdb803bdb0f332eb6b73dd6ca7306e6", null ],
+    [ "evtSystemChannel", "structEvent.html#afc35472407c394a9351e87e7e21c6447", null ],
+    [ "evtSystemComputer", "structEvent.html#a813fdfd4b41f1b9e320a88cde44dd538", null ],
+    [ "evtSystemEventID", "structEvent.html#a4c3da0850ba27b6331f3cecb33d37da1", null ],
+    [ "evtSystemEventRecordId", "structEvent.html#afacb3a6cd30df537b0cbbbdce1711b13", null ],
+    [ "evtSystemKeywords", "structEvent.html#a90f4b13f772afe6f1ffb7d1267eef03b", null ],
+    [ "evtSystemLevel", "structEvent.html#a39bb00506800887173726821efac74ae", null ],
+    [ "evtSystemOpcode", "structEvent.html#acdeaab5aa2b75fbddfc687f5626a22ce", null ],
+    [ "evtSystemProcessID", "structEvent.html#a374092cd47a3f832bb74910935834862", null ],
+    [ "evtSystemProviderGuid", "structEvent.html#a28f41c21b45cf3e42eff5b0472e2d23d", null ],
+    [ "evtSystemProviderName", "structEvent.html#a8299b2e131d6f7abcd27ef27f478f423", null ],
+    [ "evtSystemQualifiers", "structEvent.html#a29f30b74e0fb6021f72ff3f0dac82985", null ],
+    [ "evtSystemRelatedActivityID", "structEvent.html#a49b081b3991fcbc3927fc567bf3c124e", null ],
+    [ "evtSystemTask", "structEvent.html#a14031af4d9fda39903fb0828a34b1e4b", null ],
+    [ "evtSystemThreadID", "structEvent.html#a876152f4638da5032a0fcf3ecf428a76", null ],
+    [ "evtSystemTimeCreated", "structEvent.html#af53ee1226bfbff2c70233c5ad244f0a7", null ],
+    [ "evtSystemTimeCreatedUtc", "structEvent.html#a9123cfd310599bf83ee4807672739f3e", null ],
+    [ "evtSystemUserID", "structEvent.html#a8c56425487221d463b7dcce89e3ebb82", null ],
+    [ "evtSystemVersion", "structEvent.html#a5d53d627bbb45262e3a5f99894cf068a", null ]
+];

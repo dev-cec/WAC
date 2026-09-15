@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['jumplistautomatics_0',['JumplistAutomatics',['../struct_jumplist_automatics.html',1,'']]],
-  ['jumplistcustoms_1',['JumplistCustoms',['../struct_jumplist_customs.html',1,'']]]
+  ['idlist_0',['IdList',['../structIdList.html',1,'']]],
+  ['iextensionblock_1',['IExtensionBlock',['../structIExtensionBlock.html',1,'']]],
+  ['ishellitem_2',['IShellItem',['../structIShellItem.html',1,'']]]
 ];

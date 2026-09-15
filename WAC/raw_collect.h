@@ -13,7 +13,7 @@
 #pragma once
 #include <windows.h>
 
-/*! Extrait les ruches (+ journaux .LOG1/.LOG2) vers <_outputDir>\hives et les
+/*! Extrait les ruches (+ journaux .LOG1/.LOG2) vers `_outputDir`\\hives et les
  *  rend exploitables par offreg.
  *
  *  Les journaux de transaction sont extraits car ils sont des artefacts en
@@ -31,7 +31,7 @@
 HRESULT ExtractHivesRaw();
 
 /*! Extrait les artefacts sur fichiers : Prefetch, jumplists et documents
- *  récents, vers <_outputDir>\hives sous leur chemin d'origine.
+ *  récents, vers `_outputDir`\\hives sous leur chemin d'origine.
  *
  *  Sans cette extraction, les collecteurs correspondants ne rendent AUCUNE
  *  donnée — et « 0 entrée » est, à l'analyse, indiscernable de « aucune trace

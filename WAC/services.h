@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <windows.h>
 #include <string>
@@ -11,11 +11,11 @@
 
 /*! Services et pilotes de la machine examinée.
 *
-*  POURQUOI LA RUCHE PLUTÔT QUE LE GESTIONNAIRE DE SERVICES (doc §9.4ter).
+*  POURQUOI LA RUCHE PLUTÔT QUE LE GESTIONNAIRE DE SERVICES.
 *  La version d'origine appelait `OpenServiceW` puis `QueryServiceConfigW` pour
 *  CHAQUE service, soit plusieurs centaines d'ouvertures de handle sur le SCM.
 *  Toute cette configuration est écrite dans
-*  `SYSTEM\CurrentControlSet\Services`, déjà extraite en brut : la lire hors
+*  `SYSTEM\CurrentControlSet\\Services`, déjà extraite en brut : la lire hors
 *  ligne supprime ces appels et apporte, en plus, ce que le SCM ne donne pas.
 *
 *  CE QUE LA RUCHE AJOUTE
@@ -52,7 +52,7 @@ struct ServiceStruct
 	std::wstring serviceErrorControl;       //!< comportement en cas d'échec
 	std::wstring serviceOwner;              //!< compte d'exécution (ObjectName)
 	std::wstring serviceBinary;             //!< ImagePath, tel qu'écrit dans la ruche
-	std::wstring serviceDll;                //!< Parameters\ServiceDll, si présent
+	std::wstring serviceDll;                //!< Parameters\\ServiceDll, si présent
 	std::wstring serviceFailureCommand;     //!< commande exécutée en cas d'échec
 	std::wstring serviceGroup;              //!< groupe de chargement
 	std::vector<std::wstring> dependances;  //!< DependOnService
@@ -83,7 +83,7 @@ struct Services
 {
 	std::vector<ServiceStruct> services; //!< tableau contenant tous les services
 
-	/*! Relève les services dans `SYSTEM\CurrentControlSet\Services`, puis
+	/*! Relève les services dans `SYSTEM\CurrentControlSet\\Services`, puis
 	* complète l'état courant depuis le gestionnaire de services.
 	*/
 	HRESULT getData();

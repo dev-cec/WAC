@@ -4,7 +4,7 @@ namespace {
 
 /*! Lit un champ StringData d'un raccourci .lnk.
 *
-*  FORMAT (MS-SHLLINK §2.4). Chaque champ est un compteur de CARACTÈRES sur deux
+*  FORMAT (MS-SHLLINK). Chaque champ est un compteur de CARACTÈRES sur deux
 *  octets, suivi des caractères eux-mêmes — **sans terminateur nul**. Le code
 *  d'origine ignorait ce compteur et construisait la chaîne jusqu'au premier
 *  zéro rencontré : correct par accident quand Windows en écrit un, mais sinon la
@@ -143,7 +143,7 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t taille) {
 			std::string targetPath((char*)(buffer + LinkInfo_offset + LocalPath_offset));
 			log(3, L"🔈string_to_wstring target");
 			target = string_to_wstring(targetPath);
-			// Valeur BRUTE : l'echappement est centralise dans json.h (§11).
+			// Valeur BRUTE : l'echappement est centralise dans json.h.
 			if (conf.md5) {
 				log(3, L"🔈fileToHash md5Target " + string_to_wstring(targetPath));
 				md5Target = QuickDigest5::fileToHash((char*)(buffer + LinkInfo_offset + LocalPath_offset));
@@ -187,7 +187,7 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t taille) {
 		   étant lu à l'offset du RÉPERTOIRE DE TRAVAIL au lieu du sien. Le
 		   champ `iconLocation`, calculé à partir de cette taille, était donc lu
 		   au mauvais endroit. Valeurs BRUTES : l'echappement est centralise
-		   dans json.h (§11). */
+		   dans json.h. */
 		size_t suivant = (size_t)stringData_offset;
 		description      = flags.HasName         ? lireStringData(buffer, taille, suivant, &suivant) : L"";
 		relativePath     = flags.HasRelativePath ? lireStringData(buffer, taille, suivant, &suivant) : L"";
@@ -203,7 +203,7 @@ RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 	//path retourne un codage ANSI mais on veut de l'UTF8
 	path = _path.wstring();
 	log(3, L"🔈replaceAll path_original");
-	path_original = replaceAll(path, conf.mountpoint, conf.systemDrive);
+	path_original = cheminOriginal(path);
 	log(2, L"❇️RecentDoc path " + path_original);
 	target = L"";
 	if (_path.extension() == ".lnk" || _path.extension() == ".LNK") {
@@ -271,7 +271,7 @@ RecentDoc::RecentDoc(LPBYTE buffer, size_t size, std::wstring _path, std::wstrin
 	Sid = _sid;
 	path = _path;
 
-	path_original = replaceAll(path, conf.mountpoint, conf.systemDrive);
+	path_original = cheminOriginal(path);
 	log(2, L"❇️RecentDoc path " + path_original);
 	if (conf.md5) {
 		log(3, L"🔈fileToHash md5Source " + _path);
@@ -335,9 +335,10 @@ HRESULT RecentDocs::getData() {
 	const std::wstring reps[2] = { L"\\AppData\\Roaming\\Microsoft\\Windows\\Recent", L"\\AppData\\Roaming\\Microsoft\\Office\\Recent" };
 	for (const std::wstring& rep : reps) {
 		for (const std::tuple<std::wstring, std::wstring>& profile : conf.profiles) {
-			log(3, L"🔈replaceAll Profile");
-			std::wstring temp = replaceAll(std::get<1>(profile), conf.systemDrive, L"");
-			const std::filesystem::path repertoire = conf.mountpoint + temp + rep;
+			// cheminExtrait() gere le cas d'un profil situe sur un autre volume
+			// que Windows, que replaceAll(conf.systemDrive) laissait absolu.
+			const std::filesystem::path repertoire =
+				cheminExtrait(std::get<1>(profile)) + rep;
 			const std::vector<std::filesystem::path> fichiers =
 				listFilesByExtension(repertoire, { L".lnk", L".url" });
 			size_t iFichier = 0;

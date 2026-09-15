@@ -16,9 +16,9 @@
  *  Les premières datent le document, les secondes l'ACTIVITÉ de l'utilisateur.
  *
  *  PIÈGE HORAIRE. Les trois horodatages de l'en-tête .lnk (offsets 28, 36, 44)
- *  sont en UTC — MS-SHLLINK §2.1 —, malgré des noms de champs qui ne le disent
+ *  sont en UTC — MS-SHLLINK —, malgré des noms de champs qui ne le disent
  *  pas. Les traiter comme des heures locales décalait les dates de la valeur du
- *  fuseau, sans qu'aucun contrôle de format ne puisse le voir (cf. doc §14.5).
+ *  fuseau, sans qu'aucun contrôle de format ne puisse le voir.
  *
  *  Le contenu structuré du raccourci (liste d'ID, blocs d'extension, propriétés)
  *  est analysé par `idList.h`.
@@ -108,6 +108,7 @@ public:
 
 	/*! constructeur à partir d'un buffer
 	* @param buffer contient les données à parser
+	* @param size taille du tampon, en octets
 	* @param _path contient le chemin vers le fichier contenant le buffer
 	* @param _sid contient le SID de l'utilisateur propriétaire de la donnée
 
@@ -115,7 +116,6 @@ public:
 	RecentDoc(LPBYTE buffer, size_t size, std::wstring _path, std::wstring _sid);
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson();
@@ -130,7 +130,6 @@ struct RecentDocs {
 	std::vector<RecentDoc> recentdocs; //!< tableau contenant l'ensemble des objets
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData();
 

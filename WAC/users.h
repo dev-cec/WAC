@@ -10,7 +10,7 @@
 
 /*! Comptes locaux de la machine examinée, lus dans la ruche SAM.
 *
-*  POURQUOI LA RUCHE PLUTÔT QUE netapi32 (doc §9.4ter). La version d'origine
+*  POURQUOI LA RUCHE PLUTÔT QUE netapi32. La version d'origine
 *  appelait `NetUserEnum` puis `NetUserGetInfo` pour chaque compte : autant
 *  d'allers-retours RPC vers LSASS, plus une lecture du registre vivant par
 *  utilisateur. La même information est écrite dans

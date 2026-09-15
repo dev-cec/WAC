@@ -1,0 +1,248 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector):  Fichier source de /var/www/html/WAC/WAC/scheduledTasks.h</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(document).ready(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('scheduledTasks_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">scheduledTasks.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="scheduledTasks_8h.html">Aller à la documentation de ce fichier.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment">/*  scheduledTasks.h — tâches planifiées, lues HORS LIGNE.</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment"> *  POURQUOI HORS LIGNE. La version précédente passait par le Task Scheduler COM</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="comment"> *  (`CoCreateInstance(CLSID_TaskScheduler)`), ce qui coûtait deux choses :</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="comment"> *    - une trace d&#39;exécution — sollicitation du service Schedule et entrées dans</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="comment"> *      `Microsoft-Windows-TaskScheduler/Operational` ;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="comment"> *    - du temps : plusieurs appels d&#39;interface par tâche, sur 217 tâches.</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="comment"> *  `scheduledTasks` était en outre le SEUL consommateur de COM dans WAC (audit</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="comment"> *  du 2026-09-15) : le basculer permet de supprimer COM entièrement.</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="comment"> *  SOURCES DE DONNÉES</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="comment"> *    - définition : un fichier XML par tâche sous `\\Windows\\System32\\Tasks\`,</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="comment"> *      extrait en brut ; l&#39;arborescence donne le chemin de la tâche ;</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="comment"> *    - historique : valeur binaire `DynamicInfo` sous</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment"> *      `SOFTWARE\…\\CurrentVersion\\Schedule\\TaskCache\\Tasks\{GUID}`, reliée à la</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="comment"> *      tâche par `TaskCache\\Tree&lt;chemin&gt;\Id`.</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="comment"> *  CE QUI EST PERDU, ET POURQUOI C&#39;EST ACCEPTABLE</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="comment"> *  `NextRun` et `NumberOfMissedRuns` ne sont pas stockés : le planificateur les</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="comment"> *  calcule à chaud. Ce sont des PROJECTIONS, pas des traces d&#39;activité passée :</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="comment"> *  elles n&#39;ont aucune valeur probante. Les champs ne sont donc PAS émis du tout —</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="comment"> *  une clé vide dans le JSON se lirait comme un échec de lecture, alors que la</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="comment"> *  donnée n&#39;existe simplement pas hors ligne.</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="comment"> *  `State` n&#39;est plus que « activé / désactivé » (lu dans le XML) : l&#39;état</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="comment"> *  « en cours d&#39;exécution » est par nature volatil.</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="preprocessor">#include &quot;<a class="code" href="tools_8h.html">tools.h</a>&quot;</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="preprocessor">#include &quot;<a class="code" href="json_8h.html">json.h</a>&quot;</span></div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="preprocessor">#include &quot;<a class="code" href="trans__id_8h.html">trans_id.h</a>&quot;</span></div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="preprocessor">#include &quot;<a class="code" href="quickdigest5_8h.html">quickdigest5.h</a>&quot;</span></div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
+<div class="foldopen" id="foldopen00039" data-start="{" data-end="};">
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno"><a class="line" href="structTrigger.html">   39</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structTrigger.html">Trigger</a> {</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno"><a class="line" href="structTrigger.html#a7caf8fc5e4e5358e39314701de5a735c">   40</a></span>    std::wstring <a class="code hl_variable" href="structTrigger.html#a7caf8fc5e4e5358e39314701de5a735c">type</a>;      </div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno"><a class="line" href="structTrigger.html#a68732e2fc68ff227dec98e72fdf10653">   41</a></span>    std::wstring <a class="code hl_variable" href="structTrigger.html#a68732e2fc68ff227dec98e72fdf10653">interval</a>;  </div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno"><a class="line" href="structTrigger.html#a75fed69dae286ee21efbf14d900bf10b">   42</a></span>    std::wstring <a class="code hl_variable" href="structTrigger.html#a75fed69dae286ee21efbf14d900bf10b">debut</a>;     </div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno"><a class="line" href="structTrigger.html#a222b32e5fc3bc50bf8ee45d9c6d7c4ad">   43</a></span>    <span class="keywordtype">bool</span>         <a class="code hl_variable" href="structTrigger.html#a222b32e5fc3bc50bf8ee45d9c6d7c4ad">actif</a> = <span class="keyword">true</span>; </div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>};</div>
+</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
+<div class="foldopen" id="foldopen00047" data-start="{" data-end="};">
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno"><a class="line" href="structAction.html">   47</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structAction.html">Action</a> {</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno"><a class="line" href="structAction.html#a7e227f1f5102a564ec456e349ff72884">   48</a></span>    std::wstring <a class="code hl_variable" href="structAction.html#a7e227f1f5102a564ec456e349ff72884">type</a>;       </div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno"><a class="line" href="structAction.html#a5ddd0fe6b5957d3550123542c9455a73">   49</a></span>    std::wstring <a class="code hl_variable" href="structAction.html#a5ddd0fe6b5957d3550123542c9455a73">command</a>;    </div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno"><a class="line" href="structAction.html#a69358bcbd9328fbf8d5fad29711a5d30">   50</a></span>    std::wstring <a class="code hl_variable" href="structAction.html#a69358bcbd9328fbf8d5fad29711a5d30">md5</a>;        </div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="structAction.html#a2dc221d7488424a28fe4327b6f893d18">   51</a></span>    std::wstring <a class="code hl_variable" href="structAction.html#a2dc221d7488424a28fe4327b6f893d18">arguments</a>;  </div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno"><a class="line" href="structAction.html#aad978d105e67835d43aa85d9c4ef9177">   52</a></span>    std::wstring <a class="code hl_variable" href="structAction.html#aad978d105e67835d43aa85d9c4ef9177">workingDir</a>; </div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno"><a class="line" href="structAction.html#af1fdaf541114523c6fc64161de0d7c55">   53</a></span>    std::wstring <a class="code hl_variable" href="structAction.html#af1fdaf541114523c6fc64161de0d7c55">classId</a>;    </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno"><a class="line" href="structAction.html#a59d1be201b4640f32ca91b336c4ae304">   54</a></span>    std::wstring <a class="code hl_variable" href="structAction.html#a59d1be201b4640f32ca91b336c4ae304">data</a>;       </div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>};</div>
+</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
+<div class="foldopen" id="foldopen00058" data-start="{" data-end="};">
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno"><a class="line" href="structScheduledTask.html">   58</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structScheduledTask.html">ScheduledTask</a> {</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno"><a class="line" href="structScheduledTask.html#a469228bd4ec5786557e5e63825e75418">   59</a></span>    std::wstring <a class="code hl_variable" href="structScheduledTask.html#a469228bd4ec5786557e5e63825e75418">name</a>;                 </div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno"><a class="line" href="structScheduledTask.html#a8ee9e1621fa3a246f7ccc8f8f8563a3c">   60</a></span>    std::wstring <a class="code hl_variable" href="structScheduledTask.html#a8ee9e1621fa3a246f7ccc8f8f8563a3c">path</a>;                 </div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno"><a class="line" href="structScheduledTask.html#adbb7adcb0110346cae647a5c010ece32">   61</a></span>    std::wstring <a class="code hl_variable" href="structScheduledTask.html#adbb7adcb0110346cae647a5c010ece32">description</a>;</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno"><a class="line" href="structScheduledTask.html#a0b9b77f17487188319012b84b2515cf2">   62</a></span>    std::wstring <a class="code hl_variable" href="structScheduledTask.html#a0b9b77f17487188319012b84b2515cf2">author</a>;</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno"><a class="line" href="structScheduledTask.html#a97239fd6cb57db27f6b385ce81abfe18">   63</a></span>    std::wstring <a class="code hl_variable" href="structScheduledTask.html#a97239fd6cb57db27f6b385ce81abfe18">runAs</a>;                </div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno"><a class="line" href="structScheduledTask.html#a0bf232d0b6dd66390547d7387ee71b4d">   64</a></span>    std::wstring <a class="code hl_variable" href="structScheduledTask.html#a0bf232d0b6dd66390547d7387ee71b4d">runAsSid</a>;             </div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno"><a class="line" href="structScheduledTask.html#a72900bf73190e24c330e4dafb68e425a">   65</a></span>    std::wstring <a class="code hl_variable" href="structScheduledTask.html#a72900bf73190e24c330e4dafb68e425a">state</a>;                </div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno"><a class="line" href="structScheduledTask.html#aba2ef89d590f909740d4c868428c71c5">   66</a></span>    <span class="keywordtype">bool</span>         <a class="code hl_variable" href="structScheduledTask.html#aba2ef89d590f909740d4c868428c71c5">enabled</a> = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno"><a class="line" href="structScheduledTask.html#a91bb12c2e00193cf1cfcf1843b1576e5">   67</a></span>    FILETIME     <a class="code hl_variable" href="structScheduledTask.html#a91bb12c2e00193cf1cfcf1843b1576e5">lastRunTime</a> = { 0 };      </div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno"><a class="line" href="structScheduledTask.html#a47dd4c9ec9b5445e6be00b23125f7cc0">   68</a></span>    FILETIME     <a class="code hl_variable" href="structScheduledTask.html#a47dd4c9ec9b5445e6be00b23125f7cc0">lastRunTimeUtc</a> = { 0 };   </div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno"><a class="line" href="structScheduledTask.html#aed45346c6c1f6295171607e797b87eef">   69</a></span>    LONG         <a class="code hl_variable" href="structScheduledTask.html#aed45346c6c1f6295171607e797b87eef">lastTaskResult</a> = 0;       </div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno"><a class="line" href="structScheduledTask.html#ad856049ffc53b4f7562b0a9101d8a822">   70</a></span>    std::wstring <a class="code hl_variable" href="structScheduledTask.html#ad856049ffc53b4f7562b0a9101d8a822">registrationDate</a>;         </div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno"><a class="line" href="structScheduledTask.html#af1769c7ed3551736dcdee2ba1f16d950">   71</a></span>    std::wstring <a class="code hl_variable" href="structScheduledTask.html#af1769c7ed3551736dcdee2ba1f16d950">sourceXml</a>;                </div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno"><a class="line" href="structScheduledTask.html#a37706844c969e4e8bf0108f8955d07ae">   72</a></span>    std::vector&lt;Action&gt;  <a class="code hl_variable" href="structScheduledTask.html#a37706844c969e4e8bf0108f8955d07ae">actions</a>;</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno"><a class="line" href="structScheduledTask.html#ac2c57666845b795666960c2a355bc0f5">   73</a></span>    std::vector&lt;Trigger&gt; <a class="code hl_variable" href="structScheduledTask.html#ac2c57666845b795666960c2a355bc0f5">triggers</a>;</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="structScheduledTask.html#af1ec5fe6cdd0c89562d31300863151af">toJson</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span> </div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    <span class="comment">/* liberation mémoire */</span></div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structScheduledTask.html#a9a5f5665501dee7f15790e6d05c28f87">clear</a>();</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>};</div>
+</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span> </div>
+<div class="foldopen" id="foldopen00083" data-start="{" data-end="};">
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno"><a class="line" href="structScheduledTasks.html">   83</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structScheduledTasks.html">ScheduledTasks</a> {</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno"><a class="line" href="structScheduledTasks.html#a30c5a3007d280892cd73e157cea1c9e2">   84</a></span>    std::vector&lt;ScheduledTask&gt; <a class="code hl_variable" href="structScheduledTasks.html#a30c5a3007d280892cd73e157cea1c9e2">scheduledTasks</a>;</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span> </div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    HRESULT <a class="code hl_function" href="structScheduledTasks.html#ac2d992fa98db77e5060b039f8a213478">getData</a>();</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span> </div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>    HRESULT <a class="code hl_function" href="structScheduledTasks.html#ad6c4083be40b47156a45efe46cb39c05">toJson</a>();</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span> </div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    <span class="comment">/* liberation mémoire */</span></div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structScheduledTasks.html#aca7b24c654a8851c8f6f50b60b6c805d">clear</a>();</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>};</div>
+</div>
+<div class="ttc" id="aclassJson_html"><div class="ttname"><a href="classJson.html">Json</a></div><div class="ttdef"><b>Definition</b> json.h:52</div></div>
+<div class="ttc" id="ajson_8h_html"><div class="ttname"><a href="json_8h.html">json.h</a></div></div>
+<div class="ttc" id="aquickdigest5_8h_html"><div class="ttname"><a href="quickdigest5_8h.html">quickdigest5.h</a></div></div>
+<div class="ttc" id="astructAction_html"><div class="ttname"><a href="structAction.html">Action</a></div><div class="ttdef"><b>Definition</b> scheduledTasks.h:47</div></div>
+<div class="ttc" id="astructAction_html_a2dc221d7488424a28fe4327b6f893d18"><div class="ttname"><a href="structAction.html#a2dc221d7488424a28fe4327b6f893d18">Action::arguments</a></div><div class="ttdeci">std::wstring arguments</div><div class="ttdoc">arguments de la ligne de commande</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:51</div></div>
+<div class="ttc" id="astructAction_html_a59d1be201b4640f32ca91b336c4ae304"><div class="ttname"><a href="structAction.html#a59d1be201b4640f32ca91b336c4ae304">Action::data</a></div><div class="ttdeci">std::wstring data</div><div class="ttdoc">données passées au gestionnaire COM</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:54</div></div>
+<div class="ttc" id="astructAction_html_a5ddd0fe6b5957d3550123542c9455a73"><div class="ttname"><a href="structAction.html#a5ddd0fe6b5957d3550123542c9455a73">Action::command</a></div><div class="ttdeci">std::wstring command</div><div class="ttdoc">exécutable (Exec)</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:49</div></div>
+<div class="ttc" id="astructAction_html_a69358bcbd9328fbf8d5fad29711a5d30"><div class="ttname"><a href="structAction.html#a69358bcbd9328fbf8d5fad29711a5d30">Action::md5</a></div><div class="ttdeci">std::wstring md5</div><div class="ttdoc">empreinte de l'exécutable, si –md5</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:50</div></div>
+<div class="ttc" id="astructAction_html_a7e227f1f5102a564ec456e349ff72884"><div class="ttname"><a href="structAction.html#a7e227f1f5102a564ec456e349ff72884">Action::type</a></div><div class="ttdeci">std::wstring type</div><div class="ttdoc">« Exec » ou « ComHandler »</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:48</div></div>
+<div class="ttc" id="astructAction_html_aad978d105e67835d43aa85d9c4ef9177"><div class="ttname"><a href="structAction.html#aad978d105e67835d43aa85d9c4ef9177">Action::workingDir</a></div><div class="ttdeci">std::wstring workingDir</div><div class="ttdoc">répertoire de travail</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:52</div></div>
+<div class="ttc" id="astructAction_html_af1fdaf541114523c6fc64161de0d7c55"><div class="ttname"><a href="structAction.html#af1fdaf541114523c6fc64161de0d7c55">Action::classId</a></div><div class="ttdeci">std::wstring classId</div><div class="ttdoc">CLSID (ComHandler)</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:53</div></div>
+<div class="ttc" id="astructScheduledTask_html"><div class="ttname"><a href="structScheduledTask.html">ScheduledTask</a></div><div class="ttdef"><b>Definition</b> scheduledTasks.h:58</div></div>
+<div class="ttc" id="astructScheduledTask_html_a0b9b77f17487188319012b84b2515cf2"><div class="ttname"><a href="structScheduledTask.html#a0b9b77f17487188319012b84b2515cf2">ScheduledTask::author</a></div><div class="ttdeci">std::wstring author</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:62</div></div>
+<div class="ttc" id="astructScheduledTask_html_a0bf232d0b6dd66390547d7387ee71b4d"><div class="ttname"><a href="structScheduledTask.html#a0bf232d0b6dd66390547d7387ee71b4d">ScheduledTask::runAsSid</a></div><div class="ttdeci">std::wstring runAsSid</div><div class="ttdoc">SID si UserId en est un.</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:64</div></div>
+<div class="ttc" id="astructScheduledTask_html_a37706844c969e4e8bf0108f8955d07ae"><div class="ttname"><a href="structScheduledTask.html#a37706844c969e4e8bf0108f8955d07ae">ScheduledTask::actions</a></div><div class="ttdeci">std::vector&lt; Action &gt; actions</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:72</div></div>
+<div class="ttc" id="astructScheduledTask_html_a469228bd4ec5786557e5e63825e75418"><div class="ttname"><a href="structScheduledTask.html#a469228bd4ec5786557e5e63825e75418">ScheduledTask::name</a></div><div class="ttdeci">std::wstring name</div><div class="ttdoc">nom de la tâche (nom du fichier)</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:59</div></div>
+<div class="ttc" id="astructScheduledTask_html_a47dd4c9ec9b5445e6be00b23125f7cc0"><div class="ttname"><a href="structScheduledTask.html#a47dd4c9ec9b5445e6be00b23125f7cc0">ScheduledTask::lastRunTimeUtc</a></div><div class="ttdeci">FILETIME lastRunTimeUtc</div><div class="ttdoc">depuis DynamicInfo (UTC)</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:68</div></div>
+<div class="ttc" id="astructScheduledTask_html_a72900bf73190e24c330e4dafb68e425a"><div class="ttname"><a href="structScheduledTask.html#a72900bf73190e24c330e4dafb68e425a">ScheduledTask::state</a></div><div class="ttdeci">std::wstring state</div><div class="ttdoc">« Enabled » / « Disabled »</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:65</div></div>
+<div class="ttc" id="astructScheduledTask_html_a8ee9e1621fa3a246f7ccc8f8f8563a3c"><div class="ttname"><a href="structScheduledTask.html#a8ee9e1621fa3a246f7ccc8f8f8563a3c">ScheduledTask::path</a></div><div class="ttdeci">std::wstring path</div><div class="ttdoc">chemin dans l'arborescence (ex. \Microsoft\Windows\…)</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:60</div></div>
+<div class="ttc" id="astructScheduledTask_html_a91bb12c2e00193cf1cfcf1843b1576e5"><div class="ttname"><a href="structScheduledTask.html#a91bb12c2e00193cf1cfcf1843b1576e5">ScheduledTask::lastRunTime</a></div><div class="ttdeci">FILETIME lastRunTime</div><div class="ttdoc">heure locale, dérivée de l'UTC</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:67</div></div>
+<div class="ttc" id="astructScheduledTask_html_a97239fd6cb57db27f6b385ce81abfe18"><div class="ttname"><a href="structScheduledTask.html#a97239fd6cb57db27f6b385ce81abfe18">ScheduledTask::runAs</a></div><div class="ttdeci">std::wstring runAs</div><div class="ttdoc">compte d'exécution (UserId du principal)</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:63</div></div>
+<div class="ttc" id="astructScheduledTask_html_a9a5f5665501dee7f15790e6d05c28f87"><div class="ttname"><a href="structScheduledTask.html#a9a5f5665501dee7f15790e6d05c28f87">ScheduledTask::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdef"><b>Definition</b> scheduledTasks.cpp:234</div></div>
+<div class="ttc" id="astructScheduledTask_html_aba2ef89d590f909740d4c868428c71c5"><div class="ttname"><a href="structScheduledTask.html#aba2ef89d590f909740d4c868428c71c5">ScheduledTask::enabled</a></div><div class="ttdeci">bool enabled</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:66</div></div>
+<div class="ttc" id="astructScheduledTask_html_ac2c57666845b795666960c2a355bc0f5"><div class="ttname"><a href="structScheduledTask.html#ac2c57666845b795666960c2a355bc0f5">ScheduledTask::triggers</a></div><div class="ttdeci">std::vector&lt; Trigger &gt; triggers</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:73</div></div>
+<div class="ttc" id="astructScheduledTask_html_ad856049ffc53b4f7562b0a9101d8a822"><div class="ttname"><a href="structScheduledTask.html#ad856049ffc53b4f7562b0a9101d8a822">ScheduledTask::registrationDate</a></div><div class="ttdeci">std::wstring registrationDate</div><div class="ttdoc">Date du XML, telle qu'écrite.</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:70</div></div>
+<div class="ttc" id="astructScheduledTask_html_adbb7adcb0110346cae647a5c010ece32"><div class="ttname"><a href="structScheduledTask.html#adbb7adcb0110346cae647a5c010ece32">ScheduledTask::description</a></div><div class="ttdeci">std::wstring description</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:61</div></div>
+<div class="ttc" id="astructScheduledTask_html_aed45346c6c1f6295171607e797b87eef"><div class="ttname"><a href="structScheduledTask.html#aed45346c6c1f6295171607e797b87eef">ScheduledTask::lastTaskResult</a></div><div class="ttdeci">LONG lastTaskResult</div><div class="ttdoc">code de retour de la dernière exécution</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:69</div></div>
+<div class="ttc" id="astructScheduledTask_html_af1769c7ed3551736dcdee2ba1f16d950"><div class="ttname"><a href="structScheduledTask.html#af1769c7ed3551736dcdee2ba1f16d950">ScheduledTask::sourceXml</a></div><div class="ttdeci">std::wstring sourceXml</div><div class="ttdoc">chemin du XML d'origine, pour la traçabilité</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:71</div></div>
+<div class="ttc" id="astructScheduledTask_html_af1ec5fe6cdd0c89562d31300863151af"><div class="ttname"><a href="structScheduledTask.html#af1ec5fe6cdd0c89562d31300863151af">ScheduledTask::toJson</a></div><div class="ttdeci">Json toJson() const</div><div class="ttdef"><b>Definition</b> scheduledTasks.cpp:184</div></div>
+<div class="ttc" id="astructScheduledTasks_html"><div class="ttname"><a href="structScheduledTasks.html">ScheduledTasks</a></div><div class="ttdef"><b>Definition</b> scheduledTasks.h:83</div></div>
+<div class="ttc" id="astructScheduledTasks_html_a30c5a3007d280892cd73e157cea1c9e2"><div class="ttname"><a href="structScheduledTasks.html#a30c5a3007d280892cd73e157cea1c9e2">ScheduledTasks::scheduledTasks</a></div><div class="ttdeci">std::vector&lt; ScheduledTask &gt; scheduledTasks</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:84</div></div>
+<div class="ttc" id="astructScheduledTasks_html_ac2d992fa98db77e5060b039f8a213478"><div class="ttname"><a href="structScheduledTasks.html#ac2d992fa98db77e5060b039f8a213478">ScheduledTasks::getData</a></div><div class="ttdeci">HRESULT getData()</div><div class="ttdef"><b>Definition</b> scheduledTasks.cpp:240</div></div>
+<div class="ttc" id="astructScheduledTasks_html_aca7b24c654a8851c8f6f50b60b6c805d"><div class="ttname"><a href="structScheduledTasks.html#aca7b24c654a8851c8f6f50b60b6c805d">ScheduledTasks::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdef"><b>Definition</b> scheduledTasks.cpp:311</div></div>
+<div class="ttc" id="astructScheduledTasks_html_ad6c4083be40b47156a45efe46cb39c05"><div class="ttname"><a href="structScheduledTasks.html#ad6c4083be40b47156a45efe46cb39c05">ScheduledTasks::toJson</a></div><div class="ttdeci">HRESULT toJson()</div><div class="ttdef"><b>Definition</b> scheduledTasks.cpp:304</div></div>
+<div class="ttc" id="astructTrigger_html"><div class="ttname"><a href="structTrigger.html">Trigger</a></div><div class="ttdef"><b>Definition</b> scheduledTasks.h:39</div></div>
+<div class="ttc" id="astructTrigger_html_a222b32e5fc3bc50bf8ee45d9c6d7c4ad"><div class="ttname"><a href="structTrigger.html#a222b32e5fc3bc50bf8ee45d9c6d7c4ad">Trigger::actif</a></div><div class="ttdeci">bool actif</div><div class="ttdoc">Enabled du déclencheur.</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:43</div></div>
+<div class="ttc" id="astructTrigger_html_a68732e2fc68ff227dec98e72fdf10653"><div class="ttname"><a href="structTrigger.html#a68732e2fc68ff227dec98e72fdf10653">Trigger::interval</a></div><div class="ttdeci">std::wstring interval</div><div class="ttdoc">répétition (ISO 8601 de durée, ex. « PT1H »)</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:41</div></div>
+<div class="ttc" id="astructTrigger_html_a75fed69dae286ee21efbf14d900bf10b"><div class="ttname"><a href="structTrigger.html#a75fed69dae286ee21efbf14d900bf10b">Trigger::debut</a></div><div class="ttdeci">std::wstring debut</div><div class="ttdoc">StartBoundary : première échéance prévue.</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:42</div></div>
+<div class="ttc" id="astructTrigger_html_a7caf8fc5e4e5358e39314701de5a735c"><div class="ttname"><a href="structTrigger.html#a7caf8fc5e4e5358e39314701de5a735c">Trigger::type</a></div><div class="ttdeci">std::wstring type</div><div class="ttdoc">nom de l'élément XML (TimeTrigger, LogonTrigger…)</div><div class="ttdef"><b>Definition</b> scheduledTasks.h:40</div></div>
+<div class="ttc" id="atools_8h_html"><div class="ttname"><a href="tools_8h.html">tools.h</a></div></div>
+<div class="ttc" id="atrans__id_8h_html"><div class="ttname"><a href="trans__id_8h.html">trans_id.h</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="scheduledTasks_8h.html">scheduledTasks.h</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

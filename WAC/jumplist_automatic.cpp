@@ -6,8 +6,8 @@ AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wst
 	//path retourne un codage ANSI mais on veut de l'UTF8
 	path = _path.wstring();
 	log(3, L"🔈replaceAll pathOriginal");
-	// Chemin BRUT : l'echappement est centralise dans json.h (§11).
-	pathOriginal = replaceAll(path, conf.mountpoint, conf.systemDrive);
+	// Chemin BRUT : l'echappement est centralise dans json.h.
+	pathOriginal = cheminOriginal(path);
 	log(2, L"❇️AutomaticDestination Path : " + pathOriginal);
 
 	// get user name
@@ -153,9 +153,10 @@ HRESULT JumplistAutomatics::getData() {
 
 	const std::wstring rep = L"\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\AutomaticDestinations";
 	for (const std::tuple<std::wstring, std::wstring>& profile : conf.profiles) {
-		log(3, L"🔈replaceAll Profile");
-		std::wstring temp = replaceAll(std::get<1>(profile), conf.systemDrive, L"");
-		const std::filesystem::path repertoire = conf.mountpoint + temp + rep;
+		// cheminExtrait() gere le cas d'un profil situe sur un autre volume que
+		// Windows, que replaceAll(conf.systemDrive) laissait absolu.
+		const std::filesystem::path repertoire =
+			cheminExtrait(std::get<1>(profile)) + rep;
 		const std::vector<std::filesystem::path> fichiers =
 			listFilesByExtension(repertoire, { L".automaticDestinations-ms" });
 		size_t iFichier = 0;

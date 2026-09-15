@@ -1,10 +1,8 @@
 var searchData=
 [
-  ['read_0',['read',['../struct_prefetch.html#ab3a26c6ee678f13bf066da4879b55ae7',1,'Prefetch']]],
-  ['readlnkfile_1',['ReadLnkFile',['../_read_lnk_file_8cpp.html#ab6d66465b55b40fbc9c7098f9c2aba2a',1,'ReadLnkFile.cpp']]],
-  ['recentdoc_2',['RecentDoc',['../struct_recent_doc.html#ae78978ce7653746cb933ad97bdc04cef',1,'RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid)'],['../struct_recent_doc.html#af501edc675fb4bcebe3b08956c862f6e',1,'RecentDoc::RecentDoc(LPBYTE buffer, size_t size, std::wstring _path, std::wstring _sid)']]],
-  ['releaseinterface_3',['ReleaseInterface',['../vss_8cpp.html#a08d481dd8f916168a6ff6a8c74cc2f7a',1,'ReleaseInterface(IVssBackupComponents *pBackup):&#160;vss.cpp'],['../vss_8h.html#a08d481dd8f916168a6ff6a8c74cc2f7a',1,'ReleaseInterface(IVssBackupComponents *pBackup):&#160;vss.cpp']]],
-  ['replaceall_4',['replaceAll',['../tools_8cpp.html#ac0b13fc24e7bc07ec4a03384acd92539',1,'replaceAll(std::wstring src, std::wstring search, std::wstring replacement):&#160;tools.cpp'],['../tools_8h.html#ac0b13fc24e7bc07ec4a03384acd92539',1,'replaceAll(std::wstring src, std::wstring search, std::wstring replacement):&#160;tools.cpp']]],
-  ['rootfolder_5',['RootFolder',['../struct_root_folder.html#a0a8758e7b52a85e7346eed79c754e591',1,'RootFolder']]],
-  ['rot13_6',['ROT13',['../tools_8cpp.html#a7684efc242e166b53952647faf435f95',1,'ROT13(std::wstring source):&#160;tools.cpp'],['../tools_8h.html#a7684efc242e166b53952647faf435f95',1,'ROT13(std::wstring source):&#160;tools.cpp']]]
+  ['obj_0',['obj',['../classJson.html#a2d01c95f7974c2348717c56917dd11b7',1,'Json']]],
+  ['oleheader_1',['oleheader',['../structoleHeader.html#a079d0283d7035c5052feb0d1411b1aca',1,'oleHeader::oleHeader()'],['../structoleHeader.html#ab66ffa9bac03d44caf1eba704b2468dd',1,'oleHeader::oleHeader(LPBYTE buffer, size_t _bufferSize)']]],
+  ['oleparser_2',['oleparser',['../structoleParser.html#ae692728de5af8f1bdd258ff3d8c064c9',1,'oleParser::oleParser()'],['../structoleParser.html#ac99a3f86f1f9d4eefde94d09544283f9',1,'oleParser::oleParser(LPBYTE _buffer, size_t _bufferSize)']]],
+  ['operator_3d_3',['operator=',['../structRecentDoc.html#a3390989fed87f1a03f791166b3b97478',1,'RecentDoc::operator=(const RecentDoc &amp;)=delete'],['../structRecentDoc.html#aa3b50b93a413d7024bd193df6070d44f',1,'RecentDoc::operator=(RecentDoc &amp;&amp;)=default']]],
+  ['os_5farchitecture_4',['os_architecture',['../trans__id_8cpp.html#ad20837d9d2ee65fdb4efd65e64574c5c',1,'os_architecture(DWORD archi):&#160;trans_id.cpp'],['../trans__id_8h.html#ad20837d9d2ee65fdb4efd65e64574c5c',1,'os_architecture(DWORD archi):&#160;trans_id.cpp']]]
 ];

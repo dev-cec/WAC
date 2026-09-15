@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector):  Fichier source de /var/www/html/WAC/WAC/audit.h</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(document).ready(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('audit_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">audit.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="audit_8h.html">Aller à la documentation de ce fichier.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*  audit.h — journal d&#39;investigation : ce que WAC a fait, quand, et ce que ça a laissé.</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment"> *  POURQUOI. Toute collecte sur un système vivant laisse des traces. La bonne</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment"> *  pratique forensique n&#39;est pas de les effacer — ce serait de l&#39;anti-forensique,</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment"> *  et ça compromettrait la recevabilité — mais de les DOCUMENTER, pour qu&#39;un</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="comment"> *  analyste puisse distinguer, dans les artefacts, ce qui vient du suspect de ce</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="comment"> *  qui vient de l&#39;outil.</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="comment"> *  Sans ce journal, un événement 7036 ou un accès fichier horodaté pendant la</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="comment"> *  collecte est indiscernable d&#39;une action du suspect. C&#39;est une source d&#39;erreur</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="comment"> *  d&#39;interprétation, et une prise pour la contestation d&#39;une expertise.</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="comment"> *  Le journal couvre trois choses :</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="comment"> *    1. le CONTEXTE de la collecte (outil, version, ligne de commande, machine,</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="comment"> *       opérateur, fuseau horaire, début/fin) — la chaîne de possession ;</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="comment"> *    2. chaque OPÉRATION menée, horodatée en UTC et en heure locale, avec son</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment"> *       résultat ;</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="comment"> *    3. l&#39;EMPREINTE attendue de chaque opération : quelle trace elle laisse et où</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="comment"> *       la retrouver. C&#39;est ce qui rend le journal exploitable à l&#39;analyse.</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="comment"> *  Sortie : `investigation.json`, dans le dossier de sortie, au même format que</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="comment"> *  les autres artefacts (cf. json.h).</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="comment"> *  Références : RFC 3227 (collecte et archivage de preuves), ISO/IEC 27037</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="comment"> *  (identification, collecte et préservation de preuves numériques).</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceFootprint.html">Footprint</a> {</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    <span class="keyword">extern</span> <span class="keyword">const</span> <span class="keywordtype">wchar_t</span>* <a class="code hl_variable" href="namespaceFootprint.html#a21fbd02fcf0cef0f33e637a0c51ddfc2">VOLUME_BRUT</a>;</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    <span class="keyword">extern</span> <span class="keyword">const</span> <span class="keywordtype">wchar_t</span>* <a class="code hl_variable" href="namespaceFootprint.html#ad4d42395527748d70fdcbb6ff9be3ee1">RUCHE_COPIE</a>;</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <span class="keyword">extern</span> <span class="keyword">const</span> <span class="keywordtype">wchar_t</span>* <a class="code hl_variable" href="namespaceFootprint.html#acaa99682c86093511a287609349c8634">RUCHE_PATCH</a>;</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    <span class="keyword">extern</span> <span class="keyword">const</span> <span class="keywordtype">wchar_t</span>* <a class="code hl_variable" href="namespaceFootprint.html#a1264a98237119230449e6c77d4ddfe1e">SCM</a>;</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <span class="keyword">extern</span> <span class="keyword">const</span> <span class="keywordtype">wchar_t</span>* <a class="code hl_variable" href="namespaceFootprint.html#a0da13ddb409bbb6ff27051b344f32441">COMPTES_LOCAUX</a>;</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <span class="keyword">extern</span> <span class="keyword">const</span> <span class="keywordtype">wchar_t</span>* <a class="code hl_variable" href="namespaceFootprint.html#a6ab93559465b4c66ed432176e844846b">PROCESSUS</a>;</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <span class="keyword">extern</span> <span class="keyword">const</span> <span class="keywordtype">wchar_t</span>* <a class="code hl_variable" href="namespaceFootprint.html#a3426ef6ecf6b4c42672b434a97238fed">SESSIONS</a>;</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    <span class="keyword">extern</span> <span class="keyword">const</span> <span class="keywordtype">wchar_t</span>* <a class="code hl_variable" href="namespaceFootprint.html#acabf1e875ee776cf1d6635c6ab438d54">EVENTLOG</a>;</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    <span class="keyword">extern</span> <span class="keyword">const</span> <span class="keywordtype">wchar_t</span>* <a class="code hl_variable" href="namespaceFootprint.html#aeefd446c0b758f5cf2e8919c527d0688">ECRITURE_USB</a>;</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>}</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span><span class="keywordtype">void</span> <a class="code hl_function" href="audit_8h.html#ae3092ba5f3c03d3cb8d2e87ba3a371da">auditInit</a>(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span>* argv[]);</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="keywordtype">void</span> <a class="code hl_function" href="audit_8h.html#a62e181d5aeac18f51be39f660b8c81b7">auditRecord</a>(<span class="keyword">const</span> std::wstring&amp; operation,</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>                 <span class="keyword">const</span> std::wstring&amp; cible,</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>                 HRESULT resultat,</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>                 <span class="keyword">const</span> <span class="keywordtype">wchar_t</span>* footprint);</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span> </div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>HRESULT <a class="code hl_function" href="audit_8h.html#ac7c50c38d38c2f3b3ccc78f72570d6df">auditWrite</a>();</div>
+<div class="ttc" id="aaudit_8h_html_a62e181d5aeac18f51be39f660b8c81b7"><div class="ttname"><a href="audit_8h.html#a62e181d5aeac18f51be39f660b8c81b7">auditRecord</a></div><div class="ttdeci">void auditRecord(const std::wstring &amp;operation, const std::wstring &amp;cible, HRESULT resultat, const wchar_t *footprint)</div><div class="ttdef"><b>Definition</b> audit.cpp:129</div></div>
+<div class="ttc" id="aaudit_8h_html_ac7c50c38d38c2f3b3ccc78f72570d6df"><div class="ttname"><a href="audit_8h.html#ac7c50c38d38c2f3b3ccc78f72570d6df">auditWrite</a></div><div class="ttdeci">HRESULT auditWrite()</div><div class="ttdef"><b>Definition</b> audit.cpp:151</div></div>
+<div class="ttc" id="aaudit_8h_html_ae3092ba5f3c03d3cb8d2e87ba3a371da"><div class="ttname"><a href="audit_8h.html#ae3092ba5f3c03d3cb8d2e87ba3a371da">auditInit</a></div><div class="ttdeci">void auditInit(int argc, char *argv[])</div><div class="ttdef"><b>Definition</b> audit.cpp:115</div></div>
+<div class="ttc" id="anamespaceFootprint_html"><div class="ttname"><a href="namespaceFootprint.html">Footprint</a></div><div class="ttdef"><b>Definition</b> audit.cpp:7</div></div>
+<div class="ttc" id="anamespaceFootprint_html_a0da13ddb409bbb6ff27051b344f32441"><div class="ttname"><a href="namespaceFootprint.html#a0da13ddb409bbb6ff27051b344f32441">Footprint::COMPTES_LOCAUX</a></div><div class="ttdeci">const wchar_t * COMPTES_LOCAUX</div><div class="ttdef"><b>Definition</b> audit.cpp:20</div></div>
+<div class="ttc" id="anamespaceFootprint_html_a1264a98237119230449e6c77d4ddfe1e"><div class="ttname"><a href="namespaceFootprint.html#a1264a98237119230449e6c77d4ddfe1e">Footprint::SCM</a></div><div class="ttdeci">const wchar_t * SCM</div><div class="ttdef"><b>Definition</b> audit.cpp:16</div></div>
+<div class="ttc" id="anamespaceFootprint_html_a21fbd02fcf0cef0f33e637a0c51ddfc2"><div class="ttname"><a href="namespaceFootprint.html#a21fbd02fcf0cef0f33e637a0c51ddfc2">Footprint::VOLUME_BRUT</a></div><div class="ttdeci">const wchar_t * VOLUME_BRUT</div><div class="ttdef"><b>Definition</b> audit.cpp:8</div></div>
+<div class="ttc" id="anamespaceFootprint_html_a3426ef6ecf6b4c42672b434a97238fed"><div class="ttname"><a href="namespaceFootprint.html#a3426ef6ecf6b4c42672b434a97238fed">Footprint::SESSIONS</a></div><div class="ttdeci">const wchar_t * SESSIONS</div><div class="ttdoc">Interrogation des sessions ouvertes via LSA / Terminal Services.</div><div class="ttdef"><b>Definition</b> audit.cpp:25</div></div>
+<div class="ttc" id="anamespaceFootprint_html_a6ab93559465b4c66ed432176e844846b"><div class="ttname"><a href="namespaceFootprint.html#a6ab93559465b4c66ed432176e844846b">Footprint::PROCESSUS</a></div><div class="ttdeci">const wchar_t * PROCESSUS</div><div class="ttdoc">Énumération de processus : ouvre des handles de processus (audit possible).</div><div class="ttdef"><b>Definition</b> audit.cpp:23</div></div>
+<div class="ttc" id="anamespaceFootprint_html_acaa99682c86093511a287609349c8634"><div class="ttname"><a href="namespaceFootprint.html#acaa99682c86093511a287609349c8634">Footprint::RUCHE_PATCH</a></div><div class="ttdeci">const wchar_t * RUCHE_PATCH</div><div class="ttdoc">Modification documentée du bloc de base d'une ruche COPIÉE (cf. hive_recover.h).</div><div class="ttdef"><b>Definition</b> audit.cpp:13</div></div>
+<div class="ttc" id="anamespaceFootprint_html_acabf1e875ee776cf1d6635c6ab438d54"><div class="ttname"><a href="namespaceFootprint.html#acabf1e875ee776cf1d6635c6ab438d54">Footprint::EVENTLOG</a></div><div class="ttdeci">const wchar_t * EVENTLOG</div><div class="ttdef"><b>Definition</b> audit.cpp:27</div></div>
+<div class="ttc" id="anamespaceFootprint_html_ad4d42395527748d70fdcbb6ff9be3ee1"><div class="ttname"><a href="namespaceFootprint.html#ad4d42395527748d70fdcbb6ff9be3ee1">Footprint::RUCHE_COPIE</a></div><div class="ttdeci">const wchar_t * RUCHE_COPIE</div><div class="ttdoc">Ouverture d'une ruche extraite (copie sur l'USB) : n'affecte pas l'original.</div><div class="ttdef"><b>Definition</b> audit.cpp:11</div></div>
+<div class="ttc" id="anamespaceFootprint_html_aeefd446c0b758f5cf2e8919c527d0688"><div class="ttname"><a href="namespaceFootprint.html#aeefd446c0b758f5cf2e8919c527d0688">Footprint::ECRITURE_USB</a></div><div class="ttdeci">const wchar_t * ECRITURE_USB</div><div class="ttdoc">Écriture sur le support de collecte (clé USB), jamais sur la cible.</div><div class="ttdef"><b>Definition</b> audit.cpp:29</div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="audit_8h.html">audit.h</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

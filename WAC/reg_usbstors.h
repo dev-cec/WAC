@@ -27,7 +27,7 @@ public:
 	std::wstring FirstInsertionUtc = L"";//!< date de première insertion du périphérique au format UTC
 
 	/*! Constructeur
-	* @param usb est la cle de registre contenant les information du périphérique
+	* @param hKey_usb est la cle de registre contenant les information du périphérique
 	*/
 	Usbstor(ORHKEY hKey_usb);
 
@@ -48,7 +48,6 @@ public:
 
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData();
 

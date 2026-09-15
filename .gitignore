@@ -378,3 +378,8 @@ vmtest/results/
 
 # Bibliothèque d'import générée au build depuis offreg.def
 third_party/offreg/liboffreg.a
+
+# Fichiers auxiliaires de Doxygen, regeneres a chaque passe. Le HTML lui-meme
+# reste versionne (c'est la documentation livree), mais pas ces index binaires.
+WAC/doc/html/*.tmp
+WAC/doc/*.tag

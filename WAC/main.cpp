@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
 	   Elle écrit sur STDERR, donc séparable de la sortie normale :
 	       WAC.exe --debug 2> raw.log
 	   C'est elle qui a permis de localiser le défaut `$INDEX_ALLOCATION` éclaté
-	   (doc §14.10) ; en usage courant elle noierait la console. */
+	   ; en usage courant elle noierait la console. */
 	RawHiveSetVerbose(conf._debug);
 
 	// Lecteur systeme : releve avant toute extraction, car il determine le volume
@@ -236,7 +236,7 @@ int main(int argc, char* argv[])
 	}
 
 
-	/* COM SUPPRIME (2026-09-15, doc §9.4).
+	/* COM SUPPRIME (2026-09-15).
 	 * `scheduledTasks` etait le SEUL consommateur de COM dans WAC : il lit
 	 * desormais les definitions XML de \Windows\System32\Tasks et l'historique du
 	 * TaskCache, hors ligne. Plus rien ne justifiait CoInitializeEx /
@@ -257,7 +257,7 @@ int main(int argc, char* argv[])
 
 	/* SYSTEM INFORMATION a quitte cette phase : la collecte est desormais hors
 	   ligne (ruches SYSTEM et SOFTWARE) et se fait donc APRES leur ouverture,
-	   a la fin de la phase registre. Cf. doc §9.4ter et system.h. */
+	   a la fin de la phase registre. Cf. et system.h. */
 
 	printStep(L" - Extraction of SESSIONS: ");
 	hresult = sessions.getData();
@@ -288,12 +288,12 @@ int main(int argc, char* argv[])
 	/* SERVICES a quitte cette phase : la configuration est desormais lue dans
 	   SYSTEM\CurrentControlSet\Services, donc apres l'ouverture de la ruche.
 	   Seul l'etat courant reste releve a chaud, en une seule enumeration.
-	   Cf. doc §9.4ter et services.h. */
+	   Cf. et services.h. */
 
 	/* USERS a quitte cette phase : les comptes locaux sont desormais lus dans la
 	   ruche SAM extraite. Seule subsiste ici la liste des PROFILS, indispensable
 	   AVANT l'extraction puisqu'elle donne l'emplacement des ruches par
-	   utilisateur. Cf. doc §9.4ter, users.h et tools.h (loadProfileList). */
+	   utilisateur. Cf., users.h et tools.h (loadProfileList). */
 	printStep(L" - Listing USER PROFILES: ");
 	hresult = loadProfileList();
 	auditRecord(L"Releve des profils utilisateurs",
@@ -306,7 +306,7 @@ int main(int argc, char* argv[])
 
 	// Les journaux d'evenements sont traites EN FIN de collecte : ils resident sur
 	// disque, donc figurent parmi les artefacts les moins volatils, et leur
-	// extraction dure une vingtaine de minutes sous Windows 11 (cf. doc §10).
+	// extraction dure une vingtaine de minutes sous Windows 11.
 	// Les placer ici retardait d'autant la copie brute du disque.
 
 	/************************
@@ -456,7 +456,7 @@ int main(int argc, char* argv[])
 		else {
 			printSuccess();
 
-			/* Fuseau du SUSPECT, relevé dans sa ruche SYSTEM (doc §7.4).
+			/* Fuseau du SUSPECT, relevé dans sa ruche SYSTEM.
 			   Fait dès l'ouverture de CurrentControlSet : tous les horodatages
 			   locaux formatés ensuite portent son décalage, et non celui de la
 			   machine qui exécute WAC. Indispensable pour interpréter les
@@ -608,7 +608,7 @@ int main(int argc, char* argv[])
 	}
 	} while (0);   // fin de la phase registre (voir le bloc à sortie unique ci-dessus)
 
-	/* SYSTEM INFORMATION, hors ligne (doc §9.4ter).
+	/* SYSTEM INFORMATION, hors ligne.
 	   HORS du bloc a sortie unique ci-dessus, et non dedans : meme sans ruche
 	   exploitable, le collecteur reste utile puisqu'il consigne l'instant de la
 	   collecte et la duree d'activite. Il degrade sa sortie au lieu d'etre
@@ -626,7 +626,7 @@ int main(int argc, char* argv[])
 		systemInfo.clear();// free memory
 	}
 
-	/* SERVICES, configuration hors ligne + etat courant (doc §9.4ter).
+	/* SERVICES, configuration hors ligne + etat courant.
 	   Egalement hors du bloc a sortie unique : sans ruche, getData() echoue
 	   proprement et writeNotCollected a deja consigne l'absence. */
 	printStep(L" - Extraction of SERVICES: ");
@@ -642,7 +642,7 @@ int main(int argc, char* argv[])
 		services.clear();//free memory
 	}
 
-	/* USERS, hors ligne depuis la ruche SAM (doc §9.4ter). Independant des
+	/* USERS, hors ligne depuis la ruche SAM. Independant des
 	   ruches SYSTEM et SOFTWARE : il ouvre la sienne. */
 	printStep(L" - Extraction of USERS: ");
 	hresult = users.getData();

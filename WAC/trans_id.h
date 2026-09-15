@@ -9,7 +9,7 @@
  *  D'OÙ VIENNENT LES LIBELLÉS. Les tables de GUID et d'AppID sont alignées sur
  *  les données de référence de libyal (libfwsi) plutôt que relevées à la main :
  *  une table saisie au jugé produit des libellés plausibles mais faux, et rien
- *  dans la sortie ne permettrait de s'en apercevoir (cf. doc §14.11).
+ *  dans la sortie ne permettrait de s'en apercevoir.
  *
  *  PERFORMANCE. Les deux grandes tables (16 639 GUID, 727 AppID) sont indexées
  *  dans une `unordered_map` construite au premier appel, pas parcourues. La
@@ -20,7 +20,7 @@
  *  énumérations mais des drapeaux combinables, et certaines constantes sont
  *  elles-mêmes des combinaisons (SERVICE_USER_SHARE_PROCESS = 0x60 = 0x40|0x20).
  *  Les comparer par égalité, ou par `&` sans distinguer les bits élémentaires,
- *  produit des libellés contradictoires (cf. doc §14.14).
+ *  produit des libellés contradictoires.
  */
 
 #include <string>
@@ -62,7 +62,7 @@ std::wstring os_architecture(DWORD archi);
 
 /*! Conversion d'un APPID en nom d'application
 * par exemple l'appId "0006f647f9488d7a" correspond à l'application "AIM 7.5.11.9 (custom AppID + JL support)"
-* @param appid id de l'application
+* @param appId id de l'application
 * @return wstring correspondant au nom de l’application associée à l'APPID
 */
 std::wstring from_appId(std::wstring appId);
@@ -76,35 +76,35 @@ std::wstring networkSubType(unsigned char type);
 
 /*! Conversion d'un code de provider de réseau en nom de provider de réseau
 * Par exemple le code 0x001A0000 correspond au provider de réseau "WNNC_NET_AVID"
-* @param type le code du provider de réseau
+* @param n le code du provider de réseau
 * @return wstring correspondant au nom du provider de réseau
 */
 std::wstring networkProvider_to_wstring(unsigned int n);
 
 /*! Conversion d'un type de Drive en nom de type de Drive
 * Par exemple le code 2 correspond au provider de réseau "DRIVE_REMOVABLE"
-* @param type le code du type de Drive
+* @param d le code du type de Drive
 * @return wstring correspondant au nom du type de Drive
 */
 std::wstring driveType_to_wstring(unsigned int d);
 
 /*! Conversion d'un code en nom d'option
 * Par exemple le code 3 correspond au nom "SHOWMAXIMIZED"
-* @param type le code 
+* @param option le code 
 * @return wstring correspondant au nom 
 */
 std::wstring showCommandOption(unsigned int option);
 
 /*! Conversion d'un code en nom d'index
 * Par exemple le code 0 correspond au nom "INTERNET_EXPLORER"
-* @param type le code
+* @param i le code
 * @return wstring correspondant au nom
 */
 std::wstring sort_index(unsigned char i);
 
 /*! Conversion d'un code de catégorie d'item shell en nom
 * Par exemple le code 1 correspond au nom "CONTROL_PANEL_CATEGORY"
-* @param type le code
+* @param i le code
 * @return wstring correspondant au nom
 */
 std::wstring shell_item_class(unsigned char i);

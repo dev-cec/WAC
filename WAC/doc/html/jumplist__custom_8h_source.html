@@ -1,0 +1,227 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector):  Fichier source de /var/www/html/WAC/WAC/jumplist_custom.h</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(document).ready(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('jumplist__custom_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">jumplist_custom.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="jumplist__custom_8h.html">Aller à la documentation de ce fichier.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &lt;memory&gt;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;cstdio&gt;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &lt;fstream&gt;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &lt;filesystem&gt;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &lt;stdexcept&gt;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;<a class="code" href="tools_8h.html">tools.h</a>&quot;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;<a class="code" href="idList_8h.html">idList.h</a>&quot;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#include &quot;<a class="code" href="recent__docs_8h.html">recent_docs.h</a>&quot;</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment">// Documentation : https://binaryforay.blogspot.com/2016/02/jump-lists-in-depth-understand-format.html</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="comment">// Documentation : https://github.com/libyal/dtformats/blob/main/documentation/Jump%20lists%20format.asciidoc</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="comment">// Documentation : https://github.com/EricZimmerman/JumpList/blob/master/JumpList/Resources/AppIDs.txt</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
+<div class="foldopen" id="foldopen00024" data-start="{" data-end="};">
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno"><a class="line" href="structCustomDestinationCategory.html">   24</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structCustomDestinationCategory.html">CustomDestinationCategory</a> {</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno"><a class="line" href="structCustomDestinationCategory.html#ad24e8a9379efa06c8cf3f898ee9df61e">   25</a></span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">short</span> <span class="keywordtype">int</span> <a class="code hl_variable" href="structCustomDestinationCategory.html#ad24e8a9379efa06c8cf3f898ee9df61e">nameSize</a> = 0; </div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno"><a class="line" href="structCustomDestinationCategory.html#a6ed876b503cffcbcc7a1f2de50c6b3ca">   26</a></span>    std::wstring <a class="code hl_variable" href="structCustomDestinationCategory.html#a6ed876b503cffcbcc7a1f2de50c6b3ca">name</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno"><a class="line" href="structCustomDestinationCategory.html#a0a2b51aa2ce01db7376e08939fda8d61">   27</a></span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code hl_variable" href="structCustomDestinationCategory.html#a0a2b51aa2ce01db7376e08939fda8d61">nbentries</a> = 0; </div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="structCustomDestinationCategory.html#a51444583e9d789fa2a05212424f2c314">   28</a></span>    std::vector&lt;RecentDoc&gt; <a class="code hl_variable" href="structCustomDestinationCategory.html#a51444583e9d789fa2a05212424f2c314">recentDocs</a>; </div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno"><a class="line" href="structCustomDestinationCategory.html#ac2cd75cd2cb290e3263ac3cc932cdc23">   32</a></span>    <a class="code hl_function" href="structCustomDestinationCategory.html#ac2cd75cd2cb290e3263ac3cc932cdc23">CustomDestinationCategory</a>() {};</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span> </div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    <a class="code hl_function" href="structCustomDestinationCategory.html#ac2cd75cd2cb290e3263ac3cc932cdc23">CustomDestinationCategory</a>(LPBYTE buffer, <span class="keywordtype">size_t</span> buffersize, std::wstring _path, std::wstring _sid);</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno"><a class="line" href="structCustomDestinationCategory.html#a6c75f456bb19081715bd6780175a2fcd">   48</a></span>    <span class="keyword">virtual</span> <a class="code hl_function" href="structCustomDestinationCategory.html#a6c75f456bb19081715bd6780175a2fcd">~CustomDestinationCategory</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span> </div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <span class="keyword">virtual</span> <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="structCustomDestinationCategory.html#ab48db6ca64bb1378b64357ba340585ed">toJson</a>();</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structCustomDestinationCategory.html#ab8c09eb5dea9980fa6f2df7f287943ef">clear</a>();</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>};</div>
+</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span> </div>
+<div class="foldopen" id="foldopen00057" data-start="{" data-end="};">
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno"><a class="line" href="structCustomDestination.html">   57</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structCustomDestination.html">CustomDestination</a> {</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno"><a class="line" href="structCustomDestination.html#aa7faada9a63210e5b6d819e7cbc6985c">   58</a></span>    std::wstring <a class="code hl_variable" href="structCustomDestination.html#aa7faada9a63210e5b6d819e7cbc6985c">Sid</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno"><a class="line" href="structCustomDestination.html#ae9f03597064871ff7acaa0e2d5b576df">   59</a></span>    std::wstring <a class="code hl_variable" href="structCustomDestination.html#ae9f03597064871ff7acaa0e2d5b576df">SidName</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno"><a class="line" href="structCustomDestination.html#a99f14e1b8737748200e0fe6a12762ce6">   60</a></span>    std::wstring <a class="code hl_variable" href="structCustomDestination.html#a99f14e1b8737748200e0fe6a12762ce6">application</a> = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno"><a class="line" href="structCustomDestination.html#a15778c3061c186d87cccf4d881dabf2c">   61</a></span>    std::wstring <a class="code hl_variable" href="structCustomDestination.html#a15778c3061c186d87cccf4d881dabf2c">path</a> = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno"><a class="line" href="structCustomDestination.html#a96c0aa32da5e3ecc8d71daae8822b70b">   62</a></span>    std::wstring <a class="code hl_variable" href="structCustomDestination.html#a96c0aa32da5e3ecc8d71daae8822b70b">pathOriginal</a> = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno"><a class="line" href="structCustomDestination.html#af047fe2b69bbe3494821f54b350e0dfe">   63</a></span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code hl_variable" href="structCustomDestination.html#af047fe2b69bbe3494821f54b350e0dfe">typeInt</a> = 0;</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno"><a class="line" href="structCustomDestination.html#ab703681f51635c3c5ee5cf5abfce19e2">   64</a></span>    std::wstring <a class="code hl_variable" href="structCustomDestination.html#ab703681f51635c3c5ee5cf5abfce19e2">type</a> = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno"><a class="line" href="structCustomDestination.html#ace609abffd297f3dcbeeba6993fe2f01">   73</a></span>    std::unique_ptr&lt;CustomDestinationCategory&gt; <a class="code hl_variable" href="structCustomDestination.html#ace609abffd297f3dcbeeba6993fe2f01">categorie</a>;</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno"><a class="line" href="structCustomDestination.html#a7f6369105e63e44cfb01d84de6198747">   74</a></span>    FILETIME <a class="code hl_variable" href="structCustomDestination.html#a7f6369105e63e44cfb01d84de6198747">created</a> = { 0 }; </div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno"><a class="line" href="structCustomDestination.html#adaac772e30c7185b10fb0b6243b11691">   75</a></span>    FILETIME <a class="code hl_variable" href="structCustomDestination.html#adaac772e30c7185b10fb0b6243b11691">createdUtc</a> = { 0 }; </div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno"><a class="line" href="structCustomDestination.html#af8c659ec05421a8e327909a3a861444c">   76</a></span>    FILETIME <a class="code hl_variable" href="structCustomDestination.html#af8c659ec05421a8e327909a3a861444c">modified</a> = { 0 };</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno"><a class="line" href="structCustomDestination.html#a0fc65047c3d8798ddbd2b30a47be824a">   77</a></span>    FILETIME <a class="code hl_variable" href="structCustomDestination.html#a0fc65047c3d8798ddbd2b30a47be824a">modifiedUtc</a> = { 0 };</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno"><a class="line" href="structCustomDestination.html#a6c536956469aa381c0f2ca46d53860d3">   78</a></span>    FILETIME <a class="code hl_variable" href="structCustomDestination.html#a6c536956469aa381c0f2ca46d53860d3">accessed</a> = { 0 };</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno"><a class="line" href="structCustomDestination.html#a389cb9b64289757c7101c591a042fb59">   79</a></span>    FILETIME <a class="code hl_variable" href="structCustomDestination.html#a389cb9b64289757c7101c591a042fb59">accessedUtc</a> = { 0 };</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span> </div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno"><a class="line" href="structCustomDestination.html#afc8f2d70cffcd084ac20a4103a191add">   83</a></span>    <a class="code hl_function" href="structCustomDestination.html#afc8f2d70cffcd084ac20a4103a191add">CustomDestination</a>() {};</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span> </div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    <a class="code hl_function" href="structCustomDestination.html#afc8f2d70cffcd084ac20a4103a191add">CustomDestination</a>(std::filesystem::path _path, std::wstring _sid);</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span> </div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="structCustomDestination.html#a902c558adffd0115a16246e875fd4392">toJson</a>();</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span> </div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    <span class="comment">/* liberation mémoire */</span></div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structCustomDestination.html#a792dc8de17270b06aad8d8de2a46a26f">clear</a>();</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>};</div>
+</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span> </div>
+<div class="foldopen" id="foldopen00103" data-start="{" data-end="};">
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno"><a class="line" href="structJumplistCustoms.html">  103</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structJumplistCustoms.html">JumplistCustoms</a> {</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno"><a class="line" href="structJumplistCustoms.html#abc21f6a05008aade524d71f19b6436c5">  104</a></span>    std::vector&lt;CustomDestination&gt; <a class="code hl_variable" href="structJumplistCustoms.html#abc21f6a05008aade524d71f19b6436c5">customDestinations</a>; </div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>    </div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span> </div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    HRESULT <a class="code hl_function" href="structJumplistCustoms.html#af4bc5c00a0d1c0440648487b590c09c4">getData</a>();</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span> </div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    HRESULT <a class="code hl_function" href="structJumplistCustoms.html#ad6ad4658239fd50054bddc9c71f05510">toJson</a>();</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span> </div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>    <span class="comment">/* liberation mémoire */</span></div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structJumplistCustoms.html#a3b7001f1d8636c8a4946fcd0cdaa380f">clear</a>();</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>};</div>
+</div>
+<div class="ttc" id="aclassJson_html"><div class="ttname"><a href="classJson.html">Json</a></div><div class="ttdef"><b>Definition</b> json.h:52</div></div>
+<div class="ttc" id="aidList_8h_html"><div class="ttname"><a href="idList_8h.html">idList.h</a></div></div>
+<div class="ttc" id="arecent__docs_8h_html"><div class="ttname"><a href="recent__docs_8h.html">recent_docs.h</a></div></div>
+<div class="ttc" id="astructCustomDestinationCategory_html"><div class="ttname"><a href="structCustomDestinationCategory.html">CustomDestinationCategory</a></div><div class="ttdef"><b>Definition</b> jumplist_custom.h:24</div></div>
+<div class="ttc" id="astructCustomDestinationCategory_html_a0a2b51aa2ce01db7376e08939fda8d61"><div class="ttname"><a href="structCustomDestinationCategory.html#a0a2b51aa2ce01db7376e08939fda8d61">CustomDestinationCategory::nbentries</a></div><div class="ttdeci">unsigned int nbentries</div><div class="ttdoc">nombre d'entrées dans la catégorie</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:27</div></div>
+<div class="ttc" id="astructCustomDestinationCategory_html_a51444583e9d789fa2a05212424f2c314"><div class="ttname"><a href="structCustomDestinationCategory.html#a51444583e9d789fa2a05212424f2c314">CustomDestinationCategory::recentDocs</a></div><div class="ttdeci">std::vector&lt; RecentDoc &gt; recentDocs</div><div class="ttdoc">tableau des recentDoc</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:28</div></div>
+<div class="ttc" id="astructCustomDestinationCategory_html_a6c75f456bb19081715bd6780175a2fcd"><div class="ttname"><a href="structCustomDestinationCategory.html#a6c75f456bb19081715bd6780175a2fcd">CustomDestinationCategory::~CustomDestinationCategory</a></div><div class="ttdeci">virtual ~CustomDestinationCategory()=default</div></div>
+<div class="ttc" id="astructCustomDestinationCategory_html_a6ed876b503cffcbcc7a1f2de50c6b3ca"><div class="ttname"><a href="structCustomDestinationCategory.html#a6ed876b503cffcbcc7a1f2de50c6b3ca">CustomDestinationCategory::name</a></div><div class="ttdeci">std::wstring name</div><div class="ttdoc">nom de la catégorie</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:26</div></div>
+<div class="ttc" id="astructCustomDestinationCategory_html_ab48db6ca64bb1378b64357ba340585ed"><div class="ttname"><a href="structCustomDestinationCategory.html#ab48db6ca64bb1378b64357ba340585ed">CustomDestinationCategory::toJson</a></div><div class="ttdeci">virtual Json toJson()</div><div class="ttdef"><b>Definition</b> jumplist_custom.cpp:24</div></div>
+<div class="ttc" id="astructCustomDestinationCategory_html_ab8c09eb5dea9980fa6f2df7f287943ef"><div class="ttname"><a href="structCustomDestinationCategory.html#ab8c09eb5dea9980fa6f2df7f287943ef">CustomDestinationCategory::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdef"><b>Definition</b> jumplist_custom.cpp:33</div></div>
+<div class="ttc" id="astructCustomDestinationCategory_html_ac2cd75cd2cb290e3263ac3cc932cdc23"><div class="ttname"><a href="structCustomDestinationCategory.html#ac2cd75cd2cb290e3263ac3cc932cdc23">CustomDestinationCategory::CustomDestinationCategory</a></div><div class="ttdeci">CustomDestinationCategory()</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:32</div></div>
+<div class="ttc" id="astructCustomDestinationCategory_html_ad24e8a9379efa06c8cf3f898ee9df61e"><div class="ttname"><a href="structCustomDestinationCategory.html#ad24e8a9379efa06c8cf3f898ee9df61e">CustomDestinationCategory::nameSize</a></div><div class="ttdeci">unsigned short int nameSize</div><div class="ttdoc">taille du nom de la catégorie</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:25</div></div>
+<div class="ttc" id="astructCustomDestination_html"><div class="ttname"><a href="structCustomDestination.html">CustomDestination</a></div><div class="ttdef"><b>Definition</b> jumplist_custom.h:57</div></div>
+<div class="ttc" id="astructCustomDestination_html_a0fc65047c3d8798ddbd2b30a47be824a"><div class="ttname"><a href="structCustomDestination.html#a0fc65047c3d8798ddbd2b30a47be824a">CustomDestination::modifiedUtc</a></div><div class="ttdeci">FILETIME modifiedUtc</div><div class="ttdoc">date de modification du fichier au format utc</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:77</div></div>
+<div class="ttc" id="astructCustomDestination_html_a15778c3061c186d87cccf4d881dabf2c"><div class="ttname"><a href="structCustomDestination.html#a15778c3061c186d87cccf4d881dabf2c">CustomDestination::path</a></div><div class="ttdeci">std::wstring path</div><div class="ttdoc">Chemin du custom Destination dans la snapshot.</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:61</div></div>
+<div class="ttc" id="astructCustomDestination_html_a389cb9b64289757c7101c591a042fb59"><div class="ttname"><a href="structCustomDestination.html#a389cb9b64289757c7101c591a042fb59">CustomDestination::accessedUtc</a></div><div class="ttdeci">FILETIME accessedUtc</div><div class="ttdoc">date d'accès du fichier au format utc</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:79</div></div>
+<div class="ttc" id="astructCustomDestination_html_a6c536956469aa381c0f2ca46d53860d3"><div class="ttname"><a href="structCustomDestination.html#a6c536956469aa381c0f2ca46d53860d3">CustomDestination::accessed</a></div><div class="ttdeci">FILETIME accessed</div><div class="ttdoc">date d'accès du fichier</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:78</div></div>
+<div class="ttc" id="astructCustomDestination_html_a792dc8de17270b06aad8d8de2a46a26f"><div class="ttname"><a href="structCustomDestination.html#a792dc8de17270b06aad8d8de2a46a26f">CustomDestination::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdef"><b>Definition</b> jumplist_custom.cpp:139</div></div>
+<div class="ttc" id="astructCustomDestination_html_a7f6369105e63e44cfb01d84de6198747"><div class="ttname"><a href="structCustomDestination.html#a7f6369105e63e44cfb01d84de6198747">CustomDestination::created</a></div><div class="ttdeci">FILETIME created</div><div class="ttdoc">date de création du fichier</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:74</div></div>
+<div class="ttc" id="astructCustomDestination_html_a902c558adffd0115a16246e875fd4392"><div class="ttname"><a href="structCustomDestination.html#a902c558adffd0115a16246e875fd4392">CustomDestination::toJson</a></div><div class="ttdeci">Json toJson()</div><div class="ttdef"><b>Definition</b> jumplist_custom.cpp:121</div></div>
+<div class="ttc" id="astructCustomDestination_html_a96c0aa32da5e3ecc8d71daae8822b70b"><div class="ttname"><a href="structCustomDestination.html#a96c0aa32da5e3ecc8d71daae8822b70b">CustomDestination::pathOriginal</a></div><div class="ttdeci">std::wstring pathOriginal</div><div class="ttdoc">Chemin du custom Destination sur le disque.</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:62</div></div>
+<div class="ttc" id="astructCustomDestination_html_a99f14e1b8737748200e0fe6a12762ce6"><div class="ttname"><a href="structCustomDestination.html#a99f14e1b8737748200e0fe6a12762ce6">CustomDestination::application</a></div><div class="ttdeci">std::wstring application</div><div class="ttdoc">nom de l'application liée au Custom Destination</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:60</div></div>
+<div class="ttc" id="astructCustomDestination_html_aa7faada9a63210e5b6d819e7cbc6985c"><div class="ttname"><a href="structCustomDestination.html#aa7faada9a63210e5b6d819e7cbc6985c">CustomDestination::Sid</a></div><div class="ttdeci">std::wstring Sid</div><div class="ttdoc">SID de l'utilisateur propriétaire du custom Destination.</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:58</div></div>
+<div class="ttc" id="astructCustomDestination_html_ab703681f51635c3c5ee5cf5abfce19e2"><div class="ttname"><a href="structCustomDestination.html#ab703681f51635c3c5ee5cf5abfce19e2">CustomDestination::type</a></div><div class="ttdeci">std::wstring type</div><div class="ttdoc">nom du type de Custom Destination</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:64</div></div>
+<div class="ttc" id="astructCustomDestination_html_ace609abffd297f3dcbeeba6993fe2f01"><div class="ttname"><a href="structCustomDestination.html#ace609abffd297f3dcbeeba6993fe2f01">CustomDestination::categorie</a></div><div class="ttdeci">std::unique_ptr&lt; CustomDestinationCategory &gt; categorie</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:73</div></div>
+<div class="ttc" id="astructCustomDestination_html_adaac772e30c7185b10fb0b6243b11691"><div class="ttname"><a href="structCustomDestination.html#adaac772e30c7185b10fb0b6243b11691">CustomDestination::createdUtc</a></div><div class="ttdeci">FILETIME createdUtc</div><div class="ttdoc">date de création du fichier au format utc</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:75</div></div>
+<div class="ttc" id="astructCustomDestination_html_ae9f03597064871ff7acaa0e2d5b576df"><div class="ttname"><a href="structCustomDestination.html#ae9f03597064871ff7acaa0e2d5b576df">CustomDestination::SidName</a></div><div class="ttdeci">std::wstring SidName</div><div class="ttdoc">nom de l'utilisateur propriétaire du custom Destination</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:59</div></div>
+<div class="ttc" id="astructCustomDestination_html_af047fe2b69bbe3494821f54b350e0dfe"><div class="ttname"><a href="structCustomDestination.html#af047fe2b69bbe3494821f54b350e0dfe">CustomDestination::typeInt</a></div><div class="ttdeci">unsigned int typeInt</div><div class="ttdoc">type de custom Destination en entier</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:63</div></div>
+<div class="ttc" id="astructCustomDestination_html_af8c659ec05421a8e327909a3a861444c"><div class="ttname"><a href="structCustomDestination.html#af8c659ec05421a8e327909a3a861444c">CustomDestination::modified</a></div><div class="ttdeci">FILETIME modified</div><div class="ttdoc">date de modification du fichier</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:76</div></div>
+<div class="ttc" id="astructCustomDestination_html_afc8f2d70cffcd084ac20a4103a191add"><div class="ttname"><a href="structCustomDestination.html#afc8f2d70cffcd084ac20a4103a191add">CustomDestination::CustomDestination</a></div><div class="ttdeci">CustomDestination()</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:83</div></div>
+<div class="ttc" id="astructJumplistCustoms_html"><div class="ttname"><a href="structJumplistCustoms.html">JumplistCustoms</a></div><div class="ttdef"><b>Definition</b> jumplist_custom.h:103</div></div>
+<div class="ttc" id="astructJumplistCustoms_html_a3b7001f1d8636c8a4946fcd0cdaa380f"><div class="ttname"><a href="structJumplistCustoms.html#a3b7001f1d8636c8a4946fcd0cdaa380f">JumplistCustoms::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdef"><b>Definition</b> jumplist_custom.cpp:182</div></div>
+<div class="ttc" id="astructJumplistCustoms_html_abc21f6a05008aade524d71f19b6436c5"><div class="ttname"><a href="structJumplistCustoms.html#abc21f6a05008aade524d71f19b6436c5">JumplistCustoms::customDestinations</a></div><div class="ttdeci">std::vector&lt; CustomDestination &gt; customDestinations</div><div class="ttdoc">tableau contenant les objets</div><div class="ttdef"><b>Definition</b> jumplist_custom.h:104</div></div>
+<div class="ttc" id="astructJumplistCustoms_html_ad6ad4658239fd50054bddc9c71f05510"><div class="ttname"><a href="structJumplistCustoms.html#ad6ad4658239fd50054bddc9c71f05510">JumplistCustoms::toJson</a></div><div class="ttdeci">HRESULT toJson()</div><div class="ttdef"><b>Definition</b> jumplist_custom.cpp:175</div></div>
+<div class="ttc" id="astructJumplistCustoms_html_af4bc5c00a0d1c0440648487b590c09c4"><div class="ttname"><a href="structJumplistCustoms.html#af4bc5c00a0d1c0440648487b590c09c4">JumplistCustoms::getData</a></div><div class="ttdeci">HRESULT getData()</div><div class="ttdef"><b>Definition</b> jumplist_custom.cpp:149</div></div>
+<div class="ttc" id="atools_8h_html"><div class="ttname"><a href="tools_8h.html">tools.h</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="jumplist__custom_8h.html">jumplist_custom.h</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

@@ -48,7 +48,7 @@ public:
 
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
+	* @param _niveau contient les paramètres de l'application issue des paramètres de la ligne de commande
 	* param _niveau est utilisé pour la mie en forme de la hiérarchie des objet dans le json de sortie
 	*/
 	HRESULT getData(int _niveau = 0);
@@ -58,7 +58,7 @@ public:
 	* @param sid contient le sid de l'utilisateur propriétaire de la clé
 	* @param source contient l'origine de l'artefact
 	* @param out reçoit les shellbags parsés
-	* @param niveau, profondeur dans l'arborescence utilisé pour la mise en forme du fichier json de sortie
+	* @param niveau profondeur dans l'arborescence, utilisée pour la mise en forme du fichier json de sortie
 	* @param _Parentiszip sit le père de l'artefact est un fichier zip
 	* @param Parent est le shellbag Parent si present
 	*/

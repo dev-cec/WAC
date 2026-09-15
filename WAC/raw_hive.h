@@ -4,7 +4,7 @@
  *  chemin via les index de répertoires, puis extrait l'attribut $DATA du fichier
  *  cible vers un fichier de sortie — SANS passer par l'ouverture de fichier du
  *  système (pas de verrou, pas de VSS, pas de symlink, aucune écriture sur la
- *  cible). Voir docs/MIGRATION-VSS-vers-lecture-brute.md §2.
+ *  cible). Voir docs/MIGRATION-VSS-vers-lecture-brute.md.
  *
  *  Dépendances : Win32 (CreateFileW/ReadFile) et quickdigest5 (empreinte MD5
  *  calculée au fil de l'écriture, pour ne pas relire la copie depuis le support
@@ -57,7 +57,8 @@ HRESULT ExtractFileRaw(const std::wstring& volumeLetter,
  *         temps d'extraction. Empreinte vide si l'item a échoué.
  *  @return S_OK si tout réussit, S_FALSE si au moins un item échoue,
  *          ou un code d'erreur si l'ouverture du volume échoue.
- */
+ * @param volumeLetter lettre du volume a lire, sans les deux-points (ex. L"C")
+*/
 HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
                         const std::vector<std::pair<std::wstring, std::wstring>>& items,
                         std::vector<HRESULT>* perItem = nullptr,
@@ -111,11 +112,16 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
 
 /*! Comme ExtractDirectoryRaw, mais descend dans les sous-répertoires.
  *
- *  Nécessaire pour `\Windows\System32\Tasks\`, qui est une arborescence : les
- *  tâches planifiées y sont rangées par dossier (Microsoft\Windows\...), et le
+ *  Nécessaire pour `\\Windows\\System32\\Tasks\`, qui est une arborescence : les
+ *  tâches planifiées y sont rangées par dossier (Microsoft\\Windows\...), et le
  *  chemin relatif fait partie de l'identité de la tâche. L'arborescence est
  *  reproduite à l'identique dans `outDir`.
  *
+ *  @param volumeLetter lettre du volume à lire, sans les deux-points (ex. L"C")
+ *  @param dirPathOnVolume chemin du répertoire sur le volume
+ *  @param outDir répertoire de destination ; l'arborescence y est reproduite
+ *  @param extensions extensions à extraire (vide = toutes)
+ *  @param extracted reçoit le nombre de fichiers extraits
  *  @param profondeurMax garde-fou contre une arborescence cyclique ou anormale
  *         (un index NTFS corrompu pourrait boucler) ; 0 = pas de descente
  *  @return ERROR_SUCCESS si l'énumération a abouti (même sans fichier),

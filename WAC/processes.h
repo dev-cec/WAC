@@ -3,7 +3,7 @@
 /*  processes.h — PROCESSUS EN COURS D'EXÉCUTION.
  *
  *  Reste volontairement en collecte LIVE : son objet est l'état instantané de la
- *  machine, qui n'existe nulle part sur disque (doc §9.4ter).
+ *  machine, qui n'existe nulle part sur disque.
  *
  *  POURQUOI PLUS AUCUN `OpenProcess`. La version d'origine ouvrait un handle par
  *  processus avec `PROCESS_ALL_ACCESS`, puis son jeton avec `TOKEN_ALL_ACCESS`,
@@ -80,7 +80,6 @@ struct Processes {
 
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData();
 

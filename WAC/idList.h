@@ -34,7 +34,6 @@ public:
 	bool is_zip = false; //!< utile pour les shellbags, permet de définir les fils comm des archive_contents
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual Json toJson() = 0;
@@ -55,7 +54,6 @@ public:
 	std::wstring signature = L"";//!< la signature du block d’extension, identifie sa structure d'appartenance
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual Json toJson() = 0;
@@ -71,7 +69,6 @@ struct UserPropertyViewDelegate {
 
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	virtual Json toJson() = 0;
@@ -88,7 +85,6 @@ struct UserPropertyViewDelegate {
 * @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 * @param is_zip précise si le shell item est un fichier zip, utilisé dans le traitement des extensionblocks, si le fichier est un zip ou assimilé alors les fils ont un format spécial, ne concerne que les fichiers, certains zip sont identifiés comme directory et dans ce cas pas de format special, ne concerne que les extensionblock beef0004
 * @param is_file précise si le shell item père est un fichier, utilisé dans le traitement des extensionblocks
-* @return void
 */
 void getExtensionBlock(LPBYTE buffer, std::vector<std::unique_ptr<IExtensionBlock>>* extensionBlocks, int _niveau, bool* is_zip, bool is_file);
 
@@ -238,7 +234,6 @@ struct SPSValue {
 	SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau);
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson();
@@ -262,11 +257,10 @@ struct SPS {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	SPS(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson();
@@ -292,11 +286,11 @@ struct IdList {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	* @param Parentiszip vrai si l'élément parent est une archive : le contenu
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	IdList(LPBYTE buffer, int _niveau, bool Parentiszip = false);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson();
@@ -317,11 +311,10 @@ struct Beef0000 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0000(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -336,11 +329,10 @@ struct Beef0001 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0001(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -355,11 +347,10 @@ struct Beef0002 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0002(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -375,11 +366,10 @@ struct Beef0003 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0003(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -426,7 +416,6 @@ struct Beef0004 : IExtensionBlock {
 	*/
 	Beef0004(LPBYTE buffer, int _niveau, bool* is_zip, bool is_file);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -441,11 +430,10 @@ struct Beef0006 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0006(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -460,11 +448,10 @@ struct Beef0008 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0008(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -479,11 +466,10 @@ struct Beef0009 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0009(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -498,11 +484,10 @@ struct Beef000a : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef000a(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -517,11 +502,10 @@ struct Beef000c : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef000c(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -541,11 +525,10 @@ struct Beef000e : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef000e(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -560,11 +543,10 @@ struct Beef0010 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0010(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -579,11 +561,10 @@ struct Beef0013 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0013(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -598,11 +579,10 @@ struct Beef0014 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0014(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -617,11 +597,10 @@ struct Beef0016 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0016(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -636,18 +615,17 @@ struct Beef0017 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0017(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
 
 };
 
-/*! Extension block  seen in  HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FolderTypes\{0B2BAAEB-0042-4DCA-AA4D-3EE8648D03E5}
+/*! Extension block  seen in  HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FolderTypes\{0B2BAAEB-0042-4DCA-AA4D-3EE8648D03E5}
 */
 struct Beef0019 : IExtensionBlock {
 	std::wstring guid1 = L""; //!< identifiant GUID
@@ -658,11 +636,10 @@ struct Beef0019 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0019(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -677,11 +654,10 @@ struct Beef001a : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef001a(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -696,11 +672,10 @@ struct Beef001b : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef001b(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -715,11 +690,10 @@ struct Beef001d : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef001d(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -734,11 +708,10 @@ struct Beef001e : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef001e(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -753,11 +726,10 @@ struct Beef0021 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0021(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -772,11 +744,10 @@ struct Beef0024 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0024(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -792,11 +763,10 @@ struct Beef0025 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0025(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -819,11 +789,10 @@ struct Beef0026 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0026(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -838,11 +807,10 @@ struct Beef0027 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0027(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -884,11 +852,10 @@ struct Beef0029 : IExtensionBlock {
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser des extensionblock
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
 	Beef0029(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -916,7 +883,6 @@ struct VolumeShellItem : IShellItem {
 	*/
 	VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson();
@@ -934,13 +900,12 @@ struct ControlPanel : IShellItem {
 
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
-	* @param item_size est la taille totale de l'objet
+	* @param itemSize est la taille totale de l'objet
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
 	ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -962,7 +927,6 @@ struct ControlPanelCategory :IShellItem {
 	*/
 	ControlPanelCategory(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -984,6 +948,9 @@ std::wstring getType(unsigned int type);
 * @param tailleEntree taille totale de l'entrée, utilisée pour restituer les
 *        octets bruts quand le type n'est pas décodé. Zéro si elle n'est pas
 *        connue de l'appelant : la valeur ressort alors sans dump.
+* @param typeNonDecode mis à vrai si le type n'a pas pu être décodé. L'appelant
+*        doit alors arrêter son parcours quand la taille de l'entrée n'est pas
+*        annoncée, sans quoi l'entrée suivante serait lue au mauvais endroit.
 * @return la valeur, ou un objet décrivant le type non pris en charge
 */
 Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int niveau,
@@ -1016,7 +983,6 @@ struct Property {
 	*/
 	Property(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson();
@@ -1037,7 +1003,6 @@ struct UserPropertyView0xC01 : UserPropertyViewDelegate {
 	*/
 	UserPropertyView0xC01(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson();
@@ -1059,7 +1024,6 @@ struct UserPropertyView0x23febbee : UserPropertyViewDelegate {
 	*/
 	UserPropertyView0x23febbee(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson();
@@ -1088,7 +1052,6 @@ struct UserPropertyView0x07192006 : UserPropertyViewDelegate {
 	*/
 	UserPropertyView0x07192006(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson();
@@ -1114,7 +1077,6 @@ struct UserPropertyView0x10312005 : UserPropertyViewDelegate {
 	*/
 	UserPropertyView0x10312005(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -1173,7 +1135,6 @@ struct UsersPropertyView :IShellItem {
 	UsersPropertyView(LPBYTE buffer, int _niveau);
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -1197,7 +1158,6 @@ struct RootFolder :IShellItem {
 	*/
 	RootFolder(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -1222,7 +1182,6 @@ struct NetworkShellItem :IShellItem {
 	*/
 	NetworkShellItem(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -1246,7 +1205,6 @@ struct ArchiveFileContent :IShellItem {
 	*/
 	ArchiveFileContent(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -1266,7 +1224,6 @@ struct URIShellItem :IShellItem {
 	*/
 	URIShellItem(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -1287,14 +1244,13 @@ struct FileEntryShellItem :IShellItem {
 
 	/*! constructeur
 	* @param buffer en entrée contient les bits à parser de l'item
-	* @param item_size est la taille de l'objet
+	* @param itemSize est la taille de l'objet
 	* @param shell_item_type_char est le type de shell item au format character
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
 	FileEntryShellItem(LPBYTE buffer, unsigned short int itemSize, unsigned char shell_item_type_char, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -1318,7 +1274,6 @@ public:
 	*/
 	UsersFilesFolder(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -1349,7 +1304,6 @@ struct FavoriteShellitem :IShellItem {
 	*/
 	FavoriteShellitem(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;
@@ -1427,7 +1381,6 @@ struct UnknownShellItem :IShellItem {
 	*/
 	UnknownShellItem(LPBYTE buffer, int _niveau);
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson() override;

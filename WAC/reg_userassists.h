@@ -24,7 +24,7 @@ public:
 	std::wstring Sid = L""; //!< SID de l'utilisateur propriétaire de l'objet
 	std::wstring SidName = L""; //!< nom de l'utilisateur propriétaire de l'objet
 	std::wstring Class = L""; //!< identifiant GUID de classe du UserAssist
-	std::wstring Name = L"";//§< nom associé au GUID
+	std::wstring Name = L"";//!< nom associé au GUID
 	int Count = 0;//!< nombre d’exécutions
 	int FocusCount = 0;//! nombre de fois ou le fichier à reçu un focus
 	std::wstring DateLocale = L"";//!< date de dernière exécution
@@ -54,7 +54,6 @@ public:
 	std::vector<UserAssist> userassists;//!< tableau contenant les objets
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData();
 

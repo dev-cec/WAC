@@ -47,10 +47,9 @@ struct Event {
 	Json evtEventMessage = Json::null(); //!< message de l’événement
 
 	/*! Constructeur
-	* @param hevt est un handle sur la session ouverte par EvtOpenSession
-	* @param buffer st le nom du channel contenant les événements
-	* @hevent est un handle sur un événement
-	
+	* @param hevt handle sur la session ouverte par EvtOpenSession
+	* @param buffer nom du canal contenant les événements
+	* @param hEvent handle sur l'événement à lire
 	*/
 	Event(EVT_HANDLE hevt, LPWSTR buffer, EVT_HANDLE hEvent);
 
@@ -66,7 +65,6 @@ struct Events {
 	std::vector<Event> events; //!< tableau contenant tout les Events
 	
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData();
 

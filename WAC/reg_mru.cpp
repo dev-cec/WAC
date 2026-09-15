@@ -39,7 +39,7 @@ HRESULT Mrus::getData(int _niveau) {
 		for (std::wstring keyname : keynames) {
 			//ouverture de la ruche user
 			log(3, L"🔈replaceAll profile");
-			ruche = conf.mountpoint + replaceAll(std::get<1>(profile), conf.systemDrive, L"") + L"\\ntuser.dat";
+			ruche = cheminExtrait(std::get<1>(profile)) + L"\\ntuser.dat";
 			log(3, L"🔈OROpenHive " + std::get<1>(profile) + L"\\ntuser.dat");
 			hresult = OROpenHive(ruche.c_str(), &Offhive);
 			if (hresult != ERROR_SUCCESS) {

@@ -25,6 +25,13 @@
 var NAVTREE =
 [
   [ "WAC (Windows Artefacts Collector)", "index.html", [
+    [ "Espaces de nommage", "namespaces.html", [
+      [ "Liste des espaces de nommage", "namespaces.html", "namespaces_dup" ],
+      [ "Membres de l'espace de nommage", "namespacemembers.html", [
+        [ "Tout", "namespacemembers.html", null ],
+        [ "Variables", "namespacemembers_vars.html", null ]
+      ] ]
+    ] ],
     [ "Classes", "annotated.html", [
       [ "Liste des classes", "annotated.html", "annotated_dup" ],
       [ "Index des classes", "classes.html", null ],
@@ -32,15 +39,18 @@ var NAVTREE =
       [ "Membres de classe", "functions.html", [
         [ "Tout", "functions.html", "functions_dup" ],
         [ "Fonctions", "functions_func.html", "functions_func" ],
-        [ "Variables", "functions_vars.html", "functions_vars" ]
+        [ "Variables", "functions_vars.html", "functions_vars" ],
+        [ "Énumérations", "functions_enum.html", null ],
+        [ "Fonctions associées", "functions_rela.html", null ]
       ] ]
     ] ],
     [ "Fichiers", "files.html", [
       [ "Liste des fichiers", "files.html", "files_dup" ],
       [ "Membres de fichier", "globals.html", [
-        [ "Tout", "globals.html", null ],
+        [ "Tout", "globals.html", "globals_dup" ],
         [ "Fonctions", "globals_func.html", null ],
         [ "Variables", "globals_vars.html", null ],
+        [ "Définitions de type", "globals_type.html", null ],
         [ "Macros", "globals_defs.html", null ]
       ] ]
     ] ]
@@ -49,12 +59,13 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"_read_lnk_file_8cpp.html",
-"struct_bam.html#a62df0c7472866bcde757b66e7e7d40b5",
-"struct_directory.html#a63997621361dd8c746c72fdff8c44e18",
-"struct_prefetch.html#a7ba15f3534ae66c4d3a476cccd182c36",
-"struct_system_info.html#a3a3f6c0855a1bfd51a43b1dab4aea931",
-"tools_8h.html#a2253bdea61c15807680646f199e57082"
+"annotated.html",
+"reg__amcache__applicationfile_8h.html",
+"structBeef0024.html",
+"structJumplistAutomatics.html",
+"structRun.html#a425f2b55464d8039c881c1605e05f6b3",
+"structUserPropertyView0x07192006.html#a037e72e3633e376c58d50a11fea4b903",
+"tools_8h.html#ac91ef938fdbde20051e9a702faa528aa"
 ];
 
 var SYNCONMSG = 'cliquez pour désactiver la synchronisation du panel';

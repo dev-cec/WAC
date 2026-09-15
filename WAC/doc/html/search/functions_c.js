@@ -1,10 +1,11 @@
 var searchData=
 [
-  ['parse_0',['parse',['../struct_mrus.html#a608a8c0b00ea9d4c08a72ceb5d282add',1,'Mrus::parse()'],['../struct_mru_apps.html#a4e9a56d1997960fc8f45e9732e790d55',1,'MruApps::parse()'],['../struct_shellbags.html#aba4c45f41e6132bc7615b60110358810',1,'Shellbags::parse()']]],
-  ['parselnk_1',['parseLNK',['../struct_recent_doc.html#a2687c796640288746e509f2e376b64cc',1,'RecentDoc']]],
-  ['prefetch_2',['Prefetch',['../struct_prefetch.html#a5a82cad97ff9893c88978b44d3228880',1,'Prefetch']]],
-  ['printerror_3',['printError',['../tools_8cpp.html#a52b8e5827ab36d1d9f31335c0ec301fd',1,'printError(std::wstring errorText):&#160;tools.cpp'],['../tools_8cpp.html#ad857742196348d0e4b3ee1d9474b6638',1,'printError(HRESULT hresult):&#160;tools.cpp'],['../tools_8h.html#ad857742196348d0e4b3ee1d9474b6638',1,'printError(HRESULT hresult):&#160;tools.cpp'],['../tools_8h.html#a52b8e5827ab36d1d9f31335c0ec301fd',1,'printError(std::wstring errorText):&#160;tools.cpp']]],
-  ['printsuccess_4',['printSuccess',['../tools_8cpp.html#abfb8057ef624b69b47bf30c6db4e3875',1,'printSuccess():&#160;tools.cpp'],['../tools_8h.html#abfb8057ef624b69b47bf30c6db4e3875',1,'printSuccess():&#160;tools.cpp']]],
-  ['process_5',['Process',['../struct_process.html#a9ea9e98b384a7d0c0814c35308cc4c22',1,'Process']]],
-  ['property_6',['Property',['../struct_property.html#a8db3a41e6d13822855fa49392ba5f3ba',1,'Property']]]
+  ['main_0',['main',['../main_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97',1,'main.cpp']]],
+  ['makehiveloadable_1',['makehiveloadable',['../hive__recover_8cpp.html#abfdcef62f94d212392944c4002628be4',1,'MakeHiveLoadable(const std::filesystem::path &amp;hive):&#160;hive_recover.cpp'],['../hive__recover_8h.html#abfdcef62f94d212392944c4002628be4',1,'MakeHiveLoadable(const std::filesystem::path &amp;hive):&#160;hive_recover.cpp']]],
+  ['makeshellitem_2',['makeshellitem',['../idList_8cpp.html#a9042080d478cb50aea2dd843978c8fff',1,'makeShellItem(LPBYTE buffer, int _niveau, bool Parentiszip):&#160;idList.cpp'],['../idList_8h.html#aad74b9501f426ef8e1528c1434647b1a',1,'makeShellItem(LPBYTE buffer, int _niveau, bool Parentiszip=false):&#160;idList.cpp']]],
+  ['merge_3',['merge',['../classJson.html#a57248b9413e96d1384154590d05724ad',1,'Json']]],
+  ['mftinformation_4',['mftinformation',['../structMFTInformation.html#a4d92cec13ae11e266087e4270a042137',1,'MFTInformation::MFTInformation()'],['../structMFTInformation.html#ad3d351baa5dc3ec55a37f50912b37af9',1,'MFTInformation::MFTInformation(LPBYTE data)']]],
+  ['mounteddevice_5',['MountedDevice',['../structMountedDevice.html#a5a8fbb09017366fb91688b3855f4ab60',1,'MountedDevice']]],
+  ['muicache_6',['Muicache',['../structMuicache.html#a657c8e685df255ff999997b77930a7a8',1,'Muicache']]],
+  ['multiwstring_5fto_5fvector_7',['multiwstring_to_vector',['../tools_8cpp.html#aea71d14f067d69330a32721ca7dc457d',1,'multiWstring_to_vector(LPBYTE data, int size):&#160;tools.cpp'],['../tools_8h.html#aea71d14f067d69330a32721ca7dc457d',1,'multiWstring_to_vector(LPBYTE data, int size):&#160;tools.cpp']]]
 ];

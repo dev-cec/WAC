@@ -1,0 +1,181 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector):  Fichier source de /var/www/html/WAC/WAC/reg_amcache_applicationfile.h</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(document).ready(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('reg__amcache__applicationfile_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">reg_amcache_applicationfile.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="reg__amcache__applicationfile_8h.html">Aller à la documentation de ce fichier.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;stdio.h&gt;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;offreg.h&gt;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &lt;filesystem&gt;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &lt;fstream&gt;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &lt;chrono&gt;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;<a class="code" href="tools_8h.html">tools.h</a>&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;usb.h&quot;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;<a class="code" href="quickdigest5_8h.html">quickdigest5.h</a>&quot;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
+<div class="foldopen" id="foldopen00016" data-start="{" data-end="};">
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno"><a class="line" href="structAmcacheApplicationFile.html">   16</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structAmcacheApplicationFile.html">AmcacheApplicationFile</a> {</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="structAmcacheApplicationFile.html#a1f6a5a8fc06355c4660c112a430a7809">   18</a></span>    std::wstring <a class="code hl_variable" href="structAmcacheApplicationFile.html#a1f6a5a8fc06355c4660c112a430a7809">name</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="structAmcacheApplicationFile.html#a8589abe031424dff4b9f166515e85b9d">   19</a></span>    std::wstring <a class="code hl_variable" href="structAmcacheApplicationFile.html#a8589abe031424dff4b9f166515e85b9d">publisher</a> = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno"><a class="line" href="structAmcacheApplicationFile.html#aeee05ee5592cfb9e893d9bd76f3bfd71">   20</a></span>    std::wstring <a class="code hl_variable" href="structAmcacheApplicationFile.html#aeee05ee5592cfb9e893d9bd76f3bfd71">longPath</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno"><a class="line" href="structAmcacheApplicationFile.html#ac6c6bc9a3acb14f5fd32f9181487981e">   21</a></span>    std::wstring <a class="code hl_variable" href="structAmcacheApplicationFile.html#ac6c6bc9a3acb14f5fd32f9181487981e">md5</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno"><a class="line" href="structAmcacheApplicationFile.html#a076573e70dfd1e9cd549f41ab4a54266">   22</a></span>    std::wstring <a class="code hl_variable" href="structAmcacheApplicationFile.html#a076573e70dfd1e9cd549f41ab4a54266">version</a> = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno"><a class="line" href="structAmcacheApplicationFile.html#a1ca4e0623a55a4147f5cd8958be09c47">   23</a></span>    std::wstring <a class="code hl_variable" href="structAmcacheApplicationFile.html#a1ca4e0623a55a4147f5cd8958be09c47">linkDate</a> = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno"><a class="line" href="structAmcacheApplicationFile.html#aef02bb0a0f8735ef2e5b60ffa7731be8">   24</a></span>    std::wstring <a class="code hl_variable" href="structAmcacheApplicationFile.html#aef02bb0a0f8735ef2e5b60ffa7731be8">linkDateUtc</a> = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno"><a class="line" href="structAmcacheApplicationFile.html#ab60569ad29ba0ac39b0804f299f73af4">   25</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="structAmcacheApplicationFile.html#ab60569ad29ba0ac39b0804f299f73af4">IsOsComponent</a> = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <a class="code hl_struct" href="structAmcacheApplicationFile.html">AmcacheApplicationFile</a>(ORHKEY hKey_amcache);</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="structAmcacheApplicationFile.html#a1365bd7c725dd62d999ead78158f874b">toJson</a>();</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    <span class="comment">/* liberation mémoire */</span></div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structAmcacheApplicationFile.html#a639e3cd82fc9b1d29dbef77e8a104689">clear</a>();</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>};</div>
+</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
+<div class="foldopen" id="foldopen00043" data-start="{" data-end="};">
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno"><a class="line" href="structAmcacheApplicationFiles.html">   43</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structAmcacheApplicationFiles.html">AmcacheApplicationFiles</a> {</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno"><a class="line" href="structAmcacheApplicationFiles.html#ad4f22f36ad307acb0245f41a42212009">   45</a></span>    std::vector&lt;AmcacheApplicationFile&gt; <a class="code hl_variable" href="structAmcacheApplicationFiles.html#ad4f22f36ad307acb0245f41a42212009">amcacheapplicationfiles</a>;</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span> </div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    HRESULT <a class="code hl_function" href="structAmcacheApplicationFiles.html#acafbb15eba0499b12bc1ad74c226a3db">getData</a>();</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    HRESULT <a class="code hl_function" href="structAmcacheApplicationFiles.html#ab35c915b433dd23f76bb2f96d273bb9d">toJson</a>();</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    <span class="comment">/*liberation mémoire */</span></div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structAmcacheApplicationFiles.html#a85a7dcd4a4ddb2def53ea05710491e93">clear</a>();</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>};</div>
+</div>
+<div class="ttc" id="aclassJson_html"><div class="ttname"><a href="classJson.html">Json</a></div><div class="ttdef"><b>Definition</b> json.h:52</div></div>
+<div class="ttc" id="aquickdigest5_8h_html"><div class="ttname"><a href="quickdigest5_8h.html">quickdigest5.h</a></div></div>
+<div class="ttc" id="astructAmcacheApplicationFile_html"><div class="ttname"><a href="structAmcacheApplicationFile.html">AmcacheApplicationFile</a></div><div class="ttdef"><b>Definition</b> reg_amcache_applicationfile.h:16</div></div>
+<div class="ttc" id="astructAmcacheApplicationFile_html_a076573e70dfd1e9cd549f41ab4a54266"><div class="ttname"><a href="structAmcacheApplicationFile.html#a076573e70dfd1e9cd549f41ab4a54266">AmcacheApplicationFile::version</a></div><div class="ttdeci">std::wstring version</div><div class="ttdoc">version de l’exécutable</div><div class="ttdef"><b>Definition</b> reg_amcache_applicationfile.h:22</div></div>
+<div class="ttc" id="astructAmcacheApplicationFile_html_a1365bd7c725dd62d999ead78158f874b"><div class="ttname"><a href="structAmcacheApplicationFile.html#a1365bd7c725dd62d999ead78158f874b">AmcacheApplicationFile::toJson</a></div><div class="ttdeci">Json toJson()</div><div class="ttdef"><b>Definition</b> reg_amcache_applicationfile.cpp:45</div></div>
+<div class="ttc" id="astructAmcacheApplicationFile_html_a1ca4e0623a55a4147f5cd8958be09c47"><div class="ttname"><a href="structAmcacheApplicationFile.html#a1ca4e0623a55a4147f5cd8958be09c47">AmcacheApplicationFile::linkDate</a></div><div class="ttdeci">std::wstring linkDate</div><div class="ttdoc">date de création de l'AMCACHE APPLICATION FILE</div><div class="ttdef"><b>Definition</b> reg_amcache_applicationfile.h:23</div></div>
+<div class="ttc" id="astructAmcacheApplicationFile_html_a1f6a5a8fc06355c4660c112a430a7809"><div class="ttname"><a href="structAmcacheApplicationFile.html#a1f6a5a8fc06355c4660c112a430a7809">AmcacheApplicationFile::name</a></div><div class="ttdeci">std::wstring name</div><div class="ttdoc">nom de l’exécutable</div><div class="ttdef"><b>Definition</b> reg_amcache_applicationfile.h:18</div></div>
+<div class="ttc" id="astructAmcacheApplicationFile_html_a639e3cd82fc9b1d29dbef77e8a104689"><div class="ttname"><a href="structAmcacheApplicationFile.html#a639e3cd82fc9b1d29dbef77e8a104689">AmcacheApplicationFile::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdef"><b>Definition</b> reg_amcache_applicationfile.cpp:59</div></div>
+<div class="ttc" id="astructAmcacheApplicationFile_html_a8589abe031424dff4b9f166515e85b9d"><div class="ttname"><a href="structAmcacheApplicationFile.html#a8589abe031424dff4b9f166515e85b9d">AmcacheApplicationFile::publisher</a></div><div class="ttdeci">std::wstring publisher</div><div class="ttdoc">nom de la compagnie</div><div class="ttdef"><b>Definition</b> reg_amcache_applicationfile.h:19</div></div>
+<div class="ttc" id="astructAmcacheApplicationFile_html_ab60569ad29ba0ac39b0804f299f73af4"><div class="ttname"><a href="structAmcacheApplicationFile.html#ab60569ad29ba0ac39b0804f299f73af4">AmcacheApplicationFile::IsOsComponent</a></div><div class="ttdeci">bool IsOsComponent</div><div class="ttdoc">cet exécutable fait-il parti de l'OS ?</div><div class="ttdef"><b>Definition</b> reg_amcache_applicationfile.h:25</div></div>
+<div class="ttc" id="astructAmcacheApplicationFile_html_ac6c6bc9a3acb14f5fd32f9181487981e"><div class="ttname"><a href="structAmcacheApplicationFile.html#ac6c6bc9a3acb14f5fd32f9181487981e">AmcacheApplicationFile::md5</a></div><div class="ttdeci">std::wstring md5</div><div class="ttdoc">md5 de l’exécutable</div><div class="ttdef"><b>Definition</b> reg_amcache_applicationfile.h:21</div></div>
+<div class="ttc" id="astructAmcacheApplicationFile_html_aeee05ee5592cfb9e893d9bd76f3bfd71"><div class="ttname"><a href="structAmcacheApplicationFile.html#aeee05ee5592cfb9e893d9bd76f3bfd71">AmcacheApplicationFile::longPath</a></div><div class="ttdeci">std::wstring longPath</div><div class="ttdoc">chemin d'accès à l’exécutable</div><div class="ttdef"><b>Definition</b> reg_amcache_applicationfile.h:20</div></div>
+<div class="ttc" id="astructAmcacheApplicationFile_html_aef02bb0a0f8735ef2e5b60ffa7731be8"><div class="ttname"><a href="structAmcacheApplicationFile.html#aef02bb0a0f8735ef2e5b60ffa7731be8">AmcacheApplicationFile::linkDateUtc</a></div><div class="ttdeci">std::wstring linkDateUtc</div><div class="ttdoc">date de création de l'AMCACHE APPLICATION FILE au format UTC</div><div class="ttdef"><b>Definition</b> reg_amcache_applicationfile.h:24</div></div>
+<div class="ttc" id="astructAmcacheApplicationFiles_html"><div class="ttname"><a href="structAmcacheApplicationFiles.html">AmcacheApplicationFiles</a></div><div class="ttdef"><b>Definition</b> reg_amcache_applicationfile.h:43</div></div>
+<div class="ttc" id="astructAmcacheApplicationFiles_html_a85a7dcd4a4ddb2def53ea05710491e93"><div class="ttname"><a href="structAmcacheApplicationFiles.html#a85a7dcd4a4ddb2def53ea05710491e93">AmcacheApplicationFiles::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdef"><b>Definition</b> reg_amcache_applicationfile.cpp:128</div></div>
+<div class="ttc" id="astructAmcacheApplicationFiles_html_ab35c915b433dd23f76bb2f96d273bb9d"><div class="ttname"><a href="structAmcacheApplicationFiles.html#ab35c915b433dd23f76bb2f96d273bb9d">AmcacheApplicationFiles::toJson</a></div><div class="ttdeci">HRESULT toJson()</div><div class="ttdef"><b>Definition</b> reg_amcache_applicationfile.cpp:121</div></div>
+<div class="ttc" id="astructAmcacheApplicationFiles_html_acafbb15eba0499b12bc1ad74c226a3db"><div class="ttname"><a href="structAmcacheApplicationFiles.html#acafbb15eba0499b12bc1ad74c226a3db">AmcacheApplicationFiles::getData</a></div><div class="ttdeci">HRESULT getData()</div><div class="ttdef"><b>Definition</b> reg_amcache_applicationfile.cpp:63</div></div>
+<div class="ttc" id="astructAmcacheApplicationFiles_html_ad4f22f36ad307acb0245f41a42212009"><div class="ttname"><a href="structAmcacheApplicationFiles.html#ad4f22f36ad307acb0245f41a42212009">AmcacheApplicationFiles::amcacheapplicationfiles</a></div><div class="ttdeci">std::vector&lt; AmcacheApplicationFile &gt; amcacheapplicationfiles</div><div class="ttdoc">tableau contenant tous les AMCACHE APPLICATIONS FILES</div><div class="ttdef"><b>Definition</b> reg_amcache_applicationfile.h:45</div></div>
+<div class="ttc" id="atools_8h_html"><div class="ttname"><a href="tools_8h.html">tools.h</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="reg__amcache__applicationfile_8h.html">reg_amcache_applicationfile.h</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

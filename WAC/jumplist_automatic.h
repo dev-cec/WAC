@@ -37,15 +37,12 @@ struct AutomaticDestination {
 	FILETIME accessedUtc = { 0 };//!< date d'accès du fichier au format utc
 
 	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _path est le chemin contenant les Automatic Destinations
-	* @param _sid est le SID de l'utilisateur propriétaire du LNK
-
+	* @param _path chemin du fichier Automatic Destinations
+	* @param _sid SID de l'utilisateur propriétaire du raccourci
 	*/
 	AutomaticDestination(std::filesystem::path _path, std::wstring _sid);
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson();
@@ -60,7 +57,6 @@ struct JumplistAutomatics {
 	std::vector<AutomaticDestination> automaticDestinations; //!< tableau contenant les objets
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData();
 

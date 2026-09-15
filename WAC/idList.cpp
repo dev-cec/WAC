@@ -809,7 +809,7 @@ Beef0004::Beef0004(LPBYTE buffer, int _niveau, bool* is_zip, bool is_file) {
 	   0x0009 (Windows 8.1 et au-dela) — et determine quels champs le bloc
 	   contient. Offset 2, juste avant la signature lue en 4. */
 	ExtensionVersion = *reinterpret_cast<unsigned short int*>(buffer + 2);
-	/* CORRECTION (double decalage sur les dates FAT, cf. doc §7.3).
+	/* CORRECTION (double decalage sur les dates FAT,).
 	   Une date FAT/DOS est stockee en HEURE LOCALE, par specification du format.
 	   Le code affectait cette valeur locale a `creationDateUtc`, puis lui
 	   appliquait FileTimeToLocalFileTime — traitant donc du local comme de l'UTC.
@@ -833,7 +833,7 @@ Beef0004::Beef0004(LPBYTE buffer, int _niveau, bool* is_zip, bool is_file) {
 	 * (Windows 7), le nom long était donc lu au mauvais endroit. C'est
 	 * exactement le genre de défaut qui ne se voit pas sur une machine récente
 	 * et se révèle sur un système ancien, comme l'attribut $ATTRIBUTE_LIST
-	 * (doc §14.10). La version, désormais lue (offset 2), sert à calculer la
+	 *. La version, désormais lue (offset 2), sert à calculer la
 	 * position réelle — même enchaînement que l'implémentation de référence
 	 * d'Eric Zimmerman (ExtensionBlocks). */
 	identifier = *reinterpret_cast<unsigned short int*>(buffer + 16);
@@ -2240,7 +2240,7 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _niveau) {
 		}
 	}
 	else {
-		// Date FAT = heure LOCALE : on en derive l'UTC, pas l'inverse (cf. §7.3).
+		// Date FAT = heure LOCALE : on en derive l'UTC, pas l'inverse.
 		modified = FatDateTime(date).toFileTime();
 		log(3, L"🔈LocalFileTimeToFileTime modified");
 		LocalFileTimeToFileTime(&modified, &modifiedUtc);
@@ -2281,7 +2281,7 @@ FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSiz
 	isPresent = true;
 	fsFileSize = *reinterpret_cast<unsigned int*>(buffer + 4);
 	log(3, L"🔈FatDateTime");
-	// Date FAT = heure LOCALE : on en derive l'UTC, pas l'inverse (cf. §7.3).
+	// Date FAT = heure LOCALE : on en derive l'UTC, pas l'inverse.
 	fsFileModification = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 8)).toFileTime();
 	log(3, L"🔈LocalFileTimeToFileTime fsFileModification");
 	LocalFileTimeToFileTime(&fsFileModification, &fsFileModificationUtc);
@@ -2335,7 +2335,7 @@ UsersFilesFolder::UsersFilesFolder(LPBYTE buffer, int _niveau) {
 	isPresent = true;
 	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + size - 2);
-	// Date FAT = heure LOCALE : on en derive l'UTC, pas l'inverse (cf. §7.3).
+	// Date FAT = heure LOCALE : on en derive l'UTC, pas l'inverse.
 	modified = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 0x12)).toFileTime();
 	log(3, L"🔈LocalFileTimeToFileTime modified");
 	LocalFileTimeToFileTime(&modified, &modifiedUtc);

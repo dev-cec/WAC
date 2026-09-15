@@ -53,7 +53,7 @@ VolumeInfo::VolumeInfo(LPBYTE data, int indice) {
 	creationTimeUtc = *reinterpret_cast<FILETIME*>(indVolume + 8);
 	log(3, L"🔈utcVersLocalSuspect creationTime");
 	utcVersLocalSuspect(creationTimeUtc, &creationTime);
-	// Chemins BRUTS : l'echappement est centralise dans json.h (§11). Les
+	// Chemins BRUTS : l'echappement est centralise dans json.h. Les
 	// substitutions deviceName -> mountPoint ci-dessous operent donc sur les
 	// valeurs reelles, ce qui les rend aussi utilisables telles quelles en I/O.
 	deviceName = std::wstring((wchar_t*)(data + offset)).data();
@@ -120,8 +120,8 @@ void VolumeInfo::clear() {
 Prefetch::Prefetch(const std::wstring file_path) {
 	path = file_path;
 	log(3, L"🔈replaceAll pathOriginal");
-	// Chemin BRUT : l'echappement est centralise dans json.h (§11).
-	pathOriginal = replaceAll(path, conf.mountpoint, conf.systemDrive);
+	// Chemin BRUT : l'echappement est centralise dans json.h.
+	pathOriginal = cheminOriginal(path);
 }
 
 HRESULT Prefetch::read() {

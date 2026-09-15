@@ -57,7 +57,6 @@ struct Directory {
 	Directory(LPBYTE data);
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson();
@@ -92,7 +91,6 @@ struct DestFile {
 	std::wstring getPinnedStatus();
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson();
@@ -115,7 +113,6 @@ struct DestFileDirectory {
 	DestFileDirectory(LPBYTE buffer);
 
 	/*! conversion de l'objet au format json
-	* @param i nombre de tabulation nécessaire en début de ligne pour la mise en form json, permet l'indentation propre du json
 	* @return wstring le code json
 	*/
 	Json toJson();
@@ -179,19 +176,16 @@ struct oleParser {
 	oleParser() {};
 
 	/*!Constructeur
-	* @param buffer contient un pointeur sur les données à parser
+	* @param _buffer contient un pointeur sur les données à parser
 	* @param _bufferSize contient la taille du buffer
 	*/
 	oleParser(LPBYTE _buffer, size_t _bufferSize);
 
 	/*! permet de retrouver un Directory dans l'objet ole à partir de son nom
-	* @param nom du Directory
+	* @param name du Directory
 	*/
 	Directory findDirectory(std::wstring name);
 
-	/*! permet de parser un secteur de la sat en tableau d'entiers
-	* @param sectorNumber correspond au numéro du secteur à parser
-	*/
 	/*! Suit une chaine de secteurs dans une table d'allocation (SAT ou SSAT).
 	*
 	* Les indices viennent du fichier analyse, donc d'une source non fiable : cette

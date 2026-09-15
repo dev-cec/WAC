@@ -1,7 +1,7 @@
 /*  xml_light.h — lecteur XML minimal, sans dépendance.
  *
  *  POURQUOI PAS MSXML. Lire les définitions de tâches planifiées hors ligne n'a
- *  d'intérêt que si l'on supprime la trace d'exécution COM (cf. doc §9.4) ;
+ *  d'intérêt que si l'on supprime la trace d'exécution COM ;
  *  passer par MSXML, qui est un composant COM, annulerait précisément ce
  *  bénéfice. D'où ce lecteur autonome.
  *

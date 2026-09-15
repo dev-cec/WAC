@@ -1,0 +1,299 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector):  Fichier source de /var/www/html/WAC/WAC/prefetchs.h</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(document).ready(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('prefetchs_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">prefetchs.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="prefetchs_8h.html">Aller à la documentation de ce fichier.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;cstdio&gt;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;filesystem&gt;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &lt;fstream&gt;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &lt;filesystem&gt;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &lt;sstream&gt;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &quot;<a class="code" href="tools_8h.html">tools.h</a>&quot;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;<a class="code" href="quickdigest5_8h.html">quickdigest5.h</a>&quot;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment">/*structure représentant les informations liée à la MFT</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="comment">*/</span></div>
+<div class="foldopen" id="foldopen00019" data-start="{" data-end="};">
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="structMFTInformation.html">   19</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structMFTInformation.html">MFTInformation</a> {</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno"><a class="line" href="structMFTInformation.html#a9a2d806c560501a2c0c02086c16f1812">   20</a></span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code hl_variable" href="structMFTInformation.html#a9a2d806c560501a2c0c02086c16f1812">entryIndex</a> = 0; </div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno"><a class="line" href="structMFTInformation.html#ad2197869192111fd0084761d3cb5eb3d">   21</a></span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code hl_variable" href="structMFTInformation.html#ad2197869192111fd0084761d3cb5eb3d">sequenceNumber</a> = 0;</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span> </div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno"><a class="line" href="structMFTInformation.html#a4d92cec13ae11e266087e4270a042137">   25</a></span>    <a class="code hl_function" href="structMFTInformation.html#a4d92cec13ae11e266087e4270a042137">MFTInformation</a>() {}</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <a class="code hl_function" href="structMFTInformation.html#a4d92cec13ae11e266087e4270a042137">MFTInformation</a>(LPBYTE data);</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="structMFTInformation.html#a32272f199959be6aede8202265ed907a">toJson</a>();</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    <span class="comment">/* liberation mémoire */</span></div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structMFTInformation.html#af482903748d0bc0e5ac44b61a7fdb683">clear</a>();</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>};</div>
+</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
+<div class="foldopen" id="foldopen00041" data-start="{" data-end="};">
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno"><a class="line" href="structDirStrings.html">   41</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structDirStrings.html">DirStrings</a> {</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno"><a class="line" href="structDirStrings.html#a7d72bcd11872251c3867aac55e2f4b84">   42</a></span>    std::wstring <a class="code hl_variable" href="structDirStrings.html#a7d72bcd11872251c3867aac55e2f4b84">dir</a> = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno"><a class="line" href="structDirStrings.html#aa1e6e0d7d2634f7a69d6802fd9564c3b">   43</a></span>    std::wstring <a class="code hl_variable" href="structDirStrings.html#aa1e6e0d7d2634f7a69d6802fd9564c3b">fullPath</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="structDirStrings.html#a50f13ddbd34b1376fcd09f2fab95214c">toJson</a>();</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>};</div>
+</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="foldopen" id="foldopen00048" data-start="{" data-end="};">
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno"><a class="line" href="structFilename.html">   48</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structFilename.html">Filename</a> {</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno"><a class="line" href="structFilename.html#aabb34911aec2012ab97dd552b8eaa66e">   49</a></span>    std::wstring <a class="code hl_variable" href="structFilename.html#aabb34911aec2012ab97dd552b8eaa66e">filename</a> = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno"><a class="line" href="structFilename.html#af484900be9e118ee916c3275810823a1">   50</a></span>    std::wstring <a class="code hl_variable" href="structFilename.html#af484900be9e118ee916c3275810823a1">fullPath</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="structFilename.html#a5bac75fc231c40f9168179ea661e90bf">   51</a></span>    std::wstring <a class="code hl_variable" href="structFilename.html#a5bac75fc231c40f9168179ea661e90bf">md5</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> </div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="structFilename.html#af7a43fbacc86bd7129c9f335de2be33f">toJson</a>();</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>};</div>
+</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
+<div class="foldopen" id="foldopen00056" data-start="{" data-end="};">
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno"><a class="line" href="structVolumeInfo.html">   56</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structVolumeInfo.html">VolumeInfo</a> { </div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno"><a class="line" href="structVolumeInfo.html#abfd81bc350ea89d4a990a61dbae5aaaa">   57</a></span>    FILETIME <a class="code hl_variable" href="structVolumeInfo.html#abfd81bc350ea89d4a990a61dbae5aaaa">creationTime</a> = { 0 }; </div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno"><a class="line" href="structVolumeInfo.html#a176d1cb6073a84b8904b31725c98291b">   58</a></span>    FILETIME <a class="code hl_variable" href="structVolumeInfo.html#a176d1cb6073a84b8904b31725c98291b">creationTimeUtc</a> = { 0 };</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno"><a class="line" href="structVolumeInfo.html#a06f70a7a0f171c7ecf0f7c2175360e7c">   59</a></span>    std::wstring <a class="code hl_variable" href="structVolumeInfo.html#a06f70a7a0f171c7ecf0f7c2175360e7c">serialNumber</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno"><a class="line" href="structVolumeInfo.html#a98dfd8029023e1dc638a6bbccc79f37c">   60</a></span>    std::wstring <a class="code hl_variable" href="structVolumeInfo.html#a98dfd8029023e1dc638a6bbccc79f37c">mountPoint</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno"><a class="line" href="structVolumeInfo.html#afc255e016a1de97b61a5420f38e69fb2">   61</a></span>    std::wstring <a class="code hl_variable" href="structVolumeInfo.html#afc255e016a1de97b61a5420f38e69fb2">deviceName</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno"><a class="line" href="structVolumeInfo.html#a271513d86cf1b7a0eff91fb35a6e5915">   62</a></span>    std::vector&lt;DirStrings&gt; <a class="code hl_variable" href="structVolumeInfo.html#a271513d86cf1b7a0eff91fb35a6e5915">dirStrings</a>; </div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno"><a class="line" href="structVolumeInfo.html#aff7e0c3f75d038693f831d80cc87647c">   63</a></span>    std::vector&lt;MFTInformation&gt; <a class="code hl_variable" href="structVolumeInfo.html#aff7e0c3f75d038693f831d80cc87647c">fileReferences</a>; </div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno"><a class="line" href="structVolumeInfo.html#a99d7451b1e666040acd79d87d173d20c">   66</a></span>    <a class="code hl_function" href="structVolumeInfo.html#a99d7451b1e666040acd79d87d173d20c">VolumeInfo</a>() {}</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span> </div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    <a class="code hl_function" href="structVolumeInfo.html#a99d7451b1e666040acd79d87d173d20c">VolumeInfo</a>(LPBYTE data, <span class="keywordtype">int</span> indice);</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="structVolumeInfo.html#ab56ef08b4e7f780fce14dd0621dbc916">toJson</a>();</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span> </div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    <span class="comment">/* liberation mémoire */</span></div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structVolumeInfo.html#a650b617488d49b303d518366a0f5d294">clear</a>();</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>};</div>
+</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span> </div>
+<div class="foldopen" id="foldopen00086" data-start="{" data-end="};">
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno"><a class="line" href="structPrefetch.html">   86</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structPrefetch.html">Prefetch</a> {</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno"><a class="line" href="structPrefetch.html#a6ed214b73793d3da4ac304a90469cc37">   88</a></span>    std::wstring <a class="code hl_variable" href="structPrefetch.html#a6ed214b73793d3da4ac304a90469cc37">path</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno"><a class="line" href="structPrefetch.html#a55ec9d6b0236c8f64e0500f28a51aa64">   89</a></span>    std::wstring <a class="code hl_variable" href="structPrefetch.html#a55ec9d6b0236c8f64e0500f28a51aa64">pathOriginal</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    <span class="comment">//HEADER</span></div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno"><a class="line" href="structPrefetch.html#ac25fee7f3395655f17dd9759fcf1663b">   91</a></span>    std::wstring <a class="code hl_variable" href="structPrefetch.html#ac25fee7f3395655f17dd9759fcf1663b">filename</a> = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno"><a class="line" href="structPrefetch.html#a716cb3bfc0775691d7dac0cb5dc7a4c1">   92</a></span>    std::wstring <a class="code hl_variable" href="structPrefetch.html#a716cb3bfc0775691d7dac0cb5dc7a4c1">fullPath</a> = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno"><a class="line" href="structPrefetch.html#a7293a64bf68dbdcc3fb739b5a7686b0d">   93</a></span>    std::wstring <a class="code hl_variable" href="structPrefetch.html#a7293a64bf68dbdcc3fb739b5a7686b0d">md5</a> = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno"><a class="line" href="structPrefetch.html#a4dfafd4622e287305a023c1d8dca9b6f">   94</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="structPrefetch.html#a4dfafd4622e287305a023c1d8dca9b6f">signature</a> = 0; </div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno"><a class="line" href="structPrefetch.html#a9aee39b5276aa88928b595c5209b10ab">   95</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="structPrefetch.html#a9aee39b5276aa88928b595c5209b10ab">version</a> = 0; </div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno"><a class="line" href="structPrefetch.html#a68cf15cba02b871d6df9945b029cf473">   96</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="structPrefetch.html#a68cf15cba02b871d6df9945b029cf473">size</a> = 0; </div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    <span class="comment">// FILE INFORMATION</span></div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno"><a class="line" href="structPrefetch.html#adb755f7784d23054c34dc3654cab5d0c">   98</a></span>    FILETIME <a class="code hl_variable" href="structPrefetch.html#adb755f7784d23054c34dc3654cab5d0c">created</a> = { 0 }; </div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno"><a class="line" href="structPrefetch.html#ab7a1741d109c27bbd72b516b79435cb8">   99</a></span>    FILETIME <a class="code hl_variable" href="structPrefetch.html#ab7a1741d109c27bbd72b516b79435cb8">createdUtc</a> = { 0 }; </div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno"><a class="line" href="structPrefetch.html#a29d3c48ebf7859e96225924aeb7002a5">  100</a></span>    FILETIME <a class="code hl_variable" href="structPrefetch.html#a29d3c48ebf7859e96225924aeb7002a5">modified</a> = { 0 };</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno"><a class="line" href="structPrefetch.html#a96b51b7081c0b73ba84582857c6b81d5">  101</a></span>    FILETIME <a class="code hl_variable" href="structPrefetch.html#a96b51b7081c0b73ba84582857c6b81d5">modifiedUtc</a> = { 0 };</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno"><a class="line" href="structPrefetch.html#a42c733380fdfcc7c8de7cfa79c30b7f0">  102</a></span>    FILETIME <a class="code hl_variable" href="structPrefetch.html#a42c733380fdfcc7c8de7cfa79c30b7f0">accessed</a> = { 0 };</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno"><a class="line" href="structPrefetch.html#aa5a538216fa96b46ced116e294f074b1">  103</a></span>    FILETIME <a class="code hl_variable" href="structPrefetch.html#aa5a538216fa96b46ced116e294f074b1">accessedUtc</a> = { 0 };</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno"><a class="line" href="structPrefetch.html#a7ba15f3534ae66c4d3a476cccd182c36">  104</a></span>    std::vector&lt;FILETIME&gt; <a class="code hl_variable" href="structPrefetch.html#a7ba15f3534ae66c4d3a476cccd182c36">last_runs</a>; </div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno"><a class="line" href="structPrefetch.html#a66a1f6711c9ce2f321f7d5f29e85d268">  105</a></span>    std::vector&lt;FILETIME&gt; <a class="code hl_variable" href="structPrefetch.html#a66a1f6711c9ce2f321f7d5f29e85d268">last_runsUtc</a>; </div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno"><a class="line" href="structPrefetch.html#a76b2fe4776446360ac3cb06874dcb150">  106</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="structPrefetch.html#a76b2fe4776446360ac3cb06874dcb150">run_count</a> = 0; </div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno"><a class="line" href="structPrefetch.html#a4e7452acd21ad12044d4b3246eaeb331">  107</a></span>    std::wstring <a class="code hl_variable" href="structPrefetch.html#a4e7452acd21ad12044d4b3246eaeb331">hash_string</a> = L<span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    <span class="comment">//Filename strings</span></div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno"><a class="line" href="structPrefetch.html#a36cc74072bbf150b0c2055e92205c20c">  110</a></span>    std::vector&lt;Filename&gt; <a class="code hl_variable" href="structPrefetch.html#a36cc74072bbf150b0c2055e92205c20c">filenames</a>; </div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span> </div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    <span class="comment">//volume information</span></div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno"><a class="line" href="structPrefetch.html#a77b4dfb38277a26b079563c7a8fe911a">  113</a></span>    std::vector&lt;VolumeInfo&gt; <a class="code hl_variable" href="structPrefetch.html#a77b4dfb38277a26b079563c7a8fe911a">volumes</a>; </div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span> </div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    <a class="code hl_struct" href="structPrefetch.html">Prefetch</a>(<span class="keyword">const</span> std::wstring file_path);</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span> </div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    <span class="comment">/* lecture du fichier prefetch</span></div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="comment">    */</span></div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    HRESULT <a class="code hl_function" href="structPrefetch.html#ab3a26c6ee678f13bf066da4879b55ae7">read</a>();</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span> </div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="structPrefetch.html#a5ac5f4e5d4b36d49eb420eee1866ca1d">toJson</a>();</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span> </div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    <span class="comment">/* liberation mémoire */</span></div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structPrefetch.html#a9791863eb49a3167bbd9035cca585b5d">clear</a>();</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>};</div>
+</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span> </div>
+<div class="foldopen" id="foldopen00135" data-start="{" data-end="};">
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno"><a class="line" href="structPrefetchs.html">  135</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structPrefetchs.html">Prefetchs</a> {</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno"><a class="line" href="structPrefetchs.html#ab82f9a8905f8806671b11627ae3b156f">  136</a></span>    std::vector&lt;Prefetch&gt; <a class="code hl_variable" href="structPrefetchs.html#ab82f9a8905f8806671b11627ae3b156f">prefetchs</a>; </div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span> </div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>    HRESULT <a class="code hl_function" href="structPrefetchs.html#aad2fa608edc962f46451b0e33892db51">getData</a>();</div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span> </div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>    HRESULT <a class="code hl_function" href="structPrefetchs.html#a71cae9cab2fc3376707bc77a3e848210">toJson</a>();</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span> </div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>    <span class="comment">/* liberation mémoire */</span></div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structPrefetchs.html#ab0ccddbf110b4a15d991926da93b9d97">clear</a>();</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>};</div>
+</div>
+<div class="ttc" id="aclassJson_html"><div class="ttname"><a href="classJson.html">Json</a></div><div class="ttdef"><b>Definition</b> json.h:52</div></div>
+<div class="ttc" id="aquickdigest5_8h_html"><div class="ttname"><a href="quickdigest5_8h.html">quickdigest5.h</a></div></div>
+<div class="ttc" id="astructDirStrings_html"><div class="ttname"><a href="structDirStrings.html">DirStrings</a></div><div class="ttdef"><b>Definition</b> prefetchs.h:41</div></div>
+<div class="ttc" id="astructDirStrings_html_a50f13ddbd34b1376fcd09f2fab95214c"><div class="ttname"><a href="structDirStrings.html#a50f13ddbd34b1376fcd09f2fab95214c">DirStrings::toJson</a></div><div class="ttdeci">Json toJson()</div><div class="ttdef"><b>Definition</b> prefetchs.cpp:34</div></div>
+<div class="ttc" id="astructDirStrings_html_a7d72bcd11872251c3867aac55e2f4b84"><div class="ttname"><a href="structDirStrings.html#a7d72bcd11872251c3867aac55e2f4b84">DirStrings::dir</a></div><div class="ttdeci">std::wstring dir</div><div class="ttdoc">original string presents in prefetch</div><div class="ttdef"><b>Definition</b> prefetchs.h:42</div></div>
+<div class="ttc" id="astructDirStrings_html_aa1e6e0d7d2634f7a69d6802fd9564c3b"><div class="ttname"><a href="structDirStrings.html#aa1e6e0d7d2634f7a69d6802fd9564c3b">DirStrings::fullPath</a></div><div class="ttdeci">std::wstring fullPath</div><div class="ttdoc">full path on hard drive</div><div class="ttdef"><b>Definition</b> prefetchs.h:43</div></div>
+<div class="ttc" id="astructFilename_html"><div class="ttname"><a href="structFilename.html">Filename</a></div><div class="ttdef"><b>Definition</b> prefetchs.h:48</div></div>
+<div class="ttc" id="astructFilename_html_a5bac75fc231c40f9168179ea661e90bf"><div class="ttname"><a href="structFilename.html#a5bac75fc231c40f9168179ea661e90bf">Filename::md5</a></div><div class="ttdeci">std::wstring md5</div><div class="ttdoc">hash md5 of the file</div><div class="ttdef"><b>Definition</b> prefetchs.h:51</div></div>
+<div class="ttc" id="astructFilename_html_aabb34911aec2012ab97dd552b8eaa66e"><div class="ttname"><a href="structFilename.html#aabb34911aec2012ab97dd552b8eaa66e">Filename::filename</a></div><div class="ttdeci">std::wstring filename</div><div class="ttdoc">original string presents in prefetch</div><div class="ttdef"><b>Definition</b> prefetchs.h:49</div></div>
+<div class="ttc" id="astructFilename_html_af484900be9e118ee916c3275810823a1"><div class="ttname"><a href="structFilename.html#af484900be9e118ee916c3275810823a1">Filename::fullPath</a></div><div class="ttdeci">std::wstring fullPath</div><div class="ttdoc">full path on hard drive</div><div class="ttdef"><b>Definition</b> prefetchs.h:50</div></div>
+<div class="ttc" id="astructFilename_html_af7a43fbacc86bd7129c9f335de2be33f"><div class="ttname"><a href="structFilename.html#af7a43fbacc86bd7129c9f335de2be33f">Filename::toJson</a></div><div class="ttdeci">Json toJson()</div><div class="ttdef"><b>Definition</b> prefetchs.cpp:41</div></div>
+<div class="ttc" id="astructMFTInformation_html"><div class="ttname"><a href="structMFTInformation.html">MFTInformation</a></div><div class="ttdef"><b>Definition</b> prefetchs.h:19</div></div>
+<div class="ttc" id="astructMFTInformation_html_a32272f199959be6aede8202265ed907a"><div class="ttname"><a href="structMFTInformation.html#a32272f199959be6aede8202265ed907a">MFTInformation::toJson</a></div><div class="ttdeci">Json toJson()</div><div class="ttdef"><b>Definition</b> prefetchs.cpp:22</div></div>
+<div class="ttc" id="astructMFTInformation_html_a4d92cec13ae11e266087e4270a042137"><div class="ttname"><a href="structMFTInformation.html#a4d92cec13ae11e266087e4270a042137">MFTInformation::MFTInformation</a></div><div class="ttdeci">MFTInformation()</div><div class="ttdef"><b>Definition</b> prefetchs.h:25</div></div>
+<div class="ttc" id="astructMFTInformation_html_a9a2d806c560501a2c0c02086c16f1812"><div class="ttname"><a href="structMFTInformation.html#a9a2d806c560501a2c0c02086c16f1812">MFTInformation::entryIndex</a></div><div class="ttdeci">unsigned int entryIndex</div><div class="ttdoc">numéro d'entrée dans la MFT</div><div class="ttdef"><b>Definition</b> prefetchs.h:20</div></div>
+<div class="ttc" id="astructMFTInformation_html_ad2197869192111fd0084761d3cb5eb3d"><div class="ttname"><a href="structMFTInformation.html#ad2197869192111fd0084761d3cb5eb3d">MFTInformation::sequenceNumber</a></div><div class="ttdeci">unsigned int sequenceNumber</div><div class="ttdoc">numéro de séquence dans la MFT</div><div class="ttdef"><b>Definition</b> prefetchs.h:21</div></div>
+<div class="ttc" id="astructMFTInformation_html_af482903748d0bc0e5ac44b61a7fdb683"><div class="ttname"><a href="structMFTInformation.html#af482903748d0bc0e5ac44b61a7fdb683">MFTInformation::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdef"><b>Definition</b> prefetchs.cpp:30</div></div>
+<div class="ttc" id="astructPrefetch_html"><div class="ttname"><a href="structPrefetch.html">Prefetch</a></div><div class="ttdef"><b>Definition</b> prefetchs.h:86</div></div>
+<div class="ttc" id="astructPrefetch_html_a29d3c48ebf7859e96225924aeb7002a5"><div class="ttname"><a href="structPrefetch.html#a29d3c48ebf7859e96225924aeb7002a5">Prefetch::modified</a></div><div class="ttdeci">FILETIME modified</div><div class="ttdoc">date de modification du fichier</div><div class="ttdef"><b>Definition</b> prefetchs.h:100</div></div>
+<div class="ttc" id="astructPrefetch_html_a36cc74072bbf150b0c2055e92205c20c"><div class="ttname"><a href="structPrefetch.html#a36cc74072bbf150b0c2055e92205c20c">Prefetch::filenames</a></div><div class="ttdeci">std::vector&lt; Filename &gt; filenames</div><div class="ttdoc">liste de nom de fichiers</div><div class="ttdef"><b>Definition</b> prefetchs.h:110</div></div>
+<div class="ttc" id="astructPrefetch_html_a42c733380fdfcc7c8de7cfa79c30b7f0"><div class="ttname"><a href="structPrefetch.html#a42c733380fdfcc7c8de7cfa79c30b7f0">Prefetch::accessed</a></div><div class="ttdeci">FILETIME accessed</div><div class="ttdoc">date d'accès du fichier</div><div class="ttdef"><b>Definition</b> prefetchs.h:102</div></div>
+<div class="ttc" id="astructPrefetch_html_a4dfafd4622e287305a023c1d8dca9b6f"><div class="ttname"><a href="structPrefetch.html#a4dfafd4622e287305a023c1d8dca9b6f">Prefetch::signature</a></div><div class="ttdeci">int signature</div><div class="ttdoc">signature du prefetch</div><div class="ttdef"><b>Definition</b> prefetchs.h:94</div></div>
+<div class="ttc" id="astructPrefetch_html_a4e7452acd21ad12044d4b3246eaeb331"><div class="ttname"><a href="structPrefetch.html#a4e7452acd21ad12044d4b3246eaeb331">Prefetch::hash_string</a></div><div class="ttdeci">std::wstring hash_string</div><div class="ttdoc">hash du chemin contenant le prefetch</div><div class="ttdef"><b>Definition</b> prefetchs.h:107</div></div>
+<div class="ttc" id="astructPrefetch_html_a55ec9d6b0236c8f64e0500f28a51aa64"><div class="ttname"><a href="structPrefetch.html#a55ec9d6b0236c8f64e0500f28a51aa64">Prefetch::pathOriginal</a></div><div class="ttdeci">std::wstring pathOriginal</div><div class="ttdoc">chemin du prefetch sur le disque</div><div class="ttdef"><b>Definition</b> prefetchs.h:89</div></div>
+<div class="ttc" id="astructPrefetch_html_a5ac5f4e5d4b36d49eb420eee1866ca1d"><div class="ttname"><a href="structPrefetch.html#a5ac5f4e5d4b36d49eb420eee1866ca1d">Prefetch::toJson</a></div><div class="ttdeci">Json toJson()</div><div class="ttdef"><b>Definition</b> prefetchs.cpp:360</div></div>
+<div class="ttc" id="astructPrefetch_html_a66a1f6711c9ce2f321f7d5f29e85d268"><div class="ttname"><a href="structPrefetch.html#a66a1f6711c9ce2f321f7d5f29e85d268">Prefetch::last_runsUtc</a></div><div class="ttdeci">std::vector&lt; FILETIME &gt; last_runsUtc</div><div class="ttdoc">liste des dates des dernières executions au format UTC</div><div class="ttdef"><b>Definition</b> prefetchs.h:105</div></div>
+<div class="ttc" id="astructPrefetch_html_a68cf15cba02b871d6df9945b029cf473"><div class="ttname"><a href="structPrefetch.html#a68cf15cba02b871d6df9945b029cf473">Prefetch::size</a></div><div class="ttdeci">int size</div><div class="ttdoc">taille du prefetch</div><div class="ttdef"><b>Definition</b> prefetchs.h:96</div></div>
+<div class="ttc" id="astructPrefetch_html_a6ed214b73793d3da4ac304a90469cc37"><div class="ttname"><a href="structPrefetch.html#a6ed214b73793d3da4ac304a90469cc37">Prefetch::path</a></div><div class="ttdeci">std::wstring path</div><div class="ttdoc">chemin du prefetch dans le mountpoint</div><div class="ttdef"><b>Definition</b> prefetchs.h:88</div></div>
+<div class="ttc" id="astructPrefetch_html_a716cb3bfc0775691d7dac0cb5dc7a4c1"><div class="ttname"><a href="structPrefetch.html#a716cb3bfc0775691d7dac0cb5dc7a4c1">Prefetch::fullPath</a></div><div class="ttdeci">std::wstring fullPath</div><div class="ttdoc">full path du process</div><div class="ttdef"><b>Definition</b> prefetchs.h:92</div></div>
+<div class="ttc" id="astructPrefetch_html_a7293a64bf68dbdcc3fb739b5a7686b0d"><div class="ttname"><a href="structPrefetch.html#a7293a64bf68dbdcc3fb739b5a7686b0d">Prefetch::md5</a></div><div class="ttdeci">std::wstring md5</div><div class="ttdoc">hash md5 of process</div><div class="ttdef"><b>Definition</b> prefetchs.h:93</div></div>
+<div class="ttc" id="astructPrefetch_html_a76b2fe4776446360ac3cb06874dcb150"><div class="ttname"><a href="structPrefetch.html#a76b2fe4776446360ac3cb06874dcb150">Prefetch::run_count</a></div><div class="ttdeci">int run_count</div><div class="ttdoc">nombre d’exécutions</div><div class="ttdef"><b>Definition</b> prefetchs.h:106</div></div>
+<div class="ttc" id="astructPrefetch_html_a77b4dfb38277a26b079563c7a8fe911a"><div class="ttname"><a href="structPrefetch.html#a77b4dfb38277a26b079563c7a8fe911a">Prefetch::volumes</a></div><div class="ttdeci">std::vector&lt; VolumeInfo &gt; volumes</div><div class="ttdoc">tableau contenant des information de volumes</div><div class="ttdef"><b>Definition</b> prefetchs.h:113</div></div>
+<div class="ttc" id="astructPrefetch_html_a7ba15f3534ae66c4d3a476cccd182c36"><div class="ttname"><a href="structPrefetch.html#a7ba15f3534ae66c4d3a476cccd182c36">Prefetch::last_runs</a></div><div class="ttdeci">std::vector&lt; FILETIME &gt; last_runs</div><div class="ttdoc">liste des dates des dernières executions</div><div class="ttdef"><b>Definition</b> prefetchs.h:104</div></div>
+<div class="ttc" id="astructPrefetch_html_a96b51b7081c0b73ba84582857c6b81d5"><div class="ttname"><a href="structPrefetch.html#a96b51b7081c0b73ba84582857c6b81d5">Prefetch::modifiedUtc</a></div><div class="ttdeci">FILETIME modifiedUtc</div><div class="ttdoc">date de modification du fichier au format utc</div><div class="ttdef"><b>Definition</b> prefetchs.h:101</div></div>
+<div class="ttc" id="astructPrefetch_html_a9791863eb49a3167bbd9035cca585b5d"><div class="ttname"><a href="structPrefetch.html#a9791863eb49a3167bbd9035cca585b5d">Prefetch::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdef"><b>Definition</b> prefetchs.cpp:391</div></div>
+<div class="ttc" id="astructPrefetch_html_a9aee39b5276aa88928b595c5209b10ab"><div class="ttname"><a href="structPrefetch.html#a9aee39b5276aa88928b595c5209b10ab">Prefetch::version</a></div><div class="ttdeci">int version</div><div class="ttdoc">version du prefetch</div><div class="ttdef"><b>Definition</b> prefetchs.h:95</div></div>
+<div class="ttc" id="astructPrefetch_html_aa5a538216fa96b46ced116e294f074b1"><div class="ttname"><a href="structPrefetch.html#aa5a538216fa96b46ced116e294f074b1">Prefetch::accessedUtc</a></div><div class="ttdeci">FILETIME accessedUtc</div><div class="ttdoc">date d'accès du fichier au format utc</div><div class="ttdef"><b>Definition</b> prefetchs.h:103</div></div>
+<div class="ttc" id="astructPrefetch_html_ab3a26c6ee678f13bf066da4879b55ae7"><div class="ttname"><a href="structPrefetch.html#ab3a26c6ee678f13bf066da4879b55ae7">Prefetch::read</a></div><div class="ttdeci">HRESULT read()</div><div class="ttdef"><b>Definition</b> prefetchs.cpp:127</div></div>
+<div class="ttc" id="astructPrefetch_html_ab7a1741d109c27bbd72b516b79435cb8"><div class="ttname"><a href="structPrefetch.html#ab7a1741d109c27bbd72b516b79435cb8">Prefetch::createdUtc</a></div><div class="ttdeci">FILETIME createdUtc</div><div class="ttdoc">date de création du fichier au format utc</div><div class="ttdef"><b>Definition</b> prefetchs.h:99</div></div>
+<div class="ttc" id="astructPrefetch_html_ac25fee7f3395655f17dd9759fcf1663b"><div class="ttname"><a href="structPrefetch.html#ac25fee7f3395655f17dd9759fcf1663b">Prefetch::filename</a></div><div class="ttdeci">std::wstring filename</div><div class="ttdoc">nom du fichier</div><div class="ttdef"><b>Definition</b> prefetchs.h:91</div></div>
+<div class="ttc" id="astructPrefetch_html_adb755f7784d23054c34dc3654cab5d0c"><div class="ttname"><a href="structPrefetch.html#adb755f7784d23054c34dc3654cab5d0c">Prefetch::created</a></div><div class="ttdeci">FILETIME created</div><div class="ttdoc">date de création du fichier</div><div class="ttdef"><b>Definition</b> prefetchs.h:98</div></div>
+<div class="ttc" id="astructPrefetchs_html"><div class="ttname"><a href="structPrefetchs.html">Prefetchs</a></div><div class="ttdef"><b>Definition</b> prefetchs.h:135</div></div>
+<div class="ttc" id="astructPrefetchs_html_a71cae9cab2fc3376707bc77a3e848210"><div class="ttname"><a href="structPrefetchs.html#a71cae9cab2fc3376707bc77a3e848210">Prefetchs::toJson</a></div><div class="ttdeci">HRESULT toJson()</div><div class="ttdef"><b>Definition</b> prefetchs.cpp:421</div></div>
+<div class="ttc" id="astructPrefetchs_html_aad2fa608edc962f46451b0e33892db51"><div class="ttname"><a href="structPrefetchs.html#aad2fa608edc962f46451b0e33892db51">Prefetchs::getData</a></div><div class="ttdeci">HRESULT getData()</div><div class="ttdef"><b>Definition</b> prefetchs.cpp:396</div></div>
+<div class="ttc" id="astructPrefetchs_html_ab0ccddbf110b4a15d991926da93b9d97"><div class="ttname"><a href="structPrefetchs.html#ab0ccddbf110b4a15d991926da93b9d97">Prefetchs::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdef"><b>Definition</b> prefetchs.cpp:428</div></div>
+<div class="ttc" id="astructPrefetchs_html_ab82f9a8905f8806671b11627ae3b156f"><div class="ttname"><a href="structPrefetchs.html#ab82f9a8905f8806671b11627ae3b156f">Prefetchs::prefetchs</a></div><div class="ttdeci">std::vector&lt; Prefetch &gt; prefetchs</div><div class="ttdoc">tableau contenant tout les prefetch</div><div class="ttdef"><b>Definition</b> prefetchs.h:136</div></div>
+<div class="ttc" id="astructVolumeInfo_html"><div class="ttname"><a href="structVolumeInfo.html">VolumeInfo</a></div><div class="ttdef"><b>Definition</b> prefetchs.h:56</div></div>
+<div class="ttc" id="astructVolumeInfo_html_a06f70a7a0f171c7ecf0f7c2175360e7c"><div class="ttname"><a href="structVolumeInfo.html#a06f70a7a0f171c7ecf0f7c2175360e7c">VolumeInfo::serialNumber</a></div><div class="ttdeci">std::wstring serialNumber</div><div class="ttdoc">numéro de série du volume</div><div class="ttdef"><b>Definition</b> prefetchs.h:59</div></div>
+<div class="ttc" id="astructVolumeInfo_html_a176d1cb6073a84b8904b31725c98291b"><div class="ttname"><a href="structVolumeInfo.html#a176d1cb6073a84b8904b31725c98291b">VolumeInfo::creationTimeUtc</a></div><div class="ttdeci">FILETIME creationTimeUtc</div><div class="ttdoc">date de création au format UTC</div><div class="ttdef"><b>Definition</b> prefetchs.h:58</div></div>
+<div class="ttc" id="astructVolumeInfo_html_a271513d86cf1b7a0eff91fb35a6e5915"><div class="ttname"><a href="structVolumeInfo.html#a271513d86cf1b7a0eff91fb35a6e5915">VolumeInfo::dirStrings</a></div><div class="ttdeci">std::vector&lt; DirStrings &gt; dirStrings</div><div class="ttdoc">tableau de strings liées au volume</div><div class="ttdef"><b>Definition</b> prefetchs.h:62</div></div>
+<div class="ttc" id="astructVolumeInfo_html_a650b617488d49b303d518366a0f5d294"><div class="ttname"><a href="structVolumeInfo.html#a650b617488d49b303d518366a0f5d294">VolumeInfo::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdef"><b>Definition</b> prefetchs.cpp:115</div></div>
+<div class="ttc" id="astructVolumeInfo_html_a98dfd8029023e1dc638a6bbccc79f37c"><div class="ttname"><a href="structVolumeInfo.html#a98dfd8029023e1dc638a6bbccc79f37c">VolumeInfo::mountPoint</a></div><div class="ttdeci">std::wstring mountPoint</div><div class="ttdoc">lettre du point de montage du volume</div><div class="ttdef"><b>Definition</b> prefetchs.h:60</div></div>
+<div class="ttc" id="astructVolumeInfo_html_a99d7451b1e666040acd79d87d173d20c"><div class="ttname"><a href="structVolumeInfo.html#a99d7451b1e666040acd79d87d173d20c">VolumeInfo::VolumeInfo</a></div><div class="ttdeci">VolumeInfo()</div><div class="ttdoc">Constructeur par défaut.</div><div class="ttdef"><b>Definition</b> prefetchs.h:66</div></div>
+<div class="ttc" id="astructVolumeInfo_html_ab56ef08b4e7f780fce14dd0621dbc916"><div class="ttname"><a href="structVolumeInfo.html#ab56ef08b4e7f780fce14dd0621dbc916">VolumeInfo::toJson</a></div><div class="ttdeci">Json toJson()</div><div class="ttdef"><b>Definition</b> prefetchs.cpp:99</div></div>
+<div class="ttc" id="astructVolumeInfo_html_abfd81bc350ea89d4a990a61dbae5aaaa"><div class="ttname"><a href="structVolumeInfo.html#abfd81bc350ea89d4a990a61dbae5aaaa">VolumeInfo::creationTime</a></div><div class="ttdeci">FILETIME creationTime</div><div class="ttdoc">date de création</div><div class="ttdef"><b>Definition</b> prefetchs.h:57</div></div>
+<div class="ttc" id="astructVolumeInfo_html_afc255e016a1de97b61a5420f38e69fb2"><div class="ttname"><a href="structVolumeInfo.html#afc255e016a1de97b61a5420f38e69fb2">VolumeInfo::deviceName</a></div><div class="ttdeci">std::wstring deviceName</div><div class="ttdoc">nom du périphérique</div><div class="ttdef"><b>Definition</b> prefetchs.h:61</div></div>
+<div class="ttc" id="astructVolumeInfo_html_aff7e0c3f75d038693f831d80cc87647c"><div class="ttname"><a href="structVolumeInfo.html#aff7e0c3f75d038693f831d80cc87647c">VolumeInfo::fileReferences</a></div><div class="ttdeci">std::vector&lt; MFTInformation &gt; fileReferences</div><div class="ttdoc">inutile pour l'investigation numérique</div><div class="ttdef"><b>Definition</b> prefetchs.h:63</div></div>
+<div class="ttc" id="atools_8h_html"><div class="ttname"><a href="tools_8h.html">tools.h</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="prefetchs_8h.html">prefetchs.h</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

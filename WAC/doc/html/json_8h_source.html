@@ -1,0 +1,266 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector):  Fichier source de /var/www/html/WAC/WAC/json.h</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(document).ready(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('json_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">json.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="json_8h.html">Aller à la documentation de ce fichier.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*  json.h — sérialiseur JSON centralisé pour WAC.</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment"> *  POURQUOI. Chaque artefact fabriquait son JSON à la main par concaténation de</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment"> *  chaînes. Conséquences constatées en test : échappement oublié ou incohérent</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment"> *  (ScheduledTasks, mounted_device), virgule finale invalide (Sessions), nombres</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="comment"> *  émis comme chaînes, indentation gérée à la main. Ce writer rend ces erreurs</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="comment"> *  structurellement impossibles.</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="comment"> *  PRINCIPE. Les valeurs sont stockées BRUTES en mémoire (vrais chemins,</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="comment"> *  utilisables tels quels pour les I/O fichier) ; l&#39;échappement n&#39;a lieu QU&#39;ICI,</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="comment"> *  à la sérialisation, et une seule fois.</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="comment"> *  Autonome (aucune dépendance au reste de WAC) : testable sous Linux.</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="comment"> *  Exemple :</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="comment"> *      Json o = Json::obj();</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment"> *      o.add(L&quot;SessionId&quot;, Json::num(sessionId));       // nombre, sans guillemets</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="comment"> *      o.add(L&quot;LogonName&quot;, Json::str(logonName));       // échappé automatiquement</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="comment"> *      o.add(L&quot;Path&quot;,      Json::str(cheminBrut));      // chemin brut, échappé ici</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="comment"> *      return o.dump(1);</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor">#include &lt;utility&gt;</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
+<div class="foldopen" id="foldopen00028" data-start="{" data-end="}">
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="json_8h.html#a498b432e8aac8982cb39271297a2b733">   28</a></span><span class="keyword">inline</span> std::wstring <a class="code hl_function" href="json_8h.html#a498b432e8aac8982cb39271297a2b733">jsonEscape</a>(<span class="keyword">const</span> std::wstring&amp; s) {</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    std::wstring r;</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    r.reserve(s.size() + 8);</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    <span class="keywordflow">for</span> (<span class="keywordtype">wchar_t</span> c : s) {</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>        <span class="keywordflow">switch</span> (c) {</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>        <span class="keywordflow">case</span> L<span class="charliteral">&#39;\\&#39;</span>: r += L<span class="stringliteral">&quot;\\\\&quot;</span>; <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>        <span class="keywordflow">case</span> L<span class="charliteral">&#39;&quot;&#39;</span>:  r += L<span class="stringliteral">&quot;\\\&quot;&quot;</span>; <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>        <span class="keywordflow">case</span> L<span class="charliteral">&#39;\b&#39;</span>: r += L<span class="stringliteral">&quot;\\b&quot;</span>;  <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>        <span class="keywordflow">case</span> L<span class="charliteral">&#39;\f&#39;</span>: r += L<span class="stringliteral">&quot;\\f&quot;</span>;  <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>        <span class="keywordflow">case</span> L<span class="charliteral">&#39;\n&#39;</span>: r += L<span class="stringliteral">&quot;\\n&quot;</span>;  <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>        <span class="keywordflow">case</span> L<span class="charliteral">&#39;\r&#39;</span>: r += L<span class="stringliteral">&quot;\\r&quot;</span>;  <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>        <span class="keywordflow">case</span> L<span class="charliteral">&#39;\t&#39;</span>: r += L<span class="stringliteral">&quot;\\t&quot;</span>;  <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        <span class="keywordflow">default</span>:</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>            <span class="keywordflow">if</span> (c &lt; 0x20) {                       <span class="comment">// autres caractères de contrôle</span></div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>                <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">wchar_t</span>* h = L<span class="stringliteral">&quot;0123456789abcdef&quot;</span>;</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>                r += L<span class="stringliteral">&quot;\\u00&quot;</span>; r += h[(c &gt;&gt; 4) &amp; 0xF]; r += h[c &amp; 0xF];</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>            }</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>            <span class="keywordflow">else</span> r += c;</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>        }</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    }</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    <span class="keywordflow">return</span> r;</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>}</div>
+</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span> </div>
+<div class="foldopen" id="foldopen00052" data-start="{" data-end="};">
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno"><a class="line" href="classJson.html">   52</a></span><span class="keyword">class </span><a class="code hl_class" href="classJson.html">Json</a> {</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno"><a class="line" href="classJson.html#a82938661c4953d873b5c8a204337fd57">   54</a></span>    <span class="keyword">enum class</span> <a class="code hl_enumeration" href="classJson.html#a82938661c4953d873b5c8a204337fd57">Kind</a> { <a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57af4c93c906a99a31bf2d92cf5724dfbed">Obj</a>, <a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57a3e09ae791896ec3e7e65b3fe363f0fc3">Arr</a>, <a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57aebccbbd337efb2ddb5979c57125bad1b">Str</a>, <a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57ab3e3076d9b3c53bede50d468b647b109">Num</a>, <a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57ac26f15e86e3de4c398a8273272aba034">Bool</a>, <a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57abbb93ef26e3c101ff11cdd21cab08a94">Null</a> };</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    <span class="comment">// --- fabriques ---------------------------------------------------------</span></div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno"><a class="line" href="classJson.html#a2d01c95f7974c2348717c56917dd11b7">   57</a></span>    <span class="keyword">static</span> <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="classJson.html#a2d01c95f7974c2348717c56917dd11b7">obj</a>()  { <span class="keywordflow">return</span> <a class="code hl_class" href="classJson.html">Json</a>(<a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57af4c93c906a99a31bf2d92cf5724dfbed">Kind::Obj</a>); }</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno"><a class="line" href="classJson.html#a02b566a598465cf01e42007be3704233">   58</a></span>    <span class="keyword">static</span> <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="classJson.html#a02b566a598465cf01e42007be3704233">arr</a>()  { <span class="keywordflow">return</span> <a class="code hl_class" href="classJson.html">Json</a>(<a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57a3e09ae791896ec3e7e65b3fe363f0fc3">Kind::Arr</a>); }</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno"><a class="line" href="classJson.html#a5bc2d676aa8d106a2c98ca3ee41cc4e6">   59</a></span>    <span class="keyword">static</span> <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="classJson.html#a5bc2d676aa8d106a2c98ca3ee41cc4e6">null</a>() { <span class="keywordflow">return</span> <a class="code hl_class" href="classJson.html">Json</a>(<a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57abbb93ef26e3c101ff11cdd21cab08a94">Kind::Null</a>); }</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno"><a class="line" href="classJson.html#a566f7f6afb712f82ddfd6c07751645e9">   60</a></span>    <span class="keyword">static</span> <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="classJson.html#a566f7f6afb712f82ddfd6c07751645e9">str</a>(<span class="keyword">const</span> std::wstring&amp; v) { <a class="code hl_class" href="classJson.html">Json</a> j(<a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57aebccbbd337efb2ddb5979c57125bad1b">Kind::Str</a>);  j.scalar_ = v; <span class="keywordflow">return</span> j; }</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno"><a class="line" href="classJson.html#a8405614a0c9bc7c7267b69a705200ef7">   61</a></span>    <span class="keyword">static</span> <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="classJson.html#a8405614a0c9bc7c7267b69a705200ef7">boolean</a>(<span class="keywordtype">bool</span> v)            { <a class="code hl_class" href="classJson.html">Json</a> j(<a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57ac26f15e86e3de4c398a8273272aba034">Kind::Bool</a>); j.scalar_ = v ? L<span class="stringliteral">&quot;true&quot;</span> : L<span class="stringliteral">&quot;false&quot;</span>; <span class="keywordflow">return</span> j; }</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno"><a class="line" href="classJson.html#a0e2d229ff3a8327645ff1f585610bc45">   62</a></span>    <span class="keyword">static</span> <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="classJson.html#a0e2d229ff3a8327645ff1f585610bc45">num</a>(<span class="keywordtype">long</span> <span class="keywordtype">long</span> v)           { <a class="code hl_class" href="classJson.html">Json</a> j(<a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57ab3e3076d9b3c53bede50d468b647b109">Kind::Num</a>);  j.scalar_ = std::to_wstring(v); <span class="keywordflow">return</span> j; }</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno"><a class="line" href="classJson.html#aee1009261d48105e2f605fb21d3c1b1f">   63</a></span>    <span class="keyword">static</span> <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="classJson.html#aee1009261d48105e2f605fb21d3c1b1f">num</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> v)  { <a class="code hl_class" href="classJson.html">Json</a> j(<a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57ab3e3076d9b3c53bede50d468b647b109">Kind::Num</a>);  j.scalar_ = std::to_wstring(v); <span class="keywordflow">return</span> j; }</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno"><a class="line" href="classJson.html#a5251359de8381c9aef345a252fcd2dd1">   64</a></span>    <span class="keyword">static</span> <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="classJson.html#a5251359de8381c9aef345a252fcd2dd1">num</a>(<span class="keywordtype">int</span> v)                 { <span class="keywordflow">return</span> <a class="code hl_function" href="classJson.html#a5251359de8381c9aef345a252fcd2dd1">num</a>((<span class="keywordtype">long</span> <span class="keywordtype">long</span>)v); }</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno"><a class="line" href="classJson.html#ae40f820d5c34da940b66d2ac57e6608c">   65</a></span>    <span class="keyword">static</span> <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="classJson.html#ae40f820d5c34da940b66d2ac57e6608c">num</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> v)        { <span class="keywordflow">return</span> <a class="code hl_function" href="classJson.html#ae40f820d5c34da940b66d2ac57e6608c">num</a>((<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>)v); }</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno"><a class="line" href="classJson.html#a96fd44a2c2ebfda27a99b0300331e9bc">   66</a></span>    <span class="keyword">static</span> <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="classJson.html#a96fd44a2c2ebfda27a99b0300331e9bc">num</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> v)       { <span class="keywordflow">return</span> <a class="code hl_function" href="classJson.html#a96fd44a2c2ebfda27a99b0300331e9bc">num</a>((<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>)v); }</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span> </div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>    <span class="comment">// --- construction ------------------------------------------------------</span></div>
+<div class="foldopen" id="foldopen00070" data-start="{" data-end="}">
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno"><a class="line" href="classJson.html#a390326dfba042c05275db086c656937e">   70</a></span>    <a class="code hl_class" href="classJson.html">Json</a>&amp; <a class="code hl_function" href="classJson.html#a390326dfba042c05275db086c656937e">add</a>(<span class="keyword">const</span> std::wstring&amp; cle, <a class="code hl_class" href="classJson.html">Json</a> valeur) {</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>        items_.emplace_back(cle, std::move(valeur));</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>        <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    }</div>
+</div>
+<div class="foldopen" id="foldopen00076" data-start="{" data-end="}">
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno"><a class="line" href="classJson.html#a57248b9413e96d1384154590d05724ad">   76</a></span>    <a class="code hl_class" href="classJson.html">Json</a>&amp; <a class="code hl_function" href="classJson.html#a57248b9413e96d1384154590d05724ad">merge</a>(<a class="code hl_class" href="classJson.html">Json</a> autre) {</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span>&amp; kv : autre.items_) items_.push_back(std::move(kv));</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>        <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    }</div>
+</div>
+<div class="foldopen" id="foldopen00081" data-start="{" data-end="}">
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno"><a class="line" href="classJson.html#a6f089fb2e1066f7507fcfc4720c46674">   81</a></span>    <a class="code hl_class" href="classJson.html">Json</a>&amp; <a class="code hl_function" href="classJson.html#a6f089fb2e1066f7507fcfc4720c46674">push</a>(<a class="code hl_class" href="classJson.html">Json</a> valeur) {</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>        items_.emplace_back(std::wstring(), std::move(valeur));</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>        <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    }</div>
+</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno"><a class="line" href="classJson.html#a873b882e1615217b31bb95f807f37083">   85</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classJson.html#a873b882e1615217b31bb95f807f37083">empty</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> items_.empty(); }</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno"><a class="line" href="classJson.html#ae6eba8b3f5db17b0f67d3b04fbcef25e">   86</a></span>    <span class="keywordtype">size_t</span> <a class="code hl_function" href="classJson.html#ae6eba8b3f5db17b0f67d3b04fbcef25e">size</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> items_.size(); }</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno"><a class="line" href="classJson.html#a7b6af011a3f229790cc957012bfd0240">   89</a></span>    <a class="code hl_enumeration" href="classJson.html#a82938661c4953d873b5c8a204337fd57">Kind</a> <a class="code hl_function" href="classJson.html#a7b6af011a3f229790cc957012bfd0240">kind</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> kind_; }</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span> </div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    <span class="comment">// --- sérialisation -----------------------------------------------------</span></div>
+<div class="foldopen" id="foldopen00093" data-start="{" data-end="}">
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno"><a class="line" href="classJson.html#af27671f22bf8464b46e39bd30089dac1">   93</a></span>    std::wstring <a class="code hl_function" href="classJson.html#af27671f22bf8464b46e39bd30089dac1">dump</a>(<span class="keywordtype">int</span> niveau = 0)<span class="keyword"> const </span>{</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>        <span class="keywordflow">switch</span> (kind_) {</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>        <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57abbb93ef26e3c101ff11cdd21cab08a94">Kind::Null</a>: <span class="keywordflow">return</span> L<span class="stringliteral">&quot;null&quot;</span>;</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>        <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57ab3e3076d9b3c53bede50d468b647b109">Kind::Num</a>:</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>        <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57ac26f15e86e3de4c398a8273272aba034">Kind::Bool</a>: <span class="keywordflow">return</span> scalar_;</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>        <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57aebccbbd337efb2ddb5979c57125bad1b">Kind::Str</a>:  <span class="keywordflow">return</span> L<span class="stringliteral">&quot;\&quot;&quot;</span> + <a class="code hl_function" href="json_8h.html#a498b432e8aac8982cb39271297a2b733">jsonEscape</a>(scalar_) + L<span class="stringliteral">&quot;\&quot;&quot;</span>;</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>        <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57af4c93c906a99a31bf2d92cf5724dfbed">Kind::Obj</a>:</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>        <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57a3e09ae791896ec3e7e65b3fe363f0fc3">Kind::Arr</a>:  <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>        }</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>        <span class="keyword">const</span> <span class="keywordtype">bool</span> o = (kind_ == <a class="code hl_enumvalue" href="classJson.html#a82938661c4953d873b5c8a204337fd57af4c93c906a99a31bf2d92cf5724dfbed">Kind::Obj</a>);</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>        <span class="keywordflow">if</span> (items_.empty()) <span class="keywordflow">return</span> o ? L<span class="stringliteral">&quot;{}&quot;</span> : L<span class="stringliteral">&quot;[]&quot;</span>;</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>        <span class="keyword">const</span> std::wstring ind  = tabs(niveau);</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>        <span class="keyword">const</span> std::wstring ind1 = tabs(niveau + 1);</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>        std::wstring r = o ? L<span class="stringliteral">&quot;{\n&quot;</span> : L<span class="stringliteral">&quot;[\n&quot;</span>;</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; items_.size(); ++i) {</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>            r += ind1;</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>            <span class="keywordflow">if</span> (o) r += L<span class="stringliteral">&quot;\&quot;&quot;</span> + <a class="code hl_function" href="json_8h.html#a498b432e8aac8982cb39271297a2b733">jsonEscape</a>(items_[i].first) + L<span class="stringliteral">&quot;\&quot;: &quot;</span>;</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>            r += items_[i].second.dump(niveau + 1);</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>            <span class="keywordflow">if</span> (i + 1 &lt; items_.size()) r += L<span class="stringliteral">&quot;,&quot;</span>;     <span class="comment">// jamais de virgule finale</span></div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>            r += L<span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>        }</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>        r += ind + (o ? L<span class="stringliteral">&quot;}&quot;</span> : L<span class="stringliteral">&quot;]&quot;</span>);</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>        <span class="keywordflow">return</span> r;</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    }</div>
+</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span> </div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>    <span class="keyword">explicit</span> <a class="code hl_class" href="classJson.html">Json</a>(<a class="code hl_enumeration" href="classJson.html#a82938661c4953d873b5c8a204337fd57">Kind</a> k) : kind_(k) {}</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    <span class="keyword">static</span> std::wstring tabs(<span class="keywordtype">int</span> n) { <span class="keywordflow">return</span> std::wstring(n &lt; 0 ? 0 : n, L<span class="stringliteral">&#39;\t&#39;</span>); }</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span> </div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    <a class="code hl_enumeration" href="classJson.html#a82938661c4953d873b5c8a204337fd57">Kind</a> kind_;</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>    std::wstring scalar_;                                   <span class="comment">// Str brute ; Num/Bool déjà formatés</span></div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    std::vector&lt;std::pair&lt;std::wstring, Json&gt;&gt; items_;      <span class="comment">// Obj: clé+valeur ; Arr: clé vide</span></div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>};</div>
+</div>
+<div class="ttc" id="aclassJson_html"><div class="ttname"><a href="classJson.html">Json</a></div><div class="ttdef"><b>Definition</b> json.h:52</div></div>
+<div class="ttc" id="aclassJson_html_a02b566a598465cf01e42007be3704233"><div class="ttname"><a href="classJson.html#a02b566a598465cf01e42007be3704233">Json::arr</a></div><div class="ttdeci">static Json arr()</div><div class="ttdef"><b>Definition</b> json.h:58</div></div>
+<div class="ttc" id="aclassJson_html_a0e2d229ff3a8327645ff1f585610bc45"><div class="ttname"><a href="classJson.html#a0e2d229ff3a8327645ff1f585610bc45">Json::num</a></div><div class="ttdeci">static Json num(long long v)</div><div class="ttdef"><b>Definition</b> json.h:62</div></div>
+<div class="ttc" id="aclassJson_html_a2d01c95f7974c2348717c56917dd11b7"><div class="ttname"><a href="classJson.html#a2d01c95f7974c2348717c56917dd11b7">Json::obj</a></div><div class="ttdeci">static Json obj()</div><div class="ttdef"><b>Definition</b> json.h:57</div></div>
+<div class="ttc" id="aclassJson_html_a390326dfba042c05275db086c656937e"><div class="ttname"><a href="classJson.html#a390326dfba042c05275db086c656937e">Json::add</a></div><div class="ttdeci">Json &amp; add(const std::wstring &amp;cle, Json valeur)</div><div class="ttdef"><b>Definition</b> json.h:70</div></div>
+<div class="ttc" id="aclassJson_html_a5251359de8381c9aef345a252fcd2dd1"><div class="ttname"><a href="classJson.html#a5251359de8381c9aef345a252fcd2dd1">Json::num</a></div><div class="ttdeci">static Json num(int v)</div><div class="ttdef"><b>Definition</b> json.h:64</div></div>
+<div class="ttc" id="aclassJson_html_a566f7f6afb712f82ddfd6c07751645e9"><div class="ttname"><a href="classJson.html#a566f7f6afb712f82ddfd6c07751645e9">Json::str</a></div><div class="ttdeci">static Json str(const std::wstring &amp;v)</div><div class="ttdef"><b>Definition</b> json.h:60</div></div>
+<div class="ttc" id="aclassJson_html_a57248b9413e96d1384154590d05724ad"><div class="ttname"><a href="classJson.html#a57248b9413e96d1384154590d05724ad">Json::merge</a></div><div class="ttdeci">Json &amp; merge(Json autre)</div><div class="ttdef"><b>Definition</b> json.h:76</div></div>
+<div class="ttc" id="aclassJson_html_a5bc2d676aa8d106a2c98ca3ee41cc4e6"><div class="ttname"><a href="classJson.html#a5bc2d676aa8d106a2c98ca3ee41cc4e6">Json::null</a></div><div class="ttdeci">static Json null()</div><div class="ttdef"><b>Definition</b> json.h:59</div></div>
+<div class="ttc" id="aclassJson_html_a6f089fb2e1066f7507fcfc4720c46674"><div class="ttname"><a href="classJson.html#a6f089fb2e1066f7507fcfc4720c46674">Json::push</a></div><div class="ttdeci">Json &amp; push(Json valeur)</div><div class="ttdef"><b>Definition</b> json.h:81</div></div>
+<div class="ttc" id="aclassJson_html_a7b6af011a3f229790cc957012bfd0240"><div class="ttname"><a href="classJson.html#a7b6af011a3f229790cc957012bfd0240">Json::kind</a></div><div class="ttdeci">Kind kind() const</div><div class="ttdef"><b>Definition</b> json.h:89</div></div>
+<div class="ttc" id="aclassJson_html_a82938661c4953d873b5c8a204337fd57"><div class="ttname"><a href="classJson.html#a82938661c4953d873b5c8a204337fd57">Json::Kind</a></div><div class="ttdeci">Kind</div><div class="ttdef"><b>Definition</b> json.h:54</div></div>
+<div class="ttc" id="aclassJson_html_a82938661c4953d873b5c8a204337fd57a3e09ae791896ec3e7e65b3fe363f0fc3"><div class="ttname"><a href="classJson.html#a82938661c4953d873b5c8a204337fd57a3e09ae791896ec3e7e65b3fe363f0fc3">Json::Kind::Arr</a></div><div class="ttdeci">@ Arr</div></div>
+<div class="ttc" id="aclassJson_html_a82938661c4953d873b5c8a204337fd57ab3e3076d9b3c53bede50d468b647b109"><div class="ttname"><a href="classJson.html#a82938661c4953d873b5c8a204337fd57ab3e3076d9b3c53bede50d468b647b109">Json::Kind::Num</a></div><div class="ttdeci">@ Num</div></div>
+<div class="ttc" id="aclassJson_html_a82938661c4953d873b5c8a204337fd57abbb93ef26e3c101ff11cdd21cab08a94"><div class="ttname"><a href="classJson.html#a82938661c4953d873b5c8a204337fd57abbb93ef26e3c101ff11cdd21cab08a94">Json::Kind::Null</a></div><div class="ttdeci">@ Null</div></div>
+<div class="ttc" id="aclassJson_html_a82938661c4953d873b5c8a204337fd57ac26f15e86e3de4c398a8273272aba034"><div class="ttname"><a href="classJson.html#a82938661c4953d873b5c8a204337fd57ac26f15e86e3de4c398a8273272aba034">Json::Kind::Bool</a></div><div class="ttdeci">@ Bool</div></div>
+<div class="ttc" id="aclassJson_html_a82938661c4953d873b5c8a204337fd57aebccbbd337efb2ddb5979c57125bad1b"><div class="ttname"><a href="classJson.html#a82938661c4953d873b5c8a204337fd57aebccbbd337efb2ddb5979c57125bad1b">Json::Kind::Str</a></div><div class="ttdeci">@ Str</div></div>
+<div class="ttc" id="aclassJson_html_a82938661c4953d873b5c8a204337fd57af4c93c906a99a31bf2d92cf5724dfbed"><div class="ttname"><a href="classJson.html#a82938661c4953d873b5c8a204337fd57af4c93c906a99a31bf2d92cf5724dfbed">Json::Kind::Obj</a></div><div class="ttdeci">@ Obj</div></div>
+<div class="ttc" id="aclassJson_html_a8405614a0c9bc7c7267b69a705200ef7"><div class="ttname"><a href="classJson.html#a8405614a0c9bc7c7267b69a705200ef7">Json::boolean</a></div><div class="ttdeci">static Json boolean(bool v)</div><div class="ttdef"><b>Definition</b> json.h:61</div></div>
+<div class="ttc" id="aclassJson_html_a873b882e1615217b31bb95f807f37083"><div class="ttname"><a href="classJson.html#a873b882e1615217b31bb95f807f37083">Json::empty</a></div><div class="ttdeci">bool empty() const</div><div class="ttdef"><b>Definition</b> json.h:85</div></div>
+<div class="ttc" id="aclassJson_html_a96fd44a2c2ebfda27a99b0300331e9bc"><div class="ttname"><a href="classJson.html#a96fd44a2c2ebfda27a99b0300331e9bc">Json::num</a></div><div class="ttdeci">static Json num(unsigned long v)</div><div class="ttdef"><b>Definition</b> json.h:66</div></div>
+<div class="ttc" id="aclassJson_html_ae40f820d5c34da940b66d2ac57e6608c"><div class="ttname"><a href="classJson.html#ae40f820d5c34da940b66d2ac57e6608c">Json::num</a></div><div class="ttdeci">static Json num(unsigned int v)</div><div class="ttdef"><b>Definition</b> json.h:65</div></div>
+<div class="ttc" id="aclassJson_html_ae6eba8b3f5db17b0f67d3b04fbcef25e"><div class="ttname"><a href="classJson.html#ae6eba8b3f5db17b0f67d3b04fbcef25e">Json::size</a></div><div class="ttdeci">size_t size() const</div><div class="ttdef"><b>Definition</b> json.h:86</div></div>
+<div class="ttc" id="aclassJson_html_aee1009261d48105e2f605fb21d3c1b1f"><div class="ttname"><a href="classJson.html#aee1009261d48105e2f605fb21d3c1b1f">Json::num</a></div><div class="ttdeci">static Json num(unsigned long long v)</div><div class="ttdef"><b>Definition</b> json.h:63</div></div>
+<div class="ttc" id="aclassJson_html_af27671f22bf8464b46e39bd30089dac1"><div class="ttname"><a href="classJson.html#af27671f22bf8464b46e39bd30089dac1">Json::dump</a></div><div class="ttdeci">std::wstring dump(int niveau=0) const</div><div class="ttdef"><b>Definition</b> json.h:93</div></div>
+<div class="ttc" id="ajson_8h_html_a498b432e8aac8982cb39271297a2b733"><div class="ttname"><a href="json_8h.html#a498b432e8aac8982cb39271297a2b733">jsonEscape</a></div><div class="ttdeci">std::wstring jsonEscape(const std::wstring &amp;s)</div><div class="ttdef"><b>Definition</b> json.h:28</div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="json_8h.html">json.h</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

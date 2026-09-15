@@ -1,0 +1,186 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector):  Fichier source de /var/www/html/WAC/WAC/system.h</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(document).ready(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('system_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">system.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="system_8h.html">Aller à la documentation de ce fichier.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;<a class="code" href="tools_8h.html">tools.h</a>&quot;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &quot;<a class="code" href="trans__id_8h.html">trans_id.h</a>&quot;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
+<div class="foldopen" id="foldopen00037" data-start="{" data-end="};">
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno"><a class="line" href="structSystemInfo.html">   37</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structSystemInfo.html">SystemInfo</a> {</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <span class="comment">// --- identité de la machine (ruche SYSTEM) ---</span></div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno"><a class="line" href="structSystemInfo.html#a076b6619e9293c8f3a6d122d5e96b7fc">   39</a></span>    std::wstring <a class="code hl_variable" href="structSystemInfo.html#a076b6619e9293c8f3a6d122d5e96b7fc">computerName</a>;              </div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno"><a class="line" href="structSystemInfo.html#a120e6ab17b88f69bbc14598501ecfeeb">   40</a></span>    std::wstring <a class="code hl_variable" href="structSystemInfo.html#a120e6ab17b88f69bbc14598501ecfeeb">netbiosName</a>;               </div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno"><a class="line" href="structSystemInfo.html#ab2b9887e2012f48242e8b8435e68fceb">   41</a></span>    std::wstring <a class="code hl_variable" href="structSystemInfo.html#ab2b9887e2012f48242e8b8435e68fceb">domainName</a>;                </div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno"><a class="line" href="structSystemInfo.html#affa03a18f5068286ef3f96a0c0253f8f">   42</a></span>    std::wstring <a class="code hl_variable" href="structSystemInfo.html#affa03a18f5068286ef3f96a0c0253f8f">osArchitecture</a>;            </div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <span class="comment">// --- installation (ruche SOFTWARE) ---</span></div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno"><a class="line" href="structSystemInfo.html#aff3597fd715ac85f438d5e6d8915deae">   45</a></span>    std::wstring <a class="code hl_variable" href="structSystemInfo.html#aff3597fd715ac85f438d5e6d8915deae">osName</a>;                    </div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno"><a class="line" href="structSystemInfo.html#a89d60d0398960db51137dc82a228da67">   46</a></span>    std::wstring <a class="code hl_variable" href="structSystemInfo.html#a89d60d0398960db51137dc82a228da67">productNameRaw</a>;            </div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno"><a class="line" href="structSystemInfo.html#abdd27a19219607efb8eaae5f908f4617">   47</a></span>    std::wstring <a class="code hl_variable" href="structSystemInfo.html#abdd27a19219607efb8eaae5f908f4617">version</a>;                   </div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno"><a class="line" href="structSystemInfo.html#a0490822073cb62572bc9c1a519983a03">   48</a></span>    std::wstring <a class="code hl_variable" href="structSystemInfo.html#a0490822073cb62572bc9c1a519983a03">displayVersion</a>;            </div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno"><a class="line" href="structSystemInfo.html#a7bc3a4b48ddb450d17bc865211634f0a">   49</a></span>    std::wstring <a class="code hl_variable" href="structSystemInfo.html#a7bc3a4b48ddb450d17bc865211634f0a">editionId</a>;                 </div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno"><a class="line" href="structSystemInfo.html#a7a8ad00b8e89f69926431337bc7735ce">   50</a></span>    std::wstring <a class="code hl_variable" href="structSystemInfo.html#a7a8ad00b8e89f69926431337bc7735ce">installationType</a>;          </div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="structSystemInfo.html#a3c1cac8a1022062307ec66f5040861a0">   51</a></span>    std::wstring <a class="code hl_variable" href="structSystemInfo.html#a3c1cac8a1022062307ec66f5040861a0">buildLabEx</a>;                </div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno"><a class="line" href="structSystemInfo.html#add303e00ebd5388785258d3f6a1d4722">   52</a></span>    std::wstring <a class="code hl_variable" href="structSystemInfo.html#add303e00ebd5388785258d3f6a1d4722">servicePack</a>;               </div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno"><a class="line" href="structSystemInfo.html#a0b1cc8b073aaf67b135cfda5143fc86f">   53</a></span>    std::wstring <a class="code hl_variable" href="structSystemInfo.html#a0b1cc8b073aaf67b135cfda5143fc86f">registeredOwner</a>;           </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno"><a class="line" href="structSystemInfo.html#a57be43eaef409e65a09f0e9bb371f6d0">   54</a></span>    std::wstring <a class="code hl_variable" href="structSystemInfo.html#a57be43eaef409e65a09f0e9bb371f6d0">registeredOrganization</a>;    </div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="structSystemInfo.html#a1144acf60476ffa77a6498c3d5961565">   55</a></span>    std::wstring <a class="code hl_variable" href="structSystemInfo.html#a1144acf60476ffa77a6498c3d5961565">productId</a>;                 </div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno"><a class="line" href="structSystemInfo.html#ad451c86f5c64f831d42dbb056c76f236">   56</a></span>    std::wstring <a class="code hl_variable" href="structSystemInfo.html#ad451c86f5c64f831d42dbb056c76f236">systemRoot</a>;                </div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno"><a class="line" href="structSystemInfo.html#a7c355fcf690a6fd92b54f0a3696054c1">   57</a></span>    std::wstring <a class="code hl_variable" href="structSystemInfo.html#a7c355fcf690a6fd92b54f0a3696054c1">machineGuid</a>;               </div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno"><a class="line" href="structSystemInfo.html#aa47309e18743c6d38b19bbce7b2b74e4">   58</a></span>    FILETIME     <a class="code hl_variable" href="structSystemInfo.html#aa47309e18743c6d38b19bbce7b2b74e4">installDateUtc</a> = { 0, 0 }; </div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    <span class="comment">// --- instant de la collecte (mesuré à chaud) ---</span></div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno"><a class="line" href="structSystemInfo.html#aada498c1a2a4600272ffbf429a897aaa">   61</a></span>    SYSTEMTIME <a class="code hl_variable" href="structSystemInfo.html#aada498c1a2a4600272ffbf429a897aaa">localDateTime</a> = { 0 };       </div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno"><a class="line" href="structSystemInfo.html#a0ad81fbe58dd56784259c296782fd7db">   62</a></span>    SYSTEMTIME <a class="code hl_variable" href="structSystemInfo.html#a0ad81fbe58dd56784259c296782fd7db">localDateTimeUtc</a> = { 0 };    </div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno"><a class="line" href="structSystemInfo.html#a3a3f6c0855a1bfd51a43b1dab4aea931">   63</a></span>    SYSTEMTIME <a class="code hl_variable" href="structSystemInfo.html#a3a3f6c0855a1bfd51a43b1dab4aea931">lastBootUpTime</a> = { 0 };      </div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno"><a class="line" href="structSystemInfo.html#af414a5015aadebb05a1f38a4374c0217">   64</a></span>    SYSTEMTIME <a class="code hl_variable" href="structSystemInfo.html#af414a5015aadebb05a1f38a4374c0217">lastBootUpTimeUtc</a> = { 0 };   </div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno"><a class="line" href="structSystemInfo.html#a2552f53a3a8dd307872dd737f4f8d9f7">   65</a></span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> <a class="code hl_variable" href="structSystemInfo.html#a2552f53a3a8dd307872dd737f4f8d9f7">uptimeSeconds</a> = 0;   </div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span> </div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    HRESULT <a class="code hl_function" href="structSystemInfo.html#a30d08c80ceb0a7549eedf65598a581d0">getData</a>();</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span> </div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    HRESULT <a class="code hl_function" href="structSystemInfo.html#a0335587687e107ba193aa7afc1236acb">toJson</a>();</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structSystemInfo.html#a71ad6e847cd0db030452d3a58e4545ec">clear</a>();</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>};</div>
+</div>
+<div class="ttc" id="astructSystemInfo_html"><div class="ttname"><a href="structSystemInfo.html">SystemInfo</a></div><div class="ttdef"><b>Definition</b> system.h:37</div></div>
+<div class="ttc" id="astructSystemInfo_html_a0335587687e107ba193aa7afc1236acb"><div class="ttname"><a href="structSystemInfo.html#a0335587687e107ba193aa7afc1236acb">SystemInfo::toJson</a></div><div class="ttdeci">HRESULT toJson()</div><div class="ttdoc">Conversion de l'objet au format JSON.</div><div class="ttdef"><b>Definition</b> system.cpp:215</div></div>
+<div class="ttc" id="astructSystemInfo_html_a0490822073cb62572bc9c1a519983a03"><div class="ttname"><a href="structSystemInfo.html#a0490822073cb62572bc9c1a519983a03">SystemInfo::displayVersion</a></div><div class="ttdeci">std::wstring displayVersion</div><div class="ttdoc">DisplayVersion / ReleaseId, ex. &quot;23H2&quot;.</div><div class="ttdef"><b>Definition</b> system.h:48</div></div>
+<div class="ttc" id="astructSystemInfo_html_a076b6619e9293c8f3a6d122d5e96b7fc"><div class="ttname"><a href="structSystemInfo.html#a076b6619e9293c8f3a6d122d5e96b7fc">SystemInfo::computerName</a></div><div class="ttdeci">std::wstring computerName</div><div class="ttdoc">nom de l'ordinateur</div><div class="ttdef"><b>Definition</b> system.h:39</div></div>
+<div class="ttc" id="astructSystemInfo_html_a0ad81fbe58dd56784259c296782fd7db"><div class="ttname"><a href="structSystemInfo.html#a0ad81fbe58dd56784259c296782fd7db">SystemInfo::localDateTimeUtc</a></div><div class="ttdeci">SYSTEMTIME localDateTimeUtc</div><div class="ttdoc">heure UTC au moment de l'exécution</div><div class="ttdef"><b>Definition</b> system.h:62</div></div>
+<div class="ttc" id="astructSystemInfo_html_a0b1cc8b073aaf67b135cfda5143fc86f"><div class="ttname"><a href="structSystemInfo.html#a0b1cc8b073aaf67b135cfda5143fc86f">SystemInfo::registeredOwner</a></div><div class="ttdeci">std::wstring registeredOwner</div><div class="ttdoc">propriétaire déclaré à l'installation</div><div class="ttdef"><b>Definition</b> system.h:53</div></div>
+<div class="ttc" id="astructSystemInfo_html_a1144acf60476ffa77a6498c3d5961565"><div class="ttname"><a href="structSystemInfo.html#a1144acf60476ffa77a6498c3d5961565">SystemInfo::productId</a></div><div class="ttdeci">std::wstring productId</div><div class="ttdoc">identifiant du produit</div><div class="ttdef"><b>Definition</b> system.h:55</div></div>
+<div class="ttc" id="astructSystemInfo_html_a120e6ab17b88f69bbc14598501ecfeeb"><div class="ttname"><a href="structSystemInfo.html#a120e6ab17b88f69bbc14598501ecfeeb">SystemInfo::netbiosName</a></div><div class="ttdeci">std::wstring netbiosName</div><div class="ttdoc">nom NetBIOS (Control\ComputerName)</div><div class="ttdef"><b>Definition</b> system.h:40</div></div>
+<div class="ttc" id="astructSystemInfo_html_a2552f53a3a8dd307872dd737f4f8d9f7"><div class="ttname"><a href="structSystemInfo.html#a2552f53a3a8dd307872dd737f4f8d9f7">SystemInfo::uptimeSeconds</a></div><div class="ttdeci">unsigned long long uptimeSeconds</div><div class="ttdoc">durée d'activité depuis le démarrage</div><div class="ttdef"><b>Definition</b> system.h:65</div></div>
+<div class="ttc" id="astructSystemInfo_html_a30d08c80ceb0a7549eedf65598a581d0"><div class="ttname"><a href="structSystemInfo.html#a30d08c80ceb0a7549eedf65598a581d0">SystemInfo::getData</a></div><div class="ttdeci">HRESULT getData()</div><div class="ttdef"><b>Definition</b> system.cpp:43</div></div>
+<div class="ttc" id="astructSystemInfo_html_a3a3f6c0855a1bfd51a43b1dab4aea931"><div class="ttname"><a href="structSystemInfo.html#a3a3f6c0855a1bfd51a43b1dab4aea931">SystemInfo::lastBootUpTime</a></div><div class="ttdeci">SYSTEMTIME lastBootUpTime</div><div class="ttdoc">heure locale du dernier démarrage</div><div class="ttdef"><b>Definition</b> system.h:63</div></div>
+<div class="ttc" id="astructSystemInfo_html_a3c1cac8a1022062307ec66f5040861a0"><div class="ttname"><a href="structSystemInfo.html#a3c1cac8a1022062307ec66f5040861a0">SystemInfo::buildLabEx</a></div><div class="ttdeci">std::wstring buildLabEx</div><div class="ttdoc">empreinte complète de la build</div><div class="ttdef"><b>Definition</b> system.h:51</div></div>
+<div class="ttc" id="astructSystemInfo_html_a57be43eaef409e65a09f0e9bb371f6d0"><div class="ttname"><a href="structSystemInfo.html#a57be43eaef409e65a09f0e9bb371f6d0">SystemInfo::registeredOrganization</a></div><div class="ttdeci">std::wstring registeredOrganization</div><div class="ttdoc">organisation déclarée à l'installation</div><div class="ttdef"><b>Definition</b> system.h:54</div></div>
+<div class="ttc" id="astructSystemInfo_html_a71ad6e847cd0db030452d3a58e4545ec"><div class="ttname"><a href="structSystemInfo.html#a71ad6e847cd0db030452d3a58e4545ec">SystemInfo::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdoc">Libération mémoire.</div><div class="ttdef"><b>Definition</b> system.cpp:301</div></div>
+<div class="ttc" id="astructSystemInfo_html_a7a8ad00b8e89f69926431337bc7735ce"><div class="ttname"><a href="structSystemInfo.html#a7a8ad00b8e89f69926431337bc7735ce">SystemInfo::installationType</a></div><div class="ttdeci">std::wstring installationType</div><div class="ttdoc">&quot;Client&quot; ou &quot;Server&quot;</div><div class="ttdef"><b>Definition</b> system.h:50</div></div>
+<div class="ttc" id="astructSystemInfo_html_a7bc3a4b48ddb450d17bc865211634f0a"><div class="ttname"><a href="structSystemInfo.html#a7bc3a4b48ddb450d17bc865211634f0a">SystemInfo::editionId</a></div><div class="ttdeci">std::wstring editionId</div><div class="ttdoc">EditionID, ex. &quot;Professional&quot;.</div><div class="ttdef"><b>Definition</b> system.h:49</div></div>
+<div class="ttc" id="astructSystemInfo_html_a7c355fcf690a6fd92b54f0a3696054c1"><div class="ttname"><a href="structSystemInfo.html#a7c355fcf690a6fd92b54f0a3696054c1">SystemInfo::machineGuid</a></div><div class="ttdeci">std::wstring machineGuid</div><div class="ttdoc">identifiant unique de l'installation</div><div class="ttdef"><b>Definition</b> system.h:57</div></div>
+<div class="ttc" id="astructSystemInfo_html_a89d60d0398960db51137dc82a228da67"><div class="ttname"><a href="structSystemInfo.html#a89d60d0398960db51137dc82a228da67">SystemInfo::productNameRaw</a></div><div class="ttdeci">std::wstring productNameRaw</div><div class="ttdoc">ProductName tel qu'écrit dans la ruche.</div><div class="ttdef"><b>Definition</b> system.h:46</div></div>
+<div class="ttc" id="astructSystemInfo_html_aa47309e18743c6d38b19bbce7b2b74e4"><div class="ttname"><a href="structSystemInfo.html#aa47309e18743c6d38b19bbce7b2b74e4">SystemInfo::installDateUtc</a></div><div class="ttdeci">FILETIME installDateUtc</div><div class="ttdoc">date d'installation de l'OS (UTC)</div><div class="ttdef"><b>Definition</b> system.h:58</div></div>
+<div class="ttc" id="astructSystemInfo_html_aada498c1a2a4600272ffbf429a897aaa"><div class="ttname"><a href="structSystemInfo.html#aada498c1a2a4600272ffbf429a897aaa">SystemInfo::localDateTime</a></div><div class="ttdeci">SYSTEMTIME localDateTime</div><div class="ttdoc">heure locale au moment de l'exécution</div><div class="ttdef"><b>Definition</b> system.h:61</div></div>
+<div class="ttc" id="astructSystemInfo_html_ab2b9887e2012f48242e8b8435e68fceb"><div class="ttname"><a href="structSystemInfo.html#ab2b9887e2012f48242e8b8435e68fceb">SystemInfo::domainName</a></div><div class="ttdeci">std::wstring domainName</div><div class="ttdoc">domaine DNS, ou &quot;WORKGROUP&quot; hors domaine</div><div class="ttdef"><b>Definition</b> system.h:41</div></div>
+<div class="ttc" id="astructSystemInfo_html_abdd27a19219607efb8eaae5f908f4617"><div class="ttname"><a href="structSystemInfo.html#abdd27a19219607efb8eaae5f908f4617">SystemInfo::version</a></div><div class="ttdeci">std::wstring version</div><div class="ttdoc">&quot;major.minor.build&quot; (+ &quot;.UBR&quot; si connu)</div><div class="ttdef"><b>Definition</b> system.h:47</div></div>
+<div class="ttc" id="astructSystemInfo_html_ad451c86f5c64f831d42dbb056c76f236"><div class="ttname"><a href="structSystemInfo.html#ad451c86f5c64f831d42dbb056c76f236">SystemInfo::systemRoot</a></div><div class="ttdeci">std::wstring systemRoot</div><div class="ttdoc">chemin d'installation, ex. &quot;C:\\Windows&quot;</div><div class="ttdef"><b>Definition</b> system.h:56</div></div>
+<div class="ttc" id="astructSystemInfo_html_add303e00ebd5388785258d3f6a1d4722"><div class="ttname"><a href="structSystemInfo.html#add303e00ebd5388785258d3f6a1d4722">SystemInfo::servicePack</a></div><div class="ttdeci">std::wstring servicePack</div><div class="ttdoc">CSDVersion, si présent.</div><div class="ttdef"><b>Definition</b> system.h:52</div></div>
+<div class="ttc" id="astructSystemInfo_html_af414a5015aadebb05a1f38a4374c0217"><div class="ttname"><a href="structSystemInfo.html#af414a5015aadebb05a1f38a4374c0217">SystemInfo::lastBootUpTimeUtc</a></div><div class="ttdeci">SYSTEMTIME lastBootUpTimeUtc</div><div class="ttdoc">heure UTC du dernier démarrage</div><div class="ttdef"><b>Definition</b> system.h:64</div></div>
+<div class="ttc" id="astructSystemInfo_html_aff3597fd715ac85f438d5e6d8915deae"><div class="ttname"><a href="structSystemInfo.html#aff3597fd715ac85f438d5e6d8915deae">SystemInfo::osName</a></div><div class="ttdeci">std::wstring osName</div><div class="ttdoc">libellé de l'OS, corrigé pour Windows 11</div><div class="ttdef"><b>Definition</b> system.h:45</div></div>
+<div class="ttc" id="astructSystemInfo_html_affa03a18f5068286ef3f96a0c0253f8f"><div class="ttname"><a href="structSystemInfo.html#affa03a18f5068286ef3f96a0c0253f8f">SystemInfo::osArchitecture</a></div><div class="ttdeci">std::wstring osArchitecture</div><div class="ttdoc">architecture de l'OS</div><div class="ttdef"><b>Definition</b> system.h:42</div></div>
+<div class="ttc" id="atools_8h_html"><div class="ttname"><a href="tools_8h.html">tools.h</a></div></div>
+<div class="ttc" id="atrans__id_8h_html"><div class="ttname"><a href="trans__id_8h.html">trans_id.h</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="system_8h.html">system.h</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

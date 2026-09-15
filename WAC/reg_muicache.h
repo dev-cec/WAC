@@ -20,9 +20,9 @@ public:
 	std::wstring data = L""; //!< nom de l'application
 
 	/*! Constructeur
-	* @param hKey est la cle de registre contenant les valeurs
-	* nomValeur est la nom de la valeur de la cle de registre contenant les informations
-	* profile est le profile de l'utilisateur proprietaire de l'artefact
+	* @param hKey clé de registre contenant les valeurs
+	* @param nomValeur nom de la valeur portant les informations
+	* @param profile profil de l'utilisateur propriétaire de l'artefact
 	*/
 	Muicache(ORHKEY hKey, std::wstring nomValeur, std::wstring profile);
 
@@ -41,7 +41,6 @@ public:
 	std::vector<Muicache> muicaches;//!< tableau contenant les objets
 
 	/*! Fonction permettant de parser les objets
-	* @param conf contient les paramètres de l'application issue des paramètres de la ligne de commande
 	*/
 	HRESULT getData();
 

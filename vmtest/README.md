@@ -40,6 +40,13 @@ révélé des valeurs fausses dans du JSON valide :
 | `RID` retrouvé à la fin du `SID` reconstruit | validation de la lecture du SAM |
 | aucun processus ne porte `WAC.exe` parmi ses modules | le processus Idle héritait des modules de l'outil de collecte |
 
+**Le harnais peut être la cause du défaut qu'il signale.** Un run de 604 s a été
+coupé par le timeout de 600 s de `qga.py` juste avant l'écriture des deux
+derniers JSON : le rapport disait « collecte probablement incomplète » — ce qui
+était exact — mais WAC était allé au bout. Le journal de collecte (`run.log`,
+qui se termine par `END, Time elapsed`) tranche entre les deux. Timeout porté à
+30 min ; il faudra le revoir si la collecte s'allonge encore.
+
 **Après tout changement, comparer les compteurs d'entrées au run précédent**, pas
 seulement les pastilles vertes — et écrire un contrôle croisé pour chaque défaut
 trouvé : c'est ce qui empêche la régression.
