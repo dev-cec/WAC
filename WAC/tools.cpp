@@ -599,6 +599,68 @@ std::wstring cheminRelatifAuVolume(const std::wstring& absolu) {
 	return absolu;
 }
 
+/*! Résout le chemin d'un fichier désigné par `ImagePath` ou `ServiceDll`.
+*
+*  La ruche stocke des formes hétérogènes, qu'aucune API ne normalise hors ligne :
+*    - `\SystemRoot\System32\drivers\x.sys`  (préfixe noyau)
+*    - `\??\C:\dossier\x.exe`                 (chemin objet NT)
+*    - `system32\svchost.exe -k netsvcs`      (relatif à %SystemRoot%)
+*    - `"C:\Program Files\App\x.exe" /service`(guillemets + arguments)
+*
+*  CE QUI ÉTAIT FAUX. La version d'origine coupait sur la première occurrence de
+*  « -» ou « /», y compris à l'intérieur du chemin : un binaire installé dans un
+*  dossier contenant un tiret voyait son chemin tronqué, et son MD5 n'était donc
+*  jamais calculé. Ici, la coupure se fait APRÈS l'extension du fichier, qui est
+*  le seul repère fiable de la fin du chemin.
+*/
+std::wstring cheminBinaire(std::wstring imagePath) {
+	if (imagePath.empty()) return L"";
+
+	// Chemin entre guillemets : il se termine au guillemet fermant.
+	if (imagePath.front() == L'"') {
+		const size_t fin = imagePath.find(L'"', 1);
+		imagePath = (fin == std::wstring::npos) ? imagePath.substr(1)
+		                                        : imagePath.substr(1, fin - 1);
+	}
+	else {
+		/* Sans guillemets, la fin du chemin se repère à l'extension. On prend la
+		   PREMIÈRE extension rencontrée : ce qui suit est une option. */
+		const std::wstring bas = enMinuscules(imagePath);
+		size_t fin = std::wstring::npos;
+		for (PCWSTR ext : { L".exe", L".sys", L".dll" }) {
+			const size_t p = bas.find(ext);
+			if (p != std::wstring::npos && (fin == std::wstring::npos || p < fin))
+				fin = p + 4;
+		}
+		if (fin != std::wstring::npos) imagePath = imagePath.substr(0, fin);
+	}
+
+	// Préfixes noyau et objet NT.
+	const std::wstring bas = enMinuscules(imagePath);
+	if (bas.compare(0, 12, L"\\systemroot\\") == 0)
+		imagePath = conf.systemDrive + L"\\Windows\\" + imagePath.substr(12);
+	else if (bas.compare(0, 13, L"%systemroot%\\") == 0)
+		imagePath = conf.systemDrive + L"\\Windows\\" + imagePath.substr(13);
+	/*  `%windir%` est le synonyme de `%systemroot%`, et les fournisseurs
+	    d'evenements l'emploient largement. Ne pas le traiter donnait des chemins
+	    du genre « C:\Windows\%windir%\system32\ncsi.dll » — introuvables, donc
+	    des ressources jamais lues et des messages jamais resolus. */
+	else if (bas.compare(0, 9, L"%windir%\\") == 0)
+		imagePath = conf.systemDrive + L"\\Windows\\" + imagePath.substr(9);
+	else if (bas.compare(0, 4, L"\\??\\") == 0)
+		imagePath = imagePath.substr(4);
+
+	/* Chemin relatif : il l'est à %SystemRoot%, pas au répertoire courant.
+	   Un service dont ImagePath vaut « system32\\x.exe » désigne donc
+	   C:\\Windows\\system32\\x.exe. */
+	if (imagePath.size() < 2 || imagePath[1] != L':') {
+		if (!imagePath.empty() && imagePath.front() == L'\\')
+			return L"";   // \Driver\..., \FileSystem\... : objet noyau, pas un fichier
+		imagePath = conf.systemDrive + L"\\Windows\\" + imagePath;
+	}
+	return imagePath;
+}
+
 std::wstring cheminSous(const std::wstring& racine, const std::wstring& absolu) {
 	const std::wstring volume   = volumeDuChemin(absolu);
 	const std::wstring relatif  = cheminRelatifAuVolume(absolu);
@@ -692,33 +754,73 @@ HRESULT loadSuspectTimeZone() {
 	return ERROR_SUCCESS;
 }
 
-std::wstring timeToIso8601(const SYSTEMTIME& st, bool utc) {
+std::wstring timeToIso8601(const SYSTEMTIME& st, bool utc, long fraction100ns) {
 	if (st.wYear <= 1601) return L"";        // date nulle : chaîne vide, pas 1601
 	std::wstring s;
-	s.reserve(25);
+	s.reserve(33);
 	quatreChiffres(s, st.wYear);   s += L'-';
 	deuxChiffres(s, st.wMonth);    s += L'-';
 	deuxChiffres(s, st.wDay);      s += L'T';
 	deuxChiffres(s, st.wHour);     s += L':';
 	deuxChiffres(s, st.wMinute);   s += L':';
 	deuxChiffres(s, st.wSecond);
+	/*  La fraction s'écrit ICI, entre les secondes et le suffixe de fuseau.
+	    L'insérer après coup obligeait à retrouver la fin des secondes dans la
+	    chaîne finie : sur la variante locale, dont le suffixe « +02:00 » se
+	    termine par des chiffres, la recherche s'arrêtait aussitôt et la fraction
+	    atterrissait APRÈS le décalage horaire. */
+	if (fraction100ns >= 0) {
+		s += L'.';
+		for (int p = 6; p >= 0; --p) {
+			long diviseur = 1;
+			for (int k = 0; k < p; ++k) diviseur *= 10;
+			s += (wchar_t)(L'0' + ((fraction100ns / diviseur) % 10));
+		}
+	}
 	if (utc) s += L'Z';
 	else     s += localUtcOffsetString();
 	return s;
 }
 
+/*  PRÉCISION INFRA-SECONDE.
+ *
+ *  Un FILETIME compte les intervalles de 100 nanosecondes : sa résolution est
+ *  dix millions de fois plus fine que la seconde. Passer par un SYSTEMTIME, qui
+ *  plafonne à la milliseconde, en perdait quatre chiffres — et le formatage à la
+ *  seconde en perdait sept.
+ *
+ *  POURQUOI CELA COMPTE. Corréler des artefacts, c'est les ORDONNER. Deux
+ *  événements d'une même seconde — une création de processus et la connexion
+ *  réseau qu'il ouvre, un fichier écrit puis exécuté — deviennent
+ *  indiscernables si l'horodatage est arrondi, et l'ordre est précisément ce
+ *  qu'on cherche à établir. Windows lui-même écrit sept chiffres dans le XML de
+ *  ses journaux.
+ *
+ *  La fraction est prise sur le FILETIME et non sur le SYSTEMTIME : c'est la
+ *  seule source qui la porte.
+ */
+namespace {
+
+//! Fraction de seconde d'un FILETIME, en centaines de nanosecondes (0..9999999).
+long fraction100ns(const FILETIME& ft) {
+	const ULONGLONG v = ((ULONGLONG)ft.dwHighDateTime << 32) | ft.dwLowDateTime;
+	return (long)(v % 10000000ULL);
+}
+
+} // namespace
+
 std::wstring timeToIso8601Utc(const FILETIME& filetime) {
 	if (dateNulle(filetime)) return L"";
 	SYSTEMTIME st = { 0 };
 	if (!FileTimeToSystemTime(&filetime, &st)) return L"";
-	return timeToIso8601(st, true);
+	return timeToIso8601(st, true, fraction100ns(filetime));
 }
 
 std::wstring timeToIso8601Local(const FILETIME& filetime) {
 	if (dateNulle(filetime)) return L"";
 	SYSTEMTIME st = { 0 };
 	if (!FileTimeToSystemTime(&filetime, &st)) return L"";
-	return timeToIso8601(st, false);
+	return timeToIso8601(st, false, fraction100ns(filetime));
 }
 
 bool utcVersLocalSuspect(const FILETIME& filetimeUtc, FILETIME* filetimeLocal) {

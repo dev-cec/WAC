@@ -146,6 +146,23 @@ std::wstring cheminRelatifAuVolume(const std::wstring& absolu);
 */
 std::wstring cheminExtrait(const std::wstring& absolu);
 
+/*! Résout un chemin de binaire tel que le registre l'écrit.
+*
+*  Les chemins du registre ne sont pas directement utilisables : ils peuvent
+*  être entre guillemets et suivis d'options, commencer par un préfixe d'objet
+*  NT (`\SystemRoot\`, `%SystemRoot%\`, `\??\`), ou être relatifs — et un
+*  chemin relatif l'est à `%SystemRoot%`, pas au répertoire courant.
+*
+*  Sert aux binaires de services et aux fichiers de ressources des fournisseurs
+*  d'événements, deux usages qui lisent la même sorte de valeur.
+*
+*  @param imagePath valeur brute du registre
+*  @return le chemin absolu, ou chaîne vide s'il ne désigne pas un fichier
+*          (un objet noyau comme `\Driver\xxx`, par exemple)
+*  @see la mise en œuvre, dans tools.cpp, documente les formes rencontrées
+*/
+std::wstring cheminBinaire(std::wstring imagePath);
+
 /*! Chemin d'un fichier extrait sous une racine donnée.
 *
 *  Même règle que `cheminExtrait`, mais la racine est passée en paramètre :
@@ -522,7 +539,15 @@ std::wstring localUtcOffsetString();
 *        heure locale (suffixe du fuseau de la machine)
 * @return la date formatée, ou "" si elle est nulle
 */
-std::wstring timeToIso8601(const SYSTEMTIME& systemtime, bool utc);
+/*! @param fraction100ns fraction de seconde, en centaines de nanosecondes
+*         (0..9999999), ou -1 pour ne pas l'écrire.
+*
+*  POURQUOI CE PARAMÈTRE. Un SYSTEMTIME ne porte que la milliseconde, un
+*  FILETIME descend à cent nanosecondes. Les appelants qui disposent du FILETIME
+*  d'origine passent la vraie fraction ; les autres passent -1, et l'horodatage
+*  s'arrête à la seconde plutôt que d'afficher une précision qu'il n'a pas.
+*/
+std::wstring timeToIso8601(const SYSTEMTIME& systemtime, bool utc, long fraction100ns = -1);
 
 /*! Conversion une chaîne de caractères string en wstring
 * @param str pointeur sur la chaîne de caractère string

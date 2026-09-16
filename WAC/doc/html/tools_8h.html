@@ -166,6 +166,8 @@ Fonctions</h2></td></tr>
 <tr class="separator:ac578daf9658252628413798c3b0420de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0ba4ef8ffdededddc22ae3ace933de0e" id="r_a0ba4ef8ffdededddc22ae3ace933de0e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a0ba4ef8ffdededddc22ae3ace933de0e">cheminExtrait</a> (const std::wstring &amp;absolu)</td></tr>
 <tr class="separator:a0ba4ef8ffdededddc22ae3ace933de0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a516ba6a8248bf90345ac6e0ca6da29c0" id="r_a516ba6a8248bf90345ac6e0ca6da29c0"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a516ba6a8248bf90345ac6e0ca6da29c0">cheminBinaire</a> (std::wstring imagePath)</td></tr>
+<tr class="separator:a516ba6a8248bf90345ac6e0ca6da29c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae0966d866dd8ad34bc7c40049efcdcf5" id="r_ae0966d866dd8ad34bc7c40049efcdcf5"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ae0966d866dd8ad34bc7c40049efcdcf5">cheminSous</a> (const std::wstring &amp;racine, const std::wstring &amp;absolu)</td></tr>
 <tr class="separator:ae0966d866dd8ad34bc7c40049efcdcf5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9913832dcd25e0380b2bc196758a627d" id="r_a9913832dcd25e0380b2bc196758a627d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a9913832dcd25e0380b2bc196758a627d">cheminOriginal</a> (const std::wstring &amp;extrait)</td></tr>
@@ -235,8 +237,8 @@ Fonctions</h2></td></tr>
 <tr class="separator:a33256dfbfef8ac9511a35835a5e5b29d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a299fdb4272ae83c49ad0ac0bad62f1fe" id="r_a299fdb4272ae83c49ad0ac0bad62f1fe"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a299fdb4272ae83c49ad0ac0bad62f1fe">localUtcOffsetString</a> ()</td></tr>
 <tr class="separator:a299fdb4272ae83c49ad0ac0bad62f1fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9bd10ae4fd8c15921a1654452bbd2735" id="r_a9bd10ae4fd8c15921a1654452bbd2735"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a9bd10ae4fd8c15921a1654452bbd2735">timeToIso8601</a> (const SYSTEMTIME &amp;systemtime, bool utc)</td></tr>
-<tr class="separator:a9bd10ae4fd8c15921a1654452bbd2735"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2748e7d4235c4ca2138ecb3bd7d3aa82" id="r_a2748e7d4235c4ca2138ecb3bd7d3aa82"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a2748e7d4235c4ca2138ecb3bd7d3aa82">timeToIso8601</a> (const SYSTEMTIME &amp;systemtime, bool utc, long fraction100ns=-1)</td></tr>
+<tr class="separator:a2748e7d4235c4ca2138ecb3bd7d3aa82"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad612e1d5a3738c231a1aeefb21c4d36d" id="r_ad612e1d5a3738c231a1aeefb21c4d36d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ad612e1d5a3738c231a1aeefb21c4d36d">string_to_wstring</a> (const std::string &amp;str)</td></tr>
 <tr class="separator:ad612e1d5a3738c231a1aeefb21c4d36d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9e8d9796b27a47431c88a5387b1ed2a0" id="r_a9e8d9796b27a47431c88a5387b1ed2a0"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a9e8d9796b27a47431c88a5387b1ed2a0">wstring_to_string</a> (const std::wstring &amp;wstr)</td></tr>
@@ -479,6 +481,43 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>wstring "true" ou "false" </dd></dl>
+
+</div>
+</div>
+<a id="a516ba6a8248bf90345ac6e0ca6da29c0" name="a516ba6a8248bf90345ac6e0ca6da29c0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a516ba6a8248bf90345ac6e0ca6da29c0">&#9670;&#160;</a></span>cheminBinaire()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring cheminBinaire </td>
+          <td>(</td>
+          <td class="paramtype">std::wstring&#160;</td>
+          <td class="paramname"><em>imagePath</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Résout un chemin de binaire tel que le registre l'écrit.</p>
+<p>Les chemins du registre ne sont pas directement utilisables : ils peuvent être entre guillemets et suivis d'options, commencer par un préfixe d'objet NT (<code>\SystemRoot\</code>, <code>SystemRoot%\</code>, <code>\??\</code>), ou être relatifs — et un chemin relatif l'est à <code>SystemRoot%</code>, pas au répertoire courant.</p>
+<p>Sert aux binaires de services et aux fichiers de ressources des fournisseurs d'événements, deux usages qui lisent la même sorte de valeur.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">imagePath</td><td>valeur brute du registre </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>le chemin absolu, ou chaîne vide s'il ne désigne pas un fichier (un objet noyau comme <code>\Driver\xxx</code>, par exemple) </dd></dl>
+<dl class="section see"><dt>Voir également</dt><dd>la mise en œuvre, dans <a class="el" href="tools_8cpp.html">tools.cpp</a>, documente les formes rencontrées</dd></dl>
+<p>Résout le chemin d'un fichier désigné par <code>ImagePath</code> ou <code>ServiceDll</code>.</p>
+<p>La ruche stocke des formes hétérogènes, qu'aucune API ne normalise hors ligne :</p><ul>
+<li><code>\SystemRoot\System32\drivers\x.sys</code> (préfixe noyau)</li>
+<li><code>\??\C:\dossier\x.exe</code> (chemin objet NT)</li>
+<li><code>system32\svchost.exe -k netsvcs</code> (relatif à SystemRoot%)</li>
+<li><code>"C:\Program Files\App\x.exe" /service</code>(guillemets + arguments)</li>
+</ul>
+<p>CE QUI ÉTAIT FAUX. La version d'origine coupait sur la première occurrence de « -» ou « /», y compris à l'intérieur du chemin : un binaire installé dans un dossier contenant un tiret voyait son chemin tronqué, et son MD5 n'était donc jamais calculé. Ici, la coupure se fait APRÈS l'extension du fichier, qui est le seul repère fiable de la fin du chemin. </p>
 
 </div>
 </div>
@@ -1881,8 +1920,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="a9bd10ae4fd8c15921a1654452bbd2735" name="a9bd10ae4fd8c15921a1654452bbd2735"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9bd10ae4fd8c15921a1654452bbd2735">&#9670;&#160;</a></span>timeToIso8601()</h2>
+<a id="a2748e7d4235c4ca2138ecb3bd7d3aa82" name="a2748e7d4235c4ca2138ecb3bd7d3aa82"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2748e7d4235c4ca2138ecb3bd7d3aa82">&#9670;&#160;</a></span>timeToIso8601()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1897,7 +1936,13 @@ Variables</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>utc</em>&#160;</td>
+          <td class="paramname"><em>utc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long&#160;</td>
+          <td class="paramname"><em>fraction100ns</em> = <code>-1</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1913,7 +1958,14 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Renvoie</dt><dd>la date formatée, ou "" si elle est nulle </dd></dl>
+<dl class="section return"><dt>Renvoie</dt><dd>la date formatée, ou "" si elle est nulle</dd></dl>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fraction100ns</td><td>fraction de seconde, en centaines de nanosecondes (0..9999999), ou -1 pour ne pas l'écrire.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>POURQUOI CE PARAMÈTRE. Un SYSTEMTIME ne porte que la milliseconde, un FILETIME descend à cent nanosecondes. Les appelants qui disposent du FILETIME d'origine passent la vraie fraction ; les autres passent -1, et l'horodatage s'arrête à la seconde plutôt que d'afficher une précision qu'il n'a pas. </p>
 
 </div>
 </div>

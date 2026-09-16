@@ -1,5 +1,6 @@
 #include "events.h"
 #include "evtx.h"
+#include "event_messages.h"
 #include <cwchar>
 
 /*  events.cpp — remplissage des événements depuis le XML décodé.
@@ -42,13 +43,33 @@ Json chaine(const std::wstring& texte) {
  *
  *  Les deux formes sont désormais lues, chacune depuis son propre sous-arbre.
  */
-Json donneesEvenement(const XmlNode& racine) {
+Json donneesEvenement(const XmlNode& racine, std::vector<std::wstring>* brutes) {
 	Json arr = Json::arr();
 
 	if (const XmlNode* ed = racine.enfant(L"EventData")) {
-		for (const XmlNode* d : ed->descendants(L"Data")) arr.push(Json::str(d->texte));
+		/*  LE NOM DU CHAMP EST LA MOITIÉ DE L'INFORMATION. Les fournisseurs
+		    modernes nomment chaque donnée — `TargetUserName`, `NewProcessId`,
+		    `CommandLine` — et ce nom était jeté : un tableau de valeurs brutes
+		    oblige à connaître par cœur l'ordre des champs de chaque identifiant
+		    d'événement pour savoir ce qu'on lit. Les événements classiques, eux,
+		    n'en ont pas : leurs données sont purement positionnelles, et le nom
+		    est alors omis plutôt qu'inventé. */
+		for (const XmlNode* d : ed->descendants(L"Data")) {
+			Json o = Json::obj();
+			const std::wstring nom = d->attribut(L"Name");
+			if (!nom.empty()) o.add(L"Name", Json::str(nom));
+			o.add(L"Value", Json::str(d->texte));
+			arr.push(std::move(o));
+			if (brutes) brutes->push_back(d->texte);
+		}
 		if (const XmlNode* bin = ed->enfant(L"Binary"))
-			if (!bin->texte.empty()) arr.push(Json::str(bin->texte));
+			if (!bin->texte.empty()) {
+				Json o = Json::obj();
+				o.add(L"Name",  Json::str(L"Binary"));
+				o.add(L"Value", Json::str(bin->texte));
+				arr.push(std::move(o));
+				if (brutes) brutes->push_back(bin->texte);
+			}
 		return arr;
 	}
 
@@ -61,7 +82,16 @@ Json donneesEvenement(const XmlNode& racine) {
 			const XmlNode* n = pile.back();
 			pile.pop_back();
 			if (n->enfants.empty()) {
-				if (!n->texte.empty()) arr.push(Json::str(n->nom + L"=" + n->texte));
+				// Meme forme que EventData : le nom de l'element FAIT office de
+				// nom de champ, au lieu d'etre colle a la valeur par un « = »
+				// qu'un consommateur devrait redecouper.
+				if (!n->texte.empty()) {
+					Json o = Json::obj();
+					o.add(L"Name",  Json::str(n->nom));
+					o.add(L"Value", Json::str(n->texte));
+					arr.push(std::move(o));
+					if (brutes) brutes->push_back(n->texte);
+				}
 			}
 			else {
 				// Ordre du document : la pile est remplie à l'envers.
@@ -84,13 +114,14 @@ Event::Event(const XmlNode& racine, const std::wstring& canal,
 		// pour que le rapport ne le perde pas silencieusement.
 		evtSystemEventRecordId = Json::num(identifiant);
 		evtSystemChannel = chaine(canal);
-		evtEventData = donneesEvenement(racine);
+		evtEventData = donneesEvenement(racine, &valeursBrutes);
 		return;
 	}
 
 	if (const XmlNode* p = sys->enfant(L"Provider")) {
 		evtSystemProviderName = chaine(p->attribut(L"Name"));
 		evtSystemProviderGuid = chaine(p->attribut(L"Guid"));
+		guidPourMessage = p->attribut(L"Guid");
 		// Certains fournisseurs classiques ne portent que EventSourceName.
 		if (evtSystemProviderName.kind() == Json::Kind::Null)
 			evtSystemProviderName = chaine(p->attribut(L"EventSourceName"));
@@ -98,11 +129,13 @@ Event::Event(const XmlNode& racine, const std::wstring& canal,
 	if (const XmlNode* e = sys->enfant(L"EventID")) {
 		evtSystemEventID = nombre(e->texte);
 		evtSystemQualifiers = nombre(e->attribut(L"Qualifiers"));
+		idPourMessage = (uint16_t)wcstoul(e->texte.c_str(), nullptr, 10);
 	}
 	evtSystemLevel   = nombre(sys->texteDe(L"Level"));
 	evtSystemTask    = nombre(sys->texteDe(L"Task"));
 	evtSystemOpcode  = nombre(sys->texteDe(L"Opcode"));
 	evtSystemVersion = nombre(sys->texteDe(L"Version"));
+	versionPourMessage = (uint8_t)wcstoul(sys->texteDe(L"Version").c_str(), nullptr, 10);
 	// Mots clés : conservés en texte, tels qu'écrits dans le journal — c'est un
 	// champ de bits, dont la valeur numérique ne dit rien de plus.
 	evtSystemKeywords = chaine(sys->texteDe(L"Keywords"));
@@ -130,7 +163,7 @@ Event::Event(const XmlNode& racine, const std::wstring& canal,
 	if (const XmlNode* s = sys->enfant(L"Security"))
 		evtSystemUserID = chaine(s->attribut(L"UserID"));
 
-	evtEventData = donneesEvenement(racine);
+	evtEventData = donneesEvenement(racine, &valeursBrutes);
 }
 
 Json Event::toJson() const {
@@ -155,6 +188,7 @@ Json Event::toJson() const {
 	o.add(L"EvtSystemVersion",           evtSystemVersion);
 	o.add(L"EvtEventData",               evtEventData);
 	o.add(L"EvtSourceLog",               evtSourceLog);
+	o.add(L"EvtEventMessage",            evtEventMessage);
 	return o;
 }
 
@@ -174,6 +208,8 @@ HRESULT Events::getData() {
 		log(2, L"🔥Aucun journal .evtx extrait sous " + repertoire, ERROR_FILE_NOT_FOUND);
 		return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 	}
+
+	MessagesInitialiser();
 
 	EcrivainJsonTableau sortie("events.json");
 	if (!sortie.ouvert()) return E_FAIL;
@@ -201,6 +237,16 @@ HRESULT Events::getData() {
 					return true;
 				}
 				Event ev(*racine, canal, e.identifiant, nomFichier);
+				/*  MESSAGE EN CLAIR. Reconstitué depuis les ressources du
+				    fournisseur, ce que seule l'API savait faire jusqu'ici. Le
+				    fichier de ressources est extrait à la demande, une fois par
+				    fournisseur (cf. event_messages.h). */
+				if (!ev.guidPourMessage.empty() && ev.idPourMessage != 0) {
+					const std::wstring phrase = MessageEvenement(
+						ev.guidPourMessage, ev.idPourMessage, ev.versionPourMessage,
+						ev.valeursBrutes);
+					if (!phrase.empty()) ev.evtEventMessage = Json::str(phrase);
+				}
 				/*  Un enregistrement dont la section System est incomplete est le
 				    signe d'un decodage qui a devie sur CE record. Le XML brut part
 				    au journal : sans lui, l'evenement se lit comme pauvre en
@@ -239,6 +285,19 @@ HRESULT Events::getData() {
 	if (incomplets)
 		log(2, L"🔥Enregistrements a section System incomplete : "
 		     + std::to_wstring(incomplets));
+
+	{
+		size_t nbF = 0, echecsF = 0;
+		unsigned long long resolus = 0, octets = 0;
+		MessagesBilan(&nbF, &echecsF, &resolus, &octets);
+		log(2, L"❇️Messages resolus : " + std::to_wstring(resolus) + L" sur "
+		     + std::to_wstring(lus) + L" evenement(s), "
+		     + std::to_wstring(nbF) + L" fournisseur(s) consulte(s), "
+		     + std::to_wstring(echecsF) + L" sans ressources, "
+		     + std::to_wstring(octets / 1024 / 1024) + L" Mio extraits, "
+		     + std::to_wstring(MessagesRepliApi()) + L" binaire(s) relu(s) par l'API");
+		MessagesLiberer();
+	}
 
 	if (FAILED(fermeture)) return fermeture;
 	if (fichiers == 0) return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);

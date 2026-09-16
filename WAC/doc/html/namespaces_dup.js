@@ -4,6 +4,7 @@ var namespaces_dup =
       [ "COMPTES_LOCAUX", "namespaceFootprint.html#a0da13ddb409bbb6ff27051b344f32441", null ],
       [ "ECRITURE_USB", "namespaceFootprint.html#aeefd446c0b758f5cf2e8919c527d0688", null ],
       [ "FICHIER_COPIE", "namespaceFootprint.html#a3d944af43e67edbbd418d8254902e223", null ],
+      [ "FICHIER_RESSOURCE_API", "namespaceFootprint.html#aaf30c6a498f36d7aee5166c7c9d757f8", null ],
       [ "PROCESSUS", "namespaceFootprint.html#a6ab93559465b4c66ed432176e844846b", null ],
       [ "RUCHE_COPIE", "namespaceFootprint.html#ad4d42395527748d70fdcbb6ff9be3ee1", null ],
       [ "RUCHE_PATCH", "namespaceFootprint.html#acaa99682c86093511a287609349c8634", null ],

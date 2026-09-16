@@ -1,0 +1,296 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector): Référence du fichier /var/www/html/WAC/WAC/event_messages.cpp</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(document).ready(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('event__messages_8cpp.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#func-members">Fonctions</a>  </div>
+  <div class="headertitle"><div class="title">Référence du fichier event_messages.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><code>#include &quot;<a class="el" href="event__messages_8h_source.html">event_messages.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="tools_8h_source.html">tools.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="consigne_8h_source.html">consigne.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="raw__hive_8h_source.html">raw_hive.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="pe__resource_8h_source.html">pe_resource.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="wevt_8h_source.html">wevt.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="audit_8h_source.html">audit.h</a>&quot;</code><br />
+<code>#include &lt;filesystem&gt;</code><br />
+<code>#include &lt;map&gt;</code><br />
+<code>#include &lt;memory&gt;</code><br />
+<code>#include &lt;fstream&gt;</code><br />
+<code>#include &lt;vector&gt;</code><br />
+</div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Fonctions</h2></td></tr>
+<tr class="memitem:a2297cd2c3ac867dc8e5d2fc7a13a8fed" id="r_a2297cd2c3ac867dc8e5d2fc7a13a8fed"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8cpp.html#a2297cd2c3ac867dc8e5d2fc7a13a8fed">MessagesInitialiser</a> ()</td></tr>
+<tr class="separator:a2297cd2c3ac867dc8e5d2fc7a13a8fed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a527c5833447853f1ef5ee3893f7101c6" id="r_a527c5833447853f1ef5ee3893f7101c6"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8cpp.html#a527c5833447853f1ef5ee3893f7101c6">MessageEvenement</a> (const std::wstring &amp;guidFournisseur, uint16_t identifiantEvenement, uint8_t version, const std::vector&lt; std::wstring &gt; &amp;valeurs)</td></tr>
+<tr class="separator:a527c5833447853f1ef5ee3893f7101c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a42ad875bdaf23dca8ea04f0faa7e7a49" id="r_a42ad875bdaf23dca8ea04f0faa7e7a49"><td class="memItemLeft" align="right" valign="top">unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8cpp.html#a42ad875bdaf23dca8ea04f0faa7e7a49">MessagesRepliApi</a> ()</td></tr>
+<tr class="separator:a42ad875bdaf23dca8ea04f0faa7e7a49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2ac623fbebaa5f43b7bf22496957f49" id="r_ad2ac623fbebaa5f43b7bf22496957f49"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8cpp.html#ad2ac623fbebaa5f43b7bf22496957f49">MessagesBilan</a> (size_t *fournisseurs, size_t *echecs, unsigned long long *resolus, unsigned long long *octets)</td></tr>
+<tr class="separator:ad2ac623fbebaa5f43b7bf22496957f49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3f6dc3ecbcc57e79b75910e9b90fffb" id="r_ae3f6dc3ecbcc57e79b75910e9b90fffb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8cpp.html#ae3f6dc3ecbcc57e79b75910e9b90fffb">MessagesLiberer</a> ()</td></tr>
+<tr class="separator:ae3f6dc3ecbcc57e79b75910e9b90fffb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<h2 class="groupheader">Documentation des fonctions</h2>
+<a id="a527c5833447853f1ef5ee3893f7101c6" name="a527c5833447853f1ef5ee3893f7101c6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a527c5833447853f1ef5ee3893f7101c6">&#9670;&#160;</a></span>MessageEvenement()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring MessageEvenement </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>guidFournisseur</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>identifiantEvenement</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>version</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::wstring &gt; &amp;&#160;</td>
+          <td class="paramname"><em>valeurs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Message en clair d'un événement.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">guidFournisseur</td><td>GUID du fournisseur, « {…} » ; vide si l'événement ne le porte pas — le message est alors introuvable et la fonction rend une chaîne vide </td></tr>
+    <tr><td class="paramname">identifiantEvenement</td><td>identifiant de l'événement </td></tr>
+    <tr><td class="paramname">version</td><td>version du schéma de l'événement </td></tr>
+    <tr><td class="paramname">valeurs</td><td>données de l'événement, dans l'ordre : ce sont elles qui remplissent les marques %1 %2 … du modèle </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>la phrase, ou une chaîne vide si elle n'a pas pu être reconstituée </dd></dl>
+
+</div>
+</div>
+<a id="ad2ac623fbebaa5f43b7bf22496957f49" name="ad2ac623fbebaa5f43b7bf22496957f49"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad2ac623fbebaa5f43b7bf22496957f49">&#9670;&#160;</a></span>MessagesBilan()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void MessagesBilan </td>
+          <td>(</td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>fournisseurs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>echecs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long long *&#160;</td>
+          <td class="paramname"><em>resolus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long long *&#160;</td>
+          <td class="paramname"><em>octets</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Bilan, pour le journal et le rapport. </p><dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fournisseurs</td><td>nombre de fournisseurs dont les ressources ont été lues </td></tr>
+    <tr><td class="paramname">echecs</td><td>nombre de fournisseurs dont le fichier n'a pas pu être lu </td></tr>
+    <tr><td class="paramname">resolus</td><td>nombre de messages effectivement reconstitués </td></tr>
+    <tr><td class="paramname">octets</td><td>volume extrait pour ces ressources </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a2297cd2c3ac867dc8e5d2fc7a13a8fed" name="a2297cd2c3ac867dc8e5d2fc7a13a8fed"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2297cd2c3ac867dc8e5d2fc7a13a8fed">&#9670;&#160;</a></span>MessagesInitialiser()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void MessagesInitialiser </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Prépare la résolution des messages. À appeler une fois avant la collecte des événements. Sans cet appel, les messages ne sont pas résolus et la collecte se poursuit normalement. </p>
+
+</div>
+</div>
+<a id="ae3f6dc3ecbcc57e79b75910e9b90fffb" name="ae3f6dc3ecbcc57e79b75910e9b90fffb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae3f6dc3ecbcc57e79b75910e9b90fffb">&#9670;&#160;</a></span>MessagesLiberer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void MessagesLiberer </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Libère les ressources chargées. </p>
+
+</div>
+</div>
+<a id="a42ad875bdaf23dca8ea04f0faa7e7a49" name="a42ad875bdaf23dca8ea04f0faa7e7a49"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a42ad875bdaf23dca8ea04f0faa7e7a49">&#9670;&#160;</a></span>MessagesRepliApi()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned MessagesRepliApi </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Nombre de binaires lus par l'API faute d'avoir pu l'être en brut.</p>
+<p>C'est LE chiffre d'empreinte de cette fonctionnalité : chacun de ces fichiers a été ouvert sur le système examiné. Le détail figure, fichier par fichier, dans <code>investigation.json</code>. </p>
+
+</div>
+</div>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="event__messages_8cpp.html">event_messages.cpp</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

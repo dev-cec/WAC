@@ -60,7 +60,15 @@ struct Event {
 	Json evtSystemComputer = Json::null();          //!< nom de l'ordinateur
 	Json evtSystemUserID = Json::null();            //!< SID de l'utilisateur
 	Json evtSystemVersion = Json::null();           //!< version du schéma de l'événement
-	Json evtEventData = Json::null();               //!< données propres à l'événement
+	/*! Données propres à l'événement : un tableau d'objets `{ Name, Value }`.
+	*
+	*  Le nom vient de l'attribut `Name` du `<Data>` — `TargetUserName`,
+	*  `NewProcessId`, `CommandLine` — et il est OMIS pour les événements
+	*  classiques, dont les données sont purement positionnelles. Sans lui, il
+	*  faudrait connaître par cœur l'ordre des champs de chaque identifiant
+	*  d'événement pour savoir ce qu'on lit.
+	*/
+	Json evtEventData = Json::null();
 	/*! Nom du fichier journal d'où l'événement provient.
 	*
 	*  PROVENANCE. Un même canal peut être porté par plusieurs fichiers : le
@@ -71,6 +79,14 @@ struct Event {
 	*  légitime et un défaut de lecture.
 	*/
 	Json evtSourceLog = Json::null();
+	/*! Message en clair, reconstitué depuis les ressources du fournisseur.
+	*
+	*  Omis quand il n'a pas pu l'être : fournisseur non déclaré, binaire de
+	*  ressources absent, ou événement que le fournisseur ne décrit pas. Un champ
+	*  vide se lirait comme un événement sans message, alors que le message
+	*  existe et n'a pas été atteint.
+	*/
+	Json evtEventMessage = Json::null();
 
 	/*! Construit l'événement depuis le XML décodé d'un enregistrement.
 	*  @param racine élément `<Event>` analysé par xml_light
@@ -82,6 +98,22 @@ struct Event {
 	/*! @param nomFichier nom du fichier journal, consigné comme provenance */
 	Event(const XmlNode& racine, const std::wstring& canal,
 	      unsigned long long identifiant, const std::wstring& nomFichier);
+
+	/*! Valeurs de `EventData`, dans l'ordre, telles qu'elles remplissent les
+	*  marques %1 %2 … d'un modèle de message.
+	*
+	*  Conservées à part de `evtEventData`, qui les a déjà mises en forme avec
+	*  leurs noms : les ressortir du JSON demanderait des accesseurs dont
+	*  personne d'autre n'a besoin, pour retrouver une information qu'on avait
+	*  déjà sous la main. */
+	std::vector<std::wstring> valeursBrutes;
+
+	/*  Champs conservés sous leur forme native pour la résolution du message.
+	    Les versions JSON sont déjà formatées ; les redécoder en sens inverse
+	    serait à la fois inutile et fragile. */
+	std::wstring guidPourMessage;     //!< GUID du fournisseur
+	uint16_t     idPourMessage = 0;   //!< identifiant de l'événement
+	uint8_t      versionPourMessage = 0; //!< version du schéma
 
 	/*! conversion de l'objet au format json */
 	Json toJson() const;

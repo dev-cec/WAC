@@ -7,6 +7,7 @@ var searchData=
   ['fileentryshellitem_4',['FileEntryShellItem',['../structFileEntryShellItem.html#aae555f30e574e6ef5b2543c300f35cf1',1,'FileEntryShellItem']]],
   ['filetohash_5',['fileToHash',['../classQuickDigest5.html#ad5c664e0b42e0233ec1a5905426bdc15',1,'QuickDigest5']]],
   ['finddirectory_6',['findDirectory',['../structoleParser.html#a40532c3fa1da6c8fc9ca71ee12bb0b99',1,'oleParser']]],
-  ['from_5fappid_7',['from_appid',['../trans__id_8cpp.html#a25780e92e06e955aac60fad4ec98d134',1,'from_appId(std::wstring appId):&#160;trans_id.cpp'],['../trans__id_8h.html#a25780e92e06e955aac60fad4ec98d134',1,'from_appId(std::wstring appId):&#160;trans_id.cpp']]],
-  ['fsflags_8',['FsFlags',['../structFsFlags.html#a9b2600706b5d1367930b37fb238bd39d',1,'FsFlags']]]
+  ['formatermessage_7',['formatermessage',['../wevt_8cpp.html#a45809473cf88416ff32dcf58c2107d3a',1,'formaterMessage(const std::wstring &amp;modele, const std::vector&lt; std::wstring &gt; &amp;valeurs):&#160;wevt.cpp'],['../wevt_8h.html#a45809473cf88416ff32dcf58c2107d3a',1,'formaterMessage(const std::wstring &amp;modele, const std::vector&lt; std::wstring &gt; &amp;valeurs):&#160;wevt.cpp']]],
+  ['from_5fappid_8',['from_appid',['../trans__id_8cpp.html#a25780e92e06e955aac60fad4ec98d134',1,'from_appId(std::wstring appId):&#160;trans_id.cpp'],['../trans__id_8h.html#a25780e92e06e955aac60fad4ec98d134',1,'from_appId(std::wstring appId):&#160;trans_id.cpp']]],
+  ['fsflags_9',['FsFlags',['../structFsFlags.html#a9b2600706b5d1367930b37fb238bd39d',1,'FsFlags']]]
 ];

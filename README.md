@@ -341,6 +341,29 @@ results are worth stating:
 
 - on every log, WAC reads **at least** every record the reference reads — it
   never misses one;
+- the **plain-language message** is back. It is not in the log at all: the log
+  holds an event id and its data, while the sentence lives in the provider's
+  resource file. WAC now reconstructs it offline, following the same chain the
+  API followed — provider GUID → its resource file, named in the `SOFTWARE`
+  hive → the `WEVT_TEMPLATE` resource, which maps an *event* id to a *message*
+  id → the `MESSAGETABLE` resource, which on a localized system lives in the
+  satellite `<language>\<name>.mui` → substitution of the event's own values
+  into the `%1 %2 …` marks. Resource files are extracted **on demand**, once per
+  provider that actually produced an event: extracting all of the ~930 declared
+  publishers would cost hundreds of megabytes for providers that were silent.
+  **One compromise was necessary here.** Windows 10 and 11 compress their system
+  binaries with WOF — "Compact OS": the file's `$DATA` attribute holds nothing,
+  the payload living in a named stream `WofCompressedData` compressed with
+  XPRESS or LZX. A raw read therefore returns either a correctly-sized file of
+  **all zeros** or nothing at all, and on a Windows 11 VM all 121 provider
+  binaries came back unreadable. When the raw read fails, WAC falls back to the
+  file API for **that file only**. This is not an exhibit: it is an operating
+  system binary, identical on every machine of the same build, read solely to
+  turn an id into a sentence. The cost is one read-only open — Windows does not
+  update last-access times by default — and **every such fallback is recorded in
+  `investigation.json`** with its own footprint entry. Reading WOF streams by raw
+  NTFS would need an XPRESS-Huffman and LZX decompressor, which is not
+  implemented;
 - reading from the file also **fixed a wrong value the API produced**. The API
   path asked only for `Event/EventData/Data`; on an event that stores its data
   in `UserData` instead, that request fills nothing, and the value was read
@@ -465,6 +488,24 @@ byte for byte. A wrong decompressor usually decodes without any error and return
 wrong data, which is why the comparison is exhaustive rather than a size check.
 Result on a 1 118 208-byte log: 16 compressed units out of 16 conform, 1 048 576
 bytes identical.
+
+`wevt_test.cpp` checks the five-link chain that turns an event into a sentence,
+against a **real provider's** files — its DLL and its localized satellite. Each
+link fails silently: the field simply disappears and the collection stays valid,
+so nothing points at the broken link. Two defects were caught exactly that way
+while writing it: a provider's block descriptors are **eight** bytes and not
+four (read by four, no block is ever found — 0 events described for a provider
+that describes 202), and an event descriptor is **48** bytes and not 44 (with a
+44-byte stride, only one record in twelve is coherent, with no error at all).
+The stride is therefore *derived* from the block size the resource declares, so
+a mismatch is caught rather than silently mis-read. The test also checks the
+mark substitution, including that a mark with no data **stays visible** —
+erasing it would suggest a complete sentence.
+
+```bash
+cd WAC && g++ -std=c++17 -I. pe_resource.cpp wevt.cpp wevt_test.cpp -o /tmp/wevt_test
+/tmp/wevt_test gpsvc.dll fr-FR/gpsvc.dll.mui "{aea1b4fa-97d1-45f2-a64c-4d69fffd92c9}" 1002 4001
+```
 
 `consigne_test.cpp` checks the exhibit-store procedure, and specifically the one
 thing that must never happen and is silent when it does: **the sealed copy being

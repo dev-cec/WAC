@@ -94,6 +94,10 @@ echo "== 4. Exécution de WAC (SYSTEM) =="
 # valides : l'absence d'erreur JSON ne prouve donc PAS que WAC est allé au bout.
 # qga.py rend le code de sortie de la commande invitée, on le contrôle.
 CODE=0
+# Le journal de WAC est ouvert en APPEND : sans purge il grossit d'un test a
+# l'autre (636 Mio constates apres une serie de runs), ce qui rend son
+# rapatriement inutilisable et masque les traces du run courant.
+$QGA run --shell "del $VMDIR\\WAC.exe.log 2>nul & echo." >/dev/null 2>&1 || true
 $QGA run --shell "cd /d $VMDIR && rmdir /s /q out 2>nul & WAC.exe --output=out --events --loglevel=2 > run.log 2>&1" || CODE=$?
 $QGA read "$VMDIR\\run.log" "$SORTIE/run.log" >/dev/null || echo "   ⚠️ run.log non rapatrié"
 

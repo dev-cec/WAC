@@ -281,7 +281,28 @@ def controle_events(rep):
             print(f"  ℹ️  events.json : {recouvre} événement(s) de même canal et même "
                   f"numéro venant de fichiers différents (journal courant + archive)")
 
-    # 4. aucun événement postérieur à la collecte
+    # 4. messages en clair : proportion et cohérence
+    #
+    # Le message est reconstitué depuis les ressources du fournisseur, une
+    # chaîne à cinq maillons (registre, PE, WEVT_TEMPLATE, MESSAGETABLE,
+    # substitution). Si l'un casse, le champ disparaît sans erreur — d'où ce
+    # contrôle de proportion. Un message qui garde une marque « %1 » non
+    # substituée signale, lui, une donnée manquante.
+    avecMsg = [e for e in d if e.get("EvtEventMessage")]
+    if not avecMsg:
+        print("  ⚠️  events.json : aucun message en clair — chaîne de résolution "
+              "à vérifier (registre, ressources PE, WEVT_TEMPLATE)")
+    else:
+        import re as _re
+        marques = [e for e in avecMsg
+                   if _re.search(r"%\d", str(e.get("EvtEventMessage")))]
+        print(f"  ✅ events.json : {len(avecMsg)} message(s) en clair "
+              f"({100*len(avecMsg)/len(d):.0f}% des événements)")
+        if marques:
+            print(f"  ⚠️  events.json : {len(marques)} message(s) gardent une marque "
+                  f"non substituée — donnée absente de l'événement")
+
+    # 5. aucun événement postérieur à la collecte
     inv = charge(rep, "investigation.json")
     # Les horodatages sont sous « Collection », pas à la racine.
     coll = (inv or {}).get("Collection") if isinstance(inv, dict) else None

@@ -7,6 +7,9 @@ var dir_59651bc50cd52202dfd7c76305c5d752 =
     [ "consigne.cpp", "consigne_8cpp.html", "consigne_8cpp" ],
     [ "consigne.h", "consigne_8h.html", "consigne_8h" ],
     [ "consigne_test.cpp", "consigne__test_8cpp.html", "consigne__test_8cpp" ],
+    [ "event_messages.cpp", "event__messages_8cpp.html", "event__messages_8cpp" ],
+    [ "event_messages.h", "event__messages_8h.html", "event__messages_8h" ],
+    [ "event_messages_test.cpp", "event__messages__test_8cpp.html", "event__messages__test_8cpp" ],
     [ "events.cpp", "events_8cpp.html", null ],
     [ "events.h", "events_8h.html", "events_8h" ],
     [ "evtx.cpp", "evtx_8cpp.html", "evtx_8cpp" ],
@@ -27,6 +30,8 @@ var dir_59651bc50cd52202dfd7c76305c5d752 =
     [ "main.cpp", "main_8cpp.html", "main_8cpp" ],
     [ "oleparser.cpp", "oleparser_8cpp.html", null ],
     [ "oleparser.h", "oleparser_8h.html", "oleparser_8h" ],
+    [ "pe_resource.cpp", "pe__resource_8cpp.html", null ],
+    [ "pe_resource.h", "pe__resource_8h.html", "pe__resource_8h" ],
     [ "prefetchs.cpp", "prefetchs_8cpp.html", null ],
     [ "prefetchs.h", "prefetchs_8h.html", "prefetchs_8h" ],
     [ "processes.cpp", "processes_8cpp.html", "processes_8cpp" ],
@@ -82,6 +87,9 @@ var dir_59651bc50cd52202dfd7c76305c5d752 =
     [ "trans_id.h", "trans__id_8h.html", "trans__id_8h" ],
     [ "users.cpp", "users_8cpp.html", null ],
     [ "users.h", "users_8h.html", "users_8h" ],
+    [ "wevt.cpp", "wevt_8cpp.html", "wevt_8cpp" ],
+    [ "wevt.h", "wevt_8h.html", "wevt_8h" ],
+    [ "wevt_test.cpp", "wevt__test_8cpp.html", "wevt__test_8cpp" ],
     [ "xml_light.cpp", "xml__light_8cpp.html", "xml__light_8cpp" ],
     [ "xml_light.h", "xml__light_8h.html", "xml__light_8h" ]
 ];

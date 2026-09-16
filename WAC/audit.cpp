@@ -31,6 +31,13 @@ const wchar_t* PROCESSUS    = L"Enumeration des processus : ouverture de handles
                               L"et de jetons (auditable si la politique le prevoit).";
 const wchar_t* SESSIONS     = L"Interrogation des sessions ouvertes (LSA / Terminal Services) : "
                               L"sollicite LSASS, sans modification d'artefact.";
+const wchar_t* FICHIER_RESSOURCE_API =
+                              L"Ouverture en LECTURE d'un binaire du systeme d'exploitation par "
+                              L"l'API de fichiers, sa lecture brute rendant un fichier vide "
+                              L"(compression WOF, dite « Compact OS »). Ce n'est pas une piece : "
+                              L"c'est un binaire identique sur toute machine de la meme version, "
+                              L"lu uniquement pour traduire un identifiant d'evenement en phrase. "
+                              L"Windows ne met pas a jour la date de dernier acces par defaut.";
 const wchar_t* ECRITURE_USB = L"Ecriture sur le support de collecte uniquement. Aucune ecriture "
                               L"sur le systeme examine.";
 } // namespace Footprint

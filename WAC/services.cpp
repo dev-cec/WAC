@@ -3,64 +3,10 @@
 
 namespace {
 
-/*! Résout le chemin d'un fichier désigné par `ImagePath` ou `ServiceDll`.
-*
-*  La ruche stocke des formes hétérogènes, qu'aucune API ne normalise hors ligne :
-*    - `\SystemRoot\System32\drivers\x.sys`  (préfixe noyau)
-*    - `\??\C:\dossier\x.exe`                 (chemin objet NT)
-*    - `system32\svchost.exe -k netsvcs`      (relatif à %SystemRoot%)
-*    - `"C:\Program Files\App\x.exe" /service`(guillemets + arguments)
-*
-*  CE QUI ÉTAIT FAUX. La version d'origine coupait sur la première occurrence de
-*  « -» ou « /», y compris à l'intérieur du chemin : un binaire installé dans un
-*  dossier contenant un tiret voyait son chemin tronqué, et son MD5 n'était donc
-*  jamais calculé. Ici, la coupure se fait APRÈS l'extension du fichier, qui est
-*  le seul repère fiable de la fin du chemin.
-*
-*  @param imagePath la valeur brute de la ruche
-*  @return le chemin absolu du fichier, ou "" s'il n'en désigne pas un
-*/
-std::wstring cheminBinaire(std::wstring imagePath) {
-	if (imagePath.empty()) return L"";
-
-	// Chemin entre guillemets : il se termine au guillemet fermant.
-	if (imagePath.front() == L'"') {
-		const size_t fin = imagePath.find(L'"', 1);
-		imagePath = (fin == std::wstring::npos) ? imagePath.substr(1)
-		                                        : imagePath.substr(1, fin - 1);
-	}
-	else {
-		/* Sans guillemets, la fin du chemin se repère à l'extension. On prend la
-		   PREMIÈRE extension rencontrée : ce qui suit est une option. */
-		const std::wstring bas = enMinuscules(imagePath);
-		size_t fin = std::wstring::npos;
-		for (PCWSTR ext : { L".exe", L".sys", L".dll" }) {
-			const size_t p = bas.find(ext);
-			if (p != std::wstring::npos && (fin == std::wstring::npos || p < fin))
-				fin = p + 4;
-		}
-		if (fin != std::wstring::npos) imagePath = imagePath.substr(0, fin);
-	}
-
-	// Préfixes noyau et objet NT.
-	const std::wstring bas = enMinuscules(imagePath);
-	if (bas.compare(0, 12, L"\\systemroot\\") == 0)
-		imagePath = conf.systemDrive + L"\\Windows\\" + imagePath.substr(12);
-	else if (bas.compare(0, 13, L"%systemroot%\\") == 0)
-		imagePath = conf.systemDrive + L"\\Windows\\" + imagePath.substr(13);
-	else if (bas.compare(0, 4, L"\\??\\") == 0)
-		imagePath = imagePath.substr(4);
-
-	/* Chemin relatif : il l'est à %SystemRoot%, pas au répertoire courant.
-	   Un service dont ImagePath vaut « system32\\x.exe » désigne donc
-	   C:\\Windows\\system32\\x.exe. */
-	if (imagePath.size() < 2 || imagePath[1] != L':') {
-		if (!imagePath.empty() && imagePath.front() == L'\\')
-			return L"";   // \Driver\..., \FileSystem\... : objet noyau, pas un fichier
-		imagePath = conf.systemDrive + L"\\Windows\\" + imagePath;
-	}
-	return imagePath;
-}
+/*  `cheminBinaire` a rejoint tools : la resolution des prefixes de chemins
+ *  Windows (\SystemRoot\, %SystemRoot%\, \??\) sert aussi a localiser les
+ *  fichiers de ressources des fournisseurs d'evenements (cf. event_messages.cpp).
+ */
 
 /*! MD5 d'un fichier désigné par la ruche, chaîne vide si indisponible.
 *

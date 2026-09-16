@@ -1,7 +1,7 @@
 var searchData=
 [
   ['readonly_0',['ReadOnly',['../structFileAttributes.html#ad671b5f257b0564084b0957c317366f9',1,'FileAttributes']]],
-  ['recentdocs_1',['recentdocs',['../structAutomaticDestination.html#aee250f34b14caaeab6079c44a6bdbd13',1,'AutomaticDestination::recentDocs'],['../structCustomDestinationCategory.html#a51444583e9d789fa2a05212424f2c314',1,'CustomDestinationCategory::recentDocs'],['../structRecentDocs.html#ad302ada200a2a3d54813ba283b1d11c4',1,'RecentDocs::recentdocs']]],
+  ['recentdocs_1',['recentdocs',['../structRecentDocs.html#ad302ada200a2a3d54813ba283b1d11c4',1,'RecentDocs::recentdocs'],['../structAutomaticDestination.html#aee250f34b14caaeab6079c44a6bdbd13',1,'AutomaticDestination::recentDocs'],['../structCustomDestinationCategory.html#a51444583e9d789fa2a05212424f2c314',1,'CustomDestinationCategory::recentDocs']]],
   ['reference_2',['reference',['../structFilename.html#afdb6bea2a1adde8db08f705556ec5534',1,'Filename']]],
   ['referenceconnue_3',['referenceConnue',['../structFilename.html#aa163bd15f44aaba0e95446ce37c3dd7d',1,'Filename']]],
   ['registeredorganization_4',['registeredOrganization',['../structSystemInfo.html#a57be43eaef409e65a09f0e9bb371f6d0',1,'SystemInfo']]],

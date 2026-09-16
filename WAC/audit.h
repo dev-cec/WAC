@@ -59,6 +59,9 @@ namespace Footprint {
 	extern const wchar_t* PROCESSUS;
 	//! Interrogation des sessions ouvertes via LSA / Terminal Services.
 	extern const wchar_t* SESSIONS;
+	//! Lecture d'un binaire de ressources par l'API de fichiers, faute de
+	//! pouvoir le lire en brut (compression WOF « Compact OS »).
+	extern const wchar_t* FICHIER_RESSOURCE_API;
 	//! Écriture sur le support de collecte (clé USB), jamais sur la cible.
 	extern const wchar_t* ECRITURE_USB;
 }

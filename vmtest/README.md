@@ -50,6 +50,11 @@ révélé des valeurs fausses dans du JSON valide :
 | identifiants d'enregistrement uniques dans CHAQUE fichier journal | l'invariant réel : un même canal peut être porté par plusieurs fichiers dont les numéros se recouvrent légitimement. Un doublon dans un même fichier, en revanche, signale un chunk périmé relu — le risque propre au parcours de tous les chunks physiques |
 | nom de machine MAJORITAIRE des événements conforme à `OperatingSystem.json` | un renommage de machine laisse légitimement d'anciens noms dans les journaux : c'est la majorité qui doit correspondre, pas la totalité |
 
+**Le journal de WAC s'accumule.** Il est ouvert en mode ajout : sans purge, il
+grossit d'un test a l'autre — 636 Mio constatés après une série de runs, ce qui
+rend son rapatriement inutilisable et noie les traces du run courant sous celles
+des précédents. `run-wac-test.sh` le supprime désormais avant chaque exécution.
+
 **Le harnais peut manquer de mémoire.** `qga.py read` accumulait le fichier
 entier avant de l'écrire : avec un `events.json` de 28 Mo, le cumul des réponses
 base64 et de leur décodage a suffi, la VM tournant à côté, pour que le système

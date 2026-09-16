@@ -14,5 +14,6 @@ var searchData=
   ['os_5farchitecture_11',['os_architecture',['../trans__id_8cpp.html#ad20837d9d2ee65fdb4efd65e64574c5c',1,'os_architecture(DWORD archi):&#160;trans_id.cpp'],['../trans__id_8h.html#ad20837d9d2ee65fdb4efd65e64574c5c',1,'os_architecture(DWORD archi):&#160;trans_id.cpp']]],
   ['osarchitecture_12',['osArchitecture',['../structSystemInfo.html#affa03a18f5068286ef3f96a0c0253f8f',1,'SystemInfo']]],
   ['osname_13',['osName',['../structSystemInfo.html#aff3597fd715ac85f438d5e6d8915deae',1,'SystemInfo']]],
-  ['ouvert_14',['ouvert',['../classEcrivainJsonTableau.html#a97d9cbb5f8414b0cf0de4d7f695a69f9',1,'EcrivainJsonTableau']]]
+  ['ouvert_14',['ouvert',['../classPeResource.html#a25ad93cb22b58c9622eef156eab21bdf',1,'PeResource::ouvert()'],['../classEcrivainJsonTableau.html#a97d9cbb5f8414b0cf0de4d7f695a69f9',1,'EcrivainJsonTableau::ouvert()']]],
+  ['ouvrir_15',['ouvrir',['../classPeResource.html#a326669b8cdf8ea1b081e3a6ee4c9d863',1,'PeResource']]]
 ];
