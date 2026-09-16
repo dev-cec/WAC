@@ -1,0 +1,185 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector):  Fichier source de /var/www/html/WAC/WAC/sha.h</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(document).ready(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('sha_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">sha.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="sha_8h.html">Aller à la documentation de ce fichier.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment">/*  sha.h — EMPREINTES SHA-1 ET SHA-256, calculées au fil de l&#39;écriture.</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment"> *  POURQUOI DEUX ALGORITHMES DE PLUS. La consigne d&#39;une pièce numérique doit</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="comment"> *  porter une empreinte qui l&#39;identifie sans discussion possible. MD5 seul ne</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="comment"> *  suffit plus : des collisions sont produites à volonté depuis 2008, et une</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="comment"> *  défense peut donc soutenir qu&#39;un fichier de même empreinte n&#39;est pas le</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="comment"> *  fichier saisi. SHA-1 est l&#39;empreinte que les procédures et les outils du</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="comment"> *  domaine réclament encore, mais il est lui aussi cassé en collision depuis</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="comment"> *  2017 (SHAttered). D&#39;où les trois, dont SHA-256, seul non contesté :</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="comment"> *  fabriquer un fichier qui coïncide sur les trois à la fois n&#39;est pas au</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="comment"> *  pouvoir de l&#39;état de l&#39;art.</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="comment"> *  POURQUOI PAS L&#39;API DU SYSTÈME. `bcrypt.dll` ferait le calcul, mais WAC</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="comment"> *  s&#39;interdit d&#39;ajouter une dépendance à une bibliothèque du système examiné</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment"> *  quand un algorithme public de trente lignes suffit : l&#39;exécutable reste</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="comment"> *  autonome, et l&#39;empreinte reste calculable à l&#39;identique par un tiers.</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="comment"> *  POURQUOI « AU FIL DE L&#39;ÉCRITURE ». Les octets de la pièce transitent déjà en</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="comment"> *  mémoire pendant l&#39;extraction. Les hacher à ce moment évite de relire la copie</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="comment"> *  depuis le support de collecte — sur clé USB, cette relecture coûtait près de</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="comment"> *  la moitié du temps d&#39;extraction. Et l&#39;empreinte porte alors sur ce qui a</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="comment"> *  effectivement été lu du volume, non sur une relecture qui pourrait différer.</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="comment"> *  Même interface que Md5Stream (cf. quickdigest5.h), pour que les trois</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="comment"> *  empreintes se calculent dans la même boucle.</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="comment"> *  C++ portable, aucune dépendance : vérifiable hors Windows, et confronté aux</span></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="comment"> *  vecteurs de test publics des deux algorithmes (cf. sha_test).</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="preprocessor">#include &lt;cstdint&gt;</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="preprocessor">#include &lt;cstddef&gt;</span></div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
+<div class="foldopen" id="foldopen00038" data-start="{" data-end="};">
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno"><a class="line" href="classSha1Stream.html">   38</a></span><span class="keyword">class </span><a class="code hl_class" href="classSha1Stream.html">Sha1Stream</a> final {</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classSha1Stream.html#ae05788314fac1ee85ceb7494ee4bbb2e">update</a>(<span class="keyword">const</span> uint8_t* data, <span class="keywordtype">size_t</span> length);</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    std::wstring <a class="code hl_function" href="classSha1Stream.html#a788ca19c7ee03a39151f252430b37cd3">hexDigest</a>();</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    uint32_t etat_[5] = { 0x67452301u, 0xEFCDAB89u, 0x98BADCFEu, 0x10325476u, 0xC3D2E1F0u };</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    uint8_t  bloc_[64] = { 0 };</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    <span class="keywordtype">size_t</span>   dansBloc_ = 0;</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    uint64_t octets_ = 0;</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <span class="keywordtype">void</span> comprimer(<span class="keyword">const</span> uint8_t* bloc);</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>};</div>
+</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> </div>
+<div class="foldopen" id="foldopen00054" data-start="{" data-end="};">
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno"><a class="line" href="classSha256Stream.html">   54</a></span><span class="keyword">class </span><a class="code hl_class" href="classSha256Stream.html">Sha256Stream</a> final {</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classSha256Stream.html#a4888b86c9ff4a46997d01b8c88ccfead">update</a>(<span class="keyword">const</span> uint8_t* data, <span class="keywordtype">size_t</span> length);</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    std::wstring <a class="code hl_function" href="classSha256Stream.html#aee5563e00caf3167d2a906a8cee2399e">hexDigest</a>();</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    uint32_t etat_[8] = { 0x6A09E667u, 0xBB67AE85u, 0x3C6EF372u, 0xA54FF53Au,</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>                          0x510E527Fu, 0x9B05688Cu, 0x1F83D9ABu, 0x5BE0CD19u };</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    uint8_t  bloc_[64] = { 0 };</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    <span class="keywordtype">size_t</span>   dansBloc_ = 0;</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    uint64_t octets_ = 0;</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    <span class="keywordtype">void</span> comprimer(<span class="keyword">const</span> uint8_t* bloc);</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>};</div>
+</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>std::wstring <a class="code hl_function" href="sha_8h.html#ad87339120fa7a80f9ebedfa1538c9c15">sha256Fichier</a>(<span class="keyword">const</span> std::wstring&amp; chemin);</div>
+<div class="ttc" id="aclassSha1Stream_html"><div class="ttname"><a href="classSha1Stream.html">Sha1Stream</a></div><div class="ttdef"><b>Definition</b> sha.h:38</div></div>
+<div class="ttc" id="aclassSha1Stream_html_a788ca19c7ee03a39151f252430b37cd3"><div class="ttname"><a href="classSha1Stream.html#a788ca19c7ee03a39151f252430b37cd3">Sha1Stream::hexDigest</a></div><div class="ttdeci">std::wstring hexDigest()</div><div class="ttdef"><b>Definition</b> sha.cpp:115</div></div>
+<div class="ttc" id="aclassSha1Stream_html_ae05788314fac1ee85ceb7494ee4bbb2e"><div class="ttname"><a href="classSha1Stream.html#ae05788314fac1ee85ceb7494ee4bbb2e">Sha1Stream::update</a></div><div class="ttdeci">void update(const uint8_t *data, size_t length)</div><div class="ttdef"><b>Definition</b> sha.cpp:110</div></div>
+<div class="ttc" id="aclassSha256Stream_html"><div class="ttname"><a href="classSha256Stream.html">Sha256Stream</a></div><div class="ttdef"><b>Definition</b> sha.h:54</div></div>
+<div class="ttc" id="aclassSha256Stream_html_a4888b86c9ff4a46997d01b8c88ccfead"><div class="ttname"><a href="classSha256Stream.html#a4888b86c9ff4a46997d01b8c88ccfead">Sha256Stream::update</a></div><div class="ttdeci">void update(const uint8_t *data, size_t length)</div><div class="ttdef"><b>Definition</b> sha.cpp:151</div></div>
+<div class="ttc" id="aclassSha256Stream_html_aee5563e00caf3167d2a906a8cee2399e"><div class="ttname"><a href="classSha256Stream.html#aee5563e00caf3167d2a906a8cee2399e">Sha256Stream::hexDigest</a></div><div class="ttdeci">std::wstring hexDigest()</div><div class="ttdef"><b>Definition</b> sha.cpp:156</div></div>
+<div class="ttc" id="asha_8h_html_ad87339120fa7a80f9ebedfa1538c9c15"><div class="ttname"><a href="sha_8h.html#ad87339120fa7a80f9ebedfa1538c9c15">sha256Fichier</a></div><div class="ttdeci">std::wstring sha256Fichier(const std::wstring &amp;chemin)</div><div class="ttdef"><b>Definition</b> sha.cpp:164</div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="sha_8h.html">sha.h</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

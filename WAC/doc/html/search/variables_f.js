@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['octets_0',['octets',['../structHiveLogEntry.html#aa9b09e11bc3d4632dc7818586c5212a6',1,'HiveLogEntry::octets'],['../structHiveReplayInfo.html#ae6cd4312bf446da1e24c3e6b4040ad57',1,'HiveReplayInfo::octets']]],
+  ['octets_0',['octets',['../structHiveLogEntry.html#aa9b09e11bc3d4632dc7818586c5212a6',1,'HiveLogEntry::octets'],['../structHiveReplayInfo.html#ae6cd4312bf446da1e24c3e6b4040ad57',1,'HiveReplayInfo::octets'],['../structRawHiveEmpreintes.html#a03fe2142d9f4d671098b59dd8d6e1140',1,'RawHiveEmpreintes::octets']]],
   ['offline_1',['Offline',['../structFileAttributes.html#a7524f1cdb271b689b17ee6fb59303574',1,'FileAttributes']]],
   ['ok_2',['ok',['../structHiveFixInfo.html#ac4fc2a03b317a544f3a6eb769e5e1517',1,'HiveFixInfo::ok'],['../structHiveReplayInfo.html#af3e4b4fba01e1cbfe903c3f1407b5c87',1,'HiveReplayInfo::ok']]],
   ['oldchecksum_3',['oldChecksum',['../structHiveFixInfo.html#a6bd14d92ef35249ca9a9f3fa9c4e22dd',1,'HiveFixInfo']]],

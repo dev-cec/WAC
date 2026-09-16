@@ -6,12 +6,14 @@ var searchData=
   ['servicestruct_3',['ServiceStruct',['../structServiceStruct.html',1,'']]],
   ['session_4',['Session',['../structSession.html',1,'']]],
   ['sessions_5',['Sessions',['../structSessions.html',1,'']]],
-  ['shellbag_6',['Shellbag',['../structShellbag.html',1,'']]],
-  ['shellbags_7',['Shellbags',['../structShellbags.html',1,'']]],
-  ['shellvolumeflags_8',['ShellVolumeFlags',['../structShellVolumeFlags.html',1,'']]],
-  ['shimcache_9',['Shimcache',['../structShimcache.html',1,'']]],
-  ['shimcaches_10',['Shimcaches',['../structShimcaches.html',1,'']]],
-  ['sps_11',['SPS',['../structSPS.html',1,'']]],
-  ['spsvalue_12',['SPSValue',['../structSPSValue.html',1,'']]],
-  ['systeminfo_13',['SystemInfo',['../structSystemInfo.html',1,'']]]
+  ['sha1stream_6',['Sha1Stream',['../classSha1Stream.html',1,'']]],
+  ['sha256stream_7',['Sha256Stream',['../classSha256Stream.html',1,'']]],
+  ['shellbag_8',['Shellbag',['../structShellbag.html',1,'']]],
+  ['shellbags_9',['Shellbags',['../structShellbags.html',1,'']]],
+  ['shellvolumeflags_10',['ShellVolumeFlags',['../structShellVolumeFlags.html',1,'']]],
+  ['shimcache_11',['Shimcache',['../structShimcache.html',1,'']]],
+  ['shimcaches_12',['Shimcaches',['../structShimcaches.html',1,'']]],
+  ['sps_13',['SPS',['../structSPS.html',1,'']]],
+  ['spsvalue_14',['SPSValue',['../structSPSValue.html',1,'']]],
+  ['systeminfo_15',['SystemInfo',['../structSystemInfo.html',1,'']]]
 ];

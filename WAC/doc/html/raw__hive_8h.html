@@ -107,11 +107,16 @@ $(document).ready(function(){initNavTree('raw__hive_8h.html',''); initResizable(
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
 <code>#include &lt;utility&gt;</code><br />
+<code>#include &lt;cstdint&gt;</code><br />
 </div>
 <p><a href="raw__hive_8h_source.html">Aller au code source de ce fichier.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveEmpreintes.html">RawHiveEmpreintes</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawDirEntry.html">RawDirEntry</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -128,14 +133,14 @@ Fonctions</h2></td></tr>
 <tr class="separator:a7c6fcb004a257a7b9bfb351d435286b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff3f1529d81703425b03fe383f20d88d" id="r_aff3f1529d81703425b03fe383f20d88d"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#aff3f1529d81703425b03fe383f20d88d">ExtractFileRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;filePathOnVolume, const std::wstring &amp;outFile)</td></tr>
 <tr class="separator:aff3f1529d81703425b03fe383f20d88d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2b392968d3f88c65a99c9735140ed7b4" id="r_a2b392968d3f88c65a99c9735140ed7b4"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a2b392968d3f88c65a99c9735140ed7b4">ExtractFilesRaw</a> (const std::wstring &amp;volumeLetter, const std::vector&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;items, std::vector&lt; HRESULT &gt; *perItem=nullptr, std::vector&lt; std::wstring &gt; *md5PerItem=nullptr)</td></tr>
-<tr class="separator:a2b392968d3f88c65a99c9735140ed7b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d7d4e4adb0ce41fb171335a7245f077" id="r_a7d7d4e4adb0ce41fb171335a7245f077"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a7d7d4e4adb0ce41fb171335a7245f077">ExtractFilesRaw</a> (const std::wstring &amp;volumeLetter, const std::vector&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;items, std::vector&lt; HRESULT &gt; *perItem=nullptr, std::vector&lt; <a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a> &gt; *releve=nullptr)</td></tr>
+<tr class="separator:a7d7d4e4adb0ce41fb171335a7245f077"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4bc3af8df20ef0f72d1b33dfacc078cd" id="r_a4bc3af8df20ef0f72d1b33dfacc078cd"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a4bc3af8df20ef0f72d1b33dfacc078cd">ListDirectoryRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;dirPathOnVolume, std::vector&lt; <a class="el" href="structRawDirEntry.html">RawDirEntry</a> &gt; &amp;out)</td></tr>
 <tr class="separator:a4bc3af8df20ef0f72d1b33dfacc078cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a38e3342f60999bc586350237409b8617" id="r_a38e3342f60999bc586350237409b8617"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a38e3342f60999bc586350237409b8617">ExtractDirectoryRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;dirPathOnVolume, const std::wstring &amp;outDir, const std::vector&lt; std::wstring &gt; &amp;extensions={}, size_t *extracted=nullptr, std::wstring *diagnostic=nullptr)</td></tr>
-<tr class="separator:a38e3342f60999bc586350237409b8617"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a23475f02d0144f442af3565499a6f353" id="r_a23475f02d0144f442af3565499a6f353"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a23475f02d0144f442af3565499a6f353">ExtractDirectoryTreeRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;dirPathOnVolume, const std::wstring &amp;outDir, const std::vector&lt; std::wstring &gt; &amp;extensions={}, size_t *extracted=nullptr, unsigned profondeurMax=8)</td></tr>
-<tr class="separator:a23475f02d0144f442af3565499a6f353"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeae6e3ce77dcdb3a15f4dd36994bc726" id="r_aeae6e3ce77dcdb3a15f4dd36994bc726"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#aeae6e3ce77dcdb3a15f4dd36994bc726">ExtractDirectoryRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;dirPathOnVolume, const std::wstring &amp;outDir, const std::vector&lt; std::wstring &gt; &amp;extensions={}, size_t *extracted=nullptr, std::wstring *diagnostic=nullptr, std::vector&lt; <a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a> &gt; *releve=nullptr)</td></tr>
+<tr class="separator:aeae6e3ce77dcdb3a15f4dd36994bc726"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3100b5110c4904793a33a3900a5b94f" id="r_aa3100b5110c4904793a33a3900a5b94f"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#aa3100b5110c4904793a33a3900a5b94f">ExtractDirectoryTreeRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;dirPathOnVolume, const std::wstring &amp;outDir, const std::vector&lt; std::wstring &gt; &amp;extensions={}, size_t *extracted=nullptr, unsigned profondeurMax=8, std::vector&lt; <a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a> &gt; *releve=nullptr)</td></tr>
+<tr class="separator:aa3100b5110c4904793a33a3900a5b94f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Documentation des définitions de type</h2>
 <a id="a6985ce339618f6ff7ab0155eb314e52e" name="a6985ce339618f6ff7ab0155eb314e52e"></a>
@@ -161,8 +166,8 @@ Fonctions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des fonctions</h2>
-<a id="a38e3342f60999bc586350237409b8617" name="a38e3342f60999bc586350237409b8617"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a38e3342f60999bc586350237409b8617">&#9670;&#160;</a></span>ExtractDirectoryRaw()</h2>
+<a id="aeae6e3ce77dcdb3a15f4dd36994bc726" name="aeae6e3ce77dcdb3a15f4dd36994bc726"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeae6e3ce77dcdb3a15f4dd36994bc726">&#9670;&#160;</a></span>ExtractDirectoryRaw()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -201,7 +206,13 @@ Fonctions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">std::wstring *&#160;</td>
-          <td class="paramname"><em>diagnostic</em> = <code>nullptr</code>&#160;</td>
+          <td class="paramname"><em>diagnostic</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a> &gt; *&#160;</td>
+          <td class="paramname"><em>releve</em> = <code>nullptr</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -220,6 +231,7 @@ Fonctions</h2></td></tr>
     <tr><td class="paramname">extensions</td><td>extensions à retenir, point compris et casse indifférente (ex. { L".pf" }) ; liste vide = tous les fichiers </td></tr>
     <tr><td class="paramname">extracted</td><td>(optionnel) reçoit le nombre de fichiers effectivement extraits </td></tr>
     <tr><td class="paramname">diagnostic</td><td>(optionnel) reçoit un état lisible de l'énumération : « absent », « vide », « N entrée(s), M retenue(s) ». Sans lui, un décompte à 0 ne dit pas si le répertoire manque, s'il est vide, ou si le filtre d'extension a tout écarté — trois causes très différentes. </td></tr>
+    <tr><td class="paramname">releve</td><td>(optionnel) reçoit un relevé par fichier, empreintes comprises, y compris pour les fichiers dont l'extraction a échoué : c'est la source du manifeste de consigne </td></tr>
   </table>
   </dd>
 </dl>
@@ -227,8 +239,8 @@ Fonctions</h2></td></tr>
 
 </div>
 </div>
-<a id="a23475f02d0144f442af3565499a6f353" name="a23475f02d0144f442af3565499a6f353"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a23475f02d0144f442af3565499a6f353">&#9670;&#160;</a></span>ExtractDirectoryTreeRaw()</h2>
+<a id="aa3100b5110c4904793a33a3900a5b94f" name="aa3100b5110c4904793a33a3900a5b94f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa3100b5110c4904793a33a3900a5b94f">&#9670;&#160;</a></span>ExtractDirectoryTreeRaw()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -267,7 +279,13 @@ Fonctions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">unsigned&#160;</td>
-          <td class="paramname"><em>profondeurMax</em> = <code>8</code>&#160;</td>
+          <td class="paramname"><em>profondeurMax</em> = <code>8</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a> &gt; *&#160;</td>
+          <td class="paramname"><em>releve</em> = <code>nullptr</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -286,6 +304,7 @@ Fonctions</h2></td></tr>
     <tr><td class="paramname">extensions</td><td>extensions à extraire (vide = toutes) </td></tr>
     <tr><td class="paramname">extracted</td><td>reçoit le nombre de fichiers extraits </td></tr>
     <tr><td class="paramname">profondeurMax</td><td>garde-fou contre une arborescence cyclique ou anormale (un index NTFS corrompu pourrait boucler) ; 0 = pas de descente </td></tr>
+    <tr><td class="paramname">releve</td><td>(optionnel) reçoit un relevé par fichier, empreintes comprises : c'est la source du manifeste de consigne </td></tr>
   </table>
   </dd>
 </dl>
@@ -336,8 +355,8 @@ Fonctions</h2></td></tr>
 
 </div>
 </div>
-<a id="a2b392968d3f88c65a99c9735140ed7b4" name="a2b392968d3f88c65a99c9735140ed7b4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2b392968d3f88c65a99c9735140ed7b4">&#9670;&#160;</a></span>ExtractFilesRaw()</h2>
+<a id="a7d7d4e4adb0ce41fb171335a7245f077" name="a7d7d4e4adb0ce41fb171335a7245f077"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7d7d4e4adb0ce41fb171335a7245f077">&#9670;&#160;</a></span>ExtractFilesRaw()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -363,8 +382,8 @@ Fonctions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::vector&lt; std::wstring &gt; *&#160;</td>
-          <td class="paramname"><em>md5PerItem</em> = <code>nullptr</code>&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a> &gt; *&#160;</td>
+          <td class="paramname"><em>releve</em> = <code>nullptr</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -375,19 +394,14 @@ Fonctions</h2></td></tr>
 </div><div class="memdoc">
 <p>Extrait plusieurs fichiers en UNE seule ouverture de volume (efficace). </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
+    <tr><td class="paramname">volumeLetter</td><td>lettre du volume a lire, sans les deux-points (ex. L"C") </td></tr>
     <tr><td class="paramname">items</td><td>paires {chemin sur volume, fichier de sortie} </td></tr>
     <tr><td class="paramname">perItem</td><td>(optionnel) reçoit le HRESULT de chaque item, dans l'ordre </td></tr>
-    <tr><td class="paramname">md5PerItem</td><td>(optionnel) reçoit l'empreinte MD5 de chaque item, calculée PENDANT l'écriture. Évite de relire la copie depuis le support de collecte — sur clé USB, cette relecture coûtait près de la moitié du temps d'extraction. Empreinte vide si l'item a échoué. </td></tr>
+    <tr><td class="paramname">releve</td><td>(optionnel) reçoit un relevé par item, empreintes comprises. C'est la source du manifeste de consigne : sans lui, une pièce est copiée sans rien qui l'identifie. </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>S_OK si tout réussit, S_FALSE si au moins un item échoue, ou un code d'erreur si l'ouverture du volume échoue. </dd></dl>
-<dl class="params"><dt>Paramètres</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">volumeLetter</td><td>lettre du volume a lire, sans les deux-points (ex. L"C") </td></tr>
-  </table>
-  </dd>
-</dl>
 
 </div>
 </div>

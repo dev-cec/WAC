@@ -14,6 +14,7 @@
 #include "audit.h"
 #include "raw_hive.h"
 #include "raw_collect.h"
+#include "consigne.h"
 #include "reg_usbstors.h"
 #include "reg_mounted_devices.h"
 #include "reg_bams.h"
@@ -343,6 +344,26 @@ int main(int argc, char* argv[])
 	}
 	else {
 		printSuccess();
+	}
+
+	/* MANIFESTE DE CONSIGNE. Écrit ici, une fois toutes les extractions faites :
+	   il doit couvrir toutes les pièces, et il scelle la consigne. Sans lui les
+	   copies brutes ne sont identifiées par rien, et la procédure ne vaut pas
+	   mieux qu'un simple répertoire de fichiers. */
+	printStep(L" - Sealing the exhibit store (manifest + SHA-256) : ");
+	log(3, L"🔈ConsigneEcrireManifeste");
+	{
+		size_t pieces = 0, echecs = 0;
+		unsigned long long octets = 0;
+		ConsigneBilan(&pieces, &echecs, &octets);
+		const HRESULT hrManifeste = ConsigneEcrireManifeste();
+		auditRecord(L"Scellement de la consigne (" + std::to_wstring(pieces)
+		            + L" piece(s), " + std::to_wstring(echecs) + L" echec(s), "
+		            + std::to_wstring(octets / 1024 / 1024) + L" Mio)",
+		            dossierConsigne() + L"\\MANIFESTE.json (+ .sha256)",
+		            hrManifeste, Footprint::ECRITURE_USB);
+		if (FAILED(hrManifeste)) printError(hrManifeste);
+		else printSuccess();
 	}
 
 	/************************

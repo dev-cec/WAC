@@ -1,5 +1,6 @@
 /*  raw_collect.cpp — voir raw_collect.h. */
 #include "raw_collect.h"
+#include "consigne.h"
 #include <string>
 #include <vector>
 #include <tuple>
@@ -28,8 +29,13 @@ std::wstring volumeSysteme() {
 }
 
 //! Répertoire d'extraction, sur la clé USB (dossier de sortie). Jamais l'hôte.
-std::wstring dossierExtraction() {
-	return string_to_wstring(conf._outputDir) + L"\\hives";
+/*  L'extraction écrit dans la CONSIGNE, jamais dans le répertoire de travail :
+ *  la copie brute doit exister avant qu'on en fasse quoi que ce soit, et ne plus
+ *  être touchée ensuite (cf. consigne.h). `conf.mountpoint` désigne le travail,
+ *  de sorte que tous les collecteurs lisent la copie de travail sans rien savoir
+ *  de cette séparation. */
+std::wstring cibleConsigne(const std::wstring& chemin) {
+	return cheminSous(dossierConsigne(), chemin);
 }
 
 /*! Rapporteur de progression pour raw_hive : affiche en Kio, plus lisible que des
@@ -42,7 +48,7 @@ void rapporterProgression(const wchar_t* item, unsigned long long fait,
 } // namespace
 
 HRESULT ExtractHivesRaw() {
-	conf.mountpoint = dossierExtraction();
+	conf.mountpoint = dossierTravail();
 
 	/* EXTRACTION GROUPEE PAR VOLUME.
 	   Un seul volume etait suppose, celui de Windows : un profil situe sur un
@@ -57,13 +63,15 @@ HRESULT ExtractHivesRaw() {
 	// `chemin` est absolu (avec lettre) ou relatif au volume systeme.
 	auto add = [&](const std::wstring& chemin) {
 		parVolume[volumeDuChemin(chemin)].emplace_back(cheminRelatifAuVolume(chemin),
-		                                               cheminExtrait(chemin));
+		                                               cibleConsigne(chemin));
 	};
 	// Une ruche + ses deux journaux de transaction.
 	auto addRuche = [&](const std::wstring& chemin) {
 		add(chemin);
 		add(chemin + L".LOG1");
 		add(chemin + L".LOG2");
+		// Le rejeu et le patch portent sur la copie de TRAVAIL, jamais sur la
+		// consigne : c'est toute la raison de la separation.
 		ruches.push_back(cheminExtrait(chemin));
 	};
 
@@ -84,7 +92,7 @@ HRESULT ExtractHivesRaw() {
 		addRuche(profil + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat");
 	}
 
-	// Créer l'arborescence de destination sur l'USB
+	// Créer l'arborescence de destination sous la consigne
 	for (const auto& groupe : parVolume)
 		for (const std::pair<std::wstring, std::wstring>& it : groupe.second) {
 			std::error_code ec;
@@ -95,7 +103,7 @@ HRESULT ExtractHivesRaw() {
 	   autres : on consigne son echec et on continue, comme pour une ruche
 	   manquante. Le premier echec dur est toutefois memorise pour le retour,
 	   afin que l'appelant sache que la collecte est incomplete. */
-	std::map<std::wstring, std::wstring> md5ParFichier;
+	std::map<std::wstring, std::wstring> md5ParFichier;   // chemin de travail -> MD5
 	unsigned manquants = 0;
 	HRESULT hr = ERROR_SUCCESS;
 	HRESULT premierEchecDur = ERROR_SUCCESS;
@@ -104,8 +112,11 @@ HRESULT ExtractHivesRaw() {
 		const std::wstring& volume = groupe.first;
 		const auto& items = groupe.second;
 		std::vector<HRESULT> res;
-		std::vector<std::wstring> md5Items;      // empreintes calculees a l'ecriture
-		const HRESULT hrVolume = ExtractFilesRaw(volume, items, &res, &md5Items);
+		std::vector<RawHiveExtrait> releve;      // empreintes calculees a l'ecriture
+		const HRESULT hrVolume = ExtractFilesRaw(volume, items, &res, &releve);
+		ConsigneAjouter(releve, L"Lecture brute NTFS (\\\\.\\" + volume
+		                        + L": — $MFT, index de repertoires, attribut $DATA) ; "
+		                        L"aucune ouverture de fichier par le systeme");
 		// Consigne ici, et non chez l'appelant : l'extraction doit preceder au
 		// journal les patchs qu'elle declenche, sinon l'enchainement se lit a
 		// l'envers.
@@ -126,17 +137,39 @@ HRESULT ExtractHivesRaw() {
 				++manquants;
 				log(2, L"🔥Extraction brute échouée : " + volume + L":" + items[i].first, res[i]);
 			}
-		/* Empreintes indexees par chemin de sortie : calculees pendant
-		   l'ecriture, donc AVANT tout patch — exactement ce qu'il faut
-		   consigner. On evite ainsi de relire chaque ruche depuis le support. */
-		for (size_t i = 0; i < items.size() && i < md5Items.size(); ++i)
-			if (!md5Items[i].empty()) md5ParFichier.emplace(items[i].second, md5Items[i]);
+		/* Empreintes indexees par chemin de TRAVAIL : calculees pendant
+		   l'ecriture de la consigne, donc avant toute modification — exactement
+		   ce qu'il faut consigner. La cle est le chemin de travail car c'est
+		   sur celui-la que porteront le rejeu et le patch. */
+		for (const RawHiveExtrait& e : releve)
+			if (!e.empreintes.md5.empty()) {
+				const std::filesystem::path relatif = std::filesystem::relative(
+					std::filesystem::path(e.cheminSortie), std::filesystem::path(dossierConsigne()));
+				md5ParFichier.emplace((std::filesystem::path(dossierTravail()) / relatif).wstring(),
+				                      e.empreintes.md5);
+			}
 	}
 	RawHiveSetProgress(nullptr);
 	printProgressEnd();
 	log(2, L"❇️Volumes lus : " + std::to_wstring(parVolume.size()));
 	/* Aucun volume lisible : rien ne suivra, autant le dire tout de suite. */
 	if (md5ParFichier.empty() && premierEchecDur != ERROR_SUCCESS) return premierEchecDur;
+
+	/*  CONSIGNE -> TRAVAIL. Les copies brutes sont en place et identifiees : on
+	 *  en fait la copie de travail, verifiee par empreinte, et c'est sur elle
+	 *  seule que porte tout ce qui suit. */
+	{
+		size_t copies = 0;
+		unsigned long long octets = 0;
+		const HRESULT hrCopie = ConsigneVersTravail(&copies, &octets);
+		auditRecord(L"Copie de la consigne vers le repertoire de travail ("
+		            + std::to_wstring(copies) + L" fichier(s), "
+		            + std::to_wstring(octets / 1024 / 1024) + L" Mio)",
+		            dossierConsigne() + L" -> " + dossierTravail(),
+		            hrCopie, Footprint::ECRITURE_USB);
+		if (FAILED(hrCopie)) return hrCopie;     // sans travail, rien ne suit
+		if (hrCopie == S_FALSE) hr = S_FALSE;
+	}
 
 	// Remettre chaque ruche en état (dirty -> chargeable), avec traçabilité.
 	log(0, L"*******************************************************************************************************************");
@@ -231,7 +264,7 @@ HRESULT ExtractHivesRaw() {
 }
 
 HRESULT ExtractFileArtefactsRaw() {
-	if (conf.mountpoint.empty()) conf.mountpoint = dossierExtraction();
+	if (conf.mountpoint.empty()) conf.mountpoint = dossierTravail();
 
 	log(0, L"*******************************************************************************************************************");
 	log(0, L"ℹ️Raw file artefacts :");
@@ -252,7 +285,7 @@ HRESULT ExtractFileArtefactsRaw() {
 	auto addCible = [&](const std::wstring& absolu,
 	                    const std::vector<std::wstring>& ext) {
 		cibles.push_back({ volumeDuChemin(absolu), cheminRelatifAuVolume(absolu),
-		                   cheminExtrait(absolu), ext });
+		                   cibleConsigne(absolu), ext });
 	};
 
 	addCible(L"\\Windows\\Prefetch", { L".pf" });
@@ -286,9 +319,13 @@ HRESULT ExtractFileArtefactsRaw() {
 	{
 		size_t tachesExtraites = 0;
 		const std::wstring cheminTasks = L"\\Windows\\System32\\Tasks";
+		std::vector<RawHiveExtrait> releve;
 		const HRESULT hrTasks = ExtractDirectoryTreeRaw(
-			volumeSysteme(), cheminTasks, conf.mountpoint + cheminTasks,
-			{}, &tachesExtraites);
+			volumeSysteme(), cheminTasks, cibleConsigne(cheminTasks),
+			{}, &tachesExtraites, 8, &releve);
+		ConsigneAjouter(releve, L"Lecture brute NTFS recursive (\\\\.\\"
+		                        + volumeSysteme() + L": — $MFT, index de repertoires) ; "
+		                        L"aucune ouverture de fichier par le systeme");
 		auditRecord(L"Extraction brute des definitions de taches planifiees ("
 		            + std::to_wstring(tachesExtraites) + L" fichier(s))",
 		            std::wstring(L"\\\\.\\") + volumeSysteme() + L":" + cheminTasks,
@@ -300,9 +337,14 @@ HRESULT ExtractFileArtefactsRaw() {
 	for (const Cible& cible : cibles) {
 		size_t extraits = 0;
 		std::wstring diagnostic;
+		std::vector<RawHiveExtrait> releve;
 		const HRESULT hr = ExtractDirectoryRaw(cible.volume, cible.chemin,
 		                                       cible.sortie,
-		                                       cible.extensions, &extraits, &diagnostic);
+		                                       cible.extensions, &extraits, &diagnostic,
+		                                       &releve);
+		ConsigneAjouter(releve, L"Lecture brute NTFS (\\\\.\\" + cible.volume
+		                        + L": — $MFT, index de repertoires, attribut $DATA) ; "
+		                        L"aucune ouverture de fichier par le systeme");
 		if (FAILED(hr)) {
 			/* Volume inaccessible. On NE s'arrete plus : avec plusieurs volumes,
 			   un disque illisible emportait toutes les cibles suivantes, y
@@ -329,5 +371,24 @@ HRESULT ExtractFileArtefactsRaw() {
 	RawHiveSetProgress(nullptr);
 	printProgressEnd();
 	log(2, L"❇️Fichiers extraits au total : " + std::to_wstring(total));
+
+	/*  CONSIGNE -> TRAVAIL, pour les artefacts sur fichiers. Les ruches ont deja
+	 *  ete recopiees et rejouees : ConsigneVersTravail ne les ecrase pas (cf.
+	 *  consigne.cpp), il complete le repertoire de travail. La separation vaut
+	 *  aussi pour ces fichiers-la, que WAC ne modifie pas : ne dedoubler que ce
+	 *  qu'on modifie ferait dependre la procedure de ce que l'outil croit faire,
+	 *  alors que c'est precisement ce qu'il faut pouvoir verifier du dehors. */
+	{
+		size_t copies = 0;
+		unsigned long long octets = 0;
+		const HRESULT hrCopie = ConsigneVersTravail(&copies, &octets);
+		auditRecord(L"Copie de la consigne vers le repertoire de travail ("
+		            + std::to_wstring(copies) + L" fichier(s), "
+		            + std::to_wstring(octets / 1024 / 1024) + L" Mio)",
+		            dossierConsigne() + L" -> " + dossierTravail(),
+		            hrCopie, Footprint::ECRITURE_USB);
+		if (FAILED(hrCopie)) return hrCopie;
+		if (hrCopie == S_FALSE) global = S_FALSE;
+	}
 	return global;
 }

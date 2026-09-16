@@ -102,7 +102,8 @@ $(document).ready(function(){initNavTree('audit_8h.html',''); initResizable(); }
   <div class="headertitle"><div class="title">Référence du fichier audit.h</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &lt;windows.h&gt;</code><br />
+<div class="textblock"><code>#include &quot;<a class="el" href="json_8h_source.html">json.h</a>&quot;</code><br />
+<code>#include &lt;windows.h&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
 </div>
 <p><a href="audit_8h_source.html">Aller au code source de ce fichier.</a></p>
@@ -120,8 +121,70 @@ Fonctions</h2></td></tr>
 <tr class="separator:a62e181d5aeac18f51be39f660b8c81b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac7c50c38d38c2f3b3ccc78f72570d6df" id="r_ac7c50c38d38c2f3b3ccc78f72570d6df"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="audit_8h.html#ac7c50c38d38c2f3b3ccc78f72570d6df">auditWrite</a> ()</td></tr>
 <tr class="separator:ac7c50c38d38c2f3b3ccc78f72570d6df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5aa45a04c4c5ca63f8b1d6bbf31b2ebd" id="r_a5aa45a04c4c5ca63f8b1d6bbf31b2ebd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="audit_8h.html#a5aa45a04c4c5ca63f8b1d6bbf31b2ebd">auditContexte</a> ()</td></tr>
+<tr class="separator:a5aa45a04c4c5ca63f8b1d6bbf31b2ebd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3067b3ad75c42c4edf4e39a6b21099a" id="r_af3067b3ad75c42c4edf4e39a6b21099a"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="audit_8h.html#af3067b3ad75c42c4edf4e39a6b21099a">auditDebutUtc</a> ()</td></tr>
+<tr class="separator:af3067b3ad75c42c4edf4e39a6b21099a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af73f59be248e5c6d46fae52c9baabe86" id="r_af73f59be248e5c6d46fae52c9baabe86"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="audit_8h.html#af73f59be248e5c6d46fae52c9baabe86">auditDebutLocal</a> ()</td></tr>
+<tr class="separator:af73f59be248e5c6d46fae52c9baabe86"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Documentation des fonctions</h2>
+<a id="a5aa45a04c4c5ca63f8b1d6bbf31b2ebd" name="a5aa45a04c4c5ca63f8b1d6bbf31b2ebd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5aa45a04c4c5ca63f8b1d6bbf31b2ebd">&#9670;&#160;</a></span>auditContexte()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classJson.html">Json</a> auditContexte </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Contexte de la collecte : outil, machine examinée, fuseaux, opérateur.</p>
+<p>Exposé parce que le manifeste de consigne doit porter EXACTEMENT le même contexte que le journal d'investigation. Le construire deux fois ouvrirait la possibilité que deux documents de la même collecte se contredisent — ce qui suffirait à discréditer les deux.</p>
+<dl class="section return"><dt>Renvoie</dt><dd>un objet JSON { Tool, Host, Operator } </dd></dl>
+
+</div>
+</div>
+<a id="af73f59be248e5c6d46fae52c9baabe86" name="af73f59be248e5c6d46fae52c9baabe86"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af73f59be248e5c6d46fae52c9baabe86">&#9670;&#160;</a></span>auditDebutLocal()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring auditDebutLocal </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="section see"><dt>Voir également</dt><dd><a class="el" href="audit_8h.html#af3067b3ad75c42c4edf4e39a6b21099a">auditDebutUtc</a> </dd></dl>
+
+</div>
+</div>
+<a id="af3067b3ad75c42c4edf4e39a6b21099a" name="af3067b3ad75c42c4edf4e39a6b21099a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af3067b3ad75c42c4edf4e39a6b21099a">&#9670;&#160;</a></span>auditDebutUtc()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring auditDebutUtc </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Début de la collecte, en UTC puis en heure locale (ISO 8601). Le manifeste de consigne doit dater l'extraction. </p>
+
+</div>
+</div>
 <a id="ae3092ba5f3c03d3cb8d2e87ba3a371da" name="ae3092ba5f3c03d3cb8d2e87ba3a371da"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae3092ba5f3c03d3cb8d2e87ba3a371da">&#9670;&#160;</a></span>auditInit()</h2>
 

@@ -119,6 +119,16 @@ else
   done <<< "$LISTE"
 fi
 
+# Manifeste de consigne + son sceau : minuscules, et ce sont eux qui
+# identifient les pièces. Sans eux, check-json.py ne peut pas vérifier la
+# consigne (les pièces elles-mêmes pèsent des centaines de Mio et restent sur
+# le support de collecte).
+mkdir -p "$SORTIE/consigne"
+for f in MANIFESTE.json MANIFESTE.sha256; do
+  $QGA read "$VMDIR\\out\\consigne\\$f" "$SORTIE/consigne/$f" >/dev/null 2>&1 \
+    && echo "   + consigne/$f" || echo "   ⚠️ consigne/$f non rapatrié"
+done
+
 echo "== 6. Contrôle de validité JSON =="
 python3 "$ICI/check-json.py" "$SORTIE" || echo "   ⚠️ des JSON sont invalides (voir ci-dessus)"
 

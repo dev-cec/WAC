@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <algorithm>
 #include "quickdigest5.h"
+#include "sha.h"
 
 namespace {
 
@@ -197,9 +198,32 @@ public:
 
     HRESULT extractData(uint64_t index, const std::wstring& outFile,
                         const std::wstring& libelle = std::wstring(),
-                        std::wstring* md5 = nullptr){
+                        RawHiveEmpreintes* emp = nullptr){
         std::vector<uint8_t> rec;
         if (!readMftRecord(index, rec)) return E_FAIL;
+
+        if (emp){
+            emp->mftEntry = index;
+            /* Horodatage de CETTE piece, et non du lot : c'est ce que la
+               consigne doit dater. Releve avant la lecture, donc jamais
+               posterieur a ce qu'il date. */
+            FILETIME maintenant = { 0, 0 };
+            GetSystemTimeAsFileTime(&maintenant);
+            emp->extraitUtc = ((uint64_t)maintenant.dwHighDateTime << 32)
+                            | maintenant.dwLowDateTime;
+            /* $STANDARD_INFORMATION (type 0x10) : les quatre horodatages du
+               fichier SOURCE. Ils décrivent la cible, pas la copie — et c'est
+               precisement ce qui atteste qu'une lecture brute ne modifie aucune
+               date : la copie, elle, portera les dates du moment. */
+            const uint8_t* si = findAttr(rec, 0x10, false);
+            if (si && si[8] == 0){                        // toujours résident
+                const uint8_t* d = si + rd16(si + 0x14);
+                emp->creeUtc       = rd64(d + 0x00);
+                emp->modifieUtc    = rd64(d + 0x08);
+                emp->mftModifieUtc = rd64(d + 0x10);
+                emp->accedeUtc     = rd64(d + 0x18);
+            }
+        }
 
         std::vector<Run> runs;
         uint64_t realSize = 0;
@@ -233,10 +257,15 @@ public:
 
         if (resident){
             out.write((const char*)residentData, residentLen);
-            if (md5){
-                Md5Stream flux;
-                flux.update(residentData, residentLen);
-                *md5 = flux.hexDigest();
+            if (emp){
+                Md5Stream m; Sha1Stream s1; Sha256Stream s2;
+                m.update(residentData, residentLen);
+                s1.update(residentData, residentLen);
+                s2.update(residentData, residentLen);
+                emp->md5 = m.hexDigest(); emp->sha1 = s1.hexDigest(); emp->sha256 = s2.hexDigest();
+                emp->octets = residentLen;
+                emp->tailleAnnoncee = residentLen;
+                emp->resident = true;
             }
             return S_OK;
         }
@@ -244,16 +273,23 @@ public:
         std::vector<uint8_t> cl(bytesPerCluster_);
         uint64_t written = 0;
         uint64_t prochainRapport = 0;
-        // Empreinte calculee sur les octets qui transitent deja en memoire :
-        // evite de relire la copie depuis le support de collecte.
+        // Empreintes calculees sur les octets qui transitent deja en memoire :
+        // evite de relire la copie depuis le support de collecte, et elles
+        // portent sur ce qui a ete lu du VOLUME, non sur une relecture.
         Md5Stream flux;
+        Sha1Stream flux1;
+        Sha256Stream flux256;
         for (const Run& r : runs){
             for (uint64_t k = 0; k < r.count && written < realSize; ++k){
                 if (r.lcn < 0) std::fill(cl.begin(), cl.end(), 0);          // sparse
                 else if (!readCluster((uint64_t)r.lcn + k, cl.data())) return E_FAIL;
                 uint64_t chunk = std::min<uint64_t>(bytesPerCluster_, realSize - written);
                 out.write((const char*)cl.data(), (std::streamsize)chunk);
-                if (md5) flux.update(cl.data(), (size_t)chunk);
+                if (emp){
+                    flux.update(cl.data(), (size_t)chunk);
+                    flux1.update(cl.data(), (size_t)chunk);
+                    flux256.update(cl.data(), (size_t)chunk);
+                }
                 written += chunk;
                 // Rapport tous les 1 Mio : assez fréquent pour montrer que ça
                 // avance, assez rare pour ne pas coûter en affichage.
@@ -264,7 +300,13 @@ public:
             }
         }
         if (g_progress && !libelle.empty()) g_progress(libelle.c_str(), written, realSize);
-        if (md5) *md5 = flux.hexDigest();
+        if (emp){
+            emp->md5    = flux.hexDigest();
+            emp->sha1   = flux1.hexDigest();
+            emp->sha256 = flux256.hexDigest();
+            emp->octets = written;
+            emp->tailleAnnoncee = realSize;
+        }
         RVLOG(L"[raw] extrait %llu octets\n", (unsigned long long)written);
         return (written == realSize) ? S_OK : S_FALSE;
     }
@@ -524,19 +566,24 @@ void RawHiveSetProgress(RawHiveProgressFn fn){ g_progress = fn; }
 HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
                         const std::vector<std::pair<std::wstring, std::wstring>>& items,
                         std::vector<HRESULT>* perItem,
-                        std::vector<std::wstring>* md5PerItem){
+                        std::vector<RawHiveExtrait>* releve){
     NtfsVolume vol;                       // volume ouvert UNE fois pour tous les items
     HRESULT hr = vol.open(volumeLetter);
     if (FAILED(hr)){ if (perItem) perItem->assign(items.size(), hr); return hr; }
     HRESULT overall = S_OK;
     for (const auto& it : items){
         uint64_t index = 0; HRESULT h;
-        std::wstring empreinte;
+        RawHiveExtrait ligne;
+        ligne.cheminVolume = volumeLetter + L":" + it.first;
+        ligne.cheminSortie = it.second;
         if (!vol.resolvePath(it.first, index)) h = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
         else h = vol.extractData(index, it.second, it.first,
-                                 md5PerItem ? &empreinte : nullptr);
+                                 releve ? &ligne.empreintes : nullptr);
+        ligne.resultat = h;
         if (perItem) perItem->push_back(h);
-        if (md5PerItem) md5PerItem->push_back(empreinte);
+        // UN ECHEC EST CONSIGNE AUSSI : une piece absente du manifeste se lirait
+        // comme une piece jamais cherchee.
+        if (releve) releve->push_back(std::move(ligne));
         if (FAILED(h)) overall = S_FALSE;
     }
     return overall;
@@ -582,7 +629,8 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
                             const std::wstring& outDir,
                             const std::vector<std::wstring>& extensions,
                             size_t* extracted,
-                            std::wstring* diagnostic){
+                            std::wstring* diagnostic,
+                            std::vector<RawHiveExtrait>* releve){
     if (extracted) *extracted = 0;
     if (diagnostic) diagnostic->clear();
 
@@ -621,7 +669,13 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
         ++retenus;
 
         const std::wstring cible = outDir + L"\\" + e.name;
-        HRESULT h = vol.extractData(e.mftIndex, cible);
+        RawHiveExtrait ligne;
+        ligne.cheminVolume = volumeLetter + L":" + dirPathOnVolume + L"\\" + e.name;
+        ligne.cheminSortie = cible;
+        HRESULT h = vol.extractData(e.mftIndex, cible, std::wstring(),
+                                    releve ? &ligne.empreintes : nullptr);
+        ligne.resultat = h;
+        if (releve) releve->push_back(std::move(ligne));
         if (FAILED(h)){
             RVLOG(L"[raw] extraction echouee: %ls\n", e.name.c_str());
             ++echecs;
@@ -650,7 +704,9 @@ HRESULT extraireArborescence(NtfsVolume& vol, uint64_t dirIndex,
                              const std::wstring& cheminVolume,
                              const std::wstring& outDir,
                              const std::vector<std::wstring>& extensions,
-                             size_t* extracted, unsigned profondeurRestante){
+                             size_t* extracted, unsigned profondeurRestante,
+                             const std::wstring& volumeLetter,
+                             std::vector<RawHiveExtrait>* releve){
     std::vector<RawDirEntry> entries;
     if (!vol.listDir(dirIndex, entries)){
         RVLOG(L"[raw] arbo: index illisible pour %ls\n", cheminVolume.c_str());
@@ -671,19 +727,26 @@ HRESULT extraireArborescence(NtfsVolume& vol, uint64_t dirIndex,
             }
             const HRESULT h = extraireArborescence(
                 vol, e.mftIndex, cheminVolume + L"\\" + e.name,
-                outDir + L"\\" + e.name, extensions, extracted, profondeurRestante - 1);
+                outDir + L"\\" + e.name, extensions, extracted, profondeurRestante - 1,
+                volumeLetter, releve);
             if (h == S_FALSE) global = S_FALSE;
             continue;
         }
         if (!extensionMatches(e.name, extensions)) continue;
 
-        std::wstring empreinte;   // non exploitée ici, mais évite une relecture
-        if (FAILED(vol.extractData(e.mftIndex, outDir + L"\\" + e.name,
-                                   cheminVolume + L"\\" + e.name, &empreinte))){
+        RawHiveExtrait ligne;
+        ligne.cheminVolume = volumeLetter + L":" + cheminVolume + L"\\" + e.name;
+        ligne.cheminSortie = outDir + L"\\" + e.name;
+        // Les empreintes sont TOUJOURS calculees : elles ne coutent rien de plus
+        // que la lecture deja faite, et sans elles la piece n'est pas identifiee.
+        ligne.resultat = vol.extractData(e.mftIndex, ligne.cheminSortie,
+                                         cheminVolume + L"\\" + e.name, &ligne.empreintes);
+        if (FAILED(ligne.resultat)){
             RVLOG(L"[raw] arbo: extraction echouee %ls\n", e.name.c_str());
             global = S_FALSE;
         }
         else if (extracted) ++*extracted;
+        if (releve) releve->push_back(std::move(ligne));
     }
     return global;
 }
@@ -695,7 +758,8 @@ HRESULT ExtractDirectoryTreeRaw(const std::wstring& volumeLetter,
                                 const std::wstring& outDir,
                                 const std::vector<std::wstring>& extensions,
                                 size_t* extracted,
-                                unsigned profondeurMax){
+                                unsigned profondeurMax,
+                                std::vector<RawHiveExtrait>* releve){
     if (extracted) *extracted = 0;
 
     NtfsVolume vol;
@@ -709,5 +773,6 @@ HRESULT ExtractDirectoryTreeRaw(const std::wstring& volumeLetter,
         return ERROR_SUCCESS;
     }
     return extraireArborescence(vol, dirIndex, dirPathOnVolume, outDir,
-                                extensions, extracted, profondeurMax);
+                                extensions, extracted, profondeurMax,
+                                volumeLetter, releve);
 }

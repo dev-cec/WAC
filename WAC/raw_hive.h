@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <cstdint>
 
 /*! Active des messages de diagnostic sur stderr (par défaut : silencieux). */
 void RawHiveSetVerbose(bool on);
@@ -48,21 +49,59 @@ HRESULT ExtractFileRaw(const std::wstring& volumeLetter,
                        const std::wstring& filePathOnVolume,
                        const std::wstring& outFile);
 
+/*! Ce qui est relevé d'un fichier au moment où il est extrait.
+ *
+ *  Tout est recueilli PENDANT l'extraction, sur les octets qui transitent déjà
+ *  en mémoire : relire la copie depuis le support de collecte coûtait près de la
+ *  moitié du temps d'extraction sur clé USB, et une relecture ne prouve pas ce
+ *  qui a été lu du volume — seulement ce qui se trouve dans la copie.
+ *
+ *  TROIS EMPREINTES et non une. MD5 ne suffit plus à identifier une pièce sans
+ *  discussion (collisions produites à volonté depuis 2008), SHA-1 non plus
+ *  depuis 2017 ; SHA-256 reste incontesté. Les trois ensemble ferment le débat.
+ *
+ *  Les horodatages et le numéro d'enregistrement $MFT décrivent le fichier
+ *  SOURCE : ils identifient la pièce sur le volume indépendamment de son nom, et
+ *  attestent que la lecture brute n'a modifié aucune date de la cible.
+ */
+struct RawHiveEmpreintes {
+    std::wstring md5;            //!< empreinte MD5, hexadécimal majuscule
+    std::wstring sha1;           //!< empreinte SHA-1
+    std::wstring sha256;         //!< empreinte SHA-256
+    uint64_t octets = 0;         //!< taille réellement extraite
+    uint64_t tailleAnnoncee = 0; //!< taille déclarée par l'attribut $DATA
+    uint64_t mftEntry = 0;       //!< numéro d'enregistrement dans la $MFT
+    bool     resident = false;   //!< donnée contenue dans l'enregistrement $MFT
+    // $STANDARD_INFORMATION du fichier source, en FILETIME (UTC, 0 si absent).
+    uint64_t creeUtc = 0;        //!< date de création
+    uint64_t modifieUtc = 0;     //!< dernière modification du contenu
+    uint64_t mftModifieUtc = 0;  //!< dernière modification de l'enregistrement
+    uint64_t accedeUtc = 0;      //!< dernier accès
+    uint64_t extraitUtc = 0;     //!< instant de l'extraction de CETTE pièce (FILETIME UTC)
+};
+
+/*! Un fichier extrait, tel qu'il sera consigné au manifeste. */
+struct RawHiveExtrait {
+    std::wstring cheminVolume;   //!< chemin sur le volume source
+    std::wstring cheminSortie;   //!< fichier écrit sur le support de collecte
+    HRESULT      resultat = E_FAIL;   //!< issue de l'extraction
+    RawHiveEmpreintes empreintes;     //!< vide si l'extraction a échoué
+};
+
 /*! Extrait plusieurs fichiers en UNE seule ouverture de volume (efficace).
+ *  @param volumeLetter lettre du volume a lire, sans les deux-points (ex. L"C")
  *  @param items  paires {chemin sur volume, fichier de sortie}
  *  @param perItem (optionnel) reçoit le HRESULT de chaque item, dans l'ordre
- *  @param md5PerItem (optionnel) reçoit l'empreinte MD5 de chaque item, calculée
- *         PENDANT l'écriture. Évite de relire la copie depuis le support de
- *         collecte — sur clé USB, cette relecture coûtait près de la moitié du
- *         temps d'extraction. Empreinte vide si l'item a échoué.
+ *  @param releve (optionnel) reçoit un relevé par item, empreintes comprises.
+ *         C'est la source du manifeste de consigne : sans lui, une pièce est
+ *         copiée sans rien qui l'identifie.
  *  @return S_OK si tout réussit, S_FALSE si au moins un item échoue,
  *          ou un code d'erreur si l'ouverture du volume échoue.
- * @param volumeLetter lettre du volume a lire, sans les deux-points (ex. L"C")
 */
 HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
                         const std::vector<std::pair<std::wstring, std::wstring>>& items,
                         std::vector<HRESULT>* perItem = nullptr,
-                        std::vector<std::wstring>* md5PerItem = nullptr);
+                        std::vector<RawHiveExtrait>* releve = nullptr);
 
 /*! Une entrée de répertoire lue dans l'index NTFS. */
 struct RawDirEntry {
@@ -99,6 +138,9 @@ HRESULT ListDirectoryRaw(const std::wstring& volumeLetter,
  *         « absent », « vide », « N entrée(s), M retenue(s) ». Sans lui, un
  *         décompte à 0 ne dit pas si le répertoire manque, s'il est vide, ou si
  *         le filtre d'extension a tout écarté — trois causes très différentes.
+ *  @param releve (optionnel) reçoit un relevé par fichier, empreintes comprises,
+ *         y compris pour les fichiers dont l'extraction a échoué : c'est la
+ *         source du manifeste de consigne
  *  @return ERROR_SUCCESS si le répertoire a pu être énuméré (même vide),
  *          S_FALSE si au moins un fichier n'a pas pu être extrait,
  *          un code d'erreur si le volume est inaccessible
@@ -108,7 +150,8 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
                             const std::wstring& outDir,
                             const std::vector<std::wstring>& extensions = {},
                             size_t* extracted = nullptr,
-                            std::wstring* diagnostic = nullptr);
+                            std::wstring* diagnostic = nullptr,
+                            std::vector<RawHiveExtrait>* releve = nullptr);
 
 /*! Comme ExtractDirectoryRaw, mais descend dans les sous-répertoires.
  *
@@ -124,6 +167,8 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
  *  @param extracted reçoit le nombre de fichiers extraits
  *  @param profondeurMax garde-fou contre une arborescence cyclique ou anormale
  *         (un index NTFS corrompu pourrait boucler) ; 0 = pas de descente
+ *  @param releve (optionnel) reçoit un relevé par fichier, empreintes comprises :
+ *         c'est la source du manifeste de consigne
  *  @return ERROR_SUCCESS si l'énumération a abouti (même sans fichier),
  *          S_FALSE si au moins un fichier a échoué,
  *          un code d'erreur si le volume est inaccessible
@@ -133,4 +178,5 @@ HRESULT ExtractDirectoryTreeRaw(const std::wstring& volumeLetter,
                                 const std::wstring& outDir,
                                 const std::vector<std::wstring>& extensions = {},
                                 size_t* extracted = nullptr,
-                                unsigned profondeurMax = 8);
+                                unsigned profondeurMax = 8,
+                                std::vector<RawHiveExtrait>* releve = nullptr);

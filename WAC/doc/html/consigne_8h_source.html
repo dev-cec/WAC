@@ -1,0 +1,198 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector):  Fichier source de /var/www/html/WAC/WAC/consigne.h</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(document).ready(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('consigne_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">consigne.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="consigne_8h.html">Aller à la documentation de ce fichier.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment">/*  consigne.h — CONSIGNE ET RÉPERTOIRE DE TRAVAIL.</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment"> *  LE PRINCIPE, QUI EST UNE PROCÉDURE ET NON UNE COMMODITÉ. Une pièce numérique</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="comment"> *  ne s&#39;analyse jamais sur elle-même. On en fait une copie, on scelle la copie,</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="comment"> *  et tout le travail se fait sur une SECONDE copie. Si l&#39;analyse abîme quelque</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="comment"> *  chose — un outil qui écrit, une ruche rejouée, une manipulation</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="comment"> *  malencontreuse — la pièce scellée reste disponible et l&#39;opération est</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="comment"> *  refaisable. Sans cette séparation, la première erreur détruit la preuve.</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="comment"> *  D&#39;où deux répertoires sur le support de collecte :</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="comment"> *      &lt;sortie&gt;\consigne\   copies brutes, telles que lues du volume.</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="comment"> *                           JAMAIS réouvertes en écriture après extraction.</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="comment"> *                           Contient le manifeste qui les identifie.</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment"> *      &lt;sortie&gt;\travail\    copies de travail. C&#39;est là que les ruches sont</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="comment"> *                           rejouées, que les journaux d&#39;annulation sont écrits,</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="comment"> *                           et c&#39;est ce que lisent tous les collecteurs.</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="comment"> *  La séparation vaut pour TOUS les fichiers extraits, y compris ceux que WAC ne</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="comment"> *  modifie pas — Prefetch, jumplists, .lnk, journaux d&#39;événements. Ne dédoubler</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="comment"> *  que ce qu&#39;on modifie reviendrait à faire dépendre la procédure de ce que</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="comment"> *  l&#39;outil croit faire, alors que c&#39;est précisément ce qu&#39;il faut pouvoir</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="comment"> *  vérifier de l&#39;extérieur.</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="comment"> *  LE MANIFESTE. `consigne\MANIFESTE.json` identifie chaque pièce et la</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="comment"> *  collecte. Il est scellé par `consigne\MANIFESTE.sha256`, qui porte son</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="comment"> *  empreinte : un manifeste ne peut pas se hacher lui-même, et sans ce second</span></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="comment"> *  fichier, une retouche du manifeste serait indétectable.</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="comment"> *  Ce qu&#39;il contient, et pourquoi chaque champ est là :</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="comment"> *    pour chaque pièce</span></div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="comment"> *      - le chemin SOURCE avec sa lettre de volume, et le chemin dans la</span></div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="comment"> *        consigne : ce qui relie la copie à son origine ;</span></div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span><span class="comment"> *      - MD5, SHA-1 et SHA-256 : MD5 seul ne suffit plus (collisions depuis</span></div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="comment"> *        2008), SHA-1 non plus (2017) ; les trois ensemble ferment le débat ;</span></div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span><span class="comment"> *      - la taille extraite ET la taille annoncée par l&#39;attribut $DATA : leur</span></div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span><span class="comment"> *        divergence signale une extraction tronquée, qu&#39;une empreinte seule ne</span></div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="comment"> *        révélerait pas ;</span></div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span><span class="comment"> *      - le numéro d&#39;enregistrement $MFT : il identifie le fichier sur le</span></div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span><span class="comment"> *        volume indépendamment de son nom, donc y compris si le nom a été</span></div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="comment"> *        changé pour tromper ;</span></div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="comment"> *      - les quatre horodatages NTFS du fichier SOURCE : ce sont des données</span></div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="comment"> *        d&#39;investigation, et leur présence atteste que la lecture brute ne les</span></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="comment"> *        a pas modifiés, la copie portant les dates du moment ;</span></div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="comment"> *      - l&#39;horodatage de l&#39;extraction, en UTC et en heure locale du SUSPECT ;</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><span class="comment"> *      - la méthode de collecte, et l&#39;issue — un échec est consigné aussi,</span></div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="comment"> *        car une pièce absente du manifeste se lirait comme jamais cherchée.</span></div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="comment"> *    pour la collecte</span></div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="comment"> *      - l&#39;outil, sa version, la ligne de commande ;</span></div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="comment"> *      - l&#39;opérateur : nom, SID, élévation ;</span></div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="comment"> *      - la machine examinée : nom, lecteur système, version de l&#39;OS, fuseau,</span></div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="comment"> *        et l&#39;écart avec le fuseau de la machine de collecte ;</span></div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span><span class="comment"> *      - les volumes lus : lettre, numéro de série, système de fichiers ;</span></div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="comment"> *      - le début et la fin de l&#39;extraction ;</span></div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="comment"> *      - les décomptes, et la mention expresse qu&#39;aucune écriture n&#39;a eu lieu</span></div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="comment"> *        sur le système examiné.</span></div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span> </div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span><span class="preprocessor">#include &quot;<a class="code" href="raw__hive_8h.html">raw_hive.h</a>&quot;</span></div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span> </div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>std::wstring <a class="code hl_function" href="consigne_8h.html#ab16da0b3d6f91fbf07a711c592a5a218">dossierConsigne</a>();</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span> </div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>std::wstring <a class="code hl_function" href="consigne_8h.html#ace4861ebc4b0e8ed6edbcb9bccf650e4">dossierTravail</a>();</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span><span class="keywordtype">void</span> <a class="code hl_function" href="consigne_8h.html#afe3133efffb12857d07f29f3dded68ad">ConsigneAjouter</a>(<span class="keyword">const</span> std::vector&lt;RawHiveExtrait&gt;&amp; releve,</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>                     <span class="keyword">const</span> std::wstring&amp; methode);</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span> </div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>HRESULT <a class="code hl_function" href="consigne_8h.html#a4a0087c67aeaeae0dc3a249e00bfe3ea">ConsigneVersTravail</a>(<span class="keywordtype">size_t</span>* copies = <span class="keyword">nullptr</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>* octets = <span class="keyword">nullptr</span>);</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span> </div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>HRESULT <a class="code hl_function" href="consigne_8h.html#a4a7c26caf0a0130338f1065d25447a89">ConsigneEcrireManifeste</a>();</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span> </div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span><span class="keywordtype">void</span> <a class="code hl_function" href="consigne_8h.html#a733a8682d41a58188b924c72f36f9a5d">ConsigneBilan</a>(<span class="keywordtype">size_t</span>* pieces, <span class="keywordtype">size_t</span>* echecs, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>* octets);</div>
+<div class="ttc" id="aconsigne_8h_html_a4a0087c67aeaeae0dc3a249e00bfe3ea"><div class="ttname"><a href="consigne_8h.html#a4a0087c67aeaeae0dc3a249e00bfe3ea">ConsigneVersTravail</a></div><div class="ttdeci">HRESULT ConsigneVersTravail(size_t *copies=nullptr, unsigned long long *octets=nullptr)</div><div class="ttdef"><b>Definition</b> consigne.cpp:112</div></div>
+<div class="ttc" id="aconsigne_8h_html_a4a7c26caf0a0130338f1065d25447a89"><div class="ttname"><a href="consigne_8h.html#a4a7c26caf0a0130338f1065d25447a89">ConsigneEcrireManifeste</a></div><div class="ttdeci">HRESULT ConsigneEcrireManifeste()</div><div class="ttdef"><b>Definition</b> consigne.cpp:196</div></div>
+<div class="ttc" id="aconsigne_8h_html_a733a8682d41a58188b924c72f36f9a5d"><div class="ttname"><a href="consigne_8h.html#a733a8682d41a58188b924c72f36f9a5d">ConsigneBilan</a></div><div class="ttdeci">void ConsigneBilan(size_t *pieces, size_t *echecs, unsigned long long *octets)</div><div class="ttdef"><b>Definition</b> consigne.cpp:99</div></div>
+<div class="ttc" id="aconsigne_8h_html_ab16da0b3d6f91fbf07a711c592a5a218"><div class="ttname"><a href="consigne_8h.html#ab16da0b3d6f91fbf07a711c592a5a218">dossierConsigne</a></div><div class="ttdeci">std::wstring dossierConsigne()</div><div class="ttdef"><b>Definition</b> consigne.cpp:81</div></div>
+<div class="ttc" id="aconsigne_8h_html_ace4861ebc4b0e8ed6edbcb9bccf650e4"><div class="ttname"><a href="consigne_8h.html#ace4861ebc4b0e8ed6edbcb9bccf650e4">dossierTravail</a></div><div class="ttdeci">std::wstring dossierTravail()</div><div class="ttdef"><b>Definition</b> consigne.cpp:85</div></div>
+<div class="ttc" id="aconsigne_8h_html_afe3133efffb12857d07f29f3dded68ad"><div class="ttname"><a href="consigne_8h.html#afe3133efffb12857d07f29f3dded68ad">ConsigneAjouter</a></div><div class="ttdeci">void ConsigneAjouter(const std::vector&lt; RawHiveExtrait &gt; &amp;releve, const std::wstring &amp;methode)</div><div class="ttdef"><b>Definition</b> consigne.cpp:89</div></div>
+<div class="ttc" id="araw__hive_8h_html"><div class="ttname"><a href="raw__hive_8h.html">raw_hive.h</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="consigne_8h.html">consigne.h</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

@@ -18,6 +18,7 @@ var tools_8h =
     [ "cheminExtrait", "tools_8h.html#a0ba4ef8ffdededddc22ae3ace933de0e", null ],
     [ "cheminOriginal", "tools_8h.html#a9913832dcd25e0380b2bc196758a627d", null ],
     [ "cheminRelatifAuVolume", "tools_8h.html#ac578daf9658252628413798c3b0420de", null ],
+    [ "cheminSous", "tools_8h.html#ae0966d866dd8ad34bc7c40049efcdcf5", null ],
     [ "decodeURIComponent", "tools_8h.html#a897a3625e4fa6aa492efd7beaeaa1d75", null ],
     [ "dump", "tools_8h.html#ac4c0694f9ff1125a48aa8c09d96d18dc", null ],
     [ "dump_wstring", "tools_8h.html#a8489916b2e35339262883860a7aa04a7", null ],

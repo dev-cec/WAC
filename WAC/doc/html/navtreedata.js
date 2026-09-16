@@ -48,7 +48,7 @@ var NAVTREE =
       [ "Liste des fichiers", "files.html", "files_dup" ],
       [ "Membres de fichier", "globals.html", [
         [ "Tout", "globals.html", "globals_dup" ],
-        [ "Fonctions", "globals_func.html", null ],
+        [ "Fonctions", "globals_func.html", "globals_func" ],
         [ "Variables", "globals_vars.html", null ],
         [ "Définitions de type", "globals_type.html", null ],
         [ "Macros", "globals_defs.html", null ]
@@ -60,12 +60,12 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"raw__hive_8cpp.html#a60a3b0d1449384e932c7008fab639953",
-"structBeef0019.html#a6d2c48f832e234c33dc4d66f348e3179",
-"structFsFlags.html#a5e77eeb5c1d889a5ce926377282b318f",
-"structRecentDoc.html#a3390989fed87f1a03f791166b3b97478",
-"structUnknownShellItem.html#abb7eb1668f32d243a884c39975340ccb",
-"tools_8cpp.html#aeeb4de502d09b004810269bf092a2686"
+"json_8h.html#a498b432e8aac8982cb39271297a2b733",
+"structBeef0004.html#aadd2f5be135d9bb4fbb5e2513894aadb",
+"structEvtxBilan.html",
+"structPrefetch.html#a7ba15f3534ae66c4d3a476cccd182c36",
+"structShellbags.html",
+"structoleHeader.html#afbb344465270325eb32550b254bf7960"
 ];
 
 var SYNCONMSG = 'cliquez pour désactiver la synchronisation du panel';

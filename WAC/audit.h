@@ -25,6 +25,7 @@
  *  (identification, collecte et préservation de preuves numériques).
  */
 #pragma once
+#include "json.h"
 #include <windows.h>
 #include <string>
 
@@ -86,3 +87,19 @@ void auditRecord(const std::wstring& operation,
  *  @return ERROR_SUCCESS, ou un code d'erreur d'écriture
  */
 HRESULT auditWrite();
+
+/*! Contexte de la collecte : outil, machine examinée, fuseaux, opérateur.
+*
+*  Exposé parce que le manifeste de consigne doit porter EXACTEMENT le même
+*  contexte que le journal d'investigation. Le construire deux fois ouvrirait la
+*  possibilité que deux documents de la même collecte se contredisent — ce qui
+*  suffirait à discréditer les deux.
+*
+*  @return un objet JSON { Tool, Host, Operator }
+*/
+Json auditContexte();
+
+/*! Début de la collecte, en UTC puis en heure locale (ISO 8601).
+*  Le manifeste de consigne doit dater l'extraction. */
+std::wstring auditDebutUtc();
+std::wstring auditDebutLocal();   //!< @see auditDebutUtc

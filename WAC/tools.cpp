@@ -599,15 +599,19 @@ std::wstring cheminRelatifAuVolume(const std::wstring& absolu) {
 	return absolu;
 }
 
-std::wstring cheminExtrait(const std::wstring& absolu) {
+std::wstring cheminSous(const std::wstring& racine, const std::wstring& absolu) {
 	const std::wstring volume   = volumeDuChemin(absolu);
 	const std::wstring relatif  = cheminRelatifAuVolume(absolu);
 	const std::wstring systeme  = conf.systemDrive.substr(0, 1);
 	if (enMinuscules(volume) == enMinuscules(systeme))
-		return conf.mountpoint + relatif;          // cas courant : rien ne change
+		return racine + relatif;                   // cas courant : rien ne change
 	// Volume secondaire : sous-dossier dedie, pour ne pas ecraser une copie
 	// homonyme venant d'un autre disque.
-	return conf.mountpoint + L"\\_volume_" + volume + relatif;
+	return racine + L"\\_volume_" + volume + relatif;
+}
+
+std::wstring cheminExtrait(const std::wstring& absolu) {
+	return cheminSous(conf.mountpoint, absolu);
 }
 
 std::wstring cheminOriginal(const std::wstring& extrait) {

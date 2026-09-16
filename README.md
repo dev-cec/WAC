@@ -26,6 +26,30 @@ hives' transaction logs are extracted too and **replayed onto the copy**, so wha
 is parsed is the machine's actual state and not the last state Windows happened
 to flush to disk.
 
+**The copies are kept twice, and that is a procedure rather than a convenience.**
+A digital exhibit is never examined on itself: one takes a copy, seals it, and
+works on a *second* copy. If the analysis damages something — a tool that writes,
+a hive replayed, a mistaken command — the sealed copy is still there and the
+operation can be redone. Hence two directories on the collection medium:
+
+```
+<output>/
+  consigne/          raw copies, exactly as read from the volume.
+    MANIFESTE.json   what identifies each exhibit and the collection
+    MANIFESTE.sha256 the manifest's own fingerprint — its seal
+    Windows/…        the pieces, under their original paths
+  travail/           working copies. Hives are replayed HERE. Every collector
+    Windows/…        reads from here and knows nothing of the split.
+  *.json             the artefacts
+```
+
+`consigne/` is never reopened for writing after extraction. The split applies to
+**every** extracted file, including those WAC does not modify — Prefetch,
+jumplists, `.lnk`, event logs. Duplicating only what one modifies would make the
+procedure depend on what the tool *believes* it does, which is precisely what an
+outside party needs to be able to check. The cost is disk space on the collection
+medium: roughly twice the extracted volume.
+
 **Nothing is assumed to be on `C:`.** The system drive is detected at run time,
 and — this matters on machines with a system SSD and a separate data disk —
 **user profiles may live on a different volume than Windows**. WAC groups the
@@ -107,7 +131,7 @@ does to the machine**, operation by operation — including what it cannot avoid
 | Operation | Footprint |
 |---|---|
 | **Raw volume read** (`\\.\X:`, `GENERIC_READ`) | one handle **per volume actually holding artefacts** — usually one. **No file is opened**, so no last-access timestamp is touched and no directory is walked by the OS. If *object access auditing* is enabled, opening a volume can be logged (Security 4656/4663) |
-| **Writing the collection** | on the **collection medium only** (the USB stick). Nothing is written to the examined disk |
+| **Writing the collection** | on the **collection medium only** (the USB stick). Nothing is written to the examined disk. Each extracted file is written **twice** — once to `consigne/`, once to `travail/` — because the exhibit and the working copy are separate by procedure |
 | **Transaction-log replay** | the `.LOG1/.LOG2` are applied **to the copy**, giving the machine's real state rather than its last flushed one. The original content of every replaced page goes into an undo journal, so the raw copy stays reconstructible to the byte. Measured on a real machine: 452 KB for `SYSTEM`, 1 172 KB for `SOFTWARE`, 600 KB for one `ntuser.dat` |
 | **Hive repair** | 8 bytes of the base block, **on the copy** — now only a fallback, since a replayed hive is clean by construction. The original is never opened for writing; its fingerprint is recorded first |
 | **Service state** (1 × `EnumServicesStatusExW`) | one read-only query to the SCM over `\\.\pipe\ntsvcs`. No handle per service, no state change, so no `System` 7036 event |
@@ -157,6 +181,26 @@ item, an unrecognised extension block, a value type not yet supported: the raw
 hexadecimal is attached, so an analyst can decode later what WAC could not. The
 alternative — dropping it silently — would make "we cannot read this" look like
 "there was nothing there".
+
+**Every exhibit is identified by three fingerprints.** MD5, SHA-1 and SHA-256,
+all three computed *while the bytes are being written* — so they bear on what was
+read from the volume, not on a later re-read of the copy. Three and not one
+because MD5 collisions have been producible at will since 2008 and SHA-1 since
+2017: a single fingerprint no longer settles an identity dispute, three of them
+do. They are recorded in `consigne/MANIFESTE.json`, together with, for each
+piece: its source path with drive letter, its size as extracted *and* as declared
+by the `$DATA` attribute (a divergence means a truncated extraction, which a
+fingerprint alone would not reveal — it would simply be the fingerprint of the
+truncated file), its `$MFT` entry number (which identifies the file on the volume
+independently of its name), the four NTFS timestamps of the **source** file, the
+moment of its extraction in UTC and in the suspect's local time, the collection
+method, and the outcome — **failures included**, since a piece missing from the
+manifest would read as a piece never looked for.
+
+The manifest is sealed by `consigne/MANIFESTE.sha256`, which carries its
+fingerprint. A manifest cannot hash itself, and without that second file any
+retouching of it would be undetectable — while the manifest is precisely what
+attests to the exhibits.
 
 **Everything WAC writes onto a copy can be undone.** Two operations modify an
 extracted hive: the 8-byte base-block patch, fully described in
@@ -362,6 +406,35 @@ wine /tmp/evtx_test.exe "Z:/path/to/Security.evtx" --dump   # one record per lin
 comparison against another implementation possible — `python-evtx`, for example.
 That comparison is what showed a chunk with a bad signature was ending the read
 of the whole file: 14 records out of 270.
+
+### Two more test harnesses, for two silent failure modes
+
+Both are excluded from the build by the `_test.cpp` pattern and compile natively
+on Linux — no Windows needed.
+
+`sha_test.cpp` confronts the fingerprint code with published test vectors. A
+wrong fingerprint is the worst kind of silent defect: it produces a
+flawless-looking exhibit store that identifies nothing. Two families of cases:
+the four FIPS 180-4 vectors validate the algorithms, and the lengths 55 to 128
+validate the **padding**, the one place an otherwise correct implementation goes
+wrong (at 56 bytes the length no longer fits in the block and must move to the
+next one).
+
+```bash
+cd WAC && g++ -std=c++17 -I. sha.cpp sha_test.cpp -o /tmp/sha_test && /tmp/sha_test
+```
+
+`consigne_test.cpp` checks the exhibit-store procedure, and specifically the one
+thing that must never happen and is silent when it does: **the sealed copy being
+modified**. It runs the production chain — same fingerprints, same manifest, same
+verified copy, same replay — on hive files given as arguments, then verifies that
+`consigne/` is byte-identical afterwards while `travail/` has changed, that the
+seal carries the manifest's real fingerprint, and that the manifest was not
+copied into the working directory.
+
+```bash
+wine /tmp/consigne_test.exe "Z:/tmp/out" "Z:/path/to/SYSTEM" "Z:/path/to/ntuser.dat"
+```
 
 **Timing and memory** are measured with the third mode, which runs the *complete*
 chain — raw file → BinXML → `xml_light` → `Event` → streamed JSON — on a

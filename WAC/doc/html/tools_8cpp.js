@@ -6,6 +6,7 @@ var tools_8cpp =
     [ "cheminExtrait", "tools_8cpp.html#a0ba4ef8ffdededddc22ae3ace933de0e", null ],
     [ "cheminOriginal", "tools_8cpp.html#a9913832dcd25e0380b2bc196758a627d", null ],
     [ "cheminRelatifAuVolume", "tools_8cpp.html#ac578daf9658252628413798c3b0420de", null ],
+    [ "cheminSous", "tools_8cpp.html#ae0966d866dd8ad34bc7c40049efcdcf5", null ],
     [ "decodeURIComponent", "tools_8cpp.html#a897a3625e4fa6aa492efd7beaeaa1d75", null ],
     [ "dump", "tools_8cpp.html#ac4c0694f9ff1125a48aa8c09d96d18dc", null ],
     [ "dump_wstring", "tools_8cpp.html#a8489916b2e35339262883860a7aa04a7", null ],

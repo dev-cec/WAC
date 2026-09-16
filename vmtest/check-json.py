@@ -160,6 +160,7 @@ def controles_croises(rep):
     trouvees += controle_prefetchs(rep)
     trouvees += controle_events(rep)
     trouvees += controle_rejeu_ruches(rep)
+    trouvees += controle_consigne(rep)
     trouvees += controle_references_mft(rep)
     return trouvees
 
@@ -324,6 +325,95 @@ def controle_rejeu_ruches(rep):
     if rejeuKo:
         print(f"  ⚠️  {len(rejeuKo)} ruche(s) sans rejeu applicable "
               f"{[os.path.basename(x) for x in rejeuKo[:3]]} — repli sur le patch")
+    return trouvees
+
+
+def controle_consigne(rep):
+    """Le manifeste de consigne, et son sceau.
+
+    Une consigne sans manifeste valide ne vaut pas mieux qu'un répertoire de
+    fichiers : rien n'identifie les pièces. Quatre contrôles, tous faisables
+    sans les pièces elles-mêmes — c'est ce que ferait un tiers :
+
+      - le sceau `MANIFESTE.sha256` doit porter l'empreinte réelle du
+        manifeste. C'est le seul contrôle qui détecte une retouche du
+        manifeste, lequel est précisément ce qui atteste des pièces ;
+      - chaque pièce collectée doit porter ses TROIS empreintes. Une pièce sans
+        empreinte est une pièce non identifiée, donc inutilisable ;
+      - les décomptes annoncés doivent correspondre au contenu ;
+      - les volumes lus doivent inclure le lecteur système relevé par
+        `OperatingSystem.json` — deux sources indépendantes.
+    """
+    import hashlib
+    chemin = os.path.join(rep, "consigne", "MANIFESTE.json")
+    sceau = os.path.join(rep, "consigne", "MANIFESTE.sha256")
+    if not os.path.exists(chemin):
+        print("  ⏭️  manifeste de consigne absent : contrôle ignoré")
+        return 0
+    trouvees = 0
+    try:
+        with open(chemin, encoding="utf-8-sig") as f:
+            m = json.load(f)
+    except Exception as e:
+        print(f"  ❌ MANIFESTE.json invalide : {str(e)[:70]}")
+        return 1
+
+    # 1. sceau
+    if not os.path.exists(sceau):
+        print("  ❌ MANIFESTE.sha256 absent : le manifeste n'est pas scellé")
+        trouvees += 1
+    else:
+        with open(chemin, "rb") as f:
+            reel = hashlib.sha256(f.read()).hexdigest().upper()
+        with open(sceau, encoding="utf-8-sig") as f:
+            contenu = f.read().strip()
+        annonce = contenu.split()[0].upper() if contenu else ""
+        if annonce != reel:
+            print(f"  ❌ consigne : sceau non conforme — annoncé {annonce[:16]}…, "
+                  f"calculé {reel[:16]}… — le manifeste a été modifié après scellement")
+            trouvees += 1
+        else:
+            print(f"  ✅ consigne : sceau conforme au manifeste ({reel[:16]}…)")
+
+    # 2. empreintes de chaque pièce
+    items = m.get("Items") or []
+    if not isinstance(items, list) or not items:
+        print("  ❌ consigne : aucune pièce au manifeste")
+        return trouvees + 1
+    collectees = [i for i in items if i.get("Result") == "OK"]
+    sansEmpreinte = [i.get("SourcePath") for i in collectees
+                     if not (i.get("MD5") and i.get("SHA1") and i.get("SHA256"))]
+    if sansEmpreinte:
+        print(f"  ❌ consigne : {len(sansEmpreinte)} pièce(s) sans les trois empreintes "
+              f"{[os.path.basename(str(x)) for x in sansEmpreinte[:3]]}")
+        trouvees += 1
+    else:
+        print(f"  ✅ consigne : {len(collectees)} pièce(s) portent MD5, SHA-1 et SHA-256")
+
+    # 3. décomptes
+    garde = m.get("Custody") or {}
+    echecs = [i for i in items if i.get("Result") != "OK"]
+    if garde.get("ItemCount") != len(items) or garde.get("FailedCount") != len(echecs):
+        print(f"  ❌ consigne : décomptes incohérents — annoncés "
+              f"{garde.get('ItemCount')}/{garde.get('FailedCount')}, "
+              f"trouvés {len(items)}/{len(echecs)}")
+        trouvees += 1
+    else:
+        print(f"  ✅ consigne : décomptes cohérents ({len(items)} pièce(s), "
+              f"{len(echecs)} échec(s))")
+
+    # 4. volumes lus, confrontés à une source indépendante
+    osj = charge(rep, "OperatingSystem.json")
+    systeme = str((osj or {}).get("SystemDrive") or "")[:1].upper() if isinstance(osj, dict) else ""
+    lettres = {str(v.get("Letter") or "").upper() for v in (garde.get("VolumesRead") or [])}
+    if not systeme:
+        print("  ⏭️  lecteur système absent d'OperatingSystem.json : contrôle des volumes ignoré")
+    elif systeme not in lettres:
+        print(f"  ❌ consigne : le lecteur système {systeme}: n'est pas dans les volumes "
+              f"lus {sorted(lettres)}")
+        trouvees += 1
+    else:
+        print(f"  ✅ consigne : volumes lus {sorted(lettres)}, dont le lecteur système")
     return trouvees
 
 

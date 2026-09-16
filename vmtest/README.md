@@ -44,6 +44,9 @@ révélé des valeurs fausses dans du JSON valide :
 | aucun événement postérieur à l'horodatage de collecte | décalage ou mauvaise lecture d'un `FILETIME` d'événement |
 | aucune ruche à la fois rejouée ET patchée | deux opérations indépendantes du journal d'audit : un rejeu abouti rend la ruche propre, donc le patch ne doit plus s'appliquer |
 | un journal d'annulation nommé pour chaque rejeu | sans lui la copie brute n'est plus reconstructible, et la promesse du rapport serait fausse |
+| `MANIFESTE.sha256` porte l'empreinte réelle de `MANIFESTE.json` | seul contrôle qui détecte une retouche du manifeste, lequel est précisément ce qui atteste des pièces |
+| chaque pièce collectée porte ses trois empreintes | une pièce sans empreinte n'est pas identifiée, donc inutilisable |
+| le lecteur système d'`OperatingSystem.json` figure dans les volumes lus du manifeste | deux sources indépendantes de la même information |
 
 **Le harnais peut être la cause du défaut qu'il signale.** Un run de 604 s a été
 coupé par le timeout de 600 s de `qga.py` juste avant l'écriture des deux
@@ -51,6 +54,15 @@ derniers JSON : le rapport disait « collecte probablement incomplète » — ce
 était exact — mais WAC était allé au bout. Le journal de collecte (`run.log`,
 qui se termine par `END, Time elapsed`) tranche entre les deux. Timeout porté à
 30 min ; il faudra le revoir si la collecte s'allonge encore.
+
+**La consigne se valide hors VM elle aussi.** `WAC/consigne_test.cpp` rejoue la
+chaîne de production (empreintes, manifeste, copie vérifiée, rejeu) sur des
+ruches fournies en argument, et vérifie ce qu'aucune compilation ne révèle : que
+la consigne reste intacte octet pour octet pendant que le travail est modifié.
+`WAC/sha_test.cpp` confronte les empreintes aux vecteurs de FIPS 180-4 et aux
+longueurs 55 à 128, qui exercent le remplissage — seul endroit où une
+implémentation correcte par ailleurs se trompe. Les deux compilent nativement
+sous Linux.
 
 **Le parseur EVTX se valide hors VM.** Le décodage BinXML est trop fragile pour
 n'être éprouvé que sur les journaux d'une VM neuve, tous écrits par la même

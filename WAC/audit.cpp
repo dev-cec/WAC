@@ -153,15 +153,7 @@ void auditRecord(const std::wstring& operation, const std::wstring& cible,
 	g_operations.push_back(std::move(o));
 }
 
-HRESULT auditWrite() {
-	std::wstring finUtc, finLocal;
-	FILETIME fin = { 0, 0 };
-	maintenant(finUtc, finLocal, &fin);
-
-	const ULONGLONG d = ((ULONGLONG)g_debut.dwHighDateTime << 32) | g_debut.dwLowDateTime;
-	const ULONGLONG f = ((ULONGLONG)fin.dwHighDateTime << 32) | fin.dwLowDateTime;
-	const ULONGLONG duree = (f > d) ? (f - d) / 10000000ULL : 0ULL;   // 100 ns -> s
-
+Json auditContexte() {
 	Json racine = Json::obj();
 
 	Json outil = Json::obj();
@@ -172,6 +164,7 @@ HRESULT auditWrite() {
 
 	Json hote = Json::obj();
 	hote.add(L"ComputerName", Json::str(g_machine));
+	hote.add(L"SystemDrive",  Json::str(conf.systemDrive));
 
 	/* DEUX fuseaux, et c'est voulu.
 	   - SuspectTimeZone : releve dans la ruche SYSTEM examinee. C'est LUI qui sert
@@ -211,6 +204,25 @@ HRESULT auditWrite() {
 	operateur.add(L"Sid",      Json::str(g_sid));
 	operateur.add(L"Elevated", Json::boolean(g_eleve));
 	racine.add(L"Operator", std::move(operateur));
+
+	return racine;
+}
+
+std::wstring auditDebutUtc()   { return g_debutUtc; }
+std::wstring auditDebutLocal() { return g_debutLocal; }
+
+HRESULT auditWrite() {
+	std::wstring finUtc, finLocal;
+	FILETIME fin = { 0, 0 };
+	maintenant(finUtc, finLocal, &fin);
+
+	const ULONGLONG d = ((ULONGLONG)g_debut.dwHighDateTime << 32) | g_debut.dwLowDateTime;
+	const ULONGLONG f = ((ULONGLONG)fin.dwHighDateTime << 32) | fin.dwLowDateTime;
+	const ULONGLONG duree = (f > d) ? (f - d) / 10000000ULL : 0ULL;   // 100 ns -> s
+
+	// MEME contexte que le manifeste de consigne : une seule construction, pour
+	// que deux documents de la meme collecte ne puissent pas se contredire.
+	Json racine = auditContexte();
 
 	Json collecte = Json::obj();
 	collecte.add(L"StartUtc",        Json::str(g_debutUtc));

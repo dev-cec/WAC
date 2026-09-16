@@ -146,6 +146,19 @@ std::wstring cheminRelatifAuVolume(const std::wstring& absolu);
 */
 std::wstring cheminExtrait(const std::wstring& absolu);
 
+/*! Chemin d'un fichier extrait sous une racine donnée.
+*
+*  Même règle que `cheminExtrait`, mais la racine est passée en paramètre :
+*  l'extraction écrit sous la consigne, le travail se fait sous une autre racine,
+*  et les deux doivent ranger les fichiers à l'identique pour que l'une soit la
+*  copie vérifiable de l'autre.
+*
+*  @param racine répertoire de destination
+*  @param absolu chemin d'origine, avec sa lettre de volume ou relatif au volume système
+*  @return racine + [\_volume_X] + chemin relatif au volume
+*/
+std::wstring cheminSous(const std::wstring& racine, const std::wstring& absolu);
+
 /*! Chemin d'ORIGINE d'un fichier, à partir de sa copie extraite.
 *
 * Opération inverse de `cheminExtrait()`, utilisée pour publier dans le JSON le

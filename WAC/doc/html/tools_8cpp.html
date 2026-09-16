@@ -180,6 +180,8 @@ Fonctions</h2></td></tr>
 <tr class="separator:a7f3831643296c77d2e38a6da3843683f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac578daf9658252628413798c3b0420de" id="r_ac578daf9658252628413798c3b0420de"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ac578daf9658252628413798c3b0420de">cheminRelatifAuVolume</a> (const std::wstring &amp;absolu)</td></tr>
 <tr class="separator:ac578daf9658252628413798c3b0420de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0966d866dd8ad34bc7c40049efcdcf5" id="r_ae0966d866dd8ad34bc7c40049efcdcf5"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ae0966d866dd8ad34bc7c40049efcdcf5">cheminSous</a> (const std::wstring &amp;racine, const std::wstring &amp;absolu)</td></tr>
+<tr class="separator:ae0966d866dd8ad34bc7c40049efcdcf5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0ba4ef8ffdededddc22ae3ace933de0e" id="r_a0ba4ef8ffdededddc22ae3ace933de0e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a0ba4ef8ffdededddc22ae3ace933de0e">cheminExtrait</a> (const std::wstring &amp;absolu)</td></tr>
 <tr class="separator:a0ba4ef8ffdededddc22ae3ace933de0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9913832dcd25e0380b2bc196758a627d" id="r_a9913832dcd25e0380b2bc196758a627d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a9913832dcd25e0380b2bc196758a627d">cheminOriginal</a> (const std::wstring &amp;extrait)</td></tr>
@@ -391,6 +393,44 @@ Fonctions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>le chemin sans sa lettre de lecteur </dd></dl>
+
+</div>
+</div>
+<a id="ae0966d866dd8ad34bc7c40049efcdcf5" name="ae0966d866dd8ad34bc7c40049efcdcf5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae0966d866dd8ad34bc7c40049efcdcf5">&#9670;&#160;</a></span>cheminSous()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring cheminSous </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>racine</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>absolu</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Chemin d'un fichier extrait sous une racine donnée.</p>
+<p>Même règle que <code>cheminExtrait</code>, mais la racine est passée en paramètre : l'extraction écrit sous la consigne, le travail se fait sous une autre racine, et les deux doivent ranger les fichiers à l'identique pour que l'une soit la copie vérifiable de l'autre.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">racine</td><td>répertoire de destination </td></tr>
+    <tr><td class="paramname">absolu</td><td>chemin d'origine, avec sa lettre de volume ou relatif au volume système </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>racine + [_volume_X] + chemin relatif au volume </dd></dl>
 
 </div>
 </div>
