@@ -654,6 +654,50 @@ std::wstring getVolumeLetter(std::wstring searchSerial);
 */
 HRESULT writeJsonFile(const std::string& nom, const Json& valeur);
 
+/*! Écrit un tableau JSON au fil de l'eau, sans le construire en mémoire.
+*
+*  POURQUOI. `writeJsonFile` sérialise une valeur déjà complète : pour les
+*  journaux d'événements, cela voulait dire garder cent mille enregistrements en
+*  mémoire, puis leur sérialisation entière, puis sa conversion en UTF-8 — un pic
+*  de plusieurs centaines de mégaoctets. Sur une machine examinée, un tel pic ne
+*  coûte pas seulement du temps : il provoque de la pagination, donc des
+*  écritures dans `pagefile.sys`, sur le disque même qu'on s'efforce de ne pas
+*  modifier. Ici chaque élément est écrit puis oublié.
+*
+*  Le fichier produit est identique à celui de `writeJsonFile` sur le même
+*  tableau : mêmes tabulations, pas de virgule finale.
+*
+*  Un tableau vide donne `[]`, comme `writeJsonFile`.
+*/
+class EcrivainJsonTableau {
+public:
+	/*! Ouvre `_outputDir`/`nom` et écrit l'ouverture du tableau.
+	*  @param nom nom du fichier de sortie, sans chemin */
+	explicit EcrivainJsonTableau(const std::string& nom);
+
+	/*! Ferme le tableau et le fichier. Appelé par le destructeur s'il a été
+	*  oublié, pour qu'une sortie anticipée ne laisse pas un JSON tronqué.
+	*  @return ERROR_SUCCESS, ou E_FAIL si l'écriture a échoué */
+	HRESULT fermer();
+
+	~EcrivainJsonTableau();
+
+	/*! Ajoute un élément. Sans effet si le fichier n'a pas pu être ouvert. */
+	void ajouter(const Json& element);
+
+	//! Vrai si le fichier est ouvert en écriture.
+	bool ouvert() const { return ouvert_; }
+	//! Nombre d'éléments écrits.
+	unsigned long long ecrits() const { return ecrits_; }
+
+private:
+	std::wofstream f_;
+	unsigned long long ecrits_ = 0;
+	bool ouvert_ = false;
+	bool ferme_ = false;
+	std::string nom_;
+};
+
 /*! Écrit un artefact NON COLLECTÉ, en consignant la raison de l'échec.
 *
 * POURQUOI. Quand `getData()` échoue, le fichier JSON n'était pas écrit du tout.

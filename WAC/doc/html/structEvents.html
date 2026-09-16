@@ -117,16 +117,28 @@ Fonctions membres publiques</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Attributs publics</h2></td></tr>
-<tr class="memitem:afbf75707d34b44d082cb56f8375ce492" id="r_afbf75707d34b44d082cb56f8375ce492"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structEvent.html">Event</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvents.html#afbf75707d34b44d082cb56f8375ce492">events</a></td></tr>
-<tr class="memdesc:afbf75707d34b44d082cb56f8375ce492"><td class="mdescLeft">&#160;</td><td class="mdescRight">tableau contenant tout les <a class="el" href="structEvents.html">Events</a>  <br /></td></tr>
-<tr class="separator:afbf75707d34b44d082cb56f8375ce492"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e17360ed6541d0c51aacb553e184c94" id="r_a6e17360ed6541d0c51aacb553e184c94"><td class="memItemLeft" align="right" valign="top">unsigned long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvents.html#a6e17360ed6541d0c51aacb553e184c94">lus</a> = 0</td></tr>
+<tr class="memdesc:a6e17360ed6541d0c51aacb553e184c94"><td class="mdescLeft">&#160;</td><td class="mdescRight">enregistrements écrits  <br /></td></tr>
+<tr class="separator:a6e17360ed6541d0c51aacb553e184c94"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a76f9e2da96cab2a347a51f87dd0b454e" id="r_a76f9e2da96cab2a347a51f87dd0b454e"><td class="memItemLeft" align="right" valign="top">unsigned long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvents.html#a76f9e2da96cab2a347a51f87dd0b454e">illisibles</a> = 0</td></tr>
+<tr class="memdesc:a76f9e2da96cab2a347a51f87dd0b454e"><td class="mdescLeft">&#160;</td><td class="mdescRight">enregistrements écartés  <br /></td></tr>
+<tr class="separator:a76f9e2da96cab2a347a51f87dd0b454e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aabdf1a19e3990626db3acb888949a080" id="r_aabdf1a19e3990626db3acb888949a080"><td class="memItemLeft" align="right" valign="top">unsigned long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvents.html#aabdf1a19e3990626db3acb888949a080">fichiers</a> = 0</td></tr>
+<tr class="memdesc:aabdf1a19e3990626db3acb888949a080"><td class="mdescLeft">&#160;</td><td class="mdescRight">journaux parcourus  <br /></td></tr>
+<tr class="separator:aabdf1a19e3990626db3acb888949a080"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Documentation des fonctions membres</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
+<div class="textblock"><p>Collecte de tous les journaux extraits.</p>
+<p>Aucun tableau d'événements n'est conservé : chacun est écrit puis oublié (cf. <a class="el" href="classEcrivainJsonTableau.html">EcrivainJsonTableau</a>). C'est ce qui ramène la collecte des journaux à une empreinte mémoire constante, quelle que soit la taille des journaux. </p>
+</div><h2 class="groupheader">Documentation des fonctions membres</h2>
 <a id="a763a447bc09790bd5b75316fa626dd3f" name="a763a447bc09790bd5b75316fa626dd3f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a763a447bc09790bd5b75316fa626dd3f">&#9670;&#160;</a></span>clear()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">void Events::clear </td>
@@ -135,6 +147,11 @@ Attributs publics</h2></td></tr>
           <td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>
@@ -153,7 +170,7 @@ Attributs publics</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Fonction permettant de parser les objets </p>
+<p>Lit les journaux extraits et écrit <code>events.json</code> au fil de l'eau. </p><dl class="section return"><dt>Renvoie</dt><dd>ERROR_SUCCESS, S_FALSE si des enregistrements ont été écartés, ou un code d'erreur si aucun journal n'a pu être lu </dd></dl>
 
 </div>
 </div>
@@ -162,6 +179,9 @@ Attributs publics</h2></td></tr>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">HRESULT Events::toJson </td>
@@ -170,25 +190,62 @@ Attributs publics</h2></td></tr>
           <td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
-<p>conversion de l'objet au format json </p>
+<p>Rien à sérialiser : <code><a class="el" href="structEvents.html#a336b7b01926d4b7e09e01bb9621e75d6">getData()</a></code> a déjà écrit le fichier. Conservé pour que le déroulé de <a class="el" href="main_8cpp.html">main.cpp</a> reste le même pour tous les collecteurs. </p>
 
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
-<a id="afbf75707d34b44d082cb56f8375ce492" name="afbf75707d34b44d082cb56f8375ce492"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afbf75707d34b44d082cb56f8375ce492">&#9670;&#160;</a></span>events</h2>
+<a id="aabdf1a19e3990626db3acb888949a080" name="aabdf1a19e3990626db3acb888949a080"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aabdf1a19e3990626db3acb888949a080">&#9670;&#160;</a></span>fichiers</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt;<a class="el" href="structEvent.html">Event</a>&gt; Events::events</td>
+          <td class="memname">unsigned long long Events::fichiers = 0</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>tableau contenant tout les <a class="el" href="structEvents.html">Events</a> </p>
+<p>journaux parcourus </p>
+
+</div>
+</div>
+<a id="a76f9e2da96cab2a347a51f87dd0b454e" name="a76f9e2da96cab2a347a51f87dd0b454e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a76f9e2da96cab2a347a51f87dd0b454e">&#9670;&#160;</a></span>illisibles</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned long long Events::illisibles = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>enregistrements écartés </p>
+
+</div>
+</div>
+<a id="a6e17360ed6541d0c51aacb553e184c94" name="a6e17360ed6541d0c51aacb553e184c94"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6e17360ed6541d0c51aacb553e184c94">&#9670;&#160;</a></span>lus</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned long long Events::lus = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>enregistrements écrits </p>
 
 </div>
 </div>

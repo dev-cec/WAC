@@ -220,6 +220,14 @@ HRESULT ExtractFileArtefactsRaw() {
 
 	addCible(L"\\Windows\\Prefetch", { L".pf" });
 
+	/* Journaux d'événements : extraits SEULEMENT sur demande (--events). Ce sont
+	   les plus gros artefacts du système — plus d'une centaine de mégaoctets sur
+	   une installation ordinaire, et davantage sur un serveur. Les extraire
+	   systématiquement allongerait chaque collecte et remplirait le support pour
+	   des données que l'opérateur n'a pas demandées. Leur lecture hors ligne
+	   remplace l'API EventLog (cf. events.h). */
+	if (conf._events) addCible(L"\\Windows\\System32\\winevt\\Logs", { L".evtx" });
+
 	for (const std::tuple<std::wstring, std::wstring>& profile : conf.profiles) {
 		const std::wstring profil = std::get<1>(profile);   // absolu, avec sa lettre
 		const std::wstring recent = profil + L"\\AppData\\Roaming\\Microsoft\\Windows\\Recent";

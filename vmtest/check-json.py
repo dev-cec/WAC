@@ -13,7 +13,7 @@ run-wac-test.sh qui vérifie la terminaison de WAC.
 
 Sortie non nulle si au moins un fichier est invalide ou incohérent.
 """
-import json, sys, glob, os, re
+import json, sys, glob, os, re, collections
 
 # Un double échappement se reconnaît sur un motif de CHEMIN, pas sur du texte
 # libre : le contenu d'un événement (script PowerShell, expression régulière,
@@ -158,7 +158,105 @@ def controles_croises(rep):
     trouvees += controle_users(rep)
     trouvees += controle_processes(rep)
     trouvees += controle_prefetchs(rep)
+    trouvees += controle_events(rep)
     trouvees += controle_references_mft(rep)
+    return trouvees
+
+
+def controle_events(rep):
+    """Cohérence des journaux d'événements, décodés hors ligne depuis les .evtx.
+
+    Le décodage BinXML est le plus fragile de WAC : un décalage d'un octet sur
+    un décalage de nom, ou un template mal résolu, ne produit pas d'erreur — il
+    produit des événements aux champs vides ou aux valeurs déplacées, dans un
+    JSON parfaitement valide. Quatre contrôles indépendants :
+
+      - `EvtSystemComputer` doit correspondre au nom relevé dans
+        `OperatingSystem.json`, qui vient de la ruche SYSTEM : deux sources sans
+        rapport, donc une vraie confrontation ;
+      - un événement sans fournisseur ni canal signale un décodage qui a dérivé ;
+      - les identifiants d'enregistrement doivent être UNIQUES par canal. WAC
+        parcourt tous les chunks physiques du fichier et non ceux déclarés par
+        l'en-tête (c'est ce qui lui fait lire les enregistrements qu'un journal
+        mal fermé ne compte pas) ; le risque propre à ce choix est de relire un
+        chunk périmé d'un journal circulaire, ce qui se verrait ici ;
+      - aucun événement ne peut être postérieur à la collecte.
+    """
+    d = charge(rep, "events.json")
+    if not isinstance(d, list) or not d:
+        print("  ⏭️  events.json absent ou vide : contrôle ignoré")
+        return 0
+    trouvees = 0
+
+    # 1. nom de machine, confronté à une source sans rapport
+    osj = charge(rep, "OperatingSystem.json")
+    attendus = {str(v).upper() for k, v in (osj or {}).items()
+                if isinstance(osj, dict) and k in ("CSName", "NetbiosName", "ComputerName") and v}
+    noms = collections.Counter(str(e.get("EvtSystemComputer") or "").split(".")[0].upper()
+                               for e in d if e.get("EvtSystemComputer"))
+    if not attendus:
+        print("  ⏭️  nom de machine absent d'OperatingSystem.json : contrôle ignoré")
+    elif not noms:
+        print("  ❌ events.json : aucun événement ne porte de nom de machine")
+        trouvees += 1
+    else:
+        etrangers = {n: c for n, c in noms.items() if n not in attendus}
+        # Un journal peut légitimement contenir des événements transférés depuis
+        # une autre machine (collecteur WEC) : on ne s'alarme qu'au-delà de 5 %.
+        part = sum(etrangers.values()) / sum(noms.values())
+        if part > 0.05:
+            print(f"  ❌ events.json : {part:.0%} des événements portent un autre nom "
+                  f"de machine que {sorted(attendus)} — {list(etrangers)[:3]}")
+            trouvees += 1
+        else:
+            print(f"  ✅ events.json : nom de machine conforme à OperatingSystem.json "
+                  f"({sum(noms.values())} événement(s))")
+
+    # 2. champs structurants renseignés
+    sansProvider = sum(1 for e in d if not e.get("EvtSystemProviderName"))
+    sansCanal    = sum(1 for e in d if not e.get("EvtSystemChannel"))
+    sansDate     = sum(1 for e in d if not e.get("EvtSystemTimeCreated"))
+    if sansProvider * 100 > len(d) or sansCanal or sansDate:
+        print(f"  ❌ events.json : {sansProvider} sans fournisseur, {sansCanal} sans canal, "
+              f"{sansDate} sans date sur {len(d)} — décodage BinXML à vérifier")
+        trouvees += 1
+    else:
+        print(f"  ✅ events.json : {len(d)} événement(s), fournisseur/canal/date renseignés")
+
+    # 3. unicité des identifiants par canal
+    vus = collections.defaultdict(set)
+    doublons = collections.Counter()
+    for e in d:
+        canal, rid = e.get("EvtSystemChannel"), e.get("EvtSystemEventRecordId")
+        if canal is None or rid is None:
+            continue
+        if rid in vus[canal]:
+            doublons[canal] += 1
+        vus[canal].add(rid)
+    if doublons:
+        print(f"  ❌ events.json : identifiants d'enregistrement répétés dans "
+              f"{len(doublons)} canal/canaux {doublons.most_common(3)} — "
+              f"un chunk périmé a probablement été relu")
+        trouvees += 1
+    else:
+        print(f"  ✅ events.json : identifiants uniques dans chacun des "
+              f"{len(vus)} canal/canaux")
+
+    # 4. aucun événement postérieur à la collecte
+    inv = charge(rep, "investigation.json")
+    # Les horodatages sont sous « Collection », pas à la racine.
+    coll = (inv or {}).get("Collection") if isinstance(inv, dict) else None
+    fin = (coll or {}).get("EndUtc") or (coll or {}).get("StartUtc") if isinstance(coll, dict) else None
+    futurs = [e.get("EvtSystemTimeCreated") for e in d
+              if fin and str(e.get("EvtSystemTimeCreated") or "") > str(fin)]
+    if not fin:
+        print("  ⏭️  horodatage de collecte absent : contrôle des dates futures ignoré")
+    elif futurs:
+        print(f"  ❌ events.json : {len(futurs)} événement(s) postérieurs à la collecte "
+              f"({fin}) — ex. {futurs[:2]}")
+        trouvees += 1
+    else:
+        print(f"  ✅ events.json : aucun événement postérieur à la collecte")
     return trouvees
 
 

@@ -60,12 +60,12 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"reg__amcache__applicationfile_8h.html",
-"structBeef0024.html",
-"structJumplistAutomatics.html",
-"structRun.html#a425f2b55464d8039c881c1605e05f6b3",
-"structUserPropertyView0x07192006.html#a037e72e3633e376c58d50a11fea4b903",
-"tools_8h.html#ac91ef938fdbde20051e9a702faa528aa"
+"raw__hive_8h.html#a2b392968d3f88c65a99c9735140ed7b4",
+"structBeef001a.html#ad70072f354385118b2f2d44109814503",
+"structHiveFixInfo.html#a35cea5f7db8ae09bc63aad5b93777883",
+"structRecentDoc.html#adbced5afce9df0450e353d412c1270a4",
+"structUser.html#a5cdb3b70f7e1f07cae23cb79e56283f7",
+"tools_8h.html#a64af952b26c2e734b7998bd37173b3dc"
 ];
 
 var SYNCONMSG = 'cliquez pour désactiver la synchronisation du panel';

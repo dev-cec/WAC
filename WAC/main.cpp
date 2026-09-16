@@ -46,7 +46,7 @@ void showHelp() {
 	wprintf(L"%ls\n", L"\t--help or /? : show this help ");
 	wprintf(L"%ls\n", L"\t--debug : trace the raw NTFS parser on stderr (path resolution, index blocks, data runs)");
 	wprintf(L"%ls\n", L"\t--dump : add hexa value in json files for shellbags and LNK files ");
-	wprintf(L"%ls\n", L"\t--events : converts events to json (long time)");
+	wprintf(L"%ls\n", L"\t--events : extract and parse the .evtx event logs (adds ~117 MB to the collection)");
 	wprintf(L"%ls\n", L"\t--md5 : activate hash md5 computing for files referenced in artfacts");
 	wprintf(L"%ls\n", L"\t--output=[directory name] : directory name to store output files starting from current directory. By default the directory is 'output'");
 	wprintf(L"%ls%hs%ls\n", L"\t--loglevel=[0] : define level of details in logfile and activate logging in ", conf.name.c_str(), L".log");
@@ -738,7 +738,14 @@ int main(int argc, char* argv[])
 		printStep(L" - Extraction of EVENTS: ");
 
 		hresult = events.getData();
-		auditRecord(L"Collecte EVENT LOGS", L"API EvtQuery (wevtapi)", hresult, Footprint::EVENTLOG);
+		/* La source n'est plus le service EventLog mais les fichiers .evtx
+		   extraits par lecture brute : la consignation doit dire lesquels, sans
+		   quoi le rapport laisse croire que l'API a encore ete sollicitee. */
+		auditRecord(L"Collecte EVENT LOGS (" + std::to_wstring(events.lus)
+		            + L" evenement(s) dans " + std::to_wstring(events.fichiers)
+		            + L" journal/journaux)",
+		            L"\\Windows\\System32\\winevt\\Logs\\*.evtx (copies extraites)",
+		            hresult, Footprint::FICHIER_COPIE);
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else {
 			hresult = events.toJson();

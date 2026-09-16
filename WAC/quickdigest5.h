@@ -18,7 +18,7 @@
  */
 
 /**
- * @file QuickDigest5.h
+ * @file quickdigest5.h
  * @author [Nathanne Isip](https://github.com/nthnn)
  * @brief A header file for the QuickDigest5 class, a utility for MD5 hashing.
  * 

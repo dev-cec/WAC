@@ -1,10 +1,9 @@
 var structEvent =
 [
-    [ "Event", "structEvent.html#a915ece050f329e69399da7a122fa5d9f", null ],
+    [ "Event", "structEvent.html#aacaa7e35dbdc19ab14882c216b40998d", null ],
     [ "clear", "structEvent.html#a0862af1471604bf30a4f50a5e028637a", null ],
     [ "toJson", "structEvent.html#ac83247741a82814a4adcf83cbd9545a8", null ],
     [ "evtEventData", "structEvent.html#a71647f03eadce96ebc1a8be134997ac1", null ],
-    [ "evtEventMessage", "structEvent.html#aa097f313be20ae3f527b1fea4b952109", null ],
     [ "evtSystemActivityID", "structEvent.html#a7cdb803bdb0f332eb6b73dd6ca7306e6", null ],
     [ "evtSystemChannel", "structEvent.html#afc35472407c394a9351e87e7e21c6447", null ],
     [ "evtSystemComputer", "structEvent.html#a813fdfd4b41f1b9e320a88cde44dd538", null ],
@@ -21,7 +20,6 @@ var structEvent =
     [ "evtSystemTask", "structEvent.html#a14031af4d9fda39903fb0828a34b1e4b", null ],
     [ "evtSystemThreadID", "structEvent.html#a876152f4638da5032a0fcf3ecf428a76", null ],
     [ "evtSystemTimeCreated", "structEvent.html#af53ee1226bfbff2c70233c5ad244f0a7", null ],
-    [ "evtSystemTimeCreatedUtc", "structEvent.html#a9123cfd310599bf83ee4807672739f3e", null ],
     [ "evtSystemUserID", "structEvent.html#a8c56425487221d463b7dcce89e3ebb82", null ],
     [ "evtSystemVersion", "structEvent.html#a5d53d627bbb45262e3a5f99894cf068a", null ]
 ];

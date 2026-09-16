@@ -37,8 +37,7 @@ mean opening a handle on every volume, and that is the auditable part.
 
 Only three readings remain live, because their subject *is* the instant of
 collection and no file can hold it: **running processes**, **open sessions**, and
-the current time. Event logs are still read through the API — the last remaining
-candidate for offline collection.
+the current time. Everything else — event logs included — is read from a copy.
 
 Two one-off registry reads also stay live, because they are a *prerequisite* of
 reading offline: which volume letter to extract, and where the per-user hives
@@ -63,7 +62,7 @@ To minimize disk traces, this standalone tool should be run **as administrator**
 usage: wac [--dump] [--events] [--md5] [--output=output] [--loglevel=2] [--debug]
         --help or /? : show this help
         --dump : add hexa value in json files for shellbags and LNK files
-        --events : converts events to json (long time)
+        --events : extract and parse the .evtx event logs (adds ~117 MB to the collection)
         --md5 : activate hash md5 computing for files referenced in artefacts
         --output=[directory name] : directory name to store output files starting from current directory. By default the directory is 'output'
         --loglevel=[0] : define level of details in logfile and activate logging in wac.log
@@ -98,6 +97,7 @@ does to the machine**, operation by operation — including what it cannot avoid
 | **`winbrand.dll` loaded** | a module loaded into the collecting process just to obtain the OS display name |
 | **`OpenProcess(PROCESS_ALL_ACCESS)` ×N** | one full-access handle per process — the loudest possible pattern, and the one endpoint protections watch |
 | **`OpenService` ×N** | one handle per service on the Service Control Manager |
+| **EventLog API (`wevtapi`)** | the `EventLog` service solicited for every channel — a service that can write its own entries *while being read*. The `.evtx` files are now extracted raw and parsed in-process; `wevtapi.dll` is no longer even linked |
 
 ### Remaining: what WAC still does, and what it costs
 
@@ -111,7 +111,7 @@ does to the machine**, operation by operation — including what it cannot avoid
 | **Process owners** (1 × `WTSEnumerateProcessesEx`) | solicits the Terminal Services service, once |
 | **Sessions** (`LsaEnumerateLogonSessions`) | solicits LSASS; reads only |
 | **Profile list** (1 registry key) | a local read of `HKLM\SOFTWARE\…\ProfileList`. No RPC |
-| **Event logs** (`--events`) | **the heaviest remaining trace**: solicits the `EventLog` service, which can write its own entries *while being read*. This is the last collector still using an API instead of reading the `.evtx` files |
+| **Event logs** (`--events`) | reads `\Windows\System32\winevt\Logs\*.evtx` through the same raw volume handle as every other artefact — **no service is solicited**, and the parsing happens on the copy. The only cost left is the size: ~117 MB written to the collection medium |
 | **MD5 hashing** (`--md5`) | opens each referenced file for reading. Windows disables last-access updates by default (`NtfsDisableLastAccessUpdate`), but on a system where they are enabled, **this does update them** |
 
 ### Unavoidable: the trace of running anything at all
@@ -196,19 +196,81 @@ Three details in this output are deliberate, and illustrate the rules above:
 
 ## 🚀 PERFORMANCE
 
-|                              **Architecture**                              | **Without events** | **With Events** |
-|:--------------------------------------------------------------------------:|:------------------:|:---------------:|
-| - Intel Core i7-8750 2.20 GHz<br>- 16 Go RAM<br>- Windows 11 home Edition <br>- Installed since 162 days |         ⌛5s        |   ⌛19 min 37s   |
-| - Intel Core i7-8665U 2.11 GHz<br>- 16 Go RAM<br>- Windows 10 Pro 22H2<br>- Installed since 1323 days  |         ⌛9s        |   ⌛1 min 42s   |
+A collection takes about **2 minutes** with the default options, up to roughly
+**20 minutes** with `--events`, and longer still with `--md5`. The figure depends
+heavily on the hardware: USB 2 or USB 3, processor, memory, disk.
 
-**The option --md5 may be pretty long if you have big files on your hard drive, for exemple videos.**
+**`--md5` can take a long time if the disk holds large files — videos, for
+instance.**
 
-The gap between the two "with events" figures is not a hardware one: it is
-Windows 11 that makes the EventLog API dramatically slower. Everything *except*
-the event logs takes a handful of seconds — the events alone account for the
-rest, and for a peak of several hundred megabytes of memory, since every record
-is built in memory before being written. Reading the `.evtx` files directly,
-which are just files on the volume, would remove both.
+WAC no longer uses the Win32 API to read the event logs: Windows 11 makes that
+API dramatically slower. Everything *except* the event logs took a handful of
+seconds; the logs alone accounted for the minutes.
+
+Event logs are now read from the `.evtx` files, and that removes the two costs
+the API imposed:
+
+- **the wait** — a query per channel, each round-tripping through a service, is
+  replaced by a sequential read of the files plus in-process parsing;
+- **the memory** — the API path built every record in memory before writing
+  anything. Records are now written **as they are parsed**, so the memory used no
+  longer depends on how big the logs are. Measured below: 1 281 MB against
+  26 MB.
+
+### Measured
+
+**Time.** The last collection driven through the EventLog API, on the Windows 11
+test VM, is recorded in its own `investigation.json`: the events step took
+**581 s for 102 627 events** out of 596 s for the whole collection — 97 % of the
+run, for a single artefact among the twenty-odd others. The offline parser, on 20 real logs
+(57 MB, 96 076 records, cross-compiled build under `wine` on Linux), takes
+**4.7 s**. The two do not run on the same machine and the second excludes the raw
+extraction, so read this as an order of magnitude, not a ratio: seconds instead
+of minutes, because nothing round-trips through a service any more.
+
+**Memory.** This one *is* measured on identical data, which makes it a real
+comparison: the same records, the same build, the same host — only the writing
+strategy differs. `evtx_test --collecte` streams; `evtx_test --collecte-memoire`
+reproduces the old strategy (every record built in memory, then serialised in one
+block).
+
+| Write strategy | Peak working set | Wall clock |
+|---|---|---|
+| in memory, then serialised (as the API path did) | **1 281 MB** | 5.7 s |
+| streamed, one record at a time (now) | **26 MB** | 4.7 s |
+
+A factor of **49**, and the two files come out **byte for byte identical**. The
+point is not the ratio but the shape: the streamed figure does not grow with the
+size of the logs, so it cannot reach the level where Windows starts paging — and
+paging writes to `pagefile.sys`, on the disk one is trying not to modify.
+
+The **~20 minutes** quoted above is the measured figure for the *old* API path;
+the offline path has not yet been timed end to end on physical hardware.
+
+What replaces them is the extraction itself: the `.evtx` files must be copied to
+the collection medium first (~117 MB on an ordinary installation), and on a USB
+stick that copy is the dominant cost. This is why `--events` remains **opt-in**:
+without it, the logs are neither extracted nor parsed.
+
+**Correctness, not just speed.** The parser was validated against 20 real logs,
+record by record, using `python-evtx` as an independent implementation. Two
+results are worth stating:
+
+- on every log, WAC reads **at least** every record the reference reads — it
+  never misses one;
+- reading from the file also **fixed a wrong value the API produced**. The API
+  path asked only for `Event/EventData/Data`; on an event that stores its data
+  in `UserData` instead, that request fills nothing, and the value was read
+  anyway — so the event inherited another event's data. On a real collection,
+  *log cleared* (1102) — one of the most significant events of an intrusion —
+  carried a path belonging to a different record. Valid JSON, right key, wrong
+  value;
+- on several logs it reads **considerably more**, because it does not trust the
+  file header. A log closed abruptly — the normal state of a machine seized
+  while running — under-reports its own chunk count: on one sample the header
+  announced 3 chunks and 326 records where the file actually held 1 881
+  continuous records spanning eight months. A single damaged chunk no longer
+  ends the file either.
 
 ## 🧰 BUILD REQUIREMENTS
 
@@ -248,6 +310,64 @@ are what caught real errors in valid JSON: Prefetch path hashes against their ow
 file names, `X`/`XUtc` pairs holding the same wall-clock time, sessions starting
 before boot, impossible service states, `$MFT` references pointing at reserved
 entries. See `vmtest/README.md`.
+
+### Testing the EVTX parser outside Windows
+
+A VM only ever produces its own logs: one Windows version, all of them clean.
+The BinXML decoder needs the opposite — old logs, forwarded logs, logs closed
+abruptly, logs with a damaged chunk. `WAC/evtx_test.cpp` exists for that. It is
+excluded from the build by the `_test.cpp` pattern and runs under `wine`, so a
+journal can be replayed on the development machine:
+
+```bash
+# build the harness (cross-compiled, runs under wine)
+cd WAC
+x86_64-w64-mingw32-g++ -std=c++17 -O2 -municode -static -static-libgcc   -static-libstdc++ -DUNICODE -D_UNICODE -DWINVER=0x0A00 -D_WIN32_WINNT=0x0A00   -include ../third_party/compat-include/wac_mingw_compat.h   -I../third_party/offreg -I../third_party/compat-include   evtx.cpp evtx_test.cpp events.cpp xml_light.cpp tools.cpp quickdigest5.cpp   -o /tmp/evtx_test.exe -L../third_party/offreg -loffreg -lole32 -loleaut32   -luuid -lshlwapi -ladvapi32 -lshell32 -lversion -lwtsapi32 -lsecur32   -lpropsys -lntdll
+
+# wine needs an offreg.dll in the working directory: tools.cpp imports it, and
+# the harness never calls it. A stub built from the bundled .def is enough:
+#   { echo '#include <windows.h>';
+#     tail -n +3 ../third_party/offreg/offreg.def | sed '/^$/d' | while read -r f; do
+#       echo "extern \"C\" __declspec(dllexport) DWORD $f(void){return 1;}"; done
+#   } > /tmp/offreg_stub.cpp
+#   x86_64-w64-mingw32-g++ -shared -o offreg.dll /tmp/offreg_stub.cpp
+
+wine /tmp/evtx_test.exe "Z:/path/to/Security.evtx"          # summary per log
+wine /tmp/evtx_test.exe "Z:/path/to/Security.evtx" 3        # + XML of 3 records
+wine /tmp/evtx_test.exe "Z:/path/to/Security.evtx" --dump   # one record per line
+```
+
+`--dump` prints `record id<TAB>xml` in UTF-8, which is what makes an automated
+comparison against another implementation possible — `python-evtx`, for example.
+That comparison is what showed a chunk with a bad signature was ending the read
+of the whole file: 14 records out of 270.
+
+**Timing and memory** are measured with the third mode, which runs the *complete*
+chain — raw file → BinXML → `xml_light` → `Event` → streamed JSON — on a
+directory laid out like an extraction:
+
+```bash
+mkdir -p /tmp/tree/Windows/System32/winevt/Logs /tmp/out
+cp *.evtx /tmp/tree/Windows/System32/winevt/Logs/
+/usr/bin/time -v wine /tmp/evtx_test.exe --collecte "Z:/tmp/tree" "Z:/tmp/out"
+```
+
+It reports the number of logs, records and discarded records, and writes
+`/tmp/out/events.json`. `time -v` gives the wall clock and the peak working set
+— the figure that matters, since it is what used to cause paging. Reference run:
+20 logs, 57 MB, 96 076 records, **4.7 s**, **26 MB peak**, 0 discarded.
+
+`--collecte-memoire` runs the same chain but keeps every record in memory and
+serialises in one block, the way the API path did. It exists to make the memory
+claim checkable rather than asserted: same records, same build, same host, only
+the write strategy differs. It should produce a **byte-for-byte identical**
+`events.json` — which is also how `EcrivainJsonTableau` is verified against
+`writeJsonFile`:
+
+```bash
+/usr/bin/time -v wine /tmp/evtx_test.exe --collecte-memoire "Z:/tmp/tree" "Z:/tmp/out2"
+cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
+```
 
 ## 📚 DOCUMENTATION
 

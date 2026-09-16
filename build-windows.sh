@@ -2,7 +2,7 @@
 # Build de WAC.exe depuis Linux (cross-compilation MinGW-w64), sans poste Windows.
 #
 # Produit un exe autonome (runtime C++ statique) ne dépendant que des DLL
-# système Windows (offreg.dll, wevtapi.dll, vssapi.dll… tous présents sur cible).
+# système Windows (offreg.dll et DLL de base ; wevtapi n'est plus nécessaire).
 #
 # Prérequis : paquets  g++-mingw-w64-x86-64  binutils-mingw-w64-x86-64  mingw-w64-tools
 # Usage : ./build-windows.sh [--clean]
@@ -62,7 +62,7 @@ done
 
 # --- Édition de liens ------------------------------------------------------
 echo "== Link =="
-LIBS=(-L"$TP/offreg" -loffreg -lwevtapi -lole32 -loleaut32
+LIBS=(-L"$TP/offreg" -loffreg -lole32 -loleaut32
       -luuid -lshlwapi -ladvapi32 -lshell32 -lversion -lwtsapi32
       -lsecur32 -lpropsys -lntdll)
 "$CXX" -static -static-libgcc -static-libstdc++ \

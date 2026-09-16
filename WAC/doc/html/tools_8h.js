@@ -3,6 +3,7 @@ var tools_8h =
     [ "TimeZoneInfo", "structTimeZoneInfo.html", "structTimeZoneInfo" ],
     [ "AppliConf", "structAppliConf.html", "structAppliConf" ],
     [ "FatDateTime", "structFatDateTime.html", "structFatDateTime" ],
+    [ "EcrivainJsonTableau", "classEcrivainJsonTableau.html", "classEcrivainJsonTableau" ],
     [ "LOG_TYPE_ARTEFACT", "tools_8h.html#a6420c1d8d984de90fa1add81a3785b8c", null ],
     [ "LOG_TYPE_ARTEFACT_TYPE", "tools_8h.html#a4cef5953feb26b8862337c4f7f0f696a", null ],
     [ "LOG_TYPE_DEBUG", "tools_8h.html#a542529c1654a19379e8db5625bc7801e", null ],

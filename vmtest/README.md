@@ -39,6 +39,9 @@ révélé des valeurs fausses dans du JSON valide :
 | états de service impossibles, taux de `*_UNKNOWN`, présence de pilotes | convertisseurs comparant des filtres d'énumération à des états |
 | `RID` retrouvé à la fin du `SID` reconstruit | validation de la lecture du SAM |
 | aucun processus ne porte `WAC.exe` parmi ses modules | le processus Idle héritait des modules de l'outil de collecte |
+| `EvtSystemComputer` confronté au nom de machine de `OperatingSystem.json` | contrôle du décodage BinXML des journaux : deux sources sans rapport (fichier `.evtx` et ruche SYSTEM) |
+| identifiants d'enregistrement uniques par canal | WAC parcourt **tous** les chunks physiques d'un `.evtx`, pas ceux déclarés par l'en-tête — c'est ce qui lui fait lire les enregistrements qu'un journal mal fermé ne compte pas ; le risque propre à ce choix est de relire un chunk périmé d'un journal circulaire, et ce contrôle le verrait |
+| aucun événement postérieur à l'horodatage de collecte | décalage ou mauvaise lecture d'un `FILETIME` d'événement |
 
 **Le harnais peut être la cause du défaut qu'il signale.** Un run de 604 s a été
 coupé par le timeout de 600 s de `qga.py` juste avant l'écriture des deux
@@ -46,6 +49,25 @@ derniers JSON : le rapport disait « collecte probablement incomplète » — ce
 était exact — mais WAC était allé au bout. Le journal de collecte (`run.log`,
 qui se termine par `END, Time elapsed`) tranche entre les deux. Timeout porté à
 30 min ; il faudra le revoir si la collecte s'allonge encore.
+
+**Le parseur EVTX se valide hors VM.** Le décodage BinXML est trop fragile pour
+n'être éprouvé que sur les journaux d'une VM neuve, tous écrits par la même
+version de Windows et tous propres. `WAC/evtx_test.cpp` (exclu du build par le
+motif `_test.cpp`) lit un `.evtx` et rend soit un bilan, soit le XML de chaque
+enregistrement (`--dump`) ; il tourne sous `wine`, ce qui permet de le confronter
+à des journaux réels — dont des journaux volontairement abîmés — et de comparer
+enregistrement par enregistrement à une implémentation indépendante
+(`python-evtx`). C'est ce qui a montré qu'un chunk à signature fausse arrêtait
+la lecture de tout le fichier : 14 enregistrements lus sur 270.
+
+Le mode `--collecte` execute la chaine complete (fichier brut -> BinXML ->
+`xml_light` -> `Event` -> JSON en flux) sur une arborescence imitant une
+extraction, et `--collecte-memoire` la meme chose en accumulant tout en memoire
+comme le faisait la collecte par API. C'est ce qui rend l'argument memoire
+verifiable au lieu d'affirme : memes enregistrements, meme binaire, meme hote,
+seule la strategie d'ecriture change — 1 281 Mo contre 26 Mo de pic, pour un
+`events.json` identique octet pour octet (ce qui valide au passage
+`EcrivainJsonTableau` contre `writeJsonFile`).
 
 **Après tout changement, comparer les compteurs d'entrées au run précédent**, pas
 seulement les pastilles vertes — et écrire un contrôle croisé pour chaque défaut

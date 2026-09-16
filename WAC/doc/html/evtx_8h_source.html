@@ -1,0 +1,209 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector):  Fichier source de /var/www/html/WAC/WAC/evtx.h</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(document).ready(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('evtx_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">evtx.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="evtx_8h.html">Aller à la documentation de ce fichier.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment">/*  evtx.h — LECTURE DES JOURNAUX D&#39;ÉVÉNEMENTS WINDOWS (.evtx), HORS LIGNE.</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment"> *  POURQUOI CE PARSEUR EXISTE. `events` était le dernier collecteur à passer par</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="comment"> *  une API du système examiné : `wevtapi` sollicite le service EventLog, lequel</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="comment"> *  peut inscrire ses propres entrées PENDANT qu&#39;on le lit. Or les journaux sont</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="comment"> *  de simples fichiers, sous `\Windows\System32\winevt\Logs\*.evtx` : les</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="comment"> *  extraire en brut comme les ruches et les analyser ici supprime la dernière</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="comment"> *  sollicitation évitable.</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="comment"> *  Trois bénéfices se cumulent, ce qui est rare :</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="comment"> *    - l&#39;empreinte : plus aucun service du système examiné n&#39;est sollicité ;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="comment"> *    - le temps : l&#39;API met une vingtaine de minutes sous Windows 11, contre</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="comment"> *      deux sous Windows 10, pour la même machine ;</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="comment"> *    - la mémoire : la lecture par l&#39;API construisait tous les enregistrements</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment"> *      avant écriture, jusqu&#39;à 1,4 Gio de jeu de travail — assez pour provoquer</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="comment"> *      de la pagination, donc des écritures dans `pagefile.sys`, sur le disque</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="comment"> *      qu&#39;on cherche justement à ne pas modifier.</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="comment"> *  STRUCTURE DU FORMAT (spécification libevtx de libyal)</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="comment"> *    en-tête de fichier   4096 octets, signature « ElfFile\0 »</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="comment"> *    chunk                64 Kio : en-tête de 512 octets (« ElfChnk\0 ») puis</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="comment"> *                         une suite d&#39;enregistrements</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="comment"> *    enregistrement       signature 0x2a2a0000, taille, identifiant, FILETIME,</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="comment"> *                         puis le corps en BinXML</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="comment"> *  BinXML est un XML binarisé : des jetons décrivent éléments, attributs et</span></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="comment"> *  valeurs. Sa difficulté tient à deux mécanismes :</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="comment"> *    - LES NOMS SONT PARTAGÉS. Un nom d&#39;élément n&#39;est pas écrit à sa place mais</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="comment"> *      désigné par un décalage relatif au DÉBUT DU CHUNK ; plusieurs</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="comment"> *      enregistrements pointent le même nom. D&#39;où la nécessité de garder le</span></div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="comment"> *      chunk entier sous la main pendant le décodage d&#39;un enregistrement.</span></div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span><span class="comment"> *    - LES TEMPLATES. Un enregistrement ne contient en général pas son XML mais</span></div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="comment"> *      une référence vers une définition placée ailleurs dans le chunk, plus un</span></div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span><span class="comment"> *      tableau de valeurs typées à y substituer. C&#39;est ce qui rend le format</span></div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span><span class="comment"> *      compact — et ce qui fait qu&#39;un parseur naïf ne rend rien d&#39;exploitable.</span></div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span><span class="comment"> *  CE QUE CE PARSEUR REND : le XML de chaque enregistrement, sous forme de</span></div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span><span class="comment"> *  texte. `events` l&#39;analyse ensuite avec `xml_light` — déjà écrit pour les</span></div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="comment"> *  tâches planifiées — plutôt qu&#39;avec un second décodeur spécifique.</span></div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="comment"> *  ROBUSTESSE. Les données viennent de la machine examinée : tailles, décalages</span></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="comment"> *  et compteurs sont donc à traiter comme non fiables. Chaque lecture est bornée</span></div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="comment"> *  par la taille réelle du tampon, la récursion par une profondeur maximale, et</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><span class="comment"> *  un enregistrement illisible n&#39;interrompt ni son chunk ni son fichier — il est</span></div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="comment"> *  signalé et la lecture continue. Un journal partiellement corrompu est un cas</span></div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="comment"> *  courant en investigation, pas une exception.</span></div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="preprocessor">#include &lt;functional&gt;</span></div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
+<div class="foldopen" id="foldopen00060" data-start="{" data-end="};">
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno"><a class="line" href="structEvtxEnregistrement.html">   60</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structEvtxEnregistrement.html">EvtxEnregistrement</a> {</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno"><a class="line" href="structEvtxEnregistrement.html#affa64b03a59fd0598f3f5f2593f2ce14">   61</a></span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> <a class="code hl_variable" href="structEvtxEnregistrement.html#affa64b03a59fd0598f3f5f2593f2ce14">identifiant</a> = 0;   </div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno"><a class="line" href="structEvtxEnregistrement.html#a891d30e0800937dc664e88bce38753ff">   62</a></span>    FILETIME <a class="code hl_variable" href="structEvtxEnregistrement.html#a891d30e0800937dc664e88bce38753ff">ecritUtc</a> = { 0, 0 };         </div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno"><a class="line" href="structEvtxEnregistrement.html#a173383e2d50bdb151270ef272d4fcfca">   63</a></span>    std::wstring <a class="code hl_variable" href="structEvtxEnregistrement.html#a173383e2d50bdb151270ef272d4fcfca">xml</a>;                     </div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>};</div>
+</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span> </div>
+<div class="foldopen" id="foldopen00069" data-start="{" data-end="};">
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno"><a class="line" href="structEvtxBilan.html">   69</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structEvtxBilan.html">EvtxBilan</a> {</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno"><a class="line" href="structEvtxBilan.html#a9accb30ceee395d5c3803e2832bf0336">   70</a></span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> <a class="code hl_variable" href="structEvtxBilan.html#a9accb30ceee395d5c3803e2832bf0336">chunks</a> = 0;        </div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno"><a class="line" href="structEvtxBilan.html#a283ae2336a8ece96795c840828ff4f96">   71</a></span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> <a class="code hl_variable" href="structEvtxBilan.html#a283ae2336a8ece96795c840828ff4f96">lus</a> = 0;           </div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno"><a class="line" href="structEvtxBilan.html#a00952d9b23412344694b69b9cf657207">   72</a></span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> <a class="code hl_variable" href="structEvtxBilan.html#a00952d9b23412344694b69b9cf657207">illisibles</a> = 0;    </div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno"><a class="line" href="structEvtxBilan.html#a71f5b3a70b2b5d83b9c165803a4e1b30">   73</a></span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> <a class="code hl_variable" href="structEvtxBilan.html#a71f5b3a70b2b5d83b9c165803a4e1b30">chunksIgnores</a> = 0; </div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno"><a class="line" href="structEvtxBilan.html#afee4a661bd367efd4ccd933091cee066">   74</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="structEvtxBilan.html#afee4a661bd367efd4ccd933091cee066">enteteValide</a> = <span class="keyword">false</span>;            </div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno"><a class="line" href="structEvtxBilan.html#a79e5e8bb10c36f2a6a4c9abf6cd205bb">   75</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="structEvtxBilan.html#a79e5e8bb10c36f2a6a4c9abf6cd205bb">sale</a> = <span class="keyword">false</span>;                    </div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno"><a class="line" href="structEvtxBilan.html#aa6fce5097b3f0c24e903d1950cd13052">   76</a></span>    std::wstring <a class="code hl_variable" href="structEvtxBilan.html#aa6fce5097b3f0c24e903d1950cd13052">diagnostic</a>;              </div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>};</div>
+</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span> </div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>HRESULT <a class="code hl_function" href="evtx_8h.html#ad1b41a7f4e34221aee446d70cf983c27">EvtxLireFichier</a>(<span class="keyword">const</span> std::wstring&amp; chemin,</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>                        <span class="keyword">const</span> std::function&lt;<span class="keywordtype">bool</span>(<span class="keyword">const</span> <a class="code hl_struct" href="structEvtxEnregistrement.html">EvtxEnregistrement</a>&amp;)&gt;&amp; surEnregistrement,</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>                        <a class="code hl_struct" href="structEvtxBilan.html">EvtxBilan</a>* bilan = <span class="keyword">nullptr</span>);</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span> </div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>std::wstring <a class="code hl_function" href="evtx_8h.html#ab9a79cf1305cf8cdd405fe6599a72977">EvtxCanalDepuisNomFichier</a>(<span class="keyword">const</span> std::wstring&amp; nomFichier);</div>
+<div class="ttc" id="aevtx_8h_html_ab9a79cf1305cf8cdd405fe6599a72977"><div class="ttname"><a href="evtx_8h.html#ab9a79cf1305cf8cdd405fe6599a72977">EvtxCanalDepuisNomFichier</a></div><div class="ttdeci">std::wstring EvtxCanalDepuisNomFichier(const std::wstring &amp;nomFichier)</div><div class="ttdef"><b>Definition</b> evtx.cpp:654</div></div>
+<div class="ttc" id="aevtx_8h_html_ad1b41a7f4e34221aee446d70cf983c27"><div class="ttname"><a href="evtx_8h.html#ad1b41a7f4e34221aee446d70cf983c27">EvtxLireFichier</a></div><div class="ttdeci">HRESULT EvtxLireFichier(const std::wstring &amp;chemin, const std::function&lt; bool(const EvtxEnregistrement &amp;)&gt; &amp;surEnregistrement, EvtxBilan *bilan=nullptr)</div><div class="ttdef"><b>Definition</b> evtx.cpp:670</div></div>
+<div class="ttc" id="astructEvtxBilan_html"><div class="ttname"><a href="structEvtxBilan.html">EvtxBilan</a></div><div class="ttdef"><b>Definition</b> evtx.h:69</div></div>
+<div class="ttc" id="astructEvtxBilan_html_a00952d9b23412344694b69b9cf657207"><div class="ttname"><a href="structEvtxBilan.html#a00952d9b23412344694b69b9cf657207">EvtxBilan::illisibles</a></div><div class="ttdeci">unsigned long long illisibles</div><div class="ttdoc">enregistrements écartés</div><div class="ttdef"><b>Definition</b> evtx.h:72</div></div>
+<div class="ttc" id="astructEvtxBilan_html_a283ae2336a8ece96795c840828ff4f96"><div class="ttname"><a href="structEvtxBilan.html#a283ae2336a8ece96795c840828ff4f96">EvtxBilan::lus</a></div><div class="ttdeci">unsigned long long lus</div><div class="ttdoc">enregistrements décodés</div><div class="ttdef"><b>Definition</b> evtx.h:71</div></div>
+<div class="ttc" id="astructEvtxBilan_html_a71f5b3a70b2b5d83b9c165803a4e1b30"><div class="ttname"><a href="structEvtxBilan.html#a71f5b3a70b2b5d83b9c165803a4e1b30">EvtxBilan::chunksIgnores</a></div><div class="ttdeci">unsigned long long chunksIgnores</div><div class="ttdoc">chunks abîmés sautés (sans signature)</div><div class="ttdef"><b>Definition</b> evtx.h:73</div></div>
+<div class="ttc" id="astructEvtxBilan_html_a79e5e8bb10c36f2a6a4c9abf6cd205bb"><div class="ttname"><a href="structEvtxBilan.html#a79e5e8bb10c36f2a6a4c9abf6cd205bb">EvtxBilan::sale</a></div><div class="ttdeci">bool sale</div><div class="ttdoc">journal marqué « dirty »</div><div class="ttdef"><b>Definition</b> evtx.h:75</div></div>
+<div class="ttc" id="astructEvtxBilan_html_a9accb30ceee395d5c3803e2832bf0336"><div class="ttname"><a href="structEvtxBilan.html#a9accb30ceee395d5c3803e2832bf0336">EvtxBilan::chunks</a></div><div class="ttdeci">unsigned long long chunks</div><div class="ttdoc">chunks parcourus</div><div class="ttdef"><b>Definition</b> evtx.h:70</div></div>
+<div class="ttc" id="astructEvtxBilan_html_aa6fce5097b3f0c24e903d1950cd13052"><div class="ttname"><a href="structEvtxBilan.html#aa6fce5097b3f0c24e903d1950cd13052">EvtxBilan::diagnostic</a></div><div class="ttdeci">std::wstring diagnostic</div><div class="ttdoc">phrase pour le journal d'audit</div><div class="ttdef"><b>Definition</b> evtx.h:76</div></div>
+<div class="ttc" id="astructEvtxBilan_html_afee4a661bd367efd4ccd933091cee066"><div class="ttname"><a href="structEvtxBilan.html#afee4a661bd367efd4ccd933091cee066">EvtxBilan::enteteValide</a></div><div class="ttdeci">bool enteteValide</div><div class="ttdoc">signature « ElfFile\0 » trouvée</div><div class="ttdef"><b>Definition</b> evtx.h:74</div></div>
+<div class="ttc" id="astructEvtxEnregistrement_html"><div class="ttname"><a href="structEvtxEnregistrement.html">EvtxEnregistrement</a></div><div class="ttdoc">Un enregistrement d'événement, tel que lu dans le fichier.</div><div class="ttdef"><b>Definition</b> evtx.h:60</div></div>
+<div class="ttc" id="astructEvtxEnregistrement_html_a173383e2d50bdb151270ef272d4fcfca"><div class="ttname"><a href="structEvtxEnregistrement.html#a173383e2d50bdb151270ef272d4fcfca">EvtxEnregistrement::xml</a></div><div class="ttdeci">std::wstring xml</div><div class="ttdoc">corps de l'événement, en XML</div><div class="ttdef"><b>Definition</b> evtx.h:63</div></div>
+<div class="ttc" id="astructEvtxEnregistrement_html_a891d30e0800937dc664e88bce38753ff"><div class="ttname"><a href="structEvtxEnregistrement.html#a891d30e0800937dc664e88bce38753ff">EvtxEnregistrement::ecritUtc</a></div><div class="ttdeci">FILETIME ecritUtc</div><div class="ttdoc">instant d'écriture (UTC)</div><div class="ttdef"><b>Definition</b> evtx.h:62</div></div>
+<div class="ttc" id="astructEvtxEnregistrement_html_affa64b03a59fd0598f3f5f2593f2ce14"><div class="ttname"><a href="structEvtxEnregistrement.html#affa64b03a59fd0598f3f5f2593f2ce14">EvtxEnregistrement::identifiant</a></div><div class="ttdeci">unsigned long long identifiant</div><div class="ttdoc">numéro d'enregistrement</div><div class="ttdef"><b>Definition</b> evtx.h:61</div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="evtx_8h.html">evtx.h</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

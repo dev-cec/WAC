@@ -109,6 +109,8 @@ Variables</h2></td></tr>
 <tr class="memitem:ad4d42395527748d70fdcbb6ff9be3ee1" id="r_ad4d42395527748d70fdcbb6ff9be3ee1"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#ad4d42395527748d70fdcbb6ff9be3ee1">RUCHE_COPIE</a></td></tr>
 <tr class="memdesc:ad4d42395527748d70fdcbb6ff9be3ee1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Ouverture d'une ruche extraite (copie sur l'USB) : n'affecte pas l'original.  <br /></td></tr>
 <tr class="separator:ad4d42395527748d70fdcbb6ff9be3ee1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d944af43e67edbbd418d8254902e223" id="r_a3d944af43e67edbbd418d8254902e223"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#a3d944af43e67edbbd418d8254902e223">FICHIER_COPIE</a></td></tr>
+<tr class="separator:a3d944af43e67edbbd418d8254902e223"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acaa99682c86093511a287609349c8634" id="r_acaa99682c86093511a287609349c8634"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#acaa99682c86093511a287609349c8634">RUCHE_PATCH</a></td></tr>
 <tr class="memdesc:acaa99682c86093511a287609349c8634"><td class="mdescLeft">&#160;</td><td class="mdescRight">Modification documentée du bloc de base d'une ruche COPIÉE (cf. <a class="el" href="hive__recover_8h.html">hive_recover.h</a>).  <br /></td></tr>
 <tr class="separator:acaa99682c86093511a287609349c8634"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -122,8 +124,6 @@ Variables</h2></td></tr>
 <tr class="memitem:a3426ef6ecf6b4c42672b434a97238fed" id="r_a3426ef6ecf6b4c42672b434a97238fed"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#a3426ef6ecf6b4c42672b434a97238fed">SESSIONS</a></td></tr>
 <tr class="memdesc:a3426ef6ecf6b4c42672b434a97238fed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interrogation des sessions ouvertes via LSA / Terminal <a class="el" href="structServices.html">Services</a>.  <br /></td></tr>
 <tr class="separator:a3426ef6ecf6b4c42672b434a97238fed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acabf1e875ee776cf1d6635c6ab438d54" id="r_acabf1e875ee776cf1d6635c6ab438d54"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#acabf1e875ee776cf1d6635c6ab438d54">EVENTLOG</a></td></tr>
-<tr class="separator:acabf1e875ee776cf1d6635c6ab438d54"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeefd446c0b758f5cf2e8919c527d0688" id="r_aeefd446c0b758f5cf2e8919c527d0688"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#aeefd446c0b758f5cf2e8919c527d0688">ECRITURE_USB</a></td></tr>
 <tr class="memdesc:aeefd446c0b758f5cf2e8919c527d0688"><td class="mdescLeft">&#160;</td><td class="mdescRight">Écriture sur le support de collecte (clé USB), jamais sur la cible.  <br /></td></tr>
 <tr class="separator:aeefd446c0b758f5cf2e8919c527d0688"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -168,20 +168,21 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="acabf1e875ee776cf1d6635c6ab438d54" name="acabf1e875ee776cf1d6635c6ab438d54"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acabf1e875ee776cf1d6635c6ab438d54">&#9670;&#160;</a></span>EVENTLOG</h2>
+<a id="a3d944af43e67edbbd418d8254902e223" name="a3d944af43e67edbbd418d8254902e223"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3d944af43e67edbbd418d8254902e223">&#9670;&#160;</a></span>FICHIER_COPIE</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const wchar_t * Footprint::EVENTLOG</td>
+          <td class="memname">const wchar_t * Footprint::FICHIER_COPIE</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Valeur initiale :</b><div class="fragment"><div class="line">= L<span class="stringliteral">&quot;Lecture des journaux via l&#39;API EventLog : sollicite le service &quot;</span></div>
-<div class="line">                              L<span class="stringliteral">&quot;EventLog, qui peut y inscrire ses propres entrees pendant la lecture.&quot;</span></div>
-</div><!-- fragment --><p>Lecture des journaux d'événements via l'API : sollicite le service EventLog et peut y produire ses propres entrées. </p>
+<b>Valeur initiale :</b><div class="fragment"><div class="line">= L<span class="stringliteral">&quot;Lecture d&#39;un fichier d&#39;artefact extrait (copie sur le support &quot;</span></div>
+<div class="line">                              L<span class="stringliteral">&quot;de collecte) : aucun acces a l&#39;original, aucun horodatage modifie, &quot;</span></div>
+<div class="line">                              L<span class="stringliteral">&quot;aucun service du systeme examine sollicite.&quot;</span></div>
+</div><!-- fragment --><p>Lecture d'un fichier d'artefact extrait (copie sur l'USB) : journaux d'événements, <a class="el" href="structPrefetch.html">Prefetch</a>, jumplists. Aucun accès à l'original. </p>
 
 </div>
 </div>

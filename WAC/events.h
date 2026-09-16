@@ -1,57 +1,76 @@
 #pragma once
-#include <iostream>
-#include <cstdio>
+
+/*  events.h — JOURNAUX D'ÉVÉNEMENTS WINDOWS.
+ *
+ *  Lus HORS LIGNE depuis les fichiers `.evtx` extraits par lecture brute, et non
+ *  plus par l'API `wevtapi`. C'était le dernier collecteur à solliciter un
+ *  service de la machine examinée (`EventLog`) : ce service peut inscrire ses
+ *  propres entrées pendant qu'on l'interroge, l'appel prenait une vingtaine de
+ *  minutes sous Windows 11, et la collecte montait à plus d'un gigaoctet de jeu
+ *  de travail — donc de la pagination, donc des écritures sur le disque même
+ *  qu'on s'efforce de ne pas modifier.
+ *
+ *  CHAÎNE DE TRAITEMENT
+ *    raw_collect  extrait `\Windows\System32\winevt\Logs\*.evtx` sur le support
+ *                 de collecte (lecture brute NTFS, aucune ouverture de fichier)
+ *    evtx.h       décode chaque enregistrement en texte XML
+ *    xml_light    analyse ce XML — le même lecteur que les tâches planifiées,
+ *                 plutôt qu'un second décodeur propre aux événements
+ *    events.cpp   remplit la structure ci-dessous et l'écrit AU FIL DE L'EAU
+ *
+ *  CE QUE LA LECTURE HORS LIGNE NE DONNE PAS. `EvtFormatMessage` rendait, pour
+ *  environ un événement sur sept, le message en clair. Ce texte n'est pas dans
+ *  le journal : il vient du fichier de ressources du fournisseur, qu'il faudrait
+ *  analyser en propre (ressource `WEVT_TEMPLATE` et table de messages d'un
+ *  binaire PE). Le champ est donc omis plutôt qu'écrit vide. Toutes les données
+ *  de l'événement lui-même — identifiant, horodatage, fournisseur, canal, SID,
+ *  processus, et l'intégralité de `EventData` — sont présentes.
+ */
+
 #include <windows.h>
-#include <fstream>
-#include <vector>
 #include <string>
-#include <filesystem>
-#include <sstream>
-#include <winevt.h>
-#include <sddl.h>
+#include <vector>
 #include "tools.h"
+#include "json.h"
+#include "xml_light.h"
 
-#pragma comment(lib, "Wevtapi.lib")
-
-
-/*! Convertit un EVT_VARIANT en valeur JSON typée.
-* Les chaines sont rendues BRUTES (Json::str) : l'echappement est centralise
-* dans json.h. Les entiers deviennent des nombres JSON, les types tableau des
-* tableaux JSON.
-* @param data la donnee a convertir
-* @return la valeur JSON correspondante, Json::null() si le type est inconnu
-*/
-Json variantToJson(PEVT_VARIANT data);
-/*! structure contenant un événement */
+/*! Un événement, tel qu'il figure dans un journal.
+ *
+ *  Les champs gardent les noms de l'ancienne collecte par API : le schéma de
+ *  sortie ne change pas, seule la source change. Une valeur absente du journal
+ *  reste `null` — elle n'est pas remplacée par un zéro, qui se lirait comme une
+ *  valeur relevée.
+ */
 struct Event {
-	Json evtSystemProviderName = Json::null();//!< nom du provider
-	Json evtSystemProviderGuid = Json::null();//!< GUID du provider
-	Json evtSystemEventID = Json::null();//!< id de l’événement
-	Json evtSystemQualifiers = Json::null();//!< qualificatifs de l'événement
-	Json evtSystemLevel = Json::null();//!< niveau de l'événement
-	Json evtSystemTask = Json::null();//!< tache
-	Json evtSystemOpcode = Json::null();//!< code d'opération
-	Json evtSystemKeywords = Json::null();//!< mots clés
-	Json evtSystemTimeCreated = Json::null();//!< date de création
-	Json evtSystemTimeCreatedUtc = Json::null();//!< date de création au format UTC
-	Json evtSystemEventRecordId = Json::null();//!< id de l'enregistrement
-	Json evtSystemActivityID = Json::null();//!< id de l'activité
-	Json evtSystemRelatedActivityID = Json::null();//!< id de l'activité en relation
-	Json evtSystemProcessID = Json::null();//!< id du process ayant généré l'événement
-	Json evtSystemThreadID = Json::null();//!< id du thread ayant généré l'événement
-	Json evtSystemChannel = Json::null();//!< nom du channel
-	Json evtSystemComputer = Json::null(); //!< nom de l'ordinateur
-	Json evtSystemUserID = Json::null();//!< SID de l'utilisateur
-	Json evtSystemVersion = Json::null();//!< version
-	Json evtEventData = Json::null(); //!<  Data supplémentaires de l’événement
-	Json evtEventMessage = Json::null(); //!< message de l’événement
+	Json evtSystemProviderName = Json::null();      //!< nom du fournisseur
+	Json evtSystemProviderGuid = Json::null();      //!< GUID du fournisseur
+	Json evtSystemEventID = Json::null();           //!< identifiant de l'événement
+	Json evtSystemQualifiers = Json::null();        //!< qualificatifs (événements classiques)
+	Json evtSystemLevel = Json::null();             //!< niveau
+	Json evtSystemTask = Json::null();              //!< tâche
+	Json evtSystemOpcode = Json::null();            //!< code d'opération
+	Json evtSystemKeywords = Json::null();          //!< mots clés
+	Json evtSystemTimeCreated = Json::null();       //!< date de création (UTC)
+	Json evtSystemEventRecordId = Json::null();     //!< identifiant de l'enregistrement
+	Json evtSystemActivityID = Json::null();        //!< identifiant d'activité
+	Json evtSystemRelatedActivityID = Json::null(); //!< identifiant d'activité liée
+	Json evtSystemProcessID = Json::null();         //!< processus émetteur
+	Json evtSystemThreadID = Json::null();          //!< fil d'exécution émetteur
+	Json evtSystemChannel = Json::null();           //!< canal
+	Json evtSystemComputer = Json::null();          //!< nom de l'ordinateur
+	Json evtSystemUserID = Json::null();            //!< SID de l'utilisateur
+	Json evtSystemVersion = Json::null();           //!< version du schéma de l'événement
+	Json evtEventData = Json::null();               //!< données propres à l'événement
 
-	/*! Constructeur
-	* @param hevt handle sur la session ouverte par EvtOpenSession
-	* @param buffer nom du canal contenant les événements
-	* @param hEvent handle sur l'événement à lire
+	/*! Construit l'événement depuis le XML décodé d'un enregistrement.
+	*  @param racine élément `<Event>` analysé par xml_light
+	*  @param canal canal déduit du nom de fichier, employé si le XML ne le porte
+	*         pas (les journaux archivés omettent parfois `<Channel>`)
+	*  @param identifiant numéro d'enregistrement lu dans l'en-tête binaire,
+	*         employé si le XML ne porte pas `<EventRecordID>`
 	*/
-	Event(EVT_HANDLE hevt, LPWSTR buffer, EVT_HANDLE hEvent);
+	Event(const XmlNode& racine, const std::wstring& canal,
+	      unsigned long long identifiant);
 
 	/*! conversion de l'objet au format json */
 	Json toJson() const;
@@ -60,18 +79,29 @@ struct Event {
 	void clear() {}
 };
 
+/*! Collecte de tous les journaux extraits.
+ *
+ *  Aucun tableau d'événements n'est conservé : chacun est écrit puis oublié
+ *  (cf. EcrivainJsonTableau). C'est ce qui ramène la collecte des journaux à une
+ *  empreinte mémoire constante, quelle que soit la taille des journaux.
+ */
 struct Events {
+	unsigned long long lus = 0;          //!< enregistrements écrits
+	unsigned long long illisibles = 0;   //!< enregistrements écartés
+	unsigned long long fichiers = 0;     //!< journaux parcourus
 
-	std::vector<Event> events; //!< tableau contenant tout les Events
-	
-	/*! Fonction permettant de parser les objets
+	/*! Lit les journaux extraits et écrit `events.json` au fil de l'eau.
+	*  @return ERROR_SUCCESS, S_FALSE si des enregistrements ont été écartés,
+	*          ou un code d'erreur si aucun journal n'a pu être lu
 	*/
 	HRESULT getData();
 
-	/*! conversion de l'objet au format json
+	/*! Rien à sérialiser : `getData()` a déjà écrit le fichier.
+	*  Conservé pour que le déroulé de main.cpp reste le même pour tous les
+	*  collecteurs.
 	*/
-	HRESULT toJson();
+	HRESULT toJson() { return ERROR_SUCCESS; }
 
 	/* liberation mémoire */
-	void clear();
+	void clear() {}
 };

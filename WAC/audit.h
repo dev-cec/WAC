@@ -40,6 +40,9 @@ namespace Footprint {
 	extern const wchar_t* VOLUME_BRUT;
 	//! Ouverture d'une ruche extraite (copie sur l'USB) : n'affecte pas l'original.
 	extern const wchar_t* RUCHE_COPIE;
+	//! Lecture d'un fichier d'artefact extrait (copie sur l'USB) : journaux
+	//! d'événements, Prefetch, jumplists. Aucun accès à l'original.
+	extern const wchar_t* FICHIER_COPIE;
 	//! Modification documentée du bloc de base d'une ruche COPIÉE (cf. hive_recover.h).
 	extern const wchar_t* RUCHE_PATCH;
 	//! Une seule énumération du gestionnaire de services, en lecture : relève
@@ -52,9 +55,6 @@ namespace Footprint {
 	extern const wchar_t* PROCESSUS;
 	//! Interrogation des sessions ouvertes via LSA / Terminal Services.
 	extern const wchar_t* SESSIONS;
-	//! Lecture des journaux d'événements via l'API : sollicite le service
-	//! EventLog et peut y produire ses propres entrées.
-	extern const wchar_t* EVENTLOG;
 	//! Écriture sur le support de collecte (clé USB), jamais sur la cible.
 	extern const wchar_t* ECRITURE_USB;
 }

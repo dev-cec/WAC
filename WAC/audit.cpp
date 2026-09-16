@@ -10,6 +10,9 @@ const wchar_t* VOLUME_BRUT  = L"Lecture brute du volume (\\\\.\\C:) : aucun acce
                               L"objets, s'il est actif, peut journaliser l'ouverture du volume.";
 const wchar_t* RUCHE_COPIE  = L"Ouverture d'une ruche COPIEE sur le support de collecte : "
                               L"la ruche d'origine n'est pas touchee.";
+const wchar_t* FICHIER_COPIE = L"Lecture d'un fichier d'artefact extrait (copie sur le support "
+                              L"de collecte) : aucun acces a l'original, aucun horodatage modifie, "
+                              L"aucun service du systeme examine sollicite.";
 const wchar_t* RUCHE_PATCH  = L"Modification de 8 octets du bloc de base d'une ruche COPIEE "
                               L"(alignement des numeros de sequence). L'original n'est pas "
                               L"modifie ; empreinte avant patch consignee.";
@@ -24,8 +27,6 @@ const wchar_t* PROCESSUS    = L"Enumeration des processus : ouverture de handles
                               L"et de jetons (auditable si la politique le prevoit).";
 const wchar_t* SESSIONS     = L"Interrogation des sessions ouvertes (LSA / Terminal Services) : "
                               L"sollicite LSASS, sans modification d'artefact.";
-const wchar_t* EVENTLOG     = L"Lecture des journaux via l'API EventLog : sollicite le service "
-                              L"EventLog, qui peut y inscrire ses propres entrees pendant la lecture.";
 const wchar_t* ECRITURE_USB = L"Ecriture sur le support de collecte uniquement. Aucune ecriture "
                               L"sur le systeme examine.";
 } // namespace Footprint

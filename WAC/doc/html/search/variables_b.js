@@ -16,7 +16,7 @@ var searchData=
   ['lastruntimeutc_13',['lastRunTimeUtc',['../structScheduledTask.html#a47dd4c9ec9b5445e6be00b23125f7cc0',1,'ScheduledTask']]],
   ['lasttaskresult_14',['lastTaskResult',['../structScheduledTask.html#aed45346c6c1f6295171607e797b87eef',1,'ScheduledTask']]],
   ['lastwritetime_15',['lastwritetime',['../structMru.html#a6708b5e9b85561d50a1af0fbc4e9ce69',1,'Mru::lastWriteTime'],['../structMruApp.html#ace52ad921d8950f4fbc83a5b189a79fe',1,'MruApp::lastWriteTime'],['../structRun.html#a07852e5328b140bef45eacc5acb72e14',1,'Run::lastWriteTime'],['../structShellbag.html#afba84f7be99c60cd00b265e1f9ba3bf0',1,'Shellbag::lastWriteTime'],['../structServiceStruct.html#ae965f102eb9eba164e26f14443b256d7',1,'ServiceStruct::lastWriteTime']]],
-  ['lastwritetimeutc_16',['lastwritetimeutc',['../structServiceStruct.html#a3bcd55f0cf858b1da7d0576c78e19534',1,'ServiceStruct::lastWriteTimeUtc'],['../structMruApp.html#a940cf15da9706c316966ce3be960a5e5',1,'MruApp::lastWriteTimeUtc'],['../structShellbag.html#ad790ebcca27e10789ed30cca109a4bef',1,'Shellbag::lastWriteTimeUtc'],['../structMru.html#a007169e2fd0ba8eca5f9ab72aea9c9cb',1,'Mru::lastWriteTimeUtc'],['../structRun.html#a53d3760c102a5741c3719ce20b392672',1,'Run::lastWriteTimeUtc']]],
+  ['lastwritetimeutc_16',['lastwritetimeutc',['../structServiceStruct.html#a3bcd55f0cf858b1da7d0576c78e19534',1,'ServiceStruct::lastWriteTimeUtc'],['../structShellbag.html#ad790ebcca27e10789ed30cca109a4bef',1,'Shellbag::lastWriteTimeUtc'],['../structRun.html#a53d3760c102a5741c3719ce20b392672',1,'Run::lastWriteTimeUtc'],['../structMru.html#a007169e2fd0ba8eca5f9ab72aea9c9cb',1,'Mru::lastWriteTimeUtc'],['../structMruApp.html#a940cf15da9706c316966ce3be960a5e5',1,'MruApp::lastWriteTimeUtc']]],
   ['linkdate_17',['linkDate',['../structAmcacheApplicationFile.html#a1ca4e0623a55a4147f5cd8958be09c47',1,'AmcacheApplicationFile']]],
   ['linkdateutc_18',['linkDateUtc',['../structAmcacheApplicationFile.html#aef02bb0a0f8735ef2e5b60ffa7731be8',1,'AmcacheApplicationFile']]],
   ['littleindian_19',['littleIndian',['../structoleHeader.html#ae03af53e39d079956fd8c70b57f350ea',1,'oleHeader']]],
@@ -33,5 +33,6 @@ var searchData=
   ['logontype_30',['logonType',['../structSession.html#aa57393e024125d6899bb6c069adf7db1',1,'Session']]],
   ['logontypename_31',['logonTypeName',['../structSession.html#a2321e7ddc4a990932cf1cc0ec6ec9caa',1,'Session']]],
   ['longname_32',['longName',['../structBeef0004.html#aec93d123f81b5dafccbdd4ba1fc159d0',1,'Beef0004']]],
-  ['longpath_33',['longPath',['../structAmcacheApplicationFile.html#aeee05ee5592cfb9e893d9bd76f3bfd71',1,'AmcacheApplicationFile']]]
+  ['longpath_33',['longPath',['../structAmcacheApplicationFile.html#aeee05ee5592cfb9e893d9bd76f3bfd71',1,'AmcacheApplicationFile']]],
+  ['lus_34',['lus',['../structEvents.html#a6e17360ed6541d0c51aacb553e184c94',1,'Events::lus'],['../structEvtxBilan.html#a283ae2336a8ece96795c840828ff4f96',1,'EvtxBilan::lus']]]
 ];

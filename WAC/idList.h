@@ -625,7 +625,11 @@ struct Beef0017 : IExtensionBlock {
 
 };
 
-/*! Extension block  seen in  HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FolderTypes\{0B2BAAEB-0042-4DCA-AA4D-3EE8648D03E5}
+/*! Extension block seen in
+* `HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FolderTypes\\{0B2BAAEB-0042-4DCA-AA4D-3EE8648D03E5}`
+*
+* Le chemin est en litteral (accents graves) : hors de ce cadre, doxygen lit
+* « \\{ » comme une ouverture de groupe de membres, jamais refermee.
 */
 struct Beef0019 : IExtensionBlock {
 	std::wstring guid1 = L""; //!< identifiant GUID

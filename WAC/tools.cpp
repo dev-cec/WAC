@@ -1075,6 +1075,47 @@ HRESULT writeJsonFile(const std::string& nom, const Json& valeur) {
 	return ERROR_SUCCESS;
 }
 
+EcrivainJsonTableau::EcrivainJsonTableau(const std::string& nom) : nom_(nom) {
+	std::error_code ec;
+	std::filesystem::create_directories(conf._outputDir, ec);  // pas d'erreur si présent
+	f_.open(conf._outputDir + "/" + nom);
+	if (!f_) {
+		log(2, L"🔥Ouverture du fichier de sortie impossible : " + string_to_wstring(nom));
+		return;
+	}
+	ouvert_ = true;
+	f_ << L"[";
+}
+
+void EcrivainJsonTableau::ajouter(const Json& element) {
+	if (!ouvert_ || ferme_) return;
+	// La virgule précède l'élément : on ne sait pas, en écrivant, s'il en
+	// viendra d'autres — c'est ce qui évite la virgule finale sans relecture.
+	f_ << (ecrits_ ? L",\n\t" : L"\n\t");
+	f_ << ansi_to_utf8(element.dump(1));
+	++ecrits_;
+}
+
+HRESULT EcrivainJsonTableau::fermer() {
+	if (!ouvert_ || ferme_) return ouvert_ ? ERROR_SUCCESS : E_FAIL;
+	ferme_ = true;
+	if (ecrits_) f_ << L"\n";
+	f_ << L"]";
+	const bool bon = f_.good();
+	f_.close();
+	if (!bon) {
+		log(2, L"🔥Ecriture incomplete : " + string_to_wstring(nom_));
+		return E_FAIL;
+	}
+	return ERROR_SUCCESS;
+}
+
+EcrivainJsonTableau::~EcrivainJsonTableau() {
+	// Sans cela, un retour anticipé laisserait un tableau JSON non refermé :
+	// un fichier invalide se lit comme « rien collecté », pas comme une erreur.
+	fermer();
+}
+
 HRESULT writeNotCollected(const std::string& nom, const std::wstring& artefact,
                           HRESULT resultat) {
 	Json o = Json::obj();
