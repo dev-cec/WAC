@@ -12,13 +12,14 @@ var searchData=
   ['amcacheapplicationfiles_9',['amcacheapplicationfiles',['../structAmcacheApplicationFiles.html#ad4f22f36ad307acb0245f41a42212009',1,'AmcacheApplicationFiles']]],
   ['amcacheapplications_10',['amcacheapplications',['../structAmcacheApplications.html#ac47023b2f7cd6b65f1a4986976cb49a2',1,'AmcacheApplications']]],
   ['application_11',['application',['../structAutomaticDestination.html#ab9f64a818e4bfb12581b2408cf913d23',1,'AutomaticDestination::application'],['../structCustomDestination.html#a99f14e1b8737748200e0fe6a12762ce6',1,'CustomDestination::application']]],
-  ['archive_12',['Archive',['../structFileAttributes.html#a1bd109da24c6d924ca0816c93f86893a',1,'FileAttributes']]],
-  ['arguments_13',['arguments',['../structRecentDoc.html#a165143ed1a74dc733f5a2d09d81bce2a',1,'RecentDoc::arguments'],['../structAction.html#a2dc221d7488424a28fe4327b6f893d18',1,'Action::arguments']]],
-  ['atime_14',['atime',['../structBeef0026.html#a74b55af1cfc3c821b3f8640dd1e2dbf5',1,'Beef0026']]],
-  ['atimeutc_15',['atimeUtc',['../structBeef0026.html#adad228a28953421de4d348ba3e9e1f0e',1,'Beef0026']]],
-  ['attributes_16',['attributes',['../structRecentDoc.html#adc6bffd0fdde7cea1d0e23989584a2ab',1,'RecentDoc']]],
-  ['attributs_17',['attributs',['../structXmlNode.html#adac458ba2861e6802bdb66ff7d3cfe18',1,'XmlNode']]],
-  ['authenticationpackage_18',['authenticationPackage',['../structSession.html#aac73fe2f2daced116de5019feeb7defb',1,'Session']]],
-  ['author_19',['author',['../structScheduledTask.html#a0b9b77f17487188319012b84b2515cf2',1,'ScheduledTask']]],
-  ['automaticdestinations_20',['automaticDestinations',['../structJumplistAutomatics.html#a23f6fc14a0e80fa27a9c3b7f20684598',1,'JumplistAutomatics']]]
+  ['applique_12',['applique',['../structHiveLogEntry.html#ad7999702e832d3b31253d6abe1c27156',1,'HiveLogEntry::applique'],['../structHiveReplayInfo.html#a3898b4eea95c609deab76d610bd01935',1,'HiveReplayInfo::applique']]],
+  ['archive_13',['Archive',['../structFileAttributes.html#a1bd109da24c6d924ca0816c93f86893a',1,'FileAttributes']]],
+  ['arguments_14',['arguments',['../structRecentDoc.html#a165143ed1a74dc733f5a2d09d81bce2a',1,'RecentDoc::arguments'],['../structAction.html#a2dc221d7488424a28fe4327b6f893d18',1,'Action::arguments']]],
+  ['atime_15',['atime',['../structBeef0026.html#a74b55af1cfc3c821b3f8640dd1e2dbf5',1,'Beef0026']]],
+  ['atimeutc_16',['atimeUtc',['../structBeef0026.html#adad228a28953421de4d348ba3e9e1f0e',1,'Beef0026']]],
+  ['attributes_17',['attributes',['../structRecentDoc.html#adc6bffd0fdde7cea1d0e23989584a2ab',1,'RecentDoc']]],
+  ['attributs_18',['attributs',['../structXmlNode.html#adac458ba2861e6802bdb66ff7d3cfe18',1,'XmlNode']]],
+  ['authenticationpackage_19',['authenticationPackage',['../structSession.html#aac73fe2f2daced116de5019feeb7defb',1,'Session']]],
+  ['author_20',['author',['../structScheduledTask.html#a0b9b77f17487188319012b84b2515cf2',1,'ScheduledTask']]],
+  ['automaticdestinations_21',['automaticDestinations',['../structJumplistAutomatics.html#a23f6fc14a0e80fa27a9c3b7f20684598',1,'JumplistAutomatics']]]
 ];

@@ -159,6 +159,7 @@ def controles_croises(rep):
     trouvees += controle_processes(rep)
     trouvees += controle_prefetchs(rep)
     trouvees += controle_events(rep)
+    trouvees += controle_rejeu_ruches(rep)
     trouvees += controle_references_mft(rep)
     return trouvees
 
@@ -257,6 +258,72 @@ def controle_events(rep):
         trouvees += 1
     else:
         print(f"  ✅ events.json : aucun événement postérieur à la collecte")
+    return trouvees
+
+
+def controle_rejeu_ruches(rep):
+    """Le rejeu des journaux doit rendre la ruche propre — donc sans patch.
+
+    Contrôle croisé au sens fort, sur deux opérations indépendantes consignées
+    dans `investigation.json` : si le rejeu a abouti, la vérification qui suit
+    doit trouver la ruche « déjà propre ». Une ruche à la fois rejouée ET
+    patchée signifie que le rejeu n'a pas aligné les numéros de séquence, donc
+    que l'état écrit n'est pas celui qu'il prétend être.
+
+    Vérifie aussi qu'un journal d'annulation est nommé pour chaque rejeu : sans
+    lui la copie brute n'est plus reconstructible, et la promesse du rapport
+    serait fausse.
+    """
+    inv = charge(rep, "investigation.json")
+    ops = (inv or {}).get("Operations") if isinstance(inv, dict) else None
+    if not isinstance(ops, list) or not ops:
+        print("  ⏭️  investigation.json absent : contrôle du rejeu ignoré")
+        return 0
+    trouvees = 0
+
+    def ruche_de(cible):
+        # La cible commence par le chemin de la ruche, suivi de « | ».
+        return str(cible or "").split(" | ")[0].strip().lower()
+
+    rejouees, patchees, sansAnnulation, rejeuKo = set(), set(), [], []
+    for o in ops:
+        op = str(o.get("Operation") or "")
+        cible = o.get("Target")
+        if op.startswith("Rejeu des journaux"):
+            if "non applique" in op or o.get("Result") != "OK":
+                rejeuKo.append(ruche_de(cible))
+                continue
+            rejouees.add(ruche_de(cible))
+            if "annulation :" not in str(cible or ""):
+                sansAnnulation.append(ruche_de(cible))
+        elif op.startswith("Remise en etat d'une ruche copiee (patch applique)"):
+            patchees.add(ruche_de(cible))
+
+    if not rejouees and not patchees:
+        print("  ⏭️  aucune remise en état de ruche consignée : contrôle ignoré")
+        return 0
+
+    deux = sorted(rejouees & patchees)
+    if deux:
+        print(f"  ❌ {len(deux)} ruche(s) à la fois rejouée(s) ET patchée(s) "
+              f"{[os.path.basename(x) for x in deux[:3]]} — le rejeu n'a pas "
+              f"aligné les numéros de séquence")
+        trouvees += 1
+    else:
+        print(f"  ✅ rejeu des ruches : {len(rejouees)} rejouée(s), "
+              f"{len(patchees)} patchée(s), aucune des deux à la fois")
+
+    if sansAnnulation:
+        print(f"  ❌ {len(sansAnnulation)} rejeu(x) sans journal d'annulation "
+              f"{[os.path.basename(x) for x in sansAnnulation[:3]]} — copie brute "
+              f"non reconstructible")
+        trouvees += 1
+    elif rejouees:
+        print(f"  ✅ rejeu des ruches : journal d'annulation nommé pour les "
+              f"{len(rejouees)} rejeu(x)")
+    if rejeuKo:
+        print(f"  ⚠️  {len(rejeuKo)} ruche(s) sans rejeu applicable "
+              f"{[os.path.basename(x) for x in rejeuKo[:3]]} — repli sur le patch")
     return trouvees
 
 

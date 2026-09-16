@@ -45,6 +45,9 @@ namespace Footprint {
 	extern const wchar_t* FICHIER_COPIE;
 	//! Modification documentée du bloc de base d'une ruche COPIÉE (cf. hive_recover.h).
 	extern const wchar_t* RUCHE_PATCH;
+	//! Application des journaux de transaction à une ruche COPIÉE, avec journal
+	//! d'annulation (cf. hive_recover.h).
+	extern const wchar_t* RUCHE_REJEU;
 	//! Une seule énumération du gestionnaire de services, en lecture : relève
 	//! l'état courant sans ouvrir de handle par service.
 	extern const wchar_t* SCM;

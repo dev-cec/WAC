@@ -20,7 +20,10 @@ var searchData=
   ['hive_5frecover_2ecpp_17',['hive_recover.cpp',['../hive__recover_8cpp.html',1,'']]],
   ['hive_5frecover_2eh_18',['hive_recover.h',['../hive__recover_8h.html',1,'']]],
   ['hivefixinfo_19',['HiveFixInfo',['../structHiveFixInfo.html',1,'']]],
-  ['hivefixinfotostring_20',['hivefixinfotostring',['../hive__recover_8cpp.html#aeede55581b96ea19bbf2f99ae6a71bac',1,'HiveFixInfoToString(const HiveFixInfo &amp;i):&#160;hive_recover.cpp'],['../hive__recover_8h.html#aeede55581b96ea19bbf2f99ae6a71bac',1,'HiveFixInfoToString(const HiveFixInfo &amp;i):&#160;hive_recover.cpp']]],
-  ['hivename_21',['hiveName',['../structHiveFixInfo.html#ae2ef604e15c46bb88454ba69a0b877ce',1,'HiveFixInfo']]],
-  ['hostname_22',['hostname',['../structDestFile.html#a37d1db53e5c3ee0b5d945d850cc657a3',1,'DestFile']]]
+  ['hivefixinfotostring_20',['hivefixinfotostring',['../hive__recover_8h.html#aeede55581b96ea19bbf2f99ae6a71bac',1,'HiveFixInfoToString(const HiveFixInfo &amp;i):&#160;hive_recover.cpp'],['../hive__recover_8cpp.html#aeede55581b96ea19bbf2f99ae6a71bac',1,'HiveFixInfoToString(const HiveFixInfo &amp;i):&#160;hive_recover.cpp']]],
+  ['hivelogentry_21',['HiveLogEntry',['../structHiveLogEntry.html',1,'']]],
+  ['hivename_22',['hiveName',['../structHiveFixInfo.html#ae2ef604e15c46bb88454ba69a0b877ce',1,'HiveFixInfo']]],
+  ['hivereplayinfo_23',['HiveReplayInfo',['../structHiveReplayInfo.html',1,'']]],
+  ['hivereplayinfotostring_24',['hivereplayinfotostring',['../hive__recover_8cpp.html#aed27fc60a5eff5f8813438a08f198e97',1,'HiveReplayInfoToString(const HiveReplayInfo &amp;i):&#160;hive_recover.cpp'],['../hive__recover_8h.html#aed27fc60a5eff5f8813438a08f198e97',1,'HiveReplayInfoToString(const HiveReplayInfo &amp;i):&#160;hive_recover.cpp']]],
+  ['hostname_25',['hostname',['../structDestFile.html#a37d1db53e5c3ee0b5d945d850cc657a3',1,'DestFile']]]
 ];

@@ -114,6 +114,8 @@ Variables</h2></td></tr>
 <tr class="memitem:acaa99682c86093511a287609349c8634" id="r_acaa99682c86093511a287609349c8634"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#acaa99682c86093511a287609349c8634">RUCHE_PATCH</a></td></tr>
 <tr class="memdesc:acaa99682c86093511a287609349c8634"><td class="mdescLeft">&#160;</td><td class="mdescRight">Modification documentée du bloc de base d'une ruche COPIÉE (cf. <a class="el" href="hive__recover_8h.html">hive_recover.h</a>).  <br /></td></tr>
 <tr class="separator:acaa99682c86093511a287609349c8634"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9fe914e7294068db5eadd27c17a3944" id="r_ac9fe914e7294068db5eadd27c17a3944"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#ac9fe914e7294068db5eadd27c17a3944">RUCHE_REJEU</a></td></tr>
+<tr class="separator:ac9fe914e7294068db5eadd27c17a3944"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1264a98237119230449e6c77d4ddfe1e" id="r_a1264a98237119230449e6c77d4ddfe1e"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#a1264a98237119230449e6c77d4ddfe1e">SCM</a></td></tr>
 <tr class="separator:a1264a98237119230449e6c77d4ddfe1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0da13ddb409bbb6ff27051b344f32441" id="r_a0da13ddb409bbb6ff27051b344f32441"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#a0da13ddb409bbb6ff27051b344f32441">COMPTES_LOCAUX</a></td></tr>
@@ -238,6 +240,25 @@ Variables</h2></td></tr>
 <div class="line">                              L<span class="stringliteral">&quot;modifie ; empreinte avant patch consignee.&quot;</span></div>
 </div><!-- fragment -->
 <p>Modification documentée du bloc de base d'une ruche COPIÉE (cf. <a class="el" href="hive__recover_8h.html">hive_recover.h</a>). </p>
+
+</div>
+</div>
+<a id="ac9fe914e7294068db5eadd27c17a3944" name="ac9fe914e7294068db5eadd27c17a3944"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac9fe914e7294068db5eadd27c17a3944">&#9670;&#160;</a></span>RUCHE_REJEU</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const wchar_t * Footprint::RUCHE_REJEU</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Valeur initiale :</b><div class="fragment"><div class="line">= L<span class="stringliteral">&quot;Application des journaux de transaction a la ruche COPIEE, &quot;</span></div>
+<div class="line">                              L<span class="stringliteral">&quot;jamais a l&#39;originale. Le contenu d&#39;origine de chaque page remplacee &quot;</span></div>
+<div class="line">                              L<span class="stringliteral">&quot;est conserve dans un journal d&#39;annulation : la copie brute reste &quot;</span></div>
+<div class="line">                              L<span class="stringliteral">&quot;reconstructible a l&#39;octet.&quot;</span></div>
+</div><!-- fragment --><p>Application des journaux de transaction à une ruche COPIÉE, avec journal d'annulation (cf. <a class="el" href="hive__recover_8h.html">hive_recover.h</a>). </p>
 
 </div>
 </div>

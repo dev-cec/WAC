@@ -16,6 +16,10 @@ const wchar_t* FICHIER_COPIE = L"Lecture d'un fichier d'artefact extrait (copie 
 const wchar_t* RUCHE_PATCH  = L"Modification de 8 octets du bloc de base d'une ruche COPIEE "
                               L"(alignement des numeros de sequence). L'original n'est pas "
                               L"modifie ; empreinte avant patch consignee.";
+const wchar_t* RUCHE_REJEU  = L"Application des journaux de transaction a la ruche COPIEE, "
+                              L"jamais a l'originale. Le contenu d'origine de chaque page remplacee "
+                              L"est conserve dans un journal d'annulation : la copie brute reste "
+                              L"reconstructible a l'octet.";
 const wchar_t* SCM          = L"Une seule enumeration du gestionnaire de services, en lecture "
                               L"(EnumServicesStatusExW), pour relever l'etat courant. Aucun "
                               L"handle ouvert service par service : la configuration provient "

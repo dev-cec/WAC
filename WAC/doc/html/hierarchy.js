@@ -26,6 +26,8 @@ var hierarchy =
     [ "Filename", "structFilename.html", null ],
     [ "FsFlags", "structFsFlags.html", null ],
     [ "HiveFixInfo", "structHiveFixInfo.html", null ],
+    [ "HiveLogEntry", "structHiveLogEntry.html", null ],
+    [ "HiveReplayInfo", "structHiveReplayInfo.html", null ],
     [ "IdList", "structIdList.html", null ],
     [ "IExtensionBlock", "structIExtensionBlock.html", [
       [ "Beef0000", "structBeef0000.html", null ],

@@ -105,6 +105,8 @@ $(document).ready(function(){initNavTree('hive__recover_8cpp.html',''); initResi
 <code>#include &lt;fstream&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
 <code>#include &lt;cstring&gt;</code><br />
+<code>#include &lt;algorithm&gt;</code><br />
+<code>#include &lt;iterator&gt;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Fonctions</h2></td></tr>
@@ -112,6 +114,10 @@ Fonctions</h2></td></tr>
 <tr class="separator:abfdcef62f94d212392944c4002628be4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeede55581b96ea19bbf2f99ae6a71bac" id="r_aeede55581b96ea19bbf2f99ae6a71bac"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hive__recover_8cpp.html#aeede55581b96ea19bbf2f99ae6a71bac">HiveFixInfoToString</a> (const <a class="el" href="structHiveFixInfo.html">HiveFixInfo</a> &amp;i)</td></tr>
 <tr class="separator:aeede55581b96ea19bbf2f99ae6a71bac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a916a65ce0937f535410aca3edd20ad3c" id="r_a916a65ce0937f535410aca3edd20ad3c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structHiveReplayInfo.html">HiveReplayInfo</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hive__recover_8cpp.html#a916a65ce0937f535410aca3edd20ad3c">ReplayHiveLogs</a> (const std::filesystem::path &amp;hive, const std::wstring &amp;md5Avant)</td></tr>
+<tr class="separator:a916a65ce0937f535410aca3edd20ad3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed27fc60a5eff5f8813438a08f198e97" id="r_aed27fc60a5eff5f8813438a08f198e97"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hive__recover_8cpp.html#aed27fc60a5eff5f8813438a08f198e97">HiveReplayInfoToString</a> (const <a class="el" href="structHiveReplayInfo.html">HiveReplayInfo</a> &amp;i)</td></tr>
+<tr class="separator:aed27fc60a5eff5f8813438a08f198e97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Documentation des fonctions</h2>
 <a id="aeede55581b96ea19bbf2f99ae6a71bac" name="aeede55581b96ea19bbf2f99ae6a71bac"></a>
@@ -124,6 +130,25 @@ Fonctions</h2></td></tr>
           <td class="memname">std::wstring HiveFixInfoToString </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="structHiveFixInfo.html">HiveFixInfo</a> &amp;&#160;</td>
+          <td class="paramname"><em>i</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Rend le détail lisible pour le log/rapport (une ligne). </p>
+
+</div>
+</div>
+<a id="aed27fc60a5eff5f8813438a08f198e97" name="aed27fc60a5eff5f8813438a08f198e97"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aed27fc60a5eff5f8813438a08f198e97">&#9670;&#160;</a></span>HiveReplayInfoToString()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring HiveReplayInfoToString </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structHiveReplayInfo.html">HiveReplayInfo</a> &amp;&#160;</td>
           <td class="paramname"><em>i</em></td><td>)</td>
           <td></td>
         </tr>
@@ -151,6 +176,51 @@ Fonctions</h2></td></tr>
 <p>Rend la ruche exploitable par offreg, en place, si elle est « dirty ». Ne touche rien si la ruche est déjà propre (primaire == secondaire). </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
     <tr><td class="paramname">hive</td><td>chemin de la ruche extraite (modifiée en place si dirty) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>détail de l'opération, à consigner dans le rapport </dd></dl>
+
+</div>
+</div>
+<a id="a916a65ce0937f535410aca3edd20ad3c" name="a916a65ce0937f535410aca3edd20ad3c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a916a65ce0937f535410aca3edd20ad3c">&#9670;&#160;</a></span>ReplayHiveLogs()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structHiveReplayInfo.html">HiveReplayInfo</a> ReplayHiveLogs </td>
+          <td>(</td>
+          <td class="paramtype">const std::filesystem::path &amp;&#160;</td>
+          <td class="paramname"><em>hive</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>md5Avant</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Applique les journaux de transaction à une ruche extraite.</p>
+<p>DEUX PIÈGES, tous deux rencontrés sur des données réelles et tous deux déterminants pour l'exactitude du rapport :</p>
+<ul>
+<li><b>L'ORDRE DU FICHIER, PAS L'ORDRE DES SÉQUENCES.</b> Un journal est réutilisé sur place : les entrées d'une génération antérieure survivent APRÈS la fin de la chaîne courante. Les trier par numéro de séquence fait remonter en tête une entrée périmée, dont les pages sont PLUS ANCIENNES que la ruche. Mesuré : les horodatages BAM — de la preuve d'exécution — reculaient de quinze minutes. On suit donc chaque journal dans l'ordre du fichier et on s'arrête à la première rupture de séquence, comme le fait la récupération de Windows ; ce qui suit est du résidu.</li>
+<li><b>CHAQUE ENTRÉE EST VÉRIFIÉE AVANT D'ÊTRE APPLIQUÉE.</b> Les deux empreintes Marvin32 de l'en-tête couvrent l'entête (32 premiers octets) et le corps (de l'offset 40 à la fin). Vérifiées conformes sur 60 entrées de 11 journaux d'une machine réelle. Une entrée qui échoue termine la chaîne : appliquer des pages douteuses à une preuve serait pire que ne rien appliquer.</li>
+</ul>
+<p>Un journal d'annulation <code>&lt;ruche&gt;.undo</code> est écrit à côté de la ruche, contenant le contenu d'ORIGINE de chaque page remplacée. Format, volontairement trivial pour qu'un tiers puisse refaire l'opération en sens inverse : </p><pre class="fragment">0   8   « WACUNDO1 »
+8  32   empreinte MD5 de la ruche AVANT rejeu, en ASCII hexadécimal
+</pre><p> 40 4 nombre de pages 44 8 taille de la ruche avant rejeu 52 4 réservé (0) 56 12×N table des pages : offset (8 octets), taille (4 octets) ... contenu d'origine des pages, dans l'ordre de la table</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">hive</td><td>chemin de la ruche extraite (modifiée en place si le rejeu aboutit) </td></tr>
+    <tr><td class="paramname">md5Avant</td><td>empreinte de la ruche avant rejeu, consignée dans le journal d'annulation ; l'appelant l'a déjà calculée pendant l'extraction </td></tr>
   </table>
   </dd>
 </dl>

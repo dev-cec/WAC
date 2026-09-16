@@ -21,7 +21,10 @@ itself and copies the registry hives onto the collection medium. It does **not**
 create a Volume Shadow Copy, and it does **not** use COM or WMI — all of which
 left entries in the event logs of the examined machine.
 
-**Artefacts are then parsed from those copies**, never from the live system.
+**Artefacts are then parsed from those copies**, never from the live system. The
+hives' transaction logs are extracted too and **replayed onto the copy**, so what
+is parsed is the machine's actual state and not the last state Windows happened
+to flush to disk.
 
 **Nothing is assumed to be on `C:`.** The system drive is detected at run time,
 and — this matters on machines with a system SSD and a separate data disk —
@@ -105,7 +108,8 @@ does to the machine**, operation by operation — including what it cannot avoid
 |---|---|
 | **Raw volume read** (`\\.\X:`, `GENERIC_READ`) | one handle **per volume actually holding artefacts** — usually one. **No file is opened**, so no last-access timestamp is touched and no directory is walked by the OS. If *object access auditing* is enabled, opening a volume can be logged (Security 4656/4663) |
 | **Writing the collection** | on the **collection medium only** (the USB stick). Nothing is written to the examined disk |
-| **Hive repair** | 8 bytes of the base block, **on the copy**. The original is never opened for writing; its fingerprint is recorded before the patch |
+| **Transaction-log replay** | the `.LOG1/.LOG2` are applied **to the copy**, giving the machine's real state rather than its last flushed one. The original content of every replaced page goes into an undo journal, so the raw copy stays reconstructible to the byte. Measured on a real machine: 452 KB for `SYSTEM`, 1 172 KB for `SOFTWARE`, 600 KB for one `ntuser.dat` |
+| **Hive repair** | 8 bytes of the base block, **on the copy** — now only a fallback, since a replayed hive is clean by construction. The original is never opened for writing; its fingerprint is recorded first |
 | **Service state** (1 × `EnumServicesStatusExW`) | one read-only query to the SCM over `\\.\pipe\ntsvcs`. No handle per service, no state change, so no `System` 7036 event |
 | **Processes** (`CreateToolhelp32Snapshot`) | a kernel snapshot; no process handle is opened |
 | **Process owners** (1 × `WTSEnumerateProcessesEx`) | solicits the Terminal Services service, once |
@@ -153,6 +157,23 @@ item, an unrecognised extension block, a value type not yet supported: the raw
 hexadecimal is attached, so an analyst can decode later what WAC could not. The
 alternative — dropping it silently — would make "we cannot read this" look like
 "there was nothing there".
+
+**Everything WAC writes onto a copy can be undone.** Two operations modify an
+extracted hive: the 8-byte base-block patch, fully described in
+`investigation.json`, and the transaction-log replay, which first writes
+`<hive>.undo` holding the original bytes of every page it is about to replace
+(base block included). Verified on three real hives: restoring the undo journal
+reproduces the raw copy byte for byte. The `.LOG1/.LOG2` files are kept as well,
+so a third party can redo the replay independently.
+
+**Replay follows the file, not the sequence numbers.** A transaction log is
+reused in place, so entries from an earlier generation survive *after* the end of
+the current chain. Sorting entries by sequence number brings a stale one to the
+front and applies pages **older** than the hive — measured on a real collection:
+BAM timestamps, which are execution evidence, moved fifteen minutes backwards.
+WAC therefore walks each log in file order and stops at the first break in the
+chain, and every entry is checked against both of its Marvin32 checksums before
+being applied (verified on 60 entries from 11 logs).
 
 **Paths and values are stored raw.** Escaping happens once, at serialisation, so
 what you read in the JSON is what was on the disk.

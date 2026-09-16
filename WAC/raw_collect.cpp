@@ -142,7 +142,8 @@ HRESULT ExtractHivesRaw() {
 	log(0, L"*******************************************************************************************************************");
 	log(0, L"ℹ️Hives recovery :");
 	log(0, L"*******************************************************************************************************************");
-	unsigned patchees = 0, echecs = 0;
+	unsigned patchees = 0, echecs = 0, rejouees = 0;
+	unsigned long long pagesRejouees = 0, octetsRejoues = 0;
 	/* Cette phase ne relit plus les ruches : les empreintes viennent du calcul
 	   fait pendant l'écriture (voir QuickDigest5::Stream). Auparavant, chaque
 	   ruche était relue depuis le support de collecte — environ 150 Mio lus une
@@ -165,15 +166,48 @@ HRESULT ExtractHivesRaw() {
 		if (trouve != md5ParFichier.end()) md5avant = trouve->second;
 		else md5avant = QuickDigest5::fileToHash(wstring_to_string(r));
 
-		HiveFixInfo info = MakeHiveLoadable(r);
 		log(1, L"➕Hive");
-		log(2, L"❇️" + HiveFixInfoToString(info));
-		log(2, L"❇️MD5 copie brute (avant patch) : " + md5avant);
+		log(2, L"❇️MD5 copie brute (avant toute ecriture) : " + md5avant);
 
-		// UNE entree par ruche : le patch est la seule ecriture que WAC produise
-		// sur une preuve, et l'empreinte d'AVANT patch la rend verifiable a
-		// l'octet. Les ruches deja propres sont consignees aussi — « non
-		// modifiee » est une information, pas une absence d'information.
+		/* REJEU D'ABORD. Les journaux de transaction contiennent les pages
+		   modifiees depuis la derniere ecriture complete de la ruche : les
+		   appliquer donne l'etat reel de la machine, et rend la ruche propre par
+		   construction — donc sans patch. Le contenu d'origine de chaque page
+		   remplacee part dans un journal d'annulation, de sorte que la copie
+		   brute reste reconstructible a l'octet (verifie sur trois ruches
+		   reelles). */
+		const HiveReplayInfo rejeu = ReplayHiveLogs(r, md5avant);
+		log(2, L"❇️" + HiveReplayInfoToString(rejeu));
+		if (rejeu.applique) {
+			++rejouees;
+			pagesRejouees  += rejeu.pages;
+			octetsRejoues  += rejeu.octets;
+			auditRecord(L"Rejeu des journaux de transaction d'une ruche copiee ("
+			            + std::to_wstring(rejeu.entreesRetenues) + L" entree(s), "
+			            + std::to_wstring(rejeu.pages) + L" page(s))",
+			            r + L" | " + HiveReplayInfoToString(rejeu)
+			            + L" | MD5 avant rejeu : " + md5avant
+			            + L" | annulation : " + rejeu.journalAnnulation,
+			            ERROR_SUCCESS, Footprint::RUCHE_REJEU);
+		}
+		else if (!rejeu.ok) {
+			// Le rejeu n'a rien ecrit : on le consigne et on retombe sur le patch.
+			log(2, L"🔥Rejeu impossible : " + r + L" (" + rejeu.error + L")");
+			auditRecord(L"Rejeu des journaux de transaction d'une ruche copiee (non applique)",
+			            r + L" | " + HiveReplayInfoToString(rejeu),
+			            E_FAIL, Footprint::RUCHE_COPIE);
+		}
+
+		/* PATCH EN RECOURS. Apres un rejeu abouti la ruche est propre et
+		   MakeHiveLoadable ne fait rien ; il ne reste utile que pour les ruches
+		   sans journal exploitable. */
+		HiveFixInfo info = MakeHiveLoadable(r);
+		log(2, L"❇️" + HiveFixInfoToString(info));
+
+		// UNE entree par ruche : toute ecriture de WAC sur une preuve est
+		// consignee, et l'empreinte d'AVANT la rend verifiable a l'octet. Les
+		// ruches deja propres le sont aussi — « non modifiee » est une
+		// information, pas une absence d'information.
 		// Note : le nom interne rendu par HiveFixInfoToString est tronque a ses
 		// 31 derniers caracteres, comme le format regf le stocke.
 		auditRecord(info.patched ? L"Remise en etat d'une ruche copiee (patch applique)"
@@ -185,7 +219,10 @@ HRESULT ExtractHivesRaw() {
 		else if (info.patched) ++patchees;
 	}
 	printProgressEnd();
-	log(2, L"❇️Ruches remises en état : " + std::to_wstring(patchees)
+	log(2, L"❇️Ruches rejouées : " + std::to_wstring(rejouees)
+	     + L" (" + std::to_wstring(pagesRejouees) + L" pages, "
+	     + std::to_wstring(octetsRejoues / 1024) + L" Kio appliqués)");
+	log(2, L"❇️Ruches remises en état par patch : " + std::to_wstring(patchees)
 	     + L", échecs : " + std::to_wstring(echecs)
 	     + L", fichiers manquants : " + std::to_wstring(manquants));
 
