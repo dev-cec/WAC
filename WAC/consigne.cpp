@@ -86,6 +86,59 @@ std::wstring dossierTravail() {
 	return string_to_wstring(conf._outputDir) + L"\\travail";
 }
 
+unsigned long long ConsigneEspaceLibre() {
+	ULARGE_INTEGER libre = { 0 };
+	const std::wstring sortie = string_to_wstring(conf._outputDir);
+	std::error_code ec;
+	std::filesystem::create_directories(sortie, ec);
+	if (!GetDiskFreeSpaceExW(sortie.c_str(), &libre, nullptr, nullptr)) return 0;
+	return libre.QuadPart;
+}
+
+HRESULT ConsigneVerifierEmplacement(unsigned long long besoinEstime) {
+	std::error_code ec;
+
+	// 1. Un travail deja peuplé ferait analyser une collecte antérieure.
+	const std::filesystem::path travail = dossierTravail();
+	if (std::filesystem::exists(travail, ec)) {
+		bool peuple = false;
+		for (const std::filesystem::directory_entry& e :
+		     std::filesystem::recursive_directory_iterator(travail, ec)) {
+			if (ec) break;
+			if (e.is_regular_file(ec)) { peuple = true; break; }
+		}
+		if (peuple) {
+			log(2, L"🔥Le répertoire de travail contient déjà des fichiers : "
+			       + travail.wstring()
+			       + L" — une collecte antérieure serait analysée à la place de "
+			       L"celle-ci. Utilisez --output vers un dossier neuf.",
+			    ERROR_DIR_NOT_EMPTY);
+			return HRESULT_FROM_WIN32(ERROR_DIR_NOT_EMPTY);
+		}
+	}
+
+	// 2. Place disponible. Le besoin est doublé : consigne + travail.
+	const unsigned long long libre = ConsigneEspaceLibre();
+	if (libre == 0) {
+		// Information indisponible : on ne bloque pas sur une mesure ratée.
+		log(2, L"🔥Espace libre indéterminé sur le support de collecte : "
+		       L"vérification ignorée");
+		return ERROR_SUCCESS;
+	}
+	const unsigned long long besoin = besoinEstime * 2;
+	log(2, L"❇️Support de collecte : " + std::to_wstring(libre / 1024 / 1024)
+	     + L" Mio libres, " + std::to_wstring(besoin / 1024 / 1024)
+	     + L" Mio estimés nécessaires (consigne + travail)");
+	if (libre < besoin) {
+		log(2, L"🔥Place insuffisante sur le support de collecte : "
+		       + std::to_wstring(libre / 1024 / 1024) + L" Mio libres pour "
+		       + std::to_wstring(besoin / 1024 / 1024) + L" Mio nécessaires",
+		    ERROR_DISK_FULL);
+		return HRESULT_FROM_WIN32(ERROR_DISK_FULL);
+	}
+	return ERROR_SUCCESS;
+}
+
 void ConsigneAjouter(const std::vector<RawHiveExtrait>& releve,
                      const std::wstring& methode) {
 	for (const RawHiveExtrait& e : releve) {

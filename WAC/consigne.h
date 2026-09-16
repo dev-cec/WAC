@@ -72,6 +72,32 @@ std::wstring dossierConsigne();
  *  C'est la valeur de `conf.mountpoint` : les collecteurs lisent ici. */
 std::wstring dossierTravail();
 
+/*! Vérifie que l'emplacement de collecte est utilisable, AVANT toute extraction.
+*
+*  Deux refus, tous deux préférables à une collecte qui s'abîme en cours :
+*
+*  - UN RÉPERTOIRE DE TRAVAIL DÉJÀ PEUPLÉ. `ConsigneVersTravail` n'écrase pas
+*    une copie de travail existante — il ne peut pas, sans défaire le rejeu de la
+*    phase précédente. Sur un dossier de sortie réutilisé, l'analyse porterait
+*    donc sur les fichiers d'une collecte ANTÉRIEURE, en silence et sans que rien
+*    dans le rapport ne le dise. C'est le pire cas possible : des conclusions
+*    tirées des données d'une autre machine.
+*
+*  - PAS ASSEZ DE PLACE. Chaque pièce est écrite deux fois, et une écriture
+*    tronquée par un support plein donne une copie que la vérification
+*    d'empreinte signalera — mais après avoir dépensé le temps de l'extraction.
+*    Mieux vaut le dire avant.
+*
+*  @param besoinEstime octets attendus pour la consigne SEULE ; la fonction
+*         demande le double, la copie de travail s'ajoutant
+*  @return ERROR_SUCCESS, ou un code d'erreur avec le motif journalisé
+*/
+HRESULT ConsigneVerifierEmplacement(unsigned long long besoinEstime);
+
+/*! Octets libres sur le volume qui porte le dossier de sortie.
+*  @return 0 si l'information n'a pas pu être obtenue */
+unsigned long long ConsigneEspaceLibre();
+
 /*! Enregistre un relevé d'extraction au manifeste de consigne.
  *
  *  À appeler au fil des extractions, avec le relevé rendu par les fonctions de

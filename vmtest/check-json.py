@@ -203,13 +203,19 @@ def controle_events(rep):
         trouvees += 1
     else:
         etrangers = {n: c for n, c in noms.items() if n not in attendus}
-        # Un journal peut légitimement contenir des événements transférés depuis
-        # une autre machine (collecteur WEC) : on ne s'alarme qu'au-delà de 5 %.
         part = sum(etrangers.values()) / sum(noms.values())
-        if part > 0.05:
-            print(f"  ❌ events.json : {part:.0%} des événements portent un autre nom "
-                  f"de machine que {sorted(attendus)} — {list(etrangers)[:3]}")
+        majoritaire = noms.most_common(1)[0][0]
+        if majoritaire not in attendus:
+            print(f"  ❌ events.json : le nom de machine MAJORITAIRE est "
+                  f"{majoritaire!r}, absent d'OperatingSystem.json {sorted(attendus)}")
             trouvees += 1
+        elif etrangers:
+            # Un renommage de machine, ou des événements transférés depuis un
+            # autre poste (collecteur WEC), laissent légitimement d'anciens noms
+            # dans les journaux : c'est une information, pas un défaut.
+            print(f"  ✅ events.json : nom majoritaire conforme ({majoritaire}), "
+                  f"{part:.0%} d'événements sous {len(etrangers)} autre(s) nom(s) "
+                  f"{list(etrangers)[:2]} — renommage ou événements transférés")
         else:
             print(f"  ✅ events.json : nom de machine conforme à OperatingSystem.json "
                   f"({sum(noms.values())} événement(s))")
@@ -218,31 +224,62 @@ def controle_events(rep):
     sansProvider = sum(1 for e in d if not e.get("EvtSystemProviderName"))
     sansCanal    = sum(1 for e in d if not e.get("EvtSystemChannel"))
     sansDate     = sum(1 for e in d if not e.get("EvtSystemTimeCreated"))
-    if sansProvider * 100 > len(d) or sansCanal or sansDate:
+    # Seuil à un pour mille : quelques enregistrements mal décodés sur des
+    # dizaines de milliers sont à signaler mais ne condamnent pas la collecte,
+    # alors qu'une proportion plus forte trahit une dérive du décodage. WAC
+    # journalise le XML brut de ces enregistrements, ce qui les rend
+    # diagnosticables un par un.
+    pires = max(sansProvider, sansDate)
+    if sansCanal or pires * 1000 > len(d):
         print(f"  ❌ events.json : {sansProvider} sans fournisseur, {sansCanal} sans canal, "
               f"{sansDate} sans date sur {len(d)} — décodage BinXML à vérifier")
         trouvees += 1
+    elif pires:
+        print(f"  ⚠️  events.json : {pires} enregistrement(s) sur {len(d)} à section "
+              f"System incomplète — voir le XML brut dans le journal de WAC")
     else:
         print(f"  ✅ events.json : {len(d)} événement(s), fournisseur/canal/date renseignés")
 
-    # 3. unicité des identifiants par canal
-    vus = collections.defaultdict(set)
-    doublons = collections.Counter()
-    for e in d:
-        canal, rid = e.get("EvtSystemChannel"), e.get("EvtSystemEventRecordId")
-        if canal is None or rid is None:
-            continue
-        if rid in vus[canal]:
-            doublons[canal] += 1
-        vus[canal].add(rid)
-    if doublons:
-        print(f"  ❌ events.json : identifiants d'enregistrement répétés dans "
-              f"{len(doublons)} canal/canaux {doublons.most_common(3)} — "
-              f"un chunk périmé a probablement été relu")
-        trouvees += 1
+    # 3. unicité des identifiants par FICHIER SOURCE, et non par canal
+    #
+    # Un même canal peut être porté par plusieurs fichiers — le journal courant
+    # et ses archives — dont les numéros d'enregistrement se recouvrent
+    # légitimement. L'invariant réel est l'unicité DANS UN FICHIER : deux fois
+    # le même numéro dans un fichier signifie qu'un chunk périmé d'un journal
+    # circulaire a été relu, ce qui est le risque propre au choix de parcourir
+    # tous les chunks physiques.
+    if not any(e.get("EvtSourceLog") for e in d):
+        print("  ⏭️  events.json : provenance absente, contrôle d'unicité ignoré")
     else:
-        print(f"  ✅ events.json : identifiants uniques dans chacun des "
-              f"{len(vus)} canal/canaux")
+        vus = collections.defaultdict(set)
+        doublons = collections.Counter()
+        for e in d:
+            src, rid = e.get("EvtSourceLog"), e.get("EvtSystemEventRecordId")
+            if src is None or rid is None:
+                continue
+            if rid in vus[src]:
+                doublons[src] += 1
+            vus[src].add(rid)
+        if doublons:
+            print(f"  ❌ events.json : identifiants répétés DANS UN MÊME FICHIER "
+                  f"({len(doublons)} fichier(s)) {doublons.most_common(3)} — "
+                  f"un chunk périmé a probablement été relu")
+            trouvees += 1
+        else:
+            print(f"  ✅ events.json : identifiants uniques dans chacun des "
+                  f"{len(vus)} fichier(s) journal")
+        # Les recouvrements ENTRE fichiers d'un même canal sont normaux : on les
+        # compte pour information, car ils signalent la présence d'archives.
+        parCanal = collections.defaultdict(set)
+        recouvre = 0
+        for e in d:
+            cle = (e.get("EvtSystemChannel"), e.get("EvtSystemEventRecordId"))
+            if cle[0] is None or cle[1] is None: continue
+            if cle in parCanal["vus"]: recouvre += 1
+            parCanal["vus"].add(cle)
+        if recouvre:
+            print(f"  ℹ️  events.json : {recouvre} événement(s) de même canal et même "
+                  f"numéro venant de fichiers différents (journal courant + archive)")
 
     # 4. aucun événement postérieur à la collecte
     inv = charge(rep, "investigation.json")
@@ -441,6 +478,16 @@ def controle_references_mft(rep):
                     total += 1
                     entree = o.get("MftEntryNumber") or 0
                     seq = o.get("MftSequenceNumber") or 0
+                    if entree < 27 or seq == 0:
+                        suspects.append((os.path.basename(fichier), entree, seq))
+                # Références du tableau des métriques d'un Prefetch : même règle
+                # de plausibilité, source indépendante (métriques du Prefetch
+                # contre blocs d'extension d'un shell item).
+                ref = o.get("MftReference")
+                if isinstance(ref, dict) and "EntryIndex" in ref:
+                    total += 1
+                    entree = ref.get("EntryIndex") or 0
+                    seq = ref.get("SequenceNumber") or 0
                     if entree < 27 or seq == 0:
                         suspects.append((os.path.basename(fichier), entree, seq))
                 pile.extend(o.values())

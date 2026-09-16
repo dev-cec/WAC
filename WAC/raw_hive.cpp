@@ -13,6 +13,7 @@
 #include <algorithm>
 #include "quickdigest5.h"
 #include "sha.h"
+#include "lznt1.h"
 
 namespace {
 
@@ -196,6 +197,130 @@ public:
         return true;
     }
 
+    /*! Extrait un flux compresse NTFS, unite de compression par unite.
+     *
+     *  Chaque unite est independante et se presente sous trois formes, que la
+     *  liste des sequences suffit a distinguer :
+     *    - toutes les grappes allouees : l'unite est stockee TELLE QUELLE, la
+     *      compression n'ayant rien gagne ;
+     *    - toutes creuses : des zeros ;
+     *    - partiellement allouee : les grappes presentes portent la forme
+     *      compressee, a detendre jusqu'a la taille de l'unite.
+     *
+     *  Ne pas distinguer le premier cas est l'erreur classique : detendre une
+     *  unite stockee telle quelle rend des donnees fausses sans aucune erreur.
+     */
+    HRESULT extraireCompresse(const std::vector<Run>& runs, uint64_t realSize,
+                              uint32_t uniteGrappes, std::ofstream& out,
+                              const std::wstring& libelle, RawHiveEmpreintes* emp){
+        const uint64_t tailleUnite = (uint64_t)uniteGrappes * bytesPerCluster_;
+
+        // Table VCN -> LCN : les unites se lisent par position, pas par sequence.
+        std::vector<int64_t> lcnParVcn;
+        for (const Run& r : runs){
+            for (uint64_t k = 0; k < r.count; ++k){
+                if (lcnParVcn.size() > (1ULL << 26)) break;   // garde-fou (256 Mio de VCN)
+                lcnParVcn.push_back(r.lcn < 0 ? -1 : (int64_t)(r.lcn + (int64_t)k));
+            }
+        }
+
+        std::vector<uint8_t> unite((size_t)tailleUnite);
+        std::vector<uint8_t> brut((size_t)tailleUnite);
+        std::vector<uint8_t> cl(bytesPerCluster_);
+        Md5Stream flux; Sha1Stream flux1; Sha256Stream flux256;
+        uint64_t ecrit = 0, prochainRapport = 0;
+
+        for (uint64_t vcn = 0; ecrit < realSize; vcn += uniteCompressionPas(uniteGrappes)){
+            // Etat de l'unite : combien de grappes allouees, et sont-elles en tete ?
+            uint32_t allouees = 0;
+            for (uint32_t k = 0; k < uniteGrappes; ++k){
+                const uint64_t v = vcn + k;
+                if (v < lcnParVcn.size() && lcnParVcn[v] >= 0) ++allouees;
+            }
+
+            size_t produit = 0;
+            if (allouees == 0){
+                // Unite creuse : des zeros, sans rien lire.
+                std::fill(unite.begin(), unite.end(), (uint8_t)0);
+                produit = (size_t)tailleUnite;
+            }
+            else {
+                // Les grappes allouees d'une unite sont contigues en tete.
+                size_t lus = 0;
+                bool erreur = false;
+                for (uint32_t k = 0; k < allouees; ++k){
+                    const uint64_t v = vcn + k;
+                    if (v >= lcnParVcn.size() || lcnParVcn[v] < 0){ erreur = true; break; }
+                    if (!readCluster((uint64_t)lcnParVcn[v], cl.data())){ erreur = true; break; }
+                    std::memcpy(brut.data() + lus, cl.data(), bytesPerCluster_);
+                    lus += bytesPerCluster_;
+                }
+                if (erreur) return E_FAIL;
+
+                if (allouees == uniteGrappes){
+                    // Stockee telle quelle : AUCUNE decompression.
+                    std::memcpy(unite.data(), brut.data(), (size_t)tailleUnite);
+                    produit = (size_t)tailleUnite;
+                }
+                else {
+                    produit = Lznt1Detendre(brut.data(), lus, unite.data(), (size_t)tailleUnite);
+                    if (produit == 0){
+                        RVLOG(L"[raw] LZNT1 : unite a VCN %llu illisible\n",
+                              (unsigned long long)vcn);
+                        return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+                    }
+                    // Une unite detendue incomplete n'est normale qu'en fin de
+                    // fichier ; ailleurs, c'est un flux abime.
+                    if (produit < tailleUnite && ecrit + produit < realSize)
+                        std::fill(unite.begin() + produit, unite.end(), (uint8_t)0);
+                }
+            }
+
+            const uint64_t reste = realSize - ecrit;
+            const size_t aEcrire = (size_t)((reste < tailleUnite) ? reste : tailleUnite);
+            if (aEcrire > produit && allouees != 0 && allouees != uniteGrappes){
+                // Moins de donnees que la taille annoncee : on ecrit ce qu'on a.
+                out.write((const char*)unite.data(), (std::streamsize)produit);
+                if (emp){
+                    flux.update(unite.data(), produit);
+                    flux1.update(unite.data(), produit);
+                    flux256.update(unite.data(), produit);
+                }
+                ecrit += produit;
+            }
+            else {
+                out.write((const char*)unite.data(), (std::streamsize)aEcrire);
+                if (emp){
+                    flux.update(unite.data(), aEcrire);
+                    flux1.update(unite.data(), aEcrire);
+                    flux256.update(unite.data(), aEcrire);
+                }
+                ecrit += aEcrire;
+            }
+
+            if (g_progress && !libelle.empty() && ecrit >= prochainRapport){
+                g_progress(libelle.c_str(), ecrit, realSize);
+                prochainRapport = ecrit + (1ULL << 20);
+            }
+            if (vcn >= lcnParVcn.size()) break;      // au-dela de la table
+        }
+        if (g_progress && !libelle.empty()) g_progress(libelle.c_str(), ecrit, realSize);
+
+        if (emp){
+            emp->md5    = flux.hexDigest();
+            emp->sha1   = flux1.hexDigest();
+            emp->sha256 = flux256.hexDigest();
+            emp->octets = ecrit;
+            emp->tailleAnnoncee = realSize;
+        }
+        RVLOG(L"[raw] compresse : %llu octets detendus sur %llu annonces\n",
+              (unsigned long long)ecrit, (unsigned long long)realSize);
+        return (ecrit == realSize) ? S_OK : S_FALSE;
+    }
+
+    //! Pas d'avancement en VCN : la taille de l'unité de compression.
+    static uint64_t uniteCompressionPas(uint32_t uniteGrappes){ return uniteGrappes; }
+
     HRESULT extractData(uint64_t index, const std::wstring& outFile,
                         const std::wstring& libelle = std::wstring(),
                         RawHiveEmpreintes* emp = nullptr){
@@ -230,6 +355,7 @@ public:
         bool resident = false;
         const uint8_t* residentData = nullptr;
         uint32_t residentLen = 0;
+        uint32_t uniteCompression = 0;     // en grappes ; 0 = donnee non compressee
 
         const uint8_t* a = findAttr(rec, 0x80 /*$DATA*/);
         if (a){
@@ -239,10 +365,14 @@ public:
                 residentData = a + rd16(a + 0x14);
             }
             else {
-                if (rd16(a + 0x0C) & 0x0001){     // compressé NTFS : non géré
-                    RVLOG(L"[raw] $DATA compresse NTFS : non supporte\n");
-                    return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
-                }
+                /*  COMPRESSION NTFS. Windows 11 l'active sur
+                    \Windows\System32\winevt\Logs : la refuser rendait
+                    inexploitable la totalite des journaux d'evenements (400 sur
+                    404 mesures sur une VM Windows 11). L'attribut declare la
+                    taille de l'unite de compression en puissance de deux
+                    grappes ; le detail du format est dans lznt1.h. */
+                if (rd16(a + 0x0C) & 0x0001)
+                    uniteCompression = (uint32_t)1u << rd16(a + 0x22);
                 realSize = rd64(a + 0x30);
                 runs = decodeRuns(a + rd16(a + 0x20), a + rd32(a + 0x04));
             }
@@ -268,6 +398,17 @@ public:
                 emp->resident = true;
             }
             return S_OK;
+        }
+
+        /*  EXTRACTION D'UN FLUX COMPRESSE. Le fichier est decoupe en unites de
+            compression independantes ; chacune est soit entierement allouee
+            (stockee telle quelle), soit entierement creuse (des zeros), soit
+            partiellement allouee — et ses grappes presentes portent alors la
+            forme compressee, a detendre jusqu'a la taille de l'unite. */
+        if (uniteCompression > 1){
+            const HRESULT h = extraireCompresse(runs, realSize, uniteCompression,
+                                                out, libelle, emp);
+            return h;
         }
 
         std::vector<uint8_t> cl(bytesPerCluster_);

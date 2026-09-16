@@ -1,4 +1,5 @@
 #include "prefetchs.h"
+#include <map>
 
 MFTInformation::MFTInformation(LPBYTE data) {
 	sequenceNumber = *reinterpret_cast<unsigned int*>(data + 6);
@@ -43,12 +44,19 @@ Json Filename::toJson() {
 	o.add(L"Filename", Json::str(filename));
 	o.add(L"FullPath", Json::str(fullPath));
 	if (!md5.empty()) o.add(L"Md5", Json::str(md5));
+	// Emise seulement si relevee : un couple de zeros se lirait comme une
+	// reference valide vers l'enregistrement 0 de la $MFT, qui est la $MFT
+	// elle-meme.
+	if (referenceConnue) o.add(L"MftReference", reference.toJson());
 	return o;
 }
 
 VolumeInfo::VolumeInfo(LPBYTE data, int indice) {
 	LPBYTE indVolume = data + indice * 96;
 	unsigned int offset = *reinterpret_cast<unsigned int*>(indVolume);
+	// Longueur ANNONCEE du nom de peripherique. La lecture s'y borne : sans
+	// elle, une chaine non terminee dans un fichier abime faisait lire
+	// jusqu'au premier zero rencontre, n'importe ou en memoire.
 	unsigned int numChar = *reinterpret_cast<unsigned int*>(indVolume + 4);
 	creationTimeUtc = *reinterpret_cast<FILETIME*>(indVolume + 8);
 	log(3, L"🔈utcVersLocalSuspect creationTime");
@@ -56,7 +64,10 @@ VolumeInfo::VolumeInfo(LPBYTE data, int indice) {
 	// Chemins BRUTS : l'echappement est centralise dans json.h. Les
 	// substitutions deviceName -> mountPoint ci-dessous operent donc sur les
 	// valeurs reelles, ce qui les rend aussi utilisables telles quelles en I/O.
-	deviceName = std::wstring((wchar_t*)(data + offset)).data();
+	deviceName = std::wstring((const wchar_t*)(data + offset),
+	                          numChar > 4096 ? 0 : numChar);
+	// Le nom est termine par un zero que le compte n'inclut pas toujours.
+	while (!deviceName.empty() && deviceName.back() == L'\0') deviceName.pop_back();
 	/* NUMERO DE SERIE DU VOLUME, meme defaut que le hash du chemin : les quatre
 	   octets etaient inseres dans un flux sans largeur imposee, si bien qu'un
 	   octet inferieur a 0x10 sortait sur un seul chiffre. Le numero ne
@@ -84,10 +95,19 @@ VolumeInfo::VolumeInfo(LPBYTE data, int indice) {
 	}
 
 	int fileRefOffset = *reinterpret_cast<int*>(indVolume + 20);
+	// Taille ANNONCEE du bloc de references : elle borne le compte, qui vient
+	// lui aussi du fichier et n'a donc pas a etre cru sur parole.
 	int fileRefSize = *reinterpret_cast<int*>(indVolume + 24);
 	LPBYTE fileRefsIndex = indVolume + fileRefOffset;
 	int fileRefVer = *reinterpret_cast<int*>(fileRefsIndex);
 	int numFileRefs = *reinterpret_cast<int*>(fileRefsIndex + 4);
+	const int maxFileRefs = (fileRefSize > 16) ? (fileRefSize - 16) / 8 : 0;
+	if (numFileRefs > maxFileRefs) {
+		log(2, L"🔥Prefetch : " + std::to_wstring(numFileRefs)
+		     + L" references annoncees pour " + std::to_wstring(maxFileRefs)
+		     + L" possibles — compte ramene a la taille du bloc", ERROR_INVALID_DATA);
+		numFileRefs = maxFileRefs;
+	}
 	if (fileRefVer == 3) {
 		for (int k = 0; k < numFileRefs; k++) {
 			log(3, L"🔈MFTInformation");
@@ -277,8 +297,13 @@ HRESULT Prefetch::read() {
 	int start = *reinterpret_cast<int*>(data + 84);
 	int nb_entries = *reinterpret_cast<int*>(data + 84 + 4);
 
+	/*  CHAINES DE TRACE. Leur CONTENU n'est pas émis : il décrit l'ordre de
+	    chargement des pages mémoire du programme, une donnée d'optimisation du
+	    préchargeur, sans nom, chemin ni horodatage. Mais leur décalage sert :
+	    il marque la FIN du tableau des métriques, juste au-dessus, et c'est la
+	    seule borne exacte de ce tableau. */
 	int trace_offset = *reinterpret_cast<int*>(data + 84 + 8);
-	int nb_traces = *reinterpret_cast<int*>(data + 84 + 12);
+	(void)*reinterpret_cast<int*>(data + 84 + 12);   // nombre de chaînes de trace
 
 	int filename_offset = *reinterpret_cast<int*>(data + 84 + 16);
 	int filename_size = *reinterpret_cast<int*>(data + 84 + 20);
@@ -286,6 +311,8 @@ HRESULT Prefetch::read() {
 	int volume_offset = *reinterpret_cast<int*>(data + 84 + 24);
 	int nb_volumes = *reinterpret_cast<int*>(data + 84 + 28);
 
+	// Taille ANNONCEE du bloc des volumes : elle borne le compte ci-dessous,
+	// qui vient lui aussi du fichier.
 	int volume_size = *reinterpret_cast<int*>(data + 84 + 32);
 	//run times
 	for (int i = 0; i < 8; i++) {
@@ -308,16 +335,85 @@ HRESULT Prefetch::read() {
 		run_count = *reinterpret_cast<int*>(data + 84 + 116);
 	}
 	//VOLUMES
+	// Une entree de volume fait 96 octets (cf. VolumeInfo) : au-dela de ce que
+	// le bloc peut contenir, le compte est faux et la lecture sortirait du
+	// tampon.
+	const int maxVolumes = (volume_size > 0) ? volume_size / 96 : 0;
+	if (nb_volumes > maxVolumes) {
+		log(2, L"🔥Prefetch : " + std::to_wstring(nb_volumes)
+		     + L" volumes annonces pour " + std::to_wstring(maxVolumes)
+		     + L" possibles — compte ramene a la taille du bloc", ERROR_INVALID_DATA);
+		nb_volumes = maxVolumes;
+	}
 	for (int i = 0; i < nb_volumes; i++) {
 		log(3, L"🔈VolumeInfo");
 		volumes.push_back(VolumeInfo(data + volume_offset, i));
 	}
+	/*  TABLEAU DES METRIQUES DE FICHIER. Il n'etait pas lu du tout, alors qu'il
+	    porte, pour CHAQUE fichier charge, sa reference $MFT — laquelle identifie
+	    le fichier sur le volume independamment de son nom, donc y compris si
+	    l'executable a ete renomme ou supprime depuis. Une entree fait 32 octets
+	    en version 30 et au-dela (les seules prises en charge) :
+	      0  debut, 4 duree, 8 duree moyenne,
+	      12 decalage du nom dans le bloc des chaines, 16 nombre de caracteres,
+	      20 drapeaux, 24 reference $MFT (48 bits d'entree + 16 de sequence). */
+	std::map<std::wstring, MFTInformation> metriques;   // nom du fichier -> reference
+	{
+		const int TAILLE_METRIQUE = 32;
+		/*  Le compte vient du fichier : on le borne par la place reellement
+		    disponible. La borne est le debut des chaines de trace, qui suivent
+		    immediatement le tableau — et non le debut des chaines de noms, plus
+		    loin : mesure sur une machine reelle, cette seconde borne donnait un
+		    maximum incoherent pour une partie des Prefetch, et leurs metriques
+		    etaient toutes ecartees (taux de reference de 0 % sur certains
+		    fichiers, 100 % sur d'autres). */
+		int maxMetriques = (trace_offset > start)
+		                 ? (trace_offset - start) / TAILLE_METRIQUE : 0;
+		int retenues = nb_entries;
+		if (retenues < 0 || retenues > maxMetriques) {
+			log(2, L"🔥Prefetch : " + std::to_wstring(nb_entries)
+			     + L" metriques annoncees pour " + std::to_wstring(maxMetriques)
+			     + L" possibles — compte ramene", ERROR_INVALID_DATA);
+			retenues = maxMetriques;
+		}
+		/*  APPARIEMENT PAR LE CONTENU, et non par le rang ni par un cumul de
+		    decalages. Le nom est lu A SON DECALAGE ANNONCE dans le bloc des
+		    chaines : c'est exact par construction, et une reference ne peut donc
+		    pas etre attribuee au mauvais fichier.
+		    Reconstituer les decalages en cumulant les longueurs ne marche pas :
+		    multiWstring_to_vector ecarte les chaines vides tout en avancant sa
+		    position, si bien que le cumul derive de deux octets a chaque vide —
+		    mesure sur une machine reelle, 124 Prefetch sur 279 n'obtenaient
+		    alors aucune reference. */
+		for (int k = 0; k < retenues; ++k) {
+			LPBYTE m = data + start + (size_t)k * TAILLE_METRIQUE;
+			const unsigned int decalageNom = *reinterpret_cast<unsigned int*>(m + 12);
+			const unsigned int nbCar = *reinterpret_cast<unsigned int*>(m + 16);
+			// Bornes : les deux champs viennent du fichier examine.
+			if (decalageNom >= (unsigned int)filename_size) continue;
+			if (nbCar == 0 || nbCar > 32768) continue;
+			if (decalageNom + (nbCar + 1) * sizeof(wchar_t) > (size_t)filename_size) continue;
+			std::wstring nom((const wchar_t*)(data + filename_offset + decalageNom), nbCar);
+			while (!nom.empty() && nom.back() == L'\0') nom.pop_back();
+			if (nom.empty()) continue;
+			metriques.emplace(nom, MFTInformation(m + 24));
+		}
+		log(2, L"❇️Prefetch : " + std::to_wstring(metriques.size())
+		     + L" metrique(s) de fichier lue(s)");
+	}
+
 	//FILENAMES
 	log(3, L"🔈multiWstring_to_vector filenames");
 	std::vector<std::wstring> tv = multiWstring_to_vector(data + filename_offset, filename_size);
 	for (std::wstring w : tv) {
 		Filename f;
 		f.filename = w.data();
+		const std::map<std::wstring, MFTInformation>::const_iterator m =
+			metriques.find(f.filename);
+		if (m != metriques.end()) {
+			f.reference = m->second;
+			f.referenceConnue = (m->second.entryIndex != 0);
+		}
 		for (const VolumeInfo& v : volumes) {
 			/* CE QUI ÉTAIT FAUX. La comparaison portait sur `substr(0, 35)`, une
 			   longueur codée en dur, alors que `deviceName` en fait 34
@@ -383,6 +479,11 @@ Json Prefetch::toJson() {
 	o.add(L"Volumes",   std::move(vols));
 	Json fns = Json::arr();
 	for (Filename& fn : filenames) fns.push(fn.toJson());
+	/*  VERSION DU FORMAT. Lue depuis toujours pour ecarter les Prefetch
+	    anterieurs a Windows 10, jamais emise — alors que c'est elle qui explique
+	    les differences de contenu d'un Prefetch a l'autre, et qu'un analyste en
+	    a besoin pour savoir quoi attendre du fichier. */
+	o.add(L"FormatVersion",  Json::num((long long)version));
 	o.add(L"NbFilesStrings", Json::num((unsigned long long)filenames.size()));
 	o.add(L"FilesStrings",   std::move(fns));
 	return o;

@@ -50,6 +50,26 @@ void rapporterProgression(const wchar_t* item, unsigned long long fait,
 HRESULT ExtractHivesRaw() {
 	conf.mountpoint = dossierTravail();
 
+	/*  EMPLACEMENT DE COLLECTE, verifie AVANT la premiere ecriture. Deux refus,
+	    tous deux preferables a une collecte qui s'abime en cours : un repertoire
+	    de travail deja peuple ferait analyser une collecte anterieure, et un
+	    support trop petit donnerait des copies tronquees. L'estimation est
+	    volontairement grossiere — les ruches d'une installation ordinaire, plus
+	    les journaux d'evenements quand ils sont demandes ; elle n'a pas a etre
+	    juste, seulement a ecarter un support manifestement insuffisant. */
+	{
+		const unsigned long long besoin = conf._events
+		                                ? 400ULL * 1024 * 1024   // ruches + journaux
+		                                : 250ULL * 1024 * 1024;  // ruches seules
+		const HRESULT hrLieu = ConsigneVerifierEmplacement(besoin);
+		auditRecord(L"Verification de l'emplacement de collecte ("
+		            + std::to_wstring(ConsigneEspaceLibre() / 1024 / 1024)
+		            + L" Mio libres)",
+		            string_to_wstring(conf._outputDir),
+		            hrLieu, Footprint::ECRITURE_USB);
+		if (FAILED(hrLieu)) return hrLieu;
+	}
+
 	/* EXTRACTION GROUPEE PAR VOLUME.
 	   Un seul volume etait suppose, celui de Windows : un profil situe sur un
 	   autre disque (« D:\Users\jean », cas d'un poste a SSD systeme + disque de

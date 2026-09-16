@@ -125,15 +125,24 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t taille) {
 				volumeSerial = to_hex(serial);
 				transform(volumeSerial.begin(), volumeSerial.end(), volumeSerial.begin(), ::toupper);
 				
+				/*  ETIQUETTE DE VOLUME. La specification du .lnk est explicite :
+				    une valeur de 0x14 dans VolumeLabelOffset signale que
+				    l'etiquette n'est PAS a cet endroit, mais en UTF-16 a
+				    l'offset donne par VolumeLabelOffsetUnicode, juste apres.
+				    Le code lisait bien ce second offset mais reutilisait le
+				    premier, et traitait la chaine comme de l'ANSI : l'etiquette
+				    sortait fausse — un octet sur deux etant un zero, elle sortait
+				    le plus souvent tronquee au premier caractere. */
 				unsigned int labeloffset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + volumeId_offset + 12);
 				if (labeloffset != 0x14) {
-					log(3, L"🔈string_to_wstring volumeSerial");
+					log(3, L"🔈string_to_wstring volumeLabel (ANSI)");
 					volumeLabel = string_to_wstring(std::string((char*)(buffer + LinkInfo_offset + volumeId_offset + labeloffset)));
 				}
 				else {
 					unsigned int labeloffsetunicode = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + volumeId_offset + 16);
-					log(3, L"🔈string_to_wstring volumeLabel");
-					volumeLabel = string_to_wstring(std::string((char*)(buffer + LinkInfo_offset + volumeId_offset + labeloffset)));
+					log(3, L"🔈volumeLabel (UTF-16)");
+					volumeLabel = std::wstring((const wchar_t*)(buffer + LinkInfo_offset
+					                           + volumeId_offset + labeloffsetunicode));
 				}
 			}
 			//-------------------------------------------------------------------------

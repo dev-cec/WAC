@@ -76,7 +76,8 @@ Json donneesEvenement(const XmlNode& racine) {
 } // namespace
 
 Event::Event(const XmlNode& racine, const std::wstring& canal,
-             unsigned long long identifiant) {
+             unsigned long long identifiant, const std::wstring& nomFichier) {
+	evtSourceLog = chaine(nomFichier);
 	const XmlNode* sys = racine.enfant(L"System");
 	if (!sys) {
 		// Enregistrement sans section System : on garde au moins son numéro,
@@ -153,6 +154,7 @@ Json Event::toJson() const {
 	o.add(L"EvtSystemUserID",            evtSystemUserID);
 	o.add(L"EvtSystemVersion",           evtSystemVersion);
 	o.add(L"EvtEventData",               evtEventData);
+	o.add(L"EvtSourceLog",               evtSourceLog);
 	return o;
 }
 
@@ -176,7 +178,7 @@ HRESULT Events::getData() {
 	EcrivainJsonTableau sortie("events.json");
 	if (!sortie.ouvert()) return E_FAIL;
 
-	unsigned long long journauxIllisibles = 0;
+	unsigned long long journauxIllisibles = 0, incomplets = 0;
 	size_t iFichier = 0;
 	for (const std::filesystem::path& journal : journaux) {
 		const std::wstring nomFichier = journal.filename().wstring();
@@ -198,7 +200,20 @@ HRESULT Events::getData() {
 					       + L" : XML non analysable (" + canal + L")");
 					return true;
 				}
-				sortie.ajouter(Event(*racine, canal, e.identifiant).toJson());
+				Event ev(*racine, canal, e.identifiant, nomFichier);
+				/*  Un enregistrement dont la section System est incomplete est le
+				    signe d'un decodage qui a devie sur CE record. Le XML brut part
+				    au journal : sans lui, l'evenement se lit comme pauvre en
+				    donnees alors qu'il est mal lu — et le defaut reste
+				    indiagnosticable. */
+				if (ev.evtSystemProviderName.kind() == Json::Kind::Null
+				    || ev.evtSystemTimeCreated.kind() == Json::Kind::Null) {
+					++incomplets;
+					log(2, L"🔥Evenement " + std::to_wstring(e.identifiant) + L" de "
+					     + nomFichier + L" : section System incomplete");
+					log(3, L"🔈XML : " + e.xml.substr(0, 2000));
+				}
+				sortie.ajouter(ev.toJson());
 				++lus;
 				return true;
 			}, &bilan);
@@ -221,6 +236,9 @@ HRESULT Events::getData() {
 	       + std::to_wstring(journaux.size()) + L" journaux)");
 	if (illisibles)
 		log(2, L"🔥Enregistrements ecartes : " + std::to_wstring(illisibles));
+	if (incomplets)
+		log(2, L"🔥Enregistrements a section System incomplete : "
+		     + std::to_wstring(incomplets));
 
 	if (FAILED(fermeture)) return fermeture;
 	if (fichiers == 0) return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);

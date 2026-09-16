@@ -16,6 +16,15 @@ whatever it cannot avoid must be written down.
 
 ## 🧭 HOW IT WORKS
 
+**NTFS compression is handled.** Windows 11 turns compression on for
+`\Windows\System32\winevt\Logs`, so the event logs are stored compressed
+(measured: `System.evtx`, 1 118 208 bytes held in 589 824 on disk). A raw reader
+that ignores this returns *nothing* for those files — on a Windows 11 VM, 400 of
+404 logs failed before this was implemented, which made the offline reading of
+event logs useless on the most common operating system. Compression is a
+directory attribute that a user or a policy can set anywhere, so any artefact can
+be affected.
+
 **The volume is read raw, in read-only.** WAC opens `\\.\X:`, walks the `$MFT`
 itself and copies the registry hives onto the collection medium. It does **not**
 create a Volume Shadow Copy, and it does **not** use COM or WMI — all of which
@@ -219,6 +228,15 @@ WAC therefore walks each log in file order and stops at the first break in the
 chain, and every entry is checked against both of its Marvin32 checksums before
 being applied (verified on 60 entries from 11 logs).
 
+**Every event says which file it came from.** A single channel can be carried by
+several files — the live log and its archives, whose record numbers legitimately
+overlap, and, as measured on a real machine, a log that holds events declaring
+*another* channel. Without that provenance, two events with the same channel and
+the same record number are indistinguishable, and there is no way to tell a
+legitimate duplicate from a reading defect. `EvtSourceLog` carries the log file
+name, and the test harness checks uniqueness **per file** rather than per channel
+— the invariant that actually holds.
+
 **Paths and values are stored raw.** Escaping happens once, at serialisation, so
 what you read in the JSON is what was on the disk.
 
@@ -354,9 +372,25 @@ system DLLs — which matters for a tool run from a USB stick on a machine one m
 not install anything on. `offreg.dll` (offline registry API) ships with the tool;
 its import library is generated at build time from the bundled `.def`.
 
-`-Wall -Wextra` is enabled. The warnings that remain are deliberate: they mark
-format fields that are decoded but not yet emitted, and serve as the to-do list
-for format completeness.
+`-Wall -Wextra` is enabled and the build is now **warning-free**. Those warnings
+used to serve as the to-do list for format completeness — each one marked a field
+the parsers decoded and then dropped. Clearing them turned up real defects rather
+than cosmetic ones:
+
+- a `.lnk` **volume label** read from the wrong offset and as ANSI when the
+  format said Unicode, so it came out truncated at its first character;
+- per-loaded-file **`$MFT` references** in Prefetch, never parsed at all — they
+  identify a file on the volume independently of its name, so a renamed or
+  deleted executable can still be found. 9 117 references on the test machine,
+  all passing the plausibility check. **Known limitation**: they come out on 155
+  of 279 Prefetch files; on the other 124 the metrics block is not read and the
+  reason is not yet established. The format version is now emitted for each
+  Prefetch, which is what a diagnosis needs;
+- four **announced string lengths** that were read but never used to bound the
+  read itself, leaving the parsers to run to the next zero byte, wherever that
+  fell;
+- three **counts taken from the file on trust** (volumes, `$MFT` references,
+  file metrics), now bounded by the size the file itself declares for the block.
 
 ## 🧪 AUTOMATED TESTING
 
@@ -423,6 +457,14 @@ next one).
 ```bash
 cd WAC && g++ -std=c++17 -I. sha.cpp sha_test.cpp -o /tmp/sha_test && /tmp/sha_test
 ```
+
+`lznt1_test.cpp` checks the NTFS decompressor against **Microsoft's own
+compressor**: `RtlCompressBuffer` from `ntdll` compresses a known file one
+compression unit at a time, and the test decompresses each unit here and compares
+byte for byte. A wrong decompressor usually decodes without any error and returns
+wrong data, which is why the comparison is exhaustive rather than a size check.
+Result on a 1 118 208-byte log: 16 compressed units out of 16 conform, 1 048 576
+bytes identical.
 
 `consigne_test.cpp` checks the exhibit-store procedure, and specifically the one
 thing that must never happen and is silent when it does: **the sealed copy being

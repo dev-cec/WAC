@@ -61,6 +61,16 @@ struct Event {
 	Json evtSystemUserID = Json::null();            //!< SID de l'utilisateur
 	Json evtSystemVersion = Json::null();           //!< version du schéma de l'événement
 	Json evtEventData = Json::null();               //!< données propres à l'événement
+	/*! Nom du fichier journal d'où l'événement provient.
+	*
+	*  PROVENANCE. Un même canal peut être porté par plusieurs fichiers : le
+	*  journal courant et ses archives, qu'une machine conserve côte à côte avec
+	*  des numéros d'enregistrement qui se recouvrent. Sans ce champ, deux
+	*  événements de même canal et de même numéro sont indiscernables, et rien
+	*  ne dit lequel vient d'où — ce qui interdit de trancher entre un doublon
+	*  légitime et un défaut de lecture.
+	*/
+	Json evtSourceLog = Json::null();
 
 	/*! Construit l'événement depuis le XML décodé d'un enregistrement.
 	*  @param racine élément `<Event>` analysé par xml_light
@@ -69,8 +79,9 @@ struct Event {
 	*  @param identifiant numéro d'enregistrement lu dans l'en-tête binaire,
 	*         employé si le XML ne porte pas `<EventRecordID>`
 	*/
+	/*! @param nomFichier nom du fichier journal, consigné comme provenance */
 	Event(const XmlNode& racine, const std::wstring& canal,
-	      unsigned long long identifiant);
+	      unsigned long long identifiant, const std::wstring& nomFichier);
 
 	/*! conversion de l'objet au format json */
 	Json toJson() const;

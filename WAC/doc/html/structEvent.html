@@ -108,8 +108,8 @@ $(document).ready(function(){initNavTree('structEvent.html',''); initResizable()
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Fonctions membres publiques</h2></td></tr>
-<tr class="memitem:aacaa7e35dbdc19ab14882c216b40998d" id="r_aacaa7e35dbdc19ab14882c216b40998d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvent.html#aacaa7e35dbdc19ab14882c216b40998d">Event</a> (const <a class="el" href="structXmlNode.html">XmlNode</a> &amp;racine, const std::wstring &amp;canal, unsigned long long identifiant)</td></tr>
-<tr class="separator:aacaa7e35dbdc19ab14882c216b40998d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4be366211f9152a80efa955bcef36fcb" id="r_a4be366211f9152a80efa955bcef36fcb"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvent.html#a4be366211f9152a80efa955bcef36fcb">Event</a> (const <a class="el" href="structXmlNode.html">XmlNode</a> &amp;racine, const std::wstring &amp;canal, unsigned long long identifiant, const std::wstring &amp;nomFichier)</td></tr>
+<tr class="separator:a4be366211f9152a80efa955bcef36fcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac83247741a82814a4adcf83cbd9545a8" id="r_ac83247741a82814a4adcf83cbd9545a8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvent.html#ac83247741a82814a4adcf83cbd9545a8">toJson</a> () const</td></tr>
 <tr class="separator:ac83247741a82814a4adcf83cbd9545a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0862af1471604bf30a4f50a5e028637a" id="r_a0862af1471604bf30a4f50a5e028637a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvent.html#a0862af1471604bf30a4f50a5e028637a">clear</a> ()</td></tr>
@@ -174,13 +174,15 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:a71647f03eadce96ebc1a8be134997ac1" id="r_a71647f03eadce96ebc1a8be134997ac1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvent.html#a71647f03eadce96ebc1a8be134997ac1">evtEventData</a> = <a class="el" href="classJson.html#a5bc2d676aa8d106a2c98ca3ee41cc4e6">Json::null</a>()</td></tr>
 <tr class="memdesc:a71647f03eadce96ebc1a8be134997ac1"><td class="mdescLeft">&#160;</td><td class="mdescRight">données propres à l'événement  <br /></td></tr>
 <tr class="separator:a71647f03eadce96ebc1a8be134997ac1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d49bce59c56ed87c96e22d921901743" id="r_a9d49bce59c56ed87c96e22d921901743"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvent.html#a9d49bce59c56ed87c96e22d921901743">evtSourceLog</a> = <a class="el" href="classJson.html#a5bc2d676aa8d106a2c98ca3ee41cc4e6">Json::null</a>()</td></tr>
+<tr class="separator:a9d49bce59c56ed87c96e22d921901743"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>Un événement, tel qu'il figure dans un journal.</p>
 <p>Les champs gardent les noms de l'ancienne collecte par API : le schéma de sortie ne change pas, seule la source change. Une valeur absente du journal reste <code>null</code> — elle n'est pas remplacée par un zéro, qui se lirait comme une valeur relevée. </p>
 </div><h2 class="groupheader">Documentation des constructeurs et destructeur</h2>
-<a id="aacaa7e35dbdc19ab14882c216b40998d" name="aacaa7e35dbdc19ab14882c216b40998d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aacaa7e35dbdc19ab14882c216b40998d">&#9670;&#160;</a></span>Event()</h2>
+<a id="a4be366211f9152a80efa955bcef36fcb" name="a4be366211f9152a80efa955bcef36fcb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4be366211f9152a80efa955bcef36fcb">&#9670;&#160;</a></span>Event()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -201,7 +203,13 @@ Attributs publics</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">unsigned long long&#160;</td>
-          <td class="paramname"><em>identifiant</em>&#160;</td>
+          <td class="paramname"><em>identifiant</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>nomFichier</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -214,7 +222,8 @@ Attributs publics</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">racine</td><td>élément <code>&lt;<a class="el" href="structEvent.html">Event</a>&gt;</code> analysé par xml_light </td></tr>
     <tr><td class="paramname">canal</td><td>canal déduit du nom de fichier, employé si le XML ne le porte pas (les journaux archivés omettent parfois <code>&lt;Channel&gt;</code>) </td></tr>
-    <tr><td class="paramname">identifiant</td><td>numéro d'enregistrement lu dans l'en-tête binaire, employé si le XML ne porte pas <code>&lt;EventRecordID&gt;</code> </td></tr>
+    <tr><td class="paramname">identifiant</td><td>numéro d'enregistrement lu dans l'en-tête binaire, employé si le XML ne porte pas <code>&lt;EventRecordID&gt;</code></td></tr>
+    <tr><td class="paramname">nomFichier</td><td>nom du fichier journal, consigné comme provenance </td></tr>
   </table>
   </dd>
 </dl>
@@ -279,6 +288,22 @@ Attributs publics</h2></td></tr>
 </div><div class="memdoc">
 
 <p>données propres à l'événement </p>
+
+</div>
+</div>
+<a id="a9d49bce59c56ed87c96e22d921901743" name="a9d49bce59c56ed87c96e22d921901743"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9d49bce59c56ed87c96e22d921901743">&#9670;&#160;</a></span>evtSourceLog</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classJson.html">Json</a> Event::evtSourceLog = <a class="el" href="classJson.html#a5bc2d676aa8d106a2c98ca3ee41cc4e6">Json::null</a>()</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Nom du fichier journal d'où l'événement provient.</p>
+<p>PROVENANCE. Un même canal peut être porté par plusieurs fichiers : le journal courant et ses archives, qu'une machine conserve côte à côte avec des numéros d'enregistrement qui se recouvrent. Sans ce champ, deux événements de même canal et de même numéro sont indiscernables, et rien ne dit lequel vient d'où — ce qui interdit de trancher entre un doublon légitime et un défaut de lecture. </p>
 
 </div>
 </div>

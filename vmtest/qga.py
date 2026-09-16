@@ -68,21 +68,29 @@ def run(dom, argv, capture=True, timeout=TIMEOUT_DEFAUT):
         time.sleep(1)
 
 def read_file(dom, guest_path, host_path):
+    """Rapatrie un fichier de la VM, ECRIT AU FIL DE LA LECTURE.
+
+    Le contenu etait accumule en memoire avant d'etre ecrit : sur un
+    events.json de 28 Mo, le cumul des reponses base64 et de leur decodage a
+    suffi, avec la VM elle-meme, a faire tuer le harnais par manque de memoire.
+    Chaque morceau part maintenant directement dans le fichier.
+    """
     h = qga(dom, {"execute": "guest-file-open",
                   "arguments": {"path": guest_path, "mode": "rb"}})
-    data = b""
+    total = 0
     try:
-        while True:
-            r = qga(dom, {"execute": "guest-file-read",
-                          "arguments": {"handle": h, "count": 256 << 10}})
-            data += base64.b64decode(r["buf-b64"])
-            if r.get("eof"):
-                break
+        with open(host_path, "wb") as f:
+            while True:
+                r = qga(dom, {"execute": "guest-file-read",
+                              "arguments": {"handle": h, "count": 256 << 10}})
+                morceau = base64.b64decode(r["buf-b64"])
+                f.write(morceau)
+                total += len(morceau)
+                if r.get("eof"):
+                    break
     finally:
         qga(dom, {"execute": "guest-file-close", "arguments": {"handle": h}})
-    with open(host_path, "wb") as f:
-        f.write(data)
-    print(f"{len(data)} octets -> {host_path}")
+    print(f"{total} octets -> {host_path}")
 
 def write_file(dom, host_path, guest_path):
     with open(host_path, "rb") as f:

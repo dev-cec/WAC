@@ -114,6 +114,10 @@ Fonctions</h2></td></tr>
 <tr class="separator:ab16da0b3d6f91fbf07a711c592a5a218"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace4861ebc4b0e8ed6edbcb9bccf650e4" id="r_ace4861ebc4b0e8ed6edbcb9bccf650e4"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8h.html#ace4861ebc4b0e8ed6edbcb9bccf650e4">dossierTravail</a> ()</td></tr>
 <tr class="separator:ace4861ebc4b0e8ed6edbcb9bccf650e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9ddd221b3793bb94911c8be2703aade" id="r_ad9ddd221b3793bb94911c8be2703aade"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8h.html#ad9ddd221b3793bb94911c8be2703aade">ConsigneVerifierEmplacement</a> (unsigned long long besoinEstime)</td></tr>
+<tr class="separator:ad9ddd221b3793bb94911c8be2703aade"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee43a5cb77659dcc719d9c601efaf3bb" id="r_aee43a5cb77659dcc719d9c601efaf3bb"><td class="memItemLeft" align="right" valign="top">unsigned long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8h.html#aee43a5cb77659dcc719d9c601efaf3bb">ConsigneEspaceLibre</a> ()</td></tr>
+<tr class="separator:aee43a5cb77659dcc719d9c601efaf3bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afe3133efffb12857d07f29f3dded68ad" id="r_afe3133efffb12857d07f29f3dded68ad"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8h.html#afe3133efffb12857d07f29f3dded68ad">ConsigneAjouter</a> (const std::vector&lt; <a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a> &gt; &amp;releve, const std::wstring &amp;methode)</td></tr>
 <tr class="separator:afe3133efffb12857d07f29f3dded68ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4a0087c67aeaeae0dc3a249e00bfe3ea" id="r_a4a0087c67aeaeae0dc3a249e00bfe3ea"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8h.html#a4a0087c67aeaeae0dc3a249e00bfe3ea">ConsigneVersTravail</a> (size_t *copies=nullptr, unsigned long long *octets=nullptr)</td></tr>
@@ -213,6 +217,55 @@ Fonctions</h2></td></tr>
 <p>Écrit <code>consigne\MANIFESTE.json</code> puis son sceau <code>consigne\MANIFESTE.sha256</code>.</p>
 <p>À appeler une fois toutes les extractions terminées. Le sceau est écrit APRÈS le manifeste et porte son empreinte SHA-256.</p>
 <dl class="section return"><dt>Renvoie</dt><dd>ERROR_SUCCESS, ou E_FAIL si l'un des deux fichiers n'a pas pu être écrit — auquel cas la consigne n'est pas identifiable et il faut le savoir. </dd></dl>
+
+</div>
+</div>
+<a id="aee43a5cb77659dcc719d9c601efaf3bb" name="aee43a5cb77659dcc719d9c601efaf3bb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aee43a5cb77659dcc719d9c601efaf3bb">&#9670;&#160;</a></span>ConsigneEspaceLibre()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned long long ConsigneEspaceLibre </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Octets libres sur le volume qui porte le dossier de sortie. </p><dl class="section return"><dt>Renvoie</dt><dd>0 si l'information n'a pas pu être obtenue </dd></dl>
+
+</div>
+</div>
+<a id="ad9ddd221b3793bb94911c8be2703aade" name="ad9ddd221b3793bb94911c8be2703aade"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad9ddd221b3793bb94911c8be2703aade">&#9670;&#160;</a></span>ConsigneVerifierEmplacement()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT ConsigneVerifierEmplacement </td>
+          <td>(</td>
+          <td class="paramtype">unsigned long long&#160;</td>
+          <td class="paramname"><em>besoinEstime</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Vérifie que l'emplacement de collecte est utilisable, AVANT toute extraction.</p>
+<p>Deux refus, tous deux préférables à une collecte qui s'abîme en cours :</p>
+<ul>
+<li>UN RÉPERTOIRE DE TRAVAIL DÉJÀ PEUPLÉ. <code>ConsigneVersTravail</code> n'écrase pas une copie de travail existante — il ne peut pas, sans défaire le rejeu de la phase précédente. Sur un dossier de sortie réutilisé, l'analyse porterait donc sur les fichiers d'une collecte ANTÉRIEURE, en silence et sans que rien dans le rapport ne le dise. C'est le pire cas possible : des conclusions tirées des données d'une autre machine.</li>
+<li>PAS ASSEZ DE PLACE. Chaque pièce est écrite deux fois, et une écriture tronquée par un support plein donne une copie que la vérification d'empreinte signalera — mais après avoir dépensé le temps de l'extraction. Mieux vaut le dire avant.</li>
+</ul>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">besoinEstime</td><td>octets attendus pour la consigne SEULE ; la fonction demande le double, la copie de travail s'ajoutant </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>ERROR_SUCCESS, ou un code d'erreur avec le motif journalisé </dd></dl>
 
 </div>
 </div>

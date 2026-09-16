@@ -1375,7 +1375,16 @@ Json BeefUnknown::toJson() {
 void getExtensionBlock(LPBYTE buffer, std::vector<std::unique_ptr<IExtensionBlock>>* extensionBlocks, int _niveau, bool* is_zip, bool is_file) {
 	std::unique_ptr<IExtensionBlock> block;
 	unsigned int signature = *reinterpret_cast<unsigned int*>(buffer + 4);
+	/*  TAILLE ANNONCEE du bloc. Un bloc d'extension fait au moins 8 octets : sa
+	    taille, sa version et sa signature. En deca, la structure est fausse et
+	    la faire analyser ferait lire des champs pris n'importe ou. */
 	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
+	if (size < 8) {
+		log(2, L"🔥Bloc d'extension de taille " + std::to_wstring(size)
+		     + L" (minimum 8) : signature " + to_hex(signature) + L" ignoree",
+		    ERROR_INVALID_DATA);
+		return;
+	}
 	if (signature == (unsigned int)0xBeef0000) {
 		log(3, L"🔈Beef0000");
 		block = std::make_unique<Beef0000>(buffer, _niveau + 1);
@@ -1723,15 +1732,25 @@ Json Property::toJson() {
 
 UserPropertyView0xC01::UserPropertyView0xC01(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
+	/*  Les DEUX chaines annoncent leur taille, en octets. Elles etaient lues
+	    jusqu'au premier zero rencontre : sur une structure abimee, la lecture
+	    partait au-dela de la zone. La taille annoncee borne desormais chacune,
+	    et le terminateur eventuel est retire apres coup. */
+	auto chaineBornee = [](LPBYTE p, unsigned int octets) {
+		if (octets == 0 || octets > 64 * 1024) return std::wstring();
+		std::wstring s((const wchar_t*)p, octets / sizeof(wchar_t));
+		while (!s.empty() && s.back() == L'\0') s.pop_back();
+		return s;
+	};
 	unsigned int pos = 0x14;//unknown
 	unsigned int wstring1Size = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
-	folder = std::wstring((wchar_t*)(buffer + pos)).data();
+	folder = chaineBornee(buffer + pos, wstring1Size);
 	pos += wstring1Size;
 	pos += 16;//unknown
 	unsigned int wstring2Size = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
-	fullurl = std::wstring((wchar_t*)(buffer + pos)).data();
+	fullurl = chaineBornee(buffer + pos, wstring2Size);
 }
 
 Json UserPropertyView0xC01::toJson() {
@@ -2262,10 +2281,13 @@ Json ArchiveFileContent::toJson() {
 URIShellItem::URIShellItem(LPBYTE buffer, int _niveau) {
 	niveau = _niveau;
 	isPresent = true;
+	// TAILLE DE L'ITEM : elle borne l'URI, qui etait lue jusqu'au premier zero
+	// rencontre — donc potentiellement au-dela de l'item.
 	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	unsigned short int datasize = *reinterpret_cast<unsigned short int*>(buffer + 4);
-	if (datasize == 0) {
-		uri = std::wstring((wchar_t*)(buffer + 8)).data();
+	if (datasize == 0 && size > 8) {
+		uri = std::wstring((const wchar_t*)(buffer + 8), (size - 8) / sizeof(wchar_t));
+		while (!uri.empty() && uri.back() == L'\0') uri.pop_back();
 	}
 }
 

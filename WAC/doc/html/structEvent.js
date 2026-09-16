@@ -1,9 +1,10 @@
 var structEvent =
 [
-    [ "Event", "structEvent.html#aacaa7e35dbdc19ab14882c216b40998d", null ],
+    [ "Event", "structEvent.html#a4be366211f9152a80efa955bcef36fcb", null ],
     [ "clear", "structEvent.html#a0862af1471604bf30a4f50a5e028637a", null ],
     [ "toJson", "structEvent.html#ac83247741a82814a4adcf83cbd9545a8", null ],
     [ "evtEventData", "structEvent.html#a71647f03eadce96ebc1a8be134997ac1", null ],
+    [ "evtSourceLog", "structEvent.html#a9d49bce59c56ed87c96e22d921901743", null ],
     [ "evtSystemActivityID", "structEvent.html#a7cdb803bdb0f332eb6b73dd6ca7306e6", null ],
     [ "evtSystemChannel", "structEvent.html#afc35472407c394a9351e87e7e21c6447", null ],
     [ "evtSystemComputer", "structEvent.html#a813fdfd4b41f1b9e320a88cde44dd538", null ],

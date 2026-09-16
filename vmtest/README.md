@@ -47,6 +47,15 @@ révélé des valeurs fausses dans du JSON valide :
 | `MANIFESTE.sha256` porte l'empreinte réelle de `MANIFESTE.json` | seul contrôle qui détecte une retouche du manifeste, lequel est précisément ce qui atteste des pièces |
 | chaque pièce collectée porte ses trois empreintes | une pièce sans empreinte n'est pas identifiée, donc inutilisable |
 | le lecteur système d'`OperatingSystem.json` figure dans les volumes lus du manifeste | deux sources indépendantes de la même information |
+| identifiants d'enregistrement uniques dans CHAQUE fichier journal | l'invariant réel : un même canal peut être porté par plusieurs fichiers dont les numéros se recouvrent légitimement. Un doublon dans un même fichier, en revanche, signale un chunk périmé relu — le risque propre au parcours de tous les chunks physiques |
+| nom de machine MAJORITAIRE des événements conforme à `OperatingSystem.json` | un renommage de machine laisse légitimement d'anciens noms dans les journaux : c'est la majorité qui doit correspondre, pas la totalité |
+
+**Le harnais peut manquer de mémoire.** `qga.py read` accumulait le fichier
+entier avant de l'écrire : avec un `events.json` de 28 Mo, le cumul des réponses
+base64 et de leur décodage a suffi, la VM tournant à côté, pour que le système
+tue le harnais en pleine collecte. Les morceaux partent désormais directement
+dans le fichier. `check-json.py`, lui, charge toujours `events.json` en entier —
+à revoir si les journaux grossissent encore.
 
 **Le harnais peut être la cause du défaut qu'il signale.** Un run de 604 s a été
 coupé par le timeout de 600 s de `qga.py` juste avant l'écriture des deux

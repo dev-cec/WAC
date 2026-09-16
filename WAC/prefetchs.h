@@ -49,6 +49,17 @@ struct Filename {
 	std::wstring filename = L"";//!< original string presents in prefetch
 	std::wstring fullPath = L""; //!< full path on hard drive
 	std::wstring md5 = L""; //!< hash md5 of the file
+	/*! Référence $MFT du fichier chargé, lue dans le tableau des métriques.
+	*
+	*  Elle identifie le fichier sur le volume INDÉPENDAMMENT de son nom : un
+	*  exécutable renommé ou supprimé depuis se retrouve par son numéro
+	*  d'enregistrement, ce que le chemin seul ne permet pas. Nulle quand le
+	*  tableau des métriques ne la donne pas ou que l'appariement avec le nom
+	*  n'est pas sûr — mieux vaut pas de référence qu'une référence attribuée au
+	*  mauvais fichier.
+	*/
+	MFTInformation reference;
+	bool referenceConnue = false;   //!< vrai si `reference` a été relevée
 
 	Json toJson();
 };
