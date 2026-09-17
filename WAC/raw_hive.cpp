@@ -14,6 +14,7 @@
 #include "quickdigest5.h"
 #include "sha.h"
 #include "lznt1.h"
+#include "xpress.h"
 
 namespace {
 
@@ -197,6 +198,258 @@ public:
         return true;
     }
 
+    //! Ce qu'il faut pour lire un fichier stocke par WOF, d'ou qu'il vienne.
+    struct ContexteWof {
+        bool     present = false;
+        uint32_t algorithme = 0;
+        std::vector<Run> runs;      //!< sequences du flux WofCompressedData
+        uint64_t tailleFlux = 0;
+    };
+
+    //! Contenu de l'$ATTRIBUTE_LIST, resident ou non.
+    bool lireContenuListe(const std::vector<uint8_t>& rec, std::vector<uint8_t>& contenu){
+        const uint8_t* al = findAttr(rec, 0x20, false);
+        if (!al) return false;
+        if (al[8] == 0){
+            const uint32_t vlen = rd32(al + 0x10);
+            const uint16_t voff = rd16(al + 0x14);
+            if (voff + (size_t)vlen > rec.size()) return false;
+            contenu.assign(al + voff, al + voff + vlen);
+            return true;
+        }
+        const uint64_t taille = rd64(al + 0x30);
+        if (taille == 0 || taille > (16ULL << 20)) return false;
+        const std::vector<Run> alRuns = decodeRuns(al + rd16(al + 0x20), al + rd32(al + 0x04));
+        contenu.resize((size_t)taille);
+        return readVirtual(alRuns, 0, (uint32_t)taille, contenu.data());
+    }
+
+    /*! Reunit ce qu'il faut pour lire un fichier WOF, en traversant au besoin
+     *  l'$ATTRIBUTE_LIST.
+     *
+     *  POURQUOI CETTE TRAVERSEE EST INDISPENSABLE. Quand un fichier a trop
+     *  d'attributs pour tenir dans un enregistrement $MFT, NTFS les eclate sur
+     *  plusieurs enregistrements et n'en laisse qu'une LISTE dans le premier.
+     *  Chercher le point de reparse et le flux « WofCompressedData » dans le seul
+     *  enregistrement de base les manque alors completement, et le fichier est
+     *  lu depuis son $DATA creux : de la bonne taille, et vide.
+     *  Mesure sur une VM Windows 11 : 56 binaires de fournisseurs d'evenements
+     *  etaient dans ce cas, dont Microsoft-Windows-System-Events.dll et ses
+     *  1 286 messages.
+     */
+    bool resoudreWof(const std::vector<uint8_t>& rec, ContexteWof& ctx){
+        // 1. Le point de reparse : dans l'enregistrement de base, ou dans un fragment.
+        const uint8_t* rp = findAttr(rec, 0xC0);
+        std::vector<uint8_t> fragRp;
+        if (!rp){
+            std::vector<uint8_t> contenu;
+            if (lireContenuListe(rec, contenu)){
+                size_t pos = 0;
+                while (pos + 0x1A <= contenu.size()){
+                    const uint32_t type = rd32(contenu.data() + pos);
+                    const uint16_t len  = rd16(contenu.data() + pos + 4);
+                    if (len < 0x1A || pos + len > contenu.size()) break;
+                    if (type == 0xC0){
+                        const uint64_t ref = rd64(contenu.data() + pos + 0x10) & 0x0000FFFFFFFFFFFFULL;
+                        if (readMftRecord(ref, fragRp)){
+                            rp = findAttr(fragRp, 0xC0);
+                            if (rp) break;
+                        }
+                    }
+                    pos += len;
+                }
+            }
+        }
+        if (!rp || rp[8] != 0) return false;
+        const uint8_t* contenuRp = rp + rd16(rp + 0x14);
+        if (rd32(rp + 0x10) < 24) return false;
+        if (rd32(contenuRp) != 0x80000017u) return false;     // pas WOF
+        if (rd32(contenuRp + 12) != 2) return false;          // fournisseur non gere
+        ctx.algorithme = rd32(contenuRp + 20);
+
+        // 2. Le flux nomme : dans l'enregistrement de base, ou en fragments.
+        const uint8_t* flux = findAttrNomme(rec, 0x80, L"WofCompressedData");
+        if (flux && flux[8] != 0){
+            ctx.tailleFlux = rd64(flux + 0x30);
+            ctx.runs = decodeRuns(flux + rd16(flux + 0x20), flux + rd32(flux + 0x04));
+            ctx.present = !ctx.runs.empty() && ctx.tailleFlux > 0;
+            return ctx.present;
+        }
+
+        std::vector<uint8_t> contenu;
+        if (!lireContenuListe(rec, contenu)) return false;
+        std::vector<std::pair<uint64_t, std::vector<Run>>> fragments;
+        size_t pos = 0;
+        while (pos + 0x1A <= contenu.size()){
+            const uint32_t type = rd32(contenu.data() + pos);
+            const uint16_t len  = rd16(contenu.data() + pos + 4);
+            if (len < 0x1A || pos + len > contenu.size()) break;
+            if (type == 0x80 && contenu[pos + 6] != 0){       // $DATA NOMME
+                const uint64_t vcn = rd64(contenu.data() + pos + 8);
+                const uint64_t ref = rd64(contenu.data() + pos + 0x10) & 0x0000FFFFFFFFFFFFULL;
+                std::vector<uint8_t> frag;
+                if (readMftRecord(ref, frag)){
+                    const uint8_t* d = findAttrNomme(frag, 0x80, L"WofCompressedData");
+                    if (d && d[8] != 0){
+                        if (vcn == 0) ctx.tailleFlux = rd64(d + 0x30);
+                        fragments.emplace_back(vcn, decodeRuns(d + rd16(d + 0x20), d + rd32(d + 0x04)));
+                    }
+                }
+            }
+            pos += len;
+        }
+        if (fragments.empty() || ctx.tailleFlux == 0) return false;
+        std::sort(fragments.begin(), fragments.end(),
+                  [](const std::pair<uint64_t, std::vector<Run>>& a,
+                     const std::pair<uint64_t, std::vector<Run>>& b){ return a.first < b.first; });
+        for (std::pair<uint64_t, std::vector<Run>>& f : fragments)
+            ctx.runs.insert(ctx.runs.end(), f.second.begin(), f.second.end());
+        RVLOG(L"[raw] WOF via $ATTRIBUTE_LIST : %llu fragment(s), flux de %llu octets\n",
+              (unsigned long long)fragments.size(), (unsigned long long)ctx.tailleFlux);
+        ctx.present = true;
+        return true;
+    }
+
+    //! Lit un attribut non résident dans un tampon (ses séquences, sa taille réelle).
+    bool lireAttributNonResident(const uint8_t* a, std::vector<uint8_t>& out){
+        if (a[8] == 0) return false;                 // résident : pas de séquences
+        const uint64_t taille = rd64(a + 0x30);
+        if (taille == 0 || taille > (256ULL << 20)) return false;   // garde-fou
+        const std::vector<Run> runs = decodeRuns(a + rd16(a + 0x20), a + rd32(a + 0x04));
+        out.assign((size_t)taille, 0);
+        std::vector<uint8_t> cl(bytesPerCluster_);
+        uint64_t ecrit = 0;
+        for (const Run& r : runs){
+            for (uint64_t k = 0; k < r.count && ecrit < taille; ++k){
+                if (r.lcn < 0) std::fill(cl.begin(), cl.end(), (uint8_t)0);
+                else if (!readCluster((uint64_t)r.lcn + k, cl.data())) return false;
+                const uint64_t n = std::min<uint64_t>(bytesPerCluster_, taille - ecrit);
+                std::memcpy(out.data() + ecrit, cl.data(), (size_t)n);
+                ecrit += n;
+            }
+        }
+        return ecrit == taille;
+    }
+
+    /*! Extrait un fichier dont le contenu est stocke par WOF (« Compact OS »).
+     *
+     *  L'attribut $DATA sans nom est CREUX : le lire rend des zeros. Le contenu
+     *  vit dans le flux nomme « WofCompressedData », decoupe en morceaux de
+     *  taille fixe precedes d'une table de decalages — la meme disposition que
+     *  dans une image WIM.
+     *
+     *  Le point de reparse donne l'algorithme : 0, 2 et 3 sont du XPRESS
+     *  Huffman sur des morceaux de 4, 8 et 16 Kio ; 1 est du LZX, un format
+     *  distinct qui n'est pas implemente. Un fichier en LZX est donc SIGNALE
+     *  comme non pris en charge, et non rendu faux.
+     *
+     *  @return S_OK, ou un code d'erreur
+     */
+    HRESULT extraireWof(const ContexteWof& ctx, uint64_t tailleReelle,
+                        std::ofstream& out, const std::wstring& libelle,
+                        RawHiveEmpreintes* emp){
+        const uint32_t algorithme = ctx.algorithme;
+        size_t tailleMorceau = 0;
+        switch (algorithme){
+        case 0: tailleMorceau = 4096;  break;   // XPRESS4K
+        case 2: tailleMorceau = 8192;  break;   // XPRESS8K
+        case 3: tailleMorceau = 16384; break;   // XPRESS16K
+        default:
+            // 1 = LZX : format distinct, non implemente. Mieux vaut le dire.
+            RVLOG(L"[raw] WOF : algorithme %lu (LZX ?) non implemente\n",
+                  (unsigned long)algorithme);
+            return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
+        }
+
+        // Le flux nomme, deja localise par resoudreWof.
+        if (ctx.tailleFlux == 0 || ctx.tailleFlux > (256ULL << 20)) return E_FAIL;
+        std::vector<uint8_t> donnees((size_t)ctx.tailleFlux, 0);
+        {
+            std::vector<uint8_t> cl(bytesPerCluster_);
+            uint64_t lu = 0;
+            for (const Run& r : ctx.runs){
+                for (uint64_t k = 0; k < r.count && lu < ctx.tailleFlux; ++k){
+                    if (r.lcn < 0) std::fill(cl.begin(), cl.end(), (uint8_t)0);
+                    else if (!readCluster((uint64_t)r.lcn + k, cl.data())) return E_FAIL;
+                    const uint64_t n = std::min<uint64_t>(bytesPerCluster_, ctx.tailleFlux - lu);
+                    std::memcpy(donnees.data() + lu, cl.data(), (size_t)n);
+                    lu += n;
+                }
+            }
+            if (lu != ctx.tailleFlux){
+                RVLOG(L"[raw] WOF : flux tronque (%llu sur %llu)\n",
+                      (unsigned long long)lu, (unsigned long long)ctx.tailleFlux);
+                return E_FAIL;
+            }
+        }
+
+        // 3. La table des decalages : un par morceau, sauf le premier.
+        const size_t nbMorceaux = (size_t)((tailleReelle + tailleMorceau - 1) / tailleMorceau);
+        if (nbMorceaux == 0) return E_FAIL;
+        const size_t tailleEntree = (tailleReelle > 0xFFFFFFFFULL) ? 8 : 4;
+        const size_t tailleTable  = (nbMorceaux - 1) * tailleEntree;
+        if (donnees.size() < tailleTable) return E_FAIL;
+
+        std::vector<uint64_t> debuts(nbMorceaux + 1, 0);
+        for (size_t i = 1; i < nbMorceaux; ++i)
+            debuts[i] = (tailleEntree == 4) ? (uint64_t)rd32(donnees.data() + (i - 1) * 4)
+                                            : rd64(donnees.data() + (i - 1) * 8);
+        debuts[nbMorceaux] = donnees.size() - tailleTable;
+
+        std::vector<uint8_t> morceau(tailleMorceau);
+        Md5Stream flux5; Sha1Stream flux1; Sha256Stream flux256;
+        uint64_t ecrit = 0, prochainRapport = 0;
+
+        for (size_t i = 0; i < nbMorceaux; ++i){
+            if (debuts[i + 1] < debuts[i]) return E_FAIL;              // table incoherente
+            const size_t tailleC = (size_t)(debuts[i + 1] - debuts[i]);
+            const size_t debut   = tailleTable + (size_t)debuts[i];
+            if (debut + tailleC > donnees.size()) return E_FAIL;
+            const size_t attendu = (size_t)std::min<uint64_t>(tailleMorceau, tailleReelle - ecrit);
+
+            size_t produit = 0;
+            if (tailleC >= attendu){
+                /*  Morceau STOCKE TEL QUEL : la compression n'a rien gagne.
+                    Le detendre rendrait des donnees fausses sans erreur. */
+                std::memcpy(morceau.data(), donnees.data() + debut, attendu);
+                produit = attendu;
+            }
+            else {
+                produit = XpressHuffmanDetendre(donnees.data() + debut, tailleC,
+                                                morceau.data(), attendu);
+                if (produit == 0){
+                    RVLOG(L"[raw] WOF : morceau %zu illisible\n", i);
+                    return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+                }
+            }
+
+            out.write((const char*)morceau.data(), (std::streamsize)produit);
+            if (emp){
+                flux5.update(morceau.data(), produit);
+                flux1.update(morceau.data(), produit);
+                flux256.update(morceau.data(), produit);
+            }
+            ecrit += produit;
+            if (g_progress && !libelle.empty() && ecrit >= prochainRapport){
+                g_progress(libelle.c_str(), ecrit, tailleReelle);
+                prochainRapport = ecrit + (1ULL << 20);
+            }
+        }
+        if (g_progress && !libelle.empty()) g_progress(libelle.c_str(), ecrit, tailleReelle);
+
+        if (emp){
+            emp->md5    = flux5.hexDigest();
+            emp->sha1   = flux1.hexDigest();
+            emp->sha256 = flux256.hexDigest();
+            emp->octets = ecrit;
+            emp->tailleAnnoncee = tailleReelle;
+        }
+        RVLOG(L"[raw] WOF : %llu octets detendus sur %llu annonces (algorithme %lu)\n",
+              (unsigned long long)ecrit, (unsigned long long)tailleReelle,
+              (unsigned long)algorithme);
+        return (ecrit == tailleReelle) ? S_OK : S_FALSE;
+    }
+
     /*! Extrait un flux compresse NTFS, unite de compression par unite.
      *
      *  Chaque unite est independante et se presente sous trois formes, que la
@@ -321,6 +574,52 @@ public:
     //! Pas d'avancement en VCN : la taille de l'unité de compression.
     static uint64_t uniteCompressionPas(uint32_t uniteGrappes){ return uniteGrappes; }
 
+    /*! Enumere les attributs d'un enregistrement, sans rien interpreter.
+     *  Sert a comprendre un fichier que l'extraction rend vide (cf. raw_hive.h). */
+    HRESULT listAttributes(uint64_t index, std::vector<RawAttribut>& out){
+        std::vector<uint8_t> rec;
+        if (!readMftRecord(index, rec)) return E_FAIL;
+        if (rec.size() < 0x30) return E_FAIL;
+
+        size_t off = rd16(rec.data() + 0x14);        // premier attribut
+        while (off + 4 <= rec.size()){
+            const uint32_t type = rd32(rec.data() + off);
+            if (type == 0xFFFFFFFFu) break;          // fin de la liste
+            if (off + 16 > rec.size()) break;
+            const uint32_t taille = rd32(rec.data() + off + 4);
+            if (taille < 16 || off + taille > rec.size()) break;
+
+            RawAttribut a;
+            a.type = type;
+            a.resident = (rec[off + 8] == 0);
+            const uint8_t longueurNom = rec[off + 9];
+            const uint16_t offsetNom  = rd16(rec.data() + off + 10);
+            a.drapeaux = rd16(rec.data() + off + 12);
+            for (uint8_t k = 0; k < longueurNom; ++k){
+                const size_t p = off + offsetNom + 2ULL * k;
+                if (p + 2 > rec.size()) break;
+                a.nom.push_back((wchar_t)rd16(rec.data() + p));
+            }
+            if (a.resident){
+                a.tailleReelle = rd32(rec.data() + off + 0x10);
+                const uint16_t offsetContenu = rd16(rec.data() + off + 0x14);
+                const size_t debut = off + offsetContenu;
+                const size_t n = (a.tailleReelle < 64) ? (size_t)a.tailleReelle : 64;
+                for (size_t k = 0; k < n && debut + k < rec.size(); ++k)
+                    a.apercu.push_back(rec[debut + k]);
+                // Un point de reparse porte son etiquette en tete de contenu.
+                if (type == 0xC0 && a.apercu.size() >= 4)
+                    a.tagReparse = rd32(a.apercu.data());
+            }
+            else if (off + 0x38 <= rec.size())
+                a.tailleReelle = rd64(rec.data() + off + 0x30);
+
+            out.push_back(std::move(a));
+            off += taille;
+        }
+        return ERROR_SUCCESS;
+    }
+
     HRESULT extractData(uint64_t index, const std::wstring& outFile,
                         const std::wstring& libelle = std::wstring(),
                         RawHiveEmpreintes* emp = nullptr){
@@ -375,6 +674,7 @@ public:
                     uniteCompression = (uint32_t)1u << rd16(a + 0x22);
                 realSize = rd64(a + 0x30);
                 runs = decodeRuns(a + rd16(a + 0x20), a + rd32(a + 0x04));
+
             }
         }
         else if (!collectRunsFromAttributeList(rec, runs, realSize)){
@@ -405,6 +705,23 @@ public:
             (stockee telle quelle), soit entierement creuse (des zeros), soit
             partiellement allouee — et ses grappes presentes portent alors la
             forme compressee, a detendre jusqu'a la taille de l'unite. */
+        /*  WOF (« Compact OS ») D'ABORD, et la détection porte sur le fichier
+            ENTIER, pas sur le seul enregistrement de base : un fichier dont les
+            attributs sont éclatés en $ATTRIBUTE_LIST n'a ni son point de reparse
+            ni son flux nommé dans l'enregistrement de base. Son $DATA est creux,
+            donc ni la lecture ordinaire ni la décompression NTFS ne rendraient
+            autre chose que des zéros (cf. xpress.h). */
+        {
+            ContexteWof wof;
+            if (resoudreWof(rec, wof) && wof.present){
+                const HRESULT h = extraireWof(wof, realSize, out, libelle, emp);
+                if (SUCCEEDED(h)) return h;
+                // Non pris en charge (LZX) : on n'écrit pas un fichier de zéros.
+                RVLOG(L"[raw] WOF : extraction impossible\n");
+                return h;
+            }
+        }
+
         if (uniteCompression > 1){
             const HRESULT h = extraireCompresse(runs, realSize, uniteCompression,
                                                 out, libelle, emp);
@@ -552,6 +869,34 @@ private:
     // unnamedOnly : n'accepte que l'attribut SANS nom. Vrai pour $DATA (on veut
     // le flux principal, pas un ADS) mais FAUX pour les index de répertoires :
     // $INDEX_ROOT / $INDEX_ALLOCATION portent toujours le nom "$I30".
+    /*! Attribut d'un type donné portant un NOM précis.
+     *  Les flux de données nommés ne sont pas une curiosité : c'est là que WOF
+     *  range le contenu réel d'un binaire système (cf. xpress.h). */
+    static const uint8_t* findAttrNomme(const std::vector<uint8_t>& rec, uint32_t type,
+                                        const wchar_t* nomVoulu){
+        const size_t longueurVoulue = wcslen(nomVoulu);
+        uint16_t off = rd16(rec.data() + 0x14);
+        const uint8_t* p = rec.data() + off;
+        const uint8_t* end = rec.data() + rec.size();
+        while (p + 16 <= end){
+            const uint32_t t = rd32(p);
+            if (t == 0xFFFFFFFF) break;
+            const uint32_t len = rd32(p + 4);
+            if (len < 16 || p + len > end) break;
+            if (t == type && p[9] == longueurVoulue){
+                const uint16_t offsetNom = rd16(p + 10);
+                bool pareil = true;
+                for (size_t k = 0; k < longueurVoulue; ++k){
+                    if (p + offsetNom + 2 * k + 2 > end){ pareil = false; break; }
+                    if ((wchar_t)rd16(p + offsetNom + 2 * k) != nomVoulu[k]){ pareil = false; break; }
+                }
+                if (pareil) return p;
+            }
+            p += len;
+        }
+        return nullptr;
+    }
+
     static const uint8_t* findAttr(const std::vector<uint8_t>& rec, uint32_t type,
                                    bool unnamedOnly = true){
         uint16_t off = rd16(rec.data() + 0x14);
@@ -728,6 +1073,19 @@ HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
         if (FAILED(h)) overall = S_FALSE;
     }
     return overall;
+}
+
+HRESULT ListAttributesRaw(const std::wstring& volumeLetter,
+                          const std::wstring& cheminSurVolume,
+                          std::vector<RawAttribut>& out){
+    out.clear();
+    NtfsVolume vol;
+    HRESULT hr = vol.open(volumeLetter);
+    if (FAILED(hr)) return hr;
+    uint64_t index = 0;
+    if (!vol.resolvePath(cheminSurVolume, index))
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+    return vol.listAttributes(index, out);
 }
 
 HRESULT ExtractFileRaw(const std::wstring& volumeLetter,

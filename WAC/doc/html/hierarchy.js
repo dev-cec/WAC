@@ -99,6 +99,7 @@ var hierarchy =
     [ "Processes", "structProcesses.html", null ],
     [ "Property", "structProperty.html", null ],
     [ "QuickDigest5", "classQuickDigest5.html", null ],
+    [ "RawAttribut", "structRawAttribut.html", null ],
     [ "RawDirEntry", "structRawDirEntry.html", null ],
     [ "RawHiveEmpreintes", "structRawHiveEmpreintes.html", null ],
     [ "RawHiveExtrait", "structRawHiveExtrait.html", null ],

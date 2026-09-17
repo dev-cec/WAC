@@ -113,6 +113,7 @@ $(document).ready(function(){initNavTree('raw__hive_8cpp.html',''); initResizabl
 <code>#include &quot;<a class="el" href="quickdigest5_8h_source.html">quickdigest5.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="sha_8h_source.html">sha.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="lznt1_8h_source.html">lznt1.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="xpress_8h_source.html">xpress.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
@@ -127,6 +128,8 @@ Fonctions</h2></td></tr>
 <tr class="separator:a7c6fcb004a257a7b9bfb351d435286b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a14cfdb5c02d68c067984526c403a5514" id="r_a14cfdb5c02d68c067984526c403a5514"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8cpp.html#a14cfdb5c02d68c067984526c403a5514">ExtractFilesRaw</a> (const std::wstring &amp;volumeLetter, const std::vector&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;items, std::vector&lt; HRESULT &gt; *perItem, std::vector&lt; <a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a> &gt; *releve)</td></tr>
 <tr class="separator:a14cfdb5c02d68c067984526c403a5514"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94f18c5ea231d08b77cf2d5747de7584" id="r_a94f18c5ea231d08b77cf2d5747de7584"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8cpp.html#a94f18c5ea231d08b77cf2d5747de7584">ListAttributesRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;cheminSurVolume, std::vector&lt; <a class="el" href="structRawAttribut.html">RawAttribut</a> &gt; &amp;out)</td></tr>
+<tr class="separator:a94f18c5ea231d08b77cf2d5747de7584"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff3f1529d81703425b03fe383f20d88d" id="r_aff3f1529d81703425b03fe383f20d88d"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8cpp.html#aff3f1529d81703425b03fe383f20d88d">ExtractFileRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;filePathOnVolume, const std::wstring &amp;outFile)</td></tr>
 <tr class="separator:aff3f1529d81703425b03fe383f20d88d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4bc3af8df20ef0f72d1b33dfacc078cd" id="r_a4bc3af8df20ef0f72d1b33dfacc078cd"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8cpp.html#a4bc3af8df20ef0f72d1b33dfacc078cd">ListDirectoryRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;dirPathOnVolume, std::vector&lt; <a class="el" href="structRawDirEntry.html">RawDirEntry</a> &gt; &amp;out)</td></tr>
@@ -392,6 +395,51 @@ Fonctions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>S_OK si tout réussit, S_FALSE si au moins un item échoue, ou un code d'erreur si l'ouverture du volume échoue. </dd></dl>
+
+</div>
+</div>
+<a id="a94f18c5ea231d08b77cf2d5747de7584" name="a94f18c5ea231d08b77cf2d5747de7584"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a94f18c5ea231d08b77cf2d5747de7584">&#9670;&#160;</a></span>ListAttributesRaw()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT ListAttributesRaw </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>volumeLetter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>cheminSurVolume</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structRawAttribut.html">RawAttribut</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>out</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Énumère les attributs d'un fichier, tels qu'ils figurent dans la $MFT.</p>
+<p>POURQUOI CETTE FONCTION EXISTE. Ce que l'API de Windows montre d'un fichier et ce que le disque contient peuvent différer radicalement : un binaire « Compact OS » se présente comme un fichier ordinaire — attributs normaux, un seul flux — alors qu'il porte en réalité un point de reparse, un <code>$DATA</code> creux et un flux nommé qui contient tout. Le filtre du système masque cette structure à toute interrogation classique. Sans un regard direct sur la $MFT, un fichier extrait entièrement à zéro reste inexplicable.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">volumeLetter</td><td>lettre du volume, ex. L"C" </td></tr>
+    <tr><td class="paramname">cheminSurVolume</td><td>chemin du fichier sur ce volume </td></tr>
+    <tr><td class="paramname">out</td><td>reçoit les attributs trouvés (vidé au préalable) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>ERROR_SUCCESS, ou un code d'erreur </dd></dl>
 
 </div>
 </div>

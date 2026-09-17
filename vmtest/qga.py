@@ -133,4 +133,26 @@ def main():
         write_file(a.dom, a.host, a.guest)
 
 if __name__ == "__main__":
-    main()
+    """Les erreurs PRÉVISIBLES sortent par un message, jamais par une exception.
+
+    Une exception non rattrapée dans un script marqué exécutable déclenche le
+    rapporteur d'anomalies du système, et l'opérateur reçoit une fenêtre
+    « qga.py s'est arrêté de façon inattendue » pour un fichier absent ou une
+    VM éteinte — deux situations parfaitement ordinaires pendant un test. Le
+    message doit dire ce qui manque, et le code de retour suffit au script
+    appelant.
+    """
+    try:
+        main()
+    except FileNotFoundError as e:
+        print(f"[qga] fichier introuvable : {e.filename}", file=sys.stderr)
+        sys.exit(2)
+    except (BrokenPipeError, KeyboardInterrupt):
+        sys.exit(130)
+    except RuntimeError as e:
+        # Les échecs de dialogue avec l'agent sont déjà libellés par qga().
+        print(f"[qga] {e}", file=sys.stderr)
+        sys.exit(1)
+    except OSError as e:
+        print(f"[qga] erreur d'entree/sortie : {e}", file=sys.stderr)
+        sys.exit(1)

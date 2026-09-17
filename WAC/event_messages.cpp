@@ -39,44 +39,6 @@ std::wstring normaliserGuid(const std::wstring& g) {
 	return r;
 }
 
-/*! Copie un fichier en partageant l'accès, et rend vrai si elle a abouti.
- *
- *  `std::filesystem::copy_file` n'ouvre pas la source avec des droits de partage
- *  suffisants : un binaire système est CHARGÉ EN MÉMOIRE par des processus en
- *  cours, et la copie échoue alors avec un refus d'accès. Mesuré : les 242
- *  tentatives de repli d'une collecte échouaient toutes ainsi, silencieusement.
- *  D'où l'ouverture explicite en partage lecture, écriture et suppression.
- */
-bool copierEnPartage(const std::wstring& source, const std::wstring& destination) {
-	HANDLE hs = CreateFileW(source.c_str(), GENERIC_READ,
-	                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-	                        nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-	if (hs == INVALID_HANDLE_VALUE) {
-		log(3, L"🔈Ouverture en lecture refusee : " + source, GetLastError());
-		return false;
-	}
-	HANDLE hd = CreateFileW(destination.c_str(), GENERIC_WRITE, 0, nullptr,
-	                        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-	if (hd == INVALID_HANDLE_VALUE) {
-		CloseHandle(hs);
-		log(3, L"🔈Creation impossible : " + destination, GetLastError());
-		return false;
-	}
-	std::vector<char> tampon(1 << 16);
-	DWORD lus = 0;
-	bool ok = true;
-	while (ReadFile(hs, tampon.data(), (DWORD)tampon.size(), &lus, nullptr) && lus) {
-		DWORD ecrits = 0;
-		if (!WriteFile(hd, tampon.data(), lus, &ecrits, nullptr) || ecrits != lus) {
-			ok = false;
-			break;
-		}
-	}
-	CloseHandle(hs);
-	CloseHandle(hd);
-	return ok;
-}
-
 //! Vrai si le fichier commence par la signature d'un binaire PE.
 bool estPeValide(const std::wstring& chemin) {
 	std::ifstream f(std::filesystem::path(chemin), std::ios::binary);
@@ -85,8 +47,6 @@ bool estPeValide(const std::wstring& chemin) {
 	f.read(tete, 2);
 	return f.gcount() == 2 && tete[0] == 'M' && tete[1] == 'Z';
 }
-
-unsigned g_repliApi = 0;   //!< nombre de fichiers lus par l'API faute de mieux
 
 /*! Extrait un fichier du volume vers la consigne, puis le recopie dans le
  *  travail, et rend le chemin de travail.
@@ -133,31 +93,23 @@ std::wstring extraireRessource(const std::wstring& cheminAbsolu) {
 	else
 		for (const RawHiveExtrait& e : releve) g_octets += e.empreintes.octets;
 
-	/*  WOF SE MANIFESTE DE DEUX FACONS, et il faut traiter les deux.
-	    Un binaire « Compact OS » n'a pas de contenu dans son attribut $DATA : la
-	    charge utile vit dans un flux nomme `WofCompressedData`. Selon la
-	    variante, la lecture brute rend donc soit un fichier de la bonne taille
-	    ENTIEREMENT A ZERO, soit RIEN DU TOUT — l'attribut $DATA etant
-	    inexploitable. La premiere version de ce code ne traitait que le premier
-	    cas et sortait sans rien tenter sur le second : les 121 binaires de
-	    fournisseurs d'une VM Windows 11 restaient illisibles. */
+	/*  AUCUN REPLI PAR L'API. Ces binaires sont compresses par WOF
+	    (« Compact OS ») : leur attribut $DATA est creux et le contenu vit dans un
+	    flux nomme. La lecture brute les traite desormais entierement
+	    (cf. xpress.h), et rien n'est donc ouvert sur le systeme examine.
+	    Un fichier qui reste illisible l'est pour une autre raison — absent, ou
+	    compresse en LZX, que WAC ne detend pas — et il est signale comme tel
+	    plutot que lu par une voie qui laisserait une trace. */
 	if (!brutOk || !estPeValide(cible)) {
-		const bool copie = copierEnPartage(cheminAbsolu, cible);
-		if (!copie || !estPeValide(cible)) {
-			log(2, L"🔥Binaire illisible en brut comme par l'API : " + cheminAbsolu);
-			return std::wstring();
-		}
-		++g_repliApi;
-		log(2, L"❇️Binaire non lisible en brut (compression WOF), relu par l'API : "
-		     + cheminAbsolu);
-		auditRecord(L"Lecture d'un binaire de ressources par l'API (compression WOF)",
-		            cheminAbsolu,
-		            ERROR_SUCCESS, Footprint::FICHIER_RESSOURCE_API);
+		log(2, L"🔥Binaire de ressources illisible en lecture brute : " + cheminAbsolu);
+		return std::wstring();
 	}
 
 	// Copie vers le travail : c'est là que la lecture aura lieu.
 	std::filesystem::create_directories(std::filesystem::path(travail).parent_path(), ec);
-	if (!copierEnPartage(cible, travail)) {
+	std::filesystem::copy_file(cible, travail,
+	                           std::filesystem::copy_options::overwrite_existing, ec);
+	if (ec) {
 		log(2, L"🔥Copie de travail impossible : " + travail);
 		return std::wstring();
 	}
@@ -368,8 +320,6 @@ std::wstring MessageEvenement(const std::wstring& guidFournisseur,
 	if (!phrase.empty()) ++g_resolus;
 	return phrase;
 }
-
-unsigned MessagesRepliApi() { return g_repliApi; }
 
 void MessagesBilan(size_t* fournisseurs, size_t* echecs,
                    unsigned long long* resolus, unsigned long long* octets) {

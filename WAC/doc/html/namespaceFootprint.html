@@ -126,8 +126,6 @@ Variables</h2></td></tr>
 <tr class="memitem:a3426ef6ecf6b4c42672b434a97238fed" id="r_a3426ef6ecf6b4c42672b434a97238fed"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#a3426ef6ecf6b4c42672b434a97238fed">SESSIONS</a></td></tr>
 <tr class="memdesc:a3426ef6ecf6b4c42672b434a97238fed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interrogation des sessions ouvertes via LSA / Terminal <a class="el" href="structServices.html">Services</a>.  <br /></td></tr>
 <tr class="separator:a3426ef6ecf6b4c42672b434a97238fed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaf30c6a498f36d7aee5166c7c9d757f8" id="r_aaf30c6a498f36d7aee5166c7c9d757f8"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#aaf30c6a498f36d7aee5166c7c9d757f8">FICHIER_RESSOURCE_API</a></td></tr>
-<tr class="separator:aaf30c6a498f36d7aee5166c7c9d757f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeefd446c0b758f5cf2e8919c527d0688" id="r_aeefd446c0b758f5cf2e8919c527d0688"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#aeefd446c0b758f5cf2e8919c527d0688">ECRITURE_USB</a></td></tr>
 <tr class="memdesc:aeefd446c0b758f5cf2e8919c527d0688"><td class="mdescLeft">&#160;</td><td class="mdescRight">Écriture sur le support de collecte (clé USB), jamais sur la cible.  <br /></td></tr>
 <tr class="separator:aeefd446c0b758f5cf2e8919c527d0688"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -187,28 +185,6 @@ Variables</h2></td></tr>
 <div class="line">                              L<span class="stringliteral">&quot;de collecte) : aucun acces a l&#39;original, aucun horodatage modifie, &quot;</span></div>
 <div class="line">                              L<span class="stringliteral">&quot;aucun service du systeme examine sollicite.&quot;</span></div>
 </div><!-- fragment --><p>Lecture d'un fichier d'artefact extrait (copie sur l'USB) : journaux d'événements, <a class="el" href="structPrefetch.html">Prefetch</a>, jumplists. Aucun accès à l'original. </p>
-
-</div>
-</div>
-<a id="aaf30c6a498f36d7aee5166c7c9d757f8" name="aaf30c6a498f36d7aee5166c7c9d757f8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaf30c6a498f36d7aee5166c7c9d757f8">&#9670;&#160;</a></span>FICHIER_RESSOURCE_API</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">const wchar_t * Footprint::FICHIER_RESSOURCE_API</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Valeur initiale :</b><div class="fragment"><div class="line">=</div>
-<div class="line">                              L<span class="stringliteral">&quot;Ouverture en LECTURE d&#39;un binaire du systeme d&#39;exploitation par &quot;</span></div>
-<div class="line">                              L<span class="stringliteral">&quot;l&#39;API de fichiers, sa lecture brute rendant un fichier vide &quot;</span></div>
-<div class="line">                              L<span class="stringliteral">&quot;(compression WOF, dite « Compact OS »). Ce n&#39;est pas une piece : &quot;</span></div>
-<div class="line">                              L<span class="stringliteral">&quot;c&#39;est un binaire identique sur toute machine de la meme version, &quot;</span></div>
-<div class="line">                              L<span class="stringliteral">&quot;lu uniquement pour traduire un identifiant d&#39;evenement en phrase. &quot;</span></div>
-<div class="line">                              L<span class="stringliteral">&quot;Windows ne met pas a jour la date de dernier acces par defaut.&quot;</span></div>
-</div><!-- fragment --><p>Lecture d'un binaire de ressources par l'API de fichiers, faute de pouvoir le lire en brut (compression WOF « Compact OS »). </p>
 
 </div>
 </div>

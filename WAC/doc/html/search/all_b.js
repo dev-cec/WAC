@@ -4,5 +4,5 @@ var searchData=
   ['key_1',['Key',['../structRun.html#a199906bea1d643678ed961eacf53c6c5',1,'Run']]],
   ['keylastwriteutc_2',['keyLastWriteUtc',['../structUser.html#ab8a44b52998608616a7d5d605f17d9fd',1,'User']]],
   ['keyname_3',['keyName',['../structTimeZoneInfo.html#ab51ca62115058208fd496d3b55c18e1b',1,'TimeZoneInfo']]],
-  ['kind_4',['kind',['../classJson.html#a7b6af011a3f229790cc957012bfd0240',1,'Json::kind() const'],['../classJson.html#a82938661c4953d873b5c8a204337fd57',1,'Json::Kind']]]
+  ['kind_4',['kind',['../classJson.html#a82938661c4953d873b5c8a204337fd57',1,'Json::Kind'],['../classJson.html#a7b6af011a3f229790cc957012bfd0240',1,'Json::kind() const']]]
 ];

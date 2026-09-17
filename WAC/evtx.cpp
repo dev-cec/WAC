@@ -532,6 +532,22 @@ private:
 			if ((j == JET_SUBST_NORMALE || j == JET_SUBST_OPTIONNELLE)
 			    && (lire8(c, tc, q + 4) & 0x0f) == JET_FIN_ELEMENT) {
 				const uint16_t id = lire16(c, tc, q + 1);
+
+				/*  SUBSTITUTION OPTIONNELLE DE VALEUR NULLE : l'élément n'est pas
+				    créé. C'est la règle du format, et elle porte du sens : un
+				    `<EventID></EventID>` vide se lit comme un identifiant qu'on
+				    n'a pas su décoder, alors que l'enregistrement n'en contient
+				    pas. Constaté sur une machine réelle : un enregistrement dont
+				    les 16 substitutions sont nulles sortait avec toute la
+				    section System présente et vide, ce qui ressemblait à un
+				    défaut de décodage — c'en était l'inverse, une lecture
+				    fidèle mal rendue. */
+				if (j == JET_SUBST_OPTIONNELLE && id < subs->size()
+				    && (*subs)[id].type == T_NULL) {
+					p = finElement;
+					return true;
+				}
+
 				if (id < subs->size() && ((*subs)[id].type & T_TABLEAU)) {
 					const size_t n = cardinalite((*subs)[id], profondeur);
 					for (size_t i = 0; i < n; ++i)

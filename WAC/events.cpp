@@ -294,8 +294,7 @@ HRESULT Events::getData() {
 		     + std::to_wstring(lus) + L" evenement(s), "
 		     + std::to_wstring(nbF) + L" fournisseur(s) consulte(s), "
 		     + std::to_wstring(echecsF) + L" sans ressources, "
-		     + std::to_wstring(octets / 1024 / 1024) + L" Mio extraits, "
-		     + std::to_wstring(MessagesRepliApi()) + L" binaire(s) relu(s) par l'API");
+		     + std::to_wstring(octets / 1024 / 1024) + L" Mio extraits");
 		MessagesLiberer();
 	}
 

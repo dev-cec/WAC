@@ -1,7 +1,5 @@
 var NAVTREEINDEX3 =
 {
-"structDirectory.html#a49dab910d291cc4f799a0af7b6bdd019":[1,0,45,15],
-"structDirectory.html#a576cd6ab6ad1aa5c565a8f3578d53f64":[1,0,45,8],
 "structDirectory.html#a63997621361dd8c746c72fdff8c44e18":[1,0,45,6],
 "structDirectory.html#a66bc157822d50a755625e18789db5e4b":[1,0,45,16],
 "structDirectory.html#a675745b99eab576cb7073f673a64d751":[1,0,45,12],
@@ -249,5 +247,7 @@ var NAVTREEINDEX3 =
 "structMruApp.html#a8c62f975edea40d235ff8b4ce8144658":[1,0,75,9],
 "structMruApp.html#a940cf15da9706c316966ce3be960a5e5":[1,0,75,3],
 "structMruApp.html#a9cb0dba9cbf6326a1b9b52367334978a":[1,0,75,6],
-"structMruApp.html#ace52ad921d8950f4fbc83a5b189a79fe":[1,0,75,2]
+"structMruApp.html#ace52ad921d8950f4fbc83a5b189a79fe":[1,0,75,2],
+"structMruApp.html#ae6e920dcce8546c4b57b4f7ba5d45d96":[1,0,75,5],
+"structMruApps.html":[1,0,76]
 };

@@ -117,6 +117,8 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawAttribut.html">RawAttribut</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawDirEntry.html">RawDirEntry</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -135,6 +137,8 @@ Fonctions</h2></td></tr>
 <tr class="separator:aff3f1529d81703425b03fe383f20d88d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7d7d4e4adb0ce41fb171335a7245f077" id="r_a7d7d4e4adb0ce41fb171335a7245f077"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a7d7d4e4adb0ce41fb171335a7245f077">ExtractFilesRaw</a> (const std::wstring &amp;volumeLetter, const std::vector&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;items, std::vector&lt; HRESULT &gt; *perItem=nullptr, std::vector&lt; <a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a> &gt; *releve=nullptr)</td></tr>
 <tr class="separator:a7d7d4e4adb0ce41fb171335a7245f077"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94f18c5ea231d08b77cf2d5747de7584" id="r_a94f18c5ea231d08b77cf2d5747de7584"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a94f18c5ea231d08b77cf2d5747de7584">ListAttributesRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;cheminSurVolume, std::vector&lt; <a class="el" href="structRawAttribut.html">RawAttribut</a> &gt; &amp;out)</td></tr>
+<tr class="separator:a94f18c5ea231d08b77cf2d5747de7584"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4bc3af8df20ef0f72d1b33dfacc078cd" id="r_a4bc3af8df20ef0f72d1b33dfacc078cd"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a4bc3af8df20ef0f72d1b33dfacc078cd">ListDirectoryRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;dirPathOnVolume, std::vector&lt; <a class="el" href="structRawDirEntry.html">RawDirEntry</a> &gt; &amp;out)</td></tr>
 <tr class="separator:a4bc3af8df20ef0f72d1b33dfacc078cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeae6e3ce77dcdb3a15f4dd36994bc726" id="r_aeae6e3ce77dcdb3a15f4dd36994bc726"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#aeae6e3ce77dcdb3a15f4dd36994bc726">ExtractDirectoryRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;dirPathOnVolume, const std::wstring &amp;outDir, const std::vector&lt; std::wstring &gt; &amp;extensions={}, size_t *extracted=nullptr, std::wstring *diagnostic=nullptr, std::vector&lt; <a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a> &gt; *releve=nullptr)</td></tr>
@@ -402,6 +406,51 @@ Fonctions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>S_OK si tout réussit, S_FALSE si au moins un item échoue, ou un code d'erreur si l'ouverture du volume échoue. </dd></dl>
+
+</div>
+</div>
+<a id="a94f18c5ea231d08b77cf2d5747de7584" name="a94f18c5ea231d08b77cf2d5747de7584"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a94f18c5ea231d08b77cf2d5747de7584">&#9670;&#160;</a></span>ListAttributesRaw()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT ListAttributesRaw </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>volumeLetter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>cheminSurVolume</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structRawAttribut.html">RawAttribut</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>out</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Énumère les attributs d'un fichier, tels qu'ils figurent dans la $MFT.</p>
+<p>POURQUOI CETTE FONCTION EXISTE. Ce que l'API de Windows montre d'un fichier et ce que le disque contient peuvent différer radicalement : un binaire « Compact OS » se présente comme un fichier ordinaire — attributs normaux, un seul flux — alors qu'il porte en réalité un point de reparse, un <code>$DATA</code> creux et un flux nommé qui contient tout. Le filtre du système masque cette structure à toute interrogation classique. Sans un regard direct sur la $MFT, un fichier extrait entièrement à zéro reste inexplicable.</p>
+<dl class="params"><dt>Paramètres</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">volumeLetter</td><td>lettre du volume, ex. L"C" </td></tr>
+    <tr><td class="paramname">cheminSurVolume</td><td>chemin du fichier sur ce volume </td></tr>
+    <tr><td class="paramname">out</td><td>reçoit les attributs trouvés (vidé au préalable) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Renvoie</dt><dd>ERROR_SUCCESS, ou un code d'erreur </dd></dl>
 
 </div>
 </div>

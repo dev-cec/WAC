@@ -9,7 +9,7 @@ var searchData=
   ['registrationdate_6',['registrationDate',['../structScheduledTask.html#ad856049ffc53b4f7562b0a9101d8a822',1,'ScheduledTask']]],
   ['relativepath_7',['relativePath',['../structRecentDoc.html#acf2fe815a5eff7a3a38d839744f5f2ff',1,'RecentDoc']]],
   ['reparsepoint_8',['ReparsePoint',['../structFileAttributes.html#a8046f60767d2c3113cdae79ed5e989c1',1,'FileAttributes']]],
-  ['resident_9',['resident',['../structRawHiveEmpreintes.html#a13a4c724d5928a77d1ccbe3216d4d584',1,'RawHiveEmpreintes']]],
+  ['resident_9',['resident',['../structRawHiveEmpreintes.html#a13a4c724d5928a77d1ccbe3216d4d584',1,'RawHiveEmpreintes::resident'],['../structRawAttribut.html#a4ba4b421a5ab653770c360154ed3a506',1,'RawAttribut::resident']]],
   ['resultat_10',['resultat',['../structRawHiveExtrait.html#aa8ff97c07114fbcb2c2182561759a01f',1,'RawHiveExtrait']]],
   ['rid_11',['rid',['../structUser.html#a29cef82688e723f19cf646f654ffbd45',1,'User']]],
   ['roleconnu_12',['roleConnu',['../structSession.html#a13ae23b2b890e7d3d1f6025309994441',1,'Session']]],

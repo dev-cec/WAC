@@ -149,6 +149,7 @@ does to the machine**, operation by operation — including what it cannot avoid
 | **Sessions** (`LsaEnumerateLogonSessions`) | solicits LSASS; reads only |
 | **Profile list** (1 registry key) | a local read of `HKLM\SOFTWARE\…\ProfileList`. No RPC |
 | **Event logs** (`--events`) | reads `\Windows\System32\winevt\Logs\*.evtx` through the same raw volume handle as every other artefact — **no service is solicited**, and the parsing happens on the copy. The only cost left is the size: ~117 MB written to the collection medium |
+| **Event message resolution** (`--events`) | reads the resource file of each provider that actually produced an event, through the same raw volume handle. These are operating-system binaries, not exhibits, but they go into the exhibit store with their fingerprints like everything else — which records *which build's* wording was used. ~121 MB on an ordinary installation |
 | **MD5 hashing** (`--md5`) | opens each referenced file for reading. Windows disables last-access updates by default (`NtfsDisableLastAccessUpdate`), but on a system where they are enabled, **this does update them** |
 
 ### Unavoidable: the trace of running anything at all
@@ -351,19 +352,32 @@ results are worth stating:
   into the `%1 %2 …` marks. Resource files are extracted **on demand**, once per
   provider that actually produced an event: extracting all of the ~930 declared
   publishers would cost hundreds of megabytes for providers that were silent.
-  **One compromise was necessary here.** Windows 10 and 11 compress their system
-  binaries with WOF — "Compact OS": the file's `$DATA` attribute holds nothing,
-  the payload living in a named stream `WofCompressedData` compressed with
-  XPRESS or LZX. A raw read therefore returns either a correctly-sized file of
-  **all zeros** or nothing at all, and on a Windows 11 VM all 121 provider
-  binaries came back unreadable. When the raw read fails, WAC falls back to the
-  file API for **that file only**. This is not an exhibit: it is an operating
-  system binary, identical on every machine of the same build, read solely to
-  turn an id into a sentence. The cost is one read-only open — Windows does not
-  update last-access times by default — and **every such fallback is recorded in
-  `investigation.json`** with its own footprint entry. Reading WOF streams by raw
-  NTFS would need an XPRESS-Huffman and LZX decompressor, which is not
-  implemented;
+  **This required reading WOF — and it is read raw, with no fallback.** Windows
+  10 and 11 store their system binaries compressed by "Compact OS": the file's
+  `$DATA` attribute is **sparse** and the payload lives in a named stream
+  `WofCompressedData`. Seen through the API such a file looks perfectly
+  ordinary — normal attributes, one stream, full size — because the system's
+  filter reassembles it on the fly. Seen on disk it is something else, and the
+  `$MFT` attribute listing says so plainly:
+
+  ```
+  0x80 (unnamed)          1 372 160 bytes  SPARSE     <- empty $DATA
+  0x80 WofCompressedData    667 578 bytes             <- the real content
+  0xC0 reparse point           0x80000017  algorithm 2
+  ```
+
+  A raw reader that ignores this returns a correctly-sized file of **all zeros**;
+  on the test VM all 121 provider binaries came back that way. `xpress.h/cpp`
+  implements the XPRESS-Huffman decompressor the three XPRESS variants share,
+  and `raw_hive` walks the chunk table of the named stream. **Detection looks at
+  the whole file, not just its base `$MFT` record**: when a file has too many
+  attributes to fit in one record, NTFS spreads them over several and leaves only
+  an `$ATTRIBUTE_LIST` behind — a file in that shape has neither its reparse
+  point nor its named stream in the base record, and 56 provider binaries were
+  missed that way until the traversal was added. Nothing is opened on the
+  examined machine. The fourth WOF variant, LZX, is a distinct and far more
+  complex format: it is **not** implemented, and such a file is reported as
+  unsupported rather than returned wrong;
 - reading from the file also **fixed a wrong value the API produced**. The API
   path asked only for `Event/EventData/Data`; on an event that stores its data
   in `UserData` instead, that request fills nothing, and the value was read
@@ -506,6 +520,18 @@ erasing it would suggest a complete sentence.
 cd WAC && g++ -std=c++17 -I. pe_resource.cpp wevt.cpp wevt_test.cpp -o /tmp/wevt_test
 /tmp/wevt_test gpsvc.dll fr-FR/gpsvc.dll.mui "{aea1b4fa-97d1-45f2-a64c-4d69fffd92c9}" 1002 4001
 ```
+
+`xpress_test.cpp` checks the WOF decompressor against **Microsoft's own
+compressor**, the same way `lznt1_test` does: `RtlCompressBuffer` compresses a
+known file chunk by chunk in the VM, and the test decompresses each chunk here
+and compares byte for byte. Result on a 1 118 208-byte log: 137 compressed
+chunks out of 137 conform. Getting there took two corrections that no
+compilation catches — the bit stream is read as **little-endian 16-bit words
+whose bits are consumed most-significant first**, and the bit buffer must be
+topped up to 16 bits **after every symbol**, literals included, because that
+refill advances the same byte cursor the extended match lengths are read from.
+With the refill only after matches, 16 chunks out of 137 decoded correctly and
+the rest came out wrong with no error at all.
 
 `consigne_test.cpp` checks the exhibit-store procedure, and specifically the one
 thing that must never happen and is silent when it does: **the sealed copy being

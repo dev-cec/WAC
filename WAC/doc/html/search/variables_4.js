@@ -11,7 +11,7 @@ var searchData=
   ['debut_8',['debut',['../structTrigger.html#a75fed69dae286ee21efbf14d900bf10b',1,'Trigger']]],
   ['delegate_9',['delegate',['../structUsersPropertyView.html#abce9cc6d96eb3933d789594379602705',1,'UsersPropertyView']]],
   ['dependances_10',['dependances',['../structServiceStruct.html#aefa5964c797c8c8b91e514b103c35879',1,'ServiceStruct']]],
-  ['description_11',['description',['../structScheduledTask.html#adbb7adcb0110346cae647a5c010ece32',1,'ScheduledTask::description'],['../structRecentDoc.html#af327ac0e33f4fffe6a0cb2e1c4e73337',1,'RecentDoc::description'],['../structNetworkShellItem.html#a5334b8839c3e915beb1f44d0158106e5',1,'NetworkShellItem::description']]],
+  ['description_11',['description',['../structScheduledTask.html#adbb7adcb0110346cae647a5c010ece32',1,'ScheduledTask::description'],['../structNetworkShellItem.html#a5334b8839c3e915beb1f44d0158106e5',1,'NetworkShellItem::description'],['../structRecentDoc.html#af327ac0e33f4fffe6a0cb2e1c4e73337',1,'RecentDoc::description']]],
   ['destfiles_12',['destfiles',['../structDestFileDirectory.html#afd18c616f5ba9ac128cb93eee92ff323',1,'DestFileDirectory']]],
   ['device_13',['device',['../structMountedDevice.html#ade26f26af12b5736224aec9c85b1fffd',1,'MountedDevice']]],
   ['devicename_14',['deviceName',['../structVolumeInfo.html#afc255e016a1de97b61a5420f38e69fb2',1,'VolumeInfo']]],
@@ -28,5 +28,6 @@ var searchData=
   ['displayversion_25',['displayVersion',['../structSystemInfo.html#a0490822073cb62572bc9c1a519983a03',1,'SystemInfo']]],
   ['domainname_26',['domainName',['../structSystemInfo.html#ab2b9887e2012f48242e8b8435e68fceb',1,'SystemInfo']]],
   ['donnees_27',['donnees',['../structIdList.html#a35f5d5de12d5dd514f6be8faeb7a7beb',1,'IdList']]],
-  ['drive_28',['drive',['../structMountedDevice.html#a6ccc8582a2373e19f9b17df597383a42',1,'MountedDevice']]]
+  ['drapeaux_28',['drapeaux',['../structRawAttribut.html#abc0dbf24d567b15ea426dfa487c06ce1',1,'RawAttribut']]],
+  ['drive_29',['drive',['../structMountedDevice.html#a6ccc8582a2373e19f9b17df597383a42',1,'MountedDevice']]]
 ];

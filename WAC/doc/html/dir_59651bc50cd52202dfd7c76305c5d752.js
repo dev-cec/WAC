@@ -91,5 +91,8 @@ var dir_59651bc50cd52202dfd7c76305c5d752 =
     [ "wevt.h", "wevt_8h.html", "wevt_8h" ],
     [ "wevt_test.cpp", "wevt__test_8cpp.html", "wevt__test_8cpp" ],
     [ "xml_light.cpp", "xml__light_8cpp.html", "xml__light_8cpp" ],
-    [ "xml_light.h", "xml__light_8h.html", "xml__light_8h" ]
+    [ "xml_light.h", "xml__light_8h.html", "xml__light_8h" ],
+    [ "xpress.cpp", "xpress_8cpp.html", "xpress_8cpp" ],
+    [ "xpress.h", "xpress_8h.html", "xpress_8h" ],
+    [ "xpress_test.cpp", "xpress__test_8cpp.html", "xpress__test_8cpp" ]
 ];

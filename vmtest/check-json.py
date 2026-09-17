@@ -235,8 +235,13 @@ def controle_events(rep):
               f"{sansDate} sans date sur {len(d)} — décodage BinXML à vérifier")
         trouvees += 1
     elif pires:
-        print(f"  ⚠️  events.json : {pires} enregistrement(s) sur {len(d)} à section "
-              f"System incomplète — voir le XML brut dans le journal de WAC")
+        # Un enregistrement peut légitimement ne porter AUCUNE donnée : ses
+        # substitutions sont toutes nulles, et le format prescrit alors d'omettre
+        # les éléments correspondants. Vérifié sur un cas réel : les 18 valeurs
+        # de substitution de l'enregistrement étaient nulles. Ce n'est donc pas
+        # un défaut de lecture, mais il doit rester visible.
+        print(f"  ℹ️  events.json : {pires} enregistrement(s) sur {len(d)} sans "
+              f"identifiant ni date — substitutions nulles dans le journal lui-même")
     else:
         print(f"  ✅ events.json : {len(d)} événement(s), fournisseur/canal/date renseignés")
 

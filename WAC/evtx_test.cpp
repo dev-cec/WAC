@@ -74,7 +74,8 @@ int wmain(int argc, wchar_t** argv) {
 			const std::wstring canal = EvtxCanalDepuisNomFichier(j.filename().wstring());
 			EvtxLireFichier(j.wstring(), [&](const EvtxEnregistrement& e) {
 				const std::unique_ptr<XmlNode> racine = xmlAnalyser(e.xml);
-				if (racine) { tous.push_back(Event(*racine, canal, e.identifiant).toJson()); ++lus; }
+				if (racine) { tous.push_back(Event(*racine, canal, e.identifiant,
+				                     j.filename().wstring()).toJson()); ++lus; }
 				return true;
 			}, nullptr);
 		}

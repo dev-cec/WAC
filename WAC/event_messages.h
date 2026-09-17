@@ -67,13 +67,5 @@ std::wstring MessageEvenement(const std::wstring& guidFournisseur,
 void MessagesBilan(size_t* fournisseurs, size_t* echecs,
                    unsigned long long* resolus, unsigned long long* octets);
 
-/*! Nombre de binaires lus par l'API faute d'avoir pu l'être en brut.
-*
-*  C'est LE chiffre d'empreinte de cette fonctionnalité : chacun de ces fichiers
-*  a été ouvert sur le système examiné. Le détail figure, fichier par fichier,
-*  dans `investigation.json`.
-*/
-unsigned MessagesRepliApi();
-
 /*! Libère les ressources chargées. */
 void MessagesLiberer();

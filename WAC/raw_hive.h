@@ -103,6 +103,36 @@ HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
                         std::vector<HRESULT>* perItem = nullptr,
                         std::vector<RawHiveExtrait>* releve = nullptr);
 
+/*! Un attribut d'un enregistrement $MFT, tel qu'il est écrit sur le disque. */
+struct RawAttribut {
+    uint32_t type = 0;          //!< 0x10 $STANDARD_INFORMATION, 0x80 $DATA, 0xC0 $REPARSE_POINT…
+    std::wstring nom;           //!< nom de l'attribut, vide pour l'attribut sans nom
+    bool     resident = true;   //!< contenu dans l'enregistrement
+    uint64_t tailleReelle = 0;  //!< taille des données
+    uint16_t drapeaux = 0;      //!< 0x0001 compressé, 0x4000 chiffré, 0x8000 creux
+    uint32_t tagReparse = 0;    //!< pour 0xC0 : l'étiquette du point de reparse
+    std::vector<uint8_t> apercu; //!< premiers octets du contenu, si résident
+};
+
+/*! Énumère les attributs d'un fichier, tels qu'ils figurent dans la $MFT.
+ *
+ *  POURQUOI CETTE FONCTION EXISTE. Ce que l'API de Windows montre d'un fichier
+ *  et ce que le disque contient peuvent différer radicalement : un binaire
+ *  « Compact OS » se présente comme un fichier ordinaire — attributs normaux,
+ *  un seul flux — alors qu'il porte en réalité un point de reparse, un `$DATA`
+ *  creux et un flux nommé qui contient tout. Le filtre du système masque cette
+ *  structure à toute interrogation classique. Sans un regard direct sur la
+ *  $MFT, un fichier extrait entièrement à zéro reste inexplicable.
+ *
+ *  @param volumeLetter lettre du volume, ex. L"C"
+ *  @param cheminSurVolume chemin du fichier sur ce volume
+ *  @param out reçoit les attributs trouvés (vidé au préalable)
+ *  @return ERROR_SUCCESS, ou un code d'erreur
+ */
+HRESULT ListAttributesRaw(const std::wstring& volumeLetter,
+                          const std::wstring& cheminSurVolume,
+                          std::vector<RawAttribut>& out);
+
 /*! Une entrée de répertoire lue dans l'index NTFS. */
 struct RawDirEntry {
     std::wstring name;          //!< nom du fichier ou du répertoire (sans chemin)

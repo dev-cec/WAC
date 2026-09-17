@@ -71,8 +71,13 @@ LIBS=(-L"$TP/offreg" -loffreg -lole32 -loleaut32
 # --- Exe de test raw_hive (optionnel) --------------------------------------
 if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
   echo "== Build raw_hive_test.exe =="
+  # Dépendances de raw_hive : les empreintes (sha, quickdigest5) et la
+  # décompression NTFS (lznt1). Cette liste est à tenir à jour — elle a déjà
+  # dérivé une fois, et un exe de test qui ne se lie plus ne se voit qu'au
+  # moment où on en a besoin.
   "$CXX" "${FLAGS[@]}" -municode -static -static-libgcc -static-libstdc++ \
     "$SRC/raw_hive.cpp" "$SRC/hive_recover.cpp" "$SRC/quickdigest5.cpp" \
+    "$SRC/sha.cpp" "$SRC/lznt1.cpp" "$SRC/xpress.cpp" \
     "$SRC/raw_hive_test.cpp" -o "$BUILD/raw_hive_test.exe"
   echo "   -> $BUILD/raw_hive_test.exe"
 fi

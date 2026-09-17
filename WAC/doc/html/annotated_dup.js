@@ -90,6 +90,7 @@ var annotated_dup =
     [ "Processes", "structProcesses.html", "structProcesses" ],
     [ "Property", "structProperty.html", "structProperty" ],
     [ "QuickDigest5", "classQuickDigest5.html", "classQuickDigest5" ],
+    [ "RawAttribut", "structRawAttribut.html", "structRawAttribut" ],
     [ "RawDirEntry", "structRawDirEntry.html", "structRawDirEntry" ],
     [ "RawHiveEmpreintes", "structRawHiveEmpreintes.html", "structRawHiveEmpreintes" ],
     [ "RawHiveExtrait", "structRawHiveExtrait.html", "structRawHiveExtrait" ],
