@@ -52,9 +52,6 @@ namespace Footprint {
 	//! Une seule énumération du gestionnaire de services, en lecture : relève
 	//! l'état courant sans ouvrir de handle par service.
 	extern const wchar_t* SCM;
-	//! Lecture d'une clé du registre local (ProfileList) : aucun appel RPC,
-	//! aucune sollicitation de LSASS.
-	extern const wchar_t* COMPTES_LOCAUX;
 	//! Énumération de processus : ouvre des handles de processus (audit possible).
 	extern const wchar_t* PROCESSUS;
 	//! Interrogation des sessions ouvertes via LSA / Terminal Services.

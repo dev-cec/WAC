@@ -291,17 +291,6 @@ int main(int argc, char* argv[])
 	   Seul l'etat courant reste releve a chaud, en une seule enumeration.
 	   Cf. et services.h. */
 
-	/* USERS a quitte cette phase : les comptes locaux sont desormais lus dans la
-	   ruche SAM extraite. Seule subsiste ici la liste des PROFILS, indispensable
-	   AVANT l'extraction puisqu'elle donne l'emplacement des ruches par
-	   utilisateur. Cf., users.h et tools.h (loadProfileList). */
-	printStep(L" - Listing USER PROFILES: ");
-	hresult = loadProfileList();
-	auditRecord(L"Releve des profils utilisateurs",
-	            L"HKLM\\SOFTWARE\\...\\ProfileList (registre local, lecture)",
-	            hresult, Footprint::COMPTES_LOCAUX);
-	if (hresult != ERROR_SUCCESS) printError(hresult);
-	else printSuccess();
 
 
 
@@ -317,10 +306,10 @@ int main(int argc, char* argv[])
 	wprintf(L"%ls\n", L"[RAW EXTRACTION]");
 	SetConsoleTextAttribute(conf.hConsole, 7);
 
-	const wchar_t* etiquetteRuches = L" - Extracting hives (raw NTFS) : ";
+	const wchar_t* etiquetteRuches = L" - Extracting system hives (raw NTFS) : ";
 	printStep(etiquetteRuches);
-	log(3, L"🔈ExtractHivesRaw");
-	hresult = ExtractHivesRaw();          // S_FALSE = ruches partiellement manquantes (toléré)
+	log(3, L"🔈ExtractSystemHivesRaw");
+	hresult = ExtractSystemHivesRaw();    // S_FALSE = ruches partiellement manquantes (toléré)
 	                                       // (consigne au journal depuis raw_collect)
 	if (FAILED(hresult)) {                 // seul un échec dur (volume) interrompt
 		printError(hresult);
@@ -329,6 +318,67 @@ int main(int argc, char* argv[])
 	else {
 		printSuccess();
 	}
+
+	/* Les ruches SYSTEM et SOFTWARE s'ouvrent DÈS la première passe : SOFTWARE
+	   donne la liste des profils, sans laquelle les ruches par utilisateur ne
+	   peuvent pas être extraites. */
+	//variables
+	ORHKEY hKey = NULL;
+	DWORD typeValeur = 0;
+	DWORD taille = 0;
+
+	//chargement de la clé HKLM\SYSTEM
+	printStep(L" - loading the HKLM\\SYSTEM key : ");
+	std::wstring rucheSystem = conf.mountpoint + L"\\Windows\\system32\\config\\SYSTEM";
+	/* Une ruche indisponible ne doit PAS interrompre la collecte.
+	   Constaté sur un système réel : SOFTWARE n'avait pas pu être extraite, et le
+	   `return` qui suivait abandonnait tout — y compris les artefacts de SYSTEM,
+	   les fichiers et les journaux, tous collectables. Le principe est de
+	   recueillir tout ce qui est accessible et de consigner ce qui manque. */
+	log(3, L"🔈OROpenHive System");
+	hresult = OROpenHive(rucheSystem.c_str(), &conf.System);
+	const bool systemDisponible = (hresult == ERROR_SUCCESS);
+	if (!systemDisponible) {
+		printError(hresult);
+		log(2, L"🔥Ruche SYSTEM indisponible : artefacts correspondants non collectes", hresult);
+		auditRecord(L"Ouverture de la ruche SYSTEM", rucheSystem, hresult, Footprint::RUCHE_COPIE);
+		for (const char* f : { "Usbstor.json", "mounted_device.json", "bams.json",
+		                       "shimcache.json", "services.json" })
+			writeNotCollected(f, L"dépend de la ruche SYSTEM, indisponible", hresult);
+	}
+	else printSuccess();
+
+	//chargement de la clé HKLM\SOFTWARE
+	printStep(L" - loading the HKLM\\SOFTWARE key : ");
+	std::wstring rucheSoftware = conf.mountpoint + L"\\Windows\\system32\\config\\SOFTWARE";
+	log(3, L"🔈OROpenHive Software");
+	hresult = OROpenHive(rucheSoftware.c_str(), &conf.Software);
+	const bool softwareDisponible = (hresult == ERROR_SUCCESS);
+	if (!softwareDisponible) {
+		printError(hresult);
+		log(2, L"🔥Ruche SOFTWARE indisponible : artefacts correspondants non collectes", hresult);
+		auditRecord(L"Ouverture de la ruche SOFTWARE", rucheSoftware, hresult, Footprint::RUCHE_COPIE);
+		writeNotCollected("run.json", L"dépend de la ruche SOFTWARE, indisponible", hresult);
+	}
+	else printSuccess();
+
+	/* PROFILS UTILISATEURS, HORS LIGNE. La liste se lit dans la ruche SOFTWARE
+	   qui vient d'être ouverte, et non plus dans le registre vivant : c'est ce qui
+	   impose d'extraire les ruches en deux passes. Cf. raw_collect.h. */
+	printStep(L" - Listing USER PROFILES (SOFTWARE hive) : ");
+	log(3, L"🔈loadProfileList");
+	hresult = loadProfileList();
+	auditRecord(L"Releve des profils utilisateurs",
+	            L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList (ruche copiee, offreg)",
+	            hresult, Footprint::RUCHE_COPIE);
+	if (hresult != ERROR_SUCCESS) printError(hresult);
+	else printSuccess();
+
+	printStep(L" - Extracting user hives (raw NTFS) : ");
+	log(3, L"🔈ExtractUserHivesRaw");
+	hresult = ExtractUserHivesRaw();      // S_FALSE = aucun profil, ou fichiers manquants (toléré)
+	if (FAILED(hresult)) printError(hresult);   // les autres artefacts restent collectables
+	else printSuccess();
 
 	// Prefetch, jumplists et documents récents : sans cette extraction, leurs
 	// collecteurs ne trouvent aucun fichier et rendent un artefact vide, ce qui
@@ -378,46 +428,6 @@ int main(int argc, char* argv[])
 	// Elles ne laissent donc aucune trace a distinguer dans les artefacts.
 	auditRecord(L"Lecture des artefacts du registre (ruches copiees, offreg)",
 	            conf.mountpoint, ERROR_SUCCESS, Footprint::RUCHE_COPIE);
-	//variables
-	ORHKEY hKey = NULL;
-	DWORD typeValeur = 0;
-	DWORD taille = 0;
-
-
-	//chargement de la clé HKLM\SYSTEM
-	printStep(L" - loading the HKLM\\SYSTEM key : ");
-	std::wstring rucheSystem = conf.mountpoint + L"\\Windows\\system32\\config\\SYSTEM";
-	/* Une ruche indisponible ne doit PAS interrompre la collecte.
-	   Constaté sur un système réel : SOFTWARE n'avait pas pu être extraite, et le
-	   `return` qui suivait abandonnait tout — y compris les artefacts de SYSTEM,
-	   les fichiers et les journaux, tous collectables. Le principe est de
-	   recueillir tout ce qui est accessible et de consigner ce qui manque. */
-	log(3, L"🔈OROpenHive System");
-	hresult = OROpenHive(rucheSystem.c_str(), &conf.System);
-	const bool systemDisponible = (hresult == ERROR_SUCCESS);
-	if (!systemDisponible) {
-		printError(hresult);
-		log(2, L"🔥Ruche SYSTEM indisponible : artefacts correspondants non collectes", hresult);
-		auditRecord(L"Ouverture de la ruche SYSTEM", rucheSystem, hresult, Footprint::RUCHE_COPIE);
-		for (const char* f : { "Usbstor.json", "mounted_device.json", "bams.json",
-		                       "shimcache.json", "services.json" })
-			writeNotCollected(f, L"dépend de la ruche SYSTEM, indisponible", hresult);
-	}
-	else printSuccess();
-
-	//chargement de la clé HKLM\SOFTWARE
-	printStep(L" - loading the HKLM\\SOFTWARE key : ");
-	std::wstring rucheSoftware = conf.mountpoint + L"\\Windows\\system32\\config\\SOFTWARE";
-	log(3, L"🔈OROpenHive Software");
-	hresult = OROpenHive(rucheSoftware.c_str(), &conf.Software);
-	const bool softwareDisponible = (hresult == ERROR_SUCCESS);
-	if (!softwareDisponible) {
-		printError(hresult);
-		log(2, L"🔥Ruche SOFTWARE indisponible : artefacts correspondants non collectes", hresult);
-		auditRecord(L"Ouverture de la ruche SOFTWARE", rucheSoftware, hresult, Footprint::RUCHE_COPIE);
-		writeNotCollected("run.json", L"dépend de la ruche SOFTWARE, indisponible", hresult);
-	}
-	else printSuccess();
 
 	/* Phase registre encadrée par un bloc à sortie unique : un échec en sort par
 	   `break` au lieu d'abandonner la collecte. Les artefacts sur fichiers et les

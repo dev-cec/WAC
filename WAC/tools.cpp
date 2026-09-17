@@ -526,63 +526,87 @@ std::wstring localUtcOffsetString() {
 	return s;
 }
 
+namespace {
+
+/*! Développe les variables d'environnement d'un `ProfileImagePath`, SANS
+ *  interroger l'environnement du processus.
+ *
+ *  POURQUOI PAS `ExpandEnvironmentStringsW`. Cette fonction lit l'environnement
+ *  du processus COURANT. Tant que la valeur venait du registre vivant, cela
+ *  coïncidait avec la machine examinée ; lue hors ligne dans une ruche copiée,
+ *  la valeur appartient à une autre installation que celle qui exécute WAC, et
+ *  développer avec l'environnement local deviendrait une supposition.
+ *
+ *  `ProfileImagePath` est un REG_EXPAND_SZ, et vaut littéralement
+ *  « %systemroot%\\system32\\config\\systemprofile » pour les comptes de
+ *  service. Sans développement, le chemin ne désigne aucun fichier et
+ *  l'extraction brute de leur ntuser.dat échoue en silence — ce qui s'observait
+ *  comme une extraction « partielle » sans cause apparente. */
+std::wstring developperCheminProfil(const std::wstring& brut) {
+	if (brut.find(L'%') == std::wstring::npos) return brut;
+
+	const std::wstring bas = enMinuscules(brut);
+	// %systemroot% et %windir% sont synonymes et désignent le dossier Windows.
+	for (PCWSTR v : { L"%systemroot%\\", L"%windir%\\" }) {
+		const size_t n = wcslen(v);
+		if (bas.compare(0, n, v) == 0)
+			return conf.systemDrive + L"\\Windows\\" + brut.substr(n);
+	}
+	if (bas.compare(0, 14, L"%systemdrive%\\") == 0)
+		return conf.systemDrive + L"\\" + brut.substr(14);
+
+	log(2, L"🔥ProfileImagePath : variable non reconnue dans " + brut);
+	return brut;
+}
+
+} // namespace
+
 HRESULT loadProfileList() {
-	PCWSTR CLE = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList";
-	HKEY hKey = NULL;
-	log(3, L"🔈RegOpenKeyExW ProfileList");
-	HRESULT hresult = RegOpenKeyExW(HKEY_LOCAL_MACHINE, CLE, 0, KEY_READ, &hKey);
+	if (!conf.Software) {
+		log(2, L"🔥Ruche SOFTWARE indisponible : profils utilisateurs non releves",
+		    ERROR_INVALID_HANDLE);
+		return ERROR_INVALID_HANDLE;
+	}
+
+	PCWSTR CLE = L"Microsoft\\Windows NT\\CurrentVersion\\ProfileList";
+	ORHKEY hKey = NULL;
+	log(3, L"🔈OROpenKey Software\\...\\ProfileList");
+	HRESULT hresult = OROpenKey(conf.Software, CLE, &hKey);
 	if (hresult != ERROR_SUCCESS) {
-		log(2, L"🔥RegOpenKeyExW ProfileList", hresult);
+		log(2, L"🔥OROpenKey Software\\...\\ProfileList", hresult);
 		return hresult;
 	}
 
-	for (DWORD i = 0; ; ++i) {
+	DWORD nSousCles = 0;
+	log(3, L"🔈ORQueryInfoKey ProfileList");
+	hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSousCles, NULL, NULL, NULL,
+	                         NULL, NULL, NULL, NULL);
+	if (hresult != ERROR_SUCCESS) {
+		log(2, L"🔥ORQueryInfoKey ProfileList", hresult);
+		ORCloseKey(hKey);
+		return hresult;
+	}
+
+	for (DWORD i = 0; i < nSousCles; ++i) {
 		WCHAR sid[MAX_KEY_NAME] = L"";
 		DWORD taille = MAX_KEY_NAME;
-		log(3, L"🔈RegEnumKeyExW ProfileList " + std::to_wstring(i));
-		hresult = RegEnumKeyExW(hKey, i, sid, &taille, NULL, NULL, NULL, NULL);
-		if (hresult == ERROR_NO_MORE_ITEMS) break;
-		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥RegEnumKeyExW ProfileList", hresult);
-			break;
-		}
+		log(3, L"🔈OREnumKey ProfileList " + std::to_wstring(i));
+		if (OREnumKey(hKey, i, sid, &taille, NULL, NULL, NULL) != ERROR_SUCCESS)
+			continue;
 
-		HKEY hProfil = NULL;
-		if (RegOpenKeyExW(hKey, sid, 0, KEY_READ, &hProfil) != ERROR_SUCCESS) continue;
-		DWORD octets = 0;
-		if (RegQueryValueExW(hProfil, L"ProfileImagePath", NULL, NULL, NULL, &octets) == ERROR_SUCCESS
-		    && octets >= sizeof(wchar_t)) {
-			std::vector<BYTE> tampon(octets + sizeof(wchar_t), 0);
-			if (RegQueryValueExW(hProfil, L"ProfileImagePath", NULL, NULL,
-			                     tampon.data(), &octets) == ERROR_SUCCESS) {
-				std::wstring chemin = (PCWSTR)tampon.data();
-				/* `ProfileImagePath` est un REG_EXPAND_SZ : pour les comptes de
-				   service, il vaut litteralement
-				   « %systemroot%\system32\config\systemprofile ». Sans
-				   developpement, le chemin ne designe aucun fichier et
-				   l'extraction brute de leur ntuser.dat echoue en silence — ce
-				   qui s'observait comme une extraction « partielle » sans cause
-				   apparente. */
-				if (chemin.find(L'%') != std::wstring::npos) {
-					wchar_t developpe[MAX_PATH] = L"";
-					const DWORD n = ExpandEnvironmentStringsW(chemin.c_str(),
-					                                          developpe, MAX_PATH);
-					if (n > 0 && n <= MAX_PATH) {
-						log(2, L"❇️Profil developpe : " + chemin + L" -> " + developpe);
-						chemin = developpe;
-					}
-					else
-						log(2, L"🔥ExpandEnvironmentStringsW " + chemin, GetLastError());
-				}
-				if (!chemin.empty()) {
-					conf.profiles.push_back({ sid, chemin });
-					log(2, L"❇️Profil : " + std::wstring(sid) + L" -> " + chemin);
-				}
-			}
-		}
-		RegCloseKey(hProfil);
+		std::wstring chemin;
+		if (getRegSzValue(hKey, sid, L"ProfileImagePath", &chemin) != ERROR_SUCCESS)
+			continue;
+
+		const std::wstring developpe = developperCheminProfil(chemin);
+		if (developpe != chemin)
+			log(2, L"❇️Profil developpe : " + chemin + L" -> " + developpe);
+		if (developpe.empty()) continue;
+
+		conf.profiles.push_back({ sid, developpe });
+		log(2, L"❇️Profil : " + std::wstring(sid) + L" -> " + developpe);
 	}
-	RegCloseKey(hKey);
+	ORCloseKey(hKey);
 	log(2, L"❇️" + std::to_wstring(conf.profiles.size()) + L" profils utilisateurs releves");
 	return conf.profiles.empty() ? ERROR_EMPTY : ERROR_SUCCESS;
 }

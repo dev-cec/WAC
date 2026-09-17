@@ -45,9 +45,28 @@ void rapporterProgression(const wchar_t* item, unsigned long long fait,
 	printProgress(item ? item : L"", fait / 1024, total / 1024, L"Kio");
 }
 
-} // namespace
-
-HRESULT ExtractHivesRaw() {
+/*! Extraction brute d'un lot de ruches, puis remise en etat des copies de
+ *  travail : rejeu des journaux de transaction, patch en recours.
+ *
+ *  PARTIE COMMUNE AUX DEUX PASSES. La liste des profils utilisateurs se lit
+ *  desormais dans la ruche SOFTWARE extraite (cf. raw_collect.h et
+ *  tools.h/loadProfileList) : les ruches par utilisateur ne peuvent donc plus
+ *  etre extraites dans la meme passe que les ruches systeme, puisque leur
+ *  emplacement n'est pas encore connu quand celle-ci commence.
+ *
+ *  @param cheminsRuches chemins des ruches, absolus (avec lettre de volume) ou
+ *                       relatifs au volume systeme ; les journaux .LOG1 et
+ *                       .LOG2 sont ajoutes d'office.
+ *  @param etiquette     ce que cette passe extrait, pour le journal d'audit.
+ *  @param verifierLieu  vrai pour la PREMIERE passe seulement : l'emplacement de
+ *                       collecte se verifie avant la premiere ecriture, et une
+ *                       seule fois — au second appel le repertoire de travail
+ *                       est legitimement peuple par la premiere passe, et
+ *                       `ConsigneVerifierEmplacement` le refuserait.
+ */
+HRESULT extraireLotDeRuches(const std::vector<std::wstring>& cheminsRuches,
+                            const std::wstring& etiquette,
+                            bool verifierLieu) {
 	conf.mountpoint = dossierTravail();
 
 	/*  EMPLACEMENT DE COLLECTE, verifie AVANT la premiere ecriture. Deux refus,
@@ -57,7 +76,7 @@ HRESULT ExtractHivesRaw() {
 	    volontairement grossiere — les ruches d'une installation ordinaire, plus
 	    les journaux d'evenements quand ils sont demandes ; elle n'a pas a etre
 	    juste, seulement a ecarter un support manifestement insuffisant. */
-	{
+	if (verifierLieu) {
 		const unsigned long long besoin = conf._events
 		                                ? 400ULL * 1024 * 1024   // ruches + journaux
 		                                : 250ULL * 1024 * 1024;  // ruches seules
@@ -95,22 +114,7 @@ HRESULT ExtractHivesRaw() {
 		ruches.push_back(cheminExtrait(chemin));
 	};
 
-	// Ruches système
-	addRuche(L"\\Windows\\system32\\config\\SYSTEM");
-	addRuche(L"\\Windows\\system32\\config\\SOFTWARE");
-	/* SAM : base des comptes LOCAUX. Extraite pour que `users` se lise hors
-	   ligne (dates de dernier logon, echecs de connexion, drapeaux de compte)
-	   au lieu d'interroger LSASS par RPC. Cf. users.h. */
-	addRuche(L"\\Windows\\system32\\config\\SAM");
-	addRuche(L"\\Windows\\AppCompat\\Programs\\Amcache.hve");
-
-	/* Ruches par profil utilisateur. Le chemin est passe ABSOLU, avec sa lettre :
-	   c'est elle qui determine sur quel volume lire. */
-	for (const std::tuple<std::wstring, std::wstring>& profile : conf.profiles) {
-		const std::wstring profil = std::get<1>(profile);   // ex. "D:\Users\jean"
-		addRuche(profil + L"\\ntuser.dat");
-		addRuche(profil + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat");
-	}
+	for (const std::wstring& ruche : cheminsRuches) addRuche(ruche);
 
 	// Créer l'arborescence de destination sous la consigne
 	for (const auto& groupe : parVolume)
@@ -140,7 +144,7 @@ HRESULT ExtractHivesRaw() {
 		// Consigne ici, et non chez l'appelant : l'extraction doit preceder au
 		// journal les patchs qu'elle declenche, sinon l'enchainement se lit a
 		// l'envers.
-		auditRecord(L"Extraction brute des ruches (+ journaux .LOG1/.LOG2)",
+		auditRecord(etiquette,
 		            std::wstring(L"\\\\.\\") + volume + L": -> " + conf.mountpoint,
 		            hrVolume, Footprint::VOLUME_BRUT);
 		if (FAILED(hrVolume)) {                  // volume inaccessible
@@ -281,6 +285,54 @@ HRESULT ExtractHivesRaw() {
 
 	// Une ruche illisible est bloquante en aval (OROpenHive) : on le signale.
 	return (echecs == 0) ? hr : S_FALSE;
+}
+
+} // namespace
+
+HRESULT ExtractSystemHivesRaw() {
+	/* Ruches de la machine. Aucune ne depend d'un chemin releve sur le systeme :
+	   c'est precisement ce qui permet de les extraire en premier, avant de savoir
+	   quoi que ce soit du contenu du registre. */
+	std::vector<std::wstring> ruches = {
+		L"\\Windows\\system32\\config\\SYSTEM",
+		L"\\Windows\\system32\\config\\SOFTWARE",
+		/* SAM : base des comptes LOCAUX. Extraite pour que `users` se lise hors
+		   ligne (dates de dernier logon, echecs de connexion, drapeaux de compte)
+		   au lieu d'interroger LSASS par RPC. Cf. users.h. */
+		L"\\Windows\\system32\\config\\SAM",
+		L"\\Windows\\AppCompat\\Programs\\Amcache.hve",
+	};
+	return extraireLotDeRuches(
+		ruches,
+		L"Extraction brute des ruches systeme (+ journaux .LOG1/.LOG2)",
+		true);
+}
+
+HRESULT ExtractUserHivesRaw() {
+	/* `conf.profiles` est renseigne par loadProfileList(), qui lit la ruche
+	   SOFTWARE extraite par la passe precedente. Une liste vide n'est donc pas
+	   une machine sans utilisateur, mais un releve de profils qui a echoue :
+	   l'annoncer vaut mieux que de rendre un succes sur une extraction vide. */
+	if (conf.profiles.empty()) {
+		log(2, L"🔥Aucun profil releve : aucune ruche par utilisateur a extraire");
+		auditRecord(L"Extraction brute des ruches par utilisateur (aucun profil releve)",
+		            conf.mountpoint, ERROR_EMPTY, Footprint::VOLUME_BRUT);
+		return S_FALSE;
+	}
+
+	/* Le chemin est passe ABSOLU, avec sa lettre : c'est elle qui determine sur
+	   quel volume lire. Un profil sur un second disque (« D:\Users\jean ») etait
+	   cherche dans la table de fichiers de C:, donc jamais extrait. */
+	std::vector<std::wstring> ruches;
+	for (const std::tuple<std::wstring, std::wstring>& profile : conf.profiles) {
+		const std::wstring profil = std::get<1>(profile);   // ex. "D:\Users\jean"
+		ruches.push_back(profil + L"\\ntuser.dat");
+		ruches.push_back(profil + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat");
+	}
+	return extraireLotDeRuches(
+		ruches,
+		L"Extraction brute des ruches par utilisateur (+ journaux .LOG1/.LOG2)",
+		false);
 }
 
 HRESULT ExtractFileArtefactsRaw() {

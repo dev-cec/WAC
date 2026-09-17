@@ -13,22 +13,59 @@
 #pragma once
 #include <windows.h>
 
-/*! Extrait les ruches (+ journaux .LOG1/.LOG2) vers `_outputDir`\\hives et les
- *  rend exploitables par offreg.
+/*  POURQUOI L'EXTRACTION DES RUCHES SE FAIT EN DEUX PASSES.
+ *
+ *  Les ruches par utilisateur (`ntuser.dat`, `usrClass.dat`) vivent dans le
+ *  dossier de profil : il faut donc connaître l'emplacement des profils avant de
+ *  pouvoir les extraire. Cette liste était lue dans le registre VIVANT, à
+ *  `HKLM\SOFTWARE\...\ProfileList` — la dernière lecture que WAC faisait encore
+ *  sur le registre de la machine examinée.
+ *
+ *  Elle se lit désormais dans la ruche SOFTWARE extraite, ce qui impose l'ordre
+ *  suivant, et explique que ce qui était une seule fonction en soit devenu deux :
+ *
+ *    1. ExtractSystemHivesRaw()   — SYSTEM, SOFTWARE, SAM, Amcache
+ *    2. OROpenHive(SOFTWARE)      — sur la copie de travail
+ *    3. loadProfileList()         — hors ligne, dans cette copie
+ *    4. ExtractUserHivesRaw()     — les ruches des profils ainsi relevés
+ *    5. ExtractFileArtefactsRaw() — Prefetch, jumplists, documents récents
+ *
+ *  Le coût est une seconde passe de lecture de la $MFT du volume ; le gain est
+ *  qu'aucune clé du registre de la machine examinée n'est plus ouverte.
+ */
+
+/*! Extrait les ruches de la MACHINE (+ journaux .LOG1/.LOG2) vers
+ *  `_outputDir`\\consigne, en fait la copie de travail et la rend exploitable
+ *  par offreg.
  *
  *  Les journaux de transaction sont extraits car ils sont des artefacts en
  *  eux-mêmes, et documentent les modifications en attente que la copie à chaud
  *  ne contient pas.
  *
  *  Une copie brute d'une ruche d'un système vivant est toujours « dirty » et
- *  refusée par offreg : chaque ruche passe donc par MakeHiveLoadable(), qui
- *  aligne les numéros de séquence et consigne l'opération (cf. hive_recover.h).
+ *  refusée par offreg : chaque ruche passe donc par un rejeu des journaux, puis
+ *  par MakeHiveLoadable() en recours (cf. hive_recover.h).
+ *
+ *  C'est cette passe qui vérifie l'emplacement de collecte, avant toute
+ *  écriture.
  *
  *  @return S_OK si tout réussit, S_FALSE si certains fichiers manquent ou si une
  *          ruche reste inexploitable, ou un code d'erreur si le volume ne peut
  *          être ouvert.
  */
-HRESULT ExtractHivesRaw();
+HRESULT ExtractSystemHivesRaw();
+
+/*! Extrait les ruches de chaque PROFIL utilisateur relevé dans `conf.profiles`,
+ *  selon les mêmes règles que `ExtractSystemHivesRaw`.
+ *
+ *  À appeler APRÈS `loadProfileList()`, qui renseigne `conf.profiles` depuis la
+ *  ruche SOFTWARE extraite par la passe précédente.
+ *
+ *  @return S_OK si tout réussit, S_FALSE si aucun profil n'a été relevé ou si
+ *          certains fichiers manquent, ou un code d'erreur si le volume ne peut
+ *          être ouvert.
+ */
+HRESULT ExtractUserHivesRaw();
 
 /*! Extrait les artefacts sur fichiers : Prefetch, jumplists et documents
  *  récents, vers `_outputDir`\\hives sous leur chemin d'origine.

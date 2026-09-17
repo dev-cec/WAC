@@ -75,9 +75,20 @@ Only three readings remain live, because their subject *is* the instant of
 collection and no file can hold it: **running processes**, **open sessions**, and
 the current time. Everything else — event logs included — is read from a copy.
 
-Two one-off registry reads also stay live, because they are a *prerequisite* of
-reading offline: which volume letter to extract, and where the per-user hives
-live.
+**WAC no longer opens any key of the examined machine's registry.** The last
+one was the profile list (`ProfileList`), needed to know where the per-user
+hives live — hence before any hive was available offline. It is now read in the
+extracted `SOFTWARE` hive, which makes hive extraction a two-pass affair:
+
+1. raw extraction of the machine hives (`SYSTEM`, `SOFTWARE`, `SAM`, `Amcache`);
+2. `SOFTWARE` opened **on the working copy**, profile list read there;
+3. raw extraction of each profile's `ntuser.dat` and `usrClass.dat`;
+4. raw extraction of the file artefacts (Prefetch, jumplists, `.lnk`).
+
+The cost is a second read of the volume's `$MFT`. The environment variables of
+`ProfileImagePath` (`%systemroot%`…) are expanded from the detected system
+drive, not from WAC's own environment: the value belongs to the examined
+installation.
 
 ## 📄 WHAT IS COLLECTED
 
@@ -147,7 +158,6 @@ does to the machine**, operation by operation — including what it cannot avoid
 | **Processes** (`CreateToolhelp32Snapshot`) | a kernel snapshot; no process handle is opened |
 | **Process owners** (1 × `WTSEnumerateProcessesEx`) | solicits the Terminal Services service, once |
 | **Sessions** (`LsaEnumerateLogonSessions`) | solicits LSASS; reads only |
-| **Profile list** (1 registry key) | a local read of `HKLM\SOFTWARE\…\ProfileList`. No RPC |
 | **Event logs** (`--events`) | reads `\Windows\System32\winevt\Logs\*.evtx` through the same raw volume handle as every other artefact — **no service is solicited**, and the parsing happens on the copy. The only cost left is the size: ~117 MB written to the collection medium |
 | **Event message resolution** (`--events`) | reads the resource file of each provider that actually produced an event, through the same raw volume handle. These are operating-system binaries, not exhibits, but they go into the exhibit store with their fingerprints like everything else — which records *which build's* wording was used. ~121 MB on an ordinary installation |
 | **MD5 hashing** (`--md5`) | opens each referenced file for reading. Windows disables last-access updates by default (`NtfsDisableLastAccessUpdate`), but on a system where they are enabled, **this does update them** |

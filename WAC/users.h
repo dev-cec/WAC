@@ -12,8 +12,9 @@
 *
 *  POURQUOI LA RUCHE PLUTÔT QUE netapi32. La version d'origine
 *  appelait `NetUserEnum` puis `NetUserGetInfo` pour chaque compte : autant
-*  d'allers-retours RPC vers LSASS, plus une lecture du registre vivant par
-*  utilisateur. La même information est écrite dans
+*  d'allers-retours RPC vers LSASS. La liste des profils, elle aussi lue
+*  autrefois dans le registre vivant, vient désormais de la ruche SOFTWARE
+*  extraite (cf. tools.h, loadProfileList). La même information est écrite dans
 *  `SAM\Domains\Account\Users`, désormais extraite en brut.
 *
 *  CE QUE LA RUCHE AJOUTE
@@ -64,7 +65,7 @@ struct Users {
 	std::vector<User> users;   //!< tableau contenant tous les comptes locaux
 
 	/*! Relève les comptes dans la ruche SAM extraite.
-	* Nécessite que `ExtractHivesRaw()` ait extrait `\Windows\System32\config\SAM`.
+	* Nécessite que `ExtractSystemHivesRaw()` ait extrait `\Windows\System32\config\SAM`.
 	*/
 	HRESULT getData();
 

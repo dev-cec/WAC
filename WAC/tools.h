@@ -84,18 +84,23 @@ void loadSystemDrive();
 
 /*! Relève les profils utilisateurs et renseigne `conf.profiles` (SID, chemin).
 *
-* POURQUOI AVANT L'EXTRACTION, ET POURQUOI EN LIVE. Les ruches par utilisateur
-* (`ntuser.dat`, `usrClass.dat`) vivent dans le dossier de profil : il faut donc
-* connaître ces chemins AVANT de pouvoir les extraire, c'est-à-dire avant
-* qu'aucune ruche ne soit disponible hors ligne. La source est
-* `HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\ProfileList`, lue dans le
-* registre vivant : une seule clé, en lecture, sans RPC.
+* HORS LIGNE. La source est `Microsoft\\Windows NT\\CurrentVersion\\ProfileList`,
+* lue dans la ruche SOFTWARE EXTRAITE (`conf.Software`). Cette clé était lue
+* dans le registre vivant : c'était la dernière ouverture de clé que WAC faisait
+* sur le registre de la machine examinée.
 *
-* Remplace l'enchaînement `NetUserEnum` + `NetUserGetInfo` par utilisateur, qui
-* sollicitait LSASS autant de fois qu'il y a de comptes pour obtenir la même
-* liste de chemins.
+* ORDRE IMPOSÉ. Les ruches par utilisateur (`ntuser.dat`, `usrClass.dat`) vivent
+* dans le dossier de profil : il faut connaître ces chemins pour les extraire.
+* D'où l'enchaînement ExtractSystemHivesRaw → OROpenHive(SOFTWARE) →
+* loadProfileList → ExtractUserHivesRaw (cf. raw_collect.h).
 *
-* @return ERROR_SUCCESS si la clé a pu être énumérée, un code d'erreur sinon
+* Les variables de `ProfileImagePath` (REG_EXPAND_SZ) sont développées à partir
+* de `conf.systemDrive`, et non de l'environnement du processus : la valeur
+* appartient à la machine examinée, pas à celle qui exécute WAC.
+*
+* @return ERROR_SUCCESS si au moins un profil a été relevé, ERROR_EMPTY si la clé
+*         ne contient aucun profil exploitable, ERROR_INVALID_HANDLE si la ruche
+*         SOFTWARE n'est pas ouverte, ou le code d'offreg
 */
 HRESULT loadProfileList();
 

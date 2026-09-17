@@ -165,7 +165,7 @@ Attributs publics</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>Comptes locaux de la machine examinée, lus dans la ruche SAM.</p>
-<p>POURQUOI LA RUCHE PLUTÔT QUE netapi32. La version d'origine appelait <code>NetUserEnum</code> puis <code>NetUserGetInfo</code> pour chaque compte : autant d'allers-retours RPC vers LSASS, plus une lecture du registre vivant par utilisateur. La même information est écrite dans <code>SAM\Domains\Account\<a class="el" href="structUsers.html">Users</a></code>, désormais extraite en brut.</p>
+<p>POURQUOI LA RUCHE PLUTÔT QUE netapi32. La version d'origine appelait <code>NetUserEnum</code> puis <code>NetUserGetInfo</code> pour chaque compte : autant d'allers-retours RPC vers LSASS. La liste des profils, elle aussi lue autrefois dans le registre vivant, vient désormais de la ruche SOFTWARE extraite (cf. <a class="el" href="tools_8h.html">tools.h</a>, loadProfileList). La même information est écrite dans <code>SAM\Domains\Account\<a class="el" href="structUsers.html">Users</a></code>, désormais extraite en brut.</p>
 <p>CE QUE LA RUCHE AJOUTE</p><ul>
 <li><code>LastWriteTime</code> de la clé du compte : quand le compte a été créé ou modifié — donnée qu'aucune API de netapi32 ne rend ;</li>
 <li>les comptes que LSASS refuserait d'énumérer si le service répondait mal ;</li>

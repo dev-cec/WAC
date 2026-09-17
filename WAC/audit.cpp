@@ -24,9 +24,6 @@ const wchar_t* SCM          = L"Une seule enumeration du gestionnaire de service
                               L"(EnumServicesStatusExW), pour relever l'etat courant. Aucun "
                               L"handle ouvert service par service : la configuration provient "
                               L"de la ruche SYSTEM copiee.";
-const wchar_t* COMPTES_LOCAUX = L"Lecture d'une cle du registre local (ProfileList) : aucun "
-                              L"appel RPC, aucune sollicitation de LSASS. Les comptes eux-memes "
-                              L"sont lus dans la ruche SAM copiee.";
 const wchar_t* PROCESSUS    = L"Enumeration des processus : ouverture de handles de processus "
                               L"et de jetons (auditable si la politique le prevoit).";
 const wchar_t* SESSIONS     = L"Interrogation des sessions ouvertes (LSA / Terminal Services) : "

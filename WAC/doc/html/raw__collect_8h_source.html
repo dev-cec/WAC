@@ -114,11 +114,35 @@ $(document).ready(function(){initNavTree('raw__collect_8h_source.html',''); init
 <div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#pragma once</span></div>
 <div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
 <div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>HRESULT <a class="code hl_function" href="raw__collect_8h.html#aac9868240a317d81ab2e5210e84e45b9">ExtractHivesRaw</a>();</div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>HRESULT <a class="code hl_function" href="raw__collect_8h.html#af9979687d9c2b542a94076e0201c54e6">ExtractFileArtefactsRaw</a>();</div>
-<div class="ttc" id="araw__collect_8h_html_aac9868240a317d81ab2e5210e84e45b9"><div class="ttname"><a href="raw__collect_8h.html#aac9868240a317d81ab2e5210e84e45b9">ExtractHivesRaw</a></div><div class="ttdeci">HRESULT ExtractHivesRaw()</div><div class="ttdef"><b>Definition</b> raw_collect.cpp:50</div></div>
-<div class="ttc" id="araw__collect_8h_html_af9979687d9c2b542a94076e0201c54e6"><div class="ttname"><a href="raw__collect_8h.html#af9979687d9c2b542a94076e0201c54e6">ExtractFileArtefactsRaw</a></div><div class="ttdeci">HRESULT ExtractFileArtefactsRaw()</div><div class="ttdef"><b>Definition</b> raw_collect.cpp:286</div></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="comment">/*  POURQUOI L&#39;EXTRACTION DES RUCHES SE FAIT EN DEUX PASSES.</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="comment"> *  Les ruches par utilisateur (`ntuser.dat`, `usrClass.dat`) vivent dans le</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="comment"> *  dossier de profil : il faut donc connaître l&#39;emplacement des profils avant de</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="comment"> *  pouvoir les extraire. Cette liste était lue dans le registre VIVANT, à</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="comment"> *  `HKLM\SOFTWARE\...\ProfileList` — la dernière lecture que WAC faisait encore</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="comment"> *  sur le registre de la machine examinée.</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="comment"> *  Elle se lit désormais dans la ruche SOFTWARE extraite, ce qui impose l&#39;ordre</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="comment"> *  suivant, et explique que ce qui était une seule fonction en soit devenu deux :</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="comment"> *    1. ExtractSystemHivesRaw()   — SYSTEM, SOFTWARE, SAM, Amcache</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="comment"> *    2. OROpenHive(SOFTWARE)      — sur la copie de travail</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="comment"> *    3. loadProfileList()         — hors ligne, dans cette copie</span></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="comment"> *    4. ExtractUserHivesRaw()     — les ruches des profils ainsi relevés</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="comment"> *    5. ExtractFileArtefactsRaw() — Prefetch, jumplists, documents récents</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="comment"> *  Le coût est une seconde passe de lecture de la $MFT du volume ; le gain est</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="comment"> *  qu&#39;aucune clé du registre de la machine examinée n&#39;est plus ouverte.</span></div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>HRESULT <a class="code hl_function" href="raw__collect_8h.html#ae58749bc4a81f74e2ba47ab515e50b96">ExtractSystemHivesRaw</a>();</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>HRESULT <a class="code hl_function" href="raw__collect_8h.html#aa5703c897d2cb36c0d59690f4844a51d">ExtractUserHivesRaw</a>();</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>HRESULT <a class="code hl_function" href="raw__collect_8h.html#af9979687d9c2b542a94076e0201c54e6">ExtractFileArtefactsRaw</a>();</div>
+<div class="ttc" id="araw__collect_8h_html_aa5703c897d2cb36c0d59690f4844a51d"><div class="ttname"><a href="raw__collect_8h.html#aa5703c897d2cb36c0d59690f4844a51d">ExtractUserHivesRaw</a></div><div class="ttdeci">HRESULT ExtractUserHivesRaw()</div><div class="ttdef"><b>Definition</b> raw_collect.cpp:311</div></div>
+<div class="ttc" id="araw__collect_8h_html_ae58749bc4a81f74e2ba47ab515e50b96"><div class="ttname"><a href="raw__collect_8h.html#ae58749bc4a81f74e2ba47ab515e50b96">ExtractSystemHivesRaw</a></div><div class="ttdeci">HRESULT ExtractSystemHivesRaw()</div><div class="ttdef"><b>Definition</b> raw_collect.cpp:292</div></div>
+<div class="ttc" id="araw__collect_8h_html_af9979687d9c2b542a94076e0201c54e6"><div class="ttname"><a href="raw__collect_8h.html#af9979687d9c2b542a94076e0201c54e6">ExtractFileArtefactsRaw</a></div><div class="ttdeci">HRESULT ExtractFileArtefactsRaw()</div><div class="ttdef"><b>Definition</b> raw_collect.cpp:338</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

@@ -1,5 +1,6 @@
 var raw__collect_8cpp =
 [
     [ "ExtractFileArtefactsRaw", "raw__collect_8cpp.html#af9979687d9c2b542a94076e0201c54e6", null ],
-    [ "ExtractHivesRaw", "raw__collect_8cpp.html#aac9868240a317d81ab2e5210e84e45b9", null ]
+    [ "ExtractSystemHivesRaw", "raw__collect_8cpp.html#ae58749bc4a81f74e2ba47ab515e50b96", null ],
+    [ "ExtractUserHivesRaw", "raw__collect_8cpp.html#aa5703c897d2cb36c0d59690f4844a51d", null ]
 ];

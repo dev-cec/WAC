@@ -1,7 +1,6 @@
 var namespaces_dup =
 [
     [ "Footprint", "namespaceFootprint.html", [
-      [ "COMPTES_LOCAUX", "namespaceFootprint.html#a0da13ddb409bbb6ff27051b344f32441", null ],
       [ "ECRITURE_USB", "namespaceFootprint.html#aeefd446c0b758f5cf2e8919c527d0688", null ],
       [ "FICHIER_COPIE", "namespaceFootprint.html#a3d944af43e67edbbd418d8254902e223", null ],
       [ "PROCESSUS", "namespaceFootprint.html#a6ab93559465b4c66ed432176e844846b", null ],

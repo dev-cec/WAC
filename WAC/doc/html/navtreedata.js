@@ -60,7 +60,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"globals_s.html",
+"globals_t.html",
 "structAutomaticDestination.html#adf146dff12607de34518ef2d43227c1d",
 "structDirectory.html#a63997621361dd8c746c72fdff8c44e18",
 "structMruApps.html#a1169476aee0c5789ba44af983951b807",

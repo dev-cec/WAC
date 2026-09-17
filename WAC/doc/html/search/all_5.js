@@ -25,7 +25,7 @@ var searchData=
   ['estreferencemui_22',['estreferencemui',['../tools_8h.html#a259b7509acf146373857caa3433265b2',1,'estReferenceMui(const std::wstring &amp;valeur):&#160;tools.cpp'],['../tools_8cpp.html#a259b7509acf146373857caa3433265b2',1,'estReferenceMui(const std::wstring &amp;valeur):&#160;tools.cpp']]],
   ['etatreleve_23',['etatReleve',['../structServiceStruct.html#a7b71e52c5c4123fd389f5599865c19b1',1,'ServiceStruct']]],
   ['etatservice_24',['EtatService',['../structEtatService.html',1,'']]],
-  ['event_25',['event',['../structEvent.html#a4be366211f9152a80efa955bcef36fcb',1,'Event::Event()'],['../structEvent.html',1,'Event']]],
+  ['event_25',['event',['../structEvent.html',1,'Event'],['../structEvent.html#a4be366211f9152a80efa955bcef36fcb',1,'Event::Event()']]],
   ['event_5fmessages_2ecpp_26',['event_messages.cpp',['../event__messages_8cpp.html',1,'']]],
   ['event_5fmessages_2eh_27',['event_messages.h',['../event__messages_8h.html',1,'']]],
   ['event_5fmessages_5ftest_2ecpp_28',['event_messages_test.cpp',['../event__messages__test_8cpp.html',1,'']]],
@@ -59,7 +59,7 @@ var searchData=
   ['evtxbilan_56',['EvtxBilan',['../structEvtxBilan.html',1,'']]],
   ['evtxcanaldepuisnomfichier_57',['evtxcanaldepuisnomfichier',['../evtx_8h.html#ab9a79cf1305cf8cdd405fe6599a72977',1,'EvtxCanalDepuisNomFichier(const std::wstring &amp;nomFichier):&#160;evtx.cpp'],['../evtx_8cpp.html#ab9a79cf1305cf8cdd405fe6599a72977',1,'EvtxCanalDepuisNomFichier(const std::wstring &amp;nomFichier):&#160;evtx.cpp']]],
   ['evtxenregistrement_58',['EvtxEnregistrement',['../structEvtxEnregistrement.html',1,'']]],
-  ['evtxlirefichier_59',['evtxlirefichier',['../evtx_8h.html#ad1b41a7f4e34221aee446d70cf983c27',1,'EvtxLireFichier(const std::wstring &amp;chemin, const std::function&lt; bool(const EvtxEnregistrement &amp;)&gt; &amp;surEnregistrement, EvtxBilan *bilan=nullptr):&#160;evtx.cpp'],['../evtx_8cpp.html#a26f4b420c4fc84703145e5843782c764',1,'EvtxLireFichier(const std::wstring &amp;chemin, const std::function&lt; bool(const EvtxEnregistrement &amp;)&gt; &amp;surEnregistrement, EvtxBilan *bilan):&#160;evtx.cpp']]],
+  ['evtxlirefichier_59',['evtxlirefichier',['../evtx_8cpp.html#a26f4b420c4fc84703145e5843782c764',1,'EvtxLireFichier(const std::wstring &amp;chemin, const std::function&lt; bool(const EvtxEnregistrement &amp;)&gt; &amp;surEnregistrement, EvtxBilan *bilan):&#160;evtx.cpp'],['../evtx_8h.html#ad1b41a7f4e34221aee446d70cf983c27',1,'EvtxLireFichier(const std::wstring &amp;chemin, const std::function&lt; bool(const EvtxEnregistrement &amp;)&gt; &amp;surEnregistrement, EvtxBilan *bilan=nullptr):&#160;evtx.cpp']]],
   ['executable_60',['executable',['../structBeef001d.html#a799461c2ccb01b3be39fb7032c238b5a',1,'Beef001d']]],
   ['executed_61',['executed',['../structShimcache.html#a8b246c0a6d5f4283059b262a333bbefb',1,'Shimcache']]],
   ['executiontime_62',['executionTime',['../structBam.html#a2d778fb9384e11593ef630ffd93281d2',1,'Bam']]],
@@ -74,6 +74,7 @@ var searchData=
   ['extractfileartefactsraw_71',['extractfileartefactsraw',['../raw__collect_8cpp.html#af9979687d9c2b542a94076e0201c54e6',1,'ExtractFileArtefactsRaw():&#160;raw_collect.cpp'],['../raw__collect_8h.html#af9979687d9c2b542a94076e0201c54e6',1,'ExtractFileArtefactsRaw():&#160;raw_collect.cpp']]],
   ['extractfileraw_72',['extractfileraw',['../raw__hive_8cpp.html#aff3f1529d81703425b03fe383f20d88d',1,'ExtractFileRaw(const std::wstring &amp;volumeLetter, const std::wstring &amp;filePathOnVolume, const std::wstring &amp;outFile):&#160;raw_hive.cpp'],['../raw__hive_8h.html#aff3f1529d81703425b03fe383f20d88d',1,'ExtractFileRaw(const std::wstring &amp;volumeLetter, const std::wstring &amp;filePathOnVolume, const std::wstring &amp;outFile):&#160;raw_hive.cpp']]],
   ['extractfilesraw_73',['extractfilesraw',['../raw__hive_8cpp.html#a14cfdb5c02d68c067984526c403a5514',1,'ExtractFilesRaw(const std::wstring &amp;volumeLetter, const std::vector&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;items, std::vector&lt; HRESULT &gt; *perItem, std::vector&lt; RawHiveExtrait &gt; *releve):&#160;raw_hive.cpp'],['../raw__hive_8h.html#a7d7d4e4adb0ce41fb171335a7245f077',1,'ExtractFilesRaw(const std::wstring &amp;volumeLetter, const std::vector&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;items, std::vector&lt; HRESULT &gt; *perItem=nullptr, std::vector&lt; RawHiveExtrait &gt; *releve=nullptr):&#160;raw_hive.cpp']]],
-  ['extracthivesraw_74',['extracthivesraw',['../raw__collect_8cpp.html#aac9868240a317d81ab2e5210e84e45b9',1,'ExtractHivesRaw():&#160;raw_collect.cpp'],['../raw__collect_8h.html#aac9868240a317d81ab2e5210e84e45b9',1,'ExtractHivesRaw():&#160;raw_collect.cpp']]],
-  ['extraitutc_75',['extraitUtc',['../structRawHiveEmpreintes.html#a00388dfa73cbf9f2874f9e21ea47f475',1,'RawHiveEmpreintes']]]
+  ['extractsystemhivesraw_74',['extractsystemhivesraw',['../raw__collect_8cpp.html#ae58749bc4a81f74e2ba47ab515e50b96',1,'ExtractSystemHivesRaw():&#160;raw_collect.cpp'],['../raw__collect_8h.html#ae58749bc4a81f74e2ba47ab515e50b96',1,'ExtractSystemHivesRaw():&#160;raw_collect.cpp']]],
+  ['extractuserhivesraw_75',['extractuserhivesraw',['../raw__collect_8h.html#aa5703c897d2cb36c0d59690f4844a51d',1,'ExtractUserHivesRaw():&#160;raw_collect.cpp'],['../raw__collect_8cpp.html#aa5703c897d2cb36c0d59690f4844a51d',1,'ExtractUserHivesRaw():&#160;raw_collect.cpp']]],
+  ['extraitutc_76',['extraitUtc',['../structRawHiveEmpreintes.html#a00388dfa73cbf9f2874f9e21ea47f475',1,'RawHiveEmpreintes']]]
 ];

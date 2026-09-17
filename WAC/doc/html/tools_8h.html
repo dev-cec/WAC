@@ -1315,9 +1315,10 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Relève les profils utilisateurs et renseigne <code>conf.profiles</code> (SID, chemin).</p>
-<p>POURQUOI AVANT L'EXTRACTION, ET POURQUOI EN LIVE. Les ruches par utilisateur (<code>ntuser.dat</code>, <code>usrClass.dat</code>) vivent dans le dossier de profil : il faut donc connaître ces chemins AVANT de pouvoir les extraire, c'est-à-dire avant qu'aucune ruche ne soit disponible hors ligne. La source est <code>HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\ProfileList</code>, lue dans le registre vivant : une seule clé, en lecture, sans RPC.</p>
-<p>Remplace l'enchaînement <code>NetUserEnum</code> + <code>NetUserGetInfo</code> par utilisateur, qui sollicitait LSASS autant de fois qu'il y a de comptes pour obtenir la même liste de chemins.</p>
-<dl class="section return"><dt>Renvoie</dt><dd>ERROR_SUCCESS si la clé a pu être énumérée, un code d'erreur sinon </dd></dl>
+<p>HORS LIGNE. La source est <code>Microsoft\\Windows NT\\CurrentVersion\\ProfileList</code>, lue dans la ruche SOFTWARE EXTRAITE (<code>conf.Software</code>). Cette clé était lue dans le registre vivant : c'était la dernière ouverture de clé que WAC faisait sur le registre de la machine examinée.</p>
+<p>ORDRE IMPOSÉ. Les ruches par utilisateur (<code>ntuser.dat</code>, <code>usrClass.dat</code>) vivent dans le dossier de profil : il faut connaître ces chemins pour les extraire. D'où l'enchaînement ExtractSystemHivesRaw → OROpenHive(SOFTWARE) → loadProfileList → ExtractUserHivesRaw (cf. <a class="el" href="raw__collect_8h.html">raw_collect.h</a>).</p>
+<p>Les variables de <code>ProfileImagePath</code> (REG_EXPAND_SZ) sont développées à partir de <code>conf.systemDrive</code>, et non de l'environnement du processus : la valeur appartient à la machine examinée, pas à celle qui exécute WAC.</p>
+<dl class="section return"><dt>Renvoie</dt><dd>ERROR_SUCCESS si au moins un profil a été relevé, ERROR_EMPTY si la clé ne contient aucun profil exploitable, ERROR_INVALID_HANDLE si la ruche SOFTWARE n'est pas ouverte, ou le code d'offreg </dd></dl>
 
 </div>
 </div>

@@ -107,8 +107,10 @@ $(document).ready(function(){initNavTree('raw__collect_8h.html',''); initResizab
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Fonctions</h2></td></tr>
-<tr class="memitem:aac9868240a317d81ab2e5210e84e45b9" id="r_aac9868240a317d81ab2e5210e84e45b9"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__collect_8h.html#aac9868240a317d81ab2e5210e84e45b9">ExtractHivesRaw</a> ()</td></tr>
-<tr class="separator:aac9868240a317d81ab2e5210e84e45b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae58749bc4a81f74e2ba47ab515e50b96" id="r_ae58749bc4a81f74e2ba47ab515e50b96"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__collect_8h.html#ae58749bc4a81f74e2ba47ab515e50b96">ExtractSystemHivesRaw</a> ()</td></tr>
+<tr class="separator:ae58749bc4a81f74e2ba47ab515e50b96"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa5703c897d2cb36c0d59690f4844a51d" id="r_aa5703c897d2cb36c0d59690f4844a51d"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__collect_8h.html#aa5703c897d2cb36c0d59690f4844a51d">ExtractUserHivesRaw</a> ()</td></tr>
+<tr class="separator:aa5703c897d2cb36c0d59690f4844a51d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af9979687d9c2b542a94076e0201c54e6" id="r_af9979687d9c2b542a94076e0201c54e6"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__collect_8h.html#af9979687d9c2b542a94076e0201c54e6">ExtractFileArtefactsRaw</a> ()</td></tr>
 <tr class="separator:af9979687d9c2b542a94076e0201c54e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -136,24 +138,45 @@ Fonctions</h2></td></tr>
 
 </div>
 </div>
-<a id="aac9868240a317d81ab2e5210e84e45b9" name="aac9868240a317d81ab2e5210e84e45b9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aac9868240a317d81ab2e5210e84e45b9">&#9670;&#160;</a></span>ExtractHivesRaw()</h2>
+<a id="ae58749bc4a81f74e2ba47ab515e50b96" name="ae58749bc4a81f74e2ba47ab515e50b96"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae58749bc4a81f74e2ba47ab515e50b96">&#9670;&#160;</a></span>ExtractSystemHivesRaw()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">HRESULT ExtractHivesRaw </td>
+          <td class="memname">HRESULT ExtractSystemHivesRaw </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Extrait les ruches (+ journaux .LOG1/.LOG2) vers <code>_outputDir</code>\hives et les rend exploitables par offreg.</p>
+<p>Extrait les ruches de la MACHINE (+ journaux .LOG1/.LOG2) vers <code>_outputDir</code>\consigne, en fait la copie de travail et la rend exploitable par offreg.</p>
 <p>Les journaux de transaction sont extraits car ils sont des artefacts en eux-mêmes, et documentent les modifications en attente que la copie à chaud ne contient pas.</p>
-<p>Une copie brute d'une ruche d'un système vivant est toujours « dirty » et refusée par offreg : chaque ruche passe donc par <a class="el" href="hive__recover_8cpp.html#abfdcef62f94d212392944c4002628be4">MakeHiveLoadable()</a>, qui aligne les numéros de séquence et consigne l'opération (cf. <a class="el" href="hive__recover_8h.html">hive_recover.h</a>).</p>
+<p>Une copie brute d'une ruche d'un système vivant est toujours « dirty » et refusée par offreg : chaque ruche passe donc par un rejeu des journaux, puis par <a class="el" href="hive__recover_8cpp.html#abfdcef62f94d212392944c4002628be4">MakeHiveLoadable()</a> en recours (cf. <a class="el" href="hive__recover_8h.html">hive_recover.h</a>).</p>
+<p>C'est cette passe qui vérifie l'emplacement de collecte, avant toute écriture.</p>
 <dl class="section return"><dt>Renvoie</dt><dd>S_OK si tout réussit, S_FALSE si certains fichiers manquent ou si une ruche reste inexploitable, ou un code d'erreur si le volume ne peut être ouvert. </dd></dl>
+
+</div>
+</div>
+<a id="aa5703c897d2cb36c0d59690f4844a51d" name="aa5703c897d2cb36c0d59690f4844a51d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa5703c897d2cb36c0d59690f4844a51d">&#9670;&#160;</a></span>ExtractUserHivesRaw()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT ExtractUserHivesRaw </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Extrait les ruches de chaque PROFIL utilisateur relevé dans <code>conf.profiles</code>, selon les mêmes règles que <code>ExtractSystemHivesRaw</code>.</p>
+<p>À appeler APRÈS <code><a class="el" href="tools_8cpp.html#a8dd0bb51cdc854f2137aba256aae3d9c">loadProfileList()</a></code>, qui renseigne <code>conf.profiles</code> depuis la ruche SOFTWARE extraite par la passe précédente.</p>
+<dl class="section return"><dt>Renvoie</dt><dd>S_OK si tout réussit, S_FALSE si aucun profil n'a été relevé ou si certains fichiers manquent, ou un code d'erreur si le volume ne peut être ouvert. </dd></dl>
 
 </div>
 </div>

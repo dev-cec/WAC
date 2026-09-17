@@ -6,7 +6,6 @@ var audit_8cpp =
     [ "auditInit", "audit_8cpp.html#ae3092ba5f3c03d3cb8d2e87ba3a371da", null ],
     [ "auditRecord", "audit_8cpp.html#a62e181d5aeac18f51be39f660b8c81b7", null ],
     [ "auditWrite", "audit_8cpp.html#ac7c50c38d38c2f3b3ccc78f72570d6df", null ],
-    [ "COMPTES_LOCAUX", "audit_8cpp.html#a0da13ddb409bbb6ff27051b344f32441", null ],
     [ "ECRITURE_USB", "audit_8cpp.html#aeefd446c0b758f5cf2e8919c527d0688", null ],
     [ "FICHIER_COPIE", "audit_8cpp.html#a3d944af43e67edbbd418d8254902e223", null ],
     [ "PROCESSUS", "audit_8cpp.html#a6ab93559465b4c66ed432176e844846b", null ],
