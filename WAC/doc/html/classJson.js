@@ -14,5 +14,6 @@ var classJson =
     [ "kind", "classJson.html#a7b6af011a3f229790cc957012bfd0240", null ],
     [ "merge", "classJson.html#a57248b9413e96d1384154590d05724ad", null ],
     [ "push", "classJson.html#a6f089fb2e1066f7507fcfc4720c46674", null ],
-    [ "size", "classJson.html#ae6eba8b3f5db17b0f67d3b04fbcef25e", null ]
+    [ "size", "classJson.html#ae6eba8b3f5db17b0f67d3b04fbcef25e", null ],
+    [ "vide", "classJson.html#ae494652eb309401404129eb3e6652b94", null ]
 ];

@@ -12,11 +12,12 @@
  *  PRÉLÈVEMENT. L'empreinte suffit à interroger une base publique sans rien lui
  *  envoyer, mais elle ne dit rien d'un binaire que personne ne connaît — le cas
  *  qui intéresse l'enquête — et un binaire non prélevé peut avoir disparu quand
- *  la détection arrive. Les exécutables, bibliothèques, pilotes et scripts cités
- *  sont donc COPIÉS dans la consigne, avec leurs trois empreintes, comme toute
- *  autre pièce. Les autres fichiers cités (documents, données) ne sont que
- *  hachés : ce ne sont pas des charges, et les copier ferait de la collecte une
- *  copie des documents de l'utilisateur.
+ *  la détection arrive. Les exécutables, bibliothèques, pilotes, scripts et
+ *  documents Office capables de porter des macros qui sont cités sont donc
+ *  COPIÉS dans la consigne, avec leurs trois empreintes, comme toute autre
+ *  pièce. Les autres fichiers cités (documents sans macros, données) ne sont
+ *  que hachés : ce ne sont pas des charges, et les copier ferait de la collecte
+ *  une copie des documents de l'utilisateur.
  *
  *  DÉDOUBLONNAGE. Un même contenu n'est consigné qu'une fois : trois copies
  *  identiques de msedge.dll (Edge, EdgeCore, WebView2 : 332 Mo chacune)

@@ -118,8 +118,11 @@ MRU, Run keys, Shimcache, Amcache, jumplists, Prefetch and recent documents.
 
 With `--binary`, every file those artefacts point to — a process's executable, a
 service's binary and DLL, a scheduled task's command, the files a program loaded
-(Prefetch), Shimcache and Amcache entries, a shortcut's target — is fingerprinted,
-and executables, libraries, drivers and scripts are **collected**. A fingerprint
+(Prefetch), Shimcache and Amcache entries, a shortcut's or jump list's target — is
+fingerprinted, and executables, libraries, drivers, scripts and **Office
+documents able to carry macros** (`.doc`, `.docm`, `.xls`, `.xlsm`, `.xlsb`,
+`.ppt`, `.pptm`, templates and add-ins, Publisher, Visio, Access) are
+**collected**. `.docx`/`.xlsx`/`.pptx` cannot hold VBA and are only hashed. A fingerprint
 lets a public database be queried without sending it anything, but it says
 nothing about a binary nobody knows — the one that matters to the investigation —
 and a binary left behind may be gone by the time a detection comes in. Documents

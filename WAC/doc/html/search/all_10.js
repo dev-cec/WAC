@@ -51,6 +51,6 @@ var searchData=
   ['profiles_48',['profiles',['../structAppliConf.html#acebd5e49e779376202a9766407664256',1,'AppliConf']]],
   ['properties_49',['properties',['../structUserPropertyView0x10312005.html#ad26e268cab5cf25298c7a60a1ea4c904',1,'UserPropertyView0x10312005::properties'],['../structUserPropertyView0x07192006.html#acb6c3e715d0752f662749301a1901dfb',1,'UserPropertyView0x07192006::properties']]],
   ['property_50',['property',['../structProperty.html#a8db3a41e6d13822855fa49392ba5f3ba',1,'Property::Property()'],['../structProperty.html',1,'Property']]],
-  ['publisher_51',['publisher',['../structAmcacheApplication.html#a508328e17811cc409ce1372314bf4c38',1,'AmcacheApplication::Publisher'],['../structAmcacheApplicationFile.html#a8589abe031424dff4b9f166515e85b9d',1,'AmcacheApplicationFile::publisher']]],
+  ['publisher_51',['publisher',['../structAmcacheApplicationFile.html#a8589abe031424dff4b9f166515e85b9d',1,'AmcacheApplicationFile::publisher'],['../structAmcacheApplication.html#a508328e17811cc409ce1372314bf4c38',1,'AmcacheApplication::Publisher']]],
   ['push_52',['push',['../classJson.html#a6f089fb2e1066f7507fcfc4720c46674',1,'Json']]]
 ];

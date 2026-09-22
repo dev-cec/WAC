@@ -125,6 +125,8 @@ Types publics</h2></td></tr>
 Fonctions membres publiques</h2></td></tr>
 <tr class="memitem:a390326dfba042c05275db086c656937e" id="r_a390326dfba042c05275db086c656937e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html#a390326dfba042c05275db086c656937e">add</a> (const std::wstring &amp;cle, <a class="el" href="classJson.html">Json</a> valeur)</td></tr>
 <tr class="separator:a390326dfba042c05275db086c656937e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae494652eb309401404129eb3e6652b94" id="r_ae494652eb309401404129eb3e6652b94"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html#ae494652eb309401404129eb3e6652b94">vide</a> () const</td></tr>
+<tr class="separator:ae494652eb309401404129eb3e6652b94"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a57248b9413e96d1384154590d05724ad" id="r_a57248b9413e96d1384154590d05724ad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html#a57248b9413e96d1384154590d05724ad">merge</a> (<a class="el" href="classJson.html">Json</a> autre)</td></tr>
 <tr class="separator:a57248b9413e96d1384154590d05724ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6f089fb2e1066f7507fcfc4720c46674" id="r_a6f089fb2e1066f7507fcfc4720c46674"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html#a6f089fb2e1066f7507fcfc4720c46674">push</a> (<a class="el" href="classJson.html">Json</a> valeur)</td></tr>
@@ -228,7 +230,9 @@ Fonctions membres publiques statiques</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Ajoute une paire clé/valeur (objet). </p>
+<p>Ajoute une paire clé/valeur (objet) — SAUF si la valeur est vide.</p>
+<p>RÈGLE UNIQUE : un champ sans valeur n'est pas émis. Une clé vide se lit comme une lecture ratée, et ne se distingue pas de « la source ne contient pas cette valeur ». La règle était appliquée collecteur par collecteur, donc inégalement : une collecte réelle comptait encore 129 837 <code>null</code> dans events.json, et des chaînes ou tableaux vides dans les tâches planifiées, Amcache, <a class="el" href="structShimcache.html">Shimcache</a>, les raccourcis, les shellbags… Elle vit désormais ici, là où tout champ passe, pour que le prochain collecteur ne puisse pas l'oublier.</p>
+<p>Vide : <code>null</code>, chaîne vide, objet ou tableau sans élément. Un nombre nul ou un booléen faux sont des valeurs, et sont émis. Les éléments de tableau (<code>push</code>) ne sont pas concernés : un fichier sans entrée reste « [] », ce qui signifie « aucune entrée trouvée ». </p>
 
 </div>
 </div>
@@ -648,6 +652,32 @@ Fonctions membres publiques statiques</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="ae494652eb309401404129eb3e6652b94" name="ae494652eb309401404129eb3e6652b94"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae494652eb309401404129eb3e6652b94">&#9670;&#160;</a></span>vide()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Json::vide </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>true pour <code>null</code>, une chaîne vide, un objet ou un tableau sans élément. </p>
 
 </div>
 </div>

@@ -9,13 +9,14 @@ var searchData=
   ['versionmajor_6',['versionMajor',['../structoleHeader.html#a21807321c18b05a795a67fe5dc86c747',1,'oleHeader']]],
   ['versionminor_7',['versionMinor',['../structoleHeader.html#ab5365703f5bb80ed064b18cf23f9a4d7',1,'oleHeader']]],
   ['versionpourmessage_8',['versionPourMessage',['../structEvent.html#a1fca9d1921fc196a3480851cde860211',1,'Event']]],
-  ['volume_5fbrut_9',['VOLUME_BRUT',['../namespaceFootprint.html#a21fbd02fcf0cef0f33e637a0c51ddfc2',1,'Footprint']]],
-  ['volumedrivetype_10',['volumeDriveType',['../structRecentDoc.html#a61273f968fccbd29d381eca133ade648',1,'RecentDoc']]],
-  ['volumeduchemin_11',['volumeduchemin',['../tools_8cpp.html#a7f3831643296c77d2e38a6da3843683f',1,'volumeDuChemin(const std::wstring &amp;absolu):&#160;tools.cpp'],['../tools_8h.html#a7f3831643296c77d2e38a6da3843683f',1,'volumeDuChemin(const std::wstring &amp;absolu):&#160;tools.cpp']]],
-  ['volumeinfo_12',['volumeinfo',['../structVolumeInfo.html#a55bcfcb20e244a3900e5f28de4624ac9',1,'VolumeInfo::VolumeInfo(LPBYTE data, int indice)'],['../structVolumeInfo.html#a99d7451b1e666040acd79d87d173d20c',1,'VolumeInfo::VolumeInfo()'],['../structVolumeInfo.html',1,'VolumeInfo']]],
-  ['volumelabel_13',['volumeLabel',['../structRecentDoc.html#a416af338d58ea9ba73fd34efb0e31f6d',1,'RecentDoc']]],
-  ['volumes_14',['volumes',['../structPrefetch.html#a77b4dfb38277a26b079563c7a8fe911a',1,'Prefetch::volumes'],['../structLecteurBrut_1_1Impl.html#a86f7dcc530e351e0055b483a12e41909',1,'LecteurBrut::Impl::volumes']]],
-  ['volumeserial_15',['volumeSerial',['../structRecentDoc.html#a280d45cab21459d7460a80763bb8b4a9',1,'RecentDoc']]],
-  ['volumeshellitem_16',['volumeshellitem',['../structVolumeShellItem.html#aad4404ca114335ef479909ca8285ce98',1,'VolumeShellItem::VolumeShellItem()'],['../structVolumeShellItem.html',1,'VolumeShellItem']]],
-  ['volumesouverts_17',['volumesOuverts',['../classLecteurBrut.html#a02273caa6d38fcdb0373653b518f0077',1,'LecteurBrut']]]
+  ['vide_9',['vide',['../classJson.html#ae494652eb309401404129eb3e6652b94',1,'Json']]],
+  ['volume_5fbrut_10',['VOLUME_BRUT',['../namespaceFootprint.html#a21fbd02fcf0cef0f33e637a0c51ddfc2',1,'Footprint']]],
+  ['volumedrivetype_11',['volumeDriveType',['../structRecentDoc.html#a61273f968fccbd29d381eca133ade648',1,'RecentDoc']]],
+  ['volumeduchemin_12',['volumeduchemin',['../tools_8cpp.html#a7f3831643296c77d2e38a6da3843683f',1,'volumeDuChemin(const std::wstring &amp;absolu):&#160;tools.cpp'],['../tools_8h.html#a7f3831643296c77d2e38a6da3843683f',1,'volumeDuChemin(const std::wstring &amp;absolu):&#160;tools.cpp']]],
+  ['volumeinfo_13',['volumeinfo',['../structVolumeInfo.html#a55bcfcb20e244a3900e5f28de4624ac9',1,'VolumeInfo::VolumeInfo(LPBYTE data, int indice)'],['../structVolumeInfo.html#a99d7451b1e666040acd79d87d173d20c',1,'VolumeInfo::VolumeInfo()'],['../structVolumeInfo.html',1,'VolumeInfo']]],
+  ['volumelabel_14',['volumeLabel',['../structRecentDoc.html#a416af338d58ea9ba73fd34efb0e31f6d',1,'RecentDoc']]],
+  ['volumes_15',['volumes',['../structPrefetch.html#a77b4dfb38277a26b079563c7a8fe911a',1,'Prefetch::volumes'],['../structLecteurBrut_1_1Impl.html#a86f7dcc530e351e0055b483a12e41909',1,'LecteurBrut::Impl::volumes']]],
+  ['volumeserial_16',['volumeSerial',['../structRecentDoc.html#a280d45cab21459d7460a80763bb8b4a9',1,'RecentDoc']]],
+  ['volumeshellitem_17',['volumeshellitem',['../structVolumeShellItem.html#aad4404ca114335ef479909ca8285ce98',1,'VolumeShellItem::VolumeShellItem()'],['../structVolumeShellItem.html',1,'VolumeShellItem']]],
+  ['volumesouverts_18',['volumesOuverts',['../classLecteurBrut.html#a02273caa6d38fcdb0373653b518f0077',1,'LecteurBrut']]]
 ];

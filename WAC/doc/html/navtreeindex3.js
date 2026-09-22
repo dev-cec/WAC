@@ -1,5 +1,6 @@
 var NAVTREEINDEX3 =
 {
+"structDestFile.html#ae25c6b299b5aa1425abdf7eb09e13031":[1,0,43,12],
 "structDestFileDirectory.html":[1,0,44],
 "structDestFileDirectory.html#a0613825531b4e09e7c5d6376bdc5ff4b":[1,0,44,1],
 "structDestFileDirectory.html#a193e721f9096e79a21f9a7f33f9c0c9b":[1,0,44,0],
@@ -248,6 +249,5 @@ var NAVTREEINDEX3 =
 "structMFTInformation.html#af482903748d0bc0e5ac44b61a7fdb683":[1,0,73,2],
 "structMountedDevice.html":[1,0,74],
 "structMountedDevice.html#a5a8fbb09017366fb91688b3855f4ab60":[1,0,74,0],
-"structMountedDevice.html#a6ccc8582a2373e19f9b17df597383a42":[1,0,74,4],
-"structMountedDevice.html#a79042a23a8662facf6d4d1f82f4e212d":[1,0,74,2]
+"structMountedDevice.html#a6ccc8582a2373e19f9b17df597383a42":[1,0,74,4]
 };

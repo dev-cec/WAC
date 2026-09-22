@@ -400,14 +400,28 @@ non prélevé peut avoir disparu quand une détection survient. C'est pourquoi
         \fichier{ps1}, \fichier{psm1}, \fichier{bat}, \fichier{cmd},
         \fichier{vbs}, \fichier{vbe}, \fichier{js}, \fichier{jse},
         \fichier{wsf}, \fichier{wsh}, \fichier{hta} ;
-  \item \textbf{seulement hachés} : documents et fichiers de données (cible d'un
-        raccourci, par exemple). Les copier ferait de la collecte une copie des
-        fichiers de l'utilisateur.
+  \item \textbf{prélevés aussi} : les documents Office \textbf{capables de porter
+        des macros}, vecteur d'intrusion aussi courant qu'un exécutable —
+        formats binaires anciens (\fichier{doc}, \fichier{xls}, \fichier{ppt},
+        \fichier{pps}, \fichier{dot}, \fichier{xlt}, \fichier{pot}), formats
+        « m » (\fichier{docm}, \fichier{dotm}, \fichier{xlsm}, \fichier{xltm},
+        \fichier{pptm}, \fichier{potm}, \fichier{ppsm}), \fichier{xlsb},
+        compléments (\fichier{xla}, \fichier{xlam}, \fichier{xll},
+        \fichier{wll}, \fichier{ppa}, \fichier{ppam}), Publisher
+        (\fichier{pub}), Visio (\fichier{vsd}, \fichier{vsdm}, \fichier{vstm},
+        \fichier{vssm}) et Access (\fichier{mdb}, \fichier{accdb},
+        \fichier{accde}). Ils apparaissent dans les traces comme cibles de
+        raccourcis ou de listes de sauts, ou parmi les fichiers chargés par
+        Word ou Excel dans leur Prefetch ;
+  \item \textbf{seulement hachés} : les autres documents et fichiers de données,
+        y compris \fichier{docx}, \fichier{xlsx} et \fichier{pptx}, qui ne
+        peuvent pas contenir de macros. Les copier ferait de la collecte une
+        copie des fichiers de l'utilisateur.
 \end{itemize}
 
 Les fichiers cités proviennent des processus, services (binaire et DLL), tâches
 planifiées, fichiers chargés par les programmes (Prefetch), Shimcache, Amcache et
-cibles de raccourcis. Chaque fichier n'est lu qu'une fois, quel que soit le
+cibles de raccourcis et de listes de sauts. Chaque fichier n'est lu qu'une fois, quel que soit le
 nombre d'artefacts qui le citent, et \textbf{un même contenu n'est stocké
 qu'une fois} : les autres chemins figurent au manifeste comme pièces partageant
 ce contenu (\champ{SharedExhibit}).

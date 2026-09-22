@@ -34,14 +34,35 @@ std::wstring dossierArrivee() {
  *  encore trouver leur place. */
 const unsigned long long RESERVE = 1ULL << 30;
 
-/*! Ce qui se prélève : exécutables, bibliothèques, pilotes, et les scripts
- *  qu'une tâche ou une clé Run peut lancer. */
+/*! Ce qui se prélève : exécutables, bibliothèques, pilotes, les scripts
+ *  qu'une tâche ou une clé Run peut lancer, et les documents Office CAPABLES DE
+ *  PORTER DES MACROS.
+ *
+ *  DOCUMENTS À MACROS. Un document piégé est un vecteur d'intrusion aussi
+ *  courant qu'un exécutable, et il apparaît dans les traces : cible d'un
+ *  raccourci ou d'une liste de sauts, fichier chargé par WINWORD.EXE ou
+ *  EXCEL.EXE dans leur Prefetch. Ne sont retenus que les formats où du VBA peut
+ *  vivre : les formats binaires anciens (.doc, .xls, .ppt…), les formats « m »
+ *  (.docm, .xlsm…), .xlsb, les modèles et compléments, Publisher, Visio et
+ *  Access. Les .docx/.xlsx/.pptx ne peuvent pas contenir de VBA : ils restent
+ *  seulement hachés, comme tout document — les copier ferait de la collecte une
+ *  copie des fichiers de l'utilisateur. */
 bool aPrelever(const std::wstring& chemin) {
 	const size_t point = chemin.find_last_of(L'.');
 	if (point == std::wstring::npos || chemin.find(L'\\', point) != std::wstring::npos) return false;
 	static const wchar_t* const extensions[] = {
+		// exécutables, bibliothèques, pilotes
 		L"exe", L"dll", L"sys", L"ocx", L"cpl", L"scr", L"drv", L"efi", L"com", L"msi",
+		// scripts
 		L"ps1", L"psm1", L"bat", L"cmd", L"vbs", L"vbe", L"js", L"jse", L"wsf", L"wsh", L"hta",
+		// Word
+		L"doc", L"docm", L"dot", L"dotm",
+		// Excel (xll et wll sont des DLL chargées par Excel et Word)
+		L"xls", L"xlsm", L"xlsb", L"xlt", L"xltm", L"xla", L"xlam", L"xll", L"wll",
+		// PowerPoint
+		L"ppt", L"pptm", L"pot", L"potm", L"pps", L"ppsm", L"ppa", L"ppam",
+		// Publisher, Visio, Access
+		L"pub", L"vsd", L"vsdm", L"vstm", L"vssm", L"mdb", L"accdb", L"accde",
 	};
 	const std::wstring ext = enMinuscules(chemin.substr(point + 1));
 	for (const wchar_t* e : extensions) if (ext == e) return true;

@@ -1,5 +1,6 @@
 var NAVTREEINDEX2 =
 {
+"structAppliConf.html#acebd5e49e779376202a9766407664256":[1,0,5,11],
 "structAppliConf.html#ade184923cc7733b8350179aa9af74ab3":[1,0,5,4],
 "structArchiveFileContent.html":[1,0,6],
 "structArchiveFileContent.html#a086c1c0c645060250c20f3ff45624507":[1,0,6,5],
@@ -248,6 +249,5 @@ var NAVTREEINDEX2 =
 "structDestFile.html#a9228340d2f8cf849211a5c473bc1b290":[1,0,43,3],
 "structDestFile.html#a9f3632927d1d2462ece27f264d5cbeb3":[1,0,43,6],
 "structDestFile.html#aa0d81350e6be7691463766a1e6d8083b":[1,0,43,5],
-"structDestFile.html#aa0e54dd0160f681d2b390637e137fe40":[1,0,43,14],
-"structDestFile.html#ae25c6b299b5aa1425abdf7eb09e13031":[1,0,43,12]
+"structDestFile.html#aa0e54dd0160f681d2b390637e137fe40":[1,0,43,14]
 };
