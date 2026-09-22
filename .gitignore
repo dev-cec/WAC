@@ -388,3 +388,12 @@ WAC/doc/*.tag
 # mais un lancement depuis un autre repertoire courant depose une copie des
 # ressources HTML ici. Rien a versionner.
 /doc/
+
+# Fichiers intermédiaires LaTeX de la documentation utilisateur
+/docs/utilisateur/*.aux
+/docs/utilisateur/*.log
+/docs/utilisateur/*.toc
+/docs/utilisateur/*.out
+/docs/utilisateur/*.fls
+/docs/utilisateur/*.fdb_latexmk
+/docs/utilisateur/*.xdv

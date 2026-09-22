@@ -297,9 +297,10 @@ Example of extracted system information:
   "DisplayVersion": "25H2",
   "InstallDate": "2026-09-12T13:30:15+02:00",
   "InstallDateUtc": "2026-09-12T11:30:15Z",
-  "LastBootUpTime": "2026-09-14T21:59:56+02:00",
-  "LastBootUpTimeUtc": "2026-09-14T19:59:56Z",
-  "BootTimeSource": "calculé depuis GetTickCount64 ; exclut les périodes de veille et d'hibernation, donc borne supérieure du démarrage réel",
+  "LastBootUpTime": "2026-09-14T21:59:56.5000000+02:00",
+  "LastBootUpTimeUtc": "2026-09-14T19:59:56.5000000Z",
+  "BootTimeSource": "noyau (SystemTimeOfDayInformation : BootTime - BootTimeBias), heure affichée par l'horloge au démarrage",
+  "ClockAdjustedSinceBootMs": 4365,
   "CurrentTimeZoneId": "Romance Standard Time",
   "CurrentBias": -120,
   "DaylightInEffect": true,
@@ -312,10 +313,13 @@ Three details in this output are deliberate, and illustrate the rules above:
 - **`ProductNameRaw` appears only when it differs from `OsName`.** Windows 11
   still reports "Windows 10" in `ProductName`; the build number is the only
   reliable discriminant. The raw value is kept so the correction stays verifiable.
-- **`BootTimeSource` states a reservation.** The boot time is derived from
-  `GetTickCount64`, which excludes sleep and hibernation: it bounds the observed
-  activity, it does not prove the boot instant. Without that note, the value would
-  read as a certainty.
+- **`BootTimeSource` says where the boot time comes from.** It is read from the
+  kernel (`BootTime − BootTimeBias`): what the clock showed at boot, on the same
+  reference as the event logs and logon sessions — checked against the
+  Kernel-General 12 event to the millisecond. The former estimate (now minus
+  `GetTickCount64`) ignored clock corrections and landed 3.5 s late on a resumed
+  VM. `ClockAdjustedSinceBootMs` is the total of those corrections: a few seconds
+  is routine resynchronisation, a large value means a clock changed since boot.
 - **`TimeZoneSource` says which clock was used.** Otherwise an unexpected offset
   would be indistinguishable from a read error.
 
@@ -634,6 +638,12 @@ cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
 
 ## 📚 DOCUMENTATION
 
+- **User manual** (French): `docs/utilisateur/manuel-wac.pdf`, built from
+  `docs/utilisateur/manuel-wac.tex` with `latexmk -xelatex manuel-wac.tex`
+  (fonts: Noto Sans, DejaVu Sans Mono). It covers preparing a collection, the
+  options, reading the output, verifying the exhibit store and the traces left
+  on the examined machine. `docs/utilisateur/verifier-consigne.ps1` checks the
+  seal and every exhibit of a collection (tested on 3 360 exhibits).
 - **API documentation**: HTML, generated with Doxygen from the source comments
   (`Doxygen/Doxyfile`, output in `WAC/doc/html`). Regenerate with
   `cd Doxygen && doxygen Doxyfile`.
