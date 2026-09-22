@@ -1,89 +1,89 @@
-/*  binaires.h — empreinte et prélèvement des fichiers cités par les artefacts.
+/*  binaires.h — fingerprinting and collection of the files cited by artefacts.
  *
- *  POURQUOI CE MODULE. Avec `--binary`, WAC relève l'empreinte de chaque fichier
- *  qu'un artefact désigne : exécutable d'un processus, d'un service, d'une tâche
- *  planifiée, fichiers chargés par un programme (Prefetch), entrées de Shimcache
- *  et d'Amcache, cible d'un raccourci. Ces empreintes étaient calculées en
- *  OUVRANT chaque fichier par l'API : la seule lecture de fichier que WAC
- *  faisait encore sur la machine examinée, et qui met à jour la date de dernier
- *  accès là où Windows la tient à jour. Elles sont désormais calculées par
- *  lecture brute du volume : aucun fichier n'est ouvert.
+ *  WHY THIS MODULE. With `--binary`, WAC fingerprints every file an artefact
+ *  points to: executable of a process, a service or a scheduled task, files
+ *  loaded by a program (Prefetch), Shimcache and Amcache entries, a shortcut's
+ *  target. These fingerprints used to be computed by OPENING each file through
+ *  the API: the only file read WAC still made on the examined machine, and one
+ *  that updates the last-access date where Windows maintains it. They are now
+ *  computed by reading the volume raw: no file is opened.
  *
- *  PRÉLÈVEMENT. L'empreinte suffit à interroger une base publique sans rien lui
- *  envoyer, mais elle ne dit rien d'un binaire que personne ne connaît — le cas
- *  qui intéresse l'enquête — et un binaire non prélevé peut avoir disparu quand
- *  la détection arrive. Les exécutables, bibliothèques, pilotes, scripts et
- *  documents Office capables de porter des macros qui sont cités sont donc
- *  COPIÉS dans la consigne, avec leurs trois empreintes, comme toute autre
- *  pièce. Les autres fichiers cités (documents sans macros, données) ne sont
- *  que hachés : ce ne sont pas des charges, et les copier ferait de la collecte
- *  une copie des documents de l'utilisateur.
+ *  COLLECTION. A fingerprint is enough to query a public database without
+ *  sending it anything, but it says nothing about a binary nobody knows — the
+ *  case that matters to the investigation — and a binary left behind may be
+ *  gone by the time a detection comes in. The executables, libraries, drivers,
+ *  scripts and Office documents able to carry macros that are cited are
+ *  therefore COPIED into the exhibit store, with their three fingerprints, like
+ *  any other exhibit. The other cited files (documents without macros, data)
+ *  are only hashed: they are not payloads, and copying them would turn the
+ *  collection into a copy of the user's documents.
  *
- *  BINAIRES MICROSOFT AUTHENTIQUES. Un exécutable dont l'authenticité Microsoft
- *  est vérifiée — empreinte listée dans un catalogue de Windows à signature
- *  Microsoft valide, ou signature intégrée Microsoft valide — est haché sans
- *  être prélevé : identique sur toute machine de la même version, il ne sert
- *  pas l'enquête. La vérification se fait en mémoire, sans API ni service
- *  (cf. authenticode.h), et les catalogues qui l'ont justifiée sont consignés.
+ *  AUTHENTIC MICROSOFT BINARIES. An executable whose Microsoft authenticity is
+ *  verified — digest listed in a Windows catalog with a valid Microsoft
+ *  signature, or valid embedded Microsoft signature — is hashed without being
+ *  collected: identical on every machine of the same build, it does not serve
+ *  the investigation. The check is done in memory, with no API or service (see
+ *  authenticode.h), and the catalogs that justified it go into the exhibit
+ *  store.
  *
- *  DÉDOUBLONNAGE. Un même contenu n'est consigné qu'une fois : trois copies
- *  identiques de msedge.dll (Edge, EdgeCore, WebView2 : 332 Mo chacune)
- *  occupaient 996 Mo. Les autres chemins sont déclarés au manifeste comme
- *  pièces partageant ce contenu (cf. ConsigneAjouterDoublon).
+ *  DEDUPLICATION. Identical content is stored only once: three identical copies
+ *  of msedge.dll (Edge, EdgeCore, WebView2: 332 MB each) took 996 MB. The other
+ *  paths are declared in the manifest as exhibits sharing that content (see
+ *  ConsigneAjouterDoublon).
  *
- *  La lecture étant brute, prélever ne coûte AUCUNE trace de plus que hacher :
- *  seulement de la place sur le support de collecte. Quand elle vient à manquer,
- *  le fichier est haché sans être copié, et c'est consigné.
+ *  Since reading is raw, collecting costs NO more trace than hashing: only space
+ *  on the collection medium. When space runs short, the file is hashed without
+ *  being copied, and that is recorded.
  */
 #pragma once
 #include <windows.h>
 #include <string>
 #include "json.h"
 
-/*! Empreintes d'un fichier cité, et ce qu'il en a été fait. */
+/*! Fingerprints of a cited file, and what was done with it. */
 struct EmpreinteBinaire {
-    std::wstring chemin;     //!< chemin normalisé (« X:\… »), vide si indéterminable
-    std::wstring md5;        //!< vides si le fichier n'a pas pu être lu
+    std::wstring chemin;     //!< normalised path ("X:\…"), empty if undeterminable
+    std::wstring md5;        //!< empty if the file could not be read
     std::wstring sha1;
     std::wstring sha256;
     HRESULT resultat = E_FAIL;
-    bool preleve = false;    //!< copié dans la consigne
-    /*! Authenticité Microsoft vérifiée (catalogue de Windows ou signature
-     *  intégrée) : le binaire n'est pas prélevé. Vide sinon. Cf. authenticode.h. */
+    bool preleve = false;    //!< copied into the exhibit store
+    /*! Microsoft authenticity verified (Windows catalog or embedded signature):
+     *  the binary is not collected. Empty otherwise. See authenticode.h. */
     std::wstring signature;
 };
 
-/*! Bilan de la phase, pour le journal d'investigation. */
+/*! Summary of the phase, for the investigation log. */
 struct BilanBinaires {
     size_t fichiers = 0, lus = 0, preleves = 0, sansPlace = 0, doublons = 0;
     unsigned long long octetsPreleves = 0, octetsEvites = 0;
-    size_t authentifies = 0;                 //!< binaires Microsoft authentiques, non prélevés
+    size_t authentifies = 0;                 //!< authentic Microsoft binaries, not collected
     unsigned long long octetsAuthentifies = 0;
     size_t cataloguesLus = 0, cataloguesUtilises = 0;
 };
 
-/*! Empreintes du fichier désigné par un artefact.
+/*! Fingerprints of the file an artefact points to.
  *
- *  Le chemin est normalisé par `normaliserCheminFichier` ; un chemin qui ne
- *  désigne pas un fichier local déterminable rend un résultat vide. Chaque
- *  fichier n'est lu qu'UNE fois pour toute la collecte, quel que soit le nombre
- *  d'artefacts qui le citent.
+ *  The path is normalised by `normaliserCheminFichier`; a path that does not
+ *  designate a determinable local file gives an empty result. Each file is read
+ *  only ONCE for the whole collection, however many artefacts cite it.
  *
- *  Sans `--binary`, rend un résultat vide sans rien lire.
+ *  Without `--binary`, returns an empty result without reading anything.
  */
 const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut);
 
-/*! Ajoute à un objet JSON les trois empreintes, sous les clés
+/*! Adds the three fingerprints to a JSON object, under the keys
  *  `<prefixe>Md5<suffixe>`, `<prefixe>Sha1<suffixe>`, `<prefixe>Sha256<suffixe>`.
- *  Une empreinte absente n'est pas émise : un champ vide se lirait comme un
- *  défaut du logiciel. */
+ *  A missing fingerprint is not emitted: an empty field would read as a
+ *  software defect. */
 void ajouterEmpreintes(Json& o, const EmpreinteBinaire& e,
                        const std::wstring& prefixe = L"", const std::wstring& suffixe = L"");
 
-/*! Bilan, pour le journal d'investigation. */
+/*! Summary, for the investigation log. */
 BilanBinaires BinairesBilan();
 
-/*! Consigne les catalogues de signatures qui ont justifié un non-prélèvement,
- *  puis ferme les volumes gardés ouverts. À appeler quand plus aucun artefact
- *  ne cite de fichier, AVANT la copie vers le travail et le scellement. */
+/*! Stores in the exhibit store the signature catalogs that justified not
+ *  collecting a file, then closes the volumes kept open. To be called once no
+ *  artefact cites files any more, BEFORE the copy to the working directory and
+ *  the sealing. */
 void BinairesTerminer();

@@ -1,43 +1,41 @@
-/*  authenticode.h — authenticité Microsoft d'un binaire, vérifiée sans API.
+/*  authenticode.h — Microsoft authenticity of a binary, verified without any API.
  *
- *  À QUOI ÇA SERT. Avec --binary, WAC prélève les exécutables cités par les
- *  artefacts. La plupart sont des composants de Windows ou des logiciels
- *  Microsoft, identiques sur toute machine de la même version : les copier ne
- *  sert pas l'enquête, et pèse des gigaoctets. Ces fichiers portent une preuve
- *  d'origine vérifiable SUR LA MACHINE ELLE-MÊME, sans liste embarquée :
- *    - les CATALOGUES de Windows (System32\CatRoot\{F750E6C3…}\*.cat), signés par
- *      Microsoft, qui listent l'empreinte de chaque fichier du système ;
- *    - la SIGNATURE INTÉGRÉE des binaires signés individuellement (Edge,
+ *  WHAT IT IS FOR. With --binary, WAC collects the executables cited by the
+ *  artefacts. Most are Windows components or Microsoft software, identical on
+ *  every machine of the same build: copying them does not serve the
+ *  investigation, and weighs gigabytes. These files carry a proof of origin
+ *  that can be checked ON THE MACHINE ITSELF, with no embedded list:
+ *    - Windows' CATALOGS (System32\CatRoot\{F750E6C3…}\*.cat), signed by
+ *      Microsoft, which list the fingerprint of every system file;
+ *    - the EMBEDDED SIGNATURE of individually signed binaries (Edge,
  *      OneDrive, Office…).
- *  Un fichier dont l'empreinte Authenticode figure dans un catalogue à
- *  signature Microsoft valide, ou dont la signature intégrée est une signature
- *  Microsoft valide, est haché sans être prélevé. Tout le reste l'est. Un
- *  binaire de System32 remplacé par un attaquant n'a plus l'empreinte du
- *  catalogue : il est prélevé.
+ *  A file whose Authenticode digest is listed in a catalog with a valid
+ *  Microsoft signature, or whose embedded signature is a valid Microsoft
+ *  signature, is hashed without being collected. Everything else is collected.
+ *  A System32 binary replaced by an attacker no longer has the catalog's
+ *  digest: it is collected.
  *
- *  AUCUNE TRACE. WinVerifyTrust et CryptCATAdmin sollicitent le service
- *  CryptSvc et sa base de catalogues, lisent les magasins de certificats dans le
- *  registre vivant, et contrôlent la révocation par le réseau — ce qui écrit
- *  dans CryptnetUrlCache. Rien de cela ici : catalogues et binaires sont lus par
- *  lecture brute du volume, et la vérification — ASN.1, X.509, PKCS#7, RSA —
- *  se fait en mémoire, jusqu'à des racines Microsoft EMBARQUÉES
- *  (racines_microsoft.h), sans consulter le magasin de la machine.
+ *  NO TRACE. WinVerifyTrust and CryptCATAdmin solicit the CryptSvc service and
+ *  its catalog database, read the certificate stores in the live registry, and
+ *  check revocation over the network — which writes to CryptnetUrlCache. None
+ *  of that here: catalogs and binaries are read raw from the volume, and the
+ *  verification — ASN.1, X.509, PKCS#7, RSA — is done in memory, up to
+ *  EMBEDDED Microsoft roots (racines_microsoft.h), without consulting the
+ *  machine's store.
  *
- *  CE QUI N'EST PAS VÉRIFIÉ, et pourquoi c'est acceptable ici : la révocation
- *  et les dates de validité. La question posée n'est pas « faut-il faire
- *  confiance à ce code aujourd'hui » mais « ce fichier est-il celui que
- *  Microsoft a publié » ; une signature Microsoft authentique y répond. Dans le
- *  doute — algorithme non pris en charge, structure inattendue — la réponse est
- *  « non vérifié », et le fichier est prélevé.
+ *  WHAT IS NOT CHECKED, and why that is acceptable here: revocation and
+ *  validity dates. The question is not "should this code be trusted today" but
+ *  "is this file the one Microsoft published"; an authentic Microsoft signature
+ *  answers it. When in doubt — unsupported algorithm, unexpected structure —
+ *  the answer is "not verified", and the file is collected.
  *
- *  SIGNATAIRES ACCEPTÉS. Tous les certificats rattachés à une racine Microsoft
- *  ne signent pas du code Microsoft : « Microsoft Windows Hardware
- *  Compatibility Publisher » signe les pilotes TIERS certifiés WHQL, et « Early
- *  Launch Anti-malware Publisher » les pilotes ELAM des antivirus tiers — le
- *  terrain classique des pilotes vulnérables détournés. Ne sont acceptés que les
- *  signataires dont l'organisation est « Microsoft Corporation » et le nom
- *  « Microsoft Windows », « Microsoft Corporation » ou « Microsoft Windows
- *  Publisher ».
+ *  ACCEPTED SIGNERS. Not every certificate chaining to a Microsoft root signs
+ *  Microsoft code: "Microsoft Windows Hardware Compatibility Publisher" signs
+ *  WHQL-certified THIRD-PARTY drivers, and "Early Launch Anti-malware
+ *  Publisher" third-party antivirus ELAM drivers — the classic ground of
+ *  abused vulnerable drivers. Only signers whose organisation is "Microsoft
+ *  Corporation" and whose name is "Microsoft Windows", "Microsoft Corporation"
+ *  or "Microsoft Windows Publisher" are accepted.
  */
 #pragma once
 #include <cstdint>
@@ -49,24 +47,24 @@
 #include <unordered_map>
 #include "sha.h"
 
-/*! Analyse d'un fichier PE fourni en flux : empreintes Authenticode et table
- *  de certificats, calculées au fil de la lecture, sans relire le fichier.
+/*! Analysis of a PE file fed as a stream: Authenticode digests and certificate
+ *  table, computed while reading, without reading the file again.
  *
- *  L'empreinte Authenticode couvre tout le fichier SAUF le champ CheckSum de
- *  l'en-tête optionnel, l'entrée « table de certificats » du répertoire de
- *  données, et la table de certificats elle-même. */
+ *  The Authenticode digest covers the whole file EXCEPT the optional header's
+ *  CheckSum field, the "certificate table" entry of the data directory, and
+ *  the certificate table itself. */
 class AnalyseurPe : public std::streambuf {
 public:
-	/*! Termine le calcul (à appeler une fois tout le fichier reçu). */
+	/*! Ends the computation (to be called once the whole file has been fed). */
 	void terminer();
 	bool estPe() const { return estPe_; }
-	//! Empreintes Authenticode (valides après terminer(), si estPe()).
+	//! Authenticode digests (valid after terminer(), if estPe()).
 	const uint8_t* sha1() const { return sha1_; }
 	const uint8_t* sha256() const { return sha256_; }
-	//! Mêmes empreintes, fichier complété de zéros jusqu'à un multiple de 8.
+	//! Same digests, file padded with zeros to a multiple of 8.
 	const uint8_t* sha1Complete() const { return sha1c_; }
 	const uint8_t* sha256Complete() const { return sha256c_; }
-	//! Contenu de la table de certificats (WIN_CERTIFICATE…), vide si absente.
+	//! Content of the certificate table (WIN_CERTIFICATE…), empty if absent.
 	const std::vector<uint8_t>& tableCertificats() const { return certificats_; }
 
 protected:
@@ -75,12 +73,12 @@ protected:
 
 private:
 	void recevoir(const uint8_t* p, size_t n);
-	void traiter(const uint8_t* p, size_t n);   // après analyse des en-têtes
+	void traiter(const uint8_t* p, size_t n);   // once the headers are analysed
 	bool analyserEntetes();
 
-	std::vector<uint8_t> tete_;         // en-têtes, tant que non analysés
+	std::vector<uint8_t> tete_;         // headers, until analysed
 	bool decide_ = false, estPe_ = false, termine_ = false;
-	uint64_t position_ = 0;             // octets déjà traités
+	uint64_t position_ = 0;             // bytes already processed
 	uint64_t checksum_ = 0, entreeCert_ = 0, debutCert_ = 0, finCert_ = 0;
 	Sha1Stream h1_;
 	Sha256Stream h256_;
@@ -88,35 +86,35 @@ private:
 	uint8_t sha1_[20] = {}, sha256_[32] = {}, sha1c_[20] = {}, sha256c_[32] = {};
 };
 
-/*! Résultat de la vérification d'une signature PKCS#7. */
+/*! Result of verifying a PKCS#7 signature. */
 struct SignatureVerifiee {
-	bool valide = false;          //!< signature et chaîne vérifiées jusqu'à une racine Microsoft
-	bool signataireAccepte = false; //!< et signataire conforme à la règle (cf. en-tête)
-	std::wstring signataire;      //!< nom (CN) du certificat signataire
-	std::string motif;            //!< raison d'un refus, pour le journal
-	std::string oidContenu;       //!< type du contenu signé (octets DER de l'OID)
-	const uint8_t* contenu = nullptr; //!< contenu signé (valeur, sans en-tête)
+	bool valide = false;          //!< signature and chain verified up to a Microsoft root
+	bool signataireAccepte = false; //!< and signer compliant with the rule (see the header)
+	std::wstring signataire;      //!< name (CN) of the signing certificate
+	std::string motif;            //!< reason for a rejection, for the log
+	std::string oidContenu;       //!< type of the signed content (DER bytes of the OID)
+	const uint8_t* contenu = nullptr; //!< signed content (value, without header)
 	size_t tailleContenu = 0;
 };
 
-/*! Vérifie un SignedData PKCS#7 (catalogue ou signature intégrée) : empreinte
- *  du contenu, signature du signataire, chaîne jusqu'à une racine Microsoft
- *  embarquée. Les pointeurs rendus désignent `donnees`. */
+/*! Verifies a PKCS#7 SignedData (catalog or embedded signature): content
+ *  digest, signer's signature, chain up to an embedded Microsoft root. The
+ *  returned pointers point into `donnees`. */
 SignatureVerifiee VerifierPkcs7(const uint8_t* donnees, size_t taille);
 
-/*! Index des empreintes Authenticode listées par les catalogues Microsoft
- *  valides de la machine. */
+/*! Index of the Authenticode digests listed by the machine's valid Microsoft
+ *  catalogs. */
 class IndexCatalogues {
 public:
-	/*! Vérifie un catalogue et, s'il est signé par un signataire accepté, indexe
-	 *  ses empreintes. @return true si le catalogue a été retenu. */
+	/*! Verifies a catalog and, if it is signed by an accepted signer, indexes its
+	 *  digests. @return true if the catalog was kept. */
 	bool ajouter(const std::wstring& nom, const uint8_t* octets, size_t taille);
-	/*! Nom du catalogue listant cette empreinte, ou nullptr. */
+	/*! Name of the catalog listing this digest, or nullptr. */
 	const std::wstring* chercher(const uint8_t* empreinte, size_t taille) const;
 	size_t catalogues() const { return noms_.size(); }
 	size_t empreintes() const { return index_.size(); }
 	size_t refuses() const { return refuses_; }
-	//! Écrit chaque empreinte indexée (hexa) et son catalogue — outil de test.
+	//! Writes each indexed digest (hex) and its catalog — test tool.
 	void vider(std::ostream& o) const;
 private:
 	std::vector<std::wstring> noms_;
@@ -124,34 +122,34 @@ private:
 	size_t refuses_ = 0;
 };
 
-/*! Verdict d'authenticité Microsoft sur un PE analysé. */
+/*! Microsoft authenticity verdict on an analysed PE. */
 struct VerdictMicrosoft {
-	bool microsoft = false;       //!< authentique : hacher sans prélever
-	std::wstring source;          //!< « catalogue <nom> » ou « signature intégrée »
-	std::wstring signataire;      //!< CN du signataire (signature intégrée)
-	std::string motif;            //!< pourquoi non, pour le journal
+	bool microsoft = false;       //!< authentic: hash without collecting
+	std::wstring source;          //!< "catalogue <name>" or "signature intégrée"
+	std::wstring signataire;      //!< signer's CN (embedded signature)
+	std::string motif;            //!< why not, for the log
 };
 
-/*! Décide si un PE est un binaire Microsoft authentique. */
+/*! Decides whether a PE is an authentic Microsoft binary. */
 VerdictMicrosoft EvaluerPe(const AnalyseurPe& pe, const IndexCatalogues& catalogues);
 
-/*! Fichier non PE (script, document) listé dans un catalogue Microsoft ?
+/*! Non-PE file (script, document) listed in a Microsoft catalog?
  *
- *  Pour ces fichiers, l'empreinte des catalogues est le SHA-256 des OCTETS
- *  BRUTS du fichier, quel que soit son encodage — établi sur 463 scripts
- *  PowerShell et WSH de Windows 11, tous retrouvés ainsi. */
+ *  For these files, the catalogs' digest is the SHA-256 of the file's RAW
+ *  BYTES, whatever its encoding — established on 463 PowerShell and WSH scripts
+ *  of Windows 11, all found that way. */
 VerdictMicrosoft EvaluerParCatalogue(const uint8_t sha256[32], const IndexCatalogues& catalogues);
 
-/*! Signature INTÉGRÉE d'un script PowerShell (.ps1, .psm1, .psd1, .ps1xml…).
+/*! EMBEDDED signature of a PowerShell script (.ps1, .psm1, .psd1, .ps1xml…).
  *
- *  Le bloc « # SIG # Begin signature block » (ou sa forme XML
- *  « <!-- SIG # … --> ») porte un PKCS#7 en base64. L'empreinte signée est
- *  celle du TEXTE qui précède le bloc, sans son dernier saut de ligne,
- *  réencodé en UTF-16LE sans BOM — établi sur les 10 scripts signés ainsi d'une
- *  installation Windows 11 (Defender), .ps1xml compris.
+ *  The "# SIG # Begin signature block" block (or its XML form
+ *  "<!-- SIG # … -->") carries a base64 PKCS#7. The signed digest is that of the
+ *  TEXT preceding the block, without its last line break, re-encoded as
+ *  UTF-16LE without BOM — established on the 10 scripts signed this way on a
+ *  Windows 11 installation (Defender), .ps1xml included.
  *
- *  Les scripts Windows Script Host (.vbs, .js, .wsf) ne sont authentifiés que
- *  par catalogue : leur empreinte intégrée porte sur une forme normalisée du
- *  texte qui n'a pas pu être établie avec certitude. Un tel script signé hors
- *  catalogue est donc prélevé — l'erreur dans le sens prudent. */
+ *  Windows Script Host scripts (.vbs, .js, .wsf) are authenticated by catalog
+ *  only: their embedded digest covers a normalised form of the text that could
+ *  not be established with certainty. Such a script signed outside a catalog is
+ *  therefore collected — erring on the cautious side. */
 VerdictMicrosoft EvaluerScriptPowerShell(const uint8_t* octets, size_t taille);

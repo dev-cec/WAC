@@ -1,9 +1,9 @@
-/*  rsa.cpp — voir rsa.h.
+/*  rsa.cpp — see rsa.h.
  *
- *  Nombres représentés en mots de 32 bits, poids faible d'abord.
- *  Exponentiation par multiplication de Montgomery (variante CIOS) : elle évite
- *  toute division longue, la seule partie délicate d'une arithmétique
- *  multiprécision. Le module RSA est impair, condition de Montgomery.
+ *  Numbers are held in 32-bit words, least significant first.
+ *  Exponentiation by Montgomery multiplication (CIOS variant): it avoids any
+ *  long division, the only tricky part of multi-precision arithmetic. The RSA
+ *  modulus is odd, which Montgomery requires.
  */
 #include "rsa.h"
 #include <cstring>
@@ -13,11 +13,11 @@ namespace {
 using Mot = uint32_t;
 using Nombre = std::vector<Mot>;
 
-//! Grand-boutien -> mots de 32 bits poids faible d'abord, sur `k` mots.
+//! Big-endian -> 32-bit words, least significant first, over `k` words.
 Nombre depuisOctets(const uint8_t* p, size_t n, size_t k) {
 	Nombre r(k, 0);
 	for (size_t i = 0; i < n; ++i) {
-		const size_t rang = n - 1 - i;              // rang de l'octet depuis la fin
+		const size_t rang = n - 1 - i;              // rank of the byte counted from the end
 		if (rang / 4 < k) r[rang / 4] |= (Mot)p[i] << (8 * (rang % 4));
 	}
 	return r;
@@ -41,7 +41,7 @@ void soustraire(Nombre& a, const Nombre& b) {
 	}
 }
 
-/*! Montgomery : r = a·b·R⁻¹ mod n, avec R = 2^(32k). `ninv` = −n⁻¹ mod 2³². */
+/*! Montgomery: r = a·b·R⁻¹ mod n, with R = 2^(32k). `ninv` = −n⁻¹ mod 2³². */
 void montgomery(const Nombre& a, const Nombre& b, const Nombre& n, Mot ninv, Nombre& r) {
 	const size_t k = n.size();
 	std::vector<Mot> t(k + 2, 0);
@@ -71,14 +71,14 @@ void montgomery(const Nombre& a, const Nombre& b, const Nombre& n, Mot ninv, Nom
 	if (t[k] != 0 || superieurOuEgal(r, n)) soustraire(r, n);
 }
 
-//! −n⁻¹ mod 2³², par la méthode de Newton (n impair).
+//! −n⁻¹ mod 2³², by Newton's method (n odd).
 Mot inverseNegatif(Mot n0) {
 	Mot x = 1;
 	for (int i = 0; i < 5; ++i) x *= 2 - n0 * x;   // x = n0⁻¹ mod 2³²
 	return (Mot)(0u - x);
 }
 
-//! R² mod n, par doublements successifs de 1 : 2·32k doublements réduits.
+//! R² mod n, by successive doublings of 1: 2·32k reduced doublings.
 Nombre rCarre(const Nombre& n) {
 	const size_t k = n.size();
 	Nombre r(k, 0);
@@ -95,7 +95,7 @@ Nombre rCarre(const Nombre& n) {
 	return r;
 }
 
-// Préfixes DigestInfo (DER) : AlgorithmIdentifier + en-tête de l'OCTET STRING.
+// DigestInfo prefixes (DER): AlgorithmIdentifier + OCTET STRING header.
 const uint8_t PREFIXE_SHA1[]   = { 0x30,0x21,0x30,0x09,0x06,0x05,0x2B,0x0E,0x03,0x02,0x1A,0x05,0x00,0x04,0x14 };
 const uint8_t PREFIXE_SHA1_SANS_NULL[] = { 0x30,0x1F,0x30,0x07,0x06,0x05,0x2B,0x0E,0x03,0x02,0x1A,0x04,0x14 };
 const uint8_t PREFIXE_SHA256[] = { 0x30,0x31,0x30,0x0D,0x06,0x09,0x60,0x86,0x48,0x01,0x65,0x03,0x04,0x02,0x01,0x05,0x00,0x04,0x20 };
@@ -105,10 +105,10 @@ const uint8_t PREFIXE_SHA384_SANS_NULL[] = { 0x30,0x3F,0x30,0x0B,0x06,0x09,0x60,
 const uint8_t PREFIXE_SHA512[] = { 0x30,0x51,0x30,0x0D,0x06,0x09,0x60,0x86,0x48,0x01,0x65,0x03,0x04,0x02,0x03,0x05,0x00,0x04,0x40 };
 const uint8_t PREFIXE_SHA512_SANS_NULL[] = { 0x30,0x4F,0x30,0x0B,0x06,0x09,0x60,0x86,0x48,0x01,0x65,0x03,0x04,0x02,0x03,0x04,0x40 };
 
-/*! Le bloc déchiffré doit être EXACTEMENT 00 01 FF…FF 00 ‖ DigestInfo : toute
- *  autre forme est refusée. Une comparaison laxiste (DigestInfo cherché au lieu
- *  d'être reconstruit) est la faille classique qui permet de forger une
- *  signature quand l'exposant est petit. */
+/*! The decrypted block must be EXACTLY 00 01 FF…FF 00 ‖ DigestInfo: any other
+ *  form is rejected. A lax comparison (DigestInfo searched for instead of
+ *  rebuilt) is the classic flaw that allows forging a signature when the
+ *  exponent is small. */
 bool blocConforme(const std::vector<uint8_t>& em, const uint8_t* prefixe, size_t lp,
                   const uint8_t* h, size_t lh) {
 	const size_t k = em.size();
@@ -128,9 +128,9 @@ bool RsaVerifierPkcs1(const uint8_t* module, size_t tailleModule,
                       const uint8_t* signature, size_t tailleSignature,
                       AlgoEmpreinte algo,
                       const uint8_t* empreinte, size_t tailleEmpreinte) {
-	// Zéros de tête du module (INTEGER DER positif).
+	// Leading zeros of the modulus (positive DER INTEGER).
 	while (tailleModule > 0 && *module == 0) { ++module; --tailleModule; }
-	if (tailleModule < 64 || tailleModule > 1024) return false;   // 512 à 8192 bits
+	if (tailleModule < 64 || tailleModule > 1024) return false;   // 512 to 8192 bits
 	if ((module[tailleModule - 1] & 1) == 0) return false;        // module pair : invalide
 	if (tailleExposant == 0 || tailleExposant > 8) return false;
 	while (tailleSignature > tailleModule && *signature == 0) { ++signature; --tailleSignature; }
@@ -152,7 +152,7 @@ bool RsaVerifierPkcs1(const uint8_t* module, size_t tailleModule,
 	Nombre res = base;
 	int bit = 63;
 	while (bit >= 0 && !((e >> bit) & 1)) --bit;
-	for (--bit; bit >= 0; --bit) {                                // carré et multiplication
+	for (--bit; bit >= 0; --bit) {                                // square and multiply
 		Nombre t;
 		montgomery(res, res, n, ninv, t);
 		res.swap(t);
@@ -161,7 +161,7 @@ bool RsaVerifierPkcs1(const uint8_t* module, size_t tailleModule,
 	Nombre un(k, 0);
 	un[0] = 1;
 	Nombre m;
-	montgomery(res, un, n, ninv, m);                              // sortie du domaine
+	montgomery(res, un, n, ninv, m);                              // out of the Montgomery domain
 
 	std::vector<uint8_t> em(tailleModule);
 	for (size_t i = 0; i < tailleModule; ++i) {

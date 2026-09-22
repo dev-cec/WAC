@@ -13,58 +13,55 @@
 namespace {
 
 std::unique_ptr<LecteurBrut> g_lecteur;
-std::map<std::wstring, EmpreinteBinaire> g_cache;      // clé : chemin en minuscules
-std::map<std::wstring, std::wstring> g_parContenu;    // SHA-256 -> pièce en consigne
+std::map<std::wstring, EmpreinteBinaire> g_cache;      // key: lowercase path
+std::map<std::wstring, std::wstring> g_parContenu;    // SHA-256 -> exhibit in the store
 size_t g_lus = 0, g_preleves = 0, g_sansPlace = 0, g_doublons = 0;
 unsigned long long g_octets = 0, g_octetsEvites = 0;
 size_t g_authentifies = 0, g_cataloguesLus = 0;
 unsigned long long g_octetsAuthentifies = 0;
 std::set<std::wstring> g_cataloguesUtilises;
-const size_t CATALOGUE_MAX = 64 * 1024 * 1024;       // un catalogue au-delà : ignoré
-unsigned long long g_entrant = 0;                      // compteur de fichiers d'arrivée
+const size_t CATALOGUE_MAX = 64 * 1024 * 1024;       // a catalog beyond that: ignored
+unsigned long long g_entrant = 0;                      // counter of incoming files
 
-/*! Répertoire d'ARRIVÉE, sur le support de collecte mais hors consigne.
+/*! INCOMING directory, on the collection medium but outside the exhibit store.
  *
- *  DÉDOUBLONNAGE. Le contenu d'un fichier n'est connu qu'après l'avoir lu. Il
- *  est donc écrit ici d'abord, haché au passage, puis RENOMMÉ dans la consigne
- *  s'il est nouveau, ou supprimé s'il y est déjà sous un autre chemin. La
- *  consigne ne reçoit ainsi que des pièces définitives : rien n'y est écrit
- *  puis effacé, et une collecte interrompue n'y laisse pas de fichier
- *  temporaire. Une seule lecture du volume par fichier. */
+ *  DEDUPLICATION. A file's content is only known once it has been read. It is
+ *  therefore written here first, hashed on the way, then RENAMED into the
+ *  exhibit store if new, or deleted if it is already there under another path.
+ *  The exhibit store thus only receives final exhibits: nothing is written then
+ *  erased in it, and an interrupted collection leaves no temporary file there.
+ *  A single read of the volume per file. */
 std::wstring dossierArrivee() {
 	return dossierConsigne() + L".arrivee";
 }
 
-/*! Réserve laissée libre sur le support de collecte : en deçà, les fichiers
- *  sont hachés sans être copiés. Chaque pièce est écrite deux fois (consigne
- *  puis travail), et les journaux d'événements, traités en dernier, doivent
- *  encore trouver leur place. */
+/*! Space kept free on the collection medium: below it, files are hashed
+ *  without being copied. Each exhibit is written twice (exhibit store then
+ *  working copy), and the event logs, processed last, must still find room. */
 const unsigned long long RESERVE = 1ULL << 30;
 
-/*! Ce qui se prélève : exécutables, bibliothèques, pilotes, les scripts
- *  qu'une tâche ou une clé Run peut lancer, et les documents Office CAPABLES DE
- *  PORTER DES MACROS.
+/*! What is collected: executables, libraries, drivers, the scripts a task or a
+ *  Run key can launch, and Office documents ABLE TO CARRY MACROS.
  *
- *  DOCUMENTS À MACROS. Un document piégé est un vecteur d'intrusion aussi
- *  courant qu'un exécutable, et il apparaît dans les traces : cible d'un
- *  raccourci ou d'une liste de sauts, fichier chargé par WINWORD.EXE ou
- *  EXCEL.EXE dans leur Prefetch. Ne sont retenus que les formats où du VBA peut
- *  vivre : les formats binaires anciens (.doc, .xls, .ppt…), les formats « m »
- *  (.docm, .xlsm…), .xlsb, les modèles et compléments, Publisher, Visio et
- *  Access. Les .docx/.xlsx/.pptx ne peuvent pas contenir de VBA : ils restent
- *  seulement hachés, comme tout document — les copier ferait de la collecte une
- *  copie des fichiers de l'utilisateur. */
+ *  MACRO DOCUMENTS. A booby-trapped document is an intrusion vector as common as
+ *  an executable, and it shows in the traces: target of a shortcut or a jump
+ *  list, file loaded by WINWORD.EXE or EXCEL.EXE in their Prefetch. Only the
+ *  formats where VBA can live are kept: legacy binary formats (.doc, .xls,
+ *  .ppt…), "m" formats (.docm, .xlsm…), .xlsb, templates and add-ins,
+ *  Publisher, Visio and Access. .docx/.xlsx/.pptx cannot hold VBA: they are
+ *  only hashed, like any document — copying them would turn the collection
+ *  into a copy of the user's files. */
 bool aPrelever(const std::wstring& chemin) {
 	const size_t point = chemin.find_last_of(L'.');
 	if (point == std::wstring::npos || chemin.find(L'\\', point) != std::wstring::npos) return false;
 	static const wchar_t* const extensions[] = {
-		// exécutables, bibliothèques, pilotes
+		// executables, libraries, drivers
 		L"exe", L"dll", L"sys", L"ocx", L"cpl", L"scr", L"drv", L"efi", L"com", L"msi",
 		// scripts
 		L"ps1", L"psm1", L"bat", L"cmd", L"vbs", L"vbe", L"js", L"jse", L"wsf", L"wsh", L"hta",
 		// Word
 		L"doc", L"docm", L"dot", L"dotm",
-		// Excel (xll et wll sont des DLL chargées par Excel et Word)
+		// Excel (xll and wll are DLLs loaded by Excel and Word)
 		L"xls", L"xlsm", L"xlsb", L"xlt", L"xltm", L"xla", L"xlam", L"xll", L"wll",
 		// PowerPoint
 		L"ppt", L"pptm", L"pot", L"potm", L"pps", L"ppsm", L"ppa", L"ppam",
@@ -80,7 +77,7 @@ bool aPrelever(const std::wstring& chemin) {
 
 namespace {
 
-/*! Tampon qui garde ce qu'on lui écrit : lecture d'un catalogue en mémoire. */
+/*! Buffer that keeps what is written to it: reading a catalog into memory. */
 class Collecteur : public std::streambuf {
 public:
 	std::vector<uint8_t> octets;
@@ -95,8 +92,8 @@ protected:
 	}
 };
 
-/*! Transmet ce qu'il reçoit à deux tampons : l'analyse d'un PE, et, pour un
- *  script PowerShell, la copie en mémoire de son texte. */
+/*! Forwards what it receives to two buffers: the PE analysis and, for a
+ *  PowerShell script, the in-memory copy of its text. */
 class Duplicateur : public std::streambuf {
 public:
 	Duplicateur(std::streambuf* a, std::streambuf* b) : a_(a), b_(b) {}
@@ -115,7 +112,7 @@ private:
 	std::streambuf* b_;
 };
 
-//! Scripts dont la signature intégrée est vérifiée (cf. EvaluerScriptPowerShell).
+//! Scripts whose embedded signature is verified (see EvaluerScriptPowerShell).
 bool estScriptPowerShell(const std::wstring& chemin) {
 	const size_t point = chemin.find_last_of(L'.');
 	if (point == std::wstring::npos) return false;
@@ -124,7 +121,7 @@ bool estScriptPowerShell(const std::wstring& chemin) {
 	    || ext == L"psc1" || ext == L"cdxml";
 }
 
-//! Empreinte hexadécimale (64 caractères) -> 32 octets.
+//! Hexadecimal digest (64 characters) -> 32 bytes.
 bool octetsDeHexa(const std::wstring& hexa, uint8_t sortie[32]) {
 	if (hexa.size() != 64) return false;
 	for (size_t i = 0; i < 32; ++i) {
@@ -146,10 +143,9 @@ std::wstring dossierCatalogues() {
 	return conf.systemDrive + L"\\Windows\\System32\\CatRoot\\{F750E6C3-38EE-11D1-85E5-00C04FC295EE}";
 }
 
-/*! Index des catalogues Microsoft de la machine, construit à la première
- *  demande — donc seulement si un binaire à prélever est rencontré. Les
- *  catalogues sont lus par lecture brute, EN MÉMOIRE : rien n'est écrit, et
- *  aucun service n'est sollicité (cf. authenticode.h). */
+/*! Index of the machine's Microsoft catalogs, built on first request — hence
+ *  only if a binary to collect is met. Catalogs are read raw, IN MEMORY:
+ *  nothing is written, and no service is solicited (see authenticode.h). */
 IndexCatalogues& catalogues() {
 	static IndexCatalogues index;
 	static bool fait = false;
@@ -188,7 +184,7 @@ const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut) {
 	const std::wstring chemin = normaliserCheminFichier(cheminBrut);
 	if (chemin.empty()) return vide;
 
-	const std::wstring cle = enMinuscules(chemin);       // NTFS ignore la casse
+	const std::wstring cle = enMinuscules(chemin);       // NTFS is case-insensitive
 	const auto trouve = g_cache.find(cle);
 	if (trouve != g_cache.end()) return trouve->second;
 
@@ -202,7 +198,7 @@ const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut) {
 	};
 
 	if (!aPrelever(chemin)) {
-		// Document ou donnée : empreintes seules, rien n'est écrit.
+		// Document or data: fingerprints only, nothing is written.
 		RawHiveExtrait ligne;
 		e.resultat = g_lecteur->lire(chemin, std::wstring(), ligne);
 		if (SUCCEEDED(e.resultat)) { ++g_lus; retenir(ligne); }
@@ -213,14 +209,14 @@ const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut) {
 	const std::wstring cible = cheminSous(dossierConsigne(), chemin);
 	std::error_code ec;
 
-	/* PREMIÈRE LECTURE, SANS RIEN ÉCRIRE : empreintes et, pour un PE,
-	   authenticité Microsoft. Un binaire Microsoft authentique — la grande
-	   majorité — n'est ainsi jamais écrit sur le support de collecte ; seuls
-	   les autres sont relus pour être prélevés. Relire le disque examiné coûte
-	   moins cher qu'écrire puis effacer sur une clé USB. */
+	/* FIRST READ, WRITING NOTHING: fingerprints and, for a PE, Microsoft
+	   authenticity. An authentic Microsoft binary — the vast majority — is thus
+	   never written to the collection medium; only the others are read again to be
+	   collected. Re-reading the examined disk costs less than writing then erasing
+	   on a USB stick. */
 	{
 		AnalyseurPe pe;
-		Collecteur texte;                       // scripts PowerShell : texte en mémoire
+		Collecteur texte;                       // PowerShell scripts: text in memory
 		const bool powershell = estScriptPowerShell(chemin);
 		Duplicateur tee(&pe, powershell ? &texte : nullptr);
 		RawHiveExtrait ligne;
@@ -228,8 +224,8 @@ const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut) {
 		pe.terminer();
 		if (FAILED(e.resultat)) {
 			log(3, L"🔈Empreinte impossible : " + chemin, e.resultat);
-			// Absent : l'artefact le dit déjà, et ce n'est pas une pièce. Une
-			// autre erreur est une pièce qu'on n'a pas pu lire : elle est consignée.
+			// Missing: the artefact already says so, and it is not an exhibit. Any
+			// other error is an exhibit that could not be read: it is recorded.
 			if (e.resultat != HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
 				ligne.cheminSortie = cible;
 				ConsigneAjouter({ ligne }, L"Lecture brute NTFS ; binaire cite par un artefact (--binary)");
@@ -238,8 +234,8 @@ const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut) {
 		}
 		++g_lus;
 		retenir(ligne);
-		/* PE : empreinte Authenticode. Script ou document : SHA-256 des octets
-		   bruts dans les catalogues, puis signature PowerShell intégrée. */
+		/* PE: Authenticode digest. Script or document: SHA-256 of the raw bytes in
+		   the catalogs, then embedded PowerShell signature. */
 		VerdictMicrosoft v;
 		if (pe.estPe()) v = EvaluerPe(pe, catalogues());
 		else {
@@ -263,13 +259,13 @@ const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut) {
 		}
 	}
 
-	// Déjà en consigne (extrait par une autre phase) : rien à réécrire.
+	// Already in the exhibit store (extracted by another phase): nothing to rewrite.
 	if (std::filesystem::exists(cible, ec)) return g_cache.emplace(cle, std::move(e)).first->second;
 
-	/* Chaque pièce prélevée sera recopiée vers le travail à la fin de la
-	   collecte : la place qu'elle y prendra est déjà due. Sans ce terme, une
-	   consigne remplie jusqu'à la réserve ne laissait plus de place pour sa
-	   propre copie de travail. */
+	/* Each collected exhibit will be copied to the working directory at the end
+	   of the collection: the room it will take there is already owed. Without this
+	   term, an exhibit store filled up to the reserve left no room for its own
+	   working copy. */
 	const unsigned long long libre = ConsigneEspaceLibre();
 	if (libre != 0 && libre < RESERVE + g_octets) {
 		++g_sansPlace;
@@ -277,7 +273,7 @@ const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut) {
 		return g_cache.emplace(cle, std::move(e)).first->second;
 	}
 
-	// SECONDE LECTURE : prélèvement, par le répertoire d'arrivée (dédoublonnage).
+	// SECOND READ: collection, through the incoming directory (deduplication).
 	std::filesystem::create_directories(dossierArrivee(), ec);
 	const std::wstring sortie = dossierArrivee() + L"\\" + std::to_wstring(++g_entrant) + L".bin";
 	RawHiveExtrait ligne;
@@ -292,7 +288,7 @@ const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut) {
 	else {
 		if (ligne.empreintes.sha256 != e.sha256)
 			log(2, L"🔥Contenu modifie entre deux lectures : " + chemin);
-		retenir(ligne);                     // la pièce fait foi
+		retenir(ligne);                     // the exhibit is authoritative
 		const auto deja = g_parContenu.find(e.sha256);
 		if (deja != g_parContenu.end()) {
 			ligne.cheminSortie = deja->second;
@@ -319,7 +315,7 @@ const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut) {
 			ConsigneAjouter({ ligne }, methode);
 		}
 	}
-	std::filesystem::remove(sortie, ec);    // ce qui reste en arrivée : rien
+	std::filesystem::remove(sortie, ec);    // whatever is left in the incoming directory: nothing
 	return g_cache.emplace(cle, std::move(e)).first->second;
 }
 
@@ -348,9 +344,9 @@ BilanBinaires BinairesBilan() {
 }
 
 void BinairesTerminer() {
-	/* Les catalogues qui ont JUSTIFIÉ de ne pas prélever un binaire entrent
-	   dans la consigne : sans eux, la décision ne serait pas vérifiable par un
-	   tiers. Seuls ceux-là — pas les 5 000 de la machine. */
+	/* The catalogs that JUSTIFIED not collecting a binary go into the exhibit
+	   store: without them, the decision could not be checked by a third party.
+	   Only those — not the machine's 5,000. */
 	if (g_lecteur && !g_cataloguesUtilises.empty()) {
 		std::vector<RawHiveExtrait> releve;
 		for (const std::wstring& nom : g_cataloguesUtilises) {

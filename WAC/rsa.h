@@ -1,17 +1,16 @@
-/*  rsa.h — vérification de signature RSA PKCS#1 v1.5, en mémoire, sans API.
+/*  rsa.h — RSA PKCS#1 v1.5 signature verification, in memory, with no API.
  *
- *  POURQUOI PAS CryptoAPI NI CNG. La vérification de signature Windows
- *  (WinVerifyTrust) sollicite le service CryptSvc, lit les magasins de
- *  certificats dans le registre vivant et contrôle la révocation par le réseau —
- *  ce qui écrit dans CryptnetUrlCache, un artefact forensique à part entière.
- *  Même les primitives de CNG consultent leur configuration dans le registre.
- *  Pour ne laisser AUCUNE trace, l'opération se fait ici, sur des octets en
- *  mémoire : une exponentiation modulaire, rien d'autre.
+ *  WHY NOT CryptoAPI OR CNG. Windows signature verification (WinVerifyTrust)
+ *  solicits the CryptSvc service, reads the certificate stores in the live
+ *  registry and checks revocation over the network — which writes to
+ *  CryptnetUrlCache, a forensic artefact in its own right. Even CNG's
+ *  primitives read their configuration from the registry. To leave NO trace,
+ *  the operation is done here, on bytes in memory: a modular exponentiation,
+ *  nothing else.
  *
- *  PÉRIMÈTRE. Seule la VÉRIFICATION est implémentée (clé publique, exposant
- *  public) : pas de clé privée, pas de secret à protéger, donc pas d'exigence de
- *  temps constant. Empreintes SHA-1, SHA-256, SHA-384 (chaîne Microsoft « PCA
- *  2023 ») et SHA-512.
+ *  SCOPE. Only VERIFICATION is implemented (public key, public exponent): no
+ *  private key, no secret to protect, hence no constant-time requirement.
+ *  SHA-1, SHA-256, SHA-384 (Microsoft "PCA 2023" chain) and SHA-512 digests.
  */
 #pragma once
 #include <cstdint>
@@ -20,15 +19,15 @@
 
 enum class AlgoEmpreinte { Inconnu, Sha1, Sha256, Sha384, Sha512 };
 
-/*! Vérifie une signature RSA PKCS#1 v1.5.
+/*! Verifies an RSA PKCS#1 v1.5 signature.
  *
- *  @param module, tailleModule  module n, grand-boutien (tel qu'en DER, zéro de
- *         tête éventuel compris)
- *  @param exposant, tailleExposant  exposant public e, grand-boutien
- *  @param signature, tailleSignature  signature, grand-boutien
- *  @param algo  algorithme de l'empreinte signée
- *  @param empreinte, tailleEmpreinte  empreinte attendue
- *  @return true si la signature est valide pour cette empreinte
+ *  @param module, tailleModule  modulus n, big-endian (as in DER, possible
+ *         leading zero included)
+ *  @param exposant, tailleExposant  public exponent e, big-endian
+ *  @param signature, tailleSignature  signature, big-endian
+ *  @param algo  algorithm of the signed digest
+ *  @param empreinte, tailleEmpreinte  expected digest
+ *  @return true if the signature is valid for this digest
  */
 bool RsaVerifierPkcs1(const uint8_t* module, size_t tailleModule,
                       const uint8_t* exposant, size_t tailleExposant,

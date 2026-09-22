@@ -5,11 +5,10 @@
 #include <vector>
 #include <filesystem>
 
-/*  sha.cpp — voir sha.h. Les deux algorithmes suivent FIPS 180-4 ; les
- *  commentaires ne redisent pas la norme, ils signalent les seuls endroits où
- *  une implémentation se trompe : le remplissage final et la longueur en bits,
- *  écrite en GROS boutien alors que tout le reste du projet lit du petit
- *  boutien.
+/*  sha.cpp — see sha.h. Both algorithms follow FIPS 180-4; the comments do not
+ *  restate the standard, they point out the only places where an
+ *  implementation goes wrong: the final padding and the bit length, written
+ *  BIG-endian while the rest of the project reads little-endian.
  */
 
 namespace {
@@ -17,7 +16,7 @@ namespace {
 inline uint32_t rotl(uint32_t v, int n){ return (uint32_t)((v << n) | (v >> (32 - n))); }
 inline uint32_t rotr(uint32_t v, int n){ return (uint32_t)((v >> n) | (v << (32 - n))); }
 
-//! Mot de 32 bits en gros boutien, l'ordre des deux algorithmes.
+//! Big-endian 32-bit word, the byte order of both algorithms.
 inline uint32_t be32(const uint8_t* p){
 	return ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16)
 	     | ((uint32_t)p[2] << 8)  |  (uint32_t)p[3];
@@ -34,7 +33,7 @@ const uint32_t K256[64] = {
 	0x748f82eeu,0x78a5636fu,0x84c87814u,0x8cc70208u,0x90befffau,0xa4506cebu,0xbef9a3f7u,0xc67178f2u
 };
 
-//! Empreinte en hexadécimal majuscule, convention du projet (cf. Md5Stream).
+//! Digest in uppercase hexadecimal, the project's convention (see Md5Stream).
 std::wstring enHexa(const uint8_t* octets, size_t n){
 	static const wchar_t* d = L"0123456789ABCDEF";
 	std::wstring r;
@@ -46,18 +45,18 @@ std::wstring enHexa(const uint8_t* octets, size_t n){
 	return r;
 }
 
-/*! Remplissage commun aux deux algorithmes : un octet 0x80, des zéros, puis la
- *  longueur du message EN BITS sur 8 octets gros boutien.
- *  @param dansBloc octets déjà dans le bloc courant
- *  @param bloc bloc de travail de 64 octets
- *  @param octets longueur totale du message, en octets
- *  @param comprimer fonction de compression d'un bloc
+/*! Padding shared by both algorithms: a 0x80 byte, zeros, then the message
+ *  length IN BITS on 8 big-endian bytes.
+ *  @param dansBloc bytes already in the current block
+ *  @param bloc 64-byte working block
+ *  @param octets total message length, in bytes
+ *  @param comprimer compression function of a block
  */
 template <typename F>
 void terminer(size_t& dansBloc, uint8_t* bloc, uint64_t octets, F comprimer){
 	bloc[dansBloc++] = 0x80;
-	// La longueur occupe les 8 derniers octets : s'il n'y a plus la place, on
-	// clôt ce bloc et la longueur part dans le suivant.
+	// The length takes the last 8 bytes: if there is no room left, this block is
+	// closed and the length goes into the next one.
 	if (dansBloc > 56){
 		std::memset(bloc + dansBloc, 0, 64 - dansBloc);
 		comprimer(bloc);
@@ -69,7 +68,7 @@ void terminer(size_t& dansBloc, uint8_t* bloc, uint64_t octets, F comprimer){
 	comprimer(bloc);
 }
 
-/*! Accumulation par blocs de 64 octets, commune aux deux algorithmes. */
+/*! Accumulation by 64-byte blocks, shared by both algorithms. */
 template <typename F>
 void ajouter(const uint8_t* data, size_t length, uint8_t* bloc, size_t& dansBloc,
              uint64_t& octets, F comprimer){
@@ -256,7 +255,7 @@ void Sha512Stream::update(const uint8_t* data, size_t length){
 }
 
 void Sha512Stream::digest(uint8_t* sortie){
-	// Remplissage : 0x80, zéros, puis la longueur en bits sur 128 bits.
+	// Padding: 0x80, zeros, then the bit length on 128 bits.
 	const uint64_t bits = octets_ * 8;
 	bloc_[dansBloc_++] = 0x80;
 	if (dansBloc_ > 112){

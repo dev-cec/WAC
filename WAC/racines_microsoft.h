@@ -1,16 +1,16 @@
-/*  racines_microsoft.h — certificats racines Microsoft de signature de code.
+/*  racines_microsoft.h — Microsoft code-signing root certificates.
  *
- *  GÉNÉRÉ, ne pas modifier à la main. Exportés du magasin « Racines de
- *  confiance » (LocalMachine\\Root) d'une installation Windows 11 saine ; ce sont
- *  des certificats PUBLICS. Embarqués pour que la vérification de signature ne
- *  consulte PAS le magasin de certificats de la machine examinée : ce serait
- *  lire son registre vivant, et un magasin altéré par un attaquant ferait
- *  accepter ses propres signatures. Empreinte SHA-1 (« thumbprint ») vérifiable
- *  dans le magasin de n'importe quel poste Windows.
+ *  GENERATED, do not edit by hand. Exported from the "Trusted Root" store
+ *  (LocalMachine\\Root) of a clean Windows 11 installation; these are PUBLIC
+ *  certificates. Embedded so that signature verification does NOT consult the
+ *  examined machine's certificate store: that would read its live registry,
+ *  and a store tampered with by an attacker would make his own signatures
+ *  accepted. SHA-1 fingerprint ("thumbprint") checkable in the store of any
+ *  Windows computer.
  *
- *  La racine ECC 2018 n'est pas reprise : aucun catalogue observé ne s'y
- *  rattache, et une signature ECDSA n'est pas vérifiée — le fichier est alors
- *  prélevé, ce qui est le choix sûr.
+ *  The 2018 ECC root is not included: no observed catalog chains to it, and an
+ *  ECDSA signature is not verified — the file is then collected, the safe
+ *  choice.
  */
 #pragma once
 #include <cstdint>
@@ -18,12 +18,12 @@
 
 struct RacineMicrosoft {
     const char* nom;          //!< sujet (CN)
-    const char* empreinteSha1; //!< thumbprint, pour vérification manuelle
+    const char* empreinteSha1; //!< thumbprint, for manual checking
     const uint8_t* der;       //!< certificat DER
     size_t taille;
 };
 
-// Microsoft Root Certificate Authority 2010 — expire le 2035-06-24 — Windows : Windows Production PCA 2011
+// Microsoft Root Certificate Authority 2010 — expires 2035-06-24 — Windows: Windows Production PCA 2011
 static const uint8_t RACINE_0[1521] = {
     0x30, 0x82, 0x05, 0xED, 0x30, 0x82, 0x03, 0xD5, 0xA0, 0x03, 0x02, 0x01, 0x02, 0x02, 0x10, 0x28,
     0xCC, 0x3A, 0x25, 0xBF, 0xBA, 0x44, 0xAC, 0x44, 0x9A, 0x9B, 0x58, 0x6B, 0x43, 0x39, 0xAA, 0x30,
@@ -123,7 +123,7 @@ static const uint8_t RACINE_0[1521] = {
     0x69,
 };
 
-// Microsoft Root Certificate Authority 2011 — expire le 2036-03-22 — Microsoft Code Signing PCA 2011 (Edge, Office, OneDrive)
+// Microsoft Root Certificate Authority 2011 — expires 2036-03-22 — Microsoft Code Signing PCA 2011 (Edge, Office, OneDrive)
 static const uint8_t RACINE_1[1521] = {
     0x30, 0x82, 0x05, 0xED, 0x30, 0x82, 0x03, 0xD5, 0xA0, 0x03, 0x02, 0x01, 0x02, 0x02, 0x10, 0x3F,
     0x8B, 0xC8, 0xB5, 0xFC, 0x9F, 0xB2, 0x96, 0x43, 0xB5, 0x69, 0xD6, 0x6C, 0x42, 0xE1, 0x44, 0x30,
@@ -223,7 +223,7 @@ static const uint8_t RACINE_1[1521] = {
     0x47,
 };
 
-// Microsoft Root Certificate Authority — expire le 2021-05-10 — signatures antérieures à 2011
+// Microsoft Root Certificate Authority — expired 2021-05-10 — signatures before 2011
 static const uint8_t RACINE_2[1437] = {
     0x30, 0x82, 0x05, 0x99, 0x30, 0x82, 0x03, 0x81, 0xA0, 0x03, 0x02, 0x01, 0x02, 0x02, 0x10, 0x79,
     0xAD, 0x16, 0xA1, 0x4A, 0xA0, 0xA5, 0xAD, 0x4C, 0x73, 0x58, 0xF4, 0x07, 0x13, 0x2E, 0x65, 0x30,
@@ -317,7 +317,7 @@ static const uint8_t RACINE_2[1437] = {
     0x6B, 0x9D, 0x4A, 0xFD, 0xD1, 0xA1, 0x9D, 0x99, 0x43, 0x77, 0x3F, 0xB0, 0xDA,
 };
 
-// Microsoft Root Authority — expire le 2020-12-31 — signatures les plus anciennes
+// Microsoft Root Authority — expired 2020-12-31 — the oldest signatures
 static const uint8_t RACINE_3[1046] = {
     0x30, 0x82, 0x04, 0x12, 0x30, 0x82, 0x02, 0xFA, 0xA0, 0x03, 0x02, 0x01, 0x02, 0x02, 0x0F, 0x00,
     0xC1, 0x00, 0x8B, 0x3C, 0x3C, 0x88, 0x11, 0xD1, 0x3E, 0xF6, 0x63, 0xEC, 0xDF, 0x40, 0x30, 0x0D,

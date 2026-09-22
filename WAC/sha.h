@@ -1,49 +1,48 @@
 #pragma once
 
-/*  sha.h — EMPREINTES SHA-1 ET SHA-256, calculées au fil de l'écriture.
+/*  sha.h — SHA-1 AND SHA-256 FINGERPRINTS, computed while writing.
  *
- *  POURQUOI DEUX ALGORITHMES DE PLUS. La consigne d'une pièce numérique doit
- *  porter une empreinte qui l'identifie sans discussion possible. MD5 seul ne
- *  suffit plus : des collisions sont produites à volonté depuis 2008, et une
- *  défense peut donc soutenir qu'un fichier de même empreinte n'est pas le
- *  fichier saisi. SHA-1 est l'empreinte que les procédures et les outils du
- *  domaine réclament encore, mais il est lui aussi cassé en collision depuis
- *  2017 (SHAttered). D'où les trois, dont SHA-256, seul non contesté :
- *  fabriquer un fichier qui coïncide sur les trois à la fois n'est pas au
- *  pouvoir de l'état de l'art.
+ *  WHY TWO MORE ALGORITHMS. An exhibit must carry a fingerprint that identifies
+ *  it beyond dispute. MD5 alone no longer does: collisions have been producible
+ *  at will since 2008, so a defence can argue that a file with the same
+ *  fingerprint is not the seized file. SHA-1 is the fingerprint the field's
+ *  procedures and tools still ask for, but it too has been broken for
+ *  collisions since 2017 (SHAttered). Hence all three, SHA-256 being the only
+ *  undisputed one: crafting a file that matches all three at once is beyond the
+ *  state of the art.
  *
- *  POURQUOI PAS L'API DU SYSTÈME. `bcrypt.dll` ferait le calcul, mais WAC
- *  s'interdit d'ajouter une dépendance à une bibliothèque du système examiné
- *  quand un algorithme public de trente lignes suffit : l'exécutable reste
- *  autonome, et l'empreinte reste calculable à l'identique par un tiers.
+ *  WHY NOT THE SYSTEM'S API. `bcrypt.dll` would do the computation, but WAC
+ *  refuses to depend on a library of the examined system when a thirty-line
+ *  public algorithm is enough: the executable stays standalone, and the
+ *  fingerprint stays reproducible by a third party.
  *
- *  POURQUOI « AU FIL DE L'ÉCRITURE ». Les octets de la pièce transitent déjà en
- *  mémoire pendant l'extraction. Les hacher à ce moment évite de relire la copie
- *  depuis le support de collecte — sur clé USB, cette relecture coûtait près de
- *  la moitié du temps d'extraction. Et l'empreinte porte alors sur ce qui a
- *  effectivement été lu du volume, non sur une relecture qui pourrait différer.
+ *  WHY "WHILE WRITING". The exhibit's bytes already pass through memory during
+ *  extraction. Hashing them at that point avoids reading the copy back from the
+ *  collection medium — on a USB stick, that re-read took almost half the
+ *  extraction time. And the fingerprint then bears on what was actually read
+ *  from the volume, not on a re-read that could differ.
  *
- *  Même interface que Md5Stream (cf. quickdigest5.h), pour que les trois
- *  empreintes se calculent dans la même boucle.
+ *  Same interface as Md5Stream (see quickdigest5.h), so that the three
+ *  fingerprints are computed in the same loop.
  *
- *  C++ portable, aucune dépendance : vérifiable hors Windows, et confronté aux
- *  vecteurs de test publics des deux algorithmes (cf. sha_test).
+ *  Portable C++, no dependency: verifiable outside Windows, and checked against
+ *  the public test vectors of both algorithms (see sha_test).
  */
 
 #include <cstdint>
 #include <cstddef>
 #include <string>
 
-/*! SHA-1, calculé par ajouts successifs. */
+/*! SHA-1, computed incrementally. */
 class Sha1Stream final {
 public:
-	/*! Ajoute des octets au calcul. */
+	/*! Adds bytes to the computation. */
 	void update(const uint8_t* data, size_t length);
-	/*! Clôt le calcul et rend l'empreinte en hexadécimal majuscule.
-	 *  À n'appeler qu'une fois : le calcul est terminé ensuite. */
+	/*! Ends the computation and returns the digest in uppercase hexadecimal.
+	 *  Call only once: the computation is over afterwards. */
 	std::wstring hexDigest();
-	/*! Clôt le calcul et écrit l'empreinte brute (20 octets). Même contrainte :
-	 *  une seule fois, et exclusif de hexDigest. */
+	/*! Ends the computation and writes the raw digest (20 bytes). Same
+	 *  constraint: only once, and exclusive of hexDigest. */
 	void digest(uint8_t sortie[20]);
 private:
 	uint32_t etat_[5] = { 0x67452301u, 0xEFCDAB89u, 0x98BADCFEu, 0x10325476u, 0xC3D2E1F0u };
@@ -53,16 +52,16 @@ private:
 	void comprimer(const uint8_t* bloc);
 };
 
-/*! SHA-256, calculé par ajouts successifs. */
+/*! SHA-256, computed incrementally. */
 class Sha256Stream final {
 public:
-	/*! Ajoute des octets au calcul. */
+	/*! Adds bytes to the computation. */
 	void update(const uint8_t* data, size_t length);
-	/*! Clôt le calcul et rend l'empreinte en hexadécimal majuscule.
-	 *  À n'appeler qu'une fois : le calcul est terminé ensuite. */
+	/*! Ends the computation and returns the digest in uppercase hexadecimal.
+	 *  Call only once: the computation is over afterwards. */
 	std::wstring hexDigest();
-	/*! Clôt le calcul et écrit l'empreinte brute (32 octets). Même contrainte :
-	 *  une seule fois, et exclusif de hexDigest. */
+	/*! Ends the computation and writes the raw digest (32 bytes). Same
+	 *  constraint: only once, and exclusive of hexDigest. */
 	void digest(uint8_t sortie[32]);
 private:
 	uint32_t etat_[8] = { 0x6A09E667u, 0xBB67AE85u, 0x3C6EF372u, 0xA54FF53Au,
@@ -73,19 +72,19 @@ private:
 	void comprimer(const uint8_t* bloc);
 };
 
-/*! SHA-512, et SHA-384 qui en est la variante tronquée (autres constantes
- *  initiales, 48 octets rendus).
+/*! SHA-512, and SHA-384, its truncated variant (other initial constants,
+ *  48 bytes returned).
  *
- *  POURQUOI. Microsoft signe désormais avec la chaîne « Windows Production PCA
- *  2023 », en sha384WithRSAEncryption : relevé sur le catalogue de Defender
- *  (wd_mpextdeps.cat) d'une installation Windows 11. Sans SHA-384, un fichier
- *  signé par cette chaîne ne peut pas être authentifié — et la migration de
- *  Microsoft vers cette chaîne en rendra la part croissante. */
+ *  WHY. Microsoft now signs with the "Windows Production PCA 2023" chain, in
+ *  sha384WithRSAEncryption: seen on Defender's catalog (wd_mpextdeps.cat) of a
+ *  Windows 11 installation. Without SHA-384, a file signed by that chain cannot
+ *  be authenticated — and Microsoft's move to that chain will make that share
+ *  grow. */
 class Sha512Stream final {
 public:
 	explicit Sha512Stream(bool variante384 = false);
 	void update(const uint8_t* data, size_t length);
-	/*! Clôt le calcul et écrit l'empreinte : 64 octets, ou 48 pour SHA-384. */
+	/*! Ends the computation and writes the digest: 64 bytes, or 48 for SHA-384. */
 	void digest(uint8_t* sortie);
 	size_t taille() const { return variante384_ ? 48 : 64; }
 private:
@@ -97,15 +96,15 @@ private:
 	void comprimer(const uint8_t* bloc);
 };
 
-/*! Empreintes brutes d'un tampon en une passe. */
+/*! Raw digests of a buffer in one pass. */
 void sha1Octets(const uint8_t* data, size_t length, uint8_t sortie[20]);
 void sha256Octets(const uint8_t* data, size_t length, uint8_t sortie[32]);
 void sha384Octets(const uint8_t* data, size_t length, uint8_t sortie[48]);
 void sha512Octets(const uint8_t* data, size_t length, uint8_t sortie[64]);
 
-/*! Empreinte SHA-256 d'un fichier, lue par blocs.
- *  Sert à sceller le manifeste de consigne, qui ne peut pas se hacher lui-même.
- *  @param chemin fichier à lire
- *  @return empreinte en hexadécimal majuscule, ou chaîne vide si illisible
+/*! SHA-256 fingerprint of a file, read by blocks.
+ *  Used to seal the exhibit store manifest, which cannot hash itself.
+ *  @param chemin file to read
+ *  @return uppercase hexadecimal digest, or an empty string if unreadable
  */
 std::wstring sha256Fichier(const std::wstring& chemin);
