@@ -16,6 +16,7 @@ var hierarchy =
     [ "Directory", "structDirectory.html", null ],
     [ "DirStrings", "structDirStrings.html", null ],
     [ "EcrivainJsonTableau", "classEcrivainJsonTableau.html", null ],
+    [ "EmpreinteBinaire", "structEmpreinteBinaire.html", null ],
     [ "EtatService", "structEtatService.html", null ],
     [ "Event", "structEvent.html", null ],
     [ "Events", "structEvents.html", null ],
@@ -59,6 +60,7 @@ var hierarchy =
       [ "Beef0029", "structBeef0029.html", null ],
       [ "BeefUnknown", "structBeefUnknown.html", null ]
     ] ],
+    [ "LecteurBrut::Impl", "structLecteurBrut_1_1Impl.html", null ],
     [ "IShellItem", "structIShellItem.html", [
       [ "ArchiveFileContent", "structArchiveFileContent.html", null ],
       [ "ControlPanel", "structControlPanel.html", null ],
@@ -78,6 +80,7 @@ var hierarchy =
     [ "Json", "classJson.html", null ],
     [ "JumplistAutomatics", "structJumplistAutomatics.html", null ],
     [ "JumplistCustoms", "structJumplistCustoms.html", null ],
+    [ "LecteurBrut", "classLecteurBrut.html", null ],
     [ "LinkFlags", "structLinkFlags.html", null ],
     [ "Md5Stream", "classMd5Stream.html", null ],
     [ "MetadonneesWevt", "classMetadonneesWevt.html", null ],

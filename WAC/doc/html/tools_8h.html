@@ -166,6 +166,8 @@ Fonctions</h2></td></tr>
 <tr class="separator:ac578daf9658252628413798c3b0420de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0ba4ef8ffdededddc22ae3ace933de0e" id="r_a0ba4ef8ffdededddc22ae3ace933de0e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a0ba4ef8ffdededddc22ae3ace933de0e">cheminExtrait</a> (const std::wstring &amp;absolu)</td></tr>
 <tr class="separator:a0ba4ef8ffdededddc22ae3ace933de0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad55a02a26281ebb30a39940e02f3a62f" id="r_ad55a02a26281ebb30a39940e02f3a62f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ad55a02a26281ebb30a39940e02f3a62f">normaliserCheminFichier</a> (std::wstring chemin)</td></tr>
+<tr class="separator:ad55a02a26281ebb30a39940e02f3a62f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a516ba6a8248bf90345ac6e0ca6da29c0" id="r_a516ba6a8248bf90345ac6e0ca6da29c0"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a516ba6a8248bf90345ac6e0ca6da29c0">cheminBinaire</a> (std::wstring imagePath)</td></tr>
 <tr class="separator:a516ba6a8248bf90345ac6e0ca6da29c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae0966d866dd8ad34bc7c40049efcdcf5" id="r_ae0966d866dd8ad34bc7c40049efcdcf5"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ae0966d866dd8ad34bc7c40049efcdcf5">cheminSous</a> (const std::wstring &amp;racine, const std::wstring &amp;absolu)</td></tr>
@@ -509,15 +511,7 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>le chemin absolu, ou chaîne vide s'il ne désigne pas un fichier (un objet noyau comme <code>\Driver\xxx</code>, par exemple) </dd></dl>
-<dl class="section see"><dt>Voir également</dt><dd>la mise en œuvre, dans <a class="el" href="tools_8cpp.html">tools.cpp</a>, documente les formes rencontrées</dd></dl>
-<p>Résout le chemin d'un fichier désigné par <code>ImagePath</code> ou <code>ServiceDll</code>.</p>
-<p>La ruche stocke des formes hétérogènes, qu'aucune API ne normalise hors ligne :</p><ul>
-<li><code>\SystemRoot\System32\drivers\x.sys</code> (préfixe noyau)</li>
-<li><code>\??\C:\dossier\x.exe</code> (chemin objet NT)</li>
-<li><code>system32\svchost.exe -k netsvcs</code> (relatif à SystemRoot%)</li>
-<li><code>"C:\Program Files\App\x.exe" /service</code>(guillemets + arguments)</li>
-</ul>
-<p>CE QUI ÉTAIT FAUX. La version d'origine coupait sur la première occurrence de « -» ou « /», y compris à l'intérieur du chemin : un binaire installé dans un dossier contenant un tiret voyait son chemin tronqué, et son MD5 n'était donc jamais calculé. Ici, la coupure se fait APRÈS l'extension du fichier, qui est le seul repère fiable de la fin du chemin. </p>
+<dl class="section see"><dt>Voir également</dt><dd>la mise en œuvre, dans <a class="el" href="tools_8cpp.html">tools.cpp</a>, documente les formes rencontrées </dd></dl>
 
 </div>
 </div>
@@ -1514,6 +1508,35 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>vecteur issue de la conversion </dd></dl>
+
+</div>
+</div>
+<a id="ad55a02a26281ebb30a39940e02f3a62f" name="ad55a02a26281ebb30a39940e02f3a62f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad55a02a26281ebb30a39940e02f3a62f">&#9670;&#160;</a></span>normaliserCheminFichier()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring normaliserCheminFichier </td>
+          <td>(</td>
+          <td class="paramtype">std::wstring&#160;</td>
+          <td class="paramname"><em>chemin</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Forme canonique « X:\… » d'un chemin de fichier relevé dans un artefact.</p>
+<p>LA règle de normalisation des chemins : préfixes objet NT (<code>\\??\\</code>, <code>\\\\?\\</code>), préfixe noyau <code>\\SystemRoot\\</code>, variables système (<code>windir%</code>, <code>ProgramFiles%</code>…) développées depuis <code>conf.systemDrive</code>, guillemets et espaces d'encadrement, lettre de lecteur en majuscule. <code>cheminBinaire</code> et le développement des chemins de profil s'y ramènent : une seule règle, pas de variante par artefact.</p>
+<dl class="section return"><dt>Renvoie</dt><dd>le chemin normalisé, ou une chaîne VIDE s'il ne désigne pas un fichier local déterminable : partage réseau, chemin relatif, variable propre à un utilisateur ou inconnue</dd></dl>
+<p>Résout le chemin d'un fichier désigné par <code>ImagePath</code> ou <code>ServiceDll</code>.</p>
+<p>La ruche stocke des formes hétérogènes, qu'aucune API ne normalise hors ligne :</p><ul>
+<li><code>\SystemRoot\System32\drivers\x.sys</code> (préfixe noyau)</li>
+<li><code>\??\C:\dossier\x.exe</code> (chemin objet NT)</li>
+<li><code>system32\svchost.exe -k netsvcs</code> (relatif à SystemRoot%)</li>
+<li><code>"C:\Program Files\App\x.exe" /service</code>(guillemets + arguments)</li>
+</ul>
+<p>CE QUI ÉTAIT FAUX. La version d'origine coupait sur la première occurrence de « -» ou « /», y compris à l'intérieur du chemin : un binaire installé dans un dossier contenant un tiret voyait son chemin tronqué, et son MD5 n'était donc jamais calculé. Ici, la coupure se fait APRÈS l'extension du fichier, qui est le seul repère fiable de la fin du chemin. </p>
 
 </div>
 </div>

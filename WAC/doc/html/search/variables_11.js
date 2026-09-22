@@ -1,7 +1,7 @@
 var searchData=
 [
   ['readonly_0',['ReadOnly',['../structFileAttributes.html#ad671b5f257b0564084b0957c317366f9',1,'FileAttributes']]],
-  ['recentdocs_1',['recentdocs',['../structRecentDocs.html#ad302ada200a2a3d54813ba283b1d11c4',1,'RecentDocs::recentdocs'],['../structAutomaticDestination.html#aee250f34b14caaeab6079c44a6bdbd13',1,'AutomaticDestination::recentDocs'],['../structCustomDestinationCategory.html#a51444583e9d789fa2a05212424f2c314',1,'CustomDestinationCategory::recentDocs']]],
+  ['recentdocs_1',['recentdocs',['../structAutomaticDestination.html#aee250f34b14caaeab6079c44a6bdbd13',1,'AutomaticDestination::recentDocs'],['../structCustomDestinationCategory.html#a51444583e9d789fa2a05212424f2c314',1,'CustomDestinationCategory::recentDocs'],['../structRecentDocs.html#ad302ada200a2a3d54813ba283b1d11c4',1,'RecentDocs::recentdocs']]],
   ['reference_2',['reference',['../structFilename.html#afdb6bea2a1adde8db08f705556ec5534',1,'Filename']]],
   ['referenceconnue_3',['referenceConnue',['../structFilename.html#aa163bd15f44aaba0e95446ce37c3dd7d',1,'Filename']]],
   ['registeredorganization_4',['registeredOrganization',['../structSystemInfo.html#a57be43eaef409e65a09f0e9bb371f6d0',1,'SystemInfo']]],
@@ -10,7 +10,7 @@ var searchData=
   ['relativepath_7',['relativePath',['../structRecentDoc.html#acf2fe815a5eff7a3a38d839744f5f2ff',1,'RecentDoc']]],
   ['reparsepoint_8',['ReparsePoint',['../structFileAttributes.html#a8046f60767d2c3113cdae79ed5e989c1',1,'FileAttributes']]],
   ['resident_9',['resident',['../structRawHiveEmpreintes.html#a13a4c724d5928a77d1ccbe3216d4d584',1,'RawHiveEmpreintes::resident'],['../structRawAttribut.html#a4ba4b421a5ab653770c360154ed3a506',1,'RawAttribut::resident']]],
-  ['resultat_10',['resultat',['../structRawHiveExtrait.html#aa8ff97c07114fbcb2c2182561759a01f',1,'RawHiveExtrait']]],
+  ['resultat_10',['resultat',['../structRawHiveExtrait.html#aa8ff97c07114fbcb2c2182561759a01f',1,'RawHiveExtrait::resultat'],['../structEmpreinteBinaire.html#ac42a0edbf0a08ff7b638588d7e095691',1,'EmpreinteBinaire::resultat']]],
   ['rid_11',['rid',['../structUser.html#a29cef82688e723f19cf646f654ffbd45',1,'User']]],
   ['roleconnu_12',['roleConnu',['../structSession.html#a13ae23b2b890e7d3d1f6025309994441',1,'Session']]],
   ['rootdirpath_13',['RootDirPath',['../structAmcacheApplication.html#a639ea7ab9d4c515fbb041ee20aeec442',1,'AmcacheApplication']]],

@@ -11,6 +11,7 @@
 #include <algorithm>
 #include "tools.h"
 #include "quickdigest5.h"
+#include "binaires.h"
 #include "usb.h"
 
 /*! structure représentant un artefact ShimCache
@@ -18,7 +19,7 @@
 struct Shimcache {
 public:
 	std::wstring path = L""; //!< chemin vers le fichier cible de l'artefact
-	std::wstring md5 = L""; //!< hash md5 du fichier cible de l'artefact
+	EmpreinteBinaire empreinte; //!< empreintes du fichier cible (--binary)
 	std::wstring lastModification = L""; //!< date de modification
 	std::wstring lastModificationUtc = L"";//!< date de modification au format json
 	bool executed = false;//!< true si le fichier a été exécuté, non fiable

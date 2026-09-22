@@ -11,6 +11,10 @@
 #include <fstream>
 #include <filesystem>
 #include <algorithm>
+#include <map>
+#include <memory>
+#include <ostream>
+#include <unordered_map>
 #include "quickdigest5.h"
 #include "sha.h"
 #include "lznt1.h"
@@ -41,6 +45,16 @@ bool iequals(const std::wstring& a, const std::wstring& b){
 }
 
 struct Run { int64_t lcn; uint64_t count; }; // lcn == -1 : run sparse (zéros)
+
+/*! Tampon qui jette ce qu'on lui écrit. Sert à calculer les empreintes d'un
+ *  fichier sans le recopier : les trois voies de lecture (ordinaire, LZNT1,
+ *  WOF) écrivent dans un flux et hachent au passage, si bien qu'il suffit de
+ *  leur donner un flux qui ne mène nulle part. */
+class TamponNul : public std::streambuf {
+protected:
+    int overflow(int c) override { return traits_type::not_eof(c); }
+    std::streamsize xsputn(const char*, std::streamsize n) override { return n; }
+};
 
 // Décode une liste de data runs NTFS.
 std::vector<Run> decodeRuns(const uint8_t* p, const uint8_t* end){
@@ -101,6 +115,13 @@ public:
 
     void close(){ if (h_ != INVALID_HANDLE_VALUE){ CloseHandle(h_); h_ = INVALID_HANDLE_VALUE; } }
 
+    /*! Garde en mémoire l'index de chaque répertoire traversé. Pour lire des
+     *  milliers de fichiers épars : sans cache, chaque fichier de System32
+     *  relisait ses 4 659 entrées, soit 256 blocs d'index (1 Mio). Réservé au
+     *  LecteurBrut, dont la durée de vie est celle d'une phase de collecte : un
+     *  fichier créé ensuite dans un répertoire déjà lu n'y serait pas vu. */
+    void activerCache(){ cacheActif_ = true; }
+
     // Résout un chemin (\a\b\c) en index d'enregistrement MFT.
     bool resolvePath(const std::wstring& path, uint64_t& outIndex){
         uint64_t cur = 5; // racine \ = MFT #5
@@ -113,11 +134,25 @@ public:
             std::wstring comp = path.substr(i, j - i);
             i = j;
             RVLOG(L"[raw] recherche \"%ls\" dans MFT#%llu\n", comp.c_str(), (unsigned long long)cur);
-            std::vector<RawDirEntry> entries;
-            if (!listDir(cur, entries)) return false;
             bool found = false;
-            for (const RawDirEntry& e : entries)
-                if (iequals(e.name, comp)){ cur = e.mftIndex; found = true; break; }
+            if (cacheActif_){
+                auto it = cacheRep_.find(cur);
+                if (it == cacheRep_.end()){
+                    std::vector<RawDirEntry> entries;
+                    if (!listDir(cur, entries)) return false;
+                    std::unordered_map<std::wstring, uint64_t> index;
+                    for (const RawDirEntry& e : entries) index.emplace(minuscules(e.name), e.mftIndex);
+                    it = cacheRep_.emplace(cur, std::move(index)).first;
+                }
+                const auto trouve = it->second.find(minuscules(comp));
+                if (trouve != it->second.end()){ cur = trouve->second; found = true; }
+            }
+            else {
+                std::vector<RawDirEntry> entries;
+                if (!listDir(cur, entries)) return false;
+                for (const RawDirEntry& e : entries)
+                    if (iequals(e.name, comp)){ cur = e.mftIndex; found = true; break; }
+            }
             if (!found){ RVLOG(L"[raw] composant introuvable: %ls\n", comp.c_str()); return false; }
         }
         outIndex = cur; return true;
@@ -365,7 +400,7 @@ public:
      *  @return S_OK, ou un code d'erreur
      */
     HRESULT extraireWof(const ContexteWof& ctx, uint64_t tailleReelle,
-                        std::ofstream& out, const std::wstring& libelle,
+                        std::ostream& out, const std::wstring& libelle,
                         RawHiveEmpreintes* emp){
         const uint32_t algorithme = ctx.algorithme;
         size_t tailleMorceau = 0;
@@ -484,7 +519,7 @@ public:
      */
     HRESULT extraireCompresse(const std::vector<Run>& runs, uint64_t realSize,
                               uint64_t tailleValide,
-                              uint32_t uniteGrappes, std::ofstream& out,
+                              uint32_t uniteGrappes, std::ostream& out,
                               const std::wstring& libelle, RawHiveEmpreintes* emp){
         const uint64_t tailleUnite = (uint64_t)uniteGrappes * bytesPerCluster_;
 
@@ -739,8 +774,15 @@ public:
         if (tailleValide > realSize) tailleValide = realSize;
         if (emp && !resident) emp->tailleValide = tailleValide;
 
-        std::ofstream out(std::filesystem::path(outFile), std::ios::binary | std::ios::trunc);
-        if (!out){ RVLOG(L"[raw] ouverture sortie impossible\n"); return E_FAIL; }
+        // Sortie vide : empreintes seules, rien n'est écrit (cf. TamponNul).
+        TamponNul nul;
+        std::ostream sortieNulle(&nul);
+        std::ofstream fichier;
+        if (!outFile.empty()){
+            fichier.open(std::filesystem::path(outFile), std::ios::binary | std::ios::trunc);
+            if (!fichier){ RVLOG(L"[raw] ouverture sortie impossible\n"); return E_FAIL; }
+        }
+        std::ostream& out = outFile.empty() ? sortieNulle : fichier;
 
         if (resident){
             out.write((const char*)residentData, residentLen);
@@ -830,6 +872,13 @@ public:
     }
 
 private:
+    static std::wstring minuscules(const std::wstring& s){
+        std::wstring r(s);
+        for (wchar_t& c : r) c = (wchar_t)towlower(c);
+        return r;
+    }
+    bool cacheActif_ = false;
+    std::map<uint64_t, std::unordered_map<std::wstring, uint64_t>> cacheRep_;
     HANDLE   h_ = INVALID_HANDLE_VALUE;
     uint32_t bytesPerSector_ = 0, sectorsPerCluster_ = 0, bytesPerCluster_ = 0, bytesPerRecord_ = 0;
     uint64_t mftLcn_ = 0;
@@ -1105,6 +1154,41 @@ public:
 };
 
 } // namespace
+
+struct LecteurBrut::Impl {
+    std::map<std::wstring, std::unique_ptr<NtfsVolume>> volumes;
+    std::map<std::wstring, HRESULT> echecs;    // volume inaccessible : ne pas réessayer
+};
+
+LecteurBrut::LecteurBrut() : impl_(new Impl) {}
+LecteurBrut::~LecteurBrut() = default;
+
+unsigned LecteurBrut::volumesOuverts() const { return (unsigned)impl_->volumes.size(); }
+
+HRESULT LecteurBrut::lire(const std::wstring& cheminAbsolu, const std::wstring& sortie,
+                          RawHiveExtrait& ligne){
+    ligne.cheminVolume = cheminAbsolu;
+    ligne.cheminSortie = sortie;
+    ligne.resultat = HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME);
+    if (cheminAbsolu.size() < 3 || cheminAbsolu[1] != L':' || cheminAbsolu[2] != L'\\')
+        return ligne.resultat;
+    const std::wstring volume(1, (wchar_t)towupper(cheminAbsolu[0]));
+
+    const auto echec = impl_->echecs.find(volume);
+    if (echec != impl_->echecs.end()) return ligne.resultat = echec->second;
+    auto it = impl_->volumes.find(volume);
+    if (it == impl_->volumes.end()){
+        std::unique_ptr<NtfsVolume> v(new NtfsVolume);
+        const HRESULT hr = v->open(volume);
+        if (FAILED(hr)){ impl_->echecs.emplace(volume, hr); return ligne.resultat = hr; }
+        v->activerCache();
+        it = impl_->volumes.emplace(volume, std::move(v)).first;
+    }
+    uint64_t index = 0;
+    if (!it->second->resolvePath(cheminAbsolu.substr(2), index))
+        return ligne.resultat = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+    return ligne.resultat = it->second->extractData(index, sortie, std::wstring(), &ligne.empreintes);
+}
 
 void RawHiveSetVerbose(bool on){ g_verbose = on; }
 void RawHiveSetProgress(RawHiveProgressFn fn){ g_progress = fn; }

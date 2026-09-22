@@ -1,5 +1,6 @@
 var raw__hive_8cpp =
 [
+    [ "LecteurBrut::Impl", "structLecteurBrut_1_1Impl.html", "structLecteurBrut_1_1Impl" ],
     [ "RVLOG", "raw__hive_8cpp.html#ac62ab7e9783b47f29b324ab001678edd", null ],
     [ "ExtractDirectoryRaw", "raw__hive_8cpp.html#a3bead20850215380ae329262f986b1d8", null ],
     [ "ExtractDirectoryTreeRaw", "raw__hive_8cpp.html#adc4d8df0bb971bcd4d3fd2dbc32635b6", null ],

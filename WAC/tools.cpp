@@ -544,19 +544,12 @@ namespace {
  *  comme une extraction « partielle » sans cause apparente. */
 std::wstring developperCheminProfil(const std::wstring& brut) {
 	if (brut.find(L'%') == std::wstring::npos) return brut;
-
-	const std::wstring bas = enMinuscules(brut);
-	// %systemroot% et %windir% sont synonymes et désignent le dossier Windows.
-	for (PCWSTR v : { L"%systemroot%\\", L"%windir%\\" }) {
-		const size_t n = wcslen(v);
-		if (bas.compare(0, n, v) == 0)
-			return conf.systemDrive + L"\\Windows\\" + brut.substr(n);
+	const std::wstring developpe = normaliserCheminFichier(brut);
+	if (developpe.empty()) {
+		log(2, L"🔥ProfileImagePath : variable non reconnue dans " + brut);
+		return brut;
 	}
-	if (bas.compare(0, 14, L"%systemdrive%\\") == 0)
-		return conf.systemDrive + L"\\" + brut.substr(14);
-
-	log(2, L"🔥ProfileImagePath : variable non reconnue dans " + brut);
-	return brut;
+	return developpe;
 }
 
 } // namespace
@@ -637,6 +630,57 @@ std::wstring cheminRelatifAuVolume(const std::wstring& absolu) {
 *  jamais calculé. Ici, la coupure se fait APRÈS l'extension du fichier, qui est
 *  le seul repère fiable de la fin du chemin.
 */
+std::wstring normaliserCheminFichier(std::wstring chemin) {
+	// Espaces et guillemets d'encadrement : présents dans Shimcache et Amcache.
+	while (!chemin.empty() && (chemin.front() == L' ' || chemin.front() == L'"')) chemin.erase(0, 1);
+	while (!chemin.empty() && (chemin.back() == L' ' || chemin.back() == L'"')) chemin.pop_back();
+	if (chemin.empty()) return L"";
+
+	std::wstring bas = enMinuscules(chemin);
+	// Préfixes objet NT : « \??\C:\… » (Shimcache, ImagePath), « \\?\C:\… ».
+	if (bas.compare(0, 4, L"\\??\\") == 0 || bas.compare(0, 4, L"\\\\?\\") == 0) {
+		if (bas.compare(4, 4, L"unc\\") == 0) return L"";   // partage réseau
+		chemin.erase(0, 4);
+		bas.erase(0, 4);
+	}
+	// Préfixe noyau.
+	if (bas.compare(0, 12, L"\\systemroot\\") == 0)
+		return conf.systemDrive + L"\\Windows\\" + chemin.substr(12);
+
+	/* VARIABLES, développées depuis le lecteur système DÉTECTÉ et jamais depuis
+	   l'environnement du processus : la valeur appartient à l'installation
+	   examinée, pas à celle qui exécute WAC (et WAC tourne en SYSTEM, dont
+	   l'environnement ne dit rien des utilisateurs).
+	   `%windir%` est synonyme de `%systemroot%` ; ne pas le traiter donnait des
+	   chemins du genre « C:\Windows\%windir%\system32\ncsi.dll ».
+	   Les variables PROPRES À UN UTILISATEUR (%APPDATA%, %LOCALAPPDATA%,
+	   %USERPROFILE%…) ne sont pas développées : le compte n'est pas connu ici,
+	   et deviner rendrait l'empreinte d'un autre fichier que celui désigné. */
+	if (!chemin.empty() && chemin.front() == L'%') {
+		const size_t fin = chemin.find(L'%', 1);
+		if (fin == std::wstring::npos) return L"";
+		const std::wstring var = bas.substr(1, fin - 1);
+		const std::wstring d = conf.systemDrive;
+		static const std::map<std::wstring, std::wstring> connues = {
+			{ L"systemroot", L"\\Windows" },               { L"windir", L"\\Windows" },
+			{ L"systemdrive", L"" },
+			{ L"programfiles", L"\\Program Files" },       { L"programw6432", L"\\Program Files" },
+			{ L"programfiles(x86)", L"\\Program Files (x86)" },
+			{ L"commonprogramfiles", L"\\Program Files\\Common Files" },
+			{ L"commonprogramw6432", L"\\Program Files\\Common Files" },
+			{ L"commonprogramfiles(x86)", L"\\Program Files (x86)\\Common Files" },
+			{ L"programdata", L"\\ProgramData" },          { L"allusersprofile", L"\\ProgramData" },
+			{ L"public", L"\\Users\\Public" },
+		};
+		const auto it = connues.find(var);
+		if (it == connues.end()) return L"";
+		chemin = d + it->second + chemin.substr(fin + 1);
+	}
+	if (chemin.size() < 3 || chemin[1] != L':' || chemin[2] != L'\\') return L"";
+	chemin[0] = (wchar_t)towupper(chemin[0]);
+	return chemin;
+}
+
 std::wstring cheminBinaire(std::wstring imagePath) {
 	if (imagePath.empty()) return L"";
 
@@ -659,20 +703,12 @@ std::wstring cheminBinaire(std::wstring imagePath) {
 		if (fin != std::wstring::npos) imagePath = imagePath.substr(0, fin);
 	}
 
-	// Préfixes noyau et objet NT.
-	const std::wstring bas = enMinuscules(imagePath);
-	if (bas.compare(0, 12, L"\\systemroot\\") == 0)
-		imagePath = conf.systemDrive + L"\\Windows\\" + imagePath.substr(12);
-	else if (bas.compare(0, 13, L"%systemroot%\\") == 0)
-		imagePath = conf.systemDrive + L"\\Windows\\" + imagePath.substr(13);
-	/*  `%windir%` est le synonyme de `%systemroot%`, et les fournisseurs
-	    d'evenements l'emploient largement. Ne pas le traiter donnait des chemins
-	    du genre « C:\Windows\%windir%\system32\ncsi.dll » — introuvables, donc
-	    des ressources jamais lues et des messages jamais resolus. */
-	else if (bas.compare(0, 9, L"%windir%\\") == 0)
-		imagePath = conf.systemDrive + L"\\Windows\\" + imagePath.substr(9);
-	else if (bas.compare(0, 4, L"\\??\\") == 0)
-		imagePath = imagePath.substr(4);
+	// Préfixes noyau, objet NT et variables : la règle commune.
+	{
+		const std::wstring normalise = normaliserCheminFichier(imagePath);
+		if (!normalise.empty()) return normalise;
+		if (imagePath.find(L'%') != std::wstring::npos) return L"";   // variable inconnue
+	}
 
 	/* Chemin relatif : il l'est à %SystemRoot%, pas au répertoire courant.
 	   Un service dont ImagePath vaut « system32\\x.exe » désigne donc

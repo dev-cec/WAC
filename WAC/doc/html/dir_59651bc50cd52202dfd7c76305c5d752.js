@@ -4,6 +4,8 @@ var dir_59651bc50cd52202dfd7c76305c5d752 =
     [ "asciiart.h", "asciiart_8h.html", "asciiart_8h" ],
     [ "audit.cpp", "audit_8cpp.html", "audit_8cpp" ],
     [ "audit.h", "audit_8h.html", "audit_8h" ],
+    [ "binaires.cpp", "binaires_8cpp.html", "binaires_8cpp" ],
+    [ "binaires.h", "binaires_8h.html", "binaires_8h" ],
     [ "consigne.cpp", "consigne_8cpp.html", "consigne_8cpp" ],
     [ "consigne.h", "consigne_8h.html", "consigne_8h" ],
     [ "consigne_test.cpp", "consigne__test_8cpp.html", "consigne__test_8cpp" ],

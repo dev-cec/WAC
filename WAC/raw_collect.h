@@ -46,9 +46,6 @@
  *  refusée par offreg : chaque ruche passe donc par un rejeu des journaux, puis
  *  par MakeHiveLoadable() en recours (cf. hive_recover.h).
  *
- *  C'est cette passe qui vérifie l'emplacement de collecte, avant toute
- *  écriture.
- *
  *  @return S_OK si tout réussit, S_FALSE si certains fichiers manquent ou si une
  *          ruche reste inexploitable, ou un code d'erreur si le volume ne peut
  *          être ouvert.

@@ -43,7 +43,7 @@ Json Filename::toJson() {
 	Json o = Json::obj();
 	o.add(L"Filename", Json::str(filename));
 	o.add(L"FullPath", Json::str(fullPath));
-	if (!md5.empty()) o.add(L"Md5", Json::str(md5));
+	ajouterEmpreintes(o, empreinte);
 	// Emise seulement si relevee : un couple de zeros se lirait comme une
 	// reference valide vers l'enregistrement 0 de la $MFT, qui est la $MFT
 	// elle-meme.
@@ -421,7 +421,7 @@ HRESULT Prefetch::read() {
 			   incluaient donc la barre oblique suivante et la comparaison
 			   échouait TOUJOURS : `FullPath` restait vide pour la totalité des
 			   fichiers, et `Md5`, qui en dépend, n'était jamais calculé — même
-			   avec --md5. Les `Dirs`, juste au-dessus, n'ont jamais eu ce défaut
+			   avec --binary. Les `Dirs`, juste au-dessus, n'ont jamais eu ce défaut
 			   parce qu'ils appellent `replaceAll` sans comparer de longueur.
 			   Ici la longueur est celle du nom réel, et la comparaison ignore la
 			   casse : l'en-tête Prefetch écrit en majuscules, les chaînes de
@@ -431,11 +431,9 @@ HRESULT Prefetch::read() {
 			    != enMinuscules(v.deviceName)) continue;
 
 			f.fullPath = replaceAll(f.filename, v.deviceName, v.mountPoint).data();
-			if (conf.md5) {
-				log(3, L"🔈fileToHash md5Source");
-				// fullPath est desormais BRUT : le de-echappement compensatoire
-				// qui precedait ce hash n'a plus lieu d'etre.
-				f.md5 = QuickDigest5::fileToHash(wstring_to_string(f.fullPath)).data();
+			if (conf.binary) {
+				log(3, L"🔈EmpreinteFichier");
+				f.empreinte = EmpreinteFichier(f.fullPath);
 			}
 			// L'executable du Prefetch parmi les fichiers charges : c'est LUI
 			// dont l'empreinte identifie le binaire execute.
@@ -444,7 +442,7 @@ HRESULT Prefetch::read() {
 			                           ? f.fullPath : f.fullPath.substr(barre + 1);
 			if (enMinuscules(nomSeul) == enMinuscules(filename)) {
 				fullPath = f.fullPath.data();
-				md5 = f.md5;
+				empreinte = f.empreinte;
 			}
 			break;
 		}
@@ -460,7 +458,7 @@ Json Prefetch::toJson() {
 	o.add(L"Hash",        Json::str(hash_string));
 	o.add(L"Filename",    Json::str(filename));
 	o.add(L"FullPath",    Json::str(fullPath));
-	if (!md5.empty()) o.add(L"Md5", Json::str(md5));
+	ajouterEmpreintes(o, empreinte);
 	o.add(L"Created",     Json::str(timeToIso8601Local(created)));
 	o.add(L"CreatedUtc",  Json::str(timeToIso8601Utc(createdUtc)));
 	o.add(L"Modified",    Json::str(timeToIso8601Local(modified)));

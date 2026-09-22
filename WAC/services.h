@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "binaires.h"
 #include <windows.h>
 #include <string>
 #include <vector>
@@ -56,8 +57,8 @@ struct ServiceStruct
 	std::wstring serviceFailureCommand;     //!< commande exécutée en cas d'échec
 	std::wstring serviceGroup;              //!< groupe de chargement
 	std::vector<std::wstring> dependances;  //!< DependOnService
-	std::wstring serviceMd5;                //!< MD5 du binaire, si --md5
-	std::wstring serviceDllMd5;             //!< MD5 de la ServiceDll, si --md5
+	EmpreinteBinaire serviceEmpreinte;      //!< empreintes du binaire, si --binary
+	EmpreinteBinaire serviceDllEmpreinte;   //!< empreintes de la ServiceDll, si --binary
 	FILETIME lastWriteTimeUtc = { 0, 0 };   //!< dernière écriture de la clé (UTC)
 	FILETIME lastWriteTime = { 0, 0 };      //!< idem, heure locale du suspect
 

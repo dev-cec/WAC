@@ -39,6 +39,7 @@
 #include <sddl.h>
 #include "tools.h"
 #include "quickdigest5.h"
+#include "binaires.h"
 
 
 
@@ -46,7 +47,7 @@
 struct Process {
 	std::wstring processName = L""; //!< Nom du processus
 	DWORD processId = 0; //!< Id du processus
-	std::wstring md5 = L""; //!< hash md5 du process exe
+	EmpreinteBinaire empreinte; //!< empreintes de l'exécutable (--binary), lu en brut et prélevé
 	DWORD processParentId = 0;//!< Id du processus Parent
 	DWORD processThreadCount = 0;//!< Nombre de threads
 	std::wstring processSidName = L"";//!< nom de l'utilisateur propriétaire du processus

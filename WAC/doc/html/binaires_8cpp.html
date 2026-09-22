@@ -1,0 +1,261 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector): Référence du fichier /var/www/html/WAC/WAC/binaires.cpp</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(document).ready(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('binaires_8cpp.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#func-members">Fonctions</a>  </div>
+  <div class="headertitle"><div class="title">Référence du fichier binaires.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><code>#include &quot;<a class="el" href="binaires_8h_source.html">binaires.h</a>&quot;</code><br />
+<code>#include &lt;map&gt;</code><br />
+<code>#include &lt;memory&gt;</code><br />
+<code>#include &lt;filesystem&gt;</code><br />
+<code>#include &quot;<a class="el" href="tools_8h_source.html">tools.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="raw__hive_8h_source.html">raw_hive.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="consigne_8h_source.html">consigne.h</a>&quot;</code><br />
+</div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Fonctions</h2></td></tr>
+<tr class="memitem:a1f33106ee2032db23d057900ce48f662" id="r_a1f33106ee2032db23d057900ce48f662"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structEmpreinteBinaire.html">EmpreinteBinaire</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8cpp.html#a1f33106ee2032db23d057900ce48f662">EmpreinteFichier</a> (const std::wstring &amp;cheminBrut)</td></tr>
+<tr class="separator:a1f33106ee2032db23d057900ce48f662"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acd16f8b8a149b12c852dfe32b520bd7e" id="r_acd16f8b8a149b12c852dfe32b520bd7e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8cpp.html#acd16f8b8a149b12c852dfe32b520bd7e">ajouterEmpreintes</a> (<a class="el" href="classJson.html">Json</a> &amp;o, const <a class="el" href="structEmpreinteBinaire.html">EmpreinteBinaire</a> &amp;e, const std::wstring &amp;prefixe, const std::wstring &amp;suffixe)</td></tr>
+<tr class="separator:acd16f8b8a149b12c852dfe32b520bd7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc8d95462c9eae67b679d65130580b6a" id="r_abc8d95462c9eae67b679d65130580b6a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8cpp.html#abc8d95462c9eae67b679d65130580b6a">BinairesBilan</a> (size_t *fichiers, size_t *lus, size_t *preleves, unsigned long long *octetsPreleves, size_t *sansPlace)</td></tr>
+<tr class="separator:abc8d95462c9eae67b679d65130580b6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af71e43b15569254d47f7e64f9382f374" id="r_af71e43b15569254d47f7e64f9382f374"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8cpp.html#af71e43b15569254d47f7e64f9382f374">BinairesTerminer</a> ()</td></tr>
+<tr class="separator:af71e43b15569254d47f7e64f9382f374"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<h2 class="groupheader">Documentation des fonctions</h2>
+<a id="acd16f8b8a149b12c852dfe32b520bd7e" name="acd16f8b8a149b12c852dfe32b520bd7e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acd16f8b8a149b12c852dfe32b520bd7e">&#9670;&#160;</a></span>ajouterEmpreintes()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ajouterEmpreintes </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classJson.html">Json</a> &amp;&#160;</td>
+          <td class="paramname"><em>o</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structEmpreinteBinaire.html">EmpreinteBinaire</a> &amp;&#160;</td>
+          <td class="paramname"><em>e</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>prefixe</em> = <code>L&quot;&quot;</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>suffixe</em> = <code>L&quot;&quot;</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Ajoute à un objet JSON les trois empreintes, sous les clés <code>&lt;prefixe&gt;Md5&lt;suffixe&gt;</code>, <code>&lt;prefixe&gt;Sha1&lt;suffixe&gt;</code>, <code>&lt;prefixe&gt;Sha256&lt;suffixe&gt;</code>. Une empreinte absente n'est pas émise : un champ vide se lirait comme un défaut du logiciel. </p>
+
+</div>
+</div>
+<a id="abc8d95462c9eae67b679d65130580b6a" name="abc8d95462c9eae67b679d65130580b6a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abc8d95462c9eae67b679d65130580b6a">&#9670;&#160;</a></span>BinairesBilan()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void BinairesBilan </td>
+          <td>(</td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>fichiers</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>lus</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>preleves</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long long *&#160;</td>
+          <td class="paramname"><em>octetsPreleves</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>sansPlace</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Bilan, pour le journal d'investigation. </p>
+
+</div>
+</div>
+<a id="af71e43b15569254d47f7e64f9382f374" name="af71e43b15569254d47f7e64f9382f374"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af71e43b15569254d47f7e64f9382f374">&#9670;&#160;</a></span>BinairesTerminer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void BinairesTerminer </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Ferme les volumes gardés ouverts. À appeler quand plus aucun artefact ne cite de fichier. </p>
+
+</div>
+</div>
+<a id="a1f33106ee2032db23d057900ce48f662" name="a1f33106ee2032db23d057900ce48f662"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1f33106ee2032db23d057900ce48f662">&#9670;&#160;</a></span>EmpreinteFichier()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="structEmpreinteBinaire.html">EmpreinteBinaire</a> &amp; EmpreinteFichier </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>cheminBrut</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Empreintes du fichier désigné par un artefact.</p>
+<p>Le chemin est normalisé par <code>normaliserCheminFichier</code> ; un chemin qui ne désigne pas un fichier local déterminable rend un résultat vide. Chaque fichier n'est lu qu'UNE fois pour toute la collecte, quel que soit le nombre d'artefacts qui le citent.</p>
+<p>Sans <code>--binary</code>, rend un résultat vide sans rien lire. </p>
+
+</div>
+</div>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="binaires_8cpp.html">binaires.cpp</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

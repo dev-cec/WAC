@@ -27,6 +27,7 @@
  *  « en cours d'exécution » est par nature volatil.
  */
 
+#include "binaires.h"
 #include <string>
 #include <vector>
 #include <windows.h>
@@ -47,7 +48,7 @@ struct Trigger {
 struct Action {
 	std::wstring type;       //!< « Exec » ou « ComHandler »
 	std::wstring command;    //!< exécutable (Exec)
-	std::wstring md5;        //!< empreinte de l'exécutable, si --md5
+	EmpreinteBinaire empreinte; //!< empreintes de l'exécutable, si --binary
 	std::wstring arguments;  //!< arguments de la ligne de commande
 	std::wstring workingDir; //!< répertoire de travail
 	std::wstring classId;    //!< CLSID (ComHandler)

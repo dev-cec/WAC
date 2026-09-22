@@ -2,6 +2,7 @@ var raw__hive_8h =
 [
     [ "RawHiveEmpreintes", "structRawHiveEmpreintes.html", "structRawHiveEmpreintes" ],
     [ "RawHiveExtrait", "structRawHiveExtrait.html", "structRawHiveExtrait" ],
+    [ "LecteurBrut", "classLecteurBrut.html", "classLecteurBrut" ],
     [ "RawAttribut", "structRawAttribut.html", "structRawAttribut" ],
     [ "RawDirEntry", "structRawDirEntry.html", "structRawDirEntry" ],
     [ "RawHiveProgressFn", "raw__hive_8h.html#a6985ce339618f6ff7ab0155eb314e52e", null ],

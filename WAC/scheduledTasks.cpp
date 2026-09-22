@@ -143,18 +143,21 @@ void lireDefinition(const XmlNode& racine, ScheduledTask& t) {
 		act.command    = a->texteDe(L"Command");
 		act.arguments  = a->texteDe(L"Arguments");
 		act.workingDir = a->texteDe(L"WorkingDirectory");
-		if (conf.md5 && !act.command.empty()) {
-			/* Le chemin peut être entre guillemets et contenir des variables
-			   d'environnement. On ne calcule l'empreinte que si le fichier existe
-			   vraiment : un exécutable absent n'est pas une anomalie ici (tâche
-			   pointant vers un logiciel désinstallé), et c'est une information
-			   qu'il vaut mieux laisser lire dans Command que masquer. */
-			std::wstring chemin = replaceAll(act.command, L"\"", L"");
-			wchar_t etendu[MAX_PATH] = L"";
-			if (ExpandEnvironmentStringsW(chemin.c_str(), etendu, MAX_PATH)) chemin = etendu;
-			std::error_code ec;
-			if (std::filesystem::exists(chemin, ec))
-				act.md5 = QuickDigest5::fileToHash(wstring_to_string(chemin));
+		if (conf.binary && !act.command.empty()) {
+			/* Le chemin peut être entre guillemets et contenir des variables.
+			   Il était développé avec ExpandEnvironmentStringsW — l'environnement
+			   de WAC, qui tourne en SYSTEM — et son existence testée par l'API :
+			   deux lectures de la machine vivante. La normalisation commune
+			   développe les variables système depuis le lecteur détecté.
+			   Un nom nu (« cmd.exe ») est cherché comme Windows le ferait en
+			   premier, dans System32. Un exécutable absent n'est pas une
+			   anomalie ici (logiciel désinstallé) : Command le montre. */
+			const std::wstring commande = replaceAll(act.command, L"\"", L"");
+			std::wstring chemin = normaliserCheminFichier(commande);
+			if (chemin.empty() && commande.find(L'\\') == std::wstring::npos
+			    && commande.find(L'%') == std::wstring::npos)
+				chemin = conf.systemDrive + L"\\Windows\\System32\\" + commande;
+			if (!chemin.empty()) act.empreinte = EmpreinteFichier(chemin);
 		}
 		t.actions.push_back(std::move(act));
 	}
@@ -203,7 +206,7 @@ Json ScheduledTask::toJson() const {
 		Json j = Json::obj();
 		j.add(L"Type", Json::str(a.type));
 		if (a.type == L"Exec") {
-			j.add(L"Md5",              Json::str(a.md5));
+			ajouterEmpreintes(j, a.empreinte);
 			j.add(L"Command",          Json::str(a.command));
 			j.add(L"Arguments",        Json::str(a.arguments));
 			j.add(L"WorkingDirectory", Json::str(a.workingDir));

@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "binaires.h"
 #include <iostream>
 #include <cstdio>
 #include <windows.h>
@@ -48,7 +49,7 @@ struct DirStrings {
 struct Filename {
 	std::wstring filename = L"";//!< original string presents in prefetch
 	std::wstring fullPath = L""; //!< full path on hard drive
-	std::wstring md5 = L""; //!< hash md5 of the file
+	EmpreinteBinaire empreinte; //!< empreintes du fichier chargé (--binary)
 	/*! Référence $MFT du fichier chargé, lue dans le tableau des métriques.
 	*
 	*  Elle identifie le fichier sur le volume INDÉPENDAMMENT de son nom : un
@@ -101,7 +102,7 @@ public:
 	//HEADER
 	std::wstring filename = L"";//!< nom du fichier
 	std::wstring fullPath = L"";//!< full path du process
-	std::wstring md5 = L"";//!< hash md5 of process
+	EmpreinteBinaire empreinte; //!< empreintes de l'exécutable (--binary)
 	int signature = 0; //!< signature du prefetch
 	int version = 0; //!< version du prefetch
 	int size = 0; //!< taille du prefetch

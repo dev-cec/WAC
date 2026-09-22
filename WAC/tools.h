@@ -66,7 +66,7 @@ struct AppliConf {
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);//!< Handle de la console
 	std::wofstream log;//!< handle sur le fichier de log de sortie pour mode debug
 	int loglevel = 0; //!< niveau de journalisation (0 par defaut) definit par la ligne de commande
-	bool md5;//!< if true, calcul hash md5 of files in artefacts
+	bool binary = false; //!< --binary : empreintes des fichiers cités, et prélèvement des binaires
 	TimeZoneInfo timeZone; //!< fuseau de la machine examinee (ruche SYSTEM si disponible)
 	/*! Lecteur système de la machine examinée, avec les deux-points ("C:").
 	*
@@ -150,6 +150,21 @@ std::wstring cheminRelatifAuVolume(const std::wstring& absolu);
 * @return le chemin de sa copie sur le support de collecte
 */
 std::wstring cheminExtrait(const std::wstring& absolu);
+
+/*! Forme canonique « X:\\… » d'un chemin de fichier relevé dans un artefact.
+*
+* LA règle de normalisation des chemins : préfixes objet NT (`\\??\\`,
+* `\\\\?\\`), préfixe noyau `\\SystemRoot\\`, variables système (`%windir%`,
+* `%ProgramFiles%`…) développées depuis `conf.systemDrive`, guillemets et espaces
+* d'encadrement, lettre de lecteur en majuscule. `cheminBinaire` et le
+* développement des chemins de profil s'y ramènent : une seule règle, pas de
+* variante par artefact.
+*
+* @return le chemin normalisé, ou une chaîne VIDE s'il ne désigne pas un fichier
+*         local déterminable : partage réseau, chemin relatif, variable propre à
+*         un utilisateur ou inconnue
+*/
+std::wstring normaliserCheminFichier(std::wstring chemin);
 
 /*! Résout un chemin de binaire tel que le registre l'écrit.
 *

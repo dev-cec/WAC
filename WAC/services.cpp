@@ -8,28 +8,15 @@ namespace {
  *  fichiers de ressources des fournisseurs d'evenements (cf. event_messages.cpp).
  */
 
-/*! MD5 d'un fichier désigné par la ruche, chaîne vide si indisponible.
+/*! Empreintes d'un fichier désigné par la ruche.
 *
-* MÉMORISÉ PAR CHEMIN. Les services hébergés partagent tous le même binaire :
-* sur une machine Windows 11, près de 200 des 697 services pointent sur
-* `svchost.exe`. Sans mémorisation, son empreinte était recalculée autant de
-* fois — et `--md5` lit le fichier en entier à chaque calcul. Le même principe
-* est déjà appliqué à l'extraction brute (`md5ParFichier`, raw_collect.cpp).
+* Près de 200 des 697 services d'une machine Windows 11 pointent sur
+* `svchost.exe` : EmpreinteFichier ne lit chaque fichier qu'une fois pour toute
+* la collecte, quel que soit le nombre d'artefacts qui le citent.
 */
-std::wstring md5DuBinaire(const std::wstring& valeurRuche) {
-	if (!conf.md5) return L"";
-	const std::wstring chemin = cheminBinaire(valeurRuche);
-	if (chemin.empty()) return L"";
-
-	static std::map<std::wstring, std::wstring> cache;
-	const std::wstring cle = enMinuscules(chemin);   // NTFS ignore la casse
-	const auto it = cache.find(cle);
-	if (it != cache.end()) return it->second;
-
-	log(3, L"🔈fileToHash " + chemin);
-	const std::wstring empreinte = QuickDigest5::fileToHash(wstring_to_string(chemin).c_str());
-	cache.emplace(cle, empreinte);
-	return empreinte;
+EmpreinteBinaire empreinteDuBinaire(const std::wstring& valeurRuche) {
+	if (!conf.binary || valeurRuche.empty()) return EmpreinteBinaire();
+	return EmpreinteFichier(cheminBinaire(valeurRuche));
 }
 
 /*! Relève l'état courant de tous les services en UNE énumération.
@@ -132,14 +119,14 @@ Json ServiceStruct::toJson() const {
 	   une lecture manquee — il n'est donc pas emis. */
 	if (!serviceOwner.empty())  o.add(L"Owner",  Json::str(serviceOwner));
 	if (!serviceBinary.empty()) o.add(L"Binary", Json::str(serviceBinary));   // valeur BRUTE
-	if (!serviceMd5.empty()) o.add(L"Md5", Json::str(serviceMd5));
+	ajouterEmpreintes(o, serviceEmpreinte);
 
 	/* Pour un service hébergé dans svchost.exe, `Binary` ne nomme que svchost :
 	   la DLL est le code réellement exécuté. Émise seulement si elle existe,
 	   pour que sa présence signale un service hébergé. */
 	if (!serviceDll.empty()) {
 		o.add(L"ServiceDll", Json::str(serviceDll));
-		if (!serviceDllMd5.empty()) o.add(L"ServiceDllMd5", Json::str(serviceDllMd5));
+		ajouterEmpreintes(o, serviceDllEmpreinte, L"ServiceDll");
 	}
 	// Persistance possible : commande relancée quand le service échoue.
 	if (!serviceFailureCommand.empty())
@@ -272,8 +259,8 @@ HRESULT Services::getData() {
 		// ServiceDll : le code réellement chargé pour un service hébergé.
 		getRegSzValue(hService, L"Parameters", L"ServiceDll", &s.serviceDll);
 
-		s.serviceMd5    = md5DuBinaire(s.serviceBinary);
-		s.serviceDllMd5 = md5DuBinaire(s.serviceDll);
+		s.serviceEmpreinte    = empreinteDuBinaire(s.serviceBinary);
+		s.serviceDllEmpreinte = empreinteDuBinaire(s.serviceDll);
 
 		// Appariement avec l'état courant, insensible à la casse.
 		if (etatsDisponibles) {

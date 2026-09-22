@@ -24,6 +24,7 @@
  *  est analysé par `idList.h`.
  */
 
+#include "binaires.h"
 #include <iostream>
 #include <cstdio>
 #include <windows.h>
@@ -53,7 +54,7 @@ public:
 	std::wstring path = L"";//!< chemin d'accès à l'objet dans le snapshot
 	std::wstring md5Source=L""; //!< hash md5 du fichier source
 	std::wstring target = L"";//!< chemin pour accéder à l'objet d'origine
-	std::wstring md5Target=L""; //!< hash md5 du fichier target
+	EmpreinteBinaire empreinteCible; //!< empreintes du fichier cible (--binary), lu en brut
 	std::wstring description = L""; //!< description du recentDoc
 	std::wstring relativePath = L"";//!< chemin relatif d'accès au fichier d'origine
 	std::wstring workingDirectory = L"";//!< repertoire contenant le fichier d'origine

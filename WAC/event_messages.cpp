@@ -76,6 +76,15 @@ std::wstring extraireRessource(const std::wstring& cheminAbsolu) {
 	const std::wstring volume  = volumeDuChemin(cheminAbsolu);
 	const std::wstring relatif = cheminRelatifAuVolume(cheminAbsolu);
 	const std::wstring cible   = cheminSous(dossierConsigne(), cheminAbsolu);
+	/* Déjà en consigne — prélevé comme binaire cité par un artefact (--binary), et
+	   pas encore recopié vers le travail : on ne le réextrait pas, ce qui
+	   réécrirait une pièce scellée et la déclarerait deux fois. */
+	if (std::filesystem::exists(cible, ec)) {
+		if (!estPeValide(cible)) return std::wstring();
+		std::filesystem::create_directories(std::filesystem::path(travail).parent_path(), ec);
+		std::filesystem::copy_file(cible, travail, std::filesystem::copy_options::skip_existing, ec);
+		return ec ? std::wstring() : travail;
+	}
 	std::filesystem::create_directories(std::filesystem::path(cible).parent_path(), ec);
 
 	std::vector<HRESULT> res;

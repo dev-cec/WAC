@@ -153,12 +153,12 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:aefa5964c797c8c8b91e514b103c35879" id="r_aefa5964c797c8c8b91e514b103c35879"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structServiceStruct.html#aefa5964c797c8c8b91e514b103c35879">dependances</a></td></tr>
 <tr class="memdesc:aefa5964c797c8c8b91e514b103c35879"><td class="mdescLeft">&#160;</td><td class="mdescRight">DependOnService.  <br /></td></tr>
 <tr class="separator:aefa5964c797c8c8b91e514b103c35879"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afb49b276f2eb3088bb96aa3909ecd061" id="r_afb49b276f2eb3088bb96aa3909ecd061"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structServiceStruct.html#afb49b276f2eb3088bb96aa3909ecd061">serviceMd5</a></td></tr>
-<tr class="memdesc:afb49b276f2eb3088bb96aa3909ecd061"><td class="mdescLeft">&#160;</td><td class="mdescRight">MD5 du binaire, si &ndash;md5.  <br /></td></tr>
-<tr class="separator:afb49b276f2eb3088bb96aa3909ecd061"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9a54c5c0ea42e6b328123ec62447348e" id="r_a9a54c5c0ea42e6b328123ec62447348e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structServiceStruct.html#a9a54c5c0ea42e6b328123ec62447348e">serviceDllMd5</a></td></tr>
-<tr class="memdesc:a9a54c5c0ea42e6b328123ec62447348e"><td class="mdescLeft">&#160;</td><td class="mdescRight">MD5 de la ServiceDll, si &ndash;md5.  <br /></td></tr>
-<tr class="separator:a9a54c5c0ea42e6b328123ec62447348e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a297a7a031c763baeb608672eb6f9eeda" id="r_a297a7a031c763baeb608672eb6f9eeda"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structEmpreinteBinaire.html">EmpreinteBinaire</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structServiceStruct.html#a297a7a031c763baeb608672eb6f9eeda">serviceEmpreinte</a></td></tr>
+<tr class="memdesc:a297a7a031c763baeb608672eb6f9eeda"><td class="mdescLeft">&#160;</td><td class="mdescRight">empreintes du binaire, si &ndash;binary  <br /></td></tr>
+<tr class="separator:a297a7a031c763baeb608672eb6f9eeda"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abeda58043e7024e341371b01923e94e9" id="r_abeda58043e7024e341371b01923e94e9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structEmpreinteBinaire.html">EmpreinteBinaire</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structServiceStruct.html#abeda58043e7024e341371b01923e94e9">serviceDllEmpreinte</a></td></tr>
+<tr class="memdesc:abeda58043e7024e341371b01923e94e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">empreintes de la ServiceDll, si &ndash;binary  <br /></td></tr>
+<tr class="separator:abeda58043e7024e341371b01923e94e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3bcd55f0cf858b1da7d0576c78e19534" id="r_a3bcd55f0cf858b1da7d0576c78e19534"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structServiceStruct.html#a3bcd55f0cf858b1da7d0576c78e19534">lastWriteTimeUtc</a> = { 0, 0 }</td></tr>
 <tr class="memdesc:a3bcd55f0cf858b1da7d0576c78e19534"><td class="mdescLeft">&#160;</td><td class="mdescRight">dernière écriture de la clé (UTC)  <br /></td></tr>
 <tr class="separator:a3bcd55f0cf858b1da7d0576c78e19534"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -354,19 +354,35 @@ Attributs publics</h2></td></tr>
 
 </div>
 </div>
-<a id="a9a54c5c0ea42e6b328123ec62447348e" name="a9a54c5c0ea42e6b328123ec62447348e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9a54c5c0ea42e6b328123ec62447348e">&#9670;&#160;</a></span>serviceDllMd5</h2>
+<a id="abeda58043e7024e341371b01923e94e9" name="abeda58043e7024e341371b01923e94e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abeda58043e7024e341371b01923e94e9">&#9670;&#160;</a></span>serviceDllEmpreinte</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::wstring ServiceStruct::serviceDllMd5</td>
+          <td class="memname"><a class="el" href="structEmpreinteBinaire.html">EmpreinteBinaire</a> ServiceStruct::serviceDllEmpreinte</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>MD5 de la ServiceDll, si &ndash;md5. </p>
+<p>empreintes de la ServiceDll, si &ndash;binary </p>
+
+</div>
+</div>
+<a id="a297a7a031c763baeb608672eb6f9eeda" name="a297a7a031c763baeb608672eb6f9eeda"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a297a7a031c763baeb608672eb6f9eeda">&#9670;&#160;</a></span>serviceEmpreinte</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structEmpreinteBinaire.html">EmpreinteBinaire</a> ServiceStruct::serviceEmpreinte</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>empreintes du binaire, si &ndash;binary </p>
 
 </div>
 </div>
@@ -415,22 +431,6 @@ Attributs publics</h2></td></tr>
 </div><div class="memdoc">
 
 <p>groupe de chargement </p>
-
-</div>
-</div>
-<a id="afb49b276f2eb3088bb96aa3909ecd061" name="afb49b276f2eb3088bb96aa3909ecd061"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afb49b276f2eb3088bb96aa3909ecd061">&#9670;&#160;</a></span>serviceMd5</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::wstring ServiceStruct::serviceMd5</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>MD5 du binaire, si &ndash;md5. </p>
 
 </div>
 </div>

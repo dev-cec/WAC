@@ -10,15 +10,8 @@ AmcacheApplicationFile::AmcacheApplicationFile(ORHKEY hKey_amcache) {
 	log(3, L"🔈getRegSzValue LongPath");
 	getRegSzValue(hKey_amcache, nullptr, L"LowerCaseLongPath", &longPath);
 
-	//calcul hash avant escape
-	log(3, L"🔈replaceAll temp");
-	std::wstring wp(replaceAll(longPath, L"\"", L""));
-	log(3, L"🔈wstring_to_string p");
-	std::string p = wstring_to_string(wp); // remove " in path
-	if (conf.md5) {
-		log(3, L"🔈fileToHash " + longPath);
-		md5 = QuickDigest5::fileToHash(p); // calcul hash
-	}
+	// Empreinte sur le chemin normalisé (guillemets, casse), lecture brute.
+	empreinte = EmpreinteFichier(longPath);
 
 	log(3, L"🔈replaceAll LongPath");
 	log(3, L"🔈getRegSzValue Version");
@@ -48,7 +41,7 @@ Json AmcacheApplicationFile::toJson() {
 	o.add(L"Name",          Json::str(name));
 	o.add(L"Publisher",     Json::str(publisher));
 	o.add(L"LongPath",      Json::str(longPath));      // chemin brut
-	if (!md5.empty()) o.add(L"Md5", Json::str(md5));
+	ajouterEmpreintes(o, empreinte);
 	o.add(L"Version",       Json::str(version));
 	o.add(L"LinkDate",      Json::str(linkDate));
 	o.add(L"LinkDateUtc",   Json::str(linkDateUtc));

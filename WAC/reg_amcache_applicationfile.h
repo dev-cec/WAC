@@ -11,6 +11,7 @@
 #include "tools.h"
 #include "usb.h"
 #include "quickdigest5.h"
+#include "binaires.h"
 
 
 struct AmcacheApplicationFile {
@@ -18,7 +19,7 @@ public:
 	std::wstring name = L""; //!< nom de l’exécutable
 	std::wstring publisher = L"";//!< nom de la compagnie
 	std::wstring longPath = L""; //!< chemin d'accès  à l’exécutable
-	std::wstring md5 = L""; //!< md5 de l’exécutable
+	EmpreinteBinaire empreinte; //!< empreintes de l’exécutable (--binary)
 	std::wstring version = L"";//!< version de l’exécutable
 	std::wstring linkDate = L"";//!< date de création de l'AMCACHE APPLICATION FILE
 	std::wstring linkDateUtc = L"";//!< date de création de l'AMCACHE APPLICATION FILE au format UTC

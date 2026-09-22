@@ -4,7 +4,7 @@ Json Shimcache::toJson() {
 	log(3, L"🔈Shimcache toJson");
 	Json o = Json::obj();
 	o.add(L"Path",                Json::str(path));      // chemin brut
-	if (!md5.empty()) o.add(L"Md5", Json::str(md5));
+	ajouterEmpreintes(o, empreinte);
 	o.add(L"LastModification",    Json::str(lastModification));
 	o.add(L"LastModificationUtc", Json::str(lastModificationUtc));
 	o.add(L"Executes",            Json::boolean(executed));   // vrai booléen
@@ -51,15 +51,8 @@ HRESULT Shimcaches::getData() {
 			offset += 2;
 			shimcache.path = std::wstring((LPWSTR)(donnees + offset), (LPWSTR)(donnees + offset) + name_length / sizeof(wchar_t)).data();
 
-			//calcul hash avant escape
-			log(3, L"🔈replaceAll temp");
-			std::wstring wp(replaceAll(shimcache.path, L"\"", L""));
-			log(3, L"🔈wstring_to_string p");
-			std::string p = wstring_to_string(wp); // remove " in path
-			if (conf.md5) {
-				log(3, L"🔈fileToHash " + shimcache.path);
-				shimcache.md5 = QuickDigest5::fileToHash(p); // calcul hash
-			}
+			// Empreinte sur le chemin normalisé (guillemets, \??\), lecture brute.
+			shimcache.empreinte = EmpreinteFichier(shimcache.path);
 			shimcache.path = replaceAll(shimcache.path, L"\t", L" "); // replace tab by space. seen in values
 			offset += name_length;
 			FILETIME filetime = *reinterpret_cast<FILETIME*>(donnees + offset);

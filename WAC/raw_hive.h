@@ -18,6 +18,7 @@
 #include <vector>
 #include <utility>
 #include <cstdint>
+#include <memory>
 
 /*! Active des messages de diagnostic sur stderr (par défaut : silencieux). */
 void RawHiveSetVerbose(bool on);
@@ -107,6 +108,39 @@ HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
                         const std::vector<std::pair<std::wstring, std::wstring>>& items,
                         std::vector<HRESULT>* perItem = nullptr,
                         std::vector<RawHiveExtrait>* releve = nullptr);
+
+/*! Lecteur brut PERSISTANT, pour lire des milliers de fichiers épars.
+ *
+ *  `ExtractFilesRaw` ouvre le volume, amorce la $MFT et reparcourt chaque
+ *  répertoire depuis la racine à chaque appel. Pour les binaires cités par les
+ *  artefacts (plusieurs milliers, dispersés), ce serait autant d'ouvertures de
+ *  volume — la seule opération de WAC qu'un audit d'accès aux objets peut
+ *  journaliser — et autant de relectures des 4 659 entrées de System32.
+ *  Le LecteurBrut garde chaque volume ouvert UNE fois pour toute sa durée de
+ *  vie, et met en cache l'index des répertoires traversés.
+ */
+class LecteurBrut {
+public:
+    LecteurBrut();
+    ~LecteurBrut();
+    LecteurBrut(const LecteurBrut&) = delete;
+    LecteurBrut& operator=(const LecteurBrut&) = delete;
+
+    /*! Lit un fichier par son chemin absolu (« X:\\… »).
+     *  @param sortie fichier à écrire ; VIDE pour ne calculer que les empreintes
+     *         — rien n'est alors écrit nulle part
+     *  @param ligne  reçoit le relevé, empreintes et horodatages compris
+     *  @return le résultat, également porté par `ligne.resultat` */
+    HRESULT lire(const std::wstring& cheminAbsolu, const std::wstring& sortie,
+                 RawHiveExtrait& ligne);
+
+    //! Nombre de volumes effectivement ouverts (un handle chacun).
+    unsigned volumesOuverts() const;
+
+private:
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
+};
 
 /*! Un attribut d'un enregistrement $MFT, tel qu'il est écrit sur le disque. */
 struct RawAttribut {

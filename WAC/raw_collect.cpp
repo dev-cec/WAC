@@ -58,36 +58,13 @@ void rapporterProgression(const wchar_t* item, unsigned long long fait,
  *                       relatifs au volume systeme ; les journaux .LOG1 et
  *                       .LOG2 sont ajoutes d'office.
  *  @param etiquette     ce que cette passe extrait, pour le journal d'audit.
- *  @param verifierLieu  vrai pour la PREMIERE passe seulement : l'emplacement de
- *                       collecte se verifie avant la premiere ecriture, et une
- *                       seule fois — au second appel le repertoire de travail
- *                       est legitimement peuple par la premiere passe, et
- *                       `ConsigneVerifierEmplacement` le refuserait.
  */
 HRESULT extraireLotDeRuches(const std::vector<std::wstring>& cheminsRuches,
-                            const std::wstring& etiquette,
-                            bool verifierLieu) {
+                            const std::wstring& etiquette) {
 	conf.mountpoint = dossierTravail();
 
-	/*  EMPLACEMENT DE COLLECTE, verifie AVANT la premiere ecriture. Deux refus,
-	    tous deux preferables a une collecte qui s'abime en cours : un repertoire
-	    de travail deja peuple ferait analyser une collecte anterieure, et un
-	    support trop petit donnerait des copies tronquees. L'estimation est
-	    volontairement grossiere — les ruches d'une installation ordinaire, plus
-	    les journaux d'evenements quand ils sont demandes ; elle n'a pas a etre
-	    juste, seulement a ecarter un support manifestement insuffisant. */
-	if (verifierLieu) {
-		const unsigned long long besoin = conf._events
-		                                ? 400ULL * 1024 * 1024   // ruches + journaux
-		                                : 250ULL * 1024 * 1024;  // ruches seules
-		const HRESULT hrLieu = ConsigneVerifierEmplacement(besoin);
-		auditRecord(L"Verification de l'emplacement de collecte ("
-		            + std::to_wstring(ConsigneEspaceLibre() / 1024 / 1024)
-		            + L" Mio libres)",
-		            string_to_wstring(conf._outputDir),
-		            hrLieu, Footprint::ECRITURE_USB);
-		if (FAILED(hrLieu)) return hrLieu;
-	}
+	// L'emplacement de collecte est verifie par main, avant la toute premiere
+	// ecriture — qui peut etre le prelevement d'un binaire de processus.
 
 	/* EXTRACTION GROUPEE PAR VOLUME.
 	   Un seul volume etait suppose, celui de Windows : un profil situe sur un
@@ -304,8 +281,7 @@ HRESULT ExtractSystemHivesRaw() {
 	};
 	return extraireLotDeRuches(
 		ruches,
-		L"Extraction brute des ruches systeme (+ journaux .LOG1/.LOG2)",
-		true);
+		L"Extraction brute des ruches systeme (+ journaux .LOG1/.LOG2)");
 }
 
 HRESULT ExtractUserHivesRaw() {
@@ -331,8 +307,7 @@ HRESULT ExtractUserHivesRaw() {
 	}
 	return extraireLotDeRuches(
 		ruches,
-		L"Extraction brute des ruches par utilisateur (+ journaux .LOG1/.LOG2)",
-		false);
+		L"Extraction brute des ruches par utilisateur (+ journaux .LOG1/.LOG2)");
 }
 
 HRESULT ExtractFileArtefactsRaw() {

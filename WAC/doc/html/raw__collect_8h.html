@@ -155,7 +155,6 @@ Fonctions</h2></td></tr>
 <p>Extrait les ruches de la MACHINE (+ journaux .LOG1/.LOG2) vers <code>_outputDir</code>\consigne, en fait la copie de travail et la rend exploitable par offreg.</p>
 <p>Les journaux de transaction sont extraits car ils sont des artefacts en eux-mêmes, et documentent les modifications en attente que la copie à chaud ne contient pas.</p>
 <p>Une copie brute d'une ruche d'un système vivant est toujours « dirty » et refusée par offreg : chaque ruche passe donc par un rejeu des journaux, puis par <a class="el" href="hive__recover_8cpp.html#abfdcef62f94d212392944c4002628be4">MakeHiveLoadable()</a> en recours (cf. <a class="el" href="hive__recover_8h.html">hive_recover.h</a>).</p>
-<p>C'est cette passe qui vérifie l'emplacement de collecte, avant toute écriture.</p>
 <dl class="section return"><dt>Renvoie</dt><dd>S_OK si tout réussit, S_FALSE si certains fichiers manquent ou si une ruche reste inexploitable, ou un code d'erreur si le volume ne peut être ouvert. </dd></dl>
 
 </div>

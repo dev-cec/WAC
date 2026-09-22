@@ -34,6 +34,7 @@ var tools_8cpp =
     [ "log", "tools_8cpp.html#aa2fb1cf5cd8710778ba5bad978bba540", null ],
     [ "luid_to_wstring", "tools_8cpp.html#aeeb4de502d09b004810269bf092a2686", null ],
     [ "multiWstring_to_vector", "tools_8cpp.html#aea71d14f067d69330a32721ca7dc457d", null ],
+    [ "normaliserCheminFichier", "tools_8cpp.html#ad55a02a26281ebb30a39940e02f3a62f", null ],
     [ "printError", "tools_8cpp.html#ad857742196348d0e4b3ee1d9474b6638", null ],
     [ "printError", "tools_8cpp.html#a52b8e5827ab36d1d9f31335c0ec301fd", null ],
     [ "printProgress", "tools_8cpp.html#aa0ae02c4934bf605d8077d196098348d", null ],

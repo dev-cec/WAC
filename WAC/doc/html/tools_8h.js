@@ -45,6 +45,7 @@ var tools_8h =
     [ "log", "tools_8h.html#a3fd0bef5fa02565cb2da3f612cf978b9", null ],
     [ "log", "tools_8h.html#aa2fb1cf5cd8710778ba5bad978bba540", null ],
     [ "multiWstring_to_vector", "tools_8h.html#aea71d14f067d69330a32721ca7dc457d", null ],
+    [ "normaliserCheminFichier", "tools_8h.html#ad55a02a26281ebb30a39940e02f3a62f", null ],
     [ "printError", "tools_8h.html#ad857742196348d0e4b3ee1d9474b6638", null ],
     [ "printError", "tools_8h.html#a52b8e5827ab36d1d9f31335c0ec301fd", null ],
     [ "printProgress", "tools_8h.html#aa0ae02c4934bf605d8077d196098348d", null ],

@@ -116,6 +116,16 @@ running processes, open sessions, and optionally the event logs — plus the usu
 registry and file artefacts: UserAssist, MUICache, BAM, USB devices, Shellbags,
 MRU, Run keys, Shimcache, Amcache, jumplists, Prefetch and recent documents.
 
+With `--binary`, every file those artefacts point to — a process's executable, a
+service's binary and DLL, a scheduled task's command, the files a program loaded
+(Prefetch), Shimcache and Amcache entries, a shortcut's target — is fingerprinted,
+and executables, libraries, drivers and scripts are **collected**. A fingerprint
+lets a public database be queried without sending it anything, but it says
+nothing about a binary nobody knows — the one that matters to the investigation —
+and a binary left behind may be gone by the time a detection comes in. Documents
+and data files are only hashed: they are not payloads, and copying them would
+turn the collection into a copy of the user's files.
+
 One file per artefact, plus `investigation.json` (see below). The output schema
 is documented by the code itself: every field carries a doc comment explaining
 what it is and, where it matters, why it is trustworthy.
@@ -125,11 +135,13 @@ what it is and, where it matters, why it is trustworthy.
 To minimize disk traces, this standalone tool should be run **as administrator** from a USB stick using the command:
 
 ```
-usage: wac [--dump] [--events] [--md5] [--output=output] [--loglevel=2] [--debug]
+usage: wac [--dump] [--events] [--binary] [--output=output] [--loglevel=2] [--debug]
         --help or /? : show this help
         --dump : add hexa value in json files for shellbags and LNK files
         --events : extract and parse the .evtx event logs (adds ~117 MB to the collection)
-        --md5 : activate hash md5 computing for files referenced in artefacts
+        --binary : fingerprint (MD5, SHA-1, SHA-256) every file referenced in
+                   artefacts, read raw; executables, libraries, drivers and
+                   scripts are also collected into the exhibit store
         --output=[directory name] : directory name to store output files starting from current directory. By default the directory is 'output'
         --loglevel=[0] : define level of details in logfile and activate logging in wac.log
         --debug : show the raw NTFS reader trace on stderr (path resolution,
@@ -179,7 +191,7 @@ does to the machine**, operation by operation — including what it cannot avoid
 | **Sessions** (`LsaEnumerateLogonSessions`) | solicits LSASS; reads only |
 | **Event logs** (`--events`) | reads `\Windows\System32\winevt\Logs\*.evtx` through the same raw volume handle as every other artefact — **no service is solicited**, and the parsing happens on the copy. The only cost left is the size: ~117 MB written to the collection medium |
 | **Event message resolution** (`--events`) | reads the resource file of each provider that actually produced an event, through the same raw volume handle. These are operating-system binaries, not exhibits, but they go into the exhibit store with their fingerprints like everything else — which records *which build's* wording was used. ~121 MB on an ordinary installation |
-| **MD5 hashing** (`--md5`) | opens each referenced file for reading. Windows disables last-access updates by default (`NtfsDisableLastAccessUpdate`), but on a system where they are enabled, **this does update them** |
+| **Referenced files** (`--binary`) | read through the same raw volume handle, kept open for the whole phase — **no file is opened**, so no last-access timestamp is touched. The fingerprints used to come from opening each file through the API, which did update that timestamp where Windows maintains it — on the very document a shortcut proves was opened. A volume that is not NTFS (a CD-ROM, a FAT stick) cannot be read raw: its files are reported as unread, never opened another way |
 
 ### Unavoidable: the trace of running anything at all
 
@@ -310,11 +322,21 @@ Three details in this output are deliberate, and illustrate the rules above:
 ## 🚀 PERFORMANCE
 
 A collection takes about **2 minutes** with the default options, up to roughly
-**20 minutes** with `--events`, and longer still with `--md5`. The figure depends
-heavily on the hardware: USB 2 or USB 3, processor, memory, disk.
+**20 minutes** with `--events`, and longer still with `--binary`. The figure
+depends heavily on the hardware: USB 2 or USB 3, processor, memory, disk.
 
-**`--md5` can take a long time if the disk holds large files — videos, for
-instance.**
+**`--binary` is dominated by the size of what it collects.** Measured on the
+Windows 11 test VM: 6 394 files referenced by the artefacts, 4 875 read, 2 220
+executables, libraries, drivers and scripts collected — **3.8 GB**, written
+twice (exhibit store and working copy), so about 7.6 GB on the collection
+medium; the whole collection went from 70 s to 316 s on a VM backed by NVMe. On
+a USB stick, writing is the cost. The volume is very concentrated: 6 files above
+100 MB weigh 1.45 GB (38 %) — three copies of `msedge.dll` (332 MB each: Edge,
+EdgeCore, WebView2), `mrt.exe` and two `OneDriveSetup.exe`. Each file is read
+once however many artefacts cite it, and hashing a file costs no more trace than
+collecting it — only space. When space runs short (under 1 GB left, counting the
+working copies still owed), files are hashed without being copied, and the
+investigation log says how many.
 
 WAC no longer uses the Win32 API to read the event logs: Windows 11 makes that
 API dramatically slower. Everything *except* the event logs took a handful of

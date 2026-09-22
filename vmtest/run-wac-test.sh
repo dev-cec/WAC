@@ -98,7 +98,7 @@ CODE=0
 # l'autre (636 Mio constates apres une serie de runs), ce qui rend son
 # rapatriement inutilisable et masque les traces du run courant.
 $QGA run --shell "del $VMDIR\\WAC.exe.log 2>nul & echo." >/dev/null 2>&1 || true
-$QGA run --shell "cd /d $VMDIR && rmdir /s /q out 2>nul & WAC.exe --output=out --events --loglevel=2 > run.log 2>&1" || CODE=$?
+$QGA run --shell "cd /d $VMDIR && rmdir /s /q out 2>nul & WAC.exe --output=out --events --binary --loglevel=2 > run.log 2>&1" || CODE=$?
 $QGA read "$VMDIR\\run.log" "$SORTIE/run.log" >/dev/null || echo "   ⚠️ run.log non rapatrié"
 
 if [[ -f "$SORTIE/run.log" ]] && grep -qaiE 'terminate called|Unhandled exception|Exception non gérée' "$SORTIE/run.log"; then

@@ -129,10 +129,10 @@ HRESULT Process::ListProcessModules() {
 		return ERROR_INVALID_HANDLE;
 	}
 
-	if (conf.md5) {
+	if (conf.binary) {
 		//Le premier module retourne le exe path
-		log(3, L"🔈fileToHash md5Source");
-		md5 = QuickDigest5::fileToHash(wstring_to_string(me32.szExePath));
+		log(3, L"🔈EmpreinteFichier");
+		empreinte = EmpreinteFichier(me32.szExePath);
 	}
 
 	// Now walk the module list of the process,
@@ -155,7 +155,7 @@ Json Process::toJson() const {
 	// « Nom » etait la seule cle en francais de toute la sortie, au milieu de
 	// SID, Owner, ProcessId… Une seule langue pour les cles (passe de nommage).
 	o.add(L"Name",           Json::str(processName));
-	if (!md5.empty()) o.add(L"Md5", Json::str(md5));
+	ajouterEmpreintes(o, empreinte);
 	o.add(L"SID",            Json::str(processSID));
 	o.add(L"Owner",          Json::str(processSidName));
 	/* Nommage harmonise (passe de nommage) : `PID` et `PPId` coexistaient dans

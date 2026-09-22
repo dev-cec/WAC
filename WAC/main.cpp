@@ -15,6 +15,7 @@
 #include "raw_hive.h"
 #include "raw_collect.h"
 #include "consigne.h"
+#include "binaires.h"
 #include "reg_usbstors.h"
 #include "reg_mounted_devices.h"
 #include "reg_bams.h"
@@ -43,12 +44,12 @@ AppliConf conf;// variable globale pour la conf de l'application
 
 void showHelp() {
 	SetConsoleTextAttribute(conf.hConsole, 7); // blanc
-	wprintf(L"%ls%hs%ls\n", L"\nusage: ", conf.name.c_str(), L" [--debug] [--dump] [--events] [--md5] [--output=output] [--loglevel=2]");
+	wprintf(L"%ls%hs%ls\n", L"\nusage: ", conf.name.c_str(), L" [--debug] [--dump] [--events] [--binary] [--output=output] [--loglevel=2]");
 	wprintf(L"%ls\n", L"\t--help or /? : show this help ");
 	wprintf(L"%ls\n", L"\t--debug : trace the raw NTFS parser on stderr (path resolution, index blocks, data runs)");
 	wprintf(L"%ls\n", L"\t--dump : add hexa value in json files for shellbags and LNK files ");
 	wprintf(L"%ls\n", L"\t--events : extract and parse the .evtx event logs (adds ~117 MB to the collection)");
-	wprintf(L"%ls\n", L"\t--md5 : activate hash md5 computing for files referenced in artfacts");
+	wprintf(L"%ls\n", L"\t--binary : fingerprint (MD5, SHA-1, SHA-256) every file referenced in artefacts, read raw; executables, libraries, drivers and scripts are also collected into the exhibit store");
 	wprintf(L"%ls\n", L"\t--output=[directory name] : directory name to store output files starting from current directory. By default the directory is 'output'");
 	wprintf(L"%ls%hs%ls\n", L"\t--loglevel=[0] : define level of details in logfile and activate logging in ", conf.name.c_str(), L".log");
 	wprintf(L"\n");
@@ -122,7 +123,7 @@ int main(int argc, char* argv[])
 			if (arg == "--debug") conf._debug = true;
 			else if (arg == "--dump") conf._dump = true;
 			else if (arg == "--events") conf._events = true;
-			else if (arg == "--md5") conf.md5 = true;
+			else if (arg == "--binary") conf.binary = true;
 			else if (arg.substr(0, 9) == "--output=") {
 				std::string temp = std::string(arg.substr(9));
 				if (temp.length() > 0) conf._outputDir = temp;
@@ -248,6 +249,37 @@ int main(int argc, char* argv[])
 	 * Les autres collecteurs live (processes, sessions, services, users,
 	 * systemInfo) n'utilisent que des API Win32 directes.
 	 */
+
+	/************************
+	*  EMPLACEMENT DE COLLECTE, vérifié AVANT la toute première écriture
+	*************************/
+	/* Deux refus, tous deux préférables à une collecte qui s'abîme en cours : un
+	   répertoire de travail déjà peuplé ferait analyser une collecte antérieure,
+	   et un support trop petit donnerait des copies tronquées.
+	   Vérifié ICI et non plus au début de l'extraction brute : avec --binary, la
+	   première écriture est le prélèvement de l'exécutable d'un processus, dès la
+	   phase suivante. L'estimation est volontairement grossière — ruches,
+	   journaux d'événements et binaires cités quand ils sont demandés ; elle n'a
+	   pas à être juste, seulement à écarter un support manifestement
+	   insuffisant. Un manque de place en cours de prélèvement ne fait pas échouer
+	   la collecte : les binaires sont alors hachés sans être copiés. */
+	{
+		printStep(L" - Checking the collection medium : ");
+		unsigned long long besoin = 250ULL * 1024 * 1024;           // ruches
+		if (conf._events) besoin += 150ULL * 1024 * 1024;           // journaux
+		if (conf.binary)     besoin += 1024ULL * 1024 * 1024;          // binaires cités
+		const HRESULT hrLieu = ConsigneVerifierEmplacement(besoin);
+		auditRecord(L"Verification de l'emplacement de collecte ("
+		            + std::to_wstring(ConsigneEspaceLibre() / 1024 / 1024)
+		            + L" Mio libres)",
+		            string_to_wstring(conf._outputDir),
+		            hrLieu, Footprint::ECRITURE_USB);
+		if (FAILED(hrLieu)) {
+			printError(hrLieu);
+			return hrLieu;
+		}
+		printSuccess();
+	}
 
 	/************************
 	* WIN32 API
@@ -783,6 +815,35 @@ int main(int argc, char* argv[])
 	   fuseau horaire du suspect y figurait aussi comme « non relevé », la ruche
 	   SYSTEM n'étant lue qu'ensuite. Le scellement est donc la dernière opération
 	   sur la consigne, juste avant le journal d'investigation. */
+	/* BINAIRES CITÉS. Plus aucun artefact ne cite de fichier : les volumes gardés
+	   ouverts pour les lire sont fermés, et les pièces prélevées recopiées vers le
+	   travail — comme toute pièce, même non modifiée : c'est la procédure. */
+	if (conf.binary) {
+		BinairesTerminer();
+		size_t fichiers = 0, lus = 0, preleves = 0, sansPlace = 0;
+		unsigned long long octets = 0;
+		BinairesBilan(&fichiers, &lus, &preleves, &octets, &sansPlace);
+		auditRecord(L"Empreintes des fichiers cites par les artefacts ("
+		            + std::to_wstring(fichiers) + L" cite(s), " + std::to_wstring(lus)
+		            + L" lu(s), " + std::to_wstring(preleves) + L" preleve(s), "
+		            + std::to_wstring(octets / 1024 / 1024) + L" Mio"
+		            + (sansPlace ? L", " + std::to_wstring(sansPlace) + L" hache(s) sans copie faute de place" : L"")
+		            + L")",
+		            L"lecture brute NTFS ; binaires et scripts copies dans " + dossierConsigne(),
+		            ERROR_SUCCESS, Footprint::VOLUME_BRUT);
+		printStep(L" - Copying collected binaries to the working directory : ");
+		size_t copies = 0;
+		unsigned long long octetsCopies = 0;
+		const HRESULT hrCopie = ConsigneVersTravail(&copies, &octetsCopies);
+		auditRecord(L"Copie de la consigne vers le repertoire de travail ("
+		            + std::to_wstring(copies) + L" fichier(s), "
+		            + std::to_wstring(octetsCopies / 1024 / 1024) + L" Mio)",
+		            dossierConsigne() + L" -> " + dossierTravail(),
+		            hrCopie, Footprint::ECRITURE_USB);
+		if (FAILED(hrCopie)) printError(hrCopie);
+		else printSuccess();
+	}
+
 	printStep(L" - Sealing the exhibit store (manifest + SHA-256) : ");
 	log(3, L"🔈ConsigneEcrireManifeste");
 	{

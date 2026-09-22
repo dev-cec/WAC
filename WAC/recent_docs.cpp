@@ -153,9 +153,12 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t taille) {
 			log(3, L"🔈string_to_wstring target");
 			target = string_to_wstring(targetPath);
 			// Valeur BRUTE : l'echappement est centralise dans json.h.
-			if (conf.md5) {
-				log(3, L"🔈fileToHash md5Target " + string_to_wstring(targetPath));
-				md5Target = QuickDigest5::fileToHash((char*)(buffer + LinkInfo_offset + LocalPath_offset));
+			if (conf.binary) {
+				/* Lecture brute : ouvrir la cible par l'API mettait à jour sa date
+				   de dernier accès — sur le document même dont le raccourci
+				   atteste l'ouverture. */
+				log(3, L"🔈EmpreinteFichier cible " + target);
+				empreinteCible = EmpreinteFichier(target);
 			}
 			//-------------------------------------------------------------------------
 			// Common Network Relative Link info:
@@ -227,7 +230,7 @@ RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 			LPBYTE buffer = new BYTE[size];
 			file.read(reinterpret_cast<CHAR*>(buffer), size);
 			file.close();
-			if (conf.md5) {
+			if (conf.binary) {
 				log(3, L"🔈fileToHash md5Source " + _path.wstring());
 				md5Source = QuickDigest5::fileToHash(_path.string());
 			}
@@ -282,7 +285,7 @@ RecentDoc::RecentDoc(LPBYTE buffer, size_t size, std::wstring _path, std::wstrin
 
 	path_original = cheminOriginal(path);
 	log(2, L"❇️RecentDoc path " + path_original);
-	if (conf.md5) {
+	if (conf.binary) {
 		log(3, L"🔈fileToHash md5Source " + _path);
 		md5Source = QuickDigest5::fileToHash(wstring_to_string(_path));
 	}
@@ -297,7 +300,7 @@ Json RecentDoc::toJson() {
 	o.add(L"Path",              Json::str(path_original));
 	if (!md5Source.empty()) o.add(L"Md5Source", Json::str(md5Source));
 	o.add(L"Target",            Json::str(target));
-	if (!md5Target.empty()) o.add(L"Md5Target", Json::str(md5Target));
+	ajouterEmpreintes(o, empreinteCible, L"", L"Target");
 	o.add(L"SourceCreated",     Json::str(timeToIso8601Local(sourceCreated)));
 	o.add(L"SourceCreatedUtc",  Json::str(timeToIso8601Utc(sourceCreatedUtc)));
 	o.add(L"SourceModified",    Json::str(timeToIso8601Local(sourceModified)));
