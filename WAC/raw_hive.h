@@ -1,16 +1,16 @@
-/*  raw_hive.h — Extraction de fichiers par lecture brute NTFS (sans VSS).
+/*  raw_hive.h — File extraction by raw NTFS reading (no VSS).
  *
- *  Ouvre le volume en lecture seule (\\.\C:), parse le VBR + $MFT, résout un
- *  chemin via les index de répertoires, puis extrait l'attribut $DATA du fichier
- *  cible vers un fichier de sortie — SANS passer par l'ouverture de fichier du
- *  système (pas de verrou, pas de VSS, pas de symlink, aucune écriture sur la
- *  cible). Voir docs/MIGRATION-VSS-vers-lecture-brute.md.
+ *  Opens the volume read-only (\\.\C:), parses the VBR and the $MFT, resolves a
+ *  path through the directory indexes, then extracts the target file's $DATA
+ *  attribute to an output file — WITHOUT going through the system's file
+ *  opening (no lock, no VSS, no symlink, no write to the target).
  *
- *  Dépendances : Win32 (CreateFileW/ReadFile) et quickdigest5 (empreinte MD5
- *  calculée au fil de l'écriture, pour ne pas relire la copie depuis le support
- *  de collecte). Aucune bibliothèque tierce, aucun lien avec le reste de WAC :
- *  le module reste testable isolément (raw_hive_test).
- *  Privilèges : administrateur requis (accès volume brut).
+ *  Dependencies: Win32 (CreateFileW/ReadFile), and the fingerprinting and
+ *  decompression modules (quickdigest5, sha, lznt1, xpress): fingerprints are
+ *  computed while writing, so the copy is never read back from the collection
+ *  medium. No third-party library, no link with the rest of WAC: the module
+ *  stays testable on its own (raw_hive_test).
+ *  Privileges: administrator required (raw volume access).
  */
 #pragma once
 #include <windows.h>
@@ -21,104 +21,103 @@
 #include <memory>
 #include <streambuf>
 
-/*! Active des messages de diagnostic sur stderr (par défaut : silencieux). */
+/*! Enables diagnostic messages on stderr (silent by default). */
 void RawHiveSetVerbose(bool on);
 
-/*! Signature d'un rapporteur de progression.
- *  @param item  ce qui est en cours d'extraction (chemin sur le volume)
- *  @param fait  octets déjà écrits
- *  @param total octets attendus
+/*! Signature of a progress reporter.
+ *  @param item  what is being extracted (path on the volume)
+ *  @param fait  bytes already written
+ *  @param total bytes expected
  */
 using RawHiveProgressFn = void (*)(const wchar_t* item, unsigned long long fait,
                                    unsigned long long total);
 
-/*! Installe un rapporteur de progression, appelé pendant l'extraction.
+/*! Installs a progress reporter, called during extraction.
  *
- *  Passé par callback plutôt qu'en appelant directement l'affichage : ce module
- *  ne dépend que de Win32, ce qui le garde testable isolément (raw_hive_test).
- *  Passer nullptr désactive le rapport.
+ *  Passed as a callback rather than calling the display directly: this module
+ *  depends only on Win32, which keeps it testable on its own (raw_hive_test).
+ *  Passing nullptr disables reporting.
  */
 void RawHiveSetProgress(RawHiveProgressFn fn);
 
-/*! Extrait un fichier du volume par lecture brute NTFS.
- *  @param volumeLetter   lettre du volume, ex. L"C"
- *  @param filePathOnVolume chemin relatif au volume, ex.
+/*! Extracts a file from the volume by raw NTFS reading.
+ *  @param volumeLetter   volume letter, e.g. L"C"
+ *  @param filePathOnVolume path relative to the volume, e.g.
  *         L"\\Windows\\System32\\config\\SYSTEM"
- *  @param outFile        chemin de sortie local (écrasé s'il existe)
- *  @return ERROR_SUCCESS, ou un code d'erreur Win32/applicatif
+ *  @param outFile        local output path (overwritten if it exists)
+ *  @return ERROR_SUCCESS, or a Win32/application error code
  */
 HRESULT ExtractFileRaw(const std::wstring& volumeLetter,
                        const std::wstring& filePathOnVolume,
                        const std::wstring& outFile);
 
-/*! Ce qui est relevé d'un fichier au moment où il est extrait.
+/*! What is recorded about a file when it is extracted.
  *
- *  Tout est recueilli PENDANT l'extraction, sur les octets qui transitent déjà
- *  en mémoire : relire la copie depuis le support de collecte coûtait près de la
- *  moitié du temps d'extraction sur clé USB, et une relecture ne prouve pas ce
- *  qui a été lu du volume — seulement ce qui se trouve dans la copie.
+ *  Everything is gathered DURING extraction, on the bytes already passing
+ *  through memory: reading the copy back from the collection medium took
+ *  almost half the extraction time on a USB stick, and a re-read does not
+ *  prove what was read from the volume — only what is in the copy.
  *
- *  TROIS EMPREINTES et non une. MD5 ne suffit plus à identifier une pièce sans
- *  discussion (collisions produites à volonté depuis 2008), SHA-1 non plus
- *  depuis 2017 ; SHA-256 reste incontesté. Les trois ensemble ferment le débat.
+ *  THREE FINGERPRINTS, not one. MD5 is no longer enough to identify an exhibit
+ *  beyond dispute (collisions producible at will since 2008), nor is SHA-1
+ *  since 2017; SHA-256 remains undisputed. The three together settle it.
  *
- *  Les horodatages et le numéro d'enregistrement $MFT décrivent le fichier
- *  SOURCE : ils identifient la pièce sur le volume indépendamment de son nom, et
- *  attestent que la lecture brute n'a modifié aucune date de la cible.
+ *  The timestamps and the $MFT record number describe the SOURCE file: they
+ *  identify the exhibit on the volume independently of its name, and attest
+ *  that the raw reading changed no date on the target.
  */
 struct RawHiveEmpreintes {
-    std::wstring md5;            //!< empreinte MD5, hexadécimal majuscule
+    std::wstring md5;            //!< MD5 fingerprint, uppercase hexadecimal
     std::wstring sha1;           //!< empreinte SHA-1
     std::wstring sha256;         //!< empreinte SHA-256
-    uint64_t octets = 0;         //!< taille réellement extraite
-    uint64_t tailleAnnoncee = 0; //!< taille déclarée par l'attribut $DATA
-    /*! Longueur des données valides de l'attribut non résident. Au-delà, le
-     *  contenu est nul par définition et n'est PAS lu sur le disque. Égale à
-     *  `tailleAnnoncee` pour un fichier ordinaire ; inférieure pour un fichier
-     *  préalloué (journaux d'événements). */
+    uint64_t octets = 0;         //!< size actually extracted
+    uint64_t tailleAnnoncee = 0; //!< size declared by the $DATA attribute
+    /*! Valid data length of the non-resident attribute. Beyond it, the content is
+     *  zero by definition and is NOT read from the disk. Equal to `tailleAnnoncee`
+     *  for an ordinary file; smaller for a preallocated file (event logs). */
     uint64_t tailleValide = 0;
-    uint64_t mftEntry = 0;       //!< numéro d'enregistrement dans la $MFT
-    bool     resident = false;   //!< donnée contenue dans l'enregistrement $MFT
-    // $STANDARD_INFORMATION du fichier source, en FILETIME (UTC, 0 si absent).
-    uint64_t creeUtc = 0;        //!< date de création
-    uint64_t modifieUtc = 0;     //!< dernière modification du contenu
-    uint64_t mftModifieUtc = 0;  //!< dernière modification de l'enregistrement
-    uint64_t accedeUtc = 0;      //!< dernier accès
-    uint64_t extraitUtc = 0;     //!< instant de l'extraction de CETTE pièce (FILETIME UTC)
+    uint64_t mftEntry = 0;       //!< record number in the $MFT
+    bool     resident = false;   //!< data held inside the $MFT record
+    // $STANDARD_INFORMATION of the source file, as FILETIME (UTC, 0 if absent).
+    uint64_t creeUtc = 0;        //!< creation date
+    uint64_t modifieUtc = 0;     //!< last content change
+    uint64_t mftModifieUtc = 0;  //!< last record change
+    uint64_t accedeUtc = 0;      //!< last access
+    uint64_t extraitUtc = 0;     //!< when THIS exhibit was extracted (FILETIME UTC)
 };
 
-/*! Un fichier extrait, tel qu'il sera consigné au manifeste. */
+/*! An extracted file, as it will be recorded in the manifest. */
 struct RawHiveExtrait {
-    std::wstring cheminVolume;   //!< chemin sur le volume source
-    std::wstring cheminSortie;   //!< fichier écrit sur le support de collecte
+    std::wstring cheminVolume;   //!< path on the source volume
+    std::wstring cheminSortie;   //!< file written to the collection medium
     HRESULT      resultat = E_FAIL;   //!< issue de l'extraction
-    RawHiveEmpreintes empreintes;     //!< vide si l'extraction a échoué
+    RawHiveEmpreintes empreintes;     //!< empty if the extraction failed
 };
 
-/*! Extrait plusieurs fichiers en UNE seule ouverture de volume (efficace).
- *  @param volumeLetter lettre du volume a lire, sans les deux-points (ex. L"C")
- *  @param items  paires {chemin sur volume, fichier de sortie}
- *  @param perItem (optionnel) reçoit le HRESULT de chaque item, dans l'ordre
- *  @param releve (optionnel) reçoit un relevé par item, empreintes comprises.
- *         C'est la source du manifeste de consigne : sans lui, une pièce est
- *         copiée sans rien qui l'identifie.
- *  @return S_OK si tout réussit, S_FALSE si au moins un item échoue,
- *          ou un code d'erreur si l'ouverture du volume échoue.
-*/
+/*! Extracts several files with a SINGLE opening of the volume (efficient).
+ *  @param volumeLetter letter of the volume to read, without the colon (e.g. L"C")
+ *  @param items  pairs {path on the volume, output file}
+ *  @param perItem (optional) receives the HRESULT of each item, in order
+ *  @param releve (optional) receives a record per item, fingerprints included.
+ *         It is the source of the exhibit store manifest: without it, an
+ *         exhibit is copied with nothing to identify it.
+ *  @return S_OK if everything succeeds, S_FALSE if at least one item fails,
+ *          or an error code if the volume cannot be opened.
+ */
 HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
                         const std::vector<std::pair<std::wstring, std::wstring>>& items,
                         std::vector<HRESULT>* perItem = nullptr,
                         std::vector<RawHiveExtrait>* releve = nullptr);
 
-/*! Lecteur brut PERSISTANT, pour lire des milliers de fichiers épars.
+/*! PERSISTENT raw reader, to read thousands of scattered files.
  *
- *  `ExtractFilesRaw` ouvre le volume, amorce la $MFT et reparcourt chaque
- *  répertoire depuis la racine à chaque appel. Pour les binaires cités par les
- *  artefacts (plusieurs milliers, dispersés), ce serait autant d'ouvertures de
- *  volume — la seule opération de WAC qu'un audit d'accès aux objets peut
- *  journaliser — et autant de relectures des 4 659 entrées de System32.
- *  Le LecteurBrut garde chaque volume ouvert UNE fois pour toute sa durée de
- *  vie, et met en cache l'index des répertoires traversés.
+ *  `ExtractFilesRaw` opens the volume, bootstraps the $MFT and walks every
+ *  directory from the root again on each call. For the binaries cited by the
+ *  artefacts (several thousand, scattered), that would mean as many volume
+ *  openings — the only WAC operation object-access auditing can log — and as
+ *  many re-reads of System32's 4,659 entries.
+ *  The LecteurBrut keeps each volume open ONCE for its whole lifetime, and
+ *  caches the index of the directories it walks.
  */
 struct RawDirEntry;
 
@@ -129,17 +128,17 @@ public:
     LecteurBrut(const LecteurBrut&) = delete;
     LecteurBrut& operator=(const LecteurBrut&) = delete;
 
-    /*! Lit un fichier par son chemin absolu (« X:\\… »).
-     *  @param sortie fichier à écrire ; VIDE pour ne calculer que les empreintes
-     *         — rien n'est alors écrit nulle part
-     *  @param observateur si `sortie` est vide, reçoit le contenu au fil de la
-     *         lecture (analyse d'un PE, lecture d'un catalogue en mémoire)
-     *  @param ligne  reçoit le relevé, empreintes et horodatages compris
-     *  @return le résultat, également porté par `ligne.resultat` */
+    /*! Reads a file by its absolute path ("X:\\…").
+     *  @param sortie file to write; EMPTY to compute the fingerprints only —
+     *         nothing is then written anywhere
+     *  @param observateur if `sortie` is empty, receives the content as it is
+     *         read (PE analysis, reading a catalog into memory)
+     *  @param ligne  receives the record, fingerprints and timestamps included
+     *  @return the result, also carried by `ligne.resultat` */
     HRESULT lire(const std::wstring& cheminAbsolu, const std::wstring& sortie,
                  RawHiveExtrait& ligne, std::streambuf* observateur = nullptr);
 
-    /*! Énumère un répertoire par son chemin absolu, sur le volume déjà ouvert. */
+    /*! Lists a directory by its absolute path, on the volume already open. */
     HRESULT lister(const std::wstring& dossierAbsolu, std::vector<RawDirEntry>& entrees);
 
     //! Nombre de volumes effectivement ouverts (un handle chacun).
@@ -150,81 +149,80 @@ private:
     std::unique_ptr<Impl> impl_;
 };
 
-/*! Un attribut d'un enregistrement $MFT, tel qu'il est écrit sur le disque. */
+/*! An attribute of a $MFT record, as written on the disk. */
 struct RawAttribut {
     uint32_t type = 0;          //!< 0x10 $STANDARD_INFORMATION, 0x80 $DATA, 0xC0 $REPARSE_POINT…
-    std::wstring nom;           //!< nom de l'attribut, vide pour l'attribut sans nom
-    bool     resident = true;   //!< contenu dans l'enregistrement
-    uint64_t tailleReelle = 0;  //!< taille des données
-    /*! Non résident seulement : longueur des données VALIDES (« valid data
-     *  length »). Au-delà, NTFS rend des zéros, quel que soit le contenu des
-     *  grappes — qui peuvent porter les restes d'anciens fichiers. */
+    std::wstring nom;           //!< attribute name, empty for the unnamed attribute
+    bool     resident = true;   //!< held inside the record
+    uint64_t tailleReelle = 0;  //!< data size
+    /*! Non-resident only: VALID data length. Beyond it, NTFS returns zeros,
+     *  whatever the clusters hold — they may carry remnants of former files. */
     uint64_t tailleInitialisee = 0;
-    uint16_t drapeaux = 0;      //!< 0x0001 compressé, 0x4000 chiffré, 0x8000 creux
-    uint32_t tagReparse = 0;    //!< pour 0xC0 : l'étiquette du point de reparse
-    std::vector<uint8_t> apercu; //!< premiers octets du contenu, si résident
+    uint16_t drapeaux = 0;      //!< 0x0001 compressed, 0x4000 encrypted, 0x8000 sparse
+    uint32_t tagReparse = 0;    //!< for 0xC0: the reparse point's tag
+    std::vector<uint8_t> apercu; //!< first bytes of the content, if resident
 };
 
-/*! Énumère les attributs d'un fichier, tels qu'ils figurent dans la $MFT.
+/*! Lists a file's attributes, as they appear in the $MFT.
  *
- *  POURQUOI CETTE FONCTION EXISTE. Ce que l'API de Windows montre d'un fichier
- *  et ce que le disque contient peuvent différer radicalement : un binaire
- *  « Compact OS » se présente comme un fichier ordinaire — attributs normaux,
- *  un seul flux — alors qu'il porte en réalité un point de reparse, un `$DATA`
- *  creux et un flux nommé qui contient tout. Le filtre du système masque cette
- *  structure à toute interrogation classique. Sans un regard direct sur la
- *  $MFT, un fichier extrait entièrement à zéro reste inexplicable.
+ *  WHY THIS FUNCTION EXISTS. What the Windows API shows of a file and what the
+ *  disk holds can differ radically: a "Compact OS" binary looks like an
+ *  ordinary file — normal attributes, a single stream — whereas it actually
+ *  carries a reparse point, a sparse `$DATA` and a named stream holding
+ *  everything. The system's filter hides this structure from any ordinary
+ *  query. Without a direct look at the $MFT, a file extracted entirely as zeros
+ *  remains unexplainable.
  *
- *  @param volumeLetter lettre du volume, ex. L"C"
- *  @param cheminSurVolume chemin du fichier sur ce volume
- *  @param out reçoit les attributs trouvés (vidé au préalable)
- *  @return ERROR_SUCCESS, ou un code d'erreur
+ *  @param volumeLetter volume letter, e.g. L"C"
+ *  @param cheminSurVolume path of the file on that volume
+ *  @param out receives the attributes found (cleared first)
+ *  @return ERROR_SUCCESS, or an error code
  */
 HRESULT ListAttributesRaw(const std::wstring& volumeLetter,
                           const std::wstring& cheminSurVolume,
                           std::vector<RawAttribut>& out);
 
-/*! Une entrée de répertoire lue dans l'index NTFS. */
+/*! A directory entry read from the NTFS index. */
 struct RawDirEntry {
-    std::wstring name;          //!< nom du fichier ou du répertoire (sans chemin)
-    uint64_t mftIndex = 0;      //!< index de son enregistrement dans la $MFT
-    uint64_t size = 0;          //!< taille réelle en octets (0 pour un répertoire)
-    bool isDirectory = false;   //!< vrai si l'entrée est un répertoire
+    std::wstring name;          //!< name of the file or directory (without a path)
+    uint64_t mftIndex = 0;      //!< index of its record in the $MFT
+    uint64_t size = 0;          //!< real size in bytes (0 for a directory)
+    bool isDirectory = false;   //!< true if the entry is a directory
 };
 
-/*! Énumère le contenu d'un répertoire par lecture brute NTFS.
- *  Les noms courts 8.3 sont écartés : NTFS enregistre souvent deux entrées pour
- *  un même fichier (espace de noms DOS et Win32), ce qui produirait des doublons.
- *  @param volumeLetter lettre du volume, ex. L"C"
- *  @param dirPathOnVolume chemin du répertoire, ex. L"\\Windows\\Prefetch"
- *  @param out reçoit les entrées trouvées (vidé au préalable)
- *  @return ERROR_SUCCESS, ou un code d'erreur Win32/applicatif
+/*! Lists a directory's content by raw NTFS reading.
+ *  8.3 short names are discarded: NTFS often records two entries for one file
+ *  (DOS and Win32 namespaces), which would produce duplicates.
+ *  @param volumeLetter volume letter, e.g. L"C"
+ *  @param dirPathOnVolume path of the directory, e.g. L"\\Windows\\Prefetch"
+ *  @param out receives the entries found (cleared first)
+ *  @return ERROR_SUCCESS, or a Win32/application error code
  */
 HRESULT ListDirectoryRaw(const std::wstring& volumeLetter,
                          const std::wstring& dirPathOnVolume,
                          std::vector<RawDirEntry>& out);
 
-/*! Extrait les fichiers d'un répertoire par lecture brute NTFS.
+/*! Extracts the files of a directory by raw NTFS reading.
  *
- *  Un répertoire absent n'est PAS une erreur : c'est le cas nominal en collecte
- *  (tous les profils n'ont pas tous les dossiers). Il rend alors 0 fichier.
+ *  A missing directory is NOT an error: it is the nominal case during a
+ *  collection (not every profile has every folder). It then yields 0 files.
  *
- *  @param volumeLetter lettre du volume, ex. L"C"
- *  @param dirPathOnVolume chemin du répertoire sur le volume
- *  @param outDir répertoire de sortie local (créé si absent)
- *  @param extensions extensions à retenir, point compris et casse indifférente
- *         (ex. { L".pf" }) ; liste vide = tous les fichiers
- *  @param extracted (optionnel) reçoit le nombre de fichiers effectivement extraits
- *  @param diagnostic (optionnel) reçoit un état lisible de l'énumération :
- *         « absent », « vide », « N entrée(s), M retenue(s) ». Sans lui, un
- *         décompte à 0 ne dit pas si le répertoire manque, s'il est vide, ou si
- *         le filtre d'extension a tout écarté — trois causes très différentes.
- *  @param releve (optionnel) reçoit un relevé par fichier, empreintes comprises,
- *         y compris pour les fichiers dont l'extraction a échoué : c'est la
- *         source du manifeste de consigne
- *  @return ERROR_SUCCESS si le répertoire a pu être énuméré (même vide),
- *          S_FALSE si au moins un fichier n'a pas pu être extrait,
- *          un code d'erreur si le volume est inaccessible
+ *  @param volumeLetter volume letter, e.g. L"C"
+ *  @param dirPathOnVolume path of the directory on the volume
+ *  @param outDir local output directory (created if missing)
+ *  @param extensions extensions to keep, dot included, case-insensitive
+ *         (e.g. { L".pf" }); empty list = every file
+ *  @param extracted (optional) receives the number of files actually extracted
+ *  @param diagnostic (optional) receives a readable state of the listing:
+ *         "absent", "empty", "N entries, M kept". Without it, a count of 0 does
+ *         not say whether the directory is missing, empty, or whether the
+ *         extension filter discarded everything — three very different causes.
+ *  @param releve (optional) receives a record per file, fingerprints included,
+ *         also for files whose extraction failed: it is the source of the
+ *         exhibit store manifest
+ *  @return ERROR_SUCCESS if the directory could be listed (even empty),
+ *          S_FALSE if at least one file could not be extracted,
+ *          an error code if the volume is inaccessible
  */
 HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
                             const std::wstring& dirPathOnVolume,
@@ -234,25 +232,24 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
                             std::wstring* diagnostic = nullptr,
                             std::vector<RawHiveExtrait>* releve = nullptr);
 
-/*! Comme ExtractDirectoryRaw, mais descend dans les sous-répertoires.
+/*! Like ExtractDirectoryRaw, but descends into subdirectories.
  *
- *  Nécessaire pour `\\Windows\\System32\\Tasks\`, qui est une arborescence : les
- *  tâches planifiées y sont rangées par dossier (Microsoft\\Windows\...), et le
- *  chemin relatif fait partie de l'identité de la tâche. L'arborescence est
- *  reproduite à l'identique dans `outDir`.
+ *  Needed for `\\Windows\\System32\\Tasks\`, which is a tree: scheduled tasks
+ *  are filed there by folder (Microsoft\\Windows\...), and the relative path
+ *  is part of the task's identity. The tree is reproduced as is in `outDir`.
  *
- *  @param volumeLetter lettre du volume à lire, sans les deux-points (ex. L"C")
- *  @param dirPathOnVolume chemin du répertoire sur le volume
- *  @param outDir répertoire de destination ; l'arborescence y est reproduite
- *  @param extensions extensions à extraire (vide = toutes)
- *  @param extracted reçoit le nombre de fichiers extraits
- *  @param profondeurMax garde-fou contre une arborescence cyclique ou anormale
- *         (un index NTFS corrompu pourrait boucler) ; 0 = pas de descente
- *  @param releve (optionnel) reçoit un relevé par fichier, empreintes comprises :
- *         c'est la source du manifeste de consigne
- *  @return ERROR_SUCCESS si l'énumération a abouti (même sans fichier),
- *          S_FALSE si au moins un fichier a échoué,
- *          un code d'erreur si le volume est inaccessible
+ *  @param volumeLetter letter of the volume to read, without the colon (e.g. L"C")
+ *  @param dirPathOnVolume path of the directory on the volume
+ *  @param outDir destination directory; the tree is reproduced there
+ *  @param extensions extensions to extract (empty = all)
+ *  @param extracted receives the number of files extracted
+ *  @param profondeurMax guard against a cyclic or abnormal tree (a corrupt
+ *         NTFS index could loop); 0 = no descent
+ *  @param releve (optional) receives a record per file, fingerprints included:
+ *         it is the source of the exhibit store manifest
+ *  @return ERROR_SUCCESS if the listing succeeded (even without files),
+ *          S_FALSE if at least one file failed,
+ *          an error code if the volume is inaccessible
  */
 HRESULT ExtractDirectoryTreeRaw(const std::wstring& volumeLetter,
                                 const std::wstring& dirPathOnVolume,

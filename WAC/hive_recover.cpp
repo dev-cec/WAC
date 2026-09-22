@@ -1,5 +1,5 @@
-/*  hive_recover.cpp — voir hive_recover.h.
- *  C++ portable (aucune dépendance Windows) : testable aussi sous Linux.
+/*  hive_recover.cpp — see hive_recover.h.
+ *  Portable C++ (no Windows dependency): testable on Linux too.
  */
 #include "hive_recover.h"
 #include <fstream>
@@ -10,12 +10,12 @@
 
 namespace {
 
-constexpr size_t BASE_BLOCK = 4096;   // taille du bloc de base d'une ruche
+constexpr size_t BASE_BLOCK = 4096;   // size of a hive's base block
 constexpr size_t OFF_PRIMARY   = 0x04;
 constexpr size_t OFF_SECONDARY = 0x08;
 constexpr size_t OFF_FILETYPE  = 0x1C;  // 0 = ruche primaire, 6 = journal
 constexpr size_t OFF_NAME      = 0x30;  // nom interne, UTF-16, 64 octets
-constexpr size_t OFF_CHECKSUM  = 508;   // XOR des 127 premiers uint32
+constexpr size_t OFF_CHECKSUM  = 508;   // XOR of the first 127 uint32
 
 inline uint32_t rd32(const uint8_t* p){
     return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
@@ -25,8 +25,8 @@ inline void wr32(uint8_t* p, uint32_t v){
     p[2] = (uint8_t)(v >> 16); p[3] = (uint8_t)(v >> 24);
 }
 
-/* Checksum du bloc de base : XOR des 127 premiers uint32.
-   0 et 0xFFFFFFFF sont interdits et remplacés (spécification du format). */
+/* Base block checksum: XOR of the first 127 uint32.
+   0 and 0xFFFFFFFF are forbidden and replaced (format specification). */
 uint32_t baseBlockChecksum(const uint8_t* bb){
     uint32_t x = 0;
     for (int i = 0; i < 127; ++i) x ^= rd32(bb + i * 4);
@@ -53,7 +53,7 @@ HiveFixInfo MakeHiveLoadable(const std::filesystem::path& hive){
     r.secondarySeq = rd32(bb.data() + OFF_SECONDARY);
     r.oldChecksum  = rd32(bb.data() + OFF_CHECKSUM);
 
-    // nom interne (UTF-16, terminé ou plein)
+    // internal name (UTF-16, terminated or full)
     for (size_t i = 0; i < 32; ++i){
         wchar_t c = (wchar_t)(bb[OFF_NAME + i * 2] | (bb[OFF_NAME + i * 2 + 1] << 8));
         if (!c) break;
@@ -63,7 +63,7 @@ HiveFixInfo MakeHiveLoadable(const std::filesystem::path& hive){
     r.wasDirty = (r.primarySeq != r.secondarySeq);
     if (!r.wasDirty){ r.ok = true; r.newChecksum = r.oldChecksum; return r; }
 
-    // Aligner secondaire := primaire, puis recalculer le checksum.
+    // Set secondary := primary, then recompute the checksum.
     wr32(bb.data() + OFF_SECONDARY, r.primarySeq);
     r.newChecksum = baseBlockChecksum(bb.data());
     wr32(bb.data() + OFF_CHECKSUM, r.newChecksum);
@@ -94,38 +94,38 @@ std::wstring HiveFixInfoToString(const HiveFixInfo& i){
 }
 
 // ---------------------------------------------------------------------------
-//  Rejeu des journaux de transaction
+//  Replaying the transaction logs
 // ---------------------------------------------------------------------------
-/*  Voir hive_recover.h pour la démarche et les deux pièges. Ici, le format.
+/*  See hive_recover.h for the approach and the two traps. Here, the format.
  *
- *  Journal (.LOG1/.LOG2) : bloc de base de 512 octets de type « regf », puis une
- *  suite d'entrées contiguës.
+ *  Log (.LOG1/.LOG2): 512-byte base block of type "regf", then a sequence of
+ *  contiguous entries.
  *
- *  Entrée (« HvLE ») :
- *      0   4   signature « HvLE »
- *      4   4   taille de l'entrée
- *      8   4   drapeaux
- *     12   4   numéro de séquence
- *     16   4   taille des données de bins APRÈS cette entrée
- *     20   4   nombre de pages modifiées
- *     24   8   Marvin32 du corps (offset 40 → fin de l'entrée)
- *     32   8   Marvin32 de l'en-tête (32 premiers octets)
- *     40  8×N  références de pages : offset (4), taille (4)
- *    ...       contenu des pages, dans l'ordre des références
+ *  Entry ("HvLE"):
+ *      0   4   signature "HvLE"
+ *      4   4   size of the entry
+ *      8   4   flags
+ *     12   4   sequence number
+ *     16   4   size of the bins data AFTER this entry
+ *     20   4   number of modified pages
+ *     24   8   Marvin32 of the body (offset 40 → end of the entry)
+ *     32   8   Marvin32 of the header (first 32 bytes)
+ *     40  8×N  page references: offset (4), size (4)
+ *    ...       page content, in the order of the references
  *
- *  Les offsets de page sont relatifs au DÉBUT DES DONNÉES DE BINS, donc à
- *  l'offset 4096 du fichier de ruche.
+ *  Page offsets are relative to the START OF THE BINS DATA, i.e. to offset
+ *  4096 of the hive file.
  */
 namespace {
 
 constexpr size_t LOG_ENTETE      = 512;        // bloc de base d'un journal
-constexpr size_t ENTREE_ENTETE   = 40;         // avant les références de pages
+constexpr size_t ENTREE_ENTETE   = 40;         // before the page references
 constexpr uint64_t MARVIN_GRAINE = 0x82EF4D887A4E55C5ULL;
 
 inline uint32_t rotl32(uint32_t v, int n){ return (uint32_t)((v << n) | (v >> (32 - n))); }
 
-/*  Marvin32, tel que le format l'emploie. Le résultat est rendu sur 8 octets :
- *  la moitié basse puis la moitié haute, en petit-boutien. */
+/*  Marvin32, as the format uses it. The result is returned on 8 bytes: the
+ *  low half then the high half, little-endian. */
 uint64_t marvin32(const uint8_t* data, size_t taille){
     uint32_t lo = (uint32_t)MARVIN_GRAINE;
     uint32_t hi = (uint32_t)(MARVIN_GRAINE >> 32);
@@ -136,7 +136,7 @@ uint64_t marvin32(const uint8_t* data, size_t taille){
     };
     size_t i = 0;
     for (; taille - i >= 4; i += 4){ lo += rd32(data + i); mix(); }
-    // Terminaison : les octets restants suivis d'un 0x80.
+    // Finalisation: the remaining bytes followed by a 0x80.
     uint32_t reste = 0;
     size_t k = 0;
     for (; i + k < taille; ++k) reste |= (uint32_t)data[i + k] << (8 * k);
@@ -150,23 +150,23 @@ inline uint64_t rd64(const uint8_t* p){
 }
 inline void wr64(uint8_t* p, uint64_t v){ wr32(p, (uint32_t)v); wr32(p + 4, (uint32_t)(v >> 32)); }
 
-//! Une entrée lue dans un journal, avec sa position et son verdict.
+//! An entry read from a log, with its position and its verdict.
 struct EntreeLue {
     uint32_t sequence = 0;
     uint32_t nbPages  = 0;
     uint64_t octets   = 0;
     uint32_t tailleBins = 0;
     std::vector<std::pair<uint32_t, uint32_t>> pages; //!< offset, taille
-    std::vector<uint8_t> corps;                       //!< l'entrée entière
-    size_t   debutDonnees = 0;                        //!< dans `corps`
-    std::wstring motif;                               //!< vide si valide
+    std::vector<uint8_t> corps;                       //!< the whole entry
+    size_t   debutDonnees = 0;                        //!< within `corps`
+    std::wstring motif;                               //!< empty if valid
 };
 
-/*! Entrées d'un journal, DANS L'ORDRE DU FICHIER, jusqu'à la première rupture.
+/*! Entries of a log, IN FILE ORDER, up to the first break.
  *
- *  La chaîne s'arrête à la première entrée invalide ou dont la séquence ne suit
- *  pas : ce qui vient après est un résidu d'une génération antérieure du
- *  journal, et l'appliquer ferait reculer les données (cf. hive_recover.h).
+ *  The chain stops at the first entry that is invalid or whose sequence does
+ *  not follow: what comes after is leftover from an earlier generation of the
+ *  log, and applying it would move the data backwards (see hive_recover.h).
  */
 std::vector<EntreeLue> lireChaine(const std::filesystem::path& journal,
                                   unsigned* residu){
@@ -197,7 +197,7 @@ std::vector<EntreeLue> lireChaine(const std::filesystem::path& journal,
         const uint64_t h1 = rd64(d.data() + off + 24);
         const uint64_t h2 = rd64(d.data() + off + 32);
 
-        // Bornes AVANT toute autre lecture : nbPages vient du fichier examiné.
+        // Bounds BEFORE any other read: nbPages comes from the examined file.
         if (e.nbPages > (taille - ENTREE_ENTETE) / 8) e.motif = L"nombre de pages incoherent";
         else if (marvin32(d.data() + off, 32) != h2)  e.motif = L"empreinte d'entete";
         else if (marvin32(d.data() + off + ENTREE_ENTETE, taille - ENTREE_ENTETE) != h1)
@@ -220,10 +220,10 @@ std::vector<EntreeLue> lireChaine(const std::filesystem::path& journal,
 
         if (!e.motif.empty()){
             rompue = true;
-            // Une entrée rompue n'est pas comptée comme résidu si elle est
-            // invalide en soi : l'appelant distingue les deux cas.
+            // A broken entry is not counted as leftover if it is invalid in
+            // itself: the caller tells the two cases apart.
             if (e.motif == L"rupture de sequence (residu)") ++*residu;
-            else chaine.push_back(std::move(e));   // conservée pour le rapport
+            else chaine.push_back(std::move(e));   // kept for the report
             off += taille;
             continue;
         }
@@ -263,21 +263,21 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
     for (EntreeLue& e : lireChaine(hive.wstring() + L".LOG2", &residu))
         chaine.push_back(std::move(e));
     r.entreesResidu = residu;
-    if (chaine.empty()){ r.ok = true; return r; }   // pas de journal : cas nominal
+    if (chaine.empty()){ r.ok = true; return r; }   // no log: the nominal case
     r.journaux = true;
 
-    // Les deux journaux se suivent ; l'ordre de séquence les recolle.
+    // The two logs follow each other; sequence order joins them.
     std::sort(chaine.begin(), chaine.end(),
               [](const EntreeLue& a, const EntreeLue& b){ return a.sequence < b.sequence; });
 
-    // Taille courante du fichier, pour borner les écritures.
+    // Current file size, to bound the writes.
     f.seekg(0, std::ios::end);
     const uint64_t tailleRuche = (uint64_t)f.tellg();
 
-    /*  Deux passes. La première décide et collecte le contenu d'ORIGINE des
-     *  pages : le journal d'annulation doit être complet AVANT la moindre
-     *  écriture, sans quoi une interruption laisserait une ruche modifiée
-     *  qu'on ne saurait plus reconstituer. */
+    /*  Two passes. The first one decides and gathers the ORIGINAL content of
+     *  the pages: the undo journal must be complete BEFORE the slightest write,
+     *  otherwise an interruption would leave a modified hive that could no
+     *  longer be rebuilt. */
     struct Page { uint64_t offset; uint32_t taille; std::vector<uint8_t> origine; };
     std::vector<Page> annulation;
     std::vector<const EntreeLue*> aAppliquer;
@@ -297,8 +297,8 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
             continue;
         }
         if (!premiere && e.sequence != attendue){
-            // Trou entre les deux journaux : on s'arrête là. Au-delà, l'état
-            // serait un mélange de générations, sans garantie de cohérence.
+            // Gap between the two logs: stop there. Beyond, the state would be a
+            // mix of generations, with no guarantee of consistency.
             trace.motif = L"trou dans la chaine";
             ++r.entreesEcartees;
             r.entrees.push_back(trace);
@@ -343,14 +343,14 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
 
     if (aAppliquer.empty()){ r.ok = true; return r; }
 
-    /*  Le bloc de base fait partie de l'annulation : le rejeu y réécrit les
-     *  numéros de séquence et le checksum. Sans lui, la copie brute ne serait
-     *  restituable que dans sa zone de données, et la promesse « reconstructible
-     *  à l'octet » serait fausse de 4096 octets. */
+    /*  The base block is part of the undo: the replay rewrites the sequence
+     *  numbers and the checksum in it. Without it, the raw copy could only be
+     *  restored in its data area, and the "rebuildable to the byte" promise
+     *  would be false by 4096 bytes. */
     annulation.insert(annulation.begin(), Page{ 0, (uint32_t)BASE_BLOCK,
                       std::vector<uint8_t>(bb.begin(), bb.end()) });
 
-    // Journal d'annulation, écrit AVANT toute modification de la ruche.
+    // Undo journal, written BEFORE any change to the hive.
     const std::filesystem::path chemUndo = hive.wstring() + L".undo";
     {
         std::ofstream u(chemUndo, std::ios::binary | std::ios::trunc);
@@ -375,8 +375,8 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
     }
     r.journalAnnulation = chemUndo.wstring();
 
-    // Application des pages, puis alignement du bloc de base sur la dernière
-    // séquence appliquée : la ruche devient propre par construction.
+    // Apply the pages, then align the base block on the last applied
+    // sequence: the hive becomes clean by construction.
     for (const EntreeLue* e : aAppliquer){
         size_t pos = e->debutDonnees;
         for (const std::pair<uint32_t, uint32_t>& p : e->pages){

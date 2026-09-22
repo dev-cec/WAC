@@ -1,36 +1,33 @@
-/*  hive_recover.h — rend exploitable une ruche copiée à chaud (« dirty »).
+/*  hive_recover.h — makes a hive copied live ("dirty") usable.
  *
- *  PROBLÈME. Une copie brute d'une ruche d'un système en fonctionnement est
- *  toujours marquée « dirty » : dans son bloc de base (`regf`), le numéro de
- *  séquence primaire diffère du secondaire. `offreg` (OROpenHive) refuse alors
- *  la ruche avec ERROR_BADDB (1009), quel que soit le mode — mesuré sur
- *  Windows 11 25H2. VSS masquait ce problème : le snapshot déclenchait le
- *  *registry writer*, qui flushait les ruches.
+ *  PROBLEM. A raw copy of a hive of a running system is always marked "dirty":
+ *  in its base block (`regf`), the primary sequence number differs from the
+ *  secondary one. `offreg` (OROpenHive) then rejects the hive with
+ *  ERROR_BADDB (1009), whatever the mode — measured on Windows 11 25H2. VSS hid
+ *  this problem: the snapshot triggered the *registry writer*, which flushed
+ *  the hives.
  *
- *  DEUX NIVEAUX DE REMISE EN ÉTAT, du plus complet au plus minimal :
+ *  TWO LEVELS OF REPAIR, from the most complete to the most minimal:
  *
- *    1. ReplayHiveLogs() applique les journaux de transaction. C'est ce que fait
- *       Windows au démarrage : les `.LOG1/.LOG2` contiennent les pages modifiées
- *       depuis la dernière écriture complète de la ruche, et les appliquer donne
- *       l'état réel de la machine au moment de la copie. Mesuré sur une machine
- *       réelle : 452 Kio pour SYSTEM, 1 172 Kio pour SOFTWARE, 600 Kio pour un
- *       ntuser.dat — et trois clés de `MountPoints2` que la copie brute seule ne
- *       contenait pas. La ruche reconstituée est propre par construction, donc
- *       aucun patch n'est nécessaire ensuite.
+ *    1. ReplayHiveLogs() applies the transaction logs. That is what Windows does
+ *       at boot: the `.LOG1/.LOG2` hold the pages changed since the hive's last
+ *       full write, and applying them gives the machine's real state at the
+ *       time of the copy. Measured on a real machine: 452 KiB for SYSTEM,
+ *       1,172 KiB for SOFTWARE, 600 KiB for one ntuser.dat — and three
+ *       `MountPoints2` keys the raw copy alone did not hold. The rebuilt hive is
+ *       clean by construction, so no patch is needed afterwards.
  *
- *    2. MakeHiveLoadable() ne sert plus que de recours : pas de journal, journal
- *       vide, ou chaîne d'entrées inutilisable. Il aligne secondaire := primaire
- *       et recalcule le checksum du bloc de base, ce que font les outils du
- *       domaine pour « charger une ruche dirty ». Les modifications restées dans
- *       les journaux ne sont alors PAS appliquées.
+ *    2. MakeHiveLoadable() is now only a fallback: no log, empty log, or
+ *       unusable chain of entries. It sets secondary := primary and recomputes
+ *       the base block checksum, which is what the field's tools do to "load a
+ *       dirty hive". The changes left in the logs are then NOT applied.
  *
- *  DÉONTOLOGIE. Les deux opérations écrivent dans la COPIE, jamais dans
- *  l'original — qui n'est de toute façon jamais ouvert en écriture. Et la copie
- *  brute reste reconstructible à l'octet : le patch ne porte que sur 8 octets,
- *  entièrement consignés, et le rejeu écrit à côté de la ruche un journal
- *  d'annulation contenant le contenu d'ORIGINE de chaque page remplacée
- *  (cf. ReplayHiveLogs). Les `.LOG1/.LOG2` sont extraits dans tous les cas : ils
- *  sont des artefacts en eux-mêmes et la trace de ce qui a été appliqué.
+ *  ETHICS. Both operations write to the COPY, never to the original — which is
+ *  never opened for writing anyway. And the raw copy stays rebuildable to the
+ *  byte: the patch only touches 8 bytes, fully recorded, and the replay writes
+ *  beside the hive an undo journal holding the ORIGINAL content of every
+ *  replaced page (see ReplayHiveLogs). The `.LOG1/.LOG2` are extracted in every
+ *  case: they are artefacts in themselves and the record of what was applied.
  */
 #pragma once
 #include <cstdint>
@@ -38,94 +35,93 @@
 #include <string>
 #include <vector>
 
-/*! Résultat de la mise en état d'une ruche. */
+/*! Result of repairing a hive. */
 struct HiveFixInfo {
-    bool     ok            = false; //!< bloc de base lu et traité sans erreur
-    bool     wasDirty      = false; //!< séquences primaire/secondaire différentes
-    bool     patched       = false; //!< le patch a été appliqué
-    uint32_t primarySeq    = 0;     //!< séquence primaire (inchangée)
-    uint32_t secondarySeq  = 0;     //!< séquence secondaire AVANT patch
+    bool     ok            = false; //!< base block read and processed without error
+    bool     wasDirty      = false; //!< primary/secondary sequences differ
+    bool     patched       = false; //!< the patch was applied
+    uint32_t primarySeq    = 0;     //!< primary sequence (unchanged)
+    uint32_t secondarySeq  = 0;     //!< secondary sequence BEFORE the patch
     uint32_t oldChecksum   = 0;     //!< checksum avant patch
-    uint32_t newChecksum   = 0;     //!< checksum recalculé
-    std::wstring hiveName;          //!< nom interne de la ruche (offset 0x30)
-    std::wstring error;             //!< message si ok == false
+    uint32_t newChecksum   = 0;     //!< recomputed checksum
+    std::wstring hiveName;          //!< internal name of the hive (offset 0x30)
+    std::wstring error;             //!< message if ok == false
 };
 
-/*! Rend la ruche exploitable par offreg, en place, si elle est « dirty ».
- *  Ne touche rien si la ruche est déjà propre (primaire == secondaire).
- *  @param hive chemin de la ruche extraite (modifiée en place si dirty)
- *  @return détail de l'opération, à consigner dans le rapport
+/*! Makes the hive usable by offreg, in place, if it is "dirty".
+ *  Touches nothing if the hive is already clean (primary == secondary).
+ *  @param hive path of the extracted hive (modified in place if dirty)
+ *  @return details of the operation, to be recorded in the report
  */
 HiveFixInfo MakeHiveLoadable(const std::filesystem::path& hive);
 
-/*! Rend le détail lisible pour le log/rapport (une ligne). */
+/*! Readable details for the log/report (one line). */
 std::wstring HiveFixInfoToString(const HiveFixInfo& i);
 
-/*! Une entrée de journal de transaction, retenue ou écartée. */
+/*! A transaction log entry, kept or discarded. */
 struct HiveLogEntry {
-    uint32_t sequence = 0;      //!< numéro de séquence de l'entrée
-    uint32_t pages    = 0;      //!< nombre de pages modifiées
+    uint32_t sequence = 0;      //!< sequence number of the entry
+    uint32_t pages    = 0;      //!< number of modified pages
     uint64_t octets   = 0;      //!< volume de ces pages
-    bool     applique = false;  //!< vrai si elle a été écrite dans la ruche
-    std::wstring motif;         //!< pourquoi elle a été écartée, le cas échéant
+    bool     applique = false;  //!< true if it was written into the hive
+    std::wstring motif;         //!< why it was discarded, if it was
 };
 
-/*! Résultat du rejeu des journaux de transaction. */
+/*! Result of replaying the transaction logs. */
 struct HiveReplayInfo {
-    bool ok       = false;      //!< opération menée sans erreur d'entrée/sortie
-    bool journaux = false;      //!< au moins un `.LOG1/.LOG2` exploitable trouvé
-    bool applique = false;      //!< au moins une entrée écrite dans la ruche
-    uint32_t sequenceRuche   = 0;  //!< séquence de la ruche avant rejeu
-    uint32_t sequenceFinale  = 0;  //!< séquence après rejeu
-    unsigned entreesRetenues = 0;  //!< entrées de la chaîne appliquées
-    unsigned entreesEcartees = 0;  //!< entrées invalides (empreinte, bornes)
-    unsigned entreesResidu   = 0;  //!< entrées hors chaîne (génération antérieure)
-    unsigned pages           = 0;  //!< pages écrites
-    uint64_t octets          = 0;  //!< octets écrits
-    std::wstring journalAnnulation; //!< chemin du journal d'annulation produit
-    std::wstring error;             //!< message si ok == false
-    std::vector<HiveLogEntry> entrees; //!< détail, pour le rapport
+    bool ok       = false;      //!< operation carried out without an I/O error
+    bool journaux = false;      //!< at least one usable `.LOG1/.LOG2` found
+    bool applique = false;      //!< at least one entry written into the hive
+    uint32_t sequenceRuche   = 0;  //!< hive sequence before replay
+    uint32_t sequenceFinale  = 0;  //!< sequence after replay
+    unsigned entreesRetenues = 0;  //!< chain entries applied
+    unsigned entreesEcartees = 0;  //!< invalid entries (checksum, bounds)
+    unsigned entreesResidu   = 0;  //!< entries outside the chain (earlier generation)
+    unsigned pages           = 0;  //!< pages written
+    uint64_t octets          = 0;  //!< bytes written
+    std::wstring journalAnnulation; //!< path of the undo journal produced
+    std::wstring error;             //!< message if ok == false
+    std::vector<HiveLogEntry> entrees; //!< details, for the report
 };
 
-/*! Applique les journaux de transaction à une ruche extraite.
+/*! Applies the transaction logs to an extracted hive.
 *
-*  DEUX PIÈGES, tous deux rencontrés sur des données réelles et tous deux
-*  déterminants pour l'exactitude du rapport :
+*  TWO TRAPS, both met on real data and both decisive for the report's
+*  accuracy:
 *
-*  - **L'ORDRE DU FICHIER, PAS L'ORDRE DES SÉQUENCES.** Un journal est réutilisé
-*    sur place : les entrées d'une génération antérieure survivent APRÈS la fin
-*    de la chaîne courante. Les trier par numéro de séquence fait remonter en
-*    tête une entrée périmée, dont les pages sont PLUS ANCIENNES que la ruche.
-*    Mesuré : les horodatages BAM — de la preuve d'exécution — reculaient de
-*    quinze minutes. On suit donc chaque journal dans l'ordre du fichier et on
-*    s'arrête à la première rupture de séquence, comme le fait la récupération de
-*    Windows ; ce qui suit est du résidu.
+*  - **FILE ORDER, NOT SEQUENCE ORDER.** A log is reused in place: entries from
+*    an earlier generation survive AFTER the end of the current chain. Sorting
+*    them by sequence number brings a stale entry to the front, whose pages are
+*    OLDER than the hive. Measured: BAM timestamps — execution evidence — moved
+*    fifteen minutes backwards. Each log is therefore walked in file order,
+*    stopping at the first break in the sequence, as Windows' recovery does;
+*    what follows is leftover.
 *
-*  - **CHAQUE ENTRÉE EST VÉRIFIÉE AVANT D'ÊTRE APPLIQUÉE.** Les deux empreintes
-*    Marvin32 de l'en-tête couvrent l'entête (32 premiers octets) et le corps
-*    (de l'offset 40 à la fin). Vérifiées conformes sur 60 entrées de 11 journaux
-*    d'une machine réelle. Une entrée qui échoue termine la chaîne : appliquer
-*    des pages douteuses à une preuve serait pire que ne rien appliquer.
+*  - **EVERY ENTRY IS CHECKED BEFORE BEING APPLIED.** The header's two Marvin32
+*    checksums cover the header (first 32 bytes) and the body (offset 40 to the
+*    end). Verified correct on 60 entries from 11 logs of a real machine. An
+*    entry that fails ends the chain: applying doubtful pages to evidence would
+*    be worse than applying nothing.
 *
-*  Un journal d'annulation `<ruche>.undo` est écrit à côté de la ruche, contenant
-*  le contenu d'ORIGINE de chaque page remplacée. Format, volontairement trivial
-*  pour qu'un tiers puisse refaire l'opération en sens inverse :
+*  An undo journal `<hive>.undo` is written beside the hive, holding the
+*  ORIGINAL content of every replaced page. Its format is deliberately trivial,
+*  so that a third party can undo the operation:
 *
-*      0   8   « WACUNDO1 »
-*      8  32   empreinte MD5 de la ruche AVANT rejeu, en ASCII hexadécimal
-*     40   4   nombre de pages
-*     44   8   taille de la ruche avant rejeu
-*     52   4   réservé (0)
-*     56  12×N table des pages : offset (8 octets), taille (4 octets)
-*     ...      contenu d'origine des pages, dans l'ordre de la table
+*      0   8   "WACUNDO1"
+*      8  32   MD5 of the hive BEFORE replay, as ASCII hexadecimal
+*     40   4   number of pages
+*     44   8   size of the hive before replay
+*     52   4   reserved (0)
+*     56  12×N page table: offset (8 bytes), size (4 bytes)
+*     ...      original content of the pages, in table order
 *
-*  @param hive chemin de la ruche extraite (modifiée en place si le rejeu aboutit)
-*  @param md5Avant empreinte de la ruche avant rejeu, consignée dans le journal
-*         d'annulation ; l'appelant l'a déjà calculée pendant l'extraction
-*  @return détail de l'opération, à consigner dans le rapport
+*  @param hive path of the extracted hive (modified in place if the replay succeeds)
+*  @param md5Avant fingerprint of the hive before replay, recorded in the undo
+*         journal; the caller already computed it during extraction
+*  @return details of the operation, to be recorded in the report
 */
 HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
                               const std::wstring& md5Avant);
 
-/*! Rend le détail lisible pour le log/rapport (une ligne). */
+/*! Readable details for the log/report (one line). */
 std::wstring HiveReplayInfoToString(const HiveReplayInfo& i);

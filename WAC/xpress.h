@@ -1,64 +1,62 @@
 #pragma once
 
-/*  xpress.h — DÉCOMPRESSION XPRESS HUFFMAN (WOF / « Compact OS »).
+/*  xpress.h — XPRESS HUFFMAN DECOMPRESSION (WOF / "Compact OS").
  *
- *  POURQUOI CE MODULE EXISTE. Windows 10 et 11 stockent leurs binaires système
- *  compressés par WOF. Vu de l'API, un tel fichier est parfaitement ordinaire :
- *  attributs normaux, un seul flux, taille pleine — le filtre du système
- *  reconstitue tout à la volée. Vu du disque, c'est autre chose, et
- *  l'énumération des attributs $MFT le montre sans ambiguïté :
+ *  WHY THIS MODULE EXISTS. Windows 10 and 11 store their system binaries
+ *  compressed by WOF. Seen through the API, such a file is perfectly ordinary:
+ *  normal attributes, a single stream, full size — the system's filter rebuilds
+ *  everything on the fly. Seen from the disk, it is something else, and
+ *  listing the $MFT attributes shows it unambiguously:
  *
- *      0x80 (sans nom)         1 372 160 octets   CREUX      <- $DATA vide
- *      0x80 WofCompressedData    667 578 octets              <- les vraies données
- *      0xC0 point de reparse          0x80000017  algorithme 2
+ *      0x80 (unnamed)          1,372,160 bytes   SPARSE    <- empty $DATA
+ *      0x80 WofCompressedData    667,578 bytes             <- the real data
+ *      0xC0 reparse point           0x80000017   algorithm 2
  *
- *  Une lecture brute qui ignore cela rend un fichier de la bonne taille,
- *  entièrement à zéro. Sur une VM Windows 11, les 121 binaires de fournisseurs
- *  d'événements étaient dans ce cas : aucun message d'événement ne pouvait être
- *  reconstitué sans ouvrir les fichiers par l'API — ce que ce module évite.
+ *  A raw read that ignores this returns a file of the right size, entirely
+ *  zero. On a Windows 11 VM, the 121 event-provider binaries were in that case:
+ *  no event message could be rebuilt without opening the files through the API
+ *  — which this module avoids.
  *
- *  LES ALGORITHMES DE WOF sont au nombre de quatre, désignés par le point de
- *  reparse : XPRESS sur des morceaux de 4, 8 ou 16 Kio, et LZX sur 32 Kio.
- *  Les trois premiers emploient LE MÊME codage, XPRESS Huffman, traité ici ;
- *  seule la taille des morceaux change. LZX est un format distinct, bien plus
- *  complexe, qui n'est pas implémenté : un fichier ainsi compressé est signalé
- *  comme illisible plutôt que rendu faux.
+ *  WOF HAS FOUR ALGORITHMS, named by the reparse point: XPRESS on 4, 8 or
+ *  16 KiB chunks, and LZX on 32 KiB. The first three use THE SAME coding,
+ *  XPRESS Huffman, handled here; only the chunk size differs. LZX is a distinct,
+ *  far more complex format, which is not implemented: a file compressed that
+ *  way is reported as unreadable rather than returned wrong.
  *
- *  LE CODAGE, et ses deux subtilités.
+ *  THE CODING, and its two subtleties.
  *
- *  Chaque morceau commence par une table de Huffman de 256 octets : 512
- *  longueurs de code sur 4 bits, une par symbole. Suit un train de bits d'où
- *  l'on décode des symboles ; sous 256 c'est un octet littéral, au-delà c'est
- *  une référence arrière dont les bits de poids fort donnent le nombre de bits
- *  de la distance et les quatre de poids faible la longueur.
+ *  Each chunk starts with a 256-byte Huffman table: 512 code lengths on 4 bits,
+ *  one per symbol. A bit stream follows, from which symbols are decoded; below
+ *  256 it is a literal byte, above it is a back-reference whose high bits give
+ *  the number of distance bits and whose low four give the length.
  *
- *    - LE TRAIN DE BITS SE LIT PAR MOTS DE 16 BITS EN PETIT BOUTIEN, mais les
- *      bits se consomment du plus significatif au moins significatif à
- *      l'intérieur du mot. Inverser l'un ou l'autre décode un flux qui
- *      ressemble à du bruit sans jamais lever d'erreur.
- *    - LES LONGUEURS ÉTENDUES SE LISENT EN OCTETS, sur le MÊME curseur que le
- *      train de bits. Les deux lectures s'entrelacent donc, et un curseur
- *      séparé désynchronise tout le reste du morceau.
+ *    - THE BIT STREAM IS READ AS 16-BIT LITTLE-ENDIAN WORDS, but the bits are
+ *      consumed from most to least significant within the word. Getting either
+ *      wrong decodes a stream that looks like noise without ever raising an
+ *      error.
+ *    - EXTENDED LENGTHS ARE READ AS BYTES, on the SAME cursor as the bit
+ *      stream. Both reads therefore interleave, and a separate cursor
+ *      desynchronises the rest of the chunk.
  *
- *  Les données viennent de la machine examinée : toutes les bornes sont
- *  vérifiées, et un flux incohérent rend ce qui a été produit jusque-là plutôt
- *  que de faire lire hors zone.
+ *  The data come from the examined machine: every bound is checked, and an
+ *  inconsistent stream returns what was produced so far rather than reading
+ *  out of range.
  *
- *  C++ portable, aucune dépendance : confronté au compresseur de Windows
- *  lui-même (cf. xpress_test).
+ *  Portable C++, no dependency: checked against Windows' own compressor (see
+ *  xpress_test).
  */
 
 #include <cstdint>
 #include <cstddef>
 
-/*! Détend un morceau compressé en XPRESS Huffman.
+/*! Expands one XPRESS Huffman compressed chunk.
 *
-*  @param compresse données compressées (un morceau entier, table comprise)
-*  @param tailleCompressee taille de ces données
-*  @param sortie tampon de destination
-*  @param tailleSortie taille attendue du morceau détendu, qui borne l'écriture
-*  @return nombre d'octets écrits ; 0 si l'entrée est inexploitable.
-*          Un rendu inférieur à la taille attendue signale un flux tronqué.
+*  @param compresse compressed data (one whole chunk, table included)
+*  @param tailleCompressee size of that data
+*  @param sortie destination buffer
+*  @param tailleSortie expected size of the expanded chunk, bounding the writes
+*  @return number of bytes written; 0 if the input is unusable.
+*          A result below the expected size signals a truncated stream.
 */
 size_t XpressHuffmanDetendre(const uint8_t* compresse, size_t tailleCompressee,
                              uint8_t* sortie, size_t tailleSortie);

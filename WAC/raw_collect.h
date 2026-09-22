@@ -1,78 +1,75 @@
-/*  raw_collect.h — orchestration de l'extraction offline des artefacts (WAC).
+/*  raw_collect.h — orchestration of the offline extraction of artefacts (WAC).
  *
- *  Remplace la collecte VSS : extrait par lecture brute NTFS (raw_hive) les
- *  ruches et les fichiers nécessaires vers un sous-répertoire du dossier de
- *  sortie, sur la clé USB — AUCUNE écriture sur l'hôte, aucun point de montage,
- *  aucun snapshot.
+ *  Replaces the VSS-based collection: extracts by raw NTFS reading (raw_hive)
+ *  the hives and files needed into the output folder, on the USB stick — NO
+ *  write to the host, no mount point, no snapshot.
  *
- *  conf.mountpoint est réutilisé comme simple préfixe de chemin vers ce
- *  répertoire d'extraction (sur l'USB). Les fichiers y sont rangés sous LEUR
- *  chemin d'origine relatif au volume, si bien que tout le pipeline en aval
- *  (OROpenHive, listFilesByExtension) reste inchangé.
+ *  conf.mountpoint is reused as a simple path prefix to the working directory
+ *  (on the USB stick). Files are stored there under THEIR original path relative
+ *  to the volume, so that the whole downstream pipeline (OROpenHive,
+ *  listFilesByExtension) is unchanged.
  */
 #pragma once
 #include <windows.h>
 
-/*  POURQUOI L'EXTRACTION DES RUCHES SE FAIT EN DEUX PASSES.
+/*  WHY HIVE EXTRACTION IS DONE IN TWO PASSES.
  *
- *  Les ruches par utilisateur (`ntuser.dat`, `usrClass.dat`) vivent dans le
- *  dossier de profil : il faut donc connaître l'emplacement des profils avant de
- *  pouvoir les extraire. Cette liste était lue dans le registre VIVANT, à
- *  `HKLM\SOFTWARE\...\ProfileList` — la dernière lecture que WAC faisait encore
- *  sur le registre de la machine examinée.
+ *  The per-user hives (`ntuser.dat`, `usrClass.dat`) live in the profile
+ *  folder: the profiles' location must therefore be known before they can be
+ *  extracted. That list used to be read in the LIVE registry, at
+ *  `HKLM\SOFTWARE\...\ProfileList` — the last read WAC still made in the
+ *  examined machine's registry.
  *
- *  Elle se lit désormais dans la ruche SOFTWARE extraite, ce qui impose l'ordre
- *  suivant, et explique que ce qui était une seule fonction en soit devenu deux :
+ *  It is now read in the extracted SOFTWARE hive, which imposes the following
+ *  order, and explains why what was one function became two:
  *
  *    1. ExtractSystemHivesRaw()   — SYSTEM, SOFTWARE, SAM, Amcache
- *    2. OROpenHive(SOFTWARE)      — sur la copie de travail
- *    3. loadProfileList()         — hors ligne, dans cette copie
- *    4. ExtractUserHivesRaw()     — les ruches des profils ainsi relevés
- *    5. ExtractFileArtefactsRaw() — Prefetch, jumplists, documents récents
+ *    2. OROpenHive(SOFTWARE)      — on the working copy
+ *    3. loadProfileList()         — offline, in that copy
+ *    4. ExtractUserHivesRaw()     — the hives of the profiles thus found
+ *    5. ExtractFileArtefactsRaw() — Prefetch, jump lists, recent documents
  *
- *  Le coût est une seconde passe de lecture de la $MFT du volume ; le gain est
- *  qu'aucune clé du registre de la machine examinée n'est plus ouverte.
+ *  The cost is a second pass over the volume's $MFT; the gain is that no key
+ *  of the examined machine's registry is opened any more.
  */
 
-/*! Extrait les ruches de la MACHINE (+ journaux .LOG1/.LOG2) vers
- *  `_outputDir`\\consigne, en fait la copie de travail et la rend exploitable
- *  par offreg.
+/*! Extracts the MACHINE's hives (+ .LOG1/.LOG2 logs) into
+ *  `_outputDir`\\consigne, makes their working copy and makes it usable by
+ *  offreg.
  *
- *  Les journaux de transaction sont extraits car ils sont des artefacts en
- *  eux-mêmes, et documentent les modifications en attente que la copie à chaud
- *  ne contient pas.
+ *  The transaction logs are extracted because they are artefacts in
+ *  themselves, and document the pending changes the live copy does not hold.
  *
- *  Une copie brute d'une ruche d'un système vivant est toujours « dirty » et
- *  refusée par offreg : chaque ruche passe donc par un rejeu des journaux, puis
- *  par MakeHiveLoadable() en recours (cf. hive_recover.h).
+ *  A raw copy of a live system's hive is always "dirty" and rejected by offreg:
+ *  each hive therefore goes through a log replay, then MakeHiveLoadable() as a
+ *  fallback (see hive_recover.h).
  *
- *  @return S_OK si tout réussit, S_FALSE si certains fichiers manquent ou si une
- *          ruche reste inexploitable, ou un code d'erreur si le volume ne peut
- *          être ouvert.
+ *  @return S_OK if everything succeeds, S_FALSE if some files are missing or a
+ *          hive remains unusable, or an error code if the volume cannot be
+ *          opened.
  */
 HRESULT ExtractSystemHivesRaw();
 
-/*! Extrait les ruches de chaque PROFIL utilisateur relevé dans `conf.profiles`,
- *  selon les mêmes règles que `ExtractSystemHivesRaw`.
+/*! Extracts the hives of each user PROFILE listed in `conf.profiles`, under
+ *  the same rules as `ExtractSystemHivesRaw`.
  *
- *  À appeler APRÈS `loadProfileList()`, qui renseigne `conf.profiles` depuis la
- *  ruche SOFTWARE extraite par la passe précédente.
+ *  To be called AFTER `loadProfileList()`, which fills `conf.profiles` from the
+ *  SOFTWARE hive extracted by the previous pass.
  *
- *  @return S_OK si tout réussit, S_FALSE si aucun profil n'a été relevé ou si
- *          certains fichiers manquent, ou un code d'erreur si le volume ne peut
- *          être ouvert.
+ *  @return S_OK if everything succeeds, S_FALSE if no profile was found or some
+ *          files are missing, or an error code if the volume cannot be opened.
  */
 HRESULT ExtractUserHivesRaw();
 
-/*! Extrait les artefacts sur fichiers : Prefetch, jumplists et documents
- *  récents, vers `_outputDir`\\hives sous leur chemin d'origine.
+/*! Extracts the file-based artefacts: Prefetch, jump lists and recent
+ *  documents, into `_outputDir`\\consigne under their original path.
  *
- *  Sans cette extraction, les collecteurs correspondants ne rendent AUCUNE
- *  donnée — et « 0 entrée » est, à l'analyse, indiscernable de « aucune trace
- *  sur la machine ». Le décompte par répertoire est donc journalisé, pour que le
- *  rapport distingue un dossier vide d'un dossier non collecté.
+ *  Without this extraction, the matching collectors return NO data — and
+ *  "0 entries" is, to the analyst, impossible to tell apart from "no trace on
+ *  the machine". The count per directory is therefore logged, so that the
+ *  report tells an empty folder from one not collected.
  *
- *  @return S_OK si tout réussit, S_FALSE si au moins un fichier a échoué, ou un
- *          code d'erreur si le volume ne peut être ouvert.
+ *  @return S_OK if everything succeeds, S_FALSE if at least one file failed, or
+ *          an error code if the volume cannot be opened.
  */
 HRESULT ExtractFileArtefactsRaw();

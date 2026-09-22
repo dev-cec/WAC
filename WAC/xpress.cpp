@@ -1,39 +1,39 @@
 #include "xpress.h"
 #include <cstring>
 
-/*  xpress.cpp — voir xpress.h. Les commentaires ici ne redisent pas le format :
- *  ils marquent les deux endroits où une implémentation se trompe sans erreur.
+/*  xpress.cpp — see xpress.h. The comments here do not restate the format: they
+ *  mark the two places where an implementation goes wrong without an error.
  */
 
 namespace {
 
-const size_t TAILLE_TABLE = 256;   //!< 512 longueurs de code sur 4 bits
+const size_t TAILLE_TABLE = 256;   //!< 512 code lengths on 4 bits
 const int    SYMBOLES     = 512;
 const int    LONGUEUR_MAX = 15;
 
-/*! Train de bits du format : mots de 16 bits en petit boutien, bits consommés
- *  du plus significatif au moins significatif.
+/*! The format's bit stream: 16-bit little-endian words, bits consumed from
+ *  most to least significant.
  *
- *  Le curseur d'octets est PARTAGÉ avec la lecture des longueurs étendues : les
- *  deux avancent dans le même flux, et c'est voulu par le format.
+ *  The byte cursor is SHARED with the reading of extended lengths: both move
+ *  through the same stream, as the format intends.
  */
 class TrainDeBits {
 public:
 	TrainDeBits(const uint8_t* d, size_t taille, size_t depart)
 		: d_(d), taille_(taille), octet_(depart) {}
 
-	//! Garantit au moins `n` bits disponibles, en complétant de zéros en fin de flux.
+	//! Ensures at least `n` bits are available, padding with zeros at the end of the stream.
 	void remplir(unsigned n) {
 		while (bits_ < n) {
 			if (taille_ < 2 || octet_ > taille_ - 2) {
-				// Fin du flux : on complète de zéros plutôt que de lire dehors.
+				// End of stream: pad with zeros rather than reading outside.
 				tampon_ <<= 16;
 				bits_ += 16;
 			}
 			else {
-				/*  Le mot est en PETIT BOUTIEN : l'octet de poids fort du mot est
-				    d_[octet_+1]. Il entre d'abord dans le tampon, de sorte que la
-				    consommation par le haut rende les bits dans le bon ordre. */
+				/*  The word is LITTLE-ENDIAN: its most significant byte is d_[octet_+1].
+				    It goes into the buffer first, so that consuming from the top returns the
+				    bits in the right order. */
 				tampon_ = (tampon_ << 8) | d_[octet_ + 1];
 				tampon_ = (tampon_ << 8) | d_[octet_];
 				bits_ += 16;
@@ -42,7 +42,7 @@ public:
 		}
 	}
 
-	//! Prend les `n` bits de poids fort du tampon.
+	//! Takes the `n` most significant bits of the buffer.
 	uint32_t valeur(unsigned n) {
 		if (n == 0) return 0;
 		if (n > 32) return 0;
@@ -55,7 +55,7 @@ public:
 		return v;
 	}
 
-	//! Octet suivant du flux, sur le curseur partagé.
+	//! Next byte of the stream, on the shared cursor.
 	bool octetSuivant(uint8_t* v) {
 		if (octet_ >= taille_) return false;
 		*v = d_[octet_++];
@@ -84,11 +84,11 @@ private:
 	unsigned bits_ = 0;
 };
 
-/*! Arbre de Huffman canonique, construit à partir des longueurs de code.
+/*! Canonical Huffman tree, built from the code lengths.
  *
- *  Les codes sont attribués par longueur croissante puis par numéro de symbole
- *  croissant : c'est la convention du format, et la seule qui rende le flux
- *  décodable.
+ *  Codes are assigned by increasing length, then by increasing symbol number:
+ *  that is the format's convention, and the only one that makes the stream
+ *  decodable.
  */
 class Huffman {
 public:
@@ -109,7 +109,7 @@ public:
 			code = (code + nb_[l]) << 1;
 			decalage += nb_[l];
 		}
-		// Symboles triés par (longueur, numéro).
+		// Symbols sorted by (length, number).
 		int curseur[LONGUEUR_MAX + 1];
 		for (int l = 0; l <= LONGUEUR_MAX; ++l) curseur[l] = debut_[l];
 		for (int s = 0; s < SYMBOLES; ++s) {
@@ -119,7 +119,7 @@ public:
 		return true;
 	}
 
-	//! Décode un symbole, ou -1 si aucun code ne correspond.
+	//! Decodes a symbol, or -1 if no code matches.
 	int decoder(TrainDeBits& bits) const {
 		int code = 0;
 		for (int l = 1; l <= LONGUEUR_MAX; ++l) {
@@ -142,7 +142,7 @@ private:
 size_t XpressHuffmanDetendre(const uint8_t* compresse, size_t tailleCompressee,
                              uint8_t* sortie, size_t tailleSortie) {
 	if (!compresse || !sortie || tailleSortie == 0) return 0;
-	// La table seule fait 256 octets ; en dessous, il n'y a pas de morceau.
+	// The table alone takes 256 bytes; below that there is no chunk.
 	if (tailleCompressee <= TAILLE_TABLE) return 0;
 
 	uint8_t longueurs[SYMBOLES];
@@ -154,21 +154,21 @@ size_t XpressHuffmanDetendre(const uint8_t* compresse, size_t tailleCompressee,
 	if (!arbre.construire(longueurs)) return 0;
 
 	TrainDeBits bits(compresse, tailleCompressee, TAILLE_TABLE);
-	bits.remplir(32);                       // amorçage, comme le format l'exige
+	bits.remplir(32);                       // priming, as the format requires
 
 	size_t ecrits = 0;
 	while (ecrits < tailleSortie) {
 		const int symbole = arbre.decoder(bits);
-		if (symbole < 0) break;             // code inconnu : flux incohérent
+		if (symbole < 0) break;             // unknown code: inconsistent stream
 
 		if (symbole < 256) sortie[ecrits++] = (uint8_t)symbole;
 
-		/*  COMPLÉMENT À 16 BITS APRÈS CHAQUE SYMBOLE, littéraux compris, et
-		    AVANT la lecture d'une référence arrière. Ce n'est pas une
-		    optimisation : le complément fait avancer le curseur d'octets de
-		    deux, et ce curseur est celui où se lisent les longueurs étendues.
-		    Ne compléter qu'après les références désynchronise le morceau —
-		    mesuré : 16 morceaux conformes sur 137, les autres faux sans erreur. */
+		/*  TOP UP TO 16 BITS AFTER EVERY SYMBOL, literals included, and BEFORE
+		    reading a back-reference. This is not an optimisation: the top-up
+		    advances the byte cursor by two, and that cursor is the one extended
+		    lengths are read from. Topping up only after back-references
+		    desynchronises the chunk — measured: 16 chunks correct out of 137, the
+		    others wrong without any error. */
 		if (bits.disponibles() < 16) bits.remplir(16);
 
 		if (symbole < 256) continue;
@@ -177,14 +177,14 @@ size_t XpressHuffmanDetendre(const uint8_t* compresse, size_t tailleCompressee,
 		uint32_t longueur = (uint32_t)(reste & 0x0F);
 		const unsigned bitsDistance = (unsigned)(reste >> 4);
 
-		// La distance se lit AVANT la longueur étendue : l'ordre est imposé.
+		// The distance is read BEFORE the extended length: the order is imposed.
 		uint32_t distance = bits.valeur(bitsDistance);
 		distance = (1u << bitsDistance) | distance;
 
 		if (longueur == 15) {
-			/*  LONGUEUR ÉTENDUE, lue en OCTETS sur le curseur du train de bits.
-			    Trois paliers : un octet, puis un mot de 16 bits, puis un mot de
-			    32 bits. Un curseur séparé désynchroniserait tout le morceau. */
+			/*  EXTENDED LENGTH, read as BYTES on the bit stream's cursor. Three
+			    levels: one byte, then a 16-bit word, then a 32-bit word. A separate
+			    cursor would desynchronise the whole chunk. */
 			uint8_t oct = 0;
 			if (!bits.octetSuivant(&oct)) break;
 			longueur = (uint32_t)oct + 15;
@@ -199,13 +199,13 @@ size_t XpressHuffmanDetendre(const uint8_t* compresse, size_t tailleCompressee,
 		}
 		longueur += 3;
 
-		if (distance > ecrits) break;       // avant le début : flux faux
+		if (distance > ecrits) break;       // before the start: corrupt stream
 		if (longueur > tailleSortie - ecrits)
 			longueur = (uint32_t)(tailleSortie - ecrits);
 
-		/*  Copie octet par octet : les zones se RECOUVRENT dès que la distance
-		    est inférieure à la longueur, ce qui est le cas normal — c'est ainsi
-		    que le format encode une répétition. */
+		/*  Byte-by-byte copy: the ranges OVERLAP as soon as the distance is
+		    smaller than the length, which is the normal case — it is how the format
+		    encodes a repetition. */
 		size_t source = ecrits - distance;
 		while (longueur-- > 0) sortie[ecrits++] = sortie[source++];
 	}

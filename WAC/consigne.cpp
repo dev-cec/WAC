@@ -7,33 +7,33 @@
 #include <filesystem>
 #include <map>
 
-/*  consigne.cpp — voir consigne.h pour la procédure et le contenu du manifeste.
- *  Ici, l'implémentation.
+/*  consigne.cpp — see consigne.h for the procedure and the manifest's content.
+ *  Here, the implementation.
  */
 
 namespace {
 
-//! Une pièce au manifeste.
+//! An exhibit in the manifest.
 struct Piece {
 	RawHiveExtrait extrait;
 	std::wstring   methode;
-	bool           partagee = false;   //!< contenu déjà consigné sous une autre pièce
+	bool           partagee = false;   //!< content already stored under another exhibit
 };
 
 std::vector<Piece> g_pieces;
-//! Volumes effectivement lus, par lettre : relevés une fois chacun.
-std::map<std::wstring, std::wstring> g_volumes;   // lettre -> "série | système de fichiers"
+//! Volumes actually read, by letter: recorded once each.
+std::map<std::wstring, std::wstring> g_volumes;   // letter -> "serial | file system"
 
-//! FILETIME depuis un entier 64 bits, forme dans laquelle raw_hive les rend.
+//! FILETIME from a 64-bit integer, the form raw_hive returns them in.
 FILETIME versFiletime(uint64_t v) {
 	FILETIME f = { (DWORD)(v & 0xFFFFFFFFULL), (DWORD)(v >> 32) };
 	return f;
 }
 
-/*! Ajoute un horodatage sous ses deux formes, UTC et heure locale du SUSPECT.
- *  Rien n'est écrit si la date est nulle : un champ vide se lirait comme une
- *  date que le format ne portait pas, alors qu'il ne la portait effectivement
- *  pas — mais un « 1601-01-01 » se lirait, lui, comme une vraie date.
+/*! Adds a timestamp in both forms, UTC and the SUSPECT's local time.
+ *  Nothing is written if the date is zero: an empty field would read as a date
+ *  the format did not carry — which it indeed did not — but a "1601-01-01"
+ *  would read as a real date.
  */
 void ajouterDate(Json& o, const std::wstring& cle, uint64_t filetimeUtc) {
 	if (filetimeUtc == 0) return;
@@ -42,7 +42,7 @@ void ajouterDate(Json& o, const std::wstring& cle, uint64_t filetimeUtc) {
 	o.add(cle,          Json::str(utcTimeToIso8601Local(f)));
 }
 
-//! Relève le numéro de série et le système de fichiers d'un volume.
+//! Records a volume's serial number and file system.
 std::wstring signatureVolume(const std::wstring& lettre) {
 	const std::wstring racine = lettre + L":\\";
 	DWORD serie = 0;
@@ -62,18 +62,18 @@ std::wstring lettreDe(const std::wstring& cheminVolume) {
 	return L"";
 }
 
-/*! Chemin d'une pièce RELATIF au répertoire de sortie.
+/*! Path of an exhibit RELATIVE to the output directory.
  *
- *  Le manifeste ne doit pas porter le chemin absolu de la machine de collecte :
- *  il n'identifie rien de la pièce, il expose l'arborescence de l'examinateur,
- *  et il devient faux dès que le support est monté ailleurs — c'est-à-dire à la
- *  première lecture par quelqu'un d'autre.
+ *  The manifest must not carry the collecting machine's absolute path: it
+ *  identifies nothing about the exhibit, it exposes the examiner's directory
+ *  tree, and it becomes wrong as soon as the medium is mounted elsewhere —
+ *  that is, the first time someone else reads it.
  */
 std::wstring relatifSortie(const std::wstring& absolu) {
 	std::error_code ec;
 	const std::filesystem::path rel = std::filesystem::relative(
 		std::filesystem::path(absolu), std::filesystem::path(string_to_wstring(conf._outputDir)), ec);
-	if (ec || rel.empty()) return absolu;      // hors du dossier de sortie : tel quel
+	if (ec || rel.empty()) return absolu;      // outside the output folder: as is
 	return rel.wstring();
 }
 
@@ -99,7 +99,7 @@ unsigned long long ConsigneEspaceLibre() {
 HRESULT ConsigneVerifierEmplacement(unsigned long long besoinEstime) {
 	std::error_code ec;
 
-	// 1. Un travail deja peuplé ferait analyser une collecte antérieure.
+	// 1. A working directory already populated would analyse an earlier collection.
 	const std::filesystem::path travail = dossierTravail();
 	if (std::filesystem::exists(travail, ec)) {
 		bool peuple = false;
@@ -118,10 +118,10 @@ HRESULT ConsigneVerifierEmplacement(unsigned long long besoinEstime) {
 		}
 	}
 
-	// 2. Place disponible. Le besoin est doublé : consigne + travail.
+	// 2. Available space. The need is doubled: exhibit store + working copy.
 	const unsigned long long libre = ConsigneEspaceLibre();
 	if (libre == 0) {
-		// Information indisponible : on ne bloque pas sur une mesure ratée.
+		// Information unavailable: do not block on a failed measurement.
 		log(2, L"🔥Espace libre indéterminé sur le support de collecte : "
 		       L"vérification ignorée");
 		return ERROR_SUCCESS;
@@ -160,7 +160,7 @@ void ConsigneBilan(size_t* pieces, size_t* echecs, unsigned long long* octets) {
 	for (const Piece& p : g_pieces) {
 		++nb;
 		if (FAILED(p.extrait.resultat)) ++ko;
-		// Un contenu partagé n'occupe la consigne qu'une fois.
+		// Shared content takes room in the exhibit store only once.
 		else if (!p.partagee) total += p.extrait.empreintes.octets;
 	}
 	if (pieces) *pieces = nb;
@@ -181,9 +181,10 @@ HRESULT ConsigneVersTravail(size_t* copies, unsigned long long* octets) {
 	}
 	std::filesystem::create_directories(travail, ec);
 
-	/*  Empreintes du manifeste, indexées par chemin de consigne : la copie de
-	 *  travail est comparée à ce qui a été LU DU VOLUME, pas à une relecture de
-	 *  la consigne. Une consigne déjà altérée serait ainsi détectée aussi. */
+	/*  The manifest's fingerprints, indexed by exhibit store path: the working
+	 *  copy is compared with what was READ FROM THE VOLUME, not with a re-read of
+	 *  the exhibit store. An already altered exhibit store would thus be caught
+	 *  too. */
 	std::map<std::wstring, std::wstring> attendu;   // chemin -> SHA-256
 	for (const Piece& p : g_pieces)
 		if (SUCCEEDED(p.extrait.resultat) && !p.extrait.empreintes.sha256.empty())
@@ -201,17 +202,16 @@ HRESULT ConsigneVersTravail(size_t* copies, unsigned long long* octets) {
 		const std::filesystem::path relatif =
 			std::filesystem::relative(e.path(), consigne, ec);
 		if (ec) continue;
-		// Le manifeste et son sceau appartiennent à la consigne seule : les
-		// recopier dans le travail inviterait à les modifier.
+		// The manifest and its seal belong to the exhibit store alone: copying
+		// them to the working directory would invite changing them.
 		const std::wstring nom = relatif.filename().wstring();
 		if (nom == L"MANIFESTE.json" || nom == L"MANIFESTE.sha256") continue;
 
 		const std::filesystem::path cible = travail / relatif;
-		/*  ON N'ÉCRASE PAS une copie de travail existante. La fonction est
-		 *  appelée après chaque phase d'extraction ; écraser reviendrait à
-		 *  défaire le travail déjà fait sur les fichiers de la phase précédente
-		 *  — en particulier le rejeu des journaux de transaction des ruches,
-		 *  qui a lieu juste après leur copie. */
+		/*  AN EXISTING WORKING COPY IS NOT OVERWRITTEN. The function is called
+		 *  after each extraction phase; overwriting would undo the work already
+		 *  done on the previous phase's files — in particular the replay of the
+		 *  hives' transaction logs, which happens right after they are copied. */
 		if (std::filesystem::exists(cible, ec)) { ++existants; continue; }
 		std::filesystem::create_directories(cible.parent_path(), ec);
 		std::filesystem::copy_file(e.path(), cible,
@@ -225,10 +225,10 @@ HRESULT ConsigneVersTravail(size_t* copies, unsigned long long* octets) {
 		++nb;
 		volume += (unsigned long long)std::filesystem::file_size(cible, ec);
 
-		/*  VÉRIFICATION DE LA COPIE. Sans elle, une copie silencieusement
-		 *  tronquée — support plein, écriture en erreur — donnerait un
-		 *  répertoire de travail qui ne correspond pas à la pièce, et toute
-		 *  l'analyse porterait sur autre chose. */
+		/*  VERIFYING THE COPY. Without it, a silently truncated copy — full
+		 *  medium, write error — would give a working directory that does not
+		 *  match the exhibit, and the whole analysis would bear on something
+		 *  else. */
 		const auto att = attendu.find(e.path().wstring());
 		if (att != attendu.end()) {
 			const std::wstring obtenu = sha256Fichier(cible.wstring());
@@ -257,8 +257,8 @@ HRESULT ConsigneEcrireManifeste() {
 	const std::filesystem::path consigne = dossierConsigne();
 	std::filesystem::create_directories(consigne, ec);
 
-	// Le contexte vient de l'audit : une seule construction pour les deux
-	// documents de la collecte (cf. auditContexte).
+	// The context comes from the audit: built once for both documents of
+	// the collection (see auditContexte).
 	Json racine = auditContexte();
 
 	size_t nb = 0, ko = 0;
@@ -296,8 +296,8 @@ HRESULT ConsigneEcrireManifeste() {
 	for (const auto& v : g_volumes) {
 		Json o = Json::obj();
 		o.add(L"Letter", Json::str(v.first));
-		// Le numéro de série et le système de fichiers rattachent la pièce au
-		// support physique, indépendamment de la lettre, qui peut changer.
+		// The serial number and file system tie the exhibit to the physical
+		// medium, independently of the letter, which can change.
 		const size_t sep = v.second.find(L" | ");
 		if (sep != std::wstring::npos) {
 			o.add(L"SerialNumber", Json::str(v.second.substr(0, sep)));
@@ -318,7 +318,7 @@ HRESULT ConsigneEcrireManifeste() {
 		o.add(L"ExhibitPath", Json::str(relatifSortie(e.cheminSortie)));
 		o.add(L"Method",      Json::str(p.methode));
 		if (FAILED(e.resultat)) {
-			// Une pièce absente du manifeste se lirait comme jamais cherchée.
+			// An exhibit missing from the manifest would read as never looked for.
 			o.add(L"Result", Json::str(L"0x" + to_hex(e.resultat) + L" "
 			                           + getErrorMessage(e.resultat)));
 			pieces.push(std::move(o));
@@ -329,19 +329,19 @@ HRESULT ConsigneEcrireManifeste() {
 		o.add(L"SHA1",          Json::str(m.sha1));
 		o.add(L"SHA256",        Json::str(m.sha256));
 		o.add(L"Bytes",         Json::num(m.octets));
-		/* Contenu identique, octet pour octet (SHA-256), à une pièce déjà
-		   consignée : ExhibitPath désigne celle-ci, qui n'a pas été recopiée. La
-		   source reste une pièce à part entière — son chemin, son entrée $MFT et
-		   ses horodatages sont les siens. */
+		/* Content identical, byte for byte (SHA-256), to an exhibit already
+		   stored: ExhibitPath points to it, and it was not copied again. The source
+		   remains an exhibit in its own right — its path, $MFT entry and timestamps
+		   are its own. */
 		if (p.partagee) o.add(L"SharedExhibit", Json::boolean(true));
-		// Divergence des deux tailles = extraction tronquée, qu'une empreinte
-		// seule ne révélerait pas (elle serait juste... celle du tronqué).
+		// The two sizes diverging = truncated extraction, which a fingerprint
+		// alone would not reveal (it would just be... the truncated file's).
 		if (m.tailleAnnoncee != m.octets)
 			o.add(L"DeclaredBytes", Json::num(m.tailleAnnoncee));
-		/* Fichier préalloué : ce qui suit n'a jamais été écrit et vaut zéro dans
-		   la pièce, quel que soit le contenu des grappes sur le disque. À
-		   déclarer, sans quoi une pièce de 1 Mio dont 135 Kio seulement portent
-		   des données paraît simplement « pleine de zéros ». */
+		/* Preallocated file: what follows was never written and is zero in the
+		   exhibit, whatever the clusters hold on the disk. To be declared, otherwise
+		   a 1 MiB exhibit of which only 135 KiB carry data simply looks "full of
+		   zeros". */
 		if (!m.resident && m.tailleValide < m.tailleAnnoncee)
 			o.add(L"ValidDataBytes", Json::num(m.tailleValide));
 		o.add(L"MftEntry",      Json::num(m.mftEntry));
@@ -355,8 +355,8 @@ HRESULT ConsigneEcrireManifeste() {
 	}
 	racine.add(L"Items", std::move(pieces));
 
-	// Écriture du manifeste. Chemin absolu : writeJsonFile écrit sous
-	// _outputDir, ce qui n'est pas la consigne.
+	// Writing the manifest. Absolute path: writeJsonFile writes under
+	// _outputDir, which is not the exhibit store.
 	const std::filesystem::path chemin = consigne / L"MANIFESTE.json";
 	{
 		std::wofstream f;
@@ -369,10 +369,10 @@ HRESULT ConsigneEcrireManifeste() {
 		f.close();
 	}
 
-	/*  SCEAU. Un manifeste ne peut pas porter sa propre empreinte : elle est
-	 *  écrite à côté, après lui. Sans ce second fichier, une retouche du
-	 *  manifeste serait indétectable — et le manifeste est précisément ce qui
-	 *  atteste des pièces. */
+	/*  SEAL. A manifest cannot carry its own fingerprint: it is written beside
+	 *  it, after it. Without that second file, a retouched manifest would go
+	 *  undetected — and the manifest is precisely what attests to the
+	 *  exhibits. */
 	const std::wstring empreinte = sha256Fichier(chemin.wstring());
 	const std::filesystem::path sceau = consigne / L"MANIFESTE.sha256";
 	{
@@ -382,8 +382,8 @@ HRESULT ConsigneEcrireManifeste() {
 			log(2, L"🔥Sceau du manifeste non écrit : " + sceau.wstring());
 			return E_FAIL;
 		}
-		// Format sha256sum : « <empreinte>  <nom> », lisible par les outils
-		// courants sans rien connaître de WAC.
+		// sha256sum format: "<fingerprint>  <name>", readable by common tools
+		// without knowing anything about WAC.
 		f << ansi_to_utf8(empreinte + L"  MANIFESTE.json\n");
 		f.close();
 	}

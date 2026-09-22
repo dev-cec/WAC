@@ -1,66 +1,62 @@
 #pragma once
 
-/*  lznt1.h — DÉCOMPRESSION NTFS (LZNT1).
+/*  lznt1.h — NTFS DECOMPRESSION (LZNT1).
  *
- *  POURQUOI CE MODULE EXISTE. Windows 11 active la compression NTFS sur
- *  `\Windows\System32\winevt\Logs` : les journaux d'événements y sont stockés
- *  compressés (mesuré : `System.evtx`, 1 118 208 octets pour 589 824 sur le
- *  disque, soit 1,9 pour 1). Un lecteur brut qui ignore la compression ne rend
- *  RIEN pour ces fichiers — sur une VM Windows 11, 400 des 404 journaux
- *  échouaient, et la lecture hors ligne des événements était donc inopérante
- *  sur le système d'exploitation le plus courant.
+ *  WHY THIS MODULE EXISTS. Windows 11 turns NTFS compression on for
+ *  `\Windows\System32\winevt\Logs`: the event logs are stored there compressed
+ *  (measured: `System.evtx`, 1,118,208 bytes held in 589,824 on disk, 1.9 to
+ *  1). A raw reader that ignores compression returns NOTHING for those files —
+ *  on a Windows 11 VM, 400 of the 404 logs failed, which made offline event
+ *  reading useless on the most common operating system.
  *
- *  Ce n'est pas propre aux journaux : la compression est un attribut de
- *  répertoire que l'utilisateur ou une stratégie peut poser n'importe où, et
- *  tout artefact peut donc se trouver compressé.
+ *  It is not specific to logs: compression is a directory attribute that the
+ *  user or a policy can set anywhere, so any artefact can be compressed.
  *
- *  LE FORMAT, en deux niveaux.
+ *  THE FORMAT, on two levels.
  *
- *  1. L'UNITÉ DE COMPRESSION, côté NTFS. L'attribut `$DATA` déclare une taille
- *     d'unité (2^n grappes, 16 en pratique). Le fichier est découpé en unités
- *     de cette taille, et chacune est indépendante :
- *       - unité dont TOUTES les grappes sont allouées : stockée telle quelle,
- *         la compression n'ayant rien gagné ;
- *       - unité entièrement creuse : des zéros ;
- *       - unité partiellement allouée : les grappes présentes contiennent la
- *         forme compressée, à détendre jusqu'à la taille de l'unité.
- *     C'est raw_hive qui traite ce niveau, seul à connaître les séquences.
+ *  1. THE COMPRESSION UNIT, on the NTFS side. The `$DATA` attribute declares a
+ *     unit size (2^n clusters, 16 in practice). The file is cut into units of
+ *     that size, each independent:
+ *       - unit with ALL its clusters allocated: stored as is, compression
+ *         having gained nothing;
+ *       - entirely sparse unit: zeros;
+ *       - partially allocated unit: the present clusters hold the compressed
+ *         form, to be expanded up to the unit size.
+ *     raw_hive handles this level, being the only one to know the runs.
  *
- *  2. LE FLUX LZNT1, traité ici. Une unité compressée est une suite de morceaux
- *     de 4096 octets détendus. Chaque morceau commence par un en-tête de
- *     2 octets : bits 0-11 la taille des données qui suivent moins un, bits
- *     12-14 une signature, bit 15 l'indicateur « compressé ». Un en-tête nul
- *     termine le flux.
+ *  2. THE LZNT1 STREAM, handled here. A compressed unit is a sequence of chunks
+ *     of 4096 expanded bytes. Each chunk starts with a 2-byte header: bits 0-11
+ *     the size of the following data minus one, bits 12-14 a signature, bit 15
+ *     the "compressed" flag. A zero header ends the stream.
  *
- *     Dans un morceau compressé, un octet de drapeaux commande les huit
- *     éléments suivants : bit à 0, un octet littéral ; bit à 1, une référence
- *     arrière de 2 octets. LA SUBTILITÉ, et le seul endroit où une
- *     implémentation se trompe : le découpage de ces 16 bits entre distance et
- *     longueur N'EST PAS FIXE — il dépend de la quantité déjà produite dans le
- *     morceau. La distance commence sur 4 bits et en gagne un chaque fois que
- *     la sortie franchit une puissance de deux, la longueur en perdant un
- *     d'autant. Un découpage figé donne un flux qui se décode sans erreur et
- *     produit des données fausses.
+ *     In a compressed chunk, a flag byte drives the next eight items: bit 0, a
+ *     literal byte; bit 1, a 2-byte back-reference. THE SUBTLETY, and the only
+ *     place where an implementation goes wrong: the split of those 16 bits
+ *     between distance and length IS NOT FIXED — it depends on how much the
+ *     chunk has already produced. The distance starts on 4 bits and gains one
+ *     each time the output crosses a power of two, the length losing one
+ *     accordingly. A fixed split gives a stream that decodes without error and
+ *     produces wrong data.
  *
- *  Les données viennent de la machine examinée : toutes les bornes sont
- *  vérifiées, et une sortie tronquée est signalée par un rendu partiel plutôt
- *  que par une lecture hors zone.
+ *  The data come from the examined machine: every bound is checked, and a
+ *  truncated output is reported as a partial result rather than by reading out
+ *  of range.
  *
- *  C++ portable, aucune dépendance : vérifiable hors Windows (cf. lznt1_test).
+ *  Portable C++, no dependency: verifiable outside Windows (see lznt1_test).
  */
 
 #include <cstdint>
 #include <cstddef>
 
-/*! Détend un flux LZNT1.
+/*! Expands an LZNT1 stream.
 *
-*  @param compresse données compressées (une unité de compression entière)
-*  @param tailleCompressee taille de ces données
-*  @param sortie tampon de destination
-*  @param tailleSortie capacité du tampon
-*  @return nombre d'octets écrits ; 0 si l'entrée est inexploitable.
-*          Un rendu inférieur à la capacité n'est pas une erreur : la dernière
-*          unité d'un fichier est le plus souvent partielle.
+*  @param compresse compressed data (one whole compression unit)
+*  @param tailleCompressee size of that data
+*  @param sortie destination buffer
+*  @param tailleSortie buffer capacity
+*  @return number of bytes written; 0 if the input is unusable.
+*          A result below the capacity is not an error: a file's last unit is
+*          usually partial.
 */
 size_t Lznt1Detendre(const uint8_t* compresse, size_t tailleCompressee,
                      uint8_t* sortie, size_t tailleSortie);

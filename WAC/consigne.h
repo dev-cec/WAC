@@ -1,63 +1,63 @@
 #pragma once
 
-/*  consigne.h — CONSIGNE ET RÉPERTOIRE DE TRAVAIL.
+/*  consigne.h — EXHIBIT STORE AND WORKING DIRECTORY.
  *
- *  LE PRINCIPE, QUI EST UNE PROCÉDURE ET NON UNE COMMODITÉ. Une pièce numérique
- *  ne s'analyse jamais sur elle-même. On en fait une copie, on scelle la copie,
- *  et tout le travail se fait sur une SECONDE copie. Si l'analyse abîme quelque
- *  chose — un outil qui écrit, une ruche rejouée, une manipulation
- *  malencontreuse — la pièce scellée reste disponible et l'opération est
- *  refaisable. Sans cette séparation, la première erreur détruit la preuve.
+ *  THE PRINCIPLE, WHICH IS A PROCEDURE AND NOT A CONVENIENCE. A digital exhibit
+ *  is never analysed on itself. A copy is taken and sealed, and all the work is
+ *  done on a SECOND copy. If the analysis damages something — a tool that
+ *  writes, a replayed hive, a mistaken command — the sealed exhibit remains
+ *  available and the operation can be redone. Without that split, the first
+ *  mistake destroys the evidence.
  *
- *  D'où deux répertoires sur le support de collecte :
+ *  Hence two directories on the collection medium:
  *
- *      <sortie>\consigne\   copies brutes, telles que lues du volume.
- *                           JAMAIS réouvertes en écriture après extraction.
- *                           Contient le manifeste qui les identifie.
- *      <sortie>\travail\    copies de travail. C'est là que les ruches sont
- *                           rejouées, que les journaux d'annulation sont écrits,
- *                           et c'est ce que lisent tous les collecteurs.
+ *      <output>\consigne\   raw copies, as read from the volume.
+ *                           NEVER reopened for writing after extraction.
+ *                           Holds the manifest that identifies them.
+ *      <output>\travail\    working copies. That is where hives are replayed
+ *                           and undo journals written, and what every
+ *                           collector reads.
  *
- *  La séparation vaut pour TOUS les fichiers extraits, y compris ceux que WAC ne
- *  modifie pas — Prefetch, jumplists, .lnk, journaux d'événements. Ne dédoubler
- *  que ce qu'on modifie reviendrait à faire dépendre la procédure de ce que
- *  l'outil croit faire, alors que c'est précisément ce qu'il faut pouvoir
- *  vérifier de l'extérieur.
+ *  The split applies to EVERY extracted file, including those WAC does not
+ *  modify — Prefetch, jump lists, .lnk, event logs. Duplicating only what one
+ *  modifies would make the procedure depend on what the tool believes it does,
+ *  which is precisely what must be checkable from outside.
  *
- *  LE MANIFESTE. `consigne\MANIFESTE.json` identifie chaque pièce et la
- *  collecte. Il est scellé par `consigne\MANIFESTE.sha256`, qui porte son
- *  empreinte : un manifeste ne peut pas se hacher lui-même, et sans ce second
- *  fichier, une retouche du manifeste serait indétectable.
+ *  THE MANIFEST. `consigne\MANIFESTE.json` identifies each exhibit and the
+ *  collection. It is sealed by `consigne\MANIFESTE.sha256`, which carries its
+ *  fingerprint: a manifest cannot hash itself, and without that second file, a
+ *  retouched manifest would go undetected.
  *
- *  Ce qu'il contient, et pourquoi chaque champ est là :
+ *  What it holds, and why each field is there:
  *
- *    pour chaque pièce
- *      - le chemin SOURCE avec sa lettre de volume, et le chemin dans la
- *        consigne : ce qui relie la copie à son origine ;
- *      - MD5, SHA-1 et SHA-256 : MD5 seul ne suffit plus (collisions depuis
- *        2008), SHA-1 non plus (2017) ; les trois ensemble ferment le débat ;
- *      - la taille extraite ET la taille annoncée par l'attribut $DATA : leur
- *        divergence signale une extraction tronquée, qu'une empreinte seule ne
- *        révélerait pas ;
- *      - le numéro d'enregistrement $MFT : il identifie le fichier sur le
- *        volume indépendamment de son nom, donc y compris si le nom a été
- *        changé pour tromper ;
- *      - les quatre horodatages NTFS du fichier SOURCE : ce sont des données
- *        d'investigation, et leur présence atteste que la lecture brute ne les
- *        a pas modifiés, la copie portant les dates du moment ;
- *      - l'horodatage de l'extraction, en UTC et en heure locale du SUSPECT ;
- *      - la méthode de collecte, et l'issue — un échec est consigné aussi,
- *        car une pièce absente du manifeste se lirait comme jamais cherchée.
+ *    for each exhibit
+ *      - the SOURCE path with its volume letter, and the path in the exhibit
+ *        store: what ties the copy to its origin;
+ *      - MD5, SHA-1 and SHA-256: MD5 alone is no longer enough (collisions
+ *        since 2008), nor is SHA-1 (2017); the three together settle it;
+ *      - the extracted size AND the size declared by the $DATA attribute:
+ *        their divergence reveals a truncated extraction, which a fingerprint
+ *        alone would not;
+ *      - the $MFT record number: it identifies the file on the volume
+ *        independently of its name, so even if the name was changed to
+ *        mislead;
+ *      - the four NTFS timestamps of the SOURCE file: they are investigation
+ *        data, and their presence attests that the raw reading did not change
+ *        them, the copy carrying the current dates;
+ *      - the extraction time, in UTC and in the SUSPECT's local time;
+ *      - the collection method, and the outcome — a failure is recorded too,
+ *        since an exhibit missing from the manifest would read as never
+ *        looked for.
  *
- *    pour la collecte
- *      - l'outil, sa version, la ligne de commande ;
- *      - l'opérateur : nom, SID, élévation ;
- *      - la machine examinée : nom, lecteur système, version de l'OS, fuseau,
- *        et l'écart avec le fuseau de la machine de collecte ;
- *      - les volumes lus : lettre, numéro de série, système de fichiers ;
- *      - le début et la fin de l'extraction ;
- *      - les décomptes, et la mention expresse qu'aucune écriture n'a eu lieu
- *        sur le système examiné.
+ *    for the collection
+ *      - the tool, its version, the command line;
+ *      - the operator: name, SID, elevation;
+ *      - the examined machine: name, system drive, OS version, time zone, and
+ *        the difference with the collecting machine's time zone;
+ *      - the volumes read: letter, serial number, file system;
+ *      - the start and end of the extraction;
+ *      - the counts, and the explicit statement that nothing was written to
+ *        the examined system.
  */
 
 #include <windows.h>
@@ -65,86 +65,85 @@
 #include <vector>
 #include "raw_hive.h"
 
-/*! Racine de la consigne : `<sortie>\consigne`. */
+/*! Root of the exhibit store: `<output>\consigne`. */
 std::wstring dossierConsigne();
 
-/*! Racine du répertoire de travail : `<sortie>\travail`.
- *  C'est la valeur de `conf.mountpoint` : les collecteurs lisent ici. */
+/*! Root of the working directory: `<output>\travail`.
+ *  It is the value of `conf.mountpoint`: the collectors read from here. */
 std::wstring dossierTravail();
 
-/*! Vérifie que l'emplacement de collecte est utilisable, AVANT toute extraction.
+/*! Checks that the collection location is usable, BEFORE any extraction.
 *
-*  Deux refus, tous deux préférables à une collecte qui s'abîme en cours :
+*  Two refusals, both better than a collection that goes wrong midway:
 *
-*  - UN RÉPERTOIRE DE TRAVAIL DÉJÀ PEUPLÉ. `ConsigneVersTravail` n'écrase pas
-*    une copie de travail existante — il ne peut pas, sans défaire le rejeu de la
-*    phase précédente. Sur un dossier de sortie réutilisé, l'analyse porterait
-*    donc sur les fichiers d'une collecte ANTÉRIEURE, en silence et sans que rien
-*    dans le rapport ne le dise. C'est le pire cas possible : des conclusions
-*    tirées des données d'une autre machine.
+*  - A WORKING DIRECTORY ALREADY POPULATED. `ConsigneVersTravail` does not
+*    overwrite an existing working copy — it cannot, without undoing the
+*    previous phase's replay. On a reused output folder, the analysis would
+*    therefore bear on the files of an EARLIER collection, silently and with
+*    nothing in the report saying so. That is the worst possible case:
+*    conclusions drawn from another machine's data.
 *
-*  - PAS ASSEZ DE PLACE. Chaque pièce est écrite deux fois, et une écriture
-*    tronquée par un support plein donne une copie que la vérification
-*    d'empreinte signalera — mais après avoir dépensé le temps de l'extraction.
-*    Mieux vaut le dire avant.
+*  - NOT ENOUGH SPACE. Each exhibit is written twice, and a write truncated by a
+*    full medium gives a copy that the fingerprint check will flag — but after
+*    spending the extraction time. Better to say so beforehand.
 *
-*  @param besoinEstime octets attendus pour la consigne SEULE ; la fonction
-*         demande le double, la copie de travail s'ajoutant
-*  @return ERROR_SUCCESS, ou un code d'erreur avec le motif journalisé
+*  @param besoinEstime bytes expected for the exhibit store ALONE; the function
+*         asks for twice that, the working copy coming on top
+*  @return ERROR_SUCCESS, or an error code with the reason logged
 */
 HRESULT ConsigneVerifierEmplacement(unsigned long long besoinEstime);
 
-/*! Octets libres sur le volume qui porte le dossier de sortie.
-*  @return 0 si l'information n'a pas pu être obtenue */
+/*! Free bytes on the volume holding the output folder.
+*  @return 0 if the information could not be obtained */
 unsigned long long ConsigneEspaceLibre();
 
-/*! Enregistre un relevé d'extraction au manifeste de consigne.
+/*! Records an extraction result in the exhibit store manifest.
  *
- *  À appeler au fil des extractions, avec le relevé rendu par les fonctions de
- *  `raw_hive`. Rien n'est écrit sur le disque avant `ConsigneEcrireManifeste`.
+ *  To be called as extractions go, with the record returned by the `raw_hive`
+ *  functions. Nothing is written to disk before `ConsigneEcrireManifeste`.
  *
- *  @param releve pièces extraites (ou dont l'extraction a échoué)
- *  @param methode méthode de collecte, telle qu'elle sera consignée
- *         (ex. L"Lecture brute NTFS via \\\\.\\C: ($MFT, attribut $DATA)")
+ *  @param releve extracted exhibits (or whose extraction failed)
+ *  @param methode collection method, as it will be recorded
+ *         (e.g. L"Lecture brute NTFS via \\\\.\\C: ($MFT, attribut $DATA)")
  */
 void ConsigneAjouter(const std::vector<RawHiveExtrait>& releve,
                      const std::wstring& methode);
 
-/*! Enregistre une pièce dont le CONTENU est déjà consigné sous une autre.
+/*! Records an exhibit whose CONTENT is already stored under another one.
  *
- *  `e.cheminSortie` désigne la pièce existante ; le fichier n'est pas recopié.
- *  Le manifeste la déclare (`SharedExhibit`) et ne compte pas deux fois ses
- *  octets. Sert au dédoublonnage des binaires cités (cf. binaires.h) : trois
- *  copies de msedge.dll de 332 Mo, identiques, en occupaient 996.
+ *  `e.cheminSortie` points to the existing exhibit; the file is not copied
+ *  again. The manifest declares it (`SharedExhibit`) and does not count its
+ *  bytes twice. Used to deduplicate cited binaries (see binaires.h): three
+ *  identical 332 MB copies of msedge.dll took 996 MB.
  */
 void ConsigneAjouterDoublon(const RawHiveExtrait& e, const std::wstring& methode);
 
-/*! Recopie la consigne vers le répertoire de travail, en vérifiant la copie.
+/*! Copies the exhibit store to the working directory, verifying the copy.
  *
- *  Chaque fichier est recopié puis SA COPIE est rehachée et comparée à
- *  l'empreinte du manifeste. Sans cette vérification, une copie silencieusement
- *  tronquée — support plein, erreur d'écriture — donnerait un répertoire de
- *  travail qui ne correspond pas à la consigne, et toute l'analyse porterait sur
- *  autre chose que la pièce.
+ *  Each file is copied, then ITS COPY is hashed again and compared with the
+ *  manifest's fingerprint. Without this check, a silently truncated copy — full
+ *  medium, write error — would give a working directory that does not match
+ *  the exhibit store, and the whole analysis would bear on something other than
+ *  the exhibit.
  *
- *  @param copies (optionnel) reçoit le nombre de fichiers recopiés
- *  @param octets (optionnel) reçoit le volume recopié
- *  @return ERROR_SUCCESS, S_FALSE si au moins un fichier n'a pas pu être
- *          recopié ou vérifié, ou un code d'erreur si la consigne est absente
+ *  @param copies (optional) receives the number of files copied
+ *  @param octets (optional) receives the volume copied
+ *  @return ERROR_SUCCESS, S_FALSE if at least one file could not be copied or
+ *          verified, or an error code if the exhibit store is missing
  */
 HRESULT ConsigneVersTravail(size_t* copies = nullptr, unsigned long long* octets = nullptr);
 
-/*! Écrit `consigne\MANIFESTE.json` puis son sceau `consigne\MANIFESTE.sha256`.
+/*! Writes `consigne\MANIFESTE.json` then its seal `consigne\MANIFESTE.sha256`.
  *
- *  À appeler une fois toutes les extractions terminées. Le sceau est écrit
- *  APRÈS le manifeste et porte son empreinte SHA-256.
+ *  To be called once every extraction is over. The seal is written AFTER the
+ *  manifest and carries its SHA-256 fingerprint.
  *
- *  @return ERROR_SUCCESS, ou E_FAIL si l'un des deux fichiers n'a pas pu
- *          être écrit — auquel cas la consigne n'est pas identifiable et il faut
- *          le savoir.
+ *  @return ERROR_SUCCESS, or E_FAIL if either file could not be written — in
+ *          which case the exhibit store cannot be identified, and that must be
+ *          known.
  */
 HRESULT ConsigneEcrireManifeste();
 
-/*! Nombre de pièces au manifeste, et volume total.
- *  Sert au récapitulatif de fin de collecte et au journal d'investigation. */
+/*! Number of exhibits in the manifest, and total size.
+ *  Used for the end-of-collection summary and the investigation log. */
 void ConsigneBilan(size_t* pieces, size_t* echecs, unsigned long long* octets);
