@@ -41,6 +41,15 @@
     <ClCompile Include="xml_light.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="trans_id.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="users.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="binaires.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="consigne.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="event_messages.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="evtx.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="lznt1.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="pe_resource.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="sha.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="wevt.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="xpress.cpp"><Filter>Fichiers sources</Filter></ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asciiart.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
@@ -79,6 +88,15 @@
     <ClInclude Include="xml_light.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="trans_id.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="users.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="binaires.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="consigne.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="event_messages.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="evtx.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="lznt1.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="pe_resource.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="sha.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="wevt.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="xpress.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WAC.rc"><Filter>Fichiers de ressources</Filter></ResourceCompile>

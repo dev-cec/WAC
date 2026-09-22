@@ -201,6 +201,15 @@
     <ClCompile Include="xml_light.cpp" />
     <ClCompile Include="trans_id.cpp" />
     <ClCompile Include="users.cpp" />
+    <ClCompile Include="binaires.cpp" />
+    <ClCompile Include="consigne.cpp" />
+    <ClCompile Include="event_messages.cpp" />
+    <ClCompile Include="evtx.cpp" />
+    <ClCompile Include="lznt1.cpp" />
+    <ClCompile Include="pe_resource.cpp" />
+    <ClCompile Include="sha.cpp" />
+    <ClCompile Include="wevt.cpp" />
+    <ClCompile Include="xpress.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
@@ -244,6 +253,15 @@
     <ClInclude Include="xml_light.h" />
     <ClInclude Include="trans_id.h" />
     <ClInclude Include="users.h" />
+    <ClInclude Include="binaires.h" />
+    <ClInclude Include="consigne.h" />
+    <ClInclude Include="event_messages.h" />
+    <ClInclude Include="evtx.h" />
+    <ClInclude Include="lznt1.h" />
+    <ClInclude Include="pe_resource.h" />
+    <ClInclude Include="sha.h" />
+    <ClInclude Include="wevt.h" />
+    <ClInclude Include="xpress.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="doc\modele de donnees.png" />
