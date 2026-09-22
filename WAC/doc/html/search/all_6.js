@@ -39,7 +39,7 @@ var searchData=
   ['fsfilemodification_36',['fsFileModification',['../structFileEntryShellItem.html#a88688915df04fbe394ff6e08539ea6a7',1,'FileEntryShellItem']]],
   ['fsfilemodificationutc_37',['fsFileModificationUtc',['../structFileEntryShellItem.html#a68596544bcc9cd5cc255759bce8f9be9',1,'FileEntryShellItem']]],
   ['fsfilesize_38',['fsFileSize',['../structFileEntryShellItem.html#a795365da4da6187560c2707073d584d2',1,'FileEntryShellItem']]],
-  ['fsflags_39',['fsflags',['../structFsFlags.html#a9b2600706b5d1367930b37fb238bd39d',1,'FsFlags::FsFlags()'],['../structFileEntryShellItem.html#a2b3e62ed710d98e16783edd4165ad945',1,'FileEntryShellItem::fsFlags'],['../structFsFlags.html',1,'FsFlags']]],
+  ['fsflags_39',['fsflags',['../structFileEntryShellItem.html#a2b3e62ed710d98e16783edd4165ad945',1,'FileEntryShellItem::fsFlags'],['../structFsFlags.html#a9b2600706b5d1367930b37fb238bd39d',1,'FsFlags::FsFlags()'],['../structFsFlags.html',1,'FsFlags']]],
   ['fsprimaryname_40',['fsPrimaryName',['../structFileEntryShellItem.html#a49fb00b0200168b12c4ef9aa1b467174',1,'FileEntryShellItem']]],
   ['fullname_41',['fullName',['../structUser.html#a5dfb645ec5e4fd67450ff98e9bb20114',1,'User']]],
   ['fullpath_42',['fullpath',['../structDirStrings.html#aa1e6e0d7d2634f7a69d6802fd9564c3b',1,'DirStrings::fullPath'],['../structFilename.html#af484900be9e118ee916c3275810823a1',1,'Filename::fullPath'],['../structPrefetch.html#a716cb3bfc0775691d7dac0cb5dc7a4c1',1,'Prefetch::fullPath']]],

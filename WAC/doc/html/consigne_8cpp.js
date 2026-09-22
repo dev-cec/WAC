@@ -1,6 +1,7 @@
 var consigne_8cpp =
 [
     [ "ConsigneAjouter", "consigne_8cpp.html#afe3133efffb12857d07f29f3dded68ad", null ],
+    [ "ConsigneAjouterDoublon", "consigne_8cpp.html#ad24e2d98e918f0241d5390692a21a31e", null ],
     [ "ConsigneBilan", "consigne_8cpp.html#a733a8682d41a58188b924c72f36f9a5d", null ],
     [ "ConsigneEcrireManifeste", "consigne_8cpp.html#a4a7c26caf0a0130338f1065d25447a89", null ],
     [ "ConsigneEspaceLibre", "consigne_8cpp.html#aee43a5cb77659dcc719d9c601efaf3bb", null ],

@@ -188,6 +188,14 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:a2552f53a3a8dd307872dd737f4f8d9f7" id="r_a2552f53a3a8dd307872dd737f4f8d9f7"><td class="memItemLeft" align="right" valign="top">unsigned long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSystemInfo.html#a2552f53a3a8dd307872dd737f4f8d9f7">uptimeSeconds</a> = 0</td></tr>
 <tr class="memdesc:a2552f53a3a8dd307872dd737f4f8d9f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">durée d'activité depuis le démarrage  <br /></td></tr>
 <tr class="separator:a2552f53a3a8dd307872dd737f4f8d9f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a818676d90dc13fa17cfd3b7500a432" id="r_a5a818676d90dc13fa17cfd3b7500a432"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSystemInfo.html#a5a818676d90dc13fa17cfd3b7500a432">bootFraction100ns</a> = -1</td></tr>
+<tr class="memdesc:a5a818676d90dc13fa17cfd3b7500a432"><td class="mdescLeft">&#160;</td><td class="mdescRight">fraction de seconde du démarrage (-1 : inconnue)  <br /></td></tr>
+<tr class="separator:a5a818676d90dc13fa17cfd3b7500a432"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a18b30641d00016d28be4745a68fe6f7d" id="r_a18b30641d00016d28be4745a68fe6f7d"><td class="memItemLeft" align="right" valign="top">long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSystemInfo.html#a18b30641d00016d28be4745a68fe6f7d">correctionHorloge100ns</a> = 0</td></tr>
+<tr class="separator:a18b30641d00016d28be4745a68fe6f7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb993e763066627cdd48a0e799f9831b" id="r_aeb993e763066627cdd48a0e799f9831b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSystemInfo.html#aeb993e763066627cdd48a0e799f9831b">bootDuNoyau</a> = false</td></tr>
+<tr class="memdesc:aeb993e763066627cdd48a0e799f9831b"><td class="mdescLeft">&#160;</td><td class="mdescRight">true : heure lue dans le noyau, sinon estimée  <br /></td></tr>
+<tr class="separator:aeb993e763066627cdd48a0e799f9831b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>Informations système de la machine examinée.</p>
@@ -259,6 +267,38 @@ Attributs publics</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des données membres</h2>
+<a id="aeb993e763066627cdd48a0e799f9831b" name="aeb993e763066627cdd48a0e799f9831b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeb993e763066627cdd48a0e799f9831b">&#9670;&#160;</a></span>bootDuNoyau</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool SystemInfo::bootDuNoyau = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>true : heure lue dans le noyau, sinon estimée </p>
+
+</div>
+</div>
+<a id="a5a818676d90dc13fa17cfd3b7500a432" name="a5a818676d90dc13fa17cfd3b7500a432"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5a818676d90dc13fa17cfd3b7500a432">&#9670;&#160;</a></span>bootFraction100ns</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">long SystemInfo::bootFraction100ns = -1</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>fraction de seconde du démarrage (-1 : inconnue) </p>
+
+</div>
+</div>
 <a id="a3c1cac8a1022062307ec66f5040861a0" name="a3c1cac8a1022062307ec66f5040861a0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3c1cac8a1022062307ec66f5040861a0">&#9670;&#160;</a></span>buildLabEx</h2>
 
@@ -288,6 +328,21 @@ Attributs publics</h2></td></tr>
 </div><div class="memdoc">
 
 <p>nom de l'ordinateur </p>
+
+</div>
+</div>
+<a id="a18b30641d00016d28be4745a68fe6f7d" name="a18b30641d00016d28be4745a68fe6f7d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a18b30641d00016d28be4745a68fe6f7d">&#9670;&#160;</a></span>correctionHorloge100ns</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">long long SystemInfo::correctionHorloge100ns = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Cumul des corrections d'horloge appliquées depuis le démarrage, en 100 ns (BootTimeBias du noyau). Positif : l'horloge a été avancée. Un écart de quelques secondes est le recalage ordinaire (synchronisation NTP, sortie de suspension d'une VM) ; un écart important signale une horloge modifiée — et donc des horodatages à interpréter avec prudence. </p>
 
 </div>
 </div>

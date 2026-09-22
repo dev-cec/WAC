@@ -120,6 +120,8 @@ Fonctions</h2></td></tr>
 <tr class="separator:aee43a5cb77659dcc719d9c601efaf3bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afe3133efffb12857d07f29f3dded68ad" id="r_afe3133efffb12857d07f29f3dded68ad"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8h.html#afe3133efffb12857d07f29f3dded68ad">ConsigneAjouter</a> (const std::vector&lt; <a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a> &gt; &amp;releve, const std::wstring &amp;methode)</td></tr>
 <tr class="separator:afe3133efffb12857d07f29f3dded68ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad24e2d98e918f0241d5390692a21a31e" id="r_ad24e2d98e918f0241d5390692a21a31e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8h.html#ad24e2d98e918f0241d5390692a21a31e">ConsigneAjouterDoublon</a> (const <a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a> &amp;e, const std::wstring &amp;methode)</td></tr>
+<tr class="separator:ad24e2d98e918f0241d5390692a21a31e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4a0087c67aeaeae0dc3a249e00bfe3ea" id="r_a4a0087c67aeaeae0dc3a249e00bfe3ea"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8h.html#a4a0087c67aeaeae0dc3a249e00bfe3ea">ConsigneVersTravail</a> (size_t *copies=nullptr, unsigned long long *octets=nullptr)</td></tr>
 <tr class="separator:a4a0087c67aeaeae0dc3a249e00bfe3ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4a7c26caf0a0130338f1065d25447a89" id="r_a4a7c26caf0a0130338f1065d25447a89"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8h.html#a4a7c26caf0a0130338f1065d25447a89">ConsigneEcrireManifeste</a> ()</td></tr>
@@ -162,6 +164,36 @@ Fonctions</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="ad24e2d98e918f0241d5390692a21a31e" name="ad24e2d98e918f0241d5390692a21a31e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad24e2d98e918f0241d5390692a21a31e">&#9670;&#160;</a></span>ConsigneAjouterDoublon()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ConsigneAjouterDoublon </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a> &amp;&#160;</td>
+          <td class="paramname"><em>e</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>methode</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Enregistre une pièce dont le CONTENU est déjà consigné sous une autre.</p>
+<p><code>e.cheminSortie</code> désigne la pièce existante ; le fichier n'est pas recopié. Le manifeste la déclare (<code>SharedExhibit</code>) et ne compte pas deux fois ses octets. Sert au dédoublonnage des binaires cités (cf. <a class="el" href="binaires_8h.html">binaires.h</a>) : trois copies de msedge.dll de 332 Mo, identiques, en occupaient 996. </p>
 
 </div>
 </div>

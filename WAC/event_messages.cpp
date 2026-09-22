@@ -22,6 +22,9 @@ struct Fournisseur {
 	bool utilisable = false;         //!< les deux ressources ont été chargées
 	MetadonneesWevt metadonnees;     //!< événement -> identifiant de message
 	TableMessages   messages;        //!< identifiant de message -> modèle
+	/*! Table du fichier de paramètres (ParameterFileName) : libellés des valeurs « %%nnnn ». Pour
+	 *  Security-Auditing, c'est msobjs.dll, et non le binaire du fournisseur. */
+	TableMessages   parametres;
 	std::wstring    fichier;         //!< chemin d'origine du binaire de ressources
 	std::wstring    motif;           //!< pourquoi il est inutilisable
 };
@@ -186,6 +189,44 @@ std::wstring trouverMui(const std::wstring& cheminAbsolu) {
 }
 
 /*! Charge les ressources d'un fournisseur, une seule fois. */
+/*! Chemins où chercher un fichier déclaré dans une clé de fournisseur.
+ *
+ *  DEUX CANDIDATS. Un chemin RELATIF dans une clé de fournisseur est relatif à
+ *  `System32`, alors que pour un service il l'est à `%SystemRoot%` —
+ *  `cheminBinaire` applique cette seconde règle. Constaté : un
+ *  « storagewmi.dll » nu donnait « C:\Windows\storagewmi.dll », introuvable,
+ *  au lieu de « C:\Windows\System32\storagewmi.dll ». */
+std::vector<std::wstring> candidatsPour(const std::wstring& declare) {
+	const std::wstring resolu = cheminBinaire(declare);
+	std::vector<std::wstring> candidats;
+	if (!resolu.empty()) candidats.push_back(resolu);
+	const std::filesystem::path p = resolu.empty() ? declare : resolu;
+	const std::wstring nomSeul = p.filename().wstring();
+	if (!nomSeul.empty())
+		candidats.push_back(conf.systemDrive + L"\\Windows\\System32\\" + nomSeul);
+	return candidats;
+}
+
+/*! Charge la table de messages d'un fichier déclaré : dans le binaire, sinon
+ *  dans son satellite localisé. Rend le nombre de messages. */
+size_t chargerTable(const std::wstring& declare, TableMessages& table, std::wstring* fichier) {
+	for (const std::wstring& c : candidatsPour(declare)) {
+		const std::wstring travail = extraireRessource(c);
+		if (travail.empty()) continue;
+		if (fichier) *fichier = c;
+		PeResource pe;
+		size_t n = pe.ouvrir(travail) ? table.analyser(pe.ressource(PE_RT_MESSAGETABLE)) : 0;
+		if (n == 0) {
+			const std::wstring mui = trouverMui(c);
+			PeResource peMui;
+			if (!mui.empty() && peMui.ouvrir(mui))
+				n = table.analyser(peMui.ressource(PE_RT_MESSAGETABLE));
+		}
+		return n;
+	}
+	return 0;
+}
+
 Fournisseur* charger(const std::wstring& guid) {
 	const std::map<std::wstring, std::unique_ptr<Fournisseur>>::iterator it = g_cache.find(guid);
 	if (it != g_cache.end()) return it->second.get();
@@ -207,22 +248,9 @@ Fournisseur* charger(const std::wstring& guid) {
 			return brut;
 		}
 	}
-	// `%SystemRoot%`, `%windir%` et consorts : même résolution que les services.
+	// `%SystemRoot%`, `%windir%` et consorts, et chemin relatif à System32.
 	const std::wstring resolu = cheminBinaire(chemin);
-
-	/*  DEUX CANDIDATS. Un chemin RELATIF dans une clé de fournisseur est
-	    relatif à `System32`, alors que pour un service il l'est à `%SystemRoot%`
-	    — `cheminBinaire` applique cette seconde règle. Constaté : un
-	    « storagewmi.dll » nu donnait « C:\Windows\storagewmi.dll », introuvable,
-	    au lieu de « C:\Windows\System32\storagewmi.dll ». */
-	std::vector<std::wstring> candidats;
-	if (!resolu.empty()) candidats.push_back(resolu);
-	{
-		const std::filesystem::path p = resolu.empty() ? chemin : resolu;
-		const std::wstring nomSeul = p.filename().wstring();
-		if (!nomSeul.empty())
-			candidats.push_back(conf.systemDrive + L"\\Windows\\System32\\" + nomSeul);
-	}
+	const std::vector<std::wstring> candidats = candidatsPour(chemin);
 
 	// 2. Les métadonnées, dans le binaire lui-même.
 	std::wstring travailDll;
@@ -260,6 +288,28 @@ Fournisseur* charger(const std::wstring& guid) {
 			PeResource peMui;
 			if (peMui.ouvrir(mui))
 				nbMessages = f->messages.analyser(peMui.ressource(PE_RT_MESSAGETABLE));
+		}
+	}
+
+	/* FICHIER DE PARAMÈTRES. Les valeurs énumérées d'un événement s'écrivent
+	   « %%nnnn » dans ses DONNÉES, et Windows les résout dans le fichier de
+	   paramètres du fournisseur. Les chercher dans sa propre table
+	   laissait 8 337 références brutes dans 3 700 messages de Security —
+	   « Elevated Token: %%1842 » au lieu de « Oui ». */
+	{
+		/* Le nom de la valeur est « ParameterFileName » dans la clé WINEVT du
+		   fournisseur ; « ParameterMessageFile » est celui de l'ancienne clé du
+		   service EventLog. Chercher le second seul ne trouvait rien : Security
+		   déclare le sien sous le premier (msobjs.dll). */
+		std::wstring declare;
+		if ((getRegSzValue(conf.Software, cle.c_str(), L"ParameterFileName", &declare) == ERROR_SUCCESS
+		     && !declare.empty())
+		    || (getRegSzValue(conf.Software, cle.c_str(), L"ParameterMessageFile", &declare) == ERROR_SUCCESS
+		     && !declare.empty())) {
+			std::wstring fichierParametres;
+			const size_t n = chargerTable(declare, f->parametres, &fichierParametres);
+			log(2, L"❇️Fournisseur " + guid + L" : " + std::to_wstring(n)
+			     + L" libelle(s) de parametre — " + (fichierParametres.empty() ? declare : fichierParametres));
 		}
 	}
 
@@ -321,7 +371,13 @@ std::wstring MessageEvenement(const std::wstring& guidFournisseur,
 			for (size_t i = 2; i < v.size(); ++i)
 				if (v[i] < L'0' || v[i] > L'9') { chiffres = false; break; }
 			if (chiffres) {
-				const std::wstring t = f->messages.texte((uint32_t)wcstoul(v.c_str() + 2, nullptr, 10));
+				const uint32_t id = (uint32_t)wcstoul(v.c_str() + 2, nullptr, 10);
+				std::wstring t = f->parametres.texte(id);           // d'abord : comme Windows
+				if (t.empty()) t = f->messages.texte(id);
+				// Un libellé de table finit par « \r\n » : inséré dans une phrase,
+				// il la couperait.
+				while (!t.empty() && (t.back() == L'\n' || t.back() == L'\r' || t.back() == L' '))
+					t.pop_back();
 				resolues.push_back(t.empty() ? v : t);
 				continue;
 			}

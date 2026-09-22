@@ -111,6 +111,9 @@ int main(int argc, char** argv) {
 		{ L"ligne%nsuivante",   L"ligne\nsuivante" },
 		{ L"tab%tici",          L"tab\tici" },
 		{ L"%1!s! formate",     L"<1> formate" },     // consigne d'affichage retiree
+		{ L"fin.%n%0",          L"fin." },            // %0 termine, sans saut final
+		{ L"a%0 ignore",        L"a" },
+		{ L"x%by%.%!",          L"x y.!" },
 	};
 	const std::vector<std::wstring> v = { L"<1>", L"<2>", L"<3>" };
 	for (const Cas& c : cas) {

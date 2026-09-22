@@ -121,10 +121,13 @@ def controles_croises(rep):
         print("  ⏭️  Sessions.json absent : contrôle sessions/boot ignoré")
     else:
         # Une session ne peut pas commencer avant le démarrage du système.
-        # Tolérance de 60 s : GetTickCount64 exclut les veilles, et les sessions
-        # de service démarrent dans la seconde qui suit le boot.
+        # Comparaison STRICTE : l'heure de démarrage vient du noyau (BootTime -
+        # BootTimeBias), sur la même horloge que les ouvertures de session. Le
+        # commentaire annonçait une tolérance de 60 s que le code n'appliquait
+        # pas ; c'est ce qui a révélé l'estimation par GetTickCount64, fausse de
+        # 3,5 s après recalage de l'horloge.
         avant = sorted({s.get("StartTimeUtc") for s in sessions
-                        if s.get("StartTimeUtc") and s["StartTimeUtc"] < boot})
+                        if s.get("StartTimeUtc") and instant(s["StartTimeUtc"]) < instant(boot)})
         if avant:
             print(f"  ❌ {len(avant)} session(s) démarrent AVANT le boot ({boot})")
             for v in avant[:3]:
@@ -133,6 +136,7 @@ def controles_croises(rep):
             trouvees += 1
         else:
             print(f"  ✅ aucune session antérieure au boot ({boot})")
+    trouvees += controle_boot_kernel_general(rep, boot)
 
     # Les couples <champ>/<champ>Utc doivent désigner le MÊME instant : si le
     # suffixe local et le suffixe Z portent la même heure murale, l'un des deux
@@ -300,13 +304,34 @@ def controle_events(rep):
               "à vérifier (registre, ressources PE, WEVT_TEMPLATE)")
     else:
         import re as _re
-        marques = [e for e in avecMsg
-                   if _re.search(r"%\d", str(e.get("EvtEventMessage")))]
+        # Ce qui vient des DONNÉES n'est pas une marque du gabarit : une URL
+        # encodée (« P4=CQ%2bHw ») faisait compter 47 messages BITS à tort. Les
+        # valeurs sont donc retirées du message avant la recherche.
+        def residu(e):
+            m = str(e.get("EvtEventMessage"))
+            for v in sorted((str(x.get("Value", "")) for x in (e.get("EvtEventData") or [])
+                             if isinstance(x, dict)), key=len, reverse=True):
+                if len(v) > 1 and not _re.fullmatch(r"%%\d+", v):
+                    m = m.replace(v, "")
+            return m
+        references = [e for e in avecMsg if _re.search(r"%%\d", residu(e))]
+        marques = [e for e in avecMsg if _re.search(r"(?<!%)%\d", residu(e))]
         print(f"  ✅ events.json : {len(avecMsg)} message(s) en clair "
               f"({100*len(avecMsg)/len(d):.0f}% des événements)")
+        # « %%1842 » resté tel quel : le libellé existe dans le fichier de
+        # paramètres du fournisseur, et WAC ne l'a pas résolu.
+        if references:
+            fourn = collections.Counter(e.get("EvtSystemProviderName") for e in references)
+            print(f"  ❌ events.json : {len(references)} message(s) gardent une référence "
+                  f"%%nnnn non résolue — fichier de paramètres du fournisseur "
+                  f"{fourn.most_common(2)}")
+            trouvees += 1
+        # « %3 » resté tel quel : l'événement ne porte pas la donnée. Un fait, pas
+        # un défaut — la marque est gardée visible pour que la phrase ne paraisse
+        # pas complète.
         if marques:
-            print(f"  ⚠️  events.json : {len(marques)} message(s) gardent une marque "
-                  f"non substituée — donnée absente de l'événement")
+            print(f"  ℹ️  events.json : {len(marques)} message(s) gardent une marque "
+                  f"%N — donnée absente de l'événement lui-même")
 
     # 5. aucun événement postérieur à la collecte
     inv = charge(rep, "investigation.json")
@@ -390,6 +415,52 @@ def controle_rejeu_ruches(rep):
         print(f"  ⚠️  {len(rejeuKo)} ruche(s) sans rejeu applicable "
               f"{[os.path.basename(x) for x in rejeuKo[:3]]} — repli sur le patch")
     return trouvees
+
+
+def instant(texte):
+    """Horodatage ISO 8601 (fraction de 0 à 7 chiffres, Z ou décalage) -> datetime."""
+    import datetime
+    t = str(texte).replace("Z", "+00:00")
+    m = re.match(r"^(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(?:\.(\d+))?(.*)$", t)
+    if not m:
+        return datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
+    frac = (m.group(2) or "0")[:6].ljust(6, "0")
+    return datetime.datetime.fromisoformat(f"{m.group(1)}.{frac}{m.group(3) or '+00:00'}")
+
+
+def controle_boot_kernel_general(rep, boot):
+    """L'heure de démarrage confrontée à l'événement Kernel-General 12.
+
+    À chaque démarrage, le noyau écrit dans System l'événement 12 de
+    Microsoft-Windows-Kernel-General, dont la donnée StartTime est l'heure de
+    démarrage : une source indépendante de celle que WAC relève (requête noyau
+    à chaud). Écart toléré : 1 s.
+    """
+    if not boot:
+        return 0
+    ev = charge(rep, "events.json")
+    if not isinstance(ev, list):
+        print("  ⏭️  events.json absent : heure de démarrage non confrontée à Kernel-General 12")
+        return 0
+    departs = []
+    for e in ev:
+        if "Kernel-General" not in str(e.get("EvtSystemProviderName", "")) \
+           or str(e.get("EvtSystemEventID")) != "12":
+            continue
+        for d in e.get("EvtEventData") or []:
+            if isinstance(d, dict) and d.get("Name") == "StartTime" and d.get("Value"):
+                departs.append(d["Value"])
+    if not departs:
+        print("  ⏭️  aucun événement Kernel-General 12 : heure de démarrage non confrontée")
+        return 0
+    dernier = max(departs, key=instant)
+    ecart = abs((instant(boot) - instant(dernier)).total_seconds())
+    if ecart > 1:
+        print(f"  ❌ heure de démarrage {boot} ≠ Kernel-General 12 {dernier} "
+              f"(écart {ecart:.1f} s)")
+        return 1
+    print(f"  ✅ heure de démarrage conforme à Kernel-General 12 ({dernier}, écart {ecart:.2f} s)")
+    return 0
 
 
 def controle_consigne(rep):

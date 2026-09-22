@@ -243,6 +243,17 @@ std::wstring formaterMessage(const std::wstring& modele,
 		if (suivant == L'%') { r += L'%'; ++i; continue; }
 		if (suivant == L'n') { r += L'\n'; ++i; continue; }   // saut de ligne
 		if (suivant == L't') { r += L'\t'; ++i; continue; }   // tabulation
+		if (suivant == L'r') { r += L'\r'; ++i; continue; }   // retour chariot
+		if (suivant == L'b') { r += L' ';  ++i; continue; }   // espace
+		if (suivant == L'.' || suivant == L'!') { r += suivant; ++i; continue; }
+		/*  « %0 » TERMINE le message, sans saut de ligne final (convention de
+		    FormatMessage). Il était recopié tel quel : « …supprimées suite à la
+		    suppression du profil utilisateur.\n%0 ». Un chiffre qui suit ferait
+		    une marque %0N, qui n'existe pas : même traitement. */
+		if (suivant == L'0') {
+			while (!r.empty() && (r.back() == L'\n' || r.back() == L'\r')) r.pop_back();
+			return r;
+		}
 		if (suivant < L'0' || suivant > L'9') { r += modele[i]; continue; }
 
 		// Marque positionnelle : un ou plusieurs chiffres.

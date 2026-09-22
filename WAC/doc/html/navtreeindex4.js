@@ -1,5 +1,7 @@
 var NAVTREEINDEX4 =
 {
+"structMountedDevice.html#aaacc71584161e4312c845a9b3ab80024":[1,0,74,1],
+"structMountedDevice.html#ade26f26af12b5736224aec9c85b1fffd":[1,0,74,3],
 "structMountedDevices.html":[1,0,75],
 "structMountedDevices.html#a14d59329b366d50fb3206a56ab11bdd5":[1,0,75,0],
 "structMountedDevices.html#a9edaabb53e5d72bbf057538a7d907076":[1,0,75,3],
@@ -247,7 +249,5 @@ var NAVTREEINDEX4 =
 "structSPS.html#aeb937ecfffc8f3c17ed6f4fb5b7863ec":[1,0,114,7],
 "structSPSValue.html":[1,0,115],
 "structSPSValue.html#a08795fe7743adc3538099542841bdeaa":[1,0,115,8],
-"structSPSValue.html#a097501533faec7e0df86bdfc0dfc37fe":[1,0,115,4],
-"structSPSValue.html#a394dce8467565811daf296846d96517a":[1,0,115,7],
-"structSPSValue.html#a61a45278407f06fe98866cd06c911194":[1,0,115,3]
+"structSPSValue.html#a097501533faec7e0df86bdfc0dfc37fe":[1,0,115,4]
 };

@@ -24,7 +24,7 @@ var searchData=
   ['inneritem_21',['innerItem',['../structDelegateFolder.html#a148b8ebafdf4d56d9f9f2fd13479e0ce',1,'DelegateFolder']]],
   ['installationtype_22',['installationType',['../structSystemInfo.html#a7a8ad00b8e89f69926431337bc7735ce',1,'SystemInfo']]],
   ['installdate_23',['InstallDate',['../structAmcacheApplication.html#ae1eb1f14a433aba71a252e5db4c98f29',1,'AmcacheApplication']]],
-  ['installdateutc_24',['installdateutc',['../structAmcacheApplication.html#a6683e37f1d6ec04074f44bf93fab3209',1,'AmcacheApplication::InstallDateUtc'],['../structSystemInfo.html#aa47309e18743c6d38b19bbce7b2b74e4',1,'SystemInfo::installDateUtc']]],
+  ['installdateutc_24',['installdateutc',['../structSystemInfo.html#aa47309e18743c6d38b19bbce7b2b74e4',1,'SystemInfo::installDateUtc'],['../structAmcacheApplication.html#a6683e37f1d6ec04074f44bf93fab3209',1,'AmcacheApplication::InstallDateUtc']]],
   ['interval_25',['interval',['../structTrigger.html#a68732e2fc68ff227dec98e72fdf10653',1,'Trigger']]],
   ['is_5fdirectory_26',['IS_DIRECTORY',['../structFsFlags.html#aadd8ca0ac03768f5b363c7cc534a8148',1,'FsFlags']]],
   ['is_5ffile_27',['IS_FILE',['../structFsFlags.html#a831a0d1582a203cb6eafeeb8b6b96526',1,'FsFlags']]],

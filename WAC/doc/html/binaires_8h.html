@@ -119,8 +119,8 @@ Fonctions</h2></td></tr>
 <tr class="separator:a1f33106ee2032db23d057900ce48f662"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac6f5f58993492c23be658c28fa58e30f" id="r_ac6f5f58993492c23be658c28fa58e30f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8h.html#ac6f5f58993492c23be658c28fa58e30f">ajouterEmpreintes</a> (<a class="el" href="classJson.html">Json</a> &amp;o, const <a class="el" href="structEmpreinteBinaire.html">EmpreinteBinaire</a> &amp;e, const std::wstring &amp;prefixe=L&quot;&quot;, const std::wstring &amp;suffixe=L&quot;&quot;)</td></tr>
 <tr class="separator:ac6f5f58993492c23be658c28fa58e30f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abc8d95462c9eae67b679d65130580b6a" id="r_abc8d95462c9eae67b679d65130580b6a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8h.html#abc8d95462c9eae67b679d65130580b6a">BinairesBilan</a> (size_t *fichiers, size_t *lus, size_t *preleves, unsigned long long *octetsPreleves, size_t *sansPlace)</td></tr>
-<tr class="separator:abc8d95462c9eae67b679d65130580b6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab463f084e3e7c72d36f81af20377334e" id="r_ab463f084e3e7c72d36f81af20377334e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8h.html#ab463f084e3e7c72d36f81af20377334e">BinairesBilan</a> (size_t *fichiers, size_t *lus, size_t *preleves, unsigned long long *octetsPreleves, size_t *sansPlace, size_t *doublons, unsigned long long *octetsEvites)</td></tr>
+<tr class="separator:ab463f084e3e7c72d36f81af20377334e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af71e43b15569254d47f7e64f9382f374" id="r_af71e43b15569254d47f7e64f9382f374"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8h.html#af71e43b15569254d47f7e64f9382f374">BinairesTerminer</a> ()</td></tr>
 <tr class="separator:af71e43b15569254d47f7e64f9382f374"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -166,8 +166,8 @@ Fonctions</h2></td></tr>
 
 </div>
 </div>
-<a id="abc8d95462c9eae67b679d65130580b6a" name="abc8d95462c9eae67b679d65130580b6a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abc8d95462c9eae67b679d65130580b6a">&#9670;&#160;</a></span>BinairesBilan()</h2>
+<a id="ab463f084e3e7c72d36f81af20377334e" name="ab463f084e3e7c72d36f81af20377334e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab463f084e3e7c72d36f81af20377334e">&#9670;&#160;</a></span>BinairesBilan()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -200,7 +200,19 @@ Fonctions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">size_t *&#160;</td>
-          <td class="paramname"><em>sansPlace</em>&#160;</td>
+          <td class="paramname"><em>sansPlace</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>doublons</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long long *&#160;</td>
+          <td class="paramname"><em>octetsEvites</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
