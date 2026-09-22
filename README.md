@@ -641,16 +641,16 @@ cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
 
 ## 📚 DOCUMENTATION
 
-- **User manual** (French): `docs/utilisateur/manuel-wac.pdf`, built from
-  `docs/utilisateur/manuel-wac.tex` with `latexmk -xelatex manuel-wac.tex`
+- **User manual** (French): `WAC/doc/utilisateur/manuel-wac.pdf`, built from
+  `WAC/doc/utilisateur/manuel-wac.tex` with `latexmk -xelatex manuel-wac.tex`
   (fonts: Noto Sans, DejaVu Sans Mono). It covers preparing a collection, the
   options, reading the output, verifying the exhibit store and the traces left
-  on the examined machine. `docs/utilisateur/verifier-consigne.ps1` checks the
+  on the examined machine. `WAC/doc/utilisateur/verifier-consigne.ps1` checks the
   seal and every exhibit of a collection (tested on 3 360 exhibits).
 - **API documentation**: HTML, generated with Doxygen from the source comments
   (`Doxygen/Doxyfile`, output in `WAC/doc/html`). Regenerate with
   `cd Doxygen && doxygen Doxyfile`.
-- `docs/BUILD-LINUX.md` — cross-compilation details.
+- `WAC/doc/BUILD-LINUX.md` — cross-compilation details.
 
 The design rationale lives **in the code**, next to what it explains: each
 non-obvious choice carries a comment saying why it is that way and what breaks
