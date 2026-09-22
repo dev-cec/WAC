@@ -1,141 +1,144 @@
-# VM de test Windows 11 — pilotage autonome de WAC
+# Windows 11 test VM — driving WAC unattended
 
-Permet de tester WAC sur un vrai Windows 11 (vrai NTFS) **sans aucune interaction** :
-build sur Linux → exécution dans la VM en SYSTEM → rapatriement des JSON sur l'hôte.
+*Version française : [README.fr.md](README.fr.md)*
 
-Le pilotage passe par le **qemu-guest-agent** (canal virtio-serial), donc pas besoin
-de réseau, de partage de fichiers, ni de cliquer dans la VM (les commandes tournent
-en SYSTEM : droits admin, aucun UAC).
+Tests WAC on a real Windows 11 (real NTFS) **with no interaction at all**: build
+on Linux → run in the VM as SYSTEM → JSON brought back to the host.
 
-## Fichiers
-| Fichier | Rôle |
+Everything goes through the **qemu-guest-agent** (virtio-serial channel): no
+network, no file share, no clicking in the VM (commands run as SYSTEM:
+administrator rights, no UAC).
+
+## Files
+| File | Role |
 |---|---|
-| `create-vm.sh` | Crée la VM de zéro, sans interaction : autounattend + UEFI Secure Boot + TPM 2.0 + canal guest-agent, déblocage du boot par injection de touches, puis attente que l'agent réponde. |
-| `autounattend.xml` | Install Windows muette (FR, Win11 Pro, compte admin local `wac`/`wac`, OOBE zappée, autologon) **et auto-installation du guest-agent** au 1er logon depuis le CD virtio-win. |
-| `qga.py` | Helper guest-agent : `ping`, `run` (exécuter), `read`/`write` (échanger des fichiers). |
-| `run-wac-test.sh` | Cycle de test complet : build → envoi des binaires → validation `raw_hive` (extraction brute + `reg load`) → exécution de WAC → rapatriement du log et des JSON dans `results/<horodatage>/`. |
-| `check-json.py` | Contrôle les sorties : validité JSON, chemins Windows, et **contrôles croisés** (cf. ci-dessous). S'utilise aussi seul : `python3 check-json.py results/<horodatage>`. |
+| `create-vm.sh` | Creates the VM from scratch, unattended: autounattend + UEFI Secure Boot + TPM 2.0 + guest-agent channel, boot unblocked by key injection, then waits for the agent to answer. |
+| `autounattend.xml` | Silent Windows install (French, Win11 Pro, local admin account `wac`/`wac`, OOBE skipped, autologon) **and automatic guest-agent install** at first logon from the virtio-win CD. |
+| `qga.py` | Guest-agent helper: `ping`, `run` (execute), `read`/`write` (exchange files). |
+| `run-wac-test.sh` | Full test cycle: build → send the binaries → `raw_hive` validation (raw extraction + `reg load`) → run WAC → bring the log and the JSON back into `results/<timestamp>/`. |
+| `check-json.py` | Checks the outputs: JSON validity, Windows paths, and **cross-checks** (see below). Also usable alone: `python3 check-json.py results/<timestamp>`. |
 
-## Ce que le harnais valide — et ce qu'il ne valide pas
+## What the harness validates — and what it does not
 
-Il valide la **compilation**, la **terminaison** de WAC (code de retour, absence
-de `terminate called` / `Unhandled exception`), la **validité JSON** de chaque
-sortie et la **cohérence des chemins** Windows.
+It validates **compilation**, WAC's **termination** (exit code, no
+`terminate called` / `Unhandled exception`), the **JSON validity** of every
+output and the **consistency of Windows paths**.
 
-Il ne valide **ni l'exactitude ni la complétude** des valeurs : un mauvais champ
-publié sous une bonne clé, une date mal interprétée ou un décalage de parsing
-produisent du JSON parfaitement valide. Un artefact à « 0 entrée » est par
-ailleurs indiscernable, à l'analyse, de « aucune trace sur la machine ».
+It validates **neither the accuracy nor the completeness** of the values: a
+wrong field under a right key, a misread date or a parsing offset all produce
+perfectly valid JSON. An artefact with "0 entries" is, moreover, impossible to
+tell apart from "no trace on the machine".
 
-**C'est à quoi servent les contrôles croisés** : comparer une donnée *calculée
-par WAC* à une donnée *indépendante* de la même collecte. Ce sont eux qui ont
-révélé des valeurs fausses dans du JSON valide :
+**That is what the cross-checks are for**: comparing a value *computed by WAC*
+with an *independent* value from the same collection. They are what revealed
+wrong values in valid JSON:
 
-| Contrôle | Ce qu'il a trouvé |
+| Check | What it found |
 |---|---|
-| `Hash` d'un Prefetch vs suffixe de son nom de fichier | 65 hash faux sur 270 (formatage hexadécimal sans remplissage) |
-| couples `X` / `XUtc` portant la même heure murale | double décalage horaire (`sessions`, `.lnk`, `InstallDate`) |
-| aucune session antérieure au démarrage du système | le premier de ces décalages |
-| états de service impossibles, taux de `*_UNKNOWN`, présence de pilotes | convertisseurs comparant des filtres d'énumération à des états |
-| `RID` retrouvé à la fin du `SID` reconstruit | validation de la lecture du SAM |
-| aucun processus ne porte `WAC.exe` parmi ses modules | le processus Idle héritait des modules de l'outil de collecte |
-| `EvtSystemComputer` confronté au nom de machine de `OperatingSystem.json` | contrôle du décodage BinXML des journaux : deux sources sans rapport (fichier `.evtx` et ruche SYSTEM) |
-| identifiants d'enregistrement uniques par canal | WAC parcourt **tous** les chunks physiques d'un `.evtx`, pas ceux déclarés par l'en-tête — c'est ce qui lui fait lire les enregistrements qu'un journal mal fermé ne compte pas ; le risque propre à ce choix est de relire un chunk périmé d'un journal circulaire, et ce contrôle le verrait |
-| aucun événement postérieur à l'horodatage de collecte | décalage ou mauvaise lecture d'un `FILETIME` d'événement |
-| aucune ruche à la fois rejouée ET patchée | deux opérations indépendantes du journal d'audit : un rejeu abouti rend la ruche propre, donc le patch ne doit plus s'appliquer |
-| un journal d'annulation nommé pour chaque rejeu | sans lui la copie brute n'est plus reconstructible, et la promesse du rapport serait fausse |
-| `MANIFESTE.sha256` porte l'empreinte réelle de `MANIFESTE.json` | seul contrôle qui détecte une retouche du manifeste, lequel est précisément ce qui atteste des pièces |
-| chaque pièce collectée porte ses trois empreintes | une pièce sans empreinte n'est pas identifiée, donc inutilisable |
-| le lecteur système d'`OperatingSystem.json` figure dans les volumes lus du manifeste | deux sources indépendantes de la même information |
-| identifiants d'enregistrement uniques dans CHAQUE fichier journal | l'invariant réel : un même canal peut être porté par plusieurs fichiers dont les numéros se recouvrent légitimement. Un doublon dans un même fichier, en revanche, signale un chunk périmé relu — le risque propre au parcours de tous les chunks physiques |
-| nom de machine MAJORITAIRE des événements conforme à `OperatingSystem.json` | un renommage de machine laisse légitimement d'anciens noms dans les journaux : c'est la majorité qui doit correspondre, pas la totalité |
+| a Prefetch `Hash` vs the suffix of its file name | 65 wrong hashes out of 270 (hexadecimal formatted without padding) |
+| `X` / `XUtc` pairs carrying the same wall-clock time | double time-zone shift (`sessions`, `.lnk`, `InstallDate`) |
+| no session starting before system boot | the first of those shifts — and later a boot time 3.5 s late, estimated from `GetTickCount64` |
+| boot time vs the Kernel-General 12 event | two independent sources of the boot instant: 0.00 s apart since the kernel value is used |
+| impossible service states, rate of `*_UNKNOWN`, presence of drivers | converters comparing enumeration filters with states |
+| `RID` found at the end of the rebuilt `SID` | validation of the SAM reading |
+| no process carries `WAC.exe` among its modules | the Idle process inherited the collecting tool's modules |
+| `EvtSystemComputer` vs the machine name of `OperatingSystem.json` | check of the logs' BinXML decoding: two unrelated sources (`.evtx` file and SYSTEM hive) |
+| record identifiers unique within EACH log file | the real invariant: one channel can be carried by several files whose numbers legitimately overlap. A duplicate within one file, however, reveals a stale chunk read again — the risk of walking every physical chunk |
+| MAJORITY machine name of the events matching `OperatingSystem.json` | renaming a machine legitimately leaves old names in the logs: the majority must match, not all of them |
+| no event later than the collection time | shift or misreading of an event `FILETIME` |
+| an unresolved `%%nnnn` reference left in a message | a provider's parameter file not loaded (3,780 Security messages before the fix) — told apart from a `%N` mark, which only means data absent from the event |
+| no hive both replayed AND patched | two independent audit-log operations: a successful replay makes the hive clean, so the patch must no longer apply |
+| an undo journal named for every replay | without it the raw copy can no longer be rebuilt, and the report's promise would be false |
+| `MANIFESTE.sha256` carries the real fingerprint of `MANIFESTE.json` | the only check that detects a retouched manifest — the very thing that attests to the exhibits |
+| every collected exhibit carries its three fingerprints | an exhibit without a fingerprint is unidentified, hence unusable |
+| the system drive of `OperatingSystem.json` is among the manifest's volumes read | two independent sources of the same information |
+| the files actually present in `consigne/` are exactly those of the manifest | 209 exhibits added after sealing, identified by nothing, while every other check was green |
 
-**Le journal de WAC s'accumule.** Il est ouvert en mode ajout : sans purge, il
-grossit d'un test a l'autre — 636 Mio constatés après une série de runs, ce qui
-rend son rapatriement inutilisable et noie les traces du run courant sous celles
-des précédents. `run-wac-test.sh` le supprime désormais avant chaque exécution.
+**WAC's log accumulates.** It is opened in append mode: without purging, it grows
+from one test to the next — 636 MB after a series of runs, which made fetching
+it useless and buried the current run's traces under the previous ones'.
+`run-wac-test.sh` now deletes it before each run.
 
-**Le harnais peut manquer de mémoire.** `qga.py read` accumulait le fichier
-entier avant de l'écrire : avec un `events.json` de 28 Mo, le cumul des réponses
-base64 et de leur décodage a suffi, la VM tournant à côté, pour que le système
-tue le harnais en pleine collecte. Les morceaux partent désormais directement
-dans le fichier. `check-json.py`, lui, charge toujours `events.json` en entier —
-à revoir si les journaux grossissent encore.
+**The harness can run out of memory.** `qga.py read` used to accumulate the
+whole file before writing it: with a 28 MB `events.json`, the base64 responses
+and their decoding, with the VM running alongside, were enough for the system to
+kill the harness mid-collection. Chunks now go straight to the file.
+`check-json.py` still loads `events.json` whole — to revisit if the logs keep
+growing.
 
-**Le harnais peut être la cause du défaut qu'il signale.** Un run de 604 s a été
-coupé par le timeout de 600 s de `qga.py` juste avant l'écriture des deux
-derniers JSON : le rapport disait « collecte probablement incomplète » — ce qui
-était exact — mais WAC était allé au bout. Le journal de collecte (`run.log`,
-qui se termine par `END, Time elapsed`) tranche entre les deux. Timeout porté à
-30 min ; il faudra le revoir si la collecte s'allonge encore.
+**The harness can cause the defect it reports.** A 604 s run was cut by
+`qga.py`'s 600 s timeout just before the last two JSON files were written: the
+report said "collection probably incomplete" — which was true — but WAC had
+finished. The collection log (`run.log`, which ends with `END, Time elapsed`)
+settles it. Timeout raised to 30 min; to revisit if the collection gets longer.
 
-**L'authenticité Microsoft se confronte à Windows.** `WAC/authenticode_test.cpp`
-vérifie les catalogues d'un dossier puis rend un verdict par fichier ; compilé
-pour Windows, il tourne dans la VM sur les binaires prélevés par une collecte,
-et ses verdicts se comparent à ceux de `Get-AuthenticodeSignature` sur les mêmes
-fichiers. Sur 2 233 binaires : 2 126 authentifiés par les deux, 99 prélevés par
-les deux, et aucun fichier accepté par WAC que Windows refuserait — le seul
-écart qui compterait. Le programme lit les fichiers par l'API : c'est un outil
-de test, jamais employé pendant une collecte.
+**Microsoft authenticity is confronted with Windows.** `WAC/authenticode_test.cpp`
+verifies the catalogs of a folder, then gives a verdict per file; built for
+Windows, it runs in the VM on the binaries collected by a collection, and its
+verdicts are compared with `Get-AuthenticodeSignature` on the same files. Out of
+2,233 binaries: 2,126 authenticated by both, 99 collected by both, and no file
+accepted by WAC that Windows would reject — the only difference that would
+matter. For scripts: 462 PowerShell and 11 WSH scripts, all authenticated as
+Windows does, and a signed script changed by one word is rejected. The program
+reads files through the API: it is a test tool, never used during a collection.
 
-**Le manifeste est confronté au contenu réel de la consigne.** Le harnais
-relève dans la VM la liste des fichiers de `consigne/` (`LISTE.txt`), et
-`check-json.py` vérifie que chaque fichier présent est au manifeste, et
-réciproquement. Sans ce contrôle, 209 pièces — les binaires de ressources des
-fournisseurs d'événements, extraits après le scellement — sont restées dans la
-consigne sans rien qui les identifie, alors que tous les autres contrôles
-(sceau, empreintes, décomptes) étaient verts : ils ne portaient que sur le
-manifeste lui-même.
+**The manifest is confronted with the actual content of the exhibit store.** The
+harness lists the files of `consigne/` in the VM (`LISTE.txt`), and
+`check-json.py` checks that every file present is in the manifest, and the other
+way round. Without this check, 209 exhibits — the event providers' resource
+binaries, extracted after sealing — stayed in the exhibit store identified by
+nothing, while every other check (seal, fingerprints, counts) was green: they
+only looked at the manifest itself.
 
-**La consigne se valide hors VM elle aussi.** `WAC/consigne_test.cpp` rejoue la
-chaîne de production (empreintes, manifeste, copie vérifiée, rejeu) sur des
-ruches fournies en argument, et vérifie ce qu'aucune compilation ne révèle : que
-la consigne reste intacte octet pour octet pendant que le travail est modifié.
-`WAC/sha_test.cpp` confronte les empreintes aux vecteurs de FIPS 180-4 et aux
-longueurs 55 à 128, qui exercent le remplissage — seul endroit où une
-implémentation correcte par ailleurs se trompe. Les deux compilent nativement
-sous Linux.
+**The exhibit store is validated outside the VM too.** `WAC/consigne_test.cpp`
+replays the production chain (fingerprints, manifest, verified copy, replay) on
+hives given as arguments, and checks what no compilation reveals: that the
+exhibit store stays byte-identical while the working copy is modified.
+`WAC/sha_test.cpp` confronts the fingerprints with the FIPS 180-4 vectors and
+with lengths 55 to 128, which exercise the padding — the one place where an
+otherwise correct implementation goes wrong. Both build natively on Linux.
 
-**Le parseur EVTX se valide hors VM.** Le décodage BinXML est trop fragile pour
-n'être éprouvé que sur les journaux d'une VM neuve, tous écrits par la même
-version de Windows et tous propres. `WAC/evtx_test.cpp` (exclu du build par le
-motif `_test.cpp`) lit un `.evtx` et rend soit un bilan, soit le XML de chaque
-enregistrement (`--dump`) ; il tourne sous `wine`, ce qui permet de le confronter
-à des journaux réels — dont des journaux volontairement abîmés — et de comparer
-enregistrement par enregistrement à une implémentation indépendante
-(`python-evtx`). C'est ce qui a montré qu'un chunk à signature fausse arrêtait
-la lecture de tout le fichier : 14 enregistrements lus sur 270.
+**The EVTX parser is validated outside the VM.** BinXML decoding is too fragile
+to be tried only on the logs of a fresh VM, all written by the same Windows
+build and all clean. `WAC/evtx_test.cpp` (left out of the build by the
+`_test.cpp` pattern) reads an `.evtx` and returns either a summary or the XML of
+each record (`--dump`); it runs under `wine`, which makes it possible to
+confront it with real logs — deliberately damaged ones included — and to compare
+record by record with an independent implementation (`python-evtx`). That is
+what showed that a chunk with a wrong signature stopped the reading of the whole
+file: 14 records read out of 270. The extracted logs are also checked against
+the CRC32 each EVTX chunk carries: all 1,505 chunks of the 404 logs of the test
+VM verify.
 
-Le mode `--collecte` execute la chaine complete (fichier brut -> BinXML ->
-`xml_light` -> `Event` -> JSON en flux) sur une arborescence imitant une
-extraction, et `--collecte-memoire` la meme chose en accumulant tout en memoire
-comme le faisait la collecte par API. C'est ce qui rend l'argument memoire
-verifiable au lieu d'affirme : memes enregistrements, meme binaire, meme hote,
-seule la strategie d'ecriture change — 1 281 Mo contre 26 Mo de pic, pour un
-`events.json` identique octet pour octet (ce qui valide au passage
-`EcrivainJsonTableau` contre `writeJsonFile`).
+The `--collecte` mode runs the whole chain (raw file → BinXML → `xml_light` →
+`Event` → streamed JSON) on a tree mimicking an extraction, and
+`--collecte-memoire` does the same while accumulating everything in memory as
+the API-based collection did. That makes the memory argument verifiable instead
+of asserted: same records, same binary, same host, only the writing strategy
+changes — a 1,281 MB peak against 26 MB, for a byte-identical `events.json`
+(which also validates `EcrivainJsonTableau` against `writeJsonFile`).
 
-**Après tout changement, comparer les compteurs d'entrées au run précédent**, pas
-seulement les pastilles vertes — et écrire un contrôle croisé pour chaque défaut
-trouvé : c'est ce qui empêche la régression.
+**After any change, compare the entry counts with the previous run**, not just
+the green marks — and write a cross-check for every defect found: that is what
+prevents regressions.
 
-## Utilisation
+## Usage
 ```bash
-# Créer la VM (une fois, ~15-25 min, zéro interaction)
-ISO_WIN=~/Téléchargements/Win11_25H2_French_x64_v2.iso ./create-vm.sh
+# Create the VM (once, ~15-25 min, no interaction)
+ISO_WIN=~/Downloads/Win11_25H2_French_x64_v2.iso ./create-vm.sh
 
-# Tester WAC (à chaque itération de code)
-./run-wac-test.sh --build        # rebuild + test complet
-./run-wac-test.sh --raw-only     # juste la validation raw_hive
-python3 qga.py ping              # l'agent répond ?
+# Test WAC (at every code iteration)
+./run-wac-test.sh --build        # rebuild + full test
+./run-wac-test.sh --raw-only     # raw_hive validation only
+python3 qga.py ping              # is the agent answering?
 python3 qga.py run --shell "dir C:\\"
 ```
 
-## Prérequis hôte
+## Host requirements
 `qemu-system-x86 libvirt-daemon-system libvirt-clients virtinst ovmf swtpm swtpm-tools xorriso`
-plus `~/vms/virtio-win.iso` (guest-agent + drivers) et l'ISO Windows 11.
+plus `~/vms/virtio-win.iso` (guest-agent + drivers) and the Windows 11 ISO.
 
 ## Note
-`virt-install --noautoconsole` ne relance pas la VM après le premier redémarrage de
-Setup : `create-vm.sh` la redémarre au besoin et considère l'install terminée quand
-le guest-agent répond (pas de capture d'écran à interpréter).
+`virt-install --noautoconsole` does not restart the VM after Setup's first
+reboot: `create-vm.sh` restarts it when needed and considers the install
+finished when the guest-agent answers (no screenshot to interpret).

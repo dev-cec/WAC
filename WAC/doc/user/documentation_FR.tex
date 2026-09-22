@@ -1,19 +1,20 @@
-% manuel-wac.tex — documentation utilisateur de WAC (Windows Artefacts Collector)
+% documentation_FR.tex — WAC (Windows Artefacts Collector) user manual, French edition.
+% The English edition is documentation_EN.tex, in this folder: both are maintained together,
+% section for section.
 %
-% Compilation (XeLaTeX, deux passes pour la page de garde et la table des
-% matières) :
-%     latexmk -xelatex manuel-wac.tex
-% La page de garde est ../page de garde.png.
+% Build (XeLaTeX, two passes for the cover page and the table of contents):
+%     latexmk -xelatex documentation_FR.tex
+% The cover page is ../page de garde.png.
 
 \documentclass[11pt,a4paper,oneside]{report}
 
-% ---------------------------------------------------------------- polices, langue
+% ---------------------------------------------------------------- fonts, language
 \usepackage{fontspec}
 \usepackage[french]{babel}
 \setmainfont{Noto Sans}
 \setmonofont{DejaVu Sans Mono}[Scale=0.84]
 
-% ---------------------------------------------------------------- mise en page
+% ---------------------------------------------------------------- layout
 \usepackage[top=26mm,bottom=26mm,left=24mm,right=22mm,headheight=14pt]{geometry}
 \usepackage{graphicx}
 \graphicspath{{../}}
@@ -29,7 +30,7 @@
 \usepackage{lastpage}
 \usepackage[hidelinks,unicode,pdfpagelabels]{hyperref}
 
-% Couleurs relevées sur la page de garde
+% Colours sampled from the cover page
 \definecolor{marine}{HTML}{0A1A33}
 \definecolor{bleu}{HTML}{2F6DB5}
 \definecolor{accent}{HTML}{1F66D1}
@@ -44,14 +45,14 @@
 \setlist{itemsep=0.25em,topsep=0.35em}
 \urlstyle{tt}
 \renewcommand{\arraystretch}{1.25}
-% Colonnes de tableau alignées à gauche : justifiées, les colonnes étroites
-% ouvraient de grands blancs entre les mots.
+% Left-aligned table columns: justified narrow columns opened wide gaps
+% between words.
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
-% Noms de fichiers et de champs en chasse fixe : ne se coupent pas ; on laisse
-% plutôt s'étirer les espaces de la ligne.
+% Monospaced file and field names cannot be hyphenated: let the line's spaces
+% stretch instead.
 \setlength{\emergencystretch}{3em}
 
-% Titres
+% Headings
 \titleformat{\chapter}[display]
   {\color{marine}\bfseries\raggedright}
   {\color{bleu}\large\MakeUppercase{\chaptertitlename}~\thechapter}
@@ -62,13 +63,13 @@
 \titleformat{\subsection}{\color{marine}\large\bfseries}{\color{bleu}\thesubsection}{0.7em}{}
 \titleformat{\subsubsection}{\color{bleu}\normalsize\bfseries}{}{0em}{}
 
-% En-têtes et pieds
+% Headers and footers
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\color{gris}WAC — Documentation utilisateur}
 \fancyhead[R]{\small\color{gris}\leftmark}
-% Pied de page : « Page N sur M », lisible. Le numéro était seul, petit et gris
-% clair : on ne le voyait pas.
+% Footer: "Page N sur M", readable. A bare, small, light-grey number went
+% unnoticed.
 \newcommand{\piedpage}{\small\color{marine}\textbf{Page \thepage}\ sur \pageref*{LastPage}}
 \fancyfoot[C]{\piedpage}
 \renewcommand{\footrulewidth}{0.4pt}
@@ -78,7 +79,7 @@
 \renewcommand{\chaptermark}[1]{\markboth{#1}{}}
 \fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\piedpage}\renewcommand{\headrulewidth}{0pt}}
 
-% Encadrés
+% Boxes
 \newtcolorbox{note}[1][À retenir]{enhanced,breakable,colback=fond,colframe=bleu,
   boxrule=0pt,leftrule=3pt,arc=0pt,left=8pt,right=8pt,top=6pt,bottom=6pt,
   title={\bfseries #1},coltitle=bleu,colbacktitle=fond,attach title to upper={\par\smallskip}}
@@ -94,7 +95,7 @@
   literate={é}{{\'e}}1 {è}{{\`e}}1 {à}{{\`a}}1 {ê}{{\^e}}1 {ô}{{\^o}}1 {ç}{{\c c}}1
            {É}{{\'E}}1 {—}{{---}}1 {’}{{'}}1 {…}{{...}}1 {«}{{\guillemotleft}}1 {»}{{\guillemotright}}1}
 
-% Raccourcis
+% Shortcuts
 \newcommand{\wac}{\textsc{wac}}
 \newcommand{\opt}[1]{\texttt{-{}-#1}}
 \newcommand{\champ}[1]{\texttt{#1}}
@@ -106,7 +107,7 @@
 
 \begin{document}
 
-% ============================================================ PAGE DE GARDE
+% ============================================================ COVER PAGE
 \pagenumbering{roman}
 \begin{titlepage}
 \thispagestyle{empty}
@@ -116,7 +117,7 @@
 \end{tikzpicture}
 \end{titlepage}
 
-% ============================================================ PAGE D'INFORMATION
+% ============================================================ INFORMATION PAGE
 \thispagestyle{empty}
 \vspace*{\fill}
 {\color{marine}\Large\bfseries WAC — Windows Artefacts Collector}\par
@@ -138,8 +139,8 @@ engagements.}
 \vspace*{2cm}
 \clearpage
 
-% La numérotation commence à 1 avec la table des matières ; seules la page de
-% garde et la page d'information, sans pied de page, sont hors numérotation.
+% Numbering starts at 1 with the table of contents; only the cover page and the
+% information page, which have no footer, are left out of it.
 \pagenumbering{arabic}
 \tableofcontents
 
@@ -890,10 +891,10 @@ lieu de la prendre pour l'activité étudiée :
         message lisible sur la machine de test ; les autres fournisseurs ne livrent
         pas de ressources exploitables. Les données, elles, sont toujours
         complètes.
-  \item[Volume de \opt{binary}] Tous les binaires cités sont prélevés, y compris
-        les binaires volumineux et courants (navigateur, outils Microsoft). Sur
-        la machine de test, quelques fichiers de plus de 100~Mo pèsent à eux seuls
-        plus d'un gigaoctet.
+  \item[Signés mais non authentifiés] Quelques sortes de fichiers réellement
+        signés restent prélevées, dans le sens prudent : les applications du
+        Microsoft Store (signées au niveau du paquet, et non fichier par fichier)
+        et les scripts Windows Script Host signés seulement dans leur texte.
 \end{description}
 
 % ============================================================ 9
@@ -927,7 +928,7 @@ Besoin de comprendre un échec de lecture & Relancez avec \opt{loglevel=2} (et, 
 \bottomrule
 \end{longtable}
 
-% ============================================================ ANNEXES
+% ============================================================ APPENDICES
 \appendix
 
 \chapter{Glossaire}

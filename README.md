@@ -546,7 +546,7 @@ That is what the **cross-checks** in `check-json.py` are for — comparing a val
 are what caught real errors in valid JSON: Prefetch path hashes against their own
 file names, `X`/`XUtc` pairs holding the same wall-clock time, sessions starting
 before boot, impossible service states, `$MFT` references pointing at reserved
-entries. See `vmtest/README.md`.
+entries. See `vmtest/README.md` (French: `vmtest/README.fr.md`).
 
 ### Testing the EVTX parser outside Windows
 
@@ -675,16 +675,17 @@ cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
 
 ## 📚 DOCUMENTATION
 
-- **User manual** (French): `WAC/doc/utilisateur/manuel-wac.pdf`, built from
-  `WAC/doc/utilisateur/manuel-wac.tex` with `latexmk -xelatex manuel-wac.tex`
-  (fonts: Noto Sans, DejaVu Sans Mono). It covers preparing a collection, the
-  options, reading the output, verifying the exhibit store and the traces left
-  on the examined machine. `WAC/doc/utilisateur/verifier-consigne.ps1` checks the
-  seal and every exhibit of a collection (tested on 3 360 exhibits).
-- **API documentation**: HTML, generated with Doxygen from the source comments
-  (`Doxygen/Doxyfile`, output in `WAC/doc/html`). Regenerate with
-  `cd Doxygen && doxygen Doxyfile`.
-- `WAC/doc/BUILD-LINUX.md` — cross-compilation details.
+- **User manual**, in English and French, maintained together:
+  `WAC/doc/user/documentation_EN.pdf` and `WAC/doc/user/documentation_FR.pdf`,
+  built from the `.tex` files beside them with `latexmk -xelatex` (fonts: Noto
+  Sans, DejaVu Sans Mono). They cover preparing a collection, the options,
+  reading the output, verifying the exhibit store and the traces left on the
+  examined machine. `verify-exhibits.ps1` (English) and `verifier-consigne.ps1`
+  (French) check the seal and every exhibit of a collection. The English cover
+  page, `WAC/doc/cover page.png`, is generated from the French one by
+  `WAC/doc/translate-cover.py`, which repaints its text in the same fonts and
+  layout.
+- `WAC/doc/BUILD-LINUX.md` (French: `BUILD-LINUX.fr.md`) — cross-compilation details.
 
 The design rationale lives **in the code**, next to what it explains: each
 non-obvious choice carries a comment saying why it is that way and what breaks

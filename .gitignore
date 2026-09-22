@@ -390,10 +390,10 @@ WAC/doc/*.tag
 /doc/
 
 # Fichiers intermédiaires LaTeX de la documentation utilisateur
-/WAC/doc/utilisateur/*.aux
-/WAC/doc/utilisateur/*.log
-/WAC/doc/utilisateur/*.toc
-/WAC/doc/utilisateur/*.out
-/WAC/doc/utilisateur/*.fls
-/WAC/doc/utilisateur/*.fdb_latexmk
-/WAC/doc/utilisateur/*.xdv
+/WAC/doc/user/*.aux
+/WAC/doc/user/*.log
+/WAC/doc/user/*.toc
+/WAC/doc/user/*.out
+/WAC/doc/user/*.fls
+/WAC/doc/user/*.fdb_latexmk
+/WAC/doc/user/*.xdv
