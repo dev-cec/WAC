@@ -4,7 +4,7 @@
 %
 % Build (XeLaTeX, two passes for the cover page and the table of contents):
 %     latexmk -xelatex documentation_FR.tex
-% The cover page is ../page de garde.png.
+% The cover page is ../cover_FR.png.
 
 \documentclass[11pt,a4paper,oneside]{report}
 
@@ -113,7 +113,7 @@
 \thispagestyle{empty}
 \begin{tikzpicture}[remember picture,overlay]
   \node[inner sep=0pt] at (current page.center)
-    {\includegraphics[width=\paperwidth]{page de garde.png}};
+    {\includegraphics[width=\paperwidth]{cover_FR.png}};
 \end{tikzpicture}
 \end{titlepage}
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """translate-cover.py — builds the English cover page from the French one.
 
-The French cover (`page de garde.png`) is a raster image: its text cannot be
+The French cover (`cover_FR.png`) is a raster image: its text cannot be
 edited, only repainted. This script erases each French text block and redraws
 the English text in the same fonts, sizes, colours and positions, so both
 covers share one layout and stay in step.
@@ -24,7 +24,7 @@ Fonts (SIL Open Font License), downloaded next to this script or passed with
   https://github.com/google/fonts/raw/main/ofl/nunitosans/NunitoSans%5BYTLC%2Copsz%2Cwdth%2Cwght%5D.ttf
 
 Usage:
-  python3 translate-cover.py [--fonts DIR] ["page de garde.png"] ["cover page.png"]
+  python3 translate-cover.py [--fonts DIR] [cover_FR.png] [cover_EN.png]
 """
 import argparse
 import os
@@ -56,8 +56,8 @@ def main():
     here = os.path.dirname(os.path.abspath(__file__))
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--fonts", default=here)
-    ap.add_argument("source", nargs="?", default=os.path.join(here, "page de garde.png"))
-    ap.add_argument("output", nargs="?", default=os.path.join(here, "cover page.png"))
+    ap.add_argument("source", nargs="?", default=os.path.join(here, "cover_FR.png"))
+    ap.add_argument("output", nargs="?", default=os.path.join(here, "cover_EN.png"))
     a = ap.parse_args()
     montserrat = os.path.join(a.fonts, "Montserrat[wght].ttf")
     nunito = os.path.join(a.fonts, "NunitoSans[YTLC,opsz,wdth,wght].ttf")

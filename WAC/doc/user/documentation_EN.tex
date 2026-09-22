@@ -4,7 +4,7 @@
 %
 % Build (XeLaTeX, two passes for the cover page and the table of contents):
 %     latexmk -xelatex documentation_EN.tex
-% The cover page is ../cover page.png, generated from the French one by
+% The cover page is ../cover_EN.png, generated from the French one by
 % ../translate-cover.py.
 
 \documentclass[11pt,a4paper,oneside]{report}
@@ -114,7 +114,7 @@
 \thispagestyle{empty}
 \begin{tikzpicture}[remember picture,overlay]
   \node[inner sep=0pt] at (current page.center)
-    {\includegraphics[width=\paperwidth]{cover page.png}};
+    {\includegraphics[width=\paperwidth]{cover_EN.png}};
 \end{tikzpicture}
 \end{titlepage}
 

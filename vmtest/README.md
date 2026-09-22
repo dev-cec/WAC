@@ -1,6 +1,6 @@
 # Windows 11 test VM — driving WAC unattended
 
-*Version française : [README.fr.md](README.fr.md)*
+*Version française : [README_FR.md](README_FR.md)*
 
 Tests WAC on a real Windows 11 (real NTFS) **with no interaction at all**: build
 on Linux → run in the VM as SYSTEM → JSON brought back to the host.

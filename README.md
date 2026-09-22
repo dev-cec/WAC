@@ -546,7 +546,7 @@ That is what the **cross-checks** in `check-json.py` are for — comparing a val
 are what caught real errors in valid JSON: Prefetch path hashes against their own
 file names, `X`/`XUtc` pairs holding the same wall-clock time, sessions starting
 before boot, impossible service states, `$MFT` references pointing at reserved
-entries. See `vmtest/README.md` (French: `vmtest/README.fr.md`).
+entries. See `vmtest/README.md` (French: `vmtest/README_FR.md`).
 
 ### Testing the EVTX parser outside Windows
 
@@ -682,10 +682,10 @@ cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
   reading the output, verifying the exhibit store and the traces left on the
   examined machine. `verify-exhibits.ps1` (English) and `verifier-consigne.ps1`
   (French) check the seal and every exhibit of a collection. The English cover
-  page, `WAC/doc/cover page.png`, is generated from the French one by
+  page, `WAC/doc/cover_EN.png`, is generated from the French one by
   `WAC/doc/translate-cover.py`, which repaints its text in the same fonts and
   layout.
-- `WAC/doc/BUILD-LINUX.md` (French: `BUILD-LINUX.fr.md`) — cross-compilation details.
+- `WAC/doc/BUILD-LINUX_EN.md` (French: `BUILD-LINUX_FR.md`) — cross-compilation details.
 
 The design rationale lives **in the code**, next to what it explains: each
 non-obvious choice carries a comment saying why it is that way and what breaks

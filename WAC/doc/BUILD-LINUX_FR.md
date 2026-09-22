@@ -1,6 +1,6 @@
 # Compilation de WAC depuis Linux (compilation croisée MinGW-w64)
 
-*English version: [BUILD-LINUX.md](BUILD-LINUX.md)*
+*English version: [BUILD-LINUX_EN.md](BUILD-LINUX_EN.md)*
 
 Produit `WAC.exe` (PE32+ x64) depuis Linux, **sans poste Windows**, en un
 exécutable **autonome** : le runtime C++ est lié en statique, et le programme ne

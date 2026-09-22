@@ -1,6 +1,6 @@
 # Building WAC from Linux (MinGW-w64 cross-compilation)
 
-*Version française : [BUILD-LINUX.fr.md](BUILD-LINUX.fr.md)*
+*Version française : [BUILD-LINUX_FR.md](BUILD-LINUX_FR.md)*
 
 Produces `WAC.exe` (PE32+ x64) from Linux, **without a Windows machine**, as a
 **standalone** executable: the C++ runtime is linked statically, and the program
