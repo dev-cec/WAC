@@ -18,6 +18,11 @@
  *  hachés : ce ne sont pas des charges, et les copier ferait de la collecte une
  *  copie des documents de l'utilisateur.
  *
+ *  DÉDOUBLONNAGE. Un même contenu n'est consigné qu'une fois : trois copies
+ *  identiques de msedge.dll (Edge, EdgeCore, WebView2 : 332 Mo chacune)
+ *  occupaient 996 Mo. Les autres chemins sont déclarés au manifeste comme
+ *  pièces partageant ce contenu (cf. ConsigneAjouterDoublon).
+ *
  *  La lecture étant brute, prélever ne coûte AUCUNE trace de plus que hacher :
  *  seulement de la place sur le support de collecte. Quand elle vient à manquer,
  *  le fichier est haché sans être copié, et c'est consigné.
@@ -57,7 +62,8 @@ void ajouterEmpreintes(Json& o, const EmpreinteBinaire& e,
 
 /*! Bilan, pour le journal d'investigation. */
 void BinairesBilan(size_t* fichiers, size_t* lus, size_t* preleves,
-                   unsigned long long* octetsPreleves, size_t* sansPlace);
+                   unsigned long long* octetsPreleves, size_t* sansPlace,
+                   size_t* doublons, unsigned long long* octetsEvites);
 
 /*! Ferme les volumes gardés ouverts. À appeler quand plus aucun artefact ne
  *  cite de fichier. */

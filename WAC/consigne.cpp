@@ -17,6 +17,7 @@ namespace {
 struct Piece {
 	RawHiveExtrait extrait;
 	std::wstring   methode;
+	bool           partagee = false;   //!< contenu déjà consigné sous une autre pièce
 };
 
 std::vector<Piece> g_pieces;
@@ -149,13 +150,18 @@ void ConsigneAjouter(const std::vector<RawHiveExtrait>& releve,
 	}
 }
 
+void ConsigneAjouterDoublon(const RawHiveExtrait& e, const std::wstring& methode) {
+	g_pieces.push_back(Piece{ e, methode, true });
+}
+
 void ConsigneBilan(size_t* pieces, size_t* echecs, unsigned long long* octets) {
 	size_t nb = 0, ko = 0;
 	unsigned long long total = 0;
 	for (const Piece& p : g_pieces) {
 		++nb;
 		if (FAILED(p.extrait.resultat)) ++ko;
-		else total += p.extrait.empreintes.octets;
+		// Un contenu partagé n'occupe la consigne qu'une fois.
+		else if (!p.partagee) total += p.extrait.empreintes.octets;
 	}
 	if (pieces) *pieces = nb;
 	if (echecs) *echecs = ko;
@@ -323,6 +329,11 @@ HRESULT ConsigneEcrireManifeste() {
 		o.add(L"SHA1",          Json::str(m.sha1));
 		o.add(L"SHA256",        Json::str(m.sha256));
 		o.add(L"Bytes",         Json::num(m.octets));
+		/* Contenu identique, octet pour octet (SHA-256), à une pièce déjà
+		   consignée : ExhibitPath désigne celle-ci, qui n'a pas été recopiée. La
+		   source reste une pièce à part entière — son chemin, son entrée $MFT et
+		   ses horodatages sont les siens. */
+		if (p.partagee) o.add(L"SharedExhibit", Json::boolean(true));
 		// Divergence des deux tailles = extraction tronquée, qu'une empreinte
 		// seule ne révélerait pas (elle serait juste... celle du tronqué).
 		if (m.tailleAnnoncee != m.octets)

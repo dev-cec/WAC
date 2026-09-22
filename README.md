@@ -326,13 +326,22 @@ A collection takes about **2 minutes** with the default options, up to roughly
 depends heavily on the hardware: USB 2 or USB 3, processor, memory, disk.
 
 **`--binary` is dominated by the size of what it collects.** Measured on the
-Windows 11 test VM: 6 394 files referenced by the artefacts, 4 875 read, 2 220
-executables, libraries, drivers and scripts collected — **3.8 GB**, written
-twice (exhibit store and working copy), so about 7.6 GB on the collection
-medium; the whole collection went from 70 s to 316 s on a VM backed by NVMe. On
-a USB stick, writing is the cost. The volume is very concentrated: 6 files above
-100 MB weigh 1.45 GB (38 %) — three copies of `msedge.dll` (332 MB each: Edge,
-EdgeCore, WebView2), `mrt.exe` and two `OneDriveSetup.exe`. Each file is read
+Windows 11 test VM: 6 432 files referenced by the artefacts, 4 874 read, 2 131
+executables, libraries, drivers and scripts collected — **3.3 GB**, written
+twice (exhibit store and working copy), so about 6.5 GB on the collection
+medium; the whole collection went from 70 s to about 310 s on a VM backed by
+NVMe. On a USB stick, writing is the cost. The volume is very concentrated: a
+handful of files above 100 MB (`msedge.dll`, 332 MB, `mrt.exe`,
+`OneDriveSetup.exe`) weigh over a gigabyte.
+
+**Identical content is stored once.** A file's SHA-256 is only known once it
+has been read, so it is first written to a staging directory next to the
+exhibit store, then *renamed* into it if new, or dropped if that content is
+already there under another path. The exhibit store thus only ever receives
+final pieces. The other paths stay exhibits in their own right — their own
+path, `$MFT` entry and timestamps — declared `SharedExhibit` in the manifest,
+pointing to the stored copy. On the test VM: 90 duplicates, 528 MB not written
+twice (Edge and WebView2 ship the same `msedge.dll`). Each file is read
 once however many artefacts cite it, and hashing a file costs no more trace than
 collecting it — only space. When space runs short (under 1 GB left, counting the
 working copies still owed), files are hashed without being copied, and the

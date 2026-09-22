@@ -110,6 +110,15 @@ unsigned long long ConsigneEspaceLibre();
 void ConsigneAjouter(const std::vector<RawHiveExtrait>& releve,
                      const std::wstring& methode);
 
+/*! Enregistre une pièce dont le CONTENU est déjà consigné sous une autre.
+ *
+ *  `e.cheminSortie` désigne la pièce existante ; le fichier n'est pas recopié.
+ *  Le manifeste la déclare (`SharedExhibit`) et ne compte pas deux fois ses
+ *  octets. Sert au dédoublonnage des binaires cités (cf. binaires.h) : trois
+ *  copies de msedge.dll de 332 Mo, identiques, en occupaient 996.
+ */
+void ConsigneAjouterDoublon(const RawHiveExtrait& e, const std::wstring& methode);
+
 /*! Recopie la consigne vers le répertoire de travail, en vérifiant la copie.
  *
  *  Chaque fichier est recopié puis SA COPIE est rehachée et comparée à
