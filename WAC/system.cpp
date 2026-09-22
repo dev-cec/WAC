@@ -178,16 +178,24 @@ HRESULT SystemInfo::getData() {
 
 	/* Heure de dernier démarrage.
 	 *
-	 * Calculée à partir de GetTickCount64() : heure courante moins la durée
-	 * d'activité. Choisi plutôt que WMI (Win32_OperatingSystem.LastBootUpTime),
-	 * qui laisserait une trace d'exécution WMI pour une seule valeur.
+	 * SOURCE : le noyau, par NtQuerySystemInformation(SystemTimeOfDayInformation)
+	 * — une requête en mémoire, sans WMI ni trace. Il rend `BootTime`, l'instant
+	 * du démarrage exprimé dans l'horloge ACTUELLE, et `BootTimeBias`, le cumul
+	 * des corrections d'horloge appliquées depuis. `BootTime − BootTimeBias` est
+	 * donc ce qu'affichait l'horloge au démarrage : la même référence que les
+	 * journaux d'événements et les ouvertures de session, horodatés sur le
+	 * moment.
 	 *
-	 * LIMITE À CONNAÎTRE : GetTickCount64() n'inclut PAS le temps passé en veille
-	 * ou en hibernation. Sur une machine mise en veille, l'heure calculée est donc
-	 * POSTÉRIEURE au démarrage réel, de la durée cumulée des veilles. La valeur
-	 * borne l'activité observée, elle ne prouve pas l'instant du démarrage : la
-	 * source exacte serait l'événement System 6005/6009.
-	 * Le champ BootTimeSource du JSON consigne cette réserve pour l'analyste.
+	 * CE QUI ÉTAIT FAUX. L'heure était estimée par « heure courante moins
+	 * GetTickCount64 », qui ignore les recalages d'horloge. Sur la VM de test,
+	 * suspendue puis recalée, elle tombait 3,5 s APRÈS le démarrage réel — et
+	 * après les premières ouvertures de session, ce que check-json.py a relevé.
+	 * Vérifié : BootTime 20:00:00.87 moins BootTimeBias 4,37 s donne 19:59:56.50,
+	 * exactement le StartTime de l'événement Kernel-General 12 ; l'ancienne
+	 * estimation donnait 20:00:00.
+	 *
+	 * L'estimation reste en repli si la requête échoue, et BootTimeSource dit
+	 * laquelle des deux a servi.
 	 */
 	log(3, L"🔈GetTickCount64");
 	const ULONGLONG uptimeMs = GetTickCount64();
@@ -196,15 +204,37 @@ HRESULT SystemInfo::getData() {
 	SystemTimeToFileTime(&localDateTimeUtc, &maintenantUtc);
 	const ULONGLONG maintenant100ns = ((ULONGLONG)maintenantUtc.dwHighDateTime << 32)
 	                                | maintenantUtc.dwLowDateTime;
-	const ULONGLONG uptime100ns = uptimeMs * 10000ULL;          // ms -> 100 ns
-	if (maintenant100ns > uptime100ns) {
-		const ULONGLONG boot100ns = maintenant100ns - uptime100ns;
+	ULONGLONG boot100ns = 0;
+	{
+		struct HeureDuJour {                     // SYSTEM_TIMEOFDAY_INFORMATION
+			LARGE_INTEGER BootTime, CurrentTime, TimeZoneBias;
+			ULONG TimeZoneId, Reserved;
+			ULONGLONG BootTimeBias, SleepTimeBias;
+		} hdj = {};
+		typedef LONG (WINAPI *NtQsiFn)(ULONG, PVOID, ULONG, PULONG);
+		const NtQsiFn ntQsi = reinterpret_cast<NtQsiFn>(
+			GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "NtQuerySystemInformation"));
+		ULONG rendu = 0;
+		log(3, L"🔈NtQuerySystemInformation SystemTimeOfDayInformation");
+		if (ntQsi && ntQsi(3 /*SystemTimeOfDayInformation*/, &hdj, sizeof(hdj), &rendu) >= 0
+		    && hdj.BootTime.QuadPart > (LONGLONG)hdj.BootTimeBias) {
+			boot100ns = (ULONGLONG)hdj.BootTime.QuadPart - hdj.BootTimeBias;
+			correctionHorloge100ns = (long long)hdj.BootTimeBias;
+			bootDuNoyau = true;
+		}
+		else
+			log(2, L"🔥NtQuerySystemInformation : heure de demarrage estimee par GetTickCount64");
+	}
+	if (!bootDuNoyau && maintenant100ns > uptimeMs * 10000ULL)
+		boot100ns = maintenant100ns - uptimeMs * 10000ULL;
+	if (boot100ns) {
 		FILETIME bootUtc = { (DWORD)(boot100ns & 0xFFFFFFFFULL), (DWORD)(boot100ns >> 32) };
 		FileTimeToSystemTime(&bootUtc, &lastBootUpTimeUtc);
+		bootFraction100ns = (long)(boot100ns % 10000000ULL);
 		FILETIME bootLocal = { 0, 0 };
 		if (utcVersLocalSuspect(bootUtc, &bootLocal))
 			FileTimeToSystemTime(&bootLocal, &lastBootUpTime);
-		log(2, L"❇️Last boot (UTC) : " + timeToIso8601(lastBootUpTimeUtc, true));
+		log(2, L"❇️Last boot (UTC) : " + timeToIso8601(lastBootUpTimeUtc, true, bootFraction100ns));
 	}
 	else
 		log(2, L"🔥Duree d'activite incoherente avec l'heure systeme : boot non calcule");
@@ -245,15 +275,20 @@ HRESULT SystemInfo::toJson() {
 
 	o.add(L"LocalDateTime",     Json::str(timeToIso8601(localDateTime, false)));
 	o.add(L"LocalDateTimeUtc",  Json::str(timeToIso8601(localDateTimeUtc, true)));
-	ajouterSiRenseigne(o, L"LastBootUpTime",    timeToIso8601(lastBootUpTime, false));
-	ajouterSiRenseigne(o, L"LastBootUpTimeUtc", timeToIso8601(lastBootUpTimeUtc, true));
+	ajouterSiRenseigne(o, L"LastBootUpTime",    timeToIso8601(lastBootUpTime, false, bootFraction100ns));
+	ajouterSiRenseigne(o, L"LastBootUpTimeUtc", timeToIso8601(lastBootUpTimeUtc, true, bootFraction100ns));
 	o.add(L"UptimeSeconds",     Json::num(uptimeSeconds));
-	// La reserve accompagne la valeur : sans elle, l'heure de demarrage se lirait
-	// comme une certitude alors qu'elle borne seulement l'activite observee.
-	o.add(L"BootTimeSource",    Json::str(L"calculé depuis GetTickCount64 ; "
-	                                      L"exclut les périodes de veille et "
-	                                      L"d'hibernation, donc borne supérieure "
-	                                      L"du démarrage réel"));
+	// La source accompagne la valeur : une estimation ne doit pas se lire comme
+	// une mesure.
+	o.add(L"BootTimeSource",    Json::str(bootDuNoyau
+		? L"noyau (SystemTimeOfDayInformation : BootTime - BootTimeBias), "
+		  L"heure affichée par l'horloge au démarrage"
+		: L"estimée : heure courante moins GetTickCount64 ; ignore les recalages "
+		  L"d'horloge depuis le démarrage"));
+	/* En millisecondes, signe compris : émis seulement s'il y a eu correction.
+	   Positif : horloge avancée depuis le démarrage. */
+	if (bootDuNoyau && correctionHorloge100ns != 0)
+		o.add(L"ClockAdjustedSinceBootMs", Json::num(correctionHorloge100ns / 10000LL));
 
 	/* Fuseau : celui du SUSPECT quand la ruche a pu être lue. Le champ
 	   TimeZoneSource dit laquelle des deux origines a servi — sans lui, un

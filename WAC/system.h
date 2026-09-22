@@ -63,6 +63,14 @@ struct SystemInfo {
 	SYSTEMTIME lastBootUpTime = { 0 };      //!< heure locale du dernier démarrage
 	SYSTEMTIME lastBootUpTimeUtc = { 0 };   //!< heure UTC du dernier démarrage
 	unsigned long long uptimeSeconds = 0;   //!< durée d'activité depuis le démarrage
+	long bootFraction100ns = -1;            //!< fraction de seconde du démarrage (-1 : inconnue)
+	/*! Cumul des corrections d'horloge appliquées depuis le démarrage, en 100 ns
+	 *  (BootTimeBias du noyau). Positif : l'horloge a été avancée. Un écart de
+	 *  quelques secondes est le recalage ordinaire (synchronisation NTP, sortie
+	 *  de suspension d'une VM) ; un écart important signale une horloge modifiée
+	 *  — et donc des horodatages à interpréter avec prudence. */
+	long long correctionHorloge100ns = 0;
+	bool bootDuNoyau = false;               //!< true : heure lue dans le noyau, sinon estimée
 
 	/*! Relève les informations système dans les ruches déjà ouvertes.
 	* Nécessite `conf.System` ; `conf.Software` et `conf.CurrentControlSet` sont
