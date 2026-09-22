@@ -332,14 +332,40 @@ A collection takes about **2 minutes** with the default options, up to roughly
 **20 minutes** with `--events`, and longer still with `--binary`. The figure
 depends heavily on the hardware: USB 2 or USB 3, processor, memory, disk.
 
-**`--binary` is dominated by the size of what it collects.** Measured on the
-Windows 11 test VM: 6 432 files referenced by the artefacts, 4 874 read, 2 131
-executables, libraries, drivers and scripts collected — **3.3 GB**, written
+**`--binary` was dominated by the size of what it collects** — before
+authentic Microsoft binaries were left in place (see below: 99 files, 336 MB,
+since). Measured on the Windows 11 test VM without that check: 6 432 files
+referenced by the artefacts, 4 874 read, 2 131 executables, libraries, drivers
+and scripts collected — **3.3 GB**, written
 twice (exhibit store and working copy), so about 6.5 GB on the collection
 medium; the whole collection went from 70 s to about 310 s on a VM backed by
 NVMe. On a USB stick, writing is the cost. The volume is very concentrated: a
 handful of files above 100 MB (`msedge.dll`, 332 MB, `mrt.exe`,
 `OneDriveSetup.exe`) weigh over a gigabyte.
+
+**Authentic Microsoft binaries are hashed, not collected.** Most referenced
+binaries are Windows components, identical on every machine of the same build.
+Their origin is provable on the machine itself, with no list to carry: Windows'
+own **catalogs** (`System32\CatRoot`, signed by Microsoft, listing the
+fingerprint of every system file) and the **embedded signature** of individually
+signed binaries (Edge, OneDrive, Office). A file whose Authenticode digest is in
+a validly Microsoft-signed catalog, or whose embedded signature is a valid
+Microsoft one, is fingerprinted and left in place; everything else is collected
+— including a System32 binary replaced by an attacker, whose digest no longer
+matches. **No trace**: `WinVerifyTrust` and `CryptCATAdmin` would solicit the
+CryptSvc service, read the certificate stores in the live registry and check
+revocation over the network (writing to `CryptnetUrlCache`). WAC reads catalogs
+and binaries raw and verifies everything in memory — ASN.1, X.509, PKCS#7, RSA,
+SHA-1/256/384 — up to Microsoft roots **embedded in the executable**, never the
+machine's store. Signers are restricted to Microsoft's own code: certificates
+chaining to a Microsoft root but used for **third-party** code — *Hardware
+Compatibility Publisher* (WHQL drivers), *Early Launch Anti-malware Publisher* —
+are not accepted, since vulnerable signed drivers are a classic attack path.
+The catalogs that justified a decision go into the exhibit store, so a third
+party can re-check it. Confronted with `Get-AuthenticodeSignature` on 2 233
+binaries: 2 126 authenticated by both, **no file accepted by WAC and rejected by
+Windows**. On the test VM, collected binaries went from 2 131 (3.3 GB) to 99
+(336 MB), in the same time.
 
 **Identical content is stored once.** A file's SHA-256 is only known once it
 has been read, so it is first written to a staging directory next to the

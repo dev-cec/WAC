@@ -697,7 +697,8 @@ public:
 
     HRESULT extractData(uint64_t index, const std::wstring& outFile,
                         const std::wstring& libelle = std::wstring(),
-                        RawHiveEmpreintes* emp = nullptr){
+                        RawHiveEmpreintes* emp = nullptr,
+                        std::streambuf* observateur = nullptr){
         std::vector<uint8_t> rec;
         if (!readMftRecord(index, rec)) return E_FAIL;
 
@@ -782,7 +783,10 @@ public:
             fichier.open(std::filesystem::path(outFile), std::ios::binary | std::ios::trunc);
             if (!fichier){ RVLOG(L"[raw] ouverture sortie impossible\n"); return E_FAIL; }
         }
-        std::ostream& out = outFile.empty() ? sortieNulle : fichier;
+        // Sortie vide avec observateur : le contenu lui est livré, sans écriture.
+        std::ostream sortieObservee(observateur);
+        std::ostream& out = !outFile.empty() ? static_cast<std::ostream&>(fichier)
+                          : observateur ? sortieObservee : sortieNulle;
 
         if (resident){
             out.write((const char*)residentData, residentLen);
@@ -1158,6 +1162,7 @@ public:
 struct LecteurBrut::Impl {
     std::map<std::wstring, std::unique_ptr<NtfsVolume>> volumes;
     std::map<std::wstring, HRESULT> echecs;    // volume inaccessible : ne pas réessayer
+    NtfsVolume* volume(const std::wstring& lettre, HRESULT& hr);
 };
 
 LecteurBrut::LecteurBrut() : impl_(new Impl) {}
@@ -1165,29 +1170,47 @@ LecteurBrut::~LecteurBrut() = default;
 
 unsigned LecteurBrut::volumesOuverts() const { return (unsigned)impl_->volumes.size(); }
 
+NtfsVolume* LecteurBrut::Impl::volume(const std::wstring& lettre, HRESULT& hr) {
+    const auto echec = echecs.find(lettre);
+    if (echec != echecs.end()){ hr = echec->second; return nullptr; }
+    auto it = volumes.find(lettre);
+    if (it == volumes.end()){
+        std::unique_ptr<NtfsVolume> v(new NtfsVolume);
+        hr = v->open(lettre);
+        if (FAILED(hr)){ echecs.emplace(lettre, hr); return nullptr; }
+        v->activerCache();
+        it = volumes.emplace(lettre, std::move(v)).first;
+    }
+    hr = S_OK;
+    return it->second.get();
+}
+
+HRESULT LecteurBrut::lister(const std::wstring& dossierAbsolu, std::vector<RawDirEntry>& entrees){
+    entrees.clear();
+    if (dossierAbsolu.size() < 3 || dossierAbsolu[1] != L':' || dossierAbsolu[2] != L'\\')
+        return HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME);
+    HRESULT hr;
+    NtfsVolume* v = impl_->volume(std::wstring(1, (wchar_t)towupper(dossierAbsolu[0])), hr);
+    if (!v) return hr;
+    uint64_t index = 0;
+    if (!v->resolvePath(dossierAbsolu.substr(2), index)) return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+    return v->listDir(index, entrees) ? S_OK : E_FAIL;
+}
+
 HRESULT LecteurBrut::lire(const std::wstring& cheminAbsolu, const std::wstring& sortie,
-                          RawHiveExtrait& ligne){
+                          RawHiveExtrait& ligne, std::streambuf* observateur){
     ligne.cheminVolume = cheminAbsolu;
     ligne.cheminSortie = sortie;
     ligne.resultat = HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME);
     if (cheminAbsolu.size() < 3 || cheminAbsolu[1] != L':' || cheminAbsolu[2] != L'\\')
         return ligne.resultat;
-    const std::wstring volume(1, (wchar_t)towupper(cheminAbsolu[0]));
-
-    const auto echec = impl_->echecs.find(volume);
-    if (echec != impl_->echecs.end()) return ligne.resultat = echec->second;
-    auto it = impl_->volumes.find(volume);
-    if (it == impl_->volumes.end()){
-        std::unique_ptr<NtfsVolume> v(new NtfsVolume);
-        const HRESULT hr = v->open(volume);
-        if (FAILED(hr)){ impl_->echecs.emplace(volume, hr); return ligne.resultat = hr; }
-        v->activerCache();
-        it = impl_->volumes.emplace(volume, std::move(v)).first;
-    }
+    HRESULT hr;
+    NtfsVolume* v = impl_->volume(std::wstring(1, (wchar_t)towupper(cheminAbsolu[0])), hr);
+    if (!v) return ligne.resultat = hr;
     uint64_t index = 0;
-    if (!it->second->resolvePath(cheminAbsolu.substr(2), index))
+    if (!v->resolvePath(cheminAbsolu.substr(2), index))
         return ligne.resultat = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-    return ligne.resultat = it->second->extractData(index, sortie, std::wstring(), &ligne.empreintes);
+    return ligne.resultat = v->extractData(index, sortie, std::wstring(), &ligne.empreintes, observateur);
 }
 
 void RawHiveSetVerbose(bool on){ g_verbose = on; }

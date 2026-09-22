@@ -19,6 +19,13 @@
  *  que hachés : ce ne sont pas des charges, et les copier ferait de la collecte
  *  une copie des documents de l'utilisateur.
  *
+ *  BINAIRES MICROSOFT AUTHENTIQUES. Un exécutable dont l'authenticité Microsoft
+ *  est vérifiée — empreinte listée dans un catalogue de Windows à signature
+ *  Microsoft valide, ou signature intégrée Microsoft valide — est haché sans
+ *  être prélevé : identique sur toute machine de la même version, il ne sert
+ *  pas l'enquête. La vérification se fait en mémoire, sans API ni service
+ *  (cf. authenticode.h), et les catalogues qui l'ont justifiée sont consignés.
+ *
  *  DÉDOUBLONNAGE. Un même contenu n'est consigné qu'une fois : trois copies
  *  identiques de msedge.dll (Edge, EdgeCore, WebView2 : 332 Mo chacune)
  *  occupaient 996 Mo. Les autres chemins sont déclarés au manifeste comme
@@ -41,6 +48,18 @@ struct EmpreinteBinaire {
     std::wstring sha256;
     HRESULT resultat = E_FAIL;
     bool preleve = false;    //!< copié dans la consigne
+    /*! Authenticité Microsoft vérifiée (catalogue de Windows ou signature
+     *  intégrée) : le binaire n'est pas prélevé. Vide sinon. Cf. authenticode.h. */
+    std::wstring signature;
+};
+
+/*! Bilan de la phase, pour le journal d'investigation. */
+struct BilanBinaires {
+    size_t fichiers = 0, lus = 0, preleves = 0, sansPlace = 0, doublons = 0;
+    unsigned long long octetsPreleves = 0, octetsEvites = 0;
+    size_t authentifies = 0;                 //!< binaires Microsoft authentiques, non prélevés
+    unsigned long long octetsAuthentifies = 0;
+    size_t cataloguesLus = 0, cataloguesUtilises = 0;
 };
 
 /*! Empreintes du fichier désigné par un artefact.
@@ -62,10 +81,9 @@ void ajouterEmpreintes(Json& o, const EmpreinteBinaire& e,
                        const std::wstring& prefixe = L"", const std::wstring& suffixe = L"");
 
 /*! Bilan, pour le journal d'investigation. */
-void BinairesBilan(size_t* fichiers, size_t* lus, size_t* preleves,
-                   unsigned long long* octetsPreleves, size_t* sansPlace,
-                   size_t* doublons, unsigned long long* octetsEvites);
+BilanBinaires BinairesBilan();
 
-/*! Ferme les volumes gardés ouverts. À appeler quand plus aucun artefact ne
- *  cite de fichier. */
+/*! Consigne les catalogues de signatures qui ont justifié un non-prélèvement,
+ *  puis ferme les volumes gardés ouverts. À appeler quand plus aucun artefact
+ *  ne cite de fichier, AVANT la copie vers le travail et le scellement. */
 void BinairesTerminer();

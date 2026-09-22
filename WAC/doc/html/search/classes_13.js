@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['volumeinfo_0',['VolumeInfo',['../structVolumeInfo.html',1,'']]],
-  ['volumeshellitem_1',['VolumeShellItem',['../structVolumeShellItem.html',1,'']]]
+  ['verdictmicrosoft_0',['VerdictMicrosoft',['../structVerdictMicrosoft.html',1,'']]],
+  ['volumeinfo_1',['VolumeInfo',['../structVolumeInfo.html',1,'']]],
+  ['volumeshellitem_2',['VolumeShellItem',['../structVolumeShellItem.html',1,'']]]
 ];

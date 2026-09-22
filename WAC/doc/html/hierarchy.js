@@ -9,6 +9,7 @@ var hierarchy =
     [ "AutomaticDestination", "structAutomaticDestination.html", null ],
     [ "Bam", "structBam.html", null ],
     [ "Bams", "structBams.html", null ],
+    [ "BilanBinaires", "structBilanBinaires.html", null ],
     [ "CustomDestination", "structCustomDestination.html", null ],
     [ "CustomDestinationCategory", "structCustomDestinationCategory.html", null ],
     [ "DestFile", "structDestFile.html", null ],
@@ -61,6 +62,7 @@ var hierarchy =
       [ "BeefUnknown", "structBeefUnknown.html", null ]
     ] ],
     [ "LecteurBrut::Impl", "structLecteurBrut_1_1Impl.html", null ],
+    [ "IndexCatalogues", "classIndexCatalogues.html", null ],
     [ "IShellItem", "structIShellItem.html", [
       [ "ArchiveFileContent", "structArchiveFileContent.html", null ],
       [ "ControlPanel", "structControlPanel.html", null ],
@@ -102,6 +104,7 @@ var hierarchy =
     [ "Processes", "structProcesses.html", null ],
     [ "Property", "structProperty.html", null ],
     [ "QuickDigest5", "classQuickDigest5.html", null ],
+    [ "RacineMicrosoft", "structRacineMicrosoft.html", null ],
     [ "RawAttribut", "structRawAttribut.html", null ],
     [ "RawDirEntry", "structRawDirEntry.html", null ],
     [ "RawHiveEmpreintes", "structRawHiveEmpreintes.html", null ],
@@ -118,13 +121,18 @@ var hierarchy =
     [ "Sessions", "structSessions.html", null ],
     [ "Sha1Stream", "classSha1Stream.html", null ],
     [ "Sha256Stream", "classSha256Stream.html", null ],
+    [ "Sha512Stream", "classSha512Stream.html", null ],
     [ "Shellbag", "structShellbag.html", null ],
     [ "Shellbags", "structShellbags.html", null ],
     [ "ShellVolumeFlags", "structShellVolumeFlags.html", null ],
     [ "Shimcache", "structShimcache.html", null ],
     [ "Shimcaches", "structShimcaches.html", null ],
+    [ "SignatureVerifiee", "structSignatureVerifiee.html", null ],
     [ "SPS", "structSPS.html", null ],
     [ "SPSValue", "structSPSValue.html", null ],
+    [ "std::streambuf", null, [
+      [ "AnalyseurPe", "classAnalyseurPe.html", null ]
+    ] ],
     [ "SystemInfo", "structSystemInfo.html", null ],
     [ "TableMessages", "classTableMessages.html", null ],
     [ "TimeZoneInfo", "structTimeZoneInfo.html", null ],
@@ -141,6 +149,7 @@ var hierarchy =
       [ "UserPropertyView0xC01", "structUserPropertyView0xC01.html", null ]
     ] ],
     [ "Users", "structUsers.html", null ],
+    [ "VerdictMicrosoft", "structVerdictMicrosoft.html", null ],
     [ "VolumeInfo", "structVolumeInfo.html", null ],
     [ "XmlNode", "structXmlNode.html", null ]
 ];

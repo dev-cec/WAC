@@ -41,6 +41,8 @@
     <ClCompile Include="xml_light.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="trans_id.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="users.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="authenticode.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="rsa.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="binaires.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="consigne.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="event_messages.cpp"><Filter>Fichiers sources</Filter></ClCompile>
@@ -88,6 +90,9 @@
     <ClInclude Include="xml_light.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="trans_id.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="users.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="authenticode.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="racines_microsoft.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="rsa.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="binaires.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="consigne.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="event_messages.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>

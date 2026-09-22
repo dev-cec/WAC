@@ -69,6 +69,15 @@ derniers JSON : le rapport disait « collecte probablement incomplète » — ce
 qui se termine par `END, Time elapsed`) tranche entre les deux. Timeout porté à
 30 min ; il faudra le revoir si la collecte s'allonge encore.
 
+**L'authenticité Microsoft se confronte à Windows.** `WAC/authenticode_test.cpp`
+vérifie les catalogues d'un dossier puis rend un verdict par fichier ; compilé
+pour Windows, il tourne dans la VM sur les binaires prélevés par une collecte,
+et ses verdicts se comparent à ceux de `Get-AuthenticodeSignature` sur les mêmes
+fichiers. Sur 2 233 binaires : 2 126 authentifiés par les deux, 99 prélevés par
+les deux, et aucun fichier accepté par WAC que Windows refuserait — le seul
+écart qui compterait. Le programme lit les fichiers par l'API : c'est un outil
+de test, jamais employé pendant une collecte.
+
 **Le manifeste est confronté au contenu réel de la consigne.** Le harnais
 relève dans la VM la liste des fichiers de `consigne/` (`LISTE.txt`), et
 `check-json.py` vérifie que chaque fichier présent est au manifeste, et

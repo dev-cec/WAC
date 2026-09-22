@@ -19,6 +19,7 @@
 #include <utility>
 #include <cstdint>
 #include <memory>
+#include <streambuf>
 
 /*! Active des messages de diagnostic sur stderr (par défaut : silencieux). */
 void RawHiveSetVerbose(bool on);
@@ -119,6 +120,8 @@ HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
  *  Le LecteurBrut garde chaque volume ouvert UNE fois pour toute sa durée de
  *  vie, et met en cache l'index des répertoires traversés.
  */
+struct RawDirEntry;
+
 class LecteurBrut {
 public:
     LecteurBrut();
@@ -129,10 +132,15 @@ public:
     /*! Lit un fichier par son chemin absolu (« X:\\… »).
      *  @param sortie fichier à écrire ; VIDE pour ne calculer que les empreintes
      *         — rien n'est alors écrit nulle part
+     *  @param observateur si `sortie` est vide, reçoit le contenu au fil de la
+     *         lecture (analyse d'un PE, lecture d'un catalogue en mémoire)
      *  @param ligne  reçoit le relevé, empreintes et horodatages compris
      *  @return le résultat, également porté par `ligne.resultat` */
     HRESULT lire(const std::wstring& cheminAbsolu, const std::wstring& sortie,
-                 RawHiveExtrait& ligne);
+                 RawHiveExtrait& ligne, std::streambuf* observateur = nullptr);
+
+    /*! Énumère un répertoire par son chemin absolu, sur le volume déjà ouvert. */
+    HRESULT lister(const std::wstring& dossierAbsolu, std::vector<RawDirEntry>& entrees);
 
     //! Nombre de volumes effectivement ouverts (un handle chacun).
     unsigned volumesOuverts() const;

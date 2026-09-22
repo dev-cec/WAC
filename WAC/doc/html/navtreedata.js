@@ -51,6 +51,7 @@ var NAVTREE =
         [ "Fonctions", "globals_func.html", "globals_func" ],
         [ "Variables", "globals_vars.html", null ],
         [ "Définitions de type", "globals_type.html", null ],
+        [ "Énumérations", "globals_enum.html", null ],
         [ "Macros", "globals_defs.html", null ]
       ] ]
     ] ]
@@ -60,13 +61,13 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"globals_func_n.html",
-"structAppliConf.html#acebd5e49e779376202a9766407664256",
-"structDestFile.html#ae25c6b299b5aa1425abdf7eb09e13031",
-"structMountedDevice.html#a79042a23a8662facf6d4d1f82f4e212d",
-"structSPSValue.html#a097501533faec7e0df86bdfc0dfc37fe",
-"structUserPropertyView0x10312005.html#ab5c9cc02dca9132acf4d67de35289714",
-"trans__id_8cpp.html"
+"functions_vars_l.html",
+"sha_8h_source.html",
+"structBilanBinaires.html#a96d2f7020107b56a829b35c5d9abb484",
+"structIExtensionBlock.html#a7bdccb2b2bb3e776406683af1e245a2b",
+"structRecentDoc.html#a3b0ac7a72010df97ad4db97a653838c6",
+"structTypedShellItem.html#af531cd98d1df48e087bc35d8fc187866",
+"tools_8cpp.html#ac15b36c9a117f211860abb5d7f86d8d4"
 ];
 
 var SYNCONMSG = 'cliquez pour désactiver la synchronisation du panel';

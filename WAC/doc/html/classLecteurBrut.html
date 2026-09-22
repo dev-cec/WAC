@@ -121,16 +121,15 @@ Fonctions membres publiques</h2></td></tr>
 <tr class="separator:a81a0c90edb9edbbbf9305c4fa8077ac0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4bfcb16a07f026728660eb0b3457d694" id="r_a4bfcb16a07f026728660eb0b3457d694"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classLecteurBrut.html">LecteurBrut</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLecteurBrut.html#a4bfcb16a07f026728660eb0b3457d694">operator=</a> (const <a class="el" href="classLecteurBrut.html">LecteurBrut</a> &amp;)=delete</td></tr>
 <tr class="separator:a4bfcb16a07f026728660eb0b3457d694"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad31f3d383f01f0b745ae3ecff0122a56" id="r_ad31f3d383f01f0b745ae3ecff0122a56"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLecteurBrut.html#ad31f3d383f01f0b745ae3ecff0122a56">lire</a> (const std::wstring &amp;cheminAbsolu, const std::wstring &amp;sortie, <a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a> &amp;ligne)</td></tr>
-<tr class="separator:ad31f3d383f01f0b745ae3ecff0122a56"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac5e04b520aee645bb4760944c72836d5" id="r_ac5e04b520aee645bb4760944c72836d5"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLecteurBrut.html#ac5e04b520aee645bb4760944c72836d5">lire</a> (const std::wstring &amp;cheminAbsolu, const std::wstring &amp;sortie, <a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a> &amp;ligne, std::streambuf *observateur=nullptr)</td></tr>
+<tr class="separator:ac5e04b520aee645bb4760944c72836d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3ac93aa5d18fd28807411cf07fe23dca" id="r_a3ac93aa5d18fd28807411cf07fe23dca"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLecteurBrut.html#a3ac93aa5d18fd28807411cf07fe23dca">lister</a> (const std::wstring &amp;dossierAbsolu, std::vector&lt; <a class="el" href="structRawDirEntry.html">RawDirEntry</a> &gt; &amp;entrees)</td></tr>
+<tr class="separator:a3ac93aa5d18fd28807411cf07fe23dca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a02273caa6d38fcdb0373653b518f0077" id="r_a02273caa6d38fcdb0373653b518f0077"><td class="memItemLeft" align="right" valign="top">unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLecteurBrut.html#a02273caa6d38fcdb0373653b518f0077">volumesOuverts</a> () const</td></tr>
 <tr class="memdesc:a02273caa6d38fcdb0373653b518f0077"><td class="mdescLeft">&#160;</td><td class="mdescRight">Nombre de volumes effectivement ouverts (un handle chacun).  <br /></td></tr>
 <tr class="separator:a02273caa6d38fcdb0373653b518f0077"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
-<div class="textblock"><p>Lecteur brut PERSISTANT, pour lire des milliers de fichiers épars.</p>
-<p><code>ExtractFilesRaw</code> ouvre le volume, amorce la $MFT et reparcourt chaque répertoire depuis la racine à chaque appel. Pour les binaires cités par les artefacts (plusieurs milliers, dispersés), ce serait autant d'ouvertures de volume — la seule opération de WAC qu'un audit d'accès aux objets peut journaliser — et autant de relectures des 4 659 entrées de System32. Le <a class="el" href="classLecteurBrut.html">LecteurBrut</a> garde chaque volume ouvert UNE fois pour toute sa durée de vie, et met en cache l'index des répertoires traversés. </p>
-</div><h2 class="groupheader">Documentation des constructeurs et destructeur</h2>
+<h2 class="groupheader">Documentation des constructeurs et destructeur</h2>
 <a id="a1d15fe955aee04dc3d56b478465a2aff" name="a1d15fe955aee04dc3d56b478465a2aff"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1d15fe955aee04dc3d56b478465a2aff">&#9670;&#160;</a></span>LecteurBrut() <span class="overload">[1/2]</span></h2>
 
@@ -200,8 +199,8 @@ Fonctions membres publiques</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des fonctions membres</h2>
-<a id="ad31f3d383f01f0b745ae3ecff0122a56" name="ad31f3d383f01f0b745ae3ecff0122a56"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad31f3d383f01f0b745ae3ecff0122a56">&#9670;&#160;</a></span>lire()</h2>
+<a id="ac5e04b520aee645bb4760944c72836d5" name="ac5e04b520aee645bb4760944c72836d5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac5e04b520aee645bb4760944c72836d5">&#9670;&#160;</a></span>lire()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -222,7 +221,13 @@ Fonctions membres publiques</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="structRawHiveExtrait.html">RawHiveExtrait</a> &amp;&#160;</td>
-          <td class="paramname"><em>ligne</em>&#160;</td>
+          <td class="paramname"><em>ligne</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::streambuf *&#160;</td>
+          <td class="paramname"><em>observateur</em> = <code>nullptr</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -234,11 +239,41 @@ Fonctions membres publiques</h2></td></tr>
 <p>Lit un fichier par son chemin absolu (« X:\… »). </p><dl class="params"><dt>Paramètres</dt><dd>
   <table class="params">
     <tr><td class="paramname">sortie</td><td>fichier à écrire ; VIDE pour ne calculer que les empreintes — rien n'est alors écrit nulle part </td></tr>
+    <tr><td class="paramname">observateur</td><td>si <code>sortie</code> est vide, reçoit le contenu au fil de la lecture (analyse d'un PE, lecture d'un catalogue en mémoire) </td></tr>
     <tr><td class="paramname">ligne</td><td>reçoit le relevé, empreintes et horodatages compris </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>le résultat, également porté par <code>ligne.resultat</code> </dd></dl>
+
+</div>
+</div>
+<a id="a3ac93aa5d18fd28807411cf07fe23dca" name="a3ac93aa5d18fd28807411cf07fe23dca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3ac93aa5d18fd28807411cf07fe23dca">&#9670;&#160;</a></span>lister()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT LecteurBrut::lister </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>dossierAbsolu</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structRawDirEntry.html">RawDirEntry</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>entrees</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Énumère un répertoire par son chemin absolu, sur le volume déjà ouvert. </p>
 
 </div>
 </div>

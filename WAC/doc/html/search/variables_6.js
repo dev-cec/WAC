@@ -1,8 +1,8 @@
 var searchData=
 [
   ['fichier_5fcopie_0',['FICHIER_COPIE',['../namespaceFootprint.html#a3d944af43e67edbbd418d8254902e223',1,'Footprint']]],
-  ['fichiers_1',['fichiers',['../structEvents.html#aabdf1a19e3990626db3acb888949a080',1,'Events']]],
-  ['filedocumenttypestring_2',['filedocumenttypestring',['../structBeef001a.html#a8d08eb0cc21dd4697442805a3b0f8db5',1,'Beef001a::fileDocumentTypeString'],['../structBeef001b.html#accae6bd0b2019986bbfdf4d78e597b7e',1,'Beef001b::fileDocumentTypeString']]],
+  ['fichiers_1',['fichiers',['../structEvents.html#aabdf1a19e3990626db3acb888949a080',1,'Events::fichiers'],['../structBilanBinaires.html#a7db9c4dbe7bcadf327fcddfb65d3e4f3',1,'BilanBinaires::fichiers']]],
+  ['filedocumenttypestring_2',['filedocumenttypestring',['../structBeef001b.html#accae6bd0b2019986bbfdf4d78e597b7e',1,'Beef001b::fileDocumentTypeString'],['../structBeef001a.html#a8d08eb0cc21dd4697442805a3b0f8db5',1,'Beef001a::fileDocumentTypeString']]],
   ['filename_3',['filename',['../structPrefetch.html#ac25fee7f3395655f17dd9759fcf1663b',1,'Prefetch::filename'],['../structFilename.html#aabb34911aec2012ab97dd552b8eaa66e',1,'Filename::filename']]],
   ['filenames_4',['filenames',['../structPrefetch.html#a36cc74072bbf150b0c2055e92205c20c',1,'Prefetch']]],
   ['filereferences_5',['fileReferences',['../structVolumeInfo.html#aff7e0c3f75d038693f831d80cc87647c',1,'VolumeInfo']]],
@@ -23,7 +23,7 @@ var searchData=
   ['forcenolinkinfo_20',['ForceNoLinkInfo',['../structLinkFlags.html#a613b6a58caa18fef75ad570c9d5baab7',1,'LinkFlags']]],
   ['forcenolinktrack_21',['ForceNoLinkTrack',['../structLinkFlags.html#a7c25a9dd1f00018a7a4af3c4cd1e153b',1,'LinkFlags']]],
   ['formatversion_22',['formatVersion',['../structDestFileDirectory.html#a6d2b275608f9462291612eb034521027',1,'DestFileDirectory']]],
-  ['friendlyname_23',['friendlyname',['../structSPS.html#ae1ad2763480648b35d3a9da2aa9b58b6',1,'SPS::FriendlyName'],['../structUsbstor.html#a9b94559350c121e1676960a8dcba5e7f',1,'Usbstor::FriendlyName'],['../structUserPropertyView0x10312005.html#ad7cdafe75d583a55c76358b963876a05',1,'UserPropertyView0x10312005::FriendlyName'],['../structUserPropertyView0x07192006.html#a88468c064beff3b8d622c75293876888',1,'UserPropertyView0x07192006::FriendlyName'],['../structUserPropertyView0x23febbee.html#aa4421069750683c35403920a7fea8b74',1,'UserPropertyView0x23febbee::FriendlyName'],['../structProperty.html#a1746e45a53911810a954b8a9b49a358a',1,'Property::FriendlyName']]],
+  ['friendlyname_23',['friendlyname',['../structUserPropertyView0x23febbee.html#aa4421069750683c35403920a7fea8b74',1,'UserPropertyView0x23febbee::FriendlyName'],['../structSPS.html#ae1ad2763480648b35d3a9da2aa9b58b6',1,'SPS::FriendlyName'],['../structUserPropertyView0x07192006.html#a88468c064beff3b8d622c75293876888',1,'UserPropertyView0x07192006::FriendlyName'],['../structUserPropertyView0x10312005.html#ad7cdafe75d583a55c76358b963876a05',1,'UserPropertyView0x10312005::FriendlyName'],['../structProperty.html#a1746e45a53911810a954b8a9b49a358a',1,'Property::FriendlyName'],['../structUsbstor.html#a9b94559350c121e1676960a8dcba5e7f',1,'Usbstor::FriendlyName']]],
   ['fromhive_24',['fromHive',['../structTimeZoneInfo.html#a0208fee9ebb72f6c6ea900a0e3ef1dac',1,'TimeZoneInfo']]],
   ['fsfileattributes_25',['fsFileAttributes',['../structFileEntryShellItem.html#a0c4af29812b623f07f6e4914b144c416',1,'FileEntryShellItem']]],
   ['fsfilemodification_26',['fsFileModification',['../structFileEntryShellItem.html#a88688915df04fbe394ff6e08539ea6a7',1,'FileEntryShellItem']]],

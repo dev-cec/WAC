@@ -9,5 +9,6 @@ var searchData=
   ['xpress_2ecpp_6',['xpress.cpp',['../xpress_8cpp.html',1,'']]],
   ['xpress_2eh_7',['xpress.h',['../xpress_8h.html',1,'']]],
   ['xpress_5ftest_2ecpp_8',['xpress_test.cpp',['../xpress__test_8cpp.html',1,'']]],
-  ['xpresshuffmandetendre_9',['xpresshuffmandetendre',['../xpress_8cpp.html#a1d8f4e38293b0d0a60265dc432d723e7',1,'XpressHuffmanDetendre(const uint8_t *compresse, size_t tailleCompressee, uint8_t *sortie, size_t tailleSortie):&#160;xpress.cpp'],['../xpress_8h.html#a1d8f4e38293b0d0a60265dc432d723e7',1,'XpressHuffmanDetendre(const uint8_t *compresse, size_t tailleCompressee, uint8_t *sortie, size_t tailleSortie):&#160;xpress.cpp']]]
+  ['xpresshuffmandetendre_9',['xpresshuffmandetendre',['../xpress_8cpp.html#a1d8f4e38293b0d0a60265dc432d723e7',1,'XpressHuffmanDetendre(const uint8_t *compresse, size_t tailleCompressee, uint8_t *sortie, size_t tailleSortie):&#160;xpress.cpp'],['../xpress_8h.html#a1d8f4e38293b0d0a60265dc432d723e7',1,'XpressHuffmanDetendre(const uint8_t *compresse, size_t tailleCompressee, uint8_t *sortie, size_t tailleSortie):&#160;xpress.cpp']]],
+  ['xsputn_10',['xsputn',['../classAnalyseurPe.html#a17ea4dc5effa40ab071e5d236d561040',1,'AnalyseurPe']]]
 ];

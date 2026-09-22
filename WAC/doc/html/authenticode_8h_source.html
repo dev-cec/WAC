@@ -1,0 +1,266 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WAC (Windows Artefacts Collector):  Fichier source de /var/www/html/WAC/WAC/authenticode.h</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(document).ready(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Collecteur d&#39;artefacts Win10 et supérieur</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Généré par Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('authenticode_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Chargement...</div>
+<div class="SRStatus" id="Searching">Recherche...</div>
+<div class="SRStatus" id="NoMatches">Aucune correspondance</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">authenticode.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="authenticode_8h.html">Aller à la documentation de ce fichier.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*  authenticode.h — authenticité Microsoft d&#39;un binaire, vérifiée sans API.</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment"> *  À QUOI ÇA SERT. Avec --binary, WAC prélève les exécutables cités par les</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment"> *  artefacts. La plupart sont des composants de Windows ou des logiciels</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment"> *  Microsoft, identiques sur toute machine de la même version : les copier ne</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="comment"> *  sert pas l&#39;enquête, et pèse des gigaoctets. Ces fichiers portent une preuve</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="comment"> *  d&#39;origine vérifiable SUR LA MACHINE ELLE-MÊME, sans liste embarquée :</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="comment"> *    - les CATALOGUES de Windows (System32\CatRoot\{F750E6C3…}\*.cat), signés par</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="comment"> *      Microsoft, qui listent l&#39;empreinte de chaque fichier du système ;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="comment"> *    - la SIGNATURE INTÉGRÉE des binaires signés individuellement (Edge,</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="comment"> *      OneDrive, Office…).</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="comment"> *  Un fichier dont l&#39;empreinte Authenticode figure dans un catalogue à</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="comment"> *  signature Microsoft valide, ou dont la signature intégrée est une signature</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="comment"> *  Microsoft valide, est haché sans être prélevé. Tout le reste l&#39;est. Un</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="comment"> *  binaire de System32 remplacé par un attaquant n&#39;a plus l&#39;empreinte du</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="comment"> *  catalogue : il est prélevé.</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="comment"> *  AUCUNE TRACE. WinVerifyTrust et CryptCATAdmin sollicitent le service</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="comment"> *  CryptSvc et sa base de catalogues, lisent les magasins de certificats dans le</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="comment"> *  registre vivant, et contrôlent la révocation par le réseau — ce qui écrit</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="comment"> *  dans CryptnetUrlCache. Rien de cela ici : catalogues et binaires sont lus par</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="comment"> *  lecture brute du volume, et la vérification — ASN.1, X.509, PKCS#7, RSA —</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="comment"> *  se fait en mémoire, jusqu&#39;à des racines Microsoft EMBARQUÉES</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="comment"> *  (racines_microsoft.h), sans consulter le magasin de la machine.</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="comment"> *  CE QUI N&#39;EST PAS VÉRIFIÉ, et pourquoi c&#39;est acceptable ici : la révocation</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="comment"> *  et les dates de validité. La question posée n&#39;est pas « faut-il faire</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="comment"> *  confiance à ce code aujourd&#39;hui » mais « ce fichier est-il celui que</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="comment"> *  Microsoft a publié » ; une signature Microsoft authentique y répond. Dans le</span></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="comment"> *  doute — algorithme non pris en charge, structure inattendue — la réponse est</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="comment"> *  « non vérifié », et le fichier est prélevé.</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="comment"> *  SIGNATAIRES ACCEPTÉS. Tous les certificats rattachés à une racine Microsoft</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="comment"> *  ne signent pas du code Microsoft : « Microsoft Windows Hardware</span></div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="comment"> *  Compatibility Publisher » signe les pilotes TIERS certifiés WHQL, et « Early</span></div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="comment"> *  Launch Anti-malware Publisher » les pilotes ELAM des antivirus tiers — le</span></div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span><span class="comment"> *  terrain classique des pilotes vulnérables détournés. Ne sont acceptés que les</span></div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="comment"> *  signataires dont l&#39;organisation est « Microsoft Corporation » et le nom</span></div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span><span class="comment"> *  « Microsoft Windows », « Microsoft Corporation » ou « Microsoft Windows</span></div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span><span class="comment"> *  Publisher ».</span></div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span><span class="preprocessor">#include &lt;cstdint&gt;</span></div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="preprocessor">#include &lt;cstddef&gt;</span></div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="preprocessor">#include &lt;streambuf&gt;</span></div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="preprocessor">#include &lt;unordered_map&gt;</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><span class="preprocessor">#include &quot;<a class="code" href="sha_8h.html">sha.h</a>&quot;</span></div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span> </div>
+<div class="foldopen" id="foldopen00057" data-start="{" data-end="};">
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno"><a class="line" href="classAnalyseurPe.html">   57</a></span><span class="keyword">class </span><a class="code hl_class" href="classAnalyseurPe.html">AnalyseurPe</a> : <span class="keyword">public</span> std::streambuf {</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classAnalyseurPe.html#a8b043a314b3a3a9c2f65557630f45dbf">terminer</a>();</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno"><a class="line" href="classAnalyseurPe.html#a1424489cff6ddd7a56492e3f1d797d6e">   61</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classAnalyseurPe.html#a1424489cff6ddd7a56492e3f1d797d6e">estPe</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> estPe_; }</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno"><a class="line" href="classAnalyseurPe.html#a591227ab6f61e1c384f475d505c5ef50">   63</a></span>    <span class="keyword">const</span> uint8_t* <a class="code hl_function" href="classAnalyseurPe.html#a591227ab6f61e1c384f475d505c5ef50">sha1</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> sha1_; }</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno"><a class="line" href="classAnalyseurPe.html#ac4a9ea54bb4df16d0def8a312df0167b">   64</a></span>    <span class="keyword">const</span> uint8_t* <a class="code hl_function" href="classAnalyseurPe.html#ac4a9ea54bb4df16d0def8a312df0167b">sha256</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> sha256_; }</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno"><a class="line" href="classAnalyseurPe.html#a01d7b0583324b92730d242d50c4bffda">   66</a></span>    <span class="keyword">const</span> uint8_t* <a class="code hl_function" href="classAnalyseurPe.html#a01d7b0583324b92730d242d50c4bffda">sha1Complete</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> sha1c_; }</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno"><a class="line" href="classAnalyseurPe.html#a08f5584c34aa2dd038a227c9f138ff98">   67</a></span>    <span class="keyword">const</span> uint8_t* <a class="code hl_function" href="classAnalyseurPe.html#a08f5584c34aa2dd038a227c9f138ff98">sha256Complete</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> sha256c_; }</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno"><a class="line" href="classAnalyseurPe.html#a89d483ab52ec03179bbf8ad329648924">   69</a></span>    <span class="keyword">const</span> std::vector&lt;uint8_t&gt;&amp; <a class="code hl_function" href="classAnalyseurPe.html#a89d483ab52ec03179bbf8ad329648924">tableCertificats</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> certificats_; }</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span> </div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="keyword">protected</span>:</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    <span class="keywordtype">int</span> <a class="code hl_function" href="classAnalyseurPe.html#a26a017bfe39ad41e7324d99463420bee">overflow</a>(<span class="keywordtype">int</span> c) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    std::streamsize <a class="code hl_function" href="classAnalyseurPe.html#a17ea4dc5effa40ab071e5d236d561040">xsputn</a>(<span class="keyword">const</span> <span class="keywordtype">char</span>* s, std::streamsize n) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    <span class="keywordtype">void</span> recevoir(<span class="keyword">const</span> uint8_t* p, <span class="keywordtype">size_t</span> n);</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    <span class="keywordtype">void</span> traiter(<span class="keyword">const</span> uint8_t* p, <span class="keywordtype">size_t</span> n);   <span class="comment">// après analyse des en-têtes</span></div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    <span class="keywordtype">bool</span> analyserEntetes();</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span> </div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    std::vector&lt;uint8_t&gt; tete_;         <span class="comment">// en-têtes, tant que non analysés</span></div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    <span class="keywordtype">bool</span> decide_ = <span class="keyword">false</span>, estPe_ = <span class="keyword">false</span>, termine_ = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    uint64_t position_ = 0;             <span class="comment">// octets déjà traités</span></div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    uint64_t checksum_ = 0, entreeCert_ = 0, debutCert_ = 0, finCert_ = 0;</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    <a class="code hl_class" href="classSha1Stream.html">Sha1Stream</a> h1_;</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    <a class="code hl_class" href="classSha256Stream.html">Sha256Stream</a> h256_;</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>    std::vector&lt;uint8_t&gt; certificats_;</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    uint8_t sha1_[20] = {}, sha256_[32] = {}, sha1c_[20] = {}, sha256c_[32] = {};</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>};</div>
+</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span> </div>
+<div class="foldopen" id="foldopen00091" data-start="{" data-end="};">
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno"><a class="line" href="structSignatureVerifiee.html">   91</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structSignatureVerifiee.html">SignatureVerifiee</a> {</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno"><a class="line" href="structSignatureVerifiee.html#a400f8542e28727243ea39f2504042403">   92</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="structSignatureVerifiee.html#a400f8542e28727243ea39f2504042403">valide</a> = <span class="keyword">false</span>;          </div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno"><a class="line" href="structSignatureVerifiee.html#a077c47837a66b9b49b575286d8ff833f">   93</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="structSignatureVerifiee.html#a077c47837a66b9b49b575286d8ff833f">signataireAccepte</a> = <span class="keyword">false</span>; </div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno"><a class="line" href="structSignatureVerifiee.html#a8f8295d9d336a69282bf19eae4f09bfa">   94</a></span>    std::wstring <a class="code hl_variable" href="structSignatureVerifiee.html#a8f8295d9d336a69282bf19eae4f09bfa">signataire</a>;      </div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno"><a class="line" href="structSignatureVerifiee.html#a0c364f4e9d35d92985c6d7324474f324">   95</a></span>    std::string <a class="code hl_variable" href="structSignatureVerifiee.html#a0c364f4e9d35d92985c6d7324474f324">motif</a>;            </div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno"><a class="line" href="structSignatureVerifiee.html#a8aa50da40e5864b5e6db48db68db2491">   96</a></span>    std::string <a class="code hl_variable" href="structSignatureVerifiee.html#a8aa50da40e5864b5e6db48db68db2491">oidContenu</a>;       </div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno"><a class="line" href="structSignatureVerifiee.html#af83f86b9924debbc9f3e6184e4fe6c0b">   97</a></span>    <span class="keyword">const</span> uint8_t* <a class="code hl_variable" href="structSignatureVerifiee.html#af83f86b9924debbc9f3e6184e4fe6c0b">contenu</a> = <span class="keyword">nullptr</span>; </div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno"><a class="line" href="structSignatureVerifiee.html#aa61aca700d447dbb6fd44c40b4d4ff4d">   98</a></span>    <span class="keywordtype">size_t</span> <a class="code hl_variable" href="structSignatureVerifiee.html#aa61aca700d447dbb6fd44c40b4d4ff4d">tailleContenu</a> = 0;</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>};</div>
+</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span> </div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span><a class="code hl_struct" href="structSignatureVerifiee.html">SignatureVerifiee</a> <a class="code hl_function" href="authenticode_8h.html#a3ebdb1e8e6bb6bb0629d5b0bf3ef9aba">VerifierPkcs7</a>(<span class="keyword">const</span> uint8_t* donnees, <span class="keywordtype">size_t</span> taille);</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
+<div class="foldopen" id="foldopen00108" data-start="{" data-end="};">
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno"><a class="line" href="classIndexCatalogues.html">  108</a></span><span class="keyword">class </span><a class="code hl_class" href="classIndexCatalogues.html">IndexCatalogues</a> {</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classIndexCatalogues.html#a6e7b815a9ba7392f00adac0c6bc7485a">ajouter</a>(<span class="keyword">const</span> std::wstring&amp; nom, <span class="keyword">const</span> uint8_t* octets, <span class="keywordtype">size_t</span> taille);</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    <span class="keyword">const</span> std::wstring* <a class="code hl_function" href="classIndexCatalogues.html#ab9c0928bc43905cbfde0226588a48b45">chercher</a>(<span class="keyword">const</span> uint8_t* empreinte, <span class="keywordtype">size_t</span> taille) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno"><a class="line" href="classIndexCatalogues.html#af19a22de9c7bb439b35a08f3adcfd49f">  115</a></span>    <span class="keywordtype">size_t</span> <a class="code hl_function" href="classIndexCatalogues.html#af19a22de9c7bb439b35a08f3adcfd49f">catalogues</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> noms_.size(); }</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno"><a class="line" href="classIndexCatalogues.html#a6e69ac293a71f4312ca95e2df7c1ae26">  116</a></span>    <span class="keywordtype">size_t</span> <a class="code hl_function" href="classIndexCatalogues.html#a6e69ac293a71f4312ca95e2df7c1ae26">empreintes</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> index_.size(); }</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno"><a class="line" href="classIndexCatalogues.html#af0b384d1409fb55791b17696cb7a9e53">  117</a></span>    <span class="keywordtype">size_t</span> <a class="code hl_function" href="classIndexCatalogues.html#af0b384d1409fb55791b17696cb7a9e53">refuses</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> refuses_; }</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>    std::vector&lt;std::wstring&gt; noms_;</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    std::unordered_map&lt;std::string, uint32_t&gt; index_;   <span class="comment">// empreinte brute -&gt; catalogue</span></div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>    <span class="keywordtype">size_t</span> refuses_ = 0;</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>};</div>
+</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span> </div>
+<div class="foldopen" id="foldopen00125" data-start="{" data-end="};">
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno"><a class="line" href="structVerdictMicrosoft.html">  125</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structVerdictMicrosoft.html">VerdictMicrosoft</a> {</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno"><a class="line" href="structVerdictMicrosoft.html#a8e7b4c165009f71c1310172eb3ed948b">  126</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="structVerdictMicrosoft.html#a8e7b4c165009f71c1310172eb3ed948b">microsoft</a> = <span class="keyword">false</span>;       </div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno"><a class="line" href="structVerdictMicrosoft.html#a22182a384c9b2711c59eaaf6eba0a1b9">  127</a></span>    std::wstring <a class="code hl_variable" href="structVerdictMicrosoft.html#a22182a384c9b2711c59eaaf6eba0a1b9">source</a>;          </div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno"><a class="line" href="structVerdictMicrosoft.html#a7bb93b5dd6016621f84deadc438ae7d7">  128</a></span>    std::wstring <a class="code hl_variable" href="structVerdictMicrosoft.html#a7bb93b5dd6016621f84deadc438ae7d7">signataire</a>;      </div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno"><a class="line" href="structVerdictMicrosoft.html#ab6eacc94e26920fc0b651a1905afb087">  129</a></span>    std::string <a class="code hl_variable" href="structVerdictMicrosoft.html#ab6eacc94e26920fc0b651a1905afb087">motif</a>;            </div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>};</div>
+</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span> </div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span><a class="code hl_struct" href="structVerdictMicrosoft.html">VerdictMicrosoft</a> <a class="code hl_function" href="authenticode_8h.html#a081cd8727bae07dde597f44221830027">EvaluerPe</a>(<span class="keyword">const</span> <a class="code hl_class" href="classAnalyseurPe.html">AnalyseurPe</a>&amp; pe, <span class="keyword">const</span> <a class="code hl_class" href="classIndexCatalogues.html">IndexCatalogues</a>&amp; catalogues);</div>
+<div class="ttc" id="aauthenticode_8h_html_a081cd8727bae07dde597f44221830027"><div class="ttname"><a href="authenticode_8h.html#a081cd8727bae07dde597f44221830027">EvaluerPe</a></div><div class="ttdeci">VerdictMicrosoft EvaluerPe(const AnalyseurPe &amp;pe, const IndexCatalogues &amp;catalogues)</div><div class="ttdef"><b>Definition</b> authenticode.cpp:496</div></div>
+<div class="ttc" id="aauthenticode_8h_html_a3ebdb1e8e6bb6bb0629d5b0bf3ef9aba"><div class="ttname"><a href="authenticode_8h.html#a3ebdb1e8e6bb6bb0629d5b0bf3ef9aba">VerifierPkcs7</a></div><div class="ttdeci">SignatureVerifiee VerifierPkcs7(const uint8_t *donnees, size_t taille)</div><div class="ttdef"><b>Definition</b> authenticode.cpp:250</div></div>
+<div class="ttc" id="aclassAnalyseurPe_html"><div class="ttname"><a href="classAnalyseurPe.html">AnalyseurPe</a></div><div class="ttdef"><b>Definition</b> authenticode.h:57</div></div>
+<div class="ttc" id="aclassAnalyseurPe_html_a01d7b0583324b92730d242d50c4bffda"><div class="ttname"><a href="classAnalyseurPe.html#a01d7b0583324b92730d242d50c4bffda">AnalyseurPe::sha1Complete</a></div><div class="ttdeci">const uint8_t * sha1Complete() const</div><div class="ttdoc">Mêmes empreintes, fichier complété de zéros jusqu'à un multiple de 8.</div><div class="ttdef"><b>Definition</b> authenticode.h:66</div></div>
+<div class="ttc" id="aclassAnalyseurPe_html_a08f5584c34aa2dd038a227c9f138ff98"><div class="ttname"><a href="classAnalyseurPe.html#a08f5584c34aa2dd038a227c9f138ff98">AnalyseurPe::sha256Complete</a></div><div class="ttdeci">const uint8_t * sha256Complete() const</div><div class="ttdef"><b>Definition</b> authenticode.h:67</div></div>
+<div class="ttc" id="aclassAnalyseurPe_html_a1424489cff6ddd7a56492e3f1d797d6e"><div class="ttname"><a href="classAnalyseurPe.html#a1424489cff6ddd7a56492e3f1d797d6e">AnalyseurPe::estPe</a></div><div class="ttdeci">bool estPe() const</div><div class="ttdef"><b>Definition</b> authenticode.h:61</div></div>
+<div class="ttc" id="aclassAnalyseurPe_html_a17ea4dc5effa40ab071e5d236d561040"><div class="ttname"><a href="classAnalyseurPe.html#a17ea4dc5effa40ab071e5d236d561040">AnalyseurPe::xsputn</a></div><div class="ttdeci">std::streamsize xsputn(const char *s, std::streamsize n) override</div><div class="ttdef"><b>Definition</b> authenticode.cpp:401</div></div>
+<div class="ttc" id="aclassAnalyseurPe_html_a26a017bfe39ad41e7324d99463420bee"><div class="ttname"><a href="classAnalyseurPe.html#a26a017bfe39ad41e7324d99463420bee">AnalyseurPe::overflow</a></div><div class="ttdeci">int overflow(int c) override</div><div class="ttdef"><b>Definition</b> authenticode.cpp:396</div></div>
+<div class="ttc" id="aclassAnalyseurPe_html_a591227ab6f61e1c384f475d505c5ef50"><div class="ttname"><a href="classAnalyseurPe.html#a591227ab6f61e1c384f475d505c5ef50">AnalyseurPe::sha1</a></div><div class="ttdeci">const uint8_t * sha1() const</div><div class="ttdoc">Empreintes Authenticode (valides après terminer(), si estPe()).</div><div class="ttdef"><b>Definition</b> authenticode.h:63</div></div>
+<div class="ttc" id="aclassAnalyseurPe_html_a89d483ab52ec03179bbf8ad329648924"><div class="ttname"><a href="classAnalyseurPe.html#a89d483ab52ec03179bbf8ad329648924">AnalyseurPe::tableCertificats</a></div><div class="ttdeci">const std::vector&lt; uint8_t &gt; &amp; tableCertificats() const</div><div class="ttdoc">Contenu de la table de certificats (WIN_CERTIFICATE…), vide si absente.</div><div class="ttdef"><b>Definition</b> authenticode.h:69</div></div>
+<div class="ttc" id="aclassAnalyseurPe_html_a8b043a314b3a3a9c2f65557630f45dbf"><div class="ttname"><a href="classAnalyseurPe.html#a8b043a314b3a3a9c2f65557630f45dbf">AnalyseurPe::terminer</a></div><div class="ttdeci">void terminer()</div><div class="ttdef"><b>Definition</b> authenticode.cpp:469</div></div>
+<div class="ttc" id="aclassAnalyseurPe_html_ac4a9ea54bb4df16d0def8a312df0167b"><div class="ttname"><a href="classAnalyseurPe.html#ac4a9ea54bb4df16d0def8a312df0167b">AnalyseurPe::sha256</a></div><div class="ttdeci">const uint8_t * sha256() const</div><div class="ttdef"><b>Definition</b> authenticode.h:64</div></div>
+<div class="ttc" id="aclassIndexCatalogues_html"><div class="ttname"><a href="classIndexCatalogues.html">IndexCatalogues</a></div><div class="ttdef"><b>Definition</b> authenticode.h:108</div></div>
+<div class="ttc" id="aclassIndexCatalogues_html_a6e69ac293a71f4312ca95e2df7c1ae26"><div class="ttname"><a href="classIndexCatalogues.html#a6e69ac293a71f4312ca95e2df7c1ae26">IndexCatalogues::empreintes</a></div><div class="ttdeci">size_t empreintes() const</div><div class="ttdef"><b>Definition</b> authenticode.h:116</div></div>
+<div class="ttc" id="aclassIndexCatalogues_html_a6e7b815a9ba7392f00adac0c6bc7485a"><div class="ttname"><a href="classIndexCatalogues.html#a6e7b815a9ba7392f00adac0c6bc7485a">IndexCatalogues::ajouter</a></div><div class="ttdeci">bool ajouter(const std::wstring &amp;nom, const uint8_t *octets, size_t taille)</div><div class="ttdef"><b>Definition</b> authenticode.cpp:349</div></div>
+<div class="ttc" id="aclassIndexCatalogues_html_ab9c0928bc43905cbfde0226588a48b45"><div class="ttname"><a href="classIndexCatalogues.html#ab9c0928bc43905cbfde0226588a48b45">IndexCatalogues::chercher</a></div><div class="ttdeci">const std::wstring * chercher(const uint8_t *empreinte, size_t taille) const</div><div class="ttdef"><b>Definition</b> authenticode.cpp:382</div></div>
+<div class="ttc" id="aclassIndexCatalogues_html_af0b384d1409fb55791b17696cb7a9e53"><div class="ttname"><a href="classIndexCatalogues.html#af0b384d1409fb55791b17696cb7a9e53">IndexCatalogues::refuses</a></div><div class="ttdeci">size_t refuses() const</div><div class="ttdef"><b>Definition</b> authenticode.h:117</div></div>
+<div class="ttc" id="aclassIndexCatalogues_html_af19a22de9c7bb439b35a08f3adcfd49f"><div class="ttname"><a href="classIndexCatalogues.html#af19a22de9c7bb439b35a08f3adcfd49f">IndexCatalogues::catalogues</a></div><div class="ttdeci">size_t catalogues() const</div><div class="ttdef"><b>Definition</b> authenticode.h:115</div></div>
+<div class="ttc" id="aclassSha1Stream_html"><div class="ttname"><a href="classSha1Stream.html">Sha1Stream</a></div><div class="ttdef"><b>Definition</b> sha.h:38</div></div>
+<div class="ttc" id="aclassSha256Stream_html"><div class="ttname"><a href="classSha256Stream.html">Sha256Stream</a></div><div class="ttdef"><b>Definition</b> sha.h:57</div></div>
+<div class="ttc" id="asha_8h_html"><div class="ttname"><a href="sha_8h.html">sha.h</a></div></div>
+<div class="ttc" id="astructSignatureVerifiee_html"><div class="ttname"><a href="structSignatureVerifiee.html">SignatureVerifiee</a></div><div class="ttdef"><b>Definition</b> authenticode.h:91</div></div>
+<div class="ttc" id="astructSignatureVerifiee_html_a077c47837a66b9b49b575286d8ff833f"><div class="ttname"><a href="structSignatureVerifiee.html#a077c47837a66b9b49b575286d8ff833f">SignatureVerifiee::signataireAccepte</a></div><div class="ttdeci">bool signataireAccepte</div><div class="ttdoc">et signataire conforme à la règle (cf. en-tête)</div><div class="ttdef"><b>Definition</b> authenticode.h:93</div></div>
+<div class="ttc" id="astructSignatureVerifiee_html_a0c364f4e9d35d92985c6d7324474f324"><div class="ttname"><a href="structSignatureVerifiee.html#a0c364f4e9d35d92985c6d7324474f324">SignatureVerifiee::motif</a></div><div class="ttdeci">std::string motif</div><div class="ttdoc">raison d'un refus, pour le journal</div><div class="ttdef"><b>Definition</b> authenticode.h:95</div></div>
+<div class="ttc" id="astructSignatureVerifiee_html_a400f8542e28727243ea39f2504042403"><div class="ttname"><a href="structSignatureVerifiee.html#a400f8542e28727243ea39f2504042403">SignatureVerifiee::valide</a></div><div class="ttdeci">bool valide</div><div class="ttdoc">signature et chaîne vérifiées jusqu'à une racine Microsoft</div><div class="ttdef"><b>Definition</b> authenticode.h:92</div></div>
+<div class="ttc" id="astructSignatureVerifiee_html_a8aa50da40e5864b5e6db48db68db2491"><div class="ttname"><a href="structSignatureVerifiee.html#a8aa50da40e5864b5e6db48db68db2491">SignatureVerifiee::oidContenu</a></div><div class="ttdeci">std::string oidContenu</div><div class="ttdoc">type du contenu signé (octets DER de l'OID)</div><div class="ttdef"><b>Definition</b> authenticode.h:96</div></div>
+<div class="ttc" id="astructSignatureVerifiee_html_a8f8295d9d336a69282bf19eae4f09bfa"><div class="ttname"><a href="structSignatureVerifiee.html#a8f8295d9d336a69282bf19eae4f09bfa">SignatureVerifiee::signataire</a></div><div class="ttdeci">std::wstring signataire</div><div class="ttdoc">nom (CN) du certificat signataire</div><div class="ttdef"><b>Definition</b> authenticode.h:94</div></div>
+<div class="ttc" id="astructSignatureVerifiee_html_aa61aca700d447dbb6fd44c40b4d4ff4d"><div class="ttname"><a href="structSignatureVerifiee.html#aa61aca700d447dbb6fd44c40b4d4ff4d">SignatureVerifiee::tailleContenu</a></div><div class="ttdeci">size_t tailleContenu</div><div class="ttdef"><b>Definition</b> authenticode.h:98</div></div>
+<div class="ttc" id="astructSignatureVerifiee_html_af83f86b9924debbc9f3e6184e4fe6c0b"><div class="ttname"><a href="structSignatureVerifiee.html#af83f86b9924debbc9f3e6184e4fe6c0b">SignatureVerifiee::contenu</a></div><div class="ttdeci">const uint8_t * contenu</div><div class="ttdoc">contenu signé (valeur, sans en-tête)</div><div class="ttdef"><b>Definition</b> authenticode.h:97</div></div>
+<div class="ttc" id="astructVerdictMicrosoft_html"><div class="ttname"><a href="structVerdictMicrosoft.html">VerdictMicrosoft</a></div><div class="ttdef"><b>Definition</b> authenticode.h:125</div></div>
+<div class="ttc" id="astructVerdictMicrosoft_html_a22182a384c9b2711c59eaaf6eba0a1b9"><div class="ttname"><a href="structVerdictMicrosoft.html#a22182a384c9b2711c59eaaf6eba0a1b9">VerdictMicrosoft::source</a></div><div class="ttdeci">std::wstring source</div><div class="ttdoc">« catalogue &lt;nom&gt; » ou « signature intégrée »</div><div class="ttdef"><b>Definition</b> authenticode.h:127</div></div>
+<div class="ttc" id="astructVerdictMicrosoft_html_a7bb93b5dd6016621f84deadc438ae7d7"><div class="ttname"><a href="structVerdictMicrosoft.html#a7bb93b5dd6016621f84deadc438ae7d7">VerdictMicrosoft::signataire</a></div><div class="ttdeci">std::wstring signataire</div><div class="ttdoc">CN du signataire (signature intégrée)</div><div class="ttdef"><b>Definition</b> authenticode.h:128</div></div>
+<div class="ttc" id="astructVerdictMicrosoft_html_a8e7b4c165009f71c1310172eb3ed948b"><div class="ttname"><a href="structVerdictMicrosoft.html#a8e7b4c165009f71c1310172eb3ed948b">VerdictMicrosoft::microsoft</a></div><div class="ttdeci">bool microsoft</div><div class="ttdoc">authentique : hacher sans prélever</div><div class="ttdef"><b>Definition</b> authenticode.h:126</div></div>
+<div class="ttc" id="astructVerdictMicrosoft_html_ab6eacc94e26920fc0b651a1905afb087"><div class="ttname"><a href="structVerdictMicrosoft.html#ab6eacc94e26920fc0b651a1905afb087">VerdictMicrosoft::motif</a></div><div class="ttdeci">std::string motif</div><div class="ttdoc">pourquoi non, pour le journal</div><div class="ttdef"><b>Definition</b> authenticode.h:129</div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="authenticode_8h.html">authenticode.h</a></li>
+    <li class="footer">Généré par <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

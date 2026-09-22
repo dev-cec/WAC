@@ -111,10 +111,31 @@ Fonctions membres publiques</h2></td></tr>
 <tr class="separator:a4888b86c9ff4a46997d01b8c88ccfead"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aee5563e00caf3167d2a906a8cee2399e" id="r_aee5563e00caf3167d2a906a8cee2399e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSha256Stream.html#aee5563e00caf3167d2a906a8cee2399e">hexDigest</a> ()</td></tr>
 <tr class="separator:aee5563e00caf3167d2a906a8cee2399e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66bb9f365b72d9a3d8d35222f84b9e47" id="r_a66bb9f365b72d9a3d8d35222f84b9e47"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSha256Stream.html#a66bb9f365b72d9a3d8d35222f84b9e47">digest</a> (uint8_t sortie[32])</td></tr>
+<tr class="separator:a66bb9f365b72d9a3d8d35222f84b9e47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Description détaillée</h2>
 <div class="textblock"><p>SHA-256, calculé par ajouts successifs. </p>
 </div><h2 class="groupheader">Documentation des fonctions membres</h2>
+<a id="a66bb9f365b72d9a3d8d35222f84b9e47" name="a66bb9f365b72d9a3d8d35222f84b9e47"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a66bb9f365b72d9a3d8d35222f84b9e47">&#9670;&#160;</a></span>digest()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Sha256Stream::digest </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>sortie</em>[32]</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Clôt le calcul et écrit l'empreinte brute (32 octets). Même contrainte : une seule fois, et exclusif de hexDigest. </p>
+
+</div>
+</div>
 <a id="aee5563e00caf3167d2a906a8cee2399e" name="aee5563e00caf3167d2a906a8cee2399e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aee5563e00caf3167d2a906a8cee2399e">&#9670;&#160;</a></span>hexDigest()</h2>
 

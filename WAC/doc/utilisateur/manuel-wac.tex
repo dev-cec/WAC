@@ -311,14 +311,14 @@ Contenu & Volume des copies brutes \\
 \midrule
 Ruches, Prefetch, raccourcis, listes de sauts (toujours) & environ 200 à 350~Mo \\
 Journaux d'événements et leurs binaires de messages (\opt{events}) & environ 250~Mo \\
-Binaires cités par les artefacts (\opt{binary}) & environ 3,3~Go \\
+Binaires cités non authentifiés Microsoft (\opt{binary}) & quelques centaines de Mo \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 Chaque copie étant écrite deux fois (consigne et travail), \textbf{doublez ces
-chiffres}. Une collecte complète (\opt{events} \opt{binary}) occupe ainsi environ
-7~Go.
+chiffres}. Une collecte complète (\opt{events} \opt{binary}) occupe ainsi de
+l'ordre de 1,5 à 2~Go sur une installation ordinaire.
 
 \wac{} vérifie l'emplacement \textbf{avant la toute première écriture} et refuse
 de démarrer :
@@ -435,6 +435,38 @@ cibles de raccourcis et de listes de sauts. Chaque fichier n'est lu qu'une fois,
 nombre d'artefacts qui le citent, et \textbf{un même contenu n'est stocké
 qu'une fois} : les autres chemins figurent au manifeste comme pièces partageant
 ce contenu (\champ{SharedExhibit}).
+
+\subsection*{Binaires Microsoft authentiques : hachés, non prélevés}
+
+La plupart des binaires cités sont des composants de Windows, identiques sur
+toute machine de la même version. Leur origine se prouve sur la machine
+elle-même, sans liste à embarquer : les \textbf{catalogues} de Windows
+(\path|System32\CatRoot|), signés par Microsoft, listent l'empreinte de chaque
+fichier du système ; les binaires signés individuellement (Edge, OneDrive,
+Office) portent une \textbf{signature intégrée}. Un binaire authentifié ainsi est
+haché sans être prélevé ; tous les autres sont prélevés — y compris un binaire
+système remplacé par un attaquant, dont l'empreinte ne correspond plus.
+
+Cette vérification ne laisse \textbf{aucune trace} : catalogues et binaires sont
+lus directement sur le disque, et la vérification cryptographique est faite en
+mémoire par \wac{}, jusqu'à des certificats racines Microsoft embarqués dans
+l'exécutable. Aucun service n'est sollicité, le magasin de certificats de la
+machine n'est pas consulté, et la révocation n'est pas contrôlée en ligne.
+
+Seuls les signataires Microsoft pour son propre code sont acceptés. Les pilotes
+\textbf{tiers} certifiés par Microsoft (signataires « Hardware Compatibility
+Publisher » et « Early Launch Anti-malware Publisher ») restent prélevés : un
+pilote vulnérable mais signé est un moyen d'attaque classique.
+
+Les catalogues qui ont justifié un non-prélèvement sont consignés, pour qu'un
+tiers puisse refaire la vérification. Dans les fichiers d'artefacts, le champ
+\champ{Signature} (ou \champ{ServiceDllSignature}, \champ{SignatureTarget}\ldots)
+indique l'authentification retenue, par exemple
+« \texttt{Microsoft (catalogue Package\_xxx.cat)} » ou
+« \texttt{Microsoft (signature intégrée)} ».
+
+Sur la machine de test, cette vérification ramène le prélèvement de 2~131
+binaires (3,3~Go) à 99 (336~Mo), sans allonger la collecte.
 
 La lecture étant directe, prélever ne laisse aucune trace de plus que hacher :
 seulement de la place sur le support.
@@ -795,6 +827,9 @@ Journaux d'événements (\opt{events}) & Lus par le même accès direct au volum
   le service de journalisation n'est pas sollicité. \\
 Fichiers cités (\opt{binary}) & Lus par le même accès direct. Aucun fichier
   ouvert. \\
+Vérification d'authenticité (\opt{binary}) & Catalogues lus par le même accès
+  direct ; vérification en mémoire. Aucun service sollicité, aucun accès au
+  magasin de certificats, aucun accès réseau. \\
 \bottomrule
 \end{longtable}
 

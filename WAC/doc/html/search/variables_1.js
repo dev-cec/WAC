@@ -1,7 +1,7 @@
 var searchData=
 [
   ['accedeutc_0',['accedeUtc',['../structRawHiveEmpreintes.html#a79eeb8375a73e3eb4e048b994f87e100',1,'RawHiveEmpreintes']]],
-  ['accessed_1',['accessed',['../structAutomaticDestination.html#a0e0ebd13c7caf154d150a15cd11af963',1,'AutomaticDestination::accessed'],['../structCustomDestination.html#a6c536956469aa381c0f2ca46d53860d3',1,'CustomDestination::accessed'],['../structPrefetch.html#a42c733380fdfcc7c8de7cfa79c30b7f0',1,'Prefetch::accessed']]],
+  ['accessed_1',['accessed',['../structAutomaticDestination.html#a0e0ebd13c7caf154d150a15cd11af963',1,'AutomaticDestination::accessed'],['../structPrefetch.html#a42c733380fdfcc7c8de7cfa79c30b7f0',1,'Prefetch::accessed'],['../structCustomDestination.html#a6c536956469aa381c0f2ca46d53860d3',1,'CustomDestination::accessed']]],
   ['accesseddate_2',['accessedDate',['../structBeef0004.html#a8348fad99be4dcb479f76e9c57e934f3',1,'Beef0004']]],
   ['accesseddateutc_3',['accessedDateUtc',['../structBeef0004.html#a61b9365fd5c5e7ec4194ae2c1150e5f6',1,'Beef0004']]],
   ['accessedutc_4',['accessedutc',['../structAutomaticDestination.html#a1180b3ce5bd27cf3a9a3ac3c388dfb76',1,'AutomaticDestination::accessedUtc'],['../structCustomDestination.html#a389cb9b64289757c7101c591a042fb59',1,'CustomDestination::accessedUtc'],['../structPrefetch.html#aa5a538216fa96b46ced116e294f074b1',1,'Prefetch::accessedUtc']]],
@@ -22,6 +22,7 @@ var searchData=
   ['attributes_19',['attributes',['../structRecentDoc.html#adc6bffd0fdde7cea1d0e23989584a2ab',1,'RecentDoc']]],
   ['attributs_20',['attributs',['../structXmlNode.html#adac458ba2861e6802bdb66ff7d3cfe18',1,'XmlNode']]],
   ['authenticationpackage_21',['authenticationPackage',['../structSession.html#aac73fe2f2daced116de5019feeb7defb',1,'Session']]],
-  ['author_22',['author',['../structScheduledTask.html#a0b9b77f17487188319012b84b2515cf2',1,'ScheduledTask']]],
-  ['automaticdestinations_23',['automaticDestinations',['../structJumplistAutomatics.html#a23f6fc14a0e80fa27a9c3b7f20684598',1,'JumplistAutomatics']]]
+  ['authentifies_22',['authentifies',['../structBilanBinaires.html#ab7f9c95ee090b15ca14a371254a6f7cb',1,'BilanBinaires']]],
+  ['author_23',['author',['../structScheduledTask.html#a0b9b77f17487188319012b84b2515cf2',1,'ScheduledTask']]],
+  ['automaticdestinations_24',['automaticDestinations',['../structJumplistAutomatics.html#a23f6fc14a0e80fa27a9c3b7f20684598',1,'JumplistAutomatics']]]
 ];

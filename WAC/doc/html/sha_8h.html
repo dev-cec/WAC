@@ -114,13 +114,58 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSha256Stream.html">Sha256Stream</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSha512Stream.html">Sha512Stream</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Fonctions</h2></td></tr>
+<tr class="memitem:ada951b2c626c432d036000715b30f1dc" id="r_ada951b2c626c432d036000715b30f1dc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sha_8h.html#ada951b2c626c432d036000715b30f1dc">sha1Octets</a> (const uint8_t *data, size_t length, uint8_t sortie[20])</td></tr>
+<tr class="separator:ada951b2c626c432d036000715b30f1dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3121aa3c16f81b353a5e7eb1a813731" id="r_aa3121aa3c16f81b353a5e7eb1a813731"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sha_8h.html#aa3121aa3c16f81b353a5e7eb1a813731">sha256Octets</a> (const uint8_t *data, size_t length, uint8_t sortie[32])</td></tr>
+<tr class="separator:aa3121aa3c16f81b353a5e7eb1a813731"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d5a284303aa955d46d92c31775d7f5e" id="r_a7d5a284303aa955d46d92c31775d7f5e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sha_8h.html#a7d5a284303aa955d46d92c31775d7f5e">sha384Octets</a> (const uint8_t *data, size_t length, uint8_t sortie[48])</td></tr>
+<tr class="separator:a7d5a284303aa955d46d92c31775d7f5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae643379720730a412d449d6c1884e779" id="r_ae643379720730a412d449d6c1884e779"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sha_8h.html#ae643379720730a412d449d6c1884e779">sha512Octets</a> (const uint8_t *data, size_t length, uint8_t sortie[64])</td></tr>
+<tr class="separator:ae643379720730a412d449d6c1884e779"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad87339120fa7a80f9ebedfa1538c9c15" id="r_ad87339120fa7a80f9ebedfa1538c9c15"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sha_8h.html#ad87339120fa7a80f9ebedfa1538c9c15">sha256Fichier</a> (const std::wstring &amp;chemin)</td></tr>
 <tr class="separator:ad87339120fa7a80f9ebedfa1538c9c15"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Documentation des fonctions</h2>
+<a id="ada951b2c626c432d036000715b30f1dc" name="ada951b2c626c432d036000715b30f1dc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ada951b2c626c432d036000715b30f1dc">&#9670;&#160;</a></span>sha1Octets()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sha1Octets </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>sortie</em>[20]&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Empreintes brutes d'un tampon en une passe. </p>
+
+</div>
+</div>
 <a id="ad87339120fa7a80f9ebedfa1538c9c15" name="ad87339120fa7a80f9ebedfa1538c9c15"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad87339120fa7a80f9ebedfa1538c9c15">&#9670;&#160;</a></span>sha256Fichier()</h2>
 
@@ -143,6 +188,108 @@ Fonctions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Renvoie</dt><dd>empreinte en hexadécimal majuscule, ou chaîne vide si illisible </dd></dl>
+
+</div>
+</div>
+<a id="aa3121aa3c16f81b353a5e7eb1a813731" name="aa3121aa3c16f81b353a5e7eb1a813731"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa3121aa3c16f81b353a5e7eb1a813731">&#9670;&#160;</a></span>sha256Octets()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sha256Octets </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>sortie</em>[32]&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a7d5a284303aa955d46d92c31775d7f5e" name="a7d5a284303aa955d46d92c31775d7f5e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7d5a284303aa955d46d92c31775d7f5e">&#9670;&#160;</a></span>sha384Octets()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sha384Octets </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>sortie</em>[48]&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ae643379720730a412d449d6c1884e779" name="ae643379720730a412d449d6c1884e779"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae643379720730a412d449d6c1884e779">&#9670;&#160;</a></span>sha512Octets()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sha512Octets </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>sortie</em>[64]&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>

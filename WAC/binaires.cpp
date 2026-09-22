@@ -6,6 +6,9 @@
 #include "tools.h"
 #include "raw_hive.h"
 #include "consigne.h"
+#include "authenticode.h"
+#include <set>
+#include <vector>
 
 namespace {
 
@@ -14,6 +17,10 @@ std::map<std::wstring, EmpreinteBinaire> g_cache;      // clé : chemin en minus
 std::map<std::wstring, std::wstring> g_parContenu;    // SHA-256 -> pièce en consigne
 size_t g_lus = 0, g_preleves = 0, g_sansPlace = 0, g_doublons = 0;
 unsigned long long g_octets = 0, g_octetsEvites = 0;
+size_t g_authentifies = 0, g_cataloguesLus = 0;
+unsigned long long g_octetsAuthentifies = 0;
+std::set<std::wstring> g_cataloguesUtilises;
+const size_t CATALOGUE_MAX = 64 * 1024 * 1024;       // un catalogue au-delà : ignoré
 unsigned long long g_entrant = 0;                      // compteur de fichiers d'arrivée
 
 /*! Répertoire d'ARRIVÉE, sur le support de collecte mais hors consigne.
@@ -71,6 +78,63 @@ bool aPrelever(const std::wstring& chemin) {
 
 } // namespace
 
+namespace {
+
+/*! Tampon qui garde ce qu'on lui écrit : lecture d'un catalogue en mémoire. */
+class Collecteur : public std::streambuf {
+public:
+	std::vector<uint8_t> octets;
+protected:
+	int overflow(int c) override {
+		if (c != traits_type::eof()) octets.push_back((uint8_t)c);
+		return traits_type::not_eof(c);
+	}
+	std::streamsize xsputn(const char* s, std::streamsize n) override {
+		if (octets.size() + (size_t)n <= CATALOGUE_MAX) octets.insert(octets.end(), s, s + n);
+		return n;
+	}
+};
+
+std::wstring dossierCatalogues() {
+	return conf.systemDrive + L"\\Windows\\System32\\CatRoot\\{F750E6C3-38EE-11D1-85E5-00C04FC295EE}";
+}
+
+/*! Index des catalogues Microsoft de la machine, construit à la première
+ *  demande — donc seulement si un binaire à prélever est rencontré. Les
+ *  catalogues sont lus par lecture brute, EN MÉMOIRE : rien n'est écrit, et
+ *  aucun service n'est sollicité (cf. authenticode.h). */
+IndexCatalogues& catalogues() {
+	static IndexCatalogues index;
+	static bool fait = false;
+	if (fait) return index;
+	fait = true;
+	std::vector<RawDirEntry> entrees;
+	const HRESULT hr = g_lecteur->lister(dossierCatalogues(), entrees);
+	if (FAILED(hr)) {
+		log(2, L"🔥Catalogues de signatures illisibles : tous les binaires seront preleves", hr);
+		return index;
+	}
+	std::set<uint64_t> vus;                  // un fichier peut figurer sous son nom court aussi
+	size_t lus = 0;
+	for (const RawDirEntry& e : entrees) {
+		if (e.isDirectory || !vus.insert(e.mftIndex).second) continue;
+		if (e.name.size() < 4 || enMinuscules(e.name.substr(e.name.size() - 4)) != L".cat") continue;
+		Collecteur c;
+		RawHiveExtrait ligne;
+		if (FAILED(g_lecteur->lire(dossierCatalogues() + L"\\" + e.name, std::wstring(), ligne, &c))) continue;
+		++lus;
+		index.ajouter(e.name, c.octets.data(), c.octets.size());
+	}
+	g_cataloguesLus = lus;
+	log(2, L"❇️Catalogues de signatures : " + std::to_wstring(lus) + L" lus, "
+	     + std::to_wstring(index.catalogues()) + L" retenus (signature Microsoft verifiee), "
+	     + std::to_wstring(index.refuses()) + L" refuses, "
+	     + std::to_wstring(index.empreintes()) + L" empreintes");
+	return index;
+}
+
+} // namespace
+
 const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut) {
 	static const EmpreinteBinaire vide;
 	if (!conf.binary) return vide;
@@ -84,91 +148,117 @@ const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut) {
 	if (!g_lecteur) g_lecteur.reset(new LecteurBrut);
 	EmpreinteBinaire e;
 	e.chemin = chemin;
+	auto retenir = [&](RawHiveExtrait& l) {
+		e.md5    = l.empreintes.md5;
+		e.sha1   = l.empreintes.sha1;
+		e.sha256 = l.empreintes.sha256;
+	};
 
-	/* Destination : la consigne, sous le chemin d'origine, si le fichier est à
-	   prélever et qu'il reste de la place. Une pièce déjà consignée (extraite
-	   par une autre phase) n'est pas réécrite : on la relit seulement. */
-	std::wstring sortie;
-	std::wstring cible;
-	bool manqueDePlace = false;
-	if (aPrelever(chemin)) {
-		cible = cheminSous(dossierConsigne(), chemin);
-		std::error_code ec;
-		const unsigned long long libre = ConsigneEspaceLibre();
-		if (std::filesystem::exists(cible, ec)) {
-			// déjà en consigne : empreintes seules
-		}
-		/* Chaque pièce prélevée sera recopiée vers le travail à la fin de la
-		   collecte : la place qu'elle y prendra est déjà due. Sans ce terme, une
-		   consigne remplie jusqu'à la réserve ne laissait plus de place pour sa
-		   propre copie de travail. */
-		else if (libre != 0 && libre < RESERVE + g_octets) {
-			manqueDePlace = true;
-		}
-		else {
-			std::filesystem::create_directories(dossierArrivee(), ec);
-			sortie = dossierArrivee() + L"\\" + std::to_wstring(++g_entrant) + L".bin";
-		}
+	if (!aPrelever(chemin)) {
+		// Document ou donnée : empreintes seules, rien n'est écrit.
+		RawHiveExtrait ligne;
+		e.resultat = g_lecteur->lire(chemin, std::wstring(), ligne);
+		if (SUCCEEDED(e.resultat)) { ++g_lus; retenir(ligne); }
+		else log(3, L"🔈Empreinte impossible : " + chemin, e.resultat);
+		return g_cache.emplace(cle, std::move(e)).first->second;
 	}
 
-	RawHiveExtrait ligne;
-	e.resultat = g_lecteur->lire(chemin, sortie, ligne);
-	if (SUCCEEDED(e.resultat)) {
+	const std::wstring cible = cheminSous(dossierConsigne(), chemin);
+	std::error_code ec;
+
+	/* PREMIÈRE LECTURE, SANS RIEN ÉCRIRE : empreintes et, pour un PE,
+	   authenticité Microsoft. Un binaire Microsoft authentique — la grande
+	   majorité — n'est ainsi jamais écrit sur le support de collecte ; seuls
+	   les autres sont relus pour être prélevés. Relire le disque examiné coûte
+	   moins cher qu'écrire puis effacer sur une clé USB. */
+	{
+		AnalyseurPe pe;
+		RawHiveExtrait ligne;
+		e.resultat = g_lecteur->lire(chemin, std::wstring(), ligne, &pe);
+		pe.terminer();
+		if (FAILED(e.resultat)) {
+			log(3, L"🔈Empreinte impossible : " + chemin, e.resultat);
+			// Absent : l'artefact le dit déjà, et ce n'est pas une pièce. Une
+			// autre erreur est une pièce qu'on n'a pas pu lire : elle est consignée.
+			if (e.resultat != HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
+				ligne.cheminSortie = cible;
+				ConsigneAjouter({ ligne }, L"Lecture brute NTFS ; binaire cite par un artefact (--binary)");
+			}
+			return g_cache.emplace(cle, std::move(e)).first->second;
+		}
 		++g_lus;
-		e.md5    = ligne.empreintes.md5;
-		e.sha1   = ligne.empreintes.sha1;
-		e.sha256 = ligne.empreintes.sha256;
-	}
-	if (!sortie.empty()) {
-		std::error_code ec;
-		const std::wstring methode = L"Lecture brute NTFS (\\\\.\\" + chemin.substr(0, 2)
-		                           + L" — $MFT, index de repertoires, attribut $DATA) ; "
-		                           L"binaire cite par un artefact (--binary)";
-		if (e.resultat == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
-			// Disparu depuis que l'artefact l'a cité : l'artefact le dit déjà,
-			// et ce n'est pas une pièce.
-		}
-		else if (FAILED(e.resultat)) {
-			ligne.cheminSortie = cible;
-			ConsigneAjouter({ ligne }, methode);
-		}
-		else {
-			const auto deja = g_parContenu.find(e.sha256);
-			if (deja != g_parContenu.end()) {
-				ligne.cheminSortie = deja->second;
-				ConsigneAjouterDoublon(ligne, methode + L" ; contenu identique (SHA-256) "
-				                                        L"a une piece deja consignee, non recopie");
-				++g_doublons;
-				g_octetsEvites += ligne.empreintes.octets;
-				e.preleve = true;
+		retenir(ligne);
+		if (pe.estPe()) {
+			const VerdictMicrosoft v = EvaluerPe(pe, catalogues());
+			if (v.microsoft) {
+				e.signature = L"Microsoft (" + v.source + L")";
+				++g_authentifies;
+				g_octetsAuthentifies += ligne.empreintes.octets;
+				if (v.source.compare(0, 10, L"catalogue ") == 0)
+					g_cataloguesUtilises.insert(v.source.substr(10));
+				return g_cache.emplace(cle, std::move(e)).first->second;
 			}
-			else {
-				std::filesystem::create_directories(std::filesystem::path(cible).parent_path(), ec);
-				std::filesystem::rename(sortie, cible, ec);
-				if (ec) {
-					log(2, L"🔥Mise en consigne impossible : " + cible);
-					ligne.resultat = e.resultat = HRESULT_FROM_WIN32(ERROR_WRITE_FAULT);
-					ligne.cheminSortie = cible;
-					ConsigneAjouter({ ligne }, methode);
-				}
-				else {
-					ligne.cheminSortie = cible;
-					ConsigneAjouter({ ligne }, methode);
-					g_parContenu.emplace(e.sha256, cible);
-					e.preleve = true;
-					++g_preleves;
-					g_octets += ligne.empreintes.octets;
-				}
-			}
+			log(3, L"🔈Preleve (" + std::wstring(v.motif.begin(), v.motif.end()) + L") : " + chemin);
 		}
-		std::filesystem::remove(sortie, ec);    // ce qui reste en arrivée : rien
 	}
-	if (manqueDePlace) {
+
+	// Déjà en consigne (extrait par une autre phase) : rien à réécrire.
+	if (std::filesystem::exists(cible, ec)) return g_cache.emplace(cle, std::move(e)).first->second;
+
+	/* Chaque pièce prélevée sera recopiée vers le travail à la fin de la
+	   collecte : la place qu'elle y prendra est déjà due. Sans ce terme, une
+	   consigne remplie jusqu'à la réserve ne laissait plus de place pour sa
+	   propre copie de travail. */
+	const unsigned long long libre = ConsigneEspaceLibre();
+	if (libre != 0 && libre < RESERVE + g_octets) {
 		++g_sansPlace;
 		log(2, L"🔥Place insuffisante : " + chemin + L" hache sans etre preleve");
+		return g_cache.emplace(cle, std::move(e)).first->second;
 	}
-	if (FAILED(e.resultat))
-		log(3, L"🔈Empreinte impossible : " + chemin, e.resultat);
+
+	// SECONDE LECTURE : prélèvement, par le répertoire d'arrivée (dédoublonnage).
+	std::filesystem::create_directories(dossierArrivee(), ec);
+	const std::wstring sortie = dossierArrivee() + L"\\" + std::to_wstring(++g_entrant) + L".bin";
+	RawHiveExtrait ligne;
+	e.resultat = g_lecteur->lire(chemin, sortie, ligne);
+	const std::wstring methode = L"Lecture brute NTFS (\\\\.\\" + chemin.substr(0, 2)
+	                           + L" — $MFT, index de repertoires, attribut $DATA) ; "
+	                           L"binaire cite par un artefact (--binary)";
+	if (FAILED(e.resultat)) {
+		ligne.cheminSortie = cible;
+		ConsigneAjouter({ ligne }, methode);
+	}
+	else {
+		if (ligne.empreintes.sha256 != e.sha256)
+			log(2, L"🔥Contenu modifie entre deux lectures : " + chemin);
+		retenir(ligne);                     // la pièce fait foi
+		const auto deja = g_parContenu.find(e.sha256);
+		if (deja != g_parContenu.end()) {
+			ligne.cheminSortie = deja->second;
+			ConsigneAjouterDoublon(ligne, methode + L" ; contenu identique (SHA-256) "
+			                                        L"a une piece deja consignee, non recopie");
+			++g_doublons;
+			g_octetsEvites += ligne.empreintes.octets;
+			e.preleve = true;
+		}
+		else {
+			std::filesystem::create_directories(std::filesystem::path(cible).parent_path(), ec);
+			std::filesystem::rename(sortie, cible, ec);
+			ligne.cheminSortie = cible;
+			if (ec) {
+				log(2, L"🔥Mise en consigne impossible : " + cible);
+				ligne.resultat = e.resultat = HRESULT_FROM_WIN32(ERROR_WRITE_FAULT);
+			}
+			else {
+				g_parContenu.emplace(e.sha256, cible);
+				e.preleve = true;
+				++g_preleves;
+				g_octets += ligne.empreintes.octets;
+			}
+			ConsigneAjouter({ ligne }, methode);
+		}
+	}
+	std::filesystem::remove(sortie, ec);    // ce qui reste en arrivée : rien
 	return g_cache.emplace(cle, std::move(e)).first->second;
 }
 
@@ -177,21 +267,46 @@ void ajouterEmpreintes(Json& o, const EmpreinteBinaire& e,
 	if (!e.md5.empty())    o.add(prefixe + L"Md5"    + suffixe, Json::str(e.md5));
 	if (!e.sha1.empty())   o.add(prefixe + L"Sha1"   + suffixe, Json::str(e.sha1));
 	if (!e.sha256.empty()) o.add(prefixe + L"Sha256" + suffixe, Json::str(e.sha256));
+	if (!e.signature.empty()) o.add(prefixe + L"Signature" + suffixe, Json::str(e.signature));
 }
 
-void BinairesBilan(size_t* fichiers, size_t* lus, size_t* preleves,
-                   unsigned long long* octetsPreleves, size_t* sansPlace,
-                   size_t* doublons, unsigned long long* octetsEvites) {
-	if (doublons) *doublons = g_doublons;
-	if (octetsEvites) *octetsEvites = g_octetsEvites;
-	if (fichiers) *fichiers = g_cache.size();
-	if (lus) *lus = g_lus;
-	if (preleves) *preleves = g_preleves;
-	if (octetsPreleves) *octetsPreleves = g_octets;
-	if (sansPlace) *sansPlace = g_sansPlace;
+BilanBinaires BinairesBilan() {
+	BilanBinaires b;
+	b.fichiers = g_cache.size();
+	b.lus = g_lus;
+	b.preleves = g_preleves;
+	b.octetsPreleves = g_octets;
+	b.sansPlace = g_sansPlace;
+	b.doublons = g_doublons;
+	b.octetsEvites = g_octetsEvites;
+	b.authentifies = g_authentifies;
+	b.octetsAuthentifies = g_octetsAuthentifies;
+	b.cataloguesLus = g_cataloguesLus;
+	b.cataloguesUtilises = g_cataloguesUtilises.size();
+	return b;
 }
 
 void BinairesTerminer() {
+	/* Les catalogues qui ont JUSTIFIÉ de ne pas prélever un binaire entrent
+	   dans la consigne : sans eux, la décision ne serait pas vérifiable par un
+	   tiers. Seuls ceux-là — pas les 5 000 de la machine. */
+	if (g_lecteur && !g_cataloguesUtilises.empty()) {
+		std::vector<RawHiveExtrait> releve;
+		for (const std::wstring& nom : g_cataloguesUtilises) {
+			const std::wstring source = dossierCatalogues() + L"\\" + nom;
+			const std::wstring cible = cheminSous(dossierConsigne(), source);
+			std::error_code ec;
+			if (std::filesystem::exists(cible, ec)) continue;
+			std::filesystem::create_directories(std::filesystem::path(cible).parent_path(), ec);
+			RawHiveExtrait ligne;
+			g_lecteur->lire(source, cible, ligne);
+			releve.push_back(std::move(ligne));
+		}
+		ConsigneAjouter(releve, L"Lecture brute NTFS (\\\\.\\" + conf.systemDrive
+		                        + L" — $MFT, index de repertoires, attribut $DATA) ; catalogue de "
+		                        L"signatures Windows ayant justifie le non-prelevement de binaires "
+		                        L"authentifies Microsoft (--binary)");
+	}
 	g_lecteur.reset();
 	std::error_code ec;
 	std::filesystem::remove_all(dossierArrivee(), ec);

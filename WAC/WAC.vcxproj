@@ -201,6 +201,8 @@
     <ClCompile Include="xml_light.cpp" />
     <ClCompile Include="trans_id.cpp" />
     <ClCompile Include="users.cpp" />
+    <ClCompile Include="authenticode.cpp" />
+    <ClCompile Include="rsa.cpp" />
     <ClCompile Include="binaires.cpp" />
     <ClCompile Include="consigne.cpp" />
     <ClCompile Include="event_messages.cpp" />
@@ -253,6 +255,9 @@
     <ClInclude Include="xml_light.h" />
     <ClInclude Include="trans_id.h" />
     <ClInclude Include="users.h" />
+    <ClInclude Include="authenticode.h" />
+    <ClInclude Include="racines_microsoft.h" />
+    <ClInclude Include="rsa.h" />
     <ClInclude Include="binaires.h" />
     <ClInclude Include="consigne.h" />
     <ClInclude Include="event_messages.h" />

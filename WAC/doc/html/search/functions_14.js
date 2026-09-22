@@ -1,7 +1,7 @@
 var searchData=
 [
   ['unknownshellitem_0',['UnknownShellItem',['../structUnknownShellItem.html#a3437ff552d7bd9b27d4b1e747a064ee0',1,'UnknownShellItem']]],
-  ['update_1',['update',['../classMd5Stream.html#a70b55354dfc1920ce4b533a847f34852',1,'Md5Stream::update()'],['../classSha1Stream.html#ae05788314fac1ee85ceb7494ee4bbb2e',1,'Sha1Stream::update()'],['../classSha256Stream.html#a4888b86c9ff4a46997d01b8c88ccfead',1,'Sha256Stream::update()']]],
+  ['update_1',['update',['../classMd5Stream.html#a70b55354dfc1920ce4b533a847f34852',1,'Md5Stream::update()'],['../classSha1Stream.html#ae05788314fac1ee85ceb7494ee4bbb2e',1,'Sha1Stream::update()'],['../classSha256Stream.html#a4888b86c9ff4a46997d01b8c88ccfead',1,'Sha256Stream::update()'],['../classSha512Stream.html#a320c95ec76ad5f7a82480604fb4a0b44',1,'Sha512Stream::update()']]],
   ['urishellitem_2',['URIShellItem',['../structURIShellItem.html#a7a86fad9d068be8f1bd15fafd65408bb',1,'URIShellItem']]],
   ['usbstor_3',['Usbstor',['../structUsbstor.html#a399b057c9390590600f1349d7d50de80',1,'Usbstor']]],
   ['userassist_4',['UserAssist',['../structUserAssist.html#abdf9be4a6b6a6174ddaf8aaf52877a93',1,'UserAssist']]],

@@ -820,18 +820,20 @@ int main(int argc, char* argv[])
 	   travail — comme toute pièce, même non modifiée : c'est la procédure. */
 	if (conf.binary) {
 		BinairesTerminer();
-		size_t fichiers = 0, lus = 0, preleves = 0, sansPlace = 0, doublons = 0;
-		unsigned long long octets = 0, evites = 0;
-		BinairesBilan(&fichiers, &lus, &preleves, &octets, &sansPlace, &doublons, &evites);
-		auditRecord(L"Empreintes des fichiers cites par les artefacts ("
-		            + std::to_wstring(fichiers) + L" cite(s), " + std::to_wstring(lus)
-		            + L" lu(s), " + std::to_wstring(preleves) + L" preleve(s), "
-		            + std::to_wstring(octets / 1024 / 1024) + L" Mio"
-		            + (doublons ? L", " + std::to_wstring(doublons) + L" doublon(s) de contenu non recopie(s), "
-		                          + std::to_wstring(evites / 1024 / 1024) + L" Mio evites" : L"")
-		            + (sansPlace ? L", " + std::to_wstring(sansPlace) + L" hache(s) sans copie faute de place" : L"")
-		            + L")",
-		            L"lecture brute NTFS ; binaires et scripts copies dans " + dossierConsigne(),
+		const BilanBinaires b = BinairesBilan();
+		std::wstring bilan = std::to_wstring(b.fichiers) + L" cite(s), " + std::to_wstring(b.lus)
+		                   + L" lu(s), " + std::to_wstring(b.authentifies) + L" authentifie(s) Microsoft et "
+		                   L"non preleve(s) (" + std::to_wstring(b.octetsAuthentifies / 1024 / 1024)
+		                   + L" Mio evites), " + std::to_wstring(b.preleves) + L" preleve(s) ("
+		                   + std::to_wstring(b.octetsPreleves / 1024 / 1024) + L" Mio)";
+		if (b.doublons) bilan += L", " + std::to_wstring(b.doublons) + L" doublon(s) de contenu non recopie(s)";
+		if (b.sansPlace) bilan += L", " + std::to_wstring(b.sansPlace) + L" hache(s) sans copie faute de place";
+		bilan += L" ; catalogues de signatures : " + std::to_wstring(b.cataloguesLus) + L" lus en memoire, "
+		       + std::to_wstring(b.cataloguesUtilises) + L" consigne(s)";
+		auditRecord(L"Empreintes des fichiers cites par les artefacts (" + bilan + L")",
+		            L"lecture brute NTFS ; authenticite verifiee en memoire (catalogues Windows, "
+		            L"signatures integrees), sans API ni service ; binaires non authentifies "
+		            L"copies dans " + dossierConsigne(),
 		            ERROR_SUCCESS, Footprint::VOLUME_BRUT);
 		printStep(L" - Copying collected binaries to the working directory : ");
 		size_t copies = 0;
