@@ -69,6 +69,15 @@ derniers JSON : le rapport disait « collecte probablement incomplète » — ce
 qui se termine par `END, Time elapsed`) tranche entre les deux. Timeout porté à
 30 min ; il faudra le revoir si la collecte s'allonge encore.
 
+**Le manifeste est confronté au contenu réel de la consigne.** Le harnais
+relève dans la VM la liste des fichiers de `consigne/` (`LISTE.txt`), et
+`check-json.py` vérifie que chaque fichier présent est au manifeste, et
+réciproquement. Sans ce contrôle, 209 pièces — les binaires de ressources des
+fournisseurs d'événements, extraits après le scellement — sont restées dans la
+consigne sans rien qui les identifie, alors que tous les autres contrôles
+(sceau, empreintes, décomptes) étaient verts : ils ne portaient que sur le
+manifeste lui-même.
+
 **La consigne se valide hors VM elle aussi.** `WAC/consigne_test.cpp` rejoue la
 chaîne de production (empreintes, manifeste, copie vérifiée, rejeu) sur des
 ruches fournies en argument, et vérifie ce qu'aucune compilation ne révèle : que

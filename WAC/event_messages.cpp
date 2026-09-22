@@ -55,20 +55,16 @@ bool estPeValide(const std::wstring& chemin) {
  *  copie brute est identifiée par ses empreintes et n'est jamais relue en
  *  écriture ; c'est la copie de travail qu'on ouvre.
  *
- *  REPLI SUR L'API DE FICHIERS, et pourquoi il est nécessaire. Windows 10 et 11
- *  compressent leurs binaires système avec WOF — « Compact OS » : l'attribut
- *  `$DATA` du fichier est CREUX, et la charge utile vit dans un flux de données
- *  nommé `WofCompressedData`, comprimé en XPRESS ou LZX. Une lecture brute rend
- *  donc un fichier de la bonne taille, entièrement à zéro. Mesuré sur une VM
- *  Windows 11 : les 121 binaires de fournisseurs extraits étaient tous vides, et
- *  aucun message n'était résolu.
+ *  Windows 10 et 11 compressent leurs binaires système avec WOF — « Compact
+ *  OS » : l'attribut `$DATA` est creux et la charge utile vit dans le flux nommé
+ *  `WofCompressedData`. La lecture brute le détend (cf. xpress.h) ; rien n'est
+ *  ouvert par l'API sur le système examiné.
  *
- *  Quand la copie brute n'est pas un PE valide, le fichier est donc relu par
- *  l'API. Ce n'est PAS une pièce à conviction : c'est un binaire du système
- *  d'exploitation, identique sur toute machine de la même version, qui ne sert
- *  qu'à traduire un identifiant en phrase. Le coût d'empreinte se limite à une
- *  ouverture en lecture — dont Windows ne met pas à jour la date d'accès par
- *  défaut — et chaque repli est consigné au journal d'investigation.
+ *  CANDIDATS ABSENTS. Les satellites `.mui` se cherchent langue par langue :
+ *  la plupart des candidats n'existent pas, et ce n'est pas un échec de
+ *  collecte. Ils ne sont donc pas inscrits à la consigne — 136 « pièces en
+ *  échec » y figuraient pour des langues simplement non installées, noyant les
+ *  vrais échecs. Seul un fichier présent mais illisible y est consigné.
  *
  *  @return le chemin lisible, ou chaîne vide en cas d'échec
  */
@@ -85,6 +81,14 @@ std::wstring extraireRessource(const std::wstring& cheminAbsolu) {
 	std::vector<HRESULT> res;
 	std::vector<RawHiveExtrait> releve;
 	const HRESULT hr = ExtractFilesRaw(volume, { { relatif, cible } }, &res, &releve);
+	const bool absent = !res.empty()
+	                 && (res[0] == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)
+	                  || res[0] == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND));
+	if (absent) {
+		// Candidat inexistant : ni pièce, ni répertoire vide dans la consigne.
+		std::filesystem::remove(std::filesystem::path(cible).parent_path(), ec);
+		return std::wstring();
+	}
 	ConsigneAjouter(releve, L"Lecture brute NTFS (\\\\.\\" + volume
 	                        + L": — fichier de ressources d'un fournisseur d'evenements)");
 	const bool brutOk = SUCCEEDED(hr) && !res.empty() && SUCCEEDED(res[0]);

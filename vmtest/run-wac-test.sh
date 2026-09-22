@@ -132,6 +132,12 @@ for f in MANIFESTE.json MANIFESTE.sha256; do
   $QGA read "$VMDIR\\out\\consigne\\$f" "$SORTIE/consigne/$f" >/dev/null 2>&1 \
     && echo "   + consigne/$f" || echo "   ⚠️ consigne/$f non rapatrié"
 done
+# Liste des fichiers réellement présents dans la consigne : sans elle, rien ne
+# vérifie que chaque pièce est au manifeste. Une pièce ajoutée après le
+# scellement passait inaperçue (121 binaires de fournisseurs d'événements).
+$QGA run --shell "chcp 65001 >nul & dir /s /b /a-d $VMDIR\\out\\consigne" \
+  > "$SORTIE/consigne/LISTE.txt" 2>/dev/null \
+  && echo "   + consigne/LISTE.txt" || echo "   ⚠️ liste de la consigne non relevée"
 
 echo "== 6. Contrôle de validité JSON =="
 python3 "$ICI/check-json.py" "$SORTIE" || echo "   ⚠️ des JSON sont invalides (voir ci-dessus)"

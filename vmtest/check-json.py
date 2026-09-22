@@ -13,6 +13,7 @@ run-wac-test.sh qui vérifie la terminaison de WAC.
 
 Sortie non nulle si au moins un fichier est invalide ou incohérent.
 """
+import ntpath
 import json, sys, glob, os, re, collections
 
 # Un double échappement se reconnaît sur un motif de CHEMIN, pas sur du texte
@@ -477,6 +478,54 @@ def controle_consigne(rep):
         trouvees += 1
     else:
         print(f"  ✅ consigne : volumes lus {sorted(lettres)}, dont le lecteur système")
+
+    # 5. correspondance entre le manifeste et le contenu réel de la consigne
+    trouvees += controle_consigne_contenu(rep, collectees)
+    return trouvees
+
+
+def controle_consigne_contenu(rep, collectees):
+    """Chaque fichier présent dans la consigne doit figurer au manifeste, et
+    réciproquement.
+
+    Les contrôles précédents portent sur le manifeste seul : ils ne voient pas
+    une pièce déposée dans la consigne APRÈS le scellement. C'est ce qui est
+    arrivé aux binaires de ressources des fournisseurs d'événements, extraits
+    pendant la phase des journaux alors que le manifeste était déjà écrit —
+    121 binaires présents et identifiés par rien. La liste est relevée dans la
+    VM par `dir /s /b` (cf. run-wac-test.sh).
+    """
+    liste = os.path.join(rep, "consigne", "LISTE.txt")
+    if not os.path.exists(liste):
+        print("  ⏭️  liste de la consigne absente : correspondance non vérifiée")
+        return 0
+    with open(liste, encoding="utf-8", errors="replace") as f:
+        lignes = [l.strip() for l in f if l.strip()]
+    def relatif(chemin):
+        bas = chemin.replace("/", "\\").lower()
+        i = bas.find("\\consigne\\")
+        if i >= 0:
+            return bas[i + 1:]
+        return bas if bas.startswith("consigne\\") else None
+    presents = {r for r in map(relatif, lignes) if r}
+    presents -= {"consigne\\manifeste.json", "consigne\\manifeste.sha256"}
+    declares = {str(i.get("ExhibitPath") or "").lower() for i in collectees}
+    declares.discard("")
+    horsManifeste = sorted(presents - declares)
+    absentes = sorted(declares - presents)
+    trouvees = 0
+    if horsManifeste:
+        print(f"  ❌ consigne : {len(horsManifeste)} fichier(s) présents mais absents du "
+              f"manifeste — pièces non identifiées, ajoutées après le scellement ? "
+              f"{[ntpath.basename(x) for x in horsManifeste[:3]]}")
+        trouvees += 1
+    if absentes:
+        print(f"  ❌ consigne : {len(absentes)} pièce(s) au manifeste introuvables dans la "
+              f"consigne {[ntpath.basename(x) for x in absentes[:3]]}")
+        trouvees += 1
+    if not trouvees:
+        print(f"  ✅ consigne : les {len(presents)} fichier(s) présents sont exactement "
+              f"ceux du manifeste")
     return trouvees
 
 

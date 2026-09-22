@@ -388,33 +388,12 @@ int main(int argc, char* argv[])
 	log(3, L"🔈ExtractFileArtefactsRaw");
 	hresult = ExtractFileArtefactsRaw();  // S_FALSE = certains fichiers illisibles (toléré)
 	                                       // (consigne par repertoire depuis raw_collect)
-	if (FAILED(hresult)) {
-		printError(hresult);
-		return(hresult);
-	}
-	else {
-		printSuccess();
-	}
+	/* Un échec ici ne doit plus interrompre la collecte : les ruches sont déjà
+	   dans la consigne, et un `return` les laissait sans manifeste ni sceau.
+	   Les artefacts du registre restent collectables. */
+	if (FAILED(hresult)) printError(hresult);
+	else printSuccess();
 
-	/* MANIFESTE DE CONSIGNE. Écrit ici, une fois toutes les extractions faites :
-	   il doit couvrir toutes les pièces, et il scelle la consigne. Sans lui les
-	   copies brutes ne sont identifiées par rien, et la procédure ne vaut pas
-	   mieux qu'un simple répertoire de fichiers. */
-	printStep(L" - Sealing the exhibit store (manifest + SHA-256) : ");
-	log(3, L"🔈ConsigneEcrireManifeste");
-	{
-		size_t pieces = 0, echecs = 0;
-		unsigned long long octets = 0;
-		ConsigneBilan(&pieces, &echecs, &octets);
-		const HRESULT hrManifeste = ConsigneEcrireManifeste();
-		auditRecord(L"Scellement de la consigne (" + std::to_wstring(pieces)
-		            + L" piece(s), " + std::to_wstring(echecs) + L" echec(s), "
-		            + std::to_wstring(octets / 1024 / 1024) + L" Mio)",
-		            dossierConsigne() + L"\\MANIFESTE.json (+ .sha256)",
-		            hrManifeste, Footprint::ECRITURE_USB);
-		if (FAILED(hrManifeste)) printError(hrManifeste);
-		else printSuccess();
-	}
 
 	/************************
 	*  BASE DE REGISTRE
@@ -786,10 +765,39 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	/*****************************************
-	*   Ruches extraites conservées sur l'USB (preuve) — rien à démonter
-	******************************************/
+	SetConsoleTextAttribute(conf.hConsole, 14);
+	wprintf(L"%ls\n", L"[EXHIBIT STORE]");
+	SetConsoleTextAttribute(conf.hConsole, 7);
+	/************************
+	*  SCELLEMENT DE LA CONSIGNE (après la DERNIÈRE pièce ajoutée)
+	*************************/
+	/* Le manifeste doit couvrir toutes les pièces, et il scelle la consigne. Sans
+	   lui les copies brutes ne sont identifiées par rien, et la procédure ne vaut
+	   pas mieux qu'un simple répertoire de fichiers.
 
+	   CE QUI ÉTAIT FAUX. Il était écrit à la fin de la phase d'extraction brute.
+	   Or des pièces entrent dans la consigne APRÈS : les binaires de ressources
+	   des fournisseurs d'événements, extraits à la demande pendant la phase des
+	   journaux. Constaté en VM : 121 binaires (~121 Mio) présents dans consigne/
+	   et absents du manifeste scellé — des pièces que rien n'identifiait. Le
+	   fuseau horaire du suspect y figurait aussi comme « non relevé », la ruche
+	   SYSTEM n'étant lue qu'ensuite. Le scellement est donc la dernière opération
+	   sur la consigne, juste avant le journal d'investigation. */
+	printStep(L" - Sealing the exhibit store (manifest + SHA-256) : ");
+	log(3, L"🔈ConsigneEcrireManifeste");
+	{
+		size_t pieces = 0, echecs = 0;
+		unsigned long long octets = 0;
+		ConsigneBilan(&pieces, &echecs, &octets);
+		const HRESULT hrManifeste = ConsigneEcrireManifeste();
+		auditRecord(L"Scellement de la consigne (" + std::to_wstring(pieces)
+		            + L" piece(s), " + std::to_wstring(echecs) + L" echec(s), "
+		            + std::to_wstring(octets / 1024 / 1024) + L" Mio)",
+		            dossierConsigne() + L"\\MANIFESTE.json (+ .sha256)",
+		            hrManifeste, Footprint::ECRITURE_USB);
+		if (FAILED(hrManifeste)) printError(hrManifeste);
+		else printSuccess();
+	}
 
 	/************************
 	*  JOURNAL D'INVESTIGATION (en dernier : il consigne toute la collecte)
