@@ -123,6 +123,10 @@ Fonctions</h2></td></tr>
 <tr class="separator:a3ebdb1e8e6bb6bb0629d5b0bf3ef9aba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a081cd8727bae07dde597f44221830027" id="r_a081cd8727bae07dde597f44221830027"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structVerdictMicrosoft.html">VerdictMicrosoft</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="authenticode_8cpp.html#a081cd8727bae07dde597f44221830027">EvaluerPe</a> (const <a class="el" href="classAnalyseurPe.html">AnalyseurPe</a> &amp;pe, const <a class="el" href="classIndexCatalogues.html">IndexCatalogues</a> &amp;catalogues)</td></tr>
 <tr class="separator:a081cd8727bae07dde597f44221830027"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a44c8b766dd072f28227429591e00c2b7" id="r_a44c8b766dd072f28227429591e00c2b7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structVerdictMicrosoft.html">VerdictMicrosoft</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="authenticode_8cpp.html#a44c8b766dd072f28227429591e00c2b7">EvaluerParCatalogue</a> (const uint8_t sha256[32], const <a class="el" href="classIndexCatalogues.html">IndexCatalogues</a> &amp;catalogues)</td></tr>
+<tr class="separator:a44c8b766dd072f28227429591e00c2b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a2315dcd96f5ebbeb2231b3f753c424" id="r_a7a2315dcd96f5ebbeb2231b3f753c424"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structVerdictMicrosoft.html">VerdictMicrosoft</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="authenticode_8cpp.html#a7a2315dcd96f5ebbeb2231b3f753c424">EvaluerScriptPowerShell</a> (const uint8_t *octets, size_t taille)</td></tr>
+<tr class="separator:a7a2315dcd96f5ebbeb2231b3f753c424"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Documentation des macros</h2>
 <a id="a0079f2b92a471323a5b4506691ae6aa2" name="a0079f2b92a471323a5b4506691ae6aa2"></a>
@@ -182,6 +186,36 @@ Fonctions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Documentation des fonctions</h2>
+<a id="a44c8b766dd072f28227429591e00c2b7" name="a44c8b766dd072f28227429591e00c2b7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a44c8b766dd072f28227429591e00c2b7">&#9670;&#160;</a></span>EvaluerParCatalogue()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structVerdictMicrosoft.html">VerdictMicrosoft</a> EvaluerParCatalogue </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t&#160;</td>
+          <td class="paramname"><em>sha256</em>[32], </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classIndexCatalogues.html">IndexCatalogues</a> &amp;&#160;</td>
+          <td class="paramname"><em>catalogues</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Fichier non PE (script, document) listé dans un catalogue Microsoft ?</p>
+<p>Pour ces fichiers, l'empreinte des catalogues est le SHA-256 des OCTETS BRUTS du fichier, quel que soit son encodage — établi sur 463 scripts PowerShell et WSH de Windows 11, tous retrouvés ainsi. </p>
+
+</div>
+</div>
 <a id="a081cd8727bae07dde597f44221830027" name="a081cd8727bae07dde597f44221830027"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a081cd8727bae07dde597f44221830027">&#9670;&#160;</a></span>EvaluerPe()</h2>
 
@@ -208,6 +242,37 @@ Fonctions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Décide si un PE est un binaire Microsoft authentique. </p>
+
+</div>
+</div>
+<a id="a7a2315dcd96f5ebbeb2231b3f753c424" name="a7a2315dcd96f5ebbeb2231b3f753c424"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a2315dcd96f5ebbeb2231b3f753c424">&#9670;&#160;</a></span>EvaluerScriptPowerShell()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structVerdictMicrosoft.html">VerdictMicrosoft</a> EvaluerScriptPowerShell </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>octets</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>taille</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Signature INTÉGRÉE d'un script PowerShell (.ps1, .psm1, .psd1, .ps1xml…).</p>
+<p>Le bloc « # SIG # Begin signature block » (ou sa forme XML « ») porte un PKCS#7 en base64. L'empreinte signée est celle du TEXTE qui précède le bloc, sans son dernier saut de ligne, réencodé en UTF-16LE sans BOM — établi sur les 10 scripts signés ainsi d'une installation Windows 11 (Defender), .ps1xml compris.</p>
+<p>Les scripts Windows Script Host (.vbs, .js, .wsf) ne sont authentifiés que par catalogue : leur empreinte intégrée porte sur une forme normalisée du texte qui n'a pas pu être établie avec certitude. Un tel script signé hors catalogue est donc prélevé — l'erreur dans le sens prudent. </p>
 
 </div>
 </div>

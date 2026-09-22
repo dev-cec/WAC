@@ -11,7 +11,7 @@ var searchData=
   ['chunksignores_8',['chunksIgnores',['../structEvtxBilan.html#a71f5b3a70b2b5d83b9c165803a4e1b30',1,'EvtxBilan']]],
   ['class_9',['Class',['../structUserAssist.html#afa49227090ce0422a8ee62e67caa82e5',1,'UserAssist']]],
   ['classfriendlyname_10',['classFriendlyName',['../structDelegateFolder.html#a46730cc18b1e6c438bf531571d14e3a1',1,'DelegateFolder']]],
-  ['classguid_11',['classguid',['../structDelegateFolder.html#abc2752f472b8b646cec44b6c5c5cc110',1,'DelegateFolder::classGuid'],['../structUsbstor.html#a493c78ec85ab590646638663a8ce3010',1,'Usbstor::ClassGuid']]],
+  ['classguid_11',['classguid',['../structUsbstor.html#a493c78ec85ab590646638663a8ce3010',1,'Usbstor::ClassGuid'],['../structDelegateFolder.html#abc2752f472b8b646cec44b6c5c5cc110',1,'DelegateFolder::classGuid']]],
   ['classid_12',['classid',['../structDirectory.html#a2e7ab0401b21213fec1fb1d343074376',1,'Directory::classId'],['../structAction.html#af1fdaf541114523c6fc64161de0d7c55',1,'Action::classId']]],
   ['command_13',['command',['../structAction.html#a5ddd0fe6b5957d3550123542c9455a73',1,'Action']]],
   ['commandoption_14',['commandOption',['../structRecentDoc.html#ab31d7e8885ec6621f352615135841c33',1,'RecentDoc']]],

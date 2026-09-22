@@ -379,6 +379,15 @@ bool IndexCatalogues::ajouter(const std::wstring& nom, const uint8_t* octets, si
 	return true;
 }
 
+void IndexCatalogues::vider(std::ostream& o) const {
+	static const char* hx = "0123456789abcdef";
+	for (const auto& e : index_) {
+		std::string h;
+		for (unsigned char b : e.first) { h += hx[b >> 4]; h += hx[b & 15]; }
+		o << h << "\n";
+	}
+}
+
 const std::wstring* IndexCatalogues::chercher(const uint8_t* e, size_t n) const {
 	const auto it = index_.find(std::string((const char*)e, n));
 	return it == index_.end() ? nullptr : &noms_[it->second];
@@ -531,6 +540,155 @@ VerdictMicrosoft EvaluerPe(const AnalyseurPe& pe, const IndexCatalogues& catalog
 	if (!conforme) { v.motif = "fichier modifié depuis sa signature"; return v; }
 	v.signataire = s.signataire;
 	if (!s.signataireAccepte) { v.motif = "signataire non retenu : " + std::string(s.signataire.begin(), s.signataire.end()); return v; }
+	v.microsoft = true;
+	v.source = L"signature intégrée";
+	return v;
+}
+
+// ============================================================ scripts
+
+VerdictMicrosoft EvaluerParCatalogue(const uint8_t sha256[32], const IndexCatalogues& catalogues) {
+	VerdictMicrosoft v;
+	if (const std::wstring* cat = catalogues.chercher(sha256, 32)) {
+		v.microsoft = true;
+		v.source = L"catalogue " + *cat;
+	}
+	else v.motif = "absent des catalogues";
+	return v;
+}
+
+namespace {
+
+/*! Texte du script en points de code : BOM UTF-8 ou UTF-16LE, sinon UTF-8
+ *  s'il est valide, sinon Windows-1252 (approché par Latin-1). Une erreur de
+ *  décodage ne produit qu'une empreinte différente — le fichier est alors
+ *  prélevé. */
+std::u32string decoderTexte(const uint8_t* p, size_t n) {
+	std::u32string t;
+	if (n >= 2 && p[0] == 0xFF && p[1] == 0xFE) {
+		for (size_t i = 2; i + 1 < n; i += 2) {
+			uint32_t c = p[i] | (p[i + 1] << 8);
+			if (c >= 0xD800 && c < 0xDC00 && i + 3 < n) {
+				const uint32_t d = p[i + 2] | (p[i + 3] << 8);
+				if (d >= 0xDC00 && d < 0xE000) { c = 0x10000 + ((c - 0xD800) << 10) + (d - 0xDC00); i += 2; }
+			}
+			t += (char32_t)c;
+		}
+		return t;
+	}
+	size_t i = (n >= 3 && p[0] == 0xEF && p[1] == 0xBB && p[2] == 0xBF) ? 3 : 0;
+	const size_t debut = i;
+	bool valide = true;
+	while (i < n && valide) {
+		const uint8_t b = p[i];
+		size_t k = b < 0x80 ? 0 : (b & 0xE0) == 0xC0 ? 1 : (b & 0xF0) == 0xE0 ? 2 : (b & 0xF8) == 0xF0 ? 3 : 9;
+		if (k == 9 || i + k >= n) { valide = false; break; }
+		uint32_t c = k == 0 ? b : k == 1 ? (b & 0x1F) : k == 2 ? (b & 0x0F) : (b & 0x07);
+		for (size_t j = 1; j <= k; ++j) {
+			if (i + j >= n || (p[i + j] & 0xC0) != 0x80) { valide = false; break; }
+			c = (c << 6) | (p[i + j] & 0x3F);
+		}
+		if (!valide) break;
+		t += (char32_t)c;
+		i += k + 1;
+	}
+	if (valide) return t;
+	t.clear();
+	for (i = debut; i < n; ++i) t += (char32_t)p[i];
+	return t;
+}
+
+std::vector<uint8_t> enUtf16(const std::u32string& t, size_t fin) {
+	std::vector<uint8_t> r;
+	r.reserve(fin * 2);
+	for (size_t i = 0; i < fin; ++i) {
+		uint32_t c = t[i];
+		if (c >= 0x10000) {
+			c -= 0x10000;
+			const uint32_t h = 0xD800 + (c >> 10), l = 0xDC00 + (c & 0x3FF);
+			r.push_back((uint8_t)h); r.push_back((uint8_t)(h >> 8));
+			r.push_back((uint8_t)l); r.push_back((uint8_t)(l >> 8));
+		}
+		else { r.push_back((uint8_t)c); r.push_back((uint8_t)(c >> 8)); }
+	}
+	return r;
+}
+
+size_t chercherTexte(const std::u32string& t, const char* motif, size_t depuis = 0) {
+	std::u32string m;
+	for (const char* q = motif; *q; ++q) m += (char32_t)(unsigned char)*q;
+	return t.find(m, depuis);
+}
+
+int valeurBase64(char32_t c) {
+	if (c >= 'A' && c <= 'Z') return (int)(c - 'A');
+	if (c >= 'a' && c <= 'z') return (int)(c - 'a') + 26;
+	if (c >= '0' && c <= '9') return (int)(c - '0') + 52;
+	if (c == '+') return 62;
+	if (c == '/') return 63;
+	return -1;
+}
+
+} // namespace
+
+VerdictMicrosoft EvaluerScriptPowerShell(const uint8_t* octets, size_t taille) {
+	VerdictMicrosoft v;
+	const std::u32string t = decoderTexte(octets, taille);
+
+	// Forme commentaire (« # ») ou XML (« <!-- … --> »).
+	bool xml = false;
+	size_t debut = chercherTexte(t, "# SIG # Begin signature block");
+	if (debut == std::u32string::npos) {
+		debut = chercherTexte(t, "<!-- SIG # Begin signature block -->");
+		xml = true;
+	}
+	if (debut == std::u32string::npos) { v.motif = "pas de signature intégrée"; return v; }
+	const size_t fin = chercherTexte(t, xml ? "<!-- SIG # End signature block -->" : "# SIG # End signature block", debut);
+	if (fin == std::u32string::npos) { v.motif = "bloc de signature incomplet"; return v; }
+
+	// Base64 des lignes du bloc, préfixes et suffixes retirés.
+	std::vector<uint8_t> der;
+	uint32_t acc = 0; int bits = 0;
+	size_t i = t.find(U'\n', debut);
+	while (i != std::u32string::npos && i < fin) {
+		size_t j = t.find(U'\n', i + 1);
+		if (j == std::u32string::npos || j > fin) j = fin;
+		std::u32string ligne = t.substr(i + 1, j - i - 1);
+		while (!ligne.empty() && (ligne.back() == U'\r' || ligne.back() == U' ')) ligne.pop_back();
+		const size_t pref = xml ? 5 : 2;                          // « <!-- » ou « # »
+		if (ligne.size() > pref && (xml ? ligne.compare(0, 5, U"<!-- ") == 0 : ligne.compare(0, 2, U"# ") == 0)) {
+			const size_t suff = (xml && ligne.size() >= 4 && ligne.compare(ligne.size() - 4, 4, U" -->") == 0) ? 4 : 0;
+			for (size_t k = pref; k + suff < ligne.size(); ++k) {
+				const int b = valeurBase64(ligne[k]);
+				if (b < 0) continue;                               // « = » de fin, espaces
+				acc = (acc << 6) | (uint32_t)b; bits += 6;
+				if (bits >= 8) { bits -= 8; der.push_back((uint8_t)(acc >> bits)); }
+			}
+		}
+		i = j;
+	}
+
+	const SignatureVerifiee s = VerifierPkcs7(der.data(), der.size());
+	if (!s.valide) { v.motif = s.motif; return v; }
+	if (s.oidContenu != std::string((const char*)OID_SPC_INDIRECT, sizeof(OID_SPC_INDIRECT))) {
+		v.motif = "contenu signé inattendu"; return v;
+	}
+	Tlv spc; spc.tag = 0x30; spc.val = s.contenu; spc.len = s.tailleContenu;
+	std::string annoncee;
+	if (!empreinteIndirecte(spc, annoncee)) { v.motif = "empreinte signée illisible"; return v; }
+
+	// Texte qui précède le bloc, sans son dernier saut de ligne, en UTF-16LE.
+	size_t corps = debut;
+	if (corps >= 2 && t[corps - 2] == U'\r' && t[corps - 1] == U'\n') corps -= 2;
+	else if (corps >= 1 && t[corps - 1] == U'\n') corps -= 1;
+	const std::vector<uint8_t> u16 = enUtf16(t, corps);
+	uint8_t h[64];
+	size_t lh = 0;
+	if (annoncee.size() == 32) { sha256Octets(u16.data(), u16.size(), h); lh = 32; }
+	else if (annoncee.size() == 20) { sha1Octets(u16.data(), u16.size(), h); lh = 20; }
+	if (!lh || std::memcmp(annoncee.data(), h, lh) != 0) { v.motif = "script modifié depuis sa signature"; return v; }
+	v.signataire = s.signataire;
+	if (!s.signataireAccepte) { v.motif = "signataire non retenu"; return v; }
 	v.microsoft = true;
 	v.source = L"signature intégrée";
 	return v;

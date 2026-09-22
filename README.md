@@ -364,8 +364,16 @@ are not accepted, since vulnerable signed drivers are a classic attack path.
 The catalogs that justified a decision go into the exhibit store, so a third
 party can re-check it. Confronted with `Get-AuthenticodeSignature` on 2 233
 binaries: 2 126 authenticated by both, **no file accepted by WAC and rejected by
-Windows**. On the test VM, collected binaries went from 2 131 (3.3 GB) to 99
-(336 MB), in the same time.
+Windows**. Scripts are covered too: a catalog lists a script by the SHA-256 of
+its raw bytes (established on 473 PowerShell and WSH scripts of Windows 11), and
+a PowerShell script's embedded signature block (`# SIG # Begin signature block`,
+or its XML form) signs the UTF-16LE text that precedes it — verified on every
+signed script of the test VM, and a one-word change makes it rejected. A WSH
+script (`.vbs`, `.js`, `.wsf`) signed only inline is still collected: its
+signed digest covers a normalised form of the text that could not be
+established with certainty. On the test VM, collected binaries went from 2 131
+(3.3 GB) to 92 (335 MB), in the same time; the scripts still collected are the
+unsigned ones.
 
 **Identical content is stored once.** A file's SHA-256 is only known once it
 has been read, so it is first written to a staging directory next to the

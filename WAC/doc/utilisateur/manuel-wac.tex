@@ -465,8 +465,16 @@ indique l'authentification retenue, par exemple
 « \texttt{Microsoft (catalogue Package\_xxx.cat)} » ou
 « \texttt{Microsoft (signature intégrée)} ».
 
+Les \textbf{scripts} sont authentifiés de la même façon : par les catalogues de
+Windows, et, pour PowerShell (\fichier{ps1}, \fichier{psm1}, \fichier{psd1},
+\fichier{ps1xml}\ldots), par leur bloc de signature intégré
+(\texttt{\# SIG \# Begin signature block}). Un script Windows Script Host
+(\fichier{vbs}, \fichier{js}, \fichier{wsf}) signé seulement dans son texte, et
+non par un catalogue, reste prélevé.
+
 Sur la machine de test, cette vérification ramène le prélèvement de 2~131
-binaires (3,3~Go) à 99 (336~Mo), sans allonger la collecte.
+binaires (3,3~Go) à 92 (335~Mo), sans allonger la collecte ; les scripts encore
+prélevés sont ceux qui ne sont pas signés.
 
 La lecture étant directe, prélever ne laisse aucune trace de plus que hacher :
 seulement de la place sur le support.

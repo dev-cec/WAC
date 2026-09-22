@@ -95,6 +95,53 @@ protected:
 	}
 };
 
+/*! Transmet ce qu'il reçoit à deux tampons : l'analyse d'un PE, et, pour un
+ *  script PowerShell, la copie en mémoire de son texte. */
+class Duplicateur : public std::streambuf {
+public:
+	Duplicateur(std::streambuf* a, std::streambuf* b) : a_(a), b_(b) {}
+protected:
+	int overflow(int c) override {
+		if (c != traits_type::eof()) { a_->sputc((char)c); if (b_) b_->sputc((char)c); }
+		return traits_type::not_eof(c);
+	}
+	std::streamsize xsputn(const char* s, std::streamsize n) override {
+		a_->sputn(s, n);
+		if (b_) b_->sputn(s, n);
+		return n;
+	}
+private:
+	std::streambuf* a_;
+	std::streambuf* b_;
+};
+
+//! Scripts dont la signature intégrée est vérifiée (cf. EvaluerScriptPowerShell).
+bool estScriptPowerShell(const std::wstring& chemin) {
+	const size_t point = chemin.find_last_of(L'.');
+	if (point == std::wstring::npos) return false;
+	const std::wstring ext = enMinuscules(chemin.substr(point + 1));
+	return ext == L"ps1" || ext == L"psm1" || ext == L"psd1" || ext == L"ps1xml"
+	    || ext == L"psc1" || ext == L"cdxml";
+}
+
+//! Empreinte hexadécimale (64 caractères) -> 32 octets.
+bool octetsDeHexa(const std::wstring& hexa, uint8_t sortie[32]) {
+	if (hexa.size() != 64) return false;
+	for (size_t i = 0; i < 32; ++i) {
+		unsigned v = 0;
+		for (size_t k = 0; k < 2; ++k) {
+			const wchar_t c = hexa[2 * i + k];
+			v <<= 4;
+			if (c >= L'0' && c <= L'9') v |= c - L'0';
+			else if (c >= L'A' && c <= L'F') v |= c - L'A' + 10;
+			else if (c >= L'a' && c <= L'f') v |= c - L'a' + 10;
+			else return false;
+		}
+		sortie[i] = (uint8_t)v;
+	}
+	return true;
+}
+
 std::wstring dossierCatalogues() {
 	return conf.systemDrive + L"\\Windows\\System32\\CatRoot\\{F750E6C3-38EE-11D1-85E5-00C04FC295EE}";
 }
@@ -173,8 +220,11 @@ const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut) {
 	   moins cher qu'écrire puis effacer sur une clé USB. */
 	{
 		AnalyseurPe pe;
+		Collecteur texte;                       // scripts PowerShell : texte en mémoire
+		const bool powershell = estScriptPowerShell(chemin);
+		Duplicateur tee(&pe, powershell ? &texte : nullptr);
 		RawHiveExtrait ligne;
-		e.resultat = g_lecteur->lire(chemin, std::wstring(), ligne, &pe);
+		e.resultat = g_lecteur->lire(chemin, std::wstring(), ligne, &tee);
 		pe.terminer();
 		if (FAILED(e.resultat)) {
 			log(3, L"🔈Empreinte impossible : " + chemin, e.resultat);
@@ -188,8 +238,19 @@ const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut) {
 		}
 		++g_lus;
 		retenir(ligne);
-		if (pe.estPe()) {
-			const VerdictMicrosoft v = EvaluerPe(pe, catalogues());
+		/* PE : empreinte Authenticode. Script ou document : SHA-256 des octets
+		   bruts dans les catalogues, puis signature PowerShell intégrée. */
+		VerdictMicrosoft v;
+		if (pe.estPe()) v = EvaluerPe(pe, catalogues());
+		else {
+			uint8_t h[32];
+			if (octetsDeHexa(e.sha256, h)) v = EvaluerParCatalogue(h, catalogues());
+			if (!v.microsoft && powershell) {
+				const VerdictMicrosoft ps = EvaluerScriptPowerShell(texte.octets.data(), texte.octets.size());
+				if (ps.microsoft || ps.motif != "pas de signature intégrée") v = ps;
+			}
+		}
+		{
 			if (v.microsoft) {
 				e.signature = L"Microsoft (" + v.source + L")";
 				++g_authentifies;
@@ -198,7 +259,7 @@ const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut) {
 					g_cataloguesUtilises.insert(v.source.substr(10));
 				return g_cache.emplace(cle, std::move(e)).first->second;
 			}
-			log(3, L"🔈Preleve (" + std::wstring(v.motif.begin(), v.motif.end()) + L") : " + chemin);
+			log(3, L"🔈Preleve (" + string_to_wstring(v.motif) + L") : " + chemin);
 		}
 	}
 

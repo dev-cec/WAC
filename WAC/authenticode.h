@@ -45,6 +45,7 @@
 #include <string>
 #include <vector>
 #include <streambuf>
+#include <ostream>
 #include <unordered_map>
 #include "sha.h"
 
@@ -115,6 +116,8 @@ public:
 	size_t catalogues() const { return noms_.size(); }
 	size_t empreintes() const { return index_.size(); }
 	size_t refuses() const { return refuses_; }
+	//! Écrit chaque empreinte indexée (hexa) et son catalogue — outil de test.
+	void vider(std::ostream& o) const;
 private:
 	std::vector<std::wstring> noms_;
 	std::unordered_map<std::string, uint32_t> index_;   // empreinte brute -> catalogue
@@ -131,3 +134,24 @@ struct VerdictMicrosoft {
 
 /*! Décide si un PE est un binaire Microsoft authentique. */
 VerdictMicrosoft EvaluerPe(const AnalyseurPe& pe, const IndexCatalogues& catalogues);
+
+/*! Fichier non PE (script, document) listé dans un catalogue Microsoft ?
+ *
+ *  Pour ces fichiers, l'empreinte des catalogues est le SHA-256 des OCTETS
+ *  BRUTS du fichier, quel que soit son encodage — établi sur 463 scripts
+ *  PowerShell et WSH de Windows 11, tous retrouvés ainsi. */
+VerdictMicrosoft EvaluerParCatalogue(const uint8_t sha256[32], const IndexCatalogues& catalogues);
+
+/*! Signature INTÉGRÉE d'un script PowerShell (.ps1, .psm1, .psd1, .ps1xml…).
+ *
+ *  Le bloc « # SIG # Begin signature block » (ou sa forme XML
+ *  « <!-- SIG # … --> ») porte un PKCS#7 en base64. L'empreinte signée est
+ *  celle du TEXTE qui précède le bloc, sans son dernier saut de ligne,
+ *  réencodé en UTF-16LE sans BOM — établi sur les 10 scripts signés ainsi d'une
+ *  installation Windows 11 (Defender), .ps1xml compris.
+ *
+ *  Les scripts Windows Script Host (.vbs, .js, .wsf) ne sont authentifiés que
+ *  par catalogue : leur empreinte intégrée porte sur une forme normalisée du
+ *  texte qui n'a pas pu être établie avec certitude. Un tel script signé hors
+ *  catalogue est donc prélevé — l'erreur dans le sens prudent. */
+VerdictMicrosoft EvaluerScriptPowerShell(const uint8_t* octets, size_t taille);

@@ -1,5 +1,10 @@
 var NAVTREEINDEX4 =
 {
+"structHiveReplayInfo.html#af3e4b4fba01e1cbfe903c3f1407b5c87":[1,0,64,9],
+"structHiveReplayInfo.html#af4a69d76d01962898da3c5263f1177fa":[1,0,64,7],
+"structIExtensionBlock.html":[1,0,66],
+"structIExtensionBlock.html#a21e17ece2d238afbb69bed9fdb0c19d7":[1,0,66,2],
+"structIExtensionBlock.html#a4d963ed0b851ba17155804632398aeef":[1,0,66,1],
 "structIExtensionBlock.html#a7bdccb2b2bb3e776406683af1e245a2b":[1,0,66,0],
 "structIExtensionBlock.html#ac022d019511278a7b8dbc41d1908faee":[1,0,66,3],
 "structIExtensionBlock.html#ad5645d364f50f4db62acadb7151b477e":[1,0,66,4],
@@ -244,10 +249,5 @@ var NAVTREEINDEX4 =
 "structRecentDoc.html":[1,0,100],
 "structRecentDoc.html#a0e7afaf79c5a830b2e8d1e57f0683016":[1,0,100,37],
 "structRecentDoc.html#a112fda06187ec2a627a3bb4484464355":[1,0,100,39],
-"structRecentDoc.html#a165143ed1a74dc733f5a2d09d81bce2a":[1,0,100,9],
-"structRecentDoc.html#a280d45cab21459d7460a80763bb8b4a9":[1,0,100,43],
-"structRecentDoc.html#a2ce46f17b97a3b1b2701f27d1e18145f":[1,0,100,20],
-"structRecentDoc.html#a32eed3664b67b62f799e4ed4decd3eb9":[1,0,100,22],
-"structRecentDoc.html#a3390989fed87f1a03f791166b3b97478":[1,0,100,5],
-"structRecentDoc.html#a397637d1a8327fc757a878aa74092d9b":[1,0,100,27]
+"structRecentDoc.html#a165143ed1a74dc733f5a2d09d81bce2a":[1,0,100,9]
 };

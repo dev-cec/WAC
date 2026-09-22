@@ -1,5 +1,10 @@
 var NAVTREEINDEX3 =
 {
+"structBilanBinaires.html#a4ebccc806f4ac715204c373c8cb0bbd0":[1,0,39,8],
+"structBilanBinaires.html#a7db9c4dbe7bcadf327fcddfb65d3e4f3":[1,0,39,4],
+"structBilanBinaires.html#a8a3a0ce868ee6552b2ec2a399bd23c0b":[1,0,39,5],
+"structBilanBinaires.html#a8ded0511156b21c9a36a78fd2f9dac8e":[1,0,39,10],
+"structBilanBinaires.html#a96ce1ecc85512b37848c6a45f26e3aca":[1,0,39,1],
 "structBilanBinaires.html#a96d2f7020107b56a829b35c5d9abb484":[1,0,39,6],
 "structBilanBinaires.html#ab7f9c95ee090b15ca14a371254a6f7cb":[1,0,39,0],
 "structBilanBinaires.html#ad60b1a5baa05ee895992ee691125fd2b":[1,0,39,2],
@@ -244,10 +249,5 @@ var NAVTREEINDEX3 =
 "structHiveReplayInfo.html#ab92f23fd307b459e9d07ee8017f91ff9":[1,0,64,6],
 "structHiveReplayInfo.html#ac059d30c9a496cefc3cecdb64863a175":[1,0,64,12],
 "structHiveReplayInfo.html#ae211bf2776e96823fd7794c20b9475bf":[1,0,64,5],
-"structHiveReplayInfo.html#ae6cd4312bf446da1e24c3e6b4040ad57":[1,0,64,8],
-"structHiveReplayInfo.html#af3e4b4fba01e1cbfe903c3f1407b5c87":[1,0,64,9],
-"structHiveReplayInfo.html#af4a69d76d01962898da3c5263f1177fa":[1,0,64,7],
-"structIExtensionBlock.html":[1,0,66],
-"structIExtensionBlock.html#a21e17ece2d238afbb69bed9fdb0c19d7":[1,0,66,2],
-"structIExtensionBlock.html#a4d963ed0b851ba17155804632398aeef":[1,0,66,1]
+"structHiveReplayInfo.html#ae6cd4312bf446da1e24c3e6b4040ad57":[1,0,64,8]
 };

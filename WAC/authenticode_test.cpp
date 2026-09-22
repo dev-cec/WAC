@@ -90,6 +90,10 @@ int main(int argc, char** argv) {
 	          << index.empreintes() << " empreinte(s) indexées, en " << duree << " s\n";
 	for (const auto& r : refus) std::cerr << "  refusés : " << r.second << " — " << r.first << "\n";
 
+	if (liste == "-") {                                 // empreintes indexées, en hexa
+		index.vider(std::cout);
+		return 0;
+	}
 	if (liste.empty()) return 0;
 	std::ifstream l(liste);
 	std::string ligne;
@@ -101,12 +105,23 @@ int main(int argc, char** argv) {
 		const std::string id = ligne.substr(0, barre);
 		std::ifstream f(std::filesystem::u8path(ligne.substr(barre + 1)), std::ios::binary);
 		if (!f) { std::cout << id << "|ILLISIBLE|\n"; continue; }
+		const std::vector<uint8_t> octets((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
 		AnalyseurPe pe;
-		std::vector<char> tampon(1 << 16);
-		while (f.read(tampon.data(), (std::streamsize)tampon.size()) || f.gcount())
-			pe.sputn(tampon.data(), f.gcount());
+		pe.sputn((const char*)octets.data(), (std::streamsize)octets.size());
 		pe.terminer();
-		const VerdictMicrosoft v = EvaluerPe(pe, index);
+		VerdictMicrosoft v;
+		if (pe.estPe()) v = EvaluerPe(pe, index);
+		else {
+			// Script ou document : catalogue (octets bruts), puis signature
+			// PowerShell intégrée.
+			uint8_t h[32];
+			sha256Octets(octets.data(), octets.size(), h);
+			v = EvaluerParCatalogue(h, index);
+			if (!v.microsoft) {
+				const VerdictMicrosoft ps = EvaluerScriptPowerShell(octets.data(), octets.size());
+				if (ps.microsoft || ps.motif != "pas de signature intégrée") v = ps;
+			}
+		}
 		if (v.microsoft) { ++ms; std::cout << id << "|MICROSOFT|" << utf8(v.source) << "\n"; }
 		else { ++autres; std::cout << id << "|PRELEVE|" << v.motif << "\n"; }
 	}
