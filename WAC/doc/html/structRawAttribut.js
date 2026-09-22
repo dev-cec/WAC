@@ -5,6 +5,7 @@ var structRawAttribut =
     [ "nom", "structRawAttribut.html#a4b012f4fc221162a71299d27cd0b4851", null ],
     [ "resident", "structRawAttribut.html#a4ba4b421a5ab653770c360154ed3a506", null ],
     [ "tagReparse", "structRawAttribut.html#afe344b9464b4215430d6a519cfc10bc0", null ],
+    [ "tailleInitialisee", "structRawAttribut.html#a51df2b63c640f0d5787b9c8e3c88b97a", null ],
     [ "tailleReelle", "structRawAttribut.html#a843c96325539d2165accc979d05ad69a", null ],
     [ "type", "structRawAttribut.html#ab01a61beb7e435e1ef8784ba56f19e4a", null ]
 ];

@@ -64,9 +64,9 @@ var NAVTREEINDEX =
 "structAutomaticDestination.html#adf146dff12607de34518ef2d43227c1d",
 "structDirectory.html#a63997621361dd8c746c72fdff8c44e18",
 "structMruApps.html#a1169476aee0c5789ba44af983951b807",
-"structServiceStruct.html#a143f89f9dda1dcfbfb84a6cb9334d78f",
-"structUsersPropertyView.html#a422a3fc8ce2c8c1f9153f04f73dc35b2",
-"wevt_8cpp.html#ac7abef44139369374c48961790aa6849"
+"structServiceStruct.html",
+"structUsersPropertyView.html#a22eae8fb892621f9052a769ccd1ddbde",
+"wevt_8cpp.html"
 ];
 
 var SYNCONMSG = 'cliquez pour désactiver la synchronisation du panel';

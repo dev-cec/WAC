@@ -11,5 +11,6 @@ var structRawHiveEmpreintes =
     [ "resident", "structRawHiveEmpreintes.html#a13a4c724d5928a77d1ccbe3216d4d584", null ],
     [ "sha1", "structRawHiveEmpreintes.html#ad6727a9b10ca2685abfb11ccb21c4b4a", null ],
     [ "sha256", "structRawHiveEmpreintes.html#aba0c9742ecc9553f52ed381e07017efd", null ],
-    [ "tailleAnnoncee", "structRawHiveEmpreintes.html#ae253f7703577207c432db9eb256cdd91", null ]
+    [ "tailleAnnoncee", "structRawHiveEmpreintes.html#ae253f7703577207c432db9eb256cdd91", null ],
+    [ "tailleValide", "structRawHiveEmpreintes.html#a9c59c6228a22dc1cab86fdda93f8eb79", null ]
 ];

@@ -122,6 +122,8 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:ae253f7703577207c432db9eb256cdd91" id="r_ae253f7703577207c432db9eb256cdd91"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveEmpreintes.html#ae253f7703577207c432db9eb256cdd91">tailleAnnoncee</a> = 0</td></tr>
 <tr class="memdesc:ae253f7703577207c432db9eb256cdd91"><td class="mdescLeft">&#160;</td><td class="mdescRight">taille déclarée par l'attribut $DATA  <br /></td></tr>
 <tr class="separator:ae253f7703577207c432db9eb256cdd91"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c59c6228a22dc1cab86fdda93f8eb79" id="r_a9c59c6228a22dc1cab86fdda93f8eb79"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveEmpreintes.html#a9c59c6228a22dc1cab86fdda93f8eb79">tailleValide</a> = 0</td></tr>
+<tr class="separator:a9c59c6228a22dc1cab86fdda93f8eb79"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a673ac40d340a40126057fc58bf068aa9" id="r_a673ac40d340a40126057fc58bf068aa9"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveEmpreintes.html#a673ac40d340a40126057fc58bf068aa9">mftEntry</a> = 0</td></tr>
 <tr class="memdesc:a673ac40d340a40126057fc58bf068aa9"><td class="mdescLeft">&#160;</td><td class="mdescRight">numéro d'enregistrement dans la $MFT  <br /></td></tr>
 <tr class="separator:a673ac40d340a40126057fc58bf068aa9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -339,6 +341,21 @@ Attributs publics</h2></td></tr>
 </div><div class="memdoc">
 
 <p>taille déclarée par l'attribut $DATA </p>
+
+</div>
+</div>
+<a id="a9c59c6228a22dc1cab86fdda93f8eb79" name="a9c59c6228a22dc1cab86fdda93f8eb79"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9c59c6228a22dc1cab86fdda93f8eb79">&#9670;&#160;</a></span>tailleValide</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint64_t RawHiveEmpreintes::tailleValide = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Longueur des données valides de l'attribut non résident. Au-delà, le contenu est nul par définition et n'est PAS lu sur le disque. Égale à <code>tailleAnnoncee</code> pour un fichier ordinaire ; inférieure pour un fichier préalloué (journaux d'événements). </p>
 
 </div>
 </div>

@@ -70,6 +70,11 @@ struct RawHiveEmpreintes {
     std::wstring sha256;         //!< empreinte SHA-256
     uint64_t octets = 0;         //!< taille réellement extraite
     uint64_t tailleAnnoncee = 0; //!< taille déclarée par l'attribut $DATA
+    /*! Longueur des données valides de l'attribut non résident. Au-delà, le
+     *  contenu est nul par définition et n'est PAS lu sur le disque. Égale à
+     *  `tailleAnnoncee` pour un fichier ordinaire ; inférieure pour un fichier
+     *  préalloué (journaux d'événements). */
+    uint64_t tailleValide = 0;
     uint64_t mftEntry = 0;       //!< numéro d'enregistrement dans la $MFT
     bool     resident = false;   //!< donnée contenue dans l'enregistrement $MFT
     // $STANDARD_INFORMATION du fichier source, en FILETIME (UTC, 0 si absent).
@@ -109,6 +114,10 @@ struct RawAttribut {
     std::wstring nom;           //!< nom de l'attribut, vide pour l'attribut sans nom
     bool     resident = true;   //!< contenu dans l'enregistrement
     uint64_t tailleReelle = 0;  //!< taille des données
+    /*! Non résident seulement : longueur des données VALIDES (« valid data
+     *  length »). Au-delà, NTFS rend des zéros, quel que soit le contenu des
+     *  grappes — qui peuvent porter les restes d'anciens fichiers. */
+    uint64_t tailleInitialisee = 0;
     uint16_t drapeaux = 0;      //!< 0x0001 compressé, 0x4000 chiffré, 0x8000 creux
     uint32_t tagReparse = 0;    //!< pour 0xC0 : l'étiquette du point de reparse
     std::vector<uint8_t> apercu; //!< premiers octets du contenu, si résident

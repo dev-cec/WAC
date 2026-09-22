@@ -54,6 +54,8 @@ int wmain(int argc, wchar_t** argv){
             if (a.drapeaux & 0x0001) wprintf(L" COMPRESSE");
             if (a.drapeaux & 0x8000) wprintf(L" CREUX");
             if (a.tagReparse)        wprintf(L"  reparse 0x%08lX", (unsigned long)a.tagReparse);
+            if (!a.resident && a.tailleInitialisee != a.tailleReelle)
+                wprintf(L"  valides %llu", (unsigned long long)a.tailleInitialisee);
             wprintf(L"\n");
             if (a.type == 0xC0 && !a.apercu.empty()){
                 wprintf(L"      contenu :");

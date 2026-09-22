@@ -25,6 +25,25 @@ event logs useless on the most common operating system. Compression is a
 directory attribute that a user or a policy can set anywhere, so any artefact can
 be affected.
 
+**Preallocated files are read the way NTFS presents them.** A file can be grown
+without its new clusters being written: NTFS allocates them without erasing
+them, and returns **zeros** for everything past the *valid data length*. The
+disk itself still holds whatever the previous owner of those clusters left
+there. The event logs are preallocated to their maximum size, so ignoring that
+length copied **x64 machine code of a vanished DLL** into
+`CodeIntegrity%4Operational.evtx` in place of empty chunks (135 168 valid bytes
+out of 1 052 672), and made 19 logs out of 404 — `System.evtx` among them —
+fail to extract. Beyond the valid length, WAC now writes zeros without reading
+the clusters, and the manifest records `ValidDataBytes` for every such file.
+The fingerprint of the exhibit is thus the one any ordinary acquisition gives.
+
+**Validated end to end on the logs themselves.** Each EVTX chunk carries two
+CRC32 (header, records): an independent check that no decompression, no valid
+length and no fragmented attribute was mishandled. On the test VM, the 1 505
+chunks of the 404 extracted logs all verify. That check caught a rule of
+mine that decoded without any error and returned wrong data: a last compression
+unit held in one cluster *is* compressed, even though it saves nothing.
+
 **The volume is read raw, in read-only.** WAC opens `\\.\X:`, walks the `$MFT`
 itself and copies the registry hives onto the collection medium. It does **not**
 create a Volume Shadow Copy, and it does **not** use COM or WMI — all of which

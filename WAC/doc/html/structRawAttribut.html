@@ -119,6 +119,8 @@ Attributs publics</h2></td></tr>
 <tr class="memitem:a843c96325539d2165accc979d05ad69a" id="r_a843c96325539d2165accc979d05ad69a"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawAttribut.html#a843c96325539d2165accc979d05ad69a">tailleReelle</a> = 0</td></tr>
 <tr class="memdesc:a843c96325539d2165accc979d05ad69a"><td class="mdescLeft">&#160;</td><td class="mdescRight">taille des données  <br /></td></tr>
 <tr class="separator:a843c96325539d2165accc979d05ad69a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a51df2b63c640f0d5787b9c8e3c88b97a" id="r_a51df2b63c640f0d5787b9c8e3c88b97a"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawAttribut.html#a51df2b63c640f0d5787b9c8e3c88b97a">tailleInitialisee</a> = 0</td></tr>
+<tr class="separator:a51df2b63c640f0d5787b9c8e3c88b97a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abc0dbf24d567b15ea426dfa487c06ce1" id="r_abc0dbf24d567b15ea426dfa487c06ce1"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawAttribut.html#abc0dbf24d567b15ea426dfa487c06ce1">drapeaux</a> = 0</td></tr>
 <tr class="memdesc:abc0dbf24d567b15ea426dfa487c06ce1"><td class="mdescLeft">&#160;</td><td class="mdescRight">0x0001 compressé, 0x4000 chiffré, 0x8000 creux  <br /></td></tr>
 <tr class="separator:abc0dbf24d567b15ea426dfa487c06ce1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -209,6 +211,21 @@ Attributs publics</h2></td></tr>
 </div><div class="memdoc">
 
 <p>pour 0xC0 : l'étiquette du point de reparse </p>
+
+</div>
+</div>
+<a id="a51df2b63c640f0d5787b9c8e3c88b97a" name="a51df2b63c640f0d5787b9c8e3c88b97a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a51df2b63c640f0d5787b9c8e3c88b97a">&#9670;&#160;</a></span>tailleInitialisee</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint64_t RawAttribut::tailleInitialisee = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Non résident seulement : longueur des données VALIDES (« valid data length »). Au-delà, NTFS rend des zéros, quel que soit le contenu des grappes — qui peuvent porter les restes d'anciens fichiers. </p>
 
 </div>
 </div>

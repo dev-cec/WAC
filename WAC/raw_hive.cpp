@@ -134,10 +134,17 @@ public:
        (1), offset du nom (1), VCN de départ (8), référence MFT (8), id (2).
        On retient les entrées $DATA sans nom, on charge l'enregistrement
        référencé, et on concatène ses runs dans l'ordre des VCN.
-       @param realSize reçoit la taille réelle, lue sur le fragment de VCN 0 */
+       @param realSize reçoit la taille réelle, lue sur le fragment de VCN 0
+       @param uniteCompression si non nul, reçoit la taille de l'unité de
+              compression en grappes (0 = non compressé), lue elle aussi sur le
+              fragment de VCN 0 : seul celui-ci porte l'en-tête complet.
+       @param tailleValide si non nul, reçoit la longueur des données valides,
+              lue au même endroit (cf. extractData). */
     bool collectRunsFromAttributeList(const std::vector<uint8_t>& rec,
                                       std::vector<Run>& runs, uint64_t& realSize,
-                                      uint32_t typeCherche = 0x80){
+                                      uint32_t typeCherche = 0x80,
+                                      uint32_t* uniteCompression = nullptr,
+                                      uint64_t* tailleValide = nullptr){
         const uint8_t* al = findAttr(rec, 0x20, false);
         if (!al) return false;
 
@@ -173,11 +180,23 @@ public:
                     // Le fragment porte l'attribut non résident couvrant ce VCN.
                     const uint8_t* d = findAttr(frag, typeCherche, typeCherche == 0x80);
                     if (d && d[8] != 0){
-                        if (rd16(d + 0x0C) & 0x0001){
-                            RVLOG(L"[raw] $DATA compresse NTFS dans un fragment : non supporte\n");
+                        /* COMPRESSION NTFS DANS UN FRAGMENT. Etait refusee :
+                           Application.evtx, Security.evtx et deux autres
+                           journaux d'une VM Windows 11 n'etaient pas extraits
+                           du tout. Le fichier compresse le plus actif est aussi
+                           le plus fragmente, donc le premier a basculer en
+                           $ATTRIBUTE_LIST. */
+                        if ((rd16(d + 0x0C) & 0x0001) && !uniteCompression){
+                            RVLOG(L"[raw] $DATA compresse NTFS dans un fragment : non supporte ici\n");
                             return false;
                         }
-                        if (vcn == 0) realSize = rd64(d + 0x30);
+                        if (vcn == 0){
+                            realSize = rd64(d + 0x30);
+                            if (tailleValide) *tailleValide = rd64(d + 0x38);
+                            if (uniteCompression)
+                                *uniteCompression = (rd16(d + 0x0C) & 0x0001)
+                                                  ? (uint32_t)1u << rd16(d + 0x22) : 0;
+                        }
                         fragments.emplace_back(vcn, decodeRuns(d + rd16(d + 0x20), d + rd32(d + 0x04)));
                     }
                 }
@@ -464,6 +483,7 @@ public:
      *  unite stockee telle quelle rend des donnees fausses sans aucune erreur.
      */
     HRESULT extraireCompresse(const std::vector<Run>& runs, uint64_t realSize,
+                              uint64_t tailleValide,
                               uint32_t uniteGrappes, std::ofstream& out,
                               const std::wstring& libelle, RawHiveEmpreintes* emp){
         const uint64_t tailleUnite = (uint64_t)uniteGrappes * bytesPerCluster_;
@@ -492,6 +512,10 @@ public:
             }
 
             size_t produit = 0;
+            const uint64_t debutUnite = vcn * bytesPerCluster_;
+            // Unite entierement au-dela des donnees valides : des zeros, sans
+            // lire les grappes — qui ne portent que des restes (cf. extractData).
+            if (allouees != 0 && debutUnite >= tailleValide) allouees = 0;
             if (allouees == 0){
                 // Unite creuse : des zeros, sans rien lire.
                 std::fill(unite.begin(), unite.end(), (uint8_t)0);
@@ -510,8 +534,18 @@ public:
                 }
                 if (erreur) return E_FAIL;
 
+                /* UNITE STOCKEE TELLE QUELLE seulement si TOUTES ses grappes
+                   nominales sont allouees — y compris pour la derniere unite,
+                   meme quand le fichier n'en occupe qu'une partie. Une regle
+                   fondee sur les grappes reellement necessaires a ete essayee
+                   et ecartee : NTFS compresse bien une derniere unite de 4 096
+                   octets dans une seule grappe (en-tete LZNT1 0xB4C2 releve
+                   dans Microsoft-Windows-WMI-Activity%4Operational.evtx), et la
+                   recopier brute rendait des donnees fausses SANS ERREUR —
+                   decelees par le CRC32 des chunks EVTX. C'est le critere de
+                   ntfs-3g. Les 19 echecs qui l'avaient motivee venaient en
+                   realite de grappes situees au-dela des donnees valides. */
                 if (allouees == uniteGrappes){
-                    // Stockee telle quelle : AUCUNE decompression.
                     std::memcpy(unite.data(), brut.data(), (size_t)tailleUnite);
                     produit = (size_t)tailleUnite;
                 }
@@ -528,6 +562,10 @@ public:
                         std::fill(unite.begin() + produit, unite.end(), (uint8_t)0);
                 }
             }
+
+            // Unite a cheval sur la limite des donnees valides : zeros au-dela.
+            if (tailleValide < debutUnite + tailleUnite && tailleValide > debutUnite)
+                std::fill(unite.begin() + (size_t)(tailleValide - debutUnite), unite.end(), (uint8_t)0);
 
             const uint64_t reste = realSize - ecrit;
             const size_t aEcrire = (size_t)((reste < tailleUnite) ? reste : tailleUnite);
@@ -611,8 +649,10 @@ public:
                 if (type == 0xC0 && a.apercu.size() >= 4)
                     a.tagReparse = rd32(a.apercu.data());
             }
-            else if (off + 0x38 <= rec.size())
-                a.tailleReelle = rd64(rec.data() + off + 0x30);
+            else if (off + 0x40 <= rec.size()){
+                a.tailleReelle      = rd64(rec.data() + off + 0x30);
+                a.tailleInitialisee = rd64(rec.data() + off + 0x38);
+            }
 
             out.push_back(std::move(a));
             off += taille;
@@ -655,6 +695,19 @@ public:
         const uint8_t* residentData = nullptr;
         uint32_t residentLen = 0;
         uint32_t uniteCompression = 0;     // en grappes ; 0 = donnee non compressee
+        /*  LONGUEUR DES DONNEES VALIDES (« valid data length », offset 0x38).
+            Un fichier peut etre agrandi sans que ses nouvelles grappes soient
+            ecrites : NTFS les alloue sans les effacer, et rend des ZEROS pour
+            tout ce qui est au-dela de cette longueur. Le disque, lui, porte
+            encore les restes des fichiers qui occupaient ces grappes.
+            Ignorer ce champ faisait recopier ces restes comme contenu : releve
+            sur les journaux d'evenements, preallouees a leur taille maximale —
+            du code machine x64 d'une DLL disparue a la place de chunks vides
+            dans Microsoft-Windows-CodeIntegrity%4Operational.evtx, 135 168
+            octets valides sur 1 052 672. Le contenu n'etait donc PAS celui du
+            fichier, et son empreinte differait de celle de n'importe quelle
+            acquisition ordinaire. */
+        uint64_t tailleValide = UINT64_MAX;
 
         const uint8_t* a = findAttr(rec, 0x80 /*$DATA*/);
         if (a){
@@ -673,14 +726,18 @@ public:
                 if (rd16(a + 0x0C) & 0x0001)
                     uniteCompression = (uint32_t)1u << rd16(a + 0x22);
                 realSize = rd64(a + 0x30);
+                tailleValide = rd64(a + 0x38);
                 runs = decodeRuns(a + rd16(a + 0x20), a + rd32(a + 0x04));
 
             }
         }
-        else if (!collectRunsFromAttributeList(rec, runs, realSize)){
+        else if (!collectRunsFromAttributeList(rec, runs, realSize, 0x80,
+                                               &uniteCompression, &tailleValide)){
             RVLOG(L"[raw] pas d'attribut $DATA exploitable\n");
             return E_FAIL;
         }
+        if (tailleValide > realSize) tailleValide = realSize;
+        if (emp && !resident) emp->tailleValide = tailleValide;
 
         std::ofstream out(std::filesystem::path(outFile), std::ios::binary | std::ios::trunc);
         if (!out){ RVLOG(L"[raw] ouverture sortie impossible\n"); return E_FAIL; }
@@ -723,8 +780,8 @@ public:
         }
 
         if (uniteCompression > 1){
-            const HRESULT h = extraireCompresse(runs, realSize, uniteCompression,
-                                                out, libelle, emp);
+            const HRESULT h = extraireCompresse(runs, realSize, tailleValide,
+                                                uniteCompression, out, libelle, emp);
             return h;
         }
 
@@ -739,8 +796,11 @@ public:
         Sha256Stream flux256;
         for (const Run& r : runs){
             for (uint64_t k = 0; k < r.count && written < realSize; ++k){
-                if (r.lcn < 0) std::fill(cl.begin(), cl.end(), 0);          // sparse
+                // Creux, ou au-dela des donnees valides : des zeros, sans lire.
+                if (r.lcn < 0 || written >= tailleValide) std::fill(cl.begin(), cl.end(), 0);
                 else if (!readCluster((uint64_t)r.lcn + k, cl.data())) return E_FAIL;
+                if (written < tailleValide && tailleValide < written + bytesPerCluster_)
+                    std::fill(cl.begin() + (size_t)(tailleValide - written), cl.end(), (uint8_t)0);
                 uint64_t chunk = std::min<uint64_t>(bytesPerCluster_, realSize - written);
                 out.write((const char*)cl.data(), (std::streamsize)chunk);
                 if (emp){

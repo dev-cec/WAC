@@ -327,6 +327,12 @@ HRESULT ConsigneEcrireManifeste() {
 		// seule ne révélerait pas (elle serait juste... celle du tronqué).
 		if (m.tailleAnnoncee != m.octets)
 			o.add(L"DeclaredBytes", Json::num(m.tailleAnnoncee));
+		/* Fichier préalloué : ce qui suit n'a jamais été écrit et vaut zéro dans
+		   la pièce, quel que soit le contenu des grappes sur le disque. À
+		   déclarer, sans quoi une pièce de 1 Mio dont 135 Kio seulement portent
+		   des données paraît simplement « pleine de zéros ». */
+		if (!m.resident && m.tailleValide < m.tailleAnnoncee)
+			o.add(L"ValidDataBytes", Json::num(m.tailleValide));
 		o.add(L"MftEntry",      Json::num(m.mftEntry));
 		if (m.resident) o.add(L"ResidentData", Json::boolean(true));
 		ajouterDate(o, L"Extracted",         m.extraitUtc);
