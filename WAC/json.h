@@ -66,10 +66,35 @@ public:
     static Json num(unsigned long v)       { return num((unsigned long long)v); }
 
     // --- construction ------------------------------------------------------
-    /*! Ajoute une paire clé/valeur (objet). */
+    /*! Ajoute une paire clé/valeur (objet) — SAUF si la valeur est vide.
+     *
+     *  RÈGLE UNIQUE : un champ sans valeur n'est pas émis. Une clé vide se lit
+     *  comme une lecture ratée, et ne se distingue pas de « la source ne
+     *  contient pas cette valeur ». La règle était appliquée collecteur par
+     *  collecteur, donc inégalement : une collecte réelle comptait encore
+     *  129 837 `null` dans events.json, et des chaînes ou tableaux vides dans
+     *  les tâches planifiées, Amcache, Shimcache, les raccourcis, les shellbags…
+     *  Elle vit désormais ici, là où tout champ passe, pour que le prochain
+     *  collecteur ne puisse pas l'oublier.
+     *
+     *  Vide : `null`, chaîne vide, objet ou tableau sans élément. Un nombre nul
+     *  ou un booléen faux sont des valeurs, et sont émis. Les éléments de
+     *  tableau (`push`) ne sont pas concernés : un fichier sans entrée reste
+     *  « [] », ce qui signifie « aucune entrée trouvée ». */
     Json& add(const std::wstring& cle, Json valeur) {
+        if (valeur.vide()) return *this;
         items_.emplace_back(cle, std::move(valeur));
         return *this;
+    }
+    /*! true pour `null`, une chaîne vide, un objet ou un tableau sans élément. */
+    bool vide() const {
+        switch (kind_) {
+        case Kind::Null: return true;
+        case Kind::Str:  return scalar_.empty();
+        case Kind::Obj:
+        case Kind::Arr:  return items_.empty();
+        default:         return false;
+        }
     }
     /*! Fusionne les membres d'un autre objet dans celui-ci (mise à plat).
      *  Utile quand un sous-objet doit apparaître au même niveau que le parent. */

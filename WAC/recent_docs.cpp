@@ -322,7 +322,7 @@ Json RecentDoc::toJson() {
 	o.add(L"WorkingDirectory",  Json::str(workingDirectory));
 	o.add(L"Arguments",         Json::str(arguments));
 	o.add(L"IconLocation",      Json::str(iconLocation));
-	o.add(L"VolumeDrive Type",  Json::str(volumeDriveType));
+	o.add(L"VolumeDriveType",   Json::str(volumeDriveType));
 	o.add(L"VolumeSerial",      Json::str(volumeSerial));
 	o.add(L"VolumeLabel",       Json::str(volumeLabel));
 	o.add(L"NetName",           Json::str(netName));

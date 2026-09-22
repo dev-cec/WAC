@@ -212,9 +212,12 @@ Json ScheduledTask::toJson() const {
 			j.add(L"WorkingDirectory", Json::str(a.workingDir));
 		}
 		else {
-			j.add(L"ClassId",      Json::str(a.classId));
-			j.add(L"ClassId Name", Json::str(trans_guid_to_wstring(a.classId)));
-			j.add(L"data",         Json::str(a.data));
+			/* « ClassId Name » portait une espace, et « data » était la seule clé
+			   en minuscules de toute la sortie : deux formes qu'un outil de
+			   requête traite mal et qui ne suivent pas le nommage commun. */
+			j.add(L"ClassId",     Json::str(a.classId));
+			j.add(L"ClassIdName", Json::str(trans_guid_to_wstring(a.classId)));
+			j.add(L"Data",        Json::str(a.data));
 		}
 		jsonActions.push(std::move(j));
 	}
