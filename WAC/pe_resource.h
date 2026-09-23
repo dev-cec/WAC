@@ -1,93 +1,94 @@
 #pragma once
 
-/*  pe_resource.h — LECTURE DES RESSOURCES D'UN BINAIRE PE, HORS LIGNE.
+/*! \file
+ *  \brief Reading the resources of a PE binary, offline.
  *
- *  POURQUOI. Le message en clair d'un événement n'est PAS dans le journal : le
- *  journal ne contient que l'identifiant de l'événement et ses données. Le texte
- *  vit dans le fichier de ressources du fournisseur, et c'est `EvtFormatMessage`
- *  qui les réunissait — au prix d'un appel au système examiné. Mesuré sur une
- *  collecte réelle : 14 046 événements sur 102 627 portaient un message, dont
- *  97 % venaient de fournisseurs modernes.
+ *  WHY. An event's plain-text message is NOT in the log: the log holds only the
+ *  event's identifier and its data. The text lives in the provider's resource
+ *  file, and it was `EvtFormatMessage` that brought them together — at the price
+ *  of a call to the examined system. Measured on a real collection: 14,046
+ *  events out of 102,627 carried a message, 97 % of which came from modern
+ *  providers.
  *
- *  Deux ressources sont nécessaires, et elles vivent dans le même binaire :
+ *  Two resources are needed, and they live in the same binary:
  *
- *    MESSAGETABLE   la table des textes, indexée par identifiant de message.
- *                   Sur un système localisé elle n'est pas dans la DLL mais dans
- *                   son fichier satellite `<langue>\<nom>.mui`.
- *    WEVT_TEMPLATE  les métadonnées du fournisseur, qui font le lien entre un
- *                   identifiant d'ÉVÉNEMENT et un identifiant de MESSAGE. Sans
- *                   elle, on ne sait pas quel texte va avec quel événement.
+ *    MESSAGETABLE   the table of texts, indexed by message identifier. On a
+ *                   localised system it is not in the DLL but in its satellite
+ *                   file `<language>\<name>.mui`.
+ *    WEVT_TEMPLATE  the provider's metadata, which tie an EVENT identifier to a
+ *                   MESSAGE identifier. Without it, one does not know which
+ *                   text goes with which event.
  *
- *  Ce module ne fait qu'une chose : rendre le contenu brut d'une ressource
- *  donnée. Son interprétation appartient à message_table.h et wevt.h.
+ *  This module does one thing only: return the raw content of a given resource.
+ *  Interpreting it belongs to message_table.h and wevt.h.
  *
- *  CE QUI REND LA LECTURE D'UN PE DÉLICATE ICI. Les adresses dans le répertoire
- *  de ressources sont des adresses VIRTUELLES (RVA), pas des positions dans le
- *  fichier. Il faut donc traduire chaque RVA par la table des sections — et
- *  cette traduction est le seul endroit où une implémentation se trompe
- *  silencieusement, en lisant des octets pris ailleurs dans le binaire.
+ *  WHAT MAKES READING A PE DELICATE HERE. The addresses in the resource
+ *  directory are VIRTUAL addresses (RVA), not positions in the file. Every RVA
+ *  must therefore be translated through the section table — and that
+ *  translation is the one place where an implementation goes wrong silently, by
+ *  reading bytes taken elsewhere in the binary.
  *
- *  Les fichiers viennent de la machine examinée : chaque en-tête, chaque
- *  décalage et chaque compteur est borné par la taille réelle du fichier, et un
- *  binaire malformé rend une ressource vide plutôt que de faire lire hors zone.
+ *  The files come from the examined machine: every header, every offset and
+ *  every counter is bounded by the file's real size, and a malformed binary
+ *  returns an empty resource rather than having memory read out of range.
  *
- *  C++ portable, aucune dépendance : vérifiable hors Windows (cf. pe_resource_test).
+ *  Portable C++, no dependency: verifiable outside Windows (see
+ *  pe_resource_test).
  */
 
 #include <cstdint>
 #include <string>
 #include <vector>
 
-//! Types de ressources utiles ici. RT_MESSAGETABLE est standard (11) ;
-//! WEVT_TEMPLATE est un type NOMMÉ, propre aux fournisseurs d'événements.
+//! Resource types useful here. RT_MESSAGETABLE is standard (11);
+//! WEVT_TEMPLATE is a NAMED type, specific to the event providers.
 const uint32_t PE_RT_MESSAGETABLE = 11;
 
-/*! Charge un binaire PE en mémoire et donne accès à ses ressources. */
+/*! Loads a PE binary into memory and gives access to its resources. */
 class PeResource {
 public:
-	/*! Ouvre le fichier et valide ses en-têtes.
-	*  @param chemin binaire à lire (une copie extraite, jamais l'original)
-	*  @return vrai si le fichier est un PE dont le répertoire de ressources est
-	*          exploitable */
+	/*! Opens the file and validates its headers.
+	*  @param path the binary to read (an extracted copy, never the original)
+	*  @return true if the file is a PE whose resource directory is usable */
 	bool open(const std::wstring& path);
 
 	//! Vrai si `ouvrir` a abouti.
 	bool open() const { return open_; }
 
-	//! Message d'erreur si `ouvrir` a échoué.
+	//! Error message if `open` failed.
 	const std::wstring& error() const { return error_; }
 
-	/*! Contenu d'une ressource désignée par un type NUMÉRIQUE.
-	*  @param type par exemple PE_RT_MESSAGETABLE
-	*  @param langue identifiant de langue voulu, ou 0 pour la première trouvée
-	*  @return les octets de la ressource, vide si absente */
+	/*! Content of a resource named by a NUMERIC type.
+	*  @param type for example PE_RT_MESSAGETABLE
+	*  @param language wanted language identifier, or 0 for the first one found
+	*  @return the bytes of the resource, empty if absent */
 	std::vector<uint8_t> resource(uint32_t type, uint32_t language = 0) const;
 
-	/*! Contenu d'une ressource désignée par un type NOMMÉ.
-	*  @param nomType par exemple L"WEVT_TEMPLATE" (comparaison sans casse)
-	*  @param langue identifiant de langue voulu, ou 0 pour la première trouvée
-	*  @return les octets de la ressource, vide si absente */
+	/*! Content of a resource named by a NAMED type.
+	*  @param typeName for example L"WEVT_TEMPLATE" (comparison without regard to case)
+	*  @param language wanted language identifier, or 0 for the first one found
+	*  @return the bytes of the resource, empty if absent */
 	std::vector<uint8_t> namedResource(const std::wstring& typeName,
 	                                     uint32_t language = 0) const;
 
-	/*! Types de ressources présents, pour diagnostic.
-	*  @return libellés « 11 » pour les types numériques, le nom pour les autres */
+	/*! Resource types present, for diagnosis.
+	*  @return "11" for the numeric types, the name for the others */
 	std::vector<std::wstring> typesPresent() const;
 
 private:
 	std::vector<uint8_t> file_;
 	bool open_ = false;
 	std::wstring error_;
-	uint32_t resourcesRva_ = 0;     //!< RVA du répertoire de ressources
+	uint32_t resourcesRva_ = 0;     //!< RVA of the resource directory
 	uint32_t resourcesSize_ = 0;
-	size_t   resourcesOffset_ = 0;  //!< sa position DANS LE FICHIER
+	size_t   resourcesOffset_ = 0;  //!< its position IN THE FILE
 
-	//! Traduit une adresse virtuelle en position dans le fichier, 0 si hors zone.
+	//! Translates a virtual address into a position in the file, 0 if out of range.
 	size_t offsetDeRva(uint32_t rva) const;
 	struct Section { uint32_t rva, virtualSize, fileOffset, rawSize; };
 	std::vector<Section> sections_;
 
-	//! Parcourt un niveau du répertoire de ressources.
+	//! Walks one level of the resource directory.
 	std::vector<uint8_t> find(uint32_t type, const std::wstring& typeName,
 	                             uint32_t language) const;
 };

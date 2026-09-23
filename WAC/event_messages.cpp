@@ -11,22 +11,24 @@
 #include <fstream>
 #include <vector>
 
-/*  event_messages.cpp — voir event_messages.h pour la chaîne à réunir.
- *  Ici, la mécanique : recherche du fichier, extraction à la demande, cache.
+/*! \file
+ *  \brief See event_messages.h for the chain to bring together.
+ *  Here, the mechanics: finding the file, extracting it on demand, caching.
  */
 
 namespace {
 
-//! Ce qu'on sait d'un fournisseur, une fois ses ressources lues (ou non).
+//! What is known of a provider, once its resources have been read (or not).
 struct Provider {
-	bool usable = false;         //!< les deux ressources ont été chargées
-	WevtMetadata metadata;     //!< événement -> identifiant de message
-	TableMessages   messages;        //!< identifiant de message -> modèle
-	/*! Table du fichier de paramètres (ParameterFileName) : libellés des valeurs « %%nnnn ». Pour
-	 *  Security-Auditing, c'est msobjs.dll, et non le binaire du fournisseur. */
+	bool usable = false;         //!< both resources were loaded
+	WevtMetadata metadata;     //!< event -> message identifier
+	TableMessages   messages;        //!< message identifier -> template
+	/*! Table of the parameter file (ParameterFileName): labels of the "%%nnnn"
+	 *  values. For Security-Auditing, that is msobjs.dll, and not the provider's
+	 *  binary. */
 	TableMessages   parameters;
-	std::wstring    file;         //!< chemin d'origine du binaire de ressources
-	std::wstring    reason;           //!< pourquoi il est inutilisable
+	std::wstring    file;         //!< original path of the resource binary
+	std::wstring    reason;           //!< why it is unusable
 };
 
 std::map<std::wstring, std::unique_ptr<Provider>> g_cache;   // guid -> fournisseur
@@ -34,7 +36,7 @@ bool g_ready = false;
 size_t g_failures = 0;
 unsigned long long g_resolved = 0, g_bytes = 0;
 
-//! GUID en minuscules, accolades comprises : la clé de registre l'écrit ainsi.
+//! GUID in lower case, braces included: that is how the registry key writes it.
 std::wstring normalizeGuid(const std::wstring& g) {
 	std::wstring r;
 	for (wchar_t c : g) r += (c >= L'A' && c <= L'Z') ? (wchar_t)(c - L'A' + L'a') : c;
@@ -42,7 +44,7 @@ std::wstring normalizeGuid(const std::wstring& g) {
 	return r;
 }
 
-//! Vrai si le fichier commence par la signature d'un binaire PE.
+//! True if the file starts with the signature of a PE binary.
 bool isValidPe(const std::wstring& path) {
 	std::ifstream f(std::filesystem::path(path), std::ios::binary);
 	if (!f) return false;
@@ -51,37 +53,39 @@ bool isValidPe(const std::wstring& path) {
 	return f.gcount() == 2 && head[0] == 'M' && head[1] == 'Z';
 }
 
-/*! Extrait un fichier du volume vers la consigne, puis le recopie dans le
- *  travail, et rend le chemin de travail.
+/*! Extracts a file from the volume into the exhibit store, then copies it into
+ *  the working directory, and returns the working path.
  *
- *  La discipline de la consigne s'applique à ces binaires comme au reste : la
- *  copie brute est identifiée par ses empreintes et n'est jamais relue en
- *  écriture ; c'est la copie de travail qu'on ouvre.
+ *  The discipline of the exhibit store applies to those binaries as to the
+ *  rest: the raw copy is identified by its fingerprints and is never reopened
+ *  for writing; it is the working copy that is opened.
  *
- *  Windows 10 et 11 compressent leurs binaires système avec WOF — « Compact
- *  OS » : l'attribut `$DATA` est creux et la charge utile vit dans le flux nommé
- *  `WofCompressedData`. La lecture brute le détend (cf. xpress.h) ; rien n'est
- *  ouvert par l'API sur le système examiné.
+ *  Windows 10 and 11 compress their system binaries with WOF — "Compact OS":
+ *  the `$DATA` attribute is sparse and the payload lives in the named stream
+ *  `WofCompressedData`. The raw reading decompresses it (see xpress.h); nothing
+ *  is opened through the API on the examined system.
  *
- *  CANDIDATS ABSENTS. Les satellites `.mui` se cherchent langue par langue :
- *  la plupart des candidats n'existent pas, et ce n'est pas un échec de
- *  collecte. Ils ne sont donc pas inscrits à la consigne — 136 « pièces en
- *  échec » y figuraient pour des langues simplement non installées, noyant les
- *  vrais échecs. Seul un fichier présent mais illisible y est consigné.
+ *  ABSENT CANDIDATES. The `.mui` satellites are looked for language by
+ *  language: most of the candidates do not exist, and that is not a collection
+ *  failure. They are therefore not recorded in the exhibit store — 136 "failed
+ *  exhibits" appeared there for languages that were simply not installed,
+ *  drowning the real failures. Only a file that is present but unreadable is
+ *  recorded.
  *
- *  @return le chemin lisible, ou chaîne vide en cas d'échec
+ *  @return the readable path, or an empty string on failure
  */
 std::wstring extractResource(const std::wstring& absolutePath) {
 	const std::wstring working = extractedPath(absolutePath);
 	std::error_code ec;
-	if (std::filesystem::exists(working, ec)) return working;   // deja extrait
+	if (std::filesystem::exists(working, ec)) return working;   // already extracted
 
 	const std::wstring volume  = volumeOfPath(absolutePath);
 	const std::wstring relative = pathRelativeToVolume(absolutePath);
 	const std::wstring target   = pathUnder(exhibitStoreFolder(), absolutePath);
-	/* Déjà en consigne — prélevé comme binaire cité par un artefact (--binary), et
-	   pas encore recopié vers le travail : on ne le réextrait pas, ce qui
-	   réécrirait une pièce scellée et la déclarerait deux fois. */
+	/* Already in the exhibit store — collected as a binary cited by an artefact
+	   (--binary), and not yet copied into the working directory: it is not
+	   extracted again, which would rewrite a sealed exhibit and declare it
+	   twice. */
 	if (std::filesystem::exists(target, ec)) {
 		if (!isValidPe(target)) return std::wstring();
 		std::filesystem::create_directories(std::filesystem::path(working).parent_path(), ec);
@@ -97,48 +101,49 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 	                 && (res[0] == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)
 	                  || res[0] == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND));
 	if (absent) {
-		// Candidat inexistant : ni pièce, ni répertoire vide dans la consigne.
+		// A candidate that does not exist: neither an exhibit, nor an empty directory
+// in the exhibit store.
 		std::filesystem::remove(std::filesystem::path(target).parent_path(), ec);
 		return std::wstring();
 	}
 	ExhibitStoreAdd(reading, L"Lecture brute NTFS (\\\\.\\" + volume
-	                        + L": — fichier de ressources d'un fournisseur d'evenements)");
+	                        + L": — resource file of an event provider)");
 	const bool brutOk = SUCCEEDED(hr) && !res.empty() && SUCCEEDED(res[0]);
 	if (!brutOk)
-		log(3, L"🔈Lecture brute infructueuse, repli attendu : " + absolutePath);
+		log(3, L"🔈Raw reading unsuccessful, fallback expected: " + absolutePath);
 	else
 		for (const RawHiveExtraction& e : reading) g_bytes += e.fingerprints.bytes;
 
-	/*  AUCUN REPLI PAR L'API. Ces binaires sont compresses par WOF
-	    (« Compact OS ») : leur attribut $DATA est creux et le contenu vit dans un
-	    flux nomme. La lecture brute les traite desormais entierement
-	    (cf. xpress.h), et rien n'est donc ouvert sur le systeme examine.
-	    Un fichier qui reste illisible l'est pour une autre raison — absent, ou
-	    compresse en LZX, que WAC ne detend pas — et il est signale comme tel
-	    plutot que lu par une voie qui laisserait une trace. */
+	/*  NO FALLBACK THROUGH THE API. Those binaries are compressed by WOF
+	    ("Compact OS"): their $DATA attribute is sparse and the content lives in a
+	    named stream. The raw reading now handles them entirely (see xpress.h),
+	    and nothing is therefore opened on the examined system.
+	    A file that stays unreadable is so for another reason — absent, or
+	    compressed with LZX, which WAC does not decompress — and it is reported as
+	    such rather than read by a route that would leave a trace. */
 	if (!brutOk || !isValidPe(target)) {
-		log(2, L"🔥Binaire de ressources illisible en lecture brute : " + absolutePath);
+		log(2, L"🔥Resource binary unreadable by raw reading: " + absolutePath);
 		return std::wstring();
 	}
 
-	// Copie vers le travail : c'est là que la lecture aura lieu.
+	// Copy into the working directory: that is where the reading will happen.
 	std::filesystem::create_directories(std::filesystem::path(working).parent_path(), ec);
 	std::filesystem::copy_file(target, working,
 	                           std::filesystem::copy_options::overwrite_existing, ec);
 	if (ec) {
-		log(2, L"🔥Copie de travail impossible : " + working);
+		log(2, L"🔥Cannot make the working copy: " + working);
 		return std::wstring();
 	}
 	return working;
 }
 
-/*! Langues d'interface à essayer pour trouver un satellite, dans l'ordre.
+/*! Interface languages to try to find a satellite, in order.
  *
- *  Relevées UNE FOIS : `PreferredUILanguages` est une valeur MULTI_SZ — la lire
- *  comme une chaîne simple ne rendait que la première langue, ou rien. Les
- *  candidats usuels ne servent qu'en dernier recours, et tenter cinq langues
- *  pour chacun des quelque cent fournisseurs d'une collecte coûte cinq cents
- *  résolutions de chemin pour rien.
+ *  Read ONCE: `PreferredUILanguages` is a MULTI_SZ value — reading it as a
+ *  plain string returned only the first language, or nothing. The usual
+ *  candidates serve only as a last resort, and trying five languages for each of
+ *  the hundred or so providers of a collection costs five hundred path
+ *  resolutions for nothing.
  */
 const std::vector<std::wstring>& interfaceLanguages() {
 	static std::vector<std::wstring> languages;
@@ -158,19 +163,19 @@ const std::vector<std::wstring>& interfaceLanguages() {
 		for (const std::wstring& d : languages) if (d == l) { already = true; break; }
 		if (!already) languages.push_back(l);
 	}
-	log(2, L"❇️Langues d'interface essayees pour les satellites .mui : "
+	log(2, L"❇️Interface languages tried for the .mui satellites: "
 	     + std::to_wstring(languages.size()) + L" (" + (languages.empty() ? L"-" : languages[0]) + L"…)");
 	return languages;
 }
 
-/*! Cherche le satellite localisé d'un binaire de ressources.
+/*! Looks for the localised satellite of a resource binary.
  *
- *  Sur un système localisé, la table des messages n'est PAS dans la DLL : elle
- *  est dans `<répertoire>\<langue>\<nom>.mui`. La langue n'étant pas connue
- *  d'avance, les candidats les plus courants sont essayés, puis la langue
- *  relevée dans la ruche si elle y figure.
+ *  On a localised system, the message table is NOT in the DLL: it is in
+ *  `<directory>\<language>\<name>.mui`. The language not being known in
+ *  advance, the most common candidates are tried, then the language read in the
+ *  hive if it appears there.
  *
- *  @return le chemin de travail du .mui, ou chaîne vide s'il n'y en a pas
+ *  @return the working path of the .mui, or an empty string if there is none
  */
 std::wstring findMui(const std::wstring& absolutePath) {
 	const std::filesystem::path p = absolutePath;
@@ -188,14 +193,14 @@ std::wstring findMui(const std::wstring& absolutePath) {
 	return std::wstring();
 }
 
-/*! Charge les ressources d'un fournisseur, une seule fois. */
-/*! Chemins où chercher un fichier déclaré dans une clé de fournisseur.
+/*! Loads a provider's resources, only once. */
+/*! Paths where to look for a file declared in a provider's key.
  *
- *  DEUX CANDIDATS. Un chemin RELATIF dans une clé de fournisseur est relatif à
- *  `System32`, alors que pour un service il l'est à `%SystemRoot%` —
- *  `cheminBinaire` applique cette seconde règle. Constaté : un
- *  « storagewmi.dll » nu donnait « C:\Windows\storagewmi.dll », introuvable,
- *  au lieu de « C:\Windows\System32\storagewmi.dll ». */
+ *  TWO CANDIDATES. A RELATIVE path in a provider's key is relative to
+ *  `System32`, whereas for a service it is relative to `%SystemRoot%` —
+ *  `binaryPath` applies that second rule. Seen: a bare "storagewmi.dll" gave
+ *  "C:\Windows\storagewmi.dll", which does not exist, instead of
+ *  "C:\Windows\System32\storagewmi.dll". */
 std::vector<std::wstring> candidatesFor(const std::wstring& declare) {
 	const std::wstring resolved = binaryPath(declare);
 	std::vector<std::wstring> candidates;
@@ -207,8 +212,8 @@ std::vector<std::wstring> candidatesFor(const std::wstring& declare) {
 	return candidates;
 }
 
-/*! Charge la table de messages d'un fichier déclaré : dans le binaire, sinon
- *  dans son satellite localisé. Rend le nombre de messages. */
+/*! Loads the message table of a declared file: from the binary, otherwise from
+ *  its localised satellite. Returns the number of messages. */
 size_t loadTable(const std::wstring& declare, TableMessages& table, std::wstring* file) {
 	for (const std::wstring& c : candidatesFor(declare)) {
 		const std::wstring working = extractResource(c);
@@ -233,26 +238,26 @@ Provider* load(const std::wstring& guid) {
 
 	std::unique_ptr<Provider> f = std::make_unique<Provider>();
 
-	// 1. Le chemin du fichier de ressources, dans la ruche SOFTWARE.
+	// 1. The path of the resource file, in the SOFTWARE hive.
 	const std::wstring key = L"Microsoft\\Windows\\CurrentVersion\\WINEVT\\Publishers\\" + guid;
 	std::wstring path;
 	if (getRegSzValue(conf.Software, key.c_str(), L"ResourceFileName", &path) != ERROR_SUCCESS
 	    || path.empty()) {
 		if (getRegSzValue(conf.Software, key.c_str(), L"MessageFileName", &path) != ERROR_SUCCESS
 		    || path.empty()) {
-			f->reason = L"aucun fichier de ressources declare";
+			f->reason = L"no resource file declared";
 			++g_failures;
-			log(2, L"🔥Fournisseur " + guid + L" : " + f->reason);
+			log(2, L"🔥Provider " + guid + L" : " + f->reason);
 			Provider* brut = f.get();
 			g_cache.emplace(guid, std::move(f));
 			return brut;
 		}
 	}
-	// `%SystemRoot%`, `%windir%` et consorts, et chemin relatif à System32.
+	// `%SystemRoot%`, `%windir%` and the like, and a path relative to System32.
 	const std::wstring resolved = binaryPath(path);
 	const std::vector<std::wstring> candidates = candidatesFor(path);
 
-	// 2. Les métadonnées, dans le binaire lui-même.
+	// 2. The metadata, in the binary itself.
 	std::wstring workingDll;
 	for (const std::wstring& c : candidates) {
 		workingDll = extractResource(c);
@@ -260,10 +265,10 @@ Provider* load(const std::wstring& guid) {
 	}
 	if (workingDll.empty()) {
 		f->file = resolved;
-		f->reason = L"binaire de ressources illisible";
+		f->reason = L"resource binary unreadable";
 		++g_failures;
-		log(2, L"🔥Fournisseur " + guid + L" : " + f->reason + L" — candidats : "
-		     + (candidates.empty() ? L"(aucun)" : candidates[0])
+		log(2, L"🔥Provider " + guid + L" : " + f->reason + L" — candidates: "
+		     + (candidates.empty() ? L"(none)" : candidates[0])
 		     + (candidates.size() > 1 ? L" ; " + candidates[1] : L""));
 		Provider* brut = f.get();
 		g_cache.emplace(guid, std::move(f));
@@ -271,16 +276,16 @@ Provider* load(const std::wstring& guid) {
 	}
 	PeResource pe;
 	if (!pe.open(workingDll)) {
-		f->reason = L"PE illisible : " + pe.error();
+		f->reason = L"PE unreadable: " + pe.error();
 		++g_failures;
-		log(2, L"🔥Fournisseur " + guid + L" : " + f->reason + L" (" + workingDll + L")");
+		log(2, L"🔥Provider " + guid + L" : " + f->reason + L" (" + workingDll + L")");
 		Provider* brut = f.get();
 		g_cache.emplace(guid, std::move(f));
 		return brut;
 	}
 	f->metadata.analyse(pe.namedResource(L"WEVT_TEMPLATE"), guid);
 
-	// 3. Les textes : d'abord dans le satellite localisé, sinon dans le binaire.
+	// 3. The texts: first in the localised satellite, otherwise in the binary.
 	size_t nbMessages = f->messages.analyse(pe.resource(PE_RT_MESSAGETABLE));
 	if (nbMessages == 0) {
 		const std::wstring mui = findMui(f->file);
@@ -291,16 +296,15 @@ Provider* load(const std::wstring& guid) {
 		}
 	}
 
-	/* FICHIER DE PARAMÈTRES. Les valeurs énumérées d'un événement s'écrivent
-	   « %%nnnn » dans ses DONNÉES, et Windows les résout dans le fichier de
-	   paramètres du fournisseur. Les chercher dans sa propre table
-	   laissait 8 337 références brutes dans 3 700 messages de Security —
-	   « Elevated Token: %%1842 » au lieu de « Oui ». */
+	/* PARAMETER FILE. The enumerated values of an event are written "%%nnnn" in
+	   its DATA, and Windows resolves them in the provider's parameter file.
+	   Looking for them in its own table left 8,337 raw references in 3,700
+	   Security messages — "Elevated Token: %%1842" instead of "Yes". */
 	{
-		/* Le nom de la valeur est « ParameterFileName » dans la clé WINEVT du
-		   fournisseur ; « ParameterMessageFile » est celui de l'ancienne clé du
-		   service EventLog. Chercher le second seul ne trouvait rien : Security
-		   déclare le sien sous le premier (msobjs.dll). */
+		/* The name of the value is "ParameterFileName" in the provider's WINEVT key;
+		   "ParameterMessageFile" is the one of the old EventLog service key.
+		   Looking only for the second found nothing: Security declares its own
+		   under the first (msobjs.dll). */
 		std::wstring declare;
 		if ((getRegSzValue(conf.Software, key.c_str(), L"ParameterFileName", &declare) == ERROR_SUCCESS
 		     && !declare.empty())
@@ -308,22 +312,22 @@ Provider* load(const std::wstring& guid) {
 		     && !declare.empty())) {
 			std::wstring parameterFile;
 			const size_t n = loadTable(declare, f->parameters, &parameterFile);
-			log(2, L"❇️Fournisseur " + guid + L" : " + std::to_wstring(n)
-			     + L" libelle(s) de parametre — " + (parameterFile.empty() ? declare : parameterFile));
+			log(2, L"❇️Provider " + guid + L" : " + std::to_wstring(n)
+			     + L" parameter label(s) — " + (parameterFile.empty() ? declare : parameterFile));
 		}
 	}
 
 	f->usable = (f->metadata.size() > 0 && nbMessages > 0);
 	if (!f->usable) {
-		f->reason = L"metadonnees ou table de messages absentes ("
-		         + std::to_wstring(f->metadata.size()) + L" evenement(s), "
+		f->reason = L"metadata or message table absent ("
+		         + std::to_wstring(f->metadata.size()) + L" event(s), "
 		         + std::to_wstring(nbMessages) + L" message(s))";
 		++g_failures;
-		log(2, L"🔥Fournisseur " + guid + L" : " + f->reason + L" — " + f->file);
+		log(2, L"🔥Provider " + guid + L" : " + f->reason + L" — " + f->file);
 	}
 	else {
-		log(2, L"❇️Fournisseur " + guid + L" : " + std::to_wstring(f->metadata.size())
-		     + L" evenement(s), " + std::to_wstring(nbMessages) + L" message(s) — "
+		log(2, L"❇️Provider " + guid + L" : " + std::to_wstring(f->metadata.size())
+		     + L" event(s), " + std::to_wstring(nbMessages) + L" message(s) — "
 		     + f->file);
 	}
 	Provider* brut = f.get();
@@ -338,11 +342,11 @@ void MessagesInit() {
 	g_failures = 0;
 	g_resolved = 0;
 	g_bytes = 0;
-	// Sans la ruche SOFTWARE, aucun fournisseur n'est localisable : on le dit
-	// une fois plutôt qu'à chaque événement.
+	// Without the SOFTWARE hive, no provider can be located: that is said once
+	// rather than at every event.
 	g_ready = (conf.Software != NULL);
 	if (!g_ready)
-		log(2, L"🔥Ruche SOFTWARE indisponible : les messages d'evenements ne seront pas resolus");
+		log(2, L"🔥SOFTWARE hive unavailable: the event messages will not be resolved");
 }
 
 std::wstring EventMessage(const std::wstring& providerGuid,
@@ -359,10 +363,10 @@ std::wstring EventMessage(const std::wstring& providerGuid,
 	const std::wstring messageTemplate = f->messages.text(idMessage);
 	if (messageTemplate.empty()) return std::wstring();
 
-	/*  Une donnée de la forme « %%1234 » n'est pas un texte mais une RÉFÉRENCE
-	    vers un autre message de la même table — c'est ainsi que Windows encode
-	    les valeurs énumérées. Sans cette résolution, le message final afficherait
-	    « %%1234 » au lieu du libellé. */
+	/*  A piece of data of the form "%%1234" is not a text but a REFERENCE to
+	    another message of the same table — that is how Windows encodes
+	    enumerated values. Without that resolution, the final message would show
+	    "%%1234" instead of the label. */
 	std::vector<std::wstring> resolved;
 	resolved.reserve(values.size());
 	for (const std::wstring& v : values) {
@@ -372,10 +376,10 @@ std::wstring EventMessage(const std::wstring& providerGuid,
 				if (v[i] < L'0' || v[i] > L'9') { digits = false; break; }
 			if (digits) {
 				const uint32_t id = (uint32_t)wcstoul(v.c_str() + 2, nullptr, 10);
-				std::wstring t = f->parameters.text(id);           // d'abord : comme Windows
+				std::wstring t = f->parameters.text(id);           // first: as Windows does
 				if (t.empty()) t = f->messages.text(id);
-				// Un libellé de table finit par « \r\n » : inséré dans une phrase,
-				// il la couperait.
+				// A table label ends with "\r\n": inserted into a sentence, it would
+				// cut it.
 				while (!t.empty() && (t.back() == L'\n' || t.back() == L'\r' || t.back() == L' '))
 					t.pop_back();
 				resolved.push_back(t.empty() ? v : t);

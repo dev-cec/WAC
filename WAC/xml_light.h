@@ -1,58 +1,59 @@
-/*  xml_light.h — lecteur XML minimal, sans dépendance.
+/*! \file
+ *  \brief Minimal XML reader, with no dependency.
  *
- *  POURQUOI PAS MSXML. Lire les définitions de tâches planifiées hors ligne n'a
- *  d'intérêt que si l'on supprime la trace d'exécution COM ;
- *  passer par MSXML, qui est un composant COM, annulerait précisément ce
- *  bénéfice. D'où ce lecteur autonome.
+ *  WHY NOT MSXML. Reading the scheduled task definitions offline is only worth
+ *  it if the COM execution trace is removed; going through MSXML, which is a COM
+ *  component, would cancel precisely that benefit. Hence this self-contained
+ *  reader.
  *
- *  PÉRIMÈTRE ASSUMÉ. Ce n'est PAS un analyseur XML conforme : il ne gère ni les
- *  namespaces déclarés dynamiquement, ni les DTD, ni les entités autres que les
- *  cinq prédéfinies, ni les sections CDATA imbriquées. Il traite le sous-ensemble
- *  effectivement produit par le planificateur de tâches Windows, dont le schéma
- *  est étroit et stable (`<RegistrationInfo>`, `<Triggers>`, `<Actions>`,
- *  `<Principals>`, `<Settings>`).
+ *  AN ASSUMED SCOPE. This is NOT a conforming XML parser: it handles neither
+ *  dynamically declared namespaces, nor DTDs, nor entities other than the five
+ *  predefined ones, nor nested CDATA sections. It handles the subset actually
+ *  produced by the Windows task scheduler, whose schema is narrow and stable
+ *  (`<RegistrationInfo>`, `<Triggers>`, `<Actions>`, `<Principals>`,
+ *  `<Settings>`).
  *
- *  Les fichiers analysés provenant d'une machine suspecte, l'analyse est
- *  défensive : aucune récursion non bornée, aucun accès hors tampon, et tout
- *  document mal formé rend un arbre vide plutôt que de lever une exception.
+ *  The files parsed coming from a suspect machine, the parsing is defensive: no
+ *  unbounded recursion, no access out of the buffer, and any malformed document
+ *  returns an empty tree rather than throwing an exception.
  */
 #pragma once
 #include <string>
 #include <vector>
 #include <memory>
 
-/*! Un élément XML : nom, attributs, texte, enfants. */
+/*! An XML element: name, attributes, text, children. */
 struct XmlNode {
-	std::wstring name;                                  //!< nom local, sans préfixe de namespace
-	std::wstring text;                                //!< contenu textuel direct, espaces des bords retirés
+	std::wstring name;                                  //!< local name, without the namespace prefix
+	std::wstring text;                                //!< direct text content, edge spaces stripped
 	std::vector<std::pair<std::wstring, std::wstring>> attributes;
 	std::vector<std::unique_ptr<XmlNode>> children;
 
-	/*! Premier enfant portant ce nom, ou nullptr. */
+	/*! First child carrying that name, or nullptr. */
 	const XmlNode* child(const std::wstring& childName) const;
 
-	/*! Texte du premier enfant portant ce nom, ou chaîne vide.
-	 *  @param chemin nom simple, ou chemin séparé par '/' (ex. L"Actions/Exec/Command") */
+	/*! Text of the first child carrying that name, or an empty string.
+	 *  @param path a simple name, or a path separated by '/' (e.g. L"Actions/Exec/Command") */
 	std::wstring textOf(const std::wstring& path) const;
 
-	/*! Valeur d'un attribut, ou chaîne vide. */
+	/*! Value of an attribute, or an empty string. */
 	std::wstring attribute(const std::wstring& attributeName) const;
 
-	/*! Tous les descendants portant ce nom, à n'importe quelle profondeur.
-	 *  Utile pour collecter les déclencheurs ou les actions sans connaître leur
-	 *  niveau exact d'imbrication. */
+	/*! Every descendant carrying that name, at any depth.
+	 *  Useful to collect the triggers or the actions without knowing their exact
+	 *  level of nesting. */
 	std::vector<const XmlNode*> descendants(const std::wstring& wantedName) const;
 };
 
-/*! Analyse un document XML en mémoire.
- *  @param contenu document complet (UTF-16 ; l'appelant gère le décodage)
- *  @return racine, ou nullptr si le document est mal formé ou vide
+/*! Parses an XML document in memory.
+ *  @param content the complete document (UTF-16; the caller handles the decoding)
+ *  @return the root, or nullptr if the document is malformed or empty
  */
 std::unique_ptr<XmlNode> xmlParse(const std::wstring& content);
 
-/*! Lit un fichier XML encodé en UTF-8 ou UTF-16 et l'analyse.
- *  L'encodage est déduit de la marque d'ordre des octets, à défaut UTF-8 :
- *  le planificateur écrit ses tâches en UTF-16LE avec BOM.
- *  @return racine, ou nullptr si le fichier est illisible ou mal formé
+/*! Reads an XML file encoded in UTF-8 or UTF-16 and parses it.
+ *  The encoding is deduced from the byte-order mark, UTF-8 by default: the
+ *  scheduler writes its tasks in UTF-16LE with a BOM.
+ *  @return the root, or nullptr if the file is unreadable or malformed
  */
 std::unique_ptr<XmlNode> xmlReadFile(const std::wstring& path);

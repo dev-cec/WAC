@@ -1,47 +1,47 @@
 #pragma once
 
-/*  wevt.h — MESSAGE EN CLAIR D'UN ÉVÉNEMENT, RECONSTITUÉ HORS LIGNE.
+/*! \file
+ *  \brief An event's plain-text message, rebuilt offline.
  *
- *  LE PROBLÈME. Un journal d'événements ne contient pas de phrases : il contient
- *  un identifiant d'événement et des données. Le texte vit dans le fichier de
- *  ressources du fournisseur, et c'est `EvtFormatMessage` qui faisait la
- *  jonction — au prix d'un appel au système examiné. Mesuré sur une collecte
- *  réelle : 14 046 événements sur 102 627 portaient un message, et 97 % d'entre
- *  eux venaient de fournisseurs modernes.
+ *  THE PROBLEM. An event log does not hold sentences: it holds an event
+ *  identifier and data. The text lives in the provider's resource file, and it
+ *  was `EvtFormatMessage` that made the junction — at the price of a call to the
+ *  examined system. Measured on a real collection: 14,046 events out of 102,627
+ *  carried a message, and 97 % of them came from modern providers.
  *
- *  LA CHAÎNE À REMONTER, et pourquoi il faut DEUX ressources :
+ *  THE CHAIN TO WALK BACK, and why TWO resources are needed:
  *
- *      événement (identifiant + version)
- *          │   WEVT_TEMPLATE, dans la DLL du fournisseur
+ *      event (identifier + version)
+ *          │   WEVT_TEMPLATE, in the provider's DLL
  *          ▼
- *      identifiant de message
- *          │   MESSAGETABLE, dans le satellite <langue>\<nom>.mui
+ *      message identifier
+ *          │   MESSAGETABLE, in the satellite <language>\<name>.mui
  *          ▼
- *      modèle de phrase, avec des marques %1 %2 …
- *          │   données de l'événement, lues dans le journal
+ *      sentence template, with %1 %2 … marks
+ *          │   the event's data, read in the log
  *          ▼
- *      message en clair
+ *      plain-text message
  *
- *  Aucun des deux maillons ne suffit seul : la table de messages ne dit pas quel
- *  texte va avec quel événement, et les métadonnées ne contiennent aucun texte.
+ *  Neither link is enough on its own: the message table does not say which text
+ *  goes with which event, and the metadata hold no text.
  *
- *  LES FORMATS
+ *  THE FORMATS
  *
- *  MESSAGETABLE : un compte de blocs, puis des blocs { premier identifiant,
- *  dernier identifiant, décalage }, puis des entrées consécutives
- *  { longueur, drapeaux, texte }. Le drapeau de poids faible dit si le texte est
- *  en UTF-16 ou dans une page de code — s'y tromper rend un octet sur deux.
+ *  MESSAGETABLE: a count of blocks, then blocks { first identifier, last
+ *  identifier, offset }, then consecutive entries { length, flags, text }. The
+ *  low-order flag says whether the text is in UTF-16 or in a code page —
+ *  getting it wrong returns every other byte.
  *
- *  WEVT_TEMPLATE : un en-tête « CRIM », une table de fournisseurs par GUID, et
- *  pour chaque fournisseur des blocs typés par signature — « EVNT » pour les
- *  événements, « CHAN » pour les canaux, « TTBL » pour les modèles. Seul EVNT
- *  nous intéresse : il donne, par événement, l'identifiant de message.
+ *  WEVT_TEMPLATE: a "CRIM" header, a table of providers by GUID, and for each
+ *  provider blocks typed by a signature — "EVNT" for the events, "CHAN" for the
+ *  channels, "TTBL" for the templates. Only EVNT is of interest here: it gives,
+ *  per event, the message identifier.
  *
- *  Les fichiers viennent de la machine examinée : toutes les bornes sont
- *  vérifiées, et une ressource malformée rend un résultat vide plutôt que de
- *  faire lire hors zone.
+ *  The files come from the examined machine: every bound is checked, and a
+ *  malformed resource returns an empty result rather than having memory read out
+ *  of range.
  *
- *  C++ portable, aucune dépendance (cf. wevt_test).
+ *  Portable C++, no dependency (see wevt_test).
  */
 
 #include <cstdint>
@@ -49,64 +49,64 @@
 #include <string>
 #include <vector>
 
-/*! Table des messages d'un binaire, indexée par identifiant. */
+/*! Message table of a binary, indexed by identifier. */
 class TableMessages {
 public:
-	/*! Analyse une ressource MESSAGETABLE.
-	*  @param donnees contenu brut de la ressource
-	*  @return nombre de messages lus */
+	/*! Parses a MESSAGETABLE resource.
+	*  @param data raw content of the resource
+	*  @return the number of messages read */
 	size_t analyse(const std::vector<uint8_t>& data);
 
-	/*! Texte d'un identifiant de message.
-	*  @return le modèle avec ses marques %1 %2…, ou chaîne vide si absent */
+	/*! Text of a message identifier.
+	*  @return the template with its %1 %2… marks, or an empty string if absent */
 	std::wstring text(uint32_t id) const;
 
-	//! Nombre de messages connus.
+	//! Number of known messages.
 	size_t size() const { return messages_.size(); }
 
 private:
 	std::map<uint32_t, std::wstring> messages_;
 };
 
-/*! Métadonnées d'événements d'un fournisseur (ressource WEVT_TEMPLATE). */
+/*! Event metadata of a provider (the WEVT_TEMPLATE resource). */
 class WevtMetadata {
 public:
-	/*! Analyse une ressource WEVT_TEMPLATE.
-	*  @param donnees contenu brut de la ressource
-	*  @param guidFournisseur GUID du fournisseur cherché, sous la forme
-	*         « {aea1b4fa-97d1-45f2-a64c-4d69fffd92c9} » ; vide pour prendre le
-	*         premier fournisseur décrit
-	*  @return nombre d'événements décrits */
+	/*! Parses a WEVT_TEMPLATE resource.
+	*  @param data raw content of the resource
+	*  @param providerGuid GUID of the provider looked for, in the form
+	*         "{aea1b4fa-97d1-45f2-a64c-4d69fffd92c9}"; empty to take the first
+	*         provider described
+	*  @return the number of events described */
 	size_t analyse(const std::vector<uint8_t>& data,
 	                const std::wstring& providerGuid = std::wstring());
 
-	/*! Identifiant de message d'un événement.
+	/*! Message identifier of an event.
 	*
-	*  La version est essayée d'abord, puis l'identifiant seul : un fournisseur
-	*  peut décrire plusieurs versions d'un même événement, mais le journal ne
-	*  porte pas toujours celle qui a servi.
+	*  The version is tried first, then the identifier alone: a provider may
+	*  describe several versions of the same event, but the log does not always
+	*  carry the one that served.
 	*
-	*  @return l'identifiant de message, ou 0 si l'événement n'est pas décrit */
+	*  @return the message identifier, or 0 if the event is not described */
 	uint32_t messageId(uint16_t eventId, uint8_t version) const;
 
-	//! Nombre d'événements décrits.
+	//! Number of events described.
 	size_t size() const { return parIdEtVersion_.size(); }
 
 private:
 	std::map<uint32_t, uint32_t> parIdEtVersion_;   //!< (id << 8 | version) -> message
-	std::map<uint16_t, uint32_t> parId_;            //!< id -> message (première version vue)
+	std::map<uint16_t, uint32_t> parId_;            //!< id -> message (first version seen)
 };
 
-/*! Remplace les marques %1 %2 … par les données de l'événement.
+/*! Replaces the %1 %2 … marks by the event's data.
 *
-*  Windows écrit ses modèles avec des marques positionnelles, et parfois des
-*  séquences d'échappement de mise en page (`%n`, `%t`, `%%`). Une marque sans
-*  donnée correspondante est laissée telle quelle : l'effacer ferait croire à une
-*  phrase complète alors qu'il manque une valeur.
+*  Windows writes its templates with positional marks, and sometimes with
+*  layout escape sequences (`%n`, `%t`, `%%`). A mark without matching data is
+*  left as it is: erasing it would suggest a complete sentence whereas a value
+*  is missing.
 *
-*  @param modele texte issu de la table des messages
-*  @param valeurs données de l'événement, dans l'ordre (%1 est la première)
-*  @return la phrase, ou une chaîne vide si le modèle est vide
+*  @param messageTemplate text taken from the message table
+*  @param values data of the event, in order (%1 is the first)
+*  @return the sentence, or an empty string if the template is empty
 */
 std::wstring formatMessage(const std::wstring& messageTemplate,
                              const std::vector<std::wstring>& values);

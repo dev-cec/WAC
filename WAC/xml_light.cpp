@@ -7,10 +7,10 @@
 
 namespace {
 
-//! Profondeur maximale : garde-fou contre un document forgé à imbrication extrême.
+//! Maximum depth: a guard against a document forged with extreme nesting.
 constexpr unsigned MAX_DEPTH = 64;
 
-//! Retire les espaces, tabulations et retours de ligne aux deux bords.
+//! Strips the spaces, tabulations and line breaks at both edges.
 std::wstring trim(const std::wstring& s) {
 	const wchar_t* blanks = L" \t\r\n";
 	const size_t start = s.find_first_not_of(blanks);
@@ -19,10 +19,10 @@ std::wstring trim(const std::wstring& s) {
 	return s.substr(start, end - start + 1);
 }
 
-//! Remplace les cinq entités prédéfinies. Les autres sont laissées telles quelles :
-//! mieux vaut un texte fidèle qu'une substitution devinée.
+//! Replaces the five predefined entities. The others are left as they are:
+//! a faithful text is better than a guessed substitution.
 std::wstring decodeEntities(const std::wstring& s) {
-	if (s.find(L'&') == std::wstring::npos) return s;   // cas courant : rien à faire
+	if (s.find(L'&') == std::wstring::npos) return s;   // the common case: nothing to do
 	std::wstring r;
 	r.reserve(s.size());
 	for (size_t i = 0; i < s.size(); ) {
@@ -35,14 +35,14 @@ std::wstring decodeEntities(const std::wstring& s) {
 		else if (e == L"amp")  r += L'&';
 		else if (e == L"quot") r += L'"';
 		else if (e == L"apos") r += L'\'';
-		else if (e.size() > 1 && e[0] == L'#') {        // référence numérique
+		else if (e.size() > 1 && e[0] == L'#') {        // numeric reference
 			try {
 				const int code = (e[1] == L'x' || e[1] == L'X')
 					? std::stoi(e.substr(2), nullptr, 16)
 					: std::stoi(e.substr(1));
 				if (code > 0 && code < 0x110000) r += (wchar_t)code;
 			}
-			catch (...) { r += L'&' + e + L';'; }        // illisible : conservé brut
+			catch (...) { r += L'&' + e + L';'; }        // unreadable: kept raw
 		}
 		else { r += L'&' + e + L';'; }
 		i = pv + 1;
@@ -50,18 +50,18 @@ std::wstring decodeEntities(const std::wstring& s) {
 	return r;
 }
 
-//! Retire le préfixe de namespace : le schéma des tâches n'en a qu'un, implicite.
+//! Strips the namespace prefix: the task schema has only one, implicit.
 std::wstring withoutPrefix(const std::wstring& name) {
 	const size_t d = name.find(L':');
 	return (d == std::wstring::npos) ? name : name.substr(d + 1);
 }
 
-/*! Analyse un élément à partir de `pos`, positionné juste après son '<'.
- *  Rend nullptr en cas de document mal formé. */
+/*! Parses an element from `pos`, positioned just after its '<'.
+ *  Returns nullptr on a malformed document. */
 std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigned depth) {
 	if (depth > MAX_DEPTH) return nullptr;
 
-	// --- nom de la balise
+	// --- name of the tag
 	const size_t nameStart = pos;
 	while (pos < s.size() && !iswspace(s[pos]) && s[pos] != L'>' && s[pos] != L'/') ++pos;
 	if (pos >= s.size()) return nullptr;
@@ -69,7 +69,7 @@ std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigne
 	node->name = withoutPrefix(s.substr(nameStart, pos - nameStart));
 	if (node->name.empty()) return nullptr;
 
-	// --- attributs, jusqu'à '>' ou '/>'
+	// --- attributes, up to '>' or '/>'
 	bool empty = false;
 	while (pos < s.size()) {
 		while (pos < s.size() && iswspace(s[pos])) ++pos;
@@ -90,7 +90,7 @@ std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigne
 				const wchar_t quote = s[pos++];
 				const size_t dv = pos;
 				while (pos < s.size() && s[pos] != quote) ++pos;
-				if (pos >= s.size()) return nullptr;      // guillemet non fermé
+				if (pos >= s.size()) return nullptr;      // unclosed quote
 				value = decodeEntities(s.substr(dv, pos - dv));
 				++pos;
 			}
@@ -99,12 +99,12 @@ std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigne
 	}
 	if (empty) return node;                                // <balise ... />
 
-	// --- contenu : texte et enfants, jusqu'à la balise fermante
+	// --- content: text and children, up to the closing tag
 	std::wstring text;
 	while (pos < s.size()) {
 		if (s[pos] != L'<') { text += s[pos++]; continue; }
 
-		// commentaire, CDATA ou instruction : sautés (le CDATA garde son texte)
+		// comment, CDATA or instruction: skipped (the CDATA keeps its text)
 		if (s.compare(pos, 4, L"<!--") == 0) {
 			const size_t f = s.find(L"-->", pos);
 			if (f == std::wstring::npos) return nullptr;
@@ -131,12 +131,12 @@ std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigne
 			node->text = decodeEntities(trim(text));
 			return node;
 		}
-		++pos;                                              // passe le '<'
+		++pos;                                              // past the '<'
 		auto child = readElement(s, pos, depth + 1);
 		if (!child) return nullptr;
 		node->children.push_back(std::move(child));
 	}
-	return nullptr;                                         // balise jamais fermée
+	return nullptr;                                         // tag never closed
 }
 
 } // namespace
@@ -170,7 +170,7 @@ std::wstring XmlNode::attribute(const std::wstring& attributeName) const {
 
 std::vector<const XmlNode*> XmlNode::descendants(const std::wstring& wantedName) const {
 	std::vector<const XmlNode*> found;
-	// Parcours itératif : une arborescence forgée pourrait être très profonde.
+	// Iterative walk: a forged tree could be very deep.
 	std::vector<const XmlNode*> pile{ this };
 	while (!pile.empty()) {
 		const XmlNode* n = pile.back();
@@ -187,7 +187,7 @@ std::unique_ptr<XmlNode> xmlParse(const std::wstring& content) {
 	size_t pos = 0;
 	while (pos < content.size()) {
 		if (content[pos] != L'<') { ++pos; continue; }
-		// saute prologue, commentaires et doctype pour atteindre l'élément racine
+		// skips the prologue, the comments and the doctype to reach the root element
 		if (content.compare(pos, 4, L"<!--") == 0) {
 			const size_t f = content.find(L"-->", pos);
 			if (f == std::wstring::npos) return nullptr;
@@ -213,14 +213,14 @@ std::unique_ptr<XmlNode> xmlReadFile(const std::wstring& path) {
 	                          std::istreambuf_iterator<char>());
 	if (bytes.empty()) return nullptr;
 
-	// UTF-16LE avec BOM : format écrit par le planificateur de tâches.
+	// UTF-16LE with a BOM: the format the task scheduler writes.
 	if (bytes.size() >= 2 && (unsigned char)bytes[0] == 0xFF
 	                       && (unsigned char)bytes[1] == 0xFE) {
 		std::wstring w(reinterpret_cast<const wchar_t*>(bytes.data() + 2),
 		               (bytes.size() - 2) / sizeof(wchar_t));
 		return xmlParse(w);
 	}
-	// Sinon UTF-8, avec ou sans BOM.
+	// Otherwise UTF-8, with or without a BOM.
 	const int offset = (bytes.size() >= 3 && (unsigned char)bytes[0] == 0xEF
 	                      && (unsigned char)bytes[1] == 0xBB
 	                      && (unsigned char)bytes[2] == 0xBF) ? 3 : 0;

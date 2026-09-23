@@ -1,22 +1,22 @@
 #include "wevt.h"
 #include <cstring>
 
-/*  wevt.cpp — voir wevt.h pour la chaîne à remonter et les formats.
+/*! \file
+ *  \brief See wevt.h for the chain to walk back and for the formats.
  *
- *  Structures, telles que les décrit l'implémentation de référence de libyal
- *  (libfwevt) :
+ *  Structures, as libyal's reference implementation (libfwevt) describes them:
  *
- *    manifeste       « CRIM » (4), taille (4), majeur (2), mineur (2),
- *                    nombre de fournisseurs (4)                        = 16
- *    entrée          GUID (16), décalage des données (4)               = 20
- *    fournisseur     « WEVT » (4), taille (4), identifiant de message (4),
- *                    nombre de descripteurs (4), nombre d'inconnus (4) = 20
- *                    puis un décalage de 4 octets par descripteur
- *    événements      « EVNT » (4), taille (4), nombre d'événements (4),
- *                    inconnu (4)                                       = 16
- *    événement       identifiant (2), version (1), canal (1), niveau (1),
- *                    code d'opération (1), tâche (2), mots clés (8),
- *                    IDENTIFIANT DE MESSAGE (4), puis six champs de 4    = 44
+ *    manifest        "CRIM" (4), size (4), major (2), minor (2),
+ *                    number of providers (4)                        = 16
+ *    entry           GUID (16), offset of the data (4)              = 20
+ *    provider        "WEVT" (4), size (4), message identifier (4),
+ *                    number of descriptors (4), number of unknowns (4) = 20
+ *                    then an offset of 4 bytes per descriptor
+ *    events          "EVNT" (4), size (4), number of events (4),
+ *                    unknown (4)                                    = 16
+ *    event           identifier (2), version (1), channel (1), level (1),
+ *                    opcode (1), task (2), keywords (8),
+ *                    MESSAGE IDENTIFIER (4), then six fields of 4     = 44
  */
 
 namespace {
@@ -31,7 +31,7 @@ inline uint32_t rd32(const std::vector<uint8_t>& d, size_t o) {
 	     | ((uint32_t)d[o + 2] << 16) | ((uint32_t)d[o + 3] << 24);
 }
 
-//! GUID à la forme « {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} », en minuscules.
+//! GUID in the form "{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}", in lower case.
 std::wstring guidToText(const std::vector<uint8_t>& d, size_t o) {
 	if (o + 16 > d.size()) return std::wstring();
 	static const wchar_t* h = L"0123456789abcdef";
@@ -40,7 +40,7 @@ std::wstring guidToText(const std::vector<uint8_t>& d, size_t o) {
 		s += h[d[o + i] & 0x0F];
 	};
 	std::wstring s = L"{";
-	// Les trois premiers champs sont en petit boutien, les deux derniers non.
+	// The first three fields are little-endian, the last two are not.
 	for (int i : { 3, 2, 1, 0 }) oct((size_t)i, s);
 	s += L'-';
 	for (int i : { 5, 4 }) oct((size_t)i, s);
@@ -54,7 +54,7 @@ std::wstring guidToText(const std::vector<uint8_t>& d, size_t o) {
 	return s;
 }
 
-//! Comparaison de GUID sans casse ni accolades.
+//! GUID comparison, without regard to case or braces.
 bool memeGuid(std::wstring a, std::wstring b) {
 	auto normalized = [](std::wstring& s) {
 		std::wstring r;
@@ -69,12 +69,12 @@ bool memeGuid(std::wstring a, std::wstring b) {
 	return !a.empty() && a == b;
 }
 
-const size_t MAX_ENTRIES = 65536;   // garde-fou sur les compteurs du fichier
+const size_t MAX_ENTRIES = 65536;   // guard on the file's counters
 
 } // namespace
 
-//! Vrai si une ressource annonçait une taille de bloc incompatible avec son
-//! compte d'événements : la ressource est alors ignorée plutôt que lue au hasard.
+//! True if a resource declared a block size incompatible with its count of
+//! events: the resource is then ignored rather than read at random.
 bool log_wevt_pas_incoherent = false;
 
 // ---------------------------------------------------------------------------
@@ -105,20 +105,20 @@ size_t TableMessages::analyse(const std::vector<uint8_t>& d) {
 
 			std::wstring text;
 			if (flags & 0x0001) {
-				/*  UTF-16, cas des ressources modernes ; traiter le texte comme
-				    une page de code rendrait un caractère sur deux.
-				    Les unités sont lues DEUX OCTETS À LA FOIS et non par un
-				    cast vers wchar_t : ce type fait deux octets sous Windows
-				    mais QUATRE sous Linux, et le cast y relisait de l'UTF-16
-				    comme de l'UTF-32 — ce module se veut vérifiable hors
-				    Windows, la lecture doit donc l'être aussi. */
+				/*  UTF-16, the case of modern resources; treating the text as a code
+				    page would return every other character.
+				    The units are read TWO BYTES AT A TIME and not by a cast to
+				    wchar_t: that type is two bytes under Windows but FOUR under
+				    Linux, and the cast re-read UTF-16 there as UTF-32 — this
+				    module is meant to be verifiable outside Windows, so the
+				    reading must be too. */
 				text.reserve(textBytes / 2);
 				for (size_t i = 0; i + 1 < textBytes; i += 2)
 					text += (wchar_t)rd16(d, p + 4 + i);
 			}
 			else {
-				// Page de code : on élargit octet par octet, faute de savoir
-				// laquelle. Les modèles de messages sont en pratique latins.
+				// Code page: the bytes are widened one by one, for want of knowing
+				// which one. Message templates are Latin in practice.
 				text.reserve(textBytes);
 				for (size_t i = 0; i < textBytes; ++i)
 					text += (wchar_t)(unsigned char)d[p + 4 + i];
@@ -163,13 +163,13 @@ size_t WevtMetadata::analyse(const std::vector<uint8_t>& d,
 		const uint32_t nDescriptors = rd32(d, offset + 12);
 		if (nDescriptors > MAX_ENTRIES) continue;
 
-		/*  Les descripteurs sont typés PAR LA SIGNATURE trouvée à leur
-		    décalage, et non par leur rang : l'ordre des blocs n'est pas garanti,
-		    et s'appuyer sur lui ferait lire des canaux comme des événements.
-		    Chaque descripteur fait HUIT octets — un décalage et un champ
-		    inexploité. Les lire par quatre donne des décalages qui pointent
-		    n'importe où, et le bloc des événements n'est jamais trouvé
-		    (constaté : 0 événement décrit sur un fournisseur qui en décrit 74). */
+		/*  The descriptors are typed BY THE SIGNATURE found at their offset,
+		    and not by their rank: the order of the blocks is not guaranteed, and
+		    relying on it would have channels read as events.
+		    Each descriptor is EIGHT bytes — an offset and an unused field.
+		    Reading them four by four gives offsets that point anywhere, and the
+		    block of events is never found (seen: 0 events described on a provider
+		    that describes 74). */
 		for (uint32_t k = 0; k < nDescriptors; ++k) {
 			const size_t dd = offset + 20 + (size_t)k * 8;
 			if (dd + 4 > d.size()) break;
@@ -181,21 +181,21 @@ size_t WevtMetadata::analyse(const std::vector<uint8_t>& d,
 			const uint32_t nEvents = rd32(d, block + 8);
 			if (nEvents == 0 || nEvents > MAX_ENTRIES) continue;
 
-			/*  LE PAS EST DÉDUIT DE LA TAILLE ANNONCÉE, et non codé en dur.
-			    Un descripteur d'événement fait 48 octets — identifiant,
-			    version, canal, niveau, code d'opération, tâche, mots clés, puis
-			    huit champs de quatre octets dont l'identifiant de message.
-			    Le déduire rend la lecture robuste à une évolution du format et,
-			    surtout, la rend VÉRIFIABLE : un pas erroné de quatre octets
-			    (constaté en écrivant ce code) donne des enregistrements dont un
-			    sur douze seulement est cohérent, sans aucune erreur visible. */
+			/*  THE STEP IS DEDUCED FROM THE DECLARED SIZE, and not hard-coded.
+			    An event descriptor is 48 bytes — identifier, version, channel,
+			    level, opcode, task, keywords, then eight fields of four bytes
+			    among which the message identifier.
+			    Deducing it makes the reading robust to a change of the format
+			    and, above all, makes it VERIFIABLE: a wrong step of four bytes
+			    (seen while writing this code) gives records of which only one in
+			    twelve is coherent, with no visible error. */
 			size_t pas = 48;
 			if (blockSize > 16) {
 				const size_t deduced = (size_t)(blockSize - 16) / nEvents;
 				if (deduced >= 40 && deduced <= 128) pas = deduced;
 				else {
 					log_wevt_pas_incoherent = true;
-					continue;               // taille et compte se contredisent
+					continue;               // size and count contradict each other
 				}
 			}
 
@@ -205,7 +205,7 @@ size_t WevtMetadata::analyse(const std::vector<uint8_t>& d,
 				const uint16_t id      = rd16(d, ev);
 				const uint8_t  version = d[ev + 2];
 				const uint32_t message = rd32(d, ev + 16);
-				// 0 et 0xFFFFFFFF marquent tous deux « pas de message ».
+				// 0 and 0xFFFFFFFF both mark "no message".
 				if (message == 0 || message == 0xFFFFFFFFu) continue;
 				parIdEtVersion_.emplace(((uint32_t)id << 8) | version, message);
 				parId_.emplace(id, message);
@@ -226,7 +226,7 @@ uint32_t WevtMetadata::messageId(uint16_t eventId,
 }
 
 // ---------------------------------------------------------------------------
-//  Substitution des marques
+//  Substitution of the marks
 // ---------------------------------------------------------------------------
 
 std::wstring formatMessage(const std::wstring& messageTemplate,
@@ -241,31 +241,31 @@ std::wstring formatMessage(const std::wstring& messageTemplate,
 
 		const wchar_t next = messageTemplate[i + 1];
 		if (next == L'%') { r += L'%'; ++i; continue; }
-		if (next == L'n') { r += L'\n'; ++i; continue; }   // saut de ligne
+		if (next == L'n') { r += L'\n'; ++i; continue; }   // line break
 		if (next == L't') { r += L'\t'; ++i; continue; }   // tabulation
 		if (next == L'r') { r += L'\r'; ++i; continue; }   // retour chariot
 		if (next == L'b') { r += L' ';  ++i; continue; }   // espace
 		if (next == L'.' || next == L'!') { r += next; ++i; continue; }
-		/*  « %0 » TERMINE le message, sans saut de ligne final (convention de
-		    FormatMessage). Il était recopié tel quel : « …supprimées suite à la
-		    suppression du profil utilisateur.\n%0 ». Un chiffre qui suit ferait
-		    une marque %0N, qui n'existe pas : même traitement. */
+		/*  "%0" ENDS the message, without a final line break (FormatMessage's
+		    convention). It was copied as it was: "…deleted following the
+		    deletion of the user profile.\n%0". A digit that follows would make a
+		    %0N mark, which does not exist: same treatment. */
 		if (next == L'0') {
 			while (!r.empty() && (r.back() == L'\n' || r.back() == L'\r')) r.pop_back();
 			return r;
 		}
 		if (next < L'0' || next > L'9') { r += messageTemplate[i]; continue; }
 
-		// Marque positionnelle : un ou plusieurs chiffres.
+		// Positional mark: one or several digits.
 		size_t j = i + 1;
 		unsigned long position = 0;
 		while (j < messageTemplate.size() && messageTemplate[j] >= L'0' && messageTemplate[j] <= L'9') {
 			position = position * 10 + (unsigned long)(messageTemplate[j] - L'0');
 			++j;
-			if (position > 999) break;              // absurde : on abandonne
+			if (position > 999) break;              // nonsensical: give up
 		}
-		/*  Certains modèles écrivent « %1!s! » : le format entre points
-		    d'exclamation est une consigne d'affichage, pas du texte. */
+		/*  Some templates write "%1!s!": the format between exclamation marks
+		    is a display instruction, not text. */
 		if (j < messageTemplate.size() && messageTemplate[j] == L'!') {
 			const size_t end = messageTemplate.find(L'!', j + 1);
 			if (end != std::wstring::npos) j = end + 1;
@@ -275,9 +275,9 @@ std::wstring formatMessage(const std::wstring& messageTemplate,
 			i = j - 1;
 		}
 		else {
-			/*  MARQUE SANS DONNÉE : laissée telle quelle. L'effacer ferait
-			    croire à une phrase complète alors qu'il manque une valeur — et
-			    c'est précisément ce que l'analyste doit voir. */
+			/*  A MARK WITHOUT DATA: left as it is. Erasing it would suggest a
+			    complete sentence whereas a value is missing — and that is
+			    precisely what the analyst must see. */
 			r.append(messageTemplate, i, j - i);
 			i = j - 1;
 		}

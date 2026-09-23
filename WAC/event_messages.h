@@ -1,71 +1,71 @@
 #pragma once
 
-/*  event_messages.h — MESSAGE EN CLAIR D'UN ÉVÉNEMENT, SANS L'API DU SYSTÈME.
+/*! \file
+ *  \brief An event's plain-text message, without the system's API.
  *
- *  CE QUE CE MODULE REMPLACE. `EvtFormatMessage` rendait la phrase lisible d'un
- *  événement en allant chercher, dans le fichier de ressources du fournisseur,
- *  le modèle de texte correspondant. C'était le dernier service rendu par
- *  l'API : la lecture hors ligne des journaux donnait tout SAUF ce texte, absent
- *  pour environ un événement sur sept (14 046 sur 102 627 mesurés).
+ *  WHAT THIS MODULE REPLACES. `EvtFormatMessage` returned the readable sentence
+ *  of an event by going to look, in the provider's resource file, for the
+ *  matching text template. That was the last service the API rendered: the
+ *  offline reading of the logs gave everything EXCEPT that text, absent for
+ *  about one event in seven (14,046 out of 102,627 measured).
  *
- *  CE QU'IL FAUT RÉUNIR, et où chaque pièce se trouve :
+ *  WHAT MUST BE BROUGHT TOGETHER, and where each piece is found:
  *
- *    le GUID du fournisseur            dans l'événement lui-même
- *    le chemin de son fichier          ruche SOFTWARE, sous
+ *    the provider's GUID               in the event itself
+ *    the path of its file              SOFTWARE hive, under
  *                                      WINEVT\Publishers\{guid}
- *    l'identifiant de message          ressource WEVT_TEMPLATE du fichier
- *    le modèle de phrase               ressource MESSAGETABLE — non pas du
- *                                      fichier lui-même, mais de son satellite
- *                                      <langue>\<nom>.mui sur un système localisé
- *    les valeurs à insérer             données de l'événement
+ *    the message identifier            WEVT_TEMPLATE resource of that file
+ *    the sentence template             MESSAGETABLE resource — not of the file
+ *                                      itself, but of its satellite
+ *                                      <language>\<name>.mui on a localised system
+ *    the values to insert              the event's data
  *
- *  EXTRACTION À LA DEMANDE. Ces fichiers de ressources ne font pas partie des
- *  artefacts : ce sont des binaires système quelconques, et il y en a près d'un
- *  millier de déclarés. Les extraire tous coûterait des centaines de mégaoctets
- *  pour des fournisseurs dont la plupart n'ont produit aucun événement. Chaque
- *  fichier est donc extrait au moment où un événement le réclame, une seule
- *  fois, par lecture brute NTFS — comme tout le reste. Il rejoint la consigne,
- *  y est identifié par ses empreintes, puis est recopié dans le répertoire de
- *  travail avant d'être lu.
+ *  EXTRACTION ON DEMAND. Those resource files are not artefacts: they are
+ *  ordinary system binaries, and nearly a thousand of them are declared.
+ *  Extracting them all would cost hundreds of megabytes for providers most of
+ *  which produced no event at all. Each file is therefore extracted at the
+ *  moment an event calls for it, only once, by raw NTFS reading — like
+ *  everything else. It joins the exhibit store, is identified there by its
+ *  fingerprints, then is copied into the working directory before being read.
  *
- *  Un fournisseur dont le fichier est introuvable ou illisible est retenu comme
- *  tel : on ne réessaie pas à chaque événement, et le rapport le consigne.
+ *  A provider whose file cannot be found or read is remembered as such: it is
+ *  not tried again at every event, and the report records it.
  */
 
 #include <windows.h>
 #include <string>
 #include <vector>
 
-/*! Prépare la résolution des messages.
-*  À appeler une fois avant la collecte des événements. Sans cet appel, les
-*  messages ne sont pas résolus et la collecte se poursuit normalement.
+/*! Prepares the resolution of the messages.
+*  To be called once before the collection of the events. Without that call, the
+*  messages are not resolved and the collection goes on normally.
 */
 void MessagesInit();
 
-/*! Message en clair d'un événement.
+/*! Plain-text message of an event.
 *
-*  @param guidFournisseur GUID du fournisseur, « {…} » ; vide si l'événement ne
-*         le porte pas — le message est alors introuvable et la fonction rend
-*         une chaîne vide
-*  @param identifiantEvenement identifiant de l'événement
-*  @param version version du schéma de l'événement
-*  @param valeurs données de l'événement, dans l'ordre : ce sont elles qui
-*         remplissent les marques %1 %2 … du modèle
-*  @return la phrase, ou une chaîne vide si elle n'a pas pu être reconstituée
+*  @param providerGuid GUID of the provider, "{…}"; empty if the event does not
+*         carry it — the message is then unfindable and the function returns an
+*         empty string
+*  @param eventId identifier of the event
+*  @param version version of the event's schema
+*  @param values data of the event, in order: they are what fills the %1 %2 …
+*         marks of the template
+*  @return the sentence, or an empty string if it could not be rebuilt
 */
 std::wstring EventMessage(const std::wstring& providerGuid,
                               uint16_t eventId,
                               uint8_t version,
                               const std::vector<std::wstring>& values);
 
-/*! Bilan, pour le journal et le rapport.
-*  @param fournisseurs nombre de fournisseurs dont les ressources ont été lues
-*  @param echecs nombre de fournisseurs dont le fichier n'a pas pu être lu
-*  @param resolus nombre de messages effectivement reconstitués
-*  @param octets volume extrait pour ces ressources
+/*! Summary, for the log and the report.
+*  @param providers number of providers whose resources were read
+*  @param failures number of providers whose file could not be read
+*  @param resolved number of messages actually rebuilt
+*  @param bytes volume extracted for those resources
 */
 void MessagesSummary(size_t* providers, size_t* failures,
                    unsigned long long* resolved, unsigned long long* bytes);
 
-/*! Libère les ressources chargées. */
+/*! Releases the resources loaded. */
 void MessagesRelease();
