@@ -1,4 +1,4 @@
-﻿// main.cpp : Ce fichier contient la fonction 'main'. L'exécution du programme commence et se termine à cet endroit.
+﻿// main.cpp: holds the 'main' function. The program starts and ends here.
 //
 
 #include <iostream>
@@ -40,7 +40,7 @@
 #include "users.h"
 #include "events.h"
 
-AppliConf conf;// variable globale pour la conf de l'application
+AppliConf conf;// global variable holding the application's configuration
 
 void showHelp() {
 	SetConsoleTextAttribute(conf.hConsole, 7); // blanc
@@ -92,15 +92,15 @@ int main(int argc, char* argv[])
 	* fonctions utiles
 	*************************/
 	//ASCII ART
-	SetConsoleOutputCP(CP_UTF8); // format UTF8 pour la prise en compte des accents dans la console car retour en UTF8
+	SetConsoleOutputCP(CP_UTF8); // UTF-8, so that accented characters come out right in the console
 
-	/* Sortie NON TAMPONNÉE.
-	 * wprintf passe par un tampon, alors que SetConsoleTextAttribute (couleurs)
-	 * agit immédiatement : le texte sortait donc décalé par rapport à sa couleur
-	 * et par rapport à la progression, qui elle force un fflush. On voyait ainsi
-	 * « OK » puis le libellé de l'étape, dans le mauvais ordre.
-	 * Les libellés d'étape sont écrits sans retour à la ligne, en attente de leur
-	 * « OK » : un tampon de ligne ne suffirait donc pas. */
+	/* UNBUFFERED output.
+	 * wprintf goes through a buffer, whereas SetConsoleTextAttribute (colours)
+	 * acts at once: the text therefore came out out of step with its colour and
+	 * with the progress display, which does force an fflush. One saw "OK" then
+	 * the label of the step, in the wrong order.
+	 * Step labels are written without a newline, waiting for their "OK": a line
+	 * buffer would therefore not be enough. */
 	setvbuf(stdout, NULL, _IONBF, 0);
 
 	system("cls");//clear screen
@@ -108,15 +108,15 @@ int main(int argc, char* argv[])
 	log(3, L"🔈asciiart");
 	asciiart();
 
-	start = time(nullptr);//heure de depart du logiciel pour benchmark
+	start = time(nullptr);// start time of the program, for the benchmark
 
 	/************************
 	* Arguments
 	*************************/
 
 	conf.name = argv[0];
-	if (argc > 1) { // au moins un argument, argv[0] étant le nom du logiciel
-		// Prise en compte des arguments de la ligne de commande
+	if (argc > 1) { // at least one argument, argv[0] being the program's own name
+		// command-line arguments
 		const std::vector<std::string> args(argv + 1, argv + argc);
 		for (const auto& arg : args) {
 
@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
 			}
 
 			else { //argument inconnu
-				if (arg != "--help" && arg != "/?") { // Si pas argument --help ou /? alors argument invalide
+				if (arg != "--help" && arg != "/?") { // anything that is neither --help nor /? is an invalid argument
 					printError(L"Invalid argument  " + string_to_wstring(arg));
 				}
 				log(3, L"🔈showHelp");
@@ -168,25 +168,25 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	// Journal d'investigation : ouvert au plus tot pour que l'horodatage de debut
-	// encadre reellement toute la collecte (cf. audit.h).
+	// Investigation log: opened as early as possible, so that the start timestamp
+	// really brackets the whole collection (see audit.h).
 	auditInit(argc, argv);
 
-	/* Trace du parseur NTFS : SILENCIEUSE par défaut, activée par --debug.
-	   Elle écrit sur STDERR, donc séparable de la sortie normale :
-	       WAC.exe --debug 2> raw.log
-	   C'est elle qui a permis de localiser le défaut `$INDEX_ALLOCATION` éclaté
-	   ; en usage courant elle noierait la console. */
+	/* Trace of the NTFS parser: SILENT by default, turned on by --debug.
+	   It writes to STDERR, hence separable from the normal output:
+	   WAC.exe --debug 2> raw.log
+	   It is what allowed the split `$INDEX_ALLOCATION` defect to be located; in
+	   ordinary use it would drown the console. */
 	RawHiveSetVerbose(conf._debug);
 
-	// Lecteur systeme : releve avant toute extraction, car il determine le volume
-	// a lire en brut ET la restitution des chemins d'origine. Windows n'est pas
-	// toujours installe sur C:.
+	// System drive: read before any extraction, since it decides which volume is
+	// read raw AND how the original paths are restored. Windows is not always
+	// installed on C:.
 	log(3, L"🔈loadSystemDrive");
 	loadSystemDrive();
 
 	/************************
-	* Prérequis
+	* Prerequisites
 	*************************/
 
 	log(0, L"*******************************************************************************************************************");
@@ -238,40 +238,40 @@ int main(int argc, char* argv[])
 	}
 
 
-	/* COM SUPPRIME (2026-09-15).
-	 * `scheduledTasks` etait le SEUL consommateur de COM dans WAC : il lit
-	 * desormais les definitions XML de \Windows\System32\Tasks et l'historique du
-	 * TaskCache, hors ligne. Plus rien ne justifiait CoInitializeEx /
-	 * CoInitializeSecurity, dont la suppression retire :
-	 *   - la sollicitation du service Schedule ;
-	 *   - les entrees dans Microsoft-Windows-TaskScheduler/Operational ;
-	 *   - le parcours COM tache par tache (plusieurs appels d'interface x 217).
-	 * Les autres collecteurs live (processes, sessions, services, users,
-	 * systemInfo) n'utilisent que des API Win32 directes.
+	/* COM DROPPED (2026-09-15).
+	 * `scheduledTasks` was the ONLY consumer of COM in WAC: it now reads the XML
+	 * definitions of \Windows\System32\Tasks and the TaskCache history, offline.
+	 * Nothing justified CoInitializeEx / CoInitializeSecurity any more, and
+	 * dropping them removes:
+	 *   - the Schedule service being solicited;
+	 *   - the entries in Microsoft-Windows-TaskScheduler/Operational;
+	 *   - the COM walk task by task (several interface calls x 217).
+	 * The other live collectors (processes, sessions, services, users,
+	 * systemInfo) use direct Win32 API calls only.
 	 */
 
 	/************************
-	*  EMPLACEMENT DE COLLECTE, vérifié AVANT la toute première écriture
+	*  COLLECTION LOCATION, checked BEFORE the very first write
 	*************************/
-	/* Deux refus, tous deux préférables à une collecte qui s'abîme en cours : un
-	   répertoire de travail déjà peuplé ferait analyser une collecte antérieure,
-	   et un support trop petit donnerait des copies tronquées.
-	   Vérifié ICI et non plus au début de l'extraction brute : avec --binary, la
-	   première écriture est le prélèvement de l'exécutable d'un processus, dès la
-	   phase suivante. L'estimation est volontairement grossière — ruches,
-	   journaux d'événements et binaires cités quand ils sont demandés ; elle n'a
-	   pas à être juste, seulement à écarter un support manifestement
-	   insuffisant. Un manque de place en cours de prélèvement ne fait pas échouer
-	   la collecte : les binaires sont alors hachés sans être copiés. */
+	/* Two refusals, both preferable to a collection that goes wrong midway: a
+	   working directory already populated would have a previous collection
+	   analysed, and a medium too small would give truncated copies.
+	   Checked HERE and no longer at the start of the raw extraction: with
+	   --binary, the first write is the collection of a process's executable, in
+	   the very next phase. The estimate is deliberately rough — hives, event
+	   logs and cited binaries when they are asked for; it does not have to be
+	   right, only to rule out a manifestly insufficient medium. Running out of
+	   space during the collection does not fail it: the binaries are then hashed
+	   without being copied. */
 	{
 		printStep(L" - Checking the collection medium : ");
-		unsigned long long need = 250ULL * 1024 * 1024;           // ruches
-		if (conf._events) need += 150ULL * 1024 * 1024;           // journaux
-		if (conf.binary)     need += 1024ULL * 1024 * 1024;          // binaires cités
+		unsigned long long need = 250ULL * 1024 * 1024;           // hives
+		if (conf._events) need += 150ULL * 1024 * 1024;           // event logs
+		if (conf.binary)     need += 1024ULL * 1024 * 1024;          // cited binaries
 		const HRESULT hrLieu = ExhibitStoreCheckLocation(need);
-		auditRecord(L"Verification de l'emplacement de collecte ("
+		auditRecord(L"Check of the collection location ("
 		            + std::to_wstring(ExhibitStoreFreeSpace() / 1024 / 1024)
-		            + L" Mio libres)",
+		            + L" MiB free)",
 		            string_to_wstring(conf._outputDir),
 		            hrLieu, Footprint::USB_WRITE);
 		if (FAILED(hrLieu)) {
@@ -288,13 +288,13 @@ int main(int argc, char* argv[])
 	wprintf(L"%ls\n", L"[SEARCHING FOR ARTIFACTS IN WINDOWS API]");
 	SetConsoleTextAttribute(conf.hConsole, 7);
 
-	/* SYSTEM INFORMATION a quitte cette phase : la collecte est desormais hors
-	   ligne (ruches SYSTEM et SOFTWARE) et se fait donc APRES leur ouverture,
-	   a la fin de la phase registre. Cf. et system.h. */
+	/* SYSTEM INFORMATION has left this phase: the collection is now offline
+	   (SYSTEM and SOFTWARE hives) and therefore happens AFTER they are opened,
+	   at the end of the registry phase. See system.h. */
 
 	printStep(L" - Extraction of SESSIONS: ");
 	hresult = sessions.getData();
-	auditRecord(L"Collecte SESSIONS", L"LSA / WTS", hresult, Footprint::SESSIONS);
+	auditRecord(L"SESSIONS collection", L"LSA / WTS", hresult, Footprint::SESSIONS);
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
 		hresult = sessions.toJson();
@@ -307,7 +307,7 @@ int main(int argc, char* argv[])
 
 	printStep(L" - Extraction of PROCESS: ");
 	hresult = processes.getData();
-	auditRecord(L"Collecte PROCESS", L"CreateToolhelp32Snapshot", hresult, Footprint::PROCESSES);
+	auditRecord(L"PROCESS collection", L"CreateToolhelp32Snapshot", hresult, Footprint::PROCESSES);
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
 		hresult = processes.toJson();
@@ -318,21 +318,21 @@ int main(int argc, char* argv[])
 
 
 
-	/* SERVICES a quitte cette phase : la configuration est desormais lue dans
-	   SYSTEM\CurrentControlSet\Services, donc apres l'ouverture de la ruche.
-	   Seul l'etat courant reste releve a chaud, en une seule enumeration.
-	   Cf. et services.h. */
+	/* SERVICES has left this phase: the configuration is now read in
+	   SYSTEM\CurrentControlSet\Services, hence after the hive is opened. Only
+	   the current state is still read live, in a single enumeration.
+	   See services.h. */
 
 
 
 
-	// Les journaux d'evenements sont traites EN FIN de collecte : ils resident sur
-	// disque, donc figurent parmi les artefacts les moins volatils, et leur
-	// extraction dure une vingtaine de minutes sous Windows 11.
-	// Les placer ici retardait d'autant la copie brute du disque.
+	// The event logs are handled AT THE END of the collection: they live on the
+	// disk, so they are among the least volatile artefacts, and extracting them
+	// takes about twenty minutes under Windows 11.
+	// Putting them here delayed the raw copy of the disk by as much.
 
 	/************************
-	*  EXTRACTION BRUTE (offline, sans VSS, sortie sur USB)
+	*  RAW EXTRACTION (offline, no VSS, output on the USB medium)
 	*************************/
 	SetConsoleTextAttribute(conf.hConsole, 14);
 	wprintf(L"%ls\n", L"[RAW EXTRACTION]");
@@ -341,9 +341,9 @@ int main(int argc, char* argv[])
 	const wchar_t* hiveLabel = L" - Extracting system hives (raw NTFS) : ";
 	printStep(hiveLabel);
 	log(3, L"🔈ExtractSystemHivesRaw");
-	hresult = ExtractSystemHivesRaw();    // S_FALSE = ruches partiellement manquantes (toléré)
-	                                       // (consigne au journal depuis raw_collect)
-	if (FAILED(hresult)) {                 // seul un échec dur (volume) interrompt
+	hresult = ExtractSystemHivesRaw();    // S_FALSE = some hives missing (tolerated)
+	                                       // (recorded in the log by raw_collect)
+	if (FAILED(hresult)) {                 // only a hard failure (the volume) stops the collection
 		printError(hresult);
 		return(hresult);
 	}
@@ -351,36 +351,36 @@ int main(int argc, char* argv[])
 		printSuccess();
 	}
 
-	/* Les ruches SYSTEM et SOFTWARE s'ouvrent DÈS la première passe : SOFTWARE
-	   donne la liste des profils, sans laquelle les ruches par utilisateur ne
-	   peuvent pas être extraites. */
+	/* The SYSTEM and SOFTWARE hives are opened ON the first pass: SOFTWARE gives
+	   the list of profiles, without which the per-user hives cannot be
+	   extracted. */
 	//variables
 	ORHKEY hKey = NULL;
 	DWORD valueType = 0;
 	DWORD size = 0;
 
-	//chargement de la clé HKLM\SYSTEM
+	// load the HKLM\SYSTEM key
 	printStep(L" - loading the HKLM\\SYSTEM key : ");
 	std::wstring systemHive = conf.mountpoint + L"\\Windows\\system32\\config\\SYSTEM";
-	/* Une ruche indisponible ne doit PAS interrompre la collecte.
-	   Constaté sur un système réel : SOFTWARE n'avait pas pu être extraite, et le
-	   `return` qui suivait abandonnait tout — y compris les artefacts de SYSTEM,
-	   les fichiers et les journaux, tous collectables. Le principe est de
-	   recueillir tout ce qui est accessible et de consigner ce qui manque. */
+	/* An unavailable hive must NOT stop the collection.
+	   Seen on a real system: SOFTWARE could not be extracted, and the `return`
+	   that followed gave up everything — including SYSTEM's artefacts, the files
+	   and the event logs, all of them collectable. The principle is to gather
+	   everything reachable and to record what is missing. */
 	log(3, L"🔈OROpenHive System");
 	hresult = OROpenHive(systemHive.c_str(), &conf.System);
 	const bool systemAvailable = (hresult == ERROR_SUCCESS);
 	if (!systemAvailable) {
 		printError(hresult);
-		log(2, L"🔥Ruche SYSTEM indisponible : artefacts correspondants non collectes", hresult);
-		auditRecord(L"Ouverture de la ruche SYSTEM", systemHive, hresult, Footprint::HIVE_COPY);
+		log(2, L"🔥SYSTEM hive unavailable: the artefacts that depend on it are not collected", hresult);
+		auditRecord(L"Opening of the SYSTEM hive", systemHive, hresult, Footprint::HIVE_COPY);
 		for (const char* f : { "Usbstor.json", "mounted_device.json", "bams.json",
 		                       "shimcache.json", "services.json" })
-			writeNotCollected(f, L"dépend de la ruche SYSTEM, indisponible", hresult);
+			writeNotCollected(f, L"depends on the SYSTEM hive, which is unavailable", hresult);
 	}
 	else printSuccess();
 
-	//chargement de la clé HKLM\SOFTWARE
+	// load the HKLM\SOFTWARE key
 	printStep(L" - loading the HKLM\\SOFTWARE key : ");
 	std::wstring softwareHive = conf.mountpoint + L"\\Windows\\system32\\config\\SOFTWARE";
 	log(3, L"🔈OROpenHive Software");
@@ -388,65 +388,65 @@ int main(int argc, char* argv[])
 	const bool softwareAvailable = (hresult == ERROR_SUCCESS);
 	if (!softwareAvailable) {
 		printError(hresult);
-		log(2, L"🔥Ruche SOFTWARE indisponible : artefacts correspondants non collectes", hresult);
-		auditRecord(L"Ouverture de la ruche SOFTWARE", softwareHive, hresult, Footprint::HIVE_COPY);
-		writeNotCollected("run.json", L"dépend de la ruche SOFTWARE, indisponible", hresult);
+		log(2, L"🔥SOFTWARE hive unavailable: the artefacts that depend on it are not collected", hresult);
+		auditRecord(L"Opening of the SOFTWARE hive", softwareHive, hresult, Footprint::HIVE_COPY);
+		writeNotCollected("run.json", L"depends on the SOFTWARE hive, which is unavailable", hresult);
 	}
 	else printSuccess();
 
-	/* PROFILS UTILISATEURS, HORS LIGNE. La liste se lit dans la ruche SOFTWARE
-	   qui vient d'être ouverte, et non plus dans le registre vivant : c'est ce qui
-	   impose d'extraire les ruches en deux passes. Cf. raw_collect.h. */
+	/* USER PROFILES, OFFLINE. The list is read in the SOFTWARE hive just opened,
+	   and no longer in the live registry: that is what makes the hives be
+	   extracted in two passes. See raw_collect.h. */
 	printStep(L" - Listing USER PROFILES (SOFTWARE hive) : ");
 	log(3, L"🔈loadProfileList");
 	hresult = loadProfileList();
-	auditRecord(L"Releve des profils utilisateurs",
-	            L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList (ruche copiee, offreg)",
+	auditRecord(L"Reading of the user profiles",
+	            L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList (copied hive, offreg)",
 	            hresult, Footprint::HIVE_COPY);
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else printSuccess();
 
 	printStep(L" - Extracting user hives (raw NTFS) : ");
 	log(3, L"🔈ExtractUserHivesRaw");
-	hresult = ExtractUserHivesRaw();      // S_FALSE = aucun profil, ou fichiers manquants (toléré)
-	if (FAILED(hresult)) printError(hresult);   // les autres artefacts restent collectables
+	hresult = ExtractUserHivesRaw();      // S_FALSE = no profile, or missing files (tolerated)
+	if (FAILED(hresult)) printError(hresult);   // the other artefacts stay collectable
 	else printSuccess();
 
-	// Prefetch, jumplists et documents récents : sans cette extraction, leurs
-	// collecteurs ne trouvent aucun fichier et rendent un artefact vide, ce qui
-	// se lit à tort comme une absence de trace.
+	// Prefetch, jump lists and recent documents: without this extraction their
+	// collectors find no file and return an empty artefact, which reads wrongly
+	// as an absence of traces.
 	const wchar_t* fileLabel = L" - Extracting file artefacts (raw NTFS) : ";
 	printStep(fileLabel);
 	log(3, L"🔈ExtractFileArtefactsRaw");
-	hresult = ExtractFileArtefactsRaw();  // S_FALSE = certains fichiers illisibles (toléré)
-	                                       // (consigne par repertoire depuis raw_collect)
-	/* Un échec ici ne doit plus interrompre la collecte : les ruches sont déjà
-	   dans la consigne, et un `return` les laissait sans manifeste ni sceau.
-	   Les artefacts du registre restent collectables. */
+	hresult = ExtractFileArtefactsRaw();  // S_FALSE = some files unreadable (tolerated)
+	                                       // (recorded per directory by raw_collect)
+	/* A failure here must no longer stop the collection: the hives are already in
+	   the exhibit store, and a `return` left them without a manifest or a seal.
+	   The registry artefacts stay collectable. */
 	if (FAILED(hresult)) printError(hresult);
 	else printSuccess();
 
 
 	/************************
-	*  BASE DE REGISTRE
+	*  REGISTRY
 	*************************/
 
 	SetConsoleTextAttribute(conf.hConsole, 14);
 	wprintf(L"%ls\n", L"[SEARCHING FOR ARTIFACTS IN THE REGISTRY]");
 	SetConsoleTextAttribute(conf.hConsole, 7);
-	// Une seule entree pour toute la phase : ces lectures portent sur les COPIES
-	// extraites sur le support de collecte, jamais sur le registre de la cible.
-	// Elles ne laissent donc aucune trace a distinguer dans les artefacts.
-	auditRecord(L"Lecture des artefacts du registre (ruches copiees, offreg)",
+	// A single entry for the whole phase: these reads bear on the COPIES extracted
+	// onto the collection medium, never on the target's registry. They therefore
+	// leave no trace to be told apart in the artefacts.
+	auditRecord(L"Reading of the registry artefacts (copied hives, offreg)",
 	            conf.mountpoint, ERROR_SUCCESS, Footprint::HIVE_COPY);
 
-	/* Phase registre encadrée par un bloc à sortie unique : un échec en sort par
-	   `break` au lieu d'abandonner la collecte. Les artefacts sur fichiers et les
-	   journaux, qui ne dépendent pas de ces ruches, restent collectés. */
+	/* Registry phase bracketed by a single-exit block: a failure leaves it by
+	   `break` instead of giving up the collection. The file artefacts and the
+	   event logs, which do not depend on those hives, are still collected. */
 	do {
-	if (!systemAvailable) break;   // sans SYSTEM, la phase registre est vide de sens
+	if (!systemAvailable) break;   // without SYSTEM, the registry phase is meaningless
 
-	//recherche de la bonne sous-clé ControlSet correspondant à CurrentControlSet
+	// find the ControlSet subkey that CurrentControlSet points to
 	printStep(L" - Searching for the CurrentControlSet subkey : ");
 	log(3, L"🔈OROpenKey System/Select");
 	hresult = OROpenKey(conf.System, L"Select", &hKey);
@@ -472,7 +472,7 @@ int main(int argc, char* argv[])
 	}
 	else {
 
-		//le numéro de la clé ControlSet est sur 3 digit de la forme 001
+		// the ControlSet number is on 3 digits, of the form 001
 		std::wstring controlSet;
 		if ((int)(current) < 10) {
 			controlSet = L"00" + std::to_wstring(current);
@@ -483,11 +483,11 @@ int main(int argc, char* argv[])
 		else {
 			controlSet = std::to_wstring(current);
 		}
-		//nom complet de la clé controlSet qui nous intéresse
+		// full name of the ControlSet key we are interested in
 		std::wstring subkey = L"ControlSet" + controlSet;
 		printSuccess();
 
-		//ouverture de la clé HKLM\\SYSTEM\\CurrentControlSet
+		// open the HKLM\\SYSTEM\\CurrentControlSet key
 		printStep(L" - Opening the CurrentControlSet subkey : ");
 		log(3, L"🔈OROpenKey System/CurrentControlSet");
 		hresult = OROpenKey(conf.System, subkey.c_str(), &conf.CurrentControlSet);
@@ -498,22 +498,22 @@ int main(int argc, char* argv[])
 		else {
 			printSuccess();
 
-			/* Fuseau du SUSPECT, relevé dans sa ruche SYSTEM.
-			   Fait dès l'ouverture de CurrentControlSet : tous les horodatages
-			   locaux formatés ensuite portent son décalage, et non celui de la
-			   machine qui exécute WAC. Indispensable pour interpréter les
-			   artefacts qui stockent une heure locale (dates FAT, Amcache, BAM,
-			   shimcache, USBSTOR, UserAssist). */
+			/* Time zone of the SUSPECT, read in his SYSTEM hive.
+			   Done as soon as CurrentControlSet is opened: every local timestamp
+			   formatted afterwards carries his offset, and not that of the
+			   machine running WAC. Indispensable to interpret the artefacts that
+			   store a local time (FAT dates, Amcache, BAM, shimcache, USBSTOR,
+			   UserAssist). */
 			printStep(L" - Reading suspect time zone (SYSTEM hive) : ");
 			log(3, L"🔈loadSuspectTimeZone");
 			hresult = loadSuspectTimeZone();
 			if (hresult != ERROR_SUCCESS) {
-				// Non bloquant : repli sur le fuseau de la machine d'execution,
-				// correct en collecte live puisque c'est la meme machine.
+				// Not blocking: falls back on the collecting machine's time zone,
+				// which is right in a live collection since it is the same machine.
 				printError(hresult);
 			}
 			else printSuccess();
-			auditRecord(L"Relevé du fuseau horaire du suspect",
+			auditRecord(L"Reading of the suspect's time zone",
 			            L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
 			            hresult, Footprint::HIVE_COPY);
 
@@ -521,11 +521,11 @@ int main(int argc, char* argv[])
 			hresult = usbs.getData();
 			if (hresult != ERROR_SUCCESS) {
 				printError(hresult);
-				// La cle Enum\USBSTOR est absente des systemes ou aucun
-				// peripherique de masse n'a jamais ete branche : echec legitime,
-				// mais qui doit apparaitre dans la sortie plutot que de laisser
-				// un fichier manquant (cf. writeNotCollected).
-				writeNotCollected("Usbstor.json", L"USBSTOR (registre)", hresult);
+				// The Enum\USBSTOR key is absent from the systems where no mass
+				// storage device was ever plugged in: a legitimate failure, but
+				// one that must appear in the output rather than leave a missing
+				// file (see writeNotCollected).
+				writeNotCollected("Usbstor.json", L"USBSTOR (registry)", hresult);
 			}
 			else {
 				hresult = usbs.toJson();
@@ -648,17 +648,17 @@ int main(int argc, char* argv[])
 			}
 		}
 	}
-	} while (0);   // fin de la phase registre (voir le bloc à sortie unique ci-dessus)
+	} while (0);   // end of the registry phase (see the single-exit block above)
 
-	/* SYSTEM INFORMATION, hors ligne.
-	   HORS du bloc a sortie unique ci-dessus, et non dedans : meme sans ruche
-	   exploitable, le collecteur reste utile puisqu'il consigne l'instant de la
-	   collecte et la duree d'activite. Il degrade sa sortie au lieu d'etre
-	   saute. */
+	/* SYSTEM INFORMATION, offline.
+	   OUTSIDE the single-exit block above, and not inside it: even without a
+	   usable hive the collector stays useful, since it records the instant of the
+	   collection and the uptime. It degrades its output instead of being
+	   skipped. */
 	printStep(L" - Extraction of SYSTEM INFORMATION: ");
 	hresult = systemInfo.getData();
-	auditRecord(L"Collecte SYSTEM INFORMATION",
-	            L"ruches SYSTEM et SOFTWARE extraites + heure système",
+	auditRecord(L"SYSTEM INFORMATION collection",
+	            L"extracted SYSTEM and SOFTWARE hives + system time",
 	            hresult, Footprint::HIVE_COPY);
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
@@ -668,13 +668,13 @@ int main(int argc, char* argv[])
 		systemInfo.clear();// free memory
 	}
 
-	/* SERVICES, configuration hors ligne + etat courant.
-	   Egalement hors du bloc a sortie unique : sans ruche, getData() echoue
-	   proprement et writeNotCollected a deja consigne l'absence. */
+	/* SERVICES, offline configuration + current state.
+	   Also outside the single-exit block: without a hive, getData() fails
+	   cleanly and writeNotCollected has already recorded the absence. */
 	printStep(L" - Extraction of SERVICES: ");
 	hresult = services.getData();
-	auditRecord(L"Collecte SERVICES",
-	            L"ruche SYSTEM\\CurrentControlSet\\Services + EnumServicesStatusExW",
+	auditRecord(L"SERVICES collection",
+	            L"SYSTEM\\CurrentControlSet\\Services hive + EnumServicesStatusExW",
 	            hresult, Footprint::SCM);
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
@@ -684,14 +684,14 @@ int main(int argc, char* argv[])
 		services.clear();//free memory
 	}
 
-	/* USERS, hors ligne depuis la ruche SAM. Independant des
-	   ruches SYSTEM et SOFTWARE : il ouvre la sienne. */
+	/* USERS, offline from the SAM hive. Independent of the SYSTEM and SOFTWARE
+	   hives: it opens its own. */
 	printStep(L" - Extraction of USERS: ");
 	hresult = users.getData();
-	auditRecord(L"Collecte USERS", L"ruche SAM extraite", hresult, Footprint::HIVE_COPY);
+	auditRecord(L"USERS collection", L"extracted SAM hive", hresult, Footprint::HIVE_COPY);
 	if (hresult != ERROR_SUCCESS) {
 		printError(hresult);
-		writeNotCollected("users.json", L"dépend de la ruche SAM, indisponible", hresult);
+		writeNotCollected("users.json", L"depends on the SAM hive, which is unavailable", hresult);
 	}
 	else {
 		hresult = users.toJson();
@@ -702,27 +702,28 @@ int main(int argc, char* argv[])
 
 
 	/************************
-	*  FICHIERS
+	*  FILES
 	*************************/
 	SetConsoleTextAttribute(conf.hConsole, 14);
 	wprintf(L"%ls\n", L"[SEARCHING FOR ARTIFACTS IN FILES]");
 	SetConsoleTextAttribute(conf.hConsole, 7);
-	// Comme pour le registre : lecture des COPIES extraites, pas des fichiers de
-	// la cible — donc aucun horodatage d'acces modifie sur le systeme examine.
-	auditRecord(L"Lecture des artefacts sur fichiers (copies extraites)",
+	// As for the registry: the COPIES extracted are read, not the target's files —
+	// so no access timestamp is changed on the examined system.
+	auditRecord(L"Reading of the file artefacts (extracted copies)",
 	            conf.mountpoint, ERROR_SUCCESS, Footprint::HIVE_COPY);
-	/* Tâches planifiées : lues depuis les XML extraits en brut et le TaskCache
-	   du registre. Déplacé de la phase « WINDOWS API » à ici, car la collecte
-	   dépend désormais de l'extraction brute — plus du service Schedule. */
+	/* Scheduled tasks: read from the XML files extracted raw and from the
+	   registry's TaskCache. Moved from the "WINDOWS API" phase to here, since
+	   the collection now depends on the raw extraction — no longer on the
+	   Schedule service. */
 	printStep(L" - Extracting SCHEDULED TASKS (offline) : ");
 	hresult = scheduledTasks.getData();
-	auditRecord(L"Collecte SCHEDULED TASKS",
+	auditRecord(L"SCHEDULED TASKS collection",
 	            L"\\Windows\\System32\\Tasks (XML) + SOFTWARE\\...\\TaskCache",
 	            hresult, Footprint::HIVE_COPY);
 	if (hresult != ERROR_SUCCESS) {
 		printError(hresult);
 		writeNotCollected("ScheduledTasks.json",
-		                  L"définitions de tâches non extraites", hresult);
+		                  L"task definitions not extracted", hresult);
 	}
 	else {
 		hresult = scheduledTasks.toJson();
@@ -771,7 +772,7 @@ int main(int argc, char* argv[])
 		jumplistCustoms.clear();
 	}
 	/************************
-	*  JOURNAUX D'ÉVÉNEMENTS (les moins volatils : traités en dernier)
+	*  EVENT LOGS (the least volatile: handled last)
 	*************************/
 	if (conf._events) {
 		SetConsoleTextAttribute(conf.hConsole, 14);
@@ -780,13 +781,13 @@ int main(int argc, char* argv[])
 		printStep(L" - Extraction of EVENTS: ");
 
 		hresult = events.getData();
-		/* La source n'est plus le service EventLog mais les fichiers .evtx
-		   extraits par lecture brute : la consignation doit dire lesquels, sans
-		   quoi le rapport laisse croire que l'API a encore ete sollicitee. */
-		auditRecord(L"Collecte EVENT LOGS (" + std::to_wstring(events.read)
-		            + L" evenement(s) dans " + std::to_wstring(events.files)
-		            + L" journal/journaux)",
-		            L"\\Windows\\System32\\winevt\\Logs\\*.evtx (copies extraites)",
+		/* The source is no longer the EventLog service but the .evtx files extracted
+		   by raw reading: the record must say which ones, otherwise the report
+		   lets one believe the API was solicited again. */
+		auditRecord(L"EVENT LOGS collection (" + std::to_wstring(events.read)
+		            + L" event(s) in " + std::to_wstring(events.files)
+		            + L" log(s))",
+		            L"\\Windows\\System32\\winevt\\Logs\\*.evtx (extracted copies)",
 		            hresult, Footprint::FILE_COPY);
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else {
@@ -801,46 +802,47 @@ int main(int argc, char* argv[])
 	wprintf(L"%ls\n", L"[EXHIBIT STORE]");
 	SetConsoleTextAttribute(conf.hConsole, 7);
 	/************************
-	*  SCELLEMENT DE LA CONSIGNE (après la DERNIÈRE pièce ajoutée)
+	*  SEALING OF THE EXHIBIT STORE (after the LAST exhibit added)
 	*************************/
-	/* Le manifeste doit couvrir toutes les pièces, et il scelle la consigne. Sans
-	   lui les copies brutes ne sont identifiées par rien, et la procédure ne vaut
-	   pas mieux qu'un simple répertoire de fichiers.
-
-	   CE QUI ÉTAIT FAUX. Il était écrit à la fin de la phase d'extraction brute.
-	   Or des pièces entrent dans la consigne APRÈS : les binaires de ressources
-	   des fournisseurs d'événements, extraits à la demande pendant la phase des
-	   journaux. Constaté en VM : 121 binaires (~121 Mio) présents dans consigne/
-	   et absents du manifeste scellé — des pièces que rien n'identifiait. Le
-	   fuseau horaire du suspect y figurait aussi comme « non relevé », la ruche
-	   SYSTEM n'étant lue qu'ensuite. Le scellement est donc la dernière opération
-	   sur la consigne, juste avant le journal d'investigation. */
-	/* BINAIRES CITÉS. Plus aucun artefact ne cite de fichier : les volumes gardés
-	   ouverts pour les lire sont fermés, et les pièces prélevées recopiées vers le
-	   travail — comme toute pièce, même non modifiée : c'est la procédure. */
+	/* The manifest must cover every exhibit, and it seals the store. Without it
+	   the raw copies are identified by nothing, and the procedure is worth no
+	   more than a plain directory of files.
+	
+	   WHAT WAS WRONG. It was written at the end of the raw extraction phase. But
+	   exhibits enter the store AFTER that: the resource binaries of the event
+	   providers, extracted on demand during the event-log phase. Seen in a VM:
+	   121 binaries (~121 MiB) present in consigne/ and absent from the sealed
+	   manifest — exhibits that nothing identified. The suspect's time zone was
+	   also recorded there as "not read", the SYSTEM hive being read only
+	   afterwards. Sealing is therefore the last operation on the store, just
+	   before the investigation log. */
+	/* CITED BINARIES. No artefact cites a file any more: the volumes kept open to
+	   read them are closed, and the collected exhibits copied to the working
+	   directory — like any exhibit, even an unmodified one: that is the
+	   procedure. */
 	if (conf.binary) {
 		BinariesFinish();
 		const BinarySummary b = BinariesSummary();
 		std::wstring summary = std::to_wstring(b.files) + L" cite(s), " + std::to_wstring(b.read)
-		                   + L" lu(s), " + std::to_wstring(b.authenticated) + L" authentifie(s) Microsoft et "
-		                   L"non preleve(s) (" + std::to_wstring(b.authenticatedBytes / 1024 / 1024)
-		                   + L" Mio evites), " + std::to_wstring(b.collectedCount) + L" preleve(s) ("
+		                   + L" lu(s), " + std::to_wstring(b.authenticated) + L" authenticated as Microsoft and "
+		                   L"not collected (" + std::to_wstring(b.authenticatedBytes / 1024 / 1024)
+		                   + L" MiB saved), " + std::to_wstring(b.collectedCount) + L" collected ("
 		                   + std::to_wstring(b.collectedBytes / 1024 / 1024) + L" Mio)";
-		if (b.duplicates) summary += L", " + std::to_wstring(b.duplicates) + L" doublon(s) de contenu non recopie(s)";
-		if (b.sansPlace) summary += L", " + std::to_wstring(b.sansPlace) + L" hache(s) sans copie faute de place";
-		summary += L" ; catalogues de signatures : " + std::to_wstring(b.catalogsRead) + L" lus en memoire, "
-		       + std::to_wstring(b.catalogsUsed) + L" consigne(s)";
-		auditRecord(L"Empreintes des fichiers cites par les artefacts (" + summary + L")",
-		            L"lecture brute NTFS ; authenticite verifiee en memoire (catalogues Windows, "
-		            L"signatures integrees), sans API ni service ; binaires non authentifies "
-		            L"copies dans " + exhibitStoreFolder(),
+		if (b.duplicates) summary += L", " + std::to_wstring(b.duplicates) + L" duplicate content(s) not copied again";
+		if (b.sansPlace) summary += L", " + std::to_wstring(b.sansPlace) + L" hashed without a copy, medium full";
+		summary += L" ; catalogues de signatures : " + std::to_wstring(b.catalogsRead) + L" read into memory, "
+		       + std::to_wstring(b.catalogsUsed) + L" recorded as exhibit(s)";
+		auditRecord(L"Fingerprints of the files cited by the artefacts (" + summary + L")",
+		            L"raw NTFS reading; authenticity verified in memory (Windows catalogs, "
+		            L"embedded signatures), with no API and no service; unauthenticated binaries "
+		            L"copied into " + exhibitStoreFolder(),
 		            ERROR_SUCCESS, Footprint::VOLUME_BRUT);
 		printStep(L" - Copying collected binaries to the working directory : ");
 		size_t copies = 0;
 		unsigned long long copiedBytes = 0;
 		const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &copiedBytes);
-		auditRecord(L"Copie de la consigne vers le repertoire de travail ("
-		            + std::to_wstring(copies) + L" fichier(s), "
+		auditRecord(L"Copy of the exhibit store into the working directory ("
+		            + std::to_wstring(copies) + L" file(s), "
 		            + std::to_wstring(copiedBytes / 1024 / 1024) + L" Mio)",
 		            exhibitStoreFolder() + L" -> " + workingFolder(),
 		            hrCopy, Footprint::USB_WRITE);
@@ -855,8 +857,8 @@ int main(int argc, char* argv[])
 		unsigned long long bytes = 0;
 		ExhibitStoreSummary(&exhibits, &failures, &bytes);
 		const HRESULT hrManifest = ExhibitStoreWriteManifest();
-		auditRecord(L"Scellement de la consigne (" + std::to_wstring(exhibits)
-		            + L" piece(s), " + std::to_wstring(failures) + L" echec(s), "
+		auditRecord(L"Sealing of the exhibit store (" + std::to_wstring(exhibits)
+		            + L" piece(s), " + std::to_wstring(failures) + L" failure(s), "
 		            + std::to_wstring(bytes / 1024 / 1024) + L" Mio)",
 		            exhibitStoreFolder() + L"\\MANIFESTE.json (+ .sha256)",
 		            hrManifest, Footprint::USB_WRITE);
@@ -865,16 +867,16 @@ int main(int argc, char* argv[])
 	}
 
 	/************************
-	*  JOURNAL D'INVESTIGATION (en dernier : il consigne toute la collecte)
+	*  INVESTIGATION LOG (last: it records the whole collection)
 	*************************/
 	SetConsoleTextAttribute(conf.hConsole, 14);
 	wprintf(L"%ls\n", L"[INVESTIGATION LOG]");
 	SetConsoleTextAttribute(conf.hConsole, 7);
-	/* L'ECRITURE sur le support de collecte est elle aussi une operation a
-	   consigner : c'est la seule ecriture que WAC effectue, et un journal
-	   d'audit qui ne la mentionne pas laisse croire que rien n'a ete ecrit.
-	   Consignee AVANT auditWrite(), sans quoi elle manquerait au journal. */
-	auditRecord(L"Ecriture des resultats de collecte",
+	/* WRITING to the collection medium is itself an operation to record: it is
+	   the only write WAC performs, and an audit log that does not mention it
+	   lets one believe nothing was written. Recorded BEFORE auditWrite(),
+	   without which it would be missing from the log. */
+	auditRecord(L"Writing of the collection results",
 	            string_to_wstring(conf._outputDir), ERROR_SUCCESS,
 	            Footprint::USB_WRITE);
 

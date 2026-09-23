@@ -9,50 +9,50 @@
 #include "json.h"
 
 //constantes globales 
-#define MAX_KEY_NAME 255 //!< plus longue key name en base de registre
-#define MAX_VALUE_NAME 16383 //!< plus long nom de valeur en base de registre
-#define MAX_DATA 1024000 //!< taille maximale des données pour une valeur en base de registre
+#define MAX_KEY_NAME 255 //!< longest key name in the registry
+#define MAX_VALUE_NAME 16383 //!< longest value name in the registry
+#define MAX_DATA 1024000 //!< largest data a registry value can hold
 
-//Type de log
+// kind of log entry
 #define LOG_TYPE_ARTEFACT_TYPE 0//!< log of artefact type
 #define LOG_TYPE_ARTEFACT 1//!< log of new artefact
 #define LOG_TYPE_INFO 2//!< log of type info to describe artefact
 #define LOG_TYPE_ERROR 3//!< log of type error
 #define LOG_TYPE_DEBUG 4 //!< name of function called for debug purpose
 
-/*! Fuseau horaire de la machine EXAMINÉE.
+/*! Time zone of the EXAMINED machine.
 *
-* POURQUOI LA RUCHE PLUTÔT QUE L'API. Les artefacts Windows qui stockent une
-* heure locale (dates FAT, Amcache, BAM, shimcache, USBSTOR, UserAssist) ne sont
-* interprétables qu'avec le fuseau du **suspect**. `GetTimeZoneInformation()`
-* rend celui de la machine qui exécute WAC : identique en collecte live, mais
-* faux dès qu'on analyse une image montée ailleurs. La source d'autorité est donc
-* `SYSTEM\CurrentControlSet\\Control\TimeZoneInformation`.
+* WHY THE HIVE RATHER THAN THE API. The Windows artefacts that store a local
+* time (FAT dates, Amcache, BAM, shimcache, USBSTOR, UserAssist) can only be
+* interpreted with the **suspect's** time zone. `GetTimeZoneInformation()`
+* returns that of the machine running WAC: the same in a live collection, but
+* wrong as soon as an image is analysed elsewhere. The source of authority is
+* therefore `SYSTEM\CurrentControlSet\\Control\TimeZoneInformation`.
 *
-* Une divergence entre les deux est en soi un signal : image analysée sur une
-* autre machine, ou fuseau modifié depuis la collecte. Les deux sont donc
-* consignés dans `investigation.json`.
+* A divergence between the two is a signal in itself: an image analysed on
+* another machine, or a time zone changed since the collection. Both are
+* therefore recorded in `investigation.json`.
 */
 struct TimeZoneInfo {
 	std::wstring keyName;          //!< TimeZoneKeyName, ex. "Romance Standard Time"
-	std::wstring standardName;     //!< nom en heure d'hiver
-	std::wstring daylightName;     //!< nom en heure d'été
-	long activeBiasMinutes = 0;    //!< minutes à AJOUTER à l'heure locale pour obtenir l'UTC
-	long standardBiasMinutes = 0;  //!< décalage hors heure d'été (valeur `Bias` de la ruche)
-	bool  daylightInEffect = false;//!< true si l'heure d'été était active au moment de la collecte
-	bool  fromHive = false;        //!< true si relevé dans la ruche SYSTEM du suspect
-	bool  valid = false;           //!< true si la lecture a abouti
+	std::wstring standardName;     //!< name in standard time
+	std::wstring daylightName;     //!< name in daylight saving time
+	long activeBiasMinutes = 0;    //!< minutes to ADD to the local time to obtain UTC
+	long standardBiasMinutes = 0;  //!< offset outside daylight saving time (the hive's `Bias` value)
+	bool  daylightInEffect = false;//!< true if daylight saving time was in force at collection time
+	bool  fromHive = false;        //!< true if read in the suspect's SYSTEM hive
+	bool  valid = false;           //!< true if the reading succeeded
 };
 
-//! Structure de données contenant la configuration de l'application
+//! Holds the application's configuration.
 struct AppliConf {
-	/*! Mode diagnostic (--debug). Active la trace détaillée du parseur NTFS
-	* (résolution de chemin, blocs d'index, data runs) sur STDERR.
-	* Séparé de --loglevel : celui-ci journalise la COLLECTE (quels artefacts,
-	* quelles valeurs), tandis que --debug éclaire la LECTURE BAS NIVEAU du
-	* volume. Confondre les deux noyait la console en usage normal, alors que
-	* cette trace est précisément ce qui a permis de localiser le défaut
-	* `$INDEX_ALLOCATION` éclaté. */
+	/*! Diagnostic mode (--debug). Turns on the detailed trace of the NTFS parser
+	* (path resolution, index blocks, data runs) on STDERR.
+	* Separate from --loglevel: that one logs the COLLECTION (which artefacts,
+	* which values), whereas --debug lights up the LOW-LEVEL READING of the
+	* volume. Mixing the two drowned the console in ordinary use, while that
+	* trace is precisely what allowed the split `$INDEX_ALLOCATION` defect to be
+	* located. */
 	bool _debug = false;
 	bool _dump = false;//!< True if dump is active
 	bool _events = false;//!< True is events must be extracted
@@ -63,185 +63,183 @@ struct AppliConf {
 	ORHKEY System = { 0 }; //!< Reg Key to access to System Hive
 	ORHKEY Software = { 0 };//!< Reg Key to access CurrentControlSet/Software hive
 	std::vector<std::tuple<std::wstring, std::wstring>> profiles;//!< vector to store SID and profiles of users present on the machine
-	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);//!< Handle de la console
-	std::wofstream log;//!< handle sur le fichier de log de sortie pour mode debug
-	int loglevel = 0; //!< niveau de journalisation (0 par defaut) definit par la ligne de commande
-	bool binary = false; //!< --binary : empreintes des fichiers cités, et prélèvement des binaires
-	TimeZoneInfo timeZone; //!< fuseau de la machine examinee (ruche SYSTEM si disponible)
-	/*! Lecteur système de la machine examinée, avec les deux-points ("C:").
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);//!< handle of the console
+	std::wofstream log;//!< handle of the output log file, for the debug mode
+	int loglevel = 0; //!< log level (0 by default), set on the command line
+	bool binary = false; //!< --binary: fingerprints of the cited files, and collection of the binaries
+	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)
+	/*! System drive of the examined machine, with its colon ("C:").
 	*
-	* Relevé à l'exécution plutôt que codé en dur : Windows n'est pas toujours
-	* installé sur C:. La valeur sert à la fois à l'extraction brute (lettre de
-	* volume) et à restituer les chemins d'origine des artefacts. */
+	* Read at run time rather than hard-coded: Windows is not always installed on
+	* C:. The value serves both the raw extraction (volume letter) and the
+	* restitution of the artefacts' original paths. */
 	std::wstring systemDrive = L"C:";
 };
 
-/*! Relève le lecteur système de la machine et renseigne `conf.systemDrive`.
-* À appeler au démarrage, avant toute extraction.
-* En cas d'échec, `conf.systemDrive` conserve sa valeur par défaut ("C:").
+/*! Reads the machine's system drive and fills `conf.systemDrive`.
+* To be called at startup, before any extraction.
+* On failure, `conf.systemDrive` keeps its default value ("C:").
 */
 void loadSystemDrive();
 
-/*! Relève les profils utilisateurs et renseigne `conf.profiles` (SID, chemin).
+/*! Reads the user profiles and fills `conf.profiles` (SID, path).
 *
-* HORS LIGNE. La source est `Microsoft\\Windows NT\\CurrentVersion\\ProfileList`,
-* lue dans la ruche SOFTWARE EXTRAITE (`conf.Software`). Cette clé était lue
-* dans le registre vivant : c'était la dernière ouverture de clé que WAC faisait
-* sur le registre de la machine examinée.
+* OFFLINE. The source is `Microsoft\\Windows NT\\CurrentVersion\\ProfileList`,
+* read in the EXTRACTED SOFTWARE hive (`conf.Software`). That key used to be
+* read in the live registry: it was the last key WAC opened on the examined
+* machine's registry.
 *
-* ORDRE IMPOSÉ. Les ruches par utilisateur (`ntuser.dat`, `usrClass.dat`) vivent
-* dans le dossier de profil : il faut connaître ces chemins pour les extraire.
-* D'où l'enchaînement ExtractSystemHivesRaw → OROpenHive(SOFTWARE) →
-* loadProfileList → ExtractUserHivesRaw (cf. raw_collect.h).
+* AN IMPOSED ORDER. The per-user hives (`ntuser.dat`, `usrClass.dat`) live in
+* the profile folder: those paths must be known to extract them. Hence the
+* sequence ExtractSystemHivesRaw → OROpenHive(SOFTWARE) → loadProfileList →
+* ExtractUserHivesRaw (see raw_collect.h).
 *
-* Les variables de `ProfileImagePath` (REG_EXPAND_SZ) sont développées à partir
-* de `conf.systemDrive`, et non de l'environnement du processus : la valeur
-* appartient à la machine examinée, pas à celle qui exécute WAC.
+* The variables of `ProfileImagePath` (REG_EXPAND_SZ) are expanded from
+* `conf.systemDrive`, and not from the process's environment: the value belongs
+* to the examined machine, not to the one running WAC.
 *
-* @return ERROR_SUCCESS si au moins un profil a été relevé, ERROR_EMPTY si la clé
-*         ne contient aucun profil exploitable, ERROR_INVALID_HANDLE si la ruche
-*         SOFTWARE n'est pas ouverte, ou le code d'offreg
+* @return ERROR_SUCCESS if at least one profile was read, ERROR_EMPTY if the key
+*         holds no usable profile, ERROR_INVALID_HANDLE if the SOFTWARE hive is
+*         not open, or the offreg code
 */
 HRESULT loadProfileList();
 
-/*! Lettre du volume d'un chemin absolu, sans les deux-points ("C").
+/*! Volume letter of an absolute path, without the colon ("C").
 *
-* POURQUOI CETTE FONCTION EXISTE. WAC ne supposait qu'UN SEUL volume, celui de
-* Windows. Or `ProfileImagePath` peut désigner un autre disque — configuration
-* courante d'un poste à SSD système et disque de données : Windows sur `C:`, les
-* profils sur `D:`. Le code retirait alors le préfixe « C: » d'un chemin
-* commençant par « D: », ne trouvait rien à retirer, et cherchait
-* `D:\Users\jean\ntuser.dat` **dans la table de fichiers de C:**. La ruche
-* n'était pas extraite, et TOUS les artefacts de cet utilisateur sortaient à
-* « 0 entrée » — indiscernable de « aucune trace ».
+* WHY THIS FUNCTION EXISTS. WAC assumed ONE SINGLE volume, the Windows one. But
+* `ProfileImagePath` may name another disk — a common setup on a workstation
+* with a system SSD and a data disk: Windows on `C:`, the profiles on `D:`. The
+* code then stripped the "C:" prefix from a path starting with "D:", found
+* nothing to strip, and looked for `D:\Users\jean\ntuser.dat` **in C:'s file
+* table**. The hive was not extracted, and ALL of that user's artefacts came out
+* with "0 entries" — indistinguishable from "no trace".
 *
-* @param absolu chemin absolu, avec ou sans lettre de lecteur
-* @return la lettre en majuscule, ou celle du volume système si le chemin n'en
-*         porte pas (chemin déjà relatif à la racine)
+* @param absolute absolute path, with or without a drive letter
+* @return the letter in upper case, or that of the system volume if the path
+*         carries none (a path already relative to the root)
 */
 std::wstring volumeOfPath(const std::wstring& absolute);
 
-/*! Rend un chemin absolu relatif à la racine de SON volume.
+/*! Returns an absolute path relative to the root of ITS volume.
 *
-* `D:\Users\jean` -> `\Users\jean`. La lettre est retirée quelle qu'elle
-* soit, et en TÊTE uniquement : `replaceAll()`, employé jusqu'ici, en retirait
-* toutes les occurrences, si bien qu'un chemin contenant à nouveau la lettre
-* suivie de deux-points se retrouvait silencieusement altéré.
+* `D:\Users\jean` -> `\Users\jean`. The letter is stripped whatever it is, and
+* at the HEAD only: `replaceAll()`, used until now, stripped every occurrence,
+* so that a path holding the letter followed by a colon again was silently
+* altered.
 *
-* @param absolu chemin absolu
-* @return le chemin sans sa lettre de lecteur
+* @param absolute absolute path
+* @return the path without its drive letter
 */
 std::wstring pathRelativeToVolume(const std::wstring& absolute);
 
-/*! Chemin, sur le support de collecte, de la copie extraite d'un fichier.
+/*! Path, on the collection medium, of the extracted copy of a file.
 *
-* Centralise la convention de nommage de l'extraction brute, que neuf
-* collecteurs reconstruisaient chacun de leur côté avec
-* `replaceAll(chemin, conf.systemDrive, L"")` — donc avec le même défaut
-* multi-volumes (cf. `volumeDuChemin`).
+* Centralises the naming convention of the raw extraction, which nine
+* collectors each rebuilt on their own with
+* `replaceAll(path, conf.systemDrive, L"")` — hence with the same
+* multi-volume defect (see `volumeOfPath`).
 *
-* Les fichiers du volume SYSTÈME conservent leur emplacement d'origine sous
-* `conf.mountpoint`, afin que rien ne change pour le cas courant. Ceux d'un
-* autre volume sont rangés sous `\_volume_X\`, sans quoi deux disques portant
-* le même chemin relatif (`\Users\jean` sur C: et sur D:) écraseraient leurs
-* copies l'un l'autre.
+* The files of the SYSTEM volume keep their original location under
+* `conf.mountpoint`, so that nothing changes for the common case. Those of
+* another volume are stored under `\_volume_X\`, without which two disks
+* carrying the same relative path (`\Users\jean` on C: and on D:) would
+* overwrite each other's copies.
 *
-* @param absolu chemin du fichier sur la machine examinée
-* @return le chemin de sa copie sur le support de collecte
+* @param absolute path of the file on the examined machine
+* @return the path of its copy on the collection medium
 */
 std::wstring extractedPath(const std::wstring& absolute);
 
-/*! Forme canonique « X:\\… » d'un chemin de fichier relevé dans un artefact.
+/*! Canonical "X:\\…" form of a file path found in an artefact.
 *
-* LA règle de normalisation des chemins : préfixes objet NT (`\\??\\`,
-* `\\\\?\\`), préfixe noyau `\\SystemRoot\\`, variables système (`%windir%`,
-* `%ProgramFiles%`…) développées depuis `conf.systemDrive`, guillemets et espaces
-* d'encadrement, lettre de lecteur en majuscule. `cheminBinaire` et le
-* développement des chemins de profil s'y ramènent : une seule règle, pas de
-* variante par artefact.
+* THE path normalisation rule: NT object prefixes (`\\??\\`, `\\\\?\\`), the
+* kernel prefix `\\SystemRoot\\`, system variables (`%windir%`,
+* `%ProgramFiles%`…) expanded from `conf.systemDrive`, surrounding quotes and
+* spaces, drive letter in upper case. `binaryPath` and the expansion of profile
+* paths both come back to it: one single rule, no variant per artefact.
 *
-* @return le chemin normalisé, ou une chaîne VIDE s'il ne désigne pas un fichier
-*         local déterminable : partage réseau, chemin relatif, variable propre à
-*         un utilisateur ou inconnue
+* @return the normalised path, or an EMPTY string if it does not name a
+*         determinable local file: network share, relative path, variable
+*         specific to a user, or unknown variable
 */
 std::wstring normalizeFilePath(std::wstring path);
 
-/*! Résout un chemin de binaire tel que le registre l'écrit.
+/*! Resolves a binary path as the registry writes it.
 *
-*  Les chemins du registre ne sont pas directement utilisables : ils peuvent
-*  être entre guillemets et suivis d'options, commencer par un préfixe d'objet
-*  NT (`\SystemRoot\`, `%SystemRoot%\`, `\??\`), ou être relatifs — et un
-*  chemin relatif l'est à `%SystemRoot%`, pas au répertoire courant.
+*  Registry paths are not directly usable: they may be quoted and followed by
+*  options, start with an NT object prefix (`\SystemRoot\`, `%SystemRoot%\`,
+*  `\??\`), or be relative — and a relative path is relative to `%SystemRoot%`,
+*  not to the current directory.
 *
-*  Sert aux binaires de services et aux fichiers de ressources des fournisseurs
-*  d'événements, deux usages qui lisent la même sorte de valeur.
+*  Serves the service binaries and the resource files of the event providers,
+*  two uses that read the same kind of value.
 *
-*  @param imagePath valeur brute du registre
-*  @return le chemin absolu, ou chaîne vide s'il ne désigne pas un fichier
-*          (un objet noyau comme `\Driver\xxx`, par exemple)
-*  @see la mise en œuvre, dans tools.cpp, documente les formes rencontrées
+*  @param imagePath the raw registry value
+*  @return the absolute path, or an empty string if it does not name a file
+*          (a kernel object such as `\Driver\xxx`, for instance)
+*  @see the implementation, in tools.cpp, documents the forms met
 */
 std::wstring binaryPath(std::wstring imagePath);
 
-/*! Chemin d'un fichier extrait sous une racine donnée.
+/*! Path of an extracted file under a given root.
 *
-*  Même règle que `cheminExtrait`, mais la racine est passée en paramètre :
-*  l'extraction écrit sous la consigne, le travail se fait sous une autre racine,
-*  et les deux doivent ranger les fichiers à l'identique pour que l'une soit la
-*  copie vérifiable de l'autre.
+*  Same rule as `extractedPath`, but the root is passed as a parameter: the
+*  extraction writes under the exhibit store, the work happens under another
+*  root, and both must store the files identically for one to be the verifiable
+*  copy of the other.
 *
-*  @param racine répertoire de destination
-*  @param absolu chemin d'origine, avec sa lettre de volume ou relatif au volume système
-*  @return racine + [\_volume_X] + chemin relatif au volume
+*  @param root destination directory
+*  @param absolute original path, with its volume letter or relative to the
+*         system volume
+*  @return root + [\_volume_X] + path relative to the volume
 */
 std::wstring pathUnder(const std::wstring& root, const std::wstring& absolute);
 
-/*! Chemin d'ORIGINE d'un fichier, à partir de sa copie extraite.
+/*! ORIGINAL path of a file, from its extracted copy.
 *
-* Opération inverse de `cheminExtrait()`, utilisée pour publier dans le JSON le
-* chemin qu'avait le fichier sur la machine examinée — et non celui de sa copie
-* sur le support de collecte.
+* The inverse of `extractedPath()`, used to publish in the JSON the path the
+* file had on the examined machine — and not that of its copy on the collection
+* medium.
 *
-* Le remplacement naïf employé jusqu'ici, `replaceAll(chemin, conf.mountpoint,
-* conf.systemDrive)`, ignorait le sous-dossier de volume : un fichier venu de
-* `D:` ressortait sous `C:\_volume_D\Users\…`, c'est-à-dire un chemin qui
-* n'existe sur aucun disque.
+* The naive replacement used until now, `replaceAll(path, conf.mountpoint,
+* conf.systemDrive)`, ignored the volume subfolder: a file coming from `D:` came
+* out as `C:\_volume_D\Users\…`, that is a path that exists on no disk.
 *
-* @param extrait chemin de la copie, sous `conf.mountpoint`
-* @return le chemin d'origine, avec sa vraie lettre de lecteur
+* @param extracted path of the copy, under `conf.mountpoint`
+* @return the original path, with its real drive letter
 */
 std::wstring originalPath(const std::wstring& extracted);
 
-extern AppliConf conf;// variable globale pour la conf de l'application
+extern AppliConf conf;// global variable holding the application's configuration
 
 ///////////////////////////////////////////////////////
-// Format de données
+// Data formats
 //////////////////////////////////////////////////////
 
-/*! structure de données  permettant de stocker les dates au format FAT DOS time
+/*! Holds a date in the FAT DOS time format.
 *
-* Note sur les dates et heures:
-* 
-* DOS stocke les dates et heures de modification de fichiers comme une paire de nombre de 16-bit:
-* 
-* 	7 bits pour l'année, 4 bits pour le mois, 5 bits pour le jour du mois
-* 	5 bits pour l'heure, 6 bits pour les minutes, 5 bits pour les secondes (x2)
-* 
-* Tous les systèmes de fichiers utilisent des dates relatives à une époque (heure zéro). 
-* Pour DOS, l'époque est minuit, le réveillon du Nouvel An, le 1er janvier 1980. 
-* Un champ de sept bits pour les années signifie que le calendrier DOS ne fonctionne que jusqu'en 2107. 
+* A note on dates and times:
+*
+* DOS stores a file's modification date and time as a pair of 16-bit numbers:
+*
+* 	7 bits for the year, 4 bits for the month, 5 bits for the day of the month
+* 	5 bits for the hour, 6 bits for the minutes, 5 bits for the seconds (x2)
+*
+* Every file system uses dates relative to an epoch (time zero). For DOS, the
+* epoch is midnight, New Year's Eve, 1 January 1980. A seven-bit field for the
+* years means that the DOS calendar only works up to 2107.
 */
 struct FatDateTime {
 
-	unsigned int i =0; //!< entier d'origine utilisé par le constructeur, correspond à la concaténation des 2 parties de 16 bits chacune
-	unsigned short int date =0; //!< première partie de 16 bits consacrée à la date : 7 bits pour l'année, 4 bits pour le mois, 5 bits pour le jour du mois
-	unsigned short int time =0 ; //!< seconde partie de 16 bits consacrée à l'heure : 5 bits pour l'heure, 6 bits pour les minutes, 5 bits pour les secondes (x2)
+	unsigned int i =0; //!< the original integer the constructor took, that is the two 16-bit halves concatenated
+	unsigned short int date =0; //!< first 16-bit half, the date: 7 bits for the year, 4 for the month, 5 for the day of the month
+	unsigned short int time =0 ; //!< second 16-bit half, the time: 5 bits for the hour, 6 for the minutes, 5 for the seconds (x2)
 
-	//! constructeur à partir d'un timestamp, permet de parser la date
+	//! Builds from a timestamp, which parses the date.
 	FatDateTime(unsigned int _i); 
-	//! conversion FAT DOS TIME vers SYSTEM TIME
+	//! Converts FAT DOS TIME to SYSTEMTIME.
 	SYSTEMTIME toSystemTime(); 
-	//! Conversion FAT DOS TIME vers FILETIME
+	//! Converts FAT DOS TIME to FILETIME.
 	FILETIME toFileTime(); 
 };
 
@@ -249,170 +247,168 @@ struct FatDateTime {
 //affichage
 ///////////////////////////////////////////////////////
 
-//! affichage du mot OK en vert dans la console
+//! Prints the word OK in green on the console.
 void printSuccess();
 
-/*! Affiche une ligne de progression réécrite sur place (retour chariot).
+/*! Prints a progress line rewritten in place (carriage return).
 *
-* POURQUOI. Sur un système réel, l'extraction d'une grosse ruche ou la lecture du
-* journal System durent plusieurs minutes sans rien afficher : l'opérateur ne
-* distingue pas une collecte qui avance d'une collecte bloquée, et peut
-* l'interrompre — ce qui fait perdre la collecte en cours.
+* WHY. On a real system, extracting a large hive or reading the System log takes
+* several minutes without displaying anything: the operator cannot tell a
+* collection that is progressing from one that is stuck, and may interrupt it —
+* which loses the collection under way.
 *
-* N'écrit QUE si la sortie standard est une console : redirigée vers un fichier,
-* la progression n'apporterait rien et polluerait le journal de milliers de
-* lignes.
+* Writes ONLY if the standard output is a console: redirected to a file, the
+* progress would bring nothing and would pollute the log with thousands of
+* lines.
 *
-* La progression réécrit la LIGNE COURANTE, donc elle efface le libellé d'étape
-* (ceux-ci sont écrits sans retour à la ligne, en attente de leur « OK »). C'est
-* pourquoi le libellé doit être posé par printStep() : printSuccess() et
-* printError() le restaurent alors automatiquement, et aucun collecteur n'a à
-* s'en préoccuper.
+* The progress rewrites the CURRENT LINE, so it erases the step label (those are
+* written without a newline, waiting for their "OK"). That is why the label must
+* be set by printStep(): printSuccess() and printError() then restore it
+* automatically, and no collector has to care.
 *
-* @param libelle ce qui est en cours (ex. nom de fichier ou de canal)
-* @param fait quantité traitée
-* @param total quantité totale attendue, ou 0 si inconnue
-* @param unite unité à afficher (ex. L"Kio", L"evt")
+* @param label what is under way (e.g. a file or channel name)
+* @param done quantity processed
+* @param total total quantity expected, or 0 if unknown
+* @param unit unit to display (e.g. L"KiB", L"evt")
 */
 void printProgress(const std::wstring& label, unsigned long long done,
                    unsigned long long total, const wchar_t* unit);
 
-/*! Termine une ligne de progression et restaure le libellé d'étape.
-* Appelée automatiquement par printSuccess() et printError() : à n'appeler
-* directement que pour reprendre la main sur l'affichage en cours de traitement.
+/*! Ends a progress line and restores the step label.
+* Called automatically by printSuccess() and printError(): to be called directly
+* only to take back the display in the middle of a treatment.
 */
 void printProgressEnd();
 
-/*! Affiche le libellé d'une étape et le mémorise.
+/*! Prints the label of a step and remembers it.
 *
-* À utiliser à la place d'un wprintf direct pour toute étape susceptible
-* d'afficher une progression : le libellé est réaffiché après coup, si bien que
-* le « OK » ou l'erreur reste rattaché à son étape.
-* @param libelle ex. L" - Extracting SHIMCACHE Registry Keys : "
+* To be used instead of a direct wprintf for any step that may display a
+* progress: the label is printed again afterwards, so that the "OK" or the error
+* stays attached to its step.
+* @param label e.g. L" - Extracting SHIMCACHE Registry Keys : "
 */
 void printStep(const std::wstring& label);
 
-/*! Progression d'un artefact, avec limitation de fréquence.
+/*! Progress of an artefact, rate-limited.
 *
-* Destinée aux boucles de collecte. La limitation de fréquence est faite par
-* printProgress, PAR LE TEMPS : un pas fixe en nombre d'éléments ne peut pas
-* convenir à la fois aux 38 shellbags de plusieurs secondes chacun et aux 3032
-* entrées amcache instantanées (mesures sur un poste réel).
-* @param artefact nom de l'artefact en cours
-* @param fait nombre d'éléments traités
-* @param total nombre total attendu, ou 0 si inconnu
+* Meant for the collection loops. The rate limiting is done by printProgress, BY
+* TIME: a fixed step in number of elements cannot suit both the 38 shellbags of
+* several seconds each and the 3,032 instantaneous amcache entries (measured on
+* a real workstation).
+* @param artefact name of the artefact under way
+* @param done number of elements processed
+* @param total total number expected, or 0 if unknown
 */
 void printProgressStep(const std::wstring& artefact, unsigned long long done,
                        unsigned long long total);
 
-/*! affichage du message d'erreur correspondant au résultat HRESULT en ROUGE dans la console
-* @param hresult résultat retourné par un commande
+/*! Prints the error message of an HRESULT in RED on the console.
+* @param hresult the result a command returned
 */
 void printError( HRESULT  hresult);
 
-/*! affichage du message errortext en ROUGE dans la console
-* @param errorText texte à afficher
+/*! Prints errorText in RED on the console.
+* @param errorText the text to print
 */
 void printError( std::wstring  errorText);
 
-/*! extraction du message d'erreur d'un HRESULT retourné par une commande
-* @param hresult résultat retourné par un commande
-* @return wstring correspondant au texte associé au code erreur HRESULT
+/*! Extracts the error message of an HRESULT returned by a command.
+* @param hresult the result a command returned
+* @return the text attached to that HRESULT error code
 */
 std::wstring getErrorMessage(HRESULT hresult);
 
-/*! enregistrement d'un message dans le ficier de log de sortie
-* log(0, L""); => Simple message
-* log(0, L"ℹ️"); => Nouveau type d'artefact
-* log(1, L"➕"); => Nouvel artefact
-* log(2, L"🔥"); => Error
-* log(2, L"❇️"); => Identification d'un artefact
-* log(3, L"🔈"); => Nom de la fonction apperlée
-* @param loglevel niveau de journalisation, qui commande aussi l'emoji
-* @param message message a enregistré dans le fichier donnant du contexte
+/*! Records a message in the output log file.
+* log(0, L""); => plain message
+* log(0, L"ℹ️"); => new kind of artefact
+* log(1, L"➕"); => new artefact
+* log(2, L"🔥"); => error
+* log(2, L"❇️"); => identification of an artefact
+* log(3, L"🔈"); => name of the function called
+* @param loglevel log level, which also decides the emoji
+* @param message the message to record, giving the context
 */
 void log(int loglevel, std::wstring message);
 
-/*! enregistrement d'un message dans le ficier de log de  complété par un code erreur
-* @param loglevel niveau de journalisation, qui commande aussi l'emoji
-* @param message message a enregistré dans le fichier donnant du contexte
-* @param result code erreur a tranformé en message d'ereur
+/*! Records a message in the log file, completed by an error code.
+* @param loglevel log level, which also decides the emoji
+* @param message the message to record, giving the context
+* @param result error code, turned into an error message
 */
 void log(int loglevel, std::wstring message, HRESULT result);
 
 
-/*! extraction du message d'erreur d'un HRESULT retourné par une commande
-* @param hresult résultat retourné par un commande
-* @return wstring correspondant au texte associé au code erreur HRESULT
+/*! Extracts the error message of an HRESULT returned by a command.
+* @param hresult the result a command returned
+* @return the text attached to that HRESULT error code
 */
 std::wstring getErrorMessage(HRESULT hresult);
 
-/*! converti un texte ANSI vers UTF8
-* @param in chaîne de caractères encodé en ANSI
-* @return chaîne de caractères encodée en UTF8
+/*! Converts an ANSI text to UTF-8.
+* @param in the string, encoded in ANSI
+* @return the string, encoded in UTF-8
 */
 std::string ansi_to_utf8(std::string in);
 
-/*! converti un texte ANSI vers UTF8
-* @param in chaîne de caractères encodée en ANSI
-* @return chaîne de caractères encodé en UTF8
+/*! Converts an ANSI text to UTF-8.
+* @param in the string, encoded in ANSI
+* @return the string, encoded in UTF-8
 */
 std::wstring ansi_to_utf8(std::wstring in);
 
-/*! affiche en hexadecimal le contenu du buffer dans la console
-* @param buffer pointeur sur un buffer contenu les données à afficher
-* @param start indique la position du premier octet à afficher dans le buffer
-* @param end indique la position du dernier octet à afficher dans le buffer. 
+/*! Prints the content of a buffer in hexadecimal on the console.
+* @param buffer pointer to a buffer holding the data to print
+* @param start position of the first byte to print in the buffer
+* @param end position of the last byte to print in the buffer.
 */
 void dump(LPBYTE buffer, int start, int end);
 
-/*! Restitue une zone mémoire en hexadécimal, octet par octet.
+/*! Returns a memory area in hexadecimal, byte by byte.
 *
-* ATTENTION À LA SÉMANTIQUE, corrigée le 2026-09-15. Le troisième paramètre
-* s'appelait `end` et la boucle allait jusqu'à `x <= end` — un index de fin
-* INCLUS. Or les cinq appelants lui passaient tous une TAILLE : chacun lisait
-* donc un octet au-delà de la zone voulue. C'est désormais une longueur, et la
-* borne est exclusive.
+* MIND THE SEMANTICS, corrected on 2026-09-15. The third parameter was named
+* `end` and the loop went up to `x <= end` — an INCLUSIVE end index. But all
+* five callers passed it a SIZE: each therefore read one byte past the intended
+* area. It is now a length, and the bound is exclusive.
 *
-* @param buffer début de la zone
-* @param start décalage du premier octet à restituer
-* @param longueur nombre d'octets à restituer depuis `start`
-* @return les octets en hexadécimal, séparés par des espaces
+* @param buffer start of the area
+* @param start offset of the first byte to return
+* @param length number of bytes to return from `start`
+* @return the bytes in hexadecimal, separated by spaces
 */
 std::wstring dump_wstring(LPBYTE buffer, int start, int length);
 
 ///////////////////////////////////////////////////////
-//chaînes
+// strings
 ///////////////////////////////////////////////////////
 
-/*! Dans une chaîne de caractères, remplace toutes les occurrences d'une chaîne par une autre
-* @param src chaîne de départ contenant la chaîne à rechercher
-* @param search représente la chaîne à rechercher dans `src`
-* @param replacement chaîne à insérer en lieu et place de `search`
-* @return wstring resultant du remplacement
+/*! In a string, replaces every occurrence of a string by another.
+* @param src the starting string, holding the string to look for
+* @param search the string to look for in `src`
+* @param replacement the string to put in place of `search`
+* @return the string that results from the replacement
 */
 std::wstring replaceAll(std::wstring src, std::wstring search, std::wstring replacement);
 
-/*! Opération ROT13 sur une chaîne de caractères
-* @param source chaîne de caractère à traiter
-* @return wstring resultant de l'opération
+/*! ROT13 operation on a string.
+* @param source the string to process
+* @return the string that results from the operation
 */
 std::wstring ROT13(std::wstring source);
 
-/*! décodage d'URL
-* @param encoded représente l’URL à décoder
-* @return string resultant de l'opération
+/*! URL decoding.
+* @param encoded the URL to decode
+* @return the string that results from the operation
 */
 std::string decodeURIComponent(std::string encoded);
 
-/*! conversion d'un nombre en caractères hexadecimal
-* @param i entier à transformer
-* @return wstring resultant de l'opération
+/*! Converts a number to hexadecimal characters.
+* @param i the integer to convert
+* @return the string that results from the operation
 */
 std::wstring to_hex(long long i);
 
-/*! insertion de n tabulations dans une chaîne de caractères. utiliser pour le formatage du json de sortie
-* @return wstring contenant le nombre de tabulations désiré
+/*! Inserts n tabulations in a string. Used to lay out the output JSON.
+* @return a string holding the wanted number of tabulations
 */
 std::wstring tab(int i);
 
@@ -420,207 +416,209 @@ std::wstring tab(int i);
 //conversion
 ///////////////////////////////////////////////////////
 
-/*! Conversion d'un sid en nom d'utilisateur au format wstring
-* @param _sid est le sid de l'utilisateur
+/*! Converts a SID to a user name.
+* @param _sid the user's SID
 */
 std::wstring getNameFromSid(std::wstring _sid);
 
 
-/*! Conversion un booléen un wstring "true" ou "false".
-* @param b booléen à convertir
-* @return wstring "true" ou "false"
+/*! Converts a boolean to the string "true" or "false".
+* @param b the boolean to convert
+* @return "true" or "false"
 */
 std::wstring bool_to_wstring(bool b);
 
-/*! Conversion un time_t en FILETIME .
-* @param t time_t à convertir
-* @return FILETIME issue de la conversion
+/*! Converts a time_t to a FILETIME.
+* @param t the time_t to convert
+* @return the FILETIME that results from the conversion
 */
 FILETIME timet_to_fileTime(time_t t);
 
-/*! Conversion une chaîne de caractère représentant une date en FILETIME.
-* @param input chaîne à convertir
-* @return FILETIME issue de la conversion
+/*! Converts a string holding a date to a FILETIME.
+* @param input the string to convert
+* @return the FILETIME that results from the conversion
 */
 FILETIME wstring_to_filetime(std::wstring input);
 
-/*! Conversion un FILETIME en wstring.
-* @param filetime FILETIME à convertir en wstring
-* @param convertUtc si true alors date sera convertie en UTC
-* @return chaîne de caractères issue de la conversion
+/*! Converts a FILETIME to a string.
+* @param filetime the FILETIME to convert
+* @param convertUtc if true, the date is converted to UTC
+* @return the string that results from the conversion
 */
 std::wstring time_to_wstring(const FILETIME filetime, bool convertUtc = false);
 
-/*! Conversion un SYSTEMTIME en wstring.
-* @param systemtime SYSTEMTIME à convertir en wstring
-* @return chaîne de caractères issue de la conversion
+/*! Converts a SYSTEMTIME to a string.
+* @param systemtime the SYSTEMTIME to convert
+* @return the string that results from the conversion
 */
 std::wstring time_to_wstring(const SYSTEMTIME systemtime);
 
 ///////////////////////////////////////////////////////
 // Horodatages ISO 8601
 ///////////////////////////////////////////////////////
-/*  POURQUOI CE FORMAT. Les dates étaient émises en « 15/9/2026 5h43m32s » :
- *  ni triable lexicographiquement, ni corrélable entre outils, ambigu sur le
- *  jour et le mois, et surtout MUET sur le fuseau — un horodatage sans fuseau
- *  n'est pas exploitable dans une chronologie.
+/*  WHY THIS FORMAT. The dates used to be emitted as "15/9/2026 5h43m32s":
+ *  neither sortable lexicographically, nor correlatable between tools,
+ *  ambiguous on the day and the month, and above all SILENT on the time zone —
+ *  and a timestamp without a time zone cannot be used in a timeline.
  *
- *  ISO 8601 règle les quatre problèmes à la fois : « 2026-09-15T05:43:32Z »
- *  pour l'UTC, « 2026-09-15T07:43:32+02:00 » pour l'heure locale. La date porte
- *  alors son propre fuseau : plus besoin d'une convention externe pour la lire.
+ *  ISO 8601 settles all four problems at once: "2026-09-15T05:43:32Z" for UTC,
+ *  "2026-09-15T07:43:32+02:00" for a local time. The date then carries its own
+ *  time zone: no external convention is needed to read it.
  *
- *  DEUX FONCTIONS, PAS UN DRAPEAU. Le suffixe (« Z » ou « +HH:MM ») doit dire
- *  la vérité sur la valeur. Seul l'appelant sait ce qu'il détient, et un
- *  paramètre à valeur par défaut produirait des dates faussement étiquetées en
- *  cas d'oubli — une faute grave en expertise. D'où deux fonctions nommées,
- *  sans défaut possible.
+ *  TWO FUNCTIONS, NOT A FLAG. The suffix ("Z" or "+HH:MM") must tell the truth
+ *  about the value. Only the caller knows what it holds, and a parameter with a
+ *  default value would produce falsely labelled dates whenever it was
+ *  forgotten — a serious fault in an expert report. Hence two named functions,
+ *  with no possible default.
  *
- *  Une date nulle rend une chaîne vide, comme time_to_wstring : sans cela on
- *  émettrait « 1601-01-01T00:00:00Z » comme s'il s'agissait d'une vraie date.
+ *  A null date returns an empty string, as time_to_wstring does: without that
+ *  one would emit "1601-01-01T00:00:00Z" as if it were a real date.
  */
 
-/*! Formate un FILETIME **déjà exprimé en UTC** au format ISO 8601, suffixe « Z ».
-* @param filetime l'instant, en UTC
-* @return "AAAA-MM-JJTHH:MM:SSZ", ou "" si la date est nulle
+/*! Formats a FILETIME **already expressed in UTC** as ISO 8601, suffix "Z".
+* @param filetime the instant, in UTC
+* @return "YYYY-MM-DDTHH:MM:SSZ", or "" if the date is null
 */
 std::wstring timeToIso8601Utc(const FILETIME& filetime);
 
-/*! Formate un FILETIME **exprimé en heure locale** au format ISO 8601, avec le
-* décalage du fuseau de la machine (ex. "+02:00").
-* @param filetime l'instant, en heure locale de la machine examinée
-* @return "AAAA-MM-JJTHH:MM:SS+HH:MM", ou "" si la date est nulle
+/*! Formats a FILETIME **expressed in local time** as ISO 8601, with the
+* machine's time-zone offset (e.g. "+02:00").
+* @param filetime the instant, in the examined machine's local time
+* @return "YYYY-MM-DDTHH:MM:SS+HH:MM", or "" if the date is null
 */
 std::wstring timeToIso8601Local(const FILETIME& filetime);
 
-/*! Convertit un FILETIME **exprimé en heure locale** vers l'UTC, puis le formate
-* au format ISO 8601 avec le suffixe « Z ».
-* Utile pour les artefacts qui stockent des dates en heure locale (Amcache, BAM,
-* shimcache, USBSTOR, UserAssist) et dont on veut aussi la version UTC.
-* @param filetimeLocal l'instant, en heure locale de la machine examinée
-* @return "AAAA-MM-JJTHH:MM:SSZ", ou "" si la date est nulle
+/*! Converts a FILETIME **expressed in local time** to UTC, then formats it as
+* ISO 8601 with the "Z" suffix.
+* Useful for the artefacts that store dates in local time (Amcache, BAM,
+* shimcache, USBSTOR, UserAssist) and whose UTC version is also wanted.
+* @param filetimeLocal the instant, in the examined machine's local time
+* @return "YYYY-MM-DDTHH:MM:SSZ", or "" if the date is null
 */
 std::wstring localTimeToIso8601Utc(const FILETIME& filetimeLocal);
 
-/*! Convertit un FILETIME **exprimé en UTC** vers l'heure locale de la machine
-* EXAMINÉE, puis le formate au format ISO 8601 avec le décalage du fuseau.
+/*! Converts a FILETIME **expressed in UTC** to the local time of the EXAMINED
+* machine, then formats it as ISO 8601 with the time-zone offset.
 *
-* POURQUOI PAS `FileTimeToLocalFileTime` SUIVI DE `timeToIso8601Local`. Cette
-* combinaison, employée jusqu'ici, applique le décalage de la machine qui
-* EXÉCUTE WAC tout en apposant l'étiquette du fuseau du SUSPECT : identique en
-* collecte live, contradictoire dès qu'une image est analysée ailleurs — la
-* valeur et son étiquette ne parleraient plus du même fuseau.
-* Ici, le décalage appliqué et l'étiquette proviennent de la MÊME source.
+* WHY NOT `FileTimeToLocalFileTime` FOLLOWED BY `timeToIso8601Local`. That
+* combination, used until now, applies the offset of the machine RUNNING WAC
+* while attaching the label of the SUSPECT's time zone: the same in a live
+* collection, contradictory as soon as an image is analysed elsewhere — the
+* value and its label would no longer speak of the same time zone.
+* Here, the offset applied and the label come from the SAME source.
 *
-* @param filetimeUtc l'instant, en UTC
-* @return "AAAA-MM-JJTHH:MM:SS+HH:MM", ou "" si la date est nulle
+* @param filetimeUtc the instant, in UTC
+* @return "YYYY-MM-DDTHH:MM:SS+HH:MM", or "" if the date is null
 */
 std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc);
 
-/*! Convertit un FILETIME UTC en heure locale de la machine EXAMINÉE.
+/*! Converts a UTC FILETIME to the local time of the EXAMINED machine.
 *
-* Remplace `FileTimeToLocalFileTime()`, qui applique le fuseau de la machine
-* d'EXÉCUTION. Les deux coïncident en collecte live, mais divergent dès qu'une
-* image est analysée ailleurs : l'heure serait alors décalée du fuseau de
-* l'examinateur tout en portant l'étiquette du fuseau du suspect — deux fuseaux
-* dans une même valeur. Un seul point de vérité, `conf.timeZone`, évite ce
-* piège ; le repli sur la machine d'exécution ne s'applique que si la ruche
-* SYSTEM n'a pas (encore) pu être lue.
+* Replaces `FileTimeToLocalFileTime()`, which applies the time zone of the
+* RUNNING machine. The two coincide in a live collection, but diverge as soon as
+* an image is analysed elsewhere: the time would then be shifted by the
+* examiner's time zone while carrying the label of the suspect's — two time
+* zones in one value. A single point of truth, `conf.timeZone`, avoids that
+* trap; the fallback on the running machine applies only if the SYSTEM hive
+* could not (yet) be read.
 *
-* @param filetimeUtc l'instant, en UTC
-* @param filetimeLocal reçoit l'instant en heure locale du suspect
-* @return true si la conversion a abouti
+* @param filetimeUtc the instant, in UTC
+* @param filetimeLocal receives the instant in the suspect's local time
+* @return true if the conversion succeeded
 */
 bool utcToSuspectLocal(const FILETIME& filetimeUtc, FILETIME* filetimeLocal);
 
-/*! Relève le fuseau de la machine examinée dans la ruche SYSTEM du suspect.
+/*! Reads the examined machine's time zone in the suspect's SYSTEM hive.
 *
-* Lit `Control\TimeZoneInformation` sous `conf.CurrentControlSet` et renseigne
-* `conf.timeZone`. À appeler dès que `conf.CurrentControlSet` est ouverte : tous
-* les horodatages locaux formatés ENSUITE porteront le décalage du suspect.
+* Reads `Control\TimeZoneInformation` under `conf.CurrentControlSet` and fills
+* `conf.timeZone`. To be called as soon as `conf.CurrentControlSet` is open:
+* every local timestamp formatted AFTERWARDS will carry the suspect's offset.
 *
-* En cas d'échec, `conf.timeZone.valid` reste faux et le formatage retombe sur
-* `GetTimeZoneInformation()` — correct en collecte live, puisque la machine
-* examinée est alors la machine d'exécution.
+* On failure, `conf.timeZone.valid` stays false and the formatting falls back on
+* `GetTimeZoneInformation()` — which is right in a live collection, since the
+* examined machine is then the running machine.
 *
-* @return ERROR_SUCCESS si le fuseau a été relevé, un code d'erreur sinon
+* @return ERROR_SUCCESS if the time zone was read, an error code otherwise
 */
 HRESULT loadSuspectTimeZone();
 
-/*! Décalage horaire utilisé pour formater les heures locales, en "+HH:MM".
-* Provient de la ruche du suspect si elle a pu être lue, sinon de la machine
-* d'exécution.
-* @return le décalage, ex. L"+02:00"
+/*! Time-zone offset used to format local times, as "+HH:MM".
+* Comes from the suspect's hive if it could be read, otherwise from the running
+* machine.
+* @return the offset, e.g. L"+02:00"
 */
 std::wstring localUtcOffsetString();
 
-/*! Formate un SYSTEMTIME au format ISO 8601.
-* @param systemtime l'instant
-* @param utc true si la valeur est en UTC (suffixe « Z »), false si elle est en
-*        heure locale (suffixe du fuseau de la machine)
-* @return la date formatée, ou "" si elle est nulle
+/*! Formats a SYSTEMTIME as ISO 8601.
+* @param systemtime the instant
+* @param utc true if the value is in UTC (suffix "Z"), false if it is in local
+*        time (suffix of the machine's time zone)
+* @return the formatted date, or "" if it is null
 */
-/*! @param fraction100ns fraction de seconde, en centaines de nanosecondes
-*         (0..9999999), ou -1 pour ne pas l'écrire.
+/*! @param fraction100ns fraction of a second, in hundreds of nanoseconds
+*         (0..9999999), or -1 not to write it.
 *
-*  POURQUOI CE PARAMÈTRE. Un SYSTEMTIME ne porte que la milliseconde, un
-*  FILETIME descend à cent nanosecondes. Les appelants qui disposent du FILETIME
-*  d'origine passent la vraie fraction ; les autres passent -1, et l'horodatage
-*  s'arrête à la seconde plutôt que d'afficher une précision qu'il n'a pas.
+*  WHY THIS PARAMETER. A SYSTEMTIME only carries the millisecond, a FILETIME
+*  goes down to a hundred nanoseconds. The callers that hold the original
+*  FILETIME pass the real fraction; the others pass -1, and the timestamp stops
+*  at the second rather than displaying a precision it does not have.
 */
 std::wstring timeToIso8601(const SYSTEMTIME& systemtime, bool utc, long fraction100ns = -1);
 
-/*! Conversion une chaîne de caractères string en wstring
-* @param str pointeur sur la chaîne de caractère string
-* @return wstring issue de la conversion
+/*! Converts a string to a wstring.
+* @param str pointer to the string
+* @return the wstring that results from the conversion
 */
 std::wstring string_to_wstring(const std::string& str);
 
-/*! Conversion une chaîne de caractères wstring en string
-* @param wstr pointeur sur la chaîne de caractère wstring
-* @return string issue de la conversion
+/*! Converts a wstring to a string.
+* @param wstr pointer to the wstring
+* @return the string that results from the conversion
 */
 std::string wstring_to_string(const std::wstring& wstr);
 
-/*! Passe une chaîne en minuscules, pour comparer sans tenir compte de la casse.
+/*! Lowercases a string, to compare without regard to case.
 *
-* POURQUOI C'EST NÉCESSAIRE. Windows ne s'accorde pas avec lui-même sur la
-* casse : sur une VM Windows 11, l'index NTFS porte « …\\Windows\\Input\… »
-* quand le registre écrit « …\\windows\\input\… ». Toute correspondance par
-* chemin ou par nom de service faite à la casse échoue alors EN SILENCE — et une
-* tâche sans historique se lit à tort comme « jamais exécutée ».
-* @param s la chaîne à normaliser
-* @return la chaîne en minuscules
+* WHY IT IS NECESSARY. Windows does not agree with itself on case: on a Windows
+* 11 VM, the NTFS index carries "…\\Windows\\Input\…" where the registry writes
+* "…\\windows\\input\…". Any match by path or by service name done
+* case-sensitively then fails IN SILENCE — and a task without history reads
+* wrongly as "never run".
+* @param s the string to normalise
+* @return the string in lower case
 */
 std::wstring toLower(std::wstring s);
 
-/*! Dit si une valeur de registre est une RÉFÉRENCE de ressource MUI plutôt
-* qu'un texte lisible.
+/*! Says whether a registry value is a MUI resource REFERENCE rather than a
+* readable text.
 *
-* Windows stocke la plupart des noms affichés sous la forme
-* `@%SystemRoot%\system32\schedsvc.dll,-100` ou `@tzres.dll,-301` : un fichier
-* et l'identifiant d'une chaîne à l'intérieur. Seul `LoadStringW` sur le module
-* la résout — donc en chargeant ce module dans le processus de collecte, ce que
-* la lecture hors ligne cherche justement à éviter.
+* Windows stores most displayed names in the form
+* `@%SystemRoot%\system32\schedsvc.dll,-100` or `@tzres.dll,-301`: a file and
+* the identifier of a string inside it. Only `LoadStringW` on the module
+* resolves it — hence by loading that module into the collecting process, which
+* is precisely what the offline reading seeks to avoid.
 *
-* La référence est donc conservée telle quelle, mais dans un champ qui dit ce
-* qu'elle est : présenter `@tzres.dll,-301` comme un nom de fuseau reviendrait à
-* afficher un défaut de lecture à la place d'une donnée.
+* The reference is therefore kept as it is, but in a field that says what it is:
+* presenting `@tzres.dll,-301` as a time-zone name would amount to displaying a
+* reading defect in place of a piece of data.
 *
-* @param valeur la valeur lue dans la ruche
-* @return true s'il s'agit d'une référence de ressource
+* @param value the value read in the hive
+* @return true if it is a resource reference
 */
 bool estReferenceMui(const std::wstring& value);
 
-/*! Conversion d'une chaîne de multiple wstring concaténés en vecteur de wstring. chaque chaîne doit être séparée de la précédente par \0
-* @param data pointeur vers le tableau contenant les chaînes de caractères
-* @param size taille de la chaîne de caractères contenue dans `data`
-* @return vecteur issue de la conversion
+/*! Converts a string of several concatenated wstrings to a vector of wstring.
+* Each string must be separated from the previous one by \0.
+* @param data pointer to the array holding the strings
+* @param size size of the string held in `data`
+* @return the vector that results from the conversion
 */
 std::vector<std::wstring> multiWstring_to_vector(LPBYTE data, int size);
 
-/*! Conversion un GUID en wstring. La chaîne de sortie sera au format "{20D04FE0-3AEA-1069-A2D8-08002B30309D}"
-* @param guid GUID à convertir
-* @return wstring issue de la conversion
+/*! Converts a GUID to a wstring. The output is of the form
+* "{20D04FE0-3AEA-1069-A2D8-08002B30309D}".
+* @param guid the GUID to convert
+* @return the wstring that results from the conversion
 */
 std::wstring guid_to_wstring(GUID guid);
 
@@ -629,123 +627,122 @@ std::wstring guid_to_wstring(GUID guid);
 ///////////////////////////////////////////////////////
 
 
-/*! Lecture d'un SZ_VALUE en base de registre et le converti en wstring
-* @param key clé de la base de registre
-* @param sousCle sous-clé de la base de registre
-* @param nomValeur contient la nom de la valeur à lire en base de registre
-* @param ws pointeur sur un wstring contenant la valeur lue en base de registre
-* @return ERROR_SUCCESS en cas de succès sinon un code erreur.
+/*! Reads an SZ value in the registry and converts it to a wstring.
+* @param key the registry key
+* @param subKey the registry subkey
+* @param valueName name of the value to read
+* @param ws pointer to a wstring receiving the value read
+* @return ERROR_SUCCESS on success, an error code otherwise.
 */
 HRESULT getRegSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::wstring* ws);
 
-/*! Lecture d'un FILMETIME en base de registre
-* @param key clé de la base de registre
-* @param sousCle sous-clé de la base de registre
-* @param nomValeur contient la nom de la valeur à lire en base de registre
-* @param filetime pointeur sur un FILETIME contenant la valeur lue en base de registre
-* @return ERROR_SUCCESS en cas de succès sinon un code erreur.
+/*! Reads a FILETIME in the registry.
+* @param key the registry key
+* @param subKey the registry subkey
+* @param valueName name of the value to read
+* @param filetime pointer to a FILETIME receiving the value read
+* @return ERROR_SUCCESS on success, an error code otherwise.
 */
 HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, FILETIME* filetime);
 
-/*! Lecture d'une valeur binaire en base de registre
-* nécessite d'utiliser delete[] octets pour libérer la mémoire
-* @param key clé de la base de registre
-* @param sousCle sous-clé de la base de registre
-* @param nomValeur contient la nom de la valeur à lire en base de registre
-* @param octets pointeur sur un tableau de BYTE contenant la valeur lue en base de registre
-* @param taille en entrée la taille du tampon, en sortie celle de la valeur lue
-* @return ERROR_SUCCESS en cas de succès sinon un code erreur registre
+/*! Reads a binary value in the registry.
+* The caller must `delete[] bytes` to release the memory.
+* @param key the registry key
+* @param subKey the registry subkey
+* @param valueName name of the value to read
+* @param bytes pointer to an array of BYTE receiving the value read
+* @param size on input the size of the buffer, on output that of the value read
+* @return ERROR_SUCCESS on success, a registry error code otherwise
 */
 HRESULT getRegBinaryValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, LPBYTE* bytes, DWORD* size);
 
-/*! Lecture d'un booléen en base de registre
-* @param key clé de la base de registre
-* @param sousCle sous-clé de la base de registre
-* @param nomValeur contient la nom de la valeur à lire en base de registre
-* @param valeur pointeur sur un booléen contenant la valeur lue en base de registre
-* @return ERROR_SUCCESS en cas de succès sinon un code erreur.
+/*! Reads a boolean in the registry.
+* @param key the registry key
+* @param subKey the registry subkey
+* @param valueName name of the value to read
+* @param value pointer to a boolean receiving the value read
+* @return ERROR_SUCCESS on success, an error code otherwise.
 */
 HRESULT getRegboolValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, bool* value);
 
-/*! Lit une valeur REG_DWORD (32 bits) en base de registre.
-* @param key clé ouverte
-* @param sousCle sous-clé (peut être NULL)
-* @param nomValeur nom de la valeur
-* @param pdword reçoit la valeur lue
-* @return ERROR_SUCCESS, ou un code d'erreur
+/*! Reads a REG_DWORD (32-bit) value in the registry.
+* @param key an open key
+* @param subKey the subkey (may be NULL)
+* @param valueName name of the value
+* @param pdword receives the value read
+* @return ERROR_SUCCESS, or an error code
 */
 HRESULT getRegDwordValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, DWORD* pdword);
 
-/*! Lit une valeur REG_QWORD (64 bits) en base de registre.
-* Utile pour les valeurs qui portent un FILETIME brut, comme `InstallTime` sous
+/*! Reads a REG_QWORD (64-bit) value in the registry.
+* Useful for the values that carry a raw FILETIME, such as `InstallTime` under
 * `SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion`.
-* @param key clé ouverte
-* @param sousCle sous-clé (peut être NULL)
-* @param nomValeur nom de la valeur
-* @param pqword reçoit la valeur lue
-* @return ERROR_SUCCESS, ou un code d'erreur
+* @param key an open key
+* @param subKey the subkey (may be NULL)
+* @param valueName name of the value
+* @param pqword receives the value read
+* @return ERROR_SUCCESS, or an error code
 */
 HRESULT getRegQwordValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, unsigned long long* pqword);
 
-/*! Lecture d'un MULTISZ (multiple chaînes de caractères concaténées) en base de registre
-* @param key clé de la base de registre
-* @param sousCle sous-clé de la base de registre
-* @param nomValeur contient la nom de la valeur à lire en base de registre
-* @param out pointeur sur un tableau de wstring contenant les valeurs lues en base de registre
-* @return ERROR_SUCCESS en cas de succès sinon un code erreur.
+/*! Reads a MULTI_SZ (several concatenated strings) in the registry.
+* @param key the registry key
+* @param subKey the registry subkey
+* @param valueName name of the value to read
+* @param out pointer to an array of wstring receiving the values read
+* @return ERROR_SUCCESS on success, an error code otherwise.
 */
 HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vector<std::wstring>* out);
 
 
-/*! Lecture d'un MULTISZ (multiple chaînes de caractères concaténées) en base de registre
-* @param searchSerial serial du volume a rechercher
-* @return wstring lettre de lecteur du point de montage du lecteur.
+/*! Drive letter a volume is mounted on, from its serial number.
+* @param searchSerial serial number of the volume to look for
+* @return the drive letter of the volume's mount point.
 */
 std::wstring getVolumeLetter(std::wstring searchSerial);
 
-/*! Écrit une valeur JSON dans `_outputDir`/`nom`, en UTF-8.
-* Centralise la création du répertoire de sortie, l'encodage et le chemin, pour
-* que chaque artefact n'ait plus à le refaire.
-* @param nom nom du fichier (ex. "bams.json")
-* @param valeur la valeur JSON racine (généralement un Json::arr())
-* @return ERROR_SUCCESS, ou un code d'erreur
+/*! Writes a JSON value into `_outputDir`/`name`, in UTF-8.
+* Centralises the creation of the output directory, the encoding and the path,
+* so that each artefact no longer has to do it again.
+* @param name name of the file (e.g. "bams.json")
+* @param value the root JSON value (usually a Json::arr())
+* @return ERROR_SUCCESS, or an error code
 */
 HRESULT writeJsonFile(const std::string& name, const Json& value);
 
-/*! Écrit un tableau JSON au fil de l'eau, sans le construire en mémoire.
+/*! Writes a JSON array as it goes, without building it in memory.
 *
-*  POURQUOI. `writeJsonFile` sérialise une valeur déjà complète : pour les
-*  journaux d'événements, cela voulait dire garder cent mille enregistrements en
-*  mémoire, puis leur sérialisation entière, puis sa conversion en UTF-8 — un pic
-*  de plusieurs centaines de mégaoctets. Sur une machine examinée, un tel pic ne
-*  coûte pas seulement du temps : il provoque de la pagination, donc des
-*  écritures dans `pagefile.sys`, sur le disque même qu'on s'efforce de ne pas
-*  modifier. Ici chaque élément est écrit puis oublié.
+*  WHY. `writeJsonFile` serialises an already complete value: for the event
+*  logs, that meant keeping a hundred thousand records in memory, then their
+*  whole serialisation, then its conversion to UTF-8 — a peak of several hundred
+*  megabytes. On an examined machine, such a peak does not only cost time: it
+*  causes paging, hence writes into `pagefile.sys`, on the very disk one strives
+*  not to modify. Here each element is written then forgotten.
 *
-*  Le fichier produit est identique à celui de `writeJsonFile` sur le même
-*  tableau : mêmes tabulations, pas de virgule finale.
+*  The file produced is identical to `writeJsonFile`'s on the same array: same
+*  tabulations, no trailing comma.
 *
-*  Un tableau vide donne `[]`, comme `writeJsonFile`.
+*  An empty array gives `[]`, as `writeJsonFile` does.
 */
 class JsonArrayWriter {
 public:
-	/*! Ouvre `_outputDir`/`nom` et écrit l'ouverture du tableau.
-	*  @param nom nom du fichier de sortie, sans chemin */
+	/*! Opens `_outputDir`/`name` and writes the opening of the array.
+	*  @param name name of the output file, without a path */
 	explicit JsonArrayWriter(const std::string& name);
 
-	/*! Ferme le tableau et le fichier. Appelé par le destructeur s'il a été
-	*  oublié, pour qu'une sortie anticipée ne laisse pas un JSON tronqué.
-	*  @return ERROR_SUCCESS, ou E_FAIL si l'écriture a échoué */
+	/*! Closes the array and the file. Called by the destructor if it was forgotten,
+	*  so that an early exit does not leave a truncated JSON.
+	*  @return ERROR_SUCCESS, or E_FAIL if the write failed */
 	HRESULT close();
 
 	~JsonArrayWriter();
 
-	/*! Ajoute un élément. Sans effet si le fichier n'a pas pu être ouvert. */
+	/*! Adds an element. Does nothing if the file could not be opened. */
 	void add(const Json& element);
 
-	//! Vrai si le fichier est ouvert en écriture.
+	//! True if the file is open for writing.
 	bool open() const { return open_; }
-	//! Nombre d'éléments écrits.
+	//! Number of elements written.
 	unsigned long long written() const { return written_; }
 
 private:
@@ -756,30 +753,31 @@ private:
 	std::string name_;
 };
 
-/*! Écrit un artefact NON COLLECTÉ, en consignant la raison de l'échec.
+/*! Writes an artefact that was NOT COLLECTED, recording the reason of the
+* failure.
 *
-* POURQUOI. Quand `getData()` échoue, le fichier JSON n'était pas écrit du tout.
-* À l'analyse, un fichier absent ne distingue pas « la lecture a échoué » de
-* « il n'y avait rien à collecter » — et un analyste peut conclure à tort à
-* l'absence de trace. Écrire le fichier avec le motif lève l'ambiguïté.
+* WHY. When `getData()` failed, the JSON file was not written at all. In
+* analysis, a missing file does not distinguish "the reading failed" from
+* "there was nothing to collect" — and an analyst may wrongly conclude there is
+* no trace. Writing the file with the reason removes the ambiguity.
 *
-* @param nom nom du fichier (ex. "Usbstor.json")
-* @param artefact libellé de l'artefact concerné
-* @param resultat code d'erreur rencontré
-* @return ERROR_SUCCESS si le fichier a pu être écrit
+* @param name name of the file (e.g. "Usbstor.json")
+* @param artefact label of the artefact concerned
+* @param result error code met
+* @return ERROR_SUCCESS if the file could be written
 */
 HRESULT writeNotCollected(const std::string& name, const std::wstring& artefact,
                           HRESULT result);
 
-/*! Liste les fichiers réguliers d'un répertoire, filtrés par extension.
-* Ne lève jamais d'exception : un répertoire absent ou illisible rend une liste
-* vide. C'est le cas nominal en collecte (tous les profils n'ont pas tous les
-* dossiers, et la copie brute ne contient que ce qui a été extrait) ; une
-* exception non rattrapée y interromprait toute la collecte.
-* La comparaison d'extension est insensible à la casse.
-* @param repertoire répertoire à parcourir (non récursif)
-* @param extensions extensions acceptées, point compris (ex. { L".lnk", L".url" })
-* @return chemins retenus, dans l'ordre du parcours ; éventuellement vide
+/*! Lists the regular files of a directory, filtered by extension.
+* Never throws: a missing or unreadable directory returns an empty list. That is
+* the nominal case in a collection (not every profile has every folder, and the
+* raw copy holds only what was extracted); an uncaught exception there would
+* stop the whole collection.
+* The extension comparison is case-insensitive.
+* @param directory directory to walk (not recursive)
+* @param extensions accepted extensions, dot included (e.g. { L".lnk", L".url" })
+* @return the paths kept, in the order they were walked; possibly empty
 */
 std::vector<std::filesystem::path> listFilesByExtension(const std::filesystem::path& directory,
 	const std::vector<std::wstring>& extensions);
