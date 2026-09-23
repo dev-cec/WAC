@@ -692,8 +692,9 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
   \item[\fichier{amcache\_application\_files.json},
         \fichier{amcache\_applications.json}] inventaire Amcache des exécutables et
         applications : chemin, éditeur, version, dates.
-  \item[\fichier{shimcache.json}] cache de compatibilité : chemin, date de
-        modification, indicateur d'exécution.
+  \item[\fichier{shimcache.json}] cache de compatibilité : chemin et date de
+        modification du fichier. Une entrée prouve que le binaire était présent,
+        pas qu'il a été exécuté.
   \item[\fichier{bams.json}] dernière exécution par programme et par utilisateur
         (Background Activity Moderator).
   \item[\fichier{userassists.json}] programmes lancés depuis l'interface :

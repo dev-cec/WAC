@@ -29,6 +29,7 @@
 #include <filesystem>
 #include <fstream>
 #include <algorithm>
+#include <cstring>
 #include "tools.h"
 #include "quickdigest5.h"
 #include "binaires.h"
@@ -41,9 +42,11 @@ public:
 	BinaryFingerprint fingerprint;  //!< fingerprints of that file, if `--binary` was given
 	std::wstring lastModification = L"";    //!< the file's last modification, suspect's local time
 	std::wstring lastModificationUtc = L"";	//!< the same instant in UTC
-	bool executed = false;       //!< flag read at the end of the entry. The "10ts"
-	                             //!< format of Windows 10/11 documents no execution
-	                             //!< flag there: TO BE CHECKED before it is relied on
+	/* No execution flag. One used to be read at the end of the entry and
+	   emitted as "Executes"; confronted with Prefetch on the test VM, it said
+	   nothing: 12 % "true" among binaries Prefetch proves were run, 23 % among
+	   the others. A field that does not mean what its name says is worse than
+	   no field — the Windows 10/11 cache proves presence, not execution. */
 
 	/*! Converts the entry to JSON.
 	 *  @return its JSON object. */

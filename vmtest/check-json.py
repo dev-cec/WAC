@@ -162,6 +162,7 @@ def cross_checks(folder):
     found += check_users(folder)
     found += check_processes(folder)
     found += check_prefetchs(folder)
+    found += check_shimcache_dates(folder)
     found += check_events(folder)
     found += check_hive_replay(folder)
     found += check_exhibit_store(folder)
@@ -698,6 +699,51 @@ def check_prefetchs(folder):
         return 1 + check_prefetch_paths(d)
     print(f"  ✅ prefetchs.json: {len(d)} hashes match the file name")
     return check_prefetch_paths(d)
+
+
+def check_shimcache_dates(folder):
+    """The ShimCache modification date confronted with the file's NTFS date.
+
+    The cache stores the file's last modification as a FILETIME, hence UTC. WAC
+    formatted it as a local time, which shifted both keys by the time-zone
+    offset — invisible in the JSON, where the dates stayed well formed. The
+    manifest records, for every collected binary, the NTFS dates read in the
+    $MFT: an independent source. For an unchanged file both dates are
+    identical to the 100 ns; a gap of a whole number of hours on most entries
+    betrays a time-zone shift.
+    """
+    sh = load(folder, "shimcache.json")
+    store = store_folder(folder)
+    manifest = None
+    for name in ("MANIFEST.json", "MANIFESTE.json"):
+        manifest = load(os.path.join(folder, store), name) or manifest
+    if not isinstance(sh, list) or not sh or not isinstance(manifest, dict):
+        print("  ⏭️  shimcache.json or manifest absent: ShimCache dates not confronted")
+        return 0
+    source = {str(i.get("SourcePath", "")).upper(): i for i in manifest.get("Items") or []
+              if i.get("SourceModifiedUtc")}
+    same = shifted = other = 0
+    for e in sh:
+        i = source.get(str(e.get("Path", "")).upper())
+        if not i or not e.get("LastModificationUtc"):
+            continue
+        gap = (instant(e["LastModificationUtc"]) - instant(i["SourceModifiedUtc"])).total_seconds()
+        if abs(gap) < 1:
+            same += 1
+        elif abs(gap) <= 14 * 3600 and abs(gap) % 900 < 1:
+            shifted += 1          # a whole quarter of an hour: a time-zone offset
+        else:
+            other += 1            # file replaced since the cache entry
+    if same + shifted == 0:
+        print("  ⏭️  no ShimCache entry matches a collected binary: dates not confronted")
+        return 0
+    if shifted > same:
+        print(f"  ❌ shimcache.json: {shifted} date(s) shifted by a time-zone offset against "
+              f"the NTFS date, {same} identical — UTC value treated as local?")
+        return 1
+    print(f"  ✅ shimcache.json: {same} date(s) identical to the NTFS date of the file "
+          f"({other} file(s) replaced since)")
+    return 0
 
 
 def check_prefetch_paths(d):

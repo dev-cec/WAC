@@ -10,7 +10,6 @@ Json Shimcache::toJson() {
 	addFingerprints(o, fingerprint);
 	o.add(L"LastModification",    Json::str(lastModification));
 	o.add(L"LastModificationUtc", Json::str(lastModificationUtc));
-	o.add(L"Executes",            Json::boolean(executed));   // a real boolean
 	return o;
 }	//! Releases the memory held by the entry.
 
@@ -43,38 +42,70 @@ HRESULT Shimcaches::getData() {
 		log(2, L"🔥getRegBinaryValue AppCompatCache", hresult );
 		return hresult;
 	}
-	DWORD offset = *reinterpret_cast<DWORD*>(data);
-	while (offset < size) {
-		printProgressStep(L"Shimcache", offset, size);
-		Shimcache shimcache;
-		std::wstring signature = std::wstring(data + offset, data + offset + 4).data();
-		if (signature == L"10ts") {
-			offset += 12;//unused
-			short int name_length = *reinterpret_cast<short int*>(data + offset);
-			offset += 2;
-			shimcache.path = std::wstring((LPWSTR)(data + offset), (LPWSTR)(data + offset) + name_length / sizeof(wchar_t)).data();
-
-			// Fingerprint on the normalised path (quotes, \??\), read raw.
-			shimcache.fingerprint = FingerprintFile(shimcache.path);
-			shimcache.path = replaceAll(shimcache.path, L"\t", L" "); // replace tab by space. seen in values
-			offset += name_length;
-			FILETIME filetime = *reinterpret_cast<FILETIME*>(data + offset);
-			log(3, L"🔈timeToIso8601 lastModification");
-			shimcache.lastModification = timeToIso8601Local(filetime);
-			log(3, L"🔈timeToIso8601 lastModificationUtc");
-			shimcache.lastModificationUtc = localTimeToIso8601Utc(filetime);
-			offset += 8;
-			int data_length = *reinterpret_cast<int*>(data + offset);
-			offset += data_length;
-			short int executed = *reinterpret_cast<short int*>(data + offset);
-			shimcache.executed = executed;
-			offset += 4; // 2 unused
-
-			//save 
-			log(1, L"➕Shimcache ");
-			log(2, L"❇️Shimcache Path : " + shimcache.path);
-			shimcaches.push_back(shimcache);
+	/* Layout of the Windows 10/11 cache: a header whose first DWORD is its own
+	   size, then entries
+	       "10ts" (4), unknown (4), entry size (4), path size (2), path,
+	       last modification FILETIME (8), data size (4), data.
+	   Every length comes from the examined machine's hive: each read is bounded
+	   by the real size of the value, never by a length the data declares. An
+	   entry that does not start with "10ts" ends the walk — the offset used to
+	   stay where it was, and the loop never ended. */
+	auto fits = [&](size_t at, size_t length) { return at <= size && length <= size - at; };
+	if (!fits(0, 4)) {
+		log(2, L"🔥AppCompatCache: value too short for its header");
+		delete[] data;
+		return ERROR_INVALID_DATA;
+	}
+	size_t offset = *reinterpret_cast<DWORD*>(data);
+	while (fits(offset, 14)) {
+		printProgressStep(L"Shimcache", (unsigned)offset, size);
+		if (std::memcmp(data + offset, "10ts", 4) != 0) {
+			log(2, L"🔥AppCompatCache: unexpected entry signature at offset " + std::to_wstring(offset)
+			       + L", walk stopped");
+			break;
 		}
+		const size_t entryStart = offset;
+		const DWORD entrySize = *reinterpret_cast<DWORD*>(data + offset + 8);
+		offset += 12;
+		const unsigned short pathSize = *reinterpret_cast<unsigned short*>(data + offset);
+		offset += 2;
+		if (!fits(offset, (size_t)pathSize + 8 + 4)) {
+			log(2, L"🔥AppCompatCache: entry truncated at offset " + std::to_wstring(entryStart));
+			break;
+		}
+		Shimcache shimcache;
+		shimcache.path = std::wstring((const wchar_t*)(data + offset), pathSize / sizeof(wchar_t));
+		offset += pathSize;
+
+		// Fingerprint on the normalised path (quotes, \??\), read raw.
+		shimcache.fingerprint = FingerprintFile(shimcache.path);
+		shimcache.path = replaceAll(shimcache.path, L"\t", L" "); // replace tab by space. seen in values
+
+		/* The last modification is a FILETIME, hence UTC — the file's own
+		   $STANDARD_INFORMATION date. It used to be formatted as a LOCAL time:
+		   both keys came out shifted by the time-zone offset. Checked on the test
+		   VM against the NTFS dates of the same files: exactly -2 h before the
+		   fix, 0 after. */
+		const FILETIME filetime = *reinterpret_cast<FILETIME*>(data + offset);
+		shimcache.lastModificationUtc = timeToIso8601Utc(filetime);
+		shimcache.lastModification = utcTimeToIso8601Local(filetime);
+		offset += 8;
+
+		const DWORD dataSize = *reinterpret_cast<DWORD*>(data + offset);
+		offset += 4;
+		if (!fits(offset, dataSize)) {
+			log(2, L"🔥AppCompatCache: data of the entry at offset " + std::to_wstring(entryStart)
+			       + L" goes beyond the value");
+			break;
+		}
+		offset += dataSize;
+		// The entry size, when consistent, is the reference for the next entry.
+		if (entrySize >= offset - entryStart - 12 && fits(entryStart + 12, entrySize))
+			offset = entryStart + 12 + entrySize;
+
+		log(1, L"➕Shimcache ");
+		log(2, L"❇️Shimcache Path : " + shimcache.path);
+		shimcaches.push_back(shimcache);
 	}
 
 	delete [] data;
