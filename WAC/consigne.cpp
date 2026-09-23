@@ -342,8 +342,8 @@ HRESULT ExhibitStoreWriteManifest() {
 		   exhibit, whatever the clusters hold on the disk. To be declared, otherwise
 		   a 1 MiB exhibit of which only 135 KiB carry data simply looks "full of
 		   zeros". */
-		if (!m.resident && m.tailleValide < m.declaredSize)
-			o.add(L"ValidDataBytes", Json::num(m.tailleValide));
+		if (!m.resident && m.validDataLength < m.declaredSize)
+			o.add(L"ValidDataBytes", Json::num(m.validDataLength));
 		o.add(L"MftEntry",      Json::num(m.mftEntry));
 		if (m.resident) o.add(L"ResidentData", Json::boolean(true));
 		addDate(o, L"Extracted",         m.extractedUtc);

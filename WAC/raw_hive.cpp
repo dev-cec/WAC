@@ -173,13 +173,13 @@ public:
        @param compressionUnit if not null, receives the compression unit size in
        clusters (0 = not compressed), also read on the VCN 0 fragment: only
        that one carries the full header.
-       @param tailleValide if not null, receives the valid data length, read at
+       @param validDataLength if not null, receives the valid data length, read at
        the same place (see extractData). */
     bool collectRunsFromAttributeList(const std::vector<uint8_t>& rec,
                                       std::vector<Run>& runs, uint64_t& realSize,
                                       uint32_t wantedType = 0x80,
                                       uint32_t* compressionUnit = nullptr,
-                                      uint64_t* tailleValide = nullptr){
+                                      uint64_t* validDataLength = nullptr){
         const uint8_t* al = findAttr(rec, 0x20, false);
         if (!al) return false;
 
@@ -226,7 +226,7 @@ public:
                         }
                         if (vcn == 0){
                             realSize = rd64(d + 0x30);
-                            if (tailleValide) *tailleValide = rd64(d + 0x38);
+                            if (validDataLength) *validDataLength = rd64(d + 0x38);
                             if (compressionUnit)
                                 *compressionUnit = (rd16(d + 0x0C) & 0x0001)
                                                   ? (uint32_t)1u << rd16(d + 0x22) : 0;
@@ -516,7 +516,7 @@ public:
      *  stored as is returns wrong data without any error.
      */
     HRESULT extractCompressed(const std::vector<Run>& runs, uint64_t realSize,
-                              uint64_t tailleValide,
+                              uint64_t validDataLength,
                               uint32_t unitInClusters, std::ostream& out,
                               const std::wstring& label, RawHiveFingerprints* emp){
         const uint64_t unitSize = (uint64_t)unitInClusters * bytesPerCluster_;
@@ -548,7 +548,7 @@ public:
             const uint64_t unitStart = vcn * bytesPerCluster_;
             // Unit entirely beyond the valid data: zeros, without reading the
             // clusters — which only hold leftovers (see extractData).
-            if (allocated != 0 && unitStart >= tailleValide) allocated = 0;
+            if (allocated != 0 && unitStart >= validDataLength) allocated = 0;
             if (allocated == 0){
                 // Sparse unit: zeros, without reading anything.
                 std::fill(unit.begin(), unit.end(), (uint8_t)0);
@@ -595,8 +595,8 @@ public:
             }
 
             // Unit straddling the valid data limit: zeros beyond it.
-            if (tailleValide < unitStart + unitSize && tailleValide > unitStart)
-                std::fill(unit.begin() + (size_t)(tailleValide - unitStart), unit.end(), (uint8_t)0);
+            if (validDataLength < unitStart + unitSize && validDataLength > unitStart)
+                std::fill(unit.begin() + (size_t)(validDataLength - unitStart), unit.end(), (uint8_t)0);
 
             const uint64_t rest = realSize - written;
             const size_t toWrite = (size_t)((rest < unitSize) ? rest : unitSize);
@@ -738,7 +738,7 @@ public:
             Microsoft-Windows-CodeIntegrity%4Operational.evtx, 135,168 valid bytes
             out of 1,052,672. The content was therefore NOT the file's, and its
             fingerprint differed from that of any ordinary acquisition. */
-        uint64_t tailleValide = UINT64_MAX;
+        uint64_t validDataLength = UINT64_MAX;
 
         const uint8_t* a = findAttr(rec, 0x80 /*$DATA*/);
         if (a){
@@ -756,18 +756,18 @@ public:
                 if (rd16(a + 0x0C) & 0x0001)
                     compressionUnit = (uint32_t)1u << rd16(a + 0x22);
                 realSize = rd64(a + 0x30);
-                tailleValide = rd64(a + 0x38);
+                validDataLength = rd64(a + 0x38);
                 runs = decodeRuns(a + rd16(a + 0x20), a + rd32(a + 0x04));
 
             }
         }
         else if (!collectRunsFromAttributeList(rec, runs, realSize, 0x80,
-                                               &compressionUnit, &tailleValide)){
+                                               &compressionUnit, &validDataLength)){
             RVLOG(L"[raw] pas d'attribut $DATA exploitable\n");
             return E_FAIL;
         }
-        if (tailleValide > realSize) tailleValide = realSize;
-        if (emp && !resident) emp->tailleValide = tailleValide;
+        if (validDataLength > realSize) validDataLength = realSize;
+        if (emp && !resident) emp->validDataLength = validDataLength;
 
         // Empty output: fingerprints only, nothing is written (see NullBuffer).
         NullBuffer null_;
@@ -818,7 +818,7 @@ public:
         }
 
         if (compressionUnit > 1){
-            const HRESULT h = extractCompressed(runs, realSize, tailleValide,
+            const HRESULT h = extractCompressed(runs, realSize, validDataLength,
                                                 compressionUnit, out, label, emp);
             return h;
         }
@@ -835,10 +835,10 @@ public:
         for (const Run& r : runs){
             for (uint64_t k = 0; k < r.count && written < realSize; ++k){
                 // Sparse, or beyond the valid data: zeros, without reading.
-                if (r.lcn < 0 || written >= tailleValide) std::fill(cl.begin(), cl.end(), 0);
+                if (r.lcn < 0 || written >= validDataLength) std::fill(cl.begin(), cl.end(), 0);
                 else if (!readCluster((uint64_t)r.lcn + k, cl.data())) return E_FAIL;
-                if (written < tailleValide && tailleValide < written + bytesPerCluster_)
-                    std::fill(cl.begin() + (size_t)(tailleValide - written), cl.end(), (uint8_t)0);
+                if (written < validDataLength && validDataLength < written + bytesPerCluster_)
+                    std::fill(cl.begin() + (size_t)(validDataLength - written), cl.end(), (uint8_t)0);
                 uint64_t chunk = std::min<uint64_t>(bytesPerCluster_, realSize - written);
                 out.write((const char*)cl.data(), (std::streamsize)chunk);
                 if (emp){

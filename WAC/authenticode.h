@@ -127,14 +127,14 @@ public:
 	//! @return the number of digests they list.
 	size_t fingerprints() const { return index_.size(); }
 	//! @return the number of catalogs rejected by the verification.
-	size_t refuses() const { return refuses_; }
+	size_t rejected() const { return rejected_; }
 	/*! Writes each indexed digest (hex) and its catalog — test tool.
 	 *  @param o where to write. */
 	void dump(std::ostream& o) const;
 private:
 	std::vector<std::wstring> names_;
 	std::unordered_map<std::string, uint32_t> index_;   // raw digest -> catalog
-	size_t refuses_ = 0;
+	size_t rejected_ = 0;
 };
 
 /*! Microsoft authenticity verdict on an analysed PE. */

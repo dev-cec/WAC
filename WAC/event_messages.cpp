@@ -146,11 +146,11 @@ const std::vector<std::wstring>& interfaceLanguages() {
 	if (done) return languages;
 	done = true;
 
-	std::vector<std::wstring> declarees;
+	std::vector<std::wstring> declared;
 	if (conf.Software && getRegMultiSzValue(conf.Software,
 	        L"Microsoft\\Windows\\CurrentVersion\\MUI\\Settings",
-	        L"PreferredUILanguages", &declarees) == ERROR_SUCCESS)
-		for (const std::wstring& l : declarees)
+	        L"PreferredUILanguages", &declared) == ERROR_SUCCESS)
+		for (const std::wstring& l : declared)
 			if (!l.empty()) languages.push_back(l);
 
 	for (PCWSTR l : { L"en-US", L"fr-FR", L"de-DE", L"es-ES", L"it-IT" }) {

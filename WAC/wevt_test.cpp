@@ -61,18 +61,18 @@ int main(int argc, char** argv) {
 
 	int failures = 0;
 
-	const std::vector<uint8_t> resWevt = dll.namedResource(L"WEVT_TEMPLATE");
-	const std::vector<uint8_t> resMsg  = mui.resource(PE_RT_MESSAGETABLE);
-	std::cout << (resWevt.empty() ? "  ECHEC  " : "  ok     ")
-	          << "WEVT_TEMPLATE lue (" << resWevt.size() << " octets)\n";
-	std::cout << (resMsg.empty() ? "  ECHEC  " : "  ok     ")
-	          << "MESSAGETABLE lue (" << resMsg.size() << " octets)\n";
-	if (resWevt.empty() || resMsg.empty()) return 1;
+	const std::vector<uint8_t> wevtResource = dll.namedResource(L"WEVT_TEMPLATE");
+	const std::vector<uint8_t> messageResource  = mui.resource(PE_RT_MESSAGETABLE);
+	std::cout << (wevtResource.empty() ? "  ECHEC  " : "  ok     ")
+	          << "WEVT_TEMPLATE lue (" << wevtResource.size() << " octets)\n";
+	std::cout << (messageResource.empty() ? "  ECHEC  " : "  ok     ")
+	          << "MESSAGETABLE lue (" << messageResource.size() << " octets)\n";
+	if (wevtResource.empty() || messageResource.empty()) return 1;
 
 	WevtMetadata meta;
-	const size_t nEvents = meta.analyse(resWevt, large(argv[3]));
+	const size_t nEvents = meta.analyse(wevtResource, large(argv[3]));
 	TableMessages table;
-	const size_t nbMessages = table.analyse(resMsg);
+	const size_t nbMessages = table.analyse(messageResource);
 	std::cout << (nEvents ? "  ok     " : "  ECHEC  ")
 	          << nEvents << " evenement(s) decrit(s)\n";
 	std::cout << (nbMessages ? "  ok     " : "  ECHEC  ")

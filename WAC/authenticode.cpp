@@ -350,7 +350,7 @@ bool IndexCatalogues::add(const std::wstring& name, const uint8_t* bytes, size_t
 	const VerifiedSignature s = VerifyPkcs7(bytes, size);
 	if (!s.valid || !s.signerAccepted
 	    || s.contentOid != std::string((const char*)OID_CTL, sizeof(OID_CTL))) {
-		++refuses_;
+		++rejected_;
 		return false;
 	}
 	// CertificateTrustList: look for the list of subjects — a SEQUENCE whose
@@ -358,7 +358,7 @@ bool IndexCatalogues::add(const std::wstring& name, const uint8_t* bytes, size_t
 	Tlv ctl;
 	ctl.tag = 0x30; ctl.val = s.content; ctl.len = s.contentSize;
 	const uint32_t rank = (uint32_t)names_.size();
-	size_t indexees = 0;
+	size_t indexed = 0;
 	for (const Tlv& champ : children(ctl)) {
 		if (champ.tag != 0x30) continue;
 		for (const Tlv& subject : children(champ)) {
@@ -369,12 +369,12 @@ bool IndexCatalogues::add(const std::wstring& name, const uint8_t* bytes, size_t
 				if (av.size() < 2 || !EST(av[0], OID_SPC_INDIRECT)) continue;
 				for (const Tlv& v : children(av[1])) {
 					std::string h;
-					if (indirectDigest(v, h)) { index_.emplace(h, rank); ++indexees; }
+					if (indirectDigest(v, h)) { index_.emplace(h, rank); ++indexed; }
 				}
 			}
 		}
 	}
-	if (indexees == 0) { ++refuses_; return false; }
+	if (indexed == 0) { ++rejected_; return false; }
 	names_.push_back(name);
 	return true;
 }

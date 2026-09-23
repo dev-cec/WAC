@@ -171,7 +171,7 @@ IndexCatalogues& catalogues() {
 	g_catalogsRead = read;
 	log(2, L"❇️Catalogues de signatures : " + std::to_wstring(read) + L" lus, "
 	     + std::to_wstring(index.catalogues()) + L" retenus (signature Microsoft verifiee), "
-	     + std::to_wstring(index.refuses()) + L" refuses, "
+	     + std::to_wstring(index.rejected()) + L" refuses, "
 	     + std::to_wstring(index.fingerprints()) + L" empreintes");
 	return index;
 }

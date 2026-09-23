@@ -109,15 +109,15 @@ int wmain(int argc, wchar_t** argv) {
 	if (dump) _setmode(_fileno(stdout), _O_BINARY);
 
 	long displayed = 0;
-	unsigned long long empties = 0, avecSystem = 0, avecEventData = 0;
+	unsigned long long empties = 0, withSystem = 0, withEventData = 0;
 	std::map<std::wstring, unsigned long long> providers;
 
 	EvtxSummary summary;
 	const HRESULT hr = EvtxReadFile(argv[1], [&](const EvtxRecord& e) {
 		if (e.xml.empty()) ++empties;
-		if (e.xml.find(L"<System") != std::wstring::npos) ++avecSystem;
+		if (e.xml.find(L"<System") != std::wstring::npos) ++withSystem;
 		if (e.xml.find(L"<EventData") != std::wstring::npos
-		    || e.xml.find(L"<UserData") != std::wstring::npos) ++avecEventData;
+		    || e.xml.find(L"<UserData") != std::wstring::npos) ++withEventData;
 		// Fournisseur : premier attribut Name du premier Provider.
 		const size_t p = e.xml.find(L"<Provider Name=\"");
 		if (p != std::wstring::npos) {
@@ -150,8 +150,8 @@ int wmain(int argc, wchar_t** argv) {
 	wprintf(L"lus          : %llu\n", summary.read);
 	wprintf(L"illisibles   : %llu\n", summary.unreadable);
 	wprintf(L"xml vide     : %llu\n", empties);
-	wprintf(L"avec System  : %llu\n", avecSystem);
-	wprintf(L"avec Data    : %llu\n", avecEventData);
+	wprintf(L"avec System  : %llu\n", withSystem);
+	wprintf(L"avec Data    : %llu\n", withEventData);
 	wprintf(L"fournisseurs : %llu\n", (unsigned long long)providers.size());
 	for (const auto& kv : providers)
 		if (kv.second > summary.read / 20) wprintf(L"   %-60ls %llu\n", kv.first.c_str(), kv.second);

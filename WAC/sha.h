@@ -11,7 +11,7 @@
  *  state of the art.
  *
  *  WHY NOT THE SYSTEM'S API. `bcrypt.dll` would do the computation, but WAC
- *  refuses to depend on a library of the examined system when a thirty-line
+ *  rejected to depend on a library of the examined system when a thirty-line
  *  public algorithm is enough: the executable stays standalone, and the
  *  fingerprint stays reproducible by a third party.
  *

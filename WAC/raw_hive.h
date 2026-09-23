@@ -76,7 +76,7 @@ struct RawHiveFingerprints {
     /*! Valid data length of the non-resident attribute. Beyond it, the content is
      *  zero by definition and is NOT read from the disk. Equal to `declaredSize`
      *  for an ordinary file; smaller for a preallocated file (event logs). */
-    uint64_t tailleValide = 0;
+    uint64_t validDataLength = 0;
     uint64_t mftEntry = 0;       //!< record number in the $MFT
     bool     resident = false;   //!< data held inside the $MFT record
     // $STANDARD_INFORMATION of the source file, as FILETIME (UTC, 0 if absent).
