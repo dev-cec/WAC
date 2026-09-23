@@ -4,21 +4,25 @@
 #include "jumplist_custom.h"
 
 CustomDestinationCategory::CustomDestinationCategory(LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid) {
-	int pos = 0;
-
+	/* The shortcuts are found by their header: the size 0x4C then the
+	   ShellLink CLSID, 20 bytes in all. The walk used to run while
+	   `x < buffersize - pos - 23`, an UNSIGNED difference: on a file of 25 or
+	   26 bytes it wrapped around and the scan went on far past the buffer. The
+	   entry count at 4 was read without checking the file held it. */
+	const size_t pos = 4;
+	if (buffersize < pos + 4) return;
 	nbentries = *reinterpret_cast<unsigned int*>(buffer + 4);
-	pos += 4;
-	// split the file to identify every LNK file
-	for (int x = 0; x < buffersize - pos - 23; x++) {
-		int s = *reinterpret_cast<int*>(buffer + pos + x); // = 0x4C = 76 for a LNK
+	const size_t LNK_HEADER = 4 + 16;   // HeaderSize, then LinkCLSID
+	for (size_t x = pos; fits(buffersize, x, LNK_HEADER); x++) {
+		const unsigned int s = *reinterpret_cast<unsigned int*>(buffer + x); // = 0x4C = 76 for a LNK
 		if (s == 76) {
-			GUID guid = *reinterpret_cast<GUID*>(buffer + pos + x + 4);
+			GUID guid = *reinterpret_cast<GUID*>(buffer + x + 4);
 			log(3, L"🔈guid_to_wstring guid");
 			std::wstring wguid = guid_to_wstring(guid);
 
 			if (wguid.compare(L"{00021401-0000-0000-C000-000000000046}") == 0) {
 				log(3, L"🔈RecentDoc");
-				recentDocs.push_back(RecentDoc(buffer + pos + x, buffersize - pos - x, _path, _sid));
+				recentDocs.push_back(RecentDoc(buffer + x, buffersize - x, _path, _sid));
 			}
 		}
 	}
@@ -90,7 +94,8 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 		std::wstring baseName = _path.stem(); // file name without its extension
 		log(3, L"🔈from_appId application");
 		application = from_appId(baseName);
-		typeInt = *reinterpret_cast<unsigned int*>(buffer);
+		// The first word needs 4 bytes: an empty or truncated file has none.
+		typeInt = (size >= 4) ? *reinterpret_cast<unsigned int*>(buffer) : 0xFFFFFFFFu;
 		switch (typeInt) {
 		case 0: {
 			log(2, L"🔥"+ pathOriginal + L" : Custom category", ERROR_UNSUPPORTED_TYPE);
