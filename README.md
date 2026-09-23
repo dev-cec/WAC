@@ -747,6 +747,12 @@ cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
   page, `WAC/doc/cover_EN.png`, is generated from the French one by
   `WAC/doc/translate-cover.py`, which repaints its text in the same fonts and
   layout.
+- **Testing guide**, in English and French: `WAC/doc/tests/testing_EN.pdf` and
+  `WAC/doc/tests/testing_FR.pdf`. How to run each test by hand — the VM cycle
+  and its cross-checks, the format harnesses, the robustness harnesses — what
+  each one proves and does not prove, and how to read a failure. Its covers are
+  derived from the manual's by `WAC/doc/retitle-cover.py`, which changes only
+  the title. Every document shares one layout, `WAC/doc/wac-style.tex`.
 - `WAC/doc/BUILD-LINUX_EN.md` (French: `BUILD-LINUX_FR.md`) — cross-compilation details.
 
 The design rationale lives **in the code**, next to what it explains: each

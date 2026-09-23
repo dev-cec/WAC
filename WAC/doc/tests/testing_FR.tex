@@ -1,0 +1,538 @@
+% testing_FR.tex — WAC (Windows Artefacts Collector) testing guide, French edition.
+% The English edition is testing_EN.tex, in this folder: both are maintained together,
+% section for section.
+%
+% Build (XeLaTeX, two passes for the cover page and the table of contents):
+%     latexmk -xelatex testing_FR.tex
+% The cover page is ../cover_tests_FR.png, derived from ../cover_FR.png by
+% ../retitle-cover.py. The layout is ../wac-style.tex, shared with the user manual.
+
+\documentclass[11pt,a4paper,oneside]{report}
+
+% ---------------------------------------------------------------- language and labels
+\usepackage[french]{babel}
+\newcommand{\wacdoctitle}{Guide des tests}
+\newcommand{\wacpageof}{sur}
+\newcommand{\wacnotetitle}{À retenir}
+\newcommand{\wacwarningtitle}{Attention}
+% Layout shared with every WAC document.
+\input{../wac-style.tex}
+
+\hypersetup{pdftitle={WAC — Guide des tests},
+  pdfauthor={Centre d'Excellence Cyberdéfense Aérospatiale (CEC)},
+  pdfsubject={Lancer à la main les tests de WAC et en lire les résultats}}
+
+\begin{document}
+
+% ============================================================ COVER PAGE
+\pagenumbering{roman}
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture,overlay]
+  \node[inner sep=0pt] at (current page.center)
+    {\includegraphics[width=\paperwidth]{cover_tests_FR.png}};
+\end{tikzpicture}
+\end{titlepage}
+
+% ============================================================ INFORMATION PAGE
+\thispagestyle{empty}
+\vspace*{\fill}
+{\color{marine}\Large\bfseries WAC — Windows Artefacts Collector}\par
+{\color{bleu}Guide des tests}\par
+\medskip
+\begin{tabular}{@{}ll@{}}
+Version du logiciel & 1.3.1 \\
+Édition du document & septembre 2026 \\
+Éditeur & Centre d'Excellence Cyberdéfense Aérospatiale (CEC) \\
+        & École de l'air et de l'espace, base aérienne 701, Salon-de-Provence \\
+\end{tabular}
+
+\bigskip
+{\small\color{gris}Ce document explique comment lancer à la main chacun des
+tests de \wac{}, ce que chacun prouve et ne prouve pas, et comment lire un
+échec. Il s'adresse à qui modifie le code ou veut vérifier une version avant
+de l'employer. Les durées et volumes cités ont été relevés sur la machine
+virtuelle de test et sur une collecte réelle ; ce sont des ordres de
+grandeur.}
+\vspace*{2cm}
+\clearpage
+
+\pagenumbering{arabic}
+\tableofcontents
+
+% ============================================================ 1
+\chapter{Principes}
+
+\section{Ce qu'un test de WAC doit prouver}
+
+\wac{} produit des fichiers JSON. Qu'ils soient valides ne prouve presque rien :
+un champ lu au mauvais décalage, une date interprétée dans le mauvais fuseau,
+un nom décodé dans la mauvaise page de code donnent un JSON parfaitement
+valide — et faux. Les défauts les plus coûteux relevés dans \wac{} étaient tous
+de cette sorte : ils ne se voyaient qu'en confrontant une valeur à une autre
+source.
+
+Les tests se rangent donc en trois familles, qui ne répondent pas à la même
+question :
+
+\begin{description}[leftmargin=0pt,itemsep=0.5em]
+  \item[Le cycle dans la machine virtuelle] (chapitre~\ref{ch:vm}) :
+    \wac{} s'exécute-t-il jusqu'au bout sur un vrai Windows, et ses sorties
+    sont-elles cohérentes entre elles ? Les \emph{contrôles croisés}
+    confrontent une valeur calculée par \wac{} à une valeur indépendante de la
+    même collecte.
+  \item[Les harnais de format] (chapitre~\ref{ch:format}) : un décodeur
+    donne-t-il exactement le résultat de la référence — l'outil de Microsoft,
+    une norme publiée, une autre implémentation ?
+  \item[Les harnais de robustesse] (chapitre~\ref{ch:robustesse}) : un
+    analyseur lit-il en dehors de son tampon, ou boucle-t-il sans fin, sur un
+    fichier tronqué ou forgé ?
+\end{description}
+
+\section{Trois règles}
+
+\begin{enumerate}
+  \item \textbf{Un correctif s'accompagne du test qui aurait pris le défaut.}
+    Et ce test se vérifie dans les deux sens : il passe sur la sortie
+    corrigée, et il échoue quand on rejoue le défaut.
+  \item \textbf{Après tout changement, comparer au passage précédent}, et pas
+    seulement lire les pastilles vertes : un artefact passé de 1~522 entrées à
+    573 n'allume aucun voyant (section~\ref{sec:comparer}).
+  \item \textbf{Une donnée réelle ne quitte pas le poste de test.} Une collecte
+    réelle contient des données personnelles : elle se traite en local, ses
+    copies temporaires s'effacent après usage, et rien n'en entre dans le dépôt
+    (\fichier{vmtest/results/} est ignoré par git).
+\end{enumerate}
+
+% ============================================================ 2
+\chapter{Préparer l'environnement}
+
+\section{Le poste Linux}
+
+Tout se construit sur Linux, par compilation croisée MinGW-w64 ; les harnais
+tournent soit nativement, soit sous \texttt{wine}, soit dans la machine
+virtuelle.
+
+\begin{lstlisting}
+sudo apt install g++-mingw-w64-x86-64 wine64 python3 python3-pip
+pip install olefile          # lecteur OLE indépendant, pour les recoupements
+\end{lstlisting}
+
+\section{Construire WAC et les harnais}
+
+\begin{lstlisting}
+./build-windows.sh --test
+\end{lstlisting}
+
+\begin{longtable}{@{}L{7.4cm}L{7.6cm}@{}}
+\toprule
+\textbf{Produit} & \textbf{Rôle} \\
+\midrule
+\endhead
+\fichier{build-windows/WAC.exe} & l'outil de collecte \\
+\fichier{build-windows/raw\_hive\_test.exe} & lecteur NTFS brut, utilisé par le cycle VM \\
+\fichier{build-windows/tests/lnk\_test.exe} & robustesse de l'analyseur de raccourcis \\
+\fichier{build-windows/tests/parsers\_test.exe} & robustesse des listes de sauts et des Prefetch \\
+\fichier{build-windows/tests/propsys.dll}, \fichier{offreg.dll} & substituts pour \texttt{wine}, qui n'a pas ces deux bibliothèques \\
+\bottomrule
+\end{longtable}
+
+\begin{attention}
+Les deux substituts sont volontairement dans \fichier{build-windows/tests/}, à
+l'écart de \fichier{WAC.exe}. Placés à côté de lui, ils seraient chargés à la
+place des vraies bibliothèques — Windows cherche d'abord dans le dossier du
+programme — et \wac{} ne lirait plus aucune ruche, sans erreur visible. Ne
+jamais copier le dossier \fichier{tests/} sur un support de collecte.
+\end{attention}
+
+La compilation doit se terminer sans aucun avertissement : les options
+\texttt{-Wall -Wextra} sont actives, et un avertissement a déjà signalé de vrais
+défauts.
+
+Les autres harnais (chapitre~\ref{ch:format}) se construisent chacun par une
+commande donnée dans son en-tête et reprise dans ce guide ; plusieurs compilent
+nativement sous Linux.
+
+\section{La machine virtuelle de test}
+
+La VM est un Windows~11 piloté par le \emph{qemu-guest-agent} : aucune
+interaction, aucun réseau, les commandes s'exécutent en
+\texttt{NT AUTHORITY\textbackslash SYSTEM}. Sa création et ses prérequis sont
+décrits dans \fichier{vmtest/README\_FR.md} ; en résumé :
+
+\begin{lstlisting}
+cd vmtest
+ISO_WIN=~/Téléchargements/Win11_25H2_French_x64_v2.iso ./create-vm.sh   # une fois
+python3 qga.py ping                        # l'agent répond ?
+python3 qga.py run --shell "dir C:\\"      # exécuter une commande
+python3 qga.py write <hôte> <invité>       # envoyer un fichier
+python3 qga.py read  <invité> <hôte>       # rapatrier un fichier
+\end{lstlisting}
+
+\begin{note}
+Une commande lancée par \texttt{qga.py run} est coupée au bout de 30 minutes.
+Pour un test plus long (par exemple les Prefetch d'une machine réelle,
+section~\ref{sec:parsers}), le lancer en tâche détachée dans la VM et suivre son
+journal.
+\end{note}
+
+% ============================================================ 3
+\chapter{Le cycle de test dans la machine virtuelle}\label{ch:vm}
+
+\section{Lancer un cycle}
+
+\begin{lstlisting}
+cd vmtest
+./run-wac-test.sh --build     # recompile, puis cycle complet
+./run-wac-test.sh             # cycle complet avec les binaires déjà construits
+./run-wac-test.sh --raw-only  # seulement la validation de la lecture brute
+\end{lstlisting}
+
+Le cycle enchaîne : envoi de \fichier{WAC.exe} et \fichier{raw\_hive\_test.exe}
+dans la VM, validation de l'extraction brute d'une ruche (elle doit être refusée
+par \texttt{reg load} tant qu'elle n'est pas réparée, puis acceptée), exécution
+de \wac{}, puis rapatriement, dans le dossier
+\fichier{vmtest/results/<horodatage>/}, de :
+
+\begin{itemize}
+  \item \fichier{run.log} — la sortie console de la collecte, qui se termine par
+    \texttt{END, Time elapsed} quand \wac{} est allé au bout ;
+  \item \fichier{raw.log} — la trace du lecteur NTFS ;
+  \item les JSON des artefacts ;
+  \item \fichier{exhibits/} — le manifeste de consigne, son sceau et la liste
+    des fichiers réellement présents dans la consigne.
+\end{itemize}
+
+\section{Contrôler les sorties}
+
+\begin{lstlisting}
+python3 check-json.py results/<horodatage>
+\end{lstlisting}
+
+Chaque ligne commence par une coche verte (contrôle passé), une croix rouge
+(défaut) ou un signe « passer » (contrôle sans objet : l'artefact est absent ou
+vide). Le code de
+sortie vaut 0 si aucun contrôle n'a échoué. Au-delà de la validité JSON et de la
+forme des chemins, le script confronte des sources indépendantes :
+
+\begin{longtable}{@{}L{6.6cm}L{8.4cm}@{}}
+\toprule
+\textbf{Contrôle croisé} & \textbf{Ce qu'il a déjà trouvé} \\
+\midrule
+\endhead
+empreinte d'un Prefetch / suffixe de son nom de fichier & 65 empreintes fausses sur 270 (hexadécimal sans remplissage) \\
+nom de l'exécutable d'un Prefetch / début du nom de fichier & un nom lu 8 octets trop tôt (« \textbackslash x11 » partout) \\
+chemins \texttt{\textbackslash VOLUME\{guid\}} d'un Prefetch résolus & 20~066 chemins sur 20~066 non résolus \\
+couples \texttt{X} / \texttt{XUtc} & double décalage horaire \\
+aucune session antérieure au démarrage & décalages de dates, heure de démarrage en retard de 3,5~s \\
+date ShimCache / date NTFS du manifeste & une date UTC traitée comme locale (\,-2~h) \\
+entrées DestList / raccourcis des listes de sauts & les 15 premières entrées de chaque liste perdues \\
+nom de machine des événements / \fichier{OperatingSystem.json} & contrôle du décodage BinXML \\
+identifiants d'enregistrement uniques par journal & relecture d'un chunk périmé \\
+sceau / empreinte réelle du manifeste & retouche du manifeste \\
+fichiers de la consigne / contenu du manifeste & 209 pièces ajoutées après le scellement \\
+\bottomrule
+\end{longtable}
+
+La liste complète, avec l'histoire de chaque contrôle, est dans
+\fichier{vmtest/README\_FR.md}.
+
+\section{Comparer deux passages}\label{sec:comparer}
+
+Une pastille verte ne dit pas si une donnée a disparu. Après tout changement,
+comparer la nouvelle collecte à la précédente : nombre d'entrées de chaque
+artefact, et valeurs perdues ou gagnées. Deux précautions :
+
+\begin{itemize}
+  \item une collecte change d'elle-même d'un passage à l'autre : horodatages,
+    nouveaux événements, fichiers Prefetch mis à jour, empreinte de
+    \fichier{\$MFT}. On compare donc les éléments \emph{appariés} — par exemple
+    un Prefetch par son empreinte de chemin et sa dernière exécution — en
+    écartant les dates de la copie extraite ;
+  \item une valeur « perdue » peut n'être qu'un champ vide qui n'est plus émis,
+    ou une clé renommée : normaliser avant de conclure.
+\end{itemize}
+
+% ============================================================ 4
+\chapter{Les harnais de format}\label{ch:format}
+
+Chacun confronte un décodeur de \wac{} à une référence. Tous sont exclus de la
+compilation de \wac{} par le suffixe \fichier{\_test.cpp}.
+
+\section{Empreintes : \texttt{sha\_test}}
+
+Confronte SHA-1 et SHA-256 aux vecteurs publiés de FIPS~180-4, et aux longueurs
+55 à 128 octets, qui exercent le remplissage — le seul endroit où une
+implémentation par ailleurs juste se trompe.
+
+\begin{lstlisting}
+cd WAC && g++ -std=c++17 -I. sha.cpp sha_test.cpp -o /tmp/sha_test && /tmp/sha_test
+\end{lstlisting}
+
+\section{Décompression : \texttt{lznt1\_test} et \texttt{xpress\_test}}
+
+Vérifient les décompresseurs NTFS (LZNT1) et WOF (XPRESS Huffman) contre le
+\emph{compresseur de Microsoft} : un fichier connu est compressé dans la VM par
+\texttt{RtlCompressBuffer}, unité par unité, et le harnais décompresse chaque
+unité puis la compare octet pour octet à l'original. Un décompresseur faux
+décode le plus souvent sans erreur : seule la comparaison exhaustive le révèle.
+
+\begin{lstlisting}
+cd WAC
+g++ -std=c++17 -I. lznt1.cpp lznt1_test.cpp -o /tmp/lznt1_test
+g++ -std=c++17 -I. xpress.cpp xpress_test.cpp -o /tmp/xpress_test
+/tmp/lznt1_test  <original> <compressé.bin> <index.idx>
+/tmp/xpress_test <original> <compressé.bin> <index.idx>
+\end{lstlisting}
+
+\fichier{index.idx} porte une ligne \texttt{<n> <taille originale> <taille
+compressée>} par unité ; une taille compressée nulle désigne une unité que
+Windows a renoncé à compresser.
+
+\section{Messages d'événements : \texttt{wevt\_test} et \texttt{event\_messages\_test}}
+
+\texttt{wevt\_test} vérifie la chaîne qui transforme un événement en phrase,
+sur les fichiers d'un vrai fournisseur : sa DLL et son satellite localisé.
+
+\begin{lstlisting}
+cd WAC && g++ -std=c++17 -I. pe_resource.cpp wevt.cpp wevt_test.cpp -o /tmp/wevt_test
+/tmp/wevt_test gpsvc.dll fr-FR/gpsvc.dll.mui "{aea1b4fa-97d1-45f2-a64c-4d69fffd92c9}" 1002 4001
+\end{lstlisting}
+
+\texttt{event\_messages\_test} fait de même à partir de la ruche SOFTWARE ; il
+tourne sur la machine examinée ou dans la VM, seuls endroits où la ruche et les
+binaires des fournisseurs sont lisibles :
+
+\begin{lstlisting}
+event_messages_test <ruche SOFTWARE> <guid> [id[:version] ...]
+\end{lstlisting}
+
+\section{Journaux : \texttt{evtx\_test}}
+
+Lit un \fichier{.evtx} hors de Windows, sous \texttt{wine}. Il sert à éprouver
+le décodeur sur des journaux que la VM ne produit pas : anciens, transférés,
+mal fermés, abîmés — et à comparer enregistrement par enregistrement à une
+implémentation indépendante (\texttt{python-evtx}).
+
+\begin{lstlisting}
+wine evtx_test.exe "Z:/chemin/Security.evtx"            # bilan par journal
+wine evtx_test.exe "Z:/chemin/Security.evtx" 3          # + XML de 3 enregistrements
+wine evtx_test.exe "Z:/chemin/Security.evtx" --dump     # un enregistrement par ligne
+wine evtx_test.exe --collect "Z:/tmp/arbre" "Z:/tmp/sortie"          # chaine complete
+wine evtx_test.exe --collect-memory "Z:/tmp/arbre" "Z:/tmp/sortie2"  # meme chaine, en memoire
+cmp /tmp/sortie/events.json /tmp/sortie2/events.json                 # doit etre muet
+\end{lstlisting}
+
+La commande de compilation est dans le README, section \emph{Testing the EVTX
+parser outside Windows}.
+
+\section{Consigne : \texttt{consigne\_test}}
+
+Rejoue la chaîne de production — empreintes, manifeste, copie vérifiée, rejeu
+des ruches — sur des ruches données en argument, et vérifie ce qu'aucune
+compilation ne révèle : la consigne reste identique octet pour octet pendant que
+la copie de travail est modifiée, et le sceau porte l'empreinte réelle du
+manifeste.
+
+\begin{lstlisting}
+wine consigne_test.exe "Z:/tmp/sortie" "Z:/chemin/SYSTEM" "Z:/chemin/ntuser.dat"
+\end{lstlisting}
+
+\section{Lecture brute : \texttt{raw\_hive\_test}}
+
+Extrait un fichier en lisant directement le volume NTFS. À lancer sous Windows,
+en administrateur ; le cycle VM l'utilise pour valider l'extraction d'une ruche.
+
+\begin{lstlisting}
+raw_hive_test.exe [volume] [chemin] [sortie] [--fix] [--list] [--attrs]
+\end{lstlisting}
+
+\texttt{--fix} rend la ruche extraite chargeable, \texttt{--list} liste un
+répertoire, \texttt{--attrs} affiche les attributs \fichier{\$MFT} du fichier
+sans les interpréter.
+
+\section{Signatures : \texttt{authenticode\_test}}
+
+Vérifie les catalogues d'un dossier puis rend un verdict par fichier ; ses
+verdicts se comparent à ceux de \texttt{Get-AuthenticodeSignature} sur les mêmes
+fichiers, dans la VM. Le seul écart qui compte : un fichier accepté par \wac{}
+et refusé par Windows.
+
+\begin{lstlisting}
+authenticode_test --catalogs <dossier>
+authenticode_test --catalogs <dossier> --files <liste>
+\end{lstlisting}
+
+% ============================================================ 5
+\chapter{Les harnais de robustesse}\label{ch:robustesse}
+
+\section{Le principe}
+
+Un analyseur lit à des positions que le fichier lui-même déclare. Sur un
+fichier tronqué ou forgé, une lecture au-delà du tampon ne plante pas
+d'elle-même : elle lit la mémoire voisine et la publie, dans un JSON valide.
+Les harnais la font planter : chaque entrée est copiée contre une page mémoire
+interdite (\texttt{PAGE\_NOACCESS}), une fois \emph{finissant} contre elle
+(lectures au-delà de la fin), une fois \emph{commençant} juste après elle
+(lectures en deçà du début, par exemple à une position négative tirée de la
+donnée). Un seul octet lu hors de l'entrée provoque une violation d'accès.
+
+Pour chaque fichier donné, le harnais analyse :
+\begin{itemize}
+  \item le fichier entier ;
+  \item ses troncatures (toutes les longueurs pour les petits fichiers) ;
+  \item des copies dont des octets ont été remplacés au hasard, avec une graine
+    fixe : un échec se reproduit à l'identique.
+\end{itemize}
+
+\section{Raccourcis : \texttt{lnk\_test}}
+
+\begin{lstlisting}
+cd build-windows/tests
+WINEDLLOVERRIDES="propsys=n" wine lnk_test.exe a.lnk b.lnk ...
+\end{lstlisting}
+
+Sources de fichiers : le dossier \fichier{Recent} et le menu Démarrer de la VM,
+ou ceux d'une collecte (\fichier{Users\textbackslash
+<nom>\textbackslash AppData\textbackslash Roaming\textbackslash
+Microsoft\textbackslash Windows\textbackslash Recent}). Les noms accentués ou
+non latins passent mal dans la ligne de commande de \texttt{wine} : copier les
+fichiers sous des noms numérotés.
+
+\begin{note}
+\texttt{WINEDLLOVERRIDES="propsys=n"} fait charger le substitut de
+\fichier{propsys.dll} : \texttt{wine} n'implémente pas la fonction qui nomme les
+propriétés, et arrêterait le test dès le premier raccourci réel qui en porte.
+\end{note}
+
+\section{Listes de sauts et Prefetch : \texttt{parsers\_test}}\label{sec:parsers}
+
+\begin{lstlisting}
+parsers_test.exe jumplist-auto   <fichier.automaticDestinations-ms> ...
+parsers_test.exe jumplist-custom <fichier.customDestinations-ms> ...
+parsers_test.exe prefetch        <fichier.pf> ...
+\end{lstlisting}
+
+Les listes de sauts se testent sous \texttt{wine}, comme \texttt{lnk\_test}. Les
+Prefetch se testent \textbf{dans la VM} : ils sont compressés (XPRESS Huffman),
+et seule la bibliothèque \fichier{ntdll} de Windows les décompresse. Le harnais
+décompresse chaque fichier avant de l'éprouver : c'est l'analyseur de \wac{}
+qu'il vise, pas le décompresseur de Windows.
+
+Pour les 307 Prefetch d'une machine réelle (plus d'un million d'entrées), il
+faut compter environ deux heures dans la VM : lancer le test en tâche détachée,
+par lots, et suivre son journal. Exemple de script PowerShell, déposé dans la VM
+avec \texttt{qga.py write} :
+
+\begin{lstlisting}
+$files = Get-ChildItem C:\wactest\pt\pf\*.pf | ForEach-Object { $_.FullName }
+$log = 'C:\wactest\pt\pf_results.txt'
+for ($i = 0; $i -lt $files.Count; $i += 20) {
+  $batch = $files[$i..([Math]::Min($i + 19, $files.Count - 1))]
+  Add-Content $log (& C:\wactest\pt\parsers_test.exe prefetch @batch 2>&1)
+  Add-Content $log ("batch " + $i + " exit=" + $LASTEXITCODE)
+}
+Add-Content $log 'DONE'
+\end{lstlisting}
+
+\section{Référence}
+
+Résultats obtenus sur une machine réelle, chaque entrée analysée des deux côtés
+de la page interdite :
+
+\begin{longtable}{@{}L{6cm}L{3.2cm}L{5.4cm}@{}}
+\toprule
+\textbf{Fichiers} & \textbf{Entrées} & \textbf{Où} \\
+\midrule
+\endhead
+220 raccourcis & 546~214 & \texttt{wine} \\
+48 listes de sauts automatiques & 175~585 & \texttt{wine} \\
+23 listes de sauts personnalisées & 79~036 & \texttt{wine} \\
+307 Prefetch & 1~246~491 & VM, environ 2~h \\
+\bottomrule
+\end{longtable}
+
+% ============================================================ 6
+\chapter{Recouper sur une collecte réelle}
+
+Une VM fraîchement installée ne produit ni fragmentation, ni listes de sauts
+anciennes, ni noms de fichiers exotiques. Plusieurs défauts ne se sont révélés
+que sur une collecte réelle, confrontée à une source indépendante :
+
+\begin{itemize}
+  \item \textbf{listes de sauts / \texttt{olefile}} : les flux et le DestList,
+    relus par un lecteur OLE indépendant, doivent donner exactement les mêmes
+    entrées (numéros, dates, chemins). C'est ce qui a montré que les flux
+    s'appellent « 1 » à « f » et non « 01 » à « 0f » ;
+  \item \textbf{raccourci / DestList} : dans une liste de sauts, la cible d'un
+    raccourci et le chemin de son entrée DestList sont deux enregistrements du
+    même fichier. Leur désaccord a révélé une page de code fausse
+    (« d\textbackslash x92orientation ») et un chemin Unicode ignoré ;
+  \item \textbf{événements / \texttt{python-evtx}} : comparaison enregistrement
+    par enregistrement (\texttt{evtx\_test --dump}) ;
+  \item \textbf{signatures / \texttt{Get-AuthenticodeSignature}}
+    (\texttt{authenticode\_test}) ;
+  \item \textbf{ancienne collecte / nouvelle} : décoder les mêmes fichiers avec
+    le code courant et comparer, après normalisation, à la sortie d'une version
+    précédente.
+\end{itemize}
+
+\begin{attention}
+Une collecte réelle se traite en local. Si une ruche doit être lue avec le vrai
+\fichier{offreg.dll}, elle peut être copiée dans la VM de test, puis effacée
+aussitôt le test fini. Aucune copie ne reste dans le dossier de travail
+temporaire, et rien n'en entre dans le dépôt.
+\end{attention}
+
+% ============================================================ 7
+\chapter{Lire un échec}
+
+\section{Codes de sortie}
+
+\begin{longtable}{@{}L{4.4cm}L{10.6cm}@{}}
+\toprule
+\textbf{Code} & \textbf{Signification} \\
+\midrule
+\endhead
+0 & tout est passé \\
+1 & échec d'un contrôle, ou fichier d'entrée illisible \\
+2 & mauvais usage (arguments) \\
+3 & \texttt{parsers\_test} : une analyse ne s'est pas terminée en 60~s (chien de garde) \\
+\texttt{0xC0000005} (-1073741819) & violation d'accès : lecture hors du tampon \\
+\bottomrule
+\end{longtable}
+
+\section{Localiser une lecture hors tampon}
+
+Sous \texttt{wine}, une faute affiche la pile d'appels, avec des adresses
+relatives au programme (\texttt{lnk\_test+0x485bb}). Sous Windows,
+\texttt{parsers\_test} affiche lui-même l'entrée en cause et l'adresse fautive :
+
+\begin{lstlisting}
+FAILED  exception 0xC0000005 at exe+0x78b70, address read 0x159deb4200c:
+        C:\wactest\pt\pf\CMD.EXE-0BD30981.pf truncated at 192 (guard after)
+\end{lstlisting}
+
+L'adresse se traduit en fonction avec la table des symboles du programme
+(adresse de base \texttt{0x140000000}) :
+
+\begin{lstlisting}
+x86_64-w64-mingw32-nm -C parsers_test.exe | grep -i " t " | sort > syms.txt
+# chercher le symbole dont l'adresse est juste inférieure à 0x140000000 + 0x78b70
+x86_64-w64-mingw32-objdump -d --start-address=0x140078b40 \
+    --stop-address=0x140078b80 parsers_test.exe
+\end{lstlisting}
+
+L'instruction désassemblée donne le décalage lu (ici \texttt{0xcc(\%r14)}) ; il
+se rapproche alors, dans le code source, du champ lu à cette position. Rejouer
+ensuite l'entrée exacte (la troncature ou la corruption indiquée) pour vérifier
+la correction, puis toute la série.
+
+\section{Une boucle sans fin}
+
+Si \texttt{parsers\_test} s'arrête sur « no end after 60~s », l'entrée nommée
+fait tourner un analyseur sans fin — typiquement une chaîne de secteurs cyclique
+dans un conteneur OLE. C'est un défaut au même titre qu'une lecture hors tampon :
+un fichier forgé suffirait à bloquer une collecte.
+
+\end{document}
