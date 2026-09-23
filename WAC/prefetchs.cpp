@@ -44,9 +44,8 @@ Json Filename::toJson() {
 	o.add(L"Filename", Json::str(filename));
 	o.add(L"FullPath", Json::str(fullPath));
 	addFingerprints(o, fingerprint);
-	// Emise seulement si relevee : un couple de zeros se lirait comme une
-	// reference valide vers l'enregistrement 0 de la $MFT, qui est la $MFT
-	// elle-meme.
+	// Emitted only if it was read: a pair of zeros would read as a valid reference
+	// to record 0 of the $MFT, which is the $MFT itself.
 	if (referenceKnown) o.add(L"MftReference", reference.toJson());
 	return o;
 }
@@ -54,27 +53,27 @@ Json Filename::toJson() {
 VolumeInfo::VolumeInfo(LPBYTE data, int index) {
 	LPBYTE indVolume = data + index * 96;
 	unsigned int offset = *reinterpret_cast<unsigned int*>(indVolume);
-	// Longueur ANNONCEE du nom de peripherique. La lecture s'y borne : sans
-	// elle, une chaine non terminee dans un fichier abime faisait lire
-	// jusqu'au premier zero rencontre, n'importe ou en memoire.
+	// DECLARED length of the device name. The reading is bounded by it: without
+	// it, an unterminated string in a damaged file had memory read up to the
+	// first zero met, anywhere.
 	unsigned int numChar = *reinterpret_cast<unsigned int*>(indVolume + 4);
 	creationTimeUtc = *reinterpret_cast<FILETIME*>(indVolume + 8);
 	log(3, L"🔈utcVersLocalSuspect creationTime");
 	utcToSuspectLocal(creationTimeUtc, &creationTime);
-	// Chemins BRUTS : l'echappement est centralise dans json.h. Les
-	// substitutions deviceName -> mountPoint ci-dessous operent donc sur les
-	// valeurs reelles, ce qui les rend aussi utilisables telles quelles en I/O.
+	// RAW paths: the escaping is centralised in json.h. The deviceName ->
+	// mountPoint substitutions below therefore operate on the real values, which
+	// makes them usable as they are for I/O too.
 	deviceName = std::wstring((const wchar_t*)(data + offset),
 	                          numChar > 4096 ? 0 : numChar);
-	// Le nom est termine par un zero que le compte n'inclut pas toujours.
+	// The name ends with a zero that the count does not always include.
 	while (!deviceName.empty() && deviceName.back() == L'\0') deviceName.pop_back();
-	/* NUMERO DE SERIE DU VOLUME, meme defaut que le hash du chemin : les quatre
-	   octets etaient inseres dans un flux sans largeur imposee, si bien qu'un
-	   octet inferieur a 0x10 sortait sur un seul chiffre. Le numero ne
-	   correspondait alors a aucun volume et `mountPoint` restait vide — le
-	   Prefetch perdait le lecteur d'origine de l'executable.
-	   Le format %08X doit etre le MEME des deux cotes de la comparaison :
-	   getVolumeLetter() l'utilise aussi (cf. tools.cpp). */
+	/* SERIAL NUMBER OF THE VOLUME, the same defect as the path hash: the four
+	   bytes were inserted into a stream without an imposed width, so that a byte
+	   below 0x10 came out on a single digit. The number then matched no volume
+	   and `mountPoint` stayed empty — the Prefetch lost the original drive of the
+	   executable.
+	   The %08X format must be the SAME on both sides of the comparison:
+	   getVolumeLetter() uses it too (see tools.cpp). */
 	{
 		const unsigned int number = *reinterpret_cast<unsigned int*>(indVolume + 16);
 		wchar_t hexa[9] = L"";
@@ -87,7 +86,7 @@ VolumeInfo::VolumeInfo(LPBYTE data, int index) {
 	size_t pos = 1;
 	for (int k = 0; k < nbDirs; k++) {
 		std::wstring temp = std::wstring((wchar_t*)(data + dirsOffset) + pos).data();
-		pos += temp.size() + 2;//+2 pour \x0000
+		pos += temp.size() + 2;// +2 for \x0000
 		DirStrings d;
 		d.dir = temp;
 		d.fullPath = replaceAll(d.dir, deviceName, mountPoint);
@@ -95,8 +94,8 @@ VolumeInfo::VolumeInfo(LPBYTE data, int index) {
 	}
 
 	int fileRefOffset = *reinterpret_cast<int*>(indVolume + 20);
-	// Taille ANNONCEE du bloc de references : elle borne le compte, qui vient
-	// lui aussi du fichier et n'a donc pas a etre cru sur parole.
+	// DECLARED size of the block of references: it bounds the count, which also
+	// comes from the file and therefore is not to be taken on trust.
 	int fileRefSize = *reinterpret_cast<int*>(indVolume + 24);
 	LPBYTE fileRefsIndex = indVolume + fileRefOffset;
 	int fileRefVer = *reinterpret_cast<int*>(fileRefsIndex);
@@ -104,8 +103,8 @@ VolumeInfo::VolumeInfo(LPBYTE data, int index) {
 	const int maxFileRefs = (fileRefSize > 16) ? (fileRefSize - 16) / 8 : 0;
 	if (numFileRefs > maxFileRefs) {
 		log(2, L"🔥Prefetch : " + std::to_wstring(numFileRefs)
-		     + L" references annoncees pour " + std::to_wstring(maxFileRefs)
-		     + L" possibles — compte ramene a la taille du bloc", ERROR_INVALID_DATA);
+		     + L" references declared for " + std::to_wstring(maxFileRefs)
+		     + L" possible — count clamped to the block's size", ERROR_INVALID_DATA);
 		numFileRefs = maxFileRefs;
 	}
 	if (fileRefVer == 3) {
@@ -128,41 +127,40 @@ Json VolumeInfo::toJson() {
 	for (DirStrings& d : dirStrings) dirs.push(d.toJson());
 	o.add(L"NbDirs", Json::num((unsigned long long)dirStrings.size()));
 	o.add(L"Dirs",   std::move(dirs));
-	// Les references de fichiers (MFT) n'apportent rien a l'investigation : non emises.
+	// The file references (MFT) bring nothing to the investigation: not emitted.
 	return o;
 }
 
 void VolumeInfo::clear() {
 	log(3, L"🔈VolumeInfo clear");
-	fileReferences.clear();   // detruit les elements -> libere reellement
+	fileReferences.clear();   // destroys the elements -> really releases them
 }
 
 Prefetch::Prefetch(const std::wstring file_path) {
 	path = file_path;
 	log(3, L"🔈replaceAll pathOriginal");
-	// Chemin BRUT : l'echappement est centralise dans json.h.
+	// RAW path: the escaping is centralised in json.h.
 	pathOriginal = originalPath(path);
 }
 
 HRESULT Prefetch::read() {
-	/* PROPRIÉTÉ DES TAMPONS, CONFIÉE AU TYPE.
-	   Les deux tampons étaient des pointeurs nus libérés à la main en fin de
-	   fonction, ce qui produisait deux défauts distincts :
-	     - les quatre sorties en erreur (espace de travail de décompression,
-	       échec d'allocation, version non gérée) rendaient la main sans rien
-	       libérer ;
-	     - surtout, quand le Prefetch n'est PAS compressé, `data` était affecté à
-	       `buffer` — et la fin de la fonction faisait `delete[] data` PUIS
-	       `delete[] buffer`, soit un DOUBLE `delete[]` sur le même bloc, donc
-	       une corruption du tas. Le cas est rare sous Windows 10 et 11, où les
-	       Prefetch sont compressés (en-tête « MAM »), mais il suffit d'un seul
-	       fichier non compressé pour corrompre la collecte entière.
-	   `data` reste une simple VUE : il désigne l'un ou l'autre tampon sans en
-	   être propriétaire. */
-	std::unique_ptr<BYTE[]> fileBuffer;      // contenu brut du .pf
-	std::unique_ptr<BYTE[]> decompressedBuffer;  // contenu apres decompression
-	LPBYTE buffer = NULL;  // vue sur le contenu brut
-	LPBYTE data = NULL;    // vue sur les donnees exploitables
+	/* OWNERSHIP OF THE BUFFERS, GIVEN TO THE TYPE.
+	   The two buffers were raw pointers released by hand at the end of the
+	   function, which produced two distinct defects:
+	   - the four error paths (decompression workspace, allocation failure,
+	   version not handled) returned without releasing anything;
+	   - above all, when the Prefetch is NOT compressed, `data` was assigned to
+	   `buffer` — and the end of the function did `delete[] data` THEN
+	   `delete[] buffer`, that is a DOUBLE `delete[]` on the same block, hence
+	   a corruption of the heap. The case is rare under Windows 10 and 11,
+	   where the Prefetch files are compressed ("MAM" header), but one single
+	   uncompressed file is enough to corrupt the whole collection.
+	   `data` stays a plain VIEW: it names one buffer or the other without owning
+	   it. */
+	std::unique_ptr<BYTE[]> fileBuffer;      // raw content of the .pf file
+	std::unique_ptr<BYTE[]> decompressedBuffer;  // content after decompression
+	LPBYTE buffer = NULL;  // view on the raw content
+	LPBYTE data = NULL;    // view on the usable data
 	DWORD posBuffer = 0;
 	std::ifstream file(std::filesystem::path(path), std::ios::binary);
 	if (!file.good()) {
@@ -178,7 +176,7 @@ HRESULT Prefetch::read() {
 	file.read(reinterpret_cast<char*>(buffer), size);
 	file.close();
 
-	//récupération des dates
+	// read the dates
 	HANDLE hFile = CreateFile(path.c_str(),  // name of the write
 		GENERIC_READ,          // open for writing
 		0,                      // do not share
@@ -249,7 +247,7 @@ HRESULT Prefetch::read() {
 			workspace);
 		free(workspace);
 	}
-	else { // PAS DE COMPRESSION
+	else { // NO COMPRESSION
 		data = buffer;
 	}
 
@@ -259,51 +257,51 @@ HRESULT Prefetch::read() {
 	signature = *reinterpret_cast<int*>(data + 4);
 	filename = std::wstring((wchar_t*)data + 8).data();
 
-	/* SIGNATURE « SCCA » — le contrôle manquait.
-	   La constante 0x41434353 était déclarée et jamais comparée. Tout fichier
-	   déposé dans \Windows\Prefetch était donc décodé comme un Prefetch : les
-	   offsets lus au hasard produisaient soit des lectures hors du tampon, soit
-	   des dates et des noms inventés dans le rapport. Une signature absente
-	   n'est pas une erreur de collecte, c'est le constat que le fichier n'est
-	   pas un Prefetch — et c'est en soi un fait à consigner. */
+	/* THE "SCCA" SIGNATURE — the check was missing.
+	   The constant 0x41434353 was declared and never compared. Any file dropped
+	   into \Windows\Prefetch was therefore decoded as a Prefetch: the offsets
+	   read at random produced either reads out of the buffer, or dates and names
+	   invented in the report. An absent signature is not a collection error, it
+	   is the finding that the file is not a Prefetch — and that in itself is a
+	   fact to record. */
 	const int SIGNATURE_SCCA = 0x41434353;   // « SCCA » en petit-boutiste
 	if (signature != SIGNATURE_SCCA) {
-		log(2, L"🔥Signature Prefetch absente (0x" + to_hex(signature)
+		log(2, L"🔥Prefetch signature absent (0x" + to_hex(signature)
 		     + L" au lieu de 0x41434353) : " + pathOriginal, ERROR_INVALID_DATA);
 		return ERROR_INVALID_DATA;
 	}
 
-	/* HASH DU CHEMIN, tel qu'il apparaît dans le nom du fichier
-	   (« CMD.EXE-89305D47.pf »). C'est ce qui permet de rattacher un Prefetch au
-	   chemin d'origine de l'exécutable.
-	   CE QUI ÉTAIT FAUX : les quatre octets étaient insérés dans un flux sans
-	   largeur imposée, si bien qu'un octet inférieur à 0x10 sortait sur un seul
-	   chiffre — 0x0A1B2C3D devenait « a1b2c3d ». Le hash ne correspondait alors
-	   plus au nom du fichier et la corrélation échouait en silence.
-	   Une première affectation depuis les octets bruts, juste au-dessus, était
-	   par ailleurs morte : elle était écrasée deux lignes plus loin. */
+	/* HASH OF THE PATH, as it appears in the file's name
+	   ("CMD.EXE-89305D47.pf"). It is what makes it possible to tie a Prefetch to
+	   the executable's original path.
+	   WHAT WAS WRONG: the four bytes were inserted into a stream without an
+	   imposed width, so that a byte below 0x10 came out on a single digit —
+	   0x0A1B2C3D became "a1b2c3d". The hash then no longer matched the file's
+	   name and the correlation failed in silence.
+	   A first assignment from the raw bytes, just above, was dead too: it was
+	   overwritten two lines further down. */
 	const unsigned int hash = *reinterpret_cast<unsigned int*>(data + 76);
 	wchar_t hexa[9] = L"";
 	swprintf(hexa, 9, L"%08X", hash);
 	hash_string = hexa;
 
-	//verification de la version
+	// check the version
 	if (version < 30) {
 		log(2, L"🔥Prefetch version before 30 not supported", ERROR_INVALID_DATA);
 		return ERROR_INVALID_DATA; // version non prise en charge (<win10)
 	}
-	//LECTURE DES DONNEES
-	//FILE INFORMATION
+	// READING THE DATA
+	// FILE INFORMATION
 	int start = *reinterpret_cast<int*>(data + 84);
 	int nb_entries = *reinterpret_cast<int*>(data + 84 + 4);
 
-	/*  CHAINES DE TRACE. Leur CONTENU n'est pas émis : il décrit l'ordre de
-	    chargement des pages mémoire du programme, une donnée d'optimisation du
-	    préchargeur, sans nom, chemin ni horodatage. Mais leur décalage sert :
-	    il marque la FIN du tableau des métriques, juste au-dessus, et c'est la
-	    seule borne exacte de ce tableau. */
+	/*  TRACE CHAINS. Their CONTENT is not emitted: it describes the loading order
+	    of the program's memory pages, a piece of optimisation data for the
+	    prefetcher, with no name, path or timestamp. But their offset serves: it
+	    marks the END of the metrics array, just above, and it is the only exact
+	    bound of that array. */
 	int trace_offset = *reinterpret_cast<int*>(data + 84 + 8);
-	(void)*reinterpret_cast<int*>(data + 84 + 12);   // nombre de chaînes de trace
+	(void)*reinterpret_cast<int*>(data + 84 + 12);   // number of trace chains
 
 	int filename_offset = *reinterpret_cast<int*>(data + 84 + 16);
 	int filename_size = *reinterpret_cast<int*>(data + 84 + 20);
@@ -311,14 +309,14 @@ HRESULT Prefetch::read() {
 	int volume_offset = *reinterpret_cast<int*>(data + 84 + 24);
 	int nb_volumes = *reinterpret_cast<int*>(data + 84 + 28);
 
-	// Taille ANNONCEE du bloc des volumes : elle borne le compte ci-dessous,
-	// qui vient lui aussi du fichier.
+	// DECLARED size of the volumes block: it bounds the count below, which also
+	// comes from the file.
 	int volume_size = *reinterpret_cast<int*>(data + 84 + 32);
 	//run times
 	for (int i = 0; i < 8; i++) {
 		FILETIME tempUtc = *reinterpret_cast<FILETIME*>(data + 84 + 44 + i * 8);
 		FILETIME temp_locale;
-		// on ne garde pas les date nulles, il n'y a pas toujours 8 dates
+		// null dates are not kept, there are not always 8 dates
 		log(3, L"🔈timeToIso8601 last_runsUtc");
 		if (timeToIso8601Utc(tempUtc) != L"") {
 			last_runsUtc.push_back(tempUtc);
@@ -334,62 +332,61 @@ HRESULT Prefetch::read() {
 	else { // new format
 		run_count = *reinterpret_cast<int*>(data + 84 + 116);
 	}
-	//VOLUMES
-	// Une entree de volume fait 96 octets (cf. VolumeInfo) : au-dela de ce que
-	// le bloc peut contenir, le compte est faux et la lecture sortirait du
-	// tampon.
+	// VOLUMES
+	// A volume entry is 96 bytes (see VolumeInfo): beyond what the block can
+	// hold, the count is wrong and the reading would go out of the buffer.
 	const int maxVolumes = (volume_size > 0) ? volume_size / 96 : 0;
 	if (nb_volumes > maxVolumes) {
 		log(2, L"🔥Prefetch : " + std::to_wstring(nb_volumes)
-		     + L" volumes annonces pour " + std::to_wstring(maxVolumes)
-		     + L" possibles — compte ramene a la taille du bloc", ERROR_INVALID_DATA);
+		     + L" volumes declared for " + std::to_wstring(maxVolumes)
+		     + L" possible — count clamped to the block's size", ERROR_INVALID_DATA);
 		nb_volumes = maxVolumes;
 	}
 	for (int i = 0; i < nb_volumes; i++) {
 		log(3, L"🔈VolumeInfo");
 		volumes.push_back(VolumeInfo(data + volume_offset, i));
 	}
-	/*  TABLEAU DES METRIQUES DE FICHIER. Il n'etait pas lu du tout, alors qu'il
-	    porte, pour CHAQUE fichier charge, sa reference $MFT — laquelle identifie
-	    le fichier sur le volume independamment de son nom, donc y compris si
-	    l'executable a ete renomme ou supprime depuis. Une entree fait 32 octets
-	    en version 30 et au-dela (les seules prises en charge) :
-	      0  debut, 4 duree, 8 duree moyenne,
-	      12 decalage du nom dans le bloc des chaines, 16 nombre de caracteres,
-	      20 drapeaux, 24 reference $MFT (48 bits d'entree + 16 de sequence). */
-	std::map<std::wstring, MFTInformation> metrics;   // nom du fichier -> reference
+	/*  FILE METRICS ARRAY. It was not read at all, while it carries, for EACH
+	    loaded file, its $MFT reference — which identifies the file on the volume
+	    independently of its name, hence even if the executable has been renamed
+	    or deleted since. An entry is 32 bytes in version 30 and above (the only
+	    ones supported):
+	    0  start, 4 duration, 8 average duration,
+	    12 offset of the name in the strings block, 16 number of characters,
+	    20 flags, 24 $MFT reference (48 bits of entry + 16 of sequence). */
+	std::map<std::wstring, MFTInformation> metrics;   // file name -> reference
 	{
 		const int METRIC_SIZE = 32;
-		/*  Le compte vient du fichier : on le borne par la place reellement
-		    disponible. La borne est le debut des chaines de trace, qui suivent
-		    immediatement le tableau — et non le debut des chaines de noms, plus
-		    loin : mesure sur une machine reelle, cette seconde borne donnait un
-		    maximum incoherent pour une partie des Prefetch, et leurs metriques
-		    etaient toutes ecartees (taux de reference de 0 % sur certains
-		    fichiers, 100 % sur d'autres). */
+		/*  The count comes from the file: it is bounded by the room really
+		    available. The bound is the start of the trace chains, which follow
+		    the array immediately — and not the start of the name chains, further
+		    away: measured on a real machine, that second bound gave an
+		    inconsistent maximum for some of the Prefetch files, and their metrics
+		    were all discarded (a reference rate of 0 % on some files, 100 % on
+		    others). */
 		int maxMetrics = (trace_offset > start)
 		                 ? (trace_offset - start) / METRIC_SIZE : 0;
 		int kept = nb_entries;
 		if (kept < 0 || kept > maxMetrics) {
 			log(2, L"🔥Prefetch : " + std::to_wstring(nb_entries)
-			     + L" metriques annoncees pour " + std::to_wstring(maxMetrics)
-			     + L" possibles — compte ramene", ERROR_INVALID_DATA);
+			     + L" metrics declared for " + std::to_wstring(maxMetrics)
+			     + L" possible — count clamped", ERROR_INVALID_DATA);
 			kept = maxMetrics;
 		}
-		/*  APPARIEMENT PAR LE CONTENU, et non par le rang ni par un cumul de
-		    decalages. Le nom est lu A SON DECALAGE ANNONCE dans le bloc des
-		    chaines : c'est exact par construction, et une reference ne peut donc
-		    pas etre attribuee au mauvais fichier.
-		    Reconstituer les decalages en cumulant les longueurs ne marche pas :
-		    multiWstring_to_vector ecarte les chaines vides tout en avancant sa
-		    position, si bien que le cumul derive de deux octets a chaque vide —
-		    mesure sur une machine reelle, 124 Prefetch sur 279 n'obtenaient
-		    alors aucune reference. */
+		/*  MATCHING BY THE CONTENT, and not by the rank nor by a sum of offsets.
+		    The name is read AT ITS DECLARED OFFSET in the strings block: that is
+		    exact by construction, and a reference can therefore not be attributed
+		    to the wrong file.
+		    Rebuilding the offsets by summing the lengths does not work:
+		    multiWstring_to_vector discards the empty strings while advancing its
+		    position, so that the sum drifts by two bytes at every empty one —
+		    measured on a real machine, 124 Prefetch files out of 279 then got no
+		    reference at all. */
 		for (int k = 0; k < kept; ++k) {
 			LPBYTE m = data + start + (size_t)k * METRIC_SIZE;
 			const unsigned int nameOffset = *reinterpret_cast<unsigned int*>(m + 12);
 			const unsigned int nbCar = *reinterpret_cast<unsigned int*>(m + 16);
-			// Bornes : les deux champs viennent du fichier examine.
+			// Bounds: both fields come from the examined file.
 			if (nameOffset >= (unsigned int)filename_size) continue;
 			if (nbCar == 0 || nbCar > 32768) continue;
 			if (nameOffset + (nbCar + 1) * sizeof(wchar_t) > (size_t)filename_size) continue;
@@ -399,7 +396,7 @@ HRESULT Prefetch::read() {
 			metrics.emplace(name, MFTInformation(m + 24));
 		}
 		log(2, L"❇️Prefetch : " + std::to_wstring(metrics.size())
-		     + L" metrique(s) de fichier lue(s)");
+		     + L" file metric(s) read");
 	}
 
 	//FILENAMES
@@ -415,17 +412,17 @@ HRESULT Prefetch::read() {
 			f.referenceKnown = (m->second.entryIndex != 0);
 		}
 		for (const VolumeInfo& v : volumes) {
-			/* CE QUI ÉTAIT FAUX. La comparaison portait sur `substr(0, 35)`, une
-			   longueur codée en dur, alors que `deviceName` en fait 34
-			   (« \VOLUME{01dd42b110992896-8c10a5a9} »). Les 35 caractères
-			   incluaient donc la barre oblique suivante et la comparaison
-			   échouait TOUJOURS : `FullPath` restait vide pour la totalité des
-			   fichiers, et `Md5`, qui en dépend, n'était jamais calculé — même
-			   avec --binary. Les `Dirs`, juste au-dessus, n'ont jamais eu ce défaut
-			   parce qu'ils appellent `replaceAll` sans comparer de longueur.
-			   Ici la longueur est celle du nom réel, et la comparaison ignore la
-			   casse : l'en-tête Prefetch écrit en majuscules, les chaînes de
-			   volume pas nécessairement. */
+			/* WHAT WAS WRONG. The comparison bore on `substr(0, 35)`, a hard-coded
+			   length, while `deviceName` is 34 characters long
+			   ("\VOLUME{01dd42b110992896-8c10a5a9}"). The 35 characters therefore
+			   included the following backslash and the comparison ALWAYS failed:
+			   `FullPath` stayed empty for every file, and `Md5`, which depends on
+			   it, was never computed — even with --binary. The `Dirs`, just above,
+			   never had that defect because they call `replaceAll` without
+			   comparing a length.
+			   Here the length is that of the real name, and the comparison ignores
+			   case: the Prefetch header writes in upper case, the volume strings
+			   not necessarily. */
 			if (v.deviceName.empty()) continue;
 			if (toLower(f.filename.substr(0, v.deviceName.size()))
 			    != toLower(v.deviceName)) continue;
@@ -435,8 +432,8 @@ HRESULT Prefetch::read() {
 				log(3, L"🔈EmpreinteFichier");
 				f.fingerprint = FingerprintFile(f.fullPath);
 			}
-			// L'executable du Prefetch parmi les fichiers charges : c'est LUI
-			// dont l'empreinte identifie le binaire execute.
+			// The Prefetch's executable among the loaded files: it is THAT one whose
+			// fingerprint identifies the binary that ran.
 			const size_t bar = f.fullPath.find_last_of(L'\\');
 			const std::wstring nameOnly = (bar == std::wstring::npos)
 			                           ? f.fullPath : f.fullPath.substr(bar + 1);
@@ -448,7 +445,7 @@ HRESULT Prefetch::read() {
 		}
 		filenames.push_back(f);
 	}
-	return ERROR_SUCCESS;   // les deux tampons sont rendus par leur unique_ptr
+	return ERROR_SUCCESS;   // both buffers are released by their unique_ptr
 }
 
 Json Prefetch::toJson() {
@@ -477,10 +474,10 @@ Json Prefetch::toJson() {
 	o.add(L"Volumes",   std::move(vols));
 	Json fns = Json::arr();
 	for (Filename& fn : filenames) fns.push(fn.toJson());
-	/*  VERSION DU FORMAT. Lue depuis toujours pour ecarter les Prefetch
-	    anterieurs a Windows 10, jamais emise — alors que c'est elle qui explique
-	    les differences de contenu d'un Prefetch a l'autre, et qu'un analyste en
-	    a besoin pour savoir quoi attendre du fichier. */
+	/*  VERSION OF THE FORMAT. Read from the start to rule out the Prefetch files
+	    older than Windows 10, never emitted — while it is what explains the
+	    differences of content from one Prefetch to another, and an analyst needs
+	    it to know what to expect from the file. */
 	o.add(L"FormatVersion",  Json::num((long long)version));
 	o.add(L"NbFilesStrings", Json::num((unsigned long long)filenames.size()));
 	o.add(L"FilesStrings",   std::move(fns));
@@ -489,7 +486,7 @@ Json Prefetch::toJson() {
 
 void Prefetch::clear() {
 	log(3, L"🔈Prefetch clear");
-	volumes.clear();   // detruit les elements -> libere reellement
+	volumes.clear();   // destroys the elements -> really releases them
 }
 
 HRESULT Prefetchs::getData() {
@@ -526,5 +523,5 @@ HRESULT Prefetchs::toJson() {
 
 void Prefetchs::clear() {
 	log(3, L"🔈Prefetchs clear");
-	prefetchs.clear();   // detruit les elements -> libere reellement
+	prefetchs.clear();   // destroys the elements -> really releases them
 }

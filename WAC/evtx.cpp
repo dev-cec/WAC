@@ -288,7 +288,7 @@ private:
 		case T_EVTHANDLE:
 		default:
 			// No silent loss: the unknown type and its bytes are output.
-			log(2, L"🔥evtx : type de valeur non gere : " + to_hex(type));
+			log(2, L"🔥evtx: value type not handled: " + to_hex(type));
 			return dump_wstring(const_cast<LPBYTE>(d), 0, (int)size);
 		}
 	}
@@ -428,7 +428,7 @@ private:
 			default:
 				// Unknown token: going on would make the reading drift over arbitrary
 				// data. This record is abandoned.
-				log(3, L"🔈evtx : jeton inconnu " + to_hex(read8(c, tc, p)));
+				log(3, L"🔈evtx: unknown token " + to_hex(read8(c, tc, p)));
 				return false;
 			}
 		}
@@ -448,7 +448,7 @@ private:
 		}
 		// The format only allows the string type here; anything else means a
 		// desynchronised read, better reported than propagated.
-		log(3, L"🔈evtx : jeton valeur de type " + to_hex(type));
+		log(3, L"🔈evtx: value token of type " + to_hex(type));
 		return false;
 	}
 
@@ -690,7 +690,7 @@ HRESULT EvtxReadFile(const std::wstring& path,
 	                       OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (h == INVALID_HANDLE_VALUE) {
 		const DWORD err = GetLastError();
-		b.diagnostic = L"ouverture impossible";
+		b.diagnostic = L"cannot be opened";
 		log(2, L"🔥EvtxLireFichier " + path, err);
 		return HRESULT_FROM_WIN32(err);
 	}
@@ -700,12 +700,12 @@ HRESULT EvtxReadFile(const std::wstring& path,
 	if (!ReadFile(h, header.data(), (DWORD)header.size(), &read, nullptr)
 	    || read < FILE_HEADER_SIZE) {
 		CloseHandle(h);
-		b.diagnostic = L"fichier tronque (" + std::to_wstring(read) + L" octets)";
+		b.diagnostic = L"file truncated (" + std::to_wstring(read) + L" octets)";
 		return HRESULT_FROM_WIN32(ERROR_HANDLE_EOF);
 	}
 	if (memcmp(header.data(), "ElfFile\0", 8) != 0) {
 		CloseHandle(h);
-		b.diagnostic = L"signature ElfFile absente";
+		b.diagnostic = L"ElfFile signature absent";
 		log(2, L"🔥evtx : " + path + L" n'est pas un journal EVTX");
 		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
 	}
@@ -766,8 +766,8 @@ HRESULT EvtxReadFile(const std::wstring& path,
 			}
 			else {
 				++b.unreadable;
-				log(3, L"🔈evtx : enregistrement " + std::to_wstring(e.id)
-				       + L" illisible dans " + path);
+				log(3, L"🔈evtx: record " + std::to_wstring(e.id)
+				       + L" unreadable in " + path);
 			}
 			p += size;
 		}
@@ -776,11 +776,11 @@ HRESULT EvtxReadFile(const std::wstring& path,
 
 	std::wostringstream diag;
 	diag << b.chunks << L" chunk(s)";
-	if (nDeclaredChunks != b.chunks) diag << L" (" << nDeclaredChunks << L" annonce(s))";
-	diag << L", " << b.read << L" enregistrement(s)";
-	if (b.unreadable) diag << L", " << b.unreadable << L" illisible(s)";
-	if (chunksIgnores) diag << L", " << chunksIgnores << L" chunk(s) abime(s)";
-	if (b.sale) diag << L", journal non ferme proprement";
+	if (nDeclaredChunks != b.chunks) diag << L" (" << nDeclaredChunks << L" declared)";
+	diag << L", " << b.read << L" record(s)";
+	if (b.unreadable) diag << L", " << b.unreadable << L" unreadable";
+	if (chunksIgnores) diag << L", " << chunksIgnores << L" damaged chunk(s)";
+	if (b.sale) diag << L", log not closed cleanly";
 	b.diagnostic = diag.str();
 	b.chunksIgnores = chunksIgnores;
 

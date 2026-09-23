@@ -363,7 +363,7 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		if (v == 0x0000) return Json::boolean(false);
 		/* VARIANT_BOOL hors des deux valeurs canoniques : la valeur brute est
 		   restituée plutôt qu'une chaîne vide, qui perdait la donnée. */
-		log(2, L"🔥VT_BOOL non canonique 0x" + to_hex(v));
+		log(2, L"🔥VT_BOOL not canonical 0x" + to_hex(v));
 		return Json::str(L"0x" + to_hex(v));
 	}
 	if (valueType == VT_R8) {
@@ -436,7 +436,7 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		const bool boundsOk = (size > 0)
 		                   && (inputSize == 0 || start + size <= inputSize);
 		if (!boundsOk) {
-			log(2, L"🔥VT_BLOB : taille hors entree (" + std::to_wstring(size) + L")");
+			log(2, L"🔥VT_BLOB: size outside the entry (" + std::to_wstring(size) + L")");
 		}
 		/* Le décalage de 13 octets entre le début du BLOB et le premier store a
 		   été relevé empiriquement ; il n'est appliqué que si la signature s'y
@@ -487,12 +487,12 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		                   && (inputSize == 0 || dataStart + dataSize <= inputSize);
 		if (!boundsOk) {
 			if (dataSize > 0)
-				log(2, L"🔥VT_STREAM : taille de donnees hors entree ("
+				log(2, L"🔥VT_STREAM: data size outside the entry ("
 				     + std::to_wstring(dataSize) + L")");
 		}
 		else if (*reinterpret_cast<const unsigned int*>(buffer + dataStart + 4) == 0x53505331) {
 			// Property store imbrique : la signature « SPS1 » suit la taille.
-			log(3, L"🔈VT_STREAM : property store imbrique");
+			log(3, L"🔈VT_STREAM: nested property store");
 			o.add(L"PropertyStore", SPS(buffer + dataStart, level + 2).toJson());
 		}
 		else {
@@ -565,11 +565,11 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 	Json o = Json::obj();
 	o.add(L"UnsupportedValueType", Json::str(L"0x" + to_hex(valueType)));
 	if (inputSize > *pos) {
-		log(3, L"🔈dump_wstring valeur de type non pris en charge");
+		log(3, L"🔈dump_wstring: value type not supported");
 		// « tailleEntree - pos » est bien une LONGUEUR : les octets restants.
 		o.add(L"Data", Json::str(dump_wstring(buffer, (int)*pos, (int)(inputSize - *pos))));
 	}
-	log(2, L"🔥getValue : type de valeur non pris en charge 0x" + to_hex(valueType));
+	log(2, L"🔥getValue: value type not supported 0x" + to_hex(valueType));
 	return o;
 }
 
@@ -604,14 +604,14 @@ Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsign
 	const unsigned short typeElement = (unsigned short)(valueType & 0x0FFF);
 	const unsigned int nb = *reinterpret_cast<unsigned int*>(buffer + *pos);
 	*pos += 4;
-	log(3, L"🔈vecteur de " + std::to_wstring(nb) + L" element(s) de type 0x"
+	log(3, L"🔈vector of " + std::to_wstring(nb) + L" element(s) de type 0x"
 	     + to_hex(typeElement));
 
 	/* Un compteur aberrant vient d'une donnee corrompue ou d'un type mal
 	   identifie : on rend les octets au lieu d'iterer des millions de fois. */
 	const unsigned int MAX_ELEMENTS = 65536;
 	if (nb > MAX_ELEMENTS) {
-		log(2, L"🔥vecteur : compteur aberrant " + std::to_wstring(nb));
+		log(2, L"🔥vector: nonsensical count " + std::to_wstring(nb));
 		if (typeNonDecode) *typeNonDecode = true;
 		Json o = Json::obj();
 		o.add(L"UnsupportedValueType", Json::str(L"0x" + to_hex(valueType)));
@@ -632,8 +632,8 @@ Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsign
 			/* Sans savoir la taille d'un element, la position n'avance pas :
 			   continuer relirait le meme octet. On s'arrete en le signalant. */
 			if (typeNonDecode) *typeNonDecode = true;
-			log(2, L"🔥vecteur : element de type non decode 0x" + to_hex(typeElement)
-			     + L", arret apres " + std::to_wstring(x + 1) + L"/" + std::to_wstring(nb));
+			log(2, L"🔥vector: element of a type not decoded 0x" + to_hex(typeElement)
+			     + L", stopped after " + std::to_wstring(x + 1) + L"/" + std::to_wstring(nb));
 			break;
 		}
 	}
@@ -1380,8 +1380,8 @@ void getExtensionBlock(LPBYTE buffer, std::vector<std::unique_ptr<IExtensionBloc
 	    la faire analyser ferait lire des champs pris n'importe ou. */
 	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	if (size < 8) {
-		log(2, L"🔥Bloc d'extension de taille " + std::to_wstring(size)
-		     + L" (minimum 8) : signature " + to_hex(signature) + L" ignoree",
+		log(2, L"🔥Extension block of size " + std::to_wstring(size)
+		     + L" (minimum 8) : signature " + to_hex(signature) + L" ignored",
 		    ERROR_INVALID_DATA);
 		return;
 	}
@@ -1821,7 +1821,7 @@ UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _level
 		pos += temp.size;
 		properties.push_back(std::move(temp));
 		if (stop) {
-			log(2, L"🔥Property : type non decode, arret du parcours apres "
+			log(2, L"🔥Property: type not decoded, walk stopped after "
 			     + std::to_wstring(x + 1) + L"/" + std::to_wstring(numberProperties),
 			    ERROR_INVALID_DATA);
 			break;
@@ -1870,7 +1870,7 @@ UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _level
 	 || identifiersize < 0 || identifiersize > MAX_CARS
 	 || filesystemsize < 0 || filesystemsize > MAX_CARS
 	 || nbGUIDStrings < 0 || (unsigned)nbGUIDStrings > MAX_ELEMENTS) {
-		log(2, L"🔥UserPropertyView0x10312005 : longueurs invalides (nom "
+		log(2, L"🔥UserPropertyView0x10312005: invalid lengths (name "
 		     + std::to_wstring(namesize) + L", id " + std::to_wstring(identifiersize)
 		     + L", fs " + std::to_wstring(filesystemsize)
 		     + L", guids " + std::to_wstring(nbGUIDStrings) + L")", ERROR_INVALID_DATA);
@@ -1902,22 +1902,22 @@ UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _level
 	unsigned int numberProperties = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
 	if (numberProperties > MAX_ELEMENTS) {
-		log(2, L"🔥UserPropertyView0x10312005 : nombre de proprietes invraisemblable ("
-		     + std::to_wstring(numberProperties) + L") : lecture abandonnee", ERROR_INVALID_DATA);
+		log(2, L"🔥UserPropertyView0x10312005: implausible number of properties ("
+		     + std::to_wstring(numberProperties) + L"): reading abandoned", ERROR_INVALID_DATA);
 		numberProperties = 0;
 	}
 	for (unsigned int x = 0; x < numberProperties; x++) {
 		log(3, L"🔈Property");
 		Property temp(buffer + pos, level + 1);
 		if (temp.size == 0) {
-			log(2, L"🔥Property de taille nulle : arret du parcours", ERROR_INVALID_DATA);
+			log(2, L"🔥Property of null size: walk stopped", ERROR_INVALID_DATA);
 			break;
 		}
 		const bool stop = temp.typeNonDecode;   // taille indeterminee, cf. idList.h
 		pos += temp.size;
 		properties.push_back(std::move(temp));
 		if (stop) {
-			log(2, L"🔥Property : type non decode, arret du parcours apres "
+			log(2, L"🔥Property: type not decoded, walk stopped after "
 			     + std::to_wstring(x + 1) + L"/" + std::to_wstring(numberProperties),
 			    ERROR_INVALID_DATA);
 			break;
@@ -2001,7 +2001,7 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _level) {
 			delegate = std::make_unique<UserPropertyView0x23febbee>(buffer, level);
 		}
 		else
-			log(2, L"🔥0x23febbee : identifiant de " + std::to_wstring(identifierSize)
+			log(2, L"🔥0x23febbee: identifier of " + std::to_wstring(identifierSize)
 			     + L" octets au lieu de 16, GUID non lu");
 		identifierSize += 2;
 	}
@@ -2053,7 +2053,7 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _level) {
 		   non plus seulement dans le journal (cf. idList.h). Sans quoi l'objet
 		   se réduisait à son type et à une signature, ce qui ne permet ni de
 		   l'analyser ni même de savoir qu'on a perdu quelque chose. */
-		log(3, L"🔈dump_wstring UsersPropertyView signature inconnue");
+		log(3, L"🔈dump_wstring UsersPropertyView: unknown signature");
 		data = dump_wstring(buffer, 0, totalsize);
 		log(2, L"🔥UsersPropertyView Signature 0x" + to_hex(signature) + L" unknown");
 	}
@@ -2428,11 +2428,11 @@ DelegateFolder::DelegateFolder(LPBYTE buffer, unsigned short size, int _level) {
 	   le GUID de classe, ils ne font pas partie de l'item interne. */
 	const unsigned int internalSize = *reinterpret_cast<unsigned int*>(buffer + 4);
 	if (size > 38 && internalSize > 0 && internalSize <= (unsigned int)(size - 38)) {
-		log(3, L"🔈makeShellItem delegue");
+		log(3, L"🔈makeShellItem: delegate");
 		innerItem = makeShellItem(buffer + 6, level + 1, false);
 	}
 	else {
-		log(2, L"🔥DelegateFolder : taille interne incoherente ("
+		log(2, L"🔥DelegateFolder: inconsistent internal size ("
 		     + std::to_wstring(internalSize) + L")");
 		log(3, L"🔈dump_wstring DelegateFolder");
 		data = dump_wstring(buffer, 0, size);

@@ -5,9 +5,9 @@ CustomDestinationCategory::CustomDestinationCategory(LPBYTE buffer, size_t buffe
 
 	nbentries = *reinterpret_cast<unsigned int*>(buffer + 4);
 	pos += 4;
-	//decoupage du fichier pour identifier tous les fichiers LNK
+	// split the file to identify every LNK file
 	for (int x = 0; x < buffersize - pos - 23; x++) {
-		int s = *reinterpret_cast<int*>(buffer + pos + x); // = 0x4C = 76 pour un LNK
+		int s = *reinterpret_cast<int*>(buffer + pos + x); // = 0x4C = 76 for a LNK
 		if (s == 76) {
 			GUID guid = *reinterpret_cast<GUID*>(buffer + pos + x + 4);
 			log(3, L"🔈guid_to_wstring guid");
@@ -38,10 +38,10 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 	Sid = _sid;
 	log(3, L"🔈getNameFromSid Sid");
 	SidName = getNameFromSid(Sid);
-	//path retourne un codage ANSI mais on veut de l'UTF8
+	// path returns ANSI encoding, but UTF-8 is wanted
 	path = _path.wstring();
 	log(3, L"🔈replaceAll pathOriginal");
-	// Chemin BRUT : l'echappement est centralise dans json.h.
+	// RAW path: the escaping is centralised in json.h.
 	pathOriginal = originalPath(path);
 	log(2, L"❇️CustomDestination Path : " + pathOriginal);
 	std::ifstream file(std::filesystem::path(path), std::ios::binary);
@@ -51,14 +51,14 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 		file.seekg(0, std::ios::end);
 		const size_t size = file.tellg();
 		file.seekg(0, std::ios::beg);
-		/* Même motif que jumplist_automatic : propriété portée par le type,
-		   pour que toute sortie de la fonction rende le tampon. */
+		/* Same pattern as jumplist_automatic: ownership carried by the type, so
+		   that every exit of the function releases the buffer. */
 		std::unique_ptr<BYTE[]> bufferOwner = std::make_unique<BYTE[]>(size);
 		LPBYTE buffer = bufferOwner.get();
 		file.read(reinterpret_cast<CHAR*>(buffer), size);
 		file.close();
 
-		//récupération des dates
+		// read the dates
 		log(3, L"🔈CreateFile hFile");
 		HANDLE hFile = CreateFile(path.c_str(),  // name of the write
 			GENERIC_READ,          // open for reading
@@ -83,8 +83,8 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 		}
 		CloseHandle(hFile);
 
-		//conversion de l'appid contenu dans le nom de fichier en nom d'application
-		std::wstring baseName = _path.stem(); // nom de fichier sans extension
+		// turn the AppID held in the file name into an application name
+		std::wstring baseName = _path.stem(); // file name without its extension
 		log(3, L"🔈from_appId application");
 		application = from_appId(baseName);
 		typeInt = *reinterpret_cast<unsigned int*>(buffer);
@@ -106,7 +106,7 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 		default:break;
 		}
 
-		//Control de la taille du fichier pour recherche de fichier LNK
+		// Check of the file's size, to look for a LNK file
 		if ((size > 24) && (typeInt == 2)) {
 			log(3, L"🔈CustomDestinationCategory");
 			category = std::make_unique<CustomDestinationCategory>(buffer, size, path, _sid);
@@ -114,7 +114,7 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 		else {
 			log(2, L"🔥" + pathOriginal + L" : no LNK to parse",ERROR_EMPTY );
 		}
-		// Le tampon est rendu par son unique_ptr.
+		// The buffer is released by its unique_ptr.
 	}
 };
 
@@ -132,16 +132,16 @@ Json CustomDestination::toJson() {
 	o.add(L"ModifiedUtc", Json::str(timeToIso8601Utc(modifiedUtc)));
 	o.add(L"Accessed",    Json::str(timeToIso8601Local(accessed)));
 	o.add(L"AccessedUtc", Json::str(timeToIso8601Utc(accessedUtc)));
-	if (category) o.merge(category->toJson());   // champs mis a plat (schema d'origine)
+	if (category) o.merge(category->toJson());   // fields flattened (the original schema)
 	return o;
 }
 
 void CustomDestination::clear() {
 	log(3, L"🔈CustomDestination clear");
-	/* La garde manquait : `categorie` est nul dès qu'un Custom Destination ne
-	   porte pas de lnk — cas que `toJson()` teste explicitement juste au-dessus.
-	   L'appel se faisait donc sur un pointeur nul. La libération, elle, est
-	   maintenant assurée par le `unique_ptr`. */
+	/* The guard was missing: `category` is null as soon as a Custom Destination
+	   carries no lnk — a case that `toJson()` tests explicitly just above. The
+	   call was therefore made on a null pointer. The release, for its part, is
+	   now ensured by the `unique_ptr`. */
 	if (category) category->clear();
 	category.reset();
 }
@@ -155,8 +155,8 @@ HRESULT JumplistCustoms::getData() {
 
 	const std::wstring rep = L"\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\CustomDestinations";
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
-		// cheminExtrait() gere le cas d'un profil situe sur un autre volume que
-		// Windows, que replaceAll(conf.systemDrive) laissait absolu.
+		// extractedPath() handles the case of a profile on another volume than
+		// Windows, which replaceAll(conf.systemDrive) left absolute.
 		const std::filesystem::path directory =
 			extractedPath(std::get<1>(profileEntry)) + rep;
 		const std::vector<std::filesystem::path> files =
@@ -181,5 +181,5 @@ HRESULT JumplistCustoms::toJson() {
 
 void JumplistCustoms::clear() {
 	log(3, L"🔈CustomDestinations clear");
-	customDestinations.clear();   // detruit les elements -> libere reellement
+	customDestinations.clear();   // destroys the elements -> really releases them
 }

@@ -2,32 +2,32 @@
 
 namespace {
 
-/*! Lit un champ StringData d'un raccourci .lnk.
+/*! Reads a StringData field of a .lnk shortcut.
 *
-*  FORMAT (MS-SHLLINK). Chaque champ est un compteur de CARACTÈRES sur deux
-*  octets, suivi des caractères eux-mêmes — **sans terminateur nul**. Le code
-*  d'origine ignorait ce compteur et construisait la chaîne jusqu'au premier
-*  zéro rencontré : correct par accident quand Windows en écrit un, mais sinon la
-*  chaîne débordait sur le champ suivant, et sur un fichier tronqué ou forgé la
-*  lecture sortait du tampon.
+*  FORMAT (MS-SHLLINK). Each field is a count of CHARACTERS on two bytes,
+*  followed by the characters themselves — **without a null terminator**. The
+*  original code ignored that count and built the string up to the first zero
+*  met: right by accident when Windows writes one, but otherwise the string
+*  overflowed onto the next field, and on a truncated or forged file the reading
+*  went out of the buffer.
 *
-*  @param buffer début du fichier .lnk en mémoire
-*  @param taille taille totale du tampon
-*  @param offset position du champ
-*  @param suivant reçoit la position du champ suivant
-*  @return la chaîne lue, ou "" si le champ est incohérent
+*  @param buffer start of the .lnk file in memory
+*  @param size total size of the buffer
+*  @param offset position of the field
+*  @param next receives the position of the next field
+*  @return the string read, or "" if the field is inconsistent
 */
 std::wstring readStringData(LPBYTE buffer, size_t size, size_t offset, size_t* next) {
 	*next = offset;
 	if (offset + 2 > size) {
-		log(2, L"🔥StringData hors tampon a l'offset " + std::to_wstring(offset));
+		log(2, L"🔥StringData outside the buffer at offset " + std::to_wstring(offset));
 		return L"";
 	}
 	const unsigned short nbCar = *reinterpret_cast<unsigned short*>(buffer + offset);
 	const size_t bytes = (size_t)nbCar * sizeof(wchar_t);
 	if (offset + 2 + bytes > size) {
-		log(2, L"🔥StringData annonce " + std::to_wstring(nbCar)
-		     + L" caracteres, au-dela du tampon");
+		log(2, L"🔥StringData declares " + std::to_wstring(nbCar)
+		     + L" characters, beyond the buffer");
 		return L"";
 	}
 	*next = offset + 2 + bytes;
@@ -45,16 +45,17 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 		unsigned int fileAttributes = *reinterpret_cast<unsigned int*>(buffer + 24);
 		log(3, L"🔈FileAttributes");
 		attributes = FileAttributes(fileAttributes);
-		/* CORRECTION (double decalage, meme defaut que les dates FAT en miroir).
-		   Dans l'en-tete d'un fichier .lnk, CreationTime / LastAccessTime /
-		   LastWriteTime de la cible sont en UTC (MS-SHLLINK 2.1). Le code les
-		   affectait aux champs LOCAUX puis appelait LocalFileTimeToFileTime :
-		   la cle locale portait donc de l'UTC non converti, et la cle *Utc de
-		   l'UTC decale une fois de trop.
-		   Le sens correct : la valeur native est UTC, on en derive le local.
-		   Le test « si la date formatee est non vide » qui encadrait la
-		   conversion est supprime : formater une date pour savoir si elle est
-		   nulle est inutile, et convertir une date nulle est sans effet. */
+		/* FIX (a double shift, the same defect as the mirrored FAT dates).
+		   In the header of a .lnk file, the target's CreationTime /
+		   LastAccessTime / LastWriteTime are in UTC (MS-SHLLINK 2.1). The code
+		   assigned them to the LOCAL fields then called LocalFileTimeToFileTime:
+		   the local key therefore carried unconverted UTC, and the *Utc key
+		   carried UTC shifted once too often.
+		   The right way round: the native value is UTC, and the local one is
+		   derived from it.
+		   The test "if the formatted date is not empty" that surrounded the
+		   conversion is removed: formatting a date to find out whether it is null
+		   is useless, and converting a null date has no effect. */
 		targetCreatedUtc = *reinterpret_cast<FILETIME*>(buffer + 28);
 		log(3, L"🔈utcVersLocalSuspect targetCreated");
 		utcToSuspectLocal(targetCreatedUtc, &targetCreated);
@@ -125,14 +126,14 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 				volumeSerial = to_hex(serial);
 				transform(volumeSerial.begin(), volumeSerial.end(), volumeSerial.begin(), ::toupper);
 				
-				/*  ETIQUETTE DE VOLUME. La specification du .lnk est explicite :
-				    une valeur de 0x14 dans VolumeLabelOffset signale que
-				    l'etiquette n'est PAS a cet endroit, mais en UTF-16 a
-				    l'offset donne par VolumeLabelOffsetUnicode, juste apres.
-				    Le code lisait bien ce second offset mais reutilisait le
-				    premier, et traitait la chaine comme de l'ANSI : l'etiquette
-				    sortait fausse — un octet sur deux etant un zero, elle sortait
-				    le plus souvent tronquee au premier caractere. */
+				/*  VOLUME LABEL. The .lnk specification is explicit: a value of 0x14
+				    in VolumeLabelOffset signals that the label is NOT at that
+				    place, but in UTF-16 at the offset given by
+				    VolumeLabelOffsetUnicode, just after.
+				    The code did read that second offset but reused the first one,
+				    and treated the string as ANSI: the label came out wrong —
+				    every other byte being a zero, it most often came out
+				    truncated at the first character. */
 				unsigned int labeloffset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + volumeId_offset + 12);
 				if (labeloffset != 0x14) {
 					log(3, L"🔈string_to_wstring volumeLabel (ANSI)");
@@ -152,12 +153,12 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 			std::string targetPath((char*)(buffer + LinkInfo_offset + LocalPath_offset));
 			log(3, L"🔈string_to_wstring target");
 			target = string_to_wstring(targetPath);
-			// Valeur BRUTE : l'echappement est centralise dans json.h.
+			// RAW value: the escaping is centralised in json.h.
 			if (conf.binary) {
-				/* Lecture brute : ouvrir la cible par l'API mettait à jour sa date
-				   de dernier accès — sur le document même dont le raccourci
-				   atteste l'ouverture. */
-				log(3, L"🔈EmpreinteFichier cible " + target);
+				/* Raw reading: opening the target through the API would update its
+				   last access date — on the very document whose shortcut attests
+				   the opening. */
+				log(3, L"🔈FingerprintFile on the target " + target);
 				targetFingerprint = FingerprintFile(target);
 			}
 			//-------------------------------------------------------------------------
@@ -193,13 +194,13 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 		//-------------------------------------------------------------------------
 		int stringData_offset = LinkInfo_offset + LinkInfo_size;
 
-		/* Les cinq champs StringData se suivent, chacun donnant la position du
-		   suivant par sa longueur. Un seul décalage faux décale donc tout ce qui
-		   suit : c'est exactement ce qui se produisait ici, `arguments_size`
-		   étant lu à l'offset du RÉPERTOIRE DE TRAVAIL au lieu du sien. Le
-		   champ `iconLocation`, calculé à partir de cette taille, était donc lu
-		   au mauvais endroit. Valeurs BRUTES : l'echappement est centralise
-		   dans json.h. */
+		/* The five StringData fields follow one another, each giving the position of
+		   the next by its length. A single wrong offset therefore shifts
+		   everything that follows: that is exactly what happened here,
+		   `arguments_size` being read at the offset of the WORKING DIRECTORY
+		   instead of its own. The `iconLocation` field, computed from that size,
+		   was therefore read in the wrong place. RAW values: the escaping is
+		   centralised in json.h. */
 		size_t next = (size_t)stringData_offset;
 		description      = flags.HasName         ? readStringData(buffer, size, next, &next) : L"";
 		relativePath     = flags.HasRelativePath ? readStringData(buffer, size, next, &next) : L"";
@@ -212,7 +213,7 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 	//Parsing
 	Sid = _sid;
-	//path retourne un codage ANSI mais on veut de l'UTF8
+	// path returns ANSI encoding, but UTF-8 is wanted
 	path = _path.wstring();
 	log(3, L"🔈replaceAll path_original");
 	path_original = originalPath(path);
@@ -245,7 +246,7 @@ RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 		if (file.is_open()) {
 			getline(file, line); //skip first line
 			getline(file, line);
-			line = line.substr(4);//suppression de URL= en début de ligne
+			line = line.substr(4);// strip the leading "URL="
 			log(3, L"🔈decodeURIComponent line");
 			line = decodeURIComponent(line);
 			log(3, L"🔈string_to_wstring line");
@@ -254,7 +255,7 @@ RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 		}
 	}
 
-	//récupération des dates
+	// read the dates
 	HANDLE hFile = CreateFile(_path.wstring().c_str(),  // name of the write
 		GENERIC_READ,          // open for reading
 		0,                      // do not share
@@ -336,7 +337,7 @@ Json RecentDoc::toJson() {
 
 void RecentDoc::clear() {
 	log(3, L"🔈RecentDoc clear");
-	idLists.clear();   // detruit les elements -> libere reellement
+	idLists.clear();   // destroys the elements -> really releases them
 }
 
 HRESULT RecentDocs::getData() {
@@ -347,8 +348,8 @@ HRESULT RecentDocs::getData() {
 	const std::wstring reps[2] = { L"\\AppData\\Roaming\\Microsoft\\Windows\\Recent", L"\\AppData\\Roaming\\Microsoft\\Office\\Recent" };
 	for (const std::wstring& rep : reps) {
 		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
-			// cheminExtrait() gere le cas d'un profil situe sur un autre volume
-			// que Windows, que replaceAll(conf.systemDrive) laissait absolu.
+			// extractedPath() handles the case of a profile on another volume than
+			// Windows, which replaceAll(conf.systemDrive) left absolute.
 			const std::filesystem::path directory =
 				extractedPath(std::get<1>(profileEntry)) + rep;
 			const std::vector<std::filesystem::path> files =
@@ -374,5 +375,5 @@ HRESULT RecentDocs::toJson() {
 
 void RecentDocs::clear() {
 	log(3, L"🔈RecentDocs clear");
-	recentdocs.clear();   // detruit les elements -> libere reellement
+	recentdocs.clear();   // destroys the elements -> really releases them
 }

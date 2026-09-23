@@ -13,56 +13,57 @@
 
 
 
-/*!
-* OLE PARSER
-* Documentation : https://binaryforay.blogspot.com/2016/02/jump-lists-in-depth-understand-format.html
-* Documentation : https://github.com/libyal/dtformats/blob/main/documentation/Jump%20lists%20format.asciidoc
-* Documentation : https://github.com/EricZimmerman/JumpList/blob/master/JumpList/Resources/AppIDs.txt
+/*! \file
+* \brief OLE PARSER
+* Documentation: https://binaryforay.blogspot.com/2016/02/jump-lists-in-depth-understand-format.html
+* Documentation: https://github.com/libyal/dtformats/blob/main/documentation/Jump%20lists%20format.asciidoc
+* Documentation: https://github.com/EricZimmerman/JumpList/blob/master/JumpList/Resources/AppIDs.txt
 */
 
-/*!contient des informations sur les fichiers contenus avec un ID de secteur (SID) pour le secteur de départ d'une chaîne, etc.
+/*! Holds information about the files held, with a sector ID (SID) for the
+* starting sector of a chain, and so on.
 */
 struct Directory {
-	short int nameLength = 0; //!< longueur du nom
-	unsigned int firstSectorID = 0;//!< id du premier secteur
-	unsigned int userFlags = 0;//!< attributs du directory
-	int directorySize = 0; //!< taille du Directory
-	int previousDirectoryId = 0; //!< Id du précédent Directory
-	int nextDirectoryId = 0; //!< Id du prochain Directory
-	int subDirectoryId = 0; //!< Id du dubDirectory
-	FILETIME createdUtc = { 0 }; //!< date de création au format UTC
-	FILETIME created = { 0 }; //!< date de création
-	FILETIME modifiedUtc = { 0 }; //!< date de modification au format UTC
-	FILETIME modified = { 0 };//!< date de modification
-	std::wstring name = L"";//!< nom du Directory
-	std::wstring type = L"";//!< Type de directory
-	std::wstring classId = L"";//!< Identifiant de classe du Directory
-	std::wstring nodeColor = L"";//!< Couleur du nœud du Directory
+	short int nameLength = 0; //!< length of the name
+	unsigned int firstSectorID = 0;//!< id of the first sector
+	unsigned int userFlags = 0;//!< attributes of the directory
+	int directorySize = 0; //!< size of the directory
+	int previousDirectoryId = 0; //!< id of the previous directory
+	int nextDirectoryId = 0; //!< id of the next directory
+	int subDirectoryId = 0; //!< id of the subdirectory
+	FILETIME createdUtc = { 0 }; //!< creation date in UTC
+	FILETIME created = { 0 }; //!< creation date
+	FILETIME modifiedUtc = { 0 }; //!< modification date in UTC
+	FILETIME modified = { 0 };//!< modification date
+	std::wstring name = L"";//!< name of the directory
+	std::wstring type = L"";//!< type of the directory
+	std::wstring classId = L"";//!< class identifier of the directory
+	std::wstring nodeColor = L"";//!< colour of the directory's node
 
-	/*! retourne le nom du type de directory à partir d'un entier
+	/*! Returns the name of the directory type from an integer.
 	*/
 	std::wstring getType(BYTE value);
 
-	/*! retourne la couleur du nœud du directory à partir d'un entier
+	/*! Returns the colour of the directory's node from an integer.
 	*/
 	std::wstring getNodeColor(BYTE value);
 
-	/*! Constructeur par défaut
+	/*! Builds an empty directory.
 	*/
 	Directory() {};
 
-	/*!Constructeur
-	* @param data contient un pointeur sur les données à parser
+	/*! Reads a directory entry.
+	* @param data pointer to the data to parse
 	*/
 	Directory(LPBYTE data);
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the directory to JSON.
+	* @return its JSON object
 	*/
 	Json toJson();
 };
 
-/*! représente une structure destfile*/
+/*! Represents a destfile structure. */
 struct DestFile {
 	std::wstring guidDroidVolume=L"";//!< GUID containing an NTFS object identifier
 	std::wstring guidDroidFile=L"";//!< GUID containing an NTFS object identifier
@@ -70,151 +71,151 @@ struct DestFile {
 	std::wstring guidBirthDroidFile=L"";//!< GUID containing an NTFS object identifier
 	std::wstring hostname=L"";//!< Contains an ASCII string unused characters are filled with 0 - byte values
 	std::wstring pathObject=L"";//!< Contains a UTF-16 little-endian string without an end-of-string character
-	FILETIME lastModificationTime = { 0 };//!< date de dernière modification
-	FILETIME lastModificationTimeUtc = { 0 };//!< date de dernière modification au format UTC
-	short int pathObjectSize = 0; //!< taille du path object
-	unsigned int entryNumber = 0;//!< numéro de l'entrée
+	FILETIME lastModificationTime = { 0 };//!< last modification date
+	FILETIME lastModificationTimeUtc = { 0 };//!< last modification date in UTC
+	short int pathObjectSize = 0; //!< size of the path object
+	unsigned int entryNumber = 0;//!< number of the entry
 	int pinStatus = 0;//!< Where a value of -1 (0xffffffff) indicates unpinned and a value of 0 or greater pinned.
-	int size = 0;//!< taille de l'entrée
+	int size = 0;//!< size of the entry
 
-	/*! Constructeur par défaut
+	/*! Builds an empty destfile.
 	*/
 	DestFile() {};
 
-	/*!Constructeur
-	* @param buffer contient un pointeur sur les données à parser
+	/*! Reads a destfile.
+	* @param buffer pointer to the data to parse
 	*/
 	DestFile(LPBYTE buffer);
 
-	/*! retourne le statut de pinned à partir de la valeur entière
+	/*! Returns the pinned status from the integer value.
 	*/
 	std::wstring getPinnedStatus();
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the destfile to JSON.
+	* @return its JSON object
 	*/
 	Json toJson();
 };
 
-/*! représente une structure destfile Directory contenant un ensemble de DestFiles*/
+/*! Represents a destfile directory, holding a set of DestFiles. */
 struct DestFileDirectory {
-	int formatVersion = 0;//!< format de l'entrée
-	int numberOfEntries = 0;//!< nombre d'entrée
-	int numberPinnedEntries = 0;//!< nombre d'entrée pinned
-	std::vector<DestFile> destfiles;//!< tableau contenant les objets destfiles
+	int formatVersion = 0;//!< format of the entry
+	int numberOfEntries = 0;//!< number of entries
+	int numberPinnedEntries = 0;//!< number of pinned entries
+	std::vector<DestFile> destfiles;//!< the destfile objects
 
-	/*! Constructeur par défaut
+	/*! Builds an empty destfile directory.
 	*/
 	DestFileDirectory() {};
 
-	/*!Constructeur
-	* @param buffer contient un pointeur sur les données à parser
+	/*! Reads a destfile directory.
+	* @param buffer pointer to the data to parse
 	*/
 	DestFileDirectory(LPBYTE buffer);
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the destfile directory to JSON.
+	* @return its JSON object
 	*/
 	Json toJson();
 };
 
-/*! En-tete d'un conteneur OLE / CFB (Compound File Binary).
+/*! Header of an OLE / CFB (Compound File Binary) container.
 *
-* Ces champs sont des coordonnees de navigation dans le conteneur (tailles de
-* secteurs, tables d'allocation), PAS des donnees d'investigation : les traces
-* exploitables d'une jumplist automatique sont dans le stream DestList et les
-* shell items, que oleParser atteint grace a cet en-tete.
+* These fields are navigation coordinates inside the container (sector sizes,
+* allocation tables), NOT investigation data: the usable traces of an automatic
+* jump list are in the DestList stream and in the shell items, which oleParser
+* reaches thanks to this header.
 *
-* Les fichiers analyses proviennent d'une machine suspecte : ils ne sont pas de
-* confiance. Toute valeur servant a calculer un offset est donc validee ici,
-* avant usage.
+* The files parsed come from a suspect machine: they are not trusted. Every
+* value that serves to compute an offset is therefore validated here, before
+* use.
 */
 struct oleHeader {
-	bool littleIndian = false; //!< format littleindian ou Bigindian
-	unsigned long long _signature = 0xe11ab1a1e011cfd0; //!< signature attendue de l'objet OLE
-	unsigned long long signature = 0; //!< signature de l'objet OLE
+	bool littleIndian = false; //!< little-endian or big-endian
+	unsigned long long _signature = 0xe11ab1a1e011cfd0; //!< expected signature of the OLE object
+	unsigned long long signature = 0; //!< signature of the OLE object
 	unsigned short versionMajor = 0; //!< version majeure (3 = secteurs 512 o, 4 = 4096 o)
 	unsigned short versionMinor = 0; //!< version mineure
-	int sectorSize = 0; //!< taille des secteurs, en octets (validee)
-	int shortSectorSize = 0; //!< taille des petits secteurs, en octets (validee)
-	int totalSATSectors = 0; //!< nombre total de secteurs dans la SAT
-	int directoryStreamFirstSectorId = 0;//!< id du premier secteur contenant la liste des directory
-	unsigned int minimumStandardStreamSize = 0;//!< taille minimale d'un stream
-	unsigned int totalSSATSectors = 0; //!< taille totale de la SAT
-	int MSATTotalSectors = 0;//!< nombre total de secteurs dans la MSAT
-	int SSATFirstSectorId = 0; //!< id du premier secteur la SSAT
-	int MSATFirstSectorId = 0;//!< id du premier secteur la MSAT
-	std::vector<int> SATSectors; //!< tableau contenant les secteurs de la SAT
-	std::vector<int> ShortSATSectors;//!< tableau contenant les secteurs de la SSAT
-	/*! Constructeur par défaut
+	int sectorSize = 0; //!< size of the sectors, in bytes (validated)
+	int shortSectorSize = 0; //!< size of the short sectors, in bytes (validated)
+	int totalSATSectors = 0; //!< total number of sectors in the SAT
+	int directoryStreamFirstSectorId = 0;//!< id of the first sector holding the list of directories
+	unsigned int minimumStandardStreamSize = 0;//!< minimum size of a stream
+	unsigned int totalSSATSectors = 0; //!< total size of the SAT
+	int MSATTotalSectors = 0;//!< total number of sectors in the MSAT
+	int SSATFirstSectorId = 0; //!< id of the first sector of the SSAT
+	int MSATFirstSectorId = 0;//!< id of the first sector of the MSAT
+	std::vector<int> SATSectors; //!< the sectors of the SAT
+	std::vector<int> ShortSATSectors;//!< the sectors of the SSAT
+	/*! Builds an empty header.
 	*/
 	oleHeader() {}
 
-	/*!Constructeur
-	* @param buffer contient un pointeur sur les données à parser
-	* @param _bufferSize contient la taille du buffer
+	/*! Reads and validates the header.
+	* @param buffer pointer to the data to parse
+	* @param _bufferSize size of that buffer
 	*/
 	oleHeader(LPBYTE buffer, size_t _bufferSize);
 
 };
 
-/* structure représentant le parser de OLE
+/*! Reader of an OLE container.
 */
 struct oleParser {
-	oleHeader header; //!< entête du fichier ole
-	Directory rootEntry;//!< entrée principal de l'objet ole
-	std::vector<Directory> directories;//!< liste des directory de l'objet ole
-	std::vector<std::vector<BYTE>> shortSectors; //!< liste des short sectors de l'objet ole
-	std::vector<int> sat; //!< liste des secteurs de la sat
-	std::vector<int> ssat;//!< liste des secteurs de la ssat
-	LPBYTE buffer = NULL; //!< buffer contenant les données de l'objet ole à parser
-	size_t bufferSize = 0;//!< taille du buffer
+	oleHeader header; //!< header of the OLE file
+	Directory rootEntry;//!< main entry of the OLE object
+	std::vector<Directory> directories;//!< list of the directories of the OLE object
+	std::vector<std::vector<BYTE>> shortSectors; //!< list of the short sectors of the OLE object
+	std::vector<int> sat; //!< list of the sectors of the SAT
+	std::vector<int> ssat;//!< list of the sectors of the SSAT
+	LPBYTE buffer = NULL; //!< buffer holding the data of the OLE object to parse
+	size_t bufferSize = 0;//!< size of that buffer
 
 
-	/*! Constructeur par défaut
+	/*! Builds an empty reader.
 	*/
 	oleParser() {};
 
-	/*!Constructeur
-	* @param _buffer contient un pointeur sur les données à parser
-	* @param _bufferSize contient la taille du buffer
+	/*! Reads an OLE container.
+	* @param _buffer pointer to the data to parse
+	* @param _bufferSize size of that buffer
 	*/
 	oleParser(LPBYTE _buffer, size_t _bufferSize);
 
-	/*! permet de retrouver un Directory dans l'objet ole à partir de son nom
-	* @param name du Directory
+	/*! Finds a directory in the OLE object by its name.
+	* @param name name of the directory
 	*/
 	Directory findDirectory(std::wstring name);
 
-	/*! Suit une chaine de secteurs dans une table d'allocation (SAT ou SSAT).
+	/*! Follows a chain of sectors in an allocation table (SAT or SSAT).
 	*
-	* Les indices viennent du fichier analyse, donc d'une source non fiable : cette
-	* fonction valide chaque indice contre la taille de la table et detecte les
-	* chaines cycliques, qui boucleraient indefiniment. Elle remplace le meme
-	* parcours ecrit trois fois, chaque copie ayant ses propres trous.
-	* @param table la table d'allocation a parcourir (sat ou ssat)
-	* @param premier indice du premier secteur de la chaine
-	* @return les indices de la chaine, premier inclus
-	* @throws std::length_error si un indice est hors bornes ou la chaine cyclique
+	* The indexes come from the file parsed, hence from an untrusted source: this
+	* function validates every index against the table's size and detects cyclic
+	* chains, which would loop for ever. It replaces the same walk written three
+	* times, each copy with holes of its own.
+	* @param table the allocation table to walk (sat or ssat)
+	* @param first index of the first sector of the chain
+	* @return the indexes of the chain, the first one included
+	* @throws std::length_error if an index is out of bounds or the chain is cyclic
 	*/
 	static std::vector<int> sectorChain(const std::vector<int>& table, int first);
 
 	std::vector<int> GetIntFromSat(int sectorNumber);
 
-	/*! permet de parser un secteur de la sat en tableau de bytes
-	* @param sectorNumber correspond au numéro du secteur à parser
+	/*! Parses a sector of the SAT into an array of bytes.
+	* @param sectorNumber number of the sector to parse
 	*/
 	std::vector<BYTE> GetBytesFromSat(int sectorNumber);
 
-	/*! permet de parser un secteur de la ssat en tableau de bytes
-	* @param sectorNumber correspond au numéro du secteur à parser
+	/*! Parses a sector of the SSAT into an array of bytes.
+	* @param sectorNumber number of the sector to parse
 	*/
 	std::vector<BYTE> GetBytesFromSSat(int sectorNumber);
 
-	/*! permet de parser les données d'un Directory
-	* @param d correspond au directory contenant les données à récupérer
+	/*! Parses the data of a directory.
+	* @param d the directory holding the data to read
 	*/
-	std::vector<BYTE> Getdata(Directory d) { // Pour récupérer les Bytes correspondant d'un directory
+	std::vector<BYTE> Getdata(Directory d) { // To read the bytes of a directory
 		if (d.directorySize >= 4096) {
 			log(3, L"🔈GetBytesFromSat firstSectorID");
 			return GetBytesFromSat(d.firstSectorID);

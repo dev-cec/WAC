@@ -3,10 +3,10 @@
 AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wstring _sid) {
 	Sid = _sid;
 	
-	//path retourne un codage ANSI mais on veut de l'UTF8
+	// path returns ANSI encoding, but UTF-8 is wanted
 	path = _path.wstring();
 	log(3, L"🔈replaceAll pathOriginal");
-	// Chemin BRUT : l'echappement est centralise dans json.h.
+	// RAW path: the escaping is centralised in json.h.
 	pathOriginal = originalPath(path);
 	log(2, L"❇️AutomaticDestination Path : " + pathOriginal);
 
@@ -14,30 +14,30 @@ AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wst
 	log(3, L"🔈getNameFromSid SidName");
 	SidName = getNameFromSid(Sid);
 
-	//conversion de l'appid contenu dans le nom de fichier en nom d'application
+	// turn the AppID held in the file name into an application name
 	std::wstring::size_type const p(_path.filename().wstring().find_last_of('.'));
 	std::wstring baseName = _path.filename().wstring().substr(0, p);
 	log(3, L"🔈from_appId application");
 	application = from_appId(baseName);
 
-	//ouverture du fichier
+	// open the file
 	std::ifstream file(_path, std::ios::binary);
 	if (file.good()) {
 		file.unsetf(std::ios::skipws);
 		file.seekg(0, std::ios::end);
 		const size_t size = file.tellg();
 		file.seekg(0, std::ios::beg);
-		/* PROPRIÉTÉ CONFIÉE AU TYPE. Le tampon était nu et n'était libéré qu'à
-		   la toute fin de la fonction, alors que QUATRE `return` prématurés la
-		   quittent avant : échec d'analyse OLE, DestList vide ou illisible. Le
-		   contenu entier du fichier — plusieurs centaines de kilo-octets —
-		   fuyait à chaque fois, et ces cas sont fréquents sur une machine
-		   réelle, où beaucoup de jumplists sont vides ou partiels. */
+		/* OWNERSHIP GIVEN TO THE TYPE. The buffer was raw and was released only at
+		   the very end of the function, while FOUR early `return`s leave it
+		   before that: OLE parsing failure, DestList empty or unreadable. The
+		   whole content of the file — several hundred kilobytes — leaked every
+		   time, and those cases are frequent on a real machine, where many jump
+		   lists are empty or partial. */
 		std::unique_ptr<BYTE[]> bufferOwner = std::make_unique<BYTE[]>(size);
 		LPBYTE buffer = bufferOwner.get();
 		file.read(reinterpret_cast<CHAR*>(buffer), size);
 		file.close();
-		//récupération des dates
+		// read the dates
 		log(3, L"🔈CreateFile hFile");
 		HANDLE hFile = CreateFile(_path.wstring().c_str(),  // name of the write
 			GENERIC_READ,          // open for reading
@@ -73,8 +73,8 @@ AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wst
 			log(3, L"🔈oleParser buffer");
 			ole = oleParser(buffer, size);
 		}
-		// Par REFERENCE : attrapee par valeur, l'exception etait tronquee a sa
-		// classe de base et le message du type reel perdu.
+		// By REFERENCE: caught by value, the exception was truncated to its base
+		// class and the message of the real type lost.
 		catch (const std::exception&) {
 			log(2, L"🔥oleparser", ERROR_INVALID_DATA);// show cause of failure
 			return;
@@ -84,11 +84,11 @@ AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wst
 		log(3, L"🔈ole.findDirectory destlistDirectory");
 		Directory destlistDirectory = ole.findDirectory(L"destlist");
 		std::vector<BYTE> destlistDirectoryBytes;
-		if (destlistDirectory.directorySize <= 0) // Directory vide, rien à faire
+		if (destlistDirectory.directorySize <= 0) // Directory empty, nothing to do
 			return;
 		log(3, L"🔈ole.Getdata destlistDirectory");
 		destlistDirectoryBytes = ole.Getdata(destlistDirectory);
-		if (destlistDirectoryBytes.empty()) {// rien à faire
+		if (destlistDirectoryBytes.empty()) {// nothing to do
 			log(2, L"🔥ole.Getdata destlistDirectory", ERROR_EMPTY);// show cause of failure
 			return;
 		}
@@ -99,7 +99,7 @@ AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wst
 		// 4. For each DestList entry, find the corresponding Directory entry where DestListEntry.EntryNumber == DirectoryEntry.Name
 		size_t iEntry = 0;
 		for (const DestFile& df : destlistArray.destfiles) {
-			// Chaque entree DestList entraine le parsing d'un LNK complet.
+			// Each DestList entry means parsing a complete LNK.
 			printProgress(L"Jumplist " + std::filesystem::path(path).filename().wstring(),
 			              ++iEntry, destlistArray.destfiles.size(), L"lnk");
 			
@@ -117,7 +117,7 @@ AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wst
 				return;
 			}
 		}
-		// Le tampon est rendu par son unique_ptr, y compris sur sortie anticipee.
+		// The buffer is released by its unique_ptr, including on an early exit.
 	}
 };
 
@@ -142,7 +142,7 @@ Json AutomaticDestination::toJson() {
 
 void AutomaticDestination::clear() {
 	log(3, L"🔈AutomaticDestination clear");
-	recentDocs.clear();   // detruit les elements -> libere reellement
+	recentDocs.clear();   // destroys the elements -> really releases them
 }
 
 HRESULT JumplistAutomatics::getData() {
@@ -153,8 +153,8 @@ HRESULT JumplistAutomatics::getData() {
 
 	const std::wstring rep = L"\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\AutomaticDestinations";
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
-		// cheminExtrait() gere le cas d'un profil situe sur un autre volume que
-		// Windows, que replaceAll(conf.systemDrive) laissait absolu.
+		// extractedPath() handles the case of a profile on another volume than
+		// Windows, which replaceAll(conf.systemDrive) left absolute.
 		const std::filesystem::path directory =
 			extractedPath(std::get<1>(profileEntry)) + rep;
 		const std::vector<std::filesystem::path> files =
@@ -179,5 +179,5 @@ HRESULT JumplistAutomatics::toJson() {
 
 void JumplistAutomatics::clear() {
 	log(3, L"🔈AutomaticDestinations clear");
-	automaticDestinations.clear();   // detruit les elements -> libere reellement
+	automaticDestinations.clear();   // destroys the elements -> really releases them
 }

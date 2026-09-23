@@ -7,28 +7,28 @@
 
 namespace {
 
-//! Racine des définitions de tâches, relative au point d'extraction.
+//! Root of the task definitions, relative to the extraction point.
 const wchar_t* TASKS_SUBFOLDER = L"\\Windows\\System32\\Tasks";
 
-/*! Historique d'exécution d'une tâche, lu dans TaskCache. */
+/*! Execution history of a task, read in the TaskCache. */
 struct History {
 	FILETIME lastRunUtc = { 0 };
 	LONG     lastResult = 0;
 	bool     found = false;
 };
 
-/*! Décode la valeur binaire `DynamicInfo` du TaskCache.
+/*! Decodes the binary value `DynamicInfo` of the TaskCache.
  *
- *  Disposition (stable depuis Vista, longueur variable selon la version) :
+ *  Layout (stable since Vista, variable length depending on the version):
  *    0x00 version (4)
- *    0x04 dernière inscription       (FILETIME, 8)
- *    0x0C dernière exécution         (FILETIME, 8)
- *    0x14 code de retour             (4)
- *    0x18 inconnu                    (4)
- *    0x1C dernière exécution réussie (FILETIME, 8) — versions récentes
+ *    0x04 last registration        (FILETIME, 8)
+ *    0x0C last run                 (FILETIME, 8)
+ *    0x14 return code              (4)
+ *    0x18 unknown                  (4)
+ *    0x1C last successful run      (FILETIME, 8) — recent versions
  *
- *  La taille est vérifiée avant lecture : la valeur vient du registre de la
- *  machine examinée, donc d'une source non fiable.
+ *  The size is checked before reading: the value comes from the examined
+ *  machine's registry, hence from an untrusted source.
  */
 History decoderDynamicInfo(const BYTE* data, DWORD size) {
 	History h;
@@ -41,18 +41,17 @@ History decoderDynamicInfo(const BYTE* data, DWORD size) {
 	return h;
 }
 
-/*! Parcourt `TaskCache\Tree` et relève le GUID de chaque tâche.
+/*! Walks `TaskCache\Tree` and reads the GUID of every task.
  *
- *  L'arbre reproduit l'arborescence des dossiers de tâches : le parcours est donc
- *  récursif, avec un garde-fou de profondeur (un index de registre corrompu
- *  pourrait boucler).
+ *  The tree reproduces the hierarchy of the task folders: the walk is therefore
+ *  recursive, with a depth guard (a corrupted registry index could loop).
  */
 void walkTree(ORHKEY key, const std::wstring& path,
                     std::map<std::wstring, std::wstring>& idByPath,
                     unsigned depthLeft) {
 	if (!key || depthLeft == 0) return;
 
-	// Une feuille porte la valeur Id ; une branche porte des sous-clés.
+	// A leaf carries the Id value; a branch carries subkeys.
 	std::wstring id;
 	if (getRegSzValue(key, L"", L"Id", &id) == ERROR_SUCCESS && !id.empty())
 		idByPath.emplace(toLower(path), id);
@@ -73,25 +72,25 @@ void walkTree(ORHKEY key, const std::wstring& path,
 	}
 }
 
-/*! Lit le TaskCache : chemin de tâche -> historique d'exécution. */
+/*! Reads the TaskCache: task path -> execution history. */
 std::map<std::wstring, History> readTaskCache() {
 	std::map<std::wstring, History> result;
 	if (!conf.Software) {
-		log(2, L"🔥TaskCache : ruche SOFTWARE indisponible, historique non collecte");
+		log(2, L"🔥TaskCache: SOFTWARE hive unavailable, history not collected");
 		return result;
 	}
 
 	const std::wstring root = L"Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache";
 	ORHKEY treeKey = NULL;
 	if (OROpenKey(conf.Software, (root + L"\\Tree").c_str(), &treeKey) != ERROR_SUCCESS) {
-		log(2, L"🔥TaskCache\\Tree introuvable : historique d'execution non collecte");
+		log(2, L"🔥TaskCache\\Tree not found: execution history not collected");
 		return result;
 	}
 
 	std::map<std::wstring, std::wstring> idByPath;
 	walkTree(treeKey, L"", idByPath, 16);
 	ORCloseKey(treeKey);
-	log(2, L"❇️TaskCache : " + std::to_wstring(idByPath.size()) + L" tache(s) referencee(s)");
+	log(2, L"❇️TaskCache : " + std::to_wstring(idByPath.size()) + L" task(s) referenced");
 
 	for (const std::pair<const std::wstring, std::wstring>& e : idByPath) {
 		const std::wstring taskKey = root + L"\\Tasks\\" + e.second;
@@ -106,12 +105,12 @@ std::map<std::wstring, History> readTaskCache() {
 	return result;
 }
 
-//! Vrai si la chaîne ressemble à un SID (« S-1-… »).
+//! True if the string looks like a SID ("S-1-…").
 bool estUnSid(const std::wstring& v) {
 	return v.size() > 2 && (v[0] == L'S' || v[0] == L's') && v[1] == L'-';
 }
 
-/*! Remplit une tâche depuis son document XML. */
+/*! Fills a task from its XML document. */
 void readDefinition(const XmlNode& root, ScheduledTask& t) {
 	if (const XmlNode* info = root.child(L"RegistrationInfo")) {
 		t.author           = info->textOf(L"Author");
@@ -119,24 +118,24 @@ void readDefinition(const XmlNode& root, ScheduledTask& t) {
 		t.registrationDate = info->textOf(L"Date");
 	}
 
-	// Principal : compte d'exécution. UserId contient un nom OU un SID.
+	// Principal: the account it runs as. UserId holds a name OR a SID.
 	for (const XmlNode* p : root.descendants(L"Principal")) {
 		const std::wstring userId = p->textOf(L"UserId");
 		if (userId.empty()) continue;
 		if (estUnSid(userId)) {
 			t.runAsSid = userId;
-			t.runAs    = getNameFromSid(userId);   // résolution mise en cache
+			t.runAs    = getNameFromSid(userId);   // cached resolution
 		}
 		else t.runAs = userId;
 		break;
 	}
 	if (t.runAs.empty()) t.runAs = root.textOf(L"Principals/Principal/GroupId");
 
-	// Settings\Enabled vaut « true » par défaut quand l'élément est absent.
+	// Settings\Enabled is "true" by default when the element is absent.
 	t.enabled = (root.textOf(L"Settings/Enabled") != L"false");
 	t.state   = t.enabled ? L"Enabled" : L"Disabled";
 
-	// Actions : Exec (exécutable) ou ComHandler (CLSID).
+	// Actions: Exec (an executable) or ComHandler (a CLSID).
 	for (const XmlNode* a : root.descendants(L"Exec")) {
 		Action act;
 		act.type       = L"Exec";
@@ -144,14 +143,14 @@ void readDefinition(const XmlNode& root, ScheduledTask& t) {
 		act.arguments  = a->textOf(L"Arguments");
 		act.workingDir = a->textOf(L"WorkingDirectory");
 		if (conf.binary && !act.command.empty()) {
-			/* Le chemin peut être entre guillemets et contenir des variables.
-			   Il était développé avec ExpandEnvironmentStringsW — l'environnement
-			   de WAC, qui tourne en SYSTEM — et son existence testée par l'API :
-			   deux lectures de la machine vivante. La normalisation commune
-			   développe les variables système depuis le lecteur détecté.
-			   Un nom nu (« cmd.exe ») est cherché comme Windows le ferait en
-			   premier, dans System32. Un exécutable absent n'est pas une
-			   anomalie ici (logiciel désinstallé) : Command le montre. */
+			/* The path may be quoted and hold variables.
+			   It used to be expanded with ExpandEnvironmentStringsW — WAC's
+			   environment, and WAC runs as SYSTEM — and its existence tested
+			   through the API: two readings of the live machine. The common
+			   normalisation expands the system variables from the detected drive.
+			   A bare name ("cmd.exe") is looked for where Windows would look
+			   first, in System32. An absent executable is not an anomaly here
+			   (software uninstalled): Command shows it. */
 			const std::wstring command = replaceAll(act.command, L"\"", L"");
 			std::wstring path = normalizeFilePath(command);
 			if (path.empty() && command.find(L'\\') == std::wstring::npos
@@ -169,7 +168,7 @@ void readDefinition(const XmlNode& root, ScheduledTask& t) {
 		t.actions.push_back(std::move(act));
 	}
 
-	// Déclencheurs : chaque enfant de <Triggers> porte son type dans son nom.
+	// Triggers: each child of <Triggers> carries its type in its name.
 	if (const XmlNode* trigs = root.child(L"Triggers")) {
 		for (const std::unique_ptr<XmlNode>& n : trigs->children) {
 			Trigger tr;
@@ -193,13 +192,13 @@ Json ScheduledTask::toJson() const {
 	o.add(L"Enabled",            Json::boolean(enabled));
 	o.add(L"RunAs",              Json::str(runAs));
 	o.add(L"RunAsSID",           Json::str(runAsSid));
-	o.add(L"Path",               Json::str(path));               // chemin BRUT
+	o.add(L"Path",               Json::str(path));               // RAW path
 	o.add(L"State",              Json::str(state));
 	o.add(L"LastRun",            Json::str(timeToIso8601Local(lastRunTime)));
 	o.add(L"LastRunUtc",         Json::str(timeToIso8601Utc(lastRunTimeUtc)));
 	o.add(L"LastTaskResult",     Json::num((long long)lastTaskResult));
 	o.add(L"RegistrationDate",   Json::str(registrationDate));
-	o.add(L"SourceXml",          Json::str(sourceXml));   // traçabilité de la source
+	o.add(L"SourceXml",          Json::str(sourceXml));   // traceability of the source
 
 	Json jsonActions = Json::arr();
 	for (const Action& a : actions) {
@@ -212,9 +211,9 @@ Json ScheduledTask::toJson() const {
 			j.add(L"WorkingDirectory", Json::str(a.workingDir));
 		}
 		else {
-			/* « ClassId Name » portait une espace, et « data » était la seule clé
-			   en minuscules de toute la sortie : deux formes qu'un outil de
-			   requête traite mal et qui ne suivent pas le nommage commun. */
+			/* "ClassId Name" carried a space, and "data" was the only key in lower
+			   case of the whole output: two forms that a query tool handles badly
+			   and that do not follow the common naming. */
 			j.add(L"ClassId",     Json::str(a.classId));
 			j.add(L"ClassIdName", Json::str(trans_guid_to_wstring(a.classId)));
 			j.add(L"Data",        Json::str(a.data));
@@ -251,21 +250,21 @@ HRESULT ScheduledTasks::getData() {
 	const std::filesystem::path root = conf.mountpoint + TASKS_SUBFOLDER;
 	std::error_code ec;
 	if (!std::filesystem::exists(root, ec)) {
-		log(2, L"🔥Definitions de taches absentes : " + root.wstring(), ERROR_PATH_NOT_FOUND);
+		log(2, L"🔥Task definitions absent: " + root.wstring(), ERROR_PATH_NOT_FOUND);
 		return ERROR_PATH_NOT_FOUND;
 	}
 
-	// Historique d'abord : il est rattaché ensuite à chaque tâche par son chemin.
+	// History first: it is then tied to each task by its path.
 	const std::map<std::wstring, History> historical = readTaskCache();
 
-	// Les définitions sont des fichiers SANS extension, rangés en arborescence.
+	// The definitions are files WITHOUT an extension, stored in a tree.
 	std::vector<std::filesystem::path> files;
 	for (std::filesystem::recursive_directory_iterator it(root, ec), end;
 	     it != end && !ec; it.increment(ec)) {
 		std::error_code fileWriter;
 		if (it->is_regular_file(fileWriter) && !fileWriter) files.push_back(it->path());
 	}
-	log(2, L"❇️" + std::to_wstring(files.size()) + L" definition(s) de tache trouvee(s)");
+	log(2, L"❇️" + std::to_wstring(files.size()) + L" task definition(s) found");
 
 	scheduledTasks.reserve(files.size());
 	size_t iFile = 0, ignores = 0;
@@ -274,18 +273,18 @@ HRESULT ScheduledTasks::getData() {
 
 		std::unique_ptr<XmlNode> xmlRoot = xmlReadFile(file.wstring());
 		if (!xmlRoot || xmlRoot->name != L"Task") {
-			/* Un fichier sous Tasks\ qui n'est pas une définition de tâche est
-			   signalé plutôt que de produire une entrée vide : l'analyste doit
-			   pouvoir distinguer « pas de tâche » de « tâche non décodée ». */
+			/* A file under Tasks\ that is not a task definition is reported rather
+			   than producing an empty entry: the analyst must be able to tell
+			   "no task" from "task not decoded". */
 			++ignores;
-			log(2, L"🔥Definition illisible ou inattendue : " + file.wstring());
+			log(2, L"🔥Definition unreadable or unexpected: " + file.wstring());
 			continue;
 		}
 
 		ScheduledTask t;
 		t.name = file.filename().wstring();
-		// Chemin tel que le planificateur le présente : relatif à Tasks\,
-		// antislashs, préfixé d'un antislash — c'est aussi la clé du TaskCache.
+		// Path as the scheduler presents it: relative to Tasks\, backslashes,
+		// prefixed by a backslash — it is also the TaskCache's key.
 		t.path = L"\\" + std::filesystem::relative(file, root, ec).wstring();
 		t.sourceXml = originalPath(file.wstring());
 		log(1, L"➕ScheduledTask");
@@ -303,7 +302,7 @@ HRESULT ScheduledTasks::getData() {
 		scheduledTasks.push_back(std::move(t));
 	}
 	if (ignores)
-		log(2, L"❇️" + std::to_wstring(ignores) + L" fichier(s) ignore(s) sous Tasks\\");
+		log(2, L"❇️" + std::to_wstring(ignores) + L" file(s) ignored under Tasks\\");
 	return ERROR_SUCCESS;
 }
 
@@ -316,5 +315,5 @@ HRESULT ScheduledTasks::toJson() {
 
 void ScheduledTasks::clear() {
 	log(3, L"🔈ScheduledTasks clear");
-	scheduledTasks.clear();   // detruit les elements -> libere reellement
+	scheduledTasks.clear();   // destroys the elements -> really releases them
 }
