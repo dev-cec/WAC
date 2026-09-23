@@ -15,12 +15,11 @@ var searchData=
   ['timezone_12',['timeZone',['../structAppliConf.html#a5e4e7e6aee66141b1eb0ea2fea6c8eba',1,'AppliConf']]],
   ['totalsatsectors_13',['totalSATSectors',['../structoleHeader.html#a8d820bf82676eeda34ef7980900cfe72',1,'oleHeader']]],
   ['totalsize_14',['totalsize',['../structUsersPropertyView.html#a014dbd2a0acd06e5fa96a1145fa5b791',1,'UsersPropertyView']]],
-  ['totalssatsectors_15',['totalSSATSectors',['../structoleHeader.html#a48f7154235d8b1b91a98851a7bf0243e',1,'oleHeader']]],
-  ['triggers_16',['triggers',['../structScheduledTask.html#ac2c57666845b795666960c2a355bc0f5',1,'ScheduledTask']]],
-  ['type_17',['type',['../structIdList.html#aa4cb3884ff007c2cf2e41e08fa48eb51',1,'IdList::type'],['../structProperty.html#a3dfcee9b6e9cb77262c34d5b2d4985f6',1,'Property::type'],['../structCustomDestination.html#ab703681f51635c3c5ee5cf5abfce19e2',1,'CustomDestination::type'],['../structDirectory.html#a01cea5c1f079659c9dd7c0047d8c896c',1,'Directory::type'],['../structRawAttribute.html#a0ea52b32cf35d3c0bb69642c74dcc5f9',1,'RawAttribute::type'],['../structTrigger.html#a7caf8fc5e4e5358e39314701de5a735c',1,'Trigger::type'],['../structAction.html#a7e227f1f5102a564ec456e349ff72884',1,'Action::type']]],
-  ['type_5fchar_18',['type_char',['../structIdList.html#af86cacbc460ac469ad169291a5f6f598',1,'IdList']]],
-  ['type_5fhex_19',['type_hex',['../structIdList.html#a700eb37773ada77c53f8aa338780222a',1,'IdList']]],
-  ['typeint_20',['typeInt',['../structCustomDestination.html#af047fe2b69bbe3494821f54b350e0dfe',1,'CustomDestination']]],
-  ['typename_21',['typeName',['../structTypedShellItem.html#a0605937fbbf364945925dc4dd2c82cd2',1,'TypedShellItem']]],
-  ['typenotdecoded_22',['typeNotDecoded',['../structProperty.html#a9eef596ed0671c725199141700af5d65',1,'Property']]]
+  ['triggers_15',['triggers',['../structScheduledTask.html#ac2c57666845b795666960c2a355bc0f5',1,'ScheduledTask']]],
+  ['type_16',['type',['../structIdList.html#aa4cb3884ff007c2cf2e41e08fa48eb51',1,'IdList::type'],['../structProperty.html#a3dfcee9b6e9cb77262c34d5b2d4985f6',1,'Property::type'],['../structCustomDestination.html#ab703681f51635c3c5ee5cf5abfce19e2',1,'CustomDestination::type'],['../structRawAttribute.html#a0ea52b32cf35d3c0bb69642c74dcc5f9',1,'RawAttribute::type'],['../structTrigger.html#a7caf8fc5e4e5358e39314701de5a735c',1,'Trigger::type'],['../structAction.html#a7e227f1f5102a564ec456e349ff72884',1,'Action::type']]],
+  ['type_5fchar_17',['type_char',['../structIdList.html#af86cacbc460ac469ad169291a5f6f598',1,'IdList']]],
+  ['type_5fhex_18',['type_hex',['../structIdList.html#a700eb37773ada77c53f8aa338780222a',1,'IdList']]],
+  ['typeint_19',['typeInt',['../structCustomDestination.html#af047fe2b69bbe3494821f54b350e0dfe',1,'CustomDestination']]],
+  ['typename_20',['typeName',['../structTypedShellItem.html#a0605937fbbf364945925dc4dd2c82cd2',1,'TypedShellItem']]],
+  ['typenotdecoded_21',['typeNotDecoded',['../structProperty.html#a9eef596ed0671c725199141700af5d65',1,'Property']]]
 ];

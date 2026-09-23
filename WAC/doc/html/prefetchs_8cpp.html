@@ -96,6 +96,8 @@ $(document).ready(function(){initNavTree('prefetchs_8cpp.html',''); initResizabl
 </div>
 
 <div class="header">
+  <div class="summary">
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">prefetchs.cpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -104,9 +106,60 @@ $(document).ready(function(){initNavTree('prefetchs_8cpp.html',''); initResizabl
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="prefetchs_8h_source.html">prefetchs.h</a>&quot;</code><br />
 <code>#include &lt;map&gt;</code><br />
-</div><a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+</div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a4c90d811e8a791c6184dea9e28ad4d8e" id="r_a4c90d811e8a791c6184dea9e28ad4d8e"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="prefetchs_8cpp.html#a4c90d811e8a791c6184dea9e28ad4d8e">decompressPrefetch</a> (const BYTE *buffer, size_t size, std::vector&lt; BYTE &gt; &amp;out)</td></tr>
+<tr class="separator:a4c90d811e8a791c6184dea9e28ad4d8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Decoding of the <a class="el" href="structPrefetch.html">Prefetch</a> files, compressed or not (see <a class="el" href="prefetchs_8h.html" title="Prefetch: which executables ran, how many times, and what they loaded.">prefetchs.h</a>). </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="a4c90d811e8a791c6184dea9e28ad4d8e" name="a4c90d811e8a791c6184dea9e28ad4d8e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4c90d811e8a791c6184dea9e28ad4d8e">&#9670;&#160;</a></span>decompressPrefetch()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT decompressPrefetch </td>
+          <td>(</td>
+          <td class="paramtype">const BYTE *&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; BYTE &gt; &amp;&#160;</td>
+          <td class="paramname"><em>out</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Decompresses a Windows 10/11 <a class="el" href="structPrefetch.html">Prefetch</a> ("MAM" header, XPRESS Huffman).</p>
+<p>The announced size comes from the file: it is bounded to 64 MiB before sizing the allocation. Decompression is ntdll's (RtlDecompressBufferEx). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">buffer</td><td>the file's bytes, starting with "MAM" </td></tr>
+    <tr><td class="paramname">size</td><td>their number </td></tr>
+    <tr><td class="paramname">out</td><td>receives the decompressed bytes; empty on failure </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or why nothing was decompressed </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

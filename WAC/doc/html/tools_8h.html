@@ -256,6 +256,8 @@ Functions</h2></td></tr>
 <tr class="separator:aea71d14f067d69330a32721ca7dc457d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a89f4afef123fee0f163c1d61fef8a85d" id="r_a89f4afef123fee0f163c1d61fef8a85d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a89f4afef123fee0f163c1d61fef8a85d">readWideZ</a> (const BYTE *base, size_t limit, size_t offset)</td></tr>
 <tr class="separator:a89f4afef123fee0f163c1d61fef8a85d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a129d3173cc8908c45431b87c90b72e21" id="r_a129d3173cc8908c45431b87c90b72e21"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a129d3173cc8908c45431b87c90b72e21">fits</a> (size_t size, size_t offset, size_t length)</td></tr>
+<tr class="separator:a129d3173cc8908c45431b87c90b72e21"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac08f59986f0127204704ab062824b053" id="r_ac08f59986f0127204704ab062824b053"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ac08f59986f0127204704ab062824b053">readNarrowZ</a> (const BYTE *base, size_t limit, size_t offset)</td></tr>
 <tr class="separator:ac08f59986f0127204704ab062824b053"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af5b5c7829f1299c3b6e2f28f2d543282" id="r_af5b5c7829f1299c3b6e2f28f2d543282"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#af5b5c7829f1299c3b6e2f28f2d543282">guid_to_wstring</a> (GUID guid)</td></tr>
@@ -662,6 +664,57 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the path of its copy on the collection medium </dd></dl>
+
+</div>
+</div>
+<a id="a129d3173cc8908c45431b87c90b72e21" name="a129d3173cc8908c45431b87c90b72e21"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a129d3173cc8908c45431b87c90b72e21">&#9670;&#160;</a></span>fits()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool fits </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>offset</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>True if <code>length</code> bytes starting at <code>offset</code> lie inside a structure of <code>size</code> bytes. Written so that no addition can wrap around — the form every bound check on data read from a file takes. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">size</td><td>size of the structure (or buffer) </td></tr>
+    <tr><td class="paramname">offset</td><td>position of the field </td></tr>
+    <tr><td class="paramname">length</td><td>size of the field </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true if the field is entirely inside </dd></dl>
 
 </div>
 </div>
@@ -1394,11 +1447,11 @@ Variables</h2></td></tr>
 <p>Converts a string of several concatenated wstrings to a vector of wstring. Each string must be separated from the previous one by \0. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">data</td><td>pointer to the array holding the strings </td></tr>
-    <tr><td class="paramname">size</td><td>size of the string held in <code>data</code> </td></tr>
+    <tr><td class="paramname">size</td><td>size of the block, in bytes: nothing beyond it is read </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the vector that results from the conversion </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>the non-empty strings, in order </dd></dl>
 
 </div>
 </div>

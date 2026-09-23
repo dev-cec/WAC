@@ -97,7 +97,8 @@ $(document).ready(function(){initNavTree('prefetchs_8h.html',''); initResizable(
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">prefetchs.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -132,6 +133,11 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrefetchs.html">Prefetchs</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a4c90d811e8a791c6184dea9e28ad4d8e" id="r_a4c90d811e8a791c6184dea9e28ad4d8e"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="prefetchs_8h.html#a4c90d811e8a791c6184dea9e28ad4d8e">decompressPrefetch</a> (const BYTE *buffer, size_t size, std::vector&lt; BYTE &gt; &amp;out)</td></tr>
+<tr class="separator:a4c90d811e8a791c6184dea9e28ad4d8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="structPrefetch.html">Prefetch</a>: which executables ran, how many times, and what they loaded. </p>
@@ -139,7 +145,52 @@ Classes</h2></td></tr>
 <p>WHERE IT IS READ. <code>C:\Windows\<a class="el" href="structPrefetch.html">Prefetch</a>\&lt;NAME&gt;-&lt;HASH&gt;.pf</code>, the hash being computed over the executable's path: two copies of the same binary in two directories therefore give two files, and a same name with two different hashes means two distinct paths. The content is compressed (MAM/XPRESS Huffman) since Windows 8.</p>
 <p>WHAT IT DOES NOT SAY. Which user ran the program — <a class="el" href="structPrefetch.html">Prefetch</a> is machine-wide. And the service is disabled on some systems (SSD, server, group policy): the absence of a file is then no proof of non-execution.</p>
 <p>Format: <a href="https://github.com/libyal/libscca/blob/main/documentation/Windows%20Prefetch%20File%20(PF)%20format.asciidoc">https://github.com/libyal/libscca/blob/main/documentation/Windows%20Prefetch%20File%20(PF)%20format.asciidoc</a> </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="a4c90d811e8a791c6184dea9e28ad4d8e" name="a4c90d811e8a791c6184dea9e28ad4d8e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4c90d811e8a791c6184dea9e28ad4d8e">&#9670;&#160;</a></span>decompressPrefetch()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT decompressPrefetch </td>
+          <td>(</td>
+          <td class="paramtype">const BYTE *&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; BYTE &gt; &amp;&#160;</td>
+          <td class="paramname"><em>out</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Decompresses a Windows 10/11 <a class="el" href="structPrefetch.html">Prefetch</a> ("MAM" header, XPRESS Huffman).</p>
+<p>The announced size comes from the file: it is bounded to 64 MiB before sizing the allocation. Decompression is ntdll's (RtlDecompressBufferEx). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">buffer</td><td>the file's bytes, starting with "MAM" </td></tr>
+    <tr><td class="paramname">size</td><td>their number </td></tr>
+    <tr><td class="paramname">out</td><td>receives the decompressed bytes; empty on failure </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or why nothing was decompressed </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

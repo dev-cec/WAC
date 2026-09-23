@@ -1,7 +1,8 @@
 var searchData=
 [
-  ['json_0',['Json',['../classJson.html',1,'']]],
-  ['jsonarraywriter_1',['JsonArrayWriter',['../classJsonArrayWriter.html',1,'']]],
-  ['jumplistautomatics_2',['JumplistAutomatics',['../structJumplistAutomatics.html',1,'']]],
-  ['jumplistcustoms_3',['JumplistCustoms',['../structJumplistCustoms.html',1,'']]]
+  ['idlist_0',['IdList',['../structIdList.html',1,'']]],
+  ['iextensionblock_1',['IExtensionBlock',['../structIExtensionBlock.html',1,'']]],
+  ['impl_2',['Impl',['../structRawReader_1_1Impl.html',1,'RawReader']]],
+  ['indexcatalogues_3',['IndexCatalogues',['../classIndexCatalogues.html',1,'']]],
+  ['ishellitem_4',['IShellItem',['../structIShellItem.html',1,'']]]
 ];

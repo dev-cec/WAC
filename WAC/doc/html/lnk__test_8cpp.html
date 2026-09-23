@@ -110,6 +110,7 @@ $(document).ready(function(){initNavTree('lnk__test_8cpp.html',''); initResizabl
 <code>#include &lt;fstream&gt;</code><br />
 <code>#include &lt;random&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
+<code>#include &quot;<a class="el" href="guard__page_8h_source.html">guard_page.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="recent__docs_8h_source.html">recent_docs.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
@@ -125,7 +126,7 @@ Variables</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Proves that the shortcut parser never reads outside its buffer. </p>
-<p>WHY THIS TEST. A shortcut is read at offsets the file itself declares; a truncated or forged .lnk used to make WAC read past its buffer — and publish what it found there, in a perfectly valid JSON. Such an over-read does not crash on its own: it has to be made to crash. Each input is therefore copied so that it ENDS exactly at a page boundary, the next page being mapped PAGE_NOACCESS. A single byte read beyond the input raises an access violation, and the test stops there.</p>
+<p>WHY THIS TEST. A shortcut is read at offsets the file itself declares; a truncated or forged .lnk used to make WAC read past its buffer — and publish what it found there, in a perfectly valid JSON. Such an over-read does not crash on its own: it has to be made to crash. Each input is therefore placed against a page mapped PAGE_NOACCESS, at its end then at its start (see <a class="el" href="guard__page_8h.html" title="Test support: an input placed against a PAGE_NOACCESS page.">guard_page.h</a>). A single byte read outside the input raises an access violation, and the test stops there.</p>
 <p>Inputs, for each shortcut given on the command line:</p><ul>
 <li>the file itself, and every one of its truncations (1 byte to size - 1);</li>
 <li>2,000 copies with random bytes overwritten (fixed seed: reproducible).</li>

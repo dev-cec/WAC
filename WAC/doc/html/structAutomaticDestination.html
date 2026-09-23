@@ -97,6 +97,7 @@ $(document).ready(function(){initNavTree('structAutomaticDestination.html',''); 
 
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structAutomaticDestination-members.html">List of all members</a>  </div>
@@ -106,10 +107,17 @@ $(document).ready(function(){initNavTree('structAutomaticDestination.html',''); 
 
 <p><code>#include &lt;<a class="el" href="jumplist__automatic_8h_source.html">jumplist_automatic.h</a>&gt;</code></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAutomaticDestination_1_1JumplistEntry.html">JumplistEntry</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:adf345d7a43fa18554b5ecac38049ae3b" id="r_adf345d7a43fa18554b5ecac38049ae3b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAutomaticDestination.html#adf345d7a43fa18554b5ecac38049ae3b">AutomaticDestination</a> (std::filesystem::path _path, std::wstring _sid)</td></tr>
 <tr class="separator:adf345d7a43fa18554b5ecac38049ae3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6490ccb2af67ba771a4ef2e87a34911" id="r_ab6490ccb2af67ba771a4ef2e87a34911"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAutomaticDestination.html#ab6490ccb2af67ba771a4ef2e87a34911">parse</a> (LPBYTE buffer, size_t size)</td></tr>
+<tr class="separator:ab6490ccb2af67ba771a4ef2e87a34911"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a38889fd2cd6023eadc260aaa712ddfe6" id="r_a38889fd2cd6023eadc260aaa712ddfe6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAutomaticDestination.html#a38889fd2cd6023eadc260aaa712ddfe6">toJson</a> ()</td></tr>
 <tr class="separator:a38889fd2cd6023eadc260aaa712ddfe6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a10fa9e2b805930078a7f94f7352a8d78" id="r_a10fa9e2b805930078a7f94f7352a8d78"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAutomaticDestination.html#a10fa9e2b805930078a7f94f7352a8d78">clear</a> ()</td></tr>
@@ -136,9 +144,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:adf146dff12607de34518ef2d43227c1d" id="r_adf146dff12607de34518ef2d43227c1d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structoleParser.html">oleParser</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAutomaticDestination.html#adf146dff12607de34518ef2d43227c1d">ole</a></td></tr>
 <tr class="memdesc:adf146dff12607de34518ef2d43227c1d"><td class="mdescLeft">&#160;</td><td class="mdescRight">reader of the OLE compound document the file is  <br /></td></tr>
 <tr class="separator:adf146dff12607de34518ef2d43227c1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aee250f34b14caaeab6079c44a6bdbd13" id="r_aee250f34b14caaeab6079c44a6bdbd13"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structRecentDoc.html">RecentDoc</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAutomaticDestination.html#aee250f34b14caaeab6079c44a6bdbd13">recentDocs</a></td></tr>
-<tr class="memdesc:aee250f34b14caaeab6079c44a6bdbd13"><td class="mdescLeft">&#160;</td><td class="mdescRight">the shortcuts it holds, one per opened file  <br /></td></tr>
-<tr class="separator:aee250f34b14caaeab6079c44a6bdbd13"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8867ef3ace711c1bd5e511293c661ca" id="r_ae8867ef3ace711c1bd5e511293c661ca"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structAutomaticDestination_1_1JumplistEntry.html">JumplistEntry</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAutomaticDestination.html#ae8867ef3ace711c1bd5e511293c661ca">entries</a></td></tr>
+<tr class="memdesc:ae8867ef3ace711c1bd5e511293c661ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">one per opened file, in DestList order  <br /></td></tr>
+<tr class="separator:ae8867ef3ace711c1bd5e511293c661ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae5c7cd18a93b33788e46cace980683d5" id="r_ae5c7cd18a93b33788e46cace980683d5"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAutomaticDestination.html#ae5c7cd18a93b33788e46cace980683d5">created</a> = { 0 }</td></tr>
 <tr class="memdesc:ae5c7cd18a93b33788e46cace980683d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">creation of the jump list FILE, local time  <br /></td></tr>
 <tr class="separator:ae5c7cd18a93b33788e46cace980683d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -213,6 +221,41 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Releases the memory held by the jump list. </p>
+
+</div>
+</div>
+<a id="ab6490ccb2af67ba771a4ef2e87a34911" name="ab6490ccb2af67ba771a4ef2e87a34911"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab6490ccb2af67ba771a4ef2e87a34911">&#9670;&#160;</a></span>parse()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void AutomaticDestination::parse </td>
+          <td>(</td>
+          <td class="paramtype">LPBYTE&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Parses the content of a jump list: the OLE container, its DestList and the shortcut of each entry. Separate from the file reading so that it can be tested on a buffer (see <a class="el" href="parsers__test_8cpp.html" title="Proves that the jump list and Prefetch parsers never read outside their buffer, and always end.">parsers_test.cpp</a>). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">buffer</td><td>the file's bytes </td></tr>
+    <tr><td class="paramname">size</td><td>their number: no read goes beyond </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -315,6 +358,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="ae8867ef3ace711c1bd5e511293c661ca" name="ae8867ef3ace711c1bd5e511293c661ca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae8867ef3ace711c1bd5e511293c661ca">&#9670;&#160;</a></span>entries</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;<a class="el" href="structAutomaticDestination_1_1JumplistEntry.html">JumplistEntry</a>&gt; AutomaticDestination::entries</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>one per opened file, in DestList order </p>
+
+</div>
+</div>
 <a id="ac74f041531547e9ff3b45556c80d9de8" name="ac74f041531547e9ff3b45556c80d9de8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac74f041531547e9ff3b45556c80d9de8">&#9670;&#160;</a></span>modified</h2>
 
@@ -392,22 +451,6 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>path it was read from on the examined volume </p>
-
-</div>
-</div>
-<a id="aee250f34b14caaeab6079c44a6bdbd13" name="aee250f34b14caaeab6079c44a6bdbd13"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aee250f34b14caaeab6079c44a6bdbd13">&#9670;&#160;</a></span>recentDocs</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::vector&lt;<a class="el" href="structRecentDoc.html">RecentDoc</a>&gt; AutomaticDestination::recentDocs</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>the shortcuts it holds, one per opened file </p>
 
 </div>
 </div>

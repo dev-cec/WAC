@@ -113,6 +113,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:ae692728de5af8f1bdd258ff3d8c064c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac99a3f86f1f9d4eefde94d09544283f9" id="r_ac99a3f86f1f9d4eefde94d09544283f9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleParser.html#ac99a3f86f1f9d4eefde94d09544283f9">oleParser</a> (LPBYTE _buffer, size_t _bufferSize)</td></tr>
 <tr class="separator:ac99a3f86f1f9d4eefde94d09544283f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad891bce6ce487bcd4c32ec3dc6a1c82e" id="r_ad891bce6ce487bcd4c32ec3dc6a1c82e"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleParser.html#ad891bce6ce487bcd4c32ec3dc6a1c82e">sectorOffset</a> (int id) const</td></tr>
+<tr class="separator:ad891bce6ce487bcd4c32ec3dc6a1c82e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a40532c3fa1da6c8fc9ca71ee12bb0b99" id="r_a40532c3fa1da6c8fc9ca71ee12bb0b99"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structDirectory.html">Directory</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleParser.html#a40532c3fa1da6c8fc9ca71ee12bb0b99">findDirectory</a> (std::wstring name)</td></tr>
 <tr class="separator:a40532c3fa1da6c8fc9ca71ee12bb0b99"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e56c62bebc8c65be3e7bc8eeda7ca02" id="r_a0e56c62bebc8c65be3e7bc8eeda7ca02"><td class="memItemLeft" align="right" valign="top">std::vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleParser.html#a0e56c62bebc8c65be3e7bc8eeda7ca02">GetIntFromSat</a> (int sectorNumber)</td></tr>
@@ -121,8 +123,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a83924eed5fafa394ebc0b2f5944ccb76"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adbca3aa47344155445c98717d0da1d17" id="r_adbca3aa47344155445c98717d0da1d17"><td class="memItemLeft" align="right" valign="top">std::vector&lt; BYTE &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleParser.html#adbca3aa47344155445c98717d0da1d17">GetBytesFromSSat</a> (int sectorNumber)</td></tr>
 <tr class="separator:adbca3aa47344155445c98717d0da1d17"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a98bb347e1b5187ed64157618a052564a" id="r_a98bb347e1b5187ed64157618a052564a"><td class="memItemLeft" align="right" valign="top">std::vector&lt; BYTE &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleParser.html#a98bb347e1b5187ed64157618a052564a">Getdata</a> (<a class="el" href="structDirectory.html">Directory</a> d)</td></tr>
-<tr class="separator:a98bb347e1b5187ed64157618a052564a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac9a46680365b1c8878280ef9622de38" id="r_aac9a46680365b1c8878280ef9622de38"><td class="memItemLeft" align="right" valign="top">std::vector&lt; BYTE &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleParser.html#aac9a46680365b1c8878280ef9622de38">Getdata</a> (const <a class="el" href="structDirectory.html">Directory</a> &amp;d)</td></tr>
+<tr class="separator:aac9a46680365b1c8878280ef9622de38"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -293,32 +295,31 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a98bb347e1b5187ed64157618a052564a" name="a98bb347e1b5187ed64157618a052564a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a98bb347e1b5187ed64157618a052564a">&#9670;&#160;</a></span>Getdata()</h2>
+<a id="aac9a46680365b1c8878280ef9622de38" name="aac9a46680365b1c8878280ef9622de38"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aac9a46680365b1c8878280ef9622de38">&#9670;&#160;</a></span>Getdata()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">std::vector&lt; BYTE &gt; oleParser::Getdata </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structDirectory.html">Directory</a>&#160;</td>
+          <td class="paramtype">const <a class="el" href="structDirectory.html">Directory</a> &amp;&#160;</td>
           <td class="paramname"><em>d</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
-<p>Parses the data of a directory. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Reads the content of a stream, cut to its declared size. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">d</td><td>the directory holding the data to read </td></tr>
+    <tr><td class="paramname">d</td><td>the directory entry of the stream </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>its bytes; empty for an empty stream </dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">std::length_error</td><td>if its chain points outside the file </td></tr>
   </table>
   </dd>
 </dl>
@@ -404,6 +405,32 @@ Public Attributes</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="ad891bce6ce487bcd4c32ec3dc6a1c82e" name="ad891bce6ce487bcd4c32ec3dc6a1c82e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad891bce6ce487bcd4c32ec3dc6a1c82e">&#9670;&#160;</a></span>sectorOffset()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t oleParser::sectorOffset </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>id</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Position in the file of sector <code>id</code>.</p>
+<p>The header occupies the first sector, so sector <code>id</code> starts at (id + 1) × sectorSize. "512 + id × sectorSize", used until now, holds for 512-byte sectors only (version 3): in version 4 the sectors are 4096 bytes and the header is padded to 4096, so every read landed 3584 bytes too early — a valid-looking but wrong content. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">id</td><td>sector id, &gt;= 0 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>its offset from the start of the file </dd></dl>
 
 </div>
 </div>

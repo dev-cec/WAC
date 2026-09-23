@@ -12,7 +12,6 @@ var searchData=
   ['usb_5fwrite_9',['USB_WRITE',['../namespaceFootprint.html#a0f4e23dd36a28a486fe8d93c7f381d9d',1,'Footprint']]],
   ['usbs_10',['usbs',['../structUsbstors.html#a8db49a85aca68f8604cca00b453b974d',1,'Usbstors']]],
   ['userassists_11',['userassists',['../structUserAssists.html#a29e9396d468ac93eb48e19e559fd2d7e',1,'UserAssists']]],
-  ['userflags_12',['userFlags',['../structDirectory.html#a06b95b09f78506bb67896ccc53fa2493',1,'Directory']]],
-  ['username_13',['username',['../structBeef0006.html#ae57bdb7ebd3dfdd6c959b038fb1d9800',1,'Beef0006']]],
-  ['users_14',['users',['../structUsers.html#aa199d134aef8fb6e2d33762ab0db551e',1,'Users']]]
+  ['username_12',['username',['../structBeef0006.html#ae57bdb7ebd3dfdd6c959b038fb1d9800',1,'Beef0006']]],
+  ['users_13',['users',['../structUsers.html#aa199d134aef8fb6e2d33762ab0db551e',1,'Users']]]
 ];

@@ -2,6 +2,7 @@ var structPrefetch =
 [
     [ "Prefetch", "structPrefetch.html#a5a82cad97ff9893c88978b44d3228880", null ],
     [ "clear", "structPrefetch.html#a9791863eb49a3167bbd9035cca585b5d", null ],
+    [ "parse", "structPrefetch.html#a5c2e979b495175e623d6cfc3c05dd299", null ],
     [ "read", "structPrefetch.html#ab3a26c6ee678f13bf066da4879b55ae7", null ],
     [ "toJson", "structPrefetch.html#a5ac5f4e5d4b36d49eb420eee1866ca1d", null ],
     [ "accessed", "structPrefetch.html#a42c733380fdfcc7c8de7cfa79c30b7f0", null ],

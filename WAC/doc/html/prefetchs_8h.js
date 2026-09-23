@@ -5,5 +5,6 @@ var prefetchs_8h =
     [ "Filename", "structFilename.html", "structFilename" ],
     [ "VolumeInfo", "structVolumeInfo.html", "structVolumeInfo" ],
     [ "Prefetch", "structPrefetch.html", "structPrefetch" ],
-    [ "Prefetchs", "structPrefetchs.html", "structPrefetchs" ]
+    [ "Prefetchs", "structPrefetchs.html", "structPrefetchs" ],
+    [ "decompressPrefetch", "prefetchs_8h.html#a4c90d811e8a791c6184dea9e28ad4d8e", null ]
 ];

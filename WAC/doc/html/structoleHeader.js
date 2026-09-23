@@ -7,15 +7,11 @@ var structoleHeader =
     [ "littleIndian", "structoleHeader.html#ae03af53e39d079956fd8c70b57f350ea", null ],
     [ "minimumStandardStreamSize", "structoleHeader.html#a95f3f018eedadcfc590a935364ddf8dc", null ],
     [ "MSATFirstSectorId", "structoleHeader.html#a1e423b8fd484e7c3ca45bc5c206ec777", null ],
-    [ "MSATTotalSectors", "structoleHeader.html#acc8ff1531679b7fd06f7ba76dc9549e1", null ],
-    [ "SATSectors", "structoleHeader.html#afbb344465270325eb32550b254bf7960", null ],
+    [ "SATSectorIds", "structoleHeader.html#a3aafb28c7049e4ec393aa4e7b52f80fb", null ],
     [ "sectorSize", "structoleHeader.html#a0c590f8ebe0b819f4399b9a962bb921c", null ],
-    [ "ShortSATSectors", "structoleHeader.html#a0a9b15b3c06eee46147b4fb2f1661210", null ],
     [ "shortSectorSize", "structoleHeader.html#aa271540214a72ab24f7c887e6c0aceb2", null ],
     [ "signature", "structoleHeader.html#affeccd731746225f5feb9d03fb43c85b", null ],
     [ "SSATFirstSectorId", "structoleHeader.html#a4767c5b34d945db43257ac1eee04cd0b", null ],
     [ "totalSATSectors", "structoleHeader.html#a8d820bf82676eeda34ef7980900cfe72", null ],
-    [ "totalSSATSectors", "structoleHeader.html#a48f7154235d8b1b91a98851a7bf0243e", null ],
-    [ "versionMajor", "structoleHeader.html#a21807321c18b05a795a67fe5dc86c747", null ],
-    [ "versionMinor", "structoleHeader.html#ab5365703f5bb80ed064b18cf23f9a4d7", null ]
+    [ "versionMajor", "structoleHeader.html#a21807321c18b05a795a67fe5dc86c747", null ]
 ];

@@ -1,8 +1,6 @@
 var searchData=
 [
-  ['idlist_0',['IdList',['../structIdList.html',1,'']]],
-  ['iextensionblock_1',['IExtensionBlock',['../structIExtensionBlock.html',1,'']]],
-  ['impl_2',['Impl',['../structRawReader_1_1Impl.html',1,'RawReader']]],
-  ['indexcatalogues_3',['IndexCatalogues',['../classIndexCatalogues.html',1,'']]],
-  ['ishellitem_4',['IShellItem',['../structIShellItem.html',1,'']]]
+  ['hivefixinfo_0',['HiveFixInfo',['../structHiveFixInfo.html',1,'']]],
+  ['hivelogentry_1',['HiveLogEntry',['../structHiveLogEntry.html',1,'']]],
+  ['hivereplayinfo_2',['HiveReplayInfo',['../structHiveReplayInfo.html',1,'']]]
 ];

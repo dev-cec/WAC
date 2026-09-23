@@ -127,9 +127,6 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a21807321c18b05a795a67fe5dc86c747" id="r_a21807321c18b05a795a67fe5dc86c747"><td class="memItemLeft" align="right" valign="top">unsigned short&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleHeader.html#a21807321c18b05a795a67fe5dc86c747">versionMajor</a> = 0</td></tr>
 <tr class="memdesc:a21807321c18b05a795a67fe5dc86c747"><td class="mdescLeft">&#160;</td><td class="mdescRight">major version (3 = 512-byte sectors, 4 = 4096-byte)  <br /></td></tr>
 <tr class="separator:a21807321c18b05a795a67fe5dc86c747"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab5365703f5bb80ed064b18cf23f9a4d7" id="r_ab5365703f5bb80ed064b18cf23f9a4d7"><td class="memItemLeft" align="right" valign="top">unsigned short&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleHeader.html#ab5365703f5bb80ed064b18cf23f9a4d7">versionMinor</a> = 0</td></tr>
-<tr class="memdesc:ab5365703f5bb80ed064b18cf23f9a4d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">minor version  <br /></td></tr>
-<tr class="separator:ab5365703f5bb80ed064b18cf23f9a4d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0c590f8ebe0b819f4399b9a962bb921c" id="r_a0c590f8ebe0b819f4399b9a962bb921c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleHeader.html#a0c590f8ebe0b819f4399b9a962bb921c">sectorSize</a> = 0</td></tr>
 <tr class="memdesc:a0c590f8ebe0b819f4399b9a962bb921c"><td class="mdescLeft">&#160;</td><td class="mdescRight">size of the sectors, in bytes (validated)  <br /></td></tr>
 <tr class="separator:a0c590f8ebe0b819f4399b9a962bb921c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -145,24 +142,15 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a95f3f018eedadcfc590a935364ddf8dc" id="r_a95f3f018eedadcfc590a935364ddf8dc"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleHeader.html#a95f3f018eedadcfc590a935364ddf8dc">minimumStandardStreamSize</a> = 0</td></tr>
 <tr class="memdesc:a95f3f018eedadcfc590a935364ddf8dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">minimum size of a stream  <br /></td></tr>
 <tr class="separator:a95f3f018eedadcfc590a935364ddf8dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a48f7154235d8b1b91a98851a7bf0243e" id="r_a48f7154235d8b1b91a98851a7bf0243e"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleHeader.html#a48f7154235d8b1b91a98851a7bf0243e">totalSSATSectors</a> = 0</td></tr>
-<tr class="memdesc:a48f7154235d8b1b91a98851a7bf0243e"><td class="mdescLeft">&#160;</td><td class="mdescRight">total size of the SAT  <br /></td></tr>
-<tr class="separator:a48f7154235d8b1b91a98851a7bf0243e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acc8ff1531679b7fd06f7ba76dc9549e1" id="r_acc8ff1531679b7fd06f7ba76dc9549e1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleHeader.html#acc8ff1531679b7fd06f7ba76dc9549e1">MSATTotalSectors</a> = 0</td></tr>
-<tr class="memdesc:acc8ff1531679b7fd06f7ba76dc9549e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">total number of sectors in the MSAT  <br /></td></tr>
-<tr class="separator:acc8ff1531679b7fd06f7ba76dc9549e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4767c5b34d945db43257ac1eee04cd0b" id="r_a4767c5b34d945db43257ac1eee04cd0b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleHeader.html#a4767c5b34d945db43257ac1eee04cd0b">SSATFirstSectorId</a> = 0</td></tr>
 <tr class="memdesc:a4767c5b34d945db43257ac1eee04cd0b"><td class="mdescLeft">&#160;</td><td class="mdescRight">id of the first sector of the SSAT  <br /></td></tr>
 <tr class="separator:a4767c5b34d945db43257ac1eee04cd0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e423b8fd484e7c3ca45bc5c206ec777" id="r_a1e423b8fd484e7c3ca45bc5c206ec777"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleHeader.html#a1e423b8fd484e7c3ca45bc5c206ec777">MSATFirstSectorId</a> = 0</td></tr>
 <tr class="memdesc:a1e423b8fd484e7c3ca45bc5c206ec777"><td class="mdescLeft">&#160;</td><td class="mdescRight">id of the first sector of the MSAT  <br /></td></tr>
 <tr class="separator:a1e423b8fd484e7c3ca45bc5c206ec777"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afbb344465270325eb32550b254bf7960" id="r_afbb344465270325eb32550b254bf7960"><td class="memItemLeft" align="right" valign="top">std::vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleHeader.html#afbb344465270325eb32550b254bf7960">SATSectors</a></td></tr>
-<tr class="memdesc:afbb344465270325eb32550b254bf7960"><td class="mdescLeft">&#160;</td><td class="mdescRight">the sectors of the SAT  <br /></td></tr>
-<tr class="separator:afbb344465270325eb32550b254bf7960"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a9b15b3c06eee46147b4fb2f1661210" id="r_a0a9b15b3c06eee46147b4fb2f1661210"><td class="memItemLeft" align="right" valign="top">std::vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleHeader.html#a0a9b15b3c06eee46147b4fb2f1661210">ShortSATSectors</a></td></tr>
-<tr class="memdesc:a0a9b15b3c06eee46147b4fb2f1661210"><td class="mdescLeft">&#160;</td><td class="mdescRight">the sectors of the SSAT  <br /></td></tr>
-<tr class="separator:a0a9b15b3c06eee46147b4fb2f1661210"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3aafb28c7049e4ec393aa4e7b52f80fb" id="r_a3aafb28c7049e4ec393aa4e7b52f80fb"><td class="memItemLeft" align="right" valign="top">std::vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structoleHeader.html#a3aafb28c7049e4ec393aa4e7b52f80fb">SATSectorIds</a></td></tr>
+<tr class="memdesc:a3aafb28c7049e4ec393aa4e7b52f80fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">ids of the sectors holding the SAT (the MSAT's content)  <br /></td></tr>
+<tr class="separator:a3aafb28c7049e4ec393aa4e7b52f80fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Header of an OLE / CFB (Compound File Binary) container.</p>
@@ -311,35 +299,19 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="acc8ff1531679b7fd06f7ba76dc9549e1" name="acc8ff1531679b7fd06f7ba76dc9549e1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acc8ff1531679b7fd06f7ba76dc9549e1">&#9670;&#160;</a></span>MSATTotalSectors</h2>
+<a id="a3aafb28c7049e4ec393aa4e7b52f80fb" name="a3aafb28c7049e4ec393aa4e7b52f80fb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3aafb28c7049e4ec393aa4e7b52f80fb">&#9670;&#160;</a></span>SATSectorIds</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int oleHeader::MSATTotalSectors = 0</td>
+          <td class="memname">std::vector&lt;int&gt; oleHeader::SATSectorIds</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>total number of sectors in the MSAT </p>
-
-</div>
-</div>
-<a id="afbb344465270325eb32550b254bf7960" name="afbb344465270325eb32550b254bf7960"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afbb344465270325eb32550b254bf7960">&#9670;&#160;</a></span>SATSectors</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::vector&lt;int&gt; oleHeader::SATSectors</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>the sectors of the SAT </p>
+<p>ids of the sectors holding the SAT (the MSAT's content) </p>
 
 </div>
 </div>
@@ -356,22 +328,6 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>size of the sectors, in bytes (validated) </p>
-
-</div>
-</div>
-<a id="a0a9b15b3c06eee46147b4fb2f1661210" name="a0a9b15b3c06eee46147b4fb2f1661210"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0a9b15b3c06eee46147b4fb2f1661210">&#9670;&#160;</a></span>ShortSATSectors</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::vector&lt;int&gt; oleHeader::ShortSATSectors</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>the sectors of the SSAT </p>
 
 </div>
 </div>
@@ -439,22 +395,6 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a48f7154235d8b1b91a98851a7bf0243e" name="a48f7154235d8b1b91a98851a7bf0243e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a48f7154235d8b1b91a98851a7bf0243e">&#9670;&#160;</a></span>totalSSATSectors</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">unsigned int oleHeader::totalSSATSectors = 0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>total size of the SAT </p>
-
-</div>
-</div>
 <a id="a21807321c18b05a795a67fe5dc86c747" name="a21807321c18b05a795a67fe5dc86c747"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a21807321c18b05a795a67fe5dc86c747">&#9670;&#160;</a></span>versionMajor</h2>
 
@@ -468,22 +408,6 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>major version (3 = 512-byte sectors, 4 = 4096-byte) </p>
-
-</div>
-</div>
-<a id="ab5365703f5bb80ed064b18cf23f9a4d7" name="ab5365703f5bb80ed064b18cf23f9a4d7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab5365703f5bb80ed064b18cf23f9a4d7">&#9670;&#160;</a></span>versionMinor</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">unsigned short oleHeader::versionMinor = 0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>minor version </p>
 
 </div>
 </div>

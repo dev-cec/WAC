@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['xmlnode_0',['XmlNode',['../structXmlNode.html',1,'']]]
+  ['wevtmetadata_0',['WevtMetadata',['../classWevtMetadata.html',1,'']]]
 ];

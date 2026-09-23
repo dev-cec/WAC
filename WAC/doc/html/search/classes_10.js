@@ -1,21 +1,13 @@
 var searchData=
 [
-  ['scheduledtask_0',['ScheduledTask',['../structScheduledTask.html',1,'']]],
-  ['scheduledtasks_1',['ScheduledTasks',['../structScheduledTasks.html',1,'']]],
-  ['services_2',['Services',['../structServices.html',1,'']]],
-  ['servicestate_3',['ServiceState',['../structServiceState.html',1,'']]],
-  ['servicestruct_4',['ServiceStruct',['../structServiceStruct.html',1,'']]],
-  ['session_5',['Session',['../structSession.html',1,'']]],
-  ['sessions_6',['Sessions',['../structSessions.html',1,'']]],
-  ['sha1stream_7',['Sha1Stream',['../classSha1Stream.html',1,'']]],
-  ['sha256stream_8',['Sha256Stream',['../classSha256Stream.html',1,'']]],
-  ['sha512stream_9',['Sha512Stream',['../classSha512Stream.html',1,'']]],
-  ['shellbag_10',['Shellbag',['../structShellbag.html',1,'']]],
-  ['shellbags_11',['Shellbags',['../structShellbags.html',1,'']]],
-  ['shellvolumeflags_12',['ShellVolumeFlags',['../structShellVolumeFlags.html',1,'']]],
-  ['shimcache_13',['Shimcache',['../structShimcache.html',1,'']]],
-  ['shimcaches_14',['Shimcaches',['../structShimcaches.html',1,'']]],
-  ['sps_15',['SPS',['../structSPS.html',1,'']]],
-  ['spsvalue_16',['SPSValue',['../structSPSValue.html',1,'']]],
-  ['systeminfo_17',['SystemInfo',['../structSystemInfo.html',1,'']]]
+  ['rawattribute_0',['RawAttribute',['../structRawAttribute.html',1,'']]],
+  ['rawdirentry_1',['RawDirEntry',['../structRawDirEntry.html',1,'']]],
+  ['rawhiveextraction_2',['RawHiveExtraction',['../structRawHiveExtraction.html',1,'']]],
+  ['rawhivefingerprints_3',['RawHiveFingerprints',['../structRawHiveFingerprints.html',1,'']]],
+  ['rawreader_4',['RawReader',['../classRawReader.html',1,'']]],
+  ['recentdoc_5',['RecentDoc',['../structRecentDoc.html',1,'']]],
+  ['recentdocs_6',['RecentDocs',['../structRecentDocs.html',1,'']]],
+  ['rootfolder_7',['RootFolder',['../structRootFolder.html',1,'']]],
+  ['run_8',['Run',['../structRun.html',1,'']]],
+  ['runs_9',['Runs',['../structRuns.html',1,'']]]
 ];

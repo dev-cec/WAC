@@ -1,10 +1,10 @@
 var searchData=
 [
   ['rawvalues_0',['rawValues',['../structEvent.html#a87d52e43fc651704be2220d757ae8310',1,'Event']]],
-  ['read_1',['read',['../structBinarySummary.html#ad2e551311f9c1595f61a7048c7880a40',1,'BinarySummary::read'],['../structEvtxSummary.html#aac158f67fe3e12ce5c1474c7f0d14f72',1,'EvtxSummary::read'],['../structEvents.html#a5c139ecb1e34f8006c932028172480ba',1,'Events::read']]],
+  ['read_1',['read',['../structBinarySummary.html#ad2e551311f9c1595f61a7048c7880a40',1,'BinarySummary::read'],['../structEvents.html#a5c139ecb1e34f8006c932028172480ba',1,'Events::read'],['../structEvtxSummary.html#aac158f67fe3e12ce5c1474c7f0d14f72',1,'EvtxSummary::read']]],
   ['readonly_2',['ReadOnly',['../structFileAttributes.html#ad671b5f257b0564084b0957c317366f9',1,'FileAttributes']]],
   ['reason_3',['reason',['../structVerifiedSignature.html#a7729e684b97cd56cf5dd5cb478d24f5b',1,'VerifiedSignature::reason'],['../structVerdictMicrosoft.html#a65ce9ad236d7fb064e19727a82943541',1,'VerdictMicrosoft::reason'],['../structHiveLogEntry.html#a28be2c308250c784e32660f2ea2f4f0d',1,'HiveLogEntry::reason']]],
-  ['recentdocs_4',['recentdocs',['../structRecentDocs.html#ad302ada200a2a3d54813ba283b1d11c4',1,'RecentDocs::recentdocs'],['../structAutomaticDestination.html#aee250f34b14caaeab6079c44a6bdbd13',1,'AutomaticDestination::recentDocs'],['../structCustomDestinationCategory.html#a51444583e9d789fa2a05212424f2c314',1,'CustomDestinationCategory::recentDocs']]],
+  ['recentdocs_4',['recentdocs',['../structRecentDocs.html#ad302ada200a2a3d54813ba283b1d11c4',1,'RecentDocs::recentdocs'],['../structCustomDestinationCategory.html#a51444583e9d789fa2a05212424f2c314',1,'CustomDestinationCategory::recentDocs']]],
   ['reference_5',['reference',['../structFilename.html#afdb6bea2a1adde8db08f705556ec5534',1,'Filename']]],
   ['referenceknown_6',['referenceKnown',['../structFilename.html#ae9b78a376bba69945c02a90497dec574',1,'Filename']]],
   ['registeredorganization_7',['registeredOrganization',['../structSystemInfo.html#a57be43eaef409e65a09f0e9bb371f6d0',1,'SystemInfo']]],

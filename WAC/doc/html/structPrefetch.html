@@ -112,6 +112,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a5a82cad97ff9893c88978b44d3228880"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab3a26c6ee678f13bf066da4879b55ae7" id="r_ab3a26c6ee678f13bf066da4879b55ae7"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrefetch.html#ab3a26c6ee678f13bf066da4879b55ae7">read</a> ()</td></tr>
 <tr class="separator:ab3a26c6ee678f13bf066da4879b55ae7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c2e979b495175e623d6cfc3c05dd299" id="r_a5c2e979b495175e623d6cfc3c05dd299"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrefetch.html#a5c2e979b495175e623d6cfc3c05dd299">parse</a> (LPBYTE buffer, size_t <a class="el" href="structPrefetch.html#a68cf15cba02b871d6df9945b029cf473">size</a>)</td></tr>
+<tr class="separator:a5c2e979b495175e623d6cfc3c05dd299"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5ac5f4e5d4b36d49eb420eee1866ca1d" id="r_a5ac5f4e5d4b36d49eb420eee1866ca1d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrefetch.html#a5ac5f4e5d4b36d49eb420eee1866ca1d">toJson</a> ()</td></tr>
 <tr class="separator:a5ac5f4e5d4b36d49eb420eee1866ca1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9791863eb49a3167bbd9035cca585b5d" id="r_a9791863eb49a3167bbd9035cca585b5d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrefetch.html#a9791863eb49a3167bbd9035cca585b5d">clear</a> ()</td></tr>
@@ -227,6 +229,42 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a5c2e979b495175e623d6cfc3c05dd299" name="a5c2e979b495175e623d6cfc3c05dd299"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5c2e979b495175e623d6cfc3c05dd299">&#9670;&#160;</a></span>parse()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT Prefetch::parse </td>
+          <td>(</td>
+          <td class="paramtype">LPBYTE&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Parses the content of a <a class="el" href="structPrefetch.html">Prefetch</a>: decompresses it if it is compressed ("MAM"), then decodes the SCCA structure. Separate from the file reading so that it can be tested on a buffer (see <a class="el" href="parsers__test_8cpp.html" title="Proves that the jump list and Prefetch parsers never read outside their buffer, and always end.">parsers_test.cpp</a>). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">buffer</td><td>the file's bytes </td></tr>
+    <tr><td class="paramname">size</td><td>their number: no read goes beyond </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>S_OK, or why the content was not decoded </dd></dl>
+
+</div>
+</div>
 <a id="ab3a26c6ee678f13bf066da4879b55ae7" name="ab3a26c6ee678f13bf066da4879b55ae7"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab3a26c6ee678f13bf066da4879b55ae7">&#9670;&#160;</a></span>read()</h2>
 
@@ -241,7 +279,7 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Reads the file: decompresses it if need be, then parses it. </p><dl class="section return"><dt>Returns</dt><dd>the result of the read. </dd></dl>
+<p>Reads the file and its dates, then parses it (see parse). </p><dl class="section return"><dt>Returns</dt><dd>the result of the read. </dd></dl>
 
 </div>
 </div>

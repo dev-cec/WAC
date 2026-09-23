@@ -1,7 +1,21 @@
 var searchData=
 [
-  ['tablemessages_0',['TableMessages',['../classTableMessages.html',1,'']]],
-  ['timezoneinfo_1',['TimeZoneInfo',['../structTimeZoneInfo.html',1,'']]],
-  ['trigger_2',['Trigger',['../structTrigger.html',1,'']]],
-  ['typedshellitem_3',['TypedShellItem',['../structTypedShellItem.html',1,'']]]
+  ['scheduledtask_0',['ScheduledTask',['../structScheduledTask.html',1,'']]],
+  ['scheduledtasks_1',['ScheduledTasks',['../structScheduledTasks.html',1,'']]],
+  ['services_2',['Services',['../structServices.html',1,'']]],
+  ['servicestate_3',['ServiceState',['../structServiceState.html',1,'']]],
+  ['servicestruct_4',['ServiceStruct',['../structServiceStruct.html',1,'']]],
+  ['session_5',['Session',['../structSession.html',1,'']]],
+  ['sessions_6',['Sessions',['../structSessions.html',1,'']]],
+  ['sha1stream_7',['Sha1Stream',['../classSha1Stream.html',1,'']]],
+  ['sha256stream_8',['Sha256Stream',['../classSha256Stream.html',1,'']]],
+  ['sha512stream_9',['Sha512Stream',['../classSha512Stream.html',1,'']]],
+  ['shellbag_10',['Shellbag',['../structShellbag.html',1,'']]],
+  ['shellbags_11',['Shellbags',['../structShellbags.html',1,'']]],
+  ['shellvolumeflags_12',['ShellVolumeFlags',['../structShellVolumeFlags.html',1,'']]],
+  ['shimcache_13',['Shimcache',['../structShimcache.html',1,'']]],
+  ['shimcaches_14',['Shimcaches',['../structShimcaches.html',1,'']]],
+  ['sps_15',['SPS',['../structSPS.html',1,'']]],
+  ['spsvalue_16',['SPSValue',['../structSPSValue.html',1,'']]],
+  ['systeminfo_17',['SystemInfo',['../structSystemInfo.html',1,'']]]
 ];

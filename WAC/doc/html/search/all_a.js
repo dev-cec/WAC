@@ -9,5 +9,6 @@ var searchData=
   ['jumplist_5fcustom_2ecpp_6',['jumplist_custom.cpp',['../jumplist__custom_8cpp.html',1,'']]],
   ['jumplist_5fcustom_2eh_7',['jumplist_custom.h',['../jumplist__custom_8h.html',1,'']]],
   ['jumplistautomatics_8',['JumplistAutomatics',['../structJumplistAutomatics.html',1,'']]],
-  ['jumplistcustoms_9',['JumplistCustoms',['../structJumplistCustoms.html',1,'']]]
+  ['jumplistcustoms_9',['JumplistCustoms',['../structJumplistCustoms.html',1,'']]],
+  ['jumplistentry_10',['JumplistEntry',['../structAutomaticDestination_1_1JumplistEntry.html',1,'AutomaticDestination']]]
 ];

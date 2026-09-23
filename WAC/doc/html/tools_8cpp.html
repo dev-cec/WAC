@@ -1249,11 +1249,11 @@ Functions</h2></td></tr>
 <p>Converts a string of several concatenated wstrings to a vector of wstring. Each string must be separated from the previous one by \0. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">data</td><td>pointer to the array holding the strings </td></tr>
-    <tr><td class="paramname">size</td><td>size of the string held in <code>data</code> </td></tr>
+    <tr><td class="paramname">size</td><td>size of the block, in bytes: nothing beyond it is read </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the vector that results from the conversion </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>the non-empty strings, in order </dd></dl>
 
 </div>
 </div>

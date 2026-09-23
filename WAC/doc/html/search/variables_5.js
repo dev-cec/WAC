@@ -4,7 +4,7 @@ var searchData=
   ['enabled_1',['enabled',['../structScheduledTask.html#aba2ef89d590f909740d4c868428c71c5',1,'ScheduledTask']]],
   ['enabletargetmetadata_2',['EnableTargetMetadata',['../structLinkFlags.html#a555660c88264d0ae7ee162c36d7debd8',1,'LinkFlags']]],
   ['encrypted_3',['Encrypted',['../structFileAttributes.html#a6a7499f13137954e4c6b30b8cc21dc32',1,'FileAttributes']]],
-  ['entries_4',['entries',['../structHiveReplayInfo.html#a648f1eb5b9f99e2d2fbf7167a3370cc5',1,'HiveReplayInfo']]],
+  ['entries_4',['entries',['../structHiveReplayInfo.html#a648f1eb5b9f99e2d2fbf7167a3370cc5',1,'HiveReplayInfo::entries'],['../structAutomaticDestination.html#ae8867ef3ace711c1bd5e511293c661ca',1,'AutomaticDestination::entries']]],
   ['entryindex_5',['entryIndex',['../structMFTInformation.html#a9a2d806c560501a2c0c02086c16f1812',1,'MFTInformation']]],
   ['entrynumber_6',['entryNumber',['../structDestFile.html#a1815a59fbd8648d4687b80fc2869edde',1,'DestFile']]],
   ['error_7',['error',['../structHiveFixInfo.html#a6e5c26bcfce8ad94a17f543bd1192335',1,'HiveFixInfo::error'],['../structHiveReplayInfo.html#ae211bf2776e96823fd7794c20b9475bf',1,'HiveReplayInfo::error']]],
