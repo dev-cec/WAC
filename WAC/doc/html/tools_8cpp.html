@@ -1053,7 +1053,7 @@ Functions</h2></td></tr>
 <p>OFFLINE. The source is <code>Microsoft\\Windows NT\\CurrentVersion\\ProfileList</code>, read in the EXTRACTED SOFTWARE hive (<code>conf.Software</code>). That key used to be read in the live registry: it was the last key WAC opened on the examined machine's registry.</p>
 <p>AN IMPOSED ORDER. The per-user hives (<code>ntuser.dat</code>, <code>usrClass.dat</code>) live in the profile folder: those paths must be known to extract them. Hence the sequence ExtractSystemHivesRaw → OROpenHive(SOFTWARE) → loadProfileList → ExtractUserHivesRaw (see <a class="el" href="raw__collect_8h.html" title="Orchestration of the offline extraction of artefacts (WAC).">raw_collect.h</a>).</p>
 <p>The variables of <code>ProfileImagePath</code> (REG_EXPAND_SZ) are expanded from <code>conf.systemDrive</code>, and not from the process's environment: the value belongs to the examined machine, not to the one running WAC.</p>
-<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS if at least one profile was read, ERROR_EMPTY if the key holds no usable profile, ERROR_INVALID_HANDLE if the SOFTWARE hive is not open, or the offreg code </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS if at least one profile was read, ERROR_EMPTY if the key holds no usable profile, ERROR_INVALID_HANDLE if the SOFTWARE hive is not open, or the hive reader's code </dd></dl>
 
 </div>
 </div>

@@ -134,7 +134,7 @@ Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Makes a hive copied live ("dirty") usable. </p>
-<p>PROBLEM. A raw copy of a hive of a running system is always marked "dirty": in its base block (<code>regf</code>), the primary sequence number differs from the secondary one. <code>offreg</code> (OROpenHive) then rejects the hive with ERROR_BADDB (1009), whatever the mode — measured on Windows 11 25H2. VSS hid this problem: the snapshot triggered the <em>registry writer</em>, which flushed the hives.</p>
+<p>PROBLEM. A raw copy of a hive of a running system is always marked "dirty": in its base block (<code>regf</code>), the primary sequence number differs from the secondary one. WAC's hive reader (<a class="el" href="offline__registry_8cpp.html" title="Reading of registry hive files (regf), with offreg&#39;s contract — see offline_registry....">offline_registry.cpp</a>) refuses such a hive with ERROR_BADDB (1009), as Microsoft's offreg did when this was measured on Windows 11 25H2: read as is, it would give stale keys without any error. VSS hid this problem: the snapshot triggered the <em>registry writer</em>, which flushed the hives.</p>
 <p>TWO LEVELS OF REPAIR, from the most complete to the most minimal:</p>
 <ol type="1">
 <li><a class="el" href="hive__recover_8h.html#adda4598814204241193452d100f79120">ReplayHiveLogs()</a> applies the transaction logs. That is what Windows does at boot: the <code>.LOG1/.LOG2</code> hold the pages changed since the hive's last full write, and applying them gives the machine's real state at the time of the copy. Measured on a real machine: 452 KiB for SYSTEM, 1,172 KiB for SOFTWARE, 600 KiB for one ntuser.dat — and three <code>MountPoints2</code> keys the raw copy alone did not hold. The rebuilt hive is clean by construction, so no patch is needed afterwards.</li>
@@ -196,7 +196,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Makes the hive usable by offreg, in place, if it is "dirty". Touches nothing if the hive is already clean (primary == secondary). </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Makes the hive usable by the hive reader, in place, if it is "dirty". Touches nothing if the hive is already clean (primary == secondary). </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">hive</td><td>path of the extracted hive (modified in place if dirty) </td></tr>
   </table>

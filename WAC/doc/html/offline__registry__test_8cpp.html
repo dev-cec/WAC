@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>WAC (Windows Artefacts Collector): /var/www/html/WAC/WAC/parsers_test.cpp File Reference</title>
+<title>WAC (Windows Artefacts Collector): /var/www/html/WAC/WAC/offline_registry_test.cpp File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search/",'.html');
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('parsers__test_8cpp.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('offline__registry__test_8cpp.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -99,59 +99,47 @@ $(document).ready(function(){initNavTree('parsers__test_8cpp.html',''); initResi
   <div class="summary">
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
-  <div class="headertitle"><div class="title">parsers_test.cpp File Reference</div></div>
+  <div class="headertitle"><div class="title">offline_registry_test.cpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Proves that the jump list and <a class="el" href="structPrefetch.html">Prefetch</a> parsers never read outside their buffer, and always end.  
+<p>Confronts WAC's offline registry reader with Microsoft's offreg.dll on whole hives.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;windows.h&gt;</code><br />
-<code>#include &lt;atomic&gt;</code><br />
-<code>#include &lt;chrono&gt;</code><br />
 <code>#include &lt;cstdio&gt;</code><br />
-<code>#include &lt;fstream&gt;</code><br />
-<code>#include &lt;mutex&gt;</code><br />
-<code>#include &lt;random&gt;</code><br />
+<code>#include &lt;cstring&gt;</code><br />
+<code>#include &lt;algorithm&gt;</code><br />
+<code>#include &lt;map&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
-<code>#include &lt;thread&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
-<code>#include &quot;<a class="el" href="guard__page_8h_source.html">guard_page.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="jumplist__automatic_8h_source.html">jumplist_automatic.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="jumplist__custom_8h_source.html">jumplist_custom.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="prefetchs_8h_source.html">prefetchs.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="offline__registry_8h_source.html">offline_registry.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="tools_8h_source.html">tools.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a3c04138a5bfe5d72780bb7e82a18e627" id="r_a3c04138a5bfe5d72780bb7e82a18e627"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parsers__test_8cpp.html#a3c04138a5bfe5d72780bb7e82a18e627">main</a> (int argc, char **argv)</td></tr>
-<tr class="separator:a3c04138a5bfe5d72780bb7e82a18e627"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3a67a95d5205c37194aa17a9e4255e3" id="r_aa3a67a95d5205c37194aa17a9e4255e3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="offline__registry__test_8cpp.html#aa3a67a95d5205c37194aa17a9e4255e3">wmain</a> (int argc, wchar_t **argv)</td></tr>
+<tr class="separator:aa3a67a95d5205c37194aa17a9e4255e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
-<tr class="memitem:a0696b00a72abe9d549204f9b105514bc" id="r_a0696b00a72abe9d549204f9b105514bc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structAppliConf.html">AppliConf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parsers__test_8cpp.html#a0696b00a72abe9d549204f9b105514bc">conf</a></td></tr>
+<tr class="memitem:a0696b00a72abe9d549204f9b105514bc" id="r_a0696b00a72abe9d549204f9b105514bc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structAppliConf.html">AppliConf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="offline__registry__test_8cpp.html#a0696b00a72abe9d549204f9b105514bc">conf</a></td></tr>
 <tr class="memdesc:a0696b00a72abe9d549204f9b105514bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">WAC's global configuration, which <a class="el" href="tools_8cpp.html" title="Implementation of the shared tools (see tools.h).">tools.cpp</a> references (empty here)  <br /></td></tr>
 <tr class="separator:a0696b00a72abe9d549204f9b105514bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Proves that the jump list and <a class="el" href="structPrefetch.html">Prefetch</a> parsers never read outside their buffer, and always end. </p>
-<p>WHY THIS TEST. <a class="el" href="lnk__test_8cpp.html" title="Proves that the shortcut parser never reads outside its buffer.">lnk_test.cpp</a> covers the shortcut parser. The automatic jump lists add an OLE container (sector chains, allocation tables, directory entries) and the DestList; the custom jump lists a scan for shortcut headers; the <a class="el" href="structPrefetch.html">Prefetch</a> files the SCCA structure. Every one of them reads at offsets and follows chains the file itself declares.</p>
-<p>Each input is placed against a PAGE_NOACCESS page, at its end then at its start (see <a class="el" href="guard__page_8h.html" title="Test support: an input placed against a PAGE_NOACCESS page.">guard_page.h</a>): one byte read outside it raises an access violation. A WATCHDOG also stops the test if one parse does not end — a cyclic sector chain looping for ever is a defect too, on a forged file.</p>
-<p>Inputs, for each file given:</p><ul>
-<li>the file itself;</li>
-<li>its truncations: every length up to 2048 bytes, then about 1000 more, spread over the rest of the file;</li>
-<li>1000 copies with 1 to 8 random bytes overwritten (fixed seed). A compressed <a class="el" href="structPrefetch.html">Prefetch</a> ("MAM") is decompressed first: the test aims at WAC's SCCA parser, not at ntdll's decompressor. Its compressed form is still given whole and in its truncations, for WAC's checks around the call.</li>
-</ul>
-<p>Registry hives ("hive") go through WAC's own reader (<a class="el" href="offline__registry_8cpp.html" title="Reading of registry hive files (regf), with offreg&#39;s contract — see offline_registry....">offline_registry.cpp</a>): the whole tree is walked — subkeys, values, ORQueryInfoKey.</p>
-<p>Usage: <code>parsers_test jumplist-auto|jumplist-custom|prefetch|hive &lt;file&gt; [file ...]</code> Built by <code>build-windows.sh --test</code>; runs on Windows (real ntdll and propsys) or under Wine for the jump lists. </p>
+<div class="textblock"><p>Confronts WAC's offline registry reader with Microsoft's offreg.dll on whole hives. </p>
+<p>WHY THIS TEST. <a class="el" href="offline__registry_8cpp.html" title="Reading of registry hive files (regf), with offreg&#39;s contract — see offline_registry....">offline_registry.cpp</a> replaces Microsoft's DLL for every registry artefact WAC collects. A reader that is slightly wrong still returns plausible keys and values: only a comparison with the reference, key by key and byte by byte, shows it. Microsoft's DLL is loaded here DYNAMICALLY, from the path given: this program is the only one that still uses it.</p>
+<p>For each hive: both readers walk every key; for each key the name, last write time, class, subkey and value counts, the ORQueryInfoKey maxima and the security descriptor size are compared; for each value its name, type and bytes, through OREnumValue and ORGetValue. The contract's edge cases are compared on every key too: a zero-size buffer, a null data buffer, the default value, a missing value, a missing subkey.</p>
+<p>Usage: offline_registry_test <code>&lt;offreg.dll&gt;</code> <code>&lt;hive&gt;</code> [hive ...] Built by <code>build-windows.sh --test</code>; runs on Windows (Microsoft's DLL needs it), e.g. in the test VM. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a3c04138a5bfe5d72780bb7e82a18e627" name="a3c04138a5bfe5d72780bb7e82a18e627"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3c04138a5bfe5d72780bb7e82a18e627">&#9670;&#160;</a></span>main()</h2>
+<a id="aa3a67a95d5205c37194aa17a9e4255e3" name="aa3a67a95d5205c37194aa17a9e4255e3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa3a67a95d5205c37194aa17a9e4255e3">&#9670;&#160;</a></span>wmain()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int main </td>
+          <td class="memname">int wmain </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>argc</em>, </td>
@@ -159,7 +147,7 @@ Variables</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">char **&#160;</td>
+          <td class="paramtype">wchar_t **&#160;</td>
           <td class="paramname"><em>argv</em>&#160;</td>
         </tr>
         <tr>
@@ -169,13 +157,13 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p><a class="el" href="structRuns.html">Runs</a> the test. </p><dl class="params"><dt>Parameters</dt><dd>
+<p><a class="el" href="structRuns.html">Runs</a> the comparison. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">argc,argv</td><td><code>&lt;kind&gt; &lt;file&gt; [file ...]</code> </td></tr>
+    <tr><td class="paramname">argc,argv</td><td><code>&lt;offreg.dll&gt; &lt;hive&gt; [hive ...]</code> </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>0 if no input made a parser read outside its buffer or loop </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>0 if both readers agree on every hive </dd></dl>
 
 </div>
 </div>
@@ -202,7 +190,7 @@ Variables</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="parsers__test_8cpp.html">parsers_test.cpp</a></li>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="offline__registry__test_8cpp.html">offline_registry_test.cpp</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>

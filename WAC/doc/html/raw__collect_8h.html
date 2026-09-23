@@ -160,9 +160,9 @@ the machine". The count per directory is therefore logged, so that the report te
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Extracts the MACHINE's hives (+ .LOG1/.LOG2 logs) into <code>_outputDir</code>\exhibitStore, makes their working copy and makes it usable by offreg.</p>
+<p>Extracts the MACHINE's hives (+ .LOG1/.LOG2 logs) into <code>_outputDir</code>\exhibitStore, makes their working copy and makes it usable by the hive reader (<a class="el" href="offline__registry_8h.html" title="WAC&#39;s own offline registry reader: the part of Microsoft&#39;s Offline Registry API (offreg) that WAC use...">offline_registry.h</a>).</p>
 <p>The transaction logs are extracted because they are artefacts in themselves, and document the pending changes the live copy does not hold.</p>
-<p>A raw copy of a live system's hive is always "dirty" and rejected by offreg: each hive therefore goes through a log replay, then <a class="el" href="hive__recover_8cpp.html#abfdcef62f94d212392944c4002628be4">MakeHiveLoadable()</a> as a fallback (see <a class="el" href="hive__recover_8h.html" title="Makes a hive copied live (&quot;dirty&quot;) usable.">hive_recover.h</a>).</p>
+<p>A raw copy of a live system's hive is always "dirty" and refused by the hive reader: each hive therefore goes through a log replay, then <a class="el" href="hive__recover_8cpp.html#abfdcef62f94d212392944c4002628be4">MakeHiveLoadable()</a> as a fallback (see <a class="el" href="hive__recover_8h.html" title="Makes a hive copied live (&quot;dirty&quot;) usable.">hive_recover.h</a>).</p>
 <dl class="section return"><dt>Returns</dt><dd>S_OK if everything succeeds, S_FALSE if some files are missing or a hive remains unusable, or an error code if the volume cannot be opened. </dd></dl>
 
 </div>
