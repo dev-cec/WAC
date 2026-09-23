@@ -385,6 +385,64 @@ static Json byteVectorContent(LPBYTE data, size_t count, unsigned int level) {
 	return o;
 }
 
+/*! Content of a VT_STREAM value.
+ *
+ *  What a stream holds depends on the property. Recognised, in order:
+ *  - a property store: "1SPS" at 4;
+ *  - the property store LIST of PKEY_FilterInfo (ZDI, CVE-2020-0729): size,
+ *    list size, then the stores — "1SPS" at 12. Met in no real collection
+ *    yet: the layout is ZDI's, not checked on data;
+ *  - a SERIALIZED COM OBJECT: its CLSID, then the object's own data. The
+ *    fifteen streams of a real machine were all CLSID_BinaryAutoList
+ *    (Windows.Storage.Search.dll), the conditions of a saved search are
+ *    LeafCondition / CompoundCondition (StructuredQuery.dll). The class is
+ *    named only when the GUID table knows it: 16 unknown bytes are not
+ *    claimed to be a CLSID. The object's data are not documented: they are
+ *    kept in hexadecimal.
+ *  Anything else keeps its bytes.
+ *  @param data the stream data
+ *  @param size their size, checked against the entry by the caller
+ *  @param level depth, for the layout
+ *  @return the fields to merge into the value's object */
+static Json streamContent(LPBYTE data, size_t size, unsigned int level) {
+	const unsigned int SPS_SIGNATURE = 0x53505331;   // "1SPS"
+	Json o = Json::obj();
+	if (size >= 24 && *reinterpret_cast<const unsigned int*>(data + 4) == SPS_SIGNATURE) {
+		log(3, L"🔈VT_STREAM: nested property store");
+		o.add(L"PropertyStore", SPS(data, level + 2, size).toJson());
+		return o;
+	}
+	if (size >= 8 + 24 && *reinterpret_cast<const unsigned int*>(data + 12) == SPS_SIGNATURE) {
+		const size_t listSize = *reinterpret_cast<const unsigned int*>(data + 4);
+		if (fits(size, 8, listSize)) {
+			log(3, L"🔈VT_STREAM: property store list");
+			Json stores = Json::arr();
+			size_t at = 8;
+			const size_t end = 8 + listSize;
+			while (at + 24 <= end
+			       && *reinterpret_cast<const unsigned int*>(data + at + 4) == SPS_SIGNATURE) {
+				SPS store(data + at, level + 2, end - at);
+				if (store.size == 0) break;
+				stores.push(store.toJson());
+				at += store.size;
+			}
+			o.add(L"PropertyStores", std::move(stores));
+			return o;
+		}
+	}
+	if (size >= 16) {
+		const std::wstring clsid = guid_to_wstring(*reinterpret_cast<const GUID*>(data));
+		const std::wstring name = trans_guid_to_wstring(clsid);
+		if (name != L"Unmapped GUID") {
+			o.add(L"ObjectClass",     Json::str(clsid));
+			o.add(L"ObjectClassName", Json::str(name));
+		}
+	}
+	log(3, L"🔈dump_wstring VT_STREAM");
+	o.add(L"Data", Json::str(dump_wstring(data, 0, (int)size)));
+	return o;
+}
+
 /*! Reads ONE scalar value. See `getValue`, which also handles the vectors. */
 static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueType,
                          unsigned int level, unsigned int inputSize, bool* typeNotDecoded) {
@@ -554,9 +612,9 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		   "prop4294967295". In other words the artefact carried nothing usable,
 		   while the data was there.
 
-		   The content is now returned. When it starts with the "SPS1" signature,
-		   it is a nested property store: it is decoded as such — the same case as
-		   Vector<VT_UI1>. Otherwise, the bytes are returned in hexadecimal. */
+		   The content is now returned, decoded by streamContent(). Layout of
+		   the value (ZDI, CVE-2020-0729): name length, name, 2 bytes of
+		   padding, data size, data. */
 		const unsigned int nameSize = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		*pos += 4;
 		const std::wstring name = readWideZ(buffer, inputSize, *pos);
@@ -574,17 +632,11 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 				log(2, L"🔥VT_STREAM: data size outside the entry ("
 				     + std::to_wstring(dataSize) + L")");
 		}
-		else if (dataSize >= 8 && *reinterpret_cast<const unsigned int*>(buffer + dataStart + 4) == 0x53505331) {
-			// Nested property store: the "SPS1" signature follows the size.
-			log(3, L"🔈VT_STREAM: nested property store");
-			o.add(L"PropertyStore", SPS(buffer + dataStart, level + 2, dataSize).toJson());
-		}
 		else {
-			log(3, L"🔈dump_wstring VT_STREAM");
-			o.add(L"Data", Json::str(dump_wstring(buffer, (int)dataStart,
-			                                      (int)dataSize)));
+			o.merge(streamContent(buffer + dataStart, dataSize, level));
 		}
-		*pos += dataSize;
+		// Past the data: the size field was forgotten, 4 bytes short.
+		*pos = (unsigned int)std::min<size_t>(inputSize, (size_t)dataStart + dataSize);
 		return o;
 	}
 	/* TYPES ADDED to align the coverage on libfwps (libyal), the reference for
