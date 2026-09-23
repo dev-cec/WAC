@@ -1335,10 +1335,12 @@ struct TypedShellItem : IShellItem {
 
 /*! Delegate folder.
 *
-*  This container wraps ONE COMPLETE SHELL ITEM, placed at offset 6, and is
-*  recognised by the delegation GUID written 32 bytes before the end
-*  ({5E591A74-DF96-48D3-8D67-1733BCEE28BA}). The GUID of the delegating class
-*  occupies the last 16 bytes.
+*  Recognised by the delegation GUID written 32 bytes before the end
+*  ({5E591A74-DF96-48D3-8D67-1733BCEE28BA}); the GUID of the delegating class
+*  occupies the last 16 bytes. At offset 4, the size of the delegated data (2
+*  bytes); from offset 6, those data, which continue an item of the class the
+*  class byte gives (a drive root folder, a search folder…). They are decoded
+*  as such, into `innerItem`.
 *
 *  It was not recognised at all: the whole item — hence the shell item it holds,
 *  with its path, its dates and its property stores — was reduced to an
@@ -1349,7 +1351,7 @@ struct DelegateFolder : IShellItem {
 	bool isPresent = false;                      //!< presence, for the JSON
 	std::wstring classGuid;                      //!< GUID of the delegated class
 	std::wstring classFriendlyName;               //!< label of that GUID
-	std::unique_ptr<IShellItem> innerItem;        //!< nested shell item
+	std::unique_ptr<IShellItem> innerItem;        //!< the delegated data, decoded by their class
 	std::wstring data;                            //!< raw content if not decoded
 
 	/*! Reads the item.

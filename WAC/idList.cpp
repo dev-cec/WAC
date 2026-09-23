@@ -2283,35 +2283,36 @@ RootFolder::RootFolder(LPBYTE buffer, int _level) {
 	guid = L"";
 	identifier = L"";
 
-	if (size >= (unsigned short int)0x14 && size <= (unsigned short int)0x3a) {
+	/* The SIGNATURE at 6 identifies the drive and search-folder forms, as in
+	   libfwsi; the size decided first, and a drive item of 0x3a bytes or less —
+	   the form a delegate folder holds once its trailer is removed — was read
+	   as a GUID. */
+	const unsigned int signature = (size >= 10) ? *reinterpret_cast<unsigned int*>(buffer + 6) : 0;
+	if (signature == (unsigned int)0xf5a6b710) {
+		sortIndex = L"DRIVE";
+		log(3, L"🔈string_to_wstring identifier");
+		identifier = string_to_wstring(readNarrowZ(buffer, size, 13));
+	}
+	else if (signature == (unsigned int)0x23a3dfd5) {
+		sortIndex = L"SEARCH_FOLDER";
+		unsigned int pos = 0x12;
+		while (true) {
+			log(3, L"🔈SPS");
+			SPS block(buffer + pos, level + 1, pos < size ? size - pos : 0);
+			if (block.size > 0 && pos < size) {
+				SPSs.push_back(block);
+			}
+			else
+				break;
+			pos += block.size;
+		}
+	}
+	else if (size >= (unsigned short int)0x14 && size <= (unsigned short int)0x3a) {
 		sortIndex = L"GUID";
 		log(3, L"🔈guid_to_wstring guid");
 		guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 4));
 		log(3, L"🔈trans_guid_to_wstring identifier");
 		identifier = trans_guid_to_wstring(guid);
-	}
-	else if (size > (unsigned short int)0x3a) {
-		unsigned int signature = *reinterpret_cast<unsigned int*>(buffer + 6);
-		if (signature == (unsigned int)0xf5a6b710) {
-			sortIndex = L"DRIVE";
-			log(3, L"🔈string_to_wstring identifier");
-			identifier = string_to_wstring(readNarrowZ(buffer, size, 13));
-
-		}
-		if (signature == (unsigned int)0x23a3dfd5) {
-			sortIndex = L"SEARCH_FOLDER";
-			unsigned int pos = 0x12;
-			while (true) {
-				log(3, L"🔈SPS");
-				SPS block(buffer + pos, level + 1, pos < size ? size - pos : 0);
-				if (block.size > 0 && pos < size) {
-					SPSs.push_back(block);
-				}
-				else
-					break;
-				pos += block.size;
-			}
-		}
 	}
 	if (sortIndex == L"UNKNOWN") {
 		log(2, L"🔥RootFolder : sortIndex Unknown 0x" + to_hex(type));
@@ -2591,20 +2592,31 @@ DelegateFolder::DelegateFolder(LPBYTE buffer, unsigned short size, int _level) {
 		classFriendlyName = trans_guid_to_wstring(classGuid);
 	}
 
-	/* NESTED SHELL ITEM: size on 4 bytes at offset 4, content from offset 6. The
-	   last 32 bytes carry the delegation marker and the class GUID, they are not
-	   part of the inner item. */
-	const unsigned int internalSize = *reinterpret_cast<unsigned int*>(buffer + 4);
-	// The inner item's own declared size must fit too: it is what bounds its reads.
-	const unsigned short innerDeclared = (size > 8) ? *reinterpret_cast<unsigned short*>(buffer + 6) : 0;
-	if (size > 38 && internalSize > 0 && internalSize <= (unsigned int)(size - 38)
-	    && innerDeclared >= 3 && innerDeclared <= (unsigned int)(size - 38)) {
-		log(3, L"🔈makeShellItem: delegate");
-		innerItem = makeShellItem(buffer + 6, level + 1, false);
+	/* DELEGATED DATA: their size on 2 bytes at offset 4, the data from offset 6,
+	   then the 32-byte trailer (delegation marker, class GUID). The data
+	   continue an item of the class the class byte gives, at the offsets it
+	   would have without delegation: the drive letter at 13, the search
+	   folder's store at 0x12.
+	   Checked on a real machine: 33 delegate items of four forms, the size at 4
+	   always equal to the item's size minus 38. The previous version read a
+	   4-byte size and expected a complete shell item at offset 6: it rejected
+	   every one of them, and the drive letters (E:\, D:\) they carry were lost.
+	   The data are decoded on a copy that ENDS before the trailer, its size
+	   field adjusted, so that no decoder takes the trailer for its own bytes
+	   (a file entry reads its extension offset in its last two bytes). */
+	const size_t dataSize = *reinterpret_cast<unsigned short*>(buffer + 4);   // size >= 38
+	if (dataSize == 0) {
+		log(3, L"🔈DelegateFolder: no delegated data");
+	}
+	else if (fits((size_t)size - 32, 6, dataSize)) {
+		std::vector<BYTE> inner(buffer, buffer + 6 + dataSize);
+		*reinterpret_cast<unsigned short*>(inner.data()) = (unsigned short)inner.size();
+		log(3, L"🔈makeShellItem: delegated data");
+		innerItem = makeShellItem(inner.data(), level + 1, false);
 	}
 	else {
-		log(2, L"🔥DelegateFolder: inconsistent internal size ("
-		     + std::to_wstring(internalSize) + L")");
+		log(2, L"🔥DelegateFolder: data size " + std::to_wstring(dataSize)
+		     + L" overruns the item", ERROR_INVALID_DATA);
 		log(3, L"🔈dump_wstring DelegateFolder");
 		data = dump_wstring(buffer, 0, size);
 	}
@@ -2656,7 +2668,7 @@ std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _level, bool Parent
 		 * signature in their data, and libfwsi identifies them by trying every
 		 * decoder (libfwsi_item.c). All of them therefore fell into "UNKNOWN",
 		 * the most costly being the delegate folder — common in the shellbags,
-		 * and wrapping an entirely decodable shell item.
+		 * and wrapping data decodable by the class of the item.
 		 *
 		 * The order matters: these tests are more specific than the class byte,
 		 * they must prevail. Each criterion is libfwsi's, with its minimum size —
