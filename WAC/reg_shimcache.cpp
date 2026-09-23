@@ -50,14 +50,13 @@ HRESULT Shimcaches::getData() {
 	   by the real size of the value, never by a length the data declares. An
 	   entry that does not start with "10ts" ends the walk — the offset used to
 	   stay where it was, and the loop never ended. */
-	auto fits = [&](size_t at, size_t length) { return at <= size && length <= size - at; };
-	if (!fits(0, 4)) {
+	if (!fits(size, 0, 4)) {
 		log(2, L"🔥AppCompatCache: value too short for its header");
 		delete[] data;
 		return ERROR_INVALID_DATA;
 	}
 	size_t offset = *reinterpret_cast<DWORD*>(data);
-	while (fits(offset, 14)) {
+	while (fits(size, offset, 14)) {
 		printProgressStep(L"Shimcache", (unsigned)offset, size);
 		if (std::memcmp(data + offset, "10ts", 4) != 0) {
 			log(2, L"🔥AppCompatCache: unexpected entry signature at offset " + std::to_wstring(offset)
@@ -69,7 +68,7 @@ HRESULT Shimcaches::getData() {
 		offset += 12;
 		const unsigned short pathSize = *reinterpret_cast<unsigned short*>(data + offset);
 		offset += 2;
-		if (!fits(offset, (size_t)pathSize + 8 + 4)) {
+		if (!fits(size, offset, (size_t)pathSize + 8 + 4)) {
 			log(2, L"🔥AppCompatCache: entry truncated at offset " + std::to_wstring(entryStart));
 			break;
 		}
@@ -93,14 +92,14 @@ HRESULT Shimcaches::getData() {
 
 		const DWORD dataSize = *reinterpret_cast<DWORD*>(data + offset);
 		offset += 4;
-		if (!fits(offset, dataSize)) {
+		if (!fits(size, offset, dataSize)) {
 			log(2, L"🔥AppCompatCache: data of the entry at offset " + std::to_wstring(entryStart)
 			       + L" goes beyond the value");
 			break;
 		}
 		offset += dataSize;
 		// The entry size, when consistent, is the reference for the next entry.
-		if (entrySize >= offset - entryStart - 12 && fits(entryStart + 12, entrySize))
+		if (entrySize >= offset - entryStart - 12 && fits(size, entryStart + 12, entrySize))
 			offset = entryStart + 12 + entrySize;
 
 		log(1, L"➕Shimcache ");

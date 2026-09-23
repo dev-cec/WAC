@@ -339,11 +339,6 @@ static size_t declaredSize(LPBYTE buffer) {
 	return *reinterpret_cast<unsigned short*>(buffer);
 }
 
-/*! True if `length` bytes starting at `offset` lie inside a structure of `size`
- *  bytes. Written so that no addition can wrap around. */
-static bool fits(size_t size, size_t offset, size_t length) {
-	return offset <= size && length <= size - offset;
-}
 
 /*! Content of a byte vector (Vector<VT_UI1>).
  *
