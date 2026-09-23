@@ -1,4 +1,7 @@
-﻿/*
+﻿/*! \file
+ *  \brief Implementation of QuickDigest5 (third-party, GPL-3.0) and of WAC's Md5Stream.
+ */
+/*
  * Copyright (c) 2024 - Nathanne Isip
  * This file is part of QuickDigest5.
  * 

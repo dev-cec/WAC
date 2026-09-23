@@ -1,4 +1,4 @@
 var lznt1_8cpp =
 [
-    [ "Lznt1Detendre", "lznt1_8cpp.html#a43cf6ee6d1bfe7a635d63dfee110e4a6", null ]
+    [ "Lznt1Inflate", "lznt1_8cpp.html#ac063e81e2ddf8bfdb43b5e4283009b0a", null ]
 ];

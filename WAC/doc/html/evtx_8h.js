@@ -1,7 +1,7 @@
 var evtx_8h =
 [
-    [ "EvtxEnregistrement", "structEvtxEnregistrement.html", "structEvtxEnregistrement" ],
-    [ "EvtxBilan", "structEvtxBilan.html", "structEvtxBilan" ],
-    [ "EvtxCanalDepuisNomFichier", "evtx_8h.html#ab9a79cf1305cf8cdd405fe6599a72977", null ],
-    [ "EvtxLireFichier", "evtx_8h.html#ad1b41a7f4e34221aee446d70cf983c27", null ]
+    [ "EvtxRecord", "structEvtxRecord.html", "structEvtxRecord" ],
+    [ "EvtxSummary", "structEvtxSummary.html", "structEvtxSummary" ],
+    [ "EvtxChannelFromFileName", "evtx_8h.html#a35239b1da0e8481cc5c9e92b5955797e", null ],
+    [ "EvtxReadFile", "evtx_8h.html#afdec56de451b97d4bc69c2c822284ac6", null ]
 ];

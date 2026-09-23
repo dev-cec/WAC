@@ -3,7 +3,8 @@
 #include <cstring>
 #include <sstream>
 
-/*  evtx.cpp — offline decoding of Windows event logs.
+/*! \file
+ *  \brief Offline decoding of Windows event logs.
  *
  *  See evtx.h for the format and the reason this module exists. The comments
  *  here are about implementation choices, not about the format's structure.

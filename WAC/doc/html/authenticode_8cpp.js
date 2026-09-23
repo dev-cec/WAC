@@ -1,9 +1,9 @@
 var authenticode_8cpp =
 [
-    [ "EST", "authenticode_8cpp.html#a0079f2b92a471323a5b4506691ae6aa2", null ],
-    [ "OID", "authenticode_8cpp.html#a572c6cf068bcad5add54e74580a5c0f4", null ],
-    [ "EvaluerParCatalogue", "authenticode_8cpp.html#a44c8b766dd072f28227429591e00c2b7", null ],
-    [ "EvaluerPe", "authenticode_8cpp.html#a081cd8727bae07dde597f44221830027", null ],
-    [ "EvaluerScriptPowerShell", "authenticode_8cpp.html#a7a2315dcd96f5ebbeb2231b3f753c424", null ],
-    [ "VerifierPkcs7", "authenticode_8cpp.html#a3ebdb1e8e6bb6bb0629d5b0bf3ef9aba", null ]
+    [ "IS_OID", "authenticode_8cpp.html#a12a5ecb7ad791fc7297e4a082a3b66f1", null ],
+    [ "OID", "authenticode_8cpp.html#ae704f2b5d19827712440881c47410819", null ],
+    [ "EvaluateByCatalog", "authenticode_8cpp.html#a86de202069e82af1cdd735d0c61e088a", null ],
+    [ "EvaluatePe", "authenticode_8cpp.html#afcc0097b06999e19cc5505f4abc2a9d8", null ],
+    [ "EvaluatePowerShellScript", "authenticode_8cpp.html#abde9d2ad75240e98cf8f07b62a1b9513", null ],
+    [ "VerifyPkcs7", "authenticode_8cpp.html#aff6f45f79fbde34f4269c14ccbafcc7a", null ]
 ];

@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Reading of the custom jump lists (see jumplist_custom.h).
+ */
 #include "jumplist_custom.h"
 
 CustomDestinationCategory::CustomDestinationCategory(LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid) {

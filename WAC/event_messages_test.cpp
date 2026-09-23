@@ -10,7 +10,7 @@
  *  It runs ON THE EXAMINED MACHINE (or a test VM), the SOFTWARE hive and the
  *  provider binaries being readable only there.
  *
- *  Usage: event_messages_test <SOFTWARE hive> <guid> [id[:version] ...]
+ *  Usage: event_messages_test `<SOFTWARE hive>` `<guid>` [id[:version] ...]
  *  Excluded from WAC's build by the "_test.cpp" pattern.
  */
 #include "tools.h"
@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-AppliConf conf;
+AppliConf conf; //!< WAC's global configuration, which tools.cpp references (empty here)
 
 namespace {
 
@@ -31,6 +31,9 @@ void line(const wchar_t* step, bool ok, const std::wstring& detail) {
 
 } // namespace
 
+/*! Runs the test.
+ * @param argc,argv `<SOFTWARE hive>` `<guid>` [id[:version] ...]
+ * @return 0 if every check passed */
 int wmain(int argc, wchar_t** argv) {
 	if (argc < 3) {
 		wprintf(L"usage: event_messages_test <SOFTWARE hive> <guid> [id[:version] ...]\n");

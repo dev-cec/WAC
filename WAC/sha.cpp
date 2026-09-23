@@ -5,7 +5,10 @@
 #include <vector>
 #include <filesystem>
 
-/*  sha.cpp — see sha.h. Both algorithms follow FIPS 180-4; the comments do not
+/*! \file
+ *  \brief SHA-1, SHA-256, SHA-384 and SHA-512, computed incrementally.
+ *
+ *  See sha.h. Both algorithms follow FIPS 180-4; the comments do not
  *  restate the standard, they point out the only places where an
  *  implementation goes wrong: the final padding and the bit length, written
  *  BIG-endian while the rest of the project reads little-endian.

@@ -46,7 +46,7 @@ struct Event {
 	Json evtSystemProviderGuid = Json::null();      //!< GUID of the provider
 	Json evtSystemEventID = Json::null();           //!< identifier of the event
 	Json evtSystemQualifiers = Json::null();        //!< qualifiers (classic events)
-	Json evtSystemLevel = Json::null();             //!< niveau
+	Json evtSystemLevel = Json::null();             //!< level
 	Json evtSystemTask = Json::null();              //!< task
 	Json evtSystemOpcode = Json::null();            //!< opcode
 	Json evtSystemKeywords = Json::null();          //!< keywords
@@ -56,7 +56,7 @@ struct Event {
 	Json evtSystemRelatedActivityID = Json::null(); //!< related activity identifier
 	Json evtSystemProcessID = Json::null();         //!< process that emitted the event
 	Json evtSystemThreadID = Json::null();          //!< thread that emitted the event
-	Json evtSystemChannel = Json::null();           //!< canal
+	Json evtSystemChannel = Json::null();           //!< channel
 	Json evtSystemComputer = Json::null();          //!< name of the computer
 	Json evtSystemUserID = Json::null();            //!< SID of the user
 	Json evtSystemVersion = Json::null();           //!< version of the event's schema
@@ -94,9 +94,9 @@ struct Event {
 	*         carry it (archived logs sometimes omit `<Channel>`)
 	*  @param id record number read in the binary header, used if the XML does not
 	*         carry `<EventRecordID>`
+	*  @param fileName name of the log file, recorded as the provenance
 	*/
-	/*! @param fileName name of the log file, recorded as the provenance */
-	Event(const XmlNode& root, const std::wstring& canal,
+	Event(const XmlNode& root, const std::wstring& channel,
 	      unsigned long long id, const std::wstring& fileName);
 
 	/*! Values of `EventData`, in order, as they fill the %1 %2 … marks of a

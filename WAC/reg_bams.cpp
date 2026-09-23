@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Reading of the Background Activity Monitor keys (see reg_bams.h).
+ */
 #include "reg_bams.h"
 
 Bam::Bam(LPBYTE data, std::wstring valueName, std::wstring psid) {

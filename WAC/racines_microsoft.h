@@ -1,4 +1,5 @@
-/*  racines_microsoft.h — Microsoft code-signing root certificates.
+/*! \file
+ *  \brief Microsoft code-signing root certificates.
  *
  *  GENERATED, do not edit by hand. Exported from the "Trusted Root" store
  *  (LocalMachine\\Root) of a clean Windows 11 installation; these are PUBLIC

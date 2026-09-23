@@ -1,10 +1,10 @@
 var structIdList =
 [
-    [ "IdList", "structIdList.html#af28801b80b247264be97f0f157f6977a", null ],
+    [ "IdList", "structIdList.html#ac0cfac19e72ee9a20d6aa4094ef34409", null ],
     [ "toJson", "structIdList.html#a62beb2234720bdce65fe64b631a9ec52", null ],
-    [ "donnees", "structIdList.html#a35f5d5de12d5dd514f6be8faeb7a7beb", null ],
+    [ "data", "structIdList.html#a59571d51ee821b467dc1a57e1f818344", null ],
     [ "item_size", "structIdList.html#af8eb27c406e8600f6adbb6791896a3a6", null ],
-    [ "niveau", "structIdList.html#aee6bc930c9226ea45382499005018c29", null ],
+    [ "level", "structIdList.html#ae7329064c6b36ff4516bd86c761a9f41", null ],
     [ "shellItem", "structIdList.html#a68027df06d45d0501e3aaf895c0f3fd1", null ],
     [ "type", "structIdList.html#aa4cb3884ff007c2cf2e41e08fa48eb51", null ],
     [ "type_char", "structIdList.html#af86cacbc460ac469ad169291a5f6f598", null ],

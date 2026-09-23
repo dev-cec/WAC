@@ -57,8 +57,8 @@ var idList_8h =
     [ "TypedShellItem", "structTypedShellItem.html", "structTypedShellItem" ],
     [ "DelegateFolder", "structDelegateFolder.html", "structDelegateFolder" ],
     [ "UnknownShellItem", "structUnknownShellItem.html", "structUnknownShellItem" ],
-    [ "getExtensionBlock", "idList_8h.html#aa62e69a3c186f119bba471f50cf98919", null ],
+    [ "getExtensionBlock", "idList_8h.html#a226b28040841114ee414d5b2c512791b", null ],
     [ "getType", "idList_8h.html#a7525f17aa1303b4d68eae831fb5e5bfc", null ],
-    [ "getValue", "idList_8h.html#a23a2720ae9c2a129c98e5808dbe4cbd2", null ],
-    [ "makeShellItem", "idList_8h.html#aad74b9501f426ef8e1528c1434647b1a", null ]
+    [ "getValue", "idList_8h.html#a5d8c9cb21c02aa63ef60ebfa995ebe3e", null ],
+    [ "makeShellItem", "idList_8h.html#a8e06b9a97f157137b48d134484223b62", null ]
 ];

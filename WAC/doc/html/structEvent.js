@@ -1,6 +1,6 @@
 var structEvent =
 [
-    [ "Event", "structEvent.html#a4be366211f9152a80efa955bcef36fcb", null ],
+    [ "Event", "structEvent.html#aa620ab50f7f105a84e4eb0fdefed02e6", null ],
     [ "clear", "structEvent.html#a0862af1471604bf30a4f50a5e028637a", null ],
     [ "toJson", "structEvent.html#ac83247741a82814a4adcf83cbd9545a8", null ],
     [ "evtEventData", "structEvent.html#a71647f03eadce96ebc1a8be134997ac1", null ],
@@ -26,6 +26,6 @@ var structEvent =
     [ "evtSystemVersion", "structEvent.html#a5d53d627bbb45262e3a5f99894cf068a", null ],
     [ "guidPourMessage", "structEvent.html#adcd8f67a4048897d435c806afdfa18ee", null ],
     [ "idPourMessage", "structEvent.html#a46a8dad38d7cb9f88f6bdd06a6512ccd", null ],
-    [ "valeursBrutes", "structEvent.html#ac288b060d99b4d56d5ad921f843ac1ba", null ],
+    [ "rawValues", "structEvent.html#a87d52e43fc651704be2220d757ae8310", null ],
     [ "versionPourMessage", "structEvent.html#a1fca9d1921fc196a3480851cde860211", null ]
 ];

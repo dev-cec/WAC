@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Reading of Amcache's InventoryApplicationFile (see reg_amcache_applicationfile.h).
+ */
 #include "reg_amcache_applicationfile.h"
 
 AmcacheApplicationFile::AmcacheApplicationFile(ORHKEY hKey_amcache) {
@@ -45,7 +48,7 @@ Json AmcacheApplicationFile::toJson() {
 	o.add(L"Version",       Json::str(version));
 	o.add(L"LinkDate",      Json::str(linkDate));
 	o.add(L"LinkDateUtc",   Json::str(linkDateUtc));
-	o.add(L"IsOsComponent", Json::boolean(IsOsComponent));   // vrai booleen
+	o.add(L"IsOsComponent", Json::boolean(IsOsComponent));   // a real boolean
 	return o;
 }
 

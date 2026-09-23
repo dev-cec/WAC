@@ -1,4 +1,7 @@
-﻿#include <cstdio>
+﻿/*! \file
+ *  \brief Implementation of the shared tools (see tools.h).
+ */
+#include <cstdio>
 #include <iostream>
 #include <iomanip>
 #include <memory>
@@ -76,7 +79,7 @@ FILETIME FatDateTime::toFileTime() {
 }
 
 /****************************************************
-*                   AFFICHAGE                       *
+*                   DISPLAY                         *
 *****************************************************/
 
 namespace {
@@ -263,7 +266,7 @@ std::wstring dump_wstring(LPBYTE buffer, int start, int length) {
 	return ss.str();
 }
 /****************************************************
-*                     CHAINES                       *
+*                     STRINGS                       *
 *****************************************************/
 
 std::wstring replaceAll(std::wstring src, std::wstring search, std::wstring replacement)
@@ -388,7 +391,7 @@ std::wstring getNameFromSid(std::wstring _sid) {
 			name = lpName;
 		else
 			log(3, L"🔈LookupAccountSidW: no match", GetLastError());
-		LocalFree(pSID);                              // alloue par ConvertStringSidToSidW
+		LocalFree(pSID);                              // allocated by ConvertStringSidToSidW
 	}
 
 	// Memorised even when empty: a SID that cannot be resolved will stay so, no
@@ -397,6 +400,9 @@ std::wstring getNameFromSid(std::wstring _sid) {
 	return name;
 }
 
+/*! A LUID as a decimal number (its 64 bits).
+ * @param luid the LUID
+ * @return the number, as text */
 std::wstring luid_to_wstring(LUID luid) {
 	/* FIX: a LUID is 64 bits (LowPart ULONG + HighPart LONG), but the computation
 	   was done on a 32-bit ULONG. Shifting a 32-bit type by 32 is undefined
@@ -708,7 +714,7 @@ std::wstring binaryPath(std::wstring imagePath) {
 	{
 		const std::wstring normalized = normalizeFilePath(imagePath);
 		if (!normalized.empty()) return normalized;
-		if (imagePath.find(L'%') != std::wstring::npos) return L"";   // variable inconnue
+		if (imagePath.find(L'%') != std::wstring::npos) return L"";   // unknown variable
 	}
 
 	/* Relative path: it is relative to %SystemRoot%, not to the current
@@ -926,7 +932,7 @@ std::wstring string_to_wstring(const std::string& str)
 	return wstr;
 }
 
-bool estReferenceMui(const std::wstring& value) {
+bool isMuiReference(const std::wstring& value) {
 	/* Recognised form: "@<file>,-<id>". The leading "@" alone is not enough: some
 	   descriptions start with an at sign without being references. The comma
 	   followed by a minus sign is the reliable marker. */
@@ -1139,7 +1145,7 @@ HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vec
 			size_t end = pos;
 			while (end < nbCar && data[end] != L'\0') ++end;
 			if (end > pos) out->push_back(std::wstring(data + pos, end - pos));
-			if (end >= nbCar) break;          // tampon epuise
+			if (end >= nbCar) break;          // buffer exhausted
 			pos = end + 1;                    // after the \0 separator
 			if (pos < nbCar && data[pos] == L'\0') break;   // \0\0 = end of the list
 		}

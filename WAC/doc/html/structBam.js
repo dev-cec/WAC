@@ -1,6 +1,6 @@
 var structBam =
 [
-    [ "Bam", "structBam.html#a6929f34f3ca3140043246517787d92fd", null ],
+    [ "Bam", "structBam.html#ac93bfc74deae2b2472d262c9be6859f9", null ],
     [ "clear", "structBam.html#a52ff7f220c879bcb78919b3dbb91a4e9", null ],
     [ "toJson", "structBam.html#a16dd03974f6839b71cdbbc7a7787b13a", null ],
     [ "executionTime", "structBam.html#a2d778fb9384e11593ef630ffd93281d2", null ],

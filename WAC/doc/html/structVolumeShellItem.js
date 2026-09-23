@@ -1,6 +1,6 @@
 var structVolumeShellItem =
 [
-    [ "VolumeShellItem", "structVolumeShellItem.html#aad4404ca114335ef479909ca8285ce98", null ],
+    [ "VolumeShellItem", "structVolumeShellItem.html#a185182beca6702eabfa8f4d737510481", null ],
     [ "toJson", "structVolumeShellItem.html#ae1e961491a1e12fffd685a1297d8663e", null ],
     [ "flags", "structVolumeShellItem.html#a058777a92332377789772327c4ff7acf", null ],
     [ "guid", "structVolumeShellItem.html#a6f4e653f5d89aa7848e33fa87ebfde6e", null ],

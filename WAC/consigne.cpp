@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Implementation of the exhibit store and of its sealed manifest (see consigne.h for the procedure and the manifest's content).
+ */
 #include "consigne.h"
 #include "tools.h"
 #include "audit.h"

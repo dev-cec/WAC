@@ -8,12 +8,12 @@ var classJson =
       [ "Bool", "classJson.html#a82938661c4953d873b5c8a204337fd57ac26f15e86e3de4c398a8273272aba034", null ],
       [ "Null", "classJson.html#a82938661c4953d873b5c8a204337fd57abbb93ef26e3c101ff11cdd21cab08a94", null ]
     ] ],
-    [ "add", "classJson.html#a390326dfba042c05275db086c656937e", null ],
-    [ "dump", "classJson.html#af27671f22bf8464b46e39bd30089dac1", null ],
+    [ "add", "classJson.html#a0f936b8a4322c73cb42100ebaf87859f", null ],
+    [ "dump", "classJson.html#a880c78940fddf6cbc5e3a68eb026863c", null ],
     [ "empty", "classJson.html#a873b882e1615217b31bb95f807f37083", null ],
+    [ "isEmptyValue", "classJson.html#aea15e40fabe25dd183f74d9f9996c7cf", null ],
     [ "kind", "classJson.html#a7b6af011a3f229790cc957012bfd0240", null ],
-    [ "merge", "classJson.html#a57248b9413e96d1384154590d05724ad", null ],
-    [ "push", "classJson.html#a6f089fb2e1066f7507fcfc4720c46674", null ],
-    [ "size", "classJson.html#ae6eba8b3f5db17b0f67d3b04fbcef25e", null ],
-    [ "vide", "classJson.html#ae494652eb309401404129eb3e6652b94", null ]
+    [ "merge", "classJson.html#a5ee307fab0e85a681824f2f8daf921ca", null ],
+    [ "push", "classJson.html#a2d8d3cd489e1b9d9716322bdd88db40f", null ],
+    [ "size", "classJson.html#ae6eba8b3f5db17b0f67d3b04fbcef25e", null ]
 ];

@@ -43,7 +43,7 @@ public:
 	std::wstring FirstInsertionUtc = L"";	//!< the same instant in UTC
 
 	/*! Builds the device from its registry key.
-	 *  @param hKey_usb the device's key under Enum\USBSTOR, already open. */
+	 *  @param hKey_usb the device's key under `Enum\USBSTOR`, already open. */
 	Usbstor(ORHKEY hKey_usb);
 
 	/*! Converts the device to JSON.
@@ -60,7 +60,7 @@ public:
 	std::vector<Usbstor> usbs;  //!< the devices, in the order they were read
 
 
-	/*! Walks the subkeys of Enum\USBSTOR and reads each device.
+	/*! Walks the subkeys of `Enum\USBSTOR` and reads each device.
 	 *  @return S_OK, or the failure of the last read attempted. */
 	HRESULT getData();
 

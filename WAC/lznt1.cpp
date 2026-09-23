@@ -1,7 +1,10 @@
 #include "lznt1.h"
 #include <cstring>
 
-/*  lznt1.cpp — see lznt1.h. Algorithm consistent with libyal's reference
+/*! \file
+ *  \brief LZNT1 decompression, the NTFS compression.
+ *
+ *  See lznt1.h. Algorithm consistent with libyal's reference
  *  implementation (libfwnt); the comments do not restate the format, they mark
  *  its two traps: the variable split of back-references, and overlapping
  *  copies.

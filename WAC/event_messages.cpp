@@ -12,7 +12,9 @@
 #include <vector>
 
 /*! \file
- *  \brief See event_messages.h for the chain to bring together.
+ *  \brief Finding, extracting and caching the providers' resource files.
+ *
+ *  See event_messages.h for the chain to bring together.
  *  Here, the mechanics: finding the file, extracting it on demand, caching.
  */
 
@@ -31,7 +33,7 @@ struct Provider {
 	std::wstring    reason;           //!< why it is unusable
 };
 
-std::map<std::wstring, std::unique_ptr<Provider>> g_cache;   // guid -> fournisseur
+std::map<std::wstring, std::unique_ptr<Provider>> g_cache;   // guid -> provider
 bool g_ready = false;
 size_t g_failures = 0;
 unsigned long long g_resolved = 0, g_bytes = 0;

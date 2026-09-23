@@ -62,7 +62,7 @@ public:
 	std::vector<AmcacheApplicationFile> amcacheapplicationfiles; //!< the entries, in the order they were read
 
 
-	/*! Opens Amcache.hve and walks the subkeys of Root\InventoryApplicationFile.
+	/*! Opens Amcache.hve and walks the subkeys of `Root\InventoryApplicationFile`.
 	 *  @return S_OK, or the failure of the last read attempted. */
 	HRESULT getData();
 

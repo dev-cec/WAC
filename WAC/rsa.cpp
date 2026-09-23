@@ -1,4 +1,7 @@
-/*  rsa.cpp — see rsa.h.
+/*! \file
+ *  \brief RSA PKCS#1 v1.5 signature verification, in memory.
+ *
+ *  See rsa.h.
  *
  *  Numbers are held in 32-bit words, least significant first.
  *  Exponentiation by Montgomery multiplication (CIOS variant): it avoids any
@@ -139,7 +142,7 @@ bool RsaVerifyPkcs1(const uint8_t* module, size_t modulusSize,
 	const size_t k = (modulusSize + 3) / 4;
 	const Count n = fromBytes(module, modulusSize, k);
 	const Count s = fromBytes(signature, signatureSize, k);
-	if (greaterOrEqual(s, n)) return false;                      // signature hors intervalle
+	if (greaterOrEqual(s, n)) return false;                      // signature out of range
 
 	uint64_t e = 0;
 	for (size_t i = 0; i < exponentSize; ++i) e = (e << 8) | exponent[i];

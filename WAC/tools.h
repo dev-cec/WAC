@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿/*! \file
+ *  \brief Shared tools: configuration, console display, log, registry reads, time formatting, path rules, JSON output.
+ */
+#pragma once
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -8,7 +11,7 @@
 #include <time.h>
 #include "json.h"
 
-//constantes globales 
+// global constants
 #define MAX_KEY_NAME 255 //!< longest key name in the registry
 #define MAX_VALUE_NAME 16383 //!< longest value name in the registry
 #define MAX_DATA 1024000 //!< largest data a registry value can hold
@@ -210,7 +213,7 @@ std::wstring pathUnder(const std::wstring& root, const std::wstring& absolute);
 */
 std::wstring originalPath(const std::wstring& extracted);
 
-extern AppliConf conf;// global variable holding the application's configuration
+extern AppliConf conf; //!< the application's configuration, shared by every collector
 
 ///////////////////////////////////////////////////////
 // Data formats
@@ -244,7 +247,7 @@ struct FatDateTime {
 };
 
 ///////////////////////////////////////////////////////
-//affichage
+// display
 ///////////////////////////////////////////////////////
 
 //! Prints the word OK in green on the console.
@@ -605,7 +608,7 @@ std::wstring toLower(std::wstring s);
 * @param value the value read in the hive
 * @return true if it is a resource reference
 */
-bool estReferenceMui(const std::wstring& value);
+bool isMuiReference(const std::wstring& value);
 
 /*! Converts a string of several concatenated wstrings to a vector of wstring.
 * Each string must be separated from the previous one by \0.
@@ -741,7 +744,7 @@ public:
 	void add(const Json& element);
 
 	//! True if the file is open for writing.
-	bool open() const { return open_; }
+	bool isOpen() const { return open_; }
 	//! Number of elements written.
 	unsigned long long written() const { return written_; }
 

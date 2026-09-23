@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Reading of the Enum\\USBSTOR key (see reg_usbstors.h).
+ */
 #include "reg_usbstors.h"
 
 Usbstor::Usbstor(ORHKEY hKey_usb) {
@@ -59,7 +62,7 @@ Usbstor::Usbstor(ORHKEY hKey_usb) {
 
 Json Usbstor::toJson() {
 	log(3, L"🔈usbstor toJson");
-	Json ids = Json::arr();                         // vrai tableau JSON
+	Json ids = Json::arr();                         // a real JSON array
 	for (const std::wstring& h : HardwareId) ids.push(Json::str(h));
 	Json o = Json::obj();
 	o.add(L"HardwareId",       ids);

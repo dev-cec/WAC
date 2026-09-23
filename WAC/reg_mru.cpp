@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Reading of the OpenSaveMRU keys (see reg_mru.h).
+ */
 #include "reg_mru.h"
 
 Json Mru::toJson() const {

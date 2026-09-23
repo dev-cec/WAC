@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Reading of the LastVisitedMRU keys (see reg_mru_apps.h).
+ */
 #include "reg_mru_apps.h"
 
 Json MruApp::toJson() const {

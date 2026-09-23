@@ -25,6 +25,9 @@
 #include <string>
 #include <vector>
 
+/*! Runs the test.
+ * @param argc,argv [volume] [path] [output] [--fix] [--list] [--attrs]
+ * @return 0 if every check passed */
 int wmain(int argc, wchar_t** argv){
     RawHiveSetVerbose(true);
 

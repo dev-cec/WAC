@@ -7,7 +7,7 @@
  *  often produces wrong data WITHOUT raising an error — hence the exhaustive
  *  comparison rather than a size check.
  *
- *  Usage: xpress_test <original> <compressed.bin> <index.idx>
+ *  Usage: xpress_test `<original>` `<compressed.bin>` `<index.idx>`
  *    index.idx: one line "<n> <original_size> <compressed_size>" per chunk, in
  *    order; a null compressed size = a chunk Windows gave up compressing (stored
  *    as it is).
@@ -23,6 +23,9 @@
 #include <string>
 #include <vector>
 
+/*! Runs the test.
+ * @param argc,argv `<original>` `<compressed.bin>` `<index.idx>`
+ * @return 0 if every check passed */
 int main(int argc, char** argv) {
 	if (argc < 4) {
 		std::cout << "usage: xpress_test <original> <compressed.bin> <index.idx>\n";

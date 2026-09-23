@@ -7,7 +7,7 @@ var structCustomDestination =
     [ "accessed", "structCustomDestination.html#a6c536956469aa381c0f2ca46d53860d3", null ],
     [ "accessedUtc", "structCustomDestination.html#a389cb9b64289757c7101c591a042fb59", null ],
     [ "application", "structCustomDestination.html#a99f14e1b8737748200e0fe6a12762ce6", null ],
-    [ "categorie", "structCustomDestination.html#ace609abffd297f3dcbeeba6993fe2f01", null ],
+    [ "category", "structCustomDestination.html#a5006acc81c834f3e50cb4b7da7efd2b6", null ],
     [ "created", "structCustomDestination.html#a7f6369105e63e44cfb01d84de6198747", null ],
     [ "createdUtc", "structCustomDestination.html#adaac772e30c7185b10fb0b6243b11691", null ],
     [ "modified", "structCustomDestination.html#af8c659ec05421a8e327909a3a861444c", null ],

@@ -2,7 +2,9 @@
 #include <cstring>
 
 /*! \file
- *  \brief See wevt.h for the chain to walk back and for the formats.
+ *  \brief Parsing of MESSAGETABLE and WEVT_TEMPLATE, and substitution of the marks.
+ *
+ *  See wevt.h for the chain to walk back and for the formats.
  *
  *  Structures, as libyal's reference implementation (libfwevt) describes them:
  *
@@ -211,7 +213,7 @@ size_t WevtMetadata::analyse(const std::vector<uint8_t>& d,
 				parId_.emplace(id, message);
 			}
 		}
-		if (!providerGuid.empty()) break;   // fournisseur trouve
+		if (!providerGuid.empty()) break;   // provider found
 	}
 	return parIdEtVersion_.size();
 }
@@ -243,8 +245,8 @@ std::wstring formatMessage(const std::wstring& messageTemplate,
 		if (next == L'%') { r += L'%'; ++i; continue; }
 		if (next == L'n') { r += L'\n'; ++i; continue; }   // line break
 		if (next == L't') { r += L'\t'; ++i; continue; }   // tabulation
-		if (next == L'r') { r += L'\r'; ++i; continue; }   // retour chariot
-		if (next == L'b') { r += L' ';  ++i; continue; }   // espace
+		if (next == L'r') { r += L'\r'; ++i; continue; }   // carriage return
+		if (next == L'b') { r += L' ';  ++i; continue; }   // space
 		if (next == L'.' || next == L'!') { r += next; ++i; continue; }
 		/*  "%0" ENDS the message, without a final line break (FormatMessage's
 		    convention). It was copied as it was: "…deleted following the

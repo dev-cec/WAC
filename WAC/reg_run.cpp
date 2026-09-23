@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Reading of the Run and RunOnce keys (see reg_run.h).
+ */
 #include "reg_run.h"
 
 Json Run::toJson() {

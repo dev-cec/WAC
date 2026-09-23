@@ -1,5 +1,9 @@
+/*! \file
+ *  \brief WAC's console banner.
+ */
 #include "asciiart.h"
 
+//! Prints WAC's banner on the console.
 void asciiart() {
 	//POLICE => ANSI SHADOW
 	wprintf(L"%hs", R"(

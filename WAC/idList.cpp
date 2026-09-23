@@ -1,4 +1,7 @@
-﻿#include "idList.h"
+﻿/*! \file
+ *  \brief Decoding of shell items, ID lists, property stores and extension blocks (see idList.h).
+ */
+#include "idList.h"
 #include <exception>
 
 
@@ -391,7 +394,7 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 	if (valueType == VT_LPWSTR) {
 		std::wstring v((wchar_t*)(buffer + *pos + 4));
 		*pos += 4 + (unsigned int)v.size() * 2;
-		while (buffer[*pos] == 0x00) *pos += 1;   // rembourrage
+		while (buffer[*pos] == 0x00) *pos += 1;   // padding
 		return Json::str(v);
 	}
 	if (valueType == 0x101F) {                     // Vector<VT_LPWSTR>
@@ -406,7 +409,7 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 	}
 	if (valueType == 0x1011) {                     // Vector<VT_UI1>
 		unsigned short size = *reinterpret_cast<unsigned short*>(buffer + *pos);
-		Json r = Json::str(L"Not implemented");    // contenu inconnu (system.delegateidlist)
+		Json r = Json::str(L"Not implemented");    // unknown content (system.delegateidlist)
 		if (*reinterpret_cast<unsigned int*>(buffer + *pos + 0x8) == 0x53505331)
 			r = SPS(buffer + *pos + 0x4, level + 2).toJson();
 		else if (*reinterpret_cast<unsigned int*>(buffer + *pos + 0x1c) == 0x53505331)
@@ -2336,7 +2339,7 @@ Json FileEntryShellItem::toJson() {
 	o.add(L"Flags",               Json::str(fsFlags.to_wstring()));
 	o.add(L"ModificationDate",    Json::str(timeToIso8601Local(fsFileModification)));
 	o.add(L"ModificationDateUtc", Json::str(timeToIso8601Utc(fsFileModificationUtc)));
-	o.add(L"Size",                Json::num((unsigned long long)fsFileSize));   // nombre
+	o.add(L"Size",                Json::num((unsigned long long)fsFileSize));   // count
 	o.add(L"Name",                Json::str(fsPrimaryName));
 	Json blocks = Json::arr();
 	for (const auto& b : extensionBlocks) blocks.push(b->toJson());

@@ -1,4 +1,6 @@
-/*  xml_light.cpp — voir xml_light.h. */
+/*! \file
+ *  \brief Implementation of the minimal XML reader (see xml_light.h).
+ */
 #include "xml_light.h"
 #include <fstream>
 #include <filesystem>
@@ -97,7 +99,7 @@ std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigne
 		}
 		if (!attrName.empty()) node->attributes.emplace_back(attrName, value);
 	}
-	if (empty) return node;                                // <balise ... />
+	if (empty) return node;                                // <tag ... />
 
 	// --- content: text and children, up to the closing tag
 	std::wstring text;
@@ -124,7 +126,7 @@ std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigne
 			pos = f + 1;
 			continue;
 		}
-		if (pos + 1 < s.size() && s[pos + 1] == L'/') {    // </balise> : fin
+		if (pos + 1 < s.size() && s[pos + 1] == L'/') {    // </tag>: end
 			const size_t f = s.find(L'>', pos);
 			if (f == std::wstring::npos) return nullptr;
 			pos = f + 1;

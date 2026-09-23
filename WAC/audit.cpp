@@ -1,4 +1,6 @@
-/*  audit.cpp — voir audit.h. */
+/*! \file
+ *  \brief Implementation of the investigation log (see audit.h).
+ */
 #include "audit.h"
 #include <vector>
 #include <sddl.h>

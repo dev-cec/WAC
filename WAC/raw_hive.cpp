@@ -1,4 +1,7 @@
-/*  raw_hive.cpp — see raw_hive.h.
+/*! \file
+ *  \brief Raw NTFS reader: $MFT, attributes, data runs, directory indexes.
+ *
+ *  See raw_hive.h.
  *  Minimal NTFS parser: VBR, $MFT (fragmented), attributes, data runs,
  *  directory indexes ($INDEX_ROOT + $INDEX_ALLOCATION), $DATA extraction.
  *  Built for hives/EVTX/Tasks: non-resident, medium-sized files.
@@ -23,6 +26,7 @@
 namespace {
 
 bool g_verbose = false;
+//! Trace of the NTFS parser on stderr, printed only in --debug mode.
 #define RVLOG(...) do{ if(g_verbose) fwprintf(stderr, __VA_ARGS__); }while(0)
 
 RawHiveProgressFn g_progress = nullptr;      // progress reporter, optional
@@ -316,7 +320,7 @@ public:
         const uint8_t* reparseContent = rp + rd16(rp + 0x14);
         if (rd32(rp + 0x10) < 24) return false;
         if (rd32(reparseContent) != 0x80000017u) return false;     // not WOF
-        if (rd32(reparseContent + 12) != 2) return false;          // fournisseur non gere
+        if (rd32(reparseContent + 12) != 2) return false;          // provider not handled
         ctx.algorithm = rd32(reparseContent + 20);
 
         // 2. The named stream: in the base record, or in fragments.
@@ -336,7 +340,7 @@ public:
             const uint32_t type = rd32(content.data() + pos);
             const uint16_t len  = rd16(content.data() + pos + 4);
             if (len < 0x1A || pos + len > content.size()) break;
-            if (type == 0x80 && content[pos + 6] != 0){       // $DATA NOMME
+            if (type == 0x80 && content[pos + 6] != 0){       // NAMED $DATA
                 const uint64_t vcn = rd64(content.data() + pos + 8);
                 const uint64_t ref = rd64(content.data() + pos + 0x10) & 0x0000FFFFFFFFFFFFULL;
                 std::vector<uint8_t> frag;
@@ -366,7 +370,7 @@ public:
     bool readNonResidentAttribute(const uint8_t* a, std::vector<uint8_t>& out){
         if (a[8] == 0) return false;                 // resident: no runs
         const uint64_t size = rd64(a + 0x30);
-        if (size == 0 || size > (256ULL << 20)) return false;   // guard-fou
+        if (size == 0 || size > (256ULL << 20)) return false;   // guard
         const std::vector<Run> runs = decodeRuns(a + rd16(a + 0x20), a + rd32(a + 0x04));
         out.assign((size_t)size, 0);
         std::vector<uint8_t> cl(bytesPerCluster_);
@@ -453,7 +457,7 @@ public:
         uint64_t written = 0, nextReport = 0;
 
         for (size_t i = 0; i < nChunks; ++i){
-            if (starts[i + 1] < starts[i]) return E_FAIL;              // table incoherente
+            if (starts[i + 1] < starts[i]) return E_FAIL;              // inconsistent table
             const size_t packedSize = (size_t)(starts[i + 1] - starts[i]);
             const size_t start   = tableSize + (size_t)starts[i];
             if (start + packedSize > data.size()) return E_FAIL;
@@ -919,7 +923,7 @@ private:
                 }
                 vbase += r.count;
             }
-            if (lcn == -2) return false; // hors runs
+            if (lcn == -2) return false; // outside the runs
             uint32_t chunk = std::min<uint32_t>(len - got, bytesPerCluster_ - inClu);
             if (lcn < 0) memset(dst + got, 0, chunk);
             else { if (!readCluster((uint64_t)lcn, cl.data())) return false;

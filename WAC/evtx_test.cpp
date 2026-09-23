@@ -7,9 +7,9 @@
  *  wrong signature, a log not closed, null sizes).
  *
  *  Usage: evtx_test.exe <file.evtx> [number of records to print]
- *         evtx_test.exe --collect <root> <output>   (the COMPLETE chain: reads
- *         <root>\Windows\System32\winevt\Logs\*.evtx as the collection does, and
- *         writes <output>\events.json. Exercises the XML -> Event mapping and
+ *         evtx_test.exe --collect `<root>` `<output>`   (the COMPLETE chain: reads
+ *         `<root>\Windows\System32\winevt\Logs\*.evtx` as the collection does, and
+ *         writes `<output>\events.json`. Exercises the XML -> Event mapping and
  *         the streaming write, which decoding alone does not cover.)
  *         evtx_test.exe <file.evtx> --dump   (one record per line,
  *         "identifier<TAB>xml" in UTF-8, line breaks escaped, for automatic
@@ -32,7 +32,7 @@
  *  read it — tools.cpp is what references it — but the linker asks for it. A
  *  default instance is enough and keeps the test isolated.
  */
-AppliConf conf;
+AppliConf conf; //!< WAC's global configuration, which tools.cpp references (empty here)
 
 //! Writes a wide string to stdout in UTF-8, without going through the console's
 //! code page: the automatic comparison requires stable bytes.
@@ -45,6 +45,9 @@ static void writeUtf8(const std::wstring& s) {
 	fwrite(buffer.data(), 1, n, stdout);
 }
 
+/*! Runs the test.
+ * @param argc,argv see the file header for the modes
+ * @return 0 if every check passed */
 int wmain(int argc, wchar_t** argv) {
 	if (argc < 2) {
 		wprintf(L"usage: evtx_test <file.evtx> [count|--dump]\n");
@@ -71,10 +74,10 @@ int wmain(int argc, wchar_t** argv) {
 		std::vector<Json> all;
 		unsigned long long read = 0;
 		for (const std::filesystem::path& j : listFilesByExtension(directory, { L".evtx" })) {
-			const std::wstring canal = EvtxChannelFromFileName(j.filename().wstring());
+			const std::wstring channel = EvtxChannelFromFileName(j.filename().wstring());
 			EvtxReadFile(j.wstring(), [&](const EvtxRecord& e) {
 				const std::unique_ptr<XmlNode> root = xmlParse(e.xml);
-				if (root) { all.push_back(Event(*root, canal, e.id,
+				if (root) { all.push_back(Event(*root, channel, e.id,
 				                     j.filename().wstring()).toJson()); ++read; }
 				return true;
 			}, nullptr);

@@ -6,7 +6,7 @@
  *  every machine of the same build: copying them does not serve the
  *  investigation, and weighs gigabytes. These files carry a proof of origin
  *  that can be checked ON THE MACHINE ITSELF, with no embedded list:
- *    - Windows' CATALOGS (System32\CatRoot\{F750E6C3…}\*.cat), signed by
+ *    - Windows' CATALOGS (`System32\CatRoot\{F750E6C3…}\*.cat`), signed by
  *      Microsoft, which list the fingerprint of every system file;
  *    - the EMBEDDED SIGNATURE of individually signed binaries (Edge,
  *      OneDrive, Office…).
@@ -59,8 +59,8 @@ public:
 	/*! Ends the computation (to be called once the whole file has been fed). */
 	void finish();
 	//! Whether the headers read identify a PE file.
-	bool estPe() const { return estPe_; }
-	//! @return the Authenticode SHA-1 (valid after terminer(), if estPe()).
+	bool isPe() const { return isPe_; }
+	//! @return the Authenticode SHA-1 (valid after terminer(), if isPe()).
 	const uint8_t* sha1() const { return sha1_; }
 	//! @return the Authenticode SHA-256 (same conditions).
 	const uint8_t* sha256() const { return sha256_; }
@@ -83,7 +83,7 @@ private:
 	bool analyseHeaders();
 
 	std::vector<uint8_t> head_;         // headers, until analysed
-	bool decide_ = false, estPe_ = false, finished_ = false;
+	bool decide_ = false, isPe_ = false, finished_ = false;
 	uint64_t position_ = 0;             // bytes already processed
 	uint64_t checksum_ = 0, certEntry_ = 0, certStart_ = 0, finCert_ = 0;
 	Sha1Stream h1_;
@@ -100,7 +100,7 @@ struct VerifiedSignature {
 	std::string reason;            //!< reason for a rejection, for the log
 	std::string contentOid;       //!< type of the signed content (DER bytes of the OID)
 	const uint8_t* content = nullptr; //!< signed content (value, without header)
-	size_t contentSize = 0;     //!< size of `contenu`, in bytes
+	size_t contentSize = 0;     //!< size of `content`, in bytes
 };
 
 /*! Verifies a PKCS#7 SignedData (catalog or embedded signature): content

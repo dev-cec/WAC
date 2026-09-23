@@ -1,4 +1,6 @@
-/*  scheduledTasks.cpp — voir scheduledTasks.h. */
+/*! \file
+ *  \brief Offline reading of the scheduled tasks (see scheduledTasks.h).
+ */
 #include "scheduledTasks.h"
 #include "xml_light.h"
 #include <filesystem>
@@ -106,7 +108,7 @@ std::map<std::wstring, History> readTaskCache() {
 }
 
 //! True if the string looks like a SID ("S-1-…").
-bool estUnSid(const std::wstring& v) {
+bool isSid(const std::wstring& v) {
 	return v.size() > 2 && (v[0] == L'S' || v[0] == L's') && v[1] == L'-';
 }
 
@@ -122,7 +124,7 @@ void readDefinition(const XmlNode& root, ScheduledTask& t) {
 	for (const XmlNode* p : root.descendants(L"Principal")) {
 		const std::wstring userId = p->textOf(L"UserId");
 		if (userId.empty()) continue;
-		if (estUnSid(userId)) {
+		if (isSid(userId)) {
 			t.runAsSid = userId;
 			t.runAs    = getNameFromSid(userId);   // cached resolution
 		}

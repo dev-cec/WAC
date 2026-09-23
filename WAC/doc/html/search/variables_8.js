@@ -15,7 +15,12 @@ var searchData=
   ['hasworkingdir_12',['HasWorkingDir',['../structLinkFlags.html#a726e8b724b62a402c10852963f2d0207',1,'LinkFlags']]],
   ['hconsole_13',['hConsole',['../structAppliConf.html#a35d53149047512b1e19581415c79bdcd',1,'AppliConf']]],
   ['header_14',['header',['../structoleParser.html#a4651e1960f4f70abd94ac9530b33e131',1,'oleParser']]],
-  ['hidden_15',['Hidden',['../structFileAttributes.html#a29db09f5af7030fdd03b94b8b08e27d0',1,'FileAttributes']]],
-  ['hivename_16',['hiveName',['../structHiveFixInfo.html#ae2ef604e15c46bb88454ba69a0b877ce',1,'HiveFixInfo']]],
-  ['hostname_17',['hostname',['../structDestFile.html#a37d1db53e5c3ee0b5d945d850cc657a3',1,'DestFile']]]
+  ['headervalid_15',['headerValid',['../structEvtxSummary.html#afb2f72fe736c44b5af6571b4c0da0044',1,'EvtxSummary']]],
+  ['hidden_16',['Hidden',['../structFileAttributes.html#a29db09f5af7030fdd03b94b8b08e27d0',1,'FileAttributes']]],
+  ['hive_5fcopy_17',['HIVE_COPY',['../namespaceFootprint.html#a493d4c8b62fcc39c42210d5939c616a1',1,'Footprint']]],
+  ['hive_5fpatch_18',['HIVE_PATCH',['../namespaceFootprint.html#aefb355d58dd0b46e131498a8aac1967d',1,'Footprint']]],
+  ['hive_5freplay_19',['HIVE_REPLAY',['../namespaceFootprint.html#a092968a8d58bd9077dcbdab010c501a7',1,'Footprint']]],
+  ['hivename_20',['hiveName',['../structHiveFixInfo.html#ae2ef604e15c46bb88454ba69a0b877ce',1,'HiveFixInfo']]],
+  ['hivesequence_21',['hiveSequence',['../structHiveReplayInfo.html#ae43ae6b6509c52eff3e9a16b10e20e6a',1,'HiveReplayInfo']]],
+  ['hostname_22',['hostname',['../structDestFile.html#a37d1db53e5c3ee0b5d945d850cc657a3',1,'DestFile']]]
 ];

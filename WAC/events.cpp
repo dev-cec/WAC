@@ -105,7 +105,7 @@ Json eventData(const XmlNode& root, std::vector<std::wstring>* brutes) {
 
 } // namespace
 
-Event::Event(const XmlNode& root, const std::wstring& canal,
+Event::Event(const XmlNode& root, const std::wstring& channel,
              unsigned long long id, const std::wstring& fileName) {
 	evtSourceLog = string(fileName);
 	const XmlNode* sys = root.child(L"System");
@@ -113,7 +113,7 @@ Event::Event(const XmlNode& root, const std::wstring& canal,
 		// A record without a System section: at least its number is kept, so that the
 		// report does not lose it silently.
 		evtSystemEventRecordId = Json::num(id);
-		evtSystemChannel = string(canal);
+		evtSystemChannel = string(channel);
 		evtEventData = eventData(root, &rawValues);
 		return;
 	}
@@ -158,7 +158,7 @@ Event::Event(const XmlNode& root, const std::wstring& canal,
 		evtSystemThreadID  = count(x->attribute(L"ThreadID"));
 	}
 	evtSystemChannel  = string(sys->textOf(L"Channel"));
-	if (evtSystemChannel.kind() == Json::Kind::Null) evtSystemChannel = string(canal);
+	if (evtSystemChannel.kind() == Json::Kind::Null) evtSystemChannel = string(channel);
 	evtSystemComputer = string(sys->textOf(L"Computer"));
 	if (const XmlNode* s = sys->child(L"Security"))
 		evtSystemUserID = string(s->attribute(L"UserID"));
@@ -212,16 +212,16 @@ HRESULT Events::getData() {
 	MessagesInit();
 
 	JsonArrayWriter output("events.json");
-	if (!output.open()) return E_FAIL;
+	if (!output.isOpen()) return E_FAIL;
 
 	unsigned long long unreadableLogs = 0, incomplete = 0;
 	size_t iFile = 0;
 	for (const std::filesystem::path& logFile : logs) {
 		const std::wstring fileName = logFile.filename().wstring();
-		const std::wstring canal = EvtxChannelFromFileName(fileName);
-		printProgressStep(L"EventLog " + canal, ++iFile, logs.size());
+		const std::wstring channel = EvtxChannelFromFileName(fileName);
+		printProgressStep(L"EventLog " + channel, ++iFile, logs.size());
 		log(1, L"➕Journal");
-		log(2, L"❇️Journal : " + canal);
+		log(2, L"❇️Journal : " + channel);
 
 		EvtxSummary summary;
 		const HRESULT hr = EvtxReadFile(logFile.wstring(),
@@ -233,10 +233,10 @@ HRESULT Events::getData() {
 					   without stopping the reading. */
 					++unreadable;
 					log(3, L"🔈Event " + std::to_wstring(e.id)
-					       + L": XML cannot be parsed (" + canal + L")");
+					       + L": XML cannot be parsed (" + channel + L")");
 					return true;
 				}
-				Event ev(*root, canal, e.id, fileName);
+				Event ev(*root, channel, e.id, fileName);
 				/*  PLAIN-TEXT MESSAGE. Rebuilt from the provider's resources, which
 				    only the API could do until now. The resource file is
 				    extracted on demand, once per provider (see
@@ -272,7 +272,7 @@ HRESULT Events::getData() {
 		else ++files;
 		// The per-log diagnosis makes it possible to tell an empty channel from a
 		// channel that was not read — two situations that "0 events" confuses.
-		log(2, L"❇️" + canal + L" : " + summary.diagnostic);
+		log(2, L"❇️" + channel + L" : " + summary.diagnostic);
 	}
 	printProgressEnd();
 

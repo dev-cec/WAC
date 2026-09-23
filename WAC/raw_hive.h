@@ -1,7 +1,7 @@
 /*! \file
  *  \brief File extraction by raw NTFS reading (no VSS).
  *
- *  Opens the volume read-only (\\.\C:), parses the VBR and the $MFT, resolves a
+ *  Opens the volume read-only (`\\.\C:`), parses the VBR and the $MFT, resolves a
  *  path through the directory indexes, then extracts the target file's $DATA
  *  attribute to an output file — WITHOUT going through the system's file
  *  opening (no lock, no VSS, no symlink, no write to the target).
@@ -133,7 +133,8 @@ public:
     RawReader(const RawReader&) = delete;
     RawReader& operator=(const RawReader&) = delete;
 
-    /*! Reads a file by its absolute path ("X:\\…").
+    /*! Reads a file by its absolute path.
+     *  @param absolutePath the file, as "`X:\\…`"
      *  @param output file to write; EMPTY to compute the fingerprints only —
      *         nothing is then written anywhere
      *  @param observer if `output` is empty, receives the content as it is

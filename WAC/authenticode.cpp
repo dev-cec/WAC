@@ -1,4 +1,7 @@
-/*  authenticode.cpp — see authenticode.h.
+/*! \file
+ *  \brief Authenticode digests, PKCS#7 verification and catalog index.
+ *
+ *  See authenticode.h.
  *
  *  Format references: RFC 2315 (PKCS#7), RFC 5280 (X.509), "Windows
  *  Authenticode Portable Executable Signature Format" (Microsoft), and the CTL
@@ -53,9 +56,10 @@ std::vector<Tlv> children(const Tlv& t) {
 	return r;
 }
 
-bool estOid(const Tlv& t, const uint8_t* oid, size_t n) {
+bool isOid(const Tlv& t, const uint8_t* oid, size_t n) {
 	return t.tag == 0x06 && t.len == n && std::memcmp(t.val, oid, n) == 0;
 }
+//! Declares an OID constant as its DER content bytes.
 #define OID(name, ...) const uint8_t name[] = { __VA_ARGS__ }
 OID(OID_SIGNED_DATA,  0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x07,0x02);
 OID(OID_RSA,          0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x01,0x01);
@@ -72,16 +76,17 @@ OID(OID_CN,           0x55,0x04,0x03);
 OID(OID_O,            0x55,0x04,0x0A);
 OID(OID_SPC_INDIRECT, 0x2B,0x06,0x01,0x04,0x01,0x82,0x37,0x02,0x01,0x04);
 OID(OID_CTL,          0x2B,0x06,0x01,0x04,0x01,0x82,0x37,0x0A,0x01);
-#define EST(t, o) estOid((t), (o), sizeof(o))
+//! True if the DER element `t` is the OID constant `o`.
+#define IS_OID(t, o) isOid((t), (o), sizeof(o))
 
 //! Digest algorithm of an AlgorithmIdentifier (digest alone or RSA+digest).
 DigestAlgorithm algoDe(const Tlv& algId) {
 	const std::vector<Tlv> e = children(algId);
 	if (e.empty()) return DigestAlgorithm::Unknown;
-	if (EST(e[0], OID_SHA1) || EST(e[0], OID_SHA1_RSA)) return DigestAlgorithm::Sha1;
-	if (EST(e[0], OID_SHA256) || EST(e[0], OID_SHA256_RSA)) return DigestAlgorithm::Sha256;
-	if (EST(e[0], OID_SHA384) || EST(e[0], OID_SHA384_RSA)) return DigestAlgorithm::Sha384;
-	if (EST(e[0], OID_SHA512) || EST(e[0], OID_SHA512_RSA)) return DigestAlgorithm::Sha512;
+	if (IS_OID(e[0], OID_SHA1) || IS_OID(e[0], OID_SHA1_RSA)) return DigestAlgorithm::Sha1;
+	if (IS_OID(e[0], OID_SHA256) || IS_OID(e[0], OID_SHA256_RSA)) return DigestAlgorithm::Sha256;
+	if (IS_OID(e[0], OID_SHA384) || IS_OID(e[0], OID_SHA384_RSA)) return DigestAlgorithm::Sha384;
+	if (IS_OID(e[0], OID_SHA512) || IS_OID(e[0], OID_SHA512_RSA)) return DigestAlgorithm::Sha512;
 	return DigestAlgorithm::Unknown;
 }
 
@@ -100,7 +105,7 @@ std::wstring text(const Tlv& v) {
 		for (size_t i = 0; i + 1 < v.len; i += 2) r += (wchar_t)((v.val[i] << 8) | v.val[i + 1]);
 		return r;
 	}
-	for (size_t i = 0; i < v.len; ++i) {                       // UTF-8 (ASCII compris)
+	for (size_t i = 0; i < v.len; ++i) {                       // UTF-8 (ASCII included)
 		const uint8_t c = v.val[i];
 		if (c < 0x80) r += (wchar_t)c;
 		else if ((c & 0xE0) == 0xC0 && i + 1 < v.len) { r += (wchar_t)(((c & 0x1F) << 6) | (v.val[i + 1] & 0x3F)); ++i; }
@@ -115,7 +120,7 @@ std::wstring attributeNameField(const Tlv& name, const uint8_t* oid, size_t n) {
 	for (const Tlv& rdn : children(name))
 		for (const Tlv& atv : children(rdn)) {
 			const std::vector<Tlv> e = children(atv);
-			if (e.size() >= 2 && estOid(e[0], oid, n)) return text(e[1]);
+			if (e.size() >= 2 && isOid(e[0], oid, n)) return text(e[1]);
 		}
 	return std::wstring();
 }
@@ -153,7 +158,7 @@ bool analyseCertificate(const Tlv& c, Certificate& r) {
 	const std::vector<Tlv> spki = children(t[i + 5]);
 	if (spki.size() < 2 || spki[1].tag != 0x03 || spki[1].len < 2) return true;
 	const std::vector<Tlv> alg = children(spki[0]);
-	if (alg.empty() || !EST(alg[0], OID_RSA)) return true;    // non-RSA key: cannot be verified
+	if (alg.empty() || !IS_OID(alg[0], OID_RSA)) return true;    // non-RSA key: cannot be verified
 	Tlv key;
 	if (!readTlv(spki[1].val + 1, spki[1].len - 1, key)) return true;
 	const std::vector<Tlv> ne = children(key);
@@ -252,7 +257,7 @@ VerifiedSignature VerifyPkcs7(const uint8_t* data, size_t size) {
 	Tlv ci;
 	if (!readTlv(data, size, ci) || ci.tag != 0x30) { r.reason = "ContentInfo unreadable"; return r; }
 	std::vector<Tlv> e = children(ci);
-	if (e.size() < 2 || !EST(e[0], OID_SIGNED_DATA) || e[1].tag != 0xA0) { r.reason = "pas un SignedData"; return r; }
+	if (e.size() < 2 || !IS_OID(e[0], OID_SIGNED_DATA) || e[1].tag != 0xA0) { r.reason = "pas un SignedData"; return r; }
 	std::vector<Tlv> w = children(e[1]);
 	if (w.empty() || w[0].tag != 0x30) { r.reason = "SignedData unreadable"; return r; }
 	const std::vector<Tlv> sd = children(w[0]);
@@ -296,7 +301,7 @@ VerifiedSignature VerifyPkcs7(const uint8_t* data, size_t size) {
 	bool digestOk = false;
 	for (const Tlv& a : children(*attributes)) {
 		const std::vector<Tlv> av = children(a);
-		if (av.size() < 2 || !EST(av[0], OID_MESSAGE_DIGEST)) continue;
+		if (av.size() < 2 || !IS_OID(av[0], OID_MESSAGE_DIGEST)) continue;
 		const std::vector<Tlv> vals = children(av[1]);
 		if (!vals.empty() && vals[0].tag == 0x04 && vals[0].len == lhc
 		    && std::memcmp(vals[0].val, hc, lhc) == 0) digestOk = true;
@@ -366,7 +371,7 @@ bool IndexCatalogues::add(const std::wstring& name, const uint8_t* bytes, size_t
 			if (se.size() < 2 || se[0].tag != 0x04 || se[1].tag != 0x31) continue;
 			for (const Tlv& attribute : children(se[1])) {
 				const std::vector<Tlv> av = children(attribute);
-				if (av.size() < 2 || !EST(av[0], OID_SPC_INDIRECT)) continue;
+				if (av.size() < 2 || !IS_OID(av[0], OID_SPC_INDIRECT)) continue;
 				for (const Tlv& v : children(av[1])) {
 					std::string h;
 					if (indirectDigest(v, h)) { index_.emplace(h, rank); ++indexed; }
@@ -420,11 +425,11 @@ void PeAnalyser::receive(const uint8_t* p, size_t n) {
 		p += take; n -= take;
 		if (head_.size() < HEAD) return;
 		decide_ = true;
-		estPe_ = analyseHeaders();
-		if (estPe_) process(head_.data(), head_.size());
+		isPe_ = analyseHeaders();
+		if (isPe_) process(head_.data(), head_.size());
 		head_.clear(); head_.shrink_to_fit();
 	}
-	if (estPe_ && n) process(p, n);
+	if (isPe_ && n) process(p, n);
 }
 
 bool PeAnalyser::analyseHeaders() {
@@ -479,12 +484,12 @@ void PeAnalyser::finish() {
 	if (finished_) return;
 	if (!decide_) {                                     // file smaller than 64 KiB
 		decide_ = true;
-		estPe_ = analyseHeaders();
-		if (estPe_) process(head_.data(), head_.size());
+		isPe_ = analyseHeaders();
+		if (isPe_) process(head_.data(), head_.size());
 		head_.clear();
 	}
 	finished_ = true;
-	if (!estPe_) return;
+	if (!isPe_) return;
 	// Two variants: as is, and padded with zeros to a multiple of 8
 	// (the rule of some implementations for an unsigned file).
 	Sha1Stream c1 = h1_;
@@ -504,7 +509,7 @@ void PeAnalyser::finish() {
 
 VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalogues) {
 	VerdictMicrosoft v;
-	if (!pe.estPe()) { v.reason = "pas un PE"; return v; }
+	if (!pe.isPe()) { v.reason = "pas un PE"; return v; }
 
 	// 1. Catalogs: is the digest, in one of its forms, listed there?
 	for (const auto& e : { std::make_pair(pe.sha256(), 32), std::make_pair(pe.sha1(), 20),

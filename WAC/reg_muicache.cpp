@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Reading of the MUICache key (see reg_muicache.h).
+ */
 #include "reg_muicache.h"
 
 Muicache::Muicache(ORHKEY hKey, std::wstring valueName, std::wstring profile) {

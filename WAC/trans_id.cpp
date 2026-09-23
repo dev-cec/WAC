@@ -17670,7 +17670,7 @@ std::wstring to_FriendlyName(std::wstring guid, unsigned int key) {
 	}
 	else if (SUCCEEDED(PSGetNameFromPropertyKey(p, &out)) && out) {
 		result = out;
-		CoTaskMemFree(out);          // alloue par PSGetNameFromPropertyKey
+		CoTaskMemFree(out);          // allocated by PSGetNameFromPropertyKey
 	}
 	else {
 		/* NOT "(Undefined)".

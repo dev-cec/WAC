@@ -7,7 +7,7 @@
  *  decodes WITHOUT an error and returns wrong data — hence the exhaustive
  *  comparison rather than a mere size check.
  *
- *  Usage: lznt1_test <original> <compressed.bin> <index.idx>
+ *  Usage: lznt1_test `<original>` `<compressed.bin>` `<index.idx>`
  *    index.idx: one line "<n> <original_size> <compressed_size>" per unit, in
  *    order; a null compressed size signals a unit Windows gave up compressing
  *    (it is then stored as it is).
@@ -24,6 +24,9 @@
 #include <string>
 #include <vector>
 
+/*! Runs the test.
+ * @param argc,argv `<original>` `<compressed.bin>` `<index.idx>`
+ * @return 0 if every check passed */
 int main(int argc, char** argv){
 	if (argc < 4){
 		std::cout << "usage: lznt1_test <original> <compressed.bin> <index.idx>\n";

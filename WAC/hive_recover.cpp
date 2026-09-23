@@ -1,4 +1,7 @@
-/*  hive_recover.cpp — see hive_recover.h.
+/*! \file
+ *  \brief Base-block repair and transaction-log replay of copied hives.
+ *
+ *  See hive_recover.h.
  *  Portable C++ (no Windows dependency): testable on Linux too.
  */
 #include "hive_recover.h"

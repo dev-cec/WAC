@@ -39,6 +39,8 @@ struct Case { std::string message; const char* sha1; const char* sha256; std::st
 
 } // namespace
 
+/*! Runs the test on the public vectors.
+ * @return 0 if every check passed */
 int main(){
 	std::vector<Case> case_ = {
 		// FIPS 180-4
@@ -52,7 +54,7 @@ int main(){
 		{ std::string(1000000, 'a'), "34AA973CD4C4DAA4F61EEB2BDBAD27316534016F",
 		         "CDC76E5C9914FB9281A1C7E284D73E67F1809A48A497200E046D39CCC7112CD0",
 		         "un million de a" },
-		// Remplissage
+		// Padding
 		{ std::string(55, 'x'), "CEF734BA81A024479E09EB5A75B6DDAE62E6ABF1",
 		         "D5E285683CD4EFC02D021A5C62014694958901005D6F71E89E0989FAC77E4072", "55 bytes" },
 		{ std::string(56, 'x'), "901305367C259952F4E7AF8323F480D59F81335B",

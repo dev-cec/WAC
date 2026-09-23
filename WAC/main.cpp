@@ -1,4 +1,7 @@
-﻿// main.cpp: holds the 'main' function. The program starts and ends here.
+﻿/*! \file
+ *  \brief Entry point: parses the command line, then runs the collection phases in order — prerequisites, live artefacts, raw extraction, registry, files, event logs, sealing of the exhibit store, investigation log.
+ */
+// main.cpp: holds the 'main' function. The program starts and ends here.
 //
 
 #include <iostream>
@@ -40,10 +43,11 @@
 #include "users.h"
 #include "events.h"
 
-AppliConf conf;// global variable holding the application's configuration
+AppliConf conf; //!< the application's configuration, shared by every collector
 
+//! Prints the command-line help.
 void showHelp() {
-	SetConsoleTextAttribute(conf.hConsole, 7); // blanc
+	SetConsoleTextAttribute(conf.hConsole, 7); // white
 	wprintf(L"%ls%hs%ls\n", L"\nusage: ", conf.name.c_str(), L" [--debug] [--dump] [--events] [--binary] [--output=output] [--loglevel=2]");
 	wprintf(L"%ls\n", L"\t--help or /? : show this help ");
 	wprintf(L"%ls\n", L"\t--debug : trace the raw NTFS parser on stderr (path resolution, index blocks, data runs)");
@@ -59,6 +63,9 @@ void showHelp() {
 	wprintf(L"%ls\n", L"\t loglevel = 3 => activate logging for each subfunction called (used for debug only)");
 };
 
+/*! Runs a collection.
+ * @param argc,argv the command line (see showHelp())
+ * @return 0 once the collection has run to the end, an error code otherwise */
 int main(int argc, char* argv[])
 {
 	HRESULT hresult;
@@ -89,7 +96,7 @@ int main(int argc, char* argv[])
 	time_t start = 0, end = 0;
 
 	/************************
-	* fonctions utiles
+	* useful functions
 	*************************/
 	//ASCII ART
 	SetConsoleOutputCP(CP_UTF8); // UTF-8, so that accented characters come out right in the console
@@ -157,7 +164,7 @@ int main(int argc, char* argv[])
 				}
 			}
 
-			else { //argument inconnu
+			else { // unknown argument
 				if (arg != "--help" && arg != "/?") { // anything that is neither --help nor /? is an invalid argument
 					printError(L"Invalid argument  " + string_to_wstring(arg));
 				}

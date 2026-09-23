@@ -1,10 +1,10 @@
 var structShellbags =
 [
     [ "clear", "structShellbags.html#ae33184c997d0a1e12eae959064cd3dc6", null ],
-    [ "getData", "structShellbags.html#a1a0bcbbeade2ff9d1af986510a7ffe7d", null ],
-    [ "parse", "structShellbags.html#af194434a9343c2e04821682b8a4685e5", null ],
+    [ "getData", "structShellbags.html#aa6c70b490d6659eb8e4e626a046b8d5b", null ],
+    [ "parse", "structShellbags.html#afe09d61129b5b4b69a6d6d81731e8cdd", null ],
     [ "toJson", "structShellbags.html#a7d23eec35c25f5b487dd3e63f34e7ad7", null ],
-    [ "nbParcourus", "structShellbags.html#ac5678e9f0400adfc0aac5443344d426f", null ],
-    [ "niveau", "structShellbags.html#aecbae0d878913ec4434b8c67adf75d4a", null ],
+    [ "level", "structShellbags.html#a4a574aefb9ac61a7b113672d65941ea9", null ],
+    [ "nWalked", "structShellbags.html#a15e4476517c99bcae359b6b07e723d31", null ],
     [ "shellbags", "structShellbags.html#aff35832acef2d1e49bcb90a77e78dff5", null ]
 ];

@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Decoding of the Prefetch files, compressed or not (see prefetchs.h).
+ */
 #include "prefetchs.h"
 #include <map>
 
@@ -200,7 +203,7 @@ HRESULT Prefetch::read() {
 	}
 	CloseHandle(hFile);
 
-	//DECOMPRESSION SI BESOIN
+	// DECOMPRESSION IF NEEDED
 	if (buffer[0] == 'M' && buffer[1] == 'A' && buffer[2] == 'M') {
 		const unsigned short CompressionFormatXpressHuff = 4;
 		using RtlDecompressBufferEx = NTSTATUS(__stdcall*)(
@@ -264,7 +267,7 @@ HRESULT Prefetch::read() {
 	   invented in the report. An absent signature is not a collection error, it
 	   is the finding that the file is not a Prefetch — and that in itself is a
 	   fact to record. */
-	const int SIGNATURE_SCCA = 0x41434353;   // « SCCA » en petit-boutiste
+	const int SIGNATURE_SCCA = 0x41434353;   // "SCCA" in little-endian
 	if (signature != SIGNATURE_SCCA) {
 		log(2, L"🔥Prefetch signature absent (0x" + to_hex(signature)
 		     + L" au lieu de 0x41434353) : " + pathOriginal, ERROR_INVALID_DATA);
@@ -462,7 +465,7 @@ Json Prefetch::toJson() {
 	o.add(L"ModifiedUtc", Json::str(timeToIso8601Utc(modifiedUtc)));
 	o.add(L"Accessed",    Json::str(timeToIso8601Local(accessed)));
 	o.add(L"AccessedUtc", Json::str(timeToIso8601Utc(accessedUtc)));
-	o.add(L"RunCount",    Json::num((unsigned long long)run_count));   // nombre
+	o.add(L"RunCount",    Json::num((unsigned long long)run_count));   // count
 	Json runs = Json::arr(), runsUtc = Json::arr();
 	for (FILETIME& ft : last_runs)    runs.push(Json::str(timeToIso8601Local(ft)));
 	for (FILETIME& ft : last_runsUtc) runsUtc.push(Json::str(timeToIso8601Local(ft)));
@@ -506,7 +509,7 @@ HRESULT Prefetchs::getData() {
 		Prefetch p(file.wstring());
 		HRESULT hresult = p.read();
 		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥" + file.wstring(), hresult);   // prefetch non lisible
+			log(2, L"🔥" + file.wstring(), hresult);   // prefetch unreadable
 			continue;
 		}
 		prefetchs.push_back(std::move(p));

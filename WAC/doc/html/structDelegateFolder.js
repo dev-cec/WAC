@@ -1,6 +1,6 @@
 var structDelegateFolder =
 [
-    [ "DelegateFolder", "structDelegateFolder.html#afdd9cf87a63ffb99c69ca1fe3d49e238", null ],
+    [ "DelegateFolder", "structDelegateFolder.html#a517cff4f5e6a53f9af1d66c5da49641a", null ],
     [ "toJson", "structDelegateFolder.html#a6981e9fbf8b8d23e4101556b41308d7a", null ],
     [ "classFriendlyName", "structDelegateFolder.html#a46730cc18b1e6c438bf531571d14e3a1", null ],
     [ "classGuid", "structDelegateFolder.html#abc2752f472b8b646cec44b6c5c5cc110", null ],

@@ -134,8 +134,8 @@ struct oleHeader {
 	bool littleIndian = false; //!< little-endian or big-endian
 	unsigned long long _signature = 0xe11ab1a1e011cfd0; //!< expected signature of the OLE object
 	unsigned long long signature = 0; //!< signature of the OLE object
-	unsigned short versionMajor = 0; //!< version majeure (3 = secteurs 512 o, 4 = 4096 o)
-	unsigned short versionMinor = 0; //!< version mineure
+	unsigned short versionMajor = 0; //!< major version (3 = 512-byte sectors, 4 = 4096-byte)
+	unsigned short versionMinor = 0; //!< minor version
 	int sectorSize = 0; //!< size of the sectors, in bytes (validated)
 	int shortSectorSize = 0; //!< size of the short sectors, in bytes (validated)
 	int totalSATSectors = 0; //!< total number of sectors in the SAT
@@ -200,6 +200,12 @@ struct oleParser {
 	*/
 	static std::vector<int> sectorChain(const std::vector<int>& table, int first);
 
+	/*! Reads a chain of sectors as an array of 32-bit integers — an allocation
+	*  table (the SSAT) stored in sectors chained by the SAT.
+	* @param sectorNumber first sector of the chain
+	* @return the integers read, in order
+	* @throws std::length_error if the chain points outside the file
+	*/
 	std::vector<int> GetIntFromSat(int sectorNumber);
 
 	/*! Parses a sector of the SAT into an array of bytes.

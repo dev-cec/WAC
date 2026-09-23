@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief MD5 hashing (QuickDigest5, third-party, GPL-3.0), plus WAC's incremental Md5Stream.
+ */
 #pragma once
 /*
  * Copyright (c) 2024 - Nathanne Isip

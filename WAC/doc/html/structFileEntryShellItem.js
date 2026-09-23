@@ -1,6 +1,6 @@
 var structFileEntryShellItem =
 [
-    [ "FileEntryShellItem", "structFileEntryShellItem.html#aae555f30e574e6ef5b2543c300f35cf1", null ],
+    [ "FileEntryShellItem", "structFileEntryShellItem.html#a6264263822b03115256d93c172301683", null ],
     [ "toJson", "structFileEntryShellItem.html#a543b251fdd0cd881bb9ea334601496ea", null ],
     [ "extensionBlocks", "structFileEntryShellItem.html#ad65e0bc3fd8010e4b4a52161a8ab2f73", null ],
     [ "fsFileAttributes", "structFileEntryShellItem.html#a0c4af29812b623f07f6e4914b144c416", null ],

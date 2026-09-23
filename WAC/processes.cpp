@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Collection of the running processes, their owners and their modules (see processes.h).
+ */
 #include "processes.h"
 
 #include <wtsapi32.h>
@@ -14,8 +17,10 @@
  * for `sessions`.
  */
 #ifndef WTS_ANY_SESSION
+//! Every session, for WTSEnumerateProcessesExW (absent from mingw-w64).
 #define WTS_ANY_SESSION ((DWORD)-2)
 #endif
+//! Enumerates the processes of a server, with their owner and session (wtsapi32).
 extern "C" WINBOOL WINAPI WTSEnumerateProcessesExW(HANDLE hServer, DWORD* pLevel,
                                                    DWORD SessionId,
                                                    LPWSTR* ppProcessInfo,

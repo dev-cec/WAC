@@ -52,8 +52,8 @@ public:
 	*  @return true if the file is a PE whose resource directory is usable */
 	bool open(const std::wstring& path);
 
-	//! Vrai si `ouvrir` a abouti.
-	bool open() const { return open_; }
+	//! True if `open` succeeded.
+	bool isOpen() const { return open_; }
 
 	//! Error message if `open` failed.
 	const std::wstring& error() const { return error_; }

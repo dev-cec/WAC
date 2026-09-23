@@ -1,15 +1,18 @@
 var searchData=
 [
-  ['unaliasonsave_0',['UnaliasOnSave',['../structLinkFlags.html#a0db25c0778961c460b27d967645befaa',1,'LinkFlags']]],
-  ['unknown_1',['UNKNOWN',['../structFsFlags.html#a5e77eeb5c1d889a5ce926377282b318f',1,'FsFlags']]],
-  ['unused1_2',['Unused1',['../structLinkFlags.html#a7c0e960fe7a58088c794d5f5e226200c',1,'LinkFlags']]],
-  ['unused2_3',['Unused2',['../structLinkFlags.html#a99d1b57c67543696de8410e944021a48',1,'LinkFlags']]],
-  ['uptimeseconds_4',['uptimeSeconds',['../structSystemInfo.html#a2552f53a3a8dd307872dd737f4f8d9f7',1,'SystemInfo']]],
-  ['upv_5',['UPV',['../structFavoriteShellitem.html#af86c81a19e4be493cf7854a558a3592f',1,'FavoriteShellitem']]],
-  ['uri_6',['uri',['../structURIShellItem.html#aba2d73a847f23a630740b92ec5e72574',1,'URIShellItem']]],
-  ['usbs_7',['usbs',['../structUsbstors.html#a8db49a85aca68f8604cca00b453b974d',1,'Usbstors']]],
-  ['userassists_8',['userassists',['../structUserAssists.html#a29e9396d468ac93eb48e19e559fd2d7e',1,'UserAssists']]],
-  ['userflags_9',['userFlags',['../structDirectory.html#a06b95b09f78506bb67896ccc53fa2493',1,'Directory']]],
-  ['username_10',['username',['../structBeef0006.html#ae57bdb7ebd3dfdd6c959b038fb1d9800',1,'Beef0006']]],
-  ['users_11',['users',['../structUsers.html#aa199d134aef8fb6e2d33762ab0db551e',1,'Users']]]
+  ['valid_0',['valid',['../structTimeZoneInfo.html#af3ab45034d4ad2f6487bbe38b6e33c38',1,'TimeZoneInfo::valid'],['../structVerifiedSignature.html#a9616a32c6a523e1e2bd84bcd2ea4e9cf',1,'VerifiedSignature::valid']]],
+  ['validdatalength_1',['validDataLength',['../structRawHiveFingerprints.html#a001ac0c5ef993f39cfdc367e8c2b3115',1,'RawHiveFingerprints']]],
+  ['value_2',['value',['../structRun.html#adb6a6b9a227dce24fcafb241b8208b93',1,'Run::Value'],['../structSPSValue.html#a394dce8467565811daf296846d96517a',1,'SPSValue::value'],['../structBeef0016.html#ab818a483e9d30199a70c82d4d805799e',1,'Beef0016::value'],['../structProperty.html#a31a5c8b48d1c0d194f64f62de9bb009e',1,'Property::value']]],
+  ['values_3',['values',['../structSPS.html#aeb937ecfffc8f3c17ed6f4fb5b7863ec',1,'SPS']]],
+  ['valuetype_4',['valueType',['../structSPSValue.html#a08795fe7743adc3538099542841bdeaa',1,'SPSValue']]],
+  ['version_5',['version',['../structSystemInfo.html#abdd27a19219607efb8eaae5f908f4617',1,'SystemInfo::version'],['../structAmcacheApplication.html#a37dbf1bc8d32eded67b95e09d478b330',1,'AmcacheApplication::Version'],['../structAmcacheApplicationFile.html#a076573e70dfd1e9cd549f41ab4a54266',1,'AmcacheApplicationFile::version'],['../structPrefetch.html#a9aee39b5276aa88928b595c5209b10ab',1,'Prefetch::version'],['../structSPS.html#a60b03ba6df5a61dcbe02c1167dd5dd61',1,'SPS::version']]],
+  ['versionmajor_6',['versionMajor',['../structoleHeader.html#a21807321c18b05a795a67fe5dc86c747',1,'oleHeader']]],
+  ['versionminor_7',['versionMinor',['../structoleHeader.html#ab5365703f5bb80ed064b18cf23f9a4d7',1,'oleHeader']]],
+  ['versionpourmessage_8',['versionPourMessage',['../structEvent.html#a1fca9d1921fc196a3480851cde860211',1,'Event']]],
+  ['volume_5fbrut_9',['VOLUME_BRUT',['../namespaceFootprint.html#a21fbd02fcf0cef0f33e637a0c51ddfc2',1,'Footprint']]],
+  ['volumedrivetype_10',['volumeDriveType',['../structRecentDoc.html#a61273f968fccbd29d381eca133ade648',1,'RecentDoc']]],
+  ['volumelabel_11',['volumeLabel',['../structRecentDoc.html#a416af338d58ea9ba73fd34efb0e31f6d',1,'RecentDoc']]],
+  ['volumepath_12',['volumePath',['../structRawHiveExtraction.html#ac11503698433105810844fa1fee7502b',1,'RawHiveExtraction']]],
+  ['volumes_13',['volumes',['../structPrefetch.html#a77b4dfb38277a26b079563c7a8fe911a',1,'Prefetch::volumes'],['../structRawReader_1_1Impl.html#a711e4a88e3ba64c217b6bf4e470241ed',1,'RawReader::Impl::volumes']]],
+  ['volumeserial_14',['volumeSerial',['../structRecentDoc.html#a280d45cab21459d7460a80763bb8b4a9',1,'RecentDoc']]]
 ];

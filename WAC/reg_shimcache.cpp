@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Decoding of the AppCompatCache value (see reg_shimcache.h).
+ */
 #include "reg_shimcache.h"
 
 Json Shimcache::toJson() {

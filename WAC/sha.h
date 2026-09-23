@@ -106,10 +106,21 @@ private:
 	void compress(const uint8_t* block);
 };
 
-/*! Raw digests of a buffer in one pass. */
+/*! Raw SHA-1 digest of a buffer, in one pass.
+ *  @param data,length the bytes
+ *  @param output receives the 20 bytes of the digest */
 void sha1Bytes(const uint8_t* data, size_t length, uint8_t output[20]);
+/*! Raw SHA-256 digest of a buffer, in one pass.
+ *  @param data,length the bytes
+ *  @param output receives the 32 bytes of the digest */
 void sha256Bytes(const uint8_t* data, size_t length, uint8_t output[32]);
+/*! Raw SHA-384 digest of a buffer, in one pass.
+ *  @param data,length the bytes
+ *  @param output receives the 48 bytes of the digest */
 void sha384Bytes(const uint8_t* data, size_t length, uint8_t output[48]);
+/*! Raw SHA-512 digest of a buffer, in one pass.
+ *  @param data,length the bytes
+ *  @param output receives the 64 bytes of the digest */
 void sha512Bytes(const uint8_t* data, size_t length, uint8_t output[64]);
 
 /*! SHA-256 fingerprint of a file, read by blocks.

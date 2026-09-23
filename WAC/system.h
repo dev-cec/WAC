@@ -35,6 +35,9 @@
 *  `ProductNameRaw` keeps the hive's raw value so that the correction stays
 *  verifiable.
 */
+
+/*! System information of the examined machine: identity, installation, and
+ *  the instant of the collection. */
 struct SystemInfo {
 	// --- identity of the machine (SYSTEM hive) ---
 	std::wstring computerName;              //!< name of the computer

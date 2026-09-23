@@ -1,11 +1,11 @@
 var authenticode_8h =
 [
-    [ "AnalyseurPe", "classAnalyseurPe.html", "classAnalyseurPe" ],
-    [ "SignatureVerifiee", "structSignatureVerifiee.html", "structSignatureVerifiee" ],
+    [ "PeAnalyser", "classPeAnalyser.html", "classPeAnalyser" ],
+    [ "VerifiedSignature", "structVerifiedSignature.html", "structVerifiedSignature" ],
     [ "IndexCatalogues", "classIndexCatalogues.html", "classIndexCatalogues" ],
     [ "VerdictMicrosoft", "structVerdictMicrosoft.html", "structVerdictMicrosoft" ],
-    [ "EvaluerParCatalogue", "authenticode_8h.html#a44c8b766dd072f28227429591e00c2b7", null ],
-    [ "EvaluerPe", "authenticode_8h.html#a081cd8727bae07dde597f44221830027", null ],
-    [ "EvaluerScriptPowerShell", "authenticode_8h.html#a7a2315dcd96f5ebbeb2231b3f753c424", null ],
-    [ "VerifierPkcs7", "authenticode_8h.html#a3ebdb1e8e6bb6bb0629d5b0bf3ef9aba", null ]
+    [ "EvaluateByCatalog", "authenticode_8h.html#a86de202069e82af1cdd735d0c61e088a", null ],
+    [ "EvaluatePe", "authenticode_8h.html#afcc0097b06999e19cc5505f4abc2a9d8", null ],
+    [ "EvaluatePowerShellScript", "authenticode_8h.html#abde9d2ad75240e98cf8f07b62a1b9513", null ],
+    [ "VerifyPkcs7", "authenticode_8h.html#aff6f45f79fbde34f4269c14ccbafcc7a", null ]
 ];

@@ -1,6 +1,6 @@
 var structMuicache =
 [
-    [ "Muicache", "structMuicache.html#a657c8e685df255ff999997b77930a7a8", null ],
+    [ "Muicache", "structMuicache.html#aacb9d27d216c09371a87f556a0d3e9e1", null ],
     [ "clear", "structMuicache.html#a1564e040d1070bc415898d611496aa77", null ],
     [ "toJson", "structMuicache.html#ad3ed036a874c41c17857f7eae46e1592", null ],
     [ "data", "structMuicache.html#ad18520c39dc4b05028409e321382db0f", null ],

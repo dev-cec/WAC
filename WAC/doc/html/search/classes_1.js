@@ -30,5 +30,6 @@ var searchData=
   ['beef0027_27',['Beef0027',['../structBeef0027.html',1,'']]],
   ['beef0029_28',['Beef0029',['../structBeef0029.html',1,'']]],
   ['beefunknown_29',['BeefUnknown',['../structBeefUnknown.html',1,'']]],
-  ['bilanbinaires_30',['BilanBinaires',['../structBilanBinaires.html',1,'']]]
+  ['binaryfingerprint_30',['BinaryFingerprint',['../structBinaryFingerprint.html',1,'']]],
+  ['binarysummary_31',['BinarySummary',['../structBinarySummary.html',1,'']]]
 ];

@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Reading of the UserAssist keys (see reg_userassists.h).
+ */
 #include "reg_userassists.h"
 
 UserAssist::UserAssist(std::wstring hKey, LPWSTR valueName, LPBYTE data, std::wstring _sid) {

@@ -25,33 +25,33 @@
 var NAVTREE =
 [
   [ "WAC (Windows Artefacts Collector)", "index.html", [
-    [ "Espaces de nommage", "namespaces.html", [
-      [ "Liste des espaces de nommage", "namespaces.html", "namespaces_dup" ],
-      [ "Membres de l'espace de nommage", "namespacemembers.html", [
-        [ "Tout", "namespacemembers.html", null ],
+    [ "Namespaces", "namespaces.html", [
+      [ "Namespace List", "namespaces.html", "namespaces_dup" ],
+      [ "Namespace Members", "namespacemembers.html", [
+        [ "All", "namespacemembers.html", null ],
         [ "Variables", "namespacemembers_vars.html", null ]
       ] ]
     ] ],
     [ "Classes", "annotated.html", [
-      [ "Liste des classes", "annotated.html", "annotated_dup" ],
-      [ "Index des classes", "classes.html", null ],
-      [ "Hiérarchie des classes", "hierarchy.html", "hierarchy" ],
-      [ "Membres de classe", "functions.html", [
-        [ "Tout", "functions.html", "functions_dup" ],
-        [ "Fonctions", "functions_func.html", "functions_func" ],
+      [ "Class List", "annotated.html", "annotated_dup" ],
+      [ "Class Index", "classes.html", null ],
+      [ "Class Hierarchy", "hierarchy.html", "hierarchy" ],
+      [ "Class Members", "functions.html", [
+        [ "All", "functions.html", "functions_dup" ],
+        [ "Functions", "functions_func.html", "functions_func" ],
         [ "Variables", "functions_vars.html", "functions_vars" ],
-        [ "Énumérations", "functions_enum.html", null ],
-        [ "Fonctions associées", "functions_rela.html", null ]
+        [ "Enumerations", "functions_enum.html", null ],
+        [ "Related Symbols", "functions_rela.html", null ]
       ] ]
     ] ],
-    [ "Fichiers", "files.html", [
-      [ "Liste des fichiers", "files.html", "files_dup" ],
-      [ "Membres de fichier", "globals.html", [
-        [ "Tout", "globals.html", "globals_dup" ],
-        [ "Fonctions", "globals_func.html", "globals_func" ],
+    [ "Files", "files.html", [
+      [ "File List", "files.html", "files_dup" ],
+      [ "File Members", "globals.html", [
+        [ "All", "globals.html", "globals_dup" ],
+        [ "Functions", "globals_func.html", "globals_func" ],
         [ "Variables", "globals_vars.html", null ],
-        [ "Définitions de type", "globals_type.html", null ],
-        [ "Énumérations", "globals_enum.html", null ],
+        [ "Typedefs", "globals_type.html", null ],
+        [ "Enumerations", "globals_enum.html", null ],
         [ "Macros", "globals_defs.html", null ]
       ] ]
     ] ]
@@ -61,14 +61,14 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"functions_vars_g.html",
-"sha_8h.html#a7d5a284303aa955d46d92c31775d7f5e",
-"structBilanBinaires.html#a4ebccc806f4ac715204c373c8cb0bbd0",
-"structHiveReplayInfo.html#af3e4b4fba01e1cbfe903c3f1407b5c87",
-"structRecentDoc.html#a280d45cab21459d7460a80763bb8b4a9",
-"structTypedShellItem.html",
-"tools_8cpp.html#aa58517b7d74263e87094ca227705a8b5"
+"functions_vars_e.html",
+"sha_8h.html",
+"structBinaryFingerprint.html#a8c695575fb1421caa1d5b9b87204a37f",
+"structIExtensionBlock.html",
+"structRecentDoc.html#a32eed3664b67b62f799e4ed4decd3eb9",
+"structURIShellItem.html#a6e288d19d43ffbe10f75b464aff65fc2",
+"tools_8cpp.html#aa2fb1cf5cd8710778ba5bad978bba540"
 ];
 
-var SYNCONMSG = 'cliquez pour désactiver la synchronisation du panel';
-var SYNCOFFMSG = 'cliquez pour activer la synchronisation du panel';
+var SYNCONMSG = 'click to disable panel synchronisation';
+var SYNCOFFMSG = 'click to enable panel synchronisation';

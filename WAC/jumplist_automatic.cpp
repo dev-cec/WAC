@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Reading of the automatic jump lists (see jumplist_automatic.h).
+ */
 #include "jumplist_automatic.h"
 
 AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wstring _sid) {

@@ -3,7 +3,7 @@ var structAmcacheApplicationFile =
     [ "AmcacheApplicationFile", "structAmcacheApplicationFile.html#a9a3bfd104c89eb829fec7a12e77103a9", null ],
     [ "clear", "structAmcacheApplicationFile.html#a639e3cd82fc9b1d29dbef77e8a104689", null ],
     [ "toJson", "structAmcacheApplicationFile.html#a1365bd7c725dd62d999ead78158f874b", null ],
-    [ "empreinte", "structAmcacheApplicationFile.html#ac751e9ee9ef8da9486f6386803a124d8", null ],
+    [ "fingerprint", "structAmcacheApplicationFile.html#af1052c150e8f40d0b2f793c2da7f0306", null ],
     [ "IsOsComponent", "structAmcacheApplicationFile.html#ab60569ad29ba0ac39b0804f299f73af4", null ],
     [ "linkDate", "structAmcacheApplicationFile.html#a1ca4e0623a55a4147f5cd8958be09c47", null ],
     [ "linkDateUtc", "structAmcacheApplicationFile.html#aef02bb0a0f8735ef2e5b60ffa7731be8", null ],

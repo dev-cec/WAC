@@ -1,11 +1,8 @@
 var searchData=
 [
-  ['verifierpkcs7_0',['verifierpkcs7',['../authenticode_8cpp.html#a3ebdb1e8e6bb6bb0629d5b0bf3ef9aba',1,'VerifierPkcs7(const uint8_t *donnees, size_t taille):&#160;authenticode.cpp'],['../authenticode_8h.html#a3ebdb1e8e6bb6bb0629d5b0bf3ef9aba',1,'VerifierPkcs7(const uint8_t *donnees, size_t taille):&#160;authenticode.cpp']]],
-  ['vide_1',['vide',['../classJson.html#ae494652eb309401404129eb3e6652b94',1,'Json']]],
-  ['vider_2',['vider',['../classIndexCatalogues.html#a0737d0650b0463707e2cd7c5eea8a890',1,'IndexCatalogues']]],
-  ['volume_3',['volume',['../structLecteurBrut_1_1Impl.html#aae2328bf0c173511a1b4bcc6a3b7b82e',1,'LecteurBrut::Impl']]],
-  ['volumeduchemin_4',['volumeduchemin',['../tools_8cpp.html#a7f3831643296c77d2e38a6da3843683f',1,'volumeDuChemin(const std::wstring &amp;absolu):&#160;tools.cpp'],['../tools_8h.html#a7f3831643296c77d2e38a6da3843683f',1,'volumeDuChemin(const std::wstring &amp;absolu):&#160;tools.cpp']]],
-  ['volumeinfo_5',['volumeinfo',['../structVolumeInfo.html#a99d7451b1e666040acd79d87d173d20c',1,'VolumeInfo::VolumeInfo()'],['../structVolumeInfo.html#a55bcfcb20e244a3900e5f28de4624ac9',1,'VolumeInfo::VolumeInfo(LPBYTE data, int indice)']]],
-  ['volumeshellitem_6',['VolumeShellItem',['../structVolumeShellItem.html#aad4404ca114335ef479909ca8285ce98',1,'VolumeShellItem']]],
-  ['volumesouverts_7',['volumesOuverts',['../classLecteurBrut.html#a02273caa6d38fcdb0373653b518f0077',1,'LecteurBrut']]]
+  ['verifypkcs7_0',['verifypkcs7',['../authenticode_8cpp.html#aff6f45f79fbde34f4269c14ccbafcc7a',1,'VerifyPkcs7(const uint8_t *data, size_t size):&#160;authenticode.cpp'],['../authenticode_8h.html#aff6f45f79fbde34f4269c14ccbafcc7a',1,'VerifyPkcs7(const uint8_t *data, size_t size):&#160;authenticode.cpp']]],
+  ['volume_1',['volume',['../structRawReader_1_1Impl.html#a3136b1a07f343c6ddd933d57a6b0c022',1,'RawReader::Impl']]],
+  ['volumeinfo_2',['volumeinfo',['../structVolumeInfo.html#a99d7451b1e666040acd79d87d173d20c',1,'VolumeInfo::VolumeInfo()'],['../structVolumeInfo.html#a2b19b97fb8ea93829d1ff6a1eab3eb67',1,'VolumeInfo::VolumeInfo(LPBYTE data, int index)']]],
+  ['volumeofpath_3',['volumeofpath',['../tools_8cpp.html#a7bc73c77c8a53c18c6a5457fbb42c13e',1,'volumeOfPath(const std::wstring &amp;absolute):&#160;tools.cpp'],['../tools_8h.html#a7bc73c77c8a53c18c6a5457fbb42c13e',1,'volumeOfPath(const std::wstring &amp;absolute):&#160;tools.cpp']]],
+  ['volumeshellitem_4',['VolumeShellItem',['../structVolumeShellItem.html#a185182beca6702eabfa8f4d737510481',1,'VolumeShellItem']]]
 ];

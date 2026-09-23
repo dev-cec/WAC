@@ -7,7 +7,7 @@ namespace {
  *  \brief Services and drivers, read offline from the SYSTEM hive.
  *
  *  `binaryPath` has moved to tools: resolving the Windows path prefixes
- *  (\SystemRoot\, %SystemRoot%\, \??\) also serves to locate the resource files
+ *  (`\SystemRoot\`, `%SystemRoot%\`, `\??\`) also serves to locate the resource files
  *  of the event providers (see event_messages.cpp).
  */
 
@@ -90,7 +90,7 @@ HRESULT readLiveStates(std::map<std::wstring, ServiceState>& states) {
 */
 void addTextOrResource(Json& o, const std::wstring& name, const std::wstring& value) {
 	if (value.empty()) return;
-	if (value.front() != L'@') {              // texte direct
+	if (value.front() != L'@') {              // plain text
 		o.add(name.c_str(), Json::str(value));
 		return;
 	}
@@ -237,12 +237,12 @@ HRESULT Services::getData() {
 		   (WinSock2, EventLog\..., Tcpip\Parameters...), not services. Emitting
 		   them filled services.json with empty entries, which read as failed
 		   readings. */
-		bool estUnService = false;
+		bool isService = false;
 		if (getRegDwordValue(hService, nullptr, L"Type", &value) == ERROR_SUCCESS) {
 			s.serviceType = serviceType_to_wstring((int)value);
-			estUnService = true;
+			isService = true;
 		}
-		if (!estUnService) {
+		if (!isService) {
 			log(2, L"🔈Services\\" + s.serviceName + L" : pas de valeur Type, "
 			       L"conteneur de parametres ignore");
 			ORCloseKey(hService);

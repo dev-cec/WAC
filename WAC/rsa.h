@@ -18,7 +18,14 @@
 #include <cstddef>
 #include <vector>
 
-enum class DigestAlgorithm { Unknown, Sha1, Sha256, Sha384, Sha512 };
+/*! Digest algorithm named by a signature (its DigestInfo). */
+enum class DigestAlgorithm {
+	Unknown, //!< not recognised: the signature is not verified
+	Sha1,    //!< SHA-1
+	Sha256,  //!< SHA-256
+	Sha384,  //!< SHA-384
+	Sha512   //!< SHA-512
+};
 
 /*! Verifies an RSA PKCS#1 v1.5 signature.
  *

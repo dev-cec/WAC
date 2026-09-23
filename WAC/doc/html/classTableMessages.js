@@ -1,6 +1,6 @@
 var classTableMessages =
 [
-    [ "analyser", "classTableMessages.html#aa9939c26b89051d9ab51908d4b693a47", null ],
-    [ "taille", "classTableMessages.html#a515350faedd29d56e0580c5b46063a5e", null ],
-    [ "texte", "classTableMessages.html#a33f97ef6469e19068dc5afe2a2cd3158", null ]
+    [ "analyse", "classTableMessages.html#a08b97d88675c565373631c1d11e27da5", null ],
+    [ "size", "classTableMessages.html#a32454cc9b0e6c582e710cc8617c40d73", null ],
+    [ "text", "classTableMessages.html#ad81ff6e0d467f1f26565477cde945f56", null ]
 ];

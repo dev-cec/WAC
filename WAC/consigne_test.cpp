@@ -11,7 +11,7 @@
  *  production one — same fingerprints, same manifest, same verified copy, same
  *  replay.
  *
- *  Usage: consigne_test.exe <output directory> <hive> [hive...]
+ *  Usage: consigne_test.exe `<output directory>` `<hive>` [hive...]
  *  Excluded from WAC's build by the "_test.cpp" pattern of build-windows.sh.
  */
 #include "consigne.h"
@@ -26,7 +26,7 @@
 #include <vector>
 #include <map>
 
-AppliConf conf;
+AppliConf conf; //!< WAC's global configuration, which tools.cpp references (empty here)
 
 namespace {
 
@@ -84,6 +84,9 @@ void check(bool ok, const std::string& label){
 
 } // namespace
 
+/*! Runs the test.
+ * @param argc,argv `<output directory>` `<hive>` [hive...]
+ * @return 0 if every check passed */
 int wmain(int argc, wchar_t** argv){
 	if (argc < 3){
 		std::cout << "usage: consigne_test <output directory> <hive> [hive...]\n";

@@ -1,6 +1,6 @@
 var structUserAssist =
 [
-    [ "UserAssist", "structUserAssist.html#abdf9be4a6b6a6174ddaf8aaf52877a93", null ],
+    [ "UserAssist", "structUserAssist.html#a316ba0184d78f80ab64a1dcae3b51112", null ],
     [ "clear", "structUserAssist.html#ab808f3b94c1d0a36ed6e94c26ee18f3f", null ],
     [ "toJson", "structUserAssist.html#a2bea266d0f06bce34a3a3765a269598b", null ],
     [ "Class", "structUserAssist.html#afa49227090ce0422a8ee62e67caa82e5", null ],

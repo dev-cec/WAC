@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Reading of Amcache's InventoryApplication (see reg_amcache_application.h).
+ */
 #include "reg_amcache_application.h"
 
 AmcacheApplication::AmcacheApplication(ORHKEY hKey_amcache) {

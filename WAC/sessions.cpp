@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Collection of the open logon sessions (see sessions.h).
+ */
 #include "sessions.h"
 
 Session::Session(LUID* id) {

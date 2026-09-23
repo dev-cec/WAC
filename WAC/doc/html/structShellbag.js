@@ -5,7 +5,7 @@ var structShellbag =
     [ "id", "structShellbag.html#ab11dbf19048320459e11fe43dd69c469", null ],
     [ "lastWriteTime", "structShellbag.html#afba84f7be99c60cd00b265e1f9ba3bf0", null ],
     [ "lastWriteTimeUtc", "structShellbag.html#ad790ebcca27e10789ed30cca109a4bef", null ],
-    [ "niveau", "structShellbag.html#a3349c5392ba5c7e6a8657ae6d0043584", null ],
+    [ "level", "structShellbag.html#a578322285aa7c08007972331ca995066", null ],
     [ "Parent", "structShellbag.html#a449a1a9f7f6c6b0bfdc1eea5e928f58c", null ],
     [ "shellitems", "structShellbag.html#abfe48ee528635c7a4e33175dc137de37", null ],
     [ "sid", "structShellbag.html#a1be999b8b2057110ea1d2a56e8748c56", null ],

@@ -1,4 +1,6 @@
-/*  binaires.cpp — voir binaires.h. */
+/*! \file
+ *  \brief Implementation of the fingerprinting and collection of the files cited by artefacts (see binaires.h).
+ */
 #include "binaires.h"
 #include <map>
 #include <memory>
@@ -113,7 +115,7 @@ private:
 };
 
 //! Scripts whose embedded signature is verified (see EvaluatePowerShellScript).
-bool estScriptPowerShell(const std::wstring& path) {
+bool isPowerShellScript(const std::wstring& path) {
 	const size_t point = path.find_last_of(L'.');
 	if (point == std::wstring::npos) return false;
 	const std::wstring ext = toLower(path.substr(point + 1));
@@ -217,7 +219,7 @@ const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
 	{
 		PeAnalyser pe;
 		Collector text;                       // PowerShell scripts: text in memory
-		const bool powershell = estScriptPowerShell(path);
+		const bool powershell = isPowerShellScript(path);
 		Duplicator tee(&pe, powershell ? &text : nullptr);
 		RawHiveExtraction line;
 		e.result = g_reader->read(path, std::wstring(), line, &tee);
@@ -237,7 +239,7 @@ const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
 		/* PE: Authenticode digest. Script or document: SHA-256 of the raw bytes in
 		   the catalogs, then embedded PowerShell signature. */
 		VerdictMicrosoft v;
-		if (pe.estPe()) v = EvaluatePe(pe, catalogues());
+		if (pe.isPe()) v = EvaluatePe(pe, catalogues());
 		else {
 			uint8_t h[32];
 			if (bytesFromHex(e.sha256, h)) v = EvaluateByCatalog(h, catalogues());

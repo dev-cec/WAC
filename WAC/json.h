@@ -151,7 +151,7 @@ public:
      *  an array). */
     Kind kind() const { return kind_; }
 
-    // --- serialisation ------------------------------------------------------
+    // --- serialization ------------------------------------------------------
     /*! Serialises the value.
      *  @param level indentation depth, in tabulations.
      *  @return the JSON text, without a trailing newline. */

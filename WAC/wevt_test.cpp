@@ -12,7 +12,7 @@
  *      one record in twelve is coherent, and no error is raised.
  *      The step is therefore DEDUCED from the block's declared size.
  *
- *  Usage: wevt_test <file.dll> <file.dll.mui> <guid> [id[:version] ...]
+ *  Usage: wevt_test `<file.dll>` `<file.dll.mui>` `<guid>` [id[:version] ...]
  *    Both files are those of a real provider: the metadata are in the binary,
  *    the texts in its localised satellite.
  *
@@ -44,6 +44,9 @@ std::wstring large(const std::string& s) { return std::wstring(s.begin(), s.end(
 
 } // namespace
 
+/*! Runs the test.
+ * @param argc,argv `<dll>` `<mui>` `<guid>` [id[:version] ...]
+ * @return 0 if every check passed */
 int main(int argc, char** argv) {
 	if (argc < 4) {
 		std::cout << "usage: wevt_test <dll> <mui> <guid> [id[:version] ...]\n";

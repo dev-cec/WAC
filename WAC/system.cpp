@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Offline reading of the system information (see system.h).
+ */
 #include "system.h"
 
 namespace {
@@ -303,7 +306,7 @@ HRESULT SystemInfo::toJson() {
 		                           ? conf.timeZone.daylightName
 		                           : conf.timeZone.standardName;
 		if (!caption.empty()) {
-			if (estReferenceMui(caption))
+			if (isMuiReference(caption))
 				o.add(L"CurrentTimeZoneCaptionResource", Json::str(caption));
 			else
 				o.add(L"CurrentTimeZoneCaption", Json::str(caption));

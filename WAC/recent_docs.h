@@ -45,7 +45,9 @@ public:
 	// site rather than a template error.
 	RecentDoc(const RecentDoc&) = delete;
 	RecentDoc& operator=(const RecentDoc&) = delete;
+	//! Moves a shortcut (its unique_ptr go along).
 	RecentDoc(RecentDoc&&) = default;
+	//! Moves a shortcut (its unique_ptr go along).
 	RecentDoc& operator=(RecentDoc&&) = default;
 
 	std::wstring Sid = L"";      //!< SID of the user whose Recent folder holds it

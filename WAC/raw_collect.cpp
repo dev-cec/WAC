@@ -1,4 +1,6 @@
-/*  raw_collect.cpp — voir raw_collect.h. */
+/*! \file
+ *  \brief Orchestration of the offline extraction of artefacts (see raw_collect.h).
+ */
 #include "raw_collect.h"
 #include "consigne.h"
 #include <string>

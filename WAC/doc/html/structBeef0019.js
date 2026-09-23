@@ -1,6 +1,6 @@
 var structBeef0019 =
 [
-    [ "Beef0019", "structBeef0019.html#ae2a665e42b2c17e32022b227000ac2af", null ],
+    [ "Beef0019", "structBeef0019.html#aa02028ef1e1eeebb487b33777c6767aa", null ],
     [ "toJson", "structBeef0019.html#ad7e4b64453fbb5f3569f6191c74d7b06", null ],
     [ "guid1", "structBeef0019.html#a28d3e0bae5d21d40b14f649384a46a03", null ],
     [ "guid2", "structBeef0019.html#af0341e887cf7fdaa420408ca64f11917", null ],

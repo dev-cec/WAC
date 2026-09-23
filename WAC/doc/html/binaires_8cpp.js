@@ -1,7 +1,7 @@
 var binaires_8cpp =
 [
-    [ "ajouterEmpreintes", "binaires_8cpp.html#acd16f8b8a149b12c852dfe32b520bd7e", null ],
-    [ "BinairesBilan", "binaires_8cpp.html#a176c187063fd14056303eb7e8ed32102", null ],
-    [ "BinairesTerminer", "binaires_8cpp.html#af71e43b15569254d47f7e64f9382f374", null ],
-    [ "EmpreinteFichier", "binaires_8cpp.html#a1f33106ee2032db23d057900ce48f662", null ]
+    [ "addFingerprints", "binaires_8cpp.html#ac8731c2371091c6290d353fd98aa3e59", null ],
+    [ "BinariesFinish", "binaires_8cpp.html#ab4ce0b0aacbea8daa28752e26ef0e57b", null ],
+    [ "BinariesSummary", "binaires_8cpp.html#abec213e18f991fd799f47dfecc884a20", null ],
+    [ "FingerprintFile", "binaires_8cpp.html#a578290bd29707defac05f10d5cc6adfe", null ]
 ];

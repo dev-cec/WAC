@@ -1,8 +1,8 @@
 var searchData=
 [
   ['md5stream_0',['Md5Stream',['../classMd5Stream.html',1,'']]],
-  ['metadonneeswevt_1',['MetadonneesWevt',['../classMetadonneesWevt.html',1,'']]],
-  ['mftinformation_2',['MFTInformation',['../structMFTInformation.html',1,'']]],
+  ['mftinformation_1',['MFTInformation',['../structMFTInformation.html',1,'']]],
+  ['microsoftroot_2',['MicrosoftRoot',['../structMicrosoftRoot.html',1,'']]],
   ['mounteddevice_3',['MountedDevice',['../structMountedDevice.html',1,'']]],
   ['mounteddevices_4',['MountedDevices',['../structMountedDevices.html',1,'']]],
   ['mru_5',['Mru',['../structMru.html',1,'']]],

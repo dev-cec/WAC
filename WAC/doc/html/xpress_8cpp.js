@@ -1,4 +1,4 @@
 var xpress_8cpp =
 [
-    [ "XpressHuffmanDetendre", "xpress_8cpp.html#a1d8f4e38293b0d0a60265dc432d723e7", null ]
+    [ "XpressHuffmanInflate", "xpress_8cpp.html#a9c82330eb9b28011bc3a333c2089c871", null ]
 ];

@@ -1,7 +1,10 @@
 #include "xpress.h"
 #include <cstring>
 
-/*  xpress.cpp — see xpress.h. The comments here do not restate the format: they
+/*! \file
+ *  \brief XPRESS Huffman decompression, as WOF ("Compact OS") uses it.
+ *
+ *  See xpress.h. The comments here do not restate the format: they
  *  mark the two places where an implementation goes wrong without an error.
  */
 

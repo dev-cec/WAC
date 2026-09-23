@@ -1,6 +1,6 @@
 var structRootFolder =
 [
-    [ "RootFolder", "structRootFolder.html#a0a8758e7b52a85e7346eed79c754e591", null ],
+    [ "RootFolder", "structRootFolder.html#aaed5497345be3508ba6ecab4557ad92b", null ],
     [ "toJson", "structRootFolder.html#a3759f6e6af47cd4e29527af87348c01e", null ],
     [ "guid", "structRootFolder.html#a78094496e736d8efe856916392b9642d", null ],
     [ "identifier", "structRootFolder.html#aa2ddfc02c0374b1832a37d1d3ad4881f", null ],

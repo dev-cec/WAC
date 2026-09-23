@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Offline reading of the local accounts in the SAM hive (see users.h).
+ */
 #include "users.h"
 
 namespace {

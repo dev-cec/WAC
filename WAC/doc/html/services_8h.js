@@ -1,6 +1,6 @@
 var services_8h =
 [
     [ "ServiceStruct", "structServiceStruct.html", "structServiceStruct" ],
-    [ "EtatService", "structEtatService.html", "structEtatService" ],
+    [ "ServiceState", "structServiceState.html", "structServiceState" ],
     [ "Services", "structServices.html", "structServices" ]
 ];

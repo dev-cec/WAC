@@ -1,14 +1,14 @@
 var searchData=
 [
-  ['xml_0',['xml',['../structEvtxEnregistrement.html#a173383e2d50bdb151270ef272d4fcfca',1,'EvtxEnregistrement']]],
+  ['xml_0',['xml',['../structEvtxRecord.html#add3b36b24f347ee5b2470cb853f107f4',1,'EvtxRecord']]],
   ['xml_5flight_2ecpp_1',['xml_light.cpp',['../xml__light_8cpp.html',1,'']]],
   ['xml_5flight_2eh_2',['xml_light.h',['../xml__light_8h.html',1,'']]],
-  ['xmlanalyser_3',['xmlanalyser',['../xml__light_8cpp.html#af0ea3132eaa749f6e947d3b9a6fcff8f',1,'xmlAnalyser(const std::wstring &amp;contenu):&#160;xml_light.cpp'],['../xml__light_8h.html#af0ea3132eaa749f6e947d3b9a6fcff8f',1,'xmlAnalyser(const std::wstring &amp;contenu):&#160;xml_light.cpp']]],
-  ['xmllirefichier_4',['xmllirefichier',['../xml__light_8cpp.html#afee848200240a486c916145826cda58a',1,'xmlLireFichier(const std::wstring &amp;chemin):&#160;xml_light.cpp'],['../xml__light_8h.html#afee848200240a486c916145826cda58a',1,'xmlLireFichier(const std::wstring &amp;chemin):&#160;xml_light.cpp']]],
-  ['xmlnode_5',['XmlNode',['../structXmlNode.html',1,'']]],
+  ['xmlnode_3',['XmlNode',['../structXmlNode.html',1,'']]],
+  ['xmlparse_4',['xmlparse',['../xml__light_8cpp.html#a2a059cf8317ef9e1e9982c32dc6b91bf',1,'xmlParse(const std::wstring &amp;content):&#160;xml_light.cpp'],['../xml__light_8h.html#a2a059cf8317ef9e1e9982c32dc6b91bf',1,'xmlParse(const std::wstring &amp;content):&#160;xml_light.cpp']]],
+  ['xmlreadfile_5',['xmlreadfile',['../xml__light_8cpp.html#a2c8b880642b0a4d5c6ffb0e937f30a81',1,'xmlReadFile(const std::wstring &amp;path):&#160;xml_light.cpp'],['../xml__light_8h.html#a2c8b880642b0a4d5c6ffb0e937f30a81',1,'xmlReadFile(const std::wstring &amp;path):&#160;xml_light.cpp']]],
   ['xpress_2ecpp_6',['xpress.cpp',['../xpress_8cpp.html',1,'']]],
   ['xpress_2eh_7',['xpress.h',['../xpress_8h.html',1,'']]],
   ['xpress_5ftest_2ecpp_8',['xpress_test.cpp',['../xpress__test_8cpp.html',1,'']]],
-  ['xpresshuffmandetendre_9',['xpresshuffmandetendre',['../xpress_8cpp.html#a1d8f4e38293b0d0a60265dc432d723e7',1,'XpressHuffmanDetendre(const uint8_t *compresse, size_t tailleCompressee, uint8_t *sortie, size_t tailleSortie):&#160;xpress.cpp'],['../xpress_8h.html#a1d8f4e38293b0d0a60265dc432d723e7',1,'XpressHuffmanDetendre(const uint8_t *compresse, size_t tailleCompressee, uint8_t *sortie, size_t tailleSortie):&#160;xpress.cpp']]],
-  ['xsputn_10',['xsputn',['../classAnalyseurPe.html#a17ea4dc5effa40ab071e5d236d561040',1,'AnalyseurPe']]]
+  ['xpresshuffmaninflate_9',['xpresshuffmaninflate',['../xpress_8cpp.html#a9c82330eb9b28011bc3a333c2089c871',1,'XpressHuffmanInflate(const uint8_t *compressed, size_t compressedSize, uint8_t *output, size_t outputSize):&#160;xpress.cpp'],['../xpress_8h.html#a9c82330eb9b28011bc3a333c2089c871',1,'XpressHuffmanInflate(const uint8_t *compressed, size_t compressedSize, uint8_t *output, size_t outputSize):&#160;xpress.cpp']]],
+  ['xsputn_10',['xsputn',['../classPeAnalyser.html#a93bba585f76ca343b50d9e526b76970a',1,'PeAnalyser']]]
 ];

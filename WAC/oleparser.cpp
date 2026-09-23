@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Reading of OLE / CFB compound files, as automatic jump lists use them (see oleparser.h).
+ */
 #include "oleparser.h"
 
 std::wstring Directory::getType(BYTE value) {
@@ -267,7 +270,7 @@ oleParser::oleParser(LPBYTE _buffer, size_t _bufferSize) {
 			throw std::length_error("file corrupt - Error copying data from the Sector Allocation Table");
 
 		//fill the Sat
-		for (int x = 0; x < header.sectorSize; x += 4) { // a chaque "sector" on copie sectorSize entiers
+		for (int x = 0; x < header.sectorSize; x += 4) { // for each "sector", sectorSize integers are copied
 			log(3, L"🔈*reinterpret_cast<int*> sat");
 			sat.push_back(*reinterpret_cast<int*>(buffer + sector + x));
 		}
@@ -355,7 +358,7 @@ std::vector<int> oleParser::GetIntFromSat(int sectorNumber) {
 	std::vector<int> retBytes;
 	for (int i : sectorChain(sat, sectorNumber))
 	{
-		const size_t index = 512 + sectorSize * (size_t)i;   // en-tete + offset relatif
+		const size_t index = 512 + sectorSize * (size_t)i;   // header + relative offset
 		if (index >= bufferSize)
 			throw std::length_error("file corrupt - Error retrieving data from SAT");
 		// A sector can be truncated at the end of the file: what is left is read.
@@ -373,7 +376,7 @@ std::vector<BYTE> oleParser::GetBytesFromSat(int sectorNumber) {
 	std::vector<BYTE> retBytes;
 	for (int i : sectorChain(sat, sectorNumber))
 	{
-		const size_t index = 512 + sectorSize * (size_t)i;   // en-tete + offset relatif
+		const size_t index = 512 + sectorSize * (size_t)i;   // header + relative offset
 		if (index >= bufferSize)
 			throw std::length_error("file corrupt - Error retrieving data from SAT");
 		// A sector can be truncated at the end of the file: what is left is read.

@@ -1,11 +1,11 @@
 var structXmlNode =
 [
-    [ "attribut", "structXmlNode.html#a96603d9a4b35096ad0beea7b1871ab89", null ],
-    [ "descendants", "structXmlNode.html#a429e46fcb8fa8e0fc8ee2e3ede404630", null ],
-    [ "enfant", "structXmlNode.html#a1f62822d5931eb5a1b813e46e5738363", null ],
-    [ "texteDe", "structXmlNode.html#ac2407a7e11b6fe8030424c2c8e7c1fa8", null ],
-    [ "attributs", "structXmlNode.html#adac458ba2861e6802bdb66ff7d3cfe18", null ],
-    [ "enfants", "structXmlNode.html#a7556482c67a1481fe1ddc561c77699d7", null ],
-    [ "nom", "structXmlNode.html#aad937caa27d7f2a884682078a19f698c", null ],
-    [ "texte", "structXmlNode.html#a1c686c2446ca80ff877fc6bab5c8a148", null ]
+    [ "attribute", "structXmlNode.html#a2fefaf9ed09e074cb10d95410a6908c8", null ],
+    [ "child", "structXmlNode.html#a310d502d8c734c624e2bf3219038d435", null ],
+    [ "descendants", "structXmlNode.html#a68dcff313de5f2a3786c3583d19d5342", null ],
+    [ "textOf", "structXmlNode.html#a63ccc8666f1c7b1555efad9da6cc4dcc", null ],
+    [ "attributes", "structXmlNode.html#aaa6afeafd7287eeabb39db1d6b5b5155", null ],
+    [ "children", "structXmlNode.html#a1a701732ed28a14ebb6b717ba3694784", null ],
+    [ "name", "structXmlNode.html#ab505348ec21ac9dc2fcb2d9b1d0830bc", null ],
+    [ "text", "structXmlNode.html#a9d58ccc3324c7049f84f2ca08d9004ee", null ]
 ];

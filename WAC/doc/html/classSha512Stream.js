@@ -1,7 +1,7 @@
 var classSha512Stream =
 [
-    [ "Sha512Stream", "classSha512Stream.html#a7c0dfe1a71f1ec944d1114395ec74ba6", null ],
-    [ "digest", "classSha512Stream.html#a510d840fa12e8b44e4b19dc1b0ef0f90", null ],
-    [ "taille", "classSha512Stream.html#aa711fa6af98c750186419a776e72ff06", null ],
+    [ "Sha512Stream", "classSha512Stream.html#a016945d0b05aa7bbff89d9b8ed695b5d", null ],
+    [ "digest", "classSha512Stream.html#a1524226e78c946c3c411f88f5e82b9fb", null ],
+    [ "size", "classSha512Stream.html#add6e1d45fdf955fd5f79445cf992e35d", null ],
     [ "update", "classSha512Stream.html#a320c95ec76ad5f7a82480604fb4a0b44", null ]
 ];

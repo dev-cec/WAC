@@ -1,7 +1,7 @@
 var event__messages_8cpp =
 [
-    [ "MessageEvenement", "event__messages_8cpp.html#a527c5833447853f1ef5ee3893f7101c6", null ],
-    [ "MessagesBilan", "event__messages_8cpp.html#ad2ac623fbebaa5f43b7bf22496957f49", null ],
-    [ "MessagesInitialiser", "event__messages_8cpp.html#a2297cd2c3ac867dc8e5d2fc7a13a8fed", null ],
-    [ "MessagesLiberer", "event__messages_8cpp.html#ae3f6dc3ecbcc57e79b75910e9b90fffb", null ]
+    [ "EventMessage", "event__messages_8cpp.html#a8468e52e30bf9107781ce309a8eb1487", null ],
+    [ "MessagesInit", "event__messages_8cpp.html#a3f3680eee7a2ea96511ecf89666db325", null ],
+    [ "MessagesRelease", "event__messages_8cpp.html#a639749714167717db9e16c2bae357636", null ],
+    [ "MessagesSummary", "event__messages_8cpp.html#aede18008c46311a8c1f48fa7c3c4e6b7", null ]
 ];

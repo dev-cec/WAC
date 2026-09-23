@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Reading of the BagMRU tree (see reg_shellbags.h).
+ */
 #include "reg_shellbags.h"
 
 Json Shellbag::toJson() const {

@@ -13,11 +13,11 @@
  *
  *    the provider's GUID               in the event itself
  *    the path of its file              SOFTWARE hive, under
- *                                      WINEVT\Publishers\{guid}
+ *                                      `WINEVT\Publishers\{guid}`
  *    the message identifier            WEVT_TEMPLATE resource of that file
  *    the sentence template             MESSAGETABLE resource — not of the file
  *                                      itself, but of its satellite
- *                                      <language>\<name>.mui on a localised system
+ *                                      `<language>\<name>.mui` on a localised system
  *    the values to insert              the event's data
  *
  *  EXTRACTION ON DEMAND. Those resource files are not artefacts: they are

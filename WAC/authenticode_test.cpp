@@ -2,13 +2,13 @@
  *  \brief Confronts WAC's authenticity verification with Windows's own.
  *
  *  Usage:
- *    authenticode_test --catalogs <folder>
+ *    authenticode_test --catalogs `<folder>`
  *        verifies and indexes every .cat of the folder, and summarises it;
- *    authenticode_test --catalogs <folder> --files <list>
- *        then returns a verdict per file. <list>: one line per file,
+ *    authenticode_test --catalogs `<folder>` --files `<list>`
+ *        then returns a verdict per file. `<list>`: one line per file,
  *        "identifier|local path". Output: "identifier|MICROSOFT|source" or
  *        "identifier|COLLECT|reason".
- *    authenticode_test --rsa <modulus hex> <exponent hex> <signature hex> <sha256 hex>
+ *    authenticode_test --rsa `<modulus hex>` `<exponent hex>` `<signature hex>` `<sha256 hex>`
  *        verifies an isolated RSA signature (confronted with OpenSSL).
  *
  *  The judge is Get-AuthenticodeSignature, run in the VM on the same files (see
@@ -55,6 +55,9 @@ std::string utf8(const std::wstring& w) {
 
 } // namespace
 
+/*! Runs the test.
+ * @param argc,argv see the file header for the arguments
+ * @return 0 if every check passed */
 int main(int argc, char** argv) {
 	if (argc == 6 && std::strcmp(argv[1], "--rsa") == 0) {
 		const auto n = hex(argv[2]), e = hex(argv[3]), s = hex(argv[4]), h = hex(argv[5]);
@@ -110,7 +113,7 @@ int main(int argc, char** argv) {
 		pe.sputn((const char*)bytes.data(), (std::streamsize)bytes.size());
 		pe.finish();
 		VerdictMicrosoft v;
-		if (pe.estPe()) v = EvaluatePe(pe, index);
+		if (pe.isPe()) v = EvaluatePe(pe, index);
 		else {
 			// A script or a document: the catalog (raw bytes), then the embedded
 			// PowerShell signature.

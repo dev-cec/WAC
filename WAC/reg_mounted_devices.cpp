@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Reading of the MountedDevices key (see reg_mounted_devices.h).
+ */
 #include "reg_mounted_devices.h"
 
 MountedDevice::MountedDevice(ORHKEY hKey, PCWSTR szSubValue) {

@@ -1,3 +1,6 @@
+/*! \file
+ *  \brief Decoding of the .lnk shortcuts of the Recent folder (see recent_docs.h).
+ */
 #include "recent_docs.h"
 
 namespace {
@@ -316,7 +319,7 @@ Json RecentDoc::toJson() {
 	o.add(L"TargetAccessedUtc", Json::str(timeToIso8601Utc(targetAccessedUtc)));
 	o.add(L"LNKFlags",          Json::str(flags.to_wstring()));
 	o.add(L"FileAttributes",    Json::str(attributes.to_wstring()));
-	o.add(L"IconIndex",         Json::num((long long)iconIndex));   // nombre
+	o.add(L"IconIndex",         Json::num((long long)iconIndex));   // count
 	o.add(L"CommandOption",     Json::str(commandOption));
 	o.add(L"Description",       Json::str(description));
 	o.add(L"RelativePath",      Json::str(relativePath));

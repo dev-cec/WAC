@@ -82,7 +82,7 @@ struct UserPropertyViewDelegate {
 };
 
 /***************************************************************************************************
-* Fonctions
+* Functions
 ****************************************************************************************************/
 
 /*! Extracts the extension blocks of a buffer, according to their signature.
@@ -157,7 +157,7 @@ struct LinkFlags {
 	bool HasDarwinID = false; //!< The shell link is saved with a DarwinDataBlock.
 	bool RunAsUser = false; //!< The application is run as a different user when the target of the shell link is activated.
 	bool HasExpIcon = false; //!< The shell link is saved with an IconEnvironmentDataBlock.
-	bool NoPidlAlias = false; //! The file system location is represented in the shell namespace when the path to an item is parsed into an IDList.
+	bool NoPidlAlias = false; //!< The file system location is represented in the shell namespace when the path to an item is parsed into an IDList.
 	bool Unused2 = false; //!< A bit that is undefined and MUST be ignored.
 	bool RunWithShimLayer = false; //!< The shell link is saved with a ShimDataBlock.
 	bool ForceNoLinkTrack = false; //!< The TrackerDataBlock is ignored.
@@ -236,12 +236,12 @@ struct FsFlags {
 */
 struct SPSValue {
 	int level = 0; //!< depth in the tree of shell items, used to lay out the JSON
-	unsigned int size = 0; //! size of the object
-	unsigned short int valueType = 0; //! identifies the kind of value
-	std::wstring guid = L""; //! GUID of the value
-	std::wstring id = L""; // id of the value
-	std::wstring name = L""; // name of the value
-	Json value = Json::str(L""); // the value itself; it may be an object, in which case it is kept as JSON to fit the output format.
+	unsigned int size = 0; //!< size of the object
+	unsigned short int valueType = 0; //!< identifies the kind of value
+	std::wstring guid = L""; //!< GUID of the value
+	std::wstring id = L""; //!< id of the value
+	std::wstring name = L""; //!< name of the value
+	Json value = Json::str(L""); //!< the value itself; it may be an object, in which case it is kept as JSON to fit the output format.
 
 	/*! Reads one value of an SPS.
 	* @param buffer the bytes to parse
@@ -283,6 +283,14 @@ struct SPS {
 
 };
 
+/*! Builds the shell item of the right type for a buffer: the factory that
+*  reads the class byte and the signatures, then calls the matching decoder.
+* @param buffer the bytes of the item, starting with its size
+* @param _level depth in the tree of elements, used to lay out the output JSON
+* @param Parentiszip true if the parent item is an archive
+* @return the decoded item; an UnknownShellItem with the raw bytes when no
+*         type is recognised — never null
+*/
 std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _level, bool Parentiszip = false);
 
 /***************************************************************************************************
@@ -319,9 +327,9 @@ struct IdList {
 /*!  Related to CMergedFolder object
 */
 struct Beef0000 : IExtensionBlock {
-	std::wstring guid1 = L""; //!< identifiant GUID
+	std::wstring guid1 = L""; //!< GUID
 	std::wstring identifier1 = L"";//!< name matching the GUID
-	std::wstring guid2 = L""; //!< identifiant GUID
+	std::wstring guid2 = L""; //!< GUID
 	std::wstring identifier2 = L""; //!< name matching the GUID
 
 	/*! Reads the object.
@@ -373,7 +381,7 @@ struct Beef0002 : IExtensionBlock {
 /*! Extension block related to CFSFolder and CFileSysItemString object. Used for junction information?
 */
 struct Beef0003 : IExtensionBlock {
-	std::wstring guid = L""; //!< identifiant GUID
+	std::wstring guid = L""; //!< GUID
 	std::wstring identifier = L"";//!< name attached to the GUID
 
 	/*! Reads the object.
@@ -399,7 +407,7 @@ struct Beef0004 : IExtensionBlock {
 	FILETIME creationDateUtc = { 0 };//!< creation date in UTC
 	FILETIME accessedDate = { 0 }; //!< access date
 	FILETIME accessedDateUtc = { 0 }; //!< access date in UTC
-	unsigned short int ExtensionVersion=0;
+	unsigned short int ExtensionVersion=0; //!< version of the block: says which Windows wrote it
 	/*! Internal identifier of the block (offset 16), read but never emitted before. */
 	unsigned short int identifier = 0;
 	/*! NTFS file reference: `$MFT` entry number on 48 bits and sequence number on
@@ -413,11 +421,11 @@ struct Beef0004 : IExtensionBlock {
 	* Null if the block is of a version older than 7, or if the item does not
 	* come from an NTFS volume. */
 	unsigned long long mftEntryNumber = 0;
-	unsigned short int mftSequenceNumber = 0;
+	unsigned short int mftSequenceNumber = 0; //!< sequence number of that $MFT entry
 	/*! Nature deduced from the reference: "NTFS", "FAT" or "Network/special item". */
 	std::wstring mftNote;
-	std::wstring longName = L"";
-	std::wstring localizedName = L"";
+	std::wstring longName = L"";      //!< long name of the file or folder
+	std::wstring localizedName = L""; //!< localised display name, when the block carries one
 
 	/*! Reads the extension block.
 	* @param buffer the bytes to parse
@@ -436,7 +444,7 @@ struct Beef0004 : IExtensionBlock {
 /*! Extension block related to CFSFolder and CFileSysItem object. Used for personalized name?
 */
 struct Beef0006 : IExtensionBlock {
-	std::wstring username = L"";
+	std::wstring username = L""; //!< name of the user the block records
 
 	/*! Reads the object.
 	* @param buffer the bytes to parse
@@ -522,10 +530,10 @@ struct Beef000c : IExtensionBlock {
 */
 struct Beef000e : IExtensionBlock {
 	std::wstring message = L"Unsupported Extension block"; //!< message to display in the JSON
-	std::wstring guid = L"";//!< Identifiant GUID
+	std::wstring guid = L"";//!< GUID
 	std::wstring identifier = L"";//!< name matching the GUID
-	std::vector<std::unique_ptr<IExtensionBlock>> extensionblocks; //!< tableau d'extension blocks
-	std::vector<SPS> SPSs; //! array of SPS
+	std::vector<std::unique_ptr<IExtensionBlock>> extensionblocks; //!< the extension blocks
+	std::vector<SPS> SPSs; //!< array of SPS
 	std::vector<std::unique_ptr<IShellItem>> ishellitems;//!< array of shell items
 
 	/*! Reads the object.
@@ -543,7 +551,7 @@ struct Beef000e : IExtensionBlock {
 /*! Extension block related to unknown.
 */
 struct Beef0010 : IExtensionBlock {
-	SPS sps;
+	SPS sps; //!< the property store the block holds
 
 	/*! Reads the object.
 	* @param buffer the bytes to parse
@@ -594,7 +602,7 @@ struct Beef0014 : IExtensionBlock {
 /*! Extension block related to unknown.
 */
 struct Beef0016 : IExtensionBlock {
-	std::wstring value = L"";
+	std::wstring value = L""; //!< the string the block holds
 
 	/*! Reads the object.
 	* @param buffer the bytes to parse
@@ -632,9 +640,9 @@ struct Beef0017 : IExtensionBlock {
 * reads "\\{" as the opening of a member group, never closed.
 */
 struct Beef0019 : IExtensionBlock {
-	std::wstring guid1 = L""; //!< identifiant GUID
+	std::wstring guid1 = L""; //!< GUID
 	std::wstring identifier1 = L"";//!< name matching the GUID
-	std::wstring guid2 = L"";//!< identifiant GUID
+	std::wstring guid2 = L"";//!< GUID
 	std::wstring identifier2 = L"";//!< name matching the GUID
 
 	/*! Reads the object.
@@ -652,7 +660,7 @@ struct Beef0019 : IExtensionBlock {
 /*! Extension block related to unknown.
 */
 struct Beef001a : IExtensionBlock {
-	std::wstring fileDocumentTypeString = L"";
+	std::wstring fileDocumentTypeString = L""; //!< string giving the kind of document
 
 	/*! Reads the object.
 	* @param buffer the bytes to parse
@@ -686,7 +694,7 @@ struct Beef001b : IExtensionBlock {
 /*! Extension block related to unknown.
 */
 struct Beef001d : IExtensionBlock {
-	std::wstring executable = L"";
+	std::wstring executable = L""; //!< the executable the block names
 
 	/*! Reads the object.
 	* @param buffer the bytes to parse
@@ -703,7 +711,7 @@ struct Beef001d : IExtensionBlock {
 /*! Extension block related to unknown.
 */
 struct Beef001e : IExtensionBlock {
-	std::wstring pinType = L"";
+	std::wstring pinType = L""; //!< pin type, as the string the block holds
 
 	/*! Reads the object.
 	* @param buffer the bytes to parse
@@ -778,9 +786,9 @@ struct Beef0026 : IExtensionBlock {
 	FILETIME mtime = { 0 };//!< modification date in UTC
 	FILETIME atimeUtc = { 0 };//!< access date
 	FILETIME atime = { 0 };//!< access date in UTC
-	std::unique_ptr<IdList> idlist;// pointer to a list of shell items (idlist)
-	std::unique_ptr<IShellItem> shellitem;// pointer to a shell item
-	std::unique_ptr<SPS> sps;// pointer to an SPS
+	std::unique_ptr<IdList> idlist; //!< list of shell items (idlist)
+	std::unique_ptr<IShellItem> shellitem; //!< a shell item
+	std::unique_ptr<SPS> sps; //!< a property store (SPS)
 
 	/*! Reads the object.
 	* @param buffer the bytes to parse
@@ -839,6 +847,8 @@ struct BeefUnknown : IExtensionBlock {
 	Json toJson() override;
 };
 
+/*! Extension block 0xbeef0029: its purpose is not documented; its presence is
+*  reported so that it does not go unnoticed. */
 struct Beef0029 : IExtensionBlock {
 	std::wstring message = L"The purpose of this extension block is unknown"; //!< message to display in the JSON
 
@@ -884,7 +894,7 @@ struct VolumeShellItem : IShellItem {
 */
 struct ControlPanel : IShellItem {
 	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
-	std::wstring guid = L"";//!< identifiant GUID
+	std::wstring guid = L"";//!< GUID
 	std::wstring identifier = L""; //!< name attached to the GUID
 	std::vector<std::unique_ptr<IExtensionBlock>> extensionBlocks; //!< tableau d'Extension Block
 
@@ -906,7 +916,7 @@ struct ControlPanel : IShellItem {
 */
 struct ControlPanelCategory :IShellItem {
 	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
-	std::wstring id = L""; //!< identifiant
+	std::wstring id = L""; //!< identifier
 	std::vector<std::unique_ptr<IExtensionBlock>> extensionBlocks; //!< tableau d'Extension Block
 
 
@@ -961,7 +971,7 @@ struct Property {
 	* stop on that flag: a truncated and reported list is better than a complete
 	* and invented one. */
 	bool typeNotDecoded = false;
-	std::wstring guid = L""; //! identifiant GUID
+	std::wstring guid = L""; //!< GUID of the property
 	std::wstring FriendlyName = L""; //!< name attached to the GUID
 	Json value = Json::str(L"");//!< value of the property
 	
@@ -982,7 +992,7 @@ struct Property {
 struct UserPropertyView0xC01 : UserPropertyViewDelegate {
 	unsigned int level = 0;//!< depth in the tree of shell items, used to lay out the JSON
 	std::wstring folder = L""; //!< name of the directory
-	std::wstring fullurl = L""; //! url correspondante
+	std::wstring fullurl = L""; //!< matching URL
 
 	/*! Reads the item.
 	* @param buffer the bytes to parse
@@ -1001,7 +1011,7 @@ struct UserPropertyView0xC01 : UserPropertyViewDelegate {
 */
 struct UserPropertyView0x23febbee : UserPropertyViewDelegate {
 	unsigned int level = 0;//!< depth in the tree of shell items, used to lay out the JSON
-	std::wstring guid = L""; //!< identifiant GUID
+	std::wstring guid = L""; //!< GUID
 	std::wstring FriendlyName = L""; //!< name attached to the GUID
 
 	/*! Reads the item.
@@ -1092,10 +1102,10 @@ struct UsersPropertyView :IShellItem {
 	/*! 32-bit identifier of the signatures that carry one (a 4-byte identifier),
 	* read as libfwsi does. */
 	unsigned int identifier32 = 0;
-	bool identifier32Lu = false;
+	bool identifier32Lu = false; //!< true if identifier32 was read
 	// `guid` and `identifier` removed: the constructor never filled them.
 	// The identification goes through the signature, `itemType` and the delegate.
-	std::unique_ptr<UserPropertyViewDelegate> delegate; //! the delegated UsersPropertyView
+	std::unique_ptr<UserPropertyViewDelegate> delegate; //!< the delegated UsersPropertyView
 
 	/*! Raw content, in hexadecimal, when the signature is not recognised.
 	*
@@ -1129,7 +1139,7 @@ struct UsersPropertyView :IShellItem {
 struct RootFolder :IShellItem {
 	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
 	std::wstring sortIndex = L""; //!< sort index
-	std::wstring guid = L"";//!< identifiant GUID
+	std::wstring guid = L"";//!< GUID
 	std::wstring identifier = L"";//!< name attached to the GUID
 	std::vector<SPS> SPSs; //!< array of SPS
 	//std::vector<std::unique_ptr<IExtensionBlock>> extensionBlocks; // TODO: extension blocks are present with the GUID type, but the same data are found in the SPS, so they are skipped
@@ -1272,7 +1282,7 @@ public:
 */
 struct FavoriteShellitem :IShellItem {
 	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
-	UsersPropertyView UPV; //! Objet UsersPropertyView
+	UsersPropertyView UPV; //!< the UsersPropertyView object
 
 	/*! Reads the item.
 	* @param buffer the bytes to parse
@@ -1343,9 +1353,12 @@ struct DelegateFolder : IShellItem {
 	*/
 	DelegateFolder(LPBYTE buffer, unsigned short size, int _level);
 
+	//! Converts the object to JSON.
 	Json toJson() override;
 };
 
+/*! Shell item whose type is not recognised: its bytes are returned in
+*  hexadecimal, so that it stays decodable later and its presence is visible. */
 struct UnknownShellItem :IShellItem {
 	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
 	std::wstring data = L"";//!< string holding the data

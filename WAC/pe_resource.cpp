@@ -4,7 +4,9 @@
 #include <filesystem>
 
 /*! \file
- *  \brief See pe_resource.h.
+ *  \brief Walk of the resource tree of a PE binary.
+ *
+ *  See pe_resource.h.
  *
  *  THE STRUCTURE WALKED
  *
