@@ -18,7 +18,7 @@
 #include <iostream>
 #include <windows.h>
 #include <stdio.h>
-#include <offreg.h>
+#include "offline_registry.h"
 #include <string>
 #include <vector>
 #include <memory>

@@ -22,7 +22,10 @@
  *  SCCA parser, not at ntdll's decompressor. Its compressed form is still
  *  given whole and in its truncations, for WAC's checks around the call.
  *
- *  Usage: `parsers_test jumplist-auto|jumplist-custom|prefetch <file> [file ...]`
+ *  Registry hives ("hive") go through WAC's own reader (offline_registry.cpp):
+ *  the whole tree is walked — subkeys, values, ORQueryInfoKey.
+ *
+ *  Usage: `parsers_test jumplist-auto|jumplist-custom|prefetch|hive <file> [file ...]`
  *  Built by `build-windows.sh --test`; runs on Windows (real ntdll and propsys)
  *  or under Wine for the jump lists.
  */
@@ -40,6 +43,7 @@
 #include "jumplist_automatic.h"
 #include "jumplist_custom.h"
 #include "prefetchs.h"
+#include "offline_registry.h"
 
 AppliConf conf; //!< WAC's global configuration, which tools.cpp references (empty here)
 
@@ -87,6 +91,39 @@ LONG WINAPI reportFault(EXCEPTION_POINTERS* info) {
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
+/*! Walks a key and its subtree through every function WAC uses.
+ *  @return the number of keys walked */
+size_t walkHive(ORHKEY key, int depth) {
+	size_t keys = 1;
+	DWORD subkeys = 0, values = 0, maxName = 0, maxValueName = 0, maxValue = 0;
+	FILETIME lastWrite;
+	if (ORQueryInfoKey(key, nullptr, nullptr, &subkeys, &maxName, nullptr, &values,
+	                   &maxValueName, &maxValue, nullptr, &lastWrite) != ERROR_SUCCESS) return keys;
+	std::vector<wchar_t> name(16384);
+	std::vector<BYTE> data;
+	for (DWORD i = 0; i < values; ++i) {
+		DWORD cchName = (DWORD)name.size(), type = 0, size = 0;
+		if (OREnumValue(key, i, name.data(), &cchName, &type, nullptr, &size) != ERROR_MORE_DATA && size == 0) continue;
+		data.assign(size + 1, 0);
+		DWORD got = size;
+		cchName = (DWORD)name.size();
+		OREnumValue(key, i, name.data(), &cchName, &type, data.data(), &got);
+		got = size;
+		ORGetValue(key, nullptr, name.data(), &type, data.data(), &got);
+	}
+	if (depth > 512) return keys;
+	for (DWORD i = 0; i < subkeys; ++i) {
+		DWORD cchName = (DWORD)name.size();
+		if (OREnumKey(key, i, name.data(), &cchName, nullptr, nullptr, nullptr) != ERROR_SUCCESS) continue;
+		ORHKEY child = nullptr;
+		if (OROpenKey(key, name.data(), &child) == ERROR_SUCCESS) {
+			keys += walkHive(child, depth + 1);
+			ORCloseKey(child);
+		}
+	}
+	return keys;
+}
+
 /*! Parses one input of the given kind, placed against a guard page.
  *  @param kind "jumplist-auto", "jumplist-custom" or "prefetch"
  *  @param input the bytes
@@ -111,6 +148,13 @@ size_t parseGuarded(const std::string& kind, const std::vector<BYTE>& input,
 	else if (kind == "jumplist-custom") {
 		CustomDestinationCategory category(copy.data(), copy.size(), L"test.customDestinations-ms", L"S-1-0-0");
 		decoded = category.recentDocs.size();
+	}
+	else if (kind == "hive") {
+		ORHKEY root = nullptr;
+		if (openHiveBuffer(copy.data(), copy.size(), &root) == ERROR_SUCCESS) {
+			decoded = walkHive(root, 0);
+			ORCloseHive(root);
+		}
 	}
 	else {
 		Prefetch prefetch(L"test.pf");
@@ -163,11 +207,11 @@ unsigned long long exercise(const std::string& kind, const std::vector<BYTE>& da
  * @return 0 if no input made a parser read outside its buffer or loop */
 int main(int argc, char** argv) {
 	if (argc < 3) {
-		std::printf("usage: parsers_test jumplist-auto|jumplist-custom|prefetch <file> [file ...]\n");
+		std::printf("usage: parsers_test jumplist-auto|jumplist-custom|prefetch|hive <file> [file ...]\n");
 		return 2;
 	}
 	const std::string kind = argv[1];
-	if (kind != "jumplist-auto" && kind != "jumplist-custom" && kind != "prefetch") {
+	if (kind != "jumplist-auto" && kind != "jumplist-custom" && kind != "prefetch" && kind != "hive") {
 		std::printf("unknown kind: %s\n", kind.c_str());
 		return 2;
 	}
@@ -195,7 +239,8 @@ int main(int argc, char** argv) {
 		size_t whole = 0;
 		runs += exercise(kind, data, argv[a], rng, whole);
 		std::printf("  ok     %s: %zu bytes, %zu %s\n", argv[a], data.size(), whole,
-		            kind == "prefetch" ? "file(s) loaded" : kind == "jumplist-auto" ? "DestList entries" : "shortcut(s)");
+		            kind == "prefetch" ? "file(s) loaded" : kind == "jumplist-auto" ? "DestList entries"
+		            : kind == "hive" ? "key(s)" : "shortcut(s)");
 		std::fflush(stdout);
 	}
 	std::printf("all passed: %llu inputs, each with the guard page after then before it: "

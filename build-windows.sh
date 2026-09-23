@@ -2,7 +2,8 @@
 # Builds WAC.exe from Linux (MinGW-w64 cross-compilation), with no Windows machine.
 #
 # Produces a self-contained exe (static C++ runtime) that depends only on the
-# Windows system DLLs (offreg.dll and the base DLLs; wevtapi is no longer needed).
+# Windows system DLLs. The offline registry reader is WAC's own
+# (offline_registry.cpp): offreg.dll is no longer needed.
 #
 # Prerequisites: packages  g++-mingw-w64-x86-64  binutils-mingw-w64-x86-64  mingw-w64-tools
 # Usage: ./build-windows.sh [--clean] [--test]
@@ -15,23 +16,16 @@ BUILD="$ROOT/build-windows"
 
 CXX=x86_64-w64-mingw32-g++
 WINDRES=x86_64-w64-mingw32-windres
-DLLTOOL=x86_64-w64-mingw32-dlltool
 command -v "$CXX" >/dev/null || { echo "MinGW-w64 missing: apt install g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-tools" >&2; exit 1; }
 
 [[ "${1:-}" == "--clean" ]] && rm -rf "$BUILD"
 mkdir -p "$BUILD"
 
-# --- offreg import library (Offline Registry; absent from MinGW) ------------
-if [[ ! -f "$TP/offreg/liboffreg.a" ]]; then
-  echo "== Generating liboffreg.a =="
-  "$DLLTOOL" -d "$TP/offreg/offreg.def" -l "$TP/offreg/liboffreg.a" -D offreg.dll -m i386:x86-64
-fi
-
 # --- Common options --------------------------------------------------------
 FLAGS=(-std=c++17 -O2
   -DUNICODE -D_UNICODE -DWINVER=0x0A00 -D_WIN32_WINNT=0x0A00
   -include "$TP/compat-include/wac_mingw_compat.h"
-  -I"$TP/offreg" -I"$TP/compat-include"
+  -I"$TP/compat-include"
   -finput-charset=UTF-8 -fexec-charset=UTF-8
   # -Wall: the project used to build without it, which let through 46 dead
   # declarations and a GetVolumeInformationW whose result was ignored.
@@ -62,7 +56,7 @@ done
 
 # --- Link --------------------------------------------------------------------
 echo "== Link =="
-LIBS=(-L"$TP/offreg" -loffreg -lole32 -loleaut32
+LIBS=(-lole32 -loleaut32
       -luuid -lshlwapi -ladvapi32 -lshell32 -lversion -lwtsapi32
       -lsecur32 -lpropsys -lntdll)
 "$CXX" -static -static-libgcc -static-libstdc++ \
@@ -82,7 +76,7 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
   echo "   -> $BUILD/raw_hive_test.exe"
 
   # The robustness harnesses and their Wine stand-ins go into a SEPARATE
-  # folder: a stand-in offreg.dll or propsys.dll beside WAC.exe would be
+  # folder: a stand-in propsys.dll beside WAC.exe would be
   # loaded instead of the system's one (the program's folder comes first in the
   # DLL search order) if build-windows/ were ever copied onto a collection key.
   TESTS="$BUILD/tests"
@@ -104,22 +98,28 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
     "$SRC/parsers_test.cpp" "${TEST_OBJS[@]}" -o "$TESTS/parsers_test.exe" "${LIBS[@]}"
   echo "   -> $TESTS/parsers_test.exe"
 
-  # Wine stand-ins, for running the two harnesses on Linux:
-  # - propsys.dll: Wine lacks PSGetNameFromPropertyKey (see the stub's header),
-  #   used with WINEDLLOVERRIDES="propsys=n";
-  # - offreg.dll: Wine has none, and the harnesses import it without calling
-  #   it; every export of the bundled .def answers "failure".
+  # Wine stand-in, for running the two harnesses on Linux: Wine lacks
+  # PSGetNameFromPropertyKey (see the stub's header); used with
+  # WINEDLLOVERRIDES="propsys=n".
   x86_64-w64-mingw32-gcc -shared -O2 -Wall -Wextra -Wl,--kill-at \
     "$TP/compat-include/propsys_wine_stub.c" -o "$TESTS/propsys.dll"
-  OFFREG_STUB="$TESTS/offreg_stub.c"
-  { echo '#include <windows.h>'
-    tail -n +3 "$TP/offreg/offreg.def" | sed '/^[[:space:]]*$/d' | while read -r f; do
-      echo "__declspec(dllexport) DWORD WINAPI $f(void) { return ERROR_CALL_NOT_IMPLEMENTED; }"
-    done
-  } > "$OFFREG_STUB"
-  x86_64-w64-mingw32-gcc -shared -O2 -Wl,--kill-at "$OFFREG_STUB" -o "$TESTS/offreg.dll"
-  rm -f "$OFFREG_STUB"
-  echo "   -> $TESTS/propsys.dll, $TESTS/offreg.dll (Wine stand-ins, tests only)"
+  echo "   -> $TESTS/propsys.dll (Wine stand-in, tests only)"
+
+  echo "== Build evtx_test.exe, consigne_test.exe =="
+  # Built here rather than by a hand-written list of sources: that list, in the
+  # README, had drifted and no longer linked. Both run under Wine.
+  for t in evtx_test consigne_test; do
+    "$CXX" "${FLAGS[@]}" -municode -static -static-libgcc -static-libstdc++ \
+      "$SRC/$t.cpp" "${TEST_OBJS[@]}" -o "$TESTS/$t.exe" "${LIBS[@]}"
+    echo "   -> $TESTS/$t.exe"
+  done
+
+  echo "== Build offline_registry_test.exe =="
+  # WAC's hive reader against Microsoft's offreg.dll, loaded dynamically: run
+  # it on Windows (the test VM) with the path of that DLL.
+  "$CXX" "${FLAGS[@]}" -municode -static -static-libgcc -static-libstdc++ \
+    "$SRC/offline_registry_test.cpp" "${TEST_OBJS[@]}" -o "$TESTS/offline_registry_test.exe" "${LIBS[@]}"
+  echo "   -> $TESTS/offline_registry_test.exe"
 fi
 
 echo

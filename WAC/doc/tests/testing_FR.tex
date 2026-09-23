@@ -126,23 +126,25 @@ pip install olefile          # lecteur OLE indépendant, pour les recoupements
 
 \begin{longtable}{@{}L{7.4cm}L{7.6cm}@{}}
 \toprule
-\textbf{Produit} & \textbf{Rôle} \\
+\textbf{Produit, dans \fichier{}} & \textbf{Rôle} \\
 \midrule
 \endhead
-\fichier{build-windows/WAC.exe} & l'outil de collecte \\
-\fichier{build-windows/raw\_hive\_test.exe} & lecteur NTFS brut, utilisé par le cycle VM \\
-\fichier{build-windows/tests/lnk\_test.exe} & robustesse de l'analyseur de raccourcis \\
-\fichier{build-windows/tests/parsers\_test.exe} & robustesse des listes de sauts et des Prefetch \\
-\fichier{build-windows/tests/propsys.dll}, \fichier{offreg.dll} & substituts pour \texttt{wine}, qui n'a pas ces deux bibliothèques \\
+\fichier{WAC.exe} & l'outil de collecte \\
+\fichier{raw\_hive\_test.exe} & lecteur NTFS brut, utilisé par le cycle VM \\
+\fichier{tests/lnk\_test.exe} & robustesse de l'analyseur de raccourcis \\
+\fichier{tests/parsers\_test.exe} & robustesse des listes de sauts et des Prefetch \\
+\fichier{tests/evtx\_test.exe}, \fichier{consigne\_test.exe} & décodeur de journaux, consigne (chapitre~\ref{ch:format}) \\
+\fichier{tests/offline\_registry\_test.exe} & lecteur de ruches confronté à celui de Microsoft \\
+\fichier{tests/propsys.dll} & substitut pour \texttt{wine}, qui n'a pas cette bibliothèque \\
 \bottomrule
 \end{longtable}
 
 \begin{attention}
-Les deux substituts sont volontairement dans \fichier{build-windows/tests/}, à
-l'écart de \fichier{WAC.exe}. Placés à côté de lui, ils seraient chargés à la
-place des vraies bibliothèques — Windows cherche d'abord dans le dossier du
-programme — et \wac{} ne lirait plus aucune ruche, sans erreur visible. Ne
-jamais copier le dossier \fichier{tests/} sur un support de collecte.
+Le substitut est volontairement dans \fichier{build-windows/tests/}, à
+l'écart de \fichier{WAC.exe}. Placé à côté de lui, il serait chargé à la place
+de la vraie bibliothèque — Windows cherche d'abord dans le dossier du
+programme. Ne jamais copier le dossier \fichier{tests/} sur un support de
+collecte.
 \end{attention}
 
 La compilation doit se terminer sans aucun avertissement : les options
@@ -309,7 +311,8 @@ event_messages_test <ruche SOFTWARE> <guid> [id[:version] ...]
 
 \section{Journaux : \texttt{evtx\_test}}
 
-Lit un \fichier{.evtx} hors de Windows, sous \texttt{wine}. Il sert à éprouver
+Lit un \fichier{.evtx} hors de Windows, sous \texttt{wine} ; construit par
+\texttt{build-windows.sh --test}, dans \fichier{build-windows/tests/}. Il sert à éprouver
 le décodeur sur des journaux que la VM ne produit pas : anciens, transférés,
 mal fermés, abîmés — et à comparer enregistrement par enregistrement à une
 implémentation indépendante (\texttt{python-evtx}).
@@ -323,8 +326,29 @@ wine evtx_test.exe --collect-memory "Z:/tmp/arbre" "Z:/tmp/sortie2"  # meme chai
 cmp /tmp/sortie/events.json /tmp/sortie2/events.json                 # doit etre muet
 \end{lstlisting}
 
-La commande de compilation est dans le README, section \emph{Testing the EVTX
-parser outside Windows}.
+
+\section{Lecteur de ruches : \texttt{offline\_registry\_test}}
+
+\wac{} lit les ruches du registre avec son propre lecteur
+(\fichier{offline\_registry.cpp}), lié dans l'exécutable : il ne dépend plus
+de la bibliothèque \fichier{offreg.dll} de Microsoft, que Windows fournit et
+qu'il empruntait donc à la machine examinée. Ce harnais confronte les deux :
+il charge la DLL de Microsoft depuis le chemin donné, parcourt chaque ruche
+avec les deux lecteurs et compare chaque clé (nom, date, classe, compteurs,
+maxima, taille du descripteur de sécurité) et chaque valeur (nom, type,
+octets), ainsi que les cas limites du contrat : tampon trop petit, sondage de
+taille, valeur par défaut, clé ou valeur absente. Aucun écart n'est admis.
+
+\begin{lstlisting}
+offline_registry_test.exe C:\Windows\System32\offreg.dll SYSTEM SOFTWARE SAM ntuser.dat ...
+\end{lstlisting}
+
+À lancer sous Windows (la VM), sur des ruches rejouées : celles de
+\fichier{working/} d'une collecte. Seul écart voulu : une ruche dont les
+journaux n'ont pas été rejoués est refusée par \wac{}, alors que les versions
+récentes de la DLL de Microsoft la lisent telle quelle — des clés périmées,
+sans erreur ; le harnais le signale comme attendu. Référence : 18 ruches, dont
+dix d'une machine réelle, soit 1~273~652 clés et 2~456~139 valeurs identiques.
 
 \section{Consigne : \texttt{consigne\_test}}
 
@@ -335,6 +359,7 @@ la copie de travail est modifiée, et le sceau porte l'empreinte réelle du
 manifeste.
 
 \begin{lstlisting}
+cd build-windows/tests
 wine consigne_test.exe "Z:/tmp/sortie" "Z:/chemin/SYSTEM" "Z:/chemin/ntuser.dat"
 \end{lstlisting}
 
@@ -411,7 +436,14 @@ propriétés, et arrêterait le test dès le premier raccourci réel qui en port
 parsers_test.exe jumplist-auto   <fichier.automaticDestinations-ms> ...
 parsers_test.exe jumplist-custom <fichier.customDestinations-ms> ...
 parsers_test.exe prefetch        <fichier.pf> ...
+parsers_test.exe hive            <ruche> ...
 \end{lstlisting}
+
+Le type \texttt{hive} éprouve le lecteur de ruches : chaque entrée est ouverte
+depuis la mémoire, contre la page interdite, et toute l'arborescence est
+parcourue (sous-clés, valeurs, \texttt{ORQueryInfoKey}). Une sous-clé qui
+pointerait vers l'une de ses ancêtres est refusée par le lecteur : sans cela,
+un parcours récursif ne finirait jamais.
 
 Les listes de sauts se testent sous \texttt{wine}, comme \texttt{lnk\_test}. Les
 Prefetch se testent \textbf{dans la VM} : ils sont compressés (XPRESS Huffman),
@@ -449,6 +481,7 @@ de la page interdite :
 48 listes de sauts automatiques & 175~585 & \texttt{wine} \\
 23 listes de sauts personnalisées & 79~036 & \texttt{wine} \\
 307 Prefetch & 1~246~491 & VM, environ 2~h \\
+4 ruches du registre & 16~207 & \texttt{wine} \\
 \bottomrule
 \end{longtable}
 
@@ -478,9 +511,9 @@ que sur une collecte réelle, confrontée à une source indépendante :
 \end{itemize}
 
 \begin{attention}
-Une collecte réelle se traite en local. Si une ruche doit être lue avec le vrai
-\fichier{offreg.dll}, elle peut être copiée dans la VM de test, puis effacée
-aussitôt le test fini. Aucune copie ne reste dans le dossier de travail
+Une collecte réelle se traite en local. Si une ruche doit être confrontée au
+lecteur de Microsoft (\texttt{offline\_registry\_test}), elle peut être copiée
+dans la VM de test, puis effacée aussitôt le test fini. Aucune copie ne reste dans le dossier de travail
 temporaire, et rien n'en entre dans le dépôt.
 \end{attention}
 

@@ -503,12 +503,16 @@ results are worth stating:
 ### Cross-compiling from Linux (MinGW-w64)
 ```bash
 ./build-windows.sh          # produces build-windows/WAC.exe, self-contained
-./build-windows.sh --test   # also builds raw_hive_test.exe, and tests/ (lnk_test, parsers_test)
+./build-windows.sh --test   # also builds raw_hive_test.exe, and the harnesses in tests/
 ```
 The C++ runtime is linked statically: the executable depends only on Windows
 system DLLs — which matters for a tool run from a USB stick on a machine one must
-not install anything on. `offreg.dll` (offline registry API) ships with the tool;
-its import library is generated at build time from the bundled `.def`.
+not install anything on. The registry hives are read by WAC's own reader
+(`WAC/offline_registry.cpp`), linked into the executable: Microsoft's
+`offreg.dll` is no longer used — a DLL that recent Windows versions ship in
+`System32`, so WAC used to read the evidence through a library of the examined
+machine. The reader keeps offreg's functions and contract; `offline_registry_test`
+confronts it with Microsoft's DLL on whole hives (below).
 
 `-Wall -Wextra` is enabled and the build is now **warning-free**. Those warnings
 used to serve as the to-do list for format completeness — each one marked a field
@@ -557,21 +561,11 @@ excluded from the build by the `_test.cpp` pattern and runs under `wine`, so a
 journal can be replayed on the development machine:
 
 ```bash
-# build the harness (cross-compiled, runs under wine)
-cd WAC
-x86_64-w64-mingw32-g++ -std=c++17 -O2 -municode -static -static-libgcc   -static-libstdc++ -DUNICODE -D_UNICODE -DWINVER=0x0A00 -D_WIN32_WINNT=0x0A00   -include ../third_party/compat-include/wac_mingw_compat.h   -I../third_party/offreg -I../third_party/compat-include   evtx.cpp evtx_test.cpp events.cpp xml_light.cpp tools.cpp quickdigest5.cpp   -o /tmp/evtx_test.exe -L../third_party/offreg -loffreg -lole32 -loleaut32   -luuid -lshlwapi -ladvapi32 -lshell32 -lversion -lwtsapi32 -lsecur32   -lpropsys -lntdll
-
-# wine needs an offreg.dll in the working directory: tools.cpp imports it, and
-# the harness never calls it. A stub built from the bundled .def is enough:
-#   { echo '#include <windows.h>';
-#     tail -n +3 ../third_party/offreg/offreg.def | sed '/^$/d' | while read -r f; do
-#       echo "extern \"C\" __declspec(dllexport) DWORD $f(void){return 1;}"; done
-#   } > /tmp/offreg_stub.cpp
-#   x86_64-w64-mingw32-g++ -shared -o offreg.dll /tmp/offreg_stub.cpp
-
-wine /tmp/evtx_test.exe "Z:/path/to/Security.evtx"          # summary per log
-wine /tmp/evtx_test.exe "Z:/path/to/Security.evtx" 3        # + XML of 3 records
-wine /tmp/evtx_test.exe "Z:/path/to/Security.evtx" --dump   # one record per line
+# built by ./build-windows.sh --test, runs under wine
+cd build-windows/tests
+wine evtx_test.exe "Z:/path/to/Security.evtx"          # summary per log
+wine evtx_test.exe "Z:/path/to/Security.evtx" 3        # + XML of 3 records
+wine evtx_test.exe "Z:/path/to/Security.evtx" --dump   # one record per line
 ```
 
 `--dump` prints `record id<TAB>xml` in UTF-8, which is what makes an automated
@@ -643,7 +637,7 @@ seal carries the manifest's real fingerprint, and that the manifest was not
 copied into the working directory.
 
 ```bash
-wine /tmp/consigne_test.exe "Z:/tmp/out" "Z:/path/to/SYSTEM" "Z:/path/to/ntuser.dat"
+wine build-windows/tests/consigne_test.exe "Z:/tmp/out" "Z:/path/to/SYSTEM" "Z:/path/to/ntuser.dat"
 ```
 
 `lnk_test.cpp` checks that the shortcut parser **never reads outside its
@@ -660,11 +654,11 @@ machine then caught two more, in the property store values (`readScalar`,
 `SPSValue`). Result on 220 shortcuts of a real machine and eight of the test VM:
 over 570,000 inputs, no read outside the buffer.
 
-`--test` puts these harnesses in `build-windows/tests/`, with two Wine
-stand-ins: `propsys.dll` (Wine does not implement `PSGetNameFromPropertyKey`,
-which WAC calls to name the properties of real shortcuts; used with
-`WINEDLLOVERRIDES`) and `offreg.dll` (Wine has none). They are kept apart from
-`WAC.exe` on purpose: beside it, they would be loaded instead of the system's.
+`--test` puts these harnesses in `build-windows/tests/`, with a Wine stand-in,
+`propsys.dll` (Wine does not implement `PSGetNameFromPropertyKey`, which WAC
+calls to name the properties of real shortcuts; used with `WINEDLLOVERRIDES`).
+It is kept apart from `WAC.exe` on purpose: beside it, it would be loaded
+instead of the system's.
 
 ```bash
 ./build-windows.sh --test
@@ -699,7 +693,23 @@ caught on the files of a real machine:
 
 Result on the files of a real machine, each input on both sides of the guard
 page: 48 automatic jump lists (175,585 inputs), 23 custom ones (79,036) and
-307 Prefetch (1,246,491): no read outside the buffer, every parse ended.
+307 Prefetch (1,246,491), and four registry hives (`hive`, 16,207): no read outside the buffer, every parse ended.
+
+`offline_registry_test.cpp` confronts **WAC's own hive reader** with
+Microsoft's `offreg.dll`, loaded dynamically from the path given: both walk
+every key of the hives given, and every name, date, class, count, maximum,
+value type and value byte is compared, as well as the contract's edge cases
+(buffer too small, size probe, default value, missing key or value). Its first
+run showed that offreg returns the SUBKEY maxima the key records (possibly
+stale) but MEASURES the value maxima, and counts the terminator in the size it
+asks for. Result: the eight hives of the test VM (322,589 keys, 588,640
+values) and ten of a real machine (951,063 keys, 1,867,499 values), identical.
+The one intended difference: a hive whose logs were not replayed is refused,
+where recent versions of offreg read it as is — stale keys without an error.
+
+```bash
+offline_registry_test.exe C:\Windows\System32\offreg.dll SYSTEM SOFTWARE ntuser.dat ...
+```
 
 ```bash
 ./build-windows.sh --test
@@ -715,7 +725,7 @@ directory laid out like an extraction:
 ```bash
 mkdir -p /tmp/tree/Windows/System32/winevt/Logs /tmp/out
 cp *.evtx /tmp/tree/Windows/System32/winevt/Logs/
-/usr/bin/time -v wine /tmp/evtx_test.exe --collect "Z:/tmp/tree" "Z:/tmp/out"
+/usr/bin/time -v wine build-windows/tests/evtx_test.exe --collect "Z:/tmp/tree" "Z:/tmp/out"
 ```
 
 It reports the number of logs, records and discarded records, and writes
@@ -731,7 +741,7 @@ the write strategy differs. It should produce a **byte-for-byte identical**
 `writeJsonFile`:
 
 ```bash
-/usr/bin/time -v wine /tmp/evtx_test.exe --collect-memory "Z:/tmp/tree" "Z:/tmp/out2"
+/usr/bin/time -v wine build-windows/tests/evtx_test.exe --collect-memory "Z:/tmp/tree" "Z:/tmp/out2"
 cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
 ```
 

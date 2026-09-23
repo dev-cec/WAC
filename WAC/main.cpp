@@ -9,7 +9,7 @@
 #include <windows.h>
 #include <string>
 #include <stdio.h>
-#include <offreg.h>
+#include "offline_registry.h"
 #include <io.h>
 #include <fcntl.h>
 #include "asciiart.h"
@@ -421,7 +421,7 @@ int main(int argc, char* argv[])
 	log(3, L"🔈loadProfileList");
 	hresult = loadProfileList();
 	auditRecord(L"Reading of the user profiles",
-	            L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList (copied hive, offreg)",
+	            L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList (copied hive, WAC's hive reader)",
 	            hresult, Footprint::HIVE_COPY);
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else printSuccess();
@@ -457,7 +457,7 @@ int main(int argc, char* argv[])
 	// A single entry for the whole phase: these reads bear on the COPIES extracted
 	// onto the collection medium, never on the target's registry. They therefore
 	// leave no trace to be told apart in the artefacts.
-	auditRecord(L"Reading of the registry artefacts (copied hives, offreg)",
+	auditRecord(L"Reading of the registry artefacts (copied hives, WAC's hive reader)",
 	            conf.mountpoint, ERROR_SUCCESS, Footprint::HIVE_COPY);
 
 	/* Registry phase bracketed by a single-exit block: a failure leaves it by

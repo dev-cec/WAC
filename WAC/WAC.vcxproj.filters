@@ -40,6 +40,7 @@
     <ClCompile Include="tools.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="xml_light.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="trans_id.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="offline_registry.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="users.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="authenticode.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="rsa.cpp"><Filter>Fichiers sources</Filter></ClCompile>
@@ -89,6 +90,7 @@
     <ClInclude Include="tools.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="xml_light.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="trans_id.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="offline_registry.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="users.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="authenticode.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="racines_microsoft.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>

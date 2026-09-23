@@ -3,10 +3,11 @@
  *
  *  PROBLEM. A raw copy of a hive of a running system is always marked "dirty":
  *  in its base block (`regf`), the primary sequence number differs from the
- *  secondary one. `offreg` (OROpenHive) then rejects the hive with
- *  ERROR_BADDB (1009), whatever the mode — measured on Windows 11 25H2. VSS hid
- *  this problem: the snapshot triggered the *registry writer*, which flushed
- *  the hives.
+ *  secondary one. WAC's hive reader (offline_registry.cpp) refuses such a hive
+ *  with ERROR_BADDB (1009), as Microsoft's offreg did when this was measured on
+ *  Windows 11 25H2: read as is, it would give stale keys without any error. VSS
+ *  hid this problem: the snapshot triggered the *registry writer*, which
+ *  flushed the hives.
  *
  *  TWO LEVELS OF REPAIR, from the most complete to the most minimal:
  *
@@ -49,7 +50,7 @@ struct HiveFixInfo {
     std::wstring error;             //!< message if ok == false
 };
 
-/*! Makes the hive usable by offreg, in place, if it is "dirty".
+/*! Makes the hive usable by the hive reader, in place, if it is "dirty".
  *  Touches nothing if the hive is already clean (primary == secondary).
  *  @param hive path of the extracted hive (modified in place if dirty)
  *  @return details of the operation, to be recorded in the report

@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <iomanip>
 #include <sstream>
-#include <offreg.h>
+#include "offline_registry.h"
 #include <vector>
 #include <filesystem>
 #include <time.h>
@@ -110,7 +110,7 @@ void loadSystemDrive();
 *
 * @return ERROR_SUCCESS if at least one profile was read, ERROR_EMPTY if the key
 *         holds no usable profile, ERROR_INVALID_HANDLE if the SOFTWARE hive is
-*         not open, or the offreg code
+*         not open, or the hive reader's code
 */
 HRESULT loadProfileList();
 

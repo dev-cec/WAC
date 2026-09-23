@@ -121,23 +121,24 @@ pip install olefile          # independent OLE reader, for the cross-checks
 
 \begin{longtable}{@{}L{7.4cm}L{7.6cm}@{}}
 \toprule
-\textbf{Output} & \textbf{Role} \\
+\textbf{Output, in \fichier{}} & \textbf{Role} \\
 \midrule
 \endhead
-\fichier{build-windows/WAC.exe} & the collection tool \\
-\fichier{build-windows/raw\_hive\_test.exe} & raw NTFS reader, used by the VM cycle \\
-\fichier{build-windows/tests/lnk\_test.exe} & robustness of the shortcut parser \\
-\fichier{build-windows/tests/parsers\_test.exe} & robustness of the jump list and Prefetch parsers \\
-\fichier{build-windows/tests/propsys.dll}, \fichier{offreg.dll} & stand-ins for \texttt{wine}, which lacks both libraries \\
+\fichier{WAC.exe} & the collection tool \\
+\fichier{raw\_hive\_test.exe} & raw NTFS reader, used by the VM cycle \\
+\fichier{tests/lnk\_test.exe} & robustness of the shortcut parser \\
+\fichier{tests/parsers\_test.exe} & robustness of the jump list and Prefetch parsers \\
+\fichier{tests/evtx\_test.exe}, \fichier{consigne\_test.exe} & event log decoder, exhibit store (chapter~\ref{ch:format}) \\
+\fichier{tests/offline\_registry\_test.exe} & hive reader confronted with Microsoft's \\
+\fichier{tests/propsys.dll} & stand-in for \texttt{wine}, which lacks this library \\
 \bottomrule
 \end{longtable}
 
 \begin{attention}
-The two stand-ins are deliberately in \fichier{build-windows/tests/}, away from
-\fichier{WAC.exe}. Beside it, they would be loaded instead of the real
-libraries — Windows looks in the program's folder first — and \wac{} would
-read no hive at all, with no visible error. Never copy the \fichier{tests/}
-folder onto a collection medium.
+The stand-in is deliberately in \fichier{build-windows/tests/}, away from
+\fichier{WAC.exe}. Beside it, it would be loaded instead of the real library
+— Windows looks in the program's folder first. Never copy the
+\fichier{tests/} folder onto a collection medium.
 \end{attention}
 
 The build must end without a single warning: \texttt{-Wall -Wextra} are on, and
@@ -298,7 +299,8 @@ event_messages_test <SOFTWARE hive> <guid> [id[:version] ...]
 
 \section{Event logs: \texttt{evtx\_test}}
 
-Reads an \fichier{.evtx} outside Windows, under \texttt{wine}. It serves to try
+Reads an \fichier{.evtx} outside Windows, under \texttt{wine}; built by
+\texttt{build-windows.sh --test}, in \fichier{build-windows/tests/}. It serves to try
 the decoder on logs the VM does not produce: old, forwarded, closed abruptly,
 damaged — and to compare record by record with an independent implementation
 (\texttt{python-evtx}).
@@ -312,8 +314,29 @@ wine evtx_test.exe --collect-memory "Z:/tmp/tree" "Z:/tmp/out2"  # same chain, i
 cmp /tmp/out/events.json /tmp/out2/events.json                   # must be silent
 \end{lstlisting}
 
-The build command is in the README, section \emph{Testing the EVTX parser outside
-Windows}.
+
+\section{Hive reader: \texttt{offline\_registry\_test}}
+
+\wac{} reads registry hives with its own reader
+(\fichier{offline\_registry.cpp}), linked into the executable: it no longer
+depends on Microsoft's \fichier{offreg.dll}, which Windows ships and which it
+therefore borrowed from the examined machine. This harness confronts the two:
+it loads Microsoft's DLL from the path given, walks each hive with both readers
+and compares every key (name, date, class, counts, maxima, security descriptor
+size) and every value (name, type, bytes), as well as the contract's edge
+cases: buffer too small, size probe, default value, missing key or value. No
+difference is allowed.
+
+\begin{lstlisting}
+offline_registry_test.exe C:\Windows\System32\offreg.dll SYSTEM SOFTWARE SAM ntuser.dat ...
+\end{lstlisting}
+
+To be run on Windows (the VM), on replayed hives: those of a collection's
+\fichier{working/} folder. The one intended difference: a hive whose logs were
+not replayed is refused by \wac{}, where recent versions of Microsoft's DLL
+read it as is — stale keys, without an error; the harness reports it as
+expected. Reference: 18 hives, ten of them from a real machine, i.e. 1,273,652
+keys and 2,456,139 values, identical.
 
 \section{Exhibit store: \texttt{consigne\_test}}
 
@@ -323,6 +346,7 @@ exhibit store stays identical byte for byte while the working copy is changed,
 and the seal carries the manifest's real fingerprint.
 
 \begin{lstlisting}
+cd build-windows/tests
 wine consigne_test.exe "Z:/tmp/out" "Z:/path/SYSTEM" "Z:/path/ntuser.dat"
 \end{lstlisting}
 
@@ -398,7 +422,13 @@ stop the test at the first real shortcut carrying some.
 parsers_test.exe jumplist-auto   <file.automaticDestinations-ms> ...
 parsers_test.exe jumplist-custom <file.customDestinations-ms> ...
 parsers_test.exe prefetch        <file.pf> ...
+parsers_test.exe hive            <hive> ...
 \end{lstlisting}
+
+The \texttt{hive} kind tries the hive reader: each input is opened from memory,
+against the forbidden page, and the whole tree is walked (subkeys, values,
+\texttt{ORQueryInfoKey}). A subkey pointing back at one of its ancestors is
+refused by the reader: without that, a recursive walk would never end.
 
 Jump lists are tested under \texttt{wine}, like \texttt{lnk\_test}. Prefetch files
 are tested \textbf{in the VM}: they are compressed (XPRESS Huffman), and only the
@@ -435,6 +465,7 @@ forbidden page:
 48 automatic jump lists & 175,585 & \texttt{wine} \\
 23 custom jump lists & 79,036 & \texttt{wine} \\
 307 Prefetch files & 1,246,491 & VM, about 2~h \\
+4 registry hives & 16,207 & \texttt{wine} \\
 \bottomrule
 \end{longtable}
 
@@ -464,9 +495,9 @@ independent source:
 \end{itemize}
 
 \begin{attention}
-A real collection is processed locally. If a hive must be read with the real
-\fichier{offreg.dll}, it may be copied into the test VM, then deleted as soon as
-the test is over. No copy stays in the temporary working folder, and none of it
+A real collection is processed locally. If a hive must be confronted with
+Microsoft's reader (\texttt{offline\_registry\_test}), it may be copied into
+the test VM, then deleted as soon as the test is over. No copy stays in the temporary working folder, and none of it
 enters the repository.
 \end{attention}
 

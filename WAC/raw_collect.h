@@ -36,12 +36,13 @@
 
 /*! Extracts the MACHINE's hives (+ .LOG1/.LOG2 logs) into
  *  `_outputDir`\\exhibitStore, makes their working copy and makes it usable by
- *  offreg.
+ *  the hive reader (offline_registry.h).
  *
  *  The transaction logs are extracted because they are artefacts in
  *  themselves, and document the pending changes the live copy does not hold.
  *
- *  A raw copy of a live system's hive is always "dirty" and rejected by offreg:
+ *  A raw copy of a live system's hive is always "dirty" and refused by the hive
+ *  reader:
  *  each hive therefore goes through a log replay, then MakeHiveLoadable() as a
  *  fallback (see hive_recover.h).
  *

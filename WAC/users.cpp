@@ -206,7 +206,7 @@ HRESULT Users::getData() {
 	for (PCWSTR prefix : { L"SAM\\", L"" }) {
 		const std::wstring path = std::wstring(prefix) + L"Domains\\Account\\Users";
 		log(3, L"🔈OROpenKey " + path);
-		hUsers = NULL;   // offreg may write into the output even on failure
+		hUsers = NULL;   // an output handle is only meaningful on success
 		if (OROpenKey(hSam, path.c_str(), &hUsers) == ERROR_SUCCESS) {
 			base = prefix;
 			break;

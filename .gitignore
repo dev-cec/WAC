@@ -376,8 +376,6 @@ build-windows/
 # Le harnais lui-même (scripts, check-json.py, README) reste versionné.
 vmtest/results/
 
-# Bibliothèque d'import générée au build depuis offreg.def
-third_party/offreg/liboffreg.a
 
 # Fichiers auxiliaires de Doxygen, regeneres a chaque passe. Le HTML lui-meme
 # reste versionne (c'est la documentation livree), mais pas ces index binaires.

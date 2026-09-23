@@ -39,7 +39,7 @@
 #include <string>
 #include <vector>
 #include <windows.h>
-#include <offreg.h>
+#include "offline_registry.h"
 #include "tools.h"
 #include "trans_id.h"
 #include "json.h"
