@@ -138,7 +138,7 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a46730cc18b1e6c438bf531571d14e3a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">label of that GUID  <br /></td></tr>
 <tr class="separator:a46730cc18b1e6c438bf531571d14e3a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a148b8ebafdf4d56d9f9f2fd13479e0ce" id="r_a148b8ebafdf4d56d9f9f2fd13479e0ce"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="structIShellItem.html">IShellItem</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDelegateFolder.html#a148b8ebafdf4d56d9f9f2fd13479e0ce">innerItem</a></td></tr>
-<tr class="memdesc:a148b8ebafdf4d56d9f9f2fd13479e0ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">nested shell item  <br /></td></tr>
+<tr class="memdesc:a148b8ebafdf4d56d9f9f2fd13479e0ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">the delegated data, decoded by their class  <br /></td></tr>
 <tr class="separator:a148b8ebafdf4d56d9f9f2fd13479e0ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ada79033907d293ec1338575360675bc3" id="r_ada79033907d293ec1338575360675bc3"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDelegateFolder.html#ada79033907d293ec1338575360675bc3">data</a></td></tr>
 <tr class="memdesc:ada79033907d293ec1338575360675bc3"><td class="mdescLeft">&#160;</td><td class="mdescRight">raw content if not decoded  <br /></td></tr>
@@ -153,7 +153,7 @@ Public Attributes</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Delegate folder.</p>
-<p>This container wraps ONE COMPLETE SHELL ITEM, placed at offset 6, and is recognised by the delegation GUID written 32 bytes before the end ({5E591A74-DF96-48D3-8D67-1733BCEE28BA}). The GUID of the delegating class occupies the last 16 bytes.</p>
+<p>Recognised by the delegation GUID written 32 bytes before the end ({5E591A74-DF96-48D3-8D67-1733BCEE28BA}); the GUID of the delegating class occupies the last 16 bytes. At offset 4, the size of the delegated data (2 bytes); from offset 6, those data, which continue an item of the class the class byte gives (a drive root folder, a search folder…). They are decoded as such, into <code>innerItem</code>.</p>
 <p>It was not recognised at all: the whole item — hence the shell item it holds, with its path, its dates and its property stores — was reduced to an "UNKNOWN" object. It was the missing type that cost the most, because it is common in the shellbags and it hides a decodable item. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a517cff4f5e6a53f9af1d66c5da49641a" name="a517cff4f5e6a53f9af1d66c5da49641a"></a>
@@ -289,7 +289,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>nested shell item </p>
+<p>the delegated data, decoded by their class </p>
 
 </div>
 </div>

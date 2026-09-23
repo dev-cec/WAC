@@ -59,6 +59,6 @@ var idList_8h =
     [ "UnknownShellItem", "structUnknownShellItem.html", "structUnknownShellItem" ],
     [ "getExtensionBlock", "idList_8h.html#a226b28040841114ee414d5b2c512791b", null ],
     [ "getType", "idList_8h.html#a7525f17aa1303b4d68eae831fb5e5bfc", null ],
-    [ "getValue", "idList_8h.html#a5d8c9cb21c02aa63ef60ebfa995ebe3e", null ],
+    [ "getValue", "idList_8h.html#aaaeebaeb43ac7bb1e0975edf384904b0", null ],
     [ "makeShellItem", "idList_8h.html#a8e06b9a97f157137b48d134484223b62", null ]
 ];

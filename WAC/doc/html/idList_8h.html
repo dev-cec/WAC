@@ -245,8 +245,8 @@ Functions</h2></td></tr>
 <tr class="separator:a8e06b9a97f157137b48d134484223b62"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7525f17aa1303b4d68eae831fb5e5bfc" id="r_a7525f17aa1303b4d68eae831fb5e5bfc"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="idList_8h.html#a7525f17aa1303b4d68eae831fb5e5bfc">getType</a> (unsigned int type)</td></tr>
 <tr class="separator:a7525f17aa1303b4d68eae831fb5e5bfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d8c9cb21c02aa63ef60ebfa995ebe3e" id="r_a5d8c9cb21c02aa63ef60ebfa995ebe3e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="idList_8h.html#a5d8c9cb21c02aa63ef60ebfa995ebe3e">getValue</a> (LPBYTE buffer, unsigned int *pos, unsigned short valueType, unsigned int level, unsigned int inputSize=0, bool *typeNotDecoded=nullptr)</td></tr>
-<tr class="separator:a5d8c9cb21c02aa63ef60ebfa995ebe3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaaeebaeb43ac7bb1e0975edf384904b0" id="r_aaaeebaeb43ac7bb1e0975edf384904b0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="idList_8h.html#aaaeebaeb43ac7bb1e0975edf384904b0">getValue</a> (LPBYTE buffer, unsigned int *pos, unsigned short valueType, unsigned int level, unsigned int inputSize, bool *typeNotDecoded=nullptr)</td></tr>
+<tr class="separator:aaaeebaeb43ac7bb1e0975edf384904b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Shell items, ID lists and extension blocks: the structures behind shortcuts, shellbags, MRU lists and jump lists. </p>
@@ -327,8 +327,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a5d8c9cb21c02aa63ef60ebfa995ebe3e" name="a5d8c9cb21c02aa63ef60ebfa995ebe3e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5d8c9cb21c02aa63ef60ebfa995ebe3e">&#9670;&#160;</a></span>getValue()</h2>
+<a id="aaaeebaeb43ac7bb1e0975edf384904b0" name="aaaeebaeb43ac7bb1e0975edf384904b0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaaeebaeb43ac7bb1e0975edf384904b0">&#9670;&#160;</a></span>getValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -376,7 +376,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Returns the value of the SPSVALUE according to its kind.</p>
 <p>Reads a typed value of a property store.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -384,12 +383,12 @@ Functions</h2></td></tr>
     <tr><td class="paramname">pos</td><td>reading position in the entry, advanced as the decoding goes </td></tr>
     <tr><td class="paramname">valueType</td><td>VT_ type of the value </td></tr>
     <tr><td class="paramname">level</td><td>depth, for the layout </td></tr>
-    <tr><td class="paramname">inputSize</td><td>total size of the entry, used to return the raw bytes when the type is not decoded. Zero if the caller does not know it: the value then comes out without a dump. </td></tr>
-    <tr><td class="paramname">typeNotDecoded</td><td>set to true if the type could not be decoded. The caller must then stop its walk when the entry's size is not declared, otherwise the next entry would be read in the wrong place. </td></tr>
+    <tr><td class="paramname">inputSize</td><td>total size of the entry, checked by the caller against the real buffer: NO read goes beyond it. A value that does not fit comes out as <code>TruncatedValueType</code> with the remaining bytes; a type not decoded, with its remaining bytes too. </td></tr>
+    <tr><td class="paramname">typeNotDecoded</td><td>set to true if the value could not be decoded (type unknown, or value truncated). The caller must then stop its walk when the entry's size is not declared, otherwise the next entry would be read in the wrong place. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the value, or an object describing the type not supported</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>the value, or an object describing why it was not decoded</dd></dl>
 <p>Reads a property store value, scalar or VECTOR.</p>
 <p>THE VECTORS ARE NOW HANDLED GENERICALLY. The <code>VT_VECTOR</code> bit (0x1000) signals an array: a 32-bit element count, then the elements of the matching scalar type (MS-OLEPS). Only two vectors were recognised — <code>Vector&lt;VT_UI1&gt;</code> and <code>Vector&lt;VT_LPWSTR&gt;</code> — and all the others (<code>Vector&lt;VT_FILETIME&gt;</code>, <code>Vector&lt;VT_CLSID&gt;</code>, <code>Vector&lt;VT_I4&gt;</code>, <code>Vector&lt;VT_LPSTR&gt;</code>…) fell into the "type
 not supported" case. Decoding the count then delegating each element to the scalar reader covers them all at once, and any scalar type added later automatically gets its vector form.</p>
