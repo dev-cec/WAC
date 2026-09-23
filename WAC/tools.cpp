@@ -15,7 +15,7 @@
 #include <filesystem>
 
 /****************************************************
-*                   FORMAT DE DONNEES               *
+*                   DATA FORMATS                   *
 *****************************************************/
 
 
@@ -80,14 +80,14 @@ FILETIME FatDateTime::toFileTime() {
 *****************************************************/
 
 namespace {
-//! Vrai si stdout est une console : sinon la progression est inutile et bruyante.
+//! True if stdout is a console: otherwise the progress is useless and noisy.
 bool outputIsConsole() {
 	static const bool console =
 		GetFileType(GetStdHandle(STD_OUTPUT_HANDLE)) == FILE_TYPE_CHAR;
 	return console;
 }
 bool g_progressRunning = false;
-std::wstring g_currentStep;          //!< dernier libellé posé par printStep
+std::wstring g_currentStep;          //!< last label set by printStep
 } // namespace
 
 void printStep(const std::wstring& label) {
@@ -99,22 +99,22 @@ void printProgress(const std::wstring& label, unsigned long long done,
                    unsigned long long total, const wchar_t* unit) {
 	if (!outputIsConsole()) return;
 
-	/* Limitation par le TEMPS, et non par le nombre d'éléments.
-	 * Un pas fixe ne peut pas convenir aux deux extrêmes rencontrés : 38
-	 * shellbags dont chacun prend des secondes (un pas de 50 ne se déclenchait
-	 * jamais, d'où une impression de blocage) et 3000 entrées amcache qui
-	 * défilent instantanément (l'affichage coûtait alors plus que le travail).
-	 * Un rafraîchissement toutes les 150 ms reste fluide à l'œil quel que soit
-	 * le rythme. Le dernier appel (fait == total) passe toujours, pour que la
-	 * ligne finisse sur la valeur exacte. */
+	/* Rate-limited by TIME, and not by number of elements.
+	 * A fixed step cannot suit the two extremes met: 38 shellbags of which each
+	 * takes seconds (a step of 50 never fired, hence an impression of being
+	 * stuck) and 3,000 amcache entries that scroll instantly (the display then
+	 * cost more than the work).
+	 * A refresh every 150 ms stays smooth to the eye whatever the pace. The last
+	 * call (done == total) always goes through, so that the line ends on the
+	 * exact value. */
 	static ULONGLONG lastDisplay = 0;
 	const ULONGLONG now = GetTickCount64();
 	const bool last = (total > 0 && done >= total);
 	if (!last && now - lastDisplay < 150) return;
 	lastDisplay = now;
 
-	// Le libelle est tronque pour que la ligne ne depasse pas et ne provoque pas
-	// de retour a la ligne, qui casserait la reecriture sur place.
+	// The label is truncated so that the line does not overflow and cause a line
+	// break, which would break the rewriting in place.
 	std::wstring court = label;
 	if (court.size() > 40) court = L"..." + court.substr(court.size() - 37);
 
@@ -129,8 +129,8 @@ void printProgress(const std::wstring& label, unsigned long long done,
 
 void printProgressEnd() {
 	if (!outputIsConsole() || !g_progressRunning) return;
-	// Efface la ligne de progression, puis remet le libellé de l'étape : sans lui
-	// le « OK » qui suit apparaîtrait seul, sans dire à quoi il se rapporte.
+	// Erases the progress line, then puts the step label back: without it the "OK"
+	// that follows would appear alone, without saying what it refers to.
 	wprintf(L"\r%-100ls\r", L"");
 	if (!g_currentStep.empty()) wprintf(L"%ls", g_currentStep.c_str());
 	fflush(stdout);
@@ -138,8 +138,8 @@ void printProgressEnd() {
 }
 
 void printSuccess() {
-	// Restaure le libelle d'etape si une progression l'a efface, pour que le
-	// « OK » reste rattache a son etape.
+	// Restores the step label if a progress erased it, so that the "OK" stays
+	// attached to its step.
 	printProgressEnd();
 	SetConsoleTextAttribute(conf.hConsole, 10);
 	wprintf(L"OK\n");
@@ -148,17 +148,17 @@ void printSuccess() {
 
 void printProgressStep(const std::wstring& artefact, unsigned long long done,
                        unsigned long long total) {
-	/* La limitation de fréquence est assurée par printProgress (par le temps) :
-	   elle vaut pour tous les rythmes, du shellbag de plusieurs secondes aux
-	   milliers d'entrées amcache instantanées.
-	   Unité en ASCII pur, sans accent : la console est en CP_UTF8, mais wprintf
-	   convertit les wchar_t selon la locale C du programme, qui ne l'est pas — un
-	   caractère accentué y ressortirait en idéogrammes. */
+	/* The rate limiting is done by printProgress (by time): it holds for every
+	   pace, from the shellbag of several seconds to the thousands of
+	   instantaneous amcache entries.
+	   The unit is in pure ASCII, without accents: the console is in CP_UTF8, but
+	   wprintf converts the wchar_t according to the program's C locale, which is
+	   not — an accented character would come out there as ideograms. */
 	printProgress(artefact, done, total, L"elem");
 }
 
 void printError(std::wstring errorText) {
-	// Comme printSuccess : restaure le libelle d'etape avant d'ecrire l'erreur.
+	// As printSuccess does: restores the step label before writing the error.
 	printProgressEnd();
 	SetConsoleTextAttribute(conf.hConsole, 12);
 	WriteConsoleW(conf.hConsole, errorText.c_str(), errorText.length(), NULL, NULL);
@@ -187,8 +187,8 @@ std::wstring getErrorMessage(HRESULT hresult)
 		0,
 		NULL);
 	std::wstring result(errorText);
-	result.erase(std::remove(result.begin(), result.end(), '\r'), result.cend()); // pas de retour à la ligne
-	result.erase(std::remove(result.begin(), result.end(), '\n'), result.cend()); // pas de retour à la ligne
+	result.erase(std::remove(result.begin(), result.end(), '\r'), result.cend()); // no newline
+	result.erase(std::remove(result.begin(), result.end(), '\n'), result.cend()); // no newline
 
 	return result;
 }
@@ -254,7 +254,7 @@ void dump(LPBYTE buffer, int start, int end) {
 }
 
 std::wstring dump_wstring(LPBYTE buffer, int start, int length) {
-	// Borne EXCLUSIVE : « longueur » octets depuis « start » (cf. tools.h).
+	// EXCLUSIVE bound: "length" bytes from "start" (see tools.h).
 	if (!buffer || length <= 0) return L"";
 	std::wstringstream ss;
 	for (int x = start; x < start + length; x++)
@@ -293,7 +293,7 @@ std::wstring ROT13(std::wstring source)
 			transformed.append(1, (source[i] - 65 + 13) % 26 + 65);
 		}
 
-		// PAS alpha
+		// NOT alpha
 		else {
 			transformed.append(1, source[i]);
 		}
@@ -351,22 +351,22 @@ std::wstring tab(int i) {
 *****************************************************/
 
 std::wstring getNameFromSid(std::wstring _sid) {
-	/* CORRECTIONS et MISE EN CACHE.
+	/* CORRECTIONS and CACHING.
 	 *
-	 * Lenteur : LookupAccountSidW(NULL, …) interroge le contrôleur de domaine
-	 * quand le SID n'est pas résoluble localement, avec délai réseau à la clé.
-	 * La fonction était appelée pour CHAQUE shellbag, MRU, userassist et
-	 * processus, alors qu'un même SID revient des centaines de fois — d'où une
-	 * collecte qui semblait figée. Le résultat est donc mémorisé par SID.
-	 * Effet de bord utile : autant de sollicitations réseau en moins, donc
-	 * autant de traces en moins.
+	 * Slowness: LookupAccountSidW(NULL, …) queries the domain controller when the
+	 * SID is not resolvable locally, with the network delay that comes with it.
+	 * The function was called for EVERY shellbag, MRU, userassist and process,
+	 * while the same SID comes back hundreds of times — hence a collection that
+	 * seemed frozen. The result is therefore memorised per SID.
+	 * A useful side effect: that many network solicitations fewer, hence that
+	 * many traces fewer.
 	 *
-	 * Trois défauts corrigés au passage :
-	 *  - le pointeur alloué par ConvertStringSidToSidW n'était jamais libéré ;
-	 *  - la MÊME variable `taille` servait pour le nom ET pour le domaine, alors
-	 *    que l'API écrit dans les deux : la seconde écriture écrasait la première ;
-	 *  - le retour n'était pas vérifié, si bien qu'un échec faisait lire un
-	 *    tampon non initialisé.
+	 * Three defects fixed on the way:
+	 *  - the pointer allocated by ConvertStringSidToSidW was never released;
+	 *  - the SAME `size` variable served for the name AND for the domain, while
+	 *    the API writes into both: the second write overwrote the first;
+	 *  - the return value was not checked, so that a failure had an
+	 *    uninitialised buffer read.
 	 */
 	if (_sid.empty()) return L"";
 
@@ -380,28 +380,28 @@ std::wstring getNameFromSid(std::wstring _sid) {
 	if (ConvertStringSidToSidW(_sid.c_str(), &pSID)) {
 		wchar_t lpName[256] = L"";
 		wchar_t lpDomain[256] = L"";
-		DWORD nameSize = 256, domainSize = 256;   // deux tailles distinctes
+		DWORD nameSize = 256, domainSize = 256;   // two distinct sizes
 		SID_NAME_USE typeSid = SidTypeUnknown;
 		log(3, L"🔈LookupAccountSidW");
 		if (LookupAccountSidW(NULL, pSID, lpName, &nameSize,
 		                      lpDomain, &domainSize, &typeSid))
 			name = lpName;
 		else
-			log(3, L"🔈LookupAccountSidW sans correspondance", GetLastError());
+			log(3, L"🔈LookupAccountSidW: no match", GetLastError());
 		LocalFree(pSID);                              // alloue par ConvertStringSidToSidW
 	}
 
-	// Mémorisé même vide : un SID non résoluble le restera, inutile d'attendre
-	// une nouvelle fois le délai réseau à chaque occurrence.
+	// Memorised even when empty: a SID that cannot be resolved will stay so, no
+	// point in waiting for the network delay again at every occurrence.
 	cache.emplace(_sid, name);
 	return name;
 }
 
 std::wstring luid_to_wstring(LUID luid) {
-	/* CORRECTION : un LUID fait 64 bits (LowPart ULONG + HighPart LONG), mais le
-	   calcul se faisait sur un ULONG de 32 bits. Decaler de 32 un type de 32 bits
-	   est un comportement indefini, et HighPart etait perdu : deux LUID ne
-	   differant que par leur partie haute rendaient la meme valeur. */
+	/* FIX: a LUID is 64 bits (LowPart ULONG + HighPart LONG), but the computation
+	   was done on a 32-bit ULONG. Shifting a 32-bit type by 32 is undefined
+	   behaviour, and HighPart was lost: two LUIDs differing only in their high
+	   part returned the same value. */
 	const ULONGLONG value = ((ULONGLONG)(ULONG)luid.HighPart << 32) | (ULONGLONG)luid.LowPart;
 	return std::to_wstring(value);
 }
@@ -476,17 +476,17 @@ std::wstring time_to_wstring(const FILETIME filetime, bool convertUtc) {
 }
 
 ///////////////////////////////////////////////////////
-// Horodatages ISO 8601 — voir tools.h pour la justification
+// ISO 8601 timestamps — see tools.h for the rationale
 ///////////////////////////////////////////////////////
 namespace {
 
-//! Deux chiffres, zéro devant : "07", "15".
+//! Two digits, zero in front: "07", "15".
 void twoDigits(std::wstring& out, unsigned v) {
 	out += (wchar_t)(L'0' + (v / 10) % 10);
 	out += (wchar_t)(L'0' + v % 10);
 }
 
-//! Quatre chiffres : "2026".
+//! Four digits: "2026".
 void fourDigits(std::wstring& out, unsigned v) {
 	out += (wchar_t)(L'0' + (v / 1000) % 10);
 	out += (wchar_t)(L'0' + (v / 100) % 10);
@@ -494,29 +494,29 @@ void fourDigits(std::wstring& out, unsigned v) {
 	out += (wchar_t)(L'0' + v % 10);
 }
 
-//! Vrai si le FILETIME est nul (époque 1601) : pas une date, une absence de date.
+//! True if the FILETIME is null (the 1601 epoch): not a date, an absence of date.
 bool nullDate(const FILETIME& ft) {
 	return ft.dwLowDateTime == 0 && ft.dwHighDateTime == 0;
 }
 
-//! Décalage de la machine d'EXÉCUTION (repli quand la ruche n'est pas lisible).
+//! Offset of the RUNNING machine (fallback when the hive cannot be read).
 long machineBiasMinutes() {
 	TIME_ZONE_INFORMATION tz = { 0 };
 	const DWORD type = GetTimeZoneInformation(&tz);
 	if (type == TIME_ZONE_ID_INVALID) return 0;
-	// Bias est en minutes à AJOUTER à l'heure locale pour obtenir l'UTC.
+	// Bias is in minutes to ADD to the local time to obtain UTC.
 	return tz.Bias + ((type == TIME_ZONE_ID_DAYLIGHT) ? tz.DaylightBias : tz.StandardBias);
 }
 
 } // namespace
 
 std::wstring localUtcOffsetString() {
-	/* Pas de cache : la valeur change en cours d'exécution, au moment où la ruche
-	   SYSTEM du suspect devient lisible. Un cache figerait le décalage de la
-	   machine d'exécution pour toute la collecte. */
+	/* No cache: the value changes during the run, at the moment the suspect's
+	   SYSTEM hive becomes readable. A cache would freeze the running machine's
+	   offset for the whole collection. */
 	const long bias = conf.timeZone.valid ? conf.timeZone.activeBiasMinutes
 	                                       : machineBiasMinutes();
-	const long minutes = -bias;          // minutes à ajouter à l'UTC pour l'heure locale
+	const long minutes = -bias;          // minutes to add to UTC to get the local time
 	std::wstring s;
 	s += (minutes < 0) ? L'-' : L'+';
 	const long absolute = (minutes < 0) ? -minutes : minutes;
@@ -528,25 +528,25 @@ std::wstring localUtcOffsetString() {
 
 namespace {
 
-/*! Développe les variables d'environnement d'un `ProfileImagePath`, SANS
- *  interroger l'environnement du processus.
+/*! Expands the environment variables of a `ProfileImagePath`, WITHOUT querying
+ *  the process's environment.
  *
- *  POURQUOI PAS `ExpandEnvironmentStringsW`. Cette fonction lit l'environnement
- *  du processus COURANT. Tant que la valeur venait du registre vivant, cela
- *  coïncidait avec la machine examinée ; lue hors ligne dans une ruche copiée,
- *  la valeur appartient à une autre installation que celle qui exécute WAC, et
- *  développer avec l'environnement local deviendrait une supposition.
+ *  WHY NOT `ExpandEnvironmentStringsW`. That function reads the environment of
+ *  the CURRENT process. As long as the value came from the live registry, that
+ *  coincided with the examined machine; read offline in a copied hive, the value
+ *  belongs to another installation than the one running WAC, and expanding it
+ *  with the local environment would become a guess.
  *
- *  `ProfileImagePath` est un REG_EXPAND_SZ, et vaut littéralement
- *  « %systemroot%\\system32\\config\\systemprofile » pour les comptes de
- *  service. Sans développement, le chemin ne désigne aucun fichier et
- *  l'extraction brute de leur ntuser.dat échoue en silence — ce qui s'observait
- *  comme une extraction « partielle » sans cause apparente. */
+ *  `ProfileImagePath` is a REG_EXPAND_SZ, and holds literally
+ *  "%systemroot%\\system32\\config\\systemprofile" for the service accounts.
+ *  Without expansion, the path names no file and the raw extraction of their
+ *  ntuser.dat fails in silence — which showed up as a "partial" extraction with
+ *  no apparent cause. */
 std::wstring expandProfilePath(const std::wstring& brut) {
 	if (brut.find(L'%') == std::wstring::npos) return brut;
 	const std::wstring expanded = normalizeFilePath(brut);
 	if (expanded.empty()) {
-		log(2, L"🔥ProfileImagePath : variable non reconnue dans " + brut);
+		log(2, L"🔥ProfileImagePath: unknown variable in " + brut);
 		return brut;
 	}
 	return expanded;
@@ -556,7 +556,7 @@ std::wstring expandProfilePath(const std::wstring& brut) {
 
 HRESULT loadProfileList() {
 	if (!conf.Software) {
-		log(2, L"🔥Ruche SOFTWARE indisponible : profils utilisateurs non releves",
+		log(2, L"🔥SOFTWARE hive unavailable: user profiles not read",
 		    ERROR_INVALID_HANDLE);
 		return ERROR_INVALID_HANDLE;
 	}
@@ -593,21 +593,21 @@ HRESULT loadProfileList() {
 
 		const std::wstring expanded = expandProfilePath(path);
 		if (expanded != path)
-			log(2, L"❇️Profil developpe : " + path + L" -> " + expanded);
+			log(2, L"❇️Profile expanded: " + path + L" -> " + expanded);
 		if (expanded.empty()) continue;
 
 		conf.profiles.push_back({ sid, expanded });
-		log(2, L"❇️Profil : " + std::wstring(sid) + L" -> " + expanded);
+		log(2, L"❇️Profile: " + std::wstring(sid) + L" -> " + expanded);
 	}
 	ORCloseKey(hKey);
-	log(2, L"❇️" + std::to_wstring(conf.profiles.size()) + L" profils utilisateurs releves");
+	log(2, L"❇️" + std::to_wstring(conf.profiles.size()) + L" user profiles read");
 	return conf.profiles.empty() ? ERROR_EMPTY : ERROR_SUCCESS;
 }
 
 std::wstring volumeOfPath(const std::wstring& absolute) {
 	if (absolute.size() >= 2 && absolute[1] == L':')
 		return std::wstring(1, (wchar_t)towupper(absolute[0]));
-	// Chemin deja relatif a une racine : il appartient au volume systeme.
+	// Path already relative to a root: it belongs to the system volume.
 	return conf.systemDrive.substr(0, 1);
 }
 
@@ -616,46 +616,47 @@ std::wstring pathRelativeToVolume(const std::wstring& absolute) {
 	return absolute;
 }
 
-/*! Résout le chemin d'un fichier désigné par `ImagePath` ou `ServiceDll`.
+/*! Resolves the path of a file named by `ImagePath` or `ServiceDll`.
 *
-*  La ruche stocke des formes hétérogènes, qu'aucune API ne normalise hors ligne :
-*    - `\SystemRoot\System32\drivers\x.sys`  (préfixe noyau)
-*    - `\??\C:\dossier\x.exe`                 (chemin objet NT)
-*    - `system32\svchost.exe -k netsvcs`      (relatif à %SystemRoot%)
-*    - `"C:\Program Files\App\x.exe" /service`(guillemets + arguments)
+*  The hive stores heterogeneous forms, which no API normalises offline:
+*    - `\SystemRoot\System32\drivers\x.sys`   (kernel prefix)
+*    - `\??\C:\folder\x.exe`                  (NT object path)
+*    - `system32\svchost.exe -k netsvcs`      (relative to %SystemRoot%)
+*    - `"C:\Program Files\App\x.exe" /service`(quotes + arguments)
 *
-*  CE QUI ÉTAIT FAUX. La version d'origine coupait sur la première occurrence de
-*  « -» ou « /», y compris à l'intérieur du chemin : un binaire installé dans un
-*  dossier contenant un tiret voyait son chemin tronqué, et son MD5 n'était donc
-*  jamais calculé. Ici, la coupure se fait APRÈS l'extension du fichier, qui est
-*  le seul repère fiable de la fin du chemin.
+*  WHAT WAS WRONG. The original version cut on the first occurrence of "-" or
+*  "/", including inside the path: a binary installed in a folder holding a dash
+*  saw its path truncated, and its MD5 was therefore never computed. Here, the
+*  cut is made AFTER the file's extension, which is the only reliable marker of
+*  the end of the path.
 */
 std::wstring normalizeFilePath(std::wstring path) {
-	// Espaces et guillemets d'encadrement : présents dans Shimcache et Amcache.
+	// Surrounding spaces and quotes: present in Shimcache and Amcache.
 	while (!path.empty() && (path.front() == L' ' || path.front() == L'"')) path.erase(0, 1);
 	while (!path.empty() && (path.back() == L' ' || path.back() == L'"')) path.pop_back();
 	if (path.empty()) return L"";
 
 	std::wstring low = toLower(path);
-	// Préfixes objet NT : « \??\C:\… » (Shimcache, ImagePath), « \\?\C:\… ».
+	// NT object prefixes: "\??\C:\…" (Shimcache, ImagePath), "\\?\C:\…".
 	if (low.compare(0, 4, L"\\??\\") == 0 || low.compare(0, 4, L"\\\\?\\") == 0) {
-		if (low.compare(4, 4, L"unc\\") == 0) return L"";   // partage réseau
+		if (low.compare(4, 4, L"unc\\") == 0) return L"";   // network share
 		path.erase(0, 4);
 		low.erase(0, 4);
 	}
-	// Préfixe noyau.
+	// Kernel prefix.
 	if (low.compare(0, 12, L"\\systemroot\\") == 0)
 		return conf.systemDrive + L"\\Windows\\" + path.substr(12);
 
-	/* VARIABLES, développées depuis le lecteur système DÉTECTÉ et jamais depuis
-	   l'environnement du processus : la valeur appartient à l'installation
-	   examinée, pas à celle qui exécute WAC (et WAC tourne en SYSTEM, dont
-	   l'environnement ne dit rien des utilisateurs).
-	   `%windir%` est synonyme de `%systemroot%` ; ne pas le traiter donnait des
-	   chemins du genre « C:\Windows\%windir%\system32\ncsi.dll ».
-	   Les variables PROPRES À UN UTILISATEUR (%APPDATA%, %LOCALAPPDATA%,
-	   %USERPROFILE%…) ne sont pas développées : le compte n'est pas connu ici,
-	   et deviner rendrait l'empreinte d'un autre fichier que celui désigné. */
+	/* VARIABLES, expanded from the DETECTED system drive and never from the
+	   process's environment: the value belongs to the examined installation, not
+	   to the one running WAC (and WAC runs as SYSTEM, whose environment says
+	   nothing about the users).
+	   `%windir%` is a synonym of `%systemroot%`; not handling it gave paths of
+	   the kind "C:\Windows\%windir%\system32\ncsi.dll".
+	   The variables SPECIFIC TO A USER (%APPDATA%, %LOCALAPPDATA%,
+	   %USERPROFILE%…) are not expanded: the account is not known here, and
+	   guessing would return the fingerprint of another file than the one
+	   named. */
 	if (!path.empty() && path.front() == L'%') {
 		const size_t end = path.find(L'%', 1);
 		if (end == std::wstring::npos) return L"";
@@ -684,15 +685,15 @@ std::wstring normalizeFilePath(std::wstring path) {
 std::wstring binaryPath(std::wstring imagePath) {
 	if (imagePath.empty()) return L"";
 
-	// Chemin entre guillemets : il se termine au guillemet fermant.
+	// Quoted path: it ends at the closing quote.
 	if (imagePath.front() == L'"') {
 		const size_t end = imagePath.find(L'"', 1);
 		imagePath = (end == std::wstring::npos) ? imagePath.substr(1)
 		                                        : imagePath.substr(1, end - 1);
 	}
 	else {
-		/* Sans guillemets, la fin du chemin se repère à l'extension. On prend la
-		   PREMIÈRE extension rencontrée : ce qui suit est une option. */
+		/* Without quotes, the end of the path is found by the extension. The FIRST
+		   extension met is taken: what follows is an option. */
 		const std::wstring low = toLower(imagePath);
 		size_t end = std::wstring::npos;
 		for (PCWSTR ext : { L".exe", L".sys", L".dll" }) {
@@ -703,19 +704,19 @@ std::wstring binaryPath(std::wstring imagePath) {
 		if (end != std::wstring::npos) imagePath = imagePath.substr(0, end);
 	}
 
-	// Préfixes noyau, objet NT et variables : la règle commune.
+	// Kernel prefixes, NT object prefixes and variables: the common rule.
 	{
 		const std::wstring normalized = normalizeFilePath(imagePath);
 		if (!normalized.empty()) return normalized;
 		if (imagePath.find(L'%') != std::wstring::npos) return L"";   // variable inconnue
 	}
 
-	/* Chemin relatif : il l'est à %SystemRoot%, pas au répertoire courant.
-	   Un service dont ImagePath vaut « system32\\x.exe » désigne donc
+	/* Relative path: it is relative to %SystemRoot%, not to the current
+	   directory. A service whose ImagePath is "system32\\x.exe" therefore names
 	   C:\\Windows\\system32\\x.exe. */
 	if (imagePath.size() < 2 || imagePath[1] != L':') {
 		if (!imagePath.empty() && imagePath.front() == L'\\')
-			return L"";   // \Driver\..., \FileSystem\... : objet noyau, pas un fichier
+			return L"";   // \Driver\..., \FileSystem\...: a kernel object, not a file
 		imagePath = conf.systemDrive + L"\\Windows\\" + imagePath;
 	}
 	return imagePath;
@@ -726,9 +727,9 @@ std::wstring pathUnder(const std::wstring& root, const std::wstring& absolute) {
 	const std::wstring relative  = pathRelativeToVolume(absolute);
 	const std::wstring system_  = conf.systemDrive.substr(0, 1);
 	if (toLower(volume) == toLower(system_))
-		return root + relative;                   // cas courant : rien ne change
-	// Volume secondaire : sous-dossier dedie, pour ne pas ecraser une copie
-	// homonyme venant d'un autre disque.
+		return root + relative;                   // the common case: nothing changes
+	// Secondary volume: a dedicated subfolder, so as not to overwrite a copy of the
+	// same name coming from another disk.
 	return root + L"\\_volume_" + volume + relative;
 }
 
@@ -738,7 +739,7 @@ std::wstring extractedPath(const std::wstring& absolute) {
 
 std::wstring originalPath(const std::wstring& extracted) {
 	std::wstring rest = replaceAll(extracted, conf.mountpoint, L"");
-	// « \_volume_D\... » : le fichier venait d'un autre disque que Windows.
+	// "\_volume_D\..." : the file came from another disk than Windows.
 	const std::wstring mark = L"\\_volume_";
 	if (rest.compare(0, mark.size(), mark) == 0
 	    && rest.size() > mark.size()) {
@@ -749,23 +750,23 @@ std::wstring originalPath(const std::wstring& extracted) {
 }
 
 void loadSystemDrive() {
-	/* GetSystemDirectoryW rend "X:\Windows\System32" : les deux premiers
-	   caractères donnent le lecteur. Préféré à la variable d'environnement
-	   %SystemDrive%, qui peut être altérée par le processus appelant. */
+	/* GetSystemDirectoryW returns "X:\Windows\System32": the first two characters
+	   give the drive. Preferred to the environment variable %SystemDrive%, which
+	   the calling process can alter. */
 	wchar_t buffer[MAX_PATH] = L"";
 	const UINT n = GetSystemDirectoryW(buffer, MAX_PATH);
 	if (n >= 2 && buffer[1] == L':') {
 		conf.systemDrive = std::wstring(buffer, 2);
-		log(2, L"❇️Lecteur systeme : " + conf.systemDrive);
+		log(2, L"❇️System drive: " + conf.systemDrive);
 	}
 	else {
-		log(2, L"🔥GetSystemDirectoryW : lecteur systeme non determine, "
-		       L"repli sur " + conf.systemDrive, GetLastError());
+		log(2, L"🔥GetSystemDirectoryW: system drive not determined, "
+		       L"falling back on " + conf.systemDrive, GetLastError());
 	}
 }
 
 HRESULT loadSuspectTimeZone() {
-	conf.timeZone = TimeZoneInfo{};       // repart d'un état propre
+	conf.timeZone = TimeZoneInfo{};       // starts again from a clean state
 	if (!conf.CurrentControlSet) return ERROR_INVALID_HANDLE;
 
 	PCWSTR key = L"Control\\TimeZoneInformation";
@@ -773,27 +774,27 @@ HRESULT loadSuspectTimeZone() {
 	log(3, L"🔈getRegDwordValue ActiveTimeBias");
 	HRESULT hresult = getRegDwordValue(conf.CurrentControlSet, key, L"ActiveTimeBias", &activeBias);
 	if (hresult != ERROR_SUCCESS) {
-		/* ActiveTimeBias absent : on recompose Bias + biais saisonnier. On ne
-		   peut pas savoir lequel des deux s'appliquait au moment de chaque
-		   artefact, donc on prend Bias seul et on le signale. */
+		/* ActiveTimeBias absent: Bias + the seasonal bias are recomposed. One cannot
+		   know which of the two applied at the time of each artefact, so Bias
+		   alone is taken and that is reported. */
 		DWORD bias = 0;
 		log(3, L"🔈getRegDwordValue Bias");
 		hresult = getRegDwordValue(conf.CurrentControlSet, key, L"Bias", &bias);
 		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥Fuseau du suspect illisible dans la ruche SYSTEM", hresult);
+			log(2, L"🔥Suspect's time zone unreadable in the SYSTEM hive", hresult);
 			return hresult;
 		}
 		activeBias = bias;
-		log(2, L"🔥ActiveTimeBias absent : Bias seul utilise (heure d'ete non prise en compte)");
+		log(2, L"🔥ActiveTimeBias absent: Bias used alone (daylight saving time not accounted for)");
 	}
 
-	// ActiveTimeBias/Bias sont des DWORD mais portent un entier SIGNE en minutes.
+	// ActiveTimeBias/Bias are DWORDs but carry a SIGNED integer, in minutes.
 	conf.timeZone.activeBiasMinutes = (long)(int32_t)activeBias;
 
-	/* Heure d'été active ou non. Non stockée telle quelle : elle se DÉDUIT de
-	   l'écart entre ActiveTimeBias (décalage réellement appliqué) et Bias
-	   (décalage hors saison). Si les deux diffèrent, le biais saisonnier
-	   s'appliquait au moment de la collecte. */
+	/* Daylight saving time in force or not. Not stored as such: it is DEDUCED
+	   from the difference between ActiveTimeBias (the offset really applied) and
+	   Bias (the offset out of season). If the two differ, the seasonal bias
+	   applied at collection time. */
 	DWORD biasStandard = 0;
 	if (getRegDwordValue(conf.CurrentControlSet, key, L"Bias", &biasStandard) == ERROR_SUCCESS) {
 		conf.timeZone.standardBiasMinutes = (long)(int32_t)biasStandard;
@@ -809,13 +810,13 @@ HRESULT loadSuspectTimeZone() {
 	conf.timeZone.fromHive = true;
 	conf.timeZone.valid    = true;
 
-	log(2, L"❇️Fuseau du suspect (ruche SYSTEM) : " + conf.timeZone.keyName
+	log(2, L"❇️Suspect's time zone (SYSTEM hive): " + conf.timeZone.keyName
 	     + L", UTC" + localUtcOffsetString());
 	return ERROR_SUCCESS;
 }
 
 std::wstring timeToIso8601(const SYSTEMTIME& st, bool utc, long fraction100ns) {
-	if (st.wYear <= 1601) return L"";        // date nulle : chaîne vide, pas 1601
+	if (st.wYear <= 1601) return L"";        // null date: an empty string, not 1601
 	std::wstring s;
 	s.reserve(33);
 	fourDigits(s, st.wYear);   s += L'-';
@@ -824,11 +825,11 @@ std::wstring timeToIso8601(const SYSTEMTIME& st, bool utc, long fraction100ns) {
 	twoDigits(s, st.wHour);     s += L':';
 	twoDigits(s, st.wMinute);   s += L':';
 	twoDigits(s, st.wSecond);
-	/*  La fraction s'écrit ICI, entre les secondes et le suffixe de fuseau.
-	    L'insérer après coup obligeait à retrouver la fin des secondes dans la
-	    chaîne finie : sur la variante locale, dont le suffixe « +02:00 » se
-	    termine par des chiffres, la recherche s'arrêtait aussitôt et la fraction
-	    atterrissait APRÈS le décalage horaire. */
+	/*  The fraction is written HERE, between the seconds and the time-zone suffix.
+	    Inserting it afterwards meant finding the end of the seconds in the
+	    finished string: on the local variant, whose "+02:00" suffix ends with
+	    digits, the search stopped at once and the fraction landed AFTER the
+	    time-zone offset. */
 	if (fraction100ns >= 0) {
 		s += L'.';
 		for (int p = 6; p >= 0; --p) {
@@ -842,26 +843,25 @@ std::wstring timeToIso8601(const SYSTEMTIME& st, bool utc, long fraction100ns) {
 	return s;
 }
 
-/*  PRÉCISION INFRA-SECONDE.
+/*  SUB-SECOND PRECISION.
  *
- *  Un FILETIME compte les intervalles de 100 nanosecondes : sa résolution est
- *  dix millions de fois plus fine que la seconde. Passer par un SYSTEMTIME, qui
- *  plafonne à la milliseconde, en perdait quatre chiffres — et le formatage à la
- *  seconde en perdait sept.
+ *  A FILETIME counts intervals of 100 nanoseconds: its resolution is ten
+ *  million times finer than the second. Going through a SYSTEMTIME, which caps
+ *  at the millisecond, lost four digits of it — and formatting to the second
+ *  lost seven.
  *
- *  POURQUOI CELA COMPTE. Corréler des artefacts, c'est les ORDONNER. Deux
- *  événements d'une même seconde — une création de processus et la connexion
- *  réseau qu'il ouvre, un fichier écrit puis exécuté — deviennent
- *  indiscernables si l'horodatage est arrondi, et l'ordre est précisément ce
- *  qu'on cherche à établir. Windows lui-même écrit sept chiffres dans le XML de
- *  ses journaux.
+ *  WHY IT MATTERS. Correlating artefacts means ORDERING them. Two events within
+ *  the same second — a process creation and the network connection it opens, a
+ *  file written then executed — become indistinguishable if the timestamp is
+ *  rounded, and the order is precisely what one seeks to establish. Windows
+ *  itself writes seven digits in the XML of its logs.
  *
- *  La fraction est prise sur le FILETIME et non sur le SYSTEMTIME : c'est la
- *  seule source qui la porte.
+ *  The fraction is taken from the FILETIME and not from the SYSTEMTIME: it is
+ *  the only source that carries it.
  */
 namespace {
 
-//! Fraction de seconde d'un FILETIME, en centaines de nanosecondes (0..9999999).
+//! Fraction of a second of a FILETIME, in hundreds of nanoseconds (0..9999999).
 long fraction100ns(const FILETIME& ft) {
 	const ULONGLONG v = ((ULONGLONG)ft.dwHighDateTime << 32) | ft.dwLowDateTime;
 	return (long)(v % 10000000ULL);
@@ -887,16 +887,16 @@ bool utcToSuspectLocal(const FILETIME& filetimeUtc, FILETIME* filetimeLocal) {
 	if (!filetimeLocal) return false;
 	*filetimeLocal = FILETIME{ 0, 0 };
 	if (nullDate(filetimeUtc)) return false;
-	/* Le biais est en minutes à AJOUTER à l'heure locale pour obtenir l'UTC
-	   (convention de la ruche) : l'heure locale s'obtient donc en le
-	   RETRANCHANT de l'UTC. Même source que localUtcOffsetString(), afin que la
-	   valeur et son étiquette parlent du même fuseau. */
+	/* The bias is in minutes to ADD to the local time to obtain UTC (the hive's
+	   convention): the local time is therefore obtained by SUBTRACTING it from
+	   UTC. Same source as localUtcOffsetString(), so that the value and its
+	   label speak of the same time zone. */
 	const long bias = conf.timeZone.valid ? conf.timeZone.activeBiasMinutes
 	                                       : machineBiasMinutes();
 	const ULONGLONG utc100ns = ((ULONGLONG)filetimeUtc.dwHighDateTime << 32)
 	                         | filetimeUtc.dwLowDateTime;
 	const long long offset100ns = (long long)bias * 60LL * 10000000LL;
-	if ((long long)utc100ns < offset100ns) return false;   // sous l'epoque : aberrant
+	if ((long long)utc100ns < offset100ns) return false;   // before the epoch: nonsensical
 	const ULONGLONG local100ns = (ULONGLONG)((long long)utc100ns - offset100ns);
 	filetimeLocal->dwLowDateTime  = (DWORD)(local100ns & 0xFFFFFFFFULL);
 	filetimeLocal->dwHighDateTime = (DWORD)(local100ns >> 32);
@@ -927,9 +927,9 @@ std::wstring string_to_wstring(const std::string& str)
 }
 
 bool estReferenceMui(const std::wstring& value) {
-	/* Forme reconnue : « @<fichier>,-<id> ». Le « @ » initial seul ne suffit
-	   pas : certaines descriptions commencent par une arobase sans être des
-	   références. La virgule suivie du signe moins est le marqueur fiable. */
+	/* Recognised form: "@<file>,-<id>". The leading "@" alone is not enough: some
+	   descriptions start with an at sign without being references. The comma
+	   followed by a minus sign is the reliable marker. */
 	if (value.size() < 4 || value.front() != L'@') return false;
 	const size_t virgule = value.rfind(L',');
 	return virgule != std::wstring::npos
@@ -963,7 +963,7 @@ std::vector<std::wstring> multiWstring_to_vector(LPBYTE data, int size)
 	{
 
 		std::wstring ws = std::wstring(d).data();
-		pos += ws.length() + 1;//position du premier caractère de la chaîne suivante après le \0 de fin de chaîne de la suivante
+		pos += ws.length() + 1;// position of the first character of the next string, after the \0 that ends this one
 		d += ws.length() + 1;
 		if (!ws.empty()) {
 			out.push_back(ws);
@@ -989,20 +989,20 @@ std::wstring guid_to_wstring(GUID guid) {
 *                   REGISTRY                        *
 *****************************************************/
 
-// Lire une donnée au format binaire en base de données
+// Read a value in binary form from the registry
 HRESULT getRegBinaryValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, LPBYTE* bytes, DWORD* size)
 {
-	//Attention octets doit être suffisamment grand pour accepter les données LPBYTE octets = new BYTE[MAX_DATA]; si la taille n'est pas connue
-	//les REG_BINARY sont stockées sous forme de bytes 
+	// Mind that `bytes` must be large enough to hold the data: LPBYTE bytes = new BYTE[MAX_DATA]; when the size is not known
+	// REG_BINARY values are stored as bytes
 	DWORD valueType = 0;
 	HRESULT hresult = 0;
 	if (*bytes != NULL)
-		delete[] * bytes; // on supprime tout buffer passé en paramètre pour ne pas avoir de memory leak;
+		delete[] * bytes; // any buffer passed as a parameter is released, so as not to leak memory
 	do {
 		*bytes = new BYTE[*size];
 		memset(*bytes, 0, *size);
 		log(3, L"🔈ORGetValue");
-		hresult = ORGetValue(key, subKey, valueName, &valueType, *bytes, size); //lecture des données
+		hresult = ORGetValue(key, subKey, valueName, &valueType, *bytes, size); // read the data
 	} while (hresult == ERROR_MORE_DATA);
 
 	if (hresult != ERROR_SUCCESS) {
@@ -1013,10 +1013,10 @@ HRESULT getRegBinaryValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, LPBYTE* b
 }
 
 
-// Lire une valeur booléenne en base de registre
+// Read a boolean value from the registry
 HRESULT getRegboolValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, bool* value)
 {
-	//les REG_BINARY sont stockées sous forme de bytes 
+	// REG_BINARY values are stored as bytes
 	DWORD size = 0;
 	LPBYTE bytes = NULL;
 	HRESULT hresult = 0;
@@ -1033,11 +1033,11 @@ HRESULT getRegboolValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, bool* value
 	return hresult;
 }
 
-// Lit une valeur FILETIME en base de registre
+// Read a FILETIME value from the registry
 HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, FILETIME* filetime)
 {
-	//les REG_FILETIME  sont stockées sous forme de bytes
-	// leur type est soit REG_BINARY soi REG_FILETIME(16) 
+	// REG_FILETIME values are stored as bytes
+	// their type is either REG_BINARY or REG_FILETIME(16)
 	DWORD size = 0;
 	LPBYTE data = new BYTE[size + 2];
 	HRESULT hresult = 0;
@@ -1057,8 +1057,8 @@ HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, FILETIM
 	return hresult;
 }
 
-// Lire une chaîne de caractère en base de registre
-// S'assure que la chaîne est printable et se termine par \0. Si un caractère n'est pas imprimable il est remplacé par ?
+// Read a string from the registry
+// Makes sure the string is printable and ends with \0. A character that is not printable is replaced by ?
 HRESULT getRegDwordValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, DWORD* pdword)
 {
 	DWORD size = 0;
@@ -1066,7 +1066,7 @@ HRESULT getRegDwordValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, DWORD* pdw
 	log(3, L"🔈getRegBinaryValue");
 	HRESULT hresult = getRegBinaryValue(key, subKey, valueName, &data, &size);
 	if (hresult != ERROR_SUCCESS) return hresult;
-	// Une valeur plus courte que 4 octets n'est pas un DWORD exploitable.
+	// A value shorter than 4 bytes is not a usable DWORD.
 	if (size < sizeof(DWORD)) { delete[] data; return ERROR_INVALID_DATA; }
 	*pdword = *reinterpret_cast<DWORD*>(data);
 	delete[] data;
@@ -1080,7 +1080,7 @@ HRESULT getRegQwordValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, unsigned l
 	log(3, L"🔈getRegBinaryValue");
 	HRESULT hresult = getRegBinaryValue(key, subKey, valueName, &data, &size);
 	if (hresult != ERROR_SUCCESS) return hresult;
-	// Une valeur plus courte que 8 octets n'est pas un QWORD exploitable.
+	// A value shorter than 8 bytes is not a usable QWORD.
 	if (size < sizeof(unsigned long long)) { delete[] data; return ERROR_INVALID_DATA; }
 	memcpy(pqword, data, sizeof(unsigned long long));
 	delete[] data;
@@ -1089,7 +1089,7 @@ HRESULT getRegQwordValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, unsigned l
 
 HRESULT getRegSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::wstring* ws)
 {
-	//les REG_SZ sont stockées sous forme de wchar_t = 16 bit par caractère
+	// REG_SZ values are stored as wchar_t = 16 bits per character
 	DWORD size = 0;
 	LPWSTR data = NULL;
 	size_t nbChar = 0;
@@ -1108,11 +1108,11 @@ HRESULT getRegSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::wstring*
 	return hresult;
 }
 
-// Lit une valeur multi chaîne en base de registre. Chaque chaîne se termine par \0
-// Les caractères non imprimable sont remplacés par ?
+// Read a multi-string value from the registry. Each string ends with \0
+// Characters that are not printable are replaced by ?
 HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vector<std::wstring>* out)
 {
-	//les REG_MULTI_SZ sont stockées sous forme de wchar_t = 16 bit par caractère et d'un succession de chaîne séparées par \0 et à la fin \0\0
+	// REG_MULTI_SZ values are stored as wchar_t = 16 bits per character, a succession of strings separated by \0 and ended by \0\0
 	DWORD size = 0;
 	wchar_t* data = NULL;
 	HRESULT hresult = 0;
@@ -1123,16 +1123,16 @@ HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vec
 		return hresult;
 	}
 	else {
-		/* CE QUI ÉTAIT FAUX. La boucle relisait `donnees` à chaque tour sans
-		   jamais avancer le pointeur : seul le compteur de position progressait.
-		   Toute valeur REG_MULTI_SZ ressortait donc comme sa PREMIÈRE chaîne,
-		   répétée autant de fois qu'il y avait de caractères à parcourir —
-		   observé sur `DependOnService` (« RPCSS » cinq fois) et sur
-		   `HardwareId` des périphériques USB.
-
-		   La borne est désormais calculée sur le tampon, sans faire confiance à
-		   un éventuel \0 final : une valeur tronquée dans la ruche ferait sinon
-		   lire au-delà. */
+		/* WHAT WAS WRONG. The loop re-read `data` at every turn without ever
+		   advancing the pointer: only the position counter progressed. Every
+		   REG_MULTI_SZ value therefore came out as its FIRST string, repeated as
+		   many times as there were characters to walk — seen on
+		   `DependOnService` ("RPCSS" five times) and on the `HardwareId` of USB
+		   devices.
+		
+		   The bound is now computed on the buffer, without trusting a possible
+		   final \0: a value truncated in the hive would otherwise be read past
+		   its end. */
 		const size_t nbCar = size / sizeof(wchar_t);
 		size_t pos = 0;
 		while (pos < nbCar) {
@@ -1140,8 +1140,8 @@ HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vec
 			while (end < nbCar && data[end] != L'\0') ++end;
 			if (end > pos) out->push_back(std::wstring(data + pos, end - pos));
 			if (end >= nbCar) break;          // tampon epuise
-			pos = end + 1;                    // apres le \0 separateur
-			if (pos < nbCar && data[pos] == L'\0') break;   // \0\0 = fin de liste
+			pos = end + 1;                    // after the \0 separator
+			if (pos < nbCar && data[pos] == L'\0') break;   // \0\0 = end of the list
 		}
 	}
 	delete[] data;
@@ -1149,19 +1149,18 @@ HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vec
 }
 
 std::wstring getVolumeLetter(std::wstring searchSerial) {
-	/*  RÉÉCRITE (2026-09-15). La version d'origine cumulait :
-	 *    - `return Names;` alors que `Names` valait NULL et que la fonction rend
-	 *      un `std::wstring` : construire une chaîne depuis un pointeur nul est
-	 *      un comportement indéfini, sur le chemin même de l'échec ;
-	 *    - le `return` du milieu de boucle abandonnait le tampon `Names` ET le
-	 *      handle de recherche de volumes, jamais fermé ;
-	 *    - `while (Success == ERROR_MORE_DATA)` comparait un BOOL (0 ou 1) au
-	 *      code 234 : la condition était TOUJOURS fausse, donc la boucle de
-	 *      redimensionnement du tampon ne s'exécutait jamais. Si le tampon
-	 *      initial ne suffisait pas, on construisait la chaîne à partir de
-	 *      mémoire non initialisée.
-	 *  Le tampon est désormais un vecteur, le handle fermé sur tous les chemins,
-	 *  et le redimensionnement testé correctement.
+	/*  REWRITTEN (2026-09-15). The original version piled up:
+	 *    - `return Names;` while `Names` was NULL and the function returns a
+	 *      `std::wstring`: building a string from a null pointer is undefined
+	 *      behaviour, on the failure path itself;
+	 *    - the `return` in the middle of the loop abandoned the `Names` buffer
+	 *      AND the volume search handle, never closed;
+	 *    - `while (Success == ERROR_MORE_DATA)` compared a BOOL (0 or 1) to the
+	 *      code 234: the condition was ALWAYS false, so the loop that resizes
+	 *      the buffer never ran. If the initial buffer was not enough, the
+	 *      string was built from uninitialised memory.
+	 *  The buffer is now a vector, the handle is closed on every path, and the
+	 *  resizing is tested correctly.
 	 */
 	WCHAR volume[MAX_PATH + 1] = L"";
 	log(3, L"🔈FindFirstVolumeW");
@@ -1173,8 +1172,8 @@ std::wstring getVolumeLetter(std::wstring searchSerial) {
 
 	std::wstring found;
 	do {
-		// Points de montage du volume. Le tampon est agrandi tant que l'API le
-		// demande, ce que le test d'origine ne faisait jamais.
+		// Mount points of the volume. The buffer is grown as long as the API asks for
+		// it, which the original test never did.
 		std::vector<wchar_t> paths(MAX_PATH);
 		DWORD nbCar = (DWORD)paths.size();
 		BOOL ok = FALSE;
@@ -1192,28 +1191,28 @@ std::wstring getVolumeLetter(std::wstring searchSerial) {
 		else {
 			DWORD serialNumber = 0;
 			log(3, L"🔈GetVolumeInformationW");
-			/* Le resultat etait ignore. Sur un volume sans media (lecteur de
-			   carte vide, lecteur optique), l'appel echoue et numeroSerie reste
-			   a zero : on comparait alors un numero de serie nul, si bien qu'une
-			   recherche de « 0 » aurait designe un volume au hasard. */
+			/* The result was ignored. On a volume without media (an empty card
+			   reader, an optical drive), the call fails and serialNumber stays at
+			   zero: a null serial number was then compared, so that a search for
+			   "0" would have named a volume at random. */
 			if (!GetVolumeInformationW(volume, NULL, NULL, &serialNumber,
 			                           NULL, NULL, NULL, NULL)) {
 				log(2, L"🔥GetVolumeInformationW " + std::wstring(volume),
 				    GetLastError());
 			}
 			else {
-				/* %08X, en majuscules et sur huit chiffres : c'est la forme
-				   canonique du numero de serie et, surtout, celle que produit
-				   l'appelant (cf. prefetchs.cpp). Un flux `std::hex` sans
-				   largeur imposee rendait « a1b2c3d » la ou l'autre cote
-				   attendait « 0A1B2C3D » : la comparaison echouait alors en
-				   silence sur tout volume dont le premier octet est < 0x10. */
+				/* %08X, in upper case and on eight digits: it is the canonical form
+				   of the serial number and, above all, the one the caller
+				   produces (see prefetchs.cpp). A `std::hex` stream without an
+				   imposed width returned "a1b2c3d" where the other side expected
+				   "0A1B2C3D": the comparison then failed in silence on every
+				   volume whose first byte is < 0x10. */
 				wchar_t hexa[9] = L"";
 				swprintf(hexa, 9, L"%08X", serialNumber);
 				if (std::wstring(hexa) == searchSerial) {
-					// Premier point de montage, chaine terminee par un zero.
+					// First mount point, a zero-terminated string.
 					const std::wstring path(paths.data());
-					// On ne garde que « C: », sans la barre oblique inverse.
+					// Only "C:" is kept, without the backslash.
 					found = replaceAll(path, L"\\", L"");
 					break;
 				}
@@ -1223,17 +1222,17 @@ std::wstring getVolumeLetter(std::wstring searchSerial) {
 	} while (FindNextVolumeW(recherche, volume, ARRAYSIZE(volume)));
 
 	log(3, L"🔈FindVolumeClose");
-	FindVolumeClose(recherche);   // ferme sur TOUS les chemins, y compris le succes
+	FindVolumeClose(recherche);   // closed on EVERY path, including success
 	return found;
 }
 
 HRESULT writeJsonFile(const std::string& name, const Json& value) {
 	std::error_code ec;
-	std::filesystem::create_directories(conf._outputDir, ec); // pas d'erreur si présent
+	std::filesystem::create_directories(conf._outputDir, ec); // no error if present
 	std::wofstream f;
 	f.open(conf._outputDir + "/" + name);
 	if (!f) {
-		log(2, L"🔥Ouverture du fichier de sortie impossible : " + string_to_wstring(name));
+		log(2, L"🔥Cannot open the output file: " + string_to_wstring(name));
 		return E_FAIL;
 	}
 	f << ansi_to_utf8(value.dump(0));
@@ -1243,10 +1242,10 @@ HRESULT writeJsonFile(const std::string& name, const Json& value) {
 
 JsonArrayWriter::JsonArrayWriter(const std::string& name) : name_(name) {
 	std::error_code ec;
-	std::filesystem::create_directories(conf._outputDir, ec);  // pas d'erreur si présent
+	std::filesystem::create_directories(conf._outputDir, ec);  // no error if present
 	f_.open(conf._outputDir + "/" + name);
 	if (!f_) {
-		log(2, L"🔥Ouverture du fichier de sortie impossible : " + string_to_wstring(name));
+		log(2, L"🔥Cannot open the output file: " + string_to_wstring(name));
 		return;
 	}
 	open_ = true;
@@ -1255,8 +1254,8 @@ JsonArrayWriter::JsonArrayWriter(const std::string& name) : name_(name) {
 
 void JsonArrayWriter::add(const Json& element) {
 	if (!open_ || closed_) return;
-	// La virgule précède l'élément : on ne sait pas, en écrivant, s'il en
-	// viendra d'autres — c'est ce qui évite la virgule finale sans relecture.
+	// The comma precedes the element: while writing, one does not know whether
+	// others will come — that is what avoids a trailing comma without re-reading.
 	f_ << (written_ ? L",\n\t" : L"\n\t");
 	f_ << ansi_to_utf8(element.dump(1));
 	++written_;
@@ -1270,15 +1269,15 @@ HRESULT JsonArrayWriter::close() {
 	const bool good = f_.good();
 	f_.close();
 	if (!good) {
-		log(2, L"🔥Ecriture incomplete : " + string_to_wstring(name_));
+		log(2, L"🔥Incomplete write: " + string_to_wstring(name_));
 		return E_FAIL;
 	}
 	return ERROR_SUCCESS;
 }
 
 JsonArrayWriter::~JsonArrayWriter() {
-	// Sans cela, un retour anticipé laisserait un tableau JSON non refermé :
-	// un fichier invalide se lit comme « rien collecté », pas comme une erreur.
+	// Without this, an early return would leave a JSON array unclosed: an invalid
+	// file reads as "nothing collected", not as an error.
 	close();
 }
 
@@ -1288,15 +1287,15 @@ HRESULT writeNotCollected(const std::string& name, const std::wstring& artefact,
 	o.add(L"Artifact",         Json::str(artefact));
 	o.add(L"CollectionStatus", Json::str(L"NotCollected"));
 	o.add(L"Error",            Json::str(L"0x" + to_hex(result) + L" " + getErrorMessage(result)));
-	// Sans cette precision, un tableau vide et une lecture en echec se lisent de
-	// la meme facon : « aucune trace ».
-	o.add(L"Note",             Json::str(L"La lecture de cet artefact a échoué : "
-	                                     L"l'absence de données ci-dessus ne signifie PAS "
-	                                     L"qu'aucune trace n'existe sur le système."));
+	// Without that detail, an empty array and a failed reading read the same way:
+	// "no trace".
+	o.add(L"Note",             Json::str(L"Reading this artefact failed: "
+	                                     L"the absence of data above does NOT mean "
+	                                     L"that no trace exists on the system."));
 	return writeJsonFile(name, o);
 }
 
-//! Minuscules ASCII : suffisant pour des extensions de fichiers.
+//! ASCII lower case: enough for file extensions.
 static std::wstring toLowerAscii(std::wstring s) {
 	for (wchar_t& c : s) if (c >= L'A' && c <= L'Z') c = (wchar_t)(c - L'A' + L'a');
 	return s;
@@ -1307,17 +1306,17 @@ std::vector<std::filesystem::path> listFilesByExtension(const std::filesystem::p
 	std::vector<std::filesystem::path> results;
 	std::error_code ec;
 	std::filesystem::directory_iterator it(directory, ec);
-	if (ec) {                                    // absent ou illisible : cas nominal
-		log(4, L"🔈Repertoire non parcouru : " + directory.wstring());
+	if (ec) {                                    // missing or unreadable: the nominal case
+		log(4, L"🔈Directory not walked: " + directory.wstring());
 		return results;
 	}
-	std::vector<std::wstring> expectedExtensions;   // abaissees une seule fois
+	std::vector<std::wstring> expectedExtensions;   // lowercased only once
 	expectedExtensions.reserve(extensions.size());
 	for (const std::wstring& e : extensions) expectedExtensions.push_back(toLowerAscii(e));
 
 	for (const std::filesystem::directory_iterator end; it != end; it.increment(ec)) {
-		if (ec) {                                // parcours interrompu : on garde l'acquis
-			log(2, L"🔥Parcours interrompu : " + directory.wstring());
+		if (ec) {                                // walk interrupted: what was gathered is kept
+			log(2, L"🔥Walk interrupted: " + directory.wstring());
 			break;
 		}
 		std::error_code fileWriter;
