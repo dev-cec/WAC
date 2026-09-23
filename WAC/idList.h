@@ -14,47 +14,53 @@
 
 
 
-/********************************************************************************************************************
-* Impossible de scinder le document en plusieurs fichiers car des références cycliques entre les types l'en empêche
-*********************************************************************************************************************/
+/*! \file
+* \brief Shell items, ID lists and extension blocks: the structures behind
+* shortcuts, shellbags, MRU lists and jump lists.
+*
+* This file cannot be split into several ones: cyclic references between the
+* types prevent it.
+*/
 
 /***************************************************************************************************
 * STRUCUTRES VRTUELLES
 ****************************************************************************************************/
-/*! Type de base virtuel pour les shell Items.
-*  tous les shells items hérite de ce type de base permettant ainsi d'inclure un type de shell virtuel dans les autres classes
+/*! Virtual base type of the shell items.
+*  Every shell item inherits from it, which lets the other classes hold a shell
+*  item of any kind.
 */
 struct IShellItem {
 public:
-	/*! Destructeur virtuel : indispensable pour detruire un objet derive
-	* via un pointeur de base (sinon comportement indefini). */
+	/*! Virtual destructor: indispensable to destroy a derived object through a base
+	* pointer (undefined behaviour otherwise). */
 	virtual ~IShellItem() = default;
 
-	int level = 0; //!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
-	bool is_zip = false; //!< utile pour les shellbags, permet de définir les fils comm des archive_contents
+	int level = 0; //!< depth in the tree of shell items, used to lay out the JSON
+	bool is_zip = false; //!< for the shellbags: says that the children are archive contents
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	virtual Json toJson() = 0;
 
 };
 
-/*! Type de base virtuel pour les extension Block.
-*  tous les shells items hérite de ce type de base permettant ainsi d'inclure un type de shell virtuel dans les autres classes
+/*! Virtual base type of the extension blocks.
+*  Every extension block inherits from it, which lets the other classes hold an
+*  extension block of any kind.
 */
 struct IExtensionBlock {
 public:
-	/*! Destructeur virtuel : indispensable pour detruire un objet derive
-	* via un pointeur de base (sinon comportement indefini). */
+	/*! Virtual destructor: indispensable to destroy a derived object through a base
+	* pointer (undefined behaviour otherwise). */
 	virtual ~IExtensionBlock() = default;
 
-	int level = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
-	bool isPresent = false;//!< true si un block d’extension est présent sinon false
-	std::wstring signature = L"";//!< la signature du block d’extension, identifie sa structure d'appartenance
+	int level = 0;//!< depth in the tree of shell items, used to lay out the JSON
+	bool isPresent = false;//!< true if an extension block is present, false otherwise
+	std::wstring signature = L"";//!< signature of the extension block, which identifies its structure
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	virtual Json toJson() = 0;
 
@@ -63,13 +69,13 @@ public:
 /*! User Property View Delegate Shell Item
 */
 struct UserPropertyViewDelegate {
-	/*! Destructeur virtuel : indispensable pour detruire un objet derive
-	* via un pointeur de base (sinon comportement indefini). */
+	/*! Virtual destructor: indispensable to destroy a derived object through a base
+	* pointer (undefined behaviour otherwise). */
 	virtual ~UserPropertyViewDelegate() = default;
 
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	virtual Json toJson() = 0;
 
@@ -79,12 +85,15 @@ struct UserPropertyViewDelegate {
 * Fonctions
 ****************************************************************************************************/
 
-/*! Permet d'extraire des extensionBlock d'un Buffer en fonction de leur signature
-* @param buffer en entrée contient les bits à parser des extensionblock
-* @param extensionBlocks pointeur sur un vecteur de Iextensionblock utiliser pour stocker les extensionBlock extraits du buffer
-* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-* @param is_zip précise si le shell item est un fichier zip, utilisé dans le traitement des extensionblocks, si le fichier est un zip ou assimilé alors les fils ont un format spécial, ne concerne que les fichiers, certains zip sont identifiés comme directory et dans ce cas pas de format special, ne concerne que les extensionblock beef0004
-* @param is_file précise si le shell item père est un fichier, utilisé dans le traitement des extensionblocks
+/*! Extracts the extension blocks of a buffer, according to their signature.
+* @param buffer the bytes of the extension blocks to parse
+* @param extensionBlocks vector receiving the extension blocks extracted from the buffer
+* @param _level depth in the tree of elements, used to lay out the output JSON
+* @param is_zip whether the shell item is a zip file: the children of a zip (or
+*        similar) have a special format. Concerns only files — some zips are
+*        identified as directories, and then there is no special format — and
+*        only the beef0004 extension blocks
+* @param is_file whether the parent shell item is a file
 */
 void getExtensionBlock(LPBYTE buffer, std::vector<std::unique_ptr<IExtensionBlock>>* extensionBlocks, int _level, bool* is_zip, bool is_file);
 
@@ -92,118 +101,127 @@ void getExtensionBlock(LPBYTE buffer, std::vector<std::unique_ptr<IExtensionBloc
 * FLAGS
 ****************************************************************************************************/
 
-/*! La structure FileAttributesFlags définit des bits qui spécifient les attributs de fichier du lien cible, si la cible est un élément de système de fichiers. Les attributs du fichier peuvent être utilisés si la cible de liaison n'est pas disponible, ou si l'accès à la cible serait inefficaces.
-* Il est possible que les attributs d'éléments cibles ne soient pas synchronisés avec cette valeur.
-* Documentation à l'adresse https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/378f485c-0be9-47a4-a261-7df467c3c9c6
+/*! The FileAttributesFlags structure defines bits that specify the file
+* attributes of the link target, if the target is a file system item. The file
+* attributes can be used if the link target is not available, or if accessing
+* the target would be inefficient. The target's attributes may not be in sync
+* with this value.
+* Documentation: https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/378f485c-0be9-47a4-a261-7df467c3c9c6
 */
 struct FileAttributes {
-	bool ReadOnly = false; //!< Le fichier est en lecture seule.
-	bool Hidden = false; //!< Le fichier est masqué et n’est donc pas compris dans un listing de répertoires ordinaire. 
-	bool System = false; //!< le fichier est un fichier system.
-	bool Directory = false; //!< Le fichier est un répertoire. 
-	bool Archive = false; //!< Ce fichier est marqué à inclure dans une opération de sauvegarde incrémentielle.
-	bool Normal = false; //!< Le fichier est un fichier standard qui n’a pas d’attributs spéciaux. Cet attribut est valide uniquement s’il est utilisé seul.
-	bool Temporary = false; //!< e fichier est temporaire. Un fichier temporaire contient les données nécessaires quand une application s’exécute, mais qui ne le sont plus une fois l’exécution terminée. 
-	bool SparseFile = false; //!< Le fichier est un fichier partiellement alloué.Les fichiers partiellement alloués sont généralement de gros fichiers dont les données sont principalement des zéros.
-	bool ReparsePoint = false; //!< Le fichier contient un point d’analyse, qui est un bloc de données définies par l’utilisateur associé à un fichier ou à un répertoire. 
-	bool Compressed = false; //!< Le fichier est compressé.
-	bool Offline = false; //!< Le fichier est hors connexion. Les données du fichier ne sont pas immédiatement disponibles.
-	bool NotContentIndexed = false; //!< Le fichier ne sera pas indexé par le service d’indexation de contenu du système d’exploitation.
-	bool Encrypted = false; //!< Le fichier ou le répertoire est chiffré.Cela signifie pour un fichier, que toutes ses données sont chiffrées.Pour un répertoire, cela signifie que tous les fichiers et répertoires créés sont chiffrés par défaut.
+	bool ReadOnly = false; //!< The file is read-only.
+	bool Hidden = false; //!< The file is hidden, and so not included in an ordinary directory listing.
+	bool System = false; //!< The file is a system file.
+	bool Directory = false; //!< The file is a directory.
+	bool Archive = false; //!< The file is marked to be included in an incremental backup operation.
+	bool Normal = false; //!< The file is a standard file with no special attribute. Valid only when used alone.
+	bool Temporary = false; //!< The file is temporary: it holds data needed while an application runs, and no longer once it has finished.
+	bool SparseFile = false; //!< The file is a sparse file. Sparse files are usually large files whose data are mostly zeros.
+	bool ReparsePoint = false; //!< The file holds a reparse point, a block of user-defined data attached to a file or a directory.
+	bool Compressed = false; //!< The file is compressed.
+	bool Offline = false; //!< The file is offline. Its data are not immediately available.
+	bool NotContentIndexed = false; //!< The file will not be indexed by the operating system's content indexing service.
+	bool Encrypted = false; //!< The file or directory is encrypted. For a file, all its data are encrypted; for a directory, every file and directory created in it is encrypted by default.
 
 
-	/*! constructeur
-	* @param attr entier contenant les attribut du fichier. Le constructeur extrait les attributs de cet entier à l'aide masques binaires.
+	/*! Decodes the attributes.
+	* @param attr integer holding the file's attributes; the constructor extracts
+	*        them from it with bit masks.
 	*/
 	FileAttributes(unsigned int attr);
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	std::wstring to_wstring();
 
 };
 
-/*! La structure LinkFlags définit des bits qui spécifient quelles structures de liaison de coquille sont Présents dans le format de fichier après la structure ShellLinkHeader.
-* Documentation à l'adresse https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/ae350202-3ba9-4790-9e9e-98935f4ee5af
+/*! The LinkFlags structure defines bits that specify which shell link
+* structures are present in the file format after the ShellLinkHeader structure.
+* Documentation: https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/ae350202-3ba9-4790-9e9e-98935f4ee5af
 */
 struct LinkFlags {
-	bool HasLinkTargetIDList = false; //!< Le lien shell est sauvegardé avec une liste d'identification d'objets (IDList). Si Ce bit est réglé, une LinkTargetIDList Structure DOIT suivre la ShellLinkHeader. Si ce bit n'est pas set, cette structure NE DOIT PAS être présente.
-	bool HasLinkInfo = false; //!< La liaison shell est sauvegardée avec des informations de lien. Si cette bit est réglé, un LinkInfo structure DOIT être présent. Si ce bit n'est pas réglé, cette structure NE DOIT PAS être présente.
-	bool HasName = false; //!< La liaison shell est sauvegardée avec une chaîne de nom. Si cette bit est réglé, une structure de String-STRING StringData DOIT être présent. Si ce bit n'est pas réglé, cette structure NE DOIT PAS être présente.
+	bool HasLinkTargetIDList = false; //!< The shell link is saved with an item ID list (IDList). If this bit is set, a LinkTargetIDList structure MUST follow the ShellLinkHeader. If it is not set, that structure MUST NOT be present.
+	bool HasLinkInfo = false; //!< The shell link is saved with link information. If this bit is set, a LinkInfo structure MUST be present. If it is not set, that structure MUST NOT be present.
+	bool HasName = false; //!< The shell link is saved with a name string. If this bit is set, a NAME_STRING StringData structure MUST be present. If it is not set, that structure MUST NOT be present.
 	bool HasRelativePath = false; //!< The shell link is saved with a relative path string. If this bit is set, a RELATIVE_PATH StringData structure MUST be present. If this bit is not set, this structure MUST NOT be present.
-	bool HasWorkingDir = false; //!< La liaison shell est sauvegardée avec un répertoire de travail. Si ce bit est réglé, une structure de TRAVANT-DIR StringData DOIT être présent. Si ce bit n'est pas réglé, cette structure NE DOIT PAS être présente.
-	bool HasArguments = false;  //!< La liaison shell est sauvegardée avec des arguments de ligne de commande. Si ce bit est réglé, une structure de chaîne COMMAND-LINE-ARGUMENTS DOIT être présent. Si ce bit n'est pas réglé, cette structure NE DOIT PAS être présente.
-	bool HasIconLocation = false; //!< La liaison shell est sauvegardée avec une chaîne de localisation d'icône. Si ce bit est réglé, une structure de strate de chaîne ICON-LOCATIONDOIT être présent. Si ce bit n'est pas réglé, cette structure NE DOIT PAS être présente.
-	bool IsUnicode = false; //!< Le lien shell contient des chaînes codées Unicode. C'est ce que bit DEVRAIT être réglé. Si ce bit est défini, la section StringData contient Chaînes codées en codées par un code d'Unicode; sinon, il contient des chaînes qui sont codées en utilisant la page de code par défaut du système.
-	bool ForceNoLinkInfo = false; //!< La structure LinkInfo est ignorée.
-	bool HasExpString = false; //!< La liaison shell est sauvegardée avec un bloc de données EnvironnementVariable
-	bool RunInSeparateProcess = false; //!< La cible est exécutée dans une machine virtuelle séparée lorsque lancement d'une cible de liaison c'est une application de 16 bits.
-	bool Unused1 = false; //!< Un bit qui n'est pas défini et DOIT être ignoré.
-	bool HasDarwinID = false; //!< La liaison à coque est sauvegardée avec un DarwinDataBlock
-	bool RunAsUser = false; //!< L'application est exécutée en tant qu'utilisateur différent lorsque le Une cible de la liaison de l'obus est activée.
-	bool HasExpIcon = false; //!< La liaison shell est sauvegardée avec un IconEnvironmentDataBlock
-	bool NoPidlAlias = false; //! L'emplacement du système de fichiers est représenté dans l'espace de noms de shell lorsque le chemin à un article est analysé en une liste d'ID.
-	bool Unused2 = false; //!< Un bit qui n'est pas défini et DOIT être ignoré.
-	bool RunWithShimLayer = false; //!< La liaison shell est sauvegardée avec un ShimDataBlock
-	bool ForceNoLinkTrack = false; //!< Le TrackerDataBlock est ignorée.
-	bool EnableTargetMetadata = false; //!< La liaison à l'obus tente de collecter les propriétés cibles et les stocker dans le PropertyStoreDataBlock lorsque la cible de liaison est définie.
-	bool DisableLinkPathTracking = false; //!< Le EnvironmentVariableDataBlock est ignoré.
-	bool DisableKnownFolderTracking = false; //!< Le SpecialFolderDataBlock et le KnownFolderDataBlock sont ignorés lors du chargement de la liaison de la coque. Si ce bit est défini, ces données supplémentaires blocs NE DEVRAIT PAS être sauvegardés lors de la sauvegarde de la liaison shell.
-	bool DisableKnownFolderAlias = false; //!< Si le lien a une KnownFolderDataBlock, la forme nonalias de la connue IDList du dossier souhaite être utilisée lors de la traduction de la cible IDList à la le temps de chargement de la liaison.
-	bool AllowLinkToLink = false; //!< Création d'un lien qui fait référence à un autre lien est activé. Sinon, en spécifier un lien comme IDList cible NE DEVRAIT PAS être autorisés.
-	bool UnaliasOnSave = false; //!< Lors de la sauvegarde d'un lien pour lequel la cible IDList est sous un dossier connu, soit la forme nonalias de ce dossier connu, soit le dossier connu de l'IDList de cible DEVRAIT être utilisé.
-	bool PreferEnvironmentPath = false; //!< La cible L'IDLIST NE DEVRAIT PAS être stockée; à la place, le chemin spécifié dans le bloc de données de l'environnement DEVRAIT être utilisé pour se référer à la cible.
-	bool KeepLocalIDListForUNCTarget = false; //!< Lorsque l'objectif est un nom UNC qui fait référence à un sur une machine locale, le chemin local IDLIST dans le PropertyStoreDataBlock DEVRAIT être stocké, de sorte qu'il puisse être utilisé lorsque la liaison est chargée sur la machine locale.
+	bool HasWorkingDir = false; //!< The shell link is saved with a working directory. If this bit is set, a WORKING_DIR StringData structure MUST be present. If it is not set, that structure MUST NOT be present.
+	bool HasArguments = false;  //!< The shell link is saved with command-line arguments. If this bit is set, a COMMAND_LINE_ARGUMENTS StringData structure MUST be present. If it is not set, that structure MUST NOT be present.
+	bool HasIconLocation = false; //!< The shell link is saved with an icon location string. If this bit is set, an ICON_LOCATION StringData structure MUST be present. If it is not set, that structure MUST NOT be present.
+	bool IsUnicode = false; //!< The shell link holds Unicode-encoded strings. This bit SHOULD be set. If it is, the StringData section holds Unicode strings; otherwise it holds strings encoded with the system's default code page.
+	bool ForceNoLinkInfo = false; //!< The LinkInfo structure is ignored.
+	bool HasExpString = false; //!< The shell link is saved with an EnvironmentVariableDataBlock.
+	bool RunInSeparateProcess = false; //!< The target is run in a separate virtual machine when launching a link target that is a 16-bit application.
+	bool Unused1 = false; //!< A bit that is undefined and MUST be ignored.
+	bool HasDarwinID = false; //!< The shell link is saved with a DarwinDataBlock.
+	bool RunAsUser = false; //!< The application is run as a different user when the target of the shell link is activated.
+	bool HasExpIcon = false; //!< The shell link is saved with an IconEnvironmentDataBlock.
+	bool NoPidlAlias = false; //! The file system location is represented in the shell namespace when the path to an item is parsed into an IDList.
+	bool Unused2 = false; //!< A bit that is undefined and MUST be ignored.
+	bool RunWithShimLayer = false; //!< The shell link is saved with a ShimDataBlock.
+	bool ForceNoLinkTrack = false; //!< The TrackerDataBlock is ignored.
+	bool EnableTargetMetadata = false; //!< The shell link attempts to collect the target's properties and store them in the PropertyStoreDataBlock when the link target is set.
+	bool DisableLinkPathTracking = false; //!< The EnvironmentVariableDataBlock is ignored.
+	bool DisableKnownFolderTracking = false; //!< The SpecialFolderDataBlock and the KnownFolderDataBlock are ignored when loading the shell link. If this bit is set, those extra data blocks SHOULD NOT be saved when saving the shell link.
+	bool DisableKnownFolderAlias = false; //!< If the link has a KnownFolderDataBlock, the unaliased form of the known folder IDList SHOULD be used when translating the target IDList at the time the link is loaded.
+	bool AllowLinkToLink = false; //!< Creating a link that references another link is enabled. Otherwise, specifying a link as the target IDList SHOULD NOT be allowed.
+	bool UnaliasOnSave = false; //!< When saving a link for which the target IDList is under a known folder, either the unaliased form of that known folder or the target IDList SHOULD be used.
+	bool PreferEnvironmentPath = false; //!< The target IDList SHOULD NOT be stored; instead, the path specified in the EnvironmentVariableDataBlock SHOULD be used to refer to the target.
+	bool KeepLocalIDListForUNCTarget = false; //!< When the target is a UNC name that refers to a location on a local machine, the local path IDList in the PropertyStoreDataBlock SHOULD be stored, so that it can be used when the link is loaded on the local machine.
 
-	/*! constructeur
-	* @param _flags entier contenant les flags du lien. Le constructeur extrait les flags de cet entier à l'aide masques binaires.
+	/*! Decodes the link flags.
+	* @param _flags integer holding the link's flags; the constructor extracts
+	*        them from it with bit masks.
 	*/
 	LinkFlags(unsigned int _flags);
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	std::wstring to_wstring();
 
 };
 
 
-/*! La structure ShellVolumeFlags définit des bits qui spécifient le type de volume shell.
+/*! The ShellVolumeFlags structure defines bits that specify the kind of shell
+* volume.
 */
 struct ShellVolumeFlags {
-	bool None = false; //!< Pas d'information sur le volume
-	bool SystemFolder = false; //!< le volume est répertoire system
-	bool LocalDisk = false; //!< le volume et un disque local
+	bool None = false; //!< No information on the volume
+	bool SystemFolder = false; //!< the volume is a system directory
+	bool LocalDisk = false; //!< the volume is a local disk
 
-	/*! constructeur
-	* @param i octet contenant les données à traiter. Le constructeur extrait les données de cette valeur à l'aide masques binaires.
+	/*! Decodes the flags.
+	* @param i byte holding the data; the constructor extracts them from it with
+	*        bit masks.
 	*/
 	ShellVolumeFlags(unsigned char i);
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	std::wstring to_wstring();
 
 };
 
-/*! La structure FsFlags définit des bits qui spécifient le type de lien.
+/*! The FsFlags structure defines bits that specify the kind of link.
 */
 struct FsFlags {
-	bool IS_DIRECTORY = false; //!< il s'agit d'un repertoire
-	bool IS_FILE = false; //!< il s'agit dun fichier
-	bool IS_UNICODE = false; //!< Les strings du lien sont au format UNICODE
-	bool UNKNOWN = false; //!< le type de lien est inconnu
-	bool HAS_CLSID = false; //!< le lien a un guid de classe
+	bool IS_DIRECTORY = false; //!< it is a directory
+	bool IS_FILE = false; //!< it is a file
+	bool IS_UNICODE = false; //!< the link's strings are in UNICODE
+	bool UNKNOWN = false; //!< the kind of link is unknown
+	bool HAS_CLSID = false; //!< the link has a class GUID
 
-	/*! constructeur
-	* @param i octet contenant les données à traiter. Le constructeur extrait les données de cette valeur à l'aide masques binaires.
+	/*! Decodes the flags.
+	* @param i byte holding the data; the constructor extracts them from it with
+	*        bit masks.
 	*/
 	FsFlags(unsigned char i);
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	std::wstring to_wstring();
 
@@ -214,54 +232,52 @@ struct FsFlags {
 * SPS
 ****************************************************************************************************/
 
-/*! Structure représentent une des valeurs d'un SPS.
+/*! One of the values of an SPS (serialized property set).
 */
 struct SPSValue {
-	int level = 0; //!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
-	unsigned int size = 0; //! taille de l'objet
-	unsigned short int valueType = 0; //! identifie le type de valeur
-	std::wstring guid = L""; //! guid de la valeur
-	std::wstring id = L""; // id de la valeur
-	std::wstring name = L""; // nom de la valeur
-	Json value = Json::str(L""); // valeur de la valeur, peut être un objet auquel cas il est stocké au format json pour compatibilité avec le format json de sortie.
+	int level = 0; //!< depth in the tree of shell items, used to lay out the JSON
+	unsigned int size = 0; //! size of the object
+	unsigned short int valueType = 0; //! identifies the kind of value
+	std::wstring guid = L""; //! GUID of the value
+	std::wstring id = L""; // id of the value
+	std::wstring name = L""; // name of the value
+	Json value = Json::str(L""); // the value itself; it may be an object, in which case it is kept as JSON to fit the output format.
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _guid guid correspondant au SPS auquel appartient le SPSVALUE
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads one value of an SPS.
+	* @param buffer the bytes to parse
+	* @param _guid GUID of the SPS the value belongs to
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	SPSValue(LPBYTE buffer, std::wstring _guid, int _level);
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson();
 
 };
 
-/*! Structure représentent un Serialized Property Sets.
+/*! A Serialized Property Set.
 */
 struct SPS {
-	int level = 0; //!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
-	unsigned int size = 0; //!< Taille de l'objet en octets
-	unsigned int version = 0; //!< version de l'objet permettant de définir sa structure interne
-	std::wstring guid = L""; //!< GUID de l'objet
-	std::wstring FriendlyName = L"";//!< nom associé au GUID
-	std::vector<SPSValue> values; //!< Tableau contenant les différents SPSVALUE de l'objet SPS
+	int level = 0; //!< depth in the tree of shell items, used to lay out the JSON
+	unsigned int size = 0; //!< size of the object, in bytes
+	unsigned int version = 0; //!< version of the object, which decides its internal structure
+	std::wstring guid = L""; //!< GUID of the object
+	std::wstring FriendlyName = L"";//!< name attached to the GUID
+	std::vector<SPSValue> values; //!< the SPSVALUEs of the SPS
 
-	/*! constructeur par défaut
+	/*! Builds an empty object.
 	*/
 	SPS() {};
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	SPS(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson();
 
@@ -272,26 +288,26 @@ std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _level, bool Parent
 /***************************************************************************************************
 * ID LIST
 ****************************************************************************************************/
-/*! type représentant une liste de Shell Item
+/*! A list of shell items.
 */
 struct IdList {
-	int level = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
-	unsigned int item_size = 0; //!< Taille de l'objet en octets
-	unsigned char type_char = NULL; //!< Type de l'objet
-	std::wstring type_hex = L""; //!< type de l'objet en hexa
-	std::wstring type = L""; //!< nom correspondant au type de l'objet
-	std::wstring data = L""; //!< dump hexa de l'objet si besoin de l'include dans le json de sortie
-	std::unique_ptr<IShellItem> shellItem; //!< pointeur vers l'objet shell item correspondant au type
+	int level = 0;//!< depth in the tree of shell items, used to lay out the JSON
+	unsigned int item_size = 0; //!< size of the object, in bytes
+	unsigned char type_char = NULL; //!< kind of the object
+	std::wstring type_hex = L""; //!< kind of the object, in hexadecimal
+	std::wstring type = L""; //!< name of the object's kind
+	std::wstring data = L""; //!< hexadecimal dump of the object, when it must be included in the output JSON
+	std::unique_ptr<IShellItem> shellItem; //!< pointer to the shell item object matching the kind
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	* @param Parentiszip vrai si l'élément parent est une archive : le contenu
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
+	* @param Parentiszip true if the parent element is an archive: the content of
+	*        a ZIP has a format of its own, which cannot be guessed from the item
 	*/
 	IdList(LPBYTE buffer, int _level, bool Parentiszip = false);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson();
 
@@ -304,18 +320,17 @@ struct IdList {
 */
 struct Beef0000 : IExtensionBlock {
 	std::wstring guid1 = L""; //!< identifiant GUID
-	std::wstring identifier1 = L"";//!< nom correspondant au GUID
+	std::wstring identifier1 = L"";//!< name matching the GUID
 	std::wstring guid2 = L""; //!< identifiant GUID
-	std::wstring identifier2 = L""; //!< nom correspondant au GUID
+	std::wstring identifier2 = L""; //!< name matching the GUID
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0000(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -324,16 +339,15 @@ struct Beef0000 : IExtensionBlock {
 /*!  Extension block related to CFileUrlStub object. Used for display name?
 */
 struct Beef0001 : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block"; //!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block"; //!< message to display in the JSON
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0001(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -342,16 +356,15 @@ struct Beef0001 : IExtensionBlock {
 /*! Extension block related to CFileUrlStub object. Used for display name?
 */
 struct Beef0002 : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block"; //!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block"; //!< message to display in the JSON
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0002(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -361,62 +374,60 @@ struct Beef0002 : IExtensionBlock {
 */
 struct Beef0003 : IExtensionBlock {
 	std::wstring guid = L""; //!< identifiant GUID
-	std::wstring identifier = L"";//!< nom associé au GUID
+	std::wstring identifier = L"";//!< name attached to the GUID
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0003(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
 };
 
-/*! Extension block related to CFSFolder and CFileSysItem object.
-	* pour les shellbags, si le père est un zip ou assimilé alors les fils ont un format spécial, il faut donc identifier si le père est un zip
-	* ne concerne que les fichiers, certains zip sont identifiés comme directory et dans ce cas pas de format special
-	* ne concerne que les extensionblock beef0004
+/*! Extension block related to the CFSFolder and CFileSysItem objects.
+	* For the shellbags, if the parent is a zip or similar, the children have a
+	* special format, so whether the parent is a zip must be known. Concerns only
+	* files — some zips are identified as directories, and then there is no
+	* special format — and only the beef0004 extension blocks.
 */
 struct Beef0004 : IExtensionBlock {
-	FILETIME creationDate = { 0 }; //!< date de création
-	FILETIME creationDateUtc = { 0 };//!< date de création au format UTC
-	FILETIME accessedDate = { 0 }; //!< date d'accès
-	FILETIME accessedDateUtc = { 0 }; //!< date d'accès au format UTC
+	FILETIME creationDate = { 0 }; //!< creation date
+	FILETIME creationDateUtc = { 0 };//!< creation date in UTC
+	FILETIME accessedDate = { 0 }; //!< access date
+	FILETIME accessedDateUtc = { 0 }; //!< access date in UTC
 	unsigned short int ExtensionVersion=0;
-	/*! Identifiant interne du bloc (offset 16), lu mais jamais émis auparavant. */
+	/*! Internal identifier of the block (offset 16), read but never emitted before. */
 	unsigned short int identifier = 0;
-	/*! Référence de fichier NTFS : numéro d'entrée `$MFT` sur 48 bits et numéro
-	* de séquence sur 16, présents à partir de la version 7 du bloc.
+	/*! NTFS file reference: `$MFT` entry number on 48 bits and sequence number on
+	* 16, present from version 7 of the block on.
 	*
-	* POURQUOI C'EST IMPORTANT. Cette référence désigne l'entrée `$MFT` EXACTE du
-	* fichier : elle rattache une entrée de shellbag ou de raccourci à son
-	* enregistrement dans la table de fichiers, donc permet de retrouver le
-	* fichier même renommé ou supprimé, et de recouper ses dates. WAC ne la
-	* lisait pas, alors que la lecture brute du volume exploite déjà ces
-	* références ailleurs.
-	* Nuls si le bloc est d'une version antérieure à 7, ou si l'élément ne
-	* provient pas d'un volume NTFS. */
+	* WHY IT MATTERS. This reference names the EXACT `$MFT` entry of the file: it
+	* ties a shellbag or shortcut entry to its record in the file table, hence
+	* makes it possible to find the file again even renamed or deleted, and to
+	* cross-check its dates. WAC did not read it, while the raw reading of the
+	* volume already uses those references elsewhere.
+	* Null if the block is of a version older than 7, or if the item does not
+	* come from an NTFS volume. */
 	unsigned long long mftEntryNumber = 0;
 	unsigned short int mftSequenceNumber = 0;
-	/*! Nature déduite de la référence : "NTFS", "FAT" ou "Network/special item". */
+	/*! Nature deduced from the reference: "NTFS", "FAT" or "Network/special item". */
 	std::wstring mftNote;
 	std::wstring longName = L"";
 	std::wstring localizedName = L"";
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
-	* @param is_zip est un booléen indiquant que l'objet est une archive compressée
-	* @param is_file est un booléen indiquant que l'objet est un fichier
+	/*! Reads the extension block.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
+	* @param is_zip whether the object is a compressed archive
+	* @param is_file whether the object is a file
 	*/
 	Beef0004(LPBYTE buffer, int _level, bool* is_zip, bool is_file);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -427,14 +438,13 @@ struct Beef0004 : IExtensionBlock {
 struct Beef0006 : IExtensionBlock {
 	std::wstring username = L"";
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0006(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -443,16 +453,15 @@ struct Beef0006 : IExtensionBlock {
 /*! Extension block related to CBitBucket object.
 */
 struct Beef0008 : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block"; //!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block"; //!< message to display in the JSON
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0008(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -461,16 +470,15 @@ struct Beef0008 : IExtensionBlock {
 /*! Extension block related to CBitBucket object. Used for original path?
 */
 struct Beef0009 : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block"; //!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block"; //!< message to display in the JSON
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0009(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -479,16 +487,15 @@ struct Beef0009 : IExtensionBlock {
 /*! Extension block related to CMergedFolder object. Used for source count or sub shell item list?
 */
 struct Beef000a : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block"; //!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block"; //!< message to display in the JSON
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef000a(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -497,16 +504,15 @@ struct Beef000a : IExtensionBlock {
 /*! Extension block  related to CControlPanelFolder object. Used for display name/CPL category?
 */
 struct Beef000c : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block"; //!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block"; //!< message to display in the JSON
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef000c(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -515,21 +521,20 @@ struct Beef000c : IExtensionBlock {
 /*! Extension block related to unknown.
 */
 struct Beef000e : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block"; //!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block"; //!< message to display in the JSON
 	std::wstring guid = L"";//!< Identifiant GUID
-	std::wstring identifier = L"";//!< com correspondant au GUID
+	std::wstring identifier = L"";//!< name matching the GUID
 	std::vector<std::unique_ptr<IExtensionBlock>> extensionblocks; //!< tableau d'extension blocks
-	std::vector<SPS> SPSs; //! tableau de SPS
-	std::vector<std::unique_ptr<IShellItem>> ishellitems;//!< tableau de shellitems
+	std::vector<SPS> SPSs; //! array of SPS
+	std::vector<std::unique_ptr<IShellItem>> ishellitems;//!< array of shell items
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef000e(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -540,14 +545,13 @@ struct Beef000e : IExtensionBlock {
 struct Beef0010 : IExtensionBlock {
 	SPS sps;
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0010(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -556,16 +560,15 @@ struct Beef0010 : IExtensionBlock {
 /*! Extension block related to unknown.
 */
 struct Beef0013 : IExtensionBlock {
-	std::wstring message = L"The purpose of this extension block is unknown"; //!< message à afficher dans le json
+	std::wstring message = L"The purpose of this extension block is unknown"; //!< message to display in the JSON
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0013(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -574,16 +577,15 @@ struct Beef0013 : IExtensionBlock {
 /*! The extension block has seen to be used with the CUri class identifier which is the GUID "df2fce13-25ec-45bb-9d4c-cecd47c2430c". The CUri data could be a Vista and/or MSIE 7 specific extension.
 */
 struct Beef0014 : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block";//!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block";//!< message to display in the JSON
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0014(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -594,14 +596,13 @@ struct Beef0014 : IExtensionBlock {
 struct Beef0016 : IExtensionBlock {
 	std::wstring value = L"";
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0016(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -610,16 +611,15 @@ struct Beef0016 : IExtensionBlock {
 /*!  Extension block  related to Shell item from Windows 7 BagMRU (Search Home).
 */
 struct Beef0017 : IExtensionBlock {
-	std::wstring message = L"Unsupported Extension block";//!< message à afficher dans le json
+	std::wstring message = L"Unsupported Extension block";//!< message to display in the JSON
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0017(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -628,23 +628,22 @@ struct Beef0017 : IExtensionBlock {
 /*! Extension block seen in
 * `HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FolderTypes\\{0B2BAAEB-0042-4DCA-AA4D-3EE8648D03E5}`
 *
-* Le chemin est en litteral (accents graves) : hors de ce cadre, doxygen lit
-* « \\{ » comme une ouverture de groupe de membres, jamais refermee.
+* The path is written as a literal (backquotes): outside of that frame, doxygen
+* reads "\\{" as the opening of a member group, never closed.
 */
 struct Beef0019 : IExtensionBlock {
 	std::wstring guid1 = L""; //!< identifiant GUID
-	std::wstring identifier1 = L"";//!< nom correspondant au GUID
+	std::wstring identifier1 = L"";//!< name matching the GUID
 	std::wstring guid2 = L"";//!< identifiant GUID
-	std::wstring identifier2 = L"";//!< nom correspondant au GUID
+	std::wstring identifier2 = L"";//!< name matching the GUID
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0019(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -655,14 +654,13 @@ struct Beef0019 : IExtensionBlock {
 struct Beef001a : IExtensionBlock {
 	std::wstring fileDocumentTypeString = L"";
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef001a(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -671,16 +669,15 @@ struct Beef001a : IExtensionBlock {
 /*! Extension block related to unknown.
 */
 struct Beef001b : IExtensionBlock {
-	std::wstring fileDocumentTypeString = L""; //!< chaîne indiquant le type de document
+	std::wstring fileDocumentTypeString = L""; //!< string giving the kind of document
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef001b(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -691,14 +688,13 @@ struct Beef001b : IExtensionBlock {
 struct Beef001d : IExtensionBlock {
 	std::wstring executable = L"";
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef001d(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -709,14 +705,13 @@ struct Beef001d : IExtensionBlock {
 struct Beef001e : IExtensionBlock {
 	std::wstring pinType = L"";
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef001e(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -725,16 +720,15 @@ struct Beef001e : IExtensionBlock {
 /*! Extension block related to unknown.
 */
 struct Beef0021 : IExtensionBlock {
-	SPS sps;  //!< un objet SPS
+	SPS sps;  //!< an SPS object
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0021(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -743,16 +737,15 @@ struct Beef0021 : IExtensionBlock {
 /*! Extension block related to unknown.
 */
 struct Beef0024 : IExtensionBlock {
-	SPS sps;  //!< un objet SPS
+	SPS sps;  //!< an SPS object
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0024(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -761,17 +754,16 @@ struct Beef0024 : IExtensionBlock {
 /*! Extension block related to unknown.
 */
 struct Beef0025 : IExtensionBlock {
-	FILETIME filetime1 = { 0 }; //!< date au format filetime
-	FILETIME filetime2 = { 0 };//!< date  au format filetime
+	FILETIME filetime1 = { 0 }; //!< date as a FILETIME
+	FILETIME filetime2 = { 0 };//!< date as a FILETIME
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0025(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -780,24 +772,23 @@ struct Beef0025 : IExtensionBlock {
 /*! Extension block related to unknown.
 */
 struct Beef0026 : IExtensionBlock {
-	FILETIME ctimeUtc = { 0 }; //!< date de création
-	FILETIME ctime = { 0 };//!< date de création au format UTC
-	FILETIME mtimeUtc = { 0 };//!< date de modification
-	FILETIME mtime = { 0 };//!< date de modification au format UTC
-	FILETIME atimeUtc = { 0 };//!< date d'accès
-	FILETIME atime = { 0 };//!< date d'accès au format UTC
-	std::unique_ptr<IdList> idlist;//pointeur vers une liste de shell item (idlist)
-	std::unique_ptr<IShellItem> shellitem;//pointeur vers un shelitem
-	std::unique_ptr<SPS> sps;//pointeur vers un SPS
+	FILETIME ctimeUtc = { 0 }; //!< creation date
+	FILETIME ctime = { 0 };//!< creation date in UTC
+	FILETIME mtimeUtc = { 0 };//!< modification date
+	FILETIME mtime = { 0 };//!< modification date in UTC
+	FILETIME atimeUtc = { 0 };//!< access date
+	FILETIME atime = { 0 };//!< access date in UTC
+	std::unique_ptr<IdList> idlist;// pointer to a list of shell items (idlist)
+	std::unique_ptr<IShellItem> shellitem;// pointer to a shell item
+	std::unique_ptr<SPS> sps;// pointer to an SPS
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0026(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -806,16 +797,15 @@ struct Beef0026 : IExtensionBlock {
 /*! Extension block related to unknown.
 */
 struct Beef0027 : IExtensionBlock {
-	SPS sps; //!< un objet SPS
+	SPS sps; //!< an SPS object
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0027(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -823,44 +813,42 @@ struct Beef0027 : IExtensionBlock {
 
 /*! Extension block related to unknown.
 */
-/*! Bloc d'extension de signature non reconnue.
+/*! Extension block with an unrecognised signature.
 *
-*  POURQUOI CETTE CLASSE. La fabrique se contentait d'écrire le dump dans le
-*  JOURNAL et n'ajoutait RIEN à la liste des blocs : un bloc d'extension inconnu
-*  était donc absent du JSON, et invisible sauf à relancer la collecte avec
-*  `--loglevel=2`. Au niveau de journalisation par défaut, la donnée était
-*  perdue sans laisser de trace.
+*  WHY THIS CLASS. The factory merely wrote the dump into the LOG and added
+*  NOTHING to the list of blocks: an unknown extension block was therefore
+*  absent from the JSON, and invisible unless the collection was run again with
+*  `--loglevel=2`. At the default log level, the data was lost without a trace.
 *
-*  Un objet dont on ne sait pas lire la structure doit rendre ses OCTETS : c'est
-*  la seule façon qu'un analyste puisse le décoder plus tard, et la seule qui
-*  distingue « WAC ne sait pas décoder ceci » de « il n'y avait rien ». C'est ce
-*  que fait déjà `UnknownShellItem` ; cette classe rétablit la symétrie.
+*  An object whose structure cannot be read must return its BYTES: it is the
+*  only way an analyst can decode it later, and the only one that tells "WAC
+*  cannot decode this" from "there was nothing". `UnknownShellItem` already does
+*  so; this class restores the symmetry.
 */
 struct BeefUnknown : IExtensionBlock {
-	std::wstring data;        //!< contenu brut du bloc, en hexadécimal
-	unsigned short size = 0;  //!< taille annoncée par le bloc
+	std::wstring data;        //!< raw content of the block, in hexadecimal
+	unsigned short size = 0;  //!< size declared by the block
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'extension block
-	* @param _niveau niveau dans l'arborescence, pour la mise en forme du json
+	/*! Reads the extension block.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree, used to lay out the JSON
 	*/
 	BeefUnknown(LPBYTE buffer, int _level);
 
-	//! conversion de l'objet au format json
+	//! Converts the object to JSON.
 	Json toJson() override;
 };
 
 struct Beef0029 : IExtensionBlock {
-	std::wstring message = L"The purpose of this extension block is unknown"; //!< message à afficher dans le json
+	std::wstring message = L"The purpose of this extension block is unknown"; //!< message to display in the JSON
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser des extensionblock
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
+	/*! Reads the object.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Beef0029(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -873,21 +861,20 @@ struct Beef0029 : IExtensionBlock {
 /*! Volume Shell Item
 */
 struct VolumeShellItem : IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
-	ShellVolumeFlags flags = { 0 }; //!< drapeaux correspondant aux options du type de volume flags
-	std::wstring name = L""; //!< nom du volume
-	std::wstring guid = L""; //!< GUID du volume
-	std::wstring identifier = L""; //!< nom associé au GUID
+	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
+	ShellVolumeFlags flags = { 0 }; //!< flags matching the options of the volume type
+	std::wstring name = L""; //!< name of the volume
+	std::wstring guid = L""; //!< GUID of the volume
+	std::wstring identifier = L""; //!< name attached to the GUID
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param type_char est le type d'objet au format character
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param type_char kind of the object, as a character
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson();
 
@@ -896,21 +883,20 @@ struct VolumeShellItem : IShellItem {
 /*! Control panel Shell Item
 */
 struct ControlPanel : IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
+	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
 	std::wstring guid = L"";//!< identifiant GUID
-	std::wstring identifier = L""; //!< nom associé au GUID
+	std::wstring identifier = L""; //!< name attached to the GUID
 	std::vector<std::unique_ptr<IExtensionBlock>> extensionBlocks; //!< tableau d'Extension Block
 
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param itemSize est la taille totale de l'objet
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param itemSize total size of the object
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
@@ -919,425 +905,411 @@ struct ControlPanel : IShellItem {
 /*! Control Panel Category Shell Item
 */
 struct ControlPanelCategory :IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
+	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
 	std::wstring id = L""; //!< identifiant
 	std::vector<std::unique_ptr<IExtensionBlock>> extensionBlocks; //!< tableau d'Extension Block
 
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	ControlPanelCategory(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
 };
 
-/*! Retourne le type de valeur de la SPSVALUE à partir du code hexa
+/*! Returns the kind of value of the SPSVALUE from its hexadecimal code.
 */
 std::wstring getType(unsigned int type);
 
-/*!  Retourne le valeur de la SPSVALUE à partir de son type
+/*! Returns the value of the SPSVALUE according to its kind.
 */
-/*! Lit une valeur typée d'un property store.
+/*! Reads a typed value of a property store.
 *
-* @param buffer début de l'entrée
-* @param pos position de lecture dans l'entrée, avancée au fil du décodage
-* @param valueType type VT_ de la valeur
-* @param niveau profondeur, pour la mise en forme
-* @param tailleEntree taille totale de l'entrée, utilisée pour restituer les
-*        octets bruts quand le type n'est pas décodé. Zéro si elle n'est pas
-*        connue de l'appelant : la valeur ressort alors sans dump.
-* @param typeNonDecode mis à vrai si le type n'a pas pu être décodé. L'appelant
-*        doit alors arrêter son parcours quand la taille de l'entrée n'est pas
-*        annoncée, sans quoi l'entrée suivante serait lue au mauvais endroit.
-* @return la valeur, ou un objet décrivant le type non pris en charge
+* @param buffer start of the entry
+* @param pos reading position in the entry, advanced as the decoding goes
+* @param valueType VT_ type of the value
+* @param level depth, for the layout
+* @param inputSize total size of the entry, used to return the raw bytes when
+*        the type is not decoded. Zero if the caller does not know it: the value
+*        then comes out without a dump.
+* @param typeNotDecoded set to true if the type could not be decoded. The caller
+*        must then stop its walk when the entry's size is not declared,
+*        otherwise the next entry would be read in the wrong place.
+* @return the value, or an object describing the type not supported
 */
 Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int level,
-              unsigned int inputSize = 0, bool* typeNonDecode = nullptr);
+              unsigned int inputSize = 0, bool* typeNotDecoded = nullptr);
 
-/*! Structure définissant le format d'un Property à l’intérieur des UserPropertyView
+/*! Format of a Property inside the UserPropertyViews.
 */
 struct Property {
-	int level = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
-	unsigned int id = 0; //!< identifiant de la property
-	unsigned short int type = 0; //!< type de la property
-	unsigned int size = 0; //!< taille de la property
-	/*! Vrai si le type de la valeur n'a pas pu être décodé.
+	int level = 0;//!< depth in the tree of shell items, used to lay out the JSON
+	unsigned int id = 0; //!< identifier of the property
+	unsigned short int type = 0; //!< type of the property
+	unsigned int size = 0; //!< size of the property
+	/*! True if the value's type could not be decoded.
 	*
-	* La taille d'une `Property` n'est pas annoncée : elle se DÉDUIT de
-	* l'avancement du décodage. Un type inconnu laisse donc la position là où
-	* elle était, et la propriété suivante serait lue au mauvais endroit —
-	* produisant des propriétés d'apparence normale mais fausses. Les boucles
-	* qui enchaînent les propriétés s'arrêtent sur ce drapeau : mieux vaut une
-	* liste tronquée et signalée qu'une liste complète et inventée. */
-	bool typeNonDecode = false;
+	* The size of a `Property` is not declared: it is DEDUCED from the progress
+	* of the decoding. An unknown type therefore leaves the position where it
+	* was, and the next property would be read in the wrong place — producing
+	* properties that look normal and are wrong. The loops that chain properties
+	* stop on that flag: a truncated and reported list is better than a complete
+	* and invented one. */
+	bool typeNotDecoded = false;
 	std::wstring guid = L""; //! identifiant GUID
-	std::wstring FriendlyName = L""; //!< nom associé au guid
-	Json value = Json::str(L"");//!< valeur de la property
+	std::wstring FriendlyName = L""; //!< name attached to the GUID
+	Json value = Json::str(L"");//!< value of the property
 	
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	Property(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson();
 
 };
 
-/*! Structure définissant le format d'un UserPropertyView de signature 0xC01
+/*! Format of a UserPropertyView of signature 0xC01.
 */
 struct UserPropertyView0xC01 : UserPropertyViewDelegate {
-	unsigned int level = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
-	std::wstring folder = L""; //!< nom du repertoire
+	unsigned int level = 0;//!< depth in the tree of shell items, used to lay out the JSON
+	std::wstring folder = L""; //!< name of the directory
 	std::wstring fullurl = L""; //! url correspondante
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	UserPropertyView0xC01(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson();
 
 
 };
 
-/*! Structure définissant le format d'un UserPropertyView de type 0x23febee
+/*! Format of a UserPropertyView of type 0x23febee.
 */
 struct UserPropertyView0x23febbee : UserPropertyViewDelegate {
-	unsigned int level = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	unsigned int level = 0;//!< depth in the tree of shell items, used to lay out the JSON
 	std::wstring guid = L""; //!< identifiant GUID
-	std::wstring FriendlyName = L""; //!< nom associé au GUID
+	std::wstring FriendlyName = L""; //!< name attached to the GUID
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	UserPropertyView0x23febbee(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson();
 
 };
 
-/*! Structure définissant le format d'un UserPropertyView de type 0x7192006
+/*! Format of a UserPropertyView of type 0x7192006.
 */
 struct UserPropertyView0x07192006 : UserPropertyViewDelegate {
-	unsigned int level = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
-	FILETIME modified = { 0 }; //!< date de modification
-	FILETIME modifiedUtc = { 0 };//!< date de modification au format UTC
-	FILETIME created = { 0 }; //!< date de création
-	FILETIME createdUtc = { 0 }; //!< date de création au format UTC
-	std::wstring folderName1 = L""; //!< nom du repertoire
-	std::wstring folderName2 = L""; //!< nom du repertoire
-	std::wstring folderIdentifier = L""; //!< identifiant du repertoire
-	std::wstring guidClass = L""; //!< identifiant GUID de la classe
-	std::wstring FriendlyName = L""; //!< nom associé au GUID de la classe
-	std::vector<Property> properties; //!< Tableau de Property
+	unsigned int level = 0;//!< depth in the tree of shell items, used to lay out the JSON
+	FILETIME modified = { 0 }; //!< modification date
+	FILETIME modifiedUtc = { 0 };//!< modification date in UTC
+	FILETIME created = { 0 }; //!< creation date
+	FILETIME createdUtc = { 0 }; //!< creation date in UTC
+	std::wstring folderName1 = L""; //!< name of the directory
+	std::wstring folderName2 = L""; //!< name of the directory
+	std::wstring folderIdentifier = L""; //!< identifier of the directory
+	std::wstring guidClass = L""; //!< GUID of the class
+	std::wstring FriendlyName = L""; //!< name attached to the class GUID
+	std::vector<Property> properties; //!< array of Property
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	UserPropertyView0x07192006(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson();
 
 };
 
-/*! Structure définissant le format d'un UserPropertyView de type 0x10312005
+/*! Format of a UserPropertyView of type 0x10312005.
 */
 struct UserPropertyView0x10312005 : UserPropertyViewDelegate {
-	unsigned int level = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
-	std::wstring name = L"";//!< nom  de la propriété
-	std::wstring identifier = L""; //!< identifiant de la propriété
-	std::wstring filesystem = L"";//!< nom du système de fichier
-	std::wstring guidClass = L""; //!< identifiant GUID de classe
-	std::wstring FriendlyName = L""; //!< nom associé au GUID de classe
-	std::vector<std::wstring> guidstrings; //!< tableau de GUID
-	std::vector<Property> properties;//!< tableau de Property
+	unsigned int level = 0;//!< depth in the tree of shell items, used to lay out the JSON
+	std::wstring name = L"";//!< name of the property
+	std::wstring identifier = L""; //!< identifier of the property
+	std::wstring filesystem = L"";//!< name of the file system
+	std::wstring guidClass = L""; //!< class GUID
+	std::wstring FriendlyName = L""; //!< name attached to the class GUID
+	std::vector<std::wstring> guidstrings; //!< array of GUID
+	std::vector<Property> properties;//!< array of Property
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	UserPropertyView0x10312005(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
 };
 
-/*! Structure définissant le format d'un UserPropertyView shell item
+/*! Format of a UserPropertyView shell item.
 */
 struct UsersPropertyView :IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
-	unsigned short int totalsize = 0; //!< taille totale de l’objet
-	unsigned short int dataSize = 0; //!< taille des données
-	unsigned int signature = 0; //!< signature de l"objet
-	unsigned short int SPSDataSize = 0; //!< taille des données SPS
-	unsigned short int identifierSize = 0;//!< taille de l'identifier
-	unsigned int dataOffset = 0; //!< Offset des données
-	unsigned short int extensionOffset = 0; //!< Offset des extension blocks
-	unsigned short int spsOffset = 0;//!< offset des SPS
-	std::vector<SPS> SPSs; //!< tableau contenant les SPS
-	std::vector<std::unique_ptr<IExtensionBlock>> extensionBlocks; //!< tableau contenant les extension blocks
-	/*! Nature de l'item, déduite de sa signature.
+	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
+	unsigned short int totalsize = 0; //!< total size of the object
+	unsigned short int dataSize = 0; //!< size of the data
+	unsigned int signature = 0; //!< signature of the object
+	unsigned short int SPSDataSize = 0; //!< size of the SPS data
+	unsigned short int identifierSize = 0;//!< size of the identifier
+	unsigned int dataOffset = 0; //!< offset of the data
+	unsigned short int extensionOffset = 0; //!< offset of the extension blocks
+	unsigned short int spsOffset = 0;//!< offset of the SPS
+	std::vector<SPS> SPSs; //!< the SPS
+	std::vector<std::unique_ptr<IExtensionBlock>> extensionBlocks; //!< the extension blocks
+	/*! Nature of the item, deduced from its signature.
 	*
-	* La signature ne choisit pas seulement un décodeur : chez libyal (libfwsi)
-	* elle IDENTIFIE le type. Deux des signatures traitées ici ne désignent pas
-	* des « users property view » mais des périphériques MTP — volume et entrée
-	* de fichier —, soit la trace qu'un téléphone ou un appareil photo a été
-	* branché et parcouru. Le nom de classe générique masquait ce fait. */
+	* The signature does not only choose a decoder: at libyal (libfwsi) it
+	* IDENTIFIES the type. Two of the signatures handled here do not name "users
+	* property views" but MTP devices — a volume and a file entry —, that is the
+	* trace that a phone or a camera was plugged in and browsed. The generic class
+	* name hid that fact. */
 	std::wstring itemType;
-	/*! Identifiant 32 bits des signatures qui en portent un (identifiant de
-	* 4 octets), relevé comme le fait libfwsi. */
+	/*! 32-bit identifier of the signatures that carry one (a 4-byte identifier),
+	* read as libfwsi does. */
 	unsigned int identifier32 = 0;
 	bool identifier32Lu = false;
-	// `guid` et `identifier` retires : jamais renseignes par le constructeur.
-	// L'identification passe par la signature, `itemType` et le delegue.
-	std::unique_ptr<UserPropertyViewDelegate> delegate; //! UsersPropertyView déléguée
+	// `guid` and `identifier` removed: the constructor never filled them.
+	// The identification goes through the signature, `itemType` and the delegate.
+	std::unique_ptr<UserPropertyViewDelegate> delegate; //! the delegated UsersPropertyView
 
-	/*! Contenu brut, en hexadécimal, quand la signature n'est pas reconnue.
+	/*! Raw content, in hexadecimal, when the signature is not recognised.
 	*
-	* MESURÉ SUR UNE COLLECTE RÉELLE (2026-09-15) : 75 des 89
-	* `USERS_PROPERTY_VIEW` portaient une signature inconnue (`0xc1ec0c9`) et
-	* ressortaient avec pour tout contenu leur type et cette signature. Le dump
-	* existait, mais n'allait que dans le JOURNAL : au niveau de journalisation
-	* par défaut, 75 objets disparaissaient donc entièrement de la sortie.
-	* Cf. le barème de qualité : un objet non décodé rend ses octets. */
+	* MEASURED ON A REAL COLLECTION (2026-09-15): 75 of the 89
+	* `USERS_PROPERTY_VIEW` carried an unknown signature (`0xc1ec0c9`) and came
+	* out with nothing but their type and that signature as content. The dump
+	* existed, but went only into the LOG: at the default log level, 75 objects
+	* therefore vanished entirely from the output.
+	* See the quality bar: an object that is not decoded returns its bytes. */
 	std::wstring data;
 
-	/*! constructeur par défaut
+	/*! Builds an empty object.
 	*/
 	UsersPropertyView() {};
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	UsersPropertyView(LPBYTE buffer, int _level);
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
 };
 
-/*! Structure définissant le format d'un RootFolder Shell Item
+/*! Format of a RootFolder shell item.
 */
 struct RootFolder :IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
-	std::wstring sortIndex = L""; //!w index de tri
+	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
+	std::wstring sortIndex = L""; //!< sort index
 	std::wstring guid = L"";//!< identifiant GUID
-	std::wstring identifier = L"";//!< nom associé au GUID
-	std::vector<SPS> SPSs; //!< tableau de SPS
-	//std::vector<std::unique_ptr<IExtensionBlock>> extensionBlocks; // TODO des extension blocks sont présent avec le type GUID mais on retrouve les même datas dans les SPS donc on passe
+	std::wstring identifier = L"";//!< name attached to the GUID
+	std::vector<SPS> SPSs; //!< array of SPS
+	//std::vector<std::unique_ptr<IExtensionBlock>> extensionBlocks; // TODO: extension blocks are present with the GUID type, but the same data are found in the SPS, so they are skipped
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	RootFolder(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
 };
 
-/*! Structure définissant le format d'un Network Shell Item
+/*! Format of a Network shell item.
 */
 struct NetworkShellItem :IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
-	std::wstring subtypename = L"";//!< nom du sous-type
+	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
+	std::wstring subtypename = L"";//!< name of the subtype
 	std::wstring location = L"";//!< emplacement 
-	std::wstring description = L"";//!< description de l'objet
-	std::wstring comments = L"";//!< commentaires de l’objet
-	FILETIME modifiedUtc = { 0 };//!< date de modification au format UTC
-	FILETIME modified = { 0 };//!< date de modification
+	std::wstring description = L"";//!< description of the object
+	std::wstring comments = L"";//!< comments of the object
+	FILETIME modifiedUtc = { 0 };//!< modification date in UTC
+	FILETIME modified = { 0 };//!< modification date
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	NetworkShellItem(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
 };
 
-/*! Structure définissant le format d'un Archive File Shell Item
+/*! Format of an Archive File shell item.
 */
 struct ArchiveFileContent :IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
-	// `subtypename` et `location` retires : declares ici mais jamais renseignes
-	// (ils appartiennent a NetworkShellItem, qui porte les memes noms).
-	std::wstring name = L"";//!< nom de l'archive
-	FILETIME modifiedUtc = { 0 };//!< date de modification au format UTC
-	FILETIME modified = { 0 };//!< date de modification
+	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
+	// `subtypename` and `location` removed: declared here but never filled
+	// (they belong to NetworkShellItem, which carries the same names).
+	std::wstring name = L"";//!< name of the archive
+	FILETIME modifiedUtc = { 0 };//!< modification date in UTC
+	FILETIME modified = { 0 };//!< modification date
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	ArchiveFileContent(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
 };
 
-/*! Structure définissant le format d'un URL Shell Item
+/*! Format of a URL shell item.
 */
 struct URIShellItem :IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
+	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
 	std::wstring uri = L""; //!< URI 
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	URIShellItem(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
 };
 
-/*! Structure définissant le format d'un File Entry Shell Item
+/*! Format of a File Entry shell item.
 */
 struct FileEntryShellItem :IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
-	unsigned short int fsFileSize = 0; //!< taille du fichier
-	FILETIME fsFileModificationUtc = { 0 };//!< date de modification UTC
-	FILETIME fsFileModification = { 0 };//!< date de modification
-	std::wstring fsPrimaryName = L"";//!< nom primaire
-	FsFlags fsFlags = { 0 }; //!< drapeaux décrivant les options de l'entrée
-	FileAttributes fsFileAttributes = { 0 }; //!< drapeaux décrivant les attributs de l'entrée
-	std::vector<std::unique_ptr<IExtensionBlock>> extensionBlocks; //!< tableau contenant les extension blocks
+	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
+	unsigned short int fsFileSize = 0; //!< size of the file
+	FILETIME fsFileModificationUtc = { 0 };//!< modification date in UTC
+	FILETIME fsFileModification = { 0 };//!< modification date
+	std::wstring fsPrimaryName = L"";//!< primary name
+	FsFlags fsFlags = { 0 }; //!< flags describing the options of the entry
+	FileAttributes fsFileAttributes = { 0 }; //!< flags describing the attributes of the entry
+	std::vector<std::unique_ptr<IExtensionBlock>> extensionBlocks; //!< the extension blocks
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param itemSize est la taille de l'objet
-	* @param shell_item_type_char est le type de shell item au format character
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param itemSize size of the object
+	* @param shell_item_type_char kind of shell item, as a character
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	FileEntryShellItem(LPBYTE buffer, unsigned short int itemSize, unsigned char shell_item_type_char, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
 };
 
-/*! Structure définissant le format d'un Users Files Folder Shell Item
+/*! Format of a Users Files Folder shell item.
 */
 struct UsersFilesFolder :IShellItem {
 public:
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
-	std::wstring primaryName = L"";//!< nom primaire
-	FILETIME modifiedUtc = { 0 };//!< date de modification au format UTC
-	FILETIME modified = { 0 };//!< date de modification
+	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
+	std::wstring primaryName = L"";//!< primary name
+	FILETIME modifiedUtc = { 0 };//!< modification date in UTC
+	FILETIME modified = { 0 };//!< modification date
 	std::unique_ptr<IExtensionBlock> extensionBlock; //!< block d'extension
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	UsersFilesFolder(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
 };
 
-/*! Structure définissant le format d'un Favorites Shell Item
+/*! Format of a Favorites shell item.
 */
 
-/*! Shell item de type « favori ».
+/*! Shell item of the "favorite" kind.
 *
-* NON COUVERT PAR LES TESTS (vérifié le 2026-09-15) : la VM de validation ne
-* produit aucun shell item de ce type, donc le parsing n'est jamais exercé.
-* Pertinence forensique élevée s'il est rencontré — un favori traduit une
-* ressource délibérément marquée par l'utilisateur, donc une intention — d'où
-* l'intérêt de le valider plutôt que de le laisser en l'état.
-* Pour l'exercer : shellbags issus d'une session interactive ayant navigué dans
-* les Favoris, ou jeu de ruches de référence.
+* NOT COVERED BY THE TESTS (checked on 2026-09-15): the validation VM produces no
+* shell item of this kind, so the parsing is never exercised. High forensic
+* relevance if met — a favorite expresses a resource deliberately marked by the
+* user, hence an intent — which is why it is worth validating rather than
+* leaving as it is.
+* To exercise it: shellbags from an interactive session that browsed the
+* Favorites, or a reference set of hives.
 */
 struct FavoriteShellitem :IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
+	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
 	UsersPropertyView UPV; //! Objet UsersPropertyView
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	FavoriteShellitem(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 
 };
 
-/*! Structure définissant le format d'un UNKNOWN Shell Item
+/*! Format of an UNKNOWN shell item.
 */
-/*! Shell item d'un type reconnu par sa signature, mais sans décodeur dédié.
+/*! Shell item of a type recognised by its signature, but without a dedicated
+*  decoder.
 *
-*  POURQUOI. L'identification d'un shell item ne se fait pas qu'avec l'octet de
-*  classe : plusieurs types se reconnaissent à une signature placée dans les
-*  données (libfwsi_item.c essaie chaque décodeur, et chacun vérifie la sienne).
-*  WAC ne testait que l'octet de classe, si bien que six types documentés
-*  tombaient dans « UNKNOWN » : graveur de CD, dossier de jeux, site web,
-*  fichier Acronis, fichier .cpl du panneau de configuration.
+*  WHY. A shell item is not identified by its class byte alone: several types are
+*  recognised by a signature placed in the data (libfwsi_item.c tries every
+*  decoder, and each checks its own). WAC tested only the class byte, so that
+*  six documented types fell into "UNKNOWN": CD burner, games folder, web site,
+*  Acronis file, control panel .cpl file.
 *
-*  Les nommer vaut mieux que « inconnu », même sans décoder tous leurs champs :
-*  l'analyste sait ce qu'il a sous les yeux, et les octets restent joints.
+*  Naming them is better than "unknown", even without decoding all their fields:
+*  the analyst knows what is in front of them, and the bytes stay attached.
 */
 struct TypedShellItem : IShellItem {
-	bool isPresent = false;   //!< présence, pour le formatage du json
+	bool isPresent = false;   //!< presence, to lay out the JSON
 	std::wstring typeName;    //!< type reconnu, ex. "CD Burn", "Game Folder"
-	std::wstring data;        //!< contenu brut, en hexadécimal
+	std::wstring data;        //!< raw content, in hexadecimal
 
-	/*! constructeur
-	* @param buffer données de l'item
-	* @param taille taille de l'item
-	* @param _typeName libellé du type reconnu
-	* @param _niveau niveau dans l'arborescence
+	/*! Reads the item.
+	* @param buffer data of the item
+	* @param size size of the item
+	* @param _typeName label of the recognised type
+	* @param _level depth in the tree
 	*/
 	TypedShellItem(LPBYTE buffer, unsigned short size, const std::wstring& _typeName,
 	               int _level);
@@ -1345,29 +1317,29 @@ struct TypedShellItem : IShellItem {
 	Json toJson() override;
 };
 
-/*! Dossier délégué (« delegate folder »).
+/*! Delegate folder.
 *
-*  Ce conteneur enveloppe UN SHELL ITEM COMPLET, placé à l'offset 6, et se
-*  reconnaît au GUID de délégation inscrit 32 octets avant la fin
-*  ({5E591A74-DF96-48D3-8D67-1733BCEE28BA}). Le GUID de la classe qui délègue
-*  occupe les 16 derniers octets.
+*  This container wraps ONE COMPLETE SHELL ITEM, placed at offset 6, and is
+*  recognised by the delegation GUID written 32 bytes before the end
+*  ({5E591A74-DF96-48D3-8D67-1733BCEE28BA}). The GUID of the delegating class
+*  occupies the last 16 bytes.
 *
-*  Il n'était pas reconnu du tout : l'item entier — donc le shell item qu'il
-*  contient, avec son chemin, ses dates et ses property stores — était réduit à
-*  un objet « UNKNOWN ». C'est le type manquant qui coûtait le plus, parce qu'il
-*  est courant dans les shellbags et qu'il masque un item décodable.
+*  It was not recognised at all: the whole item — hence the shell item it holds,
+*  with its path, its dates and its property stores — was reduced to an
+*  "UNKNOWN" object. It was the missing type that cost the most, because it is
+*  common in the shellbags and it hides a decodable item.
 */
 struct DelegateFolder : IShellItem {
-	bool isPresent = false;                      //!< présence, pour le json
-	std::wstring classGuid;                      //!< GUID de la classe déléguée
-	std::wstring classFriendlyName;               //!< libellé de ce GUID
-	std::unique_ptr<IShellItem> innerItem;        //!< shell item imbriqué
-	std::wstring data;                            //!< contenu brut si non décodé
+	bool isPresent = false;                      //!< presence, for the JSON
+	std::wstring classGuid;                      //!< GUID of the delegated class
+	std::wstring classFriendlyName;               //!< label of that GUID
+	std::unique_ptr<IShellItem> innerItem;        //!< nested shell item
+	std::wstring data;                            //!< raw content if not decoded
 
-	/*! constructeur
-	* @param buffer données de l'item
-	* @param taille taille de l'item
-	* @param _niveau niveau dans l'arborescence
+	/*! Reads the item.
+	* @param buffer data of the item
+	* @param size size of the item
+	* @param _level depth in the tree
 	*/
 	DelegateFolder(LPBYTE buffer, unsigned short size, int _level);
 
@@ -1375,17 +1347,16 @@ struct DelegateFolder : IShellItem {
 };
 
 struct UnknownShellItem :IShellItem {
-	bool isPresent = false; //!< l'objet est-il présent, utilisé pour le formatage du json
-	std::wstring data = L"";//!< chaîne contenant les données
+	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
+	std::wstring data = L"";//!< string holding the data
 
-	/*! constructeur
-	* @param buffer en entrée contient les bits à parser de l'item
-	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
-
+	/*! Reads the item.
+	* @param buffer the bytes to parse
+	* @param _level depth in the tree of elements, used to lay out the output JSON
 	*/
 	UnknownShellItem(LPBYTE buffer, int _level);
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
+	/*! Converts the object to JSON.
+	* @return its JSON value
 	*/
 	Json toJson() override;
 

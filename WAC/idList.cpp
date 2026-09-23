@@ -326,11 +326,11 @@ std::wstring getType(unsigned int type) {
 }
 
 Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int level,
-              unsigned int inputSize, bool* typeNonDecode);
+              unsigned int inputSize, bool* typeNotDecoded);
 
 /*! Lit UNE valeur scalaire. Voir `getValue`, qui traite en plus les vecteurs. */
 static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueType,
-                         unsigned int level, unsigned int inputSize, bool* typeNonDecode) {
+                         unsigned int level, unsigned int inputSize, bool* typeNotDecoded) {
 	// Renvoie desormais une valeur Json typee (et non une chaine pre-serialisee) :
 	// l'echappement est fait par le writer, une seule fois, a la serialisation.
 	// NB : les backslashes ne sont PLUS doubles ici, ce qui corrige aussi
@@ -561,7 +561,7 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 	 *
 	 * La position n'est pas avancée : elle ne sert qu'à l'intérieur de l'entrée,
 	 * dont le parcours est borné par sa propre taille chez l'appelant. */
-	if (typeNonDecode) *typeNonDecode = true;
+	if (typeNotDecoded) *typeNotDecoded = true;
 	Json o = Json::obj();
 	o.add(L"UnsupportedValueType", Json::str(L"0x" + to_hex(valueType)));
 	if (inputSize > *pos) {
@@ -591,15 +591,15 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 *  devinerait.
 */
 Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int level,
-              unsigned int inputSize, bool* typeNonDecode) {
+              unsigned int inputSize, bool* typeNotDecoded) {
 	const unsigned short VT_VECTOR_BIT = 0x1000;
 
 	// Cas particuliers conserves : heuristiques propres a ces deux vecteurs.
 	if (valueType == 0x1011 || valueType == 0x101F)
-		return readScalar(buffer, pos, valueType, level, inputSize, typeNonDecode);
+		return readScalar(buffer, pos, valueType, level, inputSize, typeNotDecoded);
 
 	if ((valueType & VT_VECTOR_BIT) == 0)
-		return readScalar(buffer, pos, valueType, level, inputSize, typeNonDecode);
+		return readScalar(buffer, pos, valueType, level, inputSize, typeNotDecoded);
 
 	const unsigned short typeElement = (unsigned short)(valueType & 0x0FFF);
 	const unsigned int nb = *reinterpret_cast<unsigned int*>(buffer + *pos);
@@ -612,7 +612,7 @@ Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsign
 	const unsigned int MAX_ELEMENTS = 65536;
 	if (nb > MAX_ELEMENTS) {
 		log(2, L"🔥vector: nonsensical count " + std::to_wstring(nb));
-		if (typeNonDecode) *typeNonDecode = true;
+		if (typeNotDecoded) *typeNotDecoded = true;
 		Json o = Json::obj();
 		o.add(L"UnsupportedValueType", Json::str(L"0x" + to_hex(valueType)));
 		o.add(L"ElementCount",         Json::num(nb));
@@ -631,7 +631,7 @@ Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsign
 		if (elementNonDecode) {
 			/* Sans savoir la taille d'un element, la position n'avance pas :
 			   continuer relirait le meme octet. On s'arrete en le signalant. */
-			if (typeNonDecode) *typeNonDecode = true;
+			if (typeNotDecoded) *typeNotDecoded = true;
 			log(2, L"🔥vector: element of a type not decoded 0x" + to_hex(typeElement)
 			     + L", stopped after " + std::to_wstring(x + 1) + L"/" + std::to_wstring(nb));
 			break;
@@ -1714,7 +1714,7 @@ Property::Property(LPBYTE buffer, int _level) {
 	type = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
 	log(3, L"🔈getValue");
-	value = getValue(buffer, &pos, type, level, 0, &typeNonDecode);
+	value = getValue(buffer, &pos, type, level, 0, &typeNotDecoded);
 	size = pos;
 }
 
@@ -1817,7 +1817,7 @@ UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _level
 	for (unsigned int x = 0; x < numberProperties; x++) {
 		log(3, L"🔈Property");
 		Property temp(buffer + pos, level + 1);
-		const bool stop = temp.typeNonDecode;   // taille indeterminee, cf. idList.h
+		const bool stop = temp.typeNotDecoded;   // taille indeterminee, cf. idList.h
 		pos += temp.size;
 		properties.push_back(std::move(temp));
 		if (stop) {
@@ -1913,7 +1913,7 @@ UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _level
 			log(2, L"🔥Property of null size: walk stopped", ERROR_INVALID_DATA);
 			break;
 		}
-		const bool stop = temp.typeNonDecode;   // taille indeterminee, cf. idList.h
+		const bool stop = temp.typeNotDecoded;   // taille indeterminee, cf. idList.h
 		pos += temp.size;
 		properties.push_back(std::move(temp));
 		if (stop) {
