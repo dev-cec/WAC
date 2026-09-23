@@ -63,10 +63,10 @@ var NAVTREEINDEX =
 "annotated.html",
 "functions_v.html",
 "rsa_8h.html#ac45c14ed73917e022d33ef6818a2d9b7",
-"structBeef0025.html#a48b9798af9aefbeb70fca2714e1a4633",
-"structHiveLogEntry.html#a28be2c308250c784e32660f2ea2f4f0d",
-"structRawHiveFingerprints.html#a2a93cddf8583586e96595c3b6d02724b",
-"structTimeZoneInfo.html#a0f44986712feebee3f46cfe288a6292b",
+"structBeef0025.html#a2d08448046cf1ce0822b8a9fdadfb40b",
+"structHiveLogEntry.html",
+"structRawHiveFingerprints.html#a270ddbbddbe855e9f14e8347d241d805",
+"structTimeZoneInfo.html#a0208fee9ebb72f6c6ea900a0e3ef1dac",
 "tools_8cpp.html#a64af952b26c2e734b7998bd37173b3dc"
 ];
 

@@ -110,6 +110,9 @@ $(document).ready(function(){initNavTree('tools_8h.html',''); initResizable(); }
 <div class="textblock"><code>#include &lt;iostream&gt;</code><br />
 <code>#include &lt;fstream&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
+<code>#include &lt;type_traits&gt;</code><br />
+<code>#include &lt;iomanip&gt;</code><br />
+<code>#include &lt;sstream&gt;</code><br />
 <code>#include &lt;offreg.h&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
@@ -198,10 +201,6 @@ Functions</h2></td></tr>
 <tr class="separator:a3fd0bef5fa02565cb2da3f612cf978b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa2fb1cf5cd8710778ba5bad978bba540" id="r_aa2fb1cf5cd8710778ba5bad978bba540"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#aa2fb1cf5cd8710778ba5bad978bba540">log</a> (int loglevel, std::wstring message, HRESULT result)</td></tr>
 <tr class="separator:aa2fb1cf5cd8710778ba5bad978bba540"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f20577b4f90e4d40f33250f74928ded" id="r_a0f20577b4f90e4d40f33250f74928ded"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a0f20577b4f90e4d40f33250f74928ded">ansi_to_utf8</a> (std::string in)</td></tr>
-<tr class="separator:a0f20577b4f90e4d40f33250f74928ded"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2253bdea61c15807680646f199e57082" id="r_a2253bdea61c15807680646f199e57082"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a2253bdea61c15807680646f199e57082">ansi_to_utf8</a> (std::wstring in)</td></tr>
-<tr class="separator:a2253bdea61c15807680646f199e57082"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4c0694f9ff1125a48aa8c09d96d18dc" id="r_ac4c0694f9ff1125a48aa8c09d96d18dc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ac4c0694f9ff1125a48aa8c09d96d18dc">dump</a> (LPBYTE buffer, int start, int end)</td></tr>
 <tr class="separator:ac4c0694f9ff1125a48aa8c09d96d18dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7a340bb9420f7c842f6ae990f5897ef1" id="r_a7a340bb9420f7c842f6ae990f5897ef1"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a7a340bb9420f7c842f6ae990f5897ef1">dump_wstring</a> (LPBYTE buffer, int start, int length)</td></tr>
@@ -212,8 +211,9 @@ Functions</h2></td></tr>
 <tr class="separator:a7684efc242e166b53952647faf435f95"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a897a3625e4fa6aa492efd7beaeaa1d75" id="r_a897a3625e4fa6aa492efd7beaeaa1d75"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a897a3625e4fa6aa492efd7beaeaa1d75">decodeURIComponent</a> (std::string encoded)</td></tr>
 <tr class="separator:a897a3625e4fa6aa492efd7beaeaa1d75"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7962322204e2574d54ce125ac2055850" id="r_a7962322204e2574d54ce125ac2055850"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a7962322204e2574d54ce125ac2055850">to_hex</a> (long long i)</td></tr>
-<tr class="separator:a7962322204e2574d54ce125ac2055850"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e5558a8b32a9ef745df219984caddab" id="r_a6e5558a8b32a9ef745df219984caddab"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a6e5558a8b32a9ef745df219984caddab"><td class="memTemplItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="tools_8h.html#a6e5558a8b32a9ef745df219984caddab">to_hex</a> (T value, int minDigits=2)</td></tr>
+<tr class="separator:a6e5558a8b32a9ef745df219984caddab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a238702c13cab5b487c46812cd980e7d6" id="r_a238702c13cab5b487c46812cd980e7d6"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a238702c13cab5b487c46812cd980e7d6">tab</a> (int i)</td></tr>
 <tr class="separator:a238702c13cab5b487c46812cd980e7d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab29ec2bd73a4de1536739ac5cd16ecff" id="r_ab29ec2bd73a4de1536739ac5cd16ecff"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ab29ec2bd73a4de1536739ac5cd16ecff">getNameFromSid</a> (std::wstring _sid)</td></tr>
@@ -244,10 +244,12 @@ Functions</h2></td></tr>
 <tr class="separator:a299fdb4272ae83c49ad0ac0bad62f1fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2748e7d4235c4ca2138ecb3bd7d3aa82" id="r_a2748e7d4235c4ca2138ecb3bd7d3aa82"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a2748e7d4235c4ca2138ecb3bd7d3aa82">timeToIso8601</a> (const SYSTEMTIME &amp;systemtime, bool utc, long fraction100ns=-1)</td></tr>
 <tr class="separator:a2748e7d4235c4ca2138ecb3bd7d3aa82"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad612e1d5a3738c231a1aeefb21c4d36d" id="r_ad612e1d5a3738c231a1aeefb21c4d36d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ad612e1d5a3738c231a1aeefb21c4d36d">string_to_wstring</a> (const std::string &amp;str)</td></tr>
-<tr class="separator:ad612e1d5a3738c231a1aeefb21c4d36d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9e8d9796b27a47431c88a5387b1ed2a0" id="r_a9e8d9796b27a47431c88a5387b1ed2a0"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a9e8d9796b27a47431c88a5387b1ed2a0">wstring_to_string</a> (const std::wstring &amp;wstr)</td></tr>
-<tr class="separator:a9e8d9796b27a47431c88a5387b1ed2a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f0bdac0f58e2d621c497478f845c05c" id="r_a4f0bdac0f58e2d621c497478f845c05c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a4f0bdac0f58e2d621c497478f845c05c">decodeText</a> (const std::string &amp;bytes, UINT codePage=0)</td></tr>
+<tr class="separator:a4f0bdac0f58e2d621c497478f845c05c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a229f23807f3e0ecd7ad5f4c0a39156e9" id="r_a229f23807f3e0ecd7ad5f4c0a39156e9"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a229f23807f3e0ecd7ad5f4c0a39156e9">encodeText</a> (const std::wstring &amp;text, UINT codePage=CP_UTF8)</td></tr>
+<tr class="separator:a229f23807f3e0ecd7ad5f4c0a39156e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a39f06ea897c5d9cfa9c5db5deb82bab0" id="r_a39f06ea897c5d9cfa9c5db5deb82bab0"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a39f06ea897c5d9cfa9c5db5deb82bab0">loadSuspectAnsiCodePage</a> ()</td></tr>
+<tr class="separator:a39f06ea897c5d9cfa9c5db5deb82bab0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a91174db2a2f6918c424af0beb323d74e" id="r_a91174db2a2f6918c424af0beb323d74e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a91174db2a2f6918c424af0beb323d74e">toLower</a> (std::wstring s)</td></tr>
 <tr class="separator:a91174db2a2f6918c424af0beb323d74e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b4cfa2b19dd3138efd1cdca232d614e" id="r_a2b4cfa2b19dd3138efd1cdca232d614e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a2b4cfa2b19dd3138efd1cdca232d614e">isMuiReference</a> (const std::wstring &amp;value)</td></tr>
@@ -423,56 +425,6 @@ Variables</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a0f20577b4f90e4d40f33250f74928ded" name="a0f20577b4f90e4d40f33250f74928ded"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0f20577b4f90e4d40f33250f74928ded">&#9670;&#160;</a></span>ansi_to_utf8() <span class="overload">[1/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::string ansi_to_utf8 </td>
-          <td>(</td>
-          <td class="paramtype">std::string&#160;</td>
-          <td class="paramname"><em>in</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Converts an ANSI text to UTF-8. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">in</td><td>the string, encoded in ANSI </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>the string, encoded in UTF-8 </dd></dl>
-
-</div>
-</div>
-<a id="a2253bdea61c15807680646f199e57082" name="a2253bdea61c15807680646f199e57082"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2253bdea61c15807680646f199e57082">&#9670;&#160;</a></span>ansi_to_utf8() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::wstring ansi_to_utf8 </td>
-          <td>(</td>
-          <td class="paramtype">std::wstring&#160;</td>
-          <td class="paramname"><em>in</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Converts an ANSI text to UTF-8. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">in</td><td>the string, encoded in ANSI </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>the string, encoded in UTF-8 </dd></dl>
-
-</div>
-</div>
 <a id="a30395273a71242bd8f62d969fc250085" name="a30395273a71242bd8f62d969fc250085"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a30395273a71242bd8f62d969fc250085">&#9670;&#160;</a></span>binaryPath()</h2>
 
@@ -524,6 +476,44 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>"true" or "false" </dd></dl>
+
+</div>
+</div>
+<a id="a4f0bdac0f58e2d621c497478f845c05c" name="a4f0bdac0f58e2d621c497478f845c05c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4f0bdac0f58e2d621c497478f845c05c">&#9670;&#160;</a></span>decodeText()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring decodeText </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>bytes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">UINT&#160;</td>
+          <td class="paramname"><em>codePage</em> = <code>0</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Decodes bytes into UTF-16 text — THE conversion from bytes to text in WAC.</p>
+<p>The code page is a parameter, not a function name: there used to be six conversions, two of them wrong. mbstowcs / wcstombs in the "C" locale mapped each byte to the character of the same value (Latin-1): the characters 0x80-0x9F of the Windows code pages (’ “ ” – € …) came out as control characters — "d’orientation" as "d\x92orientation" on a real machine — and a path outside Latin-1 could not be narrowed at all.</p>
+<p>By default, the EXAMINED machine's ANSI code page: shortcuts, shell items, DestList host names and ANSI event data store their non-Unicode strings in "the system default code page" (MS-SHLLINK) of the machine that wrote them. WAC's own narrow strings (JSON file names, build date) are pure ASCII, identical in every code page; the command line is read in UTF-16. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bytes</td><td>the bytes </td></tr>
+    <tr><td class="paramname">codePage</td><td>CP_UTF8, a Windows code page, or 0 for the examined machine's ANSI code page (<code>conf.ansiCodePage</code>; the running machine's until the SYSTEM hive is read) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the text; bytes invalid for the code page are widened one by one rather than lost </dd></dl>
 
 </div>
 </div>
@@ -636,6 +626,42 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the bytes in hexadecimal, separated by spaces </dd></dl>
+
+</div>
+</div>
+<a id="a229f23807f3e0ecd7ad5f4c0a39156e9" name="a229f23807f3e0ecd7ad5f4c0a39156e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a229f23807f3e0ecd7ad5f4c0a39156e9">&#9670;&#160;</a></span>encodeText()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string encodeText </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>text</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">UINT&#160;</td>
+          <td class="paramname"><em>codePage</em> = <code>CP_UTF8</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Encodes UTF-16 text into bytes — the reverse of decodeText. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">text</td><td>the text </td></tr>
+    <tr><td class="paramname">codePage</td><td>CP_UTF8 by default: the encoding of every file WAC writes </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the bytes </dd></dl>
 
 </div>
 </div>
@@ -1257,6 +1283,24 @@ Variables</h2></td></tr>
 <p>AN IMPOSED ORDER. The per-user hives (<code>ntuser.dat</code>, <code>usrClass.dat</code>) live in the profile folder: those paths must be known to extract them. Hence the sequence ExtractSystemHivesRaw → OROpenHive(SOFTWARE) → loadProfileList → ExtractUserHivesRaw (see <a class="el" href="raw__collect_8h.html" title="Orchestration of the offline extraction of artefacts (WAC).">raw_collect.h</a>).</p>
 <p>The variables of <code>ProfileImagePath</code> (REG_EXPAND_SZ) are expanded from <code>conf.systemDrive</code>, and not from the process's environment: the value belongs to the examined machine, not to the one running WAC.</p>
 <dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS if at least one profile was read, ERROR_EMPTY if the key holds no usable profile, ERROR_INVALID_HANDLE if the SOFTWARE hive is not open, or the offreg code </dd></dl>
+
+</div>
+</div>
+<a id="a39f06ea897c5d9cfa9c5db5deb82bab0" name="a39f06ea897c5d9cfa9c5db5deb82bab0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a39f06ea897c5d9cfa9c5db5deb82bab0">&#9670;&#160;</a></span>loadSuspectAnsiCodePage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT loadSuspectAnsiCodePage </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads the examined machine's ANSI code page in its SYSTEM hive and fills <code>conf.ansiCodePage</code>. To be called as soon as <code>conf.CurrentControlSet</code> is open, like loadSuspectTimeZone. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or why the code page was not read (the running machine's then stays in use) </dd></dl>
 
 </div>
 </div>
@@ -1940,31 +1984,6 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="ad612e1d5a3738c231a1aeefb21c4d36d" name="ad612e1d5a3738c231a1aeefb21c4d36d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad612e1d5a3738c231a1aeefb21c4d36d">&#9670;&#160;</a></span>string_to_wstring()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::wstring string_to_wstring </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>str</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Converts a string to a wstring. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">str</td><td>pointer to the string </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>the wstring that results from the conversion </dd></dl>
-
-</div>
-</div>
 <a id="a238702c13cab5b487c46812cd980e7d6" name="a238702c13cab5b487c46812cd980e7d6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a238702c13cab5b487c46812cd980e7d6">&#9670;&#160;</a></span>tab()</h2>
 
@@ -2169,28 +2188,42 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="a7962322204e2574d54ce125ac2055850" name="a7962322204e2574d54ce125ac2055850"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7962322204e2574d54ce125ac2055850">&#9670;&#160;</a></span>to_hex()</h2>
+<a id="a6e5558a8b32a9ef745df219984caddab" name="a6e5558a8b32a9ef745df219984caddab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6e5558a8b32a9ef745df219984caddab">&#9670;&#160;</a></span>to_hex()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
       <table class="memname">
         <tr>
           <td class="memname">std::wstring to_hex </td>
           <td>(</td>
-          <td class="paramtype">long long&#160;</td>
-          <td class="paramname"><em>i</em></td><td>)</td>
+          <td class="paramtype">T&#160;</td>
+          <td class="paramname"><em>value</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>minDigits</em> = <code>2</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Converts a number to hexadecimal characters. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Writes an integer in lower-case hexadecimal, on the WIDTH OF ITS TYPE.</p>
+<p>A template rather than one <code>long long</code> signature: every value used to be widened to 64 bits first, so a negative 32-bit value — an HRESULT such as 0x80070005 — came out as "ffffffff80070005". The value is now read as the unsigned type of the same width. A <code>char</code> is written as a number, never as a character. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">i</td><td>the integer to convert </td></tr>
+    <tr><td class="paramname">value</td><td>the integer </td></tr>
+    <tr><td class="paramname">minDigits</td><td>minimum number of digits, left-padded with zeros (2 by default; 1 for no padding, e.g. the stream names of a jump list) </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the string that results from the operation </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>the digits, without a "0x" prefix </dd></dl>
 
 </div>
 </div>
@@ -2415,31 +2448,6 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the FILETIME that results from the conversion </dd></dl>
-
-</div>
-</div>
-<a id="a9e8d9796b27a47431c88a5387b1ed2a0" name="a9e8d9796b27a47431c88a5387b1ed2a0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9e8d9796b27a47431c88a5387b1ed2a0">&#9670;&#160;</a></span>wstring_to_string()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::string wstring_to_string </td>
-          <td>(</td>
-          <td class="paramtype">const std::wstring &amp;&#160;</td>
-          <td class="paramname"><em>wstr</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Converts a wstring to a string. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">wstr</td><td>pointer to the wstring </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>the string that results from the conversion </dd></dl>
 
 </div>
 </div>

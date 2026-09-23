@@ -114,7 +114,7 @@ Public Member Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Incremental MD5, computed while a file is being written. (WAC's addition to <a class="el" href="classQuickDigest5.html" title="A utility class for MD5 hashing of strings and files.">QuickDigest5</a>.)</p>
-<p>WHY. <code><a class="el" href="classQuickDigest5.html#a477938f5f3ddef8d8fec3ae8ba6d57d3" title="Computes the MD5 hash of a file.">QuickDigest5::digestFile()</a></code> reopens and rereads the whole file. During the raw extraction, the copy was written to the USB key and then read back from that same key to be hashed: about 150 MiB read twice on the slowest medium of the chain, nearly half of the collection time. This class hashes the bytes when they already pass through memory, in a single pass.</p>
+<p>WHY. <code><a class="el" href="classQuickDigest5.html#a89205e034964714c4421c63d668728b6" title="Computes the MD5 hash of a file.">QuickDigest5::digestFile()</a></code> reopens and rereads the whole file. During the raw extraction, the copy was written to the USB key and then read back from that same key to be hashed: about 150 MiB read twice on the slowest medium of the chain, nearly half of the collection time. This class hashes the bytes when they already pass through memory, in a single pass.</p>
 <p>The forensic value is identical: it is the same content, the one actually written into the kept copy.</p>
 <p>Usage: <a class="el" href="classMd5Stream.html">Md5Stream</a> md5; md5.update(block, size); // as many times as needed std::wstring h = md5.hexDigest(); </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>

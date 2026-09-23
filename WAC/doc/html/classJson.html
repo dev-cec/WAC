@@ -152,16 +152,9 @@ Static Public Member Functions</h2></td></tr>
 <tr class="separator:a566f7f6afb712f82ddfd6c07751645e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8405614a0c9bc7c7267b69a705200ef7" id="r_a8405614a0c9bc7c7267b69a705200ef7"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html#a8405614a0c9bc7c7267b69a705200ef7">boolean</a> (bool v)</td></tr>
 <tr class="separator:a8405614a0c9bc7c7267b69a705200ef7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0e2d229ff3a8327645ff1f585610bc45" id="r_a0e2d229ff3a8327645ff1f585610bc45"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html#a0e2d229ff3a8327645ff1f585610bc45">num</a> (long long v)</td></tr>
-<tr class="separator:a0e2d229ff3a8327645ff1f585610bc45"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aee1009261d48105e2f605fb21d3c1b1f" id="r_aee1009261d48105e2f605fb21d3c1b1f"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html#aee1009261d48105e2f605fb21d3c1b1f">num</a> (unsigned long long v)</td></tr>
-<tr class="separator:aee1009261d48105e2f605fb21d3c1b1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5251359de8381c9aef345a252fcd2dd1" id="r_a5251359de8381c9aef345a252fcd2dd1"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html#a5251359de8381c9aef345a252fcd2dd1">num</a> (int v)</td></tr>
-<tr class="separator:a5251359de8381c9aef345a252fcd2dd1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae40f820d5c34da940b66d2ac57e6608c" id="r_ae40f820d5c34da940b66d2ac57e6608c"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html#ae40f820d5c34da940b66d2ac57e6608c">num</a> (unsigned int v)</td></tr>
-<tr class="separator:ae40f820d5c34da940b66d2ac57e6608c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a96fd44a2c2ebfda27a99b0300331e9bc" id="r_a96fd44a2c2ebfda27a99b0300331e9bc"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html#a96fd44a2c2ebfda27a99b0300331e9bc">num</a> (unsigned long v)</td></tr>
-<tr class="separator:a96fd44a2c2ebfda27a99b0300331e9bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1ac8a14ed178ba686fb561b6f6921e3a" id="r_a1ac8a14ed178ba686fb561b6f6921e3a"><td class="memTemplParams" colspan="2">template&lt;typename T , typename  = std::enable_if_t&lt;std::is_integral_v&lt;T&gt; &amp;&amp; !std::is_same_v&lt;T, bool&gt;&gt;&gt; </td></tr>
+<tr class="memitem:a1ac8a14ed178ba686fb561b6f6921e3a"><td class="memTemplItemLeft" align="right" valign="top">static <a class="el" href="classJson.html">Json</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classJson.html#a1ac8a14ed178ba686fb561b6f6921e3a">num</a> (T v)</td></tr>
+<tr class="separator:a1ac8a14ed178ba686fb561b6f6921e3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A JSON value: object, array or scalar. Insertion order is preserved.</p>
@@ -482,11 +475,13 @@ that value". The rule used to be applied collector by collector, hence unevenly:
 
 </div>
 </div>
-<a id="a5251359de8381c9aef345a252fcd2dd1" name="a5251359de8381c9aef345a252fcd2dd1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5251359de8381c9aef345a252fcd2dd1">&#9670;&#160;</a></span>num() <span class="overload">[1/5]</span></h2>
+<a id="a1ac8a14ed178ba686fb561b6f6921e3a" name="a1ac8a14ed178ba686fb561b6f6921e3a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1ac8a14ed178ba686fb561b6f6921e3a">&#9670;&#160;</a></span>num()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<div class="memtemplate">
+template&lt;typename T , typename  = std::enable_if_t&lt;std::is_integral_v&lt;T&gt; &amp;&amp; !std::is_same_v&lt;T, bool&gt;&gt;&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -494,7 +489,7 @@ that value". The rule used to be applied collector by collector, hence unevenly:
         <tr>
           <td class="memname">static <a class="el" href="classJson.html">Json</a> Json::num </td>
           <td>(</td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">T&#160;</td>
           <td class="paramname"><em>v</em></td><td>)</td>
           <td></td>
         </tr>
@@ -505,153 +500,13 @@ that value". The rule used to be applied collector by collector, hence unevenly:
   </tr>
 </table>
 </div><div class="memdoc">
-
-<p></p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">v</td><td>the number. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>that number, unquoted.   </dd></dl>
-
-</div>
-</div>
-<a id="a0e2d229ff3a8327645ff1f585610bc45" name="a0e2d229ff3a8327645ff1f585610bc45"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0e2d229ff3a8327645ff1f585610bc45">&#9670;&#160;</a></span>num() <span class="overload">[2/5]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static <a class="el" href="classJson.html">Json</a> Json::num </td>
-          <td>(</td>
-          <td class="paramtype">long long&#160;</td>
-          <td class="paramname"><em>v</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<dl class="params"><dt>Parameters</dt><dd>
+<p>One template for every integer type, instead of one overload per type (there were five). A bool is refused: it is <a class="el" href="classJson.html#a8405614a0c9bc7c7267b69a705200ef7">Json::boolean</a>. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">v</td><td>the number. </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>that number, unquoted. </dd></dl>
-
-</div>
-</div>
-<a id="ae40f820d5c34da940b66d2ac57e6608c" name="ae40f820d5c34da940b66d2ac57e6608c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae40f820d5c34da940b66d2ac57e6608c">&#9670;&#160;</a></span>num() <span class="overload">[3/5]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static <a class="el" href="classJson.html">Json</a> Json::num </td>
-          <td>(</td>
-          <td class="paramtype">unsigned int&#160;</td>
-          <td class="paramname"><em>v</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p></p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">v</td><td>the number. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>that number, unquoted.   </dd></dl>
-
-</div>
-</div>
-<a id="aee1009261d48105e2f605fb21d3c1b1f" name="aee1009261d48105e2f605fb21d3c1b1f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aee1009261d48105e2f605fb21d3c1b1f">&#9670;&#160;</a></span>num() <span class="overload">[4/5]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static <a class="el" href="classJson.html">Json</a> Json::num </td>
-          <td>(</td>
-          <td class="paramtype">unsigned long long&#160;</td>
-          <td class="paramname"><em>v</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p></p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">v</td><td>the number. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>that number, unquoted.   </dd></dl>
-
-</div>
-</div>
-<a id="a96fd44a2c2ebfda27a99b0300331e9bc" name="a96fd44a2c2ebfda27a99b0300331e9bc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a96fd44a2c2ebfda27a99b0300331e9bc">&#9670;&#160;</a></span>num() <span class="overload">[5/5]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static <a class="el" href="classJson.html">Json</a> Json::num </td>
-          <td>(</td>
-          <td class="paramtype">unsigned long&#160;</td>
-          <td class="paramname"><em>v</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p></p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">v</td><td>the number. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>that number, unquoted.   </dd></dl>
 
 </div>
 </div>

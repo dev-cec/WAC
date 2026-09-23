@@ -1,12 +1,12 @@
 var tools_8cpp =
 [
-    [ "ansi_to_utf8", "tools_8cpp.html#a0f20577b4f90e4d40f33250f74928ded", null ],
-    [ "ansi_to_utf8", "tools_8cpp.html#a2253bdea61c15807680646f199e57082", null ],
     [ "binaryPath", "tools_8cpp.html#a30395273a71242bd8f62d969fc250085", null ],
     [ "bool_to_wstring", "tools_8cpp.html#a60ee9433903019ec436ff2efcef4ea0d", null ],
+    [ "decodeText", "tools_8cpp.html#af96f7473f590c9d12a0033b399eed043", null ],
     [ "decodeURIComponent", "tools_8cpp.html#a897a3625e4fa6aa492efd7beaeaa1d75", null ],
     [ "dump", "tools_8cpp.html#ac4c0694f9ff1125a48aa8c09d96d18dc", null ],
     [ "dump_wstring", "tools_8cpp.html#a7a340bb9420f7c842f6ae990f5897ef1", null ],
+    [ "encodeText", "tools_8cpp.html#aedebacbc39c7c2b343be9bf9e9c641a0", null ],
     [ "extractedPath", "tools_8cpp.html#a90966443464069ccf60bbe78afac2f20", null ],
     [ "getErrorMessage", "tools_8cpp.html#ac6445268d6c87c34c40e723fd1ea23ef", null ],
     [ "getNameFromSid", "tools_8cpp.html#ab29ec2bd73a4de1536739ac5cd16ecff", null ],
@@ -22,6 +22,7 @@ var tools_8cpp =
     [ "isMuiReference", "tools_8cpp.html#a2b4cfa2b19dd3138efd1cdca232d614e", null ],
     [ "listFilesByExtension", "tools_8cpp.html#abc796ef7b3c37280836660e1376c2594", null ],
     [ "loadProfileList", "tools_8cpp.html#a8dd0bb51cdc854f2137aba256aae3d9c", null ],
+    [ "loadSuspectAnsiCodePage", "tools_8cpp.html#a39f06ea897c5d9cfa9c5db5deb82bab0", null ],
     [ "loadSuspectTimeZone", "tools_8cpp.html#a33256dfbfef8ac9511a35835a5e5b29d", null ],
     [ "loadSystemDrive", "tools_8cpp.html#a64af952b26c2e734b7998bd37173b3dc", null ],
     [ "localTimeToIso8601Utc", "tools_8cpp.html#ae52f0c935a795ae5ade2cabe8686f61a", null ],
@@ -45,7 +46,6 @@ var tools_8cpp =
     [ "readWideZ", "tools_8cpp.html#a89f4afef123fee0f163c1d61fef8a85d", null ],
     [ "replaceAll", "tools_8cpp.html#ac0b13fc24e7bc07ec4a03384acd92539", null ],
     [ "ROT13", "tools_8cpp.html#a7684efc242e166b53952647faf435f95", null ],
-    [ "string_to_wstring", "tools_8cpp.html#ad612e1d5a3738c231a1aeefb21c4d36d", null ],
     [ "tab", "tools_8cpp.html#a238702c13cab5b487c46812cd980e7d6", null ],
     [ "time_to_wstring", "tools_8cpp.html#ac751f9398d8050d01c33a813eefed165", null ],
     [ "time_to_wstring", "tools_8cpp.html#addbcf94a622e9fa893340802b75f789f", null ],
@@ -53,13 +53,11 @@ var tools_8cpp =
     [ "timeToIso8601", "tools_8cpp.html#a8404da1f3f7d0bed84db92de5b94e5d8", null ],
     [ "timeToIso8601Local", "tools_8cpp.html#ac6e9127cec836f464d33dc6ed7aaf93c", null ],
     [ "timeToIso8601Utc", "tools_8cpp.html#aed51f7f887c3a9ede2b9ee9dc59e8391", null ],
-    [ "to_hex", "tools_8cpp.html#a7962322204e2574d54ce125ac2055850", null ],
     [ "toLower", "tools_8cpp.html#a91174db2a2f6918c424af0beb323d74e", null ],
     [ "utcTimeToIso8601Local", "tools_8cpp.html#a5efd9b98819f1d7951c8f56c8c005465", null ],
     [ "utcToSuspectLocal", "tools_8cpp.html#a23566fa243f8b4cc3c01a578d30d4d06", null ],
     [ "volumeOfPath", "tools_8cpp.html#a7bc73c77c8a53c18c6a5457fbb42c13e", null ],
     [ "writeJsonFile", "tools_8cpp.html#a745cace5ec6e835950164e2b0a222c8e", null ],
     [ "writeNotCollected", "tools_8cpp.html#afe66d0a52585ae4970e185056c1a7c23", null ],
-    [ "wstring_to_filetime", "tools_8cpp.html#ac15b36c9a117f211860abb5d7f86d8d4", null ],
-    [ "wstring_to_string", "tools_8cpp.html#a9e8d9796b27a47431c88a5387b1ed2a0", null ]
+    [ "wstring_to_filetime", "tools_8cpp.html#ac15b36c9a117f211860abb5d7f86d8d4", null ]
 ];

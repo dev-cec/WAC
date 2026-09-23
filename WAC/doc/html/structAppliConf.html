@@ -121,9 +121,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a3fa41463d0f70cba7c29ef7b8b73f308" id="r_a3fa41463d0f70cba7c29ef7b8b73f308"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf.html#a3fa41463d0f70cba7c29ef7b8b73f308">name</a> = &quot;&quot;</td></tr>
 <tr class="memdesc:a3fa41463d0f70cba7c29ef7b8b73f308"><td class="mdescLeft">&#160;</td><td class="mdescRight">name of the program, obtained from command line  <br /></td></tr>
 <tr class="separator:a3fa41463d0f70cba7c29ef7b8b73f308"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a15a52812f9e117b55a3c4006c122f9e7" id="r_a15a52812f9e117b55a3c4006c122f9e7"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf.html#a15a52812f9e117b55a3c4006c122f9e7">_outputDir</a> = &quot;output&quot;</td></tr>
-<tr class="memdesc:a15a52812f9e117b55a3c4006c122f9e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">directory to store output JSON  <br /></td></tr>
-<tr class="separator:a15a52812f9e117b55a3c4006c122f9e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6affafb9032a231ed3c74bcbbf9b74c" id="r_ac6affafb9032a231ed3c74bcbbf9b74c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf.html#ac6affafb9032a231ed3c74bcbbf9b74c">_outputDir</a> = L&quot;output&quot;</td></tr>
+<tr class="memdesc:ac6affafb9032a231ed3c74bcbbf9b74c"><td class="mdescLeft">&#160;</td><td class="mdescRight">directory to store output JSON (UTF-16: any name the command line can carry)  <br /></td></tr>
+<tr class="separator:ac6affafb9032a231ed3c74bcbbf9b74c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9968074249a92e938580e34c7769e46d" id="r_a9968074249a92e938580e34c7769e46d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf.html#a9968074249a92e938580e34c7769e46d">mountpoint</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:a9968074249a92e938580e34c7769e46d"><td class="mdescLeft">&#160;</td><td class="mdescRight">mount point path to access the snapshot made during execution  <br /></td></tr>
 <tr class="separator:a9968074249a92e938580e34c7769e46d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -142,9 +142,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a35d53149047512b1e19581415c79bdcd" id="r_a35d53149047512b1e19581415c79bdcd"><td class="memItemLeft" align="right" valign="top">HANDLE&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf.html#a35d53149047512b1e19581415c79bdcd">hConsole</a> = GetStdHandle(STD_OUTPUT_HANDLE)</td></tr>
 <tr class="memdesc:a35d53149047512b1e19581415c79bdcd"><td class="mdescLeft">&#160;</td><td class="mdescRight">handle of the console  <br /></td></tr>
 <tr class="separator:a35d53149047512b1e19581415c79bdcd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac9cea4573fac59eb9a52ad2a3b349733" id="r_ac9cea4573fac59eb9a52ad2a3b349733"><td class="memItemLeft" align="right" valign="top">std::wofstream&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf.html#ac9cea4573fac59eb9a52ad2a3b349733">log</a></td></tr>
-<tr class="memdesc:ac9cea4573fac59eb9a52ad2a3b349733"><td class="mdescLeft">&#160;</td><td class="mdescRight">handle of the output log file, for the debug mode  <br /></td></tr>
-<tr class="separator:ac9cea4573fac59eb9a52ad2a3b349733"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a269c6f349598300b84ac6941d349f74c" id="r_a269c6f349598300b84ac6941d349f74c"><td class="memItemLeft" align="right" valign="top">std::ofstream&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf.html#a269c6f349598300b84ac6941d349f74c">log</a></td></tr>
+<tr class="memdesc:a269c6f349598300b84ac6941d349f74c"><td class="mdescLeft">&#160;</td><td class="mdescRight">handle of the output log file, for the debug mode (UTF-8 bytes)  <br /></td></tr>
+<tr class="separator:a269c6f349598300b84ac6941d349f74c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2087631ac415bdd43de5ad3b5f704076" id="r_a2087631ac415bdd43de5ad3b5f704076"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf.html#a2087631ac415bdd43de5ad3b5f704076">loglevel</a> = 0</td></tr>
 <tr class="memdesc:a2087631ac415bdd43de5ad3b5f704076"><td class="mdescLeft">&#160;</td><td class="mdescRight">log level (0 by default), set on the command line  <br /></td></tr>
 <tr class="separator:a2087631ac415bdd43de5ad3b5f704076"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -156,6 +156,8 @@ Public Attributes</h2></td></tr>
 <tr class="separator:a5e4e7e6aee66141b1eb0ea2fea6c8eba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5f3076de7f30505010ae57b166e615e6" id="r_a5f3076de7f30505010ae57b166e615e6"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf.html#a5f3076de7f30505010ae57b166e615e6">systemDrive</a> = L&quot;C:&quot;</td></tr>
 <tr class="separator:a5f3076de7f30505010ae57b166e615e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06bb5569569e4f33c4520d076995f35c" id="r_a06bb5569569e4f33c4520d076995f35c"><td class="memItemLeft" align="right" valign="top">UINT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf.html#a06bb5569569e4f33c4520d076995f35c">ansiCodePage</a> = 0</td></tr>
+<tr class="separator:a06bb5569569e4f33c4520d076995f35c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Holds the application's configuration. </p>
@@ -207,19 +209,34 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a15a52812f9e117b55a3c4006c122f9e7" name="a15a52812f9e117b55a3c4006c122f9e7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a15a52812f9e117b55a3c4006c122f9e7">&#9670;&#160;</a></span>_outputDir</h2>
+<a id="ac6affafb9032a231ed3c74bcbbf9b74c" name="ac6affafb9032a231ed3c74bcbbf9b74c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac6affafb9032a231ed3c74bcbbf9b74c">&#9670;&#160;</a></span>_outputDir</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::string AppliConf::_outputDir = &quot;output&quot;</td>
+          <td class="memname">std::wstring AppliConf::_outputDir = L&quot;output&quot;</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>directory to store output JSON </p>
+<p>directory to store output JSON (UTF-16: any name the command line can carry) </p>
+
+</div>
+</div>
+<a id="a06bb5569569e4f33c4520d076995f35c" name="a06bb5569569e4f33c4520d076995f35c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a06bb5569569e4f33c4520d076995f35c">&#9670;&#160;</a></span>ansiCodePage</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">UINT AppliConf::ansiCodePage = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>ANSI code page of the EXAMINED machine, read in its SYSTEM hive (<code>Control\Nls\CodePage</code>, value <code>ACP</code>). 0 until read: the running machine's is used meanwhile — the same in a live collection. </p>
 
 </div>
 </div>
@@ -271,19 +288,19 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="ac9cea4573fac59eb9a52ad2a3b349733" name="ac9cea4573fac59eb9a52ad2a3b349733"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac9cea4573fac59eb9a52ad2a3b349733">&#9670;&#160;</a></span>log</h2>
+<a id="a269c6f349598300b84ac6941d349f74c" name="a269c6f349598300b84ac6941d349f74c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a269c6f349598300b84ac6941d349f74c">&#9670;&#160;</a></span>log</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::wofstream AppliConf::log</td>
+          <td class="memname">std::ofstream AppliConf::log</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>handle of the output log file, for the debug mode </p>
+<p>handle of the output log file, for the debug mode (UTF-8 bytes) </p>
 
 </div>
 </div>

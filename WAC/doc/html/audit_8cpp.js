@@ -1,7 +1,7 @@
 var audit_8cpp =
 [
     [ "auditContext", "audit_8cpp.html#a9358f102721b6f721d594f511279ecbd", null ],
-    [ "auditInit", "audit_8cpp.html#ae3092ba5f3c03d3cb8d2e87ba3a371da", null ],
+    [ "auditInit", "audit_8cpp.html#ab304e84db82b142bdaa33b0e1a06f7a4", null ],
     [ "auditRecord", "audit_8cpp.html#acdc6ae467d9f91baf1c9208377cbe50c", null ],
     [ "auditStartLocal", "audit_8cpp.html#a8e4ad7f6f29fe1090eba067a60c8088a", null ],
     [ "auditStartUtc", "audit_8cpp.html#ae2e721b9365f0c478ae3b918763725d5", null ],

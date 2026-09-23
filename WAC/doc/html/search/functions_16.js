@@ -6,6 +6,5 @@ var searchData=
   ['writenotcollected_3',['writenotcollected',['../tools_8cpp.html#afe66d0a52585ae4970e185056c1a7c23',1,'writeNotCollected(const std::string &amp;name, const std::wstring &amp;artefact, HRESULT result):&#160;tools.cpp'],['../tools_8h.html#afe66d0a52585ae4970e185056c1a7c23',1,'writeNotCollected(const std::string &amp;name, const std::wstring &amp;artefact, HRESULT result):&#160;tools.cpp']]],
   ['written_4',['written',['../classJsonArrayWriter.html#a26857b8bbf63fb6b66ed65d2112cb914',1,'JsonArrayWriter']]],
   ['wstring_5fto_5ffiletime_5',['wstring_to_filetime',['../tools_8cpp.html#ac15b36c9a117f211860abb5d7f86d8d4',1,'wstring_to_filetime(std::wstring input):&#160;tools.cpp'],['../tools_8h.html#ac15b36c9a117f211860abb5d7f86d8d4',1,'wstring_to_filetime(std::wstring input):&#160;tools.cpp']]],
-  ['wstring_5fto_5fstring_6',['wstring_to_string',['../tools_8cpp.html#a9e8d9796b27a47431c88a5387b1ed2a0',1,'wstring_to_string(const std::wstring &amp;wstr):&#160;tools.cpp'],['../tools_8h.html#a9e8d9796b27a47431c88a5387b1ed2a0',1,'wstring_to_string(const std::wstring &amp;wstr):&#160;tools.cpp']]],
-  ['wtsenumerateprocessesexw_7',['WTSEnumerateProcessesExW',['../processes_8cpp.html#a33ce55d72052c5a66917a45d0601b7e8',1,'processes.cpp']]]
+  ['wtsenumerateprocessesexw_6',['WTSEnumerateProcessesExW',['../processes_8cpp.html#a33ce55d72052c5a66917a45d0601b7e8',1,'processes.cpp']]]
 ];

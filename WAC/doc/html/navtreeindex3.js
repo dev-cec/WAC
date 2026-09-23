@@ -1,5 +1,6 @@
 var NAVTREEINDEX3 =
 {
+"structBeef0025.html#a2d08448046cf1ce0822b8a9fdadfb40b":[1,0,33,1],
 "structBeef0025.html#a48b9798af9aefbeb70fca2714e1a4633":[1,0,33,0],
 "structBeef0025.html#a94c3d04b714010ae9253fb473bd09e0f":[1,0,33,3],
 "structBeef0025.html#ac3ebb4dfe6ce8f2d1032dce2a8967114":[1,0,33,2],
@@ -248,6 +249,5 @@ var NAVTREEINDEX3 =
 "structHiveFixInfo.html#a6bd14d92ef35249ca9a9f3fa9c4e22dd":[1,0,61,4],
 "structHiveFixInfo.html#a6e5c26bcfce8ad94a17f543bd1192335":[1,0,61,0],
 "structHiveFixInfo.html#ac4fc2a03b317a544f3a6eb769e5e1517":[1,0,61,3],
-"structHiveFixInfo.html#ae2ef604e15c46bb88454ba69a0b877ce":[1,0,61,1],
-"structHiveLogEntry.html":[1,0,62]
+"structHiveFixInfo.html#ae2ef604e15c46bb88454ba69a0b877ce":[1,0,61,1]
 };

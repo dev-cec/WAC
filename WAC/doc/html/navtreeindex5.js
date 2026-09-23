@@ -1,5 +1,6 @@
 var NAVTREEINDEX5 =
 {
+"structRawHiveFingerprints.html#a270ddbbddbe855e9f14e8347d241d805":[1,0,98,8],
 "structRawHiveFingerprints.html#a2a93cddf8583586e96595c3b6d02724b":[1,0,98,7],
 "structRawHiveFingerprints.html#a51076ab2879eba093b3a231fd55e5174":[1,0,98,3],
 "structRawHiveFingerprints.html#a662f273e19e7eacf718321e0b2554ff4":[1,0,98,1],
@@ -248,6 +249,5 @@ var NAVTREEINDEX5 =
 "structSystemInfo.html#af414a5015aadebb05a1f38a4374c0217":[1,0,122,14],
 "structSystemInfo.html#aff3597fd715ac85f438d5e6d8915deae":[1,0,122,20],
 "structSystemInfo.html#affa03a18f5068286ef3f96a0c0253f8f":[1,0,122,19],
-"structTimeZoneInfo.html":[1,0,124],
-"structTimeZoneInfo.html#a0208fee9ebb72f6c6ea900a0e3ef1dac":[1,0,124,3]
+"structTimeZoneInfo.html":[1,0,124]
 };

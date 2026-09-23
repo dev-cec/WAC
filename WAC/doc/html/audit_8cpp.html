@@ -118,8 +118,8 @@ Namespaces</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ae3092ba5f3c03d3cb8d2e87ba3a371da" id="r_ae3092ba5f3c03d3cb8d2e87ba3a371da"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="audit_8cpp.html#ae3092ba5f3c03d3cb8d2e87ba3a371da">auditInit</a> (int argc, char *argv[])</td></tr>
-<tr class="separator:ae3092ba5f3c03d3cb8d2e87ba3a371da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab304e84db82b142bdaa33b0e1a06f7a4" id="r_ab304e84db82b142bdaa33b0e1a06f7a4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="audit_8cpp.html#ab304e84db82b142bdaa33b0e1a06f7a4">auditInit</a> (const std::vector&lt; std::wstring &gt; &amp;args)</td></tr>
+<tr class="separator:ab304e84db82b142bdaa33b0e1a06f7a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acdc6ae467d9f91baf1c9208377cbe50c" id="r_acdc6ae467d9f91baf1c9208377cbe50c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="audit_8cpp.html#acdc6ae467d9f91baf1c9208377cbe50c">auditRecord</a> (const std::wstring &amp;operation, const std::wstring &amp;target, HRESULT result, const wchar_t *footprint)</td></tr>
 <tr class="separator:acdc6ae467d9f91baf1c9208377cbe50c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9358f102721b6f721d594f511279ecbd" id="r_a9358f102721b6f721d594f511279ecbd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="audit_8cpp.html#a9358f102721b6f721d594f511279ecbd">auditContext</a> ()</td></tr>
@@ -179,8 +179,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="ae3092ba5f3c03d3cb8d2e87ba3a371da" name="ae3092ba5f3c03d3cb8d2e87ba3a371da"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae3092ba5f3c03d3cb8d2e87ba3a371da">&#9670;&#160;</a></span>auditInit()</h2>
+<a id="ab304e84db82b142bdaa33b0e1a06f7a4" name="ab304e84db82b142bdaa33b0e1a06f7a4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab304e84db82b142bdaa33b0e1a06f7a4">&#9670;&#160;</a></span>auditInit()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -188,26 +188,15 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">void auditInit </td>
           <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>argc</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramtype">const std::vector&lt; std::wstring &gt; &amp;&#160;</td>
+          <td class="paramname"><em>args</em></td><td>)</td>
           <td></td>
-          <td class="paramtype">char *&#160;</td>
-          <td class="paramname"><em>argv</em>[]&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Opens the log: reads the context of the collection (machine, operator, time area, command line) and the start timestamp. To be called once, as early as possible in <code>main</code>. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">argc</td><td>number of command-line arguments </td></tr>
-    <tr><td class="paramname">argv</td><td>the command-line arguments </td></tr>
+    <tr><td class="paramname">args</td><td>the command-line arguments, program name first, in UTF-16 </td></tr>
   </table>
   </dd>
 </dl>

@@ -23,7 +23,7 @@ var searchData=
   ['recent_5fdocs_2ecpp_20',['recent_docs.cpp',['../recent__docs_8cpp.html',1,'']]],
   ['recent_5fdocs_2eh_21',['recent_docs.h',['../recent__docs_8h.html',1,'']]],
   ['recentdoc_22',['recentdoc',['../structRecentDoc.html#aabf36d17c0f3c85c979834401b38eb88',1,'RecentDoc::RecentDoc(RecentDoc &amp;&amp;)=default'],['../structRecentDoc.html#a629fee533dd5ee75d796f8d287a184fe',1,'RecentDoc::RecentDoc(const RecentDoc &amp;)=delete'],['../structRecentDoc.html#ae78978ce7653746cb933ad97bdc04cef',1,'RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid)'],['../structRecentDoc.html#af501edc675fb4bcebe3b08956c862f6e',1,'RecentDoc::RecentDoc(LPBYTE buffer, size_t size, std::wstring _path, std::wstring _sid)'],['../structRecentDoc.html',1,'RecentDoc']]],
-  ['recentdocs_23',['recentdocs',['../structRecentDocs.html#ad302ada200a2a3d54813ba283b1d11c4',1,'RecentDocs::recentdocs'],['../structCustomDestinationCategory.html#a51444583e9d789fa2a05212424f2c314',1,'CustomDestinationCategory::recentDocs'],['../structRecentDocs.html',1,'RecentDocs']]],
+  ['recentdocs_23',['recentdocs',['../structCustomDestinationCategory.html#a51444583e9d789fa2a05212424f2c314',1,'CustomDestinationCategory::recentDocs'],['../structRecentDocs.html#ad302ada200a2a3d54813ba283b1d11c4',1,'RecentDocs::recentdocs'],['../structRecentDocs.html',1,'RecentDocs']]],
   ['reference_24',['reference',['../structFilename.html#afdb6bea2a1adde8db08f705556ec5534',1,'Filename']]],
   ['referenceknown_25',['referenceKnown',['../structFilename.html#ae9b78a376bba69945c02a90497dec574',1,'Filename']]],
   ['reg_5famcache_5fapplication_2ecpp_26',['reg_amcache_application.cpp',['../reg__amcache__application_8cpp.html',1,'']]],

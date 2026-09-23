@@ -4,7 +4,7 @@ var searchData=
   ['favoriteshellitem_1',['FavoriteShellitem',['../structFavoriteShellitem.html#aaabb38be7cfc3aac0120c38e60279890',1,'FavoriteShellitem']]],
   ['fileattributes_2',['FileAttributes',['../structFileAttributes.html#a797b365758b7ed48c36b0a117cce1e36',1,'FileAttributes']]],
   ['fileentryshellitem_3',['FileEntryShellItem',['../structFileEntryShellItem.html#a6264263822b03115256d93c172301683',1,'FileEntryShellItem']]],
-  ['filetohash_4',['fileToHash',['../classQuickDigest5.html#ad5c664e0b42e0233ec1a5905426bdc15',1,'QuickDigest5']]],
+  ['filetohash_4',['fileToHash',['../classQuickDigest5.html#a1663224b7a3d10898d3e295a2f594540',1,'QuickDigest5']]],
   ['find_5',['find',['../classIndexCatalogues.html#a987352c5bc8c2babe6ba96ba211684e1',1,'IndexCatalogues']]],
   ['finddirectory_6',['findDirectory',['../structoleParser.html#a40532c3fa1da6c8fc9ca71ee12bb0b99',1,'oleParser']]],
   ['fingerprintfile_7',['fingerprintfile',['../binaires_8h.html#a578290bd29707defac05f10d5cc6adfe',1,'FingerprintFile(const std::wstring &amp;rawPath):&#160;binaires.cpp'],['../binaires_8cpp.html#a578290bd29707defac05f10d5cc6adfe',1,'FingerprintFile(const std::wstring &amp;rawPath):&#160;binaires.cpp']]],

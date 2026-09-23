@@ -1,5 +1,6 @@
 var NAVTREEINDEX4 =
 {
+"structHiveLogEntry.html":[1,0,62],
 "structHiveLogEntry.html#a28be2c308250c784e32660f2ea2f4f0d":[1,0,62,3],
 "structHiveLogEntry.html#a8f0fddccca0ac31292ab99eb89b6a577":[1,0,62,4],
 "structHiveLogEntry.html#aa3e84c07937e3e6dc859dcc5b5a1bbcd":[1,0,62,2],
@@ -248,6 +249,5 @@ var NAVTREEINDEX4 =
 "structRawHiveExtraction.html#ac11503698433105810844fa1fee7502b":[1,0,97,3],
 "structRawHiveFingerprints.html":[1,0,98],
 "structRawHiveFingerprints.html#a001ac0c5ef993f39cfdc367e8c2b3115":[1,0,98,12],
-"structRawHiveFingerprints.html#a25b709e3c6ccb4eb187982d791fcf62b":[1,0,98,4],
-"structRawHiveFingerprints.html#a270ddbbddbe855e9f14e8347d241d805":[1,0,98,8]
+"structRawHiveFingerprints.html#a25b709e3c6ccb4eb187982d791fcf62b":[1,0,98,4]
 };
