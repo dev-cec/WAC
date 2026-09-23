@@ -40,12 +40,24 @@ std::wstring readStringData(LPBYTE buffer, size_t size, size_t offset, size_t* n
 } // namespace
 
 void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
-	unsigned int header_size = *reinterpret_cast<unsigned int*>(buffer);
+	/* Every field of a shortcut is read at an offset the file itself declares.
+	   A truncated or forged .lnk must not make WAC read past its buffer: these
+	   two accessors return 0 outside it, and each structure (header, ID list,
+	   LinkInfo) is checked against the buffer before it is walked. */
+	auto u16 = [&](size_t at) -> unsigned int {
+		return (at <= size && size - at >= 2) ? *reinterpret_cast<unsigned short*>(buffer + at) : 0u; };
+	auto u32 = [&](size_t at) -> unsigned int {
+		return (at <= size && size - at >= 4) ? *reinterpret_cast<unsigned int*>(buffer + at) : 0u; };
+	if (size < 76) {
+		log(2, L"🔥LNK: file shorter than its 76-byte header", ERROR_INVALID_DATA);
+		return;
+	}
+	unsigned int header_size = u32(0);
 	guid = *reinterpret_cast<GUID*>(buffer + 4);
 	log(3, L"🔈guid_to_wstring guid");
 	if (guid_to_wstring(guid).compare(L"{00021401-0000-0000-C000-000000000046}") == 0) {
-		flags = LinkFlags(*reinterpret_cast<unsigned int*>(buffer + 20));
-		unsigned int fileAttributes = *reinterpret_cast<unsigned int*>(buffer + 24);
+		flags = LinkFlags(u32(20));
+		unsigned int fileAttributes = u32(24);
 		log(3, L"🔈FileAttributes");
 		attributes = FileAttributes(fileAttributes);
 		/* FIX (a double shift, the same defect as the mirrored FAT dates).
@@ -70,12 +82,12 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 		targetModifiedUtc = *reinterpret_cast<FILETIME*>(buffer + 44);
 		log(3, L"🔈utcVersLocalSuspect targetModified");
 		utcToSuspectLocal(targetModifiedUtc, &targetModified);
-		iconIndex = *reinterpret_cast<unsigned int*>(buffer + 56);
+		iconIndex = u32(56);
 		log(3, L"🔈showCommandOption commandOption");
-		commandOption = showCommandOption(*reinterpret_cast<unsigned int*>(buffer + 60)); //
+		commandOption = showCommandOption(u32(60)); //
 		//debug
 		if (commandOption == L"UNKOWN")
-			log(2, L"🔥commandOption Unknown 0x" + to_hex(*reinterpret_cast<unsigned int*>(buffer + 60)));
+			log(2, L"🔥commandOption Unknown 0x" + to_hex(u32(60)));
 
 		//-------------------------------------------------------------------------
 		// Shell item id list (starts at 76 with 2 byte length -> so we can skip):
@@ -85,15 +97,25 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 		int LinkTargetIDList_offset = header_size;
 		if (flags.HasLinkTargetIDList)
 		{
-			LinkTargetIDList_size = *reinterpret_cast<unsigned short int*>(buffer + LinkTargetIDList_offset); //size of item id list
+			LinkTargetIDList_size = u16(LinkTargetIDList_offset); //size of item id list
 
-			int offset = LinkTargetIDList_offset + 2;
-			unsigned short int item_size = 1;
-			while (item_size != 0 && offset < LinkTargetIDList_size) {
-				item_size = *reinterpret_cast<unsigned short int*>(buffer + offset);
-				if (item_size != 0) {
-					idLists.push_back(IdList(buffer + offset, 2)); // lvl 1 is object itself
+			/* The list runs from offset 78 to 78 + its declared size. The loop
+			   compared the absolute OFFSET with the SIZE, which stopped it up to
+			   78 bytes before the end of the list: the last items were lost —
+			   often the one that names the target. Seen on the test VM: a shortcut
+			   whose list holds a root folder and a URI item came out with no item
+			   at all, its twin with the root folder only. */
+			const size_t listEnd = std::min(size, (size_t)LinkTargetIDList_offset + 2 + LinkTargetIDList_size);
+			size_t offset = (size_t)LinkTargetIDList_offset + 2;
+			while (offset + 2 <= listEnd) {
+				const unsigned short item_size = (unsigned short)u16(offset);
+				if (item_size == 0) break;                              // terminal item
+				if (item_size < 3 || item_size > listEnd - offset) {    // item overruns the list
+					log(2, L"🔥LNK: shell item of " + std::to_wstring(item_size)
+					     + L" bytes overruns the ID list, walk stopped", ERROR_INVALID_DATA);
+					break;
 				}
+				idLists.push_back(IdList(buffer + offset, 2)); // lvl 1 is object itself
 				offset += item_size;
 			}
 
@@ -108,22 +130,26 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 		int LinkInfo_offset = LinkTargetIDList_offset + 2 + LinkTargetIDList_size;
 
 		if (flags.HasLinkInfo) {
-			LinkInfo_size = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset);
-			unsigned int link_flags = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + 8);
+			LinkInfo_size = u32(LinkInfo_offset);
+			// The LinkInfo strings are read within the LinkInfo structure, which
+			// must itself fit in the file.
+			const size_t infoEnd = ((size_t)LinkInfo_offset + LinkInfo_size <= size)
+			                       ? (size_t)LinkInfo_offset + LinkInfo_size : size;
+			unsigned int link_flags = u32(LinkInfo_offset + 8);
 			bool VolumeIDAndLocalBasePath = link_flags & 0x1;
 			bool CommonNetworkRelativeLinkAndPathSuffix = link_flags & 0x2;
 			//-------------------------------------------------------------------------
 			// Volume Id info:
 			//-------------------------------------------------------------------------
-			unsigned int volumeId_offset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + 12); //volume id offset
+			unsigned int volumeId_offset = u32(LinkInfo_offset + 12); //volume id offset
 			if (VolumeIDAndLocalBasePath == true && volumeId_offset != 0) {
-				unsigned int driveType = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + volumeId_offset + 4);
+				unsigned int driveType = u32(LinkInfo_offset + volumeId_offset + 4);
 				log(3, L"🔈driveType_to_wstring volumeDriveType");
 				volumeDriveType = driveType_to_wstring(driveType);
 				//debug
 				if (volumeDriveType == L"BAD TYPE")
 					log(2, L"🔥volumeDriveType BAD TYPE 0x" + to_hex(driveType), ERROR_UNSUPPORTED_TYPE);
-				unsigned int serial = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + volumeId_offset + 8);
+				unsigned int serial = u32(LinkInfo_offset + volumeId_offset + 8);
 				
 				log(3, L"🔈to_hex volumeSerial");
 				volumeSerial = to_hex(serial);
@@ -137,23 +163,23 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 				    and treated the string as ANSI: the label came out wrong —
 				    every other byte being a zero, it most often came out
 				    truncated at the first character. */
-				unsigned int labeloffset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + volumeId_offset + 12);
+				unsigned int labeloffset = u32(LinkInfo_offset + volumeId_offset + 12);
 				if (labeloffset != 0x14) {
 					log(3, L"🔈string_to_wstring volumeLabel (ANSI)");
-					volumeLabel = string_to_wstring(std::string((char*)(buffer + LinkInfo_offset + volumeId_offset + labeloffset)));
+					volumeLabel = string_to_wstring(readNarrowZ(buffer, infoEnd, (size_t)LinkInfo_offset + volumeId_offset + labeloffset));
 				}
 				else {
-					unsigned int labeloffsetunicode = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + volumeId_offset + 16);
+					unsigned int labeloffsetunicode = u32(LinkInfo_offset + volumeId_offset + 16);
 					log(3, L"🔈volumeLabel (UTF-16)");
-					volumeLabel = std::wstring((const wchar_t*)(buffer + LinkInfo_offset
-					                           + volumeId_offset + labeloffsetunicode));
+					volumeLabel = readWideZ(buffer, infoEnd,
+					                        (size_t)LinkInfo_offset + volumeId_offset + labeloffsetunicode);
 				}
 			}
 			//-------------------------------------------------------------------------
 			// Local path std::string (ending with 0x00):
 			//-------------------------------------------------------------------------
-			unsigned int LocalPath_offset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + 16); //local path offset from start of fileinfo
-			std::string targetPath((char*)(buffer + LinkInfo_offset + LocalPath_offset));
+			unsigned int LocalPath_offset = u32(LinkInfo_offset + 16); //local path offset from start of fileinfo
+			std::string targetPath = readNarrowZ(buffer, infoEnd, (size_t)LinkInfo_offset + LocalPath_offset);
 			log(3, L"🔈string_to_wstring target");
 			target = string_to_wstring(targetPath);
 			// RAW value: the escaping is centralised in json.h.
@@ -167,25 +193,31 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 			//-------------------------------------------------------------------------
 			// Common Network Relative Link info:
 			//-------------------------------------------------------------------------
-			unsigned int network_offset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + 20); //common network offset
+			unsigned int network_offset = u32(LinkInfo_offset + 20); //common network offset
 			if (CommonNetworkRelativeLinkAndPathSuffix && network_offset != 0) {
-				unsigned int net_flags = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + network_offset + 4);
-				bool ValidDevice = net_flags && 0x1;
-				bool ValidNetType = net_flags && 0x2;
-				unsigned int NetNameOffset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + network_offset + 8);
+				unsigned int net_flags = u32(LinkInfo_offset + network_offset + 4);
+				/* Bitwise tests. They were written `net_flags && 0x1`, a LOGICAL and:
+				   both flags came out true as soon as any flag was set. */
+				bool ValidDevice = (net_flags & 0x1) != 0;
+				bool ValidNetType = (net_flags & 0x2) != 0;
+				unsigned int NetNameOffset = u32(LinkInfo_offset + network_offset + 8);
 				log(3, L"🔈string_to_wstring netName");
-				netName = string_to_wstring(std::string((char*)(buffer + LinkInfo_offset + network_offset + NetNameOffset)));
-				unsigned int DeviceNameOffset = *reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + network_offset + 12);
+				netName = string_to_wstring(readNarrowZ(buffer, infoEnd, (size_t)LinkInfo_offset + network_offset + NetNameOffset));
+				unsigned int DeviceNameOffset = u32(LinkInfo_offset + network_offset + 12);
 				if (ValidDevice == true && DeviceNameOffset != 0) {
 					log(3, L"🔈string_to_wstring netDeviceName");
-					netDeviceName = string_to_wstring(std::string((char*)(buffer + LinkInfo_offset + network_offset + NetNameOffset)));
+					// Read at DeviceNameOffset: it was read at NetNameOffset, so the
+					// device name always repeated the network name.
+					netDeviceName = string_to_wstring(readNarrowZ(buffer, infoEnd, (size_t)LinkInfo_offset + network_offset + DeviceNameOffset));
 				}
 				if (ValidNetType == true) {
 					log(3, L"🔈networkProvider_to_wstring netProviderType");
-					netProviderType = networkProvider_to_wstring(*reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + network_offset + 14));
+					// NetworkProviderType is at offset 16 (MS-SHLLINK 2.3.2); it was
+					// read at 14, across two fields.
+					netProviderType = networkProvider_to_wstring(u32(LinkInfo_offset + network_offset + 16));
 					//debug
 					if (netProviderType == L"BAD NET PROVIDER")
-						log(2, L"🔥netProviderType Unknown 0x" + to_hex(*reinterpret_cast<unsigned int*>(buffer + LinkInfo_offset + network_offset + 14)), ERROR_UNSUPPORTED_TYPE);
+						log(2, L"🔥netProviderType Unknown 0x" + to_hex(u32(LinkInfo_offset + network_offset + 16)), ERROR_UNSUPPORTED_TYPE);
 				}
 			}
 		}
@@ -231,7 +263,8 @@ RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 			const size_t size = file.tellg();
 			file.seekg(0, std::ios::beg);
 
-			LPBYTE buffer = new BYTE[size];
+			std::vector<BYTE> content(size);
+			LPBYTE buffer = content.data();
 			file.read(reinterpret_cast<CHAR*>(buffer), size);
 			file.close();
 			if (conf.binary) {
@@ -240,7 +273,6 @@ RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 			}
 			log(3, L"🔈parseLNK");
 			parseLNK(buffer, size);
-			delete[] buffer;
 		}
 	}
 	if (_path.extension() == ".url" || _path.extension() == ".URL") {
@@ -249,7 +281,8 @@ RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 		if (file.is_open()) {
 			getline(file, line); //skip first line
 			getline(file, line);
-			line = line.substr(4);// strip the leading "URL="
+			// strip the leading "URL=" (a shorter line would throw std::out_of_range)
+			line = line.size() >= 4 ? line.substr(4) : std::string();
 			log(3, L"🔈decodeURIComponent line");
 			line = decodeURIComponent(line);
 			log(3, L"🔈string_to_wstring line");

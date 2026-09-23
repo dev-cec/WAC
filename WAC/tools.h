@@ -386,7 +386,7 @@ std::wstring dump_wstring(LPBYTE buffer, int start, int length);
 
 /*! In a string, replaces every occurrence of a string by another.
 * @param src the starting string, holding the string to look for
-* @param search the string to look for in `src`
+* @param search the string to look for in `src`; empty, nothing is replaced
 * @param replacement the string to put in place of `search`
 * @return the string that results from the replacement
 */
@@ -617,6 +617,34 @@ bool isMuiReference(const std::wstring& value);
 * @return the vector that results from the conversion
 */
 std::vector<std::wstring> multiWstring_to_vector(LPBYTE data, int size);
+
+/*! Reads a zero-terminated UTF-16 string, never past a bound.
+*
+* WHY. The artefact parsers read many strings "up to the first zero". In a
+* truncated or forged file the zero may be missing, and the read then went on
+* past the buffer — reading, and publishing, whatever memory followed. The
+* bound is the size of the structure being read (a shell item, an extension
+* block, a file), itself checked against the real buffer by the caller.
+*
+* The units are read two bytes at a time, little-endian: no cast to wchar_t,
+* whose size differs between Windows and Linux.
+*
+* @param base start of the structure
+* @param limit size of the structure, in bytes: nothing at or beyond
+*        `base + limit` is read
+* @param offset position of the string in the structure
+* @return the string, without its terminator; empty if `offset` is out of range
+*/
+std::wstring readWideZ(const BYTE* base, size_t limit, size_t offset);
+
+/*! Reads a zero-terminated single-byte string (ANSI), never past a bound.
+* Same rule as readWideZ().
+* @param base start of the structure
+* @param limit size of the structure, in bytes
+* @param offset position of the string in the structure
+* @return the string, without its terminator; empty if `offset` is out of range
+*/
+std::string readNarrowZ(const BYTE* base, size_t limit, size_t offset);
 
 /*! Converts a GUID to a wstring. The output is of the form
 * "{20D04FE0-3AEA-1069-A2D8-08002B30309D}".

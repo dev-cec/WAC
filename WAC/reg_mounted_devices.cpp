@@ -9,12 +9,13 @@ MountedDevice::MountedDevice(ORHKEY hKey, PCWSTR szSubValue) {
 	log(3, L"🔈getRegBinaryValue device");
 	HRESULT hr = getRegBinaryValue(hKey, NULL, szSubValue, &buffer, &size);
 	if (hr == ERROR_SUCCESS) {
-		if (std::wstring((wchar_t*)buffer,(wchar_t*)buffer+4).compare(L"_??_")==0) {//WSTRING
+		// Each form is tested only if the value is long enough to hold it.
+		if (size >= 8 && std::wstring((wchar_t*)buffer,(wchar_t*)buffer+4).compare(L"_??_")==0) {//WSTRING
 			device = std::wstring((wchar_t*)buffer, (wchar_t*)buffer + size / sizeof(wchar_t)).data();
 			log(2, L"❇️MountedDevice device : " + device);
 		}
 		else { //STRING
-			if (std::string(buffer, buffer + 8).compare("DMIO:ID:") == 0) {
+			if (size >= 24 && std::string(buffer, buffer + 8).compare("DMIO:ID:") == 0) {
 				log(3, L"🔈guid_to_wstring device");
 				device = (L"\\VOLUME" + guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8))).data();
 			}else{

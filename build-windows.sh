@@ -80,6 +80,16 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
     "$SRC/sha.cpp" "$SRC/lznt1.cpp" "$SRC/xpress.cpp" \
     "$SRC/raw_hive_test.cpp" -o "$BUILD/raw_hive_test.exe"
   echo "   -> $BUILD/raw_hive_test.exe"
+
+  echo "== Build lnk_test.exe =="
+  # The shortcut parser pulls in most of WAC (shell items, GUID names, paths,
+  # log): the harness links every WAC object but main.o rather than a list
+  # that would drift. Run: wine lnk_test.exe <file.lnk> [file.lnk ...]
+  TEST_OBJS=()
+  for o in "${OBJS[@]}"; do [[ "$o" == "$BUILD/main.o" ]] || TEST_OBJS+=("$o"); done
+  "$CXX" "${FLAGS[@]}" -static -static-libgcc -static-libstdc++ \
+    "$SRC/lnk_test.cpp" "${TEST_OBJS[@]}" -o "$BUILD/lnk_test.exe" "${LIBS[@]}"
+  echo "   -> $BUILD/lnk_test.exe"
 fi
 
 echo

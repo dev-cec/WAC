@@ -145,9 +145,16 @@ HRESULT Mrus::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vec
 			continue;
 		}
 		unsigned int offset = 0;
-		while (offset < dataSize) {
+		while (offset + 2 <= dataSize) {
 			unsigned short int size = *reinterpret_cast<unsigned short int*>(data + offset);
 			if (size == 0) break;
+			// Each shell item declares its size: it must fit in what is left of the
+			// value, which is the real buffer. Every read inside the item is then
+			// bounded by that size (see readWideZ).
+			if (size < 3 || size > dataSize - offset) {
+				log(2, L"🔥Mru: shell item of " + std::to_wstring(size) + L" bytes overruns the value, walk stopped", ERROR_INVALID_DATA);
+				break;
+			}
 			else {
 				log(3, L"🔈IdList");
 				auto shellitem = std::make_unique<IdList>(data + offset, level + 2, Parentiszip);

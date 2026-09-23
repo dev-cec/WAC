@@ -291,6 +291,10 @@ std::wstring dump_wstring(LPBYTE buffer, int start, int length) {
 
 std::wstring replaceAll(std::wstring src, std::wstring search, std::wstring replacement)
 {
+	/* An empty `search` is "found" at every position without ever advancing:
+	   the loop used to never end. It happens as soon as the string looked for
+	   is an empty setting — originalPath() with no mount point. */
+	if (search.empty()) return src;
 	if (src.length() > 0) {
 		size_t pos = 0;
 		while ((pos = src.find(search, pos)) != std::wstring::npos) {
@@ -976,6 +980,24 @@ std::string wstring_to_string(const std::wstring& wstr)
 	str.resize(wstr.length());
 	wcstombs_s(&size, &str[0], str.size() + 1, wstr.c_str(), wstr.size());
 	return str;
+}
+
+std::wstring readWideZ(const BYTE* base, size_t limit, size_t offset) {
+	std::wstring r;
+	if (base == nullptr) return r;
+	for (size_t i = offset; i < limit && limit - i >= 2; i += 2) {
+		const wchar_t c = (wchar_t)(base[i] | (base[i + 1] << 8));
+		if (c == 0) break;
+		r += c;
+	}
+	return r;
+}
+
+std::string readNarrowZ(const BYTE* base, size_t limit, size_t offset) {
+	std::string r;
+	if (base == nullptr) return r;
+	for (size_t i = offset; i < limit && base[i] != 0; ++i) r += (char)base[i];
+	return r;
 }
 
 std::vector<std::wstring> multiWstring_to_vector(LPBYTE data, int size)

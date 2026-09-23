@@ -271,11 +271,14 @@ struct SPS {
 	*/
 	SPS() {};
 
-	/*! Reads the object.
+	/*! Reads a property store.
 	* @param buffer the bytes to parse
 	* @param _level depth in the tree of elements, used to lay out the output JSON
+	* @param limit bytes available from `buffer` to the end of the enclosing
+	*        structure. A store that declares more is rejected: `size` stays 0,
+	*        which stops the caller's walk.
 	*/
-	SPS(LPBYTE buffer, int _level);
+	SPS(LPBYTE buffer, int _level, size_t limit);
 	/*! Converts the object to JSON.
 	* @return its JSON value
 	*/
@@ -780,12 +783,12 @@ struct Beef0025 : IExtensionBlock {
 /*! Extension block related to unknown.
 */
 struct Beef0026 : IExtensionBlock {
-	FILETIME ctimeUtc = { 0 }; //!< creation date
-	FILETIME ctime = { 0 };//!< creation date in UTC
-	FILETIME mtimeUtc = { 0 };//!< modification date
-	FILETIME mtime = { 0 };//!< modification date in UTC
-	FILETIME atimeUtc = { 0 };//!< access date
-	FILETIME atime = { 0 };//!< access date in UTC
+	FILETIME ctimeUtc = { 0 }; //!< creation date, UTC
+	FILETIME ctime = { 0 };//!< creation date, suspect's local time
+	FILETIME mtimeUtc = { 0 };//!< modification date, UTC
+	FILETIME mtime = { 0 };//!< modification date, suspect's local time
+	FILETIME atimeUtc = { 0 };//!< access date, UTC
+	FILETIME atime = { 0 };//!< access date, suspect's local time
 	std::unique_ptr<IdList> idlist; //!< list of shell items (idlist)
 	std::unique_ptr<IShellItem> shellitem; //!< a shell item
 	std::unique_ptr<SPS> sps; //!< a property store (SPS)
@@ -975,11 +978,14 @@ struct Property {
 	std::wstring FriendlyName = L""; //!< name attached to the GUID
 	Json value = Json::str(L"");//!< value of the property
 	
-	/*! Reads the item.
+	/*! Reads one property.
 	* @param buffer the bytes to parse
 	* @param _level depth in the tree of elements, used to lay out the output JSON
+	* @param limit bytes available from `buffer` to the end of the enclosing shell
+	*        item: no read goes beyond. A property that does not fit is left
+	*        empty with `typeNotDecoded` set, which stops the caller's walk.
 	*/
-	Property(LPBYTE buffer, int _level);
+	Property(LPBYTE buffer, int _level, size_t limit);
 	/*! Converts the object to JSON.
 	* @return its JSON value
 	*/

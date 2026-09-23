@@ -97,7 +97,7 @@ AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wst
 		}
 		// 3. Process DestList entries
 		log(3, L"🔈DestFileDirectory destlistArray");
-		DestFileDirectory destlistArray = DestFileDirectory(&destlistDirectoryBytes[0]);
+		DestFileDirectory destlistArray = DestFileDirectory(destlistDirectoryBytes.data(), destlistDirectoryBytes.size());
 
 		// 4. For each DestList entry, find the corresponding Directory entry where DestListEntry.EntryNumber == DirectoryEntry.Name
 		size_t iEntry = 0;

@@ -25,7 +25,8 @@ std::wstring Directory::getNodeColor(BYTE value) {
 
 Directory::Directory(LPBYTE data) {
 	nameLength = *reinterpret_cast<short int*>(data + 64);
-	name = std::wstring((wchar_t*)(data)).data();
+	// The name field of a CFB directory entry is 64 bytes: the read stops there.
+	name = readWideZ(data, 64, 0);
 	log(3, L"🔈getType type");
 	type = getType(data[66]);
 	log(3, L"🔈getNodeColor nodeColor");
@@ -66,17 +67,24 @@ Json Directory::toJson() {
 	return o;
 }
 
-DestFile::DestFile(LPBYTE buffer) {
+DestFile::DestFile(LPBYTE buffer, size_t limit) {
+	// The fixed part of an entry is 130 bytes; below that the entry is truncated.
+	if (limit < 130) {
+		size = 0;
+		return;
+	}
 	log(3, L"🔈guid_to_wstring guidDroidVolume");
 	guidDroidVolume = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8));
 	log(3, L"🔈guid_to_wstring guidDroidFile");
 	guidDroidFile = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 24));
 	log(3, L"🔈guid_to_wstring guidBirthDroidVolume");
-	guidBirthDroidVolume = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 56));
+	// Birth droid volume at 40: it was read at 56, the offset of the birth droid
+	// FILE, so both birth GUIDs came out identical.
+	guidBirthDroidVolume = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 40));
 	log(3, L"🔈guid_to_wstring guidBirthDroidFile");
 	guidBirthDroidFile = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 56));
 	log(3, L"🔈string_to_wstring hostname");
-	hostname = string_to_wstring(std::string((char*)(buffer + 72)));
+	hostname = string_to_wstring(readNarrowZ(buffer, 88, 72));   // 16-byte NetBIOS field
 	entryNumber = *reinterpret_cast<unsigned int*>(buffer + 88);
 	lastModificationTimeUtc = *reinterpret_cast<FILETIME*>(buffer + 100);
 	log(3, L"🔈timeToIso8601 lastModificationTimeUtc");
@@ -86,8 +94,11 @@ DestFile::DestFile(LPBYTE buffer) {
 	}
 	pinStatus = *reinterpret_cast<int*>(buffer + 108);
 	pathObjectSize = *reinterpret_cast<unsigned short int*>(buffer + 128);
-	pathObject = std::wstring((wchar_t*)(buffer + 130)).data();
+	// The path is read on its DECLARED length, itself bounded by the stream.
+	const size_t chars = std::min<size_t>(pathObjectSize, (limit - 130) / 2);
+	pathObject = readWideZ(buffer, 130 + chars * 2, 130);
 	size = 130 + pathObjectSize * 2 + 4; // +2 end of string +2 unknown
+	if (size > limit) size = 0;          // truncated entry: the walk stops
 };
 
 std::wstring DestFile::getPinnedStatus() {
@@ -114,14 +125,18 @@ Json DestFile::toJson() {
 	return o;
 }
 
-DestFileDirectory::DestFileDirectory(LPBYTE buffer) {
+DestFileDirectory::DestFileDirectory(LPBYTE buffer, size_t size) {
+	if (size < 32) return;                 // no room for the header
 	formatVersion = *reinterpret_cast<int*>(buffer);
 	numberOfEntries = *reinterpret_cast<int*>(buffer + 4);
 	numberPinnedEntries = *reinterpret_cast<int*>(buffer + 8);
-	int offset = 32;
-	for (int x = 0; x < numberOfEntries; x++) {
+	size_t offset = 32;
+	// The entry count comes from the file: the walk also stops at the end of the
+	// stream, and on an entry that does not fit.
+	for (int x = 0; x < numberOfEntries && offset < size; x++) {
 		log(3, L"🔈DestFile");
-		DestFile d = DestFile(buffer + offset);
+		DestFile d = DestFile(buffer + offset, size - offset);
+		if (d.size == 0) break;
 		offset += d.size; // the size varies from one entry to the next, because of the path's length
 		destfiles.push_back(d);
 	}

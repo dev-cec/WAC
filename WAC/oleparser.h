@@ -84,8 +84,11 @@ struct DestFile {
 
 	/*! Reads a destfile.
 	* @param buffer pointer to the data to parse
+	* @param limit bytes available from `buffer` to the end of the DestList
+	*        stream: no read goes beyond; an entry that does not fit is left
+	*        with `size` 0, which stops the caller's walk
 	*/
-	DestFile(LPBYTE buffer);
+	DestFile(LPBYTE buffer, size_t limit);
 
 	/*! Returns the pinned status from the integer value.
 	*/
@@ -108,10 +111,11 @@ struct DestFileDirectory {
 	*/
 	DestFileDirectory() {};
 
-	/*! Reads a destfile directory.
+	/*! Reads a destfile directory (the DestList stream).
 	* @param buffer pointer to the data to parse
+	* @param size size of the stream, in bytes
 	*/
-	DestFileDirectory(LPBYTE buffer);
+	DestFileDirectory(LPBYTE buffer, size_t size);
 
 	/*! Converts the destfile directory to JSON.
 	* @return its JSON object

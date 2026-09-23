@@ -53,8 +53,8 @@ Json Filename::toJson() {
 	return o;
 }
 
-VolumeInfo::VolumeInfo(LPBYTE data, int index) {
-	LPBYTE indVolume = data + index * 96;
+VolumeInfo::VolumeInfo(LPBYTE data, int index, size_t limit) {
+	LPBYTE indVolume = data + index * 96;    // the caller keeps (index + 1) * 96 <= limit
 	unsigned int offset = *reinterpret_cast<unsigned int*>(indVolume);
 	// DECLARED length of the device name. The reading is bounded by it: without
 	// it, an unterminated string in a damaged file had memory read up to the
@@ -66,8 +66,10 @@ VolumeInfo::VolumeInfo(LPBYTE data, int index) {
 	// RAW paths: the escaping is centralised in json.h. The deviceName ->
 	// mountPoint substitutions below therefore operate on the real values, which
 	// makes them usable as they are for I/O too.
-	deviceName = std::wstring((const wchar_t*)(data + offset),
-	                          numChar > 4096 ? 0 : numChar);
+	// Offset and length come from the file: both are bounded by the block.
+	const size_t nameChars = (offset < limit) ? std::min<size_t>(numChar > 4096 ? 0 : numChar,
+	                                                           (limit - offset) / 2) : 0;
+	deviceName = std::wstring((const wchar_t*)(data + offset), nameChars);
 	// The name ends with a zero that the count does not always include.
 	while (!deviceName.empty() && deviceName.back() == L'\0') deviceName.pop_back();
 	/* SERIAL NUMBER OF THE VOLUME, the same defect as the path hash: the four
@@ -86,10 +88,12 @@ VolumeInfo::VolumeInfo(LPBYTE data, int index) {
 	mountPoint = getVolumeLetter(serialNumber);
 	int dirsOffset = *reinterpret_cast<int*>(indVolume + 28);
 	int nbDirs = *reinterpret_cast<int*>(indVolume + 32);
-	size_t pos = 1;
-	for (int k = 0; k < nbDirs; k++) {
-		std::wstring temp = std::wstring((wchar_t*)(data + dirsOffset) + pos).data();
-		pos += temp.size() + 2;// +2 for \x0000
+	// Each directory string: a 2-byte length, the characters, a null. Every
+	// read stops at the end of the block, and so does the walk.
+	size_t pos = (size_t)dirsOffset + 2;
+	for (int k = 0; k < nbDirs && dirsOffset >= 0 && pos < limit; k++) {
+		std::wstring temp = readWideZ(data, limit, pos);
+		pos += (temp.size() + 2) * 2;   // the string, its null, the next length
 		DirStrings d;
 		d.dir = temp;
 		d.fullPath = replaceAll(d.dir, deviceName, mountPoint);
@@ -100,7 +104,11 @@ VolumeInfo::VolumeInfo(LPBYTE data, int index) {
 	// DECLARED size of the block of references: it bounds the count, which also
 	// comes from the file and therefore is not to be taken on trust.
 	int fileRefSize = *reinterpret_cast<int*>(indVolume + 24);
-	LPBYTE fileRefsIndex = indVolume + fileRefOffset;
+	// Relative to the volumes block, like the other offsets of the entry: it was
+	// added to the entry itself, which is right only for the first volume.
+	if (fileRefOffset < 0 || fileRefSize < 16 || (size_t)fileRefOffset + (size_t)fileRefSize > limit)
+		return;
+	LPBYTE fileRefsIndex = data + fileRefOffset;
 	int fileRefVer = *reinterpret_cast<int*>(fileRefsIndex);
 	int numFileRefs = *reinterpret_cast<int*>(fileRefsIndex + 4);
 	const int maxFileRefs = (fileRefSize > 16) ? (fileRefSize - 16) / 8 : 0;
@@ -164,6 +172,7 @@ HRESULT Prefetch::read() {
 	std::unique_ptr<BYTE[]> decompressedBuffer;  // content after decompression
 	LPBYTE buffer = NULL;  // view on the raw content
 	LPBYTE data = NULL;    // view on the usable data
+	size_t dataSize = 0;   // size of that data, the bound of every read
 	DWORD posBuffer = 0;
 	std::ifstream file(std::filesystem::path(path), std::ios::binary);
 	if (!file.good()) {
@@ -174,6 +183,7 @@ HRESULT Prefetch::read() {
 	file.seekg(0, std::ios::end);
 	const ULONG size = (ULONG)file.tellg();
 	file.seekg(0, std::ios::beg);
+	if (size < 8) return ERROR_FILE_CORRUPT;
 	fileBuffer = std::make_unique<BYTE[]>(size);
 	buffer = fileBuffer.get();
 	file.read(reinterpret_cast<char*>(buffer), size);
@@ -223,6 +233,13 @@ HRESULT Prefetch::read() {
 		static auto decompress_buffer_ex = reinterpret_cast<RtlDecompressBufferEx>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "RtlDecompressBufferEx"));
 
 		const int decompressed_size = *reinterpret_cast<int*>(buffer + 4);
+		// The announced size comes from the file and sizes the allocation: a
+		// Prefetch is a few hundred KiB, 64 MiB leaves a wide margin.
+		if (decompressed_size <= 0 || decompressed_size > (64 << 20)) {
+			log(2, L"🔥Prefetch: implausible decompressed size " + std::to_wstring(decompressed_size)
+			     + L" : " + pathOriginal, ERROR_INVALID_DATA);
+			return ERROR_INVALID_DATA;
+		}
 		posBuffer += 8;
 		ULONG compressed_buffer_workspace_size, compress_fragment_workspace_size;
 		log(3, L"🔈compression_workspace_size");
@@ -240,25 +257,38 @@ HRESULT Prefetch::read() {
 			return ERROR_DECRYPTION_FAILED;
 
 		log(3, L"🔈decompress_buffer_ex");
-		decompress_buffer_ex(
+		const NTSTATUS status = decompress_buffer_ex(
 			CompressionFormatXpressHuff,
 			reinterpret_cast<PUCHAR>(data),
 			decompressed_size,
 			reinterpret_cast<PUCHAR>(buffer + posBuffer),
-			size,
+			size - posBuffer,
 			&final_uncompressed_size,
 			workspace);
 		free(workspace);
+		// The result was ignored: a failed decompression left a buffer of zeros
+		// parsed as if it were the file.
+		if (status < 0) {
+			log(2, L"🔥Prefetch: decompression failed : " + pathOriginal, (HRESULT)status);
+			return ERROR_INVALID_DATA;
+		}
+		dataSize = final_uncompressed_size;
 	}
 	else { // NO COMPRESSION
 		data = buffer;
+		dataSize = size;
+	}
+	// Fixed header (84) + file information up to the eight run times (44 + 64).
+	if (dataSize < 84 + 44 + 64) {
+		log(2, L"🔥Prefetch: file too short for its header : " + pathOriginal, ERROR_INVALID_DATA);
+		return ERROR_INVALID_DATA;
 	}
 
 
 
 	version = *reinterpret_cast<int*>(data);
 	signature = *reinterpret_cast<int*>(data + 4);
-	filename = std::wstring((wchar_t*)data + 8).data();
+	filename = readWideZ(data, 8 + 60, 8);   // 60-byte name field
 
 	/* THE "SCCA" SIGNATURE — the check was missing.
 	   The constant 0x41434353 was declared and never compared. Any file dropped
@@ -270,7 +300,7 @@ HRESULT Prefetch::read() {
 	const int SIGNATURE_SCCA = 0x41434353;   // "SCCA" in little-endian
 	if (signature != SIGNATURE_SCCA) {
 		log(2, L"🔥Prefetch signature absent (0x" + to_hex(signature)
-		     + L" au lieu de 0x41434353) : " + pathOriginal, ERROR_INVALID_DATA);
+		     + L" instead of 0x41434353): " + pathOriginal, ERROR_INVALID_DATA);
 		return ERROR_INVALID_DATA;
 	}
 
@@ -291,7 +321,7 @@ HRESULT Prefetch::read() {
 	// check the version
 	if (version < 30) {
 		log(2, L"🔥Prefetch version before 30 not supported", ERROR_INVALID_DATA);
-		return ERROR_INVALID_DATA; // version non prise en charge (<win10)
+		return ERROR_INVALID_DATA; // version not supported (< Windows 10)
 	}
 	// READING THE DATA
 	// FILE INFORMATION
@@ -315,6 +345,22 @@ HRESULT Prefetch::read() {
 	// DECLARED size of the volumes block: it bounds the count below, which also
 	// comes from the file.
 	int volume_size = *reinterpret_cast<int*>(data + 84 + 32);
+
+	/* Every block is located by an offset and a size read in the file: each must
+	   lie inside the data before it is walked. A block that does not is treated
+	   as absent — and said so — rather than read beyond the buffer. */
+	auto inside = [&](int off, int len) {
+		return off >= 0 && len >= 0 && (size_t)off <= dataSize && (size_t)len <= dataSize - (size_t)off;
+	};
+	if (!inside(filename_offset, filename_size)) {
+		log(2, L"🔥Prefetch: file-name block outside the data : " + pathOriginal, ERROR_INVALID_DATA);
+		filename_offset = filename_size = 0;
+	}
+	if (!inside(volume_offset, volume_size)) {
+		log(2, L"🔥Prefetch: volumes block outside the data : " + pathOriginal, ERROR_INVALID_DATA);
+		volume_offset = volume_size = nb_volumes = 0;
+	}
+	if (trace_offset < 0 || (size_t)trace_offset > dataSize) trace_offset = 0;
 	//run times
 	for (int i = 0; i < 8; i++) {
 		FILETIME tempUtc = *reinterpret_cast<FILETIME*>(data + 84 + 44 + i * 8);
@@ -347,7 +393,7 @@ HRESULT Prefetch::read() {
 	}
 	for (int i = 0; i < nb_volumes; i++) {
 		log(3, L"🔈VolumeInfo");
-		volumes.push_back(VolumeInfo(data + volume_offset, i));
+		volumes.push_back(VolumeInfo(data + volume_offset, i, (size_t)volume_size));
 	}
 	/*  FILE METRICS ARRAY. It was not read at all, while it carries, for EACH
 	    loaded file, its $MFT reference — which identifies the file on the volume
@@ -367,7 +413,7 @@ HRESULT Prefetch::read() {
 		    inconsistent maximum for some of the Prefetch files, and their metrics
 		    were all discarded (a reference rate of 0 % on some files, 100 % on
 		    others). */
-		int maxMetrics = (trace_offset > start)
+		int maxMetrics = (start >= 0 && trace_offset > start)
 		                 ? (trace_offset - start) / METRIC_SIZE : 0;
 		int kept = nb_entries;
 		if (kept < 0 || kept > maxMetrics) {

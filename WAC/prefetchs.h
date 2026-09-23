@@ -103,10 +103,13 @@ struct VolumeInfo {
 	//! Builds an empty volume.
 	VolumeInfo() {}
 
-	/*! Reads a volume block from a Prefetch file.
-	 *  @param data the block's bytes.
-	 *  @param index rank of the volume in the Prefetch file. */
-	VolumeInfo(LPBYTE data, int index);
+	/*! Reads a volume entry from a Prefetch file.
+	 *  @param data start of the volumes block: every offset of an entry is
+	 *         relative to it.
+	 *  @param index rank of the volume in the block.
+	 *  @param limit size of the volumes block, checked by the caller against the
+	 *         file: no read goes beyond. */
+	VolumeInfo(LPBYTE data, int index, size_t limit);
 
 	/*! Converts the volume to JSON.
 	 *  @return its JSON object. */

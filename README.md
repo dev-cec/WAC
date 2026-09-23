@@ -646,6 +646,23 @@ copied into the working directory.
 wine /tmp/consigne_test.exe "Z:/tmp/out" "Z:/path/to/SYSTEM" "Z:/path/to/ntuser.dat"
 ```
 
+`lnk_test.cpp` checks that the shortcut parser **never reads outside its
+buffer**. Every length in a `.lnk` — ID list, shell items, extension blocks,
+strings — comes from the file itself, and an over-read does not crash on its
+own: it publishes whatever lies past the buffer, in a perfectly valid JSON. The
+test makes it crash: each input is placed so that it ends exactly at a page
+boundary, the next page being mapped `PAGE_NOACCESS`. Each shortcut given is
+parsed whole, then in every one of its truncations, then with 2,000 random
+corruptions (fixed seed). Its first runs caught a shell item read at fixed
+offsets past its declared size (network item, `+0x54`), and an endless loop in
+`replaceAll()` when the string looked for is empty. Result on eight shortcuts of
+the test VM (Start menu and Recent): 24,652 inputs, no read outside the buffer.
+
+```bash
+./build-windows.sh --test
+wine build-windows/lnk_test.exe a.lnk b.lnk ...
+```
+
 **Timing and memory** are measured with the third mode, which runs the *complete*
 chain — raw file → BinXML → `xml_light` → `Event` → streamed JSON — on a
 directory laid out like an extraction:

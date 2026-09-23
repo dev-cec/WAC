@@ -3,6 +3,7 @@
  */
 #include "idList.h"
 #include <exception>
+#include <map>
 
 
 /********************************************************************************************************************
@@ -331,6 +332,19 @@ std::wstring getType(unsigned int type) {
 Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int level,
               unsigned int inputSize, bool* typeNotDecoded);
 
+/*! Size a shell item or an extension block declares in its first two bytes.
+ *  The caller has checked that this size fits in the real buffer: it is then
+ *  the bound of every read inside the structure. */
+static size_t declaredSize(LPBYTE buffer) {
+	return *reinterpret_cast<unsigned short*>(buffer);
+}
+
+/*! True if `length` bytes starting at `offset` lie inside a structure of `size`
+ *  bytes. Written so that no addition can wrap around. */
+static bool fits(size_t size, size_t offset, size_t length) {
+	return offset <= size && length <= size - offset;
+}
+
 /*! Reads ONE scalar value. See `getValue`, which also handles the vectors. */
 static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueType,
                          unsigned int level, unsigned int inputSize, bool* typeNotDecoded) {
@@ -402,7 +416,8 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		unsigned int nb = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		for (unsigned int x = 0; x < nb; x++) {
 			unsigned int size = *reinterpret_cast<unsigned int*>(buffer + *pos + 4);
-			arr.push(Json::str(std::wstring((wchar_t*)(buffer + *pos + 8))));
+			const size_t bound = inputSize ? inputSize : (size_t)*pos + 8 + (size_t)size * 2;
+			arr.push(Json::str(readWideZ(buffer, bound, (size_t)*pos + 8)));
 			*pos += 4 + size * 2;
 		}
 		return arr;
@@ -410,10 +425,14 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 	if (valueType == 0x1011) {                     // Vector<VT_UI1>
 		unsigned short size = *reinterpret_cast<unsigned short*>(buffer + *pos);
 		Json r = Json::str(L"Not implemented");    // unknown content (system.delegateidlist)
+		// The vector holds `size` bytes; a nested store must fit in them (and in
+		// the entry, when its size is known).
+		size_t room = size;
+		if (inputSize && inputSize > *pos) room = std::min<size_t>(room, inputSize - *pos);
 		if (*reinterpret_cast<unsigned int*>(buffer + *pos + 0x8) == 0x53505331)
-			r = SPS(buffer + *pos + 0x4, level + 2).toJson();
+			r = SPS(buffer + *pos + 0x4, level + 2, room > 4 ? room - 4 : 0).toJson();
 		else if (*reinterpret_cast<unsigned int*>(buffer + *pos + 0x1c) == 0x53505331)
-			r = SPS(buffer + *pos + 0x8, level + 2).toJson();
+			r = SPS(buffer + *pos + 0x8, level + 2, room > 8 ? room - 8 : 0).toJson();
 		*pos += size;
 		return r;
 	}
@@ -450,7 +469,7 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 			const unsigned int end = start + size;
 			while (p + 8 < end) {
 				if (*reinterpret_cast<const unsigned int*>(buffer + p + 4) != 0x53505331) break;
-				SPS sps(buffer + p, level + 2);
+				SPS sps(buffer + p, level + 2, end - p);
 				if (sps.size == 0) break;
 				arr.push(sps.toJson());
 				p += sps.size;
@@ -495,7 +514,7 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		else if (*reinterpret_cast<const unsigned int*>(buffer + dataStart + 4) == 0x53505331) {
 			// Nested property store: the "SPS1" signature follows the size.
 			log(3, L"🔈VT_STREAM: nested property store");
-			o.add(L"PropertyStore", SPS(buffer + dataStart, level + 2).toJson());
+			o.add(L"PropertyStore", SPS(buffer + dataStart, level + 2, dataSize).toJson());
 		}
 		else {
 			log(3, L"🔈dump_wstring VT_STREAM");
@@ -538,7 +557,8 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		/* Size in BYTES, terminator included — unlike VT_LPWSTR, whose size is in
 		   characters. */
 		unsigned int size = *reinterpret_cast<unsigned int*>(buffer + *pos);
-		std::wstring v = string_to_wstring(std::string((char*)(buffer + *pos + 4)));
+		const size_t bound = inputSize ? inputSize : (size_t)*pos + 4 + size;
+		std::wstring v = string_to_wstring(readNarrowZ(buffer, bound, (size_t)*pos + 4));
 		*pos += 4 + size;
 		return Json::str(v);
 	}
@@ -652,7 +672,7 @@ SPSValue::SPSValue(LPBYTE buffer, std::wstring _guid, int _level) {
 		//recherche value
 		unsigned int pos = 13;
 		if (guid == L"{D5CDD505-2E9C-101B-9397-08002B2CF9AE}") {
-			id = std::wstring((wchar_t*)(buffer + 9)).data();
+			id = readWideZ(buffer, size, 9);
 			log(3, L"🔈trans_guid_to_wstring name");
 			name = trans_guid_to_wstring(guid);
 			valueType = *reinterpret_cast<unsigned short int*>(buffer + 9 + id_int); // id_int holds the size of the std::string
@@ -682,18 +702,29 @@ Json SPSValue::toJson() {
 	return o;
 }
 
-SPS::SPS(LPBYTE buffer, int _level) {
+SPS::SPS(LPBYTE buffer, int _level, size_t limit) {
 	level = _level;
-	size = *reinterpret_cast<unsigned int*>(buffer);
+	size = 0;
+	/* The store declares its own size; it must fit in the enclosing structure,
+	   and every value must fit in the store. Without those checks, a store
+	   declaring more than its container had its values read beyond it. */
+	if (limit < 24) return;                        // no room for the header
+	const unsigned int declared = *reinterpret_cast<unsigned int*>(buffer);
+	if (declared < 24 || declared > limit) {
+		log(2, L"🔥SPS: declared size " + std::to_wstring(declared) + L" does not fit in "
+		     + std::to_wstring(limit) + L" bytes, store ignored", ERROR_INVALID_DATA);
+		return;
+	}
+	size = declared;
 	version = *reinterpret_cast<unsigned int*>(buffer + 4);
 	log(3, L"🔈guid_to_wstring guid");
 	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8));
 	log(3, L"🔈trans_guid_to_wstring FriendlyName");
 	FriendlyName = trans_guid_to_wstring(guid);
 	unsigned int pos = 24;
-	while (true) {
-		if (pos >= size)
-			break; //fin
+	while (pos + 4 <= size) {
+		const unsigned int valueSize = *reinterpret_cast<unsigned int*>(buffer + pos);
+		if (valueSize == 0 || valueSize > size - pos) break;  // end, or a value overrunning the store
 		log(3, L"🔈SPSValue");
 		SPSValue block(buffer + pos, guid, level + 2); // consistent with toJson
 		if (block.size == 0) { // empty
@@ -835,26 +866,36 @@ Beef0004::Beef0004(LPBYTE buffer, int _level, bool* is_zip, bool is_file) {
 	 * (offset 2), serves to compute the real position — the same sequence as Eric
 	 * Zimmerman's reference implementation (ExtensionBlocks). */
 	identifier = *reinterpret_cast<unsigned short int*>(buffer + 16);
-	unsigned int off = 18;                        // end of the fixed part
+	/* Every field past the fixed part (18 bytes, checked by getExtensionBlock)
+	   depends on the version: each read is checked against the block's size. */
+	const size_t blockSize = declaredSize(buffer);
+	size_t off = 18;                              // end of the fixed part
 	if (ExtensionVersion >= 7) {
 		off += 2;                                 // two empty bytes
 		/* File reference: 6 bytes of entry index, 2 of sequence. */
-		const unsigned long long brut = *reinterpret_cast<unsigned long long*>(buffer + off);
-		mftEntryNumber    = brut & 0x0000FFFFFFFFFFFFULL;
-		mftSequenceNumber = (unsigned short int)(brut >> 48);
-		if (mftEntryNumber != 0 && mftSequenceNumber != 0)      mftNote = L"NTFS";
-		else if (mftEntryNumber != 0 && mftSequenceNumber == 0) mftNote = L"FAT";
-		else                                                    mftNote = L"Network/special item";
+		if (fits(blockSize, off, 8)) {
+			const unsigned long long brut = *reinterpret_cast<unsigned long long*>(buffer + off);
+			mftEntryNumber    = brut & 0x0000FFFFFFFFFFFFULL;
+			mftSequenceNumber = (unsigned short int)(brut >> 48);
+			if (mftEntryNumber != 0 && mftSequenceNumber != 0)      mftNote = L"NTFS";
+			else if (mftEntryNumber != 0 && mftSequenceNumber == 0) mftNote = L"FAT";
+			else                                                    mftNote = L"Network/special item";
+		}
 		off += 8;                                 // file reference
 		off += 8;                                 // eight unknown bytes
 	}
-	if (ExtensionVersion >= 3) off += 2;
+	/* Size of the long name. It was read at the hard-coded offset 36 — right
+	   for version 9 only, like the name offsets themselves; it is the 2-byte
+	   field of the same sequence. */
+	unsigned short int longNameSize = 0;
+	if (ExtensionVersion >= 3) {
+		if (fits(blockSize, off, 2)) longNameSize = *reinterpret_cast<unsigned short int*>(buffer + off);
+		off += 2;
+	}
 	if (ExtensionVersion >= 9) off += 4;
 	if (ExtensionVersion >= 8) off += 4;
 
-	unsigned short int longNameSize = 0;
-	longNameSize = *reinterpret_cast<unsigned short int*>(buffer + 36);
-	longName = std::wstring((wchar_t*)(buffer + off)).data();
+	longName = readWideZ(buffer, blockSize, off);
 	// the content of ZIP files and other archives has a special format, so the archives must be identified.
 	// The ARCHIVE attribute does not mean ZIP but "ready to be archived", in Explorer's sense
 	std::wstring extension = L"";
@@ -865,7 +906,7 @@ Beef0004::Beef0004(LPBYTE buffer, int _level, bool* is_zip, bool is_file) {
 		*is_zip = true;
 	if (longNameSize > longName.size())
 	{
-		localizedName = std::wstring((wchar_t*)(buffer + off + (longName.size() + 1) * 2)).data();
+		localizedName = readWideZ(buffer, blockSize, off + (longName.size() + 1) * 2);
 	}
 }
 
@@ -899,10 +940,13 @@ Beef0006::Beef0006(LPBYTE buffer, int _level) {
 	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0006";
-	int pos = 0;
-	while (*reinterpret_cast<short int*>(buffer + pos) != 0x0000)
+	// The name follows the first null 16-bit word of the block; both the search
+	// and the read stop at the block's end.
+	const size_t limit = declaredSize(buffer);
+	size_t pos = 0;
+	while (pos + 2 <= limit && *reinterpret_cast<short int*>(buffer + pos) != 0x0000)
 		pos += 1;
-	username = std::wstring((wchar_t*)(buffer + pos + 2)).data();
+	username = readWideZ(buffer, limit, pos + 2);
 }
 
 Json Beef0006::toJson() {
@@ -993,24 +1037,26 @@ Beef000e::Beef000e(LPBYTE buffer, int _level) {
 	int pos = 50;
 	for (int x = 0; x < 3; x++) {
 		log(3, L"🔈SPS");
-		SPS s = SPS(buffer + pos, level + 1);
+		SPS s = SPS(buffer + pos, level + 1, (size_t)pos < declaredSize(buffer) ? declaredSize(buffer) - pos : 0);
+		if (s.size == 0) break;
 		SPSs.push_back(s);
 		pos += s.size;
 	}
 	pos += 11;
 	for (int x = 0; x < 3; x++) {
-		std::string s = std::string((char*)buffer + pos);
+		std::string s = readNarrowZ(buffer, declaredSize(buffer), pos);
 		pos += s.size() + 1;
 	}
 	pos += 16;
-	std::string s = std::string((char*)buffer + pos);
+	std::string s = readNarrowZ(buffer, declaredSize(buffer), pos);
 	pos += s.size() + 1;
 
 	pos += 1;
 
+	const size_t limit = declaredSize(buffer);
 	for (int x = 0; x < 2; x++) { // 2 extension block
-		unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
-		if (size > 0) {
+		unsigned short int size = ((size_t)pos + 2 <= limit) ? *reinterpret_cast<unsigned short int*>(buffer + pos) : 0;
+		if (size > 0 && size <= limit - (size_t)pos) {
 			log(3, L"🔈getExtensionBlock");
 			getExtensionBlock(buffer + pos, &extensionblocks, level + 1, NULL, false);
 			pos += size;
@@ -1018,9 +1064,9 @@ Beef000e::Beef000e(LPBYTE buffer, int _level) {
 		else
 			break;
 	}
-	while (true) {
+	while ((size_t)pos + 2 <= limit) {
 		unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos); // look for the idlist
-		if (size > 0) {
+		if (size >= 3 && size <= limit - (size_t)pos) {
 			log(3, L"🔈makeShellItem");
 			ishellitems.push_back(makeShellItem(buffer + pos, level + 1));
 			pos += size;
@@ -1064,7 +1110,7 @@ Beef0010::Beef0010(LPBYTE buffer, int _level) {
 	isPresent = true;
 	signature = L"0xbeef0010";
 	log(3, L"🔈SPS");
-	sps = SPS(buffer + 16, level + 1);
+	sps = SPS(buffer + 16, level + 1, declaredSize(buffer) > 16 ? declaredSize(buffer) - 16 : 0);
 }
 
 Json Beef0010::toJson() {
@@ -1109,7 +1155,7 @@ Beef0016::Beef0016(LPBYTE buffer, int _level) {
 	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0016";
-	value = std::wstring((wchar_t*)(buffer + 10)).data();
+	value = readWideZ(buffer, declaredSize(buffer), 10);
 }
 
 Json Beef0016::toJson() {
@@ -1164,7 +1210,7 @@ Beef001a::Beef001a(LPBYTE buffer, int _level) {
 	level = _level;
 	isPresent = true;
 	signature = L"0xbeef001a";
-	fileDocumentTypeString = std::wstring((wchar_t*)(buffer + 10)).data();
+	fileDocumentTypeString = readWideZ(buffer, declaredSize(buffer), 10);
 }
 
 Json Beef001a::toJson() {
@@ -1179,7 +1225,7 @@ Beef001b::Beef001b(LPBYTE buffer, int _level) {
 	level = _level;
 	isPresent = true;
 	signature = L"0xbeef001b";
-	fileDocumentTypeString = std::wstring((wchar_t*)(buffer + 10)).data();
+	fileDocumentTypeString = readWideZ(buffer, declaredSize(buffer), 10);
 }
 
 Json Beef001b::toJson() {
@@ -1194,7 +1240,7 @@ Beef001d::Beef001d(LPBYTE buffer, int _level) {
 	level = _level;
 	isPresent = true;
 	signature = L"0xbeef001d";
-	executable = std::wstring((wchar_t*)(buffer + 10)).data();
+	executable = readWideZ(buffer, declaredSize(buffer), 10);
 }
 
 Json Beef001d::toJson() {
@@ -1209,7 +1255,7 @@ Beef001e::Beef001e(LPBYTE buffer, int _level) {
 	level = _level;
 	isPresent = true;
 	signature = L"0xbeef001e";
-	pinType = std::wstring((wchar_t*)(buffer + 10)).data();
+	pinType = readWideZ(buffer, declaredSize(buffer), 10);
 }
 
 Json Beef001e::toJson() {
@@ -1225,7 +1271,7 @@ Beef0021::Beef0021(LPBYTE buffer, int _level) {
 	isPresent = true;
 	signature = L"0xbeef0021";
 	log(3, L"🔈SPS");
-	sps = SPS(buffer + 8, level + 1);
+	sps = SPS(buffer + 8, level + 1, declaredSize(buffer) > 8 ? declaredSize(buffer) - 8 : 0);
 }
 
 Json Beef0021::toJson() {
@@ -1241,7 +1287,7 @@ Beef0024::Beef0024(LPBYTE buffer, int _level) {
 	isPresent = true;
 	signature = L"0xbeef0024";
 	log(3, L"🔈SPS");
-	sps = SPS(buffer + 8, level + 1);
+	sps = SPS(buffer + 8, level + 1, declaredSize(buffer) > 8 ? declaredSize(buffer) - 8 : 0);
 }
 
 Json Beef0024::toJson() {
@@ -1277,19 +1323,32 @@ Beef0026::Beef0026(LPBYTE buffer, int _level) {
 	signature = L"0xbeef0026";
 	idlist = NULL;
 	shellitem = NULL;
-	if ((short int)buffer[8] == 0x11 || (short int)buffer[8] == 0x10 || (short int)buffer[8] == 0x12 || (short int)buffer[8] == 0x34 || (short int)buffer[8] == 0x31) {
+	const bool datedType = buffer[8] == 0x11 || buffer[8] == 0x10 || buffer[8] == 0x12
+	                    || buffer[8] == 0x34 || buffer[8] == 0x31;
+	if (datedType && !fits(declaredSize(buffer), 12, 24)) {   // three FILETIMEs from 12
+		log(2, L"🔥Beef0026: block too short for its dates, not decoded", ERROR_INVALID_DATA);
+	}
+	else if (datedType) {
+		/* Three FILETIMEs, hence UTC. The local times used to be derived with
+		   LocalFileTimeToFileTime — the reverse conversion, with the time zone
+		   of the machine running WAC — and the access one from the MODIFICATION
+		   date. They now go through the suspect's time zone, like every other
+		   UTC date. */
 		ctimeUtc = *reinterpret_cast<FILETIME*>(buffer + 12);
-		log(3, L"🔈LocalFileTimeToFileTime ctimeUtc");
-		LocalFileTimeToFileTime(&ctimeUtc, &ctime);
 		mtimeUtc = *reinterpret_cast<FILETIME*>(buffer + 20);
-		log(3, L"🔈LocalFileTimeToFileTime mtimeUtc");
-		LocalFileTimeToFileTime(&mtimeUtc, &mtime);
 		atimeUtc = *reinterpret_cast<FILETIME*>(buffer + 28);
-		log(3, L"🔈LocalFileTimeToFileTime mtimeUtc");
-		LocalFileTimeToFileTime(&mtimeUtc, &atime);
+		log(3, L"🔈utcToSuspectLocal ctime, mtime, atime");
+		utcToSuspectLocal(ctimeUtc, &ctime);
+		utcToSuspectLocal(mtimeUtc, &mtime);
+		utcToSuspectLocal(atimeUtc, &atime);
 		// 2 unknown bytes
-		log(3, L"🔈IdList");
-		idlist = std::make_unique<IdList>(buffer + 38, level + 2);
+		// The nested ID list starts at 38 and must fit in the block.
+		const size_t blockSize = declaredSize(buffer);
+		const unsigned short innerSize = (blockSize >= 40) ? *reinterpret_cast<unsigned short*>(buffer + 38) : 0;
+		if (innerSize >= 3 && innerSize <= blockSize - 38) {
+			log(3, L"🔈IdList");
+			idlist = std::make_unique<IdList>(buffer + 38, level + 2);
+		}
 	}
 	else {
 		ctimeUtc = { 0 };
@@ -1299,7 +1358,7 @@ Beef0026::Beef0026(LPBYTE buffer, int _level) {
 		atimeUtc = { 0 };
 		atime = { 0 };
 		log(3, L"🔈SPS");
-		sps = std::make_unique<SPS>(buffer + 8, level + 2);
+		sps = std::make_unique<SPS>(buffer + 8, level + 2, declaredSize(buffer) > 8 ? declaredSize(buffer) - 8 : 0);
 	}
 
 }
@@ -1324,7 +1383,7 @@ Beef0027::Beef0027(LPBYTE buffer, int _level) {
 	isPresent = true;
 	signature = L"0xbeef0027";
 	log(3, L"🔈SPS");
-	sps = SPS(buffer + 8, level + 1);
+	sps = SPS(buffer + 8, level + 1, declaredSize(buffer) > 8 ? declaredSize(buffer) - 8 : 0);
 }
 
 Json Beef0027::toJson() {
@@ -1372,15 +1431,36 @@ Json BeefUnknown::toJson() {
 
 void getExtensionBlock(LPBYTE buffer, std::vector<std::unique_ptr<IExtensionBlock>>* extensionBlocks, int _level, bool* is_zip, bool is_file) {
 	std::unique_ptr<IExtensionBlock> block;
-	unsigned int signature = *reinterpret_cast<unsigned int*>(buffer + 4);
-	/*  DECLARED SIZE of the block. An extension block is at least 8 bytes: its
-	    size, its version and its signature. Below that, the structure is wrong
-	    and parsing it would read fields taken anywhere. */
+	/*  DECLARED SIZE of the block, read FIRST: the signature lies at offset 4,
+	    beyond a block of fewer than 8 bytes. An extension block is at least 8
+	    bytes: its size, its version and its signature. Below that, the
+	    structure is wrong and parsing it would read fields taken anywhere. */
 	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	if (size < 8) {
 		log(2, L"🔥Extension block of size " + std::to_wstring(size)
-		     + L" (minimum 8) : signature " + to_hex(signature) + L" ignored",
-		    ERROR_INVALID_DATA);
+		     + L" (minimum 8) ignored", ERROR_INVALID_DATA);
+		return;
+	}
+	unsigned int signature = *reinterpret_cast<unsigned int*>(buffer + 4);
+	/*  FIXED PART of each decoded block: the constructors read their fields at
+	    fixed offsets, which a block of the right signature but too short does
+	    not hold. Such a block is kept raw, as an unknown one — its bytes stay
+	    in the output, nothing is read beyond it. */
+	static const std::map<unsigned int, size_t> FIXED_PART = {
+		{ 0xBeef0000, 40 },   // two GUIDs at 8 and 24
+		{ 0xBeef0003, 24 },   // GUID at 8
+		{ 0xBeef0004, 18 },   // dates and identifier, up to 18
+		{ 0xBeef000e, 32 },   // GUID at 16
+		{ 0xBeef0019, 40 },   // two GUIDs at 8 and 24
+		{ 0xBeef0025, 28 },   // two FILETIMEs at 12 and 20
+		{ 0xBeef0026,  9 },   // type byte at 8
+	};
+	const auto fixedPart = FIXED_PART.find(signature);
+	if (fixedPart != FIXED_PART.end() && size < fixedPart->second) {
+		log(2, L"🔥Extension block 0x" + to_hex(signature) + L" of " + std::to_wstring(size)
+		     + L" bytes, shorter than its fixed part (" + std::to_wstring(fixedPart->second)
+		     + L"): kept raw", ERROR_INVALID_DATA);
+		extensionBlocks->push_back(std::make_unique<BeefUnknown>(buffer, _level));
 		return;
 	}
 	if (signature == (unsigned int)0xBeef0000) {
@@ -1586,9 +1666,9 @@ VolumeShellItem::VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _le
 	std::wstring volumeName = L"";
 	if (flags.LocalDisk == true) {
 		log(3, L"🔈string_to_wstring name");
-		name = string_to_wstring(std::string((char*)buffer + 3));
+		name = string_to_wstring(readNarrowZ(buffer, declaredSize(buffer), 3));
 	}
-	else if (flags.SystemFolder == true) {
+	else if (flags.SystemFolder == true && fits(declaredSize(buffer), 4, 16)) {
 		log(3, L"🔈guid_to_wstring guid");
 		guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 4));
 		log(3, L"🔈trans_guid_to_wstring name");
@@ -1626,8 +1706,9 @@ ControlPanel::ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _leve
 	if (extensionOffset != 0x00) {
 		unsigned short int pos = extensionOffset;
 		while (pos < itemSize) {
-			unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
-			if (size > 0 && pos < itemSize) {
+			// The block declares its size: it must fit in what is left of the item.
+			unsigned short int size = ((size_t)pos + 2 <= (size_t)itemSize) ? *reinterpret_cast<unsigned short int*>(buffer + pos) : 0;
+			if (size > 0 && pos < itemSize && size <= (size_t)itemSize - (size_t)pos) {
 				log(3, L"🔈getExtensionBlock");
 				getExtensionBlock(buffer + pos, &extensionBlocks, level + 1, NULL, false);
 				pos += size;
@@ -1673,8 +1754,9 @@ ControlPanelCategory::ControlPanelCategory(LPBYTE buffer, int _level) {
 	if (totalsize > 14) { // extension Block is present
 		int pos = 12;
 		while (true) {
-			unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
-			if (size > 0 && pos < totalsize) {
+			// The block declares its size: it must fit in what is left of the item.
+			unsigned short int size = ((size_t)pos + 2 <= (size_t)totalsize) ? *reinterpret_cast<unsigned short int*>(buffer + pos) : 0;
+			if (size > 0 && pos < totalsize && size <= (size_t)totalsize - (size_t)pos) {
 				log(3, L"🔈getExtensionBlock");
 				getExtensionBlock(buffer + pos, &extensionBlocks, level + 1, NULL, false);
 				pos += size;
@@ -1697,11 +1779,17 @@ Json ControlPanelCategory::toJson() {
 	return o;
 }
 
-Property::Property(LPBYTE buffer, int _level) {
+Property::Property(LPBYTE buffer, int _level, size_t limit) {
 	level = _level;
 	id = 0;
 	type = 0;
 	unsigned int pos = 0;
+	// GUID (16), identifier (4) and type (4) must fit before anything is read.
+	if (limit < 24) {
+		typeNotDecoded = true;
+		size = 0;
+		return;
+	}
 	log(3, L"🔈guid_to_wstring guid");
 	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + pos));
 	pos += 16;
@@ -1712,7 +1800,7 @@ Property::Property(LPBYTE buffer, int _level) {
 	type = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
 	log(3, L"🔈getValue");
-	value = getValue(buffer, &pos, type, level, 0, &typeNotDecoded);
+	value = getValue(buffer, &pos, type, level, (unsigned int)limit, &typeNotDecoded);
 	size = pos;
 }
 
@@ -1734,21 +1822,25 @@ UserPropertyView0xC01::UserPropertyView0xC01(LPBYTE buffer, int _level) {
 	    zero met: on a damaged structure, the reading went beyond the area. The
 	    declared size now bounds each of them, and the possible terminator is
 	    removed afterwards. */
-	auto boundedString = [](LPBYTE p, unsigned int bytes) {
-		if (bytes == 0 || bytes > 64 * 1024) return std::wstring();
-		std::wstring s((const wchar_t*)p, bytes / sizeof(wchar_t));
+	const size_t itemSize = declaredSize(buffer);
+	auto boundedString = [&](size_t at, size_t bytes) {
+		if (bytes == 0 || !fits(itemSize, at, bytes)) return std::wstring();
+		std::wstring s((const wchar_t*)(buffer + at), bytes / sizeof(wchar_t));
 		while (!s.empty() && s.back() == L'\0') s.pop_back();
 		return s;
 	};
-	unsigned int pos = 0x14;//unknown
-	unsigned int wstring1Size = *reinterpret_cast<unsigned int*>(buffer + pos);
+	size_t pos = 0x14;//unknown
+	if (!fits(itemSize, pos, 4)) return;
+	const size_t wstring1Size = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
-	folder = boundedString(buffer + pos, wstring1Size);
+	folder = boundedString(pos, wstring1Size);
+	if (!fits(itemSize, pos, wstring1Size)) return;
 	pos += wstring1Size;
 	pos += 16;//unknown
-	unsigned int wstring2Size = *reinterpret_cast<unsigned int*>(buffer + pos);
+	if (!fits(itemSize, pos, 4)) return;
+	const size_t wstring2Size = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
-	fullurl = boundedString(buffer + pos, wstring2Size);
+	fullurl = boundedString(pos, wstring2Size);
 }
 
 Json UserPropertyView0xC01::toJson() {
@@ -1776,8 +1868,13 @@ Json UserPropertyView0x23febbee::toJson() {
 }
 
 UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _level) {
-	unsigned int pos = 0;
 	level = _level;
+	const size_t itemSize = declaredSize(buffer);
+	if (itemSize < 74) {   // dates and the three name sizes, up to 74
+		log(2, L"🔥MTP File Entry of " + std::to_wstring(itemSize) + L" bytes: too short, not decoded",
+		    ERROR_INVALID_DATA);
+		return;
+	}
 	modifiedUtc = *reinterpret_cast<FILETIME*>(buffer + 26);
 	createdUtc = *reinterpret_cast<FILETIME*>(buffer + 34);
 	log(3, L"🔈timeToIso8601 modifiedUtc");
@@ -1794,16 +1891,23 @@ UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _level
 	}
 	else
 		created = { 0 };
-	int folderName1Size = *reinterpret_cast<unsigned int*>(buffer + 62);
-	int folderName2Size = *reinterpret_cast<unsigned int*>(buffer + 66);
-	int folderIdentifiersize = *reinterpret_cast<unsigned int*>(buffer + 70);
+	// Sizes in characters, unsigned: a huge one yields an offset beyond the
+	// item, which readWideZ reads as empty and fits() refuses.
+	const size_t folderName1Size = *reinterpret_cast<unsigned int*>(buffer + 62);
+	const size_t folderName2Size = *reinterpret_cast<unsigned int*>(buffer + 66);
+	const size_t folderIdentifiersize = *reinterpret_cast<unsigned int*>(buffer + 70);
 
-	folderName1 = std::wstring((wchar_t*)(buffer + 74)).data();
-	folderName2 = std::wstring((wchar_t*)(buffer + 74) + folderName1Size).data();
-	folderIdentifier = std::wstring((wchar_t*)(buffer + 74) + folderName1Size + folderName2Size).data();
+	folderName1 = readWideZ(buffer, itemSize, 74);
+	folderName2 = readWideZ(buffer, itemSize, 74 + folderName1Size * 2);
+	folderIdentifier = readWideZ(buffer, itemSize, 74 + (folderName1Size + folderName2Size) * 2);
 
-	pos = 74 + folderName1Size * 2 + folderName2Size * 2 + folderIdentifiersize * 2;
+	size_t pos = 74 + (folderName1Size + folderName2Size + folderIdentifiersize) * 2;
 	pos += 4;//unknown
+	if (!fits(itemSize, pos, 16 + 4)) {   // class GUID and number of properties
+		log(2, L"🔥MTP File Entry: names overrun the item, class and properties not read",
+		    ERROR_INVALID_DATA);
+		return;
+	}
 	log(3, L"🔈guid_to_wstring guidClass");
 	guidClass = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + pos));
 	log(3, L"🔈trans_guid_to_wstring FriendlyName");
@@ -1814,7 +1918,9 @@ UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _level
 	pos += 4;
 	for (unsigned int x = 0; x < numberProperties; x++) {
 		log(3, L"🔈Property");
-		Property temp(buffer + pos, level + 1);
+		if (pos >= itemSize) break;      // end of the shell item
+		Property temp(buffer + pos, level + 1, itemSize - pos);
+		if (temp.size == 0) break;       // nothing consumed: the walk would not advance
 		const bool stop = temp.typeNotDecoded;   // undetermined size, see idList.h
 		pos += temp.size;
 		properties.push_back(std::move(temp));
@@ -1847,17 +1953,22 @@ Json UserPropertyView0x07192006::toJson() {
 
 UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _level) {
 	/* All the lengths below come from the file parsed — hence from an untrusted
-	   source — and serve to compute reading offsets. The constructor does not
-	   receive the buffer's size, so it cannot validate them against it. They
-	   are bounded to the PLAUSIBLE maximum: a shell item carries its size on 16
-	   bits, it cannot exceed 64 KiB, that is 32,768 UTF-16 characters. A value
-	   beyond that signals corrupted or forged data, and the reading is abandoned
-	   rather than walking memory at random. */
+	   source — and serve to compute reading offsets. Every read is bounded by
+	   the item's declared size, which the caller checked against the buffer.
+	   The lengths are also bounded to the PLAUSIBLE maximum: a shell item
+	   carries its size on 16 bits, it cannot exceed 64 KiB, that is 32,768
+	   UTF-16 characters. A value beyond that signals corrupted or forged data,
+	   and the reading is abandoned. */
 	constexpr int MAX_CARS = 32768;        // 64 KiB / 2: the maximum size of a shell item
 	constexpr unsigned MAX_ELEMENTS = 1024; // well beyond the plausible, but finite
 
-	unsigned int pos = 0;
 	level = _level;
+	const size_t itemSize = declaredSize(buffer);
+	if (itemSize < 0x36) {   // the four sizes, up to 0x36
+		log(2, L"🔥MTP Volume of " + std::to_wstring(itemSize) + L" bytes: too short, not decoded",
+		    ERROR_INVALID_DATA);
+		return;
+	}
 	int namesize = *reinterpret_cast<unsigned int*>(buffer + 0x26);
 	int identifiersize = *reinterpret_cast<unsigned int*>(buffer + 0x2A);
 	int filesystemsize = *reinterpret_cast<unsigned int*>(buffer + 0x2E);
@@ -1874,16 +1985,21 @@ UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _level
 		return;                            // fields left empty: nothing doubtful is published
 	}
 
-	name = std::wstring((wchar_t*)(buffer + 0x36)).data();
-	identifier = std::wstring((wchar_t*)(buffer + 0x36 + namesize * 2)).data();
-	filesystem = std::wstring((wchar_t*)(buffer + 0x36 + namesize * 2 + identifiersize * 2)).data();
+	name = readWideZ(buffer, itemSize, 0x36);
+	identifier = readWideZ(buffer, itemSize, 0x36 + namesize * 2);
+	filesystem = readWideZ(buffer, itemSize, 0x36 + namesize * 2 + identifiersize * 2);
 
-	pos = 0x36 + namesize * 2 + identifiersize * 2 + filesystemsize * 2;
-	for (int x = 0; x < nbGUIDStrings; x++) {
-		guidstrings.push_back(std::wstring((wchar_t*)(buffer + pos)));
+	size_t pos = 0x36 + (size_t)(namesize + identifiersize + filesystemsize) * 2;
+	for (int x = 0; x < nbGUIDStrings && pos < itemSize; x++) {
+		guidstrings.push_back(readWideZ(buffer, itemSize, pos));
 		pos += 78;
 	}
 	pos += 4;//unknown
+	if (!fits(itemSize, pos, 16 + 4)) {   // class GUID and number of properties
+		log(2, L"🔥MTP Volume: strings overrun the item, class and properties not read",
+		    ERROR_INVALID_DATA);
+		return;
+	}
 
 	log(3, L"🔈guid_to_wstring guidClass");
 	guidClass = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + pos));
@@ -1905,7 +2021,8 @@ UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _level
 	}
 	for (unsigned int x = 0; x < numberProperties; x++) {
 		log(3, L"🔈Property");
-		Property temp(buffer + pos, level + 1);
+		if (pos >= declaredSize(buffer)) break;      // end of the shell item
+		Property temp(buffer + pos, level + 1, declaredSize(buffer) - pos);
 		if (temp.size == 0) {
 			log(2, L"🔥Property of null size: walk stopped", ERROR_INVALID_DATA);
 			break;
@@ -1992,13 +2109,13 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _level) {
 		   libfwsi reads those 16 bytes on condition `identifier_size == 16`; WAC
 		   checked nothing and therefore published a GUID made of arbitrary bytes
 		   as soon as the identifier had another size. */
-		if (identifierSize == 16) {
+		if (identifierSize == 16 && fits(totalsize, 0xE, 16)) {
 			log(3, L"🔈UserPropertyView0x23febbee");
 			delegate = std::make_unique<UserPropertyView0x23febbee>(buffer, level);
 		}
 		else
 			log(2, L"🔥0x23febbee: identifier of " + std::to_wstring(identifierSize)
-			     + L" octets au lieu de 16, GUID non lu");
+			     + L" bytes instead of 16, GUID not read");
 		identifierSize += 2;
 	}
 	else if (signature == (unsigned int)0x10312005) {
@@ -2018,14 +2135,15 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _level) {
 	   carries an identifier then its property store. Three of them have a 4-byte
 	   identifier, which libfwsi reads. */
 	else if (!itemType.empty()) {
-		if (identifierSize == 4) {
+		if (identifierSize == 4 && fits(totalsize, dataOffset, 4)) {
 			identifier32 = *reinterpret_cast<unsigned int*>(buffer + dataOffset);
 			identifier32Lu = true;
 		}
 		spsOffset = dataOffset + identifierSize;
 		while (true) {
 			log(3, L"🔈SPS");
-			SPS block(buffer + spsOffset + pos, level + 1);
+			const size_t at = (size_t)spsOffset + pos;
+			SPS block(buffer + at, level + 1, at < declaredSize(buffer) ? declaredSize(buffer) - at : 0);
 			if (block.size && pos < SPSDataSize) SPSs.push_back(block);
 			else break;
 			pos += block.size;
@@ -2035,7 +2153,8 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _level) {
 		spsOffset = dataOffset + identifierSize;
 		while (true) {
 			log(3, L"🔈SPS");
-			SPS block(buffer + spsOffset + pos, level + 1);
+			const size_t at = (size_t)spsOffset + pos;
+			SPS block(buffer + at, level + 1, at < declaredSize(buffer) ? declaredSize(buffer) - at : 0);
 			if (block.size && pos < SPSDataSize) {
 				SPSs.push_back(block);
 			}
@@ -2058,8 +2177,9 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _level) {
 	if (extensionOffset != 0x00) {
 		pos = extensionOffset;
 		while (pos < totalsize) {
-			unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
-			if (size > 0 && pos < totalsize) {
+			// The block declares its size: it must fit in what is left of the item.
+			unsigned short int size = ((size_t)pos + 2 <= (size_t)totalsize) ? *reinterpret_cast<unsigned short int*>(buffer + pos) : 0;
+			if (size > 0 && pos < totalsize && size <= (size_t)totalsize - (size_t)pos) {
 				log(3, L"🔈getExtensionBlock");
 				getExtensionBlock(buffer + pos, &extensionBlocks, level + 1, NULL, false);
 				pos += size;
@@ -2129,7 +2249,7 @@ RootFolder::RootFolder(LPBYTE buffer, int _level) {
 		if (signature == (unsigned int)0xf5a6b710) {
 			sortIndex = L"DRIVE";
 			log(3, L"🔈string_to_wstring identifier");
-			identifier = string_to_wstring(std::string((char*)(buffer + 13)));
+			identifier = string_to_wstring(readNarrowZ(buffer, size, 13));
 
 		}
 		if (signature == (unsigned int)0x23a3dfd5) {
@@ -2137,7 +2257,7 @@ RootFolder::RootFolder(LPBYTE buffer, int _level) {
 			unsigned int pos = 0x12;
 			while (true) {
 				log(3, L"🔈SPS");
-				SPS block(buffer + pos, level + 1);
+				SPS block(buffer + pos, level + 1, pos < size ? size - pos : 0);
 				if (block.size > 0 && pos < size) {
 					SPSs.push_back(block);
 				}
@@ -2184,11 +2304,11 @@ NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _level) {
 		log(2, L"🔥NetworkShellItem : Subtype Unknown 0x" + to_hex(subtype));
 	if (subtype == 0xC3) {
 		log(3, L"🔈string_to_wstring location");
-		location = string_to_wstring(std::string((char*)buffer + 5));
+		location = string_to_wstring(readNarrowZ(buffer, declaredSize(buffer), 5));
 	}
-	else {
+	else if (fits(declaredSize(buffer), 0x54, 8)) {   // up to the two sizes at 0x54
 		log(3, L"🔈wstring_to_filetime modifiedUtc");
-		modifiedUtc = wstring_to_filetime(std::wstring((wchar_t*)(buffer + 0x24)));
+		modifiedUtc = wstring_to_filetime(readWideZ(buffer, declaredSize(buffer), 0x24));
 		log(3, L"🔈utcVersLocalSuspect modified");
 		utcToSuspectLocal(modifiedUtc, &modified);
 		unsigned int descriptionsize = *reinterpret_cast<unsigned int*>(buffer + 0x54);
@@ -2196,14 +2316,11 @@ NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _level) {
 		int pos = 0x5c;
 		if (descriptionsize > 0)
 		{
-			description = std::wstring((wchar_t*)(buffer + pos)).data();
+			description = readWideZ(buffer, declaredSize(buffer), pos);
 			pos += descriptionsize * 2 + 2;
 		}
 		if (commentssize > 0)
-		{
-			comments = std::wstring((wchar_t*)(buffer + pos)).data();
-			pos += commentssize * 2 + 2;
-		}
+			comments = readWideZ(buffer, declaredSize(buffer), pos);
 	}
 }
 
@@ -2229,7 +2346,10 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _level) {
 	unsigned int date = *reinterpret_cast<unsigned int*>(buffer + 8);
 
 	if (date == 0) {
-		if (*reinterpret_cast<unsigned int*>(buffer + 0x10) != 0) { // FILETIME
+		if (!fits(declaredSize(buffer), 0x10, 8)) {
+			log(2, L"🔥ArchiveFileContent: item too short for its date", ERROR_INVALID_DATA);
+		}
+		else if (*reinterpret_cast<unsigned int*>(buffer + 0x10) != 0) { // FILETIME
 			modifiedUtc = *reinterpret_cast<FILETIME*>(buffer + 0x10);
 
 			log(3, L"🔈timeToIso8601 modifiedUtc");
@@ -2239,11 +2359,11 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _level) {
 			}
 			else
 				modifiedUtc = { 0 };
-			name = std::wstring((wchar_t*)(buffer + 0x20)).data();
+			name = readWideZ(buffer, declaredSize(buffer), 0x20);
 		}
 		else { // DATE EN WSTRING
 			log(3, L"🔈wstring_to_filetime modifiedUtc");
-			modifiedUtc = wstring_to_filetime(std::wstring((wchar_t*)(buffer + 0x24)));
+			modifiedUtc = wstring_to_filetime(readWideZ(buffer, declaredSize(buffer), 0x24));
 			log(3, L"🔈timeToIso8601 modifiedUtc");
 			if (timeToIso8601Utc(modifiedUtc) != L"") {
 				log(3, L"🔈utcVersLocalSuspect modified");
@@ -2251,7 +2371,7 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _level) {
 			}
 			else
 				modifiedUtc = { 0 };
-			name = std::wstring((wchar_t*)(buffer + 0x5C)).data();
+			name = readWideZ(buffer, declaredSize(buffer), 0x5C);
 		}
 	}
 	else {
@@ -2260,7 +2380,7 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _level) {
 		log(3, L"🔈LocalFileTimeToFileTime modified");
 		LocalFileTimeToFileTime(&modified, &modifiedUtc);
 		log(3, L"🔈string_to_wstring modified");
-		name = string_to_wstring(std::string((char*)(buffer + 0x1C)));
+		name = string_to_wstring(readNarrowZ(buffer, declaredSize(buffer), 0x1C));
 	}
 }
 
@@ -2309,18 +2429,19 @@ FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSiz
 	fsFileAttributes = FileAttributes((unsigned int)*reinterpret_cast<unsigned short int*>(buffer + 12));
 
 	if (fsFlags.IS_UNICODE)  //Unicode
-		fsPrimaryName = std::wstring((wchar_t*)(buffer + 14)).data();
+		fsPrimaryName = readWideZ(buffer, itemSize, 14);
 	else {
 		log(3, L"🔈string_to_wstring fsPrimaryName");
-		fsPrimaryName = string_to_wstring(std::string((char*)(buffer + 14)));
+		fsPrimaryName = string_to_wstring(readNarrowZ(buffer, itemSize, 14));
 	}
 
 	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + itemSize - 2);
 	unsigned short int pos = extensionOffset;
 	if (extensionOffset != 0x00) {
 		while (pos < itemSize) {
-			unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
-			if (size > 0 && pos < itemSize) {
+			// The block declares its size: it must fit in what is left of the item.
+			unsigned short int size = ((size_t)pos + 2 <= (size_t)itemSize) ? *reinterpret_cast<unsigned short int*>(buffer + pos) : 0;
+			if (size > 0 && pos < itemSize && size <= (size_t)itemSize - (size_t)pos) {
 				log(3, L"🔈getExtensionBlock");
 				getExtensionBlock(buffer + pos, &extensionBlocks, level + 1, &is_zip, fsFlags.IS_FILE);
 				pos += size;
@@ -2358,9 +2479,14 @@ UsersFilesFolder::UsersFilesFolder(LPBYTE buffer, int _level) {
 	log(3, L"🔈LocalFileTimeToFileTime modified");
 	LocalFileTimeToFileTime(&modified, &modifiedUtc);
 	log(3, L"🔈string_to_wstring primaryName");
-	primaryName = string_to_wstring(std::string((char*)buffer + 0x18));
-	log(3, L"🔈Beef0004");
-	extensionBlock = std::make_unique<Beef0004>(buffer + extensionOffset, level + 1, nullptr, false); // The block follows
+	primaryName = string_to_wstring(readNarrowZ(buffer, size, 0x18));
+	// The block's offset and size come from the item: both must stay inside it.
+	const unsigned short blockSize = ((size_t)extensionOffset + 2 <= size)
+	                                 ? *reinterpret_cast<unsigned short*>(buffer + extensionOffset) : 0;
+	if (extensionOffset >= 4 && blockSize >= 8 && blockSize <= size - extensionOffset) {
+		log(3, L"🔈Beef0004");
+		extensionBlock = std::make_unique<Beef0004>(buffer + extensionOffset, level + 1, nullptr, false); // The block follows
+	}
 }
 
 Json UsersFilesFolder::toJson() {
@@ -2423,7 +2549,10 @@ DelegateFolder::DelegateFolder(LPBYTE buffer, unsigned short size, int _level) {
 	   last 32 bytes carry the delegation marker and the class GUID, they are not
 	   part of the inner item. */
 	const unsigned int internalSize = *reinterpret_cast<unsigned int*>(buffer + 4);
-	if (size > 38 && internalSize > 0 && internalSize <= (unsigned int)(size - 38)) {
+	// The inner item's own declared size must fit too: it is what bounds its reads.
+	const unsigned short innerDeclared = (size > 8) ? *reinterpret_cast<unsigned short*>(buffer + 6) : 0;
+	if (size > 38 && internalSize > 0 && internalSize <= (unsigned int)(size - 38)
+	    && innerDeclared >= 3 && innerDeclared <= (unsigned int)(size - 38)) {
 		log(3, L"🔈makeShellItem: delegate");
 		innerItem = makeShellItem(buffer + 6, level + 1, false);
 	}
@@ -2518,6 +2647,28 @@ std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _level, bool Parent
 		unsigned char type_char = *reinterpret_cast<unsigned char*>(buffer + 2);
 		log(3, L"🔈shell_item_class");
 		std::wstring type = shell_item_class(type_char);
+		/* FIXED PART of each decoded type: the offsets its constructor reads
+		   unconditionally. The caller has checked the item's declared size
+		   against the real buffer, not that it holds the fields of the type the
+		   class byte announces. A shorter item is kept raw, as an unknown one. */
+		static const std::map<std::wstring, size_t> FIXED_PART = {
+			{ L"CONTROL_PANEL",          30 },   // GUID at 14
+			{ L"CONTROL_PANEL_CATEGORY", 12 },   // category at 8
+			{ L"ROOT_FOLDER",             4 },   // sort index at 3
+			{ L"FILE_ENTRY_SHELL_ITEM",  14 },   // size, FAT date, attributes
+			{ L"USERS_PROPERTY_VIEW",    14 },   // sizes and signature, up to 14
+			{ L"FAVORITE_SHELL_ITEM",    14 },   // a users property view
+			{ L"URI",                     6 },   // data size at 4
+			{ L"ARCHIVE_FILE_CONTENT",   12 },   // FAT date at 8
+			{ L"USERS_FILES_FOLDER",     22 },   // FAT date at 0x12
+		};
+		const auto fixedPart = FIXED_PART.find(type);
+		if (fixedPart != FIXED_PART.end() && item_size < fixedPart->second) {
+			log(2, L"🔥Shell item " + type + L" of " + std::to_wstring(item_size)
+			     + L" bytes, shorter than its fixed part (" + std::to_wstring(fixedPart->second)
+			     + L"): kept raw", ERROR_INVALID_DATA);
+			return std::make_unique<UnknownShellItem>(buffer, _level);
+		}
 		if (type == L"VOLUME_SHELL_ITEM") {
 			log(3, L"🔈VolumeShellItem");
 			return std::make_unique<VolumeShellItem>(buffer, type_char, _level);
@@ -2586,9 +2737,14 @@ std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _level, bool Parent
 			return std::make_unique<UnknownShellItem>(buffer, _level);
 		}
 	}
-	else {
+	else if (item_size >= 12) {   // FAT date at 8, as above
 		log(3, L"🔈ArchiveFileContent");
 		return std::make_unique<ArchiveFileContent>(buffer, _level);
+	}
+	else {
+		log(2, L"🔥Archive content item of " + std::to_wstring(item_size)
+		     + L" bytes, shorter than its fixed part (12): kept raw", ERROR_INVALID_DATA);
+		return std::make_unique<UnknownShellItem>(buffer, _level);
 	}
 	return nullptr;   // no type recognised: never an implicit return
 }
