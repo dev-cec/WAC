@@ -90,6 +90,12 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
   "$CXX" "${FLAGS[@]}" -static -static-libgcc -static-libstdc++ \
     "$SRC/lnk_test.cpp" "${TEST_OBJS[@]}" -o "$BUILD/lnk_test.exe" "${LIBS[@]}"
   echo "   -> $BUILD/lnk_test.exe"
+
+  echo "== Build parsers_test.exe =="
+  # Jump lists and Prefetch, same guard pages; see its header for the usage.
+  "$CXX" "${FLAGS[@]}" -static -static-libgcc -static-libstdc++ \
+    "$SRC/parsers_test.cpp" "${TEST_OBJS[@]}" -o "$BUILD/parsers_test.exe" "${LIBS[@]}"
+  echo "   -> $BUILD/parsers_test.exe"
   # Wine lacks PSGetNameFromPropertyKey (see the stub's header): needed to run
   # lnk_test on real shortcuts, with WINEDLLOVERRIDES="propsys=n".
   x86_64-w64-mingw32-gcc -shared -O2 -Wall -Wextra -Wl,--kill-at \

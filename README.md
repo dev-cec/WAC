@@ -669,6 +669,43 @@ used with `WINEDLLOVERRIDES`.
 cd build-windows && WINEDLLOVERRIDES="propsys=n" wine lnk_test.exe a.lnk b.lnk ...
 ```
 
+Both tests place each input against the guard page twice: once ending at it,
+once starting right after it (`guard_page.h`). The second layout catches reads
+*before* the input — a negative offset computed from the data, which the first
+one lets through because the bytes before the input are mapped.
+
+`parsers_test.cpp` does the same for the **automatic and custom jump lists**
+and the **Prefetch** files, whose parsers follow chains and offsets the file
+declares: OLE sector chains and allocation tables, the DestList, the scan for
+shortcut headers, the SCCA blocks. A watchdog also fails the test if one parse
+does not end within 60 s — a cyclic sector chain on a forged file is a defect
+too — and a fault handler names the input and the faulting instruction. A
+compressed Prefetch is decompressed first (ntdll), so that the test aims at
+WAC's SCCA parser; run it on Windows for that reason. What its first runs
+caught on the files of a real machine:
+
+- a Prefetch read 20 bytes past its end when truncated: the minimum size
+  stopped at the run times (192 bytes), the run count is read at 212;
+- the Prefetch file names read up to the first zero met, past their block;
+- in the OLE reader, reviewed at the same time: the header read before its
+  size was checked, sector offsets computed in `int` (a negative one passed
+  the bound check), 4096-byte sectors read 3584 bytes too early, and the MSAT
+  beyond the header copied without bounds, stopped after one byte, then read
+  one id in four;
+- a custom jump list of 25 or 26 bytes made an unsigned difference wrap around
+  and the scan run far past the buffer.
+
+Result on the files of a real machine, each input on both sides of the guard
+page: 48 automatic jump lists (175,585 inputs), 23 custom ones (79,036) and
+307 Prefetch (1,246,491): no read outside the buffer, every parse ended.
+
+```bash
+./build-windows.sh --test
+parsers_test.exe jumplist-auto   file.automaticDestinations-ms ...
+parsers_test.exe jumplist-custom file.customDestinations-ms ...
+parsers_test.exe prefetch        CMD.EXE-0BD30981.pf ...
+```
+
 **Timing and memory** are measured with the third mode, which runs the *complete*
 chain — raw file → BinXML → `xml_light` → `Event` → streamed JSON — on a
 directory laid out like an extraction:

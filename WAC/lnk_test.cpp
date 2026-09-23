@@ -4,9 +4,9 @@
  *  WHY THIS TEST. A shortcut is read at offsets the file itself declares; a
  *  truncated or forged .lnk used to make WAC read past its buffer — and publish
  *  what it found there, in a perfectly valid JSON. Such an over-read does not
- *  crash on its own: it has to be made to crash. Each input is therefore copied
- *  so that it ENDS exactly at a page boundary, the next page being mapped
- *  PAGE_NOACCESS. A single byte read beyond the input raises an access
+ *  crash on its own: it has to be made to crash. Each input is therefore placed
+ *  against a page mapped PAGE_NOACCESS, at its end then at its start (see
+ *  guard_page.h). A single byte read outside the input raises an access
  *  violation, and the test stops there.
  *
  *  Inputs, for each shortcut given on the command line:
@@ -22,33 +22,24 @@
 #include <fstream>
 #include <random>
 #include <vector>
+#include "guard_page.h"
 #include "recent_docs.h"
 
 AppliConf conf; //!< WAC's global configuration, which tools.cpp references (empty here)
 
 namespace {
 
-/*! Parses `data` placed right before a PAGE_NOACCESS page.
+/*! Parses `data` placed against a PAGE_NOACCESS page, after it then before it.
  *  @param data the bytes of the shortcut
  *  @return the number of shell items decoded */
 size_t parseGuarded(const std::vector<BYTE>& data) {
-	SYSTEM_INFO si;
-	GetSystemInfo(&si);
-	const size_t page = si.dwPageSize;
-	const size_t pages = (data.size() + page - 1) / page + 1;
-	BYTE* base = static_cast<BYTE*>(VirtualAlloc(nullptr, (pages + 1) * page,
-	                                             MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE));
-	if (base == nullptr) return 0;
-	DWORD old = 0;
-	VirtualProtect(base + pages * page, page, PAGE_NOACCESS, &old);   // the guard page
-	BYTE* start = base + pages * page - data.size();                  // ends at the guard
-	if (!data.empty()) memcpy(start, data.data(), data.size());
 	size_t items = 0;
-	{
-		RecentDoc doc(start, data.size(), L"test.lnk", L"S-1-0-0");
+	for (GuardSide side : { GuardSide::After, GuardSide::Before }) {
+		GuardedCopy copy(data, side);
+		if (copy.data() == nullptr) return 0;
+		RecentDoc doc(copy.data(), copy.size(), L"test.lnk", L"S-1-0-0");
 		items = doc.idLists.size();
 	}
-	VirtualFree(base, 0, MEM_RELEASE);
 	return items;
 }
 
@@ -85,6 +76,7 @@ int main(int argc, char** argv) {
 			++runs;
 		}
 	}
-	std::printf("all passed: %llu truncated or corrupted input(s), no read outside the buffer\n", runs);
+	std::printf("all passed: %llu truncated or corrupted input(s), each with the guard page after "
+	            "then before it: no read outside the buffer\n", runs);
 	return 0;
 }
