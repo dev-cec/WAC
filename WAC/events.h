@@ -1,30 +1,30 @@
 #pragma once
 
-/*  events.h — JOURNAUX D'ÉVÉNEMENTS WINDOWS.
+/*! \file
+ *  \brief Windows event logs.
  *
- *  Lus HORS LIGNE depuis les fichiers `.evtx` extraits par lecture brute, et non
- *  plus par l'API `wevtapi`. C'était le dernier collecteur à solliciter un
- *  service de la machine examinée (`EventLog`) : ce service peut inscrire ses
- *  propres entrées pendant qu'on l'interroge, l'appel prenait une vingtaine de
- *  minutes sous Windows 11, et la collecte montait à plus d'un gigaoctet de jeu
- *  de travail — donc de la pagination, donc des écritures sur le disque même
- *  qu'on s'efforce de ne pas modifier.
+ *  Read OFFLINE from the `.evtx` files extracted by raw reading, and no longer
+ *  through the `wevtapi` API. That was the last collector to solicit a service
+ *  of the examined machine (`EventLog`): that service can write its own entries
+ *  while it is being queried, the call took about twenty minutes under Windows
+ *  11, and the collection grew to more than a gigabyte of working set — hence
+ *  paging, hence writes to the very disk one strives not to modify.
  *
- *  CHAÎNE DE TRAITEMENT
- *    raw_collect  extrait `\Windows\System32\winevt\Logs\*.evtx` sur le support
- *                 de collecte (lecture brute NTFS, aucune ouverture de fichier)
- *    evtx.h       décode chaque enregistrement en texte XML
- *    xml_light    analyse ce XML — le même lecteur que les tâches planifiées,
- *                 plutôt qu'un second décodeur propre aux événements
- *    events.cpp   remplit la structure ci-dessous et l'écrit AU FIL DE L'EAU
+ *  PROCESSING CHAIN
+ *    raw_collect  extracts `\Windows\System32\winevt\Logs\*.evtx` onto the
+ *                 collection medium (raw NTFS reading, no file opened)
+ *    evtx.h       decodes each record into XML text
+ *    xml_light    parses that XML — the same reader as the scheduled tasks,
+ *                 rather than a second decoder specific to the events
+ *    events.cpp   fills the structure below and writes it AS IT GOES
  *
- *  CE QUE LA LECTURE HORS LIGNE NE DONNE PAS. `EvtFormatMessage` rendait, pour
- *  environ un événement sur sept, le message en clair. Ce texte n'est pas dans
- *  le journal : il vient du fichier de ressources du fournisseur, qu'il faudrait
- *  analyser en propre (ressource `WEVT_TEMPLATE` et table de messages d'un
- *  binaire PE). Le champ est donc omis plutôt qu'écrit vide. Toutes les données
- *  de l'événement lui-même — identifiant, horodatage, fournisseur, canal, SID,
- *  processus, et l'intégralité de `EventData` — sont présentes.
+ *  WHAT THE OFFLINE READING DOES NOT GIVE. `EvtFormatMessage` returned, for
+ *  about one event in seven, the plain-text message. That text is not in the
+ *  log: it comes from the provider's resource file, which would have to be
+ *  parsed in its own right (the `WEVT_TEMPLATE` resource and the message table
+ *  of a PE binary). The field is therefore omitted rather than written empty.
+ *  All the data of the event itself — identifier, timestamp, provider, channel,
+ *  SID, process, and the whole of `EventData` — are present.
  */
 
 #include <windows.h>
@@ -34,117 +34,116 @@
 #include "json.h"
 #include "xml_light.h"
 
-/*! Un événement, tel qu'il figure dans un journal.
+/*! One event, as it appears in a log.
  *
- *  Les champs gardent les noms de l'ancienne collecte par API : le schéma de
- *  sortie ne change pas, seule la source change. Une valeur absente du journal
- *  reste `null` — elle n'est pas remplacée par un zéro, qui se lirait comme une
- *  valeur relevée.
+ *  The fields keep the names of the old collection through the API: the output
+ *  schema does not change, only the source does. A value absent from the log
+ *  stays `null` — it is not replaced by a zero, which would read as a value
+ *  that had been read.
  */
 struct Event {
-	Json evtSystemProviderName = Json::null();      //!< nom du fournisseur
-	Json evtSystemProviderGuid = Json::null();      //!< GUID du fournisseur
-	Json evtSystemEventID = Json::null();           //!< identifiant de l'événement
-	Json evtSystemQualifiers = Json::null();        //!< qualificatifs (événements classiques)
+	Json evtSystemProviderName = Json::null();      //!< name of the provider
+	Json evtSystemProviderGuid = Json::null();      //!< GUID of the provider
+	Json evtSystemEventID = Json::null();           //!< identifier of the event
+	Json evtSystemQualifiers = Json::null();        //!< qualifiers (classic events)
 	Json evtSystemLevel = Json::null();             //!< niveau
-	Json evtSystemTask = Json::null();              //!< tâche
-	Json evtSystemOpcode = Json::null();            //!< code d'opération
-	Json evtSystemKeywords = Json::null();          //!< mots clés
-	Json evtSystemTimeCreated = Json::null();       //!< date de création (UTC)
-	Json evtSystemEventRecordId = Json::null();     //!< identifiant de l'enregistrement
-	Json evtSystemActivityID = Json::null();        //!< identifiant d'activité
-	Json evtSystemRelatedActivityID = Json::null(); //!< identifiant d'activité liée
-	Json evtSystemProcessID = Json::null();         //!< processus émetteur
-	Json evtSystemThreadID = Json::null();          //!< fil d'exécution émetteur
+	Json evtSystemTask = Json::null();              //!< task
+	Json evtSystemOpcode = Json::null();            //!< opcode
+	Json evtSystemKeywords = Json::null();          //!< keywords
+	Json evtSystemTimeCreated = Json::null();       //!< creation date (UTC)
+	Json evtSystemEventRecordId = Json::null();     //!< identifier of the record
+	Json evtSystemActivityID = Json::null();        //!< activity identifier
+	Json evtSystemRelatedActivityID = Json::null(); //!< related activity identifier
+	Json evtSystemProcessID = Json::null();         //!< process that emitted the event
+	Json evtSystemThreadID = Json::null();          //!< thread that emitted the event
 	Json evtSystemChannel = Json::null();           //!< canal
-	Json evtSystemComputer = Json::null();          //!< nom de l'ordinateur
-	Json evtSystemUserID = Json::null();            //!< SID de l'utilisateur
-	Json evtSystemVersion = Json::null();           //!< version du schéma de l'événement
-	/*! Données propres à l'événement : un tableau d'objets `{ Name, Value }`.
+	Json evtSystemComputer = Json::null();          //!< name of the computer
+	Json evtSystemUserID = Json::null();            //!< SID of the user
+	Json evtSystemVersion = Json::null();           //!< version of the event's schema
+	/*! Data specific to the event: an array of `{ Name, Value }` objects.
 	*
-	*  Le nom vient de l'attribut `Name` du `<Data>` — `TargetUserName`,
-	*  `NewProcessId`, `CommandLine` — et il est OMIS pour les événements
-	*  classiques, dont les données sont purement positionnelles. Sans lui, il
-	*  faudrait connaître par cœur l'ordre des champs de chaque identifiant
-	*  d'événement pour savoir ce qu'on lit.
+	*  The name comes from the `Name` attribute of the `<Data>` — `TargetUserName`,
+	*  `NewProcessId`, `CommandLine` — and it is OMITTED for classic events,
+	*  whose data are purely positional. Without it, one would have to know by
+	*  heart the order of the fields of every event identifier to know what one is
+	*  reading.
 	*/
 	Json evtEventData = Json::null();
-	/*! Nom du fichier journal d'où l'événement provient.
+	/*! Name of the log file the event comes from.
 	*
-	*  PROVENANCE. Un même canal peut être porté par plusieurs fichiers : le
-	*  journal courant et ses archives, qu'une machine conserve côte à côte avec
-	*  des numéros d'enregistrement qui se recouvrent. Sans ce champ, deux
-	*  événements de même canal et de même numéro sont indiscernables, et rien
-	*  ne dit lequel vient d'où — ce qui interdit de trancher entre un doublon
-	*  légitime et un défaut de lecture.
+	*  PROVENANCE. One channel can be carried by several files: the current log
+	*  and its archives, which a machine keeps side by side with record numbers
+	*  that overlap. Without this field, two events of the same channel and the
+	*  same number are indistinguishable, and nothing says which comes from
+	*  where — which makes it impossible to decide between a legitimate duplicate
+	*  and a reading defect.
 	*/
 	Json evtSourceLog = Json::null();
-	/*! Message en clair, reconstitué depuis les ressources du fournisseur.
+	/*! Plain-text message, rebuilt from the provider's resources.
 	*
-	*  Omis quand il n'a pas pu l'être : fournisseur non déclaré, binaire de
-	*  ressources absent, ou événement que le fournisseur ne décrit pas. Un champ
-	*  vide se lirait comme un événement sans message, alors que le message
-	*  existe et n'a pas été atteint.
+	*  Omitted when it could not be: provider not declared, resource binary
+	*  absent, or an event the provider does not describe. An empty field would
+	*  read as an event without a message, whereas the message exists and was not
+	*  reached.
 	*/
 	Json evtEventMessage = Json::null();
 
-	/*! Construit l'événement depuis le XML décodé d'un enregistrement.
-	*  @param racine élément `<Event>` analysé par xml_light
-	*  @param canal canal déduit du nom de fichier, employé si le XML ne le porte
-	*         pas (les journaux archivés omettent parfois `<Channel>`)
-	*  @param identifiant numéro d'enregistrement lu dans l'en-tête binaire,
-	*         employé si le XML ne porte pas `<EventRecordID>`
+	/*! Builds the event from the decoded XML of a record.
+	*  @param root the `<Event>` element parsed by xml_light
+	*  @param channel channel deduced from the file name, used if the XML does not
+	*         carry it (archived logs sometimes omit `<Channel>`)
+	*  @param id record number read in the binary header, used if the XML does not
+	*         carry `<EventRecordID>`
 	*/
-	/*! @param nomFichier nom du fichier journal, consigné comme provenance */
+	/*! @param fileName name of the log file, recorded as the provenance */
 	Event(const XmlNode& root, const std::wstring& canal,
 	      unsigned long long id, const std::wstring& fileName);
 
-	/*! Valeurs de `EventData`, dans l'ordre, telles qu'elles remplissent les
-	*  marques %1 %2 … d'un modèle de message.
+	/*! Values of `EventData`, in order, as they fill the %1 %2 … marks of a
+	*  message template.
 	*
-	*  Conservées à part de `evtEventData`, qui les a déjà mises en forme avec
-	*  leurs noms : les ressortir du JSON demanderait des accesseurs dont
-	*  personne d'autre n'a besoin, pour retrouver une information qu'on avait
-	*  déjà sous la main. */
+	*  Kept apart from `evtEventData`, which has already laid them out with their
+	*  names: getting them back out of the JSON would need accessors nobody else
+	*  needs, to recover information one already had at hand. */
 	std::vector<std::wstring> rawValues;
 
-	/*  Champs conservés sous leur forme native pour la résolution du message.
-	    Les versions JSON sont déjà formatées ; les redécoder en sens inverse
-	    serait à la fois inutile et fragile. */
-	std::wstring guidPourMessage;     //!< GUID du fournisseur
-	uint16_t     idPourMessage = 0;   //!< identifiant de l'événement
-	uint8_t      versionPourMessage = 0; //!< version du schéma
+	/*  Fields kept in their native form for the resolution of the message.
+	    The JSON versions are already formatted; decoding them back would be both
+	    useless and fragile. */
+	std::wstring guidPourMessage;     //!< GUID of the provider
+	uint16_t     idPourMessage = 0;   //!< identifier of the event
+	uint8_t      versionPourMessage = 0; //!< version of the schema
 
-	/*! conversion de l'objet au format json */
+	/*! Converts the event to JSON.
+*  @return its JSON object. */
 	Json toJson() const;
 
-	/* liberation mémoire */
+	//! Releases the memory held by the event.
 	void clear() {}
 };
 
-/*! Collecte de tous les journaux extraits.
+/*! Collection of every extracted log.
  *
- *  Aucun tableau d'événements n'est conservé : chacun est écrit puis oublié
- *  (cf. EcrivainJsonTableau). C'est ce qui ramène la collecte des journaux à une
- *  empreinte mémoire constante, quelle que soit la taille des journaux.
+ *  No array of events is kept: each one is written then forgotten (see
+ *  JsonArrayWriter). That is what brings the collection of the logs down to a
+ *  constant memory footprint, whatever the size of the logs.
  */
 struct Events {
-	unsigned long long read = 0;          //!< enregistrements écrits
-	unsigned long long unreadable = 0;   //!< enregistrements écartés
-	unsigned long long files = 0;     //!< journaux parcourus
+	unsigned long long read = 0;          //!< records written
+	unsigned long long unreadable = 0;   //!< records discarded
+	unsigned long long files = 0;     //!< logs walked
 
-	/*! Lit les journaux extraits et écrit `events.json` au fil de l'eau.
-	*  @return ERROR_SUCCESS, S_FALSE si des enregistrements ont été écartés,
-	*          ou un code d'erreur si aucun journal n'a pu être lu
+	/*! Reads the extracted logs and writes `events.json` as it goes.
+	*  @return ERROR_SUCCESS, S_FALSE if some records were discarded, or an error
+	*          code if no log could be read
 	*/
 	HRESULT getData();
 
-	/*! Rien à sérialiser : `getData()` a déjà écrit le fichier.
-	*  Conservé pour que le déroulé de main.cpp reste le même pour tous les
-	*  collecteurs.
+	/*! Nothing to serialise: `getData()` has already written the file.
+	*  Kept so that the sequence in main.cpp stays the same for every collector.
 	*/
 	HRESULT toJson() { return ERROR_SUCCESS; }
 
-	/* liberation mémoire */
+	//! Releases the memory held by the collection.
 	void clear() {}
 };

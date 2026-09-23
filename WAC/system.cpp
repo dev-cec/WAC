@@ -2,22 +2,21 @@
 
 namespace {
 
-/*! Ajoute une valeur au JSON seulement si elle a une source.
+/*! Adds a value to the JSON only if it has a source.
 *
-* POURQUOI OMETTRE PLUTÔT QU'ÉMETTRE VIDE. Une clé présente mais vide se lit
-* comme un échec de lecture — l'analyste ne peut pas distinguer « la ruche ne
-* contient pas cette valeur » de « WAC n'a pas su la lire ». Les valeurs
-* réellement illisibles sont, elles, consignées dans le journal et dans
-* investigation.json.
+* WHY OMIT RATHER THAN EMIT EMPTY. A key that is present but empty reads as a
+* failed reading — the analyst cannot tell "the hive does not hold that value"
+* from "WAC could not read it". The values that really are unreadable are, for
+* their part, recorded in the log and in investigation.json.
 */
 void addIfSet(Json& o, PCWSTR name, const std::wstring& value) {
 	if (!value.empty()) o.add(name, Json::str(value));
 }
 
-/*! Traduit PROCESSOR_ARCHITECTURE (valeur texte de la ruche) en libellé.
-* La ruche stocke la chaîne d'environnement, pas la constante numérique : elle
-* est donc convertie vers le même vocabulaire que `os_architecture()` afin que
-* la sortie reste comparable entre versions de WAC.
+/*! Translates PROCESSOR_ARCHITECTURE (the hive's text value) into a label.
+* The hive stores the environment string, not the numeric constant: it is
+* therefore converted to the same vocabulary as `os_architecture()`, so that the
+* output stays comparable between versions of WAC.
 */
 std::wstring architectureFromHive(const std::wstring& value) {
 	if (value == L"AMD64") return os_architecture(PROCESSOR_ARCHITECTURE_AMD64);
@@ -25,12 +24,12 @@ std::wstring architectureFromHive(const std::wstring& value) {
 	if (value == L"ARM64") return os_architecture(PROCESSOR_ARCHITECTURE_ARM64);
 	if (value == L"ARM")   return os_architecture(PROCESSOR_ARCHITECTURE_ARM);
 	if (value == L"IA64")  return os_architecture(PROCESSOR_ARCHITECTURE_IA64);
-	// Valeur inattendue : restituée telle quelle plutôt que masquée derrière
-	// « inconnue », pour que le cas non couvert reste visible.
+	// Unexpected value: returned as it is rather than hidden behind "unknown", so
+	// that the case not covered stays visible.
 	return value.empty() ? os_architecture(PROCESSOR_ARCHITECTURE_UNKNOWN) : value;
 }
 
-//! Convertit un temps Unix (secondes depuis 1970, UTC) en FILETIME.
+//! Converts a Unix time (seconds since 1970, UTC) to a FILETIME.
 FILETIME unixToFiletime(unsigned long long seconds) {
 	const unsigned long long OFFSET_1601_1970 = 11644473600ULL;
 	const unsigned long long cent_ns = (seconds + OFFSET_1601_1970) * 10000000ULL;
@@ -48,16 +47,16 @@ HRESULT SystemInfo::getData() {
 	log(1, L"➕System");
 
 	/*******************************************************************
-	* 1. Identité de la machine — ruche SYSTEM
+	* 1. Identity of the machine — SYSTEM hive
 	*******************************************************************/
 	if (conf.CurrentControlSet) {
 		log(3, L"🔈getRegSzValue ComputerName");
 		getRegSzValue(conf.CurrentControlSet, L"Control\\ComputerName\\ComputerName",
 		              L"ComputerName", &netbiosName);
 
-		/* Nom DNS. `Hostname` est le nom en vigueur, `NV Hostname` celui qui a
-		   été persisté : ils ne diffèrent qu'entre un renommage et le
-		   redémarrage suivant, cas qui mérite justement d'être visible. */
+		/* DNS name. `Hostname` is the name in force, `NV Hostname` the one that was
+		   persisted: they differ only between a rename and the next reboot, a
+		   case that deserves to be visible. */
 		log(3, L"🔈getRegSzValue Tcpip Hostname");
 		if (getRegSzValue(conf.CurrentControlSet, L"Services\\Tcpip\\Parameters",
 		                  L"Hostname", &computerName) != ERROR_SUCCESS)
@@ -82,10 +81,10 @@ HRESULT SystemInfo::getData() {
 		log(2, L"❇️Domain name : " + domainName);
 	}
 	else
-		log(2, L"🔥CurrentControlSet indisponible : identite machine non relevee");
+		log(2, L"🔥CurrentControlSet unavailable: machine identity not read");
 
 	/*******************************************************************
-	* 2. Installation — ruche SOFTWARE
+	* 2. Installation — SOFTWARE hive
 	*******************************************************************/
 	if (conf.Software) {
 		PCWSTR key = L"Microsoft\\Windows NT\\CurrentVersion";
@@ -101,14 +100,14 @@ HRESULT SystemInfo::getData() {
 		getRegSzValue(conf.Software, key, L"ProductId",              &productId);
 		getRegSzValue(conf.Software, key, L"SystemRoot",             &systemRoot);
 
-		/* DisplayVersion (« 23H2 ») a remplacé ReleaseId (« 2009 », figé) à
-		   partir de la version 20H2 : on prend le premier disponible. */
+		/* DisplayVersion ("23H2") replaced ReleaseId ("2009", frozen) from version
+		   20H2 on: the first one available is taken. */
 		if (getRegSzValue(conf.Software, key, L"DisplayVersion", &displayVersion) != ERROR_SUCCESS)
 			getRegSzValue(conf.Software, key, L"ReleaseId", &displayVersion);
 
-		/* Numéro de version. CurrentMajorVersionNumber / CurrentMinorVersionNumber
-		   n'existent qu'à partir de Windows 10 ; avant, seule la chaîne
-		   `CurrentVersion` (« 6.1 ») porte l'information. */
+		/* Version number. CurrentMajorVersionNumber / CurrentMinorVersionNumber
+		   exist only from Windows 10 on; before that, only the `CurrentVersion`
+		   string ("6.1") carries the information. */
 		std::wstring build;
 		getRegSzValue(conf.Software, key, L"CurrentBuildNumber", &build);
 		if (build.empty()) getRegSzValue(conf.Software, key, L"CurrentBuild", &build);
@@ -122,23 +121,24 @@ HRESULT SystemInfo::getData() {
 			getRegSzValue(conf.Software, key, L"CurrentVersion", &version);
 		if (!build.empty()) version += (version.empty() ? L"" : L".") + build;
 
-		// UBR = révision mensuelle : distingue deux machines de même build.
+		// UBR = monthly revision: distinguishes two machines of the same build.
 		DWORD ubr = 0;
 		if (getRegDwordValue(conf.Software, key, L"UBR", &ubr) == ERROR_SUCCESS && !version.empty())
 			version += L"." + std::to_wstring(ubr);
 
-		/* Correction du libellé de l'OS (cf. en-tête). Windows 11 se déclare
-		   « Windows 10 » dans ProductName ; le build est le seul discriminant. */
+		/* Correction of the OS label (see the file header). Windows 11 declares
+		   itself as "Windows 10" in ProductName; the build is the only
+		   discriminant. */
 		osName = productNameRaw;
 		const unsigned long buildNumber = build.empty() ? 0UL : wcstoul(build.c_str(), nullptr, 10);
 		if (buildNumber >= 22000 && osName.find(L"Windows 10") != std::wstring::npos) {
 			osName.replace(osName.find(L"Windows 10"), 10, L"Windows 11");
-			log(2, L"❇️ProductName corrige : build " + build + L" => " + osName);
+			log(2, L"❇️ProductName corrected: build " + build + L" => " + osName);
 		}
 
-		/* Date d'installation. `InstallTime` (REG_QWORD, FILETIME UTC) existe
-		   depuis Windows 8 et est précise ; `InstallDate` (REG_DWORD, temps Unix
-		   UTC) est le repli pour les systèmes antérieurs. */
+		/* Installation date. `InstallTime` (REG_QWORD, UTC FILETIME) has existed
+		   since Windows 8 and is precise; `InstallDate` (REG_DWORD, Unix time
+		   UTC) is the fallback for earlier systems. */
 		unsigned long long installTime = 0;
 		if (getRegQwordValue(conf.Software, key, L"InstallTime", &installTime) == ERROR_SUCCESS
 		    && installTime != 0) {
@@ -152,18 +152,18 @@ HRESULT SystemInfo::getData() {
 				installDateUtc = unixToFiletime(installDate);
 		}
 
-		// Identifiant unique de l'installation : sert a corréler des artefacts
-		// issus de machines différentes (telemetrie, journaux applicatifs).
+		// Unique identifier of the installation: serves to correlate artefacts coming
+		// from different machines (telemetry, application logs).
 		log(3, L"🔈getRegSzValue MachineGuid");
 		getRegSzValue(conf.Software, L"Microsoft\\Cryptography", L"MachineGuid", &machineGuid);
 
 		log(2, L"❇️OS : " + osName + L" " + version);
 	}
 	else
-		log(2, L"🔥Ruche SOFTWARE indisponible : informations d'installation non relevees");
+		log(2, L"🔥SOFTWARE hive unavailable: installation information not read");
 
 	/*******************************************************************
-	* 3. Instant de la collecte — mesuré à chaud, sans trace
+	* 3. Instant of the collection — measured live, without a trace
 	*******************************************************************/
 	log(3, L"🔈GetSystemTime");
 	GetSystemTime(&localDateTimeUtc);
@@ -176,26 +176,25 @@ HRESULT SystemInfo::getData() {
 	else
 		log(2, L"🔥GetTimeZoneInformation", TIME_ZONE_ID_UNKNOWN);
 
-	/* Heure de dernier démarrage.
+	/* Time of the last boot.
 	 *
-	 * SOURCE : le noyau, par NtQuerySystemInformation(SystemTimeOfDayInformation)
-	 * — une requête en mémoire, sans WMI ni trace. Il rend `BootTime`, l'instant
-	 * du démarrage exprimé dans l'horloge ACTUELLE, et `BootTimeBias`, le cumul
-	 * des corrections d'horloge appliquées depuis. `BootTime − BootTimeBias` est
-	 * donc ce qu'affichait l'horloge au démarrage : la même référence que les
-	 * journaux d'événements et les ouvertures de session, horodatés sur le
-	 * moment.
+	 * SOURCE: the kernel, through
+	 * NtQuerySystemInformation(SystemTimeOfDayInformation) — an in-memory query,
+	 * with no WMI and no trace. It returns `BootTime`, the instant of the boot
+	 * expressed in the CURRENT clock, and `BootTimeBias`, the total of the clock
+	 * corrections applied since. `BootTime − BootTimeBias` is therefore what the
+	 * clock showed at boot time: the same reference as the event logs and the
+	 * logons, timestamped as they happened.
 	 *
-	 * CE QUI ÉTAIT FAUX. L'heure était estimée par « heure courante moins
-	 * GetTickCount64 », qui ignore les recalages d'horloge. Sur la VM de test,
-	 * suspendue puis recalée, elle tombait 3,5 s APRÈS le démarrage réel — et
-	 * après les premières ouvertures de session, ce que check-json.py a relevé.
-	 * Vérifié : BootTime 20:00:00.87 moins BootTimeBias 4,37 s donne 19:59:56.50,
-	 * exactement le StartTime de l'événement Kernel-General 12 ; l'ancienne
-	 * estimation donnait 20:00:00.
+	 * WHAT WAS WRONG. The time was estimated by "current time minus
+	 * GetTickCount64", which ignores clock adjustments. On the test VM, suspended
+	 * then adjusted, it fell 3.5 s AFTER the real boot — and after the first
+	 * logons, which check-json.py caught. Verified: BootTime 20:00:00.87 minus
+	 * BootTimeBias 4.37 s gives 19:59:56.50, exactly the StartTime of the
+	 * Kernel-General 12 event; the old estimate gave 20:00:00.
 	 *
-	 * L'estimation reste en repli si la requête échoue, et BootTimeSource dit
-	 * laquelle des deux a servi.
+	 * The estimate remains as a fallback if the query fails, and BootTimeSource
+	 * says which of the two served.
 	 */
 	log(3, L"🔈GetTickCount64");
 	const ULONGLONG uptimeMs = GetTickCount64();
@@ -223,7 +222,7 @@ HRESULT SystemInfo::getData() {
 			bootFromKernel = true;
 		}
 		else
-			log(2, L"🔥NtQuerySystemInformation : heure de demarrage estimee par GetTickCount64");
+			log(2, L"🔥NtQuerySystemInformation: boot time estimated through GetTickCount64");
 	}
 	if (!bootFromKernel && now100ns > uptimeMs * 10000ULL)
 		boot100ns = now100ns - uptimeMs * 10000ULL;
@@ -237,7 +236,7 @@ HRESULT SystemInfo::getData() {
 		log(2, L"❇️Last boot (UTC) : " + timeToIso8601(lastBootUpTimeUtc, true, bootFraction100ns));
 	}
 	else
-		log(2, L"🔥Duree d'activite incoherente avec l'heure systeme : boot non calcule");
+		log(2, L"🔥Uptime inconsistent with the system time: boot time not computed");
 
 	return ERROR_SUCCESS;
 }
@@ -252,9 +251,9 @@ HRESULT SystemInfo::toJson() {
 	addIfSet(o, L"OsArchitecture",  osArchitecture);
 
 	addIfSet(o, L"OsName",          osName);
-	/* La valeur brute n'est répétée que lorsqu'elle DIFFÈRE du libellé retenu :
-	   c'est alors la trace de la correction Windows 10 / Windows 11, qui doit
-	   rester vérifiable. Sinon elle ferait doublon. */
+	/* The raw value is repeated only when it DIFFERS from the label kept: it is
+	   then the trace of the Windows 10 / Windows 11 correction, which must stay
+	   verifiable. Otherwise it would be a duplicate. */
 	if (!productNameRaw.empty() && productNameRaw != osName)
 		o.add(L"ProductNameRaw", Json::str(productNameRaw));
 	addIfSet(o, L"Version",                version);
@@ -268,8 +267,8 @@ HRESULT SystemInfo::toJson() {
 	addIfSet(o, L"ProductId",              productId);
 	addIfSet(o, L"SystemRoot",             systemRoot);
 	addIfSet(o, L"MachineGuid",            machineGuid);
-	// installDateUtc est en UTC : la version locale doit etre CONVERTIE, pas
-	// seulement re-etiquetee (defaut detecte par le controle croise du harness).
+	// installDateUtc is in UTC: the local version must be CONVERTED, not merely
+	// relabelled (a defect caught by the harness's cross-check).
 	addIfSet(o, L"InstallDate",            utcTimeToIso8601Local(installDateUtc));
 	addIfSet(o, L"InstallDateUtc",         timeToIso8601Utc(installDateUtc));
 
@@ -278,28 +277,28 @@ HRESULT SystemInfo::toJson() {
 	addIfSet(o, L"LastBootUpTime",    timeToIso8601(lastBootUpTime, false, bootFraction100ns));
 	addIfSet(o, L"LastBootUpTimeUtc", timeToIso8601(lastBootUpTimeUtc, true, bootFraction100ns));
 	o.add(L"UptimeSeconds",     Json::num(uptimeSeconds));
-	// La source accompagne la valeur : une estimation ne doit pas se lire comme
-	// une mesure.
+	// The source goes along with the value: an estimate must not read as a
+	// measurement.
 	o.add(L"BootTimeSource",    Json::str(bootFromKernel
-		? L"noyau (SystemTimeOfDayInformation : BootTime - BootTimeBias), "
-		  L"heure affichée par l'horloge au démarrage"
-		: L"estimée : heure courante moins GetTickCount64 ; ignore les recalages "
-		  L"d'horloge depuis le démarrage"));
-	/* En millisecondes, signe compris : émis seulement s'il y a eu correction.
-	   Positif : horloge avancée depuis le démarrage. */
+		? L"kernel (SystemTimeOfDayInformation: BootTime - BootTimeBias), "
+		  L"the time the clock showed at boot"
+		: L"estimated: current time minus GetTickCount64; ignores the clock adjustments "
+		  L"made since the boot"));
+	/* In milliseconds, sign included: emitted only if there was a correction.
+	   Positive: the clock was moved forward since the boot. */
 	if (bootFromKernel && clockCorrection100ns != 0)
 		o.add(L"ClockAdjustedSinceBootMs", Json::num(clockCorrection100ns / 10000LL));
 
-	/* Fuseau : celui du SUSPECT quand la ruche a pu être lue. Le champ
-	   TimeZoneSource dit laquelle des deux origines a servi — sans lui, un
-	   décalage inattendu serait indistinguable d'une erreur de lecture. */
+	/* Time zone: the SUSPECT's when the hive could be read. The TimeZoneSource
+	   field says which of the two origins served — without it, an unexpected
+	   offset would be indistinguishable from a reading error. */
 	if (conf.timeZone.valid) {
 		addIfSet(o, L"CurrentTimeZoneId",      conf.timeZone.keyName);
-		/* Le libelle saisonnier est stocke comme reference MUI
-		   (« @tzres.dll,-301 ») sur les systemes recents. `CurrentTimeZoneId`
-		   (« Romance Standard Time ») reste l'identifiant canonique et suffit a
-		   interpreter les heures locales ; la reference est conservee pour
-		   tracabilite, sans etre presentee comme un nom. */
+		/* The seasonal label is stored as a MUI reference ("@tzres.dll,-301") on
+		   recent systems. `CurrentTimeZoneId` ("Romance Standard Time") remains
+		   the canonical identifier and is enough to interpret local times; the
+		   reference is kept for traceability, without being presented as a
+		   name. */
 		const std::wstring caption = conf.timeZone.daylightInEffect
 		                           ? conf.timeZone.daylightName
 		                           : conf.timeZone.standardName;
@@ -311,11 +310,11 @@ HRESULT SystemInfo::toJson() {
 		}
 		o.add(L"CurrentBias",       Json::num((long long)conf.timeZone.activeBiasMinutes));
 		o.add(L"DaylightInEffect",  Json::boolean(conf.timeZone.daylightInEffect));
-		o.add(L"TimeZoneSource",    Json::str(L"ruche SYSTEM de la machine examinée"));
+		o.add(L"TimeZoneSource",    Json::str(L"SYSTEM hive of the examined machine"));
 	}
 	else {
-		/* Repli : la machine d'exécution. Correct en collecte live, faux sur une
-		   image montée ailleurs — d'où la mention explicite. */
+		/* Fallback: the running machine. Right in a live collection, wrong on an
+		   image mounted elsewhere — hence the explicit mention. */
 		TIME_ZONE_INFORMATION tz = { 0 };
 		const DWORD r = GetTimeZoneInformation(&tz);
 		if (r != TIME_ZONE_ID_INVALID) {
@@ -326,8 +325,8 @@ HRESULT SystemInfo::toJson() {
 			                           + (wasSummer ? tz.DaylightBias : tz.StandardBias))));
 			o.add(L"DaylightInEffect", Json::boolean(wasSummer));
 		}
-		o.add(L"TimeZoneSource", Json::str(L"machine d'exécution (ruche SYSTEM illisible) "
-		                                   L"— ne vaut que si la collecte est live"));
+		o.add(L"TimeZoneSource", Json::str(L"running machine (SYSTEM hive unreadable) "
+		                                   L"— only valid if the collection is live"));
 	}
 
 	return writeJsonFile("OperatingSystem.json", o);

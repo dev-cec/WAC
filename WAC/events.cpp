@@ -3,57 +3,57 @@
 #include "event_messages.h"
 #include <cwchar>
 
-/*  events.cpp — remplissage des événements depuis le XML décodé.
+/*! \file
+ *  \brief Filling of the events from the decoded XML.
  *
- *  Voir events.h pour la chaîne de traitement et ce que la lecture hors ligne
- *  apporte. Les commentaires ici portent sur la correspondance entre le XML d'un
- *  enregistrement et les champs de sortie.
+ *  See events.h for the processing chain and what the offline reading brings.
+ *  The comments here bear on the correspondence between a record's XML and the
+ *  output fields.
  */
 
 namespace {
 
-//! Nombre entier rendu en JSON, ou `null` si le texte n'en est pas un.
+//! An integer returned as JSON, or `null` if the text is not one.
 Json count(const std::wstring& text) {
 	if (text.empty()) return Json::null();
 	wchar_t* end = nullptr;
 	const long long v = wcstoll(text.c_str(), &end, 10);
-	if (!end || *end != L'\0') return Json::null();   // pas un entier : on ne devine pas
+	if (!end || *end != L'\0') return Json::null();   // not an integer: no guessing
 	return Json::num(v);
 }
 
-//! Chaîne rendue en JSON, ou `null` si elle est vide.
+//! A string returned as JSON, or `null` if it is empty.
 Json string(const std::wstring& text) {
 	return text.empty() ? Json::null() : Json::str(text);
 }
 
-/*! Données propres à l'événement, sous forme de tableau de valeurs.
+/*! Data specific to the event, as an array of values.
  *
- *  Deux formes existent dans les journaux : `<EventData>` avec des `<Data>`
- *  (la plus courante) et `<UserData>`, où le fournisseur place un sous-arbre de
- *  son cru.
+ *  Two forms exist in the logs: `<EventData>` with `<Data>` elements (the more
+ *  common one) and `<UserData>`, where the provider puts a subtree of its own.
  *
- *  L'ancienne collecte par API ne demandait que `Event/EventData/Data`. Sur un
- *  événement en `UserData`, ce contexte de rendu ne remplit rien, et la valeur
- *  était lue quand même : le tampon n'étant pas réinitialisé, l'événement
- *  héritait de la donnée d'un AUTRE événement. Relevé sur une collecte réelle :
- *  l'effacement d'un journal (1102) — l'un des événements les plus
- *  significatifs d'une intrusion — portait « C:\WINDOWS\ServiceState\wmansvc »,
- *  qui ne lui appartient pas. Un défaut de ce genre ne se voit pas : le JSON est
- *  valide, la clé est la bonne, seule la valeur est fausse.
+ *  The old collection through the API asked only for `Event/EventData/Data`. On
+ *  an event in `UserData`, that rendering context fills nothing, and the value
+ *  was read all the same: the buffer not being reset, the event inherited the
+ *  data of ANOTHER event. Seen on a real collection: the clearing of a log
+ *  (1102) — one of the most significant events of an intrusion — carried
+ *  "C:\WINDOWS\ServiceState\wmansvc", which does not belong to it. A defect of
+ *  that kind does not show: the JSON is valid, the key is the right one, only
+ *  the value is wrong.
  *
- *  Les deux formes sont désormais lues, chacune depuis son propre sous-arbre.
+ *  Both forms are now read, each from its own subtree.
  */
 Json eventData(const XmlNode& root, std::vector<std::wstring>* brutes) {
 	Json arr = Json::arr();
 
 	if (const XmlNode* ed = root.child(L"EventData")) {
-		/*  LE NOM DU CHAMP EST LA MOITIÉ DE L'INFORMATION. Les fournisseurs
-		    modernes nomment chaque donnée — `TargetUserName`, `NewProcessId`,
-		    `CommandLine` — et ce nom était jeté : un tableau de valeurs brutes
-		    oblige à connaître par cœur l'ordre des champs de chaque identifiant
-		    d'événement pour savoir ce qu'on lit. Les événements classiques, eux,
-		    n'en ont pas : leurs données sont purement positionnelles, et le nom
-		    est alors omis plutôt qu'inventé. */
+		/*  THE FIELD'S NAME IS HALF THE INFORMATION. Modern providers name every
+		    piece of data — `TargetUserName`, `NewProcessId`, `CommandLine` — and
+		    that name was thrown away: an array of raw values forces one to know
+		    by heart the order of the fields of every event identifier to know
+		    what one is reading. Classic events, for their part, have none: their
+		    data are purely positional, and the name is then omitted rather than
+		    invented. */
 		for (const XmlNode* d : ed->descendants(L"Data")) {
 			Json o = Json::obj();
 			const std::wstring name = d->attribute(L"Name");
@@ -74,17 +74,17 @@ Json eventData(const XmlNode& root, std::vector<std::wstring>* brutes) {
 	}
 
 	if (const XmlNode* ud = root.child(L"UserData")) {
-		/*  Sous-arbre libre : on relève les feuilles porteuses de texte, en les
-		 *  préfixant de leur nom d'élément. Sans ce nom, « 0x32cfb » seul ne
-		 *  dirait pas qu'il s'agit d'un identifiant de session. */
+		/*  A free subtree: the leaves that carry text are read, prefixed by their
+		 *  element name. Without that name, "0x32cfb" on its own would not say
+		 *  that it is a session identifier. */
 		std::vector<const XmlNode*> pile{ ud };
 		while (!pile.empty()) {
 			const XmlNode* n = pile.back();
 			pile.pop_back();
 			if (n->children.empty()) {
-				// Meme forme que EventData : le nom de l'element FAIT office de
-				// nom de champ, au lieu d'etre colle a la valeur par un « = »
-				// qu'un consommateur devrait redecouper.
+				// Same form as EventData: the element's name SERVES as the field name,
+				// instead of being glued to the value by an "=" that a consumer
+				// would have to split again.
 				if (!n->text.empty()) {
 					Json o = Json::obj();
 					o.add(L"Name",  Json::str(n->name));
@@ -94,7 +94,7 @@ Json eventData(const XmlNode& root, std::vector<std::wstring>* brutes) {
 				}
 			}
 			else {
-				// Ordre du document : la pile est remplie à l'envers.
+				// Document order: the stack is filled the other way round.
 				for (size_t i = n->children.size(); i-- > 0;) pile.push_back(n->children[i].get());
 			}
 		}
@@ -110,8 +110,8 @@ Event::Event(const XmlNode& root, const std::wstring& canal,
 	evtSourceLog = string(fileName);
 	const XmlNode* sys = root.child(L"System");
 	if (!sys) {
-		// Enregistrement sans section System : on garde au moins son numéro,
-		// pour que le rapport ne le perde pas silencieusement.
+		// A record without a System section: at least its number is kept, so that the
+		// report does not lose it silently.
 		evtSystemEventRecordId = Json::num(id);
 		evtSystemChannel = string(canal);
 		evtEventData = eventData(root, &rawValues);
@@ -122,7 +122,7 @@ Event::Event(const XmlNode& root, const std::wstring& canal,
 		evtSystemProviderName = string(p->attribute(L"Name"));
 		evtSystemProviderGuid = string(p->attribute(L"Guid"));
 		guidPourMessage = p->attribute(L"Guid");
-		// Certains fournisseurs classiques ne portent que EventSourceName.
+		// Some classic providers carry only EventSourceName.
 		if (evtSystemProviderName.kind() == Json::Kind::Null)
 			evtSystemProviderName = string(p->attribute(L"EventSourceName"));
 	}
@@ -136,15 +136,15 @@ Event::Event(const XmlNode& root, const std::wstring& canal,
 	evtSystemOpcode  = count(sys->textOf(L"Opcode"));
 	evtSystemVersion = count(sys->textOf(L"Version"));
 	versionPourMessage = (uint8_t)wcstoul(sys->textOf(L"Version").c_str(), nullptr, 10);
-	// Mots clés : conservés en texte, tels qu'écrits dans le journal — c'est un
-	// champ de bits, dont la valeur numérique ne dit rien de plus.
+	// Keywords: kept as text, as written in the log — it is a bit field, whose
+	// numeric value says nothing more.
 	evtSystemKeywords = string(sys->textOf(L"Keywords"));
 
 	if (const XmlNode* t = sys->child(L"TimeCreated"))
 		evtSystemTimeCreated = string(t->attribute(L"SystemTime"));
 
-	// L'en-tête binaire porte le même numéro : il sert de recours, et il est
-	// toujours présent même quand le XML de l'événement ne l'écrit pas.
+	// The binary header carries the same number: it serves as a fallback, and it is
+	// always present even when the event's XML does not write it.
 	evtSystemEventRecordId = count(sys->textOf(L"EventRecordID"));
 	if (evtSystemEventRecordId.kind() == Json::Kind::Null)
 		evtSystemEventRecordId = Json::num(id);
@@ -203,9 +203,9 @@ HRESULT Events::getData() {
 		listFilesByExtension(directory, { L".evtx" });
 
 	if (logs.empty()) {
-		/* Aucun journal extrait. Ce n'est PAS « aucun événement » : c'est une
-		   extraction qui n'a pas eu lieu, et le rapport doit les distinguer. */
-		log(2, L"🔥Aucun journal .evtx extrait sous " + directory, ERROR_FILE_NOT_FOUND);
+		/* No log extracted. This is NOT "no event": it is an extraction that did not
+		   happen, and the report must tell the two apart. */
+		log(2, L"🔥No .evtx log extracted under " + directory, ERROR_FILE_NOT_FOUND);
 		return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 	}
 
@@ -228,34 +228,34 @@ HRESULT Events::getData() {
 			[&](const EvtxRecord& e) {
 				const std::unique_ptr<XmlNode> root = xmlParse(e.xml);
 				if (!root) {
-					/* Le XML est reconstruit par evtx.cpp : s'il n'est pas
-					   analysable, c'est le décodage qui a dérivé, pas le
-					   journal. On le signale sans arrêter la lecture. */
+					/* The XML is rebuilt by evtx.cpp: if it cannot be parsed, it is the
+					   decoding that went wrong, not the log. That is reported
+					   without stopping the reading. */
 					++unreadable;
-					log(3, L"🔈Evenement " + std::to_wstring(e.id)
-					       + L" : XML non analysable (" + canal + L")");
+					log(3, L"🔈Event " + std::to_wstring(e.id)
+					       + L": XML cannot be parsed (" + canal + L")");
 					return true;
 				}
 				Event ev(*root, canal, e.id, fileName);
-				/*  MESSAGE EN CLAIR. Reconstitué depuis les ressources du
-				    fournisseur, ce que seule l'API savait faire jusqu'ici. Le
-				    fichier de ressources est extrait à la demande, une fois par
-				    fournisseur (cf. event_messages.h). */
+				/*  PLAIN-TEXT MESSAGE. Rebuilt from the provider's resources, which
+				    only the API could do until now. The resource file is
+				    extracted on demand, once per provider (see
+				    event_messages.h). */
 				if (!ev.guidPourMessage.empty() && ev.idPourMessage != 0) {
 					const std::wstring phrase = EventMessage(
 						ev.guidPourMessage, ev.idPourMessage, ev.versionPourMessage,
 						ev.rawValues);
 					if (!phrase.empty()) ev.evtEventMessage = Json::str(phrase);
 				}
-				/*  Un enregistrement dont la section System est incomplete est le
-				    signe d'un decodage qui a devie sur CE record. Le XML brut part
-				    au journal : sans lui, l'evenement se lit comme pauvre en
-				    donnees alors qu'il est mal lu — et le defaut reste
-				    indiagnosticable. */
+				/*  A record whose System section is incomplete is the sign of a
+				    decoding that went wrong on THAT record. The raw XML goes to
+				    the log: without it, the event reads as poor in data whereas
+				    it is badly read — and the defect stays impossible to
+				    diagnose. */
 				if (ev.evtSystemProviderName.kind() == Json::Kind::Null
 				    || ev.evtSystemTimeCreated.kind() == Json::Kind::Null) {
 					++incomplete;
-					log(2, L"🔥Evenement " + std::to_wstring(e.id) + L" de "
+					log(2, L"🔥Event " + std::to_wstring(e.id) + L" de "
 					     + fileName + L" : section System incomplete");
 					log(3, L"🔈XML : " + e.xml.substr(0, 2000));
 				}
@@ -267,34 +267,34 @@ HRESULT Events::getData() {
 		unreadable += summary.unreadable;
 		if (FAILED(hr)) {
 			++unreadableLogs;
-			log(2, L"🔥Journal illisible : " + fileName, hr);
+			log(2, L"🔥Log unreadable: " + fileName, hr);
 		}
 		else ++files;
-		// Le diagnostic par journal permet de distinguer un canal vide d'un
-		// canal non lu — deux situations que « 0 événement » confond.
+		// The per-log diagnosis makes it possible to tell an empty channel from a
+		// channel that was not read — two situations that "0 events" confuses.
 		log(2, L"❇️" + canal + L" : " + summary.diagnostic);
 	}
 	printProgressEnd();
 
 	const HRESULT closing = output.close();
-	log(2, L"❇️Evenements ecrits : " + std::to_wstring(read)
+	log(2, L"❇️Events written: " + std::to_wstring(read)
 	       + L" (" + std::to_wstring(files) + L"/"
-	       + std::to_wstring(logs.size()) + L" journaux)");
+	       + std::to_wstring(logs.size()) + L" logs)");
 	if (unreadable)
-		log(2, L"🔥Enregistrements ecartes : " + std::to_wstring(unreadable));
+		log(2, L"🔥Records discarded: " + std::to_wstring(unreadable));
 	if (incomplete)
-		log(2, L"🔥Enregistrements a section System incomplete : "
+		log(2, L"🔥Records with an incomplete System section: "
 		     + std::to_wstring(incomplete));
 
 	{
 		size_t nbF = 0, failuresF = 0;
 		unsigned long long resolved = 0, bytes = 0;
 		MessagesSummary(&nbF, &failuresF, &resolved, &bytes);
-		log(2, L"❇️Messages resolus : " + std::to_wstring(resolved) + L" sur "
-		     + std::to_wstring(read) + L" evenement(s), "
-		     + std::to_wstring(nbF) + L" fournisseur(s) consulte(s), "
-		     + std::to_wstring(failuresF) + L" sans ressources, "
-		     + std::to_wstring(bytes / 1024 / 1024) + L" Mio extraits");
+		log(2, L"❇️Messages resolved: " + std::to_wstring(resolved) + L" sur "
+		     + std::to_wstring(read) + L" event(s), "
+		     + std::to_wstring(nbF) + L" provider(s) consulted, "
+		     + std::to_wstring(failuresF) + L" without resources, "
+		     + std::to_wstring(bytes / 1024 / 1024) + L" MiB extracted");
 		MessagesRelease();
 	}
 
