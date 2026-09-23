@@ -1,4 +1,24 @@
-﻿#pragma once
+﻿/*! \file
+ *  \brief Custom jump lists: the entries an application pins itself.
+ *
+ *  WHAT THE ARTEFACT PROVES. Beside the automatic list, an application may
+ *  declare its OWN task-bar entries, grouped in named categories — pinned
+ *  files, recent projects, its own commands. The categories are the
+ *  application's own words, and a pinned entry stays until the user removes it:
+ *  it therefore documents a lasting interest in a document, where the automatic
+ *  list only keeps the most recent ones.
+ *
+ *  WHERE IT IS READ.
+ *  `%AppData%\\Microsoft\\Windows\\Recent\\CustomDestinations\\<AppID>.customDestinations-ms`.
+ *  Unlike the automatic lists, the file is not an OLE document: it is a
+ *  concatenation of complete .lnk shortcuts, each parsed by recent_docs.h.
+ *
+ *  Documentation:
+ *   - https://binaryforay.blogspot.com/2016/02/jump-lists-in-depth-understand-format.html
+ *   - https://github.com/libyal/dtformats/blob/main/documentation/Jump%20lists%20format.asciidoc
+ *   - https://github.com/EricZimmerman/JumpList/blob/master/JumpList/Resources/AppIDs.txt
+ */
+#pragma once
 #include <memory>
 
 #include <iostream>
@@ -13,105 +33,94 @@
 #include "idList.h"
 #include "recent_docs.h"
 
-////////////////////////////////////////////////////
-// Documentation : https://binaryforay.blogspot.com/2016/02/jump-lists-in-depth-understand-format.html
-// Documentation : https://github.com/libyal/dtformats/blob/main/documentation/Jump%20lists%20format.asciidoc
-// Documentation : https://github.com/EricZimmerman/JumpList/blob/master/JumpList/Resources/AppIDs.txt
-///////////////////////////////////////////////////
-
-/*! Représente un objet représentant un objet Custom Destination Category
-*/
+/*! One category of a custom jump list, as the application names it. */
 struct CustomDestinationCategory {
-	unsigned short int nameSize = 0; //!< taille du nom de la catégorie
-	std::wstring name = L""; //!< nom de la catégorie
-	unsigned int nbentries = 0; //!< nombre d'entrées dans la catégorie
-	std::vector<RecentDoc> recentDocs; //!< tableau des recentDoc
+	unsigned short int nameSize = 0; //!< length of the category's name, as declared
+	std::wstring name = L"";    //!< name of the category, in the application's own words
+	unsigned int nbentries = 0; //!< number of entries the category declares
+	std::vector<RecentDoc> recentDocs; //!< its entries, each a complete shortcut
 
-	/*! Constructeur par défaut
-	*/
+	//! Builds an empty category.
 	CustomDestinationCategory() {};
 
-	/*! constructeur
-	* @param buffer données de la catégorie à analyser
-	* @param buffersize taille du tampon
-	* @param _path chemin du fichier Custom Destinations
-	* @param _sid SID de l'utilisateur propriétaire du raccourci
+	/*! Reads a category from the file's bytes.
+	* @param buffer the category's bytes.
+	* @param buffersize size of that buffer, in bytes.
+	* @param _path path of the .customDestinations-ms file.
+	* @param _sid SID of the user it belongs to.
 	*/
 	CustomDestinationCategory(LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid);
 
-	/*! Destructeur virtuel.
-	* `toJson()` est virtuelle : sans destructeur virtuel, détruire l'objet par
-	* un pointeur de base serait un comportement indéfini. Il n'existe pas
-	* encore de classe dérivée, mais la classe est déclarée polymorphe et doit
-	* l'être complètement.
+	/*! Virtual destructor.
+	* `toJson()` being virtual, destroying the object through a base pointer
+	* would be undefined behaviour without it. No derived class exists yet, but
+	* the class is declared polymorphic and must be so completely.
 	*/
 	virtual ~CustomDestinationCategory() = default;
 
+	/*! Converts the category to JSON, entries included.
+	 *  @return its JSON object. */
 	virtual Json toJson();
 
+	//! Releases the memory held by the category.
 	void clear();
 };
 
-/*! Représente un objet représentant un objet Custom Destination
-*/
+/*! One custom jump list: an application, and the entries it pinned. */
 struct CustomDestination {
-	std::wstring Sid = L""; //!< SID de l'utilisateur propriétaire du custom Destination
-	std::wstring SidName = L""; //!< nom de l'utilisateur propriétaire du custom Destination
-	std::wstring application = L"";//!< nom de l'application liée au Custom Destination
-	std::wstring path = L"";//!< Chemin du custom Destination dans la snapshot
-	std::wstring pathOriginal = L"";//!< Chemin du custom Destination sur le disque
-	unsigned int typeInt = 0;//!< type de custom Destination en entier
-	std::wstring type = L"";//!< nom du type de Custom Destination
-	/*! Catégorie du Custom Destination, absente si le fichier ne porte pas de lnk.
+	std::wstring Sid = L"";     //!< SID of the user the jump list belongs to
+	std::wstring SidName = L"";	//!< name of that user
+	std::wstring application = L"";//!< the application, resolved from the AppID when known
+	std::wstring path = L"";       //!< path of the file in the working directory
+	std::wstring pathOriginal = L"";//!< path it was read from on the examined volume
+	unsigned int typeInt = 0;//!< kind of list, as the file numbers it
+	std::wstring type = L"";	//!< that kind spelled out
+	/*! Category of the jump list, absent if the file carries no shortcut.
 	*
-	* POURQUOI UN `unique_ptr`. Le pointeur était nu et n'était libéré que par
-	* `CustomDestination::clear()` — que rien n'appelait : `JumplistCustoms::clear()`
-	* vide le vecteur, ce qui détruit les éléments sans passer par cette méthode.
-	* Chaque Custom Destination fuyait donc sa catégorie entière, avec son
-	* vecteur de `RecentDoc` et les listes d'ID qu'ils contiennent. La propriété
-	* est désormais portée par le type. */
+	* WHY A `unique_ptr`. The pointer was raw, and was released only by
+	* `CustomDestination::clear()` — which nothing called: `JumplistCustoms::clear()`
+	* empties the vector, which destroys the elements without going through that
+	* method. Every Custom Destination therefore leaked its whole category, with
+	* its vector of `RecentDoc` and the ID lists they hold. Ownership is now
+	* carried by the type. */
 	std::unique_ptr<CustomDestinationCategory> categorie;
-	FILETIME created = { 0 }; //!< date de création du fichier
-	FILETIME createdUtc = { 0 }; //!< date de création du fichier au format utc
-	FILETIME modified = { 0 };//!< date de modification  du fichier
-	FILETIME modifiedUtc = { 0 };//!< date de modification du fichier au format utc
-	FILETIME accessed = { 0 };//!< date d'accès du fichier
-	FILETIME accessedUtc = { 0 };//!< date d'accès du fichier au format utc
+	FILETIME created = { 0 };     //!< creation of the jump list FILE, local time
+	FILETIME createdUtc = { 0 };  //!< the same instant in UTC
+	FILETIME modified = { 0 };    //!< last modification of that file, local time
+	FILETIME modifiedUtc = { 0 };	//!< the same instant in UTC
+	FILETIME accessed = { 0 };    //!< last access to that file, local time
+	FILETIME accessedUtc = { 0 };	//!< the same instant in UTC
 
-	/*! constructeur par défaut
-	*/
+	//! Builds an empty jump list.
 	CustomDestination() {};
 
-	/*! constructeur
-	* @param _path chemin du fichier Custom Destinations
-	* @param _sid est le SID de l'utilisateur propriétaire du LNK
-
+	/*! Reads a jump list, its category and every shortcut in it.
+	* @param _path path of the .customDestinations-ms file.
+	* @param _sid SID of the user it belongs to.
 	*/
 	CustomDestination(std::filesystem::path _path, std::wstring _sid);
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
-	*/
+	/*! Converts the jump list to JSON, category included.
+	 *  @return its JSON object. */
 	Json toJson();
 
-	/* liberation mémoire */
+	//! Releases the memory held by the jump list.
 	void clear();
 };
 
-/*! Représente un objet représentant un objet Jumplist contenant les Custom Destinations
-*/
+/*! All the custom jump lists of every user of the machine. */
 struct JumplistCustoms {
-	std::vector<CustomDestination> customDestinations; //!< tableau contenant les objets
+	std::vector<CustomDestination> customDestinations; //!< the jump lists read
 	
 
-	/*! Fonction permettant de parser les objets
-	*/
+	/*! Lists each user's CustomDestinations folder and reads every file.
+	 *  @return S_OK, or the failure of the last read attempted. */
 	HRESULT getData();
 
-	/*! conversion de l'objet au format json
-	*/
+	/*! Writes `jumplistCustomDestinations.json` into the output directory.
+	 *  @return the result of the write. */
 	HRESULT toJson();
 
-	/* liberation mémoire */
+	//! Releases the memory held by the jump lists.
 	void clear();
 };

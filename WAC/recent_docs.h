@@ -1,28 +1,28 @@
-﻿#pragma once
-
-/*  recent_docs.h — DOCUMENTS RÉCENTS : les raccourcis .lnk de `\Recent`.
+﻿/*! \file
+ *  \brief Recent documents: the .lnk shortcuts of `\\Recent`.
  *
- *  CE QUE L'ARTEFACT PROUVE. Windows crée un raccourci dans
- *  `%AppData%\Microsoft\Windows\Recent` chaque fois qu'un document est ouvert.
- *  Le raccourci survit à la suppression du document et conserve le chemin
- *  d'origine, la taille et les horodatages de la CIBLE au moment de l'ouverture :
- *  il atteste donc qu'un fichier a existé et a été ouvert, même s'il n'est plus
- *  sur le disque — y compris sur un volume amovible depuis longtemps débranché.
+ *  WHAT THE ARTEFACT PROVES. Windows creates a shortcut in
+ *  `%AppData%\\Microsoft\\Windows\\Recent` every time a document is opened. The
+ *  shortcut outlives the document's deletion and keeps the original path, the
+ *  size and the timestamps of the TARGET as they were when it was opened: it
+ *  therefore attests that a file existed and was opened, even if it is no
+ *  longer on the disk — including on a removable volume long since unplugged.
  *
- *  DEUX JEUX D'HORODATAGES, À NE PAS CONFONDRE
- *    - `target*` : dates de la cible, recopiées dans l'en-tête du .lnk ;
- *    - `source*` : dates du fichier .lnk lui-même, c'est-à-dire l'instant de
- *      l'ouverture.
- *  Les premières datent le document, les secondes l'ACTIVITÉ de l'utilisateur.
+ *  TWO SETS OF TIMESTAMPS, NOT TO BE CONFUSED
+ *    - `target*`: the target's dates, copied into the .lnk header;
+ *    - `source*`: the dates of the .lnk file itself, that is the instant of the
+ *      opening.
+ *  The first date the document, the second date the user's ACTIVITY.
  *
- *  PIÈGE HORAIRE. Les trois horodatages de l'en-tête .lnk (offsets 28, 36, 44)
- *  sont en UTC — MS-SHLLINK —, malgré des noms de champs qui ne le disent
- *  pas. Les traiter comme des heures locales décalait les dates de la valeur du
- *  fuseau, sans qu'aucun contrôle de format ne puisse le voir.
+ *  A TIME TRAP. The three timestamps of the .lnk header (offsets 28, 36, 44)
+ *  are in UTC — MS-SHLLINK — despite field names that do not say so. Treating
+ *  them as local times shifted the dates by the time-zone offset, where no
+ *  format check could see it.
  *
- *  Le contenu structuré du raccourci (liste d'ID, blocs d'extension, propriétés)
- *  est analysé par `idList.h`.
+ *  The structured content of the shortcut (ID list, extension blocks,
+ *  properties) is parsed by `idList.h`.
  */
+#pragma once
 
 #include "binaires.h"
 #include <iostream>
@@ -37,108 +37,103 @@
 #include "idList.h"
 #include "quickdigest5.h"
 
-/* structure représentant un document récent
-*/
+/*! One recent document: a .lnk shortcut, and the file it points to. */
 struct RecentDoc {
 public:
-	// Contient des unique_ptr (via IdList) : type deplacable, non copiable.
-	// La copie est interdite explicitement pour obtenir une erreur claire
-	// au site fautif plutot qu'une erreur de template.
+	// Holds unique_ptr (through IdList): movable type, not copyable.
+	// Copying is forbidden explicitly, to get a clear error at the offending
+	// site rather than a template error.
 	RecentDoc(const RecentDoc&) = delete;
 	RecentDoc& operator=(const RecentDoc&) = delete;
 	RecentDoc(RecentDoc&&) = default;
 	RecentDoc& operator=(RecentDoc&&) = default;
 
-	std::wstring Sid = L""; //!< SID de l'utilisateur propriétaire de l'objet
-	std::wstring path_original = L"";//!< chemin d'accès à l'objet sur le disque
-	std::wstring path = L"";//!< chemin d'accès à l'objet dans le snapshot
-	std::wstring md5Source=L""; //!< hash md5 du fichier source
-	std::wstring target = L"";//!< chemin pour accéder à l'objet d'origine
-	EmpreinteBinaire empreinteCible; //!< empreintes du fichier cible (--binary), lu en brut
-	std::wstring description = L""; //!< description du recentDoc
-	std::wstring relativePath = L"";//!< chemin relatif d'accès au fichier d'origine
-	std::wstring workingDirectory = L"";//!< repertoire contenant le fichier d'origine
-	std::wstring arguments = L"";//!< arguments du fichier d'origine 
-	std::wstring iconLocation = L"";//!< chemin de l’icône représentatif du type de fichier si différent des icônes standards
-	unsigned int fileSize = 0;//!< taille du fichier d'origine
-	unsigned int iconIndex = 0;//! index de l’icône
-	std::wstring commandOption = L"";//!< option d'ouverture du fichier d'origine
-	GUID guid = { 0 }; //!< 
-	FILETIME sourceCreated = { 0 }; //!< date de création du recentdoc
-	FILETIME sourceCreatedUtc = { 0 };//!< date de création du recentdoc au format UTC
-	FILETIME sourceModified = { 0 };//!< date de modification du recentdoc
-	FILETIME sourceModifiedUtc = { 0 };//!< date de modification du recentdoc au format UTC
-	FILETIME sourceAccessed = { 0 };//!< date d'accès du recentdoc
-	FILETIME sourceAccessedUtc = { 0 };//!< date d'accès du recentdoc au format UTC
-	FILETIME targetCreated = { 0 };//!< date de création du fichier d'origine
-	FILETIME targetCreatedUtc = { 0 };//!< date de création du fichier d'origine au format UTC
-	FILETIME targetModified = { 0 };//!< date de modification du fichier d'origine
-	FILETIME targetModifiedUtc = { 0 };//!< date de modification du fichier d'origine au format UTC
-	FILETIME targetAccessed = { 0 };//!< date d'accès au fichier d'origine
-	FILETIME targetAccessedUtc = { 0 };//!< date d'accès au fichier d'origine au format UTC
-	LinkFlags flags = { 0 };//!< attributs du recentDoc
-	FileAttributes attributes = { 0 };//!< attributs du fichier d'origine
-	std::wstring volumeDriveType = L""; //!< type de volume de disque
-	std::wstring volumeSerial = L"";//!< numéro de série du volume
-	std::wstring volumeLabel = L"";//!< label du volume
-	std::wstring netName = L"";//!< nom du réseau
-	std::wstring netDeviceName = L"";//!< nom du périphérique réseau
-	std::wstring netProviderType = L"";//!< type de provider de réseau
-	std::vector<IdList> idLists;//!< tableau contenant des Idlist 
+	std::wstring Sid = L"";      //!< SID of the user whose Recent folder holds it
+	std::wstring path_original = L"";//!< path of the .lnk file on the examined volume
+	std::wstring path = L"";     //!< path of the .lnk file in the working directory
+	std::wstring md5Source=L"";  //!< MD5 of the .lnk file itself
+	std::wstring target = L"";   //!< path of the document the shortcut points to
+	EmpreinteBinaire empreinteCible; //!< fingerprints of that target, if `--binary` was given
+	std::wstring description = L""; //!< description carried by the shortcut
+	std::wstring relativePath = L"";//!< path of the target, relative to the shortcut
+	std::wstring workingDirectory = L"";//!< working directory declared for the target
+	std::wstring arguments = L"";//!< command-line arguments passed to the target
+	std::wstring iconLocation = L"";//!< file the shortcut's icon is taken from
+	unsigned int fileSize = 0;   //!< size of the target, as the .lnk header records it
+	unsigned int iconIndex = 0;  //!< index of the icon in that file
+	std::wstring commandOption = L"";//!< how the target is to be shown when opened
+	GUID guid = { 0 };           //!< GUID of the shortcut, when it carries one
+	FILETIME sourceCreated = { 0 };     //!< creation of the .lnk FILE, local time
+	FILETIME sourceCreatedUtc = { 0 };  //!< the same instant in UTC
+	FILETIME sourceModified = { 0 };    //!< last modification of the .lnk file, local time
+	FILETIME sourceModifiedUtc = { 0 };	//!< the same instant in UTC
+	FILETIME sourceAccessed = { 0 };    //!< last access to the .lnk file, local time
+	FILETIME sourceAccessedUtc = { 0 };	//!< the same instant in UTC
+	FILETIME targetCreated = { 0 };     //!< creation of the TARGET, local time
+	FILETIME targetCreatedUtc = { 0 };  //!< the same instant, as the header stores it
+	FILETIME targetModified = { 0 };    //!< last modification of the target, local time
+	FILETIME targetModifiedUtc = { 0 };	//!< the same instant, as the header stores it
+	FILETIME targetAccessed = { 0 };    //!< last access to the target, local time
+	FILETIME targetAccessedUtc = { 0 };	//!< the same instant, as the header stores it
+	LinkFlags flags = { 0 };            //!< flags of the shortcut: which parts it carries
+	FileAttributes attributes = { 0 };  //!< attributes of the target file
+	std::wstring volumeDriveType = L""; //!< kind of volume the target was on
+	std::wstring volumeSerial = L"";    //!< serial number of that volume
+	std::wstring volumeLabel = L"";     //!< label of that volume
+	std::wstring netName = L"";         //!< network share the target was on
+	std::wstring netDeviceName = L"";   //!< device name that share was mapped to
+	std::wstring netProviderType = L"";	//!< kind of network provider
+	std::vector<IdList> idLists;        //!< the target's PIDL, item by item
 
-	/*! Analyse un fichier LNK.
+	/*! Parses a LNK file.
 	*
-	* La TAILLE est indispensable et manquait : sans elle, aucune lecture ne
-	* pouvait être bornée, et les champs StringData — dont la longueur est
-	* annoncée dans le fichier lui-même — étaient lus jusqu'au premier zéro
-	* rencontré, donc potentiellement hors du tampon sur un raccourci tronqué ou
-	* forgé.
+	* The SIZE is indispensable, and was missing: without it no read could be
+	* bounded, and the StringData fields — whose length is announced in the file
+	* itself — were read up to the first zero met, hence possibly past the end of
+	* the buffer on a truncated or forged shortcut.
 	*
-	* @param buffer contient les données à parser
-	* @param taille taille du tampon, en octets
+	* @param buffer the bytes of the shortcut.
+	* @param taille size of that buffer, in bytes.
 	*/
 	void parseLNK(LPBYTE buffer, size_t taille);
 
 
-	/*! constructeur à partir d'un fichier
-	* @param _path contient le chemin vers le fichier à parser
-	* @param _sid contient le SID de l'utilisateur propriétaire du fichier
-
+	/*! Reads a shortcut from a file.
+	* @param _path path of the .lnk file to parse.
+	* @param _sid SID of the user whose Recent folder holds it.
 	*/
 	RecentDoc(std::filesystem::path _path, std::wstring _sid);
 
-	/*! constructeur à partir d'un buffer
-	* @param buffer contient les données à parser
-	* @param size taille du tampon, en octets
-	* @param _path contient le chemin vers le fichier contenant le buffer
-	* @param _sid contient le SID de l'utilisateur propriétaire de la donnée
-
+	/*! Reads a shortcut already in memory — a jump list holds its shortcuts
+	* inside a single file.
+	* @param buffer the bytes of the shortcut.
+	* @param size size of that buffer, in bytes.
+	* @param _path path of the file the buffer comes from.
+	* @param _sid SID of the user that file belongs to.
 	*/
 	RecentDoc(LPBYTE buffer, size_t size, std::wstring _path, std::wstring _sid);
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
-	*/
+	/*! Converts the shortcut to JSON, shell items included.
+	 *  @return its JSON object. */
 	Json toJson();
 
-	/*liberation mémoire */
+	//! Releases the memory held by the shortcut.
 	void clear();
 };
 
-/*! structure contenant l'ensemble des objets
-*/
+/*! All the recent documents of every user of the machine. */
 struct RecentDocs {
-	std::vector<RecentDoc> recentdocs; //!< tableau contenant l'ensemble des objets
+	std::vector<RecentDoc> recentdocs; //!< the shortcuts, in the order they were listed
 
-	/*! Fonction permettant de parser les objets
-	*/
+	/*! Lists each user's Recent folder and parses every .lnk file in it.
+	 *  @return S_OK, or the failure of the last read attempted. */
 	HRESULT getData();
 
-	/*! conversion de l'objet au format json
-	*/
+	/*! Writes `recentdocs.json` into the output directory.
+	 *  @return the result of the write. */
 	HRESULT toJson();
 
-	/*liberation mémoire */
+	//! Releases the memory held by the shortcuts.
 	void clear();
 
 };
