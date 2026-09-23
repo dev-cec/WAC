@@ -163,37 +163,57 @@ void printProgressStep(const std::wstring& artefact, unsigned long long done,
 void printError(std::wstring errorText) {
 	// As printSuccess does: restores the step label before writing the error.
 	printProgressEnd();
+	/* The line is ENDED: without the newline the next step label was printed
+	   right after the error, on the same line. And WriteConsoleW writes nothing
+	   when the output is redirected to a file, so the error was missing from
+	   the redirected log altogether: the text then goes through stdout, in
+	   UTF-8. */
+	errorText += L"\n";
 	SetConsoleTextAttribute(conf.hConsole, 12);
-	WriteConsoleW(conf.hConsole, errorText.c_str(), errorText.length(), NULL, NULL);
+	if (outputIsConsole()) {
+		WriteConsoleW(conf.hConsole, errorText.c_str(), (DWORD)errorText.length(), NULL, NULL);
+	}
+	else {
+		const int n = WideCharToMultiByte(CP_UTF8, 0, errorText.c_str(), (int)errorText.length(),
+		                                  nullptr, 0, nullptr, nullptr);
+		std::string utf8(n > 0 ? n : 0, '\0');
+		if (n > 0) WideCharToMultiByte(CP_UTF8, 0, errorText.c_str(), (int)errorText.length(),
+		                               &utf8[0], n, nullptr, nullptr);
+		fwrite(utf8.data(), 1, utf8.size(), stdout);
+		fflush(stdout);
+	}
 	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
 void printError(HRESULT  hresult) {
-	
-	std::wstring errorText = getErrorMessage(hresult).data();
-	printError(errorText);
+	printError(L"0x" + to_hex(hresult) + L" " + getErrorMessage(hresult));
 }
 
 std::wstring getErrorMessage(HRESULT hresult)
 {
-	//used to log, so no log to this call function
-	LPWSTR errorText = NULL;
-	FormatMessageW(
-		FORMAT_MESSAGE_FROM_SYSTEM
-		| FORMAT_MESSAGE_ALLOCATE_BUFFER
-		| FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL,
-		hresult,
-		LANG_SYSTEM_DEFAULT,
-		//MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), 
-		(LPWSTR)&errorText,
-		0,
-		NULL);
-	std::wstring result(errorText);
-	result.erase(std::remove(result.begin(), result.end(), '\r'), result.cend()); // no newline
-	result.erase(std::remove(result.begin(), result.end(), '\n'), result.cend()); // no newline
-
-	return result;
+	// used by log(), so it must not log itself
+	/* The message is asked in ENGLISH first, like the rest of WAC's output; a
+	   system without the English messages falls back on its own language.
+	   FormatMessageW can fail (a code without a message): the result was then
+	   built from a null pointer, which is undefined behaviour. The buffer the
+	   system allocates is released, which it never was. */
+	const DWORD languages[2] = { MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), 0 };
+	for (DWORD language : languages) {
+		LPWSTR errorText = NULL;
+		const DWORD n = FormatMessageW(
+			FORMAT_MESSAGE_FROM_SYSTEM
+			| FORMAT_MESSAGE_ALLOCATE_BUFFER
+			| FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL, hresult, language, (LPWSTR)&errorText, 0, NULL);
+		if (n == 0 || errorText == NULL) continue;
+		std::wstring result(errorText, n);
+		LocalFree(errorText);
+		result.erase(std::remove(result.begin(), result.end(), '\r'), result.cend()); // no newline
+		result.erase(std::remove(result.begin(), result.end(), '\n'), result.cend()); // no newline
+		while (!result.empty() && result.back() == L' ') result.pop_back();
+		return result;
+	}
+	return L"(no system message for this code)";
 }
 
 
