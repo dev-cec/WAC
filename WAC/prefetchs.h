@@ -1,4 +1,26 @@
-﻿#pragma once
+﻿/*! \file
+ *  \brief Prefetch: which executables ran, how many times, and what they loaded.
+ *
+ *  WHAT IT SHOWS. To speed up the next start, Windows records for each
+ *  executable the files it loaded during its first ten seconds, the number of
+ *  runs, and the last eight run times. It is the strongest execution proof on a
+ *  workstation: a file exists only because the program RAN. And the list of
+ *  loaded files says what it did — the DLLs it pulled in, the documents it
+ *  opened, the volumes it reached.
+ *
+ *  WHERE IT IS READ. `C:\Windows\Prefetch\<NAME>-<HASH>.pf`, the hash being
+ *  computed over the executable's path: two copies of the same binary in two
+ *  directories therefore give two files, and a same name with two different
+ *  hashes means two distinct paths. The content is compressed (MAM/XPRESS
+ *  Huffman) since Windows 8.
+ *
+ *  WHAT IT DOES NOT SAY. Which user ran the program — Prefetch is machine-wide.
+ *  And the service is disabled on some systems (SSD, server, group policy):
+ *  the absence of a file is then no proof of non-execution.
+ *
+ *  Format: https://github.com/libyal/libscca/blob/main/documentation/Windows%20Prefetch%20File%20(PF)%20format.asciidoc
+ */
+#pragma once
 
 #include "binaires.h"
 #include <iostream>
@@ -15,146 +37,145 @@
 
 
 
-/*structure représentant les informations liée à la MFT
-*/
+/*! A file reference in the $MFT: what identifies a file on the volume
+ *  independently of its name. */
 struct MFTInformation {
-	unsigned int entryIndex = 0; //!< numéro d'entrée dans la MFT
-	unsigned int sequenceNumber = 0;//!< numéro de séquence dans la MFT
+	unsigned int entryIndex = 0;     //!< record number in the $MFT
+	unsigned int sequenceNumber = 0; //!< sequence number, which a reuse of the record increments
 
-	/*! constructeur par défaut
-	*/
+	//! Builds an empty reference.
 	MFTInformation() {}
 
-	/*!Constructeur
-	* @param data contient un pointeur sur les données à parser
-	*/
+	/*! Reads a reference from a Prefetch file.
+	 *  @param data the six bytes of the reference. */
 	MFTInformation(LPBYTE data);
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
-	*/
+	/*! Converts the reference to JSON.
+	 *  @return its JSON object. */
 	Json toJson();
 
-	/* liberation mémoire */
+	//! Releases the memory held by the reference.
 	void clear();
 };
 
+/*! One directory the executable reached, as listed by the Prefetch file. */
 struct DirStrings {
-	std::wstring dir = L"";//!< original string presents in prefetch
-	std::wstring fullPath = L""; //!< full path on hard drive
+	std::wstring dir = L"";      //!< the string as the Prefetch file holds it, in NT form
+	std::wstring fullPath = L""; //!< the same path with its drive letter
 
+	/*! Converts the directory to JSON.
+	 *  @return its JSON object. */
 	Json toJson();
 };
 
+/*! One file the executable loaded during its first ten seconds. */
 struct Filename {
-	std::wstring filename = L"";//!< original string presents in prefetch
-	std::wstring fullPath = L""; //!< full path on hard drive
-	EmpreinteBinaire empreinte; //!< empreintes du fichier chargé (--binary)
-	/*! Référence $MFT du fichier chargé, lue dans le tableau des métriques.
+	std::wstring filename = L"";//!< the string as the Prefetch file holds it, in NT form
+	std::wstring fullPath = L""; //!< the same path with its drive letter
+	EmpreinteBinaire empreinte; //!< fingerprints of that file, if `--binary` was given
+	/*! $MFT reference of the loaded file, read from the metrics array.
 	*
-	*  Elle identifie le fichier sur le volume INDÉPENDAMMENT de son nom : un
-	*  exécutable renommé ou supprimé depuis se retrouve par son numéro
-	*  d'enregistrement, ce que le chemin seul ne permet pas. Nulle quand le
-	*  tableau des métriques ne la donne pas ou que l'appariement avec le nom
-	*  n'est pas sûr — mieux vaut pas de référence qu'une référence attribuée au
-	*  mauvais fichier.
+	*  It identifies the file on the volume INDEPENDENTLY of its name: an
+	*  executable renamed or deleted since is found again by its record number,
+	*  which the path alone does not allow. Null when the metrics array does not
+	*  give it, or when the match with the name is not certain — no reference is
+	*  better than a reference attributed to the wrong file.
 	*/
 	MFTInformation reference;
-	bool referenceConnue = false;   //!< vrai si `reference` a été relevée
+	bool referenceConnue = false;   //!< true if `reference` was read
 
+	/*! Converts the loaded file to JSON.
+	 *  @return its JSON object. */
 	Json toJson();
 };
 
+/*! One volume the executable reached, as described by the Prefetch file. */
 struct VolumeInfo { 
-	FILETIME creationTime = { 0 }; //!< date de création
-	FILETIME creationTimeUtc = { 0 };//!< date de création au format UTC
-	std::wstring serialNumber = L""; //!< numéro de série du volume
-	std::wstring mountPoint = L""; //!< lettre du point de montage du volume
-	std::wstring deviceName = L""; //!< nom du périphérique
-	std::vector<DirStrings> dirStrings; //!< tableau de strings liées au volume
-	std::vector<MFTInformation> fileReferences; //!< inutile pour l'investigation numérique
+	FILETIME creationTime = { 0 };    //!< creation of the volume, suspect's local time
+	FILETIME creationTimeUtc = { 0 }; //!< the same instant in UTC
+	std::wstring serialNumber = L""; //!< serial number of the volume
+	std::wstring mountPoint = L"";   //!< drive letter it was mounted on
+	std::wstring deviceName = L"";   //!< device name, in NT form
+	std::vector<DirStrings> dirStrings; //!< the directories reached on this volume
+	std::vector<MFTInformation> fileReferences; //!< references of the files loaded from
+	                                 //!< this volume, kept for completeness
 
-	//! Constructeur par défaut
+	//! Builds an empty volume.
 	VolumeInfo() {}
 
-	/*! Constructeur
-	* @param data données du bloc de volume à analyser
-	* @param indice rang du volume dans le fichier Prefetch
-	*/
+	/*! Reads a volume block from a Prefetch file.
+	 *  @param data the block's bytes.
+	 *  @param indice rank of the volume in the Prefetch file. */
 	VolumeInfo(LPBYTE data, int indice);
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
-	*/
+	/*! Converts the volume to JSON.
+	 *  @return its JSON object. */
 	Json toJson();
 
-	/* liberation mémoire */
+	//! Releases the memory held by the volume.
 	void clear();
 };
 
-/*! structure représentant un prefecth windows
-* documentation : https://github.com/libyal/libscca/blob/main/documentation/Windows%20Prefetch%20File%20(PF)%20format.asciidoc
-*/
+/*! One Prefetch file: an executable that ran, and what it loaded. */
 struct Prefetch {
 public:
-	std::wstring path = L""; //!< chemin du prefetch dans le mountpoint
-	std::wstring pathOriginal = L""; //!< chemin du prefetch sur le disque
+	std::wstring path = L"";         //!< path of the .pf file in the working directory
+	std::wstring pathOriginal = L"";	//!< path it was read from on the examined volume
 	//HEADER
-	std::wstring filename = L"";//!< nom du fichier
-	std::wstring fullPath = L"";//!< full path du process
-	EmpreinteBinaire empreinte; //!< empreintes de l'exécutable (--binary)
-	int signature = 0; //!< signature du prefetch
-	int version = 0; //!< version du prefetch
-	int size = 0; //!< taille du prefetch
+	std::wstring filename = L"";//!< name of the executable, as the .pf file names it
+	std::wstring fullPath = L"";//!< full path of the executable, once resolved
+	EmpreinteBinaire empreinte; //!< fingerprints of that executable, if `--binary` was given
+	int signature = 0; //!< signature of the .pf file, which identifies its format
+	int version = 0;   //!< format version, which follows the Windows version
+	int size = 0;      //!< size the .pf file declares
 	// FILE INFORMATION
-	FILETIME created = { 0 }; //!< date de création du fichier
-	FILETIME createdUtc = { 0 }; //!< date de création du fichier au format utc
-	FILETIME modified = { 0 };//!< date de modification  du fichier
-	FILETIME modifiedUtc = { 0 };//!< date de modification du fichier au format utc
-	FILETIME accessed = { 0 };//!< date d'accès du fichier
-	FILETIME accessedUtc = { 0 };//!< date d'accès du fichier au format utc
-	std::vector<FILETIME> last_runs; //!< liste des dates des dernières executions
-	std::vector<FILETIME> last_runsUtc; //!< liste des dates des dernières executions au format UTC
-	int run_count = 0; //!< nombre d’exécutions
-	std::wstring hash_string = L"";//!< hash du chemin contenant le prefetch
+	FILETIME created = { 0 };     //!< creation of the .pf FILE, suspect's local time
+	FILETIME createdUtc = { 0 };  //!< the same instant in UTC
+	FILETIME modified = { 0 };    //!< last modification of the .pf file, local time
+	FILETIME modifiedUtc = { 0 };	//!< the same instant in UTC
+	FILETIME accessed = { 0 };    //!< last access to the .pf file, local time
+	FILETIME accessedUtc = { 0 };	//!< the same instant in UTC
+	std::vector<FILETIME> last_runs;    //!< the last eight runs, suspect's local time
+	std::vector<FILETIME> last_runsUtc;	//!< the same instants in UTC
+	int run_count = 0; //!< number of runs counted since the file was created
+	std::wstring hash_string = L"";//!< hash in the file's name, computed over the
+	                               //!< executable's path: it distinguishes two
+	                               //!< copies of the same binary
 
 	//Filename strings
-	std::vector<Filename> filenames; //!< liste de nom de fichiers
+	std::vector<Filename> filenames; //!< the files loaded during the first ten seconds
 
 	//volume information
-	std::vector<VolumeInfo> volumes; //!< tableau contenant des information de volumes
+	std::vector<VolumeInfo> volumes; //!< the volumes those files were loaded from
 
-	/*! constructeur
-	* @param file_path en entrée contient le chemin vers le fichier prefetch à parser
-	*/
+	/*! Prepares the reading of a Prefetch file.
+	 *  @param file_path path of the .pf file in the working directory. */
 	Prefetch(const std::wstring file_path);
 
-	/* lecture du fichier prefetch
-	*/
+	/*! Reads the file: decompresses it if need be, then parses it.
+	 *  @return the result of the read. */
 	HRESULT read();
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
-	*/
+	/*! Converts the Prefetch file to JSON, loaded files and volumes included.
+	 *  @return its JSON object. */
 	Json toJson();
 
-	/* liberation mémoire */
+	//! Releases the memory held by the Prefetch file.
 	void clear();
 };
 
-/*! structure contenant l'ensemble des objets
-*/
+/*! All the Prefetch files of the examined machine. */
 struct Prefetchs {
-	std::vector<Prefetch> prefetchs; //!< tableau contenant tout les prefetch
+	std::vector<Prefetch> prefetchs; //!< the files read, in the order they were listed
 
-	/*! Fonction permettant de parser les objets
-	*/
+	/*! Lists the Prefetch directory and reads each .pf file.
+	 *  @return S_OK, or the failure of the last read attempted. */
 	HRESULT getData();
 
-	/*! conversion de l'objet au format json
-	*/
+	/*! Writes `prefetchs.json` into the output directory.
+	 *  @return the result of the write. */
 	HRESULT toJson();
 
-	/* liberation mémoire */
+	//! Releases the memory held by the Prefetch files.
 	void clear();
 };
