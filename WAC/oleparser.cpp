@@ -3,68 +3,11 @@
  */
 #include "oleparser.h"
 
-std::wstring Directory::getType(BYTE value) {
-	switch (value) {
-	case 0: return L"Empty"; break;
-	case 1: return L"Storage"; break;
-	case 2: return L"Stream"; break;
-	case 3: return L"LockBytes"; break;
-	case 4: return L"Property"; break;
-	case 5: return L"RootStorage"; break;
-	default: return L"Unknown"; break;
-	}
-}
-
-std::wstring Directory::getNodeColor(BYTE value) {
-	switch (value) {
-	case 0: return L"Red"; break;
-	case 1: return L"Black"; break;
-	default: return L"Unknown"; break;
-	}
-}
-
 Directory::Directory(LPBYTE data) {
-	nameLength = *reinterpret_cast<short int*>(data + 64);
 	// The name field of a CFB directory entry is 64 bytes: the read stops there.
 	name = readWideZ(data, 64, 0);
-	log(3, L"🔈getType type");
-	type = getType(data[66]);
-	log(3, L"🔈getNodeColor nodeColor");
-	nodeColor = getNodeColor(data[67]);
-	previousDirectoryId = *reinterpret_cast<int*>(data + 68);
-	nextDirectoryId = *reinterpret_cast<int*>(data + 72);
-	subDirectoryId = *reinterpret_cast<int*>(data + 76);
-	log(3, L"🔈guid_to_wstring classId");
-	classId = guid_to_wstring(*reinterpret_cast<GUID*>(data + 80));
-	userFlags = *reinterpret_cast<unsigned int*>(data + 96);
-	created = *reinterpret_cast<FILETIME*>(data + 100);
-	log(3, L"🔈LocalFileTimeToFileTime createdUtc");
-	LocalFileTimeToFileTime(&created, &createdUtc);
-	modified = *reinterpret_cast<FILETIME*>(data + 108);
-	log(3, L"🔈LocalFileTimeToFileTime modifiedUtc");
-	LocalFileTimeToFileTime(&modified, &modifiedUtc);
 	firstSectorID = *reinterpret_cast<unsigned int*>(data + 116);
 	directorySize = *reinterpret_cast<unsigned int*>(data + 120);
-};
-
-Json Directory::toJson() {
-	log(3, L"🔈Directory toJson");
-	Json o = Json::obj();
-	o.add(L"DirectoryName",          Json::str(name));
-	o.add(L"DirectoryType",          Json::str(type));
-	o.add(L"NodeColor",              Json::str(nodeColor));
-	o.add(L"PreviousDirectoryId",    Json::num((long long)previousDirectoryId));
-	o.add(L"NextDirectoryId",        Json::num((long long)nextDirectoryId));
-	o.add(L"SubDirectoryId",         Json::num((long long)subDirectoryId));
-	o.add(L"ClassId",                Json::str(classId));
-	o.add(L"UserFlags",              Json::num((long long)userFlags));
-	o.add(L"CreationTime",           Json::str(timeToIso8601Local(created)));
-	o.add(L"CreationTimeUtc",        Json::str(timeToIso8601Utc(createdUtc)));
-	o.add(L"ModifiedTime",           Json::str(timeToIso8601Local(modified)));
-	o.add(L"ModifiedTimeUtc",        Json::str(timeToIso8601Utc(modifiedUtc)));
-	o.add(L"FirstDirectorySectorId", Json::num((long long)firstSectorID));
-	o.add(L"DirectorySize",          Json::num((long long)directorySize));
-	return o;
 }
 
 DestFile::DestFile(LPBYTE buffer, size_t limit) {
@@ -165,6 +108,11 @@ int powerOfTwoOrZero(unsigned int exponent) {
 } // namespace
 
 oleHeader::oleHeader(LPBYTE buffer, size_t _bufferSize) {
+	/* The header is 512 bytes (76 of fields, then 109 SAT sector ids): its
+	   size is checked BEFORE anything is read. The check used to come after
+	   the signature and the first 76 bytes. */
+	if (_bufferSize < 512)
+		throw std::length_error("File corrupt - file smaller than the header");
 	signature = *reinterpret_cast<unsigned long long*>(buffer);
 	if (signature != _signature) {
 		log(2, L"🔥oleHeader signature " + to_hex(signature), ERROR_NDIS_BAD_VERSION);
@@ -176,7 +124,6 @@ oleHeader::oleHeader(LPBYTE buffer, size_t _bufferSize) {
 		throw std::runtime_error("Big indian Format not Handle, please handle this file specifically");
 	}
 
-	versionMinor = *reinterpret_cast<unsigned short*>(buffer + 24); // Minor version at offset 24
 	versionMajor = *reinterpret_cast<unsigned short*>(buffer + 26); // Major version at offset 26
 
 	/* The sector sizes are stored as a POWER OF 2. The exponent comes from the
@@ -203,20 +150,15 @@ oleHeader::oleHeader(LPBYTE buffer, size_t _bufferSize) {
 	directoryStreamFirstSectorId = *reinterpret_cast<int*>(buffer + 48); // Sector ID of first sector used by Directory at offset 48
 	minimumStandardStreamSize = *reinterpret_cast<unsigned int*>(buffer + 56); // Minimum size of a standard stream in bytes at offset 56
 	SSATFirstSectorId = *reinterpret_cast<int*>(buffer + 60); // Sector ID of the first sector used for the Short Sector Allocation Table(SSAT) at offset 60
-	totalSSATSectors = *reinterpret_cast<unsigned int*>(buffer + 64); // Total sectors used for SSAT at offset 64
 	MSATFirstSectorId = *reinterpret_cast<int*>(buffer + 68);
-	MSATTotalSectors = *reinterpret_cast<int*>(buffer + 72);
-	// Process MSAT
-	if (_bufferSize < 516)
-		throw std::length_error("File corrupt - file smaller than header size"); // header = 76 + 109*4 + 4
-
+	// The first 109 SAT sector ids are in the header (the MSAT's head).
 	for (int i = 0; i < 109; i++) {
 		int addr = *reinterpret_cast<int*>(buffer + 76 + i * 4);
 
 		if (addr >= 0) {
 			if (i < totalSATSectors) {
-				log(3, L"🔈SATSectors");
-				SATSectors.push_back(addr * sectorSize + 512); // 512 is for the header
+				log(3, L"🔈SATSectorIds");
+				SATSectorIds.push_back(addr);
 			}
 			else {
 				log(2, L"🔥The total number of sectors was larger than the one expected from the header data",ERROR_FILE_CORRUPT);
@@ -226,69 +168,50 @@ oleHeader::oleHeader(LPBYTE buffer, size_t _bufferSize) {
 	}
 }
 
+size_t oleParser::sectorOffset(int id) const {
+	return ((size_t)id + 1) * (size_t)header.sectorSize;
+}
+
 oleParser::oleParser(LPBYTE _buffer, size_t _bufferSize) {
 	buffer = _buffer;
 	bufferSize = _bufferSize;
 
 	// 0. Process header
 	header = oleHeader(buffer, _bufferSize);
+	const size_t sectorSize = (size_t)header.sectorSize;
+	const size_t sectorsInFile = bufferSize / sectorSize;
+	// A SAT of more sectors than the file holds cannot be real.
+	if (header.totalSATSectors < 0 || (size_t)header.totalSATSectors > sectorsInFile)
+		throw std::length_error("file corrupt - SAT larger than the file");
 
-	//Big Files
-	if (header.MSATFirstSectorId > -2) {
-		int maxSlotsPerBlock = header.sectorSize / 4;
-		int remainingSlots = header.totalSATSectors - 109; // 109 for header part already done
-		int remainingByteLen = 4 * remainingSlots;
-		int msatOffset = (header.MSATFirstSectorId + 1) * header.sectorSize;
-		int startOffset = 0;
-		/* A `unique_ptr` as a precaution: the function throws exceptions almost
-		   everywhere ("file corrupt …"), and a `throw` added between this
-		   allocation and its manual release would leak silently. */
-		std::unique_ptr<BYTE[]> msatBuffer = std::make_unique<BYTE[]>(remainingByteLen);
-		LPBYTE remainingBytes = msatBuffer.get();
-		while (remainingSlots > 0) {
-			if (remainingSlots > maxSlotsPerBlock) {
-				// in this case we have to only take so many
-				for (int x = 0; x < header.sectorSize - 4; x++) {
-					remainingBytes[x] = buffer[msatOffset + x];
-				}
-				remainingSlots -= maxSlotsPerBlock - 1;
-				int newOffset = *reinterpret_cast<int*>(buffer + msatOffset + (4 * (maxSlotsPerBlock - 1)));
-				msatOffset = (newOffset + 1) * header.sectorSize;
-				startOffset += (maxSlotsPerBlock - 1) * 4;
-			}
-			else {
-				//copy it and be done with it
-				for (int x = 0; x < remainingSlots * 4; x++) {
-					remainingBytes[startOffset + x] = buffer[msatOffset + x];
-					remainingSlots -= remainingSlots;
-				}
-			}
+	/* THE REST OF THE MSAT, beyond the 109 ids of the header: a chain of
+	   sectors, each holding sectorSize / 4 - 1 SAT sector ids and, in its last
+	   slot, the id of the next one. The previous code read those sectors with
+	   no bound at all, stopped its last copy after ONE byte (its counter was
+	   reset inside the copy loop), then kept one id in four. */
+	int next = header.MSATFirstSectorId;
+	const size_t idsPerSector = sectorSize / 4 - 1;
+	size_t visited = 0;
+	while (next >= 0 && header.SATSectorIds.size() < (size_t)header.totalSATSectors) {
+		if (++visited > sectorsInFile)
+			throw std::length_error("file corrupt - cyclic MSAT chain");
+		const size_t offset = sectorOffset(next);
+		if (!fits(bufferSize, offset, sectorSize))
+			throw std::length_error("file corrupt - MSAT sector outside the file");
+		for (size_t k = 0; k < idsPerSector && header.SATSectorIds.size() < (size_t)header.totalSATSectors; ++k) {
+			const int id = *reinterpret_cast<int*>(buffer + offset + 4 * k);
+			if (id >= 0) header.SATSectorIds.push_back(id);
 		}
-
-		remainingSlots = header.totalSATSectors - 109;
-
-		for (int i = 0; i < remainingSlots; i += 4)
-		{
-			int sectorId = *reinterpret_cast<int*>(remainingBytes + i * 4) * header.sectorSize + 512; // 512 is for the header
-			header.SATSectors.push_back(sectorId);
-		}
-		// The buffer is released by its unique_ptr.
+		next = *reinterpret_cast<int*>(buffer + offset + 4 * idsPerSector);
 	}
 
-	//We need to get all the bytes that make up the SectorAllocationTable
-	//start with empty array to hold our bytes
-
-
-	for (int sector : header.SATSectors)
-	{
-		if (sector + header.sectorSize > _bufferSize)
+	// The SAT itself: the concatenation of its sectors, read as 32-bit ids.
+	for (int id : header.SATSectorIds) {
+		const size_t offset = sectorOffset(id);
+		if (!fits(bufferSize, offset, sectorSize))
 			throw std::length_error("file corrupt - Error copying data from the Sector Allocation Table");
-
-		//fill the Sat
-		for (int x = 0; x < header.sectorSize; x += 4) { // for each "sector", sectorSize integers are copied
-			log(3, L"🔈*reinterpret_cast<int*> sat");
-			sat.push_back(*reinterpret_cast<int*>(buffer + sector + x));
-		}
+		for (size_t x = 0; x < sectorSize; x += 4)
+			sat.push_back(*reinterpret_cast<int*>(buffer + offset + x));
 	}
 
 	//Just as with the SAT, but this time, with the SmallSectorAllocationTable
@@ -303,21 +226,17 @@ oleParser::oleParser(LPBYTE _buffer, size_t _bufferSize) {
 
 	log(3, L"🔈GetBytesFromSat dirBytes");
 	std::vector<BYTE> dirBytes = GetBytesFromSat(header.directoryStreamFirstSectorId);
-	LPBYTE pDirBytes = &dirBytes[0];
-	int dirIndex = 0;
-	if (dirIndex + 128 > dirBytes.size())
+	if (dirBytes.size() < 128)
 		throw std::length_error("file corrupt - Error copying data from directory index");
 
-	while (dirIndex < dirBytes.size())
-	{
-		log(3, L"🔈*reinterpret_cast<short int*> dirLen");
-		int dirLen = *reinterpret_cast<short int*>(pDirBytes + dirIndex + 64);
-		if (pDirBytes[dirIndex + 66] != 0 && dirLen > 0) { //0 is empty directory structure
+	// Entries of 128 bytes; a partial one at the end is not read.
+	for (size_t dirIndex = 0; dirIndex + 128 <= dirBytes.size(); dirIndex += 128) {
+		const LPBYTE entry = dirBytes.data() + dirIndex;
+		const short dirLen = *reinterpret_cast<short int*>(entry + 64);
+		if (entry[66] != 0 && dirLen > 0) { //0 is empty directory structure
 			log(3, L"🔈Directory d");
-			Directory d = Directory(pDirBytes + dirIndex);
-			directories.push_back(d);
+			directories.push_back(Directory(entry));
 		}
-		dirIndex += 128;
 	}
 
 	//the Root Entry directory item contains all the sectors we need for small sector stuff, so get the data and cut it up so we can use it later
@@ -373,7 +292,7 @@ std::vector<int> oleParser::GetIntFromSat(int sectorNumber) {
 	std::vector<int> retBytes;
 	for (int i : sectorChain(sat, sectorNumber))
 	{
-		const size_t index = 512 + sectorSize * (size_t)i;   // header + relative offset
+		const size_t index = sectorOffset(i);
 		if (index >= bufferSize)
 			throw std::length_error("file corrupt - Error retrieving data from SAT");
 		// A sector can be truncated at the end of the file: what is left is read.
@@ -391,7 +310,7 @@ std::vector<BYTE> oleParser::GetBytesFromSat(int sectorNumber) {
 	std::vector<BYTE> retBytes;
 	for (int i : sectorChain(sat, sectorNumber))
 	{
-		const size_t index = 512 + sectorSize * (size_t)i;   // header + relative offset
+		const size_t index = sectorOffset(i);
 		if (index >= bufferSize)
 			throw std::length_error("file corrupt - Error retrieving data from SAT");
 		// A sector can be truncated at the end of the file: what is left is read.
@@ -413,4 +332,19 @@ std::vector<BYTE> oleParser::GetBytesFromSSat(int sectorNumber) {
 		retBytes.insert(retBytes.end(), sector.begin(), sector.begin() + size);
 	}
 	return retBytes;
+}
+
+std::vector<BYTE> oleParser::Getdata(const Directory& d) {
+	if (d.directorySize <= 0) return {};
+	/* Streams smaller than the cutoff the header declares live in short
+	   sectors; the cutoff was hard-coded to 4096, its usual value. */
+	const size_t cutoff = header.minimumStandardStreamSize ? header.minimumStandardStreamSize : 4096;
+	std::vector<BYTE> bytes = ((size_t)d.directorySize >= cutoff)
+	                          ? GetBytesFromSat((int)d.firstSectorID)
+	                          : GetBytesFromSSat((int)d.firstSectorID);
+	/* A chain ends on a whole sector: the stream is cut to its declared size.
+	   The padding of its last sector used to be handed on as data — to the
+	   DestList walk and to the shortcut parser. */
+	if (bytes.size() > (size_t)d.directorySize) bytes.resize((size_t)d.directorySize);
+	return bytes;
 }

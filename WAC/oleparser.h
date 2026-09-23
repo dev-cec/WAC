@@ -20,47 +20,27 @@
 * Documentation: https://github.com/EricZimmerman/JumpList/blob/master/JumpList/Resources/AppIDs.txt
 */
 
-/*! Holds information about the files held, with a sector ID (SID) for the
-* starting sector of a chain, and so on.
+/*! One entry of the OLE directory: a stream or a storage, found by its name.
+*
+*  Only what WAC uses is read: the name, the first sector and the size. The
+*  entry also carries a type, a colour, sibling ids, a CLSID, flags and two
+*  dates; they were decoded into members that only an uncalled toJson() read —
+*  dead code, whose dates were moreover converted as local times while MS-CFB
+*  defines them in UTC.
 */
 struct Directory {
-	short int nameLength = 0; //!< length of the name
-	unsigned int firstSectorID = 0;//!< id of the first sector
-	unsigned int userFlags = 0;//!< attributes of the directory
-	int directorySize = 0; //!< size of the directory
-	int previousDirectoryId = 0; //!< id of the previous directory
-	int nextDirectoryId = 0; //!< id of the next directory
-	int subDirectoryId = 0; //!< id of the subdirectory
-	FILETIME createdUtc = { 0 }; //!< creation date in UTC
-	FILETIME created = { 0 }; //!< creation date
-	FILETIME modifiedUtc = { 0 }; //!< modification date in UTC
-	FILETIME modified = { 0 };//!< modification date
-	std::wstring name = L"";//!< name of the directory
-	std::wstring type = L"";//!< type of the directory
-	std::wstring classId = L"";//!< class identifier of the directory
-	std::wstring nodeColor = L"";//!< colour of the directory's node
+	std::wstring name = L"";//!< name of the stream or storage
+	unsigned int firstSectorID = 0;//!< id of its first sector
+	int directorySize = 0; //!< size of its content, in bytes
 
-	/*! Returns the name of the directory type from an integer.
-	*/
-	std::wstring getType(BYTE value);
-
-	/*! Returns the colour of the directory's node from an integer.
-	*/
-	std::wstring getNodeColor(BYTE value);
-
-	/*! Builds an empty directory.
+	/*! Builds an empty entry (the "not found" result of findDirectory).
 	*/
 	Directory() {};
 
 	/*! Reads a directory entry.
-	* @param data pointer to the data to parse
+	* @param data the entry's 128 bytes
 	*/
 	Directory(LPBYTE data);
-
-	/*! Converts the directory to JSON.
-	* @return its JSON object
-	*/
-	Json toJson();
 };
 
 /*! Represents a destfile structure. */
@@ -139,18 +119,14 @@ struct oleHeader {
 	unsigned long long _signature = 0xe11ab1a1e011cfd0; //!< expected signature of the OLE object
 	unsigned long long signature = 0; //!< signature of the OLE object
 	unsigned short versionMajor = 0; //!< major version (3 = 512-byte sectors, 4 = 4096-byte)
-	unsigned short versionMinor = 0; //!< minor version
 	int sectorSize = 0; //!< size of the sectors, in bytes (validated)
 	int shortSectorSize = 0; //!< size of the short sectors, in bytes (validated)
 	int totalSATSectors = 0; //!< total number of sectors in the SAT
 	int directoryStreamFirstSectorId = 0;//!< id of the first sector holding the list of directories
 	unsigned int minimumStandardStreamSize = 0;//!< minimum size of a stream
-	unsigned int totalSSATSectors = 0; //!< total size of the SAT
-	int MSATTotalSectors = 0;//!< total number of sectors in the MSAT
 	int SSATFirstSectorId = 0; //!< id of the first sector of the SSAT
 	int MSATFirstSectorId = 0;//!< id of the first sector of the MSAT
-	std::vector<int> SATSectors; //!< the sectors of the SAT
-	std::vector<int> ShortSATSectors;//!< the sectors of the SSAT
+	std::vector<int> SATSectorIds; //!< ids of the sectors holding the SAT (the MSAT's content)
 	/*! Builds an empty header.
 	*/
 	oleHeader() {}
@@ -185,6 +161,17 @@ struct oleParser {
 	* @param _bufferSize size of that buffer
 	*/
 	oleParser(LPBYTE _buffer, size_t _bufferSize);
+
+	/*! Position in the file of sector `id`.
+	*
+	*  The header occupies the first sector, so sector `id` starts at
+	*  (id + 1) × sectorSize. "512 + id × sectorSize", used until now, holds for
+	*  512-byte sectors only (version 3): in version 4 the sectors are 4096
+	*  bytes and the header is padded to 4096, so every read landed 3584 bytes
+	*  too early — a valid-looking but wrong content.
+	*  @param id sector id, >= 0
+	*  @return its offset from the start of the file */
+	size_t sectorOffset(int id) const;
 
 	/*! Finds a directory in the OLE object by its name.
 	* @param name name of the directory
@@ -222,19 +209,11 @@ struct oleParser {
 	*/
 	std::vector<BYTE> GetBytesFromSSat(int sectorNumber);
 
-	/*! Parses the data of a directory.
-	* @param d the directory holding the data to read
+	/*! Reads the content of a stream, cut to its declared size.
+	* @param d the directory entry of the stream
+	* @return its bytes; empty for an empty stream
+	* @throws std::length_error if its chain points outside the file
 	*/
-	std::vector<BYTE> Getdata(Directory d) { // To read the bytes of a directory
-		if (d.directorySize >= 4096) {
-			log(3, L"🔈GetBytesFromSat firstSectorID");
-			return GetBytesFromSat(d.firstSectorID);
-		}
-		else if (d.directorySize > 0) {
-			log(3, L"🔈GetBytesFromSSat firstSectorID");
-			return GetBytesFromSSat(d.firstSectorID);
-		}
-		return {};
-	}
+	std::vector<BYTE> Getdata(const Directory& d);
 
 };
