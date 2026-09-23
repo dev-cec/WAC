@@ -113,7 +113,15 @@ else
 fi
 
 echo "== 5. Fetch of the JSON files =="
-LIST=$($QGA run --shell "dir /b $VMDIR\\out\\*.json 2>nul" || true)
+# The listing is retried: right after a long collection the guest agent has
+# once answered with an empty output while the JSON files were there, and the
+# whole run then looked like "no JSON produced".
+LIST=""
+for attempt in 1 2 3; do
+  LIST=$($QGA run --shell "dir /b $VMDIR\\out\\*.json 2>nul" || true)
+  [[ -n "${LIST// }" ]] && break
+  sleep 5
+done
 if [[ -z "${LIST// }" ]]; then
   echo "   ⚠️ no JSON produced — see $OUTPUT/run.log"
 else
