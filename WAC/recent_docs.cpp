@@ -178,12 +178,26 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 			//-------------------------------------------------------------------------
 			// Local path std::string (ending with 0x00):
 			//-------------------------------------------------------------------------
-			unsigned int LocalPath_offset = u32(LinkInfo_offset + 16); //local path offset from start of fileinfo
-			std::string targetPath = readNarrowZ(buffer, infoEnd, (size_t)LinkInfo_offset + LocalPath_offset);
-			log(3, L"🔈string_to_wstring target");
-			target = string_to_wstring(targetPath);
+			/* Two defects fixed here (MS-SHLLINK 2.3):
+			   - the path was read even without the VolumeIDAndLocalBasePath flag,
+			     whose offset is then 0: the LinkInfo header was read as a string;
+			   - a LinkInfo header of 0x24 bytes or more carries, at +28, the offset
+			     of a UNICODE copy of the path. The ANSI one loses every character
+			     outside the code page — seen on a real machine: "‐" became "-",
+			     a Chinese file name "??????.docx". The Unicode copy now prevails. */
+			const unsigned int LocalPath_offset = u32(LinkInfo_offset + 16); //local path offset from start of fileinfo
+			const unsigned int linkInfoHeaderSize = u32(LinkInfo_offset + 4);
+			const unsigned int LocalPathUnicode_offset = (linkInfoHeaderSize >= 0x24) ? u32(LinkInfo_offset + 28) : 0;
+			if (VolumeIDAndLocalBasePath && LocalPathUnicode_offset != 0) {
+				log(3, L"🔈readWideZ target (UTF-16)");
+				target = readWideZ(buffer, infoEnd, (size_t)LinkInfo_offset + LocalPathUnicode_offset);
+			}
+			else if (VolumeIDAndLocalBasePath && LocalPath_offset != 0) {
+				log(3, L"🔈decodeText target");
+				target = decodeText(readNarrowZ(buffer, infoEnd, (size_t)LinkInfo_offset + LocalPath_offset));
+			}
 			// RAW value: the escaping is centralised in json.h.
-			if (conf.binary) {
+			if (conf.binary && !target.empty()) {
 				/* Raw reading: opening the target through the API would update its
 				   last access date — on the very document whose shortcut attests
 				   the opening. */
