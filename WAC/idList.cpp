@@ -801,6 +801,37 @@ Json SPS::toJson() {
 * Extension blocks
 *********************************************************************************************************************/
 
+FolderTypeNames folderTypeNames(const std::wstring& typeGuid, const std::wstring& viewGuid) {
+	static std::map<std::wstring, FolderTypeNames> cache;
+	const std::wstring cacheKey = typeGuid + L"/" + viewGuid;
+	const auto cached = cache.find(cacheKey);
+	if (cached != cache.end()) return cached->second;
+
+	FolderTypeNames names;
+	/* Offline: the examined machine's SOFTWARE hive, not the running one's
+	   registry — a folder type added by an application exists only there. */
+	if (conf.Software) {
+		const std::wstring typeKey = L"Microsoft\\Windows\\CurrentVersion\\Explorer\\FolderTypes\\" + typeGuid;
+		std::wstring value;
+		if (getRegSzValue(conf.Software, typeKey.c_str(), L"CanonicalName", &value) == ERROR_SUCCESS)
+			names.folderType = value;
+		value.clear();
+		const std::wstring viewKey = typeKey + L"\\TopViews\\" + viewGuid;
+		if (getRegSzValue(conf.Software, viewKey.c_str(), L"Name", &value) == ERROR_SUCCESS && !value.empty()) {
+			if (isMuiReference(value)) names.folderViewResource = value;
+			else                       names.folderView = value;
+		}
+	}
+	cache[cacheKey] = names;
+	return names;
+}
+
+void addFolderTypeNames(Json& o, const FolderTypeNames& names) {
+	if (!names.folderType.empty())         o.add(L"FolderType",         Json::str(names.folderType));
+	if (!names.folderView.empty())         o.add(L"FolderView",         Json::str(names.folderView));
+	if (!names.folderViewResource.empty()) o.add(L"FolderViewResource", Json::str(names.folderViewResource));
+}
+
 Beef0000::Beef0000(LPBYTE buffer, int _level) {
 	level = _level;
 	isPresent = true;
@@ -813,6 +844,7 @@ Beef0000::Beef0000(LPBYTE buffer, int _level) {
 	guid2 = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 24));
 	log(3, L"🔈trans_guid_to_wstring identifier2");
 	identifier2 = trans_guid_to_wstring(guid2);
+	names = folderTypeNames(guid1, guid2);
 }
 
 Json Beef0000::toJson() {
@@ -823,6 +855,7 @@ Json Beef0000::toJson() {
 	o.add(L"Identifier1", Json::str(identifier1));
 	o.add(L"Guid2", Json::str(guid2));
 	o.add(L"Identifier2", Json::str(identifier2));
+	addFolderTypeNames(o, names);
 	return o;
 }
 
@@ -1239,6 +1272,7 @@ Beef0019::Beef0019(LPBYTE buffer, int _level) {
 	guid2 = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 24));
 	log(3, L"🔈trans_guid_to_wstring identifier2");
 	identifier2 = trans_guid_to_wstring(guid2);
+	names = folderTypeNames(guid1, guid2);
 }
 
 Json Beef0019::toJson() {
@@ -1249,6 +1283,7 @@ Json Beef0019::toJson() {
 	o.add(L"Identifier1", Json::str(identifier1));
 	o.add(L"Guid2", Json::str(guid2));
 	o.add(L"Identifier2", Json::str(identifier2));
+	addFolderTypeNames(o, names);
 	return o;
 }
 

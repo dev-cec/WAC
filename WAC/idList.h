@@ -327,13 +327,51 @@ struct IdList {
 /***************************************************************************************************
 * EXTENSION BLOCKS
 ****************************************************************************************************/
-/*!  Related to CMergedFolder object
+/*! Folder type and view named by the two GUIDs of blocks 0xbeef0000 and
+*  0xbeef0019.
+*
+*  The first GUID is a FOLDER TYPE (libfwsi), the second one of its VIEWS: on
+*  Windows 11 it is found under
+*  `Microsoft\Windows\CurrentVersion\Explorer\FolderTypes\{type}\TopViews\{view}`.
+*  Neither is in the GUID table: the names come from the examined machine's
+*  SOFTWARE hive, read offline. The view's name is a MUI reference
+*  (`@shell32.dll,-34817`) on current systems: kept as such, in its own field
+*  (see isMuiReference). Every field stays empty when the key is absent — some
+*  blocks hold values no folder type bears, e.g. {20000000-0000-…}.
+*  The `Parent` chain is NOT followed for the view: Documents.LibraryFolder,
+*  for one, declares `OverrideParentTopViews = 1` and no view of its own, and
+*  what Windows then displays is documented nowhere — a name taken from the
+*  parent would be a guess published as a reading.
+*/
+struct FolderTypeNames {
+	std::wstring folderType;          //!< CanonicalName of the type, e.g. "Documents.Library"
+	std::wstring folderView;          //!< name of the view, when it is plain text
+	std::wstring folderViewResource;  //!< name of the view, when it is a MUI reference
+};
+
+/*! Reads the names of a folder type and of one of its views (see FolderTypeNames).
+*  Results are cached: the same pair recurs in every shell item of a library.
+*  @param typeGuid the folder type, "{…}"
+*  @param viewGuid the view, "{…}"
+*  @return the names found; empty without a SOFTWARE hive or a matching key */
+FolderTypeNames folderTypeNames(const std::wstring& typeGuid, const std::wstring& viewGuid);
+
+/*! Adds the fields of `names` that were found to `o`.
+*  @param o the block's JSON object
+*  @param names the names read by folderTypeNames */
+void addFolderTypeNames(Json& o, const FolderTypeNames& names);
+
+/*! Folder type and view (libfwsi; Eric Zimmerman's ExtensionBlocks reads the
+*  same layout). 42 bytes: folder type GUID at 8, view GUID at 24, first
+*  extension block offset at 40. A 14-byte variant, content unknown, is kept
+*  raw. Related to the CMergedFolder object.
 */
 struct Beef0000 : IExtensionBlock {
-	std::wstring guid1 = L""; //!< GUID
-	std::wstring identifier1 = L"";//!< name matching the GUID
-	std::wstring guid2 = L""; //!< GUID
-	std::wstring identifier2 = L""; //!< name matching the GUID
+	std::wstring guid1 = L""; //!< folder type GUID
+	std::wstring identifier1 = L"";//!< name matching the GUID in the GUID table
+	std::wstring guid2 = L""; //!< view GUID (TopViews of the folder type)
+	std::wstring identifier2 = L""; //!< name matching the GUID in the GUID table
+	FolderTypeNames names; //!< names of the folder type and view, from the SOFTWARE hive
 
 	/*! Reads the object.
 	* @param buffer the bytes to parse
@@ -643,10 +681,11 @@ struct Beef0017 : IExtensionBlock {
 * reads "\\{" as the opening of a member group, never closed.
 */
 struct Beef0019 : IExtensionBlock {
-	std::wstring guid1 = L""; //!< GUID
-	std::wstring identifier1 = L"";//!< name matching the GUID
-	std::wstring guid2 = L"";//!< GUID
-	std::wstring identifier2 = L"";//!< name matching the GUID
+	std::wstring guid1 = L""; //!< folder type GUID
+	std::wstring identifier1 = L"";//!< name matching the GUID in the GUID table
+	std::wstring guid2 = L"";//!< view GUID (TopViews of the folder type)
+	std::wstring identifier2 = L"";//!< name matching the GUID in the GUID table
+	FolderTypeNames names; //!< names of the folder type and view, from the SOFTWARE hive
 
 	/*! Reads the object.
 	* @param buffer the bytes to parse
