@@ -9,98 +9,14 @@
 
 \documentclass[11pt,a4paper,oneside]{report}
 
-% ---------------------------------------------------------------- fonts, language
-\usepackage{fontspec}
+% ---------------------------------------------------------------- language and labels
 \usepackage[british]{babel}
-\setmainfont{Noto Sans}
-\setmonofont{DejaVu Sans Mono}[Scale=0.84]
-
-% ---------------------------------------------------------------- layout
-\usepackage[top=26mm,bottom=26mm,left=24mm,right=22mm,headheight=14pt]{geometry}
-\usepackage{graphicx}
-\graphicspath{{../}}
-\usepackage{xcolor}
-\usepackage{tikz}
-\usepackage{booktabs,tabularx,longtable,array}
-\usepackage{enumitem}
-\usepackage{fancyhdr}
-\usepackage{titlesec}
-\usepackage[most]{tcolorbox}
-\usepackage{listings}
-\usepackage{url}
-\usepackage{lastpage}
-\usepackage[hidelinks,unicode,pdfpagelabels]{hyperref}
-
-% Colours sampled from the cover page
-\definecolor{marine}{HTML}{0A1A33}
-\definecolor{bleu}{HTML}{2F6DB5}
-\definecolor{accent}{HTML}{1F66D1}
-\definecolor{fond}{HTML}{EEF3FA}
-\definecolor{alerte}{HTML}{B3261E}
-\definecolor{fondalerte}{HTML}{FBEDEC}
-\definecolor{gris}{HTML}{5B6573}
-
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{0.55em}
-\linespread{1.08}
-\setlist{itemsep=0.25em,topsep=0.35em}
-\urlstyle{tt}
-\renewcommand{\arraystretch}{1.25}
-% Left-aligned table columns: justified narrow columns opened wide gaps
-% between words.
-\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
-% Monospaced file and field names cannot be hyphenated: let the line's spaces
-% stretch instead.
-\setlength{\emergencystretch}{3em}
-
-% Headings
-\titleformat{\chapter}[display]
-  {\color{marine}\bfseries\raggedright}
-  {\color{bleu}\large\MakeUppercase{\chaptertitlename}~\thechapter}
-  {0.3em}
-  {\Huge}[{\color{accent}\titlerule[2pt]}]
-\titlespacing*{\chapter}{0pt}{0pt}{1.6em}
-\titleformat{\section}{\color{marine}\Large\bfseries}{\color{bleu}\thesection}{0.8em}{}
-\titleformat{\subsection}{\color{marine}\large\bfseries}{\color{bleu}\thesubsection}{0.7em}{}
-\titleformat{\subsubsection}{\color{bleu}\normalsize\bfseries}{}{0em}{}
-
-% Headers and footers
-\pagestyle{fancy}
-\fancyhf{}
-\fancyhead[L]{\small\color{gris}WAC — User manual}
-\fancyhead[R]{\small\color{gris}\leftmark}
-% Footer: "Page N of M", readable. A bare, small, light-grey number went
-% unnoticed.
-\newcommand{\piedpage}{\small\color{marine}\textbf{Page \thepage}\ of \pageref*{LastPage}}
-\fancyfoot[C]{\piedpage}
-\renewcommand{\footrulewidth}{0.4pt}
-\renewcommand{\footrule}{\hbox to\headwidth{\color{fond}\leaders\hrule height \footrulewidth\hfill}}
-\renewcommand{\headrulewidth}{0.4pt}
-\renewcommand{\headrule}{\hbox to\headwidth{\color{fond}\leaders\hrule height \headrulewidth\hfill}}
-\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
-\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\piedpage}\renewcommand{\headrulewidth}{0pt}}
-
-% Boxes
-\newtcolorbox{note}[1][Keep in mind]{enhanced,breakable,colback=fond,colframe=bleu,
-  boxrule=0pt,leftrule=3pt,arc=0pt,left=8pt,right=8pt,top=6pt,bottom=6pt,
-  title={\bfseries #1},coltitle=bleu,colbacktitle=fond,attach title to upper={\par\smallskip}}
-\newtcolorbox{attention}[1][Warning]{enhanced,breakable,colback=fondalerte,colframe=alerte,
-  boxrule=0pt,leftrule=3pt,arc=0pt,left=8pt,right=8pt,top=6pt,bottom=6pt,
-  title={\bfseries #1},coltitle=alerte,colbacktitle=fondalerte,attach title to upper={\par\smallskip}}
-
-% Code
-\lstset{basicstyle=\ttfamily\small,columns=fullflexible,keepspaces=true,
-  backgroundcolor=\color{fond},frame=l,framerule=3pt,rulecolor=\color{bleu},
-  xleftmargin=9pt,framexleftmargin=6pt,aboveskip=0.8em,belowskip=0.8em,
-  breaklines=true,breakatwhitespace=false,showstringspaces=false,
-  literate={é}{{\'e}}1 {è}{{\`e}}1 {à}{{\`a}}1 {ê}{{\^e}}1 {ô}{{\^o}}1 {ç}{{\c c}}1
-           {É}{{\'E}}1 {—}{{---}}1 {’}{{'}}1 {…}{{...}}1 {«}{{\guillemotleft}}1 {»}{{\guillemotright}}1}
-
-% Shortcuts
-\newcommand{\wac}{\textsc{wac}}
-\newcommand{\opt}[1]{\texttt{-{}-#1}}
-\newcommand{\champ}[1]{\texttt{#1}}
-\newcommand{\fichier}[1]{\texttt{#1}}
+\newcommand{\wacdoctitle}{User manual}
+\newcommand{\wacpageof}{of}
+\newcommand{\wacnotetitle}{Keep in mind}
+\newcommand{\wacwarningtitle}{Warning}
+% Layout shared with every WAC document.
+\input{../wac-style.tex}
 
 \hypersetup{pdftitle={WAC — User manual},
   pdfauthor={Aerospace Cyber Defence Centre of Excellence (CEC)},
