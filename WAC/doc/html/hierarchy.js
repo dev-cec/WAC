@@ -24,6 +24,7 @@ var hierarchy =
     [ "FatDateTime", "structFatDateTime.html", null ],
     [ "FileAttributes", "structFileAttributes.html", null ],
     [ "Filename", "structFilename.html", null ],
+    [ "FolderTypeNames", "structFolderTypeNames.html", null ],
     [ "FsFlags", "structFsFlags.html", null ],
     [ "HiveFixInfo", "structHiveFixInfo.html", null ],
     [ "HiveLogEntry", "structHiveLogEntry.html", null ],

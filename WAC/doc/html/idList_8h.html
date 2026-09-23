@@ -142,6 +142,8 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structIdList.html">IdList</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFolderTypeNames.html">FolderTypeNames</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBeef0000.html">Beef0000</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBeef0001.html">Beef0001</a></td></tr>
@@ -243,6 +245,10 @@ Functions</h2></td></tr>
 <tr class="separator:a226b28040841114ee414d5b2c512791b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8e06b9a97f157137b48d134484223b62" id="r_a8e06b9a97f157137b48d134484223b62"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="structIShellItem.html">IShellItem</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="idList_8h.html#a8e06b9a97f157137b48d134484223b62">makeShellItem</a> (LPBYTE buffer, int _level, bool Parentiszip=false)</td></tr>
 <tr class="separator:a8e06b9a97f157137b48d134484223b62"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa78ef6f7be798339ffa8e24db00f14ee" id="r_aa78ef6f7be798339ffa8e24db00f14ee"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFolderTypeNames.html">FolderTypeNames</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="idList_8h.html#aa78ef6f7be798339ffa8e24db00f14ee">folderTypeNames</a> (const std::wstring &amp;typeGuid, const std::wstring &amp;viewGuid)</td></tr>
+<tr class="separator:aa78ef6f7be798339ffa8e24db00f14ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff717f550427ea233692c75c1853e92c" id="r_aff717f550427ea233692c75c1853e92c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="idList_8h.html#aff717f550427ea233692c75c1853e92c">addFolderTypeNames</a> (<a class="el" href="classJson.html">Json</a> &amp;o, const <a class="el" href="structFolderTypeNames.html">FolderTypeNames</a> &amp;names)</td></tr>
+<tr class="separator:aff717f550427ea233692c75c1853e92c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7525f17aa1303b4d68eae831fb5e5bfc" id="r_a7525f17aa1303b4d68eae831fb5e5bfc"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="idList_8h.html#a7525f17aa1303b4d68eae831fb5e5bfc">getType</a> (unsigned int type)</td></tr>
 <tr class="separator:a7525f17aa1303b4d68eae831fb5e5bfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaaeebaeb43ac7bb1e0975edf384904b0" id="r_aaaeebaeb43ac7bb1e0975edf384904b0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="idList_8h.html#aaaeebaeb43ac7bb1e0975edf384904b0">getValue</a> (LPBYTE buffer, unsigned int *pos, unsigned short valueType, unsigned int level, unsigned int inputSize, bool *typeNotDecoded=nullptr)</td></tr>
@@ -252,6 +258,77 @@ Functions</h2></td></tr>
 <div class="textblock"><p>Shell items, ID lists and extension blocks: the structures behind shortcuts, shellbags, MRU lists and jump lists. </p>
 <p>This file cannot be split into several ones: cyclic references between the types prevent it. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="aff717f550427ea233692c75c1853e92c" name="aff717f550427ea233692c75c1853e92c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff717f550427ea233692c75c1853e92c">&#9670;&#160;</a></span>addFolderTypeNames()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void addFolderTypeNames </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classJson.html">Json</a> &amp;&#160;</td>
+          <td class="paramname"><em>o</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structFolderTypeNames.html">FolderTypeNames</a> &amp;&#160;</td>
+          <td class="paramname"><em>names</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Adds the fields of <code>names</code> that were found to <code>o</code>. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">o</td><td>the block's JSON object </td></tr>
+    <tr><td class="paramname">names</td><td>the names read by folderTypeNames </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aa78ef6f7be798339ffa8e24db00f14ee" name="aa78ef6f7be798339ffa8e24db00f14ee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa78ef6f7be798339ffa8e24db00f14ee">&#9670;&#160;</a></span>folderTypeNames()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structFolderTypeNames.html">FolderTypeNames</a> folderTypeNames </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>typeGuid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>viewGuid</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads the names of a folder type and of one of its views (see <a class="el" href="structFolderTypeNames.html">FolderTypeNames</a>). Results are cached: the same pair recurs in every shell item of a library. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">typeGuid</td><td>the folder type, "{…}" </td></tr>
+    <tr><td class="paramname">viewGuid</td><td>the view, "{…}" </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the names found; empty without a SOFTWARE hive or a matching key </dd></dl>
+
+</div>
+</div>
 <a id="a226b28040841114ee414d5b2c512791b" name="a226b28040841114ee414d5b2c512791b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a226b28040841114ee414d5b2c512791b">&#9670;&#160;</a></span>getExtensionBlock()</h2>
 

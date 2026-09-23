@@ -5,5 +5,6 @@ var structBeef0000 =
     [ "guid1", "structBeef0000.html#add6c343c922e167de1162dde552434f4", null ],
     [ "guid2", "structBeef0000.html#a1138a39837990eb8c76e1c986c1555ad", null ],
     [ "identifier1", "structBeef0000.html#a0e95d71b0593c83015e43c10f0c1a607", null ],
-    [ "identifier2", "structBeef0000.html#a258f48c2b7f6a62b17a82571cb6e2798", null ]
+    [ "identifier2", "structBeef0000.html#a258f48c2b7f6a62b17a82571cb6e2798", null ],
+    [ "names", "structBeef0000.html#a03dbd4eb7e148efa705364d1ba45b3e4", null ]
 ];

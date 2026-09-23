@@ -9,7 +9,7 @@ var searchData=
   ['chunksignores_6',['chunksIgnores',['../structEvtxSummary.html#a31b6a625228249108e4f7f7d9b3d4d72',1,'EvtxSummary']]],
   ['class_7',['Class',['../structUserAssist.html#afa49227090ce0422a8ee62e67caa82e5',1,'UserAssist']]],
   ['classfriendlyname_8',['classFriendlyName',['../structDelegateFolder.html#a46730cc18b1e6c438bf531571d14e3a1',1,'DelegateFolder']]],
-  ['classguid_9',['classguid',['../structUsbstor.html#a493c78ec85ab590646638663a8ce3010',1,'Usbstor::ClassGuid'],['../structDelegateFolder.html#abc2752f472b8b646cec44b6c5c5cc110',1,'DelegateFolder::classGuid']]],
+  ['classguid_9',['classguid',['../structDelegateFolder.html#abc2752f472b8b646cec44b6c5c5cc110',1,'DelegateFolder::classGuid'],['../structUsbstor.html#a493c78ec85ab590646638663a8ce3010',1,'Usbstor::ClassGuid']]],
   ['classid_10',['classid',['../structDirectory.html#a2e7ab0401b21213fec1fb1d343074376',1,'Directory::classId'],['../structAction.html#af1fdaf541114523c6fc64161de0d7c55',1,'Action::classId']]],
   ['clockcorrection100ns_11',['clockCorrection100ns',['../structSystemInfo.html#ac573bb7051da162b9ba045a7bfe42a0e',1,'SystemInfo']]],
   ['collected_12',['collected',['../structBinaryFingerprint.html#acf75e98fd260ad59aa762dd074d35be1',1,'BinaryFingerprint']]],

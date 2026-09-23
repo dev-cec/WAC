@@ -114,6 +114,10 @@ Functions</h2></td></tr>
 <tr class="separator:a7525f17aa1303b4d68eae831fb5e5bfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b8de4eee6410b2c292d6256da81bc89" id="r_a7b8de4eee6410b2c292d6256da81bc89"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="idList_8cpp.html#a7b8de4eee6410b2c292d6256da81bc89">getValue</a> (LPBYTE buffer, unsigned int *pos, unsigned short valueType, unsigned int level, unsigned int inputSize, bool *typeNotDecoded)</td></tr>
 <tr class="separator:a7b8de4eee6410b2c292d6256da81bc89"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa78ef6f7be798339ffa8e24db00f14ee" id="r_aa78ef6f7be798339ffa8e24db00f14ee"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFolderTypeNames.html">FolderTypeNames</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="idList_8cpp.html#aa78ef6f7be798339ffa8e24db00f14ee">folderTypeNames</a> (const std::wstring &amp;typeGuid, const std::wstring &amp;viewGuid)</td></tr>
+<tr class="separator:aa78ef6f7be798339ffa8e24db00f14ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff717f550427ea233692c75c1853e92c" id="r_aff717f550427ea233692c75c1853e92c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="idList_8cpp.html#aff717f550427ea233692c75c1853e92c">addFolderTypeNames</a> (<a class="el" href="classJson.html">Json</a> &amp;o, const <a class="el" href="structFolderTypeNames.html">FolderTypeNames</a> &amp;names)</td></tr>
+<tr class="separator:aff717f550427ea233692c75c1853e92c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a226b28040841114ee414d5b2c512791b" id="r_a226b28040841114ee414d5b2c512791b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="idList_8cpp.html#a226b28040841114ee414d5b2c512791b">getExtensionBlock</a> (LPBYTE buffer, std::vector&lt; std::unique_ptr&lt; <a class="el" href="structIExtensionBlock.html">IExtensionBlock</a> &gt; &gt; *extensionBlocks, int _level, bool *is_zip, bool is_file)</td></tr>
 <tr class="separator:a226b28040841114ee414d5b2c512791b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a26594bcfbe6a569053c458a24111f4ab" id="r_a26594bcfbe6a569053c458a24111f4ab"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="structIShellItem.html">IShellItem</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="idList_8cpp.html#a26594bcfbe6a569053c458a24111f4ab">makeShellItem</a> (LPBYTE buffer, int _level, bool Parentiszip)</td></tr>
@@ -122,6 +126,77 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Decoding of shell items, ID lists, property stores and extension blocks (see <a class="el" href="idList_8h.html" title="Shell items, ID lists and extension blocks: the structures behind shortcuts, shellbags,...">idList.h</a>). </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="aff717f550427ea233692c75c1853e92c" name="aff717f550427ea233692c75c1853e92c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff717f550427ea233692c75c1853e92c">&#9670;&#160;</a></span>addFolderTypeNames()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void addFolderTypeNames </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classJson.html">Json</a> &amp;&#160;</td>
+          <td class="paramname"><em>o</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structFolderTypeNames.html">FolderTypeNames</a> &amp;&#160;</td>
+          <td class="paramname"><em>names</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Adds the fields of <code>names</code> that were found to <code>o</code>. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">o</td><td>the block's JSON object </td></tr>
+    <tr><td class="paramname">names</td><td>the names read by folderTypeNames </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aa78ef6f7be798339ffa8e24db00f14ee" name="aa78ef6f7be798339ffa8e24db00f14ee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa78ef6f7be798339ffa8e24db00f14ee">&#9670;&#160;</a></span>folderTypeNames()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structFolderTypeNames.html">FolderTypeNames</a> folderTypeNames </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>typeGuid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>viewGuid</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads the names of a folder type and of one of its views (see <a class="el" href="structFolderTypeNames.html">FolderTypeNames</a>). Results are cached: the same pair recurs in every shell item of a library. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">typeGuid</td><td>the folder type, "{…}" </td></tr>
+    <tr><td class="paramname">viewGuid</td><td>the view, "{…}" </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the names found; empty without a SOFTWARE hive or a matching key </dd></dl>
+
+</div>
+</div>
 <a id="a226b28040841114ee414d5b2c512791b" name="a226b28040841114ee414d5b2c512791b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a226b28040841114ee414d5b2c512791b">&#9670;&#160;</a></span>getExtensionBlock()</h2>
 

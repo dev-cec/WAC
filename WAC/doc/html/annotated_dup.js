@@ -58,6 +58,7 @@ var annotated_dup =
     [ "FileAttributes", "structFileAttributes.html", "structFileAttributes" ],
     [ "FileEntryShellItem", "structFileEntryShellItem.html", "structFileEntryShellItem" ],
     [ "Filename", "structFilename.html", "structFilename" ],
+    [ "FolderTypeNames", "structFolderTypeNames.html", "structFolderTypeNames" ],
     [ "FsFlags", "structFsFlags.html", "structFsFlags" ],
     [ "HiveFixInfo", "structHiveFixInfo.html", "structHiveFixInfo" ],
     [ "HiveLogEntry", "structHiveLogEntry.html", "structHiveLogEntry" ],
