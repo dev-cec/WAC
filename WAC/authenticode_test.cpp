@@ -32,7 +32,7 @@
 
 namespace {
 
-std::vector<uint8_t> read(const std::filesystem::path& p) {
+std::vector<uint8_t> readFile(const std::filesystem::path& p) {
 	std::ifstream f(p, std::ios::binary);
 	return std::vector<uint8_t>((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
 }
@@ -75,12 +75,12 @@ int main(int argc, char** argv) {
 
 	IndexCatalogues index;
 	std::map<std::string, size_t> refusals;
-	size_t read = 0;
+	size_t catalogsRead = 0;
 	const auto t0 = std::chrono::steady_clock::now();
 	for (const auto& e : std::filesystem::directory_iterator(folder)) {
 		if (e.path().extension() != ".cat") continue;
-		const std::vector<uint8_t> d = read(e.path());
-		++read;
+		const std::vector<uint8_t> d = readFile(e.path());
+		++catalogsRead;
 		if (!index.add(e.path().filename().wstring(), d.data(), d.size())) {
 			const VerifiedSignature s = VerifyPkcs7(d.data(), d.size());
 			++refusals[s.valid ? (s.signerAccepted ? std::string("no indexable digest")
@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
 		}
 	}
 	const double duration = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
-	std::cerr << read << " catalog(s) read, " << index.catalogues() << " kept, "
+	std::cerr << catalogsRead << " catalog(s) read, " << index.catalogues() << " kept, "
 	          << index.fingerprints() << " digest(s) indexed, in " << duration << " s\n";
 	for (const auto& r : refusals) std::cerr << "  refusés : " << r.second << " — " << r.first << "\n";
 
