@@ -939,24 +939,24 @@ struct ControlPanelCategory :IShellItem {
 */
 std::wstring getType(unsigned int type);
 
-/*! Returns the value of the SPSVALUE according to its kind.
-*/
 /*! Reads a typed value of a property store.
 *
 * @param buffer start of the entry
 * @param pos reading position in the entry, advanced as the decoding goes
 * @param valueType VT_ type of the value
 * @param level depth, for the layout
-* @param inputSize total size of the entry, used to return the raw bytes when
-*        the type is not decoded. Zero if the caller does not know it: the value
-*        then comes out without a dump.
-* @param typeNotDecoded set to true if the type could not be decoded. The caller
-*        must then stop its walk when the entry's size is not declared,
-*        otherwise the next entry would be read in the wrong place.
-* @return the value, or an object describing the type not supported
+* @param inputSize total size of the entry, checked by the caller against the
+*        real buffer: NO read goes beyond it. A value that does not fit comes
+*        out as `TruncatedValueType` with the remaining bytes; a type not
+*        decoded, with its remaining bytes too.
+* @param typeNotDecoded set to true if the value could not be decoded (type
+*        unknown, or value truncated). The caller must then stop its walk when
+*        the entry's size is not declared, otherwise the next entry would be
+*        read in the wrong place.
+* @return the value, or an object describing why it was not decoded
 */
 Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int level,
-              unsigned int inputSize = 0, bool* typeNotDecoded = nullptr);
+              unsigned int inputSize, bool* typeNotDecoded = nullptr);
 
 /*! Format of a Property inside the UserPropertyViews.
 */

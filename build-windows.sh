@@ -90,6 +90,11 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
   "$CXX" "${FLAGS[@]}" -static -static-libgcc -static-libstdc++ \
     "$SRC/lnk_test.cpp" "${TEST_OBJS[@]}" -o "$BUILD/lnk_test.exe" "${LIBS[@]}"
   echo "   -> $BUILD/lnk_test.exe"
+  # Wine lacks PSGetNameFromPropertyKey (see the stub's header): needed to run
+  # lnk_test on real shortcuts, with WINEDLLOVERRIDES="propsys=n".
+  x86_64-w64-mingw32-gcc -shared -O2 -Wall -Wextra -Wl,--kill-at \
+    "$TP/compat-include/propsys_wine_stub.c" -o "$BUILD/propsys.dll"
+  echo "   -> $BUILD/propsys.dll (Wine stub, tests only)"
 fi
 
 echo

@@ -655,12 +655,18 @@ boundary, the next page being mapped `PAGE_NOACCESS`. Each shortcut given is
 parsed whole, then in every one of its truncations, then with 2,000 random
 corruptions (fixed seed). Its first runs caught a shell item read at fixed
 offsets past its declared size (network item, `+0x54`), and an endless loop in
-`replaceAll()` when the string looked for is empty. Result on eight shortcuts of
-the test VM (Start menu and Recent): 24,652 inputs, no read outside the buffer.
+`replaceAll()` when the string looked for is empty; the shortcuts of a real
+machine then caught two more, in the property store values (`readScalar`,
+`SPSValue`). Result on 220 shortcuts of a real machine and eight of the test VM:
+over 570,000 inputs, no read outside the buffer.
+
+Wine does not implement `PSGetNameFromPropertyKey`, which WAC calls to name the
+properties of real shortcuts: `--test` also builds a stand-in `propsys.dll`,
+used with `WINEDLLOVERRIDES`.
 
 ```bash
 ./build-windows.sh --test
-wine build-windows/lnk_test.exe a.lnk b.lnk ...
+cd build-windows && WINEDLLOVERRIDES="propsys=n" wine lnk_test.exe a.lnk b.lnk ...
 ```
 
 **Timing and memory** are measured with the third mode, which runs the *complete*

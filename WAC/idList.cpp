@@ -353,6 +353,34 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 	// NB: the backslashes are NO LONGER doubled here, which also fixes the
 	// advance of *pos that was computed on the escaped string (hence wrong for
 	// any value holding a backslash, that is any path).
+	/* EVERY READ STAYS INSIDE THE ENTRY, of `inputSize` bytes from `buffer`.
+	   The offsets and lengths below come from the file; a truncated or forged
+	   entry used to be read beyond its end. A value that does not fit is not
+	   decoded: its remaining bytes are returned, and the walk stops, as for a
+	   type not decoded. Both callers pass the real size of the entry. */
+	auto room = [&](size_t length) { return fits(inputSize, *pos, length); };
+	auto truncated = [&]() {
+		if (typeNotDecoded) *typeNotDecoded = true;
+		log(2, L"🔥getValue: value of type 0x" + to_hex(valueType) + L" overruns its entry",
+		    ERROR_INVALID_DATA);
+		Json o = Json::obj();
+		o.add(L"TruncatedValueType", Json::str(L"0x" + to_hex(valueType)));
+		if (inputSize > *pos)
+			o.add(L"Data", Json::str(dump_wstring(buffer, (int)*pos, (int)(inputSize - *pos))));
+		return o;
+	};
+	static const std::map<unsigned short, size_t> FIXED_SIZE = {
+		{ VT_I2, 2 }, { VT_I4, 4 }, { VT_INT, 4 }, { VT_DATE, 8 }, { VT_BOOL, 2 },
+		{ VT_R8, 8 }, { VT_I1, 1 }, { VT_UI1, 1 }, { VT_UI2, 2 }, { VT_UI4, 4 },
+		{ VT_UINT, 4 }, { VT_I8, 8 }, { VT_UI8, 8 }, { VT_FILETIME, 8 }, { VT_R4, 4 },
+		{ VT_CY, 8 }, { VT_ERROR, 4 }, { VT_DECIMAL, 16 }, { VT_CLSID, 16 },
+		// variable types: only their leading size field is fixed
+		{ VT_BSTR, 4 }, { VT_LPWSTR, 4 }, { VT_LPSTR, 4 }, { VT_BLOB, 4 },
+		{ VT_STREAM, 4 }, { 0x101F, 4 }, { 0x1011, 2 },
+	};
+	const auto fixedSize = FIXED_SIZE.find(valueType);
+	if (fixedSize != FIXED_SIZE.end() && !room(fixedSize->second)) return truncated();
+
 	if (valueType == VT_EMPTY) return Json::str(L"");
 	if (valueType == VT_NULL)  return Json::null();
 	if (valueType == VT_I2) {
@@ -362,7 +390,7 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		int v = *reinterpret_cast<int*>(buffer + *pos); *pos += 4; return Json::num((long long)v);
 	}
 	if (valueType == VT_BSTR) {
-		std::wstring v((wchar_t*)(buffer + *pos + 4));
+		std::wstring v = readWideZ(buffer, inputSize, (size_t)*pos + 4);
 		*pos += 4 + (unsigned int)v.size() * 2 + 2;
 		return Json::str(v);
 	}
@@ -406,18 +434,17 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		unsigned long long v = *reinterpret_cast<unsigned long long*>(buffer + *pos); *pos += 8; return Json::num(v);
 	}
 	if (valueType == VT_LPWSTR) {
-		std::wstring v((wchar_t*)(buffer + *pos + 4));
+		std::wstring v = readWideZ(buffer, inputSize, (size_t)*pos + 4);
 		*pos += 4 + (unsigned int)v.size() * 2;
-		while (buffer[*pos] == 0x00) *pos += 1;   // padding
+		while (*pos < inputSize && buffer[*pos] == 0x00) *pos += 1;   // padding
 		return Json::str(v);
 	}
 	if (valueType == 0x101F) {                     // Vector<VT_LPWSTR>
 		Json arr = Json::arr();
 		unsigned int nb = *reinterpret_cast<unsigned int*>(buffer + *pos);
-		for (unsigned int x = 0; x < nb; x++) {
+		for (unsigned int x = 0; x < nb && fits(inputSize, (size_t)*pos + 4, 4); x++) {
 			unsigned int size = *reinterpret_cast<unsigned int*>(buffer + *pos + 4);
-			const size_t bound = inputSize ? inputSize : (size_t)*pos + 8 + (size_t)size * 2;
-			arr.push(Json::str(readWideZ(buffer, bound, (size_t)*pos + 8)));
+			arr.push(Json::str(readWideZ(buffer, inputSize, (size_t)*pos + 8)));
 			*pos += 4 + size * 2;
 		}
 		return arr;
@@ -427,12 +454,11 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		Json r = Json::str(L"Not implemented");    // unknown content (system.delegateidlist)
 		// The vector holds `size` bytes; a nested store must fit in them (and in
 		// the entry, when its size is known).
-		size_t room = size;
-		if (inputSize && inputSize > *pos) room = std::min<size_t>(room, inputSize - *pos);
-		if (*reinterpret_cast<unsigned int*>(buffer + *pos + 0x8) == 0x53505331)
-			r = SPS(buffer + *pos + 0x4, level + 2, room > 4 ? room - 4 : 0).toJson();
-		else if (*reinterpret_cast<unsigned int*>(buffer + *pos + 0x1c) == 0x53505331)
-			r = SPS(buffer + *pos + 0x8, level + 2, room > 8 ? room - 8 : 0).toJson();
+		const size_t space = std::min<size_t>(size, inputSize - *pos);   // room(2) checked above
+		if (space >= 0x8 + 4 && *reinterpret_cast<unsigned int*>(buffer + *pos + 0x8) == 0x53505331)
+			r = SPS(buffer + *pos + 0x4, level + 2, space - 4).toJson();
+		else if (space >= 0x1c + 4 && *reinterpret_cast<unsigned int*>(buffer + *pos + 0x1c) == 0x53505331)
+			r = SPS(buffer + *pos + 0x8, level + 2, space - 8).toJson();
 		*pos += size;
 		return r;
 	}
@@ -455,15 +481,14 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		const unsigned int start = *pos + 4;
 		Json o = Json::obj();
 		o.add(L"DataSize", Json::num(size));
-		const bool boundsOk = (size > 0)
-		                   && (inputSize == 0 || start + size <= inputSize);
+		const bool boundsOk = size > 0 && fits(inputSize, start, size);
 		if (!boundsOk) {
 			log(2, L"🔥VT_BLOB: size outside the entry (" + std::to_wstring(size) + L")");
 		}
 		/* The 13-byte offset between the start of the BLOB and the first store was
 		   found empirically; it is applied only if the signature is actually
 		   there. */
-		else if (*reinterpret_cast<const unsigned int*>(buffer + start + 13 + 4) == 0x53505331) {
+		else if (size >= 13 + 8 && *reinterpret_cast<const unsigned int*>(buffer + start + 13 + 4) == 0x53505331) {
 			Json arr = Json::arr();
 			unsigned int p = start + 13;
 			const unsigned int end = start + size;
@@ -496,7 +521,8 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		   Vector<VT_UI1>. Otherwise, the bytes are returned in hexadecimal. */
 		const unsigned int nameSize = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		*pos += 4;
-		const std::wstring name((wchar_t*)(buffer + *pos));
+		const std::wstring name = readWideZ(buffer, inputSize, *pos);
+		if (!fits(inputSize, (size_t)*pos, (size_t)nameSize + 2 + 4)) return truncated();
 		*pos += nameSize + 2;
 		const unsigned int dataSize = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		const unsigned int dataStart = *pos + 4;
@@ -504,14 +530,13 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		Json o = Json::obj();
 		o.add(L"StreamName", Json::str(name));
 		o.add(L"DataSize",   Json::num(dataSize));
-		const bool boundsOk = (dataSize > 0)
-		                   && (inputSize == 0 || dataStart + dataSize <= inputSize);
+		const bool boundsOk = dataSize > 0 && fits(inputSize, dataStart, dataSize);
 		if (!boundsOk) {
 			if (dataSize > 0)
 				log(2, L"🔥VT_STREAM: data size outside the entry ("
 				     + std::to_wstring(dataSize) + L")");
 		}
-		else if (*reinterpret_cast<const unsigned int*>(buffer + dataStart + 4) == 0x53505331) {
+		else if (dataSize >= 8 && *reinterpret_cast<const unsigned int*>(buffer + dataStart + 4) == 0x53505331) {
 			// Nested property store: the "SPS1" signature follows the size.
 			log(3, L"🔈VT_STREAM: nested property store");
 			o.add(L"PropertyStore", SPS(buffer + dataStart, level + 2, dataSize).toJson());
@@ -557,8 +582,7 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		/* Size in BYTES, terminator included — unlike VT_LPWSTR, whose size is in
 		   characters. */
 		unsigned int size = *reinterpret_cast<unsigned int*>(buffer + *pos);
-		const size_t bound = inputSize ? inputSize : (size_t)*pos + 4 + size;
-		std::wstring v = string_to_wstring(readNarrowZ(buffer, bound, (size_t)*pos + 4));
+		std::wstring v = string_to_wstring(readNarrowZ(buffer, inputSize, (size_t)*pos + 4));
 		*pos += 4 + size;
 		return Json::str(v);
 	}
@@ -622,6 +646,13 @@ Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsign
 		return readScalar(buffer, pos, valueType, level, inputSize, typeNotDecoded);
 
 	const unsigned short typeElement = (unsigned short)(valueType & 0x0FFF);
+	if (!fits(inputSize, *pos, 4)) {                // no room for the element count
+		if (typeNotDecoded) *typeNotDecoded = true;
+		log(2, L"🔥vector: no room for the element count", ERROR_INVALID_DATA);
+		Json o = Json::obj();
+		o.add(L"TruncatedValueType", Json::str(L"0x" + to_hex(valueType)));
+		return o;
+	}
 	const unsigned int nb = *reinterpret_cast<unsigned int*>(buffer + *pos);
 	*pos += 4;
 	log(3, L"🔈vector of " + std::to_wstring(nb) + L" element(s) de type 0x"
@@ -666,12 +697,27 @@ SPSValue::SPSValue(LPBYTE buffer, std::wstring _guid, int _level) {
 	guid = _guid;
 	size = *reinterpret_cast<unsigned int*>(buffer);
 	valueType = 0;
+	/* The caller checked that the entry fits in its store. Its header — size,
+	   identifier, reserved byte, type and padding — takes 13 bytes; a shorter
+	   entry is malformed and ends the store's walk (size 0). */
+	if (size > 0 && size < 13) {
+		log(2, L"🔥SPSValue: entry of " + std::to_wstring(size) + L" bytes, shorter than its header",
+		    ERROR_INVALID_DATA);
+		size = 0;
+	}
 	if (size > 0) {
 		unsigned int id_int = *reinterpret_cast<unsigned int*>(buffer + 4);
 		id = std::to_wstring(id_int);
 		//recherche value
 		unsigned int pos = 13;
 		if (guid == L"{D5CDD505-2E9C-101B-9397-08002B2CF9AE}") {
+			// Named entry: `id_int` is the name's size, then the type.
+			if (!fits(size, 9 + (size_t)id_int, 4)) {
+				log(2, L"🔥SPSValue: name of " + std::to_wstring(id_int)
+				     + L" bytes overruns its entry", ERROR_INVALID_DATA);
+				size = 0;
+				return;
+			}
 			id = readWideZ(buffer, size, 9);
 			log(3, L"🔈trans_guid_to_wstring name");
 			name = trans_guid_to_wstring(guid);
