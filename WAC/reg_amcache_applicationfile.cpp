@@ -10,7 +10,7 @@ AmcacheApplicationFile::AmcacheApplicationFile(ORHKEY hKey_amcache) {
 	log(3, L"🔈getRegSzValue LongPath");
 	getRegSzValue(hKey_amcache, nullptr, L"LowerCaseLongPath", &longPath);
 
-	// Empreinte sur le chemin normalisé (guillemets, casse), lecture brute.
+	// Fingerprint on the normalised path (quotes, case), read raw.
 	fingerprint = FingerprintFile(longPath);
 
 	log(3, L"🔈replaceAll LongPath");
@@ -20,7 +20,7 @@ AmcacheApplicationFile::AmcacheApplicationFile(ORHKEY hKey_amcache) {
 	version = replaceAll(version, L"\t", L"\\t"); // replace tab in std::string by \t, tab not supported by json in strings
 	log(3, L"🔈getRegboolValue IsOsComponent");
 	getRegboolValue(hKey_amcache, nullptr, L"IsOsComponent", &IsOsComponent);
-	//la date est stockée en REG_SZ, donc il faut la reconvertir en FILETIME pour avoir le bon format et la bonne timezone
+	// the date is stored as REG_SZ, so it must be converted back to a FILETIME to get the right format and the right time zone
 	std::wstring temp;
 	log(3, L"🔈getRegSzValue LinkDate");
 	getRegSzValue(hKey_amcache, nullptr, L"LinkDate", &temp);
@@ -40,7 +40,7 @@ Json AmcacheApplicationFile::toJson() {
 	Json o = Json::obj();
 	o.add(L"Name",          Json::str(name));
 	o.add(L"Publisher",     Json::str(publisher));
-	o.add(L"LongPath",      Json::str(longPath));      // chemin brut
+	o.add(L"LongPath",      Json::str(longPath));      // raw path
 	addFingerprints(o, fingerprint);
 	o.add(L"Version",       Json::str(version));
 	o.add(L"LinkDate",      Json::str(linkDate));
@@ -120,5 +120,5 @@ HRESULT AmcacheApplicationFiles::toJson() {
 
 void AmcacheApplicationFiles::clear() {
 	log(3, L"🔈AmcacheApplicationFiles clear");
-	amcacheapplicationfiles.clear();   // detruit les elements -> libere reellement
+	amcacheapplicationfiles.clear();   // destroys the elements -> really releases them
 }

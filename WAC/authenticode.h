@@ -105,7 +105,7 @@ struct VerifiedSignature {
 
 /*! Verifies a PKCS#7 SignedData (catalog or embedded signature): content
  *  digest, signer's signature, chain up to an embedded Microsoft root. The
- *  returned pointers point into `donnees`. */
+ *  returned pointers point into `data`. */
 VerifiedSignature VerifyPkcs7(const uint8_t* data, size_t size);
 
 /*! Index of the Authenticode digests listed by the machine's valid Microsoft
@@ -114,12 +114,12 @@ class IndexCatalogues {
 public:
 	/*! Verifies a catalog and, if it is signed by an accepted signer, indexes its
 	 *  digests.
-	 *  @param nom name of the catalog, kept to name it in the manifest.
-	 *  @param octets,taille the catalog's bytes.
+	 *  @param name name of the catalog, kept to name it in the manifest.
+	 *  @param bytes,size the catalog's bytes.
 	 *  @return true if the catalog was kept. */
 	bool add(const std::wstring& name, const uint8_t* bytes, size_t size);
 	/*! Looks a digest up in the index.
-	 *  @param empreinte,taille the raw digest (SHA-1 or SHA-256).
+	 *  @param fingerprint,size the raw digest (SHA-1 or SHA-256).
 	 *  @return the name of the catalog listing it, or nullptr. */
 	const std::wstring* find(const uint8_t* fingerprint, size_t size) const;
 	//! @return the number of indexed catalogs.
@@ -140,7 +140,7 @@ private:
 /*! Microsoft authenticity verdict on an analysed PE. */
 struct VerdictMicrosoft {
 	bool microsoft = false;       //!< authentic: hash without collecting
-	std::wstring source;          //!< "catalogue <name>" or "signature intégrée"
+	std::wstring source;          //!< "catalog <name>" or "embedded signature"
 	std::wstring signer;      //!< signer's CN (embedded signature)
 	std::string reason;            //!< why not, for the log
 };

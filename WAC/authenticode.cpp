@@ -250,19 +250,19 @@ bool signerAccepted(const std::wstring& cn, const std::wstring& o) {
 VerifiedSignature VerifyPkcs7(const uint8_t* data, size_t size) {
 	VerifiedSignature r;
 	Tlv ci;
-	if (!readTlv(data, size, ci) || ci.tag != 0x30) { r.reason = "ContentInfo illisible"; return r; }
+	if (!readTlv(data, size, ci) || ci.tag != 0x30) { r.reason = "ContentInfo unreadable"; return r; }
 	std::vector<Tlv> e = children(ci);
 	if (e.size() < 2 || !EST(e[0], OID_SIGNED_DATA) || e[1].tag != 0xA0) { r.reason = "pas un SignedData"; return r; }
 	std::vector<Tlv> w = children(e[1]);
-	if (w.empty() || w[0].tag != 0x30) { r.reason = "SignedData illisible"; return r; }
+	if (w.empty() || w[0].tag != 0x30) { r.reason = "SignedData unreadable"; return r; }
 	const std::vector<Tlv> sd = children(w[0]);
 	// version, digestAlgorithms, encapContentInfo, [0] certificats, [1] crls, signerInfos
-	if (sd.size() < 4) { r.reason = "SignedData incomplet"; return r; }
+	if (sd.size() < 4) { r.reason = "SignedData incomplete"; return r; }
 	const std::vector<Tlv> eci = children(sd[2]);
-	if (eci.size() < 2 || eci[0].tag != 0x06 || eci[1].tag != 0xA0) { r.reason = "contenu absent"; return r; }
+	if (eci.size() < 2 || eci[0].tag != 0x06 || eci[1].tag != 0xA0) { r.reason = "content absent"; return r; }
 	r.contentOid.assign((const char*)eci[0].val, eci[0].len);
 	const std::vector<Tlv> cc = children(eci[1]);
-	if (cc.empty()) { r.reason = "contenu vide"; return r; }
+	if (cc.empty()) { r.reason = "content empty"; return r; }
 	r.content = cc[0].val;
 	r.contentSize = cc[0].len;
 
@@ -273,22 +273,22 @@ VerifiedSignature VerifyPkcs7(const uint8_t* data, size_t size) {
 			for (const Tlv& c : children(sd[i])) { Certificate x; if (analyseCertificate(c, x)) pool.push_back(x); }
 		else if (sd[i].tag == 0x31) infos = &sd[i];
 	}
-	if (!infos) { r.reason = "aucun signataire"; return r; }
+	if (!infos) { r.reason = "no signer"; return r; }
 	const std::vector<Tlv> signers = children(*infos);
-	if (signers.empty()) { r.reason = "aucun signataire"; return r; }
+	if (signers.empty()) { r.reason = "no signer"; return r; }
 	const std::vector<Tlv> si = children(signers[0]);
 	// version, issuerAndSerialNumber, digestAlgorithm, [0] attributes, digestEncryptionAlgorithm, encryptedDigest
-	if (si.size() < 5) { r.reason = "SignerInfo incomplet"; return r; }
+	if (si.size() < 5) { r.reason = "SignerInfo incomplete"; return r; }
 	const std::vector<Tlv> ias = children(si[1]);
-	if (ias.size() < 2) { r.reason = "émetteur du signataire illisible"; return r; }
+	if (ias.size() < 2) { r.reason = "signer's issuer unreadable"; return r; }
 	const DigestAlgorithm algo = algoDe(si[2]);
-	if (algo == DigestAlgorithm::Unknown) { r.reason = "algorithme d'empreinte non pris en charge"; return r; }
+	if (algo == DigestAlgorithm::Unknown) { r.reason = "digest algorithm not supported"; return r; }
 	size_t k = 3;
 	const Tlv* attributes = nullptr;
 	if (si[k].tag == 0xA0) attributes = &si[k++];
-	if (k + 1 >= si.size() || si[k + 1].tag != 0x04) { r.reason = "signature absente"; return r; }
+	if (k + 1 >= si.size() || si[k + 1].tag != 0x04) { r.reason = "signature absent"; return r; }
 	const Tlv& signature = si[k + 1];
-	if (!attributes) { r.reason = "attributs authentifiés absents"; return r; }
+	if (!attributes) { r.reason = "authenticated attributes absent"; return r; }
 
 	// 1. The content's digest must be the one announced in the attributes.
 	uint8_t hc[64];
@@ -301,7 +301,7 @@ VerifiedSignature VerifyPkcs7(const uint8_t* data, size_t size) {
 		if (!vals.empty() && vals[0].tag == 0x04 && vals[0].len == lhc
 		    && std::memcmp(vals[0].val, hc, lhc) == 0) digestOk = true;
 	}
-	if (!digestOk) { r.reason = "empreinte du contenu non conforme"; return r; }
+	if (!digestOk) { r.reason = "content digest does not match"; return r; }
 
 	// 2. The signature covers the attributes, re-encoded as a SET (0x31).
 	std::vector<uint8_t> signedBytes(attributes->start, attributes->start + attributes->total);
@@ -312,20 +312,20 @@ VerifiedSignature VerifyPkcs7(const uint8_t* data, size_t size) {
 	const Certificate* signer = nullptr;
 	for (const Certificate& c : pool)
 		if (sameBytes(c.issuer, ias[0]) && sameBytes(c.serial, ias[1])) { signer = &c; break; }
-	if (!signer || !signer->rsa) { r.reason = "certificat signataire absent ou non RSA"; return r; }
+	if (!signer || !signer->rsa) { r.reason = "signer certificate absent or not RSA"; return r; }
 	if (!RsaVerifyPkcs1(signer->module.val, signer->module.len,
 	                      signer->exponent.val, signer->exponent.len,
 	                      signature.val, signature.len, algo, ha, lha)) {
-		r.reason = "signature RSA invalide"; return r;
+		r.reason = "RSA signature invalid"; return r;
 	}
 	// 3. The chain up to an embedded Microsoft root.
-	if (!attach(*signer, pool)) { r.reason = "chaîne non rattachée à une racine Microsoft"; return r; }
+	if (!attach(*signer, pool)) { r.reason = "chain not tied to a Microsoft root"; return r; }
 
 	r.valid = true;
 	r.signer = attributeNameField(signer->subject, OID_CN, sizeof(OID_CN));
 	const std::wstring o = attributeNameField(signer->subject, OID_O, sizeof(OID_O));
 	r.signerAccepted = signerAccepted(r.signer, o);
-	if (!r.signerAccepted) r.reason = "signataire non retenu";
+	if (!r.signerAccepted) r.reason = "signer not accepted";
 	return r;
 }
 
@@ -511,21 +511,21 @@ VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalog
 	                       std::make_pair(pe.sha256Complete(), 32), std::make_pair(pe.sha1Complete(), 20) }) {
 		if (const std::wstring* cat = catalogues.find(e.first, (size_t)e.second)) {
 			v.microsoft = true;
-			v.source = L"catalogue " + *cat;
+			v.source = L"catalog " + *cat;
 			return v;
 		}
 	}
 
 	// 2. Embedded signature: WIN_CERTIFICATE { dwLength, wRevision, wCertificateType, bCertificate }.
 	const std::vector<uint8_t>& t = pe.certificateTable();
-	if (t.size() < 8) { v.reason = "non signé (ni catalogue, ni signature intégrée)"; return v; }
+	if (t.size() < 8) { v.reason = "not signed (neither catalog nor embedded signature)"; return v; }
 	const uint32_t length = lu32(t.data());
 	const uint16_t type = lu16(t.data() + 6);
-	if (type != 0x0002 || length < 8 || length > t.size()) { v.reason = "table de certificats inattendue"; return v; }
+	if (type != 0x0002 || length < 8 || length > t.size()) { v.reason = "unexpected certificate table"; return v; }
 	const VerifiedSignature s = VerifyPkcs7(t.data() + 8, length - 8);
 	if (!s.valid) { v.reason = s.reason; return v; }
 	if (s.contentOid != std::string((const char*)OID_SPC_INDIRECT, sizeof(OID_SPC_INDIRECT))) {
-		v.reason = "contenu signé inattendu"; return v;
+		v.reason = "unexpected signed content"; return v;
 	}
 	// The signed content carries the file's Authenticode digest: it must be the
 	// one computed here, otherwise the signature is authentic but covers ANOTHER
@@ -533,15 +533,15 @@ VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalog
 	Tlv spc;
 	spc.tag = 0x30; spc.val = s.content; spc.len = s.contentSize;
 	std::string declared;
-	if (!indirectDigest(spc, declared)) { v.reason = "empreinte signée illisible"; return v; }
+	if (!indirectDigest(spc, declared)) { v.reason = "signed digest unreadable"; return v; }
 	const bool wellFormed =
 		(declared.size() == 32 && std::memcmp(declared.data(), pe.sha256(), 32) == 0)
 	 || (declared.size() == 20 && std::memcmp(declared.data(), pe.sha1(), 20) == 0);
-	if (!wellFormed) { v.reason = "fichier modifié depuis sa signature"; return v; }
+	if (!wellFormed) { v.reason = "file modified since it was signed"; return v; }
 	v.signer = s.signer;
-	if (!s.signerAccepted) { v.reason = "signataire non retenu : " + std::string(s.signer.begin(), s.signer.end()); return v; }
+	if (!s.signerAccepted) { v.reason = "signer not accepted: " + std::string(s.signer.begin(), s.signer.end()); return v; }
 	v.microsoft = true;
-	v.source = L"signature intégrée";
+	v.source = L"embedded signature";
 	return v;
 }
 
@@ -551,9 +551,9 @@ VerdictMicrosoft EvaluateByCatalog(const uint8_t sha256[32], const IndexCatalogu
 	VerdictMicrosoft v;
 	if (const std::wstring* cat = catalogues.find(sha256, 32)) {
 		v.microsoft = true;
-		v.source = L"catalogue " + *cat;
+		v.source = L"catalog " + *cat;
 	}
-	else v.reason = "absent des catalogues";
+	else v.reason = "absent from the catalogs";
 	return v;
 }
 
@@ -641,9 +641,9 @@ VerdictMicrosoft EvaluatePowerShellScript(const uint8_t* bytes, size_t size) {
 		start = findText(t, "<!-- SIG # Begin signature block -->");
 		xml = true;
 	}
-	if (start == std::u32string::npos) { v.reason = "pas de signature intégrée"; return v; }
+	if (start == std::u32string::npos) { v.reason = "pas de embedded signature"; return v; }
 	const size_t end = findText(t, xml ? "<!-- SIG # End signature block -->" : "# SIG # End signature block", start);
-	if (end == std::u32string::npos) { v.reason = "bloc de signature incomplet"; return v; }
+	if (end == std::u32string::npos) { v.reason = "signature block incomplete"; return v; }
 
 	// Base64 of the block's lines, prefixes and suffixes removed.
 	std::vector<uint8_t> der;
@@ -670,11 +670,11 @@ VerdictMicrosoft EvaluatePowerShellScript(const uint8_t* bytes, size_t size) {
 	const VerifiedSignature s = VerifyPkcs7(der.data(), der.size());
 	if (!s.valid) { v.reason = s.reason; return v; }
 	if (s.contentOid != std::string((const char*)OID_SPC_INDIRECT, sizeof(OID_SPC_INDIRECT))) {
-		v.reason = "contenu signé inattendu"; return v;
+		v.reason = "unexpected signed content"; return v;
 	}
 	Tlv spc; spc.tag = 0x30; spc.val = s.content; spc.len = s.contentSize;
 	std::string declared;
-	if (!indirectDigest(spc, declared)) { v.reason = "empreinte signée illisible"; return v; }
+	if (!indirectDigest(spc, declared)) { v.reason = "signed digest unreadable"; return v; }
 
 	// Text preceding the block, without its last line break, as UTF-16LE.
 	size_t corps = start;
@@ -685,10 +685,10 @@ VerdictMicrosoft EvaluatePowerShellScript(const uint8_t* bytes, size_t size) {
 	size_t lh = 0;
 	if (declared.size() == 32) { sha256Bytes(u16.data(), u16.size(), h); lh = 32; }
 	else if (declared.size() == 20) { sha1Bytes(u16.data(), u16.size(), h); lh = 20; }
-	if (!lh || std::memcmp(declared.data(), h, lh) != 0) { v.reason = "script modifié depuis sa signature"; return v; }
+	if (!lh || std::memcmp(declared.data(), h, lh) != 0) { v.reason = "script modified since it was signed"; return v; }
 	v.signer = s.signer;
-	if (!s.signerAccepted) { v.reason = "signataire non retenu"; return v; }
+	if (!s.signerAccepted) { v.reason = "signer not accepted"; return v; }
 	v.microsoft = true;
-	v.source = L"signature intégrée";
+	v.source = L"embedded signature";
 	return v;
 }

@@ -109,10 +109,10 @@ HRESULT ExhibitStoreCheckLocation(unsigned long long estimatedNeed) {
 			if (e.is_regular_file(ec)) { populated = true; break; }
 		}
 		if (populated) {
-			log(2, L"🔥Le répertoire de travail contient déjà des fichiers : "
+			log(2, L"🔥The working directory already holds files: "
 			       + working.wstring()
-			       + L" — une collecte antérieure serait analysée à la place de "
-			       L"celle-ci. Utilisez --output vers un dossier neuf.",
+			       + L" — a previous collection would be analysed instead of "
+			       L"this one. Use --output towards a fresh folder.",
 			    ERROR_DIR_NOT_EMPTY);
 			return HRESULT_FROM_WIN32(ERROR_DIR_NOT_EMPTY);
 		}
@@ -122,18 +122,18 @@ HRESULT ExhibitStoreCheckLocation(unsigned long long estimatedNeed) {
 	const unsigned long long free = ExhibitStoreFreeSpace();
 	if (free == 0) {
 		// Information unavailable: do not block on a failed measurement.
-		log(2, L"🔥Espace libre indéterminé sur le support de collecte : "
-		       L"vérification ignorée");
+		log(2, L"🔥Free space undetermined on the collection medium: "
+		       L"check skipped");
 		return ERROR_SUCCESS;
 	}
 	const unsigned long long need = estimatedNeed * 2;
-	log(2, L"❇️Support de collecte : " + std::to_wstring(free / 1024 / 1024)
-	     + L" Mio libres, " + std::to_wstring(need / 1024 / 1024)
-	     + L" Mio estimés nécessaires (consigne + travail)");
+	log(2, L"❇️Collection medium: " + std::to_wstring(free / 1024 / 1024)
+	     + L" MiB free, " + std::to_wstring(need / 1024 / 1024)
+	     + L" MiB estimated as needed (exhibit store + working copy)");
 	if (free < need) {
-		log(2, L"🔥Place insuffisante sur le support de collecte : "
-		       + std::to_wstring(free / 1024 / 1024) + L" Mio libres pour "
-		       + std::to_wstring(need / 1024 / 1024) + L" Mio nécessaires",
+		log(2, L"🔥Not enough space on the collection medium: "
+		       + std::to_wstring(free / 1024 / 1024) + L" MiB free for "
+		       + std::to_wstring(need / 1024 / 1024) + L" MiB needed",
 		    ERROR_DISK_FULL);
 		return HRESULT_FROM_WIN32(ERROR_DISK_FULL);
 	}
@@ -176,7 +176,7 @@ HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes) {
 	const std::filesystem::path working  = workingFolder();
 	std::error_code ec;
 	if (!std::filesystem::exists(exhibitStore, ec)) {
-		log(2, L"🔥Consigne absente : " + exhibitStore.wstring(), ERROR_PATH_NOT_FOUND);
+		log(2, L"🔥Exhibit store absent: " + exhibitStore.wstring(), ERROR_PATH_NOT_FOUND);
 		return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
 	}
 	std::filesystem::create_directories(working, ec);
@@ -217,7 +217,7 @@ HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes) {
 		std::filesystem::copy_file(e.path(), target,
 		                           std::filesystem::copy_options::overwrite_existing, ec);
 		if (ec) {
-			log(2, L"🔥Copie vers le travail impossible : " + relative.wstring());
+			log(2, L"🔥Cannot copy into the working directory: " + relative.wstring());
 			++ko;
 			global = S_FALSE;
 			continue;
@@ -233,9 +233,9 @@ HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes) {
 		if (att != expected.end()) {
 			const std::wstring obtained = sha256OfFile(target.wstring());
 			if (obtained != att->second) {
-				log(2, L"🔥Copie de travail non conforme à la consigne : "
-				       + relative.wstring() + L" (attendu " + att->second
-				       + L", obtenu " + obtained + L")");
+				log(2, L"🔥Working copy does not match the exhibit store: "
+				       + relative.wstring() + L" (expected " + att->second
+				       + L", got " + obtained + L")");
 				++ko;
 				global = S_FALSE;
 			}
@@ -243,10 +243,10 @@ HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes) {
 		}
 	}
 
-	log(2, L"❇️Travail : " + std::to_wstring(nb) + L" fichier(s) recopié(s), "
-	     + std::to_wstring(verifies) + L" vérifié(s) par empreinte, "
-	     + std::to_wstring(existing) + L" déjà présent(s), "
-	     + std::to_wstring(ko) + L" écart(s)");
+	log(2, L"❇️Travail : " + std::to_wstring(nb) + L" file(s) copied, "
+	     + std::to_wstring(verifies) + L" verified by fingerprint, "
+	     + std::to_wstring(existing) + L" already present, "
+	     + std::to_wstring(ko) + L" divergence(s)");
 	if (copies) *copies = nb;
 	if (bytes) *bytes = volume;
 	return global;
@@ -269,12 +269,12 @@ HRESULT ExhibitStoreWriteManifest() {
 	guard.add(L"ExhibitDirectory",  Json::str(L"consigne"));
 	guard.add(L"WorkingDirectory",  Json::str(L"travail"));
 	guard.add(L"Statement", Json::str(
-		L"Les fichiers de « consigne » sont les copies brutes telles que lues du "
-		L"volume : elles ne sont jamais réouvertes en écriture. Toute analyse, et "
-		L"toute modification (rejeu des journaux de transaction, alignement du bloc "
-		L"de base d'une ruche), portent sur « travail », recopié depuis la consigne "
-		L"et vérifié par empreinte. Aucune écriture n'a été faite sur le système "
-		L"examiné."));
+		L"The files of 'consigne' are the raw copies as read from the volume: "
+		L"they are never reopened for writing. Any analysis, and any "
+		L"modification (replay of the transaction logs, alignment of a hive's "
+		L"base block), bear on 'travail', copied from the exhibit store and "
+		L"verified by fingerprint. Nothing was written to the examined "
+		L"system."));
 	guard.add(L"ExtractionStartUtc",   Json::str(auditStartUtc()));
 	guard.add(L"ExtractionStart",      Json::str(auditStartLocal()));
 	std::wstring finUtc, finLocal;
@@ -362,7 +362,7 @@ HRESULT ExhibitStoreWriteManifest() {
 		std::wofstream f;
 		f.open(path);
 		if (!f) {
-			log(2, L"🔥Manifeste de consigne non écrit : " + path.wstring());
+			log(2, L"🔥Exhibit manifest not written: " + path.wstring());
 			return E_FAIL;
 		}
 		f << ansi_to_utf8(root.dump(0));
@@ -379,7 +379,7 @@ HRESULT ExhibitStoreWriteManifest() {
 		std::wofstream f;
 		f.open(seal);
 		if (!f || fingerprint.empty()) {
-			log(2, L"🔥Sceau du manifeste non écrit : " + seal.wstring());
+			log(2, L"🔥Manifest seal not written: " + seal.wstring());
 			return E_FAIL;
 		}
 		// sha256sum format: "<fingerprint>  <name>", readable by common tools
@@ -388,9 +388,9 @@ HRESULT ExhibitStoreWriteManifest() {
 		f.close();
 	}
 
-	log(2, L"❇️Manifeste de consigne : " + std::to_wstring(nb) + L" pièce(s), "
-	     + std::to_wstring(ko) + L" échec(s), "
+	log(2, L"❇️Exhibit manifest: " + std::to_wstring(nb) + L" pièce(s), "
+	     + std::to_wstring(ko) + L" failure(s), "
 	     + std::to_wstring(total / 1024 / 1024) + L" Mio");
-	log(2, L"❇️Sceau du manifeste (SHA-256) : " + fingerprint);
+	log(2, L"❇️Manifest seal (SHA-256): " + fingerprint);
 	return ERROR_SUCCESS;
 }

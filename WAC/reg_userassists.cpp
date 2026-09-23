@@ -1,15 +1,15 @@
 #include "reg_userassists.h"
 
 UserAssist::UserAssist(std::wstring hKey, LPWSTR valueName, LPBYTE data, std::wstring _sid) {
-	// Codage ANSI mais on veut de l'utf8
+	// ANSI encoding, but UTF-8 is wanted
 	log(3, L"🔈ROT13 Name");
-	Name = ROT13(valueName); // Rot13 du nom de la Value pour récupérer le nom de l’exécutable
+	Name = ROT13(valueName); // ROT13 of the value's name, to recover the executable's name
 	log(2, L"❇️UserAssist Name : " + Name);
 	Sid = _sid;
 	log(3, L"🔈getNameFromSid SidName");
 	SidName = getNameFromSid(Sid);
 	Class = hKey;
-	//conversion des GUID Directory
+	// conversion of the known folder GUIDs
 	std::wsmatch pieces_match;
 	std::wregex key(L"[\\{][a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}[\\}]");
 	log(3, L"🔈regex_search Name");
@@ -20,15 +20,15 @@ UserAssist::UserAssist(std::wstring hKey, LPWSTR valueName, LPBYTE data, std::ws
 			Name = replaceAll(Name, s, n);
 		}
 	}
-	Count = *reinterpret_cast<int*>(data + 4); // conversion en integer du nombre d'exécutions à partir du little endian
-	FocusCount = *reinterpret_cast<int*>(data + 8); // conversion en integer du nombre d'exécutions à partir du little endian
+	Count = *reinterpret_cast<int*>(data + 4); // little-endian to integer: the number of runs
+	FocusCount = *reinterpret_cast<int*>(data + 8); // little-endian to integer: the focus count
 	FILETIME filetime = *reinterpret_cast<FILETIME*>(data + 60);
 	log(3, L"🔈timeToIso8601 DateLocale");
-	DateLocale = timeToIso8601Local(filetime); // récupération de la date de dernière exécution sous forme de tableau de bytes
-	if (DateLocale != L"") { // si la date est vide
-		// sinon on la convertie en UTC
+	DateLocale = timeToIso8601Local(filetime); // last run, read from the bytes of the value
+	if (DateLocale != L"") { // if the date is empty
+		// otherwise it is converted to UTC
 		log(3, L"🔈timeToIso8601 DateLocaleUtc");
-		DateLocaleUtc = localTimeToIso8601Utc(filetime); // récupération de la date de dernière exécution sous forme de tableau de bytes
+		DateLocaleUtc = localTimeToIso8601Utc(filetime); // last run, read from the bytes of the value
 	}
 }
 
@@ -65,10 +65,10 @@ HRESULT UserAssists::getData() {
 	DWORD bufferSize = 0;
 	ORHKEY Offhive = NULL;
 	std::wstring hive = L"";
-	std::wstring userassitsKey[2] = { L"{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}", L"{F4E57C4B-2036-45F0-A9AB-443BCFE33D9F}" }; // les GUID à lire pour les userassists
+	std::wstring userassitsKey[2] = { L"{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}", L"{F4E57C4B-2036-45F0-A9AB-443BCFE33D9F}" }; // the GUIDs to read for the userassists
 	for (std::wstring key : userassitsKey) {
 		for (std::tuple<std::wstring, std::wstring> profileEntry : conf.profiles) {
-			//ouverture de la ruche user
+			// open the user hive
 			log(3, L"🔈replaceAll profile");
 			hive = extractedPath(std::get<1>(profileEntry)) + L"\\ntuser.dat";
 			log(3, L"🔈OROpenHive " + std::get<1>(profileEntry) + L"\\ntuser.dat");
@@ -127,5 +127,5 @@ HRESULT UserAssists::toJson() {
 
 void UserAssists::clear() {
 	log(3, L"🔈UserAssists clear");
-	userassists.clear();   // detruit les elements -> libere reellement
+	userassists.clear();   // destroys the elements -> really releases them
 }

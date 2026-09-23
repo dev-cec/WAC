@@ -2,9 +2,10 @@
 
 namespace {
 
-/* Offsets dans la valeur `F` d'un compte SAM (structure de taille fixe, 0x50
- * octets). Alignés sur RegRipper (samparse.pl) et creddump, qui concordent.
- * Nommés plutôt qu'écrits en clair dans le code : un offset nu ne se relit pas.
+/* Offsets in the `F` value of a SAM account (a fixed-size structure, 0x50
+ * bytes). Aligned on RegRipper (samparse.pl) and creddump, which agree.
+ * Named rather than written in plain in the code: a bare offset cannot be
+ * read back.
  */
 const size_t F_MIN_SIZE          = 0x44;
 const size_t F_LAST_LOGON  = 0x08;   // FILETIME
@@ -16,15 +17,15 @@ const size_t F_FLAGS            = 0x38;   // WORD (ACB)
 const size_t F_FAILURES              = 0x40;   // WORD
 const size_t F_LOGONS          = 0x42;   // WORD
 
-/* Offsets dans la valeur `V`. La valeur commence par une table d'entrées de 12
- * octets (offset, longueur, inconnu) ; les offsets sont relatifs à 0xCC, soit la
- * fin de cette table. */
+/* Offsets in the `V` value. The value starts with a table of 12-byte entries
+ * (offset, length, unknown); the offsets are relative to 0xCC, that is the end
+ * of that table. */
 const size_t V_BASE          = 0xCC;
 const size_t V_NAME           = 0x0C;
 const size_t V_FULL_NAME   = 0x18;
 const size_t V_COMMENT   = 0x24;
 
-//! Lit un FILETIME à un offset, sans jamais dépasser le tampon.
+//! Reads a FILETIME at an offset, never going past the buffer.
 FILETIME readFiletime(const BYTE* data, DWORD size, size_t offset) {
 	FILETIME ft = { 0, 0 };
 	if (offset + sizeof(FILETIME) > size) return ft;
@@ -32,16 +33,15 @@ FILETIME readFiletime(const BYTE* data, DWORD size, size_t offset) {
 	return ft;
 }
 
-/*! Lit une chaîne de la valeur `V` d'après son entrée dans la table d'offsets.
+/*! Reads a string of the `V` value from its entry in the offset table.
 *
-* Les chaînes ne sont PAS terminées par un zéro : la longueur de l'entrée est la
-* seule borne. Une longueur corrompue pointerait hors du tampon, d'où la
-* vérification systématique.
+* The strings are NOT zero-terminated: the entry's length is the only bound. A
+* corrupted length would point out of the buffer, hence the systematic check.
 *
-* @param donnees la valeur `V`
-* @param taille sa taille
-* @param entree l'offset de l'entrée dans la table (V_NOM, V_NOM_COMPLET, …)
-* @return la chaîne, ou "" si l'entrée est vide ou incohérente
+* @param data the `V` value
+* @param size its size
+* @param entry the offset of the entry in the table (V_NAME, V_FULL_NAME, …)
+* @return the string, or "" if the entry is empty or inconsistent
 */
 std::wstring readStringV(const BYTE* data, DWORD size, size_t entry) {
 	if (entry + 8 > size) return L"";
@@ -57,18 +57,18 @@ std::wstring readStringV(const BYTE* data, DWORD size, size_t entry) {
 	return std::wstring((PCWSTR)(data + start), length / sizeof(wchar_t));
 }
 
-/*! Décompose les drapeaux de compte (ACB) en libellés lisibles.
+/*! Breaks the account flags (ACB) down into readable labels.
 *
-* `Disabled` seul ne suffit pas à décrire un compte : « mot de passe jamais
-* expiré », « compte verrouillé » ou « mot de passe non requis » sont des faits
-* que l'analyste doit voir sans avoir à décoder un entier.
+* `Disabled` alone is not enough to describe an account: "password never
+* expires", "account locked out" or "password not required" are facts the
+* analyst must see without having to decode an integer.
 */
 std::wstring describeFlags(DWORD acb) {
-	/* ATTENTION : ces bits sont les ACB du SAM, PAS les UF_* de lmaccess.h.
-	   Les deux espaces se ressemblent mais sont décalés — ACB_DISABLED vaut
-	   0x0001 alors que UF_ACCOUNTDISABLE vaut 0x0002. Remplacer ces valeurs par
-	   les constantes UF_* « pour faire propre » inverserait la lecture de tous
-	   les comptes. Elles sont donc écrites en clair, avec leur nom ACB. */
+	/* MIND THIS: these bits are the SAM's ACB, NOT the UF_* of lmaccess.h. The
+	   two spaces look alike but are shifted — ACB_DISABLED is 0x0001 whereas
+	   UF_ACCOUNTDISABLE is 0x0002. Replacing these values by the UF_* constants
+	   "to make it clean" would invert the reading of every account. They are
+	   therefore written in plain, with their ACB name. */
 	struct { DWORD bit; PCWSTR name; } TABLE[] = {
 		{ 0x0001, L"ACCOUNT_DISABLED" },
 		{ 0x0002, L"HOME_DIRECTORY_REQUIRED" },
@@ -91,15 +91,15 @@ std::wstring describeFlags(DWORD acb) {
 	return s;
 }
 
-/*! Recompose le SID de la machine depuis `SAM\Domains\Account`, valeur `V`.
+/*! Rebuilds the machine's SID from `SAM\Domains\Account`, value `V`.
 *
-* Les trois sous-autorités du SID de domaine local occupent les 12 derniers
-* octets de la valeur. Sans elles, seul le RID serait connu — un RID ne
-* s'interprète pas seul et ne se corrèle avec aucun autre artefact.
+* The three subauthorities of the local domain SID occupy the last 12 bytes of
+* the value. Without them, only the RID would be known — and a RID cannot be
+* interpreted on its own, nor correlated with any other artefact.
 *
-* @param hSam la ruche SAM ouverte
-* @param base préfixe de clé ("SAM\\" ou "", cf. `racineSam`)
-* @return "S-1-5-21-a-b-c", ou "" en cas d'échec
+* @param hSam the open SAM hive
+* @param base key prefix ("SAM\\" or "", see `samRoot`)
+* @return "S-1-5-21-a-b-c", or "" on failure
 */
 std::wstring readMachineSid(ORHKEY hSam, const std::wstring& base) {
 	LPBYTE data = NULL;
@@ -108,8 +108,8 @@ std::wstring readMachineSid(ORHKEY hSam, const std::wstring& base) {
 	if (getRegBinaryValue(hSam, (base + L"Domains\\Account").c_str(), L"V",
 	                      &data, &size) != ERROR_SUCCESS) {
 		log(2, L"🔥SID de machine illisible : les SID seront limites au RID");
-		// getRegBinaryValue alloue le tampon AVANT de lire : il faut le rendre
-		// meme quand la lecture echoue, sinon la sortie en erreur fuit.
+		// getRegBinaryValue allocates the buffer BEFORE reading: it must be released
+		// even when the reading fails, otherwise the error path leaks.
 		delete[] data;
 		return L"";
 	}
@@ -130,7 +130,7 @@ std::wstring readMachineSid(ORHKEY hSam, const std::wstring& base) {
 	return sid;
 }
 
-//! Chemin de profil associé à un SID, "" si le compte n'a jamais ouvert de session.
+//! Profile path attached to a SID, "" if the account never logged on.
 std::wstring profileOfSid(const std::wstring& sid) {
 	if (sid.empty()) return L"";
 	for (const std::tuple<std::wstring, std::wstring>& p : conf.profiles)
@@ -150,15 +150,15 @@ Json User::toJson() const {
 	o.add(L"RID",      Json::num(rid));
 	o.add(L"Disabled", Json::boolean((flags & 0x0001) != 0));
 	if (!flagLabels.empty()) o.add(L"AccountFlags", Json::str(flagLabels));
-	/* Un profil absent signifie que le compte n'a jamais ouvert de session sur
-	   cette machine : fait à part entière, pas une lecture manquée. */
+	/* An absent profile means the account never logged on to this machine: a fact
+	   in its own right, not a failed reading. */
 	if (!profile.empty()) o.add(L"Profile", Json::str(profile));
 
 	o.add(L"LogonCount",       Json::num(logonCount));
 	o.add(L"BadPasswordCount", Json::num(badPasswordCount));
 
-	// Chaque horodatage est emis dans les deux referentiels, comme partout
-	// ailleurs dans WAC ; vide si le SAM ne porte pas la date.
+	// Every timestamp is emitted in both references, as everywhere else in WAC;
+	// empty if the SAM does not carry the date.
 	struct { PCWSTR name; PCWSTR nameUtc; const FILETIME* ft; } DATES[] = {
 		{ L"LastLogon",        L"LastLogonUtc",        &lastLogonUtc },
 		{ L"PasswordLastSet",  L"PasswordLastSetUtc",  &passwordLastSetUtc },
@@ -193,17 +193,17 @@ HRESULT Users::getData() {
 		return hresult;
 	}
 
-	/* La ruche SAM porte une clé racine nommée « SAM » : le chemin complet est
-	   donc `SAM\Domains\Account\Users`. Les deux formes sont essayées, car la
-	   racine exposée dépend de la façon dont la ruche a été écrite — une erreur
-	   ERROR_FILE_NOT_FOUND ici se lirait sinon comme « ruche absente » alors
-	   qu'elle est présente et lisible. */
+	/* The SAM hive carries a root key named "SAM": the full path is therefore
+	   `SAM\Domains\Account\Users`. Both forms are tried, because the root
+	   exposed depends on the way the hive was written — an ERROR_FILE_NOT_FOUND
+	   here would otherwise read as "hive absent" while it is present and
+	   readable. */
 	ORHKEY hUsers = NULL;
 	std::wstring base;
 	for (PCWSTR prefix : { L"SAM\\", L"" }) {
 		const std::wstring path = std::wstring(prefix) + L"Domains\\Account\\Users";
 		log(3, L"🔈OROpenKey " + path);
-		hUsers = NULL;   // offreg peut ecrire dans la sortie meme en cas d'echec
+		hUsers = NULL;   // offreg may write into the output even on failure
 		if (OROpenKey(hSam, path.c_str(), &hUsers) == ERROR_SUCCESS) {
 			base = prefix;
 			break;
@@ -236,8 +236,8 @@ HRESULT Users::getData() {
 		log(3, L"🔈OREnumKey Users " + std::to_wstring(i));
 		if (OREnumKey(hUsers, i, keyName, &size, NULL, NULL, NULL) != ERROR_SUCCESS)
 			continue;
-		/* La sous-clé `Names` n'est pas un compte mais un index nom -> RID :
-		   elle est ignorée, les RID étant déjà portés par la valeur `F`. */
+		/* The `Names` subkey is not an account but a name -> RID index: it is
+		   ignored, the RIDs being already carried by the `F` value. */
 		if (toLower(keyName) == L"names") continue;
 
 		ORHKEY hAccount = NULL;
@@ -252,7 +252,7 @@ HRESULT Users::getData() {
 		ORQueryInfoKey(hAccount, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 		               &u.keyLastWriteUtc);
 
-		// --- valeur F : horodatages, RID, drapeaux, compteurs ---
+		// --- value F: timestamps, RID, flags, counters ---
 		LPBYTE f = NULL;
 		DWORD sizeF = 0;
 		if (getRegBinaryValue(hAccount, nullptr, L"F", &f, &sizeF) == ERROR_SUCCESS
@@ -272,11 +272,12 @@ HRESULT Users::getData() {
 			log(2, L"🔥Valeur F absente ou trop courte pour " + std::wstring(keyName));
 		delete[] f;
 
-		/* Si `F` n'a pas donné le RID, le nom de la clé le porte en hexadécimal :
-		   repli qui évite de perdre le compte pour un seul champ illisible. */
+		/* If `F` did not give the RID, the key's name carries it in hexadecimal: a
+		   fallback that avoids losing the account for a single unreadable
+		   field. */
 		if (u.rid == 0) u.rid = (DWORD)wcstoul(keyName, nullptr, 16);
 
-		// --- valeur V : nom, nom complet, commentaire ---
+		// --- value V: name, full name, comment ---
 		LPBYTE v = NULL;
 		DWORD sizeV = 0;
 		if (getRegBinaryValue(hAccount, nullptr, L"V", &v, &sizeV) == ERROR_SUCCESS) {
@@ -290,7 +291,7 @@ HRESULT Users::getData() {
 		ORCloseKey(hAccount);
 
 		if (u.name.empty()) {
-			// Sans nom, l'entrée n'est pas exploitable : signalée, pas émise.
+			// Without a name, the entry is not usable: reported, not emitted.
 			log(2, L"🔥Compte sans nom exploitable, RID " + std::to_wstring(u.rid));
 			continue;
 		}
@@ -317,5 +318,5 @@ HRESULT Users::toJson() {
 
 void Users::clear() {
 	log(3, L"🔈users clear");
-	users.clear();   // detruit les elements -> libere reellement
+	users.clear();   // destroys the elements -> really releases them
 }

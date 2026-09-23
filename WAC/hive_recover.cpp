@@ -40,14 +40,14 @@ uint32_t baseBlockChecksum(const uint8_t* bb){
 HiveFixInfo MakeHiveLoadable(const std::filesystem::path& hive){
     HiveFixInfo r;
     std::fstream f(hive, std::ios::in | std::ios::out | std::ios::binary);
-    if (!f){ r.error = L"ouverture impossible"; return r; }
+    if (!f){ r.error = L"cannot be opened"; return r; }
 
     std::vector<uint8_t> bb(BASE_BLOCK);
     f.read(reinterpret_cast<char*>(bb.data()), BASE_BLOCK);
-    if (f.gcount() != (std::streamsize)BASE_BLOCK){ r.error = L"bloc de base tronqué"; return r; }
+    if (f.gcount() != (std::streamsize)BASE_BLOCK){ r.error = L"base block truncated"; return r; }
 
-    if (std::memcmp(bb.data(), "regf", 4) != 0){ r.error = L"signature regf absente"; return r; }
-    if (rd32(bb.data() + OFF_FILETYPE) != 0){ r.error = L"n'est pas une ruche primaire"; return r; }
+    if (std::memcmp(bb.data(), "regf", 4) != 0){ r.error = L"regf signature absent"; return r; }
+    if (rd32(bb.data() + OFF_FILETYPE) != 0){ r.error = L"is not a primary hive"; return r; }
 
     r.primarySeq   = rd32(bb.data() + OFF_PRIMARY);
     r.secondarySeq = rd32(bb.data() + OFF_SECONDARY);
@@ -71,7 +71,7 @@ HiveFixInfo MakeHiveLoadable(const std::filesystem::path& hive){
     f.seekp(0, std::ios::beg);
     f.write(reinterpret_cast<const char*>(bb.data()), BASE_BLOCK);
     f.flush();
-    if (!f){ r.error = L"écriture du bloc de base impossible"; return r; }
+    if (!f){ r.error = L"cannot write the base block"; return r; }
 
     r.patched = true; r.ok = true;
     return r;
@@ -85,10 +85,10 @@ std::wstring HiveFixInfoToString(const HiveFixInfo& i){
         for (int k = 0; k < 8; ++k) b[2 + k] = d[(v >> ((7 - k) * 4)) & 0xF];
         b[10] = 0; return std::wstring(b);
     };
-    if (!i.ok) return L"ECHEC (" + i.error + L")";
-    if (!i.wasDirty) return i.hiveName + L" : déjà propre (séq " + hex(i.primarySeq) + L")";
+    if (!i.ok) return L"FAILED (" + i.error + L")";
+    if (!i.wasDirty) return i.hiveName + L": already clean (seq " + hex(i.primarySeq) + L")";
     return i.hiveName + L" : dirty séq " + hex(i.primarySeq) + L"/" + hex(i.secondarySeq)
-         + L" -> aligné " + hex(i.primarySeq) + L", checksum " + hex(i.oldChecksum)
+         + L" -> aligned " + hex(i.primarySeq) + L", checksum " + hex(i.oldChecksum)
          + L" -> " + hex(i.newChecksum)
          + (i.patched ? L" [patch appliqué]" : L" [NON appliqué]");
 }
@@ -198,10 +198,10 @@ std::vector<ReadEntry> readString(const std::filesystem::path& log,
         const uint64_t h2 = rd64(d.data() + off + 32);
 
         // Bounds BEFORE any other read: nbPages comes from the examined file.
-        if (e.nbPages > (size - ENTRY_HEADER) / 8) e.reason = L"nombre de pages incoherent";
-        else if (marvin32(d.data() + off, 32) != h2)  e.reason = L"empreinte d'entete";
+        if (e.nbPages > (size - ENTRY_HEADER) / 8) e.reason = L"inconsistent number of pages";
+        else if (marvin32(d.data() + off, 32) != h2)  e.reason = L"header digest";
         else if (marvin32(d.data() + off + ENTRY_HEADER, size - ENTRY_HEADER) != h1)
-                                                      e.reason = L"empreinte de corps";
+                                                      e.reason = L"body digest";
         else {
             uint64_t sum = 0;
             for (uint32_t i = 0; i < e.nbPages; ++i){
@@ -211,18 +211,18 @@ std::vector<ReadEntry> readString(const std::filesystem::path& log,
                 sum += t;
             }
             if (ENTRY_HEADER + 8ULL * e.nbPages + sum > size)
-                e.reason = L"pages hors de l'entree";
+                e.reason = L"pages outside the entry";
             else e.bytes = sum;
         }
 
         if (e.reason.empty() && !first && e.sequence != expected)
-            e.reason = L"rupture de sequence (residu)";
+            e.reason = L"sequence broken (leftover)";
 
         if (!e.reason.empty()){
             broken = true;
             // A broken entry is not counted as leftover if it is invalid in
             // itself: the caller tells the two cases apart.
-            if (e.reason == L"rupture de sequence (residu)") ++*leftover;
+            if (e.reason == L"sequence broken (leftover)") ++*leftover;
             else string.push_back(std::move(e));   // kept for the report
             off += size;
             continue;
@@ -245,13 +245,13 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
     HiveReplayInfo r;
 
     std::fstream f(hive, std::ios::in | std::ios::out | std::ios::binary);
-    if (!f){ r.error = L"ouverture impossible"; return r; }
+    if (!f){ r.error = L"cannot be opened"; return r; }
 
     std::vector<uint8_t> bb(BASE_BLOCK);
     f.read(reinterpret_cast<char*>(bb.data()), BASE_BLOCK);
-    if (f.gcount() != (std::streamsize)BASE_BLOCK){ r.error = L"bloc de base tronqué"; return r; }
-    if (std::memcmp(bb.data(), "regf", 4) != 0){ r.error = L"signature regf absente"; return r; }
-    if (rd32(bb.data() + OFF_FILETYPE) != 0){ r.error = L"n'est pas une ruche primaire"; return r; }
+    if (f.gcount() != (std::streamsize)BASE_BLOCK){ r.error = L"base block truncated"; return r; }
+    if (std::memcmp(bb.data(), "regf", 4) != 0){ r.error = L"regf signature absent"; return r; }
+    if (rd32(bb.data() + OFF_FILETYPE) != 0){ r.error = L"is not a primary hive"; return r; }
 
     const uint32_t primarySeq   = rd32(bb.data() + OFF_PRIMARY);
     const uint32_t secondarySeq = rd32(bb.data() + OFF_SECONDARY);
@@ -292,14 +292,14 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
 
         if (!e.reason.empty()){ trace.reason = e.reason; ++r.discardedEntries; r.entries.push_back(trace); continue; }
         if (e.sequence <= secondarySeq){
-            trace.reason = L"deja dans la ruche";
+            trace.reason = L"already in the hive";
             r.entries.push_back(trace);
             continue;
         }
         if (!first && e.sequence != expected){
             // Gap between the two logs: stop there. Beyond, the state would be a
             // mix of generations, with no guarantee of consistency.
-            trace.reason = L"trou dans la chaine";
+            trace.reason = L"hole in the chain";
             ++r.discardedEntries;
             r.entries.push_back(trace);
             break;
@@ -311,7 +311,7 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
         for (const std::pair<uint32_t, uint32_t>& p : e.pages)
             if (BASE_BLOCK + (uint64_t)p.first + p.second > hiveSize) boundsOk = false;
         if (!boundsOk){
-            trace.reason = L"page hors de la ruche";
+            trace.reason = L"page outside the hive";
             ++r.discardedEntries;
             r.entries.push_back(trace);
             break;
@@ -354,7 +354,7 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
     const std::filesystem::path chemUndo = hive.wstring() + L".undo";
     {
         std::ofstream u(chemUndo, std::ios::binary | std::ios::trunc);
-        if (!u){ r.error = L"journal d'annulation non écrit : rejeu abandonné"; return r; }
+        if (!u){ r.error = L"undo journal not written: replay abandoned"; return r; }
         std::vector<uint8_t> ent(56, 0);
         std::memcpy(ent.data(), "WACUNDO1", 8);
         for (size_t i = 0; i < 32; ++i)
@@ -371,7 +371,7 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
         for (const Page& p : undo)
             u.write(reinterpret_cast<const char*>(p.origin.data()), (std::streamsize)p.size);
         u.flush();
-        if (!u){ r.error = L"journal d'annulation incomplet : rejeu abandonné"; return r; }
+        if (!u){ r.error = L"undo journal incomplete: replay abandoned"; return r; }
     }
     r.undoJournal = chemUndo.wstring();
 
@@ -391,7 +391,7 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
     f.seekp(0, std::ios::beg);
     f.write(reinterpret_cast<const char*>(bb.data()), BASE_BLOCK);
     f.flush();
-    if (!f){ r.error = L"écriture de la ruche impossible"; return r; }
+    if (!f){ r.error = L"cannot write the hive"; return r; }
 
     r.applique = true;
     r.ok = true;
@@ -406,15 +406,15 @@ std::wstring HiveReplayInfoToString(const HiveReplayInfo& i){
         for (int k = 0; k < 8; ++k) b[2 + k] = d[(v >> ((7 - k) * 4)) & 0xF];
         b[10] = 0; return std::wstring(b);
     };
-    if (!i.ok) return L"rejeu : ECHEC (" + i.error + L")";
-    if (!i.logs) return L"rejeu : aucun journal de transaction exploitable";
-    if (!i.applique) return L"rejeu : rien a appliquer (ruche a jour, seq "
+    if (!i.ok) return L"rejeu : FAILED (" + i.error + L")";
+    if (!i.logs) return L"replay: no usable transaction log";
+    if (!i.applique) return L"replay: nothing to apply (hive up to date, seq "
                           + hex(i.hiveSequence) + L")";
     std::wstring s = L"rejeu : " + std::to_wstring(i.keptEntries) + L" entree(s), "
                    + std::to_wstring(i.pages) + L" page(s), "
                    + std::to_wstring(i.bytes / 1024) + L" Kio, seq "
                    + hex(i.hiveSequence) + L" -> " + hex(i.sequenceFinale);
-    if (i.discardedEntries) s += L", " + std::to_wstring(i.discardedEntries) + L" ecartee(s)";
-    if (i.leftoverEntries)   s += L", " + std::to_wstring(i.leftoverEntries) + L" hors chaine";
+    if (i.discardedEntries) s += L", " + std::to_wstring(i.discardedEntries) + L" discarded";
+    if (i.leftoverEntries)   s += L", " + std::to_wstring(i.leftoverEntries) + L" out of the chain";
     return s;
 }

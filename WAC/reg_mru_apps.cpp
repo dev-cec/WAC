@@ -35,7 +35,7 @@ HRESULT MruApps::getData(int _level) {
 	for (std::tuple<std::wstring, std::wstring> profileEntry : conf.profiles) {
 		std::wstring keynames[3] = { L"LastVisitedMRU",L"LastVisitedPidlMRU",L"LastVisitedPidlMRULegacy" };
 		for (std::wstring keyname : keynames) {
-			//ouverture de la ruche user
+			// open the user hive
 			log(3, L"🔈replaceAll profile");
 			hive = extractedPath(std::get<1>(profileEntry)) + L"\\ntuser.dat";
 			log(3, L"🔈OROpenHive " + std::get<1>(profileEntry) + L"\\ntuser.dat");
@@ -65,11 +65,11 @@ HRESULT MruApps::getData(int _level) {
 HRESULT MruApps::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vector<MruApp>* out, unsigned int level, bool _Parentiszip) {
 	HRESULT hresult = NULL;
 	std::vector<unsigned int> ids;
-	/* NULL, et non un tampon de MAX_DATA (1 Mo) : `getRegBinaryValue` alloue
-	   lui-même à la taille exacte de la valeur. L'allocation d'avance était
-	   perdue à chaque appel — et `parse` est RÉCURSIVE, donc autant de fois
-	   qu'il y a de niveaux de clés. Elle fuyait de surcroît entièrement sur les
-	   deux sorties en erreur ci-dessous, qui ne libéraient rien. */
+	/* NULL, and not a buffer of MAX_DATA (1 MiB): `getRegBinaryValue` allocates
+	   the exact size of the value itself. The buffer allocated up front was lost
+	   at every call — and `parse` is RECURSIVE, so as many times as there are
+	   levels of keys. It leaked entirely, moreover, on the two error paths
+	   below, which released nothing. */
 	LPBYTE data = NULL;
 	unsigned int pos = 0;
 	DWORD mruListSize = 0;
@@ -88,7 +88,7 @@ HRESULT MruApps::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::
 	hresult = getRegBinaryValue(hKey, L"", L"MRUListEx", &data, &mruListSize);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥parse", hresult);
-		// getRegBinaryValue alloue AVANT de lire : le tampon existe meme en echec.
+		// getRegBinaryValue allocates BEFORE reading: the buffer exists even on failure.
 		delete[] data;
 		return hresult;
 	}
@@ -158,5 +158,5 @@ HRESULT MruApps::toJson() {
 
 void MruApps::clear() {
 	log(3, L"🔈MruApps clear");
-	mruApps.clear();   // detruit les unique_ptr -> libere reellement
+	mruApps.clear();   // destroys the unique_ptr -> really releases them
 }

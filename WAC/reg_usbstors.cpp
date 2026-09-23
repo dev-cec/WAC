@@ -117,7 +117,7 @@ HRESULT Usbstors::getData() {
 			continue;
 		}
 		log(3, L"🔈OROpenKey CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor));
-		hresult = OROpenKey(hkey, szSubKey_usbstor, &hKey_manufacturer); // on ouvre la clé du fabricant
+		hresult = OROpenKey(hkey, szSubKey_usbstor, &hKey_manufacturer); // open the manufacturer's key
 		if (hresult != ERROR_SUCCESS) {
 			log(2, L"🔥OROpenKey hKey_fabricant", hresult);
 			continue;
@@ -163,5 +163,5 @@ HRESULT Usbstors::toJson() {
 
 void Usbstors::clear() {
 	log(3, L"🔈usbstors clear");
-	usbs.clear();   // detruit les elements -> libere reellement
+	usbs.clear();   // destroys the elements -> really releases them
 }

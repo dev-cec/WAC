@@ -115,8 +115,8 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 		std::vector<RawHiveExtraction> reading;      // fingerprints computed while writing
 		const HRESULT hrVolume = ExtractFilesRaw(volume, items, &res, &reading);
 		ExhibitStoreAdd(reading, L"Lecture brute NTFS (\\\\.\\" + volume
-		                        + L": — $MFT, index de repertoires, attribut $DATA) ; "
-		                        L"aucune ouverture de fichier par le systeme");
+		                        + L": — $MFT, directory indexes, $DATA attribute); "
+		                        L"no file opened by the system");
 		// Recorded here, not by the caller: the extraction must come before the
 		// patches it triggers in the log, otherwise the sequence reads
 		// backwards.
@@ -135,7 +135,7 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 		for (size_t i = 0; i < items.size() && i < res.size(); ++i)
 			if (FAILED(res[i])) {
 				++missing;
-				log(2, L"🔥Extraction brute échouée : " + volume + L":" + items[i].first, res[i]);
+				log(2, L"🔥Raw extraction failed: " + volume + L":" + items[i].first, res[i]);
 			}
 		/* Fingerprints indexed by WORKING path: computed while the exhibit store
 		   was being written, hence before any modification — exactly what must be
@@ -151,7 +151,7 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 	}
 	RawHiveSetProgress(nullptr);
 	printProgressEnd();
-	log(2, L"❇️Volumes lus : " + std::to_wstring(parVolume.size()));
+	log(2, L"❇️Volumes read: " + std::to_wstring(parVolume.size()));
 	/* No readable volume: nothing will follow, better say so at once. */
 	if (md5ByFile.empty() && firstHardFailure != ERROR_SUCCESS) return firstHardFailure;
 
@@ -162,7 +162,7 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 		size_t copies = 0;
 		unsigned long long bytes = 0;
 		const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &bytes);
-		auditRecord(L"Copie de la consigne vers le repertoire de travail ("
+		auditRecord(L"Copy of the exhibit store into the working directory ("
 		            + std::to_wstring(copies) + L" fichier(s), "
 		            + std::to_wstring(bytes / 1024 / 1024) + L" Mio)",
 		            exhibitStoreFolder() + L" -> " + workingFolder(),
@@ -188,7 +188,7 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 		++iHive;
 		if (!std::filesystem::exists(r, ec)) continue;   // not extracted: already logged
 
-		printProgress(L"Remise en etat " + std::filesystem::path(r).filename().wstring(),
+		printProgress(L"Repair of " + std::filesystem::path(r).filename().wstring(),
 		              iHive, hives.size(), L"ruche");
 
 		/* Fingerprint BEFORE any modification: the raw copy stays identifiable.
@@ -200,7 +200,7 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 		else md5Before = QuickDigest5::fileToHash(wstring_to_string(r));
 
 		log(1, L"➕Hive");
-		log(2, L"❇️MD5 copie brute (avant toute ecriture) : " + md5Before);
+		log(2, L"❇️MD5 of the raw copy (before any write): " + md5Before);
 
 		/* REPLAY FIRST. The transaction logs hold the pages changed since the
 		   hive's last full write: applying them gives the machine's real state,
@@ -214,18 +214,18 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 			++replayed;
 			replayedPages  += rejeu.pages;
 			replayedBytes  += rejeu.bytes;
-			auditRecord(L"Rejeu des journaux de transaction d'une ruche copiee ("
+			auditRecord(L"Replay of the transaction logs of a copied hive ("
 			            + std::to_wstring(rejeu.keptEntries) + L" entree(s), "
 			            + std::to_wstring(rejeu.pages) + L" page(s))",
 			            r + L" | " + HiveReplayInfoToString(rejeu)
-			            + L" | MD5 avant rejeu : " + md5Before
-			            + L" | annulation : " + rejeu.undoJournal,
+			            + L" | MD5 before the replay: " + md5Before
+			            + L" | undo: " + rejeu.undoJournal,
 			            ERROR_SUCCESS, Footprint::HIVE_REPLAY);
 		}
 		else if (!rejeu.ok) {
 			// The replay wrote nothing: record it and fall back on the patch.
 			log(2, L"🔥Rejeu impossible : " + r + L" (" + rejeu.error + L")");
-			auditRecord(L"Rejeu des journaux de transaction d'une ruche copiee (non applique)",
+			auditRecord(L"Replay of the transaction logs of a copied hive (non applique)",
 			            r + L" | " + HiveReplayInfoToString(rejeu),
 			            E_FAIL, Footprint::HIVE_COPY);
 		}
@@ -242,21 +242,21 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 		// not a lack of information.
 		// Note: the internal name returned by HiveFixInfoToString is truncated to
 		// its last 31 characters, as the regf format stores it.
-		auditRecord(info.patched ? L"Remise en etat d'une ruche copiee (patch applique)"
-		                         : L"Verification d'une ruche copiee (deja propre)",
-		            r + L" | " + HiveFixInfoToString(info) + L" | MD5 avant patch : " + md5Before,
+		auditRecord(info.patched ? L"Repair of d'une ruche copiee (patch applique)"
+		                         : L"Check of a copied hive (already clean)",
+		            r + L" | " + HiveFixInfoToString(info) + L" | MD5 before the patch: " + md5Before,
 		            info.ok ? ERROR_SUCCESS : E_FAIL,
 		            info.patched ? Footprint::HIVE_PATCH : Footprint::HIVE_COPY);
-		if (!info.ok) { ++failures; log(2, L"🔥Ruche non exploitable : " + r + L" (" + info.error + L")"); }
+		if (!info.ok) { ++failures; log(2, L"🔥Hive not usable: " + r + L" (" + info.error + L")"); }
 		else if (info.patched) ++patchees;
 	}
 	printProgressEnd();
-	log(2, L"❇️Ruches rejouées : " + std::to_wstring(replayed)
+	log(2, L"❇️Hives replayed: " + std::to_wstring(replayed)
 	     + L" (" + std::to_wstring(replayedPages) + L" pages, "
 	     + std::to_wstring(replayedBytes / 1024) + L" Kio appliqués)");
-	log(2, L"❇️Ruches remises en état par patch : " + std::to_wstring(patchees)
-	     + L", échecs : " + std::to_wstring(failures)
-	     + L", fichiers manquants : " + std::to_wstring(missing));
+	log(2, L"❇️Hives repaired by patch: " + std::to_wstring(patchees)
+	     + L", failures: " + std::to_wstring(failures)
+	     + L", missing files: " + std::to_wstring(missing));
 
 	// An unreadable hive blocks what follows (OROpenHive): report it.
 	return (failures == 0) ? hr : S_FALSE;
@@ -279,7 +279,7 @@ HRESULT ExtractSystemHivesRaw() {
 	};
 	return extractHiveSet(
 		hives,
-		L"Extraction brute des ruches systeme (+ journaux .LOG1/.LOG2)");
+		L"Raw extraction of the system hives (+ .LOG1/.LOG2 logs)");
 }
 
 HRESULT ExtractUserHivesRaw() {
@@ -288,8 +288,8 @@ HRESULT ExtractUserHivesRaw() {
 	   machine without users but a failed profile listing: saying so is better
 	   than returning success on an empty extraction. */
 	if (conf.profiles.empty()) {
-		log(2, L"🔥Aucun profil releve : aucune ruche par utilisateur a extraire");
-		auditRecord(L"Extraction brute des ruches par utilisateur (aucun profil releve)",
+		log(2, L"🔥No profile read: no per-user hive to extract");
+		auditRecord(L"Raw extraction of the per-user hives (no profile read)",
 		            conf.mountpoint, ERROR_EMPTY, Footprint::VOLUME_BRUT);
 		return S_FALSE;
 	}
@@ -305,7 +305,7 @@ HRESULT ExtractUserHivesRaw() {
 	}
 	return extractHiveSet(
 		hives,
-		L"Extraction brute des ruches par utilisateur (+ journaux .LOG1/.LOG2)");
+		L"Raw extraction of the per-user hives (+ .LOG1/.LOG2 logs)");
 }
 
 HRESULT ExtractFileArtefactsRaw() {
@@ -368,8 +368,8 @@ HRESULT ExtractFileArtefactsRaw() {
 			{}, &extractedTasks, 8, &reading);
 		ExhibitStoreAdd(reading, L"Lecture brute NTFS recursive (\\\\.\\"
 		                        + systemVolume() + L": — $MFT, index de repertoires) ; "
-		                        L"aucune ouverture de fichier par le systeme");
-		auditRecord(L"Extraction brute des definitions de taches planifiees ("
+		                        L"no file opened by the system");
+		auditRecord(L"Raw extraction of the scheduled task definitions ("
 		            + std::to_wstring(extractedTasks) + L" fichier(s))",
 		            std::wstring(L"\\\\.\\") + systemVolume() + L":" + tasksPath,
 		            hrTasks, Footprint::VOLUME_BRUT);
@@ -386,8 +386,8 @@ HRESULT ExtractFileArtefactsRaw() {
 		                                       target.extensions, &extractedFiles, &diagnostic,
 		                                       &reading);
 		ExhibitStoreAdd(reading, L"Lecture brute NTFS (\\\\.\\" + target.volume
-		                        + L": — $MFT, index de repertoires, attribut $DATA) ; "
-		                        L"aucune ouverture de fichier par le systeme");
+		                        + L": — $MFT, directory indexes, $DATA attribute); "
+		                        L"no file opened by the system");
 		if (FAILED(hr)) {
 			/* Inaccessible volume. We NO LONGER stop: with several volumes, an
 			   unreadable disk took all the following targets down with it, the
@@ -413,7 +413,7 @@ HRESULT ExtractFileArtefactsRaw() {
 	}
 	RawHiveSetProgress(nullptr);
 	printProgressEnd();
-	log(2, L"❇️Fichiers extraits au total : " + std::to_wstring(total));
+	log(2, L"❇️Files extracted in total: " + std::to_wstring(total));
 
 	/*  EXHIBIT STORE -> WORKING COPY, for the file-based artefacts. The hives
 	 *  have already been copied and replayed: ExhibitStoreToWorking does not
@@ -426,7 +426,7 @@ HRESULT ExtractFileArtefactsRaw() {
 		size_t copies = 0;
 		unsigned long long bytes = 0;
 		const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &bytes);
-		auditRecord(L"Copie de la consigne vers le repertoire de travail ("
+		auditRecord(L"Copy of the exhibit store into the working directory ("
 		            + std::to_wstring(copies) + L" fichier(s), "
 		            + std::to_wstring(bytes / 1024 / 1024) + L" Mio)",
 		            exhibitStoreFolder() + L" -> " + workingFolder(),

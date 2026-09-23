@@ -154,7 +154,7 @@ IndexCatalogues& catalogues() {
 	std::vector<RawDirEntry> entries;
 	const HRESULT hr = g_reader->list(catalogFolder(), entries);
 	if (FAILED(hr)) {
-		log(2, L"🔥Catalogues de signatures illisibles : tous les binaires seront preleves", hr);
+		log(2, L"🔥Signature catalogs unreadable: every binary will be collected", hr);
 		return index;
 	}
 	std::set<uint64_t> seen;                  // a file can also appear under its short name
@@ -169,10 +169,10 @@ IndexCatalogues& catalogues() {
 		index.add(e.name, c.bytes.data(), c.bytes.size());
 	}
 	g_catalogsRead = read;
-	log(2, L"❇️Catalogues de signatures : " + std::to_wstring(read) + L" lus, "
-	     + std::to_wstring(index.catalogues()) + L" retenus (signature Microsoft verifiee), "
+	log(2, L"❇️Catalogues de signatures : " + std::to_wstring(read) + L" read, "
+	     + std::to_wstring(index.catalogues()) + L" kept (Microsoft signature verified), "
 	     + std::to_wstring(index.rejected()) + L" refuses, "
-	     + std::to_wstring(index.fingerprints()) + L" empreintes");
+	     + std::to_wstring(index.fingerprints()) + L" fingerprints");
 	return index;
 }
 
@@ -202,7 +202,7 @@ const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
 		RawHiveExtraction line;
 		e.result = g_reader->read(path, std::wstring(), line);
 		if (SUCCEEDED(e.result)) { ++g_read; keep(line); }
-		else log(3, L"🔈Empreinte impossible : " + path, e.result);
+		else log(3, L"🔈Cannot fingerprint: " + path, e.result);
 		return g_cache.emplace(key, std::move(e)).first->second;
 	}
 
@@ -223,12 +223,12 @@ const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
 		e.result = g_reader->read(path, std::wstring(), line, &tee);
 		pe.finish();
 		if (FAILED(e.result)) {
-			log(3, L"🔈Empreinte impossible : " + path, e.result);
+			log(3, L"🔈Cannot fingerprint: " + path, e.result);
 			// Missing: the artefact already says so, and it is not an exhibit. Any
 			// other error is an exhibit that could not be read: it is recorded.
 			if (e.result != HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
 				line.outputPath = target;
-				ExhibitStoreAdd({ line }, L"Lecture brute NTFS ; binaire cite par un artefact (--binary)");
+				ExhibitStoreAdd({ line }, L"Raw NTFS reading; binary cited by an artefact (--binary)");
 			}
 			return g_cache.emplace(key, std::move(e)).first->second;
 		}
@@ -243,7 +243,7 @@ const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
 			if (bytesFromHex(e.sha256, h)) v = EvaluateByCatalog(h, catalogues());
 			if (!v.microsoft && powershell) {
 				const VerdictMicrosoft ps = EvaluatePowerShellScript(text.bytes.data(), text.bytes.size());
-				if (ps.microsoft || ps.reason != "pas de signature intégrée") v = ps;
+				if (ps.microsoft || ps.reason != "no embedded signature") v = ps;
 			}
 		}
 		{
@@ -255,7 +255,7 @@ const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
 					g_catalogsUsed.insert(v.source.substr(10));
 				return g_cache.emplace(key, std::move(e)).first->second;
 			}
-			log(3, L"🔈Preleve (" + string_to_wstring(v.reason) + L") : " + path);
+			log(3, L"🔈Collected (" + string_to_wstring(v.reason) + L") : " + path);
 		}
 	}
 
@@ -269,7 +269,7 @@ const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
 	const unsigned long long free = ExhibitStoreFreeSpace();
 	if (free != 0 && free < RESERVE + g_bytes) {
 		++g_sansPlace;
-		log(2, L"🔥Place insuffisante : " + path + L" hache sans etre preleve");
+		log(2, L"🔥Not enough space: " + path + L" hashed without being collected");
 		return g_cache.emplace(key, std::move(e)).first->second;
 	}
 
@@ -279,21 +279,21 @@ const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
 	RawHiveExtraction line;
 	e.result = g_reader->read(path, output, line);
 	const std::wstring method = L"Lecture brute NTFS (\\\\.\\" + path.substr(0, 2)
-	                           + L" — $MFT, index de repertoires, attribut $DATA) ; "
-	                           L"binaire cite par un artefact (--binary)";
+	                           + L" — $MFT, directory indexes, $DATA attribute); "
+	                           L"binary cited by an artefact (--binary)";
 	if (FAILED(e.result)) {
 		line.outputPath = target;
 		ExhibitStoreAdd({ line }, method);
 	}
 	else {
 		if (line.fingerprints.sha256 != e.sha256)
-			log(2, L"🔥Contenu modifie entre deux lectures : " + path);
+			log(2, L"🔥Content changed between two reads: " + path);
 		keep(line);                     // the exhibit is authoritative
 		const auto already = g_byContent.find(e.sha256);
 		if (already != g_byContent.end()) {
 			line.outputPath = already->second;
-			ExhibitStoreAddDuplicate(line, method + L" ; contenu identique (SHA-256) "
-			                                        L"a une piece deja consignee, non recopie");
+			ExhibitStoreAddDuplicate(line, method + L" ; content identical (SHA-256) "
+			                                        L"to an exhibit already recorded, not copied again");
 			++g_duplicates;
 			g_avoidedBytes += line.fingerprints.bytes;
 			e.collected = true;
@@ -303,7 +303,7 @@ const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
 			std::filesystem::rename(output, target, ec);
 			line.outputPath = target;
 			if (ec) {
-				log(2, L"🔥Mise en consigne impossible : " + target);
+				log(2, L"🔥Cannot record as an exhibit: " + target);
 				line.result = e.result = HRESULT_FROM_WIN32(ERROR_WRITE_FAULT);
 			}
 			else {
@@ -360,9 +360,9 @@ void BinariesFinish() {
 			reading.push_back(std::move(line));
 		}
 		ExhibitStoreAdd(reading, L"Lecture brute NTFS (\\\\.\\" + conf.systemDrive
-		                        + L" — $MFT, index de repertoires, attribut $DATA) ; catalogue de "
-		                        L"signatures Windows ayant justifie le non-prelevement de binaires "
-		                        L"authentifies Microsoft (--binary)");
+		                        + L" — $MFT, directory indexes, $DATA attribute); catalogue de "
+		                        L"catalog that justified not collecting binaries "
+		                        L"authenticated as Microsoft (--binary)");
 	}
 	g_reader.reset();
 	std::error_code ec;

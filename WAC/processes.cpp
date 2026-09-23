@@ -2,16 +2,16 @@
 
 #include <wtsapi32.h>
 
-/* DÉCLARATION MANQUANTE DANS L'EN-TÊTE MINGW-W64.
+/* A DECLARATION MISSING FROM THE MINGW-W64 HEADER.
  *
- * `WTSEnumerateProcessesExW` est exporté par wtsapi32.dll depuis Windows Vista
- * et le symbole est bien présent dans libwtsapi32.a, mais `wtsapi32.h` de
- * mingw-w64 ne le déclare pas (contrairement à `WTSEnumerateSessionsExW`, juste
- * à côté). Le prototype est donc repris tel qu'il est documenté.
+ * `WTSEnumerateProcessesExW` has been exported by wtsapi32.dll since Windows
+ * Vista and the symbol is present in libwtsapi32.a, but mingw-w64's
+ * `wtsapi32.h` does not declare it (unlike `WTSEnumerateSessionsExW`, right
+ * next to it). The prototype is therefore taken as it is documented.
  *
- * Préféré à un chargement dynamique par `GetProcAddress` : celui-ci imposerait
- * un `LoadLibrary` sur wtsapi32.dll, alors que la DLL est déjà liée au
- * programme pour `sessions`.
+ * Preferred to a dynamic load through `GetProcAddress`: that would require a
+ * `LoadLibrary` on wtsapi32.dll, while the DLL is already linked to the program
+ * for `sessions`.
  */
 #ifndef WTS_ANY_SESSION
 #define WTS_ANY_SESSION ((DWORD)-2)
@@ -23,19 +23,19 @@ extern "C" WINBOOL WINAPI WTSEnumerateProcessesExW(HANDLE hServer, DWORD* pLevel
 
 namespace {
 
-/*! Relève le SID du propriétaire et la session de TOUS les processus, en un
-* appel, sans ouvrir aucun handle de processus.
+/*! Reads the owner's SID and the session of ALL the processes, in one call,
+* without opening any process handle.
 *
-* `WTSEnumerateProcessesExW` interroge le service Terminal Services, déjà
-* sollicité par `sessions`. Il rend le SID même pour les processus protégés, que
-* `OpenProcess` refuse — y compris lsass, services.exe et les processus de
-* Defender, dont l'usurpation est précisément ce qu'une investigation cherche.
+* `WTSEnumerateProcessesExW` queries the Terminal Services service, already
+* solicited by `sessions`. It returns the SID even for the protected processes
+* that `OpenProcess` refuses — including lsass, services.exe and Defender's
+* processes, whose impersonation is precisely what an investigation looks for.
 *
-* @param parPid reçoit, pour chaque PID, le SID et l'identifiant de session
-* @return ERROR_SUCCESS si l'énumération a abouti
+* @param byPid receives, for each PID, the SID and the session identifier
+* @return ERROR_SUCCESS if the enumeration succeeded
 */
 HRESULT readOwners(std::map<DWORD, std::pair<std::wstring, DWORD>>& parPid) {
-	DWORD level = 0;                 // niveau 0 : SessionId, ProcessId, nom, SID
+	DWORD level = 0;                 // level 0: SessionId, ProcessId, name, SID
 	PWTS_PROCESS_INFOW infos = NULL;
 	DWORD count = 0;
 	log(3, L"🔈WTSEnumerateProcessesExW");
@@ -58,9 +58,9 @@ HRESULT readOwners(std::map<DWORD, std::pair<std::wstring, DWORD>>& parPid) {
 			else
 				log(2, L"🔥ConvertSidToStringSidW", GetLastError());
 		}
-		/* Un SID vide est un fait, pas un echec : les processus purement noyau
-		   (System, Registry) n'ont pas de jeton utilisateur. La session, elle,
-		   est toujours rendue. */
+		/* An empty SID is a fact, not a failure: the purely kernel processes
+		   (System, Registry) have no user token. The session, for its part, is
+		   always returned. */
 		parPid[infos[i].ProcessId] = { sid, infos[i].SessionId };
 	}
 	log(2, L"❇️Proprietaires releves pour " + std::to_wstring(parPid.size()) + L" processus");
@@ -79,21 +79,21 @@ Process::Process(const PROCESSENTRY32W* pe32) {
 
 	log(2, L"❇️Process Name : " + processName + L" (PID " + std::to_wstring(processId) + L")");
 
-	/* PID 0 — LE PIÈGE À NE PAS REPRODUIRE.
-	   `CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 0)` ne signifie pas « le
-	   processus 0 » mais « le PROCESSUS COURANT ». Le processus Idle se voyait
-	   donc attribuer les 25 modules de WAC.exe lui-même, WAC.exe en tête : un
-	   rapport d'enquête affirmait que le processus système avait chargé l'outil
-	   de collecte. Le processus Idle n'a de toute façon ni image ni module. */
+	/* PID 0 — THE TRAP NOT TO REPRODUCE.
+	   `CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 0)` does not mean "process 0"
+	   but "the CURRENT PROCESS". The Idle process was therefore credited with
+	   the 25 modules of WAC.exe itself, WAC.exe first: an investigation report
+	   stated that the system process had loaded the collection tool. The Idle
+	   process has neither an image nor a module anyway. */
 	if (processId == 0) {
 		processModulesAccess = L"processus Idle : aucun module par nature";
 		return;
 	}
 
-	/* Les modules sont relevés indépendamment du propriétaire. Dans la version
-	   d'origine, un échec de lecture du jeton provoquait un `return` avant cet
-	   appel : les 16 processus protégés sortaient donc aussi sans AUCUN module,
-	   alors que l'instantané Toolhelp ne dépend pas du jeton. */
+	/* The modules are read independently of the owner. In the original version, a
+	   failure to read the token caused a `return` before this call: the 16
+	   protected processes therefore also came out with NO module at all, while
+	   the Toolhelp snapshot does not depend on the token. */
 	log(3, L"🔈ListProcessModules");
 	const HRESULT result = ListProcessModules();
 	if (result != ERROR_SUCCESS)
@@ -130,7 +130,7 @@ HRESULT Process::ListProcessModules() {
 	}
 
 	if (conf.binary) {
-		//Le premier module retourne le exe path
+		// The first module returns the executable's path
 		log(3, L"🔈EmpreinteFichier");
 		fingerprint = FingerprintFile(me32.szExePath);
 	}
@@ -152,24 +152,24 @@ HRESULT Process::ListProcessModules() {
 Json Process::toJson() const {
 	log(3, L"🔈process toJson");
 	Json o = Json::obj();
-	// « Nom » etait la seule cle en francais de toute la sortie, au milieu de
-	// SID, Owner, ProcessId… Une seule langue pour les cles (passe de nommage).
+	// "Nom" was the only key in French of the whole output, among SID, Owner,
+	// ProcessId… One single language for the keys (naming pass).
 	o.add(L"Name",           Json::str(processName));
 	addFingerprints(o, fingerprint);
 	o.add(L"SID",            Json::str(processSID));
 	o.add(L"Owner",          Json::str(processSidName));
-	/* Nommage harmonise (passe de nommage) : `PID` et `PPId` coexistaient dans
-	   le MEME objet avec deux conventions de casse, et `services.json` appelait
-	   `ProcessId` la meme notion. Une seule orthographe pour une seule notion,
-	   explicite comme `SessionId`. */
+	/* Harmonised naming (naming pass): `PID` and `PPId` coexisted in the SAME
+	   object with two case conventions, and `services.json` called the same
+	   notion `ProcessId`. One spelling for one notion, explicit like
+	   `SessionId`. */
 	o.add(L"ProcessId",       Json::num(processId));
 	o.add(L"ParentProcessId", Json::num(processParentId));
-	o.add(L"ThreadCount",    Json::num(processThreadCount));   // etait parse mais jamais emis
-	// Permet de rattacher un processus a une entree de Sessions.json.
+	o.add(L"ThreadCount",    Json::num(processThreadCount));   // was parsed but never emitted
+	// Makes it possible to tie a process to an entry of Sessions.json.
 	if (sessionKnown) o.add(L"SessionId", Json::num(sessionId));
-	/* Ne porte QUE l'erreur de lecture des modules. Elle portait auparavant
-	   celle du jeton, si bien qu'un refus d'acces au processus s'affichait ici
-	   comme un probleme de modules. */
+	/* Carries ONLY the error of the module reading. It used to carry the token's
+	   too, so that an access denied on the process showed up here as a problem
+	   with the modules. */
 	o.add(L"ModulesMessage", Json::str(processModulesAccess));
 	Json modules = Json::arr();
 	for (const std::wstring& m : processModules) modules.push(Json::str(m));
@@ -209,15 +209,15 @@ HRESULT Processes::getData() {
 		CloseHandle(hProcessSnap);          // clean the snapshot object
 		return ERROR_INVALID_HANDLE;
 	}
-	/* Process32Next ne donne pas le nombre de processus a l'avance, ce qui
-	   privait la progression de son pourcentage. On compte donc d'abord, par un
-	   premier parcours du MEME snapshot : il est deja en memoire et ce passage
-	   n'ouvre aucun handle ni ne lit aucun module, son cout est negligeable
-	   devant la collecte elle-meme. */
+	/* Process32Next does not give the number of processes in advance, which
+	   deprived the progress display of its percentage. They are therefore
+	   counted first, by a first walk of the SAME snapshot: it is already in
+	   memory and that pass opens no handle and reads no module, so its cost is
+	   negligible next to the collection itself. */
 	unsigned long long totalProcess = 0;
 	do { ++totalProcess; } while (Process32Next(hProcessSnap, &pe32));
 
-	// Repositionnement au debut du snapshot pour la collecte reelle.
+	// Back to the start of the snapshot for the real collection.
 	pe32.dwSize = sizeof(PROCESSENTRY32);
 	if (!Process32First(hProcessSnap, &pe32)) {
 		log(2, L"🔥Process32First (2e passe)", GetLastError());
@@ -225,8 +225,8 @@ HRESULT Processes::getData() {
 		return ERROR_INVALID_HANDLE;
 	}
 
-	/* Propriétaires et sessions en UNE fois, avant le parcours : un échec ici
-	   n'empêche pas la collecte, il laisse seulement les SID vides. */
+	/* Owners and sessions in ONE go, before the walk: a failure here does not
+	   prevent the collection, it only leaves the SIDs empty. */
 	std::map<DWORD, std::pair<std::wstring, DWORD>> owners;
 	readOwners(owners);
 
@@ -265,5 +265,5 @@ HRESULT Processes::toJson() {
 
 void Processes::clear() {
 	log(3, L"🔈processes clear");
-	processes.clear();   // detruit les elements -> libere reellement
+	processes.clear();   // destroys the elements -> really releases them
 }

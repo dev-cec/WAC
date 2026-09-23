@@ -91,13 +91,13 @@ public:
                          NULL, OPEN_EXISTING, 0, NULL);
         if (h_ == INVALID_HANDLE_VALUE){
             DWORD e = GetLastError();
-            RVLOG(L"[raw] open %ls: erreur %lu (admin requis ?)\n", path.c_str(), e);
+            RVLOG(L"[raw] open %ls: error %lu (admin rights needed?)\n", path.c_str(), e);
             return HRESULT_FROM_WIN32(e);
         }
         uint8_t vbr[512];
         if (!readBytes(0, vbr, 512)) return E_FAIL;
         if (memcmp(vbr + 3, "NTFS    ", 8) != 0){
-            RVLOG(L"[raw] signature NTFS absente\n"); return E_FAIL;
+            RVLOG(L"[raw] NTFS signature absent\n"); return E_FAIL;
         }
         bytesPerSector_    = rd16(vbr + 0x0B);
         sectorsPerCluster_ = vbr[0x0D];
@@ -133,7 +133,7 @@ public:
             if (j == i) break;
             std::wstring comp = path.substr(i, j - i);
             i = j;
-            RVLOG(L"[raw] recherche \"%ls\" dans MFT#%llu\n", comp.c_str(), (unsigned long long)cur);
+            RVLOG(L"[raw] looking for \"%ls\" in MFT#%llu\n", comp.c_str(), (unsigned long long)cur);
             bool found = false;
             if (cacheActive_){
                 auto it = cacheRep_.find(cur);
@@ -153,7 +153,7 @@ public:
                 for (const RawDirEntry& e : entries)
                     if (iequals(e.name, comp)){ cur = e.mftIndex; found = true; break; }
             }
-            if (!found){ RVLOG(L"[raw] composant introuvable: %ls\n", comp.c_str()); return false; }
+            if (!found){ RVLOG(L"[raw] component not found: %ls\n", comp.c_str()); return false; }
         }
         outIndex = cur; return true;
     }
@@ -221,7 +221,7 @@ public:
                            compressed file is also the most fragmented, hence the first
                            to switch to an $ATTRIBUTE_LIST. */
                         if ((rd16(d + 0x0C) & 0x0001) && !compressionUnit){
-                            RVLOG(L"[raw] $DATA compresse NTFS dans un fragment : non supporte ici\n");
+                            RVLOG(L"[raw] NTFS-compressed $DATA in a fragment: not supported here\n");
                             return false;
                         }
                         if (vcn == 0){
@@ -234,7 +234,7 @@ public:
                         fragments.emplace_back(vcn, decodeRuns(d + rd16(d + 0x20), d + rd32(d + 0x04)));
                     }
                 }
-                else RVLOG(L"[raw] fragment MFT #%llu illisible\n", (unsigned long long)ref);
+                else RVLOG(L"[raw] MFT fragment #%llu unreadable\n", (unsigned long long)ref);
             }
             pos += len;
         }
@@ -245,7 +245,7 @@ public:
         for (auto& f : fragments)
             runs.insert(runs.end(), f.second.begin(), f.second.end());
 
-        RVLOG(L"[raw] $ATTRIBUTE_LIST : %llu fragment(s), %llu run(s), taille %llu\n",
+        RVLOG(L"[raw] $ATTRIBUTE_LIST: %llu fragment(s), %llu run(s), size %llu\n",
               (unsigned long long)fragments.size(), (unsigned long long)runs.size(),
               (unsigned long long)realSize);
         return true;
@@ -408,7 +408,7 @@ public:
         case 3: chunkSize = 16384; break;   // XPRESS16K
         default:
             // 1 = LZX: a distinct format, not implemented. Better to say so.
-            RVLOG(L"[raw] WOF : algorithme %lu (LZX ?) non implemente\n",
+            RVLOG(L"[raw] WOF: algorithm %lu (LZX?) not implemented\n",
                   (unsigned long)algorithm);
             return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
         }
@@ -429,7 +429,7 @@ public:
                 }
             }
             if (read != ctx.streamSize){
-                RVLOG(L"[raw] WOF : flux tronque (%llu sur %llu)\n",
+                RVLOG(L"[raw] WOF: stream truncated (%llu out of %llu)\n",
                       (unsigned long long)read, (unsigned long long)ctx.streamSize);
                 return E_FAIL;
             }
@@ -470,7 +470,7 @@ public:
                 product = XpressHuffmanInflate(data.data() + start, packedSize,
                                                 chunk.data(), expected);
                 if (product == 0){
-                    RVLOG(L"[raw] WOF : morceau %zu illisible\n", i);
+                    RVLOG(L"[raw] WOF: chunk %zu unreadable\n", i);
                     return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
                 }
             }
@@ -496,7 +496,7 @@ public:
             emp->bytes = written;
             emp->declaredSize = actualSize;
         }
-        RVLOG(L"[raw] WOF : %llu octets detendus sur %llu annonces (algorithme %lu)\n",
+        RVLOG(L"[raw] WOF: %llu bytes decompressed out of %llu declared (algorithm %lu)\n",
               (unsigned long long)written, (unsigned long long)actualSize,
               (unsigned long)algorithm);
         return (written == actualSize) ? S_OK : S_FALSE;
@@ -583,7 +583,7 @@ public:
                 else {
                     product = Lznt1Inflate(brut.data(), read, unit.data(), (size_t)unitSize);
                     if (product == 0){
-                        RVLOG(L"[raw] LZNT1 : unite a VCN %llu illisible\n",
+                        RVLOG(L"[raw] LZNT1: unit at VCN %llu unreadable\n",
                               (unsigned long long)vcn);
                         return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
                     }
@@ -635,7 +635,7 @@ public:
             emp->bytes = written;
             emp->declaredSize = realSize;
         }
-        RVLOG(L"[raw] compresse : %llu octets detendus sur %llu annonces\n",
+        RVLOG(L"[raw] compressed: %llu bytes decompressed out of %llu declared\n",
               (unsigned long long)written, (unsigned long long)realSize);
         return (written == realSize) ? S_OK : S_FALSE;
     }
@@ -763,7 +763,7 @@ public:
         }
         else if (!collectRunsFromAttributeList(rec, runs, realSize, 0x80,
                                                &compressionUnit, &validDataLength)){
-            RVLOG(L"[raw] pas d'attribut $DATA exploitable\n");
+            RVLOG(L"[raw] no usable $DATA attribute\n");
             return E_FAIL;
         }
         if (validDataLength > realSize) validDataLength = realSize;
@@ -775,7 +775,7 @@ public:
         std::ofstream file;
         if (!outFile.empty()){
             file.open(std::filesystem::path(outFile), std::ios::binary | std::ios::trunc);
-            if (!file){ RVLOG(L"[raw] ouverture sortie impossible\n"); return E_FAIL; }
+            if (!file){ RVLOG(L"[raw] cannot open the output\n"); return E_FAIL; }
         }
         // Empty output with an observer: the content is handed to it, nothing is written.
         std::ostream observedOutput(observer);
@@ -863,7 +863,7 @@ public:
             emp->bytes = written;
             emp->declaredSize = realSize;
         }
-        RVLOG(L"[raw] extrait %llu octets\n", (unsigned long long)written);
+        RVLOG(L"[raw] extracted %llu bytes\n", (unsigned long long)written);
         return (written == realSize) ? S_OK : S_FALSE;
     }
 
@@ -946,10 +946,10 @@ private:
     bool bootstrapMft(){
         std::vector<uint8_t> rec(bytesPerRecord_);
         if (!readBytes(mftLcn_ * bytesPerCluster_, rec.data(), bytesPerRecord_)) return false;
-        if (memcmp(rec.data(), "FILE", 4) != 0){ RVLOG(L"[raw] MFT#0: signature FILE absente\n"); return false; }
+        if (memcmp(rec.data(), "FILE", 4) != 0){ RVLOG(L"[raw] MFT#0: FILE signature absent\n"); return false; }
         applyFixup(rec.data(), bytesPerRecord_, bytesPerSector_);
         const uint8_t* a = findAttr(rec, 0x80);
-        if (!a || a[8] == 0){ RVLOG(L"[raw] $MFT $DATA introuvable/résident\n"); return false; }
+        if (!a || a[8] == 0){ RVLOG(L"[raw] $MFT $DATA not found / resident\n"); return false; }
         uint16_t runsOff = rd16(a + 0x20);
         uint32_t attrLen = rd32(a + 0x04);
         mftRuns_ = decodeRuns(a + runsOff, a + attrLen);
@@ -962,7 +962,7 @@ private:
     bool readMftRecord(uint64_t index, std::vector<uint8_t>& rec){
         rec.assign(bytesPerRecord_, 0);
         if (!readVirtual(mftRuns_, index * bytesPerRecord_, bytesPerRecord_, rec.data())){
-            RVLOG(L"[raw] MFT#%llu: readVirtual echec\n", (unsigned long long)index); return false; }
+            RVLOG(L"[raw] MFT#%llu: readVirtual failed\n", (unsigned long long)index); return false; }
         if (memcmp(rec.data(), "FILE", 4) != 0){
             RVLOG(L"[raw] MFT#%llu: magic FILE absent (%02x%02x%02x%02x)\n",
                   (unsigned long long)index, rec[0], rec[1], rec[2], rec[3]); return false; }
@@ -1065,7 +1065,7 @@ public:
     bool listDir(uint64_t dirIndex, std::vector<RawDirEntry>& out){
         std::vector<uint8_t> rec;
         if (!readMftRecord(dirIndex, rec)){
-            RVLOG(L"[raw] listDir(%llu): enregistrement illisible\n", (unsigned long long)dirIndex);
+            RVLOG(L"[raw] listDir(%llu): record unreadable\n", (unsigned long long)dirIndex);
             return false; }
 
         // $INDEX_ROOT (0x90) — resident, always present
@@ -1106,10 +1106,10 @@ public:
            the index blocks: ALL its entries then come from $INDEX_ALLOCATION.
            Hence the separate trace of both sources — without it, "0 entries"
            does not say which of the two failed. */
-        RVLOG(L"[raw] listDir(%llu): %llu entree(s) depuis $INDEX_ROOT, "
+        RVLOG(L"[raw] listDir(%llu): %llu entry/entries from $INDEX_ROOT, "
               L"$INDEX_ALLOCATION %ls (blockSize=%u)\n",
               (unsigned long long)dirIndex, (unsigned long long)fromRoot,
-              ia ? (ia[8] != 0 ? L"non resident" : L"RESIDENT (inattendu)") : L"absent",
+              ia ? (ia[8] != 0 ? L"non resident" : L"RESIDENT (unexpected)") : L"absent",
               idxBlockSize);
         if (ia && ia[8] != 0 && idxBlockSize){
             uint64_t realSize = rd64(ia + 0x30);
@@ -1130,7 +1130,7 @@ public:
         for (uint64_t pos = 0; pos + idxBlockSize <= realSize; pos += idxBlockSize){
             ++blocksRead;
             if (!readVirtual(runs, pos, idxBlockSize, blk.data())){
-                RVLOG(L"[raw] bloc d'index a l'offset %llu illisible\n",
+                RVLOG(L"[raw] index block at offset %llu unreadable\n",
                       (unsigned long long)pos);
                 break;
             }
@@ -1309,7 +1309,7 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
     if (!vol.resolvePath(dirPathOnVolume, dirIndex)){
         // Missing directory: the nominal case during a collection, not an error.
         RVLOG(L"[raw] repertoire absent: %ls\n", dirPathOnVolume.c_str());
-        if (diagnostic) *diagnostic = L"chemin non resolu (repertoire absent ?)";
+        if (diagnostic) *diagnostic = L"path not resolved (directory absent?)";
         return ERROR_SUCCESS;
     }
 
@@ -1341,7 +1341,7 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
         line.result = h;
         if (reading) reading->push_back(std::move(line));
         if (FAILED(h)){
-            RVLOG(L"[raw] extraction echouee: %ls\n", e.name.c_str());
+            RVLOG(L"[raw] extraction failed: %ls\n", e.name.c_str());
             ++failures;
             overall = S_FALSE;
         }
@@ -1353,8 +1353,8 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
     if (diagnostic){
         *diagnostic = std::to_wstring(entries.size()) + L" entree(s), "
                     + std::to_wstring(files) + L" fichier(s), "
-                    + std::to_wstring(kept) + L" retenu(s)";
-        if (failures) *diagnostic += L", " + std::to_wstring(failures) + L" echec(s)";
+                    + std::to_wstring(kept) + L" kept";
+        if (failures) *diagnostic += L", " + std::to_wstring(failures) + L" failure(s)";
     }
     return overall;
 }
@@ -1373,7 +1373,7 @@ HRESULT extractTree(NtfsVolume& vol, uint64_t dirIndex,
                              std::vector<RawHiveExtraction>* reading){
     std::vector<RawDirEntry> entries;
     if (!vol.listDir(dirIndex, entries)){
-        RVLOG(L"[raw] arbo: index illisible pour %ls\n", volumePath.c_str());
+        RVLOG(L"[raw] tree: index unreadable for %ls\n", volumePath.c_str());
         return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
     }
 
@@ -1386,7 +1386,7 @@ HRESULT extractTree(NtfsVolume& vol, uint64_t dirIndex,
 
         if (e.isDirectory){
             if (depthLeft == 0){
-                RVLOG(L"[raw] arbo: profondeur max atteinte a %ls\n", e.name.c_str());
+                RVLOG(L"[raw] tree: maximum depth reached at %ls\n", e.name.c_str());
                 continue;
             }
             const HRESULT h = extractTree(
@@ -1406,7 +1406,7 @@ HRESULT extractTree(NtfsVolume& vol, uint64_t dirIndex,
         line.result = vol.extractData(e.mftIndex, line.outputPath,
                                          volumePath + L"\\" + e.name, &line.fingerprints);
         if (FAILED(line.result)){
-            RVLOG(L"[raw] arbo: extraction echouee %ls\n", e.name.c_str());
+            RVLOG(L"[raw] tree: extraction failed %ls\n", e.name.c_str());
             global = S_FALSE;
         }
         else if (extracted) ++*extracted;

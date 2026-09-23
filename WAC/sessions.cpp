@@ -1,18 +1,18 @@
 #include "sessions.h"
 
 Session::Session(LUID* id) {
-	/* `LsaGetLogonSessionData` ALLOUE elle-même la structure et écrase le
-	   pointeur : le `new SECURITY_LOGON_SESSION_DATA()` qui se trouvait ici
-	   était perdu à chaque session, et en cas d'échec de l'appel le bloc issu de
-	   `new` aurait été rendu à `LsaFreeReturnBuffer` — un allocateur qui ne
-	   l'avait pas fourni. */
+	/* `LsaGetLogonSessionData` ALLOCATES the structure itself and overwrites the
+	   pointer: the `new SECURITY_LOGON_SESSION_DATA()` that used to be here was
+	   lost at every session, and if the call failed the block from `new` would
+	   have been handed to `LsaFreeReturnBuffer` — an allocator that had not
+	   provided it. */
 	PSECURITY_LOGON_SESSION_DATA data = NULL;
 	_LARGE_INTEGER temp = { 0 };
 	HRESULT hresult = 0;
 
 	sessionId = ((LONGLONG)(id->HighPart) << 32) + id->LowPart;
-	/* LUID reserves par Windows, toujours les memes (winnt.h :
-	   SYSTEM_LUID, ANONYMOUS_LOGON_LUID, LOCALSERVICE_LUID, NETWORKSERVICE_LUID). */
+	/* LUIDs reserved by Windows, always the same ones (winnt.h: SYSTEM_LUID,
+	   ANONYMOUS_LOGON_LUID, LOCALSERVICE_LUID, NETWORKSERVICE_LUID). */
 	switch (sessionId) {
 	case 0x3E7: knownRole = L"SYSTEM";          break;
 	case 0x3E6: knownRole = L"ANONYMOUS LOGON"; break;
@@ -25,12 +25,12 @@ Session::Session(LUID* id) {
 	log(3, L"🔈LsaGetLogonSessionData");
 	hresult = LsaGetLogonSessionData(id, &data);
 	if (hresult  == ERROR_SUCCESS) {
-		/* CORRECTION (double decalage, meme defaut que les .lnk).
-		   LogonTime est un FILETIME, donc UTC. Le code l'affectait au champ
-		   LOCAL puis appelait LocalFileTimeToFileTime : la cle locale portait de
-		   l'UTC non converti et la cle *Utc de l'UTC decale de -2 h.
-		   Symptome qui l'a revele : toutes les sessions demarraient 2 h AVANT
-		   l'heure de demarrage du systeme — impossible. */
+		/* FIX (a double shift, the same defect as the .lnk files).
+		   LogonTime is a FILETIME, hence UTC. The code assigned it to the LOCAL
+		   field then called LocalFileTimeToFileTime: the local key carried
+		   unconverted UTC and the *Utc key carried UTC shifted by -2 h.
+		   The symptom that revealed it: every session started 2 h BEFORE the
+		   system's boot time — impossible. */
 		temp = data->LogonTime;
 		memcpy(&startTimeUtc, &temp, sizeof(startTimeUtc));
 		log(3, L"🔈utcVersLocalSuspect startTime");
@@ -41,7 +41,7 @@ Session::Session(LUID* id) {
 		logonTypeName = logon_type(logonType);
 		authenticationPackage = std::wstring(data->AuthenticationPackage.Buffer).data();
 
-		// Converti ICI, tant que la structure de LSA est valide (cf. sessions.h).
+		// Converted HERE, while LSA's structure is still valid (see sessions.h).
 		if (data->Sid) {
 			LPWSTR sidText = NULL;
 			log(3, L"🔈ConvertSidToStringSidW");
@@ -56,7 +56,7 @@ Session::Session(LUID* id) {
 	else {
 		log(2, L"🔥LsaGetLogonSessionData", hresult);
 	}
-	// Seul un appel REUSSI a fourni un tampon a liberer.
+	// Only a SUCCESSFUL call provided a buffer to release.
 	if (data) LsaFreeReturnBuffer(data);
 }
 
@@ -64,12 +64,12 @@ Json Session::toJson() const {
 	log(3, L"🔈session toJson");
 	log(3, L"🔈timeToIso8601 startTime");
 	Json o = Json::obj();
-	o.add(L"SessionId",             Json::num(sessionId));      // nombre, pas chaîne
+	o.add(L"SessionId",             Json::num(sessionId));      // a number, not a string
 	o.add(L"SID",                   Json::str(sid));
 	if (!knownRole.empty()) o.add(L"WellKnownRole", Json::str(knownRole));
 	o.add(L"LogonName",             Json::str(logonName));
 	o.add(L"LogonDomainName",       Json::str(logonDomainName));
-	o.add(L"LogonType",             Json::num(logonType));      // nombre, pas chaîne
+	o.add(L"LogonType",             Json::num(logonType));      // a number, not a string
 	o.add(L"LogonTypeName",         Json::str(logonTypeName));
 	o.add(L"AuthenticationPackage", Json::str(authenticationPackage));
 	o.add(L"StartTime",             Json::str(timeToIso8601Local(startTime)));
@@ -114,5 +114,5 @@ HRESULT Sessions::toJson() {
 
 void Sessions::clear() {
 	log(3, L"🔈sessions clear");
-	sessions.clear();   // detruit les elements -> libere reellement
+	sessions.clear();   // destroys the elements -> really releases them
 }

@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
-// fichier Include Microsoft Visual C++.
-// Utilisé par WAC.rc
+// Microsoft Visual C++ include file.
+// Used by WAC.rc
 //
 #define IDI_ICON1                       109
 

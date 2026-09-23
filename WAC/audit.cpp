@@ -5,43 +5,43 @@
 #include "tools.h"
 
 namespace Footprint {
-const wchar_t* VOLUME_BRUT  = L"Lecture brute du volume (\\\\.\\C:) : aucun acces fichier, "
-                              L"donc aucun horodatage de la cible modifie. Un audit d'acces aux "
-                              L"objets, s'il est actif, peut journaliser l'ouverture du volume.";
-const wchar_t* HIVE_COPY  = L"Ouverture d'une ruche COPIEE sur le support de collecte : "
-                              L"la ruche d'origine n'est pas touchee.";
-const wchar_t* FILE_COPY = L"Lecture d'un fichier d'artefact extrait (copie sur le support "
-                              L"de collecte) : aucun acces a l'original, aucun horodatage modifie, "
-                              L"aucun service du systeme examine sollicite.";
-const wchar_t* HIVE_PATCH  = L"Modification de 8 octets du bloc de base d'une ruche COPIEE "
-                              L"(alignement des numeros de sequence). L'original n'est pas "
-                              L"modifie ; empreinte avant patch consignee.";
-const wchar_t* HIVE_REPLAY  = L"Application des journaux de transaction a la ruche COPIEE, "
-                              L"jamais a l'originale. Le contenu d'origine de chaque page remplacee "
-                              L"est conserve dans un journal d'annulation : la copie brute reste "
+const wchar_t* VOLUME_BRUT  = L"Raw reading of the volume (\\\\.\\C:): no file access, "
+                              L"hence no timestamp of the target changed. An object-access audit, "
+                              L"if it is enabled, may log the opening of the volume.";
+const wchar_t* HIVE_COPY  = L"Opening of a hive COPIED onto the collection medium: "
+                              L"the original hive is left untouched.";
+const wchar_t* FILE_COPY = L"Reading of an extracted artefact file (a copy on the collection "
+                              L"medium): no access to the original, no timestamp changed, "
+                              L"no service of the examined system solicited.";
+const wchar_t* HIVE_PATCH  = L"Change of 8 bytes in the base block of a COPIED hive "
+                              L"(alignment of the sequence numbers). The original is not "
+                              L"modified; the fingerprint before the patch is recorded.";
+const wchar_t* HIVE_REPLAY  = L"Application of the transaction logs to the COPIED hive, "
+                              L"never to the original one. The original content of every replaced page "
+                              L"is kept in an undo journal: the raw copy stays "
                               L"reconstructible a l'octet.";
-const wchar_t* SCM          = L"Une seule enumeration du gestionnaire de services, en lecture "
-                              L"(EnumServicesStatusExW), pour relever l'etat courant. Aucun "
-                              L"handle ouvert service par service : la configuration provient "
-                              L"de la ruche SYSTEM copiee.";
-const wchar_t* PROCESSES    = L"Enumeration des processus : ouverture de handles de processus "
-                              L"et de jetons (auditable si la politique le prevoit).";
-const wchar_t* SESSIONS     = L"Interrogation des sessions ouvertes (LSA / Terminal Services) : "
-                              L"sollicite LSASS, sans modification d'artefact.";
-const wchar_t* USB_WRITE = L"Ecriture sur le support de collecte uniquement. Aucune ecriture "
-                              L"sur le systeme examine.";
+const wchar_t* SCM          = L"A single read-only enumeration of the service manager "
+                              L"(EnumServicesStatusExW), to read the current state. No "
+                              L"handle opened service by service: the configuration comes "
+                              L"from the copied SYSTEM hive.";
+const wchar_t* PROCESSES    = L"Enumeration of the processes: opening of process and token "
+                              L"handles (auditable if the policy provides for it).";
+const wchar_t* SESSIONS     = L"Query of the open sessions (LSA / Terminal Services): "
+                              L"solicits LSASS, without modifying any artefact.";
+const wchar_t* USB_WRITE = L"Write to the collection medium only. No write "
+                              L"to the examined system.";
 } // namespace Footprint
 
 namespace {
 
-//! Une opération consignée.
+//! One recorded operation.
 struct Operation {
 	unsigned     sequence = 0;
 	std::wstring timestampUtc;
 	std::wstring timestampLocal;
 	std::wstring operation;
 	std::wstring target;
-	std::wstring result;      //!< "OK" ou le code et son message
+	std::wstring result;      //!< "OK", or the code and its message
 	std::wstring footprint;
 };
 
@@ -54,7 +54,7 @@ std::wstring g_machine, g_user, g_sid, g_timeZone;
 long         g_biasMinutes  = 0;
 bool         g_elevated         = false;
 
-//! Horodatage courant, en UTC et en heure locale.
+//! Current timestamp, in UTC and in local time.
 void now(std::wstring& utc, std::wstring& local, FILETIME* brut = nullptr) {
 	SYSTEMTIME stUtc = { 0 };
 	GetSystemTime(&stUtc);
@@ -67,7 +67,7 @@ void now(std::wstring& utc, std::wstring& local, FILETIME* brut = nullptr) {
 	if (brut) SystemTimeToFileTime(&stUtc, brut);
 }
 
-//! Contexte de la machine et de l'opérateur au moment de la collecte.
+//! Context of the machine and of the operator at collection time.
 void readContext() {
 	wchar_t buffer[512] = L"";
 	DWORD size = 512;
@@ -76,8 +76,8 @@ void readContext() {
 	size = 512;
 	if (GetUserNameW(buffer, &size)) g_user = buffer;
 
-	// SID du compte sous lequel WAC s'execute : identifie l'operateur sans
-	// ambiguite, meme si le nom de compte a change depuis.
+	// SID of the account WAC runs as: identifies the operator without ambiguity,
+	// even if the account name has changed since.
 	HANDLE token = NULL;
 	if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) {
 		DWORD required = 0;
@@ -100,14 +100,13 @@ void readContext() {
 		CloseHandle(token);
 	}
 
-	// Fuseau de la MACHINE EXAMINEE : indispensable pour reinterpreter les dates
-	// locales des artefacts ( — le fuseau du suspect, pas celui de
-	// l'analyste).
+	// Time zone of the EXAMINED MACHINE: indispensable to reinterpret the local
+	// dates of the artefacts (the suspect's time zone, not the analyst's).
 	TIME_ZONE_INFORMATION tz = { 0 };
 	const DWORD type = GetTimeZoneInformation(&tz);
 	if (type != TIME_ZONE_ID_INVALID) {
 		g_timeZone = (type == TIME_ZONE_ID_DAYLIGHT) ? tz.DaylightName : tz.StandardName;
-		// Bias est en minutes A AJOUTER a l'heure locale pour obtenir l'UTC.
+		// Bias is in minutes to ADD to the local time to obtain UTC.
 		g_biasMinutes = tz.Bias + ((type == TIME_ZONE_ID_DAYLIGHT) ? tz.DaylightBias : tz.StandardBias);
 	}
 }
@@ -135,15 +134,15 @@ void auditRecord(const std::wstring& operation, const std::wstring& target,
 	now(o.timestampUtc, o.timestampLocal);
 	o.operation = operation;
 	o.target     = target;
-	/* S_FALSE (1) signifie « réussi, mais partiellement » — typiquement des
-	   ruches absentes tolérées par l'extraction. `getErrorMessage()` le traduit
-	   comme le code Win32 1, « Fonction incorrecte », ce qui faisait lire un
-	   succès partiel comme une panne dans le journal d'audit. Dans une pièce
-	   d'enquête, un résultat mal qualifié vaut moins que pas de résultat. */
+	/* S_FALSE (1) means "succeeded, but only partly" — typically hives that are
+	   absent and tolerated by the extraction. `getErrorMessage()` translates it
+	   as the Win32 code 1, "Incorrect function", which had a partial success
+	   read as a breakdown in the audit log. In a piece of evidence, a badly
+	   qualified result is worth less than no result. */
 	if (result == ERROR_SUCCESS)
 		o.result = L"OK";
 	else if (result == S_FALSE)
-		o.result = L"PARTIEL (voir le journal de collecte pour le détail)";
+		o.result = L"PARTIAL (see the collection log for the detail)";
 	else
 		o.result = L"0x" + to_hex(result) + L" " + getErrorMessage(result);
 	o.footprint = footprint ? footprint : L"";
@@ -163,26 +162,26 @@ Json auditContext() {
 	host.add(L"ComputerName", Json::str(g_machine));
 	host.add(L"SystemDrive",  Json::str(conf.systemDrive));
 
-	/* DEUX fuseaux, et c'est voulu.
-	   - SuspectTimeZone : releve dans la ruche SYSTEM examinee. C'est LUI qui sert
-	     a formater les heures locales des artefacts, et donc la seule reference
-	     valable pour interpreter une date locale.
-	   - CollectionHostTimeZone : celui de la machine qui a execute WAC.
-	   En collecte live les deux coincident. Une DIVERGENCE est un signal : image
-	   analysee sur une autre machine, ou fuseau modifie depuis la collecte — dans
-	   les deux cas l'analyste doit le savoir. */
+	/* TWO time zones, and that is deliberate.
+	   - SuspectTimeZone: read in the examined SYSTEM hive. It is THE one used to
+	   format the artefacts' local times, and therefore the only valid
+	   reference to interpret a local date.
+	   - CollectionHostTimeZone: that of the machine that ran WAC.
+	   In a live collection the two coincide. A DIVERGENCE is a signal: an image
+	   analysed on another machine, or a time zone changed since the collection —
+	   in both cases the analyst must know. */
 	Json suspect = Json::obj();
 	if (conf.timeZone.valid) {
 		suspect.add(L"KeyName",      Json::str(conf.timeZone.keyName));
 		suspect.add(L"StandardName", Json::str(conf.timeZone.standardName));
 		suspect.add(L"DaylightName", Json::str(conf.timeZone.daylightName));
-		// Minutes a AJOUTER a l'UTC pour obtenir l'heure locale : +120 = UTC+02:00.
-		// Sens verifiable dans ce fichier meme (StartLocal = StartUtc + offset).
+		// Minutes to ADD to UTC to obtain the local time: +120 = UTC+02:00.
+		// The sign is verifiable in this very file (StartLocal = StartUtc + offset).
 		suspect.add(L"UtcOffsetMinutes", Json::num((long long)-conf.timeZone.activeBiasMinutes));
 		suspect.add(L"Source", Json::str(L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation"));
 	}
 	else {
-		suspect.add(L"Source", Json::str(L"non relevé : repli sur le fuseau de la machine de collecte"));
+		suspect.add(L"Source", Json::str(L"not read: fallback on the collecting machine's time zone"));
 	}
 	host.add(L"SuspectTimeZone", std::move(suspect));
 
@@ -217,8 +216,8 @@ HRESULT auditWrite() {
 	const ULONGLONG f = ((ULONGLONG)end.dwHighDateTime << 32) | end.dwLowDateTime;
 	const ULONGLONG duration = (f > d) ? (f - d) / 10000000ULL : 0ULL;   // 100 ns -> s
 
-	// MEME contexte que le manifeste de consigne : une seule construction, pour
-	// que deux documents de la meme collecte ne puissent pas se contredire.
+	// The SAME context as the exhibit manifest: one single construction, so that
+	// two documents of the same collection cannot contradict each other.
 	Json root = auditContext();
 
 	Json collection = Json::obj();

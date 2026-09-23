@@ -3,32 +3,34 @@
 
 namespace {
 
-/*  `cheminBinaire` a rejoint tools : la resolution des prefixes de chemins
- *  Windows (\SystemRoot\, %SystemRoot%\, \??\) sert aussi a localiser les
- *  fichiers de ressources des fournisseurs d'evenements (cf. event_messages.cpp).
+/*! \file
+ *  \brief Services and drivers, read offline from the SYSTEM hive.
+ *
+ *  `binaryPath` has moved to tools: resolving the Windows path prefixes
+ *  (\SystemRoot\, %SystemRoot%\, \??\) also serves to locate the resource files
+ *  of the event providers (see event_messages.cpp).
  */
 
-/*! Empreintes d'un fichier désigné par la ruche.
+/*! Fingerprints of a file named by the hive.
 *
-* Près de 200 des 697 services d'une machine Windows 11 pointent sur
-* `svchost.exe` : EmpreinteFichier ne lit chaque fichier qu'une fois pour toute
-* la collecte, quel que soit le nombre d'artefacts qui le citent.
+* Nearly 200 of the 697 services of a Windows 11 machine point to
+* `svchost.exe`: FingerprintFile reads each file only once for the whole
+* collection, whatever the number of artefacts that cite it.
 */
 BinaryFingerprint binaryFingerprint(const std::wstring& hiveValue) {
 	if (!conf.binary || hiveValue.empty()) return BinaryFingerprint();
 	return FingerprintFile(binaryPath(hiveValue));
 }
 
-/*! Relève l'état courant de tous les services en UNE énumération.
+/*! Reads the current state of every service in ONE enumeration.
 *
-*  POURQUOI UNE SEULE FOIS. La version d'origine ouvrait un handle par service
-*  (`OpenServiceW`, et de surcroît avec `SC_MANAGER_ALL_ACCESS` alors qu'un droit
-*  de lecture suffisait — ce qui faisait échouer la lecture sur les services
-*  protégés). Ici le SCM est interrogé une fois, en lecture seule, et
-*  l'appariement se fait en mémoire.
+*  WHY ONLY ONCE. The original version opened a handle per service
+*  (`OpenServiceW`, and moreover with `SC_MANAGER_ALL_ACCESS` while a read right
+*  was enough — which made the reading fail on the protected services). Here the
+*  SCM is queried once, read-only, and the matching is done in memory.
 *
-*  @param etats reçoit l'état indexé par nom de service en minuscules
-*  @return ERROR_SUCCESS si l'énumération a abouti
+*  @param states receives the state indexed by service name in lower case
+*  @return ERROR_SUCCESS if the enumeration succeeded
 */
 HRESULT readLiveStates(std::map<std::wstring, ServiceState>& states) {
 	log(3, L"🔈OpenSCManager");
@@ -46,7 +48,7 @@ HRESULT readLiveStates(std::map<std::wstring, ServiceState>& states) {
 	                      SERVICE_STATE_ALL, NULL, 0, &neededBytes, &count, 0, NULL);
 	if (neededBytes == 0) {
 		CloseServiceHandle(hSCM);
-		return ERROR_SUCCESS;   // aucun service : pas une erreur
+		return ERROR_SUCCESS;   // no service: not an error
 	}
 
 	std::vector<BYTE> buffer(neededBytes);
@@ -73,18 +75,18 @@ HRESULT readLiveStates(std::map<std::wstring, ServiceState>& states) {
 	return result;
 }
 
-/*! Ajoute une valeur qui peut être un texte, une référence de ressource MUI, ou
-* une référence de fichier INF portant son propre libellé de repli.
+/*! Adds a value that may be a text, a MUI resource reference, or a reference to
+* an INF file carrying its own fallback label.
 *
-* Le nom du champ dit de quoi il s'agit : `<nom>` pour un texte exploitable,
-* `<nom>Resource` pour la référence brute — les deux à la fois quand la valeur
-* contient l'un et l'autre.
+* The field's name says what it is: `<name>` for a usable text,
+* `<name>Resource` for the raw reference — both at once when the value holds
+* one and the other.
 *
-* Les pilotes déclarent leur nom sous la forme
-* `@disk.inf,%disk_ServiceDesc%;Disk Driver` : Windows y place lui-même, après
-* le point-virgule, le libellé à utiliser si le fichier INF n'est pas
-* disponible. Ce repli est du texte utilisable et il serait absurde de le
-* jeter — il concerne la quasi-totalité des ~400 pilotes de la ruche.
+* The drivers declare their name in the form
+* `@disk.inf,%disk_ServiceDesc%;Disk Driver`: Windows itself puts there, after
+* the semicolon, the label to use if the INF file is not available. That
+* fallback is usable text and it would be absurd to throw it away — it concerns
+* nearly all of the ~400 drivers of the hive.
 */
 void addTextOrResource(Json& o, const std::wstring& name, const std::wstring& value) {
 	if (value.empty()) return;
@@ -104,31 +106,31 @@ Json ServiceStruct::toJson() const {
 	log(3, L"🔈service toJson");
 	Json o = Json::obj();
 	o.add(L"Name",        Json::str(serviceName));
-	/* `DisplayName` et `Description` sont, pour la quasi-totalite des services
-	   systeme, des references de ressource MUI (« @schedsvc.dll,-100 ») que seul
-	   un chargement de module resoudrait. Elles sont donc restituees dans un
-	   champ qui dit ce qu'elles sont, plutot que presentees comme des noms.
-	   `Name` reste l'identifiant exploitable : c'est celui qu'emploient les
-	   journaux et les commandes. */
+	/* `DisplayName` and `Description` are, for nearly all system services, MUI
+	   resource references ("@schedsvc.dll,-100") that only a module load would
+	   resolve. They are therefore returned in a field that says what they are,
+	   rather than presented as names.
+	   `Name` remains the usable identifier: it is the one the logs and the
+	   commands use. */
 	addTextOrResource(o, L"DisplayName", serviceDisplayName);
 	addTextOrResource(o, L"Description", serviceDescription);
 	o.add(L"Type",        Json::str(serviceType));
 	o.add(L"StartType",   Json::str(serviceStartType));
 	if (!serviceErrorControl.empty()) o.add(L"ErrorControl", Json::str(serviceErrorControl));
-	/* Un pilote n'a pas de compte d'execution : `Owner` vide est un fait, pas
-	   une lecture manquee — il n'est donc pas emis. */
+	/* A driver has no account to run as: an empty `Owner` is a fact, not a failed
+	   reading — so it is not emitted. */
 	if (!serviceOwner.empty())  o.add(L"Owner",  Json::str(serviceOwner));
-	if (!serviceBinary.empty()) o.add(L"Binary", Json::str(serviceBinary));   // valeur BRUTE
+	if (!serviceBinary.empty()) o.add(L"Binary", Json::str(serviceBinary));   // RAW value
 	addFingerprints(o, serviceFingerprint);
 
-	/* Pour un service hébergé dans svchost.exe, `Binary` ne nomme que svchost :
-	   la DLL est le code réellement exécuté. Émise seulement si elle existe,
-	   pour que sa présence signale un service hébergé. */
+	/* For a service hosted in svchost.exe, `Binary` only names svchost: the DLL
+	   is the code really executed. Emitted only if it exists, so that its
+	   presence signals a hosted service. */
 	if (!serviceDll.empty()) {
 		o.add(L"ServiceDll", Json::str(serviceDll));
 		addFingerprints(o, serviceDllFingerprint, L"ServiceDll");
 	}
-	// Persistance possible : commande relancée quand le service échoue.
+	// A possible persistence: a command run again when the service fails.
 	if (!serviceFailureCommand.empty())
 		o.add(L"FailureCommand", Json::str(serviceFailureCommand));
 	if (!serviceGroup.empty()) o.add(L"Group", Json::str(serviceGroup));
@@ -138,13 +140,14 @@ Json ServiceStruct::toJson() const {
 		o.add(L"DependOnService", d);
 	}
 
-	/* Instant de création ou de dernière modification du service : la donnée que
-	   le gestionnaire de services ne fournit pas, et souvent la plus parlante. */
+	/* Instant of the creation or the last modification of the service: the piece
+	   of data the service manager does not provide, and often the most
+	   telling. */
 	o.add(L"LastWriteTime",    Json::str(timeToIso8601Local(lastWriteTime)));
 	o.add(L"LastWriteTimeUtc", Json::str(timeToIso8601Utc(lastWriteTimeUtc)));
 
-	/* État volatil. Le drapeau accompagne la valeur : sans lui, « arrêté » et
-	   « non relevé » se confondraient. */
+	/* Volatile state. The flag goes along with the value: without it, "stopped"
+	   and "not read" would be confused. */
 	o.add(L"LiveStatusAvailable", Json::boolean(stateRead));
 	if (stateRead) {
 		o.add(L"Status",    Json::str(serviceStatus));
@@ -185,7 +188,7 @@ HRESULT Services::getData() {
 		return hresult;
 	}
 
-	// État courant relevé AVANT le parcours : une seule sollicitation du SCM.
+	// Current state read BEFORE the walk: one single solicitation of the SCM.
 	std::map<std::wstring, ServiceState> states;
 	const bool statesAvailable = (readLiveStates(states) == ERROR_SUCCESS);
 
@@ -229,11 +232,11 @@ HRESULT Services::getData() {
 		getRegMultiSzValue(hService, nullptr, L"DependOnService", &s.dependencies);
 
 		DWORD value = 0;
-		/* `Type` est obligatoire pour tout service enregistre. Certaines
-		   sous-cles de `Services` n'en portent pas : ce sont des CONTENEURS de
-		   parametres (WinSock2, EventLog\..., Tcpip\Parameters...), pas des
-		   services. Les emettre remplissait services.json d'entrees vides, qui
-		   se lisent comme des lectures echouees. */
+		/* `Type` is mandatory for every registered service. Some subkeys of
+		   `Services` do not carry one: they are CONTAINERS of parameters
+		   (WinSock2, EventLog\..., Tcpip\Parameters...), not services. Emitting
+		   them filled services.json with empty entries, which read as failed
+		   readings. */
 		bool estUnService = false;
 		if (getRegDwordValue(hService, nullptr, L"Type", &value) == ERROR_SUCCESS) {
 			s.serviceType = serviceType_to_wstring((int)value);
@@ -248,21 +251,21 @@ HRESULT Services::getData() {
 		if (getRegDwordValue(hService, nullptr, L"Start", &value) == ERROR_SUCCESS)
 			s.serviceStartType = serviceStart_to_wstring((int)value);
 		if (getRegDwordValue(hService, nullptr, L"ErrorControl", &value) == ERROR_SUCCESS) {
-			/* SERVICE_ERROR_IGNORE=0 … SERVICE_ERROR_CRITICAL=3. Traduit ici
-			   plutôt que dans trans_id : quatre valeurs, un seul appelant. */
+			/* SERVICE_ERROR_IGNORE=0 … SERVICE_ERROR_CRITICAL=3. Translated here
+			   rather than in trans_id: four values, one single caller. */
 			PCWSTR labels[] = { L"SERVICE_ERROR_IGNORE", L"SERVICE_ERROR_NORMAL",
 			                      L"SERVICE_ERROR_SEVERE", L"SERVICE_ERROR_CRITICAL" };
 			s.serviceErrorControl = (value <= 3) ? labels[value]
 			                                      : L"SERVICE_ERROR_UNKNOWN";
 		}
 
-		// ServiceDll : le code réellement chargé pour un service hébergé.
+		// ServiceDll: the code really loaded for a hosted service.
 		getRegSzValue(hService, L"Parameters", L"ServiceDll", &s.serviceDll);
 
 		s.serviceFingerprint    = binaryFingerprint(s.serviceBinary);
 		s.serviceDllFingerprint = binaryFingerprint(s.serviceDll);
 
-		// Appariement avec l'état courant, insensible à la casse.
+		// Matching with the current state, without regard to case.
 		if (statesAvailable) {
 			const auto it = states.find(toLower(s.serviceName));
 			if (it != states.end()) {
@@ -289,5 +292,5 @@ HRESULT Services::toJson() {
 
 void Services::clear() {
 	log(3, L"🔈services clear");
-	services.clear();   // detruit les elements -> libere reellement
+	services.clear();   // destroys the elements -> really releases them
 }

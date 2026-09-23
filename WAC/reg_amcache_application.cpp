@@ -10,7 +10,7 @@ AmcacheApplication::AmcacheApplication(ORHKEY hKey_amcache) {
 	getRegSzValue(hKey_amcache, nullptr, L"RootDirPath", &RootDirPath);
 	log(3, L"🔈getRegSzValue Version");
 	getRegSzValue(hKey_amcache, nullptr, L"Version", &Version);
-	//la date est stockée en REG_SZ, donc il faut la reconvertir en FILETIME pour avoir le bon format et la bonne timezone
+	// the date is stored as REG_SZ, so it must be converted back to a FILETIME to get the right format and the right time zone
 	std::wstring temp;
 	log(3, L"🔈getRegSzValue InstallDate");
 	getRegSzValue(hKey_amcache, nullptr, L"InstallDate", &temp);
@@ -30,7 +30,7 @@ Json AmcacheApplication::toJson() {
 	Json o = Json::obj();
 	o.add(L"Name",           Json::str(Name));
 	o.add(L"Publisher",      Json::str(Publisher));
-	o.add(L"RootDirPath",    Json::str(RootDirPath));   // chemin brut
+	o.add(L"RootDirPath",    Json::str(RootDirPath));   // raw path
 	o.add(L"Version",        Json::str(Version));
 	o.add(L"InstallDate",    Json::str(InstallDate));
 	o.add(L"InstallDateUtc", Json::str(InstallDateUtc));
@@ -108,5 +108,5 @@ HRESULT AmcacheApplications::toJson() {
 
 void AmcacheApplications::clear() {
 	log(3, L"🔈AmcacheApplications clear");
-	amcacheapplications.clear();   // detruit les elements -> libere reellement
+	amcacheapplications.clear();   // destroys the elements -> really releases them
 }

@@ -3,13 +3,13 @@
 Json Shimcache::toJson() {
 	log(3, L"🔈Shimcache toJson");
 	Json o = Json::obj();
-	o.add(L"Path",                Json::str(path));      // chemin brut
+	o.add(L"Path",                Json::str(path));      // raw path
 	addFingerprints(o, fingerprint);
 	o.add(L"LastModification",    Json::str(lastModification));
 	o.add(L"LastModificationUtc", Json::str(lastModificationUtc));
-	o.add(L"Executes",            Json::boolean(executed));   // vrai booléen
+	o.add(L"Executes",            Json::boolean(executed));   // a real boolean
 	return o;
-}	/* liberation mémoire */
+}	//! Releases the memory held by the entry.
 
 void Shimcache::clear() {
 	log(3, L"🔈Shimcache clear");
@@ -51,7 +51,7 @@ HRESULT Shimcaches::getData() {
 			offset += 2;
 			shimcache.path = std::wstring((LPWSTR)(data + offset), (LPWSTR)(data + offset) + name_length / sizeof(wchar_t)).data();
 
-			// Empreinte sur le chemin normalisé (guillemets, \??\), lecture brute.
+			// Fingerprint on the normalised path (quotes, \??\), read raw.
 			shimcache.fingerprint = FingerprintFile(shimcache.path);
 			shimcache.path = replaceAll(shimcache.path, L"\t", L" "); // replace tab by space. seen in values
 			offset += name_length;
@@ -87,5 +87,5 @@ HRESULT Shimcaches::toJson() {
 
 void Shimcaches::clear() {
 	log(3, L"🔈Shimcaches clear");
-	shimcaches.clear();   // detruit les elements -> libere reellement
+	shimcaches.clear();   // destroys the elements -> really releases them
 }

@@ -31,7 +31,7 @@ MountedDevice::MountedDevice(ORHKEY hKey, PCWSTR szSubValue) {
 Json MountedDevice::toJson() const {
 	log(3, L"🔈MountedDevice toJson");
 	Json o = Json::obj();
-	o.add(L"Drive",  Json::str(drive));    // valeurs brutes : échappées ici
+	o.add(L"Drive",  Json::str(drive));    // raw values: escaped here
 	o.add(L"Device", Json::str(device));
 	return o;
 }
@@ -95,5 +95,5 @@ HRESULT MountedDevices::toJson() {
 
 void MountedDevices::clear() {
 	log(3, L"🔈MountedDevices clear");
-	mounteddevices.clear();   // detruit les elements -> libere reellement
+	mounteddevices.clear();   // destroys the elements -> really releases them
 }
