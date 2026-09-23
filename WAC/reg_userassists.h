@@ -1,4 +1,20 @@
-﻿#pragma once
+﻿/*! \file
+ *  \brief UserAssist: what the user launched from the shell, how often, and when.
+ *
+ *  WHAT IT SHOWS. Explorer counts, for each user, the programs and shortcuts
+ *  started FROM THE GRAPHICAL INTERFACE, with a run count, a focus count and
+ *  the last run. It is the artefact that shows a human at the keyboard: a
+ *  program started by a service, a script or a task is not counted here. A run
+ *  count that stays at zero while the last-run date is set, or the reverse,
+ *  says the entry was written by something other than an ordinary launch.
+ *
+ *  WHERE IT IS READ. In each NTUSER.DAT, under
+ *  `SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\UserAssist\<GUID>\count`,
+ *  for two GUIDs: `{CEBFF5CD-…}` for shortcuts and `{F4E57C4B-…}` for
+ *  executables. Value names are ROT13-encoded — which hides nothing, but keeps
+ *  them out of a plain search of the hive.
+ */
+#pragma once
 
 #include <iostream>
 #include <windows.h>
@@ -17,50 +33,47 @@
 
 
 
-/*! structure représentant un artefact userassist
-*/
+/*! One UserAssist entry: something the user started from the shell. */
 struct UserAssist {
 public:
-	std::wstring Sid = L""; //!< SID de l'utilisateur propriétaire de l'objet
-	std::wstring SidName = L""; //!< nom de l'utilisateur propriétaire de l'objet
-	std::wstring Class = L""; //!< identifiant GUID de classe du UserAssist
-	std::wstring Name = L"";//!< nom associé au GUID
-	int Count = 0;//!< nombre d’exécutions
-	int FocusCount = 0;//! nombre de fois ou le fichier à reçu un focus
-	std::wstring DateLocale = L"";//!< date de dernière exécution
-	std::wstring DateLocaleUtc = L"";//! date de dernière exécution au format UTC
+	std::wstring Sid = L"";      //!< SID of the user who started it
+	std::wstring SidName = L"";  //!< name of that user
+	std::wstring Class = L"";    //!< GUID of the subkey: shortcuts, or executables
+	std::wstring Name = L"";     //!< what was started, ROT13-decoded and its
+	                             //!< known folder GUIDs resolved to paths
+	int Count = 0;               //!< number of runs counted by Explorer
+	int FocusCount = 0;          //!< number of times the window received the focus
+	std::wstring DateLocale = L"";    //!< last run, in the suspect's local time
+	std::wstring DateLocaleUtc = L""; //!< the same instant in UTC
 
-	/*! Constructeur
-	* @param hKey clé de registre contenant l'artefact
-	* @param nomValeur nom de la valeur contenant les données
-	* @param donnees buffer contenant les données
-	* @param _sid proprietaire des données
-	*/
+	/*! Builds the entry from a registry value.
+	 *  @param hKey name of the GUID subkey the value comes from.
+	 *  @param nomValeur name of the value, ROT13-encoded.
+	 *  @param donnees the value's bytes: run count, focus count and last run.
+	 *  @param _sid SID of the user whose hive holds the value. */
 	UserAssist(std::wstring hKey, LPWSTR nomValeur, LPBYTE donnees, std::wstring _sid);
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
-	*/
+	/*! Converts the entry to JSON.
+	 *  @return its JSON object. */
 	Json toJson();
 
-	/* liberation mémoire */
+	//! Releases the memory held by the entry.
 	void clear();
 };
 
-/*! structure contenant l'ensemble des artefacts
-*/
+/*! All the UserAssist entries collected, for every user of the machine. */
 struct UserAssists {
 public:
-	std::vector<UserAssist> userassists;//!< tableau contenant les objets
+	std::vector<UserAssist> userassists;  //!< the entries, in the order they were read
 
-	/*! Fonction permettant de parser les objets
-	*/
+	/*! Reads both GUID subkeys in each user's NTUSER.DAT.
+	 *  @return S_OK, or the failure of the last read attempted. */
 	HRESULT getData();
 
-	/*! conversion de l'objet au format json
-	*/
+	/*! Writes `userassists.json` into the output directory.
+	 *  @return the result of the write. */
 	HRESULT toJson();
 
-	/* liberation mémoire */
+	//! Releases the memory held by the entries.
 	void clear();
 };
