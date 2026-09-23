@@ -48,10 +48,10 @@ révélé des valeurs fausses dans du JSON valide :
 | une référence `%%nnnn` restée dans un message | fichier de paramètres d'un fournisseur non chargé (3 780 messages de Security avant correction) — distinguée d'une marque `%N`, qui signale seulement une donnée absente de l'événement |
 | aucune ruche à la fois rejouée ET patchée | deux opérations indépendantes du journal d'audit : un rejeu abouti rend la ruche propre, donc le patch ne doit plus s'appliquer |
 | un journal d'annulation nommé pour chaque rejeu | sans lui la copie brute n'est plus reconstructible, et la promesse du rapport serait fausse |
-| `MANIFESTE.sha256` porte l'empreinte réelle de `MANIFESTE.json` | seul contrôle qui détecte une retouche du manifeste, lequel est précisément ce qui atteste des pièces |
+| `MANIFEST.sha256` porte l'empreinte réelle de `MANIFEST.json` | seul contrôle qui détecte une retouche du manifeste, lequel est précisément ce qui atteste des pièces |
 | chaque pièce collectée porte ses trois empreintes | une pièce sans empreinte n'est pas identifiée, donc inutilisable |
 | le lecteur système d'`OperatingSystem.json` figure dans les volumes lus du manifeste | deux sources indépendantes de la même information |
-| les fichiers réellement présents dans `consigne/` sont exactement ceux du manifeste | 209 pièces ajoutées après le scellement, identifiées par rien, alors que tous les autres contrôles étaient verts |
+| les fichiers réellement présents dans `exhibits/` sont exactement ceux du manifeste | 209 pièces ajoutées après le scellement, identifiées par rien, alors que tous les autres contrôles étaient verts |
 | identifiants d'enregistrement uniques dans CHAQUE fichier journal | l'invariant réel : un même canal peut être porté par plusieurs fichiers dont les numéros se recouvrent légitimement. Un doublon dans un même fichier, en revanche, signale un chunk périmé relu — le risque propre au parcours de tous les chunks physiques |
 | nom de machine MAJORITAIRE des événements conforme à `OperatingSystem.json` | un renommage de machine laisse légitimement d'anciens noms dans les journaux : c'est la majorité qui doit correspondre, pas la totalité |
 
@@ -86,7 +86,7 @@ Le programme lit les fichiers par l'API : c'est un outil
 de test, jamais employé pendant une collecte.
 
 **Le manifeste est confronté au contenu réel de la consigne.** Le harnais
-relève dans la VM la liste des fichiers de `consigne/` (`LISTE.txt`), et
+relève dans la VM la liste des fichiers de `exhibits/` (`LIST.txt`), et
 `check-json.py` vérifie que chaque fichier présent est au manifeste, et
 réciproquement. Sans ce contrôle, 209 pièces — les binaires de ressources des
 fournisseurs d'événements, extraits après le scellement — sont restées dans la

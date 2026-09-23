@@ -1,57 +1,57 @@
 #!/usr/bin/env python3
-"""qga.py — pilote une VM Windows via qemu-guest-agent (virsh), pour tests WAC autonomes.
+"""qga.py — drives a Windows VM through qemu-guest-agent (virsh), for autonomous WAC tests.
 
-Permet, depuis l'hôte Linux, sans clic ni réseau :
-  - run   : exécuter une commande dans la VM (contexte SYSTEM = admin, pas d'UAC)
-  - read  : lire un fichier de la VM vers l'hôte
-  - write : écrire un fichier de l'hôte vers la VM
-  - ping  : vérifier que l'agent répond
+From the Linux host, with no click and no network, it can:
+  - run   : run a command in the VM (SYSTEM context = admin, no UAC)
+  - read  : read a file from the VM onto the host
+  - write : write a file from the host into the VM
+  - ping  : check that the agent answers
 
-Usage :
+Usage:
   qga.py ping [--dom win11-test]
   qga.py run  -- <cmd> [args...]
   qga.py run  --shell "cmd /c ..."
-  qga.py read  <chemin_guest> <sortie_hote>
-  qga.py write <fichier_hote> <chemin_guest>
+  qga.py read  <guest_path> <host_output>
+  qga.py write <host_file> <guest_path>
 """
 import argparse, base64, json, subprocess, sys, time
 
 CONN = "qemu:///session"
 
-# Erreurs transitoires de l'agent (service occupé/qui redémarre) : on réessaie.
-TRANSITOIRE = ("not responding", "not available", "not connected", "Broken pipe")
+# Transient agent errors (service busy or restarting): retried.
+TRANSIENT = ("not responding", "not available", "not connected", "Broken pipe")
 
-def qga(dom, cmd, essais=6):
-    """Envoie une commande qemu-agent-command et retourne le champ 'return'.
-    Réessaie avec backoff sur les indisponibilités transitoires de l'agent."""
+def qga(dom, cmd, attempts=6):
+    """Sends a qemu-agent-command and returns its 'return' field.
+    Retries with a backoff on the agent's transient unavailability."""
     last = ""
-    for n in range(essais):
+    for n in range(attempts):
         out = subprocess.run(
             ["virsh", "-c", CONN, "qemu-agent-command", dom, json.dumps(cmd)],
             capture_output=True, text=True)
         if out.returncode == 0:
             return json.loads(out.stdout).get("return")
         last = out.stderr.strip()
-        if not any(t in last for t in TRANSITOIRE):
-            sys.exit(f"[qga] erreur virsh: {last}")
-        time.sleep(2 * (n + 1))          # 2,4,6,8,10 s
-    sys.exit(f"[qga] agent injoignable après {essais} essais: {last}")
+        if not any(t in last for t in TRANSIENT):
+            sys.exit(f"[qga] virsh error: {last}")
+        time.sleep(2 * (n + 1))          # 2, 4, 6, 8, 10 s
+    sys.exit(f"[qga] agent unreachable after {attempts} attempts: {last}")
 
-# Une collecte complète avec --events dure ~10 min sur la VM de test et
-# s'allonge à mesure que le journal d'événements grossit. Le timeout était de
-# 600 s : un run de 604 s a été coupé JUSTE avant l'écriture de events.json et
-# d'investigation.json, et le harnais a rapatrié 22 fichiers sur 24 en
-# signalant « collecte probablement incomplète ». Le diagnostic était juste,
-# mais la cause était le harnais lui-même, pas WAC. Marge portée à 30 min.
-TIMEOUT_DEFAUT = 1800
+# A full collection with --events takes ~10 min on the test VM and grows longer
+# as the event log grows. The timeout used to be 600 s: a 604 s run was cut
+# JUST before events.json and investigation.json were written, and the harness
+# fetched 22 files out of 24, reporting "collection probably incomplete". The
+# diagnosis was right, but the cause was the harness itself, not WAC. The margin
+# is raised to 30 min.
+DEFAULT_TIMEOUT = 1800
 
 
 def ping(dom):
     qga(dom, {"execute": "guest-ping"})
     print("agent OK")
 
-def run(dom, argv, capture=True, timeout=TIMEOUT_DEFAUT):
-    """Exécute argv[0] avec argv[1:] dans la VM ; retourne (code, stdout, stderr)."""
+def run(dom, argv, capture=True, timeout=DEFAULT_TIMEOUT):
+    """Runs argv[0] with argv[1:] in the VM; returns (code, stdout, stderr)."""
     pid = qga(dom, {"execute": "guest-exec", "arguments": {
         "path": argv[0], "arg": argv[1:],
         "capture-output": capture}})["pid"]
@@ -63,17 +63,17 @@ def run(dom, argv, capture=True, timeout=TIMEOUT_DEFAUT):
             err = base64.b64decode(st.get("err-data", "")).decode("utf-8", "replace")
             return st.get("exitcode", 0), out, err
         if time.time() - t0 > timeout:
-            sys.exit(f"[qga] timeout d'exécution ({timeout} s) — la commande "
-                     f"tourne peut-être encore dans la VM")
+            sys.exit(f"[qga] execution timeout ({timeout} s) — the command "
+                     f"may still be running in the VM")
         time.sleep(1)
 
 def read_file(dom, guest_path, host_path):
-    """Rapatrie un fichier de la VM, ECRIT AU FIL DE LA LECTURE.
+    """Fetches a file from the VM, WRITTEN AS IT IS READ.
 
-    Le contenu etait accumule en memoire avant d'etre ecrit : sur un
-    events.json de 28 Mo, le cumul des reponses base64 et de leur decodage a
-    suffi, avec la VM elle-meme, a faire tuer le harnais par manque de memoire.
-    Chaque morceau part maintenant directement dans le fichier.
+    The content used to be accumulated in memory before being written: on a
+    28 MB events.json, the base64 answers plus their decoding were enough, with
+    the VM itself, to have the harness killed for lack of memory. Each chunk now
+    goes straight into the file.
     """
     h = qga(dom, {"execute": "guest-file-open",
                   "arguments": {"path": guest_path, "mode": "rb"}})
@@ -83,14 +83,14 @@ def read_file(dom, guest_path, host_path):
             while True:
                 r = qga(dom, {"execute": "guest-file-read",
                               "arguments": {"handle": h, "count": 256 << 10}})
-                morceau = base64.b64decode(r["buf-b64"])
-                f.write(morceau)
-                total += len(morceau)
+                chunk = base64.b64decode(r["buf-b64"])
+                f.write(chunk)
+                total += len(chunk)
                 if r.get("eof"):
                     break
     finally:
         qga(dom, {"execute": "guest-file-close", "arguments": {"handle": h}})
-    print(f"{total} octets -> {host_path}")
+    print(f"{total} bytes -> {host_path}")
 
 def write_file(dom, host_path, guest_path):
     with open(host_path, "rb") as f:
@@ -98,16 +98,16 @@ def write_file(dom, host_path, guest_path):
     h = qga(dom, {"execute": "guest-file-open",
                   "arguments": {"path": guest_path, "mode": "wb"}})
     try:
-        # 48 Ko brut -> ~64 Ko en base64 : reste sous la limite Linux de
-        # ~128 Ko PAR ARGUMENT (MAX_ARG_STRLEN), le JSON étant passé en argv.
-        TAILLE = 48 << 10
-        for i in range(0, len(data), TAILLE):
-            chunk = base64.b64encode(data[i:i + TAILLE]).decode()
+        # 48 KiB raw -> ~64 KiB of base64: stays under Linux's limit of ~128 KiB
+        # PER ARGUMENT (MAX_ARG_STRLEN), the JSON being passed in argv.
+        CHUNK = 48 << 10
+        for i in range(0, len(data), CHUNK):
+            encoded = base64.b64encode(data[i:i + CHUNK]).decode()
             qga(dom, {"execute": "guest-file-write",
-                      "arguments": {"handle": h, "buf-b64": chunk}})
+                      "arguments": {"handle": h, "buf-b64": encoded}})
     finally:
         qga(dom, {"execute": "guest-file-close", "arguments": {"handle": h}})
-    print(f"{len(data)} octets -> VM:{guest_path}")
+    print(f"{len(data)} bytes -> VM:{guest_path}")
 
 def main():
     ap = argparse.ArgumentParser()
@@ -133,26 +133,24 @@ def main():
         write_file(a.dom, a.host, a.guest)
 
 if __name__ == "__main__":
-    """Les erreurs PRÉVISIBLES sortent par un message, jamais par une exception.
-
-    Une exception non rattrapée dans un script marqué exécutable déclenche le
-    rapporteur d'anomalies du système, et l'opérateur reçoit une fenêtre
-    « qga.py s'est arrêté de façon inattendue » pour un fichier absent ou une
-    VM éteinte — deux situations parfaitement ordinaires pendant un test. Le
-    message doit dire ce qui manque, et le code de retour suffit au script
-    appelant.
-    """
+    # FORESEEABLE errors leave through a message, never through an exception.
+    #
+    # An uncaught exception in a script marked executable triggers the system's
+    # crash reporter, and the operator gets a "qga.py stopped unexpectedly"
+    # window for a missing file or a VM that is off — two perfectly ordinary
+    # situations during a test. The message must say what is missing, and the
+    # return code is enough for the calling script.
     try:
         main()
     except FileNotFoundError as e:
-        print(f"[qga] fichier introuvable : {e.filename}", file=sys.stderr)
+        print(f"[qga] file not found: {e.filename}", file=sys.stderr)
         sys.exit(2)
     except (BrokenPipeError, KeyboardInterrupt):
         sys.exit(130)
     except RuntimeError as e:
-        # Les échecs de dialogue avec l'agent sont déjà libellés par qga().
+        # The failures of the dialogue with the agent are already worded by qga().
         print(f"[qga] {e}", file=sys.stderr)
         sys.exit(1)
     except OSError as e:
-        print(f"[qga] erreur d'entree/sortie : {e}", file=sys.stderr)
+        print(f"[qga] input/output error: {e}", file=sys.stderr)
         sys.exit(1)

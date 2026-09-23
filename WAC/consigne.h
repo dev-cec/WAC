@@ -10,7 +10,7 @@
  *
  *  Hence two directories on the collection medium:
  *
- *      <output>\exhibitStore\   raw copies, as read from the volume.
+ *      <output>\exhibits\   raw copies, as read from the volume.
  *                           NEVER reopened for writing after extraction.
  *                           Holds the manifest that identifies them.
  *      <output>\working\    working copies. That is where hives are replayed
@@ -22,8 +22,8 @@
  *  modifies would make the procedure depend on what the tool believes it does,
  *  which is precisely what must be checkable from outside.
  *
- *  THE MANIFEST. `exhibitStore\MANIFESTE.json` identifies each exhibit and the
- *  collection. It is sealed by `exhibitStore\MANIFESTE.sha256`, which carries its
+ *  THE MANIFEST. `exhibits\MANIFEST.json` identifies each exhibit and the
+ *  collection. It is sealed by `exhibits\MANIFEST.sha256`, which carries its
  *  fingerprint: a manifest cannot hash itself, and without that second file, a
  *  retouched manifest would go undetected.
  *
@@ -65,7 +65,7 @@
 #include <vector>
 #include "raw_hive.h"
 
-/*! Root of the exhibit store: `<output>\exhibitStore`. */
+/*! Root of the exhibit store: `<output>\exhibits`. */
 std::wstring exhibitStoreFolder();
 
 /*! Root of the working directory: `<output>\working`.
@@ -133,7 +133,7 @@ void ExhibitStoreAddDuplicate(const RawHiveExtraction& e, const std::wstring& me
  */
 HRESULT ExhibitStoreToWorking(size_t* copies = nullptr, unsigned long long* bytes = nullptr);
 
-/*! Writes `exhibitStore\MANIFESTE.json` then its seal `exhibitStore\MANIFESTE.sha256`.
+/*! Writes `exhibits\MANIFEST.json` then its seal `exhibits\MANIFEST.sha256`.
  *
  *  To be called once every extraction is over. The seal is written AFTER the
  *  manifest and carries its SHA-256 fingerprint.

@@ -5,13 +5,13 @@
 param([string]$Sortie = '.\output')
 
 # 1. The seal: the manifest's fingerprint must be the one recorded beside it.
-$annonce = ((Get-Content -Raw "$Sortie\consigne\MANIFESTE.sha256") -split '\s+')[0]
-$reel    = (Get-FileHash -Algorithm SHA256 "$Sortie\consigne\MANIFESTE.json").Hash
+$annonce = ((Get-Content -Raw "$Sortie\exhibits\MANIFEST.sha256") -split '\s+')[0]
+$reel    = (Get-FileHash -Algorithm SHA256 "$Sortie\exhibits\MANIFEST.json").Hash
 if ($annonce -ne $reel) { Write-Output "SCEAU NON CONFORME : manifeste modifie"; exit 1 }
 Write-Output "Sceau conforme ($reel)"
 
 # 2. Every exhibit: its SHA-256 must be the one in the manifest.
-$m = Get-Content -Raw -Encoding UTF8 "$Sortie\consigne\MANIFESTE.json" | ConvertFrom-Json
+$m = Get-Content -Raw -Encoding UTF8 "$Sortie\exhibits\MANIFEST.json" | ConvertFrom-Json
 $ok = 0; $ko = 0
 foreach ($p in ($m.Items | Where-Object { $_.Result -eq 'OK' })) {
     $f = Join-Path $Sortie $p.ExhibitPath

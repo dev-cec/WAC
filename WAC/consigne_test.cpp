@@ -169,10 +169,10 @@ int wmain(int argc, wchar_t** argv){
 	// --- 6. manifest and seal ---------------------------------------------
 	const HRESULT hrManifest = ExhibitStoreWriteManifest();
 	check(hrManifest == ERROR_SUCCESS, "manifest and seal written");
-	const std::filesystem::path manifest = std::filesystem::path(exhibitStoreFolder()) / L"MANIFESTE.json";
-	const std::filesystem::path seal     = std::filesystem::path(exhibitStoreFolder()) / L"MANIFESTE.sha256";
-	check(std::filesystem::exists(manifest, ec), "MANIFESTE.json present");
-	check(std::filesystem::exists(seal, ec),     "MANIFESTE.sha256 present");
+	const std::filesystem::path manifest = std::filesystem::path(exhibitStoreFolder()) / L"MANIFEST.json";
+	const std::filesystem::path seal     = std::filesystem::path(exhibitStoreFolder()) / L"MANIFEST.sha256";
+	check(std::filesystem::exists(manifest, ec), "MANIFEST.json present");
+	check(std::filesystem::exists(seal, ec),     "MANIFEST.sha256 present");
 
 	// The seal must carry the manifest's real fingerprint.
 	std::wstring expected = sha256OfFile(manifest.wstring());
@@ -185,7 +185,7 @@ int wmain(int argc, wchar_t** argv){
 
 	// The manifest must NOT have been copied into the working directory.
 	check(!std::filesystem::exists(
-	             std::filesystem::path(workingFolder()) / L"MANIFESTE.json", ec),
+	             std::filesystem::path(workingFolder()) / L"MANIFEST.json", ec),
 	         "the manifest is not copied into the working directory");
 
 	std::cout << (failures ? "FAILURES: " : "all passed (failures: ") << failures

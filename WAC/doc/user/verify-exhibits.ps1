@@ -5,13 +5,13 @@
 param([string]$Output = '.\output')
 
 # 1. The seal: the manifest's fingerprint must be the one recorded beside it.
-$recorded = ((Get-Content -Raw "$Output\consigne\MANIFESTE.sha256") -split '\s+')[0]
-$actual   = (Get-FileHash -Algorithm SHA256 "$Output\consigne\MANIFESTE.json").Hash
+$recorded = ((Get-Content -Raw "$Output\exhibits\MANIFEST.sha256") -split '\s+')[0]
+$actual   = (Get-FileHash -Algorithm SHA256 "$Output\exhibits\MANIFEST.json").Hash
 if ($recorded -ne $actual) { Write-Output "SEAL MISMATCH: the manifest was modified"; exit 1 }
 Write-Output "Seal verified ($actual)"
 
 # 2. Every exhibit: its SHA-256 must be the one in the manifest.
-$m = Get-Content -Raw -Encoding UTF8 "$Output\consigne\MANIFESTE.json" | ConvertFrom-Json
+$m = Get-Content -Raw -Encoding UTF8 "$Output\exhibits\MANIFEST.json" | ConvertFrom-Json
 $ok = 0; $ko = 0
 foreach ($p in ($m.Items | Where-Object { $_.Result -eq 'OK' })) {
     $f = Join-Path $Output $p.ExhibitPath

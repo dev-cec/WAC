@@ -62,16 +62,16 @@ operation can be redone. Hence two directories on the collection medium:
 
 ```
 <output>/
-  consigne/          raw copies, exactly as read from the volume.
-    MANIFESTE.json   what identifies each exhibit and the collection
-    MANIFESTE.sha256 the manifest's own fingerprint — its seal
+  exhibits/          raw copies, exactly as read from the volume.
+    MANIFEST.json   what identifies each exhibit and the collection
+    MANIFEST.sha256 the manifest's own fingerprint — its seal
     Windows/…        the pieces, under their original paths
-  travail/           working copies. Hives are replayed HERE. Every collector
+  working/           working copies. Hives are replayed HERE. Every collector
     Windows/…        reads from here and knows nothing of the split.
   *.json             the artefacts
 ```
 
-`consigne/` is never reopened for writing after extraction. The split applies to
+`exhibits/` is never reopened for writing after extraction. The split applies to
 **every** extracted file, including those WAC does not modify — Prefetch,
 jumplists, `.lnk`, event logs. Duplicating only what one modifies would make the
 procedure depend on what the tool *believes* it does, which is precisely what an
@@ -185,7 +185,7 @@ does to the machine**, operation by operation — including what it cannot avoid
 | Operation | Footprint |
 |---|---|
 | **Raw volume read** (`\\.\X:`, `GENERIC_READ`) | one handle **per volume actually holding artefacts** — usually one. **No file is opened**, so no last-access timestamp is touched and no directory is walked by the OS. If *object access auditing* is enabled, opening a volume can be logged (Security 4656/4663) |
-| **Writing the collection** | on the **collection medium only** (the USB stick). Nothing is written to the examined disk. Each extracted file is written **twice** — once to `consigne/`, once to `travail/` — because the exhibit and the working copy are separate by procedure |
+| **Writing the collection** | on the **collection medium only** (the USB stick). Nothing is written to the examined disk. Each extracted file is written **twice** — once to `exhibits/`, once to `working/` — because the exhibit and the working copy are separate by procedure |
 | **Transaction-log replay** | the `.LOG1/.LOG2` are applied **to the copy**, giving the machine's real state rather than its last flushed one. The original content of every replaced page goes into an undo journal, so the raw copy stays reconstructible to the byte. Measured on a real machine: 452 KB for `SYSTEM`, 1 172 KB for `SOFTWARE`, 600 KB for one `ntuser.dat` |
 | **Hive repair** | 8 bytes of the base block, **on the copy** — now only a fallback, since a replayed hive is clean by construction. The original is never opened for writing; its fingerprint is recorded first |
 | **Service state** (1 × `EnumServicesStatusExW`) | one read-only query to the SCM over `\\.\pipe\ntsvcs`. No handle per service, no state change, so no `System` 7036 event |
@@ -241,7 +241,7 @@ all three computed *while the bytes are being written* — so they bear on what 
 read from the volume, not on a later re-read of the copy. Three and not one
 because MD5 collisions have been producible at will since 2008 and SHA-1 since
 2017: a single fingerprint no longer settles an identity dispute, three of them
-do. They are recorded in `consigne/MANIFESTE.json`, together with, for each
+do. They are recorded in `exhibits/MANIFEST.json`, together with, for each
 piece: its source path with drive letter, its size as extracted *and* as declared
 by the `$DATA` attribute (a divergence means a truncated extraction, which a
 fingerprint alone would not reveal — it would simply be the fingerprint of the
@@ -251,7 +251,7 @@ moment of its extraction in UTC and in the suspect's local time, the collection
 method, and the outcome — **failures included**, since a piece missing from the
 manifest would read as a piece never looked for.
 
-The manifest is sealed by `consigne/MANIFESTE.sha256`, which carries its
+The manifest is sealed by `exhibits/MANIFEST.sha256`, which carries its
 fingerprint. A manifest cannot hash itself, and without that second file any
 retouching of it would be undetectable — while the manifest is precisely what
 attests to the exhibits.
@@ -638,7 +638,7 @@ the rest came out wrong with no error at all.
 thing that must never happen and is silent when it does: **the sealed copy being
 modified**. It runs the production chain — same fingerprints, same manifest, same
 verified copy, same replay — on hive files given as arguments, then verifies that
-`consigne/` is byte-identical afterwards while `travail/` has changed, that the
+`exhibits/` is byte-identical afterwards while `working/` has changed, that the
 seal carries the manifest's real fingerprint, and that the manifest was not
 copied into the working directory.
 

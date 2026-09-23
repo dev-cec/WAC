@@ -229,11 +229,11 @@ copy remains and the operation can be redone.
 it does not modify. The two directories keep their French names in the output:
 
 \begin{description}[style=nextline,leftmargin=1.2em]
-  \item[\fichier{consigne/} — the exhibit store] the raw copies, as read from
+  \item[\fichier{exhibits/} — the exhibit store] the raw copies, as read from
         the volume. This directory is never reopened for writing after
         extraction. It holds the manifest identifying each exhibit, and the
         manifest's seal.
-  \item[\fichier{travail/} — the working copy] copied from the exhibit store and
+  \item[\fichier{working/} — the working copy] copied from the exhibit store and
         verified by fingerprint. The only modifications (replay of the hives'
         transaction logs) are made here, and every collector reads from here.
 \end{description}
@@ -531,12 +531,12 @@ writing dominates.
 
 \begin{lstlisting}
 <output>/
-  consigne/            exhibit store: raw copies, never rewritten
-    MANIFESTE.json     identifies each exhibit and the collection
-    MANIFESTE.sha256   the manifest's fingerprint: its seal
+  exhibits/            exhibit store: raw copies, never rewritten
+    MANIFEST.json     identifies each exhibit and the collection
+    MANIFEST.sha256   the manifest's fingerprint: its seal
     Windows/...        the exhibits, under their original paths
     Users/...
-  travail/             working copies (replayed hives)
+  working/             working copies (replayed hives)
   investigation.json   the collection log
   *.json               the artefacts
 \end{lstlisting}
@@ -547,7 +547,7 @@ drive letter.
 
 \section{The exhibit store manifest}
 
-\fichier{consigne/MANIFESTE.json} identifies the collection and each exhibit.
+\fichier{exhibits/MANIFEST.json} identifies the collection and each exhibit.
 
 \subsection{Header}
 
@@ -603,12 +603,12 @@ independent ones do.
 \subsection{The seal}
 
 The manifest cannot hold its own fingerprint: it is in
-\fichier{MANIFESTE.sha256}. On Linux:
+\fichier{MANIFEST.sha256}. On Linux:
 
 \begin{lstlisting}
-$ cd output/consigne
-$ sha256sum -c MANIFESTE.sha256
-MANIFESTE.json: OK
+$ cd output/exhibits
+$ sha256sum -c MANIFEST.sha256
+MANIFEST.json: OK
 \end{lstlisting}
 
 \subsection{Each exhibit}
@@ -914,7 +914,7 @@ Need to understand a read failure & Run again with \opt{loglevel=2} (and, for
 \begin{description}[style=nextline,leftmargin=1.2em]
   \item[Artefact] Trace left by the activity of the system or of a user, usable
         in an investigation.
-  \item[Exhibit store (\fichier{consigne})] Directory of the raw copies, sealed,
+  \item[Exhibit store (\fichier{exhibits})] Directory of the raw copies, sealed,
         never rewritten.
   \item[Fingerprint] Value computed on a file's content (MD5, SHA-1, SHA-256):
         different contents have different fingerprints.
@@ -926,7 +926,7 @@ Need to understand a read failure & Run again with \opt{loglevel=2} (and, for
         the manifest.
   \item[Transaction log] \fichier{.LOG1}/\fichier{.LOG2} file holding a hive's
         recent changes, not yet written into it.
-  \item[Working copy (\fichier{travail})] Directory of the working copies, on
+  \item[Working copy (\fichier{working})] Directory of the working copies, on
         which the analysis and any modification are made.
   \item[WOF / Compact OS] Compressed storage mode of the system files of
         Windows~10 and~11.

@@ -49,10 +49,10 @@ wrong values in valid JSON:
 | an unresolved `%%nnnn` reference left in a message | a provider's parameter file not loaded (3,780 Security messages before the fix) — told apart from a `%N` mark, which only means data absent from the event |
 | no hive both replayed AND patched | two independent audit-log operations: a successful replay makes the hive clean, so the patch must no longer apply |
 | an undo journal named for every replay | without it the raw copy can no longer be rebuilt, and the report's promise would be false |
-| `MANIFESTE.sha256` carries the real fingerprint of `MANIFESTE.json` | the only check that detects a retouched manifest — the very thing that attests to the exhibits |
+| `MANIFEST.sha256` carries the real fingerprint of `MANIFEST.json` | the only check that detects a retouched manifest — the very thing that attests to the exhibits |
 | every collected exhibit carries its three fingerprints | an exhibit without a fingerprint is unidentified, hence unusable |
 | the system drive of `OperatingSystem.json` is among the manifest's volumes read | two independent sources of the same information |
-| the files actually present in `consigne/` are exactly those of the manifest | 209 exhibits added after sealing, identified by nothing, while every other check was green |
+| the files actually present in `exhibits/` are exactly those of the manifest | 209 exhibits added after sealing, identified by nothing, while every other check was green |
 
 **WAC's log accumulates.** It is opened in append mode: without purging, it grows
 from one test to the next — 636 MB after a series of runs, which made fetching
@@ -83,7 +83,7 @@ Windows does, and a signed script changed by one word is rejected. The program
 reads files through the API: it is a test tool, never used during a collection.
 
 **The manifest is confronted with the actual content of the exhibit store.** The
-harness lists the files of `consigne/` in the VM (`LISTE.txt`), and
+harness lists the files of `exhibits/` in the VM (`LIST.txt`), and
 `check-json.py` checks that every file present is in the manifest, and the other
 way round. Without this check, 209 exhibits — the event providers' resource
 binaries, extracted after sealing — stayed in the exhibit store identified by

@@ -79,7 +79,7 @@ int wmain(int argc, wchar_t** argv){
         // the result of the test from being read.
         // msvcrt handles neither %zu nor field widths on %ls: we stick to %llu
         // with an explicit cast, and to %ls without a width.
-        wprintf(L"Total: %llu entree(s)\n", (unsigned long long)entries.size());
+        wprintf(L"Total: %llu entry/entries\n", (unsigned long long)entries.size());
         for (const RawDirEntry& e : entries)
             wprintf(L"  %ls %ls (%llu octets)\n", e.isDirectory ? L"[REP]" : L"     ",
                     e.name.c_str(), (unsigned long long)e.size);

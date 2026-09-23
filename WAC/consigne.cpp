@@ -80,11 +80,11 @@ std::wstring outputRelative(const std::wstring& absolute) {
 } // namespace
 
 std::wstring exhibitStoreFolder() {
-	return string_to_wstring(conf._outputDir) + L"\\consigne";
+	return string_to_wstring(conf._outputDir) + L"\\exhibits";
 }
 
 std::wstring workingFolder() {
-	return string_to_wstring(conf._outputDir) + L"\\travail";
+	return string_to_wstring(conf._outputDir) + L"\\working";
 }
 
 unsigned long long ExhibitStoreFreeSpace() {
@@ -205,7 +205,7 @@ HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes) {
 		// The manifest and its seal belong to the exhibit store alone: copying
 		// them to the working directory would invite changing them.
 		const std::wstring name = relative.filename().wstring();
-		if (name == L"MANIFESTE.json" || name == L"MANIFESTE.sha256") continue;
+		if (name == L"MANIFEST.json" || name == L"MANIFEST.sha256") continue;
 
 		const std::filesystem::path target = working / relative;
 		/*  AN EXISTING WORKING COPY IS NOT OVERWRITTEN. The function is called
@@ -266,13 +266,13 @@ HRESULT ExhibitStoreWriteManifest() {
 	ExhibitStoreSummary(&nb, &ko, &total);
 
 	Json guard = Json::obj();
-	guard.add(L"ExhibitDirectory",  Json::str(L"consigne"));
-	guard.add(L"WorkingDirectory",  Json::str(L"travail"));
+	guard.add(L"ExhibitDirectory",  Json::str(L"exhibits"));
+	guard.add(L"WorkingDirectory",  Json::str(L"working"));
 	guard.add(L"Statement", Json::str(
-		L"The files of 'consigne' are the raw copies as read from the volume: "
+		L"The files of 'exhibits' are the raw copies as read from the volume: "
 		L"they are never reopened for writing. Any analysis, and any "
 		L"modification (replay of the transaction logs, alignment of a hive's "
-		L"base block), bear on 'travail', copied from the exhibit store and "
+		L"base block), bear on 'working', copied from the exhibit store and "
 		L"verified by fingerprint. Nothing was written to the examined "
 		L"system."));
 	guard.add(L"ExtractionStartUtc",   Json::str(auditStartUtc()));
@@ -357,7 +357,7 @@ HRESULT ExhibitStoreWriteManifest() {
 
 	// Writing the manifest. Absolute path: writeJsonFile writes under
 	// _outputDir, which is not the exhibit store.
-	const std::filesystem::path path = exhibitStore / L"MANIFESTE.json";
+	const std::filesystem::path path = exhibitStore / L"MANIFEST.json";
 	{
 		std::wofstream f;
 		f.open(path);
@@ -374,7 +374,7 @@ HRESULT ExhibitStoreWriteManifest() {
 	 *  undetected — and the manifest is precisely what attests to the
 	 *  exhibits. */
 	const std::wstring fingerprint = sha256OfFile(path.wstring());
-	const std::filesystem::path seal = exhibitStore / L"MANIFESTE.sha256";
+	const std::filesystem::path seal = exhibitStore / L"MANIFEST.sha256";
 	{
 		std::wofstream f;
 		f.open(seal);
@@ -384,7 +384,7 @@ HRESULT ExhibitStoreWriteManifest() {
 		}
 		// sha256sum format: "<fingerprint>  <name>", readable by common tools
 		// without knowing anything about WAC.
-		f << ansi_to_utf8(fingerprint + L"  MANIFESTE.json\n");
+		f << ansi_to_utf8(fingerprint + L"  MANIFEST.json\n");
 		f.close();
 	}
 

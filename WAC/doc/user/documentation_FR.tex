@@ -230,11 +230,11 @@ abîme quelque chose, la copie scellée demeure et l'opération peut être refai
 ceux qu'il ne modifie pas :
 
 \begin{description}[style=nextline,leftmargin=1.2em]
-  \item[\fichier{consigne/}] les copies brutes, telles que lues sur le volume. Ce
+  \item[\fichier{exhibits/}] les copies brutes, telles que lues sur le volume. Ce
         répertoire n'est plus jamais rouvert en écriture après l'extraction. Il
         contient le manifeste qui identifie chaque pièce, et le sceau du
         manifeste.
-  \item[\fichier{travail/}] les copies de travail, recopiées depuis la consigne
+  \item[\fichier{working/}] les copies de travail, recopiées depuis la consigne
         et vérifiées par empreinte. C'est ici que sont faites les seules
         modifications (rejeu des journaux de transaction des ruches), et c'est ici
         que lisent tous les collecteurs.
@@ -535,12 +535,12 @@ l'écriture domine.
 
 \begin{lstlisting}
 <sortie>/
-  consigne/            copies brutes, jamais réécrites
-    MANIFESTE.json     identification de chaque pièce et de la collecte
-    MANIFESTE.sha256   empreinte du manifeste : son sceau
+  exhibits/            copies brutes, jamais réécrites
+    MANIFEST.json     identification de chaque pièce et de la collecte
+    MANIFEST.sha256   empreinte du manifeste : son sceau
     Windows/...        les pièces, sous leur chemin d'origine
     Users/...
-  travail/             copies de travail (ruches rejouées)
+  working/             copies de travail (ruches rejouées)
   investigation.json   journal de la collecte
   *.json               les artefacts
 \end{lstlisting}
@@ -551,7 +551,7 @@ vraie lettre de lecteur.
 
 \section{Le manifeste de consigne}
 
-\fichier{consigne/MANIFESTE.json} identifie la collecte et chaque pièce.
+\fichier{exhibits/MANIFEST.json} identifie la collecte et chaque pièce.
 
 \subsection{En-tête}
 
@@ -608,12 +608,12 @@ indépendantes, si.
 \subsection{Le sceau}
 
 Le manifeste ne peut pas contenir sa propre empreinte : elle est dans
-\fichier{MANIFESTE.sha256}. Sous Linux :
+\fichier{MANIFEST.sha256}. Sous Linux :
 
 \begin{lstlisting}
 $ cd sortie/consigne
-$ sha256sum -c MANIFESTE.sha256
-MANIFESTE.json: OK
+$ sha256sum -c MANIFEST.sha256
+MANIFEST.json: OK
 \end{lstlisting}
 
 \subsection{Chaque pièce}

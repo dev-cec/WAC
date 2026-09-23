@@ -32,7 +32,7 @@ unsigned long long g_entrant = 0;                      // counter of incoming fi
  *  erased in it, and an interrupted collection leaves no temporary file there.
  *  A single read of the volume per file. */
 std::wstring stagingFolder() {
-	return exhibitStoreFolder() + L".arrivee";
+	return exhibitStoreFolder() + L".staging";
 }
 
 /*! Space kept free on the collection medium: below it, files are hashed

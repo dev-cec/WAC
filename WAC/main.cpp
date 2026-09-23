@@ -811,7 +811,7 @@ int main(int argc, char* argv[])
 	   WHAT WAS WRONG. It was written at the end of the raw extraction phase. But
 	   exhibits enter the store AFTER that: the resource binaries of the event
 	   providers, extracted on demand during the event-log phase. Seen in a VM:
-	   121 binaries (~121 MiB) present in consigne/ and absent from the sealed
+	   121 binaries (~121 MiB) present in the exhibit store and absent from the sealed
 	   manifest — exhibits that nothing identified. The suspect's time zone was
 	   also recorded there as "not read", the SYSTEM hive being read only
 	   afterwards. Sealing is therefore the last operation on the store, just
@@ -860,7 +860,7 @@ int main(int argc, char* argv[])
 		auditRecord(L"Sealing of the exhibit store (" + std::to_wstring(exhibits)
 		            + L" piece(s), " + std::to_wstring(failures) + L" failure(s), "
 		            + std::to_wstring(bytes / 1024 / 1024) + L" Mio)",
-		            exhibitStoreFolder() + L"\\MANIFESTE.json (+ .sha256)",
+		            exhibitStoreFolder() + L"\\MANIFEST.json (+ .sha256)",
 		            hrManifest, Footprint::USB_WRITE);
 		if (FAILED(hrManifest)) printError(hrManifest);
 		else printSuccess();

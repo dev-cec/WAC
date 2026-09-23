@@ -1,57 +1,57 @@
 #!/usr/bin/env bash
-# Build de WAC.exe depuis Linux (cross-compilation MinGW-w64), sans poste Windows.
+# Builds WAC.exe from Linux (MinGW-w64 cross-compilation), with no Windows machine.
 #
-# Produit un exe autonome (runtime C++ statique) ne dépendant que des DLL
-# système Windows (offreg.dll et DLL de base ; wevtapi n'est plus nécessaire).
+# Produces a self-contained exe (static C++ runtime) that depends only on the
+# Windows system DLLs (offreg.dll and the base DLLs; wevtapi is no longer needed).
 #
-# Prérequis : paquets  g++-mingw-w64-x86-64  binutils-mingw-w64-x86-64  mingw-w64-tools
-# Usage : ./build-windows.sh [--clean]
+# Prerequisites: packages  g++-mingw-w64-x86-64  binutils-mingw-w64-x86-64  mingw-w64-tools
+# Usage: ./build-windows.sh [--clean] [--test]
 set -euo pipefail
 
-RACINE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SRC="$RACINE/WAC"
-TP="$RACINE/third_party"
-BUILD="$RACINE/build-windows"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SRC="$ROOT/WAC"
+TP="$ROOT/third_party"
+BUILD="$ROOT/build-windows"
 
 CXX=x86_64-w64-mingw32-g++
 WINDRES=x86_64-w64-mingw32-windres
 DLLTOOL=x86_64-w64-mingw32-dlltool
-command -v "$CXX" >/dev/null || { echo "MinGW-w64 absent : apt install g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-tools" >&2; exit 1; }
+command -v "$CXX" >/dev/null || { echo "MinGW-w64 missing: apt install g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-tools" >&2; exit 1; }
 
 [[ "${1:-}" == "--clean" ]] && rm -rf "$BUILD"
 mkdir -p "$BUILD"
 
-# --- Import lib offreg (Offline Registry ; absent de MinGW) -----------------
+# --- offreg import library (Offline Registry; absent from MinGW) ------------
 if [[ ! -f "$TP/offreg/liboffreg.a" ]]; then
-  echo "== Génération de liboffreg.a =="
+  echo "== Generating liboffreg.a =="
   "$DLLTOOL" -d "$TP/offreg/offreg.def" -l "$TP/offreg/liboffreg.a" -D offreg.dll -m i386:x86-64
 fi
 
-# --- Options communes ------------------------------------------------------
+# --- Common options --------------------------------------------------------
 FLAGS=(-std=c++17 -O2
   -DUNICODE -D_UNICODE -DWINVER=0x0A00 -D_WIN32_WINNT=0x0A00
   -include "$TP/compat-include/wac_mingw_compat.h"
   -I"$TP/offreg" -I"$TP/compat-include"
   -finput-charset=UTF-8 -fexec-charset=UTF-8
-  # -Wall : le projet compilait sans, ce qui laissait passer 46 declarations
-  # mortes et un GetVolumeInformationW dont le resultat etait ignore (doc §14.16).
-  # Les trois exclusions restantes sont des idiomes assumes du projet :
-  #   missing-field-initializers : « = { 0 } » sur les structures Win32,
-  #   sign-compare               : comparaisons avec les tailles STL,
-  #   cast-function-type         : GetProcAddress, cast obligatoire.
+  # -Wall: the project used to build without it, which let through 46 dead
+  # declarations and a GetVolumeInformationW whose result was ignored.
+  # The three remaining exclusions are idioms the project assumes:
+  #   missing-field-initializers: "= { 0 }" on the Win32 structures,
+  #   sign-compare              : comparisons with the STL sizes,
+  #   cast-function-type        : GetProcAddress, a mandatory cast.
   -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers
   -Wno-sign-compare -Wno-cast-function-type
   -Wno-unknown-pragmas -Wno-deprecated -Wno-conversion-null)
 
-# --- Ressource (.rc VS en UTF-16 → UTF-8 pour windres) ---------------------
-echo "== Ressource =="
+# --- Resource (VS .rc in UTF-16 -> UTF-8 for windres) ----------------------
+echo "== Resource =="
 iconv -f UTF-16LE -t UTF-8 "$SRC/WAC.rc" | tr -d '\r' | sed -E 's#\\+#/#g' > "$BUILD/WAC.utf8.rc"
 "$WINDRES" -I"$SRC" -I"$TP/compat-include" -c 65001 "$BUILD/WAC.utf8.rc" -O coff -o "$BUILD/WAC_res.o"
 
-# --- Compilation des unités ------------------------------------------------
+# --- Compilation units -----------------------------------------------------
 echo "== Compilation =="
-# Unités de compilation : découvertes automatiquement (main.cpp en dernier,
-# harnais de test exclus). Plus de liste à maintenir à la main.
+# Compilation units: discovered automatically (main.cpp last, test harnesses
+# excluded). No list to keep by hand any more.
 mapfile -t TUS < <(cd "$SRC" && ls *.cpp | grep -v -e '^main\.cpp$' -e '_test\.cpp$'; echo main.cpp)
 OBJS=()
 for tu in "${TUS[@]}"; do
@@ -60,7 +60,7 @@ for tu in "${TUS[@]}"; do
   OBJS+=("$BUILD/${tu%.cpp}.o")
 done
 
-# --- Édition de liens ------------------------------------------------------
+# --- Link --------------------------------------------------------------------
 echo "== Link =="
 LIBS=(-L"$TP/offreg" -loffreg -lole32 -loleaut32
       -luuid -lshlwapi -ladvapi32 -lshell32 -lversion -lwtsapi32
@@ -68,13 +68,13 @@ LIBS=(-L"$TP/offreg" -loffreg -lole32 -loleaut32
 "$CXX" -static -static-libgcc -static-libstdc++ \
   "${OBJS[@]}" "$BUILD/WAC_res.o" -o "$BUILD/WAC.exe" "${LIBS[@]}"
 
-# --- Exe de test raw_hive (optionnel) --------------------------------------
+# --- raw_hive test exe (optional) -------------------------------------------
 if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
   echo "== Build raw_hive_test.exe =="
-  # Dépendances de raw_hive : les empreintes (sha, quickdigest5) et la
-  # décompression NTFS (lznt1). Cette liste est à tenir à jour — elle a déjà
-  # dérivé une fois, et un exe de test qui ne se lie plus ne se voit qu'au
-  # moment où on en a besoin.
+  # raw_hive's dependencies: the fingerprints (sha, quickdigest5) and the NTFS
+  # decompression (lznt1, xpress). This list must be kept up to date — it has
+  # drifted once already, and a test exe that no longer links is only noticed
+  # at the moment it is needed.
   "$CXX" "${FLAGS[@]}" -municode -static -static-libgcc -static-libstdc++ \
     "$SRC/raw_hive.cpp" "$SRC/hive_recover.cpp" "$SRC/quickdigest5.cpp" \
     "$SRC/sha.cpp" "$SRC/lznt1.cpp" "$SRC/xpress.cpp" \
@@ -83,7 +83,7 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
 fi
 
 echo
-echo "Exécutable : $BUILD/WAC.exe"
+echo "Executable: $BUILD/WAC.exe"
 x86_64-w64-mingw32-objdump -p "$BUILD/WAC.exe" | grep -qiE 'libstdc|libgcc|winpthread' \
-  && echo "AVERTISSEMENT : dépendance runtime MinGW détectée !" \
-  || echo "Runtime C++ statique : exe autonome (DLL système Windows uniquement)."
+  && echo "WARNING: MinGW runtime dependency detected!" \
+  || echo "Static C++ runtime: self-contained exe (Windows system DLLs only)."
