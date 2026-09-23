@@ -78,7 +78,7 @@ RawHiveExtraction putInExhibitStore(const std::filesystem::path& source,
 
 int failures = 0;
 void check(bool ok, const std::string& label){
-	std::cout << (ok ? "  ok     " : "  ECHEC  ") << label << "\n";
+	std::cout << (ok ? "  ok     " : "  FAILED  ") << label << "\n";
 	if (!ok) ++failures;
 }
 
@@ -86,7 +86,7 @@ void check(bool ok, const std::string& label){
 
 int wmain(int argc, wchar_t** argv){
 	if (argc < 3){
-		std::cout << "usage: consigne_test <repertoire de sortie> <ruche> [ruche...]\n";
+		std::cout << "usage: consigne_test <output directory> <hive> [hive...]\n";
 		return 2;
 	}
 	{
@@ -120,20 +120,20 @@ int wmain(int argc, wchar_t** argv){
 					j, L"C:\\Windows\\system32\\config\\" + name + suffix));
 		}
 	}
-	ExhibitStoreAdd(reading, L"Test : copie directe (le raw NTFS n'est pas exerce ici)");
+	ExhibitStoreAdd(reading, L"Test: direct copy (raw NTFS reading is not exercised here)");
 
 	// Fingerprints of the exhibit store BEFORE anything else: this must not move.
 	std::map<std::wstring, std::wstring> before;
 	for (const std::filesystem::directory_entry& e :
 	     std::filesystem::recursive_directory_iterator(exhibitStoreFolder(), ec))
 		if (e.is_regular_file(ec)) before[e.path().wstring()] = sha256OfFile(e.path().wstring());
-	check(!before.empty(), "la consigne contient des pieces (" + std::to_string(before.size()) + ")");
+	check(!before.empty(), "the exhibit store holds exhibits (" + std::to_string(before.size()) + ")");
 
 	// --- 2. exhibit store -> working copy, verified by fingerprint --------
 	size_t copies = 0; unsigned long long bytes = 0;
 	const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &bytes);
-	check(hrCopy == ERROR_SUCCESS, "copie vers le travail sans ecart");
-	check(copies == before.size(), "tous les fichiers recopies ("
+	check(hrCopy == ERROR_SUCCESS, "copy into the working directory without divergence");
+	check(copies == before.size(), "every file copied ("
 	         + std::to_string(copies) + "/" + std::to_string(before.size()) + ")");
 
 	// --- 3. replay, which must touch ONLY the working copy ----------------
@@ -142,7 +142,7 @@ int wmain(int argc, wchar_t** argv){
 		                                      L"C:\\Windows\\system32\\config\\" + name);
 		const HiveReplayInfo r = ReplayHiveLogs(target, L"00000000000000000000000000000000");
 		std::cout << "         " << narrow(name) << " : " << narrow(HiveReplayInfoToString(r)) << "\n";
-		check(r.ok, narrow(name) + " : rejeu sans erreur");
+		check(r.ok, narrow(name) + ": replay without error");
 	}
 
 	// --- 4. IS THE EXHIBIT STORE UNTOUCHED? -------------------------------
@@ -150,10 +150,10 @@ int wmain(int argc, wchar_t** argv){
 	for (const auto& kv : before)
 		if (sha256OfFile(kv.first) != kv.second){
 			++moved;
-			std::cout << "         MODIFIE : " << narrow(kv.first) << "\n";
+			std::cout << "         MODIFIED: " << narrow(kv.first) << "\n";
 		}
-	check(moved == 0, "consigne intacte apres rejeu (" + std::to_string(before.size())
-	         + " fichier(s) verifie(s))");
+	check(moved == 0, "exhibit store untouched after the replay (" + std::to_string(before.size())
+	         + " file(s) checked)");
 
 	// --- 5. the working copy, on the other hand, must have changed --------
 	int changes = 0;
@@ -163,12 +163,12 @@ int wmain(int argc, wchar_t** argv){
 		const std::filesystem::path t = std::filesystem::path(workingFolder()) / rel;
 		if (std::filesystem::exists(t, ec) && sha256OfFile(t.wstring()) != kv.second) ++changes;
 	}
-	check(changes > 0, "le travail differe de la consigne apres rejeu ("
-	         + std::to_string(changes) + " fichier(s))");
+	check(changes > 0, "the working copy differs from the exhibit store after the replay ("
+	         + std::to_string(changes) + " file(s))");
 
 	// --- 6. manifest and seal ---------------------------------------------
 	const HRESULT hrManifest = ExhibitStoreWriteManifest();
-	check(hrManifest == ERROR_SUCCESS, "manifeste et sceau ecrits");
+	check(hrManifest == ERROR_SUCCESS, "manifest and seal written");
 	const std::filesystem::path manifest = std::filesystem::path(exhibitStoreFolder()) / L"MANIFESTE.json";
 	const std::filesystem::path seal     = std::filesystem::path(exhibitStoreFolder()) / L"MANIFESTE.sha256";
 	check(std::filesystem::exists(manifest, ec), "MANIFESTE.json present");
@@ -181,14 +181,14 @@ int wmain(int argc, wchar_t** argv){
 	std::getline(fs, line);
 	const std::string att = narrow(expected);
 	check(line.compare(0, att.size(), att) == 0,
-	         "le sceau porte l'empreinte du manifeste");
+	         "the seal carries the manifest's fingerprint");
 
 	// The manifest must NOT have been copied into the working directory.
 	check(!std::filesystem::exists(
 	             std::filesystem::path(workingFolder()) / L"MANIFESTE.json", ec),
-	         "le manifeste n'est pas recopie dans le travail");
+	         "the manifest is not copied into the working directory");
 
-	std::cout << (failures ? "ECHECS : " : "tous conformes (echecs : ") << failures
+	std::cout << (failures ? "FAILURES: " : "all passed (failures: ") << failures
 	          << (failures ? "\n" : ")\n");
 	return failures ? 1 : 0;
 }

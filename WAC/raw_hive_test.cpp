@@ -1,22 +1,23 @@
-/* raw_hive_test.cpp — harnais de validation de la lecture brute NTFS.
- * À exécuter sur Windows, en administrateur (accès volume brut).
+/*! \file
+ *  \brief Validation harness for the raw NTFS reading.
+ *  To be run on Windows, as an administrator (raw volume access).
  *
- * Usage : raw_hive_test.exe [volume] [chemin] [sortie] [--fix] [--list] [--attrs]
- *   --fix    applique MakeHiveLoadable() sur la ruche extraite
- *   --list   énumère un répertoire au lieu d'extraire un fichier
- *   --attrs  énumère les ATTRIBUTS $MFT du fichier, sans rien interpréter
+ * Usage: raw_hive_test.exe [volume] [path] [output] [--fix] [--list] [--attrs]
+ *   --fix    applies MakeHiveLoadable() on the extracted hive
+ *   --list   lists a directory instead of extracting a file
+ *   --attrs  lists the $MFT ATTRIBUTES of the file, without interpreting anything
  *
- * POURQUOI --attrs. Ce que l'API de Windows montre d'un fichier et ce que le
- * disque contient peuvent différer du tout au tout : un binaire « Compact OS »
- * se présente comme un fichier ordinaire alors qu'il porte un point de reparse,
- * un $DATA creux et un flux nommé qui contient tout. Sans ce regard direct, un
- * fichier extrait entièrement à zéro reste inexplicable.
+ * WHY --attrs. What the Windows API shows of a file and what the disk holds can
+ * differ entirely: a "Compact OS" binary presents itself as an ordinary file
+ * while it carries a reparse point, a sparse $DATA and a named stream that holds
+ * everything. Without that direct look, a file extracted entirely as zeros
+ * stays unexplainable.
  *
- * POURQUOI --fix. Une ruche copiée à chaud est toujours « dirty » : sans patch,
- * `reg load` la refuse avec ERROR_BADDB. Le harnais doit donc tester les DEUX
- * sens — sans --fix le chargement doit échouer (ce qui prouve que le patch est
- * nécessaire), avec --fix il doit réussir. Un test qui échoue par construction
- * finit par être ignoré, ce qui est pire que son absence.
+ * WHY --fix. A hive copied live is always "dirty": without the patch, `reg load`
+ * refuses it with ERROR_BADDB. The harness must therefore test BOTH ways —
+ * without --fix the load must fail (which proves the patch is necessary), with
+ * --fix it must succeed. A test that fails by construction ends up being
+ * ignored, which is worse than its absence.
  */
 #include "raw_hive.h"
 #include "hive_recover.h"
@@ -43,22 +44,22 @@ int wmain(int argc, wchar_t** argv){
     if (attrs){
         std::vector<RawAttribute> attributes;
         const HRESULT hr = ListAttributesRaw(vol, path, attributes);
-        if (FAILED(hr)){ wprintf(L"ECHEC ListAttributesRaw : 0x%08lx\n", (unsigned long)hr); return 1; }
-        wprintf(L"%zu attribut(s) dans l'enregistrement $MFT de %ls\n", attributes.size(), path);
+        if (FAILED(hr)){ wprintf(L"FAILED ListAttributesRaw: 0x%08lx\n", (unsigned long)hr); return 1; }
+        wprintf(L"%zu attribute(s) in the $MFT record of %ls\n", attributes.size(), path);
         for (const RawAttribute& a : attributes){
-            wprintf(L"  type 0x%02X  %-18ls %-12ls taille %12llu  drapeaux 0x%04X",
+            wprintf(L"  type 0x%02X  %-18ls %-12ls size %12llu  flags 0x%04X",
                     a.type,
-                    a.name.empty() ? L"(sans nom)" : a.name.c_str(),
+                    a.name.empty() ? L"(no name)" : a.name.c_str(),
                     a.resident ? L"resident" : L"non resident",
                     (unsigned long long)a.actualSize, a.flags);
-            if (a.flags & 0x0001) wprintf(L" COMPRESSE");
-            if (a.flags & 0x8000) wprintf(L" CREUX");
+            if (a.flags & 0x0001) wprintf(L" COMPRESSED");
+            if (a.flags & 0x8000) wprintf(L" SPARSE");
             if (a.tagReparse)        wprintf(L"  reparse 0x%08lX", (unsigned long)a.tagReparse);
             if (!a.resident && a.initializedSize != a.actualSize)
-                wprintf(L"  valides %llu", (unsigned long long)a.initializedSize);
+                wprintf(L"  valid %llu", (unsigned long long)a.initializedSize);
             wprintf(L"\n");
             if (a.type == 0xC0 && !a.preview.empty()){
-                wprintf(L"      contenu :");
+                wprintf(L"      content:");
                 for (size_t k = 0; k < a.preview.size() && k < 24; ++k) wprintf(L" %02X", a.preview[k]);
                 wprintf(L"\n");
             }
@@ -71,13 +72,13 @@ int wmain(int argc, wchar_t** argv){
         std::vector<RawDirEntry> entries;
         HRESULT hr = ListDirectoryRaw(vol, path, entries);
         if (FAILED(hr)){
-            wprintf(L"Resultat: 0x%08lX (ECHEC)\n", (unsigned long)hr);
+            wprintf(L"Result: 0x%08lX (FAILED)\n", (unsigned long)hr);
             return 1;
         }
-        // Le total est affiche D'ABORD : un probleme d'affichage sur la liste ne
-        // doit pas empecher de lire le resultat du test.
-        // msvcrt ne gere ni %zu ni les largeurs de champ sur %ls : on s'en tient
-        // a %llu avec cast explicite et a %ls sans largeur.
+        // The total is printed FIRST: a display problem on the list must not prevent
+        // the result of the test from being read.
+        // msvcrt handles neither %zu nor field widths on %ls: we stick to %llu
+        // with an explicit cast, and to %ls without a width.
         wprintf(L"Total: %llu entree(s)\n", (unsigned long long)entries.size());
         for (const RawDirEntry& e : entries)
             wprintf(L"  %ls %ls (%llu octets)\n", e.isDirectory ? L"[REP]" : L"     ",
@@ -87,7 +88,7 @@ int wmain(int argc, wchar_t** argv){
 
     wprintf(L"Extraction brute %ls:%ls -> %ls\n", vol, path, out);
     HRESULT hr = ExtractFileRaw(vol, path, out);
-    wprintf(L"Extraction: 0x%08lX (%ls)\n", (unsigned long)hr, SUCCEEDED(hr) ? L"OK" : L"ECHEC");
+    wprintf(L"Extraction: 0x%08lX (%ls)\n", (unsigned long)hr, SUCCEEDED(hr) ? L"OK" : L"FAILED");
     if (FAILED(hr)) return 1;
 
     if (fix){
@@ -96,8 +97,8 @@ int wmain(int argc, wchar_t** argv){
         if (!info.ok) return 1;
     }
     else {
-        wprintf(L"Recovery: NON demande (--fix absent) : la ruche reste dirty,\n"
-                L"          `reg load` doit donc la refuser (ERROR_BADDB 1009).\n");
+        wprintf(L"Recovery: NOT requested (--fix absent): the hive stays dirty,\n"
+                L"          so `reg load` must refuse it (ERROR_BADDB 1009).\n");
     }
     return 0;
 }

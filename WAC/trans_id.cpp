@@ -9,24 +9,24 @@
 
 namespace {
 
-/*! Une correspondance identifiant -> libellé lisible. */
+/*! One mapping: an identifier -> a readable label. */
 struct Translation { const wchar_t* key; const wchar_t* value; };
 
-/*! Recherche dans une table de traduction, via un index construit UNE FOIS.
+/*! Looks a label up in a translation table, through an index built ONCE.
  *
- *  POURQUOI. Ces tables étaient des cascades de `if (x == L"...") return L"...";`
- *  — 20 356 comparaisons de chaînes pour les GUID, 783 pour les AppID — et la
- *  fonction est appelée pour CHAQUE identifiant rencontré dans les shellbags,
- *  les MRU et les IdList. Sur un poste réel, cela représentait des millions de
- *  comparaisons de std::wstring.
+ *  WHY. These tables were cascades of `if (x == L"...") return L"...";` —
+ *  20,356 string comparisons for the GUIDs, 783 for the AppIDs — and the
+ *  function is called for EVERY identifier met in the shellbags, the MRUs and
+ *  the IdLists. On a real workstation, that meant millions of std::wstring
+ *  comparisons.
  *
- *  L'index est construit au premier appel puis réutilisé : la table n'est
- *  parcourue qu'une seule fois, et chaque recherche devient immédiate.
+ *  The index is built at the first call then reused: the table is walked only
+ *  once, and every lookup becomes immediate.
  *
- *  `emplace` conserve la PREMIÈRE occurrence d'une clé, ce qui reproduit
- *  exactement le comportement de la cascade de `if` (le premier test gagnait).
- *  La table contient 3495 clés dupliquées dont les libellés diffèrent : les
- *  variantes suivantes étaient donc déjà inaccessibles, et le restent.
+ *  `emplace` keeps the FIRST occurrence of a key, which reproduces exactly the
+ *  behaviour of the cascade of `if` (the first test won). The table holds 3,495
+ *  duplicated keys whose labels differ: the later variants were therefore
+ *  already unreachable, and they stay so.
  */
 std::wstring find(const Translation* table, size_t size,
                       const std::wstring& key,
@@ -42,7 +42,7 @@ std::wstring find(const Translation* table, size_t size,
 std::unordered_map<std::wstring, const wchar_t*> indexGuid;
 std::unordered_map<std::wstring, const wchar_t*> indexAppId;
 
-/* AppID de jump lists. Sources : forensics.wiki, EricZimmerman/JumpList. */
+/* Jump list AppIDs. Sources: forensics.wiki, EricZimmerman/JumpList. */
 const Translation TABLE_APPID[] = {
 	{L"0006f647f9488d7a", L"AIM 7.5.11.9 (custom AppID + JL support)"},
 	{L"00098b0ef1c84088", L"fulDC 6.78"},
@@ -773,19 +773,19 @@ const Translation TABLE_APPID[] = {
 	{L"ff99ba2fb2e34b73", L"Windows Calculator"},
 };
 
-/* GUID/CLSID connus.
+/* Known GUIDs/CLSIDs.
  *
- * SOURCES. Les noms des dossiers shell et des known folders proviennent de
- * libyal/libfwsi (libfwsi_shell_folder_identifier.c et
- * libfwsi_known_folder_identifier.c), bibliothèque de référence du domaine,
- * maintenue et citable — préférable à une compilation hétéroclite pour un outil
- * d'expertise. 343 identifiants en sont issus.
- * Le module d'implémentation entre parenthèses (« (…\\shell32.dll) ») vient de
- * notre relevé et complète le nom : il indique quel composant sert le CLSID.
+ * SOURCES. The names of the shell folders and of the known folders come from
+ * libyal/libfwsi (libfwsi_shell_folder_identifier.c and
+ * libfwsi_known_folder_identifier.c), the field's reference library, maintained
+ * and citable — preferable to a heterogeneous compilation for a forensic tool.
+ * 343 identifiers come from it.
+ * The implementation module in brackets ("(…\\shell32.dll)") comes from our own
+ * reading and completes the name: it says which component serves the CLSID.
  *
- * L'alignement a corrigé de vraies erreurs, par exemple « Windows 7 File
- * Recovery » renommé « Backup And Restore » (nom actuel du composant), et les
- * préfixes parasites « CLSID … » supprimés. */
+ * The alignment fixed real errors, for instance "Windows 7 File Recovery"
+ * renamed "Backup And Restore" (the component's current name), and the spurious
+ * "CLSID …" prefixes removed. */
 const Translation TABLE_GUID[] = {
 	{L"{0000031a-0000-0000-c000-000000000046}", L"ClassMoniker (combase.dll)"},
 	{L"{0000002f-0000-0000-c000-000000000046}", L"CLSID_RecordInfo (C:\\Windows\\System32\\oleaut32.dll)"},
@@ -17430,30 +17430,29 @@ const Translation TABLE_GUID[] = {
 
 } // namespace
 
-/*! Type de service, sous forme de DRAPEAUX.
+/*! Service type, as FLAGS.
 *
-* CE QUI ÉTAIT FAUX. La version d'origine comparait `type` à chaque constante
-* par égalité. Or `dwServiceType` est un CHAMP DE BITS : un service interactif
-* vaut 0x110 (WIN32_OWN_PROCESS | INTERACTIVE_PROCESS) et ne correspondait donc
-* à aucune constante — il ressortait « SERVICE_TYPE_UNKNOWN ». Pire,
-* SERVICE_WIN32 vaut 0x30, c'est-à-dire OWN|SHARE : ce test ne pouvait JAMAIS
-* correspondre à un service réel. Le champ `Type` de services.json était donc
-* le plus souvent inexploitable.
+* WHAT WAS WRONG. The original version compared `type` to each constant by
+* equality. But `dwServiceType` is a BIT FIELD: an interactive service is 0x110
+* (WIN32_OWN_PROCESS | INTERACTIVE_PROCESS) and therefore matched no constant —
+* it came out as "SERVICE_TYPE_UNKNOWN". Worse, SERVICE_WIN32 is 0x30, that is
+* OWN|SHARE: that test could NEVER match a real service. The `Type` field of
+* services.json was therefore unusable most of the time.
 *
-* Les drapeaux sont désormais décomposés et concaténés.
+* The flags are now broken down and concatenated.
 */
 std::wstring serviceType_to_wstring(int type) {
 	log(3, L"🔈serviceType_to_wstring");
 	if (type == 0) return L"SERVICE_TYPE_UNKNOWN";
 
-	/* ATTENTION : toutes les constantes SERVICE_* ne sont PAS des bits simples.
-	   SERVICE_USER_OWN_PROCESS vaut 0x50 et SERVICE_USER_SHARE_PROCESS 0x60 :
-	   ce sont des COMBINAISONS de SERVICE_USER_SERVICE (0x40) avec le bit
-	   « own » (0x10) ou « share » (0x20). Les tester avec un simple `&` les
-	   faisait apparaître dès que le bit partagé était posé — un service
-	   ordinaire de type 0x20 ressortait
-	   « SERVICE_WIN32_SHARE_PROCESS|SERVICE_USER_SHARE_PROCESS », ce qui est
-	   contradictoire. Seuls les bits élémentaires sont donc décodés. */
+	/* MIND THIS: not every SERVICE_* constant is a simple bit.
+	   SERVICE_USER_OWN_PROCESS is 0x50 and SERVICE_USER_SHARE_PROCESS 0x60:
+	   they are COMBINATIONS of SERVICE_USER_SERVICE (0x40) with the "own" bit
+	   (0x10) or the "share" bit (0x20). Testing them with a plain `&` made them
+	   appear as soon as the shared bit was set — an ordinary service of type
+	   0x20 came out as
+	   "SERVICE_WIN32_SHARE_PROCESS|SERVICE_USER_SHARE_PROCESS", which is
+	   contradictory. Only the elementary bits are therefore decoded. */
 	struct { int bit; PCWSTR name; } BITS[] = {
 		{ SERVICE_KERNEL_DRIVER,        L"SERVICE_KERNEL_DRIVER" },        // 0x001
 		{ SERVICE_FILE_SYSTEM_DRIVER,   L"SERVICE_FILE_SYSTEM_DRIVER" },   // 0x002
@@ -17463,9 +17462,9 @@ std::wstring serviceType_to_wstring(int type) {
 		{ SERVICE_WIN32_SHARE_PROCESS,  L"SERVICE_WIN32_SHARE_PROCESS" },  // 0x020
 		{ SERVICE_USER_SERVICE,         L"SERVICE_USER_SERVICE" },         // 0x040
 		{ SERVICE_USERSERVICE_INSTANCE, L"SERVICE_USERSERVICE_INSTANCE" }, // 0x080
-		/* Service interactif : peut afficher sur le bureau. Interdit depuis
-		   Windows Vista pour les sessions utilisateur — sa présence est en soi
-		   un point d'attention pour l'analyste. */
+		/* Interactive service: may display on the desktop. Forbidden since
+		   Windows Vista for user sessions — its presence is in itself a point of
+		   attention for the analyst. */
 		{ SERVICE_INTERACTIVE_PROCESS,  L"SERVICE_INTERACTIVE_PROCESS" },  // 0x100
 		{ SERVICE_PKG_SERVICE,          L"SERVICE_PKG_SERVICE" },          // 0x200
 	};
@@ -17479,7 +17478,7 @@ std::wstring serviceType_to_wstring(int type) {
 		s += e.name;
 	}
 
-	// Bits hors vocabulaire connu : signalés plutôt que silencieusement perdus.
+	// Bits outside the known vocabulary: reported rather than silently lost.
 	const int remaining = type & ~known;
 	if (remaining != 0) {
 		if (!s.empty()) s += L"|";
@@ -17499,15 +17498,15 @@ std::wstring serviceStart_to_wstring(int type) {
 	return L"SERVICE_START_UNKNOWN";
 }
 
-/*! État courant d'un service.
+/*! Current state of a service.
 *
-* CE QUI ÉTAIT FAUX, ET POURQUOI C'ÉTAIT GRAVE. La version d'origine comparait
-* `dwCurrentState` aux constantes SERVICE_ACTIVE (1), SERVICE_INACTIVE (2) et
-* SERVICE_STATE_ALL (3) — qui ne sont pas des états mais des FILTRES
-* d'énumération, d'un espace de valeurs différent. Résultat : un service
-* SERVICE_STOPPED (1) était rapporté « SERVICE_ACTIVE », et un service
-* SERVICE_RUNNING (4) « SERVICE_STATUS_UNKNOWN ». Le champ Status de
-* services.json affirmait donc l'inverse de la réalité, dans une pièce d'enquête.
+* WHAT WAS WRONG, AND WHY IT WAS SERIOUS. The original version compared
+* `dwCurrentState` to the constants SERVICE_ACTIVE (1), SERVICE_INACTIVE (2) and
+* SERVICE_STATE_ALL (3) — which are not states but enumeration FILTERS, from a
+* different space of values. The result: a SERVICE_STOPPED (1) service was
+* reported as "SERVICE_ACTIVE", and a SERVICE_RUNNING (4) service as
+* "SERVICE_STATUS_UNKNOWN". The Status field of services.json therefore stated
+* the opposite of reality, in a piece of evidence.
 */
 std::wstring serviceState_to_wstring(int type) {
 	log(3, L"🔈serviceState_to_wstring");
@@ -17523,12 +17522,12 @@ std::wstring serviceState_to_wstring(int type) {
 
 std::wstring logon_type(ULONG type) {
 	log(3, L"🔈logon_type");
-	/* 0 = UndefinedLogonType est une valeur LÉGITIME de SECURITY_LOGON_TYPE, pas
-	   un échec de lecture : LSA la rend pour la session SYSTEM (LUID 0x3E7) et
-	   pour les sessions sans ouverture interactive. Le libellé le dit désormais,
-	   parce que « Undefined » seul se lisait comme un défaut de l'outil —
-	   question posée sur une collecte réelle le 2026-09-15. */
-	if (type == 0)	return L"UndefinedLogonType (aucune ouverture interactive)";
+	/* 0 = UndefinedLogonType is a LEGITIMATE value of SECURITY_LOGON_TYPE, not a
+	   failed reading: LSA returns it for the SYSTEM session (LUID 0x3E7) and for
+	   the sessions without an interactive logon. The label now says so, because
+	   "Undefined" on its own read as a defect of the tool — a question raised on
+	   a real collection on 2026-09-15. */
+	if (type == 0)	return L"UndefinedLogonType (no interactive logon)";
 	if (type == 2)	return L"Interactive";
 	if (type == 3)	return L"Network";
 	if (type == 4)	return L"Batch";
@@ -17551,43 +17550,43 @@ std::wstring os_architecture(DWORD archi){
 	if (archi == PROCESSOR_ARCHITECTURE_ARM64) return L"ARM64";
 	if (archi == PROCESSOR_ARCHITECTURE_IA64) return L"Intel Itanium";
 	if (archi == PROCESSOR_ARCHITECTURE_INTEL) return L"x86";
-	if (archi == PROCESSOR_ARCHITECTURE_UNKNOWN) return L"Architecture inconnue";
-	return L"Architecture inconnue";
+	if (archi == PROCESSOR_ARCHITECTURE_UNKNOWN) return L"Unknown architecture";
+	return L"Unknown architecture";
 }
 
 std::wstring from_appId(std::wstring appId) {
 	log(3, L"🔈from_appId");
-	// Les AppID proviennent d'un nom de fichier : la casse n'est pas garantie.
-	// La table est en minuscules, on normalise donc la clé recherchée.
+	// The AppIDs come from a file name: the case is not guaranteed.
+	// The table is in lower case, so the key looked up is normalised.
 	transform(appId.begin(), appId.end(), appId.begin(), ::tolower);
-	// documentation : https://forensics.wiki/list_of_jump_list_ids/
-	// documentation : https://github.com/EricZimmerman/JumpList/blob/master/JumpList/Resources/AppIDs.txt
+	// documentation: https://forensics.wiki/list_of_jump_list_ids/
+	// documentation: https://github.com/EricZimmerman/JumpList/blob/master/JumpList/Resources/AppIDs.txt
 	return find(TABLE_APPID, sizeof(TABLE_APPID)/sizeof(*TABLE_APPID), appId, indexAppId);
 }
 
-/*! Noms canoniques de PROPERTYKEY, relevés dans la documentation Microsoft.
+/*! Canonical PROPERTYKEY names, taken from Microsoft's documentation.
 *
-*  Complète `PSGetNameFromPropertyKey`, dont le succès dépend de l'état du
-*  processus (cf. la note dans `to_FriendlyName`). Chaque entrée porte la source
-*  qui l'atteste : une table de libellés saisie au jugé produit des noms
-*  plausibles et faux, ce que rien dans la sortie ne révélerait.
+*  Completes `PSGetNameFromPropertyKey`, whose success depends on the state of
+*  the process (see the note in `to_FriendlyName`). Every entry carries the
+*  source that attests it: a table of labels typed by guesswork produces names
+*  that look plausible and are wrong, which nothing in the output would reveal.
 *
-*  GUID en MINUSCULES, avec accolades : `to_FriendlyName` normalise avant
-*  d'appeler.
+*  GUIDs in LOWER CASE, with braces: `to_FriendlyName` normalises before
+*  calling.
 *
-*  À COMPLÉTER. Les propriétés hors table ressortent sous leur clé
-*  brute, ce qui donne une liste de travail fondée sur des collectes réelles.
+*  TO BE COMPLETED. The properties outside the table come out under their raw
+*  key, which gives a working list grounded in real collections.
 */
 static std::wstring knownPropertyKey(const std::wstring& lowercaseGuid, unsigned int key) {
 	struct Entry { PCWSTR guid; unsigned int pid; PCWSTR name; };
 	static const Entry TABLE[] = {
-		/* Package family name de l'application du Store dont provient l'élément.
+		/* Package family name of the Store application the item comes from.
 		   learn.microsoft.com/windows/win32/properties/props-system-sourcepackagefamilyname
-		   Forensiquement parlant : relie un document récent à l'application qui
-		   l'a ouvert — « 5319275A.WhatsAppDesktop_cv1g1gvanyjgm » dit que le
-		   fichier vient de WhatsApp. `IsInnate` et hors index, donc absente du
-		   schéma interrogeable sur certaines machines : c'est précisément le cas
-		   qui a révélé le défaut. */
+		   Forensically speaking: it ties a recent document to the application
+		   that opened it — "5319275A.WhatsAppDesktop_cv1g1gvanyjgm" says the file
+		   comes from WhatsApp. `IsInnate` and outside the index, hence absent
+		   from the queryable schema on some machines: that is precisely the case
+		   that revealed the defect. */
 		{ L"{ffae9db7-1c8d-43ff-818c-84403aa3732d}", 100, L"System.SourcePackageFamilyName" },
 	};
 	for (const Entry& e : TABLE)
@@ -17597,31 +17596,29 @@ static std::wstring knownPropertyKey(const std::wstring& lowercaseGuid, unsigned
 
 std::wstring to_FriendlyName(std::wstring guid, unsigned int key) {
 	log(3, L"🔈to_FriendlyName");
-	/* CORRECTIONS.
-	 *  - `out` n'était pas initialisé : en cas d'échec de
-	 *    PSGetNameFromPropertyKey sans écriture, le test `out == NULL` lisait une
-	 *    valeur indéterminée ;
-	 *  - le retour de PSGetNameFromPropertyKey n'était pas vérifié ;
-	 *  - la chaîne qu'elle alloue n'était jamais libérée (CoTaskMemFree) : une
-	 *    fuite par propriété lue, donc par entrée de property store ;
-	 *  - le retour de CLSIDFromString n'était pas vérifié : sur un GUID malformé
-	 *    — cas possible, la donnée vient de la machine examinée — `p.fmtid`
-	 *    restait indéterminé et était tout de même utilisé.
+	/* FIXES.
+	 *  - `out` was not initialised: if PSGetNameFromPropertyKey failed without
+	 *    writing, the test `out == NULL` read an indeterminate value;
+	 *  - the return value of PSGetNameFromPropertyKey was not checked;
+	 *  - the string it allocates was never released (CoTaskMemFree): a leak per
+	 *    property read, hence per property store entry;
+	 *  - the return value of CLSIDFromString was not checked: on a malformed
+	 *    GUID — a possible case, the data coming from the examined machine —
+	 *    `p.fmtid` stayed indeterminate and was used all the same.
 	 *
-	 * NOTE sur COM : CLSIDFromString et PSGetNameFromPropertyKey sont des
-	 * fonctions utilitaires (conversion, lecture du schéma de propriétés) et non
-	 * des activations de composants ; elles n'exigent pas CoInitializeEx, retiré
-	 * de WAC avec la bascule hors ligne des tâches planifiées. Si
-	 * l'appel échoue malgré tout, le libellé rendu est « (Undefined) » — donc
-	 * dégradation lisible, pas donnée fausse.
+	 * A NOTE ON COM: CLSIDFromString and PSGetNameFromPropertyKey are utility
+	 * functions (conversion, reading of the property schema) and not component
+	 * activations; they do not require CoInitializeEx, which was removed from WAC
+	 * when the scheduled tasks went offline. If the call fails all the same, the
+	 * label returned is "(Undefined)" — a readable degradation, not wrong data.
 	 */
 	PROPERTYKEY p = { 0 };
 	std::wstring result;
-	// Casse d'origine conservee : c'est elle qui figure dans le champ ID du JSON,
-	// et la cle restituee doit pouvoir s'y rapporter telle quelle.
+	// The original case is kept: it is the one that appears in the JSON's ID field,
+	// and the key returned must be relatable to it as it is.
 	const std::wstring rawKey = guid + L"/" + std::to_wstring(key);
 	if (FAILED(CLSIDFromString(guid.c_str(), &p.fmtid))) {
-		log(2, L"🔥to_FriendlyName : GUID malforme " + guid, ERROR_INVALID_DATA);
+		log(2, L"🔥to_FriendlyName: malformed GUID " + guid, ERROR_INVALID_DATA);
 		return rawKey;
 	}
 	p.pid = key;
@@ -17652,36 +17649,37 @@ std::wstring to_FriendlyName(std::wstring guid, unsigned int key) {
 		result = L"MTP Vendor-extended object properties";
 	}
 	else if (!(result = knownPropertyKey(guid, key)).empty()) {
-		/* TABLE D'ABORD, API ENSUITE.
+		/* THE TABLE FIRST, THE API AFTERWARDS.
 		 *
-		 * POURQUOI. `PSGetNameFromPropertyKey` « ne réussit que pour les
-		 * propriétés enregistrées dans le schéma de propriétés » (doc Microsoft)
-		 * et passe par le property system, donc par COM. Son résultat dépend
-		 * ainsi de l'état du processus, et pas seulement de la clé demandée.
+		 * WHY. `PSGetNameFromPropertyKey` "succeeds only for the properties
+		 * registered in the property schema" (Microsoft's documentation) and goes
+		 * through the property system, hence through COM. Its result therefore
+		 * depends on the state of the process, and not only on the key asked for.
 		 *
-		 * Constaté sur une machine réelle le 2026-09-15 : la clé
-		 * {FFAE9DB7-1C8D-43FF-818C-84403AA3732D}/100 a été résolue 11 fois
-		 * (shellbags, phase registre) et NON résolue 12 fois (documents récents
-		 * et jumplists, phase fichiers) — dans une seule et même collecte, par
-		 * le même code. Le même artefact sortait donc nommé ou anonyme selon la
-		 * phase où il était lu : pour une pièce d'enquête, c'est le défaut.
+		 * Seen on a real machine on 2026-09-15: the key
+		 * {FFAE9DB7-1C8D-43FF-818C-84403AA3732D}/100 was resolved 11 times
+		 * (shellbags, registry phase) and NOT resolved 12 times (recent documents
+		 * and jump lists, file phase) — within one and the same collection, by
+		 * the same code. The same artefact therefore came out named or anonymous
+		 * depending on the phase it was read in: for a piece of evidence, that is
+		 * the defect.
 		 *
-		 * Une table statique est déterministe, ne dépend d'aucune
-		 * initialisation, et fonctionne à l'identique sur une image morte.
-		 * L'API reste en repli pour les propriétés hors table. */
+		 * A static table is deterministic, depends on no initialisation, and
+		 * works identically on a dead image. The API stays as a fallback for the
+		 * properties outside the table. */
 	}
 	else if (SUCCEEDED(PSGetNameFromPropertyKey(p, &out)) && out) {
 		result = out;
 		CoTaskMemFree(out);          // alloue par PSGetNameFromPropertyKey
 	}
 	else {
-		/* PAS « (Undefined) ».
-		 * Ce libellé se lisait comme un échec de l'outil, alors que la donnée
-		 * est parfaitement lue : seul son NOM est inconnu de nos tables. On
-		 * restitue donc la clé brute, qui est vérifiable et permet de compléter
-		 * la table ; la VALEUR de la propriété, elle, était et reste émise. */
+		/* NOT "(Undefined)".
+		 * That label read as a failure of the tool, whereas the data is read
+		 * perfectly: only its NAME is unknown to our tables. The raw key is
+		 * therefore returned, which is verifiable and makes it possible to
+		 * complete the table; the property's VALUE was and stays emitted. */
 		result = rawKey;
-		log(2, L"🔥to_FriendlyName : propriete hors table " + rawKey);
+		log(2, L"🔥to_FriendlyName: property outside the table " + rawKey);
 	}
 	return result;
 }
@@ -17689,15 +17687,14 @@ std::wstring to_FriendlyName(std::wstring guid, unsigned int key) {
 std::wstring shell_item_signature(unsigned int signature) {
 	log(3, L"🔈shell_item_signature");
 	switch (signature) {
-	/* Périphériques MTP : la présence de ces items atteste qu'un appareil
-	   photo, un téléphone ou un lecteur multimédia a été branché et exploré.
-	   Signatures relevées dans libfwsi (libfwsi_mtp_volume_values.c et
-	   libfwsi_mtp_file_entry_values.c). */
+	/* MTP devices: the presence of those items attests that a camera, a phone or
+	   a media player was plugged in and browsed. Signatures taken from libfwsi
+	   (libfwsi_mtp_volume_values.c and libfwsi_mtp_file_entry_values.c). */
 	case 0x10312005: return L"MTP Volume";
 	case 0x07192006: return L"MTP File Entry";
-	/* Users property view. Les six signatures reconnues par libfwsi
-	   (libfwsi_users_property_view_values.c) ; « 0x23febbee » est celle qui
-	   porte un identifiant de dossier connu. */
+	/* Users property view. The six signatures libfwsi recognises
+	   (libfwsi_users_property_view_values.c); "0x23febbee" is the one that
+	   carries a known folder identifier. */
 	case 0x23febbee: return L"Users Property View (known folder)";
 	case 0x10141981: return L"Users Property View";
 	case 0x23a3dfd5: return L"Users Property View";
@@ -17861,21 +17858,19 @@ std::wstring shell_item_class(unsigned char i) {
 	//0x78
 	if (i == (unsigned char)0x78) return L"FAVORITE_SHELL_ITEM"; //done
 
-	/* REPLI PAR MASQUE, comme le fait libfwsi (libfwsi_item.c).
+	/* A FALLBACK BY MASK, as libfwsi does (libfwsi_item.c).
 	 *
-	 * CE QUI MANQUAIT. Les tests ci-dessus énumèrent des valeurs EXACTES —
-	 * 0x23, 0x25, 0x29… pour les volumes, 0x30, 0x31, 0x32, 0x35, 0x36, 0x39
-	 * pour les entrées de fichier. Or le type d'un shell item se lit sur les
-	 * bits 4 à 6 de l'octet de classe : libfwsi fait `class_type & 0x70` et
-	 * traite d'un coup TOUTE la famille. WAC ne reconnaissait donc que 6 ou 7
-	 * valeurs par famille sur 32, et classait « UNKNOWN » une entrée de fichier
-	 * de classe 0x33, 0x3A ou 0xB2 — parfaitement décodable, et dont seuls les
-	 * bits de poids faible (drapeaux) différaient.
+	 * WHAT WAS MISSING. The tests above enumerate EXACT values — 0x23, 0x25,
+	 * 0x29… for the volumes, 0x30, 0x31, 0x32, 0x35, 0x36, 0x39 for the file
+	 * entries. But the type of a shell item is read on bits 4 to 6 of the class
+	 * byte: libfwsi does `class_type & 0x70` and handles the WHOLE family at
+	 * once. WAC therefore recognised only 6 or 7 values per family out of 32, and
+	 * classed as "UNKNOWN" a file entry of class 0x33, 0x3A or 0xB2 — perfectly
+	 * decodable, and differing only in its low-order bits (flags).
 	 *
-	 * Les valeurs exactes sont conservées au-dessus : elles sont vérifiées, et
-	 * certaines classes hors famille (0x1F, 0x52, 0x61, 0x71, 0x74, 0x78, 0x79)
-	 * doivent primer sur le masque — d'où le fait que ce repli vienne en
-	 * dernier. */
+	 * The exact values are kept above: they are verified, and some classes
+	 * outside the families (0x1F, 0x52, 0x61, 0x71, 0x74, 0x78, 0x79) must
+	 * prevail over the mask — hence this fallback coming last. */
 	switch (i & 0x70) {
 	case 0x20: return L"VOLUME_SHELL_ITEM";
 	case 0x30: return L"FILE_ENTRY_SHELL_ITEM";
@@ -17891,6 +17886,6 @@ std::wstring trans_guid_to_wstring(std::wstring guid) {
 	
 	transform(guid.begin(), guid.end(), guid.begin(), ::tolower);
 
-	// La table couvre CLSID, FMTID, dossiers spéciaux, AppID de périphériques…
+	// The table covers CLSIDs, FMTIDs, special folders, device AppIDs…
 	return find(TABLE_GUID, sizeof(TABLE_GUID)/sizeof(*TABLE_GUID), guid, indexGuid);
 }

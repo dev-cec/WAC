@@ -25,12 +25,12 @@
 
 int main(int argc, char** argv){
 	if (argc < 4){
-		std::cout << "usage: lznt1_test <original> <compresse.bin> <index.idx>\n";
+		std::cout << "usage: lznt1_test <original> <compressed.bin> <index.idx>\n";
 		return 2;
 	}
 	std::ifstream fo(argv[1], std::ios::binary), fc(argv[2], std::ios::binary);
 	std::ifstream fi(argv[3]);
-	if (!fo || !fc || !fi){ std::cout << "fichier(s) illisible(s)\n"; return 2; }
+	if (!fo || !fc || !fi){ std::cout << "file(s) unreadable\n"; return 2; }
 
 	const std::vector<uint8_t> original((std::istreambuf_iterator<char>(fo)),
 	                                     std::istreambuf_iterator<char>());
@@ -52,8 +52,8 @@ int main(int argc, char** argv){
 			continue;
 		}
 		++units;
-		if (posC + packedSize > compressed.size()){ std::cout << "  ECHEC  unite " << n
-			<< " : donnees compressees tronquees\n"; return 1; }
+		if (posC + packedSize > compressed.size()){ std::cout << "  FAILED  unit " << n
+			<< ": compressed data truncated\n"; return 1; }
 
 		std::vector<uint8_t> output(65536, 0xCC);   // witness pattern
 		const size_t returned = Lznt1Inflate(compressed.data() + posC, packedSize,
@@ -63,13 +63,13 @@ int main(int argc, char** argv){
 		                     && std::memcmp(output.data(), original.data() + posO, plainSize) == 0;
 		if (contentOk) ++wellFormed;
 		else {
-			std::cout << "  ECHEC  unite " << n << " : rendu " << returned
-			          << " attendu " << plainSize;
+			std::cout << "  FAILED  unit " << n << ": returned " << returned
+			          << " expected " << plainSize;
 			if (sizeOk){
 				// First diverging byte: says WHERE the decoding went wrong.
 				size_t k = 0;
 				while (k < plainSize && output[k] == original[posO + k]) ++k;
-				std::cout << ", premier ecart a l'offset " << k;
+				std::cout << ", first divergence at offset " << k;
 			}
 			std::cout << "\n";
 		}
@@ -77,10 +77,10 @@ int main(int argc, char** argv){
 		posC += packedSize;
 		posO += plainSize;
 	}
-	std::cout << "  unites compressees : " << units << ", conformes : " << wellFormed
-	          << ", non compressees par Windows : " << ignored << "\n";
-	std::cout << "  octets detendus : " << bytes << "\n";
+	std::cout << "  compressed units: " << units << ", passed: " << wellFormed
+	          << ", left uncompressed by Windows: " << ignored << "\n";
+	std::cout << "  bytes decompressed: " << bytes << "\n";
 	const bool ok = (units > 0) && (wellFormed == units);
-	std::cout << (ok ? "tous conformes" : "ECHECS") << "\n";
+	std::cout << (ok ? "all passed" : "FAILURES") << "\n";
 	return ok ? 0 : 1;
 }

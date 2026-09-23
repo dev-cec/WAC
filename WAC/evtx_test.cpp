@@ -1,20 +1,20 @@
-/*  evtx_test.cpp — harnais de validation du parseur EVTX, hors de WAC.
+/*! \file
+ *  \brief Validation harness for the EVTX parser, outside WAC.
  *
- *  Même intention que raw_hive_test : un défaut de parsing produit du JSON
- *  valide et faux, que le harnais de VM ne voit pas. Ce test-ci confronte le
- *  décodeur à de vrais journaux, dont des journaux volontairement abîmés
- *  (chunk à signature fausse, journal non fermé, tailles nulles).
+ *  The same intent as raw_hive_test: a parsing defect produces JSON that is
+ *  valid and wrong, which the VM harness does not see. This test confronts the
+ *  decoder with real logs, among them logs deliberately damaged (a chunk with a
+ *  wrong signature, a log not closed, null sizes).
  *
- *  Usage : evtx_test.exe <fichier.evtx> [nb enregistrements a afficher]
- *          evtx_test.exe --collecte <racine> <sortie>   (chaine COMPLETE :
- *          lit <racine>\Windows\System32\winevt\Logs\*.evtx comme le fait
- *          la collecte, et ecrit <sortie>\events.json. Eprouve la
- *          correspondance XML -> Event et l'ecriture en flux, que le decodage
- *          seul ne couvre pas.)
- *          evtx_test.exe <fichier.evtx> --dump   (un enregistrement par ligne,
- *          « identifiant<TAB>xml » en UTF-8, sauts de ligne echappes, pour
- *          comparaison automatique avec une implementation independante)
- *  Exclu du build de WAC par le motif « _test.cpp » de build-windows.sh.
+ *  Usage: evtx_test.exe <file.evtx> [number of records to print]
+ *         evtx_test.exe --collect <root> <output>   (the COMPLETE chain: reads
+ *         <root>\Windows\System32\winevt\Logs\*.evtx as the collection does, and
+ *         writes <output>\events.json. Exercises the XML -> Event mapping and
+ *         the streaming write, which decoding alone does not cover.)
+ *         evtx_test.exe <file.evtx> --dump   (one record per line,
+ *         "identifier<TAB>xml" in UTF-8, line breaks escaped, for automatic
+ *         comparison with an independent implementation)
+ *  Excluded from WAC's build by the "_test.cpp" pattern of build-windows.sh.
  */
 #include "evtx.h"
 #include "tools.h"
@@ -27,15 +27,15 @@
 #include <fcntl.h>
 #include <io.h>
 
-/*  `conf` est la configuration globale de WAC, définie par main.cpp. Ce harnais
- *  n'embarque pas main.cpp : il en fournit une instance vide. evtx.cpp ne la
- *  lit pas — c'est tools.cpp qui la référence — mais l'éditeur de liens la
- *  réclame. Une instance par défaut suffit et garde le test isolé.
+/*  `conf` is WAC's global configuration, defined by main.cpp. This harness does
+ *  not embed main.cpp: it provides an empty instance of it. evtx.cpp does not
+ *  read it — tools.cpp is what references it — but the linker asks for it. A
+ *  default instance is enough and keeps the test isolated.
  */
 AppliConf conf;
 
-//! Ecrit une chaine large sur stdout en UTF-8, sans passer par la page de code
-//! de la console : la comparaison automatique exige des octets stables.
+//! Writes a wide string to stdout in UTF-8, without going through the console's
+//! code page: the automatic comparison requires stable bytes.
 static void writeUtf8(const std::wstring& s) {
 	if (s.empty()) return;
 	const int n = WideCharToMultiByte(CP_UTF8, 0, s.c_str(), (int)s.size(), nullptr, 0, nullptr, nullptr);
@@ -47,20 +47,20 @@ static void writeUtf8(const std::wstring& s) {
 
 int wmain(int argc, wchar_t** argv) {
 	if (argc < 2) {
-		wprintf(L"usage: evtx_test <fichier.evtx> [nb|--dump]\n");
-		wprintf(L"       evtx_test --collecte <racine> <sortie>\n");
+		wprintf(L"usage: evtx_test <file.evtx> [count|--dump]\n");
+		wprintf(L"       evtx_test --collect <root> <output>\n");
 		return 2;
 	}
 
-	/*  Ancienne STRATEGIE D'ECRITURE, sur les memes donnees : tous les
-	 *  evenements construits en memoire, puis serialises d'un bloc, comme le
-	 *  faisait la collecte par API. Le decodage est identique — seule l'ecriture
-	 *  change — ce qui isole le cout de la strategie de celui de la source, et
-	 *  permet une comparaison de memoire que la machine examinee, elle, ne
-	 *  permet pas de refaire a l'identique.
+	/*  The OLD WRITING STRATEGY, on the same data: every event built in memory,
+	 *  then serialised in one go, as the collection through the API did. The
+	 *  decoding is identical — only the writing changes — which isolates the cost
+	 *  of the strategy from that of the source, and allows a memory comparison
+	 *  that the examined machine, for its part, does not allow to be redone
+	 *  identically.
 	 */
-	if (wcscmp(argv[1], L"--collecte-memoire") == 0) {
-		if (argc < 4) { wprintf(L"usage: evtx_test --collecte-memoire <racine> <sortie>\n"); return 2; }
+	if (wcscmp(argv[1], L"--collect-memory") == 0) {
+		if (argc < 4) { wprintf(L"usage: evtx_test --collect-memory <root> <output>\n"); return 2; }
 		conf.mountpoint = argv[2];
 		int n = WideCharToMultiByte(CP_UTF8, 0, argv[3], -1, nullptr, 0, nullptr, nullptr);
 		std::vector<char> tmp(n > 0 ? n : 1);
@@ -83,14 +83,14 @@ int wmain(int argc, wchar_t** argv) {
 		for (Json& o : all) arr.push(std::move(o));
 		const HRESULT hr = writeJsonFile("events.json", arr);
 		wprintf(L"hresult      : 0x%08lx\n", (unsigned long)hr);
-		wprintf(L"evenements   : %llu\n", read);
+		wprintf(L"events       : %llu\n", read);
 		return 0;
 	}
 
-	// Chaine complete : la meme que celle qu'execute WAC, sans le reste de la
-	// collecte. `mountpoint` est la racine des copies extraites (cf. tools.h).
-	if (wcscmp(argv[1], L"--collecte") == 0) {
-		if (argc < 4) { wprintf(L"usage: evtx_test --collecte <racine> <sortie>\n"); return 2; }
+	// The complete chain: the same as the one WAC runs, without the rest of the
+	// collection. `mountpoint` is the root of the extracted copies (see tools.h).
+	if (wcscmp(argv[1], L"--collect") == 0) {
+		if (argc < 4) { wprintf(L"usage: evtx_test --collect <root> <output>\n"); return 2; }
 		conf.mountpoint = argv[2];
 		int n = WideCharToMultiByte(CP_UTF8, 0, argv[3], -1, nullptr, 0, nullptr, nullptr);
 		std::vector<char> tmp(n > 0 ? n : 1);
@@ -99,9 +99,9 @@ int wmain(int argc, wchar_t** argv) {
 		Events ev;
 		const HRESULT hr = ev.getData();
 		wprintf(L"hresult      : 0x%08lx\n", (unsigned long)hr);
-		wprintf(L"journaux     : %llu\n", ev.files);
-		wprintf(L"evenements   : %llu\n", ev.read);
-		wprintf(L"ecartes      : %llu\n", ev.unreadable);
+		wprintf(L"logs         : %llu\n", ev.files);
+		wprintf(L"events       : %llu\n", ev.read);
+		wprintf(L"discarded    : %llu\n", ev.unreadable);
 		return 0;
 	}
 	const bool dump = (argc > 2) && (wcscmp(argv[2], L"--dump") == 0);
@@ -118,7 +118,7 @@ int wmain(int argc, wchar_t** argv) {
 		if (e.xml.find(L"<System") != std::wstring::npos) ++withSystem;
 		if (e.xml.find(L"<EventData") != std::wstring::npos
 		    || e.xml.find(L"<UserData") != std::wstring::npos) ++withEventData;
-		// Fournisseur : premier attribut Name du premier Provider.
+		// Provider: the first Name attribute of the first Provider.
 		const size_t p = e.xml.find(L"<Provider Name=\"");
 		if (p != std::wstring::npos) {
 			const size_t d = p + 16, f = e.xml.find(L'"', d);
@@ -138,21 +138,21 @@ int wmain(int argc, wchar_t** argv) {
 		}
 		if (displayed < toDisplay) {
 			++displayed;
-			wprintf(L"--- enregistrement %llu\n%ls\n", e.id, e.xml.c_str());
+			wprintf(L"--- record %llu\n%ls\n", e.id, e.xml.c_str());
 		}
 		return true;
 	}, &summary);
 
 	if (dump) return 0;
-	wprintf(L"fichier      : %ls\n", argv[1]);
+	wprintf(L"file         : %ls\n", argv[1]);
 	wprintf(L"hresult      : 0x%08lx\n", (unsigned long)hr);
 	wprintf(L"diagnostic   : %ls\n", summary.diagnostic.c_str());
-	wprintf(L"lus          : %llu\n", summary.read);
-	wprintf(L"illisibles   : %llu\n", summary.unreadable);
-	wprintf(L"xml vide     : %llu\n", empties);
-	wprintf(L"avec System  : %llu\n", withSystem);
-	wprintf(L"avec Data    : %llu\n", withEventData);
-	wprintf(L"fournisseurs : %llu\n", (unsigned long long)providers.size());
+	wprintf(L"read         : %llu\n", summary.read);
+	wprintf(L"unreadable   : %llu\n", summary.unreadable);
+	wprintf(L"empty xml    : %llu\n", empties);
+	wprintf(L"with System  : %llu\n", withSystem);
+	wprintf(L"with Data    : %llu\n", withEventData);
+	wprintf(L"providers    : %llu\n", (unsigned long long)providers.size());
 	for (const auto& kv : providers)
 		if (kv.second > summary.read / 20) wprintf(L"   %-60ls %llu\n", kv.first.c_str(), kv.second);
 	return 0;

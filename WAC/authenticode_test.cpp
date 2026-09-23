@@ -1,21 +1,21 @@
-/*  authenticode_test.cpp — confronte la vérification d'authenticité de WAC à
- *  celle de Windows.
+/*! \file
+ *  \brief Confronts WAC's authenticity verification with Windows's own.
  *
- *  Usage :
- *    authenticode_test --catalogues <dossier>
- *        vérifie et indexe tous les .cat du dossier, et en fait le bilan ;
- *    authenticode_test --catalogues <dossier> --fichiers <liste>
- *        puis rend un verdict par fichier. <liste> : une ligne par fichier,
- *        « identifiant|chemin local ». Sortie : « identifiant|MICROSOFT|source »
- *        ou « identifiant|PRELEVE|motif ».
- *    authenticode_test --rsa <module hex> <exposant hex> <signature hex> <sha256 hex>
- *        vérifie une signature RSA isolée (confrontation à OpenSSL).
+ *  Usage:
+ *    authenticode_test --catalogs <folder>
+ *        verifies and indexes every .cat of the folder, and summarises it;
+ *    authenticode_test --catalogs <folder> --files <list>
+ *        then returns a verdict per file. <list>: one line per file,
+ *        "identifier|local path". Output: "identifier|MICROSOFT|source" or
+ *        "identifier|COLLECT|reason".
+ *    authenticode_test --rsa <modulus hex> <exponent hex> <signature hex> <sha256 hex>
+ *        verifies an isolated RSA signature (confronted with OpenSSL).
  *
- *  Le juge est Get-AuthenticodeSignature, exécuté dans la VM sur les mêmes
- *  fichiers (cf. vmtest/README.md). Ce programme lit les fichiers par
- *  l'API : c'est un outil de test, pas la collecte.
+ *  The judge is Get-AuthenticodeSignature, run in the VM on the same files (see
+ *  vmtest/README.md). This program reads the files through the API: it is a test
+ *  tool, not the collection.
  *
- *  Compilation (Linux) :
+ *  Build (Linux):
  *    g++ -std=c++17 -O2 -I. authenticode.cpp rsa.cpp sha.cpp authenticode_test.cpp
  */
 #include "authenticode.h"
@@ -60,15 +60,15 @@ int main(int argc, char** argv) {
 		const auto n = hex(argv[2]), e = hex(argv[3]), s = hex(argv[4]), h = hex(argv[5]);
 		const bool ok = RsaVerifyPkcs1(n.data(), n.size(), e.data(), e.size(), s.data(), s.size(),
 		                                 DigestAlgorithm::Sha256, h.data(), h.size());
-		std::cout << (ok ? "VALIDE" : "INVALIDE") << "\n";
+		std::cout << (ok ? "VALID" : "INVALID") << "\n";
 		return ok ? 0 : 1;
 	}
 	std::string folder, list;
 	for (int i = 1; i + 1 < argc; i += 2) {
-		if (std::strcmp(argv[i], "--catalogues") == 0) folder = argv[i + 1];
-		else if (std::strcmp(argv[i], "--fichiers") == 0) list = argv[i + 1];
+		if (std::strcmp(argv[i], "--catalogs") == 0) folder = argv[i + 1];
+		else if (std::strcmp(argv[i], "--files") == 0) list = argv[i + 1];
 	}
-	if (folder.empty()) { std::cerr << "usage : voir l'en-tête du fichier\n"; return 2; }
+	if (folder.empty()) { std::cerr << "usage: see the header of the file\n"; return 2; }
 
 	IndexCatalogues index;
 	std::map<std::string, size_t> refusals;
@@ -80,17 +80,17 @@ int main(int argc, char** argv) {
 		++read;
 		if (!index.add(e.path().filename().wstring(), d.data(), d.size())) {
 			const VerifiedSignature s = VerifyPkcs7(d.data(), d.size());
-			++refusals[s.valid ? (s.signerAccepted ? std::string("aucune empreinte indexable")
-			                                         : "signataire non retenu : " + utf8(s.signer))
+			++refusals[s.valid ? (s.signerAccepted ? std::string("no indexable digest")
+			                                         : "signer not accepted: " + utf8(s.signer))
 			                 : s.reason];
 		}
 	}
 	const double duration = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
-	std::cerr << read << " catalogue(s) lus, " << index.catalogues() << " retenus, "
-	          << index.fingerprints() << " empreinte(s) indexées, en " << duration << " s\n";
+	std::cerr << read << " catalog(s) read, " << index.catalogues() << " kept, "
+	          << index.fingerprints() << " digest(s) indexed, in " << duration << " s\n";
 	for (const auto& r : refusals) std::cerr << "  refusés : " << r.second << " — " << r.first << "\n";
 
-	if (list == "-") {                                 // empreintes indexées, en hexa
+	if (list == "-") {                                 // indexed digests, in hexadecimal
 		index.dump(std::cout);
 		return 0;
 	}
@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
 		if (bar == std::string::npos) continue;
 		const std::string id = line.substr(0, bar);
 		std::ifstream f(std::filesystem::u8path(line.substr(bar + 1)), std::ios::binary);
-		if (!f) { std::cout << id << "|ILLISIBLE|\n"; continue; }
+		if (!f) { std::cout << id << "|UNREADABLE|\n"; continue; }
 		const std::vector<uint8_t> bytes((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
 		PeAnalyser pe;
 		pe.sputn((const char*)bytes.data(), (std::streamsize)bytes.size());
@@ -112,19 +112,19 @@ int main(int argc, char** argv) {
 		VerdictMicrosoft v;
 		if (pe.estPe()) v = EvaluatePe(pe, index);
 		else {
-			// Script ou document : catalogue (octets bruts), puis signature
-			// PowerShell intégrée.
+			// A script or a document: the catalog (raw bytes), then the embedded
+			// PowerShell signature.
 			uint8_t h[32];
 			sha256Bytes(bytes.data(), bytes.size(), h);
 			v = EvaluateByCatalog(h, index);
 			if (!v.microsoft) {
 				const VerdictMicrosoft ps = EvaluatePowerShellScript(bytes.data(), bytes.size());
-				if (ps.microsoft || ps.reason != "pas de signature intégrée") v = ps;
+				if (ps.microsoft || ps.reason != "no embedded signature") v = ps;
 			}
 		}
 		if (v.microsoft) { ++ms; std::cout << id << "|MICROSOFT|" << utf8(v.source) << "\n"; }
-		else { ++others; std::cout << id << "|PRELEVE|" << v.reason << "\n"; }
+		else { ++others; std::cout << id << "|COLLECT|" << v.reason << "\n"; }
 	}
-	std::cerr << ms << " authentifié(s) Microsoft, " << others << " à prélever\n";
+	std::cerr << ms << " authenticated as Microsoft, " << others << " to collect\n";
 	return 0;
 }

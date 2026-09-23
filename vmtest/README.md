@@ -110,9 +110,9 @@ file: 14 records read out of 270. The extracted logs are also checked against
 the CRC32 each EVTX chunk carries: all 1,505 chunks of the 404 logs of the test
 VM verify.
 
-The `--collecte` mode runs the whole chain (raw file → BinXML → `xml_light` →
+The `--collect` mode runs the whole chain (raw file → BinXML → `xml_light` →
 `Event` → streamed JSON) on a tree mimicking an extraction, and
-`--collecte-memoire` does the same while accumulating everything in memory as
+`--collect-memory` does the same while accumulating everything in memory as
 the API-based collection did. That makes the memory argument verifiable instead
 of asserted: same records, same binary, same host, only the writing strategy
 changes — a 1,281 MB peak against 26 MB, for a byte-identical `events.json`

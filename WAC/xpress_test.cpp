@@ -24,12 +24,12 @@
 
 int main(int argc, char** argv) {
 	if (argc < 4) {
-		std::cout << "usage: xpress_test <original> <compresse.bin> <index.idx>\n";
+		std::cout << "usage: xpress_test <original> <compressed.bin> <index.idx>\n";
 		return 2;
 	}
 	std::ifstream fo(argv[1], std::ios::binary), fc(argv[2], std::ios::binary);
 	std::ifstream fi(argv[3]);
-	if (!fo || !fc || !fi) { std::cout << "fichier(s) illisible(s)\n"; return 2; }
+	if (!fo || !fc || !fi) { std::cout << "file(s) unreadable\n"; return 2; }
 
 	const std::vector<uint8_t> original((std::istreambuf_iterator<char>(fo)),
 	                                     std::istreambuf_iterator<char>());
@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
 		if (packedSize == 0) { ++ignores; posO += plainSize; continue; }
 		++chunks;
 		if (posC + packedSize > compressed.size()) {
-			std::cout << "  ECHEC  morceau " << n << " : donnees tronquees\n";
+			std::cout << "  FAILED  chunk " << n << ": data truncated\n";
 			return 1;
 		}
 
@@ -60,12 +60,12 @@ int main(int argc, char** argv) {
 		                     && std::memcmp(output.data(), original.data() + posO, plainSize) == 0;
 		if (contentOk) ++wellFormed;
 		else {
-			std::cout << "  ECHEC  morceau " << n << " : rendu " << returned
-			          << " attendu " << plainSize;
+			std::cout << "  FAILED  chunk " << n << ": returned " << returned
+			          << " expected " << plainSize;
 			if (sizeOk) {
 				size_t k = 0;
 				while (k < plainSize && output[k] == original[posO + k]) ++k;
-				std::cout << ", premier ecart a l'offset " << k;
+				std::cout << ", first divergence at offset " << k;
 			}
 			std::cout << "\n";
 		}
@@ -74,10 +74,10 @@ int main(int argc, char** argv) {
 		posO += plainSize;
 	}
 
-	std::cout << "  morceaux comprimes : " << chunks << ", conformes : " << wellFormed
-	          << ", non comprimes par Windows : " << ignores << "\n";
-	std::cout << "  octets detendus : " << bytes << "\n";
+	std::cout << "  compressed chunks: " << chunks << ", passed: " << wellFormed
+	          << ", left uncompressed by Windows: " << ignores << "\n";
+	std::cout << "  bytes decompressed: " << bytes << "\n";
 	const bool ok = (chunks > 0) && (wellFormed == chunks);
-	std::cout << (ok ? "tous conformes" : "ECHECS") << "\n";
+	std::cout << (ok ? "all passed" : "FAILURES") << "\n";
 	return ok ? 0 : 1;
 }

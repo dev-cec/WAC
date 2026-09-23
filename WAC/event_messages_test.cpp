@@ -26,14 +26,14 @@ AppliConf conf;
 namespace {
 
 void line(const wchar_t* step, bool ok, const std::wstring& detail) {
-	wprintf(L"  %ls  %-42ls %ls\n", ok ? L"ok   " : L"ECHEC", step, detail.c_str());
+	wprintf(L"  %ls  %-42ls %ls\n", ok ? L"ok   " : L"FAILED", step, detail.c_str());
 }
 
 } // namespace
 
 int wmain(int argc, wchar_t** argv) {
 	if (argc < 3) {
-		wprintf(L"usage: event_messages_test <ruche SOFTWARE> <guid> [id[:version] ...]\n");
+		wprintf(L"usage: event_messages_test <SOFTWARE hive> <guid> [id[:version] ...]\n");
 		return 2;
 	}
 	conf.systemDrive = L"C:";
@@ -41,7 +41,7 @@ int wmain(int argc, wchar_t** argv) {
 	// 1. The hive, and the provider's key.
 	ORHKEY software = NULL;
 	HRESULT hr = OROpenHive(argv[1], &software);
-	line(L"ouverture de la ruche SOFTWARE", hr == ERROR_SUCCESS,
+	line(L"opening of the SOFTWARE hive", hr == ERROR_SUCCESS,
 	      hr == ERROR_SUCCESS ? argv[1] : L"code " + std::to_wstring(hr));
 	if (hr != ERROR_SUCCESS) return 1;
 	conf.Software = software;
@@ -71,7 +71,7 @@ int wmain(int argc, wchar_t** argv) {
 	for (const std::wstring& c : candidates) {
 		std::error_code ec;
 		const bool exists = std::filesystem::exists(c, ec);
-		line(L"candidat de chemin", exists, c);
+		line(L"path candidate", exists, c);
 		if (exists && found.empty()) found = c;
 	}
 	if (found.empty()) return 1;
@@ -84,14 +84,14 @@ int wmain(int argc, wchar_t** argv) {
 
 	std::wstring types;
 	for (const std::wstring& t : pe.typesPresent()) types += t + L" ";
-	line(L"types de ressources presents", !types.empty(), types);
+	line(L"resource types present", !types.empty(), types);
 
 	const std::vector<uint8_t> brutWevt = pe.namedResource(L"WEVT_TEMPLATE");
 	line(L"WEVT_TEMPLATE", !brutWevt.empty(),
 	      std::to_wstring(brutWevt.size()) + L" octets");
 
 	std::vector<uint8_t> brutMsg = pe.resource(PE_RT_MESSAGETABLE);
-	std::wstring ouMsg = L"dans le binaire";
+	std::wstring ouMsg = L"in the binary";
 	if (brutMsg.empty()) {
 		// Localised satellite: on a localised system the table is not in the
 		// DLL itself, but in <language>\<name>.mui.
@@ -113,10 +113,10 @@ int wmain(int argc, wchar_t** argv) {
 	// 4. The parsing, then the resolution of the requested identifiers.
 	WevtMetadata meta;
 	const size_t nbEv = meta.analyse(brutWevt, guid);
-	line(L"evenements decrits", nbEv > 0, std::to_wstring(nbEv));
+	line(L"events described", nbEv > 0, std::to_wstring(nbEv));
 	TableMessages table;
 	const size_t nbMsg = table.analyse(brutMsg);
-	line(L"messages lus", nbMsg > 0, std::to_wstring(nbMsg));
+	line(L"messages read", nbMsg > 0, std::to_wstring(nbMsg));
 
 	for (int i = 3; i < argc; ++i) {
 		std::wstring a = argv[i];
@@ -126,7 +126,7 @@ int wmain(int argc, wchar_t** argv) {
 		                              : wcstoul(a.substr(sep + 1).c_str(), nullptr, 10));
 		const uint32_t m = meta.messageId(id, ver);
 		const std::wstring messageTemplate = m ? table.text(m) : std::wstring();
-		line(L"evenement -> message", !messageTemplate.empty(),
+		line(L"event -> message", !messageTemplate.empty(),
 		      std::to_wstring(id) + L" v" + std::to_wstring(ver) + L" -> "
 		      + std::to_wstring(m));
 		if (!messageTemplate.empty()) wprintf(L"         %ls\n", messageTemplate.substr(0, 160).c_str());

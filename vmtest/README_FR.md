@@ -115,9 +115,9 @@ la lecture de tout le fichier : 14 enregistrements lus sur 270. Les journaux
 extraits sont aussi confrontés au CRC32 que porte chaque chunk EVTX : les 1 505
 chunks des 404 journaux de la VM de test sont conformes.
 
-Le mode `--collecte` execute la chaine complete (fichier brut -> BinXML ->
+Le mode `--collect` execute la chaine complete (fichier brut -> BinXML ->
 `xml_light` -> `Event` -> JSON en flux) sur une arborescence imitant une
-extraction, et `--collecte-memoire` la meme chose en accumulant tout en memoire
+extraction, et `--collect-memory` la meme chose en accumulant tout en memoire
 comme le faisait la collecte par API. C'est ce qui rend l'argument memoire
 verifiable au lieu d'affirme : memes enregistrements, meme binaire, meme hote,
 seule la strategie d'ecriture change — 1 281 Mo contre 26 Mo de pic, pour un

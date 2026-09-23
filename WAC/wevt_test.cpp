@@ -51,11 +51,11 @@ int main(int argc, char** argv) {
 	}
 	PeResource dll, mui;
 	if (!dll.open(large(argv[1]))) {
-		std::cout << "  ECHEC  binaire : " << utf8(dll.error()) << "\n";
+		std::cout << "  FAILED  binary: " << utf8(dll.error()) << "\n";
 		return 1;
 	}
 	if (!mui.open(large(argv[2]))) {
-		std::cout << "  ECHEC  satellite : " << utf8(mui.error()) << "\n";
+		std::cout << "  FAILED  satellite: " << utf8(mui.error()) << "\n";
 		return 1;
 	}
 
@@ -63,19 +63,19 @@ int main(int argc, char** argv) {
 
 	const std::vector<uint8_t> wevtResource = dll.namedResource(L"WEVT_TEMPLATE");
 	const std::vector<uint8_t> messageResource  = mui.resource(PE_RT_MESSAGETABLE);
-	std::cout << (wevtResource.empty() ? "  ECHEC  " : "  ok     ")
-	          << "WEVT_TEMPLATE lue (" << wevtResource.size() << " octets)\n";
-	std::cout << (messageResource.empty() ? "  ECHEC  " : "  ok     ")
-	          << "MESSAGETABLE lue (" << messageResource.size() << " octets)\n";
+	std::cout << (wevtResource.empty() ? "  FAILED  " : "  ok     ")
+	          << "WEVT_TEMPLATE read (" << wevtResource.size() << " bytes)\n";
+	std::cout << (messageResource.empty() ? "  FAILED  " : "  ok     ")
+	          << "MESSAGETABLE read (" << messageResource.size() << " bytes)\n";
 	if (wevtResource.empty() || messageResource.empty()) return 1;
 
 	WevtMetadata meta;
 	const size_t nEvents = meta.analyse(wevtResource, large(argv[3]));
 	TableMessages table;
 	const size_t nbMessages = table.analyse(messageResource);
-	std::cout << (nEvents ? "  ok     " : "  ECHEC  ")
-	          << nEvents << " evenement(s) decrit(s)\n";
-	std::cout << (nbMessages ? "  ok     " : "  ECHEC  ")
+	std::cout << (nEvents ? "  ok     " : "  FAILED  ")
+	          << nEvents << " event(s) described\n";
+	std::cout << (nbMessages ? "  ok     " : "  FAILED  ")
 	          << nbMessages << " message(s)\n";
 	if (!nEvents || !nbMessages) return 1;
 
@@ -90,12 +90,12 @@ int main(int argc, char** argv) {
 		const std::wstring messageTemplate = idMessage ? table.text(idMessage) : std::wstring();
 		const bool ok = !messageTemplate.empty();
 		if (!ok) ++failures;
-		std::cout << (ok ? "  ok     " : "  ECHEC  ") << "evenement " << id
+		std::cout << (ok ? "  ok     " : "  FAILED  ") << "event " << id
 		          << " v" << (int)ver << " -> message " << idMessage << "\n";
 		if (ok) {
 			const std::vector<std::wstring> values = { L"<1>", L"<2>", L"<3>", L"<4>" };
-			std::cout << "         modele  : " << utf8(messageTemplate.substr(0, 150)) << "\n";
-			std::cout << "         formate : "
+			std::cout << "         template : " << utf8(messageTemplate.substr(0, 150)) << "\n";
+			std::cout << "         formatted: "
 			          << utf8(formatMessage(messageTemplate, values).substr(0, 150)) << "\n";
 		}
 	}
@@ -107,11 +107,11 @@ int main(int argc, char** argv) {
 	const std::vector<Case> case_ = {
 		{ L"a %1 b",            L"a <1> b" },
 		{ L"%1 %2 %3",          L"<1> <2> <3>" },
-		{ L"%9 manquant",       L"%9 manquant" },     // no data: the mark is kept
-		{ L"100%% sur",         L"100% sur" },
-		{ L"ligne%nsuivante",   L"ligne\nsuivante" },
+		{ L"%9 missing",       L"%9 missing" },     // no data: the mark is kept
+		{ L"100%% of",         L"100% of" },
+		{ L"line%nnext",   L"line\nnext" },
 		{ L"tab%tici",          L"tab\tici" },
-		{ L"%1!s! formate",     L"<1> formate" },     // display instruction removed
+		{ L"%1!s! formatted",     L"<1> formatted" },     // display instruction removed
 		{ L"fin.%n%0",          L"fin." },            // %0 ends the message, with no trailing break
 		{ L"a%0 ignore",        L"a" },
 		{ L"x%by%.%!",          L"x y.!" },
@@ -121,14 +121,14 @@ int main(int argc, char** argv) {
 		const std::wstring r = formatMessage(c.messageTemplate, v);
 		const bool ok = (r == c.expected);
 		if (!ok) ++failures;
-		std::cout << (ok ? "  ok     " : "  ECHEC  ") << "substitution « "
+		std::cout << (ok ? "  ok     " : "  FAILED  ") << "substitution « "
 		          << utf8(c.messageTemplate) << " »";
 		if (!ok) std::cout << " -> « " << utf8(r) << " » au lieu de « "
 		                   << utf8(c.expected) << " »";
 		std::cout << "\n";
 	}
 
-	std::cout << (failures ? "ECHECS : " : "tous conformes (echecs : ") << failures
+	std::cout << (failures ? "FAILURES: " : "all passed (failures: ") << failures
 	          << (failures ? "\n" : ")\n");
 	return failures ? 1 : 0;
 }

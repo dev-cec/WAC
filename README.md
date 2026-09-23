@@ -415,7 +415,7 @@ of minutes, because nothing round-trips through a service any more.
 
 **Memory.** This one *is* measured on identical data, which makes it a real
 comparison: the same records, the same build, the same host — only the writing
-strategy differs. `evtx_test --collecte` streams; `evtx_test --collecte-memoire`
+strategy differs. `evtx_test --collect` streams; `evtx_test --collect-memory`
 reproduces the old strategy (every record built in memory, then serialised in one
 block).
 
@@ -653,7 +653,7 @@ directory laid out like an extraction:
 ```bash
 mkdir -p /tmp/tree/Windows/System32/winevt/Logs /tmp/out
 cp *.evtx /tmp/tree/Windows/System32/winevt/Logs/
-/usr/bin/time -v wine /tmp/evtx_test.exe --collecte "Z:/tmp/tree" "Z:/tmp/out"
+/usr/bin/time -v wine /tmp/evtx_test.exe --collect "Z:/tmp/tree" "Z:/tmp/out"
 ```
 
 It reports the number of logs, records and discarded records, and writes
@@ -661,7 +661,7 @@ It reports the number of logs, records and discarded records, and writes
 — the figure that matters, since it is what used to cause paging. Reference run:
 20 logs, 57 MB, 96 076 records, **4.7 s**, **26 MB peak**, 0 discarded.
 
-`--collecte-memoire` runs the same chain but keeps every record in memory and
+`--collect-memory` runs the same chain but keeps every record in memory and
 serialises in one block, the way the API path did. It exists to make the memory
 claim checkable rather than asserted: same records, same build, same host, only
 the write strategy differs. It should produce a **byte-for-byte identical**
@@ -669,7 +669,7 @@ the write strategy differs. It should produce a **byte-for-byte identical**
 `writeJsonFile`:
 
 ```bash
-/usr/bin/time -v wine /tmp/evtx_test.exe --collecte-memoire "Z:/tmp/tree" "Z:/tmp/out2"
+/usr/bin/time -v wine /tmp/evtx_test.exe --collect-memory "Z:/tmp/tree" "Z:/tmp/out2"
 cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
 ```
 

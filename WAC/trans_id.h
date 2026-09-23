@@ -1,26 +1,27 @@
 ﻿#pragma once
 
-/*  trans_id.h — TABLES DE CORRESPONDANCE : identifiant brut -> libellé lisible.
+/*! \file
+ *  \brief Lookup tables: a raw identifier -> a readable label.
  *
- *  Les artefacts Windows désignent les choses par des codes : un GUID de classe
- *  COM, un AppID de barre des tâches, un code de type de service, un index de
- *  provider réseau. Seul le libellé rend ces codes exploitables dans un rapport.
+ *  The Windows artefacts name things by codes: a COM class GUID, a task-bar
+ *  AppID, a service type code, a network provider index. Only the label makes
+ *  those codes usable in a report.
  *
- *  D'OÙ VIENNENT LES LIBELLÉS. Les tables de GUID et d'AppID sont alignées sur
- *  les données de référence de libyal (libfwsi) plutôt que relevées à la main :
- *  une table saisie au jugé produit des libellés plausibles mais faux, et rien
- *  dans la sortie ne permettrait de s'en apercevoir.
+ *  WHERE THE LABELS COME FROM. The GUID and AppID tables are aligned on
+ *  libyal's reference data (libfwsi) rather than gathered by hand: a table typed
+ *  by guesswork produces labels that look plausible and are wrong, and nothing
+ *  in the output would reveal it.
  *
- *  PERFORMANCE. Les deux grandes tables (16 639 GUID, 727 AppID) sont indexées
- *  dans une `unordered_map` construite au premier appel, pas parcourues. La
- *  version d'origine enchaînait des dizaines de milliers de `if` pour chaque
- *  identifiant à traduire, ce qui dominait le temps de collecte.
+ *  PERFORMANCE. The two large tables (16,639 GUIDs, 727 AppIDs) are indexed in
+ *  an `unordered_map` built at the first call, not walked. The original version
+ *  chained tens of thousands of `if` for every identifier to translate, which
+ *  dominated the collection time.
  *
- *  ATTENTION AUX CHAMPS DE BITS. Plusieurs codes Windows ne sont pas des
- *  énumérations mais des drapeaux combinables, et certaines constantes sont
- *  elles-mêmes des combinaisons (SERVICE_USER_SHARE_PROCESS = 0x60 = 0x40|0x20).
- *  Les comparer par égalité, ou par `&` sans distinguer les bits élémentaires,
- *  produit des libellés contradictoires.
+ *  MIND THE BIT FIELDS. Several Windows codes are not enumerations but
+ *  combinable flags, and some constants are themselves combinations
+ *  (SERVICE_USER_SHARE_PROCESS = 0x60 = 0x40|0x20). Comparing them by equality,
+ *  or with `&` without distinguishing the elementary bits, produces
+ *  contradictory labels.
  */
 
 #include <string>
@@ -29,111 +30,113 @@
 
 
 
-/*! Conversion d'un service type au format enum en nom wstring
-* @param type est le type au format numérique
-* @return wstring correspondant au nom du type
+/*! Converts a service type code to a name.
+* @param type the type, as a number
+* @return the name of that type
 */
 std::wstring serviceType_to_wstring(int type);
 
-/*! Conversion d'un service start type au format enum en nom wstring
-* @param type est le type au format numérique
-* @return wstring correspondant au nom du type
+/*! Converts a service start type code to a name.
+* @param type the type, as a number
+* @return the name of that type
 */
 std::wstring serviceStart_to_wstring(int type);
 
 
-/*! Conversion d'un service state type au format enum en nom wstring
-* @param type est le type au format numérique
-* @return wstring correspondant au nom du type
+/*! Converts a service state code to a name.
+* @param type the state, as a number
+* @return the name of that state
 */
 std::wstring serviceState_to_wstring(int type);
 
-/*! Conversion d'un logon type au format enum en nom wstring
-* @param type est le type au format numérique
-* @return wstring correspondant au nom du type
+/*! Converts a logon type code to a name.
+* @param type the type, as a number
+* @return the name of that type
 */
 std::wstring logon_type(ULONG type);
 
-/*! Conversion d'une architecture OS au format enum en nom wstring
-* @param archi est l'archi au format numérique
-* @return wstring correspondant au nom de l'architecture
+/*! Converts an OS architecture code to a name.
+* @param archi the architecture, as a number
+* @return the name of that architecture
 */
 std::wstring os_architecture(DWORD archi);
 
-/*! Conversion d'un APPID en nom d'application
-* par exemple l'appId "0006f647f9488d7a" correspond à l'application "AIM 7.5.11.9 (custom AppID + JL support)"
-* @param appId id de l'application
-* @return wstring correspondant au nom de l’application associée à l'APPID
+/*! Converts an APPID to an application name.
+* For instance the appId "0006f647f9488d7a" is the application "AIM 7.5.11.9
+* (custom AppID + JL support)".
+* @param appId identifier of the application
+* @return the name of the application that AppID belongs to
 */
 std::wstring from_appId(std::wstring appId);
 
-/*! Conversion d'un code de sous-réseau en nom de type sous-réseau
-* Par exemple le sous-reseau 1 correspond à "Domain/WorkGroup Description"
-* @param type le code du sous-réseau
-* @return wstring correspondant au nom du type de sous-réseau
+/*! Converts a subnetwork code to a subnetwork type name.
+* For instance subnetwork 1 is "Domain/WorkGroup Description".
+* @param type the subnetwork code
+* @return the name of that subnetwork type
 */
 std::wstring networkSubType(unsigned char type);
 
-/*! Conversion d'un code de provider de réseau en nom de provider de réseau
-* Par exemple le code 0x001A0000 correspond au provider de réseau "WNNC_NET_AVID"
-* @param n le code du provider de réseau
-* @return wstring correspondant au nom du provider de réseau
+/*! Converts a network provider code to a network provider name.
+* For instance the code 0x001A0000 is the network provider "WNNC_NET_AVID".
+* @param n the network provider code
+* @return the name of that network provider
 */
 std::wstring networkProvider_to_wstring(unsigned int n);
 
-/*! Conversion d'un type de Drive en nom de type de Drive
-* Par exemple le code 2 correspond au provider de réseau "DRIVE_REMOVABLE"
-* @param d le code du type de Drive
-* @return wstring correspondant au nom du type de Drive
+/*! Converts a drive type code to a drive type name.
+* For instance the code 2 is "DRIVE_REMOVABLE".
+* @param d the drive type code
+* @return the name of that drive type
 */
 std::wstring driveType_to_wstring(unsigned int d);
 
-/*! Conversion d'un code en nom d'option
-* Par exemple le code 3 correspond au nom "SHOWMAXIMIZED"
-* @param option le code 
-* @return wstring correspondant au nom 
+/*! Converts a code to a show-command name.
+* For instance the code 3 is "SHOWMAXIMIZED".
+* @param option the code
+* @return the matching name
 */
 std::wstring showCommandOption(unsigned int option);
 
-/*! Conversion d'un code en nom d'index
-* Par exemple le code 0 correspond au nom "INTERNET_EXPLORER"
-* @param i le code
-* @return wstring correspondant au nom
+/*! Converts a code to an index name.
+* For instance the code 0 is "INTERNET_EXPLORER".
+* @param i the code
+* @return the matching name
 */
 std::wstring sort_index(unsigned char i);
 
-/*! Conversion d'un code de catégorie d'item shell en nom
-* Par exemple le code 1 correspond au nom "CONTROL_PANEL_CATEGORY"
-* @param i le code
-* @return wstring correspondant au nom
+/*! Converts a shell item category code to a name.
+* For instance the code 1 is "CONTROL_PANEL_CATEGORY".
+* @param i the code
+* @return the matching name
 */
 std::wstring shell_item_class(unsigned char i);
 
-/*! Nature d'un shell item « users property view », d'après sa signature.
+/*! Nature of a "users property view" shell item, from its signature.
 *
-* POURQUOI C'EST NÉCESSAIRE. La signature ne sert pas seulement à choisir un
-* décodeur : chez libyal (libfwsi) elle IDENTIFIE le type d'item. Deux des
-* signatures que WAC traitait sous le nom générique « UserPropertyView » sont en
-* réalité des périphériques média — un volume MTP et une entrée de fichier
-* MTP — c'est-à-dire la trace qu'un téléphone ou un appareil photo a été
-* connecté et parcouru. Le nom générique masquait complètement ce fait.
+* WHY IT IS NECESSARY. The signature does not only serve to choose a decoder: at
+* libyal (libfwsi) it IDENTIFIES the kind of item. Two of the signatures WAC
+* handled under the generic name "UserPropertyView" are in fact media devices —
+* an MTP volume and an MTP file entry — that is, the trace that a phone or a
+* camera was connected and browsed. The generic name hid that fact completely.
 *
-* @param signature la signature lue à l'offset 6 de l'item
-* @return le libellé, ou "" si la signature n'est pas répertoriée
+* @param signature the signature read at offset 6 of the item
+* @return the label, or "" if the signature is not listed
 */
 std::wstring shell_item_signature(unsigned int signature);
 
-/*! Conversion d'un guid en nom
-* Par exemple le guid "{2559a1f1-21d7-11d4-bdaf-00c04f60b9f0}") correpsond à "Help and Support";
-* @param guid le guid
-* @return wstring correspondant au nom
+/*! Converts a GUID to a name.
+* For instance the guid "{2559a1f1-21d7-11d4-bdaf-00c04f60b9f0}" is "Help and
+* Support".
+* @param guid the GUID
+* @return the matching name
 */
 std::wstring trans_guid_to_wstring(std::wstring guid);
 
-/*! Conversion d'un guid et d'une clé en nom
-* Par exemple le guid  "{4D545058-4FCE-4578-95C8-8698A9BC0F49}" et la clé "D801" correpsondent à "MTP Vendor-extended object properties";
-* @param guid le guid
-* @param key la clé
-* @return wstring correspondant au nom
+/*! Converts a GUID and a key to a name.
+* For instance the guid "{4D545058-4FCE-4578-95C8-8698A9BC0F49}" and the key
+* "D801" are "MTP Vendor-extended object properties".
+* @param guid the GUID
+* @param key the key
+* @return the matching name
 */
 std::wstring to_FriendlyName(std::wstring guid, unsigned int key);
