@@ -503,7 +503,7 @@ results are worth stating:
 ### Cross-compiling from Linux (MinGW-w64)
 ```bash
 ./build-windows.sh          # produces build-windows/WAC.exe, self-contained
-./build-windows.sh --test   # also builds raw_hive_test.exe (raw NTFS reader)
+./build-windows.sh --test   # also builds raw_hive_test.exe, and tests/ (lnk_test, parsers_test)
 ```
 The C++ runtime is linked statically: the executable depends only on Windows
 system DLLs — which matters for a tool run from a USB stick on a machine one must
@@ -660,13 +660,15 @@ machine then caught two more, in the property store values (`readScalar`,
 `SPSValue`). Result on 220 shortcuts of a real machine and eight of the test VM:
 over 570,000 inputs, no read outside the buffer.
 
-Wine does not implement `PSGetNameFromPropertyKey`, which WAC calls to name the
-properties of real shortcuts: `--test` also builds a stand-in `propsys.dll`,
-used with `WINEDLLOVERRIDES`.
+`--test` puts these harnesses in `build-windows/tests/`, with two Wine
+stand-ins: `propsys.dll` (Wine does not implement `PSGetNameFromPropertyKey`,
+which WAC calls to name the properties of real shortcuts; used with
+`WINEDLLOVERRIDES`) and `offreg.dll` (Wine has none). They are kept apart from
+`WAC.exe` on purpose: beside it, they would be loaded instead of the system's.
 
 ```bash
 ./build-windows.sh --test
-cd build-windows && WINEDLLOVERRIDES="propsys=n" wine lnk_test.exe a.lnk b.lnk ...
+cd build-windows/tests && WINEDLLOVERRIDES="propsys=n" wine lnk_test.exe a.lnk b.lnk ...
 ```
 
 Both tests place each input against the guard page twice: once ending at it,

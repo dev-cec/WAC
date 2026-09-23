@@ -81,26 +81,45 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
     "$SRC/raw_hive_test.cpp" -o "$BUILD/raw_hive_test.exe"
   echo "   -> $BUILD/raw_hive_test.exe"
 
+  # The robustness harnesses and their Wine stand-ins go into a SEPARATE
+  # folder: a stand-in offreg.dll or propsys.dll beside WAC.exe would be
+  # loaded instead of the system's one (the program's folder comes first in the
+  # DLL search order) if build-windows/ were ever copied onto a collection key.
+  TESTS="$BUILD/tests"
+  mkdir -p "$TESTS"
+
   echo "== Build lnk_test.exe =="
   # The shortcut parser pulls in most of WAC (shell items, GUID names, paths,
   # log): the harness links every WAC object but main.o rather than a list
-  # that would drift. Run: wine lnk_test.exe <file.lnk> [file.lnk ...]
+  # that would drift. See its header, and doc/tests, for the usage.
   TEST_OBJS=()
   for o in "${OBJS[@]}"; do [[ "$o" == "$BUILD/main.o" ]] || TEST_OBJS+=("$o"); done
   "$CXX" "${FLAGS[@]}" -static -static-libgcc -static-libstdc++ \
-    "$SRC/lnk_test.cpp" "${TEST_OBJS[@]}" -o "$BUILD/lnk_test.exe" "${LIBS[@]}"
-  echo "   -> $BUILD/lnk_test.exe"
+    "$SRC/lnk_test.cpp" "${TEST_OBJS[@]}" -o "$TESTS/lnk_test.exe" "${LIBS[@]}"
+  echo "   -> $TESTS/lnk_test.exe"
 
   echo "== Build parsers_test.exe =="
   # Jump lists and Prefetch, same guard pages; see its header for the usage.
   "$CXX" "${FLAGS[@]}" -static -static-libgcc -static-libstdc++ \
-    "$SRC/parsers_test.cpp" "${TEST_OBJS[@]}" -o "$BUILD/parsers_test.exe" "${LIBS[@]}"
-  echo "   -> $BUILD/parsers_test.exe"
-  # Wine lacks PSGetNameFromPropertyKey (see the stub's header): needed to run
-  # lnk_test on real shortcuts, with WINEDLLOVERRIDES="propsys=n".
+    "$SRC/parsers_test.cpp" "${TEST_OBJS[@]}" -o "$TESTS/parsers_test.exe" "${LIBS[@]}"
+  echo "   -> $TESTS/parsers_test.exe"
+
+  # Wine stand-ins, for running the two harnesses on Linux:
+  # - propsys.dll: Wine lacks PSGetNameFromPropertyKey (see the stub's header),
+  #   used with WINEDLLOVERRIDES="propsys=n";
+  # - offreg.dll: Wine has none, and the harnesses import it without calling
+  #   it; every export of the bundled .def answers "failure".
   x86_64-w64-mingw32-gcc -shared -O2 -Wall -Wextra -Wl,--kill-at \
-    "$TP/compat-include/propsys_wine_stub.c" -o "$BUILD/propsys.dll"
-  echo "   -> $BUILD/propsys.dll (Wine stub, tests only)"
+    "$TP/compat-include/propsys_wine_stub.c" -o "$TESTS/propsys.dll"
+  OFFREG_STUB="$TESTS/offreg_stub.c"
+  { echo '#include <windows.h>'
+    tail -n +3 "$TP/offreg/offreg.def" | sed '/^[[:space:]]*$/d' | while read -r f; do
+      echo "__declspec(dllexport) DWORD WINAPI $f(void) { return ERROR_CALL_NOT_IMPLEMENTED; }"
+    done
+  } > "$OFFREG_STUB"
+  x86_64-w64-mingw32-gcc -shared -O2 -Wl,--kill-at "$OFFREG_STUB" -o "$TESTS/offreg.dll"
+  rm -f "$OFFREG_STUB"
+  echo "   -> $TESTS/propsys.dll, $TESTS/offreg.dll (Wine stand-ins, tests only)"
 fi
 
 echo
