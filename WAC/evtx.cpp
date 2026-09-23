@@ -251,8 +251,8 @@ private:
 		}
 		case T_SIZE:
 			// Matched to a 32- or 64-bit hexadecimal integer depending on the size.
-			return size >= 8 ? to_hex((long long)read64(c, tc, off))
-			     : size >= 4 ? to_hex((long long)read32(c, tc, off)) : L"";
+			return size >= 8 ? to_hex(read64(c, tc, off))
+			     : size >= 4 ? to_hex(read32(c, tc, off)) : L"";
 		case T_FILETIME: {
 			if (size < 8) return L"";
 			const uint64_t v = read64(c, tc, off);
@@ -272,8 +272,8 @@ private:
 			return timeToIso8601Utc(ft);
 		}
 		case T_SID:  return sidToText(d, size);
-		case T_HEX32: return size >= 4 ? to_hex((long long)(uint32_t)read32(c, tc, off)) : L"";
-		case T_HEX64: return size >= 8 ? to_hex((long long)read64(c, tc, off)) : L"";
+		case T_HEX32: return size >= 4 ? to_hex((uint32_t)read32(c, tc, off)) : L"";
+		case T_HEX64: return size >= 8 ? to_hex(read64(c, tc, off)) : L"";
 		case T_BINXML:
 		case T_EVTXML: {
 			/*  A value can hold a whole BinXML fragment: that is the case of

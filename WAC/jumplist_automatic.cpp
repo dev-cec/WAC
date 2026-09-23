@@ -2,31 +2,11 @@
  *  \brief Reading of the automatic jump lists (see jumplist_automatic.h).
  */
 #include "jumplist_automatic.h"
-#include <sstream>
-
-namespace {
-
-/*! Name of the OLE stream holding the shortcut of DestList entry `number`.
- *
- *  The number in LOWER-CASE HEXADECIMAL, WITHOUT padding: "1" … "f", "10".
- *  to_hex(), used until now, pads to two digits ("01"): the streams of entries
- *  1 to 15 were never found, and the first fifteen files opened with every
- *  application were lost. Checked against olefile's listing of real jump
- *  lists: streams "1" to "f", then "10".
- *  @param number the entry number, from the DestList
- *  @return the stream's name */
-std::wstring entryStreamName(unsigned int number) {
-	std::wstringstream ss;
-	ss << std::hex << number;
-	return ss.str();
-}
-
-} // namespace
 
 AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wstring _sid) {
 	Sid = _sid;
 	
-	// path returns ANSI encoding, but UTF-8 is wanted
+	// the path in UTF-16, as Windows holds it
 	path = _path.wstring();
 	log(3, L"🔈replaceAll pathOriginal");
 	// RAW path: the escaping is centralised in json.h.
@@ -140,7 +120,12 @@ void AutomaticDestination::parse(LPBYTE buffer, size_t size) {
 		              ++iEntry, destlistArray.destfiles.size(), L"lnk");
 		JumplistEntry entry{ df, std::nullopt };
 		log(3, L"🔈ole.findDirectory d");
-		const std::wstring streamName = entryStreamName(df.entryNumber);
+		/* The stream's name: the entry number in lower-case hexadecimal WITHOUT
+		   padding — "1" … "f", "10". It was padded to two digits ("01"): the
+		   streams of entries 1 to 15 were never found, and the first fifteen
+		   files opened with every application were lost. Checked against
+		   olefile's listing of real jump lists. */
+		const std::wstring streamName = to_hex(df.entryNumber, 1);
 		const Directory d = ole.findDirectory(streamName);
 		if (d.name.empty()) {
 			log(2, L"🔥ole.findDirectory " + streamName + L": no stream for this DestList entry", ERROR_EMPTY);

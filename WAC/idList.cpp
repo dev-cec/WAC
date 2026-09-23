@@ -133,7 +133,7 @@ IdList::IdList(LPBYTE buffer, int _level, bool Parentiszip) {
 	if (item_size != 0) {
 		type_char = *reinterpret_cast<unsigned char*>(buffer + 2);
 		log(3, L"🔈to_hex type_char");
-		type_hex = to_hex((int)type_char);
+		type_hex = to_hex(type_char);
 		if (Parentiszip)
 			type = L"ARCHIVE_FILE_CONTENT";
 		else {

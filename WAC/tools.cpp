@@ -358,12 +358,6 @@ std::string decodeURIComponent(std::string encoded) {
 	return decoded;
 }
 
-std::wstring to_hex(long long i) {
-
-	std::wstringstream ss;
-	ss << std::setw(2) << std::setfill(L'0') << std::hex << i;
-	return ss.str();
-}
 
 std::wstring tab(int i) {
 	//used to log, so no log to this call function

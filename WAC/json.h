@@ -21,6 +21,7 @@
  *      return o.dump(1);
  */
 #pragma once
+#include <type_traits>
 #include <string>
 #include <vector>
 #include <utility>
@@ -80,17 +81,13 @@ public:
     /*! @param v the value.
      *  @return `true` or `false`, unquoted. */
     static Json boolean(bool v)            { Json j(Kind::Bool); j.scalar_ = v ? L"true" : L"false"; return j; }
-    /*! @param v the number.
+    /*! One template for every integer type, instead of one overload per type
+     *  (there were five). A bool is refused: it is Json::boolean.
+     *  @param v the number.
      *  @return that number, unquoted. */
-    static Json num(long long v)           { Json j(Kind::Num);  j.scalar_ = std::to_wstring(v); return j; }
-    //! @copydoc num(long long)
-    static Json num(unsigned long long v)  { Json j(Kind::Num);  j.scalar_ = std::to_wstring(v); return j; }
-    //! @copydoc num(long long)
-    static Json num(int v)                 { return num((long long)v); }
-    //! @copydoc num(long long)
-    static Json num(unsigned int v)        { return num((unsigned long long)v); }
-    //! @copydoc num(long long)
-    static Json num(unsigned long v)       { return num((unsigned long long)v); }
+    template <typename T,
+              typename = std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>>>
+    static Json num(T v)                   { Json j(Kind::Num);  j.scalar_ = std::to_wstring(v); return j; }
 
     // --- construction ------------------------------------------------------
     /*! Adds a key/value pair to an object — UNLESS the value is empty.
