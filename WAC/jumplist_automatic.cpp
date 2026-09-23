@@ -2,6 +2,26 @@
  *  \brief Reading of the automatic jump lists (see jumplist_automatic.h).
  */
 #include "jumplist_automatic.h"
+#include <sstream>
+
+namespace {
+
+/*! Name of the OLE stream holding the shortcut of DestList entry `number`.
+ *
+ *  The number in LOWER-CASE HEXADECIMAL, WITHOUT padding: "1" … "f", "10".
+ *  to_hex(), used until now, pads to two digits ("01"): the streams of entries
+ *  1 to 15 were never found, and the first fifteen files opened with every
+ *  application were lost. Checked against olefile's listing of real jump
+ *  lists: streams "1" to "f", then "10".
+ *  @param number the entry number, from the DestList
+ *  @return the stream's name */
+std::wstring entryStreamName(unsigned int number) {
+	std::wstringstream ss;
+	ss << std::hex << number;
+	return ss.str();
+}
+
+} // namespace
 
 AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wstring _sid) {
 	Sid = _sid;
@@ -70,59 +90,77 @@ AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wst
 		else {
 			log(2, L"🔥CreateFile hFile", GetLastError());// show cause of failure
 		}
-		CloseHandle(hFile);
-		//parsing
-		try {
-			log(3, L"🔈oleParser buffer");
-			ole = oleParser(buffer, size);
-		}
-		// By REFERENCE: caught by value, the exception was truncated to its base
-		// class and the message of the real type lost.
-		catch (const std::exception&) {
-			log(2, L"🔥oleparser", ERROR_INVALID_DATA);// show cause of failure
-			return;
-		}
-
-		// 2. Find DestList
-		log(3, L"🔈ole.findDirectory destlistDirectory");
-		Directory destlistDirectory = ole.findDirectory(L"destlist");
-		std::vector<BYTE> destlistDirectoryBytes;
-		if (destlistDirectory.directorySize <= 0) // Directory empty, nothing to do
-			return;
-		log(3, L"🔈ole.Getdata destlistDirectory");
-		destlistDirectoryBytes = ole.Getdata(destlistDirectory);
-		if (destlistDirectoryBytes.empty()) {// nothing to do
-			log(2, L"🔥ole.Getdata destlistDirectory", ERROR_EMPTY);// show cause of failure
-			return;
-		}
-		// 3. Process DestList entries
-		log(3, L"🔈DestFileDirectory destlistArray");
-		DestFileDirectory destlistArray = DestFileDirectory(destlistDirectoryBytes.data(), destlistDirectoryBytes.size());
-
-		// 4. For each DestList entry, find the corresponding Directory entry where DestListEntry.EntryNumber == DirectoryEntry.Name
-		size_t iEntry = 0;
-		for (const DestFile& df : destlistArray.destfiles) {
-			// Each DestList entry means parsing a complete LNK.
-			printProgress(L"Jumplist " + std::filesystem::path(path).filename().wstring(),
-			              ++iEntry, destlistArray.destfiles.size(), L"lnk");
-			
-			log(3, L"🔈ole.findDirectory d");
-			Directory d = ole.findDirectory(to_hex(df.entryNumber));
-			if (d.name != L"") {
-				// 5. Once we have the Directory entry for the lnk file, we can go get the bytes that make up the lnk file.
-				log(3, L"🔈ole.Getdata d");
-				std::vector<BYTE> directoryBytes = ole.Getdata(d);
-				log(3, L"🔈RecentDoc");
-				recentDocs.push_back(RecentDoc(&directoryBytes[0], directoryBytes.size(), path, _sid));
-			}
-			else {
-				log(2, L"🔥ole.findDirectory d", ERROR_EMPTY);// show cause of failure
-				return;
-			}
-		}
-		// The buffer is released by its unique_ptr, including on an early exit.
+		if (hFile != INVALID_HANDLE_VALUE) CloseHandle(hFile);
+		parse(buffer, size);
+		// The buffer is released by its unique_ptr.
 	}
 };
+
+void AutomaticDestination::parse(LPBYTE buffer, size_t size) {
+	// 1. The OLE container. A malformed one throws: nothing more is read.
+	try {
+		log(3, L"🔈oleParser buffer");
+		ole = oleParser(buffer, size);
+	}
+	// By REFERENCE: caught by value, the exception was truncated to its base
+	// class and the message of the real type lost.
+	catch (const std::exception&) {
+		log(2, L"🔥oleparser", ERROR_INVALID_DATA);// show cause of failure
+		return;
+	}
+
+	// 2. Find DestList
+	log(3, L"🔈ole.findDirectory destlistDirectory");
+	Directory destlistDirectory = ole.findDirectory(L"destlist");
+	if (destlistDirectory.directorySize <= 0) // Directory empty, nothing to do
+		return;
+	std::vector<BYTE> destlistDirectoryBytes;
+	try {
+		log(3, L"🔈ole.Getdata destlistDirectory");
+		destlistDirectoryBytes = ole.Getdata(destlistDirectory);
+	}
+	catch (const std::exception&) {
+		log(2, L"🔥ole.Getdata destlistDirectory", ERROR_INVALID_DATA);
+		return;
+	}
+	if (destlistDirectoryBytes.empty()) {// nothing to do
+		log(2, L"🔥ole.Getdata destlistDirectory", ERROR_EMPTY);// show cause of failure
+		return;
+	}
+	// 3. Process DestList entries
+	log(3, L"🔈DestFileDirectory destlistArray");
+	DestFileDirectory destlistArray = DestFileDirectory(destlistDirectoryBytes.data(), destlistDirectoryBytes.size());
+
+	/* 4. Each DestList entry names, by its number, the stream holding its
+	   shortcut. An entry whose stream is missing or unreadable is kept, with
+	   its DestList data: it used to END the walk, losing every entry after it. */
+	size_t iEntry = 0;
+	for (const DestFile& df : destlistArray.destfiles) {
+		printProgress(L"Jumplist " + std::filesystem::path(path).filename().wstring(),
+		              ++iEntry, destlistArray.destfiles.size(), L"lnk");
+		JumplistEntry entry{ df, std::nullopt };
+		log(3, L"🔈ole.findDirectory d");
+		const std::wstring streamName = entryStreamName(df.entryNumber);
+		const Directory d = ole.findDirectory(streamName);
+		if (d.name.empty()) {
+			log(2, L"🔥ole.findDirectory " + streamName + L": no stream for this DestList entry", ERROR_EMPTY);
+		}
+		else {
+			try {
+				log(3, L"🔈ole.Getdata d");
+				std::vector<BYTE> directoryBytes = ole.Getdata(d);
+				if (!directoryBytes.empty()) {
+					log(3, L"🔈RecentDoc");
+					entry.lnk.emplace(directoryBytes.data(), directoryBytes.size(), path, Sid);
+				}
+			}
+			catch (const std::exception&) {
+				log(2, L"🔥ole.Getdata " + streamName, ERROR_INVALID_DATA);
+			}
+		}
+		entries.push_back(std::move(entry));
+	}
+}
 
 Json AutomaticDestination::toJson() {
 	log(3, L"🔈AutomaticDestination toJson");
@@ -137,15 +175,23 @@ Json AutomaticDestination::toJson() {
 	o.add(L"ModifiedUtc", Json::str(timeToIso8601Utc(modifiedUtc)));
 	o.add(L"Accessed",    Json::str(timeToIso8601Local(accessed)));
 	o.add(L"AccessedUtc", Json::str(timeToIso8601Utc(accessedUtc)));
+	/* Each item: the shortcut's fields, and under "DestList" the entry that
+	   points to it — last access, host, droid GUIDs, pin status. Those were
+	   read and never published. An item holding only "DestList" is an entry
+	   whose shortcut stream was missing. */
 	Json lnks = Json::arr();
-	for (RecentDoc& r : recentDocs) lnks.push(r.toJson());
+	for (JumplistEntry& e : entries) {
+		Json item = e.lnk ? e.lnk->toJson() : Json::obj();
+		item.add(L"DestList", e.destList.toJson());
+		lnks.push(std::move(item));
+	}
 	o.add(L"LNKs", std::move(lnks));
 	return o;
 };
 
 void AutomaticDestination::clear() {
 	log(3, L"🔈AutomaticDestination clear");
-	recentDocs.clear();   // destroys the elements -> really releases them
+	entries.clear();   // destroys the elements -> really releases them
 }
 
 HRESULT JumplistAutomatics::getData() {

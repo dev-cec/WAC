@@ -163,6 +163,7 @@ def cross_checks(folder):
     found += check_processes(folder)
     found += check_prefetchs(folder)
     found += check_shimcache_dates(folder)
+    found += check_jumplist_entries(folder)
     found += check_events(folder)
     found += check_hive_replay(folder)
     found += check_exhibit_store(folder)
@@ -744,6 +745,54 @@ def check_shimcache_dates(folder):
     print(f"  ✅ shimcache.json: {same} date(s) identical to the NTFS date of the file "
           f"({other} file(s) replaced since)")
     return 0
+
+
+def check_jumplist_entries(folder):
+    """Every DestList entry of an automatic jump list must find its shortcut.
+
+    An entry names, by its number, the stream holding its shortcut: "1" to
+    "f", then "10"… The name was built with a two-digit padding ("01"): the
+    streams of entries 1 to 15 were never found, and the first fifteen files
+    opened with every application disappeared without an error — on a real
+    machine, 573 shortcuts published out of 1,522. The DestList and the
+    shortcut are two independent records of the same file: the DestList path
+    is also confronted with the shortcut's target.
+    """
+    d = load(folder, "jumplistAutomaticDestinations.json")
+    if not isinstance(d, list) or not d:
+        print("  ⏭️  jumplistAutomaticDestinations.json absent: DestList not confronted")
+        return 0
+    entries = orphans = compared = same = 0
+    for jl in d:
+        for item in jl.get("LNKs") or []:
+            dest = item.get("DestList")
+            if not isinstance(dest, dict):
+                continue
+            entries += 1
+            if len(item) <= 1:              # nothing but the DestList entry
+                orphans += 1
+                continue
+            target = str(item.get("Target") or "").lower()
+            path = str(dest.get("PathObject") or "").lower()
+            if target and path and "\\" in path:
+                compared += 1
+                same += target == path or path.endswith(target.split("\\")[-1])
+    if entries == 0:
+        print("  ⏭️  no DestList entry: jump lists not confronted")
+        return 0
+    found = 0
+    if orphans * 10 > entries:
+        print(f"  ❌ jumplistAutomaticDestinations.json: {orphans} DestList entries out of "
+              f"{entries} without their shortcut — stream name wrong?")
+        found += 1
+    if compared and same * 2 < compared:
+        print(f"  ❌ jumplistAutomaticDestinations.json: shortcut target and DestList path agree "
+              f"for {same} of {compared} entries only — stream read wrong?")
+        found += 1
+    if not found:
+        print(f"  ✅ jumplistAutomaticDestinations.json: {entries - orphans} of {entries} DestList "
+              f"entries with their shortcut, target = DestList path for {same} of {compared}")
+    return found
 
 
 def check_prefetch_paths(d):

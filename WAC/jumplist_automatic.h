@@ -21,6 +21,7 @@
  *   - https://github.com/EricZimmerman/JumpList/blob/master/JumpList/Resources/AppIDs.txt
  */
 #pragma once
+#include <optional>
 
 #include <iostream>
 #include <cstdio>
@@ -42,8 +43,14 @@ struct AutomaticDestination {
 	std::wstring SidName = L"";	//!< name of that user
 	std::wstring application = L"";//!< the application, resolved from the AppID when known
 
+	/*! One DestList entry and the shortcut its number points to. */
+	struct JumplistEntry {
+		DestFile destList;               //!< the DestList entry: last access, host, droid GUIDs, pin
+		std::optional<RecentDoc> lnk;    //!< its shortcut; empty if the stream is missing or unreadable
+	};
+
 	oleParser ole; //!< reader of the OLE compound document the file is
-	std::vector<RecentDoc> recentDocs; //!< the shortcuts it holds, one per opened file
+	std::vector<JumplistEntry> entries; //!< one per opened file, in DestList order
 	FILETIME created = { 0 };     //!< creation of the jump list FILE, local time
 	FILETIME createdUtc = { 0 };  //!< the same instant in UTC
 	FILETIME modified = { 0 };    //!< last modification of that file, local time
@@ -56,6 +63,14 @@ struct AutomaticDestination {
 	* @param _sid SID of the user it belongs to.
 	*/
 	AutomaticDestination(std::filesystem::path _path, std::wstring _sid);
+
+	/*! Parses the content of a jump list: the OLE container, its DestList and
+	*  the shortcut of each entry. Separate from the file reading so that it can
+	*  be tested on a buffer (see parsers_test.cpp).
+	* @param buffer the file's bytes
+	* @param size their number: no read goes beyond
+	*/
+	void parse(LPBYTE buffer, size_t size);
 
 	/*! Converts the jump list to JSON, shortcuts included.
 	 *  @return its JSON object. */
