@@ -92,16 +92,9 @@ int wmain(int argc, wchar_t** argv){
 		std::cout << "usage: consigne_test <output directory> <hive> [hive...]\n";
 		return 2;
 	}
-	{
-		// conf._outputDir holds narrow bytes (see tools.h).
-		std::wstring output = argv[1];
-		std::string narrowOutput;
-		for (wchar_t c : output) narrowOutput += (char)c;
-		conf._outputDir = narrowOutput;
-	}
+	conf._outputDir = argv[1];
 	conf.systemDrive = L"C:";
-	char* wrong[] = { (char*)"consigne_test" };
-	auditInit(1, wrong);
+	auditInit({ L"consigne_test" });
 
 	std::error_code ec;
 	std::filesystem::remove_all(exhibitStoreFolder(), ec);

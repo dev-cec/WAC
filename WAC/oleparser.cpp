@@ -26,8 +26,8 @@ DestFile::DestFile(LPBYTE buffer, size_t limit) {
 	guidBirthDroidVolume = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 40));
 	log(3, L"🔈guid_to_wstring guidBirthDroidFile");
 	guidBirthDroidFile = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 56));
-	log(3, L"🔈string_to_wstring hostname");
-	hostname = string_to_wstring(readNarrowZ(buffer, 88, 72));   // 16-byte NetBIOS field
+	log(3, L"🔈decodeText hostname");
+	hostname = decodeText(readNarrowZ(buffer, 88, 72));   // 16-byte NetBIOS field
 	entryNumber = *reinterpret_cast<unsigned int*>(buffer + 88);
 	lastModificationTimeUtc = *reinterpret_cast<FILETIME*>(buffer + 100);
 	log(3, L"🔈timeToIso8601 lastModificationTimeUtc");

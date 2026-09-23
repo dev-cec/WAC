@@ -65,10 +65,7 @@ int wmain(int argc, wchar_t** argv) {
 	if (wcscmp(argv[1], L"--collect-memory") == 0) {
 		if (argc < 4) { wprintf(L"usage: evtx_test --collect-memory <root> <output>\n"); return 2; }
 		conf.mountpoint = argv[2];
-		int n = WideCharToMultiByte(CP_UTF8, 0, argv[3], -1, nullptr, 0, nullptr, nullptr);
-		std::vector<char> tmp(n > 0 ? n : 1);
-		WideCharToMultiByte(CP_UTF8, 0, argv[3], -1, tmp.data(), n, nullptr, nullptr);
-		conf._outputDir = tmp.data();
+		conf._outputDir = argv[3];
 
 		const std::wstring directory = extractedPath(L"\\Windows\\System32\\winevt\\Logs");
 		std::vector<Json> all;
@@ -95,10 +92,7 @@ int wmain(int argc, wchar_t** argv) {
 	if (wcscmp(argv[1], L"--collect") == 0) {
 		if (argc < 4) { wprintf(L"usage: evtx_test --collect <root> <output>\n"); return 2; }
 		conf.mountpoint = argv[2];
-		int n = WideCharToMultiByte(CP_UTF8, 0, argv[3], -1, nullptr, 0, nullptr, nullptr);
-		std::vector<char> tmp(n > 0 ? n : 1);
-		WideCharToMultiByte(CP_UTF8, 0, argv[3], -1, tmp.data(), n, nullptr, nullptr);
-		conf._outputDir = tmp.data();
+		conf._outputDir = argv[3];
 		Events ev;
 		const HRESULT hr = ev.getData();
 		wprintf(L"hresult      : 0x%08lx\n", (unsigned long)hr);

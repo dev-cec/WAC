@@ -257,7 +257,7 @@ const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
 					g_catalogsUsed.insert(v.source.substr(10));
 				return g_cache.emplace(key, std::move(e)).first->second;
 			}
-			log(3, L"🔈Collected (" + string_to_wstring(v.reason) + L") : " + path);
+			log(3, L"🔈Collected (" + decodeText(v.reason) + L") : " + path);
 		}
 	}
 

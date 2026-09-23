@@ -115,15 +115,15 @@ void readContext() {
 
 } // namespace
 
-void auditInit(int argc, char* argv[]) {
+void auditInit(const std::vector<std::wstring>& args) {
 	g_operations.clear();
 	g_sequence = 0;
 	now(g_startUtc, g_startLocal, &g_start);
 
 	g_commandLine.clear();
-	for (int i = 0; i < argc; ++i) {
+	for (size_t i = 0; i < args.size(); ++i) {
 		if (i) g_commandLine += L" ";
-		g_commandLine += string_to_wstring(argv[i]);
+		g_commandLine += args[i];
 	}
 
 	readContext();
@@ -157,7 +157,7 @@ Json auditContext() {
 	Json tool = Json::obj();
 	tool.add(L"Name",        Json::str(L"WAC"));
 	tool.add(L"CommandLine", Json::str(g_commandLine));
-	tool.add(L"BuildDate",   Json::str(string_to_wstring(__DATE__) + L" " + string_to_wstring(__TIME__)));
+	tool.add(L"BuildDate",   Json::str(decodeText(__DATE__) + L" " + decodeText(__TIME__)));
 	root.add(L"Tool", std::move(tool));
 
 	Json host = Json::obj();

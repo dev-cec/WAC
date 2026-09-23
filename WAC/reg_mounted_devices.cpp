@@ -19,7 +19,7 @@ MountedDevice::MountedDevice(ORHKEY hKey, PCWSTR szSubValue) {
 				log(3, L"🔈guid_to_wstring device");
 				device = (L"\\VOLUME" + guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8))).data();
 			}else{
-				device = string_to_wstring(std::string((char*)buffer, (char*)buffer + size)).data();
+				device = decodeText(std::string((char*)buffer, (char*)buffer + size)).data();
 			}
 		}
 	}

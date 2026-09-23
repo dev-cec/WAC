@@ -165,8 +165,8 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 				    truncated at the first character. */
 				unsigned int labeloffset = u32(LinkInfo_offset + volumeId_offset + 12);
 				if (labeloffset != 0x14) {
-					log(3, L"🔈string_to_wstring volumeLabel (ANSI)");
-					volumeLabel = string_to_wstring(readNarrowZ(buffer, infoEnd, (size_t)LinkInfo_offset + volumeId_offset + labeloffset));
+					log(3, L"🔈decodeText volumeLabel (ANSI)");
+					volumeLabel = decodeText(readNarrowZ(buffer, infoEnd, (size_t)LinkInfo_offset + volumeId_offset + labeloffset));
 				}
 				else {
 					unsigned int labeloffsetunicode = u32(LinkInfo_offset + volumeId_offset + 16);
@@ -201,14 +201,14 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 				bool ValidDevice = (net_flags & 0x1) != 0;
 				bool ValidNetType = (net_flags & 0x2) != 0;
 				unsigned int NetNameOffset = u32(LinkInfo_offset + network_offset + 8);
-				log(3, L"🔈string_to_wstring netName");
-				netName = string_to_wstring(readNarrowZ(buffer, infoEnd, (size_t)LinkInfo_offset + network_offset + NetNameOffset));
+				log(3, L"🔈decodeText netName");
+				netName = decodeText(readNarrowZ(buffer, infoEnd, (size_t)LinkInfo_offset + network_offset + NetNameOffset));
 				unsigned int DeviceNameOffset = u32(LinkInfo_offset + network_offset + 12);
 				if (ValidDevice == true && DeviceNameOffset != 0) {
-					log(3, L"🔈string_to_wstring netDeviceName");
+					log(3, L"🔈decodeText netDeviceName");
 					// Read at DeviceNameOffset: it was read at NetNameOffset, so the
 					// device name always repeated the network name.
-					netDeviceName = string_to_wstring(readNarrowZ(buffer, infoEnd, (size_t)LinkInfo_offset + network_offset + DeviceNameOffset));
+					netDeviceName = decodeText(readNarrowZ(buffer, infoEnd, (size_t)LinkInfo_offset + network_offset + DeviceNameOffset));
 				}
 				if (ValidNetType == true) {
 					log(3, L"🔈networkProvider_to_wstring netProviderType");
@@ -248,7 +248,7 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 	//Parsing
 	Sid = _sid;
-	// path returns ANSI encoding, but UTF-8 is wanted
+	// the path in UTF-16, as Windows holds it
 	path = _path.wstring();
 	log(3, L"🔈replaceAll path_original");
 	path_original = originalPath(path);
@@ -269,7 +269,7 @@ RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 			file.close();
 			if (conf.binary) {
 				log(3, L"🔈fileToHash md5Source " + _path.wstring());
-				md5Source = QuickDigest5::fileToHash(_path.string());
+				md5Source = QuickDigest5::fileToHash(_path);
 			}
 			log(3, L"🔈parseLNK");
 			parseLNK(buffer, size);
@@ -285,8 +285,9 @@ RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 			line = line.size() >= 4 ? line.substr(4) : std::string();
 			log(3, L"🔈decodeURIComponent line");
 			line = decodeURIComponent(line);
-			log(3, L"🔈string_to_wstring line");
-			target = string_to_wstring(line);
+			// Decoded %xx escapes are UTF-8 bytes, not ANSI.
+			log(3, L"🔈decodeText (UTF-8) line");
+			target = decodeText(line, CP_UTF8);
 			file.close();
 		}
 	}
@@ -324,7 +325,7 @@ RecentDoc::RecentDoc(LPBYTE buffer, size_t size, std::wstring _path, std::wstrin
 	log(2, L"❇️RecentDoc path " + path_original);
 	if (conf.binary) {
 		log(3, L"🔈fileToHash md5Source " + _path);
-		md5Source = QuickDigest5::fileToHash(wstring_to_string(_path));
+		md5Source = QuickDigest5::fileToHash(_path);
 	}
 	target = L"";
 	log(3, L"🔈parseLNK");

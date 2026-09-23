@@ -5,6 +5,9 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <type_traits>
+#include <iomanip>
+#include <sstream>
 #include <offreg.h>
 #include <vector>
 #include <filesystem>
@@ -60,14 +63,14 @@ struct AppliConf {
 	bool _dump = false;//!< True if dump is active
 	bool _events = false;//!< True is events must be extracted
 	std::string name = ""; //!< name of the program, obtained from command line
-	std::string _outputDir = "output"; //!< directory to store output JSON
+	std::wstring _outputDir = L"output"; //!< directory to store output JSON (UTF-16: any name the command line can carry)
 	std::wstring mountpoint = L""; //!< mount point path to access the snapshot made during execution
 	ORHKEY CurrentControlSet = { 0 }; //!< Reg Key to access Current Control Set Hive
 	ORHKEY System = { 0 }; //!< Reg Key to access to System Hive
 	ORHKEY Software = { 0 };//!< Reg Key to access CurrentControlSet/Software hive
 	std::vector<std::tuple<std::wstring, std::wstring>> profiles;//!< vector to store SID and profiles of users present on the machine
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);//!< handle of the console
-	std::wofstream log;//!< handle of the output log file, for the debug mode
+	std::ofstream log;//!< handle of the output log file, for the debug mode (UTF-8 bytes)
 	int loglevel = 0; //!< log level (0 by default), set on the command line
 	bool binary = false; //!< --binary: fingerprints of the cited files, and collection of the binaries
 	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)
@@ -77,6 +80,10 @@ struct AppliConf {
 	* C:. The value serves both the raw extraction (volume letter) and the
 	* restitution of the artefacts' original paths. */
 	std::wstring systemDrive = L"C:";
+	/*! ANSI code page of the EXAMINED machine, read in its SYSTEM hive
+	* (`Control\Nls\CodePage`, value `ACP`). 0 until read: the running
+	* machine's is used meanwhile — the same in a live collection. */
+	UINT ansiCodePage = 0;
 };
 
 /*! Reads the machine's system drive and fills `conf.systemDrive`.
@@ -347,18 +354,6 @@ void log(int loglevel, std::wstring message, HRESULT result);
 */
 std::wstring getErrorMessage(HRESULT hresult);
 
-/*! Converts an ANSI text to UTF-8.
-* @param in the string, encoded in ANSI
-* @return the string, encoded in UTF-8
-*/
-std::string ansi_to_utf8(std::string in);
-
-/*! Converts an ANSI text to UTF-8.
-* @param in the string, encoded in ANSI
-* @return the string, encoded in UTF-8
-*/
-std::wstring ansi_to_utf8(std::wstring in);
-
 /*! Prints the content of a buffer in hexadecimal on the console.
 * @param buffer pointer to a buffer holding the data to print
 * @param start position of the first byte to print in the buffer
@@ -582,17 +577,40 @@ std::wstring localUtcOffsetString();
 */
 std::wstring timeToIso8601(const SYSTEMTIME& systemtime, bool utc, long fraction100ns = -1);
 
-/*! Converts a string to a wstring.
-* @param str pointer to the string
-* @return the wstring that results from the conversion
-*/
-std::wstring string_to_wstring(const std::string& str);
+/*! Decodes bytes into UTF-16 text — THE conversion from bytes to text in WAC.
+*
+* The code page is a parameter, not a function name: there used to be six
+* conversions, two of them wrong. mbstowcs / wcstombs in the "C" locale mapped
+* each byte to the character of the same value (Latin-1): the characters
+* 0x80-0x9F of the Windows code pages (’ “ ” – € …) came out as control
+* characters — "d’orientation" as "d\x92orientation" on a real machine — and
+* a path outside Latin-1 could not be narrowed at all.
+*
+* By default, the EXAMINED machine's ANSI code page: shortcuts, shell items,
+* DestList host names and ANSI event data store their non-Unicode strings in
+* "the system default code page" (MS-SHLLINK) of the machine that wrote them.
+* WAC's own narrow strings (JSON file names, build date) are pure ASCII,
+* identical in every code page; the command line is read in UTF-16.
+* @param bytes the bytes
+* @param codePage CP_UTF8, a Windows code page, or 0 for the examined
+*        machine's ANSI code page (`conf.ansiCodePage`; the running machine's
+*        until the SYSTEM hive is read)
+* @return the text; bytes invalid for the code page are widened one by one
+*         rather than lost */
+std::wstring decodeText(const std::string& bytes, UINT codePage = 0);
 
-/*! Converts a wstring to a string.
-* @param wstr pointer to the wstring
-* @return the string that results from the conversion
-*/
-std::string wstring_to_string(const std::wstring& wstr);
+/*! Encodes UTF-16 text into bytes — the reverse of decodeText.
+* @param text the text
+* @param codePage CP_UTF8 by default: the encoding of every file WAC writes
+* @return the bytes */
+std::string encodeText(const std::wstring& text, UINT codePage = CP_UTF8);
+
+/*! Reads the examined machine's ANSI code page in its SYSTEM hive and fills
+* `conf.ansiCodePage`. To be called as soon as `conf.CurrentControlSet` is
+* open, like loadSuspectTimeZone.
+* @return ERROR_SUCCESS, or why the code page was not read (the running
+*         machine's then stays in use) */
+HRESULT loadSuspectAnsiCodePage();
 
 /*! Lowercases a string, to compare without regard to case.
 *
@@ -802,7 +820,7 @@ public:
 	unsigned long long written() const { return written_; }
 
 private:
-	std::wofstream f_;
+	std::ofstream f_;   //!< the file, written in UTF-8 bytes
 	unsigned long long written_ = 0;
 	bool open_ = false;
 	bool closed_ = false;

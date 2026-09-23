@@ -122,42 +122,55 @@ int main(int argc, char* argv[])
 	*************************/
 
 	conf.name = argv[0];
-	if (argc > 1) { // at least one argument, argv[0] being the program's own name
+	(void)argc;
+	/* The arguments in UTF-16, as Windows holds them: through `argv` they were
+	   narrowed to the process's ANSI code page, and an output directory whose
+	   name the code page cannot represent was lost. */
+	std::vector<std::wstring> commandLine;
+	{
+		int count = 0;
+		LPWSTR* wide = CommandLineToArgvW(GetCommandLineW(), &count);
+		if (wide != nullptr) {
+			for (int i = 0; i < count; ++i) commandLine.emplace_back(wide[i]);
+			LocalFree(wide);
+		}
+	}
+	if (commandLine.size() > 1) { // at least one argument, the first being the program's own name
 		// command-line arguments
-		const std::vector<std::string> args(argv + 1, argv + argc);
-		for (const auto& arg : args) {
+		for (size_t i = 1; i < commandLine.size(); ++i) {
+			const std::wstring& arg = commandLine[i];
 
-			if (arg == "--debug") conf._debug = true;
-			else if (arg == "--dump") conf._dump = true;
-			else if (arg == "--events") conf._events = true;
-			else if (arg == "--binary") conf.binary = true;
-			else if (arg.substr(0, 9) == "--output=") {
-				std::string temp = std::string(arg.substr(9));
+			if (arg == L"--debug") conf._debug = true;
+			else if (arg == L"--dump") conf._dump = true;
+			else if (arg == L"--events") conf._events = true;
+			else if (arg == L"--binary") conf.binary = true;
+			else if (arg.substr(0, 9) == L"--output=") {
+				std::wstring temp = arg.substr(9);
 				if (temp.length() > 0) conf._outputDir = temp;
 				else {
 					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
-					wprintf(L"%ls%hs\n", L"Invalid length for output param ", arg.c_str());
+					wprintf(L"%ls%ls\n", L"Invalid length for output param ", arg.c_str());
 					log(3, L"🔈showHelp");
 					showHelp();
 					exit(1);
 				}
-				if (conf._outputDir.find("\\") != std::string::npos) {
+				if (conf._outputDir.find(L"\\") != std::wstring::npos) {
 					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
-					wprintf(L"%ls%hs\n", L"Invalid character for param ", arg.c_str());
+					wprintf(L"%ls%ls\n", L"Invalid character for param ", arg.c_str());
 					log(3, L"🔈showHelp");
 					showHelp();
 					exit(1);
 				}
 			}
-			else if (arg.substr(0, 11) == "--loglevel=") {
-				std::string temp = std::string(arg.substr(11));
+			else if (arg.substr(0, 11) == L"--loglevel=") {
+				std::wstring temp = arg.substr(11);
 				try {
-					conf.loglevel = stoi(temp);
+					conf.loglevel = std::stoi(temp);
 				}
 				catch (...)
 				{
 					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
-					wprintf(L"%ls%hs\n", L"Invalid numeric value for output param ", arg.c_str());
+					wprintf(L"%ls%ls\n", L"Invalid numeric value for output param ", arg.c_str());
 					log(3, L"🔈showHelp");
 					showHelp();
 					exit(1);
@@ -165,8 +178,8 @@ int main(int argc, char* argv[])
 			}
 
 			else { // unknown argument
-				if (arg != "--help" && arg != "/?") { // anything that is neither --help nor /? is an invalid argument
-					printError(L"Invalid argument  " + string_to_wstring(arg));
+				if (arg != L"--help" && arg != L"/?") { // anything that is neither --help nor /? is an invalid argument
+					printError(L"Invalid argument  " + arg);
 				}
 				log(3, L"🔈showHelp");
 				showHelp();
@@ -177,7 +190,7 @@ int main(int argc, char* argv[])
 
 	// Investigation log: opened as early as possible, so that the start timestamp
 	// really brackets the whole collection (see audit.h).
-	auditInit(argc, argv);
+	auditInit(commandLine);
 
 	/* Trace of the NTFS parser: SILENT by default, turned on by --debug.
 	   It writes to STDERR, hence separable from the normal output:
@@ -279,7 +292,7 @@ int main(int argc, char* argv[])
 		auditRecord(L"Check of the collection location ("
 		            + std::to_wstring(ExhibitStoreFreeSpace() / 1024 / 1024)
 		            + L" MiB free)",
-		            string_to_wstring(conf._outputDir),
+		            conf._outputDir,
 		            hrLieu, Footprint::USB_WRITE);
 		if (FAILED(hrLieu)) {
 			printError(hrLieu);
@@ -522,6 +535,18 @@ int main(int argc, char* argv[])
 			else printSuccess();
 			auditRecord(L"Reading of the suspect's time zone",
 			            L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
+			            hresult, Footprint::HIVE_COPY);
+
+			/* ANSI code page of the SUSPECT, for the same reason: shortcuts,
+			   shell items and DestList host names store text in the code page
+			   of the machine that wrote them. */
+			printStep(L" - Reading suspect ANSI code page (SYSTEM hive) : ");
+			log(3, L"🔈loadSuspectAnsiCodePage");
+			hresult = loadSuspectAnsiCodePage();
+			if (hresult != ERROR_SUCCESS) printError(hresult);   // not blocking: the running machine's is used
+			else printSuccess();
+			auditRecord(L"Reading of the suspect's ANSI code page",
+			            L"SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage",
 			            hresult, Footprint::HIVE_COPY);
 
 			printStep(L" - Extracting USBSTOR Registry Keys : ");
@@ -884,7 +909,7 @@ int main(int argc, char* argv[])
 	   lets one believe nothing was written. Recorded BEFORE auditWrite(),
 	   without which it would be missing from the log. */
 	auditRecord(L"Writing of the collection results",
-	            string_to_wstring(conf._outputDir), ERROR_SUCCESS,
+	            conf._outputDir, ERROR_SUCCESS,
 	            Footprint::USB_WRITE);
 
 	printStep(L" - Writing investigation.json : ");

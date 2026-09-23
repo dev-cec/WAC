@@ -217,7 +217,7 @@ private:
 		case T_ANSI: {
 			std::string s(reinterpret_cast<const char*>(d), size);
 			while (!s.empty() && s.back() == '\0') s.pop_back();
-			return escape(string_to_wstring(s));
+			return escape(decodeText(s));
 		}
 		case T_INT8:   return size >= 1 ? std::to_wstring((int)(int8_t)d[0]) : L"";
 		case T_UINT8:  return size >= 1 ? std::to_wstring((unsigned)d[0]) : L"";

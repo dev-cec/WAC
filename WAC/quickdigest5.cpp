@@ -185,7 +185,7 @@ std::vector<uint8_t> QuickDigest5::digestString(const std::string& input) {
     return QuickDigest5.digest;
 }
 
-std::vector<uint8_t> QuickDigest5::digestFile(const std::string& filepath) {
+std::vector<uint8_t> QuickDigest5::digestFile(const std::filesystem::path& filepath) {
     QuickDigest5 QuickDigest5;
     std::ifstream file(std::filesystem::path(filepath), std::ios::binary);
     if (file) {
@@ -241,7 +241,7 @@ std::wstring QuickDigest5::toHash(const std::string& input) {
     return result;
 }
 
-std::wstring QuickDigest5::fileToHash(const std::string& filepath) {
+std::wstring QuickDigest5::fileToHash(const std::filesystem::path& filepath) {
     std::vector<uint8_t> digest = QuickDigest5::digestFile(filepath);
     std::wstringstream ss;
     std::wstring result = L"";

@@ -2,6 +2,7 @@
  *  \brief Implementation of the minimal XML reader (see xml_light.h).
  */
 #include "xml_light.h"
+#include "tools.h"
 #include <fstream>
 #include <filesystem>
 #include <vector>
@@ -226,11 +227,7 @@ std::unique_ptr<XmlNode> xmlReadFile(const std::wstring& path) {
 	const int offset = (bytes.size() >= 3 && (unsigned char)bytes[0] == 0xEF
 	                      && (unsigned char)bytes[1] == 0xBB
 	                      && (unsigned char)bytes[2] == 0xBF) ? 3 : 0;
-	const int size = MultiByteToWideChar(CP_UTF8, 0, bytes.data() + offset,
-	                                       (int)bytes.size() - offset, nullptr, 0);
-	if (size <= 0) return nullptr;
-	std::wstring w((size_t)size, L'\0');
-	MultiByteToWideChar(CP_UTF8, 0, bytes.data() + offset,
-	                    (int)bytes.size() - offset, &w[0], size);
+	const std::wstring w = decodeText(std::string(bytes.begin() + offset, bytes.end()), CP_UTF8);
+	if (w.empty()) return nullptr;
 	return xmlParse(w);
 }

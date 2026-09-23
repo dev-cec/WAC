@@ -75,7 +75,7 @@ std::wstring letterOf(const std::wstring& volumePath) {
 std::wstring outputRelative(const std::wstring& absolute) {
 	std::error_code ec;
 	const std::filesystem::path rel = std::filesystem::relative(
-		std::filesystem::path(absolute), std::filesystem::path(string_to_wstring(conf._outputDir)), ec);
+		std::filesystem::path(absolute), std::filesystem::path(conf._outputDir), ec);
 	if (ec || rel.empty()) return absolute;      // outside the output folder: as is
 	return rel.wstring();
 }
@@ -83,16 +83,16 @@ std::wstring outputRelative(const std::wstring& absolute) {
 } // namespace
 
 std::wstring exhibitStoreFolder() {
-	return string_to_wstring(conf._outputDir) + L"\\exhibits";
+	return conf._outputDir + L"\\exhibits";
 }
 
 std::wstring workingFolder() {
-	return string_to_wstring(conf._outputDir) + L"\\working";
+	return conf._outputDir + L"\\working";
 }
 
 unsigned long long ExhibitStoreFreeSpace() {
 	ULARGE_INTEGER free = { 0 };
-	const std::wstring output = string_to_wstring(conf._outputDir);
+	const std::wstring output = conf._outputDir;
 	std::error_code ec;
 	std::filesystem::create_directories(output, ec);
 	if (!GetDiskFreeSpaceExW(output.c_str(), &free, nullptr, nullptr)) return 0;
@@ -362,13 +362,13 @@ HRESULT ExhibitStoreWriteManifest() {
 	// _outputDir, which is not the exhibit store.
 	const std::filesystem::path path = exhibitStore / L"MANIFEST.json";
 	{
-		std::wofstream f;
+		std::ofstream f;
 		f.open(path);
 		if (!f) {
 			log(2, L"🔥Exhibit manifest not written: " + path.wstring());
 			return E_FAIL;
 		}
-		f << ansi_to_utf8(root.dump(0));
+		f << encodeText(root.dump(0));
 		f.close();
 	}
 
@@ -379,7 +379,7 @@ HRESULT ExhibitStoreWriteManifest() {
 	const std::wstring fingerprint = sha256OfFile(path.wstring());
 	const std::filesystem::path seal = exhibitStore / L"MANIFEST.sha256";
 	{
-		std::wofstream f;
+		std::ofstream f;
 		f.open(seal);
 		if (!f || fingerprint.empty()) {
 			log(2, L"🔥Manifest seal not written: " + seal.wstring());
@@ -387,11 +387,11 @@ HRESULT ExhibitStoreWriteManifest() {
 		}
 		// sha256sum format: "<fingerprint>  <name>", readable by common tools
 		// without knowing anything about WAC.
-		f << ansi_to_utf8(fingerprint + L"  MANIFEST.json\n");
+		f << encodeText(fingerprint + L"  MANIFEST.json\n");
 		f.close();
 	}
 
-	log(2, L"❇️Exhibit manifest: " + std::to_wstring(nb) + L" pièce(s), "
+	log(2, L"❇️Exhibit manifest: " + std::to_wstring(nb) + L" exhibit(s), "
 	     + std::to_wstring(ko) + L" failure(s), "
 	     + std::to_wstring(total / 1024 / 1024) + L" Mio");
 	log(2, L"❇️Manifest seal (SHA-256): " + fingerprint);

@@ -45,7 +45,7 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 	Sid = _sid;
 	log(3, L"🔈getNameFromSid Sid");
 	SidName = getNameFromSid(Sid);
-	// path returns ANSI encoding, but UTF-8 is wanted
+	// the path in UTF-16, as Windows holds it
 	path = _path.wstring();
 	log(3, L"🔈replaceAll pathOriginal");
 	// RAW path: the escaping is centralised in json.h.

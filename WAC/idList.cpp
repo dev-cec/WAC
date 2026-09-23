@@ -667,7 +667,7 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		/* Size in BYTES, terminator included — unlike VT_LPWSTR, whose size is in
 		   characters. */
 		unsigned int size = *reinterpret_cast<unsigned int*>(buffer + *pos);
-		std::wstring v = string_to_wstring(readNarrowZ(buffer, inputSize, (size_t)*pos + 4));
+		std::wstring v = decodeText(readNarrowZ(buffer, inputSize, (size_t)*pos + 4));
 		*pos += 4 + size;
 		return Json::str(v);
 	}
@@ -1831,8 +1831,8 @@ VolumeShellItem::VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _le
 	flags = ShellVolumeFlags(type_char);
 	std::wstring volumeName = L"";
 	if (flags.LocalDisk == true) {
-		log(3, L"🔈string_to_wstring name");
-		name = string_to_wstring(readNarrowZ(buffer, declaredSize(buffer), 3));
+		log(3, L"🔈decodeText name");
+		name = decodeText(readNarrowZ(buffer, declaredSize(buffer), 3));
 	}
 	else if (flags.SystemFolder == true && fits(declaredSize(buffer), 4, 16)) {
 		log(3, L"🔈guid_to_wstring guid");
@@ -2410,8 +2410,8 @@ RootFolder::RootFolder(LPBYTE buffer, int _level) {
 	const unsigned int signature = (size >= 10) ? *reinterpret_cast<unsigned int*>(buffer + 6) : 0;
 	if (signature == (unsigned int)0xf5a6b710) {
 		sortIndex = L"DRIVE";
-		log(3, L"🔈string_to_wstring identifier");
-		identifier = string_to_wstring(readNarrowZ(buffer, size, 13));
+		log(3, L"🔈decodeText identifier");
+		identifier = decodeText(readNarrowZ(buffer, size, 13));
 	}
 	else if (signature == (unsigned int)0x23a3dfd5) {
 		sortIndex = L"SEARCH_FOLDER";
@@ -2470,8 +2470,8 @@ NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _level) {
 	if (subtypename == L"Unknown")
 		log(2, L"🔥NetworkShellItem : Subtype Unknown 0x" + to_hex(subtype));
 	if (subtype == 0xC3) {
-		log(3, L"🔈string_to_wstring location");
-		location = string_to_wstring(readNarrowZ(buffer, declaredSize(buffer), 5));
+		log(3, L"🔈decodeText location");
+		location = decodeText(readNarrowZ(buffer, declaredSize(buffer), 5));
 	}
 	else if (fits(declaredSize(buffer), 0x54, 8)) {   // up to the two sizes at 0x54
 		log(3, L"🔈wstring_to_filetime modifiedUtc");
@@ -2546,8 +2546,8 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _level) {
 		modified = FatDateTime(date).toFileTime();
 		log(3, L"🔈LocalFileTimeToFileTime modified");
 		LocalFileTimeToFileTime(&modified, &modifiedUtc);
-		log(3, L"🔈string_to_wstring modified");
-		name = string_to_wstring(readNarrowZ(buffer, declaredSize(buffer), 0x1C));
+		log(3, L"🔈decodeText modified");
+		name = decodeText(readNarrowZ(buffer, declaredSize(buffer), 0x1C));
 	}
 }
 
@@ -2598,8 +2598,8 @@ FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSiz
 	if (fsFlags.IS_UNICODE)  //Unicode
 		fsPrimaryName = readWideZ(buffer, itemSize, 14);
 	else {
-		log(3, L"🔈string_to_wstring fsPrimaryName");
-		fsPrimaryName = string_to_wstring(readNarrowZ(buffer, itemSize, 14));
+		log(3, L"🔈decodeText fsPrimaryName");
+		fsPrimaryName = decodeText(readNarrowZ(buffer, itemSize, 14));
 	}
 
 	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + itemSize - 2);
@@ -2645,8 +2645,8 @@ UsersFilesFolder::UsersFilesFolder(LPBYTE buffer, int _level) {
 	modified = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 0x12)).toFileTime();
 	log(3, L"🔈LocalFileTimeToFileTime modified");
 	LocalFileTimeToFileTime(&modified, &modifiedUtc);
-	log(3, L"🔈string_to_wstring primaryName");
-	primaryName = string_to_wstring(readNarrowZ(buffer, size, 0x18));
+	log(3, L"🔈decodeText primaryName");
+	primaryName = decodeText(readNarrowZ(buffer, size, 0x18));
 	// The block's offset and size come from the item: both must stay inside it.
 	const unsigned short blockSize = ((size_t)extensionOffset + 2 <= size)
 	                                 ? *reinterpret_cast<unsigned short*>(buffer + extensionOffset) : 0;

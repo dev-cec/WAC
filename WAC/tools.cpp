@@ -174,11 +174,7 @@ void printError(std::wstring errorText) {
 		WriteConsoleW(conf.hConsole, errorText.c_str(), (DWORD)errorText.length(), NULL, NULL);
 	}
 	else {
-		const int n = WideCharToMultiByte(CP_UTF8, 0, errorText.c_str(), (int)errorText.length(),
-		                                  nullptr, 0, nullptr, nullptr);
-		std::string utf8(n > 0 ? n : 0, '\0');
-		if (n > 0) WideCharToMultiByte(CP_UTF8, 0, errorText.c_str(), (int)errorText.length(),
-		                               &utf8[0], n, nullptr, nullptr);
+		const std::string utf8 = encodeText(errorText);
 		fwrite(utf8.data(), 1, utf8.size(), stdout);
 		fflush(stdout);
 	}
@@ -220,7 +216,7 @@ std::wstring getErrorMessage(HRESULT hresult)
 void log(int loglevel, std::wstring message) {
 	if (conf.loglevel >= loglevel && conf.loglevel > 0) {
 		conf.log.open(conf.name + ".log", std::ios::app);
-		conf.log << tab(loglevel) << ansi_to_utf8(message) << std::endl;
+		conf.log << encodeText(tab(loglevel) + message) << std::endl;
 		conf.log.flush();
 		conf.log.close();
 	}
@@ -228,45 +224,6 @@ void log(int loglevel, std::wstring message) {
 
 void log(int loglevel, std::wstring message, HRESULT result) {
 	log(loglevel, message + L" : " + getErrorMessage(result));
-}
-
-std::string ansi_to_utf8(std::string in)
-{
-	// 
-	//used to log, so no log to this call function
-
-	int size = MultiByteToWideChar(CP_ACP, WC_COMPOSITECHECK || WC_DEFAULTCHAR, in.c_str(),
-		in.length(), nullptr, 0);
-	std::wstring utf16_str(size, '\0');
-
-	MultiByteToWideChar(CP_ACP, WC_COMPOSITECHECK || WC_DEFAULTCHAR, in.c_str(),
-		in.length(), &utf16_str[0], size);
-
-	int utf8_size = WideCharToMultiByte(CP_UTF8, 0, utf16_str.c_str(),
-		utf16_str.length(), nullptr, 0,
-		nullptr, nullptr);
-	std::string utf8_str(utf8_size, '\0');
-
-	WideCharToMultiByte(CP_UTF8, 0, utf16_str.c_str(),
-		utf16_str.length(), &utf8_str[0], utf8_size,
-		nullptr, nullptr);
-	return utf8_str;
-}
-
-std::wstring ansi_to_utf8(std::wstring in)
-{
-	//used to log, so no log to this call function
-
-	int utf8_size = WideCharToMultiByte(CP_UTF8, 0, in.c_str(),
-		in.length(), nullptr, 0,
-		nullptr, nullptr);
-	std::string utf8_str(utf8_size, '\0');
-
-	WideCharToMultiByte(CP_UTF8, 0, in.c_str(),
-		in.length(), &utf8_str[0], utf8_size,
-		nullptr, nullptr);
-
-	return string_to_wstring(utf8_str);
 }
 
 void dump(LPBYTE buffer, int start, int end) {
@@ -449,7 +406,7 @@ FILETIME timet_to_fileTime(time_t t)
 
 FILETIME wstring_to_filetime(std::wstring input) {
 
-	std::istringstream istr(wstring_to_string(input));
+	std::istringstream istr(encodeText(input));   // digits and separators: ASCII
 	SYSTEMTIME st = { 0 };
 	FILETIME ft = { 0 };
 	istr >> st.wMonth;
@@ -940,14 +897,55 @@ std::wstring localTimeToIso8601Utc(const FILETIME& filetimeLocal) {
 	return timeToIso8601Utc(utc);
 }
 
-std::wstring string_to_wstring(const std::string& str)
+std::wstring decodeText(const std::string& bytes, UINT codePage)
 {
 	//used to log, so no log to this call function
-	std::wstring wstr;
-	size_t size;
-	wstr.resize(str.length());
-	mbstowcs_s(&size, &wstr[0], wstr.size() + 1, str.c_str(), str.size());
-	return wstr;
+	if (bytes.empty()) return std::wstring();
+	if (codePage == 0) codePage = conf.ansiCodePage ? conf.ansiCodePage : CP_ACP;
+	// UTF-8 is checked strictly: an invalid sequence is not silently replaced.
+	const DWORD flags = (codePage == CP_UTF8) ? MB_ERR_INVALID_CHARS : 0;
+	const int n = MultiByteToWideChar(codePage, flags, bytes.data(), (int)bytes.size(), nullptr, 0);
+	if (n > 0) {
+		std::wstring text((size_t)n, L'\0');
+		if (MultiByteToWideChar(codePage, flags, bytes.data(), (int)bytes.size(), &text[0], n) == n)
+			return text;
+	}
+	std::wstring widened;   // invalid for the code page: the bytes rather than nothing
+	for (unsigned char c : bytes) widened.push_back((wchar_t)c);
+	return widened;
+}
+
+std::string encodeText(const std::wstring& text, UINT codePage)
+{
+	//used to log, so no log to this call function
+	if (text.empty()) return std::string();
+	const int n = WideCharToMultiByte(codePage, 0, text.data(), (int)text.size(), nullptr, 0, nullptr, nullptr);
+	if (n <= 0) return std::string();
+	std::string bytes((size_t)n, '\0');
+	if (WideCharToMultiByte(codePage, 0, text.data(), (int)text.size(), &bytes[0], n, nullptr, nullptr) != n)
+		return std::string();
+	return bytes;
+}
+
+HRESULT loadSuspectAnsiCodePage() {
+	if (!conf.CurrentControlSet) return ERROR_INVALID_HANDLE;
+	std::wstring acp;
+	log(3, L"🔈getRegSzValue Nls\\CodePage\\ACP");
+	const HRESULT hresult = getRegSzValue(conf.CurrentControlSet, L"Control\\Nls\\CodePage", L"ACP", &acp);
+	if (hresult != ERROR_SUCCESS) {
+		log(2, L"🔥Suspect's ANSI code page unreadable in the SYSTEM hive", hresult);
+		return hresult;
+	}
+	const UINT codePage = (UINT)wcstoul(acp.c_str(), nullptr, 10);
+	CPINFO info;
+	// A code page this Windows does not know cannot be used for the conversion.
+	if (codePage == 0 || !GetCPInfo(codePage, &info)) {
+		log(2, L"🔥Suspect's ANSI code page \"" + acp + L"\" not usable here", ERROR_INVALID_DATA);
+		return ERROR_INVALID_DATA;
+	}
+	conf.ansiCodePage = codePage;
+	log(2, L"❇️Suspect's ANSI code page (SYSTEM hive): " + std::to_wstring(codePage));
+	return ERROR_SUCCESS;
 }
 
 bool isMuiReference(const std::wstring& value) {
@@ -964,16 +962,6 @@ bool isMuiReference(const std::wstring& value) {
 std::wstring toLower(std::wstring s) {
 	for (wchar_t& c : s) c = (wchar_t)towlower(c);
 	return s;
-}
-
-std::string wstring_to_string(const std::wstring& wstr)
-{
-
-	std::string str;
-	size_t size;
-	str.resize(wstr.length());
-	wcstombs_s(&size, &str[0], str.size() + 1, wstr.c_str(), wstr.size());
-	return str;
 }
 
 std::wstring readWideZ(const BYTE* base, size_t limit, size_t offset) {
@@ -1266,13 +1254,13 @@ std::wstring getVolumeLetter(std::wstring searchSerial) {
 HRESULT writeJsonFile(const std::string& name, const Json& value) {
 	std::error_code ec;
 	std::filesystem::create_directories(conf._outputDir, ec); // no error if present
-	std::wofstream f;
-	f.open(conf._outputDir + "/" + name);
+	std::ofstream f;
+	f.open(std::filesystem::path(conf._outputDir) / name);
 	if (!f) {
-		log(2, L"🔥Cannot open the output file: " + string_to_wstring(name));
+		log(2, L"🔥Cannot open the output file: " + decodeText(name));
 		return E_FAIL;
 	}
-	f << ansi_to_utf8(value.dump(0));
+	f << encodeText(value.dump(0));
 	f.close();
 	return ERROR_SUCCESS;
 }
@@ -1280,33 +1268,33 @@ HRESULT writeJsonFile(const std::string& name, const Json& value) {
 JsonArrayWriter::JsonArrayWriter(const std::string& name) : name_(name) {
 	std::error_code ec;
 	std::filesystem::create_directories(conf._outputDir, ec);  // no error if present
-	f_.open(conf._outputDir + "/" + name);
+	f_.open(std::filesystem::path(conf._outputDir) / name);
 	if (!f_) {
-		log(2, L"🔥Cannot open the output file: " + string_to_wstring(name));
+		log(2, L"🔥Cannot open the output file: " + decodeText(name));
 		return;
 	}
 	open_ = true;
-	f_ << L"[";
+	f_ << "[";
 }
 
 void JsonArrayWriter::add(const Json& element) {
 	if (!open_ || closed_) return;
 	// The comma precedes the element: while writing, one does not know whether
 	// others will come — that is what avoids a trailing comma without re-reading.
-	f_ << (written_ ? L",\n\t" : L"\n\t");
-	f_ << ansi_to_utf8(element.dump(1));
+	f_ << (written_ ? ",\n\t" : "\n\t");
+	f_ << encodeText(element.dump(1));
 	++written_;
 }
 
 HRESULT JsonArrayWriter::close() {
 	if (!open_ || closed_) return open_ ? ERROR_SUCCESS : E_FAIL;
 	closed_ = true;
-	if (written_) f_ << L"\n";
-	f_ << L"]";
+	if (written_) f_ << "\n";
+	f_ << "]";
 	const bool good = f_.good();
 	f_.close();
 	if (!good) {
-		log(2, L"🔥Incomplete write: " + string_to_wstring(name_));
+		log(2, L"🔥Incomplete write: " + decodeText(name_));
 		return E_FAIL;
 	}
 	return ERROR_SUCCESS;

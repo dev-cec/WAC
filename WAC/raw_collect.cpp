@@ -199,7 +199,7 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 		std::wstring md5Before;
 		const auto found = md5ByFile.find(r);
 		if (found != md5ByFile.end()) md5Before = found->second;
-		else md5Before = QuickDigest5::fileToHash(wstring_to_string(r));
+		else md5Before = QuickDigest5::fileToHash(r);
 
 		log(1, L"➕Hive");
 		log(2, L"❇️MD5 of the raw copy (before any write): " + md5Before);

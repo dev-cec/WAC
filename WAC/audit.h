@@ -28,6 +28,7 @@
 #include "json.h"
 #include <windows.h>
 #include <string>
+#include <vector>
 
 /*! Expected footprint of an operation: the trace it leaves on the examined
  *  system. Used to fill the log's `Footprint` field.
@@ -64,10 +65,9 @@ namespace Footprint {
 /*! Opens the log: reads the context of the collection (machine, operator, time
  *  area, command line) and the start timestamp.
  *  To be called once, as early as possible in `main`.
- *  @param argc number of command-line arguments
- *  @param argv the command-line arguments
+ *  @param args the command-line arguments, program name first, in UTF-16
  */
-void auditInit(int argc, char* argv[]);
+void auditInit(const std::vector<std::wstring>& args);
 
 /*! Records an operation.
  *  @param operation what was done, e.g. L"EnumServicesStatusExW"

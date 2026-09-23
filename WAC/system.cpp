@@ -332,6 +332,18 @@ HRESULT SystemInfo::toJson() {
 		                                   L"— only valid if the collection is live"));
 	}
 
+	/* ANSI code page used to decode the non-Unicode text of the artefacts,
+	   and where it comes from — as for the time zone. */
+	if (conf.ansiCodePage) {
+		o.add(L"AnsiCodePage",       Json::num((unsigned long long)conf.ansiCodePage));
+		o.add(L"AnsiCodePageSource", Json::str(L"SYSTEM hive of the examined machine"));
+	}
+	else {
+		o.add(L"AnsiCodePage",       Json::num((unsigned long long)GetACP()));
+		o.add(L"AnsiCodePageSource", Json::str(L"running machine (SYSTEM hive unreadable) "
+		                                       L"— only valid if the collection is live"));
+	}
+
 	return writeJsonFile("OperatingSystem.json", o);
 }
 

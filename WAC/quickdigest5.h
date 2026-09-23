@@ -33,6 +33,7 @@
  */
 
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <sstream>
@@ -155,7 +156,9 @@ public:
      * @param filepath The path to the file to hash.
      * @return A vector of bytes representing the MD5 hash.
      */
-    static std::vector<uint8_t> digestFile(const std::string& filepath);
+    // WAC: a std::filesystem::path (was std::string), so that a path outside
+    // the process's ANSI code page stays openable — it is kept in UTF-16.
+    static std::vector<uint8_t> digestFile(const std::filesystem::path& filepath);
 
     /**
      * @brief Computes the MD5 hash of a string and returns it as a hex string.
@@ -171,7 +174,7 @@ public:
      * @param filepath The path to the file to hash.
      * @return A string representing the MD5 hash in hexadecimal format.
      */
-    static std::wstring fileToHash(const std::string& filepath);
+    static std::wstring fileToHash(const std::filesystem::path& filepath);   // WAC: see digestFile
 
 };
 
