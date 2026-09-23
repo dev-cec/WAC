@@ -110,8 +110,8 @@ $(document).ready(function(){initNavTree('structDestFile.html',''); initResizabl
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a4934f0423cffed22308a24a53a38520c" id="r_a4934f0423cffed22308a24a53a38520c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDestFile.html#a4934f0423cffed22308a24a53a38520c">DestFile</a> ()</td></tr>
 <tr class="separator:a4934f0423cffed22308a24a53a38520c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a39c78e7f5f6f0c64e16e3961860e03e1" id="r_a39c78e7f5f6f0c64e16e3961860e03e1"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDestFile.html#a39c78e7f5f6f0c64e16e3961860e03e1">DestFile</a> (LPBYTE buffer)</td></tr>
-<tr class="separator:a39c78e7f5f6f0c64e16e3961860e03e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab04ba4cafd4649d76adaac35689bf966" id="r_ab04ba4cafd4649d76adaac35689bf966"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDestFile.html#ab04ba4cafd4649d76adaac35689bf966">DestFile</a> (LPBYTE buffer, size_t limit)</td></tr>
+<tr class="separator:ab04ba4cafd4649d76adaac35689bf966"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a424a5bcb4d6ac74d20625715216518e6" id="r_a424a5bcb4d6ac74d20625715216518e6"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDestFile.html#a424a5bcb4d6ac74d20625715216518e6">getPinnedStatus</a> ()</td></tr>
 <tr class="separator:a424a5bcb4d6ac74d20625715216518e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9228340d2f8cf849211a5c473bc1b290" id="r_a9228340d2f8cf849211a5c473bc1b290"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDestFile.html#a9228340d2f8cf849211a5c473bc1b290">toJson</a> ()</td></tr>
@@ -185,8 +185,8 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a39c78e7f5f6f0c64e16e3961860e03e1" name="a39c78e7f5f6f0c64e16e3961860e03e1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a39c78e7f5f6f0c64e16e3961860e03e1">&#9670;&#160;</a></span>DestFile() <span class="overload">[2/2]</span></h2>
+<a id="ab04ba4cafd4649d76adaac35689bf966" name="ab04ba4cafd4649d76adaac35689bf966"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab04ba4cafd4649d76adaac35689bf966">&#9670;&#160;</a></span>DestFile() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -195,14 +195,25 @@ Public Attributes</h2></td></tr>
           <td class="memname">DestFile::DestFile </td>
           <td>(</td>
           <td class="paramtype">LPBYTE&#160;</td>
-          <td class="paramname"><em>buffer</em></td><td>)</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>limit</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Reads a destfile. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">buffer</td><td>pointer to the data to parse </td></tr>
+    <tr><td class="paramname">limit</td><td>bytes available from <code>buffer</code> to the end of the DestList stream: no read goes beyond; an entry that does not fit is left with <code>size</code> 0, which stops the caller's walk </td></tr>
   </table>
   </dd>
 </dl>

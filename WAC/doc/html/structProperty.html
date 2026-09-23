@@ -108,8 +108,8 @@ $(document).ready(function(){initNavTree('structProperty.html',''); initResizabl
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a090fd25886553b40af9c242f71bf07d9" id="r_a090fd25886553b40af9c242f71bf07d9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structProperty.html#a090fd25886553b40af9c242f71bf07d9">Property</a> (LPBYTE buffer, int _level)</td></tr>
-<tr class="separator:a090fd25886553b40af9c242f71bf07d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc6fc70dfc3d794307729ab6c203c514" id="r_acc6fc70dfc3d794307729ab6c203c514"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structProperty.html#acc6fc70dfc3d794307729ab6c203c514">Property</a> (LPBYTE buffer, int _level, size_t limit)</td></tr>
+<tr class="separator:acc6fc70dfc3d794307729ab6c203c514"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a99fc27235c174bf3234ae522e54f91b2" id="r_a99fc27235c174bf3234ae522e54f91b2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structProperty.html#a99fc27235c174bf3234ae522e54f91b2">toJson</a> ()</td></tr>
 <tr class="separator:a99fc27235c174bf3234ae522e54f91b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -142,8 +142,8 @@ Public Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Format of a <a class="el" href="structProperty.html">Property</a> inside the UserPropertyViews. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a090fd25886553b40af9c242f71bf07d9" name="a090fd25886553b40af9c242f71bf07d9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a090fd25886553b40af9c242f71bf07d9">&#9670;&#160;</a></span>Property()</h2>
+<a id="acc6fc70dfc3d794307729ab6c203c514" name="acc6fc70dfc3d794307729ab6c203c514"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acc6fc70dfc3d794307729ab6c203c514">&#9670;&#160;</a></span>Property()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -158,7 +158,13 @@ Public Attributes</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>_level</em>&#160;</td>
+          <td class="paramname"><em>_level</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>limit</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -167,10 +173,11 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Reads the item. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Reads one property. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">buffer</td><td>the bytes to parse </td></tr>
     <tr><td class="paramname">_level</td><td>depth in the tree of elements, used to lay out the output JSON </td></tr>
+    <tr><td class="paramname">limit</td><td>bytes available from <code>buffer</code> to the end of the enclosing shell item: no read goes beyond. A property that does not fit is left empty with <code>typeNotDecoded</code> set, which stops the caller's walk. </td></tr>
   </table>
   </dd>
 </dl>

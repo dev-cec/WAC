@@ -1,7 +1,7 @@
 var structDestFile =
 [
     [ "DestFile", "structDestFile.html#a4934f0423cffed22308a24a53a38520c", null ],
-    [ "DestFile", "structDestFile.html#a39c78e7f5f6f0c64e16e3961860e03e1", null ],
+    [ "DestFile", "structDestFile.html#ab04ba4cafd4649d76adaac35689bf966", null ],
     [ "getPinnedStatus", "structDestFile.html#a424a5bcb4d6ac74d20625715216518e6", null ],
     [ "toJson", "structDestFile.html#a9228340d2f8cf849211a5c473bc1b290", null ],
     [ "entryNumber", "structDestFile.html#a1815a59fbd8648d4687b80fc2869edde", null ],

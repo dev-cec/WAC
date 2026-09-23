@@ -29,6 +29,7 @@ var dir_59651bc50cd52202dfd7c76305c5d752 =
     [ "jumplist_automatic.h", "jumplist__automatic_8h.html", "jumplist__automatic_8h" ],
     [ "jumplist_custom.cpp", "jumplist__custom_8cpp.html", null ],
     [ "jumplist_custom.h", "jumplist__custom_8h.html", "jumplist__custom_8h" ],
+    [ "lnk_test.cpp", "lnk__test_8cpp.html", "lnk__test_8cpp" ],
     [ "lznt1.cpp", "lznt1_8cpp.html", "lznt1_8cpp" ],
     [ "lznt1.h", "lznt1_8h.html", "lznt1_8h" ],
     [ "lznt1_test.cpp", "lznt1__test_8cpp.html", "lznt1__test_8cpp" ],

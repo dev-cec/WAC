@@ -254,6 +254,10 @@ Functions</h2></td></tr>
 <tr class="separator:a2b4cfa2b19dd3138efd1cdca232d614e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aea71d14f067d69330a32721ca7dc457d" id="r_aea71d14f067d69330a32721ca7dc457d"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#aea71d14f067d69330a32721ca7dc457d">multiWstring_to_vector</a> (LPBYTE data, int size)</td></tr>
 <tr class="separator:aea71d14f067d69330a32721ca7dc457d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89f4afef123fee0f163c1d61fef8a85d" id="r_a89f4afef123fee0f163c1d61fef8a85d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a89f4afef123fee0f163c1d61fef8a85d">readWideZ</a> (const BYTE *base, size_t limit, size_t offset)</td></tr>
+<tr class="separator:a89f4afef123fee0f163c1d61fef8a85d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac08f59986f0127204704ab062824b053" id="r_ac08f59986f0127204704ab062824b053"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ac08f59986f0127204704ab062824b053">readNarrowZ</a> (const BYTE *base, size_t limit, size_t offset)</td></tr>
+<tr class="separator:ac08f59986f0127204704ab062824b053"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af5b5c7829f1299c3b6e2f28f2d543282" id="r_af5b5c7829f1299c3b6e2f28f2d543282"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#af5b5c7829f1299c3b6e2f28f2d543282">guid_to_wstring</a> (GUID guid)</td></tr>
 <tr class="separator:af5b5c7829f1299c3b6e2f28f2d543282"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4eb3a55c96fa93b7130be2bcd9702bab" id="r_a4eb3a55c96fa93b7130be2bcd9702bab"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a4eb3a55c96fa93b7130be2bcd9702bab">getRegSzValue</a> (ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::wstring *ws)</td></tr>
@@ -1726,6 +1730,95 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="ac08f59986f0127204704ab062824b053" name="ac08f59986f0127204704ab062824b053"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac08f59986f0127204704ab062824b053">&#9670;&#160;</a></span>readNarrowZ()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string readNarrowZ </td>
+          <td>(</td>
+          <td class="paramtype">const BYTE *&#160;</td>
+          <td class="paramname"><em>base</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>limit</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>offset</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads a zero-terminated single-byte string (ANSI), never past a bound. Same rule as <a class="el" href="tools_8h.html#a89f4afef123fee0f163c1d61fef8a85d">readWideZ()</a>. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">base</td><td>start of the structure </td></tr>
+    <tr><td class="paramname">limit</td><td>size of the structure, in bytes </td></tr>
+    <tr><td class="paramname">offset</td><td>position of the string in the structure </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the string, without its terminator; empty if <code>offset</code> is out of range </dd></dl>
+
+</div>
+</div>
+<a id="a89f4afef123fee0f163c1d61fef8a85d" name="a89f4afef123fee0f163c1d61fef8a85d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a89f4afef123fee0f163c1d61fef8a85d">&#9670;&#160;</a></span>readWideZ()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring readWideZ </td>
+          <td>(</td>
+          <td class="paramtype">const BYTE *&#160;</td>
+          <td class="paramname"><em>base</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>limit</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>offset</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads a zero-terminated UTF-16 string, never past a bound.</p>
+<p>WHY. The artefact parsers read many strings "up to the first zero". In a truncated or forged file the zero may be missing, and the read then went on past the buffer — reading, and publishing, whatever memory followed. The bound is the size of the structure being read (a shell item, an extension block, a file), itself checked against the real buffer by the caller.</p>
+<p>The units are read two bytes at a time, little-endian: no cast to wchar_t, whose size differs between Windows and Linux.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">base</td><td>start of the structure </td></tr>
+    <tr><td class="paramname">limit</td><td>size of the structure, in bytes: nothing at or beyond <code>base + limit</code> is read </td></tr>
+    <tr><td class="paramname">offset</td><td>position of the string in the structure </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the string, without its terminator; empty if <code>offset</code> is out of range </dd></dl>
+
+</div>
+</div>
 <a id="ac0b13fc24e7bc07ec4a03384acd92539" name="ac0b13fc24e7bc07ec4a03384acd92539"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac0b13fc24e7bc07ec4a03384acd92539">&#9670;&#160;</a></span>replaceAll()</h2>
 
@@ -1760,7 +1853,7 @@ Variables</h2></td></tr>
 <p>In a string, replaces every occurrence of a string by another. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">src</td><td>the starting string, holding the string to look for </td></tr>
-    <tr><td class="paramname">search</td><td>the string to look for in <code>src</code> </td></tr>
+    <tr><td class="paramname">search</td><td>the string to look for in <code>src</code>; empty, nothing is replaced </td></tr>
     <tr><td class="paramname">replacement</td><td>the string to put in place of <code>search</code> </td></tr>
   </table>
   </dd>

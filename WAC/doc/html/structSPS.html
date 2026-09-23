@@ -110,8 +110,8 @@ $(document).ready(function(){initNavTree('structSPS.html',''); initResizable(); 
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a2d03e5f0ea4268a8bd752db53c3c07a1" id="r_a2d03e5f0ea4268a8bd752db53c3c07a1"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSPS.html#a2d03e5f0ea4268a8bd752db53c3c07a1">SPS</a> ()</td></tr>
 <tr class="separator:a2d03e5f0ea4268a8bd752db53c3c07a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a30e24a5977e11a79165e63d8c7b0530a" id="r_a30e24a5977e11a79165e63d8c7b0530a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSPS.html#a30e24a5977e11a79165e63d8c7b0530a">SPS</a> (LPBYTE buffer, int _level)</td></tr>
-<tr class="separator:a30e24a5977e11a79165e63d8c7b0530a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a93f849ee7993906190e151794e723802" id="r_a93f849ee7993906190e151794e723802"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSPS.html#a93f849ee7993906190e151794e723802">SPS</a> (LPBYTE buffer, int _level, size_t limit)</td></tr>
+<tr class="separator:a93f849ee7993906190e151794e723802"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9f60b0d8b6fb0803d0eb3799d00fcb6d" id="r_a9f60b0d8b6fb0803d0eb3799d00fcb6d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSPS.html#a9f60b0d8b6fb0803d0eb3799d00fcb6d">toJson</a> ()</td></tr>
 <tr class="separator:a9f60b0d8b6fb0803d0eb3799d00fcb6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -165,8 +165,8 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a30e24a5977e11a79165e63d8c7b0530a" name="a30e24a5977e11a79165e63d8c7b0530a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a30e24a5977e11a79165e63d8c7b0530a">&#9670;&#160;</a></span>SPS() <span class="overload">[2/2]</span></h2>
+<a id="a93f849ee7993906190e151794e723802" name="a93f849ee7993906190e151794e723802"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a93f849ee7993906190e151794e723802">&#9670;&#160;</a></span>SPS() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -181,7 +181,13 @@ Public Attributes</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>_level</em>&#160;</td>
+          <td class="paramname"><em>_level</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>limit</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -190,10 +196,11 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Reads the object. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Reads a property store. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">buffer</td><td>the bytes to parse </td></tr>
     <tr><td class="paramname">_level</td><td>depth in the tree of elements, used to lay out the output JSON </td></tr>
+    <tr><td class="paramname">limit</td><td>bytes available from <code>buffer</code> to the end of the enclosing structure. A store that declares more is rejected: <code>size</code> stays 0, which stops the caller's walk. </td></tr>
   </table>
   </dd>
 </dl>

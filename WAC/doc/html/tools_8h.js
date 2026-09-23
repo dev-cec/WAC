@@ -52,6 +52,8 @@ var tools_8h =
     [ "printProgressStep", "tools_8h.html#a0f7dd5d6efe1ef759d852fb9224d79d4", null ],
     [ "printStep", "tools_8h.html#a2919887747c3c908764bd070515c5739", null ],
     [ "printSuccess", "tools_8h.html#abfb8057ef624b69b47bf30c6db4e3875", null ],
+    [ "readNarrowZ", "tools_8h.html#ac08f59986f0127204704ab062824b053", null ],
+    [ "readWideZ", "tools_8h.html#a89f4afef123fee0f163c1d61fef8a85d", null ],
     [ "replaceAll", "tools_8h.html#ac0b13fc24e7bc07ec4a03384acd92539", null ],
     [ "ROT13", "tools_8h.html#a7684efc242e166b53952647faf435f95", null ],
     [ "string_to_wstring", "tools_8h.html#ad612e1d5a3738c231a1aeefb21c4d36d", null ],

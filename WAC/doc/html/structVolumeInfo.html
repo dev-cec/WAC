@@ -111,8 +111,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a99d7451b1e666040acd79d87d173d20c" id="r_a99d7451b1e666040acd79d87d173d20c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVolumeInfo.html#a99d7451b1e666040acd79d87d173d20c">VolumeInfo</a> ()</td></tr>
 <tr class="memdesc:a99d7451b1e666040acd79d87d173d20c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Builds an empty volume.  <br /></td></tr>
 <tr class="separator:a99d7451b1e666040acd79d87d173d20c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2b19b97fb8ea93829d1ff6a1eab3eb67" id="r_a2b19b97fb8ea93829d1ff6a1eab3eb67"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVolumeInfo.html#a2b19b97fb8ea93829d1ff6a1eab3eb67">VolumeInfo</a> (LPBYTE data, int index)</td></tr>
-<tr class="separator:a2b19b97fb8ea93829d1ff6a1eab3eb67"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abacd86de131829b57825cddc90602c37" id="r_abacd86de131829b57825cddc90602c37"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVolumeInfo.html#abacd86de131829b57825cddc90602c37">VolumeInfo</a> (LPBYTE data, int index, size_t limit)</td></tr>
+<tr class="separator:abacd86de131829b57825cddc90602c37"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab56ef08b4e7f780fce14dd0621dbc916" id="r_ab56ef08b4e7f780fce14dd0621dbc916"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVolumeInfo.html#ab56ef08b4e7f780fce14dd0621dbc916">toJson</a> ()</td></tr>
 <tr class="separator:ab56ef08b4e7f780fce14dd0621dbc916"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a650b617488d49b303d518366a0f5d294" id="r_a650b617488d49b303d518366a0f5d294"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVolumeInfo.html#a650b617488d49b303d518366a0f5d294">clear</a> ()</td></tr>
@@ -173,8 +173,8 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a2b19b97fb8ea93829d1ff6a1eab3eb67" name="a2b19b97fb8ea93829d1ff6a1eab3eb67"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2b19b97fb8ea93829d1ff6a1eab3eb67">&#9670;&#160;</a></span>VolumeInfo() <span class="overload">[2/2]</span></h2>
+<a id="abacd86de131829b57825cddc90602c37" name="abacd86de131829b57825cddc90602c37"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abacd86de131829b57825cddc90602c37">&#9670;&#160;</a></span>VolumeInfo() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -189,7 +189,13 @@ Public Attributes</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>index</em>&#160;</td>
+          <td class="paramname"><em>index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>limit</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -198,10 +204,11 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Reads a volume block from a <a class="el" href="structPrefetch.html">Prefetch</a> file. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Reads a volume entry from a <a class="el" href="structPrefetch.html">Prefetch</a> file. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">data</td><td>the block's bytes. </td></tr>
-    <tr><td class="paramname">index</td><td>rank of the volume in the <a class="el" href="structPrefetch.html">Prefetch</a> file. </td></tr>
+    <tr><td class="paramname">data</td><td>start of the volumes block: every offset of an entry is relative to it. </td></tr>
+    <tr><td class="paramname">index</td><td>rank of the volume in the block. </td></tr>
+    <tr><td class="paramname">limit</td><td>size of the volumes block, checked by the caller against the file: no read goes beyond. </td></tr>
   </table>
   </dd>
 </dl>

@@ -1,5 +1,8 @@
 var NAVTREEINDEX3 =
 {
+"structBeefUnknown.html#aaf78bcd19487c4dbf5733ab698d11ee7":[1,0,37,1],
+"structBinaryFingerprint.html":[1,0,38],
+"structBinaryFingerprint.html#a04e6b16e429ee48c2cd57aadbf2ae9fc":[1,0,38,3],
 "structBinaryFingerprint.html#a8c695575fb1421caa1d5b9b87204a37f":[1,0,38,1],
 "structBinaryFingerprint.html#a961792c04ee0778e8bee6933b7752f6e":[1,0,38,4],
 "structBinaryFingerprint.html#aa4e502ceaff5381b38b99c228c618da3":[1,0,38,6],
@@ -73,7 +76,6 @@ var NAVTREEINDEX3 =
 "structDestFile.html#a1815a59fbd8648d4687b80fc2869edde":[1,0,45,4],
 "structDestFile.html#a28ae8237d680f92b3be1c16c4d40a469":[1,0,45,8],
 "structDestFile.html#a37d1db53e5c3ee0b5d945d850cc657a3":[1,0,45,9],
-"structDestFile.html#a39c78e7f5f6f0c64e16e3961860e03e1":[1,0,45,1],
 "structDestFile.html#a424a5bcb4d6ac74d20625715216518e6":[1,0,45,2],
 "structDestFile.html#a4934f0423cffed22308a24a53a38520c":[1,0,45,0],
 "structDestFile.html#a4e6eeb2866cacd4f254bb2c01beffc21":[1,0,45,13],
@@ -84,13 +86,14 @@ var NAVTREEINDEX3 =
 "structDestFile.html#a9f3632927d1d2462ece27f264d5cbeb3":[1,0,45,6],
 "structDestFile.html#aa0d81350e6be7691463766a1e6d8083b":[1,0,45,5],
 "structDestFile.html#aa0e54dd0160f681d2b390637e137fe40":[1,0,45,14],
+"structDestFile.html#ab04ba4cafd4649d76adaac35689bf966":[1,0,45,1],
 "structDestFile.html#ae25c6b299b5aa1425abdf7eb09e13031":[1,0,45,12],
 "structDestFileDirectory.html":[1,0,46],
-"structDestFileDirectory.html#a0613825531b4e09e7c5d6376bdc5ff4b":[1,0,46,1],
 "structDestFileDirectory.html#a193e721f9096e79a21f9a7f33f9c0c9b":[1,0,46,0],
 "structDestFileDirectory.html#a23fef3f089255d2f37d3ee8ee70e3761":[1,0,46,6],
 "structDestFileDirectory.html#a269efd98d7c418d2fdede6af62c5a422":[1,0,46,5],
 "structDestFileDirectory.html#a6d2b275608f9462291612eb034521027":[1,0,46,4],
+"structDestFileDirectory.html#a9a689808b05b4b93a5b5391fb614509a":[1,0,46,1],
 "structDestFileDirectory.html#adea1e3fd2820e38e8bb46408028f67c4":[1,0,46,2],
 "structDestFileDirectory.html#afd18c616f5ba9ac128cb93eee92ff323":[1,0,46,3],
 "structDirStrings.html":[1,0,48],
@@ -246,8 +249,5 @@ var NAVTREEINDEX3 =
 "structHiveReplayInfo.html#a648f1eb5b9f99e2d2fbf7167a3370cc5":[1,0,61,3],
 "structHiveReplayInfo.html#a8fa03338ad55acfe5478ac4be9c73e71":[1,0,61,8],
 "structHiveReplayInfo.html#a9df97d7b20fd9b83a33f08b4001079f5":[1,0,61,1],
-"structHiveReplayInfo.html#aa9a5e69ab6e4eb3a758435aa57035839":[1,0,61,11],
-"structHiveReplayInfo.html#ae211bf2776e96823fd7794c20b9475bf":[1,0,61,4],
-"structHiveReplayInfo.html#ae43ae6b6509c52eff3e9a16b10e20e6a":[1,0,61,5],
-"structHiveReplayInfo.html#af3e4b4fba01e1cbfe903c3f1407b5c87":[1,0,61,9]
+"structHiveReplayInfo.html#aa9a5e69ab6e4eb3a758435aa57035839":[1,0,61,11]
 };

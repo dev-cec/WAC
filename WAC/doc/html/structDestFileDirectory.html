@@ -110,8 +110,8 @@ $(document).ready(function(){initNavTree('structDestFileDirectory.html',''); ini
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a193e721f9096e79a21f9a7f33f9c0c9b" id="r_a193e721f9096e79a21f9a7f33f9c0c9b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDestFileDirectory.html#a193e721f9096e79a21f9a7f33f9c0c9b">DestFileDirectory</a> ()</td></tr>
 <tr class="separator:a193e721f9096e79a21f9a7f33f9c0c9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0613825531b4e09e7c5d6376bdc5ff4b" id="r_a0613825531b4e09e7c5d6376bdc5ff4b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDestFileDirectory.html#a0613825531b4e09e7c5d6376bdc5ff4b">DestFileDirectory</a> (LPBYTE buffer)</td></tr>
-<tr class="separator:a0613825531b4e09e7c5d6376bdc5ff4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9a689808b05b4b93a5b5391fb614509a" id="r_a9a689808b05b4b93a5b5391fb614509a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDestFileDirectory.html#a9a689808b05b4b93a5b5391fb614509a">DestFileDirectory</a> (LPBYTE buffer, size_t size)</td></tr>
+<tr class="separator:a9a689808b05b4b93a5b5391fb614509a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adea1e3fd2820e38e8bb46408028f67c4" id="r_adea1e3fd2820e38e8bb46408028f67c4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDestFileDirectory.html#adea1e3fd2820e38e8bb46408028f67c4">toJson</a> ()</td></tr>
 <tr class="separator:adea1e3fd2820e38e8bb46408028f67c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -159,8 +159,8 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a0613825531b4e09e7c5d6376bdc5ff4b" name="a0613825531b4e09e7c5d6376bdc5ff4b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0613825531b4e09e7c5d6376bdc5ff4b">&#9670;&#160;</a></span>DestFileDirectory() <span class="overload">[2/2]</span></h2>
+<a id="a9a689808b05b4b93a5b5391fb614509a" name="a9a689808b05b4b93a5b5391fb614509a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9a689808b05b4b93a5b5391fb614509a">&#9670;&#160;</a></span>DestFileDirectory() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -169,14 +169,25 @@ Public Attributes</h2></td></tr>
           <td class="memname">DestFileDirectory::DestFileDirectory </td>
           <td>(</td>
           <td class="paramtype">LPBYTE&#160;</td>
-          <td class="paramname"><em>buffer</em></td><td>)</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Reads a destfile directory. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Reads a destfile directory (the DestList stream). </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">buffer</td><td>pointer to the data to parse </td></tr>
+    <tr><td class="paramname">size</td><td>size of the stream, in bytes </td></tr>
   </table>
   </dd>
 </dl>

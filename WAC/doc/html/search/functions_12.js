@@ -22,7 +22,7 @@ var searchData=
   ['showhelp_19',['showHelp',['../main_8cpp.html#aec315d77f5c38417289a0e311d2a9d31',1,'main.cpp']]],
   ['size_20',['size',['../classSha512Stream.html#add6e1d45fdf955fd5f79445cf992e35d',1,'Sha512Stream::size()'],['../classWevtMetadata.html#a3eae68da1bc9d95279893309278d9375',1,'WevtMetadata::size()'],['../classTableMessages.html#a32454cc9b0e6c582e710cc8617c40d73',1,'TableMessages::size()'],['../classJson.html#ae6eba8b3f5db17b0f67d3b04fbcef25e',1,'Json::size()']]],
   ['sort_5findex_21',['sort_index',['../trans__id_8cpp.html#aae7ad1547183f79f20f516a77c6c673c',1,'sort_index(unsigned char i):&#160;trans_id.cpp'],['../trans__id_8h.html#aae7ad1547183f79f20f516a77c6c673c',1,'sort_index(unsigned char i):&#160;trans_id.cpp']]],
-  ['sps_22',['sps',['../structSPS.html#a30e24a5977e11a79165e63d8c7b0530a',1,'SPS::SPS(LPBYTE buffer, int _level)'],['../structSPS.html#a2d03e5f0ea4268a8bd752db53c3c07a1',1,'SPS::SPS()']]],
+  ['sps_22',['sps',['../structSPS.html#a93f849ee7993906190e151794e723802',1,'SPS::SPS(LPBYTE buffer, int _level, size_t limit)'],['../structSPS.html#a2d03e5f0ea4268a8bd752db53c3c07a1',1,'SPS::SPS()']]],
   ['spsvalue_23',['SPSValue',['../structSPSValue.html#aa869a2b0853615534fe6c74ff19c8895',1,'SPSValue']]],
   ['str_24',['str',['../classJson.html#a566f7f6afb712f82ddfd6c07751645e9',1,'Json']]],
   ['string_5fto_5fwstring_25',['string_to_wstring',['../tools_8cpp.html#ad612e1d5a3738c231a1aeefb21c4d36d',1,'string_to_wstring(const std::string &amp;str):&#160;tools.cpp'],['../tools_8h.html#ad612e1d5a3738c231a1aeefb21c4d36d',1,'string_to_wstring(const std::string &amp;str):&#160;tools.cpp']]]

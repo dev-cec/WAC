@@ -1,5 +1,8 @@
 var NAVTREEINDEX5 =
 {
+"structRecentDoc.html#a165143ed1a74dc733f5a2d09d81bce2a":[1,0,98,9],
+"structRecentDoc.html#a280d45cab21459d7460a80763bb8b4a9":[1,0,98,43],
+"structRecentDoc.html#a2ce46f17b97a3b1b2701f27d1e18145f":[1,0,98,19],
 "structRecentDoc.html#a32eed3664b67b62f799e4ed4decd3eb9":[1,0,98,21],
 "structRecentDoc.html#a3390989fed87f1a03f791166b3b97478":[1,0,98,5],
 "structRecentDoc.html#a397637d1a8327fc757a878aa74092d9b":[1,0,98,26],
@@ -72,8 +75,8 @@ var NAVTREEINDEX5 =
 "structSPS.html#a2964f1af975b1fe92cc89aa51cd4bf96":[1,0,118,6],
 "structSPS.html#a2d03e5f0ea4268a8bd752db53c3c07a1":[1,0,118,0],
 "structSPS.html#a30ae1b9e26b6115cf5543d19231f138d":[1,0,118,5],
-"structSPS.html#a30e24a5977e11a79165e63d8c7b0530a":[1,0,118,1],
 "structSPS.html#a60b03ba6df5a61dcbe02c1167dd5dd61":[1,0,118,8],
+"structSPS.html#a93f849ee7993906190e151794e723802":[1,0,118,1],
 "structSPS.html#a9f60b0d8b6fb0803d0eb3799d00fcb6d":[1,0,118,2],
 "structSPS.html#aa9b54a9d79d3d61452f914126837ace5":[1,0,118,4],
 "structSPS.html#ae1ad2763480648b35d3a9da2aa9b58b6":[1,0,118,3],
@@ -187,12 +190,11 @@ var NAVTREEINDEX5 =
 "structShellbags.html#afe09d61129b5b4b69a6d6d81731e8cdd":[1,0,114,2],
 "structShellbags.html#aff35832acef2d1e49bcb90a77e78dff5":[1,0,114,6],
 "structShimcache.html":[1,0,116],
-"structShimcache.html#a77fc05093c063c490216a9ae50d78e6e":[1,0,116,4],
-"structShimcache.html#a81f0a3b8b50abd04b2266826da62c704":[1,0,116,6],
-"structShimcache.html#a8b246c0a6d5f4283059b262a333bbefb":[1,0,116,2],
-"structShimcache.html#a9713fad1b909b71af03e9613065504f1":[1,0,116,3],
+"structShimcache.html#a77fc05093c063c490216a9ae50d78e6e":[1,0,116,3],
+"structShimcache.html#a81f0a3b8b50abd04b2266826da62c704":[1,0,116,5],
+"structShimcache.html#a9713fad1b909b71af03e9613065504f1":[1,0,116,2],
 "structShimcache.html#a9cd0477fb40b255b4cff2cd3a59cb4b8":[1,0,116,0],
-"structShimcache.html#ad10e36f246dc6c743e6a7ae324b55914":[1,0,116,5],
+"structShimcache.html#ad10e36f246dc6c743e6a7ae324b55914":[1,0,116,4],
 "structShimcache.html#ad768f3503379cd9e12e1019ebad7e8a2":[1,0,116,1],
 "structShimcaches.html":[1,0,117],
 "structShimcaches.html#a41620f175cff97448ea62c7cdcdfdeb8":[1,0,117,1],
@@ -247,7 +249,5 @@ var NAVTREEINDEX5 =
 "structTypedShellItem.html#a0605937fbbf364945925dc4dd2c82cd2":[1,0,124,4],
 "structTypedShellItem.html#a3b6ed5be14828caac9bb5a8a81442476":[1,0,124,0],
 "structTypedShellItem.html#a9c803660428558aa1c48c7481ddf0175":[1,0,124,3],
-"structTypedShellItem.html#ae7127f8777724c4423586546f74f6e45":[1,0,124,1],
-"structTypedShellItem.html#af531cd98d1df48e087bc35d8fc187866":[1,0,124,2],
-"structURIShellItem.html":[1,0,126]
+"structTypedShellItem.html#ae7127f8777724c4423586546f74f6e45":[1,0,124,1]
 };
