@@ -118,7 +118,7 @@ public:
 	void vider(std::ostream& o) const;
 private:
 	std::vector<std::wstring> noms_;
-	std::unordered_map<std::string, uint32_t> index_;   // empreinte brute -> catalogue
+	std::unordered_map<std::string, uint32_t> index_;   // raw digest -> catalog
 	size_t refuses_ = 0;
 };
 

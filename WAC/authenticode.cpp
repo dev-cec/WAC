@@ -20,7 +20,7 @@ struct Tlv {
 	uint8_t tag = 0;
 	const uint8_t* debut = nullptr;   //!< first byte (tag)
 	size_t total = 0;                 //!< tag + length + value
-	const uint8_t* val = nullptr;     //!< valeur
+	const uint8_t* val = nullptr;     //!< value
 	size_t len = 0;
 };
 
@@ -96,7 +96,7 @@ size_t empreinte(AlgoEmpreinte a, const uint8_t* p, size_t n, uint8_t sortie[64]
 //! String of a name attribute (PrintableString, UTF8String, BMPString…).
 std::wstring texte(const Tlv& v) {
 	std::wstring r;
-	if (v.tag == 0x1E) {                                       // BMPString : UTF-16BE
+	if (v.tag == 0x1E) {                                       // BMPString: UTF-16BE
 		for (size_t i = 0; i + 1 < v.len; i += 2) r += (wchar_t)((v.val[i] << 8) | v.val[i + 1]);
 		return r;
 	}
@@ -477,7 +477,7 @@ void AnalyseurPe::traiter(const uint8_t* p, size_t n) {
 
 void AnalyseurPe::terminer() {
 	if (termine_) return;
-	if (!decide_) {                                     // fichier de moins de 64 Kio
+	if (!decide_) {                                     // file smaller than 64 KiB
 		decide_ = true;
 		estPe_ = analyserEntetes();
 		if (estPe_) traiter(tete_.data(), tete_.size());
@@ -659,7 +659,7 @@ VerdictMicrosoft EvaluerScriptPowerShell(const uint8_t* octets, size_t taille) {
 			const size_t suff = (xml && ligne.size() >= 4 && ligne.compare(ligne.size() - 4, 4, U" -->") == 0) ? 4 : 0;
 			for (size_t k = pref; k + suff < ligne.size(); ++k) {
 				const int b = valeurBase64(ligne[k]);
-				if (b < 0) continue;                               // « = » de fin, espaces
+				if (b < 0) continue;                               // trailing "=", spaces
 				acc = (acc << 6) | (uint32_t)b; bits += 6;
 				if (bits >= 8) { bits -= 8; der.push_back((uint8_t)(acc >> bits)); }
 			}

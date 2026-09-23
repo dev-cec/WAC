@@ -131,7 +131,7 @@ bool RsaVerifierPkcs1(const uint8_t* module, size_t tailleModule,
 	// Leading zeros of the modulus (positive DER INTEGER).
 	while (tailleModule > 0 && *module == 0) { ++module; --tailleModule; }
 	if (tailleModule < 64 || tailleModule > 1024) return false;   // 512 to 8192 bits
-	if ((module[tailleModule - 1] & 1) == 0) return false;        // module pair : invalide
+	if ((module[tailleModule - 1] & 1) == 0) return false;        // even modulus: invalid
 	if (tailleExposant == 0 || tailleExposant > 8) return false;
 	while (tailleSignature > tailleModule && *signature == 0) { ++signature; --tailleSignature; }
 	if (tailleSignature > tailleModule) return false;

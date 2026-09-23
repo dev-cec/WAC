@@ -164,7 +164,7 @@ private:
 	const BYTE* c;
 	size_t tc;
 
-	// -- noms ---------------------------------------------------------------
+	// -- names --------------------------------------------------------------
 	/*  A name is designated by an offset relative to the chunk, shared between
 	 *  records. Hence the need to keep the whole chunk: a record cannot be
 	 *  decoded in isolation.
@@ -181,7 +181,7 @@ private:
 		return 8 + 2ULL * (lire16(c, tc, offset + 6) + 1);
 	}
 
-	// -- valeurs ------------------------------------------------------------
+	// -- values -------------------------------------------------------------
 	/*! Renders a typed value as text.
 	 *  @param indice for an array type, the wanted element; -1 = all of them,
 	 *         concatenated (a case that does not occur in real logs, kept so as
@@ -325,7 +325,7 @@ private:
 			return r;
 		}
 
-		// Types de taille fixe.
+		// Fixed-size types.
 		size_t pas = 0;
 		switch (base) {
 		case T_INT8: case T_UINT8:                       pas = 1;  break;
@@ -364,7 +364,7 @@ private:
 		return tableau(v.type & 0x7f, v.offset, v.taille, profondeur).size();
 	}
 
-	// -- flux de jetons -----------------------------------------------------
+	// -- token stream -------------------------------------------------------
 	/*! Decodes a sequence of tokens (fragment, element, content).
 	 *  @param p current position, advanced as reading goes
 	 *  @param fin upper bound

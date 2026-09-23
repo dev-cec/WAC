@@ -14,113 +14,112 @@
 
 namespace {
 
-/*! Lettre du volume système examiné, sans les deux-points ("C").
+/*! Letter of the examined system volume, without the colon ("C").
  *
- *  Dérivée de conf.systemDrive : Windows n'est pas toujours sur C:.
+ *  Derived from conf.systemDrive: Windows is not always on C:.
  *
- *  À N'UTILISER que pour ce qui se trouve nécessairement sur le volume de
- *  Windows — les définitions de tâches planifiées, par exemple, vivent sous
- *  `\Windows\System32\Tasks`. Tout ce qui dépend d'un chemin relevé sur la
- *  machine (profils utilisateurs en tête) doit passer par `volumeDuChemin()` :
- *  supposer le volume système pour ces chemins était précisément le défaut qui
- *  faisait perdre en silence les profils situés sur un autre disque. */
+ *  To be used ONLY for what necessarily lives on the Windows volume —
+ *  scheduled task definitions, for instance, live under
+ *  `\Windows\System32\Tasks`. Anything that depends on a path found on the
+ *  machine (user profiles first) must go through `volumeDuChemin()`: assuming
+ *  the system volume for those paths was precisely the defect that silently
+ *  lost profiles located on another disk. */
 std::wstring volumeSysteme() {
 	return conf.systemDrive.substr(0, 1);
 }
 
-//! Répertoire d'extraction, sur la clé USB (dossier de sortie). Jamais l'hôte.
-/*  L'extraction écrit dans la CONSIGNE, jamais dans le répertoire de travail :
- *  la copie brute doit exister avant qu'on en fasse quoi que ce soit, et ne plus
- *  être touchée ensuite (cf. consigne.h). `conf.mountpoint` désigne le travail,
- *  de sorte que tous les collecteurs lisent la copie de travail sans rien savoir
- *  de cette séparation. */
+//! Extraction directory, on the USB stick (output folder). Never the host.
+/*  Extraction writes into the EXHIBIT STORE, never into the working
+ *  directory: the raw copy must exist before anything is done with it, and
+ *  must not be touched afterwards (see consigne.h). `conf.mountpoint` points to
+ *  the working directory, so every collector reads the working copy without
+ *  knowing anything about this split. */
 std::wstring cibleConsigne(const std::wstring& chemin) {
 	return cheminSous(dossierConsigne(), chemin);
 }
 
-/*! Rapporteur de progression pour raw_hive : affiche en Kio, plus lisible que des
- *  octets pour des ruches de plusieurs dizaines de Mio. */
+/*! Progress reporter for raw_hive: displays KiB, more readable than bytes for
+ *  hives of several tens of MiB. */
 void rapporterProgression(const wchar_t* item, unsigned long long fait,
                           unsigned long long total) {
 	printProgress(item ? item : L"", fait / 1024, total / 1024, L"Kio");
 }
 
-/*! Extraction brute d'un lot de ruches, puis remise en etat des copies de
- *  travail : rejeu des journaux de transaction, patch en recours.
+/*! Raw extraction of a batch of hives, then repair of the working copies:
+ *  transaction log replay, patch as a fallback.
  *
- *  PARTIE COMMUNE AUX DEUX PASSES. La liste des profils utilisateurs se lit
- *  desormais dans la ruche SOFTWARE extraite (cf. raw_collect.h et
- *  tools.h/loadProfileList) : les ruches par utilisateur ne peuvent donc plus
- *  etre extraites dans la meme passe que les ruches systeme, puisque leur
- *  emplacement n'est pas encore connu quand celle-ci commence.
+ *  SHARED BY BOTH PASSES. The user profile list is now read in the extracted
+ *  SOFTWARE hive (see raw_collect.h and tools.h/loadProfileList): the per-user
+ *  hives can therefore no longer be extracted in the same pass as the system
+ *  hives, since their location is not yet known when that one starts.
  *
- *  @param cheminsRuches chemins des ruches, absolus (avec lettre de volume) ou
- *                       relatifs au volume systeme ; les journaux .LOG1 et
- *                       .LOG2 sont ajoutes d'office.
- *  @param etiquette     ce que cette passe extrait, pour le journal d'audit.
+ *  @param cheminsRuches hive paths, absolute (with volume letter) or relative
+ *                       to the system volume; the .LOG1 and .LOG2 logs are
+ *                       added automatically.
+ *  @param etiquette     what this pass extracts, for the audit log.
  */
 HRESULT extraireLotDeRuches(const std::vector<std::wstring>& cheminsRuches,
                             const std::wstring& etiquette) {
 	conf.mountpoint = dossierTravail();
 
-	// L'emplacement de collecte est verifie par main, avant la toute premiere
-	// ecriture — qui peut etre le prelevement d'un binaire de processus.
+	// The collection location is checked by main, before the very first
+	// write — which can be collecting a process's binary.
 
-	/* EXTRACTION GROUPEE PAR VOLUME.
-	   Un seul volume etait suppose, celui de Windows : un profil situe sur un
-	   autre disque (« D:\Users\jean », cas d'un poste a SSD systeme + disque de
-	   donnees) etait cherche dans la table de fichiers de C:, donc jamais
-	   extrait — et tous les artefacts de cet utilisateur sortaient vides.
-	   Les fichiers sont desormais regroupes par lettre de volume, et
-	   ExtractFilesRaw appele une fois par volume reellement concerne. */
+	/* EXTRACTION GROUPED BY VOLUME.
+	   A single volume used to be assumed, the Windows one: a profile on another
+	   disk ("D:\Users\jean", a machine with a system SSD + a data disk) was
+	   looked for in C:'s file table, so never extracted — and every artefact of
+	   that user came out empty.
+	   Files are now grouped by volume letter, and ExtractFilesRaw called once
+	   per volume actually involved. */
 	std::map<std::wstring, std::vector<std::pair<std::wstring, std::wstring>>> parVolume;
-	std::vector<std::wstring> ruches;   // chemins locaux des ruches à remettre en état
+	std::vector<std::wstring> ruches;   // local paths of the hives to repair
 
-	// `chemin` est absolu (avec lettre) ou relatif au volume systeme.
+	// `chemin` is absolute (with letter) or relative to the system volume.
 	auto add = [&](const std::wstring& chemin) {
 		parVolume[volumeDuChemin(chemin)].emplace_back(cheminRelatifAuVolume(chemin),
 		                                               cibleConsigne(chemin));
 	};
-	// Une ruche + ses deux journaux de transaction.
+	// A hive + its two transaction logs.
 	auto addRuche = [&](const std::wstring& chemin) {
 		add(chemin);
 		add(chemin + L".LOG1");
 		add(chemin + L".LOG2");
-		// Le rejeu et le patch portent sur la copie de TRAVAIL, jamais sur la
-		// consigne : c'est toute la raison de la separation.
+		// The replay and the patch apply to the WORKING copy, never to the
+		// exhibit store: that is the whole point of the split.
 		ruches.push_back(cheminExtrait(chemin));
 	};
 
 	for (const std::wstring& ruche : cheminsRuches) addRuche(ruche);
 
-	// Créer l'arborescence de destination sous la consigne
+	// Create the destination tree under the exhibit store
 	for (const auto& groupe : parVolume)
 		for (const std::pair<std::wstring, std::wstring>& it : groupe.second) {
 			std::error_code ec;
 			std::filesystem::create_directories(std::filesystem::path(it.second).parent_path(), ec);
 		}
 
-	/* Une passe par volume. Un volume inaccessible ne doit pas emporter les
-	   autres : on consigne son echec et on continue, comme pour une ruche
-	   manquante. Le premier echec dur est toutefois memorise pour le retour,
-	   afin que l'appelant sache que la collecte est incomplete. */
-	std::map<std::wstring, std::wstring> md5ParFichier;   // chemin de travail -> MD5
+	/* One pass per volume. An inaccessible volume must not take the others
+	   down: its failure is recorded and we go on, as for a missing hive. The
+	   first hard failure is nonetheless kept for the return value, so that the
+	   caller knows the collection is incomplete. */
+	std::map<std::wstring, std::wstring> md5ParFichier;   // working path -> MD5
 	unsigned manquants = 0;
 	HRESULT hr = ERROR_SUCCESS;
 	HRESULT premierEchecDur = ERROR_SUCCESS;
-	RawHiveSetProgress(&rapporterProgression);   // montre que l'extraction avance
+	RawHiveSetProgress(&rapporterProgression);   // shows that extraction is progressing
 	for (const auto& groupe : parVolume) {
 		const std::wstring& volume = groupe.first;
 		const auto& items = groupe.second;
 		std::vector<HRESULT> res;
-		std::vector<RawHiveExtrait> releve;      // empreintes calculees a l'ecriture
+		std::vector<RawHiveExtrait> releve;      // fingerprints computed while writing
 		const HRESULT hrVolume = ExtractFilesRaw(volume, items, &res, &releve);
 		ConsigneAjouter(releve, L"Lecture brute NTFS (\\\\.\\" + volume
 		                        + L": — $MFT, index de repertoires, attribut $DATA) ; "
 		                        L"aucune ouverture de fichier par le systeme");
-		// Consigne ici, et non chez l'appelant : l'extraction doit preceder au
-		// journal les patchs qu'elle declenche, sinon l'enchainement se lit a
-		// l'envers.
+		// Recorded here, not by the caller: the extraction must come before the
+		// patches it triggers in the log, otherwise the sequence reads
+		// backwards.
 		auditRecord(etiquette,
 		            std::wstring(L"\\\\.\\") + volume + L": -> " + conf.mountpoint,
 		            hrVolume, Footprint::VOLUME_BRUT);
@@ -131,17 +130,17 @@ HRESULT extraireLotDeRuches(const std::vector<std::wstring>& cheminsRuches,
 		}
 		if (hrVolume == S_FALSE) hr = S_FALSE;
 
-		// Journaliser les échecs par fichier sans interrompre (journaux parfois
-		// absents, profils système sans UsrClass.dat, etc.)
+		// Log per-file failures without stopping (logs sometimes missing,
+		// system profiles without UsrClass.dat, etc.)
 		for (size_t i = 0; i < items.size() && i < res.size(); ++i)
 			if (FAILED(res[i])) {
 				++manquants;
 				log(2, L"🔥Extraction brute échouée : " + volume + L":" + items[i].first, res[i]);
 			}
-		/* Empreintes indexees par chemin de TRAVAIL : calculees pendant
-		   l'ecriture de la consigne, donc avant toute modification — exactement
-		   ce qu'il faut consigner. La cle est le chemin de travail car c'est
-		   sur celui-la que porteront le rejeu et le patch. */
+		/* Fingerprints indexed by WORKING path: computed while the exhibit store
+		   was being written, hence before any modification — exactly what must be
+		   recorded. The key is the working path because that is the one the replay
+		   and the patch will apply to. */
 		for (const RawHiveExtrait& e : releve)
 			if (!e.empreintes.md5.empty()) {
 				const std::filesystem::path relatif = std::filesystem::relative(
@@ -153,12 +152,12 @@ HRESULT extraireLotDeRuches(const std::vector<std::wstring>& cheminsRuches,
 	RawHiveSetProgress(nullptr);
 	printProgressEnd();
 	log(2, L"❇️Volumes lus : " + std::to_wstring(parVolume.size()));
-	/* Aucun volume lisible : rien ne suivra, autant le dire tout de suite. */
+	/* No readable volume: nothing will follow, better say so at once. */
 	if (md5ParFichier.empty() && premierEchecDur != ERROR_SUCCESS) return premierEchecDur;
 
-	/*  CONSIGNE -> TRAVAIL. Les copies brutes sont en place et identifiees : on
-	 *  en fait la copie de travail, verifiee par empreinte, et c'est sur elle
-	 *  seule que porte tout ce qui suit. */
+	/*  EXHIBIT STORE -> WORKING COPY. The raw copies are in place and
+	 *  identified: their working copy is made, verified by fingerprint, and
+	 *  everything that follows applies to it alone. */
 	{
 		size_t copies = 0;
 		unsigned long long octets = 0;
@@ -168,33 +167,33 @@ HRESULT extraireLotDeRuches(const std::vector<std::wstring>& cheminsRuches,
 		            + std::to_wstring(octets / 1024 / 1024) + L" Mio)",
 		            dossierConsigne() + L" -> " + dossierTravail(),
 		            hrCopie, Footprint::ECRITURE_USB);
-		if (FAILED(hrCopie)) return hrCopie;     // sans travail, rien ne suit
+		if (FAILED(hrCopie)) return hrCopie;     // without a working copy, nothing follows
 		if (hrCopie == S_FALSE) hr = S_FALSE;
 	}
 
-	// Remettre chaque ruche en état (dirty -> chargeable), avec traçabilité.
+	// Repair each hive (dirty -> loadable), with traceability.
 	log(0, L"*******************************************************************************************************************");
 	log(0, L"ℹ️Hives recovery :");
 	log(0, L"*******************************************************************************************************************");
 	unsigned patchees = 0, echecs = 0, rejouees = 0;
 	unsigned long long pagesRejouees = 0, octetsRejoues = 0;
-	/* Cette phase ne relit plus les ruches : les empreintes viennent du calcul
-	   fait pendant l'écriture (voir QuickDigest5::Stream). Auparavant, chaque
-	   ruche était relue depuis le support de collecte — environ 150 Mio lus une
-	   seconde fois sur une clé USB, soit près de la moitié du temps d'extraction,
-	   sans le moindre affichage. */
+	/* This phase no longer re-reads the hives: the fingerprints come from the
+	   computation made while writing (see QuickDigest5::Stream). Previously,
+	   each hive was read back from the collection medium — about 150 MiB read a
+	   second time from a USB stick, almost half the extraction time, without
+	   any display. */
 	size_t iRuche = 0;
 	for (const std::wstring& r : ruches) {
 		std::error_code ec;
 		++iRuche;
-		if (!std::filesystem::exists(r, ec)) continue;   // non extraite : déjà journalisé
+		if (!std::filesystem::exists(r, ec)) continue;   // not extracted: already logged
 
 		printProgress(L"Remise en etat " + std::filesystem::path(r).filename().wstring(),
 		              iRuche, ruches.size(), L"ruche");
 
-		/* Empreinte AVANT toute modification : la copie brute reste identifiable.
-		   Reprise du calcul fait pendant l'extraction ; on ne relit le fichier
-		   que si elle manque (cas theorique d'un item sans empreinte). */
+		/* Fingerprint BEFORE any modification: the raw copy stays identifiable.
+		   Taken from the computation made during extraction; the file is only
+		   re-read if it is missing (theoretical case of an item without one). */
 		std::wstring md5avant;
 		const auto trouve = md5ParFichier.find(r);
 		if (trouve != md5ParFichier.end()) md5avant = trouve->second;
@@ -203,13 +202,12 @@ HRESULT extraireLotDeRuches(const std::vector<std::wstring>& cheminsRuches,
 		log(1, L"➕Hive");
 		log(2, L"❇️MD5 copie brute (avant toute ecriture) : " + md5avant);
 
-		/* REJEU D'ABORD. Les journaux de transaction contiennent les pages
-		   modifiees depuis la derniere ecriture complete de la ruche : les
-		   appliquer donne l'etat reel de la machine, et rend la ruche propre par
-		   construction — donc sans patch. Le contenu d'origine de chaque page
-		   remplacee part dans un journal d'annulation, de sorte que la copie
-		   brute reste reconstructible a l'octet (verifie sur trois ruches
-		   reelles). */
+		/* REPLAY FIRST. The transaction logs hold the pages changed since the
+		   hive's last full write: applying them gives the machine's real state,
+		   and makes the hive clean by construction — hence no patch. The original
+		   content of each replaced page goes into an undo journal, so that the
+		   raw copy stays rebuildable to the byte (verified on three real
+		   hives). */
 		const HiveReplayInfo rejeu = ReplayHiveLogs(r, md5avant);
 		log(2, L"❇️" + HiveReplayInfoToString(rejeu));
 		if (rejeu.applique) {
@@ -225,25 +223,25 @@ HRESULT extraireLotDeRuches(const std::vector<std::wstring>& cheminsRuches,
 			            ERROR_SUCCESS, Footprint::RUCHE_REJEU);
 		}
 		else if (!rejeu.ok) {
-			// Le rejeu n'a rien ecrit : on le consigne et on retombe sur le patch.
+			// The replay wrote nothing: record it and fall back on the patch.
 			log(2, L"🔥Rejeu impossible : " + r + L" (" + rejeu.error + L")");
 			auditRecord(L"Rejeu des journaux de transaction d'une ruche copiee (non applique)",
 			            r + L" | " + HiveReplayInfoToString(rejeu),
 			            E_FAIL, Footprint::RUCHE_COPIE);
 		}
 
-		/* PATCH EN RECOURS. Apres un rejeu abouti la ruche est propre et
-		   MakeHiveLoadable ne fait rien ; il ne reste utile que pour les ruches
-		   sans journal exploitable. */
+		/* PATCH AS A FALLBACK. After a successful replay the hive is clean and
+		   MakeHiveLoadable does nothing; it only remains useful for hives
+		   without a usable log. */
 		HiveFixInfo info = MakeHiveLoadable(r);
 		log(2, L"❇️" + HiveFixInfoToString(info));
 
-		// UNE entree par ruche : toute ecriture de WAC sur une preuve est
-		// consignee, et l'empreinte d'AVANT la rend verifiable a l'octet. Les
-		// ruches deja propres le sont aussi — « non modifiee » est une
-		// information, pas une absence d'information.
-		// Note : le nom interne rendu par HiveFixInfoToString est tronque a ses
-		// 31 derniers caracteres, comme le format regf le stocke.
+		// ONE entry per hive: every write WAC makes on evidence is recorded,
+		// and the BEFORE fingerprint makes it verifiable to the byte. Hives that
+		// are already clean are recorded too — "not modified" is information,
+		// not a lack of information.
+		// Note: the internal name returned by HiveFixInfoToString is truncated to
+		// its last 31 characters, as the regf format stores it.
 		auditRecord(info.patched ? L"Remise en etat d'une ruche copiee (patch applique)"
 		                         : L"Verification d'une ruche copiee (deja propre)",
 		            r + L" | " + HiveFixInfoToString(info) + L" | MD5 avant patch : " + md5avant,
@@ -260,22 +258,22 @@ HRESULT extraireLotDeRuches(const std::vector<std::wstring>& cheminsRuches,
 	     + L", échecs : " + std::to_wstring(echecs)
 	     + L", fichiers manquants : " + std::to_wstring(manquants));
 
-	// Une ruche illisible est bloquante en aval (OROpenHive) : on le signale.
+	// An unreadable hive blocks what follows (OROpenHive): report it.
 	return (echecs == 0) ? hr : S_FALSE;
 }
 
 } // namespace
 
 HRESULT ExtractSystemHivesRaw() {
-	/* Ruches de la machine. Aucune ne depend d'un chemin releve sur le systeme :
-	   c'est precisement ce qui permet de les extraire en premier, avant de savoir
-	   quoi que ce soit du contenu du registre. */
+	/* The machine's hives. None depends on a path found on the system: that
+	   is precisely what allows extracting them first, before knowing anything
+	   of the registry's content. */
 	std::vector<std::wstring> ruches = {
 		L"\\Windows\\system32\\config\\SYSTEM",
 		L"\\Windows\\system32\\config\\SOFTWARE",
-		/* SAM : base des comptes LOCAUX. Extraite pour que `users` se lise hors
-		   ligne (dates de dernier logon, echecs de connexion, drapeaux de compte)
-		   au lieu d'interroger LSASS par RPC. Cf. users.h. */
+		/* SAM: database of LOCAL accounts. Extracted so that `users` is read
+		   offline (last logon dates, logon failures, account flags) instead of
+		   querying LSASS over RPC. See users.h. */
 		L"\\Windows\\system32\\config\\SAM",
 		L"\\Windows\\AppCompat\\Programs\\Amcache.hve",
 	};
@@ -285,10 +283,10 @@ HRESULT ExtractSystemHivesRaw() {
 }
 
 HRESULT ExtractUserHivesRaw() {
-	/* `conf.profiles` est renseigne par loadProfileList(), qui lit la ruche
-	   SOFTWARE extraite par la passe precedente. Une liste vide n'est donc pas
-	   une machine sans utilisateur, mais un releve de profils qui a echoue :
-	   l'annoncer vaut mieux que de rendre un succes sur une extraction vide. */
+	/* `conf.profiles` is filled by loadProfileList(), which reads the SOFTWARE
+	   hive extracted by the previous pass. An empty list is therefore not a
+	   machine without users but a failed profile listing: saying so is better
+	   than returning success on an empty extraction. */
 	if (conf.profiles.empty()) {
 		log(2, L"🔥Aucun profil releve : aucune ruche par utilisateur a extraire");
 		auditRecord(L"Extraction brute des ruches par utilisateur (aucun profil releve)",
@@ -296,9 +294,9 @@ HRESULT ExtractUserHivesRaw() {
 		return S_FALSE;
 	}
 
-	/* Le chemin est passe ABSOLU, avec sa lettre : c'est elle qui determine sur
-	   quel volume lire. Un profil sur un second disque (« D:\Users\jean ») etait
-	   cherche dans la table de fichiers de C:, donc jamais extrait. */
+	/* The path is passed ABSOLUTE, with its letter: that is what determines
+	   which volume to read. A profile on a second disk ("D:\Users\jean") was
+	   looked for in C:'s file table, so never extracted. */
 	std::vector<std::wstring> ruches;
 	for (const std::tuple<std::wstring, std::wstring>& profile : conf.profiles) {
 		const std::wstring profil = std::get<1>(profile);   // ex. "D:\Users\jean"
@@ -317,18 +315,17 @@ HRESULT ExtractFileArtefactsRaw() {
 	log(0, L"ℹ️Raw file artefacts :");
 	log(0, L"*******************************************************************************************************************");
 
-	/* Répertoires à extraire, avec le filtre d'extension de leur collecteur.
-	   Chaque cible porte SON volume : les dossiers d'un profil situe sur un
-	   autre disque que Windows etaient lus sur le volume systeme, donc jamais
-	   trouves. */
+	/* Directories to extract, with their collector's extension filter.
+	   Each target carries ITS volume: the folders of a profile on a disk other
+	   than Windows' were read on the system volume, so never found. */
 	struct Cible {
-		std::wstring volume;       //!< lettre du volume, sans deux-points
-		std::wstring chemin;       //!< chemin relatif a la racine de ce volume
-		std::wstring sortie;       //!< destination sur le support de collecte
+		std::wstring volume;       //!< volume letter, without the colon
+		std::wstring chemin;       //!< path relative to that volume's root
+		std::wstring sortie;       //!< destination on the collection medium
 		std::vector<std::wstring> extensions;
 	};
 	std::vector<Cible> cibles;
-	// `absolu` porte sa lettre, ou est relatif au volume systeme.
+	// `absolu` carries its letter, or is relative to the system volume.
 	auto addCible = [&](const std::wstring& absolu,
 	                    const std::vector<std::wstring>& ext) {
 		cibles.push_back({ volumeDuChemin(absolu), cheminRelatifAuVolume(absolu),
@@ -337,16 +334,15 @@ HRESULT ExtractFileArtefactsRaw() {
 
 	addCible(L"\\Windows\\Prefetch", { L".pf" });
 
-	/* Journaux d'événements : extraits SEULEMENT sur demande (--events). Ce sont
-	   les plus gros artefacts du système — plus d'une centaine de mégaoctets sur
-	   une installation ordinaire, et davantage sur un serveur. Les extraire
-	   systématiquement allongerait chaque collecte et remplirait le support pour
-	   des données que l'opérateur n'a pas demandées. Leur lecture hors ligne
-	   remplace l'API EventLog (cf. events.h). */
+	/* Event logs: extracted ONLY on request (--events). They are the system's
+	   largest artefacts — over a hundred megabytes on an ordinary installation,
+	   more on a server. Extracting them systematically would lengthen every
+	   collection and fill the medium with data the operator did not ask for.
+	   Reading them offline replaces the EventLog API (see events.h). */
 	if (conf._events) addCible(L"\\Windows\\System32\\winevt\\Logs", { L".evtx" });
 
 	for (const std::tuple<std::wstring, std::wstring>& profile : conf.profiles) {
-		const std::wstring profil = std::get<1>(profile);   // absolu, avec sa lettre
+		const std::wstring profil = std::get<1>(profile);   // absolute, with its letter
 		const std::wstring recent = profil + L"\\AppData\\Roaming\\Microsoft\\Windows\\Recent";
 		addCible(recent + L"\\AutomaticDestinations", { L".automaticDestinations-ms" });
 		addCible(recent + L"\\CustomDestinations",    { L".customDestinations-ms" });
@@ -359,10 +355,10 @@ HRESULT ExtractFileArtefactsRaw() {
 	size_t total = 0;
 	RawHiveSetProgress(&rapporterProgression);
 
-	/* Définitions de tâches planifiées : une arborescence, et les fichiers n'ont
-	   PAS d'extension — d'où l'extraction récursive sans filtre. Elle remplace la
-	   lecture via le Task Scheduler COM, ce qui supprime à la fois
-	   la trace d'exécution et la dépendance à COM. */
+	/* Scheduled task definitions: a tree, and the files have NO extension —
+	   hence the recursive extraction without a filter. It replaces reading
+	   through the Task Scheduler COM interface, which removes both the
+	   execution trace and the dependency on COM. */
 	{
 		size_t tachesExtraites = 0;
 		const std::wstring cheminTasks = L"\\Windows\\System32\\Tasks";
@@ -393,20 +389,20 @@ HRESULT ExtractFileArtefactsRaw() {
 		                        + L": — $MFT, index de repertoires, attribut $DATA) ; "
 		                        L"aucune ouverture de fichier par le systeme");
 		if (FAILED(hr)) {
-			/* Volume inaccessible. On NE s'arrete plus : avec plusieurs volumes,
-			   un disque illisible emportait toutes les cibles suivantes, y
-			   compris celles du volume systeme. */
+			/* Inaccessible volume. We NO LONGER stop: with several volumes, an
+			   unreadable disk took all the following targets down with it, the
+			   system volume's included. */
 			log(2, L"🔥Extraction brute impossible : " + cible.volume + L":"
 			     + cible.chemin, hr);
 			global = S_FALSE;
 			continue;
 		}
-		if (hr == S_FALSE) global = S_FALSE;    // certains fichiers n'ont pas pu être lus
+		if (hr == S_FALSE) global = S_FALSE;    // some files could not be read
 		total += extraits;
-		// Une entree par repertoire, avec le decompte : c'est ce qui permet a
-		// l'analyse de distinguer « dossier vide » de « dossier non collecte ».
-		// Le diagnostic accompagne le decompte : « 0 fichier » ne dit pas si le
-		// repertoire manque, s'il est vide ou si le filtre a tout ecarte.
+		// One entry per directory, with the count: that is what lets the
+		// analysis tell "empty folder" from "folder not collected".
+		// The diagnosis goes with the count: "0 files" does not say whether the
+		// directory is missing, empty, or whether the filter discarded everything.
 		auditRecord(L"Extraction brute d'un repertoire (" + std::to_wstring(extraits)
 		            + L" fichier(s) — " + diagnostic + L")",
 		            std::wstring(L"\\\\.\\") + cible.volume + L":" + cible.chemin,
@@ -419,12 +415,13 @@ HRESULT ExtractFileArtefactsRaw() {
 	printProgressEnd();
 	log(2, L"❇️Fichiers extraits au total : " + std::to_wstring(total));
 
-	/*  CONSIGNE -> TRAVAIL, pour les artefacts sur fichiers. Les ruches ont deja
-	 *  ete recopiees et rejouees : ConsigneVersTravail ne les ecrase pas (cf.
-	 *  consigne.cpp), il complete le repertoire de travail. La separation vaut
-	 *  aussi pour ces fichiers-la, que WAC ne modifie pas : ne dedoubler que ce
-	 *  qu'on modifie ferait dependre la procedure de ce que l'outil croit faire,
-	 *  alors que c'est precisement ce qu'il faut pouvoir verifier du dehors. */
+	/*  EXHIBIT STORE -> WORKING COPY, for the file-based artefacts. The hives
+	 *  have already been copied and replayed: ConsigneVersTravail does not
+	 *  overwrite them (see consigne.cpp), it completes the working directory.
+	 *  The split applies to these files too, which WAC does not modify:
+	 *  duplicating only what one modifies would make the procedure depend on
+	 *  what the tool believes it does, which is precisely what must be
+	 *  checkable from outside. */
 	{
 		size_t copies = 0;
 		unsigned long long octets = 0;

@@ -55,7 +55,7 @@ std::wstring signatureVolume(const std::wstring& lettre) {
 	return std::wstring(hex) + L" | " + fs;
 }
 
-//! Lettre de volume d'un chemin source « X:\... ».
+//! Volume letter of a source path "X:\...".
 std::wstring lettreDe(const std::wstring& cheminVolume) {
 	if (cheminVolume.size() >= 2 && cheminVolume[1] == L':')
 		return cheminVolume.substr(0, 1);
@@ -185,7 +185,7 @@ HRESULT ConsigneVersTravail(size_t* copies, unsigned long long* octets) {
 	 *  copy is compared with what was READ FROM THE VOLUME, not with a re-read of
 	 *  the exhibit store. An already altered exhibit store would thus be caught
 	 *  too. */
-	std::map<std::wstring, std::wstring> attendu;   // chemin -> SHA-256
+	std::map<std::wstring, std::wstring> attendu;   // path -> SHA-256
 	for (const Piece& p : g_pieces)
 		if (SUCCEEDED(p.extrait.resultat) && !p.extrait.empreintes.sha256.empty())
 			attendu.emplace(p.extrait.cheminSortie, p.extrait.empreintes.sha256);

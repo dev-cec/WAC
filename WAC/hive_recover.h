@@ -42,7 +42,7 @@ struct HiveFixInfo {
     bool     patched       = false; //!< the patch was applied
     uint32_t primarySeq    = 0;     //!< primary sequence (unchanged)
     uint32_t secondarySeq  = 0;     //!< secondary sequence BEFORE the patch
-    uint32_t oldChecksum   = 0;     //!< checksum avant patch
+    uint32_t oldChecksum   = 0;     //!< checksum before the patch
     uint32_t newChecksum   = 0;     //!< recomputed checksum
     std::wstring hiveName;          //!< internal name of the hive (offset 0x30)
     std::wstring error;             //!< message if ok == false
@@ -62,7 +62,7 @@ std::wstring HiveFixInfoToString(const HiveFixInfo& i);
 struct HiveLogEntry {
     uint32_t sequence = 0;      //!< sequence number of the entry
     uint32_t pages    = 0;      //!< number of modified pages
-    uint64_t octets   = 0;      //!< volume de ces pages
+    uint64_t octets   = 0;      //!< size of those pages
     bool     applique = false;  //!< true if it was written into the hive
     std::wstring motif;         //!< why it was discarded, if it was
 };

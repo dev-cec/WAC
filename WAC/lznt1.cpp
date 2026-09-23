@@ -25,7 +25,7 @@ size_t detendreMorceau(const uint8_t* compresse, size_t tailleCompressee, size_t
 	 *  threshold is crossed, the distance gains a bit and the length loses one.
 	 *  Fixing these values produces wrong data without any error. */
 	unsigned decalage = 12;          // position of the distance field
-	uint16_t masqueTaille = 0x0fff;  // champ de longueur
+	uint16_t masqueTaille = 0x0fff;  // length field
 	size_t   seuil = 16;
 
 	while (tailleMorceau > 0) {

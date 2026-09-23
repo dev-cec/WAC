@@ -68,8 +68,8 @@ HRESULT ExtractFileRaw(const std::wstring& volumeLetter,
  */
 struct RawHiveEmpreintes {
     std::wstring md5;            //!< MD5 fingerprint, uppercase hexadecimal
-    std::wstring sha1;           //!< empreinte SHA-1
-    std::wstring sha256;         //!< empreinte SHA-256
+    std::wstring sha1;           //!< SHA-1 fingerprint
+    std::wstring sha256;         //!< SHA-256 fingerprint
     uint64_t octets = 0;         //!< size actually extracted
     uint64_t tailleAnnoncee = 0; //!< size declared by the $DATA attribute
     /*! Valid data length of the non-resident attribute. Beyond it, the content is
@@ -90,7 +90,7 @@ struct RawHiveEmpreintes {
 struct RawHiveExtrait {
     std::wstring cheminVolume;   //!< path on the source volume
     std::wstring cheminSortie;   //!< file written to the collection medium
-    HRESULT      resultat = E_FAIL;   //!< issue de l'extraction
+    HRESULT      resultat = E_FAIL;   //!< outcome of the extraction
     RawHiveEmpreintes empreintes;     //!< empty if the extraction failed
 };
 
@@ -141,7 +141,7 @@ public:
     /*! Lists a directory by its absolute path, on the volume already open. */
     HRESULT lister(const std::wstring& dossierAbsolu, std::vector<RawDirEntry>& entrees);
 
-    //! Nombre de volumes effectivement ouverts (un handle chacun).
+    //! Number of volumes actually opened (one handle each).
     unsigned volumesOuverts() const;
 
 private:

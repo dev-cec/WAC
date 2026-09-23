@@ -13,8 +13,8 @@ namespace {
 constexpr size_t BASE_BLOCK = 4096;   // size of a hive's base block
 constexpr size_t OFF_PRIMARY   = 0x04;
 constexpr size_t OFF_SECONDARY = 0x08;
-constexpr size_t OFF_FILETYPE  = 0x1C;  // 0 = ruche primaire, 6 = journal
-constexpr size_t OFF_NAME      = 0x30;  // nom interne, UTF-16, 64 octets
+constexpr size_t OFF_FILETYPE  = 0x1C;  // 0 = primary hive, 6 = log
+constexpr size_t OFF_NAME      = 0x30;  // internal name, UTF-16, 64 bytes
 constexpr size_t OFF_CHECKSUM  = 508;   // XOR of the first 127 uint32
 
 inline uint32_t rd32(const uint8_t* p){
@@ -118,7 +118,7 @@ std::wstring HiveFixInfoToString(const HiveFixInfo& i){
  */
 namespace {
 
-constexpr size_t LOG_ENTETE      = 512;        // bloc de base d'un journal
+constexpr size_t LOG_ENTETE      = 512;        // base block of a log
 constexpr size_t ENTREE_ENTETE   = 40;         // before the page references
 constexpr uint64_t MARVIN_GRAINE = 0x82EF4D887A4E55C5ULL;
 
@@ -156,7 +156,7 @@ struct EntreeLue {
     uint32_t nbPages  = 0;
     uint64_t octets   = 0;
     uint32_t tailleBins = 0;
-    std::vector<std::pair<uint32_t, uint32_t>> pages; //!< offset, taille
+    std::vector<std::pair<uint32_t, uint32_t>> pages; //!< offset, size
     std::vector<uint8_t> corps;                       //!< the whole entry
     size_t   debutDonnees = 0;                        //!< within `corps`
     std::wstring motif;                               //!< empty if valid

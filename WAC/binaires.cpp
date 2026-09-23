@@ -157,7 +157,7 @@ IndexCatalogues& catalogues() {
 		log(2, L"🔥Catalogues de signatures illisibles : tous les binaires seront preleves", hr);
 		return index;
 	}
-	std::set<uint64_t> vus;                  // un fichier peut figurer sous son nom court aussi
+	std::set<uint64_t> vus;                  // a file can also appear under its short name
 	size_t lus = 0;
 	for (const RawDirEntry& e : entrees) {
 		if (e.isDirectory || !vus.insert(e.mftIndex).second) continue;
