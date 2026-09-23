@@ -345,6 +345,46 @@ static bool fits(size_t size, size_t offset, size_t length) {
 	return offset <= size && length <= size - offset;
 }
 
+/*! Content of a byte vector (Vector<VT_UI1>).
+ *
+ *  It was returned as the string "Not implemented", without its bytes. On a
+ *  real machine the 8 such values were all a serialized ID LIST — a search
+ *  folder, the full path of a PDF — each a sequence of shell items ended by a
+ *  null size landing exactly on the vector's last byte. Recognised, in order:
+ *  a property store ("1SPS" at 4), a well-formed ID list; anything else keeps
+ *  its bytes.
+ *  @param data the bytes of the vector
+ *  @param count their number, checked against the entry by the caller
+ *  @param level depth, for the layout
+ *  @return the decoded content, or {"Data": hex} */
+static Json byteVectorContent(LPBYTE data, size_t count, unsigned int level) {
+	if (count >= 24 && *reinterpret_cast<const unsigned int*>(data + 4) == 0x53505331) {
+		SPS store(data, level + 2, count);
+		if (store.size) return store.toJson();
+	}
+	// An ID list: every item declares a size of at least 3 that fits, and the
+	// list ends with a null size — nothing less is taken for one.
+	size_t end = 0;
+	bool terminated = false;
+	while (end + 2 <= count) {
+		const unsigned short size = *reinterpret_cast<const unsigned short*>(data + end);
+		if (size == 0) { terminated = true; break; }
+		if (size < 3 || size > count - end) break;
+		end += size;
+	}
+	Json o = Json::obj();
+	if (terminated && end > 0) {
+		Json items = Json::arr();
+		for (size_t at = 0; at < end; at += *reinterpret_cast<const unsigned short*>(data + at))
+			items.push(IdList(data + at, (int)level + 1).toJson());
+		o.add(L"IdList", std::move(items));
+		return o;
+	}
+	log(2, L"🔥Vector<VT_UI1>: content not recognised, kept raw");
+	o.add(L"Data", Json::str(dump_wstring(data, 0, (int)count)));
+	return o;
+}
+
 /*! Reads ONE scalar value. See `getValue`, which also handles the vectors. */
 static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueType,
                          unsigned int level, unsigned int inputSize, bool* typeNotDecoded) {
@@ -376,7 +416,7 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		{ VT_CY, 8 }, { VT_ERROR, 4 }, { VT_DECIMAL, 16 }, { VT_CLSID, 16 },
 		// variable types: only their leading size field is fixed
 		{ VT_BSTR, 4 }, { VT_LPWSTR, 4 }, { VT_LPSTR, 4 }, { VT_BLOB, 4 },
-		{ VT_STREAM, 4 }, { 0x101F, 4 }, { 0x1011, 2 },
+		{ VT_STREAM, 4 }, { 0x101F, 4 }, { 0x1011, 4 },
 	};
 	const auto fixedSize = FIXED_SIZE.find(valueType);
 	if (fixedSize != FIXED_SIZE.end() && !room(fixedSize->second)) return truncated();
@@ -450,16 +490,14 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		return arr;
 	}
 	if (valueType == 0x1011) {                     // Vector<VT_UI1>
-		unsigned short size = *reinterpret_cast<unsigned short*>(buffer + *pos);
-		Json r = Json::str(L"Not implemented");    // unknown content (system.delegateidlist)
-		// The vector holds `size` bytes; a nested store must fit in them (and in
-		// the entry, when its size is known).
-		const size_t space = std::min<size_t>(size, inputSize - *pos);   // room(2) checked above
-		if (space >= 0x8 + 4 && *reinterpret_cast<unsigned int*>(buffer + *pos + 0x8) == 0x53505331)
-			r = SPS(buffer + *pos + 0x4, level + 2, space - 4).toJson();
-		else if (space >= 0x1c + 4 && *reinterpret_cast<unsigned int*>(buffer + *pos + 0x1c) == 0x53505331)
-			r = SPS(buffer + *pos + 0x8, level + 2, space - 8).toJson();
-		*pos += size;
+		/* MS-OLEPS: the byte count on 4 bytes, the bytes, then padding to a
+		   multiple of 4. The count was read on 2 bytes, and the advance forgot
+		   both the count field and the padding. */
+		const size_t count = *reinterpret_cast<unsigned int*>(buffer + *pos);   // room(4) checked above
+		const size_t start = (size_t)*pos + 4;
+		if (!fits(inputSize, start, count)) return truncated();
+		Json r = byteVectorContent(buffer + start, count, level);
+		*pos = (unsigned int)std::min<size_t>(inputSize, start + ((count + 3) & ~(size_t)3));
 		return r;
 	}
 	if (valueType == VT_FILETIME) {
