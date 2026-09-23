@@ -39,7 +39,7 @@ std::wstring FileAttributes::to_wstring() {
 	if (NotContentIndexed == true) result += L"NOT_CONTENT_INDEXED, ";
 	if (Encrypted == true) result += L"ENCRYPTED, ";
 	if (result.size() > 0)
-		return std::wstring(&result[0], &result[0] + result.size() - 2);//suppression de la dernière virgule et espace
+		return std::wstring(&result[0], &result[0] + result.size() - 2);// remove the last comma and space
 	else
 		return result;
 }
@@ -105,7 +105,7 @@ std::wstring LinkFlags::to_wstring() {
 	if (PreferEnvironmentPath == true) result += L"PREFER_ENVIRONMENT_PATH, ";
 	if (KeepLocalIDListForUNCTarget == true) result += L"KEEP_LOCAL_IDLIST_FOR_UNC_TARGET, ";
 	if (result.size() > 0)
-		return std::wstring(&result[0], &result[0] + result.size() - 2);//suppression de la dernière virgule et espace
+		return std::wstring(&result[0], &result[0] + result.size() - 2);// remove the last comma and space
 	else
 		return result;
 }
@@ -147,8 +147,8 @@ Json IdList::toJson() {
 	o.add(L"TypeHex", Json::str(L"0x" + type_hex));
 	o.add(L"Type",    Json::str(type));
 	if (conf._dump) o.add(L"Dump", Json::str(data));
-	// Les champs du shell item sont mis a plat dans cet objet (schema d'origine).
-	// Garde : shellItem peut etre nul (item de taille nulle, ou type non reconnu).
+	// The shell item's fields are flattened into this object (the original schema).
+	// Guard: shellItem may be null (an item of null size, or a type not recognised).
 	if (shellItem) o.merge(shellItem->toJson());
 	return o;
 }
@@ -328,14 +328,14 @@ std::wstring getType(unsigned int type) {
 Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int level,
               unsigned int inputSize, bool* typeNotDecoded);
 
-/*! Lit UNE valeur scalaire. Voir `getValue`, qui traite en plus les vecteurs. */
+/*! Reads ONE scalar value. See `getValue`, which also handles the vectors. */
 static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueType,
                          unsigned int level, unsigned int inputSize, bool* typeNotDecoded) {
-	// Renvoie desormais une valeur Json typee (et non une chaine pre-serialisee) :
-	// l'echappement est fait par le writer, une seule fois, a la serialisation.
-	// NB : les backslashes ne sont PLUS doubles ici, ce qui corrige aussi
-	// l'avancement de *pos qui etait calcule sur la chaine echappee (donc faux
-	// pour toute valeur contenant un backslash, c'est-a-dire tout chemin).
+	// Now returns a typed Json value (and no longer a pre-serialised string):
+	// the escaping is done by the writer, once, at serialisation time.
+	// NB: the backslashes are NO LONGER doubled here, which also fixes the
+	// advance of *pos that was computed on the escaped string (hence wrong for
+	// any value holding a backslash, that is any path).
 	if (valueType == VT_EMPTY) return Json::str(L"");
 	if (valueType == VT_NULL)  return Json::null();
 	if (valueType == VT_I2) {
@@ -354,15 +354,15 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		SYSTEMTIME st = { 0 };
 		if (!VariantTimeToSystemTime(t, &st)) { *pos += 8; return Json::null(); }
 		*pos += 8;
-		// Une date VARIANT (VT_DATE) est exprimee en heure LOCALE par convention OLE.
+		// A VARIANT date (VT_DATE) is expressed in LOCAL time, by OLE convention.
 		return Json::str(timeToIso8601(st, false));
 	}
 	if (valueType == VT_BOOL) {
 		unsigned short v = *reinterpret_cast<unsigned short*>(buffer + *pos); *pos += 2;
 		if (v == 0xFFFF) return Json::boolean(true);
 		if (v == 0x0000) return Json::boolean(false);
-		/* VARIANT_BOOL hors des deux valeurs canoniques : la valeur brute est
-		   restituée plutôt qu'une chaîne vide, qui perdait la donnée. */
+		/* VARIANT_BOOL outside the two canonical values: the raw value is returned
+		   rather than an empty string, which lost the data. */
 		log(2, L"🔥VT_BOOL not canonical 0x" + to_hex(v));
 		return Json::str(L"0x" + to_hex(v));
 	}
@@ -415,20 +415,20 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		return r;
 	}
 	if (valueType == VT_FILETIME) {
-		// Un FILETIME est UTC par definition : etiquette « Z », pas le fuseau local.
+		// A FILETIME is UTC by definition: the "Z" label, not the local time zone.
 		Json r = Json::str(timeToIso8601Utc(*reinterpret_cast<FILETIME*>(buffer + *pos)));
 		*pos += 8; return r;
 	}
 	if (valueType == VT_BLOB) {
-		/* L'ANCIENNE VERSION SUPPOSAIT TOUJOURS TROIS PROPERTY STORES à
-		   l'offset 17, codé en dur et sans vérifier quoi que ce soit. Sur un
-		   BLOB d'une autre forme — et rien ne garantit celle-là — les trois
-		   lectures partaient dans des octets arbitraires et publiaient des
-		   propriétés inventées. Le contenu brut, lui, n'était jamais rendu.
+		/* THE OLD VERSION ALWAYS ASSUMED THREE PROPERTY STORES at offset 17,
+		   hard-coded and without checking anything. On a BLOB of another shape —
+		   and nothing guarantees that one — the three readings went into
+		   arbitrary bytes and published invented properties. The raw content,
+		   for its part, was never returned.
 
-		   Désormais : la taille annoncée borne la lecture, la signature
-		   « SPS1 » est vérifiée avant de décoder, et l'on enchaîne autant de
-		   stores que le BLOB en contient réellement. À défaut, les octets. */
+		   Now: the declared size bounds the reading, the "SPS1" signature is
+		   checked before decoding, and as many stores are chained as the BLOB
+		   really holds. Failing that, the bytes. */
 		const unsigned int size = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		const unsigned int start = *pos + 4;
 		Json o = Json::obj();
@@ -438,9 +438,9 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		if (!boundsOk) {
 			log(2, L"🔥VT_BLOB: size outside the entry (" + std::to_wstring(size) + L")");
 		}
-		/* Le décalage de 13 octets entre le début du BLOB et le premier store a
-		   été relevé empiriquement ; il n'est appliqué que si la signature s'y
-		   trouve effectivement. */
+		/* The 13-byte offset between the start of the BLOB and the first store was
+		   found empirically; it is applied only if the signature is actually
+		   there. */
 		else if (*reinterpret_cast<const unsigned int*>(buffer + start + 13 + 4) == 0x53505331) {
 			Json arr = Json::arr();
 			unsigned int p = start + 13;
@@ -462,17 +462,16 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		return o;
 	}
 	if (valueType == VT_STREAM) {
-		/* LE CONTENU DU FLUX ÉTAIT JETÉ. Le code lisait le nom du flux, lisait la
-		   taille des données, avançait d'autant… et ne rendait que le nom. Or ce
-		   nom est un simple identifiant d'indirection : sur une collecte réelle,
-		   les quinze valeurs VT_STREAM rendaient toutes « prop4294967295 ».
-		   Autrement dit l'artefact ne portait rien d'exploitable, alors que les
-		   données étaient là.
+		/* THE STREAM'S CONTENT WAS THROWN AWAY. The code read the stream's name,
+		   read the size of the data, advanced by as much… and returned only the
+		   name. But that name is a mere indirection identifier: on a real
+		   collection, the fifteen VT_STREAM values all returned
+		   "prop4294967295". In other words the artefact carried nothing usable,
+		   while the data was there.
 
-		   Le contenu est désormais restitué. Quand il commence par la signature
-		   « SPS1 », c'est un property store imbriqué : il est décodé comme tel —
-		   même cas que Vector<VT_UI1>. Sinon, les octets sont rendus en
-		   hexadécimal. */
+		   The content is now returned. When it starts with the "SPS1" signature,
+		   it is a nested property store: it is decoded as such — the same case as
+		   Vector<VT_UI1>. Otherwise, the bytes are returned in hexadecimal. */
 		const unsigned int nameSize = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		*pos += 4;
 		const std::wstring name((wchar_t*)(buffer + *pos));
@@ -491,7 +490,7 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 				     + std::to_wstring(dataSize) + L")");
 		}
 		else if (*reinterpret_cast<const unsigned int*>(buffer + dataStart + 4) == 0x53505331) {
-			// Property store imbrique : la signature « SPS1 » suit la taille.
+			// Nested property store: the "SPS1" signature follows the size.
 			log(3, L"🔈VT_STREAM: nested property store");
 			o.add(L"PropertyStore", SPS(buffer + dataStart, level + 2).toJson());
 		}
@@ -503,38 +502,38 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		*pos += dataSize;
 		return o;
 	}
-	/* TYPES AJOUTÉS pour aligner la couverture sur libfwps (libyal), référence du
-	   format des property stores. Ils manquaient tous les cinq, et sortaient
-	   donc sans valeur. Tailles et sémantique d'après MS-OLEPS. */
-	if (valueType == VT_R4) {                      // 0x0004 : flottant 32 bits
+	/* TYPES ADDED to align the coverage on libfwps (libyal), the reference for
+	   the property store format. All five were missing, and therefore came out
+	   without a value. Sizes and semantics after MS-OLEPS. */
+	if (valueType == VT_R4) {                      // 0x0004: 32-bit float
 		float v = *reinterpret_cast<float*>(buffer + *pos); *pos += 4;
 		return Json::str(std::to_wstring(v));
 	}
-	if (valueType == VT_CY) {                      // 0x0006 : monétaire
-		/* Entier signé 64 bits valant le montant multiplié par 10 000. La valeur
-		   brute est conservée : la diviser ici imposerait un format décimal et
-		   perdrait de la précision. */
+	if (valueType == VT_CY) {                      // 0x0006: currency
+		/* A signed 64-bit integer holding the amount multiplied by 10,000. The raw
+		   value is kept: dividing it here would impose a decimal format and lose
+		   precision. */
 		long long v = *reinterpret_cast<long long*>(buffer + *pos); *pos += 8;
 		Json o = Json::obj();
 		o.add(L"ScaledBy10000", Json::num(v));
 		return o;
 	}
-	if (valueType == VT_ERROR) {                   // 0x000A : HRESULT
+	if (valueType == VT_ERROR) {                   // 0x000A: HRESULT
 		unsigned int v = *reinterpret_cast<unsigned int*>(buffer + *pos); *pos += 4;
 		return Json::str(L"0x" + to_hex(v));
 	}
-	if (valueType == VT_DECIMAL) {                 // 0x000E : décimal 128 bits
-		/* Structure DECIMAL de Windows : 16 octets. Restituée en octets bruts
-		   plutôt que convertie — une conversion en double perdrait justement la
-		   précision qui fait l'intérêt de ce type. */
+	if (valueType == VT_DECIMAL) {                 // 0x000E: 128-bit decimal
+		/* Windows DECIMAL structure: 16 bytes. Returned as raw bytes rather than
+		   converted — a conversion to double would lose precisely the precision
+		   that makes this type worth having. */
 		Json o = Json::obj();
 		o.add(L"Decimal128", Json::str(dump_wstring(buffer, (int)*pos, 16)));
 		*pos += 16;
 		return o;
 	}
-	if (valueType == VT_LPSTR) {                   // 0x001E : chaîne ASCII
-		/* Taille en OCTETS, terminateur inclus — contrairement à VT_LPWSTR dont
-		   la taille est en caractères. */
+	if (valueType == VT_LPSTR) {                   // 0x001E: ASCII string
+		/* Size in BYTES, terminator included — unlike VT_LPWSTR, whose size is in
+		   characters. */
 		unsigned int size = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		std::wstring v = string_to_wstring(std::string((char*)(buffer + *pos + 4)));
 		*pos += 4 + size;
@@ -549,52 +548,50 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		return o;
 	}
 
-	/* TYPE NON DÉCODÉ : ON REND LES OCTETS.
+	/* A TYPE NOT DECODED: ITS BYTES ARE RETURNED.
 	 *
-	 * La version précédente rendait une chaîne vide. La propriété apparaissait
-	 * donc avec son nom et son type, mais SANS valeur — indiscernable d'une
-	 * propriété réellement vide, et la donnée était perdue alors qu'elle est
-	 * présente dans le fichier. Un type que nous ne savons pas lire ne doit pas
-	 * faire disparaître son contenu : on restitue les octets restants de
-	 * l'entrée, en hexadécimal, pour qu'un analyste puisse les décoder — même
-	 * raison d'être que le dump de `UnknownShellItem` et de `BeefUnknown`.
+	 * The previous version returned an empty string. The property therefore
+	 * appeared with its name and its type, but WITHOUT a value —
+	 * indistinguishable from a really empty property, and the data was lost
+	 * while it is present in the file. A type we cannot read must not make its
+	 * content disappear: the remaining bytes of the entry are returned, in
+	 * hexadecimal, so that an analyst can decode them — the same reason for being
+	 * as the dump of `UnknownShellItem` and of `BeefUnknown`.
 	 *
-	 * La position n'est pas avancée : elle ne sert qu'à l'intérieur de l'entrée,
-	 * dont le parcours est borné par sa propre taille chez l'appelant. */
+	 * The position is not advanced: it only serves inside the entry, whose walk
+	 * is bounded by its own size at the caller's. */
 	if (typeNotDecoded) *typeNotDecoded = true;
 	Json o = Json::obj();
 	o.add(L"UnsupportedValueType", Json::str(L"0x" + to_hex(valueType)));
 	if (inputSize > *pos) {
 		log(3, L"🔈dump_wstring: value type not supported");
-		// « tailleEntree - pos » est bien une LONGUEUR : les octets restants.
+		// "inputSize - pos" is indeed a LENGTH: the remaining bytes.
 		o.add(L"Data", Json::str(dump_wstring(buffer, (int)*pos, (int)(inputSize - *pos))));
 	}
 	log(2, L"🔥getValue: value type not supported 0x" + to_hex(valueType));
 	return o;
 }
 
-/*! Lit une valeur de property store, scalaire ou VECTEUR.
+/*! Reads a property store value, scalar or VECTOR.
 *
-*  LES VECTEURS SONT DÉSORMAIS TRAITÉS GÉNÉRIQUEMENT. Le bit `VT_VECTOR`
-*  (0x1000) signale un tableau : un compteur d'éléments sur 32 bits, puis les
-*  éléments du type scalaire correspondant (MS-OLEPS). Deux vecteurs seulement
-*  étaient reconnus — `Vector<VT_UI1>` et `Vector<VT_LPWSTR>` — et tous les
-*  autres (`Vector<VT_FILETIME>`, `Vector<VT_CLSID>`, `Vector<VT_I4>`,
-*  `Vector<VT_LPSTR>`…) tombaient dans le cas « type non pris en charge ».
-*  Décoder le compteur puis déléguer chaque élément au lecteur scalaire les
-*  couvre tous d'un coup, et tout type scalaire ajouté plus tard bénéficie
-*  automatiquement de sa forme vectorielle.
+*  THE VECTORS ARE NOW HANDLED GENERICALLY. The `VT_VECTOR` bit (0x1000) signals
+*  an array: a 32-bit element count, then the elements of the matching scalar
+*  type (MS-OLEPS). Only two vectors were recognised — `Vector<VT_UI1>` and
+*  `Vector<VT_LPWSTR>` — and all the others (`Vector<VT_FILETIME>`,
+*  `Vector<VT_CLSID>`, `Vector<VT_I4>`, `Vector<VT_LPSTR>`…) fell into the "type
+*  not supported" case. Decoding the count then delegating each element to the
+*  scalar reader covers them all at once, and any scalar type added later
+*  automatically gets its vector form.
 *
-*  Les deux vecteurs historiques gardent leur traitement propre : celui de
-*  `Vector<VT_UI1>` n'est pas un simple tableau d'octets mais peut contenir un
-*  property store imbriqué (signature « SPS1 »), ce qu'aucune règle générique ne
-*  devinerait.
+*  The two historical vectors keep their own handling: `Vector<VT_UI1>` is not a
+*  plain byte array but may hold a nested property store ("SPS1" signature),
+*  which no generic rule would guess.
 */
 Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int level,
               unsigned int inputSize, bool* typeNotDecoded) {
 	const unsigned short VT_VECTOR_BIT = 0x1000;
 
-	// Cas particuliers conserves : heuristiques propres a ces deux vecteurs.
+	// Special cases kept: heuristics specific to these two vectors.
 	if (valueType == 0x1011 || valueType == 0x101F)
 		return readScalar(buffer, pos, valueType, level, inputSize, typeNotDecoded);
 
@@ -607,8 +604,8 @@ Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsign
 	log(3, L"🔈vector of " + std::to_wstring(nb) + L" element(s) de type 0x"
 	     + to_hex(typeElement));
 
-	/* Un compteur aberrant vient d'une donnee corrompue ou d'un type mal
-	   identifie : on rend les octets au lieu d'iterer des millions de fois. */
+	/* A nonsensical count comes from corrupted data or a misidentified type: the
+	   bytes are returned instead of iterating millions of times. */
 	const unsigned int MAX_ELEMENTS = 65536;
 	if (nb > MAX_ELEMENTS) {
 		log(2, L"🔥vector: nonsensical count " + std::to_wstring(nb));
@@ -629,8 +626,8 @@ Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsign
 		                      &elementNonDecode);
 		arr.push(std::move(v));
 		if (elementNonDecode) {
-			/* Sans savoir la taille d'un element, la position n'avance pas :
-			   continuer relirait le meme octet. On s'arrete en le signalant. */
+			/* Without knowing an element's size, the position does not advance:
+			   going on would re-read the same byte. We stop and report it. */
 			if (typeNotDecoded) *typeNotDecoded = true;
 			log(2, L"🔥vector: element of a type not decoded 0x" + to_hex(typeElement)
 			     + L", stopped after " + std::to_wstring(x + 1) + L"/" + std::to_wstring(nb));
@@ -655,15 +652,14 @@ SPSValue::SPSValue(LPBYTE buffer, std::wstring _guid, int _level) {
 			id = std::wstring((wchar_t*)(buffer + 9)).data();
 			log(3, L"🔈trans_guid_to_wstring name");
 			name = trans_guid_to_wstring(guid);
-			valueType = *reinterpret_cast<unsigned short int*>(buffer + 9 + id_int); // id_int contient la taille de la std::string 
-			pos = 9 + id_int + 2 + 2; // 2 de padding ?
+			valueType = *reinterpret_cast<unsigned short int*>(buffer + 9 + id_int); // id_int holds the size of the std::string
+			pos = 9 + id_int + 2 + 2; // 2 bytes of padding?
 		}
 		else {
 			valueType = *reinterpret_cast<unsigned short int*>(buffer + 9);
 			log(3, L"🔈to_FriendlyName name");
-			// Le nom inconnu est desormais la CLE BRUTE, journalisee par
-			// to_FriendlyName lui-meme : le test sur « (Undefined) » n'a plus
-			// d'objet et faisait doublon.
+			// The unknown name is now the RAW KEY, logged by to_FriendlyName itself: the
+			// test on "(Undefined)" has no purpose any more and was redundant.
 			name = to_FriendlyName(guid, id_int);
 			id = std::to_wstring(id_int);
 
@@ -679,7 +675,7 @@ Json SPSValue::toJson() {
 	o.add(L"ID",    Json::str(guid + L"/" + id));
 	o.add(L"Name",  Json::str(name));
 	o.add(L"Type",  Json::str(getType(valueType)));
-	o.add(L"Value", value);          // valeur deja typee (chaine, nombre, objet, tableau)
+	o.add(L"Value", value);          // value already typed (string, number, object, array)
 	return o;
 }
 
@@ -696,8 +692,8 @@ SPS::SPS(LPBYTE buffer, int _level) {
 		if (pos >= size)
 			break; //fin
 		log(3, L"🔈SPSValue");
-		SPSValue block(buffer + pos, guid, level + 2); // concordance avec toJson
-		if (block.size == 0) { //vide
+		SPSValue block(buffer + pos, guid, level + 2); // consistent with toJson
+		if (block.size == 0) { // empty
 			break;
 		}
 		else
@@ -711,10 +707,10 @@ Json SPS::toJson() {
 	Json arr = Json::arr();
 	for (SPSValue& v : values) arr.push(v.toJson());
 	Json o = Json::obj();
-	/* GUID du property store (son « format ID ») et son libelle : releves par le
-	   constructeur et jamais emis. Chaque valeur porte deja le GUID dans son
-	   champ ID, mais un store SANS valeur perdait toute identification — et le
-	   libelle du store n'apparaissait nulle part. */
+	/* GUID of the property store (its "format ID") and its label: read by the
+	   constructor and never emitted. Each value already carries the GUID in its
+	   ID field, but a store WITHOUT a value lost all identification — and the
+	   store's label appeared nowhere. */
 	if (!guid.empty())         o.add(L"GUID",         Json::str(guid));
 	if (!FriendlyName.empty()) o.add(L"FriendlyName", Json::str(FriendlyName));
 	o.add(L"Values", std::move(arr));
@@ -803,20 +799,20 @@ Beef0004::Beef0004(LPBYTE buffer, int _level, bool* is_zip, bool is_file) {
 	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0004";
-	/* VERSION DU BLOC : elle etait mise a zero et jamais relue, donc ni exploitee
-	   ni emise. Or c'est une donnee d'enquete : elle indique quelle version de
-	   Windows a ECRIT l'entree — 0x0003 (XP), 0x0007 (Vista), 0x0008 (Windows 7),
-	   0x0009 (Windows 8.1 et au-dela) — et determine quels champs le bloc
-	   contient. Offset 2, juste avant la signature lue en 4. */
+	/* VERSION OF THE BLOCK: it was set to zero and never read again, hence neither
+	   used nor emitted. Yet it is investigation data: it says which version of
+	   Windows WROTE the entry — 0x0003 (XP), 0x0007 (Vista), 0x0008 (Windows 7),
+	   0x0009 (Windows 8.1 and later) — and decides which fields the block holds.
+	   Offset 2, just before the signature read at 4. */
 	ExtensionVersion = *reinterpret_cast<unsigned short int*>(buffer + 2);
-	/* CORRECTION (double decalage sur les dates FAT,).
-	   Une date FAT/DOS est stockee en HEURE LOCALE, par specification du format.
-	   Le code affectait cette valeur locale a `creationDateUtc`, puis lui
-	   appliquait FileTimeToLocalFileTime — traitant donc du local comme de l'UTC.
-	   Resultat : la cle *Utc publiait une heure locale etiquetee UTC, et la cle
-	   locale une heure decalee une SECONDE fois (+2 h a Paris en ete).
-	   Le sens correct est l'inverse : la valeur native est locale, on en derive
-	   l'UTC. */
+	/* FIX (a double shift on the FAT dates).
+	   A FAT/DOS date is stored in LOCAL TIME, by the format's specification. The
+	   code assigned that local value to `creationDateUtc`, then applied
+	   FileTimeToLocalFileTime to it — thus treating local time as UTC.
+	   The result: the *Utc key published a local time labelled UTC, and the local
+	   key a time shifted a SECOND time (+2 h in Paris in summer).
+	   The right way is the reverse: the native value is local, and UTC is
+	   derived from it. */
 	creationDate = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 8)).toFileTime();
 	log(3, L"🔈LocalFileTimeToFileTime creationDate");
 	LocalFileTimeToFileTime(&creationDate, &creationDateUtc);
@@ -824,31 +820,30 @@ Beef0004::Beef0004(LPBYTE buffer, int _level, bool* is_zip, bool is_file) {
 	accessedDate = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 12)).toFileTime();
 	log(3, L"🔈LocalFileTimeToFileTime accessedDate");
 	LocalFileTimeToFileTime(&accessedDate, &accessedDateUtc);
-	/* IDENTIFIANT ET RÉFÉRENCE $MFT (versions >= 7), et surtout OFFSETS CALCULÉS
-	 * D'APRÈS LA VERSION.
+	/* IDENTIFIER AND $MFT REFERENCE (versions >= 7), and above all OFFSETS
+	 * COMPUTED FROM THE VERSION.
 	 *
-	 * CE QUI ÉTAIT FAUX. Les offsets du nom long étaient codés en dur (36 et 46)
-	 * — ils ne sont exacts que pour la VERSION 9 du bloc, celle de Windows 8.1
-	 * et au-delà. Sur un bloc de version 3 (Windows XP), 7 (Vista) ou 8
-	 * (Windows 7), le nom long était donc lu au mauvais endroit. C'est
-	 * exactement le genre de défaut qui ne se voit pas sur une machine récente
-	 * et se révèle sur un système ancien, comme l'attribut $ATTRIBUTE_LIST
-	 *. La version, désormais lue (offset 2), sert à calculer la
-	 * position réelle — même enchaînement que l'implémentation de référence
-	 * d'Eric Zimmerman (ExtensionBlocks). */
+	 * WHAT WAS WRONG. The offsets of the long name were hard-coded (36 and 46) —
+	 * they are right only for VERSION 9 of the block, that of Windows 8.1 and
+	 * later. On a block of version 3 (Windows XP), 7 (Vista) or 8 (Windows 7),
+	 * the long name was therefore read in the wrong place. It is exactly the kind
+	 * of defect that does not show on a recent machine and reveals itself on an
+	 * old system, like the $ATTRIBUTE_LIST attribute. The version, now read
+	 * (offset 2), serves to compute the real position — the same sequence as Eric
+	 * Zimmerman's reference implementation (ExtensionBlocks). */
 	identifier = *reinterpret_cast<unsigned short int*>(buffer + 16);
-	unsigned int off = 18;                        // fin de la partie fixe
+	unsigned int off = 18;                        // end of the fixed part
 	if (ExtensionVersion >= 7) {
-		off += 2;                                 // deux octets vides
-		/* Référence de fichier : 6 octets d'index d'entrée, 2 de séquence. */
+		off += 2;                                 // two empty bytes
+		/* File reference: 6 bytes of entry index, 2 of sequence. */
 		const unsigned long long brut = *reinterpret_cast<unsigned long long*>(buffer + off);
 		mftEntryNumber    = brut & 0x0000FFFFFFFFFFFFULL;
 		mftSequenceNumber = (unsigned short int)(brut >> 48);
 		if (mftEntryNumber != 0 && mftSequenceNumber != 0)      mftNote = L"NTFS";
 		else if (mftEntryNumber != 0 && mftSequenceNumber == 0) mftNote = L"FAT";
 		else                                                    mftNote = L"Network/special item";
-		off += 8;                                 // reference de fichier
-		off += 8;                                 // huit octets inconnus
+		off += 8;                                 // file reference
+		off += 8;                                 // eight unknown bytes
 	}
 	if (ExtensionVersion >= 3) off += 2;
 	if (ExtensionVersion >= 9) off += 4;
@@ -857,8 +852,8 @@ Beef0004::Beef0004(LPBYTE buffer, int _level, bool* is_zip, bool is_file) {
 	unsigned short int longNameSize = 0;
 	longNameSize = *reinterpret_cast<unsigned short int*>(buffer + 36);
 	longName = std::wstring((wchar_t*)(buffer + off)).data();
-	// le contenu des ZIP et autres archives ont un contenu format special, il faut donc identifier les archives.
-	// L'attribut ARCHIVE ne signifie pas ZIP mais "prêt à être archivé" au sens l'explorer
+	// the content of ZIP files and other archives has a special format, so the archives must be identified.
+	// The ARCHIVE attribute does not mean ZIP but "ready to be archived", in Explorer's sense
 	std::wstring extension = L"";
 	if (longName.length() > 3)
 		extension = longName.substr(longName.length() - 3, 3);
@@ -875,19 +870,19 @@ Json Beef0004::toJson() {
 	log(3, L"🔈Beef0004 toJson");
 	Json o = Json::obj();
 	o.add(L"Signature", Json::str(signature));
-	// Version du bloc : dit quelle version de Windows a ecrit l'entree.
+	// Version of the block: says which version of Windows wrote the entry.
 	o.add(L"ExtensionVersion", Json::str(L"0x" + to_hex(ExtensionVersion)));
 	o.add(L"Identifier",       Json::num(identifier));
-	/* Reference $MFT : n'existe qu'a partir de la version 7 du bloc. Emise
-	   seulement si elle est presente, pour ne pas publier de zeros trompeurs. */
+	/* $MFT reference: exists only from version 7 of the block on. Emitted only if
+	   it is present, so as not to publish misleading zeros. */
 	if (!mftNote.empty()) {
 		o.add(L"MftEntryNumber",    Json::num(mftEntryNumber));
 		o.add(L"MftSequenceNumber", Json::num(mftSequenceNumber));
 		o.add(L"MftNote",           Json::str(mftNote));
 	}
-	// CORRECTION : les cles Created* publiaient accessedDate/accessedDateUtc,
-	// alors que creationDate/creationDateUtc sont bien parses. La date de
-	// creation etait donc perdue et remplacee par la date d'acces.
+	// FIX: the Created* keys published accessedDate/accessedDateUtc, while
+	// creationDate/creationDateUtc are indeed parsed. The creation date was
+	// therefore lost and replaced by the access date.
 	o.add(L"CreatedDate",     Json::str(timeToIso8601Local(creationDate)));
 	o.add(L"CreatedDateUtc",  Json::str(timeToIso8601Utc(creationDateUtc)));
 	o.add(L"AccessedDate",    Json::str(timeToIso8601Local(accessedDate)));
@@ -975,14 +970,14 @@ Json Beef000c::toJson() {
 	return o;
 }
 
-/* NON COUVERT PAR LES TESTS (vérifié le 2026-09-15).
- * La VM de validation ne produit que des blocs 0xbeef0004 : ce constructeur n'est
- * jamais exercé, ses offsets (GUID en +16, 3 SPS à partir de +50, puis +11 avant
- * 3 chaînes) restent donc des hypothèses non vérifiées.
- * Pour l'exercer il faut des shellbags contenant ce bloc — ce qui suppose une
- * session INTERACTIVE dans l'explorateur (les shellbags ne sont pas alimentés par
- * un processus lancé en service), ou un jeu de ruches de référence.
- * Tant que ce n'est pas fait : sortie à considérer comme non validée. */
+/* NOT COVERED BY THE TESTS (checked on 2026-09-15).
+ * The validation VM produces only 0xbeef0004 blocks: this constructor is never
+ * exercised, and its offsets (GUID at +16, 3 SPS from +50, then +11 before 3
+ * strings) therefore remain unverified hypotheses.
+ * Exercising it needs shellbags holding this block — which requires an
+ * INTERACTIVE session in Explorer (the shellbags are not fed by a process started
+ * as a service), or a reference set of hives.
+ * Until that is done: output to be considered as not validated. */
 Beef000e::Beef000e(LPBYTE buffer, int _level) {
 	level = _level;
 	message = L"";
@@ -1021,7 +1016,7 @@ Beef000e::Beef000e(LPBYTE buffer, int _level) {
 			break;
 	}
 	while (true) {
-		unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos); // recherche de idlist
+		unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos); // look for the idlist
 		if (size > 0) {
 			log(3, L"🔈makeShellItem");
 			ishellitems.push_back(makeShellItem(buffer + pos, level + 1));
@@ -1034,10 +1029,10 @@ Beef000e::Beef000e(LPBYTE buffer, int _level) {
 
 Json Beef000e::toJson() {
 	log(3, L"🔈Beef000e toJson");
-	/* MEMBRES COLLECTES ET JAMAIS EMIS. Le constructeur relevait le GUID, son
-	   libelle, TROIS property stores et des blocs d'extension ; toJson ne
-	   publiait que la signature et les shell items. Tout le reste etait lu puis
-	   jete — meme defaut que UsersPropertyView, trouve par le meme audit. */
+	/* MEMBERS COLLECTED AND NEVER EMITTED. The constructor read the GUID, its
+	   label, THREE property stores and extension blocks; toJson published only
+	   the signature and the shell items. All the rest was read then thrown
+	   away — the same defect as UsersPropertyView, found by the same audit. */
 	Json o = Json::obj();
 	o.add(L"Signature", Json::str(signature));
 	if (!guid.empty())       o.add(L"GUID",         Json::str(guid));
@@ -1266,7 +1261,7 @@ Json Beef0025::toJson() {
 	log(3, L"🔈Beef0025 toJson");
 	Json o = Json::obj();
 	o.add(L"Signature", Json::str(signature));
-	// FILETIME bruts lus du buffer : UTC par definition du type.
+	// Raw FILETIMEs read from the buffer: UTC by definition of the type.
 	o.add(L"Filetime1", Json::str(timeToIso8601Utc(filetime1)));
 	o.add(L"Filetime2", Json::str(timeToIso8601Utc(filetime2)));
 	return o;
@@ -1289,7 +1284,7 @@ Beef0026::Beef0026(LPBYTE buffer, int _level) {
 		atimeUtc = *reinterpret_cast<FILETIME*>(buffer + 28);
 		log(3, L"🔈LocalFileTimeToFileTime mtimeUtc");
 		LocalFileTimeToFileTime(&mtimeUtc, &atime);
-		// 2 octets Unknown
+		// 2 unknown bytes
 		log(3, L"🔈IdList");
 		idlist = std::make_unique<IdList>(buffer + 38, level + 2);
 	}
@@ -1367,7 +1362,7 @@ Json BeefUnknown::toJson() {
 	o.add(L"Signature", Json::str(signature));
 	o.add(L"Unknown",   Json::boolean(true));
 	o.add(L"Size",      Json::num(size));
-	// Les octets, pour que le bloc reste decodable plus tard.
+	// The bytes, so that the block stays decodable later.
 	o.add(L"Data",      Json::str(data));
 	return o;
 }
@@ -1375,9 +1370,9 @@ Json BeefUnknown::toJson() {
 void getExtensionBlock(LPBYTE buffer, std::vector<std::unique_ptr<IExtensionBlock>>* extensionBlocks, int _level, bool* is_zip, bool is_file) {
 	std::unique_ptr<IExtensionBlock> block;
 	unsigned int signature = *reinterpret_cast<unsigned int*>(buffer + 4);
-	/*  TAILLE ANNONCEE du bloc. Un bloc d'extension fait au moins 8 octets : sa
-	    taille, sa version et sa signature. En deca, la structure est fausse et
-	    la faire analyser ferait lire des champs pris n'importe ou. */
+	/*  DECLARED SIZE of the block. An extension block is at least 8 bytes: its
+	    size, its version and its signature. Below that, the structure is wrong
+	    and parsing it would read fields taken anywhere. */
 	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	if (size < 8) {
 		log(2, L"🔥Extension block of size " + std::to_wstring(size)
@@ -1521,10 +1516,10 @@ void getExtensionBlock(LPBYTE buffer, std::vector<std::unique_ptr<IExtensionBloc
 		extensionBlocks->push_back(std::move(block));
 	}
 	else {
-		/* Le dump n'allait QUE dans le journal, et le bloc n'était pas ajouté à
-		   la liste : il n'apparaissait donc pas dans le JSON, et disparaissait
-		   entièrement au niveau de journalisation par défaut. Il est désormais
-		   émis comme les autres, avec ses octets (cf. BeefUnknown). */
+		/* The dump went ONLY into the log, and the block was not added to the list:
+		   it therefore did not appear in the JSON, and vanished entirely at the
+		   default log level. It is now emitted like the others, with its bytes
+		   (see BeefUnknown). */
 		log(3, L"🔈BeefUnknown");
 		block = std::make_unique<BeefUnknown>(buffer, _level);
 		log(3, L"🔈to_hex signature");
@@ -1571,7 +1566,7 @@ std::wstring FsFlags::to_wstring() {
 	if (UNKNOWN == true) result += L"UNKNOWN, ";
 
 	if (result.size() > 0)
-		return std::wstring(&result[0], &result[0] + result.size() - 2);//suppression de la dernière virgule et espace
+		return std::wstring(&result[0], &result[0] + result.size() - 2);// remove the last comma and space
 	else
 		return result;
 }
@@ -1732,10 +1727,10 @@ Json Property::toJson() {
 
 UserPropertyView0xC01::UserPropertyView0xC01(LPBYTE buffer, int _level) {
 	level = _level;
-	/*  Les DEUX chaines annoncent leur taille, en octets. Elles etaient lues
-	    jusqu'au premier zero rencontre : sur une structure abimee, la lecture
-	    partait au-dela de la zone. La taille annoncee borne desormais chacune,
-	    et le terminateur eventuel est retire apres coup. */
+	/*  BOTH strings declare their size, in bytes. They were read up to the first
+	    zero met: on a damaged structure, the reading went beyond the area. The
+	    declared size now bounds each of them, and the possible terminator is
+	    removed afterwards. */
 	auto boundedString = [](LPBYTE p, unsigned int bytes) {
 		if (bytes == 0 || bytes > 64 * 1024) return std::wstring();
 		std::wstring s((const wchar_t*)p, bytes / sizeof(wchar_t));
@@ -1817,7 +1812,7 @@ UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _level
 	for (unsigned int x = 0; x < numberProperties; x++) {
 		log(3, L"🔈Property");
 		Property temp(buffer + pos, level + 1);
-		const bool stop = temp.typeNotDecoded;   // taille indeterminee, cf. idList.h
+		const bool stop = temp.typeNotDecoded;   // undetermined size, see idList.h
 		pos += temp.size;
 		properties.push_back(std::move(temp));
 		if (stop) {
@@ -1848,16 +1843,15 @@ Json UserPropertyView0x07192006::toJson() {
 }
 
 UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _level) {
-	/* Toutes les longueurs ci-dessous viennent du fichier analysé — donc d'une
-	   source non fiable — et servent à calculer des offsets de lecture. Le
-	   constructeur ne reçoit pas la taille du tampon, il ne peut donc pas les
-	   valider contre elle. On les borne au maximum PLAUSIBLE : un shell item
-	   porte sa taille sur 16 bits, il ne peut pas dépasser 64 Kio, soit 32768
-	   caractères UTF-16. Une valeur au-delà signale une donnée corrompue ou
-	   forgée, et la lecture est abandonnée plutôt que de parcourir la mémoire
-	   au hasard. */
-	constexpr int MAX_CARS = 32768;        // 64 Kio / 2 : taille max d'un shell item
-	constexpr unsigned MAX_ELEMENTS = 1024; // bien au-delà du plausible, mais fini
+	/* All the lengths below come from the file parsed — hence from an untrusted
+	   source — and serve to compute reading offsets. The constructor does not
+	   receive the buffer's size, so it cannot validate them against it. They
+	   are bounded to the PLAUSIBLE maximum: a shell item carries its size on 16
+	   bits, it cannot exceed 64 KiB, that is 32,768 UTF-16 characters. A value
+	   beyond that signals corrupted or forged data, and the reading is abandoned
+	   rather than walking memory at random. */
+	constexpr int MAX_CARS = 32768;        // 64 KiB / 2: the maximum size of a shell item
+	constexpr unsigned MAX_ELEMENTS = 1024; // well beyond the plausible, but finite
 
 	unsigned int pos = 0;
 	level = _level;
@@ -1874,7 +1868,7 @@ UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _level
 		     + std::to_wstring(namesize) + L", id " + std::to_wstring(identifiersize)
 		     + L", fs " + std::to_wstring(filesystemsize)
 		     + L", guids " + std::to_wstring(nbGUIDStrings) + L")", ERROR_INVALID_DATA);
-		return;                            // champs laissés vides : rien de douteux n'est publié
+		return;                            // fields left empty: nothing doubtful is published
 	}
 
 	name = std::wstring((wchar_t*)(buffer + 0x36)).data();
@@ -1894,11 +1888,11 @@ UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _level
 	FriendlyName = trans_guid_to_wstring(guidClass);
 	pos += 16;
 
-	/* L'interprétation de ce champ comme « nombre de propriétés » n'est pas
-	   confirmée par la spécification : à l'observation, seules les 4 premières
-	   entrées sont exploitables. Tant que ce n'est pas tranché, la valeur est
-	   bornée et la boucle s'arrête si une propriété rend une taille nulle —
-	   sinon `pos` n'avancerait plus et on relirait la même zone. */
+	/* Interpreting this field as a "number of properties" is not confirmed by the
+	   specification: by observation, only the first 4 entries are usable. Until
+	   that is settled, the value is bounded and the loop stops if a property
+	   returns a null size — otherwise `pos` would no longer advance and the same
+	   area would be read again. */
 	unsigned int numberProperties = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
 	if (numberProperties > MAX_ELEMENTS) {
@@ -1913,7 +1907,7 @@ UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _level
 			log(2, L"🔥Property of null size: walk stopped", ERROR_INVALID_DATA);
 			break;
 		}
-		const bool stop = temp.typeNotDecoded;   // taille indeterminee, cf. idList.h
+		const bool stop = temp.typeNotDecoded;   // undetermined size, see idList.h
 		pos += temp.size;
 		properties.push_back(std::move(temp));
 		if (stop) {
@@ -1930,10 +1924,9 @@ Json UserPropertyView0x10312005::toJson() {
 	Json o = Json::obj();
 	o.add(L"Name",        Json::str(name));
 	o.add(L"Identifier",  Json::str(identifier));
-	// CORRECTION : la cle d'origine etait « Star-system », vestige d'un
-	// rechercher-remplacer manque. Elle publiait le nom du systeme de fichiers
-	// sous un intitule que personne ne peut deviner : information collectee mais
-	// introuvable a l'analyse.
+	// FIX: the original key was "Star-system", the remnant of a botched
+	// search-and-replace. It published the file system's name under a heading no
+	// one can guess: information collected but impossible to find in analysis.
 	o.add(L"FileSystem",  Json::str(filesystem));
 	Json guids = Json::arr();
 	for (const std::wstring& g : guidstrings) {
@@ -1962,27 +1955,27 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _level) {
 	totalsize = *reinterpret_cast<unsigned short int*>(buffer + 0);
 	dataSize = *reinterpret_cast<unsigned short int*>(buffer + 4);
 	signature = *reinterpret_cast<unsigned int*>(buffer + 6);
-	unsigned short int signature_short = *reinterpret_cast<unsigned short int*>(buffer + 6); // Certaines signatures sont identifiées par leurs 2 premiers octets
+	unsigned short int signature_short = *reinterpret_cast<unsigned short int*>(buffer + 6); // Some signatures are identified by their first 2 bytes
 	SPSDataSize = *reinterpret_cast<unsigned short int*>(buffer + 10);
 	identifierSize = *reinterpret_cast<unsigned short int*>(buffer + 12);
 	dataOffset = 14;
 
-	/* NATURE DE L'ITEM, d'après sa signature.
+	/* NATURE OF THE ITEM, from its signature.
 	 *
-	 * Chez libyal (libfwsi_users_property_view_values.c) la signature ne sert
-	 * pas seulement à choisir un décodeur : elle IDENTIFIE le type d'item. Deux
-	 * de celles traitées ici ne sont pas des « users property view » du tout :
-	 *   0x10312005 = VOLUME MTP,      0x07192006 = ENTRÉE DE FICHIER MTP,
-	 * c'est-à-dire la trace qu'un téléphone, un appareil photo ou un lecteur
-	 * multimédia a été branché et parcouru. Le nom générique masquait ce fait,
-	 * qui est justement ce qu'une investigation cherche.
-	 * Le champ `itemType` le nomme désormais dans la sortie. */
+	 * At libyal (libfwsi_users_property_view_values.c) the signature does not
+	 * only serve to choose a decoder: it IDENTIFIES the kind of item. Two of
+	 * those handled here are not "users property views" at all:
+	 *   0x10312005 = MTP VOLUME,      0x07192006 = MTP FILE ENTRY,
+	 * that is the trace that a phone, a camera or a media player was plugged in
+	 * and browsed. The generic name hid that fact, which is precisely what an
+	 * investigation looks for.
+	 * The `itemType` field now names it in the output. */
 	switch (signature) {
 	case 0x10312005: itemType = L"MTP Volume";                          break;
 	case 0x07192006: itemType = L"MTP File Entry";                       break;
 	case 0x23febbee: itemType = L"Users Property View (known folder)";   break;
-	/* Les quatre suivantes sont reconnues par libfwsi et n'étaient pas
-	   traitées : l'item tombait dans la branche « signature inconnue ». */
+	/* The next four are recognised by libfwsi and were not handled: the item fell
+	   into the "unknown signature" branch. */
 	case 0x10141981:
 	case 0x23a3dfd5:
 	case 0x3b93afbb:
@@ -1992,10 +1985,10 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _level) {
 	}
 
 	if (signature == (unsigned int)0x23febbee) {
-		/* GUID DE DOSSIER CONNU, et seulement si l'identifiant EST un GUID.
-		   libfwsi lit ces 16 octets sous condition `identifier_size == 16` ;
-		   WAC ne vérifiait rien et publiait donc un GUID composé d'octets
-		   arbitraires dès que l'identifiant avait une autre taille. */
+		/* KNOWN FOLDER GUID, and only if the identifier IS a GUID.
+		   libfwsi reads those 16 bytes on condition `identifier_size == 16`; WAC
+		   checked nothing and therefore published a GUID made of arbitrary bytes
+		   as soon as the identifier had another size. */
 		if (identifierSize == 16) {
 			log(3, L"🔈UserPropertyView0x23febbee");
 			delegate = std::make_unique<UserPropertyView0x23febbee>(buffer, level);
@@ -2018,9 +2011,9 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _level) {
 		delegate = std::make_unique<UserPropertyView0xC01>(buffer, level);
 		signature = signature_short;
 	}
-	/* Signatures repertoriees par libfwsi sans structure propre : l'item porte
-	   un identifiant puis son property store. Trois d'entre elles ont un
-	   identifiant de 4 octets, que libfwsi relève. */
+	/* Signatures listed by libfwsi without a structure of their own: the item
+	   carries an identifier then its property store. Three of them have a 4-byte
+	   identifier, which libfwsi reads. */
 	else if (!itemType.empty()) {
 		if (identifierSize == 4) {
 			identifier32 = *reinterpret_cast<unsigned int*>(buffer + dataOffset);
@@ -2049,10 +2042,10 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _level) {
 		}
 	}
 	else {
-		/* Signature non reconnue : les octets sont conservés DANS LA SORTIE, et
-		   non plus seulement dans le journal (cf. idList.h). Sans quoi l'objet
-		   se réduisait à son type et à une signature, ce qui ne permet ni de
-		   l'analyser ni même de savoir qu'on a perdu quelque chose. */
+		/* Unrecognised signature: the bytes are kept IN THE OUTPUT, and no longer only
+		   in the log (see idList.h). Otherwise the object came down to its type
+		   and a signature, which allows neither analysing it nor even knowing
+		   that something was lost. */
 		log(3, L"🔈dump_wstring UsersPropertyView: unknown signature");
 		data = dump_wstring(buffer, 0, totalsize);
 		log(2, L"🔥UsersPropertyView Signature 0x" + to_hex(signature) + L" unknown");
@@ -2079,18 +2072,18 @@ Json UsersPropertyView::toJson() {
 	Json o = Json::obj();
 	if (!isPresent) return o;
 	o.add(L"Signature", Json::str(L"0x" + to_hex(signature)));
-	// Nature de l'item : « MTP Volume », « MTP File Entry »… cf. idList.h.
+	// Nature of the item: "MTP Volume", "MTP File Entry"… see idList.h.
 	if (!itemType.empty()) o.add(L"ItemType", Json::str(itemType));
 	if (identifier32Lu)    o.add(L"Identifier", Json::num(identifier32));
-	// les champs du delegue sont mis a plat (schema d'origine)
+	// the delegate's fields are flattened (the original schema)
 	if (delegate) o.merge(delegate->toJson());
 
-	/* SPS et blocs d'extension : ILS ETAIENT COLLECTES ET JAMAIS EMIS.
-	   Le constructeur remplit `SPSs` (branche sans delegue) et `extensionBlocks`
-	   (systematiquement, si l'objet en porte), mais toJson n'en publiait aucun :
-	   tout leur contenu — noms de proprietes, valeurs, dates — etait lu puis
-	   jete. Les delegues portent des `properties`, pas ces deux vecteurs : il
-	   n'y a donc pas de doublon a craindre. */
+	/* SPS AND EXTENSION BLOCKS: THEY WERE COLLECTED AND NEVER EMITTED.
+	   The constructor fills `SPSs` (the branch without a delegate) and
+	   `extensionBlocks` (always, if the object carries some), but toJson
+	   published none of them: all their content — property names, values,
+	   dates — was read then thrown away. The delegates carry `properties`, not
+	   these two vectors: there is therefore no duplicate to fear. */
 	if (!SPSs.empty()) {
 		Json arr = Json::arr();
 		for (SPS& sps : SPSs) arr.push(sps.toJson());
@@ -2102,7 +2095,7 @@ Json UsersPropertyView::toJson() {
 		o.add(L"ExtensionBlocksCount", Json::num((unsigned long long)extensionBlocks.size()));
 		o.add(L"ExtensionBlocks",      std::move(arr));
 	}
-	// Octets bruts si la signature n'a pas ete reconnue (cf. idList.h).
+	// Raw bytes if the signature was not recognised (see idList.h).
 	if (!data.empty()) {
 		o.add(L"Unknown", Json::boolean(true));
 		o.add(L"Data",    Json::str(data));
@@ -2154,9 +2147,9 @@ RootFolder::RootFolder(LPBYTE buffer, int _level) {
 	if (sortIndex == L"UNKNOWN") {
 		log(2, L"🔥RootFolder : sortIndex Unknown 0x" + to_hex(type));
 	}
-	/* TODO: C'est une version simplifiée qui semble suffire pour le moment
-	* conforme à la documentation Windows Shell Item format specification https://github.com/libyal/libfwsi/blob/main/documentation/Windows%20Shell%20Item%20format.asciidoc#43-control-panel-shell-items
-	* Le code à l'adresse ci dessous est plus complet
+	/* TODO: this is a simplified version that seems enough for now, in line with
+	* the Windows Shell Item format specification https://github.com/libyal/libfwsi/blob/main/documentation/Windows%20Shell%20Item%20format.asciidoc#43-control-panel-shell-items
+	* The code at the address below is more complete
 	* https://github.com/49374/OverTheShellbags/blob/main/OverTheShellbags/shell_item_parser.py#L11
 	*/
 
@@ -2259,7 +2252,7 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _level) {
 		}
 	}
 	else {
-		// Date FAT = heure LOCALE : on en derive l'UTC, pas l'inverse.
+		// FAT date = LOCAL time: UTC is derived from it, not the reverse.
 		modified = FatDateTime(date).toFileTime();
 		log(3, L"🔈LocalFileTimeToFileTime modified");
 		LocalFileTimeToFileTime(&modified, &modifiedUtc);
@@ -2281,8 +2274,8 @@ Json ArchiveFileContent::toJson() {
 URIShellItem::URIShellItem(LPBYTE buffer, int _level) {
 	level = _level;
 	isPresent = true;
-	// TAILLE DE L'ITEM : elle borne l'URI, qui etait lue jusqu'au premier zero
-	// rencontre — donc potentiellement au-dela de l'item.
+	// SIZE OF THE ITEM: it bounds the URI, which was read up to the first zero
+	// met — hence possibly beyond the item.
 	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	unsigned short int datasize = *reinterpret_cast<unsigned short int*>(buffer + 4);
 	if (datasize == 0 && size > 8) {
@@ -2303,7 +2296,7 @@ FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSiz
 	isPresent = true;
 	fsFileSize = *reinterpret_cast<unsigned int*>(buffer + 4);
 	log(3, L"🔈FatDateTime");
-	// Date FAT = heure LOCALE : on en derive l'UTC, pas l'inverse.
+	// FAT date = LOCAL time: UTC is derived from it, not the reverse.
 	fsFileModification = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 8)).toFileTime();
 	log(3, L"🔈LocalFileTimeToFileTime fsFileModification");
 	LocalFileTimeToFileTime(&fsFileModification, &fsFileModificationUtc);
@@ -2357,14 +2350,14 @@ UsersFilesFolder::UsersFilesFolder(LPBYTE buffer, int _level) {
 	isPresent = true;
 	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + size - 2);
-	// Date FAT = heure LOCALE : on en derive l'UTC, pas l'inverse.
+	// FAT date = LOCAL time: UTC is derived from it, not the reverse.
 	modified = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 0x12)).toFileTime();
 	log(3, L"🔈LocalFileTimeToFileTime modified");
 	LocalFileTimeToFileTime(&modified, &modifiedUtc);
 	log(3, L"🔈string_to_wstring primaryName");
 	primaryName = string_to_wstring(std::string((char*)buffer + 0x18));
 	log(3, L"🔈Beef0004");
-	extensionBlock = std::make_unique<Beef0004>(buffer + extensionOffset, level + 1, nullptr, false); // Le bloc suit 
+	extensionBlock = std::make_unique<Beef0004>(buffer + extensionOffset, level + 1, nullptr, false); // The block follows
 }
 
 Json UsersFilesFolder::toJson() {
@@ -2374,7 +2367,7 @@ Json UsersFilesFolder::toJson() {
 	o.add(L"PrimaryName",     Json::str(primaryName));
 	o.add(L"ModifiedDateUtc", Json::str(timeToIso8601Utc(modifiedUtc)));
 	o.add(L"ModifiedDate",    Json::str(timeToIso8601Local(modified)));
-	// garde : extensionBlock peut etre nul
+	// guard: extensionBlock may be null
 	if (extensionBlock && extensionBlock->isPresent)
 		o.add(L"ExtensionBlock", extensionBlock->toJson());
 	return o;
@@ -2406,7 +2399,7 @@ Json TypedShellItem::toJson() {
 	log(3, L"🔈TypedShellItem toJson");
 	Json o = Json::obj();
 	o.add(L"ItemType", Json::str(typeName));
-	// Champs non decodes : les octets restent joints (cf. idList.h).
+	// Fields not decoded: the bytes stay attached (see idList.h).
 	o.add(L"Data",     Json::str(data));
 	return o;
 }
@@ -2415,7 +2408,7 @@ DelegateFolder::DelegateFolder(LPBYTE buffer, unsigned short size, int _level) {
 	level = _level;
 	isPresent = true;
 
-	/* GUID de la classe qui delegue : les 16 derniers octets de l'item. */
+	/* GUID of the delegating class: the last 16 bytes of the item. */
 	if (size >= 16) {
 		log(3, L"🔈guid_to_wstring classGuid");
 		classGuid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + size - 16));
@@ -2423,9 +2416,9 @@ DelegateFolder::DelegateFolder(LPBYTE buffer, unsigned short size, int _level) {
 		classFriendlyName = trans_guid_to_wstring(classGuid);
 	}
 
-	/* SHELL ITEM IMBRIQUE : taille sur 4 octets a l'offset 4, contenu a partir
-	   de l'offset 6. Les 32 derniers octets portent le marqueur de delegation et
-	   le GUID de classe, ils ne font pas partie de l'item interne. */
+	/* NESTED SHELL ITEM: size on 4 bytes at offset 4, content from offset 6. The
+	   last 32 bytes carry the delegation marker and the class GUID, they are not
+	   part of the inner item. */
 	const unsigned int internalSize = *reinterpret_cast<unsigned int*>(buffer + 4);
 	if (size > 38 && internalSize > 0 && internalSize <= (unsigned int)(size - 38)) {
 		log(3, L"🔈makeShellItem: delegate");
@@ -2447,7 +2440,7 @@ Json DelegateFolder::toJson() {
 		o.add(L"ClassGuid",    Json::str(classGuid));
 		o.add(L"FriendlyName", Json::str(classFriendlyName));
 	}
-	// L'item delegue est mis a plat, comme les autres shell items imbriques.
+	// The delegated item is flattened, like the other nested shell items.
 	if (innerItem) o.add(L"DelegatedItem", innerItem->toJson());
 	if (!data.empty()) o.add(L"Data", Json::str(data));
 	return o;
@@ -2463,13 +2456,13 @@ UnknownShellItem::UnknownShellItem(LPBYTE buffer, int _level) {
 
 Json UnknownShellItem::toJson() {
 	log(3, L"🔈UnknownShellItem toJson");
-	// CORRECTION : l'ancienne version construisait la chaine sans jamais
-	// l'affecter -> tout shell item de type non reconnu etait silencieusement
-	// perdu. On remonte desormais systematiquement le dump brut, pour qu'un
-	// type inconnu soit visible et analysable au lieu d'etre ignore.
+	// FIX: the old version built the string without ever assigning it -> every
+	// shell item of an unrecognised type was silently lost. The raw dump is now
+	// always returned, so that an unknown type is visible and analysable instead
+	// of being ignored.
 	Json o = Json::obj();
 	o.add(L"Unknown", Json::boolean(true));
-	o.add(L"Data",    Json::str(data));   // dump hexa de l'item
+	o.add(L"Data",    Json::str(data));   // hexadecimal dump of the item
 	return o;
 }
 
@@ -2477,22 +2470,22 @@ std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _level, bool Parent
 
 	unsigned int item_size = *reinterpret_cast<unsigned short int*>(buffer);
 	if (Parentiszip == false) {
-		/* TYPES RECONNUS PAR UNE SIGNATURE DANS LES DONNÉES, testés AVANT
-		 * l'octet de classe.
+		/* TYPES RECOGNISED BY A SIGNATURE IN THE DATA, tested BEFORE the class
+		 * byte.
 		 *
-		 * CE QUI MANQUAIT. WAC n'identifiait un shell item que par son octet de
-		 * classe. Or six types documentés ne se reconnaissent pas là : ils
-		 * portent une signature dans leurs données, et libfwsi les identifie en
-		 * essayant chaque décodeur (libfwsi_item.c). Tous tombaient donc dans
-		 * « UNKNOWN », le plus coûteux étant le dossier délégué — courant dans
-		 * les shellbags, et qui enveloppe un shell item entièrement décodable.
+		 * WHAT WAS MISSING. WAC identified a shell item only by its class byte.
+		 * But six documented types are not recognised there: they carry a
+		 * signature in their data, and libfwsi identifies them by trying every
+		 * decoder (libfwsi_item.c). All of them therefore fell into "UNKNOWN",
+		 * the most costly being the delegate folder — common in the shellbags,
+		 * and wrapping an entirely decodable shell item.
 		 *
-		 * L'ordre importe : ces tests sont plus spécifiques que l'octet de
-		 * classe, ils doivent primer. Chaque critère est celui de libfwsi, avec
-		 * sa taille minimale — sans quoi la vérification lirait hors de l'item. */
+		 * The order matters: these tests are more specific than the class byte,
+		 * they must prevail. Each criterion is libfwsi's, with its minimum size —
+		 * without which the check would read outside the item. */
 		const unsigned short size = (unsigned short)item_size;
 
-		/* Dossier délégué : marqueur de délégation 32 octets avant la fin. */
+		/* Delegate folder: delegation marker 32 bytes before the end. */
 		static const unsigned char GUID_DELEGATION[16] = {
 			0x74, 0x1a, 0x59, 0x5e, 0x96, 0xdf, 0xd3, 0x48,
 			0x8d, 0x67, 0x17, 0x33, 0xbc, 0xee, 0x28, 0xba };
@@ -2501,17 +2494,17 @@ std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _level, bool Parent
 			log(3, L"🔈DelegateFolder");
 			return std::make_unique<DelegateFolder>(buffer, size, _level);
 		}
-		// Graveur de CD : signature ASCII « AugM ».
+		// CD burner: ASCII signature "AugM".
 		if (size >= 18 && memcmp(buffer + 4, "AugM", 4) == 0) {
 			log(3, L"🔈CD Burn");
 			return std::make_unique<TypedShellItem>(buffer, size, L"CD Burn", _level);
 		}
-		// Dossier de jeux : signature ASCII « GFSI ».
+		// Games folder: ASCII signature "GFSI".
 		if (size >= 32 && memcmp(buffer + 4, "GFSI", 4) == 0) {
 			log(3, L"🔈Game Folder");
 			return std::make_unique<TypedShellItem>(buffer, size, L"Game Folder", _level);
 		}
-		// Fichier .cpl du panneau de configuration : valeur de 4 octets precise.
+		// Control panel .cpl file: a precise 4-byte value.
 		if (size >= 24
 		    && *reinterpret_cast<unsigned int*>(buffer + 4) == 0xFFFFFF38UL) {
 			log(3, L"🔈Control Panel CPL File");
@@ -2566,13 +2559,13 @@ std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _level, bool Parent
 			log(3, L"🔈FavoriteShellitem");
 			return std::make_unique<FavoriteShellitem>(buffer, _level);
 		}
-		/* CRITÈRES FAIBLES, testés en DERNIER — l'ordre suit celui de libfwsi,
-		   qui essaie `file_entry` avant `web_site`.
-		   Celui du site web porte sur quatre octets à l'offset 4, or c'est là
-		   qu'une entrée de fichier écrit sa TAILLE : un fichier de 0xC001B000
-		   octets serait pris pour un site web si ce test venait d'abord. Celui
-		   de l'archive Acronis lit l'octet de classe lui-même. Les deux ne sont
-		   donc consultés que si aucun type de classe n'a répondu. */
+		/* WEAK CRITERIA, tested LAST — the order follows libfwsi's, which tries
+		   `file_entry` before `web_site`.
+		   The web site one bears on four bytes at offset 4, and that is where a
+		   file entry writes its SIZE: a file of 0xC001B000 bytes would be taken
+		   for a web site if that test came first. The Acronis archive one reads
+		   the class byte itself. Both are therefore consulted only if no class
+		   type answered. */
 		if (size >= 24 && buffer[4] == 0x00 && buffer[5] == 0xb0
 		    && buffer[6] == 0x01 && buffer[7] == 0xc0) {
 			log(3, L"🔈Web Site");
@@ -2594,5 +2587,5 @@ std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _level, bool Parent
 		log(3, L"🔈ArchiveFileContent");
 		return std::make_unique<ArchiveFileContent>(buffer, _level);
 	}
-	return nullptr;   // aucun type reconnu : jamais de retour implicite
+	return nullptr;   // no type recognised: never an implicit return
 }
