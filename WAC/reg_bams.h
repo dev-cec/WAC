@@ -1,3 +1,21 @@
+/*! \file
+ *  \brief Background Activity Monitor (BAM): last execution of a binary, per user.
+ *
+ *  WHAT IT SHOWS. The BAM service throttles the background activity of
+ *  applications, and to do so records, FOR EACH USER, the path of every
+ *  executable run and the time it last ran. That makes it one of the most
+ *  direct execution proofs on a Windows system: a full path, a user, and a
+ *  date — where Prefetch gives no user and Shimcache does not prove execution.
+ *
+ *  WHERE IT IS READ. In SYSTEM, `CurrentControlSet\Services\bam\UserSettings\<SID>`
+ *  and `…\bam\state\UserSettings\<SID>` (the second path since Windows 10
+ *  1809; both are read, since either may be the one populated). Each value is
+ *  named after the executable's path, in NT form (`\Device\HarddiskVolume3\…`),
+ *  and holds the execution time as a FILETIME.
+ *
+ *  Its span is short — the entries are pruned — so an absent path means nothing,
+ *  while a present one dates a run precisely.
+ */
 #pragma once
 #include <iostream>
 #include <windows.h>
@@ -11,45 +29,42 @@
 #include "usb.h"
 #include "users.h"
 
-/*!structure représentant un artefact Background Activity Monitor (BAM)
-*/
+/*! One BAM entry: a binary, the user who ran it, and when it last ran. */
 struct Bam {
 public:
-	std::wstring sid = L""; //!< SID de l'utilisateur
-	std::wstring sidName = L""; //!< nom de l'utilisateur
-	std::wstring name = L"";//!< nom de l'objet
-	std::wstring executionTime = L"";//!< date de création de l'objet
-	std::wstring executionTimeUtc = L"";//!< date de création de l'objet au format UTC
+	std::wstring sid = L"";      //!< SID of the user who ran the binary
+	std::wstring sidName = L"";  //!< name of that user
+	std::wstring name = L"";     //!< path of the executable, as the value names it
+	std::wstring executionTime = L"";    //!< last execution, in the suspect's local time
+	std::wstring executionTimeUtc = L""; //!< the same instant in UTC
 
-	/*! Constructeur
-	* @param donnees contient timestamps à transformer en datetime
-	* @param nomValeur contient le nom de la clé de registre contenant le BAM
-	* @param psid contient le SID de l'utilisateur
-	*/
+	/*! Builds the entry from a registry value.
+	 *  @param donnees the value's bytes, which start with the execution FILETIME.
+	 *  @param nomValeur name of the value, that is the executable's path.
+	 *  @param psid SID of the user whose UserSettings subkey holds the value. */
 	Bam(LPBYTE donnees, std::wstring nomValeur, std::wstring psid);
 
-	/*! conversion de l'objet au format json
-	* @return wstring le code json
-	*/
+	/*! Converts the entry to JSON.
+	 *  @return its JSON object. */
 	Json toJson() const;
 
-	/* liberation mémoire */
+	//! Releases the memory held by the entry.
 	void clear();
 };
 
-/*! *structure contenant l'ensemble des BAM
-*/
+/*! All the BAM entries collected, for every user of the machine. */
 struct Bams {
 public:
-	std::vector<Bam> bams;//!< tableau contenant tous les objets
+	std::vector<Bam> bams;  //!< the entries, in the order they were read
 	
-	/*! Fonction permettant de parser les objets
-	*/
+	/*! Walks the UserSettings subkeys of both BAM paths, for each user.
+	 *  @return S_OK, or the failure of the last read attempted. */
 	HRESULT getData();
 
-	/*! conversion de l'objet au format json */
+	/*! Writes `bams.json` into the output directory.
+	 *  @return the result of the write. */
 	HRESULT toJson();
 
-	/* liberation mémoire */
+	//! Releases the memory held by the entries.
 	void clear();
 };

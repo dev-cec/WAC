@@ -1151,9 +1151,15 @@ public:
 
 } // namespace
 
+/*! What the reader keeps between calls: the volumes it has opened, and the
+ *  letters it has already failed to open. */
 struct LecteurBrut::Impl {
-    std::map<std::wstring, std::unique_ptr<NtfsVolume>> volumes;
-    std::map<std::wstring, HRESULT> echecs;    // volume inaccessible: do not retry
+    std::map<std::wstring, std::unique_ptr<NtfsVolume>> volumes;  //!< by volume letter
+    std::map<std::wstring, HRESULT> echecs;    //!< volume inaccessible: do not retry
+    /*! Returns the volume of a letter, opening it on first use.
+     *  @param lettre the volume letter ("X:")
+     *  @param hr receives the result of the opening
+     *  @return the volume, or nullptr if it cannot be opened */
     NtfsVolume* volume(const std::wstring& lettre, HRESULT& hr);
 };
 

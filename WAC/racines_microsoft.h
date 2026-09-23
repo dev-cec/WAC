@@ -16,11 +16,13 @@
 #include <cstdint>
 #include <cstddef>
 
+/*! An embedded Microsoft root certificate, against which a signature chain is
+ *  verified. */
 struct RacineMicrosoft {
-    const char* nom;          //!< sujet (CN)
+    const char* nom;           //!< subject (CN)
     const char* empreinteSha1; //!< thumbprint, for manual checking
-    const uint8_t* der;       //!< certificat DER
-    size_t taille;
+    const uint8_t* der;        //!< the certificate, DER-encoded
+    size_t taille;             //!< size of `der`, in bytes
 };
 
 // Microsoft Root Certificate Authority 2010 — expires 2035-06-24 — Windows: Windows Production PCA 2011

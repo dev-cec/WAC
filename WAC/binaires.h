@@ -44,9 +44,9 @@
 struct EmpreinteBinaire {
     std::wstring chemin;     //!< normalised path ("X:\…"), empty if undeterminable
     std::wstring md5;        //!< empty if the file could not be read
-    std::wstring sha1;
-    std::wstring sha256;
-    HRESULT resultat = E_FAIL;
+    std::wstring sha1;       //!< empty if the file could not be read
+    std::wstring sha256;     //!< empty if the file could not be read
+    HRESULT resultat = E_FAIL;   //!< outcome of the raw read
     bool preleve = false;    //!< copied into the exhibit store
     /*! Microsoft authenticity verified (Windows catalog or embedded signature):
      *  the binary is not collected. Empty otherwise. See authenticode.h. */
@@ -55,11 +55,17 @@ struct EmpreinteBinaire {
 
 /*! Summary of the phase, for the investigation log. */
 struct BilanBinaires {
-    size_t fichiers = 0, lus = 0, preleves = 0, sansPlace = 0, doublons = 0;
-    unsigned long long octetsPreleves = 0, octetsEvites = 0;
+    size_t fichiers = 0;                     //!< distinct cited files
+    size_t lus = 0;                          //!< read, hence fingerprinted
+    size_t preleves = 0;                     //!< copied into the exhibit store
+    size_t sansPlace = 0;                    //!< hashed only, medium full
+    size_t doublons = 0;                     //!< identical content already collected
+    unsigned long long octetsPreleves = 0;   //!< bytes written to the medium
+    unsigned long long octetsEvites = 0;     //!< bytes saved by the three rules above
     size_t authentifies = 0;                 //!< authentic Microsoft binaries, not collected
-    unsigned long long octetsAuthentifies = 0;
-    size_t cataloguesLus = 0, cataloguesUtilises = 0;
+    unsigned long long octetsAuthentifies = 0;  //!< bytes saved by that rule alone
+    size_t cataloguesLus = 0;                //!< CatRoot catalogs parsed
+    size_t cataloguesUtilises = 0;           //!< among them, those that authenticated a file
 };
 
 /*! Fingerprints of the file an artefact points to.

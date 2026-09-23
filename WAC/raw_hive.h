@@ -121,6 +121,10 @@ HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
  */
 struct RawDirEntry;
 
+/*! Persistent raw reader: reads files and lists directories on NTFS volumes
+ *  kept open for the reader's whole lifetime.
+ *
+ *  Not copyable: it owns one handle per volume and the directory index cache. */
 class LecteurBrut {
 public:
     LecteurBrut();
@@ -138,10 +142,13 @@ public:
     HRESULT lire(const std::wstring& cheminAbsolu, const std::wstring& sortie,
                  RawHiveExtrait& ligne, std::streambuf* observateur = nullptr);
 
-    /*! Lists a directory by its absolute path, on the volume already open. */
+    /*! Lists a directory by its absolute path, on the volume already open.
+     *  @param dossierAbsolu the directory ("X:\\…")
+     *  @param entrees receives its entries
+     *  @return the result of the listing */
     HRESULT lister(const std::wstring& dossierAbsolu, std::vector<RawDirEntry>& entrees);
 
-    //! Number of volumes actually opened (one handle each).
+    //! @return the number of volumes actually opened (one handle each).
     unsigned volumesOuverts() const;
 
 private:

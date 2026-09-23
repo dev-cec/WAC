@@ -36,13 +36,16 @@
 /*! SHA-1, computed incrementally. */
 class Sha1Stream final {
 public:
-	/*! Adds bytes to the computation. */
+	/*! Adds bytes to the computation.
+	 *  @param data,length the bytes. */
 	void update(const uint8_t* data, size_t length);
-	/*! Ends the computation and returns the digest in uppercase hexadecimal.
-	 *  Call only once: the computation is over afterwards. */
+	/*! Ends the computation.
+	 *  Call only once: the computation is over afterwards.
+	 *  @return the digest in uppercase hexadecimal. */
 	std::wstring hexDigest();
-	/*! Ends the computation and writes the raw digest (20 bytes). Same
-	 *  constraint: only once, and exclusive of hexDigest. */
+	/*! Ends the computation and writes the raw digest. Same constraint: only
+	 *  once, and exclusive of hexDigest.
+	 *  @param sortie the 20 bytes of the digest. */
 	void digest(uint8_t sortie[20]);
 private:
 	uint32_t etat_[5] = { 0x67452301u, 0xEFCDAB89u, 0x98BADCFEu, 0x10325476u, 0xC3D2E1F0u };
@@ -55,13 +58,16 @@ private:
 /*! SHA-256, computed incrementally. */
 class Sha256Stream final {
 public:
-	/*! Adds bytes to the computation. */
+	/*! Adds bytes to the computation.
+	 *  @param data,length the bytes. */
 	void update(const uint8_t* data, size_t length);
-	/*! Ends the computation and returns the digest in uppercase hexadecimal.
-	 *  Call only once: the computation is over afterwards. */
+	/*! Ends the computation.
+	 *  Call only once: the computation is over afterwards.
+	 *  @return the digest in uppercase hexadecimal. */
 	std::wstring hexDigest();
-	/*! Ends the computation and writes the raw digest (32 bytes). Same
-	 *  constraint: only once, and exclusive of hexDigest. */
+	/*! Ends the computation and writes the raw digest. Same constraint: only
+	 *  once, and exclusive of hexDigest.
+	 *  @param sortie the 32 bytes of the digest. */
 	void digest(uint8_t sortie[32]);
 private:
 	uint32_t etat_[8] = { 0x6A09E667u, 0xBB67AE85u, 0x3C6EF372u, 0xA54FF53Au,
@@ -82,10 +88,14 @@ private:
  *  grow. */
 class Sha512Stream final {
 public:
+	/*! @param variante384 computes SHA-384 instead of SHA-512. */
 	explicit Sha512Stream(bool variante384 = false);
+	/*! Adds bytes to the computation. */
 	void update(const uint8_t* data, size_t length);
-	/*! Ends the computation and writes the digest: 64 bytes, or 48 for SHA-384. */
+	/*! Ends the computation and writes the digest: 64 bytes, or 48 for SHA-384.
+	 *  @param sortie buffer of at least taille() bytes. */
 	void digest(uint8_t* sortie);
+	/*! Digest size in bytes: 48 for SHA-384, 64 for SHA-512. */
 	size_t taille() const { return variante384_ ? 48 : 64; }
 private:
 	uint64_t etat_[8];
