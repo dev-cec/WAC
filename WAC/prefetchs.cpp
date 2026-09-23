@@ -169,11 +169,7 @@ HRESULT Prefetch::read() {
 	   `data` stays a plain VIEW: it names one buffer or the other without owning
 	   it. */
 	std::unique_ptr<BYTE[]> fileBuffer;      // raw content of the .pf file
-	std::unique_ptr<BYTE[]> decompressedBuffer;  // content after decompression
 	LPBYTE buffer = NULL;  // view on the raw content
-	LPBYTE data = NULL;    // view on the usable data
-	size_t dataSize = 0;   // size of that data, the bound of every read
-	DWORD posBuffer = 0;
 	std::ifstream file(std::filesystem::path(path), std::ios::binary);
 	if (!file.good()) {
 		return ERROR_FILE_CORRUPT;
@@ -200,86 +196,111 @@ HRESULT Prefetch::read() {
 	if (hFile != INVALID_HANDLE_VALUE) {
 		FILE_BASIC_INFO fileInfo;
 		log(3, L"🔈GetFileInformationByHandleEx hFile");
-		GetFileInformationByHandleEx(hFile, FileBasicInfo, &fileInfo, sizeof(FILE_BASIC_INFO));
-		memcpy(&createdUtc, &fileInfo.CreationTime, sizeof(createdUtc));
-		memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
-		memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
-		log(3, L"🔈utcVersLocalSuspect created");
-		utcToSuspectLocal(createdUtc, &created);
-		log(3, L"🔈utcVersLocalSuspect modified");
-		utcToSuspectLocal(modifiedUtc, &modified);
-		log(3, L"🔈utcVersLocalSuspect accessed");
-		utcToSuspectLocal(accessedUtc, &accessed);
+		// The result was ignored: on failure, uninitialised bytes became dates.
+		if (GetFileInformationByHandleEx(hFile, FileBasicInfo, &fileInfo, sizeof(FILE_BASIC_INFO))) {
+			memcpy(&createdUtc, &fileInfo.CreationTime, sizeof(createdUtc));
+			memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
+			memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
+			log(3, L"🔈utcVersLocalSuspect created");
+			utcToSuspectLocal(createdUtc, &created);
+			log(3, L"🔈utcVersLocalSuspect modified");
+			utcToSuspectLocal(modifiedUtc, &modified);
+			log(3, L"🔈utcVersLocalSuspect accessed");
+			utcToSuspectLocal(accessedUtc, &accessed);
+		}
+		else {
+			log(2, L"🔥GetFileInformationByHandleEx " + pathOriginal, GetLastError());
+		}
+		CloseHandle(hFile);
 	}
-	CloseHandle(hFile);
+
+	return parse(buffer, size);
+}
+
+HRESULT decompressPrefetch(const BYTE* buffer, size_t size, std::vector<BYTE>& out) {
+	out.clear();
+	if (size < 8) return ERROR_INVALID_DATA;
+	const unsigned short CompressionFormatXpressHuff = 4;
+	using RtlDecompressBufferEx = NTSTATUS(__stdcall*)(
+		USHORT CompressionFormat,
+		PUCHAR UncompressedBuffer,
+		ULONG UncompressedBufferSize,
+		PUCHAR CompressedBuffer,
+		ULONG CompressedBufferSize,
+		PULONG FinalUncompressedSize,
+		PVOID WorkSpace);
+	using RtlGetCompressionWorkSpaceSize = NTSTATUS(__stdcall*)(
+		USHORT CompressionFormatAndEngine,
+		PULONG CompressBufferWorkSpaceSize,
+		PULONG CompressFragmentWorkSpaceSize);
+
+	static auto compression_workspace_size = reinterpret_cast<RtlGetCompressionWorkSpaceSize>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "RtlGetCompressionWorkSpaceSize"));
+	static auto decompress_buffer_ex = reinterpret_cast<RtlDecompressBufferEx>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "RtlDecompressBufferEx"));
+	if (!compression_workspace_size || !decompress_buffer_ex) return ERROR_PROC_NOT_FOUND;
+
+	const int decompressed_size = *reinterpret_cast<const int*>(buffer + 4);
+	// The announced size comes from the file and sizes the allocation: a
+	// Prefetch is a few hundred KiB, 64 MiB leaves a wide margin.
+	if (decompressed_size <= 0 || decompressed_size > (64 << 20)) {
+		return ERROR_INVALID_DATA;
+	}
+	const size_t posBuffer = 8;
+	ULONG compressed_buffer_workspace_size, compress_fragment_workspace_size;
+	log(3, L"🔈compression_workspace_size");
+	HRESULT hr = compression_workspace_size(CompressionFormatXpressHuff, &compressed_buffer_workspace_size, &compress_fragment_workspace_size);
+	if (hr != ERROR_SUCCESS)
+		return hr;
+
+	out.assign((size_t)decompressed_size, 0);
+
+	ULONG final_uncompressed_size = 0;
+	std::vector<BYTE> workspace(compressed_buffer_workspace_size);
+
+	log(3, L"🔈decompress_buffer_ex");
+	const NTSTATUS status = decompress_buffer_ex(
+		CompressionFormatXpressHuff,
+		out.data(),
+		decompressed_size,
+		const_cast<PUCHAR>(buffer + posBuffer),
+		(ULONG)(size - posBuffer),
+		&final_uncompressed_size,
+		workspace.data());
+	// The result was ignored: a failed decompression left a buffer of zeros
+	// parsed as if it were the file.
+	if (status < 0) {
+		out.clear();
+		return ERROR_INVALID_DATA;
+	}
+	// Never more than the buffer allocated, whatever the call reports.
+	out.resize(std::min<size_t>(final_uncompressed_size, (size_t)decompressed_size));
+	return ERROR_SUCCESS;
+}
+
+HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
+	LPBYTE data = NULL;    // view on the usable data: `buffer` or the decompressed copy
+	size_t dataSize = 0;   // size of that data, the bound of every read
+	if (size < 8) return ERROR_FILE_CORRUPT;
 
 	// DECOMPRESSION IF NEEDED
+	std::vector<BYTE> decompressed;
 	if (buffer[0] == 'M' && buffer[1] == 'A' && buffer[2] == 'M') {
-		const unsigned short CompressionFormatXpressHuff = 4;
-		using RtlDecompressBufferEx = NTSTATUS(__stdcall*)(
-			USHORT CompressionFormat,
-			PUCHAR UncompressedBuffer,
-			ULONG UncompressedBufferSize,
-			PUCHAR CompressedBuffer,
-			ULONG CompressedBufferSize,
-			PULONG FinalUncompressedSize,
-			PVOID WorkSpace);
-		using RtlGetCompressionWorkSpaceSize = NTSTATUS(__stdcall*)(
-			USHORT CompressionFormatAndEngine,
-			PULONG CompressBufferWorkSpaceSize,
-			PULONG CompressFragmentWorkSpaceSize);
-
-		static auto compression_workspace_size = reinterpret_cast<RtlGetCompressionWorkSpaceSize>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "RtlGetCompressionWorkSpaceSize"));
-		static auto decompress_buffer_ex = reinterpret_cast<RtlDecompressBufferEx>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "RtlDecompressBufferEx"));
-
-		const int decompressed_size = *reinterpret_cast<int*>(buffer + 4);
-		// The announced size comes from the file and sizes the allocation: a
-		// Prefetch is a few hundred KiB, 64 MiB leaves a wide margin.
-		if (decompressed_size <= 0 || decompressed_size > (64 << 20)) {
-			log(2, L"🔥Prefetch: implausible decompressed size " + std::to_wstring(decompressed_size)
-			     + L" : " + pathOriginal, ERROR_INVALID_DATA);
-			return ERROR_INVALID_DATA;
-		}
-		posBuffer += 8;
-		ULONG compressed_buffer_workspace_size, compress_fragment_workspace_size;
-		log(3, L"🔈compression_workspace_size");
-		HRESULT hr = compression_workspace_size(CompressionFormatXpressHuff, &compressed_buffer_workspace_size, &compress_fragment_workspace_size);
-		if (hr != ERROR_SUCCESS)
+		const HRESULT hr = decompressPrefetch(buffer, size, decompressed);
+		if (hr != ERROR_SUCCESS) {
+			log(2, L"🔥Prefetch: decompression failed : " + pathOriginal, hr);
 			return hr;
-
-		decompressedBuffer = std::make_unique<BYTE[]>(decompressed_size);
-		data = decompressedBuffer.get();
-
-		ULONG final_uncompressed_size;
-
-		auto* const workspace = malloc(compressed_buffer_workspace_size);
-		if (!workspace)
-			return ERROR_DECRYPTION_FAILED;
-
-		log(3, L"🔈decompress_buffer_ex");
-		const NTSTATUS status = decompress_buffer_ex(
-			CompressionFormatXpressHuff,
-			reinterpret_cast<PUCHAR>(data),
-			decompressed_size,
-			reinterpret_cast<PUCHAR>(buffer + posBuffer),
-			size - posBuffer,
-			&final_uncompressed_size,
-			workspace);
-		free(workspace);
-		// The result was ignored: a failed decompression left a buffer of zeros
-		// parsed as if it were the file.
-		if (status < 0) {
-			log(2, L"🔥Prefetch: decompression failed : " + pathOriginal, (HRESULT)status);
-			return ERROR_INVALID_DATA;
 		}
-		dataSize = final_uncompressed_size;
+		data = decompressed.data();
+		dataSize = decompressed.size();
 	}
 	else { // NO COMPRESSION
 		data = buffer;
 		dataSize = size;
 	}
-	// Fixed header (84) + file information up to the eight run times (44 + 64).
-	if (dataSize < 84 + 44 + 64) {
+	/* Fixed header (84) + file information read up to the run count, at
+	   84 + 124: 212 bytes. The minimum stopped at the eight run times (192),
+	   and a truncated file was read 20 bytes past its end — caught by
+	   parsers_test. */
+	if (dataSize < 84 + 128) {
 		log(2, L"🔥Prefetch: file too short for its header : " + pathOriginal, ERROR_INVALID_DATA);
 		return ERROR_INVALID_DATA;
 	}
@@ -288,7 +309,12 @@ HRESULT Prefetch::read() {
 
 	version = *reinterpret_cast<int*>(data);
 	signature = *reinterpret_cast<int*>(data + 4);
-	filename = readWideZ(data, 8 + 60, 8);   // 60-byte name field
+	/* Executable name: 60 bytes at offset 16 (after the version, the
+	   signature, an unknown word and the file size). The bounded rewrite of
+	   `(wchar_t*)data + 8` — 8 CHARACTERS, hence byte 16 — read it at byte 8:
+	   every name came out as "\x11". check-json.py now confronts it with the
+	   name of the .pf file. */
+	filename = readWideZ(data, 16 + 60, 16);
 
 	/* THE "SCCA" SIGNATURE — the check was missing.
 	   The constant 0x41434353 was declared and never compared. Any file dropped

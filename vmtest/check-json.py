@@ -685,6 +685,7 @@ def check_prefetchs(folder):
         return 0
 
     bad = []
+    badNames = []
     for p in d:
         name = (p.get("Path") or "").replace("/", "\\").split("\\")[-1]
         if "-" not in name or not name.lower().endswith(".pf"):
@@ -692,6 +693,16 @@ def check_prefetchs(folder):
         expected = name.rsplit("-", 1)[-1][:-3]
         if (p.get("Hash") or "").upper() != expected.upper():
             bad.append((name, p.get("Hash")))
+        # The executable name, decoded from the header, is the prefix of the
+        # file name: read at the wrong offset, it came out as "\x11" everywhere.
+        if (p.get("Filename") or "").upper() != name.rsplit("-", 1)[0].upper():
+            badNames.append((name, p.get("Filename")))
+    if badNames:
+        print(f"  ❌ prefetchs.json: {len(badNames)}/{len(d)} executable names differ "
+              f"from the file name")
+        for name, f in badNames[:3]:
+            print(f"        {name} -> {f!r}")
+        return 1 + (1 if bad else 0) + check_prefetch_paths(d)
     if bad:
         print(f"  ❌ prefetchs.json: {len(bad)}/{len(d)} hashes do not match "
               f"the file name")

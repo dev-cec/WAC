@@ -613,8 +613,8 @@ bool isMuiReference(const std::wstring& value);
 /*! Converts a string of several concatenated wstrings to a vector of wstring.
 * Each string must be separated from the previous one by \0.
 * @param data pointer to the array holding the strings
-* @param size size of the string held in `data`
-* @return the vector that results from the conversion
+* @param size size of the block, in bytes: nothing beyond it is read
+* @return the non-empty strings, in order
 */
 std::vector<std::wstring> multiWstring_to_vector(LPBYTE data, int size);
 

@@ -119,6 +119,16 @@ struct VolumeInfo {
 	void clear();
 };
 
+/*! Decompresses a Windows 10/11 Prefetch ("MAM" header, XPRESS Huffman).
+ *
+ *  The announced size comes from the file: it is bounded to 64 MiB before
+ *  sizing the allocation. Decompression is ntdll's (RtlDecompressBufferEx).
+ *  @param buffer the file's bytes, starting with "MAM"
+ *  @param size their number
+ *  @param out receives the decompressed bytes; empty on failure
+ *  @return ERROR_SUCCESS, or why nothing was decompressed */
+HRESULT decompressPrefetch(const BYTE* buffer, size_t size, std::vector<BYTE>& out);
+
 /*! One Prefetch file: an executable that ran, and what it loaded. */
 struct Prefetch {
 public:
@@ -155,9 +165,17 @@ public:
 	 *  @param file_path path of the .pf file in the working directory. */
 	Prefetch(const std::wstring file_path);
 
-	/*! Reads the file: decompresses it if need be, then parses it.
+	/*! Reads the file and its dates, then parses it (see parse).
 	 *  @return the result of the read. */
 	HRESULT read();
+
+	/*! Parses the content of a Prefetch: decompresses it if it is compressed
+	 *  ("MAM"), then decodes the SCCA structure. Separate from the file reading
+	 *  so that it can be tested on a buffer (see parsers_test.cpp).
+	 *  @param buffer the file's bytes
+	 *  @param size their number: no read goes beyond
+	 *  @return S_OK, or why the content was not decoded */
+	HRESULT parse(LPBYTE buffer, size_t size);
 
 	/*! Converts the Prefetch file to JSON, loaded files and volumes included.
 	 *  @return its JSON object. */

@@ -1002,22 +1002,17 @@ std::string readNarrowZ(const BYTE* base, size_t limit, size_t offset) {
 
 std::vector<std::wstring> multiWstring_to_vector(LPBYTE data, int size)
 {
-
+	/* Each string is read within the block: it used to be read up to the first
+	   zero met, and a block whose last string is not terminated was read past
+	   its end. */
 	std::vector<std::wstring> out;
-	wchar_t* d = (wchar_t*)data;
-	size_t pos = 0;
-
-	while (pos < (size_t)size / sizeof(wchar_t))
-	{
-
-		std::wstring ws = std::wstring(d).data();
-		pos += ws.length() + 1;// position of the first character of the next string, after the \0 that ends this one
-		d += ws.length() + 1;
-		if (!ws.empty()) {
-			out.push_back(ws);
-		}
+	if (size <= 0) return out;
+	size_t pos = 0;   // in bytes
+	while (pos + sizeof(wchar_t) <= (size_t)size) {
+		const std::wstring ws = readWideZ(data, (size_t)size, pos);
+		pos += (ws.length() + 1) * sizeof(wchar_t);   // past the string and its \0
+		if (!ws.empty()) out.push_back(ws);
 	}
-
 	return out;
 }
 
