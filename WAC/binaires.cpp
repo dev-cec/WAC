@@ -12,14 +12,14 @@
 
 namespace {
 
-std::unique_ptr<LecteurBrut> g_lecteur;
-std::map<std::wstring, EmpreinteBinaire> g_cache;      // key: lowercase path
-std::map<std::wstring, std::wstring> g_parContenu;    // SHA-256 -> exhibit in the store
-size_t g_lus = 0, g_preleves = 0, g_sansPlace = 0, g_doublons = 0;
-unsigned long long g_octets = 0, g_octetsEvites = 0;
-size_t g_authentifies = 0, g_cataloguesLus = 0;
-unsigned long long g_octetsAuthentifies = 0;
-std::set<std::wstring> g_cataloguesUtilises;
+std::unique_ptr<RawReader> g_reader;
+std::map<std::wstring, BinaryFingerprint> g_cache;      // key: lowercase path
+std::map<std::wstring, std::wstring> g_byContent;    // SHA-256 -> exhibit in the store
+size_t g_read = 0, g_collected = 0, g_sansPlace = 0, g_duplicates = 0;
+unsigned long long g_bytes = 0, g_avoidedBytes = 0;
+size_t g_authenticated = 0, g_catalogsRead = 0;
+unsigned long long g_authenticatedBytes = 0;
+std::set<std::wstring> g_catalogsUsed;
 const size_t CATALOGUE_MAX = 64 * 1024 * 1024;       // a catalog beyond that: ignored
 unsigned long long g_entrant = 0;                      // counter of incoming files
 
@@ -31,8 +31,8 @@ unsigned long long g_entrant = 0;                      // counter of incoming fi
  *  The exhibit store thus only receives final exhibits: nothing is written then
  *  erased in it, and an interrupted collection leaves no temporary file there.
  *  A single read of the volume per file. */
-std::wstring dossierArrivee() {
-	return dossierConsigne() + L".arrivee";
+std::wstring stagingFolder() {
+	return exhibitStoreFolder() + L".arrivee";
 }
 
 /*! Space kept free on the collection medium: below it, files are hashed
@@ -51,9 +51,9 @@ const unsigned long long RESERVE = 1ULL << 30;
  *  Publisher, Visio and Access. .docx/.xlsx/.pptx cannot hold VBA: they are
  *  only hashed, like any document — copying them would turn the collection
  *  into a copy of the user's files. */
-bool aPrelever(const std::wstring& chemin) {
-	const size_t point = chemin.find_last_of(L'.');
-	if (point == std::wstring::npos || chemin.find(L'\\', point) != std::wstring::npos) return false;
+bool worthCollecting(const std::wstring& path) {
+	const size_t point = path.find_last_of(L'.');
+	if (point == std::wstring::npos || path.find(L'\\', point) != std::wstring::npos) return false;
 	static const wchar_t* const extensions[] = {
 		// executables, libraries, drivers
 		L"exe", L"dll", L"sys", L"ocx", L"cpl", L"scr", L"drv", L"efi", L"com", L"msi",
@@ -68,7 +68,7 @@ bool aPrelever(const std::wstring& chemin) {
 		// Publisher, Visio, Access
 		L"pub", L"vsd", L"vsdm", L"vstm", L"vssm", L"mdb", L"accdb", L"accde",
 	};
-	const std::wstring ext = enMinuscules(chemin.substr(point + 1));
+	const std::wstring ext = toLower(path.substr(point + 1));
 	for (const wchar_t* e : extensions) if (ext == e) return true;
 	return false;
 }
@@ -78,25 +78,25 @@ bool aPrelever(const std::wstring& chemin) {
 namespace {
 
 /*! Buffer that keeps what is written to it: reading a catalog into memory. */
-class Collecteur : public std::streambuf {
+class Collector : public std::streambuf {
 public:
-	std::vector<uint8_t> octets;
+	std::vector<uint8_t> bytes;
 protected:
 	int overflow(int c) override {
-		if (c != traits_type::eof()) octets.push_back((uint8_t)c);
+		if (c != traits_type::eof()) bytes.push_back((uint8_t)c);
 		return traits_type::not_eof(c);
 	}
 	std::streamsize xsputn(const char* s, std::streamsize n) override {
-		if (octets.size() + (size_t)n <= CATALOGUE_MAX) octets.insert(octets.end(), s, s + n);
+		if (bytes.size() + (size_t)n <= CATALOGUE_MAX) bytes.insert(bytes.end(), s, s + n);
 		return n;
 	}
 };
 
 /*! Forwards what it receives to two buffers: the PE analysis and, for a
  *  PowerShell script, the in-memory copy of its text. */
-class Duplicateur : public std::streambuf {
+class Duplicator : public std::streambuf {
 public:
-	Duplicateur(std::streambuf* a, std::streambuf* b) : a_(a), b_(b) {}
+	Duplicator(std::streambuf* a, std::streambuf* b) : a_(a), b_(b) {}
 protected:
 	int overflow(int c) override {
 		if (c != traits_type::eof()) { a_->sputc((char)c); if (b_) b_->sputc((char)c); }
@@ -112,17 +112,17 @@ private:
 	std::streambuf* b_;
 };
 
-//! Scripts whose embedded signature is verified (see EvaluerScriptPowerShell).
-bool estScriptPowerShell(const std::wstring& chemin) {
-	const size_t point = chemin.find_last_of(L'.');
+//! Scripts whose embedded signature is verified (see EvaluatePowerShellScript).
+bool estScriptPowerShell(const std::wstring& path) {
+	const size_t point = path.find_last_of(L'.');
 	if (point == std::wstring::npos) return false;
-	const std::wstring ext = enMinuscules(chemin.substr(point + 1));
+	const std::wstring ext = toLower(path.substr(point + 1));
 	return ext == L"ps1" || ext == L"psm1" || ext == L"psd1" || ext == L"ps1xml"
 	    || ext == L"psc1" || ext == L"cdxml";
 }
 
 //! Hexadecimal digest (64 characters) -> 32 bytes.
-bool octetsDeHexa(const std::wstring& hexa, uint8_t sortie[32]) {
+bool bytesFromHex(const std::wstring& hexa, uint8_t output[32]) {
 	if (hexa.size() != 64) return false;
 	for (size_t i = 0; i < 32; ++i) {
 		unsigned v = 0;
@@ -134,12 +134,12 @@ bool octetsDeHexa(const std::wstring& hexa, uint8_t sortie[32]) {
 			else if (c >= L'a' && c <= L'f') v |= c - L'a' + 10;
 			else return false;
 		}
-		sortie[i] = (uint8_t)v;
+		output[i] = (uint8_t)v;
 	}
 	return true;
 }
 
-std::wstring dossierCatalogues() {
+std::wstring catalogFolder() {
 	return conf.systemDrive + L"\\Windows\\System32\\CatRoot\\{F750E6C3-38EE-11D1-85E5-00C04FC295EE}";
 }
 
@@ -148,65 +148,65 @@ std::wstring dossierCatalogues() {
  *  nothing is written, and no service is solicited (see authenticode.h). */
 IndexCatalogues& catalogues() {
 	static IndexCatalogues index;
-	static bool fait = false;
-	if (fait) return index;
-	fait = true;
-	std::vector<RawDirEntry> entrees;
-	const HRESULT hr = g_lecteur->lister(dossierCatalogues(), entrees);
+	static bool done = false;
+	if (done) return index;
+	done = true;
+	std::vector<RawDirEntry> entries;
+	const HRESULT hr = g_reader->list(catalogFolder(), entries);
 	if (FAILED(hr)) {
 		log(2, L"🔥Catalogues de signatures illisibles : tous les binaires seront preleves", hr);
 		return index;
 	}
-	std::set<uint64_t> vus;                  // a file can also appear under its short name
-	size_t lus = 0;
-	for (const RawDirEntry& e : entrees) {
-		if (e.isDirectory || !vus.insert(e.mftIndex).second) continue;
-		if (e.name.size() < 4 || enMinuscules(e.name.substr(e.name.size() - 4)) != L".cat") continue;
-		Collecteur c;
-		RawHiveExtrait ligne;
-		if (FAILED(g_lecteur->lire(dossierCatalogues() + L"\\" + e.name, std::wstring(), ligne, &c))) continue;
-		++lus;
-		index.ajouter(e.name, c.octets.data(), c.octets.size());
+	std::set<uint64_t> seen;                  // a file can also appear under its short name
+	size_t read = 0;
+	for (const RawDirEntry& e : entries) {
+		if (e.isDirectory || !seen.insert(e.mftIndex).second) continue;
+		if (e.name.size() < 4 || toLower(e.name.substr(e.name.size() - 4)) != L".cat") continue;
+		Collector c;
+		RawHiveExtraction line;
+		if (FAILED(g_reader->read(catalogFolder() + L"\\" + e.name, std::wstring(), line, &c))) continue;
+		++read;
+		index.add(e.name, c.bytes.data(), c.bytes.size());
 	}
-	g_cataloguesLus = lus;
-	log(2, L"❇️Catalogues de signatures : " + std::to_wstring(lus) + L" lus, "
+	g_catalogsRead = read;
+	log(2, L"❇️Catalogues de signatures : " + std::to_wstring(read) + L" lus, "
 	     + std::to_wstring(index.catalogues()) + L" retenus (signature Microsoft verifiee), "
 	     + std::to_wstring(index.refuses()) + L" refuses, "
-	     + std::to_wstring(index.empreintes()) + L" empreintes");
+	     + std::to_wstring(index.fingerprints()) + L" empreintes");
 	return index;
 }
 
 } // namespace
 
-const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut) {
-	static const EmpreinteBinaire vide;
-	if (!conf.binary) return vide;
-	const std::wstring chemin = normaliserCheminFichier(cheminBrut);
-	if (chemin.empty()) return vide;
+const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
+	static const BinaryFingerprint empty;
+	if (!conf.binary) return empty;
+	const std::wstring path = normalizeFilePath(rawPath);
+	if (path.empty()) return empty;
 
-	const std::wstring cle = enMinuscules(chemin);       // NTFS is case-insensitive
-	const auto trouve = g_cache.find(cle);
-	if (trouve != g_cache.end()) return trouve->second;
+	const std::wstring key = toLower(path);       // NTFS is case-insensitive
+	const auto found = g_cache.find(key);
+	if (found != g_cache.end()) return found->second;
 
-	if (!g_lecteur) g_lecteur.reset(new LecteurBrut);
-	EmpreinteBinaire e;
-	e.chemin = chemin;
-	auto retenir = [&](RawHiveExtrait& l) {
-		e.md5    = l.empreintes.md5;
-		e.sha1   = l.empreintes.sha1;
-		e.sha256 = l.empreintes.sha256;
+	if (!g_reader) g_reader.reset(new RawReader);
+	BinaryFingerprint e;
+	e.path = path;
+	auto keep = [&](RawHiveExtraction& l) {
+		e.md5    = l.fingerprints.md5;
+		e.sha1   = l.fingerprints.sha1;
+		e.sha256 = l.fingerprints.sha256;
 	};
 
-	if (!aPrelever(chemin)) {
+	if (!worthCollecting(path)) {
 		// Document or data: fingerprints only, nothing is written.
-		RawHiveExtrait ligne;
-		e.resultat = g_lecteur->lire(chemin, std::wstring(), ligne);
-		if (SUCCEEDED(e.resultat)) { ++g_lus; retenir(ligne); }
-		else log(3, L"🔈Empreinte impossible : " + chemin, e.resultat);
-		return g_cache.emplace(cle, std::move(e)).first->second;
+		RawHiveExtraction line;
+		e.result = g_reader->read(path, std::wstring(), line);
+		if (SUCCEEDED(e.result)) { ++g_read; keep(line); }
+		else log(3, L"🔈Empreinte impossible : " + path, e.result);
+		return g_cache.emplace(key, std::move(e)).first->second;
 	}
 
-	const std::wstring cible = cheminSous(dossierConsigne(), chemin);
+	const std::wstring target = pathUnder(exhibitStoreFolder(), path);
 	std::error_code ec;
 
 	/* FIRST READ, WRITING NOTHING: fingerprints and, for a PE, Microsoft
@@ -215,156 +215,156 @@ const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut) {
 	   collected. Re-reading the examined disk costs less than writing then erasing
 	   on a USB stick. */
 	{
-		AnalyseurPe pe;
-		Collecteur texte;                       // PowerShell scripts: text in memory
-		const bool powershell = estScriptPowerShell(chemin);
-		Duplicateur tee(&pe, powershell ? &texte : nullptr);
-		RawHiveExtrait ligne;
-		e.resultat = g_lecteur->lire(chemin, std::wstring(), ligne, &tee);
-		pe.terminer();
-		if (FAILED(e.resultat)) {
-			log(3, L"🔈Empreinte impossible : " + chemin, e.resultat);
+		PeAnalyser pe;
+		Collector text;                       // PowerShell scripts: text in memory
+		const bool powershell = estScriptPowerShell(path);
+		Duplicator tee(&pe, powershell ? &text : nullptr);
+		RawHiveExtraction line;
+		e.result = g_reader->read(path, std::wstring(), line, &tee);
+		pe.finish();
+		if (FAILED(e.result)) {
+			log(3, L"🔈Empreinte impossible : " + path, e.result);
 			// Missing: the artefact already says so, and it is not an exhibit. Any
 			// other error is an exhibit that could not be read: it is recorded.
-			if (e.resultat != HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
-				ligne.cheminSortie = cible;
-				ConsigneAjouter({ ligne }, L"Lecture brute NTFS ; binaire cite par un artefact (--binary)");
+			if (e.result != HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
+				line.outputPath = target;
+				ExhibitStoreAdd({ line }, L"Lecture brute NTFS ; binaire cite par un artefact (--binary)");
 			}
-			return g_cache.emplace(cle, std::move(e)).first->second;
+			return g_cache.emplace(key, std::move(e)).first->second;
 		}
-		++g_lus;
-		retenir(ligne);
+		++g_read;
+		keep(line);
 		/* PE: Authenticode digest. Script or document: SHA-256 of the raw bytes in
 		   the catalogs, then embedded PowerShell signature. */
 		VerdictMicrosoft v;
-		if (pe.estPe()) v = EvaluerPe(pe, catalogues());
+		if (pe.estPe()) v = EvaluatePe(pe, catalogues());
 		else {
 			uint8_t h[32];
-			if (octetsDeHexa(e.sha256, h)) v = EvaluerParCatalogue(h, catalogues());
+			if (bytesFromHex(e.sha256, h)) v = EvaluateByCatalog(h, catalogues());
 			if (!v.microsoft && powershell) {
-				const VerdictMicrosoft ps = EvaluerScriptPowerShell(texte.octets.data(), texte.octets.size());
-				if (ps.microsoft || ps.motif != "pas de signature intégrée") v = ps;
+				const VerdictMicrosoft ps = EvaluatePowerShellScript(text.bytes.data(), text.bytes.size());
+				if (ps.microsoft || ps.reason != "pas de signature intégrée") v = ps;
 			}
 		}
 		{
 			if (v.microsoft) {
 				e.signature = L"Microsoft (" + v.source + L")";
-				++g_authentifies;
-				g_octetsAuthentifies += ligne.empreintes.octets;
+				++g_authenticated;
+				g_authenticatedBytes += line.fingerprints.bytes;
 				if (v.source.compare(0, 10, L"catalogue ") == 0)
-					g_cataloguesUtilises.insert(v.source.substr(10));
-				return g_cache.emplace(cle, std::move(e)).first->second;
+					g_catalogsUsed.insert(v.source.substr(10));
+				return g_cache.emplace(key, std::move(e)).first->second;
 			}
-			log(3, L"🔈Preleve (" + string_to_wstring(v.motif) + L") : " + chemin);
+			log(3, L"🔈Preleve (" + string_to_wstring(v.reason) + L") : " + path);
 		}
 	}
 
 	// Already in the exhibit store (extracted by another phase): nothing to rewrite.
-	if (std::filesystem::exists(cible, ec)) return g_cache.emplace(cle, std::move(e)).first->second;
+	if (std::filesystem::exists(target, ec)) return g_cache.emplace(key, std::move(e)).first->second;
 
 	/* Each collected exhibit will be copied to the working directory at the end
 	   of the collection: the room it will take there is already owed. Without this
 	   term, an exhibit store filled up to the reserve left no room for its own
 	   working copy. */
-	const unsigned long long libre = ConsigneEspaceLibre();
-	if (libre != 0 && libre < RESERVE + g_octets) {
+	const unsigned long long free = ExhibitStoreFreeSpace();
+	if (free != 0 && free < RESERVE + g_bytes) {
 		++g_sansPlace;
-		log(2, L"🔥Place insuffisante : " + chemin + L" hache sans etre preleve");
-		return g_cache.emplace(cle, std::move(e)).first->second;
+		log(2, L"🔥Place insuffisante : " + path + L" hache sans etre preleve");
+		return g_cache.emplace(key, std::move(e)).first->second;
 	}
 
 	// SECOND READ: collection, through the incoming directory (deduplication).
-	std::filesystem::create_directories(dossierArrivee(), ec);
-	const std::wstring sortie = dossierArrivee() + L"\\" + std::to_wstring(++g_entrant) + L".bin";
-	RawHiveExtrait ligne;
-	e.resultat = g_lecteur->lire(chemin, sortie, ligne);
-	const std::wstring methode = L"Lecture brute NTFS (\\\\.\\" + chemin.substr(0, 2)
+	std::filesystem::create_directories(stagingFolder(), ec);
+	const std::wstring output = stagingFolder() + L"\\" + std::to_wstring(++g_entrant) + L".bin";
+	RawHiveExtraction line;
+	e.result = g_reader->read(path, output, line);
+	const std::wstring method = L"Lecture brute NTFS (\\\\.\\" + path.substr(0, 2)
 	                           + L" — $MFT, index de repertoires, attribut $DATA) ; "
 	                           L"binaire cite par un artefact (--binary)";
-	if (FAILED(e.resultat)) {
-		ligne.cheminSortie = cible;
-		ConsigneAjouter({ ligne }, methode);
+	if (FAILED(e.result)) {
+		line.outputPath = target;
+		ExhibitStoreAdd({ line }, method);
 	}
 	else {
-		if (ligne.empreintes.sha256 != e.sha256)
-			log(2, L"🔥Contenu modifie entre deux lectures : " + chemin);
-		retenir(ligne);                     // the exhibit is authoritative
-		const auto deja = g_parContenu.find(e.sha256);
-		if (deja != g_parContenu.end()) {
-			ligne.cheminSortie = deja->second;
-			ConsigneAjouterDoublon(ligne, methode + L" ; contenu identique (SHA-256) "
+		if (line.fingerprints.sha256 != e.sha256)
+			log(2, L"🔥Contenu modifie entre deux lectures : " + path);
+		keep(line);                     // the exhibit is authoritative
+		const auto already = g_byContent.find(e.sha256);
+		if (already != g_byContent.end()) {
+			line.outputPath = already->second;
+			ExhibitStoreAddDuplicate(line, method + L" ; contenu identique (SHA-256) "
 			                                        L"a une piece deja consignee, non recopie");
-			++g_doublons;
-			g_octetsEvites += ligne.empreintes.octets;
-			e.preleve = true;
+			++g_duplicates;
+			g_avoidedBytes += line.fingerprints.bytes;
+			e.collected = true;
 		}
 		else {
-			std::filesystem::create_directories(std::filesystem::path(cible).parent_path(), ec);
-			std::filesystem::rename(sortie, cible, ec);
-			ligne.cheminSortie = cible;
+			std::filesystem::create_directories(std::filesystem::path(target).parent_path(), ec);
+			std::filesystem::rename(output, target, ec);
+			line.outputPath = target;
 			if (ec) {
-				log(2, L"🔥Mise en consigne impossible : " + cible);
-				ligne.resultat = e.resultat = HRESULT_FROM_WIN32(ERROR_WRITE_FAULT);
+				log(2, L"🔥Mise en consigne impossible : " + target);
+				line.result = e.result = HRESULT_FROM_WIN32(ERROR_WRITE_FAULT);
 			}
 			else {
-				g_parContenu.emplace(e.sha256, cible);
-				e.preleve = true;
-				++g_preleves;
-				g_octets += ligne.empreintes.octets;
+				g_byContent.emplace(e.sha256, target);
+				e.collected = true;
+				++g_collected;
+				g_bytes += line.fingerprints.bytes;
 			}
-			ConsigneAjouter({ ligne }, methode);
+			ExhibitStoreAdd({ line }, method);
 		}
 	}
-	std::filesystem::remove(sortie, ec);    // whatever is left in the incoming directory: nothing
-	return g_cache.emplace(cle, std::move(e)).first->second;
+	std::filesystem::remove(output, ec);    // whatever is left in the incoming directory: nothing
+	return g_cache.emplace(key, std::move(e)).first->second;
 }
 
-void ajouterEmpreintes(Json& o, const EmpreinteBinaire& e,
-                       const std::wstring& prefixe, const std::wstring& suffixe) {
-	if (!e.md5.empty())    o.add(prefixe + L"Md5"    + suffixe, Json::str(e.md5));
-	if (!e.sha1.empty())   o.add(prefixe + L"Sha1"   + suffixe, Json::str(e.sha1));
-	if (!e.sha256.empty()) o.add(prefixe + L"Sha256" + suffixe, Json::str(e.sha256));
-	if (!e.signature.empty()) o.add(prefixe + L"Signature" + suffixe, Json::str(e.signature));
+void addFingerprints(Json& o, const BinaryFingerprint& e,
+                       const std::wstring& prefix, const std::wstring& suffix) {
+	if (!e.md5.empty())    o.add(prefix + L"Md5"    + suffix, Json::str(e.md5));
+	if (!e.sha1.empty())   o.add(prefix + L"Sha1"   + suffix, Json::str(e.sha1));
+	if (!e.sha256.empty()) o.add(prefix + L"Sha256" + suffix, Json::str(e.sha256));
+	if (!e.signature.empty()) o.add(prefix + L"Signature" + suffix, Json::str(e.signature));
 }
 
-BilanBinaires BinairesBilan() {
-	BilanBinaires b;
-	b.fichiers = g_cache.size();
-	b.lus = g_lus;
-	b.preleves = g_preleves;
-	b.octetsPreleves = g_octets;
+BinarySummary BinariesSummary() {
+	BinarySummary b;
+	b.files = g_cache.size();
+	b.read = g_read;
+	b.collectedCount = g_collected;
+	b.collectedBytes = g_bytes;
 	b.sansPlace = g_sansPlace;
-	b.doublons = g_doublons;
-	b.octetsEvites = g_octetsEvites;
-	b.authentifies = g_authentifies;
-	b.octetsAuthentifies = g_octetsAuthentifies;
-	b.cataloguesLus = g_cataloguesLus;
-	b.cataloguesUtilises = g_cataloguesUtilises.size();
+	b.duplicates = g_duplicates;
+	b.avoidedBytes = g_avoidedBytes;
+	b.authenticated = g_authenticated;
+	b.authenticatedBytes = g_authenticatedBytes;
+	b.catalogsRead = g_catalogsRead;
+	b.catalogsUsed = g_catalogsUsed.size();
 	return b;
 }
 
-void BinairesTerminer() {
+void BinariesFinish() {
 	/* The catalogs that JUSTIFIED not collecting a binary go into the exhibit
 	   store: without them, the decision could not be checked by a third party.
 	   Only those — not the machine's 5,000. */
-	if (g_lecteur && !g_cataloguesUtilises.empty()) {
-		std::vector<RawHiveExtrait> releve;
-		for (const std::wstring& nom : g_cataloguesUtilises) {
-			const std::wstring source = dossierCatalogues() + L"\\" + nom;
-			const std::wstring cible = cheminSous(dossierConsigne(), source);
+	if (g_reader && !g_catalogsUsed.empty()) {
+		std::vector<RawHiveExtraction> reading;
+		for (const std::wstring& name : g_catalogsUsed) {
+			const std::wstring source = catalogFolder() + L"\\" + name;
+			const std::wstring target = pathUnder(exhibitStoreFolder(), source);
 			std::error_code ec;
-			if (std::filesystem::exists(cible, ec)) continue;
-			std::filesystem::create_directories(std::filesystem::path(cible).parent_path(), ec);
-			RawHiveExtrait ligne;
-			g_lecteur->lire(source, cible, ligne);
-			releve.push_back(std::move(ligne));
+			if (std::filesystem::exists(target, ec)) continue;
+			std::filesystem::create_directories(std::filesystem::path(target).parent_path(), ec);
+			RawHiveExtraction line;
+			g_reader->read(source, target, line);
+			reading.push_back(std::move(line));
 		}
-		ConsigneAjouter(releve, L"Lecture brute NTFS (\\\\.\\" + conf.systemDrive
+		ExhibitStoreAdd(reading, L"Lecture brute NTFS (\\\\.\\" + conf.systemDrive
 		                        + L" — $MFT, index de repertoires, attribut $DATA) ; catalogue de "
 		                        L"signatures Windows ayant justifie le non-prelevement de binaires "
 		                        L"authentifies Microsoft (--binary)");
 	}
-	g_lecteur.reset();
+	g_reader.reset();
 	std::error_code ec;
-	std::filesystem::remove_all(dossierArrivee(), ec);
+	std::filesystem::remove_all(stagingFolder(), ec);
 }

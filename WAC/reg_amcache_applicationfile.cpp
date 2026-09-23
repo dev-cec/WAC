@@ -11,7 +11,7 @@ AmcacheApplicationFile::AmcacheApplicationFile(ORHKEY hKey_amcache) {
 	getRegSzValue(hKey_amcache, nullptr, L"LowerCaseLongPath", &longPath);
 
 	// Empreinte sur le chemin normalisé (guillemets, casse), lecture brute.
-	empreinte = EmpreinteFichier(longPath);
+	fingerprint = FingerprintFile(longPath);
 
 	log(3, L"🔈replaceAll LongPath");
 	log(3, L"🔈getRegSzValue Version");
@@ -41,7 +41,7 @@ Json AmcacheApplicationFile::toJson() {
 	o.add(L"Name",          Json::str(name));
 	o.add(L"Publisher",     Json::str(publisher));
 	o.add(L"LongPath",      Json::str(longPath));      // chemin brut
-	ajouterEmpreintes(o, empreinte);
+	addFingerprints(o, fingerprint);
 	o.add(L"Version",       Json::str(version));
 	o.add(L"LinkDate",      Json::str(linkDate));
 	o.add(L"LinkDateUtc",   Json::str(linkDateUtc));
@@ -64,13 +64,13 @@ HRESULT AmcacheApplicationFiles::getData() {
 	ORHKEY hKey = NULL, hKey_amcache = NULL;
 	DWORD nSubkeys = 0;
 	DWORD nValues = 0;
-	WCHAR sousCle[MAX_VALUE_NAME] = L"";
-	DWORD tailleTampon = 0;
+	WCHAR subKey[MAX_VALUE_NAME] = L"";
+	DWORD bufferSize = 0;
 	ORHKEY Offhive = NULL;
-	std::wstring ruche = conf.mountpoint + L"\\Windows\\AppCompat\\Programs\\Amcache.hve";
+	std::wstring hive = conf.mountpoint + L"\\Windows\\AppCompat\\Programs\\Amcache.hve";
 
 	log(3, L"🔈OROpenHive C:\\Windows\\AppCompat\\Programs\\Amcache.hve");
-	hresult = OROpenHive(ruche.c_str(), &Offhive);
+	hresult = OROpenHive(hive.c_str(), &Offhive);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥OROpenHive : C:\\Windows\\AppCompat\\Programs\\Amcache.hve", hresult);
 		return hresult;
@@ -91,17 +91,17 @@ HRESULT AmcacheApplicationFiles::getData() {
 	}
 	for (DWORD i = 0; i < nSubkeys; i++) {
 		printProgressStep(L"AmcacheApplicationFile", i + 1, nSubkeys);
-		tailleTampon = MAX_VALUE_NAME;
+		bufferSize = MAX_VALUE_NAME;
 		log(3, L"🔈OREnumKey Root\\InventoryApplicationFile " + std::to_wstring(i));
-		hresult = OREnumKey(hKey, i, sousCle, &tailleTampon, NULL, NULL, NULL);
+		hresult = OREnumKey(hKey, i, subKey, &bufferSize, NULL, NULL, NULL);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
 			log(2, L"🔥OREnumKey Root\\InventoryApplicationFile " + std::to_wstring(i), hresult);
 			continue;
 		}
-		log(3, L"🔈OROpenKey  subkey " + std::wstring(sousCle));
-		hresult = OROpenKey(hKey, sousCle, &hKey_amcache);
+		log(3, L"🔈OROpenKey  subkey " + std::wstring(subKey));
+		hresult = OROpenKey(hKey, subKey, &hKey_amcache);
 		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥OROpenKey  subkey " + std::wstring(sousCle), hresult);
+			log(2, L"🔥OROpenKey  subkey " + std::wstring(subKey), hresult);
 			continue;
 		}
 		log(1, L"➕AmcacheApplicationFile ");

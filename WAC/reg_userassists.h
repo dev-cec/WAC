@@ -48,10 +48,10 @@ public:
 
 	/*! Builds the entry from a registry value.
 	 *  @param hKey name of the GUID subkey the value comes from.
-	 *  @param nomValeur name of the value, ROT13-encoded.
-	 *  @param donnees the value's bytes: run count, focus count and last run.
+	 *  @param valueName name of the value, ROT13-encoded.
+	 *  @param data the value's bytes: run count, focus count and last run.
 	 *  @param _sid SID of the user whose hive holds the value. */
-	UserAssist(std::wstring hKey, LPWSTR nomValeur, LPBYTE donnees, std::wstring _sid);
+	UserAssist(std::wstring hKey, LPWSTR valueName, LPBYTE data, std::wstring _sid);
 
 	/*! Converts the entry to JSON.
 	 *  @return its JSON object. */

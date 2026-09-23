@@ -54,7 +54,7 @@ struct Session {
 	* The LUIDs 0x3E7 (999), 0x3E6 (998), 0x3E5 (997) and 0x3E4 (996) always
 	* designate the same service sessions. Naming them keeps the analyst from
 	* reading their null `LogonType` — legitimate for those — as a failed read. */
-	std::wstring roleConnu;
+	std::wstring knownRole;
 	LONGLONG sessionId = 0;  //!< LUID of the session, as Windows numbers it
 	/*! Reads a session from its identifier.
 	 *  @param id LUID of the session, as `LsaEnumerateLogonSessions` gives it. */

@@ -62,14 +62,14 @@ struct ServiceStruct
 	std::wstring serviceDll;                //!< Parameters\\ServiceDll, if present
 	std::wstring serviceFailureCommand;     //!< command run when the service fails
 	std::wstring serviceGroup;              //!< load-order group it belongs to
-	std::vector<std::wstring> dependances;  //!< services it depends on (DependOnService)
-	EmpreinteBinaire serviceEmpreinte;      //!< fingerprints of the binary, if `--binary`
-	EmpreinteBinaire serviceDllEmpreinte;   //!< fingerprints of the ServiceDll, if `--binary`
+	std::vector<std::wstring> dependencies;  //!< services it depends on (DependOnService)
+	BinaryFingerprint serviceFingerprint;      //!< fingerprints of the binary, if `--binary`
+	BinaryFingerprint serviceDllFingerprint;   //!< fingerprints of the ServiceDll, if `--binary`
 	FILETIME lastWriteTimeUtc = { 0, 0 };   //!< last write to the key, in UTC
 	FILETIME lastWriteTime = { 0, 0 };      //!< the same instant, suspect's local time
 
 	// --- volatile state, measured live ---
-	bool         etatReleve = false;        //!< true if the SCM answered for this service
+	bool         stateRead = false;        //!< true if the SCM answered for this service
 	std::wstring serviceStatus;             //!< current state: running, stopped…
 	DWORD        serviceProcessId = 0;      //!< PID hosting the service, 0 if stopped
 
@@ -82,7 +82,7 @@ struct ServiceStruct
 };
 
 //! Volatile state of a service, read in a single enumeration of the SCM.
-struct EtatService {
+struct ServiceState {
 	std::wstring status;      //!< current state, spelled out
 	DWORD processId = 0;      //!< PID hosting the service, 0 if stopped
 };

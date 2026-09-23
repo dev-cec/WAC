@@ -16,7 +16,7 @@
  *
  *  A TIME TRAP. The three timestamps of the .lnk header (offsets 28, 36, 44)
  *  are in UTC — MS-SHLLINK — despite field names that do not say so. Treating
- *  them as local times shifted the dates by the time-zone offset, where no
+ *  them as local times shifted the dates by the time-area offset, where no
  *  format check could see it.
  *
  *  The structured content of the shortcut (ID list, extension blocks,
@@ -53,7 +53,7 @@ public:
 	std::wstring path = L"";     //!< path of the .lnk file in the working directory
 	std::wstring md5Source=L"";  //!< MD5 of the .lnk file itself
 	std::wstring target = L"";   //!< path of the document the shortcut points to
-	EmpreinteBinaire empreinteCible; //!< fingerprints of that target, if `--binary` was given
+	BinaryFingerprint targetFingerprint; //!< fingerprints of that target, if `--binary` was given
 	std::wstring description = L""; //!< description carried by the shortcut
 	std::wstring relativePath = L"";//!< path of the target, relative to the shortcut
 	std::wstring workingDirectory = L"";//!< working directory declared for the target
@@ -93,9 +93,9 @@ public:
 	* the buffer on a truncated or forged shortcut.
 	*
 	* @param buffer the bytes of the shortcut.
-	* @param taille size of that buffer, in bytes.
+	* @param size size of that buffer, in bytes.
 	*/
-	void parseLNK(LPBYTE buffer, size_t taille);
+	void parseLNK(LPBYTE buffer, size_t size);
 
 
 	/*! Reads a shortcut from a file.

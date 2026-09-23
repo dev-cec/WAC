@@ -38,7 +38,7 @@ public:
 	std::wstring name = L"";       //!< file name of the executable
 	std::wstring publisher = L"";  //!< company it declares in its resources
 	std::wstring longPath = L"";   //!< full path where it was inventoried
-	EmpreinteBinaire empreinte;    //!< fingerprints of that file, if `--binary` was given
+	BinaryFingerprint fingerprint;    //!< fingerprints of that file, if `--binary` was given
 	std::wstring version = L"";    //!< version it declares
 	std::wstring linkDate = L"";    //!< PE link date, suspect's local time
 	std::wstring linkDateUtc = L"";	//!< the same instant in UTC

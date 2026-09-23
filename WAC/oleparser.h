@@ -197,7 +197,7 @@ struct oleParser {
 	* @return les indices de la chaine, premier inclus
 	* @throws std::length_error si un indice est hors bornes ou la chaine cyclique
 	*/
-	static std::vector<int> sectorChain(const std::vector<int>& table, int premier);
+	static std::vector<int> sectorChain(const std::vector<int>& table, int first);
 
 	std::vector<int> GetIntFromSat(int sectorNumber);
 

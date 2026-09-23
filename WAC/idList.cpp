@@ -114,18 +114,18 @@ std::wstring LinkFlags::to_wstring() {
 * SPS (Property STORE)
 *********************************************************************************************************************/
 
-IdList::IdList(LPBYTE buffer, int _niveau, bool Parentiszip) {
+IdList::IdList(LPBYTE buffer, int _level, bool Parentiszip) {
 	type_char = NULL;
-	niveau = _niveau;
+	level = _level;
 	shellItem = NULL;
 	item_size = *reinterpret_cast<unsigned short int*>(buffer);
 
 	if (conf._dump == true) {
 		log(3, L"🔈dump_wstring idlist");
-		donnees = dump_wstring(buffer, 0, item_size);
+		data = dump_wstring(buffer, 0, item_size);
 	}
 	else
-		donnees = L"";
+		data = L"";
 	if (item_size != 0) {
 		type_char = *reinterpret_cast<unsigned char*>(buffer + 2);
 		log(3, L"🔈to_hex type_char");
@@ -137,7 +137,7 @@ IdList::IdList(LPBYTE buffer, int _niveau, bool Parentiszip) {
 			type = shell_item_class(type_char);
 		}
 		log(3, L"🔈makeShellItem idlist");
-		shellItem = makeShellItem(buffer, niveau + 1, Parentiszip);
+		shellItem = makeShellItem(buffer, level + 1, Parentiszip);
 	}
 }
 
@@ -146,7 +146,7 @@ Json IdList::toJson() {
 	Json o = Json::obj();
 	o.add(L"TypeHex", Json::str(L"0x" + type_hex));
 	o.add(L"Type",    Json::str(type));
-	if (conf._dump) o.add(L"Dump", Json::str(donnees));
+	if (conf._dump) o.add(L"Dump", Json::str(data));
 	// Les champs du shell item sont mis a plat dans cet objet (schema d'origine).
 	// Garde : shellItem peut etre nul (item de taille nulle, ou type non reconnu).
 	if (shellItem) o.merge(shellItem->toJson());
@@ -325,12 +325,12 @@ std::wstring getType(unsigned int type) {
 	else return L"0x" + to_hex(type);
 }
 
-Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int niveau,
-              unsigned int tailleEntree, bool* typeNonDecode);
+Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int level,
+              unsigned int inputSize, bool* typeNonDecode);
 
 /*! Lit UNE valeur scalaire. Voir `getValue`, qui traite en plus les vecteurs. */
-static Json lireScalaire(LPBYTE buffer, unsigned int* pos, unsigned short valueType,
-                         unsigned int niveau, unsigned int tailleEntree, bool* typeNonDecode) {
+static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueType,
+                         unsigned int level, unsigned int inputSize, bool* typeNonDecode) {
 	// Renvoie desormais une valeur Json typee (et non une chaine pre-serialisee) :
 	// l'echappement est fait par le writer, une seule fois, a la serialisation.
 	// NB : les backslashes ne sont PLUS doubles ici, ce qui corrige aussi
@@ -398,20 +398,20 @@ static Json lireScalaire(LPBYTE buffer, unsigned int* pos, unsigned short valueT
 		Json arr = Json::arr();
 		unsigned int nb = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		for (unsigned int x = 0; x < nb; x++) {
-			unsigned int taille = *reinterpret_cast<unsigned int*>(buffer + *pos + 4);
+			unsigned int size = *reinterpret_cast<unsigned int*>(buffer + *pos + 4);
 			arr.push(Json::str(std::wstring((wchar_t*)(buffer + *pos + 8))));
-			*pos += 4 + taille * 2;
+			*pos += 4 + size * 2;
 		}
 		return arr;
 	}
 	if (valueType == 0x1011) {                     // Vector<VT_UI1>
-		unsigned short taille = *reinterpret_cast<unsigned short*>(buffer + *pos);
+		unsigned short size = *reinterpret_cast<unsigned short*>(buffer + *pos);
 		Json r = Json::str(L"Not implemented");    // contenu inconnu (system.delegateidlist)
 		if (*reinterpret_cast<unsigned int*>(buffer + *pos + 0x8) == 0x53505331)
-			r = SPS(buffer + *pos + 0x4, niveau + 2).toJson();
+			r = SPS(buffer + *pos + 0x4, level + 2).toJson();
 		else if (*reinterpret_cast<unsigned int*>(buffer + *pos + 0x1c) == 0x53505331)
-			r = SPS(buffer + *pos + 0x8, niveau + 2).toJson();
-		*pos += taille;
+			r = SPS(buffer + *pos + 0x8, level + 2).toJson();
+		*pos += size;
 		return r;
 	}
 	if (valueType == VT_FILETIME) {
@@ -429,25 +429,25 @@ static Json lireScalaire(LPBYTE buffer, unsigned int* pos, unsigned short valueT
 		   Désormais : la taille annoncée borne la lecture, la signature
 		   « SPS1 » est vérifiée avant de décoder, et l'on enchaîne autant de
 		   stores que le BLOB en contient réellement. À défaut, les octets. */
-		const unsigned int taille = *reinterpret_cast<unsigned int*>(buffer + *pos);
-		const unsigned int debut = *pos + 4;
+		const unsigned int size = *reinterpret_cast<unsigned int*>(buffer + *pos);
+		const unsigned int start = *pos + 4;
 		Json o = Json::obj();
-		o.add(L"DataSize", Json::num(taille));
-		const bool bornesOk = (taille > 0)
-		                   && (tailleEntree == 0 || debut + taille <= tailleEntree);
-		if (!bornesOk) {
-			log(2, L"🔥VT_BLOB : taille hors entree (" + std::to_wstring(taille) + L")");
+		o.add(L"DataSize", Json::num(size));
+		const bool boundsOk = (size > 0)
+		                   && (inputSize == 0 || start + size <= inputSize);
+		if (!boundsOk) {
+			log(2, L"🔥VT_BLOB : taille hors entree (" + std::to_wstring(size) + L")");
 		}
 		/* Le décalage de 13 octets entre le début du BLOB et le premier store a
 		   été relevé empiriquement ; il n'est appliqué que si la signature s'y
 		   trouve effectivement. */
-		else if (*reinterpret_cast<const unsigned int*>(buffer + debut + 13 + 4) == 0x53505331) {
+		else if (*reinterpret_cast<const unsigned int*>(buffer + start + 13 + 4) == 0x53505331) {
 			Json arr = Json::arr();
-			unsigned int p = debut + 13;
-			const unsigned int fin = debut + taille;
-			while (p + 8 < fin) {
+			unsigned int p = start + 13;
+			const unsigned int end = start + size;
+			while (p + 8 < end) {
 				if (*reinterpret_cast<const unsigned int*>(buffer + p + 4) != 0x53505331) break;
-				SPS sps(buffer + p, niveau + 2);
+				SPS sps(buffer + p, level + 2);
 				if (sps.size == 0) break;
 				arr.push(sps.toJson());
 				p += sps.size;
@@ -456,9 +456,9 @@ static Json lireScalaire(LPBYTE buffer, unsigned int* pos, unsigned short valueT
 		}
 		else {
 			log(3, L"🔈dump_wstring VT_BLOB");
-			o.add(L"Data", Json::str(dump_wstring(buffer, (int)debut, (int)taille)));
+			o.add(L"Data", Json::str(dump_wstring(buffer, (int)start, (int)size)));
 		}
-		*pos += 4 + taille;
+		*pos += 4 + size;
 		return o;
 	}
 	if (valueType == VT_STREAM) {
@@ -473,34 +473,34 @@ static Json lireScalaire(LPBYTE buffer, unsigned int* pos, unsigned short valueT
 		   « SPS1 », c'est un property store imbriqué : il est décodé comme tel —
 		   même cas que Vector<VT_UI1>. Sinon, les octets sont rendus en
 		   hexadécimal. */
-		const unsigned int tailleNom = *reinterpret_cast<unsigned int*>(buffer + *pos);
+		const unsigned int nameSize = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		*pos += 4;
-		const std::wstring nom((wchar_t*)(buffer + *pos));
-		*pos += tailleNom + 2;
-		const unsigned int tailleDonnees = *reinterpret_cast<unsigned int*>(buffer + *pos);
-		const unsigned int debutDonnees = *pos + 4;
+		const std::wstring name((wchar_t*)(buffer + *pos));
+		*pos += nameSize + 2;
+		const unsigned int dataSize = *reinterpret_cast<unsigned int*>(buffer + *pos);
+		const unsigned int dataStart = *pos + 4;
 
 		Json o = Json::obj();
-		o.add(L"StreamName", Json::str(nom));
-		o.add(L"DataSize",   Json::num(tailleDonnees));
-		const bool bornesOk = (tailleDonnees > 0)
-		                   && (tailleEntree == 0 || debutDonnees + tailleDonnees <= tailleEntree);
-		if (!bornesOk) {
-			if (tailleDonnees > 0)
+		o.add(L"StreamName", Json::str(name));
+		o.add(L"DataSize",   Json::num(dataSize));
+		const bool boundsOk = (dataSize > 0)
+		                   && (inputSize == 0 || dataStart + dataSize <= inputSize);
+		if (!boundsOk) {
+			if (dataSize > 0)
 				log(2, L"🔥VT_STREAM : taille de donnees hors entree ("
-				     + std::to_wstring(tailleDonnees) + L")");
+				     + std::to_wstring(dataSize) + L")");
 		}
-		else if (*reinterpret_cast<const unsigned int*>(buffer + debutDonnees + 4) == 0x53505331) {
+		else if (*reinterpret_cast<const unsigned int*>(buffer + dataStart + 4) == 0x53505331) {
 			// Property store imbrique : la signature « SPS1 » suit la taille.
 			log(3, L"🔈VT_STREAM : property store imbrique");
-			o.add(L"PropertyStore", SPS(buffer + debutDonnees, niveau + 2).toJson());
+			o.add(L"PropertyStore", SPS(buffer + dataStart, level + 2).toJson());
 		}
 		else {
 			log(3, L"🔈dump_wstring VT_STREAM");
-			o.add(L"Data", Json::str(dump_wstring(buffer, (int)debutDonnees,
-			                                      (int)tailleDonnees)));
+			o.add(L"Data", Json::str(dump_wstring(buffer, (int)dataStart,
+			                                      (int)dataSize)));
 		}
-		*pos += tailleDonnees;
+		*pos += dataSize;
 		return o;
 	}
 	/* TYPES AJOUTÉS pour aligner la couverture sur libfwps (libyal), référence du
@@ -535,9 +535,9 @@ static Json lireScalaire(LPBYTE buffer, unsigned int* pos, unsigned short valueT
 	if (valueType == VT_LPSTR) {                   // 0x001E : chaîne ASCII
 		/* Taille en OCTETS, terminateur inclus — contrairement à VT_LPWSTR dont
 		   la taille est en caractères. */
-		unsigned int taille = *reinterpret_cast<unsigned int*>(buffer + *pos);
+		unsigned int size = *reinterpret_cast<unsigned int*>(buffer + *pos);
 		std::wstring v = string_to_wstring(std::string((char*)(buffer + *pos + 4)));
-		*pos += 4 + taille;
+		*pos += 4 + size;
 		return Json::str(v);
 	}
 	if (valueType == VT_CLSID) {
@@ -564,10 +564,10 @@ static Json lireScalaire(LPBYTE buffer, unsigned int* pos, unsigned short valueT
 	if (typeNonDecode) *typeNonDecode = true;
 	Json o = Json::obj();
 	o.add(L"UnsupportedValueType", Json::str(L"0x" + to_hex(valueType)));
-	if (tailleEntree > *pos) {
+	if (inputSize > *pos) {
 		log(3, L"🔈dump_wstring valeur de type non pris en charge");
 		// « tailleEntree - pos » est bien une LONGUEUR : les octets restants.
-		o.add(L"Data", Json::str(dump_wstring(buffer, (int)*pos, (int)(tailleEntree - *pos))));
+		o.add(L"Data", Json::str(dump_wstring(buffer, (int)*pos, (int)(inputSize - *pos))));
 	}
 	log(2, L"🔥getValue : type de valeur non pris en charge 0x" + to_hex(valueType));
 	return o;
@@ -590,16 +590,16 @@ static Json lireScalaire(LPBYTE buffer, unsigned int* pos, unsigned short valueT
 *  property store imbriqué (signature « SPS1 »), ce qu'aucune règle générique ne
 *  devinerait.
 */
-Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int niveau,
-              unsigned int tailleEntree, bool* typeNonDecode) {
+Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int level,
+              unsigned int inputSize, bool* typeNonDecode) {
 	const unsigned short VT_VECTOR_BIT = 0x1000;
 
 	// Cas particuliers conserves : heuristiques propres a ces deux vecteurs.
 	if (valueType == 0x1011 || valueType == 0x101F)
-		return lireScalaire(buffer, pos, valueType, niveau, tailleEntree, typeNonDecode);
+		return readScalar(buffer, pos, valueType, level, inputSize, typeNonDecode);
 
 	if ((valueType & VT_VECTOR_BIT) == 0)
-		return lireScalaire(buffer, pos, valueType, niveau, tailleEntree, typeNonDecode);
+		return readScalar(buffer, pos, valueType, level, inputSize, typeNonDecode);
 
 	const unsigned short typeElement = (unsigned short)(valueType & 0x0FFF);
 	const unsigned int nb = *reinterpret_cast<unsigned int*>(buffer + *pos);
@@ -616,16 +616,16 @@ Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsign
 		Json o = Json::obj();
 		o.add(L"UnsupportedValueType", Json::str(L"0x" + to_hex(valueType)));
 		o.add(L"ElementCount",         Json::num(nb));
-		if (tailleEntree > *pos)
+		if (inputSize > *pos)
 			o.add(L"Data", Json::str(dump_wstring(buffer, (int)*pos,
-			                                      (int)(tailleEntree - *pos))));
+			                                      (int)(inputSize - *pos))));
 		return o;
 	}
 
 	Json arr = Json::arr();
 	for (unsigned int x = 0; x < nb; ++x) {
 		bool elementNonDecode = false;
-		Json v = lireScalaire(buffer, pos, typeElement, niveau, tailleEntree,
+		Json v = readScalar(buffer, pos, typeElement, level, inputSize,
 		                      &elementNonDecode);
 		arr.push(std::move(v));
 		if (elementNonDecode) {
@@ -640,9 +640,9 @@ Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsign
 	return arr;
 }
 
-SPSValue::SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau) {
+SPSValue::SPSValue(LPBYTE buffer, std::wstring _guid, int _level) {
 	log(3, L"🔈SPSValue");
-	niveau = _niveau;
+	level = _level;
 	guid = _guid;
 	size = *reinterpret_cast<unsigned int*>(buffer);
 	valueType = 0;
@@ -669,7 +669,7 @@ SPSValue::SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau) {
 
 		}
 		log(3, L"🔈getValue");
-		value = getValue(buffer, &pos, valueType, niveau, size);
+		value = getValue(buffer, &pos, valueType, level, size);
 	}
 }
 
@@ -683,8 +683,8 @@ Json SPSValue::toJson() {
 	return o;
 }
 
-SPS::SPS(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+SPS::SPS(LPBYTE buffer, int _level) {
+	level = _level;
 	size = *reinterpret_cast<unsigned int*>(buffer);
 	version = *reinterpret_cast<unsigned int*>(buffer + 4);
 	log(3, L"🔈guid_to_wstring guid");
@@ -696,7 +696,7 @@ SPS::SPS(LPBYTE buffer, int _niveau) {
 		if (pos >= size)
 			break; //fin
 		log(3, L"🔈SPSValue");
-		SPSValue block(buffer + pos, guid, niveau + 2); // concordance avec toJson
+		SPSValue block(buffer + pos, guid, level + 2); // concordance avec toJson
 		if (block.size == 0) { //vide
 			break;
 		}
@@ -725,8 +725,8 @@ Json SPS::toJson() {
 * Extension blocks
 *********************************************************************************************************************/
 
-Beef0000::Beef0000(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0000::Beef0000(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0000";
 	log(3, L"🔈guid_to_wstring guid1");
@@ -750,8 +750,8 @@ Json Beef0000::toJson() {
 	return o;
 }
 
-Beef0001::Beef0001(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0001::Beef0001(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0001";
 	message = L"Unsupported Extension block";
@@ -765,8 +765,8 @@ Json Beef0001::toJson() {
 	return o;
 }
 
-Beef0002::Beef0002(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0002::Beef0002(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0002";
 	message = L"Unsupported Extension block";
@@ -780,8 +780,8 @@ Json Beef0002::toJson() {
 	return o;
 }
 
-Beef0003::Beef0003(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0003::Beef0003(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0003";
 	log(3, L"🔈guid_to_wstring guid");
@@ -799,8 +799,8 @@ Json Beef0003::toJson() {
 	return o;
 }
 
-Beef0004::Beef0004(LPBYTE buffer, int _niveau, bool* is_zip, bool is_file) {
-	niveau = _niveau;
+Beef0004::Beef0004(LPBYTE buffer, int _level, bool* is_zip, bool is_file) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0004";
 	/* VERSION DU BLOC : elle etait mise a zero et jamais relue, donc ni exploitee
@@ -897,8 +897,8 @@ Json Beef0004::toJson() {
 	return o;
 }
 
-Beef0006::Beef0006(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0006::Beef0006(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0006";
 	int pos = 0;
@@ -915,8 +915,8 @@ Json Beef0006::toJson() {
 	return o;
 }
 
-Beef0008::Beef0008(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0008::Beef0008(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef008";
 	message = L"Unsupported Extension block";
@@ -930,8 +930,8 @@ Json Beef0008::toJson() {
 	return o;
 }
 
-Beef0009::Beef0009(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0009::Beef0009(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0009";
 	message = L"Unsupported Extension block";
@@ -945,8 +945,8 @@ Json Beef0009::toJson() {
 	return o;
 }
 
-Beef000a::Beef000a(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef000a::Beef000a(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef000a";
 	message = L"Unsupported Extension block";
@@ -960,8 +960,8 @@ Json Beef000a::toJson() {
 	return o;
 }
 
-Beef000c::Beef000c(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef000c::Beef000c(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef000c";
 	message = L"Unsupported Extension block";
@@ -983,8 +983,8 @@ Json Beef000c::toJson() {
  * session INTERACTIVE dans l'explorateur (les shellbags ne sont pas alimentés par
  * un processus lancé en service), ou un jeu de ruches de référence.
  * Tant que ce n'est pas fait : sortie à considérer comme non validée. */
-Beef000e::Beef000e(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef000e::Beef000e(LPBYTE buffer, int _level) {
+	level = _level;
 	message = L"";
 	isPresent = true;
 	signature = L"0xbeef000e";
@@ -995,7 +995,7 @@ Beef000e::Beef000e(LPBYTE buffer, int _niveau) {
 	int pos = 50;
 	for (int x = 0; x < 3; x++) {
 		log(3, L"🔈SPS");
-		SPS s = SPS(buffer + pos, niveau + 1);
+		SPS s = SPS(buffer + pos, level + 1);
 		SPSs.push_back(s);
 		pos += s.size;
 	}
@@ -1014,7 +1014,7 @@ Beef000e::Beef000e(LPBYTE buffer, int _niveau) {
 		unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
 		if (size > 0) {
 			log(3, L"🔈getExtensionBlock");
-			getExtensionBlock(buffer + pos, &extensionblocks, niveau + 1, NULL, false);
+			getExtensionBlock(buffer + pos, &extensionblocks, level + 1, NULL, false);
 			pos += size;
 		}
 		else
@@ -1024,7 +1024,7 @@ Beef000e::Beef000e(LPBYTE buffer, int _niveau) {
 		unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos); // recherche de idlist
 		if (size > 0) {
 			log(3, L"🔈makeShellItem");
-			ishellitems.push_back(makeShellItem(buffer + pos, niveau + 1));
+			ishellitems.push_back(makeShellItem(buffer + pos, level + 1));
 			pos += size;
 		}
 		else
@@ -1053,20 +1053,20 @@ Json Beef000e::toJson() {
 		o.add(L"PropertyStores", std::move(stores));
 	}
 	if (!extensionblocks.empty()) {
-		Json blocs = Json::arr();
-		for (const auto& b : extensionblocks) blocs.push(b->toJson());
+		Json blocks = Json::arr();
+		for (const auto& b : extensionblocks) blocks.push(b->toJson());
 		o.add(L"ExtensionBlocksCount", Json::num((unsigned long long)extensionblocks.size()));
-		o.add(L"ExtensionBlocks",      std::move(blocs));
+		o.add(L"ExtensionBlocks",      std::move(blocks));
 	}
 	return o;
 }
 
-Beef0010::Beef0010(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0010::Beef0010(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0010";
 	log(3, L"🔈SPS");
-	sps = SPS(buffer + 16, niveau + 1);
+	sps = SPS(buffer + 16, level + 1);
 }
 
 Json Beef0010::toJson() {
@@ -1077,8 +1077,8 @@ Json Beef0010::toJson() {
 	return o;
 }
 
-Beef0013::Beef0013(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0013::Beef0013(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0013";
 	message = L"The purpose of this extension block is unknown";
@@ -1092,8 +1092,8 @@ Json Beef0013::toJson() {
 	return o;
 }
 
-Beef0014::Beef0014(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0014::Beef0014(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0014";
 	message = L"Unsupported Extension block";
@@ -1107,8 +1107,8 @@ Json Beef0014::toJson() {
 	return o;
 }
 
-Beef0016::Beef0016(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0016::Beef0016(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0016";
 	value = std::wstring((wchar_t*)(buffer + 10)).data();
@@ -1122,8 +1122,8 @@ Json Beef0016::toJson() {
 	return o;
 }
 
-Beef0017::Beef0017(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0017::Beef0017(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0017";
 	message = L"Unsupported Extension block";
@@ -1137,8 +1137,8 @@ Json Beef0017::toJson() {
 	return o;
 }
 
-Beef0019::Beef0019(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0019::Beef0019(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0019";
 	log(3, L"🔈guid_to_wstring guid1");
@@ -1162,8 +1162,8 @@ Json Beef0019::toJson() {
 	return o;
 }
 
-Beef001a::Beef001a(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef001a::Beef001a(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef001a";
 	fileDocumentTypeString = std::wstring((wchar_t*)(buffer + 10)).data();
@@ -1177,8 +1177,8 @@ Json Beef001a::toJson() {
 	return o;
 }
 
-Beef001b::Beef001b(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef001b::Beef001b(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef001b";
 	fileDocumentTypeString = std::wstring((wchar_t*)(buffer + 10)).data();
@@ -1192,8 +1192,8 @@ Json Beef001b::toJson() {
 	return o;
 }
 
-Beef001d::Beef001d(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef001d::Beef001d(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef001d";
 	executable = std::wstring((wchar_t*)(buffer + 10)).data();
@@ -1207,8 +1207,8 @@ Json Beef001d::toJson() {
 	return o;
 }
 
-Beef001e::Beef001e(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef001e::Beef001e(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef001e";
 	pinType = std::wstring((wchar_t*)(buffer + 10)).data();
@@ -1222,12 +1222,12 @@ Json Beef001e::toJson() {
 	return o;
 }
 
-Beef0021::Beef0021(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0021::Beef0021(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0021";
 	log(3, L"🔈SPS");
-	sps = SPS(buffer + 8, niveau + 1);
+	sps = SPS(buffer + 8, level + 1);
 }
 
 Json Beef0021::toJson() {
@@ -1238,12 +1238,12 @@ Json Beef0021::toJson() {
 	return o;
 }
 
-Beef0024::Beef0024(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0024::Beef0024(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0024";
 	log(3, L"🔈SPS");
-	sps = SPS(buffer + 8, niveau + 1);
+	sps = SPS(buffer + 8, level + 1);
 }
 
 Json Beef0024::toJson() {
@@ -1254,8 +1254,8 @@ Json Beef0024::toJson() {
 	return o;
 }
 
-Beef0025::Beef0025(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0025::Beef0025(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0025";
 	filetime1 = *reinterpret_cast<FILETIME*>(buffer + 12);
@@ -1272,9 +1272,9 @@ Json Beef0025::toJson() {
 	return o;
 }
 
-Beef0026::Beef0026(LPBYTE buffer, int _niveau) {
+Beef0026::Beef0026(LPBYTE buffer, int _level) {
 	sps = NULL;
-	niveau = _niveau;
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0026";
 	idlist = NULL;
@@ -1291,7 +1291,7 @@ Beef0026::Beef0026(LPBYTE buffer, int _niveau) {
 		LocalFileTimeToFileTime(&mtimeUtc, &atime);
 		// 2 octets Unknown
 		log(3, L"🔈IdList");
-		idlist = std::make_unique<IdList>(buffer + 38, niveau + 2);
+		idlist = std::make_unique<IdList>(buffer + 38, level + 2);
 	}
 	else {
 		ctimeUtc = { 0 };
@@ -1301,7 +1301,7 @@ Beef0026::Beef0026(LPBYTE buffer, int _niveau) {
 		atimeUtc = { 0 };
 		atime = { 0 };
 		log(3, L"🔈SPS");
-		sps = std::make_unique<SPS>(buffer + 8, niveau + 2);
+		sps = std::make_unique<SPS>(buffer + 8, level + 2);
 	}
 
 }
@@ -1321,12 +1321,12 @@ Json Beef0026::toJson() {
 	return o;
 }
 
-Beef0027::Beef0027(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0027::Beef0027(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0027";
 	log(3, L"🔈SPS");
-	sps = SPS(buffer + 8, niveau + 1);
+	sps = SPS(buffer + 8, level + 1);
 }
 
 Json Beef0027::toJson() {
@@ -1337,8 +1337,8 @@ Json Beef0027::toJson() {
 	return o;
 }
 
-Beef0029::Beef0029(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Beef0029::Beef0029(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	signature = L"0xbeef0029";
 	message = L"The purpose of this extension block is unknown";
@@ -1352,8 +1352,8 @@ Json Beef0029::toJson() {
 	return o;
 }
 
-BeefUnknown::BeefUnknown(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+BeefUnknown::BeefUnknown(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	size = *reinterpret_cast<unsigned short*>(buffer);
 	signature = L"0x" + to_hex(*reinterpret_cast<unsigned int*>(buffer + 4));
@@ -1372,7 +1372,7 @@ Json BeefUnknown::toJson() {
 	return o;
 }
 
-void getExtensionBlock(LPBYTE buffer, std::vector<std::unique_ptr<IExtensionBlock>>* extensionBlocks, int _niveau, bool* is_zip, bool is_file) {
+void getExtensionBlock(LPBYTE buffer, std::vector<std::unique_ptr<IExtensionBlock>>* extensionBlocks, int _level, bool* is_zip, bool is_file) {
 	std::unique_ptr<IExtensionBlock> block;
 	unsigned int signature = *reinterpret_cast<unsigned int*>(buffer + 4);
 	/*  TAILLE ANNONCEE du bloc. Un bloc d'extension fait au moins 8 octets : sa
@@ -1387,137 +1387,137 @@ void getExtensionBlock(LPBYTE buffer, std::vector<std::unique_ptr<IExtensionBloc
 	}
 	if (signature == (unsigned int)0xBeef0000) {
 		log(3, L"🔈Beef0000");
-		block = std::make_unique<Beef0000>(buffer, _niveau + 1);
+		block = std::make_unique<Beef0000>(buffer, _level + 1);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0001) {
 		log(3, L"🔈Beef0001");
-		block = std::make_unique<Beef0001>(buffer, _niveau);
+		block = std::make_unique<Beef0001>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0002) {
 		log(3, L"🔈Beef0002");
-		block = std::make_unique<Beef0002>(buffer, _niveau);
+		block = std::make_unique<Beef0002>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0003) {
 		log(3, L"🔈Beef0003");
-		block = std::make_unique<Beef0003>(buffer, _niveau);
+		block = std::make_unique<Beef0003>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0004) {
 		log(3, L"🔈Beef0004");
-		block = std::make_unique<Beef0004>(buffer, _niveau, is_zip, is_file);
+		block = std::make_unique<Beef0004>(buffer, _level, is_zip, is_file);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0006) {
 		log(3, L"🔈Beef0006");
-		block = std::make_unique<Beef0006>(buffer, _niveau);
+		block = std::make_unique<Beef0006>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0008) {
 		log(3, L"🔈Beef0008");
-		block = std::make_unique<Beef0008>(buffer, _niveau);
+		block = std::make_unique<Beef0008>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0009) {
 		log(3, L"🔈Beef0009");
-		block = std::make_unique<Beef0009>(buffer, _niveau);
+		block = std::make_unique<Beef0009>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef000a) {
 		log(3, L"🔈Beef000a");
-		block = std::make_unique<Beef000a>(buffer, _niveau);
+		block = std::make_unique<Beef000a>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef000c) {
 		log(3, L"🔈Beef000c");
-		block = std::make_unique<Beef000c>(buffer, _niveau);
+		block = std::make_unique<Beef000c>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef000e) {
 		log(3, L"🔈Beef000e");
-		block = std::make_unique<Beef000e>(buffer, _niveau);
+		block = std::make_unique<Beef000e>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0010) {
 		log(3, L"🔈Beef0010");
-		block = std::make_unique<Beef0010>(buffer, _niveau);
+		block = std::make_unique<Beef0010>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0013) {
 		log(3, L"🔈Beef0013");
-		block = std::make_unique<Beef0013>(buffer, _niveau);
+		block = std::make_unique<Beef0013>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0014) {
 		log(3, L"🔈Beef0014");
-		block = std::make_unique<Beef0014>(buffer, _niveau);
+		block = std::make_unique<Beef0014>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0016) {
 		log(3, L"🔈Beef0016");
-		block = std::make_unique<Beef0016>(buffer, _niveau);
+		block = std::make_unique<Beef0016>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0017) {
 		log(3, L"🔈Beef0017");
-		block = std::make_unique<Beef0017>(buffer, _niveau);
+		block = std::make_unique<Beef0017>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0019) {
 		log(3, L"🔈Beef0019");
-		block = std::make_unique<Beef0019>(buffer, _niveau);
+		block = std::make_unique<Beef0019>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef001a) {
 		log(3, L"🔈Beef001a");
-		block = std::make_unique<Beef001a>(buffer, _niveau);
+		block = std::make_unique<Beef001a>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef001b) {
 		log(3, L"🔈Beef001b");
-		block = std::make_unique<Beef001b>(buffer, _niveau);
+		block = std::make_unique<Beef001b>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef001d) {
 		log(3, L"🔈Beef001d");
-		block = std::make_unique<Beef001d>(buffer, _niveau);
+		block = std::make_unique<Beef001d>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef001e) {
 		log(3, L"🔈Beef001e");
-		block = std::make_unique<Beef001e>(buffer, _niveau);
+		block = std::make_unique<Beef001e>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0021) {
 		log(3, L"🔈Beef0021");
-		block = std::make_unique<Beef0021>(buffer, _niveau);
+		block = std::make_unique<Beef0021>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0024) {
 		log(3, L"🔈Beef0024");
-		block = std::make_unique<Beef0024>(buffer, _niveau);
+		block = std::make_unique<Beef0024>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0025) {
 		log(3, L"🔈Beef0025");
-		block = std::make_unique<Beef0025>(buffer, _niveau);
+		block = std::make_unique<Beef0025>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0026) {
 		log(3, L"🔈Beef0026");
-		block = std::make_unique<Beef0026>(buffer, _niveau);
+		block = std::make_unique<Beef0026>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0027) {
 		log(3, L"🔈Beef0027");
-		block = std::make_unique<Beef0027>(buffer, _niveau);
+		block = std::make_unique<Beef0027>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else if (signature == (unsigned int)0xBeef0029) {
 		log(3, L"🔈Beef0029");
-		block = std::make_unique<Beef0029>(buffer, _niveau);
+		block = std::make_unique<Beef0029>(buffer, _level);
 		extensionBlocks->push_back(std::move(block));
 	}
 	else {
@@ -1526,7 +1526,7 @@ void getExtensionBlock(LPBYTE buffer, std::vector<std::unique_ptr<IExtensionBloc
 		   entièrement au niveau de journalisation par défaut. Il est désormais
 		   émis comme les autres, avec ses octets (cf. BeefUnknown). */
 		log(3, L"🔈BeefUnknown");
-		block = std::make_unique<BeefUnknown>(buffer, _niveau);
+		block = std::make_unique<BeefUnknown>(buffer, _level);
 		log(3, L"🔈to_hex signature");
 		log(2, L"🔥Extension block unknown 0x" + to_hex(signature));
 		extensionBlocks->push_back(std::move(block));
@@ -1576,9 +1576,9 @@ std::wstring FsFlags::to_wstring() {
 		return result;
 }
 
-VolumeShellItem::VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _niveau) {
+VolumeShellItem::VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _level) {
 
-	niveau = _niveau;
+	level = _level;
 	isPresent = true;
 	name = L"";
 	guid = L"";
@@ -1617,8 +1617,8 @@ Json VolumeShellItem::toJson() {
 	return o;
 }
 
-ControlPanel::ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _niveau) {
-	niveau = _niveau;
+ControlPanel::ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _level) {
+	level = _level;
 	isPresent = true;
 	log(3, L"🔈guid_to_wstring guid");
 	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 14));
@@ -1631,7 +1631,7 @@ ControlPanel::ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _nive
 			unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
 			if (size > 0 && pos < itemSize) {
 				log(3, L"🔈getExtensionBlock");
-				getExtensionBlock(buffer + pos, &extensionBlocks, niveau + 1, NULL, false);
+				getExtensionBlock(buffer + pos, &extensionBlocks, level + 1, NULL, false);
 				pos += size;
 			}
 			else
@@ -1646,15 +1646,15 @@ Json ControlPanel::toJson() {
 	if (!isPresent) return o;
 	o.add(L"GUID",       Json::str(guid));
 	o.add(L"Identifier", Json::str(identifier));
-	Json blocs = Json::arr();
-	for (const auto& b : extensionBlocks) blocs.push(b->toJson());
+	Json blocks = Json::arr();
+	for (const auto& b : extensionBlocks) blocks.push(b->toJson());
 	o.add(L"ExtensionBlocksCount", Json::num((unsigned long long)extensionBlocks.size()));
-	o.add(L"ExtensionBlocks",      std::move(blocs));
+	o.add(L"ExtensionBlocks",      std::move(blocks));
 	return o;
 }
 
-ControlPanelCategory::ControlPanelCategory(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+ControlPanelCategory::ControlPanelCategory(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	unsigned short int totalsize = *reinterpret_cast<unsigned short int*>(buffer);
 	switch (*reinterpret_cast<unsigned int*>(buffer + 8)) {
@@ -1678,7 +1678,7 @@ ControlPanelCategory::ControlPanelCategory(LPBYTE buffer, int _niveau) {
 			unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
 			if (size > 0 && pos < totalsize) {
 				log(3, L"🔈getExtensionBlock");
-				getExtensionBlock(buffer + pos, &extensionBlocks, niveau + 1, NULL, false);
+				getExtensionBlock(buffer + pos, &extensionBlocks, level + 1, NULL, false);
 				pos += size;
 			}
 			else
@@ -1692,15 +1692,15 @@ Json ControlPanelCategory::toJson() {
 	Json o = Json::obj();
 	if (!isPresent) return o;
 	o.add(L"ID", Json::str(id));
-	Json blocs = Json::arr();
-	for (const auto& b : extensionBlocks) blocs.push(b->toJson());
+	Json blocks = Json::arr();
+	for (const auto& b : extensionBlocks) blocks.push(b->toJson());
 	o.add(L"ExtensionBlocksCount", Json::num((unsigned long long)extensionBlocks.size()));
-	o.add(L"ExtensionBlocks",      std::move(blocs));
+	o.add(L"ExtensionBlocks",      std::move(blocks));
 	return o;
 }
 
-Property::Property(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+Property::Property(LPBYTE buffer, int _level) {
+	level = _level;
 	id = 0;
 	type = 0;
 	unsigned int pos = 0;
@@ -1714,7 +1714,7 @@ Property::Property(LPBYTE buffer, int _niveau) {
 	type = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
 	log(3, L"🔈getValue");
-	value = getValue(buffer, &pos, type, niveau, 0, &typeNonDecode);
+	value = getValue(buffer, &pos, type, level, 0, &typeNonDecode);
 	size = pos;
 }
 
@@ -1730,27 +1730,27 @@ Json Property::toJson() {
 	return o;
 }
 
-UserPropertyView0xC01::UserPropertyView0xC01(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+UserPropertyView0xC01::UserPropertyView0xC01(LPBYTE buffer, int _level) {
+	level = _level;
 	/*  Les DEUX chaines annoncent leur taille, en octets. Elles etaient lues
 	    jusqu'au premier zero rencontre : sur une structure abimee, la lecture
 	    partait au-dela de la zone. La taille annoncee borne desormais chacune,
 	    et le terminateur eventuel est retire apres coup. */
-	auto chaineBornee = [](LPBYTE p, unsigned int octets) {
-		if (octets == 0 || octets > 64 * 1024) return std::wstring();
-		std::wstring s((const wchar_t*)p, octets / sizeof(wchar_t));
+	auto boundedString = [](LPBYTE p, unsigned int bytes) {
+		if (bytes == 0 || bytes > 64 * 1024) return std::wstring();
+		std::wstring s((const wchar_t*)p, bytes / sizeof(wchar_t));
 		while (!s.empty() && s.back() == L'\0') s.pop_back();
 		return s;
 	};
 	unsigned int pos = 0x14;//unknown
 	unsigned int wstring1Size = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
-	folder = chaineBornee(buffer + pos, wstring1Size);
+	folder = boundedString(buffer + pos, wstring1Size);
 	pos += wstring1Size;
 	pos += 16;//unknown
 	unsigned int wstring2Size = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
-	fullurl = chaineBornee(buffer + pos, wstring2Size);
+	fullurl = boundedString(buffer + pos, wstring2Size);
 }
 
 Json UserPropertyView0xC01::toJson() {
@@ -1761,8 +1761,8 @@ Json UserPropertyView0xC01::toJson() {
 	return o;
 }
 
-UserPropertyView0x23febbee::UserPropertyView0x23febbee(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+UserPropertyView0x23febbee::UserPropertyView0x23febbee(LPBYTE buffer, int _level) {
+	level = _level;
 	log(3, L"🔈guid_to_wstring guid");
 	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 0xE));
 	log(3, L"🔈trans_guid_to_wstring FriendlyName");
@@ -1777,22 +1777,22 @@ Json UserPropertyView0x23febbee::toJson() {
 	return o;
 }
 
-UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _niveau) {
+UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _level) {
 	unsigned int pos = 0;
-	niveau = _niveau;
+	level = _level;
 	modifiedUtc = *reinterpret_cast<FILETIME*>(buffer + 26);
 	createdUtc = *reinterpret_cast<FILETIME*>(buffer + 34);
 	log(3, L"🔈timeToIso8601 modifiedUtc");
 	if (!timeToIso8601Utc(modifiedUtc).empty()) {
 		log(3, L"🔈utcVersLocalSuspect modifiedUtc");
-		utcVersLocalSuspect(modifiedUtc, &modified);
+		utcToSuspectLocal(modifiedUtc, &modified);
 	}
 	else
 		modified = { 0 };
 	log(3, L"🔈timeToIso8601 createdUtc");
 	if (!timeToIso8601Utc(createdUtc).empty()) {
 		log(3, L"🔈utcVersLocalSuspect created");
-		utcVersLocalSuspect(createdUtc, &created);
+		utcToSuspectLocal(createdUtc, &created);
 	}
 	else
 		created = { 0 };
@@ -1816,11 +1816,11 @@ UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _nivea
 	pos += 4;
 	for (unsigned int x = 0; x < numberProperties; x++) {
 		log(3, L"🔈Property");
-		Property temp(buffer + pos, niveau + 1);
-		const bool arret = temp.typeNonDecode;   // taille indeterminee, cf. idList.h
+		Property temp(buffer + pos, level + 1);
+		const bool stop = temp.typeNonDecode;   // taille indeterminee, cf. idList.h
 		pos += temp.size;
 		properties.push_back(std::move(temp));
-		if (arret) {
+		if (stop) {
 			log(2, L"🔥Property : type non decode, arret du parcours apres "
 			     + std::to_wstring(x + 1) + L"/" + std::to_wstring(numberProperties),
 			    ERROR_INVALID_DATA);
@@ -1847,7 +1847,7 @@ Json UserPropertyView0x07192006::toJson() {
 	return o;
 }
 
-UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _niveau) {
+UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _level) {
 	/* Toutes les longueurs ci-dessous viennent du fichier analysé — donc d'une
 	   source non fiable — et servent à calculer des offsets de lecture. Le
 	   constructeur ne reçoit pas la taille du tampon, il ne peut donc pas les
@@ -1860,7 +1860,7 @@ UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _nivea
 	constexpr unsigned MAX_ELEMENTS = 1024; // bien au-delà du plausible, mais fini
 
 	unsigned int pos = 0;
-	niveau = _niveau;
+	level = _level;
 	int namesize = *reinterpret_cast<unsigned int*>(buffer + 0x26);
 	int identifiersize = *reinterpret_cast<unsigned int*>(buffer + 0x2A);
 	int filesystemsize = *reinterpret_cast<unsigned int*>(buffer + 0x2E);
@@ -1908,15 +1908,15 @@ UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _nivea
 	}
 	for (unsigned int x = 0; x < numberProperties; x++) {
 		log(3, L"🔈Property");
-		Property temp(buffer + pos, niveau + 1);
+		Property temp(buffer + pos, level + 1);
 		if (temp.size == 0) {
 			log(2, L"🔥Property de taille nulle : arret du parcours", ERROR_INVALID_DATA);
 			break;
 		}
-		const bool arret = temp.typeNonDecode;   // taille indeterminee, cf. idList.h
+		const bool stop = temp.typeNonDecode;   // taille indeterminee, cf. idList.h
 		pos += temp.size;
 		properties.push_back(std::move(temp));
-		if (arret) {
+		if (stop) {
 			log(2, L"🔥Property : type non decode, arret du parcours apres "
 			     + std::to_wstring(x + 1) + L"/" + std::to_wstring(numberProperties),
 			    ERROR_INVALID_DATA);
@@ -1951,8 +1951,8 @@ Json UserPropertyView0x10312005::toJson() {
 	return o;
 }
 
-UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	extensionOffset = 0;
 	spsOffset = 0;
@@ -1998,7 +1998,7 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau) {
 		   arbitraires dès que l'identifiant avait une autre taille. */
 		if (identifierSize == 16) {
 			log(3, L"🔈UserPropertyView0x23febbee");
-			delegate = std::make_unique<UserPropertyView0x23febbee>(buffer, niveau);
+			delegate = std::make_unique<UserPropertyView0x23febbee>(buffer, level);
 		}
 		else
 			log(2, L"🔥0x23febbee : identifiant de " + std::to_wstring(identifierSize)
@@ -2007,15 +2007,15 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau) {
 	}
 	else if (signature == (unsigned int)0x10312005) {
 		log(3, L"🔈MTP Volume");
-		delegate = std::make_unique<UserPropertyView0x10312005>(buffer, niveau);
+		delegate = std::make_unique<UserPropertyView0x10312005>(buffer, level);
 	}
 	else if (signature == (unsigned int)0x07192006) {
 		log(3, L"🔈MTP File Entry");
-		delegate = std::make_unique<UserPropertyView0x07192006>(buffer, niveau);
+		delegate = std::make_unique<UserPropertyView0x07192006>(buffer, level);
 	}
 	else if (signature_short == (unsigned int)0xC001) {
 		log(3, L"🔈UserPropertyView0xC01");
-		delegate = std::make_unique<UserPropertyView0xC01>(buffer, niveau);
+		delegate = std::make_unique<UserPropertyView0xC01>(buffer, level);
 		signature = signature_short;
 	}
 	/* Signatures repertoriees par libfwsi sans structure propre : l'item porte
@@ -2029,7 +2029,7 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau) {
 		spsOffset = dataOffset + identifierSize;
 		while (true) {
 			log(3, L"🔈SPS");
-			SPS block(buffer + spsOffset + pos, niveau + 1);
+			SPS block(buffer + spsOffset + pos, level + 1);
 			if (block.size && pos < SPSDataSize) SPSs.push_back(block);
 			else break;
 			pos += block.size;
@@ -2039,7 +2039,7 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau) {
 		spsOffset = dataOffset + identifierSize;
 		while (true) {
 			log(3, L"🔈SPS");
-			SPS block(buffer + spsOffset + pos, niveau + 1);
+			SPS block(buffer + spsOffset + pos, level + 1);
 			if (block.size && pos < SPSDataSize) {
 				SPSs.push_back(block);
 			}
@@ -2065,7 +2065,7 @@ UsersPropertyView::UsersPropertyView(LPBYTE buffer, int _niveau) {
 			unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
 			if (size > 0 && pos < totalsize) {
 				log(3, L"🔈getExtensionBlock");
-				getExtensionBlock(buffer + pos, &extensionBlocks, niveau + 1, NULL, false);
+				getExtensionBlock(buffer + pos, &extensionBlocks, level + 1, NULL, false);
 				pos += size;
 			}
 			else
@@ -2110,8 +2110,8 @@ Json UsersPropertyView::toJson() {
 	return o;
 }
 
-RootFolder::RootFolder(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+RootFolder::RootFolder(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	unsigned char type = *reinterpret_cast<unsigned char*>(buffer + 3);
@@ -2141,7 +2141,7 @@ RootFolder::RootFolder(LPBYTE buffer, int _niveau) {
 			unsigned int pos = 0x12;
 			while (true) {
 				log(3, L"🔈SPS");
-				SPS block(buffer + pos, niveau + 1);
+				SPS block(buffer + pos, level + 1);
 				if (block.size > 0 && pos < size) {
 					SPSs.push_back(block);
 				}
@@ -2177,8 +2177,8 @@ Json RootFolder::toJson() {
 	return o;
 }
 
-NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	unsigned char subtype = *reinterpret_cast<unsigned char*>(buffer + 2);
 	log(3, L"🔈networkSubType");
@@ -2194,7 +2194,7 @@ NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _niveau) {
 		log(3, L"🔈wstring_to_filetime modifiedUtc");
 		modifiedUtc = wstring_to_filetime(std::wstring((wchar_t*)(buffer + 0x24)));
 		log(3, L"🔈utcVersLocalSuspect modified");
-		utcVersLocalSuspect(modifiedUtc, &modified);
+		utcToSuspectLocal(modifiedUtc, &modified);
 		unsigned int descriptionsize = *reinterpret_cast<unsigned int*>(buffer + 0x54);
 		unsigned int commentssize = *reinterpret_cast<unsigned int*>(buffer + 0x58);
 		int pos = 0x5c;
@@ -2227,9 +2227,9 @@ Json NetworkShellItem::toJson() {
 	return o;
 }
 
-ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _niveau) {
+ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _level) {
 	isPresent = true;
-	niveau = _niveau;
+	level = _level;
 	unsigned int date = *reinterpret_cast<unsigned int*>(buffer + 8);
 
 	if (date == 0) {
@@ -2239,7 +2239,7 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _niveau) {
 			log(3, L"🔈timeToIso8601 modifiedUtc");
 			if (timeToIso8601Utc(modifiedUtc) != L"") {
 				log(3, L"🔈utcVersLocalSuspect modified");
-				utcVersLocalSuspect(modifiedUtc, &modified);
+				utcToSuspectLocal(modifiedUtc, &modified);
 			}
 			else
 				modifiedUtc = { 0 };
@@ -2251,7 +2251,7 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _niveau) {
 			log(3, L"🔈timeToIso8601 modifiedUtc");
 			if (timeToIso8601Utc(modifiedUtc) != L"") {
 				log(3, L"🔈utcVersLocalSuspect modified");
-				utcVersLocalSuspect(modifiedUtc, &modified);
+				utcToSuspectLocal(modifiedUtc, &modified);
 			}
 			else
 				modifiedUtc = { 0 };
@@ -2278,8 +2278,8 @@ Json ArchiveFileContent::toJson() {
 	return o;
 }
 
-URIShellItem::URIShellItem(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+URIShellItem::URIShellItem(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	// TAILLE DE L'ITEM : elle borne l'URI, qui etait lue jusqu'au premier zero
 	// rencontre — donc potentiellement au-dela de l'item.
@@ -2298,8 +2298,8 @@ Json URIShellItem::toJson() {
 	return o;
 }
 
-FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSize, unsigned char shell_item_type_char, int _niveau) {
-	niveau = _niveau;
+FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSize, unsigned char shell_item_type_char, int _level) {
+	level = _level;
 	isPresent = true;
 	fsFileSize = *reinterpret_cast<unsigned int*>(buffer + 4);
 	log(3, L"🔈FatDateTime");
@@ -2326,7 +2326,7 @@ FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSiz
 			unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer + pos);
 			if (size > 0 && pos < itemSize) {
 				log(3, L"🔈getExtensionBlock");
-				getExtensionBlock(buffer + pos, &extensionBlocks, niveau + 1, &is_zip, fsFlags.IS_FILE);
+				getExtensionBlock(buffer + pos, &extensionBlocks, level + 1, &is_zip, fsFlags.IS_FILE);
 				pos += size;
 			}
 			else
@@ -2345,15 +2345,15 @@ Json FileEntryShellItem::toJson() {
 	o.add(L"ModificationDateUtc", Json::str(timeToIso8601Utc(fsFileModificationUtc)));
 	o.add(L"Size",                Json::num((unsigned long long)fsFileSize));   // nombre
 	o.add(L"Name",                Json::str(fsPrimaryName));
-	Json blocs = Json::arr();
-	for (const auto& b : extensionBlocks) blocs.push(b->toJson());
+	Json blocks = Json::arr();
+	for (const auto& b : extensionBlocks) blocks.push(b->toJson());
 	o.add(L"ExtensionBlocksCount", Json::num((unsigned long long)extensionBlocks.size()));
-	o.add(L"ExtensionBlocks",      std::move(blocs));
+	o.add(L"ExtensionBlocks",      std::move(blocks));
 	return o;
 }
 
-UsersFilesFolder::UsersFilesFolder(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+UsersFilesFolder::UsersFilesFolder(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + size - 2);
@@ -2364,7 +2364,7 @@ UsersFilesFolder::UsersFilesFolder(LPBYTE buffer, int _niveau) {
 	log(3, L"🔈string_to_wstring primaryName");
 	primaryName = string_to_wstring(std::string((char*)buffer + 0x18));
 	log(3, L"🔈Beef0004");
-	extensionBlock = std::make_unique<Beef0004>(buffer + extensionOffset, niveau + 1, nullptr, false); // Le bloc suit 
+	extensionBlock = std::make_unique<Beef0004>(buffer + extensionOffset, level + 1, nullptr, false); // Le bloc suit 
 }
 
 Json UsersFilesFolder::toJson() {
@@ -2380,11 +2380,11 @@ Json UsersFilesFolder::toJson() {
 	return o;
 }
 
-FavoriteShellitem::FavoriteShellitem(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+FavoriteShellitem::FavoriteShellitem(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	log(3, L"🔈UsersPropertyView");
-	UPV = UsersPropertyView(buffer, niveau + 1);
+	UPV = UsersPropertyView(buffer, level + 1);
 }
 
 Json FavoriteShellitem::toJson() {
@@ -2393,13 +2393,13 @@ Json FavoriteShellitem::toJson() {
 	return Json::obj();
 }
 
-TypedShellItem::TypedShellItem(LPBYTE buffer, unsigned short taille,
-                               const std::wstring& _typeName, int _niveau) {
-	niveau = _niveau;
+TypedShellItem::TypedShellItem(LPBYTE buffer, unsigned short size,
+                               const std::wstring& _typeName, int _level) {
+	level = _level;
 	isPresent = true;
 	typeName = _typeName;
 	log(3, L"🔈dump_wstring TypedShellItem");
-	data = dump_wstring(buffer, 0, taille);
+	data = dump_wstring(buffer, 0, size);
 }
 
 Json TypedShellItem::toJson() {
@@ -2411,14 +2411,14 @@ Json TypedShellItem::toJson() {
 	return o;
 }
 
-DelegateFolder::DelegateFolder(LPBYTE buffer, unsigned short taille, int _niveau) {
-	niveau = _niveau;
+DelegateFolder::DelegateFolder(LPBYTE buffer, unsigned short size, int _level) {
+	level = _level;
 	isPresent = true;
 
 	/* GUID de la classe qui delegue : les 16 derniers octets de l'item. */
-	if (taille >= 16) {
+	if (size >= 16) {
 		log(3, L"🔈guid_to_wstring classGuid");
-		classGuid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + taille - 16));
+		classGuid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + size - 16));
 		log(3, L"🔈trans_guid_to_wstring classFriendlyName");
 		classFriendlyName = trans_guid_to_wstring(classGuid);
 	}
@@ -2426,16 +2426,16 @@ DelegateFolder::DelegateFolder(LPBYTE buffer, unsigned short taille, int _niveau
 	/* SHELL ITEM IMBRIQUE : taille sur 4 octets a l'offset 4, contenu a partir
 	   de l'offset 6. Les 32 derniers octets portent le marqueur de delegation et
 	   le GUID de classe, ils ne font pas partie de l'item interne. */
-	const unsigned int tailleInterne = *reinterpret_cast<unsigned int*>(buffer + 4);
-	if (taille > 38 && tailleInterne > 0 && tailleInterne <= (unsigned int)(taille - 38)) {
+	const unsigned int internalSize = *reinterpret_cast<unsigned int*>(buffer + 4);
+	if (size > 38 && internalSize > 0 && internalSize <= (unsigned int)(size - 38)) {
 		log(3, L"🔈makeShellItem delegue");
-		innerItem = makeShellItem(buffer + 6, niveau + 1, false);
+		innerItem = makeShellItem(buffer + 6, level + 1, false);
 	}
 	else {
 		log(2, L"🔥DelegateFolder : taille interne incoherente ("
-		     + std::to_wstring(tailleInterne) + L")");
+		     + std::to_wstring(internalSize) + L")");
 		log(3, L"🔈dump_wstring DelegateFolder");
-		data = dump_wstring(buffer, 0, taille);
+		data = dump_wstring(buffer, 0, size);
 	}
 }
 
@@ -2453,8 +2453,8 @@ Json DelegateFolder::toJson() {
 	return o;
 }
 
-UnknownShellItem::UnknownShellItem(LPBYTE buffer, int _niveau) {
-	niveau = _niveau;
+UnknownShellItem::UnknownShellItem(LPBYTE buffer, int _level) {
+	level = _level;
 	isPresent = true;
 	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	log(3, L"🔈dump_wstring data");
@@ -2473,7 +2473,7 @@ Json UnknownShellItem::toJson() {
 	return o;
 }
 
-std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _niveau, bool Parentiszip) {
+std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _level, bool Parentiszip) {
 
 	unsigned int item_size = *reinterpret_cast<unsigned short int*>(buffer);
 	if (Parentiszip == false) {
@@ -2490,33 +2490,33 @@ std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _niveau, bool Paren
 		 * L'ordre importe : ces tests sont plus spécifiques que l'octet de
 		 * classe, ils doivent primer. Chaque critère est celui de libfwsi, avec
 		 * sa taille minimale — sans quoi la vérification lirait hors de l'item. */
-		const unsigned short taille = (unsigned short)item_size;
+		const unsigned short size = (unsigned short)item_size;
 
 		/* Dossier délégué : marqueur de délégation 32 octets avant la fin. */
 		static const unsigned char GUID_DELEGATION[16] = {
 			0x74, 0x1a, 0x59, 0x5e, 0x96, 0xdf, 0xd3, 0x48,
 			0x8d, 0x67, 0x17, 0x33, 0xbc, 0xee, 0x28, 0xba };
-		if (taille >= 38
-		    && memcmp(buffer + taille - 32, GUID_DELEGATION, 16) == 0) {
+		if (size >= 38
+		    && memcmp(buffer + size - 32, GUID_DELEGATION, 16) == 0) {
 			log(3, L"🔈DelegateFolder");
-			return std::make_unique<DelegateFolder>(buffer, taille, _niveau);
+			return std::make_unique<DelegateFolder>(buffer, size, _level);
 		}
 		// Graveur de CD : signature ASCII « AugM ».
-		if (taille >= 18 && memcmp(buffer + 4, "AugM", 4) == 0) {
+		if (size >= 18 && memcmp(buffer + 4, "AugM", 4) == 0) {
 			log(3, L"🔈CD Burn");
-			return std::make_unique<TypedShellItem>(buffer, taille, L"CD Burn", _niveau);
+			return std::make_unique<TypedShellItem>(buffer, size, L"CD Burn", _level);
 		}
 		// Dossier de jeux : signature ASCII « GFSI ».
-		if (taille >= 32 && memcmp(buffer + 4, "GFSI", 4) == 0) {
+		if (size >= 32 && memcmp(buffer + 4, "GFSI", 4) == 0) {
 			log(3, L"🔈Game Folder");
-			return std::make_unique<TypedShellItem>(buffer, taille, L"Game Folder", _niveau);
+			return std::make_unique<TypedShellItem>(buffer, size, L"Game Folder", _level);
 		}
 		// Fichier .cpl du panneau de configuration : valeur de 4 octets precise.
-		if (taille >= 24
+		if (size >= 24
 		    && *reinterpret_cast<unsigned int*>(buffer + 4) == 0xFFFFFF38UL) {
 			log(3, L"🔈Control Panel CPL File");
-			return std::make_unique<TypedShellItem>(buffer, taille,
-			                                        L"Control Panel CPL File", _niveau);
+			return std::make_unique<TypedShellItem>(buffer, size,
+			                                        L"Control Panel CPL File", _level);
 		}
 
 		unsigned char type_char = *reinterpret_cast<unsigned char*>(buffer + 2);
@@ -2524,47 +2524,47 @@ std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _niveau, bool Paren
 		std::wstring type = shell_item_class(type_char);
 		if (type == L"VOLUME_SHELL_ITEM") {
 			log(3, L"🔈VolumeShellItem");
-			return std::make_unique<VolumeShellItem>(buffer, type_char, _niveau);
+			return std::make_unique<VolumeShellItem>(buffer, type_char, _level);
 		}
 		if (type == L"CONTROL_PANEL") {
 			log(3, L"🔈ControlPanel");
-			return std::make_unique<ControlPanel>(buffer, item_size, _niveau);
+			return std::make_unique<ControlPanel>(buffer, item_size, _level);
 		}
 		if (type == L"CONTROL_PANEL_CATEGORY") {
 			log(3, L"🔈ControlPanelCategory");
-			return std::make_unique<ControlPanelCategory>(buffer, _niveau);
+			return std::make_unique<ControlPanelCategory>(buffer, _level);
 		}
 		if (type == L"ROOT_FOLDER") {
 			log(3, L"🔈RootFolder");
-			return std::make_unique<RootFolder>(buffer, _niveau);
+			return std::make_unique<RootFolder>(buffer, _level);
 		}
 		if (type == L"FILE_ENTRY_SHELL_ITEM") {
 			log(3, L"🔈FileEntryShellItem");
-			return std::make_unique<FileEntryShellItem>(buffer, item_size, type_char, _niveau);
+			return std::make_unique<FileEntryShellItem>(buffer, item_size, type_char, _level);
 		}
 		if (type == L"USERS_PROPERTY_VIEW") {
 			log(3, L"🔈UsersPropertyView");
-			return std::make_unique<UsersPropertyView>(buffer, _niveau);
+			return std::make_unique<UsersPropertyView>(buffer, _level);
 		}
 		if (type == L"NETWORK_LOCATION_SHELL_ITEM") {
 			log(3, L"🔈NetworkShellItem");
-			return std::make_unique<NetworkShellItem>(buffer, _niveau);
+			return std::make_unique<NetworkShellItem>(buffer, _level);
 		}
 		if (type == L"URI") {
 			log(3, L"🔈URIShellItem");
-			return std::make_unique<URIShellItem>(buffer, _niveau);
+			return std::make_unique<URIShellItem>(buffer, _level);
 		}
 		if (type == L"ARCHIVE_FILE_CONTENT") {
 			log(3, L"🔈ArchiveFileContent");
-			return std::make_unique<ArchiveFileContent>(buffer, _niveau);
+			return std::make_unique<ArchiveFileContent>(buffer, _level);
 		}
 		if (type == L"USERS_FILES_FOLDER") {
 			log(3, L"🔈UsersFilesFolder");
-			return std::make_unique<UsersFilesFolder>(buffer, _niveau);
+			return std::make_unique<UsersFilesFolder>(buffer, _level);
 		}
 		if (type == L"FAVORITE_SHELL_ITEM") {
 			log(3, L"🔈FavoriteShellitem");
-			return std::make_unique<FavoriteShellitem>(buffer, _niveau);
+			return std::make_unique<FavoriteShellitem>(buffer, _level);
 		}
 		/* CRITÈRES FAIBLES, testés en DERNIER — l'ordre suit celui de libfwsi,
 		   qui essaie `file_entry` avant `web_site`.
@@ -2573,26 +2573,26 @@ std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _niveau, bool Paren
 		   octets serait pris pour un site web si ce test venait d'abord. Celui
 		   de l'archive Acronis lit l'octet de classe lui-même. Les deux ne sont
 		   donc consultés que si aucun type de classe n'a répondu. */
-		if (taille >= 24 && buffer[4] == 0x00 && buffer[5] == 0xb0
+		if (size >= 24 && buffer[4] == 0x00 && buffer[5] == 0xb0
 		    && buffer[6] == 0x01 && buffer[7] == 0xc0) {
 			log(3, L"🔈Web Site");
-			return std::make_unique<TypedShellItem>(buffer, taille, L"Web Site", _niveau);
+			return std::make_unique<TypedShellItem>(buffer, size, L"Web Site", _level);
 		}
-		if (taille >= 50 && buffer[2] == 0x52 && buffer[3] == 0x67
+		if (size >= 50 && buffer[2] == 0x52 && buffer[3] == 0x67
 		    && buffer[4] == 0xb1 && buffer[5] == 0xac) {
 			log(3, L"🔈Acronis TIB File");
-			return std::make_unique<TypedShellItem>(buffer, taille,
-			                                        L"Acronis TIB File", _niveau);
+			return std::make_unique<TypedShellItem>(buffer, size,
+			                                        L"Acronis TIB File", _level);
 		}
 
 		if (type == L"UNKNOWN") {
 			log(3, L"🔈UnknownShellItem");
-			return std::make_unique<UnknownShellItem>(buffer, _niveau);
+			return std::make_unique<UnknownShellItem>(buffer, _level);
 		}
 	}
 	else {
 		log(3, L"🔈ArchiveFileContent");
-		return std::make_unique<ArchiveFileContent>(buffer, _niveau);
+		return std::make_unique<ArchiveFileContent>(buffer, _level);
 	}
 	return nullptr;   // aucun type reconnu : jamais de retour implicite
 }

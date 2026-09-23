@@ -1,19 +1,19 @@
 #include "reg_muicache.h"
 
-Muicache::Muicache(ORHKEY hKey, std::wstring nomValeur, std::wstring profile) {
+Muicache::Muicache(ORHKEY hKey, std::wstring valueName, std::wstring profile) {
 	
 	HRESULT hresult = 0;
 
-	name = nomValeur;
+	name = valueName;
 	log(2, L"❇️muicache Name : " + name);
 	sid = profile;
 	log(3, L"🔈getNameFromSid sidName");
 	sidName = getNameFromSid(sid);
 
 	log(3, L"🔈getRegSzValue nomValeur");
-	hresult = getRegSzValue(hKey, nullptr, nomValeur.c_str(), &data);
+	hresult = getRegSzValue(hKey, nullptr, valueName.c_str(), &data);
 	if (hresult != ERROR_SUCCESS) {
-		log(2, L"🔥getRegSzValue Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache\\" + std::wstring(nomValeur), hresult);
+		log(2, L"🔥getRegSzValue Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache\\" + std::wstring(valueName), hresult);
 	}
 	else {
 	}
@@ -24,7 +24,7 @@ Json Muicache::toJson() {
 	Json o = Json::obj();
 	o.add(L"SID",     Json::str(sid));
 	o.add(L"SIDName", Json::str(sidName));
-	o.add(L"Name",    Json::str(name));    // chemin brut
+	o.add(L"Name",    Json::str(name));    // raw path
 	o.add(L"Data",    Json::str(data));
 	return o;
 }
@@ -46,17 +46,17 @@ HRESULT Muicaches::getData() {
 	DWORD nSubkeys = 0;
 	DWORD nValues=0;
 	DWORD dType = 0;
-	WCHAR nomValeur[MAX_VALUE_NAME]=L"";
+	WCHAR valueName[MAX_VALUE_NAME]=L"";
 
-	std::wstring ruche = L"";
-	for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
-		//ouverture de la ruche user
+	std::wstring hive = L"";
+	for (std::tuple<std::wstring, std::wstring> profileEntry : conf.profiles) {
+		// open the user hive
 		log(3, L"🔈replaceAll profile");
-		ruche = cheminExtrait(std::get<1>(profile)) + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat";
-		log(3, L"🔈OROpenHive " + std::get<1>(profile) + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat");
-		hresult = OROpenHive(ruche.c_str(), &Offhive);
+		hive = extractedPath(std::get<1>(profileEntry)) + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat";
+		log(3, L"🔈OROpenHive " + std::get<1>(profileEntry) + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat");
+		hresult = OROpenHive(hive.c_str(), &Offhive);
 		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥OROpenHive " + std::get<1>(profile) + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat", GetLastError());
+			log(2, L"🔥OROpenHive " + std::get<1>(profileEntry) + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat", GetLastError());
 			continue;
 		};
 
@@ -76,21 +76,21 @@ HRESULT Muicaches::getData() {
 
 		for (int i = 0; i < (int)nValues; i++) {
 			printProgressStep(L"Muicache", (unsigned)i + 1, nValues);
-			DWORD tailleTampon = MAX_VALUE_NAME;
+			DWORD bufferSize = MAX_VALUE_NAME;
 			DWORD cData = MAX_DATA;
 			log(3, L"🔈OREnumValue " + std::to_wstring(i));
-			hresult = OREnumValue(hKey, i, nomValeur, &tailleTampon, &dType, NULL, &cData);
+			hresult = OREnumValue(hKey, i, valueName, &bufferSize, &dType, NULL, &cData);
 			if (hresult != ERROR_SUCCESS) {
 				log(2, L"🔥OREnumValue " + std::to_wstring(i), hresult);
 				continue;
 			};
 			if (dType != REG_SZ) {
-				log(2, L"🔥OREnumValue " + std::wstring(nomValeur) + L" not REG_SZ type");
+				log(2, L"🔥OREnumValue " + std::wstring(valueName) + L" not REG_SZ type");
 				continue;
 			}
 			//save
 			log(1, L"➕Muicache");
-			muicaches.push_back(Muicache(hKey, nomValeur, std::get<0>(profile)));
+			muicaches.push_back(Muicache(hKey, valueName, std::get<0>(profileEntry)));
 		}
 	}
 	return ERROR_SUCCESS;

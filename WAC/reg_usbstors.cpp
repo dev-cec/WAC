@@ -82,13 +82,13 @@ HRESULT Usbstors::getData() {
 
 	//variables
 	HRESULT hresult = 0;
-	ORHKEY hkey = NULL, hKey_fabricant = NULL, hKey_usb = NULL;
+	ORHKEY hkey = NULL, hKey_manufacturer = NULL, hKey_usb = NULL;
 	DWORD nSubkeys_usbstor = 0;
-	DWORD nSubkeys_fabricant = 0;
+	DWORD nSubkeys_manufacturer = 0;
 	DWORD nValues = 0;
 	wchar_t szSubKey_usbstor[MAX_VALUE_NAME] = L"";
-	wchar_t szSubKey_fabricant[MAX_VALUE_NAME] = L"";
-	DWORD tailleTampon = MAX_VALUE_NAME;
+	wchar_t szSubKey_manufacturer[MAX_VALUE_NAME] = L"";
+	DWORD bufferSize = MAX_VALUE_NAME;
 
 	log(0, L"*******************************************************************************************************************");
 	log(0, L"ℹ️Usbstor :");
@@ -109,39 +109,39 @@ HRESULT Usbstors::getData() {
 
 	for (int i = 0; i < (int)nSubkeys_usbstor; i++) {
 		printProgressStep(L"Usbstor", (unsigned)i + 1, nSubkeys_usbstor);
-		tailleTampon = MAX_KEY_NAME;
+		bufferSize = MAX_KEY_NAME;
 		log(3, L"🔈OREnumKey CurrentControlSet\\Enum\\USBSTOR Value " + std::to_wstring(i));
-		hresult = OREnumKey(hkey, i, szSubKey_usbstor, &tailleTampon, NULL, NULL, NULL);
+		hresult = OREnumKey(hkey, i, szSubKey_usbstor, &bufferSize, NULL, NULL, NULL);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
 			log(2, L"🔥OREnumKey CurrentControlSet\\Enum\\USBSTOR Value " + std::to_wstring(i), hresult);
 			continue;
 		}
 		log(3, L"🔈OROpenKey CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor));
-		hresult = OROpenKey(hkey, szSubKey_usbstor, &hKey_fabricant); // on ouvre la clé du fabricant
+		hresult = OROpenKey(hkey, szSubKey_usbstor, &hKey_manufacturer); // on ouvre la clé du fabricant
 		if (hresult != ERROR_SUCCESS) {
 			log(2, L"🔥OROpenKey hKey_fabricant", hresult);
 			continue;
 		}
 		log(3, L"🔈ORQueryInfoKey CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor));
-		hresult = ORQueryInfoKey(hKey_fabricant, NULL, NULL, &nSubkeys_fabricant, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
+		hresult = ORQueryInfoKey(hKey_manufacturer, NULL, NULL, &nSubkeys_manufacturer, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
 			log(2, L"🔥ORQueryInfoKey CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor), hresult);
 			continue;
 		}
 
-		for (int j = 0; j < (int)nSubkeys_fabricant; j++) {
-			tailleTampon = MAX_KEY_NAME;
+		for (int j = 0; j < (int)nSubkeys_manufacturer; j++) {
+			bufferSize = MAX_KEY_NAME;
 			log(3, L"🔈OREnumKey CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L" Value " + std::to_wstring(j));
-			hresult = OREnumKey(hKey_fabricant, j, szSubKey_fabricant, &tailleTampon, NULL, NULL, NULL);
+			hresult = OREnumKey(hKey_manufacturer, j, szSubKey_manufacturer, &bufferSize, NULL, NULL, NULL);
 			if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
 				log(2, L"🔥OREnumKey CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L" Value " + std::to_wstring(j), hresult);
 				continue;
 			}
 
-			log(3, L"🔈OROpenKey CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L" \\" + szSubKey_fabricant);
-			hresult = OROpenKey(hKey_fabricant, szSubKey_fabricant, &hKey_usb);
+			log(3, L"🔈OROpenKey CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L" \\" + szSubKey_manufacturer);
+			hresult = OROpenKey(hKey_manufacturer, szSubKey_manufacturer, &hKey_usb);
 			if (hresult != ERROR_SUCCESS) {
-				log(2, L"🔥OROpenKey CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L" \\" + szSubKey_fabricant, hresult);
+				log(2, L"🔥OROpenKey CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor) + L" \\" + szSubKey_manufacturer, hresult);
 				continue;
 			}
 			log(1, L"➕USB ");

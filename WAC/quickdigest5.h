@@ -197,7 +197,7 @@ public:
      *  À n'appeler qu'une fois : le calcul est terminé ensuite. */
     std::wstring hexDigest();
 private:
-    QuickDigest5 moteur;
+    QuickDigest5 engine;
 };
 
 

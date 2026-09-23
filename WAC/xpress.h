@@ -1,6 +1,5 @@
-#pragma once
-
-/*  xpress.h — XPRESS HUFFMAN DECOMPRESSION (WOF / "Compact OS").
+/*! \file
+ *  \brief XPRESS HUFFMAN DECOMPRESSION (WOF / "Compact OS").
  *
  *  WHY THIS MODULE EXISTS. Windows 10 and 11 store their system binaries
  *  compressed by WOF. Seen through the API, such a file is perfectly ordinary:
@@ -45,18 +44,19 @@
  *  Portable C++, no dependency: checked against Windows' own compressor (see
  *  xpress_test).
  */
+#pragma once
 
 #include <cstdint>
 #include <cstddef>
 
 /*! Expands one XPRESS Huffman compressed chunk.
 *
-*  @param compresse compressed data (one whole chunk, table included)
-*  @param tailleCompressee size of that data
-*  @param sortie destination buffer
-*  @param tailleSortie expected size of the expanded chunk, bounding the writes
+*  @param compressed compressed data (one whole chunk, table included)
+*  @param compressedSize size of that data
+*  @param output destination buffer
+*  @param outputSize expected size of the expanded chunk, bounding the writes
 *  @return number of bytes written; 0 if the input is unusable.
 *          A result below the expected size signals a truncated stream.
 */
-size_t XpressHuffmanDetendre(const uint8_t* compresse, size_t tailleCompressee,
-                             uint8_t* sortie, size_t tailleSortie);
+size_t XpressHuffmanInflate(const uint8_t* compressed, size_t compressedSize,
+                             uint8_t* output, size_t outputSize);

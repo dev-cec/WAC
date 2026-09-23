@@ -52,13 +52,13 @@
 struct Process {
 	std::wstring processName = L""; //!< name of the executable
 	DWORD processId = 0;            //!< identifier of the process
-	EmpreinteBinaire empreinte;     //!< fingerprints of that executable, if `--binary` was given
+	BinaryFingerprint fingerprint;     //!< fingerprints of that executable, if `--binary` was given
 	DWORD processParentId = 0;      //!< identifier of the process that started it
 	DWORD processThreadCount = 0;   //!< number of threads it holds
 	std::wstring processSidName = L"";//!< name of the account it runs as
 	std::wstring processSID = L"";    //!< SID of that account
 	DWORD sessionId = 0;              //!< session the process belongs to
-	bool  sessionConnue = false;      //!< true if that session could be read
+	bool  sessionKnown = false;      //!< true if that session could be read
 	std::wstring processModulesAccess = L"OK"; //!< outcome of the module listing, for
 	                                  //!< the processes it could not be read on
 	std::vector<std::wstring> processModules; //!< the DLLs loaded by the process. The

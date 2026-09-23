@@ -96,8 +96,8 @@ struct Event {
 	*         employé si le XML ne porte pas `<EventRecordID>`
 	*/
 	/*! @param nomFichier nom du fichier journal, consigné comme provenance */
-	Event(const XmlNode& racine, const std::wstring& canal,
-	      unsigned long long identifiant, const std::wstring& nomFichier);
+	Event(const XmlNode& root, const std::wstring& canal,
+	      unsigned long long id, const std::wstring& fileName);
 
 	/*! Valeurs de `EventData`, dans l'ordre, telles qu'elles remplissent les
 	*  marques %1 %2 … d'un modèle de message.
@@ -106,7 +106,7 @@ struct Event {
 	*  leurs noms : les ressortir du JSON demanderait des accesseurs dont
 	*  personne d'autre n'a besoin, pour retrouver une information qu'on avait
 	*  déjà sous la main. */
-	std::vector<std::wstring> valeursBrutes;
+	std::vector<std::wstring> rawValues;
 
 	/*  Champs conservés sous leur forme native pour la résolution du message.
 	    Les versions JSON sont déjà formatées ; les redécoder en sens inverse
@@ -129,9 +129,9 @@ struct Event {
  *  empreinte mémoire constante, quelle que soit la taille des journaux.
  */
 struct Events {
-	unsigned long long lus = 0;          //!< enregistrements écrits
-	unsigned long long illisibles = 0;   //!< enregistrements écartés
-	unsigned long long fichiers = 0;     //!< journaux parcourus
+	unsigned long long read = 0;          //!< enregistrements écrits
+	unsigned long long unreadable = 0;   //!< enregistrements écartés
+	unsigned long long files = 0;     //!< journaux parcourus
 
 	/*! Lit les journaux extraits et écrit `events.json` au fil de l'eau.
 	*  @return ERROR_SUCCESS, S_FALSE si des enregistrements ont été écartés,

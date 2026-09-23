@@ -10,102 +10,102 @@
 namespace {
 
 //! One compressed chunk: at most 4096 expanded bytes.
-const size_t TAILLE_MORCEAU = 4096;
+const size_t CHUNK_SIZE = 4096;
 
 /*! Expands one compressed chunk.
- *  @param pos position in `compresse`, updated
- *  @return bytes written to `sortie`
+ *  @param pos position in `compressed`, updated
+ *  @return bytes written to `output`
  */
-size_t detendreMorceau(const uint8_t* compresse, size_t tailleCompressee, size_t& pos,
-                       size_t tailleMorceau, uint8_t* sortie, size_t tailleSortie) {
-	size_t ecrits = 0;
+size_t decompressChunk(const uint8_t* compressed, size_t compressedSize, size_t& pos,
+                       size_t chunkSize, uint8_t* output, size_t outputSize) {
+	size_t written = 0;
 
 	/*  VARIABLE SPLIT. As long as the chunk's output does not exceed the
 	 *  threshold, the distance takes 4 bits and the length 12. Each time the
 	 *  threshold is crossed, the distance gains a bit and the length loses one.
 	 *  Fixing these values produces wrong data without any error. */
-	unsigned decalage = 12;          // position of the distance field
-	uint16_t masqueTaille = 0x0fff;  // length field
-	size_t   seuil = 16;
+	unsigned offset = 12;          // position of the distance field
+	uint16_t sizeMask = 0x0fff;  // length field
+	size_t   threshold = 16;
 
-	while (tailleMorceau > 0) {
-		if (pos >= tailleCompressee) break;
-		uint8_t drapeaux = compresse[pos++];
-		tailleMorceau -= 1;
+	while (chunkSize > 0) {
+		if (pos >= compressedSize) break;
+		uint8_t flags = compressed[pos++];
+		chunkSize -= 1;
 
 		for (int bit = 0; bit < 8; ++bit) {
-			if (drapeaux & 0x01) {
+			if (flags & 0x01) {
 				// Back-reference: 2 bytes, little-endian.
-				if (pos + 1 >= tailleCompressee) return ecrits;
-				if (tailleMorceau < 2) return ecrits;
-				const uint16_t tuple = (uint16_t)(compresse[pos] | (compresse[pos + 1] << 8));
+				if (pos + 1 >= compressedSize) return written;
+				if (chunkSize < 2) return written;
+				const uint16_t tuple = (uint16_t)(compressed[pos] | (compressed[pos + 1] << 8));
 				pos += 2;
-				tailleMorceau -= 2;
+				chunkSize -= 2;
 
-				const size_t distance = (size_t)(tuple >> decalage) + 1;
-				size_t longueur      = (size_t)(tuple & masqueTaille) + 3;
-				if (distance > ecrits) return ecrits;       // before the start: corrupt stream
+				const size_t distance = (size_t)(tuple >> offset) + 1;
+				size_t length      = (size_t)(tuple & sizeMask) + 3;
+				if (distance > written) return written;       // before the start: corrupt stream
 
 				/*  BYTE-BY-BYTE COPY, not memcpy: the ranges OVERLAP as soon as the
 				 *  distance is smaller than the length, and that is the normal case —
 				 *  it is how the format encodes a repetition. memcpy would return
 				 *  something else. */
-				size_t source = ecrits - distance;
-				while (longueur-- > 0) {
-					if (ecrits >= tailleSortie) return ecrits;
-					sortie[ecrits++] = sortie[source++];
+				size_t source = written - distance;
+				while (length-- > 0) {
+					if (written >= outputSize) return written;
+					output[written++] = output[source++];
 				}
 			}
 			else {
-				if (pos >= tailleCompressee || tailleMorceau == 0) return ecrits;
-				if (ecrits >= tailleSortie) return ecrits;
-				sortie[ecrits++] = compresse[pos++];
-				tailleMorceau -= 1;
+				if (pos >= compressedSize || chunkSize == 0) return written;
+				if (written >= outputSize) return written;
+				output[written++] = compressed[pos++];
+				chunkSize -= 1;
 			}
-			drapeaux >>= 1;
-			if (tailleMorceau == 0) break;
+			flags >>= 1;
+			if (chunkSize == 0) break;
 
 			// Re-evaluate the split after EACH item.
-			while (ecrits > seuil) {
-				if (decalage == 0) return ecrits;          // inconsistent stream
-				--decalage;
-				masqueTaille >>= 1;
-				seuil <<= 1;
+			while (written > threshold) {
+				if (offset == 0) return written;          // inconsistent stream
+				--offset;
+				sizeMask >>= 1;
+				threshold <<= 1;
 			}
 		}
 	}
-	return ecrits;
+	return written;
 }
 
 } // namespace
 
-size_t Lznt1Detendre(const uint8_t* compresse, size_t tailleCompressee,
-                     uint8_t* sortie, size_t tailleSortie) {
-	if (!compresse || !sortie || tailleCompressee < 2 || tailleSortie == 0) return 0;
+size_t Lznt1Inflate(const uint8_t* compressed, size_t compressedSize,
+                     uint8_t* output, size_t outputSize) {
+	if (!compressed || !output || compressedSize < 2 || outputSize == 0) return 0;
 
-	size_t pos = 0, ecrits = 0;
-	while (pos < tailleCompressee && ecrits < tailleSortie) {
-		if (pos + 1 >= tailleCompressee) break;
-		const uint16_t entete = (uint16_t)(compresse[pos] | (compresse[pos + 1] << 8));
+	size_t pos = 0, written = 0;
+	while (pos < compressedSize && written < outputSize) {
+		if (pos + 1 >= compressedSize) break;
+		const uint16_t header = (uint16_t)(compressed[pos] | (compressed[pos + 1] << 8));
 		pos += 2;
-		if (entete == 0) break;                 // end of stream
+		if (header == 0) break;                 // end of stream
 
-		const size_t taille = (size_t)(entete & 0x0fff) + 1;
+		const size_t size = (size_t)(header & 0x0fff) + 1;
 
-		if (entete & 0x8000) {
-			ecrits += detendreMorceau(compresse, tailleCompressee, pos, taille,
-			                          sortie + ecrits, tailleSortie - ecrits);
+		if (header & 0x8000) {
+			written += decompressChunk(compressed, compressedSize, pos, size,
+			                          output + written, outputSize - written);
 		}
 		else {
 			// Chunk stored as is: compression had gained nothing.
-			const size_t n = (taille < tailleCompressee - pos) ? taille : (tailleCompressee - pos);
-			const size_t m = (n < tailleSortie - ecrits) ? n : (tailleSortie - ecrits);
-			std::memcpy(sortie + ecrits, compresse + pos, m);
+			const size_t n = (size < compressedSize - pos) ? size : (compressedSize - pos);
+			const size_t m = (n < outputSize - written) ? n : (outputSize - written);
+			std::memcpy(output + written, compressed + pos, m);
 			pos    += n;
-			ecrits += m;
+			written += m;
 		}
 		// A chunk yields at most 4096 bytes; beyond that, the stream is inconsistent.
-		if (ecrits > tailleSortie) return tailleSortie;
+		if (written > outputSize) return outputSize;
 	}
-	return ecrits;
+	return written;
 }

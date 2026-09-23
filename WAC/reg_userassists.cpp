@@ -1,9 +1,9 @@
 #include "reg_userassists.h"
 
-UserAssist::UserAssist(std::wstring hKey, LPWSTR nomValeur, LPBYTE donnees, std::wstring _sid) {
+UserAssist::UserAssist(std::wstring hKey, LPWSTR valueName, LPBYTE data, std::wstring _sid) {
 	// Codage ANSI mais on veut de l'utf8
 	log(3, L"🔈ROT13 Name");
-	Name = ROT13(nomValeur); // Rot13 du nom de la Value pour récupérer le nom de l’exécutable
+	Name = ROT13(valueName); // Rot13 du nom de la Value pour récupérer le nom de l’exécutable
 	log(2, L"❇️UserAssist Name : " + Name);
 	Sid = _sid;
 	log(3, L"🔈getNameFromSid SidName");
@@ -20,9 +20,9 @@ UserAssist::UserAssist(std::wstring hKey, LPWSTR nomValeur, LPBYTE donnees, std:
 			Name = replaceAll(Name, s, n);
 		}
 	}
-	Count = *reinterpret_cast<int*>(donnees + 4); // conversion en integer du nombre d'exécutions à partir du little endian
-	FocusCount = *reinterpret_cast<int*>(donnees + 8); // conversion en integer du nombre d'exécutions à partir du little endian
-	FILETIME filetime = *reinterpret_cast<FILETIME*>(donnees + 60);
+	Count = *reinterpret_cast<int*>(data + 4); // conversion en integer du nombre d'exécutions à partir du little endian
+	FocusCount = *reinterpret_cast<int*>(data + 8); // conversion en integer du nombre d'exécutions à partir du little endian
+	FILETIME filetime = *reinterpret_cast<FILETIME*>(data + 60);
 	log(3, L"🔈timeToIso8601 DateLocale");
 	DateLocale = timeToIso8601Local(filetime); // récupération de la date de dernière exécution sous forme de tableau de bytes
 	if (DateLocale != L"") { // si la date est vide
@@ -61,20 +61,20 @@ HRESULT UserAssists::getData() {
 	DWORD nSubkeys = 0;
 	DWORD nValues = 0;
 	DWORD dType = 0;
-	WCHAR nomValeur[MAX_VALUE_NAME] = L"";
-	DWORD tailleTampon = 0;
+	WCHAR valueName[MAX_VALUE_NAME] = L"";
+	DWORD bufferSize = 0;
 	ORHKEY Offhive = NULL;
-	std::wstring ruche = L"";
+	std::wstring hive = L"";
 	std::wstring userassitsKey[2] = { L"{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}", L"{F4E57C4B-2036-45F0-A9AB-443BCFE33D9F}" }; // les GUID à lire pour les userassists
 	for (std::wstring key : userassitsKey) {
-		for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
+		for (std::tuple<std::wstring, std::wstring> profileEntry : conf.profiles) {
 			//ouverture de la ruche user
 			log(3, L"🔈replaceAll profile");
-			ruche = cheminExtrait(std::get<1>(profile)) + L"\\ntuser.dat";
-			log(3, L"🔈OROpenHive " + std::get<1>(profile) + L"\\ntuser.dat");
-			hresult = OROpenHive(ruche.c_str(), &Offhive);
+			hive = extractedPath(std::get<1>(profileEntry)) + L"\\ntuser.dat";
+			log(3, L"🔈OROpenHive " + std::get<1>(profileEntry) + L"\\ntuser.dat");
+			hresult = OROpenHive(hive.c_str(), &Offhive);
 			if (hresult != ERROR_SUCCESS) {
-				log(2, L"🔥OROpenHive " + std::get<1>(profile) + L"\\ntuser.dat", hresult);
+				log(2, L"🔥OROpenHive " + std::get<1>(profileEntry) + L"\\ntuser.dat", hresult);
 				continue;
 			}
 
@@ -95,13 +95,13 @@ HRESULT UserAssists::getData() {
 			for (DWORD i = 0; i < nValues; i++) {
 				printProgressStep(L"UserAssist", i + 1, nValues);
 				DWORD dataSize = 0;
-				LPBYTE donnees = NULL;
+				LPBYTE data = NULL;
 				do {
-					if (donnees != NULL)
-						delete[] donnees;
-					donnees = new BYTE[dataSize];
+					if (data != NULL)
+						delete[] data;
+					data = new BYTE[dataSize];
 					log(3, L"🔈OREnumValue " + subkey + L" " + std::to_wstring(i));
-					hresult = OREnumValue(hKey, i, nomValeur, &tailleTampon, &dType, donnees, &dataSize);
+					hresult = OREnumValue(hKey, i, valueName, &bufferSize, &dType, data, &dataSize);
 				} while (hresult == ERROR_MORE_DATA);
 				if (hresult != ERROR_SUCCESS) {
 					log(2, L"🔥OREnumValue " + subkey + L" " + std::to_wstring(i), hresult);
@@ -109,9 +109,9 @@ HRESULT UserAssists::getData() {
 				}
 				//save
 				log(1, L"➕UserAssist ");
-				userassists.push_back(UserAssist(key, nomValeur, donnees, std::get<0>(profile)));
+				userassists.push_back(UserAssist(key, valueName, data, std::get<0>(profileEntry)));
 
-				delete[] donnees;
+				delete[] data;
 			}
 		}
 	}

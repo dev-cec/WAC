@@ -10,8 +10,8 @@ namespace {
 * réellement illisibles sont, elles, consignées dans le journal et dans
 * investigation.json.
 */
-void ajouterSiRenseigne(Json& o, PCWSTR nom, const std::wstring& valeur) {
-	if (!valeur.empty()) o.add(nom, Json::str(valeur));
+void addIfSet(Json& o, PCWSTR name, const std::wstring& value) {
+	if (!value.empty()) o.add(name, Json::str(value));
 }
 
 /*! Traduit PROCESSOR_ARCHITECTURE (valeur texte de la ruche) en libellé.
@@ -19,21 +19,21 @@ void ajouterSiRenseigne(Json& o, PCWSTR nom, const std::wstring& valeur) {
 * est donc convertie vers le même vocabulaire que `os_architecture()` afin que
 * la sortie reste comparable entre versions de WAC.
 */
-std::wstring architectureDepuisRuche(const std::wstring& valeur) {
-	if (valeur == L"AMD64") return os_architecture(PROCESSOR_ARCHITECTURE_AMD64);
-	if (valeur == L"x86")   return os_architecture(PROCESSOR_ARCHITECTURE_INTEL);
-	if (valeur == L"ARM64") return os_architecture(PROCESSOR_ARCHITECTURE_ARM64);
-	if (valeur == L"ARM")   return os_architecture(PROCESSOR_ARCHITECTURE_ARM);
-	if (valeur == L"IA64")  return os_architecture(PROCESSOR_ARCHITECTURE_IA64);
+std::wstring architectureFromHive(const std::wstring& value) {
+	if (value == L"AMD64") return os_architecture(PROCESSOR_ARCHITECTURE_AMD64);
+	if (value == L"x86")   return os_architecture(PROCESSOR_ARCHITECTURE_INTEL);
+	if (value == L"ARM64") return os_architecture(PROCESSOR_ARCHITECTURE_ARM64);
+	if (value == L"ARM")   return os_architecture(PROCESSOR_ARCHITECTURE_ARM);
+	if (value == L"IA64")  return os_architecture(PROCESSOR_ARCHITECTURE_IA64);
 	// Valeur inattendue : restituée telle quelle plutôt que masquée derrière
 	// « inconnue », pour que le cas non couvert reste visible.
-	return valeur.empty() ? os_architecture(PROCESSOR_ARCHITECTURE_UNKNOWN) : valeur;
+	return value.empty() ? os_architecture(PROCESSOR_ARCHITECTURE_UNKNOWN) : value;
 }
 
 //! Convertit un temps Unix (secondes depuis 1970, UTC) en FILETIME.
-FILETIME unixVersFiletime(unsigned long long secondes) {
-	const unsigned long long DECALAGE_1601_1970 = 11644473600ULL;
-	const unsigned long long cent_ns = (secondes + DECALAGE_1601_1970) * 10000000ULL;
+FILETIME unixToFiletime(unsigned long long seconds) {
+	const unsigned long long OFFSET_1601_1970 = 11644473600ULL;
+	const unsigned long long cent_ns = (seconds + OFFSET_1601_1970) * 10000000ULL;
 	FILETIME ft = { (DWORD)(cent_ns & 0xFFFFFFFFULL), (DWORD)(cent_ns >> 32) };
 	return ft;
 }
@@ -76,7 +76,7 @@ HRESULT SystemInfo::getData() {
 		log(3, L"🔈getRegSzValue PROCESSOR_ARCHITECTURE");
 		getRegSzValue(conf.CurrentControlSet, L"Control\\Session Manager\\Environment",
 		              L"PROCESSOR_ARCHITECTURE", &archiBrute);
-		osArchitecture = architectureDepuisRuche(archiBrute);
+		osArchitecture = architectureFromHive(archiBrute);
 
 		log(2, L"❇️Computer name : " + computerName);
 		log(2, L"❇️Domain name : " + domainName);
@@ -88,50 +88,50 @@ HRESULT SystemInfo::getData() {
 	* 2. Installation — ruche SOFTWARE
 	*******************************************************************/
 	if (conf.Software) {
-		PCWSTR cle = L"Microsoft\\Windows NT\\CurrentVersion";
+		PCWSTR key = L"Microsoft\\Windows NT\\CurrentVersion";
 
 		log(3, L"🔈getRegSzValue ProductName");
-		getRegSzValue(conf.Software, cle, L"ProductName",            &productNameRaw);
-		getRegSzValue(conf.Software, cle, L"EditionID",              &editionId);
-		getRegSzValue(conf.Software, cle, L"InstallationType",       &installationType);
-		getRegSzValue(conf.Software, cle, L"BuildLabEx",             &buildLabEx);
-		getRegSzValue(conf.Software, cle, L"CSDVersion",             &servicePack);
-		getRegSzValue(conf.Software, cle, L"RegisteredOwner",        &registeredOwner);
-		getRegSzValue(conf.Software, cle, L"RegisteredOrganization", &registeredOrganization);
-		getRegSzValue(conf.Software, cle, L"ProductId",              &productId);
-		getRegSzValue(conf.Software, cle, L"SystemRoot",             &systemRoot);
+		getRegSzValue(conf.Software, key, L"ProductName",            &productNameRaw);
+		getRegSzValue(conf.Software, key, L"EditionID",              &editionId);
+		getRegSzValue(conf.Software, key, L"InstallationType",       &installationType);
+		getRegSzValue(conf.Software, key, L"BuildLabEx",             &buildLabEx);
+		getRegSzValue(conf.Software, key, L"CSDVersion",             &servicePack);
+		getRegSzValue(conf.Software, key, L"RegisteredOwner",        &registeredOwner);
+		getRegSzValue(conf.Software, key, L"RegisteredOrganization", &registeredOrganization);
+		getRegSzValue(conf.Software, key, L"ProductId",              &productId);
+		getRegSzValue(conf.Software, key, L"SystemRoot",             &systemRoot);
 
 		/* DisplayVersion (« 23H2 ») a remplacé ReleaseId (« 2009 », figé) à
 		   partir de la version 20H2 : on prend le premier disponible. */
-		if (getRegSzValue(conf.Software, cle, L"DisplayVersion", &displayVersion) != ERROR_SUCCESS)
-			getRegSzValue(conf.Software, cle, L"ReleaseId", &displayVersion);
+		if (getRegSzValue(conf.Software, key, L"DisplayVersion", &displayVersion) != ERROR_SUCCESS)
+			getRegSzValue(conf.Software, key, L"ReleaseId", &displayVersion);
 
 		/* Numéro de version. CurrentMajorVersionNumber / CurrentMinorVersionNumber
 		   n'existent qu'à partir de Windows 10 ; avant, seule la chaîne
 		   `CurrentVersion` (« 6.1 ») porte l'information. */
 		std::wstring build;
-		getRegSzValue(conf.Software, cle, L"CurrentBuildNumber", &build);
-		if (build.empty()) getRegSzValue(conf.Software, cle, L"CurrentBuild", &build);
+		getRegSzValue(conf.Software, key, L"CurrentBuildNumber", &build);
+		if (build.empty()) getRegSzValue(conf.Software, key, L"CurrentBuild", &build);
 
-		DWORD majeur = 0, mineur = 0;
-		if (getRegDwordValue(conf.Software, cle, L"CurrentMajorVersionNumber", &majeur) == ERROR_SUCCESS) {
-			getRegDwordValue(conf.Software, cle, L"CurrentMinorVersionNumber", &mineur);
-			version = std::to_wstring(majeur) + L"." + std::to_wstring(mineur);
+		DWORD major = 0, minor = 0;
+		if (getRegDwordValue(conf.Software, key, L"CurrentMajorVersionNumber", &major) == ERROR_SUCCESS) {
+			getRegDwordValue(conf.Software, key, L"CurrentMinorVersionNumber", &minor);
+			version = std::to_wstring(major) + L"." + std::to_wstring(minor);
 		}
 		else
-			getRegSzValue(conf.Software, cle, L"CurrentVersion", &version);
+			getRegSzValue(conf.Software, key, L"CurrentVersion", &version);
 		if (!build.empty()) version += (version.empty() ? L"" : L".") + build;
 
 		// UBR = révision mensuelle : distingue deux machines de même build.
 		DWORD ubr = 0;
-		if (getRegDwordValue(conf.Software, cle, L"UBR", &ubr) == ERROR_SUCCESS && !version.empty())
+		if (getRegDwordValue(conf.Software, key, L"UBR", &ubr) == ERROR_SUCCESS && !version.empty())
 			version += L"." + std::to_wstring(ubr);
 
 		/* Correction du libellé de l'OS (cf. en-tête). Windows 11 se déclare
 		   « Windows 10 » dans ProductName ; le build est le seul discriminant. */
 		osName = productNameRaw;
-		const unsigned long numeroBuild = build.empty() ? 0UL : wcstoul(build.c_str(), nullptr, 10);
-		if (numeroBuild >= 22000 && osName.find(L"Windows 10") != std::wstring::npos) {
+		const unsigned long buildNumber = build.empty() ? 0UL : wcstoul(build.c_str(), nullptr, 10);
+		if (buildNumber >= 22000 && osName.find(L"Windows 10") != std::wstring::npos) {
 			osName.replace(osName.find(L"Windows 10"), 10, L"Windows 11");
 			log(2, L"❇️ProductName corrige : build " + build + L" => " + osName);
 		}
@@ -140,16 +140,16 @@ HRESULT SystemInfo::getData() {
 		   depuis Windows 8 et est précise ; `InstallDate` (REG_DWORD, temps Unix
 		   UTC) est le repli pour les systèmes antérieurs. */
 		unsigned long long installTime = 0;
-		if (getRegQwordValue(conf.Software, cle, L"InstallTime", &installTime) == ERROR_SUCCESS
+		if (getRegQwordValue(conf.Software, key, L"InstallTime", &installTime) == ERROR_SUCCESS
 		    && installTime != 0) {
 			installDateUtc.dwLowDateTime  = (DWORD)(installTime & 0xFFFFFFFFULL);
 			installDateUtc.dwHighDateTime = (DWORD)(installTime >> 32);
 		}
 		else {
 			DWORD installDate = 0;
-			if (getRegDwordValue(conf.Software, cle, L"InstallDate", &installDate) == ERROR_SUCCESS
+			if (getRegDwordValue(conf.Software, key, L"InstallDate", &installDate) == ERROR_SUCCESS
 			    && installDate != 0)
-				installDateUtc = unixVersFiletime(installDate);
+				installDateUtc = unixToFiletime(installDate);
 		}
 
 		// Identifiant unique de l'installation : sert a corréler des artefacts
@@ -200,13 +200,13 @@ HRESULT SystemInfo::getData() {
 	log(3, L"🔈GetTickCount64");
 	const ULONGLONG uptimeMs = GetTickCount64();
 	uptimeSeconds = uptimeMs / 1000ULL;
-	FILETIME maintenantUtc = { 0, 0 };
-	SystemTimeToFileTime(&localDateTimeUtc, &maintenantUtc);
-	const ULONGLONG maintenant100ns = ((ULONGLONG)maintenantUtc.dwHighDateTime << 32)
-	                                | maintenantUtc.dwLowDateTime;
+	FILETIME nowUtc = { 0, 0 };
+	SystemTimeToFileTime(&localDateTimeUtc, &nowUtc);
+	const ULONGLONG now100ns = ((ULONGLONG)nowUtc.dwHighDateTime << 32)
+	                                | nowUtc.dwLowDateTime;
 	ULONGLONG boot100ns = 0;
 	{
-		struct HeureDuJour {                     // SYSTEM_TIMEOFDAY_INFORMATION
+		struct TimeOfDay {                     // SYSTEM_TIMEOFDAY_INFORMATION
 			LARGE_INTEGER BootTime, CurrentTime, TimeZoneBias;
 			ULONG TimeZoneId, Reserved;
 			ULONGLONG BootTimeBias, SleepTimeBias;
@@ -214,25 +214,25 @@ HRESULT SystemInfo::getData() {
 		typedef LONG (WINAPI *NtQsiFn)(ULONG, PVOID, ULONG, PULONG);
 		const NtQsiFn ntQsi = reinterpret_cast<NtQsiFn>(
 			GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "NtQuerySystemInformation"));
-		ULONG rendu = 0;
+		ULONG returned = 0;
 		log(3, L"🔈NtQuerySystemInformation SystemTimeOfDayInformation");
-		if (ntQsi && ntQsi(3 /*SystemTimeOfDayInformation*/, &hdj, sizeof(hdj), &rendu) >= 0
+		if (ntQsi && ntQsi(3 /*SystemTimeOfDayInformation*/, &hdj, sizeof(hdj), &returned) >= 0
 		    && hdj.BootTime.QuadPart > (LONGLONG)hdj.BootTimeBias) {
 			boot100ns = (ULONGLONG)hdj.BootTime.QuadPart - hdj.BootTimeBias;
-			correctionHorloge100ns = (long long)hdj.BootTimeBias;
-			bootDuNoyau = true;
+			clockCorrection100ns = (long long)hdj.BootTimeBias;
+			bootFromKernel = true;
 		}
 		else
 			log(2, L"🔥NtQuerySystemInformation : heure de demarrage estimee par GetTickCount64");
 	}
-	if (!bootDuNoyau && maintenant100ns > uptimeMs * 10000ULL)
-		boot100ns = maintenant100ns - uptimeMs * 10000ULL;
+	if (!bootFromKernel && now100ns > uptimeMs * 10000ULL)
+		boot100ns = now100ns - uptimeMs * 10000ULL;
 	if (boot100ns) {
 		FILETIME bootUtc = { (DWORD)(boot100ns & 0xFFFFFFFFULL), (DWORD)(boot100ns >> 32) };
 		FileTimeToSystemTime(&bootUtc, &lastBootUpTimeUtc);
 		bootFraction100ns = (long)(boot100ns % 10000000ULL);
 		FILETIME bootLocal = { 0, 0 };
-		if (utcVersLocalSuspect(bootUtc, &bootLocal))
+		if (utcToSuspectLocal(bootUtc, &bootLocal))
 			FileTimeToSystemTime(&bootLocal, &lastBootUpTime);
 		log(2, L"❇️Last boot (UTC) : " + timeToIso8601(lastBootUpTimeUtc, true, bootFraction100ns));
 	}
@@ -246,55 +246,55 @@ HRESULT SystemInfo::toJson() {
 	log(3, L"🔈system toJson");
 	Json o = Json::obj();
 
-	ajouterSiRenseigne(o, L"ComputerName",    computerName);
-	ajouterSiRenseigne(o, L"NetbiosName",     netbiosName);
-	ajouterSiRenseigne(o, L"DomainName",      domainName);
-	ajouterSiRenseigne(o, L"OsArchitecture",  osArchitecture);
+	addIfSet(o, L"ComputerName",    computerName);
+	addIfSet(o, L"NetbiosName",     netbiosName);
+	addIfSet(o, L"DomainName",      domainName);
+	addIfSet(o, L"OsArchitecture",  osArchitecture);
 
-	ajouterSiRenseigne(o, L"OsName",          osName);
+	addIfSet(o, L"OsName",          osName);
 	/* La valeur brute n'est répétée que lorsqu'elle DIFFÈRE du libellé retenu :
 	   c'est alors la trace de la correction Windows 10 / Windows 11, qui doit
 	   rester vérifiable. Sinon elle ferait doublon. */
 	if (!productNameRaw.empty() && productNameRaw != osName)
 		o.add(L"ProductNameRaw", Json::str(productNameRaw));
-	ajouterSiRenseigne(o, L"Version",                version);
-	ajouterSiRenseigne(o, L"DisplayVersion",         displayVersion);
-	ajouterSiRenseigne(o, L"EditionId",              editionId);
-	ajouterSiRenseigne(o, L"InstallationType",       installationType);
-	ajouterSiRenseigne(o, L"BuildLabEx",             buildLabEx);
-	ajouterSiRenseigne(o, L"ServicePack",            servicePack);
-	ajouterSiRenseigne(o, L"RegisteredOwner",        registeredOwner);
-	ajouterSiRenseigne(o, L"RegisteredOrganization", registeredOrganization);
-	ajouterSiRenseigne(o, L"ProductId",              productId);
-	ajouterSiRenseigne(o, L"SystemRoot",             systemRoot);
-	ajouterSiRenseigne(o, L"MachineGuid",            machineGuid);
+	addIfSet(o, L"Version",                version);
+	addIfSet(o, L"DisplayVersion",         displayVersion);
+	addIfSet(o, L"EditionId",              editionId);
+	addIfSet(o, L"InstallationType",       installationType);
+	addIfSet(o, L"BuildLabEx",             buildLabEx);
+	addIfSet(o, L"ServicePack",            servicePack);
+	addIfSet(o, L"RegisteredOwner",        registeredOwner);
+	addIfSet(o, L"RegisteredOrganization", registeredOrganization);
+	addIfSet(o, L"ProductId",              productId);
+	addIfSet(o, L"SystemRoot",             systemRoot);
+	addIfSet(o, L"MachineGuid",            machineGuid);
 	// installDateUtc est en UTC : la version locale doit etre CONVERTIE, pas
 	// seulement re-etiquetee (defaut detecte par le controle croise du harness).
-	ajouterSiRenseigne(o, L"InstallDate",            utcTimeToIso8601Local(installDateUtc));
-	ajouterSiRenseigne(o, L"InstallDateUtc",         timeToIso8601Utc(installDateUtc));
+	addIfSet(o, L"InstallDate",            utcTimeToIso8601Local(installDateUtc));
+	addIfSet(o, L"InstallDateUtc",         timeToIso8601Utc(installDateUtc));
 
 	o.add(L"LocalDateTime",     Json::str(timeToIso8601(localDateTime, false)));
 	o.add(L"LocalDateTimeUtc",  Json::str(timeToIso8601(localDateTimeUtc, true)));
-	ajouterSiRenseigne(o, L"LastBootUpTime",    timeToIso8601(lastBootUpTime, false, bootFraction100ns));
-	ajouterSiRenseigne(o, L"LastBootUpTimeUtc", timeToIso8601(lastBootUpTimeUtc, true, bootFraction100ns));
+	addIfSet(o, L"LastBootUpTime",    timeToIso8601(lastBootUpTime, false, bootFraction100ns));
+	addIfSet(o, L"LastBootUpTimeUtc", timeToIso8601(lastBootUpTimeUtc, true, bootFraction100ns));
 	o.add(L"UptimeSeconds",     Json::num(uptimeSeconds));
 	// La source accompagne la valeur : une estimation ne doit pas se lire comme
 	// une mesure.
-	o.add(L"BootTimeSource",    Json::str(bootDuNoyau
+	o.add(L"BootTimeSource",    Json::str(bootFromKernel
 		? L"noyau (SystemTimeOfDayInformation : BootTime - BootTimeBias), "
 		  L"heure affichée par l'horloge au démarrage"
 		: L"estimée : heure courante moins GetTickCount64 ; ignore les recalages "
 		  L"d'horloge depuis le démarrage"));
 	/* En millisecondes, signe compris : émis seulement s'il y a eu correction.
 	   Positif : horloge avancée depuis le démarrage. */
-	if (bootDuNoyau && correctionHorloge100ns != 0)
-		o.add(L"ClockAdjustedSinceBootMs", Json::num(correctionHorloge100ns / 10000LL));
+	if (bootFromKernel && clockCorrection100ns != 0)
+		o.add(L"ClockAdjustedSinceBootMs", Json::num(clockCorrection100ns / 10000LL));
 
 	/* Fuseau : celui du SUSPECT quand la ruche a pu être lue. Le champ
 	   TimeZoneSource dit laquelle des deux origines a servi — sans lui, un
 	   décalage inattendu serait indistinguable d'une erreur de lecture. */
 	if (conf.timeZone.valid) {
-		ajouterSiRenseigne(o, L"CurrentTimeZoneId",      conf.timeZone.keyName);
+		addIfSet(o, L"CurrentTimeZoneId",      conf.timeZone.keyName);
 		/* Le libelle saisonnier est stocke comme reference MUI
 		   (« @tzres.dll,-301 ») sur les systemes recents. `CurrentTimeZoneId`
 		   (« Romance Standard Time ») reste l'identifiant canonique et suffit a
@@ -319,12 +319,12 @@ HRESULT SystemInfo::toJson() {
 		TIME_ZONE_INFORMATION tz = { 0 };
 		const DWORD r = GetTimeZoneInformation(&tz);
 		if (r != TIME_ZONE_ID_INVALID) {
-			const bool ete = (r == TIME_ZONE_ID_DAYLIGHT);
+			const bool wasSummer = (r == TIME_ZONE_ID_DAYLIGHT);
 			o.add(L"CurrentTimeZoneCaption",
-			      Json::str(ete ? tz.DaylightName : tz.StandardName));
+			      Json::str(wasSummer ? tz.DaylightName : tz.StandardName));
 			o.add(L"CurrentBias",      Json::num((long long)(tz.Bias
-			                           + (ete ? tz.DaylightBias : tz.StandardBias))));
-			o.add(L"DaylightInEffect", Json::boolean(ete));
+			                           + (wasSummer ? tz.DaylightBias : tz.StandardBias))));
+			o.add(L"DaylightInEffect", Json::boolean(wasSummer));
 		}
 		o.add(L"TimeZoneSource", Json::str(L"machine d'exécution (ruche SYSTEM illisible) "
 		                                   L"— ne vaut que si la collecte est live"));

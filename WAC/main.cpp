@@ -265,15 +265,15 @@ int main(int argc, char* argv[])
 	   la collecte : les binaires sont alors hachés sans être copiés. */
 	{
 		printStep(L" - Checking the collection medium : ");
-		unsigned long long besoin = 250ULL * 1024 * 1024;           // ruches
-		if (conf._events) besoin += 150ULL * 1024 * 1024;           // journaux
-		if (conf.binary)     besoin += 1024ULL * 1024 * 1024;          // binaires cités
-		const HRESULT hrLieu = ConsigneVerifierEmplacement(besoin);
+		unsigned long long need = 250ULL * 1024 * 1024;           // ruches
+		if (conf._events) need += 150ULL * 1024 * 1024;           // journaux
+		if (conf.binary)     need += 1024ULL * 1024 * 1024;          // binaires cités
+		const HRESULT hrLieu = ExhibitStoreCheckLocation(need);
 		auditRecord(L"Verification de l'emplacement de collecte ("
-		            + std::to_wstring(ConsigneEspaceLibre() / 1024 / 1024)
+		            + std::to_wstring(ExhibitStoreFreeSpace() / 1024 / 1024)
 		            + L" Mio libres)",
 		            string_to_wstring(conf._outputDir),
-		            hrLieu, Footprint::ECRITURE_USB);
+		            hrLieu, Footprint::USB_WRITE);
 		if (FAILED(hrLieu)) {
 			printError(hrLieu);
 			return hrLieu;
@@ -307,7 +307,7 @@ int main(int argc, char* argv[])
 
 	printStep(L" - Extraction of PROCESS: ");
 	hresult = processes.getData();
-	auditRecord(L"Collecte PROCESS", L"CreateToolhelp32Snapshot", hresult, Footprint::PROCESSUS);
+	auditRecord(L"Collecte PROCESS", L"CreateToolhelp32Snapshot", hresult, Footprint::PROCESSES);
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
 		hresult = processes.toJson();
@@ -338,8 +338,8 @@ int main(int argc, char* argv[])
 	wprintf(L"%ls\n", L"[RAW EXTRACTION]");
 	SetConsoleTextAttribute(conf.hConsole, 7);
 
-	const wchar_t* etiquetteRuches = L" - Extracting system hives (raw NTFS) : ";
-	printStep(etiquetteRuches);
+	const wchar_t* hiveLabel = L" - Extracting system hives (raw NTFS) : ";
+	printStep(hiveLabel);
 	log(3, L"🔈ExtractSystemHivesRaw");
 	hresult = ExtractSystemHivesRaw();    // S_FALSE = ruches partiellement manquantes (toléré)
 	                                       // (consigne au journal depuis raw_collect)
@@ -356,24 +356,24 @@ int main(int argc, char* argv[])
 	   peuvent pas être extraites. */
 	//variables
 	ORHKEY hKey = NULL;
-	DWORD typeValeur = 0;
-	DWORD taille = 0;
+	DWORD valueType = 0;
+	DWORD size = 0;
 
 	//chargement de la clé HKLM\SYSTEM
 	printStep(L" - loading the HKLM\\SYSTEM key : ");
-	std::wstring rucheSystem = conf.mountpoint + L"\\Windows\\system32\\config\\SYSTEM";
+	std::wstring systemHive = conf.mountpoint + L"\\Windows\\system32\\config\\SYSTEM";
 	/* Une ruche indisponible ne doit PAS interrompre la collecte.
 	   Constaté sur un système réel : SOFTWARE n'avait pas pu être extraite, et le
 	   `return` qui suivait abandonnait tout — y compris les artefacts de SYSTEM,
 	   les fichiers et les journaux, tous collectables. Le principe est de
 	   recueillir tout ce qui est accessible et de consigner ce qui manque. */
 	log(3, L"🔈OROpenHive System");
-	hresult = OROpenHive(rucheSystem.c_str(), &conf.System);
-	const bool systemDisponible = (hresult == ERROR_SUCCESS);
-	if (!systemDisponible) {
+	hresult = OROpenHive(systemHive.c_str(), &conf.System);
+	const bool systemAvailable = (hresult == ERROR_SUCCESS);
+	if (!systemAvailable) {
 		printError(hresult);
 		log(2, L"🔥Ruche SYSTEM indisponible : artefacts correspondants non collectes", hresult);
-		auditRecord(L"Ouverture de la ruche SYSTEM", rucheSystem, hresult, Footprint::RUCHE_COPIE);
+		auditRecord(L"Ouverture de la ruche SYSTEM", systemHive, hresult, Footprint::HIVE_COPY);
 		for (const char* f : { "Usbstor.json", "mounted_device.json", "bams.json",
 		                       "shimcache.json", "services.json" })
 			writeNotCollected(f, L"dépend de la ruche SYSTEM, indisponible", hresult);
@@ -382,14 +382,14 @@ int main(int argc, char* argv[])
 
 	//chargement de la clé HKLM\SOFTWARE
 	printStep(L" - loading the HKLM\\SOFTWARE key : ");
-	std::wstring rucheSoftware = conf.mountpoint + L"\\Windows\\system32\\config\\SOFTWARE";
+	std::wstring softwareHive = conf.mountpoint + L"\\Windows\\system32\\config\\SOFTWARE";
 	log(3, L"🔈OROpenHive Software");
-	hresult = OROpenHive(rucheSoftware.c_str(), &conf.Software);
-	const bool softwareDisponible = (hresult == ERROR_SUCCESS);
-	if (!softwareDisponible) {
+	hresult = OROpenHive(softwareHive.c_str(), &conf.Software);
+	const bool softwareAvailable = (hresult == ERROR_SUCCESS);
+	if (!softwareAvailable) {
 		printError(hresult);
 		log(2, L"🔥Ruche SOFTWARE indisponible : artefacts correspondants non collectes", hresult);
-		auditRecord(L"Ouverture de la ruche SOFTWARE", rucheSoftware, hresult, Footprint::RUCHE_COPIE);
+		auditRecord(L"Ouverture de la ruche SOFTWARE", softwareHive, hresult, Footprint::HIVE_COPY);
 		writeNotCollected("run.json", L"dépend de la ruche SOFTWARE, indisponible", hresult);
 	}
 	else printSuccess();
@@ -402,7 +402,7 @@ int main(int argc, char* argv[])
 	hresult = loadProfileList();
 	auditRecord(L"Releve des profils utilisateurs",
 	            L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList (ruche copiee, offreg)",
-	            hresult, Footprint::RUCHE_COPIE);
+	            hresult, Footprint::HIVE_COPY);
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else printSuccess();
 
@@ -415,8 +415,8 @@ int main(int argc, char* argv[])
 	// Prefetch, jumplists et documents récents : sans cette extraction, leurs
 	// collecteurs ne trouvent aucun fichier et rendent un artefact vide, ce qui
 	// se lit à tort comme une absence de trace.
-	const wchar_t* etiquetteFichiers = L" - Extracting file artefacts (raw NTFS) : ";
-	printStep(etiquetteFichiers);
+	const wchar_t* fileLabel = L" - Extracting file artefacts (raw NTFS) : ";
+	printStep(fileLabel);
 	log(3, L"🔈ExtractFileArtefactsRaw");
 	hresult = ExtractFileArtefactsRaw();  // S_FALSE = certains fichiers illisibles (toléré)
 	                                       // (consigne par repertoire depuis raw_collect)
@@ -438,13 +438,13 @@ int main(int argc, char* argv[])
 	// extraites sur le support de collecte, jamais sur le registre de la cible.
 	// Elles ne laissent donc aucune trace a distinguer dans les artefacts.
 	auditRecord(L"Lecture des artefacts du registre (ruches copiees, offreg)",
-	            conf.mountpoint, ERROR_SUCCESS, Footprint::RUCHE_COPIE);
+	            conf.mountpoint, ERROR_SUCCESS, Footprint::HIVE_COPY);
 
 	/* Phase registre encadrée par un bloc à sortie unique : un échec en sort par
 	   `break` au lieu d'abandonner la collecte. Les artefacts sur fichiers et les
 	   journaux, qui ne dépendent pas de ces ruches, restent collectés. */
 	do {
-	if (!systemDisponible) break;   // sans SYSTEM, la phase registre est vide de sens
+	if (!systemAvailable) break;   // sans SYSTEM, la phase registre est vide de sens
 
 	//recherche de la bonne sous-clé ControlSet correspondant à CurrentControlSet
 	printStep(L" - Searching for the CurrentControlSet subkey : ");
@@ -454,7 +454,7 @@ int main(int argc, char* argv[])
 		printError(hresult);
 		break;
 	}
-	hresult = ORGetValue(hKey, nullptr, L"Current", &typeValeur, nullptr, &taille);
+	hresult = ORGetValue(hKey, nullptr, L"Current", &valueType, nullptr, &size);
 	if (hresult != ERROR_SUCCESS)
 	{
 		printError(hresult);
@@ -464,7 +464,7 @@ int main(int argc, char* argv[])
 	DWORD current = 0;
 
 	log(3, L"🔈ORGetValue System/Select/Current");
-	hresult = ORGetValue(hKey, nullptr, L"Current", &typeValeur, &current, &taille);
+	hresult = ORGetValue(hKey, nullptr, L"Current", &valueType, &current, &size);
 	if (hresult != ERROR_SUCCESS)
 	{
 		printError(hresult);
@@ -473,18 +473,18 @@ int main(int argc, char* argv[])
 	else {
 
 		//le numéro de la clé ControlSet est sur 3 digit de la forme 001
-		std::wstring controleSet;
+		std::wstring controlSet;
 		if ((int)(current) < 10) {
-			controleSet = L"00" + std::to_wstring(current);
+			controlSet = L"00" + std::to_wstring(current);
 		}
 		else if ((int)(current) < 100) {
-			controleSet = L"0" + std::to_wstring(current);
+			controlSet = L"0" + std::to_wstring(current);
 		}
 		else {
-			controleSet = std::to_wstring(current);
+			controlSet = std::to_wstring(current);
 		}
 		//nom complet de la clé controlSet qui nous intéresse
-		std::wstring subkey = L"ControlSet" + controleSet;
+		std::wstring subkey = L"ControlSet" + controlSet;
 		printSuccess();
 
 		//ouverture de la clé HKLM\\SYSTEM\\CurrentControlSet
@@ -515,7 +515,7 @@ int main(int argc, char* argv[])
 			else printSuccess();
 			auditRecord(L"Relevé du fuseau horaire du suspect",
 			            L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
-			            hresult, Footprint::RUCHE_COPIE);
+			            hresult, Footprint::HIVE_COPY);
 
 			printStep(L" - Extracting USBSTOR Registry Keys : ");
 			hresult = usbs.getData();
@@ -659,7 +659,7 @@ int main(int argc, char* argv[])
 	hresult = systemInfo.getData();
 	auditRecord(L"Collecte SYSTEM INFORMATION",
 	            L"ruches SYSTEM et SOFTWARE extraites + heure système",
-	            hresult, Footprint::RUCHE_COPIE);
+	            hresult, Footprint::HIVE_COPY);
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
 		hresult = systemInfo.toJson();
@@ -688,7 +688,7 @@ int main(int argc, char* argv[])
 	   ruches SYSTEM et SOFTWARE : il ouvre la sienne. */
 	printStep(L" - Extraction of USERS: ");
 	hresult = users.getData();
-	auditRecord(L"Collecte USERS", L"ruche SAM extraite", hresult, Footprint::RUCHE_COPIE);
+	auditRecord(L"Collecte USERS", L"ruche SAM extraite", hresult, Footprint::HIVE_COPY);
 	if (hresult != ERROR_SUCCESS) {
 		printError(hresult);
 		writeNotCollected("users.json", L"dépend de la ruche SAM, indisponible", hresult);
@@ -710,7 +710,7 @@ int main(int argc, char* argv[])
 	// Comme pour le registre : lecture des COPIES extraites, pas des fichiers de
 	// la cible — donc aucun horodatage d'acces modifie sur le systeme examine.
 	auditRecord(L"Lecture des artefacts sur fichiers (copies extraites)",
-	            conf.mountpoint, ERROR_SUCCESS, Footprint::RUCHE_COPIE);
+	            conf.mountpoint, ERROR_SUCCESS, Footprint::HIVE_COPY);
 	/* Tâches planifiées : lues depuis les XML extraits en brut et le TaskCache
 	   du registre. Déplacé de la phase « WINDOWS API » à ici, car la collecte
 	   dépend désormais de l'extraction brute — plus du service Schedule. */
@@ -718,7 +718,7 @@ int main(int argc, char* argv[])
 	hresult = scheduledTasks.getData();
 	auditRecord(L"Collecte SCHEDULED TASKS",
 	            L"\\Windows\\System32\\Tasks (XML) + SOFTWARE\\...\\TaskCache",
-	            hresult, Footprint::RUCHE_COPIE);
+	            hresult, Footprint::HIVE_COPY);
 	if (hresult != ERROR_SUCCESS) {
 		printError(hresult);
 		writeNotCollected("ScheduledTasks.json",
@@ -783,11 +783,11 @@ int main(int argc, char* argv[])
 		/* La source n'est plus le service EventLog mais les fichiers .evtx
 		   extraits par lecture brute : la consignation doit dire lesquels, sans
 		   quoi le rapport laisse croire que l'API a encore ete sollicitee. */
-		auditRecord(L"Collecte EVENT LOGS (" + std::to_wstring(events.lus)
-		            + L" evenement(s) dans " + std::to_wstring(events.fichiers)
+		auditRecord(L"Collecte EVENT LOGS (" + std::to_wstring(events.read)
+		            + L" evenement(s) dans " + std::to_wstring(events.files)
 		            + L" journal/journaux)",
 		            L"\\Windows\\System32\\winevt\\Logs\\*.evtx (copies extraites)",
-		            hresult, Footprint::FICHIER_COPIE);
+		            hresult, Footprint::FILE_COPY);
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else {
 			hresult = events.toJson();
@@ -819,48 +819,48 @@ int main(int argc, char* argv[])
 	   ouverts pour les lire sont fermés, et les pièces prélevées recopiées vers le
 	   travail — comme toute pièce, même non modifiée : c'est la procédure. */
 	if (conf.binary) {
-		BinairesTerminer();
-		const BilanBinaires b = BinairesBilan();
-		std::wstring bilan = std::to_wstring(b.fichiers) + L" cite(s), " + std::to_wstring(b.lus)
-		                   + L" lu(s), " + std::to_wstring(b.authentifies) + L" authentifie(s) Microsoft et "
-		                   L"non preleve(s) (" + std::to_wstring(b.octetsAuthentifies / 1024 / 1024)
-		                   + L" Mio evites), " + std::to_wstring(b.preleves) + L" preleve(s) ("
-		                   + std::to_wstring(b.octetsPreleves / 1024 / 1024) + L" Mio)";
-		if (b.doublons) bilan += L", " + std::to_wstring(b.doublons) + L" doublon(s) de contenu non recopie(s)";
-		if (b.sansPlace) bilan += L", " + std::to_wstring(b.sansPlace) + L" hache(s) sans copie faute de place";
-		bilan += L" ; catalogues de signatures : " + std::to_wstring(b.cataloguesLus) + L" lus en memoire, "
-		       + std::to_wstring(b.cataloguesUtilises) + L" consigne(s)";
-		auditRecord(L"Empreintes des fichiers cites par les artefacts (" + bilan + L")",
+		BinariesFinish();
+		const BinarySummary b = BinariesSummary();
+		std::wstring summary = std::to_wstring(b.files) + L" cite(s), " + std::to_wstring(b.read)
+		                   + L" lu(s), " + std::to_wstring(b.authenticated) + L" authentifie(s) Microsoft et "
+		                   L"non preleve(s) (" + std::to_wstring(b.authenticatedBytes / 1024 / 1024)
+		                   + L" Mio evites), " + std::to_wstring(b.collectedCount) + L" preleve(s) ("
+		                   + std::to_wstring(b.collectedBytes / 1024 / 1024) + L" Mio)";
+		if (b.duplicates) summary += L", " + std::to_wstring(b.duplicates) + L" doublon(s) de contenu non recopie(s)";
+		if (b.sansPlace) summary += L", " + std::to_wstring(b.sansPlace) + L" hache(s) sans copie faute de place";
+		summary += L" ; catalogues de signatures : " + std::to_wstring(b.catalogsRead) + L" lus en memoire, "
+		       + std::to_wstring(b.catalogsUsed) + L" consigne(s)";
+		auditRecord(L"Empreintes des fichiers cites par les artefacts (" + summary + L")",
 		            L"lecture brute NTFS ; authenticite verifiee en memoire (catalogues Windows, "
 		            L"signatures integrees), sans API ni service ; binaires non authentifies "
-		            L"copies dans " + dossierConsigne(),
+		            L"copies dans " + exhibitStoreFolder(),
 		            ERROR_SUCCESS, Footprint::VOLUME_BRUT);
 		printStep(L" - Copying collected binaries to the working directory : ");
 		size_t copies = 0;
-		unsigned long long octetsCopies = 0;
-		const HRESULT hrCopie = ConsigneVersTravail(&copies, &octetsCopies);
+		unsigned long long copiedBytes = 0;
+		const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &copiedBytes);
 		auditRecord(L"Copie de la consigne vers le repertoire de travail ("
 		            + std::to_wstring(copies) + L" fichier(s), "
-		            + std::to_wstring(octetsCopies / 1024 / 1024) + L" Mio)",
-		            dossierConsigne() + L" -> " + dossierTravail(),
-		            hrCopie, Footprint::ECRITURE_USB);
-		if (FAILED(hrCopie)) printError(hrCopie);
+		            + std::to_wstring(copiedBytes / 1024 / 1024) + L" Mio)",
+		            exhibitStoreFolder() + L" -> " + workingFolder(),
+		            hrCopy, Footprint::USB_WRITE);
+		if (FAILED(hrCopy)) printError(hrCopy);
 		else printSuccess();
 	}
 
 	printStep(L" - Sealing the exhibit store (manifest + SHA-256) : ");
 	log(3, L"🔈ConsigneEcrireManifeste");
 	{
-		size_t pieces = 0, echecs = 0;
-		unsigned long long octets = 0;
-		ConsigneBilan(&pieces, &echecs, &octets);
-		const HRESULT hrManifeste = ConsigneEcrireManifeste();
-		auditRecord(L"Scellement de la consigne (" + std::to_wstring(pieces)
-		            + L" piece(s), " + std::to_wstring(echecs) + L" echec(s), "
-		            + std::to_wstring(octets / 1024 / 1024) + L" Mio)",
-		            dossierConsigne() + L"\\MANIFESTE.json (+ .sha256)",
-		            hrManifeste, Footprint::ECRITURE_USB);
-		if (FAILED(hrManifeste)) printError(hrManifeste);
+		size_t exhibits = 0, failures = 0;
+		unsigned long long bytes = 0;
+		ExhibitStoreSummary(&exhibits, &failures, &bytes);
+		const HRESULT hrManifest = ExhibitStoreWriteManifest();
+		auditRecord(L"Scellement de la consigne (" + std::to_wstring(exhibits)
+		            + L" piece(s), " + std::to_wstring(failures) + L" echec(s), "
+		            + std::to_wstring(bytes / 1024 / 1024) + L" Mio)",
+		            exhibitStoreFolder() + L"\\MANIFESTE.json (+ .sha256)",
+		            hrManifest, Footprint::USB_WRITE);
+		if (FAILED(hrManifest)) printError(hrManifest);
 		else printSuccess();
 	}
 
@@ -876,7 +876,7 @@ int main(int argc, char* argv[])
 	   Consignee AVANT auditWrite(), sans quoi elle manquerait au journal. */
 	auditRecord(L"Ecriture des resultats de collecte",
 	            string_to_wstring(conf._outputDir), ERROR_SUCCESS,
-	            Footprint::ECRITURE_USB);
+	            Footprint::USB_WRITE);
 
 	printStep(L" - Writing investigation.json : ");
 	log(3, L"🔈auditWrite");

@@ -8,20 +8,20 @@
 namespace {
 
 //! Profondeur maximale : garde-fou contre un document forgé à imbrication extrême.
-constexpr unsigned PROFONDEUR_MAX = 64;
+constexpr unsigned MAX_DEPTH = 64;
 
 //! Retire les espaces, tabulations et retours de ligne aux deux bords.
-std::wstring elaguer(const std::wstring& s) {
-	const wchar_t* blancs = L" \t\r\n";
-	const size_t debut = s.find_first_not_of(blancs);
-	if (debut == std::wstring::npos) return std::wstring();
-	const size_t fin = s.find_last_not_of(blancs);
-	return s.substr(debut, fin - debut + 1);
+std::wstring trim(const std::wstring& s) {
+	const wchar_t* blanks = L" \t\r\n";
+	const size_t start = s.find_first_not_of(blanks);
+	if (start == std::wstring::npos) return std::wstring();
+	const size_t end = s.find_last_not_of(blanks);
+	return s.substr(start, end - start + 1);
 }
 
 //! Remplace les cinq entités prédéfinies. Les autres sont laissées telles quelles :
 //! mieux vaut un texte fidèle qu'une substitution devinée.
-std::wstring decoderEntites(const std::wstring& s) {
+std::wstring decodeEntities(const std::wstring& s) {
 	if (s.find(L'&') == std::wstring::npos) return s;   // cas courant : rien à faire
 	std::wstring r;
 	r.reserve(s.size());
@@ -51,58 +51,58 @@ std::wstring decoderEntites(const std::wstring& s) {
 }
 
 //! Retire le préfixe de namespace : le schéma des tâches n'en a qu'un, implicite.
-std::wstring sansPrefixe(const std::wstring& nom) {
-	const size_t d = nom.find(L':');
-	return (d == std::wstring::npos) ? nom : nom.substr(d + 1);
+std::wstring withoutPrefix(const std::wstring& name) {
+	const size_t d = name.find(L':');
+	return (d == std::wstring::npos) ? name : name.substr(d + 1);
 }
 
 /*! Analyse un élément à partir de `pos`, positionné juste après son '<'.
  *  Rend nullptr en cas de document mal formé. */
-std::unique_ptr<XmlNode> lireElement(const std::wstring& s, size_t& pos, unsigned profondeur) {
-	if (profondeur > PROFONDEUR_MAX) return nullptr;
+std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigned depth) {
+	if (depth > MAX_DEPTH) return nullptr;
 
 	// --- nom de la balise
-	const size_t debutNom = pos;
+	const size_t nameStart = pos;
 	while (pos < s.size() && !iswspace(s[pos]) && s[pos] != L'>' && s[pos] != L'/') ++pos;
 	if (pos >= s.size()) return nullptr;
-	auto noeud = std::make_unique<XmlNode>();
-	noeud->nom = sansPrefixe(s.substr(debutNom, pos - debutNom));
-	if (noeud->nom.empty()) return nullptr;
+	auto node = std::make_unique<XmlNode>();
+	node->name = withoutPrefix(s.substr(nameStart, pos - nameStart));
+	if (node->name.empty()) return nullptr;
 
 	// --- attributs, jusqu'à '>' ou '/>'
-	bool vide = false;
+	bool empty = false;
 	while (pos < s.size()) {
 		while (pos < s.size() && iswspace(s[pos])) ++pos;
 		if (pos >= s.size()) return nullptr;
-		if (s[pos] == L'/') { vide = true; ++pos; continue; }
+		if (s[pos] == L'/') { empty = true; ++pos; continue; }
 		if (s[pos] == L'>') { ++pos; break; }
 
 		const size_t dn = pos;
 		while (pos < s.size() && s[pos] != L'=' && !iswspace(s[pos])
 		       && s[pos] != L'>' && s[pos] != L'/') ++pos;
-		const std::wstring nomAttr = sansPrefixe(s.substr(dn, pos - dn));
+		const std::wstring attrName = withoutPrefix(s.substr(dn, pos - dn));
 		while (pos < s.size() && iswspace(s[pos])) ++pos;
-		std::wstring valeur;
+		std::wstring value;
 		if (pos < s.size() && s[pos] == L'=') {
 			++pos;
 			while (pos < s.size() && iswspace(s[pos])) ++pos;
 			if (pos < s.size() && (s[pos] == L'"' || s[pos] == L'\'')) {
-				const wchar_t guillemet = s[pos++];
+				const wchar_t quote = s[pos++];
 				const size_t dv = pos;
-				while (pos < s.size() && s[pos] != guillemet) ++pos;
+				while (pos < s.size() && s[pos] != quote) ++pos;
 				if (pos >= s.size()) return nullptr;      // guillemet non fermé
-				valeur = decoderEntites(s.substr(dv, pos - dv));
+				value = decodeEntities(s.substr(dv, pos - dv));
 				++pos;
 			}
 		}
-		if (!nomAttr.empty()) noeud->attributs.emplace_back(nomAttr, valeur);
+		if (!attrName.empty()) node->attributes.emplace_back(attrName, value);
 	}
-	if (vide) return noeud;                                // <balise ... />
+	if (empty) return node;                                // <balise ... />
 
 	// --- contenu : texte et enfants, jusqu'à la balise fermante
-	std::wstring texte;
+	std::wstring text;
 	while (pos < s.size()) {
-		if (s[pos] != L'<') { texte += s[pos++]; continue; }
+		if (s[pos] != L'<') { text += s[pos++]; continue; }
 
 		// commentaire, CDATA ou instruction : sautés (le CDATA garde son texte)
 		if (s.compare(pos, 4, L"<!--") == 0) {
@@ -114,7 +114,7 @@ std::unique_ptr<XmlNode> lireElement(const std::wstring& s, size_t& pos, unsigne
 		if (s.compare(pos, 9, L"<![CDATA[") == 0) {
 			const size_t f = s.find(L"]]>", pos);
 			if (f == std::wstring::npos) return nullptr;
-			texte += s.substr(pos + 9, f - pos - 9);
+			text += s.substr(pos + 9, f - pos - 9);
 			pos = f + 3;
 			continue;
 		}
@@ -128,107 +128,107 @@ std::unique_ptr<XmlNode> lireElement(const std::wstring& s, size_t& pos, unsigne
 			const size_t f = s.find(L'>', pos);
 			if (f == std::wstring::npos) return nullptr;
 			pos = f + 1;
-			noeud->texte = decoderEntites(elaguer(texte));
-			return noeud;
+			node->text = decodeEntities(trim(text));
+			return node;
 		}
 		++pos;                                              // passe le '<'
-		auto enfant = lireElement(s, pos, profondeur + 1);
-		if (!enfant) return nullptr;
-		noeud->enfants.push_back(std::move(enfant));
+		auto child = readElement(s, pos, depth + 1);
+		if (!child) return nullptr;
+		node->children.push_back(std::move(child));
 	}
 	return nullptr;                                         // balise jamais fermée
 }
 
 } // namespace
 
-const XmlNode* XmlNode::enfant(const std::wstring& nomEnfant) const {
-	for (const std::unique_ptr<XmlNode>& e : enfants)
-		if (e->nom == nomEnfant) return e.get();
+const XmlNode* XmlNode::child(const std::wstring& childName) const {
+	for (const std::unique_ptr<XmlNode>& e : children)
+		if (e->name == childName) return e.get();
 	return nullptr;
 }
 
-std::wstring XmlNode::texteDe(const std::wstring& chemin) const {
-	const XmlNode* courant = this;
-	size_t debut = 0;
-	while (courant && debut <= chemin.size()) {
-		const size_t sep = chemin.find(L'/', debut);
-		const std::wstring segment = chemin.substr(debut, sep == std::wstring::npos
-		                                                  ? std::wstring::npos : sep - debut);
+std::wstring XmlNode::textOf(const std::wstring& path) const {
+	const XmlNode* current = this;
+	size_t start = 0;
+	while (current && start <= path.size()) {
+		const size_t sep = path.find(L'/', start);
+		const std::wstring segment = path.substr(start, sep == std::wstring::npos
+		                                                  ? std::wstring::npos : sep - start);
 		if (segment.empty()) break;
-		courant = courant->enfant(segment);
+		current = current->child(segment);
 		if (sep == std::wstring::npos) break;
-		debut = sep + 1;
+		start = sep + 1;
 	}
-	return courant ? courant->texte : std::wstring();
+	return current ? current->text : std::wstring();
 }
 
-std::wstring XmlNode::attribut(const std::wstring& nomAttribut) const {
-	for (const std::pair<std::wstring, std::wstring>& a : attributs)
-		if (a.first == nomAttribut) return a.second;
+std::wstring XmlNode::attribute(const std::wstring& attributeName) const {
+	for (const std::pair<std::wstring, std::wstring>& a : attributes)
+		if (a.first == attributeName) return a.second;
 	return std::wstring();
 }
 
-std::vector<const XmlNode*> XmlNode::descendants(const std::wstring& nomRecherche) const {
-	std::vector<const XmlNode*> trouves;
+std::vector<const XmlNode*> XmlNode::descendants(const std::wstring& wantedName) const {
+	std::vector<const XmlNode*> found;
 	// Parcours itératif : une arborescence forgée pourrait être très profonde.
 	std::vector<const XmlNode*> pile{ this };
 	while (!pile.empty()) {
 		const XmlNode* n = pile.back();
 		pile.pop_back();
-		for (const std::unique_ptr<XmlNode>& e : n->enfants) {
-			if (e->nom == nomRecherche) trouves.push_back(e.get());
+		for (const std::unique_ptr<XmlNode>& e : n->children) {
+			if (e->name == wantedName) found.push_back(e.get());
 			pile.push_back(e.get());
 		}
 	}
-	return trouves;
+	return found;
 }
 
-std::unique_ptr<XmlNode> xmlAnalyser(const std::wstring& contenu) {
+std::unique_ptr<XmlNode> xmlParse(const std::wstring& content) {
 	size_t pos = 0;
-	while (pos < contenu.size()) {
-		if (contenu[pos] != L'<') { ++pos; continue; }
+	while (pos < content.size()) {
+		if (content[pos] != L'<') { ++pos; continue; }
 		// saute prologue, commentaires et doctype pour atteindre l'élément racine
-		if (contenu.compare(pos, 4, L"<!--") == 0) {
-			const size_t f = contenu.find(L"-->", pos);
+		if (content.compare(pos, 4, L"<!--") == 0) {
+			const size_t f = content.find(L"-->", pos);
 			if (f == std::wstring::npos) return nullptr;
 			pos = f + 3;
 			continue;
 		}
-		if (pos + 1 < contenu.size() && (contenu[pos + 1] == L'?' || contenu[pos + 1] == L'!')) {
-			const size_t f = contenu.find(L'>', pos);
+		if (pos + 1 < content.size() && (content[pos + 1] == L'?' || content[pos + 1] == L'!')) {
+			const size_t f = content.find(L'>', pos);
 			if (f == std::wstring::npos) return nullptr;
 			pos = f + 1;
 			continue;
 		}
 		++pos;
-		return lireElement(contenu, pos, 0);
+		return readElement(content, pos, 0);
 	}
 	return nullptr;
 }
 
-std::unique_ptr<XmlNode> xmlLireFichier(const std::wstring& chemin) {
-	std::ifstream f(std::filesystem::path(chemin), std::ios::binary);
+std::unique_ptr<XmlNode> xmlReadFile(const std::wstring& path) {
+	std::ifstream f(std::filesystem::path(path), std::ios::binary);
 	if (!f) return nullptr;
-	const std::string octets((std::istreambuf_iterator<char>(f)),
+	const std::string bytes((std::istreambuf_iterator<char>(f)),
 	                          std::istreambuf_iterator<char>());
-	if (octets.empty()) return nullptr;
+	if (bytes.empty()) return nullptr;
 
 	// UTF-16LE avec BOM : format écrit par le planificateur de tâches.
-	if (octets.size() >= 2 && (unsigned char)octets[0] == 0xFF
-	                       && (unsigned char)octets[1] == 0xFE) {
-		std::wstring w(reinterpret_cast<const wchar_t*>(octets.data() + 2),
-		               (octets.size() - 2) / sizeof(wchar_t));
-		return xmlAnalyser(w);
+	if (bytes.size() >= 2 && (unsigned char)bytes[0] == 0xFF
+	                       && (unsigned char)bytes[1] == 0xFE) {
+		std::wstring w(reinterpret_cast<const wchar_t*>(bytes.data() + 2),
+		               (bytes.size() - 2) / sizeof(wchar_t));
+		return xmlParse(w);
 	}
 	// Sinon UTF-8, avec ou sans BOM.
-	const int decalage = (octets.size() >= 3 && (unsigned char)octets[0] == 0xEF
-	                      && (unsigned char)octets[1] == 0xBB
-	                      && (unsigned char)octets[2] == 0xBF) ? 3 : 0;
-	const int taille = MultiByteToWideChar(CP_UTF8, 0, octets.data() + decalage,
-	                                       (int)octets.size() - decalage, nullptr, 0);
-	if (taille <= 0) return nullptr;
-	std::wstring w((size_t)taille, L'\0');
-	MultiByteToWideChar(CP_UTF8, 0, octets.data() + decalage,
-	                    (int)octets.size() - decalage, &w[0], taille);
-	return xmlAnalyser(w);
+	const int offset = (bytes.size() >= 3 && (unsigned char)bytes[0] == 0xEF
+	                      && (unsigned char)bytes[1] == 0xBB
+	                      && (unsigned char)bytes[2] == 0xBF) ? 3 : 0;
+	const int size = MultiByteToWideChar(CP_UTF8, 0, bytes.data() + offset,
+	                                       (int)bytes.size() - offset, nullptr, 0);
+	if (size <= 0) return nullptr;
+	std::wstring w((size_t)size, L'\0');
+	MultiByteToWideChar(CP_UTF8, 0, bytes.data() + offset,
+	                    (int)bytes.size() - offset, &w[0], size);
+	return xmlParse(w);
 }

@@ -69,11 +69,11 @@ HRESULT MountedDevices::getData() {
 
 	for (int i = 0; i < (int)nValues; i++) {
 		printProgressStep(L"MountedDevice", (unsigned)i + 1, nValues);
-		DWORD tailleTampon = MAX_VALUE_NAME;
+		DWORD bufferSize = MAX_VALUE_NAME;
 		DWORD cData = MAX_DATA;
 		WCHAR  szSubValue[MAX_VALUE_NAME];
 		log(3, L"🔈OREnumValue System\\MountedDevices Value " + std::to_wstring(i));
-		hresult = OREnumValue(hKey, i, szSubValue, &tailleTampon, NULL, NULL, &cData);
+		hresult = OREnumValue(hKey, i, szSubValue, &bufferSize, NULL, NULL, &cData);
 		if (hresult != ERROR_SUCCESS) {
 			log(2, L"🔥OREnumValue System\\MountedDevices Value " + std::to_wstring(i), hresult);
 			continue;

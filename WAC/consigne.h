@@ -1,6 +1,5 @@
-#pragma once
-
-/*  consigne.h — EXHIBIT STORE AND WORKING DIRECTORY.
+/*! \file
+ *  \brief EXHIBIT STORE AND WORKING DIRECTORY.
  *
  *  THE PRINCIPLE, WHICH IS A PROCEDURE AND NOT A CONVENIENCE. A digital exhibit
  *  is never analysed on itself. A copy is taken and sealed, and all the work is
@@ -11,10 +10,10 @@
  *
  *  Hence two directories on the collection medium:
  *
- *      <output>\consigne\   raw copies, as read from the volume.
+ *      <output>\exhibitStore\   raw copies, as read from the volume.
  *                           NEVER reopened for writing after extraction.
  *                           Holds the manifest that identifies them.
- *      <output>\travail\    working copies. That is where hives are replayed
+ *      <output>\working\    working copies. That is where hives are replayed
  *                           and undo journals written, and what every
  *                           collector reads.
  *
@@ -23,8 +22,8 @@
  *  modifies would make the procedure depend on what the tool believes it does,
  *  which is precisely what must be checkable from outside.
  *
- *  THE MANIFEST. `consigne\MANIFESTE.json` identifies each exhibit and the
- *  collection. It is sealed by `consigne\MANIFESTE.sha256`, which carries its
+ *  THE MANIFEST. `exhibitStore\MANIFESTE.json` identifies each exhibit and the
+ *  collection. It is sealed by `exhibitStore\MANIFESTE.sha256`, which carries its
  *  fingerprint: a manifest cannot hash itself, and without that second file, a
  *  retouched manifest would go undetected.
  *
@@ -52,31 +51,32 @@
  *    for the collection
  *      - the tool, its version, the command line;
  *      - the operator: name, SID, elevation;
- *      - the examined machine: name, system drive, OS version, time zone, and
- *        the difference with the collecting machine's time zone;
+ *      - the examined machine: name, system drive, OS version, time area, and
+ *        the difference with the collecting machine's time area;
  *      - the volumes read: letter, serial number, file system;
  *      - the start and end of the extraction;
  *      - the counts, and the explicit statement that nothing was written to
  *        the examined system.
  */
+#pragma once
 
 #include <windows.h>
 #include <string>
 #include <vector>
 #include "raw_hive.h"
 
-/*! Root of the exhibit store: `<output>\consigne`. */
-std::wstring dossierConsigne();
+/*! Root of the exhibit store: `<output>\exhibitStore`. */
+std::wstring exhibitStoreFolder();
 
-/*! Root of the working directory: `<output>\travail`.
+/*! Root of the working directory: `<output>\working`.
  *  It is the value of `conf.mountpoint`: the collectors read from here. */
-std::wstring dossierTravail();
+std::wstring workingFolder();
 
 /*! Checks that the collection location is usable, BEFORE any extraction.
 *
 *  Two refusals, both better than a collection that goes wrong midway:
 *
-*  - A WORKING DIRECTORY ALREADY POPULATED. `ConsigneVersTravail` does not
+*  - A WORKING DIRECTORY ALREADY POPULATED. `ExhibitStoreToWorking` does not
 *    overwrite an existing working copy — it cannot, without undoing the
 *    previous phase's replay. On a reused output folder, the analysis would
 *    therefore bear on the files of an EARLIER collection, silently and with
@@ -87,36 +87,36 @@ std::wstring dossierTravail();
 *    full medium gives a copy that the fingerprint check will flag — but after
 *    spending the extraction time. Better to say so beforehand.
 *
-*  @param besoinEstime bytes expected for the exhibit store ALONE; the function
+*  @param estimatedNeed bytes expected for the exhibit store ALONE; the function
 *         asks for twice that, the working copy coming on top
 *  @return ERROR_SUCCESS, or an error code with the reason logged
 */
-HRESULT ConsigneVerifierEmplacement(unsigned long long besoinEstime);
+HRESULT ExhibitStoreCheckLocation(unsigned long long estimatedNeed);
 
 /*! Free bytes on the volume holding the output folder.
 *  @return 0 if the information could not be obtained */
-unsigned long long ConsigneEspaceLibre();
+unsigned long long ExhibitStoreFreeSpace();
 
 /*! Records an extraction result in the exhibit store manifest.
  *
  *  To be called as extractions go, with the record returned by the `raw_hive`
- *  functions. Nothing is written to disk before `ConsigneEcrireManifeste`.
+ *  functions. Nothing is written to disk before `ExhibitStoreWriteManifest`.
  *
- *  @param releve extracted exhibits (or whose extraction failed)
- *  @param methode collection method, as it will be recorded
- *         (e.g. L"Lecture brute NTFS via \\\\.\\C: ($MFT, attribut $DATA)")
+ *  @param reading extracted exhibits (or whose extraction failed)
+ *  @param method collection method, as it will be recorded
+ *         (e.g. L"Lecture brute NTFS via \\\\.\\C: ($MFT, attribute $DATA)")
  */
-void ConsigneAjouter(const std::vector<RawHiveExtrait>& releve,
-                     const std::wstring& methode);
+void ExhibitStoreAdd(const std::vector<RawHiveExtraction>& reading,
+                     const std::wstring& method);
 
 /*! Records an exhibit whose CONTENT is already stored under another one.
  *
- *  `e.cheminSortie` points to the existing exhibit; the file is not copied
+ *  `e.outputPath` points to the existing exhibit; the file is not copied
  *  again. The manifest declares it (`SharedExhibit`) and does not count its
  *  bytes twice. Used to deduplicate cited binaries (see binaires.h): three
  *  identical 332 MB copies of msedge.dll took 996 MB.
  */
-void ConsigneAjouterDoublon(const RawHiveExtrait& e, const std::wstring& methode);
+void ExhibitStoreAddDuplicate(const RawHiveExtraction& e, const std::wstring& method);
 
 /*! Copies the exhibit store to the working directory, verifying the copy.
  *
@@ -127,13 +127,13 @@ void ConsigneAjouterDoublon(const RawHiveExtrait& e, const std::wstring& methode
  *  the exhibit.
  *
  *  @param copies (optional) receives the number of files copied
- *  @param octets (optional) receives the volume copied
+ *  @param bytes (optional) receives the volume copied
  *  @return ERROR_SUCCESS, S_FALSE if at least one file could not be copied or
  *          verified, or an error code if the exhibit store is missing
  */
-HRESULT ConsigneVersTravail(size_t* copies = nullptr, unsigned long long* octets = nullptr);
+HRESULT ExhibitStoreToWorking(size_t* copies = nullptr, unsigned long long* bytes = nullptr);
 
-/*! Writes `consigne\MANIFESTE.json` then its seal `consigne\MANIFESTE.sha256`.
+/*! Writes `exhibitStore\MANIFESTE.json` then its seal `exhibitStore\MANIFESTE.sha256`.
  *
  *  To be called once every extraction is over. The seal is written AFTER the
  *  manifest and carries its SHA-256 fingerprint.
@@ -142,8 +142,8 @@ HRESULT ConsigneVersTravail(size_t* copies = nullptr, unsigned long long* octets
  *          which case the exhibit store cannot be identified, and that must be
  *          known.
  */
-HRESULT ConsigneEcrireManifeste();
+HRESULT ExhibitStoreWriteManifest();
 
 /*! Number of exhibits in the manifest, and total size.
  *  Used for the end-of-collection summary and the investigation log. */
-void ConsigneBilan(size_t* pieces, size_t* echecs, unsigned long long* octets);
+void ExhibitStoreSummary(size_t* exhibits, size_t* failures, unsigned long long* bytes);

@@ -17,7 +17,7 @@
  *      Json o = Json::obj();
  *      o.add(L"SessionId", Json::num(sessionId));       // a number, unquoted
  *      o.add(L"LogonName", Json::str(logonName));       // escaped automatically
- *      o.add(L"Path",      Json::str(cheminBrut));      // raw path, escaped here
+ *      o.add(L"Path",      Json::str(rawPath));      // raw path, escaped here
  *      return o.dump(1);
  */
 #pragma once
@@ -108,17 +108,17 @@ public:
      *  elements (`push`) are not concerned: a file with no entry stays "[]",
      *  which means "no entry found".
      *
-     *  @param cle the key.
-     *  @param valeur the value, moved into the object.
+     *  @param key the key.
+     *  @param value the value, moved into the object.
      *  @return this object, so calls can be chained. */
-    Json& add(const std::wstring& cle, Json valeur) {
-        if (valeur.vide()) return *this;
-        items_.emplace_back(cle, std::move(valeur));
+    Json& add(const std::wstring& key, Json value) {
+        if (value.isEmptyValue()) return *this;
+        items_.emplace_back(key, std::move(value));
         return *this;
     }
     /*! @return true for `null`, an empty string, or an object or array with no
      *  element — the values `add` does not emit. */
-    bool vide() const {
+    bool isEmptyValue() const {
         switch (kind_) {
         case Kind::Null: return true;
         case Kind::Str:  return scalar_.empty();
@@ -129,17 +129,17 @@ public:
     }
     /*! Merges another object's members into this one (flattening).
      *  Useful when a sub-object must appear at the same level as its parent.
-     *  @param autre the object whose members are taken over.
+     *  @param other the object whose members are taken over.
      *  @return this object, so calls can be chained. */
-    Json& merge(Json autre) {
-        for (auto& kv : autre.items_) items_.push_back(std::move(kv));
+    Json& merge(Json other) {
+        for (auto& kv : other.items_) items_.push_back(std::move(kv));
         return *this;
     }
     /*! Adds an element to an array. Unlike `add`, an empty element is kept.
-     *  @param valeur the element, moved into the array.
+     *  @param value the element, moved into the array.
      *  @return this array, so calls can be chained. */
-    Json& push(Json valeur) {
-        items_.emplace_back(std::wstring(), std::move(valeur));
+    Json& push(Json value) {
+        items_.emplace_back(std::wstring(), std::move(value));
         return *this;
     }
     //! @return true if the object or array holds no member.
@@ -153,9 +153,9 @@ public:
 
     // --- serialisation ------------------------------------------------------
     /*! Serialises the value.
-     *  @param niveau indentation depth, in tabulations.
+     *  @param level indentation depth, in tabulations.
      *  @return the JSON text, without a trailing newline. */
-    std::wstring dump(int niveau = 0) const {
+    std::wstring dump(int level = 0) const {
         switch (kind_) {
         case Kind::Null: return L"null";
         case Kind::Num:
@@ -166,13 +166,13 @@ public:
         }
         const bool o = (kind_ == Kind::Obj);
         if (items_.empty()) return o ? L"{}" : L"[]";
-        const std::wstring ind  = tabs(niveau);
-        const std::wstring ind1 = tabs(niveau + 1);
+        const std::wstring ind  = tabs(level);
+        const std::wstring ind1 = tabs(level + 1);
         std::wstring r = o ? L"{\n" : L"[\n";
         for (size_t i = 0; i < items_.size(); ++i) {
             r += ind1;
             if (o) r += L"\"" + jsonEscape(items_[i].first) + L"\": ";
-            r += items_[i].second.dump(niveau + 1);
+            r += items_[i].second.dump(level + 1);
             if (i + 1 < items_.size()) r += L",";     // never a trailing comma
             r += L"\n";
         }

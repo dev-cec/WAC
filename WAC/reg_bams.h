@@ -39,10 +39,10 @@ public:
 	std::wstring executionTimeUtc = L""; //!< the same instant in UTC
 
 	/*! Builds the entry from a registry value.
-	 *  @param donnees the value's bytes, which start with the execution FILETIME.
-	 *  @param nomValeur name of the value, that is the executable's path.
+	 *  @param data the value's bytes, which start with the execution FILETIME.
+	 *  @param valueName name of the value, that is the executable's path.
 	 *  @param psid SID of the user whose UserSettings subkey holds the value. */
-	Bam(LPBYTE donnees, std::wstring nomValeur, std::wstring psid);
+	Bam(LPBYTE data, std::wstring valueName, std::wstring psid);
 
 	/*! Converts the entry to JSON.
 	 *  @return its JSON object. */

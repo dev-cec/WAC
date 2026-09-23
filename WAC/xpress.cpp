@@ -7,9 +7,9 @@
 
 namespace {
 
-const size_t TAILLE_TABLE = 256;   //!< 512 code lengths on 4 bits
-const int    SYMBOLES     = 512;
-const int    LONGUEUR_MAX = 15;
+const size_t TABLE_SIZE = 256;   //!< 512 code lengths on 4 bits
+const int    SYMBOLS     = 512;
+const int    MAX_LENGTH = 15;
 
 /*! The format's bit stream: 16-bit little-endian words, bits consumed from
  *  most to least significant.
@@ -19,68 +19,68 @@ const int    LONGUEUR_MAX = 15;
  */
 class TrainDeBits {
 public:
-	TrainDeBits(const uint8_t* d, size_t taille, size_t depart)
-		: d_(d), taille_(taille), octet_(depart) {}
+	TrainDeBits(const uint8_t* d, size_t size, size_t depart)
+		: d_(d), size_(size), byte_(depart) {}
 
 	//! Ensures at least `n` bits are available, padding with zeros at the end of the stream.
-	void remplir(unsigned n) {
+	void fill(unsigned n) {
 		while (bits_ < n) {
-			if (taille_ < 2 || octet_ > taille_ - 2) {
+			if (size_ < 2 || byte_ > size_ - 2) {
 				// End of stream: pad with zeros rather than reading outside.
-				tampon_ <<= 16;
+				buffer_ <<= 16;
 				bits_ += 16;
 			}
 			else {
-				/*  The word is LITTLE-ENDIAN: its most significant byte is d_[octet_+1].
+				/*  The word is LITTLE-ENDIAN: its most significant byte is d_[byte_+1].
 				    It goes into the buffer first, so that consuming from the top returns the
 				    bits in the right order. */
-				tampon_ = (tampon_ << 8) | d_[octet_ + 1];
-				tampon_ = (tampon_ << 8) | d_[octet_];
+				buffer_ = (buffer_ << 8) | d_[byte_ + 1];
+				buffer_ = (buffer_ << 8) | d_[byte_];
 				bits_ += 16;
-				octet_ += 2;
+				byte_ += 2;
 			}
 		}
 	}
 
 	//! Takes the `n` most significant bits of the buffer.
-	uint32_t valeur(unsigned n) {
+	uint32_t value(unsigned n) {
 		if (n == 0) return 0;
 		if (n > 32) return 0;
-		remplir(n);
-		uint32_t v = tampon_;
+		fill(n);
+		uint32_t v = buffer_;
 		if (n < 32) v >>= (bits_ - n);
 		bits_ -= n;
-		if (bits_ == 0) tampon_ = 0;
-		else            tampon_ &= 0xFFFFFFFFu >> (32 - bits_);
+		if (bits_ == 0) buffer_ = 0;
+		else            buffer_ &= 0xFFFFFFFFu >> (32 - bits_);
 		return v;
 	}
 
 	//! Next byte of the stream, on the shared cursor.
-	bool octetSuivant(uint8_t* v) {
-		if (octet_ >= taille_) return false;
-		*v = d_[octet_++];
+	bool nextByte(uint8_t* v) {
+		if (byte_ >= size_) return false;
+		*v = d_[byte_++];
 		return true;
 	}
-	bool mot16(uint32_t* v) {
-		if (taille_ < 2 || octet_ > taille_ - 2) return false;
-		*v = (uint32_t)(d_[octet_] | (d_[octet_ + 1] << 8));
-		octet_ += 2;
+	bool word16(uint32_t* v) {
+		if (size_ < 2 || byte_ > size_ - 2) return false;
+		*v = (uint32_t)(d_[byte_] | (d_[byte_ + 1] << 8));
+		byte_ += 2;
 		return true;
 	}
-	bool mot32(uint32_t* v) {
-		if (taille_ < 4 || octet_ > taille_ - 4) return false;
-		*v = (uint32_t)d_[octet_] | ((uint32_t)d_[octet_ + 1] << 8)
-		   | ((uint32_t)d_[octet_ + 2] << 16) | ((uint32_t)d_[octet_ + 3] << 24);
-		octet_ += 4;
+	bool word32(uint32_t* v) {
+		if (size_ < 4 || byte_ > size_ - 4) return false;
+		*v = (uint32_t)d_[byte_] | ((uint32_t)d_[byte_ + 1] << 8)
+		   | ((uint32_t)d_[byte_ + 2] << 16) | ((uint32_t)d_[byte_ + 3] << 24);
+		byte_ += 4;
 		return true;
 	}
-	unsigned disponibles() const { return bits_; }
+	unsigned available() const { return bits_; }
 
 private:
 	const uint8_t* d_;
-	size_t   taille_;
-	size_t   octet_;
-	uint32_t tampon_ = 0;
+	size_t   size_;
+	size_t   byte_;
+	uint32_t buffer_ = 0;
 	unsigned bits_ = 0;
 };
 
@@ -92,29 +92,29 @@ private:
  */
 class Huffman {
 public:
-	bool construire(const uint8_t* longueurs) {
+	bool build(const uint8_t* lengths) {
 		std::memset(nb_, 0, sizeof(nb_));
-		int utilises = 0;
-		for (int s = 0; s < SYMBOLES; ++s) {
-			const uint8_t l = longueurs[s];
-			if (l > LONGUEUR_MAX) return false;
-			if (l) { ++nb_[l]; ++utilises; }
+		int used = 0;
+		for (int s = 0; s < SYMBOLS; ++s) {
+			const uint8_t l = lengths[s];
+			if (l > MAX_LENGTH) return false;
+			if (l) { ++nb_[l]; ++used; }
 		}
-		if (utilises == 0) return false;
+		if (used == 0) return false;
 
-		int code = 0, decalage = 0;
-		for (int l = 1; l <= LONGUEUR_MAX; ++l) {
-			premier_[l] = code;
-			debut_[l] = decalage;
+		int code = 0, offset = 0;
+		for (int l = 1; l <= MAX_LENGTH; ++l) {
+			first_[l] = code;
+			start_[l] = offset;
 			code = (code + nb_[l]) << 1;
-			decalage += nb_[l];
+			offset += nb_[l];
 		}
 		// Symbols sorted by (length, number).
-		int curseur[LONGUEUR_MAX + 1];
-		for (int l = 0; l <= LONGUEUR_MAX; ++l) curseur[l] = debut_[l];
-		for (int s = 0; s < SYMBOLES; ++s) {
-			const uint8_t l = longueurs[s];
-			if (l) symboles_[curseur[l]++] = (uint16_t)s;
+		int cursor[MAX_LENGTH + 1];
+		for (int l = 0; l <= MAX_LENGTH; ++l) cursor[l] = start_[l];
+		for (int s = 0; s < SYMBOLS; ++s) {
+			const uint8_t l = lengths[s];
+			if (l) symbols_[cursor[l]++] = (uint16_t)s;
 		}
 		return true;
 	}
@@ -122,46 +122,46 @@ public:
 	//! Decodes a symbol, or -1 if no code matches.
 	int decoder(TrainDeBits& bits) const {
 		int code = 0;
-		for (int l = 1; l <= LONGUEUR_MAX; ++l) {
-			code = (code << 1) | (int)bits.valeur(1);
-			if (nb_[l] && (code - premier_[l]) < nb_[l] && (code - premier_[l]) >= 0)
-				return symboles_[debut_[l] + (code - premier_[l])];
+		for (int l = 1; l <= MAX_LENGTH; ++l) {
+			code = (code << 1) | (int)bits.value(1);
+			if (nb_[l] && (code - first_[l]) < nb_[l] && (code - first_[l]) >= 0)
+				return symbols_[start_[l] + (code - first_[l])];
 		}
 		return -1;
 	}
 
 private:
-	int      nb_[LONGUEUR_MAX + 1] = { 0 };
-	int      premier_[LONGUEUR_MAX + 1] = { 0 };
-	int      debut_[LONGUEUR_MAX + 1] = { 0 };
-	uint16_t symboles_[SYMBOLES] = { 0 };
+	int      nb_[MAX_LENGTH + 1] = { 0 };
+	int      first_[MAX_LENGTH + 1] = { 0 };
+	int      start_[MAX_LENGTH + 1] = { 0 };
+	uint16_t symbols_[SYMBOLS] = { 0 };
 };
 
 } // namespace
 
-size_t XpressHuffmanDetendre(const uint8_t* compresse, size_t tailleCompressee,
-                             uint8_t* sortie, size_t tailleSortie) {
-	if (!compresse || !sortie || tailleSortie == 0) return 0;
+size_t XpressHuffmanInflate(const uint8_t* compressed, size_t compressedSize,
+                             uint8_t* output, size_t outputSize) {
+	if (!compressed || !output || outputSize == 0) return 0;
 	// The table alone takes 256 bytes; below that there is no chunk.
-	if (tailleCompressee <= TAILLE_TABLE) return 0;
+	if (compressedSize <= TABLE_SIZE) return 0;
 
-	uint8_t longueurs[SYMBOLES];
-	for (size_t i = 0; i < TAILLE_TABLE; ++i) {
-		longueurs[2 * i]     = (uint8_t)(compresse[i] & 0x0F);
-		longueurs[2 * i + 1] = (uint8_t)(compresse[i] >> 4);
+	uint8_t lengths[SYMBOLS];
+	for (size_t i = 0; i < TABLE_SIZE; ++i) {
+		lengths[2 * i]     = (uint8_t)(compressed[i] & 0x0F);
+		lengths[2 * i + 1] = (uint8_t)(compressed[i] >> 4);
 	}
-	Huffman arbre;
-	if (!arbre.construire(longueurs)) return 0;
+	Huffman tree;
+	if (!tree.build(lengths)) return 0;
 
-	TrainDeBits bits(compresse, tailleCompressee, TAILLE_TABLE);
-	bits.remplir(32);                       // priming, as the format requires
+	TrainDeBits bits(compressed, compressedSize, TABLE_SIZE);
+	bits.fill(32);                       // priming, as the format requires
 
-	size_t ecrits = 0;
-	while (ecrits < tailleSortie) {
-		const int symbole = arbre.decoder(bits);
-		if (symbole < 0) break;             // unknown code: inconsistent stream
+	size_t written = 0;
+	while (written < outputSize) {
+		const int symbol = tree.decoder(bits);
+		if (symbol < 0) break;             // unknown code: inconsistent stream
 
-		if (symbole < 256) sortie[ecrits++] = (uint8_t)symbole;
+		if (symbol < 256) output[written++] = (uint8_t)symbol;
 
 		/*  TOP UP TO 16 BITS AFTER EVERY SYMBOL, literals included, and BEFORE
 		    reading a back-reference. This is not an optimisation: the top-up
@@ -169,45 +169,45 @@ size_t XpressHuffmanDetendre(const uint8_t* compresse, size_t tailleCompressee,
 		    lengths are read from. Topping up only after back-references
 		    desynchronises the chunk — measured: 16 chunks correct out of 137, the
 		    others wrong without any error. */
-		if (bits.disponibles() < 16) bits.remplir(16);
+		if (bits.available() < 16) bits.fill(16);
 
-		if (symbole < 256) continue;
+		if (symbol < 256) continue;
 
-		const int reste = symbole - 256;
-		uint32_t longueur = (uint32_t)(reste & 0x0F);
-		const unsigned bitsDistance = (unsigned)(reste >> 4);
+		const int rest = symbol - 256;
+		uint32_t length = (uint32_t)(rest & 0x0F);
+		const unsigned bitsDistance = (unsigned)(rest >> 4);
 
 		// The distance is read BEFORE the extended length: the order is imposed.
-		uint32_t distance = bits.valeur(bitsDistance);
+		uint32_t distance = bits.value(bitsDistance);
 		distance = (1u << bitsDistance) | distance;
 
-		if (longueur == 15) {
+		if (length == 15) {
 			/*  EXTENDED LENGTH, read as BYTES on the bit stream's cursor. Three
 			    levels: one byte, then a 16-bit word, then a 32-bit word. A separate
 			    cursor would desynchronise the whole chunk. */
 			uint8_t oct = 0;
-			if (!bits.octetSuivant(&oct)) break;
-			longueur = (uint32_t)oct + 15;
-			if (longueur == 270) {
+			if (!bits.nextByte(&oct)) break;
+			length = (uint32_t)oct + 15;
+			if (length == 270) {
 				uint32_t m = 0;
-				if (!bits.mot16(&m)) break;
-				longueur = m;
-				if (longueur == 0) {
-					if (!bits.mot32(&longueur)) break;
+				if (!bits.word16(&m)) break;
+				length = m;
+				if (length == 0) {
+					if (!bits.word32(&length)) break;
 				}
 			}
 		}
-		longueur += 3;
+		length += 3;
 
-		if (distance > ecrits) break;       // before the start: corrupt stream
-		if (longueur > tailleSortie - ecrits)
-			longueur = (uint32_t)(tailleSortie - ecrits);
+		if (distance > written) break;       // before the start: corrupt stream
+		if (length > outputSize - written)
+			length = (uint32_t)(outputSize - written);
 
 		/*  Byte-by-byte copy: the ranges OVERLAP as soon as the distance is
 		    smaller than the length, which is the normal case — it is how the format
 		    encodes a repetition. */
-		size_t source = ecrits - distance;
-		while (longueur-- > 0) sortie[ecrits++] = sortie[source++];
+		size_t source = written - distance;
+		while (length-- > 0) output[written++] = output[source++];
 	}
-	return ecrits;
+	return written;
 }

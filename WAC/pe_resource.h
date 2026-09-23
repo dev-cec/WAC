@@ -49,45 +49,45 @@ public:
 	*  @param chemin binaire à lire (une copie extraite, jamais l'original)
 	*  @return vrai si le fichier est un PE dont le répertoire de ressources est
 	*          exploitable */
-	bool ouvrir(const std::wstring& chemin);
+	bool open(const std::wstring& path);
 
 	//! Vrai si `ouvrir` a abouti.
-	bool ouvert() const { return ouvert_; }
+	bool open() const { return open_; }
 
 	//! Message d'erreur si `ouvrir` a échoué.
-	const std::wstring& erreur() const { return erreur_; }
+	const std::wstring& error() const { return error_; }
 
 	/*! Contenu d'une ressource désignée par un type NUMÉRIQUE.
 	*  @param type par exemple PE_RT_MESSAGETABLE
 	*  @param langue identifiant de langue voulu, ou 0 pour la première trouvée
 	*  @return les octets de la ressource, vide si absente */
-	std::vector<uint8_t> ressource(uint32_t type, uint32_t langue = 0) const;
+	std::vector<uint8_t> resource(uint32_t type, uint32_t language = 0) const;
 
 	/*! Contenu d'une ressource désignée par un type NOMMÉ.
 	*  @param nomType par exemple L"WEVT_TEMPLATE" (comparaison sans casse)
 	*  @param langue identifiant de langue voulu, ou 0 pour la première trouvée
 	*  @return les octets de la ressource, vide si absente */
-	std::vector<uint8_t> ressourceNommee(const std::wstring& nomType,
-	                                     uint32_t langue = 0) const;
+	std::vector<uint8_t> namedResource(const std::wstring& typeName,
+	                                     uint32_t language = 0) const;
 
 	/*! Types de ressources présents, pour diagnostic.
 	*  @return libellés « 11 » pour les types numériques, le nom pour les autres */
-	std::vector<std::wstring> typesPresents() const;
+	std::vector<std::wstring> typesPresent() const;
 
 private:
-	std::vector<uint8_t> fichier_;
-	bool ouvert_ = false;
-	std::wstring erreur_;
-	uint32_t rvaRessources_ = 0;     //!< RVA du répertoire de ressources
-	uint32_t tailleRessources_ = 0;
-	size_t   offsetRessources_ = 0;  //!< sa position DANS LE FICHIER
+	std::vector<uint8_t> file_;
+	bool open_ = false;
+	std::wstring error_;
+	uint32_t resourcesRva_ = 0;     //!< RVA du répertoire de ressources
+	uint32_t resourcesSize_ = 0;
+	size_t   resourcesOffset_ = 0;  //!< sa position DANS LE FICHIER
 
 	//! Traduit une adresse virtuelle en position dans le fichier, 0 si hors zone.
 	size_t offsetDeRva(uint32_t rva) const;
-	struct Section { uint32_t rva, tailleVirtuelle, offsetFichier, tailleBrute; };
+	struct Section { uint32_t rva, virtualSize, fileOffset, rawSize; };
 	std::vector<Section> sections_;
 
 	//! Parcourt un niveau du répertoire de ressources.
-	std::vector<uint8_t> chercher(uint32_t type, const std::wstring& nomType,
-	                             uint32_t langue) const;
+	std::vector<uint8_t> find(uint32_t type, const std::wstring& typeName,
+	                             uint32_t language) const;
 };

@@ -53,7 +53,7 @@ struct User {
 	DWORD        rid = 0;                //!< relative identifier, which names the subkey
 	std::wstring profile;                //!< path of the profile (ProfileList)
 	DWORD        flags = 0;              //!< account flags (ACB)
-	std::wstring flagsLibelles;          //!< those flags spelled out
+	std::wstring flagLabels;          //!< those flags spelled out
 	unsigned     logonCount = 0;         //!< number of successful logons
 	unsigned     badPasswordCount = 0;   //!< number of failed authentications
 	FILETIME     lastLogonUtc = { 0, 0 };        //!< last logon, in UTC

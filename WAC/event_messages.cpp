@@ -18,24 +18,24 @@
 namespace {
 
 //! Ce qu'on sait d'un fournisseur, une fois ses ressources lues (ou non).
-struct Fournisseur {
-	bool utilisable = false;         //!< les deux ressources ont été chargées
-	MetadonneesWevt metadonnees;     //!< événement -> identifiant de message
+struct Provider {
+	bool usable = false;         //!< les deux ressources ont été chargées
+	WevtMetadata metadata;     //!< événement -> identifiant de message
 	TableMessages   messages;        //!< identifiant de message -> modèle
 	/*! Table du fichier de paramètres (ParameterFileName) : libellés des valeurs « %%nnnn ». Pour
 	 *  Security-Auditing, c'est msobjs.dll, et non le binaire du fournisseur. */
-	TableMessages   parametres;
-	std::wstring    fichier;         //!< chemin d'origine du binaire de ressources
-	std::wstring    motif;           //!< pourquoi il est inutilisable
+	TableMessages   parameters;
+	std::wstring    file;         //!< chemin d'origine du binaire de ressources
+	std::wstring    reason;           //!< pourquoi il est inutilisable
 };
 
-std::map<std::wstring, std::unique_ptr<Fournisseur>> g_cache;   // guid -> fournisseur
-bool g_pret = false;
-size_t g_echecs = 0;
-unsigned long long g_resolus = 0, g_octets = 0;
+std::map<std::wstring, std::unique_ptr<Provider>> g_cache;   // guid -> fournisseur
+bool g_ready = false;
+size_t g_failures = 0;
+unsigned long long g_resolved = 0, g_bytes = 0;
 
 //! GUID en minuscules, accolades comprises : la clé de registre l'écrit ainsi.
-std::wstring normaliserGuid(const std::wstring& g) {
+std::wstring normalizeGuid(const std::wstring& g) {
 	std::wstring r;
 	for (wchar_t c : g) r += (c >= L'A' && c <= L'Z') ? (wchar_t)(c - L'A' + L'a') : c;
 	if (!r.empty() && r.front() != L'{') r = L"{" + r + L"}";
@@ -43,12 +43,12 @@ std::wstring normaliserGuid(const std::wstring& g) {
 }
 
 //! Vrai si le fichier commence par la signature d'un binaire PE.
-bool estPeValide(const std::wstring& chemin) {
-	std::ifstream f(std::filesystem::path(chemin), std::ios::binary);
+bool isValidPe(const std::wstring& path) {
+	std::ifstream f(std::filesystem::path(path), std::ios::binary);
 	if (!f) return false;
-	char tete[2] = { 0, 0 };
-	f.read(tete, 2);
-	return f.gcount() == 2 && tete[0] == 'M' && tete[1] == 'Z';
+	char head[2] = { 0, 0 };
+	f.read(head, 2);
+	return f.gcount() == 2 && head[0] == 'M' && head[1] == 'Z';
 }
 
 /*! Extrait un fichier du volume vers la consigne, puis le recopie dans le
@@ -71,43 +71,43 @@ bool estPeValide(const std::wstring& chemin) {
  *
  *  @return le chemin lisible, ou chaîne vide en cas d'échec
  */
-std::wstring extraireRessource(const std::wstring& cheminAbsolu) {
-	const std::wstring travail = cheminExtrait(cheminAbsolu);
+std::wstring extractResource(const std::wstring& absolutePath) {
+	const std::wstring working = extractedPath(absolutePath);
 	std::error_code ec;
-	if (std::filesystem::exists(travail, ec)) return travail;   // deja extrait
+	if (std::filesystem::exists(working, ec)) return working;   // deja extrait
 
-	const std::wstring volume  = volumeDuChemin(cheminAbsolu);
-	const std::wstring relatif = cheminRelatifAuVolume(cheminAbsolu);
-	const std::wstring cible   = cheminSous(dossierConsigne(), cheminAbsolu);
+	const std::wstring volume  = volumeOfPath(absolutePath);
+	const std::wstring relative = pathRelativeToVolume(absolutePath);
+	const std::wstring target   = pathUnder(exhibitStoreFolder(), absolutePath);
 	/* Déjà en consigne — prélevé comme binaire cité par un artefact (--binary), et
 	   pas encore recopié vers le travail : on ne le réextrait pas, ce qui
 	   réécrirait une pièce scellée et la déclarerait deux fois. */
-	if (std::filesystem::exists(cible, ec)) {
-		if (!estPeValide(cible)) return std::wstring();
-		std::filesystem::create_directories(std::filesystem::path(travail).parent_path(), ec);
-		std::filesystem::copy_file(cible, travail, std::filesystem::copy_options::skip_existing, ec);
-		return ec ? std::wstring() : travail;
+	if (std::filesystem::exists(target, ec)) {
+		if (!isValidPe(target)) return std::wstring();
+		std::filesystem::create_directories(std::filesystem::path(working).parent_path(), ec);
+		std::filesystem::copy_file(target, working, std::filesystem::copy_options::skip_existing, ec);
+		return ec ? std::wstring() : working;
 	}
-	std::filesystem::create_directories(std::filesystem::path(cible).parent_path(), ec);
+	std::filesystem::create_directories(std::filesystem::path(target).parent_path(), ec);
 
 	std::vector<HRESULT> res;
-	std::vector<RawHiveExtrait> releve;
-	const HRESULT hr = ExtractFilesRaw(volume, { { relatif, cible } }, &res, &releve);
+	std::vector<RawHiveExtraction> reading;
+	const HRESULT hr = ExtractFilesRaw(volume, { { relative, target } }, &res, &reading);
 	const bool absent = !res.empty()
 	                 && (res[0] == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)
 	                  || res[0] == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND));
 	if (absent) {
 		// Candidat inexistant : ni pièce, ni répertoire vide dans la consigne.
-		std::filesystem::remove(std::filesystem::path(cible).parent_path(), ec);
+		std::filesystem::remove(std::filesystem::path(target).parent_path(), ec);
 		return std::wstring();
 	}
-	ConsigneAjouter(releve, L"Lecture brute NTFS (\\\\.\\" + volume
+	ExhibitStoreAdd(reading, L"Lecture brute NTFS (\\\\.\\" + volume
 	                        + L": — fichier de ressources d'un fournisseur d'evenements)");
 	const bool brutOk = SUCCEEDED(hr) && !res.empty() && SUCCEEDED(res[0]);
 	if (!brutOk)
-		log(3, L"🔈Lecture brute infructueuse, repli attendu : " + cheminAbsolu);
+		log(3, L"🔈Lecture brute infructueuse, repli attendu : " + absolutePath);
 	else
-		for (const RawHiveExtrait& e : releve) g_octets += e.empreintes.octets;
+		for (const RawHiveExtraction& e : reading) g_bytes += e.fingerprints.bytes;
 
 	/*  AUCUN REPLI PAR L'API. Ces binaires sont compresses par WOF
 	    (« Compact OS ») : leur attribut $DATA est creux et le contenu vit dans un
@@ -116,20 +116,20 @@ std::wstring extraireRessource(const std::wstring& cheminAbsolu) {
 	    Un fichier qui reste illisible l'est pour une autre raison — absent, ou
 	    compresse en LZX, que WAC ne detend pas — et il est signale comme tel
 	    plutot que lu par une voie qui laisserait une trace. */
-	if (!brutOk || !estPeValide(cible)) {
-		log(2, L"🔥Binaire de ressources illisible en lecture brute : " + cheminAbsolu);
+	if (!brutOk || !isValidPe(target)) {
+		log(2, L"🔥Binaire de ressources illisible en lecture brute : " + absolutePath);
 		return std::wstring();
 	}
 
 	// Copie vers le travail : c'est là que la lecture aura lieu.
-	std::filesystem::create_directories(std::filesystem::path(travail).parent_path(), ec);
-	std::filesystem::copy_file(cible, travail,
+	std::filesystem::create_directories(std::filesystem::path(working).parent_path(), ec);
+	std::filesystem::copy_file(target, working,
 	                           std::filesystem::copy_options::overwrite_existing, ec);
 	if (ec) {
-		log(2, L"🔥Copie de travail impossible : " + travail);
+		log(2, L"🔥Copie de travail impossible : " + working);
 		return std::wstring();
 	}
-	return travail;
+	return working;
 }
 
 /*! Langues d'interface à essayer pour trouver un satellite, dans l'ordre.
@@ -140,27 +140,27 @@ std::wstring extraireRessource(const std::wstring& cheminAbsolu) {
  *  pour chacun des quelque cent fournisseurs d'une collecte coûte cinq cents
  *  résolutions de chemin pour rien.
  */
-const std::vector<std::wstring>& languesInterface() {
-	static std::vector<std::wstring> langues;
-	static bool faites = false;
-	if (faites) return langues;
-	faites = true;
+const std::vector<std::wstring>& interfaceLanguages() {
+	static std::vector<std::wstring> languages;
+	static bool done = false;
+	if (done) return languages;
+	done = true;
 
 	std::vector<std::wstring> declarees;
 	if (conf.Software && getRegMultiSzValue(conf.Software,
 	        L"Microsoft\\Windows\\CurrentVersion\\MUI\\Settings",
 	        L"PreferredUILanguages", &declarees) == ERROR_SUCCESS)
 		for (const std::wstring& l : declarees)
-			if (!l.empty()) langues.push_back(l);
+			if (!l.empty()) languages.push_back(l);
 
 	for (PCWSTR l : { L"en-US", L"fr-FR", L"de-DE", L"es-ES", L"it-IT" }) {
-		bool deja = false;
-		for (const std::wstring& d : langues) if (d == l) { deja = true; break; }
-		if (!deja) langues.push_back(l);
+		bool already = false;
+		for (const std::wstring& d : languages) if (d == l) { already = true; break; }
+		if (!already) languages.push_back(l);
 	}
 	log(2, L"❇️Langues d'interface essayees pour les satellites .mui : "
-	     + std::to_wstring(langues.size()) + L" (" + (langues.empty() ? L"-" : langues[0]) + L"…)");
-	return langues;
+	     + std::to_wstring(languages.size()) + L" (" + (languages.empty() ? L"-" : languages[0]) + L"…)");
+	return languages;
 }
 
 /*! Cherche le satellite localisé d'un binaire de ressources.
@@ -172,18 +172,18 @@ const std::vector<std::wstring>& languesInterface() {
  *
  *  @return le chemin de travail du .mui, ou chaîne vide s'il n'y en a pas
  */
-std::wstring trouverMui(const std::wstring& cheminAbsolu) {
-	const std::filesystem::path p = cheminAbsolu;
-	const std::wstring repertoire = p.parent_path().wstring();
-	const std::wstring nom = p.filename().wstring();
+std::wstring findMui(const std::wstring& absolutePath) {
+	const std::filesystem::path p = absolutePath;
+	const std::wstring directory = p.parent_path().wstring();
+	const std::wstring name = p.filename().wstring();
 
-	const std::vector<std::wstring>& langues = languesInterface();
+	const std::vector<std::wstring>& languages = interfaceLanguages();
 
-	for (const std::wstring& l : langues) {
+	for (const std::wstring& l : languages) {
 		if (l.empty()) continue;
-		const std::wstring candidat = repertoire + L"\\" + l + L"\\" + nom + L".mui";
-		const std::wstring travail = extraireRessource(candidat);
-		if (!travail.empty()) return travail;
+		const std::wstring candidate = directory + L"\\" + l + L"\\" + name + L".mui";
+		const std::wstring working = extractResource(candidate);
+		if (!working.empty()) return working;
 	}
 	return std::wstring();
 }
@@ -196,98 +196,98 @@ std::wstring trouverMui(const std::wstring& cheminAbsolu) {
  *  `cheminBinaire` applique cette seconde règle. Constaté : un
  *  « storagewmi.dll » nu donnait « C:\Windows\storagewmi.dll », introuvable,
  *  au lieu de « C:\Windows\System32\storagewmi.dll ». */
-std::vector<std::wstring> candidatsPour(const std::wstring& declare) {
-	const std::wstring resolu = cheminBinaire(declare);
-	std::vector<std::wstring> candidats;
-	if (!resolu.empty()) candidats.push_back(resolu);
-	const std::filesystem::path p = resolu.empty() ? declare : resolu;
-	const std::wstring nomSeul = p.filename().wstring();
-	if (!nomSeul.empty())
-		candidats.push_back(conf.systemDrive + L"\\Windows\\System32\\" + nomSeul);
-	return candidats;
+std::vector<std::wstring> candidatesFor(const std::wstring& declare) {
+	const std::wstring resolved = binaryPath(declare);
+	std::vector<std::wstring> candidates;
+	if (!resolved.empty()) candidates.push_back(resolved);
+	const std::filesystem::path p = resolved.empty() ? declare : resolved;
+	const std::wstring nameOnly = p.filename().wstring();
+	if (!nameOnly.empty())
+		candidates.push_back(conf.systemDrive + L"\\Windows\\System32\\" + nameOnly);
+	return candidates;
 }
 
 /*! Charge la table de messages d'un fichier déclaré : dans le binaire, sinon
  *  dans son satellite localisé. Rend le nombre de messages. */
-size_t chargerTable(const std::wstring& declare, TableMessages& table, std::wstring* fichier) {
-	for (const std::wstring& c : candidatsPour(declare)) {
-		const std::wstring travail = extraireRessource(c);
-		if (travail.empty()) continue;
-		if (fichier) *fichier = c;
+size_t loadTable(const std::wstring& declare, TableMessages& table, std::wstring* file) {
+	for (const std::wstring& c : candidatesFor(declare)) {
+		const std::wstring working = extractResource(c);
+		if (working.empty()) continue;
+		if (file) *file = c;
 		PeResource pe;
-		size_t n = pe.ouvrir(travail) ? table.analyser(pe.ressource(PE_RT_MESSAGETABLE)) : 0;
+		size_t n = pe.open(working) ? table.analyse(pe.resource(PE_RT_MESSAGETABLE)) : 0;
 		if (n == 0) {
-			const std::wstring mui = trouverMui(c);
+			const std::wstring mui = findMui(c);
 			PeResource peMui;
-			if (!mui.empty() && peMui.ouvrir(mui))
-				n = table.analyser(peMui.ressource(PE_RT_MESSAGETABLE));
+			if (!mui.empty() && peMui.open(mui))
+				n = table.analyse(peMui.resource(PE_RT_MESSAGETABLE));
 		}
 		return n;
 	}
 	return 0;
 }
 
-Fournisseur* charger(const std::wstring& guid) {
-	const std::map<std::wstring, std::unique_ptr<Fournisseur>>::iterator it = g_cache.find(guid);
+Provider* load(const std::wstring& guid) {
+	const std::map<std::wstring, std::unique_ptr<Provider>>::iterator it = g_cache.find(guid);
 	if (it != g_cache.end()) return it->second.get();
 
-	std::unique_ptr<Fournisseur> f = std::make_unique<Fournisseur>();
+	std::unique_ptr<Provider> f = std::make_unique<Provider>();
 
 	// 1. Le chemin du fichier de ressources, dans la ruche SOFTWARE.
-	const std::wstring cle = L"Microsoft\\Windows\\CurrentVersion\\WINEVT\\Publishers\\" + guid;
-	std::wstring chemin;
-	if (getRegSzValue(conf.Software, cle.c_str(), L"ResourceFileName", &chemin) != ERROR_SUCCESS
-	    || chemin.empty()) {
-		if (getRegSzValue(conf.Software, cle.c_str(), L"MessageFileName", &chemin) != ERROR_SUCCESS
-		    || chemin.empty()) {
-			f->motif = L"aucun fichier de ressources declare";
-			++g_echecs;
-			log(2, L"🔥Fournisseur " + guid + L" : " + f->motif);
-			Fournisseur* brut = f.get();
+	const std::wstring key = L"Microsoft\\Windows\\CurrentVersion\\WINEVT\\Publishers\\" + guid;
+	std::wstring path;
+	if (getRegSzValue(conf.Software, key.c_str(), L"ResourceFileName", &path) != ERROR_SUCCESS
+	    || path.empty()) {
+		if (getRegSzValue(conf.Software, key.c_str(), L"MessageFileName", &path) != ERROR_SUCCESS
+		    || path.empty()) {
+			f->reason = L"aucun fichier de ressources declare";
+			++g_failures;
+			log(2, L"🔥Fournisseur " + guid + L" : " + f->reason);
+			Provider* brut = f.get();
 			g_cache.emplace(guid, std::move(f));
 			return brut;
 		}
 	}
 	// `%SystemRoot%`, `%windir%` et consorts, et chemin relatif à System32.
-	const std::wstring resolu = cheminBinaire(chemin);
-	const std::vector<std::wstring> candidats = candidatsPour(chemin);
+	const std::wstring resolved = binaryPath(path);
+	const std::vector<std::wstring> candidates = candidatesFor(path);
 
 	// 2. Les métadonnées, dans le binaire lui-même.
-	std::wstring travailDll;
-	for (const std::wstring& c : candidats) {
-		travailDll = extraireRessource(c);
-		if (!travailDll.empty()) { f->fichier = c; break; }
+	std::wstring workingDll;
+	for (const std::wstring& c : candidates) {
+		workingDll = extractResource(c);
+		if (!workingDll.empty()) { f->file = c; break; }
 	}
-	if (travailDll.empty()) {
-		f->fichier = resolu;
-		f->motif = L"binaire de ressources illisible";
-		++g_echecs;
-		log(2, L"🔥Fournisseur " + guid + L" : " + f->motif + L" — candidats : "
-		     + (candidats.empty() ? L"(aucun)" : candidats[0])
-		     + (candidats.size() > 1 ? L" ; " + candidats[1] : L""));
-		Fournisseur* brut = f.get();
+	if (workingDll.empty()) {
+		f->file = resolved;
+		f->reason = L"binaire de ressources illisible";
+		++g_failures;
+		log(2, L"🔥Fournisseur " + guid + L" : " + f->reason + L" — candidats : "
+		     + (candidates.empty() ? L"(aucun)" : candidates[0])
+		     + (candidates.size() > 1 ? L" ; " + candidates[1] : L""));
+		Provider* brut = f.get();
 		g_cache.emplace(guid, std::move(f));
 		return brut;
 	}
 	PeResource pe;
-	if (!pe.ouvrir(travailDll)) {
-		f->motif = L"PE illisible : " + pe.erreur();
-		++g_echecs;
-		log(2, L"🔥Fournisseur " + guid + L" : " + f->motif + L" (" + travailDll + L")");
-		Fournisseur* brut = f.get();
+	if (!pe.open(workingDll)) {
+		f->reason = L"PE illisible : " + pe.error();
+		++g_failures;
+		log(2, L"🔥Fournisseur " + guid + L" : " + f->reason + L" (" + workingDll + L")");
+		Provider* brut = f.get();
 		g_cache.emplace(guid, std::move(f));
 		return brut;
 	}
-	f->metadonnees.analyser(pe.ressourceNommee(L"WEVT_TEMPLATE"), guid);
+	f->metadata.analyse(pe.namedResource(L"WEVT_TEMPLATE"), guid);
 
 	// 3. Les textes : d'abord dans le satellite localisé, sinon dans le binaire.
-	size_t nbMessages = f->messages.analyser(pe.ressource(PE_RT_MESSAGETABLE));
+	size_t nbMessages = f->messages.analyse(pe.resource(PE_RT_MESSAGETABLE));
 	if (nbMessages == 0) {
-		const std::wstring mui = trouverMui(f->fichier);
+		const std::wstring mui = findMui(f->file);
 		if (!mui.empty()) {
 			PeResource peMui;
-			if (peMui.ouvrir(mui))
-				nbMessages = f->messages.analyser(peMui.ressource(PE_RT_MESSAGETABLE));
+			if (peMui.open(mui))
+				nbMessages = f->messages.analyse(peMui.resource(PE_RT_MESSAGETABLE));
 		}
 	}
 
@@ -302,102 +302,102 @@ Fournisseur* charger(const std::wstring& guid) {
 		   service EventLog. Chercher le second seul ne trouvait rien : Security
 		   déclare le sien sous le premier (msobjs.dll). */
 		std::wstring declare;
-		if ((getRegSzValue(conf.Software, cle.c_str(), L"ParameterFileName", &declare) == ERROR_SUCCESS
+		if ((getRegSzValue(conf.Software, key.c_str(), L"ParameterFileName", &declare) == ERROR_SUCCESS
 		     && !declare.empty())
-		    || (getRegSzValue(conf.Software, cle.c_str(), L"ParameterMessageFile", &declare) == ERROR_SUCCESS
+		    || (getRegSzValue(conf.Software, key.c_str(), L"ParameterMessageFile", &declare) == ERROR_SUCCESS
 		     && !declare.empty())) {
-			std::wstring fichierParametres;
-			const size_t n = chargerTable(declare, f->parametres, &fichierParametres);
+			std::wstring parameterFile;
+			const size_t n = loadTable(declare, f->parameters, &parameterFile);
 			log(2, L"❇️Fournisseur " + guid + L" : " + std::to_wstring(n)
-			     + L" libelle(s) de parametre — " + (fichierParametres.empty() ? declare : fichierParametres));
+			     + L" libelle(s) de parametre — " + (parameterFile.empty() ? declare : parameterFile));
 		}
 	}
 
-	f->utilisable = (f->metadonnees.taille() > 0 && nbMessages > 0);
-	if (!f->utilisable) {
-		f->motif = L"metadonnees ou table de messages absentes ("
-		         + std::to_wstring(f->metadonnees.taille()) + L" evenement(s), "
+	f->usable = (f->metadata.size() > 0 && nbMessages > 0);
+	if (!f->usable) {
+		f->reason = L"metadonnees ou table de messages absentes ("
+		         + std::to_wstring(f->metadata.size()) + L" evenement(s), "
 		         + std::to_wstring(nbMessages) + L" message(s))";
-		++g_echecs;
-		log(2, L"🔥Fournisseur " + guid + L" : " + f->motif + L" — " + f->fichier);
+		++g_failures;
+		log(2, L"🔥Fournisseur " + guid + L" : " + f->reason + L" — " + f->file);
 	}
 	else {
-		log(2, L"❇️Fournisseur " + guid + L" : " + std::to_wstring(f->metadonnees.taille())
+		log(2, L"❇️Fournisseur " + guid + L" : " + std::to_wstring(f->metadata.size())
 		     + L" evenement(s), " + std::to_wstring(nbMessages) + L" message(s) — "
-		     + f->fichier);
+		     + f->file);
 	}
-	Fournisseur* brut = f.get();
+	Provider* brut = f.get();
 	g_cache.emplace(guid, std::move(f));
 	return brut;
 }
 
 } // namespace
 
-void MessagesInitialiser() {
+void MessagesInit() {
 	g_cache.clear();
-	g_echecs = 0;
-	g_resolus = 0;
-	g_octets = 0;
+	g_failures = 0;
+	g_resolved = 0;
+	g_bytes = 0;
 	// Sans la ruche SOFTWARE, aucun fournisseur n'est localisable : on le dit
 	// une fois plutôt qu'à chaque événement.
-	g_pret = (conf.Software != NULL);
-	if (!g_pret)
+	g_ready = (conf.Software != NULL);
+	if (!g_ready)
 		log(2, L"🔥Ruche SOFTWARE indisponible : les messages d'evenements ne seront pas resolus");
 }
 
-std::wstring MessageEvenement(const std::wstring& guidFournisseur,
-                              uint16_t identifiantEvenement,
+std::wstring EventMessage(const std::wstring& providerGuid,
+                              uint16_t eventId,
                               uint8_t version,
-                              const std::vector<std::wstring>& valeurs) {
-	if (!g_pret || guidFournisseur.empty()) return std::wstring();
+                              const std::vector<std::wstring>& values) {
+	if (!g_ready || providerGuid.empty()) return std::wstring();
 
-	Fournisseur* f = charger(normaliserGuid(guidFournisseur));
-	if (!f || !f->utilisable) return std::wstring();
+	Provider* f = load(normalizeGuid(providerGuid));
+	if (!f || !f->usable) return std::wstring();
 
-	const uint32_t idMessage = f->metadonnees.identifiantMessage(identifiantEvenement, version);
+	const uint32_t idMessage = f->metadata.messageId(eventId, version);
 	if (idMessage == 0) return std::wstring();
-	const std::wstring modele = f->messages.texte(idMessage);
-	if (modele.empty()) return std::wstring();
+	const std::wstring messageTemplate = f->messages.text(idMessage);
+	if (messageTemplate.empty()) return std::wstring();
 
 	/*  Une donnée de la forme « %%1234 » n'est pas un texte mais une RÉFÉRENCE
 	    vers un autre message de la même table — c'est ainsi que Windows encode
 	    les valeurs énumérées. Sans cette résolution, le message final afficherait
 	    « %%1234 » au lieu du libellé. */
-	std::vector<std::wstring> resolues;
-	resolues.reserve(valeurs.size());
-	for (const std::wstring& v : valeurs) {
+	std::vector<std::wstring> resolved;
+	resolved.reserve(values.size());
+	for (const std::wstring& v : values) {
 		if (v.size() > 2 && v[0] == L'%' && v[1] == L'%') {
-			bool chiffres = true;
+			bool digits = true;
 			for (size_t i = 2; i < v.size(); ++i)
-				if (v[i] < L'0' || v[i] > L'9') { chiffres = false; break; }
-			if (chiffres) {
+				if (v[i] < L'0' || v[i] > L'9') { digits = false; break; }
+			if (digits) {
 				const uint32_t id = (uint32_t)wcstoul(v.c_str() + 2, nullptr, 10);
-				std::wstring t = f->parametres.texte(id);           // d'abord : comme Windows
-				if (t.empty()) t = f->messages.texte(id);
+				std::wstring t = f->parameters.text(id);           // d'abord : comme Windows
+				if (t.empty()) t = f->messages.text(id);
 				// Un libellé de table finit par « \r\n » : inséré dans une phrase,
 				// il la couperait.
 				while (!t.empty() && (t.back() == L'\n' || t.back() == L'\r' || t.back() == L' '))
 					t.pop_back();
-				resolues.push_back(t.empty() ? v : t);
+				resolved.push_back(t.empty() ? v : t);
 				continue;
 			}
 		}
-		resolues.push_back(v);
+		resolved.push_back(v);
 	}
 
-	const std::wstring phrase = formaterMessage(modele, resolues);
-	if (!phrase.empty()) ++g_resolus;
+	const std::wstring phrase = formatMessage(messageTemplate, resolved);
+	if (!phrase.empty()) ++g_resolved;
 	return phrase;
 }
 
-void MessagesBilan(size_t* fournisseurs, size_t* echecs,
-                   unsigned long long* resolus, unsigned long long* octets) {
-	if (fournisseurs) *fournisseurs = g_cache.size();
-	if (echecs)       *echecs = g_echecs;
-	if (resolus)      *resolus = g_resolus;
-	if (octets)       *octets = g_octets;
+void MessagesSummary(size_t* providers, size_t* failures,
+                   unsigned long long* resolved, unsigned long long* bytes) {
+	if (providers) *providers = g_cache.size();
+	if (failures)       *failures = g_failures;
+	if (resolved)      *resolved = g_resolved;
+	if (bytes)       *bytes = g_bytes;
 }
 
-void MessagesLiberer() {
+void MessagesRelease() {
 	g_cache.clear();
 }

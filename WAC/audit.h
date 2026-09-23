@@ -12,7 +12,7 @@
  *
  *  The log covers three things:
  *    1. the CONTEXT of the collection (tool, version, command line, machine,
- *       operator, time zone, start/end) — the chain of custody;
+ *       operator, time area, start/end) — the chain of custody;
  *    2. every OPERATION carried out, timestamped in UTC and in local time, with
  *       its result;
  *    3. the expected FOOTPRINT of each operation: which trace it leaves and
@@ -41,28 +41,28 @@ namespace Footprint {
 	extern const wchar_t* VOLUME_BRUT;
 	//! Opening an extracted hive (the copy on the USB medium): leaves the
 	//! original untouched.
-	extern const wchar_t* RUCHE_COPIE;
+	extern const wchar_t* HIVE_COPY;
 	//! Reading an extracted artefact file (the copy on the USB medium): event
 	//! logs, Prefetch, jump lists. No access to the original.
-	extern const wchar_t* FICHIER_COPIE;
+	extern const wchar_t* FILE_COPY;
 	//! Documented change to the base block of a COPIED hive (see hive_recover.h).
-	extern const wchar_t* RUCHE_PATCH;
-	//! Replay of the transaction logs into a COPIED hive, with an undo journal
+	extern const wchar_t* HIVE_PATCH;
+	//! Replay of the transaction logs into a COPIED hive, with an undo log
 	//! (see hive_recover.h).
-	extern const wchar_t* RUCHE_REJEU;
+	extern const wchar_t* HIVE_REPLAY;
 	//! A single read-only enumeration of the service manager: reads the current
 	//! state without opening a handle per service.
 	extern const wchar_t* SCM;
 	//! Process enumeration: opens process handles (which can be audited).
-	extern const wchar_t* PROCESSUS;
+	extern const wchar_t* PROCESSES;
 	//! Query of the open sessions through LSA / Terminal Services.
 	extern const wchar_t* SESSIONS;
 	//! Write to the collection medium (the USB key), never to the target.
-	extern const wchar_t* ECRITURE_USB;
+	extern const wchar_t* USB_WRITE;
 }
 
 /*! Opens the log: reads the context of the collection (machine, operator, time
- *  zone, command line) and the start timestamp.
+ *  area, command line) and the start timestamp.
  *  To be called once, as early as possible in `main`.
  *  @param argc number of command-line arguments
  *  @param argv the command-line arguments
@@ -71,13 +71,13 @@ void auditInit(int argc, char* argv[]);
 
 /*! Records an operation.
  *  @param operation what was done, e.g. L"EnumServicesStatusExW"
- *  @param cible on what, e.g. L"\\Windows\\System32\\config\\SYSTEM" (may be empty)
- *  @param resultat HRESULT of the operation
+ *  @param target on what, e.g. L"\\Windows\\System32\\config\\SYSTEM" (may be empty)
+ *  @param result HRESULT of the operation
  *  @param footprint expected trace (one of the `Footprint` constants)
  */
 void auditRecord(const std::wstring& operation,
-                 const std::wstring& cible,
-                 HRESULT resultat,
+                 const std::wstring& target,
+                 HRESULT result,
                  const wchar_t* footprint);
 
 /*! Closes the log (end timestamp, duration) and writes `investigation.json`.
@@ -95,13 +95,13 @@ HRESULT auditWrite();
 *
 *  @return a JSON object { Tool, Host, Operator }
 */
-Json auditContexte();
+Json auditContext();
 
 /*! Start of the collection, in UTC (ISO 8601).
 *  The exhibit manifest must date the extraction.
 *  @return the timestamp, as text. */
-std::wstring auditDebutUtc();
+std::wstring auditStartUtc();
 /*! Start of the collection, in the suspect's local time (ISO 8601).
 *  @return the timestamp, as text.
-*  @see auditDebutUtc */
-std::wstring auditDebutLocal();
+*  @see auditStartUtc */
+std::wstring auditStartLocal();

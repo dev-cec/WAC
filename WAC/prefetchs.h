@@ -72,7 +72,7 @@ struct DirStrings {
 struct Filename {
 	std::wstring filename = L"";//!< the string as the Prefetch file holds it, in NT form
 	std::wstring fullPath = L""; //!< the same path with its drive letter
-	EmpreinteBinaire empreinte; //!< fingerprints of that file, if `--binary` was given
+	BinaryFingerprint fingerprint; //!< fingerprints of that file, if `--binary` was given
 	/*! $MFT reference of the loaded file, read from the metrics array.
 	*
 	*  It identifies the file on the volume INDEPENDENTLY of its name: an
@@ -82,7 +82,7 @@ struct Filename {
 	*  better than a reference attributed to the wrong file.
 	*/
 	MFTInformation reference;
-	bool referenceConnue = false;   //!< true if `reference` was read
+	bool referenceKnown = false;   //!< true if `reference` was read
 
 	/*! Converts the loaded file to JSON.
 	 *  @return its JSON object. */
@@ -105,8 +105,8 @@ struct VolumeInfo {
 
 	/*! Reads a volume block from a Prefetch file.
 	 *  @param data the block's bytes.
-	 *  @param indice rank of the volume in the Prefetch file. */
-	VolumeInfo(LPBYTE data, int indice);
+	 *  @param index rank of the volume in the Prefetch file. */
+	VolumeInfo(LPBYTE data, int index);
 
 	/*! Converts the volume to JSON.
 	 *  @return its JSON object. */
@@ -124,7 +124,7 @@ public:
 	//HEADER
 	std::wstring filename = L"";//!< name of the executable, as the .pf file names it
 	std::wstring fullPath = L"";//!< full path of the executable, once resolved
-	EmpreinteBinaire empreinte; //!< fingerprints of that executable, if `--binary` was given
+	BinaryFingerprint fingerprint; //!< fingerprints of that executable, if `--binary` was given
 	int signature = 0; //!< signature of the .pf file, which identifies its format
 	int version = 0;   //!< format version, which follows the Windows version
 	int size = 0;      //!< size the .pf file declares

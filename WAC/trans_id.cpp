@@ -10,7 +10,7 @@
 namespace {
 
 /*! Une correspondance identifiant -> libellé lisible. */
-struct Traduction { const wchar_t* cle; const wchar_t* valeur; };
+struct Translation { const wchar_t* key; const wchar_t* value; };
 
 /*! Recherche dans une table de traduction, via un index construit UNE FOIS.
  *
@@ -28,22 +28,22 @@ struct Traduction { const wchar_t* cle; const wchar_t* valeur; };
  *  La table contient 3495 clés dupliquées dont les libellés diffèrent : les
  *  variantes suivantes étaient donc déjà inaccessibles, et le restent.
  */
-std::wstring chercher(const Traduction* table, size_t taille,
-                      const std::wstring& cle,
+std::wstring find(const Translation* table, size_t size,
+                      const std::wstring& key,
                       std::unordered_map<std::wstring, const wchar_t*>& index) {
 	if (index.empty()) {
-		index.reserve(taille);
-		for (size_t i = 0; i < taille; ++i) index.emplace(table[i].cle, table[i].valeur);
+		index.reserve(size);
+		for (size_t i = 0; i < size; ++i) index.emplace(table[i].key, table[i].value);
 	}
-	const auto trouve = index.find(cle);
-	return trouve != index.end() ? trouve->second : std::wstring(L"Unmapped GUID");
+	const auto found = index.find(key);
+	return found != index.end() ? found->second : std::wstring(L"Unmapped GUID");
 }
 
 std::unordered_map<std::wstring, const wchar_t*> indexGuid;
 std::unordered_map<std::wstring, const wchar_t*> indexAppId;
 
 /* AppID de jump lists. Sources : forensics.wiki, EricZimmerman/JumpList. */
-const Traduction TABLE_APPID[] = {
+const Translation TABLE_APPID[] = {
 	{L"0006f647f9488d7a", L"AIM 7.5.11.9 (custom AppID + JL support)"},
 	{L"00098b0ef1c84088", L"fulDC 6.78"},
 	{L"01b29f0dc90366bb", L"AIM 5.9.3857"},
@@ -786,7 +786,7 @@ const Traduction TABLE_APPID[] = {
  * L'alignement a corrigé de vraies erreurs, par exemple « Windows 7 File
  * Recovery » renommé « Backup And Restore » (nom actuel du composant), et les
  * préfixes parasites « CLSID … » supprimés. */
-const Traduction TABLE_GUID[] = {
+const Translation TABLE_GUID[] = {
 	{L"{0000031a-0000-0000-c000-000000000046}", L"ClassMoniker (combase.dll)"},
 	{L"{0000002f-0000-0000-c000-000000000046}", L"CLSID_RecordInfo (C:\\Windows\\System32\\oleaut32.dll)"},
 	{L"{00000100-0000-0010-8000-00aa006d2ea4}", L"CLSID DAO.DBEngine.36"},
@@ -17454,7 +17454,7 @@ std::wstring serviceType_to_wstring(int type) {
 	   ordinaire de type 0x20 ressortait
 	   « SERVICE_WIN32_SHARE_PROCESS|SERVICE_USER_SHARE_PROCESS », ce qui est
 	   contradictoire. Seuls les bits élémentaires sont donc décodés. */
-	struct { int bit; PCWSTR nom; } BITS[] = {
+	struct { int bit; PCWSTR name; } BITS[] = {
 		{ SERVICE_KERNEL_DRIVER,        L"SERVICE_KERNEL_DRIVER" },        // 0x001
 		{ SERVICE_FILE_SYSTEM_DRIVER,   L"SERVICE_FILE_SYSTEM_DRIVER" },   // 0x002
 		{ SERVICE_ADAPTER,              L"SERVICE_ADAPTER" },              // 0x004
@@ -17471,19 +17471,19 @@ std::wstring serviceType_to_wstring(int type) {
 	};
 
 	std::wstring s;
-	int connus = 0;
+	int known = 0;
 	for (const auto& e : BITS) {
-		connus |= e.bit;
+		known |= e.bit;
 		if ((type & e.bit) == 0) continue;
 		if (!s.empty()) s += L"|";
-		s += e.nom;
+		s += e.name;
 	}
 
 	// Bits hors vocabulaire connu : signalés plutôt que silencieusement perdus.
-	const int restants = type & ~connus;
-	if (restants != 0) {
+	const int remaining = type & ~known;
+	if (remaining != 0) {
 		if (!s.empty()) s += L"|";
-		s += L"0x" + to_hex(restants);
+		s += L"0x" + to_hex(remaining);
 	}
 
 	return s.empty() ? L"SERVICE_TYPE_UNKNOWN" : s;
@@ -17562,7 +17562,7 @@ std::wstring from_appId(std::wstring appId) {
 	transform(appId.begin(), appId.end(), appId.begin(), ::tolower);
 	// documentation : https://forensics.wiki/list_of_jump_list_ids/
 	// documentation : https://github.com/EricZimmerman/JumpList/blob/master/JumpList/Resources/AppIDs.txt
-	return chercher(TABLE_APPID, sizeof(TABLE_APPID)/sizeof(*TABLE_APPID), appId, indexAppId);
+	return find(TABLE_APPID, sizeof(TABLE_APPID)/sizeof(*TABLE_APPID), appId, indexAppId);
 }
 
 /*! Noms canoniques de PROPERTYKEY, relevés dans la documentation Microsoft.
@@ -17578,9 +17578,9 @@ std::wstring from_appId(std::wstring appId) {
 *  À COMPLÉTER. Les propriétés hors table ressortent sous leur clé
 *  brute, ce qui donne une liste de travail fondée sur des collectes réelles.
 */
-static std::wstring propertyKeyConnue(const std::wstring& guidMinuscules, unsigned int key) {
-	struct Entree { PCWSTR guid; unsigned int pid; PCWSTR nom; };
-	static const Entree TABLE[] = {
+static std::wstring knownPropertyKey(const std::wstring& lowercaseGuid, unsigned int key) {
+	struct Entry { PCWSTR guid; unsigned int pid; PCWSTR name; };
+	static const Entry TABLE[] = {
 		/* Package family name de l'application du Store dont provient l'élément.
 		   learn.microsoft.com/windows/win32/properties/props-system-sourcepackagefamilyname
 		   Forensiquement parlant : relie un document récent à l'application qui
@@ -17590,8 +17590,8 @@ static std::wstring propertyKeyConnue(const std::wstring& guidMinuscules, unsign
 		   qui a révélé le défaut. */
 		{ L"{ffae9db7-1c8d-43ff-818c-84403aa3732d}", 100, L"System.SourcePackageFamilyName" },
 	};
-	for (const Entree& e : TABLE)
-		if (key == e.pid && guidMinuscules == e.guid) return e.nom;
+	for (const Entry& e : TABLE)
+		if (key == e.pid && lowercaseGuid == e.guid) return e.name;
 	return L"";
 }
 
@@ -17619,10 +17619,10 @@ std::wstring to_FriendlyName(std::wstring guid, unsigned int key) {
 	std::wstring result;
 	// Casse d'origine conservee : c'est elle qui figure dans le champ ID du JSON,
 	// et la cle restituee doit pouvoir s'y rapporter telle quelle.
-	const std::wstring cleBrute = guid + L"/" + std::to_wstring(key);
+	const std::wstring rawKey = guid + L"/" + std::to_wstring(key);
 	if (FAILED(CLSIDFromString(guid.c_str(), &p.fmtid))) {
 		log(2, L"🔥to_FriendlyName : GUID malforme " + guid, ERROR_INVALID_DATA);
-		return cleBrute;
+		return rawKey;
 	}
 	p.pid = key;
 	PWSTR out = nullptr;
@@ -17651,7 +17651,7 @@ std::wstring to_FriendlyName(std::wstring guid, unsigned int key) {
 		//
 		result = L"MTP Vendor-extended object properties";
 	}
-	else if (!(result = propertyKeyConnue(guid, key)).empty()) {
+	else if (!(result = knownPropertyKey(guid, key)).empty()) {
 		/* TABLE D'ABORD, API ENSUITE.
 		 *
 		 * POURQUOI. `PSGetNameFromPropertyKey` « ne réussit que pour les
@@ -17680,8 +17680,8 @@ std::wstring to_FriendlyName(std::wstring guid, unsigned int key) {
 		 * est parfaitement lue : seul son NOM est inconnu de nos tables. On
 		 * restitue donc la clé brute, qui est vérifiable et permet de compléter
 		 * la table ; la VALEUR de la propriété, elle, était et reste émise. */
-		result = cleBrute;
-		log(2, L"🔥to_FriendlyName : propriete hors table " + cleBrute);
+		result = rawKey;
+		log(2, L"🔥to_FriendlyName : propriete hors table " + rawKey);
 	}
 	return result;
 }
@@ -17892,5 +17892,5 @@ std::wstring trans_guid_to_wstring(std::wstring guid) {
 	transform(guid.begin(), guid.end(), guid.begin(), ::tolower);
 
 	// La table couvre CLSID, FMTID, dossiers spéciaux, AppID de périphériques…
-	return chercher(TABLE_GUID, sizeof(TABLE_GUID)/sizeof(*TABLE_GUID), guid, indexGuid);
+	return find(TABLE_GUID, sizeof(TABLE_GUID)/sizeof(*TABLE_GUID), guid, indexGuid);
 }

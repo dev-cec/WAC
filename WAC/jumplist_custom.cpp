@@ -42,7 +42,7 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 	path = _path.wstring();
 	log(3, L"🔈replaceAll pathOriginal");
 	// Chemin BRUT : l'echappement est centralise dans json.h.
-	pathOriginal = cheminOriginal(path);
+	pathOriginal = originalPath(path);
 	log(2, L"❇️CustomDestination Path : " + pathOriginal);
 	std::ifstream file(std::filesystem::path(path), std::ios::binary);
 	if (file.good())
@@ -53,8 +53,8 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 		file.seekg(0, std::ios::beg);
 		/* Même motif que jumplist_automatic : propriété portée par le type,
 		   pour que toute sortie de la fonction rende le tampon. */
-		std::unique_ptr<BYTE[]> tampon = std::make_unique<BYTE[]>(size);
-		LPBYTE buffer = tampon.get();
+		std::unique_ptr<BYTE[]> bufferOwner = std::make_unique<BYTE[]>(size);
+		LPBYTE buffer = bufferOwner.get();
 		file.read(reinterpret_cast<CHAR*>(buffer), size);
 		file.close();
 
@@ -74,9 +74,9 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 			memcpy(&createdUtc, &fileInfo.CreationTime, sizeof(createdUtc));
 			memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
 			memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
-			utcVersLocalSuspect(createdUtc, &created);
-			utcVersLocalSuspect(modifiedUtc, &modified);
-			utcVersLocalSuspect(accessedUtc, &accessed);
+			utcToSuspectLocal(createdUtc, &created);
+			utcToSuspectLocal(modifiedUtc, &modified);
+			utcToSuspectLocal(accessedUtc, &accessed);
 		}
 		else {
 			log(2, L"🔥CreateFile hFile ",GetLastError());
@@ -109,7 +109,7 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 		//Control de la taille du fichier pour recherche de fichier LNK
 		if ((size > 24) && (typeInt == 2)) {
 			log(3, L"🔈CustomDestinationCategory");
-			categorie = std::make_unique<CustomDestinationCategory>(buffer, size, path, _sid);
+			category = std::make_unique<CustomDestinationCategory>(buffer, size, path, _sid);
 		}
 		else {
 			log(2, L"🔥" + pathOriginal + L" : no LNK to parse",ERROR_EMPTY );
@@ -132,7 +132,7 @@ Json CustomDestination::toJson() {
 	o.add(L"ModifiedUtc", Json::str(timeToIso8601Utc(modifiedUtc)));
 	o.add(L"Accessed",    Json::str(timeToIso8601Local(accessed)));
 	o.add(L"AccessedUtc", Json::str(timeToIso8601Utc(accessedUtc)));
-	if (categorie) o.merge(categorie->toJson());   // champs mis a plat (schema d'origine)
+	if (category) o.merge(category->toJson());   // champs mis a plat (schema d'origine)
 	return o;
 }
 
@@ -142,8 +142,8 @@ void CustomDestination::clear() {
 	   porte pas de lnk — cas que `toJson()` teste explicitement juste au-dessus.
 	   L'appel se faisait donc sur un pointeur nul. La libération, elle, est
 	   maintenant assurée par le `unique_ptr`. */
-	if (categorie) categorie->clear();
-	categorie.reset();
+	if (category) category->clear();
+	category.reset();
 }
 
 HRESULT JumplistCustoms::getData() {
@@ -154,19 +154,19 @@ HRESULT JumplistCustoms::getData() {
 
 
 	const std::wstring rep = L"\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\CustomDestinations";
-	for (const std::tuple<std::wstring, std::wstring>& profile : conf.profiles) {
+	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
 		// cheminExtrait() gere le cas d'un profil situe sur un autre volume que
 		// Windows, que replaceAll(conf.systemDrive) laissait absolu.
-		const std::filesystem::path repertoire =
-			cheminExtrait(std::get<1>(profile)) + rep;
-		const std::vector<std::filesystem::path> fichiers =
-			listFilesByExtension(repertoire, { L".customDestinations-ms" });
-		size_t iFichier = 0;
-		for (const std::filesystem::path& fichier : fichiers) {
+		const std::filesystem::path directory =
+			extractedPath(std::get<1>(profileEntry)) + rep;
+		const std::vector<std::filesystem::path> files =
+			listFilesByExtension(directory, { L".customDestinations-ms" });
+		size_t iFile = 0;
+		for (const std::filesystem::path& file : files) {
 			log(1, L"➕CustomDestination");
-			printProgress(L"Jumplist " + fichier.filename().wstring(),
-			              ++iFichier, fichiers.size(), L"fic");
-			customDestinations.push_back(CustomDestination(fichier, std::get<0>(profile)));
+			printProgress(L"Jumplist " + file.filename().wstring(),
+			              ++iFile, files.size(), L"fic");
+			customDestinations.push_back(CustomDestination(file, std::get<0>(profileEntry)));
 		}
 	}
 	return ERROR_SUCCESS;

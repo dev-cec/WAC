@@ -1,6 +1,5 @@
-#pragma once
-
-/*  lznt1.h — NTFS DECOMPRESSION (LZNT1).
+/*! \file
+ *  \brief NTFS DECOMPRESSION (LZNT1).
  *
  *  WHY THIS MODULE EXISTS. Windows 11 turns NTFS compression on for
  *  `\Windows\System32\winevt\Logs`: the event logs are stored there compressed
@@ -44,19 +43,20 @@
  *
  *  Portable C++, no dependency: verifiable outside Windows (see lznt1_test).
  */
+#pragma once
 
 #include <cstdint>
 #include <cstddef>
 
 /*! Expands an LZNT1 stream.
 *
-*  @param compresse compressed data (one whole compression unit)
-*  @param tailleCompressee size of that data
-*  @param sortie destination buffer
-*  @param tailleSortie buffer capacity
+*  @param compressed compressed data (one whole compression unit)
+*  @param compressedSize size of that data
+*  @param output destination buffer
+*  @param outputSize buffer capacity
 *  @return number of bytes written; 0 if the input is unusable.
 *          A result below the capacity is not an error: a file's last unit is
 *          usually partial.
 */
-size_t Lznt1Detendre(const uint8_t* compresse, size_t tailleCompressee,
-                     uint8_t* sortie, size_t tailleSortie);
+size_t Lznt1Inflate(const uint8_t* compressed, size_t compressedSize,
+                     uint8_t* output, size_t outputSize);

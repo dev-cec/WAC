@@ -30,7 +30,7 @@ public:
 	* via un pointeur de base (sinon comportement indefini). */
 	virtual ~IShellItem() = default;
 
-	int niveau = 0; //!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	int level = 0; //!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	bool is_zip = false; //!< utile pour les shellbags, permet de définir les fils comm des archive_contents
 
 	/*! conversion de l'objet au format json
@@ -49,7 +49,7 @@ public:
 	* via un pointeur de base (sinon comportement indefini). */
 	virtual ~IExtensionBlock() = default;
 
-	int niveau = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	int level = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	bool isPresent = false;//!< true si un block d’extension est présent sinon false
 	std::wstring signature = L"";//!< la signature du block d’extension, identifie sa structure d'appartenance
 
@@ -86,7 +86,7 @@ struct UserPropertyViewDelegate {
 * @param is_zip précise si le shell item est un fichier zip, utilisé dans le traitement des extensionblocks, si le fichier est un zip ou assimilé alors les fils ont un format spécial, ne concerne que les fichiers, certains zip sont identifiés comme directory et dans ce cas pas de format special, ne concerne que les extensionblock beef0004
 * @param is_file précise si le shell item père est un fichier, utilisé dans le traitement des extensionblocks
 */
-void getExtensionBlock(LPBYTE buffer, std::vector<std::unique_ptr<IExtensionBlock>>* extensionBlocks, int _niveau, bool* is_zip, bool is_file);
+void getExtensionBlock(LPBYTE buffer, std::vector<std::unique_ptr<IExtensionBlock>>* extensionBlocks, int _level, bool* is_zip, bool is_file);
 
 /***************************************************************************************************
 * FLAGS
@@ -217,7 +217,7 @@ struct FsFlags {
 /*! Structure représentent une des valeurs d'un SPS.
 */
 struct SPSValue {
-	int niveau = 0; //!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	int level = 0; //!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	unsigned int size = 0; //! taille de l'objet
 	unsigned short int valueType = 0; //! identifie le type de valeur
 	std::wstring guid = L""; //! guid de la valeur
@@ -231,7 +231,7 @@ struct SPSValue {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	SPSValue(LPBYTE buffer, std::wstring _guid, int _niveau);
+	SPSValue(LPBYTE buffer, std::wstring _guid, int _level);
 
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
@@ -243,7 +243,7 @@ struct SPSValue {
 /*! Structure représentent un Serialized Property Sets.
 */
 struct SPS {
-	int niveau = 0; //!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	int level = 0; //!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	unsigned int size = 0; //!< Taille de l'objet en octets
 	unsigned int version = 0; //!< version de l'objet permettant de définir sa structure interne
 	std::wstring guid = L""; //!< GUID de l'objet
@@ -259,7 +259,7 @@ struct SPS {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	SPS(LPBYTE buffer, int _niveau);
+	SPS(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -267,7 +267,7 @@ struct SPS {
 
 };
 
-std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _niveau, bool Parentiszip = false);
+std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _level, bool Parentiszip = false);
 
 /***************************************************************************************************
 * ID LIST
@@ -275,12 +275,12 @@ std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _niveau, bool Paren
 /*! type représentant une liste de Shell Item
 */
 struct IdList {
-	int niveau = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	int level = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	unsigned int item_size = 0; //!< Taille de l'objet en octets
 	unsigned char type_char = NULL; //!< Type de l'objet
 	std::wstring type_hex = L""; //!< type de l'objet en hexa
 	std::wstring type = L""; //!< nom correspondant au type de l'objet
-	std::wstring donnees = L""; //!< dump hexa de l'objet si besoin de l'include dans le json de sortie
+	std::wstring data = L""; //!< dump hexa de l'objet si besoin de l'include dans le json de sortie
 	std::unique_ptr<IShellItem> shellItem; //!< pointeur vers l'objet shell item correspondant au type
 
 	/*! constructeur
@@ -289,7 +289,7 @@ struct IdList {
 	* @param Parentiszip vrai si l'élément parent est une archive : le contenu
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	IdList(LPBYTE buffer, int _niveau, bool Parentiszip = false);
+	IdList(LPBYTE buffer, int _level, bool Parentiszip = false);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -313,7 +313,7 @@ struct Beef0000 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0000(LPBYTE buffer, int _niveau);
+	Beef0000(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -331,7 +331,7 @@ struct Beef0001 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0001(LPBYTE buffer, int _niveau);
+	Beef0001(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -349,7 +349,7 @@ struct Beef0002 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0002(LPBYTE buffer, int _niveau);
+	Beef0002(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -368,7 +368,7 @@ struct Beef0003 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0003(LPBYTE buffer, int _niveau);
+	Beef0003(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -414,7 +414,7 @@ struct Beef0004 : IExtensionBlock {
 	* @param is_zip est un booléen indiquant que l'objet est une archive compressée
 	* @param is_file est un booléen indiquant que l'objet est un fichier
 	*/
-	Beef0004(LPBYTE buffer, int _niveau, bool* is_zip, bool is_file);
+	Beef0004(LPBYTE buffer, int _level, bool* is_zip, bool is_file);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -432,7 +432,7 @@ struct Beef0006 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0006(LPBYTE buffer, int _niveau);
+	Beef0006(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -450,7 +450,7 @@ struct Beef0008 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0008(LPBYTE buffer, int _niveau);
+	Beef0008(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -468,7 +468,7 @@ struct Beef0009 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0009(LPBYTE buffer, int _niveau);
+	Beef0009(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -486,7 +486,7 @@ struct Beef000a : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef000a(LPBYTE buffer, int _niveau);
+	Beef000a(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -504,7 +504,7 @@ struct Beef000c : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef000c(LPBYTE buffer, int _niveau);
+	Beef000c(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -527,7 +527,7 @@ struct Beef000e : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef000e(LPBYTE buffer, int _niveau);
+	Beef000e(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -545,7 +545,7 @@ struct Beef0010 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0010(LPBYTE buffer, int _niveau);
+	Beef0010(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -563,7 +563,7 @@ struct Beef0013 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0013(LPBYTE buffer, int _niveau);
+	Beef0013(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -581,7 +581,7 @@ struct Beef0014 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0014(LPBYTE buffer, int _niveau);
+	Beef0014(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -599,7 +599,7 @@ struct Beef0016 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0016(LPBYTE buffer, int _niveau);
+	Beef0016(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -617,7 +617,7 @@ struct Beef0017 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0017(LPBYTE buffer, int _niveau);
+	Beef0017(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -642,7 +642,7 @@ struct Beef0019 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0019(LPBYTE buffer, int _niveau);
+	Beef0019(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -660,7 +660,7 @@ struct Beef001a : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef001a(LPBYTE buffer, int _niveau);
+	Beef001a(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -678,7 +678,7 @@ struct Beef001b : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef001b(LPBYTE buffer, int _niveau);
+	Beef001b(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -696,7 +696,7 @@ struct Beef001d : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef001d(LPBYTE buffer, int _niveau);
+	Beef001d(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -714,7 +714,7 @@ struct Beef001e : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef001e(LPBYTE buffer, int _niveau);
+	Beef001e(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -732,7 +732,7 @@ struct Beef0021 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0021(LPBYTE buffer, int _niveau);
+	Beef0021(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -750,7 +750,7 @@ struct Beef0024 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0024(LPBYTE buffer, int _niveau);
+	Beef0024(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -769,7 +769,7 @@ struct Beef0025 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0025(LPBYTE buffer, int _niveau);
+	Beef0025(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -795,7 +795,7 @@ struct Beef0026 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0026(LPBYTE buffer, int _niveau);
+	Beef0026(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -813,7 +813,7 @@ struct Beef0027 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0027(LPBYTE buffer, int _niveau);
+	Beef0027(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -844,7 +844,7 @@ struct BeefUnknown : IExtensionBlock {
 	* @param buffer en entrée contient les bits à parser de l'extension block
 	* @param _niveau niveau dans l'arborescence, pour la mise en forme du json
 	*/
-	BeefUnknown(LPBYTE buffer, int _niveau);
+	BeefUnknown(LPBYTE buffer, int _level);
 
 	//! conversion de l'objet au format json
 	Json toJson() override;
@@ -858,7 +858,7 @@ struct Beef0029 : IExtensionBlock {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 	*        d'un ZIP a un format propre, qui ne se devine pas depuis l'élément
 	*/
-	Beef0029(LPBYTE buffer, int _niveau);
+	Beef0029(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -885,7 +885,7 @@ struct VolumeShellItem : IShellItem {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _niveau);
+	VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -908,7 +908,7 @@ struct ControlPanel : IShellItem {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _niveau);
+	ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -929,7 +929,7 @@ struct ControlPanelCategory :IShellItem {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	ControlPanelCategory(LPBYTE buffer, int _niveau);
+	ControlPanelCategory(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -957,13 +957,13 @@ std::wstring getType(unsigned int type);
 *        annoncée, sans quoi l'entrée suivante serait lue au mauvais endroit.
 * @return la valeur, ou un objet décrivant le type non pris en charge
 */
-Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int niveau,
-              unsigned int tailleEntree = 0, bool* typeNonDecode = nullptr);
+Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsigned int level,
+              unsigned int inputSize = 0, bool* typeNonDecode = nullptr);
 
 /*! Structure définissant le format d'un Property à l’intérieur des UserPropertyView
 */
 struct Property {
-	int niveau = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	int level = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	unsigned int id = 0; //!< identifiant de la property
 	unsigned short int type = 0; //!< type de la property
 	unsigned int size = 0; //!< taille de la property
@@ -985,7 +985,7 @@ struct Property {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	Property(LPBYTE buffer, int _niveau);
+	Property(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -996,7 +996,7 @@ struct Property {
 /*! Structure définissant le format d'un UserPropertyView de signature 0xC01
 */
 struct UserPropertyView0xC01 : UserPropertyViewDelegate {
-	unsigned int niveau = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	unsigned int level = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	std::wstring folder = L""; //!< nom du repertoire
 	std::wstring fullurl = L""; //! url correspondante
 
@@ -1005,7 +1005,7 @@ struct UserPropertyView0xC01 : UserPropertyViewDelegate {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	UserPropertyView0xC01(LPBYTE buffer, int _niveau);
+	UserPropertyView0xC01(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -1017,7 +1017,7 @@ struct UserPropertyView0xC01 : UserPropertyViewDelegate {
 /*! Structure définissant le format d'un UserPropertyView de type 0x23febee
 */
 struct UserPropertyView0x23febbee : UserPropertyViewDelegate {
-	unsigned int niveau = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	unsigned int level = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	std::wstring guid = L""; //!< identifiant GUID
 	std::wstring FriendlyName = L""; //!< nom associé au GUID
 
@@ -1026,7 +1026,7 @@ struct UserPropertyView0x23febbee : UserPropertyViewDelegate {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	UserPropertyView0x23febbee(LPBYTE buffer, int _niveau);
+	UserPropertyView0x23febbee(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -1037,7 +1037,7 @@ struct UserPropertyView0x23febbee : UserPropertyViewDelegate {
 /*! Structure définissant le format d'un UserPropertyView de type 0x7192006
 */
 struct UserPropertyView0x07192006 : UserPropertyViewDelegate {
-	unsigned int niveau = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	unsigned int level = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	FILETIME modified = { 0 }; //!< date de modification
 	FILETIME modifiedUtc = { 0 };//!< date de modification au format UTC
 	FILETIME created = { 0 }; //!< date de création
@@ -1054,7 +1054,7 @@ struct UserPropertyView0x07192006 : UserPropertyViewDelegate {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	UserPropertyView0x07192006(LPBYTE buffer, int _niveau);
+	UserPropertyView0x07192006(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -1065,7 +1065,7 @@ struct UserPropertyView0x07192006 : UserPropertyViewDelegate {
 /*! Structure définissant le format d'un UserPropertyView de type 0x10312005
 */
 struct UserPropertyView0x10312005 : UserPropertyViewDelegate {
-	unsigned int niveau = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
+	unsigned int level = 0;//!< hiérarchie dans l'arbre des IshellItem, utiliser pour la mise en forme json
 	std::wstring name = L"";//!< nom  de la propriété
 	std::wstring identifier = L""; //!< identifiant de la propriété
 	std::wstring filesystem = L"";//!< nom du système de fichier
@@ -1079,7 +1079,7 @@ struct UserPropertyView0x10312005 : UserPropertyViewDelegate {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	UserPropertyView0x10312005(LPBYTE buffer, int _niveau);
+	UserPropertyView0x10312005(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -1136,7 +1136,7 @@ struct UsersPropertyView :IShellItem {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	UsersPropertyView(LPBYTE buffer, int _niveau);
+	UsersPropertyView(LPBYTE buffer, int _level);
 
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
@@ -1160,7 +1160,7 @@ struct RootFolder :IShellItem {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	RootFolder(LPBYTE buffer, int _niveau);
+	RootFolder(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -1184,7 +1184,7 @@ struct NetworkShellItem :IShellItem {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	NetworkShellItem(LPBYTE buffer, int _niveau);
+	NetworkShellItem(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -1207,7 +1207,7 @@ struct ArchiveFileContent :IShellItem {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	ArchiveFileContent(LPBYTE buffer, int _niveau);
+	ArchiveFileContent(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -1226,7 +1226,7 @@ struct URIShellItem :IShellItem {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	URIShellItem(LPBYTE buffer, int _niveau);
+	URIShellItem(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -1253,7 +1253,7 @@ struct FileEntryShellItem :IShellItem {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	FileEntryShellItem(LPBYTE buffer, unsigned short int itemSize, unsigned char shell_item_type_char, int _niveau);
+	FileEntryShellItem(LPBYTE buffer, unsigned short int itemSize, unsigned char shell_item_type_char, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -1276,7 +1276,7 @@ public:
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	UsersFilesFolder(LPBYTE buffer, int _niveau);
+	UsersFilesFolder(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -1306,7 +1306,7 @@ struct FavoriteShellitem :IShellItem {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	FavoriteShellitem(LPBYTE buffer, int _niveau);
+	FavoriteShellitem(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/
@@ -1339,8 +1339,8 @@ struct TypedShellItem : IShellItem {
 	* @param _typeName libellé du type reconnu
 	* @param _niveau niveau dans l'arborescence
 	*/
-	TypedShellItem(LPBYTE buffer, unsigned short taille, const std::wstring& _typeName,
-	               int _niveau);
+	TypedShellItem(LPBYTE buffer, unsigned short size, const std::wstring& _typeName,
+	               int _level);
 
 	Json toJson() override;
 };
@@ -1369,7 +1369,7 @@ struct DelegateFolder : IShellItem {
 	* @param taille taille de l'item
 	* @param _niveau niveau dans l'arborescence
 	*/
-	DelegateFolder(LPBYTE buffer, unsigned short taille, int _niveau);
+	DelegateFolder(LPBYTE buffer, unsigned short size, int _level);
 
 	Json toJson() override;
 };
@@ -1383,7 +1383,7 @@ struct UnknownShellItem :IShellItem {
 	* @param _niveau est le niveau dans l'arborescence d'élément utilisé pour la mise en forme du fichier json de sortie
 
 	*/
-	UnknownShellItem(LPBYTE buffer, int _niveau);
+	UnknownShellItem(LPBYTE buffer, int _level);
 	/*! conversion de l'objet au format json
 	* @return wstring le code json
 	*/

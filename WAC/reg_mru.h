@@ -34,7 +34,7 @@
 struct Mru {
 public:
 	unsigned int id = 0;      //!< rank in MRUListEx: 0 is the most recent
-	unsigned int niveau = 0;  //!< depth in the tree, which the output JSON reproduces
+	unsigned int level = 0;  //!< depth in the tree, which the output JSON reproduces
 	std::wstring extension = L"";  //!< extension of the list the entry belongs to
 	std::wstring sid = L"";        //!< SID of the user who opened the file
 	std::wstring sidName = L"";    //!< name of that user
@@ -55,26 +55,26 @@ public:
 	std::vector<Mru> mrus;  //!< the entries, in the order they were read
 	/*! Number of entries walked, for the progress display: `parse` being
 	* recursive, the total is not known in advance. */
-	unsigned long long nbParcourus = 0;
-	unsigned int niveau = 0; //!< depth reached in the tree, for the output JSON
+	unsigned long long nWalked = 0;
+	unsigned int level = 0; //!< depth reached in the tree, for the output JSON
 
 	/*! Reads both ComDlg32 keys in each user's NTUSER.DAT.
-	 *  @param _niveau depth to start from, used to lay out the hierarchy in the
+	 *  @param _level depth to start from, used to lay out the hierarchy in the
 	 *         output JSON.
 	 *  @return S_OK, or the failure of the last read attempted. */
-	HRESULT getData(int _niveau = 0);
+	HRESULT getData(int _level = 0);
 
 	/*! Parses a key ordered by MRUListEx, and recurses into its subkeys.
 	 *  @param hKey the key to parse, already open.
 	 *  @param sid SID of the user whose hive holds it.
 	 *  @param source the key the entries come from.
 	 *  @param out receives the parsed entries.
-	 *  @param niveau depth of this key, for the output JSON.
+	 *  @param level depth of this key, for the output JSON.
 	 *  @param _Parentiszip whether the parent item is a zip archive, which
 	 *         changes how the shell items below it are read.
 	 *  @param extension extension of the list, that is the name of the subkey.
 	 *  @return S_OK, or the failure of the last read attempted. */
-	HRESULT parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vector<Mru>* out, unsigned int niveau, bool _Parentiszip, std::wstring extension);
+	HRESULT parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vector<Mru>* out, unsigned int level, bool _Parentiszip, std::wstring extension);
 
 	/*! Writes `mrus.json` into the output directory.
 	 *  @return the result of the write. */

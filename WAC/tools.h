@@ -119,7 +119,7 @@ HRESULT loadProfileList();
 * @return la lettre en majuscule, ou celle du volume système si le chemin n'en
 *         porte pas (chemin déjà relatif à la racine)
 */
-std::wstring volumeDuChemin(const std::wstring& absolu);
+std::wstring volumeOfPath(const std::wstring& absolute);
 
 /*! Rend un chemin absolu relatif à la racine de SON volume.
 *
@@ -131,7 +131,7 @@ std::wstring volumeDuChemin(const std::wstring& absolu);
 * @param absolu chemin absolu
 * @return le chemin sans sa lettre de lecteur
 */
-std::wstring cheminRelatifAuVolume(const std::wstring& absolu);
+std::wstring pathRelativeToVolume(const std::wstring& absolute);
 
 /*! Chemin, sur le support de collecte, de la copie extraite d'un fichier.
 *
@@ -149,7 +149,7 @@ std::wstring cheminRelatifAuVolume(const std::wstring& absolu);
 * @param absolu chemin du fichier sur la machine examinée
 * @return le chemin de sa copie sur le support de collecte
 */
-std::wstring cheminExtrait(const std::wstring& absolu);
+std::wstring extractedPath(const std::wstring& absolute);
 
 /*! Forme canonique « X:\\… » d'un chemin de fichier relevé dans un artefact.
 *
@@ -164,7 +164,7 @@ std::wstring cheminExtrait(const std::wstring& absolu);
 *         local déterminable : partage réseau, chemin relatif, variable propre à
 *         un utilisateur ou inconnue
 */
-std::wstring normaliserCheminFichier(std::wstring chemin);
+std::wstring normalizeFilePath(std::wstring path);
 
 /*! Résout un chemin de binaire tel que le registre l'écrit.
 *
@@ -181,7 +181,7 @@ std::wstring normaliserCheminFichier(std::wstring chemin);
 *          (un objet noyau comme `\Driver\xxx`, par exemple)
 *  @see la mise en œuvre, dans tools.cpp, documente les formes rencontrées
 */
-std::wstring cheminBinaire(std::wstring imagePath);
+std::wstring binaryPath(std::wstring imagePath);
 
 /*! Chemin d'un fichier extrait sous une racine donnée.
 *
@@ -194,7 +194,7 @@ std::wstring cheminBinaire(std::wstring imagePath);
 *  @param absolu chemin d'origine, avec sa lettre de volume ou relatif au volume système
 *  @return racine + [\_volume_X] + chemin relatif au volume
 */
-std::wstring cheminSous(const std::wstring& racine, const std::wstring& absolu);
+std::wstring pathUnder(const std::wstring& root, const std::wstring& absolute);
 
 /*! Chemin d'ORIGINE d'un fichier, à partir de sa copie extraite.
 *
@@ -210,7 +210,7 @@ std::wstring cheminSous(const std::wstring& racine, const std::wstring& absolu);
 * @param extrait chemin de la copie, sous `conf.mountpoint`
 * @return le chemin d'origine, avec sa vraie lettre de lecteur
 */
-std::wstring cheminOriginal(const std::wstring& extrait);
+std::wstring originalPath(const std::wstring& extracted);
 
 extern AppliConf conf;// variable globale pour la conf de l'application
 
@@ -274,8 +274,8 @@ void printSuccess();
 * @param total quantité totale attendue, ou 0 si inconnue
 * @param unite unité à afficher (ex. L"Kio", L"evt")
 */
-void printProgress(const std::wstring& libelle, unsigned long long fait,
-                   unsigned long long total, const wchar_t* unite);
+void printProgress(const std::wstring& label, unsigned long long done,
+                   unsigned long long total, const wchar_t* unit);
 
 /*! Termine une ligne de progression et restaure le libellé d'étape.
 * Appelée automatiquement par printSuccess() et printError() : à n'appeler
@@ -290,7 +290,7 @@ void printProgressEnd();
 * le « OK » ou l'erreur reste rattaché à son étape.
 * @param libelle ex. L" - Extracting SHIMCACHE Registry Keys : "
 */
-void printStep(const std::wstring& libelle);
+void printStep(const std::wstring& label);
 
 /*! Progression d'un artefact, avec limitation de fréquence.
 *
@@ -302,7 +302,7 @@ void printStep(const std::wstring& libelle);
 * @param fait nombre d'éléments traités
 * @param total nombre total attendu, ou 0 si inconnu
 */
-void printProgressStep(const std::wstring& artefact, unsigned long long fait,
+void printProgressStep(const std::wstring& artefact, unsigned long long done,
                        unsigned long long total);
 
 /*! affichage du message d'erreur correspondant au résultat HRESULT en ROUGE dans la console
@@ -379,7 +379,7 @@ void dump(LPBYTE buffer, int start, int end);
 * @param longueur nombre d'octets à restituer depuis `start`
 * @return les octets en hexadécimal, séparés par des espaces
 */
-std::wstring dump_wstring(LPBYTE buffer, int start, int longueur);
+std::wstring dump_wstring(LPBYTE buffer, int start, int length);
 
 ///////////////////////////////////////////////////////
 //chaînes
@@ -530,7 +530,7 @@ std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc);
 * @param filetimeLocal reçoit l'instant en heure locale du suspect
 * @return true si la conversion a abouti
 */
-bool utcVersLocalSuspect(const FILETIME& filetimeUtc, FILETIME* filetimeLocal);
+bool utcToSuspectLocal(const FILETIME& filetimeUtc, FILETIME* filetimeLocal);
 
 /*! Relève le fuseau de la machine examinée dans la ruche SYSTEM du suspect.
 *
@@ -591,7 +591,7 @@ std::string wstring_to_string(const std::wstring& wstr);
 * @param s la chaîne à normaliser
 * @return la chaîne en minuscules
 */
-std::wstring enMinuscules(std::wstring s);
+std::wstring toLower(std::wstring s);
 
 /*! Dit si une valeur de registre est une RÉFÉRENCE de ressource MUI plutôt
 * qu'un texte lisible.
@@ -609,7 +609,7 @@ std::wstring enMinuscules(std::wstring s);
 * @param valeur la valeur lue dans la ruche
 * @return true s'il s'agit d'une référence de ressource
 */
-bool estReferenceMui(const std::wstring& valeur);
+bool estReferenceMui(const std::wstring& value);
 
 /*! Conversion d'une chaîne de multiple wstring concaténés en vecteur de wstring. chaque chaîne doit être séparée de la précédente par \0
 * @param data pointeur vers le tableau contenant les chaînes de caractères
@@ -636,7 +636,7 @@ std::wstring guid_to_wstring(GUID guid);
 * @param ws pointeur sur un wstring contenant la valeur lue en base de registre
 * @return ERROR_SUCCESS en cas de succès sinon un code erreur.
 */
-HRESULT getRegSzValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, std::wstring* ws);
+HRESULT getRegSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::wstring* ws);
 
 /*! Lecture d'un FILMETIME en base de registre
 * @param key clé de la base de registre
@@ -645,7 +645,7 @@ HRESULT getRegSzValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, std::wstring
 * @param filetime pointeur sur un FILETIME contenant la valeur lue en base de registre
 * @return ERROR_SUCCESS en cas de succès sinon un code erreur.
 */
-HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, FILETIME* filetime);
+HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, FILETIME* filetime);
 
 /*! Lecture d'une valeur binaire en base de registre
 * nécessite d'utiliser delete[] octets pour libérer la mémoire
@@ -656,7 +656,7 @@ HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, FILETI
 * @param taille en entrée la taille du tampon, en sortie celle de la valeur lue
 * @return ERROR_SUCCESS en cas de succès sinon un code erreur registre
 */
-HRESULT getRegBinaryValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, LPBYTE* octets, DWORD* taille);
+HRESULT getRegBinaryValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, LPBYTE* bytes, DWORD* size);
 
 /*! Lecture d'un booléen en base de registre
 * @param key clé de la base de registre
@@ -665,7 +665,7 @@ HRESULT getRegBinaryValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, LPBYTE* 
 * @param valeur pointeur sur un booléen contenant la valeur lue en base de registre
 * @return ERROR_SUCCESS en cas de succès sinon un code erreur.
 */
-HRESULT getRegboolValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, bool* valeur);
+HRESULT getRegboolValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, bool* value);
 
 /*! Lit une valeur REG_DWORD (32 bits) en base de registre.
 * @param key clé ouverte
@@ -674,7 +674,7 @@ HRESULT getRegboolValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, bool* vale
 * @param pdword reçoit la valeur lue
 * @return ERROR_SUCCESS, ou un code d'erreur
 */
-HRESULT getRegDwordValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, DWORD* pdword);
+HRESULT getRegDwordValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, DWORD* pdword);
 
 /*! Lit une valeur REG_QWORD (64 bits) en base de registre.
 * Utile pour les valeurs qui portent un FILETIME brut, comme `InstallTime` sous
@@ -685,7 +685,7 @@ HRESULT getRegDwordValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, DWORD* pd
 * @param pqword reçoit la valeur lue
 * @return ERROR_SUCCESS, ou un code d'erreur
 */
-HRESULT getRegQwordValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, unsigned long long* pqword);
+HRESULT getRegQwordValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, unsigned long long* pqword);
 
 /*! Lecture d'un MULTISZ (multiple chaînes de caractères concaténées) en base de registre
 * @param key clé de la base de registre
@@ -694,7 +694,7 @@ HRESULT getRegQwordValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, unsigned 
 * @param out pointeur sur un tableau de wstring contenant les valeurs lues en base de registre
 * @return ERROR_SUCCESS en cas de succès sinon un code erreur.
 */
-HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, std::vector<std::wstring>* out);
+HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vector<std::wstring>* out);
 
 
 /*! Lecture d'un MULTISZ (multiple chaînes de caractères concaténées) en base de registre
@@ -710,7 +710,7 @@ std::wstring getVolumeLetter(std::wstring searchSerial);
 * @param valeur la valeur JSON racine (généralement un Json::arr())
 * @return ERROR_SUCCESS, ou un code d'erreur
 */
-HRESULT writeJsonFile(const std::string& nom, const Json& valeur);
+HRESULT writeJsonFile(const std::string& name, const Json& value);
 
 /*! Écrit un tableau JSON au fil de l'eau, sans le construire en mémoire.
 *
@@ -727,33 +727,33 @@ HRESULT writeJsonFile(const std::string& nom, const Json& valeur);
 *
 *  Un tableau vide donne `[]`, comme `writeJsonFile`.
 */
-class EcrivainJsonTableau {
+class JsonArrayWriter {
 public:
 	/*! Ouvre `_outputDir`/`nom` et écrit l'ouverture du tableau.
 	*  @param nom nom du fichier de sortie, sans chemin */
-	explicit EcrivainJsonTableau(const std::string& nom);
+	explicit JsonArrayWriter(const std::string& name);
 
 	/*! Ferme le tableau et le fichier. Appelé par le destructeur s'il a été
 	*  oublié, pour qu'une sortie anticipée ne laisse pas un JSON tronqué.
 	*  @return ERROR_SUCCESS, ou E_FAIL si l'écriture a échoué */
-	HRESULT fermer();
+	HRESULT close();
 
-	~EcrivainJsonTableau();
+	~JsonArrayWriter();
 
 	/*! Ajoute un élément. Sans effet si le fichier n'a pas pu être ouvert. */
-	void ajouter(const Json& element);
+	void add(const Json& element);
 
 	//! Vrai si le fichier est ouvert en écriture.
-	bool ouvert() const { return ouvert_; }
+	bool open() const { return open_; }
 	//! Nombre d'éléments écrits.
-	unsigned long long ecrits() const { return ecrits_; }
+	unsigned long long written() const { return written_; }
 
 private:
 	std::wofstream f_;
-	unsigned long long ecrits_ = 0;
-	bool ouvert_ = false;
-	bool ferme_ = false;
-	std::string nom_;
+	unsigned long long written_ = 0;
+	bool open_ = false;
+	bool closed_ = false;
+	std::string name_;
 };
 
 /*! Écrit un artefact NON COLLECTÉ, en consignant la raison de l'échec.
@@ -768,8 +768,8 @@ private:
 * @param resultat code d'erreur rencontré
 * @return ERROR_SUCCESS si le fichier a pu être écrit
 */
-HRESULT writeNotCollected(const std::string& nom, const std::wstring& artefact,
-                          HRESULT resultat);
+HRESULT writeNotCollected(const std::string& name, const std::wstring& artefact,
+                          HRESULT result);
 
 /*! Liste les fichiers réguliers d'un répertoire, filtrés par extension.
 * Ne lève jamais d'exception : un répertoire absent ou illisible rend une liste
@@ -781,5 +781,5 @@ HRESULT writeNotCollected(const std::string& nom, const std::wstring& artefact,
 * @param extensions extensions acceptées, point compris (ex. { L".lnk", L".url" })
 * @return chemins retenus, dans l'ordre du parcours ; éventuellement vide
 */
-std::vector<std::filesystem::path> listFilesByExtension(const std::filesystem::path& repertoire,
+std::vector<std::filesystem::path> listFilesByExtension(const std::filesystem::path& directory,
 	const std::vector<std::wstring>& extensions);

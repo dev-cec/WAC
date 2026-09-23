@@ -8,13 +8,13 @@
 namespace {
 
 //! Racine des définitions de tâches, relative au point d'extraction.
-const wchar_t* SOUS_DOSSIER_TASKS = L"\\Windows\\System32\\Tasks";
+const wchar_t* TASKS_SUBFOLDER = L"\\Windows\\System32\\Tasks";
 
 /*! Historique d'exécution d'une tâche, lu dans TaskCache. */
-struct Historique {
-	FILETIME derniereExecutionUtc = { 0 };
-	LONG     dernierResultat = 0;
-	bool     trouve = false;
+struct History {
+	FILETIME lastRunUtc = { 0 };
+	LONG     lastResult = 0;
+	bool     found = false;
 };
 
 /*! Décode la valeur binaire `DynamicInfo` du TaskCache.
@@ -30,14 +30,14 @@ struct Historique {
  *  La taille est vérifiée avant lecture : la valeur vient du registre de la
  *  machine examinée, donc d'une source non fiable.
  */
-Historique decoderDynamicInfo(const BYTE* donnees, DWORD taille) {
-	Historique h;
-	if (!donnees || taille < 0x18) return h;
-	const ULONGLONG brut = *reinterpret_cast<const ULONGLONG*>(donnees + 0x0C);
-	h.derniereExecutionUtc.dwLowDateTime  = (DWORD)(brut & 0xFFFFFFFFULL);
-	h.derniereExecutionUtc.dwHighDateTime = (DWORD)(brut >> 32);
-	h.dernierResultat = *reinterpret_cast<const LONG*>(donnees + 0x14);
-	h.trouve = true;
+History decoderDynamicInfo(const BYTE* data, DWORD size) {
+	History h;
+	if (!data || size < 0x18) return h;
+	const ULONGLONG brut = *reinterpret_cast<const ULONGLONG*>(data + 0x0C);
+	h.lastRunUtc.dwLowDateTime  = (DWORD)(brut & 0xFFFFFFFFULL);
+	h.lastRunUtc.dwHighDateTime = (DWORD)(brut >> 32);
+	h.lastResult = *reinterpret_cast<const LONG*>(data + 0x14);
+	h.found = true;
 	return h;
 }
 
@@ -47,63 +47,63 @@ Historique decoderDynamicInfo(const BYTE* donnees, DWORD taille) {
  *  récursif, avec un garde-fou de profondeur (un index de registre corrompu
  *  pourrait boucler).
  */
-void parcourirArbre(ORHKEY cle, const std::wstring& chemin,
-                    std::map<std::wstring, std::wstring>& idParChemin,
-                    unsigned profondeurRestante) {
-	if (!cle || profondeurRestante == 0) return;
+void walkTree(ORHKEY key, const std::wstring& path,
+                    std::map<std::wstring, std::wstring>& idByPath,
+                    unsigned depthLeft) {
+	if (!key || depthLeft == 0) return;
 
 	// Une feuille porte la valeur Id ; une branche porte des sous-clés.
 	std::wstring id;
-	if (getRegSzValue(cle, L"", L"Id", &id) == ERROR_SUCCESS && !id.empty())
-		idParChemin.emplace(enMinuscules(chemin), id);
+	if (getRegSzValue(key, L"", L"Id", &id) == ERROR_SUCCESS && !id.empty())
+		idByPath.emplace(toLower(path), id);
 
-	DWORD nSousCles = 0;
-	if (ORQueryInfoKey(cle, NULL, NULL, &nSousCles, NULL, NULL, NULL,
+	DWORD nSubKeys = 0;
+	if (ORQueryInfoKey(key, NULL, NULL, &nSubKeys, NULL, NULL, NULL,
 	                   NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
 		return;
 
-	for (DWORD i = 0; i < nSousCles; ++i) {
-		WCHAR nom[MAX_KEY_NAME] = L"";
-		DWORD taille = MAX_KEY_NAME;
-		if (OREnumKey(cle, i, nom, &taille, NULL, NULL, NULL) != ERROR_SUCCESS) continue;
-		ORHKEY sousCle = NULL;
-		if (OROpenKey(cle, nom, &sousCle) != ERROR_SUCCESS) continue;
-		parcourirArbre(sousCle, chemin + L"\\" + nom, idParChemin, profondeurRestante - 1);
-		ORCloseKey(sousCle);
+	for (DWORD i = 0; i < nSubKeys; ++i) {
+		WCHAR name[MAX_KEY_NAME] = L"";
+		DWORD size = MAX_KEY_NAME;
+		if (OREnumKey(key, i, name, &size, NULL, NULL, NULL) != ERROR_SUCCESS) continue;
+		ORHKEY subKey = NULL;
+		if (OROpenKey(key, name, &subKey) != ERROR_SUCCESS) continue;
+		walkTree(subKey, path + L"\\" + name, idByPath, depthLeft - 1);
+		ORCloseKey(subKey);
 	}
 }
 
 /*! Lit le TaskCache : chemin de tâche -> historique d'exécution. */
-std::map<std::wstring, Historique> lireTaskCache() {
-	std::map<std::wstring, Historique> resultat;
+std::map<std::wstring, History> readTaskCache() {
+	std::map<std::wstring, History> result;
 	if (!conf.Software) {
 		log(2, L"🔥TaskCache : ruche SOFTWARE indisponible, historique non collecte");
-		return resultat;
+		return result;
 	}
 
-	const std::wstring racine = L"Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache";
-	ORHKEY cleArbre = NULL;
-	if (OROpenKey(conf.Software, (racine + L"\\Tree").c_str(), &cleArbre) != ERROR_SUCCESS) {
+	const std::wstring root = L"Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache";
+	ORHKEY treeKey = NULL;
+	if (OROpenKey(conf.Software, (root + L"\\Tree").c_str(), &treeKey) != ERROR_SUCCESS) {
 		log(2, L"🔥TaskCache\\Tree introuvable : historique d'execution non collecte");
-		return resultat;
+		return result;
 	}
 
-	std::map<std::wstring, std::wstring> idParChemin;
-	parcourirArbre(cleArbre, L"", idParChemin, 16);
-	ORCloseKey(cleArbre);
-	log(2, L"❇️TaskCache : " + std::to_wstring(idParChemin.size()) + L" tache(s) referencee(s)");
+	std::map<std::wstring, std::wstring> idByPath;
+	walkTree(treeKey, L"", idByPath, 16);
+	ORCloseKey(treeKey);
+	log(2, L"❇️TaskCache : " + std::to_wstring(idByPath.size()) + L" tache(s) referencee(s)");
 
-	for (const std::pair<const std::wstring, std::wstring>& e : idParChemin) {
-		const std::wstring cleTache = racine + L"\\Tasks\\" + e.second;
-		LPBYTE donnees = NULL;
-		DWORD taille = 0;
-		if (getRegBinaryValue(conf.Software, cleTache.c_str(), L"DynamicInfo",
-		                      &donnees, &taille) == ERROR_SUCCESS) {
-			resultat.emplace(e.first, decoderDynamicInfo(donnees, taille));
-			delete[] donnees;
+	for (const std::pair<const std::wstring, std::wstring>& e : idByPath) {
+		const std::wstring taskKey = root + L"\\Tasks\\" + e.second;
+		LPBYTE data = NULL;
+		DWORD size = 0;
+		if (getRegBinaryValue(conf.Software, taskKey.c_str(), L"DynamicInfo",
+		                      &data, &size) == ERROR_SUCCESS) {
+			result.emplace(e.first, decoderDynamicInfo(data, size));
+			delete[] data;
 		}
 	}
-	return resultat;
+	return result;
 }
 
 //! Vrai si la chaîne ressemble à un SID (« S-1-… »).
@@ -112,16 +112,16 @@ bool estUnSid(const std::wstring& v) {
 }
 
 /*! Remplit une tâche depuis son document XML. */
-void lireDefinition(const XmlNode& racine, ScheduledTask& t) {
-	if (const XmlNode* info = racine.enfant(L"RegistrationInfo")) {
-		t.author           = info->texteDe(L"Author");
-		t.description      = info->texteDe(L"Description");
-		t.registrationDate = info->texteDe(L"Date");
+void readDefinition(const XmlNode& root, ScheduledTask& t) {
+	if (const XmlNode* info = root.child(L"RegistrationInfo")) {
+		t.author           = info->textOf(L"Author");
+		t.description      = info->textOf(L"Description");
+		t.registrationDate = info->textOf(L"Date");
 	}
 
 	// Principal : compte d'exécution. UserId contient un nom OU un SID.
-	for (const XmlNode* p : racine.descendants(L"Principal")) {
-		const std::wstring userId = p->texteDe(L"UserId");
+	for (const XmlNode* p : root.descendants(L"Principal")) {
+		const std::wstring userId = p->textOf(L"UserId");
 		if (userId.empty()) continue;
 		if (estUnSid(userId)) {
 			t.runAsSid = userId;
@@ -130,19 +130,19 @@ void lireDefinition(const XmlNode& racine, ScheduledTask& t) {
 		else t.runAs = userId;
 		break;
 	}
-	if (t.runAs.empty()) t.runAs = racine.texteDe(L"Principals/Principal/GroupId");
+	if (t.runAs.empty()) t.runAs = root.textOf(L"Principals/Principal/GroupId");
 
 	// Settings\Enabled vaut « true » par défaut quand l'élément est absent.
-	t.enabled = (racine.texteDe(L"Settings/Enabled") != L"false");
+	t.enabled = (root.textOf(L"Settings/Enabled") != L"false");
 	t.state   = t.enabled ? L"Enabled" : L"Disabled";
 
 	// Actions : Exec (exécutable) ou ComHandler (CLSID).
-	for (const XmlNode* a : racine.descendants(L"Exec")) {
+	for (const XmlNode* a : root.descendants(L"Exec")) {
 		Action act;
 		act.type       = L"Exec";
-		act.command    = a->texteDe(L"Command");
-		act.arguments  = a->texteDe(L"Arguments");
-		act.workingDir = a->texteDe(L"WorkingDirectory");
+		act.command    = a->textOf(L"Command");
+		act.arguments  = a->textOf(L"Arguments");
+		act.workingDir = a->textOf(L"WorkingDirectory");
 		if (conf.binary && !act.command.empty()) {
 			/* Le chemin peut être entre guillemets et contenir des variables.
 			   Il était développé avec ExpandEnvironmentStringsW — l'environnement
@@ -152,31 +152,31 @@ void lireDefinition(const XmlNode& racine, ScheduledTask& t) {
 			   Un nom nu (« cmd.exe ») est cherché comme Windows le ferait en
 			   premier, dans System32. Un exécutable absent n'est pas une
 			   anomalie ici (logiciel désinstallé) : Command le montre. */
-			const std::wstring commande = replaceAll(act.command, L"\"", L"");
-			std::wstring chemin = normaliserCheminFichier(commande);
-			if (chemin.empty() && commande.find(L'\\') == std::wstring::npos
-			    && commande.find(L'%') == std::wstring::npos)
-				chemin = conf.systemDrive + L"\\Windows\\System32\\" + commande;
-			if (!chemin.empty()) act.empreinte = EmpreinteFichier(chemin);
+			const std::wstring command = replaceAll(act.command, L"\"", L"");
+			std::wstring path = normalizeFilePath(command);
+			if (path.empty() && command.find(L'\\') == std::wstring::npos
+			    && command.find(L'%') == std::wstring::npos)
+				path = conf.systemDrive + L"\\Windows\\System32\\" + command;
+			if (!path.empty()) act.fingerprint = FingerprintFile(path);
 		}
 		t.actions.push_back(std::move(act));
 	}
-	for (const XmlNode* a : racine.descendants(L"ComHandler")) {
+	for (const XmlNode* a : root.descendants(L"ComHandler")) {
 		Action act;
 		act.type    = L"ComHandler";
-		act.classId = a->texteDe(L"ClassId");
-		act.data    = a->texteDe(L"Data");
+		act.classId = a->textOf(L"ClassId");
+		act.data    = a->textOf(L"Data");
 		t.actions.push_back(std::move(act));
 	}
 
 	// Déclencheurs : chaque enfant de <Triggers> porte son type dans son nom.
-	if (const XmlNode* trigs = racine.enfant(L"Triggers")) {
-		for (const std::unique_ptr<XmlNode>& n : trigs->enfants) {
+	if (const XmlNode* trigs = root.child(L"Triggers")) {
+		for (const std::unique_ptr<XmlNode>& n : trigs->children) {
 			Trigger tr;
-			tr.type     = n->nom;                       // TimeTrigger, LogonTrigger…
-			tr.debut    = n->texteDe(L"StartBoundary");
-			tr.actif    = (n->texteDe(L"Enabled") != L"false");
-			tr.interval = n->texteDe(L"Repetition/Interval");
+			tr.type     = n->name;                       // TimeTrigger, LogonTrigger…
+			tr.start    = n->textOf(L"StartBoundary");
+			tr.active    = (n->textOf(L"Enabled") != L"false");
+			tr.interval = n->textOf(L"Repetition/Interval");
 			t.triggers.push_back(std::move(tr));
 		}
 	}
@@ -206,7 +206,7 @@ Json ScheduledTask::toJson() const {
 		Json j = Json::obj();
 		j.add(L"Type", Json::str(a.type));
 		if (a.type == L"Exec") {
-			ajouterEmpreintes(j, a.empreinte);
+			addFingerprints(j, a.fingerprint);
 			j.add(L"Command",          Json::str(a.command));
 			j.add(L"Arguments",        Json::str(a.arguments));
 			j.add(L"WorkingDirectory", Json::str(a.workingDir));
@@ -227,8 +227,8 @@ Json ScheduledTask::toJson() const {
 	for (const Trigger& t : triggers) {
 		Json j = Json::obj();
 		j.add(L"Type",     Json::str(t.type));
-		j.add(L"Enabled",  Json::boolean(t.actif));
-		j.add(L"Start",    Json::str(t.debut));
+		j.add(L"Enabled",  Json::boolean(t.active));
+		j.add(L"Start",    Json::str(t.start));
 		j.add(L"Interval", Json::str(t.interval));
 		jsonTriggers.push(std::move(j));
 	}
@@ -248,57 +248,57 @@ HRESULT ScheduledTasks::getData() {
 	log(0, L"ℹ️Scheduled tasks (offline) :");
 	log(0, L"*******************************************************************************************************************");
 
-	const std::filesystem::path racine = conf.mountpoint + SOUS_DOSSIER_TASKS;
+	const std::filesystem::path root = conf.mountpoint + TASKS_SUBFOLDER;
 	std::error_code ec;
-	if (!std::filesystem::exists(racine, ec)) {
-		log(2, L"🔥Definitions de taches absentes : " + racine.wstring(), ERROR_PATH_NOT_FOUND);
+	if (!std::filesystem::exists(root, ec)) {
+		log(2, L"🔥Definitions de taches absentes : " + root.wstring(), ERROR_PATH_NOT_FOUND);
 		return ERROR_PATH_NOT_FOUND;
 	}
 
 	// Historique d'abord : il est rattaché ensuite à chaque tâche par son chemin.
-	const std::map<std::wstring, Historique> historiques = lireTaskCache();
+	const std::map<std::wstring, History> historical = readTaskCache();
 
 	// Les définitions sont des fichiers SANS extension, rangés en arborescence.
-	std::vector<std::filesystem::path> fichiers;
-	for (std::filesystem::recursive_directory_iterator it(racine, ec), fin;
-	     it != fin && !ec; it.increment(ec)) {
-		std::error_code ecFichier;
-		if (it->is_regular_file(ecFichier) && !ecFichier) fichiers.push_back(it->path());
+	std::vector<std::filesystem::path> files;
+	for (std::filesystem::recursive_directory_iterator it(root, ec), end;
+	     it != end && !ec; it.increment(ec)) {
+		std::error_code fileWriter;
+		if (it->is_regular_file(fileWriter) && !fileWriter) files.push_back(it->path());
 	}
-	log(2, L"❇️" + std::to_wstring(fichiers.size()) + L" definition(s) de tache trouvee(s)");
+	log(2, L"❇️" + std::to_wstring(files.size()) + L" definition(s) de tache trouvee(s)");
 
-	scheduledTasks.reserve(fichiers.size());
-	size_t iFichier = 0, ignores = 0;
-	for (const std::filesystem::path& fichier : fichiers) {
-		printProgressStep(L"ScheduledTask", ++iFichier, fichiers.size());
+	scheduledTasks.reserve(files.size());
+	size_t iFile = 0, ignores = 0;
+	for (const std::filesystem::path& file : files) {
+		printProgressStep(L"ScheduledTask", ++iFile, files.size());
 
-		std::unique_ptr<XmlNode> racineXml = xmlLireFichier(fichier.wstring());
-		if (!racineXml || racineXml->nom != L"Task") {
+		std::unique_ptr<XmlNode> xmlRoot = xmlReadFile(file.wstring());
+		if (!xmlRoot || xmlRoot->name != L"Task") {
 			/* Un fichier sous Tasks\ qui n'est pas une définition de tâche est
 			   signalé plutôt que de produire une entrée vide : l'analyste doit
 			   pouvoir distinguer « pas de tâche » de « tâche non décodée ». */
 			++ignores;
-			log(2, L"🔥Definition illisible ou inattendue : " + fichier.wstring());
+			log(2, L"🔥Definition illisible ou inattendue : " + file.wstring());
 			continue;
 		}
 
 		ScheduledTask t;
-		t.name = fichier.filename().wstring();
+		t.name = file.filename().wstring();
 		// Chemin tel que le planificateur le présente : relatif à Tasks\,
 		// antislashs, préfixé d'un antislash — c'est aussi la clé du TaskCache.
-		t.path = L"\\" + std::filesystem::relative(fichier, racine, ec).wstring();
-		t.sourceXml = cheminOriginal(fichier.wstring());
+		t.path = L"\\" + std::filesystem::relative(file, root, ec).wstring();
+		t.sourceXml = originalPath(file.wstring());
 		log(1, L"➕ScheduledTask");
 		log(2, L"❇️Task : " + t.path);
 
-		lireDefinition(*racineXml, t);
+		readDefinition(*xmlRoot, t);
 
-		const std::map<std::wstring, Historique>::const_iterator h =
-			historiques.find(enMinuscules(t.path));
-		if (h != historiques.end() && h->second.trouve) {
-			t.lastRunTimeUtc = h->second.derniereExecutionUtc;
-			t.lastTaskResult = h->second.dernierResultat;
-			utcVersLocalSuspect(t.lastRunTimeUtc, &t.lastRunTime);
+		const std::map<std::wstring, History>::const_iterator h =
+			historical.find(toLower(t.path));
+		if (h != historical.end() && h->second.found) {
+			t.lastRunTimeUtc = h->second.lastRunUtc;
+			t.lastTaskResult = h->second.lastResult;
+			utcToSuspectLocal(t.lastRunTimeUtc, &t.lastRunTime);
 		}
 		scheduledTasks.push_back(std::move(t));
 	}

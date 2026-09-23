@@ -21,50 +21,50 @@ namespace {
  *  whose fields are 0 fails validation; it is reported, it does not cause an
  *  out-of-range read.
  */
-inline uint8_t  lire8 (const BYTE* b, size_t taille, size_t o) {
-	return (o + 1 <= taille) ? b[o] : 0;
+inline uint8_t  read8 (const BYTE* b, size_t size, size_t o) {
+	return (o + 1 <= size) ? b[o] : 0;
 }
-inline uint16_t lire16(const BYTE* b, size_t taille, size_t o) {
-	if (o + 2 > taille) return 0;
+inline uint16_t read16(const BYTE* b, size_t size, size_t o) {
+	if (o + 2 > size) return 0;
 	return (uint16_t)(b[o] | ((uint16_t)b[o + 1] << 8));
 }
-inline uint32_t lire32(const BYTE* b, size_t taille, size_t o) {
-	if (o + 4 > taille) return 0;
+inline uint32_t read32(const BYTE* b, size_t size, size_t o) {
+	if (o + 4 > size) return 0;
 	return (uint32_t)b[o] | ((uint32_t)b[o + 1] << 8)
 	     | ((uint32_t)b[o + 2] << 16) | ((uint32_t)b[o + 3] << 24);
 }
-inline uint64_t lire64(const BYTE* b, size_t taille, size_t o) {
-	if (o + 8 > taille) return 0;
-	return (uint64_t)lire32(b, taille, o) | ((uint64_t)lire32(b, taille, o + 4) << 32);
+inline uint64_t read64(const BYTE* b, size_t size, size_t o) {
+	if (o + 8 > size) return 0;
+	return (uint64_t)read32(b, size, o) | ((uint64_t)read32(b, size, o + 4) << 32);
 }
 
 // ---------------------------------------------------------------------------
 //  Format constants
 // ---------------------------------------------------------------------------
-const size_t TAILLE_ENTETE_FICHIER = 4096;
-const size_t TAILLE_CHUNK          = 65536;
-const size_t TAILLE_ENTETE_CHUNK   = 512;
-const size_t DEBUT_ENREGISTREMENTS = 512;   // within the chunk
+const size_t FILE_HEADER_SIZE = 4096;
+const size_t CHUNK_SIZE          = 65536;
+const size_t CHUNK_HEADER_SIZE   = 512;
+const size_t RECORDS_START = 512;   // within the chunk
 const uint32_t SIGNATURE_ENREG     = 0x00002a2a;
 
 //! BinXML tokens. Bit 0x40 means "more data follows".
 enum : uint8_t {
 	JET_EOF                 = 0x00,
-	JET_OUVRE_ELEMENT       = 0x01,
-	JET_FERME_DEBUT_BALISE  = 0x02,
-	JET_FERME_ELEMENT_VIDE  = 0x03,
+	TOKEN_OPEN_ELEMENT       = 0x01,
+	TOKEN_CLOSE_START_TAG  = 0x02,
+	TOKEN_CLOSE_EMPTY_ELEMENT  = 0x03,
 	JET_FIN_ELEMENT         = 0x04,
-	JET_VALEUR              = 0x05,
-	JET_ATTRIBUT            = 0x06,
+	TOKEN_VALUE              = 0x05,
+	TOKEN_ATTRIBUTE            = 0x06,
 	JET_CDATA               = 0x07,
-	JET_REF_CARACTERE       = 0x08,
-	JET_REF_ENTITE          = 0x09,
-	JET_PI_CIBLE            = 0x0a,
-	JET_PI_DONNEES          = 0x0b,
+	TOKEN_CHAR_REF       = 0x08,
+	TOKEN_ENTITY_REF          = 0x09,
+	TOKEN_PI_TARGET            = 0x0a,
+	TOKEN_PI_DATA          = 0x0b,
 	JET_INSTANCE_TEMPLATE   = 0x0c,
-	JET_SUBST_NORMALE       = 0x0d,
-	JET_SUBST_OPTIONNELLE   = 0x0e,
-	JET_ENTETE_FRAGMENT     = 0x0f,
+	TOKEN_SUBST_NORMAL       = 0x0d,
+	TOKEN_SUBST_OPTIONAL   = 0x0e,
+	TOKEN_FRAGMENT_HEADER     = 0x0f,
 };
 
 //! BinXML value types (bit 0x80 marks an array).
@@ -72,16 +72,16 @@ enum : uint8_t {
 	T_NULL = 0x00, T_STRING = 0x01, T_ANSI = 0x02,
 	T_INT8 = 0x03, T_UINT8 = 0x04, T_INT16 = 0x05, T_UINT16 = 0x06,
 	T_INT32 = 0x07, T_UINT32 = 0x08, T_INT64 = 0x09, T_UINT64 = 0x0a,
-	T_REAL32 = 0x0b, T_REAL64 = 0x0c, T_BOOL = 0x0d, T_BINAIRE = 0x0e,
+	T_REAL32 = 0x0b, T_REAL64 = 0x0c, T_BOOL = 0x0d, T_BINARY = 0x0e,
 	T_GUID = 0x0f, T_SIZE = 0x10, T_FILETIME = 0x11, T_SYSTIME = 0x12,
 	T_SID = 0x13, T_HEX32 = 0x14, T_HEX64 = 0x15,
 	T_EVTHANDLE = 0x20, T_BINXML = 0x21, T_EVTXML = 0x23,
-	T_TABLEAU = 0x80,
+	T_ARRAY = 0x80,
 };
 
 //! Maximum nesting depth. A corrupt chunk can describe a template that
 //! references itself; without a guard, the stack overflows.
-const unsigned PROFONDEUR_MAX = 24;
+const unsigned MAX_DEPTH = 24;
 
 // ---------------------------------------------------------------------------
 //  XML escaping
@@ -90,7 +90,7 @@ const unsigned PROFONDEUR_MAX = 24;
  *  Without escaping, the XML produced would be malformed and xml_light would
  *  return an empty tree — the event would be lost, not just badly displayed.
  */
-std::wstring echapper(const std::wstring& s) {
+std::wstring escape(const std::wstring& s) {
 	std::wstring r;
 	r.reserve(s.size());
 	for (wchar_t c : s) {
@@ -111,23 +111,23 @@ std::wstring echapper(const std::wstring& s) {
 }
 
 //! Text form of a raw SID, without going through a system API.
-std::wstring sidEnTexte(const BYTE* b, size_t taille) {
-	if (taille < 8) return L"";
+std::wstring sidToText(const BYTE* b, size_t size) {
+	if (size < 8) return L"";
 	const uint8_t revision = b[0];
-	const uint8_t nbSousAutorites = b[1];
-	if (taille < (size_t)8 + 4ULL * nbSousAutorites) return L"";
+	const uint8_t nSubAuthorities = b[1];
+	if (size < (size_t)8 + 4ULL * nSubAuthorities) return L"";
 	// The authority is BIG-endian, unlike the rest of the format.
-	uint64_t autorite = 0;
-	for (int i = 0; i < 6; ++i) autorite = (autorite << 8) | b[2 + i];
+	uint64_t authority = 0;
+	for (int i = 0; i < 6; ++i) authority = (authority << 8) | b[2 + i];
 	std::wostringstream o;
-	o << L"S-" << (unsigned)revision << L"-" << autorite;
-	for (uint8_t i = 0; i < nbSousAutorites; ++i)
-		o << L"-" << (unsigned long)lire32(b, taille, 8 + 4ULL * i);
+	o << L"S-" << (unsigned)revision << L"-" << authority;
+	for (uint8_t i = 0; i < nSubAuthorities; ++i)
+		o << L"-" << (unsigned long)read32(b, size, 8 + 4ULL * i);
 	return o.str();
 }
 
 //! Floating-point value in the format Event Viewer expects.
-std::wstring reelEnTexte(double v) {
+std::wstring realToText(double v) {
 	std::wostringstream o;
 	o.precision(6);
 	o << std::fixed << v;
@@ -139,25 +139,25 @@ std::wstring reelEnTexte(double v) {
 // ---------------------------------------------------------------------------
 
 //! One value of a template instance's array.
-struct ValeurSubst {
+struct SubstValue {
 	uint8_t type = T_NULL;
 	size_t  offset = 0;   //!< within the chunk
-	size_t  taille = 0;
+	size_t  size = 0;
 };
 
-class Decodeur {
+class Decoder {
 public:
-	Decodeur(const BYTE* chunk, size_t tailleChunk)
-		: c(chunk), tc(tailleChunk) {}
+	Decoder(const BYTE* chunk, size_t chunkSize)
+		: c(chunk), tc(chunkSize) {}
 
 	/*! Decodes a record's BinXML body into XML text.
-	 *  @param debut offset of the body within the chunk
-	 *  @param fin   upper bound (end of the record)
+	 *  @param start offset of the body within the chunk
+	 *  @param end   upper bound (end of the record)
 	 */
-	bool document(size_t debut, size_t fin, std::wstring& sortie) {
-		if (debut >= fin || fin > tc) return false;
-		size_t p = debut;
-		return jetons(p, fin, nullptr, sortie, 0) && !sortie.empty();
+	bool document(size_t start, size_t end, std::wstring& output) {
+		if (start >= end || end > tc) return false;
+		size_t p = start;
+		return tokens(p, end, nullptr, output, 0) && !output.empty();
 	}
 
 private:
@@ -169,34 +169,34 @@ private:
 	 *  records. Hence the need to keep the whole chunk: a record cannot be
 	 *  decoded in isolation.
 	 */
-	std::wstring nom(size_t offset) const {
+	std::wstring name(size_t offset) const {
 		if (offset + 8 > tc) return L"";
-		const uint16_t nbCar = lire16(c, tc, offset + 6);
+		const uint16_t nbCar = read16(c, tc, offset + 6);
 		if (offset + 8 + 2ULL * nbCar > tc) return L"";
 		return std::wstring(reinterpret_cast<const wchar_t*>(c + offset + 8), nbCar);
 	}
 	//! Size taken by a name structure (terminator included).
-	size_t tailleNom(size_t offset) const {
+	size_t nameSize(size_t offset) const {
 		if (offset + 8 > tc) return 0;
-		return 8 + 2ULL * (lire16(c, tc, offset + 6) + 1);
+		return 8 + 2ULL * (read16(c, tc, offset + 6) + 1);
 	}
 
 	// -- values -------------------------------------------------------------
 	/*! Renders a typed value as text.
-	 *  @param indice for an array type, the wanted element; -1 = all of them,
+	 *  @param index for an array type, the wanted element; -1 = all of them,
 	 *         concatenated (a case that does not occur in real logs, kept so as
 	 *         to lose nothing silently)
 	 */
-	std::wstring valeur(uint8_t type, size_t off, size_t taille, int indice,
-	                    unsigned profondeur) {
-		if (off + taille > tc) return L"";
+	std::wstring value(uint8_t type, size_t off, size_t size, int index,
+	                    unsigned depth) {
+		if (off + size > tc) return L"";
 		const BYTE* d = c + off;
 
-		if (type & T_TABLEAU) {
+		if (type & T_ARRAY) {
 			const uint8_t base = type & 0x7f;
-			std::vector<std::wstring> elements = tableau(base, off, taille, profondeur);
-			if (indice >= 0)
-				return (size_t)indice < elements.size() ? elements[indice] : L"";
+			std::vector<std::wstring> elements = array(base, off, size, depth);
+			if (index >= 0)
+				return (size_t)index < elements.size() ? elements[index] : L"";
 			std::wstring r;
 			for (size_t i = 0; i < elements.size(); ++i) {
 				if (i) r += L" ";
@@ -209,119 +209,119 @@ private:
 		case T_NULL: return L"";
 		case T_STRING: {
 			// No terminator: the announced size is authoritative.
-			std::wstring s(reinterpret_cast<const wchar_t*>(d), taille / 2);
+			std::wstring s(reinterpret_cast<const wchar_t*>(d), size / 2);
 			while (!s.empty() && s.back() == L'\0') s.pop_back();
-			return echapper(s);
+			return escape(s);
 		}
 		case T_ANSI: {
-			std::string s(reinterpret_cast<const char*>(d), taille);
+			std::string s(reinterpret_cast<const char*>(d), size);
 			while (!s.empty() && s.back() == '\0') s.pop_back();
-			return echapper(string_to_wstring(s));
+			return escape(string_to_wstring(s));
 		}
-		case T_INT8:   return taille >= 1 ? std::to_wstring((int)(int8_t)d[0]) : L"";
-		case T_UINT8:  return taille >= 1 ? std::to_wstring((unsigned)d[0]) : L"";
-		case T_INT16:  return taille >= 2 ? std::to_wstring((int)(int16_t)lire16(c, tc, off)) : L"";
-		case T_UINT16: return taille >= 2 ? std::to_wstring((unsigned)lire16(c, tc, off)) : L"";
-		case T_INT32:  return taille >= 4 ? std::to_wstring((int32_t)lire32(c, tc, off)) : L"";
-		case T_UINT32: return taille >= 4 ? std::to_wstring((uint32_t)lire32(c, tc, off)) : L"";
-		case T_INT64:  return taille >= 8 ? std::to_wstring((int64_t)lire64(c, tc, off)) : L"";
-		case T_UINT64: return taille >= 8 ? std::to_wstring((uint64_t)lire64(c, tc, off)) : L"";
+		case T_INT8:   return size >= 1 ? std::to_wstring((int)(int8_t)d[0]) : L"";
+		case T_UINT8:  return size >= 1 ? std::to_wstring((unsigned)d[0]) : L"";
+		case T_INT16:  return size >= 2 ? std::to_wstring((int)(int16_t)read16(c, tc, off)) : L"";
+		case T_UINT16: return size >= 2 ? std::to_wstring((unsigned)read16(c, tc, off)) : L"";
+		case T_INT32:  return size >= 4 ? std::to_wstring((int32_t)read32(c, tc, off)) : L"";
+		case T_UINT32: return size >= 4 ? std::to_wstring((uint32_t)read32(c, tc, off)) : L"";
+		case T_INT64:  return size >= 8 ? std::to_wstring((int64_t)read64(c, tc, off)) : L"";
+		case T_UINT64: return size >= 8 ? std::to_wstring((uint64_t)read64(c, tc, off)) : L"";
 		case T_REAL32: {
-			if (taille < 4) return L"";
-			float f; uint32_t v = lire32(c, tc, off); memcpy(&f, &v, 4);
-			return reelEnTexte(f);
+			if (size < 4) return L"";
+			float f; uint32_t v = read32(c, tc, off); memcpy(&f, &v, 4);
+			return realToText(f);
 		}
 		case T_REAL64: {
-			if (taille < 8) return L"";
-			double v; uint64_t u = lire64(c, tc, off); memcpy(&v, &u, 8);
-			return reelEnTexte(v);
+			if (size < 8) return L"";
+			double v; uint64_t u = read64(c, tc, off); memcpy(&v, &u, 8);
+			return realToText(v);
 		}
 		case T_BOOL:
 			// 32 bits, not a byte: "true" whatever the non-zero value.
-			return taille >= 4 ? (lire32(c, tc, off) ? L"true" : L"false") : L"";
-		case T_BINAIRE:
+			return size >= 4 ? (read32(c, tc, off) ? L"true" : L"false") : L"";
+		case T_BINARY:
 			// No conversion: the binary data of an event (4688, 4624) carry
 			// information that no interpretation replaces.
-			return dump_wstring(const_cast<LPBYTE>(d), 0, (int)taille);
+			return dump_wstring(const_cast<LPBYTE>(d), 0, (int)size);
 		case T_GUID: {
-			if (taille < 16) return L"";
+			if (size < 16) return L"";
 			GUID g; memcpy(&g, d, 16);
 			return guid_to_wstring(g);
 		}
 		case T_SIZE:
 			// Matched to a 32- or 64-bit hexadecimal integer depending on the size.
-			return taille >= 8 ? to_hex((long long)lire64(c, tc, off))
-			     : taille >= 4 ? to_hex((long long)lire32(c, tc, off)) : L"";
+			return size >= 8 ? to_hex((long long)read64(c, tc, off))
+			     : size >= 4 ? to_hex((long long)read32(c, tc, off)) : L"";
 		case T_FILETIME: {
-			if (taille < 8) return L"";
-			const uint64_t v = lire64(c, tc, off);
+			if (size < 8) return L"";
+			const uint64_t v = read64(c, tc, off);
 			FILETIME ft = { (DWORD)(v & 0xFFFFFFFFULL), (DWORD)(v >> 32) };
 			// Log timestamps are in UTC.
 			return timeToIso8601Utc(ft);
 		}
 		case T_SYSTIME: {
-			if (taille < 16) return L"";
+			if (size < 16) return L"";
 			SYSTEMTIME st = { 0 };
-			st.wYear   = lire16(c, tc, off);      st.wMonth        = lire16(c, tc, off + 2);
-			st.wDayOfWeek = lire16(c, tc, off + 4); st.wDay        = lire16(c, tc, off + 6);
-			st.wHour   = lire16(c, tc, off + 8);  st.wMinute       = lire16(c, tc, off + 10);
-			st.wSecond = lire16(c, tc, off + 12); st.wMilliseconds = lire16(c, tc, off + 14);
+			st.wYear   = read16(c, tc, off);      st.wMonth        = read16(c, tc, off + 2);
+			st.wDayOfWeek = read16(c, tc, off + 4); st.wDay        = read16(c, tc, off + 6);
+			st.wHour   = read16(c, tc, off + 8);  st.wMinute       = read16(c, tc, off + 10);
+			st.wSecond = read16(c, tc, off + 12); st.wMilliseconds = read16(c, tc, off + 14);
 			FILETIME ft = { 0 };
 			if (!SystemTimeToFileTime(&st, &ft)) return L"";
 			return timeToIso8601Utc(ft);
 		}
-		case T_SID:  return sidEnTexte(d, taille);
-		case T_HEX32: return taille >= 4 ? to_hex((long long)(uint32_t)lire32(c, tc, off)) : L"";
-		case T_HEX64: return taille >= 8 ? to_hex((long long)lire64(c, tc, off)) : L"";
+		case T_SID:  return sidToText(d, size);
+		case T_HEX32: return size >= 4 ? to_hex((long long)(uint32_t)read32(c, tc, off)) : L"";
+		case T_HEX64: return size >= 8 ? to_hex((long long)read64(c, tc, off)) : L"";
 		case T_BINXML:
 		case T_EVTXML: {
 			/*  A value can hold a whole BinXML fragment: that is the case of
 			 *  forwarded events (UserData, RenderingInfo), where the real content is
 			 *  nested inside a substitution value. Without this recursion, these
 			 *  events come out empty. */
-			if (profondeur >= PROFONDEUR_MAX) return L"";
-			std::wstring imbrique;
+			if (depth >= MAX_DEPTH) return L"";
+			std::wstring nested;
 			size_t p = off;
-			if (!jetons(p, off + taille, nullptr, imbrique, profondeur + 1)) return L"";
-			return imbrique;
+			if (!tokens(p, off + size, nullptr, nested, depth + 1)) return L"";
+			return nested;
 		}
 		case T_EVTHANDLE:
 		default:
 			// No silent loss: the unknown type and its bytes are output.
 			log(2, L"🔥evtx : type de valeur non gere : " + to_hex(type));
-			return dump_wstring(const_cast<LPBYTE>(d), 0, (int)taille);
+			return dump_wstring(const_cast<LPBYTE>(d), 0, (int)size);
 		}
 	}
 
 	//! Splits an array-typed value into its elements.
-	std::vector<std::wstring> tableau(uint8_t base, size_t off, size_t taille,
-	                                  unsigned profondeur) {
+	std::vector<std::wstring> array(uint8_t base, size_t off, size_t size,
+	                                  unsigned depth) {
 		std::vector<std::wstring> r;
-		if (taille == 0) return r;
+		if (size == 0) return r;
 
 		// Strings: separated by their terminator, variable length.
 		if (base == T_STRING) {
-			size_t debut = off;
-			for (size_t p = off; p + 2 <= off + taille; p += 2) {
-				if (lire16(c, tc, p) == 0) {
-					r.push_back(valeur(T_STRING, debut, p - debut, -1, profondeur));
-					debut = p + 2;
+			size_t start = off;
+			for (size_t p = off; p + 2 <= off + size; p += 2) {
+				if (read16(c, tc, p) == 0) {
+					r.push_back(value(T_STRING, start, p - start, -1, depth));
+					start = p + 2;
 				}
 			}
-			if (debut < off + taille)
-				r.push_back(valeur(T_STRING, debut, off + taille - debut, -1, profondeur));
+			if (start < off + size)
+				r.push_back(value(T_STRING, start, off + size - start, -1, depth));
 			return r;
 		}
 		if (base == T_ANSI) {
-			size_t debut = off;
-			for (size_t p = off; p < off + taille; ++p) {
+			size_t start = off;
+			for (size_t p = off; p < off + size; ++p) {
 				if (c[p] == 0) {
-					r.push_back(valeur(T_ANSI, debut, p - debut, -1, profondeur));
-					debut = p + 1;
+					r.push_back(value(T_ANSI, start, p - start, -1, depth));
+					start = p + 1;
 				}
 			}
-			if (debut < off + taille)
-				r.push_back(valeur(T_ANSI, debut, off + taille - debut, -1, profondeur));
+			if (start < off + size)
+				r.push_back(value(T_ANSI, start, off + size - start, -1, depth));
 			return r;
 		}
 
@@ -335,14 +335,14 @@ private:
 		case T_INT64: case T_UINT64: case T_REAL64:
 		case T_FILETIME: case T_HEX64:                   pas = 8;  break;
 		case T_GUID: case T_SYSTIME:                     pas = 16; break;
-		case T_SIZE: pas = (taille % 8 == 0) ? 8 : 4;              break;
+		case T_SIZE: pas = (size % 8 == 0) ? 8 : 4;              break;
 		case T_SID: {
 			// Variable length: derived from the number of sub-authorities.
 			size_t p = off;
-			while (p + 8 <= off + taille) {
+			while (p + 8 <= off + size) {
 				const size_t n = 8 + 4ULL * c[p + 1];
-				if (p + n > off + taille) break;
-				r.push_back(sidEnTexte(c + p, n));
+				if (p + n > off + size) break;
+				r.push_back(sidToText(c + p, n));
 				p += n;
 			}
 			return r;
@@ -350,85 +350,85 @@ private:
 		default:
 			// Array of a type whose stride is unknown: return the whole value
 			// rather than splitting it at random.
-			r.push_back(valeur(base, off, taille, -1, profondeur));
+			r.push_back(value(base, off, size, -1, depth));
 			return r;
 		}
-		for (size_t p = off; p + pas <= off + taille; p += pas)
-			r.push_back(valeur(base, p, pas, -1, profondeur));
+		for (size_t p = off; p + pas <= off + size; p += pas)
+			r.push_back(value(base, p, pas, -1, depth));
 		return r;
 	}
 
 	//! Number of elements of an array-typed substitution value.
-	size_t cardinalite(const ValeurSubst& v, unsigned profondeur) {
-		if (!(v.type & T_TABLEAU)) return 1;
-		return tableau(v.type & 0x7f, v.offset, v.taille, profondeur).size();
+	size_t cardinalite(const SubstValue& v, unsigned depth) {
+		if (!(v.type & T_ARRAY)) return 1;
+		return array(v.type & 0x7f, v.offset, v.size, depth).size();
 	}
 
 	// -- token stream -------------------------------------------------------
 	/*! Decodes a sequence of tokens (fragment, element, content).
 	 *  @param p current position, advanced as reading goes
-	 *  @param fin upper bound
+	 *  @param end upper bound
 	 *  @param subs values of the current template instance, or nullptr
 	 */
-	bool jetons(size_t& p, size_t fin, const std::vector<ValeurSubst>* subs,
-	            std::wstring& sortie, unsigned profondeur) {
-		if (profondeur >= PROFONDEUR_MAX) return false;
-		while (p < fin) {
-			const uint8_t jeton = lire8(c, tc, p) & 0x0f;
-			switch (jeton) {
+	bool tokens(size_t& p, size_t end, const std::vector<SubstValue>* subs,
+	            std::wstring& output, unsigned depth) {
+		if (depth >= MAX_DEPTH) return false;
+		while (p < end) {
+			const uint8_t token = read8(c, tc, p) & 0x0f;
+			switch (token) {
 			case JET_EOF:
 				++p;
 				return true;
-			case JET_ENTETE_FRAGMENT:
-				p += 4;                       // jeton, majeur, mineur, drapeaux
+			case TOKEN_FRAGMENT_HEADER:
+				p += 4;                       // token, major, minor, flags
 				break;
-			case JET_OUVRE_ELEMENT:
-				if (!element(p, fin, subs, sortie, profondeur)) return false;
+			case TOKEN_OPEN_ELEMENT:
+				if (!element(p, end, subs, output, depth)) return false;
 				break;
 			case JET_INSTANCE_TEMPLATE:
-				if (!instanceTemplate(p, fin, sortie, profondeur)) return false;
+				if (!instanceTemplate(p, end, output, depth)) return false;
 				break;
 			case JET_FIN_ELEMENT:
 				++p;
 				return true;                  // the caller closes the tag
-			case JET_VALEUR:
-				if (!valeurTexte(p, fin, sortie, profondeur)) return false;
+			case TOKEN_VALUE:
+				if (!textValue(p, end, output, depth)) return false;
 				break;
-			case JET_SUBST_NORMALE:
-			case JET_SUBST_OPTIONNELLE: {
-				const uint16_t id = lire16(c, tc, p + 1);
+			case TOKEN_SUBST_NORMAL:
+			case TOKEN_SUBST_OPTIONAL: {
+				const uint16_t id = read16(c, tc, p + 1);
 				p += 4;
 				if (subs && id < subs->size())
-					sortie += valeur((*subs)[id].type, (*subs)[id].offset,
-					                 (*subs)[id].taille, -1, profondeur);
+					output += value((*subs)[id].type, (*subs)[id].offset,
+					                 (*subs)[id].size, -1, depth);
 				break;
 			}
 			case JET_CDATA: {
-				const uint16_t nbCar = lire16(c, tc, p + 1);
-				sortie += echapper(nom(p));   // same encoding: length + UTF-16
+				const uint16_t nbCar = read16(c, tc, p + 1);
+				output += escape(name(p));   // same encoding: length + UTF-16
 				p += 3 + 2ULL * nbCar;
 				break;
 			}
-			case JET_REF_CARACTERE:
-				sortie += L"&#" + std::to_wstring(lire16(c, tc, p + 1)) + L";";
+			case TOKEN_CHAR_REF:
+				output += L"&#" + std::to_wstring(read16(c, tc, p + 1)) + L";";
 				p += 3;
 				break;
-			case JET_REF_ENTITE: {
-				const std::wstring n = nom(lire32(c, tc, p + 1));
-				if (!n.empty()) sortie += L"&" + n + L";";
+			case TOKEN_ENTITY_REF: {
+				const std::wstring n = name(read32(c, tc, p + 1));
+				if (!n.empty()) output += L"&" + n + L";";
 				p += 5;
 				break;
 			}
-			case JET_PI_CIBLE: p += 5; break;
-			case JET_PI_DONNEES: {
-				const uint16_t nbCar = lire16(c, tc, p + 1);
+			case TOKEN_PI_TARGET: p += 5; break;
+			case TOKEN_PI_DATA: {
+				const uint16_t nbCar = read16(c, tc, p + 1);
 				p += 3 + 2ULL * nbCar;
 				break;
 			}
 			default:
 				// Unknown token: going on would make the reading drift over arbitrary
 				// data. This record is abandoned.
-				log(3, L"🔈evtx : jeton inconnu " + to_hex(lire8(c, tc, p)));
+				log(3, L"🔈evtx : jeton inconnu " + to_hex(read8(c, tc, p)));
 				return false;
 			}
 		}
@@ -436,14 +436,14 @@ private:
 	}
 
 	//! Value token (0x05/0x45): literal text in the content.
-	bool valeurTexte(size_t& p, size_t fin, std::wstring& sortie, unsigned profondeur) {
-		const uint8_t type = lire8(c, tc, p + 1);
+	bool textValue(size_t& p, size_t end, std::wstring& output, unsigned depth) {
+		const uint8_t type = read8(c, tc, p + 1);
 		if (type == T_STRING) {
-			const uint16_t nbCar = lire16(c, tc, p + 2);
-			const size_t octets = 2ULL * nbCar;
-			if (p + 4 + octets > fin) return false;
-			sortie += valeur(T_STRING, p + 4, octets, -1, profondeur);
-			p += 4 + octets;
+			const uint16_t nbCar = read16(c, tc, p + 2);
+			const size_t bytes = 2ULL * nbCar;
+			if (p + 4 + bytes > end) return false;
+			output += value(T_STRING, p + 4, bytes, -1, depth);
+			p += 4 + bytes;
 			return true;
 		}
 		// The format only allows the string type here; anything else means a
@@ -458,67 +458,67 @@ private:
 	 *  them on either side of ">". Attributes are therefore gathered separately
 	 *  before writing the opening tag.
 	 */
-	bool element(size_t& p, size_t fin, const std::vector<ValeurSubst>* subs,
-	             std::wstring& sortie, unsigned profondeur) {
-		if (profondeur >= PROFONDEUR_MAX) return false;
-		const uint8_t jeton = lire8(c, tc, p);
-		const bool aAttributs = (jeton & 0x40) != 0;
+	bool element(size_t& p, size_t end, const std::vector<SubstValue>* subs,
+	             std::wstring& output, unsigned depth) {
+		if (depth >= MAX_DEPTH) return false;
+		const uint8_t token = read8(c, tc, p);
+		const bool hasAttributes = (token & 0x40) != 0;
 
 		/*  The dependency identifier (2 bytes) is present in the logs, but absent
 		 *  when the element comes from a BinXML-typed substitution value. Nothing
 		 *  in the stream says so: the variant whose announced size and name offset
 		 *  are consistent is kept. */
 		size_t q = p + 3;                          // with dependency identifier
-		uint32_t tailleDonnees = lire32(c, tc, q);
-		uint32_t offsetNom = lire32(c, tc, q + 4);
-		if (offsetNom + 8 > tc || q + 4 + tailleDonnees > fin) {
+		uint32_t dataSize = read32(c, tc, q);
+		uint32_t nameOffset = read32(c, tc, q + 4);
+		if (nameOffset + 8 > tc || q + 4 + dataSize > end) {
 			q = p + 1;                             // without dependency identifier
-			tailleDonnees = lire32(c, tc, q);
-			offsetNom = lire32(c, tc, q + 4);
-			if (offsetNom + 8 > tc) return false;
+			dataSize = read32(c, tc, q);
+			nameOffset = read32(c, tc, q + 4);
+			if (nameOffset + 8 > tc) return false;
 		}
-		const size_t finElement = q + 4 + tailleDonnees;
+		const size_t finElement = q + 4 + dataSize;
 		q += 8;
 
-		const std::wstring nomElement = nom(offsetNom);
-		if (nomElement.empty()) return false;
+		const std::wstring elementName = name(nameOffset);
+		if (elementName.empty()) return false;
 		// The name can be stored in place rather than referenced elsewhere.
-		if (offsetNom == q) q += tailleNom(offsetNom);
+		if (nameOffset == q) q += nameSize(nameOffset);
 
-		std::wstring attributs;
-		if (aAttributs) {
-			const uint32_t tailleListe = lire32(c, tc, q);
+		std::wstring attributes;
+		if (hasAttributes) {
+			const uint32_t listSize = read32(c, tc, q);
 			q += 4;
-			const size_t finListe = (q + tailleListe <= fin) ? q + tailleListe : fin;
-			while (q < finListe) {
-				const uint8_t jetonAttr = lire8(c, tc, q);
-				if ((jetonAttr & 0x0f) != JET_ATTRIBUT) break;
-				const uint32_t offsetNomAttr = lire32(c, tc, q + 1);
+			const size_t listEnd = (q + listSize <= end) ? q + listSize : end;
+			while (q < listEnd) {
+				const uint8_t attrToken = read8(c, tc, q);
+				if ((attrToken & 0x0f) != TOKEN_ATTRIBUTE) break;
+				const uint32_t attrNameOffset = read32(c, tc, q + 1);
 				q += 5;
-				const std::wstring nomAttr = nom(offsetNomAttr);
-				if (offsetNomAttr == q) q += tailleNom(offsetNomAttr);
+				const std::wstring attrName = name(attrNameOffset);
+				if (attrNameOffset == q) q += nameSize(attrNameOffset);
 
 				std::wstring val;
-				if (!donneeAttribut(q, finListe, subs, val, profondeur)) break;
+				if (!attributeData(q, listEnd, subs, val, depth)) break;
 				/*  Empty attribute not written: the event log itself omits
 				 *  attributes without a value (`Provider` without `Guid`), and an empty
 				 *  attribute would suggest data missing from the log when it was never
 				 *  written there. */
-				if (!nomAttr.empty() && !val.empty())
-					attributs += L" " + nomAttr + L"=\"" + val + L"\"";
-				if ((jetonAttr & 0x40) == 0) break;   // dernier attribut
+				if (!attrName.empty() && !val.empty())
+					attributes += L" " + attrName + L"=\"" + val + L"\"";
+				if ((attrToken & 0x40) == 0) break;   // last attribute
 			}
-			q = finListe;
+			q = listEnd;
 		}
 
-		const uint8_t fermeture = lire8(c, tc, q);
-		if ((fermeture & 0x0f) == JET_FERME_ELEMENT_VIDE) {
+		const uint8_t closing = read8(c, tc, q);
+		if ((closing & 0x0f) == TOKEN_CLOSE_EMPTY_ELEMENT) {
 			++q;
-			sortie += L"<" + nomElement + attributs + L"/>";
+			output += L"<" + elementName + attributes + L"/>";
 			p = (finElement > q) ? finElement : q;
 			return true;
 		}
-		if ((fermeture & 0x0f) != JET_FERME_DEBUT_BALISE) return false;
+		if ((closing & 0x0f) != TOKEN_CLOSE_START_TAG) return false;
 		++q;
 
 		/*  Array-typed substitution: the specification requires repeating the
@@ -527,10 +527,10 @@ private:
 		 *  when the substitution is the whole content, the only form Windows logs
 		 *  produce. */
 		if (subs) {
-			const uint8_t j = lire8(c, tc, q) & 0x0f;
-			if ((j == JET_SUBST_NORMALE || j == JET_SUBST_OPTIONNELLE)
-			    && (lire8(c, tc, q + 4) & 0x0f) == JET_FIN_ELEMENT) {
-				const uint16_t id = lire16(c, tc, q + 1);
+			const uint8_t j = read8(c, tc, q) & 0x0f;
+			if ((j == TOKEN_SUBST_NORMAL || j == TOKEN_SUBST_OPTIONAL)
+			    && (read8(c, tc, q + 4) & 0x0f) == JET_FIN_ELEMENT) {
+				const uint16_t id = read16(c, tc, q + 1);
 
 				/*  OPTIONAL SUBSTITUTION WITH A NULL VALUE: the element is not
 				    created. That is the format's rule, and it carries meaning: an empty
@@ -539,63 +539,63 @@ private:
 				    record whose 16 substitutions are null came out with its whole System
 				    section present and empty, which looked like a decoding defect — it
 				    was the opposite, a faithful reading badly rendered. */
-				if (j == JET_SUBST_OPTIONNELLE && id < subs->size()
+				if (j == TOKEN_SUBST_OPTIONAL && id < subs->size()
 				    && (*subs)[id].type == T_NULL) {
 					p = finElement;
 					return true;
 				}
 
-				if (id < subs->size() && ((*subs)[id].type & T_TABLEAU)) {
-					const size_t n = cardinalite((*subs)[id], profondeur);
+				if (id < subs->size() && ((*subs)[id].type & T_ARRAY)) {
+					const size_t n = cardinalite((*subs)[id], depth);
 					for (size_t i = 0; i < n; ++i)
-						sortie += L"<" + nomElement + attributs + L">"
-						        + valeur((*subs)[id].type, (*subs)[id].offset,
-						                 (*subs)[id].taille, (int)i, profondeur)
-						        + L"</" + nomElement + L">";
-					if (n == 0) sortie += L"<" + nomElement + attributs + L"/>";
+						output += L"<" + elementName + attributes + L">"
+						        + value((*subs)[id].type, (*subs)[id].offset,
+						                 (*subs)[id].size, (int)i, depth)
+						        + L"</" + elementName + L">";
+					if (n == 0) output += L"<" + elementName + attributes + L"/>";
 					p = finElement;
 					return true;
 				}
 			}
 		}
 
-		sortie += L"<" + nomElement + attributs + L">";
-		const size_t finContenu = (finElement <= fin) ? finElement : fin;
-		if (!jetons(q, finContenu, subs, sortie, profondeur + 1)) {
+		output += L"<" + elementName + attributes + L">";
+		const size_t contentEnd = (finElement <= end) ? finElement : end;
+		if (!tokens(q, contentEnd, subs, output, depth + 1)) {
 			// Unreadable content: the tag is closed so that the document stays
 			// well-formed, and the record stays partly usable.
-			sortie += L"</" + nomElement + L">";
+			output += L"</" + elementName + L">";
 			return false;
 		}
-		sortie += L"</" + nomElement + L">";
+		output += L"</" + elementName + L">";
 		p = (finElement > q) ? finElement : q;
 		return true;
 	}
 
 	//! Data of an attribute: literal text or substitution.
-	bool donneeAttribut(size_t& p, size_t fin, const std::vector<ValeurSubst>* subs,
-	                    std::wstring& val, unsigned profondeur) {
-		while (p < fin) {
-			const uint8_t jeton = lire8(c, tc, p);
-			switch (jeton & 0x0f) {
-			case JET_VALEUR:
-				if (!valeurTexte(p, fin, val, profondeur)) return false;
+	bool attributeData(size_t& p, size_t end, const std::vector<SubstValue>* subs,
+	                    std::wstring& val, unsigned depth) {
+		while (p < end) {
+			const uint8_t token = read8(c, tc, p);
+			switch (token & 0x0f) {
+			case TOKEN_VALUE:
+				if (!textValue(p, end, val, depth)) return false;
 				break;
-			case JET_SUBST_NORMALE:
-			case JET_SUBST_OPTIONNELLE: {
-				const uint16_t id = lire16(c, tc, p + 1);
+			case TOKEN_SUBST_NORMAL:
+			case TOKEN_SUBST_OPTIONAL: {
+				const uint16_t id = read16(c, tc, p + 1);
 				p += 4;
 				if (subs && id < subs->size())
-					val += valeur((*subs)[id].type, (*subs)[id].offset,
-					              (*subs)[id].taille, -1, profondeur);
+					val += value((*subs)[id].type, (*subs)[id].offset,
+					              (*subs)[id].size, -1, depth);
 				break;
 			}
-			case JET_REF_CARACTERE:
-				val += L"&#" + std::to_wstring(lire16(c, tc, p + 1)) + L";";
+			case TOKEN_CHAR_REF:
+				val += L"&#" + std::to_wstring(read16(c, tc, p + 1)) + L";";
 				p += 3;
 				break;
-			case JET_REF_ENTITE: {
-				const std::wstring n = nom(lire32(c, tc, p + 1));
+			case TOKEN_ENTITY_REF: {
+				const std::wstring n = name(read32(c, tc, p + 1));
 				if (!n.empty()) val += L"&" + n + L";";
 				p += 5;
 				break;
@@ -603,7 +603,7 @@ private:
 			default:
 				return true;                  // end of this attribute's data
 			}
-			if ((jeton & 0x40) == 0) return true;   // nothing follows
+			if ((token & 0x40) == 0) return true;   // nothing follows
 		}
 		return true;
 	}
@@ -615,45 +615,45 @@ private:
 	 *  sharing is what makes the format compact, and why a record can only be
 	 *  decoded with its whole chunk at hand.
 	 */
-	bool instanceTemplate(size_t& p, size_t fin, std::wstring& sortie,
-	                      unsigned profondeur) {
-		if (profondeur >= PROFONDEUR_MAX) return false;
-		const size_t jeton = p;
-		const uint32_t offsetDefinition = lire32(c, tc, jeton + 6);
+	bool instanceTemplate(size_t& p, size_t end, std::wstring& output,
+	                      unsigned depth) {
+		if (depth >= MAX_DEPTH) return false;
+		const size_t token = p;
+		const uint32_t offsetDefinition = read32(c, tc, token + 6);
 
 		/*  "Right after this field" = token + 10: the definition follows, and the
 		 *  instance data start after the fragment. Otherwise the definition is
 		 *  elsewhere and the instance data follow the field. */
-		const bool surPlace = (offsetDefinition == jeton + 10);
+		const bool inPlace = (offsetDefinition == token + 10);
 		const size_t d = offsetDefinition;         // points to the "next" field
 		if (d + 24 > tc) return false;
-		const uint32_t tailleFragment = lire32(c, tc, d + 20);
-		const size_t debutFragment = d + 24;
-		if (debutFragment + tailleFragment > tc) return false;
+		const uint32_t fragmentSize = read32(c, tc, d + 20);
+		const size_t fragmentStart = d + 24;
+		if (fragmentStart + fragmentSize > tc) return false;
 
-		size_t donnees = surPlace ? (debutFragment + tailleFragment) : (jeton + 10);
-		if (donnees + 4 > fin) return false;
+		size_t data = inPlace ? (fragmentStart + fragmentSize) : (token + 10);
+		if (data + 4 > end) return false;
 
 		// Value array: 4-byte descriptors, then data.
-		const uint32_t nbValeurs = lire32(c, tc, donnees);
-		donnees += 4;
+		const uint32_t nValues = read32(c, tc, data);
+		data += 4;
 		// Guard: at least a 4-byte descriptor per announced value.
-		if (nbValeurs > (fin - donnees) / 4) return false;
-		std::vector<ValeurSubst> valeurs(nbValeurs);
-		size_t offsetValeur = donnees + 4ULL * nbValeurs;
-		for (uint32_t i = 0; i < nbValeurs; ++i) {
-			valeurs[i].taille = lire16(c, tc, donnees + 4ULL * i);
-			valeurs[i].type   = lire8(c, tc, donnees + 4ULL * i + 2);
-			valeurs[i].offset = offsetValeur;
-			offsetValeur += valeurs[i].taille;
-			if (offsetValeur > tc) return false;
+		if (nValues > (end - data) / 4) return false;
+		std::vector<SubstValue> values(nValues);
+		size_t valueOffset = data + 4ULL * nValues;
+		for (uint32_t i = 0; i < nValues; ++i) {
+			values[i].size = read16(c, tc, data + 4ULL * i);
+			values[i].type   = read8(c, tc, data + 4ULL * i + 2);
+			values[i].offset = valueOffset;
+			valueOffset += values[i].size;
+			if (valueOffset > tc) return false;
 		}
 
 		// The definition's fragment is decoded with these values.
-		size_t q = debutFragment;
-		const bool ok = jetons(q, debutFragment + tailleFragment, &valeurs,
-		                       sortie, profondeur + 1);
-		p = offsetValeur;
+		size_t q = fragmentStart;
+		const bool ok = tokens(q, fragmentStart + fragmentSize, &values,
+		                       output, depth + 1);
+		p = valueOffset;
 		return ok;
 	}
 };
@@ -664,11 +664,11 @@ private:
 //  Reading the file
 // ---------------------------------------------------------------------------
 
-std::wstring EvtxCanalDepuisNomFichier(const std::wstring& nomFichier) {
-	std::wstring n = nomFichier;
+std::wstring EvtxChannelFromFileName(const std::wstring& fileName) {
+	std::wstring n = fileName;
 	const size_t sep = n.find_last_of(L"\\/");
 	if (sep != std::wstring::npos) n = n.substr(sep + 1);
-	if (n.size() > 5 && enMinuscules(n.substr(n.size() - 5)) == L".evtx")
+	if (n.size() > 5 && toLower(n.substr(n.size() - 5)) == L".evtx")
 		n = n.substr(0, n.size() - 5);
 	// "%4" is the slash of the channel name, forbidden in a file name;
 	// other characters follow the same convention.
@@ -680,49 +680,49 @@ std::wstring EvtxCanalDepuisNomFichier(const std::wstring& nomFichier) {
 	return r;
 }
 
-HRESULT EvtxLireFichier(const std::wstring& chemin,
-                        const std::function<bool(const EvtxEnregistrement&)>& surEnregistrement,
-                        EvtxBilan* bilan) {
-	EvtxBilan local;
-	EvtxBilan& b = bilan ? *bilan : local;
+HRESULT EvtxReadFile(const std::wstring& path,
+                        const std::function<bool(const EvtxRecord&)>& onRecord,
+                        EvtxSummary* summary) {
+	EvtxSummary local;
+	EvtxSummary& b = summary ? *summary : local;
 
-	HANDLE h = CreateFileW(chemin.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
+	HANDLE h = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
 	                       OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (h == INVALID_HANDLE_VALUE) {
 		const DWORD err = GetLastError();
 		b.diagnostic = L"ouverture impossible";
-		log(2, L"🔥EvtxLireFichier " + chemin, err);
+		log(2, L"🔥EvtxLireFichier " + path, err);
 		return HRESULT_FROM_WIN32(err);
 	}
 
-	std::vector<BYTE> entete(TAILLE_ENTETE_FICHIER);
-	DWORD lu = 0;
-	if (!ReadFile(h, entete.data(), (DWORD)entete.size(), &lu, nullptr)
-	    || lu < TAILLE_ENTETE_FICHIER) {
+	std::vector<BYTE> header(FILE_HEADER_SIZE);
+	DWORD read = 0;
+	if (!ReadFile(h, header.data(), (DWORD)header.size(), &read, nullptr)
+	    || read < FILE_HEADER_SIZE) {
 		CloseHandle(h);
-		b.diagnostic = L"fichier tronque (" + std::to_wstring(lu) + L" octets)";
+		b.diagnostic = L"fichier tronque (" + std::to_wstring(read) + L" octets)";
 		return HRESULT_FROM_WIN32(ERROR_HANDLE_EOF);
 	}
-	if (memcmp(entete.data(), "ElfFile\0", 8) != 0) {
+	if (memcmp(header.data(), "ElfFile\0", 8) != 0) {
 		CloseHandle(h);
 		b.diagnostic = L"signature ElfFile absente";
-		log(2, L"🔥evtx : " + chemin + L" n'est pas un journal EVTX");
+		log(2, L"🔥evtx : " + path + L" n'est pas un journal EVTX");
 		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
 	}
-	b.enteteValide = true;
-	const uint16_t drapeaux = lire16(entete.data(), entete.size(), 120);
-	b.sale = (drapeaux & 0x0001) != 0;
-	const uint16_t nbChunksAnnonces = lire16(entete.data(), entete.size(), 42);
+	b.headerValid = true;
+	const uint16_t flags = read16(header.data(), header.size(), 120);
+	b.sale = (flags & 0x0001) != 0;
+	const uint16_t nDeclaredChunks = read16(header.data(), header.size(), 42);
 
 	/*  Chunks are walked to the end of the file, not just up to the announced
 	 *  count: a log closed abruptly often holds more, and those chunks carry the
 	 *  most recent events — precisely the ones the investigation wants. */
-	std::vector<BYTE> chunk(TAILLE_CHUNK);
-	bool continuer = true;
+	std::vector<BYTE> chunk(CHUNK_SIZE);
+	bool goOn = true;
 	unsigned long long chunksIgnores = 0;
-	while (continuer) {
-		if (!ReadFile(h, chunk.data(), (DWORD)chunk.size(), &lu, nullptr) || lu == 0) break;
-		if (lu < TAILLE_ENTETE_CHUNK) break;
+	while (goOn) {
+		if (!ReadFile(h, chunk.data(), (DWORD)chunk.size(), &read, nullptr) || read == 0) break;
+		if (read < CHUNK_HEADER_SIZE) break;
 		if (memcmp(chunk.data(), "ElfChnk\0", 8) != 0) {
 			/*  Chunk without a signature: either preallocated space never written
 			 *  (end of the file), or a damaged chunk in the MIDDLE of the log. The two
@@ -731,9 +731,9 @@ HRESULT EvtxLireFichier(const std::wstring& chemin,
 			 *  out of 270. So we move on to the next chunk.
 			 *  An empty chunk is not counted as skipped: only a chunk that holds
 			 *  something without the signature is reported. */
-			bool vide = true;
-			for (size_t i = 0; i < lu && vide; ++i) if (chunk[i]) vide = false;
-			if (!vide) ++chunksIgnores;
+			bool empty = true;
+			for (size_t i = 0; i < read && empty; ++i) if (chunk[i]) empty = false;
+			if (!empty) ++chunksIgnores;
 			continue;
 		}
 		++b.chunks;
@@ -741,48 +741,48 @@ HRESULT EvtxLireFichier(const std::wstring& chemin,
 		/*  "Free space offset" bounds the written records. A corrupt chunk can
 		 *  announce it out of range: the chunk size is then used, the rest being
 		 *  filtered by the record signature. */
-		size_t finEnregistrements = lire32(chunk.data(), lu, 48);
-		if (finEnregistrements <= DEBUT_ENREGISTREMENTS || finEnregistrements > lu)
-			finEnregistrements = lu;
+		size_t recordsEnd = read32(chunk.data(), read, 48);
+		if (recordsEnd <= RECORDS_START || recordsEnd > read)
+			recordsEnd = read;
 
-		Decodeur decodeur(chunk.data(), lu);
-		size_t p = DEBUT_ENREGISTREMENTS;
-		while (p + 24 <= finEnregistrements) {
-			if (lire32(chunk.data(), lu, p) != SIGNATURE_ENREG) break;
-			const uint32_t taille = lire32(chunk.data(), lu, p + 4);
+		Decoder decoder(chunk.data(), read);
+		size_t p = RECORDS_START;
+		while (p + 24 <= recordsEnd) {
+			if (read32(chunk.data(), read, p) != SIGNATURE_ENREG) break;
+			const uint32_t size = read32(chunk.data(), read, p + 4);
 			// A record takes at least the header (24) and the trailing size copy
 			// (4); an absurd size would stop the reading on arbitrary data.
-			if (taille < 28 || p + taille > finEnregistrements) break;
+			if (size < 28 || p + size > recordsEnd) break;
 
-			EvtxEnregistrement e;
-			e.identifiant = lire64(chunk.data(), lu, p + 8);
-			const uint64_t v = lire64(chunk.data(), lu, p + 16);
-			e.ecritUtc.dwLowDateTime  = (DWORD)(v & 0xFFFFFFFFULL);
-			e.ecritUtc.dwHighDateTime = (DWORD)(v >> 32);
+			EvtxRecord e;
+			e.id = read64(chunk.data(), read, p + 8);
+			const uint64_t v = read64(chunk.data(), read, p + 16);
+			e.writtenUtc.dwLowDateTime  = (DWORD)(v & 0xFFFFFFFFULL);
+			e.writtenUtc.dwHighDateTime = (DWORD)(v >> 32);
 
-			if (decodeur.document(p + 24, p + taille - 4, e.xml)) {
-				++b.lus;
-				if (!surEnregistrement(e)) { continuer = false; break; }
+			if (decoder.document(p + 24, p + size - 4, e.xml)) {
+				++b.read;
+				if (!onRecord(e)) { goOn = false; break; }
 			}
 			else {
-				++b.illisibles;
-				log(3, L"🔈evtx : enregistrement " + std::to_wstring(e.identifiant)
-				       + L" illisible dans " + chemin);
+				++b.unreadable;
+				log(3, L"🔈evtx : enregistrement " + std::to_wstring(e.id)
+				       + L" illisible dans " + path);
 			}
-			p += taille;
+			p += size;
 		}
 	}
 	CloseHandle(h);
 
 	std::wostringstream diag;
 	diag << b.chunks << L" chunk(s)";
-	if (nbChunksAnnonces != b.chunks) diag << L" (" << nbChunksAnnonces << L" annonce(s))";
-	diag << L", " << b.lus << L" enregistrement(s)";
-	if (b.illisibles) diag << L", " << b.illisibles << L" illisible(s)";
+	if (nDeclaredChunks != b.chunks) diag << L" (" << nDeclaredChunks << L" annonce(s))";
+	diag << L", " << b.read << L" enregistrement(s)";
+	if (b.unreadable) diag << L", " << b.unreadable << L" illisible(s)";
 	if (chunksIgnores) diag << L", " << chunksIgnores << L" chunk(s) abime(s)";
 	if (b.sale) diag << L", journal non ferme proprement";
 	b.diagnostic = diag.str();
 	b.chunksIgnores = chunksIgnores;
 
-	return (b.illisibles || chunksIgnores) ? S_FALSE : ERROR_SUCCESS;
+	return (b.unreadable || chunksIgnores) ? S_FALSE : ERROR_SUCCESS;
 }

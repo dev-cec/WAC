@@ -34,52 +34,52 @@ const uint32_t K256[64] = {
 };
 
 //! Digest in uppercase hexadecimal, the project's convention (see Md5Stream).
-std::wstring enHexa(const uint8_t* octets, size_t n){
+std::wstring enHexa(const uint8_t* bytes, size_t n){
 	static const wchar_t* d = L"0123456789ABCDEF";
 	std::wstring r;
 	r.reserve(n * 2);
 	for (size_t i = 0; i < n; ++i){
-		r.push_back(d[octets[i] >> 4]);
-		r.push_back(d[octets[i] & 0x0F]);
+		r.push_back(d[bytes[i] >> 4]);
+		r.push_back(d[bytes[i] & 0x0F]);
 	}
 	return r;
 }
 
 /*! Padding shared by both algorithms: a 0x80 byte, zeros, then the message
  *  length IN BITS on 8 big-endian bytes.
- *  @param dansBloc bytes already in the current block
- *  @param bloc 64-byte working block
- *  @param octets total message length, in bytes
- *  @param comprimer compression function of a block
+ *  @param inBlock bytes already in the current block
+ *  @param block 64-byte working block
+ *  @param bytes total message length, in bytes
+ *  @param compress compression function of a block
  */
 template <typename F>
-void terminer(size_t& dansBloc, uint8_t* bloc, uint64_t octets, F comprimer){
-	bloc[dansBloc++] = 0x80;
+void finish(size_t& inBlock, uint8_t* block, uint64_t bytes, F compress){
+	block[inBlock++] = 0x80;
 	// The length takes the last 8 bytes: if there is no room left, this block is
 	// closed and the length goes into the next one.
-	if (dansBloc > 56){
-		std::memset(bloc + dansBloc, 0, 64 - dansBloc);
-		comprimer(bloc);
-		dansBloc = 0;
+	if (inBlock > 56){
+		std::memset(block + inBlock, 0, 64 - inBlock);
+		compress(block);
+		inBlock = 0;
 	}
-	std::memset(bloc + dansBloc, 0, 56 - dansBloc);
-	const uint64_t bits = octets * 8;
-	for (int i = 0; i < 8; ++i) bloc[56 + i] = (uint8_t)(bits >> (56 - 8 * i));
-	comprimer(bloc);
+	std::memset(block + inBlock, 0, 56 - inBlock);
+	const uint64_t bits = bytes * 8;
+	for (int i = 0; i < 8; ++i) block[56 + i] = (uint8_t)(bits >> (56 - 8 * i));
+	compress(block);
 }
 
 /*! Accumulation by 64-byte blocks, shared by both algorithms. */
 template <typename F>
-void ajouter(const uint8_t* data, size_t length, uint8_t* bloc, size_t& dansBloc,
-             uint64_t& octets, F comprimer){
+void add(const uint8_t* data, size_t length, uint8_t* block, size_t& inBlock,
+             uint64_t& bytes, F compress){
 	if (!data) return;
-	octets += length;
+	bytes += length;
 	while (length){
-		const size_t place = 64 - dansBloc;
+		const size_t place = 64 - inBlock;
 		const size_t n = length < place ? length : place;
-		std::memcpy(bloc + dansBloc, data, n);
-		dansBloc += n; data += n; length -= n;
-		if (dansBloc == 64){ comprimer(bloc); dansBloc = 0; }
+		std::memcpy(block + inBlock, data, n);
+		inBlock += n; data += n; length -= n;
+		if (inBlock == 64){ compress(block); inBlock = 0; }
 	}
 }
 
@@ -89,12 +89,12 @@ void ajouter(const uint8_t* data, size_t length, uint8_t* bloc, size_t& dansBloc
 //  SHA-1
 // ---------------------------------------------------------------------------
 
-void Sha1Stream::comprimer(const uint8_t* bloc){
+void Sha1Stream::compress(const uint8_t* block){
 	uint32_t w[80];
-	for (int i = 0; i < 16; ++i) w[i] = be32(bloc + 4 * i);
+	for (int i = 0; i < 16; ++i) w[i] = be32(block + 4 * i);
 	for (int i = 16; i < 80; ++i) w[i] = rotl(w[i-3] ^ w[i-8] ^ w[i-14] ^ w[i-16], 1);
 
-	uint32_t a = etat_[0], b = etat_[1], c = etat_[2], d = etat_[3], e = etat_[4];
+	uint32_t a = state_[0], b = state_[1], c = state_[2], d = state_[3], e = state_[4];
 	for (int i = 0; i < 80; ++i){
 		uint32_t f, k;
 		if      (i < 20){ f = (b & c) | (~b & d);            k = 0x5A827999u; }
@@ -104,18 +104,18 @@ void Sha1Stream::comprimer(const uint8_t* bloc){
 		const uint32_t t = rotl(a, 5) + f + e + k + w[i];
 		e = d; d = c; c = rotl(b, 30); b = a; a = t;
 	}
-	etat_[0] += a; etat_[1] += b; etat_[2] += c; etat_[3] += d; etat_[4] += e;
+	state_[0] += a; state_[1] += b; state_[2] += c; state_[3] += d; state_[4] += e;
 }
 
 void Sha1Stream::update(const uint8_t* data, size_t length){
-	ajouter(data, length, bloc_, dansBloc_, octets_,
-	        [this](const uint8_t* b){ comprimer(b); });
+	add(data, length, block_, inBlock_, bytes_,
+	        [this](const uint8_t* b){ compress(b); });
 }
 
 void Sha1Stream::digest(uint8_t d[20]){
-	terminer(dansBloc_, bloc_, octets_, [this](const uint8_t* b){ comprimer(b); });
+	finish(inBlock_, block_, bytes_, [this](const uint8_t* b){ compress(b); });
 	for (int i = 0; i < 5; ++i)
-		for (int j = 0; j < 4; ++j) d[4 * i + j] = (uint8_t)(etat_[i] >> (24 - 8 * j));
+		for (int j = 0; j < 4; ++j) d[4 * i + j] = (uint8_t)(state_[i] >> (24 - 8 * j));
 }
 
 std::wstring Sha1Stream::hexDigest(){
@@ -124,24 +124,24 @@ std::wstring Sha1Stream::hexDigest(){
 	return enHexa(d, 20);
 }
 
-void sha1Octets(const uint8_t* data, size_t length, uint8_t sortie[20]){
-	Sha1Stream s; s.update(data, length); s.digest(sortie);
+void sha1Bytes(const uint8_t* data, size_t length, uint8_t output[20]){
+	Sha1Stream s; s.update(data, length); s.digest(output);
 }
 
 // ---------------------------------------------------------------------------
 //  SHA-256
 // ---------------------------------------------------------------------------
 
-void Sha256Stream::comprimer(const uint8_t* bloc){
+void Sha256Stream::compress(const uint8_t* block){
 	uint32_t w[64];
-	for (int i = 0; i < 16; ++i) w[i] = be32(bloc + 4 * i);
+	for (int i = 0; i < 16; ++i) w[i] = be32(block + 4 * i);
 	for (int i = 16; i < 64; ++i){
 		const uint32_t s0 = rotr(w[i-15], 7) ^ rotr(w[i-15], 18) ^ (w[i-15] >> 3);
 		const uint32_t s1 = rotr(w[i-2], 17) ^ rotr(w[i-2], 19)  ^ (w[i-2] >> 10);
 		w[i] = w[i-16] + s0 + w[i-7] + s1;
 	}
-	uint32_t a = etat_[0], b = etat_[1], c = etat_[2], d = etat_[3];
-	uint32_t e = etat_[4], f = etat_[5], g = etat_[6], h = etat_[7];
+	uint32_t a = state_[0], b = state_[1], c = state_[2], d = state_[3];
+	uint32_t e = state_[4], f = state_[5], g = state_[6], h = state_[7];
 	for (int i = 0; i < 64; ++i){
 		const uint32_t S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
 		const uint32_t ch = (e & f) ^ (~e & g);
@@ -152,19 +152,19 @@ void Sha256Stream::comprimer(const uint8_t* bloc){
 		h = g; g = f; f = e; e = d + t1;
 		d = c; c = b; b = a; a = t1 + t2;
 	}
-	etat_[0] += a; etat_[1] += b; etat_[2] += c; etat_[3] += d;
-	etat_[4] += e; etat_[5] += f; etat_[6] += g; etat_[7] += h;
+	state_[0] += a; state_[1] += b; state_[2] += c; state_[3] += d;
+	state_[4] += e; state_[5] += f; state_[6] += g; state_[7] += h;
 }
 
 void Sha256Stream::update(const uint8_t* data, size_t length){
-	ajouter(data, length, bloc_, dansBloc_, octets_,
-	        [this](const uint8_t* b){ comprimer(b); });
+	add(data, length, block_, inBlock_, bytes_,
+	        [this](const uint8_t* b){ compress(b); });
 }
 
 void Sha256Stream::digest(uint8_t d[32]){
-	terminer(dansBloc_, bloc_, octets_, [this](const uint8_t* b){ comprimer(b); });
+	finish(inBlock_, block_, bytes_, [this](const uint8_t* b){ compress(b); });
 	for (int i = 0; i < 8; ++i)
-		for (int j = 0; j < 4; ++j) d[4 * i + j] = (uint8_t)(etat_[i] >> (24 - 8 * j));
+		for (int j = 0; j < 4; ++j) d[4 * i + j] = (uint8_t)(state_[i] >> (24 - 8 * j));
 }
 
 std::wstring Sha256Stream::hexDigest(){
@@ -173,18 +173,18 @@ std::wstring Sha256Stream::hexDigest(){
 	return enHexa(d, 32);
 }
 
-void sha256Octets(const uint8_t* data, size_t length, uint8_t sortie[32]){
-	Sha256Stream s; s.update(data, length); s.digest(sortie);
+void sha256Bytes(const uint8_t* data, size_t length, uint8_t output[32]){
+	Sha256Stream s; s.update(data, length); s.digest(output);
 }
 
-std::wstring sha256Fichier(const std::wstring& chemin){
-	std::ifstream f(std::filesystem::path(chemin), std::ios::binary);
+std::wstring sha256OfFile(const std::wstring& path){
+	std::ifstream f(std::filesystem::path(path), std::ios::binary);
 	if (!f) return L"";
-	Sha256Stream flux;
-	std::vector<char> tampon(1 << 16);
-	while (f.read(tampon.data(), (std::streamsize)tampon.size()) || f.gcount())
-		flux.update(reinterpret_cast<const uint8_t*>(tampon.data()), (size_t)f.gcount());
-	return flux.hexDigest();
+	Sha256Stream stream;
+	std::vector<char> buffer(1 << 16);
+	while (f.read(buffer.data(), (std::streamsize)buffer.size()) || f.gcount())
+		stream.update(reinterpret_cast<const uint8_t*>(buffer.data()), (size_t)f.gcount());
+	return stream.hexDigest();
 }
 
 // ---------------------------------------------------------------------------
@@ -213,24 +213,24 @@ inline uint64_t rotr64(uint64_t v, int n){ return (v >> n) | (v << (64 - n)); }
 inline uint64_t be64(const uint8_t* p){ uint64_t v = 0; for (int i = 0; i < 8; ++i) v = (v << 8) | p[i]; return v; }
 } // namespace
 
-Sha512Stream::Sha512Stream(bool variante384) : variante384_(variante384) {
+Sha512Stream::Sha512Stream(bool variant384) : variant384_(variant384) {
 	static const uint64_t H512[8] = { 0x6a09e667f3bcc908ULL,0xbb67ae8584caa73bULL,0x3c6ef372fe94f82bULL,0xa54ff53a5f1d36f1ULL,
 	                                  0x510e527fade682d1ULL,0x9b05688c2b3e6c1fULL,0x1f83d9abfb41bd6bULL,0x5be0cd19137e2179ULL };
 	static const uint64_t H384[8] = { 0xcbbb9d5dc1059ed8ULL,0x629a292a367cd507ULL,0x9159015a3070dd17ULL,0x152fecd8f70e5939ULL,
 	                                  0x67332667ffc00b31ULL,0x8eb44a8768581511ULL,0xdb0c2e0d64f98fa7ULL,0x47b5481dbefa4fa4ULL };
-	for (int i = 0; i < 8; ++i) etat_[i] = variante384 ? H384[i] : H512[i];
+	for (int i = 0; i < 8; ++i) state_[i] = variant384 ? H384[i] : H512[i];
 }
 
-void Sha512Stream::comprimer(const uint8_t* bloc){
+void Sha512Stream::compress(const uint8_t* block){
 	uint64_t w[80];
-	for (int i = 0; i < 16; ++i) w[i] = be64(bloc + 8 * i);
+	for (int i = 0; i < 16; ++i) w[i] = be64(block + 8 * i);
 	for (int i = 16; i < 80; ++i){
 		const uint64_t s0 = rotr64(w[i-15], 1) ^ rotr64(w[i-15], 8) ^ (w[i-15] >> 7);
 		const uint64_t s1 = rotr64(w[i-2], 19) ^ rotr64(w[i-2], 61) ^ (w[i-2] >> 6);
 		w[i] = w[i-16] + s0 + w[i-7] + s1;
 	}
-	uint64_t a = etat_[0], b = etat_[1], c = etat_[2], d = etat_[3];
-	uint64_t e = etat_[4], f = etat_[5], g = etat_[6], h = etat_[7];
+	uint64_t a = state_[0], b = state_[1], c = state_[2], d = state_[3];
+	uint64_t e = state_[4], f = state_[5], g = state_[6], h = state_[7];
 	for (int i = 0; i < 80; ++i){
 		const uint64_t S1 = rotr64(e, 14) ^ rotr64(e, 18) ^ rotr64(e, 41);
 		const uint64_t ch = (e & f) ^ (~e & g);
@@ -240,40 +240,40 @@ void Sha512Stream::comprimer(const uint8_t* bloc){
 		const uint64_t t2 = S0 + maj;
 		h = g; g = f; f = e; e = d + t1; d = c; c = b; b = a; a = t1 + t2;
 	}
-	etat_[0] += a; etat_[1] += b; etat_[2] += c; etat_[3] += d;
-	etat_[4] += e; etat_[5] += f; etat_[6] += g; etat_[7] += h;
+	state_[0] += a; state_[1] += b; state_[2] += c; state_[3] += d;
+	state_[4] += e; state_[5] += f; state_[6] += g; state_[7] += h;
 }
 
 void Sha512Stream::update(const uint8_t* data, size_t length){
-	octets_ += length;
+	bytes_ += length;
 	while (length){
-		const size_t n = std::min(length, sizeof(bloc_) - dansBloc_);
-		std::memcpy(bloc_ + dansBloc_, data, n);
-		dansBloc_ += n; data += n; length -= n;
-		if (dansBloc_ == sizeof(bloc_)){ comprimer(bloc_); dansBloc_ = 0; }
+		const size_t n = std::min(length, sizeof(block_) - inBlock_);
+		std::memcpy(block_ + inBlock_, data, n);
+		inBlock_ += n; data += n; length -= n;
+		if (inBlock_ == sizeof(block_)){ compress(block_); inBlock_ = 0; }
 	}
 }
 
-void Sha512Stream::digest(uint8_t* sortie){
+void Sha512Stream::digest(uint8_t* output){
 	// Padding: 0x80, zeros, then the bit length on 128 bits.
-	const uint64_t bits = octets_ * 8;
-	bloc_[dansBloc_++] = 0x80;
-	if (dansBloc_ > 112){
-		std::memset(bloc_ + dansBloc_, 0, 128 - dansBloc_);
-		comprimer(bloc_);
-		dansBloc_ = 0;
+	const uint64_t bits = bytes_ * 8;
+	block_[inBlock_++] = 0x80;
+	if (inBlock_ > 112){
+		std::memset(block_ + inBlock_, 0, 128 - inBlock_);
+		compress(block_);
+		inBlock_ = 0;
 	}
-	std::memset(bloc_ + dansBloc_, 0, 120 - dansBloc_);
-	for (int i = 0; i < 8; ++i) bloc_[120 + i] = (uint8_t)(bits >> (56 - 8 * i));
-	comprimer(bloc_);
-	const size_t n = taille();
-	for (size_t i = 0; i < n; ++i) sortie[i] = (uint8_t)(etat_[i / 8] >> (56 - 8 * (i % 8)));
+	std::memset(block_ + inBlock_, 0, 120 - inBlock_);
+	for (int i = 0; i < 8; ++i) block_[120 + i] = (uint8_t)(bits >> (56 - 8 * i));
+	compress(block_);
+	const size_t n = size();
+	for (size_t i = 0; i < n; ++i) output[i] = (uint8_t)(state_[i / 8] >> (56 - 8 * (i % 8)));
 }
 
-void sha384Octets(const uint8_t* data, size_t length, uint8_t sortie[48]){
-	Sha512Stream s(true); s.update(data, length); s.digest(sortie);
+void sha384Bytes(const uint8_t* data, size_t length, uint8_t output[48]){
+	Sha512Stream s(true); s.update(data, length); s.digest(output);
 }
 
-void sha512Octets(const uint8_t* data, size_t length, uint8_t sortie[64]){
-	Sha512Stream s(false); s.update(data, length); s.digest(sortie);
+void sha512Bytes(const uint8_t* data, size_t length, uint8_t output[64]){
+	Sha512Stream s(false); s.update(data, length); s.digest(output);
 }

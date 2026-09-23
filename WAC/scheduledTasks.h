@@ -47,15 +47,15 @@
 struct Trigger {
 	std::wstring type;      //!< name of the XML element (TimeTrigger, LogonTrigger…)
 	std::wstring interval;  //!< repetition (ISO 8601 duration, e.g. "PT1H")
-	std::wstring debut;     //!< StartBoundary: the first time it was due
-	bool         actif = true; //!< the trigger's Enabled flag
+	std::wstring start;     //!< StartBoundary: the first time it was due
+	bool         active = true; //!< the trigger's Enabled flag
 };
 
 /*! What a scheduled task runs: a command, or a COM handler. */
 struct Action {
 	std::wstring type;       //!< "Exec" or "ComHandler"
 	std::wstring command;    //!< the executable (Exec)
-	EmpreinteBinaire empreinte; //!< fingerprints of that executable, if `--binary` was given
+	BinaryFingerprint fingerprint; //!< fingerprints of that executable, if `--binary` was given
 	std::wstring arguments;  //!< command-line arguments
 	std::wstring workingDir; //!< working directory
 	std::wstring classId;    //!< CLSID of the handler (ComHandler)
@@ -65,7 +65,7 @@ struct Action {
 /*! One scheduled task, rebuilt from its XML and the TaskCache. */
 struct ScheduledTask {
 	std::wstring name;                 //!< name of the task, that is its file name
-	std::wstring path;                 //!< chemin dans l'arborescence (ex. \\Microsoft\\Windows\…)
+	std::wstring path;                 //!< path dans l'arborescence (ex. \\Microsoft\\Windows\…)
 	std::wstring description;          //!< description the author gave it
 	std::wstring author;               //!< who registered the task, as the XML declares it
 	std::wstring runAs;                //!< account it runs as (the principal's UserId)

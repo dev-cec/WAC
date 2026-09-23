@@ -43,16 +43,16 @@ Json Filename::toJson() {
 	Json o = Json::obj();
 	o.add(L"Filename", Json::str(filename));
 	o.add(L"FullPath", Json::str(fullPath));
-	ajouterEmpreintes(o, empreinte);
+	addFingerprints(o, fingerprint);
 	// Emise seulement si relevee : un couple de zeros se lirait comme une
 	// reference valide vers l'enregistrement 0 de la $MFT, qui est la $MFT
 	// elle-meme.
-	if (referenceConnue) o.add(L"MftReference", reference.toJson());
+	if (referenceKnown) o.add(L"MftReference", reference.toJson());
 	return o;
 }
 
-VolumeInfo::VolumeInfo(LPBYTE data, int indice) {
-	LPBYTE indVolume = data + indice * 96;
+VolumeInfo::VolumeInfo(LPBYTE data, int index) {
+	LPBYTE indVolume = data + index * 96;
 	unsigned int offset = *reinterpret_cast<unsigned int*>(indVolume);
 	// Longueur ANNONCEE du nom de peripherique. La lecture s'y borne : sans
 	// elle, une chaine non terminee dans un fichier abime faisait lire
@@ -60,7 +60,7 @@ VolumeInfo::VolumeInfo(LPBYTE data, int indice) {
 	unsigned int numChar = *reinterpret_cast<unsigned int*>(indVolume + 4);
 	creationTimeUtc = *reinterpret_cast<FILETIME*>(indVolume + 8);
 	log(3, L"🔈utcVersLocalSuspect creationTime");
-	utcVersLocalSuspect(creationTimeUtc, &creationTime);
+	utcToSuspectLocal(creationTimeUtc, &creationTime);
 	// Chemins BRUTS : l'echappement est centralise dans json.h. Les
 	// substitutions deviceName -> mountPoint ci-dessous operent donc sur les
 	// valeurs reelles, ce qui les rend aussi utilisables telles quelles en I/O.
@@ -76,9 +76,9 @@ VolumeInfo::VolumeInfo(LPBYTE data, int indice) {
 	   Le format %08X doit etre le MEME des deux cotes de la comparaison :
 	   getVolumeLetter() l'utilise aussi (cf. tools.cpp). */
 	{
-		const unsigned int numero = *reinterpret_cast<unsigned int*>(indVolume + 16);
+		const unsigned int number = *reinterpret_cast<unsigned int*>(indVolume + 16);
 		wchar_t hexa[9] = L"";
-		swprintf(hexa, 9, L"%08X", numero);
+		swprintf(hexa, 9, L"%08X", number);
 		serialNumber = hexa;
 	}
 	mountPoint = getVolumeLetter(serialNumber);
@@ -141,7 +141,7 @@ Prefetch::Prefetch(const std::wstring file_path) {
 	path = file_path;
 	log(3, L"🔈replaceAll pathOriginal");
 	// Chemin BRUT : l'echappement est centralise dans json.h.
-	pathOriginal = cheminOriginal(path);
+	pathOriginal = originalPath(path);
 }
 
 HRESULT Prefetch::read() {
@@ -159,8 +159,8 @@ HRESULT Prefetch::read() {
 	       fichier non compressé pour corrompre la collecte entière.
 	   `data` reste une simple VUE : il désigne l'un ou l'autre tampon sans en
 	   être propriétaire. */
-	std::unique_ptr<BYTE[]> tamponFichier;      // contenu brut du .pf
-	std::unique_ptr<BYTE[]> tamponDecompresse;  // contenu apres decompression
+	std::unique_ptr<BYTE[]> fileBuffer;      // contenu brut du .pf
+	std::unique_ptr<BYTE[]> decompressedBuffer;  // contenu apres decompression
 	LPBYTE buffer = NULL;  // vue sur le contenu brut
 	LPBYTE data = NULL;    // vue sur les donnees exploitables
 	DWORD posBuffer = 0;
@@ -173,8 +173,8 @@ HRESULT Prefetch::read() {
 	file.seekg(0, std::ios::end);
 	const ULONG size = (ULONG)file.tellg();
 	file.seekg(0, std::ios::beg);
-	tamponFichier = std::make_unique<BYTE[]>(size);
-	buffer = tamponFichier.get();
+	fileBuffer = std::make_unique<BYTE[]>(size);
+	buffer = fileBuffer.get();
 	file.read(reinterpret_cast<char*>(buffer), size);
 	file.close();
 
@@ -194,11 +194,11 @@ HRESULT Prefetch::read() {
 		memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
 		memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
 		log(3, L"🔈utcVersLocalSuspect created");
-		utcVersLocalSuspect(createdUtc, &created);
+		utcToSuspectLocal(createdUtc, &created);
 		log(3, L"🔈utcVersLocalSuspect modified");
-		utcVersLocalSuspect(modifiedUtc, &modified);
+		utcToSuspectLocal(modifiedUtc, &modified);
 		log(3, L"🔈utcVersLocalSuspect accessed");
-		utcVersLocalSuspect(accessedUtc, &accessed);
+		utcToSuspectLocal(accessedUtc, &accessed);
 	}
 	CloseHandle(hFile);
 
@@ -229,8 +229,8 @@ HRESULT Prefetch::read() {
 		if (hr != ERROR_SUCCESS)
 			return hr;
 
-		tamponDecompresse = std::make_unique<BYTE[]>(decompressed_size);
-		data = tamponDecompresse.get();
+		decompressedBuffer = std::make_unique<BYTE[]>(decompressed_size);
+		data = decompressedBuffer.get();
 
 		ULONG final_uncompressed_size;
 
@@ -323,7 +323,7 @@ HRESULT Prefetch::read() {
 		if (timeToIso8601Utc(tempUtc) != L"") {
 			last_runsUtc.push_back(tempUtc);
 			log(3, L"🔈utcVersLocalSuspect last_runs");
-			utcVersLocalSuspect(tempUtc, &temp_locale);
+			utcToSuspectLocal(tempUtc, &temp_locale);
 			last_runs.push_back(temp_locale);
 		}
 	}
@@ -357,9 +357,9 @@ HRESULT Prefetch::read() {
 	      0  debut, 4 duree, 8 duree moyenne,
 	      12 decalage du nom dans le bloc des chaines, 16 nombre de caracteres,
 	      20 drapeaux, 24 reference $MFT (48 bits d'entree + 16 de sequence). */
-	std::map<std::wstring, MFTInformation> metriques;   // nom du fichier -> reference
+	std::map<std::wstring, MFTInformation> metrics;   // nom du fichier -> reference
 	{
-		const int TAILLE_METRIQUE = 32;
+		const int METRIC_SIZE = 32;
 		/*  Le compte vient du fichier : on le borne par la place reellement
 		    disponible. La borne est le debut des chaines de trace, qui suivent
 		    immediatement le tableau — et non le debut des chaines de noms, plus
@@ -367,14 +367,14 @@ HRESULT Prefetch::read() {
 		    maximum incoherent pour une partie des Prefetch, et leurs metriques
 		    etaient toutes ecartees (taux de reference de 0 % sur certains
 		    fichiers, 100 % sur d'autres). */
-		int maxMetriques = (trace_offset > start)
-		                 ? (trace_offset - start) / TAILLE_METRIQUE : 0;
-		int retenues = nb_entries;
-		if (retenues < 0 || retenues > maxMetriques) {
+		int maxMetrics = (trace_offset > start)
+		                 ? (trace_offset - start) / METRIC_SIZE : 0;
+		int kept = nb_entries;
+		if (kept < 0 || kept > maxMetrics) {
 			log(2, L"🔥Prefetch : " + std::to_wstring(nb_entries)
-			     + L" metriques annoncees pour " + std::to_wstring(maxMetriques)
+			     + L" metriques annoncees pour " + std::to_wstring(maxMetrics)
 			     + L" possibles — compte ramene", ERROR_INVALID_DATA);
-			retenues = maxMetriques;
+			kept = maxMetrics;
 		}
 		/*  APPARIEMENT PAR LE CONTENU, et non par le rang ni par un cumul de
 		    decalages. Le nom est lu A SON DECALAGE ANNONCE dans le bloc des
@@ -385,20 +385,20 @@ HRESULT Prefetch::read() {
 		    position, si bien que le cumul derive de deux octets a chaque vide —
 		    mesure sur une machine reelle, 124 Prefetch sur 279 n'obtenaient
 		    alors aucune reference. */
-		for (int k = 0; k < retenues; ++k) {
-			LPBYTE m = data + start + (size_t)k * TAILLE_METRIQUE;
-			const unsigned int decalageNom = *reinterpret_cast<unsigned int*>(m + 12);
+		for (int k = 0; k < kept; ++k) {
+			LPBYTE m = data + start + (size_t)k * METRIC_SIZE;
+			const unsigned int nameOffset = *reinterpret_cast<unsigned int*>(m + 12);
 			const unsigned int nbCar = *reinterpret_cast<unsigned int*>(m + 16);
 			// Bornes : les deux champs viennent du fichier examine.
-			if (decalageNom >= (unsigned int)filename_size) continue;
+			if (nameOffset >= (unsigned int)filename_size) continue;
 			if (nbCar == 0 || nbCar > 32768) continue;
-			if (decalageNom + (nbCar + 1) * sizeof(wchar_t) > (size_t)filename_size) continue;
-			std::wstring nom((const wchar_t*)(data + filename_offset + decalageNom), nbCar);
-			while (!nom.empty() && nom.back() == L'\0') nom.pop_back();
-			if (nom.empty()) continue;
-			metriques.emplace(nom, MFTInformation(m + 24));
+			if (nameOffset + (nbCar + 1) * sizeof(wchar_t) > (size_t)filename_size) continue;
+			std::wstring name((const wchar_t*)(data + filename_offset + nameOffset), nbCar);
+			while (!name.empty() && name.back() == L'\0') name.pop_back();
+			if (name.empty()) continue;
+			metrics.emplace(name, MFTInformation(m + 24));
 		}
-		log(2, L"❇️Prefetch : " + std::to_wstring(metriques.size())
+		log(2, L"❇️Prefetch : " + std::to_wstring(metrics.size())
 		     + L" metrique(s) de fichier lue(s)");
 	}
 
@@ -409,10 +409,10 @@ HRESULT Prefetch::read() {
 		Filename f;
 		f.filename = w.data();
 		const std::map<std::wstring, MFTInformation>::const_iterator m =
-			metriques.find(f.filename);
-		if (m != metriques.end()) {
+			metrics.find(f.filename);
+		if (m != metrics.end()) {
 			f.reference = m->second;
-			f.referenceConnue = (m->second.entryIndex != 0);
+			f.referenceKnown = (m->second.entryIndex != 0);
 		}
 		for (const VolumeInfo& v : volumes) {
 			/* CE QUI ÉTAIT FAUX. La comparaison portait sur `substr(0, 35)`, une
@@ -427,22 +427,22 @@ HRESULT Prefetch::read() {
 			   casse : l'en-tête Prefetch écrit en majuscules, les chaînes de
 			   volume pas nécessairement. */
 			if (v.deviceName.empty()) continue;
-			if (enMinuscules(f.filename.substr(0, v.deviceName.size()))
-			    != enMinuscules(v.deviceName)) continue;
+			if (toLower(f.filename.substr(0, v.deviceName.size()))
+			    != toLower(v.deviceName)) continue;
 
 			f.fullPath = replaceAll(f.filename, v.deviceName, v.mountPoint).data();
 			if (conf.binary) {
 				log(3, L"🔈EmpreinteFichier");
-				f.empreinte = EmpreinteFichier(f.fullPath);
+				f.fingerprint = FingerprintFile(f.fullPath);
 			}
 			// L'executable du Prefetch parmi les fichiers charges : c'est LUI
 			// dont l'empreinte identifie le binaire execute.
-			const size_t barre = f.fullPath.find_last_of(L'\\');
-			const std::wstring nomSeul = (barre == std::wstring::npos)
-			                           ? f.fullPath : f.fullPath.substr(barre + 1);
-			if (enMinuscules(nomSeul) == enMinuscules(filename)) {
+			const size_t bar = f.fullPath.find_last_of(L'\\');
+			const std::wstring nameOnly = (bar == std::wstring::npos)
+			                           ? f.fullPath : f.fullPath.substr(bar + 1);
+			if (toLower(nameOnly) == toLower(filename)) {
 				fullPath = f.fullPath.data();
-				empreinte = f.empreinte;
+				fingerprint = f.fingerprint;
 			}
 			break;
 		}
@@ -458,7 +458,7 @@ Json Prefetch::toJson() {
 	o.add(L"Hash",        Json::str(hash_string));
 	o.add(L"Filename",    Json::str(filename));
 	o.add(L"FullPath",    Json::str(fullPath));
-	ajouterEmpreintes(o, empreinte);
+	addFingerprints(o, fingerprint);
 	o.add(L"Created",     Json::str(timeToIso8601Local(created)));
 	o.add(L"CreatedUtc",  Json::str(timeToIso8601Utc(createdUtc)));
 	o.add(L"Modified",    Json::str(timeToIso8601Local(modified)));
@@ -499,17 +499,17 @@ HRESULT Prefetchs::getData() {
 	log(0, L"*******************************************************************************************************************");
 
 
-	const std::filesystem::path repertoire = conf.mountpoint + L"\\Windows\\Prefetch";
-	const std::vector<std::filesystem::path> fichiersPf =
-		listFilesByExtension(repertoire, { L".pf" });
+	const std::filesystem::path directory = conf.mountpoint + L"\\Windows\\Prefetch";
+	const std::vector<std::filesystem::path> pfFiles =
+		listFilesByExtension(directory, { L".pf" });
 	size_t iPf = 0;
-	for (const std::filesystem::path& fichier : fichiersPf) {
-		printProgressStep(L"Prefetch", ++iPf, fichiersPf.size());
+	for (const std::filesystem::path& file : pfFiles) {
+		printProgressStep(L"Prefetch", ++iPf, pfFiles.size());
 		log(1, L"➕Prefetch");
-		Prefetch p(fichier.wstring());
+		Prefetch p(file.wstring());
 		HRESULT hresult = p.read();
 		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥" + fichier.wstring(), hresult);   // prefetch non lisible
+			log(2, L"🔥" + file.wstring(), hresult);   // prefetch non lisible
 			continue;
 		}
 		prefetchs.push_back(std::move(p));

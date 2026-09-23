@@ -7,7 +7,7 @@ Json Run::toJson() {
 	o.add(L"SIDName",          Json::str(SidName));
 	o.add(L"Key",              Json::str(Key));
 	o.add(L"Name",             Json::str(Name));
-	o.add(L"Value",            Json::str(Value));      // ligne de commande brute
+	o.add(L"Value",            Json::str(Value));      // raw command line
 	o.add(L"LastWriteTime",    Json::str(timeToIso8601Local(lastWriteTime)));
 	o.add(L"LastWriteTimeUtc", Json::str(timeToIso8601Utc(lastWriteTimeUtc)));
 	return o;
@@ -27,11 +27,11 @@ HRESULT Runs::getData() {
 	ORHKEY Offhive = NULL;
 	DWORD nSubkeys = 0;
 	DWORD nValues = 0;
-	DWORD tailleTampon = 0;
+	DWORD bufferSize = 0;
 	DWORD dType = 0;
-	WCHAR nomValeur[MAX_VALUE_NAME] = L"";
+	WCHAR valueName[MAX_VALUE_NAME] = L"";
 	FILETIME lastWriteTimeUtc = { 0 };
-	std::wstring ruche = L"";
+	std::wstring hive = L"";
 	std::wstring runKeys[2] = { L"Run",L"RunOnce" };
 	for (std::wstring runKey : runKeys) {
 		log(3, L"🔈OROpenKey HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey);
@@ -51,42 +51,42 @@ HRESULT Runs::getData() {
 			printProgressStep(L"Run", (unsigned)i + 1, nValues);
 			log(1, L"➕Run ");
 			Run run;
-			tailleTampon = MAX_VALUE_NAME;
+			bufferSize = MAX_VALUE_NAME;
 			run.lastWriteTimeUtc = lastWriteTimeUtc;
 			log(3, L"🔈utcVersLocalSuspect lastWriteTime");
-			utcVersLocalSuspect(lastWriteTimeUtc, &run.lastWriteTime);
+			utcToSuspectLocal(lastWriteTimeUtc, &run.lastWriteTime);
 			DWORD cData = MAX_DATA;
 			log(3, L"🔈OREnumValue Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey + L" " + std::to_wstring(i));
-			hresult = OREnumValue(hKey, i, nomValeur, &tailleTampon, &dType, NULL, &cData);
+			hresult = OREnumValue(hKey, i, valueName, &bufferSize, &dType, NULL, &cData);
 			if (hresult != ERROR_SUCCESS) {
 				log(2, L"🔥OREnumValue Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey + L" " + std::to_wstring(i), hresult);
 			}
 			if (dType != REG_SZ) {
-				log(2, L"🔥OREnumValue " + std::wstring(nomValeur) + L" not REG_SZ type");
+				log(2, L"🔥OREnumValue " + std::wstring(valueName) + L" not REG_SZ type");
 				continue;
 			}
-			run.Name = nomValeur;
+			run.Name = valueName;
 			log(2, L"❇️Run Name : " + run.Name);
 			run.Sid = L"";
 			run.SidName = L"HKLM";
 			run.Key = runKey;
-			log(3, L"🔈getRegSzValue " + std::wstring(nomValeur));
-			hresult = getRegSzValue(hKey, nullptr, nomValeur, &run.Value);
+			log(3, L"🔈getRegSzValue " + std::wstring(valueName));
+			hresult = getRegSzValue(hKey, nullptr, valueName, &run.Value);
 			if (hresult != ERROR_SUCCESS) {
-				log(2, L"🔥getRegSzValue " + std::wstring(nomValeur), hresult);
+				log(2, L"🔥getRegSzValue " + std::wstring(valueName), hresult);
 			}
 			log(3, L"🔈replaceAll Value");
 			//save
 			runs.push_back(run);
 		}
-		for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
-			//ouverture de la ruche user
+		for (std::tuple<std::wstring, std::wstring> profileEntry : conf.profiles) {
+			// open the user hive
 			log(3, L"🔈replaceAll Profile");
-			ruche = cheminExtrait(std::get<1>(profile)) + L"\\ntuser.dat";
-			log(3, L"🔈OROpenHive " + std::get<1>(profile) + L"\\ntuser.dat");
-			hresult = OROpenHive(ruche.c_str(), &Offhive);
+			hive = extractedPath(std::get<1>(profileEntry)) + L"\\ntuser.dat";
+			log(3, L"🔈OROpenHive " + std::get<1>(profileEntry) + L"\\ntuser.dat");
+			hresult = OROpenHive(hive.c_str(), &Offhive);
 			if (hresult != ERROR_SUCCESS) {
-				log(2, L"🔥OROpenHive " + std::get<1>(profile) + L"\\ntuser.dat", hresult);
+				log(2, L"🔥OROpenHive " + std::get<1>(profileEntry) + L"\\ntuser.dat", hresult);
 				continue;
 			}
 
@@ -107,30 +107,30 @@ HRESULT Runs::getData() {
 			for (int i = 0; i < (int)nValues; i++) {
 				log(1, L"➕Run ");
 				Run run;
-				tailleTampon = MAX_VALUE_NAME;
+				bufferSize = MAX_VALUE_NAME;
 				DWORD cData = MAX_DATA;
 				run.lastWriteTimeUtc = lastWriteTimeUtc;
 				log(3, L"🔈utcVersLocalSuspect lastWriteTime");
-				utcVersLocalSuspect(lastWriteTimeUtc, &run.lastWriteTime);
+				utcToSuspectLocal(lastWriteTimeUtc, &run.lastWriteTime);
 				log(3, L"🔈OREnumValue Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey + L" " + std::to_wstring(i));
-				hresult = OREnumValue(hKey, i, nomValeur, &tailleTampon, &dType, NULL, &cData);
+				hresult = OREnumValue(hKey, i, valueName, &bufferSize, &dType, NULL, &cData);
 				if (hresult != ERROR_SUCCESS) {
 					log(2, L"🔥OREnumValue Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey + L" " + std::to_wstring(i), hresult);
 				}
 				if (dType != REG_SZ) {
-					log(2, L"🔥OREnumValue " + std::wstring(nomValeur) + L" not REG_SZ type");
+					log(2, L"🔥OREnumValue " + std::wstring(valueName) + L" not REG_SZ type");
 					continue;
 				}
-				run.Name = nomValeur;
+				run.Name = valueName;
 				log(2, L"❇️Run Name : " + run.Name);
-				run.Sid = std::get<0>(profile);
+				run.Sid = std::get<0>(profileEntry);
 				log(3, L"🔈getNameFromSid Sid");
 				run.SidName = getNameFromSid(run.Sid);
 				run.Key = runKey;
-				log(3, L"🔈getRegSzValue " + std::wstring(nomValeur));
-				hresult = getRegSzValue(hKey, nullptr, nomValeur, &run.Value);
+				log(3, L"🔈getRegSzValue " + std::wstring(valueName));
+				hresult = getRegSzValue(hKey, nullptr, valueName, &run.Value);
 				if (hresult != ERROR_SUCCESS) {
-					log(2, L"🔥getRegSzValue " + std::wstring(nomValeur), hresult);
+					log(2, L"🔥getRegSzValue " + std::wstring(valueName), hresult);
 				}
 				log(3, L"🔈replaceAll Value");
 				//save

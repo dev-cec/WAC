@@ -35,9 +35,9 @@ public:
 
 	/*! Builds the entry from a registry value.
 	 *  @param hKey the MuiCache key, already open.
-	 *  @param nomValeur name of the value, that is the executable's path.
+	 *  @param valueName name of the value, that is the executable's path.
 	 *  @param profile profile of the user the hive belongs to. */
-	Muicache(ORHKEY hKey, std::wstring nomValeur, std::wstring profile);
+	Muicache(ORHKEY hKey, std::wstring valueName, std::wstring profile);
 
 	/*! Converts the entry to JSON.
 	 *  @return its JSON object. */

@@ -21,28 +21,28 @@ namespace {
  *  To be used ONLY for what necessarily lives on the Windows volume —
  *  scheduled task definitions, for instance, live under
  *  `\Windows\System32\Tasks`. Anything that depends on a path found on the
- *  machine (user profiles first) must go through `volumeDuChemin()`: assuming
+ *  machine (user profiles first) must go through `volumeOfPath()`: assuming
  *  the system volume for those paths was precisely the defect that silently
  *  lost profiles located on another disk. */
-std::wstring volumeSysteme() {
+std::wstring systemVolume() {
 	return conf.systemDrive.substr(0, 1);
 }
 
 //! Extraction directory, on the USB stick (output folder). Never the host.
 /*  Extraction writes into the EXHIBIT STORE, never into the working
  *  directory: the raw copy must exist before anything is done with it, and
- *  must not be touched afterwards (see consigne.h). `conf.mountpoint` points to
+ *  must not be touched afterwards (see exhibitStore.h). `conf.mountpoint` points to
  *  the working directory, so every collector reads the working copy without
  *  knowing anything about this split. */
-std::wstring cibleConsigne(const std::wstring& chemin) {
-	return cheminSous(dossierConsigne(), chemin);
+std::wstring exhibitTarget(const std::wstring& path) {
+	return pathUnder(exhibitStoreFolder(), path);
 }
 
 /*! Progress reporter for raw_hive: displays KiB, more readable than bytes for
  *  hives of several tens of MiB. */
-void rapporterProgression(const wchar_t* item, unsigned long long fait,
+void reportProgress(const wchar_t* item, unsigned long long done,
                           unsigned long long total) {
-	printProgress(item ? item : L"", fait / 1024, total / 1024, L"Kio");
+	printProgress(item ? item : L"", done / 1024, total / 1024, L"Kio");
 }
 
 /*! Raw extraction of a batch of hives, then repair of the working copies:
@@ -53,14 +53,14 @@ void rapporterProgression(const wchar_t* item, unsigned long long fait,
  *  hives can therefore no longer be extracted in the same pass as the system
  *  hives, since their location is not yet known when that one starts.
  *
- *  @param cheminsRuches hive paths, absolute (with volume letter) or relative
+ *  @param hivePaths hive paths, absolute (with volume letter) or relative
  *                       to the system volume; the .LOG1 and .LOG2 logs are
  *                       added automatically.
  *  @param etiquette     what this pass extracts, for the audit log.
  */
-HRESULT extraireLotDeRuches(const std::vector<std::wstring>& cheminsRuches,
+HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
                             const std::wstring& etiquette) {
-	conf.mountpoint = dossierTravail();
+	conf.mountpoint = workingFolder();
 
 	// The collection location is checked by main, before the very first
 	// write — which can be collecting a process's binary.
@@ -73,28 +73,28 @@ HRESULT extraireLotDeRuches(const std::vector<std::wstring>& cheminsRuches,
 	   Files are now grouped by volume letter, and ExtractFilesRaw called once
 	   per volume actually involved. */
 	std::map<std::wstring, std::vector<std::pair<std::wstring, std::wstring>>> parVolume;
-	std::vector<std::wstring> ruches;   // local paths of the hives to repair
+	std::vector<std::wstring> hives;   // local paths of the hives to repair
 
-	// `chemin` is absolute (with letter) or relative to the system volume.
-	auto add = [&](const std::wstring& chemin) {
-		parVolume[volumeDuChemin(chemin)].emplace_back(cheminRelatifAuVolume(chemin),
-		                                               cibleConsigne(chemin));
+	// `path` is absolute (with letter) or relative to the system volume.
+	auto add = [&](const std::wstring& path) {
+		parVolume[volumeOfPath(path)].emplace_back(pathRelativeToVolume(path),
+		                                               exhibitTarget(path));
 	};
 	// A hive + its two transaction logs.
-	auto addRuche = [&](const std::wstring& chemin) {
-		add(chemin);
-		add(chemin + L".LOG1");
-		add(chemin + L".LOG2");
+	auto addHive = [&](const std::wstring& path) {
+		add(path);
+		add(path + L".LOG1");
+		add(path + L".LOG2");
 		// The replay and the patch apply to the WORKING copy, never to the
 		// exhibit store: that is the whole point of the split.
-		ruches.push_back(cheminExtrait(chemin));
+		hives.push_back(extractedPath(path));
 	};
 
-	for (const std::wstring& ruche : cheminsRuches) addRuche(ruche);
+	for (const std::wstring& hive : hivePaths) addHive(hive);
 
 	// Create the destination tree under the exhibit store
-	for (const auto& groupe : parVolume)
-		for (const std::pair<std::wstring, std::wstring>& it : groupe.second) {
+	for (const auto& group : parVolume)
+		for (const std::pair<std::wstring, std::wstring>& it : group.second) {
 			std::error_code ec;
 			std::filesystem::create_directories(std::filesystem::path(it.second).parent_path(), ec);
 		}
@@ -103,18 +103,18 @@ HRESULT extraireLotDeRuches(const std::vector<std::wstring>& cheminsRuches,
 	   down: its failure is recorded and we go on, as for a missing hive. The
 	   first hard failure is nonetheless kept for the return value, so that the
 	   caller knows the collection is incomplete. */
-	std::map<std::wstring, std::wstring> md5ParFichier;   // working path -> MD5
-	unsigned manquants = 0;
+	std::map<std::wstring, std::wstring> md5ByFile;   // working path -> MD5
+	unsigned missing = 0;
 	HRESULT hr = ERROR_SUCCESS;
-	HRESULT premierEchecDur = ERROR_SUCCESS;
-	RawHiveSetProgress(&rapporterProgression);   // shows that extraction is progressing
-	for (const auto& groupe : parVolume) {
-		const std::wstring& volume = groupe.first;
-		const auto& items = groupe.second;
+	HRESULT firstHardFailure = ERROR_SUCCESS;
+	RawHiveSetProgress(&reportProgress);   // shows that extraction is progressing
+	for (const auto& group : parVolume) {
+		const std::wstring& volume = group.first;
+		const auto& items = group.second;
 		std::vector<HRESULT> res;
-		std::vector<RawHiveExtrait> releve;      // fingerprints computed while writing
-		const HRESULT hrVolume = ExtractFilesRaw(volume, items, &res, &releve);
-		ConsigneAjouter(releve, L"Lecture brute NTFS (\\\\.\\" + volume
+		std::vector<RawHiveExtraction> reading;      // fingerprints computed while writing
+		const HRESULT hrVolume = ExtractFilesRaw(volume, items, &res, &reading);
+		ExhibitStoreAdd(reading, L"Lecture brute NTFS (\\\\.\\" + volume
 		                        + L": — $MFT, index de repertoires, attribut $DATA) ; "
 		                        L"aucune ouverture de fichier par le systeme");
 		// Recorded here, not by the caller: the extraction must come before the
@@ -125,7 +125,7 @@ HRESULT extraireLotDeRuches(const std::vector<std::wstring>& cheminsRuches,
 		            hrVolume, Footprint::VOLUME_BRUT);
 		if (FAILED(hrVolume)) {                  // volume inaccessible
 			log(2, L"🔥Volume " + volume + L": inaccessible pour la lecture brute", hrVolume);
-			if (premierEchecDur == ERROR_SUCCESS) premierEchecDur = hrVolume;
+			if (firstHardFailure == ERROR_SUCCESS) firstHardFailure = hrVolume;
 			continue;
 		}
 		if (hrVolume == S_FALSE) hr = S_FALSE;
@@ -134,100 +134,100 @@ HRESULT extraireLotDeRuches(const std::vector<std::wstring>& cheminsRuches,
 		// system profiles without UsrClass.dat, etc.)
 		for (size_t i = 0; i < items.size() && i < res.size(); ++i)
 			if (FAILED(res[i])) {
-				++manquants;
+				++missing;
 				log(2, L"🔥Extraction brute échouée : " + volume + L":" + items[i].first, res[i]);
 			}
 		/* Fingerprints indexed by WORKING path: computed while the exhibit store
 		   was being written, hence before any modification — exactly what must be
 		   recorded. The key is the working path because that is the one the replay
 		   and the patch will apply to. */
-		for (const RawHiveExtrait& e : releve)
-			if (!e.empreintes.md5.empty()) {
-				const std::filesystem::path relatif = std::filesystem::relative(
-					std::filesystem::path(e.cheminSortie), std::filesystem::path(dossierConsigne()));
-				md5ParFichier.emplace((std::filesystem::path(dossierTravail()) / relatif).wstring(),
-				                      e.empreintes.md5);
+		for (const RawHiveExtraction& e : reading)
+			if (!e.fingerprints.md5.empty()) {
+				const std::filesystem::path relative = std::filesystem::relative(
+					std::filesystem::path(e.outputPath), std::filesystem::path(exhibitStoreFolder()));
+				md5ByFile.emplace((std::filesystem::path(workingFolder()) / relative).wstring(),
+				                      e.fingerprints.md5);
 			}
 	}
 	RawHiveSetProgress(nullptr);
 	printProgressEnd();
 	log(2, L"❇️Volumes lus : " + std::to_wstring(parVolume.size()));
 	/* No readable volume: nothing will follow, better say so at once. */
-	if (md5ParFichier.empty() && premierEchecDur != ERROR_SUCCESS) return premierEchecDur;
+	if (md5ByFile.empty() && firstHardFailure != ERROR_SUCCESS) return firstHardFailure;
 
 	/*  EXHIBIT STORE -> WORKING COPY. The raw copies are in place and
 	 *  identified: their working copy is made, verified by fingerprint, and
 	 *  everything that follows applies to it alone. */
 	{
 		size_t copies = 0;
-		unsigned long long octets = 0;
-		const HRESULT hrCopie = ConsigneVersTravail(&copies, &octets);
+		unsigned long long bytes = 0;
+		const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &bytes);
 		auditRecord(L"Copie de la consigne vers le repertoire de travail ("
 		            + std::to_wstring(copies) + L" fichier(s), "
-		            + std::to_wstring(octets / 1024 / 1024) + L" Mio)",
-		            dossierConsigne() + L" -> " + dossierTravail(),
-		            hrCopie, Footprint::ECRITURE_USB);
-		if (FAILED(hrCopie)) return hrCopie;     // without a working copy, nothing follows
-		if (hrCopie == S_FALSE) hr = S_FALSE;
+		            + std::to_wstring(bytes / 1024 / 1024) + L" Mio)",
+		            exhibitStoreFolder() + L" -> " + workingFolder(),
+		            hrCopy, Footprint::USB_WRITE);
+		if (FAILED(hrCopy)) return hrCopy;     // without a working copy, nothing follows
+		if (hrCopy == S_FALSE) hr = S_FALSE;
 	}
 
 	// Repair each hive (dirty -> loadable), with traceability.
 	log(0, L"*******************************************************************************************************************");
 	log(0, L"ℹ️Hives recovery :");
 	log(0, L"*******************************************************************************************************************");
-	unsigned patchees = 0, echecs = 0, rejouees = 0;
-	unsigned long long pagesRejouees = 0, octetsRejoues = 0;
+	unsigned patchees = 0, failures = 0, replayed = 0;
+	unsigned long long replayedPages = 0, replayedBytes = 0;
 	/* This phase no longer re-reads the hives: the fingerprints come from the
 	   computation made while writing (see QuickDigest5::Stream). Previously,
 	   each hive was read back from the collection medium — about 150 MiB read a
 	   second time from a USB stick, almost half the extraction time, without
 	   any display. */
-	size_t iRuche = 0;
-	for (const std::wstring& r : ruches) {
+	size_t iHive = 0;
+	for (const std::wstring& r : hives) {
 		std::error_code ec;
-		++iRuche;
+		++iHive;
 		if (!std::filesystem::exists(r, ec)) continue;   // not extracted: already logged
 
 		printProgress(L"Remise en etat " + std::filesystem::path(r).filename().wstring(),
-		              iRuche, ruches.size(), L"ruche");
+		              iHive, hives.size(), L"ruche");
 
 		/* Fingerprint BEFORE any modification: the raw copy stays identifiable.
 		   Taken from the computation made during extraction; the file is only
 		   re-read if it is missing (theoretical case of an item without one). */
-		std::wstring md5avant;
-		const auto trouve = md5ParFichier.find(r);
-		if (trouve != md5ParFichier.end()) md5avant = trouve->second;
-		else md5avant = QuickDigest5::fileToHash(wstring_to_string(r));
+		std::wstring md5Before;
+		const auto found = md5ByFile.find(r);
+		if (found != md5ByFile.end()) md5Before = found->second;
+		else md5Before = QuickDigest5::fileToHash(wstring_to_string(r));
 
 		log(1, L"➕Hive");
-		log(2, L"❇️MD5 copie brute (avant toute ecriture) : " + md5avant);
+		log(2, L"❇️MD5 copie brute (avant toute ecriture) : " + md5Before);
 
 		/* REPLAY FIRST. The transaction logs hold the pages changed since the
 		   hive's last full write: applying them gives the machine's real state,
 		   and makes the hive clean by construction — hence no patch. The original
-		   content of each replaced page goes into an undo journal, so that the
+		   content of each replaced page goes into an undo log, so that the
 		   raw copy stays rebuildable to the byte (verified on three real
 		   hives). */
-		const HiveReplayInfo rejeu = ReplayHiveLogs(r, md5avant);
+		const HiveReplayInfo rejeu = ReplayHiveLogs(r, md5Before);
 		log(2, L"❇️" + HiveReplayInfoToString(rejeu));
 		if (rejeu.applique) {
-			++rejouees;
-			pagesRejouees  += rejeu.pages;
-			octetsRejoues  += rejeu.octets;
+			++replayed;
+			replayedPages  += rejeu.pages;
+			replayedBytes  += rejeu.bytes;
 			auditRecord(L"Rejeu des journaux de transaction d'une ruche copiee ("
-			            + std::to_wstring(rejeu.entreesRetenues) + L" entree(s), "
+			            + std::to_wstring(rejeu.keptEntries) + L" entree(s), "
 			            + std::to_wstring(rejeu.pages) + L" page(s))",
 			            r + L" | " + HiveReplayInfoToString(rejeu)
-			            + L" | MD5 avant rejeu : " + md5avant
-			            + L" | annulation : " + rejeu.journalAnnulation,
-			            ERROR_SUCCESS, Footprint::RUCHE_REJEU);
+			            + L" | MD5 avant rejeu : " + md5Before
+			            + L" | annulation : " + rejeu.undoJournal,
+			            ERROR_SUCCESS, Footprint::HIVE_REPLAY);
 		}
 		else if (!rejeu.ok) {
 			// The replay wrote nothing: record it and fall back on the patch.
 			log(2, L"🔥Rejeu impossible : " + r + L" (" + rejeu.error + L")");
 			auditRecord(L"Rejeu des journaux de transaction d'une ruche copiee (non applique)",
 			            r + L" | " + HiveReplayInfoToString(rejeu),
-			            E_FAIL, Footprint::RUCHE_COPIE);
+			            E_FAIL, Footprint::HIVE_COPY);
 		}
 
 		/* PATCH AS A FALLBACK. After a successful replay the hive is clean and
@@ -244,22 +244,22 @@ HRESULT extraireLotDeRuches(const std::vector<std::wstring>& cheminsRuches,
 		// its last 31 characters, as the regf format stores it.
 		auditRecord(info.patched ? L"Remise en etat d'une ruche copiee (patch applique)"
 		                         : L"Verification d'une ruche copiee (deja propre)",
-		            r + L" | " + HiveFixInfoToString(info) + L" | MD5 avant patch : " + md5avant,
+		            r + L" | " + HiveFixInfoToString(info) + L" | MD5 avant patch : " + md5Before,
 		            info.ok ? ERROR_SUCCESS : E_FAIL,
-		            info.patched ? Footprint::RUCHE_PATCH : Footprint::RUCHE_COPIE);
-		if (!info.ok) { ++echecs; log(2, L"🔥Ruche non exploitable : " + r + L" (" + info.error + L")"); }
+		            info.patched ? Footprint::HIVE_PATCH : Footprint::HIVE_COPY);
+		if (!info.ok) { ++failures; log(2, L"🔥Ruche non exploitable : " + r + L" (" + info.error + L")"); }
 		else if (info.patched) ++patchees;
 	}
 	printProgressEnd();
-	log(2, L"❇️Ruches rejouées : " + std::to_wstring(rejouees)
-	     + L" (" + std::to_wstring(pagesRejouees) + L" pages, "
-	     + std::to_wstring(octetsRejoues / 1024) + L" Kio appliqués)");
+	log(2, L"❇️Ruches rejouées : " + std::to_wstring(replayed)
+	     + L" (" + std::to_wstring(replayedPages) + L" pages, "
+	     + std::to_wstring(replayedBytes / 1024) + L" Kio appliqués)");
 	log(2, L"❇️Ruches remises en état par patch : " + std::to_wstring(patchees)
-	     + L", échecs : " + std::to_wstring(echecs)
-	     + L", fichiers manquants : " + std::to_wstring(manquants));
+	     + L", échecs : " + std::to_wstring(failures)
+	     + L", fichiers manquants : " + std::to_wstring(missing));
 
 	// An unreadable hive blocks what follows (OROpenHive): report it.
-	return (echecs == 0) ? hr : S_FALSE;
+	return (failures == 0) ? hr : S_FALSE;
 }
 
 } // namespace
@@ -268,7 +268,7 @@ HRESULT ExtractSystemHivesRaw() {
 	/* The machine's hives. None depends on a path found on the system: that
 	   is precisely what allows extracting them first, before knowing anything
 	   of the registry's content. */
-	std::vector<std::wstring> ruches = {
+	std::vector<std::wstring> hives = {
 		L"\\Windows\\system32\\config\\SYSTEM",
 		L"\\Windows\\system32\\config\\SOFTWARE",
 		/* SAM: database of LOCAL accounts. Extracted so that `users` is read
@@ -277,8 +277,8 @@ HRESULT ExtractSystemHivesRaw() {
 		L"\\Windows\\system32\\config\\SAM",
 		L"\\Windows\\AppCompat\\Programs\\Amcache.hve",
 	};
-	return extraireLotDeRuches(
-		ruches,
+	return extractHiveSet(
+		hives,
 		L"Extraction brute des ruches systeme (+ journaux .LOG1/.LOG2)");
 }
 
@@ -297,19 +297,19 @@ HRESULT ExtractUserHivesRaw() {
 	/* The path is passed ABSOLUTE, with its letter: that is what determines
 	   which volume to read. A profile on a second disk ("D:\Users\jean") was
 	   looked for in C:'s file table, so never extracted. */
-	std::vector<std::wstring> ruches;
-	for (const std::tuple<std::wstring, std::wstring>& profile : conf.profiles) {
-		const std::wstring profil = std::get<1>(profile);   // ex. "D:\Users\jean"
-		ruches.push_back(profil + L"\\ntuser.dat");
-		ruches.push_back(profil + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat");
+	std::vector<std::wstring> hives;
+	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
+		const std::wstring profilePath = std::get<1>(profileEntry);   // ex. "D:\Users\jean"
+		hives.push_back(profilePath + L"\\ntuser.dat");
+		hives.push_back(profilePath + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat");
 	}
-	return extraireLotDeRuches(
-		ruches,
+	return extractHiveSet(
+		hives,
 		L"Extraction brute des ruches par utilisateur (+ journaux .LOG1/.LOG2)");
 }
 
 HRESULT ExtractFileArtefactsRaw() {
-	if (conf.mountpoint.empty()) conf.mountpoint = dossierTravail();
+	if (conf.mountpoint.empty()) conf.mountpoint = workingFolder();
 
 	log(0, L"*******************************************************************************************************************");
 	log(0, L"ℹ️Raw file artefacts :");
@@ -318,97 +318,97 @@ HRESULT ExtractFileArtefactsRaw() {
 	/* Directories to extract, with their collector's extension filter.
 	   Each target carries ITS volume: the folders of a profile on a disk other
 	   than Windows' were read on the system volume, so never found. */
-	struct Cible {
+	struct Target {
 		std::wstring volume;       //!< volume letter, without the colon
-		std::wstring chemin;       //!< path relative to that volume's root
-		std::wstring sortie;       //!< destination on the collection medium
+		std::wstring path;       //!< path relative to that volume's root
+		std::wstring output;       //!< destination on the collection medium
 		std::vector<std::wstring> extensions;
 	};
-	std::vector<Cible> cibles;
-	// `absolu` carries its letter, or is relative to the system volume.
-	auto addCible = [&](const std::wstring& absolu,
+	std::vector<Target> targets;
+	// `absolute` carries its letter, or is relative to the system volume.
+	auto addTarget = [&](const std::wstring& absolute,
 	                    const std::vector<std::wstring>& ext) {
-		cibles.push_back({ volumeDuChemin(absolu), cheminRelatifAuVolume(absolu),
-		                   cibleConsigne(absolu), ext });
+		targets.push_back({ volumeOfPath(absolute), pathRelativeToVolume(absolute),
+		                   exhibitTarget(absolute), ext });
 	};
 
-	addCible(L"\\Windows\\Prefetch", { L".pf" });
+	addTarget(L"\\Windows\\Prefetch", { L".pf" });
 
 	/* Event logs: extracted ONLY on request (--events). They are the system's
 	   largest artefacts — over a hundred megabytes on an ordinary installation,
 	   more on a server. Extracting them systematically would lengthen every
 	   collection and fill the medium with data the operator did not ask for.
 	   Reading them offline replaces the EventLog API (see events.h). */
-	if (conf._events) addCible(L"\\Windows\\System32\\winevt\\Logs", { L".evtx" });
+	if (conf._events) addTarget(L"\\Windows\\System32\\winevt\\Logs", { L".evtx" });
 
-	for (const std::tuple<std::wstring, std::wstring>& profile : conf.profiles) {
-		const std::wstring profil = std::get<1>(profile);   // absolute, with its letter
-		const std::wstring recent = profil + L"\\AppData\\Roaming\\Microsoft\\Windows\\Recent";
-		addCible(recent + L"\\AutomaticDestinations", { L".automaticDestinations-ms" });
-		addCible(recent + L"\\CustomDestinations",    { L".customDestinations-ms" });
-		addCible(recent,                              { L".lnk", L".url" });
-		addCible(profil + L"\\AppData\\Roaming\\Microsoft\\Office\\Recent",
+	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
+		const std::wstring profile = std::get<1>(profileEntry);   // absolute, with its letter
+		const std::wstring recent = profile + L"\\AppData\\Roaming\\Microsoft\\Windows\\Recent";
+		addTarget(recent + L"\\AutomaticDestinations", { L".automaticDestinations-ms" });
+		addTarget(recent + L"\\CustomDestinations",    { L".customDestinations-ms" });
+		addTarget(recent,                              { L".lnk", L".url" });
+		addTarget(profile + L"\\AppData\\Roaming\\Microsoft\\Office\\Recent",
 		                                              { L".lnk", L".url" });
 	}
 
 	HRESULT global = S_OK;
 	size_t total = 0;
-	RawHiveSetProgress(&rapporterProgression);
+	RawHiveSetProgress(&reportProgress);
 
 	/* Scheduled task definitions: a tree, and the files have NO extension —
 	   hence the recursive extraction without a filter. It replaces reading
 	   through the Task Scheduler COM interface, which removes both the
 	   execution trace and the dependency on COM. */
 	{
-		size_t tachesExtraites = 0;
-		const std::wstring cheminTasks = L"\\Windows\\System32\\Tasks";
-		std::vector<RawHiveExtrait> releve;
+		size_t extractedTasks = 0;
+		const std::wstring tasksPath = L"\\Windows\\System32\\Tasks";
+		std::vector<RawHiveExtraction> reading;
 		const HRESULT hrTasks = ExtractDirectoryTreeRaw(
-			volumeSysteme(), cheminTasks, cibleConsigne(cheminTasks),
-			{}, &tachesExtraites, 8, &releve);
-		ConsigneAjouter(releve, L"Lecture brute NTFS recursive (\\\\.\\"
-		                        + volumeSysteme() + L": — $MFT, index de repertoires) ; "
+			systemVolume(), tasksPath, exhibitTarget(tasksPath),
+			{}, &extractedTasks, 8, &reading);
+		ExhibitStoreAdd(reading, L"Lecture brute NTFS recursive (\\\\.\\"
+		                        + systemVolume() + L": — $MFT, index de repertoires) ; "
 		                        L"aucune ouverture de fichier par le systeme");
 		auditRecord(L"Extraction brute des definitions de taches planifiees ("
-		            + std::to_wstring(tachesExtraites) + L" fichier(s))",
-		            std::wstring(L"\\\\.\\") + volumeSysteme() + L":" + cheminTasks,
+		            + std::to_wstring(extractedTasks) + L" fichier(s))",
+		            std::wstring(L"\\\\.\\") + systemVolume() + L":" + tasksPath,
 		            hrTasks, Footprint::VOLUME_BRUT);
-		log(2, L"❇️" + cheminTasks + L" : " + std::to_wstring(tachesExtraites) + L" fichier(s)");
+		log(2, L"❇️" + tasksPath + L" : " + std::to_wstring(extractedTasks) + L" fichier(s)");
 		if (hrTasks == S_FALSE) global = S_FALSE;
 	}
 
-	for (const Cible& cible : cibles) {
-		size_t extraits = 0;
+	for (const Target& target : targets) {
+		size_t extractedFiles = 0;
 		std::wstring diagnostic;
-		std::vector<RawHiveExtrait> releve;
-		const HRESULT hr = ExtractDirectoryRaw(cible.volume, cible.chemin,
-		                                       cible.sortie,
-		                                       cible.extensions, &extraits, &diagnostic,
-		                                       &releve);
-		ConsigneAjouter(releve, L"Lecture brute NTFS (\\\\.\\" + cible.volume
+		std::vector<RawHiveExtraction> reading;
+		const HRESULT hr = ExtractDirectoryRaw(target.volume, target.path,
+		                                       target.output,
+		                                       target.extensions, &extractedFiles, &diagnostic,
+		                                       &reading);
+		ExhibitStoreAdd(reading, L"Lecture brute NTFS (\\\\.\\" + target.volume
 		                        + L": — $MFT, index de repertoires, attribut $DATA) ; "
 		                        L"aucune ouverture de fichier par le systeme");
 		if (FAILED(hr)) {
 			/* Inaccessible volume. We NO LONGER stop: with several volumes, an
 			   unreadable disk took all the following targets down with it, the
 			   system volume's included. */
-			log(2, L"🔥Extraction brute impossible : " + cible.volume + L":"
-			     + cible.chemin, hr);
+			log(2, L"🔥Extraction brute impossible : " + target.volume + L":"
+			     + target.path, hr);
 			global = S_FALSE;
 			continue;
 		}
 		if (hr == S_FALSE) global = S_FALSE;    // some files could not be read
-		total += extraits;
+		total += extractedFiles;
 		// One entry per directory, with the count: that is what lets the
 		// analysis tell "empty folder" from "folder not collected".
 		// The diagnosis goes with the count: "0 files" does not say whether the
 		// directory is missing, empty, or whether the filter discarded everything.
-		auditRecord(L"Extraction brute d'un repertoire (" + std::to_wstring(extraits)
+		auditRecord(L"Extraction brute d'un repertoire (" + std::to_wstring(extractedFiles)
 		            + L" fichier(s) — " + diagnostic + L")",
-		            std::wstring(L"\\\\.\\") + cible.volume + L":" + cible.chemin,
+		            std::wstring(L"\\\\.\\") + target.volume + L":" + target.path,
 		            hr, Footprint::VOLUME_BRUT);
 		log(1, L"➕Directory");
-		log(2, L"❇️" + cible.chemin + L" : " + std::to_wstring(extraits)
+		log(2, L"❇️" + target.path + L" : " + std::to_wstring(extractedFiles)
 		     + L" fichier(s) [" + diagnostic + L"]");
 	}
 	RawHiveSetProgress(nullptr);
@@ -416,23 +416,23 @@ HRESULT ExtractFileArtefactsRaw() {
 	log(2, L"❇️Fichiers extraits au total : " + std::to_wstring(total));
 
 	/*  EXHIBIT STORE -> WORKING COPY, for the file-based artefacts. The hives
-	 *  have already been copied and replayed: ConsigneVersTravail does not
-	 *  overwrite them (see consigne.cpp), it completes the working directory.
+	 *  have already been copied and replayed: ExhibitStoreToWorking does not
+	 *  overwrite them (see exhibitStore.cpp), it completes the working directory.
 	 *  The split applies to these files too, which WAC does not modify:
 	 *  duplicating only what one modifies would make the procedure depend on
 	 *  what the tool believes it does, which is precisely what must be
 	 *  checkable from outside. */
 	{
 		size_t copies = 0;
-		unsigned long long octets = 0;
-		const HRESULT hrCopie = ConsigneVersTravail(&copies, &octets);
+		unsigned long long bytes = 0;
+		const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &bytes);
 		auditRecord(L"Copie de la consigne vers le repertoire de travail ("
 		            + std::to_wstring(copies) + L" fichier(s), "
-		            + std::to_wstring(octets / 1024 / 1024) + L" Mio)",
-		            dossierConsigne() + L" -> " + dossierTravail(),
-		            hrCopie, Footprint::ECRITURE_USB);
-		if (FAILED(hrCopie)) return hrCopie;
-		if (hrCopie == S_FALSE) global = S_FALSE;
+		            + std::to_wstring(bytes / 1024 / 1024) + L" Mio)",
+		            exhibitStoreFolder() + L" -> " + workingFolder(),
+		            hrCopy, Footprint::USB_WRITE);
+		if (FAILED(hrCopy)) return hrCopy;
+		if (hrCopy == S_FALSE) global = S_FALSE;
 	}
 	return global;
 }

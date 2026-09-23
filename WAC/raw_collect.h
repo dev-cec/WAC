@@ -1,4 +1,5 @@
-/*  raw_collect.h — orchestration of the offline extraction of artefacts (WAC).
+/*! \file
+ *  \brief Orchestration of the offline extraction of artefacts (WAC).
  *
  *  Replaces the VSS-based collection: extracts by raw NTFS reading (raw_hive)
  *  the hives and files needed into the output folder, on the USB stick — NO
@@ -34,7 +35,7 @@
  */
 
 /*! Extracts the MACHINE's hives (+ .LOG1/.LOG2 logs) into
- *  `_outputDir`\\consigne, makes their working copy and makes it usable by
+ *  `_outputDir`\\exhibitStore, makes their working copy and makes it usable by
  *  offreg.
  *
  *  The transaction logs are extracted because they are artefacts in
@@ -62,7 +63,7 @@ HRESULT ExtractSystemHivesRaw();
 HRESULT ExtractUserHivesRaw();
 
 /*! Extracts the file-based artefacts: Prefetch, jump lists and recent
- *  documents, into `_outputDir`\\consigne under their original path.
+ *  documents, into `_outputDir`\\exhibitStore under their original path.
  *
  *  Without this extraction, the matching collectors return NO data — and
  *  "0 entries" is, to the analyst, impossible to tell apart from "no trace on

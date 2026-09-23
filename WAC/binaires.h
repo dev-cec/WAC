@@ -1,4 +1,5 @@
-/*  binaires.h — fingerprinting and collection of the files cited by artefacts.
+/*! \file
+ *  \brief Fingerprinting and collection of the files cited by artefacts.
  *
  *  WHY THIS MODULE. With `--binary`, WAC fingerprints every file an artefact
  *  points to: executable of a process, a service or a scheduled task, files
@@ -29,7 +30,7 @@
  *  DEDUPLICATION. Identical content is stored only once: three identical copies
  *  of msedge.dll (Edge, EdgeCore, WebView2: 332 MB each) took 996 MB. The other
  *  paths are declared in the manifest as exhibits sharing that content (see
- *  ConsigneAjouterDoublon).
+ *  ExhibitStoreAddDuplicate).
  *
  *  Since reading is raw, collecting costs NO more trace than hashing: only space
  *  on the collection medium. When space runs short, the file is hashed without
@@ -41,55 +42,55 @@
 #include "json.h"
 
 /*! Fingerprints of a cited file, and what was done with it. */
-struct EmpreinteBinaire {
-    std::wstring chemin;     //!< normalised path ("X:\…"), empty if undeterminable
+struct BinaryFingerprint {
+    std::wstring path;     //!< normalised path ("X:\…"), empty if undeterminable
     std::wstring md5;        //!< empty if the file could not be read
     std::wstring sha1;       //!< empty if the file could not be read
     std::wstring sha256;     //!< empty if the file could not be read
-    HRESULT resultat = E_FAIL;   //!< outcome of the raw read
-    bool preleve = false;    //!< copied into the exhibit store
+    HRESULT result = E_FAIL;   //!< outcome of the raw read
+    bool collected = false;    //!< copied into the exhibit store
     /*! Microsoft authenticity verified (Windows catalog or embedded signature):
      *  the binary is not collected. Empty otherwise. See authenticode.h. */
     std::wstring signature;
 };
 
 /*! Summary of the phase, for the investigation log. */
-struct BilanBinaires {
-    size_t fichiers = 0;                     //!< distinct cited files
-    size_t lus = 0;                          //!< read, hence fingerprinted
-    size_t preleves = 0;                     //!< copied into the exhibit store
+struct BinarySummary {
+    size_t files = 0;                     //!< distinct cited files
+    size_t read = 0;                          //!< read, hence fingerprinted
+    size_t collectedCount = 0;                     //!< copied into the exhibit store
     size_t sansPlace = 0;                    //!< hashed only, medium full
-    size_t doublons = 0;                     //!< identical content already collected
-    unsigned long long octetsPreleves = 0;   //!< bytes written to the medium
-    unsigned long long octetsEvites = 0;     //!< bytes saved by the three rules above
-    size_t authentifies = 0;                 //!< authentic Microsoft binaries, not collected
-    unsigned long long octetsAuthentifies = 0;  //!< bytes saved by that rule alone
-    size_t cataloguesLus = 0;                //!< CatRoot catalogs parsed
-    size_t cataloguesUtilises = 0;           //!< among them, those that authenticated a file
+    size_t duplicates = 0;                     //!< identical content already collected
+    unsigned long long collectedBytes = 0;   //!< bytes written to the medium
+    unsigned long long avoidedBytes = 0;     //!< bytes saved by the three rules above
+    size_t authenticated = 0;                 //!< authentic Microsoft binaries, not collected
+    unsigned long long authenticatedBytes = 0;  //!< bytes saved by that rule alone
+    size_t catalogsRead = 0;                //!< CatRoot catalogs parsed
+    size_t catalogsUsed = 0;           //!< among them, those that authenticated a file
 };
 
 /*! Fingerprints of the file an artefact points to.
  *
- *  The path is normalised by `normaliserCheminFichier`; a path that does not
+ *  The path is normalised by `normalizeFilePath`; a path that does not
  *  designate a determinable local file gives an empty result. Each file is read
  *  only ONCE for the whole collection, however many artefacts cite it.
  *
  *  Without `--binary`, returns an empty result without reading anything.
  */
-const EmpreinteBinaire& EmpreinteFichier(const std::wstring& cheminBrut);
+const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath);
 
 /*! Adds the three fingerprints to a JSON object, under the keys
- *  `<prefixe>Md5<suffixe>`, `<prefixe>Sha1<suffixe>`, `<prefixe>Sha256<suffixe>`.
+ *  `<prefix>Md5<suffix>`, `<prefix>Sha1<suffix>`, `<prefix>Sha256<suffix>`.
  *  A missing fingerprint is not emitted: an empty field would read as a
  *  software defect. */
-void ajouterEmpreintes(Json& o, const EmpreinteBinaire& e,
-                       const std::wstring& prefixe = L"", const std::wstring& suffixe = L"");
+void addFingerprints(Json& o, const BinaryFingerprint& e,
+                       const std::wstring& prefix = L"", const std::wstring& suffix = L"");
 
 /*! Summary, for the investigation log. */
-BilanBinaires BinairesBilan();
+BinarySummary BinariesSummary();
 
 /*! Stores in the exhibit store the signature catalogs that justified not
  *  collecting a file, then closes the volumes kept open. To be called once no
  *  artefact cites files any more, BEFORE the copy to the working directory and
  *  the sealing. */
-void BinairesTerminer();
+void BinariesFinish();

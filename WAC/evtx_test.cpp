@@ -36,13 +36,13 @@ AppliConf conf;
 
 //! Ecrit une chaine large sur stdout en UTF-8, sans passer par la page de code
 //! de la console : la comparaison automatique exige des octets stables.
-static void ecrireUtf8(const std::wstring& s) {
+static void writeUtf8(const std::wstring& s) {
 	if (s.empty()) return;
 	const int n = WideCharToMultiByte(CP_UTF8, 0, s.c_str(), (int)s.size(), nullptr, 0, nullptr, nullptr);
 	if (n <= 0) return;
-	std::vector<char> tampon(n);
-	WideCharToMultiByte(CP_UTF8, 0, s.c_str(), (int)s.size(), tampon.data(), n, nullptr, nullptr);
-	fwrite(tampon.data(), 1, n, stdout);
+	std::vector<char> buffer(n);
+	WideCharToMultiByte(CP_UTF8, 0, s.c_str(), (int)s.size(), buffer.data(), n, nullptr, nullptr);
+	fwrite(buffer.data(), 1, n, stdout);
 }
 
 int wmain(int argc, wchar_t** argv) {
@@ -67,23 +67,23 @@ int wmain(int argc, wchar_t** argv) {
 		WideCharToMultiByte(CP_UTF8, 0, argv[3], -1, tmp.data(), n, nullptr, nullptr);
 		conf._outputDir = tmp.data();
 
-		const std::wstring repertoire = cheminExtrait(L"\\Windows\\System32\\winevt\\Logs");
-		std::vector<Json> tous;
-		unsigned long long lus = 0;
-		for (const std::filesystem::path& j : listFilesByExtension(repertoire, { L".evtx" })) {
-			const std::wstring canal = EvtxCanalDepuisNomFichier(j.filename().wstring());
-			EvtxLireFichier(j.wstring(), [&](const EvtxEnregistrement& e) {
-				const std::unique_ptr<XmlNode> racine = xmlAnalyser(e.xml);
-				if (racine) { tous.push_back(Event(*racine, canal, e.identifiant,
-				                     j.filename().wstring()).toJson()); ++lus; }
+		const std::wstring directory = extractedPath(L"\\Windows\\System32\\winevt\\Logs");
+		std::vector<Json> all;
+		unsigned long long read = 0;
+		for (const std::filesystem::path& j : listFilesByExtension(directory, { L".evtx" })) {
+			const std::wstring canal = EvtxChannelFromFileName(j.filename().wstring());
+			EvtxReadFile(j.wstring(), [&](const EvtxRecord& e) {
+				const std::unique_ptr<XmlNode> root = xmlParse(e.xml);
+				if (root) { all.push_back(Event(*root, canal, e.id,
+				                     j.filename().wstring()).toJson()); ++read; }
 				return true;
 			}, nullptr);
 		}
 		Json arr = Json::arr();
-		for (Json& o : tous) arr.push(std::move(o));
+		for (Json& o : all) arr.push(std::move(o));
 		const HRESULT hr = writeJsonFile("events.json", arr);
 		wprintf(L"hresult      : 0x%08lx\n", (unsigned long)hr);
-		wprintf(L"evenements   : %llu\n", lus);
+		wprintf(L"evenements   : %llu\n", read);
 		return 0;
 	}
 
@@ -99,22 +99,22 @@ int wmain(int argc, wchar_t** argv) {
 		Events ev;
 		const HRESULT hr = ev.getData();
 		wprintf(L"hresult      : 0x%08lx\n", (unsigned long)hr);
-		wprintf(L"journaux     : %llu\n", ev.fichiers);
-		wprintf(L"evenements   : %llu\n", ev.lus);
-		wprintf(L"ecartes      : %llu\n", ev.illisibles);
+		wprintf(L"journaux     : %llu\n", ev.files);
+		wprintf(L"evenements   : %llu\n", ev.read);
+		wprintf(L"ecartes      : %llu\n", ev.unreadable);
 		return 0;
 	}
 	const bool dump = (argc > 2) && (wcscmp(argv[2], L"--dump") == 0);
-	const long aAfficher = (!dump && argc > 2) ? wcstol(argv[2], nullptr, 10) : 0;
+	const long toDisplay = (!dump && argc > 2) ? wcstol(argv[2], nullptr, 10) : 0;
 	if (dump) _setmode(_fileno(stdout), _O_BINARY);
 
-	long affiches = 0;
-	unsigned long long vides = 0, avecSystem = 0, avecEventData = 0;
-	std::map<std::wstring, unsigned long long> fournisseurs;
+	long displayed = 0;
+	unsigned long long empties = 0, avecSystem = 0, avecEventData = 0;
+	std::map<std::wstring, unsigned long long> providers;
 
-	EvtxBilan bilan;
-	const HRESULT hr = EvtxLireFichier(argv[1], [&](const EvtxEnregistrement& e) {
-		if (e.xml.empty()) ++vides;
+	EvtxSummary summary;
+	const HRESULT hr = EvtxReadFile(argv[1], [&](const EvtxRecord& e) {
+		if (e.xml.empty()) ++empties;
 		if (e.xml.find(L"<System") != std::wstring::npos) ++avecSystem;
 		if (e.xml.find(L"<EventData") != std::wstring::npos
 		    || e.xml.find(L"<UserData") != std::wstring::npos) ++avecEventData;
@@ -122,38 +122,38 @@ int wmain(int argc, wchar_t** argv) {
 		const size_t p = e.xml.find(L"<Provider Name=\"");
 		if (p != std::wstring::npos) {
 			const size_t d = p + 16, f = e.xml.find(L'"', d);
-			if (f != std::wstring::npos) ++fournisseurs[e.xml.substr(d, f - d)];
+			if (f != std::wstring::npos) ++providers[e.xml.substr(d, f - d)];
 		}
 		if (dump) {
-			std::wstring ligne = std::to_wstring(e.identifiant) + L"\t";
+			std::wstring line = std::to_wstring(e.id) + L"\t";
 			for (wchar_t ch : e.xml) {
-				if (ch == L'\n') ligne += L"\\n";
-				else if (ch == L'\r') ligne += L"\\r";
-				else if (ch == L'\\') ligne += L"\\\\";
-				else ligne += ch;
+				if (ch == L'\n') line += L"\\n";
+				else if (ch == L'\r') line += L"\\r";
+				else if (ch == L'\\') line += L"\\\\";
+				else line += ch;
 			}
-			ligne += L"\n";
-			ecrireUtf8(ligne);
+			line += L"\n";
+			writeUtf8(line);
 			return true;
 		}
-		if (affiches < aAfficher) {
-			++affiches;
-			wprintf(L"--- enregistrement %llu\n%ls\n", e.identifiant, e.xml.c_str());
+		if (displayed < toDisplay) {
+			++displayed;
+			wprintf(L"--- enregistrement %llu\n%ls\n", e.id, e.xml.c_str());
 		}
 		return true;
-	}, &bilan);
+	}, &summary);
 
 	if (dump) return 0;
 	wprintf(L"fichier      : %ls\n", argv[1]);
 	wprintf(L"hresult      : 0x%08lx\n", (unsigned long)hr);
-	wprintf(L"diagnostic   : %ls\n", bilan.diagnostic.c_str());
-	wprintf(L"lus          : %llu\n", bilan.lus);
-	wprintf(L"illisibles   : %llu\n", bilan.illisibles);
-	wprintf(L"xml vide     : %llu\n", vides);
+	wprintf(L"diagnostic   : %ls\n", summary.diagnostic.c_str());
+	wprintf(L"lus          : %llu\n", summary.read);
+	wprintf(L"illisibles   : %llu\n", summary.unreadable);
+	wprintf(L"xml vide     : %llu\n", empties);
 	wprintf(L"avec System  : %llu\n", avecSystem);
 	wprintf(L"avec Data    : %llu\n", avecEventData);
-	wprintf(L"fournisseurs : %llu\n", (unsigned long long)fournisseurs.size());
-	for (const auto& kv : fournisseurs)
-		if (kv.second > bilan.lus / 20) wprintf(L"   %-60ls %llu\n", kv.first.c_str(), kv.second);
+	wprintf(L"fournisseurs : %llu\n", (unsigned long long)providers.size());
+	for (const auto& kv : providers)
+		if (kv.second > summary.read / 20) wprintf(L"   %-60ls %llu\n", kv.first.c_str(), kv.second);
 	return 0;
 }

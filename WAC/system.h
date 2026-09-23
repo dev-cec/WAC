@@ -69,8 +69,8 @@ struct SystemInfo {
 	 *  quelques secondes est le recalage ordinaire (synchronisation NTP, sortie
 	 *  de suspension d'une VM) ; un écart important signale une horloge modifiée
 	 *  — et donc des horodatages à interpréter avec prudence. */
-	long long correctionHorloge100ns = 0;
-	bool bootDuNoyau = false;               //!< true : heure lue dans le noyau, sinon estimée
+	long long clockCorrection100ns = 0;
+	bool bootFromKernel = false;               //!< true : heure lue dans le noyau, sinon estimée
 
 	/*! Relève les informations système dans les ruches déjà ouvertes.
 	* Nécessite `conf.System` ; `conf.Software` et `conf.CurrentControlSet` sont

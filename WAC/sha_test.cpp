@@ -1,17 +1,17 @@
 /*  sha_test.cpp — confrontation de sha.cpp aux vecteurs de test publics.
  *
- *  Une empreinte fausse est le pire des defauts silencieux : elle produit une
- *  consigne d'apparence irreprochable qui n'identifie rien. D'ou ce test.
+ *  Une fingerprint fausse est le pire des defauts silencieux : elle product une
+ *  exhibitStore d'apparence irreprochable qui n'identifie rien. D'ou ce test.
  *
- *  Deux familles de cas, pour deux raisons differentes :
- *    - les quatre vecteurs de FIPS 180-4 (vide, « abc », 448 bits, un million
- *      de « a ») valident l'algorithme lui-meme ;
- *    - les longueurs 55 a 128 valident le REMPLISSAGE, seul endroit ou une
- *      implementation correcte par ailleurs se trompe : a 56 octets la longueur
- *      ne tient plus dans le bloc et doit passer au suivant. Leurs valeurs
- *      attendues viennent d'une implementation independante.
+ *  Deux familles de case_, pour deux raisons differentes :
+ *    - les quatre vecteurs de FIPS 180-4 (empty, « abc », 448 bits, un million
+ *      de « a ») valident l'algorithm lui-meme ;
+ *    - les lengths 55 a 128 valident le REMPLISSAGE, seul endroit ou une
+ *      implementation correcte par ailleurs se trompe : a 56 bytes la length
+ *      ne tient plus dans le block et doit passer au next. Leurs values
+ *      expected viennent d'une implementation independante.
  *
- *  Exclu du build de WAC par le motif « _test.cpp » de build-windows.sh.
+ *  Exclu du build de WAC par le reason « _test.cpp » de build-windows.sh.
  *  Compilation native : g++ -std=c++17 -I. sha.cpp sha_test.cpp -o sha_test
  */
 #include "sha.h"
@@ -21,7 +21,7 @@
 
 namespace {
 
-std::string etroit(const std::wstring& w){
+std::string narrow(const std::wstring& w){
 	std::string r;
 	for (wchar_t c : w) r += (char)c;
 	return r;
@@ -33,12 +33,12 @@ std::wstring sha256De(const std::string& m){
 	Sha256Stream f; f.update((const uint8_t*)m.data(), m.size()); return f.hexDigest();
 }
 
-struct Cas { std::string message; const char* sha1; const char* sha256; std::string nom; };
+struct Case { std::string message; const char* sha1; const char* sha256; std::string name; };
 
 } // namespace
 
 int main(){
-	std::vector<Cas> cas = {
+	std::vector<Case> case_ = {
 		// FIPS 180-4
 		{ "", "DA39A3EE5E6B4B0D3255BFEF95601890AFD80709",
 		      "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855", "vide" },
@@ -71,20 +71,20 @@ int main(){
 		         "24DA1B81D0B16DF6428EEE73C69FCB2A93C76BC6DF706F0C6670FE6BFE800464", "128 octets" },
 	};
 
-	int echecs = 0;
-	for (const Cas& c : cas){
-		const std::string r1 = etroit(sha1De(c.message));
-		const std::string r2 = etroit(sha256De(c.message));
+	int failures = 0;
+	for (const Case& c : case_){
+		const std::string r1 = narrow(sha1De(c.message));
+		const std::string r2 = narrow(sha256De(c.message));
 		const bool ok = (r1 == c.sha1) && (r2 == c.sha256);
 		if (!ok){
-			++echecs;
-			std::cout << "  ECHEC  " << c.nom << "\n";
+			++failures;
+			std::cout << "  ECHEC  " << c.name << "\n";
 			if (r1 != c.sha1)   std::cout << "         sha1   attendu " << c.sha1
 			                              << "\n                obtenu  " << r1 << "\n";
 			if (r2 != c.sha256) std::cout << "         sha256 attendu " << c.sha256
 			                              << "\n                obtenu  " << r2 << "\n";
 		}
-		else std::cout << "  ok     " << c.nom << "\n";
+		else std::cout << "  ok     " << c.name << "\n";
 	}
 
 	/* Le decoupage des ajouts ne doit rien changer : c'est ainsi que WAC
@@ -94,14 +94,14 @@ int main(){
 		a.update((const uint8_t*)&ch, 1);
 		b.update((const uint8_t*)&ch, 1);
 	}
-	const bool morceaux =
-		etroit(a.hexDigest()) == "A9993E364706816ABA3E25717850C26C9CD0D89D" &&
-		etroit(b.hexDigest()) == "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD";
-	if (!morceaux) ++echecs;
-	std::cout << (morceaux ? "  ok     " : "  ECHEC  ")
+	const bool chunks =
+		narrow(a.hexDigest()) == "A9993E364706816ABA3E25717850C26C9CD0D89D" &&
+		narrow(b.hexDigest()) == "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD";
+	if (!chunks) ++failures;
+	std::cout << (chunks ? "  ok     " : "  ECHEC  ")
 	          << "ajouts octet par octet == ajout d'un seul bloc\n";
 
-	std::cout << (echecs ? "ECHECS : " : "tous conformes (echecs : ") << echecs
-	          << (echecs ? "\n" : ")\n");
-	return echecs ? 1 : 0;
+	std::cout << (failures ? "ECHECS : " : "tous conformes (echecs : ") << failures
+	          << (failures ? "\n" : ")\n");
+	return failures ? 1 : 0;
 }

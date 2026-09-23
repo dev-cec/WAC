@@ -1,4 +1,5 @@
-/*  raw_hive.h — File extraction by raw NTFS reading (no VSS).
+/*! \file
+ *  \brief File extraction by raw NTFS reading (no VSS).
  *
  *  Opens the volume read-only (\\.\C:), parses the VBR and the $MFT, resolves a
  *  path through the directory indexes, then extracts the target file's $DATA
@@ -26,10 +27,10 @@ void RawHiveSetVerbose(bool on);
 
 /*! Signature of a progress reporter.
  *  @param item  what is being extracted (path on the volume)
- *  @param fait  bytes already written
+ *  @param done  bytes already written
  *  @param total bytes expected
  */
-using RawHiveProgressFn = void (*)(const wchar_t* item, unsigned long long fait,
+using RawHiveProgressFn = void (*)(const wchar_t* item, unsigned long long done,
                                    unsigned long long total);
 
 /*! Installs a progress reporter, called during extraction.
@@ -66,39 +67,39 @@ HRESULT ExtractFileRaw(const std::wstring& volumeLetter,
  *  identify the exhibit on the volume independently of its name, and attest
  *  that the raw reading changed no date on the target.
  */
-struct RawHiveEmpreintes {
+struct RawHiveFingerprints {
     std::wstring md5;            //!< MD5 fingerprint, uppercase hexadecimal
     std::wstring sha1;           //!< SHA-1 fingerprint
     std::wstring sha256;         //!< SHA-256 fingerprint
-    uint64_t octets = 0;         //!< size actually extracted
-    uint64_t tailleAnnoncee = 0; //!< size declared by the $DATA attribute
+    uint64_t bytes = 0;         //!< size actually extracted
+    uint64_t declaredSize = 0; //!< size declared by the $DATA attribute
     /*! Valid data length of the non-resident attribute. Beyond it, the content is
-     *  zero by definition and is NOT read from the disk. Equal to `tailleAnnoncee`
+     *  zero by definition and is NOT read from the disk. Equal to `declaredSize`
      *  for an ordinary file; smaller for a preallocated file (event logs). */
     uint64_t tailleValide = 0;
     uint64_t mftEntry = 0;       //!< record number in the $MFT
     bool     resident = false;   //!< data held inside the $MFT record
     // $STANDARD_INFORMATION of the source file, as FILETIME (UTC, 0 if absent).
     uint64_t creeUtc = 0;        //!< creation date
-    uint64_t modifieUtc = 0;     //!< last content change
-    uint64_t mftModifieUtc = 0;  //!< last record change
+    uint64_t modifiedUtc = 0;     //!< last content change
+    uint64_t mftModifiedUtc = 0;  //!< last record change
     uint64_t accedeUtc = 0;      //!< last access
-    uint64_t extraitUtc = 0;     //!< when THIS exhibit was extracted (FILETIME UTC)
+    uint64_t extractedUtc = 0;     //!< when THIS exhibit was extracted (FILETIME UTC)
 };
 
 /*! An extracted file, as it will be recorded in the manifest. */
-struct RawHiveExtrait {
-    std::wstring cheminVolume;   //!< path on the source volume
-    std::wstring cheminSortie;   //!< file written to the collection medium
-    HRESULT      resultat = E_FAIL;   //!< outcome of the extraction
-    RawHiveEmpreintes empreintes;     //!< empty if the extraction failed
+struct RawHiveExtraction {
+    std::wstring volumePath;   //!< path on the source volume
+    std::wstring outputPath;   //!< file written to the collection medium
+    HRESULT      result = E_FAIL;   //!< outcome of the extraction
+    RawHiveFingerprints fingerprints;     //!< empty if the extraction failed
 };
 
 /*! Extracts several files with a SINGLE opening of the volume (efficient).
  *  @param volumeLetter letter of the volume to read, without the colon (e.g. L"C")
  *  @param items  pairs {path on the volume, output file}
  *  @param perItem (optional) receives the HRESULT of each item, in order
- *  @param releve (optional) receives a record per item, fingerprints included.
+ *  @param reading (optional) receives a record per item, fingerprints included.
  *         It is the source of the exhibit store manifest: without it, an
  *         exhibit is copied with nothing to identify it.
  *  @return S_OK if everything succeeds, S_FALSE if at least one item fails,
@@ -107,7 +108,7 @@ struct RawHiveExtrait {
 HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
                         const std::vector<std::pair<std::wstring, std::wstring>>& items,
                         std::vector<HRESULT>* perItem = nullptr,
-                        std::vector<RawHiveExtrait>* releve = nullptr);
+                        std::vector<RawHiveExtraction>* reading = nullptr);
 
 /*! PERSISTENT raw reader, to read thousands of scattered files.
  *
@@ -116,7 +117,7 @@ HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
  *  artefacts (several thousand, scattered), that would mean as many volume
  *  openings — the only WAC operation object-access auditing can log — and as
  *  many re-reads of System32's 4,659 entries.
- *  The LecteurBrut keeps each volume open ONCE for its whole lifetime, and
+ *  The RawReader keeps each volume open ONCE for its whole lifetime, and
  *  caches the index of the directories it walks.
  */
 struct RawDirEntry;
@@ -125,31 +126,31 @@ struct RawDirEntry;
  *  kept open for the reader's whole lifetime.
  *
  *  Not copyable: it owns one handle per volume and the directory index cache. */
-class LecteurBrut {
+class RawReader {
 public:
-    LecteurBrut();
-    ~LecteurBrut();
-    LecteurBrut(const LecteurBrut&) = delete;
-    LecteurBrut& operator=(const LecteurBrut&) = delete;
+    RawReader();
+    ~RawReader();
+    RawReader(const RawReader&) = delete;
+    RawReader& operator=(const RawReader&) = delete;
 
     /*! Reads a file by its absolute path ("X:\\…").
-     *  @param sortie file to write; EMPTY to compute the fingerprints only —
+     *  @param output file to write; EMPTY to compute the fingerprints only —
      *         nothing is then written anywhere
-     *  @param observateur if `sortie` is empty, receives the content as it is
+     *  @param observer if `output` is empty, receives the content as it is
      *         read (PE analysis, reading a catalog into memory)
-     *  @param ligne  receives the record, fingerprints and timestamps included
-     *  @return the result, also carried by `ligne.resultat` */
-    HRESULT lire(const std::wstring& cheminAbsolu, const std::wstring& sortie,
-                 RawHiveExtrait& ligne, std::streambuf* observateur = nullptr);
+     *  @param line  receives the record, fingerprints and timestamps included
+     *  @return the result, also carried by `line.result` */
+    HRESULT read(const std::wstring& absolutePath, const std::wstring& output,
+                 RawHiveExtraction& line, std::streambuf* observer = nullptr);
 
     /*! Lists a directory by its absolute path, on the volume already open.
-     *  @param dossierAbsolu the directory ("X:\\…")
-     *  @param entrees receives its entries
+     *  @param absoluteFolder the directory ("X:\\…")
+     *  @param entries receives its entries
      *  @return the result of the listing */
-    HRESULT lister(const std::wstring& dossierAbsolu, std::vector<RawDirEntry>& entrees);
+    HRESULT list(const std::wstring& absoluteFolder, std::vector<RawDirEntry>& entries);
 
     //! @return the number of volumes actually opened (one handle each).
-    unsigned volumesOuverts() const;
+    unsigned openVolumes() const;
 
 private:
     struct Impl;
@@ -157,17 +158,17 @@ private:
 };
 
 /*! An attribute of a $MFT record, as written on the disk. */
-struct RawAttribut {
+struct RawAttribute {
     uint32_t type = 0;          //!< 0x10 $STANDARD_INFORMATION, 0x80 $DATA, 0xC0 $REPARSE_POINT…
-    std::wstring nom;           //!< attribute name, empty for the unnamed attribute
+    std::wstring name;           //!< attribute name, empty for the unnamed attribute
     bool     resident = true;   //!< held inside the record
-    uint64_t tailleReelle = 0;  //!< data size
+    uint64_t actualSize = 0;  //!< data size
     /*! Non-resident only: VALID data length. Beyond it, NTFS returns zeros,
      *  whatever the clusters hold — they may carry remnants of former files. */
-    uint64_t tailleInitialisee = 0;
-    uint16_t drapeaux = 0;      //!< 0x0001 compressed, 0x4000 encrypted, 0x8000 sparse
+    uint64_t initializedSize = 0;
+    uint16_t flags = 0;      //!< 0x0001 compressed, 0x4000 encrypted, 0x8000 sparse
     uint32_t tagReparse = 0;    //!< for 0xC0: the reparse point's tag
-    std::vector<uint8_t> apercu; //!< first bytes of the content, if resident
+    std::vector<uint8_t> preview; //!< first bytes of the content, if resident
 };
 
 /*! Lists a file's attributes, as they appear in the $MFT.
@@ -181,13 +182,13 @@ struct RawAttribut {
  *  remains unexplainable.
  *
  *  @param volumeLetter volume letter, e.g. L"C"
- *  @param cheminSurVolume path of the file on that volume
+ *  @param pathOnVolume path of the file on that volume
  *  @param out receives the attributes found (cleared first)
  *  @return ERROR_SUCCESS, or an error code
  */
 HRESULT ListAttributesRaw(const std::wstring& volumeLetter,
-                          const std::wstring& cheminSurVolume,
-                          std::vector<RawAttribut>& out);
+                          const std::wstring& pathOnVolume,
+                          std::vector<RawAttribute>& out);
 
 /*! A directory entry read from the NTFS index. */
 struct RawDirEntry {
@@ -224,7 +225,7 @@ HRESULT ListDirectoryRaw(const std::wstring& volumeLetter,
  *         "absent", "empty", "N entries, M kept". Without it, a count of 0 does
  *         not say whether the directory is missing, empty, or whether the
  *         extension filter discarded everything — three very different causes.
- *  @param releve (optional) receives a record per file, fingerprints included,
+ *  @param reading (optional) receives a record per file, fingerprints included,
  *         also for files whose extraction failed: it is the source of the
  *         exhibit store manifest
  *  @return ERROR_SUCCESS if the directory could be listed (even empty),
@@ -237,7 +238,7 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
                             const std::vector<std::wstring>& extensions = {},
                             size_t* extracted = nullptr,
                             std::wstring* diagnostic = nullptr,
-                            std::vector<RawHiveExtrait>* releve = nullptr);
+                            std::vector<RawHiveExtraction>* reading = nullptr);
 
 /*! Like ExtractDirectoryRaw, but descends into subdirectories.
  *
@@ -250,9 +251,9 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
  *  @param outDir destination directory; the tree is reproduced there
  *  @param extensions extensions to extract (empty = all)
  *  @param extracted receives the number of files extracted
- *  @param profondeurMax guard against a cyclic or abnormal tree (a corrupt
+ *  @param maxDepth guard against a cyclic or abnormal tree (a corrupt
  *         NTFS index could loop); 0 = no descent
- *  @param releve (optional) receives a record per file, fingerprints included:
+ *  @param reading (optional) receives a record per file, fingerprints included:
  *         it is the source of the exhibit store manifest
  *  @return ERROR_SUCCESS if the listing succeeded (even without files),
  *          S_FALSE if at least one file failed,
@@ -263,5 +264,5 @@ HRESULT ExtractDirectoryTreeRaw(const std::wstring& volumeLetter,
                                 const std::wstring& outDir,
                                 const std::vector<std::wstring>& extensions = {},
                                 size_t* extracted = nullptr,
-                                unsigned profondeurMax = 8,
-                                std::vector<RawHiveExtrait>* releve = nullptr);
+                                unsigned maxDepth = 8,
+                                std::vector<RawHiveExtraction>* reading = nullptr);

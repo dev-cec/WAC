@@ -34,26 +34,26 @@ namespace {
 * @param parPid reçoit, pour chaque PID, le SID et l'identifiant de session
 * @return ERROR_SUCCESS si l'énumération a abouti
 */
-HRESULT releverProprietaires(std::map<DWORD, std::pair<std::wstring, DWORD>>& parPid) {
-	DWORD niveau = 0;                 // niveau 0 : SessionId, ProcessId, nom, SID
+HRESULT readOwners(std::map<DWORD, std::pair<std::wstring, DWORD>>& parPid) {
+	DWORD level = 0;                 // niveau 0 : SessionId, ProcessId, nom, SID
 	PWTS_PROCESS_INFOW infos = NULL;
-	DWORD nombre = 0;
+	DWORD count = 0;
 	log(3, L"🔈WTSEnumerateProcessesExW");
-	if (!WTSEnumerateProcessesExW(WTS_CURRENT_SERVER_HANDLE, &niveau, WTS_ANY_SESSION,
-	                              (LPWSTR*)&infos, &nombre)) {
-		const HRESULT erreur = GetLastError();
-		log(2, L"🔥WTSEnumerateProcessesExW : proprietaires non releves", erreur);
-		return erreur;
+	if (!WTSEnumerateProcessesExW(WTS_CURRENT_SERVER_HANDLE, &level, WTS_ANY_SESSION,
+	                              (LPWSTR*)&infos, &count)) {
+		const HRESULT error = GetLastError();
+		log(2, L"🔥WTSEnumerateProcessesExW : proprietaires non releves", error);
+		return error;
 	}
 
-	for (DWORD i = 0; i < nombre; ++i) {
+	for (DWORD i = 0; i < count; ++i) {
 		std::wstring sid;
 		if (infos[i].pUserSid) {
-			LPWSTR texte = NULL;
+			LPWSTR text = NULL;
 			log(3, L"🔈ConvertSidToStringSidW");
-			if (ConvertSidToStringSidW(infos[i].pUserSid, &texte) && texte) {
-				sid = texte;
-				LocalFree(texte);
+			if (ConvertSidToStringSidW(infos[i].pUserSid, &text) && text) {
+				sid = text;
+				LocalFree(text);
 			}
 			else
 				log(2, L"🔥ConvertSidToStringSidW", GetLastError());
@@ -65,7 +65,7 @@ HRESULT releverProprietaires(std::map<DWORD, std::pair<std::wstring, DWORD>>& pa
 	}
 	log(2, L"❇️Proprietaires releves pour " + std::to_wstring(parPid.size()) + L" processus");
 	log(3, L"🔈WTSFreeMemoryExW");
-	WTSFreeMemoryExW(WTSTypeProcessInfoLevel0, infos, nombre);
+	WTSFreeMemoryExW(WTSTypeProcessInfoLevel0, infos, count);
 	return ERROR_SUCCESS;
 }
 
@@ -95,9 +95,9 @@ Process::Process(const PROCESSENTRY32W* pe32) {
 	   appel : les 16 processus protégés sortaient donc aussi sans AUCUN module,
 	   alors que l'instantané Toolhelp ne dépend pas du jeton. */
 	log(3, L"🔈ListProcessModules");
-	const HRESULT resultat = ListProcessModules();
-	if (resultat != ERROR_SUCCESS)
-		log(2, L"🔥ListProcessModules : ", resultat);
+	const HRESULT result = ListProcessModules();
+	if (result != ERROR_SUCCESS)
+		log(2, L"🔥ListProcessModules : ", result);
 }
 
 HRESULT Process::ListProcessModules() {
@@ -132,16 +132,16 @@ HRESULT Process::ListProcessModules() {
 	if (conf.binary) {
 		//Le premier module retourne le exe path
 		log(3, L"🔈EmpreinteFichier");
-		empreinte = EmpreinteFichier(me32.szExePath);
+		fingerprint = FingerprintFile(me32.szExePath);
 	}
 
 	// Now walk the module list of the process,
 	// and display information about each module
 
 	do {
-		std::wstring chemin = me32.szExePath;
-		log(2, L"❇️Module exePath : " + chemin);
-		processModules.push_back(std::move(chemin));
+		std::wstring path = me32.szExePath;
+		log(2, L"❇️Module exePath : " + path);
+		processModules.push_back(std::move(path));
 		log(3, L"🔈Module32Next");
 	} while (Module32Next(hModuleSnap, &me32));
 
@@ -155,7 +155,7 @@ Json Process::toJson() const {
 	// « Nom » etait la seule cle en francais de toute la sortie, au milieu de
 	// SID, Owner, ProcessId… Une seule langue pour les cles (passe de nommage).
 	o.add(L"Name",           Json::str(processName));
-	ajouterEmpreintes(o, empreinte);
+	addFingerprints(o, fingerprint);
 	o.add(L"SID",            Json::str(processSID));
 	o.add(L"Owner",          Json::str(processSidName));
 	/* Nommage harmonise (passe de nommage) : `PID` et `PPId` coexistaient dans
@@ -166,7 +166,7 @@ Json Process::toJson() const {
 	o.add(L"ParentProcessId", Json::num(processParentId));
 	o.add(L"ThreadCount",    Json::num(processThreadCount));   // etait parse mais jamais emis
 	// Permet de rattacher un processus a une entree de Sessions.json.
-	if (sessionConnue) o.add(L"SessionId", Json::num(sessionId));
+	if (sessionKnown) o.add(L"SessionId", Json::num(sessionId));
 	/* Ne porte QUE l'erreur de lecture des modules. Elle portait auparavant
 	   celle du jeton, si bien qu'un refus d'acces au processus s'affichait ici
 	   comme un probleme de modules. */
@@ -227,8 +227,8 @@ HRESULT Processes::getData() {
 
 	/* Propriétaires et sessions en UNE fois, avant le parcours : un échec ici
 	   n'empêche pas la collecte, il laisse seulement les SID vides. */
-	std::map<DWORD, std::pair<std::wstring, DWORD>> proprietaires;
-	releverProprietaires(proprietaires);
+	std::map<DWORD, std::pair<std::wstring, DWORD>> owners;
+	readOwners(owners);
 
 	unsigned long long nbProcess = 0;
 	processes.reserve((size_t)totalProcess);
@@ -237,11 +237,11 @@ HRESULT Processes::getData() {
 		log(1, L"➕Process");
 		printProgressStep(L"Process", ++nbProcess, totalProcess);
 		Process p(&pe32);
-		const auto it = proprietaires.find(p.processId);
-		if (it != proprietaires.end()) {
+		const auto it = owners.find(p.processId);
+		if (it != owners.end()) {
 			p.processSID     = it->second.first;
 			p.sessionId      = it->second.second;
-			p.sessionConnue  = true;
+			p.sessionKnown  = true;
 			if (!p.processSID.empty()) {
 				log(3, L"🔈getNameFromSid");
 				p.processSidName = getNameFromSid(p.processSID);

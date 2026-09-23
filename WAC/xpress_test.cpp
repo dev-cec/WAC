@@ -1,17 +1,17 @@
 /*  xpress_test.cpp — confronte la decompression XPRESS Huffman au compresseur
  *  de Windows lui-meme.
  *
- *  `RtlCompressBuffer` de ntdll comprime un fichier connu, morceau par morceau,
- *  et ce test detend ici et compare OCTET POUR OCTET. Un decompresseur faux
- *  produit le plus souvent des donnees fausses SANS lever d'erreur — d'ou la
- *  comparaison exhaustive plutot qu'un controle de taille.
+ *  `RtlCompressBuffer` de ntdll comprime un file known, chunk par chunk,
+ *  et ce test detend ici et compare OCTET POUR OCTET. Un decompresseur wrong
+ *  product le plus souvent des data fausses SANS lever d'error — d'ou la
+ *  comparaison exhaustive plutot qu'un controle de size.
  *
- *  Usage : xpress_test <original> <compresse.bin> <index.idx>
- *    index.idx : une ligne « <n> <taille_origine> <taille_compressee> » par
- *    morceau, dans l'ordre ; taille compressee nulle = morceau que Windows a
- *    renonce a comprimer (stocke tel quel).
+ *  Usage : xpress_test <original> <compressed.bin> <index.idx>
+ *    index.idx : une line « <n> <taille_origine> <taille_compressee> » par
+ *    chunk, dans l'ordre ; size compressee nulle = chunk que Windows a
+ *    renonce a compress (stocke tel quel).
  *
- *  Exclu du build de WAC par le motif « _test.cpp ».
+ *  Exclu du build de WAC par le reason « _test.cpp ».
  *  Compilation native : g++ -std=c++17 -I. xpress.cpp xpress_test.cpp -o xpress_test
  */
 #include "xpress.h"
@@ -33,51 +33,51 @@ int main(int argc, char** argv) {
 
 	const std::vector<uint8_t> original((std::istreambuf_iterator<char>(fo)),
 	                                     std::istreambuf_iterator<char>());
-	const std::vector<uint8_t> compresse((std::istreambuf_iterator<char>(fc)),
+	const std::vector<uint8_t> compressed((std::istreambuf_iterator<char>(fc)),
 	                                      std::istreambuf_iterator<char>());
 
 	size_t posC = 0, posO = 0;
-	int morceaux = 0, conformes = 0, ignores = 0;
-	unsigned long long octets = 0;
-	std::string ligne;
-	int n; size_t tailleO, tailleC;
+	int chunks = 0, wellFormed = 0, ignores = 0;
+	unsigned long long bytes = 0;
+	std::string line;
+	int n; size_t plainSize, packedSize;
 
-	while (std::getline(fi, ligne)) {
-		if (ligne.empty()) continue;
-		if (std::sscanf(ligne.c_str(), "%d %zu %zu", &n, &tailleO, &tailleC) != 3) continue;
-		if (tailleC == 0) { ++ignores; posO += tailleO; continue; }
-		++morceaux;
-		if (posC + tailleC > compresse.size()) {
+	while (std::getline(fi, line)) {
+		if (line.empty()) continue;
+		if (std::sscanf(line.c_str(), "%d %zu %zu", &n, &plainSize, &packedSize) != 3) continue;
+		if (packedSize == 0) { ++ignores; posO += plainSize; continue; }
+		++chunks;
+		if (posC + packedSize > compressed.size()) {
 			std::cout << "  ECHEC  morceau " << n << " : donnees tronquees\n";
 			return 1;
 		}
 
-		std::vector<uint8_t> sortie(tailleO, 0xCC);       // motif temoin
-		const size_t rendu = XpressHuffmanDetendre(compresse.data() + posC, tailleC,
-		                                           sortie.data(), sortie.size());
-		const bool tailleOk = (rendu == tailleO);
-		const bool contenuOk = tailleOk && posO + tailleO <= original.size()
-		                     && std::memcmp(sortie.data(), original.data() + posO, tailleO) == 0;
-		if (contenuOk) ++conformes;
+		std::vector<uint8_t> output(plainSize, 0xCC);       // witness pattern
+		const size_t returned = XpressHuffmanInflate(compressed.data() + posC, packedSize,
+		                                           output.data(), output.size());
+		const bool sizeOk = (returned == plainSize);
+		const bool contentOk = sizeOk && posO + plainSize <= original.size()
+		                     && std::memcmp(output.data(), original.data() + posO, plainSize) == 0;
+		if (contentOk) ++wellFormed;
 		else {
-			std::cout << "  ECHEC  morceau " << n << " : rendu " << rendu
-			          << " attendu " << tailleO;
-			if (tailleOk) {
+			std::cout << "  ECHEC  morceau " << n << " : rendu " << returned
+			          << " attendu " << plainSize;
+			if (sizeOk) {
 				size_t k = 0;
-				while (k < tailleO && sortie[k] == original[posO + k]) ++k;
+				while (k < plainSize && output[k] == original[posO + k]) ++k;
 				std::cout << ", premier ecart a l'offset " << k;
 			}
 			std::cout << "\n";
 		}
-		octets += rendu;
-		posC += tailleC;
-		posO += tailleO;
+		bytes += returned;
+		posC += packedSize;
+		posO += plainSize;
 	}
 
-	std::cout << "  morceaux comprimes : " << morceaux << ", conformes : " << conformes
+	std::cout << "  morceaux comprimes : " << chunks << ", conformes : " << wellFormed
 	          << ", non comprimes par Windows : " << ignores << "\n";
-	std::cout << "  octets detendus : " << octets << "\n";
-	const bool ok = (morceaux > 0) && (conformes == morceaux);
+	std::cout << "  octets detendus : " << bytes << "\n";
+	const bool ok = (chunks > 0) && (wellFormed == chunks);
 	std::cout << (ok ? "tous conformes" : "ECHECS") << "\n";
 	return ok ? 0 : 1;
 }

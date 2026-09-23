@@ -1,17 +1,17 @@
-/*  event_messages_test.cpp — eprouve, ETAPE PAR ETAPE, la chaine qui rend le
- *  message en clair d'un evenement.
+/*! \file
+ *  \brief Walks, STEP BY STEP, the chain that produces an event's plain-text
+ *  message.
  *
- *  POURQUOI CE HARNAIS. La chaine compte cinq maillons, et un echec de masse ne
- *  dit pas lequel a cede : la collecte reste valide, le champ disparait, et
- *  chaque hypothese demandait jusque-la une collecte complete de plusieurs
- *  minutes pour etre eliminee. Ce programme fait le meme trajet et affiche
- *  chaque etape.
+ *  WHY THIS HARNESS. The chain has five links, and a mass failure does not say
+ *  which one gave way: the collection stays valid, the field disappears, and
+ *  until now each hypothesis needed a full collection of several minutes to be
+ *  ruled out. This program takes the same route and prints every step.
  *
- *  Il tourne SUR LA MACHINE examinee (ou une VM de test), la ruche SOFTWARE et
- *  les binaires de fournisseurs n'etant lisibles que la.
+ *  It runs ON THE EXAMINED MACHINE (or a test VM), the SOFTWARE hive and the
+ *  provider binaries being readable only there.
  *
- *  Usage : event_messages_test <ruche SOFTWARE> <guid> [id[:version] ...]
- *  Exclu du build de WAC par le motif « _test.cpp ».
+ *  Usage: event_messages_test <SOFTWARE hive> <guid> [id[:version] ...]
+ *  Excluded from WAC's build by the "_test.cpp" pattern.
  */
 #include "tools.h"
 #include "pe_resource.h"
@@ -25,8 +25,8 @@ AppliConf conf;
 
 namespace {
 
-void ligne(const wchar_t* etape, bool ok, const std::wstring& detail) {
-	wprintf(L"  %ls  %-42ls %ls\n", ok ? L"ok   " : L"ECHEC", etape, detail.c_str());
+void line(const wchar_t* step, bool ok, const std::wstring& detail) {
+	wprintf(L"  %ls  %-42ls %ls\n", ok ? L"ok   " : L"ECHEC", step, detail.c_str());
 }
 
 } // namespace
@@ -38,85 +38,85 @@ int wmain(int argc, wchar_t** argv) {
 	}
 	conf.systemDrive = L"C:";
 
-	// 1. La ruche, et la cle du fournisseur.
+	// 1. The hive, and the provider's key.
 	ORHKEY software = NULL;
 	HRESULT hr = OROpenHive(argv[1], &software);
-	ligne(L"ouverture de la ruche SOFTWARE", hr == ERROR_SUCCESS,
+	line(L"ouverture de la ruche SOFTWARE", hr == ERROR_SUCCESS,
 	      hr == ERROR_SUCCESS ? argv[1] : L"code " + std::to_wstring(hr));
 	if (hr != ERROR_SUCCESS) return 1;
 	conf.Software = software;
 
 	std::wstring guid = argv[2];
-	const std::wstring cle =
+	const std::wstring key =
 		L"Microsoft\\Windows\\CurrentVersion\\WINEVT\\Publishers\\" + guid;
 	std::wstring declare;
-	HRESULT hrv = getRegSzValue(software, cle.c_str(), L"ResourceFileName", &declare);
+	HRESULT hrv = getRegSzValue(software, key.c_str(), L"ResourceFileName", &declare);
 	if (hrv != ERROR_SUCCESS || declare.empty())
-		hrv = getRegSzValue(software, cle.c_str(), L"MessageFileName", &declare);
-	ligne(L"ResourceFileName / MessageFileName", hrv == ERROR_SUCCESS && !declare.empty(),
+		hrv = getRegSzValue(software, key.c_str(), L"MessageFileName", &declare);
+	line(L"ResourceFileName / MessageFileName", hrv == ERROR_SUCCESS && !declare.empty(),
 	      declare.empty() ? L"(absent)" : declare);
 	if (declare.empty()) return 1;
 
-	// 2. La resolution du chemin.
-	const std::wstring resolu = cheminBinaire(declare);
-	std::vector<std::wstring> candidats;
-	if (!resolu.empty()) candidats.push_back(resolu);
+	// 2. Resolving the path.
+	const std::wstring resolved = binaryPath(declare);
+	std::vector<std::wstring> candidates;
+	if (!resolved.empty()) candidates.push_back(resolved);
 	{
-		const std::wstring nomSeul = std::filesystem::path(
-			resolu.empty() ? declare : resolu).filename().wstring();
-		if (!nomSeul.empty())
-			candidats.push_back(conf.systemDrive + L"\\Windows\\System32\\" + nomSeul);
+		const std::wstring nameOnly = std::filesystem::path(
+			resolved.empty() ? declare : resolved).filename().wstring();
+		if (!nameOnly.empty())
+			candidates.push_back(conf.systemDrive + L"\\Windows\\System32\\" + nameOnly);
 	}
-	std::wstring trouve;
-	for (const std::wstring& c : candidats) {
+	std::wstring found;
+	for (const std::wstring& c : candidates) {
 		std::error_code ec;
-		const bool existe = std::filesystem::exists(c, ec);
-		ligne(L"candidat de chemin", existe, c);
-		if (existe && trouve.empty()) trouve = c;
+		const bool exists = std::filesystem::exists(c, ec);
+		line(L"candidat de chemin", exists, c);
+		if (exists && found.empty()) found = c;
 	}
-	if (trouve.empty()) return 1;
+	if (found.empty()) return 1;
 
-	// 3. Les deux ressources.
+	// 3. The two resources.
 	PeResource pe;
-	const bool ouvert = pe.ouvrir(trouve);
-	ligne(L"lecture du PE", ouvert, ouvert ? trouve : pe.erreur());
-	if (!ouvert) return 1;
+	const bool open = pe.open(found);
+	line(L"lecture du PE", open, open ? found : pe.error());
+	if (!open) return 1;
 
 	std::wstring types;
-	for (const std::wstring& t : pe.typesPresents()) types += t + L" ";
-	ligne(L"types de ressources presents", !types.empty(), types);
+	for (const std::wstring& t : pe.typesPresent()) types += t + L" ";
+	line(L"types de ressources presents", !types.empty(), types);
 
-	const std::vector<uint8_t> brutWevt = pe.ressourceNommee(L"WEVT_TEMPLATE");
-	ligne(L"WEVT_TEMPLATE", !brutWevt.empty(),
+	const std::vector<uint8_t> brutWevt = pe.namedResource(L"WEVT_TEMPLATE");
+	line(L"WEVT_TEMPLATE", !brutWevt.empty(),
 	      std::to_wstring(brutWevt.size()) + L" octets");
 
-	std::vector<uint8_t> brutMsg = pe.ressource(PE_RT_MESSAGETABLE);
+	std::vector<uint8_t> brutMsg = pe.resource(PE_RT_MESSAGETABLE);
 	std::wstring ouMsg = L"dans le binaire";
 	if (brutMsg.empty()) {
-		// Satellite localise : la table n'est pas dans la DLL sur un systeme
-		// localise, mais dans <langue>\<nom>.mui.
-		const std::filesystem::path p = trouve;
+		// Localised satellite: on a localised system the table is not in the
+		// DLL itself, but in <language>\<name>.mui.
+		const std::filesystem::path p = found;
 		for (PCWSTR l : { L"fr-FR", L"en-US", L"de-DE", L"es-ES" }) {
 			const std::wstring mui = p.parent_path().wstring() + L"\\" + l + L"\\"
 			                       + p.filename().wstring() + L".mui";
 			std::error_code ec;
 			if (!std::filesystem::exists(mui, ec)) continue;
 			PeResource peMui;
-			if (!peMui.ouvrir(mui)) continue;
-			brutMsg = peMui.ressource(PE_RT_MESSAGETABLE);
+			if (!peMui.open(mui)) continue;
+			brutMsg = peMui.resource(PE_RT_MESSAGETABLE);
 			if (!brutMsg.empty()) { ouMsg = mui; break; }
 		}
 	}
-	ligne(L"MESSAGETABLE", !brutMsg.empty(),
+	line(L"MESSAGETABLE", !brutMsg.empty(),
 	      std::to_wstring(brutMsg.size()) + L" octets, " + ouMsg);
 
-	// 4. L'analyse, puis la resolution des identifiants demandes.
-	MetadonneesWevt meta;
-	const size_t nbEv = meta.analyser(brutWevt, guid);
-	ligne(L"evenements decrits", nbEv > 0, std::to_wstring(nbEv));
+	// 4. The parsing, then the resolution of the requested identifiers.
+	WevtMetadata meta;
+	const size_t nbEv = meta.analyse(brutWevt, guid);
+	line(L"evenements decrits", nbEv > 0, std::to_wstring(nbEv));
 	TableMessages table;
-	const size_t nbMsg = table.analyser(brutMsg);
-	ligne(L"messages lus", nbMsg > 0, std::to_wstring(nbMsg));
+	const size_t nbMsg = table.analyse(brutMsg);
+	line(L"messages lus", nbMsg > 0, std::to_wstring(nbMsg));
 
 	for (int i = 3; i < argc; ++i) {
 		std::wstring a = argv[i];
@@ -124,12 +124,12 @@ int wmain(int argc, wchar_t** argv) {
 		const uint16_t id = (uint16_t)wcstoul(a.substr(0, sep).c_str(), nullptr, 10);
 		const uint8_t ver = (uint8_t)(sep == std::wstring::npos ? 0
 		                              : wcstoul(a.substr(sep + 1).c_str(), nullptr, 10));
-		const uint32_t m = meta.identifiantMessage(id, ver);
-		const std::wstring modele = m ? table.texte(m) : std::wstring();
-		ligne(L"evenement -> message", !modele.empty(),
+		const uint32_t m = meta.messageId(id, ver);
+		const std::wstring messageTemplate = m ? table.text(m) : std::wstring();
+		line(L"evenement -> message", !messageTemplate.empty(),
 		      std::to_wstring(id) + L" v" + std::to_wstring(ver) + L" -> "
 		      + std::to_wstring(m));
-		if (!modele.empty()) wprintf(L"         %ls\n", modele.substr(0, 160).c_str());
+		if (!messageTemplate.empty()) wprintf(L"         %ls\n", messageTemplate.substr(0, 160).c_str());
 	}
 
 	ORCloseHive(software);

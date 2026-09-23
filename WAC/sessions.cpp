@@ -14,10 +14,10 @@ Session::Session(LUID* id) {
 	/* LUID reserves par Windows, toujours les memes (winnt.h :
 	   SYSTEM_LUID, ANONYMOUS_LOGON_LUID, LOCALSERVICE_LUID, NETWORKSERVICE_LUID). */
 	switch (sessionId) {
-	case 0x3E7: roleConnu = L"SYSTEM";          break;
-	case 0x3E6: roleConnu = L"ANONYMOUS LOGON"; break;
-	case 0x3E5: roleConnu = L"LOCAL SERVICE";   break;
-	case 0x3E4: roleConnu = L"NETWORK SERVICE"; break;
+	case 0x3E7: knownRole = L"SYSTEM";          break;
+	case 0x3E6: knownRole = L"ANONYMOUS LOGON"; break;
+	case 0x3E5: knownRole = L"LOCAL SERVICE";   break;
+	case 0x3E4: knownRole = L"NETWORK SERVICE"; break;
 	default: break;
 	}
 	log(1, L"➕Session : ");
@@ -34,7 +34,7 @@ Session::Session(LUID* id) {
 		temp = data->LogonTime;
 		memcpy(&startTimeUtc, &temp, sizeof(startTimeUtc));
 		log(3, L"🔈utcVersLocalSuspect startTime");
-		utcVersLocalSuspect(startTimeUtc, &startTime);
+		utcToSuspectLocal(startTimeUtc, &startTime);
 		logonName = std::wstring(data->UserName.Buffer).data();
 		logonDomainName = std::wstring(data->LogonDomain.Buffer).data();
 		logonType = data->LogonType;
@@ -43,11 +43,11 @@ Session::Session(LUID* id) {
 
 		// Converti ICI, tant que la structure de LSA est valide (cf. sessions.h).
 		if (data->Sid) {
-			LPWSTR sidTexte = NULL;
+			LPWSTR sidText = NULL;
 			log(3, L"🔈ConvertSidToStringSidW");
-			if (ConvertSidToStringSidW(data->Sid, &sidTexte) && sidTexte) {
-				sid = sidTexte;
-				LocalFree(sidTexte);
+			if (ConvertSidToStringSidW(data->Sid, &sidText) && sidText) {
+				sid = sidText;
+				LocalFree(sidText);
 			}
 			else
 				log(2, L"🔥ConvertSidToStringSidW", GetLastError());
@@ -66,7 +66,7 @@ Json Session::toJson() const {
 	Json o = Json::obj();
 	o.add(L"SessionId",             Json::num(sessionId));      // nombre, pas chaîne
 	o.add(L"SID",                   Json::str(sid));
-	if (!roleConnu.empty()) o.add(L"WellKnownRole", Json::str(roleConnu));
+	if (!knownRole.empty()) o.add(L"WellKnownRole", Json::str(knownRole));
 	o.add(L"LogonName",             Json::str(logonName));
 	o.add(L"LogonDomainName",       Json::str(logonDomainName));
 	o.add(L"LogonType",             Json::num(logonType));      // nombre, pas chaîne

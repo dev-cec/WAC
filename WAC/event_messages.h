@@ -40,7 +40,7 @@
 *  À appeler une fois avant la collecte des événements. Sans cet appel, les
 *  messages ne sont pas résolus et la collecte se poursuit normalement.
 */
-void MessagesInitialiser();
+void MessagesInit();
 
 /*! Message en clair d'un événement.
 *
@@ -53,10 +53,10 @@ void MessagesInitialiser();
 *         remplissent les marques %1 %2 … du modèle
 *  @return la phrase, ou une chaîne vide si elle n'a pas pu être reconstituée
 */
-std::wstring MessageEvenement(const std::wstring& guidFournisseur,
-                              uint16_t identifiantEvenement,
+std::wstring EventMessage(const std::wstring& providerGuid,
+                              uint16_t eventId,
                               uint8_t version,
-                              const std::vector<std::wstring>& valeurs);
+                              const std::vector<std::wstring>& values);
 
 /*! Bilan, pour le journal et le rapport.
 *  @param fournisseurs nombre de fournisseurs dont les ressources ont été lues
@@ -64,8 +64,8 @@ std::wstring MessageEvenement(const std::wstring& guidFournisseur,
 *  @param resolus nombre de messages effectivement reconstitués
 *  @param octets volume extrait pour ces ressources
 */
-void MessagesBilan(size_t* fournisseurs, size_t* echecs,
-                   unsigned long long* resolus, unsigned long long* octets);
+void MessagesSummary(size_t* providers, size_t* failures,
+                   unsigned long long* resolved, unsigned long long* bytes);
 
 /*! Libère les ressources chargées. */
-void MessagesLiberer();
+void MessagesRelease();

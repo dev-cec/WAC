@@ -1,4 +1,5 @@
-/*  authenticode.h — Microsoft authenticity of a binary, verified without any API.
+/*! \file
+ *  \brief Microsoft authenticity of a binary, verified without any API.
  *
  *  WHAT IT IS FOR. With --binary, WAC collects the executables cited by the
  *  artefacts. Most are Windows components or Microsoft software, identical on
@@ -53,10 +54,10 @@
  *  The Authenticode digest covers the whole file EXCEPT the optional header's
  *  CheckSum field, the "certificate table" entry of the data directory, and
  *  the certificate table itself. */
-class AnalyseurPe : public std::streambuf {
+class PeAnalyser : public std::streambuf {
 public:
 	/*! Ends the computation (to be called once the whole file has been fed). */
-	void terminer();
+	void finish();
 	//! Whether the headers read identify a PE file.
 	bool estPe() const { return estPe_; }
 	//! @return the Authenticode SHA-1 (valid after terminer(), if estPe()).
@@ -68,7 +69,7 @@ public:
 	//! @return the SHA-256, same padding.
 	const uint8_t* sha256Complete() const { return sha256c_; }
 	//! @return the certificate table (WIN_CERTIFICATE…), empty if absent.
-	const std::vector<uint8_t>& tableCertificats() const { return certificats_; }
+	const std::vector<uint8_t>& certificateTable() const { return certificates_; }
 
 protected:
 	/*! Receives one byte from the stream. @param c the byte. */
@@ -77,35 +78,35 @@ protected:
 	std::streamsize xsputn(const char* s, std::streamsize n) override;
 
 private:
-	void recevoir(const uint8_t* p, size_t n);
-	void traiter(const uint8_t* p, size_t n);   // once the headers are analysed
-	bool analyserEntetes();
+	void receive(const uint8_t* p, size_t n);
+	void process(const uint8_t* p, size_t n);   // once the headers are analysed
+	bool analyseHeaders();
 
-	std::vector<uint8_t> tete_;         // headers, until analysed
-	bool decide_ = false, estPe_ = false, termine_ = false;
+	std::vector<uint8_t> head_;         // headers, until analysed
+	bool decide_ = false, estPe_ = false, finished_ = false;
 	uint64_t position_ = 0;             // bytes already processed
-	uint64_t checksum_ = 0, entreeCert_ = 0, debutCert_ = 0, finCert_ = 0;
+	uint64_t checksum_ = 0, certEntry_ = 0, certStart_ = 0, finCert_ = 0;
 	Sha1Stream h1_;
 	Sha256Stream h256_;
-	std::vector<uint8_t> certificats_;
+	std::vector<uint8_t> certificates_;
 	uint8_t sha1_[20] = {}, sha256_[32] = {}, sha1c_[20] = {}, sha256c_[32] = {};
 };
 
 /*! Result of verifying a PKCS#7 signature. */
-struct SignatureVerifiee {
-	bool valide = false;          //!< signature and chain verified up to a Microsoft root
-	bool signataireAccepte = false; //!< and signer compliant with the rule (see the header)
-	std::wstring signataire;      //!< name (CN) of the signing certificate
-	std::string motif;            //!< reason for a rejection, for the log
-	std::string oidContenu;       //!< type of the signed content (DER bytes of the OID)
-	const uint8_t* contenu = nullptr; //!< signed content (value, without header)
-	size_t tailleContenu = 0;     //!< size of `contenu`, in bytes
+struct VerifiedSignature {
+	bool valid = false;          //!< signature and chain verified up to a Microsoft root
+	bool signerAccepted = false; //!< and signer compliant with the rule (see the header)
+	std::wstring signer;      //!< name (CN) of the signing certificate
+	std::string reason;            //!< reason for a rejection, for the log
+	std::string contentOid;       //!< type of the signed content (DER bytes of the OID)
+	const uint8_t* content = nullptr; //!< signed content (value, without header)
+	size_t contentSize = 0;     //!< size of `contenu`, in bytes
 };
 
 /*! Verifies a PKCS#7 SignedData (catalog or embedded signature): content
  *  digest, signer's signature, chain up to an embedded Microsoft root. The
  *  returned pointers point into `donnees`. */
-SignatureVerifiee VerifierPkcs7(const uint8_t* donnees, size_t taille);
+VerifiedSignature VerifyPkcs7(const uint8_t* data, size_t size);
 
 /*! Index of the Authenticode digests listed by the machine's valid Microsoft
  *  catalogs. */
@@ -116,22 +117,22 @@ public:
 	 *  @param nom name of the catalog, kept to name it in the manifest.
 	 *  @param octets,taille the catalog's bytes.
 	 *  @return true if the catalog was kept. */
-	bool ajouter(const std::wstring& nom, const uint8_t* octets, size_t taille);
+	bool add(const std::wstring& name, const uint8_t* bytes, size_t size);
 	/*! Looks a digest up in the index.
 	 *  @param empreinte,taille the raw digest (SHA-1 or SHA-256).
 	 *  @return the name of the catalog listing it, or nullptr. */
-	const std::wstring* chercher(const uint8_t* empreinte, size_t taille) const;
+	const std::wstring* find(const uint8_t* fingerprint, size_t size) const;
 	//! @return the number of indexed catalogs.
-	size_t catalogues() const { return noms_.size(); }
+	size_t catalogues() const { return names_.size(); }
 	//! @return the number of digests they list.
-	size_t empreintes() const { return index_.size(); }
+	size_t fingerprints() const { return index_.size(); }
 	//! @return the number of catalogs rejected by the verification.
 	size_t refuses() const { return refuses_; }
 	/*! Writes each indexed digest (hex) and its catalog — test tool.
 	 *  @param o where to write. */
-	void vider(std::ostream& o) const;
+	void dump(std::ostream& o) const;
 private:
-	std::vector<std::wstring> noms_;
+	std::vector<std::wstring> names_;
 	std::unordered_map<std::string, uint32_t> index_;   // raw digest -> catalog
 	size_t refuses_ = 0;
 };
@@ -140,19 +141,19 @@ private:
 struct VerdictMicrosoft {
 	bool microsoft = false;       //!< authentic: hash without collecting
 	std::wstring source;          //!< "catalogue <name>" or "signature intégrée"
-	std::wstring signataire;      //!< signer's CN (embedded signature)
-	std::string motif;            //!< why not, for the log
+	std::wstring signer;      //!< signer's CN (embedded signature)
+	std::string reason;            //!< why not, for the log
 };
 
 /*! Decides whether a PE is an authentic Microsoft binary. */
-VerdictMicrosoft EvaluerPe(const AnalyseurPe& pe, const IndexCatalogues& catalogues);
+VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalogues);
 
 /*! Non-PE file (script, document) listed in a Microsoft catalog?
  *
  *  For these files, the catalogs' digest is the SHA-256 of the file's RAW
  *  BYTES, whatever its encoding — established on 463 PowerShell and WSH scripts
  *  of Windows 11, all found that way. */
-VerdictMicrosoft EvaluerParCatalogue(const uint8_t sha256[32], const IndexCatalogues& catalogues);
+VerdictMicrosoft EvaluateByCatalog(const uint8_t sha256[32], const IndexCatalogues& catalogues);
 
 /*! EMBEDDED signature of a PowerShell script (.ps1, .psm1, .psd1, .ps1xml…).
  *
@@ -166,4 +167,4 @@ VerdictMicrosoft EvaluerParCatalogue(const uint8_t sha256[32], const IndexCatalo
  *  only: their embedded digest covers a normalised form of the text that could
  *  not be established with certainty. Such a script signed outside a catalog is
  *  therefore collected — erring on the cautious side. */
-VerdictMicrosoft EvaluerScriptPowerShell(const uint8_t* octets, size_t taille);
+VerdictMicrosoft EvaluatePowerShellScript(const uint8_t* bytes, size_t size);

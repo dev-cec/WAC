@@ -1,6 +1,5 @@
-#pragma once
-
-/*  evtx.h — READING WINDOWS EVENT LOGS (.evtx), OFFLINE.
+/*! \file
+ *  \brief READING WINDOWS EVENT LOGS (.evtx), OFFLINE.
  *
  *  WHY THIS PARSER EXISTS. `events` was the last collector going through an API
  *  of the examined system: `wevtapi` solicits the EventLog service, which can
@@ -48,6 +47,7 @@
  *  reading goes on. A partially corrupt log is a common case in forensics, not
  *  an exception.
  */
+#pragma once
 
 #include <string>
 #include <vector>
@@ -55,21 +55,21 @@
 #include <windows.h>
 
 //! One event record, as read from the file.
-struct EvtxEnregistrement {
-	unsigned long long identifiant = 0;   //!< record number
-	FILETIME ecritUtc = { 0, 0 };         //!< time written (UTC)
+struct EvtxRecord {
+	unsigned long long id = 0;   //!< record number
+	FILETIME writtenUtc = { 0, 0 };         //!< time written (UTC)
 	std::wstring xml;                     //!< event body, as XML
 };
 
 /*! Result of reading an .evtx file: enough to tell, in the report, an empty
 *  log from an unreadable one.
 */
-struct EvtxBilan {
-	unsigned long long chunks = 0;        //!< chunks parcourus
-	unsigned long long lus = 0;           //!< decoded records
-	unsigned long long illisibles = 0;    //!< discarded records
+struct EvtxSummary {
+	unsigned long long chunks = 0;        //!< chunks walked
+	unsigned long long read = 0;           //!< decoded records
+	unsigned long long unreadable = 0;    //!< discarded records
 	unsigned long long chunksIgnores = 0; //!< damaged chunks skipped (no signature)
-	bool enteteValide = false;            //!< "ElfFile\0" signature found
+	bool headerValid = false;            //!< "ElfFile\0" signature found
 	bool sale = false;                    //!< log marked "dirty"
 	std::wstring diagnostic;              //!< sentence for the audit log
 };
@@ -81,16 +81,16 @@ struct EvtxBilan {
 *  instead of keeping a hundred thousand events in memory, the flaw of
 *  API-based reading.
 *
-*  @param chemin path of the .evtx file (the extracted copy, never the original)
-*  @param surEnregistrement callback invoked for each decoded record; returning
+*  @param path path of the .evtx file (the extracted copy, never the original)
+*  @param onRecord callback invoked for each decoded record; returning
 *         false stops the reading
-*  @param bilan receives the count and the diagnosis (optional)
+*  @param summary receives the count and the diagnosis (optional)
 *  @return ERROR_SUCCESS if the file was walked, an error code if it is
 *          inaccessible; S_FALSE if records were discarded
 */
-HRESULT EvtxLireFichier(const std::wstring& chemin,
-                        const std::function<bool(const EvtxEnregistrement&)>& surEnregistrement,
-                        EvtxBilan* bilan = nullptr);
+HRESULT EvtxReadFile(const std::wstring& path,
+                        const std::function<bool(const EvtxRecord&)>& onRecord,
+                        EvtxSummary* summary = nullptr);
 
 /*! Channel name from the log's file name.
 *
@@ -98,7 +98,7 @@ HRESULT EvtxLireFichier(const std::wstring& chemin,
 *  designates the channel "Microsoft-Windows-Kernel-Boot/Operational". "%4" is
 *  an escaped slash, that character being forbidden in a file name.
 *
-*  @param nomFichier file name, with or without a path
+*  @param fileName file name, with or without a path
 *  @return the channel name
 */
-std::wstring EvtxCanalDepuisNomFichier(const std::wstring& nomFichier);
+std::wstring EvtxChannelFromFileName(const std::wstring& fileName);

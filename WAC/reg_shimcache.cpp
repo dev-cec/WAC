@@ -4,7 +4,7 @@ Json Shimcache::toJson() {
 	log(3, L"🔈Shimcache toJson");
 	Json o = Json::obj();
 	o.add(L"Path",                Json::str(path));      // chemin brut
-	ajouterEmpreintes(o, empreinte);
+	addFingerprints(o, fingerprint);
 	o.add(L"LastModification",    Json::str(lastModification));
 	o.add(L"LastModificationUtc", Json::str(lastModificationUtc));
 	o.add(L"Executes",            Json::boolean(executed));   // vrai booléen
@@ -24,7 +24,7 @@ HRESULT Shimcaches::getData() {
 	//variables
 	HRESULT hresult=0;
 	ORHKEY hKey=NULL;
-	LPBYTE donnees = NULL;
+	LPBYTE data = NULL;
 
 	log(3, L"🔈OROpenKey CurrentControlSet\\Control\\Session Manager\\AppCompatCache");
 	hresult = OROpenKey(conf.CurrentControlSet, L"Control\\Session Manager\\AppCompatCache", &hKey);
@@ -33,37 +33,37 @@ HRESULT Shimcaches::getData() {
 		return hresult;
 	}
 
-	DWORD taille=0;
+	DWORD size=0;
 	log(3, L"🔈getRegBinaryValue AppCompatCache");
-	hresult = getRegBinaryValue(hKey, nullptr, L"AppCompatCache", &donnees, &taille);
+	hresult = getRegBinaryValue(hKey, nullptr, L"AppCompatCache", &data, &size);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥getRegBinaryValue AppCompatCache", hresult );
 		return hresult;
 	}
-	DWORD offset = *reinterpret_cast<DWORD*>(donnees);
-	while (offset < taille) {
-		printProgressStep(L"Shimcache", offset, taille);
+	DWORD offset = *reinterpret_cast<DWORD*>(data);
+	while (offset < size) {
+		printProgressStep(L"Shimcache", offset, size);
 		Shimcache shimcache;
-		std::wstring signature = std::wstring(donnees + offset, donnees + offset + 4).data();
+		std::wstring signature = std::wstring(data + offset, data + offset + 4).data();
 		if (signature == L"10ts") {
 			offset += 12;//unused
-			short int name_length = *reinterpret_cast<short int*>(donnees + offset);
+			short int name_length = *reinterpret_cast<short int*>(data + offset);
 			offset += 2;
-			shimcache.path = std::wstring((LPWSTR)(donnees + offset), (LPWSTR)(donnees + offset) + name_length / sizeof(wchar_t)).data();
+			shimcache.path = std::wstring((LPWSTR)(data + offset), (LPWSTR)(data + offset) + name_length / sizeof(wchar_t)).data();
 
 			// Empreinte sur le chemin normalisé (guillemets, \??\), lecture brute.
-			shimcache.empreinte = EmpreinteFichier(shimcache.path);
+			shimcache.fingerprint = FingerprintFile(shimcache.path);
 			shimcache.path = replaceAll(shimcache.path, L"\t", L" "); // replace tab by space. seen in values
 			offset += name_length;
-			FILETIME filetime = *reinterpret_cast<FILETIME*>(donnees + offset);
+			FILETIME filetime = *reinterpret_cast<FILETIME*>(data + offset);
 			log(3, L"🔈timeToIso8601 lastModification");
 			shimcache.lastModification = timeToIso8601Local(filetime);
 			log(3, L"🔈timeToIso8601 lastModificationUtc");
 			shimcache.lastModificationUtc = localTimeToIso8601Utc(filetime);
 			offset += 8;
-			int data_length = *reinterpret_cast<int*>(donnees + offset);
+			int data_length = *reinterpret_cast<int*>(data + offset);
 			offset += data_length;
-			short int executed = *reinterpret_cast<short int*>(donnees + offset);
+			short int executed = *reinterpret_cast<short int*>(data + offset);
 			shimcache.executed = executed;
 			offset += 4; // 2 unused
 
@@ -74,7 +74,7 @@ HRESULT Shimcaches::getData() {
 		}
 	}
 
-	delete [] donnees;
+	delete [] data;
 	return ERROR_SUCCESS;
 }
 

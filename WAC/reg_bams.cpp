@@ -1,9 +1,9 @@
 #include "reg_bams.h"
 
-Bam::Bam(LPBYTE donnees, std::wstring nomValeur, std::wstring psid) {
-	name = nomValeur;
+Bam::Bam(LPBYTE data, std::wstring valueName, std::wstring psid) {
+	name = valueName;
 	log(2, L"❇️Bam Name : " + name);
-	FILETIME temp = *reinterpret_cast<FILETIME*>(donnees);
+	FILETIME temp = *reinterpret_cast<FILETIME*>(data);
 	log(3, L"🔈timeToIso8601 datetime");
 	executionTime = timeToIso8601Local(temp);
 	log(3, L"🔈timeToIso8601 datetimeUtc");
@@ -18,7 +18,7 @@ Json Bam::toJson() const {
 	Json o = Json::obj();
 	o.add(L"SID",              Json::str(sid));
 	o.add(L"SIDName",          Json::str(sidName));
-	o.add(L"Name",             Json::str(name));      // chemin brut
+	o.add(L"Name",             Json::str(name));      // raw path
 	o.add(L"executionTime",    Json::str(executionTime));
 	o.add(L"executionTimeUtc", Json::str(executionTimeUtc));
 	return o;
@@ -40,12 +40,12 @@ HRESULT Bams::getData() {
 	DWORD nSubkeys = 0;
 	DWORD nValues = 0;
 	DWORD dType = 0;
-	DWORD tailleTampon = 0;
-	WCHAR nomValeur[MAX_VALUE_NAME]=L"";
+	DWORD bufferSize = 0;
+	WCHAR valueName[MAX_VALUE_NAME]=L"";
 	std::wstring bam_keys[2] = { L"bam",L"bam\\state" };
 	for (std::wstring key : bam_keys) {
-		for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
-			std::wstring temp = L"Services\\" + key + L"\\UserSettings\\" + std::get<0>(profile);
+		for (std::tuple<std::wstring, std::wstring> profileEntry : conf.profiles) {
+			std::wstring temp = L"Services\\" + key + L"\\UserSettings\\" + std::get<0>(profileEntry);
 			CONST wchar_t* regkey = temp.c_str();
 			log(3, L"🔈OROpenKey CurrentControlSet\\" + std::wstring(regkey));
 			hresult = OROpenKey(conf.CurrentControlSet, regkey, &hKey);
@@ -63,19 +63,19 @@ HRESULT Bams::getData() {
 
 			for (int i = 0; i < (int)nValues; i++) {
 				printProgressStep(L"Bam", (unsigned)i + 1, nValues);
-				tailleTampon = MAX_KEY_NAME;
+				bufferSize = MAX_KEY_NAME;
 				DWORD cData = 0;
-				LPBYTE donnees = NULL;
+				LPBYTE data = NULL;
 
 				do {
-					if (donnees != NULL)
-						delete[] donnees;
-					donnees = new BYTE[cData];
+					if (data != NULL)
+						delete[] data;
+					data = new BYTE[cData];
 					log(3, L"🔈OREnumValue CurrentControlSet\\" + std::wstring(regkey));
-					hresult = OREnumValue(hKey, i, nomValeur, &tailleTampon, &dType, (LPBYTE)donnees, &cData);
+					hresult = OREnumValue(hKey, i, valueName, &bufferSize, &dType, (LPBYTE)data, &cData);
 				} while (hresult == ERROR_MORE_DATA);
 				if (dType != REG_BINARY) {
-					log(2, L"🔥OREnumValue "+ std::wstring(nomValeur) + L" not a REG_BINARY value");
+					log(2, L"🔥OREnumValue "+ std::wstring(valueName) + L" not a REG_BINARY value");
 				}
 				else {
 					if (hresult != ERROR_SUCCESS) {
@@ -83,12 +83,12 @@ HRESULT Bams::getData() {
 					}
 					else {
 						log(1, L"➕Bam");
-						Bam bam(donnees, std::wstring(nomValeur), std::wstring(std::get<0>(profile)));
+						Bam bam(data, std::wstring(valueName), std::wstring(std::get<0>(profileEntry)));
 						//save
 						bams.push_back(bam);
 					}
 				}
-				delete[] donnees;
+				delete[] data;
 			}
 		}
 	}

@@ -41,25 +41,25 @@ int wmain(int argc, wchar_t** argv){
     const wchar_t* out  = positionnels.size() > 2 ? positionnels[2] : L"SYSTEM.hiv";
 
     if (attrs){
-        std::vector<RawAttribut> liste;
-        const HRESULT hr = ListAttributesRaw(vol, path, liste);
+        std::vector<RawAttribute> attributes;
+        const HRESULT hr = ListAttributesRaw(vol, path, attributes);
         if (FAILED(hr)){ wprintf(L"ECHEC ListAttributesRaw : 0x%08lx\n", (unsigned long)hr); return 1; }
-        wprintf(L"%zu attribut(s) dans l'enregistrement $MFT de %ls\n", liste.size(), path);
-        for (const RawAttribut& a : liste){
+        wprintf(L"%zu attribut(s) dans l'enregistrement $MFT de %ls\n", attributes.size(), path);
+        for (const RawAttribute& a : attributes){
             wprintf(L"  type 0x%02X  %-18ls %-12ls taille %12llu  drapeaux 0x%04X",
                     a.type,
-                    a.nom.empty() ? L"(sans nom)" : a.nom.c_str(),
+                    a.name.empty() ? L"(sans nom)" : a.name.c_str(),
                     a.resident ? L"resident" : L"non resident",
-                    (unsigned long long)a.tailleReelle, a.drapeaux);
-            if (a.drapeaux & 0x0001) wprintf(L" COMPRESSE");
-            if (a.drapeaux & 0x8000) wprintf(L" CREUX");
+                    (unsigned long long)a.actualSize, a.flags);
+            if (a.flags & 0x0001) wprintf(L" COMPRESSE");
+            if (a.flags & 0x8000) wprintf(L" CREUX");
             if (a.tagReparse)        wprintf(L"  reparse 0x%08lX", (unsigned long)a.tagReparse);
-            if (!a.resident && a.tailleInitialisee != a.tailleReelle)
-                wprintf(L"  valides %llu", (unsigned long long)a.tailleInitialisee);
+            if (!a.resident && a.initializedSize != a.actualSize)
+                wprintf(L"  valides %llu", (unsigned long long)a.initializedSize);
             wprintf(L"\n");
-            if (a.type == 0xC0 && !a.apercu.empty()){
+            if (a.type == 0xC0 && !a.preview.empty()){
                 wprintf(L"      contenu :");
-                for (size_t k = 0; k < a.apercu.size() && k < 24; ++k) wprintf(L" %02X", a.apercu[k]);
+                for (size_t k = 0; k < a.preview.size() && k < 24; ++k) wprintf(L" %02X", a.preview[k]);
                 wprintf(L"\n");
             }
         }

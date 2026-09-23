@@ -18,14 +18,14 @@ namespace {
 
 struct Tlv {
 	uint8_t tag = 0;
-	const uint8_t* debut = nullptr;   //!< first byte (tag)
+	const uint8_t* start = nullptr;   //!< first byte (tag)
 	size_t total = 0;                 //!< tag + length + value
 	const uint8_t* val = nullptr;     //!< value
 	size_t len = 0;
 };
 
 //! Reads a DER element at `p` (at most `n` bytes). Definite length only.
-bool lireTlv(const uint8_t* p, size_t n, Tlv& t) {
+bool readTlv(const uint8_t* p, size_t n, Tlv& t) {
 	if (n < 2 || (p[0] & 0x1F) == 0x1F) return false;         // long tag form: no
 	size_t i = 1, len = 0;
 	const uint8_t b = p[i++];
@@ -36,17 +36,17 @@ bool lireTlv(const uint8_t* p, size_t n, Tlv& t) {
 		for (size_t k = 0; k < nb; ++k) len = (len << 8) | p[i++];
 	}
 	if (len > n - i) return false;
-	t.tag = p[0]; t.debut = p; t.val = p + i; t.len = len; t.total = i + len;
+	t.tag = p[0]; t.start = p; t.val = p + i; t.len = len; t.total = i + len;
 	return true;
 }
 
 //! Elements contained in a constructed element.
-std::vector<Tlv> enfants(const Tlv& t) {
+std::vector<Tlv> children(const Tlv& t) {
 	std::vector<Tlv> r;
 	size_t pos = 0;
 	while (pos < t.len) {
 		Tlv e;
-		if (!lireTlv(t.val + pos, t.len - pos, e)) break;
+		if (!readTlv(t.val + pos, t.len - pos, e)) break;
 		r.push_back(e);
 		pos += e.total;
 	}
@@ -56,7 +56,7 @@ std::vector<Tlv> enfants(const Tlv& t) {
 bool estOid(const Tlv& t, const uint8_t* oid, size_t n) {
 	return t.tag == 0x06 && t.len == n && std::memcmp(t.val, oid, n) == 0;
 }
-#define OID(nom, ...) const uint8_t nom[] = { __VA_ARGS__ }
+#define OID(name, ...) const uint8_t name[] = { __VA_ARGS__ }
 OID(OID_SIGNED_DATA,  0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x07,0x02);
 OID(OID_RSA,          0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x01,0x01);
 OID(OID_SHA1_RSA,     0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x01,0x05);
@@ -75,26 +75,26 @@ OID(OID_CTL,          0x2B,0x06,0x01,0x04,0x01,0x82,0x37,0x0A,0x01);
 #define EST(t, o) estOid((t), (o), sizeof(o))
 
 //! Digest algorithm of an AlgorithmIdentifier (digest alone or RSA+digest).
-AlgoEmpreinte algoDe(const Tlv& algId) {
-	const std::vector<Tlv> e = enfants(algId);
-	if (e.empty()) return AlgoEmpreinte::Inconnu;
-	if (EST(e[0], OID_SHA1) || EST(e[0], OID_SHA1_RSA)) return AlgoEmpreinte::Sha1;
-	if (EST(e[0], OID_SHA256) || EST(e[0], OID_SHA256_RSA)) return AlgoEmpreinte::Sha256;
-	if (EST(e[0], OID_SHA384) || EST(e[0], OID_SHA384_RSA)) return AlgoEmpreinte::Sha384;
-	if (EST(e[0], OID_SHA512) || EST(e[0], OID_SHA512_RSA)) return AlgoEmpreinte::Sha512;
-	return AlgoEmpreinte::Inconnu;
+DigestAlgorithm algoDe(const Tlv& algId) {
+	const std::vector<Tlv> e = children(algId);
+	if (e.empty()) return DigestAlgorithm::Unknown;
+	if (EST(e[0], OID_SHA1) || EST(e[0], OID_SHA1_RSA)) return DigestAlgorithm::Sha1;
+	if (EST(e[0], OID_SHA256) || EST(e[0], OID_SHA256_RSA)) return DigestAlgorithm::Sha256;
+	if (EST(e[0], OID_SHA384) || EST(e[0], OID_SHA384_RSA)) return DigestAlgorithm::Sha384;
+	if (EST(e[0], OID_SHA512) || EST(e[0], OID_SHA512_RSA)) return DigestAlgorithm::Sha512;
+	return DigestAlgorithm::Unknown;
 }
 
-size_t empreinte(AlgoEmpreinte a, const uint8_t* p, size_t n, uint8_t sortie[64]) {
-	if (a == AlgoEmpreinte::Sha1)   { sha1Octets(p, n, sortie);   return 20; }
-	if (a == AlgoEmpreinte::Sha256) { sha256Octets(p, n, sortie); return 32; }
-	if (a == AlgoEmpreinte::Sha384) { sha384Octets(p, n, sortie); return 48; }
-	if (a == AlgoEmpreinte::Sha512) { sha512Octets(p, n, sortie); return 64; }
+size_t fingerprint(DigestAlgorithm a, const uint8_t* p, size_t n, uint8_t output[64]) {
+	if (a == DigestAlgorithm::Sha1)   { sha1Bytes(p, n, output);   return 20; }
+	if (a == DigestAlgorithm::Sha256) { sha256Bytes(p, n, output); return 32; }
+	if (a == DigestAlgorithm::Sha384) { sha384Bytes(p, n, output); return 48; }
+	if (a == DigestAlgorithm::Sha512) { sha512Bytes(p, n, output); return 64; }
 	return 0;
 }
 
 //! String of a name attribute (PrintableString, UTF8String, BMPString…).
-std::wstring texte(const Tlv& v) {
+std::wstring text(const Tlv& v) {
 	std::wstring r;
 	if (v.tag == 0x1E) {                                       // BMPString: UTF-16BE
 		for (size_t i = 0; i + 1 < v.len; i += 2) r += (wchar_t)((v.val[i] << 8) | v.val[i + 1]);
@@ -111,77 +111,77 @@ std::wstring texte(const Tlv& v) {
 }
 
 //! Value of an attribute (CN, O…) in a Name.
-std::wstring attributNom(const Tlv& nom, const uint8_t* oid, size_t n) {
-	for (const Tlv& rdn : enfants(nom))
-		for (const Tlv& atv : enfants(rdn)) {
-			const std::vector<Tlv> e = enfants(atv);
-			if (e.size() >= 2 && estOid(e[0], oid, n)) return texte(e[1]);
+std::wstring attributeNameField(const Tlv& name, const uint8_t* oid, size_t n) {
+	for (const Tlv& rdn : children(name))
+		for (const Tlv& atv : children(rdn)) {
+			const std::vector<Tlv> e = children(atv);
+			if (e.size() >= 2 && estOid(e[0], oid, n)) return text(e[1]);
 		}
 	return std::wstring();
 }
 
-bool memeOctets(const Tlv& a, const Tlv& b) {
-	return a.total == b.total && std::memcmp(a.debut, b.debut, a.total) == 0;
+bool sameBytes(const Tlv& a, const Tlv& b) {
+	return a.total == b.total && std::memcmp(a.start, b.start, a.total) == 0;
 }
 
 // ============================================================ X.509
 
-struct Certificat {
-	Tlv entier, tbs, emetteur, sujet, serie;
-	Tlv module, exposant;          // RSA key
-	AlgoEmpreinte algoSignature = AlgoEmpreinte::Inconnu;
+struct Certificate {
+	Tlv integer, tbs, issuer, subject, serial;
+	Tlv module, exponent;          // RSA key
+	DigestAlgorithm algoSignature = DigestAlgorithm::Unknown;
 	const uint8_t* signature = nullptr;
-	size_t tailleSignature = 0;
+	size_t signatureSize = 0;
 	bool rsa = false;
 };
 
-bool analyserCertificat(const Tlv& c, Certificat& r) {
-	const std::vector<Tlv> e = enfants(c);
+bool analyseCertificate(const Tlv& c, Certificate& r) {
+	const std::vector<Tlv> e = children(c);
 	if (c.tag != 0x30 || e.size() < 3 || e[0].tag != 0x30 || e[2].tag != 0x03 || e[2].len < 2) return false;
-	r.entier = c;
+	r.integer = c;
 	r.tbs = e[0];
 	r.algoSignature = algoDe(e[1]);
 	r.signature = e[2].val + 1;                               // unused-bits byte
-	r.tailleSignature = e[2].len - 1;
-	std::vector<Tlv> t = enfants(e[0]);
+	r.signatureSize = e[2].len - 1;
+	std::vector<Tlv> t = children(e[0]);
 	size_t i = 0;
 	if (i < t.size() && t[i].tag == 0xA0) ++i;                // version
 	if (i + 6 > t.size()) return false;
-	r.serie = t[i];                                           // serialNumber
-	r.emetteur = t[i + 2];                                    // issuer
-	r.sujet = t[i + 4];                                       // subject
-	const std::vector<Tlv> spki = enfants(t[i + 5]);
+	r.serial = t[i];                                           // serialNumber
+	r.issuer = t[i + 2];                                    // issuer
+	r.subject = t[i + 4];                                       // subject
+	const std::vector<Tlv> spki = children(t[i + 5]);
 	if (spki.size() < 2 || spki[1].tag != 0x03 || spki[1].len < 2) return true;
-	const std::vector<Tlv> alg = enfants(spki[0]);
+	const std::vector<Tlv> alg = children(spki[0]);
 	if (alg.empty() || !EST(alg[0], OID_RSA)) return true;    // non-RSA key: cannot be verified
-	Tlv cle;
-	if (!lireTlv(spki[1].val + 1, spki[1].len - 1, cle)) return true;
-	const std::vector<Tlv> ne = enfants(cle);
+	Tlv key;
+	if (!readTlv(spki[1].val + 1, spki[1].len - 1, key)) return true;
+	const std::vector<Tlv> ne = children(key);
 	if (ne.size() < 2 || ne[0].tag != 0x02 || ne[1].tag != 0x02) return true;
 	r.module = ne[0];
-	r.exposant = ne[1];
+	r.exponent = ne[1];
 	r.rsa = true;
 	return true;
 }
 
-//! Was the signature of `c` produced by the key of `emetteur`?
-bool signePar(const Certificat& c, const Certificat& emetteur) {
-	if (!emetteur.rsa || c.algoSignature == AlgoEmpreinte::Inconnu) return false;
+//! Was the signature of `c` produced by the key of `issuer`?
+bool signedBy(const Certificate& c, const Certificate& issuer) {
+	if (!issuer.rsa || c.algoSignature == DigestAlgorithm::Unknown) return false;
 	uint8_t h[64];
-	const size_t lh = empreinte(c.algoSignature, c.tbs.debut, c.tbs.total, h);
-	return RsaVerifierPkcs1(emetteur.module.val, emetteur.module.len,
-	                        emetteur.exposant.val, emetteur.exposant.len,
-	                        c.signature, c.tailleSignature, c.algoSignature, h, lh);
+	const size_t lh = fingerprint(c.algoSignature, c.tbs.start, c.tbs.total, h);
+	return RsaVerifyPkcs1(issuer.module.val, issuer.module.len,
+	                        issuer.exponent.val, issuer.exponent.len,
+	                        c.signature, c.signatureSize, c.algoSignature, h, lh);
 }
 
 //! Embedded roots, parsed once.
-const std::vector<Certificat>& racines() {
-	static std::vector<Certificat> r;
-	static std::once_flag fait;
-	std::call_once(fait, [] {
-		for (const RacineMicrosoft& m : RACINES_MICROSOFT) {
-			Tlv t; Certificat c;
-			if (lireTlv(m.der, m.taille, t) && analyserCertificat(t, c) && c.rsa) r.push_back(c);
+const std::vector<Certificate>& roots() {
+	static std::vector<Certificate> r;
+	static std::once_flag done;
+	std::call_once(done, [] {
+		for (const MicrosoftRoot& m : MICROSOFT_ROOTS) {
+			Tlv t; Certificate c;
+			if (readTlv(m.der, m.size, t) && analyseCertificate(t, c) && c.rsa) r.push_back(c);
 		}
 	});
 	return r;
@@ -191,53 +191,53 @@ const std::vector<Certificat>& racines() {
  *  The 5,308 catalogs of a machine are signed by a handful of certificates:
  *  without this cache, the same chain would be verified again every time, the
  *  RSA-4096 root included. */
-std::set<std::string>& chainesValides() { static std::set<std::string> s; return s; }
+std::set<std::string>& validChains() { static std::set<std::string> s; return s; }
 
-std::string cleCert(const Certificat& c) {
+std::string certKey(const Certificate& c) {
 	uint8_t h[32];
-	sha256Octets(c.entier.debut, c.entier.total, h);
+	sha256Bytes(c.integer.start, c.integer.total, h);
 	return std::string((const char*)h, 32);
 }
 
-/*! Chains `feuille` to an embedded Microsoft root, through the certificates
+/*! Chains `leaf` to an embedded Microsoft root, through the certificates
  *  supplied with the signature. At most 6 levels. */
-bool rattacher(const Certificat& feuille, const std::vector<Certificat>& pool) {
-	const Certificat* courant = &feuille;
-	std::vector<std::string> parcourus;
-	for (int niveau = 0; niveau < 6; ++niveau) {
-		const std::string cle = cleCert(*courant);
-		if (chainesValides().count(cle)) {
-			for (const std::string& p : parcourus) chainesValides().insert(p);
+bool attach(const Certificate& leaf, const std::vector<Certificate>& pool) {
+	const Certificate* current = &leaf;
+	std::vector<std::string> walked;
+	for (int level = 0; level < 6; ++level) {
+		const std::string key = certKey(*current);
+		if (validChains().count(key)) {
+			for (const std::string& p : walked) validChains().insert(p);
 			return true;
 		}
-		parcourus.push_back(cle);
+		walked.push_back(key);
 		// Issued by an embedded root?
-		for (const Certificat& r : racines()) {
-			if (!memeOctets(courant->emetteur, r.sujet)) continue;
+		for (const Certificate& r : roots()) {
+			if (!sameBytes(current->issuer, r.subject)) continue;
 			// The certificate IS the root (same key): nothing more to verify.
-			if (courant->rsa && courant->module.len == r.module.len
-			    && std::memcmp(courant->module.val, r.module.val, r.module.len) == 0) {
-				for (const std::string& p : parcourus) chainesValides().insert(p);
+			if (current->rsa && current->module.len == r.module.len
+			    && std::memcmp(current->module.val, r.module.val, r.module.len) == 0) {
+				for (const std::string& p : walked) validChains().insert(p);
 				return true;
 			}
-			if (signePar(*courant, r)) {
-				for (const std::string& p : parcourus) chainesValides().insert(p);
+			if (signedBy(*current, r)) {
+				for (const std::string& p : walked) validChains().insert(p);
 				return true;
 			}
 		}
 		// Otherwise, an intermediate supplied with the signature.
-		const Certificat* suivant = nullptr;
-		for (const Certificat& c : pool) {
-			if (&c == courant || !memeOctets(courant->emetteur, c.sujet)) continue;
-			if (signePar(*courant, c)) { suivant = &c; break; }
+		const Certificate* next = nullptr;
+		for (const Certificate& c : pool) {
+			if (&c == current || !sameBytes(current->issuer, c.subject)) continue;
+			if (signedBy(*current, c)) { next = &c; break; }
 		}
-		if (!suivant) return false;
-		courant = suivant;
+		if (!next) return false;
+		current = next;
 	}
 	return false;
 }
 
-bool signataireAccepte(const std::wstring& cn, const std::wstring& o) {
+bool signerAccepted(const std::wstring& cn, const std::wstring& o) {
 	if (o != L"Microsoft Corporation") return false;
 	return cn == L"Microsoft Windows" || cn == L"Microsoft Corporation"
 	    || cn == L"Microsoft Windows Publisher";
@@ -247,85 +247,85 @@ bool signataireAccepte(const std::wstring& cn, const std::wstring& o) {
 
 // ============================================================ PKCS#7
 
-SignatureVerifiee VerifierPkcs7(const uint8_t* donnees, size_t taille) {
-	SignatureVerifiee r;
+VerifiedSignature VerifyPkcs7(const uint8_t* data, size_t size) {
+	VerifiedSignature r;
 	Tlv ci;
-	if (!lireTlv(donnees, taille, ci) || ci.tag != 0x30) { r.motif = "ContentInfo illisible"; return r; }
-	std::vector<Tlv> e = enfants(ci);
-	if (e.size() < 2 || !EST(e[0], OID_SIGNED_DATA) || e[1].tag != 0xA0) { r.motif = "pas un SignedData"; return r; }
-	std::vector<Tlv> w = enfants(e[1]);
-	if (w.empty() || w[0].tag != 0x30) { r.motif = "SignedData illisible"; return r; }
-	const std::vector<Tlv> sd = enfants(w[0]);
+	if (!readTlv(data, size, ci) || ci.tag != 0x30) { r.reason = "ContentInfo illisible"; return r; }
+	std::vector<Tlv> e = children(ci);
+	if (e.size() < 2 || !EST(e[0], OID_SIGNED_DATA) || e[1].tag != 0xA0) { r.reason = "pas un SignedData"; return r; }
+	std::vector<Tlv> w = children(e[1]);
+	if (w.empty() || w[0].tag != 0x30) { r.reason = "SignedData illisible"; return r; }
+	const std::vector<Tlv> sd = children(w[0]);
 	// version, digestAlgorithms, encapContentInfo, [0] certificats, [1] crls, signerInfos
-	if (sd.size() < 4) { r.motif = "SignedData incomplet"; return r; }
-	const std::vector<Tlv> eci = enfants(sd[2]);
-	if (eci.size() < 2 || eci[0].tag != 0x06 || eci[1].tag != 0xA0) { r.motif = "contenu absent"; return r; }
-	r.oidContenu.assign((const char*)eci[0].val, eci[0].len);
-	const std::vector<Tlv> cc = enfants(eci[1]);
-	if (cc.empty()) { r.motif = "contenu vide"; return r; }
-	r.contenu = cc[0].val;
-	r.tailleContenu = cc[0].len;
+	if (sd.size() < 4) { r.reason = "SignedData incomplet"; return r; }
+	const std::vector<Tlv> eci = children(sd[2]);
+	if (eci.size() < 2 || eci[0].tag != 0x06 || eci[1].tag != 0xA0) { r.reason = "contenu absent"; return r; }
+	r.contentOid.assign((const char*)eci[0].val, eci[0].len);
+	const std::vector<Tlv> cc = children(eci[1]);
+	if (cc.empty()) { r.reason = "contenu vide"; return r; }
+	r.content = cc[0].val;
+	r.contentSize = cc[0].len;
 
-	std::vector<Certificat> pool;
+	std::vector<Certificate> pool;
 	const Tlv* infos = nullptr;
 	for (size_t i = 3; i < sd.size(); ++i) {
 		if (sd[i].tag == 0xA0)
-			for (const Tlv& c : enfants(sd[i])) { Certificat x; if (analyserCertificat(c, x)) pool.push_back(x); }
+			for (const Tlv& c : children(sd[i])) { Certificate x; if (analyseCertificate(c, x)) pool.push_back(x); }
 		else if (sd[i].tag == 0x31) infos = &sd[i];
 	}
-	if (!infos) { r.motif = "aucun signataire"; return r; }
-	const std::vector<Tlv> signataires = enfants(*infos);
-	if (signataires.empty()) { r.motif = "aucun signataire"; return r; }
-	const std::vector<Tlv> si = enfants(signataires[0]);
-	// version, issuerAndSerialNumber, digestAlgorithm, [0] attributs, digestEncryptionAlgorithm, encryptedDigest
-	if (si.size() < 5) { r.motif = "SignerInfo incomplet"; return r; }
-	const std::vector<Tlv> ias = enfants(si[1]);
-	if (ias.size() < 2) { r.motif = "émetteur du signataire illisible"; return r; }
-	const AlgoEmpreinte algo = algoDe(si[2]);
-	if (algo == AlgoEmpreinte::Inconnu) { r.motif = "algorithme d'empreinte non pris en charge"; return r; }
+	if (!infos) { r.reason = "aucun signataire"; return r; }
+	const std::vector<Tlv> signers = children(*infos);
+	if (signers.empty()) { r.reason = "aucun signataire"; return r; }
+	const std::vector<Tlv> si = children(signers[0]);
+	// version, issuerAndSerialNumber, digestAlgorithm, [0] attributes, digestEncryptionAlgorithm, encryptedDigest
+	if (si.size() < 5) { r.reason = "SignerInfo incomplet"; return r; }
+	const std::vector<Tlv> ias = children(si[1]);
+	if (ias.size() < 2) { r.reason = "émetteur du signataire illisible"; return r; }
+	const DigestAlgorithm algo = algoDe(si[2]);
+	if (algo == DigestAlgorithm::Unknown) { r.reason = "algorithme d'empreinte non pris en charge"; return r; }
 	size_t k = 3;
-	const Tlv* attributs = nullptr;
-	if (si[k].tag == 0xA0) attributs = &si[k++];
-	if (k + 1 >= si.size() || si[k + 1].tag != 0x04) { r.motif = "signature absente"; return r; }
+	const Tlv* attributes = nullptr;
+	if (si[k].tag == 0xA0) attributes = &si[k++];
+	if (k + 1 >= si.size() || si[k + 1].tag != 0x04) { r.reason = "signature absente"; return r; }
 	const Tlv& signature = si[k + 1];
-	if (!attributs) { r.motif = "attributs authentifiés absents"; return r; }
+	if (!attributes) { r.reason = "attributs authentifiés absents"; return r; }
 
 	// 1. The content's digest must be the one announced in the attributes.
 	uint8_t hc[64];
-	const size_t lhc = empreinte(algo, r.contenu, r.tailleContenu, hc);
-	bool empreinteOk = false;
-	for (const Tlv& a : enfants(*attributs)) {
-		const std::vector<Tlv> av = enfants(a);
+	const size_t lhc = fingerprint(algo, r.content, r.contentSize, hc);
+	bool digestOk = false;
+	for (const Tlv& a : children(*attributes)) {
+		const std::vector<Tlv> av = children(a);
 		if (av.size() < 2 || !EST(av[0], OID_MESSAGE_DIGEST)) continue;
-		const std::vector<Tlv> vals = enfants(av[1]);
+		const std::vector<Tlv> vals = children(av[1]);
 		if (!vals.empty() && vals[0].tag == 0x04 && vals[0].len == lhc
-		    && std::memcmp(vals[0].val, hc, lhc) == 0) empreinteOk = true;
+		    && std::memcmp(vals[0].val, hc, lhc) == 0) digestOk = true;
 	}
-	if (!empreinteOk) { r.motif = "empreinte du contenu non conforme"; return r; }
+	if (!digestOk) { r.reason = "empreinte du contenu non conforme"; return r; }
 
 	// 2. The signature covers the attributes, re-encoded as a SET (0x31).
-	std::vector<uint8_t> signes(attributs->debut, attributs->debut + attributs->total);
-	signes[0] = 0x31;
+	std::vector<uint8_t> signedBytes(attributes->start, attributes->start + attributes->total);
+	signedBytes[0] = 0x31;
 	uint8_t ha[64];
-	const size_t lha = empreinte(algo, signes.data(), signes.size(), ha);
+	const size_t lha = fingerprint(algo, signedBytes.data(), signedBytes.size(), ha);
 
-	const Certificat* signataire = nullptr;
-	for (const Certificat& c : pool)
-		if (memeOctets(c.emetteur, ias[0]) && memeOctets(c.serie, ias[1])) { signataire = &c; break; }
-	if (!signataire || !signataire->rsa) { r.motif = "certificat signataire absent ou non RSA"; return r; }
-	if (!RsaVerifierPkcs1(signataire->module.val, signataire->module.len,
-	                      signataire->exposant.val, signataire->exposant.len,
+	const Certificate* signer = nullptr;
+	for (const Certificate& c : pool)
+		if (sameBytes(c.issuer, ias[0]) && sameBytes(c.serial, ias[1])) { signer = &c; break; }
+	if (!signer || !signer->rsa) { r.reason = "certificat signataire absent ou non RSA"; return r; }
+	if (!RsaVerifyPkcs1(signer->module.val, signer->module.len,
+	                      signer->exponent.val, signer->exponent.len,
 	                      signature.val, signature.len, algo, ha, lha)) {
-		r.motif = "signature RSA invalide"; return r;
+		r.reason = "signature RSA invalide"; return r;
 	}
 	// 3. The chain up to an embedded Microsoft root.
-	if (!rattacher(*signataire, pool)) { r.motif = "chaîne non rattachée à une racine Microsoft"; return r; }
+	if (!attach(*signer, pool)) { r.reason = "chaîne non rattachée à une racine Microsoft"; return r; }
 
-	r.valide = true;
-	r.signataire = attributNom(signataire->sujet, OID_CN, sizeof(OID_CN));
-	const std::wstring o = attributNom(signataire->sujet, OID_O, sizeof(OID_O));
-	r.signataireAccepte = signataireAccepte(r.signataire, o);
-	if (!r.signataireAccepte) r.motif = "signataire non retenu";
+	r.valid = true;
+	r.signer = attributeNameField(signer->subject, OID_CN, sizeof(OID_CN));
+	const std::wstring o = attributeNameField(signer->subject, OID_O, sizeof(OID_O));
+	r.signerAccepted = signerAccepted(r.signer, o);
+	if (!r.signerAccepted) r.reason = "signataire non retenu";
 	return r;
 }
 
@@ -335,51 +335,51 @@ namespace {
 
 /*! Digest carried by a SpcIndirectDataContent: SEQUENCE { data,
  *  messageDigest DigestInfo SEQUENCE { AlgorithmIdentifier, OCTET STRING } }. */
-bool empreinteIndirecte(const Tlv& spc, std::string& sortie) {
-	const std::vector<Tlv> e = enfants(spc);
+bool indirectDigest(const Tlv& spc, std::string& output) {
+	const std::vector<Tlv> e = children(spc);
 	if (e.size() < 2) return false;
-	const std::vector<Tlv> di = enfants(e[1]);
+	const std::vector<Tlv> di = children(e[1]);
 	if (di.size() < 2 || di[1].tag != 0x04 || (di[1].len != 20 && di[1].len != 32)) return false;
-	sortie.assign((const char*)di[1].val, di[1].len);
+	output.assign((const char*)di[1].val, di[1].len);
 	return true;
 }
 
 } // namespace
 
-bool IndexCatalogues::ajouter(const std::wstring& nom, const uint8_t* octets, size_t taille) {
-	const SignatureVerifiee s = VerifierPkcs7(octets, taille);
-	if (!s.valide || !s.signataireAccepte
-	    || s.oidContenu != std::string((const char*)OID_CTL, sizeof(OID_CTL))) {
+bool IndexCatalogues::add(const std::wstring& name, const uint8_t* bytes, size_t size) {
+	const VerifiedSignature s = VerifyPkcs7(bytes, size);
+	if (!s.valid || !s.signerAccepted
+	    || s.contentOid != std::string((const char*)OID_CTL, sizeof(OID_CTL))) {
 		++refuses_;
 		return false;
 	}
 	// CertificateTrustList: look for the list of subjects — a SEQUENCE whose
 	// elements are SEQUENCE { OCTET STRING, SET }.
 	Tlv ctl;
-	ctl.tag = 0x30; ctl.val = s.contenu; ctl.len = s.tailleContenu;
-	const uint32_t rang = (uint32_t)noms_.size();
+	ctl.tag = 0x30; ctl.val = s.content; ctl.len = s.contentSize;
+	const uint32_t rank = (uint32_t)names_.size();
 	size_t indexees = 0;
-	for (const Tlv& champ : enfants(ctl)) {
+	for (const Tlv& champ : children(ctl)) {
 		if (champ.tag != 0x30) continue;
-		for (const Tlv& sujet : enfants(champ)) {
-			const std::vector<Tlv> se = enfants(sujet);
+		for (const Tlv& subject : children(champ)) {
+			const std::vector<Tlv> se = children(subject);
 			if (se.size() < 2 || se[0].tag != 0x04 || se[1].tag != 0x31) continue;
-			for (const Tlv& attribut : enfants(se[1])) {
-				const std::vector<Tlv> av = enfants(attribut);
+			for (const Tlv& attribute : children(se[1])) {
+				const std::vector<Tlv> av = children(attribute);
 				if (av.size() < 2 || !EST(av[0], OID_SPC_INDIRECT)) continue;
-				for (const Tlv& v : enfants(av[1])) {
+				for (const Tlv& v : children(av[1])) {
 					std::string h;
-					if (empreinteIndirecte(v, h)) { index_.emplace(h, rang); ++indexees; }
+					if (indirectDigest(v, h)) { index_.emplace(h, rank); ++indexees; }
 				}
 			}
 		}
 	}
 	if (indexees == 0) { ++refuses_; return false; }
-	noms_.push_back(nom);
+	names_.push_back(name);
 	return true;
 }
 
-void IndexCatalogues::vider(std::ostream& o) const {
+void IndexCatalogues::dump(std::ostream& o) const {
 	static const char* hx = "0123456789abcdef";
 	for (const auto& e : index_) {
 		std::string h;
@@ -388,110 +388,110 @@ void IndexCatalogues::vider(std::ostream& o) const {
 	}
 }
 
-const std::wstring* IndexCatalogues::chercher(const uint8_t* e, size_t n) const {
+const std::wstring* IndexCatalogues::find(const uint8_t* e, size_t n) const {
 	const auto it = index_.find(std::string((const char*)e, n));
-	return it == index_.end() ? nullptr : &noms_[it->second];
+	return it == index_.end() ? nullptr : &names_[it->second];
 }
 
-// ============================================================ PE en flux
+// ============================================================ PE en stream
 
 namespace {
 inline uint16_t lu16(const uint8_t* p) { return (uint16_t)(p[0] | (p[1] << 8)); }
 inline uint32_t lu32(const uint8_t* p) { return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24); }
-const size_t TETE = 64 * 1024;                  // headers expected within the first 64 KiB
-const size_t CERTIFICATS_MAX = 4 * 1024 * 1024; // certificate table: 4 MiB at most
+const size_t HEAD = 64 * 1024;                  // headers expected within the first 64 KiB
+const size_t MAX_CERTIFICATES = 4 * 1024 * 1024; // certificate table: 4 MiB at most
 }
 
-int AnalyseurPe::overflow(int c) {
-	if (c != traits_type::eof()) { const uint8_t o = (uint8_t)c; recevoir(&o, 1); }
+int PeAnalyser::overflow(int c) {
+	if (c != traits_type::eof()) { const uint8_t o = (uint8_t)c; receive(&o, 1); }
 	return traits_type::not_eof(c);
 }
 
-std::streamsize AnalyseurPe::xsputn(const char* s, std::streamsize n) {
-	recevoir(reinterpret_cast<const uint8_t*>(s), (size_t)n);
+std::streamsize PeAnalyser::xsputn(const char* s, std::streamsize n) {
+	receive(reinterpret_cast<const uint8_t*>(s), (size_t)n);
 	return n;
 }
 
-void AnalyseurPe::recevoir(const uint8_t* p, size_t n) {
-	if (termine_ || n == 0) return;
+void PeAnalyser::receive(const uint8_t* p, size_t n) {
+	if (finished_ || n == 0) return;
 	if (!decide_) {
-		const size_t prendre = std::min(n, TETE - tete_.size());
-		tete_.insert(tete_.end(), p, p + prendre);
-		p += prendre; n -= prendre;
-		if (tete_.size() < TETE) return;
+		const size_t take = std::min(n, HEAD - head_.size());
+		head_.insert(head_.end(), p, p + take);
+		p += take; n -= take;
+		if (head_.size() < HEAD) return;
 		decide_ = true;
-		estPe_ = analyserEntetes();
-		if (estPe_) traiter(tete_.data(), tete_.size());
-		tete_.clear(); tete_.shrink_to_fit();
+		estPe_ = analyseHeaders();
+		if (estPe_) process(head_.data(), head_.size());
+		head_.clear(); head_.shrink_to_fit();
 	}
-	if (estPe_ && n) traiter(p, n);
+	if (estPe_ && n) process(p, n);
 }
 
-bool AnalyseurPe::analyserEntetes() {
-	const uint8_t* t = tete_.data();
-	const size_t n = tete_.size();
+bool PeAnalyser::analyseHeaders() {
+	const uint8_t* t = head_.data();
+	const size_t n = head_.size();
 	if (n < 0x40 || t[0] != 'M' || t[1] != 'Z') return false;
 	const uint32_t pe = lu32(t + 0x3C);
 	if (pe > n - 24 || std::memcmp(t + pe, "PE\0\0", 4) != 0) return false;
 	const uint32_t opt = pe + 24;
-	const uint16_t tailleOpt = lu16(t + pe + 20);
-	if (opt + tailleOpt > n || tailleOpt < 2) return false;
+	const uint16_t optionalHeaderSize = lu16(t + pe + 20);
+	if (opt + optionalHeaderSize > n || optionalHeaderSize < 2) return false;
 	const uint16_t magic = lu16(t + opt);
-	size_t repertoires;
-	if (magic == 0x10B) repertoires = opt + 96;         // PE32
-	else if (magic == 0x20B) repertoires = opt + 112;   // PE32+
+	size_t directories;
+	if (magic == 0x10B) directories = opt + 96;         // PE32
+	else if (magic == 0x20B) directories = opt + 112;   // PE32+
 	else return false;
-	if (repertoires > opt + tailleOpt) return false;
-	const uint32_t nbRep = lu32(t + repertoires - 4);   // NumberOfRvaAndSizes
+	if (directories > opt + optionalHeaderSize) return false;
+	const uint32_t nbRep = lu32(t + directories - 4);   // NumberOfRvaAndSizes
 	checksum_ = opt + 64;
-	entreeCert_ = repertoires + 4 * 8;                  // entry 4: certificate table
-	if (nbRep <= 4 || entreeCert_ + 8 > opt + tailleOpt) { entreeCert_ = 0; return true; }
-	debutCert_ = lu32(t + entreeCert_);                 // position in the FILE
-	finCert_ = debutCert_ + lu32(t + entreeCert_ + 4);
-	if (finCert_ == debutCert_) debutCert_ = finCert_ = 0;
+	certEntry_ = directories + 4 * 8;                  // entry 4: certificate table
+	if (nbRep <= 4 || certEntry_ + 8 > opt + optionalHeaderSize) { certEntry_ = 0; return true; }
+	certStart_ = lu32(t + certEntry_);                 // position in the FILE
+	finCert_ = certStart_ + lu32(t + certEntry_ + 4);
+	if (finCert_ == certStart_) certStart_ = finCert_ = 0;
 	return true;
 }
 
-void AnalyseurPe::traiter(const uint8_t* p, size_t n) {
+void PeAnalyser::process(const uint8_t* p, size_t n) {
 	// Splits [position_, position_ + n) along the three excluded ranges.
 	while (n) {
 		const uint64_t pos = position_;
-		uint64_t jusque = pos + n;
-		bool exclu = false;
-		auto zone = [&](uint64_t debut, uint64_t fin) {
-			if (fin <= debut) return;
-			if (pos >= debut && pos < fin) { exclu = true; jusque = std::min(jusque, fin); }
-			else if (pos < debut) jusque = std::min(jusque, debut);
+		uint64_t until = pos + n;
+		bool excluded = false;
+		auto area = [&](uint64_t start, uint64_t end) {
+			if (end <= start) return;
+			if (pos >= start && pos < end) { excluded = true; until = std::min(until, end); }
+			else if (pos < start) until = std::min(until, start);
 		};
-		zone(checksum_, checksum_ + 4);
-		if (entreeCert_) zone(entreeCert_, entreeCert_ + 8);
-		const bool dansCert = debutCert_ && pos >= debutCert_ && pos < finCert_;
-		zone(debutCert_, finCert_);
-		const size_t m = (size_t)(jusque - pos);
-		if (!exclu) { h1_.update(p, m); h256_.update(p, m); }
-		else if (dansCert && certificats_.size() + m <= CERTIFICATS_MAX)
-			certificats_.insert(certificats_.end(), p, p + m);
+		area(checksum_, checksum_ + 4);
+		if (certEntry_) area(certEntry_, certEntry_ + 8);
+		const bool inCert = certStart_ && pos >= certStart_ && pos < finCert_;
+		area(certStart_, finCert_);
+		const size_t m = (size_t)(until - pos);
+		if (!excluded) { h1_.update(p, m); h256_.update(p, m); }
+		else if (inCert && certificates_.size() + m <= MAX_CERTIFICATES)
+			certificates_.insert(certificates_.end(), p, p + m);
 		p += m; n -= m; position_ += m;
 	}
 }
 
-void AnalyseurPe::terminer() {
-	if (termine_) return;
+void PeAnalyser::finish() {
+	if (finished_) return;
 	if (!decide_) {                                     // file smaller than 64 KiB
 		decide_ = true;
-		estPe_ = analyserEntetes();
-		if (estPe_) traiter(tete_.data(), tete_.size());
-		tete_.clear();
+		estPe_ = analyseHeaders();
+		if (estPe_) process(head_.data(), head_.size());
+		head_.clear();
 	}
-	termine_ = true;
+	finished_ = true;
 	if (!estPe_) return;
 	// Two variants: as is, and padded with zeros to a multiple of 8
 	// (the rule of some implementations for an unsigned file).
 	Sha1Stream c1 = h1_;
 	Sha256Stream c256 = h256_;
-	const uint64_t hache = position_ - (finCert_ - debutCert_);
+	const uint64_t hashed = position_ - (finCert_ - certStart_);
 	static const uint8_t zeros[8] = { 0 };
-	const size_t complement = (size_t)((8 - (hache % 8)) % 8);
+	const size_t complement = (size_t)((8 - (hashed % 8)) % 8);
 	c1.update(zeros, complement);
 	c256.update(zeros, complement);
 	h1_.digest(sha1_);
@@ -502,14 +502,14 @@ void AnalyseurPe::terminer() {
 
 // ============================================================ verdict
 
-VerdictMicrosoft EvaluerPe(const AnalyseurPe& pe, const IndexCatalogues& catalogues) {
+VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalogues) {
 	VerdictMicrosoft v;
-	if (!pe.estPe()) { v.motif = "pas un PE"; return v; }
+	if (!pe.estPe()) { v.reason = "pas un PE"; return v; }
 
 	// 1. Catalogs: is the digest, in one of its forms, listed there?
 	for (const auto& e : { std::make_pair(pe.sha256(), 32), std::make_pair(pe.sha1(), 20),
 	                       std::make_pair(pe.sha256Complete(), 32), std::make_pair(pe.sha1Complete(), 20) }) {
-		if (const std::wstring* cat = catalogues.chercher(e.first, (size_t)e.second)) {
+		if (const std::wstring* cat = catalogues.find(e.first, (size_t)e.second)) {
 			v.microsoft = true;
 			v.source = L"catalogue " + *cat;
 			return v;
@@ -517,29 +517,29 @@ VerdictMicrosoft EvaluerPe(const AnalyseurPe& pe, const IndexCatalogues& catalog
 	}
 
 	// 2. Embedded signature: WIN_CERTIFICATE { dwLength, wRevision, wCertificateType, bCertificate }.
-	const std::vector<uint8_t>& t = pe.tableCertificats();
-	if (t.size() < 8) { v.motif = "non signé (ni catalogue, ni signature intégrée)"; return v; }
-	const uint32_t longueur = lu32(t.data());
+	const std::vector<uint8_t>& t = pe.certificateTable();
+	if (t.size() < 8) { v.reason = "non signé (ni catalogue, ni signature intégrée)"; return v; }
+	const uint32_t length = lu32(t.data());
 	const uint16_t type = lu16(t.data() + 6);
-	if (type != 0x0002 || longueur < 8 || longueur > t.size()) { v.motif = "table de certificats inattendue"; return v; }
-	const SignatureVerifiee s = VerifierPkcs7(t.data() + 8, longueur - 8);
-	if (!s.valide) { v.motif = s.motif; return v; }
-	if (s.oidContenu != std::string((const char*)OID_SPC_INDIRECT, sizeof(OID_SPC_INDIRECT))) {
-		v.motif = "contenu signé inattendu"; return v;
+	if (type != 0x0002 || length < 8 || length > t.size()) { v.reason = "table de certificats inattendue"; return v; }
+	const VerifiedSignature s = VerifyPkcs7(t.data() + 8, length - 8);
+	if (!s.valid) { v.reason = s.reason; return v; }
+	if (s.contentOid != std::string((const char*)OID_SPC_INDIRECT, sizeof(OID_SPC_INDIRECT))) {
+		v.reason = "contenu signé inattendu"; return v;
 	}
 	// The signed content carries the file's Authenticode digest: it must be the
 	// one computed here, otherwise the signature is authentic but covers ANOTHER
 	// file.
 	Tlv spc;
-	spc.tag = 0x30; spc.val = s.contenu; spc.len = s.tailleContenu;
-	std::string annoncee;
-	if (!empreinteIndirecte(spc, annoncee)) { v.motif = "empreinte signée illisible"; return v; }
-	const bool conforme =
-		(annoncee.size() == 32 && std::memcmp(annoncee.data(), pe.sha256(), 32) == 0)
-	 || (annoncee.size() == 20 && std::memcmp(annoncee.data(), pe.sha1(), 20) == 0);
-	if (!conforme) { v.motif = "fichier modifié depuis sa signature"; return v; }
-	v.signataire = s.signataire;
-	if (!s.signataireAccepte) { v.motif = "signataire non retenu : " + std::string(s.signataire.begin(), s.signataire.end()); return v; }
+	spc.tag = 0x30; spc.val = s.content; spc.len = s.contentSize;
+	std::string declared;
+	if (!indirectDigest(spc, declared)) { v.reason = "empreinte signée illisible"; return v; }
+	const bool wellFormed =
+		(declared.size() == 32 && std::memcmp(declared.data(), pe.sha256(), 32) == 0)
+	 || (declared.size() == 20 && std::memcmp(declared.data(), pe.sha1(), 20) == 0);
+	if (!wellFormed) { v.reason = "fichier modifié depuis sa signature"; return v; }
+	v.signer = s.signer;
+	if (!s.signerAccepted) { v.reason = "signataire non retenu : " + std::string(s.signer.begin(), s.signer.end()); return v; }
 	v.microsoft = true;
 	v.source = L"signature intégrée";
 	return v;
@@ -547,13 +547,13 @@ VerdictMicrosoft EvaluerPe(const AnalyseurPe& pe, const IndexCatalogues& catalog
 
 // ============================================================ scripts
 
-VerdictMicrosoft EvaluerParCatalogue(const uint8_t sha256[32], const IndexCatalogues& catalogues) {
+VerdictMicrosoft EvaluateByCatalog(const uint8_t sha256[32], const IndexCatalogues& catalogues) {
 	VerdictMicrosoft v;
-	if (const std::wstring* cat = catalogues.chercher(sha256, 32)) {
+	if (const std::wstring* cat = catalogues.find(sha256, 32)) {
 		v.microsoft = true;
 		v.source = L"catalogue " + *cat;
 	}
-	else v.motif = "absent des catalogues";
+	else v.reason = "absent des catalogues";
 	return v;
 }
 
@@ -562,7 +562,7 @@ namespace {
 /*! Script text as code points: UTF-8 or UTF-16LE BOM, otherwise UTF-8 if
  *  valid, otherwise Windows-1252 (approximated by Latin-1). A decoding error
  *  only yields a different digest — the file is then collected. */
-std::u32string decoderTexte(const uint8_t* p, size_t n) {
+std::u32string decodeText(const uint8_t* p, size_t n) {
 	std::u32string t;
 	if (n >= 2 && p[0] == 0xFF && p[1] == 0xFE) {
 		for (size_t i = 2; i + 1 < n; i += 2) {
@@ -576,31 +576,31 @@ std::u32string decoderTexte(const uint8_t* p, size_t n) {
 		return t;
 	}
 	size_t i = (n >= 3 && p[0] == 0xEF && p[1] == 0xBB && p[2] == 0xBF) ? 3 : 0;
-	const size_t debut = i;
-	bool valide = true;
-	while (i < n && valide) {
+	const size_t start = i;
+	bool valid = true;
+	while (i < n && valid) {
 		const uint8_t b = p[i];
 		size_t k = b < 0x80 ? 0 : (b & 0xE0) == 0xC0 ? 1 : (b & 0xF0) == 0xE0 ? 2 : (b & 0xF8) == 0xF0 ? 3 : 9;
-		if (k == 9 || i + k >= n) { valide = false; break; }
+		if (k == 9 || i + k >= n) { valid = false; break; }
 		uint32_t c = k == 0 ? b : k == 1 ? (b & 0x1F) : k == 2 ? (b & 0x0F) : (b & 0x07);
 		for (size_t j = 1; j <= k; ++j) {
-			if (i + j >= n || (p[i + j] & 0xC0) != 0x80) { valide = false; break; }
+			if (i + j >= n || (p[i + j] & 0xC0) != 0x80) { valid = false; break; }
 			c = (c << 6) | (p[i + j] & 0x3F);
 		}
-		if (!valide) break;
+		if (!valid) break;
 		t += (char32_t)c;
 		i += k + 1;
 	}
-	if (valide) return t;
+	if (valid) return t;
 	t.clear();
-	for (i = debut; i < n; ++i) t += (char32_t)p[i];
+	for (i = start; i < n; ++i) t += (char32_t)p[i];
 	return t;
 }
 
-std::vector<uint8_t> enUtf16(const std::u32string& t, size_t fin) {
+std::vector<uint8_t> enUtf16(const std::u32string& t, size_t end) {
 	std::vector<uint8_t> r;
-	r.reserve(fin * 2);
-	for (size_t i = 0; i < fin; ++i) {
+	r.reserve(end * 2);
+	for (size_t i = 0; i < end; ++i) {
 		uint32_t c = t[i];
 		if (c >= 0x10000) {
 			c -= 0x10000;
@@ -613,13 +613,13 @@ std::vector<uint8_t> enUtf16(const std::u32string& t, size_t fin) {
 	return r;
 }
 
-size_t chercherTexte(const std::u32string& t, const char* motif, size_t depuis = 0) {
+size_t findText(const std::u32string& t, const char* reason, size_t since = 0) {
 	std::u32string m;
-	for (const char* q = motif; *q; ++q) m += (char32_t)(unsigned char)*q;
-	return t.find(m, depuis);
+	for (const char* q = reason; *q; ++q) m += (char32_t)(unsigned char)*q;
+	return t.find(m, since);
 }
 
-int valeurBase64(char32_t c) {
+int base64Value(char32_t c) {
 	if (c >= 'A' && c <= 'Z') return (int)(c - 'A');
 	if (c >= 'a' && c <= 'z') return (int)(c - 'a') + 26;
 	if (c >= '0' && c <= '9') return (int)(c - '0') + 52;
@@ -630,35 +630,35 @@ int valeurBase64(char32_t c) {
 
 } // namespace
 
-VerdictMicrosoft EvaluerScriptPowerShell(const uint8_t* octets, size_t taille) {
+VerdictMicrosoft EvaluatePowerShellScript(const uint8_t* bytes, size_t size) {
 	VerdictMicrosoft v;
-	const std::u32string t = decoderTexte(octets, taille);
+	const std::u32string t = decodeText(bytes, size);
 
 	// Comment form ("#") or XML form ("<!-- … -->").
 	bool xml = false;
-	size_t debut = chercherTexte(t, "# SIG # Begin signature block");
-	if (debut == std::u32string::npos) {
-		debut = chercherTexte(t, "<!-- SIG # Begin signature block -->");
+	size_t start = findText(t, "# SIG # Begin signature block");
+	if (start == std::u32string::npos) {
+		start = findText(t, "<!-- SIG # Begin signature block -->");
 		xml = true;
 	}
-	if (debut == std::u32string::npos) { v.motif = "pas de signature intégrée"; return v; }
-	const size_t fin = chercherTexte(t, xml ? "<!-- SIG # End signature block -->" : "# SIG # End signature block", debut);
-	if (fin == std::u32string::npos) { v.motif = "bloc de signature incomplet"; return v; }
+	if (start == std::u32string::npos) { v.reason = "pas de signature intégrée"; return v; }
+	const size_t end = findText(t, xml ? "<!-- SIG # End signature block -->" : "# SIG # End signature block", start);
+	if (end == std::u32string::npos) { v.reason = "bloc de signature incomplet"; return v; }
 
 	// Base64 of the block's lines, prefixes and suffixes removed.
 	std::vector<uint8_t> der;
 	uint32_t acc = 0; int bits = 0;
-	size_t i = t.find(U'\n', debut);
-	while (i != std::u32string::npos && i < fin) {
+	size_t i = t.find(U'\n', start);
+	while (i != std::u32string::npos && i < end) {
 		size_t j = t.find(U'\n', i + 1);
-		if (j == std::u32string::npos || j > fin) j = fin;
-		std::u32string ligne = t.substr(i + 1, j - i - 1);
-		while (!ligne.empty() && (ligne.back() == U'\r' || ligne.back() == U' ')) ligne.pop_back();
+		if (j == std::u32string::npos || j > end) j = end;
+		std::u32string line = t.substr(i + 1, j - i - 1);
+		while (!line.empty() && (line.back() == U'\r' || line.back() == U' ')) line.pop_back();
 		const size_t pref = xml ? 5 : 2;                          // "<!--" or "#"
-		if (ligne.size() > pref && (xml ? ligne.compare(0, 5, U"<!-- ") == 0 : ligne.compare(0, 2, U"# ") == 0)) {
-			const size_t suff = (xml && ligne.size() >= 4 && ligne.compare(ligne.size() - 4, 4, U" -->") == 0) ? 4 : 0;
-			for (size_t k = pref; k + suff < ligne.size(); ++k) {
-				const int b = valeurBase64(ligne[k]);
+		if (line.size() > pref && (xml ? line.compare(0, 5, U"<!-- ") == 0 : line.compare(0, 2, U"# ") == 0)) {
+			const size_t suff = (xml && line.size() >= 4 && line.compare(line.size() - 4, 4, U" -->") == 0) ? 4 : 0;
+			for (size_t k = pref; k + suff < line.size(); ++k) {
+				const int b = base64Value(line[k]);
 				if (b < 0) continue;                               // trailing "=", spaces
 				acc = (acc << 6) | (uint32_t)b; bits += 6;
 				if (bits >= 8) { bits -= 8; der.push_back((uint8_t)(acc >> bits)); }
@@ -667,27 +667,27 @@ VerdictMicrosoft EvaluerScriptPowerShell(const uint8_t* octets, size_t taille) {
 		i = j;
 	}
 
-	const SignatureVerifiee s = VerifierPkcs7(der.data(), der.size());
-	if (!s.valide) { v.motif = s.motif; return v; }
-	if (s.oidContenu != std::string((const char*)OID_SPC_INDIRECT, sizeof(OID_SPC_INDIRECT))) {
-		v.motif = "contenu signé inattendu"; return v;
+	const VerifiedSignature s = VerifyPkcs7(der.data(), der.size());
+	if (!s.valid) { v.reason = s.reason; return v; }
+	if (s.contentOid != std::string((const char*)OID_SPC_INDIRECT, sizeof(OID_SPC_INDIRECT))) {
+		v.reason = "contenu signé inattendu"; return v;
 	}
-	Tlv spc; spc.tag = 0x30; spc.val = s.contenu; spc.len = s.tailleContenu;
-	std::string annoncee;
-	if (!empreinteIndirecte(spc, annoncee)) { v.motif = "empreinte signée illisible"; return v; }
+	Tlv spc; spc.tag = 0x30; spc.val = s.content; spc.len = s.contentSize;
+	std::string declared;
+	if (!indirectDigest(spc, declared)) { v.reason = "empreinte signée illisible"; return v; }
 
 	// Text preceding the block, without its last line break, as UTF-16LE.
-	size_t corps = debut;
+	size_t corps = start;
 	if (corps >= 2 && t[corps - 2] == U'\r' && t[corps - 1] == U'\n') corps -= 2;
 	else if (corps >= 1 && t[corps - 1] == U'\n') corps -= 1;
 	const std::vector<uint8_t> u16 = enUtf16(t, corps);
 	uint8_t h[64];
 	size_t lh = 0;
-	if (annoncee.size() == 32) { sha256Octets(u16.data(), u16.size(), h); lh = 32; }
-	else if (annoncee.size() == 20) { sha1Octets(u16.data(), u16.size(), h); lh = 20; }
-	if (!lh || std::memcmp(annoncee.data(), h, lh) != 0) { v.motif = "script modifié depuis sa signature"; return v; }
-	v.signataire = s.signataire;
-	if (!s.signataireAccepte) { v.motif = "signataire non retenu"; return v; }
+	if (declared.size() == 32) { sha256Bytes(u16.data(), u16.size(), h); lh = 32; }
+	else if (declared.size() == 20) { sha1Bytes(u16.data(), u16.size(), h); lh = 20; }
+	if (!lh || std::memcmp(declared.data(), h, lh) != 0) { v.reason = "script modifié depuis sa signature"; return v; }
+	v.signer = s.signer;
+	if (!s.signerAccepted) { v.reason = "signataire non retenu"; return v; }
 	v.microsoft = true;
 	v.source = L"signature intégrée";
 	return v;

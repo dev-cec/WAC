@@ -7,7 +7,7 @@ AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wst
 	path = _path.wstring();
 	log(3, L"🔈replaceAll pathOriginal");
 	// Chemin BRUT : l'echappement est centralise dans json.h.
-	pathOriginal = cheminOriginal(path);
+	pathOriginal = originalPath(path);
 	log(2, L"❇️AutomaticDestination Path : " + pathOriginal);
 
 	// get user name
@@ -33,8 +33,8 @@ AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wst
 		   contenu entier du fichier — plusieurs centaines de kilo-octets —
 		   fuyait à chaque fois, et ces cas sont fréquents sur une machine
 		   réelle, où beaucoup de jumplists sont vides ou partiels. */
-		std::unique_ptr<BYTE[]> tampon = std::make_unique<BYTE[]>(size);
-		LPBYTE buffer = tampon.get();
+		std::unique_ptr<BYTE[]> bufferOwner = std::make_unique<BYTE[]>(size);
+		LPBYTE buffer = bufferOwner.get();
 		file.read(reinterpret_cast<CHAR*>(buffer), size);
 		file.close();
 		//récupération des dates
@@ -54,11 +54,11 @@ AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wst
 				memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
 				memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
 				log(3, L"🔈utcVersLocalSuspect createdUtc");
-				utcVersLocalSuspect(createdUtc, &created);
+				utcToSuspectLocal(createdUtc, &created);
 				log(3, L"🔈utcVersLocalSuspect modifiedUtc");
-				utcVersLocalSuspect(modifiedUtc, &modified);
+				utcToSuspectLocal(modifiedUtc, &modified);
 				log(3, L"🔈utcVersLocalSuspect accessedUtc");
-				utcVersLocalSuspect(accessedUtc, &accessed);
+				utcToSuspectLocal(accessedUtc, &accessed);
 			}
 			else {
 				log(2, L"🔥GetFileInformationByHandleEx hFile", GetLastError());// show cause of failure
@@ -97,11 +97,11 @@ AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wst
 		DestFileDirectory destlistArray = DestFileDirectory(&destlistDirectoryBytes[0]);
 
 		// 4. For each DestList entry, find the corresponding Directory entry where DestListEntry.EntryNumber == DirectoryEntry.Name
-		size_t iEntree = 0;
+		size_t iEntry = 0;
 		for (const DestFile& df : destlistArray.destfiles) {
 			// Chaque entree DestList entraine le parsing d'un LNK complet.
 			printProgress(L"Jumplist " + std::filesystem::path(path).filename().wstring(),
-			              ++iEntree, destlistArray.destfiles.size(), L"lnk");
+			              ++iEntry, destlistArray.destfiles.size(), L"lnk");
 			
 			log(3, L"🔈ole.findDirectory d");
 			Directory d = ole.findDirectory(to_hex(df.entryNumber));
@@ -152,19 +152,19 @@ HRESULT JumplistAutomatics::getData() {
 	log(0, L"*******************************************************************************************************************");
 
 	const std::wstring rep = L"\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\AutomaticDestinations";
-	for (const std::tuple<std::wstring, std::wstring>& profile : conf.profiles) {
+	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
 		// cheminExtrait() gere le cas d'un profil situe sur un autre volume que
 		// Windows, que replaceAll(conf.systemDrive) laissait absolu.
-		const std::filesystem::path repertoire =
-			cheminExtrait(std::get<1>(profile)) + rep;
-		const std::vector<std::filesystem::path> fichiers =
-			listFilesByExtension(repertoire, { L".automaticDestinations-ms" });
-		size_t iFichier = 0;
-		for (const std::filesystem::path& fichier : fichiers) {
+		const std::filesystem::path directory =
+			extractedPath(std::get<1>(profileEntry)) + rep;
+		const std::vector<std::filesystem::path> files =
+			listFilesByExtension(directory, { L".automaticDestinations-ms" });
+		size_t iFile = 0;
+		for (const std::filesystem::path& file : files) {
 			log(1, L"➕AutomaticDestination");
-			printProgress(L"Jumplist " + fichier.filename().wstring(),
-			              ++iFichier, fichiers.size(), L"fic");
-			automaticDestinations.push_back(AutomaticDestination(fichier, std::get<0>(profile)));
+			printProgress(L"Jumplist " + file.filename().wstring(),
+			              ++iFile, files.size(), L"fic");
+			automaticDestinations.push_back(AutomaticDestination(file, std::get<0>(profileEntry)));
 		}
 	}
 	return ERROR_SUCCESS;

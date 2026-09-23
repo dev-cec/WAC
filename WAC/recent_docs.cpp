@@ -17,26 +17,26 @@ namespace {
 *  @param suivant reçoit la position du champ suivant
 *  @return la chaîne lue, ou "" si le champ est incohérent
 */
-std::wstring lireStringData(LPBYTE buffer, size_t taille, size_t offset, size_t* suivant) {
-	*suivant = offset;
-	if (offset + 2 > taille) {
+std::wstring readStringData(LPBYTE buffer, size_t size, size_t offset, size_t* next) {
+	*next = offset;
+	if (offset + 2 > size) {
 		log(2, L"🔥StringData hors tampon a l'offset " + std::to_wstring(offset));
 		return L"";
 	}
 	const unsigned short nbCar = *reinterpret_cast<unsigned short*>(buffer + offset);
-	const size_t octets = (size_t)nbCar * sizeof(wchar_t);
-	if (offset + 2 + octets > taille) {
+	const size_t bytes = (size_t)nbCar * sizeof(wchar_t);
+	if (offset + 2 + bytes > size) {
 		log(2, L"🔥StringData annonce " + std::to_wstring(nbCar)
 		     + L" caracteres, au-dela du tampon");
 		return L"";
 	}
-	*suivant = offset + 2 + octets;
+	*next = offset + 2 + bytes;
 	return std::wstring((wchar_t*)(buffer + offset + 2), nbCar);
 }
 
 } // namespace
 
-void RecentDoc::parseLNK(LPBYTE buffer, size_t taille) {
+void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 	unsigned int header_size = *reinterpret_cast<unsigned int*>(buffer);
 	guid = *reinterpret_cast<GUID*>(buffer + 4);
 	log(3, L"🔈guid_to_wstring guid");
@@ -57,15 +57,15 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t taille) {
 		   nulle est inutile, et convertir une date nulle est sans effet. */
 		targetCreatedUtc = *reinterpret_cast<FILETIME*>(buffer + 28);
 		log(3, L"🔈utcVersLocalSuspect targetCreated");
-		utcVersLocalSuspect(targetCreatedUtc, &targetCreated);
+		utcToSuspectLocal(targetCreatedUtc, &targetCreated);
 
 		targetAccessedUtc = *reinterpret_cast<FILETIME*>(buffer + 36);
 		log(3, L"🔈utcVersLocalSuspect targetAccessed");
-		utcVersLocalSuspect(targetAccessedUtc, &targetAccessed);
+		utcToSuspectLocal(targetAccessedUtc, &targetAccessed);
 
 		targetModifiedUtc = *reinterpret_cast<FILETIME*>(buffer + 44);
 		log(3, L"🔈utcVersLocalSuspect targetModified");
-		utcVersLocalSuspect(targetModifiedUtc, &targetModified);
+		utcToSuspectLocal(targetModifiedUtc, &targetModified);
 		iconIndex = *reinterpret_cast<unsigned int*>(buffer + 56);
 		log(3, L"🔈showCommandOption commandOption");
 		commandOption = showCommandOption(*reinterpret_cast<unsigned int*>(buffer + 60)); //
@@ -158,7 +158,7 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t taille) {
 				   de dernier accès — sur le document même dont le raccourci
 				   atteste l'ouverture. */
 				log(3, L"🔈EmpreinteFichier cible " + target);
-				empreinteCible = EmpreinteFichier(target);
+				targetFingerprint = FingerprintFile(target);
 			}
 			//-------------------------------------------------------------------------
 			// Common Network Relative Link info:
@@ -200,12 +200,12 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t taille) {
 		   champ `iconLocation`, calculé à partir de cette taille, était donc lu
 		   au mauvais endroit. Valeurs BRUTES : l'echappement est centralise
 		   dans json.h. */
-		size_t suivant = (size_t)stringData_offset;
-		description      = flags.HasName         ? lireStringData(buffer, taille, suivant, &suivant) : L"";
-		relativePath     = flags.HasRelativePath ? lireStringData(buffer, taille, suivant, &suivant) : L"";
-		workingDirectory = flags.HasWorkingDir   ? lireStringData(buffer, taille, suivant, &suivant) : L"";
-		arguments        = flags.HasArguments    ? lireStringData(buffer, taille, suivant, &suivant) : L"";
-		iconLocation     = flags.HasIconLocation ? lireStringData(buffer, taille, suivant, &suivant) : L"";
+		size_t next = (size_t)stringData_offset;
+		description      = flags.HasName         ? readStringData(buffer, size, next, &next) : L"";
+		relativePath     = flags.HasRelativePath ? readStringData(buffer, size, next, &next) : L"";
+		workingDirectory = flags.HasWorkingDir   ? readStringData(buffer, size, next, &next) : L"";
+		arguments        = flags.HasArguments    ? readStringData(buffer, size, next, &next) : L"";
+		iconLocation     = flags.HasIconLocation ? readStringData(buffer, size, next, &next) : L"";
 	}
 }
 
@@ -215,7 +215,7 @@ RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 	//path retourne un codage ANSI mais on veut de l'UTF8
 	path = _path.wstring();
 	log(3, L"🔈replaceAll path_original");
-	path_original = cheminOriginal(path);
+	path_original = originalPath(path);
 	log(2, L"❇️RecentDoc path " + path_original);
 	target = L"";
 	if (_path.extension() == ".lnk" || _path.extension() == ".LNK") {
@@ -270,11 +270,11 @@ RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 		memcpy(&sourceModifiedUtc, &fileInfo.LastWriteTime, sizeof(sourceModifiedUtc));
 		memcpy(&sourceAccessedUtc, &fileInfo.LastAccessTime, sizeof(sourceAccessedUtc));
 		log(3, L"🔈utcVersLocalSuspect sourceCreated");
-		utcVersLocalSuspect(sourceCreatedUtc, &sourceCreated);
+		utcToSuspectLocal(sourceCreatedUtc, &sourceCreated);
 		log(3, L"🔈utcVersLocalSuspect sourceModified");
-		utcVersLocalSuspect(sourceModifiedUtc, &sourceModified);
+		utcToSuspectLocal(sourceModifiedUtc, &sourceModified);
 		log(3, L"🔈utcVersLocalSuspect sourceAccessed");
-		utcVersLocalSuspect(sourceAccessedUtc, &sourceAccessed);
+		utcToSuspectLocal(sourceAccessedUtc, &sourceAccessed);
 	}
 	CloseHandle(hFile);
 }
@@ -283,7 +283,7 @@ RecentDoc::RecentDoc(LPBYTE buffer, size_t size, std::wstring _path, std::wstrin
 	Sid = _sid;
 	path = _path;
 
-	path_original = cheminOriginal(path);
+	path_original = originalPath(path);
 	log(2, L"❇️RecentDoc path " + path_original);
 	if (conf.binary) {
 		log(3, L"🔈fileToHash md5Source " + _path);
@@ -300,7 +300,7 @@ Json RecentDoc::toJson() {
 	o.add(L"Path",              Json::str(path_original));
 	if (!md5Source.empty()) o.add(L"Md5Source", Json::str(md5Source));
 	o.add(L"Target",            Json::str(target));
-	ajouterEmpreintes(o, empreinteCible, L"", L"Target");
+	addFingerprints(o, targetFingerprint, L"", L"Target");
 	o.add(L"SourceCreated",     Json::str(timeToIso8601Local(sourceCreated)));
 	o.add(L"SourceCreatedUtc",  Json::str(timeToIso8601Utc(sourceCreatedUtc)));
 	o.add(L"SourceModified",    Json::str(timeToIso8601Local(sourceModified)));
@@ -346,19 +346,19 @@ HRESULT RecentDocs::getData() {
 
 	const std::wstring reps[2] = { L"\\AppData\\Roaming\\Microsoft\\Windows\\Recent", L"\\AppData\\Roaming\\Microsoft\\Office\\Recent" };
 	for (const std::wstring& rep : reps) {
-		for (const std::tuple<std::wstring, std::wstring>& profile : conf.profiles) {
+		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
 			// cheminExtrait() gere le cas d'un profil situe sur un autre volume
 			// que Windows, que replaceAll(conf.systemDrive) laissait absolu.
-			const std::filesystem::path repertoire =
-				cheminExtrait(std::get<1>(profile)) + rep;
-			const std::vector<std::filesystem::path> fichiers =
-				listFilesByExtension(repertoire, { L".lnk", L".url" });
-			size_t iFichier = 0;
-			for (const std::filesystem::path& fichier : fichiers) {
+			const std::filesystem::path directory =
+				extractedPath(std::get<1>(profileEntry)) + rep;
+			const std::vector<std::filesystem::path> files =
+				listFilesByExtension(directory, { L".lnk", L".url" });
+			size_t iFile = 0;
+			for (const std::filesystem::path& file : files) {
 				log(1, L"➕RecentDoc");
-				printProgress(L"RecentDoc " + fichier.filename().wstring(),
-				              ++iFichier, fichiers.size(), L"lnk");
-				recentdocs.push_back(RecentDoc(fichier, std::get<0>(profile)));
+				printProgress(L"RecentDoc " + file.filename().wstring(),
+				              ++iFile, files.size(), L"lnk");
+				recentdocs.push_back(RecentDoc(file, std::get<0>(profileEntry)));
 			}
 		}
 	}

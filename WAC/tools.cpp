@@ -81,23 +81,23 @@ FILETIME FatDateTime::toFileTime() {
 
 namespace {
 //! Vrai si stdout est une console : sinon la progression est inutile et bruyante.
-bool sortieEstConsole() {
+bool outputIsConsole() {
 	static const bool console =
 		GetFileType(GetStdHandle(STD_OUTPUT_HANDLE)) == FILE_TYPE_CHAR;
 	return console;
 }
-bool g_progressionEnCours = false;
-std::wstring g_etapeCourante;          //!< dernier libellé posé par printStep
+bool g_progressRunning = false;
+std::wstring g_currentStep;          //!< dernier libellé posé par printStep
 } // namespace
 
-void printStep(const std::wstring& libelle) {
-	g_etapeCourante = libelle;
-	wprintf(L"%ls", libelle.c_str());
+void printStep(const std::wstring& label) {
+	g_currentStep = label;
+	wprintf(L"%ls", label.c_str());
 }
 
-void printProgress(const std::wstring& libelle, unsigned long long fait,
-                   unsigned long long total, const wchar_t* unite) {
-	if (!sortieEstConsole()) return;
+void printProgress(const std::wstring& label, unsigned long long done,
+                   unsigned long long total, const wchar_t* unit) {
+	if (!outputIsConsole()) return;
 
 	/* Limitation par le TEMPS, et non par le nombre d'éléments.
 	 * Un pas fixe ne peut pas convenir aux deux extrêmes rencontrés : 38
@@ -107,34 +107,34 @@ void printProgress(const std::wstring& libelle, unsigned long long fait,
 	 * Un rafraîchissement toutes les 150 ms reste fluide à l'œil quel que soit
 	 * le rythme. Le dernier appel (fait == total) passe toujours, pour que la
 	 * ligne finisse sur la valeur exacte. */
-	static ULONGLONG dernierAffichage = 0;
-	const ULONGLONG maintenant = GetTickCount64();
-	const bool dernier = (total > 0 && fait >= total);
-	if (!dernier && maintenant - dernierAffichage < 150) return;
-	dernierAffichage = maintenant;
+	static ULONGLONG lastDisplay = 0;
+	const ULONGLONG now = GetTickCount64();
+	const bool last = (total > 0 && done >= total);
+	if (!last && now - lastDisplay < 150) return;
+	lastDisplay = now;
 
 	// Le libelle est tronque pour que la ligne ne depasse pas et ne provoque pas
 	// de retour a la ligne, qui casserait la reecriture sur place.
-	std::wstring court = libelle;
+	std::wstring court = label;
 	if (court.size() > 40) court = L"..." + court.substr(court.size() - 37);
 
 	if (total > 0)
-		wprintf(L"\r   %-40ls %llu/%llu %ls (%llu%%)   ", court.c_str(), fait, total,
-		        unite, (unsigned long long)(fait * 100ULL / total));
+		wprintf(L"\r   %-40ls %llu/%llu %ls (%llu%%)   ", court.c_str(), done, total,
+		        unit, (unsigned long long)(done * 100ULL / total));
 	else
-		wprintf(L"\r   %-40ls %llu %ls   ", court.c_str(), fait, unite);
+		wprintf(L"\r   %-40ls %llu %ls   ", court.c_str(), done, unit);
 	fflush(stdout);
-	g_progressionEnCours = true;
+	g_progressRunning = true;
 }
 
 void printProgressEnd() {
-	if (!sortieEstConsole() || !g_progressionEnCours) return;
+	if (!outputIsConsole() || !g_progressRunning) return;
 	// Efface la ligne de progression, puis remet le libellé de l'étape : sans lui
 	// le « OK » qui suit apparaîtrait seul, sans dire à quoi il se rapporte.
 	wprintf(L"\r%-100ls\r", L"");
-	if (!g_etapeCourante.empty()) wprintf(L"%ls", g_etapeCourante.c_str());
+	if (!g_currentStep.empty()) wprintf(L"%ls", g_currentStep.c_str());
 	fflush(stdout);
-	g_progressionEnCours = false;
+	g_progressRunning = false;
 }
 
 void printSuccess() {
@@ -146,7 +146,7 @@ void printSuccess() {
 	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
-void printProgressStep(const std::wstring& artefact, unsigned long long fait,
+void printProgressStep(const std::wstring& artefact, unsigned long long done,
                        unsigned long long total) {
 	/* La limitation de fréquence est assurée par printProgress (par le temps) :
 	   elle vaut pour tous les rythmes, du shellbag de plusieurs secondes aux
@@ -154,7 +154,7 @@ void printProgressStep(const std::wstring& artefact, unsigned long long fait,
 	   Unité en ASCII pur, sans accent : la console est en CP_UTF8, mais wprintf
 	   convertit les wchar_t selon la locale C du programme, qui ne l'est pas — un
 	   caractère accentué y ressortirait en idéogrammes. */
-	printProgress(artefact, fait, total, L"elem");
+	printProgress(artefact, done, total, L"elem");
 }
 
 void printError(std::wstring errorText) {
@@ -253,11 +253,11 @@ void dump(LPBYTE buffer, int start, int end) {
 	wprintf(L"\n");
 }
 
-std::wstring dump_wstring(LPBYTE buffer, int start, int longueur) {
+std::wstring dump_wstring(LPBYTE buffer, int start, int length) {
 	// Borne EXCLUSIVE : « longueur » octets depuis « start » (cf. tools.h).
-	if (!buffer || longueur <= 0) return L"";
+	if (!buffer || length <= 0) return L"";
 	std::wstringstream ss;
-	for (int x = start; x < start + longueur; x++)
+	for (int x = start; x < start + length; x++)
 		ss << std::setw(2) << std::setfill(L'0') << std::hex
 		   << static_cast<int>(buffer[x]) << L" ";
 	return ss.str();
@@ -371,21 +371,21 @@ std::wstring getNameFromSid(std::wstring _sid) {
 	if (_sid.empty()) return L"";
 
 	static std::map<std::wstring, std::wstring> cache;
-	const auto trouve = cache.find(_sid);
-	if (trouve != cache.end()) return trouve->second;
+	const auto found = cache.find(_sid);
+	if (found != cache.end()) return found->second;
 
-	std::wstring nom;
+	std::wstring name;
 	PSID pSID = NULL;
 	log(3, L"🔈ConvertStringSidToSidW");
 	if (ConvertStringSidToSidW(_sid.c_str(), &pSID)) {
 		wchar_t lpName[256] = L"";
 		wchar_t lpDomain[256] = L"";
-		DWORD tailleNom = 256, tailleDomaine = 256;   // deux tailles distinctes
+		DWORD nameSize = 256, domainSize = 256;   // deux tailles distinctes
 		SID_NAME_USE typeSid = SidTypeUnknown;
 		log(3, L"🔈LookupAccountSidW");
-		if (LookupAccountSidW(NULL, pSID, lpName, &tailleNom,
-		                      lpDomain, &tailleDomaine, &typeSid))
-			nom = lpName;
+		if (LookupAccountSidW(NULL, pSID, lpName, &nameSize,
+		                      lpDomain, &domainSize, &typeSid))
+			name = lpName;
 		else
 			log(3, L"🔈LookupAccountSidW sans correspondance", GetLastError());
 		LocalFree(pSID);                              // alloue par ConvertStringSidToSidW
@@ -393,8 +393,8 @@ std::wstring getNameFromSid(std::wstring _sid) {
 
 	// Mémorisé même vide : un SID non résoluble le restera, inutile d'attendre
 	// une nouvelle fois le délai réseau à chaque occurrence.
-	cache.emplace(_sid, nom);
-	return nom;
+	cache.emplace(_sid, name);
+	return name;
 }
 
 std::wstring luid_to_wstring(LUID luid) {
@@ -481,13 +481,13 @@ std::wstring time_to_wstring(const FILETIME filetime, bool convertUtc) {
 namespace {
 
 //! Deux chiffres, zéro devant : "07", "15".
-void deuxChiffres(std::wstring& out, unsigned v) {
+void twoDigits(std::wstring& out, unsigned v) {
 	out += (wchar_t)(L'0' + (v / 10) % 10);
 	out += (wchar_t)(L'0' + v % 10);
 }
 
 //! Quatre chiffres : "2026".
-void quatreChiffres(std::wstring& out, unsigned v) {
+void fourDigits(std::wstring& out, unsigned v) {
 	out += (wchar_t)(L'0' + (v / 1000) % 10);
 	out += (wchar_t)(L'0' + (v / 100) % 10);
 	out += (wchar_t)(L'0' + (v / 10) % 10);
@@ -495,12 +495,12 @@ void quatreChiffres(std::wstring& out, unsigned v) {
 }
 
 //! Vrai si le FILETIME est nul (époque 1601) : pas une date, une absence de date.
-bool dateNulle(const FILETIME& ft) {
+bool nullDate(const FILETIME& ft) {
 	return ft.dwLowDateTime == 0 && ft.dwHighDateTime == 0;
 }
 
 //! Décalage de la machine d'EXÉCUTION (repli quand la ruche n'est pas lisible).
-long biaisMachineMinutes() {
+long machineBiasMinutes() {
 	TIME_ZONE_INFORMATION tz = { 0 };
 	const DWORD type = GetTimeZoneInformation(&tz);
 	if (type == TIME_ZONE_ID_INVALID) return 0;
@@ -514,15 +514,15 @@ std::wstring localUtcOffsetString() {
 	/* Pas de cache : la valeur change en cours d'exécution, au moment où la ruche
 	   SYSTEM du suspect devient lisible. Un cache figerait le décalage de la
 	   machine d'exécution pour toute la collecte. */
-	const long biais = conf.timeZone.valid ? conf.timeZone.activeBiasMinutes
-	                                       : biaisMachineMinutes();
-	const long minutes = -biais;          // minutes à ajouter à l'UTC pour l'heure locale
+	const long bias = conf.timeZone.valid ? conf.timeZone.activeBiasMinutes
+	                                       : machineBiasMinutes();
+	const long minutes = -bias;          // minutes à ajouter à l'UTC pour l'heure locale
 	std::wstring s;
 	s += (minutes < 0) ? L'-' : L'+';
-	const long absolu = (minutes < 0) ? -minutes : minutes;
-	deuxChiffres(s, (unsigned)(absolu / 60));
+	const long absolute = (minutes < 0) ? -minutes : minutes;
+	twoDigits(s, (unsigned)(absolute / 60));
 	s += L':';
-	deuxChiffres(s, (unsigned)(absolu % 60));
+	twoDigits(s, (unsigned)(absolute % 60));
 	return s;
 }
 
@@ -542,14 +542,14 @@ namespace {
  *  service. Sans développement, le chemin ne désigne aucun fichier et
  *  l'extraction brute de leur ntuser.dat échoue en silence — ce qui s'observait
  *  comme une extraction « partielle » sans cause apparente. */
-std::wstring developperCheminProfil(const std::wstring& brut) {
+std::wstring expandProfilePath(const std::wstring& brut) {
 	if (brut.find(L'%') == std::wstring::npos) return brut;
-	const std::wstring developpe = normaliserCheminFichier(brut);
-	if (developpe.empty()) {
+	const std::wstring expanded = normalizeFilePath(brut);
+	if (expanded.empty()) {
 		log(2, L"🔥ProfileImagePath : variable non reconnue dans " + brut);
 		return brut;
 	}
-	return developpe;
+	return expanded;
 }
 
 } // namespace
@@ -561,18 +561,18 @@ HRESULT loadProfileList() {
 		return ERROR_INVALID_HANDLE;
 	}
 
-	PCWSTR CLE = L"Microsoft\\Windows NT\\CurrentVersion\\ProfileList";
+	PCWSTR KEY = L"Microsoft\\Windows NT\\CurrentVersion\\ProfileList";
 	ORHKEY hKey = NULL;
 	log(3, L"🔈OROpenKey Software\\...\\ProfileList");
-	HRESULT hresult = OROpenKey(conf.Software, CLE, &hKey);
+	HRESULT hresult = OROpenKey(conf.Software, KEY, &hKey);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥OROpenKey Software\\...\\ProfileList", hresult);
 		return hresult;
 	}
 
-	DWORD nSousCles = 0;
+	DWORD nSubKeys = 0;
 	log(3, L"🔈ORQueryInfoKey ProfileList");
-	hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSousCles, NULL, NULL, NULL,
+	hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubKeys, NULL, NULL, NULL,
 	                         NULL, NULL, NULL, NULL);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥ORQueryInfoKey ProfileList", hresult);
@@ -580,40 +580,40 @@ HRESULT loadProfileList() {
 		return hresult;
 	}
 
-	for (DWORD i = 0; i < nSousCles; ++i) {
+	for (DWORD i = 0; i < nSubKeys; ++i) {
 		WCHAR sid[MAX_KEY_NAME] = L"";
-		DWORD taille = MAX_KEY_NAME;
+		DWORD size = MAX_KEY_NAME;
 		log(3, L"🔈OREnumKey ProfileList " + std::to_wstring(i));
-		if (OREnumKey(hKey, i, sid, &taille, NULL, NULL, NULL) != ERROR_SUCCESS)
+		if (OREnumKey(hKey, i, sid, &size, NULL, NULL, NULL) != ERROR_SUCCESS)
 			continue;
 
-		std::wstring chemin;
-		if (getRegSzValue(hKey, sid, L"ProfileImagePath", &chemin) != ERROR_SUCCESS)
+		std::wstring path;
+		if (getRegSzValue(hKey, sid, L"ProfileImagePath", &path) != ERROR_SUCCESS)
 			continue;
 
-		const std::wstring developpe = developperCheminProfil(chemin);
-		if (developpe != chemin)
-			log(2, L"❇️Profil developpe : " + chemin + L" -> " + developpe);
-		if (developpe.empty()) continue;
+		const std::wstring expanded = expandProfilePath(path);
+		if (expanded != path)
+			log(2, L"❇️Profil developpe : " + path + L" -> " + expanded);
+		if (expanded.empty()) continue;
 
-		conf.profiles.push_back({ sid, developpe });
-		log(2, L"❇️Profil : " + std::wstring(sid) + L" -> " + developpe);
+		conf.profiles.push_back({ sid, expanded });
+		log(2, L"❇️Profil : " + std::wstring(sid) + L" -> " + expanded);
 	}
 	ORCloseKey(hKey);
 	log(2, L"❇️" + std::to_wstring(conf.profiles.size()) + L" profils utilisateurs releves");
 	return conf.profiles.empty() ? ERROR_EMPTY : ERROR_SUCCESS;
 }
 
-std::wstring volumeDuChemin(const std::wstring& absolu) {
-	if (absolu.size() >= 2 && absolu[1] == L':')
-		return std::wstring(1, (wchar_t)towupper(absolu[0]));
+std::wstring volumeOfPath(const std::wstring& absolute) {
+	if (absolute.size() >= 2 && absolute[1] == L':')
+		return std::wstring(1, (wchar_t)towupper(absolute[0]));
 	// Chemin deja relatif a une racine : il appartient au volume systeme.
 	return conf.systemDrive.substr(0, 1);
 }
 
-std::wstring cheminRelatifAuVolume(const std::wstring& absolu) {
-	if (absolu.size() >= 2 && absolu[1] == L':') return absolu.substr(2);
-	return absolu;
+std::wstring pathRelativeToVolume(const std::wstring& absolute) {
+	if (absolute.size() >= 2 && absolute[1] == L':') return absolute.substr(2);
+	return absolute;
 }
 
 /*! Résout le chemin d'un fichier désigné par `ImagePath` ou `ServiceDll`.
@@ -630,22 +630,22 @@ std::wstring cheminRelatifAuVolume(const std::wstring& absolu) {
 *  jamais calculé. Ici, la coupure se fait APRÈS l'extension du fichier, qui est
 *  le seul repère fiable de la fin du chemin.
 */
-std::wstring normaliserCheminFichier(std::wstring chemin) {
+std::wstring normalizeFilePath(std::wstring path) {
 	// Espaces et guillemets d'encadrement : présents dans Shimcache et Amcache.
-	while (!chemin.empty() && (chemin.front() == L' ' || chemin.front() == L'"')) chemin.erase(0, 1);
-	while (!chemin.empty() && (chemin.back() == L' ' || chemin.back() == L'"')) chemin.pop_back();
-	if (chemin.empty()) return L"";
+	while (!path.empty() && (path.front() == L' ' || path.front() == L'"')) path.erase(0, 1);
+	while (!path.empty() && (path.back() == L' ' || path.back() == L'"')) path.pop_back();
+	if (path.empty()) return L"";
 
-	std::wstring bas = enMinuscules(chemin);
+	std::wstring low = toLower(path);
 	// Préfixes objet NT : « \??\C:\… » (Shimcache, ImagePath), « \\?\C:\… ».
-	if (bas.compare(0, 4, L"\\??\\") == 0 || bas.compare(0, 4, L"\\\\?\\") == 0) {
-		if (bas.compare(4, 4, L"unc\\") == 0) return L"";   // partage réseau
-		chemin.erase(0, 4);
-		bas.erase(0, 4);
+	if (low.compare(0, 4, L"\\??\\") == 0 || low.compare(0, 4, L"\\\\?\\") == 0) {
+		if (low.compare(4, 4, L"unc\\") == 0) return L"";   // partage réseau
+		path.erase(0, 4);
+		low.erase(0, 4);
 	}
 	// Préfixe noyau.
-	if (bas.compare(0, 12, L"\\systemroot\\") == 0)
-		return conf.systemDrive + L"\\Windows\\" + chemin.substr(12);
+	if (low.compare(0, 12, L"\\systemroot\\") == 0)
+		return conf.systemDrive + L"\\Windows\\" + path.substr(12);
 
 	/* VARIABLES, développées depuis le lecteur système DÉTECTÉ et jamais depuis
 	   l'environnement du processus : la valeur appartient à l'installation
@@ -656,12 +656,12 @@ std::wstring normaliserCheminFichier(std::wstring chemin) {
 	   Les variables PROPRES À UN UTILISATEUR (%APPDATA%, %LOCALAPPDATA%,
 	   %USERPROFILE%…) ne sont pas développées : le compte n'est pas connu ici,
 	   et deviner rendrait l'empreinte d'un autre fichier que celui désigné. */
-	if (!chemin.empty() && chemin.front() == L'%') {
-		const size_t fin = chemin.find(L'%', 1);
-		if (fin == std::wstring::npos) return L"";
-		const std::wstring var = bas.substr(1, fin - 1);
+	if (!path.empty() && path.front() == L'%') {
+		const size_t end = path.find(L'%', 1);
+		if (end == std::wstring::npos) return L"";
+		const std::wstring var = low.substr(1, end - 1);
 		const std::wstring d = conf.systemDrive;
-		static const std::map<std::wstring, std::wstring> connues = {
+		static const std::map<std::wstring, std::wstring> known = {
 			{ L"systemroot", L"\\Windows" },               { L"windir", L"\\Windows" },
 			{ L"systemdrive", L"" },
 			{ L"programfiles", L"\\Program Files" },       { L"programw6432", L"\\Program Files" },
@@ -672,41 +672,41 @@ std::wstring normaliserCheminFichier(std::wstring chemin) {
 			{ L"programdata", L"\\ProgramData" },          { L"allusersprofile", L"\\ProgramData" },
 			{ L"public", L"\\Users\\Public" },
 		};
-		const auto it = connues.find(var);
-		if (it == connues.end()) return L"";
-		chemin = d + it->second + chemin.substr(fin + 1);
+		const auto it = known.find(var);
+		if (it == known.end()) return L"";
+		path = d + it->second + path.substr(end + 1);
 	}
-	if (chemin.size() < 3 || chemin[1] != L':' || chemin[2] != L'\\') return L"";
-	chemin[0] = (wchar_t)towupper(chemin[0]);
-	return chemin;
+	if (path.size() < 3 || path[1] != L':' || path[2] != L'\\') return L"";
+	path[0] = (wchar_t)towupper(path[0]);
+	return path;
 }
 
-std::wstring cheminBinaire(std::wstring imagePath) {
+std::wstring binaryPath(std::wstring imagePath) {
 	if (imagePath.empty()) return L"";
 
 	// Chemin entre guillemets : il se termine au guillemet fermant.
 	if (imagePath.front() == L'"') {
-		const size_t fin = imagePath.find(L'"', 1);
-		imagePath = (fin == std::wstring::npos) ? imagePath.substr(1)
-		                                        : imagePath.substr(1, fin - 1);
+		const size_t end = imagePath.find(L'"', 1);
+		imagePath = (end == std::wstring::npos) ? imagePath.substr(1)
+		                                        : imagePath.substr(1, end - 1);
 	}
 	else {
 		/* Sans guillemets, la fin du chemin se repère à l'extension. On prend la
 		   PREMIÈRE extension rencontrée : ce qui suit est une option. */
-		const std::wstring bas = enMinuscules(imagePath);
-		size_t fin = std::wstring::npos;
+		const std::wstring low = toLower(imagePath);
+		size_t end = std::wstring::npos;
 		for (PCWSTR ext : { L".exe", L".sys", L".dll" }) {
-			const size_t p = bas.find(ext);
-			if (p != std::wstring::npos && (fin == std::wstring::npos || p < fin))
-				fin = p + 4;
+			const size_t p = low.find(ext);
+			if (p != std::wstring::npos && (end == std::wstring::npos || p < end))
+				end = p + 4;
 		}
-		if (fin != std::wstring::npos) imagePath = imagePath.substr(0, fin);
+		if (end != std::wstring::npos) imagePath = imagePath.substr(0, end);
 	}
 
 	// Préfixes noyau, objet NT et variables : la règle commune.
 	{
-		const std::wstring normalise = normaliserCheminFichier(imagePath);
-		if (!normalise.empty()) return normalise;
+		const std::wstring normalized = normalizeFilePath(imagePath);
+		if (!normalized.empty()) return normalized;
 		if (imagePath.find(L'%') != std::wstring::npos) return L"";   // variable inconnue
 	}
 
@@ -721,41 +721,41 @@ std::wstring cheminBinaire(std::wstring imagePath) {
 	return imagePath;
 }
 
-std::wstring cheminSous(const std::wstring& racine, const std::wstring& absolu) {
-	const std::wstring volume   = volumeDuChemin(absolu);
-	const std::wstring relatif  = cheminRelatifAuVolume(absolu);
-	const std::wstring systeme  = conf.systemDrive.substr(0, 1);
-	if (enMinuscules(volume) == enMinuscules(systeme))
-		return racine + relatif;                   // cas courant : rien ne change
+std::wstring pathUnder(const std::wstring& root, const std::wstring& absolute) {
+	const std::wstring volume   = volumeOfPath(absolute);
+	const std::wstring relative  = pathRelativeToVolume(absolute);
+	const std::wstring system_  = conf.systemDrive.substr(0, 1);
+	if (toLower(volume) == toLower(system_))
+		return root + relative;                   // cas courant : rien ne change
 	// Volume secondaire : sous-dossier dedie, pour ne pas ecraser une copie
 	// homonyme venant d'un autre disque.
-	return racine + L"\\_volume_" + volume + relatif;
+	return root + L"\\_volume_" + volume + relative;
 }
 
-std::wstring cheminExtrait(const std::wstring& absolu) {
-	return cheminSous(conf.mountpoint, absolu);
+std::wstring extractedPath(const std::wstring& absolute) {
+	return pathUnder(conf.mountpoint, absolute);
 }
 
-std::wstring cheminOriginal(const std::wstring& extrait) {
-	std::wstring reste = replaceAll(extrait, conf.mountpoint, L"");
+std::wstring originalPath(const std::wstring& extracted) {
+	std::wstring rest = replaceAll(extracted, conf.mountpoint, L"");
 	// « \_volume_D\... » : le fichier venait d'un autre disque que Windows.
-	const std::wstring marque = L"\\_volume_";
-	if (reste.compare(0, marque.size(), marque) == 0
-	    && reste.size() > marque.size()) {
-		const wchar_t lettre = reste[marque.size()];
-		return std::wstring(1, lettre) + L":" + reste.substr(marque.size() + 1);
+	const std::wstring mark = L"\\_volume_";
+	if (rest.compare(0, mark.size(), mark) == 0
+	    && rest.size() > mark.size()) {
+		const wchar_t letter = rest[mark.size()];
+		return std::wstring(1, letter) + L":" + rest.substr(mark.size() + 1);
 	}
-	return conf.systemDrive + reste;
+	return conf.systemDrive + rest;
 }
 
 void loadSystemDrive() {
 	/* GetSystemDirectoryW rend "X:\Windows\System32" : les deux premiers
 	   caractères donnent le lecteur. Préféré à la variable d'environnement
 	   %SystemDrive%, qui peut être altérée par le processus appelant. */
-	wchar_t tampon[MAX_PATH] = L"";
-	const UINT n = GetSystemDirectoryW(tampon, MAX_PATH);
-	if (n >= 2 && tampon[1] == L':') {
-		conf.systemDrive = std::wstring(tampon, 2);
+	wchar_t buffer[MAX_PATH] = L"";
+	const UINT n = GetSystemDirectoryW(buffer, MAX_PATH);
+	if (n >= 2 && buffer[1] == L':') {
+		conf.systemDrive = std::wstring(buffer, 2);
 		log(2, L"❇️Lecteur systeme : " + conf.systemDrive);
 	}
 	else {
@@ -768,17 +768,17 @@ HRESULT loadSuspectTimeZone() {
 	conf.timeZone = TimeZoneInfo{};       // repart d'un état propre
 	if (!conf.CurrentControlSet) return ERROR_INVALID_HANDLE;
 
-	PCWSTR cle = L"Control\\TimeZoneInformation";
+	PCWSTR key = L"Control\\TimeZoneInformation";
 	DWORD activeBias = 0;
 	log(3, L"🔈getRegDwordValue ActiveTimeBias");
-	HRESULT hresult = getRegDwordValue(conf.CurrentControlSet, cle, L"ActiveTimeBias", &activeBias);
+	HRESULT hresult = getRegDwordValue(conf.CurrentControlSet, key, L"ActiveTimeBias", &activeBias);
 	if (hresult != ERROR_SUCCESS) {
 		/* ActiveTimeBias absent : on recompose Bias + biais saisonnier. On ne
 		   peut pas savoir lequel des deux s'appliquait au moment de chaque
 		   artefact, donc on prend Bias seul et on le signale. */
 		DWORD bias = 0;
 		log(3, L"🔈getRegDwordValue Bias");
-		hresult = getRegDwordValue(conf.CurrentControlSet, cle, L"Bias", &bias);
+		hresult = getRegDwordValue(conf.CurrentControlSet, key, L"Bias", &bias);
 		if (hresult != ERROR_SUCCESS) {
 			log(2, L"🔥Fuseau du suspect illisible dans la ruche SYSTEM", hresult);
 			return hresult;
@@ -795,7 +795,7 @@ HRESULT loadSuspectTimeZone() {
 	   (décalage hors saison). Si les deux diffèrent, le biais saisonnier
 	   s'appliquait au moment de la collecte. */
 	DWORD biasStandard = 0;
-	if (getRegDwordValue(conf.CurrentControlSet, cle, L"Bias", &biasStandard) == ERROR_SUCCESS) {
+	if (getRegDwordValue(conf.CurrentControlSet, key, L"Bias", &biasStandard) == ERROR_SUCCESS) {
 		conf.timeZone.standardBiasMinutes = (long)(int32_t)biasStandard;
 		conf.timeZone.daylightInEffect =
 			(conf.timeZone.activeBiasMinutes != conf.timeZone.standardBiasMinutes);
@@ -803,9 +803,9 @@ HRESULT loadSuspectTimeZone() {
 	else
 		conf.timeZone.standardBiasMinutes = conf.timeZone.activeBiasMinutes;
 
-	getRegSzValue(conf.CurrentControlSet, cle, L"TimeZoneKeyName", &conf.timeZone.keyName);
-	getRegSzValue(conf.CurrentControlSet, cle, L"StandardName",    &conf.timeZone.standardName);
-	getRegSzValue(conf.CurrentControlSet, cle, L"DaylightName",    &conf.timeZone.daylightName);
+	getRegSzValue(conf.CurrentControlSet, key, L"TimeZoneKeyName", &conf.timeZone.keyName);
+	getRegSzValue(conf.CurrentControlSet, key, L"StandardName",    &conf.timeZone.standardName);
+	getRegSzValue(conf.CurrentControlSet, key, L"DaylightName",    &conf.timeZone.daylightName);
 	conf.timeZone.fromHive = true;
 	conf.timeZone.valid    = true;
 
@@ -818,12 +818,12 @@ std::wstring timeToIso8601(const SYSTEMTIME& st, bool utc, long fraction100ns) {
 	if (st.wYear <= 1601) return L"";        // date nulle : chaîne vide, pas 1601
 	std::wstring s;
 	s.reserve(33);
-	quatreChiffres(s, st.wYear);   s += L'-';
-	deuxChiffres(s, st.wMonth);    s += L'-';
-	deuxChiffres(s, st.wDay);      s += L'T';
-	deuxChiffres(s, st.wHour);     s += L':';
-	deuxChiffres(s, st.wMinute);   s += L':';
-	deuxChiffres(s, st.wSecond);
+	fourDigits(s, st.wYear);   s += L'-';
+	twoDigits(s, st.wMonth);    s += L'-';
+	twoDigits(s, st.wDay);      s += L'T';
+	twoDigits(s, st.wHour);     s += L':';
+	twoDigits(s, st.wMinute);   s += L':';
+	twoDigits(s, st.wSecond);
 	/*  La fraction s'écrit ICI, entre les secondes et le suffixe de fuseau.
 	    L'insérer après coup obligeait à retrouver la fin des secondes dans la
 	    chaîne finie : sur la variante locale, dont le suffixe « +02:00 » se
@@ -832,9 +832,9 @@ std::wstring timeToIso8601(const SYSTEMTIME& st, bool utc, long fraction100ns) {
 	if (fraction100ns >= 0) {
 		s += L'.';
 		for (int p = 6; p >= 0; --p) {
-			long diviseur = 1;
-			for (int k = 0; k < p; ++k) diviseur *= 10;
-			s += (wchar_t)(L'0' + ((fraction100ns / diviseur) % 10));
+			long divisor = 1;
+			for (int k = 0; k < p; ++k) divisor *= 10;
+			s += (wchar_t)(L'0' + ((fraction100ns / divisor) % 10));
 		}
 	}
 	if (utc) s += L'Z';
@@ -870,34 +870,34 @@ long fraction100ns(const FILETIME& ft) {
 } // namespace
 
 std::wstring timeToIso8601Utc(const FILETIME& filetime) {
-	if (dateNulle(filetime)) return L"";
+	if (nullDate(filetime)) return L"";
 	SYSTEMTIME st = { 0 };
 	if (!FileTimeToSystemTime(&filetime, &st)) return L"";
 	return timeToIso8601(st, true, fraction100ns(filetime));
 }
 
 std::wstring timeToIso8601Local(const FILETIME& filetime) {
-	if (dateNulle(filetime)) return L"";
+	if (nullDate(filetime)) return L"";
 	SYSTEMTIME st = { 0 };
 	if (!FileTimeToSystemTime(&filetime, &st)) return L"";
 	return timeToIso8601(st, false, fraction100ns(filetime));
 }
 
-bool utcVersLocalSuspect(const FILETIME& filetimeUtc, FILETIME* filetimeLocal) {
+bool utcToSuspectLocal(const FILETIME& filetimeUtc, FILETIME* filetimeLocal) {
 	if (!filetimeLocal) return false;
 	*filetimeLocal = FILETIME{ 0, 0 };
-	if (dateNulle(filetimeUtc)) return false;
+	if (nullDate(filetimeUtc)) return false;
 	/* Le biais est en minutes à AJOUTER à l'heure locale pour obtenir l'UTC
 	   (convention de la ruche) : l'heure locale s'obtient donc en le
 	   RETRANCHANT de l'UTC. Même source que localUtcOffsetString(), afin que la
 	   valeur et son étiquette parlent du même fuseau. */
-	const long biais = conf.timeZone.valid ? conf.timeZone.activeBiasMinutes
-	                                       : biaisMachineMinutes();
+	const long bias = conf.timeZone.valid ? conf.timeZone.activeBiasMinutes
+	                                       : machineBiasMinutes();
 	const ULONGLONG utc100ns = ((ULONGLONG)filetimeUtc.dwHighDateTime << 32)
 	                         | filetimeUtc.dwLowDateTime;
-	const long long decalage100ns = (long long)biais * 60LL * 10000000LL;
-	if ((long long)utc100ns < decalage100ns) return false;   // sous l'epoque : aberrant
-	const ULONGLONG local100ns = (ULONGLONG)((long long)utc100ns - decalage100ns);
+	const long long offset100ns = (long long)bias * 60LL * 10000000LL;
+	if ((long long)utc100ns < offset100ns) return false;   // sous l'epoque : aberrant
+	const ULONGLONG local100ns = (ULONGLONG)((long long)utc100ns - offset100ns);
 	filetimeLocal->dwLowDateTime  = (DWORD)(local100ns & 0xFFFFFFFFULL);
 	filetimeLocal->dwHighDateTime = (DWORD)(local100ns >> 32);
 	return true;
@@ -905,12 +905,12 @@ bool utcVersLocalSuspect(const FILETIME& filetimeUtc, FILETIME* filetimeLocal) {
 
 std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc) {
 	FILETIME local = { 0, 0 };
-	if (!utcVersLocalSuspect(filetimeUtc, &local)) return L"";
+	if (!utcToSuspectLocal(filetimeUtc, &local)) return L"";
 	return timeToIso8601Local(local);
 }
 
 std::wstring localTimeToIso8601Utc(const FILETIME& filetimeLocal) {
-	if (dateNulle(filetimeLocal)) return L"";
+	if (nullDate(filetimeLocal)) return L"";
 	FILETIME utc = { 0, 0 };
 	if (!LocalFileTimeToFileTime(&filetimeLocal, &utc)) return L"";
 	return timeToIso8601Utc(utc);
@@ -926,18 +926,18 @@ std::wstring string_to_wstring(const std::string& str)
 	return wstr;
 }
 
-bool estReferenceMui(const std::wstring& valeur) {
+bool estReferenceMui(const std::wstring& value) {
 	/* Forme reconnue : « @<fichier>,-<id> ». Le « @ » initial seul ne suffit
 	   pas : certaines descriptions commencent par une arobase sans être des
 	   références. La virgule suivie du signe moins est le marqueur fiable. */
-	if (valeur.size() < 4 || valeur.front() != L'@') return false;
-	const size_t virgule = valeur.rfind(L',');
+	if (value.size() < 4 || value.front() != L'@') return false;
+	const size_t virgule = value.rfind(L',');
 	return virgule != std::wstring::npos
-	    && virgule + 1 < valeur.size()
-	    && valeur[virgule + 1] == L'-';
+	    && virgule + 1 < value.size()
+	    && value[virgule + 1] == L'-';
 }
 
-std::wstring enMinuscules(std::wstring s) {
+std::wstring toLower(std::wstring s) {
 	for (wchar_t& c : s) c = (wchar_t)towlower(c);
 	return s;
 }
@@ -990,19 +990,19 @@ std::wstring guid_to_wstring(GUID guid) {
 *****************************************************/
 
 // Lire une donnée au format binaire en base de données
-HRESULT getRegBinaryValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, LPBYTE* octets, DWORD* taille)
+HRESULT getRegBinaryValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, LPBYTE* bytes, DWORD* size)
 {
 	//Attention octets doit être suffisamment grand pour accepter les données LPBYTE octets = new BYTE[MAX_DATA]; si la taille n'est pas connue
 	//les REG_BINARY sont stockées sous forme de bytes 
-	DWORD typeValeur = 0;
+	DWORD valueType = 0;
 	HRESULT hresult = 0;
-	if (*octets != NULL)
-		delete[] * octets; // on supprime tout buffer passé en paramètre pour ne pas avoir de memory leak;
+	if (*bytes != NULL)
+		delete[] * bytes; // on supprime tout buffer passé en paramètre pour ne pas avoir de memory leak;
 	do {
-		*octets = new BYTE[*taille];
-		memset(*octets, 0, *taille);
+		*bytes = new BYTE[*size];
+		memset(*bytes, 0, *size);
 		log(3, L"🔈ORGetValue");
-		hresult = ORGetValue(key, sousCle, nomValeur, &typeValeur, *octets, taille); //lecture des données
+		hresult = ORGetValue(key, subKey, valueName, &valueType, *bytes, size); //lecture des données
 	} while (hresult == ERROR_MORE_DATA);
 
 	if (hresult != ERROR_SUCCESS) {
@@ -1014,110 +1014,110 @@ HRESULT getRegBinaryValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, LPBYTE* 
 
 
 // Lire une valeur booléenne en base de registre
-HRESULT getRegboolValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, bool* valeur)
+HRESULT getRegboolValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, bool* value)
 {
 	//les REG_BINARY sont stockées sous forme de bytes 
-	DWORD taille = 0;
-	LPBYTE octets = NULL;
+	DWORD size = 0;
+	LPBYTE bytes = NULL;
 	HRESULT hresult = 0;
 	log(3, L"🔈getRegBinaryValue");
-	hresult = getRegBinaryValue(key, sousCle, nomValeur, &octets, &taille);
+	hresult = getRegBinaryValue(key, subKey, valueName, &bytes, &size);
 
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥getRegBinaryValue", hresult);
 	}
 	else {
-		*valeur = (bool)octets[0];
+		*value = (bool)bytes[0];
 	}
-	delete[] octets;
+	delete[] bytes;
 	return hresult;
 }
 
 // Lit une valeur FILETIME en base de registre
-HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, FILETIME* filetime)
+HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, FILETIME* filetime)
 {
 	//les REG_FILETIME  sont stockées sous forme de bytes
 	// leur type est soit REG_BINARY soi REG_FILETIME(16) 
-	DWORD taille = 0;
-	LPBYTE donnees = new BYTE[taille + 2];
+	DWORD size = 0;
+	LPBYTE data = new BYTE[size + 2];
 	HRESULT hresult = 0;
 
 	log(3, L"🔈getRegBinaryValue");
-	hresult = getRegBinaryValue(key, sousCle, nomValeur, &donnees, &taille);
+	hresult = getRegBinaryValue(key, subKey, valueName, &data, &size);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥getRegBinaryValue", hresult);
 	}
 	else {
 		FILETIME temp = { 0 };
-		temp = *reinterpret_cast<FILETIME*>(donnees);
+		temp = *reinterpret_cast<FILETIME*>(data);
 		*filetime = temp;
 	}
 
-	delete[] donnees;
+	delete[] data;
 	return hresult;
 }
 
 // Lire une chaîne de caractère en base de registre
 // S'assure que la chaîne est printable et se termine par \0. Si un caractère n'est pas imprimable il est remplacé par ?
-HRESULT getRegDwordValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, DWORD* pdword)
+HRESULT getRegDwordValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, DWORD* pdword)
 {
-	DWORD taille = 0;
-	LPBYTE donnees = NULL;
+	DWORD size = 0;
+	LPBYTE data = NULL;
 	log(3, L"🔈getRegBinaryValue");
-	HRESULT hresult = getRegBinaryValue(key, sousCle, nomValeur, &donnees, &taille);
+	HRESULT hresult = getRegBinaryValue(key, subKey, valueName, &data, &size);
 	if (hresult != ERROR_SUCCESS) return hresult;
 	// Une valeur plus courte que 4 octets n'est pas un DWORD exploitable.
-	if (taille < sizeof(DWORD)) { delete[] donnees; return ERROR_INVALID_DATA; }
-	*pdword = *reinterpret_cast<DWORD*>(donnees);
-	delete[] donnees;
+	if (size < sizeof(DWORD)) { delete[] data; return ERROR_INVALID_DATA; }
+	*pdword = *reinterpret_cast<DWORD*>(data);
+	delete[] data;
 	return ERROR_SUCCESS;
 }
 
-HRESULT getRegQwordValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, unsigned long long* pqword)
+HRESULT getRegQwordValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, unsigned long long* pqword)
 {
-	DWORD taille = 0;
-	LPBYTE donnees = NULL;
+	DWORD size = 0;
+	LPBYTE data = NULL;
 	log(3, L"🔈getRegBinaryValue");
-	HRESULT hresult = getRegBinaryValue(key, sousCle, nomValeur, &donnees, &taille);
+	HRESULT hresult = getRegBinaryValue(key, subKey, valueName, &data, &size);
 	if (hresult != ERROR_SUCCESS) return hresult;
 	// Une valeur plus courte que 8 octets n'est pas un QWORD exploitable.
-	if (taille < sizeof(unsigned long long)) { delete[] donnees; return ERROR_INVALID_DATA; }
-	memcpy(pqword, donnees, sizeof(unsigned long long));
-	delete[] donnees;
+	if (size < sizeof(unsigned long long)) { delete[] data; return ERROR_INVALID_DATA; }
+	memcpy(pqword, data, sizeof(unsigned long long));
+	delete[] data;
 	return ERROR_SUCCESS;
 }
 
-HRESULT getRegSzValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, std::wstring* ws)
+HRESULT getRegSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::wstring* ws)
 {
 	//les REG_SZ sont stockées sous forme de wchar_t = 16 bit par caractère
-	DWORD taille = 0;
-	LPWSTR donnees = NULL;
+	DWORD size = 0;
+	LPWSTR data = NULL;
 	size_t nbChar = 0;
 	HRESULT hresult = 0;
 	log(3, L"🔈getRegBinaryValue");
-	hresult = getRegBinaryValue(key, sousCle, nomValeur, (LPBYTE*)&donnees, &taille);
+	hresult = getRegBinaryValue(key, subKey, valueName, (LPBYTE*)&data, &size);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥getRegBinaryValue", hresult);
 		return hresult;
 	}
 	else {
-		nbChar = taille / sizeof(wchar_t);
-		*ws = std::wstring(donnees, donnees + nbChar).data();
+		nbChar = size / sizeof(wchar_t);
+		*ws = std::wstring(data, data + nbChar).data();
 	}
-	delete[] donnees;
+	delete[] data;
 	return hresult;
 }
 
 // Lit une valeur multi chaîne en base de registre. Chaque chaîne se termine par \0
 // Les caractères non imprimable sont remplacés par ?
-HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, std::vector<std::wstring>* out)
+HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vector<std::wstring>* out)
 {
 	//les REG_MULTI_SZ sont stockées sous forme de wchar_t = 16 bit par caractère et d'un succession de chaîne séparées par \0 et à la fin \0\0
-	DWORD taille = 0;
-	wchar_t* donnees = NULL;
+	DWORD size = 0;
+	wchar_t* data = NULL;
 	HRESULT hresult = 0;
 	log(3, L"🔈getRegBinaryValue");
-	hresult = getRegBinaryValue(key, sousCle, nomValeur, (LPBYTE*)&donnees, &taille);
+	hresult = getRegBinaryValue(key, subKey, valueName, (LPBYTE*)&data, &size);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥getRegBinaryValue", hresult);
 		return hresult;
@@ -1133,18 +1133,18 @@ HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR sousCle, PCWSTR nomValeur, std::ve
 		   La borne est désormais calculée sur le tampon, sans faire confiance à
 		   un éventuel \0 final : une valeur tronquée dans la ruche ferait sinon
 		   lire au-delà. */
-		const size_t nbCar = taille / sizeof(wchar_t);
+		const size_t nbCar = size / sizeof(wchar_t);
 		size_t pos = 0;
 		while (pos < nbCar) {
-			size_t fin = pos;
-			while (fin < nbCar && donnees[fin] != L'\0') ++fin;
-			if (fin > pos) out->push_back(std::wstring(donnees + pos, fin - pos));
-			if (fin >= nbCar) break;          // tampon epuise
-			pos = fin + 1;                    // apres le \0 separateur
-			if (pos < nbCar && donnees[pos] == L'\0') break;   // \0\0 = fin de liste
+			size_t end = pos;
+			while (end < nbCar && data[end] != L'\0') ++end;
+			if (end > pos) out->push_back(std::wstring(data + pos, end - pos));
+			if (end >= nbCar) break;          // tampon epuise
+			pos = end + 1;                    // apres le \0 separateur
+			if (pos < nbCar && data[pos] == L'\0') break;   // \0\0 = fin de liste
 		}
 	}
-	delete[] donnees;
+	delete[] data;
 	return ERROR_SUCCESS;
 }
 
@@ -1171,32 +1171,32 @@ std::wstring getVolumeLetter(std::wstring searchSerial) {
 		return L"";
 	}
 
-	std::wstring trouve;
+	std::wstring found;
 	do {
 		// Points de montage du volume. Le tampon est agrandi tant que l'API le
 		// demande, ce que le test d'origine ne faisait jamais.
-		std::vector<wchar_t> chemins(MAX_PATH);
-		DWORD nbCar = (DWORD)chemins.size();
+		std::vector<wchar_t> paths(MAX_PATH);
+		DWORD nbCar = (DWORD)paths.size();
 		BOOL ok = FALSE;
-		for (int essai = 0; essai < 3; ++essai) {
+		for (int attempt = 0; attempt < 3; ++attempt) {
 			log(3, L"🔈GetVolumePathNamesForVolumeNameW");
-			ok = GetVolumePathNamesForVolumeNameW(volume, chemins.data(),
-			                                      (DWORD)chemins.size(), &nbCar);
+			ok = GetVolumePathNamesForVolumeNameW(volume, paths.data(),
+			                                      (DWORD)paths.size(), &nbCar);
 			if (ok || GetLastError() != ERROR_MORE_DATA) break;
-			chemins.assign(nbCar ? nbCar : chemins.size() * 2, L'\0');
+			paths.assign(nbCar ? nbCar : paths.size() * 2, L'\0');
 		}
 		if (!ok) {
 			log(2, L"🔥GetVolumePathNamesForVolumeNameW " + std::wstring(volume),
 			    GetLastError());
 		}
 		else {
-			DWORD numeroSerie = 0;
+			DWORD serialNumber = 0;
 			log(3, L"🔈GetVolumeInformationW");
 			/* Le resultat etait ignore. Sur un volume sans media (lecteur de
 			   carte vide, lecteur optique), l'appel echoue et numeroSerie reste
 			   a zero : on comparait alors un numero de serie nul, si bien qu'une
 			   recherche de « 0 » aurait designe un volume au hasard. */
-			if (!GetVolumeInformationW(volume, NULL, NULL, &numeroSerie,
+			if (!GetVolumeInformationW(volume, NULL, NULL, &serialNumber,
 			                           NULL, NULL, NULL, NULL)) {
 				log(2, L"🔥GetVolumeInformationW " + std::wstring(volume),
 				    GetLastError());
@@ -1209,12 +1209,12 @@ std::wstring getVolumeLetter(std::wstring searchSerial) {
 				   attendait « 0A1B2C3D » : la comparaison echouait alors en
 				   silence sur tout volume dont le premier octet est < 0x10. */
 				wchar_t hexa[9] = L"";
-				swprintf(hexa, 9, L"%08X", numeroSerie);
+				swprintf(hexa, 9, L"%08X", serialNumber);
 				if (std::wstring(hexa) == searchSerial) {
 					// Premier point de montage, chaine terminee par un zero.
-					const std::wstring chemin(chemins.data());
+					const std::wstring path(paths.data());
 					// On ne garde que « C: », sans la barre oblique inverse.
-					trouve = replaceAll(chemin, L"\\", L"");
+					found = replaceAll(path, L"\\", L"");
 					break;
 				}
 			}
@@ -1224,76 +1224,76 @@ std::wstring getVolumeLetter(std::wstring searchSerial) {
 
 	log(3, L"🔈FindVolumeClose");
 	FindVolumeClose(recherche);   // ferme sur TOUS les chemins, y compris le succes
-	return trouve;
+	return found;
 }
 
-HRESULT writeJsonFile(const std::string& nom, const Json& valeur) {
+HRESULT writeJsonFile(const std::string& name, const Json& value) {
 	std::error_code ec;
 	std::filesystem::create_directories(conf._outputDir, ec); // pas d'erreur si présent
 	std::wofstream f;
-	f.open(conf._outputDir + "/" + nom);
+	f.open(conf._outputDir + "/" + name);
 	if (!f) {
-		log(2, L"🔥Ouverture du fichier de sortie impossible : " + string_to_wstring(nom));
+		log(2, L"🔥Ouverture du fichier de sortie impossible : " + string_to_wstring(name));
 		return E_FAIL;
 	}
-	f << ansi_to_utf8(valeur.dump(0));
+	f << ansi_to_utf8(value.dump(0));
 	f.close();
 	return ERROR_SUCCESS;
 }
 
-EcrivainJsonTableau::EcrivainJsonTableau(const std::string& nom) : nom_(nom) {
+JsonArrayWriter::JsonArrayWriter(const std::string& name) : name_(name) {
 	std::error_code ec;
 	std::filesystem::create_directories(conf._outputDir, ec);  // pas d'erreur si présent
-	f_.open(conf._outputDir + "/" + nom);
+	f_.open(conf._outputDir + "/" + name);
 	if (!f_) {
-		log(2, L"🔥Ouverture du fichier de sortie impossible : " + string_to_wstring(nom));
+		log(2, L"🔥Ouverture du fichier de sortie impossible : " + string_to_wstring(name));
 		return;
 	}
-	ouvert_ = true;
+	open_ = true;
 	f_ << L"[";
 }
 
-void EcrivainJsonTableau::ajouter(const Json& element) {
-	if (!ouvert_ || ferme_) return;
+void JsonArrayWriter::add(const Json& element) {
+	if (!open_ || closed_) return;
 	// La virgule précède l'élément : on ne sait pas, en écrivant, s'il en
 	// viendra d'autres — c'est ce qui évite la virgule finale sans relecture.
-	f_ << (ecrits_ ? L",\n\t" : L"\n\t");
+	f_ << (written_ ? L",\n\t" : L"\n\t");
 	f_ << ansi_to_utf8(element.dump(1));
-	++ecrits_;
+	++written_;
 }
 
-HRESULT EcrivainJsonTableau::fermer() {
-	if (!ouvert_ || ferme_) return ouvert_ ? ERROR_SUCCESS : E_FAIL;
-	ferme_ = true;
-	if (ecrits_) f_ << L"\n";
+HRESULT JsonArrayWriter::close() {
+	if (!open_ || closed_) return open_ ? ERROR_SUCCESS : E_FAIL;
+	closed_ = true;
+	if (written_) f_ << L"\n";
 	f_ << L"]";
-	const bool bon = f_.good();
+	const bool good = f_.good();
 	f_.close();
-	if (!bon) {
-		log(2, L"🔥Ecriture incomplete : " + string_to_wstring(nom_));
+	if (!good) {
+		log(2, L"🔥Ecriture incomplete : " + string_to_wstring(name_));
 		return E_FAIL;
 	}
 	return ERROR_SUCCESS;
 }
 
-EcrivainJsonTableau::~EcrivainJsonTableau() {
+JsonArrayWriter::~JsonArrayWriter() {
 	// Sans cela, un retour anticipé laisserait un tableau JSON non refermé :
 	// un fichier invalide se lit comme « rien collecté », pas comme une erreur.
-	fermer();
+	close();
 }
 
-HRESULT writeNotCollected(const std::string& nom, const std::wstring& artefact,
-                          HRESULT resultat) {
+HRESULT writeNotCollected(const std::string& name, const std::wstring& artefact,
+                          HRESULT result) {
 	Json o = Json::obj();
 	o.add(L"Artifact",         Json::str(artefact));
 	o.add(L"CollectionStatus", Json::str(L"NotCollected"));
-	o.add(L"Error",            Json::str(L"0x" + to_hex(resultat) + L" " + getErrorMessage(resultat)));
+	o.add(L"Error",            Json::str(L"0x" + to_hex(result) + L" " + getErrorMessage(result)));
 	// Sans cette precision, un tableau vide et une lecture en echec se lisent de
 	// la meme facon : « aucune trace ».
 	o.add(L"Note",             Json::str(L"La lecture de cet artefact a échoué : "
 	                                     L"l'absence de données ci-dessus ne signifie PAS "
 	                                     L"qu'aucune trace n'existe sur le système."));
-	return writeJsonFile(nom, o);
+	return writeJsonFile(name, o);
 }
 
 //! Minuscules ASCII : suffisant pour des extensions de fichiers.
@@ -1302,30 +1302,30 @@ static std::wstring toLowerAscii(std::wstring s) {
 	return s;
 }
 
-std::vector<std::filesystem::path> listFilesByExtension(const std::filesystem::path& repertoire,
+std::vector<std::filesystem::path> listFilesByExtension(const std::filesystem::path& directory,
 	const std::vector<std::wstring>& extensions) {
-	std::vector<std::filesystem::path> resultats;
+	std::vector<std::filesystem::path> results;
 	std::error_code ec;
-	std::filesystem::directory_iterator it(repertoire, ec);
+	std::filesystem::directory_iterator it(directory, ec);
 	if (ec) {                                    // absent ou illisible : cas nominal
-		log(4, L"🔈Repertoire non parcouru : " + repertoire.wstring());
-		return resultats;
+		log(4, L"🔈Repertoire non parcouru : " + directory.wstring());
+		return results;
 	}
-	std::vector<std::wstring> attendues;         // abaissees une seule fois
-	attendues.reserve(extensions.size());
-	for (const std::wstring& e : extensions) attendues.push_back(toLowerAscii(e));
+	std::vector<std::wstring> expectedExtensions;   // abaissees une seule fois
+	expectedExtensions.reserve(extensions.size());
+	for (const std::wstring& e : extensions) expectedExtensions.push_back(toLowerAscii(e));
 
-	for (const std::filesystem::directory_iterator fin; it != fin; it.increment(ec)) {
+	for (const std::filesystem::directory_iterator end; it != end; it.increment(ec)) {
 		if (ec) {                                // parcours interrompu : on garde l'acquis
-			log(2, L"🔥Parcours interrompu : " + repertoire.wstring());
+			log(2, L"🔥Parcours interrompu : " + directory.wstring());
 			break;
 		}
-		std::error_code ecFichier;
-		if (!it->is_regular_file(ecFichier) || ecFichier) continue;
+		std::error_code fileWriter;
+		if (!it->is_regular_file(fileWriter) || fileWriter) continue;
 		const std::wstring ext = toLowerAscii(it->path().extension().wstring());
-		for (const std::wstring& attendue : attendues) {
-			if (ext == attendue) { resultats.push_back(it->path()); break; }
+		for (const std::wstring& wanted : expectedExtensions) {
+			if (ext == wanted) { results.push_back(it->path()); break; }
 		}
 	}
-	return resultats;
+	return results;
 }

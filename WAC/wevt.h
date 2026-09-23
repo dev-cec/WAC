@@ -55,21 +55,21 @@ public:
 	/*! Analyse une ressource MESSAGETABLE.
 	*  @param donnees contenu brut de la ressource
 	*  @return nombre de messages lus */
-	size_t analyser(const std::vector<uint8_t>& donnees);
+	size_t analyse(const std::vector<uint8_t>& data);
 
 	/*! Texte d'un identifiant de message.
 	*  @return le modèle avec ses marques %1 %2…, ou chaîne vide si absent */
-	std::wstring texte(uint32_t identifiant) const;
+	std::wstring text(uint32_t id) const;
 
 	//! Nombre de messages connus.
-	size_t taille() const { return messages_.size(); }
+	size_t size() const { return messages_.size(); }
 
 private:
 	std::map<uint32_t, std::wstring> messages_;
 };
 
 /*! Métadonnées d'événements d'un fournisseur (ressource WEVT_TEMPLATE). */
-class MetadonneesWevt {
+class WevtMetadata {
 public:
 	/*! Analyse une ressource WEVT_TEMPLATE.
 	*  @param donnees contenu brut de la ressource
@@ -77,8 +77,8 @@ public:
 	*         « {aea1b4fa-97d1-45f2-a64c-4d69fffd92c9} » ; vide pour prendre le
 	*         premier fournisseur décrit
 	*  @return nombre d'événements décrits */
-	size_t analyser(const std::vector<uint8_t>& donnees,
-	                const std::wstring& guidFournisseur = std::wstring());
+	size_t analyse(const std::vector<uint8_t>& data,
+	                const std::wstring& providerGuid = std::wstring());
 
 	/*! Identifiant de message d'un événement.
 	*
@@ -87,10 +87,10 @@ public:
 	*  porte pas toujours celle qui a servi.
 	*
 	*  @return l'identifiant de message, ou 0 si l'événement n'est pas décrit */
-	uint32_t identifiantMessage(uint16_t identifiantEvenement, uint8_t version) const;
+	uint32_t messageId(uint16_t eventId, uint8_t version) const;
 
 	//! Nombre d'événements décrits.
-	size_t taille() const { return parIdEtVersion_.size(); }
+	size_t size() const { return parIdEtVersion_.size(); }
 
 private:
 	std::map<uint32_t, uint32_t> parIdEtVersion_;   //!< (id << 8 | version) -> message
@@ -108,5 +108,5 @@ private:
 *  @param valeurs données de l'événement, dans l'ordre (%1 est la première)
 *  @return la phrase, ou une chaîne vide si le modèle est vide
 */
-std::wstring formaterMessage(const std::wstring& modele,
-                             const std::vector<std::wstring>& valeurs);
+std::wstring formatMessage(const std::wstring& messageTemplate,
+                             const std::vector<std::wstring>& values);

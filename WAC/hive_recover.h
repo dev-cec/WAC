@@ -1,4 +1,5 @@
-/*  hive_recover.h — makes a hive copied live ("dirty") usable.
+/*! \file
+ *  \brief Makes a hive copied live ("dirty") usable.
  *
  *  PROBLEM. A raw copy of a hive of a running system is always marked "dirty":
  *  in its base block (`regf`), the primary sequence number differs from the
@@ -25,7 +26,7 @@
  *  ETHICS. Both operations write to the COPY, never to the original — which is
  *  never opened for writing anyway. And the raw copy stays rebuildable to the
  *  byte: the patch only touches 8 bytes, fully recorded, and the replay writes
- *  beside the hive an undo journal holding the ORIGINAL content of every
+ *  beside the hive an undo log holding the ORIGINAL content of every
  *  replaced page (see ReplayHiveLogs). The `.LOG1/.LOG2` are extracted in every
  *  case: they are artefacts in themselves and the record of what was applied.
  */
@@ -62,26 +63,26 @@ std::wstring HiveFixInfoToString(const HiveFixInfo& i);
 struct HiveLogEntry {
     uint32_t sequence = 0;      //!< sequence number of the entry
     uint32_t pages    = 0;      //!< number of modified pages
-    uint64_t octets   = 0;      //!< size of those pages
+    uint64_t bytes   = 0;      //!< size of those pages
     bool     applique = false;  //!< true if it was written into the hive
-    std::wstring motif;         //!< why it was discarded, if it was
+    std::wstring reason;         //!< why it was discarded, if it was
 };
 
 /*! Result of replaying the transaction logs. */
 struct HiveReplayInfo {
     bool ok       = false;      //!< operation carried out without an I/O error
-    bool journaux = false;      //!< at least one usable `.LOG1/.LOG2` found
+    bool logs = false;      //!< at least one usable `.LOG1/.LOG2` found
     bool applique = false;      //!< at least one entry written into the hive
-    uint32_t sequenceRuche   = 0;  //!< hive sequence before replay
+    uint32_t hiveSequence   = 0;  //!< hive sequence before replay
     uint32_t sequenceFinale  = 0;  //!< sequence after replay
-    unsigned entreesRetenues = 0;  //!< chain entries applied
-    unsigned entreesEcartees = 0;  //!< invalid entries (checksum, bounds)
-    unsigned entreesResidu   = 0;  //!< entries outside the chain (earlier generation)
+    unsigned keptEntries = 0;  //!< chain entries applied
+    unsigned discardedEntries = 0;  //!< invalid entries (checksum, bounds)
+    unsigned leftoverEntries   = 0;  //!< entries outside the chain (earlier generation)
     unsigned pages           = 0;  //!< pages written
-    uint64_t octets          = 0;  //!< bytes written
-    std::wstring journalAnnulation; //!< path of the undo journal produced
+    uint64_t bytes          = 0;  //!< bytes written
+    std::wstring undoJournal; //!< path of the undo log produced
     std::wstring error;             //!< message if ok == false
-    std::vector<HiveLogEntry> entrees; //!< details, for the report
+    std::vector<HiveLogEntry> entries; //!< details, for the report
 };
 
 /*! Applies the transaction logs to an extracted hive.
@@ -103,7 +104,7 @@ struct HiveReplayInfo {
 *    entry that fails ends the chain: applying doubtful pages to evidence would
 *    be worse than applying nothing.
 *
-*  An undo journal `<hive>.undo` is written beside the hive, holding the
+*  An undo log `<hive>.undo` is written beside the hive, holding the
 *  ORIGINAL content of every replaced page. Its format is deliberately trivial,
 *  so that a third party can undo the operation:
 *
@@ -116,12 +117,12 @@ struct HiveReplayInfo {
 *     ...      original content of the pages, in table order
 *
 *  @param hive path of the extracted hive (modified in place if the replay succeeds)
-*  @param md5Avant fingerprint of the hive before replay, recorded in the undo
-*         journal; the caller already computed it during extraction
+*  @param md5Before fingerprint of the hive before replay, recorded in the undo
+*         log; the caller already computed it during extraction
 *  @return details of the operation, to be recorded in the report
 */
 HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
-                              const std::wstring& md5Avant);
+                              const std::wstring& md5Before);
 
 /*! Readable details for the log/report (one line). */
 std::wstring HiveReplayInfoToString(const HiveReplayInfo& i);

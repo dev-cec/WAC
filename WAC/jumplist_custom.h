@@ -83,7 +83,7 @@ struct CustomDestination {
 	* method. Every Custom Destination therefore leaked its whole category, with
 	* its vector of `RecentDoc` and the ID lists they hold. Ownership is now
 	* carried by the type. */
-	std::unique_ptr<CustomDestinationCategory> categorie;
+	std::unique_ptr<CustomDestinationCategory> category;
 	FILETIME created = { 0 };     //!< creation of the jump list FILE, local time
 	FILETIME createdUtc = { 0 };  //!< the same instant in UTC
 	FILETIME modified = { 0 };    //!< last modification of that file, local time

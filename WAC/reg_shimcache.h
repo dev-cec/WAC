@@ -38,7 +38,7 @@
 struct Shimcache {
 public:
 	std::wstring path = L"";     //!< path of the binary the entry names
-	EmpreinteBinaire empreinte;  //!< fingerprints of that file, if `--binary` was given
+	BinaryFingerprint fingerprint;  //!< fingerprints of that file, if `--binary` was given
 	std::wstring lastModification = L"";    //!< the file's last modification, suspect's local time
 	std::wstring lastModificationUtc = L"";	//!< the same instant in UTC
 	bool executed = false;       //!< flag read at the end of the entry. The "10ts"

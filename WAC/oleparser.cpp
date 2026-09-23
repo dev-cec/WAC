@@ -79,7 +79,7 @@ DestFile::DestFile(LPBYTE buffer) {
 	log(3, L"🔈timeToIso8601 lastModificationTimeUtc");
 	if (timeToIso8601Utc(lastModificationTimeUtc) != L"") {
 		log(3, L"🔈utcVersLocalSuspect lastModificationTimeUtc");
-		utcVersLocalSuspect(lastModificationTimeUtc, &lastModificationTime);
+		utcToSuspectLocal(lastModificationTimeUtc, &lastModificationTime);
 	}
 	pinStatus = *reinterpret_cast<int*>(buffer + 108);
 	pathObjectSize = *reinterpret_cast<unsigned short int*>(buffer + 128);
@@ -136,11 +136,11 @@ namespace {
 /*! 2^exposant, en entier, ou 0 si l'exposant sort des bornes plausibles du
  *  format CFB. Evite `pow` (flottant) et la troncature d'un cast vers un type
  *  trop petit : la valeur retournee sert a calculer des offsets. */
-int powerOfTwoOrZero(unsigned int exposant) {
+int powerOfTwoOrZero(unsigned int exponent) {
 	// CFB utilise 9 (512 o) ou 12 (4096 o) pour les secteurs, 6 (64 o) pour les
 	// petits secteurs. On tolere [6, 16] et on rejette le reste.
-	if (exposant < 6 || exposant > 16) return 0;
-	return 1 << exposant;
+	if (exponent < 6 || exponent > 16) return 0;
+	return 1 << exponent;
 }
 
 } // namespace
@@ -174,10 +174,10 @@ oleHeader::oleHeader(LPBYTE buffer, size_t _bufferSize) {
 
 	/* La version majeure impose la taille de secteur (MS-CFB) : une incoherence
 	   signale une corruption ou une falsification, information utile au rapport. */
-	const int attendue = (versionMajor == 3) ? 512 : (versionMajor == 4) ? 4096 : 0;
-	if (attendue != 0 && sectorSize != attendue)
+	const int expected = (versionMajor == 3) ? 512 : (versionMajor == 4) ? 4096 : 0;
+	if (expected != 0 && sectorSize != expected)
 		log(2, L"🔥oleHeader incoherent : version majeure " + std::to_wstring(versionMajor)
-		     + L" attend des secteurs de " + std::to_wstring(attendue)
+		     + L" attend des secteurs de " + std::to_wstring(expected)
 		     + L" o, l'en-tete declare " + std::to_wstring(sectorSize) + L" o");
 	totalSATSectors = *reinterpret_cast<int*>(buffer + 44); // Total Sector Allocation Table(SAT) sectors at offset 44
 	directoryStreamFirstSectorId = *reinterpret_cast<int*>(buffer + 48); // Sector ID of first sector used by Directory at offset 48
@@ -223,8 +223,8 @@ oleParser::oleParser(LPBYTE _buffer, size_t _bufferSize) {
 		/* `unique_ptr` par precaution : la fonction leve des exceptions un peu
 		   partout (« file corrupt … »), et un `throw` ajoute entre cette
 		   allocation et sa liberation manuelle fuirait sans bruit. */
-		std::unique_ptr<BYTE[]> tamponMsat = std::make_unique<BYTE[]>(remainingByteLen);
-		LPBYTE remainingBytes = tamponMsat.get();
+		std::unique_ptr<BYTE[]> msatBuffer = std::make_unique<BYTE[]>(remainingByteLen);
+		LPBYTE remainingBytes = msatBuffer.get();
 		while (remainingSlots > 0) {
 			if (remainingSlots > maxSlotsPerBlock) {
 				// in this case we have to only take so many
@@ -333,17 +333,17 @@ Directory oleParser::findDirectory(std::wstring name) {
 	return Directory();
 }
 
-std::vector<int> oleParser::sectorChain(const std::vector<int>& table, int premier) {
-	std::vector<int> chaine;
-	int courant = premier;
+std::vector<int> oleParser::sectorChain(const std::vector<int>& table, int first) {
+	std::vector<int> string;
+	int current = first;
 	// Une chaine ne peut pas etre plus longue que la table : au-dela, elle boucle.
-	while (chaine.size() <= table.size()) {
-		if (courant < 0 || (size_t)courant >= table.size())
+	while (string.size() <= table.size()) {
+		if (current < 0 || (size_t)current >= table.size())
 			throw std::length_error("file corrupt - sector index out of range");
-		chaine.push_back(courant);
-		const int suivant = table[courant];
-		if (suivant < 0) return chaine;        // -2 ENDOFCHAIN et autres marqueurs
-		courant = suivant;
+		string.push_back(current);
+		const int next = table[current];
+		if (next < 0) return string;        // -2 ENDOFCHAIN et autres marqueurs
+		current = next;
 	}
 	throw std::length_error("file corrupt - cyclic sector chain");
 }
@@ -383,14 +383,14 @@ std::vector<BYTE> oleParser::GetBytesFromSat(int sectorNumber) {
 
 std::vector<BYTE> oleParser::GetBytesFromSSat(int sectorNumber) {
 	std::vector<BYTE> retBytes;
-	const size_t taille = (size_t)header.shortSectorSize;
+	const size_t size = (size_t)header.shortSectorSize;
 	for (int i : sectorChain(ssat, sectorNumber))
 	{
 		// CORRECTION : le test etait `i > size()`, laissant passer i == size().
-		if ((size_t)i >= shortSectors.size() || taille > shortSectors[i].size())
+		if ((size_t)i >= shortSectors.size() || size > shortSectors[i].size())
 			throw std::length_error("file corrupt - Error retrieving data from SSAT");
-		const std::vector<BYTE>& secteur = shortSectors[i];
-		retBytes.insert(retBytes.end(), secteur.begin(), secteur.begin() + taille);
+		const std::vector<BYTE>& sector = shortSectors[i];
+		retBytes.insert(retBytes.end(), sector.begin(), sector.begin() + size);
 	}
 	return retBytes;
 }

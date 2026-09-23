@@ -14,9 +14,9 @@ namespace {
 * `svchost.exe` : EmpreinteFichier ne lit chaque fichier qu'une fois pour toute
 * la collecte, quel que soit le nombre d'artefacts qui le citent.
 */
-EmpreinteBinaire empreinteDuBinaire(const std::wstring& valeurRuche) {
-	if (!conf.binary || valeurRuche.empty()) return EmpreinteBinaire();
-	return EmpreinteFichier(cheminBinaire(valeurRuche));
+BinaryFingerprint binaryFingerprint(const std::wstring& hiveValue) {
+	if (!conf.binary || hiveValue.empty()) return BinaryFingerprint();
+	return FingerprintFile(binaryPath(hiveValue));
 }
 
 /*! Relève l'état courant de tous les services en UNE énumération.
@@ -30,47 +30,47 @@ EmpreinteBinaire empreinteDuBinaire(const std::wstring& valeurRuche) {
 *  @param etats reçoit l'état indexé par nom de service en minuscules
 *  @return ERROR_SUCCESS si l'énumération a abouti
 */
-HRESULT releverEtatsLive(std::map<std::wstring, EtatService>& etats) {
+HRESULT readLiveStates(std::map<std::wstring, ServiceState>& states) {
 	log(3, L"🔈OpenSCManager");
 	SC_HANDLE hSCM = OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE | SC_MANAGER_CONNECT);
 	if (!hSCM) {
-		const HRESULT erreur = GetLastError();
-		log(2, L"🔥OpenSCManager : etat courant des services non releve", erreur);
-		return erreur;
+		const HRESULT error = GetLastError();
+		log(2, L"🔥OpenSCManager : etat courant des services non releve", error);
+		return error;
 	}
 
-	HRESULT resultat = ERROR_SUCCESS;
-	DWORD octetsNecessaires = 0, nombre = 0;
+	HRESULT result = ERROR_SUCCESS;
+	DWORD neededBytes = 0, count = 0;
 	log(3, L"🔈EnumServicesStatusExW (dimensionnement)");
 	EnumServicesStatusExW(hSCM, SC_ENUM_PROCESS_INFO, SERVICE_WIN32 | SERVICE_DRIVER,
-	                      SERVICE_STATE_ALL, NULL, 0, &octetsNecessaires, &nombre, 0, NULL);
-	if (octetsNecessaires == 0) {
+	                      SERVICE_STATE_ALL, NULL, 0, &neededBytes, &count, 0, NULL);
+	if (neededBytes == 0) {
 		CloseServiceHandle(hSCM);
 		return ERROR_SUCCESS;   // aucun service : pas une erreur
 	}
 
-	std::vector<BYTE> tampon(octetsNecessaires);
-	DWORD reste = 0;
+	std::vector<BYTE> buffer(neededBytes);
+	DWORD rest = 0;
 	log(3, L"🔈EnumServicesStatusExW");
 	if (EnumServicesStatusExW(hSCM, SC_ENUM_PROCESS_INFO, SERVICE_WIN32 | SERVICE_DRIVER,
-	                          SERVICE_STATE_ALL, tampon.data(), (DWORD)tampon.size(),
-	                          &reste, &nombre, 0, NULL)) {
-		const LPENUM_SERVICE_STATUS_PROCESS liste = (LPENUM_SERVICE_STATUS_PROCESS)tampon.data();
-		for (DWORD i = 0; i < nombre; ++i) {
-			if (!liste[i].lpServiceName) continue;
-			EtatService e;
-			e.status    = serviceState_to_wstring(liste[i].ServiceStatusProcess.dwCurrentState);
-			e.processId = liste[i].ServiceStatusProcess.dwProcessId;
-			etats.emplace(enMinuscules(liste[i].lpServiceName), e);
+	                          SERVICE_STATE_ALL, buffer.data(), (DWORD)buffer.size(),
+	                          &rest, &count, 0, NULL)) {
+		const LPENUM_SERVICE_STATUS_PROCESS list = (LPENUM_SERVICE_STATUS_PROCESS)buffer.data();
+		for (DWORD i = 0; i < count; ++i) {
+			if (!list[i].lpServiceName) continue;
+			ServiceState e;
+			e.status    = serviceState_to_wstring(list[i].ServiceStatusProcess.dwCurrentState);
+			e.processId = list[i].ServiceStatusProcess.dwProcessId;
+			states.emplace(toLower(list[i].lpServiceName), e);
 		}
-		log(2, L"❇️Etat courant releve pour " + std::to_wstring(etats.size()) + L" services");
+		log(2, L"❇️Etat courant releve pour " + std::to_wstring(states.size()) + L" services");
 	}
 	else {
-		resultat = GetLastError();
-		log(2, L"🔥EnumServicesStatusExW", resultat);
+		result = GetLastError();
+		log(2, L"🔥EnumServicesStatusExW", result);
 	}
 	CloseServiceHandle(hSCM);
-	return resultat;
+	return result;
 }
 
 /*! Ajoute une valeur qui peut être un texte, une référence de ressource MUI, ou
@@ -86,16 +86,16 @@ HRESULT releverEtatsLive(std::map<std::wstring, EtatService>& etats) {
 * disponible. Ce repli est du texte utilisable et il serait absurde de le
 * jeter — il concerne la quasi-totalité des ~400 pilotes de la ruche.
 */
-void ajouterTexteOuRessource(Json& o, const std::wstring& nom, const std::wstring& valeur) {
-	if (valeur.empty()) return;
-	if (valeur.front() != L'@') {              // texte direct
-		o.add(nom.c_str(), Json::str(valeur));
+void addTextOrResource(Json& o, const std::wstring& name, const std::wstring& value) {
+	if (value.empty()) return;
+	if (value.front() != L'@') {              // texte direct
+		o.add(name.c_str(), Json::str(value));
 		return;
 	}
-	const size_t pointVirgule = valeur.rfind(L';');
-	if (pointVirgule != std::wstring::npos && pointVirgule + 1 < valeur.size())
-		o.add(nom.c_str(), Json::str(valeur.substr(pointVirgule + 1)));
-	o.add((nom + L"Resource").c_str(), Json::str(valeur));
+	const size_t pointVirgule = value.rfind(L';');
+	if (pointVirgule != std::wstring::npos && pointVirgule + 1 < value.size())
+		o.add(name.c_str(), Json::str(value.substr(pointVirgule + 1)));
+	o.add((name + L"Resource").c_str(), Json::str(value));
 }
 
 } // namespace
@@ -110,8 +110,8 @@ Json ServiceStruct::toJson() const {
 	   champ qui dit ce qu'elles sont, plutot que presentees comme des noms.
 	   `Name` reste l'identifiant exploitable : c'est celui qu'emploient les
 	   journaux et les commandes. */
-	ajouterTexteOuRessource(o, L"DisplayName", serviceDisplayName);
-	ajouterTexteOuRessource(o, L"Description", serviceDescription);
+	addTextOrResource(o, L"DisplayName", serviceDisplayName);
+	addTextOrResource(o, L"Description", serviceDescription);
 	o.add(L"Type",        Json::str(serviceType));
 	o.add(L"StartType",   Json::str(serviceStartType));
 	if (!serviceErrorControl.empty()) o.add(L"ErrorControl", Json::str(serviceErrorControl));
@@ -119,22 +119,22 @@ Json ServiceStruct::toJson() const {
 	   une lecture manquee — il n'est donc pas emis. */
 	if (!serviceOwner.empty())  o.add(L"Owner",  Json::str(serviceOwner));
 	if (!serviceBinary.empty()) o.add(L"Binary", Json::str(serviceBinary));   // valeur BRUTE
-	ajouterEmpreintes(o, serviceEmpreinte);
+	addFingerprints(o, serviceFingerprint);
 
 	/* Pour un service hébergé dans svchost.exe, `Binary` ne nomme que svchost :
 	   la DLL est le code réellement exécuté. Émise seulement si elle existe,
 	   pour que sa présence signale un service hébergé. */
 	if (!serviceDll.empty()) {
 		o.add(L"ServiceDll", Json::str(serviceDll));
-		ajouterEmpreintes(o, serviceDllEmpreinte, L"ServiceDll");
+		addFingerprints(o, serviceDllFingerprint, L"ServiceDll");
 	}
 	// Persistance possible : commande relancée quand le service échoue.
 	if (!serviceFailureCommand.empty())
 		o.add(L"FailureCommand", Json::str(serviceFailureCommand));
 	if (!serviceGroup.empty()) o.add(L"Group", Json::str(serviceGroup));
-	if (!dependances.empty()) {
+	if (!dependencies.empty()) {
 		Json d = Json::arr();
-		for (const std::wstring& dep : dependances) d.push(Json::str(dep));
+		for (const std::wstring& dep : dependencies) d.push(Json::str(dep));
 		o.add(L"DependOnService", d);
 	}
 
@@ -145,8 +145,8 @@ Json ServiceStruct::toJson() const {
 
 	/* État volatil. Le drapeau accompagne la valeur : sans lui, « arrêté » et
 	   « non relevé » se confondraient. */
-	o.add(L"LiveStatusAvailable", Json::boolean(etatReleve));
-	if (etatReleve) {
+	o.add(L"LiveStatusAvailable", Json::boolean(stateRead));
+	if (stateRead) {
 		o.add(L"Status",    Json::str(serviceStatus));
 		o.add(L"ProcessId", Json::num(serviceProcessId));
 	}
@@ -175,9 +175,9 @@ HRESULT Services::getData() {
 		return hresult;
 	}
 
-	DWORD nSousCles = 0;
+	DWORD nSubKeys = 0;
 	log(3, L"🔈ORQueryInfoKey CurrentControlSet\\Services");
-	hresult = ORQueryInfoKey(hServices, NULL, NULL, &nSousCles, NULL, NULL, NULL,
+	hresult = ORQueryInfoKey(hServices, NULL, NULL, &nSubKeys, NULL, NULL, NULL,
 	                         NULL, NULL, NULL, NULL);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥ORQueryInfoKey CurrentControlSet\\Services", hresult);
@@ -186,30 +186,30 @@ HRESULT Services::getData() {
 	}
 
 	// État courant relevé AVANT le parcours : une seule sollicitation du SCM.
-	std::map<std::wstring, EtatService> etats;
-	const bool etatsDisponibles = (releverEtatsLive(etats) == ERROR_SUCCESS);
+	std::map<std::wstring, ServiceState> states;
+	const bool statesAvailable = (readLiveStates(states) == ERROR_SUCCESS);
 
-	services.reserve(nSousCles);
-	WCHAR nomCle[MAX_KEY_NAME] = L"";
-	for (DWORD i = 0; i < nSousCles; ++i) {
-		printProgressStep(L"Service", i + 1, nSousCles);
-		DWORD taille = MAX_KEY_NAME;
+	services.reserve(nSubKeys);
+	WCHAR keyName[MAX_KEY_NAME] = L"";
+	for (DWORD i = 0; i < nSubKeys; ++i) {
+		printProgressStep(L"Service", i + 1, nSubKeys);
+		DWORD size = MAX_KEY_NAME;
 		log(3, L"🔈OREnumKey Services " + std::to_wstring(i));
-		hresult = OREnumKey(hServices, i, nomCle, &taille, NULL, NULL, NULL);
+		hresult = OREnumKey(hServices, i, keyName, &size, NULL, NULL, NULL);
 		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
 			log(2, L"🔥OREnumKey Services " + std::to_wstring(i), hresult);
 			continue;
 		}
 
 		ORHKEY hService = NULL;
-		log(3, L"🔈OROpenKey Services\\" + std::wstring(nomCle));
-		if (OROpenKey(hServices, nomCle, &hService) != ERROR_SUCCESS) {
-			log(2, L"🔥OROpenKey Services\\" + std::wstring(nomCle));
+		log(3, L"🔈OROpenKey Services\\" + std::wstring(keyName));
+		if (OROpenKey(hServices, keyName, &hService) != ERROR_SUCCESS) {
+			log(2, L"🔥OROpenKey Services\\" + std::wstring(keyName));
 			continue;
 		}
 
 		ServiceStruct s;
-		s.serviceName = nomCle;
+		s.serviceName = keyName;
 		log(1, L"➕Service");
 		log(2, L"❇️Service name : " + s.serviceName);
 
@@ -217,7 +217,7 @@ HRESULT Services::getData() {
 		ORQueryInfoKey(hService, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 		               &s.lastWriteTimeUtc);
 		log(3, L"🔈utcVersLocalSuspect lastWriteTime");
-		utcVersLocalSuspect(s.lastWriteTimeUtc, &s.lastWriteTime);
+		utcToSuspectLocal(s.lastWriteTimeUtc, &s.lastWriteTime);
 
 		getRegSzValue(hService, nullptr, L"DisplayName", &s.serviceDisplayName);
 		if (s.serviceDisplayName.empty()) s.serviceDisplayName = s.serviceName;
@@ -226,17 +226,17 @@ HRESULT Services::getData() {
 		getRegSzValue(hService, nullptr, L"ObjectName",   &s.serviceOwner);
 		getRegSzValue(hService, nullptr, L"Group",        &s.serviceGroup);
 		getRegSzValue(hService, nullptr, L"FailureCommand", &s.serviceFailureCommand);
-		getRegMultiSzValue(hService, nullptr, L"DependOnService", &s.dependances);
+		getRegMultiSzValue(hService, nullptr, L"DependOnService", &s.dependencies);
 
-		DWORD valeur = 0;
+		DWORD value = 0;
 		/* `Type` est obligatoire pour tout service enregistre. Certaines
 		   sous-cles de `Services` n'en portent pas : ce sont des CONTENEURS de
 		   parametres (WinSock2, EventLog\..., Tcpip\Parameters...), pas des
 		   services. Les emettre remplissait services.json d'entrees vides, qui
 		   se lisent comme des lectures echouees. */
 		bool estUnService = false;
-		if (getRegDwordValue(hService, nullptr, L"Type", &valeur) == ERROR_SUCCESS) {
-			s.serviceType = serviceType_to_wstring((int)valeur);
+		if (getRegDwordValue(hService, nullptr, L"Type", &value) == ERROR_SUCCESS) {
+			s.serviceType = serviceType_to_wstring((int)value);
 			estUnService = true;
 		}
 		if (!estUnService) {
@@ -245,28 +245,28 @@ HRESULT Services::getData() {
 			ORCloseKey(hService);
 			continue;
 		}
-		if (getRegDwordValue(hService, nullptr, L"Start", &valeur) == ERROR_SUCCESS)
-			s.serviceStartType = serviceStart_to_wstring((int)valeur);
-		if (getRegDwordValue(hService, nullptr, L"ErrorControl", &valeur) == ERROR_SUCCESS) {
+		if (getRegDwordValue(hService, nullptr, L"Start", &value) == ERROR_SUCCESS)
+			s.serviceStartType = serviceStart_to_wstring((int)value);
+		if (getRegDwordValue(hService, nullptr, L"ErrorControl", &value) == ERROR_SUCCESS) {
 			/* SERVICE_ERROR_IGNORE=0 … SERVICE_ERROR_CRITICAL=3. Traduit ici
 			   plutôt que dans trans_id : quatre valeurs, un seul appelant. */
-			PCWSTR libelles[] = { L"SERVICE_ERROR_IGNORE", L"SERVICE_ERROR_NORMAL",
+			PCWSTR labels[] = { L"SERVICE_ERROR_IGNORE", L"SERVICE_ERROR_NORMAL",
 			                      L"SERVICE_ERROR_SEVERE", L"SERVICE_ERROR_CRITICAL" };
-			s.serviceErrorControl = (valeur <= 3) ? libelles[valeur]
+			s.serviceErrorControl = (value <= 3) ? labels[value]
 			                                      : L"SERVICE_ERROR_UNKNOWN";
 		}
 
 		// ServiceDll : le code réellement chargé pour un service hébergé.
 		getRegSzValue(hService, L"Parameters", L"ServiceDll", &s.serviceDll);
 
-		s.serviceEmpreinte    = empreinteDuBinaire(s.serviceBinary);
-		s.serviceDllEmpreinte = empreinteDuBinaire(s.serviceDll);
+		s.serviceFingerprint    = binaryFingerprint(s.serviceBinary);
+		s.serviceDllFingerprint = binaryFingerprint(s.serviceDll);
 
 		// Appariement avec l'état courant, insensible à la casse.
-		if (etatsDisponibles) {
-			const auto it = etats.find(enMinuscules(s.serviceName));
-			if (it != etats.end()) {
-				s.etatReleve      = true;
+		if (statesAvailable) {
+			const auto it = states.find(toLower(s.serviceName));
+			if (it != states.end()) {
+				s.stateRead      = true;
 				s.serviceStatus   = it->second.status;
 				s.serviceProcessId = it->second.processId;
 			}

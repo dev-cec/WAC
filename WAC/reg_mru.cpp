@@ -19,7 +19,7 @@ Json Mru::toJson() const {
 }
 
 
-HRESULT Mrus::getData(int _niveau) {
+HRESULT Mrus::getData(int _level) {
 
 	log(0, L"*******************************************************************************************************************");
 	log(0, L"ℹ️Mrus : ");
@@ -29,21 +29,21 @@ HRESULT Mrus::getData(int _niveau) {
 	ORHKEY hKey = NULL;
 	ORHKEY hSubKey=NULL;
 	ORHKEY Offhive=NULL;
-	DWORD nSubkeys=0, nValues=0, tailleTampon = 0;
-	WCHAR nomValeur[MAX_VALUE_NAME] = L"";
-	std::wstring ruche = L"";
-	niveau = _niveau;
+	DWORD nSubkeys=0, nValues=0, bufferSize = 0;
+	WCHAR valueName[MAX_VALUE_NAME] = L"";
+	std::wstring hive = L"";
+	level = _level;
 	//HKEY_USERS
-	for (std::tuple<std::wstring, std::wstring> profile : conf.profiles) {
+	for (std::tuple<std::wstring, std::wstring> profileEntry : conf.profiles) {
 		std::wstring keynames[2] = { L"OpenSavePidlMRU",L"OpenSaveMRU" };
 		for (std::wstring keyname : keynames) {
-			//ouverture de la ruche user
+			// open the user hive
 			log(3, L"🔈replaceAll profile");
-			ruche = cheminExtrait(std::get<1>(profile)) + L"\\ntuser.dat";
-			log(3, L"🔈OROpenHive " + std::get<1>(profile) + L"\\ntuser.dat");
-			hresult = OROpenHive(ruche.c_str(), &Offhive);
+			hive = extractedPath(std::get<1>(profileEntry)) + L"\\ntuser.dat";
+			log(3, L"🔈OROpenHive " + std::get<1>(profileEntry) + L"\\ntuser.dat");
+			hresult = OROpenHive(hive.c_str(), &Offhive);
 			if (hresult != ERROR_SUCCESS) {
-				log(2, L"🔥OROpenHive " + std::get<1>(profile) + L"\\ntuser.dat", hresult);
+				log(2, L"🔥OROpenHive " + std::get<1>(profileEntry) + L"\\ntuser.dat", hresult);
 				continue;
 			}
 			log(3, L"🔈OROpenKey Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\" + keyname);
@@ -61,20 +61,20 @@ HRESULT Mrus::getData(int _niveau) {
 			}
 
 			for (int i = 1; i < (int)nSubkeys; i++) {//i=0 = *, on passe
-				tailleTampon = MAX_KEY_NAME;
+				bufferSize = MAX_KEY_NAME;
 				log(3, L"🔈OREnumKey hKey");
-				hresult = OREnumKey(hKey, i, nomValeur, &tailleTampon, NULL, NULL, NULL);
+				hresult = OREnumKey(hKey, i, valueName, &bufferSize, NULL, NULL, NULL);
 				if (hresult != ERROR_SUCCESS) {
 					log(2, L"🔥OREnumKey hkey", hresult);
 					continue;
 				}
-				log(3, L"🔈OROpenKey hkey\\" + std::wstring(nomValeur));
-				hresult = OROpenKey(hKey, nomValeur, &hSubKey);
+				log(3, L"🔈OROpenKey hkey\\" + std::wstring(valueName));
+				hresult = OROpenKey(hKey, valueName, &hSubKey);
 				if (hresult != ERROR_SUCCESS) {
-					log(2, L"🔥OROpenKey hkey\\" + std::wstring(nomValeur), hresult);
+					log(2, L"🔥OROpenKey hkey\\" + std::wstring(valueName), hresult);
 					continue;
 				}
-				hresult = parse(hSubKey, std::get<0>(profile), keyname, &mrus, 1, false, nomValeur);
+				hresult = parse(hSubKey, std::get<0>(profileEntry), keyname, &mrus, 1, false, valueName);
 				if (hresult != ERROR_SUCCESS) {
 					log(2, L"🔥parse", hresult);
 					continue;
@@ -85,15 +85,15 @@ HRESULT Mrus::getData(int _niveau) {
 	return ERROR_SUCCESS;
 }
 
-HRESULT Mrus::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vector<Mru>* out, unsigned int niveau, bool _Parentiszip, std::wstring extension) {
+HRESULT Mrus::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vector<Mru>* out, unsigned int level, bool _Parentiszip, std::wstring extension) {
 	HRESULT hresult = NULL;
 	std::vector<unsigned int> ids;
-	LPBYTE donnees = NULL;
+	LPBYTE data = NULL;
 	FILETIME lastWriteTimeUtc = { 0 };
 	DWORD nSubkeys = 0, nValues = 0;
 
 	unsigned int pos = 0;
-	DWORD taille = 0;
+	DWORD mruListSize = 0;
 
 	log(3, L"🔈ORQueryInfoKey hKey");
 	hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, &lastWriteTimeUtc);
@@ -103,58 +103,59 @@ HRESULT Mrus::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vec
 	}
 
 	log(3, L"🔈getRegBinaryValue hkey\\MRUListEx");
-	hresult = getRegBinaryValue(hKey, L"", L"MRUListEx", &donnees, &taille);
+	hresult = getRegBinaryValue(hKey, L"", L"MRUListEx", &data, &mruListSize);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥getRegBinaryValue hkey\\MRUListEx", hresult);
 		return hresult;
 	}
-	while (pos < taille) {
-		int id = *reinterpret_cast<int*>(donnees + pos);
+	while (pos < mruListSize) {
+		int id = *reinterpret_cast<int*>(data + pos);
 		if (id == 0xffffffff) break;
 		ids.push_back(id);
 		pos += 4;
 	}
 
-	delete[] donnees;
-	donnees = NULL;
+	delete[] data;
+	data = NULL;
 	for (int id : ids) {
 		bool Parentiszip = false | _Parentiszip;
 		log(1, L"➕Mru");
-		printProgress(L"Mru (niveau " + std::to_wstring(niveau) + L")",
-		              ++nbParcourus, 0, L"mru");
+		printProgress(L"Mru (niveau " + std::to_wstring(level) + L")",
+		              ++nWalked, 0, L"mru");
 		Mru mru;
 		mru.id = id;
 		log(2, L"❇️Mru id" + id);
 		mru.lastWriteTimeUtc = lastWriteTimeUtc;
 		log(3, L"🔈utcVersLocalSuspect lastWriteTime");
-		utcVersLocalSuspect(lastWriteTimeUtc, &mru.lastWriteTime);
+		utcToSuspectLocal(lastWriteTimeUtc, &mru.lastWriteTime);
 		mru.extension = extension;
-		mru.niveau = niveau;
+		mru.level = level;
 		mru.sid = sid;
 		log(3, L"🔈getNameFromSid sidName");
 		mru.sidName = getNameFromSid(sid);
 		mru.source = source;
 		log(3, L"🔈getRegBinaryValue hkey\\" + std::to_wstring(id));
-		hresult = getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), &donnees, &taille);
+		DWORD dataSize = 0;
+		hresult = getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), &data, &dataSize);
 		if (hresult != ERROR_SUCCESS) {
 			log(2, L"🔥getRegBinaryValue hkey\\" + std::to_wstring(id), hresult);
 			continue;
 		}
 		unsigned int offset = 0;
-		while (offset < taille) {
-			unsigned short int size = *reinterpret_cast<unsigned short int*>(donnees + offset);
+		while (offset < dataSize) {
+			unsigned short int size = *reinterpret_cast<unsigned short int*>(data + offset);
 			if (size == 0) break;
 			else {
 				log(3, L"🔈IdList");
-				auto shellitem = std::make_unique<IdList>(donnees + offset, niveau + 2, Parentiszip);
+				auto shellitem = std::make_unique<IdList>(data + offset, level + 2, Parentiszip);
 				if (shellitem->shellItem->is_zip == true)
 					Parentiszip = true;
 				offset += size;
 				mru.shellitems.push_back(std::move(shellitem));
 			}
 		}
-		delete[] donnees;
-		donnees = NULL;
+		delete[] data;
+		data = NULL;
 
 		//save
 		out->push_back(std::move(mru));
