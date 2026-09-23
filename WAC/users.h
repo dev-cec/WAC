@@ -1,3 +1,39 @@
+/*! \file
+ *  \brief Local accounts of the examined machine, read from the SAM hive.
+ *
+ *  WHAT IT SHOWS. Who can log on to the machine, since when, how many times
+ *  they did, and how many times they failed. An account created shortly before
+ *  the events, an account whose password was changed, a disabled account that
+ *  logged on: those are the facts this artefact settles, and it names them by
+ *  the SID the other artefacts use.
+ *
+ *  WHY THE HIVE RATHER THAN netapi32. The original version called `NetUserEnum`
+ *  then `NetUserGetInfo` for each account: as many RPC round trips to LSASS.
+ *  The profile list, itself once read from the live registry, now comes from
+ *  the extracted SOFTWARE hive (see tools.h, loadProfileList). The same
+ *  information is written in `SAM\\Domains\\Account\\Users`, now extracted raw.
+ *
+ *  WHAT THE HIVE ADDS
+ *    - the account key's `LastWriteTime`: when the account was created or
+ *      modified — a piece of data no netapi32 API returns;
+ *    - the accounts LSASS would refuse to enumerate if the service answered
+ *      badly;
+ *    - a reading that remains possible on a dead image.
+ *
+ *  STRUCTURE OF THE SAM
+ *  Each account is a subkey named after its RID in hexadecimal on 8 digits,
+ *  carrying two binary values:
+ *    - `F`: the fixed-size fields — timestamps, RID, account flags, logon
+ *      counters (offsets documented below);
+ *    - `V`: the variable-size fields — name, full name, comment, paths,
+ *      preceded by a table of offsets relative to 0xCC.
+ *  The password hashes (`V`, offsets 0x9C and 0xA8) are DELIBERATELY IGNORED:
+ *  they establish no fact useful to the investigation, and their presence in an
+ *  output file would create a risk for nothing in return.
+ *
+ *  The full SID is rebuilt from the machine SID, read in the `V` value of
+ *  `SAM\\Domains\\Account`, and the account's RID.
+ */
 #pragma once
 
 #include <string>
@@ -8,70 +44,47 @@
 #include "trans_id.h"
 #include "json.h"
 
-/*! Comptes locaux de la machine examinée, lus dans la ruche SAM.
-*
-*  POURQUOI LA RUCHE PLUTÔT QUE netapi32. La version d'origine
-*  appelait `NetUserEnum` puis `NetUserGetInfo` pour chaque compte : autant
-*  d'allers-retours RPC vers LSASS. La liste des profils, elle aussi lue
-*  autrefois dans le registre vivant, vient désormais de la ruche SOFTWARE
-*  extraite (cf. tools.h, loadProfileList). La même information est écrite dans
-*  `SAM\Domains\Account\Users`, désormais extraite en brut.
-*
-*  CE QUE LA RUCHE AJOUTE
-*    - `LastWriteTime` de la clé du compte : quand le compte a été créé ou
-*      modifié — donnée qu'aucune API de netapi32 ne rend ;
-*    - les comptes que LSASS refuserait d'énumérer si le service répondait mal ;
-*    - une lecture qui reste possible sur une image morte.
-*
-*  STRUCTURE DU SAM
-*  Chaque compte est une sous-clé nommée par son RID en hexadécimal sur 8
-*  chiffres, portant deux valeurs binaires :
-*    - `F` : champs de taille fixe — horodatages, RID, drapeaux de compte,
-*      compteurs de connexion (offsets documentés ci-dessous) ;
-*    - `V` : champs de taille variable — nom, nom complet, commentaire, chemins,
-*      précédés d'une table d'offsets relatifs à 0xCC.
-*  Les empreintes de mots de passe (`V`, offsets 0x9C et 0xA8) sont
-*  DÉLIBÉRÉMENT IGNORÉES : elles n'établissent aucun fait utile à l'enquête et
-*  leur présence dans un fichier de sortie créerait un risque sans contrepartie.
-*
-*  Le SID complet est recomposé à partir du SID de machine, lu dans la valeur
-*  `V` de `SAM\Domains\Account`, et du RID du compte.
-*/
+/*! One local account of the examined machine. */
 struct User {
-	std::wstring name;                   //!< nom de connexion
-	std::wstring fullName;               //!< nom complet
-	std::wstring comment;                //!< commentaire du compte
-	std::wstring SID;                    //!< SID complet, recomposé
-	DWORD        rid = 0;                //!< identifiant relatif
-	std::wstring profile;                //!< chemin du profil (ProfileList)
-	DWORD        flags = 0;              //!< drapeaux de compte (ACB)
-	std::wstring flagsLibelles;          //!< drapeaux décomposés, lisibles
-	unsigned     logonCount = 0;         //!< nombre de connexions réussies
-	unsigned     badPasswordCount = 0;   //!< nombre d'échecs d'authentification
-	FILETIME     lastLogonUtc = { 0, 0 };        //!< dernière connexion
-	FILETIME     passwordLastSetUtc = { 0, 0 };  //!< dernier changement de mot de passe
-	FILETIME     accountExpiresUtc = { 0, 0 };   //!< expiration du compte
-	FILETIME     lastBadPasswordUtc = { 0, 0 };  //!< dernier échec d'authentification
-	FILETIME     keyLastWriteUtc = { 0, 0 };     //!< création / modification du compte
+	std::wstring name;                   //!< logon name
+	std::wstring fullName;               //!< full name of the account holder
+	std::wstring comment;                //!< comment attached to the account
+	std::wstring SID;                    //!< full SID, rebuilt from the machine SID and the RID
+	DWORD        rid = 0;                //!< relative identifier, which names the subkey
+	std::wstring profile;                //!< path of the profile (ProfileList)
+	DWORD        flags = 0;              //!< account flags (ACB)
+	std::wstring flagsLibelles;          //!< those flags spelled out
+	unsigned     logonCount = 0;         //!< number of successful logons
+	unsigned     badPasswordCount = 0;   //!< number of failed authentications
+	FILETIME     lastLogonUtc = { 0, 0 };        //!< last logon, in UTC
+	FILETIME     passwordLastSetUtc = { 0, 0 };  //!< last password change, in UTC
+	FILETIME     accountExpiresUtc = { 0, 0 };   //!< expiry of the account, in UTC
+	FILETIME     lastBadPasswordUtc = { 0, 0 };  //!< last failed authentication, in UTC
+	FILETIME     keyLastWriteUtc = { 0, 0 };     //!< creation / modification of the account
 
-	//! Conversion de l'objet au format JSON
+	/*! Converts the account to JSON.
+	 *  @return its JSON object. */
 	Json toJson() const;
 
-	//! Libération mémoire
+	//! Releases the memory held by the account.
 	void clear();
 };
 
+/*! All the local accounts of the examined machine. */
 struct Users {
-	std::vector<User> users;   //!< tableau contenant tous les comptes locaux
+	std::vector<User> users;   //!< the accounts, as the SAM lists them
 
-	/*! Relève les comptes dans la ruche SAM extraite.
-	* Nécessite que `ExtractSystemHivesRaw()` ait extrait `\Windows\System32\config\SAM`.
+	/*! Reads the accounts from the extracted SAM hive.
+	* Requires that `ExtractSystemHivesRaw()` has extracted
+	* `\Windows\System32\config\SAM`.
+	* @return S_OK, or the failure of the hive read.
 	*/
 	HRESULT getData();
 
-	//! Conversion de l'objet au format JSON
+	/*! Writes `users.json` into the output directory.
+	 *  @return the result of the write. */
 	HRESULT toJson();
 
-	//! Libération mémoire
+	//! Releases the memory held by the accounts.
 	void clear();
 };

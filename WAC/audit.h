@@ -1,102 +1,107 @@
-/*  audit.h — journal d'investigation : ce que WAC a fait, quand, et ce que ça a laissé.
+/*! \file
+ *  \brief Investigation log: what WAC did, when, and what it left behind.
  *
- *  POURQUOI. Toute collecte sur un système vivant laisse des traces. La bonne
- *  pratique forensique n'est pas de les effacer — ce serait de l'anti-forensique,
- *  et ça compromettrait la recevabilité — mais de les DOCUMENTER, pour qu'un
- *  analyste puisse distinguer, dans les artefacts, ce qui vient du suspect de ce
- *  qui vient de l'outil.
+ *  WHY. Any collection on a live system leaves traces. Good forensic practice
+ *  is not to erase them — that would be anti-forensics, and it would compromise
+ *  admissibility — but to DOCUMENT them, so that an analyst can tell apart, in
+ *  the artefacts, what comes from the suspect and what comes from the tool.
  *
- *  Sans ce journal, un événement 7036 ou un accès fichier horodaté pendant la
- *  collecte est indiscernable d'une action du suspect. C'est une source d'erreur
- *  d'interprétation, et une prise pour la contestation d'une expertise.
+ *  Without this log, a 7036 event or a file access timestamped during the
+ *  collection is indistinguishable from an action of the suspect. That is a
+ *  source of misinterpretation, and a handle for contesting an expert report.
  *
- *  Le journal couvre trois choses :
- *    1. le CONTEXTE de la collecte (outil, version, ligne de commande, machine,
- *       opérateur, fuseau horaire, début/fin) — la chaîne de possession ;
- *    2. chaque OPÉRATION menée, horodatée en UTC et en heure locale, avec son
- *       résultat ;
- *    3. l'EMPREINTE attendue de chaque opération : quelle trace elle laisse et où
- *       la retrouver. C'est ce qui rend le journal exploitable à l'analyse.
+ *  The log covers three things:
+ *    1. the CONTEXT of the collection (tool, version, command line, machine,
+ *       operator, time zone, start/end) — the chain of custody;
+ *    2. every OPERATION carried out, timestamped in UTC and in local time, with
+ *       its result;
+ *    3. the expected FOOTPRINT of each operation: which trace it leaves and
+ *       where to find it. That is what makes the log usable in analysis.
  *
- *  Sortie : `investigation.json`, dans le dossier de sortie, au même format que
- *  les autres artefacts (cf. json.h).
+ *  Output: `investigation.json`, in the output directory, in the same format as
+ *  the other artefacts (see json.h).
  *
- *  Références : RFC 3227 (collecte et archivage de preuves), ISO/IEC 27037
- *  (identification, collecte et préservation de preuves numériques).
+ *  References: RFC 3227 (evidence collecting and archiving), ISO/IEC 27037
+ *  (identification, collection and preservation of digital evidence).
  */
 #pragma once
 #include "json.h"
 #include <windows.h>
 #include <string>
 
-/*! Empreinte attendue d'une opération : la trace qu'elle laisse sur le système
- *  examiné. Sert à renseigner le champ `Footprint` du journal.
+/*! Expected footprint of an operation: the trace it leaves on the examined
+ *  system. Used to fill the log's `Footprint` field.
  *
- *  Les valeurs sont volontairement descriptives plutôt que codées : elles sont
- *  destinées à être lues par un analyste humain dans le rapport.
+ *  The values are descriptive rather than coded on purpose: they are meant to
+ *  be read by a human analyst in the report.
  */
 namespace Footprint {
-	//! Lecture brute du volume : pas d'accès fichier, donc aucun horodatage
-	//! modifié ; un audit d'accès aux objets (si activé) peut la journaliser.
+	//! Raw read of the volume: no file access, hence no timestamp changed;
+	//! an object-access audit (if enabled) may log it.
 	extern const wchar_t* VOLUME_BRUT;
-	//! Ouverture d'une ruche extraite (copie sur l'USB) : n'affecte pas l'original.
+	//! Opening an extracted hive (the copy on the USB medium): leaves the
+	//! original untouched.
 	extern const wchar_t* RUCHE_COPIE;
-	//! Lecture d'un fichier d'artefact extrait (copie sur l'USB) : journaux
-	//! d'événements, Prefetch, jumplists. Aucun accès à l'original.
+	//! Reading an extracted artefact file (the copy on the USB medium): event
+	//! logs, Prefetch, jump lists. No access to the original.
 	extern const wchar_t* FICHIER_COPIE;
-	//! Modification documentée du bloc de base d'une ruche COPIÉE (cf. hive_recover.h).
+	//! Documented change to the base block of a COPIED hive (see hive_recover.h).
 	extern const wchar_t* RUCHE_PATCH;
-	//! Application des journaux de transaction à une ruche COPIÉE, avec journal
-	//! d'annulation (cf. hive_recover.h).
+	//! Replay of the transaction logs into a COPIED hive, with an undo journal
+	//! (see hive_recover.h).
 	extern const wchar_t* RUCHE_REJEU;
-	//! Une seule énumération du gestionnaire de services, en lecture : relève
-	//! l'état courant sans ouvrir de handle par service.
+	//! A single read-only enumeration of the service manager: reads the current
+	//! state without opening a handle per service.
 	extern const wchar_t* SCM;
-	//! Énumération de processus : ouvre des handles de processus (audit possible).
+	//! Process enumeration: opens process handles (which can be audited).
 	extern const wchar_t* PROCESSUS;
-	//! Interrogation des sessions ouvertes via LSA / Terminal Services.
+	//! Query of the open sessions through LSA / Terminal Services.
 	extern const wchar_t* SESSIONS;
-	//! Écriture sur le support de collecte (clé USB), jamais sur la cible.
+	//! Write to the collection medium (the USB key), never to the target.
 	extern const wchar_t* ECRITURE_USB;
 }
 
-/*! Ouvre le journal : relève le contexte de la collecte (machine, opérateur,
- *  fuseau, ligne de commande) et l'horodatage de début.
- *  À appeler une fois, au plus tôt dans `main`.
- *  @param argc nombre d'arguments de la ligne de commande
- *  @param argv arguments de la ligne de commande
+/*! Opens the log: reads the context of the collection (machine, operator, time
+ *  zone, command line) and the start timestamp.
+ *  To be called once, as early as possible in `main`.
+ *  @param argc number of command-line arguments
+ *  @param argv the command-line arguments
  */
 void auditInit(int argc, char* argv[]);
 
-/*! Consigne une opération.
- *  @param operation ce qui a été fait, ex. L"EnumServicesStatusExW"
- *  @param cible sur quoi, ex. L"\\Windows\\System32\\config\\SYSTEM" (peut être vide)
- *  @param resultat HRESULT de l'opération
- *  @param footprint trace attendue (une constante de `Footprint`)
+/*! Records an operation.
+ *  @param operation what was done, e.g. L"EnumServicesStatusExW"
+ *  @param cible on what, e.g. L"\\Windows\\System32\\config\\SYSTEM" (may be empty)
+ *  @param resultat HRESULT of the operation
+ *  @param footprint expected trace (one of the `Footprint` constants)
  */
 void auditRecord(const std::wstring& operation,
                  const std::wstring& cible,
                  HRESULT resultat,
                  const wchar_t* footprint);
 
-/*! Clôt le journal (horodatage de fin, durée) et écrit `investigation.json`.
- *  À appeler en toute fin de collecte, après le dernier collecteur.
- *  @return ERROR_SUCCESS, ou un code d'erreur d'écriture
+/*! Closes the log (end timestamp, duration) and writes `investigation.json`.
+ *  To be called at the very end of the collection, after the last collector.
+ *  @return ERROR_SUCCESS, or a write error code
  */
 HRESULT auditWrite();
 
-/*! Contexte de la collecte : outil, machine examinée, fuseaux, opérateur.
+/*! Context of the collection: tool, examined machine, time zones, operator.
 *
-*  Exposé parce que le manifeste de consigne doit porter EXACTEMENT le même
-*  contexte que le journal d'investigation. Le construire deux fois ouvrirait la
-*  possibilité que deux documents de la même collecte se contredisent — ce qui
-*  suffirait à discréditer les deux.
+*  Exposed because the exhibit manifest must carry EXACTLY the same context as
+*  the investigation log. Building it twice would open the possibility of two
+*  documents of the same collection contradicting each other — which would be
+*  enough to discredit both.
 *
-*  @return un objet JSON { Tool, Host, Operator }
+*  @return a JSON object { Tool, Host, Operator }
 */
 Json auditContexte();
 
-/*! Début de la collecte, en UTC puis en heure locale (ISO 8601).
-*  Le manifeste de consigne doit dater l'extraction. */
+/*! Start of the collection, in UTC (ISO 8601).
+*  The exhibit manifest must date the extraction.
+*  @return the timestamp, as text. */
 std::wstring auditDebutUtc();
-std::wstring auditDebutLocal();   //!< @see auditDebutUtc
+/*! Start of the collection, in the suspect's local time (ISO 8601).
+*  @return the timestamp, as text.
+*  @see auditDebutUtc */
+std::wstring auditDebutLocal();

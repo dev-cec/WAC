@@ -1,4 +1,42 @@
-﻿#pragma once
+﻿/*! \file
+ *  \brief Services and drivers of the examined machine.
+ *
+ *  WHAT IT SHOWS. What the machine runs without a user: services, and the
+ *  KERNEL DRIVERS. A service starts on its own, often as SYSTEM, and survives
+ *  every reboot — which makes it a persistence of choice, and a driver the most
+ *  privileged of all. Each entry carries what is really executed, under which
+ *  account, and WHEN the service was registered or last modified.
+ *
+ *  WHY THE HIVE RATHER THAN THE SERVICE MANAGER.
+ *  The original version called `OpenServiceW` then `QueryServiceConfigW` for
+ *  EACH service, that is several hundred handle openings on the SCM. All that
+ *  configuration is written in `SYSTEM\\CurrentControlSet\\Services`, already
+ *  extracted raw: reading it offline removes those calls and brings, on top of
+ *  that, what the SCM does not give.
+ *
+ *  WHAT THE HIVE ADDS
+ *    - the DRIVERS (`SERVICE_KERNEL_DRIVER`, `SERVICE_FILE_SYSTEM_DRIVER`): the
+ *      original enumeration filtered on `SERVICE_WIN32` and excluded all of
+ *      them, while a malicious driver is a major persistence vector;
+ *    - the key's `LastWriteTime`: the instant the service was created or
+ *      modified. No SCM API gives it, and it is often the most telling piece of
+ *      the artefact;
+ *    - `ServiceDll` (under `Parameters`): for a service hosted in svchost.exe,
+ *      `ImagePath` only names svchost — the code really executed is that DLL;
+ *    - `FailureCommand`: the command run when the service fails, which is
+ *      diverted as a persistence mechanism;
+ *    - the services still registered in the hive but absent from the SCM.
+ *
+ *  WHAT IS STILL MEASURED LIVE, AND WHY
+ *  `Status` and `ProcessId` do not exist on the disk: they describe the instant
+ *  of the collection. A SINGLE enumeration (`EnumServicesStatusExW`) reads them
+ *  for all services at once, without any `OpenServiceW` — the footprint is
+ *  therefore lighter than before the switch, not heavier. Dropping them would
+ *  have cost the correlation with processes.json, which nothing replaces.
+ *  `LiveStatusAvailable` says whether that reading succeeded, so that a stopped
+ *  service is not confused with a service whose state could not be read.
+ */
+#pragma once
 
 #include "binaires.h"
 #include <windows.h>
@@ -10,88 +48,60 @@
 #include "quickdigest5.h"
 #include "json.h"
 
-/*! Services et pilotes de la machine examinée.
-*
-*  POURQUOI LA RUCHE PLUTÔT QUE LE GESTIONNAIRE DE SERVICES.
-*  La version d'origine appelait `OpenServiceW` puis `QueryServiceConfigW` pour
-*  CHAQUE service, soit plusieurs centaines d'ouvertures de handle sur le SCM.
-*  Toute cette configuration est écrite dans
-*  `SYSTEM\CurrentControlSet\\Services`, déjà extraite en brut : la lire hors
-*  ligne supprime ces appels et apporte, en plus, ce que le SCM ne donne pas.
-*
-*  CE QUE LA RUCHE AJOUTE
-*    - les PILOTES (`SERVICE_KERNEL_DRIVER`, `SERVICE_FILE_SYSTEM_DRIVER`) :
-*      l'énumération d'origine filtrait sur `SERVICE_WIN32` et les excluait
-*      tous, alors qu'un pilote malveillant est un vecteur de persistance
-*      majeur ;
-*    - `LastWriteTime` de la clé : l'instant où le service a été créé ou
-*      modifié. Aucune API du SCM ne le donne, et c'est souvent la donnée la
-*      plus parlante de l'artefact ;
-*    - `ServiceDll` (sous `Parameters`) : pour un service hébergé dans
-*      svchost.exe, `ImagePath` ne nomme que svchost — le code réellement
-*      exécuté est cette DLL ;
-*    - `FailureCommand` : commande lancée en cas d'échec du service, détournée
-*      comme mécanisme de persistance ;
-*    - les services encore inscrits dans la ruche mais absents du SCM.
-*
-*  CE QUI RESTE MESURÉ À CHAUD, ET POURQUOI
-*  `Status` et `ProcessId` n'existent pas sur disque : ils décrivent l'instant
-*  de la collecte. Une SEULE énumération (`EnumServicesStatusExW`) les relève
-*  pour tous les services à la fois, sans aucun `OpenServiceW` — l'empreinte est
-*  donc plus faible qu'avant la bascule, pas plus forte. Les abandonner aurait
-*  coûté la corrélation avec processes.json, que rien ne remplace.
-*  `LiveStatusAvailable` dit si ce relevé a abouti, pour qu'un service arrêté ne
-*  se confonde pas avec un service dont l'état n'a pas pu être lu.
-*/
+/*! One service or driver, as the hive declares it. */
 struct ServiceStruct
 {
-	std::wstring serviceName;               //!< nom interne (nom de la sous-clé)
-	std::wstring serviceDisplayName;        //!< nom affiché
-	std::wstring serviceDescription;        //!< description (parfois "@dll,-id")
-	std::wstring serviceType;               //!< drapeaux de type, décomposés
-	std::wstring serviceStartType;          //!< mode de démarrage
-	std::wstring serviceErrorControl;       //!< comportement en cas d'échec
-	std::wstring serviceOwner;              //!< compte d'exécution (ObjectName)
-	std::wstring serviceBinary;             //!< ImagePath, tel qu'écrit dans la ruche
-	std::wstring serviceDll;                //!< Parameters\\ServiceDll, si présent
-	std::wstring serviceFailureCommand;     //!< commande exécutée en cas d'échec
-	std::wstring serviceGroup;              //!< groupe de chargement
-	std::vector<std::wstring> dependances;  //!< DependOnService
-	EmpreinteBinaire serviceEmpreinte;      //!< empreintes du binaire, si --binary
-	EmpreinteBinaire serviceDllEmpreinte;   //!< empreintes de la ServiceDll, si --binary
-	FILETIME lastWriteTimeUtc = { 0, 0 };   //!< dernière écriture de la clé (UTC)
-	FILETIME lastWriteTime = { 0, 0 };      //!< idem, heure locale du suspect
+	std::wstring serviceName;               //!< internal name, that is the subkey's name
+	std::wstring serviceDisplayName;        //!< name shown to the user
+	std::wstring serviceDescription;        //!< description (sometimes "@dll,-id")
+	std::wstring serviceType;               //!< type flags, spelled out
+	std::wstring serviceStartType;          //!< when it starts: boot, automatic, on demand…
+	std::wstring serviceErrorControl;       //!< what the system does if it fails to start
+	std::wstring serviceOwner;              //!< account it runs as (ObjectName)
+	std::wstring serviceBinary;             //!< ImagePath, as written in the hive
+	std::wstring serviceDll;                //!< Parameters\\ServiceDll, if present
+	std::wstring serviceFailureCommand;     //!< command run when the service fails
+	std::wstring serviceGroup;              //!< load-order group it belongs to
+	std::vector<std::wstring> dependances;  //!< services it depends on (DependOnService)
+	EmpreinteBinaire serviceEmpreinte;      //!< fingerprints of the binary, if `--binary`
+	EmpreinteBinaire serviceDllEmpreinte;   //!< fingerprints of the ServiceDll, if `--binary`
+	FILETIME lastWriteTimeUtc = { 0, 0 };   //!< last write to the key, in UTC
+	FILETIME lastWriteTime = { 0, 0 };      //!< the same instant, suspect's local time
 
-	// --- état volatil, relevé à chaud ---
-	bool         etatReleve = false;        //!< true si le SCM a répondu pour ce service
-	std::wstring serviceStatus;             //!< état courant
-	DWORD        serviceProcessId = 0;      //!< PID hébergeant le service, 0 si arrêté
+	// --- volatile state, measured live ---
+	bool         etatReleve = false;        //!< true if the SCM answered for this service
+	std::wstring serviceStatus;             //!< current state: running, stopped…
+	DWORD        serviceProcessId = 0;      //!< PID hosting the service, 0 if stopped
 
-	//! Conversion de l'objet au format JSON
+	/*! Converts the service to JSON.
+	 *  @return its JSON object. */
 	Json toJson() const;
 
-	//! Libération mémoire
+	//! Releases the memory held by the service.
 	void clear();
 };
 
-//! État volatil d'un service, relevé en une seule énumération du SCM.
+//! Volatile state of a service, read in a single enumeration of the SCM.
 struct EtatService {
-	std::wstring status;
-	DWORD processId = 0;
+	std::wstring status;      //!< current state, spelled out
+	DWORD processId = 0;      //!< PID hosting the service, 0 if stopped
 };
 
+/*! All the services and drivers of the examined machine. */
 struct Services
 {
-	std::vector<ServiceStruct> services; //!< tableau contenant tous les services
+	std::vector<ServiceStruct> services; //!< the services, as the hive lists them
 
-	/*! Relève les services dans `SYSTEM\CurrentControlSet\\Services`, puis
-	* complète l'état courant depuis le gestionnaire de services.
+	/*! Reads the services in `SYSTEM\CurrentControlSet\\Services`, then
+	* completes their current state from the service manager.
+	* @return S_OK, or the failure of the hive read.
 	*/
 	HRESULT getData();
 
-	//! Conversion de l'objet au format JSON
+	/*! Writes `services.json` into the output directory.
+	 *  @return the result of the write. */
 	HRESULT toJson();
 
-	//! Libération mémoire
+	//! Releases the memory held by the services.
 	void clear();
 };
