@@ -1,18 +1,20 @@
-/*  sha_test.cpp — confrontation de sha.cpp aux vecteurs de test publics.
+/*! \file
+ *  \brief Confronts sha.cpp with the public test vectors.
  *
- *  Une fingerprint fausse est le pire des defauts silencieux : elle product une
- *  exhibitStore d'apparence irreprochable qui n'identifie rien. D'ou ce test.
+ *  A wrong fingerprint is the worst of the silent defects: it produces an
+ *  exhibit store that looks irreproachable and identifies nothing. Hence this
+ *  test.
  *
- *  Deux familles de case_, pour deux raisons differentes :
- *    - les quatre vecteurs de FIPS 180-4 (empty, « abc », 448 bits, un million
- *      de « a ») valident l'algorithm lui-meme ;
- *    - les lengths 55 a 128 valident le REMPLISSAGE, seul endroit ou une
- *      implementation correcte par ailleurs se trompe : a 56 bytes la length
- *      ne tient plus dans le block et doit passer au next. Leurs values
- *      expected viennent d'une implementation independante.
+ *  Two families of cases, for two different reasons:
+ *    - the four vectors of FIPS 180-4 (empty, "abc", 448 bits, a million "a")
+ *      validate the algorithm itself;
+ *    - the lengths 55 to 128 validate the PADDING, the one place where an
+ *      otherwise correct implementation goes wrong: at 56 bytes the length no
+ *      longer fits in the block and must move to the next one. Their expected
+ *      values come from an independent implementation.
  *
- *  Exclu du build de WAC par le reason « _test.cpp » de build-windows.sh.
- *  Compilation native : g++ -std=c++17 -I. sha.cpp sha_test.cpp -o sha_test
+ *  Excluded from WAC's build by the "_test.cpp" pattern of build-windows.sh.
+ *  Native build: g++ -std=c++17 -I. sha.cpp sha_test.cpp -o sha_test
  */
 #include "sha.h"
 #include <iostream>
@@ -87,8 +89,8 @@ int main(){
 		else std::cout << "  ok     " << c.name << "\n";
 	}
 
-	/* Le decoupage des ajouts ne doit rien changer : c'est ainsi que WAC
-	   l'utilise, un cluster a la fois pendant l'extraction. */
+	/* Splitting the updates must change nothing: that is how WAC uses it, one
+	   cluster at a time during the extraction. */
 	Sha1Stream a; Sha256Stream b;
 	for (char ch : std::string("abc")){
 		a.update((const uint8_t*)&ch, 1);

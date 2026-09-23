@@ -105,5 +105,5 @@ HRESULT Muicaches::toJson() {
 
 void Muicaches::clear() {
 	log(3, L"🔈Muicaches clear");
-	muicaches.clear();   // detruit les elements -> libere reellement
+	muicaches.clear();   // destroys the elements -> really releases them
 }

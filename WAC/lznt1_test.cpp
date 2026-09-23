@@ -1,18 +1,19 @@
-/*  lznt1_test.cpp — confronte la decompression LZNT1 au compresseur de Windows.
+/*! \file
+ *  \brief Confronts the LZNT1 decompression with Windows's own compressor.
  *
- *  Le juge est `RtlCompressBuffer` de ntdll : on lui done compresser un file
- *  known, unit de compression par unit de compression, puis on detend ici et
- *  on compare byte pour byte. Un decompresseur wrong se decode le plus souvent
- *  SANS error et rend des data fausses — d'ou la comparaison exhaustive
- *  plutot qu'un simple controle de size.
+ *  The judge is ntdll's `RtlCompressBuffer`: it is given a known file to
+ *  compress, compression unit by compression unit, then the units are
+ *  decompressed here and compared byte for byte. A wrong decompressor most often
+ *  decodes WITHOUT an error and returns wrong data — hence the exhaustive
+ *  comparison rather than a mere size check.
  *
- *  Usage : lznt1_test <original> <compressed.bin> <index.idx>
- *    index.idx : une line « <n> <taille_origine> <taille_compressee> » par
- *    unit, dans l'ordre ; une size compressee nulle signale une unit que
- *    Windows a renoncee a compresser (elle est alors stockee telle quelle).
+ *  Usage: lznt1_test <original> <compressed.bin> <index.idx>
+ *    index.idx: one line "<n> <original_size> <compressed_size>" per unit, in
+ *    order; a null compressed size signals a unit Windows gave up compressing
+ *    (it is then stored as it is).
  *
- *  Exclu du build de WAC par le reason « _test.cpp ».
- *  Compilation native : g++ -std=c++17 -I. lznt1.cpp lznt1_test.cpp -o lznt1_test
+ *  Excluded from WAC's build by the "_test.cpp" pattern.
+ *  Native build: g++ -std=c++17 -I. lznt1.cpp lznt1_test.cpp -o lznt1_test
  */
 #include "lznt1.h"
 #include <cstdio>
@@ -46,7 +47,7 @@ int main(int argc, char** argv){
 		if (line.empty()) continue;
 		if (std::sscanf(line.c_str(), "%d %zu %zu", &n, &plainSize, &packedSize) != 3) continue;
 		if (packedSize == 0){
-			// Unite que Windows n'a pas compressee : NTFS la stocke telle quelle.
+			// A unit Windows did not compress: NTFS stores it as it is.
 			++ignored;
 			posO += plainSize;
 			continue;

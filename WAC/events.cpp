@@ -290,7 +290,7 @@ HRESULT Events::getData() {
 		size_t nbF = 0, failuresF = 0;
 		unsigned long long resolved = 0, bytes = 0;
 		MessagesSummary(&nbF, &failuresF, &resolved, &bytes);
-		log(2, L"❇️Messages resolved: " + std::to_wstring(resolved) + L" sur "
+		log(2, L"❇️Messages resolved: " + std::to_wstring(resolved) + L" out of "
 		     + std::to_wstring(read) + L" event(s), "
 		     + std::to_wstring(nbF) + L" provider(s) consulted, "
 		     + std::to_wstring(failuresF) + L" without resources, "

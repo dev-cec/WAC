@@ -120,7 +120,7 @@ HRESULT Mrus::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vec
 	for (int id : ids) {
 		bool Parentiszip = false | _Parentiszip;
 		log(1, L"➕Mru");
-		printProgress(L"Mru (niveau " + std::to_wstring(level) + L")",
+		printProgress(L"Mru (level " + std::to_wstring(level) + L")",
 		              ++nWalked, 0, L"mru");
 		Mru mru;
 		mru.id = id;
@@ -173,5 +173,5 @@ HRESULT Mrus::toJson() {
 
 void Mrus::clear() {
 	log(3, L"🔈Mrus clear");
-	mrus.clear();   // detruit les unique_ptr -> libere reellement
+	mrus.clear();   // destroys the unique_ptr -> really releases them
 }

@@ -65,7 +65,7 @@ struct Action {
 /*! One scheduled task, rebuilt from its XML and the TaskCache. */
 struct ScheduledTask {
 	std::wstring name;                 //!< name of the task, that is its file name
-	std::wstring path;                 //!< path dans l'arborescence (ex. \\Microsoft\\Windows\…)
+	std::wstring path;                 //!< path in the tree (ex. \\Microsoft\\Windows\…)
 	std::wstring description;          //!< description the author gave it
 	std::wstring author;               //!< who registered the task, as the XML declares it
 	std::wstring runAs;                //!< account it runs as (the principal's UserId)

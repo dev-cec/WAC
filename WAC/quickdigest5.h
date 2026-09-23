@@ -49,13 +49,13 @@
  * 
  * @note This class is marked `final` and cannot be subclassed.
  */
-class Md5Stream;   // calcul incremental : voir apres cette classe
+class Md5Stream;   // incremental computation: see after this class
 
 class QuickDigest5 final {
 private:
-    /* Md5Stream reutilise le moteur interne pour hacher au fil de l'ecriture.
-       L'amitie evite d'exposer publiquement update()/finalize(), qui n'ont de
-       sens qu'utilises dans le bon ordre. */
+    /* Md5Stream reuses the internal engine to hash while writing.
+       Friendship avoids exposing update()/finalize() publicly: they only make
+       sense when used in the right order. */
     friend class Md5Stream;
 
     /**
@@ -172,29 +172,29 @@ public:
 
 };
 
-/*! Calcul MD5 incrémental, au fil de l'écriture d'un fichier.
+/*! Incremental MD5, computed while a file is being written. (WAC's addition to
+ *  QuickDigest5.)
  *
- *  POURQUOI. `QuickDigest5::digestFile()` rouvre et relit intégralement le
- *  fichier. Lors de l'extraction brute, la copie est écrite sur la clé USB puis
- *  relue depuis cette même clé pour être hachée : environ 150 Mio lus deux fois
- *  sur le support le plus lent de la chaîne, soit près de la moitié du temps de
- *  collecte. Cette classe hache les octets au moment où ils transitent déjà en
- *  mémoire, en un seul parcours.
+ *  WHY. `QuickDigest5::digestFile()` reopens and rereads the whole file. During
+ *  the raw extraction, the copy was written to the USB key and then read back
+ *  from that same key to be hashed: about 150 MiB read twice on the slowest
+ *  medium of the chain, nearly half of the collection time. This class hashes
+ *  the bytes when they already pass through memory, in a single pass.
  *
- *  La valeur forensique est identique : c'est le même contenu, celui qui est
- *  effectivement écrit dans la copie conservée.
+ *  The forensic value is identical: it is the same content, the one actually
+ *  written into the kept copy.
  *
- *  Usage :
+ *  Usage:
  *      Md5Stream md5;
- *      md5.update(bloc, taille);        // autant de fois que nécessaire
+ *      md5.update(block, size);         // as many times as needed
  *      std::wstring h = md5.hexDigest();
  */
 class Md5Stream final {
 public:
-    /*! Ajoute des octets au calcul. */
+    /*! Adds bytes to the computation. */
     void update(const uint8_t* data, size_t length);
-    /*! Clôt le calcul et rend l'empreinte en hexadécimal majuscule.
-     *  À n'appeler qu'une fois : le calcul est terminé ensuite. */
+    /*! Ends the computation and returns the digest in uppercase hexadecimal.
+     *  To be called only once: the computation is over afterwards. */
     std::wstring hexDigest();
 private:
     QuickDigest5 engine;

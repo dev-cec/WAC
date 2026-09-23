@@ -1,18 +1,19 @@
-/*  xpress_test.cpp — confronte la decompression XPRESS Huffman au compresseur
- *  de Windows lui-meme.
+/*! \file
+ *  \brief Confronts the XPRESS Huffman decompression with Windows's own
+ *  compressor.
  *
- *  `RtlCompressBuffer` de ntdll comprime un file known, chunk par chunk,
- *  et ce test detend ici et compare OCTET POUR OCTET. Un decompresseur wrong
- *  product le plus souvent des data fausses SANS lever d'error — d'ou la
- *  comparaison exhaustive plutot qu'un controle de size.
+ *  ntdll's `RtlCompressBuffer` compresses a known file, chunk by chunk, and this
+ *  test decompresses here and compares BYTE FOR BYTE. A wrong decompressor most
+ *  often produces wrong data WITHOUT raising an error — hence the exhaustive
+ *  comparison rather than a size check.
  *
- *  Usage : xpress_test <original> <compressed.bin> <index.idx>
- *    index.idx : une line « <n> <taille_origine> <taille_compressee> » par
- *    chunk, dans l'ordre ; size compressee nulle = chunk que Windows a
- *    renonce a compress (stocke tel quel).
+ *  Usage: xpress_test <original> <compressed.bin> <index.idx>
+ *    index.idx: one line "<n> <original_size> <compressed_size>" per chunk, in
+ *    order; a null compressed size = a chunk Windows gave up compressing (stored
+ *    as it is).
  *
- *  Exclu du build de WAC par le reason « _test.cpp ».
- *  Compilation native : g++ -std=c++17 -I. xpress.cpp xpress_test.cpp -o xpress_test
+ *  Excluded from WAC's build by the "_test.cpp" pattern.
+ *  Native build: g++ -std=c++17 -I. xpress.cpp xpress_test.cpp -o xpress_test
  */
 #include "xpress.h"
 #include <cstdio>

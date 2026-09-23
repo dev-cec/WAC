@@ -34,7 +34,7 @@ namespace {
 * @param byPid receives, for each PID, the SID and the session identifier
 * @return ERROR_SUCCESS if the enumeration succeeded
 */
-HRESULT readOwners(std::map<DWORD, std::pair<std::wstring, DWORD>>& parPid) {
+HRESULT readOwners(std::map<DWORD, std::pair<std::wstring, DWORD>>& byPid) {
 	DWORD level = 0;                 // level 0: SessionId, ProcessId, name, SID
 	PWTS_PROCESS_INFOW infos = NULL;
 	DWORD count = 0;
@@ -42,7 +42,7 @@ HRESULT readOwners(std::map<DWORD, std::pair<std::wstring, DWORD>>& parPid) {
 	if (!WTSEnumerateProcessesExW(WTS_CURRENT_SERVER_HANDLE, &level, WTS_ANY_SESSION,
 	                              (LPWSTR*)&infos, &count)) {
 		const HRESULT error = GetLastError();
-		log(2, L"🔥WTSEnumerateProcessesExW : proprietaires non releves", error);
+		log(2, L"🔥WTSEnumerateProcessesExW: owners not read", error);
 		return error;
 	}
 
@@ -61,9 +61,9 @@ HRESULT readOwners(std::map<DWORD, std::pair<std::wstring, DWORD>>& parPid) {
 		/* An empty SID is a fact, not a failure: the purely kernel processes
 		   (System, Registry) have no user token. The session, for its part, is
 		   always returned. */
-		parPid[infos[i].ProcessId] = { sid, infos[i].SessionId };
+		byPid[infos[i].ProcessId] = { sid, infos[i].SessionId };
 	}
-	log(2, L"❇️Proprietaires releves pour " + std::to_wstring(parPid.size()) + L" processus");
+	log(2, L"❇️Owners read for " + std::to_wstring(byPid.size()) + L" processes");
 	log(3, L"🔈WTSFreeMemoryExW");
 	WTSFreeMemoryExW(WTSTypeProcessInfoLevel0, infos, count);
 	return ERROR_SUCCESS;
@@ -86,7 +86,7 @@ Process::Process(const PROCESSENTRY32W* pe32) {
 	   stated that the system process had loaded the collection tool. The Idle
 	   process has neither an image nor a module anyway. */
 	if (processId == 0) {
-		processModulesAccess = L"processus Idle : aucun module par nature";
+		processModulesAccess = L"Idle process: no module by nature";
 		return;
 	}
 

@@ -97,11 +97,11 @@ HRESULT Shellbags::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std
 		bool Parentiszip = false | _Parentiszip;
 		DWORD dataSize = 0;
 		log(1, L"➕Shellbag");
-		/* Affiche a CHAQUE shellbag, sans limitation de frequence : ils sont peu
-		   nombreux (quelques dizaines) mais chacun demande le parsing recursif
-		   d'IdLists, soit plusieurs seconds. Le pas de 50 de printProgressStep
-		   ne se serait jamais declenche ici — d'ou l'impression de blocage. */
-		printProgress(L"Shellbag (niveau " + std::to_wstring(level) + L")",
+		/* Displayed at EVERY shellbag, without rate limiting: there are few of them
+		   (a few dozen) but each requires the recursive parsing of IdLists, that is
+		   several seconds. The step of 50 of printProgressStep would never have
+		   fired here — hence the impression of being stuck. */
+		printProgress(L"Shellbag (level " + std::to_wstring(level) + L")",
 		              ++nWalked, 0, L"bag");
 		Shellbag shellbag;
 		shellbag.id = id;
@@ -167,5 +167,5 @@ HRESULT Shellbags::toJson() {
 
 void Shellbags::clear() {
 	log(3, L"🔈Shellbags clear");
-	shellbags.clear();   // detruit les unique_ptr -> libere reellement
+	shellbags.clear();   // destroys the unique_ptr -> really releases them
 }

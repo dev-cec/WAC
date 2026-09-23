@@ -104,7 +104,7 @@ unsigned long long ExhibitStoreFreeSpace();
  *
  *  @param reading extracted exhibits (or whose extraction failed)
  *  @param method collection method, as it will be recorded
- *         (e.g. L"Lecture brute NTFS via \\\\.\\C: ($MFT, attribute $DATA)")
+ *         (e.g. L"Raw NTFS reading via \\\\.\\C: ($MFT, attribute $DATA)")
  */
 void ExhibitStoreAdd(const std::vector<RawHiveExtraction>& reading,
                      const std::wstring& method);

@@ -1352,7 +1352,7 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
        too strict an extension filter, or extraction failures. */
     if (diagnostic){
         *diagnostic = std::to_wstring(entries.size()) + L" entree(s), "
-                    + std::to_wstring(files) + L" fichier(s), "
+                    + std::to_wstring(files) + L" file(s), "
                     + std::to_wstring(kept) + L" kept";
         if (failures) *diagnostic += L", " + std::to_wstring(failures) + L" failure(s)";
     }

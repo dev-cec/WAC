@@ -104,5 +104,5 @@ HRESULT Bams::toJson() {
 
 void Bams::clear() {
 	log(3, L"🔈Bams clear");
-	bams.clear();   // detruit les elements -> libere reellement
+	bams.clear();   // destroys the elements -> really releases them
 }

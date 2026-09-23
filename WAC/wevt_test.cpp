@@ -101,8 +101,8 @@ int main(int argc, char** argv) {
 	}
 
 	/*  Substitution is checked on its own, on built cases: a mark
-	    sans donnee doit RESTER visible, l'effacer ferait croire a une phrase
-	    complete. */
+	    without data must STAY visible: erasing it would suggest a complete
+	    sentence. */
 	struct Case { const wchar_t* messageTemplate; const wchar_t* expected; };
 	const std::vector<Case> case_ = {
 		{ L"a %1 b",            L"a <1> b" },

@@ -163,7 +163,7 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 		unsigned long long bytes = 0;
 		const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &bytes);
 		auditRecord(L"Copy of the exhibit store into the working directory ("
-		            + std::to_wstring(copies) + L" fichier(s), "
+		            + std::to_wstring(copies) + L" file(s), "
 		            + std::to_wstring(bytes / 1024 / 1024) + L" Mio)",
 		            exhibitStoreFolder() + L" -> " + workingFolder(),
 		            hrCopy, Footprint::USB_WRITE);
@@ -189,7 +189,7 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 		if (!std::filesystem::exists(r, ec)) continue;   // not extracted: already logged
 
 		printProgress(L"Repair of " + std::filesystem::path(r).filename().wstring(),
-		              iHive, hives.size(), L"ruche");
+		              iHive, hives.size(), L"hive");
 
 		/* Fingerprint BEFORE any modification: the raw copy stays identifiable.
 		   Taken from the computation made during extraction; the file is only
@@ -242,7 +242,7 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 		// not a lack of information.
 		// Note: the internal name returned by HiveFixInfoToString is truncated to
 		// its last 31 characters, as the regf format stores it.
-		auditRecord(info.patched ? L"Repair of d'une ruche copiee (patch applique)"
+		auditRecord(info.patched ? L"Repair of a copied hive (patch applied)"
 		                         : L"Check of a copied hive (already clean)",
 		            r + L" | " + HiveFixInfoToString(info) + L" | MD5 before the patch: " + md5Before,
 		            info.ok ? ERROR_SUCCESS : E_FAIL,
@@ -370,10 +370,10 @@ HRESULT ExtractFileArtefactsRaw() {
 		                        + systemVolume() + L": — $MFT, index de repertoires) ; "
 		                        L"no file opened by the system");
 		auditRecord(L"Raw extraction of the scheduled task definitions ("
-		            + std::to_wstring(extractedTasks) + L" fichier(s))",
+		            + std::to_wstring(extractedTasks) + L" file(s))",
 		            std::wstring(L"\\\\.\\") + systemVolume() + L":" + tasksPath,
 		            hrTasks, Footprint::VOLUME_BRUT);
-		log(2, L"❇️" + tasksPath + L" : " + std::to_wstring(extractedTasks) + L" fichier(s)");
+		log(2, L"❇️" + tasksPath + L" : " + std::to_wstring(extractedTasks) + L" file(s)");
 		if (hrTasks == S_FALSE) global = S_FALSE;
 	}
 
@@ -404,12 +404,12 @@ HRESULT ExtractFileArtefactsRaw() {
 		// The diagnosis goes with the count: "0 files" does not say whether the
 		// directory is missing, empty, or whether the filter discarded everything.
 		auditRecord(L"Extraction brute d'un repertoire (" + std::to_wstring(extractedFiles)
-		            + L" fichier(s) — " + diagnostic + L")",
+		            + L" file(s) — " + diagnostic + L")",
 		            std::wstring(L"\\\\.\\") + target.volume + L":" + target.path,
 		            hr, Footprint::VOLUME_BRUT);
 		log(1, L"➕Directory");
 		log(2, L"❇️" + target.path + L" : " + std::to_wstring(extractedFiles)
-		     + L" fichier(s) [" + diagnostic + L"]");
+		     + L" file(s) [" + diagnostic + L"]");
 	}
 	RawHiveSetProgress(nullptr);
 	printProgressEnd();
@@ -427,7 +427,7 @@ HRESULT ExtractFileArtefactsRaw() {
 		unsigned long long bytes = 0;
 		const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &bytes);
 		auditRecord(L"Copy of the exhibit store into the working directory ("
-		            + std::to_wstring(copies) + L" fichier(s), "
+		            + std::to_wstring(copies) + L" file(s), "
 		            + std::to_wstring(bytes / 1024 / 1024) + L" Mio)",
 		            exhibitStoreFolder() + L" -> " + workingFolder(),
 		            hrCopy, Footprint::USB_WRITE);

@@ -150,5 +150,5 @@ HRESULT Runs::toJson() {
 
 void Runs::clear() {
 	log(3, L"🔈Runs clear");
-	runs.clear();   // detruit les elements -> libere reellement
+	runs.clear();   // destroys the elements -> really releases them
 }
