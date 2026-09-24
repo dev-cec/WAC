@@ -35,6 +35,7 @@ var dir_59651bc50cd52202dfd7c76305c5d752 =
     [ "lznt1.h", "lznt1_8h.html", "lznt1_8h" ],
     [ "lznt1_test.cpp", "lznt1__test_8cpp.html", "lznt1__test_8cpp" ],
     [ "main.cpp", "main_8cpp.html", "main_8cpp" ],
+    [ "ntfs_fixup_test.cpp", "ntfs__fixup__test_8cpp.html", "ntfs__fixup__test_8cpp" ],
     [ "offline_registry.cpp", "offline__registry_8cpp.html", "offline__registry_8cpp" ],
     [ "offline_registry.h", "offline__registry_8h.html", "offline__registry_8h" ],
     [ "offline_registry_test.cpp", "offline__registry__test_8cpp.html", "offline__registry__test_8cpp" ],

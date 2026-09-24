@@ -132,6 +132,7 @@ pip install olefile          # independent OLE reader, for the cross-checks
 \fichier{tests/evtx\_test.exe}, \fichier{consigne\_test.exe} & event log decoder, exhibit store (chapter~\ref{ch:format}) \\
 \fichier{tests/offline\_registry\_test.exe} & hive reader confronted with Microsoft's \\
 \fichier{tests/system\_conversions\_test.exe} & WAC's conversions confronted with Windows' \\
+\fichier{tests/ntfs\_fixup\_test.exe} & check of NTFS records (torn records) \\
 \bottomrule
 \end{longtable}
 
@@ -395,6 +396,23 @@ raw_hive_test.exe [volume] [path] [output] [--fix] [--list] [--attrs]
 \texttt{--fix} makes the extracted hive loadable, \texttt{--list} lists a
 directory, \texttt{--attrs} shows the \fichier{\$MFT} attributes of the file
 without interpreting them.
+
+\section{NTFS records: \texttt{ntfs\_fixup\_test}}
+
+NTFS writes a \fichier{\$MFT} record or an index block sector by sector,
+and ends every 512-byte stride with a sequence number. \wac{} checks that
+number before restoring the real bytes: a record torn by an interrupted write
+is refused. The harness builds records whose expected result is known (sound,
+torn in each stride, malformed arrays), then confronts \wac{}'s verdict with an
+independent check on 20,000 random records placed against a forbidden page.
+No data is needed.
+
+\begin{lstlisting}
+cd build-windows/tests && wine ntfs_fixup_test.exe
+\end{lstlisting}
+
+Reference: 44,610 checks, no failure. On a real volume, the VM cycle confirms
+it: \fichier{raw.log} must hold no ``torn record''.
 
 \section{Signatures: \texttt{authenticode\_test}}
 

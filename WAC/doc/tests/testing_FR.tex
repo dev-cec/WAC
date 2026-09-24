@@ -137,6 +137,7 @@ pip install olefile          # lecteur OLE indépendant, pour les recoupements
 \fichier{tests/evtx\_test.exe}, \fichier{consigne\_test.exe} & décodeur de journaux, consigne (chapitre~\ref{ch:format}) \\
 \fichier{tests/offline\_registry\_test.exe} & lecteur de ruches confronté à celui de Microsoft \\
 \fichier{tests/system\_conversions\_test.exe} & conversions de WAC confrontées à celles de Windows \\
+\fichier{tests/ntfs\_fixup\_test.exe} & vérification des enregistrements NTFS (enregistrements déchirés) \\
 \bottomrule
 \end{longtable}
 
@@ -411,6 +412,24 @@ raw_hive_test.exe [volume] [chemin] [sortie] [--fix] [--list] [--attrs]
 \texttt{--fix} rend la ruche extraite chargeable, \texttt{--list} liste un
 répertoire, \texttt{--attrs} affiche les attributs \fichier{\$MFT} du fichier
 sans les interpréter.
+
+\section{Enregistrements NTFS : \texttt{ntfs\_fixup\_test}}
+
+NTFS écrit un enregistrement de la \fichier{\$MFT} ou un bloc d'index
+secteur par secteur, et termine chaque tranche de 512~octets par un numéro de
+séquence. \wac{} vérifie ce numéro avant de restituer les vrais octets : un
+enregistrement déchiré par une écriture interrompue est refusé. Le harnais
+construit des enregistrements dont le résultat attendu est connu (sains,
+déchirés dans chaque tranche, tableaux malformés), puis confronte le verdict de
+\wac{} à une vérification indépendante sur 20~000 enregistrements aléatoires
+placés contre une page interdite. Aucune donnée n'est nécessaire.
+
+\begin{lstlisting}
+cd build-windows/tests && wine ntfs_fixup_test.exe
+\end{lstlisting}
+
+Référence : 44~610 contrôles, aucun échec. Sur un vrai volume, le cycle de la
+VM le confirme : \fichier{raw.log} ne doit contenir aucun « torn record ».
 
 \section{Signatures : \texttt{authenticode\_test}}
 

@@ -62,12 +62,12 @@ var NAVTREEINDEX =
 [
 "annotated.html",
 "functions_v.html",
-"reg__mru__apps_8cpp.html",
-"structBeef001a.html#a1e10dc87449264dbc3aedfceb032e742",
-"structFsFlags.html#a35c3062b39866556dcc10a8668d691fc",
-"structRawDirEntry.html#a3979cd607bda6bbb5da87daee84ee80a",
-"structTimeZoneInfo.html#a8ab26ddcdec8b7be84e534e9b6e2fd72",
-"time__zone_8h.html#aee9e944ba7df3c29cdbf6a0ec01218b6"
+"reg__mounted__devices_8h.html",
+"structBeef0019.html#ad3c6c709332e17912a2850451ef8ad2f",
+"structFolderTypeNames.html",
+"structRawAttribute.html#ad4e72633a35413eef7c9b76d7f689868",
+"structTimeZoneInfo.html",
+"time__zone_8cpp.html#aee9e944ba7df3c29cdbf6a0ec01218b6"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

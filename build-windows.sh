@@ -116,6 +116,12 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
     echo "   -> $TESTS/$t.exe"
   done
 
+  echo "== Build ntfs_fixup_test.exe =="
+  # The check of NTFS multi-sector records (torn records refused); runs under Wine.
+  "$CXX" "${FLAGS[@]}" -static -static-libgcc -static-libstdc++ \
+    "$SRC/ntfs_fixup_test.cpp" "${TEST_OBJS[@]}" -o "$TESTS/ntfs_fixup_test.exe" "${LIBS[@]}"
+  echo "   -> $TESTS/ntfs_fixup_test.exe"
+
   echo "== Build offline_registry_test.exe =="
   # WAC's hive reader against Microsoft's offreg.dll, loaded dynamically: run
   # it on Windows (the test VM) with the path of that DLL.

@@ -1,5 +1,10 @@
 var NAVTREEINDEX4 =
 {
+"structFolderTypeNames.html":[1,0,58],
+"structFolderTypeNames.html#ac6870ff0755ea155a00a8977fe7fcd3a":[1,0,58,0],
+"structFolderTypeNames.html#ad1363adefe1cd32185b21f9a2efc4dcf":[1,0,58,2],
+"structFolderTypeNames.html#adf347a13cad229724f2e08decc197b24":[1,0,58,1],
+"structFsFlags.html":[1,0,59],
 "structFsFlags.html#a35c3062b39866556dcc10a8668d691fc":[1,0,59,1],
 "structFsFlags.html#a5e77eeb5c1d889a5ce926377282b318f":[1,0,59,6],
 "structFsFlags.html#a831a0d1582a203cb6eafeeb8b6b96526":[1,0,59,4],
@@ -244,10 +249,5 @@ var NAVTREEINDEX4 =
 "structRawAttribute.html#a54bddb794ac7263c7820996e29b1176c":[1,0,95,3],
 "structRawAttribute.html#a5afd6f5de4aecde216864d926f1d92eb":[1,0,95,2],
 "structRawAttribute.html#a73e61cdc17cb21353adce996fea668ca":[1,0,95,0],
-"structRawAttribute.html#aae3a3c278a9f8d64823df219880b06a2":[1,0,95,4],
-"structRawAttribute.html#ad4e72633a35413eef7c9b76d7f689868":[1,0,95,5],
-"structRawAttribute.html#ae3e312e36a7cbb7d83d68ffa386e71d0":[1,0,95,1],
-"structRawDirEntry.html":[1,0,96],
-"structRawDirEntry.html#a1f6035e62d71b0124e876152508c3a55":[1,0,96,3],
-"structRawDirEntry.html#a3472be41ee2a072fd5787fd223808b61":[1,0,96,1]
+"structRawAttribute.html#aae3a3c278a9f8d64823df219880b06a2":[1,0,95,4]
 };

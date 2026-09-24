@@ -25,6 +25,28 @@
 /*! Enables diagnostic messages on stderr (silent by default). */
 void RawHiveSetVerbose(bool on);
 
+/*! Checks then applies the fixups of an NTFS multi-sector record ($MFT
+ *  record "FILE", index block "INDX").
+ *
+ *  WHY. NTFS writes such a record sector by sector. To detect a write cut in
+ *  the middle, it replaces the last two bytes of every 512-byte stride with an
+ *  update sequence number, and keeps the real bytes in the update sequence
+ *  array. A stride that does not end with that number was not written with the
+ *  others: the record is TORN, a mix of two versions. Applying the fixups
+ *  without checking them, as WAC used to, silently turned such a record into
+ *  plausible data.
+ *
+ *  The stride is always 512 bytes, whatever the sector size the volume
+ *  declares (as Linux's ntfs3 driver does): on a 4K-native disk, using the
+ *  sector size would read the wrong bytes.
+ *
+ *  Nothing is modified unless the whole record checks out.
+ *  @param record the record, as read from the volume
+ *  @param size its size (a multiple of 512)
+ *  @return true if the array is well formed and every stride ends with the
+ *          update sequence number; false otherwise (record left as it is) */
+bool applyNtfsFixup(uint8_t* record, size_t size);
+
 /*! Signature of a progress reporter.
  *  @param item  what is being extracted (path on the volume)
  *  @param done  bytes already written

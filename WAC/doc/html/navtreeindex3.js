@@ -1,5 +1,10 @@
 var NAVTREEINDEX3 =
 {
+"structBeef0019.html#ad3c6c709332e17912a2850451ef8ad2f":[1,0,26,6],
+"structBeef0019.html#ad7e4b64453fbb5f3569f6191c74d7b06":[1,0,26,1],
+"structBeef0019.html#aef40bc682f92944035f87edd78169873":[1,0,26,5],
+"structBeef0019.html#af0341e887cf7fdaa420408ca64f11917":[1,0,26,3],
+"structBeef001a.html":[1,0,27],
 "structBeef001a.html#a1e10dc87449264dbc3aedfceb032e742":[1,0,27,0],
 "structBeef001a.html#a766aea8644ce75c11b9167145ae0d7f4":[1,0,27,1],
 "structBeef001a.html#a8d08eb0cc21dd4697442805a3b0f8db5":[1,0,27,2],
@@ -244,10 +249,5 @@ var NAVTREEINDEX3 =
 "structFilename.html#ae9b78a376bba69945c02a90497dec574":[1,0,57,5],
 "structFilename.html#af484900be9e118ee916c3275810823a1":[1,0,57,3],
 "structFilename.html#af7a43fbacc86bd7129c9f335de2be33f":[1,0,57,0],
-"structFilename.html#afdb6bea2a1adde8db08f705556ec5534":[1,0,57,4],
-"structFolderTypeNames.html":[1,0,58],
-"structFolderTypeNames.html#ac6870ff0755ea155a00a8977fe7fcd3a":[1,0,58,0],
-"structFolderTypeNames.html#ad1363adefe1cd32185b21f9a2efc4dcf":[1,0,58,2],
-"structFolderTypeNames.html#adf347a13cad229724f2e08decc197b24":[1,0,58,1],
-"structFsFlags.html":[1,0,59]
+"structFilename.html#afdb6bea2a1adde8db08f705556ec5534":[1,0,57,4]
 };

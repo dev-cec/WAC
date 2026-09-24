@@ -2,6 +2,7 @@ var raw__hive_8cpp =
 [
     [ "RawReader::Impl", "structRawReader_1_1Impl.html", "structRawReader_1_1Impl" ],
     [ "RVLOG", "raw__hive_8cpp.html#ac62ab7e9783b47f29b324ab001678edd", null ],
+    [ "applyNtfsFixup", "raw__hive_8cpp.html#ab0f5ca400aaa1626345f2f1bf4b7f5fa", null ],
     [ "ExtractDirectoryRaw", "raw__hive_8cpp.html#afe22436d45540b8c7265350f47eebf0d", null ],
     [ "ExtractDirectoryTreeRaw", "raw__hive_8cpp.html#aa81aeb88ac0d8b47f7fb5467d92c5236", null ],
     [ "ExtractFileRaw", "raw__hive_8cpp.html#aff3f1529d81703425b03fe383f20d88d", null ],

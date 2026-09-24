@@ -87,7 +87,7 @@ La validation de \wac{} repose donc sur ce principe : toute donnée qui peut
     exécutés à chaque collecte, sur la machine examinée. Ils refusent une
     donnée incohérente plutôt que de la publier, et attestent l'intégrité des
     pièces prélevées.
-  \item[Les programmes de test] (chapitre~\ref{ch:harnais}) : treize
+  \item[Les programmes de test] (chapitre~\ref{ch:harnais}) : quatorze
     exécutables qui confrontent chaque décodeur à une référence (la fonction de
     Microsoft qu'il remplace, une norme publiée, une autre implémentation), ou
     qui prouvent qu'un analyseur ne lit jamais hors de son tampon.
@@ -147,9 +147,11 @@ vérifiée avant d'être utilisée :
 
 \begin{itemize}
   \item signature \texttt{FILE} de chaque enregistrement de la \fichier{\$MFT}
-    et \texttt{INDX} de chaque bloc d'index, puis application des
-    \emph{fixups} (tableau de séquence de mise à jour), qui restituent les
-    derniers octets de chaque secteur ;
+    et \texttt{INDX} de chaque bloc d'index, puis vérification des
+    \emph{fixups} (tableau de séquence de mise à jour) : chaque tranche de
+    512~octets doit se terminer par le numéro de séquence de l'enregistrement.
+    Un enregistrement \emph{déchiré} par une écriture interrompue, mélange de
+    deux versions, est refusé au lieu d'être lu comme une donnée plausible ;
   \item décompression LZNT1 et WOF bornée par la taille attendue de chaque
     unité : une unité qui ne produit pas le nombre d'octets prévu est une
     erreur, pas une donnée tronquée en silence ;
@@ -233,7 +235,7 @@ n'interrompt plus la lecture du fichier.
 % ============================================================ 3
 \chapter{Les programmes de test}\label{ch:harnais}
 
-Treize exécutables, exclus de la compilation de \wac{} par leur suffixe
+Quatorze exécutables, exclus de la compilation de \wac{} par leur suffixe
 \fichier{\_test.cpp} et construits par \texttt{build-windows.sh --test}.
 Chacun vise un composant et le confronte à un juge qui ne partage rien avec
 lui.
@@ -268,6 +270,10 @@ lui.
 \texttt{consigne\_test} & la consigne elle-même, avant et après &
   consigne identique octet pour octet après modification de la copie de
   travail ; sceau conforme \\
+\texttt{ntfs\_fixup\_test} & enregistrements construits, vérification indépendante &
+  enregistrements sains restitués à l'octet, enregistrements déchirés et
+  tableaux malformés refusés, 20~000 enregistrements aléatoires contre une page
+  interdite : 44~610 contrôles, aucun échec \\
 \texttt{raw\_hive\_test} & \texttt{reg load} de Windows &
   la ruche extraite est refusée avant réparation et acceptée après : le test
   échoue dans les deux sens s'il le faut \\
@@ -512,10 +518,6 @@ qu'ils visent sont absents, sur les données qu'ils ont vues.
     fuseaux dont les règles concordent avec celles de Windows sur la période
     vérifiée (Europe de l'Ouest, États-Unis, UTC) ; les autres sont vérifiés
     contre Windows seulement.
-  \item \textbf{Secteurs à moitié écrits} : les \emph{fixups} des
-    enregistrements NTFS sont appliqués, mais leur numéro de séquence n'est
-    pas encore comparé à la fin de chaque secteur ; un enregistrement déchiré
-    n'est donc pas signalé comme tel.
   \item \textbf{Compilation MSVC} : le projet Visual Studio est maintenu, mais
     les contrôles sont faits sur la version compilée par MinGW, celle qui est
     livrée.

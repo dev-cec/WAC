@@ -86,7 +86,7 @@ test.
   \item[The checks built into \wac{}] (chapter~\ref{ch:integres}): run during
     every collection, on the examined machine. They refuse inconsistent data
     rather than publish it, and attest the integrity of the exhibits taken.
-  \item[The test programs] (chapter~\ref{ch:harnais}): thirteen executables
+  \item[The test programs] (chapter~\ref{ch:harnais}): fourteen executables
     that confront each decoder with a reference (the Microsoft function it
     replaces, a published standard, another implementation), or that prove a
     parser never reads outside its buffer.
@@ -144,9 +144,11 @@ Windows file system. Every structure read is checked before use:
 
 \begin{itemize}
   \item \texttt{FILE} signature of every \fichier{\$MFT} record and
-    \texttt{INDX} signature of every index block, then application of the
-    \emph{fixups} (update sequence array), which restore the last bytes of each
-    sector;
+    \texttt{INDX} signature of every index block, then check of the
+    \emph{fixups} (update sequence array): every 512-byte stride must end with
+    the record's sequence number. A record \emph{torn} by an interrupted write,
+    a mix of two versions, is refused instead of being read as plausible
+    data;
   \item LZNT1 and WOF decompression bounded by the expected size of each unit:
     a unit that does not produce the expected number of bytes is an error, not
     data silently truncated;
@@ -229,7 +231,7 @@ reported and skipped; it no longer stops the reading of the file.
 % ============================================================ 3
 \chapter{The test programs}\label{ch:harnais}
 
-Thirteen executables, left out of \wac{}'s build by their
+Fourteen executables, left out of \wac{}'s build by their
 \fichier{\_test.cpp} suffix and built by \texttt{build-windows.sh --test}.
 Each targets one component and confronts it with a judge that shares nothing
 with it.
@@ -263,6 +265,10 @@ with it.
 \texttt{consigne\_test} & the exhibit store itself, before and after &
   exhibit store byte-identical after the working copy was modified; seal
   conforms \\
+\texttt{ntfs\_fixup\_test} & hand-built records, independent check &
+  sound records restored to the byte, torn records and malformed arrays
+  refused, 20,000 random records against a forbidden page: 44,610 checks, no
+  failure \\
 \texttt{raw\_hive\_test} & Windows's \texttt{reg load} &
   the extracted hive is refused before repair and accepted after: the test
   fails both ways if it must \\
@@ -496,9 +502,6 @@ they target are absent, on the data they have seen.
     the zones whose rules agree with Windows's over the period checked
     (Western Europe, United States, UTC); the others are checked against
     Windows only.
-  \item \textbf{Torn sectors}: the fixups of NTFS records are applied, but
-    their sequence number is not yet compared with the end of each sector; a
-    torn record is therefore not reported as such.
   \item \textbf{MSVC build}: the Visual Studio project is maintained, but the
     checks are made on the MinGW build, the one delivered.
 \end{itemize}

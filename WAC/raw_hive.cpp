@@ -933,25 +933,13 @@ private:
         return true;
     }
 
-    // Applies the fixups (Update Sequence Array) of a FILE/INDX record.
-    static void applyFixup(uint8_t* rec, uint32_t size, uint32_t sectorSize){
-        uint16_t usaOff = rd16(rec + 4), usaCnt = rd16(rec + 6);
-        if (usaOff + 2u * usaCnt > size) return;
-        const uint8_t* usa = rec + usaOff;
-        for (uint16_t i = 1; i < usaCnt; ++i){
-            uint32_t secEnd = i * sectorSize;
-            if (secEnd < 2 || secEnd > size) break;
-            uint8_t* pos = rec + secEnd - 2;
-            pos[0] = usa[2 * i]; pos[1] = usa[2 * i + 1];
-        }
-    }
 
     // Bootstrap: reads record #0 ($MFT) to get its own runs.
     bool bootstrapMft(){
         std::vector<uint8_t> rec(bytesPerRecord_);
         if (!readBytes(mftLcn_ * bytesPerCluster_, rec.data(), bytesPerRecord_)) return false;
         if (memcmp(rec.data(), "FILE", 4) != 0){ RVLOG(L"[raw] MFT#0: FILE signature absent\n"); return false; }
-        applyFixup(rec.data(), bytesPerRecord_, bytesPerSector_);
+        if (!applyNtfsFixup(rec.data(), bytesPerRecord_)){ RVLOG(L"[raw] MFT#0: torn record (fixups)\n"); return false; }
         const uint8_t* a = findAttr(rec, 0x80);
         if (!a || a[8] == 0){ RVLOG(L"[raw] $MFT $DATA not found / resident\n"); return false; }
         uint16_t runsOff = rd16(a + 0x20);
@@ -970,7 +958,10 @@ private:
         if (memcmp(rec.data(), "FILE", 4) != 0){
             RVLOG(L"[raw] MFT#%llu: magic FILE absent (%02x%02x%02x%02x)\n",
                   (unsigned long long)index, rec[0], rec[1], rec[2], rec[3]); return false; }
-        applyFixup(rec.data(), bytesPerRecord_, bytesPerSector_);
+        if (!applyNtfsFixup(rec.data(), bytesPerRecord_)){
+            RVLOG(L"[raw] MFT#%llu: torn record (fixups): not used\n", (unsigned long long)index);
+            return false;
+        }
         return true;
     }
 
@@ -1130,7 +1121,7 @@ public:
                         uint32_t idxBlockSize, std::vector<RawDirEntry>& out){
         if (!idxBlockSize) return;
         std::vector<uint8_t> blk(idxBlockSize);
-        uint64_t blocksRead = 0, blocksWithoutIndx = 0;
+        uint64_t blocksRead = 0, blocksWithoutIndx = 0, blocksTorn = 0;
         for (uint64_t pos = 0; pos + idxBlockSize <= realSize; pos += idxBlockSize){
             ++blocksRead;
             if (!readVirtual(runs, pos, idxBlockSize, blk.data())){
@@ -1139,7 +1130,8 @@ public:
                 break;
             }
             if (memcmp(blk.data(), "INDX", 4) != 0){ ++blocksWithoutIndx; continue; }
-            applyFixup(blk.data(), idxBlockSize, bytesPerSector_);
+            // A torn index block would list entries of two versions of the directory.
+            if (!applyNtfsFixup(blk.data(), idxBlockSize)){ ++blocksTorn; continue; }
             const uint8_t* nh = blk.data() + 0x18;      // node header after the INDX header
             uint32_t used = rd32(nh + 4);
             const uint8_t* lim = nh + used;
@@ -1147,9 +1139,10 @@ public:
             parseIndexNode(nh, lim, out);
         }
         RVLOG(L"[raw] index blocks: realSize=%llu, %llu read, "
-              L"%llu without INDX signature, total %llu entry(ies)\n",
+              L"%llu without INDX signature, %llu torn, total %llu entry(ies)\n",
               (unsigned long long)realSize, (unsigned long long)blocksRead,
-              (unsigned long long)blocksWithoutIndx, (unsigned long long)out.size());
+              (unsigned long long)blocksWithoutIndx, (unsigned long long)blocksTorn,
+              (unsigned long long)out.size());
     }
 };
 
@@ -1216,6 +1209,28 @@ HRESULT RawReader::read(const std::wstring& absolutePath, const std::wstring& ou
 }
 
 void RawHiveSetVerbose(bool on){ g_verbose = on; }
+
+bool applyNtfsFixup(uint8_t* record, size_t size){
+    const size_t STRIDE = 512;        // fixed by NTFS, not the volume's sector size
+    if (!record || size < STRIDE || size % STRIDE) return false;
+    const uint16_t arrayOffset = rd16(record + 4), arrayCount = rd16(record + 6);
+    /* One entry for the sequence number, then one per stride. The array lies
+       in the first stride, after the signature and its own two fields, at an
+       even offset (the checks of ntfs3's ntfs_fix_post_read). */
+    if (arrayOffset < 8 || (arrayOffset & 1) || arrayCount != size / STRIDE + 1
+        || arrayOffset + 2u * arrayCount > STRIDE) return false;
+    const uint8_t* array = record + arrayOffset;
+    const uint16_t sequence = rd16(array);
+    // Every stride checked BEFORE anything is written: a torn record stays as read.
+    for (size_t i = 1; i < arrayCount; ++i)
+        if (rd16(record + i * STRIDE - 2) != sequence) return false;
+    for (size_t i = 1; i < arrayCount; ++i){
+        uint8_t* end = record + i * STRIDE - 2;
+        end[0] = array[2 * i];
+        end[1] = array[2 * i + 1];
+    }
+    return true;
+}
 void RawHiveSetProgress(RawHiveProgressFn fn){ g_progress = fn; }
 
 HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,

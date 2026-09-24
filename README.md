@@ -629,6 +629,18 @@ refill advances the same byte cursor the extended match lengths are read from.
 With the refill only after matches, 16 chunks out of 137 decoded correctly and
 the rest came out wrong with no error at all.
 
+`ntfs_fixup_test.cpp` checks the fixups of NTFS multi-sector records (`$MFT`
+records, index blocks). NTFS ends every 512-byte stride of such a record with an
+update sequence number; WAC used to restore the real bytes without comparing
+that number, so a record torn by an interrupted write came out as plausible
+data, a mix of two versions. The number is now checked first — the stride is
+always 512 bytes, whatever the sector size the volume declares, as in Linux's
+`ntfs3` — and a torn record or index block is refused and logged. The harness
+builds sound, torn and malformed records whose outcome is known, then compares
+WAC's verdict with an independent check on 20,000 random records against a
+guard page: 44,610 checks, no failure; it fails on the former behaviour. On the
+test VM's real volume, no record is refused (`raw.log`: no "torn record").
+
 `consigne_test.cpp` checks the exhibit-store procedure, and specifically the one
 thing that must never happen and is silent when it does: **the sealed copy being
 modified**. It runs the production chain — same fingerprints, same manifest, same

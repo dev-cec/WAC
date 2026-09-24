@@ -6,6 +6,7 @@ var raw__hive_8h =
     [ "RawAttribute", "structRawAttribute.html", "structRawAttribute" ],
     [ "RawDirEntry", "structRawDirEntry.html", "structRawDirEntry" ],
     [ "RawHiveProgressFn", "raw__hive_8h.html#a8077cabec9441f4ac6617ed5bbe50d02", null ],
+    [ "applyNtfsFixup", "raw__hive_8h.html#ab0f5ca400aaa1626345f2f1bf4b7f5fa", null ],
     [ "ExtractDirectoryRaw", "raw__hive_8h.html#a8d83fd6d25b9df001deec0679103027a", null ],
     [ "ExtractDirectoryTreeRaw", "raw__hive_8h.html#a187df02989f72f88af784e873d740b05", null ],
     [ "ExtractFileRaw", "raw__hive_8h.html#aff3f1529d81703425b03fe383f20d88d", null ],
