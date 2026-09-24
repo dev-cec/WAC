@@ -197,7 +197,7 @@ HRESULT JumplistAutomatics::getData() {
 		for (const std::filesystem::path& file : files) {
 			log(1, L"➕AutomaticDestination");
 			printProgress(L"Jumplist " + file.filename().wstring(),
-			              ++iFile, files.size(), L"fic");
+			              ++iFile, files.size(), L"files");
 			automaticDestinations.push_back(AutomaticDestination(file, std::get<0>(profileEntry)));
 		}
 	}

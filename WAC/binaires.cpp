@@ -23,7 +23,7 @@ size_t g_authenticated = 0, g_catalogsRead = 0;
 unsigned long long g_authenticatedBytes = 0;
 std::set<std::wstring> g_catalogsUsed;
 const size_t CATALOGUE_MAX = 64 * 1024 * 1024;       // a catalog beyond that: ignored
-unsigned long long g_entrant = 0;                      // counter of incoming files
+unsigned long long g_incoming = 0;                      // counter of incoming files
 
 /*! INCOMING directory, on the collection medium but outside the exhibit store.
  *
@@ -171,9 +171,9 @@ IndexCatalogues& catalogues() {
 		index.add(e.name, c.bytes.data(), c.bytes.size());
 	}
 	g_catalogsRead = read;
-	log(2, L"❇️Catalogues de signatures : " + std::to_wstring(read) + L" read, "
+	log(2, L"❇️Signature catalogs: " + std::to_wstring(read) + L" read, "
 	     + std::to_wstring(index.catalogues()) + L" kept (Microsoft signature verified), "
-	     + std::to_wstring(index.rejected()) + L" refuses, "
+	     + std::to_wstring(index.rejected()) + L" refused, "
 	     + std::to_wstring(index.fingerprints()) + L" fingerprints");
 	return index;
 }
@@ -277,10 +277,10 @@ const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
 
 	// SECOND READ: collection, through the incoming directory (deduplication).
 	std::filesystem::create_directories(stagingFolder(), ec);
-	const std::wstring output = stagingFolder() + L"\\" + std::to_wstring(++g_entrant) + L".bin";
+	const std::wstring output = stagingFolder() + L"\\" + std::to_wstring(++g_incoming) + L".bin";
 	RawHiveExtraction line;
 	e.result = g_reader->read(path, output, line);
-	const std::wstring method = L"Lecture brute NTFS (\\\\.\\" + path.substr(0, 2)
+	const std::wstring method = L"Raw NTFS reading (\\\\.\\" + path.substr(0, 2)
 	                           + L" — $MFT, directory indexes, $DATA attribute); "
 	                           L"binary cited by an artefact (--binary)";
 	if (FAILED(e.result)) {
@@ -361,8 +361,8 @@ void BinariesFinish() {
 			g_reader->read(source, target, line);
 			reading.push_back(std::move(line));
 		}
-		ExhibitStoreAdd(reading, L"Lecture brute NTFS (\\\\.\\" + conf.systemDrive
-		                        + L" — $MFT, directory indexes, $DATA attribute); catalogue de "
+		ExhibitStoreAdd(reading, L"Raw NTFS reading (\\\\.\\" + conf.systemDrive
+		                        + L" — $MFT, directory indexes, $DATA attribute); signature "
 		                        L"catalog that justified not collecting binaries "
 		                        L"authenticated as Microsoft (--binary)");
 	}

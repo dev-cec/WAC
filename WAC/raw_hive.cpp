@@ -360,7 +360,7 @@ public:
                      const std::pair<uint64_t, std::vector<Run>>& b){ return a.first < b.first; });
         for (std::pair<uint64_t, std::vector<Run>>& f : fragments)
             ctx.runs.insert(ctx.runs.end(), f.second.begin(), f.second.end());
-        RVLOG(L"[raw] WOF via $ATTRIBUTE_LIST : %llu fragment(s), flux de %llu octets\n",
+        RVLOG(L"[raw] WOF via $ATTRIBUTE_LIST : %llu fragment(s), stream of %llu bytes\n",
               (unsigned long long)fragments.size(), (unsigned long long)ctx.streamSize);
         ctx.present = true;
         return true;
@@ -535,7 +535,7 @@ public:
         }
 
         std::vector<uint8_t> unit((size_t)unitSize);
-        std::vector<uint8_t> brut((size_t)unitSize);
+        std::vector<uint8_t> rawUnit((size_t)unitSize);
         std::vector<uint8_t> cl(bytesPerCluster_);
         Md5Stream stream; Sha1Stream stream1; Sha256Stream stream256;
         uint64_t written = 0, nextReport = 0;
@@ -566,7 +566,7 @@ public:
                     const uint64_t v = vcn + k;
                     if (v >= lcnParVcn.size() || lcnParVcn[v] < 0){ error = true; break; }
                     if (!readCluster((uint64_t)lcnParVcn[v], cl.data())){ error = true; break; }
-                    std::memcpy(brut.data() + read, cl.data(), bytesPerCluster_);
+                    std::memcpy(rawUnit.data() + read, cl.data(), bytesPerCluster_);
                     read += bytesPerCluster_;
                 }
                 if (error) return E_FAIL;
@@ -581,11 +581,11 @@ public:
                    EVTX chunks. It is ntfs-3g's criterion. The 19 failures that had
                    prompted it actually came from clusters beyond the valid data. */
                 if (allocated == unitInClusters){
-                    std::memcpy(unit.data(), brut.data(), (size_t)unitSize);
+                    std::memcpy(unit.data(), rawUnit.data(), (size_t)unitSize);
                     product = (size_t)unitSize;
                 }
                 else {
-                    product = Lznt1Inflate(brut.data(), read, unit.data(), (size_t)unitSize);
+                    product = Lznt1Inflate(rawUnit.data(), read, unit.data(), (size_t)unitSize);
                     if (product == 0){
                         RVLOG(L"[raw] LZNT1: unit at VCN %llu unreadable\n",
                               (unsigned long long)vcn);
@@ -1075,7 +1075,7 @@ public:
         // $INDEX_ROOT (0x90) — resident, always present
         const uint8_t* ir = findAttr(rec, 0x90, false);   // "$I30"
         if (!ir){ RVLOG(L"[raw] listDir(%llu): $INDEX_ROOT absent\n", (unsigned long long)dirIndex); return false; }
-        if (ir[8] != 0){ RVLOG(L"[raw] listDir(%llu): $INDEX_ROOT non resident\n", (unsigned long long)dirIndex); return false; }
+        if (ir[8] != 0){ RVLOG(L"[raw] listDir(%llu): $INDEX_ROOT non-resident\n", (unsigned long long)dirIndex); return false; }
         uint32_t irValLen = rd32(ir + 0x10); uint16_t irValOff = rd16(ir + 0x14);
         const uint8_t* val = ir + irValOff;
         uint32_t idxBlockSize = rd32(val + 8);
@@ -1113,7 +1113,7 @@ public:
         RVLOG(L"[raw] listDir(%llu): %llu entry/entries from $INDEX_ROOT, "
               L"$INDEX_ALLOCATION %ls (blockSize=%u)\n",
               (unsigned long long)dirIndex, (unsigned long long)fromRoot,
-              ia ? (ia[8] != 0 ? L"non resident" : L"RESIDENT (unexpected)") : L"absent",
+              ia ? (ia[8] != 0 ? L"non-resident" : L"RESIDENT (unexpected)") : L"absent",
               idxBlockSize);
         if (ia && ia[8] != 0 && idxBlockSize){
             uint64_t realSize = rd64(ia + 0x30);
@@ -1146,8 +1146,8 @@ public:
             if (lim > blk.data() + idxBlockSize) lim = blk.data() + idxBlockSize;
             parseIndexNode(nh, lim, out);
         }
-        RVLOG(L"[raw] blocs d'index: realSize=%llu, %llu lu(s), "
-              L"%llu sans signature INDX, total %llu entree(s)\n",
+        RVLOG(L"[raw] index blocks: realSize=%llu, %llu read, "
+              L"%llu without INDX signature, total %llu entry(ies)\n",
               (unsigned long long)realSize, (unsigned long long)blocksRead,
               (unsigned long long)blocksWithoutIndx, (unsigned long long)out.size());
     }
@@ -1312,7 +1312,7 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
     uint64_t dirIndex = 0;
     if (!vol.resolvePath(dirPathOnVolume, dirIndex)){
         // Missing directory: the nominal case during a collection, not an error.
-        RVLOG(L"[raw] repertoire absent: %ls\n", dirPathOnVolume.c_str());
+        RVLOG(L"[raw] directory absent: %ls\n", dirPathOnVolume.c_str());
         if (diagnostic) *diagnostic = L"path not resolved (directory absent?)";
         return ERROR_SUCCESS;
     }
@@ -1320,7 +1320,7 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
     std::vector<RawDirEntry> entries;
     if (!vol.listDir(dirIndex, entries)){
         RVLOG(L"[raw] enumeration impossible: %ls\n", dirPathOnVolume.c_str());
-        if (diagnostic) *diagnostic = L"enumeration de l'index impossible";
+        if (diagnostic) *diagnostic = L"index enumeration impossible";
         return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
     }
 
@@ -1355,7 +1355,7 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
     /* The details tell apart three causes of a zero count: empty index,
        too strict an extension filter, or extraction failures. */
     if (diagnostic){
-        *diagnostic = std::to_wstring(entries.size()) + L" entree(s), "
+        *diagnostic = std::to_wstring(entries.size()) + L" entry(ies), "
                     + std::to_wstring(files) + L" file(s), "
                     + std::to_wstring(kept) + L" kept";
         if (failures) *diagnostic += L", " + std::to_wstring(failures) + L" failure(s)";
@@ -1437,7 +1437,7 @@ HRESULT ExtractDirectoryTreeRaw(const std::wstring& volumeLetter,
     uint64_t dirIndex = 0;
     if (!vol.resolvePath(dirPathOnVolume, dirIndex)){
         // Missing directory: the nominal case during a collection, not an error.
-        RVLOG(L"[raw] arbo: repertoire absent %ls\n", dirPathOnVolume.c_str());
+        RVLOG(L"[raw] tree: directory absent %ls\n", dirPathOnVolume.c_str());
         return ERROR_SUCCESS;
     }
     return extractTree(vol, dirIndex, dirPathOnVolume, outDir,

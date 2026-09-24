@@ -848,14 +848,14 @@ int wmain(int argc, wchar_t* argv[])
 	if (conf.binary) {
 		BinariesFinish();
 		const BinarySummary b = BinariesSummary();
-		std::wstring summary = std::to_wstring(b.files) + L" cite(s), " + std::to_wstring(b.read)
-		                   + L" lu(s), " + std::to_wstring(b.authenticated) + L" authenticated as Microsoft and "
+		std::wstring summary = std::to_wstring(b.files) + L" cited, " + std::to_wstring(b.read)
+		                   + L" read, " + std::to_wstring(b.authenticated) + L" authenticated as Microsoft and "
 		                   L"not collected (" + std::to_wstring(b.authenticatedBytes / 1024 / 1024)
 		                   + L" MiB saved), " + std::to_wstring(b.collectedCount) + L" collected ("
-		                   + std::to_wstring(b.collectedBytes / 1024 / 1024) + L" Mio)";
+		                   + std::to_wstring(b.collectedBytes / 1024 / 1024) + L" MiB)";
 		if (b.duplicates) summary += L", " + std::to_wstring(b.duplicates) + L" duplicate content(s) not copied again";
 		if (b.sansPlace) summary += L", " + std::to_wstring(b.sansPlace) + L" hashed without a copy, medium full";
-		summary += L" ; catalogues de signatures : " + std::to_wstring(b.catalogsRead) + L" read into memory, "
+		summary += L"; signature catalogs: " + std::to_wstring(b.catalogsRead) + L" read into memory, "
 		       + std::to_wstring(b.catalogsUsed) + L" recorded as exhibit(s)";
 		auditRecord(L"Fingerprints of the files cited by the artefacts (" + summary + L")",
 		            L"raw NTFS reading; authenticity verified in memory (Windows catalogs, "
@@ -868,7 +868,7 @@ int wmain(int argc, wchar_t* argv[])
 		const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &copiedBytes);
 		auditRecord(L"Copy of the exhibit store into the working directory ("
 		            + std::to_wstring(copies) + L" file(s), "
-		            + std::to_wstring(copiedBytes / 1024 / 1024) + L" Mio)",
+		            + std::to_wstring(copiedBytes / 1024 / 1024) + L" MiB)",
 		            exhibitStoreFolder() + L" -> " + workingFolder(),
 		            hrCopy, Footprint::USB_WRITE);
 		if (FAILED(hrCopy)) printError(hrCopy);
@@ -876,15 +876,15 @@ int wmain(int argc, wchar_t* argv[])
 	}
 
 	printStep(L" - Sealing the exhibit store (manifest + SHA-256) : ");
-	log(3, L"🔈ConsigneEcrireManifeste");
+	log(3, L"🔈ExhibitStoreWriteManifest");
 	{
 		size_t exhibits = 0, failures = 0;
 		unsigned long long bytes = 0;
 		ExhibitStoreSummary(&exhibits, &failures, &bytes);
 		const HRESULT hrManifest = ExhibitStoreWriteManifest();
 		auditRecord(L"Sealing of the exhibit store (" + std::to_wstring(exhibits)
-		            + L" piece(s), " + std::to_wstring(failures) + L" failure(s), "
-		            + std::to_wstring(bytes / 1024 / 1024) + L" Mio)",
+		            + L" exhibit(s), " + std::to_wstring(failures) + L" failure(s), "
+		            + std::to_wstring(bytes / 1024 / 1024) + L" MiB)",
 		            exhibitStoreFolder() + L"\\MANIFEST.json (+ .sha256)",
 		            hrManifest, Footprint::USB_WRITE);
 		if (FAILED(hrManifest)) printError(hrManifest);

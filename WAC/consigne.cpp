@@ -158,16 +158,16 @@ void ExhibitStoreAddDuplicate(const RawHiveExtraction& e, const std::wstring& me
 }
 
 void ExhibitStoreSummary(size_t* exhibits, size_t* failures, unsigned long long* bytes) {
-	size_t nb = 0, ko = 0;
+	size_t count = 0, failed = 0;
 	unsigned long long total = 0;
 	for (const Exhibit& p : g_exhibits) {
-		++nb;
-		if (FAILED(p.extracted.result)) ++ko;
+		++count;
+		if (FAILED(p.extracted.result)) ++failed;
 		// Shared content takes room in the exhibit store only once.
 		else if (!p.shared) total += p.extracted.fingerprints.bytes;
 	}
-	if (exhibits) *exhibits = nb;
-	if (failures) *failures = ko;
+	if (exhibits) *exhibits = count;
+	if (failures) *failures = failed;
 	if (bytes) *bytes = total;
 }
 
@@ -193,7 +193,7 @@ HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes) {
 		if (SUCCEEDED(p.extracted.result) && !p.extracted.fingerprints.sha256.empty())
 			expected.emplace(p.extracted.outputPath, p.extracted.fingerprints.sha256);
 
-	size_t nb = 0, ko = 0, verifies = 0, existing = 0;
+	size_t count = 0, failed = 0, verified = 0, existing = 0;
 	unsigned long long volume = 0;
 	HRESULT global = ERROR_SUCCESS;
 
@@ -221,11 +221,11 @@ HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes) {
 		                           std::filesystem::copy_options::overwrite_existing, ec);
 		if (ec) {
 			log(2, L"🔥Cannot copy into the working directory: " + relative.wstring());
-			++ko;
+			++failed;
 			global = S_FALSE;
 			continue;
 		}
-		++nb;
+		++count;
 		volume += (unsigned long long)std::filesystem::file_size(target, ec);
 
 		/*  VERIFYING THE COPY. Without it, a silently truncated copy — full
@@ -239,18 +239,18 @@ HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes) {
 				log(2, L"🔥Working copy does not match the exhibit store: "
 				       + relative.wstring() + L" (expected " + att->second
 				       + L", got " + obtained + L")");
-				++ko;
+				++failed;
 				global = S_FALSE;
 			}
-			else ++verifies;
+			else ++verified;
 		}
 	}
 
-	log(2, L"❇️Travail : " + std::to_wstring(nb) + L" file(s) copied, "
-	     + std::to_wstring(verifies) + L" verified by fingerprint, "
+	log(2, L"❇️Working directory: " + std::to_wstring(count) + L" file(s) copied, "
+	     + std::to_wstring(verified) + L" verified by fingerprint, "
 	     + std::to_wstring(existing) + L" already present, "
-	     + std::to_wstring(ko) + L" divergence(s)");
-	if (copies) *copies = nb;
+	     + std::to_wstring(failed) + L" divergence(s)");
+	if (copies) *copies = count;
 	if (bytes) *bytes = volume;
 	return global;
 }
@@ -264,9 +264,9 @@ HRESULT ExhibitStoreWriteManifest() {
 	// the collection (see auditContext).
 	Json root = auditContext();
 
-	size_t nb = 0, ko = 0;
+	size_t count = 0, failed = 0;
 	unsigned long long total = 0;
-	ExhibitStoreSummary(&nb, &ko, &total);
+	ExhibitStoreSummary(&count, &failed, &total);
 
 	Json guard = Json::obj();
 	guard.add(L"ExhibitDirectory",  Json::str(L"exhibits"));
@@ -289,8 +289,8 @@ HRESULT ExhibitStoreWriteManifest() {
 	}
 	guard.add(L"ManifestWrittenUtc",   Json::str(finUtc));
 	guard.add(L"ManifestWritten",      Json::str(finLocal));
-	guard.add(L"ItemCount",            Json::num((unsigned long long)nb));
-	guard.add(L"FailedCount",          Json::num((unsigned long long)ko));
+	guard.add(L"ItemCount",            Json::num((unsigned long long)count));
+	guard.add(L"FailedCount",          Json::num((unsigned long long)failed));
 	guard.add(L"TotalBytes",           Json::num(total));
 	guard.add(L"HashAlgorithms",       Json::str(L"MD5, SHA-1, SHA-256"));
 	guard.add(L"NoWriteToExaminedSystem", Json::boolean(true));
@@ -391,9 +391,9 @@ HRESULT ExhibitStoreWriteManifest() {
 		f.close();
 	}
 
-	log(2, L"❇️Exhibit manifest: " + std::to_wstring(nb) + L" exhibit(s), "
-	     + std::to_wstring(ko) + L" failure(s), "
-	     + std::to_wstring(total / 1024 / 1024) + L" Mio");
+	log(2, L"❇️Exhibit manifest: " + std::to_wstring(count) + L" exhibit(s), "
+	     + std::to_wstring(failed) + L" failure(s), "
+	     + std::to_wstring(total / 1024 / 1024) + L" MiB");
 	log(2, L"❇️Manifest seal (SHA-256): " + fingerprint);
 	return ERROR_SUCCESS;
 }

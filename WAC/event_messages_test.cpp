@@ -82,20 +82,20 @@ int wmain(int argc, wchar_t** argv) {
 	// 3. The two resources.
 	PeResource pe;
 	const bool open = pe.open(found);
-	line(L"lecture du PE", open, open ? found : pe.error());
+	line(L"PE reading", open, open ? found : pe.error());
 	if (!open) return 1;
 
 	std::wstring types;
 	for (const std::wstring& t : pe.typesPresent()) types += t + L" ";
 	line(L"resource types present", !types.empty(), types);
 
-	const std::vector<uint8_t> brutWevt = pe.namedResource(L"WEVT_TEMPLATE");
-	line(L"WEVT_TEMPLATE", !brutWevt.empty(),
-	      std::to_wstring(brutWevt.size()) + L" octets");
+	const std::vector<uint8_t> wevtResource = pe.namedResource(L"WEVT_TEMPLATE");
+	line(L"WEVT_TEMPLATE", !wevtResource.empty(),
+	      std::to_wstring(wevtResource.size()) + L" bytes");
 
-	std::vector<uint8_t> brutMsg = pe.resource(PE_RT_MESSAGETABLE);
-	std::wstring ouMsg = L"in the binary";
-	if (brutMsg.empty()) {
+	std::vector<uint8_t> messageTable = pe.resource(PE_RT_MESSAGETABLE);
+	std::wstring messageSource = L"in the binary";
+	if (messageTable.empty()) {
 		// Localised satellite: on a localised system the table is not in the
 		// DLL itself, but in <language>\<name>.mui.
 		const std::filesystem::path p = found;
@@ -106,20 +106,20 @@ int wmain(int argc, wchar_t** argv) {
 			if (!std::filesystem::exists(mui, ec)) continue;
 			PeResource peMui;
 			if (!peMui.open(mui)) continue;
-			brutMsg = peMui.resource(PE_RT_MESSAGETABLE);
-			if (!brutMsg.empty()) { ouMsg = mui; break; }
+			messageTable = peMui.resource(PE_RT_MESSAGETABLE);
+			if (!messageTable.empty()) { messageSource = mui; break; }
 		}
 	}
-	line(L"MESSAGETABLE", !brutMsg.empty(),
-	      std::to_wstring(brutMsg.size()) + L" octets, " + ouMsg);
+	line(L"MESSAGETABLE", !messageTable.empty(),
+	      std::to_wstring(messageTable.size()) + L" bytes, " + messageSource);
 
 	// 4. The parsing, then the resolution of the requested identifiers.
 	WevtMetadata meta;
-	const size_t nbEv = meta.analyse(brutWevt, guid);
-	line(L"events described", nbEv > 0, std::to_wstring(nbEv));
+	const size_t eventCount = meta.analyse(wevtResource, guid);
+	line(L"events described", eventCount > 0, std::to_wstring(eventCount));
 	TableMessages table;
-	const size_t nbMsg = table.analyse(brutMsg);
-	line(L"messages read", nbMsg > 0, std::to_wstring(nbMsg));
+	const size_t messageCount = table.analyse(messageTable);
+	line(L"messages read", messageCount > 0, std::to_wstring(messageCount));
 
 	for (int i = 3; i < argc; ++i) {
 		std::wstring a = argv[i];

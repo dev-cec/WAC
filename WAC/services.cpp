@@ -37,7 +37,7 @@ HRESULT readLiveStates(std::map<std::wstring, ServiceState>& states) {
 	SC_HANDLE hSCM = OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE | SC_MANAGER_CONNECT);
 	if (!hSCM) {
 		const HRESULT error = GetLastError();
-		log(2, L"🔥OpenSCManager : etat courant des services non releve", error);
+		log(2, L"🔥OpenSCManager: current state of the services not read", error);
 		return error;
 	}
 
@@ -65,7 +65,7 @@ HRESULT readLiveStates(std::map<std::wstring, ServiceState>& states) {
 			e.processId = list[i].ServiceStatusProcess.dwProcessId;
 			states.emplace(toLower(list[i].lpServiceName), e);
 		}
-		log(2, L"❇️Etat courant releve pour " + std::to_wstring(states.size()) + L" services");
+		log(2, L"❇️Current state read for " + std::to_wstring(states.size()) + L" services");
 	}
 	else {
 		result = GetLastError();
@@ -166,7 +166,7 @@ HRESULT Services::getData() {
 	log(0, L"*******************************************************************************************************************");
 
 	if (!conf.CurrentControlSet) {
-		log(2, L"🔥CurrentControlSet indisponible : services non collectes");
+		log(2, L"🔥CurrentControlSet unavailable: services not collected");
 		return ERROR_INVALID_HANDLE;
 	}
 
@@ -243,8 +243,8 @@ HRESULT Services::getData() {
 			isService = true;
 		}
 		if (!isService) {
-			log(2, L"🔈Services\\" + s.serviceName + L" : pas de valeur Type, "
-			       L"conteneur de parametres ignore");
+			log(2, L"🔈Services\\" + s.serviceName + L": no Type value, "
+			       L"parameter container skipped");
 			ORCloseKey(hService);
 			continue;
 		}
@@ -279,7 +279,7 @@ HRESULT Services::getData() {
 		ORCloseKey(hService);
 	}
 	ORCloseKey(hServices);
-	log(2, L"❇️" + std::to_wstring(services.size()) + L" services releves dans la ruche");
+	log(2, L"❇️" + std::to_wstring(services.size()) + L" services read in the hive");
 	return ERROR_SUCCESS;
 }
 

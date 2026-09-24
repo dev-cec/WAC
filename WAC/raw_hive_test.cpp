@@ -71,7 +71,7 @@ int wmain(int argc, wchar_t** argv){
     }
 
     if (list){
-        wprintf(L"Enumeration brute %ls:%ls\n", vol, path);
+        wprintf(L"Raw enumeration %ls:%ls\n", vol, path);
         std::vector<RawDirEntry> entries;
         HRESULT hr = ListDirectoryRaw(vol, path, entries);
         if (FAILED(hr)){
@@ -84,12 +84,12 @@ int wmain(int argc, wchar_t** argv){
         // with an explicit cast, and to %ls without a width.
         wprintf(L"Total: %llu entry/entries\n", (unsigned long long)entries.size());
         for (const RawDirEntry& e : entries)
-            wprintf(L"  %ls %ls (%llu octets)\n", e.isDirectory ? L"[REP]" : L"     ",
+            wprintf(L"  %ls %ls (%llu bytes)\n", e.isDirectory ? L"[DIR]" : L"     ",
                     e.name.c_str(), (unsigned long long)e.size);
         return 0;
     }
 
-    wprintf(L"Extraction brute %ls:%ls -> %ls\n", vol, path, out);
+    wprintf(L"Raw extraction %ls:%ls -> %ls\n", vol, path, out);
     HRESULT hr = ExtractFileRaw(vol, path, out);
     wprintf(L"Extraction: 0x%08lX (%ls)\n", (unsigned long)hr, SUCCEEDED(hr) ? L"OK" : L"FAILED");
     if (FAILED(hr)) return 1;

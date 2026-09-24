@@ -534,8 +534,8 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 	}
 	if (valueType == 0x101F) {                     // Vector<VT_LPWSTR>
 		Json arr = Json::arr();
-		unsigned int nb = *reinterpret_cast<unsigned int*>(buffer + *pos);
-		for (unsigned int x = 0; x < nb && fits(inputSize, (size_t)*pos + 4, 4); x++) {
+		unsigned int elementCount = *reinterpret_cast<unsigned int*>(buffer + *pos);
+		for (unsigned int x = 0; x < elementCount && fits(inputSize, (size_t)*pos + 4, 4); x++) {
 			unsigned int size = *reinterpret_cast<unsigned int*>(buffer + *pos + 4);
 			arr.push(Json::str(readWideZ(buffer, inputSize, (size_t)*pos + 8)));
 			*pos += 4 + size * 2;
@@ -738,20 +738,20 @@ Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsign
 		o.add(L"TruncatedValueType", Json::str(L"0x" + to_hex(valueType)));
 		return o;
 	}
-	const unsigned int nb = *reinterpret_cast<unsigned int*>(buffer + *pos);
+	const unsigned int elementCount = *reinterpret_cast<unsigned int*>(buffer + *pos);
 	*pos += 4;
-	log(3, L"🔈vector of " + std::to_wstring(nb) + L" element(s) de type 0x"
+	log(3, L"🔈vector of " + std::to_wstring(elementCount) + L" element(s) of type 0x"
 	     + to_hex(typeElement));
 
 	/* A nonsensical count comes from corrupted data or a misidentified type: the
 	   bytes are returned instead of iterating millions of times. */
 	const unsigned int MAX_ELEMENTS = 65536;
-	if (nb > MAX_ELEMENTS) {
-		log(2, L"🔥vector: nonsensical count " + std::to_wstring(nb));
+	if (elementCount > MAX_ELEMENTS) {
+		log(2, L"🔥vector: nonsensical count " + std::to_wstring(elementCount));
 		if (typeNotDecoded) *typeNotDecoded = true;
 		Json o = Json::obj();
 		o.add(L"UnsupportedValueType", Json::str(L"0x" + to_hex(valueType)));
-		o.add(L"ElementCount",         Json::num(nb));
+		o.add(L"ElementCount",         Json::num(elementCount));
 		if (inputSize > *pos)
 			o.add(L"Data", Json::str(dump_wstring(buffer, (int)*pos,
 			                                      (int)(inputSize - *pos))));
@@ -759,7 +759,7 @@ Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsign
 	}
 
 	Json arr = Json::arr();
-	for (unsigned int x = 0; x < nb; ++x) {
+	for (unsigned int x = 0; x < elementCount; ++x) {
 		bool elementNonDecode = false;
 		Json v = readScalar(buffer, pos, typeElement, level, inputSize,
 		                      &elementNonDecode);
@@ -769,7 +769,7 @@ Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsign
 			   going on would re-read the same byte. We stop and report it. */
 			if (typeNotDecoded) *typeNotDecoded = true;
 			log(2, L"🔥vector: element of a type not decoded 0x" + to_hex(typeElement)
-			     + L", stopped after " + std::to_wstring(x + 1) + L"/" + std::to_wstring(nb));
+			     + L", stopped after " + std::to_wstring(x + 1) + L"/" + std::to_wstring(elementCount));
 			break;
 		}
 	}
@@ -793,7 +793,7 @@ SPSValue::SPSValue(LPBYTE buffer, std::wstring _guid, int _level) {
 	if (size > 0) {
 		unsigned int id_int = *reinterpret_cast<unsigned int*>(buffer + 4);
 		id = std::to_wstring(id_int);
-		//recherche value
+		// look for the value
 		unsigned int pos = 13;
 		if (guid == L"{D5CDD505-2E9C-101B-9397-08002B2CF9AE}") {
 			// Named entry: `id_int` is the name's size, then the type.
@@ -1038,9 +1038,9 @@ Beef0004::Beef0004(LPBYTE buffer, int _level, bool* is_zip, bool is_file) {
 		off += 2;                                 // two empty bytes
 		/* File reference: 6 bytes of entry index, 2 of sequence. */
 		if (fits(blockSize, off, 8)) {
-			const unsigned long long brut = *reinterpret_cast<unsigned long long*>(buffer + off);
-			mftEntryNumber    = brut & 0x0000FFFFFFFFFFFFULL;
-			mftSequenceNumber = (unsigned short int)(brut >> 48);
+			const unsigned long long reference = *reinterpret_cast<unsigned long long*>(buffer + off);
+			mftEntryNumber    = reference & 0x0000FFFFFFFFFFFFULL;
+			mftSequenceNumber = (unsigned short int)(reference >> 48);
 			if (mftEntryNumber != 0 && mftSequenceNumber != 0)      mftNote = L"NTFS";
 			else if (mftEntryNumber != 0 && mftSequenceNumber == 0) mftNote = L"FAT";
 			else                                                    mftNote = L"Network/special item";

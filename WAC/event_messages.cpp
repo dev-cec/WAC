@@ -108,10 +108,10 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 		std::filesystem::remove(std::filesystem::path(target).parent_path(), ec);
 		return std::wstring();
 	}
-	ExhibitStoreAdd(reading, L"Lecture brute NTFS (\\\\.\\" + volume
+	ExhibitStoreAdd(reading, L"Raw NTFS reading (\\\\.\\" + volume
 	                        + L": — resource file of an event provider)");
-	const bool brutOk = SUCCEEDED(hr) && !res.empty() && SUCCEEDED(res[0]);
-	if (!brutOk)
+	const bool rawReadOk = SUCCEEDED(hr) && !res.empty() && SUCCEEDED(res[0]);
+	if (!rawReadOk)
 		log(3, L"🔈Raw reading unsuccessful, fallback expected: " + absolutePath);
 	else
 		for (const RawHiveExtraction& e : reading) g_bytes += e.fingerprints.bytes;
@@ -123,7 +123,7 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 	    A file that stays unreadable is so for another reason — absent, or
 	    compressed with LZX, which WAC does not decompress — and it is reported as
 	    such rather than read by a route that would leave a trace. */
-	if (!brutOk || !isValidPe(target)) {
+	if (!rawReadOk || !isValidPe(target)) {
 		log(2, L"🔥Resource binary unreadable by raw reading: " + absolutePath);
 		return std::wstring();
 	}
@@ -249,10 +249,10 @@ Provider* load(const std::wstring& guid) {
 		    || path.empty()) {
 			f->reason = L"no resource file declared";
 			++g_failures;
-			log(2, L"🔥Provider " + guid + L" : " + f->reason);
-			Provider* brut = f.get();
+			log(2, L"🔥Provider " + guid + L": " + f->reason);
+			Provider* provider = f.get();
 			g_cache.emplace(guid, std::move(f));
-			return brut;
+			return provider;
 		}
 	}
 	// `%SystemRoot%`, `%windir%` and the like, and a path relative to System32.
@@ -269,21 +269,21 @@ Provider* load(const std::wstring& guid) {
 		f->file = resolved;
 		f->reason = L"resource binary unreadable";
 		++g_failures;
-		log(2, L"🔥Provider " + guid + L" : " + f->reason + L" — candidates: "
+		log(2, L"🔥Provider " + guid + L": " + f->reason + L" — candidates: "
 		     + (candidates.empty() ? L"(none)" : candidates[0])
 		     + (candidates.size() > 1 ? L" ; " + candidates[1] : L""));
-		Provider* brut = f.get();
+		Provider* provider = f.get();
 		g_cache.emplace(guid, std::move(f));
-		return brut;
+		return provider;
 	}
 	PeResource pe;
 	if (!pe.open(workingDll)) {
 		f->reason = L"PE unreadable: " + pe.error();
 		++g_failures;
-		log(2, L"🔥Provider " + guid + L" : " + f->reason + L" (" + workingDll + L")");
-		Provider* brut = f.get();
+		log(2, L"🔥Provider " + guid + L": " + f->reason + L" (" + workingDll + L")");
+		Provider* provider = f.get();
 		g_cache.emplace(guid, std::move(f));
-		return brut;
+		return provider;
 	}
 	f->metadata.analyse(pe.namedResource(L"WEVT_TEMPLATE"), guid);
 
@@ -325,16 +325,16 @@ Provider* load(const std::wstring& guid) {
 		         + std::to_wstring(f->metadata.size()) + L" event(s), "
 		         + std::to_wstring(nbMessages) + L" message(s))";
 		++g_failures;
-		log(2, L"🔥Provider " + guid + L" : " + f->reason + L" — " + f->file);
+		log(2, L"🔥Provider " + guid + L": " + f->reason + L" — " + f->file);
 	}
 	else {
 		log(2, L"❇️Provider " + guid + L" : " + std::to_wstring(f->metadata.size())
 		     + L" event(s), " + std::to_wstring(nbMessages) + L" message(s) — "
 		     + f->file);
 	}
-	Provider* brut = f.get();
+	Provider* provider = f.get();
 	g_cache.emplace(guid, std::move(f));
-	return brut;
+	return provider;
 }
 
 } // namespace

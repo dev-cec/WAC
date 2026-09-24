@@ -676,7 +676,7 @@ HRESULT EvtxReadFile(const std::wstring& path,
 	if (h == INVALID_HANDLE_VALUE) {
 		const DWORD err = GetLastError();
 		b.diagnostic = L"cannot be opened";
-		log(2, L"🔥EvtxLireFichier " + path, err);
+		log(2, L"🔥EvtxReadFile " + path, err);
 		return HRESULT_FROM_WIN32(err);
 	}
 
@@ -685,13 +685,13 @@ HRESULT EvtxReadFile(const std::wstring& path,
 	if (!ReadFile(h, header.data(), (DWORD)header.size(), &read, nullptr)
 	    || read < FILE_HEADER_SIZE) {
 		CloseHandle(h);
-		b.diagnostic = L"file truncated (" + std::to_wstring(read) + L" octets)";
+		b.diagnostic = L"file truncated (" + std::to_wstring(read) + L" bytes)";
 		return HRESULT_FROM_WIN32(ERROR_HANDLE_EOF);
 	}
 	if (memcmp(header.data(), "ElfFile\0", 8) != 0) {
 		CloseHandle(h);
 		b.diagnostic = L"ElfFile signature absent";
-		log(2, L"🔥evtx : " + path + L" n'est pas un journal EVTX");
+		log(2, L"🔥evtx: " + path + L" is not an EVTX log");
 		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
 	}
 	b.headerValid = true;

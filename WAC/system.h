@@ -48,7 +48,7 @@ struct SystemInfo {
 	// --- installation (SOFTWARE hive) ---
 	std::wstring osName;                    //!< label of the OS, corrected for Windows 11
 	std::wstring productNameRaw;            //!< ProductName as written in the hive
-	std::wstring version;                   //!< "major.minor.build" (+ ".UBR" si connu)
+	std::wstring version;                   //!< "major.minor.build" (+ ".UBR" if known)
 	std::wstring displayVersion;            //!< DisplayVersion / ReleaseId, ex. "23H2"
 	std::wstring editionId;                 //!< EditionID, ex. "Professional"
 	std::wstring installationType;          //!< "Client" or "Server"

@@ -210,16 +210,16 @@ HRESULT SystemInfo::getData() {
 			LARGE_INTEGER BootTime, CurrentTime, TimeZoneBias;
 			ULONG TimeZoneId, Reserved;
 			ULONGLONG BootTimeBias, SleepTimeBias;
-		} hdj = {};
+		} timeOfDay = {};
 		typedef LONG (WINAPI *NtQsiFn)(ULONG, PVOID, ULONG, PULONG);
 		const NtQsiFn ntQsi = reinterpret_cast<NtQsiFn>(
 			GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "NtQuerySystemInformation"));
 		ULONG returned = 0;
 		log(3, L"🔈NtQuerySystemInformation SystemTimeOfDayInformation");
-		if (ntQsi && ntQsi(3 /*SystemTimeOfDayInformation*/, &hdj, sizeof(hdj), &returned) >= 0
-		    && hdj.BootTime.QuadPart > (LONGLONG)hdj.BootTimeBias) {
-			boot100ns = (ULONGLONG)hdj.BootTime.QuadPart - hdj.BootTimeBias;
-			clockCorrection100ns = (long long)hdj.BootTimeBias;
+		if (ntQsi && ntQsi(3 /*SystemTimeOfDayInformation*/, &timeOfDay, sizeof(timeOfDay), &returned) >= 0
+		    && timeOfDay.BootTime.QuadPart > (LONGLONG)timeOfDay.BootTimeBias) {
+			boot100ns = (ULONGLONG)timeOfDay.BootTime.QuadPart - timeOfDay.BootTimeBias;
+			clockCorrection100ns = (long long)timeOfDay.BootTimeBias;
 			bootFromKernel = true;
 		}
 		else

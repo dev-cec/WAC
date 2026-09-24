@@ -34,9 +34,9 @@ struct History {
 History decoderDynamicInfo(const BYTE* data, DWORD size) {
 	History h;
 	if (!data || size < 0x18) return h;
-	const ULONGLONG brut = *reinterpret_cast<const ULONGLONG*>(data + 0x0C);
-	h.lastRunUtc.dwLowDateTime  = (DWORD)(brut & 0xFFFFFFFFULL);
-	h.lastRunUtc.dwHighDateTime = (DWORD)(brut >> 32);
+	const ULONGLONG lastRun100ns = *reinterpret_cast<const ULONGLONG*>(data + 0x0C);
+	h.lastRunUtc.dwLowDateTime  = (DWORD)(lastRun100ns & 0xFFFFFFFFULL);
+	h.lastRunUtc.dwHighDateTime = (DWORD)(lastRun100ns >> 32);
 	h.lastResult = *reinterpret_cast<const LONG*>(data + 0x14);
 	h.found = true;
 	return h;

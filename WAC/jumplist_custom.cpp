@@ -173,7 +173,7 @@ HRESULT JumplistCustoms::getData() {
 		for (const std::filesystem::path& file : files) {
 			log(1, L"➕CustomDestination");
 			printProgress(L"Jumplist " + file.filename().wstring(),
-			              ++iFile, files.size(), L"fic");
+			              ++iFile, files.size(), L"files");
 			customDestinations.push_back(CustomDestination(file, std::get<0>(profileEntry)));
 		}
 	}

@@ -1357,7 +1357,7 @@ struct FavoriteShellitem :IShellItem {
 */
 struct TypedShellItem : IShellItem {
 	bool isPresent = false;   //!< presence, to lay out the JSON
-	std::wstring typeName;    //!< type reconnu, ex. "CD Burn", "Game Folder"
+	std::wstring typeName;    //!< recognised type, e.g. "CD Burn", "Game Folder"
 	std::wstring data;        //!< raw content, in hexadecimal
 
 	/*! Reads the item.

@@ -13,7 +13,7 @@ Muicache::Muicache(ORHKEY hKey, std::wstring valueName, std::wstring profile) {
 	log(3, L"🔈getNameFromSid sidName");
 	sidName = getNameFromSid(sid);
 
-	log(3, L"🔈getRegSzValue nomValeur");
+	log(3, L"🔈getRegSzValue valueName");
 	hresult = getRegSzValue(hKey, nullptr, valueName.c_str(), &data);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥getRegSzValue Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache\\" + std::wstring(valueName), hresult);

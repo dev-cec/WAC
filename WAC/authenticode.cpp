@@ -34,9 +34,9 @@ bool readTlv(const uint8_t* p, size_t n, Tlv& t) {
 	const uint8_t b = p[i++];
 	if (b < 0x80) len = b;
 	else {
-		const size_t nb = b & 0x7F;
-		if (nb == 0 || nb > 4 || i + nb > n) return false;     // indefinite or oversized
-		for (size_t k = 0; k < nb; ++k) len = (len << 8) | p[i++];
+		const size_t lengthSize = b & 0x7F;
+		if (lengthSize == 0 || lengthSize > 4 || i + lengthSize > n) return false;     // indefinite or oversized
+		for (size_t k = 0; k < lengthSize; ++k) len = (len << 8) | p[i++];
 	}
 	if (len > n - i) return false;
 	t.tag = p[0]; t.start = p; t.val = p + i; t.len = len; t.total = i + len;
@@ -257,11 +257,11 @@ VerifiedSignature VerifyPkcs7(const uint8_t* data, size_t size) {
 	Tlv ci;
 	if (!readTlv(data, size, ci) || ci.tag != 0x30) { r.reason = "ContentInfo unreadable"; return r; }
 	std::vector<Tlv> e = children(ci);
-	if (e.size() < 2 || !IS_OID(e[0], OID_SIGNED_DATA) || e[1].tag != 0xA0) { r.reason = "pas un SignedData"; return r; }
+	if (e.size() < 2 || !IS_OID(e[0], OID_SIGNED_DATA) || e[1].tag != 0xA0) { r.reason = "not a SignedData"; return r; }
 	std::vector<Tlv> w = children(e[1]);
 	if (w.empty() || w[0].tag != 0x30) { r.reason = "SignedData unreadable"; return r; }
 	const std::vector<Tlv> sd = children(w[0]);
-	// version, digestAlgorithms, encapContentInfo, [0] certificats, [1] crls, signerInfos
+	// version, digestAlgorithms, encapContentInfo, [0] certificates, [1] crls, signerInfos
 	if (sd.size() < 4) { r.reason = "SignedData incomplete"; return r; }
 	const std::vector<Tlv> eci = children(sd[2]);
 	if (eci.size() < 2 || eci[0].tag != 0x06 || eci[1].tag != 0xA0) { r.reason = "content absent"; return r; }
@@ -509,7 +509,7 @@ void PeAnalyser::finish() {
 
 VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalogues) {
 	VerdictMicrosoft v;
-	if (!pe.isPe()) { v.reason = "pas un PE"; return v; }
+	if (!pe.isPe()) { v.reason = "not a PE"; return v; }
 
 	// 1. Catalogs: is the digest, in one of its forms, listed there?
 	for (const auto& e : { std::make_pair(pe.sha256(), 32), std::make_pair(pe.sha1(), 20),
@@ -646,7 +646,7 @@ VerdictMicrosoft EvaluatePowerShellScript(const uint8_t* bytes, size_t size) {
 		start = findText(t, "<!-- SIG # Begin signature block -->");
 		xml = true;
 	}
-	if (start == std::u32string::npos) { v.reason = "pas de embedded signature"; return v; }
+	if (start == std::u32string::npos) { v.reason = "no embedded signature"; return v; }
 	const size_t end = findText(t, xml ? "<!-- SIG # End signature block -->" : "# SIG # End signature block", start);
 	if (end == std::u32string::npos) { v.reason = "signature block incomplete"; return v; }
 

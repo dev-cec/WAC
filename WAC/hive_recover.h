@@ -65,7 +65,7 @@ struct HiveLogEntry {
     uint32_t sequence = 0;      //!< sequence number of the entry
     uint32_t pages    = 0;      //!< number of modified pages
     uint64_t bytes   = 0;      //!< size of those pages
-    bool     applique = false;  //!< true if it was written into the hive
+    bool     applied = false;  //!< true if it was written into the hive
     std::wstring reason;         //!< why it was discarded, if it was
 };
 
@@ -73,9 +73,9 @@ struct HiveLogEntry {
 struct HiveReplayInfo {
     bool ok       = false;      //!< operation carried out without an I/O error
     bool logs = false;      //!< at least one usable `.LOG1/.LOG2` found
-    bool applique = false;      //!< at least one entry written into the hive
+    bool applied = false;      //!< at least one entry written into the hive
     uint32_t hiveSequence   = 0;  //!< hive sequence before replay
-    uint32_t sequenceFinale  = 0;  //!< sequence after replay
+    uint32_t finalSequence  = 0;  //!< sequence after replay
     unsigned keptEntries = 0;  //!< chain entries applied
     unsigned discardedEntries = 0;  //!< invalid entries (checksum, bounds)
     unsigned leftoverEntries   = 0;  //!< entries outside the chain (earlier generation)

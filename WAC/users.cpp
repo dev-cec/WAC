@@ -54,7 +54,7 @@ std::wstring readStringV(const BYTE* data, DWORD size, size_t entry) {
 	if (length == 0 || length > size) return L"";
 	const size_t start = V_BASE + relativeOffset;
 	if (start + length > size) {
-		log(2, L"🔥Valeur V du SAM incoherente : entree hors tampon");
+		log(2, L"🔥SAM V value inconsistent: entry outside the buffer");
 		return L"";
 	}
 	return std::wstring((PCWSTR)(data + start), length / sizeof(wchar_t));
@@ -110,7 +110,7 @@ std::wstring readMachineSid(ORHKEY hSam, const std::wstring& base) {
 	log(3, L"🔈getRegBinaryValue " + base + L"Domains\\Account V");
 	if (getRegBinaryValue(hSam, (base + L"Domains\\Account").c_str(), L"V",
 	                      &data, &size) != ERROR_SUCCESS) {
-		log(2, L"🔥SID de machine illisible : les SID seront limites au RID");
+		log(2, L"🔥Machine SID unreadable: the SIDs will be limited to the RID");
 		// getRegBinaryValue allocates the buffer BEFORE reading: it must be released
 		// even when the reading fails, otherwise the error path leaks.
 		delete[] data;
@@ -125,10 +125,10 @@ std::wstring readMachineSid(ORHKEY hSam, const std::wstring& base) {
 		memcpy(&c, end + 8, sizeof(DWORD));
 		sid = L"S-1-5-21-" + std::to_wstring(a) + L"-" + std::to_wstring(b)
 		    + L"-" + std::to_wstring(c);
-		log(2, L"❇️SID de machine : " + sid);
+		log(2, L"❇️Machine SID: " + sid);
 	}
 	else
-		log(2, L"🔥Valeur V de SAM\\Domains\\Account trop courte");
+		log(2, L"🔥V value of SAM\\Domains\\Account too short");
 	delete[] data;
 	return sid;
 }
@@ -192,7 +192,7 @@ HRESULT Users::getData() {
 	log(3, L"🔈OROpenHive SAM");
 	HRESULT hresult = OROpenHive(samHive.c_str(), &hSam);
 	if (hresult != ERROR_SUCCESS) {
-		log(2, L"🔥Ruche SAM indisponible : comptes locaux non collectes", hresult);
+		log(2, L"🔥SAM hive unavailable: local accounts not collected", hresult);
 		return hresult;
 	}
 
@@ -213,7 +213,7 @@ HRESULT Users::getData() {
 		}
 	}
 	if (!hUsers) {
-		log(2, L"🔥OROpenKey Domains\\Account\\Users introuvable dans la ruche SAM");
+		log(2, L"🔥OROpenKey Domains\\Account\\Users not found in the SAM hive");
 		ORCloseHive(hSam);
 		return ERROR_FILE_NOT_FOUND;
 	}
@@ -272,7 +272,7 @@ HRESULT Users::getData() {
 			u.flagLabels = describeFlags(u.flags);
 		}
 		else
-			log(2, L"🔥Valeur F absente ou trop courte pour " + std::wstring(keyName));
+			log(2, L"🔥F value missing or too short for " + std::wstring(keyName));
 		delete[] f;
 
 		/* If `F` did not give the RID, the key's name carries it in hexadecimal: a
@@ -289,13 +289,13 @@ HRESULT Users::getData() {
 			u.comment  = readStringV(v, sizeV, V_COMMENT);
 		}
 		else
-			log(2, L"🔥Valeur V absente pour " + std::wstring(keyName));
+			log(2, L"🔥V value missing for " + std::wstring(keyName));
 		delete[] v;
 		ORCloseKey(hAccount);
 
 		if (u.name.empty()) {
 			// Without a name, the entry is not usable: reported, not emitted.
-			log(2, L"🔥Compte sans nom exploitable, RID " + std::to_wstring(u.rid));
+			log(2, L"🔥Account without a usable name, RID " + std::to_wstring(u.rid));
 			continue;
 		}
 		if (!sidMachine.empty()) u.SID = sidMachine + L"-" + std::to_wstring(u.rid);
@@ -308,7 +308,7 @@ HRESULT Users::getData() {
 
 	ORCloseKey(hUsers);
 	ORCloseHive(hSam);
-	log(2, L"❇️" + std::to_wstring(users.size()) + L" comptes locaux releves dans le SAM");
+	log(2, L"❇️" + std::to_wstring(users.size()) + L" local accounts read in the SAM");
 	return users.empty() ? ERROR_EMPTY : ERROR_SUCCESS;
 }
 

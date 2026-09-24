@@ -90,10 +90,10 @@ std::wstring HiveFixInfoToString(const HiveFixInfo& i){
     };
     if (!i.ok) return L"FAILED (" + i.error + L")";
     if (!i.wasDirty) return i.hiveName + L": already clean (seq " + hex(i.primarySeq) + L")";
-    return i.hiveName + L" : dirty séq " + hex(i.primarySeq) + L"/" + hex(i.secondarySeq)
+    return i.hiveName + L": dirty, seq " + hex(i.primarySeq) + L"/" + hex(i.secondarySeq)
          + L" -> aligned " + hex(i.primarySeq) + L", checksum " + hex(i.oldChecksum)
          + L" -> " + hex(i.newChecksum)
-         + (i.patched ? L" [patch appliqué]" : L" [NON appliqué]");
+         + (i.patched ? L" [patch applied]" : L" [patch NOT applied]");
 }
 
 // ---------------------------------------------------------------------------
@@ -139,7 +139,7 @@ uint64_t marvin32(const uint8_t* data, size_t size){
     };
     size_t i = 0;
     for (; size - i >= 4; i += 4){ lo += rd32(data + i); mix(); }
-    // Finalisation: the remaining bytes followed by a 0x80.
+    // Finalization: the remaining bytes followed by a 0x80.
     uint32_t rest = 0;
     size_t k = 0;
     for (; i + k < size; ++k) rest |= (uint32_t)data[i + k] << (8 * k);
@@ -259,7 +259,7 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
     const uint32_t primarySeq   = rd32(bb.data() + OFF_PRIMARY);
     const uint32_t secondarySeq = rd32(bb.data() + OFF_SECONDARY);
     r.hiveSequence  = primarySeq;
-    r.sequenceFinale = primarySeq;
+    r.finalSequence = primarySeq;
 
     unsigned leftover = 0;
     std::vector<ReadEntry> string = readString(hive.wstring() + L".LOG1", &leftover);
@@ -329,19 +329,19 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
             undo.push_back(std::move(pg));
         }
         if (!boundsOk){
-            trace.reason = L"lecture de la page d'origine impossible";
+            trace.reason = L"original page unreadable";
             ++r.discardedEntries;
             r.entries.push_back(trace);
             break;
         }
 
-        trace.applique = true;
+        trace.applied = true;
         toApply.push_back(&e);
         r.entries.push_back(trace);
         ++r.keptEntries;
         r.pages  += e.nbPages;
         r.bytes += e.bytes;
-        r.sequenceFinale = e.sequence;
+        r.finalSequence = e.sequence;
     }
 
     if (toApply.empty()){ r.ok = true; return r; }
@@ -388,15 +388,15 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
             pos += p.second;
         }
     }
-    wr32(bb.data() + OFF_PRIMARY,   r.sequenceFinale);
-    wr32(bb.data() + OFF_SECONDARY, r.sequenceFinale);
+    wr32(bb.data() + OFF_PRIMARY,   r.finalSequence);
+    wr32(bb.data() + OFF_SECONDARY, r.finalSequence);
     wr32(bb.data() + OFF_CHECKSUM,  baseBlockChecksum(bb.data()));
     f.seekp(0, std::ios::beg);
     f.write(reinterpret_cast<const char*>(bb.data()), BASE_BLOCK);
     f.flush();
     if (!f){ r.error = L"cannot write the hive"; return r; }
 
-    r.applique = true;
+    r.applied = true;
     r.ok = true;
     return r;
 }
@@ -409,14 +409,14 @@ std::wstring HiveReplayInfoToString(const HiveReplayInfo& i){
         for (int k = 0; k < 8; ++k) b[2 + k] = d[(v >> ((7 - k) * 4)) & 0xF];
         b[10] = 0; return std::wstring(b);
     };
-    if (!i.ok) return L"rejeu : FAILED (" + i.error + L")";
+    if (!i.ok) return L"replay: FAILED (" + i.error + L")";
     if (!i.logs) return L"replay: no usable transaction log";
-    if (!i.applique) return L"replay: nothing to apply (hive up to date, seq "
+    if (!i.applied) return L"replay: nothing to apply (hive up to date, seq "
                           + hex(i.hiveSequence) + L")";
-    std::wstring s = L"rejeu : " + std::to_wstring(i.keptEntries) + L" entree(s), "
+    std::wstring s = L"replay: " + std::to_wstring(i.keptEntries) + L" entry(ies), "
                    + std::to_wstring(i.pages) + L" page(s), "
-                   + std::to_wstring(i.bytes / 1024) + L" Kio, seq "
-                   + hex(i.hiveSequence) + L" -> " + hex(i.sequenceFinale);
+                   + std::to_wstring(i.bytes / 1024) + L" KiB, seq "
+                   + hex(i.hiveSequence) + L" -> " + hex(i.finalSequence);
     if (i.discardedEntries) s += L", " + std::to_wstring(i.discardedEntries) + L" discarded";
     if (i.leftoverEntries)   s += L", " + std::to_wstring(i.leftoverEntries) + L" out of the chain";
     return s;

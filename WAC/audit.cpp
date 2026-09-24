@@ -56,7 +56,7 @@ long         g_biasMinutes  = 0;
 bool         g_elevated         = false;
 
 //! Current timestamp, in UTC and in local time.
-void now(std::wstring& utc, std::wstring& local, FILETIME* brut = nullptr) {
+void now(std::wstring& utc, std::wstring& local, FILETIME* nowFiletime = nullptr) {
 	SYSTEMTIME stUtc = { 0 };
 	GetSystemTime(&stUtc);
 	utc = timeToIso8601(stUtc, true);
@@ -65,7 +65,7 @@ void now(std::wstring& utc, std::wstring& local, FILETIME* brut = nullptr) {
 	GetLocalTime(&stLocal);
 	local = timeToIso8601(stLocal, false);
 
-	if (brut && !SystemTimeToFileTime(&stUtc, brut)) *brut = FILETIME{ 0, 0 };   // null: not emitted
+	if (nowFiletime && !SystemTimeToFileTime(&stUtc, nowFiletime)) *nowFiletime = FILETIME{ 0, 0 };   // null: not emitted
 }
 
 //! Context of the machine and of the operator at collection time.

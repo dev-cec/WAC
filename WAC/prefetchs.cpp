@@ -504,7 +504,7 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 
 			f.fullPath = replaceAll(f.filename, v.deviceName, v.mountPoint).data();
 			if (conf.binary) {
-				log(3, L"🔈EmpreinteFichier");
+				log(3, L"🔈FingerprintFile");
 				f.fingerprint = FingerprintFile(f.fullPath);
 			}
 			// The Prefetch's executable among the loaded files: it is THAT one whose

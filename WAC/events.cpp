@@ -43,7 +43,7 @@ Json string(const std::wstring& text) {
  *
  *  Both forms are now read, each from its own subtree.
  */
-Json eventData(const XmlNode& root, std::vector<std::wstring>* brutes) {
+Json eventData(const XmlNode& root, std::vector<std::wstring>* rawValues) {
 	Json arr = Json::arr();
 
 	if (const XmlNode* ed = root.child(L"EventData")) {
@@ -60,7 +60,7 @@ Json eventData(const XmlNode& root, std::vector<std::wstring>* brutes) {
 			if (!name.empty()) o.add(L"Name", Json::str(name));
 			o.add(L"Value", Json::str(d->text));
 			arr.push(std::move(o));
-			if (brutes) brutes->push_back(d->text);
+			if (rawValues) rawValues->push_back(d->text);
 		}
 		if (const XmlNode* bin = ed->child(L"Binary"))
 			if (!bin->text.empty()) {
@@ -68,7 +68,7 @@ Json eventData(const XmlNode& root, std::vector<std::wstring>* brutes) {
 				o.add(L"Name",  Json::str(L"Binary"));
 				o.add(L"Value", Json::str(bin->text));
 				arr.push(std::move(o));
-				if (brutes) brutes->push_back(bin->text);
+				if (rawValues) rawValues->push_back(bin->text);
 			}
 		return arr;
 	}
@@ -90,7 +90,7 @@ Json eventData(const XmlNode& root, std::vector<std::wstring>* brutes) {
 					o.add(L"Name",  Json::str(n->name));
 					o.add(L"Value", Json::str(n->text));
 					arr.push(std::move(o));
-					if (brutes) brutes->push_back(n->text);
+					if (rawValues) rawValues->push_back(n->text);
 				}
 			}
 			else {
@@ -255,8 +255,8 @@ HRESULT Events::getData() {
 				if (ev.evtSystemProviderName.kind() == Json::Kind::Null
 				    || ev.evtSystemTimeCreated.kind() == Json::Kind::Null) {
 					++incomplete;
-					log(2, L"🔥Event " + std::to_wstring(e.id) + L" de "
-					     + fileName + L" : section System incomplete");
+					log(2, L"🔥Event " + std::to_wstring(e.id) + L" of "
+					     + fileName + L": System section incomplete");
 					log(3, L"🔈XML : " + e.xml.substr(0, 2000));
 				}
 				output.add(ev.toJson());

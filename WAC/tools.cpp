@@ -485,12 +485,12 @@ namespace {
  *  Without expansion, the path names no file and the raw extraction of their
  *  ntuser.dat fails in silence — which showed up as a "partial" extraction with
  *  no apparent cause. */
-std::wstring expandProfilePath(const std::wstring& brut) {
-	if (brut.find(L'%') == std::wstring::npos) return brut;
-	const std::wstring expanded = normalizeFilePath(brut);
+std::wstring expandProfilePath(const std::wstring& path) {
+	if (path.find(L'%') == std::wstring::npos) return path;
+	const std::wstring expanded = normalizeFilePath(path);
 	if (expanded.empty()) {
-		log(2, L"🔥ProfileImagePath: unknown variable in " + brut);
-		return brut;
+		log(2, L"🔥ProfileImagePath: unknown variable in " + path);
+		return path;
 	}
 	return expanded;
 }

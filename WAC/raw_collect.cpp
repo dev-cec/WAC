@@ -44,7 +44,7 @@ std::wstring exhibitTarget(const std::wstring& path) {
  *  hives of several tens of MiB. */
 void reportProgress(const wchar_t* item, unsigned long long done,
                           unsigned long long total) {
-	printProgress(item ? item : L"", done / 1024, total / 1024, L"Kio");
+	printProgress(item ? item : L"", done / 1024, total / 1024, L"KiB");
 }
 
 /*! Raw extraction of a batch of hives, then repair of the working copies:
@@ -58,10 +58,10 @@ void reportProgress(const wchar_t* item, unsigned long long done,
  *  @param hivePaths hive paths, absolute (with volume letter) or relative
  *                       to the system volume; the .LOG1 and .LOG2 logs are
  *                       added automatically.
- *  @param etiquette     what this pass extracts, for the audit log.
+ *  @param label     what this pass extracts, for the audit log.
  */
 HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
-                            const std::wstring& etiquette) {
+                            const std::wstring& label) {
 	conf.mountpoint = workingFolder();
 
 	// The collection location is checked by main, before the very first
@@ -116,17 +116,17 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 		std::vector<HRESULT> res;
 		std::vector<RawHiveExtraction> reading;      // fingerprints computed while writing
 		const HRESULT hrVolume = ExtractFilesRaw(volume, items, &res, &reading);
-		ExhibitStoreAdd(reading, L"Lecture brute NTFS (\\\\.\\" + volume
+		ExhibitStoreAdd(reading, L"Raw NTFS reading (\\\\.\\" + volume
 		                        + L": — $MFT, directory indexes, $DATA attribute); "
 		                        L"no file opened by the system");
 		// Recorded here, not by the caller: the extraction must come before the
 		// patches it triggers in the log, otherwise the sequence reads
 		// backwards.
-		auditRecord(etiquette,
+		auditRecord(label,
 		            std::wstring(L"\\\\.\\") + volume + L": -> " + conf.mountpoint,
 		            hrVolume, Footprint::VOLUME_BRUT);
 		if (FAILED(hrVolume)) {                  // volume inaccessible
-			log(2, L"🔥Volume " + volume + L": inaccessible pour la lecture brute", hrVolume);
+			log(2, L"🔥Volume " + volume + L": not accessible for raw reading", hrVolume);
 			if (firstHardFailure == ERROR_SUCCESS) firstHardFailure = hrVolume;
 			continue;
 		}
@@ -166,7 +166,7 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 		const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &bytes);
 		auditRecord(L"Copy of the exhibit store into the working directory ("
 		            + std::to_wstring(copies) + L" file(s), "
-		            + std::to_wstring(bytes / 1024 / 1024) + L" Mio)",
+		            + std::to_wstring(bytes / 1024 / 1024) + L" MiB)",
 		            exhibitStoreFolder() + L" -> " + workingFolder(),
 		            hrCopy, Footprint::USB_WRITE);
 		if (FAILED(hrCopy)) return hrCopy;     // without a working copy, nothing follows
@@ -177,7 +177,7 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 	log(0, L"*******************************************************************************************************************");
 	log(0, L"ℹ️Hives recovery :");
 	log(0, L"*******************************************************************************************************************");
-	unsigned patchees = 0, failures = 0, replayed = 0;
+	unsigned patchedHives = 0, failures = 0, replayed = 0;
 	unsigned long long replayedPages = 0, replayedBytes = 0;
 	/* This phase no longer re-reads the hives: the fingerprints come from the
 	   computation made while writing (see QuickDigest5::Stream). Previously,
@@ -210,25 +210,25 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 		   content of each replaced page goes into an undo log, so that the
 		   raw copy stays rebuildable to the byte (verified on three real
 		   hives). */
-		const HiveReplayInfo rejeu = ReplayHiveLogs(r, md5Before);
-		log(2, L"❇️" + HiveReplayInfoToString(rejeu));
-		if (rejeu.applique) {
+		const HiveReplayInfo replay = ReplayHiveLogs(r, md5Before);
+		log(2, L"❇️" + HiveReplayInfoToString(replay));
+		if (replay.applied) {
 			++replayed;
-			replayedPages  += rejeu.pages;
-			replayedBytes  += rejeu.bytes;
+			replayedPages  += replay.pages;
+			replayedBytes  += replay.bytes;
 			auditRecord(L"Replay of the transaction logs of a copied hive ("
-			            + std::to_wstring(rejeu.keptEntries) + L" entree(s), "
-			            + std::to_wstring(rejeu.pages) + L" page(s))",
-			            r + L" | " + HiveReplayInfoToString(rejeu)
+			            + std::to_wstring(replay.keptEntries) + L" entry(ies), "
+			            + std::to_wstring(replay.pages) + L" page(s))",
+			            r + L" | " + HiveReplayInfoToString(replay)
 			            + L" | MD5 before the replay: " + md5Before
-			            + L" | undo: " + rejeu.undoJournal,
+			            + L" | undo: " + replay.undoJournal,
 			            ERROR_SUCCESS, Footprint::HIVE_REPLAY);
 		}
-		else if (!rejeu.ok) {
+		else if (!replay.ok) {
 			// The replay wrote nothing: record it and fall back on the patch.
-			log(2, L"🔥Rejeu impossible : " + r + L" (" + rejeu.error + L")");
-			auditRecord(L"Replay of the transaction logs of a copied hive (non applique)",
-			            r + L" | " + HiveReplayInfoToString(rejeu),
+			log(2, L"🔥Replay impossible: " + r + L" (" + replay.error + L")");
+			auditRecord(L"Replay of the transaction logs of a copied hive (not applied)",
+			            r + L" | " + HiveReplayInfoToString(replay),
 			            E_FAIL, Footprint::HIVE_COPY);
 		}
 
@@ -250,13 +250,13 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 		            info.ok ? ERROR_SUCCESS : E_FAIL,
 		            info.patched ? Footprint::HIVE_PATCH : Footprint::HIVE_COPY);
 		if (!info.ok) { ++failures; log(2, L"🔥Hive not usable: " + r + L" (" + info.error + L")"); }
-		else if (info.patched) ++patchees;
+		else if (info.patched) ++patchedHives;
 	}
 	printProgressEnd();
 	log(2, L"❇️Hives replayed: " + std::to_wstring(replayed)
 	     + L" (" + std::to_wstring(replayedPages) + L" pages, "
-	     + std::to_wstring(replayedBytes / 1024) + L" Kio appliqués)");
-	log(2, L"❇️Hives repaired by patch: " + std::to_wstring(patchees)
+	     + std::to_wstring(replayedBytes / 1024) + L" KiB applied)");
+	log(2, L"❇️Hives repaired by patch: " + std::to_wstring(patchedHives)
 	     + L", failures: " + std::to_wstring(failures)
 	     + L", missing files: " + std::to_wstring(missing));
 
@@ -368,8 +368,8 @@ HRESULT ExtractFileArtefactsRaw() {
 		const HRESULT hrTasks = ExtractDirectoryTreeRaw(
 			systemVolume(), tasksPath, exhibitTarget(tasksPath),
 			{}, &extractedTasks, 8, &reading);
-		ExhibitStoreAdd(reading, L"Lecture brute NTFS recursive (\\\\.\\"
-		                        + systemVolume() + L": — $MFT, index de repertoires) ; "
+		ExhibitStoreAdd(reading, L"Recursive raw NTFS reading (\\\\.\\"
+		                        + systemVolume() + L": — $MFT, directory indexes); "
 		                        L"no file opened by the system");
 		auditRecord(L"Raw extraction of the scheduled task definitions ("
 		            + std::to_wstring(extractedTasks) + L" file(s))",
@@ -387,14 +387,14 @@ HRESULT ExtractFileArtefactsRaw() {
 		                                       target.output,
 		                                       target.extensions, &extractedFiles, &diagnostic,
 		                                       &reading);
-		ExhibitStoreAdd(reading, L"Lecture brute NTFS (\\\\.\\" + target.volume
+		ExhibitStoreAdd(reading, L"Raw NTFS reading (\\\\.\\" + target.volume
 		                        + L": — $MFT, directory indexes, $DATA attribute); "
 		                        L"no file opened by the system");
 		if (FAILED(hr)) {
 			/* Inaccessible volume. We NO LONGER stop: with several volumes, an
 			   unreadable disk took all the following targets down with it, the
 			   system volume's included. */
-			log(2, L"🔥Extraction brute impossible : " + target.volume + L":"
+			log(2, L"🔥Raw extraction impossible: " + target.volume + L":"
 			     + target.path, hr);
 			global = S_FALSE;
 			continue;
@@ -405,7 +405,7 @@ HRESULT ExtractFileArtefactsRaw() {
 		// analysis tell "empty folder" from "folder not collected".
 		// The diagnosis goes with the count: "0 files" does not say whether the
 		// directory is missing, empty, or whether the filter discarded everything.
-		auditRecord(L"Extraction brute d'un repertoire (" + std::to_wstring(extractedFiles)
+		auditRecord(L"Raw extraction of a directory (" + std::to_wstring(extractedFiles)
 		            + L" file(s) — " + diagnostic + L")",
 		            std::wstring(L"\\\\.\\") + target.volume + L":" + target.path,
 		            hr, Footprint::VOLUME_BRUT);
@@ -430,7 +430,7 @@ HRESULT ExtractFileArtefactsRaw() {
 		const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &bytes);
 		auditRecord(L"Copy of the exhibit store into the working directory ("
 		            + std::to_wstring(copies) + L" file(s), "
-		            + std::to_wstring(bytes / 1024 / 1024) + L" Mio)",
+		            + std::to_wstring(bytes / 1024 / 1024) + L" MiB)",
 		            exhibitStoreFolder() + L" -> " + workingFolder(),
 		            hrCopy, Footprint::USB_WRITE);
 		if (FAILED(hrCopy)) return hrCopy;

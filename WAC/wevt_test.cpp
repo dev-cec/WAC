@@ -126,7 +126,7 @@ int main(int argc, char** argv) {
 		if (!ok) ++failures;
 		std::cout << (ok ? "  ok     " : "  FAILED  ") << "substitution « "
 		          << utf8(c.messageTemplate) << " »";
-		if (!ok) std::cout << " -> « " << utf8(r) << " » au lieu de « "
+		if (!ok) std::cout << " -> « " << utf8(r) << " » instead of « "
 		                   << utf8(c.expected) << " »";
 		std::cout << "\n";
 	}

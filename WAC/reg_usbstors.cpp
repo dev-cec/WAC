@@ -122,7 +122,7 @@ HRESULT Usbstors::getData() {
 		log(3, L"🔈OROpenKey CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor));
 		hresult = OROpenKey(hkey, szSubKey_usbstor, &hKey_manufacturer); // open the manufacturer's key
 		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥OROpenKey hKey_fabricant", hresult);
+			log(2, L"🔥OROpenKey hKey_vendor", hresult);
 			continue;
 		}
 		log(3, L"🔈ORQueryInfoKey CurrentControlSet\\Enum\\USBSTOR\\" + std::wstring(szSubKey_usbstor));

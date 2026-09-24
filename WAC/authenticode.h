@@ -60,7 +60,7 @@ public:
 	void finish();
 	//! Whether the headers read identify a PE file.
 	bool isPe() const { return isPe_; }
-	//! @return the Authenticode SHA-1 (valid after terminer(), if isPe()).
+	//! @return the Authenticode SHA-1 (valid after finish(), if isPe()).
 	const uint8_t* sha1() const { return sha1_; }
 	//! @return the Authenticode SHA-256 (same conditions).
 	const uint8_t* sha256() const { return sha256_; }

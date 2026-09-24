@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
 	const double duration = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
 	std::cerr << catalogsRead << " catalog(s) read, " << index.catalogues() << " kept, "
 	          << index.fingerprints() << " digest(s) indexed, in " << duration << " s\n";
-	for (const auto& r : refusals) std::cerr << "  refusés : " << r.second << " — " << r.first << "\n";
+	for (const auto& r : refusals) std::cerr << "  refused: " << r.second << " — " << r.first << "\n";
 
 	if (list == "-") {                                 // indexed digests, in hexadecimal
 		index.dump(std::cout);

@@ -133,7 +133,7 @@ HRESULT Process::ListProcessModules() {
 
 	if (conf.binary) {
 		// The first module returns the executable's path
-		log(3, L"🔈EmpreinteFichier");
+		log(3, L"🔈FingerprintFile");
 		fingerprint = FingerprintFile(me32.szExePath);
 	}
 
@@ -222,7 +222,7 @@ HRESULT Processes::getData() {
 	// Back to the start of the snapshot for the real collection.
 	pe32.dwSize = sizeof(PROCESSENTRY32);
 	if (!Process32First(hProcessSnap, &pe32)) {
-		log(2, L"🔥Process32First (2e passe)", GetLastError());
+		log(2, L"🔥Process32First (2nd pass)", GetLastError());
 		CloseHandle(hProcessSnap);
 		return ERROR_INVALID_HANDLE;
 	}
