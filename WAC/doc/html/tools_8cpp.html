@@ -113,11 +113,11 @@ $(document).ready(function(){initNavTree('tools_8cpp.html',''); initResizable();
 <code>#include &lt;array&gt;</code><br />
 <code>#include &lt;map&gt;</code><br />
 <code>#include &lt;windows.h&gt;</code><br />
-<code>#include &lt;ShellAPI.h&gt;</code><br />
 <code>#include &lt;stdio.h&gt;</code><br />
 <code>#include &lt;regex&gt;</code><br />
-<code>#include &lt;sddl.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="tools_8h_source.html">tools.h</a>&quot;</code><br />
+<code>#include &lt;cstring&gt;</code><br />
+<code>#include &lt;cmath&gt;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
@@ -221,6 +221,12 @@ Functions</h2></td></tr>
 <tr class="separator:aea71d14f067d69330a32721ca7dc457d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af5b5c7829f1299c3b6e2f28f2d543282" id="r_af5b5c7829f1299c3b6e2f28f2d543282"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#af5b5c7829f1299c3b6e2f28f2d543282">guid_to_wstring</a> (GUID guid)</td></tr>
 <tr class="separator:af5b5c7829f1299c3b6e2f28f2d543282"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a32138a88efff9f1db5432803a5c4cd64" id="r_a32138a88efff9f1db5432803a5c4cd64"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a32138a88efff9f1db5432803a5c4cd64">sidToText</a> (const BYTE *sid, size_t size)</td></tr>
+<tr class="separator:a32138a88efff9f1db5432803a5c4cd64"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac40c001dc8ff1a35d94a53e88ff114a0" id="r_ac40c001dc8ff1a35d94a53e88ff114a0"><td class="memItemLeft" align="right" valign="top">std::vector&lt; BYTE &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ac40c001dc8ff1a35d94a53e88ff114a0">textToSid</a> (const std::wstring &amp;text)</td></tr>
+<tr class="separator:ac40c001dc8ff1a35d94a53e88ff114a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3946876af4fb5b1551872ff9bdf27887" id="r_a3946876af4fb5b1551872ff9bdf27887"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a3946876af4fb5b1551872ff9bdf27887">oleDateToSystemTime</a> (double date, SYSTEMTIME &amp;st)</td></tr>
+<tr class="separator:a3946876af4fb5b1551872ff9bdf27887"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:add13d51f17348ae4d80ce6b5f5b3415e" id="r_add13d51f17348ae4d80ce6b5f5b3415e"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#add13d51f17348ae4d80ce6b5f5b3415e">getRegBinaryValue</a> (ORHKEY key, PCWSTR subKey, PCWSTR valueName, LPBYTE *bytes, DWORD *size)</td></tr>
 <tr class="separator:add13d51f17348ae4d80ce6b5f5b3415e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a55c27e3c9e64135544b0a0f9311d3630" id="r_a55c27e3c9e64135544b0a0f9311d3630"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a55c27e3c9e64135544b0a0f9311d3630">getRegboolValue</a> (ORHKEY key, PCWSTR subKey, PCWSTR valueName, bool *value)</td></tr>
@@ -961,7 +967,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Converts a GUID to a wstring. The output is of the form "{20D04FE0-3AEA-1069-A2D8-08002B30309D}". </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Converts a GUID to a wstring. The output is of the form "{20D04FE0-3AEA-1069-A2D8-08002B30309D}", upper case — as StringFromCLSID (ole32) wrote it, which this replaces: a formatting has no reason to go through a library. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">guid</td><td>the GUID to convert </td></tr>
   </table>
@@ -1318,6 +1324,42 @@ Functions</h2></td></tr>
 <li><code>"C:\Program Files\App\x.exe" /service</code>(quotes + arguments)</li>
 </ul>
 <p>WHAT WAS WRONG. The original version cut on the first occurrence of "-" or "/", including inside the path: a binary installed in a folder holding a dash saw its path truncated, and its MD5 was therefore never computed. Here, the cut is made AFTER the file's extension, which is the only reliable marker of the end of the path. </p>
+
+</div>
+</div>
+<a id="a3946876af4fb5b1551872ff9bdf27887" name="a3946876af4fb5b1551872ff9bdf27887"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3946876af4fb5b1551872ff9bdf27887">&#9670;&#160;</a></span>oleDateToSystemTime()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool oleDateToSystemTime </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>date</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">SYSTEMTIME &amp;&#160;</td>
+          <td class="paramname"><em>st</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Converts an OLE automation date (VT_DATE: days since 30 December 1899, the fraction being the time of day, positive even for a negative date) to a SYSTEMTIME, as VariantTimeToSystemTime (oleaut32) does — which this replaces: same range and same rounding to the second; NaN is refused. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">date</td><td>the OLE date </td></tr>
+    <tr><td class="paramname">st</td><td>receives the date </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if the date is outside the range </dd></dl>
 
 </div>
 </div>
@@ -1777,6 +1819,42 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a32138a88efff9f1db5432803a5c4cd64" name="a32138a88efff9f1db5432803a5c4cd64"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a32138a88efff9f1db5432803a5c4cd64">&#9670;&#160;</a></span>sidToText()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring sidToText </td>
+          <td>(</td>
+          <td class="paramtype">const BYTE *&#160;</td>
+          <td class="paramname"><em>sid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Text form of a binary SID ("S-1-5-21-…"), as ConvertSidToStringSidW writes it — which this replaces — without any system call: an identifier authority of 2^32 or more is written in hexadecimal without padding ("0x9B63132D1D0"), as Windows does (checked by <a class="el" href="system__conversions__test_8cpp.html" title="Confronts WAC&#39;s own conversions with the Windows functions they replaced, which WAC no longer imports...">system_conversions_test.cpp</a>). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sid</td><td>the binary SID </td></tr>
+    <tr><td class="paramname">size</td><td>the bytes available: nothing beyond is read </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the text, or "" if the SID does not fit in <code>size</code> </dd></dl>
+
+</div>
+</div>
 <a id="a238702c13cab5b487c46812cd980e7d6" name="a238702c13cab5b487c46812cd980e7d6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a238702c13cab5b487c46812cd980e7d6">&#9670;&#160;</a></span>tab()</h2>
 
@@ -1793,6 +1871,31 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Inserts n tabulations in a string. Used to lay out the output JSON. </p><dl class="section return"><dt>Returns</dt><dd>a string holding the wanted number of tabulations </dd></dl>
+
+</div>
+</div>
+<a id="ac40c001dc8ff1a35d94a53e88ff114a0" name="ac40c001dc8ff1a35d94a53e88ff114a0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac40c001dc8ff1a35d94a53e88ff114a0">&#9670;&#160;</a></span>textToSid()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; BYTE &gt; textToSid </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>text</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Binary form of a SID written as text — the reverse of sidToText, replacing ConvertStringSidToSidW. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">text</td><td>"S-1-…" </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the binary SID, or empty if the text is not a well-formed SID </dd></dl>
 
 </div>
 </div>

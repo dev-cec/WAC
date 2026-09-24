@@ -42,9 +42,12 @@ MSVC build for several commits, unnoticed because only the Linux build was
 tested.
 
 ## Verified standalone
-`WAC.exe` imports only: `ADVAPI32, KERNEL32, msvcrt, ole32, OLEAUT32, PROPSYS,
-Secur32, SHELL32, WTSAPI32` — **no MinGW DLL** (static runtime), and no
-`offreg.dll`: the hives are read by WAC's own reader (`WAC/offline_registry.cpp`). Check with:
+`WAC.exe` imports only: `ADVAPI32, KERNEL32, msvcrt, Secur32, WTSAPI32` — what
+querying the running system requires. **No MinGW DLL** (static runtime); no
+`offreg.dll` (the hives are read by `WAC/offline_registry.cpp`); no `ole32`,
+`oleaut32`, `propsys` or `shell32` (GUIDs, SIDs, OLE dates, property names and
+the command line are handled by WAC itself, checked against Windows by
+`system_conversions_test`). Check with:
 ```bash
 x86_64-w64-mingw32-objdump -p build-windows/WAC.exe | grep "DLL Name"
 ```

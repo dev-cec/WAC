@@ -5,7 +5,6 @@
 #include "xml_light.h"
 #include <filesystem>
 #include <map>
-#include <sddl.h>
 
 namespace {
 

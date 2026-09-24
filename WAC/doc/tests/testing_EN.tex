@@ -121,7 +121,7 @@ pip install olefile          # independent OLE reader, for the cross-checks
 
 \begin{longtable}{@{}L{7.4cm}L{7.6cm}@{}}
 \toprule
-\textbf{Output, in \fichier{}} & \textbf{Role} \\
+\textbf{Output, in \fichier{build-windows/}} & \textbf{Role} \\
 \midrule
 \endhead
 \fichier{WAC.exe} & the collection tool \\
@@ -130,15 +130,14 @@ pip install olefile          # independent OLE reader, for the cross-checks
 \fichier{tests/parsers\_test.exe} & robustness of the jump list and Prefetch parsers \\
 \fichier{tests/evtx\_test.exe}, \fichier{consigne\_test.exe} & event log decoder, exhibit store (chapter~\ref{ch:format}) \\
 \fichier{tests/offline\_registry\_test.exe} & hive reader confronted with Microsoft's \\
-\fichier{tests/propsys.dll} & stand-in for \texttt{wine}, which lacks this library \\
+\fichier{tests/system\_conversions\_test.exe} & WAC's conversions confronted with Windows' \\
 \bottomrule
 \end{longtable}
 
 \begin{attention}
-The stand-in is deliberately in \fichier{build-windows/tests/}, away from
-\fichier{WAC.exe}. Beside it, it would be loaded instead of the real library
-— Windows looks in the program's folder first. Never copy the
-\fichier{tests/} folder onto a collection medium.
+The harnesses are deliberately in \fichier{build-windows/tests/}, away from
+\fichier{WAC.exe}: they are test tools, with no business on a collection
+medium. Never copy the \fichier{tests/} folder onto one.
 \end{attention}
 
 The build must end without a single warning: \texttt{-Wall -Wextra} are on, and
@@ -338,6 +337,27 @@ read it as is — stale keys, without an error; the harness reports it as
 expected. Reference: 18 hives, ten of them from a real machine, i.e. 1,273,652
 keys and 2,456,139 values, identical.
 
+\section{Conversions: \texttt{system\_conversions\_test}}
+
+\wac{} imports only what querying the running system requires
+(\fichier{ADVAPI32}, \fichier{KERNEL32}, \fichier{msvcrt}, \fichier{Secur32},
+\fichier{WTSAPI32}). The conversions it used to ask of other libraries are
+done by its own code; this harness confronts them with the Windows functions
+they replaced: GUIDs (\texttt{StringFromGUID2}), SIDs both ways
+(\texttt{ConvertSidToStringSidW}, \texttt{ConvertStringSidToSidW}), OLE dates
+(\texttt{VariantTimeToSystemTime}) and property names
+(\texttt{PSGetNameFromPropertyKey}). The table of property names is generated
+from the schema of a reference Windows by \fichier{vmtest/property-schema.cpp}.
+
+\begin{lstlisting}
+system_conversions_test.exe
+\end{lstlisting}
+
+To be run on Windows (the VM). Reference: 513,387 comparisons, no difference.
+Two intended differences: \wac{} refuses a SID text Windows would truncate (a
+sub-authority of $2^{32}$ or more, a sixteenth sub-authority), and a NaN date,
+for which Windows returns a meaningless time.
+
 \section{Exhibit store: \texttt{consigne\_test}}
 
 Replays the production chain — fingerprints, manifest, verified copy, hive
@@ -400,7 +420,7 @@ For each file given, the harness parses:
 
 \begin{lstlisting}
 cd build-windows/tests
-WINEDLLOVERRIDES="propsys=n" wine lnk_test.exe a.lnk b.lnk ...
+wine lnk_test.exe a.lnk b.lnk ...
 \end{lstlisting}
 
 Where to find files: the \fichier{Recent} folder and the Start menu of the VM,
@@ -409,12 +429,6 @@ or those of a collection (\fichier{Users\textbackslash
 Microsoft\textbackslash Windows\textbackslash Recent}). Accented or non-Latin
 names travel badly through the \texttt{wine} command line: copy the files under
 numbered names.
-
-\begin{note}
-\texttt{WINEDLLOVERRIDES="propsys=n"} loads the \fichier{propsys.dll} stand-in:
-\texttt{wine} does not implement the function that names properties, and would
-stop the test at the first real shortcut carrying some.
-\end{note}
 
 \section{Jump lists and Prefetch: \texttt{parsers\_test}}\label{sec:parsers}
 

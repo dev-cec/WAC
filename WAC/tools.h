@@ -62,7 +62,7 @@ struct AppliConf {
 	bool _debug = false;
 	bool _dump = false;//!< True if dump is active
 	bool _events = false;//!< True is events must be extracted
-	std::string name = ""; //!< name of the program, obtained from command line
+	std::wstring name = L""; //!< name of the program, obtained from the command line
 	std::wstring _outputDir = L"output"; //!< directory to store output JSON (UTF-16: any name the command line can carry)
 	std::wstring mountpoint = L""; //!< mount point path to access the snapshot made during execution
 	ORHKEY CurrentControlSet = { 0 }; //!< Reg Key to access Current Control Set Hive
@@ -690,11 +690,37 @@ inline bool fits(size_t size, size_t offset, size_t length) {
 std::string readNarrowZ(const BYTE* base, size_t limit, size_t offset);
 
 /*! Converts a GUID to a wstring. The output is of the form
-* "{20D04FE0-3AEA-1069-A2D8-08002B30309D}".
+* "{20D04FE0-3AEA-1069-A2D8-08002B30309D}", upper case — as StringFromCLSID
+* (ole32) wrote it, which this replaces: a formatting has no reason to go
+* through a library.
 * @param guid the GUID to convert
 * @return the wstring that results from the conversion
 */
 std::wstring guid_to_wstring(GUID guid);
+
+/*! Text form of a binary SID ("S-1-5-21-…"), as ConvertSidToStringSidW writes
+* it — which this replaces — without any system call: an identifier authority
+* of 2^32 or more is written in hexadecimal without padding ("0x9B63132D1D0"),
+* as Windows does (checked by system_conversions_test.cpp).
+* @param sid the binary SID
+* @param size the bytes available: nothing beyond is read
+* @return the text, or "" if the SID does not fit in `size` */
+std::wstring sidToText(const BYTE* sid, size_t size);
+
+/*! Binary form of a SID written as text — the reverse of sidToText, replacing
+* ConvertStringSidToSidW.
+* @param text "S-1-…"
+* @return the binary SID, or empty if the text is not a well-formed SID */
+std::vector<BYTE> textToSid(const std::wstring& text);
+
+/*! Converts an OLE automation date (VT_DATE: days since 30 December 1899, the
+* fraction being the time of day, positive even for a negative date) to a
+* SYSTEMTIME, as VariantTimeToSystemTime (oleaut32) does — which this replaces:
+* same range and same rounding to the second; NaN is refused.
+* @param date the OLE date
+* @param st receives the date
+* @return false if the date is outside the range */
+bool oleDateToSystemTime(double date, SYSTEMTIME& st);
 
 ///////////////////////////////////////////////////////
 //Registry

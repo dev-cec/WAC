@@ -46,14 +46,11 @@ Session::Session(LUID* id) {
 
 		// Converted HERE, while LSA's structure is still valid (see sessions.h).
 		if (data->Sid) {
-			LPWSTR sidText = NULL;
-			log(3, L"🔈ConvertSidToStringSidW");
-			if (ConvertSidToStringSidW(data->Sid, &sidText) && sidText) {
-				sid = sidText;
-				LocalFree(sidText);
-			}
+			log(3, L"🔈sidToText");
+			if (IsValidSid(data->Sid))
+				sid = sidToText(static_cast<const BYTE*>(data->Sid), GetLengthSid(data->Sid));
 			else
-				log(2, L"🔥ConvertSidToStringSidW", GetLastError());
+				log(2, L"🔥sidToText: invalid SID", ERROR_INVALID_SID);
 		}
 	}
 	else {

@@ -126,7 +126,7 @@ pip install olefile          # lecteur OLE indépendant, pour les recoupements
 
 \begin{longtable}{@{}L{7.4cm}L{7.6cm}@{}}
 \toprule
-\textbf{Produit, dans \fichier{}} & \textbf{Rôle} \\
+\textbf{Produit, dans \fichier{build-windows/}} & \textbf{Rôle} \\
 \midrule
 \endhead
 \fichier{WAC.exe} & l'outil de collecte \\
@@ -135,16 +135,15 @@ pip install olefile          # lecteur OLE indépendant, pour les recoupements
 \fichier{tests/parsers\_test.exe} & robustesse des listes de sauts et des Prefetch \\
 \fichier{tests/evtx\_test.exe}, \fichier{consigne\_test.exe} & décodeur de journaux, consigne (chapitre~\ref{ch:format}) \\
 \fichier{tests/offline\_registry\_test.exe} & lecteur de ruches confronté à celui de Microsoft \\
-\fichier{tests/propsys.dll} & substitut pour \texttt{wine}, qui n'a pas cette bibliothèque \\
+\fichier{tests/system\_conversions\_test.exe} & conversions de WAC confrontées à celles de Windows \\
 \bottomrule
 \end{longtable}
 
 \begin{attention}
-Le substitut est volontairement dans \fichier{build-windows/tests/}, à
-l'écart de \fichier{WAC.exe}. Placé à côté de lui, il serait chargé à la place
-de la vraie bibliothèque — Windows cherche d'abord dans le dossier du
-programme. Ne jamais copier le dossier \fichier{tests/} sur un support de
-collecte.
+Les harnais sont volontairement dans \fichier{build-windows/tests/}, à
+l'écart de \fichier{WAC.exe} : ce sont des outils de test, qui n'ont rien à
+faire sur un support de collecte. Ne jamais y copier le dossier
+\fichier{tests/}.
 \end{attention}
 
 La compilation doit se terminer sans aucun avertissement : les options
@@ -350,6 +349,28 @@ récentes de la DLL de Microsoft la lisent telle quelle — des clés périmées
 sans erreur ; le harnais le signale comme attendu. Référence : 18 ruches, dont
 dix d'une machine réelle, soit 1~273~652 clés et 2~456~139 valeurs identiques.
 
+\section{Conversions : \texttt{system\_conversions\_test}}
+
+\wac{} n'importe que ce qu'exige l'interrogation du système en marche
+(\fichier{ADVAPI32}, \fichier{KERNEL32}, \fichier{msvcrt}, \fichier{Secur32},
+\fichier{WTSAPI32}). Les conversions qu'il demandait à d'autres bibliothèques
+sont faites par son propre code ; ce harnais les confronte aux fonctions
+Windows remplacées : GUID (\texttt{StringFromGUID2}), SID dans les deux sens
+(\texttt{ConvertSidToStringSidW}, \texttt{ConvertStringSidToSidW}), dates OLE
+(\texttt{VariantTimeToSystemTime}) et noms de propriétés
+(\texttt{PSGetNameFromPropertyKey}). La table des noms de propriétés est
+générée depuis le schéma d'un Windows de référence par
+\fichier{vmtest/property-schema.cpp}.
+
+\begin{lstlisting}
+system_conversions_test.exe
+\end{lstlisting}
+
+À lancer sous Windows (la VM). Référence : 513~387 comparaisons, aucun écart.
+Deux écarts voulus : \wac{} refuse un SID écrit que Windows tronquerait
+(sous-autorité de $2^{32}$ ou plus, seizième sous-autorité), et une date NaN,
+pour laquelle Windows rend une heure dénuée de sens.
+
 \section{Consigne : \texttt{consigne\_test}}
 
 Rejoue la chaîne de production — empreintes, manifeste, copie vérifiée, rejeu
@@ -414,7 +435,7 @@ Pour chaque fichier donné, le harnais analyse :
 
 \begin{lstlisting}
 cd build-windows/tests
-WINEDLLOVERRIDES="propsys=n" wine lnk_test.exe a.lnk b.lnk ...
+wine lnk_test.exe a.lnk b.lnk ...
 \end{lstlisting}
 
 Sources de fichiers : le dossier \fichier{Recent} et le menu Démarrer de la VM,
@@ -423,12 +444,6 @@ ou ceux d'une collecte (\fichier{Users\textbackslash
 Microsoft\textbackslash Windows\textbackslash Recent}). Les noms accentués ou
 non latins passent mal dans la ligne de commande de \texttt{wine} : copier les
 fichiers sous des noms numérotés.
-
-\begin{note}
-\texttt{WINEDLLOVERRIDES="propsys=n"} fait charger le substitut de
-\fichier{propsys.dll} : \texttt{wine} n'implémente pas la fonction qui nomme les
-propriétés, et arrêterait le test dès le premier raccourci réel qui en porte.
-\end{note}
 
 \section{Listes de sauts et Prefetch : \texttt{parsers\_test}}\label{sec:parsers}
 

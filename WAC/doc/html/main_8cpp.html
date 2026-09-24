@@ -149,8 +149,8 @@ Functions</h2></td></tr>
 <tr class="memitem:aec315d77f5c38417289a0e311d2a9d31" id="r_aec315d77f5c38417289a0e311d2a9d31"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#aec315d77f5c38417289a0e311d2a9d31">showHelp</a> ()</td></tr>
 <tr class="memdesc:aec315d77f5c38417289a0e311d2a9d31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints the command-line help.  <br /></td></tr>
 <tr class="separator:aec315d77f5c38417289a0e311d2a9d31"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0ddf1224851353fc92bfbff6f499fa97" id="r_a0ddf1224851353fc92bfbff6f499fa97"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97">main</a> (int argc, char *argv[])</td></tr>
-<tr class="separator:a0ddf1224851353fc92bfbff6f499fa97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae1325efcce4a4b1b4ea52247f0a0a0c1" id="r_ae1325efcce4a4b1b4ea52247f0a0a0c1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#ae1325efcce4a4b1b4ea52247f0a0a0c1">wmain</a> (int argc, wchar_t *argv[])</td></tr>
+<tr class="separator:ae1325efcce4a4b1b4ea52247f0a0a0c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
@@ -161,41 +161,6 @@ Variables</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Entry point: parses the command line, then runs the collection phases in order — prerequisites, live artefacts, raw extraction, registry, files, event logs, sealing of the exhibit store, investigation log. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a0ddf1224851353fc92bfbff6f499fa97" name="a0ddf1224851353fc92bfbff6f499fa97"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0ddf1224851353fc92bfbff6f499fa97">&#9670;&#160;</a></span>main()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int main </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>argc</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">char *&#160;</td>
-          <td class="paramname"><em>argv</em>[]&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p><a class="el" href="structRuns.html">Runs</a> a collection. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">argc,argv</td><td>the command line (see <a class="el" href="main_8cpp.html#aec315d77f5c38417289a0e311d2a9d31" title="Prints the command-line help.">showHelp()</a>) </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>0 once the collection has run to the end, an error code otherwise </dd></dl>
-
-</div>
-</div>
 <a id="aec315d77f5c38417289a0e311d2a9d31" name="aec315d77f5c38417289a0e311d2a9d31"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aec315d77f5c38417289a0e311d2a9d31">&#9670;&#160;</a></span>showHelp()</h2>
 
@@ -212,6 +177,41 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Prints the command-line help. </p>
+
+</div>
+</div>
+<a id="ae1325efcce4a4b1b4ea52247f0a0a0c1" name="ae1325efcce4a4b1b4ea52247f0a0a0c1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae1325efcce4a4b1b4ea52247f0a0a0c1">&#9670;&#160;</a></span>wmain()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int wmain </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>argc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">wchar_t *&#160;</td>
+          <td class="paramname"><em>argv</em>[]&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p><a class="el" href="structRuns.html">Runs</a> a collection. wmain: the runtime hands the arguments in UTF-16, as Windows holds them — CommandLineToArgvW (shell32) is no longer needed for that. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">argc,argv</td><td>the command line (see <a class="el" href="main_8cpp.html#aec315d77f5c38417289a0e311d2a9d31" title="Prints the command-line help.">showHelp()</a>) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 once the collection has run to the end, an error code otherwise </dd></dl>
 
 </div>
 </div>

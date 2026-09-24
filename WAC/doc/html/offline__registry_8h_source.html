@@ -100,40 +100,40 @@ $(document).ready(function(){initNavTree('offline__registry_8h_source.html','');
 </div><!--header-->
 <div class="contents">
 <a href="offline__registry_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span> </div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#pragma once</span></div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="preprocessor">#ifndef _ORHKEY_DEFINED</span></div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno"><a class="line" href="offline__registry_8h.html#ad2da26383fbd0ad730025d3ac8b0f9dd">   31</a></span><span class="preprocessor">#define _ORHKEY_DEFINED</span></div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno"><a class="line" href="offline__registry_8h.html#a7dc39901ff6afa4c678c7dc4a55b2122">   32</a></span><a class="code hl_function" href="offline__registry_8h.html#a7dc39901ff6afa4c678c7dc4a55b2122">DECLARE_HANDLE</a>(ORHKEY);   </div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno"><a class="line" href="offline__registry_8h.html#a186f2fce5c4f309f234bfce9ed3c233f">   33</a></span><span class="keyword">typedef</span> ORHKEY* <a class="code hl_typedef" href="offline__registry_8h.html#a186f2fce5c4f309f234bfce9ed3c233f">PORHKEY</a>;  </div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#adf79c3817781c5d2b3686ddf8bd22a73">OROpenHive</a>(PCWSTR lpHivePath, <a class="code hl_typedef" href="offline__registry_8h.html#a186f2fce5c4f309f234bfce9ed3c233f">PORHKEY</a> phkResult);</div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#a820ed11f36115997363d2e9f28d585de">openHiveBuffer</a>(<span class="keyword">const</span> BYTE* data, <span class="keywordtype">size_t</span> size, <a class="code hl_typedef" href="offline__registry_8h.html#a186f2fce5c4f309f234bfce9ed3c233f">PORHKEY</a> phkResult);</div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#ae380194f7023286d72d626fc25876a83">ORCloseHive</a>(ORHKEY Handle);</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#a2bb141b4a6fd617fb1ecb8ee53def712">OROpenKey</a>(ORHKEY Handle, PCWSTR lpSubKey, <a class="code hl_typedef" href="offline__registry_8h.html#a186f2fce5c4f309f234bfce9ed3c233f">PORHKEY</a> phkResult);</div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#a61ab47d7536df009d6eb6fa325e3d060">ORCloseKey</a>(ORHKEY Handle);</div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#ad8ccf24f67ddc819b5b5a2fcc543ddfd">OREnumKey</a>(ORHKEY Handle, DWORD dwIndex, PWSTR lpName, PDWORD lpcName,</div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>                PWSTR lpClass, PDWORD lpcClass, PFILETIME lpftLastWriteTime);</div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span> </div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#aa18741be2187ba39766e5ba9035b8f1e">OREnumValue</a>(ORHKEY Handle, DWORD dwIndex, PWSTR lpValueName,</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>                  PDWORD lpcValueName, PDWORD lpType, PBYTE lpData, PDWORD lpcbData);</div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span> </div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#adf4d4b5634c9da9ea5f3e67c01e061d2">ORGetValue</a>(ORHKEY Handle, PCWSTR lpSubKey, PCWSTR lpValue,</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>                 PDWORD pdwType, PVOID pvData, PDWORD pcbData);</div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span> </div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#a3696308837c47a9e54ab8e1ae18e5531">ORQueryInfoKey</a>(ORHKEY Handle, PWSTR lpClass, PDWORD lpcClass,</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>                     PDWORD lpcSubKeys, PDWORD lpcMaxSubKeyLen,</div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>                     PDWORD lpcMaxClassLen, PDWORD lpcValues,</div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>                     PDWORD lpcMaxValueNameLen, PDWORD lpcMaxValueLen,</div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>                     PDWORD lpcbSecurityDescriptor, PFILETIME lpftLastWriteTime);</div>
-<div class="ttc" id="aoffline__registry_8h_html_a186f2fce5c4f309f234bfce9ed3c233f"><div class="ttname"><a href="offline__registry_8h.html#a186f2fce5c4f309f234bfce9ed3c233f">PORHKEY</a></div><div class="ttdeci">ORHKEY * PORHKEY</div><div class="ttdoc">receives an ORHKEY</div><div class="ttdef"><b>Definition</b> offline_registry.h:33</div></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="preprocessor">#ifndef _ORHKEY_DEFINED</span></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno"><a class="line" href="offline__registry_8h.html#ad2da26383fbd0ad730025d3ac8b0f9dd">   30</a></span><span class="preprocessor">#define _ORHKEY_DEFINED</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno"><a class="line" href="offline__registry_8h.html#a7dc39901ff6afa4c678c7dc4a55b2122">   31</a></span><a class="code hl_function" href="offline__registry_8h.html#a7dc39901ff6afa4c678c7dc4a55b2122">DECLARE_HANDLE</a>(ORHKEY);   </div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno"><a class="line" href="offline__registry_8h.html#a186f2fce5c4f309f234bfce9ed3c233f">   32</a></span><span class="keyword">typedef</span> ORHKEY* <a class="code hl_typedef" href="offline__registry_8h.html#a186f2fce5c4f309f234bfce9ed3c233f">PORHKEY</a>;  </div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#adf79c3817781c5d2b3686ddf8bd22a73">OROpenHive</a>(PCWSTR lpHivePath, <a class="code hl_typedef" href="offline__registry_8h.html#a186f2fce5c4f309f234bfce9ed3c233f">PORHKEY</a> phkResult);</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#a820ed11f36115997363d2e9f28d585de">openHiveBuffer</a>(<span class="keyword">const</span> BYTE* data, <span class="keywordtype">size_t</span> size, <a class="code hl_typedef" href="offline__registry_8h.html#a186f2fce5c4f309f234bfce9ed3c233f">PORHKEY</a> phkResult);</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span> </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#ae380194f7023286d72d626fc25876a83">ORCloseHive</a>(ORHKEY Handle);</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#a2bb141b4a6fd617fb1ecb8ee53def712">OROpenKey</a>(ORHKEY Handle, PCWSTR lpSubKey, <a class="code hl_typedef" href="offline__registry_8h.html#a186f2fce5c4f309f234bfce9ed3c233f">PORHKEY</a> phkResult);</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#a61ab47d7536df009d6eb6fa325e3d060">ORCloseKey</a>(ORHKEY Handle);</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span> </div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#ad8ccf24f67ddc819b5b5a2fcc543ddfd">OREnumKey</a>(ORHKEY Handle, DWORD dwIndex, PWSTR lpName, PDWORD lpcName,</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>                PWSTR lpClass, PDWORD lpcClass, PFILETIME lpftLastWriteTime);</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span> </div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#aa18741be2187ba39766e5ba9035b8f1e">OREnumValue</a>(ORHKEY Handle, DWORD dwIndex, PWSTR lpValueName,</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>                  PDWORD lpcValueName, PDWORD lpType, PBYTE lpData, PDWORD lpcbData);</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span> </div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#adf4d4b5634c9da9ea5f3e67c01e061d2">ORGetValue</a>(ORHKEY Handle, PCWSTR lpSubKey, PCWSTR lpValue,</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>                 PDWORD pdwType, PVOID pvData, PDWORD pcbData);</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span> </div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>DWORD <a class="code hl_function" href="offline__registry_8h.html#a3696308837c47a9e54ab8e1ae18e5531">ORQueryInfoKey</a>(ORHKEY Handle, PWSTR lpClass, PDWORD lpcClass,</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>                     PDWORD lpcSubKeys, PDWORD lpcMaxSubKeyLen,</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>                     PDWORD lpcMaxClassLen, PDWORD lpcValues,</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>                     PDWORD lpcMaxValueNameLen, PDWORD lpcMaxValueLen,</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>                     PDWORD lpcbSecurityDescriptor, PFILETIME lpftLastWriteTime);</div>
+<div class="ttc" id="aoffline__registry_8h_html_a186f2fce5c4f309f234bfce9ed3c233f"><div class="ttname"><a href="offline__registry_8h.html#a186f2fce5c4f309f234bfce9ed3c233f">PORHKEY</a></div><div class="ttdeci">ORHKEY * PORHKEY</div><div class="ttdoc">receives an ORHKEY</div><div class="ttdef"><b>Definition</b> offline_registry.h:32</div></div>
 <div class="ttc" id="aoffline__registry_8h_html_a2bb141b4a6fd617fb1ecb8ee53def712"><div class="ttname"><a href="offline__registry_8h.html#a2bb141b4a6fd617fb1ecb8ee53def712">OROpenKey</a></div><div class="ttdeci">DWORD OROpenKey(ORHKEY Handle, PCWSTR lpSubKey, PORHKEY phkResult)</div><div class="ttdef"><b>Definition</b> offline_registry.cpp:445</div></div>
 <div class="ttc" id="aoffline__registry_8h_html_a3696308837c47a9e54ab8e1ae18e5531"><div class="ttname"><a href="offline__registry_8h.html#a3696308837c47a9e54ab8e1ae18e5531">ORQueryInfoKey</a></div><div class="ttdeci">DWORD ORQueryInfoKey(ORHKEY Handle, PWSTR lpClass, PDWORD lpcClass, PDWORD lpcSubKeys, PDWORD lpcMaxSubKeyLen, PDWORD lpcMaxClassLen, PDWORD lpcValues, PDWORD lpcMaxValueNameLen, PDWORD lpcMaxValueLen, PDWORD lpcbSecurityDescriptor, PFILETIME lpftLastWriteTime)</div><div class="ttdef"><b>Definition</b> offline_registry.cpp:535</div></div>
 <div class="ttc" id="aoffline__registry_8h_html_a61ab47d7536df009d6eb6fa325e3d060"><div class="ttname"><a href="offline__registry_8h.html#a61ab47d7536df009d6eb6fa325e3d060">ORCloseKey</a></div><div class="ttdeci">DWORD ORCloseKey(ORHKEY Handle)</div><div class="ttdef"><b>Definition</b> offline_registry.cpp:463</div></div>

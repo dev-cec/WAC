@@ -654,15 +654,12 @@ machine then caught two more, in the property store values (`readScalar`,
 `SPSValue`). Result on 220 shortcuts of a real machine and eight of the test VM:
 over 570,000 inputs, no read outside the buffer.
 
-`--test` puts these harnesses in `build-windows/tests/`, with a Wine stand-in,
-`propsys.dll` (Wine does not implement `PSGetNameFromPropertyKey`, which WAC
-calls to name the properties of real shortcuts; used with `WINEDLLOVERRIDES`).
-It is kept apart from `WAC.exe` on purpose: beside it, it would be loaded
-instead of the system's.
+`--test` puts these harnesses in `build-windows/tests/`, apart from `WAC.exe`:
+they are never to be copied onto a collection key.
 
 ```bash
 ./build-windows.sh --test
-cd build-windows/tests && WINEDLLOVERRIDES="propsys=n" wine lnk_test.exe a.lnk b.lnk ...
+cd build-windows/tests && wine lnk_test.exe a.lnk b.lnk ...
 ```
 
 Both tests place each input against the guard page twice: once ending at it,
@@ -710,6 +707,22 @@ where recent versions of offreg read it as is — stale keys without an error.
 ```bash
 offline_registry_test.exe C:\Windows\System32\offreg.dll SYSTEM SOFTWARE ntuser.dat ...
 ```
+
+`system_conversions_test.cpp` confronts the conversions WAC now does itself
+with the Windows functions it no longer imports: GUIDs (`StringFromGUID2`),
+SIDs in both directions (`ConvertSidToStringSidW`, `ConvertStringSidToSidW`),
+OLE dates (`VariantTimeToSystemTime`) and property names
+(`PSGetNameFromPropertyKey`, against the table generated from the Windows
+property schema by `vmtest/property-schema.cpp`). WAC.exe thus imports only
+what querying the running system requires: `ADVAPI32, KERNEL32, msvcrt,
+Secur32, WTSAPI32`. Getting the dates right took the test: Windows adds half a
+second TO THE DATE, then truncates — a rounding of the seconds of the day,
+whatever the order of the operations, disagreed on the half-second cases. It
+also showed that Windows writes an identifier authority of 2^32 or more in
+hexadecimal without padding. Result: 513,387 comparisons, identical. Two
+intended differences: WAC refuses a SID text Windows would truncate (a
+sub-authority of 2^32 or more, a 16th sub-authority), and a NaN date, for which
+Windows returns a meaningless time. Run it on Windows (the test VM).
 
 ```bash
 ./build-windows.sh --test

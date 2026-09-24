@@ -490,7 +490,7 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 	if (valueType == VT_DATE) {
 		double t = *reinterpret_cast<double*>(buffer + *pos);
 		SYSTEMTIME st = { 0 };
-		if (!VariantTimeToSystemTime(t, &st)) { *pos += 8; return Json::null(); }
+		if (!oleDateToSystemTime(t, st)) { *pos += 8; return Json::null(); }
 		*pos += 8;
 		// A VARIANT date (VT_DATE) is expressed in LOCAL time, by OLE convention.
 		return Json::str(timeToIso8601(st, false));

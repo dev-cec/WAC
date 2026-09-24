@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>WAC (Windows Artefacts Collector): /var/www/html/WAC/WAC/parsers_test.cpp File Reference</title>
+<title>WAC (Windows Artefacts Collector): /var/www/html/WAC/WAC/system_conversions_test.cpp File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search/",'.html');
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('parsers__test_8cpp.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('system__conversions__test_8cpp.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -99,83 +99,63 @@ $(document).ready(function(){initNavTree('parsers__test_8cpp.html',''); initResi
   <div class="summary">
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
-  <div class="headertitle"><div class="title">parsers_test.cpp File Reference</div></div>
+  <div class="headertitle"><div class="title">system_conversions_test.cpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Proves that the jump list and <a class="el" href="structPrefetch.html">Prefetch</a> parsers never read outside their buffer, and always end.  
+<p>Confronts WAC's own conversions with the Windows functions they replaced, which WAC no longer imports.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;windows.h&gt;</code><br />
-<code>#include &lt;atomic&gt;</code><br />
-<code>#include &lt;chrono&gt;</code><br />
+<code>#include &lt;sddl.h&gt;</code><br />
+<code>#include &lt;oleauto.h&gt;</code><br />
+<code>#include &lt;propsys.h&gt;</code><br />
+<code>#include &lt;cmath&gt;</code><br />
 <code>#include &lt;cstdio&gt;</code><br />
-<code>#include &lt;fstream&gt;</code><br />
-<code>#include &lt;mutex&gt;</code><br />
+<code>#include &lt;cstring&gt;</code><br />
+<code>#include &lt;limits&gt;</code><br />
 <code>#include &lt;random&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
-<code>#include &lt;thread&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
-<code>#include &quot;<a class="el" href="guard__page_8h_source.html">guard_page.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="jumplist__automatic_8h_source.html">jumplist_automatic.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="jumplist__custom_8h_source.html">jumplist_custom.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="prefetchs_8h_source.html">prefetchs.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="offline__registry_8h_source.html">offline_registry.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="tools_8h_source.html">tools.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="trans__id_8h_source.html">trans_id.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a3c04138a5bfe5d72780bb7e82a18e627" id="r_a3c04138a5bfe5d72780bb7e82a18e627"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parsers__test_8cpp.html#a3c04138a5bfe5d72780bb7e82a18e627">main</a> (int argc, char **argv)</td></tr>
-<tr class="separator:a3c04138a5bfe5d72780bb7e82a18e627"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:accd1e08d01d2949549aaaca77cec644b" id="r_accd1e08d01d2949549aaaca77cec644b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="system__conversions__test_8cpp.html#accd1e08d01d2949549aaaca77cec644b">wmain</a> ()</td></tr>
+<tr class="separator:accd1e08d01d2949549aaaca77cec644b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
-<tr class="memitem:a0696b00a72abe9d549204f9b105514bc" id="r_a0696b00a72abe9d549204f9b105514bc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structAppliConf.html">AppliConf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parsers__test_8cpp.html#a0696b00a72abe9d549204f9b105514bc">conf</a></td></tr>
+<tr class="memitem:a0696b00a72abe9d549204f9b105514bc" id="r_a0696b00a72abe9d549204f9b105514bc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structAppliConf.html">AppliConf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="system__conversions__test_8cpp.html#a0696b00a72abe9d549204f9b105514bc">conf</a></td></tr>
 <tr class="memdesc:a0696b00a72abe9d549204f9b105514bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">WAC's global configuration, which <a class="el" href="tools_8cpp.html" title="Implementation of the shared tools (see tools.h).">tools.cpp</a> references (empty here)  <br /></td></tr>
 <tr class="separator:a0696b00a72abe9d549204f9b105514bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Proves that the jump list and <a class="el" href="structPrefetch.html">Prefetch</a> parsers never read outside their buffer, and always end. </p>
-<p>WHY THIS TEST. <a class="el" href="lnk__test_8cpp.html" title="Proves that the shortcut parser never reads outside its buffer.">lnk_test.cpp</a> covers the shortcut parser. The automatic jump lists add an OLE container (sector chains, allocation tables, directory entries) and the DestList; the custom jump lists a scan for shortcut headers; the <a class="el" href="structPrefetch.html">Prefetch</a> files the SCCA structure. Every one of them reads at offsets and follows chains the file itself declares.</p>
-<p>Each input is placed against a PAGE_NOACCESS page, at its end then at its start (see <a class="el" href="guard__page_8h.html" title="Test support: an input placed against a PAGE_NOACCESS page.">guard_page.h</a>): one byte read outside it raises an access violation. A WATCHDOG also stops the test if one parse does not end — a cyclic sector chain looping for ever is a defect too, on a forged file.</p>
-<p>Inputs, for each file given:</p><ul>
-<li>the file itself;</li>
-<li>its truncations: every length up to 2048 bytes, then about 1000 more, spread over the rest of the file;</li>
-<li>1000 copies with 1 to 8 random bytes overwritten (fixed seed). A compressed <a class="el" href="structPrefetch.html">Prefetch</a> ("MAM") is decompressed first: the test aims at WAC's SCCA parser, not at ntdll's decompressor. Its compressed form is still given whole and in its truncations, for WAC's checks around the call.</li>
+<div class="textblock"><p>Confronts WAC's own conversions with the Windows functions they replaced, which WAC no longer imports. </p>
+<p>WHY THIS TEST. To depend only on what querying the running system requires, WAC stopped importing ole32, oleaut32, propsys and shell32, and the SID conversions of advapi32: GUIDs, SIDs, OLE dates and property names are now formatted and parsed by WAC itself (<a class="el" href="tools_8cpp.html" title="Implementation of the shared tools (see tools.h).">tools.cpp</a>, <a class="el" href="trans__id_8cpp.html">trans_id.cpp</a>). A conversion that is slightly off still produces well-formed output; only a comparison with the functions replaced, on many inputs, shows it. This program is the only one that still calls them.</p>
+<p>Compared:</p><ul>
+<li>guid_to_wstring / StringFromGUID2, on random GUIDs;</li>
+<li>sidToText / ConvertSidToStringSidW and textToSid / ConvertStringSidToSidW, on random SIDs (0 to 15 sub-authorities, authorities of 2^32 and more) and on malformed texts, which both must refuse;</li>
+<li>oleDateToSystemTime / VariantTimeToSystemTime, on random dates, the ends of the range, times close to midnight, negative dates and NaN;</li>
+<li>to_FriendlyName / PSGetNameFromPropertyKey, on every property of the table: a name WAC gives must be the one Windows gives.</li>
 </ul>
-<p>Registry hives ("hive") go through WAC's own reader (<a class="el" href="offline__registry_8cpp.html" title="Reading of registry hive files (regf), with offreg&#39;s contract — see offline_registry....">offline_registry.cpp</a>): the whole tree is walked — subkeys, values, ORQueryInfoKey.</p>
-<p>Usage: <code>parsers_test jumplist-auto|jumplist-custom|prefetch|hive &lt;file&gt; [file ...]</code> Built by <code>build-windows.sh --test</code>; runs on Windows (real ntdll) or under Wine for the jump lists. </p>
+<p>Usage: system_conversions_test Built by <code>build-windows.sh --test</code>; runs on Windows (the test VM). </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a3c04138a5bfe5d72780bb7e82a18e627" name="a3c04138a5bfe5d72780bb7e82a18e627"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3c04138a5bfe5d72780bb7e82a18e627">&#9670;&#160;</a></span>main()</h2>
+<a id="accd1e08d01d2949549aaaca77cec644b" name="accd1e08d01d2949549aaaca77cec644b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#accd1e08d01d2949549aaaca77cec644b">&#9670;&#160;</a></span>wmain()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int main </td>
+          <td class="memname">int wmain </td>
           <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>argc</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramname"></td><td>)</td>
           <td></td>
-          <td class="paramtype">char **&#160;</td>
-          <td class="paramname"><em>argv</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p><a class="el" href="structRuns.html">Runs</a> the test. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">argc,argv</td><td><code>&lt;kind&gt; &lt;file&gt; [file ...]</code> </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>0 if no input made a parser read outside its buffer or loop </dd></dl>
+<p><a class="el" href="structRuns.html">Runs</a> every comparison. </p><dl class="section return"><dt>Returns</dt><dd>0 if WAC's conversions agree with Windows everywhere </dd></dl>
 
 </div>
 </div>
@@ -202,7 +182,7 @@ Variables</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="parsers__test_8cpp.html">parsers_test.cpp</a></li>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="system__conversions__test_8cpp.html">system_conversions_test.cpp</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>

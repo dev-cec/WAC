@@ -14,5 +14,6 @@ var trans__id_8cpp =
     [ "showCommandOption", "trans__id_8cpp.html#adf9aab34debe110d3fb6f386853b63ff", null ],
     [ "sort_index", "trans__id_8cpp.html#aae7ad1547183f79f20f516a77c6c673c", null ],
     [ "to_FriendlyName", "trans__id_8cpp.html#af8c506e93a57e8751822275002c467aa", null ],
-    [ "trans_guid_to_wstring", "trans__id_8cpp.html#a92f2aae2072557f310263ae072a7dfda", null ]
+    [ "trans_guid_to_wstring", "trans__id_8cpp.html#a92f2aae2072557f310263ae072a7dfda", null ],
+    [ "TABLE_PROPERTY", "trans__id_8cpp.html#a8209ee93c576db64b4d65a9dc0d08b02", null ]
 ];

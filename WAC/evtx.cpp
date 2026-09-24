@@ -111,22 +111,6 @@ std::wstring escape(const std::wstring& s) {
 	return r;
 }
 
-//! Text form of a raw SID, without going through a system API.
-std::wstring sidToText(const BYTE* b, size_t size) {
-	if (size < 8) return L"";
-	const uint8_t revision = b[0];
-	const uint8_t nSubAuthorities = b[1];
-	if (size < (size_t)8 + 4ULL * nSubAuthorities) return L"";
-	// The authority is BIG-endian, unlike the rest of the format.
-	uint64_t authority = 0;
-	for (int i = 0; i < 6; ++i) authority = (authority << 8) | b[2 + i];
-	std::wostringstream o;
-	o << L"S-" << (unsigned)revision << L"-" << authority;
-	for (uint8_t i = 0; i < nSubAuthorities; ++i)
-		o << L"-" << (unsigned long)read32(b, size, 8 + 4ULL * i);
-	return o.str();
-}
-
 //! Floating-point value in the format Event Viewer expects.
 std::wstring realToText(double v) {
 	std::wostringstream o;

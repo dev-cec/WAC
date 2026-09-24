@@ -26,7 +26,7 @@
  *  the whole tree is walked — subkeys, values, ORQueryInfoKey.
  *
  *  Usage: `parsers_test jumplist-auto|jumplist-custom|prefetch|hive <file> [file ...]`
- *  Built by `build-windows.sh --test`; runs on Windows (real ntdll and propsys)
+ *  Built by `build-windows.sh --test`; runs on Windows (real ntdll)
  *  or under Wine for the jump lists.
  */
 #include <windows.h>

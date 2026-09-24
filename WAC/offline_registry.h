@@ -3,11 +3,10 @@
  *         Registry API (offreg) that WAC uses, reimplemented and linked into
  *         WAC.exe.
  *
- *  WHY. offreg.dll is not part of Windows: WAC shipped Microsoft's
- *  redistributable DLL beside WAC.exe and loaded it at run time. The tool
- *  therefore depended on a file outside the executable — one that could be
- *  missing, replaced, or taken from the examined machine if it happened to
- *  have one — for EVERY registry artefact it collects. The hive format (regf)
+ *  WHY. WAC loaded offreg.dll at run time, a file outside the executable —
+ *  one that could be missing, replaced, or taken from the examined machine
+ *  (Windows 11 has one in System32) — for EVERY registry artefact it
+ *  collects. The hive format (regf)
  *  is read here directly, from the hive files WAC has already extracted.
  *
  *  SAME CONTRACT. The functions keep offreg's names and signatures, so that no

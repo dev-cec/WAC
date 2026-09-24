@@ -42,10 +42,12 @@ MSVC pendant plusieurs commits, sans que rien ne le signale, seule la
 compilation Linux étant testée.
 
 ## Autonomie vérifiée
-`WAC.exe` n'importe que : `ADVAPI32, KERNEL32, msvcrt, ole32, OLEAUT32, PROPSYS,
-Secur32, SHELL32, WTSAPI32` — **aucune DLL MinGW** (runtime statique), et plus
-d'`offreg.dll` : les ruches sont lues par le lecteur propre à WAC
-(`WAC/offline_registry.cpp`). Vérifier
+`WAC.exe` n'importe que : `ADVAPI32, KERNEL32, msvcrt, Secur32, WTSAPI32` — ce
+qu'exige l'interrogation du système en marche. **Aucune DLL MinGW** (runtime
+statique) ; plus d'`offreg.dll` (les ruches sont lues par
+`WAC/offline_registry.cpp`) ; plus d'`ole32`, `oleaut32`, `propsys` ni `shell32`
+(GUID, SID, dates OLE, noms de propriétés et ligne de commande sont traités par
+WAC lui-même, vérifiés contre Windows par `system_conversions_test`). Vérifier
 avec :
 ```bash
 x86_64-w64-mingw32-objdump -p build-windows/WAC.exe | grep "DLL Name"

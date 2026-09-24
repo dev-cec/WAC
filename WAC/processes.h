@@ -41,7 +41,6 @@
 #include <string>
 #include <filesystem>
 #include <sstream>
-#include <sddl.h>
 #include "tools.h"
 #include "quickdigest5.h"
 #include "binaires.h"

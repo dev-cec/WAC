@@ -3,7 +3,6 @@
  */
 #include "audit.h"
 #include <vector>
-#include <sddl.h>
 #include "tools.h"
 
 namespace Footprint {
@@ -87,12 +86,11 @@ void readContext() {
 		if (required) {
 			std::vector<BYTE> sidBuffer(required);
 			if (GetTokenInformation(token, TokenUser, sidBuffer.data(), required, &required)) {
-				LPWSTR text = nullptr;
 				PTOKEN_USER tu = reinterpret_cast<PTOKEN_USER>(sidBuffer.data());
-				if (ConvertSidToStringSidW(tu->User.Sid, &text)) {
-					g_sid = text;
-					LocalFree(text);
-				}
+				// The SID lies inside the buffer: it bounds the read.
+				const BYTE* sid = static_cast<const BYTE*>(tu->User.Sid);
+				if (sid >= sidBuffer.data() && sid < sidBuffer.data() + sidBuffer.size())
+					g_sid = sidToText(sid, (size_t)(sidBuffer.data() + sidBuffer.size() - sid));
 			}
 		}
 		TOKEN_ELEVATION elevation = { 0 };

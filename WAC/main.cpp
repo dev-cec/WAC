@@ -48,14 +48,14 @@ AppliConf conf; //!< the application's configuration, shared by every collector
 //! Prints the command-line help.
 void showHelp() {
 	SetConsoleTextAttribute(conf.hConsole, 7); // white
-	wprintf(L"%ls%hs%ls\n", L"\nusage: ", conf.name.c_str(), L" [--debug] [--dump] [--events] [--binary] [--output=output] [--loglevel=2]");
+	wprintf(L"%ls%ls%ls\n", L"\nusage: ", conf.name.c_str(), L" [--debug] [--dump] [--events] [--binary] [--output=output] [--loglevel=2]");
 	wprintf(L"%ls\n", L"\t--help or /? : show this help ");
 	wprintf(L"%ls\n", L"\t--debug : trace the raw NTFS parser on stderr (path resolution, index blocks, data runs)");
 	wprintf(L"%ls\n", L"\t--dump : add hexa value in json files for shellbags and LNK files ");
 	wprintf(L"%ls\n", L"\t--events : extract and parse the .evtx event logs (adds ~117 MB to the collection)");
 	wprintf(L"%ls\n", L"\t--binary : fingerprint (MD5, SHA-1, SHA-256) every file referenced in artefacts, read raw; executables, libraries, drivers and scripts are also collected into the exhibit store");
 	wprintf(L"%ls\n", L"\t--output=[directory name] : directory name to store output files starting from current directory. By default the directory is 'output'");
-	wprintf(L"%ls%hs%ls\n", L"\t--loglevel=[0] : define level of details in logfile and activate logging in ", conf.name.c_str(), L".log");
+	wprintf(L"%ls%ls%ls\n", L"\t--loglevel=[0] : define level of details in logfile and activate logging in ", conf.name.c_str(), L".log");
 	wprintf(L"\n");
 	wprintf(L"%ls\n", L"\t loglevel = 0 => no logging");
 	wprintf(L"%ls\n", L"\t loglevel = 1 => activate logging for each artefact type treated");
@@ -64,9 +64,11 @@ void showHelp() {
 };
 
 /*! Runs a collection.
+ *  wmain: the runtime hands the arguments in UTF-16, as Windows holds them —
+ *  CommandLineToArgvW (shell32) is no longer needed for that.
  * @param argc,argv the command line (see showHelp())
  * @return 0 once the collection has run to the end, an error code otherwise */
-int main(int argc, char* argv[])
+int wmain(int argc, wchar_t* argv[])
 {
 	HRESULT hresult;
 	Services services;
@@ -122,19 +124,10 @@ int main(int argc, char* argv[])
 	*************************/
 
 	conf.name = argv[0];
-	(void)argc;
-	/* The arguments in UTF-16, as Windows holds them: through `argv` they were
-	   narrowed to the process's ANSI code page, and an output directory whose
-	   name the code page cannot represent was lost. */
-	std::vector<std::wstring> commandLine;
-	{
-		int count = 0;
-		LPWSTR* wide = CommandLineToArgvW(GetCommandLineW(), &count);
-		if (wide != nullptr) {
-			for (int i = 0; i < count; ++i) commandLine.emplace_back(wide[i]);
-			LocalFree(wide);
-		}
-	}
+	/* The arguments in UTF-16: through a narrow `argv` they were converted to
+	   the process's ANSI code page, and an output directory whose name the
+	   code page cannot represent was lost. */
+	const std::vector<std::wstring> commandLine(argv, argv + argc);
 	if (commandLine.size() > 1) { // at least one argument, the first being the program's own name
 		// command-line arguments
 		for (size_t i = 1; i < commandLine.size(); ++i) {

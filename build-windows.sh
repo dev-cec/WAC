@@ -56,10 +56,13 @@ done
 
 # --- Link --------------------------------------------------------------------
 echo "== Link =="
-LIBS=(-lole32 -loleaut32
-      -luuid -lshlwapi -ladvapi32 -lshell32 -lversion -lwtsapi32
-      -lsecur32 -lpropsys -lntdll)
-"$CXX" -static -static-libgcc -static-libstdc++ \
+# Only what querying the running system requires: accounts, tokens and
+# services (advapi32), the process list (wtsapi32), the logon sessions
+# (secur32). Formatting and parsing — GUIDs, SIDs, OLE dates, property names,
+# the command line, the registry hives — are WAC's own code.
+LIBS=(-ladvapi32 -lwtsapi32 -lsecur32)
+# -municode: WAC's entry point is wmain (arguments in UTF-16).
+"$CXX" -municode -static -static-libgcc -static-libstdc++ \
   "${OBJS[@]}" "$BUILD/WAC_res.o" -o "$BUILD/WAC.exe" "${LIBS[@]}"
 
 # --- raw_hive test exe (optional) -------------------------------------------
@@ -75,10 +78,8 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
     "$SRC/raw_hive_test.cpp" -o "$BUILD/raw_hive_test.exe"
   echo "   -> $BUILD/raw_hive_test.exe"
 
-  # The robustness harnesses and their Wine stand-ins go into a SEPARATE
-  # folder: a stand-in propsys.dll beside WAC.exe would be
-  # loaded instead of the system's one (the program's folder comes first in the
-  # DLL search order) if build-windows/ were ever copied onto a collection key.
+  # The test harnesses go into a SEPARATE folder: they are never to be copied
+  # onto a collection key with WAC.exe.
   TESTS="$BUILD/tests"
   mkdir -p "$TESTS"
 
@@ -98,12 +99,13 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
     "$SRC/parsers_test.cpp" "${TEST_OBJS[@]}" -o "$TESTS/parsers_test.exe" "${LIBS[@]}"
   echo "   -> $TESTS/parsers_test.exe"
 
-  # Wine stand-in, for running the two harnesses on Linux: Wine lacks
-  # PSGetNameFromPropertyKey (see the stub's header); used with
-  # WINEDLLOVERRIDES="propsys=n".
-  x86_64-w64-mingw32-gcc -shared -O2 -Wall -Wextra -Wl,--kill-at \
-    "$TP/compat-include/propsys_wine_stub.c" -o "$TESTS/propsys.dll"
-  echo "   -> $TESTS/propsys.dll (Wine stand-in, tests only)"
+  echo "== Build system_conversions_test.exe =="
+  # WAC's GUID, SID, OLE date and property name conversions against the Windows
+  # functions they replaced: the only program still linked with those.
+  "$CXX" "${FLAGS[@]}" -municode -static -static-libgcc -static-libstdc++ \
+    "$SRC/system_conversions_test.cpp" "${TEST_OBJS[@]}" -o "$TESTS/system_conversions_test.exe" \
+    "${LIBS[@]}" -lole32 -loleaut32 -lpropsys -luuid
+  echo "   -> $TESTS/system_conversions_test.exe"
 
   echo "== Build evtx_test.exe, consigne_test.exe =="
   # Built here rather than by a hand-written list of sources: that list, in the

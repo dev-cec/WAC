@@ -54,14 +54,11 @@ HRESULT readOwners(std::map<DWORD, std::pair<std::wstring, DWORD>>& byPid) {
 	for (DWORD i = 0; i < count; ++i) {
 		std::wstring sid;
 		if (infos[i].pUserSid) {
-			LPWSTR text = NULL;
-			log(3, L"🔈ConvertSidToStringSidW");
-			if (ConvertSidToStringSidW(infos[i].pUserSid, &text) && text) {
-				sid = text;
-				LocalFree(text);
-			}
+			log(3, L"🔈sidToText");
+			if (IsValidSid(infos[i].pUserSid))
+				sid = sidToText(static_cast<const BYTE*>(infos[i].pUserSid), GetLengthSid(infos[i].pUserSid));
 			else
-				log(2, L"🔥ConvertSidToStringSidW", GetLastError());
+				log(2, L"🔥sidToText: invalid SID", ERROR_INVALID_SID);
 		}
 		/* An empty SID is a fact, not a failure: the purely kernel processes
 		   (System, Registry) have no user token. The session, for its part, is

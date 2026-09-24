@@ -10,11 +10,11 @@
 #include <array>
 #include <map>
 #include <windows.h>
-#include <ShellAPI.h> 
 #include <stdio.h>
 #include <regex>
-#include <sddl.h>
 #include "tools.h"
+#include <cstring>
+#include <cmath>
 #include <filesystem>
 
 /****************************************************
@@ -215,7 +215,7 @@ std::wstring getErrorMessage(HRESULT hresult)
 
 void log(int loglevel, std::wstring message) {
 	if (conf.loglevel >= loglevel && conf.loglevel > 0) {
-		conf.log.open(conf.name + ".log", std::ios::app);
+		conf.log.open(std::filesystem::path(conf.name + L".log"), std::ios::app);
 		conf.log << encodeText(tab(loglevel) + message) << std::endl;
 		conf.log.flush();
 		conf.log.close();
@@ -340,7 +340,8 @@ std::wstring getNameFromSid(std::wstring _sid) {
 	 * many traces fewer.
 	 *
 	 * Three defects fixed on the way:
-	 *  - the pointer allocated by ConvertStringSidToSidW was never released;
+	 *  - the pointer allocated by ConvertStringSidToSidW was never released (the
+	 *    conversion is now WAC's own, textToSid);
 	 *  - the SAME `size` variable served for the name AND for the domain, while
 	 *    the API writes into both: the second write overwrote the first;
 	 *  - the return value was not checked, so that a failure had an
@@ -353,9 +354,9 @@ std::wstring getNameFromSid(std::wstring _sid) {
 	if (found != cache.end()) return found->second;
 
 	std::wstring name;
-	PSID pSID = NULL;
-	log(3, L"🔈ConvertStringSidToSidW");
-	if (ConvertStringSidToSidW(_sid.c_str(), &pSID)) {
+	std::vector<BYTE> sid = textToSid(_sid);
+	if (!sid.empty()) {
+		PSID pSID = sid.data();
 		wchar_t lpName[256] = L"";
 		wchar_t lpDomain[256] = L"";
 		DWORD nameSize = 256, domainSize = 256;   // two distinct sizes
@@ -366,7 +367,6 @@ std::wstring getNameFromSid(std::wstring _sid) {
 			name = lpName;
 		else
 			log(3, L"🔈LookupAccountSidW: no match", GetLastError());
-		LocalFree(pSID);                              // allocated by ConvertStringSidToSidW
 	}
 
 	// Memorised even when empty: a SID that cannot be resolved will stay so, no
@@ -999,14 +999,104 @@ std::vector<std::wstring> multiWstring_to_vector(LPBYTE data, int size)
 }
 
 std::wstring guid_to_wstring(GUID guid) {
-	OLECHAR* result;
-	log(3, L"🔈tringFromCLSID result");
-	HRESULT hresult = StringFromCLSID(guid, &result);
-	if (hresult == ERROR_SUCCESS)
-		return std::wstring(result);
-	else
-		return L"";
+	wchar_t text[39];
+	swprintf(text, 39, L"{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+	         (unsigned long)guid.Data1, guid.Data2, guid.Data3,
+	         guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
+	         guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
+	return text;
+}
 
+std::wstring sidToText(const BYTE* sid, size_t size) {
+	if (size < 8) return L"";
+	const unsigned revision = sid[0];
+	const unsigned subAuthorities = sid[1];
+	if (size < 8 + 4 * (size_t)subAuthorities) return L"";
+	// The authority is BIG-endian, unlike the rest of the format.
+	unsigned long long authority = 0;
+	for (int i = 0; i < 6; ++i) authority = (authority << 8) | sid[2 + i];
+	std::wostringstream o;
+	o << L"S-" << revision << L"-";
+	if (authority < 0x100000000ULL) o << authority;
+	else o << L"0x" << std::uppercase << std::hex << authority << std::dec << std::nouppercase;   // no padding, as Windows
+	for (unsigned i = 0; i < subAuthorities; ++i) {
+		uint32_t v = 0;
+		std::memcpy(&v, sid + 8 + 4 * (size_t)i, 4);
+		o << L"-" << v;
+	}
+	return o.str();
+}
+
+std::vector<BYTE> textToSid(const std::wstring& text) {
+	// "S-" revision "-" authority ("-" sub-authority){0,15}
+	std::vector<unsigned long long> parts;
+	if (text.size() < 4 || (text[0] != L'S' && text[0] != L's') || text[1] != L'-') return {};
+	size_t pos = 2;
+	while (pos <= text.size()) {
+		const size_t end = text.find(L'-', pos);
+		const std::wstring field = text.substr(pos, end == std::wstring::npos ? std::wstring::npos : end - pos);
+		if (field.empty()) return {};
+		const bool hex = parts.size() == 1 && field.size() > 2 && field[0] == L'0' && (field[1] == L'x' || field[1] == L'X');
+		size_t used = 0;
+		unsigned long long v = 0;
+		try { v = std::stoull(hex ? field.substr(2) : field, &used, hex ? 16 : 10); }
+		catch (...) { return {}; }
+		if (used != field.size() - (hex ? 2 : 0)) return {};
+		parts.push_back(v);
+		if (end == std::wstring::npos) break;
+		pos = end + 1;
+	}
+	if (parts.size() < 2 || parts.size() > 2 + 15 || parts[0] > 0xFF || parts[1] > 0xFFFFFFFFFFFFULL) return {};
+	std::vector<BYTE> sid(8 + 4 * (parts.size() - 2));
+	sid[0] = (BYTE)parts[0];
+	sid[1] = (BYTE)(parts.size() - 2);
+	for (int i = 0; i < 6; ++i) sid[2 + i] = (BYTE)(parts[1] >> (8 * (5 - i)));
+	for (size_t i = 2; i < parts.size(); ++i) {
+		if (parts[i] > 0xFFFFFFFFULL) return {};
+		const uint32_t v = (uint32_t)parts[i];
+		std::memcpy(&sid[8 + 4 * (i - 2)], &v, 4);
+	}
+	return sid;
+}
+
+bool oleDateToSystemTime(double date, SYSTEMTIME& st) {
+	/* VariantTimeToSystemTime's rounding, established against Windows by
+	   system_conversions_test.cpp on 200,000 dates: half a second is added TO
+	   THE DATE ITSELF (a double, whose precision is then only a few tens of
+	   microseconds), then the time of day is truncated to the second. Rounding
+	   the seconds of the day instead — whatever the order of the operations —
+	   disagreed with Windows on the half-second cases. For a negative date the
+	   time counts forward from the integer part: the half second goes that
+	   way, and a time that overflows the day moves to the next one.
+	   Range ]-657435, 2958466[, as Windows; NaN is refused — Windows returns a
+	   meaningless time for it. */
+	if (!(date > -657435.0 && date < 2958466.0)) return false;
+	const double whole = std::trunc(date);
+	long long days = (long long)whole;
+	const double halfSecond = 0.5 / 86400.0;
+	double time = std::fabs((date >= 0 ? date + halfSecond : date - halfSecond) - whole);
+	if (time >= 1.0) { time -= 1.0; days += 1; }
+	long long seconds = (long long)(time * 86400.0);
+	if (seconds >= 86400) { seconds -= 86400; days += 1; }   // rounded up to midnight
+	// Civil date of `days` after 1899-12-30 (H. Hinnant's days-to-civil).
+	long long z = days - 25569 + 719468;                     // 1899-12-30 is day -25569 of 1970
+	const long long era = (z >= 0 ? z : z - 146096) / 146097;
+	const unsigned doe = (unsigned)(z - era * 146097);
+	const unsigned yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+	const unsigned doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+	const unsigned mp = (5 * doy + 2) / 153;
+	const unsigned day = doy - (153 * mp + 2) / 5 + 1;
+	const unsigned month = mp < 10 ? mp + 3 : mp - 9;
+	const long long year = (long long)yoe + era * 400 + (month <= 2);
+	st = SYSTEMTIME{};
+	st.wYear = (WORD)year;
+	st.wMonth = (WORD)month;
+	st.wDay = (WORD)day;
+	st.wDayOfWeek = (WORD)(((days % 7) + 7 + 6) % 7);        // 1899-12-30 was a Saturday
+	st.wHour = (WORD)(seconds / 3600);
+	st.wMinute = (WORD)(seconds / 60 % 60);
+	st.wSecond = (WORD)(seconds % 60);
+	return true;
 }
 
 

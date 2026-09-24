@@ -11,7 +11,7 @@ var structAppliConf =
     [ "log", "structAppliConf.html#a269c6f349598300b84ac6941d349f74c", null ],
     [ "loglevel", "structAppliConf.html#a2087631ac415bdd43de5ad3b5f704076", null ],
     [ "mountpoint", "structAppliConf.html#a9968074249a92e938580e34c7769e46d", null ],
-    [ "name", "structAppliConf.html#a3fa41463d0f70cba7c29ef7b8b73f308", null ],
+    [ "name", "structAppliConf.html#a5213c22a5d55c36782dabbeda4791e48", null ],
     [ "profiles", "structAppliConf.html#acebd5e49e779376202a9766407664256", null ],
     [ "Software", "structAppliConf.html#a7f9aa7e1f590f754b5952ccc15d7fee1", null ],
     [ "System", "structAppliConf.html#abc7f350a870d4dc5e3a3ffbdc2634d3d", null ],
