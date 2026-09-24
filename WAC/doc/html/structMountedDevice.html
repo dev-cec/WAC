@@ -121,9 +121,27 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a6ccc8582a2373e19f9b17df597383a42" id="r_a6ccc8582a2373e19f9b17df597383a42"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMountedDevice.html#a6ccc8582a2373e19f9b17df597383a42">drive</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:a6ccc8582a2373e19f9b17df597383a42"><td class="mdescLeft">&#160;</td><td class="mdescRight">the mount: drive letter, or volume GUID  <br /></td></tr>
 <tr class="separator:a6ccc8582a2373e19f9b17df597383a42"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae39e4d13aa0f20da6cc95a2836264ae6" id="r_ae39e4d13aa0f20da6cc95a2836264ae6"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMountedDevice.html#ae39e4d13aa0f20da6cc95a2836264ae6">type</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:ae39e4d13aa0f20da6cc95a2836264ae6"><td class="mdescLeft">&#160;</td><td class="mdescRight">"GPT partition", "MBR partition", "Device path" or "Unknown"  <br /></td></tr>
+<tr class="separator:ae39e4d13aa0f20da6cc95a2836264ae6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5042a7267fa6a1b2c9c3aaa9ebca2f9e" id="r_a5042a7267fa6a1b2c9c3aaa9ebca2f9e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMountedDevice.html#a5042a7267fa6a1b2c9c3aaa9ebca2f9e">partitionGuid</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a5042a7267fa6a1b2c9c3aaa9ebca2f9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">GPT: partition GUID, "{...}".  <br /></td></tr>
+<tr class="separator:a5042a7267fa6a1b2c9c3aaa9ebca2f9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a310a4f58be99578a750cc01684aa6261" id="r_a310a4f58be99578a750cc01684aa6261"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMountedDevice.html#a310a4f58be99578a750cc01684aa6261">diskSignature</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a310a4f58be99578a750cc01684aa6261"><td class="mdescLeft">&#160;</td><td class="mdescRight">MBR: disk signature, "0x1A2B3C4D".  <br /></td></tr>
+<tr class="separator:a310a4f58be99578a750cc01684aa6261"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a55c1ad23bf49a33366ac78886233178f" id="r_a55c1ad23bf49a33366ac78886233178f"><td class="memItemLeft" align="right" valign="top">unsigned long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMountedDevice.html#a55c1ad23bf49a33366ac78886233178f">partitionOffset</a> = 0</td></tr>
+<tr class="memdesc:a55c1ad23bf49a33366ac78886233178f"><td class="mdescLeft">&#160;</td><td class="mdescRight">MBR: offset of the partition on the disk, in bytes.  <br /></td></tr>
+<tr class="separator:a55c1ad23bf49a33366ac78886233178f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6071ffd5253a0a57db9d2a0b8dcbc0da" id="r_a6071ffd5253a0a57db9d2a0b8dcbc0da"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMountedDevice.html#a6071ffd5253a0a57db9d2a0b8dcbc0da">hasPartitionOffset</a> = false</td></tr>
+<tr class="memdesc:a6071ffd5253a0a57db9d2a0b8dcbc0da"><td class="mdescLeft">&#160;</td><td class="mdescRight">true for an MBR value (an offset of 0 is not emitted otherwise)  <br /></td></tr>
+<tr class="separator:a6071ffd5253a0a57db9d2a0b8dcbc0da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ade26f26af12b5736224aec9c85b1fffd" id="r_ade26f26af12b5736224aec9c85b1fffd"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMountedDevice.html#ade26f26af12b5736224aec9c85b1fffd">device</a> = L&quot;&quot;</td></tr>
-<tr class="memdesc:ade26f26af12b5736224aec9c85b1fffd"><td class="mdescLeft">&#160;</td><td class="mdescRight">identifier of the device mounted there  <br /></td></tr>
+<tr class="memdesc:ade26f26af12b5736224aec9c85b1fffd"><td class="mdescLeft">&#160;</td><td class="mdescRight">device path (removable device, CD-ROM)  <br /></td></tr>
 <tr class="separator:ade26f26af12b5736224aec9c85b1fffd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a021d3e1126d9c40824437794c2de882b" id="r_a021d3e1126d9c40824437794c2de882b"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMountedDevice.html#a021d3e1126d9c40824437794c2de882b">data</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a021d3e1126d9c40824437794c2de882b"><td class="mdescLeft">&#160;</td><td class="mdescRight">unknown form: the bytes in hexadecimal  <br /></td></tr>
+<tr class="separator:a021d3e1126d9c40824437794c2de882b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One mount: a drive letter or volume, and the device behind it. </p>
@@ -202,6 +220,22 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
+<a id="a021d3e1126d9c40824437794c2de882b" name="a021d3e1126d9c40824437794c2de882b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a021d3e1126d9c40824437794c2de882b">&#9670;&#160;</a></span>data</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring MountedDevice::data = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>unknown form: the bytes in hexadecimal </p>
+
+</div>
+</div>
 <a id="ade26f26af12b5736224aec9c85b1fffd" name="ade26f26af12b5736224aec9c85b1fffd"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ade26f26af12b5736224aec9c85b1fffd">&#9670;&#160;</a></span>device</h2>
 
@@ -214,7 +248,23 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>identifier of the device mounted there </p>
+<p>device path (removable device, CD-ROM) </p>
+
+</div>
+</div>
+<a id="a310a4f58be99578a750cc01684aa6261" name="a310a4f58be99578a750cc01684aa6261"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a310a4f58be99578a750cc01684aa6261">&#9670;&#160;</a></span>diskSignature</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring MountedDevice::diskSignature = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>MBR: disk signature, "0x1A2B3C4D". </p>
 
 </div>
 </div>
@@ -231,6 +281,70 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>the mount: drive letter, or volume GUID </p>
+
+</div>
+</div>
+<a id="a6071ffd5253a0a57db9d2a0b8dcbc0da" name="a6071ffd5253a0a57db9d2a0b8dcbc0da"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6071ffd5253a0a57db9d2a0b8dcbc0da">&#9670;&#160;</a></span>hasPartitionOffset</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool MountedDevice::hasPartitionOffset = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>true for an MBR value (an offset of 0 is not emitted otherwise) </p>
+
+</div>
+</div>
+<a id="a5042a7267fa6a1b2c9c3aaa9ebca2f9e" name="a5042a7267fa6a1b2c9c3aaa9ebca2f9e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5042a7267fa6a1b2c9c3aaa9ebca2f9e">&#9670;&#160;</a></span>partitionGuid</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring MountedDevice::partitionGuid = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>GPT: partition GUID, "{...}". </p>
+
+</div>
+</div>
+<a id="a55c1ad23bf49a33366ac78886233178f" name="a55c1ad23bf49a33366ac78886233178f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a55c1ad23bf49a33366ac78886233178f">&#9670;&#160;</a></span>partitionOffset</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned long long MountedDevice::partitionOffset = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>MBR: offset of the partition on the disk, in bytes. </p>
+
+</div>
+</div>
+<a id="ae39e4d13aa0f20da6cc95a2836264ae6" name="ae39e4d13aa0f20da6cc95a2836264ae6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae39e4d13aa0f20da6cc95a2836264ae6">&#9670;&#160;</a></span>type</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring MountedDevice::type = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>"GPT partition", "MBR partition", "Device path" or "Unknown" </p>
 
 </div>
 </div>

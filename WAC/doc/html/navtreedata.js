@@ -65,9 +65,9 @@ var NAVTREEINDEX =
 "reg__mounted__devices_8h.html",
 "structBeef0019.html#ad3c6c709332e17912a2850451ef8ad2f",
 "structFolderTypeNames.html",
-"structRawAttribute.html#ad4e72633a35413eef7c9b76d7f689868",
-"structTimeZoneInfo.html",
-"time__zone_8cpp.html#aee9e944ba7df3c29cdbf6a0ec01218b6"
+"structRawAttribute.html#a0ea52b32cf35d3c0bb69642c74dcc5f9",
+"structSystemInfo.html#ac573bb7051da162b9ba045a7bfe42a0e",
+"system__conversions__test_8cpp.html#a0696b00a72abe9d549204f9b105514bc"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

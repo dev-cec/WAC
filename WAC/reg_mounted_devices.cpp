@@ -2,41 +2,68 @@
  *  \brief Reading of the MountedDevices key (see reg_mounted_devices.h).
  */
 #include "reg_mounted_devices.h"
+#include <cstring>
 
 MountedDevice::MountedDevice(ORHKEY hKey, PCWSTR szSubValue) {
-	LPBYTE buffer = NULL;
+	drive = szSubValue;
+	log(1, L"➕Drive " + drive);
 	DWORD size = 0;
-	log(3, L"🔈getRegBinaryValue device");
-	HRESULT hr = getRegBinaryValue(hKey, NULL, szSubValue, &buffer, &size);
-	if (hr == ERROR_SUCCESS) {
-		// Each form is tested only if the value is long enough to hold it.
-		if (size >= 8 && std::wstring((wchar_t*)buffer,(wchar_t*)buffer+4).compare(L"_??_")==0) {//WSTRING
-			device = std::wstring((wchar_t*)buffer, (wchar_t*)buffer + size / sizeof(wchar_t)).data();
-			log(2, L"❇️MountedDevice device : " + device);
-		}
-		else { //STRING
-			if (size >= 24 && std::string(buffer, buffer + 8).compare("DMIO:ID:") == 0) {
-				log(3, L"🔈guid_to_wstring device");
-				device = (L"\\VOLUME" + guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8))).data();
-			}else{
-				device = decodeText(std::string((char*)buffer, (char*)buffer + size)).data();
-			}
-		}
+	log(3, L"🔈ORGetValue size");
+	HRESULT hr = ORGetValue(hKey, nullptr, szSubValue, nullptr, nullptr, &size);
+	std::vector<BYTE> bytes(size);
+	if (hr == ERROR_SUCCESS && size) {
+		log(3, L"🔈ORGetValue data");
+		hr = ORGetValue(hKey, nullptr, szSubValue, nullptr, bytes.data(), &size);
+		bytes.resize(size);
+	}
+	if (hr != ERROR_SUCCESS) {
+		log(2, L"🔥ORGetValue MountedDevices " + drive, hr);
+		return;
+	}
+	// The form is told by the content; every read below is bounded by bytes.size().
+	static const char GPT_PREFIX[] = "DMIO:ID:";
+	if (bytes.size() == 24 && std::memcmp(bytes.data(), GPT_PREFIX, 8) == 0) {
+		GUID guid;
+		std::memcpy(&guid, bytes.data() + 8, sizeof(guid));
+		type = L"GPT partition";
+		partitionGuid = guid_to_wstring(guid);
+	}
+	else if (bytes.size() == 12) {
+		uint32_t signature = 0;
+		uint64_t offset = 0;
+		std::memcpy(&signature, bytes.data(), 4);
+		std::memcpy(&offset, bytes.data() + 4, 8);
+		type = L"MBR partition";
+		diskSignature = L"0x" + to_hex(signature, 8);
+		partitionOffset = offset;
+		hasPartitionOffset = true;
+	}
+	else if (bytes.size() >= 8 && bytes.size() % 2 == 0
+	         && (std::memcmp(bytes.data(), L"\\??\\", 8) == 0 || std::memcmp(bytes.data(), L"_??_", 8) == 0)) {
+		// UTF-16, read by copy (the buffer carries no alignment guarantee), without trailing zeros.
+		std::wstring path(bytes.size() / 2, L'\0');
+		std::memcpy(&path[0], bytes.data(), bytes.size());
+		while (!path.empty() && path.back() == L'\0') path.pop_back();
+		type = L"Device path";
+		device = path;
 	}
 	else {
-		log(2, L"🔥getRegSzValue", hr);
+		type = L"Unknown";
+		data = dump_wstring(bytes.data(), 0, (int)bytes.size());
+		log(2, L"🔥MountedDevices " + drive + L": unknown form, kept in hexadecimal");
 	}
-	delete[] buffer;
-
-	drive = std::wstring(szSubValue).data();
-	log(1, L"➕Drive " + drive);
 }
 
 Json MountedDevice::toJson() const {
 	log(3, L"🔈MountedDevice toJson");
 	Json o = Json::obj();
-	o.add(L"Drive",  Json::str(drive));    // raw values: escaped here
-	o.add(L"Device", Json::str(device));
+	o.add(L"Drive",         Json::str(drive));
+	o.add(L"Type",          Json::str(type));
+	o.add(L"PartitionGuid", Json::str(partitionGuid));
+	o.add(L"DiskSignature", Json::str(diskSignature));
+	if (hasPartitionOffset) o.add(L"PartitionOffset", Json::num(partitionOffset));
+	o.add(L"Device",        Json::str(device));
+	o.add(L"Data",          Json::str(data));
 	return o;
 }
 

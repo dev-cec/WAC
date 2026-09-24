@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['data_0',['data',['../structBeefUnknown.html#a195cd7db6339f214697f4c9a72cecf4a',1,'BeefUnknown::data'],['../structUsersPropertyView.html#a2ba779625408cad4f6a5a945cbcdaa8d',1,'UsersPropertyView::data'],['../structTypedShellItem.html#af531cd98d1df48e087bc35d8fc187866',1,'TypedShellItem::data'],['../structDelegateFolder.html#ada79033907d293ec1338575360675bc3',1,'DelegateFolder::data'],['../structUnknownShellItem.html#abb7eb1668f32d243a884c39975340ccb',1,'UnknownShellItem::data'],['../structMuicache.html#ad18520c39dc4b05028409e321382db0f',1,'Muicache::data'],['../structAction.html#a59d1be201b4640f32ca91b336c4ae304',1,'Action::data'],['../structIdList.html#a59571d51ee821b467dc1a57e1f818344',1,'IdList::data']]],
+  ['data_0',['data',['../structBeefUnknown.html#a195cd7db6339f214697f4c9a72cecf4a',1,'BeefUnknown::data'],['../structUsersPropertyView.html#a2ba779625408cad4f6a5a945cbcdaa8d',1,'UsersPropertyView::data'],['../structTypedShellItem.html#af531cd98d1df48e087bc35d8fc187866',1,'TypedShellItem::data'],['../structDelegateFolder.html#ada79033907d293ec1338575360675bc3',1,'DelegateFolder::data'],['../structUnknownShellItem.html#abb7eb1668f32d243a884c39975340ccb',1,'UnknownShellItem::data'],['../structMountedDevice.html#a021d3e1126d9c40824437794c2de882b',1,'MountedDevice::data'],['../structMuicache.html#ad18520c39dc4b05028409e321382db0f',1,'Muicache::data'],['../structAction.html#a59d1be201b4640f32ca91b336c4ae304',1,'Action::data'],['../structIdList.html#a59571d51ee821b467dc1a57e1f818344',1,'IdList::data']]],
   ['dataoffset_1',['dataOffset',['../structUsersPropertyView.html#a885db6cfd016e960339bba4218becbc9',1,'UsersPropertyView']]],
   ['datasize_2',['dataSize',['../structUsersPropertyView.html#aea414d30401455e2fe24960c937c662c',1,'UsersPropertyView']]],
   ['date_3',['date',['../structFatDateTime.html#a95e034c5f40d196bea5f5d11836d98a6',1,'FatDateTime']]],
@@ -30,8 +30,9 @@ var searchData=
   ['disableknownfoldertracking_27',['DisableKnownFolderTracking',['../structLinkFlags.html#a069c580935d432f416530b622daa5297',1,'LinkFlags']]],
   ['disablelinkpathtracking_28',['DisableLinkPathTracking',['../structLinkFlags.html#ac95e8da4f7c2dd54847aa9899025a0b1',1,'LinkFlags']]],
   ['discardedentries_29',['discardedEntries',['../structHiveReplayInfo.html#a33b3b451e07cbd4b044bfc5ca06d7784',1,'HiveReplayInfo']]],
-  ['displayversion_30',['displayVersion',['../structSystemInfo.html#a0490822073cb62572bc9c1a519983a03',1,'SystemInfo']]],
-  ['domainname_31',['domainName',['../structSystemInfo.html#ab2b9887e2012f48242e8b8435e68fceb',1,'SystemInfo']]],
-  ['drive_32',['drive',['../structMountedDevice.html#a6ccc8582a2373e19f9b17df597383a42',1,'MountedDevice']]],
-  ['duplicates_33',['duplicates',['../structBinarySummary.html#a702bb0c63d1fe5e4c19b8b00520996c7',1,'BinarySummary']]]
+  ['disksignature_30',['diskSignature',['../structMountedDevice.html#a310a4f58be99578a750cc01684aa6261',1,'MountedDevice']]],
+  ['displayversion_31',['displayVersion',['../structSystemInfo.html#a0490822073cb62572bc9c1a519983a03',1,'SystemInfo']]],
+  ['domainname_32',['domainName',['../structSystemInfo.html#ab2b9887e2012f48242e8b8435e68fceb',1,'SystemInfo']]],
+  ['drive_33',['drive',['../structMountedDevice.html#a6ccc8582a2373e19f9b17df597383a42',1,'MountedDevice']]],
+  ['duplicates_34',['duplicates',['../structBinarySummary.html#a702bb0c63d1fe5e4c19b8b00520996c7',1,'BinarySummary']]]
 ];

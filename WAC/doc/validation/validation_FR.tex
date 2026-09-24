@@ -409,6 +409,9 @@ aucun processus ne porte \fichier{WAC.exe} parmi ses modules & modules de
   l'outil attribués au processus Idle \\
 références \fichier{\$MFT} plausibles & décodage des blocs d'extension des
   raccourcis \\
+montages / lecture de la clé par Windows (\texttt{reg query}) et
+  partitions (\texttt{Get-Partition}) & 6 montages sur 7 publiés comme
+  « \textbackslash{} » (chemins de périphérique décodés en ANSI) \\
 \multicolumn{2}{@{}l}{\textit{Consigne et rejeu}} \\
 sceau / empreinte réelle du manifeste & retouche du manifeste \\
 trois empreintes par pièce, comptes cohérents & pièce non identifiée \\
@@ -428,7 +431,7 @@ Dernier cycle, sur la version 1.3.1 (Windows~11, fuseau de Paris) :
 \begin{itemize}
   \item 23 fichiers JSON valides sur 23 produits (le 24\textsuperscript{e},
     USBSTOR, est absent : la machine virtuelle n'a jamais vu de clé USB) ;
-  \item 26 contrôles croisés passés, aucun échec, dont 4~045 dates locales
+  \item 28 contrôles croisés passés, aucun échec, dont 4~045 dates locales
     confrontées à la base IANA et 145~645 événements décodés ;
   \item 1~336 pièces dans la consigne, exactement celles du manifeste, sceau
     conforme.

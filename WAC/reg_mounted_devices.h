@@ -9,9 +9,20 @@
  *  to the very stick, and hence to the USBSTOR entries.
  *
  *  WHERE IT IS READ. In SYSTEM, the `MountedDevices` key. Its values are named
- *  `\DosDevices\X:` for letters and `\??\Volume{GUID}` for volumes; the data
- *  is either the disk signature and partition offset (fixed disks) or the
- *  device path in UTF-16 (removable devices).
+ *  `\DosDevices\X:` for letters and `\??\Volume{GUID}` for volumes. The data
+ *  takes one of three forms, told apart by their content:
+ *    - 12 bytes: an MBR partition, as the disk signature (4 bytes) and the
+ *      partition's offset on the disk in bytes (8 bytes);
+ *    - "DMIO:ID:" followed by a GUID (24 bytes): a GPT partition, by its
+ *      partition GUID;
+ *    - a device path in UTF-16, "\??\..." ("_??_..." on older systems): a
+ *      removable device or a CD-ROM, with its USB serial number if any.
+ *
+ *  WHAT WAS WRONG. Only the old "_??_" prefix was recognised: every current
+ *  device path was decoded as ANSI text and stopped at its first zero byte,
+ *  giving "\" — six mounts out of seven on the test machine. An MBR value
+ *  would have been decoded as text too. Each form now has its own fields, and
+ *  an unknown one is kept in hexadecimal rather than guessed.
  *
  *  The key holds no per-value timestamp: it says which device HAD the letter
  *  when the collection ran, not since when.
@@ -36,8 +47,14 @@
 /*! One mount: a drive letter or volume, and the device behind it. */
 struct MountedDevice {
 public:
-	std::wstring drive = L"";   //!< the mount: drive letter, or volume GUID
-	std::wstring device = L"";  //!< identifier of the device mounted there
+	std::wstring drive = L"";          //!< the mount: drive letter, or volume GUID
+	std::wstring type = L"";           //!< "GPT partition", "MBR partition", "Device path" or "Unknown"
+	std::wstring partitionGuid = L"";  //!< GPT: partition GUID, "{...}"
+	std::wstring diskSignature = L"";  //!< MBR: disk signature, "0x1A2B3C4D"
+	unsigned long long partitionOffset = 0; //!< MBR: offset of the partition on the disk, in bytes
+	bool hasPartitionOffset = false;   //!< true for an MBR value (an offset of 0 is not emitted otherwise)
+	std::wstring device = L"";         //!< device path (removable device, CD-ROM)
+	std::wstring data = L"";           //!< unknown form: the bytes in hexadecimal
 
 	/*! Builds the mount from a registry value.
 	 *  @param hKey the MountedDevices key, already open.

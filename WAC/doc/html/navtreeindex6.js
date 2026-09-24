@@ -1,5 +1,11 @@
 var NAVTREEINDEX6 =
 {
+"structSystemInfo.html#ac573bb7051da162b9ba045a7bfe42a0e":[1,0,122,5],
+"structSystemInfo.html#ad451c86f5c64f831d42dbb056c76f236":[1,0,122,23],
+"structSystemInfo.html#add303e00ebd5388785258d3f6a1d4722":[1,0,122,22],
+"structSystemInfo.html#ae8917699c8642fcea60d8821d39807cb":[1,0,122,6],
+"structSystemInfo.html#aff3597fd715ac85f438d5e6d8915deae":[1,0,122,17],
+"structSystemInfo.html#affa03a18f5068286ef3f96a0c0253f8f":[1,0,122,16],
 "structTimeZoneInfo.html":[1,0,124],
 "structTimeZoneInfo.html#a0208fee9ebb72f6c6ea900a0e3ef1dac":[1,0,124,4],
 "structTimeZoneInfo.html#a0f44986712feebee3f46cfe288a6292b":[1,0,124,8],
@@ -243,11 +249,5 @@ var NAVTREEINDEX6 =
 "system_8cpp.html":[2,0,0,94],
 "system_8h.html":[2,0,0,95],
 "system_8h_source.html":[2,0,0,95],
-"system__conversions__test_8cpp.html":[2,0,0,96],
-"system__conversions__test_8cpp.html#a0696b00a72abe9d549204f9b105514bc":[2,0,0,96,1],
-"system__conversions__test_8cpp.html#accd1e08d01d2949549aaaca77cec644b":[2,0,0,96,0],
-"time__zone_8cpp.html":[2,0,0,97],
-"time__zone_8cpp.html#a0c7efcfaefffd17056736b1365e3283a":[2,0,0,97,2],
-"time__zone_8cpp.html#a384b6bf4432ee322038cd013600573fe":[2,0,0,97,1],
-"time__zone_8cpp.html#a76c27d6699d544d9e4b1d7a2425cc0b7":[2,0,0,97,3]
+"system__conversions__test_8cpp.html":[2,0,0,96]
 };

@@ -397,6 +397,9 @@ no process carries \fichier{WAC.exe} among its modules & the tool's modules
   attributed to the Idle process \\
 plausible \fichier{\$MFT} references & decoding of the shortcuts' extension
   blocks \\
+mounts / Windows' reading of the key (\texttt{reg query}) and partitions
+  (\texttt{Get-Partition}) & 6 mounts out of 7 published as ``\textbackslash{}''
+  (device paths decoded as ANSI) \\
 \multicolumn{2}{@{}l}{\textit{Exhibit store and replay}} \\
 seal / real fingerprint of the manifest & a retouched manifest \\
 three fingerprints per exhibit, consistent counts & an unidentified exhibit \\
@@ -415,7 +418,7 @@ Last cycle, on version 1.3.1 (Windows~11, Paris time zone):
 \begin{itemize}
   \item 23 valid JSON files out of 23 produced (the 24th, USBSTOR, is absent:
     the virtual machine has never seen a USB key);
-  \item 26 cross-checks passed, no failure, among them 4,045 local dates
+  \item 28 cross-checks passed, no failure, among them 4,045 local dates
     confronted with the IANA database and 145,645 events decoded;
   \item 1,336 exhibits in the exhibit store, exactly those of the manifest,
     seal conforms.

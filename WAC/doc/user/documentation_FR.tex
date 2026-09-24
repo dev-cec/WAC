@@ -642,7 +642,13 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
 \begin{description}[style=nextline,leftmargin=1.2em]
   \item[\fichier{Usbstor.json}] périphériques de stockage USB connus du système.
   \item[\fichier{mounted\_device.json}] correspondance entre lettres de lecteur et
-        périphériques.
+        périphériques. \champ{Drive} nomme la lettre ou le volume ;
+        \champ{Type} dit la forme de la valeur : \texttt{GPT partition}
+        (\champ{PartitionGuid}), \texttt{MBR partition}
+        (\champ{DiskSignature} et \champ{PartitionOffset}, en octets),
+        \texttt{Device path} (\champ{Device}, chemin du périphérique, avec le
+        numéro de série d'une clé USB) ou \texttt{Unknown} (\champ{Data}, les
+        octets en hexadécimal).
 \end{description}
 
 \subsection{Journaux d'événements (\opt{events})}

@@ -129,7 +129,12 @@ Classes</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="structMountedDevices.html">MountedDevices</a>: which device was mounted behind which drive letter. </p>
 <p>WHAT IT SHOWS. Windows records, for each drive letter and each mount point, the identifier of the volume mounted there. That is what ties a letter found in a path — in a shortcut, a <a class="el" href="structPrefetch.html">Prefetch</a> trace, a shellbag — to a physical device: without it, "E:\report.docx" names no medium. For a removable device the identifier carries the USB serial number, which links the letter to the very stick, and hence to the USBSTOR entries.</p>
-<p>WHERE IT IS READ. In SYSTEM, the <code><a class="el" href="structMountedDevices.html">MountedDevices</a></code> key. Its values are named <code>\DosDevices\X:</code> for letters and <code>\??\Volume{GUID}</code> for volumes; the data is either the disk signature and partition offset (fixed disks) or the device path in UTF-16 (removable devices).</p>
+<p>WHERE IT IS READ. In SYSTEM, the <code><a class="el" href="structMountedDevices.html">MountedDevices</a></code> key. Its values are named <code>\DosDevices\X:</code> for letters and <code>\??\Volume{GUID}</code> for volumes. The data takes one of three forms, told apart by their content:</p><ul>
+<li>12 bytes: an MBR partition, as the disk signature (4 bytes) and the partition's offset on the disk in bytes (8 bytes);</li>
+<li>"DMIO:ID:" followed by a GUID (24 bytes): a GPT partition, by its partition GUID;</li>
+<li>a device path in UTF-16, "\??\..." ("_??_..." on older systems): a removable device or a CD-ROM, with its USB serial number if any.</li>
+</ul>
+<p>WHAT WAS WRONG. Only the old "_??_" prefix was recognised: every current device path was decoded as ANSI text and stopped at its first zero byte, giving "\" — six mounts out of seven on the test machine. An MBR value would have been decoded as text too. Each form now has its own fields, and an unknown one is kept in hexadecimal rather than guessed.</p>
 <p>The key holds no per-value timestamp: it says which device HAD the letter when the collection ran, not since when. </p>
 </div></div><!-- contents -->
 </div><!-- doc-content -->

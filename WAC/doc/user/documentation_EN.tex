@@ -633,7 +633,13 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
 \begin{description}[style=nextline,leftmargin=1.2em]
   \item[\fichier{Usbstor.json}] USB storage devices known to the system.
   \item[\fichier{mounted\_device.json}] mapping between drive letters and
-        devices.
+        devices. \champ{Drive} names the letter or the volume; \champ{Type}
+        gives the form of the value: \texttt{GPT partition}
+        (\champ{PartitionGuid}), \texttt{MBR partition}
+        (\champ{DiskSignature} and \champ{PartitionOffset}, in bytes),
+        \texttt{Device path} (\champ{Device}, the device path, with the serial
+        number of a USB key) or \texttt{Unknown} (\champ{Data}, the bytes in
+        hexadecimal).
 \end{description}
 
 \subsection{Event logs (\opt{events})}

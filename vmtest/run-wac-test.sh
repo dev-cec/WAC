@@ -146,6 +146,17 @@ $QGA run --shell "chcp 65001 >nul & dir /s /b /a-d $VMDIR\\out\\exhibits" \
   > "$OUTPUT/exhibits/LIST.txt" 2>/dev/null \
   && echo "   + exhibits/LIST.txt" || echo "   ⚠️ list of the exhibit store not read"
 
+# References read by Windows itself, for the cross-checks of check-json.py:
+# the MountedDevices values through the live registry API (WAC reads them in
+# the raw hive, with its own reader), and the partitions of the disks.
+mkdir -p "$OUTPUT/reference"
+$QGA run reg.exe query 'HKLM\SYSTEM\MountedDevices' > "$OUTPUT/reference/mounted-devices.txt" 2>/dev/null \
+  && echo "   + reference/mounted-devices.txt" || echo "   ⚠️ MountedDevices reference not read"
+$QGA run -- powershell.exe -NoProfile -Command \
+  'Get-Partition | ForEach-Object { "{0}|{1}|{2}|{3}" -f $_.DriveLetter, $_.Guid, $_.Offset, ($_.AccessPaths -join ";") }' \
+  > "$OUTPUT/reference/partitions.txt" 2>/dev/null \
+  && echo "   + reference/partitions.txt" || echo "   ⚠️ partitions reference not read"
+
 echo "== 6. JSON validity check =="
 python3 "$HERE/check-json.py" "$OUTPUT" || echo "   ⚠️ some JSON files are invalid (see above)"
 

@@ -150,6 +150,7 @@ def cross_checks(folder):
     found += check_hive_replay(folder)
     found += check_exhibit_store(folder)
     found += check_mft_references(folder)
+    found += check_mounted_devices(folder)
     return found
 
 
@@ -811,6 +812,98 @@ def check_prefetch_paths(d):
         return 1
     print(f"  ✅ prefetchs.json: {resolved}/{total} file paths resolved")
     return 0
+
+
+def decode_mounted_device(data):
+    """Independent decoding of a MountedDevices value, from its bytes."""
+    import uuid
+    if len(data) == 24 and data[:8] == b"DMIO:ID:":
+        return {"Type": "GPT partition",
+                "PartitionGuid": "{" + str(uuid.UUID(bytes_le=data[8:24])).upper() + "}"}
+    if len(data) == 12:
+        return {"Type": "MBR partition",
+                "DiskSignature": "0x%08x" % int.from_bytes(data[:4], "little"),
+                "PartitionOffset": int.from_bytes(data[4:12], "little")}
+    if len(data) >= 8 and len(data) % 2 == 0 and data[:8] in ("\\??\\".encode("utf-16-le"), "_??_".encode("utf-16-le")):
+        return {"Type": "Device path", "Device": data.decode("utf-16-le").rstrip("\0")}
+    return {"Type": "Unknown", "Data": " ".join("%02x" % b for b in data) + " "}
+
+
+def check_mounted_devices(folder):
+    """mounted_device.json against Windows' own reading of the same key, and
+    against the partitions of the disks.
+
+    WHY. WAC recognised only the old "_??_" prefix of device paths: every
+    current one ("\\??\\SCSI#CdRom...") was decoded as ANSI text, stopped at
+    its first zero byte and came out as "\\" — six mounts out of seven, in a
+    valid JSON. Two independent references, fetched in the VM by
+    run-wac-test.sh:
+      - the values read by `reg query` (the live registry API; WAC reads the
+        raw hive with its own reader), decoded here by a separate
+        implementation: every field of every mount must match;
+      - `Get-Partition`: the partition GUID of a GPT mount must be the one
+        Windows gives for that letter or that volume — a check of the MEANING
+        of the value, not only of its bytes.
+    """
+    d = load(folder, "mounted_device.json")
+    ref = os.path.join(folder, "reference", "mounted-devices.txt")
+    if not isinstance(d, list) or not d or not os.path.exists(ref):
+        print("  ⏭️  mounted_device.json or its reference absent: mounts not confronted")
+        return 0
+    found = 0
+    expected = {}
+    with open(ref, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            m = re.match(r"^\s{4}(.+?)\s{4}REG_BINARY\s{4}([0-9A-Fa-f]*)\s*$", line)
+            if m:
+                expected[m.group(1)] = decode_mounted_device(bytes.fromhex(m.group(2)))
+    wac = {e.get("Drive"): e for e in d if isinstance(e, dict)}
+    differences = []
+    for drive, fields in expected.items():
+        mine = wac.get(drive)
+        if mine is None:
+            differences.append(f"{drive}: missing")
+            continue
+        for key, value in fields.items():
+            if str(mine.get(key)).lower() != str(value).lower():
+                differences.append(f"{drive}: {key}={mine.get(key)!r}, expected {value!r}")
+    extra = set(wac) - set(expected)
+    if differences or extra:
+        for text in differences[:3]:
+            print(f"  ❌ mounted_device.json: {text}")
+        if extra:
+            print(f"  ❌ mounted_device.json: {len(extra)} mount(s) Windows does not list")
+        found += 1
+    else:
+        print(f"  ✅ mounted_device.json: {len(expected)} mount(s) identical to Windows' reading of the key")
+    # The meaning: a GPT mount names the partition Windows gives for that letter or volume.
+    parts = os.path.join(folder, "reference", "partitions.txt")
+    if os.path.exists(parts):
+        by_mount = {}
+        with open(parts, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                fields = line.strip().split("|")
+                if len(fields) != 4:
+                    continue
+                letter, guid, _, paths = fields
+                if letter.strip():
+                    by_mount["\\DosDevices\\" + letter.strip() + ":"] = guid.lower()
+                for p in paths.split(";"):
+                    v = re.search(r"Volume\{[0-9a-fA-F-]+\}", p)
+                    if v:
+                        by_mount["\\??\\" + v.group(0)] = guid.lower()
+        gpt = [e for e in wac.values() if e.get("Type") == "GPT partition"]
+        wrong = [e["Drive"] for e in gpt if e["Drive"] in by_mount
+                 and e.get("PartitionGuid", "").lower() != by_mount[e["Drive"]]]
+        compared = [e for e in gpt if e["Drive"] in by_mount]
+        if wrong:
+            print(f"  ❌ mounted_device.json: partition GUID other than Windows' for {wrong[:3]}")
+            found += 1
+        elif compared:
+            print(f"  ✅ mounted_device.json: {len(compared)} GPT mount(s) name the partition Windows gives")
+        else:
+            print("  ⏭️  no GPT mount to confront with the partitions")
+    return found
 
 
 def process_name(p):
