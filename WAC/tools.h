@@ -249,7 +249,10 @@ struct FatDateTime {
 	FatDateTime(unsigned int _i); 
 	//! Converts FAT DOS TIME to SYSTEMTIME.
 	SYSTEMTIME toSystemTime(); 
-	//! Converts FAT DOS TIME to FILETIME.
+	/*! Converts FAT DOS TIME to FILETIME.
+	 *  @return the instant, or a null FILETIME (not emitted) for the zero
+	 *          value and for an impossible date (month 13, 30 February, hour
+	 *          25...) — the bits are hostile input. */
 	FILETIME toFileTime(); 
 };
 
@@ -440,30 +443,13 @@ std::wstring getNameFromSid(std::wstring _sid);
 */
 std::wstring bool_to_wstring(bool b);
 
-/*! Converts a time_t to a FILETIME.
-* @param t the time_t to convert
-* @return the FILETIME that results from the conversion
-*/
-FILETIME timet_to_fileTime(time_t t);
-
-/*! Converts a string holding a date to a FILETIME.
+/*! Converts a string holding a date ("month/day/year hour:minute:second")
+* to a FILETIME.
 * @param input the string to convert
-* @return the FILETIME that results from the conversion
+* @return the instant, or a null FILETIME (not emitted) if the string does not
+*         hold a valid date
 */
 FILETIME wstring_to_filetime(std::wstring input);
-
-/*! Converts a FILETIME to a string.
-* @param filetime the FILETIME to convert
-* @param convertUtc if true, the date is converted to UTC
-* @return the string that results from the conversion
-*/
-std::wstring time_to_wstring(const FILETIME filetime, bool convertUtc = false);
-
-/*! Converts a SYSTEMTIME to a string.
-* @param systemtime the SYSTEMTIME to convert
-* @return the string that results from the conversion
-*/
-std::wstring time_to_wstring(const SYSTEMTIME systemtime);
 
 ///////////////////////////////////////////////////////
 // Horodatages ISO 8601
@@ -483,7 +469,7 @@ std::wstring time_to_wstring(const SYSTEMTIME systemtime);
  *  forgotten — a serious fault in an expert report. Hence two named functions,
  *  with no possible default.
  *
- *  A null date returns an empty string, as time_to_wstring does: without that
+ *  A null date returns an empty string: without that
  *  one would emit "1601-01-01T00:00:00Z" as if it were a real date.
  */
 
@@ -504,6 +490,7 @@ std::wstring timeToIso8601Local(const FILETIME& filetime);
 * ISO 8601 with the "Z" suffix.
 * Useful for the artefacts that store dates in local time (Amcache, BAM,
 * shimcache, USBSTOR, UserAssist) and whose UTC version is also wanted.
+* The offset is the suspect's (suspectLocalToUtc), not the running machine's.
 * @param filetimeLocal the instant, in the examined machine's local time
 * @return "YYYY-MM-DDTHH:MM:SSZ", or "" if the date is null
 */
@@ -534,11 +521,25 @@ std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc);
 * trap; the fallback on the running machine applies only if the SYSTEM hive
 * could not (yet) be read.
 *
+* NO RETURN CODE. The result is null (1601), hence not emitted, when the
+* input is null or the shift leaves the FILETIME range: the caller has nothing
+* to check and nothing to ignore — a failure cannot turn into a wrong date.
+*
 * @param filetimeUtc the instant, in UTC
-* @param filetimeLocal receives the instant in the suspect's local time
-* @return true if the conversion succeeded
+* @return the instant in the suspect's local time, or a null FILETIME
 */
-bool utcToSuspectLocal(const FILETIME& filetimeUtc, FILETIME* filetimeLocal);
+FILETIME utcToSuspectLocal(const FILETIME& filetimeUtc);
+
+/*! Converts a FILETIME in the local time of the EXAMINED machine to UTC: the
+* reverse of utcToSuspectLocal, with the same offset.
+*
+* Replaces `LocalFileTimeToFileTime()`, which applies the time zone of the
+* RUNNING machine — the trap described above, in the other direction.
+*
+* @param filetimeLocal the instant, in the suspect's local time
+* @return the instant in UTC, or a null FILETIME (input null or out of range)
+*/
+FILETIME suspectLocalToUtc(const FILETIME& filetimeLocal);
 
 /*! Reads the examined machine's time zone in the suspect's SYSTEM hive.
 *

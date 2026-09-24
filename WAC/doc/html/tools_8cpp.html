@@ -117,6 +117,7 @@ $(document).ready(function(){initNavTree('tools_8cpp.html',''); initResizable();
 <code>#include &lt;regex&gt;</code><br />
 <code>#include &quot;<a class="el" href="tools_8h_source.html">tools.h</a>&quot;</code><br />
 <code>#include &lt;cstring&gt;</code><br />
+<code>#include &lt;climits&gt;</code><br />
 <code>#include &lt;cmath&gt;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
 </div><table class="memberdecls">
@@ -161,14 +162,8 @@ Functions</h2></td></tr>
 <tr class="separator:aeeb4de502d09b004810269bf092a2686"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a60ee9433903019ec436ff2efcef4ea0d" id="r_a60ee9433903019ec436ff2efcef4ea0d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a60ee9433903019ec436ff2efcef4ea0d">bool_to_wstring</a> (bool b)</td></tr>
 <tr class="separator:a60ee9433903019ec436ff2efcef4ea0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a65f1910dd69d412fb7162edf2bdcb50f" id="r_a65f1910dd69d412fb7162edf2bdcb50f"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a65f1910dd69d412fb7162edf2bdcb50f">timet_to_fileTime</a> (time_t t)</td></tr>
-<tr class="separator:a65f1910dd69d412fb7162edf2bdcb50f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac15b36c9a117f211860abb5d7f86d8d4" id="r_ac15b36c9a117f211860abb5d7f86d8d4"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ac15b36c9a117f211860abb5d7f86d8d4">wstring_to_filetime</a> (std::wstring input)</td></tr>
 <tr class="separator:ac15b36c9a117f211860abb5d7f86d8d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:addbcf94a622e9fa893340802b75f789f" id="r_addbcf94a622e9fa893340802b75f789f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#addbcf94a622e9fa893340802b75f789f">time_to_wstring</a> (const SYSTEMTIME systemtime)</td></tr>
-<tr class="separator:addbcf94a622e9fa893340802b75f789f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac751f9398d8050d01c33a813eefed165" id="r_ac751f9398d8050d01c33a813eefed165"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ac751f9398d8050d01c33a813eefed165">time_to_wstring</a> (const FILETIME filetime, bool convertUtc)</td></tr>
-<tr class="separator:ac751f9398d8050d01c33a813eefed165"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a299fdb4272ae83c49ad0ac0bad62f1fe" id="r_a299fdb4272ae83c49ad0ac0bad62f1fe"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a299fdb4272ae83c49ad0ac0bad62f1fe">localUtcOffsetString</a> ()</td></tr>
 <tr class="separator:a299fdb4272ae83c49ad0ac0bad62f1fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8dd0bb51cdc854f2137aba256aae3d9c" id="r_a8dd0bb51cdc854f2137aba256aae3d9c"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a8dd0bb51cdc854f2137aba256aae3d9c">loadProfileList</a> ()</td></tr>
@@ -197,8 +192,10 @@ Functions</h2></td></tr>
 <tr class="separator:aed51f7f887c3a9ede2b9ee9dc59e8391"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac6e9127cec836f464d33dc6ed7aaf93c" id="r_ac6e9127cec836f464d33dc6ed7aaf93c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ac6e9127cec836f464d33dc6ed7aaf93c">timeToIso8601Local</a> (const FILETIME &amp;filetime)</td></tr>
 <tr class="separator:ac6e9127cec836f464d33dc6ed7aaf93c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a23566fa243f8b4cc3c01a578d30d4d06" id="r_a23566fa243f8b4cc3c01a578d30d4d06"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a23566fa243f8b4cc3c01a578d30d4d06">utcToSuspectLocal</a> (const FILETIME &amp;filetimeUtc, FILETIME *filetimeLocal)</td></tr>
-<tr class="separator:a23566fa243f8b4cc3c01a578d30d4d06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2db11fd993cf754bcb19e0731955b6ab" id="r_a2db11fd993cf754bcb19e0731955b6ab"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a2db11fd993cf754bcb19e0731955b6ab">utcToSuspectLocal</a> (const FILETIME &amp;filetimeUtc)</td></tr>
+<tr class="separator:a2db11fd993cf754bcb19e0731955b6ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a920d2d59405bf35238ca8e289cc8d85f" id="r_a920d2d59405bf35238ca8e289cc8d85f"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a920d2d59405bf35238ca8e289cc8d85f">suspectLocalToUtc</a> (const FILETIME &amp;filetimeLocal)</td></tr>
+<tr class="separator:a920d2d59405bf35238ca8e289cc8d85f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5efd9b98819f1d7951c8f56c8c005465" id="r_a5efd9b98819f1d7951c8f56c8c005465"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a5efd9b98819f1d7951c8f56c8c005465">utcTimeToIso8601Local</a> (const FILETIME &amp;filetimeUtc)</td></tr>
 <tr class="separator:a5efd9b98819f1d7951c8f56c8c005465"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae52f0c935a795ae5ade2cabe8686f61a" id="r_ae52f0c935a795ae5ade2cabe8686f61a"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ae52f0c935a795ae5ade2cabe8686f61a">localTimeToIso8601Utc</a> (const FILETIME &amp;filetimeLocal)</td></tr>
@@ -1135,7 +1132,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Converts a FILETIME <b>expressed in local time</b> to UTC, then formats it as ISO 8601 with the "Z" suffix. Useful for the artefacts that store dates in local time (Amcache, BAM, shimcache, USBSTOR, <a class="el" href="structUserAssist.html">UserAssist</a>) and whose UTC version is also wanted. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Converts a FILETIME <b>expressed in local time</b> to UTC, then formats it as ISO 8601 with the "Z" suffix. Useful for the artefacts that store dates in local time (Amcache, BAM, shimcache, USBSTOR, <a class="el" href="structUserAssist.html">UserAssist</a>) and whose UTC version is also wanted. The offset is the suspect's (suspectLocalToUtc), not the running machine's. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">filetimeLocal</td><td>the instant, in the examined machine's local time </td></tr>
   </table>
@@ -1855,6 +1852,33 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a920d2d59405bf35238ca8e289cc8d85f" name="a920d2d59405bf35238ca8e289cc8d85f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a920d2d59405bf35238ca8e289cc8d85f">&#9670;&#160;</a></span>suspectLocalToUtc()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME suspectLocalToUtc </td>
+          <td>(</td>
+          <td class="paramtype">const FILETIME &amp;&#160;</td>
+          <td class="paramname"><em>filetimeLocal</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Converts a FILETIME in the local time of the EXAMINED machine to UTC: the reverse of utcToSuspectLocal, with the same offset.</p>
+<p>Replaces <code>LocalFileTimeToFileTime()</code>, which applies the time zone of the RUNNING machine — the trap described above, in the other direction.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">filetimeLocal</td><td>the instant, in the suspect's local time </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the instant in UTC, or a null FILETIME (input null or out of range) </dd></dl>
+
+</div>
+</div>
 <a id="a238702c13cab5b487c46812cd980e7d6" name="a238702c13cab5b487c46812cd980e7d6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a238702c13cab5b487c46812cd980e7d6">&#9670;&#160;</a></span>tab()</h2>
 
@@ -1896,92 +1920,6 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the binary SID, or empty if the text is not a well-formed SID </dd></dl>
-
-</div>
-</div>
-<a id="ac751f9398d8050d01c33a813eefed165" name="ac751f9398d8050d01c33a813eefed165"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac751f9398d8050d01c33a813eefed165">&#9670;&#160;</a></span>time_to_wstring() <span class="overload">[1/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::wstring time_to_wstring </td>
-          <td>(</td>
-          <td class="paramtype">const FILETIME&#160;</td>
-          <td class="paramname"><em>filetime</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>convertUtc</em> = <code>false</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Converts a FILETIME to a string. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">filetime</td><td>the FILETIME to convert </td></tr>
-    <tr><td class="paramname">convertUtc</td><td>if true, the date is converted to UTC </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>the string that results from the conversion </dd></dl>
-
-</div>
-</div>
-<a id="addbcf94a622e9fa893340802b75f789f" name="addbcf94a622e9fa893340802b75f789f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#addbcf94a622e9fa893340802b75f789f">&#9670;&#160;</a></span>time_to_wstring() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::wstring time_to_wstring </td>
-          <td>(</td>
-          <td class="paramtype">const SYSTEMTIME&#160;</td>
-          <td class="paramname"><em>systemtime</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Converts a SYSTEMTIME to a string. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">systemtime</td><td>the SYSTEMTIME to convert </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>the string that results from the conversion </dd></dl>
-
-</div>
-</div>
-<a id="a65f1910dd69d412fb7162edf2bdcb50f" name="a65f1910dd69d412fb7162edf2bdcb50f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a65f1910dd69d412fb7162edf2bdcb50f">&#9670;&#160;</a></span>timet_to_fileTime()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">FILETIME timet_to_fileTime </td>
-          <td>(</td>
-          <td class="paramtype">time_t&#160;</td>
-          <td class="paramname"><em>t</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Converts a time_t to a FILETIME. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">t</td><td>the time_t to convert </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>the FILETIME that results from the conversion </dd></dl>
 
 </div>
 </div>
@@ -2137,41 +2075,31 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a23566fa243f8b4cc3c01a578d30d4d06" name="a23566fa243f8b4cc3c01a578d30d4d06"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a23566fa243f8b4cc3c01a578d30d4d06">&#9670;&#160;</a></span>utcToSuspectLocal()</h2>
+<a id="a2db11fd993cf754bcb19e0731955b6ab" name="a2db11fd993cf754bcb19e0731955b6ab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2db11fd993cf754bcb19e0731955b6ab">&#9670;&#160;</a></span>utcToSuspectLocal()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool utcToSuspectLocal </td>
+          <td class="memname">FILETIME utcToSuspectLocal </td>
           <td>(</td>
           <td class="paramtype">const FILETIME &amp;&#160;</td>
-          <td class="paramname"><em>filetimeUtc</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramname"><em>filetimeUtc</em></td><td>)</td>
           <td></td>
-          <td class="paramtype">FILETIME *&#160;</td>
-          <td class="paramname"><em>filetimeLocal</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Converts a UTC FILETIME to the local time of the EXAMINED machine.</p>
 <p>Replaces <code>FileTimeToLocalFileTime()</code>, which applies the time zone of the RUNNING machine. The two coincide in a live collection, but diverge as soon as an image is analysed elsewhere: the time would then be shifted by the examiner's time zone while carrying the label of the suspect's — two time zones in one value. A single point of truth, <code>conf.timeZone</code>, avoids that trap; the fallback on the running machine applies only if the SYSTEM hive could not (yet) be read.</p>
+<p>NO RETURN CODE. The result is null (1601), hence not emitted, when the input is null or the shift leaves the FILETIME range: the caller has nothing to check and nothing to ignore — a failure cannot turn into a wrong date.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">filetimeUtc</td><td>the instant, in UTC </td></tr>
-    <tr><td class="paramname">filetimeLocal</td><td>receives the instant in the suspect's local time </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>true if the conversion succeeded </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>the instant in the suspect's local time, or a null FILETIME </dd></dl>
 
 </div>
 </div>
@@ -2298,13 +2226,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Converts a string holding a date to a FILETIME. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Converts a string holding a date ("month/day/year hour:minute:second") to a FILETIME. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the string to convert </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the FILETIME that results from the conversion </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>the instant, or a null FILETIME (not emitted) if the string does not hold a valid date </dd></dl>
 
 </div>
 </div>

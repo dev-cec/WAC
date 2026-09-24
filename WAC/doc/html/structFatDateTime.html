@@ -115,7 +115,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a429b996145f34bd8fd30de4c5d3a6874"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts FAT DOS TIME to SYSTEMTIME.  <br /></td></tr>
 <tr class="separator:a429b996145f34bd8fd30de4c5d3a6874"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0d149a27110e93ff0a8a39851bd4d0f9" id="r_a0d149a27110e93ff0a8a39851bd4d0f9"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFatDateTime.html#a0d149a27110e93ff0a8a39851bd4d0f9">toFileTime</a> ()</td></tr>
-<tr class="memdesc:a0d149a27110e93ff0a8a39851bd4d0f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts FAT DOS TIME to FILETIME.  <br /></td></tr>
 <tr class="separator:a0d149a27110e93ff0a8a39851bd4d0f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
@@ -172,8 +171,7 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Converts FAT DOS TIME to FILETIME. </p>
+<p>Converts FAT DOS TIME to FILETIME. </p><dl class="section return"><dt>Returns</dt><dd>the instant, or a null FILETIME (not emitted) for the zero value and for an impossible date (month 13, 30 February, hour 25...) — the bits are hostile input. </dd></dl>
 
 </div>
 </div>

@@ -56,12 +56,12 @@ AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wst
 				memcpy(&createdUtc, &fileInfo.CreationTime, sizeof(createdUtc));
 				memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
 				memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
-				log(3, L"🔈utcVersLocalSuspect createdUtc");
-				utcToSuspectLocal(createdUtc, &created);
-				log(3, L"🔈utcVersLocalSuspect modifiedUtc");
-				utcToSuspectLocal(modifiedUtc, &modified);
-				log(3, L"🔈utcVersLocalSuspect accessedUtc");
-				utcToSuspectLocal(accessedUtc, &accessed);
+				log(3, L"🔈utcToSuspectLocal createdUtc");
+				created = utcToSuspectLocal(createdUtc);
+				log(3, L"🔈utcToSuspectLocal modifiedUtc");
+				modified = utcToSuspectLocal(modifiedUtc);
+				log(3, L"🔈utcToSuspectLocal accessedUtc");
+				accessed = utcToSuspectLocal(accessedUtc);
 			}
 			else {
 				log(2, L"🔥GetFileInformationByHandleEx hFile", GetLastError());// show cause of failure

@@ -110,8 +110,8 @@ HRESULT Shellbags::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std
 		shellbag.id = id;
 		log(2, L"❇️Shellbag id : " + id);
 		shellbag.lastWriteTimeUtc = lastWriteTimeUtc;
-		log(3, L"🔈utcVersLocalSuspect lastWriteTime");
-		utcToSuspectLocal(lastWriteTimeUtc, &shellbag.lastWriteTime);
+		log(3, L"🔈utcToSuspectLocal lastWriteTime");
+		shellbag.lastWriteTime = utcToSuspectLocal(lastWriteTimeUtc);
 		shellbag.Parent = Parent;
 		shellbag.level = level;
 		shellbag.sid = sid;

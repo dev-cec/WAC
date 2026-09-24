@@ -65,7 +65,7 @@ void now(std::wstring& utc, std::wstring& local, FILETIME* brut = nullptr) {
 	GetLocalTime(&stLocal);
 	local = timeToIso8601(stLocal, false);
 
-	if (brut) SystemTimeToFileTime(&stUtc, brut);
+	if (brut && !SystemTimeToFileTime(&stUtc, brut)) *brut = FILETIME{ 0, 0 };   // null: not emitted
 }
 
 //! Context of the machine and of the operator at collection time.

@@ -719,7 +719,12 @@ Secur32, WTSAPI32`. Getting the dates right took the test: Windows adds half a
 second TO THE DATE, then truncates — a rounding of the seconds of the day,
 whatever the order of the operations, disagreed on the half-second cases. It
 also showed that Windows writes an identifier authority of 2^32 or more in
-hexadecimal without padding. Result: 513,387 comparisons, identical. Two
+hexadecimal without padding. The same program checks the date conversions
+whose result was once ignored: every FAT date against `DosDateTimeToFileTime`
+(an impossible one — month 13, hour 25 — gave whatever the stack held, it now
+gives a null date, not emitted), and the suspect's offset in both directions
+(local to UTC used `LocalFileTimeToFileTime`, hence the offset of the machine
+running WAC). Result: 1,761,979 comparisons, identical. Two
 intended differences: WAC refuses a SID text Windows would truncate (a
 sub-authority of 2^32 or more, a 16th sub-authority), and a NaN date, for which
 Windows returns a meaningless time. Run it on Windows (the test VM).

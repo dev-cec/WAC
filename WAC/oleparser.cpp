@@ -32,8 +32,8 @@ DestFile::DestFile(LPBYTE buffer, size_t limit) {
 	lastModificationTimeUtc = *reinterpret_cast<FILETIME*>(buffer + 100);
 	log(3, L"🔈timeToIso8601 lastModificationTimeUtc");
 	if (timeToIso8601Utc(lastModificationTimeUtc) != L"") {
-		log(3, L"🔈utcVersLocalSuspect lastModificationTimeUtc");
-		utcToSuspectLocal(lastModificationTimeUtc, &lastModificationTime);
+		log(3, L"🔈utcToSuspectLocal lastModificationTimeUtc");
+		lastModificationTime = utcToSuspectLocal(lastModificationTimeUtc);
 	}
 	pinStatus = *reinterpret_cast<int*>(buffer + 108);
 	pathObjectSize = *reinterpret_cast<unsigned short int*>(buffer + 128);

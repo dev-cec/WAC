@@ -219,8 +219,8 @@ HRESULT Services::getData() {
 		log(3, L"🔈ORQueryInfoKey Services\\" + s.serviceName);
 		ORQueryInfoKey(hService, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 		               &s.lastWriteTimeUtc);
-		log(3, L"🔈utcVersLocalSuspect lastWriteTime");
-		utcToSuspectLocal(s.lastWriteTimeUtc, &s.lastWriteTime);
+		log(3, L"🔈utcToSuspectLocal lastWriteTime");
+		s.lastWriteTime = utcToSuspectLocal(s.lastWriteTimeUtc);
 
 		getRegSzValue(hService, nullptr, L"DisplayName", &s.serviceDisplayName);
 		if (s.serviceDisplayName.empty()) s.serviceDisplayName = s.serviceName;

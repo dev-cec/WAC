@@ -4,7 +4,7 @@ var searchData=
   ['sectoroffset_1',['sectorOffset',['../structoleParser.html#ad891bce6ce487bcd4c32ec3dc6a1c82e',1,'oleParser']]],
   ['servicestart_5fto_5fwstring_2',['servicestart_to_wstring',['../trans__id_8h.html#ab8778d28e18d3faba83fa6e187f7e88b',1,'serviceStart_to_wstring(int type):&#160;trans_id.cpp'],['../trans__id_8cpp.html#ab8778d28e18d3faba83fa6e187f7e88b',1,'serviceStart_to_wstring(int type):&#160;trans_id.cpp']]],
   ['servicestate_5fto_5fwstring_3',['servicestate_to_wstring',['../trans__id_8h.html#a70038cbd763c613bb2dfebf3740a0d0f',1,'serviceState_to_wstring(int type):&#160;trans_id.cpp'],['../trans__id_8cpp.html#a70038cbd763c613bb2dfebf3740a0d0f',1,'serviceState_to_wstring(int type):&#160;trans_id.cpp']]],
-  ['servicetype_5fto_5fwstring_4',['servicetype_to_wstring',['../trans__id_8cpp.html#aa4c2df15f897b200a02c0ec8a1742e2e',1,'serviceType_to_wstring(int type):&#160;trans_id.cpp'],['../trans__id_8h.html#aa4c2df15f897b200a02c0ec8a1742e2e',1,'serviceType_to_wstring(int type):&#160;trans_id.cpp']]],
+  ['servicetype_5fto_5fwstring_4',['servicetype_to_wstring',['../trans__id_8h.html#aa4c2df15f897b200a02c0ec8a1742e2e',1,'serviceType_to_wstring(int type):&#160;trans_id.cpp'],['../trans__id_8cpp.html#aa4c2df15f897b200a02c0ec8a1742e2e',1,'serviceType_to_wstring(int type):&#160;trans_id.cpp']]],
   ['session_5',['Session',['../structSession.html#abbd8ff6b7c1de962ec3e1d74826f616d',1,'Session']]],
   ['sha1_6',['sha1',['../classPeAnalyser.html#af60ce3a81c790858dfc6e056b678ebd1',1,'PeAnalyser']]],
   ['sha1bytes_7',['sha1bytes',['../sha_8cpp.html#ad01a2635c4cbba7e51a1e6ae9fc52115',1,'sha1Bytes(const uint8_t *data, size_t length, uint8_t output[20]):&#160;sha.cpp'],['../sha_8h.html#ad01a2635c4cbba7e51a1e6ae9fc52115',1,'sha1Bytes(const uint8_t *data, size_t length, uint8_t output[20]):&#160;sha.cpp']]],
@@ -26,5 +26,6 @@ var searchData=
   ['sort_5findex_23',['sort_index',['../trans__id_8cpp.html#aae7ad1547183f79f20f516a77c6c673c',1,'sort_index(unsigned char i):&#160;trans_id.cpp'],['../trans__id_8h.html#aae7ad1547183f79f20f516a77c6c673c',1,'sort_index(unsigned char i):&#160;trans_id.cpp']]],
   ['sps_24',['sps',['../structSPS.html#a93f849ee7993906190e151794e723802',1,'SPS::SPS(LPBYTE buffer, int _level, size_t limit)'],['../structSPS.html#a2d03e5f0ea4268a8bd752db53c3c07a1',1,'SPS::SPS()']]],
   ['spsvalue_25',['SPSValue',['../structSPSValue.html#aa869a2b0853615534fe6c74ff19c8895',1,'SPSValue']]],
-  ['str_26',['str',['../classJson.html#a566f7f6afb712f82ddfd6c07751645e9',1,'Json']]]
+  ['str_26',['str',['../classJson.html#a566f7f6afb712f82ddfd6c07751645e9',1,'Json']]],
+  ['suspectlocaltoutc_27',['suspectlocaltoutc',['../tools_8cpp.html#a920d2d59405bf35238ca8e289cc8d85f',1,'suspectLocalToUtc(const FILETIME &amp;filetimeLocal):&#160;tools.cpp'],['../tools_8h.html#a920d2d59405bf35238ca8e289cc8d85f',1,'suspectLocalToUtc(const FILETIME &amp;filetimeLocal):&#160;tools.cpp']]]
 ];

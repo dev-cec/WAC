@@ -168,16 +168,16 @@ HRESULT SystemInfo::getData() {
 	/*******************************************************************
 	* 3. Instant of the collection — measured live, without a trace
 	*******************************************************************/
-	log(3, L"🔈GetSystemTime");
-	GetSystemTime(&localDateTimeUtc);
-	TIME_ZONE_INFORMATION timezone = { 0 };
-	log(3, L"🔈GetTimeZoneInformation");
-	if (GetTimeZoneInformation(&timezone) != TIME_ZONE_ID_INVALID) {
-		log(3, L"🔈SystemTimeToTzSpecificLocalTime");
-		SystemTimeToTzSpecificLocalTime(&timezone, &localDateTimeUtc, &localDateTime);
-	}
-	else
-		log(2, L"🔥GetTimeZoneInformation", TIME_ZONE_ID_UNKNOWN);
+	/* The local time is derived with the SUSPECT's offset (utcToSuspectLocal),
+	   the one its label carries, and not with the running machine's
+	   (SystemTimeToTzSpecificLocalTime), as every other date of the collection.
+	   A conversion that fails leaves the SYSTEMTIME null: not emitted. */
+	FILETIME nowUtc = { 0, 0 };
+	log(3, L"🔈GetSystemTimeAsFileTime");
+	GetSystemTimeAsFileTime(&nowUtc);
+	if (!FileTimeToSystemTime(&nowUtc, &localDateTimeUtc)) localDateTimeUtc = SYSTEMTIME{};
+	const FILETIME nowLocal = utcToSuspectLocal(nowUtc);
+	if (!FileTimeToSystemTime(&nowLocal, &localDateTime)) localDateTime = SYSTEMTIME{};
 
 	/* Time of the last boot.
 	 *
@@ -202,8 +202,6 @@ HRESULT SystemInfo::getData() {
 	log(3, L"🔈GetTickCount64");
 	const ULONGLONG uptimeMs = GetTickCount64();
 	uptimeSeconds = uptimeMs / 1000ULL;
-	FILETIME nowUtc = { 0, 0 };
-	SystemTimeToFileTime(&localDateTimeUtc, &nowUtc);
 	const ULONGLONG now100ns = ((ULONGLONG)nowUtc.dwHighDateTime << 32)
 	                                | nowUtc.dwLowDateTime;
 	ULONGLONG boot100ns = 0;
@@ -231,11 +229,12 @@ HRESULT SystemInfo::getData() {
 		boot100ns = now100ns - uptimeMs * 10000ULL;
 	if (boot100ns) {
 		FILETIME bootUtc = { (DWORD)(boot100ns & 0xFFFFFFFFULL), (DWORD)(boot100ns >> 32) };
-		FileTimeToSystemTime(&bootUtc, &lastBootUpTimeUtc);
 		bootFraction100ns = (long)(boot100ns % 10000000ULL);
-		FILETIME bootLocal = { 0, 0 };
-		if (utcToSuspectLocal(bootUtc, &bootLocal))
-			FileTimeToSystemTime(&bootLocal, &lastBootUpTime);
+		/* On failure the SYSTEMTIME stays null and the field is not emitted:
+		   a zero-initialised value, never a stale one. */
+		if (!FileTimeToSystemTime(&bootUtc, &lastBootUpTimeUtc)) lastBootUpTimeUtc = SYSTEMTIME{};
+		const FILETIME bootLocal = utcToSuspectLocal(bootUtc);
+		if (!FileTimeToSystemTime(&bootLocal, &lastBootUpTime)) lastBootUpTime = SYSTEMTIME{};
 		log(2, L"❇️Last boot (UTC) : " + timeToIso8601(lastBootUpTimeUtc, true, bootFraction100ns));
 	}
 	else

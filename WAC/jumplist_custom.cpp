@@ -81,9 +81,9 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 			memcpy(&createdUtc, &fileInfo.CreationTime, sizeof(createdUtc));
 			memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
 			memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
-			utcToSuspectLocal(createdUtc, &created);
-			utcToSuspectLocal(modifiedUtc, &modified);
-			utcToSuspectLocal(accessedUtc, &accessed);
+			created = utcToSuspectLocal(createdUtc);
+			modified = utcToSuspectLocal(modifiedUtc);
+			accessed = utcToSuspectLocal(accessedUtc);
 		}
 		else {
 			log(2, L"🔥CreateFile hFile ",GetLastError());

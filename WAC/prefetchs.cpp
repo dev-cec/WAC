@@ -61,8 +61,8 @@ VolumeInfo::VolumeInfo(LPBYTE data, int index, size_t limit) {
 	// first zero met, anywhere.
 	unsigned int numChar = *reinterpret_cast<unsigned int*>(indVolume + 4);
 	creationTimeUtc = *reinterpret_cast<FILETIME*>(indVolume + 8);
-	log(3, L"🔈utcVersLocalSuspect creationTime");
-	utcToSuspectLocal(creationTimeUtc, &creationTime);
+	log(3, L"🔈utcToSuspectLocal creationTime");
+	creationTime = utcToSuspectLocal(creationTimeUtc);
 	// RAW paths: the escaping is centralised in json.h. The deviceName ->
 	// mountPoint substitutions below therefore operate on the real values, which
 	// makes them usable as they are for I/O too.
@@ -201,12 +201,12 @@ HRESULT Prefetch::read() {
 			memcpy(&createdUtc, &fileInfo.CreationTime, sizeof(createdUtc));
 			memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
 			memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
-			log(3, L"🔈utcVersLocalSuspect created");
-			utcToSuspectLocal(createdUtc, &created);
-			log(3, L"🔈utcVersLocalSuspect modified");
-			utcToSuspectLocal(modifiedUtc, &modified);
-			log(3, L"🔈utcVersLocalSuspect accessed");
-			utcToSuspectLocal(accessedUtc, &accessed);
+			log(3, L"🔈utcToSuspectLocal created");
+			created = utcToSuspectLocal(createdUtc);
+			log(3, L"🔈utcToSuspectLocal modified");
+			modified = utcToSuspectLocal(modifiedUtc);
+			log(3, L"🔈utcToSuspectLocal accessed");
+			accessed = utcToSuspectLocal(accessedUtc);
 		}
 		else {
 			log(2, L"🔥GetFileInformationByHandleEx " + pathOriginal, GetLastError());
@@ -395,8 +395,8 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 		log(3, L"🔈timeToIso8601 last_runsUtc");
 		if (timeToIso8601Utc(tempUtc) != L"") {
 			last_runsUtc.push_back(tempUtc);
-			log(3, L"🔈utcVersLocalSuspect last_runs");
-			utcToSuspectLocal(tempUtc, &temp_locale);
+			log(3, L"🔈utcToSuspectLocal last_runs");
+			temp_locale = utcToSuspectLocal(tempUtc);
 			last_runs.push_back(temp_locale);
 		}
 	}

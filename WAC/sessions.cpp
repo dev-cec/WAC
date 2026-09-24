@@ -36,8 +36,8 @@ Session::Session(LUID* id) {
 		   system's boot time — impossible. */
 		temp = data->LogonTime;
 		memcpy(&startTimeUtc, &temp, sizeof(startTimeUtc));
-		log(3, L"🔈utcVersLocalSuspect startTime");
-		utcToSuspectLocal(startTimeUtc, &startTime);
+		log(3, L"🔈utcToSuspectLocal startTime");
+		startTime = utcToSuspectLocal(startTimeUtc);
 		logonName = std::wstring(data->UserName.Buffer).data();
 		logonDomainName = std::wstring(data->LogonDomain.Buffer).data();
 		logonType = data->LogonType;

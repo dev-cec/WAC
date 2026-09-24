@@ -1012,12 +1012,12 @@ Beef0004::Beef0004(LPBYTE buffer, int _level, bool* is_zip, bool is_file) {
 	   The right way is the reverse: the native value is local, and UTC is
 	   derived from it. */
 	creationDate = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 8)).toFileTime();
-	log(3, L"🔈LocalFileTimeToFileTime creationDate");
-	LocalFileTimeToFileTime(&creationDate, &creationDateUtc);
+	log(3, L"🔈suspectLocalToUtc creationDate");
+	creationDateUtc = suspectLocalToUtc(creationDate);
 
 	accessedDate = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 12)).toFileTime();
-	log(3, L"🔈LocalFileTimeToFileTime accessedDate");
-	LocalFileTimeToFileTime(&accessedDate, &accessedDateUtc);
+	log(3, L"🔈suspectLocalToUtc accessedDate");
+	accessedDateUtc = suspectLocalToUtc(accessedDate);
 	/* IDENTIFIER AND $MFT REFERENCE (versions >= 7), and above all OFFSETS
 	 * COMPUTED FROM THE VERSION.
 	 *
@@ -1504,9 +1504,9 @@ Beef0026::Beef0026(LPBYTE buffer, int _level) {
 		mtimeUtc = *reinterpret_cast<FILETIME*>(buffer + 20);
 		atimeUtc = *reinterpret_cast<FILETIME*>(buffer + 28);
 		log(3, L"🔈utcToSuspectLocal ctime, mtime, atime");
-		utcToSuspectLocal(ctimeUtc, &ctime);
-		utcToSuspectLocal(mtimeUtc, &mtime);
-		utcToSuspectLocal(atimeUtc, &atime);
+		ctime = utcToSuspectLocal(ctimeUtc);
+		mtime = utcToSuspectLocal(mtimeUtc);
+		atime = utcToSuspectLocal(atimeUtc);
 		// 2 unknown bytes
 		// The nested ID list starts at 38 and must fit in the block.
 		const size_t blockSize = declaredSize(buffer);
@@ -2045,15 +2045,15 @@ UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _level
 	createdUtc = *reinterpret_cast<FILETIME*>(buffer + 34);
 	log(3, L"🔈timeToIso8601 modifiedUtc");
 	if (!timeToIso8601Utc(modifiedUtc).empty()) {
-		log(3, L"🔈utcVersLocalSuspect modifiedUtc");
-		utcToSuspectLocal(modifiedUtc, &modified);
+		log(3, L"🔈utcToSuspectLocal modifiedUtc");
+		modified = utcToSuspectLocal(modifiedUtc);
 	}
 	else
 		modified = { 0 };
 	log(3, L"🔈timeToIso8601 createdUtc");
 	if (!timeToIso8601Utc(createdUtc).empty()) {
-		log(3, L"🔈utcVersLocalSuspect created");
-		utcToSuspectLocal(createdUtc, &created);
+		log(3, L"🔈utcToSuspectLocal created");
+		created = utcToSuspectLocal(createdUtc);
 	}
 	else
 		created = { 0 };
@@ -2476,8 +2476,8 @@ NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _level) {
 	else if (fits(declaredSize(buffer), 0x54, 8)) {   // up to the two sizes at 0x54
 		log(3, L"🔈wstring_to_filetime modifiedUtc");
 		modifiedUtc = wstring_to_filetime(readWideZ(buffer, declaredSize(buffer), 0x24));
-		log(3, L"🔈utcVersLocalSuspect modified");
-		utcToSuspectLocal(modifiedUtc, &modified);
+		log(3, L"🔈utcToSuspectLocal modified");
+		modified = utcToSuspectLocal(modifiedUtc);
 		unsigned int descriptionsize = *reinterpret_cast<unsigned int*>(buffer + 0x54);
 		unsigned int commentssize = *reinterpret_cast<unsigned int*>(buffer + 0x58);
 		int pos = 0x5c;
@@ -2521,8 +2521,8 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _level) {
 
 			log(3, L"🔈timeToIso8601 modifiedUtc");
 			if (timeToIso8601Utc(modifiedUtc) != L"") {
-				log(3, L"🔈utcVersLocalSuspect modified");
-				utcToSuspectLocal(modifiedUtc, &modified);
+				log(3, L"🔈utcToSuspectLocal modified");
+				modified = utcToSuspectLocal(modifiedUtc);
 			}
 			else
 				modifiedUtc = { 0 };
@@ -2533,8 +2533,8 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _level) {
 			modifiedUtc = wstring_to_filetime(readWideZ(buffer, declaredSize(buffer), 0x24));
 			log(3, L"🔈timeToIso8601 modifiedUtc");
 			if (timeToIso8601Utc(modifiedUtc) != L"") {
-				log(3, L"🔈utcVersLocalSuspect modified");
-				utcToSuspectLocal(modifiedUtc, &modified);
+				log(3, L"🔈utcToSuspectLocal modified");
+				modified = utcToSuspectLocal(modifiedUtc);
 			}
 			else
 				modifiedUtc = { 0 };
@@ -2544,8 +2544,8 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _level) {
 	else {
 		// FAT date = LOCAL time: UTC is derived from it, not the reverse.
 		modified = FatDateTime(date).toFileTime();
-		log(3, L"🔈LocalFileTimeToFileTime modified");
-		LocalFileTimeToFileTime(&modified, &modifiedUtc);
+		log(3, L"🔈suspectLocalToUtc modified");
+		modifiedUtc = suspectLocalToUtc(modified);
 		log(3, L"🔈decodeText modified");
 		name = decodeText(readNarrowZ(buffer, declaredSize(buffer), 0x1C));
 	}
@@ -2588,8 +2588,8 @@ FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSiz
 	log(3, L"🔈FatDateTime");
 	// FAT date = LOCAL time: UTC is derived from it, not the reverse.
 	fsFileModification = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 8)).toFileTime();
-	log(3, L"🔈LocalFileTimeToFileTime fsFileModification");
-	LocalFileTimeToFileTime(&fsFileModification, &fsFileModificationUtc);
+	log(3, L"🔈suspectLocalToUtc fsFileModification");
+	fsFileModificationUtc = suspectLocalToUtc(fsFileModification);
 	log(3, L"🔈FsFlags");
 	fsFlags = FsFlags(shell_item_type_char);
 	log(3, L"🔈FileAttributes");
@@ -2643,8 +2643,8 @@ UsersFilesFolder::UsersFilesFolder(LPBYTE buffer, int _level) {
 	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + size - 2);
 	// FAT date = LOCAL time: UTC is derived from it, not the reverse.
 	modified = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 0x12)).toFileTime();
-	log(3, L"🔈LocalFileTimeToFileTime modified");
-	LocalFileTimeToFileTime(&modified, &modifiedUtc);
+	log(3, L"🔈suspectLocalToUtc modified");
+	modifiedUtc = suspectLocalToUtc(modified);
 	log(3, L"🔈decodeText primaryName");
 	primaryName = decodeText(readNarrowZ(buffer, size, 0x18));
 	// The block's offset and size come from the item: both must stay inside it.

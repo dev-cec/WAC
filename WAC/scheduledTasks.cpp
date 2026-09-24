@@ -298,7 +298,7 @@ HRESULT ScheduledTasks::getData() {
 		if (h != historical.end() && h->second.found) {
 			t.lastRunTimeUtc = h->second.lastRunUtc;
 			t.lastTaskResult = h->second.lastResult;
-			utcToSuspectLocal(t.lastRunTimeUtc, &t.lastRunTime);
+			t.lastRunTime = utcToSuspectLocal(t.lastRunTimeUtc);
 		}
 		scheduledTasks.push_back(std::move(t));
 	}

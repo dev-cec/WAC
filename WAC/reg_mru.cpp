@@ -129,8 +129,8 @@ HRESULT Mrus::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vec
 		mru.id = id;
 		log(2, L"❇️Mru id" + id);
 		mru.lastWriteTimeUtc = lastWriteTimeUtc;
-		log(3, L"🔈utcVersLocalSuspect lastWriteTime");
-		utcToSuspectLocal(lastWriteTimeUtc, &mru.lastWriteTime);
+		log(3, L"🔈utcToSuspectLocal lastWriteTime");
+		mru.lastWriteTime = utcToSuspectLocal(lastWriteTimeUtc);
 		mru.extension = extension;
 		mru.level = level;
 		mru.sid = sid;

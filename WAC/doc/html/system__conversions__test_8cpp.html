@@ -137,7 +137,10 @@ Variables</h2></td></tr>
 <li>guid_to_wstring / StringFromGUID2, on random GUIDs;</li>
 <li>sidToText / ConvertSidToStringSidW and textToSid / ConvertStringSidToSidW, on random SIDs (0 to 15 sub-authorities, authorities of 2^32 and more) and on malformed texts, which both must refuse;</li>
 <li>oleDateToSystemTime / VariantTimeToSystemTime, on random dates, the ends of the range, times close to midnight, negative dates and NaN;</li>
-<li>to_FriendlyName / PSGetNameFromPropertyKey, on every property of the table: a name WAC gives must be the one Windows gives.</li>
+<li>to_FriendlyName / PSGetNameFromPropertyKey, on every property of the table: a name WAC gives must be the one Windows gives;</li>
+<li><a class="el" href="structFatDateTime.html#a0d149a27110e93ff0a8a39851bd4d0f9">FatDateTime::toFileTime</a> / DosDateTimeToFileTime, on every date with a sample of times and every time with a sample of dates: an impossible date (month 13, hour 25...) must give a null FILETIME, not whatever the stack held;</li>
+<li>wstring_to_filetime / SystemTimeToFileTime, valid and impossible dates;</li>
+<li>utcToSuspectLocal and suspectLocalToUtc: the SUSPECT's offset, not the running machine's, in both directions (LocalFileTimeToFileTime, used before, applied the machine's), and a null result out of range.</li>
 </ul>
 <p>Usage: system_conversions_test Built by <code>build-windows.sh --test</code>; runs on Windows (the test VM). </p>
 </div><h2 class="groupheader">Function Documentation</h2>

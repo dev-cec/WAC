@@ -14,6 +14,7 @@
 #include <regex>
 #include "tools.h"
 #include <cstring>
+#include <climits>
 #include <cmath>
 #include <filesystem>
 
@@ -66,15 +67,16 @@ SYSTEMTIME FatDateTime::toSystemTime() {
 
 FILETIME FatDateTime::toFileTime() {
 
-	FILETIME f;
-	if (i != 0) {
-		log(3, L"🔈toSystemTime s");
-		const SYSTEMTIME s = toSystemTime();
-		log(3, L"🔈SystemTimeToFileTime f");
-		SystemTimeToFileTime(&s, &f);
-	}
-	else
-		f = { 0 };
+	FILETIME f = { 0, 0 };
+	if (i == 0) return f;
+	const SYSTEMTIME s = toSystemTime();
+	/* The fields are masked but not validated: month 0 or 13, day 31 in
+	   April, hour 24 to 31, second 60 or 62 fit in their bits. Windows refuses
+	   such a date; f then stays null, and the field is not emitted. Before,
+	   the refusal was ignored and f, uninitialised, emitted whatever the stack
+	   held. */
+	log(3, L"🔈SystemTimeToFileTime f");
+	if (!SystemTimeToFileTime(&s, &f)) f = { 0, 0 };
 	return f;
 }
 
@@ -394,16 +396,6 @@ std::wstring bool_to_wstring(bool b)
 	else return L"false";
 }
 
-FILETIME timet_to_fileTime(time_t t)
-{
-
-	FILETIME ft = { 0 };
-	LONGLONG time_value = Int32x32To64(t, 10000000) + 116444736000000000;
-	ft.dwLowDateTime = (DWORD)time_value;
-	ft.dwHighDateTime = time_value >> 32;
-	return ft;
-}
-
 FILETIME wstring_to_filetime(std::wstring input) {
 
 	std::istringstream istr(encodeText(input));   // digits and separators: ASCII
@@ -422,38 +414,8 @@ FILETIME wstring_to_filetime(std::wstring input) {
 	istr >> st.wSecond;
 	st.wMilliseconds = 0;
 	log(3, L"🔈SystemTimeToFileTime ft");
-	SystemTimeToFileTime(&st, &ft);
+	if (istr.fail() || !SystemTimeToFileTime(&st, &ft)) return FILETIME{ 0, 0 };
 	return ft;
-}
-
-std::wstring time_to_wstring(const SYSTEMTIME systemtime)
-{
-
-	std::wstring result = std::to_wstring(systemtime.wDay) + L"/" + std::to_wstring(systemtime.wMonth) + L"/" + std::to_wstring(systemtime.wYear)
-		+ L" " + std::to_wstring(systemtime.wHour) + L"h" + std::to_wstring(systemtime.wMinute) + L"m" + std::to_wstring(systemtime.wSecond) + L"s";
-	if (result == L"1/1/1601 0h0m0s")
-		return L"";
-	else
-		return result;
-}
-
-std::wstring time_to_wstring(const FILETIME filetime, bool convertUtc) {
-
-	SYSTEMTIME systemtime;
-	if (convertUtc) {
-		FILETIME utc;
-		log(3, L"🔈LocalFileTimeToFileTime utc");
-		LocalFileTimeToFileTime(&filetime, &utc);
-		log(3, L"🔈FileTimeToSystemTime systemtime");
-		FileTimeToSystemTime(&utc, &systemtime); //conversion filetime to systemtime
-	}
-	else {
-		log(3, L"🔈FileTimeToSystemTime systemtime");
-		FileTimeToSystemTime(&filetime, &systemtime); //conversion filetime to systemtime
-		log(3, L"🔈timeToIso8601 systemtime");
-	}
-	return time_to_wstring(systemtime);
-
 }
 
 ///////////////////////////////////////////////////////
@@ -864,37 +826,49 @@ std::wstring timeToIso8601Local(const FILETIME& filetime) {
 	return timeToIso8601(st, false, fraction100ns(filetime));
 }
 
-bool utcToSuspectLocal(const FILETIME& filetimeUtc, FILETIME* filetimeLocal) {
-	if (!filetimeLocal) return false;
-	*filetimeLocal = FILETIME{ 0, 0 };
-	if (nullDate(filetimeUtc)) return false;
+namespace {
+
+/*! Shifts a FILETIME by the suspect's offset, in the direction asked: the one
+ *  implementation of both directions, so that they cannot drift apart.
+ *  @param filetime the instant
+ *  @param toUtc true for local -> UTC, false for UTC -> local
+ *  @return the shifted instant, or a null FILETIME (input null, or the result
+ *          out of the FILETIME range) */
+FILETIME shiftBySuspectBias(const FILETIME& filetime, bool toUtc) {
+	if (nullDate(filetime)) return FILETIME{ 0, 0 };
 	/* The bias is in minutes to ADD to the local time to obtain UTC (the hive's
-	   convention): the local time is therefore obtained by SUBTRACTING it from
-	   UTC. Same source as localUtcOffsetString(), so that the value and its
-	   label speak of the same time zone. */
+	   convention): local -> UTC adds it, UTC -> local subtracts it. Same source
+	   as localUtcOffsetString(), so that the value and its label speak of the
+	   same time zone. */
 	const long bias = conf.timeZone.valid ? conf.timeZone.activeBiasMinutes
 	                                       : machineBiasMinutes();
-	const ULONGLONG utc100ns = ((ULONGLONG)filetimeUtc.dwHighDateTime << 32)
-	                         | filetimeUtc.dwLowDateTime;
-	const long long offset100ns = (long long)bias * 60LL * 10000000LL;
-	if ((long long)utc100ns < offset100ns) return false;   // before the epoch: nonsensical
-	const ULONGLONG local100ns = (ULONGLONG)((long long)utc100ns - offset100ns);
-	filetimeLocal->dwLowDateTime  = (DWORD)(local100ns & 0xFFFFFFFFULL);
-	filetimeLocal->dwHighDateTime = (DWORD)(local100ns >> 32);
-	return true;
+	const long long offset100ns = (toUtc ? 1LL : -1LL) * (long long)bias * 60LL * 10000000LL;
+	const long long value = (long long)(((ULONGLONG)filetime.dwHighDateTime << 32) | filetime.dwLowDateTime);
+	// A FILETIME is signed-positive for Windows: FileTimeToSystemTime refuses bit 63.
+	if (value < 0) return FILETIME{ 0, 0 };
+	if (offset100ns < 0 ? value < -offset100ns : value > LLONG_MAX - offset100ns)
+		return FILETIME{ 0, 0 };
+	const ULONGLONG shifted = (ULONGLONG)(value + offset100ns);
+	if (shifted == 0) return FILETIME{ 0, 0 };
+	return FILETIME{ (DWORD)(shifted & 0xFFFFFFFFULL), (DWORD)(shifted >> 32) };
+}
+
+} // namespace
+
+FILETIME utcToSuspectLocal(const FILETIME& filetimeUtc) {
+	return shiftBySuspectBias(filetimeUtc, false);
+}
+
+FILETIME suspectLocalToUtc(const FILETIME& filetimeLocal) {
+	return shiftBySuspectBias(filetimeLocal, true);
 }
 
 std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc) {
-	FILETIME local = { 0, 0 };
-	if (!utcToSuspectLocal(filetimeUtc, &local)) return L"";
-	return timeToIso8601Local(local);
+	return timeToIso8601Local(utcToSuspectLocal(filetimeUtc));
 }
 
 std::wstring localTimeToIso8601Utc(const FILETIME& filetimeLocal) {
-	if (nullDate(filetimeLocal)) return L"";
-	FILETIME utc = { 0, 0 };
-	if (!LocalFileTimeToFileTime(&filetimeLocal, &utc)) return L"";
-	return timeToIso8601Utc(utc);
+	return timeToIso8601Utc(suspectLocalToUtc(filetimeLocal));
 }
 
 std::wstring decodeText(const std::string& bytes, UINT codePage)

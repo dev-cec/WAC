@@ -72,16 +72,16 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 		   conversion is removed: formatting a date to find out whether it is null
 		   is useless, and converting a null date has no effect. */
 		targetCreatedUtc = *reinterpret_cast<FILETIME*>(buffer + 28);
-		log(3, L"🔈utcVersLocalSuspect targetCreated");
-		utcToSuspectLocal(targetCreatedUtc, &targetCreated);
+		log(3, L"🔈utcToSuspectLocal targetCreated");
+		targetCreated = utcToSuspectLocal(targetCreatedUtc);
 
 		targetAccessedUtc = *reinterpret_cast<FILETIME*>(buffer + 36);
-		log(3, L"🔈utcVersLocalSuspect targetAccessed");
-		utcToSuspectLocal(targetAccessedUtc, &targetAccessed);
+		log(3, L"🔈utcToSuspectLocal targetAccessed");
+		targetAccessed = utcToSuspectLocal(targetAccessedUtc);
 
 		targetModifiedUtc = *reinterpret_cast<FILETIME*>(buffer + 44);
-		log(3, L"🔈utcVersLocalSuspect targetModified");
-		utcToSuspectLocal(targetModifiedUtc, &targetModified);
+		log(3, L"🔈utcToSuspectLocal targetModified");
+		targetModified = utcToSuspectLocal(targetModifiedUtc);
 		iconIndex = u32(56);
 		log(3, L"🔈showCommandOption commandOption");
 		commandOption = showCommandOption(u32(60)); //
@@ -321,12 +321,12 @@ RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 		memcpy(&sourceCreatedUtc, &fileInfo.CreationTime, sizeof(sourceCreatedUtc));
 		memcpy(&sourceModifiedUtc, &fileInfo.LastWriteTime, sizeof(sourceModifiedUtc));
 		memcpy(&sourceAccessedUtc, &fileInfo.LastAccessTime, sizeof(sourceAccessedUtc));
-		log(3, L"🔈utcVersLocalSuspect sourceCreated");
-		utcToSuspectLocal(sourceCreatedUtc, &sourceCreated);
-		log(3, L"🔈utcVersLocalSuspect sourceModified");
-		utcToSuspectLocal(sourceModifiedUtc, &sourceModified);
-		log(3, L"🔈utcVersLocalSuspect sourceAccessed");
-		utcToSuspectLocal(sourceAccessedUtc, &sourceAccessed);
+		log(3, L"🔈utcToSuspectLocal sourceCreated");
+		sourceCreated = utcToSuspectLocal(sourceCreatedUtc);
+		log(3, L"🔈utcToSuspectLocal sourceModified");
+		sourceModified = utcToSuspectLocal(sourceModifiedUtc);
+		log(3, L"🔈utcToSuspectLocal sourceAccessed");
+		sourceAccessed = utcToSuspectLocal(sourceAccessedUtc);
 	}
 	CloseHandle(hFile);
 }

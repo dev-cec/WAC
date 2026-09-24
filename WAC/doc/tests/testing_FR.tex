@@ -358,7 +358,12 @@ sont faites par son propre code ; ce harnais les confronte aux fonctions
 Windows remplacées : GUID (\texttt{StringFromGUID2}), SID dans les deux sens
 (\texttt{ConvertSidToStringSidW}, \texttt{ConvertStringSidToSidW}), dates OLE
 (\texttt{VariantTimeToSystemTime}) et noms de propriétés
-(\texttt{PSGetNameFromPropertyKey}). La table des noms de propriétés est
+(\texttt{PSGetNameFromPropertyKey}), dates FAT
+(\texttt{DosDateTimeToFileTime}, sur toutes les dates). Il vérifie aussi le
+décalage horaire du suspect dans les deux sens : une date locale convertie en
+UTC doit l'être avec le fuseau de la machine examinée, et non avec celui de la
+machine qui exécute \wac{}. Une date impossible (mois 13, heure 25) donne une
+date nulle, donc non émise. La table des noms de propriétés est
 générée depuis le schéma d'un Windows de référence par
 \fichier{vmtest/property-schema.cpp}.
 
@@ -366,7 +371,7 @@ générée depuis le schéma d'un Windows de référence par
 system_conversions_test.exe
 \end{lstlisting}
 
-À lancer sous Windows (la VM). Référence : 513~387 comparaisons, aucun écart.
+À lancer sous Windows (la VM). Référence : 1~761~979 comparaisons, aucun écart.
 Deux écarts voulus : \wac{} refuse un SID écrit que Windows tronquerait
 (sous-autorité de $2^{32}$ ou plus, seizième sous-autorité), et une date NaN,
 pour laquelle Windows rend une heure dénuée de sens.

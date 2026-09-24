@@ -18,7 +18,15 @@
  *  - oleDateToSystemTime / VariantTimeToSystemTime, on random dates, the ends
  *    of the range, times close to midnight, negative dates and NaN;
  *  - to_FriendlyName / PSGetNameFromPropertyKey, on every property of the
- *    table: a name WAC gives must be the one Windows gives.
+ *    table: a name WAC gives must be the one Windows gives;
+ *  - FatDateTime::toFileTime / DosDateTimeToFileTime, on every date with a
+ *    sample of times and every time with a sample of dates: an impossible
+ *    date (month 13, hour 25...) must give a null FILETIME, not whatever the
+ *    stack held;
+ *  - wstring_to_filetime / SystemTimeToFileTime, valid and impossible dates;
+ *  - utcToSuspectLocal and suspectLocalToUtc: the SUSPECT's offset, not the
+ *    running machine's, in both directions (LocalFileTimeToFileTime, used
+ *    before, applied the machine's), and a null result out of range.
  *
  *  Usage: system_conversions_test
  *  Built by `build-windows.sh --test`; runs on Windows (the test VM).
@@ -161,6 +169,82 @@ void properties() {
 	list->Release();
 }
 
+//! A FILETIME as one 64-bit number.
+ULONGLONG value(const FILETIME& ft) {
+	return ((ULONGLONG)ft.dwHighDateTime << 32) | ft.dwLowDateTime;
+}
+
+//! A FILETIME from one 64-bit number.
+FILETIME filetime(ULONGLONG v) {
+	return FILETIME{ (DWORD)(v & 0xFFFFFFFFULL), (DWORD)(v >> 32) };
+}
+
+//! Compares one FAT date and time with DosDateTimeToFileTime.
+void fatDate(WORD date, WORD time) {
+	FILETIME windows = { 0, 0 };
+	const bool accepted = DosDateTimeToFileTime(date, time, &windows) != 0;
+	const FILETIME mine = FatDateTime((unsigned)date | ((unsigned)time << 16)).toFileTime();
+	wchar_t text[120];
+	swprintf(text, 120, L"FAT date %04X time %04X: Windows %d %llu, WAC %llu",
+	         date, time, accepted, value(windows), value(mine));
+	check(accepted ? value(mine) == value(windows) : value(mine) == 0, text);
+}
+
+void fatDates(std::mt19937_64& rng) {
+	for (unsigned date = 0; date < 0x10000; ++date)
+		for (int k = 0; k < 8; ++k) fatDate((WORD)date, (WORD)rng());
+	for (unsigned time = 0; time < 0x10000; ++time)
+		for (int k = 0; k < 8; ++k) fatDate((WORD)rng(), (WORD)time);
+}
+
+void textDates() {
+	const struct { const wchar_t* text; WORD year, month, day, hour, minute, second; } valid[] = {
+		{ L"9/24/2026 7:06:32", 2026, 9, 24, 7, 6, 32 },
+		{ L"2/29/2024 23:59:59", 2024, 2, 29, 23, 59, 59 },
+		{ L"1/1/1601 0:00:01", 1601, 1, 1, 0, 0, 1 },
+	};
+	for (const auto& v : valid) {
+		SYSTEMTIME st = {};
+		st.wYear = v.year; st.wMonth = v.month; st.wDay = v.day;
+		st.wHour = v.hour; st.wMinute = v.minute; st.wSecond = v.second;
+		FILETIME windows = { 0, 0 };
+		SystemTimeToFileTime(&st, &windows);
+		check(value(wstring_to_filetime(v.text)) == value(windows), L"text date \"" + std::wstring(v.text) + L"\"");
+	}
+	for (const wchar_t* impossible : { L"13/1/2026 0:00:00", L"2/30/2026 0:00:00", L"1/1/2026 25:00:00",
+	                                   L"1/1/2026 0:60:00", L"", L"garbage", L"1/1/1600 0:00:00" })
+		check(value(wstring_to_filetime(impossible)) == 0, L"text date \"" + std::wstring(impossible) + L"\" should give a null date");
+}
+
+void suspectOffset(std::mt19937_64& rng) {
+	/* A suspect at UTC-05:00 while the test runs at another offset (the VM is
+	   at UTC+01:00 or +02:00): a conversion that used the running machine's
+	   time zone gives another hour. */
+	conf.timeZone.valid = true;
+	conf.timeZone.activeBiasMinutes = 300;
+	const ULONGLONG hour = 36000000000ULL;
+	for (int i = 0; i < 100000; ++i) {
+		const ULONGLONG utc = 5 * hour + rng() % (0x7FFFFFFFFFFFFFFFULL - 10 * hour);
+		const FILETIME local = utcToSuspectLocal(filetime(utc));
+		check(value(local) == utc - 5 * hour, L"utcToSuspectLocal: not UTC-05:00");
+		check(value(suspectLocalToUtc(local)) == utc, L"suspectLocalToUtc: not the reverse of utcToSuspectLocal");
+	}
+	// The formatted UTC version of a local date (Amcache, BAM, UserAssist...).
+	SYSTEMTIME noon = {};
+	noon.wYear = 2026; noon.wMonth = 1; noon.wDay = 15; noon.wHour = 12;
+	FILETIME localNoon = { 0, 0 };
+	SystemTimeToFileTime(&noon, &localNoon);
+	check(localTimeToIso8601Utc(localNoon) == L"2026-01-15T17:00:00.0000000Z",
+	      L"localTimeToIso8601Utc(12:00 at UTC-05:00) = " + localTimeToIso8601Utc(localNoon));
+	// Null in, out of range: a null date, never a shifted one.
+	check(value(utcToSuspectLocal(filetime(0))) == 0, L"utcToSuspectLocal(null) should be null");
+	check(value(suspectLocalToUtc(filetime(0))) == 0, L"suspectLocalToUtc(null) should be null");
+	check(value(utcToSuspectLocal(filetime(hour))) == 0, L"utcToSuspectLocal before 1601 should be null");
+	check(value(suspectLocalToUtc(filetime(0x7FFFFFFFFFFFFFFFULL))) == 0, L"suspectLocalToUtc beyond the range should be null");
+	check(value(utcToSuspectLocal(filetime(0x8000000000000000ULL + hour * 10))) == 0, L"utcToSuspectLocal of a negative FILETIME should be null");
+	conf.timeZone = TimeZoneInfo{};
+}
+
 } // namespace
 
 /*! Runs every comparison.
@@ -172,6 +256,9 @@ int wmain() {
 	sids(rng);
 	dates(rng);
 	properties();
+	fatDates(rng);
+	textDates();
+	suspectOffset(rng);
 	CoUninitialize();
 	std::wprintf(L"%ls: %llu comparison(s), %llu difference(s)\n",
 	             g_failures ? L"FAILED" : L"all identical", g_checks, g_failures);

@@ -114,8 +114,8 @@ HRESULT MruApps::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::
 		mruApp.id = id;
 		log(2, L"❇️MruApp id" + id);
 		mruApp.lastWriteTimeUtc = lastWriteTimeUtc;
-		log(3, L"🔈utcVersLocalSuspect lastWriteTime");
-		utcToSuspectLocal(lastWriteTimeUtc, &mruApp.lastWriteTime);
+		log(3, L"🔈utcToSuspectLocal lastWriteTime");
+		mruApp.lastWriteTime = utcToSuspectLocal(lastWriteTimeUtc);
 		mruApp.level = level;
 		mruApp.sid = sid;
 		log(3, L"🔈getNameFromSid sidName");
