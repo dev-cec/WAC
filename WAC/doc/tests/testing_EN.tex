@@ -214,7 +214,8 @@ script confronts independent sources:
 Prefetch hash / suffix of its file name & 65 wrong hashes out of 270 (hexadecimal without padding) \\
 Prefetch executable name / start of the file name & a name read 8 bytes too early (``\textbackslash x11'' everywhere) \\
 Prefetch \texttt{\textbackslash VOLUME\{guid\}} paths resolved & 20,066 paths out of 20,066 unresolved \\
-\texttt{X} / \texttt{XUtc} pairs & double time-zone shift \\
+\texttt{X} / \texttt{XUtc} pairs, lists included & double time-zone shift; Prefetch \texttt{RunsUtc} 2~h off \\
+offset of every local date / tz database & the collection day's offset applied to every date; daylight saving dates misread \\
 no session earlier than the boot & date shifts, a boot time 3.5~s late \\
 ShimCache date / NTFS date in the manifest & a UTC date treated as local (-2~h) \\
 DestList entries / jump list shortcuts & the first 15 entries of every list lost \\
@@ -347,7 +348,14 @@ they replaced: GUIDs (\texttt{StringFromGUID2}), SIDs both ways
 (\texttt{ConvertSidToStringSidW}, \texttt{ConvertStringSidToSidW}), OLE dates
 (\texttt{VariantTimeToSystemTime}) and property names
 (\texttt{PSGetNameFromPropertyKey}), FAT dates (\texttt{DosDateTimeToFileTime},
-on every date). It also checks the suspect's offset in both directions: a local
+on every date), and daylight saving time: WAC's offset in both directions
+(\texttt{SystemTimeToTzSpecificLocalTimeEx}, \texttt{TzSpecificLocalTimeToSystemTimeEx})
+on \emph{every} time zone of Windows, with its rules year by year, at the
+transitions (hour skipped, hour repeated, change of rule on 1 January) from
+1980 to 2035; the reading of \fichier{SYSTEM\textbackslash...\textbackslash
+TimeZoneInformation}, whose daylight saving dates are \texttt{TIME\_FIELDS},
+not \texttt{SYSTEMTIME}s; rules forged at random. It also checks the
+suspect's offset in both directions: a local
 date converted to UTC must be so with the time zone of the examined machine,
 not that of the machine running \wac{}. An impossible date (month 13, hour 25)
 gives a null date, hence not emitted. The table of property names is generated
@@ -357,7 +365,7 @@ from the schema of a reference Windows by \fichier{vmtest/property-schema.cpp}.
 system_conversions_test.exe
 \end{lstlisting}
 
-To be run on Windows (the VM). Reference: 1,761,979 comparisons, no difference.
+To be run on Windows (the VM). Reference: 9,661,284 comparisons, no difference.
 Two intended differences: \wac{} refuses a SID text Windows would truncate (a
 sub-authority of $2^{32}$ or more, a sixteenth sub-authority), and a NaN date,
 for which Windows returns a meaningless time.

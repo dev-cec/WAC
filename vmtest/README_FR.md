@@ -36,7 +36,8 @@ révélé des valeurs fausses dans du JSON valide :
 | Contrôle | Ce qu'il a trouvé |
 |---|---|
 | `Hash` d'un Prefetch vs suffixe de son nom de fichier | 65 hash faux sur 270 (formatage hexadécimal sans remplissage) |
-| couples `X` / `XUtc` portant la même heure murale | double décalage horaire (`sessions`, `.lnk`, `InstallDate`) |
+| couples `X` / `XUtc` (et listes, `Runs` / `RunsUtc`) désignant le même instant | double décalage horaire (`sessions`, `.lnk`, `InstallDate`) ; `RunsUtc` des Prefetch étiquetés `+02:00` (1 273 heures d'exécution fausses de 2 h) |
+| décalage de chaque date locale / base tz (zoneinfo) | toutes les dates étiquetées avec le décalage du jour de collecte (106 dates d'hiver à `+02:00`) ; dates de changement d'heure de la ruche SYSTEM lues dans le mauvais format |
 | aucune session antérieure au démarrage du système | le premier de ces décalages — puis une heure de démarrage en retard de 3,5 s, estimée par `GetTickCount64` |
 | heure de démarrage vs événement Kernel-General 12 | deux sources indépendantes de l'instant du démarrage : 0,00 s d'écart depuis que la valeur vient du noyau |
 | états de service impossibles, taux de `*_UNKNOWN`, présence de pilotes | convertisseurs comparant des filtres d'énumération à des états |

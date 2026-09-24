@@ -91,8 +91,7 @@ struct Filename {
 
 /*! One volume the executable reached, as described by the Prefetch file. */
 struct VolumeInfo { 
-	FILETIME creationTime = { 0 };    //!< creation of the volume, suspect's local time
-	FILETIME creationTimeUtc = { 0 }; //!< the same instant in UTC
+	FILETIME creationTimeUtc = { 0 }; //!< creation of the volume, UTC (the local time is derived at output)
 	std::wstring serialNumber = L""; //!< serial number of the volume
 	std::wstring mountPoint = L"";   //!< drive letter it was mounted on
 	std::wstring deviceName = L"";   //!< device name, in NT form
@@ -142,14 +141,10 @@ public:
 	int version = 0;   //!< format version, which follows the Windows version
 	int size = 0;      //!< size the .pf file declares
 	// FILE INFORMATION
-	FILETIME created = { 0 };     //!< creation of the .pf FILE, suspect's local time
-	FILETIME createdUtc = { 0 };  //!< the same instant in UTC
-	FILETIME modified = { 0 };    //!< last modification of the .pf file, local time
-	FILETIME modifiedUtc = { 0 };	//!< the same instant in UTC
-	FILETIME accessed = { 0 };    //!< last access to the .pf file, local time
-	FILETIME accessedUtc = { 0 };	//!< the same instant in UTC
-	std::vector<FILETIME> last_runs;    //!< the last eight runs, suspect's local time
-	std::vector<FILETIME> last_runsUtc;	//!< the same instants in UTC
+	FILETIME createdUtc = { 0 };  //!< creation of the .pf FILE, UTC
+	FILETIME modifiedUtc = { 0 };	//!< last modification of the .pf file, UTC
+	FILETIME accessedUtc = { 0 };	//!< last access to the .pf file, UTC
+	std::vector<FILETIME> last_runsUtc;	//!< the last eight runs, in UTC (the local times are derived at output)
 	int run_count = 0; //!< number of runs counted since the file was created
 	std::wstring hash_string = L"";//!< hash in the file's name, computed over the
 	                               //!< executable's path: it distinguishes two

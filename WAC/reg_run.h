@@ -37,8 +37,7 @@ public:
 	std::wstring Key = L"";     //!< the key it comes from: `Run` or `RunOnce`
 	std::wstring Name = L"";    //!< name of the value, which the entry chooses freely
 	std::wstring Value = L"";   //!< the command line started
-	FILETIME lastWriteTime = { 0 };    //!< last write to the KEY, in the suspect's local time
-	FILETIME lastWriteTimeUtc = { 0 }; //!< the same instant in UTC
+	FILETIME lastWriteTimeUtc = { 0 }; //!< last write to the KEY, UTC (the local time is derived at output)
 
 	/*! Converts the entry to JSON.
 	 *  @return its JSON object. */

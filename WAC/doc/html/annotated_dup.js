@@ -125,6 +125,8 @@ var annotated_dup =
     [ "SystemInfo", "structSystemInfo.html", "structSystemInfo" ],
     [ "TableMessages", "classTableMessages.html", "classTableMessages" ],
     [ "TimeZoneInfo", "structTimeZoneInfo.html", "structTimeZoneInfo" ],
+    [ "TimeZoneRule", "structTimeZoneRule.html", "structTimeZoneRule" ],
+    [ "TimeZoneRules", "structTimeZoneRules.html", "structTimeZoneRules" ],
     [ "Trigger", "structTrigger.html", "structTrigger" ],
     [ "TypedShellItem", "structTypedShellItem.html", "structTypedShellItem" ],
     [ "UnknownShellItem", "structUnknownShellItem.html", "structUnknownShellItem" ],

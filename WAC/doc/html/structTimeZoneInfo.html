@@ -116,8 +116,17 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a4f41832e74d50853c6493d67ac026109" id="r_a4f41832e74d50853c6493d67ac026109"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTimeZoneInfo.html#a4f41832e74d50853c6493d67ac026109">daylightName</a></td></tr>
 <tr class="memdesc:a4f41832e74d50853c6493d67ac026109"><td class="mdescLeft">&#160;</td><td class="mdescRight">name in daylight saving time  <br /></td></tr>
 <tr class="separator:a4f41832e74d50853c6493d67ac026109"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8ab26ddcdec8b7be84e534e9b6e2fd72" id="r_a8ab26ddcdec8b7be84e534e9b6e2fd72"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structTimeZoneRules.html">TimeZoneRules</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTimeZoneInfo.html#a8ab26ddcdec8b7be84e534e9b6e2fd72">rules</a></td></tr>
+<tr class="memdesc:a8ab26ddcdec8b7be84e534e9b6e2fd72"><td class="mdescLeft">&#160;</td><td class="mdescRight">daylight saving rules, year by year: the offset of EACH date  <br /></td></tr>
+<tr class="separator:a8ab26ddcdec8b7be84e534e9b6e2fd72"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9a9c4cd39d5cb5ea511c9ce5273d2b06" id="r_a9a9c4cd39d5cb5ea511c9ce5273d2b06"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTimeZoneInfo.html#a9a9c4cd39d5cb5ea511c9ce5273d2b06">firstRuleYear</a> = 0</td></tr>
+<tr class="memdesc:a9a9c4cd39d5cb5ea511c9ce5273d2b06"><td class="mdescLeft">&#160;</td><td class="mdescRight">first year of the rules per year ("Dynamic DST"), 0 if none  <br /></td></tr>
+<tr class="separator:a9a9c4cd39d5cb5ea511c9ce5273d2b06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a10d1eae997224b011962a03eba93351e" id="r_a10d1eae997224b011962a03eba93351e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTimeZoneInfo.html#a10d1eae997224b011962a03eba93351e">lastRuleYear</a> = 0</td></tr>
+<tr class="memdesc:a10d1eae997224b011962a03eba93351e"><td class="mdescLeft">&#160;</td><td class="mdescRight">last year of the rules per year, 0 if none  <br /></td></tr>
+<tr class="separator:a10d1eae997224b011962a03eba93351e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae338973d7dbabcb52a81264280cb8aeb" id="r_ae338973d7dbabcb52a81264280cb8aeb"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTimeZoneInfo.html#ae338973d7dbabcb52a81264280cb8aeb">activeBiasMinutes</a> = 0</td></tr>
-<tr class="memdesc:ae338973d7dbabcb52a81264280cb8aeb"><td class="mdescLeft">&#160;</td><td class="mdescRight">minutes to ADD to the local time to obtain UTC  <br /></td></tr>
+<tr class="memdesc:ae338973d7dbabcb52a81264280cb8aeb"><td class="mdescLeft">&#160;</td><td class="mdescRight">offset at collection time: minutes to ADD to the local time to obtain UTC  <br /></td></tr>
 <tr class="separator:ae338973d7dbabcb52a81264280cb8aeb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f44986712feebee3f46cfe288a6292b" id="r_a0f44986712feebee3f46cfe288a6292b"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTimeZoneInfo.html#a0f44986712feebee3f46cfe288a6292b">standardBiasMinutes</a> = 0</td></tr>
 <tr class="memdesc:a0f44986712feebee3f46cfe288a6292b"><td class="mdescLeft">&#160;</td><td class="mdescRight">offset outside daylight saving time (the hive's <code>Bias</code> value)  <br /></td></tr>
@@ -149,7 +158,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>minutes to ADD to the local time to obtain UTC </p>
+<p>offset at collection time: minutes to ADD to the local time to obtain UTC </p>
 
 </div>
 </div>
@@ -185,6 +194,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a9a9c4cd39d5cb5ea511c9ce5273d2b06" name="a9a9c4cd39d5cb5ea511c9ce5273d2b06"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9a9c4cd39d5cb5ea511c9ce5273d2b06">&#9670;&#160;</a></span>firstRuleYear</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int TimeZoneInfo::firstRuleYear = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>first year of the rules per year ("Dynamic DST"), 0 if none </p>
+
+</div>
+</div>
 <a id="a0208fee9ebb72f6c6ea900a0e3ef1dac" name="a0208fee9ebb72f6c6ea900a0e3ef1dac"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0208fee9ebb72f6c6ea900a0e3ef1dac">&#9670;&#160;</a></span>fromHive</h2>
 
@@ -214,6 +239,38 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>TimeZoneKeyName, ex. "Romance Standard Time". </p>
+
+</div>
+</div>
+<a id="a10d1eae997224b011962a03eba93351e" name="a10d1eae997224b011962a03eba93351e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a10d1eae997224b011962a03eba93351e">&#9670;&#160;</a></span>lastRuleYear</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int TimeZoneInfo::lastRuleYear = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>last year of the rules per year, 0 if none </p>
+
+</div>
+</div>
+<a id="a8ab26ddcdec8b7be84e534e9b6e2fd72" name="a8ab26ddcdec8b7be84e534e9b6e2fd72"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8ab26ddcdec8b7be84e534e9b6e2fd72">&#9670;&#160;</a></span>rules</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structTimeZoneRules.html">TimeZoneRules</a> TimeZoneInfo::rules</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>daylight saving rules, year by year: the offset of EACH date </p>
 
 </div>
 </div>

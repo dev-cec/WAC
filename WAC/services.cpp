@@ -143,7 +143,7 @@ Json ServiceStruct::toJson() const {
 	/* Instant of the creation or the last modification of the service: the piece
 	   of data the service manager does not provide, and often the most
 	   telling. */
-	o.add(L"LastWriteTime",    Json::str(timeToIso8601Local(lastWriteTime)));
+	o.add(L"LastWriteTime",    Json::str(utcTimeToIso8601Local(lastWriteTimeUtc)));
 	o.add(L"LastWriteTimeUtc", Json::str(timeToIso8601Utc(lastWriteTimeUtc)));
 
 	/* Volatile state. The flag goes along with the value: without it, "stopped"
@@ -219,8 +219,6 @@ HRESULT Services::getData() {
 		log(3, L"🔈ORQueryInfoKey Services\\" + s.serviceName);
 		ORQueryInfoKey(hService, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 		               &s.lastWriteTimeUtc);
-		log(3, L"🔈utcToSuspectLocal lastWriteTime");
-		s.lastWriteTime = utcToSuspectLocal(s.lastWriteTimeUtc);
 
 		getRegSzValue(hService, nullptr, L"DisplayName", &s.serviceDisplayName);
 		if (s.serviceDisplayName.empty()) s.serviceDisplayName = s.serviceName;

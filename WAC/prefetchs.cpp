@@ -61,8 +61,6 @@ VolumeInfo::VolumeInfo(LPBYTE data, int index, size_t limit) {
 	// first zero met, anywhere.
 	unsigned int numChar = *reinterpret_cast<unsigned int*>(indVolume + 4);
 	creationTimeUtc = *reinterpret_cast<FILETIME*>(indVolume + 8);
-	log(3, L"🔈utcToSuspectLocal creationTime");
-	creationTime = utcToSuspectLocal(creationTimeUtc);
 	// RAW paths: the escaping is centralised in json.h. The deviceName ->
 	// mountPoint substitutions below therefore operate on the real values, which
 	// makes them usable as they are for I/O too.
@@ -132,7 +130,7 @@ Json VolumeInfo::toJson() {
 	o.add(L"DeviceName",      Json::str(deviceName));
 	o.add(L"SerialNumber",    Json::str(serialNumber));
 	o.add(L"MountPoint",      Json::str(mountPoint));
-	o.add(L"CreationTime",    Json::str(timeToIso8601Local(creationTime)));
+	o.add(L"CreationTime",    Json::str(utcTimeToIso8601Local(creationTimeUtc)));
 	o.add(L"CreationTimeUtc", Json::str(timeToIso8601Utc(creationTimeUtc)));
 	Json dirs = Json::arr();
 	for (DirStrings& d : dirStrings) dirs.push(d.toJson());
@@ -201,12 +199,6 @@ HRESULT Prefetch::read() {
 			memcpy(&createdUtc, &fileInfo.CreationTime, sizeof(createdUtc));
 			memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
 			memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
-			log(3, L"🔈utcToSuspectLocal created");
-			created = utcToSuspectLocal(createdUtc);
-			log(3, L"🔈utcToSuspectLocal modified");
-			modified = utcToSuspectLocal(modifiedUtc);
-			log(3, L"🔈utcToSuspectLocal accessed");
-			accessed = utcToSuspectLocal(accessedUtc);
 		}
 		else {
 			log(2, L"🔥GetFileInformationByHandleEx " + pathOriginal, GetLastError());
@@ -390,14 +382,10 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 	//run times
 	for (int i = 0; i < 8; i++) {
 		FILETIME tempUtc = *reinterpret_cast<FILETIME*>(data + 84 + 44 + i * 8);
-		FILETIME temp_locale;
 		// null dates are not kept, there are not always 8 dates
 		log(3, L"🔈timeToIso8601 last_runsUtc");
 		if (timeToIso8601Utc(tempUtc) != L"") {
 			last_runsUtc.push_back(tempUtc);
-			log(3, L"🔈utcToSuspectLocal last_runs");
-			temp_locale = utcToSuspectLocal(tempUtc);
-			last_runs.push_back(temp_locale);
 		}
 	}
 	if (*reinterpret_cast<int*>(data + 84 + 120) == 0) // old_format
@@ -531,16 +519,21 @@ Json Prefetch::toJson() {
 	o.add(L"Filename",    Json::str(filename));
 	o.add(L"FullPath",    Json::str(fullPath));
 	addFingerprints(o, fingerprint);
-	o.add(L"Created",     Json::str(timeToIso8601Local(created)));
+	o.add(L"Created",     Json::str(utcTimeToIso8601Local(createdUtc)));
 	o.add(L"CreatedUtc",  Json::str(timeToIso8601Utc(createdUtc)));
-	o.add(L"Modified",    Json::str(timeToIso8601Local(modified)));
+	o.add(L"Modified",    Json::str(utcTimeToIso8601Local(modifiedUtc)));
 	o.add(L"ModifiedUtc", Json::str(timeToIso8601Utc(modifiedUtc)));
-	o.add(L"Accessed",    Json::str(timeToIso8601Local(accessed)));
+	o.add(L"Accessed",    Json::str(utcTimeToIso8601Local(accessedUtc)));
 	o.add(L"AccessedUtc", Json::str(timeToIso8601Utc(accessedUtc)));
 	o.add(L"RunCount",    Json::num((unsigned long long)run_count));   // count
 	Json runs = Json::arr(), runsUtc = Json::arr();
-	for (FILETIME& ft : last_runs)    runs.push(Json::str(timeToIso8601Local(ft)));
-	for (FILETIME& ft : last_runsUtc) runsUtc.push(Json::str(timeToIso8601Local(ft)));
+	/* RunsUtc used to be formatted as LOCAL time: the UTC wall-clock time
+	   labelled "+02:00", an instant two hours off. Both lists now come from
+	   the UTC values, each with its own suffix. */
+	for (const FILETIME& ft : last_runsUtc) {
+		runs.push(Json::str(utcTimeToIso8601Local(ft)));
+		runsUtc.push(Json::str(timeToIso8601Utc(ft)));
+	}
 	o.add(L"Runs",    std::move(runs));
 	o.add(L"RunsUtc", std::move(runsUtc));
 	Json vols = Json::arr();

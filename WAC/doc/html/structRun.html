@@ -131,11 +131,8 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:adb6a6b9a227dce24fcafb241b8208b93" id="r_adb6a6b9a227dce24fcafb241b8208b93"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRun.html#adb6a6b9a227dce24fcafb241b8208b93">Value</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:adb6a6b9a227dce24fcafb241b8208b93"><td class="mdescLeft">&#160;</td><td class="mdescRight">the command line started  <br /></td></tr>
 <tr class="separator:adb6a6b9a227dce24fcafb241b8208b93"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a07852e5328b140bef45eacc5acb72e14" id="r_a07852e5328b140bef45eacc5acb72e14"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRun.html#a07852e5328b140bef45eacc5acb72e14">lastWriteTime</a> = { 0 }</td></tr>
-<tr class="memdesc:a07852e5328b140bef45eacc5acb72e14"><td class="mdescLeft">&#160;</td><td class="mdescRight">last write to the KEY, in the suspect's local time  <br /></td></tr>
-<tr class="separator:a07852e5328b140bef45eacc5acb72e14"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a53d3760c102a5741c3719ce20b392672" id="r_a53d3760c102a5741c3719ce20b392672"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRun.html#a53d3760c102a5741c3719ce20b392672">lastWriteTimeUtc</a> = { 0 }</td></tr>
-<tr class="memdesc:a53d3760c102a5741c3719ce20b392672"><td class="mdescLeft">&#160;</td><td class="mdescRight">the same instant in UTC  <br /></td></tr>
+<tr class="memdesc:a53d3760c102a5741c3719ce20b392672"><td class="mdescLeft">&#160;</td><td class="mdescRight">last write to the KEY, UTC (the local time is derived at output)  <br /></td></tr>
 <tr class="separator:a53d3760c102a5741c3719ce20b392672"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -195,22 +192,6 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a07852e5328b140bef45eacc5acb72e14" name="a07852e5328b140bef45eacc5acb72e14"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a07852e5328b140bef45eacc5acb72e14">&#9670;&#160;</a></span>lastWriteTime</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">FILETIME Run::lastWriteTime = { 0 }</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>last write to the KEY, in the suspect's local time </p>
-
-</div>
-</div>
 <a id="a53d3760c102a5741c3719ce20b392672" name="a53d3760c102a5741c3719ce20b392672"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a53d3760c102a5741c3719ce20b392672">&#9670;&#160;</a></span>lastWriteTimeUtc</h2>
 
@@ -223,7 +204,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>the same instant in UTC </p>
+<p>last write to the KEY, UTC (the local time is derived at output) </p>
 
 </div>
 </div>

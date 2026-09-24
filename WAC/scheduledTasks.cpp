@@ -195,7 +195,7 @@ Json ScheduledTask::toJson() const {
 	o.add(L"RunAsSID",           Json::str(runAsSid));
 	o.add(L"Path",               Json::str(path));               // RAW path
 	o.add(L"State",              Json::str(state));
-	o.add(L"LastRun",            Json::str(timeToIso8601Local(lastRunTime)));
+	o.add(L"LastRun",            Json::str(utcTimeToIso8601Local(lastRunTimeUtc)));
 	o.add(L"LastRunUtc",         Json::str(timeToIso8601Utc(lastRunTimeUtc)));
 	o.add(L"LastTaskResult",     Json::num((long long)lastTaskResult));
 	o.add(L"RegistrationDate",   Json::str(registrationDate));
@@ -298,7 +298,6 @@ HRESULT ScheduledTasks::getData() {
 		if (h != historical.end() && h->second.found) {
 			t.lastRunTimeUtc = h->second.lastRunUtc;
 			t.lastTaskResult = h->second.lastResult;
-			t.lastRunTime = utcToSuspectLocal(t.lastRunTimeUtc);
 		}
 		scheduledTasks.push_back(std::move(t));
 	}

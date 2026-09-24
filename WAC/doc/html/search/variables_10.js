@@ -1,7 +1,7 @@
 var searchData=
 [
   ['rawvalues_0',['rawValues',['../structEvent.html#a87d52e43fc651704be2220d757ae8310',1,'Event']]],
-  ['read_1',['read',['../structBinarySummary.html#ad2e551311f9c1595f61a7048c7880a40',1,'BinarySummary::read'],['../structEvents.html#a5c139ecb1e34f8006c932028172480ba',1,'Events::read'],['../structEvtxSummary.html#aac158f67fe3e12ce5c1474c7f0d14f72',1,'EvtxSummary::read']]],
+  ['read_1',['read',['../structBinarySummary.html#ad2e551311f9c1595f61a7048c7880a40',1,'BinarySummary::read'],['../structEvtxSummary.html#aac158f67fe3e12ce5c1474c7f0d14f72',1,'EvtxSummary::read'],['../structEvents.html#a5c139ecb1e34f8006c932028172480ba',1,'Events::read']]],
   ['readonly_2',['ReadOnly',['../structFileAttributes.html#ad671b5f257b0564084b0957c317366f9',1,'FileAttributes']]],
   ['reason_3',['reason',['../structVerifiedSignature.html#a7729e684b97cd56cf5dd5cb478d24f5b',1,'VerifiedSignature::reason'],['../structVerdictMicrosoft.html#a65ce9ad236d7fb064e19727a82943541',1,'VerdictMicrosoft::reason'],['../structHiveLogEntry.html#a28be2c308250c784e32660f2ea2f4f0d',1,'HiveLogEntry::reason']]],
   ['recentdocs_4',['recentdocs',['../structCustomDestinationCategory.html#a51444583e9d789fa2a05212424f2c314',1,'CustomDestinationCategory::recentDocs'],['../structRecentDocs.html#ad302ada200a2a3d54813ba283b1d11c4',1,'RecentDocs::recentdocs']]],
@@ -17,11 +17,12 @@ var searchData=
   ['rid_14',['rid',['../structUser.html#a29cef82688e723f19cf646f654ffbd45',1,'User']]],
   ['rootdirpath_15',['RootDirPath',['../structAmcacheApplication.html#a639ea7ab9d4c515fbb041ee20aeec442',1,'AmcacheApplication']]],
   ['rootentry_16',['rootEntry',['../structoleParser.html#ab6006b9530da8cc65cbd879c50d1242b',1,'oleParser']]],
-  ['run_5fcount_17',['run_count',['../structPrefetch.html#a76b2fe4776446360ac3cb06874dcb150',1,'Prefetch']]],
-  ['runas_18',['runAs',['../structScheduledTask.html#a97239fd6cb57db27f6b385ce81abfe18',1,'ScheduledTask']]],
-  ['runassid_19',['runAsSid',['../structScheduledTask.html#a0bf232d0b6dd66390547d7387ee71b4d',1,'ScheduledTask']]],
-  ['runasuser_20',['RunAsUser',['../structLinkFlags.html#af7d0b21228c02be87bf03f87f15d7a69',1,'LinkFlags']]],
-  ['runinseparateprocess_21',['RunInSeparateProcess',['../structLinkFlags.html#a06e602670b6c525171f87e14c53f7bf1',1,'LinkFlags']]],
-  ['runs_22',['runs',['../structRuns.html#a4e548488a4c98b07248d884720207a47',1,'Runs']]],
-  ['runwithshimlayer_23',['RunWithShimLayer',['../structLinkFlags.html#a92dea2f98f4075b34da2fac1d0afde61',1,'LinkFlags']]]
+  ['rules_17',['rules',['../structTimeZoneInfo.html#a8ab26ddcdec8b7be84e534e9b6e2fd72',1,'TimeZoneInfo']]],
+  ['run_5fcount_18',['run_count',['../structPrefetch.html#a76b2fe4776446360ac3cb06874dcb150',1,'Prefetch']]],
+  ['runas_19',['runAs',['../structScheduledTask.html#a97239fd6cb57db27f6b385ce81abfe18',1,'ScheduledTask']]],
+  ['runassid_20',['runAsSid',['../structScheduledTask.html#a0bf232d0b6dd66390547d7387ee71b4d',1,'ScheduledTask']]],
+  ['runasuser_21',['RunAsUser',['../structLinkFlags.html#af7d0b21228c02be87bf03f87f15d7a69',1,'LinkFlags']]],
+  ['runinseparateprocess_22',['RunInSeparateProcess',['../structLinkFlags.html#a06e602670b6c525171f87e14c53f7bf1',1,'LinkFlags']]],
+  ['runs_23',['runs',['../structRuns.html#a4e548488a4c98b07248d884720207a47',1,'Runs']]],
+  ['runwithshimlayer_24',['RunWithShimLayer',['../structLinkFlags.html#a92dea2f98f4075b34da2fac1d0afde61',1,'LinkFlags']]]
 ];

@@ -26,7 +26,17 @@
  *  - wstring_to_filetime / SystemTimeToFileTime, valid and impossible dates;
  *  - utcToSuspectLocal and suspectLocalToUtc: the SUSPECT's offset, not the
  *    running machine's, in both directions (LocalFileTimeToFileTime, used
- *    before, applied the machine's), and a null result out of range.
+ *    before, applied the machine's), and a null result out of range;
+ *  - biasAtUtc / SystemTimeToTzSpecificLocalTimeEx and biasAtLocal /
+ *    TzSpecificLocalTimeToSystemTimeEx, on EVERY time zone of Windows, with
+ *    the rules read in the registry as WAC reads them in the suspect's
+ *    hives: random instants from 1970 to 2040, and every transition (the
+ *    hour skipped, the hour repeated) from 1980 to 2035;
+ *  - the rule read in `SYSTEM\...\TimeZoneInformation` (transition dates in
+ *    the kernel's TIME_FIELDS layout) against GetTimeZoneInformation;
+ *  - the formatting of WAC end to end: a winter date collected in summer is
+ *    labelled with its own offset, not the collection day's;
+ *  - random (forged) rules: offsets within bounds, no overflow.
  *
  *  Usage: system_conversions_test
  *  Built by `build-windows.sh --test`; runs on Windows (the test VM).
@@ -44,6 +54,7 @@
 #include <vector>
 #include "tools.h"
 #include "trans_id.h"
+#include "time_zone.h"
 
 AppliConf conf; //!< WAC's global configuration, which tools.cpp references (empty here)
 
@@ -54,7 +65,14 @@ unsigned long long g_checks = 0, g_failures = 0;
 /*! Records one comparison, printing the first failures. */
 void check(bool same, const std::wstring& what) {
 	++g_checks;
-	if (!same && ++g_failures <= 20) std::wprintf(L"  DIFF  %ls\n", what.c_str());
+	if (same) return;
+	++g_failures;
+	// At most three differences per subject (the text before the first comma), 60 in all.
+	static std::wstring subject;
+	static unsigned shown = 0, forSubject = 0;
+	const std::wstring s = what.substr(0, what.find(L','));
+	if (s != subject) { subject = s; forSubject = 0; }
+	if (++forSubject <= 3 && ++shown <= 60) std::wprintf(L"  DIFF  %ls\n", what.c_str());
 }
 
 void guids(std::mt19937_64& rng) {
@@ -221,7 +239,8 @@ void suspectOffset(std::mt19937_64& rng) {
 	   at UTC+01:00 or +02:00): a conversion that used the running machine's
 	   time zone gives another hour. */
 	conf.timeZone.valid = true;
-	conf.timeZone.activeBiasMinutes = 300;
+	conf.timeZone.rules = TimeZoneRules{};
+	conf.timeZone.rules.current.biasMinutes = 300;
 	const ULONGLONG hour = 36000000000ULL;
 	for (int i = 0; i < 100000; ++i) {
 		const ULONGLONG utc = 5 * hour + rng() % (0x7FFFFFFFFFFFFFFFULL - 10 * hour);
@@ -245,6 +264,212 @@ void suspectOffset(std::mt19937_64& rng) {
 	conf.timeZone = TimeZoneInfo{};
 }
 
+//! One registry value of a time zone, read live: the bytes WAC reads in the hive.
+std::vector<BYTE> zoneValue(const std::wstring& key, const wchar_t* name) {
+	DWORD size = 0;
+	if (RegGetValueW(HKEY_LOCAL_MACHINE, key.c_str(), name, RRF_RT_ANY, nullptr, nullptr, &size) != ERROR_SUCCESS)
+		return {};
+	std::vector<BYTE> data(size);
+	if (RegGetValueW(HKEY_LOCAL_MACHINE, key.c_str(), name, RRF_RT_ANY, nullptr, data.data(), &size) != ERROR_SUCCESS)
+		return {};
+	data.resize(size);
+	return data;
+}
+
+//! The rules of a time zone, from the registry, as loadSuspectTimeZone builds them.
+bool zoneRules(const std::wstring& keyName, TimeZoneRules& rules) {
+	const std::wstring key = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\" + keyName;
+	const std::vector<BYTE> tzi = zoneValue(key, L"TZI");
+	if (!parseTimeZoneRule(tzi.data(), tzi.size(), rules.current)) return false;
+	const std::wstring dynamic = key + L"\\Dynamic DST";
+	const std::vector<BYTE> first = zoneValue(dynamic, L"FirstEntry"), last = zoneValue(dynamic, L"LastEntry");
+	if (first.size() != 4 || last.size() != 4) return true;
+	DWORD firstYear = 0, lastYear = 0;
+	std::memcpy(&firstYear, first.data(), 4);
+	std::memcpy(&lastYear, last.data(), 4);
+	for (DWORD year = firstYear; year <= lastYear && year - firstYear < 1000; ++year) {
+		const std::vector<BYTE> rule = zoneValue(dynamic, std::to_wstring(year).c_str());
+		TimeZoneRule r;
+		if (parseTimeZoneRule(rule.data(), rule.size(), r)) rules.byYear[(int)year] = r;
+	}
+	return true;
+}
+
+//! SYSTEMTIME of a 100 ns count.
+SYSTEMTIME systemTime(ULONGLONG ticks) {
+	const FILETIME ft = filetime(ticks);
+	SYSTEMTIME st = {};
+	FileTimeToSystemTime(&ft, &st);
+	return st;
+}
+
+//! 100 ns count of a SYSTEMTIME.
+long long ticksOf(const SYSTEMTIME& st) {
+	FILETIME ft = { 0, 0 };
+	SystemTimeToFileTime(&st, &ft);
+	return (long long)value(ft);
+}
+
+//! Compares both directions at one instant, taken as UTC then as a local time.
+void zoneInstant(const DYNAMIC_TIME_ZONE_INFORMATION& zone, const TimeZoneRules& rules, long long instant) {
+	const long long minute = 600000000LL;
+	// A SYSTEMTIME stops at the millisecond: both sides compare that instant.
+	const SYSTEMTIME st = systemTime((ULONGLONG)instant);
+	const long long ticks = ticksOf(st);
+	SYSTEMTIME other = {};
+	if (SystemTimeToTzSpecificLocalTimeEx(&zone, &st, &other)) {
+		const long windows = (long)((ticks - ticksOf(other)) / minute);
+		const long mine = biasAtUtc(rules, ticks);
+		check(windows == mine, std::wstring(zone.TimeZoneKeyName) + L", UTC "
+		      + timeToIso8601Utc(filetime((ULONGLONG)ticks)) + L": Windows bias " + std::to_wstring(windows)
+		      + L", WAC " + std::to_wstring(mine));
+	}
+	if (TzSpecificLocalTimeToSystemTimeEx(&zone, &st, &other)) {
+		const long windows = (long)((ticksOf(other) - ticks) / minute);
+		const long mine = biasAtLocal(rules, ticks);
+		check(windows == mine, std::wstring(zone.TimeZoneKeyName) + L", local "
+		      + timeToIso8601Utc(filetime((ULONGLONG)ticks)).substr(0, 19) + L": Windows bias " + std::to_wstring(windows)
+		      + L", WAC " + std::to_wstring(mine));
+	}
+}
+
+void timeZones(std::mt19937_64& rng) {
+	const long long minute = 600000000LL;
+	SYSTEMTIME from = {}, to = {};
+	from.wYear = 1970; from.wMonth = 1; from.wDay = 1;
+	to.wYear = 2040; to.wMonth = 1; to.wDay = 1;
+	const long long start = ticksOf(from), span = ticksOf(to) - start;
+	DYNAMIC_TIME_ZONE_INFORMATION zone = {};
+	unsigned zones = 0;
+	for (DWORD i = 0; EnumDynamicTimeZoneInformation(i, &zone) == ERROR_SUCCESS; ++i) {
+		TimeZoneRules rules;
+		if (!zoneRules(zone.TimeZoneKeyName, rules)) {
+			check(false, L"time zone " + std::wstring(zone.TimeZoneKeyName) + L": TZI unreadable");
+			continue;
+		}
+		++zones;
+		for (int k = 0; k < 2000; ++k) zoneInstant(zone, rules, start + (long long)(rng() % (ULONGLONG)span));
+		// Around every transition: the edges are where a rule read wrong shows.
+		for (int year = 1980; year <= 2035; ++year) {
+			const TimeZoneRule& r = rules.forYear(year);
+			for (const SYSTEMTIME* date : { &r.daylightDate, &r.standardDate }) {
+				if (date->wMonth == 0) continue;
+				for (int week = 0; week < 5; ++week) {
+					SYSTEMTIME day = {};
+					day.wYear = (WORD)year; day.wMonth = date->wMonth; day.wDay = (WORD)(1 + 7 * week);
+					if (week == 4) day.wDay = 28;
+					const long long base = ticksOf(day) + (date->wHour * 60LL + date->wMinute) * minute;
+					for (int d = 0; d < 7; ++d)
+						for (long long m : { -121LL, -61LL, -60LL, -59LL, -1LL, 0LL, 1LL, 30LL, 59LL, 60LL, 61LL, 121LL })
+							zoneInstant(zone, rules, base + d * 1440LL * minute + m * minute);
+				}
+			}
+		}
+		// Around 1 January, where a change of rule takes effect: every half hour of a day and a half.
+		for (int year = 1980; year <= 2035; ++year) {
+			SYSTEMTIME newYear = {};
+			newYear.wYear = (WORD)year; newYear.wMonth = 1; newYear.wDay = 1;
+			for (long long m = -18 * 60; m <= 18 * 60; m += 30)
+				zoneInstant(zone, rules, ticksOf(newYear) + m * minute);
+		}
+	}
+	check(zones > 100, L"only " + std::to_wstring(zones) + L" time zone(s) enumerated");
+	std::wprintf(L"  %u time zones compared\n", zones);
+}
+
+/*! The rule WAC builds from `SYSTEM\...\TimeZoneInformation`, read as it reads
+ *  it in the suspect's hive, must be the one GetTimeZoneInformation gives:
+ *  the transition dates are stored there as TIME_FIELDS, not SYSTEMTIMEs. */
+void systemTimeZoneKey() {
+	const std::wstring key = L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation";
+	const std::vector<BYTE> bias = zoneValue(key, L"Bias"), standardBias = zoneValue(key, L"StandardBias"),
+	    daylightBias = zoneValue(key, L"DaylightBias"), standardStart = zoneValue(key, L"StandardStart"),
+	    daylightStart = zoneValue(key, L"DaylightStart");
+	if (bias.size() != 4 || standardBias.size() != 4 || daylightBias.size() != 4
+	    || standardStart.size() != 16 || daylightStart.size() != 16) {
+		check(false, L"TimeZoneInformation: values missing");
+		return;
+	}
+	int32_t b[3];
+	std::memcpy(&b[0], bias.data(), 4);
+	std::memcpy(&b[1], standardBias.data(), 4);
+	std::memcpy(&b[2], daylightBias.data(), 4);
+	BYTE standard[16], daylight[16];
+	std::memcpy(standard, standardStart.data(), 16);
+	std::memcpy(daylight, daylightStart.data(), 16);
+	TimeZoneRule rule;
+	TIME_ZONE_INFORMATION windows = {};
+	if (!parseTimeZoneInformation(b[0], b[1], b[2], standard, daylight, rule)
+	    || GetTimeZoneInformation(&windows) == TIME_ZONE_ID_INVALID) {
+		check(false, L"TimeZoneInformation: rule refused");
+		return;
+	}
+	const auto same = [](const SYSTEMTIME& a, const SYSTEMTIME& c) {
+		return a.wYear == c.wYear && a.wMonth == c.wMonth && a.wDayOfWeek == c.wDayOfWeek && a.wDay == c.wDay
+		    && a.wHour == c.wHour && a.wMinute == c.wMinute && a.wSecond == c.wSecond && a.wMilliseconds == c.wMilliseconds;
+	};
+	check(rule.biasMinutes == windows.Bias && rule.standardBiasMinutes == windows.StandardBias
+	      && rule.daylightBiasMinutes == windows.DaylightBias, L"TimeZoneInformation: offsets differ from Windows'");
+	check(same(rule.standardDate, windows.StandardDate), L"TimeZoneInformation: StandardStart read differently from Windows");
+	check(same(rule.daylightDate, windows.DaylightDate), L"TimeZoneInformation: DaylightStart read differently from Windows");
+}
+
+/*! End to end, through the formatting of WAC: a collection made in SUMMER in
+ *  Paris (offset of the day +02:00) must still date a winter instant at
+ *  +01:00. The offset of the collection day, applied to every date before,
+ *  gave "+02:00" and a local time one hour off. */
+void seasonalOffsets() {
+	TimeZoneRules paris;
+	if (!zoneRules(L"Romance Standard Time", paris)) { check(false, L"Romance Standard Time unreadable"); return; }
+	conf.timeZone = TimeZoneInfo{};
+	conf.timeZone.valid = true;
+	conf.timeZone.activeBiasMinutes = -120;      // collected in summer
+	conf.timeZone.rules = paris;
+	SYSTEMTIME winter = {}, summer = {};
+	winter.wYear = 2026; winter.wMonth = 1; winter.wDay = 15; winter.wHour = 12;
+	summer.wYear = 2026; summer.wMonth = 7; summer.wDay = 15; summer.wHour = 12;
+	const FILETIME winterFt = filetime((ULONGLONG)ticksOf(winter)), summerFt = filetime((ULONGLONG)ticksOf(summer));
+	check(utcTimeToIso8601Local(winterFt) == L"2026-01-15T13:00:00.0000000+01:00",
+	      L"winter UTC -> local: " + utcTimeToIso8601Local(winterFt));
+	check(utcTimeToIso8601Local(summerFt) == L"2026-07-15T14:00:00.0000000+02:00",
+	      L"summer UTC -> local: " + utcTimeToIso8601Local(summerFt));
+	// A local date stored by the artefact (Amcache, FAT date): its UTC and its label.
+	check(localTimeToIso8601Utc(winterFt) == L"2026-01-15T11:00:00.0000000Z",
+	      L"winter local -> UTC: " + localTimeToIso8601Utc(winterFt));
+	check(timeToIso8601Local(winterFt) == L"2026-01-15T12:00:00.0000000+01:00",
+	      L"winter local label: " + timeToIso8601Local(winterFt));
+	// The hour repeated on 25 October 2026 (03:00 -> 02:00): two UTC instants, two labels.
+	SYSTEMTIME first = {};
+	first.wYear = 2026; first.wMonth = 10; first.wDay = 25; first.wHour = 0; first.wMinute = 30;
+	const long long hour = 36000000000LL;
+	check(utcTimeToIso8601Local(filetime((ULONGLONG)ticksOf(first))) == L"2026-10-25T02:30:00.0000000+02:00"
+	      && utcTimeToIso8601Local(filetime((ULONGLONG)(ticksOf(first) + hour))) == L"2026-10-25T02:30:00.0000000+01:00",
+	      L"repeated hour: the two occurrences must carry their own offsets");
+	conf.timeZone = TimeZoneInfo{};
+}
+
+/*! Rules read from a forged hive: random bytes must give a refused rule or
+ *  offsets within their bounds — never a crash or an overflow, even at the
+ *  ends of the FILETIME range. */
+void hostileRules(std::mt19937_64& rng) {
+	const long long ends[] = { 0, 1, 36000000000LL, 0x7FFFFFFFFFFFFFFFLL, 0x7FFFFFFFFFFFFFFFLL - 36000000000LL,
+	                           0x0240000000000000LL };
+	for (int i = 0; i < 20000; ++i) {
+		BYTE bytes[44];
+		for (BYTE& b : bytes) b = (BYTE)rng();
+		// Plausible offsets half of the time, so that the transitions get exercised.
+		if (i % 2) for (int k = 0; k < 3; ++k) { const int32_t v = (int32_t)(rng() % 1441) - 720; std::memcpy(bytes + 4 * k, &v, 4); }
+		TimeZoneRules rules;
+		if (!parseTimeZoneRule(bytes, sizeof(bytes), rules.current)) continue;
+		if (i % 3 == 0) rules.byYear[2000 + (int)(rng() % 50)] = rules.current;
+		for (int k = 0; k < 20; ++k) {
+			const long long instant = k < 6 ? ends[k] : (long long)(rng() >> 1);
+			const long a = biasAtUtc(rules, instant), b = biasAtLocal(rules, instant);
+			check(a >= -2880 && a <= 2880 && b >= -2880 && b <= 2880, L"hostile rule: offset out of bounds");
+		}
+	}
+}
+
 } // namespace
 
 /*! Runs every comparison.
@@ -259,6 +484,10 @@ int wmain() {
 	fatDates(rng);
 	textDates();
 	suspectOffset(rng);
+	timeZones(rng);
+	seasonalOffsets();
+	systemTimeZoneKey();
+	hostileRules(rng);
 	CoUninitialize();
 	std::wprintf(L"%ls: %llu comparison(s), %llu difference(s)\n",
 	             g_failures ? L"FAILED" : L"all identical", g_checks, g_failures);

@@ -113,15 +113,15 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a8fa03338ad55acfe5478ac4be9c73e71" id="r_a8fa03338ad55acfe5478ac4be9c73e71"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structHiveReplayInfo.html#a8fa03338ad55acfe5478ac4be9c73e71">logs</a> = false</td></tr>
 <tr class="memdesc:a8fa03338ad55acfe5478ac4be9c73e71"><td class="mdescLeft">&#160;</td><td class="mdescRight">at least one usable <code>.LOG1/.LOG2</code> found  <br /></td></tr>
 <tr class="separator:a8fa03338ad55acfe5478ac4be9c73e71"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3898b4eea95c609deab76d610bd01935" id="r_a3898b4eea95c609deab76d610bd01935"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structHiveReplayInfo.html#a3898b4eea95c609deab76d610bd01935">applique</a> = false</td></tr>
-<tr class="memdesc:a3898b4eea95c609deab76d610bd01935"><td class="mdescLeft">&#160;</td><td class="mdescRight">at least one entry written into the hive  <br /></td></tr>
-<tr class="separator:a3898b4eea95c609deab76d610bd01935"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a837081fc11a957ca30f09d5236af4344" id="r_a837081fc11a957ca30f09d5236af4344"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structHiveReplayInfo.html#a837081fc11a957ca30f09d5236af4344">applied</a> = false</td></tr>
+<tr class="memdesc:a837081fc11a957ca30f09d5236af4344"><td class="mdescLeft">&#160;</td><td class="mdescRight">at least one entry written into the hive  <br /></td></tr>
+<tr class="separator:a837081fc11a957ca30f09d5236af4344"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae43ae6b6509c52eff3e9a16b10e20e6a" id="r_ae43ae6b6509c52eff3e9a16b10e20e6a"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structHiveReplayInfo.html#ae43ae6b6509c52eff3e9a16b10e20e6a">hiveSequence</a> = 0</td></tr>
 <tr class="memdesc:ae43ae6b6509c52eff3e9a16b10e20e6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">hive sequence before replay  <br /></td></tr>
 <tr class="separator:ae43ae6b6509c52eff3e9a16b10e20e6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa9a5e69ab6e4eb3a758435aa57035839" id="r_aa9a5e69ab6e4eb3a758435aa57035839"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structHiveReplayInfo.html#aa9a5e69ab6e4eb3a758435aa57035839">sequenceFinale</a> = 0</td></tr>
-<tr class="memdesc:aa9a5e69ab6e4eb3a758435aa57035839"><td class="mdescLeft">&#160;</td><td class="mdescRight">sequence after replay  <br /></td></tr>
-<tr class="separator:aa9a5e69ab6e4eb3a758435aa57035839"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca7227673af6b2d7f424a929a17f5a9a" id="r_aca7227673af6b2d7f424a929a17f5a9a"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structHiveReplayInfo.html#aca7227673af6b2d7f424a929a17f5a9a">finalSequence</a> = 0</td></tr>
+<tr class="memdesc:aca7227673af6b2d7f424a929a17f5a9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">sequence after replay  <br /></td></tr>
+<tr class="separator:aca7227673af6b2d7f424a929a17f5a9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a49dacf4bc86e1f7caafe698451f5ca42" id="r_a49dacf4bc86e1f7caafe698451f5ca42"><td class="memItemLeft" align="right" valign="top">unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structHiveReplayInfo.html#a49dacf4bc86e1f7caafe698451f5ca42">keptEntries</a> = 0</td></tr>
 <tr class="memdesc:a49dacf4bc86e1f7caafe698451f5ca42"><td class="mdescLeft">&#160;</td><td class="mdescRight">chain entries applied  <br /></td></tr>
 <tr class="separator:a49dacf4bc86e1f7caafe698451f5ca42"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -150,14 +150,14 @@ Public Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Result of replaying the transaction logs. </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
-<a id="a3898b4eea95c609deab76d610bd01935" name="a3898b4eea95c609deab76d610bd01935"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3898b4eea95c609deab76d610bd01935">&#9670;&#160;</a></span>applique</h2>
+<a id="a837081fc11a957ca30f09d5236af4344" name="a837081fc11a957ca30f09d5236af4344"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a837081fc11a957ca30f09d5236af4344">&#9670;&#160;</a></span>applied</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool HiveReplayInfo::applique = false</td>
+          <td class="memname">bool HiveReplayInfo::applied = false</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -227,6 +227,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>message if ok == false </p>
+
+</div>
+</div>
+<a id="aca7227673af6b2d7f424a929a17f5a9a" name="aca7227673af6b2d7f424a929a17f5a9a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aca7227673af6b2d7f424a929a17f5a9a">&#9670;&#160;</a></span>finalSequence</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t HiveReplayInfo::finalSequence = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>sequence after replay </p>
 
 </div>
 </div>
@@ -323,22 +339,6 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>pages written </p>
-
-</div>
-</div>
-<a id="aa9a5e69ab6e4eb3a758435aa57035839" name="aa9a5e69ab6e4eb3a758435aa57035839"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa9a5e69ab6e4eb3a758435aa57035839">&#9670;&#160;</a></span>sequenceFinale</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">uint32_t HiveReplayInfo::sequenceFinale = 0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>sequence after replay </p>
 
 </div>
 </div>

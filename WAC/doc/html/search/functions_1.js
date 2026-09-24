@@ -29,9 +29,11 @@ var searchData=
   ['beef0027_26',['Beef0027',['../structBeef0027.html#acdcde94b042af7fa04476dd050c46357',1,'Beef0027']]],
   ['beef0029_27',['Beef0029',['../structBeef0029.html#a4058348d6aa7a47fe35ba467bde4f4b9',1,'Beef0029']]],
   ['beefunknown_28',['BeefUnknown',['../structBeefUnknown.html#aab39f60558ee66d9700af233bd628a5c',1,'BeefUnknown']]],
-  ['binariesfinish_29',['binariesfinish',['../binaires_8cpp.html#ab4ce0b0aacbea8daa28752e26ef0e57b',1,'BinariesFinish():&#160;binaires.cpp'],['../binaires_8h.html#ab4ce0b0aacbea8daa28752e26ef0e57b',1,'BinariesFinish():&#160;binaires.cpp']]],
-  ['binariessummary_30',['binariessummary',['../binaires_8cpp.html#abec213e18f991fd799f47dfecc884a20',1,'BinariesSummary():&#160;binaires.cpp'],['../binaires_8h.html#abec213e18f991fd799f47dfecc884a20',1,'BinariesSummary():&#160;binaires.cpp']]],
-  ['binarypath_31',['binarypath',['../tools_8cpp.html#a30395273a71242bd8f62d969fc250085',1,'binaryPath(std::wstring imagePath):&#160;tools.cpp'],['../tools_8h.html#a30395273a71242bd8f62d969fc250085',1,'binaryPath(std::wstring imagePath):&#160;tools.cpp']]],
-  ['bool_5fto_5fwstring_32',['bool_to_wstring',['../tools_8h.html#a60ee9433903019ec436ff2efcef4ea0d',1,'bool_to_wstring(bool b):&#160;tools.cpp'],['../tools_8cpp.html#a60ee9433903019ec436ff2efcef4ea0d',1,'bool_to_wstring(bool b):&#160;tools.cpp']]],
-  ['boolean_33',['boolean',['../classJson.html#a8405614a0c9bc7c7267b69a705200ef7',1,'Json']]]
+  ['biasatlocal_29',['biasatlocal',['../time__zone_8cpp.html#aee9e944ba7df3c29cdbf6a0ec01218b6',1,'biasAtLocal(const TimeZoneRules &amp;rules, long long local100ns):&#160;time_zone.cpp'],['../time__zone_8h.html#aee9e944ba7df3c29cdbf6a0ec01218b6',1,'biasAtLocal(const TimeZoneRules &amp;rules, long long local100ns):&#160;time_zone.cpp']]],
+  ['biasatutc_30',['biasatutc',['../time__zone_8cpp.html#a384b6bf4432ee322038cd013600573fe',1,'biasAtUtc(const TimeZoneRules &amp;rules, long long utc100ns):&#160;time_zone.cpp'],['../time__zone_8h.html#a384b6bf4432ee322038cd013600573fe',1,'biasAtUtc(const TimeZoneRules &amp;rules, long long utc100ns):&#160;time_zone.cpp']]],
+  ['binariesfinish_31',['binariesfinish',['../binaires_8cpp.html#ab4ce0b0aacbea8daa28752e26ef0e57b',1,'BinariesFinish():&#160;binaires.cpp'],['../binaires_8h.html#ab4ce0b0aacbea8daa28752e26ef0e57b',1,'BinariesFinish():&#160;binaires.cpp']]],
+  ['binariessummary_32',['binariessummary',['../binaires_8cpp.html#abec213e18f991fd799f47dfecc884a20',1,'BinariesSummary():&#160;binaires.cpp'],['../binaires_8h.html#abec213e18f991fd799f47dfecc884a20',1,'BinariesSummary():&#160;binaires.cpp']]],
+  ['binarypath_33',['binarypath',['../tools_8cpp.html#a30395273a71242bd8f62d969fc250085',1,'binaryPath(std::wstring imagePath):&#160;tools.cpp'],['../tools_8h.html#a30395273a71242bd8f62d969fc250085',1,'binaryPath(std::wstring imagePath):&#160;tools.cpp']]],
+  ['bool_5fto_5fwstring_34',['bool_to_wstring',['../tools_8cpp.html#a60ee9433903019ec436ff2efcef4ea0d',1,'bool_to_wstring(bool b):&#160;tools.cpp'],['../tools_8h.html#a60ee9433903019ec436ff2efcef4ea0d',1,'bool_to_wstring(bool b):&#160;tools.cpp']]],
+  ['boolean_35',['boolean',['../classJson.html#a8405614a0c9bc7c7267b69a705200ef7',1,'Json']]]
 ];

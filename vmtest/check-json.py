@@ -138,25 +138,7 @@ def cross_checks(folder):
             print(f"  ✅ no session earlier than the boot ({boot})")
     found += check_boot_kernel_general(folder, boot)
 
-    # The <field>/<field>Utc pairs must name the SAME instant: if the local suffix
-    # and the Z suffix carry the same wall-clock time, one of them is mislabelled.
-    suspects = 0
-    for file in sorted(glob.glob(os.path.join(folder, "*.json"))):
-        d = load(folder, os.path.basename(file))
-        if d is None:
-            continue
-        for key, val, keyUtc, valUtc in date_pairs(d):
-            # "2026-09-15T08:00:00+02:00" and "...T08:00:00Z": same wall-clock time
-            if val[:19] == valUtc[:19] and not val.endswith("Z"):
-                suspects += 1
-                if suspects <= 3:
-                    print(f"  ❌ {os.path.basename(file)}: {key}={val} "
-                          f"and {keyUtc}={valUtc} carry the same wall-clock time")
-    if suspects:
-        print(f"  ❌ {suspects} mislabelled local/UTC pair(s)")
-        found += 1
-    else:
-        print("  ✅ local/UTC pairs consistent")
+    found += check_date_pairs(folder, osj)
 
     found += check_services(folder)
     found += check_users(folder)
@@ -957,7 +939,8 @@ ISO = re.compile(r'^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d')
 
 
 def date_pairs(obj):
-    """Yields (key, value, keyUtc, valueUtc) for every <X>/<X>Utc pair."""
+    """Yields (key, value, keyUtc, valueUtc) for every <X>/<X>Utc pair, and for
+    every element of two lists <X>/<X>Utc of the same length (Prefetch Runs)."""
     if isinstance(obj, dict):
         for key, val in obj.items():
             keyUtc = key + "Utc"
@@ -965,11 +948,95 @@ def date_pairs(obj):
             if (isinstance(val, str) and isinstance(other, str)
                     and ISO.match(val) and ISO.match(other)):
                 yield key, val, keyUtc, other
+            elif (isinstance(val, list) and isinstance(other, list) and len(val) == len(other)):
+                for i, (v, u) in enumerate(zip(val, other)):
+                    if isinstance(v, str) and isinstance(u, str) and ISO.match(v) and ISO.match(u):
+                        yield f"{key}[{i}]", v, f"{keyUtc}[{i}]", u
         for val in obj.values():
             yield from date_pairs(val)
     elif isinstance(obj, list):
         for val in obj:
             yield from date_pairs(val)
+
+
+# Windows time zone -> IANA zone, for the offsets check: the tz database is a
+# source independent of Windows and of WAC. Only zones whose rules are the same
+# in both over the years checked.
+WINDOWS_TO_IANA = {
+    "Romance Standard Time": "Europe/Paris",
+    "W. Europe Standard Time": "Europe/Berlin",
+    "GMT Standard Time": "Europe/London",
+    "Eastern Standard Time": "America/New_York",
+    "Central Standard Time": "America/Chicago",
+    "Pacific Standard Time": "America/Los_Angeles",
+    "UTC": "Etc/UTC",
+}
+# Years over which Windows and the tz database agree for these zones (the
+# European Union's rules date from 1996; Windows' dynamic rules stop in 2037).
+IANA_YEARS = range(1996, 2038)
+
+
+def check_date_pairs(folder, osj):
+    """Every <X>/<X>Utc pair names the SAME instant, and the offset of the local
+    value is the one in force AT THAT DATE in the suspect's time zone.
+
+    WHY. WAC used to label every local date with the offset of the collection
+    day: collected in summer, a winter date read "+02:00" with a local time one
+    hour off — while the pair still looked consistent to a check comparing the
+    wall-clock times only. And the Prefetch "RunsUtc" carried the UTC time
+    labelled "+02:00", an instant two hours off. The offsets are confronted with
+    the tz database (zoneinfo), not with WAC's own rules.
+    """
+    try:
+        from zoneinfo import ZoneInfo
+    except ImportError:
+        ZoneInfo = None
+    key = (osj or {}).get("CurrentTimeZoneId") if isinstance(osj, dict) else None
+    zone = ZoneInfo(WINDOWS_TO_IANA[key]) if ZoneInfo and key in WINDOWS_TO_IANA else None
+    different = wrong_offset = nonexistent = checked = 0
+    found = 0
+    for file in sorted(glob.glob(os.path.join(folder, "*.json"))):
+        d = load(folder, os.path.basename(file))
+        if d is None:
+            continue
+        name = os.path.basename(file)
+        for k, val, kUtc, valUtc in date_pairs(d):
+            local, utc = instant(val), instant(valUtc)
+            if local != utc:
+                different += 1
+                if different <= 3:
+                    print(f"  ❌ {name}: {k}={val} and {kUtc}={valUtc} are not the same instant")
+                continue
+            if zone is None or val.endswith("Z") or utc.year not in IANA_YEARS:
+                continue
+            checked += 1
+            expected = utc.astimezone(zone)
+            if expected.utcoffset() == local.utcoffset():
+                continue
+            wall = local.replace(tzinfo=None)
+            import datetime
+            if wall.replace(tzinfo=zone).astimezone(datetime.timezone.utc).astimezone(zone).replace(tzinfo=None) != wall:
+                # A local time the artefact stored in the hour skipped in spring:
+                # it has no offset of its own. Reported, not a defect of WAC.
+                nonexistent += 1
+                continue
+            wrong_offset += 1
+            if wrong_offset <= 3:
+                print(f"  ❌ {name}: {k}={val}: offset {expected.strftime('%z')} expected in {key}")
+    if different:
+        print(f"  ❌ {different} local/UTC pair(s) naming two different instants")
+        found += 1
+    else:
+        print("  ✅ local/UTC pairs name the same instant")
+    if zone is None:
+        print(f"  ⏭️  time zone {key!r} not in the IANA table: offsets per date not checked")
+    elif wrong_offset:
+        print(f"  ❌ {wrong_offset} local date(s) with an offset other than the one of their date ({key})")
+        found += 1
+    else:
+        extra = f"; {nonexistent} local time(s) of a skipped hour" if nonexistent else ""
+        print(f"  ✅ {checked} local date(s) carry the offset of their own date ({key}, tz database){extra}")
+    return found
 
 
 if __name__ == "__main__":

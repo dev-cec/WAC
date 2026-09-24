@@ -62,12 +62,9 @@ struct SystemInfo {
 	FILETIME     installDateUtc = { 0, 0 }; //!< installation date of the OS (UTC)
 
 	// --- instant of the collection (measured live) ---
-	SYSTEMTIME localDateTime = { 0 };       //!< local time at the moment of the run
-	SYSTEMTIME localDateTimeUtc = { 0 };    //!< UTC time at the moment of the run
-	SYSTEMTIME lastBootUpTime = { 0 };      //!< local time of the last boot
-	SYSTEMTIME lastBootUpTimeUtc = { 0 };   //!< UTC time of the last boot
+	FILETIME collectionTimeUtc = { 0, 0 };  //!< instant of the run (UTC)
+	FILETIME lastBootUpTimeUtc = { 0, 0 };  //!< instant of the last boot (UTC)
 	unsigned long long uptimeSeconds = 0;   //!< uptime since the boot
-	long bootFraction100ns = -1;            //!< fraction of a second of the boot (-1: unknown)
 	/*! Total of the clock corrections applied since the boot, in 100 ns units
 	 *  (the kernel's BootTimeBias). Positive: the clock was moved forward. A gap
 	 *  of a few seconds is the ordinary adjustment (NTP synchronisation, a VM

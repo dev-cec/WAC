@@ -12,7 +12,7 @@ Json Mru::toJson() const {
 	o.add(L"SIDName",   Json::str(sidName));
 	o.add(L"Source",    Json::str(source));
 	log(3, L"🔈timeToIso8601 lastWriteTime");
-	o.add(L"LastWriteTime",    Json::str(timeToIso8601Local(lastWriteTime)));
+	o.add(L"LastWriteTime",    Json::str(utcTimeToIso8601Local(lastWriteTimeUtc)));
 	log(3, L"🔈timeToIso8601 lastWriteTimeUtc");
 	o.add(L"LastWriteTimeUtc", Json::str(timeToIso8601Utc(lastWriteTimeUtc)));
 	Json items = Json::arr();
@@ -129,8 +129,6 @@ HRESULT Mrus::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vec
 		mru.id = id;
 		log(2, L"❇️Mru id" + id);
 		mru.lastWriteTimeUtc = lastWriteTimeUtc;
-		log(3, L"🔈utcToSuspectLocal lastWriteTime");
-		mru.lastWriteTime = utcToSuspectLocal(lastWriteTimeUtc);
 		mru.extension = extension;
 		mru.level = level;
 		mru.sid = sid;

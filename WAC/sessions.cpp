@@ -36,8 +36,6 @@ Session::Session(LUID* id) {
 		   system's boot time — impossible. */
 		temp = data->LogonTime;
 		memcpy(&startTimeUtc, &temp, sizeof(startTimeUtc));
-		log(3, L"🔈utcToSuspectLocal startTime");
-		startTime = utcToSuspectLocal(startTimeUtc);
 		logonName = std::wstring(data->UserName.Buffer).data();
 		logonDomainName = std::wstring(data->LogonDomain.Buffer).data();
 		logonType = data->LogonType;
@@ -72,7 +70,7 @@ Json Session::toJson() const {
 	o.add(L"LogonType",             Json::num(logonType));      // a number, not a string
 	o.add(L"LogonTypeName",         Json::str(logonTypeName));
 	o.add(L"AuthenticationPackage", Json::str(authenticationPackage));
-	o.add(L"StartTime",             Json::str(timeToIso8601Local(startTime)));
+	o.add(L"StartTime",             Json::str(utcTimeToIso8601Local(startTimeUtc)));
 	o.add(L"StartTimeUtc",          Json::str(timeToIso8601Utc(startTimeUtc)));
 	return o;
 }

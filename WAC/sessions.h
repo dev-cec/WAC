@@ -33,8 +33,7 @@
 /*! One logon session open on the machine. */
 struct Session {
 
-	FILETIME startTime = { 0 };    //!< start of the session, suspect's local time
-	FILETIME startTimeUtc = { 0 }; //!< the same instant in UTC
+	FILETIME startTimeUtc = { 0 }; //!< start of the session, UTC (the local time is derived at output)
 	std::wstring authenticationPackage = L""; //!< package that authenticated it (Kerberos, NTLM…)
 	std::wstring logonName = L"";       //!< name of the account logged on
 	std::wstring logonDomainName = L"";	//!< domain of that account

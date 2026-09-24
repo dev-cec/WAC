@@ -168,16 +168,11 @@ HRESULT SystemInfo::getData() {
 	/*******************************************************************
 	* 3. Instant of the collection — measured live, without a trace
 	*******************************************************************/
-	/* The local time is derived with the SUSPECT's offset (utcToSuspectLocal),
-	   the one its label carries, and not with the running machine's
-	   (SystemTimeToTzSpecificLocalTime), as every other date of the collection.
-	   A conversion that fails leaves the SYSTEMTIME null: not emitted. */
-	FILETIME nowUtc = { 0, 0 };
+	/* Kept in UTC; the local version is derived at output with the SUSPECT's
+	   offset, the one its label carries, as every other date of the
+	   collection. */
 	log(3, L"🔈GetSystemTimeAsFileTime");
-	GetSystemTimeAsFileTime(&nowUtc);
-	if (!FileTimeToSystemTime(&nowUtc, &localDateTimeUtc)) localDateTimeUtc = SYSTEMTIME{};
-	const FILETIME nowLocal = utcToSuspectLocal(nowUtc);
-	if (!FileTimeToSystemTime(&nowLocal, &localDateTime)) localDateTime = SYSTEMTIME{};
+	GetSystemTimeAsFileTime(&collectionTimeUtc);
 
 	/* Time of the last boot.
 	 *
@@ -202,8 +197,8 @@ HRESULT SystemInfo::getData() {
 	log(3, L"🔈GetTickCount64");
 	const ULONGLONG uptimeMs = GetTickCount64();
 	uptimeSeconds = uptimeMs / 1000ULL;
-	const ULONGLONG now100ns = ((ULONGLONG)nowUtc.dwHighDateTime << 32)
-	                                | nowUtc.dwLowDateTime;
+	const ULONGLONG now100ns = ((ULONGLONG)collectionTimeUtc.dwHighDateTime << 32)
+	                                | collectionTimeUtc.dwLowDateTime;
 	ULONGLONG boot100ns = 0;
 	{
 		struct TimeOfDay {                     // SYSTEM_TIMEOFDAY_INFORMATION
@@ -228,14 +223,8 @@ HRESULT SystemInfo::getData() {
 	if (!bootFromKernel && now100ns > uptimeMs * 10000ULL)
 		boot100ns = now100ns - uptimeMs * 10000ULL;
 	if (boot100ns) {
-		FILETIME bootUtc = { (DWORD)(boot100ns & 0xFFFFFFFFULL), (DWORD)(boot100ns >> 32) };
-		bootFraction100ns = (long)(boot100ns % 10000000ULL);
-		/* On failure the SYSTEMTIME stays null and the field is not emitted:
-		   a zero-initialised value, never a stale one. */
-		if (!FileTimeToSystemTime(&bootUtc, &lastBootUpTimeUtc)) lastBootUpTimeUtc = SYSTEMTIME{};
-		const FILETIME bootLocal = utcToSuspectLocal(bootUtc);
-		if (!FileTimeToSystemTime(&bootLocal, &lastBootUpTime)) lastBootUpTime = SYSTEMTIME{};
-		log(2, L"❇️Last boot (UTC) : " + timeToIso8601(lastBootUpTimeUtc, true, bootFraction100ns));
+		lastBootUpTimeUtc = FILETIME{ (DWORD)(boot100ns & 0xFFFFFFFFULL), (DWORD)(boot100ns >> 32) };
+		log(2, L"❇️Last boot (UTC) : " + timeToIso8601Utc(lastBootUpTimeUtc));
 	}
 	else
 		log(2, L"🔥Uptime inconsistent with the system time: boot time not computed");
@@ -274,10 +263,10 @@ HRESULT SystemInfo::toJson() {
 	addIfSet(o, L"InstallDate",            utcTimeToIso8601Local(installDateUtc));
 	addIfSet(o, L"InstallDateUtc",         timeToIso8601Utc(installDateUtc));
 
-	o.add(L"LocalDateTime",     Json::str(timeToIso8601(localDateTime, false)));
-	o.add(L"LocalDateTimeUtc",  Json::str(timeToIso8601(localDateTimeUtc, true)));
-	addIfSet(o, L"LastBootUpTime",    timeToIso8601(lastBootUpTime, false, bootFraction100ns));
-	addIfSet(o, L"LastBootUpTimeUtc", timeToIso8601(lastBootUpTimeUtc, true, bootFraction100ns));
+	addIfSet(o, L"LocalDateTime",     utcTimeToIso8601Local(collectionTimeUtc));
+	addIfSet(o, L"LocalDateTimeUtc",  timeToIso8601Utc(collectionTimeUtc));
+	addIfSet(o, L"LastBootUpTime",    utcTimeToIso8601Local(lastBootUpTimeUtc));
+	addIfSet(o, L"LastBootUpTimeUtc", timeToIso8601Utc(lastBootUpTimeUtc));
 	o.add(L"UptimeSeconds",     Json::num(uptimeSeconds));
 	// The source goes along with the value: an estimate must not read as a
 	// measurement.

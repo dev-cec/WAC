@@ -164,8 +164,6 @@ Functions</h2></td></tr>
 <tr class="separator:a60ee9433903019ec436ff2efcef4ea0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac15b36c9a117f211860abb5d7f86d8d4" id="r_ac15b36c9a117f211860abb5d7f86d8d4"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ac15b36c9a117f211860abb5d7f86d8d4">wstring_to_filetime</a> (std::wstring input)</td></tr>
 <tr class="separator:ac15b36c9a117f211860abb5d7f86d8d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a299fdb4272ae83c49ad0ac0bad62f1fe" id="r_a299fdb4272ae83c49ad0ac0bad62f1fe"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a299fdb4272ae83c49ad0ac0bad62f1fe">localUtcOffsetString</a> ()</td></tr>
-<tr class="separator:a299fdb4272ae83c49ad0ac0bad62f1fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8dd0bb51cdc854f2137aba256aae3d9c" id="r_a8dd0bb51cdc854f2137aba256aae3d9c"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a8dd0bb51cdc854f2137aba256aae3d9c">loadProfileList</a> ()</td></tr>
 <tr class="separator:a8dd0bb51cdc854f2137aba256aae3d9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7bc73c77c8a53c18c6a5457fbb42c13e" id="r_a7bc73c77c8a53c18c6a5457fbb42c13e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a7bc73c77c8a53c18c6a5457fbb42c13e">volumeOfPath</a> (const std::wstring &amp;absolute)</td></tr>
@@ -186,8 +184,6 @@ Functions</h2></td></tr>
 <tr class="separator:a64af952b26c2e734b7998bd37173b3dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a33256dfbfef8ac9511a35835a5e5b29d" id="r_a33256dfbfef8ac9511a35835a5e5b29d"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a33256dfbfef8ac9511a35835a5e5b29d">loadSuspectTimeZone</a> ()</td></tr>
 <tr class="separator:a33256dfbfef8ac9511a35835a5e5b29d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8404da1f3f7d0bed84db92de5b94e5d8" id="r_a8404da1f3f7d0bed84db92de5b94e5d8"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a8404da1f3f7d0bed84db92de5b94e5d8">timeToIso8601</a> (const SYSTEMTIME &amp;st, bool utc, long fraction100ns)</td></tr>
-<tr class="separator:a8404da1f3f7d0bed84db92de5b94e5d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aed51f7f887c3a9ede2b9ee9dc59e8391" id="r_aed51f7f887c3a9ede2b9ee9dc59e8391"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#aed51f7f887c3a9ede2b9ee9dc59e8391">timeToIso8601Utc</a> (const FILETIME &amp;filetime)</td></tr>
 <tr class="separator:aed51f7f887c3a9ede2b9ee9dc59e8391"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac6e9127cec836f464d33dc6ed7aaf93c" id="r_ac6e9127cec836f464d33dc6ed7aaf93c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ac6e9127cec836f464d33dc6ed7aaf93c">timeToIso8601Local</a> (const FILETIME &amp;filetime)</td></tr>
@@ -1094,6 +1090,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Reads the examined machine's time zone in the suspect's SYSTEM hive.</p>
 <p>Reads <code>Control\TimeZoneInformation</code> under <code>conf.CurrentControlSet</code> and fills <code>conf.timeZone</code>. To be called as soon as <code>conf.CurrentControlSet</code> is open: every local timestamp formatted AFTERWARDS will carry the suspect's offset.</p>
+<p>The daylight saving rules come from the same key (the rule Windows applies now) and, unless <code>DynamicDaylightTimeDisabled</code> is set, from the rules per year of the zone in the SOFTWARE hive (<code>Time Zones\&lt;key&gt;\Dynamic DST</code>), which must therefore be open: a date of 2005 in the United States follows the rules of 2005, not those of today.</p>
 <p>On failure, <code>conf.timeZone.valid</code> stays false and the formatting falls back on <code>GetTimeZoneInformation()</code> — which is right in a live collection, since the examined machine is then the running machine.</p>
 <dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS if the time zone was read, an error code otherwise </dd></dl>
 
@@ -1139,24 +1136,6 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>"YYYY-MM-DDTHH:MM:SSZ", or "" if the date is null </dd></dl>
-
-</div>
-</div>
-<a id="a299fdb4272ae83c49ad0ac0bad62f1fe" name="a299fdb4272ae83c49ad0ac0bad62f1fe"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a299fdb4272ae83c49ad0ac0bad62f1fe">&#9670;&#160;</a></span>localUtcOffsetString()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::wstring localUtcOffsetString </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Time-zone offset used to format local times, as "+HH:MM". Comes from the suspect's hive if it could be read, otherwise from the running machine. </p><dl class="section return"><dt>Returns</dt><dd>the offset, e.g. L"+02:00" </dd></dl>
 
 </div>
 </div>
@@ -1923,55 +1902,6 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a8404da1f3f7d0bed84db92de5b94e5d8" name="a8404da1f3f7d0bed84db92de5b94e5d8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8404da1f3f7d0bed84db92de5b94e5d8">&#9670;&#160;</a></span>timeToIso8601()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::wstring timeToIso8601 </td>
-          <td>(</td>
-          <td class="paramtype">const SYSTEMTIME &amp;&#160;</td>
-          <td class="paramname"><em>systemtime</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>utc</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">long&#160;</td>
-          <td class="paramname"><em>fraction100ns</em> = <code>-1</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Formats a SYSTEMTIME as ISO 8601. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">systemtime</td><td>the instant </td></tr>
-    <tr><td class="paramname">utc</td><td>true if the value is in UTC (suffix "Z"), false if it is in local time (suffix of the machine's time zone) </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>the formatted date, or "" if it is null</dd></dl>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">fraction100ns</td><td>fraction of a second, in hundreds of nanoseconds (0..9999999), or -1 not to write it.</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>WHY THIS PARAMETER. A SYSTEMTIME only carries the millisecond, a FILETIME goes down to a hundred nanoseconds. The callers that hold the original FILETIME pass the real fraction; the others pass -1, and the timestamp stops at the second rather than displaying a precision it does not have. </p>
-
-</div>
-</div>
 <a id="ac6e9127cec836f464d33dc6ed7aaf93c" name="ac6e9127cec836f464d33dc6ed7aaf93c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac6e9127cec836f464d33dc6ed7aaf93c">&#9670;&#160;</a></span>timeToIso8601Local()</h2>
 
@@ -1987,7 +1917,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Formats a FILETIME <b>expressed in local time</b> as ISO 8601, with the machine's time-zone offset (e.g. "+02:00"). </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Formats a FILETIME <b>expressed in local time</b> as ISO 8601, with the offset in force at that local time on the examined machine (e.g. "+01:00" in winter, "+02:00" in summer) — the one suspectLocalToUtc applies. For a value the artefact stores in LOCAL time; a value stored in UTC is formatted by utcTimeToIso8601Local, which knows its exact offset even in the hour repeated in autumn. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">filetime</td><td>the instant, in the examined machine's local time </td></tr>
   </table>
@@ -2063,7 +1993,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Converts a FILETIME <b>expressed in UTC</b> to the local time of the EXAMINED machine, then formats it as ISO 8601 with the time-zone offset.</p>
+<p>Converts a FILETIME <b>expressed in UTC</b> to the local time of the EXAMINED machine, then formats it as ISO 8601 with the offset in force AT THAT DATE.</p>
 <p>WHY NOT <code>FileTimeToLocalFileTime</code> FOLLOWED BY <code>timeToIso8601Local</code>. That combination, used until now, applies the offset of the machine RUNNING WAC while attaching the label of the SUSPECT's time zone: the same in a live collection, contradictory as soon as an image is analysed elsewhere — the value and its label would no longer speak of the same time zone. Here, the offset applied and the label come from the SAME source.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -2091,7 +2021,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Converts a UTC FILETIME to the local time of the EXAMINED machine.</p>
-<p>Replaces <code>FileTimeToLocalFileTime()</code>, which applies the time zone of the RUNNING machine. The two coincide in a live collection, but diverge as soon as an image is analysed elsewhere: the time would then be shifted by the examiner's time zone while carrying the label of the suspect's — two time zones in one value. A single point of truth, <code>conf.timeZone</code>, avoids that trap; the fallback on the running machine applies only if the SYSTEM hive could not (yet) be read.</p>
+<p>Replaces <code>FileTimeToLocalFileTime()</code>, which applies the time zone of the RUNNING machine. The two coincide in a live collection, but diverge as soon as an image is analysed elsewhere: the time would then be shifted by the examiner's time zone while carrying the label of the suspect's — two time zones in one value. A single point of truth, <code>conf.timeZone</code>, avoids that trap; the fallback on the running machine applies only if the SYSTEM hive could not (yet) be read. The offset is the one in force AT THAT DATE (daylight saving time, rules of the year), not the offset of the collection day.</p>
 <p>NO RETURN CODE. The result is null (1601), hence not emitted, when the input is null or the shift leaves the FILETIME range: the caller has nothing to check and nothing to ignore — a failure cannot turn into a wrong date.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">

@@ -121,11 +121,8 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:abfd81bc350ea89d4a990a61dbae5aaaa" id="r_abfd81bc350ea89d4a990a61dbae5aaaa"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVolumeInfo.html#abfd81bc350ea89d4a990a61dbae5aaaa">creationTime</a> = { 0 }</td></tr>
-<tr class="memdesc:abfd81bc350ea89d4a990a61dbae5aaaa"><td class="mdescLeft">&#160;</td><td class="mdescRight">creation of the volume, suspect's local time  <br /></td></tr>
-<tr class="separator:abfd81bc350ea89d4a990a61dbae5aaaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a176d1cb6073a84b8904b31725c98291b" id="r_a176d1cb6073a84b8904b31725c98291b"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVolumeInfo.html#a176d1cb6073a84b8904b31725c98291b">creationTimeUtc</a> = { 0 }</td></tr>
-<tr class="memdesc:a176d1cb6073a84b8904b31725c98291b"><td class="mdescLeft">&#160;</td><td class="mdescRight">the same instant in UTC  <br /></td></tr>
+<tr class="memdesc:a176d1cb6073a84b8904b31725c98291b"><td class="mdescLeft">&#160;</td><td class="mdescRight">creation of the volume, UTC (the local time is derived at output)  <br /></td></tr>
 <tr class="separator:a176d1cb6073a84b8904b31725c98291b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a06f70a7a0f171c7ecf0f7c2175360e7c" id="r_a06f70a7a0f171c7ecf0f7c2175360e7c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVolumeInfo.html#a06f70a7a0f171c7ecf0f7c2175360e7c">serialNumber</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:a06f70a7a0f171c7ecf0f7c2175360e7c"><td class="mdescLeft">&#160;</td><td class="mdescRight">serial number of the volume  <br /></td></tr>
@@ -254,22 +251,6 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="abfd81bc350ea89d4a990a61dbae5aaaa" name="abfd81bc350ea89d4a990a61dbae5aaaa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abfd81bc350ea89d4a990a61dbae5aaaa">&#9670;&#160;</a></span>creationTime</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">FILETIME VolumeInfo::creationTime = { 0 }</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>creation of the volume, suspect's local time </p>
-
-</div>
-</div>
 <a id="a176d1cb6073a84b8904b31725c98291b" name="a176d1cb6073a84b8904b31725c98291b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a176d1cb6073a84b8904b31725c98291b">&#9670;&#160;</a></span>creationTimeUtc</h2>
 
@@ -282,7 +263,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>the same instant in UTC </p>
+<p>creation of the volume, UTC (the local time is derived at output) </p>
 
 </div>
 </div>

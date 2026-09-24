@@ -12,7 +12,7 @@ Json Shellbag::toJson() const {
 	o.add(L"SIDName", Json::str(sidName));
 	o.add(L"Source",  Json::str(source));
 	log(3, L"🔈timeToIso8601 lastWriteTime");
-	o.add(L"LastWriteTime",    Json::str(timeToIso8601Local(lastWriteTime)));
+	o.add(L"LastWriteTime",    Json::str(utcTimeToIso8601Local(lastWriteTimeUtc)));
 	log(3, L"🔈timeToIso8601 lastWriteTimeUtc");
 	o.add(L"LastWriteTimeUtc", Json::str(timeToIso8601Utc(lastWriteTimeUtc)));
 	Json items = Json::arr();
@@ -110,8 +110,6 @@ HRESULT Shellbags::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std
 		shellbag.id = id;
 		log(2, L"❇️Shellbag id : " + id);
 		shellbag.lastWriteTimeUtc = lastWriteTimeUtc;
-		log(3, L"🔈utcToSuspectLocal lastWriteTime");
-		shellbag.lastWriteTime = utcToSuspectLocal(lastWriteTimeUtc);
 		shellbag.Parent = Parent;
 		shellbag.level = level;
 		shellbag.sid = sid;

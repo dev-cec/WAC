@@ -670,6 +670,15 @@ The local time is the \textbf{suspect's}, computed with the time zone read from
 its \fichier{SYSTEM} hive — not the collecting machine's. Dates carry the
 fraction of a second when the source provides it (down to a ten-millionth).
 
+Every date carries the offset in force \textbf{at that date}, daylight saving
+time included: a January date collected in summer in Paris is at
+\texttt{+01:00}, a July date at \texttt{+02:00}. \wac{} applies the rules of
+the examined machine year by year (\fichier{Dynamic DST} key of the
+\fichier{SOFTWARE} hive): a 2005 date in the United States follows the rules
+of 2005. For a value the artefact stores in local time (FAT date, Amcache,
+BAM…), the hour repeated in autumn is read as its first occurrence, and the
+hour skipped in spring with the offset before the change, as Windows does.
+
 \section{A missing field is not an empty field}
 
 A value with no source is not emitted at all. An empty key would read as a

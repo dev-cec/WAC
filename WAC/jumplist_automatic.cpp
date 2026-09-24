@@ -56,12 +56,6 @@ AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wst
 				memcpy(&createdUtc, &fileInfo.CreationTime, sizeof(createdUtc));
 				memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
 				memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
-				log(3, L"🔈utcToSuspectLocal createdUtc");
-				created = utcToSuspectLocal(createdUtc);
-				log(3, L"🔈utcToSuspectLocal modifiedUtc");
-				modified = utcToSuspectLocal(modifiedUtc);
-				log(3, L"🔈utcToSuspectLocal accessedUtc");
-				accessed = utcToSuspectLocal(accessedUtc);
 			}
 			else {
 				log(2, L"🔥GetFileInformationByHandleEx hFile", GetLastError());// show cause of failure
@@ -154,11 +148,11 @@ Json AutomaticDestination::toJson() {
 	o.add(L"SID",         Json::str(Sid));
 	o.add(L"SIDName",     Json::str(SidName));
 	o.add(L"Application", Json::str(application));
-	o.add(L"Created",     Json::str(timeToIso8601Local(created)));
+	o.add(L"Created",     Json::str(utcTimeToIso8601Local(createdUtc)));
 	o.add(L"CreatedUtc",  Json::str(timeToIso8601Utc(createdUtc)));
-	o.add(L"Modified",    Json::str(timeToIso8601Local(modified)));
+	o.add(L"Modified",    Json::str(utcTimeToIso8601Local(modifiedUtc)));
 	o.add(L"ModifiedUtc", Json::str(timeToIso8601Utc(modifiedUtc)));
-	o.add(L"Accessed",    Json::str(timeToIso8601Local(accessed)));
+	o.add(L"Accessed",    Json::str(utcTimeToIso8601Local(accessedUtc)));
 	o.add(L"AccessedUtc", Json::str(timeToIso8601Utc(accessedUtc)));
 	/* Each item: the shortcut's fields, and under "DestList" the entry that
 	   points to it — last access, host, droid GUIDs, pin status. Those were

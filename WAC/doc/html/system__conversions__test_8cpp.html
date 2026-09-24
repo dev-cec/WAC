@@ -118,6 +118,7 @@ $(document).ready(function(){initNavTree('system__conversions__test_8cpp.html','
 <code>#include &lt;vector&gt;</code><br />
 <code>#include &quot;<a class="el" href="tools_8h_source.html">tools.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="trans__id_8h_source.html">trans_id.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="time__zone_8h_source.html">time_zone.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -140,7 +141,11 @@ Variables</h2></td></tr>
 <li>to_FriendlyName / PSGetNameFromPropertyKey, on every property of the table: a name WAC gives must be the one Windows gives;</li>
 <li><a class="el" href="structFatDateTime.html#a0d149a27110e93ff0a8a39851bd4d0f9">FatDateTime::toFileTime</a> / DosDateTimeToFileTime, on every date with a sample of times and every time with a sample of dates: an impossible date (month 13, hour 25...) must give a null FILETIME, not whatever the stack held;</li>
 <li>wstring_to_filetime / SystemTimeToFileTime, valid and impossible dates;</li>
-<li>utcToSuspectLocal and suspectLocalToUtc: the SUSPECT's offset, not the running machine's, in both directions (LocalFileTimeToFileTime, used before, applied the machine's), and a null result out of range.</li>
+<li>utcToSuspectLocal and suspectLocalToUtc: the SUSPECT's offset, not the running machine's, in both directions (LocalFileTimeToFileTime, used before, applied the machine's), and a null result out of range;</li>
+<li>biasAtUtc / SystemTimeToTzSpecificLocalTimeEx and biasAtLocal / TzSpecificLocalTimeToSystemTimeEx, on EVERY time zone of Windows, with the rules read in the registry as WAC reads them in the suspect's hives: random instants from 1970 to 2040, and every transition (the hour skipped, the hour repeated) from 1980 to 2035;</li>
+<li>the rule read in <code>SYSTEM\...\TimeZoneInformation</code> (transition dates in the kernel's TIME_FIELDS layout) against GetTimeZoneInformation;</li>
+<li>the formatting of WAC end to end: a winter date collected in summer is labelled with its own offset, not the collection day's;</li>
+<li>random (forged) rules: offsets within bounds, no overflow.</li>
 </ul>
 <p>Usage: system_conversions_test Built by <code>build-windows.sh --test</code>; runs on Windows (the test VM). </p>
 </div><h2 class="groupheader">Function Documentation</h2>

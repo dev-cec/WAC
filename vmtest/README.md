@@ -36,7 +36,8 @@ wrong values in valid JSON:
 | Check | What it found |
 |---|---|
 | a Prefetch `Hash` vs the suffix of its file name | 65 wrong hashes out of 270 (hexadecimal formatted without padding) |
-| `X` / `XUtc` pairs carrying the same wall-clock time | double time-zone shift (`sessions`, `.lnk`, `InstallDate`) |
+| `X` / `XUtc` pairs (and lists, `Runs` / `RunsUtc`) naming the same instant | double time-zone shift (`sessions`, `.lnk`, `InstallDate`); Prefetch `RunsUtc` labelled `+02:00` (1,273 run times 2 h off) |
+| offset of every local date vs the tz database (zoneinfo) | every date labelled with the offset of the collection day (106 winter dates at `+02:00`); daylight saving dates of the SYSTEM hive read in the wrong layout |
 | no session starting before system boot | the first of those shifts — and later a boot time 3.5 s late, estimated from `GetTickCount64` |
 | boot time vs the Kernel-General 12 event | two independent sources of the boot instant: 0.00 s apart since the kernel value is used |
 | impossible service states, rate of `*_UNKNOWN`, presence of drivers | converters comparing enumeration filters with states |

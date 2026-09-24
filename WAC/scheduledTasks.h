@@ -72,8 +72,7 @@ struct ScheduledTask {
 	std::wstring runAsSid;             //!< SID, when that UserId is one
 	std::wstring state;                //!< "Enabled" / "Disabled"
 	bool         enabled = true;       //!< the same, as a boolean
-	FILETIME     lastRunTime = { 0 };      //!< last run, in the suspect's local time
-	FILETIME     lastRunTimeUtc = { 0 };   //!< the same instant, as DynamicInfo stores it
+	FILETIME     lastRunTimeUtc = { 0 };   //!< last run, UTC, as DynamicInfo stores it
 	LONG         lastTaskResult = 0;       //!< value the last run returned
 	std::wstring registrationDate;         //!< the XML's Date, as written
 	std::wstring sourceXml;                //!< path of the source XML, for traceability

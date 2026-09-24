@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <sstream>
 #include "offline_registry.h"
+#include "time_zone.h"
 #include <vector>
 #include <filesystem>
 #include <time.h>
@@ -43,7 +44,10 @@ struct TimeZoneInfo {
 	std::wstring keyName;          //!< TimeZoneKeyName, ex. "Romance Standard Time"
 	std::wstring standardName;     //!< name in standard time
 	std::wstring daylightName;     //!< name in daylight saving time
-	long activeBiasMinutes = 0;    //!< minutes to ADD to the local time to obtain UTC
+	TimeZoneRules rules;           //!< daylight saving rules, year by year: the offset of EACH date
+	int firstRuleYear = 0;         //!< first year of the rules per year ("Dynamic DST"), 0 if none
+	int lastRuleYear = 0;          //!< last year of the rules per year, 0 if none
+	long activeBiasMinutes = 0;    //!< offset at collection time: minutes to ADD to the local time to obtain UTC
 	long standardBiasMinutes = 0;  //!< offset outside daylight saving time (the hive's `Bias` value)
 	bool  daylightInEffect = false;//!< true if daylight saving time was in force at collection time
 	bool  fromHive = false;        //!< true if read in the suspect's SYSTEM hive
@@ -480,7 +484,11 @@ FILETIME wstring_to_filetime(std::wstring input);
 std::wstring timeToIso8601Utc(const FILETIME& filetime);
 
 /*! Formats a FILETIME **expressed in local time** as ISO 8601, with the
-* machine's time-zone offset (e.g. "+02:00").
+* offset in force at that local time on the examined machine (e.g. "+01:00" in
+* winter, "+02:00" in summer) — the one suspectLocalToUtc applies.
+* For a value the artefact stores in LOCAL time; a value stored in UTC is
+* formatted by utcTimeToIso8601Local, which knows its exact offset even in the
+* hour repeated in autumn.
 * @param filetime the instant, in the examined machine's local time
 * @return "YYYY-MM-DDTHH:MM:SS+HH:MM", or "" if the date is null
 */
@@ -497,7 +505,7 @@ std::wstring timeToIso8601Local(const FILETIME& filetime);
 std::wstring localTimeToIso8601Utc(const FILETIME& filetimeLocal);
 
 /*! Converts a FILETIME **expressed in UTC** to the local time of the EXAMINED
-* machine, then formats it as ISO 8601 with the time-zone offset.
+* machine, then formats it as ISO 8601 with the offset in force AT THAT DATE.
 *
 * WHY NOT `FileTimeToLocalFileTime` FOLLOWED BY `timeToIso8601Local`. That
 * combination, used until now, applies the offset of the machine RUNNING WAC
@@ -519,7 +527,9 @@ std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc);
 * examiner's time zone while carrying the label of the suspect's — two time
 * zones in one value. A single point of truth, `conf.timeZone`, avoids that
 * trap; the fallback on the running machine applies only if the SYSTEM hive
-* could not (yet) be read.
+* could not (yet) be read. The offset is the one in force AT THAT DATE
+* (daylight saving time, rules of the year), not the offset of the collection
+* day.
 *
 * NO RETURN CODE. The result is null (1601), hence not emitted, when the
 * input is null or the shift leaves the FILETIME range: the caller has nothing
@@ -547,6 +557,12 @@ FILETIME suspectLocalToUtc(const FILETIME& filetimeLocal);
 * `conf.timeZone`. To be called as soon as `conf.CurrentControlSet` is open:
 * every local timestamp formatted AFTERWARDS will carry the suspect's offset.
 *
+* The daylight saving rules come from the same key (the rule Windows applies
+* now) and, unless `DynamicDaylightTimeDisabled` is set, from the rules per
+* year of the zone in the SOFTWARE hive (`Time Zones\<key>\Dynamic DST`),
+* which must therefore be open: a date of 2005 in the United States follows
+* the rules of 2005, not those of today.
+*
 * On failure, `conf.timeZone.valid` stays false and the formatting falls back on
 * `GetTimeZoneInformation()` — which is right in a live collection, since the
 * examined machine is then the running machine.
@@ -555,28 +571,7 @@ FILETIME suspectLocalToUtc(const FILETIME& filetimeLocal);
 */
 HRESULT loadSuspectTimeZone();
 
-/*! Time-zone offset used to format local times, as "+HH:MM".
-* Comes from the suspect's hive if it could be read, otherwise from the running
-* machine.
-* @return the offset, e.g. L"+02:00"
-*/
-std::wstring localUtcOffsetString();
 
-/*! Formats a SYSTEMTIME as ISO 8601.
-* @param systemtime the instant
-* @param utc true if the value is in UTC (suffix "Z"), false if it is in local
-*        time (suffix of the machine's time zone)
-* @return the formatted date, or "" if it is null
-*/
-/*! @param fraction100ns fraction of a second, in hundreds of nanoseconds
-*         (0..9999999), or -1 not to write it.
-*
-*  WHY THIS PARAMETER. A SYSTEMTIME only carries the millisecond, a FILETIME
-*  goes down to a hundred nanoseconds. The callers that hold the original
-*  FILETIME pass the real fraction; the others pass -1, and the timestamp stops
-*  at the second rather than displaying a precision it does not have.
-*/
-std::wstring timeToIso8601(const SYSTEMTIME& systemtime, bool utc, long fraction100ns = -1);
 
 /*! Decodes bytes into UTF-16 text — THE conversion from bytes to text in WAC.
 *

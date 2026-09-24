@@ -137,6 +137,8 @@ var hierarchy =
     [ "SystemInfo", "structSystemInfo.html", null ],
     [ "TableMessages", "classTableMessages.html", null ],
     [ "TimeZoneInfo", "structTimeZoneInfo.html", null ],
+    [ "TimeZoneRule", "structTimeZoneRule.html", null ],
+    [ "TimeZoneRules", "structTimeZoneRules.html", null ],
     [ "Trigger", "structTrigger.html", null ],
     [ "Usbstor", "structUsbstor.html", null ],
     [ "Usbstors", "structUsbstors.html", null ],

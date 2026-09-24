@@ -140,11 +140,8 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:aba2ef89d590f909740d4c868428c71c5" id="r_aba2ef89d590f909740d4c868428c71c5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledTask.html#aba2ef89d590f909740d4c868428c71c5">enabled</a> = true</td></tr>
 <tr class="memdesc:aba2ef89d590f909740d4c868428c71c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">the same, as a boolean  <br /></td></tr>
 <tr class="separator:aba2ef89d590f909740d4c868428c71c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a91bb12c2e00193cf1cfcf1843b1576e5" id="r_a91bb12c2e00193cf1cfcf1843b1576e5"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledTask.html#a91bb12c2e00193cf1cfcf1843b1576e5">lastRunTime</a> = { 0 }</td></tr>
-<tr class="memdesc:a91bb12c2e00193cf1cfcf1843b1576e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">last run, in the suspect's local time  <br /></td></tr>
-<tr class="separator:a91bb12c2e00193cf1cfcf1843b1576e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a47dd4c9ec9b5445e6be00b23125f7cc0" id="r_a47dd4c9ec9b5445e6be00b23125f7cc0"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledTask.html#a47dd4c9ec9b5445e6be00b23125f7cc0">lastRunTimeUtc</a> = { 0 }</td></tr>
-<tr class="memdesc:a47dd4c9ec9b5445e6be00b23125f7cc0"><td class="mdescLeft">&#160;</td><td class="mdescRight">the same instant, as DynamicInfo stores it  <br /></td></tr>
+<tr class="memdesc:a47dd4c9ec9b5445e6be00b23125f7cc0"><td class="mdescLeft">&#160;</td><td class="mdescRight">last run, UTC, as DynamicInfo stores it  <br /></td></tr>
 <tr class="separator:a47dd4c9ec9b5445e6be00b23125f7cc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aed45346c6c1f6295171607e797b87eef" id="r_aed45346c6c1f6295171607e797b87eef"><td class="memItemLeft" align="right" valign="top">LONG&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledTask.html#aed45346c6c1f6295171607e797b87eef">lastTaskResult</a> = 0</td></tr>
 <tr class="memdesc:aed45346c6c1f6295171607e797b87eef"><td class="mdescLeft">&#160;</td><td class="mdescRight">value the last run returned  <br /></td></tr>
@@ -267,22 +264,6 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a91bb12c2e00193cf1cfcf1843b1576e5" name="a91bb12c2e00193cf1cfcf1843b1576e5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a91bb12c2e00193cf1cfcf1843b1576e5">&#9670;&#160;</a></span>lastRunTime</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">FILETIME ScheduledTask::lastRunTime = { 0 }</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>last run, in the suspect's local time </p>
-
-</div>
-</div>
 <a id="a47dd4c9ec9b5445e6be00b23125f7cc0" name="a47dd4c9ec9b5445e6be00b23125f7cc0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a47dd4c9ec9b5445e6be00b23125f7cc0">&#9670;&#160;</a></span>lastRunTimeUtc</h2>
 
@@ -295,7 +276,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>the same instant, as DynamicInfo stores it </p>
+<p>last run, UTC, as DynamicInfo stores it </p>
 
 </div>
 </div>

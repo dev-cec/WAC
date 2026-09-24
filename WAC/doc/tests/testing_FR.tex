@@ -224,7 +224,8 @@ forme des chemins, le script confronte des sources indépendantes :
 empreinte d'un Prefetch / suffixe de son nom de fichier & 65 empreintes fausses sur 270 (hexadécimal sans remplissage) \\
 nom de l'exécutable d'un Prefetch / début du nom de fichier & un nom lu 8 octets trop tôt (« \textbackslash x11 » partout) \\
 chemins \texttt{\textbackslash VOLUME\{guid\}} d'un Prefetch résolus & 20~066 chemins sur 20~066 non résolus \\
-couples \texttt{X} / \texttt{XUtc} & double décalage horaire \\
+couples \texttt{X} / \texttt{XUtc}, listes comprises & double décalage horaire ; \texttt{RunsUtc} des Prefetch décalés de 2~h \\
+décalage de chaque date locale / base tz & décalage du jour de collecte appliqué à toutes les dates ; dates de changement d'heure mal lues \\
 aucune session antérieure au démarrage & décalages de dates, heure de démarrage en retard de 3,5~s \\
 date ShimCache / date NTFS du manifeste & une date UTC traitée comme locale (\,-2~h) \\
 entrées DestList / raccourcis des listes de sauts & les 15 premières entrées de chaque liste perdues \\
@@ -359,7 +360,15 @@ Windows remplacées : GUID (\texttt{StringFromGUID2}), SID dans les deux sens
 (\texttt{ConvertSidToStringSidW}, \texttt{ConvertStringSidToSidW}), dates OLE
 (\texttt{VariantTimeToSystemTime}) et noms de propriétés
 (\texttt{PSGetNameFromPropertyKey}), dates FAT
-(\texttt{DosDateTimeToFileTime}, sur toutes les dates). Il vérifie aussi le
+(\texttt{DosDateTimeToFileTime}, sur toutes les dates), et l'heure d'été :
+le décalage de \wac{} dans les deux sens (\texttt{SystemTimeToTzSpecificLocalTimeEx},
+\texttt{TzSpecificLocalTimeToSystemTimeEx}) sur \emph{tous} les fuseaux de
+Windows, avec leurs règles année par année, aux transitions (heure sautée,
+heure répétée, changement de règle au 1\textsuperscript{er} janvier) de 1980
+à 2035 ; la lecture de \fichier{SYSTEM\textbackslash...\textbackslash
+TimeZoneInformation}, dont les dates de changement d'heure sont des
+\texttt{TIME\_FIELDS} et non des \texttt{SYSTEMTIME} ; des règles forgées au
+hasard. Il vérifie aussi le
 décalage horaire du suspect dans les deux sens : une date locale convertie en
 UTC doit l'être avec le fuseau de la machine examinée, et non avec celui de la
 machine qui exécute \wac{}. Une date impossible (mois 13, heure 25) donne une
@@ -371,7 +380,7 @@ générée depuis le schéma d'un Windows de référence par
 system_conversions_test.exe
 \end{lstlisting}
 
-À lancer sous Windows (la VM). Référence : 1~761~979 comparaisons, aucun écart.
+À lancer sous Windows (la VM). Référence : 9~661~284 comparaisons, aucun écart.
 Deux écarts voulus : \wac{} refuse un SID écrit que Windows tronquerait
 (sous-autorité de $2^{32}$ ou plus, seizième sous-autorité), et une date NaN,
 pour laquelle Windows rend une heure dénuée de sens.

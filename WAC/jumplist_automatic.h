@@ -51,12 +51,9 @@ struct AutomaticDestination {
 
 	oleParser ole; //!< reader of the OLE compound document the file is
 	std::vector<JumplistEntry> entries; //!< one per opened file, in DestList order
-	FILETIME created = { 0 };     //!< creation of the jump list FILE, local time
-	FILETIME createdUtc = { 0 };  //!< the same instant in UTC
-	FILETIME modified = { 0 };    //!< last modification of that file, local time
-	FILETIME modifiedUtc = { 0 };	//!< the same instant in UTC
-	FILETIME accessed = { 0 };    //!< last access to that file, local time
-	FILETIME accessedUtc = { 0 };	//!< the same instant in UTC
+	FILETIME createdUtc = { 0 };  //!< creation of the jump list FILE, UTC (the local time is derived at output)
+	FILETIME modifiedUtc = { 0 };	//!< last modification of that file, UTC
+	FILETIME accessedUtc = { 0 };	//!< last access to that file, UTC
 
 	/*! Reads a jump list and every shortcut in it.
 	* @param _path path of the .automaticDestinations-ms file.

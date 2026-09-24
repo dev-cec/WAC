@@ -39,8 +39,7 @@ public:
 	std::wstring sid = L"";        //!< SID of the user who opened the file
 	std::wstring sidName = L"";    //!< name of that user
 	std::wstring source = L"";     //!< the key it comes from: `OpenSavePidlMRU` or `OpenSaveMRU`
-	FILETIME lastWriteTime = { 0 };    //!< last write to the KEY, suspect's local time
-	FILETIME lastWriteTimeUtc = { 0 }; //!< the same instant in UTC
+	FILETIME lastWriteTimeUtc = { 0 }; //!< last write to the KEY, UTC (the local time is derived at output)
 	std::vector<std::unique_ptr<IdList>> shellitems; //!< the PIDL, item by item
 
 	/*! Converts the entry to JSON, shell items included.

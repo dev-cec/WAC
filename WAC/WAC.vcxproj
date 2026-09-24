@@ -197,6 +197,7 @@
     <ClCompile Include="services.cpp" />
     <ClCompile Include="sessions.cpp" />
     <ClCompile Include="system.cpp" />
+    <ClCompile Include="time_zone.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="xml_light.cpp" />
     <ClCompile Include="trans_id.cpp" />
@@ -251,6 +252,7 @@
     <ClInclude Include="services.h" />
     <ClInclude Include="sessions.h" />
     <ClInclude Include="system.h" />
+    <ClInclude Include="time_zone.h" />
     <ClInclude Include="tools.h" />
     <ClInclude Include="xml_light.h" />
     <ClInclude Include="trans_id.h" />

@@ -11,7 +11,7 @@ Json Run::toJson() {
 	o.add(L"Key",              Json::str(Key));
 	o.add(L"Name",             Json::str(Name));
 	o.add(L"Value",            Json::str(Value));      // raw command line
-	o.add(L"LastWriteTime",    Json::str(timeToIso8601Local(lastWriteTime)));
+	o.add(L"LastWriteTime",    Json::str(utcTimeToIso8601Local(lastWriteTimeUtc)));
 	o.add(L"LastWriteTimeUtc", Json::str(timeToIso8601Utc(lastWriteTimeUtc)));
 	return o;
 }
@@ -56,8 +56,6 @@ HRESULT Runs::getData() {
 			Run run;
 			bufferSize = MAX_VALUE_NAME;
 			run.lastWriteTimeUtc = lastWriteTimeUtc;
-			log(3, L"🔈utcToSuspectLocal lastWriteTime");
-			run.lastWriteTime = utcToSuspectLocal(lastWriteTimeUtc);
 			DWORD cData = MAX_DATA;
 			log(3, L"🔈OREnumValue Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey + L" " + std::to_wstring(i));
 			hresult = OREnumValue(hKey, i, valueName, &bufferSize, &dType, NULL, &cData);
@@ -113,8 +111,6 @@ HRESULT Runs::getData() {
 				bufferSize = MAX_VALUE_NAME;
 				DWORD cData = MAX_DATA;
 				run.lastWriteTimeUtc = lastWriteTimeUtc;
-				log(3, L"🔈utcToSuspectLocal lastWriteTime");
-				run.lastWriteTime = utcToSuspectLocal(lastWriteTimeUtc);
 				log(3, L"🔈OREnumValue Software\\Microsoft\\Windows\\CurrentVersion\\" + runKey + L" " + std::to_wstring(i));
 				hresult = OREnumValue(hKey, i, valueName, &bufferSize, &dType, NULL, &cData);
 				if (hresult != ERROR_SUCCESS) {

@@ -66,7 +66,6 @@ struct ServiceStruct
 	BinaryFingerprint serviceFingerprint;      //!< fingerprints of the binary, if `--binary`
 	BinaryFingerprint serviceDllFingerprint;   //!< fingerprints of the ServiceDll, if `--binary`
 	FILETIME lastWriteTimeUtc = { 0, 0 };   //!< last write to the key, in UTC
-	FILETIME lastWriteTime = { 0, 0 };      //!< the same instant, suspect's local time
 
 	// --- volatile state, measured live ---
 	bool         stateRead = false;        //!< true if the SCM answered for this service

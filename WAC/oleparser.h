@@ -51,7 +51,6 @@ struct DestFile {
 	std::wstring guidBirthDroidFile=L"";//!< GUID containing an NTFS object identifier
 	std::wstring hostname=L"";//!< Contains an ASCII string unused characters are filled with 0 - byte values
 	std::wstring pathObject=L"";//!< Contains a UTF-16 little-endian string without an end-of-string character
-	FILETIME lastModificationTime = { 0 };//!< last modification date
 	FILETIME lastModificationTimeUtc = { 0 };//!< last modification date in UTC
 	short int pathObjectSize = 0; //!< size of the path object
 	unsigned int entryNumber = 0;//!< number of the entry

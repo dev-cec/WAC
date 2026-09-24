@@ -72,16 +72,10 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 		   conversion is removed: formatting a date to find out whether it is null
 		   is useless, and converting a null date has no effect. */
 		targetCreatedUtc = *reinterpret_cast<FILETIME*>(buffer + 28);
-		log(3, L"🔈utcToSuspectLocal targetCreated");
-		targetCreated = utcToSuspectLocal(targetCreatedUtc);
 
 		targetAccessedUtc = *reinterpret_cast<FILETIME*>(buffer + 36);
-		log(3, L"🔈utcToSuspectLocal targetAccessed");
-		targetAccessed = utcToSuspectLocal(targetAccessedUtc);
 
 		targetModifiedUtc = *reinterpret_cast<FILETIME*>(buffer + 44);
-		log(3, L"🔈utcToSuspectLocal targetModified");
-		targetModified = utcToSuspectLocal(targetModifiedUtc);
 		iconIndex = u32(56);
 		log(3, L"🔈showCommandOption commandOption");
 		commandOption = showCommandOption(u32(60)); //
@@ -321,12 +315,6 @@ RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 		memcpy(&sourceCreatedUtc, &fileInfo.CreationTime, sizeof(sourceCreatedUtc));
 		memcpy(&sourceModifiedUtc, &fileInfo.LastWriteTime, sizeof(sourceModifiedUtc));
 		memcpy(&sourceAccessedUtc, &fileInfo.LastAccessTime, sizeof(sourceAccessedUtc));
-		log(3, L"🔈utcToSuspectLocal sourceCreated");
-		sourceCreated = utcToSuspectLocal(sourceCreatedUtc);
-		log(3, L"🔈utcToSuspectLocal sourceModified");
-		sourceModified = utcToSuspectLocal(sourceModifiedUtc);
-		log(3, L"🔈utcToSuspectLocal sourceAccessed");
-		sourceAccessed = utcToSuspectLocal(sourceAccessedUtc);
 	}
 	CloseHandle(hFile);
 }
@@ -353,17 +341,17 @@ Json RecentDoc::toJson() {
 	if (!md5Source.empty()) o.add(L"Md5Source", Json::str(md5Source));
 	o.add(L"Target",            Json::str(target));
 	addFingerprints(o, targetFingerprint, L"", L"Target");
-	o.add(L"SourceCreated",     Json::str(timeToIso8601Local(sourceCreated)));
+	o.add(L"SourceCreated",     Json::str(utcTimeToIso8601Local(sourceCreatedUtc)));
 	o.add(L"SourceCreatedUtc",  Json::str(timeToIso8601Utc(sourceCreatedUtc)));
-	o.add(L"SourceModified",    Json::str(timeToIso8601Local(sourceModified)));
+	o.add(L"SourceModified",    Json::str(utcTimeToIso8601Local(sourceModifiedUtc)));
 	o.add(L"SourceModifiedUtc", Json::str(timeToIso8601Utc(sourceModifiedUtc)));
-	o.add(L"SourceAccessed",    Json::str(timeToIso8601Local(sourceAccessed)));
+	o.add(L"SourceAccessed",    Json::str(utcTimeToIso8601Local(sourceAccessedUtc)));
 	o.add(L"SourceAccessedUtc", Json::str(timeToIso8601Utc(sourceAccessedUtc)));
-	o.add(L"TargetCreated",     Json::str(timeToIso8601Local(targetCreated)));
+	o.add(L"TargetCreated",     Json::str(utcTimeToIso8601Local(targetCreatedUtc)));
 	o.add(L"TargetCreatedUtc",  Json::str(timeToIso8601Utc(targetCreatedUtc)));
-	o.add(L"TargetModified",    Json::str(timeToIso8601Local(targetModified)));
+	o.add(L"TargetModified",    Json::str(utcTimeToIso8601Local(targetModifiedUtc)));
 	o.add(L"TargetModifiedUtc", Json::str(timeToIso8601Utc(targetModifiedUtc)));
-	o.add(L"TargetAccessed",    Json::str(timeToIso8601Local(targetAccessed)));
+	o.add(L"TargetAccessed",    Json::str(utcTimeToIso8601Local(targetAccessedUtc)));
 	o.add(L"TargetAccessedUtc", Json::str(timeToIso8601Utc(targetAccessedUtc)));
 	o.add(L"LNKFlags",          Json::str(flags.to_wstring()));
 	o.add(L"FileAttributes",    Json::str(attributes.to_wstring()));

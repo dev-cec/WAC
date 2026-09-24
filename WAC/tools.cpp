@@ -442,23 +442,38 @@ bool nullDate(const FILETIME& ft) {
 	return ft.dwLowDateTime == 0 && ft.dwHighDateTime == 0;
 }
 
-//! Offset of the RUNNING machine (fallback when the hive cannot be read).
-long machineBiasMinutes() {
-	TIME_ZONE_INFORMATION tz = { 0 };
-	const DWORD type = GetTimeZoneInformation(&tz);
-	if (type == TIME_ZONE_ID_INVALID) return 0;
-	// Bias is in minutes to ADD to the local time to obtain UTC.
-	return tz.Bias + ((type == TIME_ZONE_ID_DAYLIGHT) ? tz.DaylightBias : tz.StandardBias);
+const long long MINUTE_100NS = 600000000LL;   //!< one minute, in hundreds of nanoseconds
+
+/*! Rules of the RUNNING machine: the fallback when the suspect's hive cannot
+ *  be read, right in a live collection since the machine is then the same.
+ *  Only its current rule; the rules per year come from the hive. Built once:
+ *  the running machine does not change during the collection. */
+const TimeZoneRules& machineRules() {
+	static const TimeZoneRules rules = [] {
+		TimeZoneRules r;
+		TIME_ZONE_INFORMATION tz = {};
+		if (GetTimeZoneInformation(&tz) == TIME_ZONE_ID_INVALID) return r;
+		// Through the registry layout, to share the validation of parseTimeZoneRule.
+		BYTE tzi[44] = {};
+		const int32_t bias[3] = { (int32_t)tz.Bias, (int32_t)tz.StandardBias, (int32_t)tz.DaylightBias };
+		memcpy(tzi, bias, sizeof(bias));
+		memcpy(tzi + 12, &tz.StandardDate, sizeof(SYSTEMTIME));
+		memcpy(tzi + 28, &tz.DaylightDate, sizeof(SYSTEMTIME));
+		parseTimeZoneRule(tzi, sizeof(tzi), r.current);
+		return r;
+	}();
+	return rules;
 }
 
-} // namespace
+/*! The rules that date local times: the suspect's once its SYSTEM hive is
+ *  read, the running machine's before. Not cached: the answer changes at the
+ *  moment the hive becomes readable. */
+const TimeZoneRules& suspectRules() {
+	return conf.timeZone.valid ? conf.timeZone.rules : machineRules();
+}
 
-std::wstring localUtcOffsetString() {
-	/* No cache: the value changes during the run, at the moment the suspect's
-	   SYSTEM hive becomes readable. A cache would freeze the running machine's
-	   offset for the whole collection. */
-	const long bias = conf.timeZone.valid ? conf.timeZone.activeBiasMinutes
-	                                       : machineBiasMinutes();
+//! "+HH:MM" of a bias (minutes to ADD to the local time to obtain UTC).
+std::wstring offsetSuffix(long bias) {
 	const long minutes = -bias;          // minutes to add to UTC to get the local time
 	std::wstring s;
 	s += (minutes < 0) ? L'-' : L'+';
@@ -468,6 +483,9 @@ std::wstring localUtcOffsetString() {
 	twoDigits(s, (unsigned)(absolute % 60));
 	return s;
 }
+
+} // namespace
+
 
 namespace {
 
@@ -708,6 +726,70 @@ void loadSystemDrive() {
 	}
 }
 
+namespace {
+
+//! Reads a registry value of an exact size; false if it is absent or of another size.
+bool readExactValue(ORHKEY key, PCWSTR subKey, PCWSTR name, void* out, DWORD size) {
+	DWORD read = size;
+	return ORGetValue(key, subKey, name, nullptr, out, &read) == ERROR_SUCCESS && read == size;
+}
+
+/*! Reads the daylight saving rules of the suspect's time zone into
+ *  conf.timeZone.rules. The current rule comes from the values of
+ *  TimeZoneInformation (parseTimeZoneInformation: beware their layout);
+ *  the rules per year come from the zone's "Dynamic DST" key in SOFTWARE.
+ *  Failing that, the rule stays the offset of the collection day, without
+ *  daylight saving time — the former behaviour — and the log says so.
+ *  @param key the TimeZoneInformation key, under CurrentControlSet */
+void loadSuspectTimeZoneRules(PCWSTR key) {
+	TimeZoneRules& rules = conf.timeZone.rules;
+	int32_t bias = 0, standardBias = 0, daylightBias = 0;
+	BYTE standardStart[16] = {}, daylightStart[16] = {};
+	if (!readExactValue(conf.CurrentControlSet, key, L"Bias", &bias, 4)
+	    || !readExactValue(conf.CurrentControlSet, key, L"StandardBias", &standardBias, 4)
+	    || !readExactValue(conf.CurrentControlSet, key, L"DaylightBias", &daylightBias, 4)
+	    || !readExactValue(conf.CurrentControlSet, key, L"StandardStart", standardStart, 16)
+	    || !readExactValue(conf.CurrentControlSet, key, L"DaylightStart", daylightStart, 16)
+	    || !parseTimeZoneInformation(bias, standardBias, daylightBias, standardStart, daylightStart, rules.current)) {
+		rules.current = TimeZoneRule{};
+		rules.current.biasMinutes = conf.timeZone.activeBiasMinutes;
+		log(2, L"🔥Daylight saving rules unreadable: the offset of the collection day applies to every date");
+		return;
+	}
+	DWORD disabled = 0;
+	if (getRegDwordValue(conf.CurrentControlSet, key, L"DynamicDaylightTimeDisabled", &disabled) == ERROR_SUCCESS
+	    && disabled != 0) {
+		log(2, L"❇️Rules per year disabled on the examined machine: its current rule applies to every year");
+		return;
+	}
+	// The key name comes from the hive: a separator in it would read another key.
+	const std::wstring& zone = conf.timeZone.keyName;
+	if (!conf.Software || zone.empty() || zone.find(L'\\') != std::wstring::npos) return;
+	const std::wstring dynamic = L"Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\" + zone + L"\\Dynamic DST";
+	DWORD first = 0, last = 0;
+	if (!readExactValue(conf.Software, dynamic.c_str(), L"FirstEntry", &first, 4)
+	    || !readExactValue(conf.Software, dynamic.c_str(), L"LastEntry", &last, 4)) return;
+	if (first < 1601 || last > 30827 || first > last || last - first > 1000) {
+		log(2, L"🔥Dynamic DST of " + zone + L": inconsistent years, ignored");
+		return;
+	}
+	for (DWORD year = first; year <= last; ++year) {
+		BYTE bytes[44] = {};
+		TimeZoneRule rule;
+		if (readExactValue(conf.Software, dynamic.c_str(), std::to_wstring(year).c_str(), bytes, sizeof(bytes))
+		    && parseTimeZoneRule(bytes, sizeof(bytes), rule))
+			rules.byYear[(int)year] = rule;
+	}
+	if (!rules.byYear.empty()) {
+		conf.timeZone.firstRuleYear = rules.byYear.begin()->first;
+		conf.timeZone.lastRuleYear = rules.byYear.rbegin()->first;
+		log(2, L"❇️Daylight saving rules per year: " + std::to_wstring(conf.timeZone.firstRuleYear)
+		     + L"-" + std::to_wstring(conf.timeZone.lastRuleYear));
+	}
+}
+
+} // namespace
+
 HRESULT loadSuspectTimeZone() {
 	conf.timeZone = TimeZoneInfo{};       // starts again from a clean state
 	if (!conf.CurrentControlSet) return ERROR_INVALID_HANDLE;
@@ -750,15 +832,23 @@ HRESULT loadSuspectTimeZone() {
 	getRegSzValue(conf.CurrentControlSet, key, L"TimeZoneKeyName", &conf.timeZone.keyName);
 	getRegSzValue(conf.CurrentControlSet, key, L"StandardName",    &conf.timeZone.standardName);
 	getRegSzValue(conf.CurrentControlSet, key, L"DaylightName",    &conf.timeZone.daylightName);
+	loadSuspectTimeZoneRules(key);
 	conf.timeZone.fromHive = true;
 	conf.timeZone.valid    = true;
 
 	log(2, L"❇️Suspect's time zone (SYSTEM hive): " + conf.timeZone.keyName
-	     + L", UTC" + localUtcOffsetString());
+	     + L", UTC" + offsetSuffix(conf.timeZone.activeBiasMinutes) + L" at collection time");
 	return ERROR_SUCCESS;
 }
 
-std::wstring timeToIso8601(const SYSTEMTIME& st, bool utc, long fraction100ns) {
+namespace {
+
+/*! Formats a SYSTEMTIME as ISO 8601, with the suffix given.
+ *  @param st the date
+ *  @param fraction100ns fraction of a second, in hundreds of nanoseconds (0..9999999)
+ *  @param suffix "Z", or the offset "+HH:MM" of the value
+ *  @return the formatted date, or "" if it is null */
+std::wstring formatIso8601(const SYSTEMTIME& st, long fraction100ns, const std::wstring& suffix) {
 	if (st.wYear <= 1601) return L"";        // null date: an empty string, not 1601
 	std::wstring s;
 	s.reserve(33);
@@ -773,17 +863,13 @@ std::wstring timeToIso8601(const SYSTEMTIME& st, bool utc, long fraction100ns) {
 	    finished string: on the local variant, whose "+02:00" suffix ends with
 	    digits, the search stopped at once and the fraction landed AFTER the
 	    time-zone offset. */
-	if (fraction100ns >= 0) {
-		s += L'.';
-		for (int p = 6; p >= 0; --p) {
-			long divisor = 1;
-			for (int k = 0; k < p; ++k) divisor *= 10;
-			s += (wchar_t)(L'0' + ((fraction100ns / divisor) % 10));
-		}
+	s += L'.';
+	for (int p = 6; p >= 0; --p) {
+		long divisor = 1;
+		for (int k = 0; k < p; ++k) divisor *= 10;
+		s += (wchar_t)(L'0' + ((fraction100ns / divisor) % 10));
 	}
-	if (utc) s += L'Z';
-	else     s += localUtcOffsetString();
-	return s;
+	return s + suffix;
 }
 
 /*  SUB-SECOND PRECISION.
@@ -802,12 +888,36 @@ std::wstring timeToIso8601(const SYSTEMTIME& st, bool utc, long fraction100ns) {
  *  The fraction is taken from the FILETIME and not from the SYSTEMTIME: it is
  *  the only source that carries it.
  */
-namespace {
-
 //! Fraction of a second of a FILETIME, in hundreds of nanoseconds (0..9999999).
 long fraction100ns(const FILETIME& ft) {
 	const ULONGLONG v = ((ULONGLONG)ft.dwHighDateTime << 32) | ft.dwLowDateTime;
 	return (long)(v % 10000000ULL);
+}
+
+//! A FILETIME as a signed count of 100 ns (negative if bit 63 is set: not a date for Windows).
+long long ticksOf(const FILETIME& ft) {
+	return (long long)(((ULONGLONG)ft.dwHighDateTime << 32) | ft.dwLowDateTime);
+}
+
+/*! Shifts a FILETIME by an offset.
+ *  @return the shifted instant, or a null FILETIME if the input is not a date
+ *          or the result leaves the FILETIME range */
+FILETIME shifted(const FILETIME& filetime, long long offset100ns) {
+	const long long value = ticksOf(filetime);
+	// A FILETIME is signed-positive for Windows: FileTimeToSystemTime refuses bit 63.
+	if (value <= 0) return FILETIME{ 0, 0 };
+	if (offset100ns < 0 ? value < -offset100ns : value > LLONG_MAX - offset100ns)
+		return FILETIME{ 0, 0 };
+	const ULONGLONG result = (ULONGLONG)(value + offset100ns);
+	return FILETIME{ (DWORD)(result & 0xFFFFFFFFULL), (DWORD)(result >> 32) };
+}
+
+//! Formats a local FILETIME with the bias that goes with it.
+std::wstring formatLocal(const FILETIME& local, long bias) {
+	if (nullDate(local)) return L"";
+	SYSTEMTIME st = { 0 };
+	if (!FileTimeToSystemTime(&local, &st)) return L"";
+	return formatIso8601(st, fraction100ns(local), offsetSuffix(bias));
 }
 
 } // namespace
@@ -816,55 +926,35 @@ std::wstring timeToIso8601Utc(const FILETIME& filetime) {
 	if (nullDate(filetime)) return L"";
 	SYSTEMTIME st = { 0 };
 	if (!FileTimeToSystemTime(&filetime, &st)) return L"";
-	return timeToIso8601(st, true, fraction100ns(filetime));
+	return formatIso8601(st, fraction100ns(filetime), L"Z");
 }
 
 std::wstring timeToIso8601Local(const FILETIME& filetime) {
 	if (nullDate(filetime)) return L"";
-	SYSTEMTIME st = { 0 };
-	if (!FileTimeToSystemTime(&filetime, &st)) return L"";
-	return timeToIso8601(st, false, fraction100ns(filetime));
+	// The offset suspectLocalToUtc applies to the same local time: label and UTC agree.
+	return formatLocal(filetime, biasAtLocal(suspectRules(), ticksOf(filetime)));
 }
 
-namespace {
-
-/*! Shifts a FILETIME by the suspect's offset, in the direction asked: the one
- *  implementation of both directions, so that they cannot drift apart.
- *  @param filetime the instant
- *  @param toUtc true for local -> UTC, false for UTC -> local
- *  @return the shifted instant, or a null FILETIME (input null, or the result
- *          out of the FILETIME range) */
-FILETIME shiftBySuspectBias(const FILETIME& filetime, bool toUtc) {
-	if (nullDate(filetime)) return FILETIME{ 0, 0 };
-	/* The bias is in minutes to ADD to the local time to obtain UTC (the hive's
-	   convention): local -> UTC adds it, UTC -> local subtracts it. Same source
-	   as localUtcOffsetString(), so that the value and its label speak of the
-	   same time zone. */
-	const long bias = conf.timeZone.valid ? conf.timeZone.activeBiasMinutes
-	                                       : machineBiasMinutes();
-	const long long offset100ns = (toUtc ? 1LL : -1LL) * (long long)bias * 60LL * 10000000LL;
-	const long long value = (long long)(((ULONGLONG)filetime.dwHighDateTime << 32) | filetime.dwLowDateTime);
-	// A FILETIME is signed-positive for Windows: FileTimeToSystemTime refuses bit 63.
-	if (value < 0) return FILETIME{ 0, 0 };
-	if (offset100ns < 0 ? value < -offset100ns : value > LLONG_MAX - offset100ns)
-		return FILETIME{ 0, 0 };
-	const ULONGLONG shifted = (ULONGLONG)(value + offset100ns);
-	if (shifted == 0) return FILETIME{ 0, 0 };
-	return FILETIME{ (DWORD)(shifted & 0xFFFFFFFFULL), (DWORD)(shifted >> 32) };
-}
-
-} // namespace
-
+/* Each date takes the offset in force AT THAT DATE, from the suspect's rules
+   (time_zone.h): a winter date collected in summer is at +01:00, not +02:00.
+   Same source as the labels, so that a value and its label speak of the same
+   time zone. */
 FILETIME utcToSuspectLocal(const FILETIME& filetimeUtc) {
-	return shiftBySuspectBias(filetimeUtc, false);
+	if (nullDate(filetimeUtc)) return FILETIME{ 0, 0 };
+	return shifted(filetimeUtc, -biasAtUtc(suspectRules(), ticksOf(filetimeUtc)) * MINUTE_100NS);
 }
 
 FILETIME suspectLocalToUtc(const FILETIME& filetimeLocal) {
-	return shiftBySuspectBias(filetimeLocal, true);
+	if (nullDate(filetimeLocal)) return FILETIME{ 0, 0 };
+	return shifted(filetimeLocal, biasAtLocal(suspectRules(), ticksOf(filetimeLocal)) * MINUTE_100NS);
 }
 
 std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc) {
-	return timeToIso8601Local(utcToSuspectLocal(filetimeUtc));
+	if (nullDate(filetimeUtc)) return L"";
+	/* The bias of the UTC instant labels the result: in the hour repeated in
+	   autumn, the local time alone could not tell which of the two offsets. */
+	const long bias = biasAtUtc(suspectRules(), ticksOf(filetimeUtc));
+	return formatLocal(shifted(filetimeUtc, -bias * MINUTE_100NS), bias);
 }
 
 std::wstring localTimeToIso8601Utc(const FILETIME& filetimeLocal) {

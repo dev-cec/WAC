@@ -10,7 +10,6 @@ var structDestFile =
     [ "guidDroidFile", "structDestFile.html#a69fef023fac90a9bb22111fbe3f82282", null ],
     [ "guidDroidVolume", "structDestFile.html#a28ae8237d680f92b3be1c16c4d40a469", null ],
     [ "hostname", "structDestFile.html#a37d1db53e5c3ee0b5d945d850cc657a3", null ],
-    [ "lastModificationTime", "structDestFile.html#a8c03e2d46a9cd3f7cb053aecb6bdc8e4", null ],
     [ "lastModificationTimeUtc", "structDestFile.html#a64f8a7d687d7711bb44cfc3ec557ac0f", null ],
     [ "pathObject", "structDestFile.html#ae25c6b299b5aa1425abdf7eb09e13031", null ],
     [ "pathObjectSize", "structDestFile.html#a4e6eeb2866cacd4f254bb2c01beffc21", null ],

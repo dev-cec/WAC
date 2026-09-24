@@ -4,7 +4,6 @@ var structVolumeInfo =
     [ "VolumeInfo", "structVolumeInfo.html#abacd86de131829b57825cddc90602c37", null ],
     [ "clear", "structVolumeInfo.html#a650b617488d49b303d518366a0f5d294", null ],
     [ "toJson", "structVolumeInfo.html#ab56ef08b4e7f780fce14dd0621dbc916", null ],
-    [ "creationTime", "structVolumeInfo.html#abfd81bc350ea89d4a990a61dbae5aaaa", null ],
     [ "creationTimeUtc", "structVolumeInfo.html#a176d1cb6073a84b8904b31725c98291b", null ],
     [ "deviceName", "structVolumeInfo.html#afc255e016a1de97b61a5420f38e69fb2", null ],
     [ "dirStrings", "structVolumeInfo.html#a271513d86cf1b7a0eff91fb35a6e5915", null ],

@@ -823,11 +823,8 @@ struct Beef0025 : IExtensionBlock {
 */
 struct Beef0026 : IExtensionBlock {
 	FILETIME ctimeUtc = { 0 }; //!< creation date, UTC
-	FILETIME ctime = { 0 };//!< creation date, suspect's local time
 	FILETIME mtimeUtc = { 0 };//!< modification date, UTC
-	FILETIME mtime = { 0 };//!< modification date, suspect's local time
 	FILETIME atimeUtc = { 0 };//!< access date, UTC
-	FILETIME atime = { 0 };//!< access date, suspect's local time
 	std::unique_ptr<IdList> idlist; //!< list of shell items (idlist)
 	std::unique_ptr<IShellItem> shellitem; //!< a shell item
 	std::unique_ptr<SPS> sps; //!< a property store (SPS)
@@ -1075,9 +1072,7 @@ struct UserPropertyView0x23febbee : UserPropertyViewDelegate {
 */
 struct UserPropertyView0x07192006 : UserPropertyViewDelegate {
 	unsigned int level = 0;//!< depth in the tree of shell items, used to lay out the JSON
-	FILETIME modified = { 0 }; //!< modification date
 	FILETIME modifiedUtc = { 0 };//!< modification date in UTC
-	FILETIME created = { 0 }; //!< creation date
 	FILETIME createdUtc = { 0 }; //!< creation date in UTC
 	std::wstring folderName1 = L""; //!< name of the directory
 	std::wstring folderName2 = L""; //!< name of the directory
@@ -1210,7 +1205,6 @@ struct NetworkShellItem :IShellItem {
 	std::wstring description = L"";//!< description of the object
 	std::wstring comments = L"";//!< comments of the object
 	FILETIME modifiedUtc = { 0 };//!< modification date in UTC
-	FILETIME modified = { 0 };//!< modification date
 
 	/*! Reads the item.
 	* @param buffer the bytes to parse
@@ -1232,7 +1226,7 @@ struct ArchiveFileContent :IShellItem {
 	// (they belong to NetworkShellItem, which carries the same names).
 	std::wstring name = L"";//!< name of the archive
 	FILETIME modifiedUtc = { 0 };//!< modification date in UTC
-	FILETIME modified = { 0 };//!< modification date
+	FILETIME modified = { 0 };//!< modification date as a FAT date stores it, local time; null when the source is UTC
 
 	/*! Reads the item.
 	* @param buffer the bytes to parse

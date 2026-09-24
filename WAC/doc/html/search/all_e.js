@@ -18,8 +18,8 @@ var searchData=
   ['normal_15',['Normal',['../structFileAttributes.html#a7f804972ce8c834ba7740e3fdbad96f5',1,'FileAttributes']]],
   ['normalizefilepath_16',['normalizefilepath',['../tools_8h.html#a4580f472c8a7ea6733b6935053a936fa',1,'normalizeFilePath(std::wstring path):&#160;tools.cpp'],['../tools_8cpp.html#a4580f472c8a7ea6733b6935053a936fa',1,'normalizeFilePath(std::wstring path):&#160;tools.cpp']]],
   ['notcontentindexed_17',['NotContentIndexed',['../structFileAttributes.html#ad3bfd1988eec70dcb64a5e17e75edea2',1,'FileAttributes']]],
-  ['null_18',['null',['../classJson.html#a82938661c4953d873b5c8a204337fd57abbb93ef26e3c101ff11cdd21cab08a94',1,'Json::Null'],['../classJson.html#a5bc2d676aa8d106a2c98ca3ee41cc4e6',1,'Json::null()']]],
-  ['num_19',['num',['../classJson.html#a1ac8a14ed178ba686fb561b6f6921e3a',1,'Json::num(T v)'],['../classJson.html#a82938661c4953d873b5c8a204337fd57ab3e3076d9b3c53bede50d468b647b109',1,'Json::Num']]],
+  ['null_18',['null',['../classJson.html#a5bc2d676aa8d106a2c98ca3ee41cc4e6',1,'Json::null()'],['../classJson.html#a82938661c4953d873b5c8a204337fd57abbb93ef26e3c101ff11cdd21cab08a94',1,'Json::Null']]],
+  ['num_19',['num',['../classJson.html#a82938661c4953d873b5c8a204337fd57ab3e3076d9b3c53bede50d468b647b109',1,'Json::Num'],['../classJson.html#a1ac8a14ed178ba686fb561b6f6921e3a',1,'Json::num(T v)']]],
   ['numberofentries_20',['numberOfEntries',['../structDestFileDirectory.html#a269efd98d7c418d2fdede6af62c5a422',1,'DestFileDirectory']]],
   ['numberpinnedentries_21',['numberPinnedEntries',['../structDestFileDirectory.html#a23fef3f089255d2f37d3ee8ee70e3761',1,'DestFileDirectory']]],
   ['nwalked_22',['nwalked',['../structMrus.html#a71153f68a590613a340c9694fff314d4',1,'Mrus::nWalked'],['../structMruApps.html#acaa00c2ac8eff120dd71dc2511c7de0a',1,'MruApps::nWalked'],['../structShellbags.html#a15e4476517c99bcae359b6b07e723d31',1,'Shellbags::nWalked']]]

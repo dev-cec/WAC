@@ -37,6 +37,7 @@
     <ClCompile Include="services.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="sessions.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="system.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="time_zone.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="tools.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="xml_light.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="trans_id.cpp"><Filter>Fichiers sources</Filter></ClCompile>
@@ -87,6 +88,7 @@
     <ClInclude Include="services.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="sessions.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="system.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="time_zone.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="tools.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="xml_light.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="trans_id.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>

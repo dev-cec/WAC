@@ -490,10 +490,11 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 	if (valueType == VT_DATE) {
 		double t = *reinterpret_cast<double*>(buffer + *pos);
 		SYSTEMTIME st = { 0 };
-		if (!oleDateToSystemTime(t, st)) { *pos += 8; return Json::null(); }
+		FILETIME local = { 0, 0 };
 		*pos += 8;
+		if (!oleDateToSystemTime(t, st) || !SystemTimeToFileTime(&st, &local)) return Json::null();
 		// A VARIANT date (VT_DATE) is expressed in LOCAL time, by OLE convention.
-		return Json::str(timeToIso8601(st, false));
+		return Json::str(timeToIso8601Local(local));
 	}
 	if (valueType == VT_BOOL) {
 		unsigned short v = *reinterpret_cast<unsigned short*>(buffer + *pos); *pos += 2;
@@ -1503,10 +1504,6 @@ Beef0026::Beef0026(LPBYTE buffer, int _level) {
 		ctimeUtc = *reinterpret_cast<FILETIME*>(buffer + 12);
 		mtimeUtc = *reinterpret_cast<FILETIME*>(buffer + 20);
 		atimeUtc = *reinterpret_cast<FILETIME*>(buffer + 28);
-		log(3, L"🔈utcToSuspectLocal ctime, mtime, atime");
-		ctime = utcToSuspectLocal(ctimeUtc);
-		mtime = utcToSuspectLocal(mtimeUtc);
-		atime = utcToSuspectLocal(atimeUtc);
 		// 2 unknown bytes
 		// The nested ID list starts at 38 and must fit in the block.
 		const size_t blockSize = declaredSize(buffer);
@@ -1518,11 +1515,8 @@ Beef0026::Beef0026(LPBYTE buffer, int _level) {
 	}
 	else {
 		ctimeUtc = { 0 };
-		ctime = { 0 };
 		mtimeUtc = { 0 };
-		mtime = { 0 };
 		atimeUtc = { 0 };
-		atime = { 0 };
 		log(3, L"🔈SPS");
 		sps = std::make_unique<SPS>(buffer + 8, level + 2, declaredSize(buffer) > 8 ? declaredSize(buffer) - 8 : 0);
 	}
@@ -1533,11 +1527,11 @@ Json Beef0026::toJson() {
 	log(3, L"🔈Beef0026 toJson");
 	Json o = Json::obj();
 	o.add(L"Signature",           Json::str(signature));
-	o.add(L"CreationDate",        Json::str(timeToIso8601Local(ctime)));
+	o.add(L"CreationDate",        Json::str(utcTimeToIso8601Local(ctimeUtc)));
 	o.add(L"CreationDateUtc",     Json::str(timeToIso8601Utc(ctimeUtc)));
-	o.add(L"ModificationDate",    Json::str(timeToIso8601Local(mtime)));
+	o.add(L"ModificationDate",    Json::str(utcTimeToIso8601Local(mtimeUtc)));
 	o.add(L"ModificationDateUtc", Json::str(timeToIso8601Utc(mtimeUtc)));
-	o.add(L"AccessedDate",        Json::str(timeToIso8601Local(atime)));
+	o.add(L"AccessedDate",        Json::str(utcTimeToIso8601Local(atimeUtc)));
 	o.add(L"AccessedDateUtc",     Json::str(timeToIso8601Utc(atimeUtc)));
 	if (sps)    o.add(L"SPS",    sps->toJson());
 	if (idlist) o.add(L"IdList", idlist->toJson());
@@ -2043,20 +2037,6 @@ UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _level
 	}
 	modifiedUtc = *reinterpret_cast<FILETIME*>(buffer + 26);
 	createdUtc = *reinterpret_cast<FILETIME*>(buffer + 34);
-	log(3, L"🔈timeToIso8601 modifiedUtc");
-	if (!timeToIso8601Utc(modifiedUtc).empty()) {
-		log(3, L"🔈utcToSuspectLocal modifiedUtc");
-		modified = utcToSuspectLocal(modifiedUtc);
-	}
-	else
-		modified = { 0 };
-	log(3, L"🔈timeToIso8601 createdUtc");
-	if (!timeToIso8601Utc(createdUtc).empty()) {
-		log(3, L"🔈utcToSuspectLocal created");
-		created = utcToSuspectLocal(createdUtc);
-	}
-	else
-		created = { 0 };
 	// Sizes in characters, unsigned: a huge one yields an offset beyond the
 	// item, which readWideZ reads as empty and fits() refuses.
 	const size_t folderName1Size = *reinterpret_cast<unsigned int*>(buffer + 62);
@@ -2105,9 +2085,9 @@ Json UserPropertyView0x07192006::toJson() {
 	o.add(L"Folder1",          Json::str(folderName1));
 	o.add(L"Folder2",          Json::str(folderName2));
 	o.add(L"FolderIdentifier", Json::str(folderIdentifier));
-	o.add(L"CreatedDate",      Json::str(timeToIso8601Local(created)));
+	o.add(L"CreatedDate",      Json::str(utcTimeToIso8601Local(createdUtc)));
 	o.add(L"CreatedDateUtc",   Json::str(timeToIso8601Utc(createdUtc)));
-	o.add(L"ModifiedDate",     Json::str(timeToIso8601Local(modified)));
+	o.add(L"ModifiedDate",     Json::str(utcTimeToIso8601Local(modifiedUtc)));
 	o.add(L"ModifiedDateUtc",  Json::str(timeToIso8601Utc(modifiedUtc)));
 	o.add(L"GUIDClass",        Json::str(guidClass));
 	o.add(L"FriendlyName",     Json::str(FriendlyName));
@@ -2476,8 +2456,6 @@ NetworkShellItem::NetworkShellItem(LPBYTE buffer, int _level) {
 	else if (fits(declaredSize(buffer), 0x54, 8)) {   // up to the two sizes at 0x54
 		log(3, L"🔈wstring_to_filetime modifiedUtc");
 		modifiedUtc = wstring_to_filetime(readWideZ(buffer, declaredSize(buffer), 0x24));
-		log(3, L"🔈utcToSuspectLocal modified");
-		modified = utcToSuspectLocal(modifiedUtc);
 		unsigned int descriptionsize = *reinterpret_cast<unsigned int*>(buffer + 0x54);
 		unsigned int commentssize = *reinterpret_cast<unsigned int*>(buffer + 0x58);
 		int pos = 0x5c;
@@ -2500,7 +2478,7 @@ Json NetworkShellItem::toJson() {
 		o.add(L"Location", Json::str(location));
 	} else {
 		o.add(L"ModifiedUtc", Json::str(timeToIso8601Utc(modifiedUtc)));
-		o.add(L"Modified",    Json::str(timeToIso8601Local(modified)));
+		o.add(L"Modified",    Json::str(utcTimeToIso8601Local(modifiedUtc)));
 		o.add(L"Description", Json::str(description));
 		o.add(L"Comments",    Json::str(comments));
 	}
@@ -2519,25 +2497,11 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _level) {
 		else if (*reinterpret_cast<unsigned int*>(buffer + 0x10) != 0) { // FILETIME
 			modifiedUtc = *reinterpret_cast<FILETIME*>(buffer + 0x10);
 
-			log(3, L"🔈timeToIso8601 modifiedUtc");
-			if (timeToIso8601Utc(modifiedUtc) != L"") {
-				log(3, L"🔈utcToSuspectLocal modified");
-				modified = utcToSuspectLocal(modifiedUtc);
-			}
-			else
-				modifiedUtc = { 0 };
 			name = readWideZ(buffer, declaredSize(buffer), 0x20);
 		}
 		else { // DATE EN WSTRING
 			log(3, L"🔈wstring_to_filetime modifiedUtc");
 			modifiedUtc = wstring_to_filetime(readWideZ(buffer, declaredSize(buffer), 0x24));
-			log(3, L"🔈timeToIso8601 modifiedUtc");
-			if (timeToIso8601Utc(modifiedUtc) != L"") {
-				log(3, L"🔈utcToSuspectLocal modified");
-				modified = utcToSuspectLocal(modifiedUtc);
-			}
-			else
-				modifiedUtc = { 0 };
 			name = readWideZ(buffer, declaredSize(buffer), 0x5C);
 		}
 	}
@@ -2556,7 +2520,9 @@ Json ArchiveFileContent::toJson() {
 	Json o = Json::obj();
 	if (!isPresent) return o;
 	o.add(L"ModifiedUtc", Json::str(timeToIso8601Utc(modifiedUtc)));
-	o.add(L"Modified",    Json::str(timeToIso8601Local(modified)));
+	// A FAT date is local at the source and kept as written; otherwise the source is UTC.
+	const bool localSource = modified.dwLowDateTime != 0 || modified.dwHighDateTime != 0;
+	o.add(L"Modified",    Json::str(localSource ? timeToIso8601Local(modified) : utcTimeToIso8601Local(modifiedUtc)));
 	o.add(L"Name",        Json::str(name));
 	return o;
 }

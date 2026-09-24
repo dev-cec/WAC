@@ -3,7 +3,6 @@ var structShellbag =
     [ "toJson", "structShellbag.html#adc27da2d9851eb52bfd4688efb1e277d", null ],
     [ "childs", "structShellbag.html#a2043681af0c230a086f829280dfa79cd", null ],
     [ "id", "structShellbag.html#ab11dbf19048320459e11fe43dd69c469", null ],
-    [ "lastWriteTime", "structShellbag.html#afba84f7be99c60cd00b265e1f9ba3bf0", null ],
     [ "lastWriteTimeUtc", "structShellbag.html#ad790ebcca27e10789ed30cca109a4bef", null ],
     [ "level", "structShellbag.html#a578322285aa7c08007972331ca995066", null ],
     [ "Parent", "structShellbag.html#a449a1a9f7f6c6b0bfdc1eea5e928f58c", null ],

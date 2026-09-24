@@ -682,6 +682,16 @@ dans sa ruche \fichier{SYSTEM} — pas celle de la machine de collecte. Les date
 portent la fraction de seconde quand la source la fournit (jusqu'au
 dix-millionième).
 
+Chaque date porte le décalage en vigueur \textbf{à cette date}, heure d'été
+comprise : une date de janvier relevée en été à Paris est à \texttt{+01:00},
+une date de juillet à \texttt{+02:00}. \wac{} applique les règles de la machine
+examinée année par année (clé \fichier{Dynamic DST} de la ruche
+\fichier{SOFTWARE}) : une date de 2005 aux États-Unis suit les règles de 2005.
+Pour une valeur que l'artefact enregistre en heure locale (date FAT, Amcache,
+BAM…), l'heure répétée à l'automne est lue comme sa première occurrence, et
+l'heure sautée au printemps avec le décalage d'avant le changement, comme le
+fait Windows.
+
 \section{Un champ absent n'est pas un champ vide}
 
 Une valeur sans source n'est pas émise du tout. Une clé vide se lirait comme une

@@ -55,17 +55,15 @@ std::wstring g_machine, g_user, g_sid, g_timeZone;
 long         g_biasMinutes  = 0;
 bool         g_elevated         = false;
 
-//! Current timestamp, in UTC and in local time.
+/*! Current timestamp, in UTC and in the suspect's local time: the same time
+ *  zone as every other local date of the collection (the running machine's
+ *  until the suspect's SYSTEM hive is read). */
 void now(std::wstring& utc, std::wstring& local, FILETIME* nowFiletime = nullptr) {
-	SYSTEMTIME stUtc = { 0 };
-	GetSystemTime(&stUtc);
-	utc = timeToIso8601(stUtc, true);
-
-	SYSTEMTIME stLocal = { 0 };
-	GetLocalTime(&stLocal);
-	local = timeToIso8601(stLocal, false);
-
-	if (nowFiletime && !SystemTimeToFileTime(&stUtc, nowFiletime)) *nowFiletime = FILETIME{ 0, 0 };   // null: not emitted
+	FILETIME ft = { 0, 0 };
+	GetSystemTimeAsFileTime(&ft);
+	utc = timeToIso8601Utc(ft);
+	local = utcTimeToIso8601Local(ft);
+	if (nowFiletime) *nowFiletime = ft;
 }
 
 //! Context of the machine and of the operator at collection time.

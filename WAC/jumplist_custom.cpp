@@ -81,9 +81,6 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 			memcpy(&createdUtc, &fileInfo.CreationTime, sizeof(createdUtc));
 			memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
 			memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
-			created = utcToSuspectLocal(createdUtc);
-			modified = utcToSuspectLocal(modifiedUtc);
-			accessed = utcToSuspectLocal(accessedUtc);
 		}
 		else {
 			log(2, L"🔥CreateFile hFile ",GetLastError());
@@ -134,11 +131,11 @@ Json CustomDestination::toJson() {
 	o.add(L"Application", Json::str(application));
 	o.add(L"Path",        Json::str(pathOriginal));
 	o.add(L"Type",        Json::str(type));
-	o.add(L"Created",     Json::str(timeToIso8601Local(created)));
+	o.add(L"Created",     Json::str(utcTimeToIso8601Local(createdUtc)));
 	o.add(L"CreatedUtc",  Json::str(timeToIso8601Utc(createdUtc)));
-	o.add(L"Modified",    Json::str(timeToIso8601Local(modified)));
+	o.add(L"Modified",    Json::str(utcTimeToIso8601Local(modifiedUtc)));
 	o.add(L"ModifiedUtc", Json::str(timeToIso8601Utc(modifiedUtc)));
-	o.add(L"Accessed",    Json::str(timeToIso8601Local(accessed)));
+	o.add(L"Accessed",    Json::str(utcTimeToIso8601Local(accessedUtc)));
 	o.add(L"AccessedUtc", Json::str(timeToIso8601Utc(accessedUtc)));
 	if (category) o.merge(category->toJson());   // fields flattened (the original schema)
 	return o;

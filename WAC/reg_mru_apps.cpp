@@ -12,7 +12,7 @@ Json MruApp::toJson() const {
 	o.add(L"SIDName", Json::str(sidName));
 	o.add(L"Source",  Json::str(source));
 	log(3, L"🔈timeToIso8601 lastWriteTime");
-	o.add(L"LastWriteTime",    Json::str(timeToIso8601Local(lastWriteTime)));
+	o.add(L"LastWriteTime",    Json::str(utcTimeToIso8601Local(lastWriteTimeUtc)));
 	log(3, L"🔈timeToIso8601 lastWriteTimeUtc");
 	o.add(L"LastWriteTimeUtc", Json::str(timeToIso8601Utc(lastWriteTimeUtc)));
 	Json items = Json::arr();
@@ -114,8 +114,6 @@ HRESULT MruApps::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::
 		mruApp.id = id;
 		log(2, L"❇️MruApp id" + id);
 		mruApp.lastWriteTimeUtc = lastWriteTimeUtc;
-		log(3, L"🔈utcToSuspectLocal lastWriteTime");
-		mruApp.lastWriteTime = utcToSuspectLocal(lastWriteTimeUtc);
 		mruApp.level = level;
 		mruApp.sid = sid;
 		log(3, L"🔈getNameFromSid sidName");

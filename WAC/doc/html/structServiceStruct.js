@@ -3,7 +3,6 @@ var structServiceStruct =
     [ "clear", "structServiceStruct.html#ab9cb149c42d1ee5f303d1e7c732361d9", null ],
     [ "toJson", "structServiceStruct.html#a87c2e96d2da5a3917b69e75b10b4e1c7", null ],
     [ "dependencies", "structServiceStruct.html#a008f6837b2b5ac6ae9e090b85a6a1884", null ],
-    [ "lastWriteTime", "structServiceStruct.html#ae965f102eb9eba164e26f14443b256d7", null ],
     [ "lastWriteTimeUtc", "structServiceStruct.html#a3bcd55f0cf858b1da7d0576c78e19534", null ],
     [ "serviceBinary", "structServiceStruct.html#ad6feca349802e0a18f887f2f5ec5b2dc", null ],
     [ "serviceDescription", "structServiceStruct.html#a8291eea6c430d71fcd01b736bbab18b6", null ],

@@ -724,7 +724,17 @@ whose result was once ignored: every FAT date against `DosDateTimeToFileTime`
 (an impossible one — month 13, hour 25 — gave whatever the stack held, it now
 gives a null date, not emitted), and the suspect's offset in both directions
 (local to UTC used `LocalFileTimeToFileTime`, hence the offset of the machine
-running WAC). Result: 1,761,979 comparisons, identical. Two
+running WAC). It also checks daylight saving time: WAC applies to each date the offset in
+force AT THAT DATE, from the suspect's rules year by year (`time_zone.cpp`),
+where it used to apply the collection day's offset to every date — a winter
+date collected in summer came out one hour off and labelled `+02:00`. The
+offsets are compared with `SystemTimeToTzSpecificLocalTimeEx` and
+`TzSpecificLocalTimeToSystemTimeEx` on every time zone of Windows, at every
+transition from 1980 to 2035; and `check-json.py` confronts the offset of every
+local date of a real collection with the tz database, an independent source —
+which caught the daylight saving dates of the SYSTEM hive read in the wrong
+layout (`TIME_FIELDS`, the weekday last, not `SYSTEMTIME`). Result: 9,661,284
+comparisons, identical. Two
 intended differences: WAC refuses a SID text Windows would truncate (a
 sub-authority of 2^32 or more, a 16th sub-authority), and a NaN date, for which
 Windows returns a meaningless time. Run it on Windows (the test VM).

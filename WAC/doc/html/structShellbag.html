@@ -137,11 +137,8 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a2043681af0c230a086f829280dfa79cd" id="r_a2043681af0c230a086f829280dfa79cd"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structShellbag.html">Shellbag</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShellbag.html#a2043681af0c230a086f829280dfa79cd">childs</a></td></tr>
 <tr class="memdesc:a2043681af0c230a086f829280dfa79cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">the folders browsed below this one  <br /></td></tr>
 <tr class="separator:a2043681af0c230a086f829280dfa79cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afba84f7be99c60cd00b265e1f9ba3bf0" id="r_afba84f7be99c60cd00b265e1f9ba3bf0"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShellbag.html#afba84f7be99c60cd00b265e1f9ba3bf0">lastWriteTime</a> = { 0 }</td></tr>
-<tr class="memdesc:afba84f7be99c60cd00b265e1f9ba3bf0"><td class="mdescLeft">&#160;</td><td class="mdescRight">last write to the KEY, suspect's local time  <br /></td></tr>
-<tr class="separator:afba84f7be99c60cd00b265e1f9ba3bf0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad790ebcca27e10789ed30cca109a4bef" id="r_ad790ebcca27e10789ed30cca109a4bef"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShellbag.html#ad790ebcca27e10789ed30cca109a4bef">lastWriteTimeUtc</a> = { 0 }</td></tr>
-<tr class="memdesc:ad790ebcca27e10789ed30cca109a4bef"><td class="mdescLeft">&#160;</td><td class="mdescRight">the same instant in UTC  <br /></td></tr>
+<tr class="memdesc:ad790ebcca27e10789ed30cca109a4bef"><td class="mdescLeft">&#160;</td><td class="mdescRight">last write to the KEY, UTC (the local time is derived at output)  <br /></td></tr>
 <tr class="separator:ad790ebcca27e10789ed30cca109a4bef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -198,22 +195,6 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="afba84f7be99c60cd00b265e1f9ba3bf0" name="afba84f7be99c60cd00b265e1f9ba3bf0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afba84f7be99c60cd00b265e1f9ba3bf0">&#9670;&#160;</a></span>lastWriteTime</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">FILETIME Shellbag::lastWriteTime = { 0 }</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>last write to the KEY, suspect's local time </p>
-
-</div>
-</div>
 <a id="ad790ebcca27e10789ed30cca109a4bef" name="ad790ebcca27e10789ed30cca109a4bef"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad790ebcca27e10789ed30cca109a4bef">&#9670;&#160;</a></span>lastWriteTimeUtc</h2>
 
@@ -226,7 +207,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>the same instant in UTC </p>
+<p>last write to the KEY, UTC (the local time is derived at output) </p>
 
 </div>
 </div>

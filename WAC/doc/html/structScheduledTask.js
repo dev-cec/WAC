@@ -6,7 +6,6 @@ var structScheduledTask =
     [ "author", "structScheduledTask.html#a0b9b77f17487188319012b84b2515cf2", null ],
     [ "description", "structScheduledTask.html#adbb7adcb0110346cae647a5c010ece32", null ],
     [ "enabled", "structScheduledTask.html#aba2ef89d590f909740d4c868428c71c5", null ],
-    [ "lastRunTime", "structScheduledTask.html#a91bb12c2e00193cf1cfcf1843b1576e5", null ],
     [ "lastRunTimeUtc", "structScheduledTask.html#a47dd4c9ec9b5445e6be00b23125f7cc0", null ],
     [ "lastTaskResult", "structScheduledTask.html#aed45346c6c1f6295171607e797b87eef", null ],
     [ "name", "structScheduledTask.html#a469228bd4ec5786557e5e63825e75418", null ],

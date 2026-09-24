@@ -11,6 +11,5 @@ var structSession =
     [ "logonTypeName", "structSession.html#a2321e7ddc4a990932cf1cc0ec6ec9caa", null ],
     [ "sessionId", "structSession.html#a0309ee0fd9a7033455cd26c5e8a5346f", null ],
     [ "sid", "structSession.html#a5cabcec3ffeca33baae9905989ee5075", null ],
-    [ "startTime", "structSession.html#a0852e5f8ecbd8c0b6caed1bcafe3de85", null ],
     [ "startTimeUtc", "structSession.html#ad9efd94bc64684b82295a844de29cf20", null ]
 ];

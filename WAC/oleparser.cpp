@@ -32,8 +32,6 @@ DestFile::DestFile(LPBYTE buffer, size_t limit) {
 	lastModificationTimeUtc = *reinterpret_cast<FILETIME*>(buffer + 100);
 	log(3, L"🔈timeToIso8601 lastModificationTimeUtc");
 	if (timeToIso8601Utc(lastModificationTimeUtc) != L"") {
-		log(3, L"🔈utcToSuspectLocal lastModificationTimeUtc");
-		lastModificationTime = utcToSuspectLocal(lastModificationTimeUtc);
 	}
 	pinStatus = *reinterpret_cast<int*>(buffer + 108);
 	pathObjectSize = *reinterpret_cast<unsigned short int*>(buffer + 128);
@@ -61,7 +59,7 @@ Json DestFile::toJson() {
 	o.add(L"Hostname",                Json::str(hostname));
 	o.add(L"EntryNumber",             Json::num((long long)entryNumber));
 	o.add(L"LastModificationTimeUtc", Json::str(timeToIso8601Utc(lastModificationTimeUtc)));
-	o.add(L"LastModificationTime",    Json::str(timeToIso8601Local(lastModificationTime)));
+	o.add(L"LastModificationTime",    Json::str(utcTimeToIso8601Local(lastModificationTimeUtc)));
 	// FIX: "Pinned"/"Unpinned" was inserted without quotes -> invalid JSON
 	o.add(L"PinStatus",               Json::str(getPinnedStatus()));
 	o.add(L"PathObject",              Json::str(pathObject));

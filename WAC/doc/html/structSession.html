@@ -118,11 +118,8 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a0852e5f8ecbd8c0b6caed1bcafe3de85" id="r_a0852e5f8ecbd8c0b6caed1bcafe3de85"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSession.html#a0852e5f8ecbd8c0b6caed1bcafe3de85">startTime</a> = { 0 }</td></tr>
-<tr class="memdesc:a0852e5f8ecbd8c0b6caed1bcafe3de85"><td class="mdescLeft">&#160;</td><td class="mdescRight">start of the session, suspect's local time  <br /></td></tr>
-<tr class="separator:a0852e5f8ecbd8c0b6caed1bcafe3de85"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad9efd94bc64684b82295a844de29cf20" id="r_ad9efd94bc64684b82295a844de29cf20"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSession.html#ad9efd94bc64684b82295a844de29cf20">startTimeUtc</a> = { 0 }</td></tr>
-<tr class="memdesc:ad9efd94bc64684b82295a844de29cf20"><td class="mdescLeft">&#160;</td><td class="mdescRight">the same instant in UTC  <br /></td></tr>
+<tr class="memdesc:ad9efd94bc64684b82295a844de29cf20"><td class="mdescLeft">&#160;</td><td class="mdescRight">start of the session, UTC (the local time is derived at output)  <br /></td></tr>
 <tr class="separator:ad9efd94bc64684b82295a844de29cf20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac73fe2f2daced116de5019feeb7defb" id="r_aac73fe2f2daced116de5019feeb7defb"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSession.html#aac73fe2f2daced116de5019feeb7defb">authenticationPackage</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:aac73fe2f2daced116de5019feeb7defb"><td class="mdescLeft">&#160;</td><td class="mdescRight">package that authenticated it (Kerberos, NTLM…)  <br /></td></tr>
@@ -341,22 +338,6 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a0852e5f8ecbd8c0b6caed1bcafe3de85" name="a0852e5f8ecbd8c0b6caed1bcafe3de85"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0852e5f8ecbd8c0b6caed1bcafe3de85">&#9670;&#160;</a></span>startTime</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">FILETIME Session::startTime = { 0 }</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>start of the session, suspect's local time </p>
-
-</div>
-</div>
 <a id="ad9efd94bc64684b82295a844de29cf20" name="ad9efd94bc64684b82295a844de29cf20"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad9efd94bc64684b82295a844de29cf20">&#9670;&#160;</a></span>startTimeUtc</h2>
 
@@ -369,7 +350,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>the same instant in UTC </p>
+<p>start of the session, UTC (the local time is derived at output) </p>
 
 </div>
 </div>
