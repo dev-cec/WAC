@@ -550,7 +550,8 @@ That is what the **cross-checks** in `check-json.py` are for — comparing a val
 are what caught real errors in valid JSON: Prefetch path hashes against their own
 file names, `X`/`XUtc` pairs holding the same wall-clock time, sessions starting
 before boot, impossible service states, `$MFT` references pointing at reserved
-entries. See `vmtest/README.md` (French: `vmtest/README_FR.md`).
+entries. See `vmtest/README.md` (French: `vmtest/README_FR.md`), and the
+validation report (`WAC/doc/validation/`) for the whole list with its results.
 
 ### Testing the EVTX parser outside Windows
 
@@ -791,6 +792,13 @@ cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
   each one proves and does not prove, and how to read a failure. Its covers are
   derived from the manual's by `WAC/doc/retitle-cover.py`, which changes only
   the title. Every document shares one layout, `WAC/doc/wac-style.tex`.
+- **Validation report**, in English and French:
+  `WAC/doc/validation/validation_EN.pdf` and `validation_FR.pdf`. What
+  establishes WAC's quality: the checks WAC runs itself during every
+  collection, the thirteen test programs and their judges, the VM cycle and the
+  cross-checks of `check-json.py`, the cross-checks on a real collection — with
+  the reference result of each, the defects each one caught, and the limits of
+  what they guarantee. Same template, cover retitled by `retitle-cover.py`.
 - `WAC/doc/BUILD-LINUX_EN.md` (French: `BUILD-LINUX_FR.md`) — cross-compilation details.
 
 The design rationale lives **in the code**, next to what it explains: each

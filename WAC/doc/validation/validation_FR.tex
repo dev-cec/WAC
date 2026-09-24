@@ -1,0 +1,524 @@
+% validation_FR.tex — WAC (Windows Artefacts Collector) validation report, French edition.
+% The English edition is validation_EN.tex, in this folder: both are maintained together,
+% section for section.
+%
+% Build (XeLaTeX, two passes for the cover page and the table of contents):
+%     latexmk -xelatex validation_FR.tex
+% The cover page is ../cover_validation_FR.png, derived from ../cover_FR.png by
+% ../retitle-cover.py. The layout is ../wac-style.tex, shared with every WAC document.
+%
+% This report says WHAT is verified and what it guarantees; how to run each test
+% by hand is in the testing guide (../tests/testing_FR.tex).
+
+\documentclass[11pt,a4paper,oneside]{report}
+
+% ---------------------------------------------------------------- language and labels
+\usepackage[french]{babel}
+\newcommand{\wacdoctitle}{Dossier de validation}
+\newcommand{\wacpageof}{sur}
+\newcommand{\wacnotetitle}{À retenir}
+\newcommand{\wacwarningtitle}{Limite}
+% Layout shared with every WAC document.
+\input{../wac-style.tex}
+
+\hypersetup{pdftitle={WAC — Dossier de validation},
+  pdfauthor={Centre d'Excellence Cyberdéfense Aérospatiale (CEC)},
+  pdfsubject={Les contrôles qui garantissent la qualité de WAC, et leurs résultats}}
+
+\begin{document}
+
+% ============================================================ COVER PAGE
+\pagenumbering{roman}
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture,overlay]
+  \node[inner sep=0pt] at (current page.center)
+    {\includegraphics[width=\paperwidth]{cover_validation_FR.png}};
+\end{tikzpicture}
+\end{titlepage}
+
+% ============================================================ INFORMATION PAGE
+\thispagestyle{empty}
+\vspace*{\fill}
+{\color{marine}\Large\bfseries WAC — Windows Artefacts Collector}\par
+{\color{bleu}Dossier de validation}\par
+\medskip
+\begin{tabular}{@{}ll@{}}
+Version du logiciel & 1.3.1 \\
+Édition du document & septembre 2026 \\
+Éditeur & Centre d'Excellence Cyberdéfense Aérospatiale (CEC) \\
+        & École de l'air et de l'espace, base aérienne 701, Salon-de-Provence \\
+\end{tabular}
+
+\bigskip
+{\small\color{gris}Ce document recense les contrôles qui établissent la
+qualité de \wac{} : ceux que \wac{} exécute lui-même à chaque collecte, les
+programmes de test qui confrontent ses décodeurs à une référence, et les
+contrôles automatiques de ses sorties. Pour chacun, il dit ce qui est comparé,
+à quoi, le résultat de référence et les défauts qu'il a déjà pris. Il dit aussi
+ce que ces contrôles ne garantissent pas. La façon de lancer chaque test est
+dans le \emph{Guide des tests}.}
+\vspace*{2cm}
+\clearpage
+
+\pagenumbering{arabic}
+\tableofcontents
+
+% ============================================================ 1
+\chapter{La démarche}
+
+\section{Pourquoi un JSON valide ne prouve rien}
+
+\wac{} produit des fichiers JSON destinés à une expertise. Qu'ils soient
+valides ne dit presque rien de leur justesse : un champ lu au mauvais décalage,
+une date interprétée dans le mauvais fuseau, un nom décodé dans la mauvaise
+page de code, une décompression fausse donnent tous un JSON parfaitement
+valide, et faux. Les défauts les plus graves relevés dans \wac{} étaient tous de
+cette sorte. Aucun ne se voyait à l'exécution ; chacun n'est apparu qu'en
+confrontant une valeur à une \textbf{source indépendante}.
+
+La validation de \wac{} repose donc sur ce principe : toute donnée qui peut
+être recoupée l'est, par un moyen qui ne partage rien avec le code vérifié.
+
+\section{Quatre niveaux de contrôle}
+
+\begin{description}[leftmargin=0pt,itemsep=0.5em]
+  \item[Les contrôles intégrés à \wac{}] (chapitre~\ref{ch:integres}) :
+    exécutés à chaque collecte, sur la machine examinée. Ils refusent une
+    donnée incohérente plutôt que de la publier, et attestent l'intégrité des
+    pièces prélevées.
+  \item[Les programmes de test] (chapitre~\ref{ch:harnais}) : treize
+    exécutables qui confrontent chaque décodeur à une référence (la fonction de
+    Microsoft qu'il remplace, une norme publiée, une autre implémentation), ou
+    qui prouvent qu'un analyseur ne lit jamais hors de son tampon.
+  \item[Le cycle automatique et ses contrôles] (chapitre~\ref{ch:cycle}) : une
+    collecte complète dans une machine virtuelle Windows~11, puis
+    \fichier{check-json.py}, qui vérifie la validité des sorties et les
+    confronte entre elles et à des sources externes.
+  \item[Les recoupements sur une collecte réelle] (chapitre~\ref{ch:reel}) :
+    ce qu'une machine virtuelle neuve ne contient pas (journaux anciens,
+    fichiers fragmentés, noms exotiques) est vérifié sur les données d'une
+    vraie machine, traitées en local.
+\end{description}
+
+\section{Les règles de développement qui s'y rattachent}
+
+\begin{enumerate}
+  \item \textbf{Un correctif s'accompagne du test qui aurait pris le défaut},
+    et ce test est vérifié dans les deux sens : il passe sur le code corrigé,
+    et il échoue quand on réintroduit le défaut. Un test qui n'a jamais été vu
+    échouer ne prouve rien.
+  \item \textbf{La compilation se fait sans avertissement}, options
+    \texttt{-Wall -Wextra} activées. Les avertissements ont d'ailleurs servi
+    de liste de travaux : chacun signalait un champ décodé puis perdu.
+  \item \textbf{Après toute modification, la nouvelle collecte est comparée à
+    la précédente}, artefact par artefact : un artefact passé de 1~522 entrées
+    à 573 n'allume aucun voyant, seule la comparaison le montre.
+  \item \textbf{Toute entrée est hostile}, y compris un fichier du disque
+    examiné : chaque lecture est bornée par la taille réelle du tampon, jamais
+    par une longueur annoncée dans la donnée.
+  \item \textbf{Un champ sans valeur n'est pas émis} : une clé vide ou nulle se
+    lirait comme une donnée relevée, ou comme une lecture ratée.
+\end{enumerate}
+
+% ============================================================ 2
+\chapter{Les contrôles intégrés à WAC}\label{ch:integres}
+
+Ces contrôles font partie du programme de collecte. Ils s'exécutent à chaque
+collecte et leur résultat est consigné dans \fichier{investigation.json},
+opération par opération, avec son code de retour et la trace qu'elle laisse
+sur le système examiné.
+
+\section{Avant toute extraction}
+
+\begin{itemize}
+  \item version de Windows (10 ou ultérieure) et droits d'administrateur
+    effectifs (jeton élevé) ;
+  \item emplacement de collecte utilisable et place disponible, vérifiés
+    \emph{avant} la première extraction : une collecte interrompue faute de
+    place laisserait une consigne incomplète.
+\end{itemize}
+
+\section{Lecture brute du volume NTFS}
+
+Les fichiers verrouillés (ruches, journaux) sont lus directement sur le volume,
+sans passer par le système de fichiers de Windows. Chaque structure lue est
+vérifiée avant d'être utilisée :
+
+\begin{itemize}
+  \item signature \texttt{FILE} de chaque enregistrement de la \fichier{\$MFT}
+    et \texttt{INDX} de chaque bloc d'index, puis application des
+    \emph{fixups} (tableau de séquence de mise à jour), qui restituent les
+    derniers octets de chaque secteur ;
+  \item décompression LZNT1 et WOF bornée par la taille attendue de chaque
+    unité : une unité qui ne produit pas le nombre d'octets prévu est une
+    erreur, pas une donnée tronquée en silence ;
+  \item taille extraite comparée à la taille déclarée par l'attribut
+    \texttt{\$DATA} : leur écart, publié dans le manifeste, révèle une
+    extraction tronquée qu'une empreinte seule ne montrerait pas.
+\end{itemize}
+
+\section{Ruches du registre}
+
+\wac{} lit les ruches avec son propre lecteur, lié dans l'exécutable, et non
+avec une bibliothèque de la machine examinée.
+
+\begin{itemize}
+  \item bloc de base : signature \texttt{regf}, somme de contrôle (OU exclusif
+    des 127 premiers mots), numéros de séquence primaire et secondaire. Une
+    ruche dont les journaux n'ont pas été rejoués est \textbf{refusée} : lue
+    telle quelle, elle donnerait des clés périmées sans aucune erreur ;
+  \item rejeu des journaux de transactions (\texttt{.LOG1}/\texttt{.LOG2}) :
+    signature et chaînage des séquences de chaque entrée ; une entrée hors
+    chaîne est écartée et comptée ; un journal d'annulation est écrit avant
+    toute modification, pour pouvoir reconstituer la copie brute ;
+  \item chaque décalage lu dans la ruche est vérifié contre la taille réelle du
+    fichier, et une sous-clé qui pointerait vers l'une de ses ancêtres est
+    refusée : un parcours ne peut pas boucler sur une ruche forgée.
+\end{itemize}
+
+\section{Intégrité des pièces : la consigne}
+
+Toute pièce extraite est déposée dans une \emph{consigne} qui n'est plus jamais
+rouverte en écriture ; tout le travail se fait sur une seconde copie.
+
+\begin{itemize}
+  \item trois empreintes par pièce (MD5, SHA-1, SHA-256), calculées pendant la
+    lecture du volume ;
+  \item la copie de travail est vérifiée par son SHA-256 contre ce qui a été
+    lu sur le volume, et non contre une relecture de la consigne ;
+  \item le manifeste qui identifie les pièces est scellé par un second fichier
+    portant son empreinte : un manifeste retouché se détecte ;
+  \item un échec d'extraction est consigné lui aussi : une pièce absente du
+    manifeste se lirait comme jamais cherchée.
+\end{itemize}
+
+Un tiers peut vérifier la consigne sans \wac{}, avec les scripts
+\fichier{verify-exhibits.ps1} (messages en anglais) et
+\fichier{verifier-consigne.ps1} (messages en français), livrés avec la
+documentation utilisateur : ils contrôlent le sceau puis l'empreinte de chaque
+pièce.
+
+\section{Authenticité des binaires}
+
+Avec l'option \opt{binary}, \wac{} prélève les binaires cités par les
+artefacts, sauf ceux dont il établit qu'ils sont signés par Microsoft. Cette
+décision repose sur une vérification complète, faite par \wac{} lui-même :
+signature RSA de chaque catalogue de sécurité, chaîne de certificats jusqu'à
+une racine Microsoft, empreinte Authenticode du fichier retrouvée dans un
+catalogue vérifié, ou signature intégrée. Un fichier dont l'authenticité n'est
+pas établie est prélevé : le doute conduit à collecter, jamais à écarter.
+
+\section{Journaux d'événements}
+
+Signature du fichier, de chaque bloc (\emph{chunk}) et de chaque
+enregistrement. Tous les blocs physiques du fichier sont parcourus, et pas
+seulement ceux que l'en-tête déclare : un journal mal fermé livre ainsi les
+enregistrements qu'il ne compte pas. Un bloc illisible est signalé et sauté ; il
+n'interrompt plus la lecture du fichier.
+
+\section{Décodage des artefacts}
+
+\begin{itemize}
+  \item toute lecture est bornée par la taille du tampon ; un nombre
+    d'éléments déraisonnable dans une liste de valeurs (au-delà de 65~536) est
+    refusé plutôt que parcouru ;
+  \item une date impossible (mois~13, heure~25) ou hors de la plage d'un
+    \texttt{FILETIME} donne une date absente, donc non émise, et jamais une
+    valeur quelconque ;
+  \item chaque date locale porte le décalage en vigueur \emph{à sa date},
+    selon les règles d'heure d'été de la machine examinée, année par année.
+\end{itemize}
+
+% ============================================================ 3
+\chapter{Les programmes de test}\label{ch:harnais}
+
+Treize exécutables, exclus de la compilation de \wac{} par leur suffixe
+\fichier{\_test.cpp} et construits par \texttt{build-windows.sh --test}.
+Chacun vise un composant et le confronte à un juge qui ne partage rien avec
+lui.
+
+\section{Harnais de format}
+
+\begin{longtable}{@{}L{4.6cm}L{3.8cm}L{6.6cm}@{}}
+\toprule
+\textbf{Programme} & \textbf{Juge} & \textbf{Résultat de référence} \\
+\midrule
+\endhead
+\texttt{sha\_test} & vecteurs de FIPS~180-4, implémentation indépendante &
+  SHA-1 et SHA-256 conformes, y compris sur les longueurs 55 à 128 octets qui
+  exercent le remplissage \\
+\texttt{lznt1\_test} & compresseur de Microsoft (\texttt{RtlCompressBuffer}) &
+  16 unités compressées sur 16 conformes, 1~048~576 octets identiques \\
+\texttt{xpress\_test} & compresseur de Microsoft &
+  137 blocs compressés sur 137 conformes, octet pour octet \\
+\texttt{wevt\_test} & fichiers d'un vrai fournisseur d'événements &
+  chaîne complète de production des messages vérifiée, marques de substitution
+  comprises \\
+\texttt{event\_messages\_test} & ruche SOFTWARE et binaires de la machine &
+  même chaîne, étape par étape, à partir de la ruche \\
+\texttt{evtx\_test} & \texttt{python-evtx}, implémentation indépendante &
+  enregistrement par enregistrement ; chaîne complète identique en flux et en
+  mémoire (pic de 26~Mo contre 1~281~Mo) \\
+\texttt{offline\_registry\_test} & \fichier{offreg.dll} de Microsoft &
+  18 ruches, dont dix d'une machine réelle : 1~273~652 clés et 2~456~139
+  valeurs identiques \\
+\texttt{system\_conversions\_test} & fonctions Windows remplacées &
+  9~661~284 comparaisons, aucun écart (détail ci-dessous) \\
+\texttt{consigne\_test} & la consigne elle-même, avant et après &
+  consigne identique octet pour octet après modification de la copie de
+  travail ; sceau conforme \\
+\texttt{raw\_hive\_test} & \texttt{reg load} de Windows &
+  la ruche extraite est refusée avant réparation et acceptée après : le test
+  échoue dans les deux sens s'il le faut \\
+\texttt{authenticode\_test} & \texttt{Get-Authenticode}\allowbreak\texttt{Signature} &
+  2~233 binaires : 2~126 authentifiés par les deux, 99 prélevés par les deux,
+  aucun fichier accepté par \wac{} et refusé par Windows ; 462 scripts
+  PowerShell et 11 scripts WSH conformes \\
+\bottomrule
+\end{longtable}
+
+\section{Conversions : le détail de \texttt{system\_conversions\_test}}
+
+\wac{} ne dépend que de cinq bibliothèques système (\fichier{ADVAPI32},
+\fichier{KERNEL32}, \fichier{msvcrt}, \fichier{Secur32}, \fichier{WTSAPI32}),
+nécessaires pour interroger le système en marche. Les conversions qu'il
+demandait autrefois à d'autres bibliothèques de la machine examinée sont faites
+par son propre code, et ce programme les confronte aux fonctions de Windows
+qu'elles remplacent :
+
+\begin{itemize}
+  \item GUID, SID dans les deux sens, dates OLE, noms de propriétés (table de
+    1~698 entrées générée depuis le schéma de Windows) ;
+  \item dates FAT, sur toutes les dates possibles ;
+  \item heure d'été : décalage dans les deux sens sur les \textbf{141 fuseaux}
+    de Windows, avec leurs règles année par année, à chaque transition de 1980
+    à 2035 (heure sautée, heure répétée, changement de règle au 1\textsuperscript{er}
+    janvier) ;
+  \item lecture de la clé \fichier{TimeZoneInformation}, comparée à
+    \texttt{GetTimeZoneInformation} ;
+  \item règles de fuseau forgées au hasard : aucun débordement.
+\end{itemize}
+
+Écarts voulus, et documentés : \wac{} refuse un SID écrit que Windows
+tronquerait, et une date OLE non numérique pour laquelle Windows rend une heure
+dénuée de sens.
+
+\section{Harnais de robustesse}
+
+Un analyseur lit à des positions que le fichier déclare lui-même. Sur un
+fichier tronqué ou forgé, une lecture hors tampon ne plante pas d'elle-même :
+elle lit la mémoire voisine et la publie, dans un JSON valide. Les harnais de
+robustesse la font planter : chaque entrée est placée contre une page mémoire
+interdite, une fois à sa fin, une fois à son début. Un seul octet lu hors de
+l'entrée arrête le test. Un chien de garde arrête aussi un analyseur qui ne
+termine pas.
+
+Chaque fichier est analysé entier, dans ses troncatures, et en copies
+corrompues au hasard (graine fixe : un échec se reproduit à l'identique).
+
+\begin{longtable}{@{}L{4.2cm}L{6.4cm}L{4.4cm}@{}}
+\toprule
+\textbf{Programme} & \textbf{Fichiers d'une machine réelle} & \textbf{Entrées analysées} \\
+\midrule
+\endhead
+\texttt{lnk\_test} & 220 raccourcis & 546~214 \\
+\texttt{parsers\_test} & 48 listes de sauts automatiques & 175~585 \\
+ & 23 listes de sauts personnalisées & 79~036 \\
+ & 307 Prefetch & 1~246~491 \\
+ & 4 ruches du registre & 16~207 \\
+\bottomrule
+\end{longtable}
+
+Résultat : aucune lecture hors tampon, aucune boucle sans fin.
+
+% ============================================================ 4
+\chapter{Le cycle automatique et ses contrôles}\label{ch:cycle}
+
+\section{Le cycle}
+
+\fichier{vmtest/run-wac-test.sh} exécute, sans aucune intervention, une
+collecte complète dans une machine virtuelle Windows~11 (vrai NTFS, vrai
+registre) :
+
+\begin{enumerate}
+  \item avec \opt{build}, compilation sans avertissement de \wac{} et des
+    programmes de test ;
+  \item validation de l'extraction brute d'une ruche : \texttt{reg load} doit la
+    refuser avant réparation et l'accepter après ;
+  \item exécution de \wac{} avec les droits SYSTEM ; le code de retour est
+    vérifié, et la trace est cherchée pour toute exception non traitée ;
+  \item rapatriement des sorties, du journal de collecte et de la liste des
+    fichiers réellement présents dans la consigne ;
+  \item exécution de \fichier{check-json.py}.
+\end{enumerate}
+
+\section{Les contrôles de \texttt{check-json.py}}
+
+Le script vérifie d'abord la validité JSON de chaque fichier et la forme des
+chemins Windows (un double échappement se voit après analyse). Il confronte
+ensuite des valeurs calculées par \wac{} à des valeurs indépendantes : une
+autre donnée de la même collecte, ou une source externe. Chaque contrôle
+ci-dessous a été écrit après un défaut réel, qu'il a pris.
+
+\begin{longtable}{@{}L{6.6cm}L{8.4cm}@{}}
+\toprule
+\textbf{Contrôle} & \textbf{Défaut qu'il a pris} \\
+\midrule
+\endhead
+\multicolumn{2}{@{}l}{\textit{Dates}} \\
+couples \texttt{X} / \texttt{XUtc}, listes comprises, désignant le même instant
+  & double décalage horaire (sessions, raccourcis, date d'installation) ;
+  heures d'exécution des Prefetch étiquetées \texttt{+02:00} au lieu de UTC
+  (1~273 valeurs fausses de 2~h) \\
+décalage de chaque date locale / base de fuseaux IANA
+  & toutes les dates étiquetées avec le décalage du jour de collecte (106 dates
+  d'hiver à \texttt{+02:00}) ; dates de changement d'heure de la ruche SYSTEM
+  lues dans le mauvais format \\
+aucune session antérieure au démarrage du système & un décalage de deux heures
+  sur les sessions ; plus tard, une heure de démarrage en retard de 3,5~s \\
+heure de démarrage / événement Kernel-General~12 & deux sources indépendantes
+  du même instant : 0,00~s d'écart \\
+date ShimCache / date NTFS du fichier dans le manifeste & une date UTC traitée
+  comme locale \\
+aucun événement postérieur à la collecte & décalage ou mauvaise lecture d'une
+  date d'événement \\
+\multicolumn{2}{@{}l}{\textit{Décodage}} \\
+empreinte d'un Prefetch / suffixe de son nom de fichier & 65 empreintes fausses
+  sur 270 (hexadécimal sans remplissage) \\
+chemins \texttt{\textbackslash VOLUME\{guid\}} des Prefetch résolus & 20~066
+  chemins sur 20~066 non résolus \\
+entrées DestList / raccourcis des listes de sauts & les 15 premières entrées de
+  chaque liste perdues (573 raccourcis publiés sur 1~522) \\
+nom de machine des événements / \fichier{OperatingSystem.json} & contrôle du
+  décodage BinXML, sur deux sources sans lien \\
+identifiants d'enregistrement uniques par journal & relecture d'un bloc
+  périmé \\
+références \texttt{\%\%nnnn} non résolues dans les messages & fichier de
+  paramètres d'un fournisseur non chargé (3~780 messages) \\
+RID retrouvé à la fin du SID reconstruit & lecture de la base SAM \\
+états et types des services, présence des pilotes & filtres d'énumération
+  confondus avec des états \\
+aucun processus ne porte \fichier{WAC.exe} parmi ses modules & modules de
+  l'outil attribués au processus Idle \\
+références \fichier{\$MFT} plausibles & décodage des blocs d'extension des
+  raccourcis \\
+\multicolumn{2}{@{}l}{\textit{Consigne et rejeu}} \\
+sceau / empreinte réelle du manifeste & retouche du manifeste \\
+trois empreintes par pièce, comptes cohérents & pièce non identifiée \\
+fichiers présents dans la consigne / manifeste & 209 pièces ajoutées après le
+  scellement, que tous les autres contrôles laissaient passer \\
+aucune ruche à la fois rejouée et réparée & rejeu qui n'aligne pas les
+  séquences \\
+un journal d'annulation pour chaque rejeu & copie brute impossible à
+  reconstituer \\
+\bottomrule
+\end{longtable}
+
+\section{Résultat de référence}
+
+Dernier cycle, sur la version 1.3.1 (Windows~11, fuseau de Paris) :
+
+\begin{itemize}
+  \item 23 fichiers JSON valides sur 23 produits (le 24\textsuperscript{e},
+    USBSTOR, est absent : la machine virtuelle n'a jamais vu de clé USB) ;
+  \item 26 contrôles croisés passés, aucun échec, dont 4~045 dates locales
+    confrontées à la base IANA et 145~645 événements décodés ;
+  \item 1~336 pièces dans la consigne, exactement celles du manifeste, sceau
+    conforme.
+\end{itemize}
+
+% ============================================================ 5
+\chapter{Les recoupements sur une collecte réelle}\label{ch:reel}
+
+Une machine virtuelle neuve ne produit ni fragmentation, ni listes de sauts
+anciennes, ni noms de fichiers exotiques, ni journaux abîmés. Plusieurs
+défauts ne se sont révélés que sur une vraie machine, confrontée à une source
+indépendante :
+
+\begin{longtable}{@{}L{5.4cm}L{9.6cm}@{}}
+\toprule
+\textbf{Recoupement} & \textbf{Ce qu'il a montré} \\
+\midrule
+\endhead
+listes de sauts / \texttt{olefile} & les flux s'appellent « 1 » à « f »,
+  et non « 01 » à « 0f » \\
+cible d'un raccourci / entrée DestList & une page de code fausse et un chemin
+  Unicode ignoré \\
+journaux / \texttt{python-evtx} & un bloc de signature fausse arrêtait la
+  lecture de tout le fichier (14 enregistrements lus sur 270) \\
+blocs EVTX / leur CRC32 & contrôle ponctuel : les 1~505 blocs des 404
+  journaux de la machine de test sont intègres \\
+ruches / \fichier{offreg.dll} & 1~273~652 clés identiques \\
+binaires / \texttt{Get-AuthenticodeSignature} & aucune authentification
+  abusive \\
+ancienne sortie / nouvelle & décodage des mêmes fichiers par le code courant,
+  comparé après normalisation \\
+\bottomrule
+\end{longtable}
+
+\begin{note}
+Une collecte réelle contient des données personnelles. Elle se traite en local ;
+une copie temporaire dans la machine virtuelle ou un dossier de travail est
+effacée après usage, et rien n'en entre dans le dépôt des sources.
+\end{note}
+
+% ============================================================ 6
+\chapter{Ce que ces contrôles garantissent}
+
+\section{Garanties}
+
+\begin{itemize}
+  \item \textbf{Intégrité des pièces} : chaque pièce est identifiée par trois
+    empreintes, la copie de travail est vérifiée contre la lecture du volume,
+    le manifeste est scellé, et la consigne n'est jamais modifiée
+    (\texttt{consigne\_test}, contrôles du cycle).
+  \item \textbf{Aucune écriture sur le système examiné}, hors les traces
+    inévitables d'une collecte sur un système en marche, toutes consignées dans
+    \fichier{investigation.json} avec la trace attendue.
+  \item \textbf{Exactitude des décodeurs} : pour ceux qui ont une référence
+    (lecteur de ruches, décompressions, empreintes, conversions, fuseaux
+    horaires, authenticité des binaires), résultats identiques à la référence
+    sur les volumes indiqués.
+  \item \textbf{Robustesse} : aucun analyseur de raccourcis, listes de sauts,
+    Prefetch ou ruches ne lit hors de son tampon ni ne boucle, sur plus de deux
+    millions d'entrées tronquées ou corrompues.
+  \item \textbf{Cohérence des sorties} : chaque recoupement possible entre deux
+    artefacts, ou entre un artefact et une source externe, est vérifié à chaque
+    cycle.
+  \item \textbf{Indépendance vis-à-vis de la machine examinée} : \wac{}
+    n'emprunte à celle-ci aucune bibliothèque pour interpréter les preuves.
+\end{itemize}
+
+\section{Limites}
+
+\begin{attention}
+Ces contrôles ne prouvent pas l'absence de défaut. Ils prouvent que les défauts
+qu'ils visent sont absents, sur les données qu'ils ont vues.
+\end{attention}
+
+\begin{itemize}
+  \item \textbf{Complétude} : un artefact vide ne se distingue pas d'une
+    machine sans trace. Seule la comparaison entre deux collectes, ou avec une
+    machine dont on connaît le contenu, la mesure.
+  \item \textbf{Données que la machine de test ne contient pas} : clés USB,
+    appareils MTP, fichiers éclatés sur plusieurs enregistrements de la
+    \fichier{\$MFT} (\texttt{\$ATTRIBUTE\_LIST}), très gros volumes. Ils sont à
+    valider sur des systèmes réels.
+  \item \textbf{Artefacts sans référence} : quand aucun outil indépendant ne
+    lit un format, sa justesse repose sur les recoupements internes et sur la
+    documentation publique du format.
+  \item \textbf{Fuseaux horaires} : la confrontation à la base IANA couvre les
+    fuseaux dont les règles concordent avec celles de Windows sur la période
+    vérifiée (Europe de l'Ouest, États-Unis, UTC) ; les autres sont vérifiés
+    contre Windows seulement.
+  \item \textbf{Secteurs à moitié écrits} : les \emph{fixups} des
+    enregistrements NTFS sont appliqués, mais leur numéro de séquence n'est
+    pas encore comparé à la fin de chaque secteur ; un enregistrement déchiré
+    n'est donc pas signalé comme tel.
+  \item \textbf{Compilation MSVC} : le projet Visual Studio est maintenu, mais
+    les contrôles sont faits sur la version compilée par MinGW, celle qui est
+    livrée.
+\end{itemize}
+
+\end{document}
