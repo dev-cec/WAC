@@ -45,16 +45,18 @@
 #include "events.h"
 #include "event_messages.h"
 #include "running_machine.h"
+#include "trust_update.h"
 
 AppliConf conf; //!< the application's configuration, shared by every collector
 
 //! Prints the command-line help.
 void showHelp() {
 	SetConsoleTextAttribute(conf.hConsole, 7); // white
-	wprintf(L"%ls%ls%ls\n", L"\nusage: ", conf.name.c_str(), L" [--collect | --convert=folder] [--debug] [--dump] [--events] [--binary | --binary-all] [--output=output] [--loglevel=2]");
+	wprintf(L"%ls%ls%ls\n", L"\nusage: ", conf.name.c_str(), L" [--update-trust[=folder]] [--collect | --convert=folder] [--debug] [--dump] [--events] [--binary | --binary-all] [--output=output] [--loglevel=2]");
 	wprintf(L"%ls\n", L"\t--help or /? : show this help ");
 	wprintf(L"%ls\n", L"\t--collect : collection only, on the examined machine: live snapshots and raw extraction into the sealed exhibit store; nothing is converted. With --events, the resource files of every event provider are taken; with --binary, every executable and signature catalog of the system volume");
 	wprintf(L"%ls\n", L"\t--convert=folder : conversion only, on an analysis workstation, of the collection made with --collect in that folder: the seal and every fingerprint are checked first, then the JSON files are written next to the exhibit store, with conversion.json as the log. Give the same --events and --binary as the collection");
+	wprintf(L"%ls\n", L"\t--update-trust[=folder] : on the analysis workstation, BEFORE the collection, and alone: downloads Microsoft's trusted roots and disallowed certificates, checks their signatures, and writes them into folder (by default 'trust' next to WAC.exe), to be carried to the examined machine with WAC.exe");
 	wprintf(L"%ls\n", L"\t--debug : trace the raw NTFS parser on stderr (path resolution, index blocks, data runs)");
 	wprintf(L"%ls\n", L"\t--binary-all : like --binary, but every executable is collected, authenticated or not; its signature is still checked and the verdict recorded in the manifest");
 	wprintf(L"%ls\n", L"\t--threads=N : threads analysing the executables of --collect --binary (default: the processor's threads minus one)");
@@ -929,6 +931,21 @@ int wmain(int argc, wchar_t* argv[])
 	   the process's ANSI code page, and an output directory whose name the
 	   code page cannot represent was lost. */
 	const std::vector<std::wstring> commandLine(argv, argv + argc);
+	/* --update-trust runs ALONE, on the analysis workstation: it is not a
+	   collection — no investigation log, no elevation — and the only mode of
+	   WAC that uses the network. Combined with anything, it is refused: a
+	   collection that would download would reach the network from the examined
+	   machine. */
+	for (size_t i = 1; i < commandLine.size(); ++i) {
+		const std::wstring& arg = commandLine[i];
+		if (arg != L"--update-trust" && arg.substr(0, 15) != L"--update-trust=") continue;
+		if (commandLine.size() != 2 || arg == L"--update-trust=") {
+			printError(L"--update-trust runs alone, on the analysis workstation");
+			showHelp();
+			return 1;
+		}
+		return UpdateTrust(arg.size() > 15 ? arg.substr(15) : DefaultTrustFolder());
+	}
 	bool collect = false, outputGiven = false;
 	std::wstring convertFolder;
 	if (commandLine.size() > 1) { // at least one argument, the first being the program's own name

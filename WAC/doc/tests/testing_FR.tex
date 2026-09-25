@@ -509,6 +509,42 @@ authenticode_test --catalogs <dossier>
 authenticode_test --catalogs <dossier> --files <liste>
 \end{lstlisting}
 
+\section{Listes de confiance : \texttt{inflate\_test}, \texttt{cab\_test}, \texttt{trust\_list\_test}}
+
+\opt{update-trust} décompresse et lit ce que Microsoft publie ; une erreur
+donnerait une sortie valide et fausse. Chaque maillon a donc sa référence
+indépendante, et se construit sous Linux avec AddressSanitizer et UBSan :
+
+\begin{itemize}
+  \item \texttt{inflate\_test} : DEFLATE, confronté à zlib sur 49 flux, puis
+    flux tronqués et abîmés au hasard (graine fixe) ;
+  \item \texttt{cab\_test} : cabinets MSZIP, extraction identique octet pour
+    octet à celle de \texttt{cabextract} sur les vrais \fichier{authrootstl.cab}
+    et \fichier{disallowedcertstl.cab} (1\,134 contrôles) ;
+  \item \texttt{trust\_list\_test} : les comptes de \fichier{authroot.stl}
+    (racines pour la signature de code, pour l'horodatage, et pour la signature
+    de code non désapprouvées), calculés à part par une lecture DER en Python ;
+    les certificats que bloque Chromium (\fichier{net/data/ssl/blocklist}),
+    reconnus par \fichier{disallowedcert.stl} ; une liste modifiée d'un octet,
+    refusée.
+\end{itemize}
+
+\begin{lstlisting}
+g++ -std=c++17 -g -fsanitize=address,undefined -I. authenticode.cpp rsa.cpp \
+    sha.cpp quickdigest5.cpp trust_list_test.cpp -o /tmp/trust_list_test
+/tmp/trust_list_test authroot.stl 313 335 145 disallowedcert.stl blocklist 36
+\end{lstlisting}
+
+Référence (listes du 25~août~2026 et du 5~septembre~2025) : 41 contrôles, aucun
+échec. C'est ce test qui a établi ce que contient \fichier{disallowedcert.stl},
+que Microsoft ne documente pas : ses entrées de 16~octets sont le MD5 de la
+\textbf{clé publique} (et non de la partie signée, comme le nom de la propriété
+le laisse croire), celles de 48~octets le SHA-384 de la partie signée.
+
+Le résultat de bout en bout se contrôle dans la VM : les 562 racines écrites par
+\opt{update-trust} sont identiques, octet pour octet, à celles que produit
+\texttt{certutil -generateSSTFromWU}.
+
 % ============================================================ 5
 \chapter{Les harnais de robustesse}\label{ch:robustesse}
 

@@ -10,6 +10,7 @@
 #include "authenticode.h"
 #include "rsa.h"
 #include "racines_microsoft.h"
+#include "quickdigest5.h"
 #include <cstring>
 #include <map>
 #include <set>
@@ -652,6 +653,34 @@ size_t findText(const std::u32string& t, const char* reason, size_t since = 0) {
 	return t.find(m, since);
 }
 
+/*! An ASN.1 UTCTime, "YYMMDDHHMMSSZ" (RFC 5280: years 50 to 99 are 19xx), to
+ *  a FILETIME in UTC. Computed here rather than by the system: the module is
+ *  portable, and tested on Linux.
+ *  @return false if the text is not such a time (filetime untouched) */
+bool asn1TimeToFiletime(const Tlv& time, uint64_t& filetime) {
+	if (time.tag != 0x17 || time.len != 13 || time.val[12] != 'Z') return false;
+	int digits[12];
+	for (int k = 0; k < 12; ++k) {
+		if (time.val[k] < '0' || time.val[k] > '9') return false;
+		digits[k] = time.val[k] - '0';
+	}
+	auto two = [&](int at) { return digits[at] * 10 + digits[at + 1]; };
+	const int year = two(0) + (two(0) >= 50 ? 1900 : 2000);
+	const int month = two(2), day = two(4), hour = two(6), minute = two(8), second = two(10);
+	if (month < 1 || month > 12 || day < 1 || day > 31 || hour > 23 || minute > 59 || second > 59) return false;
+	// Days since 1601-01-01 (proleptic Gregorian): days from civil, H. Hinnant's method.
+	const int y = year - (month <= 2);
+	const int era = y / 400;
+	const int yearOfEra = y - era * 400;
+	const int dayOfYear = (153 * (month + (month > 2 ? -3 : 9)) + 2) / 5 + day - 1;
+	const int dayOfEra = yearOfEra * 365 + yearOfEra / 4 - yearOfEra / 100 + dayOfYear;
+	const long long daysSince1970 = (long long)era * 146097 + dayOfEra - 719468;
+	const long long DAYS_1601_TO_1970 = 134774;
+	const long long seconds = (daysSince1970 + DAYS_1601_TO_1970) * 86400 + hour * 3600 + minute * 60 + second;
+	filetime = (uint64_t)seconds * 10000000ULL;
+	return true;
+}
+
 int base64Value(char32_t c) {
 	if (c >= 'A' && c <= 'Z') return (int)(c - 'A');
 	if (c >= 'a' && c <= 'z') return (int)(c - 'a') + 26;
@@ -663,6 +692,122 @@ int base64Value(char32_t c) {
 
 } // namespace
 
+TrustList ReadTrustList(const uint8_t* bytes, size_t size) {
+	TrustList list;
+	const VerifiedSignature s = VerifyPkcs7(bytes, size);
+	if (!s.valid) { list.reason = s.reason; return list; }
+	if (s.signer != L"Microsoft Certificate Trust List Publisher" || s.signerOrganization != L"Microsoft Corporation") {
+		list.reason = "not signed by Microsoft's trust list publisher";
+		return list;
+	}
+	if (s.contentOid != std::string((const char*)OID_CTL, sizeof(OID_CTL))) { list.reason = "not a trust list"; return list; }
+	// Properties of a listed certificate: 1.3.6.1.4.1.311.10.11.<id>.
+	static const uint8_t PROPERTY[] = { 0x2B, 0x06, 0x01, 0x04, 0x01, 0x82, 0x37, 0x0A, 0x0B };
+	static const uint8_t CODE_SIGNING[] = { 0x2B, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x03 };
+	static const uint8_t TIME_STAMPING[] = { 0x2B, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x08 };
+	// Whether a list of uses — a SEQUENCE OF OID, in an OCTET STRING — holds `use`.
+	auto listsUse = [&](const Tlv& value, const uint8_t* use, size_t useSize) {
+		Tlv sequence;
+		if (value.tag != 0x04 || !readTlv(value.val, value.len, sequence)) return false;
+		for (const Tlv& oid : children(sequence))
+			if (oid.tag == 0x06 && oid.len == useSize && std::memcmp(oid.val, use, useSize) == 0)
+				return true;
+		return false;
+	};
+	Tlv ctl;
+	ctl.tag = 0x30; ctl.val = s.content; ctl.len = s.contentSize;
+	for (const Tlv& field : children(ctl)) {
+		if (field.tag == 0x17 && list.thisUpdate == 0) {   // thisUpdate, the first time of the list
+			asn1TimeToFiletime(field, list.thisUpdate);
+			continue;
+		}
+		if (field.tag != 0x30) continue;
+		const std::vector<Tlv> parts = children(field);
+		// The subject algorithm: SEQUENCE { OID 1.3.6.1.4.1.311.10.11.<id> [, NULL] }.
+		// authroot.stl names it by the SHA-1 OID, disallowedcert.stl by the property.
+		if (!parts.empty() && parts[0].tag == 0x06) {
+			if (parts[0].len == sizeof(PROPERTY) + 1 && std::memcmp(parts[0].val, PROPERTY, sizeof(PROPERTY)) == 0)
+				list.identifier = parts[0].val[sizeof(PROPERTY)];
+			else if (IS_OID(parts[0], OID_SHA1)) list.identifier = 3;
+			continue;
+		}
+		// The sizes each kind of list holds (see TrustList::identifier); any other is skipped.
+		auto sizeExpected = [&](size_t size) {
+			return list.identifier == 3 ? size == 20 : list.identifier == 15 && (size == 16 || size == 48);
+		};
+		for (const Tlv& subject : parts) {
+			const std::vector<Tlv> se = children(subject);
+			if (se.size() < 1 || se[0].tag != 0x04 || !sizeExpected(se[0].len)) continue;
+			TrustListEntry entry;
+			entry.identifier.assign((const char*)se[0].val, se[0].len);
+			if (se.size() >= 2 && se[1].tag == 0x31)
+				for (const Tlv& attribute : children(se[1])) {
+					const std::vector<Tlv> av = children(attribute);
+					if (av.size() < 2 || av[0].tag != 0x06 || av[0].len != sizeof(PROPERTY) + 1
+					    || std::memcmp(av[0].val, PROPERTY, sizeof(PROPERTY)) != 0) continue;
+					const uint8_t id = av[0].val[sizeof(PROPERTY)];
+					const std::vector<Tlv> values = children(av[1]);
+					if (values.empty()) continue;
+					// 9: the uses the root is trusted for; 122: the uses it is NOT trusted for.
+					if (id == 9) {
+						entry.codeSigningExcluded |= !listsUse(values[0], CODE_SIGNING, sizeof(CODE_SIGNING));
+						entry.timeStampingExcluded |= !listsUse(values[0], TIME_STAMPING, sizeof(TIME_STAMPING));
+					}
+					if (id == 122) {
+						entry.codeSigningExcluded |= listsUse(values[0], CODE_SIGNING, sizeof(CODE_SIGNING));
+						entry.timeStampingExcluded |= listsUse(values[0], TIME_STAMPING, sizeof(TIME_STAMPING));
+					}
+					if (id == 104) entry.distrusted = true;
+					if (id == 104 && values[0].tag == 0x04 && values[0].len == 8) {
+						uint64_t filetime = 0;
+						for (int k = 7; k >= 0; --k) filetime = (filetime << 8) | values[0].val[k];
+						entry.distrustedAfter = filetime;
+					}
+				}
+			list.entries.push_back(std::move(entry));
+		}
+	}
+	if (list.entries.empty()) { list.reason = "trust list without entries"; return list; }
+	list.valid = true;
+	return list;
+}
+
+const TrustListEntry* FindInTrustList(const TrustList& list, const uint8_t* certificate, size_t size) {
+	Tlv whole;
+	if (!certificate || !readTlv(certificate, size, whole) || whole.tag != 0x30) return nullptr;
+	std::vector<std::string> identifiers;
+	if (list.identifier == 3) {
+		uint8_t sha1[20];
+		sha1Bytes(whole.start, whole.total, sha1);
+		identifiers.emplace_back((const char*)sha1, sizeof(sha1));
+	}
+	else if (list.identifier == 15) {
+		const std::vector<Tlv> e = children(whole);
+		if (e.empty() || e[0].tag != 0x30) return nullptr;
+		uint8_t sha384[48];
+		sha384Bytes(e[0].start, e[0].total, sha384);           // of the TBSCertificate
+		identifiers.emplace_back((const char*)sha384, sizeof(sha384));
+		const std::vector<Tlv> t = children(e[0]);
+		const size_t first = !t.empty() && t[0].tag == 0xA0 ? 1 : 0;   // version
+		if (first + 6 <= t.size()) {
+			const std::vector<Tlv> spki = children(t[first + 5]);
+			if (spki.size() >= 2 && spki[1].tag == 0x03 && spki[1].len >= 1) {
+				Md5Stream md5;                                  // of the key: the BIT STRING, unused-bits byte excluded
+				md5.update(spki[1].val + 1, spki[1].len - 1);
+				const std::wstring hex = md5.hexDigest();
+				std::string bytes;
+				for (size_t k = 0; k + 1 < hex.size(); k += 2)
+					bytes += (char)std::stoi(std::string(hex.begin() + k, hex.begin() + k + 2), nullptr, 16);
+				identifiers.push_back(bytes);
+			}
+		}
+	}
+	for (const TrustListEntry& entry : list.entries)
+		for (const std::string& identifier : identifiers)
+			if (entry.identifier == identifier) return &entry;
+	return nullptr;
+}
+
 std::vector<uint8_t> DecodeBase64(const std::string& text) {
 	std::vector<uint8_t> bytes;
 	uint32_t acc = 0; int bits = 0;
@@ -673,6 +818,25 @@ std::vector<uint8_t> DecodeBase64(const std::string& text) {
 		if (bits >= 8) { bits -= 8; bytes.push_back((uint8_t)(acc >> bits)); }
 	}
 	return bytes;
+}
+
+std::string EncodeBase64(const uint8_t* bytes, size_t size, size_t lineLength) {
+	static const char ALPHABET[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+	std::string text;
+	auto put = [&](char c) {
+		text += c;
+		if (lineLength && (text.size() + 1) % (lineLength + 1) == 0) text += '\n';
+	};
+	for (size_t i = 0; i < size; i += 3) {
+		const uint32_t group = (uint32_t)bytes[i] << 16 | (i + 1 < size ? (uint32_t)bytes[i + 1] << 8 : 0)
+		                     | (i + 2 < size ? bytes[i + 2] : 0);
+		put(ALPHABET[group >> 18 & 63]);
+		put(ALPHABET[group >> 12 & 63]);
+		put(i + 1 < size ? ALPHABET[group >> 6 & 63] : '=');
+		put(i + 2 < size ? ALPHABET[group & 63] : '=');
+	}
+	if (lineLength && !text.empty() && text.back() != '\n') text += '\n';
+	return text;
 }
 
 PackageSignature VerifyPackageSignature(const uint8_t* bytes, size_t size) {

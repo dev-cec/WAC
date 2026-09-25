@@ -139,7 +139,13 @@ To minimize disk traces, this standalone tool should be run **as administrator**
 
 ```
 usage: wac [--collect | --convert=folder] [--dump] [--events] [--binary | --binary-all] [--threads=N] [--output=output] [--loglevel=2] [--debug]
+       wac --update-trust[=folder]
         --help or /? : show this help
+        --update-trust[=folder] : on the ANALYSIS WORKSTATION, BEFORE the
+                    collection, and alone: downloads Microsoft's trusted roots
+                    and disallowed certificates, checks their signatures, and
+                    writes the trust set into folder (by default `trust`, next
+                    to WAC.exe), to be carried on the key (see below)
         --collect : collection only, on the examined machine: live snapshots and
                     raw extraction into the sealed exhibit store; nothing is
                     converted. With --events, the resource files of every event
@@ -182,6 +188,30 @@ All options are optional and **disabled by default**.
 **Default output files are saved in :**
 - The `output` directory for standard results
 - The `log` file for logs when using `--loglevel`
+
+### The trust set (`--update-trust`)
+
+Checking a third-party signature means tying it to a root that is trusted,
+and to none that is distrusted. Taken from the examined machine, those roots
+would be the attacker's to choose: a root added by the attacker validates the attacker's binaries.
+`--update-trust` therefore takes them from Microsoft, on the analysis
+workstation, before leaving for the collection:
+
+| File | Content |
+|---|---|
+| `authroot.stl` | the roots of Microsoft's root program, the uses each is trusted for, its distrust date |
+| `disallowedcert.stl` | the keys and certificates Microsoft distrusts |
+| `roots\<SHA-1>.crt` | every root `authroot.stl` names (562 on 2026-08-25) |
+| `roots.pem` | those trusted for code signing and not distrusted, for `osslsigncode` or `openssl` on Linux |
+| `trust-manifest.json` | date, sources, counts, SHA-256 of every file; written last, so that an interrupted set is seen as absent |
+
+The set can be carried without being trusted: both lists are signed by
+Microsoft's trust list publisher, checked up to a Microsoft root embedded in
+WAC, and every root must have the SHA-1 the signed list names — an altered set
+is refused. It is the only mode that uses the network, through WinHTTP loaded
+at run time; the build refuses a `WAC.exe` that imports a network library.
+On a Linux workstation it runs under wine. About 4 seconds; the 562 roots are
+identical, byte for byte, to those of Windows' `certutil -generateSSTFromWU`.
 
 ## 🔀 COLLECT HERE, CONVERT ELSEWHERE
 

@@ -175,11 +175,80 @@ VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalog
  *  of Windows 11, all found that way. */
 VerdictMicrosoft EvaluateByCatalog(const uint8_t sha256[32], const IndexCatalogues& catalogues);
 
+/*! A certificate listed by a Microsoft trust list, and what the list says
+ *  of it. */
+struct TrustListEntry {
+	/*! What identifies the certificate, per the list's kind (TrustList::
+	 *  identifier) and, for disallowedcert.stl, per its size (see there). */
+	std::string identifier;
+	/*! The list restricts its uses (property 9) and code signing is not among
+	 *  them, or it disallows code signing (property 122): a root trusted for
+	 *  the web only must not validate a code signature. */
+	bool codeSigningExcluded = false;
+	/*! The same for time stamping: a root the list does not trust for it
+	 *  must not validate the time stamp of a signature. */
+	bool timeStampingExcluded = false;
+	/*! The list distrusts it after a date (property 104). Two roots of the
+	 *  list of 2026-08-25 carry the property WITHOUT a date (VeriSign Class 3
+	 *  G5, thawte Primary Root CA): the meaning is undocumented, hence taken
+	 *  the prudent way — distrusted, as of always. */
+	bool distrusted = false;
+	uint64_t distrustedAfter = 0;     //!< FILETIME of that date; 0 when the list gives none
+};
+
+/*! A Microsoft trust list: authroot.stl (the roots of Microsoft's root
+ *  program) or disallowedcert.stl (the certificates Microsoft distrusts). */
+struct TrustList {
+	bool valid = false;               //!< signed by Microsoft's trust list publisher, chain to a Microsoft root
+	std::string reason;               //!< why not valid
+	/*! How the list identifies a certificate — the property id of its
+	 *  subject algorithm:
+	 *    - 3 (authroot.stl): the SHA-1 of the certificate, 20 bytes;
+	 *    - 15 (disallowedcert.stl), "signature hash" by its name, but in
+	 *      fact two different digests, told apart by their size:
+	 *        16 bytes, the MD5 of the PUBLIC KEY (the content of the
+	 *          subjectPublicKeyInfo BIT STRING): a key is distrusted, with
+	 *          every certificate that carries it;
+	 *        48 bytes, the SHA-384 of the TBSCertificate.
+	 *      Neither is documented: MEASURED against an independent set, the
+	 *      certificates Chromium blocks (net/data/ssl/blocklist, 107 files):
+	 *      26 of the 82 entries of 16 bytes found as MD5 of a key, 3 of the
+	 *      6 entries of 48 bytes as SHA-384 of a TBSCertificate, and none as
+	 *      MD5 of a TBSCertificate, the reading the property's name
+	 *      suggests (see trust_list_test). */
+	unsigned identifier = 0;
+	uint64_t thisUpdate = 0;          //!< FILETIME (UTC) Microsoft issued this list at
+	std::vector<TrustListEntry> entries;
+};
+
+/*! Reads a Microsoft trust list and checks its signature: valid, up to an
+ *  embedded Microsoft root, by "Microsoft Certificate Trust List Publisher"
+ *  of Microsoft Corporation — the only signer accepted for a trust list, and
+ *  for nothing else.
+ *  @param bytes,size the .stl file
+ *  @return the list; `valid` false if its signature does not hold */
+TrustList ReadTrustList(const uint8_t* bytes, size_t size);
+
+/*! Looks a certificate up in a trust list, by the identifiers the list's
+ *  kind uses (see TrustList::identifier).
+ *  @param list the list, as ReadTrustList returned it
+ *  @param certificate,size the certificate, DER
+ *  @return its entry; nullptr if the list does not name it, or if the
+ *          certificate cannot be read */
+const TrustListEntry* FindInTrustList(const TrustList& list, const uint8_t* certificate, size_t size);
+
 /*! Base64 (the standard alphabet) to bytes; padding and characters outside
  *  the alphabet are skipped.
  *  @param text the encoded text
  *  @return the bytes */
 std::vector<uint8_t> DecodeBase64(const std::string& text);
+
+/*! Bytes to Base64 (the standard alphabet, padded), for the PEM files
+ *  --update-trust writes.
+ *  @param bytes,size the bytes
+ *  @param lineLength characters per line, a line feed after each; 0: one line
+ *  @return the encoded text */
+std::string EncodeBase64(const uint8_t* bytes, size_t size, size_t lineLength = 0);
 
 /*! Signature of an AppX / MSIX package (AppxSignature.p7x) and what it
  *  guarantees: the SHA-256 of the package's block map, which gives in turn

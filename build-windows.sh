@@ -147,3 +147,15 @@ if x86_64-w64-mingw32-objdump -p "$BUILD/WAC.exe" | grep -qE "\\b($FORBIDDEN)"; 
   exit 1
 fi
 echo "No network name resolution imported ($FORBIDDEN)."
+
+# No network library either: WAC.exe runs on the examined machine, where it
+# must never be able to reach the network. --update-trust, run on the analysis
+# workstation only, loads WinHTTP DYNAMICALLY, in that mode alone (see
+# http_client.cpp); a static import would load it at every start.
+NETWORK='winhttp\.dll|wininet\.dll|ws2_32\.dll|wsock32\.dll'
+if x86_64-w64-mingw32-objdump -p "$BUILD/WAC.exe" | grep -iE "DLL Name: ($NETWORK)" >/dev/null; then
+  echo "ERROR: WAC.exe imports a network library statically:"
+  x86_64-w64-mingw32-objdump -p "$BUILD/WAC.exe" | grep -iE "DLL Name: ($NETWORK)"
+  exit 1
+fi
+echo "No network library imported."

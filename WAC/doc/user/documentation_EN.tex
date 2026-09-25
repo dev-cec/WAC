@@ -273,6 +273,7 @@ then run:
 WAC.exe [--collect | --convert=folder] [--events] [--binary | --binary-all]
         [--threads=N] [--dump]
         [--output=folder] [--loglevel=N] [--debug]
+WAC.exe --update-trust[=folder]
 \end{lstlisting}
 
 Every option is optional and disabled by default.
@@ -305,6 +306,14 @@ Every option is optional and disabled by default.
   \opt{binary} (PE, Authenticode, catalogs, fingerprints). By default, the
   processor's threads minus one, the disk reading keeping its own. The result
   does not depend on it: the manifest is the same. \\
+-{}-update-trust\newline [=folder] & On the \textbf{analysis workstation}, \textbf{before} the
+  collection, and alone: downloads from Microsoft the list of trusted roots
+  (\fichier{authroot.stl}), that of disallowed certificates
+  (\fichier{disallowedcert.stl}) and every root, checks their signatures and
+  fingerprints, and writes them into \fichier{folder} (by default
+  \fichier{trust}, next to \fichier{WAC.exe}), to be carried on the key with
+  \fichier{WAC.exe}. The only mode that uses the network: the network library
+  is loaded there alone. Refused with any other option. \\
 -{}-dump & Adds the raw hexadecimal value of shellbag and \fichier{.lnk} shortcut
   items, for later decoding. \\
 -{}-output=folder & Output folder, relative to the current directory. Default:

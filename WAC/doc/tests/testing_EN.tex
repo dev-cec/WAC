@@ -491,6 +491,41 @@ authenticode_test --catalogs <folder>
 authenticode_test --catalogs <folder> --files <list>
 \end{lstlisting}
 
+\section{Trust lists: \texttt{inflate\_test}, \texttt{cab\_test}, \texttt{trust\_list\_test}}
+
+\opt{update-trust} decompresses and reads what Microsoft publishes; an error
+would give a valid and wrong output. Each link therefore has its independent
+reference, and is built on Linux with AddressSanitizer and UBSan:
+
+\begin{itemize}
+  \item \texttt{inflate\_test}: DEFLATE, checked against zlib on 49 streams,
+    then streams truncated and damaged at random (fixed seed);
+  \item \texttt{cab\_test}: MSZIP cabinets, extraction identical byte for byte
+    to \texttt{cabextract}'s on the real \fichier{authrootstl.cab} and
+    \fichier{disallowedcertstl.cab} (1,134 checks);
+  \item \texttt{trust\_list\_test}: the counts of \fichier{authroot.stl} (roots
+    for code signing, for time stamping, and for code signing not distrusted),
+    computed apart by a DER reading in Python; the certificates Chromium blocks
+    (\fichier{net/data/ssl/blocklist}), recognised by
+    \fichier{disallowedcert.stl}; a list with one byte changed, refused.
+\end{itemize}
+
+\begin{lstlisting}
+g++ -std=c++17 -g -fsanitize=address,undefined -I. authenticode.cpp rsa.cpp \
+    sha.cpp quickdigest5.cpp trust_list_test.cpp -o /tmp/trust_list_test
+/tmp/trust_list_test authroot.stl 313 335 145 disallowedcert.stl blocklist 36
+\end{lstlisting}
+
+Reference (lists of 25~August~2026 and 5~September~2025): 41 checks, no
+failure. This test established what \fichier{disallowedcert.stl} holds, which
+Microsoft does not document: its 16-byte entries are the MD5 of the
+\textbf{public key} (not of the signed part, as the property's name suggests),
+its 48-byte entries the SHA-384 of the signed part.
+
+The end-to-end result is checked in the VM: the 562 roots \opt{update-trust}
+writes are identical, byte for byte, to those \texttt{certutil
+-generateSSTFromWU} produces.
+
 % ============================================================ 5
 \chapter{The robustness harnesses}\label{ch:robustesse}
 

@@ -276,6 +276,7 @@ sur le support de collecte, puis lancez :
 WAC.exe [--collect | --convert=dossier] [--events] [--binary | --binary-all]
         [--threads=N] [--dump]
         [--output=dossier] [--loglevel=N] [--debug]
+WAC.exe --update-trust[=dossier]
 \end{lstlisting}
 
 Toutes les options sont facultatives et désactivées par défaut.
@@ -308,6 +309,14 @@ Toutes les options sont facultatives et désactivées par défaut.
   \opt{binary} (PE, Authenticode, catalogues, empreintes). Par défaut, le nombre
   de fils du processeur moins un, la lecture du disque gardant le sien. Le
   résultat n'en dépend pas : le manifeste est le même. \\
+-{}-update-trust\newline [=dossier] & Sur le \textbf{poste d'analyse}, \textbf{avant} la collecte, et
+  seule : télécharge chez Microsoft la liste des racines de confiance
+  (\fichier{authroot.stl}), celle des certificats désapprouvés
+  (\fichier{disallowedcert.stl}) et chacune des racines, vérifie leurs
+  signatures et leurs empreintes, et les écrit dans \fichier{dossier} (par
+  défaut \fichier{trust}, à côté de \fichier{WAC.exe}), à emporter sur la clé
+  avec \fichier{WAC.exe}. Seul mode qui utilise le réseau : la bibliothèque
+  réseau n'est chargée que là. Refusée avec toute autre option. \\
 -{}-dump & Ajoute la valeur hexadécimale brute des éléments de shellbags et de
   raccourcis \fichier{.lnk}, pour un décodage ultérieur. \\
 -{}-output=dossier & Dossier de sortie, relatif au répertoire courant. Par défaut :
