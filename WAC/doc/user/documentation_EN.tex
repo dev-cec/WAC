@@ -490,6 +490,32 @@ collection, 27042 for the analysis) separates the two:
         without going back to the machine.
 \end{itemize}
 
+\section{Which mode}
+
+\begin{itemize}
+  \item \textbf{By default: \opt{collect} on the machine, \opt{convert} on the
+        analysis workstation.} It is the procedure that leaves the fewest traces
+        on the examined machine, keeps the evidence sealed, and allows the
+        analysis to be redone and checked.
+  \item \textbf{Full run} (no mode option): for specific cases, to be stated in
+        the report — a triage whose results are needed on the spot with no
+        analysis workstation, a machine to be released within minutes. Its
+        conversion reads only the copies on the collection medium, never the
+        machine's files or registry, but it runs on it: minutes of processing
+        in memory (which Windows may page to \fichier{pagefile.sys}), a longer
+        process, a Windows error report if it crashes.
+  \item \textbf{Scope of \opt{binary}}: in a full run, only the files
+        \textbf{cited by the artefacts} are read; a binary on the disk that no
+        artefact cites is not examined. With \opt{collect}, it is \textbf{every
+        executable of every fixed NTFS volume}, cited or not. The collection
+        alone takes longer for that reason (16~min~39~s against 4~min~33~s on the
+        test machine): that time is reading, which writes nothing to the
+        machine.
+  \item \textbf{\opt{binary-all}}: when the content of every executable must be
+        in the exhibit store (malware analysis, request for the files
+        themselves), for about 20~GB.
+\end{itemize}
+
 \section{The two commands}
 
 On the examined machine, as administrator:

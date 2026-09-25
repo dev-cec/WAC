@@ -496,6 +496,33 @@ deux :
         la machine.
 \end{itemize}
 
+\section{Quel mode choisir}
+
+\begin{itemize}
+  \item \textbf{Par défaut : \opt{collect} sur la machine, \opt{convert} sur le
+        poste d'analyse.} C'est la procédure qui laisse le moins de traces sur la
+        machine examinée, garde les preuves scellées et permet de refaire et de
+        vérifier l'analyse.
+  \item \textbf{Exécution complète} (sans option de mode) : à réserver aux cas
+        particuliers, à signaler au rapport — un tri dont les résultats sont
+        attendus sur place sans poste d'analyse, une machine à rendre en quelques
+        minutes. Sa conversion ne lit que les copies du support de collecte,
+        jamais les fichiers ni le registre de la machine, mais elle s'exécute sur
+        celle-ci : des minutes de traitement en mémoire (que Windows peut paginer
+        dans \fichier{pagefile.sys}), un processus plus long, un rapport
+        d'erreur Windows en cas de plantage.
+  \item \textbf{Portée de \opt{binary}} : en exécution complète, seuls les
+        fichiers \textbf{cités par les artefacts} sont lus ; un binaire du disque
+        qu'aucun artefact ne cite n'est pas examiné. Avec \opt{collect}, ce sont
+        \textbf{tous les exécutables de tous les volumes fixes NTFS}, cités ou non.
+        La collecte seule dure plus longtemps pour cette raison (16~min~39~s
+        contre 4~min~33~s sur la machine de test) : ce temps est de la lecture,
+        qui n'écrit rien sur la machine.
+  \item \textbf{\opt{binary-all}} : quand le contenu de chaque exécutable doit
+        figurer dans la consigne (analyse de logiciel malveillant, demande des
+        fichiers eux-mêmes), pour environ 20~Go.
+\end{itemize}
+
 \section{Les deux commandes}
 
 Sur la machine examinée, en administrateur :

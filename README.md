@@ -138,7 +138,7 @@ what it is and, where it matters, why it is trustworthy.
 To minimize disk traces, this standalone tool should be run **as administrator** from a USB stick using the command:
 
 ```
-usage: wac [--collect | --convert=folder] [--dump] [--events] [--binary] [--output=output] [--loglevel=2] [--debug]
+usage: wac [--collect | --convert=folder] [--dump] [--events] [--binary | --binary-all] [--output=output] [--loglevel=2] [--debug]
         --help or /? : show this help
         --collect : collection only, on the examined machine: live snapshots and
                     raw extraction into the sealed exhibit store; nothing is
@@ -153,9 +153,14 @@ usage: wac [--collect | --convert=folder] [--dump] [--events] [--binary] [--outp
                     exhibit store, conversion.json as its log
         --dump : add hexa value in json files for shellbags and LNK files
         --events : extract and parse the .evtx event logs (adds ~117 MB to the collection)
-        --binary : fingerprint (MD5, SHA-1, SHA-256) every file referenced in
-                   artefacts, read raw; executables, libraries, drivers and
-                   scripts are also collected into the exhibit store
+        --binary : in a full run, fingerprint every file CITED by an artefact,
+                   read raw; the cited executables, libraries, drivers and
+                   scripts not authenticated as Microsoft are also collected.
+                   With --collect, every executable of every fixed NTFS volume
+                   instead, cited or not (see --collect)
+        --binary-all : like --binary, but every executable is collected,
+                   authenticated or not; the signature is still checked and
+                   its verdict recorded in the manifest
         --output=[directory name] : directory name to store output files starting from current directory. By default the directory is 'output'
         --loglevel=[0] : define level of details in logfile and activate logging in wac.log
         --debug : show the raw NTFS reader trace on stderr (path resolution,
@@ -173,6 +178,49 @@ All options are optional and **disabled by default**.
 **Default output files are saved in :**
 - The `output` directory for standard results
 - The `log` file for logs when using `--loglevel`
+
+### Which mode: the forensic procedure
+
+Good forensic practice separates the **collection**, on the examined machine,
+from the **analysis**, on a controlled workstation (ISO/IEC 27037 for the
+identification, collection and preservation of digital evidence, ISO/IEC 27042
+for its analysis). Three rules follow, and WAC's modes are built on them:
+
+1. **Act as little as possible on the examined machine** (ACPO, principle 1):
+   every operation run there leaves traces that can mingle with those of the
+   events under investigation, and can alter them.
+2. **Preserve the evidence as read, sealed**, so that its integrity can be
+   proven: the exhibit store and its manifest, with three fingerprints per
+   exhibit and a seal on the manifest.
+3. **Make the analysis reproducible**: redone from the same sealed evidence —
+   by a third party, or with a corrected WAC — it must give the same result.
+
+| | Full run (no mode option) | `--collect` | `--convert=folder` |
+|---|---|---|---|
+| Runs on | the examined machine | the examined machine | an analysis workstation |
+| Does | collection **and** conversion to JSON, in one run | live snapshots, raw extraction, sealed exhibit store — **nothing converted** | checks the seal and every fingerprint, then converts; the exhibit store is only read |
+| With `--binary` | reads only the files **cited by the artefacts**; a binary on the disk that no artefact cites is not examined | reads **every executable of every fixed NTFS volume**, cited or not; the conversion may cite any of them | uses what the collection took |
+| Traces on the examined machine | those of the collection, **plus the conversion's**: minutes of processing of thousands of files in WAC's memory (which Windows may page to `pagefile.sys`), a process running longer, an error report (WER) if it crashes | those of the collection only | **none**: the machine is not involved |
+| Reproducible | partly: its exhibit store is sealed, but holds neither the authenticated binaries it cited nor any record of them, and converting it again is not a tested path | yes, through `--convert` | yes: two conversions give identical JSON files |
+
+**Use `--collect`, then `--convert` on the analysis workstation.** It is the
+procedure that leaves the fewest traces on the examined machine, keeps the
+evidence sealed, and allows the analysis to be redone and checked. The longer
+duration of `--collect --binary` (16 min 39 s against 4 min 33 s on the test VM,
+see PERFORMANCE) is spent *reading* the volume raw, which writes nothing to it —
+not converting.
+
+**Keep the full run for specific cases**, and say so in the report: a triage
+whose results are needed on the spot, with no analysis workstation at hand; a
+machine that must be released within minutes. Its conversion reads only the
+copies on the collection medium — never the machine's files or registry — but
+it still runs on the examined machine.
+
+**Use `--binary-all`** when the content of every executable must itself be in
+the exhibit store — a malware analysis, a request for the files themselves —,
+at the cost of about 20 GB. Otherwise, an authenticated binary that was not
+copied can be fetched again, identical, from Microsoft's symbol server, by the
+retrieval key the manifest records (`SymbolServerKey`).
 
 ## 🛡️ FOOTPRINT ON THE EXAMINED MACHINE
 
