@@ -344,13 +344,13 @@ Measured on the Windows 11 test VM (NVMe-backed, 25 September 2026, version
 
 | Run | Duration | Exhibit store | What it holds |
 |---|---|---|---|
-| full, `--events --binary` | **273 s** | 0.74 GB, 1 640 exhibits | 24 JSON files; 170 344 events from 404 logs; 6 698 cited files, 2 146 authenticated and not collected, 75 collected (250 MB) |
-| `--collect --events --binary` | **999 s** | 1.81 GB, 6 060 files | 43 513 executables of the volume read and verified, 27 958 authenticated (not copied), 12 700 Windows differential files, 2 508 collected (676 MB); resources of all 934 event providers (649 MB) |
+| full, `--events --binary` | **4 min 33 s** | 0.74 GB, 1 640 exhibits | 24 JSON files; 170 344 events from 404 logs; 6 698 cited files, 2 146 authenticated and not collected, 75 collected (250 MB) |
+| `--collect --events --binary` | **16 min 39 s** | 1.81 GB, 6 060 files | 43 513 executables of the volume read and verified, 27 958 authenticated (not copied), 12 700 Windows differential files, 2 508 collected (676 MB); resources of all 934 event providers (649 MB) |
 | `--convert` of that collection | **43 s** | read only | seal and 6 461 fingerprints checked first; identical JSON on a second run |
-| `--collect --events --binary-all` | **1 305 s** | 20.0 GB | 58 509 executables copied, each with its signature verdict (previous cycle) |
+| `--collect --events --binary-all` | **21 min 45 s** | 20.0 GB | 58 509 executables copied, each with its signature verdict (previous cycle) |
 
 **Where the time goes** in a `--collect --binary`, as WAC's log records it per
-phase: reading and verifying the 43 513 executables takes **646 s** — of which
+phase: reading and verifying the 43 513 executables takes **10 min 46 s** — of which
 loading the 13 817 signature catalogs 32 s, Store packages 8 s — and copying the
 unauthenticated ones **29 s**; hives, event logs, provider resources and sealing
 take the rest. The cost is reading and hashing the whole volume, not writing:
@@ -449,7 +449,7 @@ point is not the ratio but the shape: the streamed figure does not grow with the
 size of the logs, so it cannot reach the level where Windows starts paging — and
 paging writes to `pagefile.sys`, on the disk one is trying not to modify.
 
-End to end, the offline path now takes **273 s** for a full run with `--events`
+End to end, the offline path now takes **4 min 33 s** for a full run with `--events`
 and `--binary` on the test VM (170 344 events from 404 logs), against about
 20 minutes for the old API path; it has not yet been timed on physical
 hardware.

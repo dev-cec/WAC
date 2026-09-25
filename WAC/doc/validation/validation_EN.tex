@@ -509,14 +509,14 @@ Last cycle, 25 September 2026, on version 1.3.1 (Windows~11, Paris time zone),
 no failure and no warning:
 
 \begin{itemize}
-  \item \textbf{full run} (\opt{events} \opt{binary}, 273~s): 24 valid JSON
+  \item \textbf{full run} (\opt{events} \opt{binary}, 4~min~33~s): 24 valid JSON
     files out of 24 produced, USBSTOR included (the harness attaches a virtual
     USB key on every cycle, so that a recreated test machine knows one too);
     62 checks passed, among them 4,090 local dates confronted with the IANA
     database and 170,344 events decoded from 404 logs; 1,640 exhibits, exactly
     those of the manifest, seal conforms;
   \item \textbf{collection only} (\opt{collect} \opt{events} \opt{binary},
-    999~s): nothing converted; 43,513 executables read, 27,958 authenticated
+    16~min~39~s): nothing converted; 43,513 executables read, 27,958 authenticated
     and not copied, 12,700 Windows differential files, 2,508 collected
     (676~MB); 6,461 exhibits verified by \fichier{verify-exhibits.ps1}; a
     retouched exhibit refused before any read;
