@@ -2,6 +2,7 @@
  *  \brief Offline reading of the system information (see system.h).
  */
 #include "system.h"
+#include "live_snapshot.h"
 
 namespace {
 
@@ -41,6 +42,80 @@ FILETIME unixToFiletime(unsigned long long seconds) {
 }
 
 } // namespace
+
+HRESULT snapshotSystemClock() {
+	/* Measured live, without a trace. Kept in UTC; the local version is
+	   derived at output with the SUSPECT's offset, the one its label carries,
+	   as every other date of the collection. */
+	FILETIME collectionTimeUtc = { 0, 0 };
+	long long clockCorrection100ns = 0;
+	bool bootFromKernel = false;
+	log(3, L"🔈GetSystemTimeAsFileTime");
+	GetSystemTimeAsFileTime(&collectionTimeUtc);
+
+	/* Time of the last boot.
+	 *
+	 * SOURCE: the kernel, through
+	 * NtQuerySystemInformation(SystemTimeOfDayInformation) — an in-memory query,
+	 * with no WMI and no trace. It returns `BootTime`, the instant of the boot
+	 * expressed in the CURRENT clock, and `BootTimeBias`, the total of the clock
+	 * corrections applied since. `BootTime − BootTimeBias` is therefore what the
+	 * clock showed at boot time: the same reference as the event logs and the
+	 * logons, timestamped as they happened.
+	 *
+	 * WHAT WAS WRONG. The time was estimated by "current time minus
+	 * GetTickCount64", which ignores clock adjustments. On the test VM, suspended
+	 * then adjusted, it fell 3.5 s AFTER the real boot — and after the first
+	 * logons, which check-json.py caught. Verified: BootTime 20:00:00.87 minus
+	 * BootTimeBias 4.37 s gives 19:59:56.50, exactly the StartTime of the
+	 * Kernel-General 12 event; the old estimate gave 20:00:00.
+	 *
+	 * The estimate remains as a fallback if the query fails, and BootTimeSource
+	 * says which of the two served.
+	 */
+	log(3, L"🔈GetTickCount64");
+	const ULONGLONG uptimeMs = GetTickCount64();
+	const unsigned long long uptimeSeconds = uptimeMs / 1000ULL;
+	const ULONGLONG now100ns = ((ULONGLONG)collectionTimeUtc.dwHighDateTime << 32)
+	                                | collectionTimeUtc.dwLowDateTime;
+	ULONGLONG boot100ns = 0;
+	{
+		struct TimeOfDay {                     // SYSTEM_TIMEOFDAY_INFORMATION
+			LARGE_INTEGER BootTime, CurrentTime, TimeZoneBias;
+			ULONG TimeZoneId, Reserved;
+			ULONGLONG BootTimeBias, SleepTimeBias;
+		} timeOfDay = {};
+		typedef LONG (WINAPI *NtQsiFn)(ULONG, PVOID, ULONG, PULONG);
+		const NtQsiFn ntQsi = reinterpret_cast<NtQsiFn>(
+			GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "NtQuerySystemInformation"));
+		ULONG returned = 0;
+		log(3, L"🔈NtQuerySystemInformation SystemTimeOfDayInformation");
+		if (ntQsi && ntQsi(3 /*SystemTimeOfDayInformation*/, &timeOfDay, sizeof(timeOfDay), &returned) >= 0
+		    && timeOfDay.BootTime.QuadPart > (LONGLONG)timeOfDay.BootTimeBias) {
+			boot100ns = (ULONGLONG)timeOfDay.BootTime.QuadPart - timeOfDay.BootTimeBias;
+			clockCorrection100ns = (long long)timeOfDay.BootTimeBias;
+			bootFromKernel = true;
+		}
+		else
+			log(2, L"🔥NtQuerySystemInformation: boot time estimated through GetTickCount64");
+	}
+	if (!bootFromKernel && now100ns > uptimeMs * 10000ULL)
+		boot100ns = now100ns - uptimeMs * 10000ULL;
+	if (boot100ns)
+		log(2, L"❇️Last boot (UTC) : " + timeToIso8601Utc(FILETIME{ (DWORD)(boot100ns & 0xFFFFFFFFULL), (DWORD)(boot100ns >> 32) }));
+	else
+		log(2, L"🔥Uptime inconsistent with the system time: boot time not computed");
+
+	// Raw values, in 100 ns ticks: nothing lost between observation and conversion.
+	Json clock = Json::obj();
+	clock.add(L"CollectionTime100ns", Json::num((unsigned long long)now100ns));
+	if (boot100ns) clock.add(L"BootTime100ns", Json::num((unsigned long long)boot100ns));
+	clock.add(L"BootTimeFromKernel", Json::num(bootFromKernel ? 1 : 0));
+	clock.add(L"ClockCorrection100ns", Json::num(clockCorrection100ns));
+	clock.add(L"UptimeSeconds", Json::num(uptimeSeconds));
+	return writeLiveSnapshot("system-clock.json", clock, L"system clock and boot time");
+
+}
 
 HRESULT SystemInfo::getData() {
 
@@ -168,69 +243,22 @@ HRESULT SystemInfo::getData() {
 		log(2, L"🔥SOFTWARE hive unavailable: installation information not read");
 
 	/*******************************************************************
-	* 3. Instant of the collection — measured live, without a trace
+	* 3. Instant of the collection and boot time — observed live by
+	*    snapshotSystemClock, read back from the snapshot
 	*******************************************************************/
-	/* Kept in UTC; the local version is derived at output with the SUSPECT's
-	   offset, the one its label carries, as every other date of the
-	   collection. */
-	log(3, L"🔈GetSystemTimeAsFileTime");
-	GetSystemTimeAsFileTime(&collectionTimeUtc);
-
-	/* Time of the last boot.
-	 *
-	 * SOURCE: the kernel, through
-	 * NtQuerySystemInformation(SystemTimeOfDayInformation) — an in-memory query,
-	 * with no WMI and no trace. It returns `BootTime`, the instant of the boot
-	 * expressed in the CURRENT clock, and `BootTimeBias`, the total of the clock
-	 * corrections applied since. `BootTime − BootTimeBias` is therefore what the
-	 * clock showed at boot time: the same reference as the event logs and the
-	 * logons, timestamped as they happened.
-	 *
-	 * WHAT WAS WRONG. The time was estimated by "current time minus
-	 * GetTickCount64", which ignores clock adjustments. On the test VM, suspended
-	 * then adjusted, it fell 3.5 s AFTER the real boot — and after the first
-	 * logons, which check-json.py caught. Verified: BootTime 20:00:00.87 minus
-	 * BootTimeBias 4.37 s gives 19:59:56.50, exactly the StartTime of the
-	 * Kernel-General 12 event; the old estimate gave 20:00:00.
-	 *
-	 * The estimate remains as a fallback if the query fails, and BootTimeSource
-	 * says which of the two served.
-	 */
-	log(3, L"🔈GetTickCount64");
-	const ULONGLONG uptimeMs = GetTickCount64();
-	uptimeSeconds = uptimeMs / 1000ULL;
-	const ULONGLONG now100ns = ((ULONGLONG)collectionTimeUtc.dwHighDateTime << 32)
-	                                | collectionTimeUtc.dwLowDateTime;
-	ULONGLONG boot100ns = 0;
-	{
-		struct TimeOfDay {                     // SYSTEM_TIMEOFDAY_INFORMATION
-			LARGE_INTEGER BootTime, CurrentTime, TimeZoneBias;
-			ULONG TimeZoneId, Reserved;
-			ULONGLONG BootTimeBias, SleepTimeBias;
-		} timeOfDay = {};
-		typedef LONG (WINAPI *NtQsiFn)(ULONG, PVOID, ULONG, PULONG);
-		const NtQsiFn ntQsi = reinterpret_cast<NtQsiFn>(
-			GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "NtQuerySystemInformation"));
-		ULONG returned = 0;
-		log(3, L"🔈NtQuerySystemInformation SystemTimeOfDayInformation");
-		if (ntQsi && ntQsi(3 /*SystemTimeOfDayInformation*/, &timeOfDay, sizeof(timeOfDay), &returned) >= 0
-		    && timeOfDay.BootTime.QuadPart > (LONGLONG)timeOfDay.BootTimeBias) {
-			boot100ns = (ULONGLONG)timeOfDay.BootTime.QuadPart - timeOfDay.BootTimeBias;
-			clockCorrection100ns = (long long)timeOfDay.BootTimeBias;
-			bootFromKernel = true;
-		}
-		else
-			log(2, L"🔥NtQuerySystemInformation: boot time estimated through GetTickCount64");
-	}
-	if (!bootFromKernel && now100ns > uptimeMs * 10000ULL)
-		boot100ns = now100ns - uptimeMs * 10000ULL;
-	if (boot100ns) {
-		lastBootUpTimeUtc = FILETIME{ (DWORD)(boot100ns & 0xFFFFFFFFULL), (DWORD)(boot100ns >> 32) };
-		log(2, L"❇️Last boot (UTC) : " + timeToIso8601Utc(lastBootUpTimeUtc));
+	Json clock = Json::null();
+	if (readLiveSnapshot("system-clock.json", clock) == ERROR_SUCCESS) {
+		long long collection = 0, boot = 0, correction = 0, uptime = 0, kernel = 0;
+		if (snapshotInteger(clock, L"CollectionTime100ns", collection) && collection > 0)
+			collectionTimeUtc = FILETIME{ (DWORD)((ULONGLONG)collection & 0xFFFFFFFFULL), (DWORD)((ULONGLONG)collection >> 32) };
+		if (snapshotInteger(clock, L"BootTime100ns", boot) && boot > 0)
+			lastBootUpTimeUtc = FILETIME{ (DWORD)((ULONGLONG)boot & 0xFFFFFFFFULL), (DWORD)((ULONGLONG)boot >> 32) };
+		if (snapshotInteger(clock, L"UptimeSeconds", uptime) && uptime >= 0) uptimeSeconds = (unsigned long long)uptime;
+		if (snapshotInteger(clock, L"ClockCorrection100ns", correction)) clockCorrection100ns = correction;
+		if (snapshotInteger(clock, L"BootTimeFromKernel", kernel)) bootFromKernel = kernel != 0;
 	}
 	else
-		log(2, L"🔥Uptime inconsistent with the system time: boot time not computed");
-
+		log(2, L"🔥System clock snapshot absent: collection and boot times not published");
 	return ERROR_SUCCESS;
 }
 

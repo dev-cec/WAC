@@ -86,6 +86,12 @@ struct ServiceState {
 	DWORD processId = 0;      //!< PID hosting the service, 0 if stopped
 };
 
+/*! Observes the current state of every service live (one enumeration of the
+ *  service manager) and records it as a snapshot (live_snapshot.h), which
+ *  Services::getData reads back. To be called in the live phase.
+ *  @return the result of the enumeration or of the snapshot's write */
+HRESULT snapshotServiceStates();
+
 /*! All the services and drivers of the examined machine. */
 struct Services
 {

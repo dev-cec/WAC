@@ -110,8 +110,8 @@ $(document).ready(function(){initNavTree('structProcesses.html',''); initResizab
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a8f07281c5922d2b9cf33c0a23a897d7e" id="r_a8f07281c5922d2b9cf33c0a23a897d7e"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structProcesses.html#a8f07281c5922d2b9cf33c0a23a897d7e">getData</a> ()</td></tr>
 <tr class="separator:a8f07281c5922d2b9cf33c0a23a897d7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a347fc32cc3833bf305a41d92591ba956" id="r_a347fc32cc3833bf305a41d92591ba956"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structProcesses.html#a347fc32cc3833bf305a41d92591ba956">toJson</a> ()</td></tr>
-<tr class="separator:a347fc32cc3833bf305a41d92591ba956"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a81a295120dca23cfea85cb307f2b81a9" id="r_a81a295120dca23cfea85cb307f2b81a9"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structProcesses.html#a81a295120dca23cfea85cb307f2b81a9">snapshot</a> ()</td></tr>
+<tr class="separator:a81a295120dca23cfea85cb307f2b81a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aec2682819405725b35aa644149a97524" id="r_aec2682819405725b35aa644149a97524"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structProcesses.html#aec2682819405725b35aa644149a97524">clear</a> ()</td></tr>
 <tr class="memdesc:aec2682819405725b35aa644149a97524"><td class="mdescLeft">&#160;</td><td class="mdescRight">Releases the memory held by the processes.  <br /></td></tr>
 <tr class="separator:aec2682819405725b35aa644149a97524"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -162,21 +162,21 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a347fc32cc3833bf305a41d92591ba956" name="a347fc32cc3833bf305a41d92591ba956"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a347fc32cc3833bf305a41d92591ba956">&#9670;&#160;</a></span>toJson()</h2>
+<a id="a81a295120dca23cfea85cb307f2b81a9" name="a81a295120dca23cfea85cb307f2b81a9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a81a295120dca23cfea85cb307f2b81a9">&#9670;&#160;</a></span>snapshot()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">HRESULT Processes::toJson </td>
+          <td class="memname">HRESULT Processes::snapshot </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Writes <code>processes.json</code> into the output directory. </p><dl class="section return"><dt>Returns</dt><dd>the result of the write. </dd></dl>
+<p>Records the processes as a live snapshot (<a class="el" href="live__snapshot_8h.html" title="Snapshot of the LIVE state: what WAC observes on the running system (processes, sessions,...">live_snapshot.h</a>), which writeProcessesFromSnapshot publishes. </p><dl class="section return"><dt>Returns</dt><dd>the result of the write. </dd></dl>
 
 </div>
 </div>

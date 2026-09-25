@@ -31,6 +31,8 @@ const wchar_t* SESSIONS     = L"Query of the open sessions (LSA / Terminal Servi
                               L"solicits LSASS, without modifying any artefact.";
 const wchar_t* USB_WRITE = L"Write to the collection medium only. No write "
                               L"to the examined system.";
+const wchar_t* CLOCK        = L"Reading of the system clock, of the uptime and of the kernel's "
+                              L"time-of-day information: in-memory queries, no artefact touched.";
 } // namespace Footprint
 
 namespace {

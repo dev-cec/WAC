@@ -96,6 +96,8 @@ $(document).ready(function(){initNavTree('sessions_8cpp.html',''); initResizable
 </div>
 
 <div class="header">
+  <div class="summary">
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">sessions.cpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -103,9 +105,35 @@ $(document).ready(function(){initNavTree('sessions_8cpp.html',''); initResizable
 <p>Collection of the open logon sessions (see <a class="el" href="sessions_8h.html" title="Logon sessions open on the machine while the collection runs.">sessions.h</a>).  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="sessions_8h_source.html">sessions.h</a>&quot;</code><br />
-</div><a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<code>#include &quot;<a class="el" href="live__snapshot_8h_source.html">live_snapshot.h</a>&quot;</code><br />
+</div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a2f2b840870137a0011fd4473b7c30a0d" id="r_a2f2b840870137a0011fd4473b7c30a0d"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sessions_8cpp.html#a2f2b840870137a0011fd4473b7c30a0d">writeSessionsFromSnapshot</a> ()</td></tr>
+<tr class="separator:a2f2b840870137a0011fd4473b7c30a0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Collection of the open logon sessions (see <a class="el" href="sessions_8h.html" title="Logon sessions open on the machine while the collection runs.">sessions.h</a>). </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="a2f2b840870137a0011fd4473b7c30a0d" name="a2f2b840870137a0011fd4473b7c30a0d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2f2b840870137a0011fd4473b7c30a0d">&#9670;&#160;</a></span>writeSessionsFromSnapshot()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT writeSessionsFromSnapshot </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Publishes <code>Sessions.json</code> from the live snapshot of the collection. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the reason the snapshot could not be read or written </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

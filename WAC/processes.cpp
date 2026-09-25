@@ -2,6 +2,7 @@
  *  \brief Collection of the running processes, their owners and their modules (see processes.h).
  */
 #include "processes.h"
+#include "live_snapshot.h"
 
 #include <wtsapi32.h>
 
@@ -158,9 +159,9 @@ Json Process::toJson() const {
 	// ProcessId… One single language for the keys (naming pass).
 	o.add(L"Name",           Json::str(processName));
 	addFingerprints(o, fingerprint);
+	// The owner's NAME is added by the conversion (writeProcessesFromSnapshot),
+	// from the hives: the snapshot keeps what was observed, the SID.
 	o.add(L"SID",            Json::str(processSID));
-	// Named when written, from the hives (account_names.h), not when observed.
-	o.add(L"Owner",          Json::str(getNameFromSid(processSID)));
 	/* Harmonised naming (naming pass): `PID` and `PPId` coexisted in the SAME
 	   object with two case conventions, and `services.json` called the same
 	   notion `ProcessId`. One spelling for one notion, explicit like
@@ -255,10 +256,28 @@ HRESULT Processes::getData() {
 	return(ERROR_SUCCESS);
 }
 
-HRESULT Processes::toJson() {
-	log(3, L"🔈processes toJson");
+HRESULT Processes::snapshot() {
+	log(3, L"🔈processes snapshot");
 	Json arr = Json::arr();
 	for (const Process& p : processes) arr.push(p.toJson());
+	return writeLiveSnapshot("processes.json", arr, L"running processes (Toolhelp snapshot, WTS)");
+}
+
+HRESULT writeProcessesFromSnapshot() {
+	Json snapshot = Json::null();
+	const HRESULT hresult = readLiveSnapshot("processes.json", snapshot);
+	if (hresult != ERROR_SUCCESS) return hresult;
+	/* Each process as observed, with the name of its owner inserted after its
+	   SID — named from the hives (account_names.h), not by asking the system. */
+	Json arr = Json::arr();
+	for (const auto& process : snapshot.members()) {
+		Json o = Json::obj();
+		for (const auto& field : process.second.members()) {
+			o.add(field.first, field.second);
+			if (field.first == L"SID") o.add(L"Owner", Json::str(getNameFromSid(field.second.text())));
+		}
+		arr.push(std::move(o));
+	}
 	return writeJsonFile("processes.json", arr);
 }
 

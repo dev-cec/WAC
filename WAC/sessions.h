@@ -75,11 +75,16 @@ struct Sessions {
 	/*! Enumerates the sessions and reads each one's data.
 	 *  @return S_OK, or the failure of the enumeration. */
 	HRESULT getData();
-	/*! Writes `Sessions.json` into the output directory.
+	/*! Records the sessions as a live snapshot (live_snapshot.h), which
+	 *  writeSessionsFromSnapshot publishes.
 	 *  @return the result of the write. */
-	HRESULT toJson();
+	HRESULT snapshot();
 
 	//! Releases the memory held by the sessions.
 	void clear();
 
 };
+
+/*! Publishes `Sessions.json` from the live snapshot of the collection.
+ *  @return ERROR_SUCCESS, or the reason the snapshot could not be read or written */
+HRESULT writeSessionsFromSnapshot();

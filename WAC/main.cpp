@@ -306,38 +306,58 @@ int wmain(int argc, wchar_t* argv[])
 	   (SYSTEM and SOFTWARE hives) and therefore happens AFTER they are opened,
 	   at the end of the registry phase. See system.h. */
 
+	/* LIVE OBSERVATIONS, recorded as sealed snapshots (live_snapshot.h): the
+	   conversion reads them back, here or on an analysis workstation. What is
+	   interpretation — the owner's name of a process — is left to it. */
 	printStep(L" - Extraction of SESSIONS: ");
 	hresult = sessions.getData();
 	auditRecord(L"SESSIONS collection", L"LSA / WTS", hresult, Footprint::SESSIONS);
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else {
-		hresult = sessions.toJson();
+		hresult = sessions.snapshot();
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else printSuccess();
 		sessions.clear();// free memory
 	}
 
-
-
 	printStep(L" - Extraction of PROCESS: ");
 	hresult = processes.getData();
 	auditRecord(L"PROCESS collection", L"CreateToolhelp32Snapshot", hresult, Footprint::PROCESSES);
-	/* Observed now, written once the account names are loaded from the
-	   hives (loadAccountNames): the owner of a process is named from the
-	   evidence, not by asking the running system. */
-	bool processesPending = hresult == ERROR_SUCCESS;
 	if (hresult != ERROR_SUCCESS) printError(hresult);
-	else printSuccess();
-	// Writes processes.json once, as soon as the names are loaded, or at the
-	// latest before the event logs if the SYSTEM hive could not be opened.
-	auto writeProcesses = [&processes, &processesPending]() {
-		if (!processesPending) return;
-		processesPending = false;
-		printStep(L" - Writing PROCESS : ");
-		const HRESULT written = processes.toJson();
-		if (written != ERROR_SUCCESS) printError(written);
+	else {
+		hresult = processes.snapshot();
+		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else printSuccess();
 		processes.clear(); // free memory
+	}
+
+	printStep(L" - Extraction of SERVICE STATES: ");
+	hresult = snapshotServiceStates();
+	auditRecord(L"SERVICE STATES collection", L"EnumServicesStatusExW", hresult, Footprint::SCM);
+	if (hresult != ERROR_SUCCESS) printError(hresult);
+	else printSuccess();
+
+	printStep(L" - Extraction of SYSTEM CLOCK: ");
+	hresult = snapshotSystemClock();
+	auditRecord(L"SYSTEM CLOCK collection",
+	            L"GetSystemTimeAsFileTime, NtQuerySystemInformation(SystemTimeOfDayInformation), GetTickCount64",
+	            hresult, Footprint::CLOCK);
+	if (hresult != ERROR_SUCCESS) printError(hresult);
+	else printSuccess();
+
+	/* processes.json is published once the account names are loaded from the
+	   hives, or at the latest before the event logs if the SYSTEM hive could
+	   not be opened. */
+	bool processesPending = true;
+	auto writeProcesses = [&processesPending]() {
+		if (!processesPending) return;
+		processesPending = false;
+		printStep(L" - Writing PROCESS and SESSIONS : ");
+		HRESULT written = writeProcessesFromSnapshot();
+		const HRESULT sessionsWritten = writeSessionsFromSnapshot();
+		if (written == ERROR_SUCCESS) written = sessionsWritten;
+		if (written != ERROR_SUCCESS) printError(written);
+		else printSuccess();
 	};
 
 

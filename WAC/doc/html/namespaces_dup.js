@@ -1,6 +1,7 @@
 var namespaces_dup =
 [
     [ "Footprint", "namespaceFootprint.html", [
+      [ "CLOCK", "namespaceFootprint.html#a2851d886859c5bd0d3cd4136f8b2cffe", null ],
       [ "FILE_COPY", "namespaceFootprint.html#ab664b541daab7ddf3cfab280e1523e2c", null ],
       [ "HIVE_COPY", "namespaceFootprint.html#a493d4c8b62fcc39c42210d5939c616a1", null ],
       [ "HIVE_PATCH", "namespaceFootprint.html#aefb355d58dd0b46e131498a8aac1967d", null ],

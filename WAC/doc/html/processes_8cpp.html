@@ -106,6 +106,7 @@ $(document).ready(function(){initNavTree('processes_8cpp.html',''); initResizabl
 <p>Collection of the running processes, their owners and their modules (see <a class="el" href="processes_8h.html" title="Running processes: the instantaneous state of the machine.">processes.h</a>).  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="processes_8h_source.html">processes.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="live__snapshot_8h_source.html">live_snapshot.h</a>&quot;</code><br />
 <code>#include &lt;wtsapi32.h&gt;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
@@ -119,6 +120,8 @@ Functions</h2></td></tr>
 <tr class="memitem:a33ce55d72052c5a66917a45d0601b7e8" id="r_a33ce55d72052c5a66917a45d0601b7e8"><td class="memItemLeft" align="right" valign="top">WINBOOL WINAPI&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="processes_8cpp.html#a33ce55d72052c5a66917a45d0601b7e8">WTSEnumerateProcessesExW</a> (HANDLE hServer, DWORD *pLevel, DWORD SessionId, LPWSTR *ppProcessInfo, DWORD *pCount)</td></tr>
 <tr class="memdesc:a33ce55d72052c5a66917a45d0601b7e8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumerates the processes of a server, with their owner and session (wtsapi32).  <br /></td></tr>
 <tr class="separator:a33ce55d72052c5a66917a45d0601b7e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf309cd7fe1e0a0d397e9f14c37262d7" id="r_adf309cd7fe1e0a0d397e9f14c37262d7"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="processes_8cpp.html#adf309cd7fe1e0a0d397e9f14c37262d7">writeProcessesFromSnapshot</a> ()</td></tr>
+<tr class="separator:adf309cd7fe1e0a0d397e9f14c37262d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Collection of the running processes, their owners and their modules (see <a class="el" href="processes_8h.html" title="Running processes: the instantaneous state of the machine.">processes.h</a>). </p>
@@ -140,6 +143,24 @@ Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="adf309cd7fe1e0a0d397e9f14c37262d7" name="adf309cd7fe1e0a0d397e9f14c37262d7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adf309cd7fe1e0a0d397e9f14c37262d7">&#9670;&#160;</a></span>writeProcessesFromSnapshot()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT writeProcessesFromSnapshot </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Publishes <code>processes.json</code> from the live snapshot of the collection, the owner of each process named from the hives (loadAccountNames must have run). </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the reason the snapshot could not be read or written </dd></dl>
+
+</div>
+</div>
 <a id="a33ce55d72052c5a66917a45d0601b7e8" name="a33ce55d72052c5a66917a45d0601b7e8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a33ce55d72052c5a66917a45d0601b7e8">&#9670;&#160;</a></span>WTSEnumerateProcessesExW()</h2>
 

@@ -2,6 +2,7 @@
  *  \brief Collection of the open logon sessions (see sessions.h).
  */
 #include "sessions.h"
+#include "live_snapshot.h"
 
 Session::Session(LUID* id) {
 	/* `LsaGetLogonSessionData` ALLOCATES the structure itself and overwrites the
@@ -103,11 +104,20 @@ HRESULT Sessions::getData() {
 	return ERROR_SUCCESS;
 }
 
-HRESULT Sessions::toJson() {
-	log(3, L"🔈sessions toJson");
+HRESULT Sessions::snapshot() {
+	log(3, L"🔈sessions snapshot");
 	Json arr = Json::arr();
 	for (const Session& s : sessions) arr.push(s.toJson());
-	return writeJsonFile("Sessions.json", arr);
+	return writeLiveSnapshot("sessions.json", arr, L"logon sessions (LSA)");
+}
+
+HRESULT writeSessionsFromSnapshot() {
+	// The sessions are published as observed: their names come from LSA at
+	// the time of the observation, not from an interpretation.
+	Json snapshot = Json::null();
+	const HRESULT hresult = readLiveSnapshot("sessions.json", snapshot);
+	if (hresult != ERROR_SUCCESS) return hresult;
+	return writeJsonFile("Sessions.json", snapshot);
 }
 
 void Sessions::clear() {

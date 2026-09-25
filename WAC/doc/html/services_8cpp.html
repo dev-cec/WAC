@@ -96,6 +96,8 @@ $(document).ready(function(){initNavTree('services_8cpp.html',''); initResizable
 </div>
 
 <div class="header">
+  <div class="summary">
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">services.cpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -103,11 +105,37 @@ $(document).ready(function(){initNavTree('services_8cpp.html',''); initResizable
 <p><a class="el" href="structServices.html">Services</a> and drivers, read offline from the SYSTEM hive.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="services_8h_source.html">services.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="live__snapshot_8h_source.html">live_snapshot.h</a>&quot;</code><br />
 <code>#include &lt;algorithm&gt;</code><br />
-</div><a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+</div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a710dabf319d75d13643557a64727775b" id="r_a710dabf319d75d13643557a64727775b"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="services_8cpp.html#a710dabf319d75d13643557a64727775b">snapshotServiceStates</a> ()</td></tr>
+<tr class="separator:a710dabf319d75d13643557a64727775b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="structServices.html">Services</a> and drivers, read offline from the SYSTEM hive. </p>
 <p><code>binaryPath</code> has moved to tools: resolving the Windows path prefixes (<code>\SystemRoot\</code>, <code>SystemRoot%\</code>, <code>\??\</code>) also serves to locate the resource files of the event providers (see <a class="el" href="event__messages_8cpp.html" title="Finding, extracting and caching the providers&#39; resource files.">event_messages.cpp</a>). </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="a710dabf319d75d13643557a64727775b" name="a710dabf319d75d13643557a64727775b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a710dabf319d75d13643557a64727775b">&#9670;&#160;</a></span>snapshotServiceStates()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT snapshotServiceStates </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Observes the current state of every service live (one enumeration of the service manager) and records it as a snapshot (<a class="el" href="live__snapshot_8h.html" title="Snapshot of the LIVE state: what WAC observes on the running system (processes, sessions,...">live_snapshot.h</a>), which <a class="el" href="structServices.html#afaf4f2a1f183ff5cf30acc7cc9f16eed">Services::getData</a> reads back. To be called in the live phase. </p><dl class="section return"><dt>Returns</dt><dd>the result of the enumeration or of the snapshot's write </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

@@ -97,7 +97,8 @@ $(document).ready(function(){initNavTree('processes_8h.html',''); initResizable(
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">processes.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -126,6 +127,11 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structProcesses.html">Processes</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:adf309cd7fe1e0a0d397e9f14c37262d7" id="r_adf309cd7fe1e0a0d397e9f14c37262d7"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="processes_8h.html#adf309cd7fe1e0a0d397e9f14c37262d7">writeProcessesFromSnapshot</a> ()</td></tr>
+<tr class="separator:adf309cd7fe1e0a0d397e9f14c37262d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Running processes: the instantaneous state of the machine. </p>
@@ -137,7 +143,26 @@ Classes</h2></td></tr>
 </ul>
 <p>The SID and the session now come from a SINGLE <code>WTSEnumerateProcessesExW</code> call, which returns them for ALL processes without opening any handle. Less footprint, and more data.</p>
 <p>The module list goes through <code>CreateToolhelp32Snapshot(TH32CS_SNAPMODULE)</code>, which never needed the handle. It is therefore collected even when the owner is unknown: the two reads are independent, and chaining them lost the modules on every token failure. </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="adf309cd7fe1e0a0d397e9f14c37262d7" name="adf309cd7fe1e0a0d397e9f14c37262d7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adf309cd7fe1e0a0d397e9f14c37262d7">&#9670;&#160;</a></span>writeProcessesFromSnapshot()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT writeProcessesFromSnapshot </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Publishes <code>processes.json</code> from the live snapshot of the collection, the owner of each process named from the hives (loadAccountNames must have run). </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the reason the snapshot could not be read or written </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

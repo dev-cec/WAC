@@ -97,7 +97,8 @@ $(document).ready(function(){initNavTree('services_8h.html',''); initResizable()
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">services.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -125,6 +126,11 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structServices.html">Services</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a710dabf319d75d13643557a64727775b" id="r_a710dabf319d75d13643557a64727775b"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="services_8h.html#a710dabf319d75d13643557a64727775b">snapshotServiceStates</a> ()</td></tr>
+<tr class="separator:a710dabf319d75d13643557a64727775b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="structServices.html">Services</a> and drivers of the examined machine. </p>
@@ -138,7 +144,26 @@ Classes</h2></td></tr>
 <li>the services still registered in the hive but absent from the SCM.</li>
 </ul>
 <p>WHAT IS STILL MEASURED LIVE, AND WHY <code>Status</code> and <code>ProcessId</code> do not exist on the disk: they describe the instant of the collection. A SINGLE enumeration (<code>EnumServicesStatusExW</code>) reads them for all services at once, without any <code>OpenServiceW</code> — the footprint is therefore lighter than before the switch, not heavier. Dropping them would have cost the correlation with processes.json, which nothing replaces. <code>LiveStatusAvailable</code> says whether that reading succeeded, so that a stopped service is not confused with a service whose state could not be read. </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="a710dabf319d75d13643557a64727775b" name="a710dabf319d75d13643557a64727775b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a710dabf319d75d13643557a64727775b">&#9670;&#160;</a></span>snapshotServiceStates()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT snapshotServiceStates </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Observes the current state of every service live (one enumeration of the service manager) and records it as a snapshot (<a class="el" href="live__snapshot_8h.html" title="Snapshot of the LIVE state: what WAC observes on the running system (processes, sessions,...">live_snapshot.h</a>), which <a class="el" href="structServices.html#afaf4f2a1f183ff5cf30acc7cc9f16eed">Services::getData</a> reads back. To be called in the live phase. </p><dl class="section return"><dt>Returns</dt><dd>the result of the enumeration or of the snapshot's write </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

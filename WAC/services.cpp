@@ -1,4 +1,5 @@
 #include "services.h"
+#include "live_snapshot.h"
 #include <algorithm>
 
 namespace {
@@ -100,7 +101,41 @@ void addTextOrResource(Json& o, const std::wstring& name, const std::wstring& va
 	o.add((name + L"Resource").c_str(), Json::str(value));
 }
 
+/*! The service states of the snapshot, as readLiveStates gave them.
+*  @param states receives the state indexed by service name in lower case
+*  @return ERROR_SUCCESS, or the reason the snapshot could not be read */
+HRESULT readSnapshotStates(std::map<std::wstring, ServiceState>& states) {
+	Json snapshot = Json::null();
+	const HRESULT hresult = readLiveSnapshot("service-states.json", snapshot);
+	if (hresult != ERROR_SUCCESS) {
+		log(2, L"🔥Service states snapshot unreadable: states not published", hresult);
+		return hresult;
+	}
+	for (const auto& member : snapshot.members()) {
+		ServiceState e;
+		if (const Json* status = member.second.find(L"Status")) e.status = status->text();
+		long long pid = 0;
+		if (snapshotInteger(member.second, L"ProcessId", pid) && pid >= 0 && pid <= 0xFFFFFFFFLL) e.processId = (DWORD)pid;
+		states.emplace(member.first, e);
+	}
+	return ERROR_SUCCESS;
+}
+
 } // namespace
+
+HRESULT snapshotServiceStates() {
+	std::map<std::wstring, ServiceState> states;
+	const HRESULT hresult = readLiveStates(states);
+	if (hresult != ERROR_SUCCESS) return hresult;
+	Json snapshot = Json::obj();
+	for (const auto& s : states) {
+		Json state = Json::obj();
+		state.add(L"Status", Json::str(s.second.status));
+		state.add(L"ProcessId", Json::num(s.second.processId));
+		snapshot.add(s.first, std::move(state));
+	}
+	return writeLiveSnapshot("service-states.json", snapshot, L"current state of the services (service manager)");
+}
 
 Json ServiceStruct::toJson() const {
 	log(3, L"🔈service toJson");
@@ -190,7 +225,8 @@ HRESULT Services::getData() {
 
 	// Current state read BEFORE the walk: one single solicitation of the SCM.
 	std::map<std::wstring, ServiceState> states;
-	const bool statesAvailable = (readLiveStates(states) == ERROR_SUCCESS);
+	// The states observed live, read back from the snapshot (snapshotServiceStates).
+	const bool statesAvailable = (readSnapshotStates(states) == ERROR_SUCCESS);
 
 	services.reserve(nSubKeys);
 	WCHAR keyName[MAX_KEY_NAME] = L"";

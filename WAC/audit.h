@@ -60,6 +60,8 @@ namespace Footprint {
 	extern const wchar_t* SESSIONS;
 	//! Write to the collection medium (the USB key), never to the target.
 	extern const wchar_t* USB_WRITE;
+	//! reading of the clock and of the boot time: in-memory queries, no artefact touched
+	extern const wchar_t* CLOCK;
 }
 
 /*! Opens the log: reads the context of the collection (machine, operator, time

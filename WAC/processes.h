@@ -92,15 +92,16 @@ struct Processes {
 	*/
 	HRESULT getData();
 
-	/*! Writes `processes.json` into the output directory.
+	/*! Records the processes as a live snapshot (live_snapshot.h), which
+	 *  writeProcessesFromSnapshot publishes.
 	 *  @return the result of the write. */
-	HRESULT toJson();
+	HRESULT snapshot();
 
 	//! Releases the memory held by the processes.
 	void clear();
 };
 
-
-
-
-
+/*! Publishes `processes.json` from the live snapshot of the collection, the
+ *  owner of each process named from the hives (loadAccountNames must have run).
+ *  @return ERROR_SUCCESS, or the reason the snapshot could not be read or written */
+HRESULT writeProcessesFromSnapshot();

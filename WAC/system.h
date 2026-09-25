@@ -36,6 +36,13 @@
 *  verifiable.
 */
 
+/*! Observes the system clock live — instant of the collection, boot time
+ *  (kernel, or estimated from the uptime), clock correction, uptime — and
+ *  records it as a snapshot (live_snapshot.h), which SystemInfo::getData reads
+ *  back. To be called in the live phase: the conversion may run elsewhere.
+ *  @return the result of the snapshot's write */
+HRESULT snapshotSystemClock();
+
 /*! System information of the examined machine: identity, installation, and
  *  the instant of the collection. */
 struct SystemInfo {

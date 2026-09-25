@@ -6,6 +6,7 @@ var audit_8cpp =
     [ "auditStartLocal", "audit_8cpp.html#a8e4ad7f6f29fe1090eba067a60c8088a", null ],
     [ "auditStartUtc", "audit_8cpp.html#ae2e721b9365f0c478ae3b918763725d5", null ],
     [ "auditWrite", "audit_8cpp.html#ac7c50c38d38c2f3b3ccc78f72570d6df", null ],
+    [ "CLOCK", "audit_8cpp.html#a2851d886859c5bd0d3cd4136f8b2cffe", null ],
     [ "FILE_COPY", "audit_8cpp.html#ab664b541daab7ddf3cfab280e1523e2c", null ],
     [ "HIVE_COPY", "audit_8cpp.html#a493d4c8b62fcc39c42210d5939c616a1", null ],
     [ "HIVE_PATCH", "audit_8cpp.html#aefb355d58dd0b46e131498a8aac1967d", null ],

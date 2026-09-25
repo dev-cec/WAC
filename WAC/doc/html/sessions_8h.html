@@ -98,7 +98,8 @@ $(document).ready(function(){initNavTree('sessions_8h.html',''); initResizable()
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
-<a href="#define-members">Macros</a>  </div>
+<a href="#define-members">Macros</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">sessions.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -130,6 +131,11 @@ Classes</h2></td></tr>
 Macros</h2></td></tr>
 <tr class="memitem:a02179d6d0af6163a233da56ec5a575ad" id="r_a02179d6d0af6163a233da56ec5a575ad"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sessions_8h.html#a02179d6d0af6163a233da56ec5a575ad">_NTDEF_</a></td></tr>
 <tr class="separator:a02179d6d0af6163a233da56ec5a575ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a2f2b840870137a0011fd4473b7c30a0d" id="r_a2f2b840870137a0011fd4473b7c30a0d"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sessions_8h.html#a2f2b840870137a0011fd4473b7c30a0d">writeSessionsFromSnapshot</a> ()</td></tr>
+<tr class="separator:a2f2b840870137a0011fd4473b7c30a0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Logon sessions open on the machine while the collection runs. </p>
@@ -148,6 +154,25 @@ Macros</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="a2f2b840870137a0011fd4473b7c30a0d" name="a2f2b840870137a0011fd4473b7c30a0d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2f2b840870137a0011fd4473b7c30a0d">&#9670;&#160;</a></span>writeSessionsFromSnapshot()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT writeSessionsFromSnapshot </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Publishes <code>Sessions.json</code> from the live snapshot of the collection. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the reason the snapshot could not be read or written </dd></dl>
 
 </div>
 </div>

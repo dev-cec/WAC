@@ -96,6 +96,8 @@ $(document).ready(function(){initNavTree('system_8cpp.html',''); initResizable()
 </div>
 
 <div class="header">
+  <div class="summary">
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">system.cpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -103,9 +105,35 @@ $(document).ready(function(){initNavTree('system_8cpp.html',''); initResizable()
 <p>Offline reading of the system information (see <a class="el" href="system_8h.html" title="System information of the examined machine.">system.h</a>).  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="system_8h_source.html">system.h</a>&quot;</code><br />
-</div><a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<code>#include &quot;<a class="el" href="live__snapshot_8h_source.html">live_snapshot.h</a>&quot;</code><br />
+</div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:af57edfcfb2674e79de21bd33c8805a42" id="r_af57edfcfb2674e79de21bd33c8805a42"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="system_8cpp.html#af57edfcfb2674e79de21bd33c8805a42">snapshotSystemClock</a> ()</td></tr>
+<tr class="separator:af57edfcfb2674e79de21bd33c8805a42"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Offline reading of the system information (see <a class="el" href="system_8h.html" title="System information of the examined machine.">system.h</a>). </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="af57edfcfb2674e79de21bd33c8805a42" name="af57edfcfb2674e79de21bd33c8805a42"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af57edfcfb2674e79de21bd33c8805a42">&#9670;&#160;</a></span>snapshotSystemClock()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT snapshotSystemClock </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Observes the system clock live — instant of the collection, boot time (kernel, or estimated from the uptime), clock correction, uptime — and records it as a snapshot (<a class="el" href="live__snapshot_8h.html" title="Snapshot of the LIVE state: what WAC observes on the running system (processes, sessions,...">live_snapshot.h</a>), which <a class="el" href="structSystemInfo.html#a30d08c80ceb0a7549eedf65598a581d0">SystemInfo::getData</a> reads back. To be called in the live phase: the conversion may run elsewhere. </p><dl class="section return"><dt>Returns</dt><dd>the result of the snapshot's write </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

@@ -110,8 +110,8 @@ $(document).ready(function(){initNavTree('structSessions.html',''); initResizabl
 Public Member Functions</h2></td></tr>
 <tr class="memitem:af9497bb8ee3183da3bc85286a5fc9ffb" id="r_af9497bb8ee3183da3bc85286a5fc9ffb"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSessions.html#af9497bb8ee3183da3bc85286a5fc9ffb">getData</a> ()</td></tr>
 <tr class="separator:af9497bb8ee3183da3bc85286a5fc9ffb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7cef21486a182a9462c85ff26dc1aea7" id="r_a7cef21486a182a9462c85ff26dc1aea7"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSessions.html#a7cef21486a182a9462c85ff26dc1aea7">toJson</a> ()</td></tr>
-<tr class="separator:a7cef21486a182a9462c85ff26dc1aea7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac45e8917adc81cab3a461be5ae961ad8" id="r_ac45e8917adc81cab3a461be5ae961ad8"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSessions.html#ac45e8917adc81cab3a461be5ae961ad8">snapshot</a> ()</td></tr>
+<tr class="separator:ac45e8917adc81cab3a461be5ae961ad8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5807afc66ff7aecb9b7a55ba2b39b4ec" id="r_a5807afc66ff7aecb9b7a55ba2b39b4ec"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSessions.html#a5807afc66ff7aecb9b7a55ba2b39b4ec">clear</a> ()</td></tr>
 <tr class="memdesc:a5807afc66ff7aecb9b7a55ba2b39b4ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Releases the memory held by the sessions.  <br /></td></tr>
 <tr class="separator:a5807afc66ff7aecb9b7a55ba2b39b4ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -162,21 +162,21 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a7cef21486a182a9462c85ff26dc1aea7" name="a7cef21486a182a9462c85ff26dc1aea7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7cef21486a182a9462c85ff26dc1aea7">&#9670;&#160;</a></span>toJson()</h2>
+<a id="ac45e8917adc81cab3a461be5ae961ad8" name="ac45e8917adc81cab3a461be5ae961ad8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac45e8917adc81cab3a461be5ae961ad8">&#9670;&#160;</a></span>snapshot()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">HRESULT Sessions::toJson </td>
+          <td class="memname">HRESULT Sessions::snapshot </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Writes <code>Sessions.json</code> into the output directory. </p><dl class="section return"><dt>Returns</dt><dd>the result of the write. </dd></dl>
+<p>Records the sessions as a live snapshot (<a class="el" href="live__snapshot_8h.html" title="Snapshot of the LIVE state: what WAC observes on the running system (processes, sessions,...">live_snapshot.h</a>), which writeSessionsFromSnapshot publishes. </p><dl class="section return"><dt>Returns</dt><dd>the result of the write. </dd></dl>
 
 </div>
 </div>
