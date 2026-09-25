@@ -179,11 +179,11 @@ All options are optional and **disabled by default**.
 - The `output` directory for standard results
 - The `log` file for logs when using `--loglevel`
 
-## 🔀 5. COLLECT HERE, CONVERT ELSEWHERE
+## 🔀 COLLECT HERE, CONVERT ELSEWHERE
 
 The same two sections as chapter 5 of the user documentation.
 
-### 5.1 Why separate collection and conversion
+### Why separate collection and conversion
 
 A WAC run does two different things:
 
@@ -225,7 +225,7 @@ Separating the two stages brings three things:
   byte-identical JSON files, and the analysis can be redone later — with a
   corrected WAC, or by a third party — without going back to the machine.
 
-### 5.2 Which mode to choose
+### Which mode to choose
 
 **By default: `--collect` on the examined machine, then `--convert` on an
 analysis workstation.**
@@ -240,6 +240,8 @@ D:\> WAC.exe --convert=E:\accounting-pc-01 --events --binary           (analysis
 | Runs on | the examined machine | the examined machine | an analysis workstation |
 | Does | collection **and** conversion, in one run | collection only: live snapshots, raw extraction, sealed exhibit store — **nothing converted** | checks the seal and every fingerprint, then converts; the exhibit store is only read |
 | `--binary` examines | only the files **cited by the artefacts**; a binary no artefact cites is not examined | **every executable of every fixed NTFS volume**, cited or not | what the collection took |
+| `--binary` collects | the cited executables **not authenticated**, with their fingerprints; the authenticated ones are fingerprinted, not copied | the executables **not authenticated**, with their fingerprints; the authenticated ones are fingerprinted, not copied | — |
+| `--binary-all` collects | **every** cited executable, authenticated or not, with its signature verdict | **every** executable, authenticated or not, with its signature verdict | — |
 | Traces on the examined machine | the collection's **and the conversion's** (processing, memory, a longer process, a crash report if it crashes) | the collection's only | **none**: the machine is not involved |
 | Duration on the test VM (`--events --binary`) | 4 min 33 s | 16 min 39 s — the extra time is *reading* the whole volume, which writes nothing to it | 43 s |
 | Reproducible | partly: its exhibit store is sealed, but holds neither the authenticated binaries it cited nor any record of them, and converting it again is not a tested path | yes, through `--convert` | yes: two conversions give identical JSON files |
@@ -250,18 +252,24 @@ D:\> WAC.exe --convert=E:\accounting-pc-01 --events --binary           (analysis
 - the machine must be released within minutes, and the 16 minutes of a
   `--collect --binary` cannot be afforded.
 
-**`--binary` or `--binary-all`:**
+**`--binary` or `--binary-all`.** Both read every executable raw and verify
+its signature in memory; they differ in what they **copy**. An executable is
+*authenticated* when a Microsoft catalog lists it, when it carries a valid
+Microsoft signature, or when it belongs to a Store package whose signature and
+block map it matches; every other one — unsigned, signed by another vendor,
+modified, unknown — is *not authenticated*. The table describes a `--collect`;
+a full run applies the same rules to the executables the artefacts cite, the
+fingerprints of the authenticated ones going into the artefact JSON files
+instead of the manifest.
 
-- `--binary` (the usual choice): every executable is verified in memory; those
-  authenticated as Microsoft's (catalog, embedded signature, signed Store
-  package) are fingerprinted but **not copied**, all others are copied with
-  their fingerprints. An authenticated binary can be fetched again, identical,
-  from Microsoft's symbol server, by the retrieval key the manifest records
-  (`SymbolServerKey`).
-- `--binary-all`: **every** executable is copied, its signature verdict
-  recorded. For cases where the content itself must be in the exhibit store —
-  a malware analysis, a request for the files themselves —, at the cost of
-  about 20 GB.
+| | `--binary` (the usual choice) | `--binary-all` |
+|---|---|---|
+| Signature checked | yes, in memory | yes, in memory |
+| Authenticated executable | **not copied**: its Authenticode digest, its verdict and its build (`SymbolServerKey`) are recorded in the manifest — a Microsoft binary can be fetched again, identical, from Microsoft's symbol server | **copied**, with its three fingerprints and its verdict (`SignatureVerified`, `Signature`) |
+| Not authenticated | **copied**, with MD5, SHA-1, SHA-256 (and the Authenticode digest of a PE) and the reason (`SignatureReason`) | **copied**, the same way |
+| Exhibit store, test VM (`--collect --events`) | 1.8 GB | 20.0 GB |
+| Collection time, test VM | 16 min 39 s | 21 min 45 s |
+| When | always, unless the case says otherwise | the content of every executable must itself be in the exhibit store: a malware analysis, a request for the files themselves |
 
 ## 🛡️ FOOTPRINT ON THE EXAMINED MACHINE
 
