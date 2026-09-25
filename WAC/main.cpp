@@ -46,6 +46,7 @@
 #include "event_messages.h"
 #include "running_machine.h"
 #include "trust_update.h"
+#include "trust_set.h"
 
 AppliConf conf; //!< the application's configuration, shared by every collector
 
@@ -332,6 +333,35 @@ void extractProfileArtefacts() {
 	   The registry artefacts stay collectable. */
 	if (FAILED(hresult)) printError(hresult);
 	else printSuccess();
+}
+
+/*! Loads the trust set of the key, which clears third-party signatures
+ *  (--binary), and records what it is — or that there is none, and why: the
+ *  third-party binaries are then all collected. Loaded before the first
+ *  executable is read, so that one set judges them all. */
+void loadTrustSet() {
+	if (!conf.binary || conf.mode == RunMode::Convert) return;
+	printStep(L" - Trust set : ");
+	const TrustSet& set = CollectionTrustSet();
+	if (set.usable) {
+		printSuccess();
+		auto isoUtcDate = [](uint64_t filetime) {
+			const FILETIME f = { (DWORD)filetime, (DWORD)(filetime >> 32) };
+			return timeToIso8601Utc(f, Precision::Second);
+		};
+		std::wstring lists = L"authroot.stl of " + isoUtcDate(set.roots.thisUpdate) + L", disallowedcert.stl of "
+		                   + isoUtcDate(set.disallowed.thisUpdate) + L", " + std::to_wstring(set.rootCertificates.size())
+		                   + L" roots, " + std::to_wstring(set.driverHashes.size()) + L" vulnerable driver fingerprints, "
+		                   + std::to_wstring(set.crlsByAuthority.size()) + L" authorities with a CRL";
+		for (const std::wstring& missing : set.driverListsMissing) lists += L"; driver list missing: " + missing;
+		auditRecord(L"Trust set of " + set.createdUtc + L" (" + lists + L"; manifest SHA-256 " + set.manifestSha256
+		            + L"): third-party signatures are checked against it", set.folder, S_OK, Footprint::TRUST_SET);
+		return;
+	}
+	wprintf(L"%ls\n", decodeText(set.reason, CP_UTF8).c_str());
+	auditRecord(L"No usable trust set (" + decodeText(set.reason, CP_UTF8)
+	            + L"): third-party binaries cannot be cleared, and are all collected",
+	            set.folder, S_FALSE, Footprint::TRUST_SET);
 }
 
 /*! Closes the phase of the cited binaries: the volumes kept open to read them
@@ -1109,6 +1139,7 @@ int wmain(int argc, wchar_t* argv[])
 		}
 	}
 
+	loadTrustSet();
 	if (conf.mode != RunMode::Convert) observeLiveState();
 
 	if (conf.mode != RunMode::Convert) {

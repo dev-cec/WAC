@@ -49,6 +49,3 @@
  *         previous set
  *  @return the process exit code: 0 on success */
 int UpdateTrust(const std::wstring& folder);
-
-/*! @return the default folder of the trust set: `trust`, next to WAC.exe */
-std::wstring DefaultTrustFolder();

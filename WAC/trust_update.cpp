@@ -11,6 +11,7 @@
 #include "json.h"
 #include "sha.h"
 #include "tools.h"
+#include "trust_set.h"
 #include <filesystem>
 #include <fstream>
 #include <algorithm>
@@ -534,13 +535,6 @@ bool writeSet(const std::filesystem::path& folder, const std::vector<SetFile>& f
 }
 
 } // namespace
-
-std::wstring DefaultTrustFolder() {
-	wchar_t module[MAX_PATH];
-	const DWORD size = GetModuleFileNameW(nullptr, module, MAX_PATH);
-	if (size == 0 || size == MAX_PATH) return L"trust";
-	return std::filesystem::path(module).parent_path().wstring() + L"\\trust";
-}
 
 int UpdateTrust(const std::wstring& folder) {
 	std::string reason;

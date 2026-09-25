@@ -68,6 +68,8 @@ namespace Footprint {
 	//! --convert: reading of the sealed exhibit store, on the analysis
 	//! workstation; the examined system is not involved.
 	extern const wchar_t* EXHIBIT_READ;
+	//! Reading of the trust set (--update-trust) on the collection medium.
+	extern const wchar_t* TRUST_SET;
 }
 
 /*! Opens the log: reads the context of the collection (machine, operator, time

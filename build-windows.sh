@@ -107,10 +107,10 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
     "${LIBS[@]}" -lole32 -loleaut32 -lpropsys -luuid
   echo "   -> $TESTS/system_conversions_test.exe"
 
-  echo "== Build evtx_test.exe, consigne_test.exe =="
+  echo "== Build evtx_test.exe, consigne_test.exe, trust_set_test.exe =="
   # Built here rather than by a hand-written list of sources: that list, in the
   # README, had drifted and no longer linked. Both run under Wine.
-  for t in evtx_test consigne_test; do
+  for t in evtx_test consigne_test trust_set_test; do
     "$CXX" "${FLAGS[@]}" -municode -static -static-libgcc -static-libstdc++ \
       "$SRC/$t.cpp" "${TEST_OBJS[@]}" -o "$TESTS/$t.exe" "${LIBS[@]}"
     echo "   -> $TESTS/$t.exe"

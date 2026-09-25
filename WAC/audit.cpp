@@ -37,6 +37,8 @@ const wchar_t* SETTINGS     = L"Queries of the running system's settings (system
                               L"time zone, volumes): in-memory, no artefact touched.";
 const wchar_t* EXHIBIT_READ = L"Reading of the sealed exhibit store on the analysis workstation: "
                               L"the examined system is not involved.";
+const wchar_t* TRUST_SET    = L"Reading of the trust set on the collection medium: "
+                              L"the examined system is not involved.";
 } // namespace Footprint
 
 namespace {
