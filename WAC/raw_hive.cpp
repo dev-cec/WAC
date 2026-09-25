@@ -50,6 +50,33 @@ bool iequals(const std::wstring& a, const std::wstring& b){
 
 struct Run { int64_t lcn; uint64_t count; }; // lcn == -1: sparse run (zeros)
 
+/*! The three fingerprints of a content, computed on the bytes as they pass —
+ *  or none, when the caller asked only for the content
+ *  (RawHiveFingerprints::computeHashes false: authenticating an executable
+ *  needs its Authenticode digest, not MD5, SHA-1 and SHA-256, and those three
+ *  cost most of the time of a whole-volume reading). One object for the four
+ *  ways a content is read: resident, WOF, NTFS-compressed, ordinary. */
+class ContentHashes {
+public:
+    //! @param emp where the fingerprints go; nullptr for none.
+    explicit ContentHashes(const RawHiveFingerprints* emp) : on_(emp && emp->computeHashes) {}
+    //! Adds bytes. @param data,length the bytes.
+    void update(const uint8_t* data, size_t length){
+        if (!on_) return;
+        md5_.update(data, length); sha1_.update(data, length); sha256_.update(data, length);
+    }
+    //! Writes the fingerprints, if computed. @param emp their destination (may be null).
+    void finish(RawHiveFingerprints* emp){
+        if (!on_ || !emp) return;
+        emp->md5 = md5_.hexDigest(); emp->sha1 = sha1_.hexDigest(); emp->sha256 = sha256_.hexDigest();
+    }
+private:
+    bool on_;
+    Md5Stream md5_;
+    Sha1Stream sha1_;
+    Sha256Stream sha256_;
+};
+
 /*! Buffer that discards what is written to it. Used to fingerprint a file
  *  without copying it: the three reading paths (plain, LZNT1, WOF) write to a
  *  stream and hash on the way, so giving them a stream that leads nowhere is
@@ -184,22 +211,9 @@ public:
                                       uint32_t wantedType = 0x80,
                                       uint32_t* compressionUnit = nullptr,
                                       uint64_t* validDataLength = nullptr){
-        const uint8_t* al = findAttr(rec, 0x20, false);
-        if (!al) return false;
-
-        // List content: resident, or to be read through its own runs.
+        // List content: resident, or to be read through its own runs (bounded).
         std::vector<uint8_t> content;
-        if (al[8] == 0){
-            const uint32_t vlen = rd32(al + 0x10);
-            const uint16_t voff = rd16(al + 0x14);
-            content.assign(al + voff, al + voff + vlen);
-        }
-        else {
-            const uint64_t size = rd64(al + 0x30);
-            const std::vector<Run> alRuns = decodeRuns(al + rd16(al + 0x20), al + rd32(al + 0x04));
-            content.resize((size_t)size);
-            if (!readVirtual(alRuns, 0, (uint32_t)size, content.data())) return false;
-        }
+        if (!readListContent(rec, content)) return false;
 
         // VCN -> runs, to reassemble in order even if the entries are not.
         std::vector<std::pair<uint64_t, std::vector<Run>>> fragments;
@@ -262,6 +276,40 @@ public:
         std::vector<Run> runs;      //!< runs of the WofCompressedData stream
         uint64_t streamSize = 0;
     };
+
+    /*! A RESIDENT attribute, looked for in the base record, then through the
+     *  $ATTRIBUTE_LIST in the extension records.
+     *
+     *  WHY. When a record is full, NTFS moves attributes — resident ones too —
+     *  to extension records and leaves a list in the base record. Seen on
+     *  Windows 11: directories carrying a $TXF_DATA (SysWOW64\zh-TW, thousands
+     *  of WinSxS components) have their $INDEX_ROOT in an extension record.
+     *  Looked for in the base record alone, 4,569 directories of the volume
+     *  were reported unreadable, and their files never collected.
+     *  @param rec the base record
+     *  @param type the attribute's type
+     *  @param holder keeps the extension record the result points into
+     *  @return the resident attribute, or nullptr */
+    const uint8_t* findResidentAttr(const std::vector<uint8_t>& rec, uint32_t type,
+                                    std::vector<uint8_t>& holder){
+        const uint8_t* a = findAttr(rec, type, false);
+        if (a) return a[8] == 0 ? a : nullptr;
+        std::vector<uint8_t> content;
+        if (!readListContent(rec, content)) return nullptr;
+        for (size_t pos = 0; pos + 0x1A <= content.size();){
+            const uint16_t len = rd16(content.data() + pos + 4);
+            if (len < 0x1A || pos + len > content.size()) break;
+            if (rd32(content.data() + pos) == type){
+                const uint64_t ref = rd64(content.data() + pos + 0x10) & 0x0000FFFFFFFFFFFFULL;
+                if (readMftRecord(ref, holder)){
+                    a = findAttr(holder, type, false);
+                    if (a && a[8] == 0) return a;
+                }
+            }
+            pos += len;
+        }
+        return nullptr;
+    }
 
     //! Content of the $ATTRIBUTE_LIST, resident or not.
     bool readListContent(const std::vector<uint8_t>& rec, std::vector<uint8_t>& content){
@@ -373,16 +421,13 @@ public:
         if (size == 0 || size > (256ULL << 20)) return false;   // guard
         const std::vector<Run> runs = decodeRuns(a + rd16(a + 0x20), a + rd32(a + 0x04));
         out.assign((size_t)size, 0);
-        std::vector<uint8_t> cl(bytesPerCluster_);
         uint64_t written = 0;
         for (const Run& r : runs){
-            for (uint64_t k = 0; k < r.count && written < size; ++k){
-                if (r.lcn < 0) std::fill(cl.begin(), cl.end(), (uint8_t)0);
-                else if (!readCluster((uint64_t)r.lcn + k, cl.data())) return false;
-                const uint64_t n = std::min<uint64_t>(bytesPerCluster_, size - written);
-                std::memcpy(out.data() + written, cl.data(), (size_t)n);
-                written += n;
-            }
+            if (written >= size) break;
+            const uint64_t n = std::min<uint64_t>(r.count * bytesPerCluster_, size - written);
+            // A sparse run stays at zero; an allocated one is read whole, in large requests.
+            if (r.lcn >= 0 && !readClusters((uint64_t)r.lcn, n, out.data() + written)) return false;
+            written += n;
         }
         return written == size;
     }
@@ -453,7 +498,7 @@ public:
         starts[nChunks] = data.size() - tableSize;
 
         std::vector<uint8_t> chunk(chunkSize);
-        Md5Stream stream5; Sha1Stream stream1; Sha256Stream stream256;
+        ContentHashes hashes(emp);
         uint64_t written = 0, nextReport = 0;
 
         for (size_t i = 0; i < nChunks; ++i){
@@ -480,11 +525,7 @@ public:
             }
 
             out.write((const char*)chunk.data(), (std::streamsize)product);
-            if (emp){
-                stream5.update(chunk.data(), product);
-                stream1.update(chunk.data(), product);
-                stream256.update(chunk.data(), product);
-            }
+            hashes.update(chunk.data(), product);
             written += product;
             if (g_progress && !label.empty() && written >= nextReport){
                 g_progress(label.c_str(), written, actualSize);
@@ -493,10 +534,8 @@ public:
         }
         if (g_progress && !label.empty()) g_progress(label.c_str(), written, actualSize);
 
+        hashes.finish(emp);
         if (emp){
-            emp->md5    = stream5.hexDigest();
-            emp->sha1   = stream1.hexDigest();
-            emp->sha256 = stream256.hexDigest();
             emp->bytes = written;
             emp->declaredSize = actualSize;
         }
@@ -537,7 +576,7 @@ public:
         std::vector<uint8_t> unit((size_t)unitSize);
         std::vector<uint8_t> rawUnit((size_t)unitSize);
         std::vector<uint8_t> cl(bytesPerCluster_);
-        Md5Stream stream; Sha1Stream stream1; Sha256Stream stream256;
+        ContentHashes hashes(emp);
         uint64_t written = 0, nextReport = 0;
 
         for (uint64_t vcn = 0; written < realSize; vcn += compressionUnitStep(unitInClusters)){
@@ -607,20 +646,12 @@ public:
             if (toWrite > product && allocated != 0 && allocated != unitInClusters){
                 // Less data than the announced size: write what we have.
                 out.write((const char*)unit.data(), (std::streamsize)product);
-                if (emp){
-                    stream.update(unit.data(), product);
-                    stream1.update(unit.data(), product);
-                    stream256.update(unit.data(), product);
-                }
+                hashes.update(unit.data(), product);
                 written += product;
             }
             else {
                 out.write((const char*)unit.data(), (std::streamsize)toWrite);
-                if (emp){
-                    stream.update(unit.data(), toWrite);
-                    stream1.update(unit.data(), toWrite);
-                    stream256.update(unit.data(), toWrite);
-                }
+                hashes.update(unit.data(), toWrite);
                 written += toWrite;
             }
 
@@ -632,10 +663,8 @@ public:
         }
         if (g_progress && !label.empty()) g_progress(label.c_str(), written, realSize);
 
+        hashes.finish(emp);
         if (emp){
-            emp->md5    = stream.hexDigest();
-            emp->sha1   = stream1.hexDigest();
-            emp->sha256 = stream256.hexDigest();
             emp->bytes = written;
             emp->declaredSize = realSize;
         }
@@ -788,12 +817,10 @@ public:
 
         if (resident){
             out.write((const char*)residentData, residentLen);
+            ContentHashes hashes(emp);
+            hashes.update(residentData, residentLen);
+            hashes.finish(emp);
             if (emp){
-                Md5Stream m; Sha1Stream s1; Sha256Stream s2;
-                m.update(residentData, residentLen);
-                s1.update(residentData, residentLen);
-                s2.update(residentData, residentLen);
-                emp->md5 = m.hexDigest(); emp->sha1 = s1.hexDigest(); emp->sha256 = s2.hexDigest();
                 emp->bytes = residentLen;
                 emp->declaredSize = residentLen;
                 emp->resident = true;
@@ -827,30 +854,34 @@ public:
             return h;
         }
 
-        std::vector<uint8_t> cl(bytesPerCluster_);
+        const uint64_t batchClusters = std::max<uint64_t>(1, READ_BATCH / bytesPerCluster_);
+        std::vector<uint8_t> batch((size_t)(batchClusters * bytesPerCluster_));
         uint64_t written = 0;
         uint64_t nextReport = 0;
         // Fingerprints computed on the bytes already passing through memory:
         // avoids reading the copy back from the collection medium, and they
         // bear on what was read from the VOLUME, not on a re-read.
-        Md5Stream stream;
-        Sha1Stream stream1;
-        Sha256Stream stream256;
+        ContentHashes hashes(emp);
         for (const Run& r : runs){
-            for (uint64_t k = 0; k < r.count && written < realSize; ++k){
+            for (uint64_t k = 0; k < r.count && written < realSize;){
+                uint64_t clusters = std::min<uint64_t>(batchClusters, r.count - k);
+                const size_t batchBytes = (size_t)(clusters * bytesPerCluster_);
                 // Sparse, or beyond the valid data: zeros, without reading.
-                if (r.lcn < 0 || written >= validDataLength) std::fill(cl.begin(), cl.end(), 0);
-                else if (!readCluster((uint64_t)r.lcn + k, cl.data())) return E_FAIL;
-                if (written < validDataLength && validDataLength < written + bytesPerCluster_)
-                    std::fill(cl.begin() + (size_t)(validDataLength - written), cl.end(), (uint8_t)0);
-                uint64_t chunk = std::min<uint64_t>(bytesPerCluster_, realSize - written);
-                out.write((const char*)cl.data(), (std::streamsize)chunk);
-                if (emp){
-                    stream.update(cl.data(), (size_t)chunk);
-                    stream1.update(cl.data(), (size_t)chunk);
-                    stream256.update(cl.data(), (size_t)chunk);
+                if (r.lcn < 0 || written >= validDataLength) std::fill(batch.begin(), batch.begin() + batchBytes, (uint8_t)0);
+                else {
+                    // Not past the valid data: the clusters beyond it hold leftovers.
+                    const uint64_t valid = validDataLength - written;
+                    clusters = std::min<uint64_t>(clusters, (valid + bytesPerCluster_ - 1) / bytesPerCluster_);
+                    const size_t readBytesCount = (size_t)(clusters * bytesPerCluster_);
+                    if (!readClusters((uint64_t)r.lcn + k, readBytesCount, batch.data())) return E_FAIL;
+                    if (valid < readBytesCount)
+                        std::fill(batch.begin() + (size_t)valid, batch.begin() + readBytesCount, (uint8_t)0);
                 }
+                const uint64_t chunk = std::min<uint64_t>(clusters * bytesPerCluster_, realSize - written);
+                out.write((const char*)batch.data(), (std::streamsize)chunk);
+                hashes.update(batch.data(), (size_t)chunk);
                 written += chunk;
+                k += clusters;
                 // Report every 1 MiB: often enough to show progress, rarely enough not
                 // to cost in display.
                 if (g_progress && !label.empty() && written >= nextReport){
@@ -860,10 +891,8 @@ public:
             }
         }
         if (g_progress && !label.empty()) g_progress(label.c_str(), written, realSize);
+        hashes.finish(emp);
         if (emp){
-            emp->md5    = stream.hexDigest();
-            emp->sha1   = stream1.hexDigest();
-            emp->sha256 = stream256.hexDigest();
             emp->bytes = written;
             emp->declaredSize = realSize;
         }
@@ -907,27 +936,51 @@ private:
         return readBytes(lcn * bytesPerCluster_, dst, bytesPerCluster_);
     }
 
+    //! Largest single read of contiguous clusters.
+    static const uint32_t READ_BATCH = 1u << 20;
+
+    /*! Reads `length` bytes from cluster `lcn` on, in large requests.
+     *
+     *  WHY. One ReadFile per 4 KiB cluster — with its seek, its allocation and
+     *  its copy — cost some 4.5 million system calls to read the executables
+     *  of a Windows 11 volume, at 15 MB/s. The clusters of a run are
+     *  contiguous on the disk: they are read in requests of up to 1 MiB.
+     *  @param lcn first cluster
+     *  @param length bytes to read
+     *  @param dst destination, `length` bytes
+     *  @return false on a read error */
+    bool readClusters(uint64_t lcn, uint64_t length, uint8_t* dst){
+        for (uint64_t done = 0; done < length;){
+            const uint32_t n = (uint32_t)std::min<uint64_t>(READ_BATCH, length - done);
+            if (!readBytes(lcn * bytesPerCluster_ + done, dst + done, n)) return false;
+            done += n;
+        }
+        return true;
+    }
+
     // Reads `len` bytes at virtual offset `fileOff` of a file described by `runs`.
     bool readVirtual(const std::vector<Run>& runs, uint64_t fileOff, uint32_t len, uint8_t* dst){
         uint32_t got = 0;
-        std::vector<uint8_t> cl(bytesPerCluster_);
         while (got < len){
             uint64_t cur   = fileOff + got;
             uint64_t vcn   = cur / bytesPerCluster_;
             uint32_t inClu = (uint32_t)(cur % bytesPerCluster_);
             uint64_t vbase = 0; int64_t lcn = -2;
+            uint64_t contiguous = 0;                 // clusters left in the run from `vcn`
             for (auto& r : runs){
                 if (vcn < vbase + r.count){
                     lcn = (r.lcn < 0) ? -1 : (int64_t)((uint64_t)r.lcn + (vcn - vbase));
+                    contiguous = vbase + r.count - vcn;
                     break;
                 }
                 vbase += r.count;
             }
             if (lcn == -2) return false; // outside the runs
-            uint32_t chunk = std::min<uint32_t>(len - got, bytesPerCluster_ - inClu);
+            // As far as the run goes, in one request (see readClusters).
+            const uint64_t reachable = contiguous * bytesPerCluster_ - inClu;
+            const uint32_t chunk = (uint32_t)std::min<uint64_t>(std::min<uint64_t>(len - got, reachable), READ_BATCH);
             if (lcn < 0) memset(dst + got, 0, chunk);
-            else { if (!readCluster((uint64_t)lcn, cl.data())) return false;
-                   memcpy(dst + got, cl.data() + inClu, chunk); }
+            else if (!readBytes((uint64_t)lcn * bytesPerCluster_ + inClu, dst + got, chunk)) return false;
             got += chunk;
         }
         return true;
@@ -1063,11 +1116,16 @@ public:
             RVLOG(L"[raw] listDir(%llu): record unreadable\n", (unsigned long long)dirIndex);
             return false; }
 
-        // $INDEX_ROOT (0x90) — resident, always present
-        const uint8_t* ir = findAttr(rec, 0x90, false);   // "$I30"
-        if (!ir){ RVLOG(L"[raw] listDir(%llu): $INDEX_ROOT absent\n", (unsigned long long)dirIndex); return false; }
-        if (ir[8] != 0){ RVLOG(L"[raw] listDir(%llu): $INDEX_ROOT non-resident\n", (unsigned long long)dirIndex); return false; }
+        // $INDEX_ROOT (0x90) — resident, always present, possibly in an extension record
+        std::vector<uint8_t> extension;
+        const uint8_t* ir = findResidentAttr(rec, 0x90, extension);   // "$I30"
+        if (!ir){ RVLOG(L"[raw] listDir(%llu): resident $INDEX_ROOT absent\n", (unsigned long long)dirIndex); return false; }
         uint32_t irValLen = rd32(ir + 0x10); uint16_t irValOff = rd16(ir + 0x14);
+        // The value must hold the index root header (0x10) and the node header (0x10).
+        if (irValLen < 0x20 || (uint64_t)irValOff + irValLen > rd32(ir + 4)){
+            RVLOG(L"[raw] listDir(%llu): $INDEX_ROOT inconsistent\n", (unsigned long long)dirIndex);
+            return false;
+        }
         const uint8_t* val = ir + irValOff;
         uint32_t idxBlockSize = rd32(val + 8);
         const uint8_t* nodeHdr = val + 0x10;
@@ -1080,6 +1138,14 @@ public:
 
         // $INDEX_ALLOCATION (0xA0) — non-resident, present if the index overflows
         const uint8_t* ia = findAttr(rec, 0xA0, false);   // "$I30"
+        // Only an index with blocks has a $BITMAP: read when $INDEX_ALLOCATION is.
+        std::vector<uint8_t> bits;
+        auto bitmap = [&]() -> const std::vector<uint8_t>* {
+            if (indexBitmap(rec, bits)) return &bits;
+            RVLOG(L"[raw] listDir(%llu): $BITMAP unreadable, every index block read\n",
+                  (unsigned long long)dirIndex);
+            return nullptr;
+        };
 
         /* If the attribute is not in the base record, it can be SPLIT through
            $ATTRIBUTE_LIST — the same mechanism as for the SOFTWARE hive's $DATA.
@@ -1093,7 +1159,7 @@ public:
                 && !splitRuns.empty()){
                 RVLOG(L"[raw] listDir(%llu): $INDEX_ALLOCATION via $ATTRIBUTE_LIST\n",
                       (unsigned long long)dirIndex);
-                readIndexBlocks(splitRuns, splitSize, idxBlockSize, out);
+                readIndexBlocks(splitRuns, splitSize, idxBlockSize, bitmap(), out);
                 return true;
             }
         }
@@ -1109,20 +1175,66 @@ public:
         if (ia && ia[8] != 0 && idxBlockSize){
             uint64_t realSize = rd64(ia + 0x30);
             std::vector<Run> runs = decodeRuns(ia + rd16(ia + 0x20), ia + rd32(ia + 0x04));
-            readIndexBlocks(runs, realSize, idxBlockSize, out);
+            readIndexBlocks(runs, realSize, idxBlockSize, bitmap(), out);
         }
         return true;
     }
 
+    /*! Allocation bitmap of a directory's index ($BITMAP "$I30", type 0xB0):
+     *  bit n says whether index block n is in use.
+     *
+     *  WHY IT IS READ. A block the directory released stays on the disk, and
+     *  can keep its INDX signature and its former entries. Read as if in use,
+     *  it would list STALE entries: names of deleted files, pointing to $MFT
+     *  records reused since by other files. The bitmap is resident (in the
+     *  base record or an extension record) or non-resident for a large index.
+     *  @param rec the directory's base record
+     *  @param bits receives the bitmap
+     *  @return false if it could not be found or read */
+    bool indexBitmap(const std::vector<uint8_t>& rec, std::vector<uint8_t>& bits){
+        const uint64_t MAX_BITMAP = 64ULL * 1024 * 1024;   // 2^29 blocks: beyond, a forged size
+        std::vector<Run> runs;
+        uint64_t size = 0;
+        std::vector<uint8_t> extension;
+        const uint8_t* b = findAttr(rec, 0xB0, false);    // "$I30"
+        // Not in the base record: non-resident through the list, or resident in an extension.
+        if (!b && !collectRunsFromAttributeList(rec, runs, size, 0xB0))
+            b = findResidentAttr(rec, 0xB0, extension);
+        if (b){
+            const uint32_t attributeLength = rd32(b + 4);
+            if (b[8] == 0){
+                const uint32_t vlen = rd32(b + 0x10);
+                const uint16_t voff = rd16(b + 0x14);
+                if ((uint64_t)voff + vlen > attributeLength) return false;
+                bits.assign(b + voff, b + voff + vlen);
+                return true;
+            }
+            if (attributeLength < 0x40) return false;
+            size = rd64(b + 0x30);
+            runs = decodeRuns(b + rd16(b + 0x20), b + attributeLength);
+        }
+        if (runs.empty() || size == 0 || size > MAX_BITMAP) return false;
+        bits.resize((size_t)size);
+        return readVirtual(runs, 0, (uint32_t)size, bits.data());
+    }
+
     /*! Walks the index blocks (INDX) described by `runs` and extracts their
      *  entries. Shared by both ways of reaching $INDEX_ALLOCATION: from the base
-     *  record, or through $ATTRIBUTE_LIST when it is split. */
+     *  record, or through $ATTRIBUTE_LIST when it is split.
+     *  @param bitmap the index's allocation bitmap (see indexBitmap); nullptr if
+     *         it could not be read, every block with a signature is then read */
     void readIndexBlocks(const std::vector<Run>& runs, uint64_t realSize,
-                        uint32_t idxBlockSize, std::vector<RawDirEntry>& out){
+                        uint32_t idxBlockSize, const std::vector<uint8_t>* bitmap,
+                        std::vector<RawDirEntry>& out){
         if (!idxBlockSize) return;
         std::vector<uint8_t> blk(idxBlockSize);
-        uint64_t blocksRead = 0, blocksWithoutIndx = 0, blocksTorn = 0;
+        uint64_t blocksRead = 0, blocksWithoutIndx = 0, blocksTorn = 0, blocksFree = 0;
         for (uint64_t pos = 0; pos + idxBlockSize <= realSize; pos += idxBlockSize){
+            const uint64_t block = pos / idxBlockSize;
+            if (bitmap && (block / 8 >= bitmap->size() || !((*bitmap)[block / 8] & (1u << (block % 8))))){
+                ++blocksFree;
+                continue;
+            }
             ++blocksRead;
             if (!readVirtual(runs, pos, idxBlockSize, blk.data())){
                 RVLOG(L"[raw] index block at offset %llu unreadable\n",
@@ -1138,9 +1250,10 @@ public:
             if (lim > blk.data() + idxBlockSize) lim = blk.data() + idxBlockSize;
             parseIndexNode(nh, lim, out);
         }
-        RVLOG(L"[raw] index blocks: realSize=%llu, %llu read, "
+        RVLOG(L"[raw] index blocks: realSize=%llu, %llu free (bitmap %ls), %llu read, "
               L"%llu without INDX signature, %llu torn, total %llu entry(ies)\n",
-              (unsigned long long)realSize, (unsigned long long)blocksRead,
+              (unsigned long long)realSize, (unsigned long long)blocksFree,
+              bitmap ? L"read" : L"UNREADABLE", (unsigned long long)blocksRead,
               (unsigned long long)blocksWithoutIndx, (unsigned long long)blocksTorn,
               (unsigned long long)out.size());
     }

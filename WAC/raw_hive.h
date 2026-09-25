@@ -107,6 +107,12 @@ struct RawHiveFingerprints {
     uint64_t mftModifiedUtc = 0;  //!< last record change
     uint64_t accedeUtc = 0;      //!< last access
     uint64_t extractedUtc = 0;     //!< when THIS exhibit was extracted (FILETIME UTC)
+    /*! INPUT, set before the read: false to skip MD5, SHA-1 and SHA-256 when
+     *  only the content is needed (authenticating an executable, whose
+     *  Authenticode digest the caller computes itself). */
+    bool computeHashes = true;
+    //! Authenticode digests of a PE (hexadecimal), when the caller computed them.
+    std::wstring authenticodeSha1, authenticodeSha256;
 };
 
 /*! An extracted file, as it will be recorded in the manifest. */
@@ -144,11 +150,36 @@ HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
  */
 struct RawDirEntry;
 
+/*! Where the files a conversion needs are read from: the examined volume
+ *  itself (RawReader, collection on the machine), or the exhibit store of a
+ *  collection made earlier (ExhibitReader, --convert on an analysis
+ *  workstation). The consumers — cited binaries, signature catalogs — read
+ *  through this interface and do not know which one serves them. */
+class FileSource {
+public:
+    virtual ~FileSource() = default;
+
+    /*! Reads a file by its absolute path on the examined machine.
+     *  @param absolutePath the file, as "`X:\\…`"
+     *  @param output file to write; EMPTY to compute the fingerprints only
+     *  @param line  receives the record, fingerprints included
+     *  @param observer if `output` is empty, receives the content as it is read
+     *  @return the result, also carried by `line.result` */
+    virtual HRESULT read(const std::wstring& absolutePath, const std::wstring& output,
+                         RawHiveExtraction& line, std::streambuf* observer = nullptr) = 0;
+
+    /*! Lists a directory by its absolute path on the examined machine.
+     *  @param absoluteFolder the directory ("X:\\…")
+     *  @param entries receives its entries
+     *  @return the result of the listing */
+    virtual HRESULT list(const std::wstring& absoluteFolder, std::vector<RawDirEntry>& entries) = 0;
+};
+
 /*! Persistent raw reader: reads files and lists directories on NTFS volumes
  *  kept open for the reader's whole lifetime.
  *
  *  Not copyable: it owns one handle per volume and the directory index cache. */
-class RawReader {
+class RawReader : public FileSource {
 public:
     RawReader();
     ~RawReader();
@@ -164,13 +195,13 @@ public:
      *  @param line  receives the record, fingerprints and timestamps included
      *  @return the result, also carried by `line.result` */
     HRESULT read(const std::wstring& absolutePath, const std::wstring& output,
-                 RawHiveExtraction& line, std::streambuf* observer = nullptr);
+                 RawHiveExtraction& line, std::streambuf* observer = nullptr) override;
 
     /*! Lists a directory by its absolute path, on the volume already open.
      *  @param absoluteFolder the directory ("X:\\…")
      *  @param entries receives its entries
      *  @return the result of the listing */
-    HRESULT list(const std::wstring& absoluteFolder, std::vector<RawDirEntry>& entries);
+    HRESULT list(const std::wstring& absoluteFolder, std::vector<RawDirEntry>& entries) override;
 
     //! @return the number of volumes actually opened (one handle each).
     unsigned openVolumes() const;
