@@ -137,6 +137,17 @@ clean() { tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'; }
     echo "RAW_SHA256 $f=$SAME"
     [[ "$SAME" == "SAME" ]] || echo "   ❌ raw reading of $f differs from Windows' (Get-FileHash)"
   done
+  # WOF's fourth algorithm, LZX, which Windows only uses on request: copies
+  # compressed by Windows itself (compact /exe:lzx), read raw, must give
+  # Get-FileHash's SHA-256 — the check of the LZX decoder on real data.
+  $QGA run --shell "mkdir $VMDIR\\lzx 2>nul & copy /y C:\\Windows\\System32\\ntoskrnl.exe $VMDIR\\lzx\\ >nul & copy /y C:\\Windows\\System32\\shell32.dll $VMDIR\\lzx\\ >nul & copy /y C:\\Windows\\System32\\drivers\\etc\\services $VMDIR\\lzx\\services.txt >nul & compact /c /exe:lzx $VMDIR\\lzx\\ntoskrnl.exe $VMDIR\\lzx\\shell32.dll $VMDIR\\lzx\\services.txt >nul" >/dev/null 2>&1 || true
+  for f in ntoskrnl.exe shell32.dll services.txt; do
+    $QGA run --shell "cd /d $VMDIR && raw_hive_test.exe C \\wactest\\lzx\\$f $VMDIR\\hashcheck.bin > nul 2>&1" >/dev/null 2>&1 || true
+    SAME=$($QGA run -- powershell.exe -NoProfile -Command \
+      "if ((Get-FileHash '$VMDIR\\lzx\\$f').Hash -eq (Get-FileHash '$VMDIR\\hashcheck.bin').Hash) { 'SAME' } else { 'DIFFERENT' }" 2>/dev/null | clean || true)
+    echo "RAW_SHA256_LZX $f=$SAME"
+    [[ "$SAME" == "SAME" ]] || echo "   ❌ raw reading of the LZX-compressed $f differs from Windows' (Get-FileHash)"
+  done
   $QGA run --shell "del $VMDIR\\hashcheck.bin 2>nul & echo." >/dev/null 2>&1 || true
 } | tee "$OUTPUT/raw-validation.txt"
 $QGA read "$VMDIR\\raw.log" "$OUTPUT/raw.log" >/dev/null 2>&1 || true
@@ -291,6 +302,13 @@ if [[ $SPLIT -eq 1 ]]; then
     '$d = "C:\wactest\stomped"; New-Item -ItemType Directory -Force $d | Out-Null; $f = "$d\stomped.ps1"; Set-Content $f "# timestomping test"; $t = [datetime]"2001-01-01T00:00:00Z"; (Get-Item $f).CreationTimeUtc = $t; (Get-Item $f).LastWriteTimeUtc = $t; (Get-Item $f).LastAccessTimeUtc = $t; $f' \
     > "$OUTPUT/reference/stomped.txt" 2>/dev/null \
     && echo "   + reference/stomped.txt" || echo "   ⚠️ timestomped file not prepared"
+
+  # A macro document of the user, as an intruder would leave one: no
+  # Microsoft catalog can list it, so --collect --binary must collect it.
+  $QGA run -- powershell.exe -NoProfile -Command \
+    '$f = "C:\Users\wac\Documents\wac-macro-test.docm"; Set-Content $f "PK wac macro document test $(Get-Date -Format o)"; $f' \
+    > "$OUTPUT/reference/macro-document.txt" 2>/dev/null \
+    && echo "   + reference/macro-document.txt" || echo "   ⚠️ macro document not prepared"
 
   # taskkill just before the collection, as in step 2: the BAM check expects
   # its execution within minutes of the collection, and the references above

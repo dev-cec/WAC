@@ -131,11 +131,11 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 
 	/*  NO FALLBACK THROUGH THE API. Those binaries are compressed by WOF
 	    ("Compact OS"): their $DATA attribute is sparse and the content lives in a
-	    named stream. The raw reading now handles them entirely (see xpress.h),
-	    and nothing is therefore opened on the examined system.
-	    A file that stays unreadable is so for another reason — absent, or
-	    compressed with LZX, which WAC does not decompress — and it is reported as
-	    such rather than read by a route that would leave a trace. */
+	    named stream. The raw reading now handles them entirely, XPRESS and LZX
+	    (see xpress.h, lzx.h), and nothing is therefore opened on the examined
+	    system. A file that stays unreadable is so for another reason — absent,
+	    or damaged — and it is reported as such rather than read by a route
+	    that would leave a trace. */
 	if (!rawReadOk || !isValidPe(target)) {
 		log(2, L"🔥Resource binary unreadable by raw reading: " + absolutePath);
 		return std::wstring();

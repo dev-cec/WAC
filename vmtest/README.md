@@ -61,7 +61,7 @@ wrong values in valid JSON:
 | the system drive of `OperatingSystem.json` is among the manifest's volumes read | two independent sources of the same information |
 | the files actually present in `exhibits/` are exactly those of the manifest | 209 exhibits added after sealing, identified by nothing, while every other check was green |
 | executables of System32/SysWOW64 as Windows lists them, all present in the manifest of a `--collect --binary` | 6,446 missing out of 8,540: directories whose `$INDEX_ROOT` lives in an extension record (4,569 unreadable), and names of hard links not declared |
-| SHA-256 of files read raw (small, large, WOF) compared with `Get-FileHash` | safeguard of the reading by batches of contiguous clusters, introduced for speed |
+| SHA-256 of files read raw (small, large, WOF XPRESS, WOF LZX compressed by `compact /exe:lzx`) compared with `Get-FileHash` | safeguard of the reading by batches of contiguous clusters, and of the LZX decoder on Windows' own data |
 | last write of the Prefetch files compared with Windows' | 0 out of 335 matching: the dates were the working copy's, the minute of the collection |
 | every catalog cited in a "Microsoft (catalog …)" verdict present in the exhibit store | 170 out of 170 missing: the prefix looked for ("catalogue") no longer matched the label ("catalog") |
 | binaries WAC declares authentic Microsoft confirmed by `Get-AuthenticodeSignature` | a wrong verdict would leave a malicious binary out of the exhibit store |

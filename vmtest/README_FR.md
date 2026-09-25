@@ -60,7 +60,7 @@ révélé des valeurs fausses dans du JSON valide :
 | le lecteur système d'`OperatingSystem.json` figure dans les volumes lus du manifeste | deux sources indépendantes de la même information |
 | les fichiers réellement présents dans `exhibits/` sont exactement ceux du manifeste | 209 pièces ajoutées après le scellement, identifiées par rien, alors que tous les autres contrôles étaient verts |
 | exécutables de System32/SysWOW64 listés par Windows, tous présents dans le manifeste d'un `--collect --binary` | 6 446 manquants sur 8 540 : répertoires dont le `$INDEX_ROOT` est dans un enregistrement d'extension (4 569 illisibles), et noms de liens physiques non déclarés |
-| SHA-256 de fichiers lus en brut (petit, gros, WOF) comparé à `Get-FileHash` | garde-fou de la lecture par lots de clusters contigus, introduite pour la vitesse |
+| SHA-256 de fichiers lus en brut (petit, gros, WOF XPRESS, WOF LZX compressés par `compact /exe:lzx`) comparé à `Get-FileHash` | garde-fou de la lecture par lots de clusters contigus, et du décodeur LZX sur des données de Windows |
 | date de modification des Prefetch comparée à celle que donne Windows | 0 sur 335 conformes : les dates étaient celles de la copie de travail, soit la minute de la collecte |
 | tout catalogue cité dans un verdict « Microsoft (catalog …) » présent dans la consigne | 170 sur 170 absents : le préfixe cherché (« catalogue ») ne correspondait plus au libellé (« catalog ») |
 | binaires déclarés authentiques Microsoft par WAC confirmés par `Get-AuthenticodeSignature` | un mauvais verdict laisserait un binaire malveillant hors de la consigne |

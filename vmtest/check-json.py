@@ -163,7 +163,31 @@ def cross_checks(folder):
     found += check_symbol_server_keys(folder)
     found += check_binary_all(folder)
     found += check_timestomping(folder)
+    found += check_macro_document(folder)
     return found
+
+
+def check_macro_document(folder):
+    """A macro document of the user must be collected by --collect --binary:
+    no Microsoft catalog can list it, and a malicious macro must stay
+    available to a later analysis. The harness leaves one in the test
+    profile (reference/macro-document.txt).
+    """
+    reference_path = os.path.join(folder, "reference", "macro-document.txt")
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+    if not os.path.exists(reference_path) or not any("--collect --binary" in str(i.get("Method", "")) for i in items):
+        print("  ⏭️  no macro document prepared, or not a --collect --binary collection: not checked")
+        return 0
+    with open(reference_path, encoding="utf-8", errors="replace") as f:
+        path = f.read().strip().lower()
+    item = next((i for i in items if str(i.get("SourcePath", "")).lower() == path), None)
+    if not item or item.get("Result") != "OK" or item.get("ContentStored") is False \
+            or not (item.get("ExhibitPath") and item.get("MD5") and item.get("SHA1") and item.get("SHA256")):
+        print(f"  ❌ macro document of the user NOT collected with its three fingerprints ({path})")
+        return 1
+    print(f"  ✅ macro document of the user collected, with MD5, SHA-1 and SHA-256 ({ntpath.basename(path)})")
+    return 0
 
 
 def check_timestomping(folder):

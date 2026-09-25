@@ -234,6 +234,18 @@ struct RawAttribute {
     std::vector<uint8_t> preview; //!< first bytes of the content, if resident
 };
 
+/*! Writes the compressed stream of a WOF ("Compact OS") file as it lies on
+ *  the disk: the test data of the decompressors, compressed by Windows itself
+ *  (raw_hive_test --wof, lzx_test).
+ *  @param volumeLetter volume letter, e.g. L"C"
+ *  @param pathOnVolume path of the file on that volume
+ *  @param outFile where to write the stream
+ *  @param algorithm (optional) receives the WOF algorithm: 0, 2, 3 XPRESS on
+ *         4, 8, 16 KiB chunks, 1 LZX on 32 KiB
+ *  @return S_OK, or an error code (ERROR_NOT_SUPPORTED if the file is not WOF) */
+HRESULT ExtractWofStreamRaw(const std::wstring& volumeLetter, const std::wstring& pathOnVolume,
+                            const std::wstring& outFile, uint32_t* algorithm = nullptr);
+
 /*! Lists a file's attributes, as they appear in the $MFT.
  *
  *  WHY THIS FUNCTION EXISTS. What the Windows API shows of a file and what the

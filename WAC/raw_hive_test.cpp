@@ -2,10 +2,12 @@
  *  \brief Validation harness for the raw NTFS reading.
  *  To be run on Windows, as an administrator (raw volume access).
  *
- * Usage: raw_hive_test.exe [volume] [path] [output] [--fix] [--list] [--attrs]
+ * Usage: raw_hive_test.exe [volume] [path] [output] [--fix] [--list] [--attrs] [--wof]
  *   --fix    applies MakeHiveLoadable() on the extracted hive
  *   --list   lists a directory instead of extracting a file
  *   --attrs  lists the $MFT ATTRIBUTES of the file, without interpreting anything
+ *   --wof    writes the COMPRESSED stream of a WOF file as it is on the disk, and
+ *            prints its algorithm: test data for lzx_test, compressed by Windows
  *
  * WHY --attrs. What the Windows API shows of a file and what the disk holds can
  * differ entirely: a "Compact OS" binary presents itself as an ordinary file
@@ -26,23 +28,32 @@
 #include <vector>
 
 /*! Runs the test.
- * @param argc,argv [volume] [path] [output] [--fix] [--list] [--attrs]
+ * @param argc,argv [volume] [path] [output] [--fix] [--list] [--attrs] [--wof]
  * @return 0 if every check passed */
 int wmain(int argc, wchar_t** argv){
     RawHiveSetVerbose(true);
 
-    bool fix = false, list = false, attrs = false;
+    bool fix = false, list = false, attrs = false, wof = false;
     std::vector<const wchar_t*> positionnels;
     for (int i = 1; i < argc; ++i){
         if (wcscmp(argv[i], L"--fix") == 0)       fix = true;
         else if (wcscmp(argv[i], L"--list") == 0) list = true;
         else if (wcscmp(argv[i], L"--attrs") == 0) attrs = true;
+        else if (wcscmp(argv[i], L"--wof") == 0) wof = true;
         else positionnels.push_back(argv[i]);
     }
     const wchar_t* vol  = positionnels.size() > 0 ? positionnels[0] : L"C";
     const wchar_t* path = positionnels.size() > 1 ? positionnels[1]
                                                   : L"\\Windows\\System32\\config\\SYSTEM";
     const wchar_t* out  = positionnels.size() > 2 ? positionnels[2] : L"SYSTEM.hiv";
+
+    if (wof){
+        uint32_t algorithm = 0;
+        const HRESULT hr = ExtractWofStreamRaw(vol, path, out, &algorithm);
+        if (FAILED(hr)){ wprintf(L"FAILED ExtractWofStreamRaw: 0x%08lx\n", (unsigned long)hr); return 1; }
+        wprintf(L"WOF stream of %ls written to %ls, algorithm %lu\n", path, out, (unsigned long)algorithm);
+        return 0;
+    }
 
     if (attrs){
         std::vector<RawAttribute> attributes;

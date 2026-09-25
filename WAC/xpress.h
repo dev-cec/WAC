@@ -19,8 +19,7 @@
  *  WOF HAS FOUR ALGORITHMS, named by the reparse point: XPRESS on 4, 8 or
  *  16 KiB chunks, and LZX on 32 KiB. The first three use THE SAME coding,
  *  XPRESS Huffman, handled here; only the chunk size differs. LZX is a distinct,
- *  far more complex format, which is not implemented: a file compressed that
- *  way is reported as unreadable rather than returned wrong.
+ *  far more complex format, handled by lzx.h.
  *
  *  THE CODING, and its two subtleties.
  *

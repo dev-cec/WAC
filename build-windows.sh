@@ -74,7 +74,7 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
   # at the moment it is needed.
   "$CXX" "${FLAGS[@]}" -municode -static -static-libgcc -static-libstdc++ \
     "$SRC/raw_hive.cpp" "$SRC/hive_recover.cpp" "$SRC/quickdigest5.cpp" \
-    "$SRC/sha.cpp" "$SRC/lznt1.cpp" "$SRC/xpress.cpp" \
+    "$SRC/sha.cpp" "$SRC/lznt1.cpp" "$SRC/xpress.cpp" "$SRC/lzx.cpp" \
     "$SRC/raw_hive_test.cpp" -o "$BUILD/raw_hive_test.exe"
   echo "   -> $BUILD/raw_hive_test.exe"
 

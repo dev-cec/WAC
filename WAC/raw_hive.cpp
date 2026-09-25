@@ -23,6 +23,7 @@
 #include "sha.h"
 #include "lznt1.h"
 #include "xpress.h"
+#include "lzx.h"
 
 namespace {
 
@@ -462,12 +463,56 @@ public:
      *  image.
      *
      *  The reparse point gives the algorithm: 0, 2 and 3 are XPRESS Huffman on
-     *  4, 8 and 16 KiB chunks; 1 is LZX, a distinct format which is not
-     *  implemented. A file in LZX is therefore REPORTED as unsupported, not
-     *  returned wrong.
+     *  4, 8 and 16 KiB chunks (xpress.h); 1 is LZX on 32 KiB chunks (lzx.h).
+     *  Any other value is REPORTED as unsupported, never returned wrong.
      *
      *  @return S_OK, or an error code
      */
+    /*! Reads the compressed stream of a WOF file ("WofCompressedData") whole,
+     *  in large requests (see readClusters).
+     *  @param ctx the file's WOF context (see resolveWof)
+     *  @param data receives the stream
+     *  @return false if it is empty, larger than 256 MiB, or unreadable */
+    bool readWofStream(const WofContext& ctx, std::vector<uint8_t>& data){
+        if (ctx.streamSize == 0 || ctx.streamSize > (256ULL << 20)) return false;
+        data.assign((size_t)ctx.streamSize, 0);
+        uint64_t read = 0;
+        for (const Run& r : ctx.runs){
+            if (read >= ctx.streamSize) break;
+            const uint64_t n = std::min<uint64_t>(r.count * bytesPerCluster_, ctx.streamSize - read);
+            if (r.lcn >= 0 && !readClusters((uint64_t)r.lcn, n, data.data() + read)) return false;
+            read += n;
+        }
+        if (read != ctx.streamSize){
+            RVLOG(L"[raw] WOF: stream truncated (%llu out of %llu)\n",
+                  (unsigned long long)read, (unsigned long long)ctx.streamSize);
+            return false;
+        }
+        return true;
+    }
+
+public:
+    /*! Writes the compressed stream of a WOF file as it is on the disk, with
+     *  its algorithm: the test data of the decompressors (lzx_test,
+     *  xpress_test), compressed by Windows itself.
+     *  @param index the file's record
+     *  @param outFile where to write the stream
+     *  @param algorithm receives the WOF algorithm (0, 2, 3 XPRESS; 1 LZX)
+     *  @return S_OK, or an error code if the file is not WOF */
+    HRESULT dumpWofStream(uint64_t index, const std::wstring& outFile, uint32_t& algorithm){
+        std::vector<uint8_t> rec;
+        if (!readMftRecord(index, rec)) return E_FAIL;
+        WofContext wof;
+        if (!resolveWof(rec, wof) || !wof.present) return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
+        std::vector<uint8_t> data;
+        if (!readWofStream(wof, data)) return E_FAIL;
+        std::ofstream out(std::filesystem::path(outFile), std::ios::binary | std::ios::trunc);
+        out.write((const char*)data.data(), (std::streamsize)data.size());
+        if (!out) return HRESULT_FROM_WIN32(ERROR_WRITE_FAULT);
+        algorithm = wof.algorithm;
+        return S_OK;
+    }
+
     HRESULT extractWof(const WofContext& ctx, uint64_t actualSize,
                         std::ostream& out, const std::wstring& label,
                         RawHiveFingerprints* emp){
@@ -477,34 +522,15 @@ public:
         case 0: chunkSize = 4096;  break;   // XPRESS4K
         case 2: chunkSize = 8192;  break;   // XPRESS8K
         case 3: chunkSize = 16384; break;   // XPRESS16K
+        case 1: chunkSize = LZX_CHUNK_SIZE; break;   // LZX
         default:
-            // 1 = LZX: a distinct format, not implemented. Better to say so.
-            RVLOG(L"[raw] WOF: algorithm %lu (LZX?) not implemented\n",
-                  (unsigned long)algorithm);
+            RVLOG(L"[raw] WOF: algorithm %lu unknown\n", (unsigned long)algorithm);
             return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
         }
 
         // The named stream, already located by resolveWof.
-        if (ctx.streamSize == 0 || ctx.streamSize > (256ULL << 20)) return E_FAIL;
-        std::vector<uint8_t> data((size_t)ctx.streamSize, 0);
-        {
-            std::vector<uint8_t> cl(bytesPerCluster_);
-            uint64_t read = 0;
-            for (const Run& r : ctx.runs){
-                for (uint64_t k = 0; k < r.count && read < ctx.streamSize; ++k){
-                    if (r.lcn < 0) std::fill(cl.begin(), cl.end(), (uint8_t)0);
-                    else if (!readCluster((uint64_t)r.lcn + k, cl.data())) return E_FAIL;
-                    const uint64_t n = std::min<uint64_t>(bytesPerCluster_, ctx.streamSize - read);
-                    std::memcpy(data.data() + read, cl.data(), (size_t)n);
-                    read += n;
-                }
-            }
-            if (read != ctx.streamSize){
-                RVLOG(L"[raw] WOF: stream truncated (%llu out of %llu)\n",
-                      (unsigned long long)read, (unsigned long long)ctx.streamSize);
-                return E_FAIL;
-            }
-        }
+        std::vector<uint8_t> data;
+        if (!readWofStream(ctx, data)) return E_FAIL;
 
         // 3. The offset table: one per chunk, except the first one.
         const size_t nChunks = (size_t)((actualSize + chunkSize - 1) / chunkSize);
@@ -538,8 +564,9 @@ public:
                 product = expected;
             }
             else {
-                product = XpressHuffmanInflate(data.data() + start, packedSize,
-                                                chunk.data(), expected);
+                product = algorithm == 1
+                        ? LzxInflate(data.data() + start, packedSize, chunk.data(), expected)
+                        : XpressHuffmanInflate(data.data() + start, packedSize, chunk.data(), expected);
                 if (product == 0){
                     RVLOG(L"[raw] WOF: chunk %zu unreadable\n", i);
                     return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
@@ -940,7 +967,7 @@ public:
             if (resolveWof(rec, wof) && wof.present){
                 const HRESULT h = extractWof(wof, realSize, out, label, emp);
                 if (SUCCEEDED(h)) return h;
-                // Unsupported (LZX): a file of zeros is not written.
+                // Unsupported algorithm or damaged stream: a file of zeros is not written.
                 RVLOG(L"[raw] WOF : extraction impossible\n");
                 return h;
             }
@@ -1483,6 +1510,19 @@ HRESULT ListAttributesRaw(const std::wstring& volumeLetter,
     if (!vol.resolvePath(pathOnVolume, index))
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
     return vol.listAttributes(index, out);
+}
+
+HRESULT ExtractWofStreamRaw(const std::wstring& volumeLetter, const std::wstring& pathOnVolume,
+                            const std::wstring& outFile, uint32_t* algorithm){
+    NtfsVolume vol;
+    HRESULT hr = vol.open(volumeLetter);
+    if (FAILED(hr)) return hr;
+    uint64_t index = 0;
+    if (!vol.resolvePath(pathOnVolume, index)) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+    uint32_t found = 0;
+    hr = vol.dumpWofStream(index, outFile, found);
+    if (algorithm) *algorithm = found;
+    return hr;
 }
 
 HRESULT ExtractFileRaw(const std::wstring& volumeLetter,
