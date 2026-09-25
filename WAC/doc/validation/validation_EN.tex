@@ -86,7 +86,7 @@ test.
   \item[The checks built into \wac{}] (chapter~\ref{ch:integres}): run during
     every collection, on the examined machine. They refuse inconsistent data
     rather than publish it, and attest the integrity of the exhibits taken.
-  \item[The test programs] (chapter~\ref{ch:harnais}): fifteen executables
+  \item[The test programs] (chapter~\ref{ch:harnais}): sixteen executables
     that confront each decoder with a reference — the Microsoft function it
     replaces, a published standard or another implementation — or that prove
     a parser never reads outside its buffer.
@@ -269,7 +269,7 @@ reported and skipped; it no longer stops the reading of the file.
 % ============================================================ 3
 \chapter{The test programs}\label{ch:harnais}
 
-Fifteen executables, left out of \wac{}'s build by their
+Sixteen executables, left out of \wac{}'s build by their
 \fichier{\_test.cpp} suffix and built by \texttt{build-windows.sh --test}.
 Each targets one component and confronts it with a judge that shares nothing
 with it.
@@ -286,6 +286,9 @@ with it.
   the padding \\
 \texttt{lznt1\_test} & Microsoft's compressor (\texttt{RtlCompressBuffer}) &
   16 compressed units out of 16 conform, 1,048,576 bytes identical \\
+\texttt{lzx\_test} & Microsoft's compressor (\texttt{compact /exe:lzx}) &
+  646 chunks out of 646 matching (three files); 235,707 truncated or damaged
+  inputs without an out-of-bounds read (sanitizers) \\
 \texttt{xpress\_test} & Microsoft's compressor &
   137 compressed chunks out of 137 conform, byte for byte \\
 \texttt{wevt\_test} & files of a real event provider &

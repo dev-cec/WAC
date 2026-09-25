@@ -321,6 +321,27 @@ g++ -std=c++17 -I. xpress.cpp xpress_test.cpp -o /tmp/xpress_test
 size>} per unit; a null compressed size marks a unit Windows gave up
 compressing.
 
+\section{LZX decompression: \texttt{lzx\_test}}
+
+WOF's fourth algorithm, LZX on 32~KiB chunks, is only produced on request. The
+test data come from Windows itself: in the VM, \texttt{compact /c /exe:lzx}
+compresses a file, and \texttt{raw\_hive\_test --wof} writes its compressed
+stream as it lies on the disk. The test decompresses every chunk and compares it
+with the original, then submits every chunk, truncated and damaged at random
+(fixed seed), to the decoder built with AddressSanitizer and UBSan: no read or
+write out of bounds, and never a ``success'' of the wrong size.
+
+\begin{lstlisting}
+cd WAC
+g++ -std=c++17 -g -fsanitize=address,undefined -I. lzx.cpp lzx_test.cpp -o /tmp/lzx_test
+/tmp/lzx_test <original> <wof-stream.bin>
+\end{lstlisting}
+
+Reference: \fichier{ntoskrnl.exe}, \fichier{shell32.dll} and a text file,
+646 chunks out of 646 identical, 235,707 checks, no failure. The VM cycle also
+checks, on every run, the SHA-256 of these three files compressed with LZX and
+read raw against \texttt{Get-FileHash}.
+
 \section{Event messages: \texttt{wevt\_test} and \texttt{event\_messages\_test}}
 
 \texttt{wevt\_test} checks the chain that turns an event into a sentence, on the

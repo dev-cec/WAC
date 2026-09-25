@@ -179,48 +179,89 @@ All options are optional and **disabled by default**.
 - The `output` directory for standard results
 - The `log` file for logs when using `--loglevel`
 
-### Which mode: the forensic procedure
+## 🔀 5. COLLECT HERE, CONVERT ELSEWHERE
 
-Good forensic practice separates the **collection**, on the examined machine,
-from the **analysis**, on a controlled workstation (ISO/IEC 27037 for the
-identification, collection and preservation of digital evidence, ISO/IEC 27042
-for its analysis). Three rules follow, and WAC's modes are built on them:
+The same two sections as chapter 5 of the user documentation.
 
-1. **Act as little as possible on the examined machine** (ACPO, principle 1):
-   every operation run there leaves traces that can mingle with those of the
-   events under investigation, and can alter them.
-2. **Preserve the evidence as read, sealed**, so that its integrity can be
-   proven: the exhibit store and its manifest, with three fingerprints per
-   exhibit and a seal on the manifest.
-3. **Make the analysis reproducible**: redone from the same sealed evidence —
-   by a third party, or with a corrected WAC — it must give the same result.
+### 5.1 Why separate collection and conversion
+
+A WAC run does two different things:
+
+1. **The collection** — observing what only a running system shows (processes,
+   sessions, service states, clock), reading the disk raw, and copying the
+   evidence into a sealed exhibit store. This part **needs** the examined
+   machine.
+2. **The conversion** — parsing thousands of copied files (hives, event logs,
+   Prefetch, shortcuts…) into JSON. This part only needs the sealed exhibit
+   store, **not** the machine.
+
+Running the conversion on the examined machine adds work there that nothing
+requires:
+
+- minutes of processing in WAC's memory, which Windows may page out to
+  `pagefile.sys` — on the very disk under examination;
+- a process that stays longer on the machine, seen and logged by its security
+  software;
+- if WAC crashes, a Windows Error Reporting file written on the machine.
+
+The conversion never reads the machine's own files or registry — only the
+copies on the collection medium — but it still runs there.
+
+Good forensic practice says to avoid exactly that:
+
+- **ISO/IEC 27037** covers the identification, collection and preservation of
+  digital evidence, **ISO/IEC 27042** its analysis: two distinct stages;
+- **ACPO principle 1**: no action should change data on the examined machine —
+  every operation run there must be necessary;
+- **ACPO principle 3**: an independent third party must be able to repeat the
+  process and reach the same result.
+
+Separating the two stages brings three things:
+
+- **fewer traces** on the examined machine: only the collection runs there;
+- **evidence checked before any analysis**: `--convert` verifies the seal and
+  the SHA-256 of every exhibit first, and refuses a retouched collection;
+- **a reproducible analysis**: two conversions of one collection give
+  byte-identical JSON files, and the analysis can be redone later — with a
+  corrected WAC, or by a third party — without going back to the machine.
+
+### 5.2 Which mode to choose
+
+**By default: `--collect` on the examined machine, then `--convert` on an
+analysis workstation.**
+
+```
+E:\> WAC.exe --collect --events --binary --output=accounting-pc-01     (examined machine, as administrator)
+D:\> WAC.exe --convert=E:\accounting-pc-01 --events --binary           (analysis workstation)
+```
 
 | | Full run (no mode option) | `--collect` | `--convert=folder` |
 |---|---|---|---|
 | Runs on | the examined machine | the examined machine | an analysis workstation |
-| Does | collection **and** conversion to JSON, in one run | live snapshots, raw extraction, sealed exhibit store — **nothing converted** | checks the seal and every fingerprint, then converts; the exhibit store is only read |
-| With `--binary` | reads only the files **cited by the artefacts**; a binary on the disk that no artefact cites is not examined | reads **every executable of every fixed NTFS volume**, cited or not; the conversion may cite any of them | uses what the collection took |
-| Traces on the examined machine | those of the collection, **plus the conversion's**: minutes of processing of thousands of files in WAC's memory (which Windows may page to `pagefile.sys`), a process running longer, an error report (WER) if it crashes | those of the collection only | **none**: the machine is not involved |
+| Does | collection **and** conversion, in one run | collection only: live snapshots, raw extraction, sealed exhibit store — **nothing converted** | checks the seal and every fingerprint, then converts; the exhibit store is only read |
+| `--binary` examines | only the files **cited by the artefacts**; a binary no artefact cites is not examined | **every executable of every fixed NTFS volume**, cited or not | what the collection took |
+| Traces on the examined machine | the collection's **and the conversion's** (processing, memory, a longer process, a crash report if it crashes) | the collection's only | **none**: the machine is not involved |
+| Duration on the test VM (`--events --binary`) | 4 min 33 s | 16 min 39 s — the extra time is *reading* the whole volume, which writes nothing to it | 43 s |
 | Reproducible | partly: its exhibit store is sealed, but holds neither the authenticated binaries it cited nor any record of them, and converting it again is not a tested path | yes, through `--convert` | yes: two conversions give identical JSON files |
 
-**Use `--collect`, then `--convert` on the analysis workstation.** It is the
-procedure that leaves the fewest traces on the examined machine, keeps the
-evidence sealed, and allows the analysis to be redone and checked. The longer
-duration of `--collect --binary` (16 min 39 s against 4 min 33 s on the test VM,
-see PERFORMANCE) is spent *reading* the volume raw, which writes nothing to it —
-not converting.
+**Use the full run only in specific cases, and say so in the report:**
 
-**Keep the full run for specific cases**, and say so in the report: a triage
-whose results are needed on the spot, with no analysis workstation at hand; a
-machine that must be released within minutes. Its conversion reads only the
-copies on the collection medium — never the machine's files or registry — but
-it still runs on the examined machine.
+- the results are needed on the spot and no analysis workstation is at hand;
+- the machine must be released within minutes, and the 16 minutes of a
+  `--collect --binary` cannot be afforded.
 
-**Use `--binary-all`** when the content of every executable must itself be in
-the exhibit store — a malware analysis, a request for the files themselves —,
-at the cost of about 20 GB. Otherwise, an authenticated binary that was not
-copied can be fetched again, identical, from Microsoft's symbol server, by the
-retrieval key the manifest records (`SymbolServerKey`).
+**`--binary` or `--binary-all`:**
+
+- `--binary` (the usual choice): every executable is verified in memory; those
+  authenticated as Microsoft's (catalog, embedded signature, signed Store
+  package) are fingerprinted but **not copied**, all others are copied with
+  their fingerprints. An authenticated binary can be fetched again, identical,
+  from Microsoft's symbol server, by the retrieval key the manifest records
+  (`SymbolServerKey`).
+- `--binary-all`: **every** executable is copied, its signature verdict
+  recorded. For cases where the content itself must be in the exhibit store —
+  a malware analysis, a request for the files themselves —, at the cost of
+  about 20 GB.
 
 ## 🛡️ FOOTPRINT ON THE EXAMINED MACHINE
 
@@ -548,9 +589,12 @@ results are worth stating:
   an `$ATTRIBUTE_LIST` behind — a file in that shape has neither its reparse
   point nor its named stream in the base record, and 56 provider binaries were
   missed that way until the traversal was added. Nothing is opened on the
-  examined machine. The fourth WOF variant, LZX, is a distinct and far more
-  complex format: it is **not** implemented, and such a file is reported as
-  unsupported rather than returned wrong;
+  examined machine. The fourth WOF variant, **LZX** on 32 KiB chunks — which
+  Windows only uses on request (`compact /exe:lzx`, disk "compacting" tools) —
+  is a distinct and far more complex format, read too: `lzx.h/cpp`, written
+  from Microsoft's own specification of the format, is checked against files
+  compressed by Windows itself (identical SHA-256, 646 chunks out of 646) and
+  against 235 707 truncated or damaged inputs under AddressSanitizer;
 - reading from the file also **fixed a wrong value the API produced**. The API
   path asked only for `Event/EventData/Data`; on an event that stores its data
   in `UserData` instead, that request fills nothing, and the value was read

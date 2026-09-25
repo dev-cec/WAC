@@ -334,6 +334,28 @@ g++ -std=c++17 -I. xpress.cpp xpress_test.cpp -o /tmp/xpress_test
 compressée>} par unité ; une taille compressée nulle désigne une unité que
 Windows a renoncé à compresser.
 
+\section{Décompression LZX : \texttt{lzx\_test}}
+
+Le quatrième algorithme de WOF, LZX sur des blocs de 32~Kio, n'est produit que
+sur demande. Les données de test viennent de Windows lui-même : dans la VM,
+\texttt{compact /c /exe:lzx} compresse un fichier, et
+\texttt{raw\_hive\_test --wof} en dépose le flux compressé tel qu'il est sur le
+disque. Le test décompresse chaque bloc et le compare à l'original, puis soumet
+chaque bloc tronqué et altéré au hasard (graine fixe) au décodeur, compilé avec
+AddressSanitizer et UBSan : aucune lecture ni écriture hors borne, et jamais une
+« réussite » de taille fausse.
+
+\begin{lstlisting}
+cd WAC
+g++ -std=c++17 -g -fsanitize=address,undefined -I. lzx.cpp lzx_test.cpp -o /tmp/lzx_test
+/tmp/lzx_test <original> <flux-wof.bin>
+\end{lstlisting}
+
+Référence : \fichier{ntoskrnl.exe}, \fichier{shell32.dll} et un fichier texte,
+646 blocs sur 646 identiques, 235~707 contrôles, aucun échec. Le cycle VM
+vérifie en outre, à chaque passage, le SHA-256 de ces trois fichiers compressés
+en LZX et lus en brut contre \texttt{Get-FileHash}.
+
 \section{Messages d'événements : \texttt{wevt\_test} et \texttt{event\_messages\_test}}
 
 \texttt{wevt\_test} vérifie la chaîne qui transforme un événement en phrase,

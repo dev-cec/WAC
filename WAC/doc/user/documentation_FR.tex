@@ -483,17 +483,48 @@ l'écriture domine.
 
 \section{Pourquoi séparer}
 
-Sans option de mode, \wac{} collecte \textbf{et} convertit en une seule
-exécution, sur la machine examinée. Les bonnes pratiques de l'expertise
-judiciaire (ISO/IEC~27037 pour la collecte, 27042 pour l'analyse) séparent les
-deux :
+Une exécution de \wac{} fait deux choses différentes :
+\begin{enumerate}
+  \item \textbf{la collecte} : relever ce que seul un système en marche montre
+        (processus, sessions, état des services, horloge), lire le disque
+        directement, copier les preuves dans une consigne scellée. Elle a
+        \textbf{besoin} de la machine examinée ;
+  \item \textbf{la conversion} : décoder en JSON des milliers de fichiers
+        copiés (ruches, journaux, Prefetch, raccourcis\ldots). Elle n'a besoin
+        que de la consigne, \textbf{pas} de la machine.
+\end{enumerate}
+
+Sans option de mode, les deux se font sur la machine examinée. La conversion y
+ajoute un travail que rien n'impose : des minutes de traitement dans la mémoire
+de \wac{}, que Windows peut paginer dans \fichier{pagefile.sys}, sur le disque
+même qu'on examine ; un processus présent plus longtemps, vu et journalisé par
+les protections de la machine ; en cas de plantage, un rapport d'erreur Windows
+écrit sur la machine. Elle ne lit pourtant ni les fichiers ni le registre de la
+machine, seulement les copies du support de collecte, mais elle s'y exécute.
+
+C'est précisément ce que les bonnes pratiques demandent d'éviter :
 \begin{itemize}
-  \item \textbf{moins d'actions sur la machine examinée}, donc moins de traces :
-        la conversion (lecture de milliers de fichiers, mémoire, fichier
-        d'échange, rapport d'erreur éventuel) se fait ailleurs ;
-  \item \textbf{une conversion refaisable} : à partir de la consigne scellée,
-        par un tiers, ou avec une version corrigée de \wac{}, sans revenir sur
-        la machine.
+  \item \textbf{ISO/IEC~27037} traite de l'identification, de la collecte et de
+        la préservation des preuves numériques, \textbf{ISO/IEC~27042} de leur
+        analyse : deux étapes distinctes ;
+  \item \textbf{principe~1 de l'ACPO} : aucune action ne doit modifier les
+        données de la machine examinée ; toute opération qui s'y exécute doit
+        être nécessaire ;
+  \item \textbf{principe~3 de l'ACPO} : un tiers indépendant doit pouvoir
+        refaire le traitement et obtenir le même résultat.
+\end{itemize}
+
+Séparer les deux étapes apporte trois choses :
+\begin{itemize}
+  \item \textbf{moins de traces} sur la machine examinée : seule la collecte
+        s'y exécute ;
+  \item \textbf{des preuves vérifiées avant toute analyse} : \opt{convert}
+        contrôle d'abord le sceau et le SHA-256 de chaque pièce, et refuse une
+        collecte retouchée ;
+  \item \textbf{une analyse reproductible} : deux conversions d'une même
+        collecte donnent des fichiers JSON identiques octet pour octet, et
+        l'analyse peut être refaite plus tard, avec une version corrigée de
+        \wac{} ou par un tiers, sans revenir sur la machine.
 \end{itemize}
 
 \section{Quel mode choisir}
@@ -613,9 +644,16 @@ identiques, ce que le harnais de test vérifie à chaque cycle.
 \section{Limites}
 
 \begin{itemize}
-  \item Un fichier cité qui n'est pas un exécutable (document, donnée) n'est
-        pas prélevé : en conversion, il n'a donc \textbf{pas d'empreinte}, là
-        où l'exécution complète la calcule sur le disque.
+  \item Les \textbf{documents à macros} (\fichier{doc}, \fichier{docm},
+        \fichier{xls}, \fichier{xlsm}, \fichier{ppt}\ldots, liste de la
+        section~\ref{sec:binary}) sont traités comme les exécutables : lus sur
+        tous les volumes fixes et \textbf{prélevés}, sauf s'ils sont, octet pour
+        octet, un fichier livré par Microsoft et listé dans un catalogue — ce
+        qu'un document écrit ou modifié par quiconque ne peut pas être.
+  \item Un fichier cité qui ne peut porter ni code ni macro (\fichier{docx},
+        \fichier{xlsx}, \fichier{pdf}, donnée) n'est pas prélevé : en
+        conversion, il n'a donc \textbf{pas d'empreinte}, là où l'exécution
+        complète la calcule sur le disque.
   \item Un exécutable authentifié n'est pas copié : à la conversion, il a son
         empreinte Authenticode et son verdict, mais pas de MD5, SHA-1 ni
         SHA-256 — ceux-ci ne sont calculés que pour ce qui est prélevé.
@@ -1038,9 +1076,6 @@ lieu de la prendre pour l'activité étudiée :
 \chapter{Limites connues}
 
 \begin{description}[style=nextline,leftmargin=1.2em]
-  \item[Compression LZX] Parmi les variantes de Compact OS (WOF), seules les
-        variantes XPRESS sont décompressées. Un fichier compressé en LZX est
-        signalé comme non pris en charge, jamais restitué faux.
   \item[Volumes non NTFS] Un fichier situé sur un CD-ROM ou une clé FAT n'est pas
         lu : il est signalé comme non lu.
   \item[Variables propres à un utilisateur] Un chemin exprimé avec

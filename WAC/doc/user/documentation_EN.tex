@@ -478,16 +478,47 @@ writing dominates.
 
 \section{Why separate}
 
-Without a mode option, \wac{} collects \textbf{and} converts in a single run,
-on the examined machine. Good forensic practice (ISO/IEC~27037 for the
-collection, 27042 for the analysis) separates the two:
+A run of \wac{} does two different things:
+\begin{enumerate}
+  \item \textbf{the collection}: observing what only a running system shows
+        (processes, sessions, service states, clock), reading the disk
+        directly, copying the evidence into a sealed exhibit store. It
+        \textbf{needs} the examined machine;
+  \item \textbf{the conversion}: parsing thousands of copied files (hives,
+        event logs, Prefetch, shortcuts\ldots) into JSON. It only needs the
+        exhibit store, \textbf{not} the machine.
+\end{enumerate}
+
+Without a mode option, both run on the examined machine. The conversion adds
+work there that nothing requires: minutes of processing in \wac{}'s memory,
+which Windows may page out to \fichier{pagefile.sys}, on the very disk under
+examination; a process present for longer, seen and logged by the machine's
+security software; if it crashes, a Windows error report written on the
+machine. It reads neither the machine's files nor its registry, only the copies
+on the collection medium, but it runs there.
+
+That is exactly what good practice asks to avoid:
 \begin{itemize}
-  \item \textbf{fewer actions on the examined machine}, hence fewer traces: the
-        conversion (reading thousands of files, memory, page file, a possible
-        error report) happens elsewhere;
-  \item \textbf{a conversion that can be redone}: from the sealed exhibit
-        store, by a third party, or with a corrected version of \wac{},
-        without going back to the machine.
+  \item \textbf{ISO/IEC~27037} covers the identification, collection and
+        preservation of digital evidence, \textbf{ISO/IEC~27042} its analysis:
+        two distinct stages;
+  \item \textbf{ACPO principle~1}: no action should change the data of the
+        examined machine; every operation run there must be necessary;
+  \item \textbf{ACPO principle~3}: an independent third party must be able to
+        repeat the process and reach the same result.
+\end{itemize}
+
+Separating the two stages brings three things:
+\begin{itemize}
+  \item \textbf{fewer traces} on the examined machine: only the collection runs
+        there;
+  \item \textbf{evidence checked before any analysis}: \opt{convert} first
+        verifies the seal and the SHA-256 of every exhibit, and refuses a
+        retouched collection;
+  \item \textbf{a reproducible analysis}: two conversions of one collection
+        give byte-identical JSON files, and the analysis can be redone later,
+        with a corrected version of \wac{} or by a third party, without going
+        back to the machine.
 \end{itemize}
 
 \section{Which mode}
@@ -607,9 +638,16 @@ which the test harness checks on every cycle.
 \section{Limitations}
 
 \begin{itemize}
-  \item A cited file that is not an executable (document, data) is not
-        collected: at conversion it therefore has \textbf{no fingerprint},
-        whereas the full run computes it on the disk.
+  \item \textbf{Macro documents} (\fichier{doc}, \fichier{docm},
+        \fichier{xls}, \fichier{xlsm}, \fichier{ppt}\ldots, list in
+        section~\ref{sec:binary}) are handled like executables: read on every
+        fixed volume and \textbf{collected}, unless they are, byte for byte, a
+        file shipped by Microsoft and listed in a catalog — which a document
+        written or modified by anyone cannot be.
+  \item A cited file that can carry neither code nor macro (\fichier{docx},
+        \fichier{xlsx}, \fichier{pdf}, data) is not collected: at conversion it
+        therefore has \textbf{no fingerprint}, whereas the full run computes it
+        on the disk.
   \item An authenticated executable is not copied: at conversion it has its
         Authenticode digest and its verdict, but no MD5, SHA-1 or SHA-256 —
         those are computed only for what is collected.
@@ -1015,9 +1053,6 @@ instead of taking it for the activity under study:
 \chapter{Known limitations}
 
 \begin{description}[style=nextline,leftmargin=1.2em]
-  \item[LZX compression] Among the Compact OS (WOF) variants, only the XPRESS
-        ones are decompressed. A file compressed with LZX is reported as
-        unsupported, never returned wrong.
   \item[Non-NTFS volumes] A file on a CD-ROM or a FAT stick is not read: it is
         reported as unread.
   \item[Per-user variables] A path written with \path|%APPDATA%|,

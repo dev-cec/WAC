@@ -87,7 +87,7 @@ La validation de \wac{} repose donc sur ce principe : toute donnée qui peut
     exécutés à chaque collecte, sur la machine examinée. Ils refusent une
     donnée incohérente plutôt que de la publier, et attestent l'intégrité des
     pièces prélevées.
-  \item[Les programmes de test] (chapitre~\ref{ch:harnais}) : quinze
+  \item[Les programmes de test] (chapitre~\ref{ch:harnais}) : seize
     exécutables qui confrontent chaque décodeur à une référence (la fonction de
     Microsoft qu'il remplace, une norme publiée, une autre implémentation), ou
     qui prouvent qu'un analyseur ne lit jamais hors de son tampon.
@@ -275,7 +275,7 @@ n'interrompt plus la lecture du fichier.
 % ============================================================ 3
 \chapter{Les programmes de test}\label{ch:harnais}
 
-Quinze exécutables, exclus de la compilation de \wac{} par leur suffixe
+Seize exécutables, exclus de la compilation de \wac{} par leur suffixe
 \fichier{\_test.cpp} et construits par \texttt{build-windows.sh --test}.
 Chacun vise un composant et le confronte à un juge qui ne partage rien avec
 lui.
@@ -294,6 +294,9 @@ lui.
   16 unités compressées sur 16 conformes, 1~048~576 octets identiques \\
 \texttt{xpress\_test} & compresseur de Microsoft &
   137 blocs compressés sur 137 conformes, octet pour octet \\
+\texttt{lzx\_test} & compresseur de Microsoft (\texttt{compact /exe:lzx}) &
+  646 blocs sur 646 conformes (trois fichiers) ; 235~707 entrées tronquées ou
+  altérées sans lecture hors borne (sanitizers) \\
 \texttt{wevt\_test} & fichiers d'un vrai fournisseur d'événements &
   chaîne complète de production des messages vérifiée, marques de substitution
   comprises \\
