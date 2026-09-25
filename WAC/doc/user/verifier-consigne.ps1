@@ -12,11 +12,14 @@ Write-Output "Sceau conforme ($reel)"
 
 # 2. Every exhibit: its SHA-256 must be the one in the manifest.
 $m = Get-Content -Raw -Encoding UTF8 "$Sortie\exhibits\MANIFEST.json" | ConvertFrom-Json
-$ok = 0; $ko = 0
+$ok = 0; $ko = 0; $fingerprintOnly = 0
 foreach ($p in ($m.Items | Where-Object { $_.Result -eq 'OK' })) {
+    # An authenticated binary that was not copied (--collect --binary): no file.
+    if ($p.ContentStored -eq $false) { $fingerprintOnly++; continue }
     $f = Join-Path $Sortie $p.ExhibitPath
     $h = (Get-FileHash -Algorithm SHA256 -LiteralPath $f -ErrorAction SilentlyContinue).Hash
     if ($h -eq $p.SHA256) { $ok++ } else { $ko++; Write-Output "DIFFERENTE : $($p.ExhibitPath)" }
 }
 Write-Output "$ok piece(s) conforme(s), $ko differente(s)"
+Write-Output "$fingerprintOnly binaire(s) authentifie(s), empreinte seule (pas de copie a verifier)"
 if ($ko) { exit 1 }

@@ -12,11 +12,14 @@ Write-Output "Seal verified ($actual)"
 
 # 2. Every exhibit: its SHA-256 must be the one in the manifest.
 $m = Get-Content -Raw -Encoding UTF8 "$Output\exhibits\MANIFEST.json" | ConvertFrom-Json
-$ok = 0; $ko = 0
+$ok = 0; $ko = 0; $fingerprintOnly = 0
 foreach ($p in ($m.Items | Where-Object { $_.Result -eq 'OK' })) {
+    # An authenticated binary that was not copied (--collect --binary): no file.
+    if ($p.ContentStored -eq $false) { $fingerprintOnly++; continue }
     $f = Join-Path $Output $p.ExhibitPath
     $h = (Get-FileHash -Algorithm SHA256 -LiteralPath $f -ErrorAction SilentlyContinue).Hash
     if ($h -eq $p.SHA256) { $ok++ } else { $ko++; Write-Output "MISMATCH: $($p.ExhibitPath)" }
 }
 Write-Output "$ok exhibit(s) verified, $ko mismatch(es)"
+Write-Output "$fingerprintOnly binarie(s) authenticated and fingerprinted only (no copy to verify)"
 if ($ko) { exit 1 }
