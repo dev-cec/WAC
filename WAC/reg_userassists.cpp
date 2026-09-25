@@ -43,8 +43,8 @@ Json UserAssist::toJson() {
 	o.add(L"Name",          Json::str(Name));
 	o.add(L"Count",         Json::num((long long)Count));
 	o.add(L"FocusCount",    Json::num((long long)FocusCount));
-	o.add(L"DateLocale",    Json::str(utcTimeToIso8601Local(lastRunUtc)));
-	o.add(L"DateLocaleUtc", Json::str(timeToIso8601Utc(lastRunUtc)));
+	o.add(L"LastRun",       Json::str(utcTimeToIso8601Local(lastRunUtc)));
+	o.add(L"LastRunUtc",    Json::str(timeToIso8601Utc(lastRunUtc)));
 	return o;
 }
 

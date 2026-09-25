@@ -153,6 +153,7 @@ def cross_checks(folder):
     found += check_mounted_devices(folder)
     found += check_date_precision(folder)
     found += check_utc_sources(folder)
+    found += check_key_names(folder)
     return found
 
 
@@ -1058,8 +1059,9 @@ def check_utc_sources(folder):
         print("  ❌ bams.json empty: the BAM keys hold at least the harness's own commands")
         found += 1
     elif start:
-        runs = [instant(b["executionTimeUtc"]) for b in bams
-                if b.get("executionTimeUtc") and (b.get("Name") or "").lower().endswith("\\taskkill.exe")]
+        # "executionTimeUtc" until 2026-09-25: archived results stay checkable.
+        runs = [instant(b.get("LastExecutionUtc") or b["executionTimeUtc"]) for b in bams
+                if (b.get("LastExecutionUtc") or b.get("executionTimeUtc")) and (b.get("Name") or "").lower().endswith("\\taskkill.exe")]
         gaps = [(instant(start) - r).total_seconds() for r in runs]
         if any(0 <= g <= 300 for g in gaps):
             print(f"  ✅ bams.json: taskkill.exe executed {min(g for g in gaps if g >= 0):.0f} s before the collection, as the harness did")
@@ -1081,14 +1083,15 @@ def check_utc_sources(folder):
         agree, shifted = 0, []
         for u in ua:
             name = ntpath.basename(u.get("Name") or "").upper()
-            if not name.endswith(".EXE") or name not in runs or not u.get("DateLocaleUtc"):
+            last = u.get("LastRunUtc") or u.get("DateLocaleUtc")   # renamed on 2026-09-25
+            if not name.endswith(".EXE") or name not in runs or not last:
                 continue
-            t = instant(u["DateLocaleUtc"])
+            t = instant(last)
             gap = min((abs((t - r).total_seconds()) for r in runs[name]))
             if gap <= 120:
                 agree += 1
             elif any(abs(gap - k * 1800) <= 120 for k in range(1, 49)):
-                shifted.append(f"{name}: {u['DateLocaleUtc']}, nearest Prefetch run {gap:.0f} s away")
+                shifted.append(f"{name}: {last}, nearest Prefetch run {gap:.0f} s away")
         if shifted:
             print(f"  ❌ userassists.json: last run shifted by a time-zone offset against Prefetch, e.g. {shifted[0]}")
             found += 1
@@ -1097,6 +1100,37 @@ def check_utc_sources(folder):
         else:
             print("  ⏭️  no UserAssist program also in the Prefetch: last runs not confronted")
     return found
+
+
+def check_key_names(folder):
+    """Every key of the output is in PascalCase, English, without abbreviation.
+
+    WHY. The output is read by other tools: a key is a contract. Keys such as
+    "NbVolumes", "DateLocale" or "executionTime" had crept in — an abbreviation,
+    a French word, a lower-case initial — each a name a consumer must special-case.
+    Renamed on 2026-09-25; this check keeps new ones from appearing.
+    """
+    bad = {}
+    def walk(o, name):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if not re.match(r"^[A-Z][A-Za-z0-9]*$", k) or re.match(r"^(Nb|Num|Tmp)[A-Z]", k) \
+                        or re.search(r"(Locale|Nom|Chemin|Taille|Valeur|Fichier)", k):
+                    bad.setdefault(k, name)
+                walk(v, name)
+        elif isinstance(o, list):
+            for v in o[:500]:
+                walk(v, name)
+    for file in sorted(glob.glob(os.path.join(folder, "*.json"))):
+        name = os.path.basename(file)
+        d = load(folder, name)
+        if d is not None:
+            walk(d, name)
+    if bad:
+        print(f"  ❌ key names not in PascalCase English: {sorted(bad.items())[:5]}")
+        return 1
+    print("  ✅ every output key in PascalCase English, without abbreviation")
+    return 0
 
 
 def process_name(p):

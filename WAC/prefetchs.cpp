@@ -134,7 +134,7 @@ Json VolumeInfo::toJson() {
 	o.add(L"CreationTimeUtc", Json::str(timeToIso8601Utc(creationTimeUtc)));
 	Json dirs = Json::arr();
 	for (DirStrings& d : dirStrings) dirs.push(d.toJson());
-	o.add(L"NbDirs", Json::num((unsigned long long)dirStrings.size()));
+	o.add(L"DirectoryCount", Json::num((unsigned long long)dirStrings.size()));
 	o.add(L"Dirs",   std::move(dirs));
 	// The file references (MFT) bring nothing to the investigation: not emitted.
 	return o;
@@ -538,7 +538,7 @@ Json Prefetch::toJson() {
 	o.add(L"RunsUtc", std::move(runsUtc));
 	Json vols = Json::arr();
 	for (VolumeInfo& v : volumes) vols.push(v.toJson());
-	o.add(L"NbVolumes", Json::num((unsigned long long)volumes.size()));
+	o.add(L"VolumeCount", Json::num((unsigned long long)volumes.size()));
 	o.add(L"Volumes",   std::move(vols));
 	Json fns = Json::arr();
 	for (Filename& fn : filenames) fns.push(fn.toJson());
@@ -547,7 +547,7 @@ Json Prefetch::toJson() {
 	    differences of content from one Prefetch to another, and an analyst needs
 	    it to know what to expect from the file. */
 	o.add(L"FormatVersion",  Json::num((long long)version));
-	o.add(L"NbFilesStrings", Json::num((unsigned long long)filenames.size()));
+	o.add(L"FileCount", Json::num((unsigned long long)filenames.size()));
 	o.add(L"FilesStrings",   std::move(fns));
 	return o;
 }

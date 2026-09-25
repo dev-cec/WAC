@@ -33,7 +33,7 @@ Json CustomDestinationCategory::toJson() {
 	Json arr = Json::arr();
 	for (RecentDoc& r : recentDocs) arr.push(r.toJson());
 	Json o = Json::obj();
-	o.add(L"recentDocs", std::move(arr));
+	o.add(L"RecentDocs", std::move(arr));
 	return o;
 }
 

@@ -386,6 +386,9 @@ dates of BAM, UserAssist, USBSTOR and Amcache / \texttt{taskkill} run by
   four artefacts store UTC, read as local time: all their dates 2~h off; BAM
   and UserAssist emptied by a regression of the value reading \\
 \multicolumn{2}{@{}l}{\textit{Decoding}} \\
+output key names in English, without abbreviation & \texttt{NbVolumes},
+  \texttt{DateLocale}, \texttt{executionTime}: an abbreviation, a French word,
+  a lower-case initial \\
 identifier and serial number of a USB key / \texttt{Get-PnpDevice} & no key
   carried its serial number, vendor or product: they are in the key names, not
   in values \\
@@ -429,7 +432,7 @@ Last cycle, on version 1.3.1 (Windows~11, Paris time zone):
   \item 24 valid JSON files out of 24 produced, USBSTOR included: the harness
     attaches a virtual USB key on every cycle, so that a recreated test
     machine knows one too;
-  \item 33 cross-checks passed, no failure, among them 4,068 local dates
+  \item 34 cross-checks passed, no failure, among them 4,068 local dates
     confronted with the IANA database and 145,645 events decoded;
   \item 1,336 exhibits in the exhibit store, exactly those of the manifest,
     seal conforms.

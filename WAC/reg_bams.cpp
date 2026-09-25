@@ -24,8 +24,8 @@ Json Bam::toJson() const {
 	o.add(L"SID",              Json::str(sid));
 	o.add(L"SIDName",          Json::str(sidName));
 	o.add(L"Name",             Json::str(name));      // raw path
-	o.add(L"executionTime",    Json::str(utcTimeToIso8601Local(executionTimeUtc)));
-	o.add(L"executionTimeUtc", Json::str(timeToIso8601Utc(executionTimeUtc)));
+	o.add(L"LastExecution",    Json::str(utcTimeToIso8601Local(executionTimeUtc)));
+	o.add(L"LastExecutionUtc", Json::str(timeToIso8601Utc(executionTimeUtc)));
 	return o;
 }
 
