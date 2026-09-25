@@ -99,6 +99,7 @@ $(document).ready(function(){initNavTree('structUserAssist.html',''); initResiza
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#pub-static-attribs">Static Public Attributes</a> &#124;
 <a href="structUserAssist-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">UserAssist Struct Reference</div></div>
 </div><!--header-->
@@ -108,8 +109,8 @@ $(document).ready(function(){initNavTree('structUserAssist.html',''); initResiza
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a316ba0184d78f80ab64a1dcae3b51112" id="r_a316ba0184d78f80ab64a1dcae3b51112"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#a316ba0184d78f80ab64a1dcae3b51112">UserAssist</a> (std::wstring hKey, LPWSTR valueName, LPBYTE data, std::wstring _sid)</td></tr>
-<tr class="separator:a316ba0184d78f80ab64a1dcae3b51112"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36feef58fdbd73d95bb5e0ec212b7ecb" id="r_a36feef58fdbd73d95bb5e0ec212b7ecb"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#a36feef58fdbd73d95bb5e0ec212b7ecb">UserAssist</a> (std::wstring hKey, const std::wstring &amp;valueName, const std::vector&lt; BYTE &gt; &amp;data, std::wstring _sid)</td></tr>
+<tr class="separator:a36feef58fdbd73d95bb5e0ec212b7ecb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2bea266d0f06bce34a3a3765a269598b" id="r_a2bea266d0f06bce34a3a3765a269598b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#a2bea266d0f06bce34a3a3765a269598b">toJson</a> ()</td></tr>
 <tr class="separator:a2bea266d0f06bce34a3a3765a269598b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab808f3b94c1d0a36ed6e94c26ee18f3f" id="r_ab808f3b94c1d0a36ed6e94c26ee18f3f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#ab808f3b94c1d0a36ed6e94c26ee18f3f">clear</a> ()</td></tr>
@@ -135,18 +136,20 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a5ba8b3e449ec33c381c7f5db6403ea93" id="r_a5ba8b3e449ec33c381c7f5db6403ea93"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#a5ba8b3e449ec33c381c7f5db6403ea93">FocusCount</a> = 0</td></tr>
 <tr class="memdesc:a5ba8b3e449ec33c381c7f5db6403ea93"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of times the window received the focus  <br /></td></tr>
 <tr class="separator:a5ba8b3e449ec33c381c7f5db6403ea93"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe9dc21d04b68c680b154d46fdde3fdd" id="r_abe9dc21d04b68c680b154d46fdde3fdd"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#abe9dc21d04b68c680b154d46fdde3fdd">DateLocale</a> = L&quot;&quot;</td></tr>
-<tr class="memdesc:abe9dc21d04b68c680b154d46fdde3fdd"><td class="mdescLeft">&#160;</td><td class="mdescRight">last run, in the suspect's local time  <br /></td></tr>
-<tr class="separator:abe9dc21d04b68c680b154d46fdde3fdd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6db3fa3f51c5e1dc69db4b33001b1224" id="r_a6db3fa3f51c5e1dc69db4b33001b1224"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#a6db3fa3f51c5e1dc69db4b33001b1224">DateLocaleUtc</a> = L&quot;&quot;</td></tr>
-<tr class="memdesc:a6db3fa3f51c5e1dc69db4b33001b1224"><td class="mdescLeft">&#160;</td><td class="mdescRight">the same instant in UTC  <br /></td></tr>
-<tr class="separator:a6db3fa3f51c5e1dc69db4b33001b1224"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a04a92cffe7c9881f0eac6713adbde7" id="r_a2a04a92cffe7c9881f0eac6713adbde7"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#a2a04a92cffe7c9881f0eac6713adbde7">lastRunUtc</a> = { 0, 0 }</td></tr>
+<tr class="memdesc:a2a04a92cffe7c9881f0eac6713adbde7"><td class="mdescLeft">&#160;</td><td class="mdescRight">last run, in UTC as the value stores it  <br /></td></tr>
+<tr class="separator:a2a04a92cffe7c9881f0eac6713adbde7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
+Static Public Attributes</h2></td></tr>
+<tr class="memitem:a0976434ad1631bb66c0044003d4d2e0d" id="r_a0976434ad1631bb66c0044003d4d2e0d"><td class="memItemLeft" align="right" valign="top">static const size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#a0976434ad1631bb66c0044003d4d2e0d">ENTRY_SIZE</a> = 72</td></tr>
+<tr class="separator:a0976434ad1631bb66c0044003d4d2e0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One <a class="el" href="structUserAssist.html">UserAssist</a> entry: something the user started from the shell. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a316ba0184d78f80ab64a1dcae3b51112" name="a316ba0184d78f80ab64a1dcae3b51112"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a316ba0184d78f80ab64a1dcae3b51112">&#9670;&#160;</a></span>UserAssist()</h2>
+<a id="a36feef58fdbd73d95bb5e0ec212b7ecb" name="a36feef58fdbd73d95bb5e0ec212b7ecb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a36feef58fdbd73d95bb5e0ec212b7ecb">&#9670;&#160;</a></span>UserAssist()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -160,13 +163,13 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">LPWSTR&#160;</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
           <td class="paramname"><em>valueName</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">LPBYTE&#160;</td>
+          <td class="paramtype">const std::vector&lt; BYTE &gt; &amp;&#160;</td>
           <td class="paramname"><em>data</em>, </td>
         </tr>
         <tr>
@@ -182,7 +185,7 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Builds the entry from a registry value. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Builds the entry from a registry value of ENTRY_SIZE bytes. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">hKey</td><td>name of the GUID subkey the value comes from. </td></tr>
     <tr><td class="paramname">valueName</td><td>name of the value, ROT13-encoded. </td></tr>
@@ -265,35 +268,26 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="abe9dc21d04b68c680b154d46fdde3fdd" name="abe9dc21d04b68c680b154d46fdde3fdd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abe9dc21d04b68c680b154d46fdde3fdd">&#9670;&#160;</a></span>DateLocale</h2>
+<a id="a0976434ad1631bb66c0044003d4d2e0d" name="a0976434ad1631bb66c0044003d4d2e0d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0976434ad1631bb66c0044003d4d2e0d">&#9670;&#160;</a></span>ENTRY_SIZE</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::wstring UserAssist::DateLocale = L&quot;&quot;</td>
+          <td class="memname">const size_t UserAssist::ENTRY_SIZE = 72</td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
-
-<p>last run, in the suspect's local time </p>
-
-</div>
-</div>
-<a id="a6db3fa3f51c5e1dc69db4b33001b1224" name="a6db3fa3f51c5e1dc69db4b33001b1224"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6db3fa3f51c5e1dc69db4b33001b1224">&#9670;&#160;</a></span>DateLocaleUtc</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::wstring UserAssist::DateLocaleUtc = L&quot;&quot;</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>the same instant in UTC </p>
+<p>Size of an entry of Windows 7 and later: session (4), run count (4), focus count (4), focus time (4), 10 usage ratios, last run FILETIME at offset 60, then 4 bytes. A value of another size is not a program entry: "UEME_CTLSESSION" holds session statistics, and read at the same offsets it gave a last run in 1691. </p>
 
 </div>
 </div>
@@ -310,6 +304,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>number of times the window received the focus </p>
+
+</div>
+</div>
+<a id="a2a04a92cffe7c9881f0eac6713adbde7" name="a2a04a92cffe7c9881f0eac6713adbde7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2a04a92cffe7c9881f0eac6713adbde7">&#9670;&#160;</a></span>lastRunUtc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME UserAssist::lastRunUtc = { 0, 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>last run, in UTC as the value stores it </p>
 
 </div>
 </div>

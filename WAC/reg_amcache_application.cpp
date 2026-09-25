@@ -22,10 +22,13 @@ AmcacheApplication::AmcacheApplication(ORHKEY hKey_amcache) {
 		log(3, L"🔈wstring_to_filetime InstallDate");
 		filetime = wstring_to_filetime(temp);
 		log(3, L"🔈timeToIso8601 InstallDate");
-		// A text date ("month/day/year hour:minute:second"): precise to the second.
-		InstallDate = timeToIso8601Local(filetime, Precision::Second);
+		/* A text date ("month/day/year hour:minute:second"), precise to the
+		   second, in UTC. It used to be read as a LOCAL time: on the test VM,
+		   OneDrive, whose folder was created at 11:34:36 UTC, reads 11:35:15 and
+		   was published at 09:35:15 UTC — installed before its own folder. */
+		InstallDate = utcTimeToIso8601Local(filetime, Precision::Second);
 		log(3, L"🔈timeToIso8601 InstallDateUtc");
-		InstallDateUtc = localTimeToIso8601Utc(filetime, Precision::Second);
+		InstallDateUtc = timeToIso8601Utc(filetime, Precision::Second);
 	}
 }
 

@@ -11,7 +11,7 @@ var searchData=
   ['identifier32lu_8',['identifier32Lu',['../structUsersPropertyView.html#a88e43c45e39d95aafe03d76cff2ea4c4',1,'UsersPropertyView']]],
   ['identifiersize_9',['identifierSize',['../structUsersPropertyView.html#afbd2e68c09e2fe8c1dca693bc486d302',1,'UsersPropertyView']]],
   ['idi_5ficon1_10',['IDI_ICON1',['../resource_8h.html#a455fef2a9349aae3af8ef8f24f6fc9d8',1,'resource.h']]],
-  ['idlist_11',['idlist',['../structIdList.html#ac0cfac19e72ee9a20d6aa4094ef34409',1,'IdList::IdList()'],['../structBeef0026.html#ad7e321238f756e4460e40cfaaf2d3e29',1,'Beef0026::idlist'],['../structIdList.html',1,'IdList']]],
+  ['idlist_11',['idlist',['../structBeef0026.html#ad7e321238f756e4460e40cfaaf2d3e29',1,'Beef0026::idlist'],['../structIdList.html#ac0cfac19e72ee9a20d6aa4094ef34409',1,'IdList::IdList()'],['../structIdList.html',1,'IdList']]],
   ['idlist_2ecpp_12',['idList.cpp',['../idList_8cpp.html',1,'']]],
   ['idlist_2eh_13',['idList.h',['../idList_8h.html',1,'']]],
   ['idlists_14',['idLists',['../structRecentDoc.html#adabdbaa8a33122b9df676452dfc052e1',1,'RecentDoc']]],

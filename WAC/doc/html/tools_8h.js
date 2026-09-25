@@ -24,6 +24,7 @@ var tools_8h =
     [ "dump", "tools_8h.html#ac4c0694f9ff1125a48aa8c09d96d18dc", null ],
     [ "dump_wstring", "tools_8h.html#a7a340bb9420f7c842f6ae990f5897ef1", null ],
     [ "encodeText", "tools_8h.html#a229f23807f3e0ecd7ad5f4c0a39156e9", null ],
+    [ "enumRegistryValue", "tools_8h.html#ae9d97b8defedd15d154fba35ed742f9f", null ],
     [ "extractedPath", "tools_8h.html#a90966443464069ccf60bbe78afac2f20", null ],
     [ "fits", "tools_8h.html#a129d3173cc8908c45431b87c90b72e21", null ],
     [ "getErrorMessage", "tools_8h.html#ac6445268d6c87c34c40e723fd1ea23ef", null ],

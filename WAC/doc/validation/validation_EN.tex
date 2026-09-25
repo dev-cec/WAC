@@ -381,6 +381,10 @@ no event later than the collection & shift or misreading of an event date \\
 FAT dates without a fraction and with even seconds; Amcache text dates
   without a fraction & every date written with seven digits of fraction,
   claiming a precision the source does not have (808 dates) \\
+dates of BAM, UserAssist, USBSTOR and Amcache / \texttt{taskkill} run by
+  the harness, Prefetch, \texttt{Get-PnpDeviceProperty}, PE headers & these
+  four artefacts store UTC, read as local time: all their dates 2~h off; BAM
+  and UserAssist emptied by a regression of the value reading \\
 \multicolumn{2}{@{}l}{\textit{Decoding}} \\
 Prefetch hash / suffix of its file name & 65 wrong hashes out of 270
   (hexadecimal without padding) \\
@@ -419,9 +423,10 @@ an undo journal for every replay & a raw copy impossible to rebuild \\
 Last cycle, on version 1.3.1 (Windows~11, Paris time zone):
 
 \begin{itemize}
-  \item 23 valid JSON files out of 23 produced (the 24th, USBSTOR, is absent:
-    the virtual machine has never seen a USB key);
-  \item 29 cross-checks passed, no failure, among them 4,045 local dates
+  \item 24 valid JSON files out of 24 produced, USBSTOR included: the harness
+    attaches a virtual USB key on every cycle, so that a recreated test
+    machine knows one too;
+  \item 33 cross-checks passed, no failure, among them 4,068 local dates
     confronted with the IANA database and 145,645 events decoded;
   \item 1,336 exhibits in the exhibit store, exactly those of the manifest,
     seal conforms.
@@ -497,7 +502,7 @@ they target are absent, on the data they have seen.
   \item \textbf{Completeness}: an empty artefact cannot be told apart from a
     machine without traces. Only the comparison between two collections, or
     with a machine whose content is known, measures it.
-  \item \textbf{Data the test machine does not hold}: USB keys, MTP devices,
+  \item \textbf{Data the test machine does not hold}: MTP devices,
     files spread over several \fichier{\$MFT} records
     (\texttt{\$ATTRIBUTE\_LIST}), very large volumes. They are to be validated
     on real systems.

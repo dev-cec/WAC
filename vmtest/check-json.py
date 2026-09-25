@@ -152,6 +152,7 @@ def cross_checks(folder):
     found += check_mft_references(folder)
     found += check_mounted_devices(folder)
     found += check_date_precision(folder)
+    found += check_utc_sources(folder)
     return found
 
 
@@ -957,6 +958,133 @@ def check_date_precision(folder):
         return 1
     print(f"  ✅ {fat} FAT date(s) to the second, even, and text dates without a fraction")
     return 0
+
+
+def check_utc_sources(folder):
+    """The artefacts that store UTC are published as UTC.
+
+    WHY. BAM, UserAssist, USBSTOR and Amcache store their dates in UTC; WAC
+    read all four as LOCAL times, which shifted both keys of every date by the
+    time-zone offset — two hours on the test VM, in a valid JSON, and the
+    pairs X/XUtc still named the same instant. Each is confronted with a
+    source independent of WAC:
+      - USBSTOR: the dates Windows itself gives (Get-PnpDeviceProperty), to
+        the 100 ns, for the key run-wac-test.sh attaches on every cycle;
+      - Amcache LinkDate: the TimeDateStamp of the PE header of the same file
+        (System32), to the second;
+      - BAM: taskkill.exe, which run-wac-test.sh runs just before WAC: its last
+        execution must precede the start of the collection by a few seconds;
+      - UserAssist: the Prefetch run times of the same executable; a gap of a
+        whole number of half hours is a time-zone shift.
+    An empty BAM or UserAssist file fails too: a regression of the value
+    reading emptied both, which no other check saw.
+    """
+    import datetime
+    found = 0
+    ref = os.path.join(folder, "reference")
+
+    # USBSTOR
+    usb = load(folder, "Usbstor.json")
+    path = os.path.join(ref, "usbstor.txt")
+    if os.path.exists(path):
+        expected = {}
+        with open(path, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                parts = line.strip().split("|")
+                if len(parts) == 3:
+                    expected.setdefault(parts[0], {})[parts[1]] = instant(parts[2])
+        mine = [(instant(u["FirstInsertionUtc"]) if u.get("FirstInsertionUtc") else None,
+                 instant(u["LastInsertionUtc"]) if u.get("LastInsertionUtc") else None)
+                for u in (usb if isinstance(usb, list) else [])]
+        missing = [i for i, k in expected.items()
+                   if (k.get("DEVPKEY_Device_InstallDate"), k.get("DEVPKEY_Device_LastArrivalDate")) not in mine]
+        if not expected:
+            print("  ⏭️  no USB device in the reference: USBSTOR dates not confronted")
+        elif missing:
+            print(f"  ❌ Usbstor.json: dates other than Windows' for {len(missing)} device(s), e.g. {missing[0]}")
+            found += 1
+        else:
+            print(f"  ✅ Usbstor.json: first and last insertion of {len(expected)} device(s) identical to Windows' (UTC)")
+
+    # Amcache LinkDate against the PE header
+    path = os.path.join(ref, "pe-timestamps.txt")
+    files = load(folder, "amcache_application_files.json")
+    if os.path.exists(path) and isinstance(files, list):
+        stamps = {}
+        with open(path, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                parts = line.strip().rsplit("|", 1)
+                if len(parts) == 2 and parts[1].isdigit():
+                    stamps[parts[0].lower()] = int(parts[1])
+        # Many files were updated since Amcache inventoried them, and recent
+        # Windows binaries carry a hash instead of a date in TimeDateStamp: an
+        # unequal pair proves nothing. What proves a defect is a gap of a whole
+        # number of half hours — the signature of a time-zone shift.
+        equal, shifted = 0, []
+        for a in files:
+            p = (a.get("LongPath") or "").lower()
+            if p in stamps and a.get("LinkDateUtc"):
+                gap = abs(instant(a["LinkDateUtc"]).timestamp() - stamps[p])
+                if gap < 1:
+                    equal += 1
+                elif gap <= 14 * 3600 and abs(gap / 1800 - round(gap / 1800)) * 1800 < 1:
+                    shifted.append(f"{p}: {a['LinkDateUtc']}, PE header {gap:.0f} s away")
+        if shifted:
+            print(f"  ❌ amcache: LinkDate shifted by a time-zone offset against the PE header, e.g. {shifted[0]}")
+            found += 1
+        elif equal:
+            print(f"  ✅ amcache: LinkDate of {equal} unchanged file(s) identical to their PE header (UTC), none shifted")
+        else:
+            print("  ⏭️  no Amcache file of System32 still identical: LinkDate not confronted")
+
+    # BAM: taskkill.exe, run by the harness just before WAC
+    bams = load(folder, "bams.json")
+    inv = load(folder, "investigation.json")
+    inv = inv[0] if isinstance(inv, list) and inv else inv
+    start = ((inv or {}).get("Collection") or {}).get("StartUtc") if isinstance(inv, dict) else None
+    if not isinstance(bams, list) or not bams:
+        print("  ❌ bams.json empty: the BAM keys hold at least the harness's own commands")
+        found += 1
+    elif start:
+        runs = [instant(b["executionTimeUtc"]) for b in bams
+                if b.get("executionTimeUtc") and (b.get("Name") or "").lower().endswith("\\taskkill.exe")]
+        gaps = [(instant(start) - r).total_seconds() for r in runs]
+        if any(0 <= g <= 300 for g in gaps):
+            print(f"  ✅ bams.json: taskkill.exe executed {min(g for g in gaps if g >= 0):.0f} s before the collection, as the harness did")
+        else:
+            print(f"  ❌ bams.json: taskkill.exe, run just before the collection, found at gaps {[round(g) for g in gaps]} s")
+            found += 1
+
+    # UserAssist against the Prefetch run times
+    ua = load(folder, "userassists.json")
+    pf = load(folder, "prefetchs.json")
+    if not isinstance(ua, list) or not ua:
+        print("  ❌ userassists.json empty: the test profile holds UserAssist entries")
+        found += 1
+    elif isinstance(pf, list):
+        runs = {}
+        for p in pf:
+            for r in p.get("RunsUtc") or []:
+                runs.setdefault((p.get("Filename") or "").upper(), []).append(instant(r))
+        agree, shifted = 0, []
+        for u in ua:
+            name = ntpath.basename(u.get("Name") or "").upper()
+            if not name.endswith(".EXE") or name not in runs or not u.get("DateLocaleUtc"):
+                continue
+            t = instant(u["DateLocaleUtc"])
+            gap = min((abs((t - r).total_seconds()) for r in runs[name]))
+            if gap <= 120:
+                agree += 1
+            elif any(abs(gap - k * 1800) <= 120 for k in range(1, 49)):
+                shifted.append(f"{name}: {u['DateLocaleUtc']}, nearest Prefetch run {gap:.0f} s away")
+        if shifted:
+            print(f"  ❌ userassists.json: last run shifted by a time-zone offset against Prefetch, e.g. {shifted[0]}")
+            found += 1
+        elif agree:
+            print(f"  ✅ userassists.json: last run of {agree} program(s) within 2 min of a Prefetch run")
+        else:
+            print("  ⏭️  no UserAssist program also in the Prefetch: last runs not confronted")
+    return found
 
 
 def process_name(p):

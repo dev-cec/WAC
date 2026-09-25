@@ -1173,6 +1173,27 @@ bool oleDateToSystemTime(double date, SYSTEMTIME& st) {
 *****************************************************/
 
 // Read a value in binary form from the registry
+HRESULT enumRegistryValue(ORHKEY key, DWORD index, std::wstring& name, DWORD& type, std::vector<BYTE>& data)
+{
+	// A value name is at most 16,383 characters (registry limit), plus the terminating zero.
+	std::vector<wchar_t> nameBuffer(16384);
+	DWORD nameLength = (DWORD)nameBuffer.size();
+	DWORD size = 0;
+	/* A null data buffer asks for the size only. Unlike ORGetValue, OREnumValue
+	   then answers ERROR_MORE_DATA with the size (offreg's contract, which
+	   offline_registry.cpp reproduces): taken for a failure, it emptied the BAM
+	   and UserAssist collections. */
+	HRESULT hresult = OREnumValue(key, index, nameBuffer.data(), &nameLength, &type, nullptr, &size);
+	if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) return hresult;
+	data.assign(size, 0);
+	nameLength = (DWORD)nameBuffer.size();
+	hresult = OREnumValue(key, index, nameBuffer.data(), &nameLength, &type, size ? data.data() : nullptr, &size);
+	if (hresult != ERROR_SUCCESS) return hresult;
+	data.resize(size);
+	name.assign(nameBuffer.data(), nameLength);
+	return ERROR_SUCCESS;
+}
+
 HRESULT getRegBinaryValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, LPBYTE* bytes, DWORD* size)
 {
 	// Mind that `bytes` must be large enough to hold the data: LPBYTE bytes = new BYTE[MAX_DATA]; when the size is not known
@@ -1219,25 +1240,21 @@ HRESULT getRegboolValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, bool* value
 // Read a FILETIME value from the registry
 HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, FILETIME* filetime)
 {
-	// REG_FILETIME values are stored as bytes
-	// their type is either REG_BINARY or REG_FILETIME(16)
-	DWORD size = 0;
-	LPBYTE data = new BYTE[size + 2];
-	HRESULT hresult = 0;
-
-	log(3, L"🔈getRegBinaryValue");
-	hresult = getRegBinaryValue(key, subKey, valueName, &data, &size);
+	/* REG_BINARY or the device property type FILETIME (0x10): exactly 8 bytes.
+	   The value is read straight into the FILETIME, bounded by its size: the
+	   former version read 8 bytes whatever the value held. */
+	if (!filetime) return ERROR_INVALID_PARAMETER;
+	FILETIME value = { 0, 0 };
+	DWORD size = sizeof(value);
+	log(3, L"🔈ORGetValue");
+	HRESULT hresult = ORGetValue(key, subKey, valueName, nullptr, &value, &size);
+	if (hresult == ERROR_SUCCESS && size != sizeof(value)) hresult = ERROR_INVALID_DATA;
 	if (hresult != ERROR_SUCCESS) {
-		log(2, L"🔥getRegBinaryValue", hresult);
+		log(2, L"🔥ORGetValue FILETIME", hresult);
+		return hresult;
 	}
-	else {
-		FILETIME temp = { 0 };
-		temp = *reinterpret_cast<FILETIME*>(data);
-		*filetime = temp;
-	}
-
-	delete[] data;
-	return hresult;
+	*filetime = value;
+	return ERROR_SUCCESS;
 }
 
 // Read a string from the registry

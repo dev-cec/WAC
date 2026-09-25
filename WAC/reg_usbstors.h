@@ -37,10 +37,8 @@ public:
 	std::wstring CompatibleIds = L"";     //!< identifiers of the compatible device classes
 	std::wstring ClassGuid = L"";         //!< GUID of the device class
 	std::wstring SerialNumber = L"";      //!< serial number the device declares
-	std::wstring LastInsertion = L"";     //!< last connection, in the suspect's local time
-	std::wstring LastInsertionUtc = L"";  //!< the same instant in UTC
-	std::wstring FirstInsertion = L"";    //!< first installation, in the suspect's local time
-	std::wstring FirstInsertionUtc = L"";	//!< the same instant in UTC
+	FILETIME lastInsertionUtc = { 0, 0 };   //!< last connection (DEVPKEY_Device_LastArrivalDate), UTC
+	FILETIME firstInsertionUtc = { 0, 0 };  //!< first installation (DEVPKEY_Device_InstallDate), UTC
 
 	/*! Builds the device from its registry key.
 	 *  @param hKey_usb the device's key under `Enum\USBSTOR`, already open. */

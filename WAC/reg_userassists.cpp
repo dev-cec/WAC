@@ -2,9 +2,9 @@
  *  \brief Reading of the UserAssist keys (see reg_userassists.h).
  */
 #include "reg_userassists.h"
+#include <cstring>
 
-UserAssist::UserAssist(std::wstring hKey, LPWSTR valueName, LPBYTE data, std::wstring _sid) {
-	// ANSI encoding, but UTF-8 is wanted
+UserAssist::UserAssist(std::wstring hKey, const std::wstring& valueName, const std::vector<BYTE>& data, std::wstring _sid) {
 	log(3, L"🔈ROT13 Name");
 	Name = ROT13(valueName); // ROT13 of the value's name, to recover the executable's name
 	log(2, L"❇️UserAssist Name : " + Name);
@@ -23,16 +23,15 @@ UserAssist::UserAssist(std::wstring hKey, LPWSTR valueName, LPBYTE data, std::ws
 			Name = replaceAll(Name, s, n);
 		}
 	}
-	Count = *reinterpret_cast<int*>(data + 4); // little-endian to integer: the number of runs
-	FocusCount = *reinterpret_cast<int*>(data + 8); // little-endian to integer: the focus count
-	FILETIME filetime = *reinterpret_cast<FILETIME*>(data + 60);
-	log(3, L"🔈timeToIso8601 DateLocale");
-	DateLocale = timeToIso8601Local(filetime); // last run, read from the bytes of the value
-	if (DateLocale != L"") { // if the date is empty
-		// otherwise it is converted to UTC
-		log(3, L"🔈timeToIso8601 DateLocaleUtc");
-		DateLocaleUtc = localTimeToIso8601Utc(filetime); // last run, read from the bytes of the value
-	}
+	// The caller guarantees ENTRY_SIZE bytes; read by copy, the buffer carries no alignment guarantee.
+	if (data.size() < ENTRY_SIZE) return;
+	std::memcpy(&Count, data.data() + 4, 4);        // number of runs
+	std::memcpy(&FocusCount, data.data() + 8, 4);   // number of times the window got the focus
+	/* The last run is a FILETIME in UTC. It used to be read as a LOCAL time:
+	   both keys came out shifted by the time-zone offset — measured on the
+	   test VM, raw_hive_test.exe started at 13:48:24 UTC (its Prefetch: 13:48:28)
+	   was published at 11:48:24 UTC. */
+	std::memcpy(&lastRunUtc, data.data() + 60, sizeof(lastRunUtc));
 }
 
 Json UserAssist::toJson() {
@@ -44,8 +43,8 @@ Json UserAssist::toJson() {
 	o.add(L"Name",          Json::str(Name));
 	o.add(L"Count",         Json::num((long long)Count));
 	o.add(L"FocusCount",    Json::num((long long)FocusCount));
-	o.add(L"DateLocale",    Json::str(DateLocale));
-	o.add(L"DateLocaleUtc", Json::str(DateLocaleUtc));
+	o.add(L"DateLocale",    Json::str(utcTimeToIso8601Local(lastRunUtc)));
+	o.add(L"DateLocaleUtc", Json::str(timeToIso8601Utc(lastRunUtc)));
 	return o;
 }
 
@@ -59,63 +58,48 @@ HRESULT UserAssists::getData() {
 	log(0, L"ℹ️User assists :");
 	log(0, L"*******************************************************************************************************************");
 
-	HRESULT hresult = 0;
-	ORHKEY hKey = NULL;
-	DWORD nSubkeys = 0;
-	DWORD nValues = 0;
-	DWORD dType = 0;
-	WCHAR valueName[MAX_VALUE_NAME] = L"";
-	DWORD bufferSize = 0;
-	ORHKEY Offhive = NULL;
-	std::wstring hive = L"";
-	std::wstring userassitsKey[2] = { L"{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}", L"{F4E57C4B-2036-45F0-A9AB-443BCFE33D9F}" }; // the GUIDs to read for the userassists
-	for (std::wstring key : userassitsKey) {
-		for (std::tuple<std::wstring, std::wstring> profileEntry : conf.profiles) {
-			// open the user hive
-			log(3, L"🔈replaceAll profile");
-			hive = extractedPath(std::get<1>(profileEntry)) + L"\\ntuser.dat";
+	const std::wstring userAssistKeys[2] = { L"{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}", L"{F4E57C4B-2036-45F0-A9AB-443BCFE33D9F}" }; // executables, shortcuts
+	for (const std::wstring& key : userAssistKeys) {
+		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
+			const std::wstring hive = extractedPath(std::get<1>(profileEntry)) + L"\\ntuser.dat";
+			ORHKEY userHive = NULL;
 			log(3, L"🔈OROpenHive " + std::get<1>(profileEntry) + L"\\ntuser.dat");
-			hresult = OROpenHive(hive.c_str(), &Offhive);
+			HRESULT hresult = OROpenHive(hive.c_str(), &userHive);
 			if (hresult != ERROR_SUCCESS) {
 				log(2, L"🔥OROpenHive " + std::get<1>(profileEntry) + L"\\ntuser.dat", hresult);
 				continue;
 			}
-
-			std::wstring subkey = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist\\" + key + L"\\count\\";
+			const std::wstring subkey = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist\\" + key + L"\\count";
+			ORHKEY hKey = NULL;
 			log(3, L"🔈OROpenKey " + subkey);
-			hresult = OROpenKey(Offhive, subkey.c_str(), &hKey);
+			hresult = OROpenKey(userHive, subkey.c_str(), &hKey);
 			if (hresult != ERROR_SUCCESS) {
-				log(2, L"🔥OROpenKey " + subkey);
+				log(2, L"🔥OROpenKey " + subkey, hresult);
+				ORCloseHive(userHive);
 				continue;
 			}
-
-			log(3, L"🔈ORQueryInfoKey " + subkey);
-			hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
-			if (hresult != ERROR_SUCCESS) {
-				log(2, L"🔥ORQueryInfoKey " + subkey);
-				continue;
-			}
-			for (DWORD i = 0; i < nValues; i++) {
-				printProgressStep(L"UserAssist", i + 1, nValues);
-				DWORD dataSize = 0;
-				LPBYTE data = NULL;
-				do {
-					if (data != NULL)
-						delete[] data;
-					data = new BYTE[dataSize];
-					log(3, L"🔈OREnumValue " + subkey + L" " + std::to_wstring(i));
-					hresult = OREnumValue(hKey, i, valueName, &bufferSize, &dType, data, &dataSize);
-				} while (hresult == ERROR_MORE_DATA);
+			std::wstring valueName;
+			DWORD type = 0;
+			std::vector<BYTE> data;
+			for (DWORD i = 0; ; ++i) {
+				log(3, L"🔈enumRegistryValue " + subkey + L" " + std::to_wstring(i));
+				hresult = enumRegistryValue(hKey, i, valueName, type, data);
+				if (hresult == ERROR_NO_MORE_ITEMS) break;
 				if (hresult != ERROR_SUCCESS) {
-					log(2, L"🔥OREnumValue " + subkey + L" " + std::to_wstring(i), hresult);
+					log(2, L"🔥enumRegistryValue " + subkey + L" " + std::to_wstring(i), hresult);
+					break;
+				}
+				if (data.size() != UserAssist::ENTRY_SIZE) {
+					// Not a program entry (UEME_CTLSESSION: session statistics).
+					log(2, L"🔈UserAssist " + ROT13(valueName) + L": " + std::to_wstring(data.size())
+					     + L" bytes, not an entry of " + std::to_wstring(UserAssist::ENTRY_SIZE) + L": skipped");
 					continue;
 				}
-				//save
 				log(1, L"➕UserAssist ");
 				userassists.push_back(UserAssist(key, valueName, data, std::get<0>(profileEntry)));
-
-				delete[] data;
 			}
+			ORCloseKey(hKey);
+			ORCloseHive(userHive);
 		}
 	}
 	return ERROR_SUCCESS;

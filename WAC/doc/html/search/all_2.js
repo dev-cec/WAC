@@ -1,7 +1,7 @@
 var searchData=
 [
   ['badpasswordcount_0',['badPasswordCount',['../structUser.html#aca418504e6bc3ffd4c95b5647b50fdd3',1,'User']]],
-  ['bam_1',['bam',['../structBam.html#ac93bfc74deae2b2472d262c9be6859f9',1,'Bam::Bam()'],['../structBam.html',1,'Bam']]],
+  ['bam_1',['bam',['../structBam.html#ac9507b952141c4c38ea9c5eaea38d71a',1,'Bam::Bam()'],['../structBam.html',1,'Bam']]],
   ['bams_2',['bams',['../structBams.html',1,'Bams'],['../structBams.html#a12aaa96b80d654f3b36be7e8cd11d7db',1,'Bams::bams']]],
   ['beef0000_3',['beef0000',['../structBeef0000.html',1,'Beef0000'],['../structBeef0000.html#a4ce9c6bce8795c523a414e04b0ebd941',1,'Beef0000::Beef0000()']]],
   ['beef0001_4',['beef0001',['../structBeef0001.html',1,'Beef0001'],['../structBeef0001.html#a3eccb8e217a31d6c5ce9f17b883cb631',1,'Beef0001::Beef0001()']]],

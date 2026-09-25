@@ -2,15 +2,17 @@
  *  \brief Reading of the Background Activity Monitor keys (see reg_bams.h).
  */
 #include "reg_bams.h"
+#include <cstring>
 
-Bam::Bam(LPBYTE data, std::wstring valueName, std::wstring psid) {
+Bam::Bam(const std::vector<BYTE>& data, std::wstring valueName, std::wstring psid) {
 	name = valueName;
 	log(2, L"❇️Bam Name : " + name);
-	FILETIME temp = *reinterpret_cast<FILETIME*>(data);
-	log(3, L"🔈timeToIso8601 datetime");
-	executionTime = timeToIso8601Local(temp);
-	log(3, L"🔈timeToIso8601 datetimeUtc");
-	executionTimeUtc = localTimeToIso8601Utc(temp);
+	/* The execution time is a FILETIME in UTC. It used to be read as a LOCAL
+	   time, shifting both keys by the time-zone offset — measured on the test
+	   VM: taskkill.exe, run by the harness at 19:28:21 UTC, was published at
+	   17:28:21 UTC. Read by copy: the buffer carries no alignment guarantee. */
+	if (data.size() >= sizeof(executionTimeUtc))
+		std::memcpy(&executionTimeUtc, data.data(), sizeof(executionTimeUtc));
 	sid = psid;
 	log(3, L"🔈getNameFromSid sidName");
 	sidName = getNameFromSid(sid);
@@ -22,8 +24,8 @@ Json Bam::toJson() const {
 	o.add(L"SID",              Json::str(sid));
 	o.add(L"SIDName",          Json::str(sidName));
 	o.add(L"Name",             Json::str(name));      // raw path
-	o.add(L"executionTime",    Json::str(executionTime));
-	o.add(L"executionTimeUtc", Json::str(executionTimeUtc));
+	o.add(L"executionTime",    Json::str(utcTimeToIso8601Local(executionTimeUtc)));
+	o.add(L"executionTimeUtc", Json::str(timeToIso8601Utc(executionTimeUtc)));
 	return o;
 }
 
@@ -37,62 +39,37 @@ HRESULT Bams::getData() {
 	log(0, L"ℹ️Bams : ");
 	log(0, L"*******************************************************************************************************************");
 
-	//variables
-	HRESULT hresult = NULL;
-	ORHKEY hKey = NULL;
-	DWORD nSubkeys = 0;
-	DWORD nValues = 0;
-	DWORD dType = 0;
-	DWORD bufferSize = 0;
-	WCHAR valueName[MAX_VALUE_NAME]=L"";
-	std::wstring bam_keys[2] = { L"bam",L"bam\\state" };
-	for (std::wstring key : bam_keys) {
-		for (std::tuple<std::wstring, std::wstring> profileEntry : conf.profiles) {
-			std::wstring temp = L"Services\\" + key + L"\\UserSettings\\" + std::get<0>(profileEntry);
-			CONST wchar_t* regkey = temp.c_str();
-			log(3, L"🔈OROpenKey CurrentControlSet\\" + std::wstring(regkey));
-			hresult = OROpenKey(conf.CurrentControlSet, regkey, &hKey);
+	const std::wstring bamKeys[2] = { L"bam", L"bam\\state" };
+	for (const std::wstring& key : bamKeys) {
+		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
+			const std::wstring subkey = L"Services\\" + key + L"\\UserSettings\\" + std::get<0>(profileEntry);
+			ORHKEY hKey = NULL;
+			log(3, L"🔈OROpenKey CurrentControlSet\\" + subkey);
+			HRESULT hresult = OROpenKey(conf.CurrentControlSet, subkey.c_str(), &hKey);
 			if (hresult != ERROR_SUCCESS) {
-				log(2,  L"🔥OROpenKey CurrentControlSet\\" + std::wstring(regkey), hresult);
+				log(2, L"🔥OROpenKey CurrentControlSet\\" + subkey, hresult);
 				continue;
-			};
-
-			log(3, L"🔈ORQueryInfoKey CurrentControlSet\\" + std::wstring(regkey));
-			hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
-			if (hresult != ERROR_SUCCESS) {
-				log(2, L"🔥ORQueryInfoKey CurrentControlSet\\" + std::wstring(regkey), hresult);
-				continue;
-			};
-
-			for (int i = 0; i < (int)nValues; i++) {
-				printProgressStep(L"Bam", (unsigned)i + 1, nValues);
-				bufferSize = MAX_KEY_NAME;
-				DWORD cData = 0;
-				LPBYTE data = NULL;
-
-				do {
-					if (data != NULL)
-						delete[] data;
-					data = new BYTE[cData];
-					log(3, L"🔈OREnumValue CurrentControlSet\\" + std::wstring(regkey));
-					hresult = OREnumValue(hKey, i, valueName, &bufferSize, &dType, (LPBYTE)data, &cData);
-				} while (hresult == ERROR_MORE_DATA);
-				if (dType != REG_BINARY) {
-					log(2, L"🔥OREnumValue "+ std::wstring(valueName) + L" not a REG_BINARY value");
-				}
-				else {
-					if (hresult != ERROR_SUCCESS) {
-						log(2, L"🔥OREnumValue OREnumValue CurrentControlSet\\" + std::wstring(regkey), hresult);
-					}
-					else {
-						log(1, L"➕Bam");
-						Bam bam(data, std::wstring(valueName), std::wstring(std::get<0>(profileEntry)));
-						//save
-						bams.push_back(bam);
-					}
-				}
-				delete[] data;
 			}
+			std::wstring valueName;
+			DWORD type = 0;
+			std::vector<BYTE> data;
+			for (DWORD i = 0; ; ++i) {
+				log(3, L"🔈enumRegistryValue CurrentControlSet\\" + subkey + L" " + std::to_wstring(i));
+				hresult = enumRegistryValue(hKey, i, valueName, type, data);
+				if (hresult == ERROR_NO_MORE_ITEMS) break;
+				if (hresult != ERROR_SUCCESS) {
+					log(2, L"🔥enumRegistryValue CurrentControlSet\\" + subkey, hresult);
+					break;
+				}
+				// The key also holds "Version" and "SequenceNumber" (REG_DWORD): not entries.
+				if (type != REG_BINARY || data.size() < sizeof(FILETIME)) {
+					log(3, L"🔈Bam " + valueName + L": not an execution entry");
+					continue;
+				}
+				log(1, L"➕Bam");
+				bams.push_back(Bam(data, valueName, std::get<0>(profileEntry)));
+			}
+			ORCloseKey(hKey);
 		}
 	}
 	return ERROR_SUCCESS;

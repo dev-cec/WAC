@@ -35,14 +35,14 @@ public:
 	std::wstring sid = L"";      //!< SID of the user who ran the binary
 	std::wstring sidName = L"";  //!< name of that user
 	std::wstring name = L"";     //!< path of the executable, as the value names it
-	std::wstring executionTime = L"";    //!< last execution, in the suspect's local time
-	std::wstring executionTimeUtc = L""; //!< the same instant in UTC
+	FILETIME executionTimeUtc = { 0, 0 }; //!< last execution, in UTC as the value stores it
 
 	/*! Builds the entry from a registry value.
-	 *  @param data the value's bytes, which start with the execution FILETIME.
+	 *  @param data the value's bytes, which start with the execution FILETIME
+	 *         (at least 8 bytes: the caller checks it).
 	 *  @param valueName name of the value, that is the executable's path.
 	 *  @param psid SID of the user whose UserSettings subkey holds the value. */
-	Bam(LPBYTE data, std::wstring valueName, std::wstring psid);
+	Bam(const std::vector<BYTE>& data, std::wstring valueName, std::wstring psid);
 
 	/*! Converts the entry to JSON.
 	 *  @return its JSON object. */

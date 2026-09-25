@@ -26,6 +26,38 @@ done
 echo "== 0. Agent =="
 $QGA ping
 
+echo "== 0b. USB key =="
+# A virtual USB key, attached on every run, so that USBSTOR is populated on any
+# test VM — including one recreated from scratch by create-vm.sh — and the USB
+# artefacts are checked on every cycle. Attached live only: the VM definition
+# is left unchanged, and a VM restart simply gets it attached again here.
+DOM="${WAC_VM:-win11-test}"
+CONN="qemu:///session"
+USB_IMG="${WAC_USB_IMG:-$HOME/vms/wac-usb-test.img}"
+mkdir -p "$(dirname "$USB_IMG")"
+[[ -f "$USB_IMG" ]] || truncate -s 64M "$USB_IMG"
+if ! virsh -c "$CONN" domblklist "$DOM" 2>/dev/null | grep -qF "$USB_IMG"; then
+  USB_XML="$(mktemp)"
+  cat > "$USB_XML" <<EOF
+<disk type='file' device='disk'>
+  <driver name='qemu' type='raw'/>
+  <source file='$USB_IMG'/>
+  <target dev='sdz' bus='usb' removable='on'/>
+  <serial>WACUSB0001</serial>
+</disk>
+EOF
+  virsh -c "$CONN" attach-device "$DOM" "$USB_XML" --live >/dev/null && echo "   USB key WACUSB0001 attached"
+  rm -f "$USB_XML"
+fi
+# Windows installs the device asynchronously: wait until it is enumerated.
+for attempt in $(seq 1 30); do
+  N_USB=$($QGA run -- powershell.exe -NoProfile -Command \
+    '(Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object InstanceId -like "USBSTOR*WACUSB0001*" | Measure-Object).Count' \
+    2>/dev/null | tr -d '\r\n ' || true)
+  [[ "${N_USB:-0}" =~ ^[1-9] ]] && { echo "   USB key known to Windows"; break; }
+  sleep 2
+done
+
 if [[ $BUILD -eq 1 ]]; then
   echo "== 1. Build (Linux cross-compilation) =="
   "$ROOT/build-windows.sh" --test >/dev/null
@@ -156,6 +188,17 @@ $QGA run -- powershell.exe -NoProfile -Command \
   'Get-Partition | ForEach-Object { "{0}|{1}|{2}|{3}" -f $_.DriveLetter, $_.Guid, $_.Offset, ($_.AccessPaths -join ";") }' \
   > "$OUTPUT/reference/partitions.txt" 2>/dev/null \
   && echo "   + reference/partitions.txt" || echo "   ⚠️ partitions reference not read"
+
+# USBSTOR dates as Windows gives them (UTC), and the PE header timestamps of
+# the executables of System32, for the dates of USBSTOR and of Amcache.
+$QGA run -- powershell.exe -NoProfile -Command \
+  'Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object InstanceId -like "USBSTOR*" | ForEach-Object { $i = $_.InstanceId; foreach ($k in "DEVPKEY_Device_InstallDate", "DEVPKEY_Device_LastArrivalDate") { $p = Get-PnpDeviceProperty -InstanceId $i -KeyName $k; if ($p.Data) { "{0}|{1}|{2}" -f $i, $k, $p.Data.ToUniversalTime().ToString("o") } } }' \
+  > "$OUTPUT/reference/usbstor.txt" 2>/dev/null \
+  && echo "   + reference/usbstor.txt" || echo "   ⚠️ USBSTOR reference not read"
+$QGA run -- powershell.exe -NoProfile -Command \
+  'Get-ChildItem C:\Windows\System32\*.exe | ForEach-Object { try { $f = [IO.File]::OpenRead($_.FullName); $b = New-Object byte[] 1024; [void]$f.Read($b, 0, 1024); $f.Close(); $pe = [BitConverter]::ToInt32($b, 0x3C); if ($pe -gt 0 -and $pe -lt 1016) { "{0}|{1}" -f $_.FullName.ToLower(), [BitConverter]::ToUInt32($b, $pe + 8) } } catch {} }' \
+  > "$OUTPUT/reference/pe-timestamps.txt" 2>/dev/null \
+  && echo "   + reference/pe-timestamps.txt" || echo "   ⚠️ PE timestamps reference not read"
 
 echo "== 6. JSON validity check =="
 python3 "$HERE/check-json.py" "$OUTPUT" || echo "   ⚠️ some JSON files are invalid (see above)"

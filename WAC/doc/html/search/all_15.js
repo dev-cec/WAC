@@ -17,7 +17,7 @@ var searchData=
   ['usbstor_14',['usbstor',['../structUsbstor.html',1,'Usbstor'],['../structUsbstor.html#a399b057c9390590600f1349d7d50de80',1,'Usbstor::Usbstor()']]],
   ['usbstors_15',['Usbstors',['../structUsbstors.html',1,'']]],
   ['user_16',['User',['../structUser.html',1,'']]],
-  ['userassist_17',['userassist',['../structUserAssist.html',1,'UserAssist'],['../structUserAssist.html#a316ba0184d78f80ab64a1dcae3b51112',1,'UserAssist::UserAssist()']]],
+  ['userassist_17',['userassist',['../structUserAssist.html',1,'UserAssist'],['../structUserAssist.html#a36feef58fdbd73d95bb5e0ec212b7ecb',1,'UserAssist::UserAssist()']]],
   ['userassists_18',['userassists',['../structUserAssists.html',1,'UserAssists'],['../structUserAssists.html#a29e9396d468ac93eb48e19e559fd2d7e',1,'UserAssists::userassists']]],
   ['username_19',['username',['../structBeef0006.html#ae57bdb7ebd3dfdd6c959b038fb1d9800',1,'Beef0006']]],
   ['userpropertyview0x07192006_20',['userpropertyview0x07192006',['../structUserPropertyView0x07192006.html',1,'UserPropertyView0x07192006'],['../structUserPropertyView0x07192006.html#aea76fef58c353796b69d7eb733e9e8a5',1,'UserPropertyView0x07192006::UserPropertyView0x07192006()']]],

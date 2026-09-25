@@ -5,7 +5,6 @@
 
 Usbstor::Usbstor(ORHKEY hKey_usb) {
 	HRESULT hresult = 0;
-	ORHKEY hkey_time = NULL;
 
 	log(3, L"🔈getRegSzValue FriendlyName");
 	hresult = getRegSzValue(hKey_usb, nullptr, L"FriendlyName", &FriendlyName);
@@ -19,44 +18,24 @@ Usbstor::Usbstor(ORHKEY hKey_usb) {
 	hresult = getRegSzValue(hKey_usb, nullptr, L"ClassGuid", &ClassGuid);
 	log(3, L"🔈getRegSzValue SerialNumber");
 	hresult = getRegSzValue(hKey_usb, nullptr, L"SerialNumber", &SerialNumber);
-	FILETIME tempFiletime = { 0 };
-	log(3, L"🔈OROpenKey hkey_time 0066");
-	hresult = OROpenKey(hKey_usb, L"Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0066", &hkey_time);
+	/* The two dates are device properties of type DEVPROP_TYPE_FILETIME, in
+	   UTC: 0066 = DEVPKEY_Device_LastArrivalDate, 0064 = DEVPKEY_Device_InstallDate.
+	   They used to be read as LOCAL times, shifting both keys by the time-zone
+	   offset; confronted on the test VM with Get-PnpDeviceProperty, which gives
+	   the same instants in UTC. Read through the subkey path: no key handle to
+	   open, and none left open. */
+	const std::wstring properties = L"Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\";
+	log(3, L"🔈getRegFiletimeValue 0066");
+	hresult = getRegFiletimeValue(hKey_usb, (properties + L"0066").c_str(), L"", &lastInsertionUtc);
 	if (hresult != ERROR_SUCCESS) {
-		log(2, L"🔥OROpenKey hkey_time 0066", hresult);
+		log(2, L"🔥getRegFiletimeValue 0066", hresult);
+		lastInsertionUtc = FILETIME{ 0, 0 };
 	}
-	else {
-		log(3, L"🔈getRegFiletimeValue tempFiletime 0066");
-		hresult = getRegFiletimeValue(hkey_time, nullptr, L"", &tempFiletime);
-		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥getRegFiletimeValue tempFiletime 0066", hresult);
-		}
-		else {
-			log(3, L"🔈timeToIso8601 tempFiletime");
-			LastInsertion = timeToIso8601Local(tempFiletime);
-			log(3, L"🔈timeToIso8601 LastInsertionUtc");
-			LastInsertionUtc = localTimeToIso8601Utc(tempFiletime);
-		}
-	}
-	log(3, L"🔈OROpenKey hkey_time 0064");
-	hresult = OROpenKey(hKey_usb, L"Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\0064", &hkey_time);
+	log(3, L"🔈getRegFiletimeValue 0064");
+	hresult = getRegFiletimeValue(hKey_usb, (properties + L"0064").c_str(), L"", &firstInsertionUtc);
 	if (hresult != ERROR_SUCCESS) {
-		log(2, L"🔥OROpenKey hkey_time 0064", hresult);
-	}
-	else {
-		tempFiletime = { 0 };
-		log(3, L"🔈getRegFiletimeValue tempFiletime 0064");
-		hresult = getRegFiletimeValue(hkey_time, nullptr, L"", &tempFiletime);
-
-		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥getRegFiletimeValue tempFiletime 0064", hresult);
-		}
-		else {
-			log(3, L"🔈timeToIso8601 FirstInsertion");
-			FirstInsertion = timeToIso8601Local(tempFiletime);
-			log(3, L"🔈timeToIso8601 FirstInsertionUtc");
-			FirstInsertionUtc = localTimeToIso8601Utc(tempFiletime);
-		}
+		log(2, L"🔥getRegFiletimeValue 0064", hresult);
+		firstInsertionUtc = FILETIME{ 0, 0 };
 	}
 }
 
@@ -70,10 +49,10 @@ Json Usbstor::toJson() {
 	o.add(L"CompatibleIds",    Json::str(CompatibleIds));
 	o.add(L"ClassGuid",        Json::str(ClassGuid));
 	o.add(L"SerialNumber",     Json::str(SerialNumber));
-	o.add(L"LastInsertion",    Json::str(LastInsertion));
-	o.add(L"LastInsertionUtc", Json::str(LastInsertionUtc));
-	o.add(L"FirstInsertion",   Json::str(FirstInsertion));
-	o.add(L"FirstInsertionUtc",Json::str(FirstInsertionUtc));
+	o.add(L"LastInsertion",    Json::str(utcTimeToIso8601Local(lastInsertionUtc)));
+	o.add(L"LastInsertionUtc", Json::str(timeToIso8601Utc(lastInsertionUtc)));
+	o.add(L"FirstInsertion",   Json::str(utcTimeToIso8601Local(firstInsertionUtc)));
+	o.add(L"FirstInsertionUtc",Json::str(timeToIso8601Utc(firstInsertionUtc)));
 	return o;
 }
 

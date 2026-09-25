@@ -511,8 +511,11 @@ std::wstring timeToIso8601Local(const FILETIME& filetime, Precision precision = 
 
 /*! Converts a FILETIME **expressed in local time** to UTC, then formats it as
 * ISO 8601 with the "Z" suffix.
-* Useful for the artefacts that store dates in local time (Amcache, BAM,
-* shimcache, USBSTOR, UserAssist) and whose UTC version is also wanted.
+* For the dates really stored in local time: FAT dates (shell items) and OLE
+* dates. Most Windows artefacts store UTC — BAM, UserAssist, USBSTOR, Amcache
+* and ShimCache were all once read through this function by mistake, each
+* shifted by the time-zone offset; each is now confronted with an
+* independent source by check-json.py or the test VM.
 * The offset is the suspect's (suspectLocalToUtc), not the running machine's.
 * @param filetimeLocal the instant, in the examined machine's local time
 * @param precision the precision of the source (see Precision): the digits of fraction written
@@ -757,6 +760,19 @@ HRESULT getRegSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::wstring*
 * @return ERROR_SUCCESS on success, an error code otherwise.
 */
 HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, FILETIME* filetime);
+
+/*! Reads the value of rank `index` of a key: its name, type and bytes.
+* The buffers are sized by the reader itself (the name to its maximum length,
+* the data to the size the hive declares), so that the caller never guesses a
+* size, never reads past the value, and has nothing to release.
+* @param key an open key
+* @param index rank of the value
+* @param name receives its name
+* @param type receives its type
+* @param data receives its bytes (data.size() is the only bound to read by)
+* @return ERROR_SUCCESS, ERROR_NO_MORE_ITEMS past the last value, or a registry error
+*/
+HRESULT enumRegistryValue(ORHKEY key, DWORD index, std::wstring& name, DWORD& type, std::vector<BYTE>& data);
 
 /*! Reads a binary value in the registry.
 * The caller must `delete[] bytes` to release the memory.

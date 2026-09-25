@@ -32,10 +32,13 @@ AmcacheApplicationFile::AmcacheApplicationFile(ORHKEY hKey_amcache) {
 		log(3, L"🔈wstring_to_filetime LinkDate");
 		filetime = wstring_to_filetime(temp);
 		log(3, L"🔈timeToIso8601 LinkDate");
-		// A text date ("month/day/year hour:minute:second"): precise to the second.
-		linkDate = timeToIso8601Local(filetime, Precision::Second);
+		/* A text date ("month/day/year hour:minute:second"), precise to the
+		   second: the PE header's TimeDateStamp, a Unix time, hence UTC. It used
+		   to be read as a LOCAL time: on the test VM, a binary whose header says
+		   10:42:45 UTC was published at 08:42:45 UTC. */
+		linkDate = utcTimeToIso8601Local(filetime, Precision::Second);
 		log(3, L"🔈timeToIso8601 LinkDateUtc");
-		linkDateUtc = localTimeToIso8601Utc(filetime, Precision::Second);
+		linkDateUtc = timeToIso8601Utc(filetime, Precision::Second);
 	}
 }
 

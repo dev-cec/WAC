@@ -151,13 +151,12 @@ var NAVTREEINDEX2 =
 "structAutomaticDestination_1_1JumplistEntry.html#a8fb38b3f369947a5e61479d5dfb110b9":[1,0,7,0,0],
 "structBam.html":[1,0,8],
 "structBam.html#a16dd03974f6839b71cdbbc7a7787b13a":[1,0,8,2],
-"structBam.html#a1b94ecb32cd8bedd2be4ad8cb81969b4":[1,0,8,7],
-"structBam.html#a2d778fb9384e11593ef630ffd93281d2":[1,0,8,3],
+"structBam.html#a1b94ecb32cd8bedd2be4ad8cb81969b4":[1,0,8,6],
 "structBam.html#a52ff7f220c879bcb78919b3dbb91a4e9":[1,0,8,1],
-"structBam.html#a62df0c7472866bcde757b66e7e7d40b5":[1,0,8,5],
-"structBam.html#a74647c7edfed15abd55209cef7529e59":[1,0,8,4],
-"structBam.html#ac03325479a6e6c5aae6f2200d28079bc":[1,0,8,6],
-"structBam.html#ac93bfc74deae2b2472d262c9be6859f9":[1,0,8,0],
+"structBam.html#a62df0c7472866bcde757b66e7e7d40b5":[1,0,8,4],
+"structBam.html#a76a6167d66a79bac7244795a749b5337":[1,0,8,3],
+"structBam.html#ac03325479a6e6c5aae6f2200d28079bc":[1,0,8,5],
+"structBam.html#ac9507b952141c4c38ea9c5eaea38d71a":[1,0,8,0],
 "structBams.html":[1,0,9],
 "structBams.html#a12aaa96b80d654f3b36be7e8cd11d7db":[1,0,9,3],
 "structBams.html#a5e7816034249f889b56b5207fb2727c1":[1,0,9,0],
@@ -249,5 +248,6 @@ var NAVTREEINDEX2 =
 "structBeef0017.html#a75f1fd7613f89cb8f5f6c4428ded8f5e":[1,0,25,0],
 "structBeef0019.html":[1,0,26],
 "structBeef0019.html#a28d3e0bae5d21d40b14f649384a46a03":[1,0,26,2],
-"structBeef0019.html#a6d2c48f832e234c33dc4d66f348e3179":[1,0,26,4]
+"structBeef0019.html#a6d2c48f832e234c33dc4d66f348e3179":[1,0,26,4],
+"structBeef0019.html#aa02028ef1e1eeebb487b33777c6767aa":[1,0,26,0]
 };

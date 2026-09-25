@@ -20,7 +20,7 @@ var searchData=
   ['notcontentindexed_17',['NotContentIndexed',['../structFileAttributes.html#ad3bfd1988eec70dcb64a5e17e75edea2',1,'FileAttributes']]],
   ['ntfs_5ffixup_5ftest_2ecpp_18',['ntfs_fixup_test.cpp',['../ntfs__fixup__test_8cpp.html',1,'']]],
   ['null_19',['null',['../classJson.html#a5bc2d676aa8d106a2c98ca3ee41cc4e6',1,'Json::null()'],['../classJson.html#a82938661c4953d873b5c8a204337fd57abbb93ef26e3c101ff11cdd21cab08a94',1,'Json::Null']]],
-  ['num_20',['num',['../classJson.html#a82938661c4953d873b5c8a204337fd57ab3e3076d9b3c53bede50d468b647b109',1,'Json::Num'],['../classJson.html#a1ac8a14ed178ba686fb561b6f6921e3a',1,'Json::num(T v)']]],
+  ['num_20',['num',['../classJson.html#a1ac8a14ed178ba686fb561b6f6921e3a',1,'Json::num(T v)'],['../classJson.html#a82938661c4953d873b5c8a204337fd57ab3e3076d9b3c53bede50d468b647b109',1,'Json::Num']]],
   ['numberofentries_21',['numberOfEntries',['../structDestFileDirectory.html#a269efd98d7c418d2fdede6af62c5a422',1,'DestFileDirectory']]],
   ['numberpinnedentries_22',['numberPinnedEntries',['../structDestFileDirectory.html#a23fef3f089255d2f37d3ee8ee70e3761',1,'DestFileDirectory']]],
   ['nwalked_23',['nwalked',['../structMrus.html#a71153f68a590613a340c9694fff314d4',1,'Mrus::nWalked'],['../structMruApps.html#acaa00c2ac8eff120dd71dc2511c7de0a',1,'MruApps::nWalked'],['../structShellbags.html#a15e4476517c99bcae359b6b07e723d31',1,'Shellbags::nWalked']]]

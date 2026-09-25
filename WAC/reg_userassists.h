@@ -43,15 +43,21 @@ public:
 	                             //!< known folder GUIDs resolved to paths
 	int Count = 0;               //!< number of runs counted by Explorer
 	int FocusCount = 0;          //!< number of times the window received the focus
-	std::wstring DateLocale = L"";    //!< last run, in the suspect's local time
-	std::wstring DateLocaleUtc = L""; //!< the same instant in UTC
+	FILETIME lastRunUtc = { 0, 0 };   //!< last run, in UTC as the value stores it
 
-	/*! Builds the entry from a registry value.
+	/*! Size of an entry of Windows 7 and later: session (4), run count (4),
+	 *  focus count (4), focus time (4), 10 usage ratios, last run FILETIME at
+	 *  offset 60, then 4 bytes. A value of another size is not a program
+	 *  entry: "UEME_CTLSESSION" holds session statistics, and read at the
+	 *  same offsets it gave a last run in 1691. */
+	static const size_t ENTRY_SIZE = 72;
+
+	/*! Builds the entry from a registry value of ENTRY_SIZE bytes.
 	 *  @param hKey name of the GUID subkey the value comes from.
 	 *  @param valueName name of the value, ROT13-encoded.
 	 *  @param data the value's bytes: run count, focus count and last run.
 	 *  @param _sid SID of the user whose hive holds the value. */
-	UserAssist(std::wstring hKey, LPWSTR valueName, LPBYTE data, std::wstring _sid);
+	UserAssist(std::wstring hKey, const std::wstring& valueName, const std::vector<BYTE>& data, std::wstring _sid);
 
 	/*! Converts the entry to JSON.
 	 *  @return its JSON object. */

@@ -7,6 +7,7 @@ var tools_8cpp =
     [ "dump", "tools_8cpp.html#ac4c0694f9ff1125a48aa8c09d96d18dc", null ],
     [ "dump_wstring", "tools_8cpp.html#a7a340bb9420f7c842f6ae990f5897ef1", null ],
     [ "encodeText", "tools_8cpp.html#aedebacbc39c7c2b343be9bf9e9c641a0", null ],
+    [ "enumRegistryValue", "tools_8cpp.html#ae9d97b8defedd15d154fba35ed742f9f", null ],
     [ "extractedPath", "tools_8cpp.html#a90966443464069ccf60bbe78afac2f20", null ],
     [ "getErrorMessage", "tools_8cpp.html#ac6445268d6c87c34c40e723fd1ea23ef", null ],
     [ "getNameFromSid", "tools_8cpp.html#ab29ec2bd73a4de1536739ac5cd16ecff", null ],

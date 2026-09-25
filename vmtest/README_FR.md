@@ -15,7 +15,7 @@ en SYSTEM : droits admin, aucun UAC).
 | `create-vm.sh` | Crée la VM de zéro, sans interaction : autounattend + UEFI Secure Boot + TPM 2.0 + canal guest-agent, déblocage du boot par injection de touches, puis attente que l'agent réponde. |
 | `autounattend.xml` | Install Windows muette (FR, Win11 Pro, compte admin local `wac`/`wac`, OOBE zappée, autologon) **et auto-installation du guest-agent** au 1er logon depuis le CD virtio-win. |
 | `qga.py` | Helper guest-agent : `ping`, `run` (exécuter), `read`/`write` (échanger des fichiers). |
-| `run-wac-test.sh` | Cycle de test complet : build → envoi des binaires → validation `raw_hive` (extraction brute + `reg load`) → exécution de WAC → rapatriement du log et des JSON dans `results/<horodatage>/`. |
+| `run-wac-test.sh` | Cycle de test complet : build → branchement d'une clé USB virtuelle (`~/vms/wac-usb-test.img`, numéro de série `WACUSB0001`, pour que USBSTOR soit peuplé même sur une VM recréée) → envoi des binaires → validation `raw_hive` (extraction brute + `reg load`) → exécution de WAC → rapatriement du log et des JSON dans `results/<horodatage>/`. |
 | `check-json.py` | Contrôle les sorties : validité JSON, chemins Windows, et **contrôles croisés** (cf. ci-dessous). S'utilise aussi seul : `python3 check-json.py results/<horodatage>`. |
 
 ## Ce que le harnais valide — et ce qu'il ne valide pas
@@ -51,6 +51,7 @@ révélé des valeurs fausses dans du JSON valide :
 | un journal d'annulation nommé pour chaque rejeu | sans lui la copie brute n'est plus reconstructible, et la promesse du rapport serait fausse |
 | `mounted_device.json` / `reg query` de la même clé (décodée par une implémentation distincte) et `Get-Partition` | 6 montages sur 7 publiés comme `\` : les chemins de périphérique actuels (`\??\...`) étaient décodés comme du texte ANSI et s'arrêtaient au premier octet nul |
 | dates FAT des shell items sans fraction et à secondes paires ; dates Amcache lues en texte sans fraction | toutes les dates écrites avec sept chiffres de fraction — `…:30.0000000` pour une date FAT précise à deux secondes (808 dates) |
+| BAM (`taskkill.exe` lancé par le harnais), UserAssist (exécutions Prefetch), USBSTOR (`Get-PnpDeviceProperty` sur la clé USB virtuelle que branche le harnais), Amcache `LinkDate` (en-têtes PE) | les quatre stockent de l'UTC, lu comme une heure locale : toutes les dates fausses de 2 h ; BAM et UserAssist ensuite vidés par une régression de la lecture des valeurs |
 | `MANIFEST.sha256` porte l'empreinte réelle de `MANIFEST.json` | seul contrôle qui détecte une retouche du manifeste, lequel est précisément ce qui atteste des pièces |
 | chaque pièce collectée porte ses trois empreintes | une pièce sans empreinte n'est pas identifiée, donc inutilisable |
 | le lecteur système d'`OperatingSystem.json` figure dans les volumes lus du manifeste | deux sources indépendantes de la même information |

@@ -15,7 +15,7 @@ administrator rights, no UAC).
 | `create-vm.sh` | Creates the VM from scratch, unattended: autounattend + UEFI Secure Boot + TPM 2.0 + guest-agent channel, boot unblocked by key injection, then waits for the agent to answer. |
 | `autounattend.xml` | Silent Windows install (French, Win11 Pro, local admin account `wac`/`wac`, OOBE skipped, autologon) **and automatic guest-agent install** at first logon from the virtio-win CD. |
 | `qga.py` | Guest-agent helper: `ping`, `run` (execute), `read`/`write` (exchange files). |
-| `run-wac-test.sh` | Full test cycle: build → send the binaries → `raw_hive` validation (raw extraction + `reg load`) → run WAC → bring the log and the JSON back into `results/<timestamp>/`. |
+| `run-wac-test.sh` | Full test cycle: build → attach a virtual USB key (`~/vms/wac-usb-test.img`, serial `WACUSB0001`, so that USBSTOR is populated even on a recreated VM) → send the binaries → `raw_hive` validation (raw extraction + `reg load`) → run WAC → bring the log and the JSON back into `results/<timestamp>/`. |
 | `check-json.py` | Checks the outputs: JSON validity, Windows paths, and **cross-checks** (see below). Also usable alone: `python3 check-json.py results/<timestamp>`. |
 
 ## What the harness validates — and what it does not
@@ -52,6 +52,7 @@ wrong values in valid JSON:
 | an undo journal named for every replay | without it the raw copy can no longer be rebuilt, and the report's promise would be false |
 | `mounted_device.json` vs `reg query` of the same key (decoded by a separate implementation) and `Get-Partition` | 6 mounts out of 7 published as `\`: current device paths (`\??\...`) were decoded as ANSI text and stopped at their first zero byte |
 | FAT dates of the shell items without a fraction and with even seconds; Amcache text dates without a fraction | every date written with seven digits of fraction — `…:30.0000000` for a FAT date precise to two seconds (808 dates) |
+| BAM (`taskkill.exe` run by the harness), UserAssist (Prefetch runs), USBSTOR (`Get-PnpDeviceProperty` on the virtual USB key the harness attaches), Amcache `LinkDate` (PE headers) | all four store UTC and were read as local time: every date 2 h off; BAM and UserAssist later emptied by a regression of the value reading |
 | `MANIFEST.sha256` carries the real fingerprint of `MANIFEST.json` | the only check that detects a retouched manifest — the very thing that attests to the exhibits |
 | every collected exhibit carries its three fingerprints | an exhibit without a fingerprint is unidentified, hence unusable |
 | the system drive of `OperatingSystem.json` is among the manifest's volumes read | two independent sources of the same information |

@@ -276,6 +276,8 @@ Functions</h2></td></tr>
 <tr class="separator:a4eb3a55c96fa93b7130be2bcd9702bab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa71d2e8dd326f686a3685b082d498baf" id="r_aa71d2e8dd326f686a3685b082d498baf"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#aa71d2e8dd326f686a3685b082d498baf">getRegFiletimeValue</a> (ORHKEY key, PCWSTR subKey, PCWSTR valueName, FILETIME *filetime)</td></tr>
 <tr class="separator:aa71d2e8dd326f686a3685b082d498baf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae9d97b8defedd15d154fba35ed742f9f" id="r_ae9d97b8defedd15d154fba35ed742f9f"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ae9d97b8defedd15d154fba35ed742f9f">enumRegistryValue</a> (ORHKEY key, DWORD index, std::wstring &amp;name, DWORD &amp;type, std::vector&lt; BYTE &gt; &amp;data)</td></tr>
+<tr class="separator:ae9d97b8defedd15d154fba35ed742f9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:add13d51f17348ae4d80ce6b5f5b3415e" id="r_add13d51f17348ae4d80ce6b5f5b3415e"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#add13d51f17348ae4d80ce6b5f5b3415e">getRegBinaryValue</a> (ORHKEY key, PCWSTR subKey, PCWSTR valueName, LPBYTE *bytes, DWORD *size)</td></tr>
 <tr class="separator:add13d51f17348ae4d80ce6b5f5b3415e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a55c27e3c9e64135544b0a0f9311d3630" id="r_a55c27e3c9e64135544b0a0f9311d3630"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a55c27e3c9e64135544b0a0f9311d3630">getRegboolValue</a> (ORHKEY key, PCWSTR subKey, PCWSTR valueName, bool *value)</td></tr>
@@ -702,6 +704,63 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the bytes </dd></dl>
+
+</div>
+</div>
+<a id="ae9d97b8defedd15d154fba35ed742f9f" name="ae9d97b8defedd15d154fba35ed742f9f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae9d97b8defedd15d154fba35ed742f9f">&#9670;&#160;</a></span>enumRegistryValue()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT enumRegistryValue </td>
+          <td>(</td>
+          <td class="paramtype">ORHKEY&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">DWORD&#160;</td>
+          <td class="paramname"><em>index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">DWORD &amp;&#160;</td>
+          <td class="paramname"><em>type</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; BYTE &gt; &amp;&#160;</td>
+          <td class="paramname"><em>data</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads the value of rank <code>index</code> of a key: its name, type and bytes. The buffers are sized by the reader itself (the name to its maximum length, the data to the size the hive declares), so that the caller never guesses a size, never reads past the value, and has nothing to release. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">key</td><td>an open key </td></tr>
+    <tr><td class="paramname">index</td><td>rank of the value </td></tr>
+    <tr><td class="paramname">name</td><td>receives its name </td></tr>
+    <tr><td class="paramname">type</td><td>receives its type </td></tr>
+    <tr><td class="paramname">data</td><td>receives its bytes (data.size() is the only bound to read by) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, ERROR_NO_MORE_ITEMS past the last value, or a registry error </dd></dl>
 
 </div>
 </div>
@@ -1409,7 +1468,7 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Converts a FILETIME <b>expressed in local time</b> to UTC, then formats it as ISO 8601 with the "Z" suffix. Useful for the artefacts that store dates in local time (Amcache, BAM, shimcache, USBSTOR, <a class="el" href="structUserAssist.html">UserAssist</a>) and whose UTC version is also wanted. The offset is the suspect's (suspectLocalToUtc), not the running machine's. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Converts a FILETIME <b>expressed in local time</b> to UTC, then formats it as ISO 8601 with the "Z" suffix. For the dates really stored in local time: FAT dates (shell items) and OLE dates. Most Windows artefacts store UTC — BAM, <a class="el" href="structUserAssist.html">UserAssist</a>, USBSTOR, Amcache and ShimCache were all once read through this function by mistake, each shifted by the time-zone offset; each is now confronted with an independent source by check-json.py or the test VM. The offset is the suspect's (suspectLocalToUtc), not the running machine's. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">filetimeLocal</td><td>the instant, in the examined machine's local time </td></tr>
     <tr><td class="paramname">precision</td><td>the precision of the source (see Precision): the digits of fraction written </td></tr>
