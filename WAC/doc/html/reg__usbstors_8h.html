@@ -128,7 +128,8 @@ Classes</h2></td></tr>
 <div class="textblock"><p>USBSTOR: the USB mass-storage devices connected to the machine. </p>
 <p>WHAT IT SHOWS. Windows keeps an entry per USB storage device it has ever seen, with the device's own identifiers and its serial number. That answers the recurring question of an exfiltration case — which stick was plugged in, and when — and, through <a class="el" href="structMountedDevices.html">MountedDevices</a>, which drive letter it held, hence which paths in the other artefacts refer to it.</p>
 <p>WHERE IT IS READ. In SYSTEM, <code>CurrentControlSet\Enum\USBSTOR</code>. The insertion dates come from the device properties, under <code>Properties\{83da6326-97a6-4088-9453-a1923f573b29}</code>: value <code>0064</code> is the first installation, <code>0066</code> the last connection.</p>
-<p>The serial number is the device's, as it declares it: a device may declare one it shares with a whole production batch, and some declare none. </p>
+<p>WHO THE DEVICE IS. The key names carry the identification, not values: <code>Enum\USBSTOR\&lt;device&gt;\&lt;instance&gt;</code>, where &lt;device&gt; reads "Disk&amp;Ven_&lt;vendor&gt;&amp;Prod_&lt;product&gt;&amp;Rev_&lt;revision&gt;" and &lt;instance&gt; is the serial number followed by "&amp;&lt;n&gt;". WAC used to look for a "SerialNumber" VALUE, which does not exist there: no collected device carried its serial number, vendor or product — the very data that ties a stick to a person.</p>
+<p>The serial number is the device's, as it declares it: a device may declare one it shares with a whole production batch, and some declare none — Windows then makes up an instance identifier whose SECOND character is "&amp;", which is not a serial number and is not published as one. </p>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

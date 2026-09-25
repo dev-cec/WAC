@@ -993,18 +993,30 @@ def check_utc_sources(folder):
                 parts = line.strip().split("|")
                 if len(parts) == 3:
                     expected.setdefault(parts[0], {})[parts[1]] = instant(parts[2])
-        mine = [(instant(u["FirstInsertionUtc"]) if u.get("FirstInsertionUtc") else None,
-                 instant(u["LastInsertionUtc"]) if u.get("LastInsertionUtc") else None)
-                for u in (usb if isinstance(usb, list) else [])]
-        missing = [i for i, k in expected.items()
-                   if (k.get("DEVPKEY_Device_InstallDate"), k.get("DEVPKEY_Device_LastArrivalDate")) not in mine]
+        # The device is identified as Windows names it: USBSTOR\\<DeviceId>\\<InstanceId>.
+        mine = {("USBSTOR\\" + (u.get("DeviceId") or "") + "\\" + (u.get("InstanceId") or "")).upper(): u
+                for u in (usb if isinstance(usb, list) else [])}
+        wrong = []
+        for i, k in expected.items():
+            u = mine.get(i.upper())
+            if u is None:
+                wrong.append(f"{i}: absent")
+                continue
+            got = (instant(u["FirstInsertionUtc"]) if u.get("FirstInsertionUtc") else None,
+                   instant(u["LastInsertionUtc"]) if u.get("LastInsertionUtc") else None)
+            if got != (k.get("DEVPKEY_Device_InstallDate"), k.get("DEVPKEY_Device_LastArrivalDate")):
+                wrong.append(f"{i}: dates other than Windows'")
+            # The key the harness attaches declares the serial number WACUSB0001.
+            if "WACUSB0001" in i.upper() and u.get("SerialNumber") != "WACUSB0001":
+                wrong.append(f"{i}: SerialNumber {u.get('SerialNumber')!r}, expected 'WACUSB0001'")
         if not expected:
-            print("  ⏭️  no USB device in the reference: USBSTOR dates not confronted")
-        elif missing:
-            print(f"  ❌ Usbstor.json: dates other than Windows' for {len(missing)} device(s), e.g. {missing[0]}")
+            print("  ⏭️  no USB device in the reference: USBSTOR not confronted")
+        elif wrong:
+            print(f"  ❌ Usbstor.json: {wrong[0]} ({len(wrong)} difference(s))")
             found += 1
         else:
-            print(f"  ✅ Usbstor.json: first and last insertion of {len(expected)} device(s) identical to Windows' (UTC)")
+            print(f"  ✅ Usbstor.json: {len(expected)} device(s) identified as Windows names them, "
+                  "serial number and insertion dates (UTC) identical")
 
     # Amcache LinkDate against the PE header
     path = os.path.join(ref, "pe-timestamps.txt")

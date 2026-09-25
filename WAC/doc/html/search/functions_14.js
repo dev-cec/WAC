@@ -3,7 +3,7 @@ var searchData=
   ['unknownshellitem_0',['UnknownShellItem',['../structUnknownShellItem.html#af233f9d6a240f68cb081bfec6d02ab6a',1,'UnknownShellItem']]],
   ['update_1',['update',['../classMd5Stream.html#a70b55354dfc1920ce4b533a847f34852',1,'Md5Stream::update()'],['../classSha1Stream.html#ae05788314fac1ee85ceb7494ee4bbb2e',1,'Sha1Stream::update()'],['../classSha256Stream.html#a4888b86c9ff4a46997d01b8c88ccfead',1,'Sha256Stream::update()'],['../classSha512Stream.html#a320c95ec76ad5f7a82480604fb4a0b44',1,'Sha512Stream::update()']]],
   ['urishellitem_2',['URIShellItem',['../structURIShellItem.html#aeb3fc98807bbcc6c9c64aafbfd8e60df',1,'URIShellItem']]],
-  ['usbstor_3',['Usbstor',['../structUsbstor.html#a399b057c9390590600f1349d7d50de80',1,'Usbstor']]],
+  ['usbstor_3',['Usbstor',['../structUsbstor.html#a74b5e9382ae33cfe92b01183b9bd6f32',1,'Usbstor']]],
   ['userassist_4',['UserAssist',['../structUserAssist.html#a36feef58fdbd73d95bb5e0ec212b7ecb',1,'UserAssist']]],
   ['userpropertyview0x07192006_5',['UserPropertyView0x07192006',['../structUserPropertyView0x07192006.html#aea76fef58c353796b69d7eb733e9e8a5',1,'UserPropertyView0x07192006']]],
   ['userpropertyview0x10312005_6',['UserPropertyView0x10312005',['../structUserPropertyView0x10312005.html#a90922a1835af3b30abdf6a6b47e31d8b',1,'UserPropertyView0x10312005']]],

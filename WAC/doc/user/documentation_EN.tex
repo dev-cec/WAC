@@ -631,7 +631,11 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
 \subsection{Devices}
 
 \begin{description}[style=nextline,leftmargin=1.2em]
-  \item[\fichier{Usbstor.json}] USB storage devices known to the system.
+  \item[\fichier{Usbstor.json}] USB storage devices known to the system:
+        \champ{Vendor}, \champ{Product}, \champ{Revision} and \champ{Type},
+        from \champ{DeviceId}; \champ{SerialNumber}, from \champ{InstanceId}
+        — absent when Windows made the identifier up (second character
+        ``\&''), the device declaring none; first and last insertion dates.
   \item[\fichier{mounted\_device.json}] mapping between drive letters and
         devices. \champ{Drive} names the letter or the volume; \champ{Type}
         gives the form of the value: \texttt{GPT partition}

@@ -12,8 +12,17 @@
  *  `Properties\{83da6326-97a6-4088-9453-a1923f573b29}`: value `0064` is the
  *  first installation, `0066` the last connection.
  *
+ *  WHO THE DEVICE IS. The key names carry the identification, not values:
+ *  `Enum\USBSTOR\<device>\<instance>`, where <device> reads
+ *  "Disk&Ven_<vendor>&Prod_<product>&Rev_<revision>" and <instance> is the
+ *  serial number followed by "&<n>". WAC used to look for a "SerialNumber"
+ *  VALUE, which does not exist there: no collected device carried its serial
+ *  number, vendor or product — the very data that ties a stick to a person.
+ *
  *  The serial number is the device's, as it declares it: a device may declare
- *  one it shares with a whole production batch, and some declare none.
+ *  one it shares with a whole production batch, and some declare none — Windows
+ *  then makes up an instance identifier whose SECOND character is "&", which is
+ *  not a serial number and is not published as one.
  */
 #pragma once
 #include <iostream>
@@ -34,15 +43,23 @@ struct Usbstor {
 public:
 	std::vector<std::wstring> HardwareId; //!< hardware identifiers the device declares
 	std::wstring FriendlyName = L"";      //!< name of the device, as it declares it
-	std::wstring CompatibleIds = L"";     //!< identifiers of the compatible device classes
+	std::vector<std::wstring> CompatibleIds; //!< identifiers of the compatible device classes
 	std::wstring ClassGuid = L"";         //!< GUID of the device class
-	std::wstring SerialNumber = L"";      //!< serial number the device declares
+	std::wstring deviceId = L"";          //!< the device key: "Disk&Ven_...&Prod_...&Rev_..."
+	std::wstring instanceId = L"";        //!< the instance key: the serial number and "&<n>"
+	std::wstring type = L"";              //!< device type, from deviceId ("Disk", "CdRom")
+	std::wstring vendor = L"";            //!< vendor, from deviceId
+	std::wstring product = L"";           //!< product, from deviceId
+	std::wstring revision = L"";          //!< revision, from deviceId
+	std::wstring serialNumber = L"";      //!< serial number, from instanceId (empty if Windows made one up)
 	FILETIME lastInsertionUtc = { 0, 0 };   //!< last connection (DEVPKEY_Device_LastArrivalDate), UTC
 	FILETIME firstInsertionUtc = { 0, 0 };  //!< first installation (DEVPKEY_Device_InstallDate), UTC
 
 	/*! Builds the device from its registry key.
-	 *  @param hKey_usb the device's key under `Enum\USBSTOR`, already open. */
-	Usbstor(ORHKEY hKey_usb);
+	 *  @param hKey_usb the instance key under `Enum\USBSTOR\<device>`, already open.
+	 *  @param device name of the device key ("Disk&Ven_...&Prod_...&Rev_...").
+	 *  @param instance name of the instance key (serial number and "&<n>"). */
+	Usbstor(ORHKEY hKey_usb, const std::wstring& device, const std::wstring& instance);
 
 	/*! Converts the device to JSON.
 	 *  @return its JSON object. */

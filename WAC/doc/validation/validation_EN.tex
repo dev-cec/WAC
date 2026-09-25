@@ -386,6 +386,9 @@ dates of BAM, UserAssist, USBSTOR and Amcache / \texttt{taskkill} run by
   four artefacts store UTC, read as local time: all their dates 2~h off; BAM
   and UserAssist emptied by a regression of the value reading \\
 \multicolumn{2}{@{}l}{\textit{Decoding}} \\
+identifier and serial number of a USB key / \texttt{Get-PnpDevice} & no key
+  carried its serial number, vendor or product: they are in the key names, not
+  in values \\
 Prefetch hash / suffix of its file name & 65 wrong hashes out of 270
   (hexadecimal without padding) \\
 Prefetch \texttt{\textbackslash VOLUME\{guid\}} paths resolved & 20,066 paths

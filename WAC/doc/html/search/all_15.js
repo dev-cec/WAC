@@ -14,7 +14,7 @@ var searchData=
   ['urishellitem_11',['urishellitem',['../structURIShellItem.html#aeb3fc98807bbcc6c9c64aafbfd8e60df',1,'URIShellItem::URIShellItem()'],['../structURIShellItem.html',1,'URIShellItem']]],
   ['usb_5fwrite_12',['USB_WRITE',['../namespaceFootprint.html#a0f4e23dd36a28a486fe8d93c7f381d9d',1,'Footprint']]],
   ['usbs_13',['usbs',['../structUsbstors.html#a8db49a85aca68f8604cca00b453b974d',1,'Usbstors']]],
-  ['usbstor_14',['usbstor',['../structUsbstor.html',1,'Usbstor'],['../structUsbstor.html#a399b057c9390590600f1349d7d50de80',1,'Usbstor::Usbstor()']]],
+  ['usbstor_14',['usbstor',['../structUsbstor.html',1,'Usbstor'],['../structUsbstor.html#a74b5e9382ae33cfe92b01183b9bd6f32',1,'Usbstor::Usbstor()']]],
   ['usbstors_15',['Usbstors',['../structUsbstors.html',1,'']]],
   ['user_16',['User',['../structUser.html',1,'']]],
   ['userassist_17',['userassist',['../structUserAssist.html',1,'UserAssist'],['../structUserAssist.html#a36feef58fdbd73d95bb5e0ec212b7ecb',1,'UserAssist::UserAssist()']]],

@@ -108,8 +108,8 @@ $(document).ready(function(){initNavTree('structUsbstor.html',''); initResizable
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a399b057c9390590600f1349d7d50de80" id="r_a399b057c9390590600f1349d7d50de80"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbstor.html#a399b057c9390590600f1349d7d50de80">Usbstor</a> (ORHKEY hKey_usb)</td></tr>
-<tr class="separator:a399b057c9390590600f1349d7d50de80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74b5e9382ae33cfe92b01183b9bd6f32" id="r_a74b5e9382ae33cfe92b01183b9bd6f32"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbstor.html#a74b5e9382ae33cfe92b01183b9bd6f32">Usbstor</a> (ORHKEY hKey_usb, const std::wstring &amp;device, const std::wstring &amp;instance)</td></tr>
+<tr class="separator:a74b5e9382ae33cfe92b01183b9bd6f32"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab10f71213f8d35f154e4e8763ee60fb3" id="r_ab10f71213f8d35f154e4e8763ee60fb3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbstor.html#ab10f71213f8d35f154e4e8763ee60fb3">toJson</a> ()</td></tr>
 <tr class="separator:ab10f71213f8d35f154e4e8763ee60fb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac304f28b087714e131f6a0ee97d34bcf" id="r_ac304f28b087714e131f6a0ee97d34bcf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbstor.html#ac304f28b087714e131f6a0ee97d34bcf">clear</a> ()</td></tr>
@@ -124,15 +124,33 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a9b94559350c121e1676960a8dcba5e7f" id="r_a9b94559350c121e1676960a8dcba5e7f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbstor.html#a9b94559350c121e1676960a8dcba5e7f">FriendlyName</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:a9b94559350c121e1676960a8dcba5e7f"><td class="mdescLeft">&#160;</td><td class="mdescRight">name of the device, as it declares it  <br /></td></tr>
 <tr class="separator:a9b94559350c121e1676960a8dcba5e7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aacd3a29a49056960317a2adaafb6cb42" id="r_aacd3a29a49056960317a2adaafb6cb42"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbstor.html#aacd3a29a49056960317a2adaafb6cb42">CompatibleIds</a> = L&quot;&quot;</td></tr>
-<tr class="memdesc:aacd3a29a49056960317a2adaafb6cb42"><td class="mdescLeft">&#160;</td><td class="mdescRight">identifiers of the compatible device classes  <br /></td></tr>
-<tr class="separator:aacd3a29a49056960317a2adaafb6cb42"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af80cbbf4c1954b349d8b599e0704c8da" id="r_af80cbbf4c1954b349d8b599e0704c8da"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbstor.html#af80cbbf4c1954b349d8b599e0704c8da">CompatibleIds</a></td></tr>
+<tr class="memdesc:af80cbbf4c1954b349d8b599e0704c8da"><td class="mdescLeft">&#160;</td><td class="mdescRight">identifiers of the compatible device classes  <br /></td></tr>
+<tr class="separator:af80cbbf4c1954b349d8b599e0704c8da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a493c78ec85ab590646638663a8ce3010" id="r_a493c78ec85ab590646638663a8ce3010"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbstor.html#a493c78ec85ab590646638663a8ce3010">ClassGuid</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:a493c78ec85ab590646638663a8ce3010"><td class="mdescLeft">&#160;</td><td class="mdescRight">GUID of the device class.  <br /></td></tr>
 <tr class="separator:a493c78ec85ab590646638663a8ce3010"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaf3e4d55b39291adb92cd55f9c3ad298" id="r_aaf3e4d55b39291adb92cd55f9c3ad298"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbstor.html#aaf3e4d55b39291adb92cd55f9c3ad298">SerialNumber</a> = L&quot;&quot;</td></tr>
-<tr class="memdesc:aaf3e4d55b39291adb92cd55f9c3ad298"><td class="mdescLeft">&#160;</td><td class="mdescRight">serial number the device declares  <br /></td></tr>
-<tr class="separator:aaf3e4d55b39291adb92cd55f9c3ad298"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6bcf3f70c2657e634ce3323f79059f7d" id="r_a6bcf3f70c2657e634ce3323f79059f7d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbstor.html#a6bcf3f70c2657e634ce3323f79059f7d">deviceId</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a6bcf3f70c2657e634ce3323f79059f7d"><td class="mdescLeft">&#160;</td><td class="mdescRight">the device key: "Disk&amp;Ven_...&amp;Prod_...&amp;Rev_..."  <br /></td></tr>
+<tr class="separator:a6bcf3f70c2657e634ce3323f79059f7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1073f184ab8035bca3265e7a5de9b305" id="r_a1073f184ab8035bca3265e7a5de9b305"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbstor.html#a1073f184ab8035bca3265e7a5de9b305">instanceId</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a1073f184ab8035bca3265e7a5de9b305"><td class="mdescLeft">&#160;</td><td class="mdescRight">the instance key: the serial number and "&amp;&lt;n&gt;"  <br /></td></tr>
+<tr class="separator:a1073f184ab8035bca3265e7a5de9b305"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95dafae5de7c66b9b799ce83a747ee46" id="r_a95dafae5de7c66b9b799ce83a747ee46"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbstor.html#a95dafae5de7c66b9b799ce83a747ee46">type</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a95dafae5de7c66b9b799ce83a747ee46"><td class="mdescLeft">&#160;</td><td class="mdescRight">device type, from deviceId ("Disk", "CdRom")  <br /></td></tr>
+<tr class="separator:a95dafae5de7c66b9b799ce83a747ee46"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64a052a61c0b8c5b68d4137c5d53358f" id="r_a64a052a61c0b8c5b68d4137c5d53358f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbstor.html#a64a052a61c0b8c5b68d4137c5d53358f">vendor</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a64a052a61c0b8c5b68d4137c5d53358f"><td class="mdescLeft">&#160;</td><td class="mdescRight">vendor, from deviceId  <br /></td></tr>
+<tr class="separator:a64a052a61c0b8c5b68d4137c5d53358f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a464bbe171b9a85bc0254a3b19aa0e43f" id="r_a464bbe171b9a85bc0254a3b19aa0e43f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbstor.html#a464bbe171b9a85bc0254a3b19aa0e43f">product</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a464bbe171b9a85bc0254a3b19aa0e43f"><td class="mdescLeft">&#160;</td><td class="mdescRight">product, from deviceId  <br /></td></tr>
+<tr class="separator:a464bbe171b9a85bc0254a3b19aa0e43f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aba8e441dcd52a1fd121cbb8ac6531a22" id="r_aba8e441dcd52a1fd121cbb8ac6531a22"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbstor.html#aba8e441dcd52a1fd121cbb8ac6531a22">revision</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:aba8e441dcd52a1fd121cbb8ac6531a22"><td class="mdescLeft">&#160;</td><td class="mdescRight">revision, from deviceId  <br /></td></tr>
+<tr class="separator:aba8e441dcd52a1fd121cbb8ac6531a22"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b67c89def345f3cb1c069e0dc5d9c8b" id="r_a2b67c89def345f3cb1c069e0dc5d9c8b"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbstor.html#a2b67c89def345f3cb1c069e0dc5d9c8b">serialNumber</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a2b67c89def345f3cb1c069e0dc5d9c8b"><td class="mdescLeft">&#160;</td><td class="mdescRight">serial number, from instanceId (empty if Windows made one up)  <br /></td></tr>
+<tr class="separator:a2b67c89def345f3cb1c069e0dc5d9c8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab76d2f22c15c3d04f845cac998de6c01" id="r_ab76d2f22c15c3d04f845cac998de6c01"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbstor.html#ab76d2f22c15c3d04f845cac998de6c01">lastInsertionUtc</a> = { 0, 0 }</td></tr>
 <tr class="memdesc:ab76d2f22c15c3d04f845cac998de6c01"><td class="mdescLeft">&#160;</td><td class="mdescRight">last connection (DEVPKEY_Device_LastArrivalDate), UTC  <br /></td></tr>
 <tr class="separator:ab76d2f22c15c3d04f845cac998de6c01"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -143,8 +161,8 @@ Public Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One USB mass-storage device known to the machine. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a399b057c9390590600f1349d7d50de80" name="a399b057c9390590600f1349d7d50de80"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a399b057c9390590600f1349d7d50de80">&#9670;&#160;</a></span>Usbstor()</h2>
+<a id="a74b5e9382ae33cfe92b01183b9bd6f32" name="a74b5e9382ae33cfe92b01183b9bd6f32"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a74b5e9382ae33cfe92b01183b9bd6f32">&#9670;&#160;</a></span>Usbstor()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -153,14 +171,32 @@ Public Attributes</h2></td></tr>
           <td class="memname">Usbstor::Usbstor </td>
           <td>(</td>
           <td class="paramtype">ORHKEY&#160;</td>
-          <td class="paramname"><em>hKey_usb</em></td><td>)</td>
+          <td class="paramname"><em>hKey_usb</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>device</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>instance</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Builds the device from its registry key. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">hKey_usb</td><td>the device's key under <code>Enum\USBSTOR</code>, already open. </td></tr>
+    <tr><td class="paramname">hKey_usb</td><td>the instance key under <code>Enum\USBSTOR\&lt;device&gt;</code>, already open. </td></tr>
+    <tr><td class="paramname">device</td><td>name of the device key ("Disk&amp;Ven_...&amp;Prod_...&amp;Rev_..."). </td></tr>
+    <tr><td class="paramname">instance</td><td>name of the instance key (serial number and "&amp;&lt;n&gt;"). </td></tr>
   </table>
   </dd>
 </dl>
@@ -222,19 +258,35 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="aacd3a29a49056960317a2adaafb6cb42" name="aacd3a29a49056960317a2adaafb6cb42"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aacd3a29a49056960317a2adaafb6cb42">&#9670;&#160;</a></span>CompatibleIds</h2>
+<a id="af80cbbf4c1954b349d8b599e0704c8da" name="af80cbbf4c1954b349d8b599e0704c8da"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af80cbbf4c1954b349d8b599e0704c8da">&#9670;&#160;</a></span>CompatibleIds</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::wstring Usbstor::CompatibleIds = L&quot;&quot;</td>
+          <td class="memname">std::vector&lt;std::wstring&gt; Usbstor::CompatibleIds</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>identifiers of the compatible device classes </p>
+
+</div>
+</div>
+<a id="a6bcf3f70c2657e634ce3323f79059f7d" name="a6bcf3f70c2657e634ce3323f79059f7d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6bcf3f70c2657e634ce3323f79059f7d">&#9670;&#160;</a></span>deviceId</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring Usbstor::deviceId = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the device key: "Disk&amp;Ven_...&amp;Prod_...&amp;Rev_..." </p>
 
 </div>
 </div>
@@ -286,6 +338,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a1073f184ab8035bca3265e7a5de9b305" name="a1073f184ab8035bca3265e7a5de9b305"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1073f184ab8035bca3265e7a5de9b305">&#9670;&#160;</a></span>instanceId</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring Usbstor::instanceId = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the instance key: the serial number and "&amp;&lt;n&gt;" </p>
+
+</div>
+</div>
 <a id="ab76d2f22c15c3d04f845cac998de6c01" name="ab76d2f22c15c3d04f845cac998de6c01"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab76d2f22c15c3d04f845cac998de6c01">&#9670;&#160;</a></span>lastInsertionUtc</h2>
 
@@ -302,19 +370,83 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="aaf3e4d55b39291adb92cd55f9c3ad298" name="aaf3e4d55b39291adb92cd55f9c3ad298"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaf3e4d55b39291adb92cd55f9c3ad298">&#9670;&#160;</a></span>SerialNumber</h2>
+<a id="a464bbe171b9a85bc0254a3b19aa0e43f" name="a464bbe171b9a85bc0254a3b19aa0e43f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a464bbe171b9a85bc0254a3b19aa0e43f">&#9670;&#160;</a></span>product</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::wstring Usbstor::SerialNumber = L&quot;&quot;</td>
+          <td class="memname">std::wstring Usbstor::product = L&quot;&quot;</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>serial number the device declares </p>
+<p>product, from deviceId </p>
+
+</div>
+</div>
+<a id="aba8e441dcd52a1fd121cbb8ac6531a22" name="aba8e441dcd52a1fd121cbb8ac6531a22"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aba8e441dcd52a1fd121cbb8ac6531a22">&#9670;&#160;</a></span>revision</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring Usbstor::revision = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>revision, from deviceId </p>
+
+</div>
+</div>
+<a id="a2b67c89def345f3cb1c069e0dc5d9c8b" name="a2b67c89def345f3cb1c069e0dc5d9c8b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2b67c89def345f3cb1c069e0dc5d9c8b">&#9670;&#160;</a></span>serialNumber</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring Usbstor::serialNumber = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>serial number, from instanceId (empty if Windows made one up) </p>
+
+</div>
+</div>
+<a id="a95dafae5de7c66b9b799ce83a747ee46" name="a95dafae5de7c66b9b799ce83a747ee46"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a95dafae5de7c66b9b799ce83a747ee46">&#9670;&#160;</a></span>type</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring Usbstor::type = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>device type, from deviceId ("Disk", "CdRom") </p>
+
+</div>
+</div>
+<a id="a64a052a61c0b8c5b68d4137c5d53358f" name="a64a052a61c0b8c5b68d4137c5d53358f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a64a052a61c0b8c5b68d4137c5d53358f">&#9670;&#160;</a></span>vendor</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring Usbstor::vendor = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>vendor, from deviceId </p>
 
 </div>
 </div>

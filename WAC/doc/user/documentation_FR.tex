@@ -640,7 +640,12 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
 \subsection{Périphériques}
 
 \begin{description}[style=nextline,leftmargin=1.2em]
-  \item[\fichier{Usbstor.json}] périphériques de stockage USB connus du système.
+  \item[\fichier{Usbstor.json}] périphériques de stockage USB connus du système :
+        \champ{Vendor}, \champ{Product}, \champ{Revision} et \champ{Type}, tirés
+        de \champ{DeviceId} ; \champ{SerialNumber}, tiré de \champ{InstanceId}
+        — absent quand l'identifiant a été fabriqué par Windows (deuxième
+        caractère « \& »), le périphérique n'en déclarant aucun ; dates de
+        première et de dernière insertion.
   \item[\fichier{mounted\_device.json}] correspondance entre lettres de lecteur et
         périphériques. \champ{Drive} nomme la lettre ou le volume ;
         \champ{Type} dit la forme de la valeur : \texttt{GPT partition}
