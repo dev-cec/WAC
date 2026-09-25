@@ -224,6 +224,7 @@ DestList entries / jump list shortcuts & the first 15 entries of every list lost
 machine name of the events / \fichier{OperatingSystem.json} & check of the BinXML decoding \\
 record identifiers unique per log & a stale chunk read again \\
 mounts / \texttt{reg query} and \texttt{Get-Partition} & device paths published as ``\textbackslash{}'' \\
+precision of FAT and text dates & seven digits of fraction on dates to the second \\
 seal / real fingerprint of the manifest & a retouched manifest \\
 files in the exhibit store / manifest content & 209 exhibits added after sealing \\
 \bottomrule
@@ -368,7 +369,7 @@ from the schema of a reference Windows by \fichier{vmtest/property-schema.cpp}.
 system_conversions_test.exe
 \end{lstlisting}
 
-To be run on Windows (the VM). Reference: 9,661,284 comparisons, no difference.
+To be run on Windows (the VM). Reference: 9,661,288 comparisons, no difference.
 Two intended differences: \wac{} refuses a SID text Windows would truncate (a
 sub-authority of $2^{32}$ or more, a sixteenth sub-authority), and a NaN date,
 for which Windows returns a meaningless time.

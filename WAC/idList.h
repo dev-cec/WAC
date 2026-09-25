@@ -1227,6 +1227,7 @@ struct ArchiveFileContent :IShellItem {
 	std::wstring name = L"";//!< name of the archive
 	FILETIME modifiedUtc = { 0 };//!< modification date in UTC
 	FILETIME modified = { 0 };//!< modification date as a FAT date stores it, local time; null when the source is UTC
+	Precision modifiedPrecision = Precision::HundredNanoseconds; //!< precision of the source: a FILETIME, or the second (FAT or text date)
 
 	/*! Reads the item.
 	* @param buffer the bytes to parse

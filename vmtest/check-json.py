@@ -151,6 +151,7 @@ def cross_checks(folder):
     found += check_exhibit_store(folder)
     found += check_mft_references(folder)
     found += check_mounted_devices(folder)
+    found += check_date_precision(folder)
     return found
 
 
@@ -904,6 +905,58 @@ def check_mounted_devices(folder):
         else:
             print("  ⏭️  no GPT mount to confront with the partitions")
     return found
+
+
+def check_date_precision(folder):
+    """A date carries no more precision than its source.
+
+    WHY. Every date came out with seven digits of fraction: a FAT date, precise
+    to two seconds, read "…:30.0000000", which claims the ten-millionth of a
+    second — digits an analyst could order events on, and that the source never
+    held. Two properties of the FAT format itself are checked on the shell items
+    (the beef0004 extension blocks and the file entries): no fraction, and an
+    EVEN number of seconds, the format storing seconds halved — which also
+    checks the decoding. The Amcache text dates (LinkDate, InstallDate) must
+    carry no fraction either.
+    """
+    fat, wrong = 0, []
+    def visit(o, name):
+        nonlocal fat
+        if isinstance(o, dict):
+            keys = []
+            if "ExtensionVersion" in o and "Signature" in o:
+                keys = ["CreatedDate", "CreatedDateUtc", "AccessedDate", "AccessedDateUtc"]
+            elif "Attributes" in o and "ModificationDate" in o:
+                keys = ["ModificationDate", "ModificationDateUtc"]
+            for k in keys:
+                v = o.get(k)
+                if isinstance(v, str) and ISO.match(v):
+                    fat += 1
+                    if "." in v[19:20] or int(v[17:19]) % 2:
+                        wrong.append(f"{name}: {k}={v}")
+            for k in ("LinkDate", "LinkDateUtc", "InstallDate", "InstallDateUtc"):
+                v = o.get(k)
+                if name.startswith("amcache") and isinstance(v, str) and v[19:20] == ".":
+                    wrong.append(f"{name}: {k}={v}")
+            for v in o.values():
+                visit(v, name)
+        elif isinstance(o, list):
+            for v in o:
+                visit(v, name)
+    for file in sorted(glob.glob(os.path.join(folder, "*.json"))):
+        name = os.path.basename(file)
+        if name == "events.json":
+            continue
+        d = load(folder, name)
+        if d is not None:
+            visit(d, name)
+    if wrong:
+        for text in wrong[:3]:
+            print(f"  ❌ date more precise than its source: {text}")
+        print(f"  ❌ {len(wrong)} date(s) claiming a precision their source does not have")
+        return 1
+    print(f"  ✅ {fat} FAT date(s) to the second, even, and text dates without a fraction")
+    return 0
 
 
 def process_name(p):

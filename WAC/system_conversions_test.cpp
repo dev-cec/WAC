@@ -36,7 +36,9 @@
  *    the kernel's TIME_FIELDS layout) against GetTimeZoneInformation;
  *  - the formatting of WAC end to end: a winter date collected in summer is
  *    labelled with its own offset, not the collection day's;
- *  - random (forged) rules: offsets within bounds, no overflow.
+ *  - random (forged) rules: offsets within bounds, no overflow;
+ *  - the precision written: seven, three or no digits of fraction, as the
+ *    source holds; a FAT date comes out to the second, never ".0000000".
  *
  *  Usage: system_conversions_test
  *  Built by `build-windows.sh --test`; runs on Windows (the test VM).
@@ -470,6 +472,24 @@ void hostileRules(std::mt19937_64& rng) {
 	}
 }
 
+/*! The fraction written says no more than the source holds. */
+void precisions() {
+	SYSTEMTIME st = {};
+	st.wYear = 2026; st.wMonth = 3; st.wDay = 6; st.wHour = 4; st.wMinute = 7; st.wSecond = 44;
+	const FILETIME base = filetime((ULONGLONG)ticksOf(st) + 1234567);   // + 0.1234567 s
+	check(timeToIso8601Utc(base) == L"2026-03-06T04:07:44.1234567Z",
+	      L"precision 100 ns: " + timeToIso8601Utc(base));
+	check(timeToIso8601Utc(base, Precision::Millisecond) == L"2026-03-06T04:07:44.123Z",
+	      L"precision millisecond: " + timeToIso8601Utc(base, Precision::Millisecond));
+	check(timeToIso8601Utc(base, Precision::Second) == L"2026-03-06T04:07:44Z",
+	      L"precision second: " + timeToIso8601Utc(base, Precision::Second));
+	// A FAT date: 6 March 2026, 04:07:44 — date (year-1980, month, day), time (h, min, s/2).
+	const unsigned date = ((2026 - 1980) << 9) | (3 << 5) | 6, time = (4 << 11) | (7 << 5) | 22;
+	const FILETIME fat = FatDateTime(date | (time << 16)).toFileTime();
+	check(timeToIso8601Utc(fat, Precision::Second) == L"2026-03-06T04:07:44Z",
+	      L"FAT date: " + timeToIso8601Utc(fat, Precision::Second));
+}
+
 } // namespace
 
 /*! Runs every comparison.
@@ -485,6 +505,7 @@ int wmain() {
 	textDates();
 	suspectOffset(rng);
 	timeZones(rng);
+	precisions();
 	seasonalOffsets();
 	systemTimeZoneKey();
 	hostileRules(rng);

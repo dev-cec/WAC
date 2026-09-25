@@ -261,7 +261,7 @@ with it.
   18 hives, ten of them from a real machine: 1,273,652 keys and 2,456,139
   values identical \\
 \texttt{system\_conversions\_test} & the Windows functions replaced &
-  9,661,284 comparisons, no difference (details below) \\
+  9,661,288 comparisons, no difference (details below) \\
 \texttt{consigne\_test} & the exhibit store itself, before and after &
   exhibit store byte-identical after the working copy was modified; seal
   conforms \\
@@ -378,6 +378,9 @@ boot time / Kernel-General~12 event & two independent sources of the same
 ShimCache date / NTFS date of the file in the manifest & a UTC date treated as
   local \\
 no event later than the collection & shift or misreading of an event date \\
+FAT dates without a fraction and with even seconds; Amcache text dates
+  without a fraction & every date written with seven digits of fraction,
+  claiming a precision the source does not have (808 dates) \\
 \multicolumn{2}{@{}l}{\textit{Decoding}} \\
 Prefetch hash / suffix of its file name & 65 wrong hashes out of 270
   (hexadecimal without padding) \\
@@ -418,7 +421,7 @@ Last cycle, on version 1.3.1 (Windows~11, Paris time zone):
 \begin{itemize}
   \item 23 valid JSON files out of 23 produced (the 24th, USBSTOR, is absent:
     the virtual machine has never seen a USB key);
-  \item 28 cross-checks passed, no failure, among them 4,045 local dates
+  \item 29 cross-checks passed, no failure, among them 4,045 local dates
     confronted with the IANA database and 145,645 events decoded;
   \item 1,336 exhibits in the exhibit store, exactly those of the manifest,
     seal conforms.

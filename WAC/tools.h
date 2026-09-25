@@ -477,11 +477,25 @@ FILETIME wstring_to_filetime(std::wstring input);
  *  one would emit "1601-01-01T00:00:00Z" as if it were a real date.
  */
 
+/*! The precision a date source really has. The fraction written says no more
+*  than it: a FAT date, precise to two seconds, used to come out as
+*  "…:30.0000000", which claims a precision to the ten-millionth of a second —
+*  an analyst would order on digits that the source never held.
+*  The default of the functions below, HundredNanoseconds, is that of a
+*  FILETIME, the native form of almost every Windows date; a source of coarser
+*  precision says so explicitly. */
+enum class Precision {
+	HundredNanoseconds, //!< FILETIME: seven digits of fraction
+	Millisecond,        //!< SYSTEMTIME (event data): three digits
+	Second              //!< FAT date (2 s), Unix time, text date, OLE date as converted: no fraction
+};
+
 /*! Formats a FILETIME **already expressed in UTC** as ISO 8601, suffix "Z".
 * @param filetime the instant, in UTC
+* @param precision the precision of the source (see Precision): the digits of fraction written
 * @return "YYYY-MM-DDTHH:MM:SSZ", or "" if the date is null
 */
-std::wstring timeToIso8601Utc(const FILETIME& filetime);
+std::wstring timeToIso8601Utc(const FILETIME& filetime, Precision precision = Precision::HundredNanoseconds);
 
 /*! Formats a FILETIME **expressed in local time** as ISO 8601, with the
 * offset in force at that local time on the examined machine (e.g. "+01:00" in
@@ -490,9 +504,10 @@ std::wstring timeToIso8601Utc(const FILETIME& filetime);
 * formatted by utcTimeToIso8601Local, which knows its exact offset even in the
 * hour repeated in autumn.
 * @param filetime the instant, in the examined machine's local time
+* @param precision the precision of the source (see Precision): the digits of fraction written
 * @return "YYYY-MM-DDTHH:MM:SS+HH:MM", or "" if the date is null
 */
-std::wstring timeToIso8601Local(const FILETIME& filetime);
+std::wstring timeToIso8601Local(const FILETIME& filetime, Precision precision = Precision::HundredNanoseconds);
 
 /*! Converts a FILETIME **expressed in local time** to UTC, then formats it as
 * ISO 8601 with the "Z" suffix.
@@ -500,9 +515,10 @@ std::wstring timeToIso8601Local(const FILETIME& filetime);
 * shimcache, USBSTOR, UserAssist) and whose UTC version is also wanted.
 * The offset is the suspect's (suspectLocalToUtc), not the running machine's.
 * @param filetimeLocal the instant, in the examined machine's local time
+* @param precision the precision of the source (see Precision): the digits of fraction written
 * @return "YYYY-MM-DDTHH:MM:SSZ", or "" if the date is null
 */
-std::wstring localTimeToIso8601Utc(const FILETIME& filetimeLocal);
+std::wstring localTimeToIso8601Utc(const FILETIME& filetimeLocal, Precision precision = Precision::HundredNanoseconds);
 
 /*! Converts a FILETIME **expressed in UTC** to the local time of the EXAMINED
 * machine, then formats it as ISO 8601 with the offset in force AT THAT DATE.
@@ -515,9 +531,10 @@ std::wstring localTimeToIso8601Utc(const FILETIME& filetimeLocal);
 * Here, the offset applied and the label come from the SAME source.
 *
 * @param filetimeUtc the instant, in UTC
+* @param precision the precision of the source (see Precision): the digits of fraction written
 * @return "YYYY-MM-DDTHH:MM:SS+HH:MM", or "" if the date is null
 */
-std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc);
+std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc, Precision precision = Precision::HundredNanoseconds);
 
 /*! Converts a UTC FILETIME to the local time of the EXAMINED machine.
 *

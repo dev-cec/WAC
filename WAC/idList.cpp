@@ -494,7 +494,7 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		*pos += 8;
 		if (!oleDateToSystemTime(t, st) || !SystemTimeToFileTime(&st, &local)) return Json::null();
 		// A VARIANT date (VT_DATE) is expressed in LOCAL time, by OLE convention.
-		return Json::str(timeToIso8601Local(local));
+		return Json::str(timeToIso8601Local(local, Precision::Second));   // oleDateToSystemTime rounds to the second
 	}
 	if (valueType == VT_BOOL) {
 		unsigned short v = *reinterpret_cast<unsigned short*>(buffer + *pos); *pos += 2;
@@ -1092,10 +1092,11 @@ Json Beef0004::toJson() {
 	// FIX: the Created* keys published accessedDate/accessedDateUtc, while
 	// creationDate/creationDateUtc are indeed parsed. The creation date was
 	// therefore lost and replaced by the access date.
-	o.add(L"CreatedDate",     Json::str(timeToIso8601Local(creationDate)));
-	o.add(L"CreatedDateUtc",  Json::str(timeToIso8601Utc(creationDateUtc)));
-	o.add(L"AccessedDate",    Json::str(timeToIso8601Local(accessedDate)));
-	o.add(L"AccessedDateUtc", Json::str(timeToIso8601Utc(accessedDateUtc)));
+	// FAT dates: precise to two seconds, hence written without a fraction.
+	o.add(L"CreatedDate",     Json::str(timeToIso8601Local(creationDate, Precision::Second)));
+	o.add(L"CreatedDateUtc",  Json::str(timeToIso8601Utc(creationDateUtc, Precision::Second)));
+	o.add(L"AccessedDate",    Json::str(timeToIso8601Local(accessedDate, Precision::Second)));
+	o.add(L"AccessedDateUtc", Json::str(timeToIso8601Utc(accessedDateUtc, Precision::Second)));
 	o.add(L"LongName",        Json::str(longName));
 	o.add(L"LocalizedName",   Json::str(localizedName));
 	return o;
@@ -2477,8 +2478,9 @@ Json NetworkShellItem::toJson() {
 	if (!location.empty()) {
 		o.add(L"Location", Json::str(location));
 	} else {
-		o.add(L"ModifiedUtc", Json::str(timeToIso8601Utc(modifiedUtc)));
-		o.add(L"Modified",    Json::str(utcTimeToIso8601Local(modifiedUtc)));
+		// Read from a text date: precise to the second.
+		o.add(L"ModifiedUtc", Json::str(timeToIso8601Utc(modifiedUtc, Precision::Second)));
+		o.add(L"Modified",    Json::str(utcTimeToIso8601Local(modifiedUtc, Precision::Second)));
 		o.add(L"Description", Json::str(description));
 		o.add(L"Comments",    Json::str(comments));
 	}
@@ -2499,15 +2501,17 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _level) {
 
 			name = readWideZ(buffer, declaredSize(buffer), 0x20);
 		}
-		else { // DATE EN WSTRING
+		else { // date as text: precise to the second
 			log(3, L"🔈wstring_to_filetime modifiedUtc");
 			modifiedUtc = wstring_to_filetime(readWideZ(buffer, declaredSize(buffer), 0x24));
+			modifiedPrecision = Precision::Second;
 			name = readWideZ(buffer, declaredSize(buffer), 0x5C);
 		}
 	}
 	else {
 		// FAT date = LOCAL time: UTC is derived from it, not the reverse.
 		modified = FatDateTime(date).toFileTime();
+		modifiedPrecision = Precision::Second;
 		log(3, L"🔈suspectLocalToUtc modified");
 		modifiedUtc = suspectLocalToUtc(modified);
 		log(3, L"🔈decodeText modified");
@@ -2519,10 +2523,11 @@ Json ArchiveFileContent::toJson() {
 	log(3, L"🔈ArchiveFileContent toJson");
 	Json o = Json::obj();
 	if (!isPresent) return o;
-	o.add(L"ModifiedUtc", Json::str(timeToIso8601Utc(modifiedUtc)));
+	o.add(L"ModifiedUtc", Json::str(timeToIso8601Utc(modifiedUtc, modifiedPrecision)));
 	// A FAT date is local at the source and kept as written; otherwise the source is UTC.
 	const bool localSource = modified.dwLowDateTime != 0 || modified.dwHighDateTime != 0;
-	o.add(L"Modified",    Json::str(localSource ? timeToIso8601Local(modified) : utcTimeToIso8601Local(modifiedUtc)));
+	o.add(L"Modified",    Json::str(localSource ? timeToIso8601Local(modified, modifiedPrecision)
+	                                            : utcTimeToIso8601Local(modifiedUtc, modifiedPrecision)));
 	o.add(L"Name",        Json::str(name));
 	return o;
 }
@@ -2591,8 +2596,9 @@ Json FileEntryShellItem::toJson() {
 	if (!isPresent) return o;
 	o.add(L"Attributes",          Json::str(fsFileAttributes.to_wstring()));
 	o.add(L"Flags",               Json::str(fsFlags.to_wstring()));
-	o.add(L"ModificationDate",    Json::str(timeToIso8601Local(fsFileModification)));
-	o.add(L"ModificationDateUtc", Json::str(timeToIso8601Utc(fsFileModificationUtc)));
+	// FAT date: precise to two seconds, hence written without a fraction.
+	o.add(L"ModificationDate",    Json::str(timeToIso8601Local(fsFileModification, Precision::Second)));
+	o.add(L"ModificationDateUtc", Json::str(timeToIso8601Utc(fsFileModificationUtc, Precision::Second)));
 	o.add(L"Size",                Json::num((unsigned long long)fsFileSize));   // count
 	o.add(L"Name",                Json::str(fsPrimaryName));
 	Json blocks = Json::arr();
@@ -2627,8 +2633,9 @@ Json UsersFilesFolder::toJson() {
 	Json o = Json::obj();
 	if (!isPresent) return o;
 	o.add(L"PrimaryName",     Json::str(primaryName));
-	o.add(L"ModifiedDateUtc", Json::str(timeToIso8601Utc(modifiedUtc)));
-	o.add(L"ModifiedDate",    Json::str(timeToIso8601Local(modified)));
+	// FAT date: precise to two seconds, hence written without a fraction.
+	o.add(L"ModifiedDateUtc", Json::str(timeToIso8601Utc(modifiedUtc, Precision::Second)));
+	o.add(L"ModifiedDate",    Json::str(timeToIso8601Local(modified, Precision::Second)));
 	// guard: extensionBlock may be null
 	if (extensionBlock && extensionBlock->isPresent)
 		o.add(L"ExtensionBlock", extensionBlock->toJson());

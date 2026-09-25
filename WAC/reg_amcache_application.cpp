@@ -22,9 +22,10 @@ AmcacheApplication::AmcacheApplication(ORHKEY hKey_amcache) {
 		log(3, L"🔈wstring_to_filetime InstallDate");
 		filetime = wstring_to_filetime(temp);
 		log(3, L"🔈timeToIso8601 InstallDate");
-		InstallDate = timeToIso8601Local(filetime);
+		// A text date ("month/day/year hour:minute:second"): precise to the second.
+		InstallDate = timeToIso8601Local(filetime, Precision::Second);
 		log(3, L"🔈timeToIso8601 InstallDateUtc");
-		InstallDateUtc = localTimeToIso8601Utc(filetime);
+		InstallDateUtc = localTimeToIso8601Utc(filetime, Precision::Second);
 	}
 }
 

@@ -685,8 +685,10 @@ ressources de messages : leurs événements n'ont alors pas de
 Chaque date est émise deux fois : \champ{X} en heure locale et \champ{XUtc} en
 UTC. L'heure locale est celle du \textbf{suspect}, calculée avec le fuseau lu
 dans sa ruche \fichier{SYSTEM} — pas celle de la machine de collecte. Les dates
-portent la fraction de seconde quand la source la fournit (jusqu'au
-dix-millionième).
+portent la fraction de seconde quand la source la fournit, et seulement dans
+la précision de cette source : sept chiffres pour un \texttt{FILETIME}, trois
+pour une date à la milliseconde, aucun pour une date à la seconde (date FAT,
+précise à deux secondes, date lue en texte, temps Unix).
 
 Chaque date porte le décalage en vigueur \textbf{à cette date}, heure d'été
 comprise : une date de janvier relevée en été à Paris est à \texttt{+01:00},

@@ -12,6 +12,7 @@ var structSystemInfo =
     [ "domainName", "structSystemInfo.html#ab2b9887e2012f48242e8b8435e68fceb", null ],
     [ "editionId", "structSystemInfo.html#a7bc3a4b48ddb450d17bc865211634f0a", null ],
     [ "installationType", "structSystemInfo.html#a7a8ad00b8e89f69926431337bc7735ce", null ],
+    [ "installDatePrecision", "structSystemInfo.html#ad18c39ec34b7c344df73621007b99af3", null ],
     [ "installDateUtc", "structSystemInfo.html#aa47309e18743c6d38b19bbce7b2b74e4", null ],
     [ "lastBootUpTimeUtc", "structSystemInfo.html#a6a14aa4c781d7a752df834e91384c0ed", null ],
     [ "machineGuid", "structSystemInfo.html#a7c355fcf690a6fd92b54f0a3696054c1", null ],

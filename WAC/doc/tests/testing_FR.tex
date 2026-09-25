@@ -234,6 +234,7 @@ entrées DestList / raccourcis des listes de sauts & les 15 premières entrées 
 nom de machine des événements / \fichier{OperatingSystem.json} & contrôle du décodage BinXML \\
 identifiants d'enregistrement uniques par journal & relecture d'un chunk périmé \\
 montages / \texttt{reg query} et \texttt{Get-Partition} & chemins de périphérique publiés comme « \textbackslash{} » \\
+précision des dates FAT et des dates lues en texte & sept chiffres de fraction sur des dates à la seconde \\
 sceau / empreinte réelle du manifeste & retouche du manifeste \\
 fichiers de la consigne / contenu du manifeste & 209 pièces ajoutées après le scellement \\
 \bottomrule
@@ -383,7 +384,7 @@ générée depuis le schéma d'un Windows de référence par
 system_conversions_test.exe
 \end{lstlisting}
 
-À lancer sous Windows (la VM). Référence : 9~661~284 comparaisons, aucun écart.
+À lancer sous Windows (la VM). Référence : 9~661~288 comparaisons, aucun écart.
 Deux écarts voulus : \wac{} refuse un SID écrit que Windows tronquerait
 (sous-autorité de $2^{32}$ ou plus, seizième sous-autorité), et une date NaN,
 pour laquelle Windows rend une heure dénuée de sens.

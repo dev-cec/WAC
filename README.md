@@ -746,7 +746,7 @@ offsets are compared with `SystemTimeToTzSpecificLocalTimeEx` and
 transition from 1980 to 2035; and `check-json.py` confronts the offset of every
 local date of a real collection with the tz database, an independent source —
 which caught the daylight saving dates of the SYSTEM hive read in the wrong
-layout (`TIME_FIELDS`, the weekday last, not `SYSTEMTIME`). Result: 9,661,284
+layout (`TIME_FIELDS`, the weekday last, not `SYSTEMTIME`). Result: 9,661,288
 comparisons, identical. Two
 intended differences: WAC refuses a SID text Windows would truncate (a
 sub-authority of 2^32 or more, a 16th sub-authority), and a NaN date, for which

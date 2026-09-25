@@ -151,8 +151,10 @@ HRESULT SystemInfo::getData() {
 		else {
 			DWORD installDate = 0;
 			if (getRegDwordValue(conf.Software, key, L"InstallDate", &installDate) == ERROR_SUCCESS
-			    && installDate != 0)
+			    && installDate != 0) {
 				installDateUtc = unixToFiletime(installDate);
+				installDatePrecision = Precision::Second;   // a Unix time counts seconds
+			}
 		}
 
 		// Unique identifier of the installation: serves to correlate artefacts coming
@@ -260,8 +262,8 @@ HRESULT SystemInfo::toJson() {
 	addIfSet(o, L"MachineGuid",            machineGuid);
 	// installDateUtc is in UTC: the local version must be CONVERTED, not merely
 	// relabelled (a defect caught by the harness's cross-check).
-	addIfSet(o, L"InstallDate",            utcTimeToIso8601Local(installDateUtc));
-	addIfSet(o, L"InstallDateUtc",         timeToIso8601Utc(installDateUtc));
+	addIfSet(o, L"InstallDate",            utcTimeToIso8601Local(installDateUtc, installDatePrecision));
+	addIfSet(o, L"InstallDateUtc",         timeToIso8601Utc(installDateUtc, installDatePrecision));
 
 	addIfSet(o, L"LocalDateTime",     utcTimeToIso8601Local(collectionTimeUtc));
 	addIfSet(o, L"LocalDateTimeUtc",  timeToIso8601Utc(collectionTimeUtc));

@@ -99,6 +99,7 @@ $(document).ready(function(){initNavTree('tools_8h.html',''); initResizable(); }
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#define-members">Macros</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">tools.h File Reference</div></div>
@@ -160,6 +161,14 @@ Macros</h2></td></tr>
 <tr class="memitem:a542529c1654a19379e8db5625bc7801e" id="r_a542529c1654a19379e8db5625bc7801e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a542529c1654a19379e8db5625bc7801e">LOG_TYPE_DEBUG</a>&#160;&#160;&#160;4</td></tr>
 <tr class="memdesc:a542529c1654a19379e8db5625bc7801e"><td class="mdescLeft">&#160;</td><td class="mdescRight">name of function called for debug purpose  <br /></td></tr>
 <tr class="separator:a542529c1654a19379e8db5625bc7801e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:ad1fbd6a28bdb0f04414d526ebeaed0e2" id="r_ad1fbd6a28bdb0f04414d526ebeaed0e2"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a> { <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">HundredNanoseconds</a>
+, <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a988bbeeb80e7e0a6b4651aab5a76b413">Millisecond</a>
+, <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2ac22cf8376b1893dcfcef0649fe1a7d87">Second</a>
+ }</td></tr>
+<tr class="separator:ad1fbd6a28bdb0f04414d526ebeaed0e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -223,14 +232,14 @@ Functions</h2></td></tr>
 <tr class="separator:a60ee9433903019ec436ff2efcef4ea0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac15b36c9a117f211860abb5d7f86d8d4" id="r_ac15b36c9a117f211860abb5d7f86d8d4"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ac15b36c9a117f211860abb5d7f86d8d4">wstring_to_filetime</a> (std::wstring input)</td></tr>
 <tr class="separator:ac15b36c9a117f211860abb5d7f86d8d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aed51f7f887c3a9ede2b9ee9dc59e8391" id="r_aed51f7f887c3a9ede2b9ee9dc59e8391"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#aed51f7f887c3a9ede2b9ee9dc59e8391">timeToIso8601Utc</a> (const FILETIME &amp;filetime)</td></tr>
-<tr class="separator:aed51f7f887c3a9ede2b9ee9dc59e8391"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac6e9127cec836f464d33dc6ed7aaf93c" id="r_ac6e9127cec836f464d33dc6ed7aaf93c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ac6e9127cec836f464d33dc6ed7aaf93c">timeToIso8601Local</a> (const FILETIME &amp;filetime)</td></tr>
-<tr class="separator:ac6e9127cec836f464d33dc6ed7aaf93c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae52f0c935a795ae5ade2cabe8686f61a" id="r_ae52f0c935a795ae5ade2cabe8686f61a"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ae52f0c935a795ae5ade2cabe8686f61a">localTimeToIso8601Utc</a> (const FILETIME &amp;filetimeLocal)</td></tr>
-<tr class="separator:ae52f0c935a795ae5ade2cabe8686f61a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5efd9b98819f1d7951c8f56c8c005465" id="r_a5efd9b98819f1d7951c8f56c8c005465"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a5efd9b98819f1d7951c8f56c8c005465">utcTimeToIso8601Local</a> (const FILETIME &amp;filetimeUtc)</td></tr>
-<tr class="separator:a5efd9b98819f1d7951c8f56c8c005465"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89cc7be3be8d6e85f9b70d4fabcab57b" id="r_a89cc7be3be8d6e85f9b70d4fabcab57b"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a89cc7be3be8d6e85f9b70d4fabcab57b">timeToIso8601Utc</a> (const FILETIME &amp;filetime, <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a> precision=<a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a>)</td></tr>
+<tr class="separator:a89cc7be3be8d6e85f9b70d4fabcab57b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a339f3424e4771fcd9cd009e2e5a35f23" id="r_a339f3424e4771fcd9cd009e2e5a35f23"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a339f3424e4771fcd9cd009e2e5a35f23">timeToIso8601Local</a> (const FILETIME &amp;filetime, <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a> precision=<a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a>)</td></tr>
+<tr class="separator:a339f3424e4771fcd9cd009e2e5a35f23"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a57a8108b142ebeea349023b6170a00c2" id="r_a57a8108b142ebeea349023b6170a00c2"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a57a8108b142ebeea349023b6170a00c2">localTimeToIso8601Utc</a> (const FILETIME &amp;filetimeLocal, <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a> precision=<a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a>)</td></tr>
+<tr class="separator:a57a8108b142ebeea349023b6170a00c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0eab7996fa09bca54687f5a91454722d" id="r_a0eab7996fa09bca54687f5a91454722d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a0eab7996fa09bca54687f5a91454722d">utcTimeToIso8601Local</a> (const FILETIME &amp;filetimeUtc, <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a> precision=<a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a>)</td></tr>
+<tr class="separator:a0eab7996fa09bca54687f5a91454722d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2db11fd993cf754bcb19e0731955b6ab" id="r_a2db11fd993cf754bcb19e0731955b6ab"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a2db11fd993cf754bcb19e0731955b6ab">utcToSuspectLocal</a> (const FILETIME &amp;filetimeUtc)</td></tr>
 <tr class="separator:a2db11fd993cf754bcb19e0731955b6ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a920d2d59405bf35238ca8e289cc8d85f" id="r_a920d2d59405bf35238ca8e289cc8d85f"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a920d2d59405bf35238ca8e289cc8d85f">suspectLocalToUtc</a> (const FILETIME &amp;filetimeLocal)</td></tr>
@@ -420,6 +429,38 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 
 <p>longest value name in the registry </p>
+
+</div>
+</div>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a id="ad1fbd6a28bdb0f04414d526ebeaed0e2" name="ad1fbd6a28bdb0f04414d526ebeaed0e2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad1fbd6a28bdb0f04414d526ebeaed0e2">&#9670;&#160;</a></span>Precision</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum class <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>The precision a date source really has. The fraction written says no more than it: a FAT date, precise to two seconds, used to come out as "…:30.0000000", which claims a precision to the ten-millionth of a second — an analyst would order on digits that the source never held. The default of the functions below, HundredNanoseconds, is that of a FILETIME, the native form of almost every Windows date; a source of coarser precision says so explicitly. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b" name="ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b"></a>HundredNanoseconds&#160;</td><td class="fielddoc"><p>FILETIME: seven digits of fraction. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad1fbd6a28bdb0f04414d526ebeaed0e2a988bbeeb80e7e0a6b4651aab5a76b413" name="ad1fbd6a28bdb0f04414d526ebeaed0e2a988bbeeb80e7e0a6b4651aab5a76b413"></a>Millisecond&#160;</td><td class="fielddoc"><p>SYSTEMTIME (event data): three digits. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad1fbd6a28bdb0f04414d526ebeaed0e2ac22cf8376b1893dcfcef0649fe1a7d87" name="ad1fbd6a28bdb0f04414d526ebeaed0e2ac22cf8376b1893dcfcef0649fe1a7d87"></a>Second&#160;</td><td class="fielddoc"><p>FAT date (2 s), Unix time, text date, OLE date as converted: no fraction. </p>
+</td></tr>
+</table>
 
 </div>
 </div>
@@ -1343,8 +1384,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="ae52f0c935a795ae5ade2cabe8686f61a" name="ae52f0c935a795ae5ade2cabe8686f61a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae52f0c935a795ae5ade2cabe8686f61a">&#9670;&#160;</a></span>localTimeToIso8601Utc()</h2>
+<a id="a57a8108b142ebeea349023b6170a00c2" name="a57a8108b142ebeea349023b6170a00c2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a57a8108b142ebeea349023b6170a00c2">&#9670;&#160;</a></span>localTimeToIso8601Utc()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1353,14 +1394,25 @@ Variables</h2></td></tr>
           <td class="memname">std::wstring localTimeToIso8601Utc </td>
           <td>(</td>
           <td class="paramtype">const FILETIME &amp;&#160;</td>
-          <td class="paramname"><em>filetimeLocal</em></td><td>)</td>
+          <td class="paramname"><em>filetimeLocal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype"><a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a>&#160;</td>
+          <td class="paramname"><em>precision</em> = <code><a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a></code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Converts a FILETIME <b>expressed in local time</b> to UTC, then formats it as ISO 8601 with the "Z" suffix. Useful for the artefacts that store dates in local time (Amcache, BAM, shimcache, USBSTOR, <a class="el" href="structUserAssist.html">UserAssist</a>) and whose UTC version is also wanted. The offset is the suspect's (suspectLocalToUtc), not the running machine's. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">filetimeLocal</td><td>the instant, in the examined machine's local time </td></tr>
+    <tr><td class="paramname">precision</td><td>the precision of the source (see Precision): the digits of fraction written </td></tr>
   </table>
   </dd>
 </dl>
@@ -2109,8 +2161,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="ac6e9127cec836f464d33dc6ed7aaf93c" name="ac6e9127cec836f464d33dc6ed7aaf93c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac6e9127cec836f464d33dc6ed7aaf93c">&#9670;&#160;</a></span>timeToIso8601Local()</h2>
+<a id="a339f3424e4771fcd9cd009e2e5a35f23" name="a339f3424e4771fcd9cd009e2e5a35f23"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a339f3424e4771fcd9cd009e2e5a35f23">&#9670;&#160;</a></span>timeToIso8601Local()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -2119,14 +2171,25 @@ Variables</h2></td></tr>
           <td class="memname">std::wstring timeToIso8601Local </td>
           <td>(</td>
           <td class="paramtype">const FILETIME &amp;&#160;</td>
-          <td class="paramname"><em>filetime</em></td><td>)</td>
+          <td class="paramname"><em>filetime</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype"><a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a>&#160;</td>
+          <td class="paramname"><em>precision</em> = <code><a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a></code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Formats a FILETIME <b>expressed in local time</b> as ISO 8601, with the offset in force at that local time on the examined machine (e.g. "+01:00" in winter, "+02:00" in summer) — the one suspectLocalToUtc applies. For a value the artefact stores in LOCAL time; a value stored in UTC is formatted by utcTimeToIso8601Local, which knows its exact offset even in the hour repeated in autumn. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">filetime</td><td>the instant, in the examined machine's local time </td></tr>
+    <tr><td class="paramname">precision</td><td>the precision of the source (see Precision): the digits of fraction written </td></tr>
   </table>
   </dd>
 </dl>
@@ -2134,8 +2197,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="aed51f7f887c3a9ede2b9ee9dc59e8391" name="aed51f7f887c3a9ede2b9ee9dc59e8391"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aed51f7f887c3a9ede2b9ee9dc59e8391">&#9670;&#160;</a></span>timeToIso8601Utc()</h2>
+<a id="a89cc7be3be8d6e85f9b70d4fabcab57b" name="a89cc7be3be8d6e85f9b70d4fabcab57b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a89cc7be3be8d6e85f9b70d4fabcab57b">&#9670;&#160;</a></span>timeToIso8601Utc()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -2144,14 +2207,25 @@ Variables</h2></td></tr>
           <td class="memname">std::wstring timeToIso8601Utc </td>
           <td>(</td>
           <td class="paramtype">const FILETIME &amp;&#160;</td>
-          <td class="paramname"><em>filetime</em></td><td>)</td>
+          <td class="paramname"><em>filetime</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype"><a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a>&#160;</td>
+          <td class="paramname"><em>precision</em> = <code><a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a></code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Formats a FILETIME <b>already expressed in UTC</b> as ISO 8601, suffix "Z". </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">filetime</td><td>the instant, in UTC </td></tr>
+    <tr><td class="paramname">precision</td><td>the precision of the source (see Precision): the digits of fraction written </td></tr>
   </table>
   </dd>
 </dl>
@@ -2224,8 +2298,8 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a id="a5efd9b98819f1d7951c8f56c8c005465" name="a5efd9b98819f1d7951c8f56c8c005465"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5efd9b98819f1d7951c8f56c8c005465">&#9670;&#160;</a></span>utcTimeToIso8601Local()</h2>
+<a id="a0eab7996fa09bca54687f5a91454722d" name="a0eab7996fa09bca54687f5a91454722d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0eab7996fa09bca54687f5a91454722d">&#9670;&#160;</a></span>utcTimeToIso8601Local()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -2234,8 +2308,18 @@ template&lt;typename T &gt; </div>
           <td class="memname">std::wstring utcTimeToIso8601Local </td>
           <td>(</td>
           <td class="paramtype">const FILETIME &amp;&#160;</td>
-          <td class="paramname"><em>filetimeUtc</em></td><td>)</td>
+          <td class="paramname"><em>filetimeUtc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype"><a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a>&#160;</td>
+          <td class="paramname"><em>precision</em> = <code><a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a></code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -2244,6 +2328,7 @@ template&lt;typename T &gt; </div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">filetimeUtc</td><td>the instant, in UTC </td></tr>
+    <tr><td class="paramname">precision</td><td>the precision of the source (see Precision): the digits of fraction written </td></tr>
   </table>
   </dd>
 </dl>

@@ -60,6 +60,7 @@ struct SystemInfo {
 	std::wstring systemRoot;                //!< installation path, e.g. "C:\\Windows"
 	std::wstring machineGuid;               //!< unique identifier of the installation
 	FILETIME     installDateUtc = { 0, 0 }; //!< installation date of the OS (UTC)
+	Precision    installDatePrecision = Precision::HundredNanoseconds; //!< the second when read from the Unix-time fallback
 
 	// --- instant of the collection (measured live) ---
 	FILETIME collectionTimeUtc = { 0, 0 };  //!< instant of the run (UTC)

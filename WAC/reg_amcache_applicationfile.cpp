@@ -32,9 +32,10 @@ AmcacheApplicationFile::AmcacheApplicationFile(ORHKEY hKey_amcache) {
 		log(3, L"🔈wstring_to_filetime LinkDate");
 		filetime = wstring_to_filetime(temp);
 		log(3, L"🔈timeToIso8601 LinkDate");
-		linkDate = timeToIso8601Local(filetime);
+		// A text date ("month/day/year hour:minute:second"): precise to the second.
+		linkDate = timeToIso8601Local(filetime, Precision::Second);
 		log(3, L"🔈timeToIso8601 LinkDateUtc");
-		linkDateUtc = localTimeToIso8601Utc(filetime);
+		linkDateUtc = localTimeToIso8601Utc(filetime, Precision::Second);
 	}
 }
 

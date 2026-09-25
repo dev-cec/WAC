@@ -266,7 +266,7 @@ lui.
   18 ruches, dont dix d'une machine réelle : 1~273~652 clés et 2~456~139
   valeurs identiques \\
 \texttt{system\_conversions\_test} & fonctions Windows remplacées &
-  9~661~284 comparaisons, aucun écart (détail ci-dessous) \\
+  9~661~288 comparaisons, aucun écart (détail ci-dessous) \\
 \texttt{consigne\_test} & la consigne elle-même, avant et après &
   consigne identique octet pour octet après modification de la copie de
   travail ; sceau conforme \\
@@ -389,6 +389,9 @@ date ShimCache / date NTFS du fichier dans le manifeste & une date UTC traitée
   comme locale \\
 aucun événement postérieur à la collecte & décalage ou mauvaise lecture d'une
   date d'événement \\
+dates FAT sans fraction et à secondes paires ; dates Amcache lues en texte
+  sans fraction & toutes les dates écrites avec sept chiffres de fraction, qui
+  annonçaient une précision que la source n'a pas (808 dates) \\
 \multicolumn{2}{@{}l}{\textit{Décodage}} \\
 empreinte d'un Prefetch / suffixe de son nom de fichier & 65 empreintes fausses
   sur 270 (hexadécimal sans remplissage) \\
@@ -431,7 +434,7 @@ Dernier cycle, sur la version 1.3.1 (Windows~11, fuseau de Paris) :
 \begin{itemize}
   \item 23 fichiers JSON valides sur 23 produits (le 24\textsuperscript{e},
     USBSTOR, est absent : la machine virtuelle n'a jamais vu de clé USB) ;
-  \item 28 contrôles croisés passés, aucun échec, dont 4~045 dates locales
+  \item 29 contrôles croisés passés, aucun échec, dont 4~045 dates locales
     confrontées à la base IANA et 145~645 événements décodés ;
   \item 1~336 pièces dans la consigne, exactement celles du manifeste, sceau
     conforme.

@@ -145,7 +145,8 @@ Variables</h2></td></tr>
 <li>biasAtUtc / SystemTimeToTzSpecificLocalTimeEx and biasAtLocal / TzSpecificLocalTimeToSystemTimeEx, on EVERY time zone of Windows, with the rules read in the registry as WAC reads them in the suspect's hives: random instants from 1970 to 2040, and every transition (the hour skipped, the hour repeated) from 1980 to 2035;</li>
 <li>the rule read in <code>SYSTEM\...\TimeZoneInformation</code> (transition dates in the kernel's TIME_FIELDS layout) against GetTimeZoneInformation;</li>
 <li>the formatting of WAC end to end: a winter date collected in summer is labelled with its own offset, not the collection day's;</li>
-<li>random (forged) rules: offsets within bounds, no overflow.</li>
+<li>random (forged) rules: offsets within bounds, no overflow;</li>
+<li>the precision written: seven, three or no digits of fraction, as the source holds; a FAT date comes out to the second, never ".0000000".</li>
 </ul>
 <p>Usage: system_conversions_test Built by <code>build-windows.sh --test</code>; runs on Windows (the test VM). </p>
 </div><h2 class="groupheader">Function Documentation</h2>

@@ -847,8 +847,10 @@ namespace {
  *  @param st the date
  *  @param fraction100ns fraction of a second, in hundreds of nanoseconds (0..9999999)
  *  @param suffix "Z", or the offset "+HH:MM" of the value
+ *  @param precision how many digits of fraction the source really has
  *  @return the formatted date, or "" if it is null */
-std::wstring formatIso8601(const SYSTEMTIME& st, long fraction100ns, const std::wstring& suffix) {
+std::wstring formatIso8601(const SYSTEMTIME& st, long fraction100ns, const std::wstring& suffix,
+                           Precision precision) {
 	if (st.wYear <= 1601) return L"";        // null date: an empty string, not 1601
 	std::wstring s;
 	s.reserve(33);
@@ -863,8 +865,10 @@ std::wstring formatIso8601(const SYSTEMTIME& st, long fraction100ns, const std::
 	    finished string: on the local variant, whose "+02:00" suffix ends with
 	    digits, the search stopped at once and the fraction landed AFTER the
 	    time-zone offset. */
-	s += L'.';
-	for (int p = 6; p >= 0; --p) {
+	const int digits = precision == Precision::HundredNanoseconds ? 7
+	                 : precision == Precision::Millisecond ? 3 : 0;
+	if (digits) s += L'.';
+	for (int p = 6; p >= 7 - digits; --p) {
 		long divisor = 1;
 		for (int k = 0; k < p; ++k) divisor *= 10;
 		s += (wchar_t)(L'0' + ((fraction100ns / divisor) % 10));
@@ -913,26 +917,26 @@ FILETIME shifted(const FILETIME& filetime, long long offset100ns) {
 }
 
 //! Formats a local FILETIME with the bias that goes with it.
-std::wstring formatLocal(const FILETIME& local, long bias) {
+std::wstring formatLocal(const FILETIME& local, long bias, Precision precision) {
 	if (nullDate(local)) return L"";
 	SYSTEMTIME st = { 0 };
 	if (!FileTimeToSystemTime(&local, &st)) return L"";
-	return formatIso8601(st, fraction100ns(local), offsetSuffix(bias));
+	return formatIso8601(st, fraction100ns(local), offsetSuffix(bias), precision);
 }
 
 } // namespace
 
-std::wstring timeToIso8601Utc(const FILETIME& filetime) {
+std::wstring timeToIso8601Utc(const FILETIME& filetime, Precision precision) {
 	if (nullDate(filetime)) return L"";
 	SYSTEMTIME st = { 0 };
 	if (!FileTimeToSystemTime(&filetime, &st)) return L"";
-	return formatIso8601(st, fraction100ns(filetime), L"Z");
+	return formatIso8601(st, fraction100ns(filetime), L"Z", precision);
 }
 
-std::wstring timeToIso8601Local(const FILETIME& filetime) {
+std::wstring timeToIso8601Local(const FILETIME& filetime, Precision precision) {
 	if (nullDate(filetime)) return L"";
 	// The offset suspectLocalToUtc applies to the same local time: label and UTC agree.
-	return formatLocal(filetime, biasAtLocal(suspectRules(), ticksOf(filetime)));
+	return formatLocal(filetime, biasAtLocal(suspectRules(), ticksOf(filetime)), precision);
 }
 
 /* Each date takes the offset in force AT THAT DATE, from the suspect's rules
@@ -949,16 +953,16 @@ FILETIME suspectLocalToUtc(const FILETIME& filetimeLocal) {
 	return shifted(filetimeLocal, biasAtLocal(suspectRules(), ticksOf(filetimeLocal)) * MINUTE_100NS);
 }
 
-std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc) {
+std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc, Precision precision) {
 	if (nullDate(filetimeUtc)) return L"";
 	/* The bias of the UTC instant labels the result: in the hour repeated in
 	   autumn, the local time alone could not tell which of the two offsets. */
 	const long bias = biasAtUtc(suspectRules(), ticksOf(filetimeUtc));
-	return formatLocal(shifted(filetimeUtc, -bias * MINUTE_100NS), bias);
+	return formatLocal(shifted(filetimeUtc, -bias * MINUTE_100NS), bias, precision);
 }
 
-std::wstring localTimeToIso8601Utc(const FILETIME& filetimeLocal) {
-	return timeToIso8601Utc(suspectLocalToUtc(filetimeLocal));
+std::wstring localTimeToIso8601Utc(const FILETIME& filetimeLocal, Precision precision) {
+	return timeToIso8601Utc(suspectLocalToUtc(filetimeLocal), precision);
 }
 
 std::wstring decodeText(const std::string& bytes, UINT codePage)

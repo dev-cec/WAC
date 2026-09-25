@@ -253,7 +253,7 @@ private:
 			st.wSecond = read16(c, tc, off + 12); st.wMilliseconds = read16(c, tc, off + 14);
 			FILETIME ft = { 0 };
 			if (!SystemTimeToFileTime(&st, &ft)) return L"";
-			return timeToIso8601Utc(ft);
+			return timeToIso8601Utc(ft, Precision::Millisecond);   // a SYSTEMTIME stops at the millisecond
 		}
 		case T_SID:  return sidToText(d, size);
 		case T_HEX32: return size >= 4 ? to_hex((uint32_t)read32(c, tc, off)) : L"";

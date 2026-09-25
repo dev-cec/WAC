@@ -674,7 +674,10 @@ have no \champ{EvtEventMessage}, but their data are complete.
 Every date is emitted twice: \champ{X} in local time and \champ{XUtc} in UTC.
 The local time is the \textbf{suspect's}, computed with the time zone read from
 its \fichier{SYSTEM} hive — not the collecting machine's. Dates carry the
-fraction of a second when the source provides it (down to a ten-millionth).
+fraction of a second when the source provides it, and only to that source's
+precision: seven digits for a \texttt{FILETIME}, three for a date to the
+millisecond, none for a date to the second (FAT date, precise to two seconds,
+text date, Unix time).
 
 Every date carries the offset in force \textbf{at that date}, daylight saving
 time included: a January date collected in summer in Paris is at
