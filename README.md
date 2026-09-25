@@ -138,7 +138,7 @@ what it is and, where it matters, why it is trustworthy.
 To minimize disk traces, this standalone tool should be run **as administrator** from a USB stick using the command:
 
 ```
-usage: wac [--collect | --convert=folder] [--dump] [--events] [--binary | --binary-all] [--output=output] [--loglevel=2] [--debug]
+usage: wac [--collect | --convert=folder] [--dump] [--events] [--binary | --binary-all] [--threads=N] [--output=output] [--loglevel=2] [--debug]
         --help or /? : show this help
         --collect : collection only, on the examined machine: live snapshots and
                     raw extraction into the sealed exhibit store; nothing is
@@ -161,6 +161,10 @@ usage: wac [--collect | --convert=folder] [--dump] [--events] [--binary | --bina
         --binary-all : like --binary, but every executable is collected,
                    authenticated or not; the signature is still checked and
                    its verdict recorded in the manifest
+        --threads=N : threads analysing the executables of --collect --binary
+                   (PE, Authenticode, catalogs, fingerprints); by default the
+                   processor's threads minus one, the reading keeping its own.
+                   The result does not depend on it: the manifest is the same
         --output=[directory name] : directory name to store output files starting from current directory. By default the directory is 'output'
         --loglevel=[0] : define level of details in logfile and activate logging in wac.log
         --debug : show the raw NTFS reader trace on stderr (path resolution,
@@ -235,7 +239,7 @@ E:\> WAC.exe --collect --events --binary --output=accounting-pc-01     (examined
 D:\> WAC.exe --convert=E:\accounting-pc-01 --events --binary           (analysis workstation)
 ```
 
-| | Full run (no mode option) | `--collect` | `--convert=folder` |
+| | Full run (\<default\>) | `--collect` | `--convert=folder` |
 |---|---|---|---|
 | Runs on | the examined machine | the examined machine | an analysis workstation |
 | Does | collection **and** conversion, in one run | collection only: live snapshots, raw extraction, sealed exhibit store — **nothing converted** | checks the seal and every fingerprint, then converts; the exhibit store is only read |
@@ -269,7 +273,7 @@ instead of the manifest.
 | Not authenticated | **copied**, with MD5, SHA-1, SHA-256 (and the Authenticode digest of a PE) and the reason (`SignatureReason`) | **copied**, the same way |
 | Exhibit store, test VM (`--collect --events`) | 1.8 GB | 20.0 GB |
 | Collection time, test VM | 16 min 39 s | 21 min 45 s |
-| When | always, unless the case says otherwise | the content of every executable must itself be in the exhibit store: a malware analysis, a request for the files themselves |
+| When | always, unless the case says otherwise | the content of every executable must itself be in the exhibit store |
 
 ## 🛡️ FOOTPRINT ON THE EXAMINED MACHINE
 

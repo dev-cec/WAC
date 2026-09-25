@@ -273,7 +273,8 @@ Ouvrez une invite de commandes \textbf{en tant qu'administrateur}, placez-vous
 sur le support de collecte, puis lancez :
 
 \begin{lstlisting}
-WAC.exe [--collect | --convert=dossier] [--events] [--binary] [--dump]
+WAC.exe [--collect | --convert=dossier] [--events] [--binary | --binary-all]
+        [--threads=N] [--dump]
         [--output=dossier] [--loglevel=N] [--debug]
 \end{lstlisting}
 
@@ -303,6 +304,10 @@ Toutes les options sont facultatives et désactivées par défaut.
   authentifié ou non ; la signature est tout de même vérifiée, et le manifeste
   dit pour chacun si elle est valide. Pour les dossiers où le contenu même doit
   figurer dans la consigne. \\
+-{}-threads=N & Nombre de fils qui analysent les exécutables de \opt{collect}
+  \opt{binary} (PE, Authenticode, catalogues, empreintes). Par défaut, le nombre
+  de fils du processeur moins un, la lecture du disque gardant le sien. Le
+  résultat n'en dépend pas : le manifeste est le même. \\
 -{}-dump & Ajoute la valeur hexadécimale brute des éléments de shellbags et de
   raccourcis \fichier{.lnk}, pour un décodage ultérieur. \\
 -{}-output=dossier & Dossier de sortie, relatif au répertoire courant. Par défaut :

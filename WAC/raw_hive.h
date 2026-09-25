@@ -25,6 +25,18 @@
 /*! Enables diagnostic messages on stderr (silent by default). */
 void RawHiveSetVerbose(bool on);
 
+/*! Time the raw reading spent since the start of the process, per activity,
+ *  in seconds: where a whole-volume reading goes (see binaires.cpp). */
+struct RawReadTimes {
+    double diskRead = 0;       //!< waiting for the volume (ReadFile)
+    double decompression = 0;  //!< WOF (XPRESS, LZX) and NTFS (LZNT1) decompression
+    double fileHashes = 0;     //!< MD5, SHA-1, SHA-256 of the files
+    double observers = 0;      //!< the callers' analysis of the content (PE, Authenticode, blocks)
+};
+
+/*! @return the time spent so far, per activity */
+RawReadTimes RawHiveTimes();
+
 /*! Checks then applies the fixups of an NTFS multi-sector record ($MFT
  *  record "FILE", index block "INDX").
  *

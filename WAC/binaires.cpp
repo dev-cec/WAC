@@ -3,6 +3,13 @@
  */
 #include "binaires.h"
 #include <map>
+#include <fstream>
+#include <chrono>
+#include <deque>
+#include <atomic>
+#include <condition_variable>
+#include <mutex>
+#include <thread>
 #include <memory>
 #include <filesystem>
 #include "tools.h"
@@ -12,6 +19,7 @@
 #include "running_machine.h"
 #include "authenticode.h"
 #include "sha.h"
+#include "quickdigest5.h"
 #include "xml_light.h"
 #include <set>
 #include <vector>
@@ -485,10 +493,96 @@ HRESULT storeExhibit(const std::wstring& path, const std::wstring& purpose, RawH
 	return recordStaged(path, staged, result, line, method, verdict);
 }
 
+/*! The analysis of an executable's content, fed as the content passes —
+ *  read from the volume, or held in memory: the PE (Authenticode), the first
+ *  bytes (a Windows differential file), a PowerShell script's text, a package
+ *  file's blocks. It touches no shared state (the catalogs are only read), so
+ *  it runs on any thread; what the verdict changes in the counters is left to
+ *  noteVerdict, on the main thread. */
+class ContentAnalysis {
+public:
+	ContentAnalysis(const std::wstring& path, const PackageFile* package)
+		: powershell_(isPowerShellScript(path)), package_(package),
+		  fanout_{ &pe_, powershell_ ? &text_ : nullptr, package ? &blocks_ : nullptr }, head_(&fanout_) {}
+	ContentAnalysis(const ContentAnalysis&) = delete;
+	ContentAnalysis& operator=(const ContentAnalysis&) = delete;
+
+	//! @return where to feed the content
+	std::streambuf* input() { return &head_; }
+	//! To be called once the whole content is fed.
+	void finishContent() { pe_.finish(); }
+	//! @return whether the content is a PE (after finishContent)
+	bool isPe() const { return pe_.isPe(); }
+
+	/*! The PE fields of the record, whether the file is a Windows differential
+	 *  file, and the verdict. A non-PE is looked up in the catalogs by its
+	 *  SHA-256: the record must carry it.
+	 *  @param line the record of the read
+	 *  @param verdict receives the verdict
+	 *  @param windowsDelta receives whether it is a differential file */
+	void conclude(RawHiveExtraction& line, VerdictMicrosoft& verdict, bool& windowsDelta) {
+		windowsDelta = !pe_.isPe() && isWindowsDelta(head_.bytes());
+		if (pe_.isPe()) {
+			line.fingerprints.authenticodeSha1 = toHexadecimal(pe_.sha1(), 20);
+			line.fingerprints.authenticodeSha256 = toHexadecimal(pe_.sha256(), 32);
+			line.fingerprints.peTimeDateStamp = pe_.timeDateStamp();
+			line.fingerprints.peSizeOfImage = pe_.sizeOfImage();
+		}
+		/* PE: Authenticode digest. Script or document: SHA-256 of the raw bytes in
+		   the catalogs, then embedded PowerShell signature. */
+		if (pe_.isPe()) verdict = EvaluatePe(pe_, catalogues());
+		else {
+			uint8_t h[32];
+			if (bytesFromHex(line.fingerprints.sha256, h)) verdict = EvaluateByCatalog(h, catalogues());
+			if (!verdict.microsoft && powershell_) {
+				const VerdictMicrosoft ps = EvaluatePowerShellScript(text_.bytes.data(), text_.bytes.size());
+				if (ps.microsoft || ps.reason != "no embedded signature") verdict = ps;
+			}
+		}
+		/* A file of a signed package — a Store application: its size and every
+		   block match what the package's signed block map says. A file added to
+		   the folder after installation is in no block map; a modified one fails
+		   on its first altered block. Either is collected. */
+		if (verdict.microsoft || !package_) return;
+		if (blocks_.size() == package_->size && blocks_.finish() == package_->blocks) {
+			verdict.microsoft = true;
+			verdict.source = L"package " + package_->package + L", signed by " + package_->signer
+			               + L" (AppxSignature.p7x, AppxBlockMap.xml)";
+			verdict.reason.clear();
+		}
+		// Listed in a signed block map, yet different: say so, it is the finding.
+		else verdict.reason += "; content differs from its package's signed block map";
+	}
+
+private:
+	const bool powershell_;
+	const PackageFile* package_;
+	PeAnalyser pe_;
+	Collector text_;                  // PowerShell scripts: text in memory
+	BlockDigests blocks_;             // a file of a signed package: its blocks
+	Fanout fanout_;
+	Head head_;
+};
+
+/*! Counts an authenticated file, and keeps what justified its authentication
+ *  for the exhibit store (catalog, package). Main thread only.
+ *  @param verdict the verdict
+ *  @param line the file's record
+ *  @param package its package entry, if any */
+void noteVerdict(const VerdictMicrosoft& verdict, const RawHiveExtraction& line, const PackageFile* package) {
+	if (!verdict.microsoft) return;
+	++g_authenticated;
+	g_authenticatedBytes += line.fingerprints.bytes;
+	/* By the verdict's own field: the prefix of its label used to be looked
+	   for as "catalogue " while the label says "catalog " — no catalog that
+	   justified an authentication ever reached the exhibit store. */
+	if (!verdict.catalog.empty()) g_catalogsUsed.insert(verdict.catalog);
+	if (package && verdict.source.compare(0, 8, L"package ") == 0) g_packagesUsed.insert(package->package);
+}
+
 /*! FIRST READ, WRITING NOTHING: fingerprints and, for a PE or a script, the
  *  Microsoft authenticity, verified in memory (see authenticode.h). The
- *  content goes through the PE analysis — and, for a PowerShell script, into
- *  memory for its embedded signature — as it is read.
+ *  content goes through the analysis (ContentAnalysis) as it is read.
  *
  *  THE STRICT NECESSARY. Authenticating a PE needs its Authenticode digests
  *  only; MD5, SHA-1 and SHA-256 of the file identify it, and are computed
@@ -506,61 +600,20 @@ HRESULT storeExhibit(const std::wstring& path, const std::wstring& purpose, RawH
 HRESULT readAndAuthenticate(const std::wstring& path, RawHiveExtraction& line, VerdictMicrosoft& verdict,
                             bool fileHashes = true, bool* windowsDelta = nullptr,
                             const std::wstring& output = std::wstring()) {
-	PeAnalyser pe;
-	Collector text;                       // PowerShell scripts: text in memory
-	const bool powershell = isPowerShellScript(path);
-	BlockDigests blocks;                  // a file of a signed package: its blocks
 	const PackageFile* package = packageFileOf(path);
-	Fanout tee{ &pe, powershell ? &text : nullptr, package ? &blocks : nullptr };
-	Head head(&tee);
+	ContentAnalysis analysis(path, package);
 	line.fingerprints.computeHashes = fileHashes;
-	const HRESULT hr = g_reader->read(path, output, line, &head);
-	pe.finish();
+	const HRESULT hr = g_reader->read(path, output, line, analysis.input());
+	analysis.finishContent();
 	if (FAILED(hr)) return hr;
-	if (windowsDelta) *windowsDelta = !pe.isPe() && isWindowsDelta(head.bytes());
-	if (!pe.isPe() && !fileHashes) {
+	if (!analysis.isPe() && !fileHashes) {
 		line = RawHiveExtraction{};
-		return readAndAuthenticate(path, line, verdict, true, nullptr, output);
+		return readAndAuthenticate(path, line, verdict, true, windowsDelta, output);
 	}
-	if (pe.isPe()) {
-		line.fingerprints.authenticodeSha1 = toHexadecimal(pe.sha1(), 20);
-		line.fingerprints.authenticodeSha256 = toHexadecimal(pe.sha256(), 32);
-		line.fingerprints.peTimeDateStamp = pe.timeDateStamp();
-		line.fingerprints.peSizeOfImage = pe.sizeOfImage();
-	}
-	/* PE: Authenticode digest. Script or document: SHA-256 of the raw bytes in
-	   the catalogs, then embedded PowerShell signature. */
-	if (pe.isPe()) verdict = EvaluatePe(pe, catalogues());
-	else {
-		uint8_t h[32];
-		if (bytesFromHex(line.fingerprints.sha256, h)) verdict = EvaluateByCatalog(h, catalogues());
-		if (!verdict.microsoft && powershell) {
-			const VerdictMicrosoft ps = EvaluatePowerShellScript(text.bytes.data(), text.bytes.size());
-			if (ps.microsoft || ps.reason != "no embedded signature") verdict = ps;
-		}
-	}
-	/* A file of a signed package — a Store application: its size and every
-	   block match what the package's signed block map says. A file added to
-	   the folder after installation is in no block map; a modified one fails
-	   on its first altered block. Either is collected. */
-	// Listed in a signed block map, yet different: say so, it is the finding.
-	if (!verdict.microsoft && package && (blocks.size() != package->size || blocks.finish() != package->blocks))
-		verdict.reason += "; content differs from its package's signed block map";
-	if (!verdict.microsoft && package && blocks.size() == package->size && blocks.finish() == package->blocks) {
-		verdict.microsoft = true;
-		verdict.source = L"package " + package->package + L", signed by " + package->signer
-		               + L" (AppxSignature.p7x, AppxBlockMap.xml)";
-		verdict.reason.clear();
-		g_packagesUsed.insert(package->package);
-	}
-	if (verdict.microsoft) {
-		++g_authenticated;
-		g_authenticatedBytes += line.fingerprints.bytes;
-		/* By the verdict's own field: the prefix of its label used to be looked
-		   for as "catalogue " while the label says "catalog " — no catalog that
-		   justified an authentication ever reached the exhibit store. */
-		if (!verdict.catalog.empty()) g_catalogsUsed.insert(verdict.catalog);
-	}
+	bool delta = false;
+	analysis.conclude(line, verdict, delta);
+	if (windowsDelta) *windowsDelta = delta;
+	noteVerdict(verdict, line, package);
 	return hr;
 }
 
@@ -724,6 +777,258 @@ BinarySummary BinariesSummary() {
 	return b;
 }
 
+namespace {
+
+/*! One file of the whole-volume walk, from its reading to its record. */
+struct WalkItem {
+	size_t order = 0;                 //!< its rank in the walk: results are recorded in that order
+	std::wstring path;
+	std::wstring method;              //!< collection method, as the manifest records it
+	std::pair<size_t, uint64_t> record;   //!< (volume, $MFT record): identifies hard links
+	bool link = false;                //!< another name of a record already read
+	bool inMemory = false;            //!< content held here, analysed by a worker
+	HRESULT result = S_OK;            //!< the read's result
+	RawHiveExtraction line;           //!< the read's record
+	std::vector<uint8_t> content;     //!< the content (inMemory)
+	std::wstring staged;              //!< the content already written to the incoming directory (--binary-all, streamed)
+	const PackageFile* package = nullptr;
+	VerdictMicrosoft verdict;
+	bool windowsDelta = false;
+};
+
+//! Largest file held in memory for a worker; a larger one is read in stream.
+const size_t IN_MEMORY_MAX = 64 * 1024 * 1024;
+//! Content read and not yet recorded, at most: the reading waits beyond it.
+const size_t IN_FLIGHT_MAX = 256 * 1024 * 1024;
+
+//! Time the workers spent analysing, in milliseconds (all threads added).
+std::atomic<unsigned long long> g_analysisMs{ 0 };
+
+//! MD5, SHA-1 and SHA-256 of a content held in memory, into its record.
+void setFileHashes(RawHiveExtraction& line, const std::vector<uint8_t>& content) {
+	Md5Stream md5;
+	Sha1Stream sha1;
+	Sha256Stream sha256;
+	md5.update(content.data(), content.size());
+	sha1.update(content.data(), content.size());
+	sha256.update(content.data(), content.size());
+	line.fingerprints.md5 = md5.hexDigest();
+	line.fingerprints.sha1 = sha1.hexDigest();
+	line.fingerprints.sha256 = sha256.hexDigest();
+}
+
+/*! A worker's job: the analysis of a content held in memory — what
+ *  readAndAuthenticate does during a read. Its three fingerprints are
+ *  computed when they are needed: a non-PE (catalog lookup), a file not
+ *  authenticated (copied), --binary-all (everything copied). */
+void analyseInMemory(WalkItem& item) {
+	const auto start = std::chrono::steady_clock::now();
+	ContentAnalysis analysis(item.path, item.package);
+	analysis.input()->sputn(reinterpret_cast<const char*>(item.content.data()), (std::streamsize)item.content.size());
+	analysis.finishContent();
+	if (!analysis.isPe() || conf.binaryAll) setFileHashes(item.line, item.content);
+	analysis.conclude(item.line, item.verdict, item.windowsDelta);
+	if (!item.verdict.microsoft && item.line.fingerprints.sha256.empty()) setFileHashes(item.line, item.content);
+	g_analysisMs += (unsigned long long)std::chrono::duration_cast<std::chrono::milliseconds>(
+		std::chrono::steady_clock::now() - start).count();
+}
+
+/*! The workers: they analyse the contents the reading hands them, and hold
+ *  the results until the main thread records them, in the walk's order. */
+class AnalysisPool {
+public:
+	explicit AnalysisPool(unsigned threads) {
+		for (unsigned k = 0; k < threads; ++k) threads_.emplace_back([this] { run(); });
+	}
+	~AnalysisPool() {
+		{
+			std::lock_guard<std::mutex> lock(mutex_);
+			stop_ = true;
+		}
+		work_.notify_all();
+		for (std::thread& t : threads_) t.join();
+	}
+	AnalysisPool(const AnalysisPool&) = delete;
+	AnalysisPool& operator=(const AnalysisPool&) = delete;
+
+	//! Hands a content to the workers.
+	void submit(std::unique_ptr<WalkItem> item) {
+		{
+			std::lock_guard<std::mutex> lock(mutex_);
+			inFlight_ += item->content.size();
+			todo_.push_back(std::move(item));
+		}
+		work_.notify_one();
+	}
+	/*! The result of a rank, if analysed.
+	 *  @param order the rank
+	 *  @param wait true to wait for it (it must have been submitted)
+	 *  @return the item, or nullptr if not analysed yet */
+	std::unique_ptr<WalkItem> take(size_t order, bool wait) {
+		std::unique_lock<std::mutex> lock(mutex_);
+		if (wait) finished_.wait(lock, [&] { return done_.count(order) != 0; });
+		const auto found = done_.find(order);
+		if (found == done_.end()) return nullptr;
+		std::unique_ptr<WalkItem> item = std::move(found->second);
+		done_.erase(found);
+		inFlight_ -= item->content.size();
+		return item;
+	}
+	//! @return the bytes of content read and not taken back yet
+	size_t inFlight() {
+		std::lock_guard<std::mutex> lock(mutex_);
+		return inFlight_;
+	}
+
+private:
+	void run() {
+		for (;;) {
+			std::unique_ptr<WalkItem> item;
+			{
+				std::unique_lock<std::mutex> lock(mutex_);
+				work_.wait(lock, [&] { return stop_ || !todo_.empty(); });
+				if (todo_.empty()) return;              // stopping, nothing left
+				item = std::move(todo_.front());
+				todo_.pop_front();
+			}
+			analyseInMemory(*item);
+			{
+				std::lock_guard<std::mutex> lock(mutex_);
+				const size_t order = item->order;
+				done_[order] = std::move(item);
+			}
+			finished_.notify_all();
+		}
+	}
+	std::vector<std::thread> threads_;
+	std::deque<std::unique_ptr<WalkItem>> todo_;
+	std::map<size_t, std::unique_ptr<WalkItem>> done_;
+	std::mutex mutex_;
+	std::condition_variable work_, finished_;
+	size_t inFlight_ = 0;
+	bool stop_ = false;
+};
+
+/*! What was recorded for a $MFT record, for its other names (hard links). */
+struct Recorded { RawHiveExtraction line; SignatureVerdict verdict; bool stored = false; std::wstring method; };
+
+/*! Writes a content held in memory to the incoming directory.
+ *  @return the file, or an empty string if it could not be written */
+std::wstring stageFromMemory(const std::vector<uint8_t>& content) {
+	const std::wstring staged = newStagingFile();
+	std::ofstream out(std::filesystem::path(staged), std::ios::binary | std::ios::trunc);
+	out.write(reinterpret_cast<const char*>(content.data()), (std::streamsize)content.size());
+	if (out) return staged;
+	std::error_code ec;
+	std::filesystem::remove(staged, ec);
+	return std::wstring();
+}
+
+/*! Records one file of the walk, analysed: fingerprinted only, or copied —
+ *  from memory, without reading the volume again — and what its hard links
+ *  will repeat. Main thread only: it alone touches the manifest, the incoming
+ *  directory and the counters. */
+class WalkRecorder {
+public:
+	void record(WalkItem& item) {
+		std::error_code ec;
+		if (item.link) {
+			const auto first = byRecord_.find(item.record);
+			if (first != byRecord_.end()) {
+				RawHiveExtraction other = first->second.line;   // same record: same content, same timestamps
+				other.volumePath = item.path;
+				// What the first name was found to be (authentic, differential, collected), and why.
+				const std::wstring linkMethod = first->second.method + L"; another name (hard link) of $MFT record "
+				                              + std::to_wstring(item.record.second) + L", read once";
+				if (first->second.stored) ExhibitStoreAddDuplicate(other, linkMethod + READ_IN_PLACE, first->second.verdict);
+				else ExhibitStoreAddFingerprint(other, linkMethod, first->second.verdict);
+				++links;
+				return;
+			}
+			// The first name could not be recorded: this one is read on its own.
+			item.link = false;
+			item.result = readAndAuthenticate(item.path, item.line, item.verdict, conf.binaryAll, &item.windowsDelta);
+		}
+		if (FAILED(item.result)) {
+			if (!item.staged.empty()) std::filesystem::remove(item.staged, ec);
+			item.line.outputPath = pathUnder(exhibitStoreFolder(), item.path);
+			ExhibitStoreAdd({ item.line }, item.method);   // a failure is recorded too
+			return;
+		}
+		++g_read;
+		if (item.inMemory) noteVerdict(item.verdict, item.line, item.package);
+		// A differential file is no executable: no signature to check.
+		const SignatureVerdict recorded = item.windowsDelta ? SignatureVerdict{} : recordedVerdict(item.verdict);
+		const std::wstring nature = item.windowsDelta
+		        ? L"Windows differential file (MSDELTA), not an executable"
+		        : item.verdict.microsoft ? L"authenticated in memory"
+		                                 : L"not authenticated: " + decodeText(item.verdict.reason);
+		if (item.windowsDelta) ++g_deltas;
+
+		if (conf.binaryAll && roomLeft()) {
+			const std::wstring allMethod = item.method + L"; " + nature + L"; copied (--binary-all)";
+			const std::wstring staged = item.inMemory ? stageFromMemory(item.content) : item.staged;
+			if (SUCCEEDED(recordStaged(item.path, staged, staged.empty() ? HRESULT_FROM_WIN32(ERROR_WRITE_FAULT) : S_OK,
+			                           item.line, allMethod + READ_IN_PLACE, recorded)))
+				byRecord_.emplace(item.record, Recorded{ item.line, recorded, true, allMethod });
+			return;
+		}
+		if (!item.staged.empty()) std::filesystem::remove(item.staged, ec);
+
+		// Authentic, differential, or no room left: fingerprinted, not copied.
+		if (item.verdict.microsoft || item.windowsDelta || full || (full = !roomLeft())) {
+			if (!item.verdict.microsoft && !item.windowsDelta) ++g_sansPlace;
+			// Not authenticated and not copied: at least its three fingerprints.
+			if (!item.verdict.microsoft && item.line.fingerprints.sha256.empty()) {
+				RawHiveExtraction reread;   // keeping what the first read found
+				reread.fingerprints.authenticodeSha1 = item.line.fingerprints.authenticodeSha1;
+				reread.fingerprints.authenticodeSha256 = item.line.fingerprints.authenticodeSha256;
+				reread.fingerprints.peTimeDateStamp = item.line.fingerprints.peTimeDateStamp;
+				reread.fingerprints.peSizeOfImage = item.line.fingerprints.peSizeOfImage;
+				if (FAILED(g_reader->read(item.path, std::wstring(), reread))) return;
+				item.line = std::move(reread);
+			}
+			const std::wstring fingerprintMethod = item.method + L"; " + nature
+			        + (item.verdict.microsoft || item.windowsDelta ? L"; fingerprinted, not copied"
+			                                                       : L"; fingerprinted without a copy: collection medium full");
+			ExhibitStoreAddFingerprint(item.line, fingerprintMethod, recorded);
+			byRecord_.emplace(item.record, Recorded{ item.line, recorded, false, fingerprintMethod });
+			return;
+		}
+		// Why it was not authenticated: a fact for the investigation, and the way to spot a gap.
+		const std::wstring purpose = L"executable, library, driver, script or macro document of the volume, "
+		                             + nature + L" (" + std::wstring(conf.binaryAll ? L"--collect --binary-all" : L"--collect --binary") + L")";
+		PhaseTimer timer(g_times.copying);
+		HRESULT stored;
+		if (item.inMemory) {
+			// Copied from memory: the content already read, not the volume again.
+			const std::wstring staged = stageFromMemory(item.content);
+			const std::wstring method = L"Raw NTFS reading (\\\\.\\" + item.path.substr(0, 2)
+			                          + L" — $MFT, directory indexes, $DATA attribute); " + purpose + READ_IN_PLACE;
+			stored = recordStaged(item.path, staged, staged.empty() ? HRESULT_FROM_WIN32(ERROR_WRITE_FAULT) : S_OK,
+			                      item.line, method, recorded);
+			if (SUCCEEDED(stored)) byRecord_.emplace(item.record, Recorded{ item.line, recorded, true, item.method + L"; " + purpose });
+			return;
+		}
+		// Read in stream (a large file): the copy, and its three fingerprints, read it again.
+		RawHiveExtraction copy;
+		copy.fingerprints.authenticodeSha1 = item.line.fingerprints.authenticodeSha1;
+		copy.fingerprints.authenticodeSha256 = item.line.fingerprints.authenticodeSha256;
+		copy.fingerprints.peTimeDateStamp = item.line.fingerprints.peTimeDateStamp;
+		copy.fingerprints.peSizeOfImage = item.line.fingerprints.peSizeOfImage;
+		stored = storeExhibit(item.path, purpose, copy, recorded);
+		if (SUCCEEDED(stored)) byRecord_.emplace(item.record, Recorded{ copy, recorded, true, item.method + L"; " + purpose });
+	}
+
+	size_t links = 0;
+	bool full = false;
+
+private:
+	std::map<std::pair<size_t, uint64_t>, Recorded> byRecord_;
+};
+
+} // namespace
+
 HRESULT BinariesCollectAll() {
 	g_reader = openReader();
 	std::error_code ec;
@@ -737,17 +1042,43 @@ HRESULT BinariesCollectAll() {
 			roots.push_back(v.mountPoint + L"\\");
 	if (roots.empty()) roots.push_back(conf.systemDrive + L"\\");
 	const std::wstring output = toLower(std::filesystem::absolute(conf._outputDir, ec).wstring());
+	const std::wstring option = conf.binaryAll ? L"--collect --binary-all" : L"--collect --binary";
 
+	/* THE WALK IN THREE PARTS. This thread alone reads the volume — the raw
+	   reader and its $MFT cache are not shared between threads — and holds
+	   each executable in memory; the workers analyse it (PE, Authenticode,
+	   catalogs, packages, fingerprints); this thread records the results IN
+	   THE WALK'S ORDER, so that the manifest does not depend on the threads.
+	   The catalogs are loaded before the workers start: they only read them. */
+	catalogues();
+	const unsigned threads = conf.threads ? conf.threads
+	                       : std::max(1u, std::thread::hardware_concurrency() > 1 ? std::thread::hardware_concurrency() - 1 : 1u);
+	AnalysisPool pool(threads);
+	WalkRecorder recorder;
+	std::map<size_t, std::unique_ptr<WalkItem>> ready;   // not analysed by a worker: failures, links, large files
+	size_t nextOrder = 0, nextRecord = 0;
 	/* HARD LINKS. System32 and WinSxS name the same $MFT records: the content
 	   is read once, and every other name is recorded like the first — the
 	   conversion looks a file up by the path an artefact cites. */
-	struct Recorded { RawHiveExtraction line; SignatureVerdict verdict; bool stored = false; std::wstring method; };
-	size_t listed = 0, unreadable = 0, links = 0;
-	bool full = false;
-	for (const std::wstring& root : roots) {
+	std::set<std::pair<size_t, uint64_t>> readOnce;
+	auto recordAvailable = [&](bool waitForMemory) {
+		while (nextRecord < nextOrder) {
+			std::unique_ptr<WalkItem> item;
+			const auto found = ready.find(nextRecord);
+			if (found != ready.end()) { item = std::move(found->second); ready.erase(found); }
+			else item = pool.take(nextRecord, waitForMemory && pool.inFlight() > IN_FLIGHT_MAX);
+			if (!item) return;
+			recorder.record(*item);
+			++nextRecord;
+		}
+	};
+
+	size_t listed = 0, unreadable = 0;
+	const auto walkStart = std::chrono::steady_clock::now();
+	for (size_t volume = 0; volume < roots.size(); ++volume) {
+		const std::wstring& root = roots[volume];
 		std::vector<std::wstring> folders{ root };
 		std::set<uint64_t> directories;       // a directory met twice (a cycle) is walked once
-		std::map<uint64_t, Recorded> byRecord;   // per volume: $MFT numbers are
 		while (!folders.empty()) {
 			const std::wstring folder = folders.back();
 			folders.pop_back();
@@ -774,115 +1105,81 @@ HRESULT BinariesCollectAll() {
 				   extension but are no drivers: paged memory, gigabytes of it. */
 				if (folder == root && (toLower(e.name) == L"pagefile.sys" || toLower(e.name) == L"swapfile.sys"
 				                       || toLower(e.name) == L"hiberfil.sys")) continue;
-				const std::wstring option = conf.binaryAll ? L"--collect --binary-all" : L"--collect --binary";
-				const std::wstring method = L"Raw NTFS reading (\\\\.\\" + path.substr(0, 2)
-				                          + L" — $MFT, directory indexes, $DATA attribute); executable, library, "
-				                            L"driver, script or macro document of the volume (" + option + L")";
-				const auto link = byRecord.find(e.mftIndex);
-				if (link != byRecord.end()) {
-					RawHiveExtraction other = link->second.line;   // same record: same content, same timestamps
-					other.volumePath = path;
-					// What the first name was found to be (authentic, differential, collected), and why.
-					const std::wstring linkMethod = link->second.method + L"; another name (hard link) of $MFT record "
-					                              + std::to_wstring(e.mftIndex) + L", read once";
-					if (link->second.stored) ExhibitStoreAddDuplicate(other, linkMethod + READ_IN_PLACE, link->second.verdict);
-					else ExhibitStoreAddFingerprint(other, linkMethod, link->second.verdict);
-					++links;
-					continue;
-				}
 				// Already an exhibit (resource file of an event provider): recorded once.
 				if (std::filesystem::exists(pathUnder(exhibitStoreFolder(), path), ec)) continue;
 
-				/* --binary-all: every executable is copied, in the SAME read that
-				   verifies it — its three fingerprints computed on the way. Otherwise
-				   the Authenticode digest alone, and a second read if it is copied. */
-				const std::wstring staged = conf.binaryAll ? newStagingFile() : std::wstring();
-				RawHiveExtraction line;
-				VerdictMicrosoft verdict;
-				bool windowsDelta = false;
-				HRESULT hr;
-				{
-					PhaseTimer timer(g_times.reading);   // includes the catalogs and packages loaded on the way
-					hr = readAndAuthenticate(path, line, verdict, conf.binaryAll, &windowsDelta, staged);
+				std::unique_ptr<WalkItem> item(new WalkItem);
+				item->order = nextOrder++;
+				item->path = path;
+				item->record = { volume, e.mftIndex };
+				item->method = L"Raw NTFS reading (\\\\.\\" + path.substr(0, 2)
+				             + L" — $MFT, directory indexes, $DATA attribute); executable, library, "
+				               L"driver, script or macro document of the volume (" + option + L")";
+				if (readOnce.count(item->record)) {
+					item->link = true;
+					ready.emplace(item->order, std::move(item));
 				}
-				if (FAILED(hr)) {
-					if (!staged.empty()) std::filesystem::remove(staged, ec);
-					line.outputPath = pathUnder(exhibitStoreFolder(), path);
-					ExhibitStoreAdd({ line }, method);   // a failure is recorded too
-					continue;
-				}
-				++g_read;
-				// A differential file is no executable: no signature to check.
-				const SignatureVerdict recorded = windowsDelta ? SignatureVerdict{} : recordedVerdict(verdict);
-				const std::wstring nature = windowsDelta
-				        ? L"Windows differential file (MSDELTA), not an executable"
-				        : verdict.microsoft ? L"authenticated in memory"
-				                            : L"not authenticated: " + decodeText(verdict.reason);
-				if (windowsDelta) ++g_deltas;
-
-				if (conf.binaryAll && roomLeft()) {
-					const std::wstring allMethod = method + L"; " + nature + L"; copied (--binary-all)";
-					if (SUCCEEDED(recordStaged(path, staged, hr, line, allMethod + READ_IN_PLACE, recorded)))
-						byRecord.emplace(e.mftIndex, Recorded{ line, recorded, true, allMethod });
-					continue;
-				}
-				if (!staged.empty()) std::filesystem::remove(staged, ec);
-
-				// Authentic, differential, or no room left: fingerprinted, not copied.
-				if (verdict.microsoft || windowsDelta || full || (full = !roomLeft())) {
-					// Not authenticated and not copied: at least its three fingerprints.
-					if (!verdict.microsoft && line.fingerprints.sha256.empty()) {
-						if (!windowsDelta) ++g_sansPlace;
-						RawHiveExtraction reread;   // keeping what the first read found
-						reread.fingerprints.authenticodeSha1 = line.fingerprints.authenticodeSha1;
-						reread.fingerprints.authenticodeSha256 = line.fingerprints.authenticodeSha256;
-						reread.fingerprints.peTimeDateStamp = line.fingerprints.peTimeDateStamp;
-						reread.fingerprints.peSizeOfImage = line.fingerprints.peSizeOfImage;
-						if (FAILED(g_reader->read(path, std::wstring(), reread))) continue;
-						line = std::move(reread);
+				else if (e.size <= IN_MEMORY_MAX) {
+					// Read into memory, analysed by a worker.
+					PhaseTimer timer(g_times.reading);
+					item->package = packageFileOf(path);
+					Collector content;
+					content.bytes.reserve((size_t)e.size);
+					item->line.fingerprints.computeHashes = false;
+					item->result = g_reader->read(path, std::wstring(), item->line, &content);
+					item->content = std::move(content.bytes);
+					if (SUCCEEDED(item->result)) {
+						readOnce.insert(item->record);
+						item->inMemory = true;
+						pool.submit(std::move(item));
 					}
-					else if (!verdict.microsoft && !windowsDelta) ++g_sansPlace;
-					const std::wstring fingerprintMethod = method + L"; " + nature
-					        + (verdict.microsoft || windowsDelta ? L"; fingerprinted, not copied"
-					                                             : L"; fingerprinted without a copy: collection medium full");
-					ExhibitStoreAddFingerprint(line, fingerprintMethod, recorded);
-					byRecord.emplace(e.mftIndex, Recorded{ line, recorded, false, fingerprintMethod });
-					continue;
+					else ready.emplace(item->order, std::move(item));
 				}
-				// The copy carries the five digests: its three, and the Authenticode of the first read.
-				RawHiveExtraction copy;
-				copy.fingerprints.authenticodeSha1 = line.fingerprints.authenticodeSha1;
-				copy.fingerprints.authenticodeSha256 = line.fingerprints.authenticodeSha256;
-				copy.fingerprints.peTimeDateStamp = line.fingerprints.peTimeDateStamp;
-				copy.fingerprints.peSizeOfImage = line.fingerprints.peSizeOfImage;
-				// Why it was not authenticated: a fact for the investigation, and the way to spot a gap.
-				const std::wstring purpose = L"executable, library, driver, script or macro document of the volume, "
-				                             + nature + L" (" + option + L")";
-				HRESULT stored;
-				{
-					PhaseTimer timer(g_times.copying);
-					stored = storeExhibit(path, purpose, copy, recorded);
+				else {
+					// A large file: read and analysed in stream, by this thread.
+					PhaseTimer timer(g_times.reading);
+					if (conf.binaryAll) item->staged = newStagingFile();
+					item->result = readAndAuthenticate(path, item->line, item->verdict, conf.binaryAll,
+					                                   &item->windowsDelta, item->staged);
+					if (SUCCEEDED(item->result)) readOnce.insert(item->record);
+					ready.emplace(item->order, std::move(item));
 				}
-				if (SUCCEEDED(stored)) {
-					if (copy.fingerprints.sha256 != line.fingerprints.sha256 && !line.fingerprints.sha256.empty())
-						log(2, L"🔥Content changed between two reads: " + path);
-					byRecord.emplace(e.mftIndex, Recorded{ copy, recorded, true, method + L"; " + purpose });
-				}
+				recordAvailable(true);
 			}
 		}
 	}
+	// The last results, waited for.
+	while (nextRecord < nextOrder) {
+		const size_t before = nextRecord;
+		recordAvailable(true);
+		if (nextRecord == before) {
+			std::unique_ptr<WalkItem> item = pool.take(nextRecord, true);
+			recorder.record(*item);
+			++nextRecord;
+		}
+	}
+	const auto walkSeconds = std::chrono::duration_cast<std::chrono::seconds>(
+		std::chrono::steady_clock::now() - walkStart).count();
+
 	log(2, L"❇️Executables of " + std::to_wstring(roots.size()) + L" volume(s): " + std::to_wstring(listed)
 	     + L" directorie(s) walked, " + std::to_wstring(unreadable) + L" unreadable, " + std::to_wstring(g_read)
 	     + L" read, " + std::to_wstring(g_authenticated) + L" authenticated"
 	     + (conf.binaryAll ? L" (copied all the same, --binary-all), " : L" (not copied), ")
 	     + std::to_wstring(g_collected) + L" collected (" + std::to_wstring(g_bytes / 1024 / 1024) + L" MiB), "
-	     + std::to_wstring(g_duplicates) + L" identical content(s) not copied again, " + std::to_wstring(links)
+	     + std::to_wstring(g_duplicates) + L" identical content(s) not copied again, " + std::to_wstring(recorder.links)
 	     + L" other name(s) of hard links, " + std::to_wstring(g_deltas) + L" Windows differential file(s) not copied, "
 	     + std::to_wstring(g_sansPlace) + L" not copied for lack of room");
-	log(2, L"❇️Executables, time per phase: reading and authentication " + std::to_wstring(g_times.reading / 1000)
-	     + L" s (of which catalogs " + std::to_wstring(g_times.catalogs / 1000) + L" s, packages "
-	     + std::to_wstring(g_times.packages / 1000) + L" s), copies " + std::to_wstring(g_times.copying / 1000) + L" s");
-	if (full) return HRESULT_FROM_WIN32(ERROR_DISK_FULL);
+	const RawReadTimes activity = RawHiveTimes();
+	log(2, L"❇️Raw reading, time per activity since the start: disk " + std::to_wstring((long long)activity.diskRead)
+	     + L" s, decompression " + std::to_wstring((long long)activity.decompression) + L" s, file hashes "
+	     + std::to_wstring((long long)activity.fileHashes) + L" s, PE analysis and Authenticode in stream "
+	     + std::to_wstring((long long)activity.observers) + L" s");
+	log(2, L"❇️Executables, " + std::to_wstring(threads) + L" analysis thread(s): walk " + std::to_wstring((long long)walkSeconds)
+	     + L" s; reading " + std::to_wstring(g_times.reading / 1000) + L" s (of which catalogs "
+	     + std::to_wstring(g_times.catalogs / 1000) + L" s, packages " + std::to_wstring(g_times.packages / 1000)
+	     + L" s); analysis " + std::to_wstring(g_analysisMs.load() / 1000) + L" s of thread time; copies "
+	     + std::to_wstring(g_times.copying / 1000) + L" s");
+	if (recorder.full) return HRESULT_FROM_WIN32(ERROR_DISK_FULL);
 	return unreadable ? S_FALSE : ERROR_SUCCESS;
 }
 

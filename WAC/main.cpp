@@ -57,6 +57,7 @@ void showHelp() {
 	wprintf(L"%ls\n", L"\t--convert=folder : conversion only, on an analysis workstation, of the collection made with --collect in that folder: the seal and every fingerprint are checked first, then the JSON files are written next to the exhibit store, with conversion.json as the log. Give the same --events and --binary as the collection");
 	wprintf(L"%ls\n", L"\t--debug : trace the raw NTFS parser on stderr (path resolution, index blocks, data runs)");
 	wprintf(L"%ls\n", L"\t--binary-all : like --binary, but every executable is collected, authenticated or not; its signature is still checked and the verdict recorded in the manifest");
+	wprintf(L"%ls\n", L"\t--threads=N : threads analysing the executables of --collect --binary (default: the processor's threads minus one)");
 	wprintf(L"%ls\n", L"\t--dump : add hexa value in json files for shellbags and LNK files ");
 	wprintf(L"%ls\n", L"\t--events : extract and parse the .evtx event logs (adds ~117 MB to the collection)");
 	wprintf(L"%ls\n", L"\t--binary : fingerprint (MD5, SHA-1, SHA-256) every file referenced in artefacts, read raw; executables, libraries, drivers and scripts are also collected into the exhibit store");
@@ -940,6 +941,18 @@ int wmain(int argc, wchar_t* argv[])
 			else if (arg == L"--events") conf._events = true;
 			else if (arg == L"--binary") conf.binary = true;
 			else if (arg == L"--binary-all") conf.binary = conf.binaryAll = true;
+			else if (arg.substr(0, 10) == L"--threads=") {
+				try {
+					const int threads = std::stoi(arg.substr(10));
+					if (threads < 1 || threads > 256) throw std::out_of_range("threads");
+					conf.threads = (unsigned)threads;
+				}
+				catch (...) {
+					printError(L"Invalid number of threads " + arg);
+					showHelp();
+					exit(1);
+				}
+			}
 			else if (arg == L"--collect") collect = true;
 			else if (arg.substr(0, 10) == L"--convert=" && arg.size() > 10) convertFolder = arg.substr(10);
 			else if (arg.substr(0, 9) == L"--output=") {

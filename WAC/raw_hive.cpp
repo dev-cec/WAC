@@ -16,6 +16,8 @@
 #include <algorithm>
 #include <map>
 #include <set>
+#include <atomic>
+#include <thread>
 #include <memory>
 #include <ostream>
 #include <unordered_map>
@@ -52,6 +54,47 @@ bool iequals(const std::wstring& a, const std::wstring& b){
 
 struct Run { int64_t lcn; uint64_t count; }; // lcn == -1: sparse run (zeros)
 
+/*! Where the raw reading spends its time, per activity, in performance
+ *  counter ticks (see RawHiveTimes): a whole-volume reading is optimised on
+ *  measurements, not guesses. */
+struct ActivityTimes { uint64_t diskRead = 0, decompression = 0, fileHashes = 0, observers = 0; };
+ActivityTimes g_activityTimes;
+
+/*! Adds the time of its scope to a counter of g_activityTimes. */
+class ActivityTimer {
+public:
+    explicit ActivityTimer(uint64_t& counter) : counter_(counter) { QueryPerformanceCounter(&start_); }
+    ~ActivityTimer() {
+        LARGE_INTEGER end;
+        QueryPerformanceCounter(&end);
+        counter_ += (uint64_t)(end.QuadPart - start_.QuadPart);
+    }
+    ActivityTimer(const ActivityTimer&) = delete;
+    ActivityTimer& operator=(const ActivityTimer&) = delete;
+private:
+    uint64_t& counter_;
+    LARGE_INTEGER start_;
+};
+
+/*! Forwards the content to the caller's observer (PE analysis, Authenticode,
+ *  block digests…), timing what it costs. */
+class TimedObserver : public std::streambuf {
+public:
+    explicit TimedObserver(std::streambuf* next) : next_(next) {}
+protected:
+    int overflow(int c) override {
+        if (c == traits_type::eof()) return traits_type::not_eof(c);
+        ActivityTimer timer(g_activityTimes.observers);
+        return next_->sputc((char)c);
+    }
+    std::streamsize xsputn(const char* s, std::streamsize n) override {
+        ActivityTimer timer(g_activityTimes.observers);
+        return next_->sputn(s, n);
+    }
+private:
+    std::streambuf* next_;
+};
+
 /*! The three fingerprints of a content, computed on the bytes as they pass —
  *  or none, when the caller asked only for the content
  *  (RawHiveFingerprints::computeHashes false: authenticating an executable
@@ -65,6 +108,7 @@ public:
     //! Adds bytes. @param data,length the bytes.
     void update(const uint8_t* data, size_t length){
         if (!on_) return;
+        ActivityTimer timer(g_activityTimes.fileHashes);
         md5_.update(data, length); sha1_.update(data, length); sha256_.update(data, length);
     }
     //! Writes the fingerprints, if computed. @param emp their destination (may be null).
@@ -513,6 +557,57 @@ public:
         return S_OK;
     }
 
+    //! Smallest file decompressed in parallel, in chunks.
+    static const size_t PARALLEL_MIN_CHUNKS = 16;
+    //! Largest file decompressed in parallel: it is held whole in memory.
+    static const uint64_t PARALLEL_MAX_SIZE = 512ULL << 20;
+
+    /*! Decompresses every chunk of a WOF stream on several threads, into one
+     *  buffer, then writes it in order, hashed on the way.
+     *  @return false if the table is inconsistent or a chunk does not give its
+     *          expected size: nothing has been written, the caller decompresses
+     *          the file sequentially */
+    bool decompressInParallel(const std::vector<uint8_t>& data, const std::vector<uint64_t>& starts,
+                              size_t tableSize, size_t nChunks, size_t chunkSize, uint64_t actualSize,
+                              uint32_t algorithm, unsigned processors, std::ostream& out,
+                              ContentHashes& hashes, const std::wstring& label){
+        for (size_t i = 0; i < nChunks; ++i)
+            if (starts[i + 1] < starts[i] || tableSize + starts[i + 1] > data.size()) return false;
+        std::vector<uint8_t> whole((size_t)actualSize);
+        std::atomic<size_t> next{ 0 };
+        std::atomic<bool> mismatch{ false };
+        auto worker = [&]{
+            for (size_t i; !mismatch && (i = next++) < nChunks;){
+                const size_t packedSize = (size_t)(starts[i + 1] - starts[i]);
+                const uint8_t* packed = data.data() + tableSize + (size_t)starts[i];
+                const size_t expected = (size_t)std::min<uint64_t>(chunkSize, actualSize - (uint64_t)i * chunkSize);
+                uint8_t* target = whole.data() + i * chunkSize;
+                size_t product;
+                if (packedSize >= expected){ std::memcpy(target, packed, expected); product = expected; }
+                else product = algorithm == 1 ? LzxInflate(packed, packedSize, target, expected)
+                                              : XpressHuffmanInflate(packed, packedSize, target, expected);
+                if (product != expected) mismatch = true;
+            }
+        };
+        {
+            ActivityTimer timer(g_activityTimes.decompression);
+            const unsigned count = (unsigned)std::min<size_t>(processors, nChunks / 8);
+            std::vector<std::thread> helpers;
+            for (unsigned k = 1; k < count; ++k) helpers.emplace_back(worker);
+            worker();
+            for (std::thread& t : helpers) t.join();
+        }
+        if (mismatch) return false;
+        for (uint64_t written = 0; written < actualSize;){
+            const size_t n = (size_t)std::min<uint64_t>(1ULL << 20, actualSize - written);
+            out.write((const char*)whole.data() + written, (std::streamsize)n);
+            hashes.update(whole.data() + written, n);
+            written += n;
+            if (g_progress && !label.empty()) g_progress(label.c_str(), written, actualSize);
+        }
+        return true;
+    }
+
     HRESULT extractWof(const WofContext& ctx, uint64_t actualSize,
                         std::ostream& out, const std::wstring& label,
                         RawHiveFingerprints* emp){
@@ -545,10 +640,27 @@ public:
                                             : rd64(data.data() + (i - 1) * 8);
         starts[nChunks] = data.size() - tableSize;
 
-        std::vector<uint8_t> chunk(chunkSize);
         ContentHashes hashes(emp);
         uint64_t written = 0, nextReport = 0;
 
+        /*  THE CHUNKS ARE INDEPENDENT: on a file of 16 chunks or more, they are
+            decompressed on every processor at once, into one buffer written
+            afterwards in order. A chunk that does not give its expected size — a
+            damaged stream — sends the file back to the sequential loop below,
+            whose behaviour on damaged data is the reference. */
+        const unsigned processors = std::thread::hardware_concurrency();
+        if (nChunks >= PARALLEL_MIN_CHUNKS && processors > 1 && actualSize <= PARALLEL_MAX_SIZE
+            && decompressInParallel(data, starts, tableSize, nChunks, chunkSize, actualSize, algorithm, processors,
+                                    out, hashes, label)){
+            hashes.finish(emp);
+            if (emp){
+                emp->bytes = actualSize;
+                emp->declaredSize = actualSize;
+            }
+            return S_OK;
+        }
+
+        std::vector<uint8_t> chunk(chunkSize);
         for (size_t i = 0; i < nChunks; ++i){
             if (starts[i + 1] < starts[i]) return E_FAIL;              // inconsistent table
             const size_t packedSize = (size_t)(starts[i + 1] - starts[i]);
@@ -564,6 +676,7 @@ public:
                 product = expected;
             }
             else {
+                ActivityTimer timer(g_activityTimes.decompression);
                 product = algorithm == 1
                         ? LzxInflate(data.data() + start, packedSize, chunk.data(), expected)
                         : XpressHuffmanInflate(data.data() + start, packedSize, chunk.data(), expected);
@@ -673,7 +786,10 @@ public:
                     product = (size_t)unitSize;
                 }
                 else {
-                    product = Lznt1Inflate(rawUnit.data(), read, unit.data(), (size_t)unitSize);
+                    {
+                        ActivityTimer timer(g_activityTimes.decompression);
+                        product = Lznt1Inflate(rawUnit.data(), read, unit.data(), (size_t)unitSize);
+                    }
                     if (product == 0){
                         RVLOG(L"[raw] LZNT1: unit at VCN %llu unreadable\n",
                               (unsigned long long)vcn);
@@ -850,6 +966,8 @@ public:
                         const std::wstring& fileName = std::wstring()){
         std::vector<uint8_t> rec;
         if (!readMftRecord(index, rec)) return E_FAIL;
+        TimedObserver timedObserver(observer);
+        if (observer) observer = &timedObserver;
 
         if (emp){
             emp->mftEntry = index;
@@ -1040,6 +1158,7 @@ private:
 
     // sector-aligned raw read (volume handles require it)
     bool readBytes(uint64_t off, void* dst, uint32_t len){
+        ActivityTimer timer(g_activityTimes.diskRead);
         uint32_t sec = bytesPerSector_ ? bytesPerSector_ : 512;
         uint64_t start = off - (off % sec);
         uint64_t end   = off + len;
@@ -1448,6 +1567,18 @@ HRESULT RawReader::read(const std::wstring& absolutePath, const std::wstring& ou
 }
 
 void RawHiveSetVerbose(bool on){ g_verbose = on; }
+
+RawReadTimes RawHiveTimes(){
+    LARGE_INTEGER frequency;
+    QueryPerformanceFrequency(&frequency);
+    const double f = frequency.QuadPart ? (double)frequency.QuadPart : 1.0;
+    RawReadTimes t;
+    t.diskRead = (double)g_activityTimes.diskRead / f;
+    t.decompression = (double)g_activityTimes.decompression / f;
+    t.fileHashes = (double)g_activityTimes.fileHashes / f;
+    t.observers = (double)g_activityTimes.observers / f;
+    return t;
+}
 
 bool applyNtfsFixup(uint8_t* record, size_t size){
     const size_t STRIDE = 512;        // fixed by NTFS, not the volume's sector size

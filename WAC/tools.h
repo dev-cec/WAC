@@ -94,6 +94,10 @@ struct AppliConf {
 	 *  the signature is still checked and its verdict recorded. For the cases
 	 *  where the content itself must be in the exhibit store. Implies binary. */
 	bool binaryAll = false;
+	/*! --threads=N: threads analysing the executables of --collect --binary
+	 *  (PE, Authenticode, catalogs, fingerprints); 0 = the processor's
+	 *  threads minus one, the reading of the volume keeping its own. */
+	unsigned threads = 0;
 	RunMode mode = RunMode::Full; //!< what this run does (see RunMode)
 	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)
 	/*! System drive of the examined machine, with its colon ("C:").

@@ -270,7 +270,8 @@ Open a command prompt \textbf{as administrator}, move to the collection medium,
 then run:
 
 \begin{lstlisting}
-WAC.exe [--collect | --convert=folder] [--events] [--binary] [--dump]
+WAC.exe [--collect | --convert=folder] [--events] [--binary | --binary-all]
+        [--threads=N] [--dump]
         [--output=folder] [--loglevel=N] [--debug]
 \end{lstlisting}
 
@@ -300,6 +301,10 @@ Every option is optional and disabled by default.
   authenticated or not; the signature is checked all the same, and the manifest
   says for each whether it holds. For the cases where the content itself must
   be in the exhibit store. \\
+-{}-threads=N & Number of threads analysing the executables of \opt{collect}
+  \opt{binary} (PE, Authenticode, catalogs, fingerprints). By default, the
+  processor's threads minus one, the disk reading keeping its own. The result
+  does not depend on it: the manifest is the same. \\
 -{}-dump & Adds the raw hexadecimal value of shellbag and \fichier{.lnk} shortcut
   items, for later decoding. \\
 -{}-output=folder & Output folder, relative to the current directory. Default:
