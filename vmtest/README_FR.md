@@ -65,6 +65,10 @@ révélé des valeurs fausses dans du JSON valide :
 | tout catalogue cité dans un verdict « Microsoft (catalog …) » présent dans la consigne | 170 sur 170 absents : le préfixe cherché (« catalogue ») ne correspondait plus au libellé (« catalog ») |
 | binaires déclarés authentiques Microsoft par WAC confirmés par `Get-AuthenticodeSignature` | un mauvais verdict laisserait un binaire malveillant hors de la consigne |
 | copie d'un paquet du Store : fichier intact authentifié, fichier modifié et fichier ajouté prélevés | vérification des paquets par la carte des blocs signée |
+| script aux dates reculées à 2001 (falsification) : 2001 dans `$STANDARD_INFORMATION`, vraie date dans `$FILE_NAME` | dates `$FILE_NAME` enregistrées au manifeste |
+| clés de récupération (`PeTimeDateStamp`, `PeSizeOfImage`) / en-têtes PE lus par PowerShell | contenu d'un binaire authentique non copié récupérable auprès de Microsoft |
+| `--binary-all` : tout exécutable copié, chacun avec son verdict | le contrôle des paquets exigeait « non copié » même en `--binary-all` |
+| `verify-exhibits.ps1` (livré avec la doc) accepte la collecte | il aurait déclaré altérée chaque pièce « empreinte seule » |
 | identifiants d'enregistrement uniques dans CHAQUE fichier journal | l'invariant réel : un même canal peut être porté par plusieurs fichiers dont les numéros se recouvrent légitimement. Un doublon dans un même fichier, en revanche, signale un chunk périmé relu — le risque propre au parcours de tous les chunks physiques |
 | nom de machine MAJORITAIRE des événements conforme à `OperatingSystem.json` | un renommage de machine laisse légitimement d'anciens noms dans les journaux : c'est la majorité qui doit correspondre, pas la totalité |
 
@@ -150,6 +154,7 @@ ISO_WIN=~/Téléchargements/Win11_25H2_French_x64_v2.iso ./create-vm.sh
 ./run-wac-test.sh --build        # rebuild + test complet
 ./run-wac-test.sh --raw-only     # juste la validation raw_hive
 ./run-wac-test.sh --no-split     # sans l'étape 7 (--collect puis --convert, ~1 h)
+./run-wac-test.sh --binary-all   # étape 7 avec --binary-all (tout exécutable copié)
 python3 qga.py ping              # l'agent répond ?
 python3 qga.py run --shell "dir C:\\"
 ```

@@ -160,6 +160,102 @@ def cross_checks(folder):
     found += check_catalogs_recorded(folder)
     found += check_package_verification(folder)
     found += check_file_artefact_dates(folder)
+    found += check_symbol_server_keys(folder)
+    found += check_binary_all(folder)
+    found += check_timestomping(folder)
+    return found
+
+
+def check_timestomping(folder):
+    """Dates forged after the fact must show. The harness forges those of a
+    script back to 2001 (make SetFileTime do it, as an intruder would): the
+    manifest must carry 2001 in $STANDARD_INFORMATION (SourceCreatedUtc) and
+    the real creation in $FILE_NAME (SourceFileNameCreatedUtc), which
+    SetFileTime does not touch.
+    """
+    reference_path = os.path.join(folder, "reference", "stomped.txt")
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+    if not os.path.exists(reference_path) or not items:
+        print("  ⏭️  no timestomped file prepared: $FILE_NAME dates not checked")
+        return 0
+    with open(reference_path, encoding="utf-8", errors="replace") as f:
+        path = f.read().strip().lower()
+    item = next((i for i in items if str(i.get("SourcePath", "")).lower() == path and i.get("Result") == "OK"), None)
+    if not item:
+        print(f"  ❌ timestomped file absent from the manifest ({path})")
+        return 1
+    standard = str(item.get("SourceCreatedUtc", ""))
+    file_name = str(item.get("SourceFileNameCreatedUtc", ""))
+    if not standard.startswith("2001-") or not file_name or file_name.startswith("2001-"):
+        print(f"  ❌ timestomping not visible: $STANDARD_INFORMATION {standard or '-'}, $FILE_NAME {file_name or '-'}")
+        return 1
+    print(f"  ✅ timestomping visible: $STANDARD_INFORMATION {standard[:10]}, $FILE_NAME {file_name[:19]}")
+    return 0
+
+
+def check_symbol_server_keys(folder):
+    """An authentic binary that was not copied must be retrievable: the
+    manifest records its build (TimeDateStamp, SizeOfImage), the key of
+    Microsoft's symbol server. Independent source: the same two fields read
+    in the header of each executable of System32 by PowerShell
+    (reference/pe-build.txt).
+    """
+    reference_path = os.path.join(folder, "reference", "pe-build.txt")
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+    keyed = {str(i.get("SourcePath", "")).lower(): i for i in items if i.get("PeTimeDateStamp")}
+    if not os.path.exists(reference_path) or not keyed:
+        print("  ⏭️  no PE build in the manifest, or no reference: retrieval keys not checked")
+        return 0
+    compared, wrong = 0, []
+    with open(reference_path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            parts = line.strip().split("|")
+            if len(parts) != 3 or parts[0] not in keyed:
+                continue
+            compared += 1
+            item = keyed[parts[0]]
+            if item["PeTimeDateStamp"].upper() != parts[1].upper() or item.get("PeSizeOfImage", "").lower() != parts[2].lower():
+                wrong.append(f"{parts[0]}: WAC {item['PeTimeDateStamp']}/{item.get('PeSizeOfImage')}, header {parts[1]}/{parts[2]}")
+    if not compared:
+        print("  ⏭️  no System32 executable in the manifest: retrieval keys not checked")
+        return 0
+    if wrong:
+        print(f"  ❌ {len(wrong)} retrieval key(s) out of {compared} differ from the PE header:")
+        for w in wrong[:5]:
+            print(f"        {w}")
+        return 1
+    print(f"  ✅ {compared} retrieval keys (TimeDateStamp, SizeOfImage) equal to the PE headers of System32")
+    return 0
+
+
+def check_binary_all(folder):
+    """--binary-all copies every executable, authenticated or not, and records
+    the signature check of each (SignatureVerified, with Signature or
+    SignatureReason) — differential files, which are no executables, apart.
+    """
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+    concerned = [i for i in items if "--collect --binary-all" in str(i.get("Method", "")) and i.get("Result") == "OK"]
+    if not concerned:
+        print("  ⏭️  not a --binary-all collection: its checks skipped")
+        return 0
+    not_copied = [i["SourcePath"] for i in concerned
+                  if i.get("ContentStored") is False and "medium full" not in i.get("Method", "")]
+    no_verdict = [i["SourcePath"] for i in concerned
+                  if "SignatureVerified" not in i and "differential file" not in i.get("Method", "")]
+    found = 0
+    if not_copied:
+        print(f"  ❌ --binary-all: {len(not_copied)} executable(s) not copied, e.g. {not_copied[:3]}")
+        found += 1
+    if no_verdict:
+        print(f"  ❌ --binary-all: {len(no_verdict)} executable(s) without a recorded signature verdict, e.g. {no_verdict[:3]}")
+        found += 1
+    if not found:
+        valid = sum(1 for i in concerned if i.get("SignatureVerified") is True)
+        print(f"  ✅ --binary-all: {len(concerned)} executable(s) copied, each with its verdict "
+              f"({valid} signature(s) valid)")
     return found
 
 
@@ -228,9 +324,15 @@ def check_package_verification(folder):
             item = by_path.get(path.lower())
             if not item or item.get("Result") != "OK":
                 faults.append(f"{case}: absent from the manifest ({path})")
+            # The verdict decides; the copy follows it, except under --binary-all
+            # where everything is copied.
             elif case == "untouched":
-                if item.get("ContentStored") is not False or not str(item.get("Signature", "")).startswith("Package"):
+                if item.get("SignatureVerified") is not True or not str(item.get("Signature", "")).startswith("Package"):
                     faults.append(f"untouched: not authenticated through its package ({path})")
+                elif item.get("ContentStored") is not False and "--binary-all" not in str(item.get("Method", "")):
+                    faults.append(f"untouched: authenticated, yet copied without --binary-all ({path})")
+            elif item.get("SignatureVerified") is not False:
+                faults.append(f"{case}: authenticated, though its package does not vouch for it ({path})")
             elif item.get("ContentStored") is False:
                 faults.append(f"{case}: NOT collected, though its package does not vouch for it ({path})")
     if faults:

@@ -15,6 +15,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <map>
+#include <set>
 #include <memory>
 #include <ostream>
 #include <unordered_map>
@@ -85,6 +86,27 @@ class NullBuffer : public std::streambuf {
 protected:
     int overflow(int c) override { return traits_type::not_eof(c); }
     std::streamsize xsputn(const char*, std::streamsize n) override { return n; }
+};
+
+/*! Writes to the output file AND hands the content to an observer: a file
+ *  copied and analysed in ONE read (--binary-all: 18 GB are not read twice).
+ *  A short write to the file is reported short, so that the stream fails. */
+class TeeBuffer : public std::streambuf {
+public:
+    TeeBuffer(std::streambuf* file, std::streambuf* observer) : file_(file), observer_(observer) {}
+protected:
+    int overflow(int c) override {
+        if (c == traits_type::eof()) return traits_type::not_eof(c);
+        observer_->sputc((char)c);
+        return file_->sputc((char)c);
+    }
+    std::streamsize xsputn(const char* s, std::streamsize n) override {
+        observer_->sputn(s, n);
+        return file_->sputn(s, n);
+    }
+private:
+    std::streambuf* file_;
+    std::streambuf* observer_;
 };
 
 // Decodes an NTFS data run list.
@@ -724,10 +746,81 @@ public:
         return ERROR_SUCCESS;
     }
 
+    /*! Calls `visit` on every resident attribute of a type of a record: in the
+     *  base record, then in its extension records ($ATTRIBUTE_LIST). A file
+     *  has one $FILE_NAME per name — hard links, 8.3 short name —, and they
+     *  can be moved out of the base record like any attribute.
+     *  @param rec the base record
+     *  @param baseIndex its number, not to be read again as an extension
+     *  @param type the attribute type
+     *  @param visit called with each attribute's value and its length */
+    template <typename Visit>
+    void forEachResidentValue(const std::vector<uint8_t>& rec, uint64_t baseIndex, uint32_t type, Visit visit){
+        auto inRecord = [&](const std::vector<uint8_t>& r){
+            const uint8_t* p = r.data() + rd16(r.data() + 0x14);
+            const uint8_t* end = r.data() + r.size();
+            while (p + 0x18 <= end){
+                const uint32_t t = rd32(p);
+                if (t == 0xFFFFFFFF) break;
+                const uint32_t len = rd32(p + 4);
+                if (len < 0x18 || p + len > end) break;
+                if (t == type && p[8] == 0){
+                    const uint32_t vlen = rd32(p + 0x10);
+                    const uint16_t voff = rd16(p + 0x14);
+                    if ((uint64_t)voff + vlen <= len) visit(p + voff, vlen);
+                }
+                p += len;
+            }
+        };
+        inRecord(rec);
+        std::vector<uint8_t> content;
+        if (!readListContent(rec, content)) return;
+        std::set<uint64_t> done{ baseIndex };
+        for (size_t pos = 0; pos + 0x1A <= content.size();){
+            const uint16_t len = rd16(content.data() + pos + 4);
+            if (len < 0x1A || pos + len > content.size()) break;
+            const uint64_t ref = rd64(content.data() + pos + 0x10) & 0x0000FFFFFFFFFFFFULL;
+            std::vector<uint8_t> extension;
+            if (rd32(content.data() + pos) == type && done.insert(ref).second && readMftRecord(ref, extension))
+                inRecord(extension);
+            pos += len;
+        }
+    }
+
+    /*! The four timestamps of the $FILE_NAME attribute of the name the file
+     *  was reached by (the Win32 one; the 8.3 short name is not a name of its
+     *  own). NTFS updates them on its own terms, independently of
+     *  $STANDARD_INFORMATION — which is what SetFileTime changes. A
+     *  $STANDARD_INFORMATION earlier than $FILE_NAME is the classic sign of
+     *  timestamps forged after the fact ("timestomping").
+     *  @param rec the file's base record
+     *  @param index its number
+     *  @param fileName the name the file was reached by; empty for the first
+     *  @param emp receives the timestamps */
+    void readFileNameTimes(const std::vector<uint8_t>& rec, uint64_t index, const std::wstring& fileName,
+                           RawHiveFingerprints& emp){
+        bool matched = false;
+        forEachResidentValue(rec, index, 0x30, [&](const uint8_t* v, uint32_t length){
+            if (matched || length < 0x42) return;
+            const uint8_t nameLength = v[0x40], nameSpace = v[0x41];
+            if (nameSpace == 2 || 0x42u + 2u * nameLength > length) return;   // 2 = DOS 8.3 only
+            std::wstring name(nameLength, L'\0');
+            for (uint8_t k = 0; k < nameLength; ++k) name[k] = (wchar_t)rd16(v + 0x42 + 2 * k);
+            const bool same = fileName.empty() || lowercase(name) == lowercase(fileName);
+            if (!same && emp.fnCreatedUtc) return;          // keep the first as a fallback
+            emp.fnCreatedUtc     = rd64(v + 0x08);
+            emp.fnModifiedUtc    = rd64(v + 0x10);
+            emp.fnMftModifiedUtc = rd64(v + 0x18);
+            emp.fnAccessedUtc    = rd64(v + 0x20);
+            matched = same;
+        });
+    }
+
     HRESULT extractData(uint64_t index, const std::wstring& outFile,
                         const std::wstring& label = std::wstring(),
                         RawHiveFingerprints* emp = nullptr,
-                        std::streambuf* observer = nullptr){
+                        std::streambuf* observer = nullptr,
+                        const std::wstring& fileName = std::wstring()){
         std::vector<uint8_t> rec;
         if (!readMftRecord(index, rec)) return E_FAIL;
 
@@ -745,13 +838,16 @@ public:
                precisely what attests that a raw read changes no date: the copy
                will carry the current dates. */
             const uint8_t* si = findAttr(rec, 0x10, false);
-            if (si && si[8] == 0){                        // always resident
+            // Always resident; its value holds at least the four timestamps (0x20 bytes).
+            if (si && si[8] == 0 && rd32(si + 0x10) >= 0x20
+                && (uint64_t)rd16(si + 0x14) + 0x20 <= rd32(si + 4)){
                 const uint8_t* d = si + rd16(si + 0x14);
                 emp->creeUtc       = rd64(d + 0x00);
                 emp->modifiedUtc    = rd64(d + 0x08);
                 emp->mftModifiedUtc = rd64(d + 0x10);
                 emp->accedeUtc     = rd64(d + 0x18);
             }
+            readFileNameTimes(rec, index, fileName, *emp);
         }
 
         std::vector<Run> runs;
@@ -810,9 +906,11 @@ public:
             file.open(std::filesystem::path(outFile), std::ios::binary | std::ios::trunc);
             if (!file){ RVLOG(L"[raw] cannot open the output\n"); return E_FAIL; }
         }
-        // Empty output with an observer: the content is handed to it, nothing is written.
+        // An observer receives the content, whether a file is written or not.
         std::ostream observedOutput(observer);
-        std::ostream& out = !outFile.empty() ? static_cast<std::ostream&>(file)
+        TeeBuffer tee(file.rdbuf(), observer);
+        std::ostream copiedAndObserved(&tee);
+        std::ostream& out = !outFile.empty() ? (observer ? copiedAndObserved : static_cast<std::ostream&>(file))
                           : observer ? observedOutput : nullOutput;
 
         if (resident){
@@ -1318,7 +1416,8 @@ HRESULT RawReader::read(const std::wstring& absolutePath, const std::wstring& ou
     uint64_t index = 0;
     if (!v->resolvePath(absolutePath.substr(2), index))
         return line.result = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-    return line.result = v->extractData(index, output, std::wstring(), &line.fingerprints, observer);
+    return line.result = v->extractData(index, output, std::wstring(), &line.fingerprints, observer,
+                                         absolutePath.substr(absolutePath.find_last_of(L'\\') + 1));
 }
 
 void RawHiveSetVerbose(bool on){ g_verbose = on; }
@@ -1361,7 +1460,8 @@ HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
         line.outputPath = it.second;
         if (!vol.resolvePath(it.first, index)) h = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
         else h = vol.extractData(index, it.second, it.first,
-                                 reading ? &line.fingerprints : nullptr);
+                                 reading ? &line.fingerprints : nullptr, nullptr,
+                                 it.first.substr(it.first.find_last_of(L'\\') + 1));
         line.result = h;
         if (perItem) perItem->push_back(h);
         // A FAILURE IS RECORDED TOO: an exhibit missing from the manifest would
@@ -1469,7 +1569,7 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
         line.volumePath = volumeLetter + L":" + dirPathOnVolume + L"\\" + e.name;
         line.outputPath = target;
         HRESULT h = vol.extractData(e.mftIndex, target, std::wstring(),
-                                    reading ? &line.fingerprints : nullptr);
+                                    reading ? &line.fingerprints : nullptr, nullptr, e.name);
         line.result = h;
         if (reading) reading->push_back(std::move(line));
         if (FAILED(h)){
@@ -1536,7 +1636,7 @@ HRESULT extractTree(NtfsVolume& vol, uint64_t dirIndex,
         // Fingerprints are ALWAYS computed: they cost nothing beyond the read
         // already made, and without them the exhibit is unidentified.
         line.result = vol.extractData(e.mftIndex, line.outputPath,
-                                         volumePath + L"\\" + e.name, &line.fingerprints);
+                                         volumePath + L"\\" + e.name, &line.fingerprints, nullptr, e.name);
         if (FAILED(line.result)){
             RVLOG(L"[raw] tree: extraction failed %ls\n", e.name.c_str());
             global = S_FALSE;

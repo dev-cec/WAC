@@ -24,7 +24,7 @@ public:
      *  @param absolutePath the file, as it was on the machine ("X:\\…")
      *  @param output file to write the copy to; empty for fingerprints only
      *  @param line receives the record and the fingerprints
-     *  @param observer if `output` is empty, receives the content
+     *  @param observer receives the content, written to `output` or not
      *  @return ERROR_SUCCESS, or ERROR_FILE_NOT_FOUND (as HRESULT) if the
      *          collection does not hold that file */
     HRESULT read(const std::wstring& absolutePath, const std::wstring& output,

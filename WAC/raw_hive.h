@@ -107,12 +107,20 @@ struct RawHiveFingerprints {
     uint64_t mftModifiedUtc = 0;  //!< last record change
     uint64_t accedeUtc = 0;      //!< last access
     uint64_t extractedUtc = 0;     //!< when THIS exhibit was extracted (FILETIME UTC)
+    /*! The four timestamps of the $FILE_NAME attribute of the name read (UTC,
+     *  0 if absent). Updated by NTFS itself, not by SetFileTime: an earlier
+     *  $STANDARD_INFORMATION reveals forged timestamps (timestomping). */
+    uint64_t fnCreatedUtc = 0, fnModifiedUtc = 0, fnMftModifiedUtc = 0, fnAccessedUtc = 0;
     /*! INPUT, set before the read: false to skip MD5, SHA-1 and SHA-256 when
      *  only the content is needed (authenticating an executable, whose
      *  Authenticode digest the caller computes itself). */
     bool computeHashes = true;
     //! Authenticode digests of a PE (hexadecimal), when the caller computed them.
     std::wstring authenticodeSha1, authenticodeSha256;
+    /*! TimeDateStamp and SizeOfImage of a PE's headers, when the caller read
+     *  them (0 otherwise): the key under which Microsoft's symbol server keeps
+     *  every build of its binaries (see PeAnalyser::timeDateStamp). */
+    uint32_t peTimeDateStamp = 0, peSizeOfImage = 0;
 };
 
 /*! An extracted file, as it will be recorded in the manifest. */
@@ -163,7 +171,8 @@ public:
      *  @param absolutePath the file, as "`X:\\…`"
      *  @param output file to write; EMPTY to compute the fingerprints only
      *  @param line  receives the record, fingerprints included
-     *  @param observer if `output` is empty, receives the content as it is read
+     *  @param observer receives the content as it is read — written to
+     *         `output` as well, if one is given (one read for both)
      *  @return the result, also carried by `line.result` */
     virtual HRESULT read(const std::wstring& absolutePath, const std::wstring& output,
                          RawHiveExtraction& line, std::streambuf* observer = nullptr) = 0;
@@ -190,8 +199,8 @@ public:
      *  @param absolutePath the file, as "`X:\\…`"
      *  @param output file to write; EMPTY to compute the fingerprints only —
      *         nothing is then written anywhere
-     *  @param observer if `output` is empty, receives the content as it is
-     *         read (PE analysis, reading a catalog into memory)
+     *  @param observer receives the content as it is read (PE analysis,
+     *         reading a catalog into memory), whether written to `output` or not
      *  @param line  receives the record, fingerprints and timestamps included
      *  @return the result, also carried by `line.result` */
     HRESULT read(const std::wstring& absolutePath, const std::wstring& output,

@@ -457,6 +457,8 @@ bool PeAnalyser::analyseHeaders() {
 	else if (magic == 0x20B) directories = opt + 112;   // PE32+
 	else return false;
 	if (directories > opt + optionalHeaderSize) return false;
+	timeDateStamp_ = lu32(t + pe + 8);                  // COFF header
+	sizeOfImage_ = lu32(t + opt + 56);                 // same offset in PE32 and PE32+
 	const uint32_t nbRep = lu32(t + directories - 4);   // NumberOfRvaAndSizes
 	checksum_ = opt + 64;
 	certEntry_ = directories + 4 * 8;                  // entry 4: certificate table

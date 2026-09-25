@@ -90,6 +90,10 @@ struct AppliConf {
 	std::ofstream log;//!< handle of the output log file, for the debug mode (UTF-8 bytes)
 	int loglevel = 0; //!< log level (0 by default), set on the command line
 	bool binary = false; //!< --binary: fingerprints of the cited files, and collection of the binaries
+	/*! --binary-all: every executable is collected, authenticated or not;
+	 *  the signature is still checked and its verdict recorded. For the cases
+	 *  where the content itself must be in the exhibit store. Implies binary. */
+	bool binaryAll = false;
 	RunMode mode = RunMode::Full; //!< what this run does (see RunMode)
 	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)
 	/*! System drive of the examined machine, with its colon ("C:").

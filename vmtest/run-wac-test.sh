@@ -17,11 +17,13 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 OUTPUT="$HERE/results/$STAMP"
 mkdir -p "$OUTPUT"
 
-BUILD=0; RAWONLY=0; SPLIT=1
+BUILD=0; RAWONLY=0; SPLIT=1; BINARY_OPTION=--binary
 for a in "$@"; do
   [[ "$a" == "--build"    ]] && BUILD=1
   [[ "$a" == "--raw-only" ]] && RAWONLY=1
   [[ "$a" == "--no-split" ]] && SPLIT=0
+  # Step 7 with --binary-all: every executable copied, verdict recorded.
+  [[ "$a" == "--binary-all" ]] && BINARY_OPTION=--binary-all
 done
 
 echo "== 0. Agent =="
@@ -233,6 +235,12 @@ $QGA run -- powershell.exe -NoProfile -Command \
   'Get-ChildItem C:\Windows\System32\*.exe | ForEach-Object { try { $f = [IO.File]::OpenRead($_.FullName); $b = New-Object byte[] 1024; [void]$f.Read($b, 0, 1024); $f.Close(); $pe = [BitConverter]::ToInt32($b, 0x3C); if ($pe -gt 0 -and $pe -lt 1016) { "{0}|{1}" -f $_.FullName.ToLower(), [BitConverter]::ToUInt32($b, $pe + 8) } } catch {} }' \
   > "$OUTPUT/reference/pe-timestamps.txt" 2>/dev/null \
   && echo "   + reference/pe-timestamps.txt" || echo "   ⚠️ PE timestamps reference not read"
+# The build of each executable of System32 — TimeDateStamp and SizeOfImage,
+# the key of Microsoft's symbol server — as read in its header by PowerShell.
+$QGA run -- powershell.exe -NoProfile -Command \
+  'Get-ChildItem C:\Windows\System32\*.exe | ForEach-Object { try { $f = [IO.File]::OpenRead($_.FullName); $b = New-Object byte[] 1024; [void]$f.Read($b, 0, 1024); $f.Close(); $pe = [BitConverter]::ToInt32($b, 0x3C); if ($pe -gt 0 -and $pe -lt 940) { "{0}|{1:X8}|{2:x}" -f $_.FullName.ToLower(), [BitConverter]::ToUInt32($b, $pe + 8), [BitConverter]::ToUInt32($b, $pe + 80) } } catch {} }; exit 0' \
+  > "$OUTPUT/reference/pe-build.txt" 2>/dev/null \
+  && echo "   + reference/pe-build.txt" || echo "   ⚠️ PE build reference not read"
 
 # The last write of each Prefetch file as Windows gives it, for the dates of
 # the file artefacts (WAC reads them in the manifest, from the raw $MFT).
@@ -276,11 +284,19 @@ if [[ $SPLIT -eq 1 ]]; then
   $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\make-fake-package.ps1" \
     > "$OUTPUT/reference/fake-package.txt" 2>/dev/null \
     && echo "   + reference/fake-package.txt" || echo "   ⚠️ copy of a Store package not prepared"
+  # A script whose dates are forged back to 2001, as an intruder would
+  # ("timestomping"): SetFileTime changes $STANDARD_INFORMATION only, and the
+  # manifest must show both sets — 2001, and the real creation in $FILE_NAME.
+  $QGA run -- powershell.exe -NoProfile -Command \
+    '$d = "C:\wactest\stomped"; New-Item -ItemType Directory -Force $d | Out-Null; $f = "$d\stomped.ps1"; Set-Content $f "# timestomping test"; $t = [datetime]"2001-01-01T00:00:00Z"; (Get-Item $f).CreationTimeUtc = $t; (Get-Item $f).LastWriteTimeUtc = $t; (Get-Item $f).LastAccessTimeUtc = $t; $f' \
+    > "$OUTPUT/reference/stomped.txt" 2>/dev/null \
+    && echo "   + reference/stomped.txt" || echo "   ⚠️ timestomped file not prepared"
+
   # taskkill just before the collection, as in step 2: the BAM check expects
   # its execution within minutes of the collection, and the references above
   # take several.
   $QGA run --shell "taskkill /f /im WAC.exe >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
-  if run_wac collect --collect --output=split --events --binary --loglevel=2; then
+  if run_wac collect --collect --output=split --events $BINARY_OPTION --loglevel=2; then
     echo "   ✅ collection went to the end"
   else
     echo "   ❌ collection ended abnormally"; ABNORMAL_STOP=1
@@ -302,6 +318,16 @@ if [[ $SPLIT -eq 1 ]]; then
     '[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-ChildItem C:\Windows\System32\*.exe | ForEach-Object { $s = Get-AuthenticodeSignature $_.FullName; "{0}|{1}|{2}" -f $_.FullName, $s.Status, $s.SignerCertificate.Subject }' \
     > "$OUTPUT/reference/authenticode.txt" 2>/dev/null \
     && echo "   + reference/authenticode.txt" || echo "   ⚠️ authenticode reference not read"
+
+  # The verification script shipped with the documentation, on this
+  # collection: seal and every exhibit, the fingerprint-only ones apart.
+  $QGA write "$ROOT/WAC/doc/user/verify-exhibits.ps1" "$VMDIR\\verify-exhibits.ps1" >/dev/null
+  if $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\verify-exhibits.ps1" \
+       -Output "$VMDIR\\split" > "$OUTPUT/verify-exhibits.log" 2>&1; then
+    echo "   ✅ verify-exhibits.ps1: $(grep -a 'verified,' "$OUTPUT/verify-exhibits.log" | tr -d '\r')"
+  else
+    echo "   ❌ verify-exhibits.ps1 refuses the collection: $(tail -3 "$OUTPUT/verify-exhibits.log" | tr -d '\r')"
+  fi
 
   # A retouched snapshot: one byte appended. The conversion must refuse it.
   LIVE="$VMDIR\\split\\exhibits\\live\\system-clock.json"

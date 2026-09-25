@@ -66,6 +66,10 @@ wrong values in valid JSON:
 | every catalog cited in a "Microsoft (catalog …)" verdict present in the exhibit store | 170 out of 170 missing: the prefix looked for ("catalogue") no longer matched the label ("catalog") |
 | binaries WAC declares authentic Microsoft confirmed by `Get-AuthenticodeSignature` | a wrong verdict would leave a malicious binary out of the exhibit store |
 | copy of a Store package: untouched file authenticated, modified and added files collected | package verification through the signed block map |
+| script whose dates are forged back to 2001: 2001 in `$STANDARD_INFORMATION`, the real date in `$FILE_NAME` | `$FILE_NAME` dates recorded in the manifest |
+| retrieval keys (`PeTimeDateStamp`, `PeSizeOfImage`) / PE headers read by PowerShell | an authentic binary not copied can be fetched again from Microsoft |
+| `--binary-all`: every executable copied, each with its verdict | the package check required "not copied" even under `--binary-all` |
+| `verify-exhibits.ps1` (shipped with the documentation) accepts the collection | it would have reported every fingerprint-only exhibit as altered |
 
 **WAC's log accumulates.** It is opened in append mode: without purging, it grows
 from one test to the next — 636 MB after a series of runs, which made fetching
@@ -144,6 +148,7 @@ ISO_WIN=~/Downloads/Win11_25H2_French_x64_v2.iso ./create-vm.sh
 ./run-wac-test.sh --build        # rebuild + full test
 ./run-wac-test.sh --raw-only     # raw_hive validation only
 ./run-wac-test.sh --no-split     # without step 7 (--collect then --convert, ~1 h)
+./run-wac-test.sh --binary-all   # step 7 with --binary-all (every executable copied)
 python3 qga.py ping              # is the agent answering?
 python3 qga.py run --shell "dir C:\\"
 ```

@@ -98,6 +98,15 @@ HRESULT ExhibitStoreCheckLocation(unsigned long long estimatedNeed);
 *  @return 0 if the information could not be obtained */
 unsigned long long ExhibitStoreFreeSpace();
 
+/*! The verdict of the signature check of an executable, as the manifest
+ *  records it ("SignatureVerified", "Signature", "SignatureReason"). */
+struct SignatureVerdict {
+	bool checked = false;     //!< a check was made
+	bool valid = false;       //!< the signature holds (catalog, embedded, package)
+	std::wstring label;       //!< what authenticated it, e.g. "Microsoft (catalog X.cat)"
+	std::wstring reason;      //!< why not, when not valid
+};
+
 /*! Records an extraction result in the exhibit store manifest.
  *
  *  To be called as extractions go, with the record returned by the `raw_hive`
@@ -108,7 +117,7 @@ unsigned long long ExhibitStoreFreeSpace();
  *         (e.g. L"Raw NTFS reading via \\\\.\\C: ($MFT, attribute $DATA)")
  */
 void ExhibitStoreAdd(const std::vector<RawHiveExtraction>& reading,
-                     const std::wstring& method);
+                     const std::wstring& method, const SignatureVerdict& verdict = {});
 
 /*! Records an exhibit whose CONTENT is already stored under another one.
  *
@@ -117,7 +126,8 @@ void ExhibitStoreAdd(const std::vector<RawHiveExtraction>& reading,
  *  bytes twice. Used to deduplicate cited binaries (see binaires.h): three
  *  identical 332 MB copies of msedge.dll took 996 MB.
  */
-void ExhibitStoreAddDuplicate(const RawHiveExtraction& e, const std::wstring& method);
+void ExhibitStoreAddDuplicate(const RawHiveExtraction& e, const std::wstring& method,
+                              const SignatureVerdict& verdict = {});
 
 /*! Records a file FINGERPRINTED but not copied: an executable whose Microsoft
  *  authenticity was verified in memory (--collect --binary). Identical on
@@ -128,9 +138,9 @@ void ExhibitStoreAddDuplicate(const RawHiveExtraction& e, const std::wstring& me
  *  catalogs recorded.
  *  @param e the reading, fingerprints included (outputPath ignored)
  *  @param method collection method, as recorded
- *  @param signature the verdict, e.g. "Microsoft (catalogue X.cat)" */
+ *  @param verdict the signature check (valid, for an authentic binary) */
 void ExhibitStoreAddFingerprint(const RawHiveExtraction& e, const std::wstring& method,
-                                const std::wstring& signature);
+                                const SignatureVerdict& verdict);
 
 /*! Copies the exhibit store to the working directory, verifying the copy.
  *  @param skipReadInPlace leaves out the exhibits marked READ_IN_PLACE

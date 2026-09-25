@@ -41,7 +41,7 @@ HRESULT ExhibitReader::read(const std::wstring& absolutePath, const std::wstring
 		sha1.update(bytes, (size_t)got);
 		sha256.update(bytes, (size_t)got);
 		if (out.is_open()) out.write(chunk.data(), got);
-		else if (observer) observer->sputn(chunk.data(), got);
+		if (observer) observer->sputn(chunk.data(), got);
 		total += (uint64_t)got;
 	}
 	if (out.is_open() && !out) return line.result = HRESULT_FROM_WIN32(ERROR_WRITE_FAULT);

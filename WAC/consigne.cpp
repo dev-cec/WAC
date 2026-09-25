@@ -26,7 +26,7 @@ struct Exhibit {
 	/*! false: fingerprinted and authenticated, content NOT copied (an
 	 *  authentic Microsoft binary, see ExhibitStoreAddFingerprint). */
 	bool           contentStored = true;
-	std::wstring   signature;        //!< verdict of the Microsoft authenticity check, if made
+	SignatureVerdict verdict;        //!< signature check of an executable, if made
 };
 
 std::vector<Exhibit> g_exhibits;
@@ -150,22 +150,23 @@ HRESULT ExhibitStoreCheckLocation(unsigned long long estimatedNeed) {
 }
 
 void ExhibitStoreAdd(const std::vector<RawHiveExtraction>& reading,
-                     const std::wstring& method) {
+                     const std::wstring& method, const SignatureVerdict& verdict) {
 	for (const RawHiveExtraction& e : reading) {
-		g_exhibits.push_back(Exhibit{ e, method });
+		g_exhibits.push_back(Exhibit{ e, method, false, true, verdict });
 		const std::wstring letter = letterOf(e.volumePath);
 		if (!letter.empty() && g_volumes.find(letter) == g_volumes.end())
 			g_volumes.emplace(letter, signatureVolume(letter));
 	}
 }
 
-void ExhibitStoreAddDuplicate(const RawHiveExtraction& e, const std::wstring& method) {
-	g_exhibits.push_back(Exhibit{ e, method, true });
+void ExhibitStoreAddDuplicate(const RawHiveExtraction& e, const std::wstring& method,
+                              const SignatureVerdict& verdict) {
+	g_exhibits.push_back(Exhibit{ e, method, true, true, verdict });
 }
 
 void ExhibitStoreAddFingerprint(const RawHiveExtraction& e, const std::wstring& method,
-                                const std::wstring& signature) {
-	Exhibit p{ e, method, false, false, signature };
+                                const SignatureVerdict& verdict) {
+	Exhibit p{ e, method, false, false, verdict };
 	p.extracted.outputPath.clear();
 	g_exhibits.push_back(std::move(p));
 }
@@ -202,7 +203,7 @@ const std::map<std::wstring, StoredExhibit>& ExhibitStoreIndex() {
 				              StoredExhibit{ p.extracted.volumePath, p.extracted.outputPath, p.contentStored,
 				                             p.extracted.fingerprints.md5, p.extracted.fingerprints.sha1,
 				                             p.extracted.fingerprints.sha256, p.extracted.fingerprints.authenticodeSha256,
-				                             p.signature });
+				                             p.verdict.label });
 		return built;
 	}();
 	return index;
@@ -402,7 +403,26 @@ HRESULT ExhibitStoreWriteManifest() {
 		   remains an exhibit in its own right — its path, $MFT entry and timestamps
 		   are its own. */
 		if (p.shared) o.add(L"SharedExhibit", Json::boolean(true));
-		if (!p.signature.empty()) o.add(L"Signature", Json::str(p.signature));
+		/* The signature check of an executable, valid or not: under
+		   --binary-all every executable is copied, and the verdict tells which
+		   are authentic. */
+		if (p.verdict.checked) {
+			o.add(L"SignatureVerified", Json::boolean(p.verdict.valid));
+			if (p.verdict.valid && !p.verdict.label.empty()) o.add(L"Signature", Json::str(p.verdict.label));
+			if (!p.verdict.valid && !p.verdict.reason.empty()) o.add(L"SignatureReason", Json::str(p.verdict.reason));
+		}
+		/* A PE's build: TimeDateStamp and SizeOfImage, the key of Microsoft's
+		   symbol server. An authentic Microsoft binary that was not copied can
+		   thus be fetched again, identical, and its fingerprint checked. */
+		if (m.peTimeDateStamp && m.peSizeOfImage) {
+			wchar_t stamp[9] = L"", size[9] = L"";
+			swprintf(stamp, 9, L"%08X", m.peTimeDateStamp);
+			swprintf(size, 9, L"%x", m.peSizeOfImage);      // lower case, as the symbol server writes it
+			const std::wstring name = e.volumePath.substr(e.volumePath.find_last_of(L'\\') + 1);
+			o.add(L"PeTimeDateStamp", Json::str(stamp));
+			o.add(L"PeSizeOfImage", Json::str(size));
+			o.add(L"SymbolServerKey", Json::str(name + L"/" + stamp + size + L"/" + name));
+		}
 		// The two sizes diverging = truncated extraction, which a fingerprint
 		// alone would not reveal (it would just be... the truncated file's).
 		if (m.declaredSize != m.bytes)
@@ -420,6 +440,13 @@ HRESULT ExhibitStoreWriteManifest() {
 		addDate(o, L"SourceModified",    m.modifiedUtc);
 		addDate(o, L"SourceMftModified", m.mftModifiedUtc);
 		addDate(o, L"SourceAccessed",    m.accedeUtc);
+		/* The same four dates from $FILE_NAME, which NTFS keeps on its own
+		   terms: set side by side with the above, they reveal timestamps forged
+		   after the fact (a $STANDARD_INFORMATION earlier than $FILE_NAME). */
+		addDate(o, L"SourceFileNameCreated",     m.fnCreatedUtc);
+		addDate(o, L"SourceFileNameModified",    m.fnModifiedUtc);
+		addDate(o, L"SourceFileNameMftModified", m.fnMftModifiedUtc);
+		addDate(o, L"SourceFileNameAccessed",    m.fnAccessedUtc);
 		exhibits.push(std::move(o));
 	}
 	root.add(L"Items", std::move(exhibits));
@@ -524,7 +551,10 @@ HRESULT ExhibitStoreLoad(ExhibitStoreCheck& check) {
 		p.method = text(L"Method");
 		p.shared = item.find(L"SharedExhibit") != nullptr;
 		p.extracted.volumePath = text(L"SourcePath");
-		p.signature = text(L"Signature");
+		p.verdict.checked = item.find(L"SignatureVerified") != nullptr;
+		p.verdict.valid = text(L"SignatureVerified") == L"true";
+		p.verdict.label = text(L"Signature");
+		p.verdict.reason = text(L"SignatureReason");
 		p.contentStored = text(L"ContentStored") != L"false";
 		if (p.contentStored) {
 			const std::wstring relative = text(L"ExhibitPath");

@@ -68,6 +68,13 @@ public:
 	const uint8_t* sha1Complete() const { return sha1c_; }
 	//! @return the SHA-256, same padding.
 	const uint8_t* sha256Complete() const { return sha256c_; }
+	/*! @return TimeDateStamp of the COFF header (valid if isPe()). With
+	 *  sizeOfImage(), the key under which Microsoft's symbol server keeps
+	 *  every build of its binaries: an authentic Microsoft binary that was not
+	 *  copied can be fetched again, identical, from it. */
+	uint32_t timeDateStamp() const { return timeDateStamp_; }
+	//! @return SizeOfImage of the optional header (valid if isPe()).
+	uint32_t sizeOfImage() const { return sizeOfImage_; }
 	//! @return the certificate table (WIN_CERTIFICATE…), empty if absent.
 	const std::vector<uint8_t>& certificateTable() const { return certificates_; }
 
@@ -86,6 +93,7 @@ private:
 	bool decide_ = false, isPe_ = false, finished_ = false;
 	uint64_t position_ = 0;             // bytes already processed
 	uint64_t checksum_ = 0, certEntry_ = 0, certStart_ = 0, finCert_ = 0;
+	uint32_t timeDateStamp_ = 0, sizeOfImage_ = 0;
 	Sha1Stream h1_;
 	Sha256Stream h256_;
 	std::vector<uint8_t> certificates_;
