@@ -313,7 +313,8 @@ Toutes les options sont facultatives et désactivées par défaut.
   seule : télécharge chez Microsoft la liste des racines de confiance
   (\fichier{authroot.stl}), celle des certificats désapprouvés
   (\fichier{disallowedcert.stl}) et chacune des racines, vérifie leurs
-  signatures et leurs empreintes, et les écrit dans \fichier{dossier} (par
+  signatures et leurs empreintes, ainsi que les listes de pilotes vulnérables
+  de Microsoft et de LOLDrivers (non signées : authentifiées par HTTPS seul), et les écrit dans \fichier{dossier} (par
   défaut \fichier{trust}, à côté de \fichier{WAC.exe}), à emporter sur la clé
   avec \fichier{WAC.exe}. Seul mode qui utilise le réseau : la bibliothèque
   réseau n'est chargée que là. Refusée avec toute autre option. \\

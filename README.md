@@ -203,14 +203,19 @@ workstation, before leaving for the collection:
 | `disallowedcert.stl` | the keys and certificates Microsoft distrusts |
 | `roots\<SHA-1>.crt` | every root `authroot.stl` names (562 on 2026-08-25) |
 | `roots.pem` | those trusted for code signing and not distrusted, for `osslsigncode` or `openssl` on Linux |
+| `vulnerable-drivers.json` | the fingerprints (file and Authenticode) of vulnerable or malicious drivers, from Microsoft's blocklist (1,086) and LOLDrivers (8,151), and the 217 signers Microsoft's blocklist denies, with the files each is restricted to |
+| `sources\` | both driver lists as downloaded: `VulnerableDriverBlockList.zip`, `loldrivers.json` |
 | `trust-manifest.json` | date, sources, counts, SHA-256 of every file; written last, so that an interrupted set is seen as absent |
 
-The set can be carried without being trusted: both lists are signed by
+The set can be carried without being trusted: both trust lists are signed by
 Microsoft's trust list publisher, checked up to a Microsoft root embedded in
 WAC, and every root must have the SHA-1 the signed list names — an altered set
-is refused. It is the only mode that uses the network, through WinHTTP loaded
+is refused. The driver lists are not signed: their authenticity is that of
+HTTPS, and the manifest says so; a list that cannot be obtained is recorded as
+missing. It is the only mode that uses the network, through WinHTTP loaded
 at run time; the build refuses a `WAC.exe` that imports a network library.
-On a Linux workstation it runs under wine. About 4 seconds; the 562 roots are
+On a Linux workstation it runs under wine. About 40 seconds (LOLDrivers is
+33 MB); the 562 roots are
 identical, byte for byte, to those of Windows' `certutil -generateSSTFromWU`.
 
 ## 🔀 COLLECT HERE, CONVERT ELSEWHERE

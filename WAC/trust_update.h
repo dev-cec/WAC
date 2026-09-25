@@ -17,6 +17,11 @@
  *    - roots\<SHA-1>.crt: every root authroot.stl names, as downloaded;
  *    - roots.pem: those trusted for code signing, for osslsigncode or openssl
  *      on a Linux workstation;
+ *    - vulnerable-drivers.json: the fingerprints of vulnerable or malicious
+ *      drivers (Microsoft's blocklist, LOLDrivers) and the signers Microsoft
+ *      denies — lists NOT signed, authenticated by HTTPS alone, as the
+ *      manifest says; a list not obtained is recorded as missing;
+ *    - sources\: those two lists as downloaded;
  *    - trust-manifest.json: date, sources, counts, SHA-256 of every file.
  *
  *  WHY IT CAN BE CARRIED WITHOUT BEING TRUSTED. Both lists are signed by

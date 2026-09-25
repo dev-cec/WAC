@@ -509,7 +509,7 @@ authenticode_test --catalogs <dossier>
 authenticode_test --catalogs <dossier> --files <liste>
 \end{lstlisting}
 
-\section{Listes de confiance : \texttt{inflate\_test}, \texttt{cab\_test}, \texttt{trust\_list\_test}}
+\section{Listes de confiance : \texttt{inflate\_test}, \texttt{cab\_test}, \texttt{zip\_test}, \texttt{trust\_list\_test}}
 
 \opt{update-trust} décompresse et lit ce que Microsoft publie ; une erreur
 donnerait une sortie valide et fausse. Chaque maillon a donc sa référence
@@ -521,6 +521,11 @@ indépendante, et se construit sous Linux avec AddressSanitizer et UBSan :
   \item \texttt{cab\_test} : cabinets MSZIP, extraction identique octet pour
     octet à celle de \texttt{cabextract} sur les vrais \fichier{authrootstl.cab}
     et \fichier{disallowedcertstl.cab} (1\,134 contrôles) ;
+  \item \texttt{zip\_test} : archives ZIP, extraction identique à celle de
+    \texttt{zipfile} (Python) sur la vraie liste de pilotes vulnérables de
+    Microsoft et deux archives synthétiques (stockée, compressée, commentaire,
+    dossiers, fichier vide) ; une archive abîmée ne rend jamais un contenu
+    altéré, refusé par son CRC-32 (1\,717 contrôles) ;
   \item \texttt{trust\_list\_test} : les comptes de \fichier{authroot.stl}
     (racines pour la signature de code, pour l'horodatage, et pour la signature
     de code non désapprouvées), calculés à part par une lecture DER en Python ;
@@ -543,7 +548,10 @@ le laisse croire), celles de 48~octets le SHA-384 de la partie signée.
 
 Le résultat de bout en bout se contrôle dans la VM : les 562 racines écrites par
 \opt{update-trust} sont identiques, octet pour octet, à celles que produit
-\texttt{certutil -generateSSTFromWU}.
+\texttt{certutil -generateSSTFromWU}. Les listes de pilotes vulnérables se
+recoupent par une lecture Python du XML et du JSON téléchargés : mêmes
+1\,086 empreintes Microsoft, 217 signataires refusés, 8\,151 empreintes
+LOLDrivers.
 
 % ============================================================ 5
 \chapter{Les harnais de robustesse}\label{ch:robustesse}

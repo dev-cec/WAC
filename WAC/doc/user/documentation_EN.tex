@@ -310,7 +310,8 @@ Every option is optional and disabled by default.
   collection, and alone: downloads from Microsoft the list of trusted roots
   (\fichier{authroot.stl}), that of disallowed certificates
   (\fichier{disallowedcert.stl}) and every root, checks their signatures and
-  fingerprints, and writes them into \fichier{folder} (by default
+  fingerprints, together with the vulnerable driver lists of Microsoft and
+  LOLDrivers (not signed: authenticated by HTTPS alone), and writes them into \fichier{folder} (by default
   \fichier{trust}, next to \fichier{WAC.exe}), to be carried on the key with
   \fichier{WAC.exe}. The only mode that uses the network: the network library
   is loaded there alone. Refused with any other option. \\
