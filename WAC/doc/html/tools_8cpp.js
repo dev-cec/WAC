@@ -10,7 +10,6 @@ var tools_8cpp =
     [ "enumRegistryValue", "tools_8cpp.html#ae9d97b8defedd15d154fba35ed742f9f", null ],
     [ "extractedPath", "tools_8cpp.html#a90966443464069ccf60bbe78afac2f20", null ],
     [ "getErrorMessage", "tools_8cpp.html#ac6445268d6c87c34c40e723fd1ea23ef", null ],
-    [ "getNameFromSid", "tools_8cpp.html#ab29ec2bd73a4de1536739ac5cd16ecff", null ],
     [ "getRegBinaryValue", "tools_8cpp.html#add13d51f17348ae4d80ce6b5f5b3415e", null ],
     [ "getRegboolValue", "tools_8cpp.html#a55c27e3c9e64135544b0a0f9311d3630", null ],
     [ "getRegDwordValue", "tools_8cpp.html#a4f0b78eee3c0f95e956cac7767d933e0", null ],

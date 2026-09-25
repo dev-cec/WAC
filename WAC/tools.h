@@ -435,8 +435,11 @@ std::wstring tab(int i);
 //conversion
 ///////////////////////////////////////////////////////
 
-/*! Converts a SID to a user name.
-* @param _sid the user's SID
+/*! Name of a SID, resolved OFFLINE from the examined machine's hives (see
+* account_names.h): never by asking the running system or the network.
+* Implemented in account_names.cpp; the table is filled by loadAccountNames.
+* @param _sid the SID, as text
+* @return its name, or "" if the evidence does not name it (not emitted)
 */
 std::wstring getNameFromSid(std::wstring _sid);
 

@@ -119,6 +119,7 @@ $(document).ready(function(){initNavTree('system__conversions__test_8cpp.html','
 <code>#include &quot;<a class="el" href="tools_8h_source.html">tools.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="trans__id_8h_source.html">trans_id.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="time__zone_8h_source.html">time_zone.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="account__names_8h_source.html">account_names.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -146,7 +147,8 @@ Variables</h2></td></tr>
 <li>the rule read in <code>SYSTEM\...\TimeZoneInformation</code> (transition dates in the kernel's TIME_FIELDS layout) against GetTimeZoneInformation;</li>
 <li>the formatting of WAC end to end: a winter date collected in summer is labelled with its own offset, not the collection day's;</li>
 <li>random (forged) rules: offsets within bounds, no overflow;</li>
-<li>the precision written: seven, three or no digits of fraction, as the source holds; a FAT date comes out to the second, never ".0000000".</li>
+<li>the precision written: seven, three or no digits of fraction, as the source holds; a FAT date comes out to the second, never ".0000000";</li>
+<li>serviceSid / LookupAccountNameW("NT SERVICE\\&lt;name&gt;"), on every service of the machine: the SIDs WAC names offline are those Windows gives.</li>
 </ul>
 <p>Usage: system_conversions_test Built by <code>build-windows.sh --test</code>; runs on Windows (the test VM). </p>
 </div><h2 class="groupheader">Function Documentation</h2>

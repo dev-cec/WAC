@@ -54,7 +54,6 @@ struct Process {
 	BinaryFingerprint fingerprint;     //!< fingerprints of that executable, if `--binary` was given
 	DWORD processParentId = 0;      //!< identifier of the process that started it
 	DWORD processThreadCount = 0;   //!< number of threads it holds
-	std::wstring processSidName = L"";//!< name of the account it runs as
 	std::wstring processSID = L"";    //!< SID of that account
 	DWORD sessionId = 0;              //!< session the process belongs to
 	bool  sessionKnown = false;      //!< true if that session could be read

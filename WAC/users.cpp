@@ -94,6 +94,16 @@ std::wstring describeFlags(DWORD acb) {
 	return s;
 }
 
+//! Profile path attached to a SID, "" if the account never logged on.
+std::wstring profileOfSid(const std::wstring& sid) {
+	if (sid.empty()) return L"";
+	for (const std::tuple<std::wstring, std::wstring>& p : conf.profiles)
+		if (toLower(std::get<0>(p)) == toLower(sid)) return std::get<1>(p);
+	return L"";
+}
+
+} // namespace
+
 /*! Rebuilds the machine's SID from `SAM\Domains\Account`, value `V`.
 *
 * The three subauthorities of the local domain SID occupy the last 12 bytes of
@@ -133,15 +143,31 @@ std::wstring readMachineSid(ORHKEY hSam, const std::wstring& base) {
 	return sid;
 }
 
-//! Profile path attached to a SID, "" if the account never logged on.
-std::wstring profileOfSid(const std::wstring& sid) {
-	if (sid.empty()) return L"";
-	for (const std::tuple<std::wstring, std::wstring>& p : conf.profiles)
-		if (toLower(std::get<0>(p)) == toLower(sid)) return std::get<1>(p);
-	return L"";
+
+HRESULT openSam(ORHKEY* hSam, std::wstring* base) {
+	if (!hSam || !base) return ERROR_INVALID_PARAMETER;
+	*hSam = NULL;
+	const std::wstring samHive = conf.mountpoint + L"\\Windows\\system32\\config\\SAM";
+	log(3, L"🔈OROpenHive SAM");
+	HRESULT hresult = OROpenHive(samHive.c_str(), hSam);
+	if (hresult != ERROR_SUCCESS) return hresult;
+	/* The SAM hive carries a root key named "SAM": the full path is therefore
+	   `SAM\Domains\Account`. Both forms are tried, because the root exposed
+	   depends on the way the hive was written — an ERROR_FILE_NOT_FOUND here
+	   would otherwise read as "hive absent" while it is present and readable. */
+	for (PCWSTR prefix : { L"SAM\\", L"" }) {
+		ORHKEY account = NULL;
+		if (OROpenKey(*hSam, (std::wstring(prefix) + L"Domains\\Account").c_str(), &account) == ERROR_SUCCESS) {
+			ORCloseKey(account);
+			*base = prefix;
+			return ERROR_SUCCESS;
+		}
+	}
+	ORCloseHive(*hSam);
+	*hSam = NULL;
+	return ERROR_FILE_NOT_FOUND;
 }
 
-} // namespace
 
 Json User::toJson() const {
 	log(3, L"🔈user toJson");
@@ -187,31 +213,16 @@ HRESULT Users::getData() {
 	log(0, L"ℹ️Users :");
 	log(0, L"*******************************************************************************************************************");
 
-	const std::wstring samHive = conf.mountpoint + L"\\Windows\\system32\\config\\SAM";
 	ORHKEY hSam = NULL;
-	log(3, L"🔈OROpenHive SAM");
-	HRESULT hresult = OROpenHive(samHive.c_str(), &hSam);
+	std::wstring base;
+	HRESULT hresult = openSam(&hSam, &base);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥SAM hive unavailable: local accounts not collected", hresult);
 		return hresult;
 	}
-
-	/* The SAM hive carries a root key named "SAM": the full path is therefore
-	   `SAM\Domains\Account\Users`. Both forms are tried, because the root
-	   exposed depends on the way the hive was written — an ERROR_FILE_NOT_FOUND
-	   here would otherwise read as "hive absent" while it is present and
-	   readable. */
 	ORHKEY hUsers = NULL;
-	std::wstring base;
-	for (PCWSTR prefix : { L"SAM\\", L"" }) {
-		const std::wstring path = std::wstring(prefix) + L"Domains\\Account\\Users";
-		log(3, L"🔈OROpenKey " + path);
-		hUsers = NULL;   // an output handle is only meaningful on success
-		if (OROpenKey(hSam, path.c_str(), &hUsers) == ERROR_SUCCESS) {
-			base = prefix;
-			break;
-		}
-	}
+	log(3, L"🔈OROpenKey " + base + L"Domains\\Account\\Users");
+	if (OROpenKey(hSam, (base + L"Domains\\Account\\Users").c_str(), &hUsers) != ERROR_SUCCESS) hUsers = NULL;
 	if (!hUsers) {
 		log(2, L"🔥OROpenKey Domains\\Account\\Users not found in the SAM hive");
 		ORCloseHive(hSam);

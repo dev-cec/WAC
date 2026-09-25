@@ -39,6 +39,7 @@
 #include "system.h"
 #include "sessions.h"
 #include "processes.h"
+#include "account_names.h"
 #include "services.h"
 #include "users.h"
 #include "events.h"
@@ -321,13 +322,23 @@ int wmain(int argc, wchar_t* argv[])
 	printStep(L" - Extraction of PROCESS: ");
 	hresult = processes.getData();
 	auditRecord(L"PROCESS collection", L"CreateToolhelp32Snapshot", hresult, Footprint::PROCESSES);
+	/* Observed now, written once the account names are loaded from the
+	   hives (loadAccountNames): the owner of a process is named from the
+	   evidence, not by asking the running system. */
+	bool processesPending = hresult == ERROR_SUCCESS;
 	if (hresult != ERROR_SUCCESS) printError(hresult);
-	else {
-		hresult = processes.toJson();
-		if (hresult != ERROR_SUCCESS) printError(hresult);
+	else printSuccess();
+	// Writes processes.json once, as soon as the names are loaded, or at the
+	// latest before the event logs if the SYSTEM hive could not be opened.
+	auto writeProcesses = [&processes, &processesPending]() {
+		if (!processesPending) return;
+		processesPending = false;
+		printStep(L" - Writing PROCESS : ");
+		const HRESULT written = processes.toJson();
+		if (written != ERROR_SUCCESS) printError(written);
 		else printSuccess();
 		processes.clear(); // free memory
-	}
+	};
 
 
 
@@ -541,6 +552,20 @@ int wmain(int argc, wchar_t* argv[])
 			auditRecord(L"Reading of the suspect's ANSI code page",
 			            L"SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage",
 			            hresult, Footprint::HIVE_COPY);
+
+			/* Names of the SIDs, from the evidence only (SAM, well-known SIDs,
+			   services, profiles): no LookupAccountSidW, which would query the
+			   domain controller. Before any artefact that names an account. */
+			printStep(L" - Naming the accounts (SAM, services, profiles) : ");
+			log(3, L"🔈loadAccountNames");
+			hresult = loadAccountNames();
+			if (hresult != ERROR_SUCCESS) printError(hresult);   // not blocking: the other sources are loaded
+			else printSuccess();
+			auditRecord(L"Offline naming of the SIDs",
+			            L"SAM (Names indexes), SYSTEM (Services), SOFTWARE (ProfileList)",
+			            hresult, Footprint::HIVE_COPY);
+
+			writeProcesses();
 
 			printStep(L" - Extracting USBSTOR Registry Keys : ");
 			hresult = usbs.getData();
@@ -796,6 +821,8 @@ int wmain(int argc, wchar_t* argv[])
 		else printSuccess();
 		jumplistCustoms.clear();
 	}
+	writeProcesses();   // if the names could not be loaded (SYSTEM hive unreadable)
+
 	/************************
 	*  EVENT LOGS (the least volatile: handled last)
 	*************************/

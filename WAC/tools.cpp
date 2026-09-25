@@ -330,53 +330,6 @@ std::wstring tab(int i) {
 *                   CONVERSION                      *
 *****************************************************/
 
-std::wstring getNameFromSid(std::wstring _sid) {
-	/* CORRECTIONS and CACHING.
-	 *
-	 * Slowness: LookupAccountSidW(NULL, …) queries the domain controller when the
-	 * SID is not resolvable locally, with the network delay that comes with it.
-	 * The function was called for EVERY shellbag, MRU, userassist and process,
-	 * while the same SID comes back hundreds of times — hence a collection that
-	 * seemed frozen. The result is therefore memorised per SID.
-	 * A useful side effect: that many network solicitations fewer, hence that
-	 * many traces fewer.
-	 *
-	 * Three defects fixed on the way:
-	 *  - the pointer allocated by ConvertStringSidToSidW was never released (the
-	 *    conversion is now WAC's own, textToSid);
-	 *  - the SAME `size` variable served for the name AND for the domain, while
-	 *    the API writes into both: the second write overwrote the first;
-	 *  - the return value was not checked, so that a failure had an
-	 *    uninitialised buffer read.
-	 */
-	if (_sid.empty()) return L"";
-
-	static std::map<std::wstring, std::wstring> cache;
-	const auto found = cache.find(_sid);
-	if (found != cache.end()) return found->second;
-
-	std::wstring name;
-	std::vector<BYTE> sid = textToSid(_sid);
-	if (!sid.empty()) {
-		PSID pSID = sid.data();
-		wchar_t lpName[256] = L"";
-		wchar_t lpDomain[256] = L"";
-		DWORD nameSize = 256, domainSize = 256;   // two distinct sizes
-		SID_NAME_USE typeSid = SidTypeUnknown;
-		log(3, L"🔈LookupAccountSidW");
-		if (LookupAccountSidW(NULL, pSID, lpName, &nameSize,
-		                      lpDomain, &domainSize, &typeSid))
-			name = lpName;
-		else
-			log(3, L"🔈LookupAccountSidW: no match", GetLastError());
-	}
-
-	// Memorised even when empty: a SID that cannot be resolved will stay so, no
-	// point in waiting for the network delay again at every occurrence.
-	cache.emplace(_sid, name);
-	return name;
-}
-
 /*! A LUID as a decimal number (its 64 bits).
  * @param luid the LUID
  * @return the number, as text */

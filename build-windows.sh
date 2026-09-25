@@ -135,3 +135,15 @@ echo "Executable: $BUILD/WAC.exe"
 x86_64-w64-mingw32-objdump -p "$BUILD/WAC.exe" | grep -qiE 'libstdc|libgcc|winpthread' \
   && echo "WARNING: MinGW runtime dependency detected!" \
   || echo "Static C++ runtime: self-contained exe (Windows system DLLs only)."
+
+# Functions WAC must never import: resolving a name through them may QUERY THE
+# DOMAIN CONTROLLER — a trace of the collection on another machine — and makes
+# the output depend on the machine running WAC. The SIDs are named offline
+# from the hives (WAC/account_names.cpp). A build that imports them fails.
+FORBIDDEN='LookupAccountSid|LookupAccountName|LsaLookupSids|LsaLookupNames'
+if x86_64-w64-mingw32-objdump -p "$BUILD/WAC.exe" | grep -qE "\\b($FORBIDDEN)"; then
+  echo "ERROR: WAC.exe imports a name-resolution function that queries the domain:"
+  x86_64-w64-mingw32-objdump -p "$BUILD/WAC.exe" | grep -E "\\b($FORBIDDEN)"
+  exit 1
+fi
+echo "No network name resolution imported ($FORBIDDEN)."

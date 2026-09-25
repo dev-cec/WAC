@@ -167,6 +167,7 @@
     
     
     <ClCompile Include="asciiart.cpp" />
+    <ClCompile Include="account_names.cpp" />
     <ClCompile Include="audit.cpp" />
     <ClCompile Include="events.cpp" />
     <ClCompile Include="hive_recover.cpp" />
@@ -221,6 +222,7 @@
   <ItemGroup>
     
     <ClInclude Include="asciiart.h" />
+    <ClInclude Include="account_names.h" />
     <ClInclude Include="audit.h" />
     <ClInclude Include="events.h" />
     <ClInclude Include="hive_recover.h" />

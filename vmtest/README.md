@@ -53,6 +53,7 @@ wrong values in valid JSON:
 | `mounted_device.json` vs `reg query` of the same key (decoded by a separate implementation) and `Get-Partition` | 6 mounts out of 7 published as `\`: current device paths (`\??\...`) were decoded as ANSI text and stopped at their first zero byte |
 | FAT dates of the shell items without a fraction and with even seconds; Amcache text dates without a fraction | every date written with seven digits of fraction — `…:30.0000000` for a FAT date precise to two seconds (808 dates) |
 | BAM (`taskkill.exe` run by the harness), UserAssist (Prefetch runs), USBSTOR (`Get-PnpDeviceProperty` on the virtual USB key the harness attaches), Amcache `LinkDate` (PE headers) | all four store UTC and were read as local time: every date 2 h off; BAM and UserAssist later emptied by a regression of the value reading |
+| SID names vs `Get-LocalUser` / `Get-LocalGroup`, and S-1-5-18 = `SYSTEM` | names asked of the running system (LookupAccountSidW, which may query the domain controller) and translated into its language (`Système`) |
 | `MANIFEST.sha256` carries the real fingerprint of `MANIFEST.json` | the only check that detects a retouched manifest — the very thing that attests to the exhibits |
 | every collected exhibit carries its three fingerprints | an exhibit without a fingerprint is unidentified, hence unusable |
 | the system drive of `OperatingSystem.json` is among the manifest's volumes read | two independent sources of the same information |

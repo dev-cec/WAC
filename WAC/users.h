@@ -70,6 +70,19 @@ struct User {
 	void clear();
 };
 
+/*! Opens the SAM hive of the working copy and finds the prefix of its keys.
+ *  @param hSam receives the open hive, to close with ORCloseHive
+ *  @param base receives the prefix ("SAM\\" or "") of `Domains\\Account`
+ *  @return ERROR_SUCCESS, or the error that kept the hive or its keys from
+ *          being opened (hSam is then NULL) */
+HRESULT openSam(ORHKEY* hSam, std::wstring* base);
+
+/*! Rebuilds the machine's SID from `SAM\Domains\Account`, value `V`.
+ *  @param hSam the open SAM hive
+ *  @param base key prefix, as openSam gives it
+ *  @return "S-1-5-21-a-b-c", or "" on failure */
+std::wstring readMachineSid(ORHKEY hSam, const std::wstring& base);
+
 /*! All the local accounts of the examined machine. */
 struct Users {
 	std::vector<User> users;   //!< the accounts, as the SAM lists them

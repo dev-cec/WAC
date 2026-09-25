@@ -705,6 +705,17 @@ BAM…), l'heure répétée à l'automne est lue comme sa première occurrence, 
 l'heure sautée au printemps avec le décalage d'avant le changement, comme le
 fait Windows.
 
+\section{Noms des comptes}
+
+Les champs qui nomment un compte (\champ{SIDName}, \champ{Owner},
+\champ{RunAs}) sont tirés des preuves seules, sans interroger le système ni le
+réseau : comptes et groupes locaux de la base SAM (dans la langue de la
+machine examinée), SID bien connus sous leur nom canonique
+(\texttt{SYSTEM}, \texttt{LOCAL SERVICE}\ldots), SID de services
+(\texttt{NT SERVICE\textbackslash\ldots}), et dossier de profil pour un
+compte de domaine. Un SID qu'aucune de ces sources ne nomme est publié sans
+nom : le SID reste la preuve, à rapprocher du domaine par l'analyste.
+
 \section{Un champ absent n'est pas un champ vide}
 
 Une valeur sans source n'est pas émise du tout. Une clé vide se lirait comme une

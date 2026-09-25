@@ -97,7 +97,8 @@ $(document).ready(function(){initNavTree('users_8h.html',''); initResizable(); }
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">users.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -120,6 +121,13 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsers.html">Users</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:aca1429591fd709d6445229982aa12ee2" id="r_aca1429591fd709d6445229982aa12ee2"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="users_8h.html#aca1429591fd709d6445229982aa12ee2">openSam</a> (ORHKEY *hSam, std::wstring *base)</td></tr>
+<tr class="separator:aca1429591fd709d6445229982aa12ee2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a801104b574110a04d38ad9e9c76ce02a" id="r_a801104b574110a04d38ad9e9c76ce02a"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="users_8h.html#a801104b574110a04d38ad9e9c76ce02a">readMachineSid</a> (ORHKEY hSam, const std::wstring &amp;base)</td></tr>
+<tr class="separator:a801104b574110a04d38ad9e9c76ce02a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Local accounts of the examined machine, read from the SAM hive. </p>
@@ -135,7 +143,90 @@ Classes</h2></td></tr>
 <li><code>V</code>: the variable-size fields — name, full name, comment, paths, preceded by a table of offsets relative to 0xCC. The password hashes (<code>V</code>, offsets 0x9C and 0xA8) are DELIBERATELY IGNORED: they establish no fact useful to the investigation, and their presence in an output file would create a risk for nothing in return.</li>
 </ul>
 <p>The full SID is rebuilt from the machine SID, read in the <code>V</code> value of <code>SAM\\Domains\\Account</code>, and the account's RID. </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="aca1429591fd709d6445229982aa12ee2" name="aca1429591fd709d6445229982aa12ee2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aca1429591fd709d6445229982aa12ee2">&#9670;&#160;</a></span>openSam()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT openSam </td>
+          <td>(</td>
+          <td class="paramtype">ORHKEY *&#160;</td>
+          <td class="paramname"><em>hSam</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::wstring *&#160;</td>
+          <td class="paramname"><em>base</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Opens the SAM hive of the working copy and finds the prefix of its keys. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">hSam</td><td>receives the open hive, to close with ORCloseHive </td></tr>
+    <tr><td class="paramname">base</td><td>receives the prefix ("SAM\\" or "") of <code>Domains\\Account</code> </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the error that kept the hive or its keys from being opened (hSam is then NULL) </dd></dl>
+
+</div>
+</div>
+<a id="a801104b574110a04d38ad9e9c76ce02a" name="a801104b574110a04d38ad9e9c76ce02a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a801104b574110a04d38ad9e9c76ce02a">&#9670;&#160;</a></span>readMachineSid()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring readMachineSid </td>
+          <td>(</td>
+          <td class="paramtype">ORHKEY&#160;</td>
+          <td class="paramname"><em>hSam</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>base</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Rebuilds the machine's SID from <code>SAM\Domains\Account</code>, value <code>V</code>. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">hSam</td><td>the open SAM hive </td></tr>
+    <tr><td class="paramname">base</td><td>key prefix, as openSam gives it </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>"S-1-5-21-a-b-c", or "" on failure</dd></dl>
+<p>Rebuilds the machine's SID from <code>SAM\Domains\Account</code>, value <code>V</code>.</p>
+<p>The three subauthorities of the local domain SID occupy the last 12 bytes of the value. Without them, only the RID would be known — and a RID cannot be interpreted on its own, nor correlated with any other artefact.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">hSam</td><td>the open SAM hive </td></tr>
+    <tr><td class="paramname">base</td><td>key prefix ("SAM\\" or "", see &lt;tt&gt;samRoot&lt;/tt&gt;)
+@return "S-1-5-21-a-b-c", or "" on failure </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

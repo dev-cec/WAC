@@ -200,6 +200,13 @@ $QGA run -- powershell.exe -NoProfile -Command \
   > "$OUTPUT/reference/pe-timestamps.txt" 2>/dev/null \
   && echo "   + reference/pe-timestamps.txt" || echo "   ⚠️ PE timestamps reference not read"
 
+# Local accounts and groups as Windows names them, for the offline naming of
+# the SIDs (WAC reads them in the SAM; Windows through its account API).
+$QGA run -- powershell.exe -NoProfile -Command \
+  '[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-LocalUser | ForEach-Object { "{0}|{1}" -f $_.SID, $_.Name }; Get-LocalGroup | ForEach-Object { "{0}|{1}" -f $_.SID, $_.Name }' \
+  > "$OUTPUT/reference/accounts.txt" 2>/dev/null \
+  && echo "   + reference/accounts.txt" || echo "   ⚠️ accounts reference not read"
+
 echo "== 6. JSON validity check =="
 python3 "$HERE/check-json.py" "$OUTPUT" || echo "   ⚠️ some JSON files are invalid (see above)"
 

@@ -38,7 +38,9 @@
  *    labelled with its own offset, not the collection day's;
  *  - random (forged) rules: offsets within bounds, no overflow;
  *  - the precision written: seven, three or no digits of fraction, as the
- *    source holds; a FAT date comes out to the second, never ".0000000".
+ *    source holds; a FAT date comes out to the second, never ".0000000";
+ *  - serviceSid / LookupAccountNameW("NT SERVICE\\<name>"), on every service
+ *    of the machine: the SIDs WAC names offline are those Windows gives.
  *
  *  Usage: system_conversions_test
  *  Built by `build-windows.sh --test`; runs on Windows (the test VM).
@@ -57,6 +59,7 @@
 #include "tools.h"
 #include "trans_id.h"
 #include "time_zone.h"
+#include "account_names.h"
 
 AppliConf conf; //!< WAC's global configuration, which tools.cpp references (empty here)
 
@@ -472,6 +475,35 @@ void hostileRules(std::mt19937_64& rng) {
 	}
 }
 
+/*! Every service of the machine: WAC's service SID against Windows'. */
+void serviceSids() {
+	HKEY services = NULL;
+	if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services", 0, KEY_READ, &services) != ERROR_SUCCESS) {
+		check(false, L"Services key unreadable");
+		return;
+	}
+	unsigned compared = 0;
+	wchar_t name[256];
+	for (DWORD i = 0; ; ++i) {
+		DWORD length = 256;
+		const LONG r = RegEnumKeyExW(services, i, name, &length, nullptr, nullptr, nullptr, nullptr);
+		if (r == ERROR_NO_MORE_ITEMS) break;
+		if (r != ERROR_SUCCESS) continue;
+		BYTE sid[SECURITY_MAX_SID_SIZE];
+		DWORD sidSize = sizeof(sid), domainSize = 256;
+		wchar_t domain[256];
+		SID_NAME_USE use;
+		const std::wstring account = std::wstring(L"NT SERVICE\\") + name;
+		if (!LookupAccountNameW(nullptr, account.c_str(), sid, &sidSize, domain, &domainSize, &use)) continue;
+		++compared;
+		check(sidToText(sid, sidSize) == serviceSid(name),
+		      L"service SID of " + std::wstring(name) + L": Windows " + sidToText(sid, sidSize) + L", WAC " + serviceSid(name));
+	}
+	RegCloseKey(services);
+	check(compared > 100, L"only " + std::to_wstring(compared) + L" service SID(s) compared");
+	std::wprintf(L"  %u service SIDs compared\n", compared);
+}
+
 /*! The fraction written says no more than the source holds. */
 void precisions() {
 	SYSTEMTIME st = {};
@@ -506,6 +538,7 @@ int wmain() {
 	suspectOffset(rng);
 	timeZones(rng);
 	precisions();
+	serviceSids();
 	seasonalOffsets();
 	systemTimeZoneKey();
 	hostileRules(rng);

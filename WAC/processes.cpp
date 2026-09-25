@@ -159,7 +159,8 @@ Json Process::toJson() const {
 	o.add(L"Name",           Json::str(processName));
 	addFingerprints(o, fingerprint);
 	o.add(L"SID",            Json::str(processSID));
-	o.add(L"Owner",          Json::str(processSidName));
+	// Named when written, from the hives (account_names.h), not when observed.
+	o.add(L"Owner",          Json::str(getNameFromSid(processSID)));
 	/* Harmonised naming (naming pass): `PID` and `PPId` coexisted in the SAME
 	   object with two case conventions, and `services.json` called the same
 	   notion `ProcessId`. One spelling for one notion, explicit like
@@ -244,10 +245,6 @@ HRESULT Processes::getData() {
 			p.processSID     = it->second.first;
 			p.sessionId      = it->second.second;
 			p.sessionKnown  = true;
-			if (!p.processSID.empty()) {
-				log(3, L"🔈getNameFromSid");
-				p.processSidName = getNameFromSid(p.processSID);
-			}
 		}
 		processes.push_back(std::move(p));
 		log(3, L"🔈Process32Next");

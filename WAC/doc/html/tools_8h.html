@@ -883,12 +883,13 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Converts a SID to a user name. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Name of a SID, resolved OFFLINE from the examined machine's hives (see <a class="el" href="account__names_8h.html" title="Names of the SIDs, resolved OFFLINE from the examined machine&#39;s hives — never by asking the running s...">account_names.h</a>): never by asking the running system or the network. Implemented in <a class="el" href="account__names_8cpp.html" title="Offline names of the SIDs (see account_names.h).">account_names.cpp</a>; the table is filled by loadAccountNames. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">_sid</td><td>the user's SID </td></tr>
+    <tr><td class="paramname">_sid</td><td>the SID, as text </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>its name, or "" if the evidence does not name it (not emitted) </dd></dl>
 
 </div>
 </div>

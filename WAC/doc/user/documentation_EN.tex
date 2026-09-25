@@ -692,6 +692,17 @@ of 2005. For a value the artefact stores in local time (FAT date, Amcache,
 BAM…), the hour repeated in autumn is read as its first occurrence, and the
 hour skipped in spring with the offset before the change, as Windows does.
 
+\section{Account names}
+
+The fields that name an account (\champ{SIDName}, \champ{Owner},
+\champ{RunAs}) come from the evidence alone, without asking the system or
+the network: local accounts and groups of the SAM database (in the language
+of the examined machine), well-known SIDs under their canonical names
+(\texttt{SYSTEM}, \texttt{LOCAL SERVICE}\ldots), service SIDs
+(\texttt{NT SERVICE\textbackslash\ldots}), and the profile folder for a
+domain account. A SID none of them names is published without a name: the SID
+remains the evidence, for the analyst to resolve against the domain.
+
 \section{A missing field is not an empty field}
 
 A value with no source is not emitted at all. An empty key would read as a

@@ -11,7 +11,6 @@ var structProcess =
     [ "processName", "structProcess.html#a45e93ebd75ff845159ce319ba8484a26", null ],
     [ "processParentId", "structProcess.html#af142a2d3b4d4b8cc8d1adf3d45875ac0", null ],
     [ "processSID", "structProcess.html#ac2d35dbe5552a51ba1ded7c7d8265e75", null ],
-    [ "processSidName", "structProcess.html#aa5709fe2266e5b24a9f46d43fc8cb955", null ],
     [ "processThreadCount", "structProcess.html#a7153a0a41a691ca313bb0ceb252834a7", null ],
     [ "sessionId", "structProcess.html#af1aff1a2a2aebf092971cb073bd99768", null ],
     [ "sessionKnown", "structProcess.html#a9a53aa2225a385794a20a9d8941a0038", null ]

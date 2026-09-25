@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>WAC (Windows Artefacts Collector): /var/www/html/WAC/WAC/users.cpp File Reference</title>
+<title>WAC (Windows Artefacts Collector): /var/www/html/WAC/WAC/account_names.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search/",'.html');
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('users_8cpp.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('account__names_8h.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -98,95 +98,74 @@ $(document).ready(function(){initNavTree('users_8cpp.html',''); initResizable();
 <div class="header">
   <div class="summary">
 <a href="#func-members">Functions</a>  </div>
-  <div class="headertitle"><div class="title">users.cpp File Reference</div></div>
+  <div class="headertitle"><div class="title">account_names.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Offline reading of the local accounts in the SAM hive (see <a class="el" href="users_8h.html" title="Local accounts of the examined machine, read from the SAM hive.">users.h</a>).  
+<p>Names of the SIDs, resolved OFFLINE from the examined machine's hives — never by asking the running system or the network.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &quot;<a class="el" href="users_8h_source.html">users.h</a>&quot;</code><br />
-</div><table class="memberdecls">
+<div class="textblock"><code>#include &lt;windows.h&gt;</code><br />
+<code>#include &lt;string&gt;</code><br />
+</div>
+<p><a href="account__names_8h_source.html">Go to the source code of this file.</a></p>
+<table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a801104b574110a04d38ad9e9c76ce02a" id="r_a801104b574110a04d38ad9e9c76ce02a"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="users_8cpp.html#a801104b574110a04d38ad9e9c76ce02a">readMachineSid</a> (ORHKEY hSam, const std::wstring &amp;base)</td></tr>
-<tr class="separator:a801104b574110a04d38ad9e9c76ce02a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca1429591fd709d6445229982aa12ee2" id="r_aca1429591fd709d6445229982aa12ee2"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="users_8cpp.html#aca1429591fd709d6445229982aa12ee2">openSam</a> (ORHKEY *hSam, std::wstring *base)</td></tr>
-<tr class="separator:aca1429591fd709d6445229982aa12ee2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a65c8e3b7f555514165f7e701a3e207e8" id="r_a65c8e3b7f555514165f7e701a3e207e8"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="account__names_8h.html#a65c8e3b7f555514165f7e701a3e207e8">loadAccountNames</a> ()</td></tr>
+<tr class="separator:a65c8e3b7f555514165f7e701a3e207e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e78e5535417d69d0554125e9c1db8c0" id="r_a6e78e5535417d69d0554125e9c1db8c0"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="account__names_8h.html#a6e78e5535417d69d0554125e9c1db8c0">serviceSid</a> (const std::wstring &amp;service)</td></tr>
+<tr class="separator:a6e78e5535417d69d0554125e9c1db8c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Offline reading of the local accounts in the SAM hive (see <a class="el" href="users_8h.html" title="Local accounts of the examined machine, read from the SAM hive.">users.h</a>). </p>
+<div class="textblock"><p>Names of the SIDs, resolved OFFLINE from the examined machine's hives — never by asking the running system or the network. </p>
+<p>WHY. WAC named the SIDs with LookupAccountSidW. For a domain SID that the machine does not know, that call QUERIES THE DOMAIN CONTROLLER: a trace of the collection on another machine, in its logs, plus the local LSA cache. It also made the output depend on the machine running WAC — its language ("Système" for S-1-5-18 on a French Windows), its domain, its network — so that a conversion could not be reproduced elsewhere. The names now come from the evidence alone, in this order of precedence:</p><ol type="1">
+<li>the SAM hive: local users, groups and aliases (domain of the machine SID) and built-in groups (S-1-5-32-…), through the "Names" index, where the TYPE of each name's default value is its RID — the names in the language the machine was installed in, as it knows them;</li>
+<li>the well-known SIDs of Windows, under their canonical names;</li>
+<li>the service SIDs (S-1-5-80-…), computed from the service names of the SYSTEM hive as Windows computes them: SHA-1 of the upper-case name;</li>
+<li>the user profiles (ProfileList): the profile folder names the account — the only offline source for a domain account. A SID none of them names is published without a name: the SID itself is the evidence, and the analyst can resolve it against the domain.</li>
+</ol>
+<p>getNameFromSid (<a class="el" href="tools_8h.html" title="Shared tools: configuration, console display, log, registry reads, time formatting,...">tools.h</a>) reads this table. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="aca1429591fd709d6445229982aa12ee2" name="aca1429591fd709d6445229982aa12ee2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aca1429591fd709d6445229982aa12ee2">&#9670;&#160;</a></span>openSam()</h2>
+<a id="a65c8e3b7f555514165f7e701a3e207e8" name="a65c8e3b7f555514165f7e701a3e207e8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a65c8e3b7f555514165f7e701a3e207e8">&#9670;&#160;</a></span>loadAccountNames()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">HRESULT openSam </td>
+          <td class="memname">HRESULT loadAccountNames </td>
           <td>(</td>
-          <td class="paramtype">ORHKEY *&#160;</td>
-          <td class="paramname"><em>hSam</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramname"></td><td>)</td>
           <td></td>
-          <td class="paramtype">std::wstring *&#160;</td>
-          <td class="paramname"><em>base</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Opens the SAM hive of the working copy and finds the prefix of its keys. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">hSam</td><td>receives the open hive, to close with ORCloseHive </td></tr>
-    <tr><td class="paramname">base</td><td>receives the prefix ("SAM\\" or "") of <code>Domains\\Account</code> </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the error that kept the hive or its keys from being opened (hSam is then NULL) </dd></dl>
+<p>Builds the table SID -&gt; name from the evidence. To be called once the profiles are read (loadProfileList) and conf.CurrentControlSet is open, BEFORE any artefact that names an account is read or written. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the error that kept the SAM from being read (the other sources are loaded all the same) </dd></dl>
 
 </div>
 </div>
-<a id="a801104b574110a04d38ad9e9c76ce02a" name="a801104b574110a04d38ad9e9c76ce02a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a801104b574110a04d38ad9e9c76ce02a">&#9670;&#160;</a></span>readMachineSid()</h2>
+<a id="a6e78e5535417d69d0554125e9c1db8c0" name="a6e78e5535417d69d0554125e9c1db8c0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6e78e5535417d69d0554125e9c1db8c0">&#9670;&#160;</a></span>serviceSid()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::wstring readMachineSid </td>
+          <td class="memname">std::wstring serviceSid </td>
           <td>(</td>
-          <td class="paramtype">ORHKEY&#160;</td>
-          <td class="paramname"><em>hSam</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype">const std::wstring &amp;&#160;</td>
-          <td class="paramname"><em>base</em>&#160;</td>
-        </tr>
-        <tr>
+          <td class="paramname"><em>service</em></td><td>)</td>
           <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Rebuilds the machine's SID from <code>SAM\Domains\Account</code>, value <code>V</code>.</p>
-<p>The three subauthorities of the local domain SID occupy the last 12 bytes of the value. Without them, only the RID would be known — and a RID cannot be interpreted on its own, nor correlated with any other artefact.</p>
-<dl class="params"><dt>Parameters</dt><dd>
+<p>The service SID Windows derives from a service name: "S-1-5-80-" followed by the five little-endian 32-bit words of the SHA-1 of the name in upper case, in UTF-16LE. Checked against LookupAccountNameW("NT SERVICE\\&lt;name&gt;") for every service of the test machine (<a class="el" href="system__conversions__test_8cpp.html" title="Confronts WAC&#39;s own conversions with the Windows functions they replaced, which WAC no longer imports...">system_conversions_test.cpp</a>). </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">hSam</td><td>the open SAM hive </td></tr>
-    <tr><td class="paramname">base</td><td>key prefix ("SAM\\" or "", see &lt;tt&gt;samRoot&lt;/tt&gt;)
-@return "S-1-5-21-a-b-c", or "" on failure </td></tr>
+    <tr><td class="paramname">service</td><td>the service name (key name under <a class="el" href="structServices.html">Services</a>) </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>the SID, as text </dd></dl>
 
 </div>
 </div>
@@ -195,7 +174,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="users_8cpp.html">users.cpp</a></li>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="account__names_8h.html">account_names.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>

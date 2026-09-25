@@ -154,6 +154,7 @@ def cross_checks(folder):
     found += check_date_precision(folder)
     found += check_utc_sources(folder)
     found += check_key_names(folder)
+    found += check_account_names(folder)
     return found
 
 
@@ -1130,6 +1131,64 @@ def check_key_names(folder):
         print(f"  ❌ key names not in PascalCase English: {sorted(bad.items())[:5]}")
         return 1
     print("  ✅ every output key in PascalCase English, without abbreviation")
+    return 0
+
+
+def check_account_names(folder):
+    """The SIDs are named from the evidence, as Windows names them.
+
+    WHY. WAC named the SIDs with LookupAccountSidW, which queries the domain
+    controller for a SID the machine does not know — a trace of the collection
+    on another machine — and returns the names in the language of the machine
+    asking ("Système" for S-1-5-18). They are now read offline: SAM, well-known
+    SIDs, service SIDs, profiles (WAC/account_names.cpp). Checked here:
+      - every local account and group named in the output carries the name
+        Windows gives it (Get-LocalUser, Get-LocalGroup, fetched in the VM);
+      - S-1-5-18 is "SYSTEM", its canonical name, whatever the language;
+      - no local account SID of the output goes unnamed.
+    """
+    path = os.path.join(folder, "reference", "accounts.txt")
+    if not os.path.exists(path):
+        print("  ⏭️  accounts reference absent: SID names not confronted")
+        return 0
+    expected = {}
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            parts = line.strip().split("|", 1)
+            if len(parts) == 2 and parts[0].startswith("S-1-"):
+                expected[parts[0].upper()] = parts[1]
+    pairs = set()
+    def walk(o):
+        if isinstance(o, dict):
+            # A name absent from its object means "not named" (an empty field
+            # is not emitted): it counts as a difference for a local account.
+            sid = o.get("SID") or o.get("Sid")
+            if isinstance(sid, str) and sid.startswith("S-1-"):
+                pairs.add((sid.upper(), o.get("SIDName") or o.get("SidName") or o.get("Owner")))
+            if isinstance(o.get("RunAsSid"), str):
+                pairs.add((o["RunAsSid"].upper(), o.get("RunAs")))
+            for v in o.values():
+                walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v)
+    for file in sorted(glob.glob(os.path.join(folder, "*.json"))):
+        # users.json names its accounts from the SAM itself, Sessions.json from
+        # LSA at the time of the observation, investigation.json the operator
+        # running WAC: none goes through the table.
+        if os.path.basename(file) in ("events.json", "users.json", "Sessions.json", "investigation.json"):
+            continue
+        d = load(folder, os.path.basename(file))
+        if d is not None:
+            walk(d)
+    wrong = [f"{s}: {n!r}, Windows {expected[s]!r}" for s, n in pairs
+             if s in expected and (n or "").lower() != expected[s].lower()]
+    wrong += [f"S-1-5-18: {n!r}, expected 'SYSTEM'" for s, n in pairs if s == "S-1-5-18" and n != "SYSTEM"]
+    if wrong:
+        print(f"  ❌ SID names: {wrong[0]} ({len(wrong)} difference(s))")
+        return 1
+    named = sum(1 for s, _ in pairs if s in expected)
+    print(f"  ✅ SID names: {named} local account(s)/group(s) as Windows names them, S-1-5-18 = SYSTEM, none unnamed")
     return 0
 
 
