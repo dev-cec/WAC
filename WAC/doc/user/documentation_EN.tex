@@ -184,14 +184,19 @@ volume.
 
 \section{What is still read live}
 
-Three pieces of information describe the very moment of the collection and are
-held in no file. They are read live, with a single query each:
+A few pieces of information describe the very moment of the collection and
+are held in no file. They are read live, with a single query each, and
+recorded as read in the exhibit store (\fichier{exhibits\textbackslash live}),
+where the conversion reads them back:
 
 \begin{itemize}
   \item the running \textbf{processes} (a kernel snapshot);
   \item the open \textbf{sessions};
   \item the \textbf{current state of the services} (their configuration is read
-        from the copied hive).
+        from the copied hive);
+  \item the \textbf{clock} and the boot time;
+  \item the running machine's \textbf{settings}: system drive, code page, time
+        zone, volumes and their serial numbers.
 \end{itemize}
 
 % ============================================================ 3
@@ -265,7 +270,8 @@ Open a command prompt \textbf{as administrator}, move to the collection medium,
 then run:
 
 \begin{lstlisting}
-WAC.exe [--events] [--binary] [--dump] [--output=folder] [--loglevel=N] [--debug]
+WAC.exe [--collect | --convert=folder] [--events] [--binary] [--dump]
+        [--output=folder] [--loglevel=N] [--debug]
 \end{lstlisting}
 
 Every option is optional and disabled by default.
@@ -277,6 +283,12 @@ Every option is optional and disabled by default.
 \normalfont\bfseries Option & \bfseries Effect \\
 \midrule
 \endhead
+-{}-collect & Collection only, on the examined machine: live observations and
+  raw extraction into the sealed exhibit store; nothing is converted. See
+  chapter~\ref{chap:separation}. \\
+-{}-convert=folder & Conversion only, on an analysis workstation, of the
+  collection made with \opt{collect} in that folder, after checking the seal
+  and every fingerprint. See chapter~\ref{chap:separation}. \\
 -{}-events & Extracts and parses the event logs (\fichier{.evtx}), and rebuilds
   each event's readable message from its provider's resources. Adds about
   250~MB of copies. \\
@@ -353,9 +365,11 @@ appear in the manifest as exhibits sharing that content
 
 Most referenced binaries are Windows components, identical on every machine of
 the same build. Their origin can be proven on the machine itself, with no list
-to carry: Windows' \textbf{catalogs} (\path|System32\CatRoot|), signed by
-Microsoft, list the fingerprint of every system file; individually signed
-binaries (Edge, OneDrive, Office) carry an \textbf{embedded signature}. A
+to carry: Windows' \textbf{catalogs}, signed by Microsoft, list the fingerprint
+of every system file. \wac{} reads those of \path|System32\CatRoot|, those of
+the components (\path|WinSxS\Catalogs|) and those of the servicing packages
+(\path|servicing\Packages|), over 13,000 on Windows~11. Individually signed
+binaries (Edge, OneDrive, Office, .NET) carry an \textbf{embedded signature}. A
 binary authenticated this way is hashed without being collected; every other one
 is collected — including a system binary replaced by an attacker, whose
 fingerprint no longer matches.
@@ -366,17 +380,32 @@ up to Microsoft root certificates embedded in the executable. No service is
 solicited, the machine's certificate store is not consulted, and revocation is
 not checked online.
 
-Only signers Microsoft uses for its own code are accepted. \textbf{Third-party}
+Only signers Microsoft uses for its own code are accepted (``Microsoft
+Windows'', ``Microsoft Corporation'', ``Microsoft Windows Publisher'' and
+``.NET''). \textbf{Third-party}
 drivers certified by Microsoft (signers ``Hardware Compatibility Publisher'' and
 ``Early Launch Anti-malware Publisher'') are still collected: a vulnerable but
 signed driver is a classic attack path.
 
-The catalogs that justified not collecting a file go into the exhibit store, so
-that a third party can redo the check. In the artefact files, the
-\champ{Signature} field (or \champ{ServiceDllSignature},
+\subsection*{Store applications: verified through their package}
+
+The files of a Store application are not signed one by one: their
+\textbf{package} is. Its folder holds the signature (\fichier{AppxSignature.p7x})
+and the block map (\fichier{AppxBlockMap.xml}), which gives the SHA-256 of every
+64~KiB block of every file. \wac{} verifies the signature, which must reach a
+Microsoft root (the Store signs the packages it distributes), checks that it
+does cover that map, then compares every block read with the map. A matching
+file is hashed without being collected; a modified file, or one added to the
+folder after installation, is collected, and so is every file of a package
+signed outside the Microsoft chain.
+
+The catalogs, package signatures and block maps that justified not collecting a
+file go into the exhibit store, so that a third party can redo the check. In
+the artefact files, the \champ{Signature} field (or \champ{ServiceDllSignature},
 \champ{SignatureTarget}\ldots) states the authentication used, for instance
-``\texttt{Microsoft (catalogue Package\_xxx.cat)}'' or
-``\texttt{Microsoft (signature intégrée)}'' (embedded signature).
+``\texttt{Microsoft (catalog C:\textbackslash{}Windows\textbackslash{}\ldots.cat)}'',
+``\texttt{Microsoft (embedded signature)}'' or
+``\texttt{Package (package C:\textbackslash{}Program Files\textbackslash{}WindowsApps\textbackslash{}\ldots)}''.
 
 \textbf{Scripts} are authenticated the same way: by Windows' catalogs and, for
 PowerShell (\fichier{ps1}, \fichier{psm1}, \fichier{psd1},
@@ -439,6 +468,127 @@ The duration depends mostly on the hardware (USB~2 or~3, disk, processor) and
 the options. On the test virtual machine (NVMe disk): about 70~s with
 \opt{events}, about 310~s with \opt{events} and \opt{binary}. On a USB stick,
 writing dominates.
+
+% ============================================================ 4 bis
+\chapter{Collect here, convert elsewhere}\label{chap:separation}
+
+\section{Why separate}
+
+Without a mode option, \wac{} collects \textbf{and} converts in a single run,
+on the examined machine. Good forensic practice (ISO/IEC~27037 for the
+collection, 27042 for the analysis) separates the two:
+\begin{itemize}
+  \item \textbf{fewer actions on the examined machine}, hence fewer traces: the
+        conversion (reading thousands of files, memory, page file, a possible
+        error report) happens elsewhere;
+  \item \textbf{a conversion that can be redone}: from the sealed exhibit
+        store, by a third party, or with a corrected version of \wac{},
+        without going back to the machine.
+\end{itemize}
+
+\section{The two commands}
+
+On the examined machine, as administrator:
+\begin{lstlisting}
+E:\> WAC.exe --collect --events --binary --output=accounting-pc-01
+\end{lstlisting}
+
+On the analysis workstation, with no particular rights, with the same
+\opt{events} and \opt{binary} options as the collection:
+\begin{lstlisting}
+D:\> WAC.exe --convert=E:\accounting-pc-01 --events --binary
+\end{lstlisting}
+
+The JSON files are written into the collection's folder, next to the exhibit
+store. \opt{convert} excludes \opt{collect} and \opt{output}.
+
+\section{What \opt{collect} takes}
+
+Since the conversion can no longer ask the machine anything, the collection
+takes \textbf{everything it will read}:
+\begin{itemize}
+  \item the \textbf{live observations}, recorded as read in
+        \fichier{exhibits\textbackslash live} and sealed like any exhibit:
+        processes, sessions, service states, clock and boot, and the machine's
+        settings (system drive, code page, time zone, volumes and their serial
+        numbers);
+  \item the hives and the file artefacts, as usual;
+  \item with \opt{events}, the resource files of \textbf{every} declared event
+        provider (binary, parameter file, \fichier{.mui} satellites): which of
+        them are needed is only known at conversion. About 650~MB on
+        Windows~11;
+  \item with \opt{binary}, \textbf{every} executable, library, driver, script
+        and macro document of \textbf{every fixed NTFS volume} — a profile on
+        \fichier{D:} included —, read directly and verified in memory, as in a
+        full run (section~\ref{sec:binary}):
+        \begin{itemize}
+          \item authenticated (catalog, embedded signature, Store package):
+                \textbf{not copied}; the manifest keeps its path, its
+                Authenticode digests and the verdict (\champ{ContentStored}
+                \texttt{false});
+          \item not authenticated: \textbf{copied}, with its three fingerprints
+                MD5, SHA-1, SHA-256, its Authenticode digest and the reason;
+          \item Windows differential file (\texttt{PA30}/\texttt{PA31}, the
+                \fichier{r} and \fichier{f} folders of \fichier{WinSxS}): not an
+                executable; hashed, not copied.
+        \end{itemize}
+        A content is stored once, and the other names of a hard link
+        (\fichier{System32} and \fichier{WinSxS}) are recorded in the manifest
+        like the first. Removable volumes, the collection medium among them,
+        and the memory files (\fichier{pagefile.sys}, \fichier{swapfile.sys},
+        \fichier{hiberfil.sys}) are left out.
+\end{itemize}
+
+\begin{attention}
+With \opt{binary}, the collection reads the whole volume: on the test virtual
+machine (Windows~11 without added software), 43,520~executables read, of which
+27,966 authenticated and 12,700 differential files not copied, 2,507 copied
+(676~MB), in 16~minutes; the whole exhibit store, event logs included, weighs
+1.8~GB. If space runs short, the remaining files are hashed without being
+copied, and the manifest says so.
+\end{attention}
+
+No artefact JSON file is written: the folder holds only the sealed exhibit
+store, the working directory and \fichier{investigation.json}.
+
+\section{What \opt{convert} does}
+
+\begin{enumerate}
+  \item \textbf{Check}, before any read: the seal must carry the manifest's
+        real fingerprint, and every exhibit its SHA-256 fingerprint. A single
+        altered exhibit, and the conversion is \textbf{refused};
+        \fichier{conversion.json} gives the reason.
+  \item \textbf{Rebuild of the working directory} from the exhibit store: the
+        former one is deleted rather than trusted, the copies are verified
+        against the manifest and the hives repaired, as at collection time. The
+        executables and the providers' resources are read in the exhibit store
+        itself, without a copy.
+  \item \textbf{Conversion}, from the exhibits alone: nothing is read from the
+        converting machine — neither its disk, nor its registry, nor its time
+        zone.
+\end{enumerate}
+
+The exhibit store is never modified and its seal remains the collection's.
+\fichier{investigation.json} remains the collection's log;
+\fichier{conversion.json} is the conversion's (operator, workstation,
+operations). Two conversions of one collection give identical JSON files,
+which the test harness checks on every cycle.
+
+\section{Limitations}
+
+\begin{itemize}
+  \item A cited file that is not an executable (document, data) is not
+        collected: at conversion it therefore has \textbf{no fingerprint},
+        whereas the full run computes it on the disk.
+  \item An authenticated executable is not copied: at conversion it has its
+        Authenticode digest and its verdict, but no MD5, SHA-1 or SHA-256 —
+        those are computed only for what is collected.
+  \item An executable on a removable volume is not collected by
+        \opt{collect} \opt{binary}.
+  \item The \opt{events} and \opt{binary} options of the conversion must be
+        those of the collection: what the collection did not take cannot be
+        converted.
+\end{itemize}
 
 % ============================================================ 5
 \chapter{The results}

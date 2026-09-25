@@ -181,6 +181,7 @@ cd vmtest
 ./run-wac-test.sh --build     # rebuild, then full cycle
 ./run-wac-test.sh             # full cycle with the binaries already built
 ./run-wac-test.sh --raw-only  # only the validation of the raw reading
+./run-wac-test.sh --no-split  # without step 7 (collection then conversion)
 \end{lstlisting}
 
 The cycle chains: upload of \fichier{WAC.exe} and \fichier{raw\_hive\_test.exe}
@@ -196,6 +197,14 @@ the folder \fichier{vmtest/results/<timestamp>/}, of:
   \item \fichier{exhibits/} — the exhibit manifest, its seal and the list of
     the files really present in the exhibit store.
 \end{itemize}
+
+Step 7 then separates collection and conversion (chapter ``Collect here,
+convert elsewhere'' of the user documentation): \opt{collect} \opt{events}
+\opt{binary}, which must convert nothing; a conversion of an exhibit store with
+one retouched exhibit, which must be refused before any read, with its reason;
+a conversion, whose JSON files pass the checks below; a second conversion,
+whose JSON files must be identical to the first's, byte for byte. Results in
+\fichier{split/} and \fichier{split-again/}.
 
 \section{Checking the outputs}
 
@@ -230,6 +239,13 @@ SID names / \texttt{Get-LocalUser}, \texttt{Get-LocalGroup} & names asked of the
 GUIDs registered by the harness (\fichier{register-test-guids.ps1}) & ``Unmapped GUID'' published as a name \\
 seal / real fingerprint of the manifest & a retouched manifest \\
 files in the exhibit store / manifest content & 209 exhibits added after sealing \\
+SHA-256 of files read raw / \texttt{Get-FileHash} & safeguard of the reading by batches of clusters \\
+Prefetch dates / dates given by Windows & 0 out of 335 matching: dates of the working copy \\
+executables of System32 and SysWOW64 / manifest of a \opt{collect} \opt{binary} & 6,446 missing out of 8,540 (\texttt{\$INDEX\_ROOT} in an extension record, hard links) \\
+catalogs cited in a verdict / exhibits of the store & 170 out of 170 missing (label ``catalog'' looked for as ``catalogue'') \\
+\wac{}'s Microsoft verdicts / \texttt{Get-AuthenticodeSignature} & safeguard: a wrong verdict would leave a binary out of the store \\
+copy of a Store package (untouched, modified, added) / verdicts & verification through the signed block map \\
+two conversions of one collection & dates read on the working copy, rebuilt at each conversion \\
 \bottomrule
 \end{longtable}
 
@@ -375,7 +391,9 @@ on \emph{every} time zone of Windows, with its rules year by year, at the
 transitions (hour skipped, hour repeated, change of rule on 1 January) from
 1980 to 2035; the reading of \fichier{SYSTEM\textbackslash...\textbackslash
 TimeZoneInformation}, whose daylight saving dates are \texttt{TIME\_FIELDS},
-not \texttt{SYSTEMTIME}s; rules forged at random. It also checks the
+not \texttt{SYSTEMTIME}s; rules forged at random; the reading back of the
+manifest's ISO~8601 dates (\texttt{iso8601UtcToFiletime}, exact to the 100~ns on
+200,000 instants, malformed dates refused). It also checks the
 suspect's offset in both directions: a local
 date converted to UTC must be so with the time zone of the examined machine,
 not that of the machine running \wac{}. An impossible date (month 13, hour 25)
@@ -386,7 +404,7 @@ from the schema of a reference Windows by \fichier{vmtest/property-schema.cpp}.
 system_conversions_test.exe
 \end{lstlisting}
 
-To be run on Windows (the VM). Reference: 9,661,562 comparisons, no difference.
+To be run on Windows (the VM). Reference: 9,861,570 comparisons, no difference.
 Two intended differences: \wac{} refuses a SID text Windows would truncate (a
 sub-authority of $2^{32}$ or more, a sixteenth sub-authority), and a NaN date,
 for which Windows returns a meaningless time.
@@ -396,7 +414,10 @@ for which Windows returns a meaningless time.
 Replays the production chain — fingerprints, manifest, verified copy, hive
 replay — on hives given as arguments, and checks what no build reveals: the
 exhibit store stays identical byte for byte while the working copy is changed,
-and the seal carries the manifest's real fingerprint.
+and the seal carries the manifest's real fingerprint. Last, it checks that an
+exhibit path read from a manifest stays inside the exhibit store: a
+\texttt{..} component is refused, a WinSxS name holding \texttt{..}
+(\texttt{i..sermode}) is accepted.
 
 \begin{lstlisting}
 cd build-windows/tests

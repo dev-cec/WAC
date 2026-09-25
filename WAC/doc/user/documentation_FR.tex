@@ -188,14 +188,19 @@ propre volume.
 
 \section{Ce qui reste lu « à chaud »}
 
-Trois informations décrivent l'instant même de la collecte et ne figurent dans
-aucun fichier. Elles sont lues en direct, en une seule requête chacune :
+Quelques informations décrivent l'instant même de la collecte et ne figurent
+dans aucun fichier. Elles sont lues en direct, en une seule requête chacune, et
+enregistrées telles que lues dans la consigne (\fichier{exhibits\textbackslash
+live}), où la conversion les relit :
 
 \begin{itemize}
   \item la liste des \textbf{processus} en cours (instantané du noyau) ;
   \item les \textbf{sessions} ouvertes ;
   \item l'\textbf{état courant des services} (la configuration, elle, est lue dans
-        la ruche copiée).
+        la ruche copiée) ;
+  \item l'\textbf{horloge} et l'heure de démarrage ;
+  \item les \textbf{réglages} de la machine en marche : lecteur système, page de
+        code, fuseau horaire, volumes et leurs numéros de série.
 \end{itemize}
 
 % ============================================================ 3
@@ -268,7 +273,8 @@ Ouvrez une invite de commandes \textbf{en tant qu'administrateur}, placez-vous
 sur le support de collecte, puis lancez :
 
 \begin{lstlisting}
-WAC.exe [--events] [--binary] [--dump] [--output=dossier] [--loglevel=N] [--debug]
+WAC.exe [--collect | --convert=dossier] [--events] [--binary] [--dump]
+        [--output=dossier] [--loglevel=N] [--debug]
 \end{lstlisting}
 
 Toutes les options sont facultatives et désactivées par défaut.
@@ -280,6 +286,12 @@ Toutes les options sont facultatives et désactivées par défaut.
 \normalfont\bfseries Option & \bfseries Effet \\
 \midrule
 \endhead
+-{}-collect & Collecte seule, sur la machine examinée : relevés en direct et
+  extraction brute dans la consigne scellée, rien n'est converti. Voir
+  chapitre~\ref{chap:separation}. \\
+-{}-convert=\newline dossier & Conversion seule, sur un poste d'analyse, de la collecte
+  faite avec \opt{collect} dans ce dossier, après vérification du sceau et de
+  chaque empreinte. Voir chapitre~\ref{chap:separation}. \\
 -{}-events & Extrait et analyse les journaux d'événements (\fichier{.evtx}), et
   reconstitue le message lisible de chaque événement à partir des ressources de
   son fournisseur. Ajoute environ 250~Mo de copies. \\
@@ -357,10 +369,12 @@ ce contenu (\champ{SharedExhibit}).
 
 La plupart des binaires cités sont des composants de Windows, identiques sur
 toute machine de la même version. Leur origine se prouve sur la machine
-elle-même, sans liste à embarquer : les \textbf{catalogues} de Windows
-(\path|System32\CatRoot|), signés par Microsoft, listent l'empreinte de chaque
-fichier du système ; les binaires signés individuellement (Edge, OneDrive,
-Office) portent une \textbf{signature intégrée}. Un binaire authentifié ainsi est
+elle-même, sans liste à embarquer : les \textbf{catalogues} de Windows, signés
+par Microsoft, listent l'empreinte de chaque fichier du système. \wac{} lit ceux
+de \path|System32\CatRoot|, ceux des composants (\path|WinSxS\Catalogs|) et
+ceux des paquets de maintenance (\path|servicing\Packages|), plus de 13\,000 sur
+Windows~11. Les binaires signés individuellement (Edge, OneDrive, Office, .NET)
+portent une \textbf{signature intégrée}. Un binaire authentifié ainsi est
 haché sans être prélevé ; tous les autres sont prélevés — y compris un binaire
 système remplacé par un attaquant, dont l'empreinte ne correspond plus.
 
@@ -370,17 +384,33 @@ mémoire par \wac{}, jusqu'à des certificats racines Microsoft embarqués dans
 l'exécutable. Aucun service n'est sollicité, le magasin de certificats de la
 machine n'est pas consulté, et la révocation n'est pas contrôlée en ligne.
 
-Seuls les signataires Microsoft pour son propre code sont acceptés. Les pilotes
+Seuls les signataires Microsoft pour son propre code sont acceptés
+(« Microsoft Windows », « Microsoft Corporation », « Microsoft Windows
+Publisher » et « .NET »). Les pilotes
 \textbf{tiers} certifiés par Microsoft (signataires « Hardware Compatibility
 Publisher » et « Early Launch Anti-malware Publisher ») restent prélevés : un
 pilote vulnérable mais signé est un moyen d'attaque classique.
 
-Les catalogues qui ont justifié un non-prélèvement sont consignés, pour qu'un
-tiers puisse refaire la vérification. Dans les fichiers d'artefacts, le champ
-\champ{Signature} (ou \champ{ServiceDllSignature}, \champ{SignatureTarget}\ldots)
-indique l'authentification retenue, par exemple
-« \texttt{Microsoft (catalogue Package\_xxx.cat)} » ou
-« \texttt{Microsoft (signature intégrée)} ».
+\subsection*{Applications du Store : vérifiées par leur paquet}
+
+Les fichiers d'une application du Store ne sont pas signés un à un : c'est leur
+\textbf{paquet} qui l'est. Son dossier contient la signature
+(\fichier{AppxSignature.p7x}) et la carte des blocs (\fichier{AppxBlockMap.xml}),
+qui donne le SHA-256 de chaque bloc de 64~Kio de chaque fichier. \wac{} vérifie
+la signature, qui doit remonter à une racine Microsoft (le Store signe les
+paquets qu'il distribue), vérifie qu'elle garantit bien cette carte, puis compare
+chaque bloc lu à la carte. Un fichier conforme est haché sans être prélevé ; un
+fichier modifié, ou ajouté au dossier après l'installation, est prélevé, de même
+que tout fichier d'un paquet signé hors de la chaîne Microsoft.
+
+Les catalogues, signatures et cartes de blocs qui ont justifié un
+non-prélèvement sont consignés, pour qu'un tiers puisse refaire la vérification.
+Dans les fichiers d'artefacts, le champ \champ{Signature} (ou
+\champ{ServiceDllSignature}, \champ{SignatureTarget}\ldots) indique
+l'authentification retenue, par exemple
+« \texttt{Microsoft (catalog C:\textbackslash{}Windows\textbackslash{}\ldots.cat)} »,
+« \texttt{Microsoft (embedded signature)} » ou
+« \texttt{Package (package C:\textbackslash{}Program Files\textbackslash{}WindowsApps\textbackslash{}\ldots)} ».
 
 Les \textbf{scripts} sont authentifiés de la même façon : par les catalogues de
 Windows, et, pour PowerShell (\fichier{ps1}, \fichier{psm1}, \fichier{psd1},
@@ -443,6 +473,127 @@ La durée dépend surtout du matériel (USB~2 ou~3, disque, processeur) et des
 options. Sur la machine virtuelle de test (disque NVMe) : environ 70~s avec
 \opt{events}, environ 310~s avec \opt{events} et \opt{binary}. Sur une clé USB,
 l'écriture domine.
+
+% ============================================================ 4 bis
+\chapter{Collecter ici, convertir ailleurs}\label{chap:separation}
+
+\section{Pourquoi séparer}
+
+Sans option de mode, \wac{} collecte \textbf{et} convertit en une seule
+exécution, sur la machine examinée. Les bonnes pratiques de l'expertise
+judiciaire (ISO/IEC~27037 pour la collecte, 27042 pour l'analyse) séparent les
+deux :
+\begin{itemize}
+  \item \textbf{moins d'actions sur la machine examinée}, donc moins de traces :
+        la conversion (lecture de milliers de fichiers, mémoire, fichier
+        d'échange, rapport d'erreur éventuel) se fait ailleurs ;
+  \item \textbf{une conversion refaisable} : à partir de la consigne scellée,
+        par un tiers, ou avec une version corrigée de \wac{}, sans revenir sur
+        la machine.
+\end{itemize}
+
+\section{Les deux commandes}
+
+Sur la machine examinée, en administrateur :
+\begin{lstlisting}
+E:\> WAC.exe --collect --events --binary --output=poste-comptable-01
+\end{lstlisting}
+
+Sur le poste d'analyse, sans droits particuliers, avec les mêmes options
+\opt{events} et \opt{binary} que la collecte :
+\begin{lstlisting}
+D:\> WAC.exe --convert=E:\poste-comptable-01 --events --binary
+\end{lstlisting}
+
+Les fichiers JSON sont écrits dans le dossier de la collecte, à côté de la
+consigne. \opt{convert} exclut \opt{collect} et \opt{output}.
+
+\section{Ce que prend \opt{collect}}
+
+La conversion ne pouvant plus rien demander à la machine, la collecte prend
+\textbf{tout ce qu'elle lira} :
+\begin{itemize}
+  \item les \textbf{relevés en direct}, enregistrés tels que lus dans
+        \fichier{exhibits\textbackslash live} et scellés comme toute pièce :
+        processus, sessions, état des services, horloge et démarrage, et les
+        réglages de la machine (lecteur système, page de code, fuseau horaire,
+        volumes et leurs numéros de série) ;
+  \item les ruches et les fichiers d'artefacts, comme d'ordinaire ;
+  \item avec \opt{events}, les fichiers de ressources de \textbf{tous} les
+        fournisseurs d'événements déclarés (binaire, fichier de paramètres,
+        satellites \fichier{.mui}) : lesquels servent ne se sait qu'à la
+        conversion. Environ 650~Mo sur Windows~11 ;
+  \item avec \opt{binary}, \textbf{tous} les exécutables, bibliothèques,
+        pilotes, scripts et documents à macros de \textbf{tous les volumes fixes
+        NTFS} — un profil sur \fichier{D:} compris —, lus directement et
+        vérifiés en mémoire, comme en exécution complète (section~\ref{sec:binary}) :
+        \begin{itemize}
+          \item authentifié (catalogue, signature intégrée, paquet du Store) :
+                \textbf{non copié} ; le manifeste garde son chemin, ses empreintes
+                Authenticode et le verdict (\champ{ContentStored} à \texttt{false}) ;
+          \item non authentifié : \textbf{copié}, avec ses trois empreintes
+                MD5, SHA-1, SHA-256, son empreinte Authenticode et la raison ;
+          \item fichier différentiel de Windows (\texttt{PA30}/\texttt{PA31},
+                dossiers \fichier{r} et \fichier{f} de \fichier{WinSxS}) : ce n'est
+                pas un exécutable ; haché, non copié.
+        \end{itemize}
+        Un même contenu n'est stocké qu'une fois, et les autres noms d'un lien
+        physique (\fichier{System32} et \fichier{WinSxS}) sont déclarés au
+        manifeste comme le premier. Les volumes amovibles, dont le support de
+        collecte, et les fichiers de mémoire (\fichier{pagefile.sys},
+        \fichier{swapfile.sys}, \fichier{hiberfil.sys}) sont exclus.
+\end{itemize}
+
+\begin{attention}
+Avec \opt{binary}, la collecte lit tout le volume : sur la machine virtuelle
+de test (Windows~11 sans logiciel ajouté), 43\,520~exécutables lus, dont
+27\,966 authentifiés et 12\,700 fichiers différentiels non copiés,
+2\,507 copiés (676~Mo), en 16~minutes ; la consigne entière, journaux
+d'événements compris, pèse 1,8~Go. Si la place vient à manquer, les fichiers
+restants sont hachés sans être copiés, et le manifeste l'indique.
+\end{attention}
+
+Aucun fichier JSON d'artefact n'est écrit : le dossier ne contient que la
+consigne scellée, le répertoire de travail et \fichier{investigation.json}.
+
+\section{Ce que fait \opt{convert}}
+
+\begin{enumerate}
+  \item \textbf{Vérification}, avant toute lecture : le sceau doit porter
+        l'empreinte réelle du manifeste, et chaque pièce son empreinte SHA-256.
+        Une seule pièce altérée, et la conversion est \textbf{refusée} ;
+        \fichier{conversion.json} en donne la raison.
+  \item \textbf{Reconstruction du répertoire de travail} depuis la consigne :
+        l'ancien est supprimé plutôt que cru, les copies sont vérifiées contre
+        le manifeste et les ruches réparées, comme à la collecte. Les
+        exécutables et les ressources des fournisseurs sont lus dans la
+        consigne même, sans copie.
+  \item \textbf{Conversion}, depuis les seules pièces : aucune lecture de la
+        machine qui convertit, ni de son disque, ni de son registre, ni de son
+        fuseau horaire.
+\end{enumerate}
+
+La consigne n'est jamais modifiée et son sceau reste celui de la collecte.
+\fichier{investigation.json} reste le journal de la collecte ;
+\fichier{conversion.json} est celui de la conversion (opérateur, poste,
+opérations). Deux conversions d'une même collecte donnent des fichiers JSON
+identiques, ce que le harnais de test vérifie à chaque cycle.
+
+\section{Limites}
+
+\begin{itemize}
+  \item Un fichier cité qui n'est pas un exécutable (document, donnée) n'est
+        pas prélevé : en conversion, il n'a donc \textbf{pas d'empreinte}, là
+        où l'exécution complète la calcule sur le disque.
+  \item Un exécutable authentifié n'est pas copié : à la conversion, il a son
+        empreinte Authenticode et son verdict, mais pas de MD5, SHA-1 ni
+        SHA-256 — ceux-ci ne sont calculés que pour ce qui est prélevé.
+  \item Un exécutable situé sur un volume amovible n'est pas prélevé par
+        \opt{collect} \opt{binary}.
+  \item Les options \opt{events} et \opt{binary} de la conversion doivent être
+        celles de la collecte : ce que la collecte n'a pas pris ne peut pas être
+        converti.
+\end{itemize}
 
 % ============================================================ 5
 \chapter{Les résultats}

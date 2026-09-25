@@ -189,6 +189,7 @@ cd vmtest
 ./run-wac-test.sh --build     # recompile, puis cycle complet
 ./run-wac-test.sh             # cycle complet avec les binaires déjà construits
 ./run-wac-test.sh --raw-only  # seulement la validation de la lecture brute
+./run-wac-test.sh --no-split  # sans l'étape 7 (collecte puis conversion)
 \end{lstlisting}
 
 Le cycle enchaîne : envoi de \fichier{WAC.exe} et \fichier{raw\_hive\_test.exe}
@@ -205,6 +206,15 @@ de \wac{}, puis rapatriement, dans le dossier
   \item \fichier{exhibits/} — le manifeste de consigne, son sceau et la liste
     des fichiers réellement présents dans la consigne.
 \end{itemize}
+
+L'étape 7 sépare ensuite collecte et conversion (chapitre « Collecter ici,
+convertir ailleurs » de la documentation utilisateur) : \opt{collect}
+\opt{events} \opt{binary}, qui ne doit rien convertir ; une conversion d'une
+consigne dont une pièce a été retouchée, qui doit être refusée avant toute
+lecture, avec sa raison ; une conversion, dont les JSON passent les contrôles
+ci-dessous ; une seconde conversion, dont les JSON doivent être identiques à la
+première, octet pour octet. Résultats dans \fichier{split/} et
+\fichier{split-again/}.
 
 \section{Contrôler les sorties}
 
@@ -240,6 +250,13 @@ noms des SID / \texttt{Get-LocalUser}, \texttt{Get-LocalGroup} & noms demandés 
 GUID enregistrés par le harnais (\fichier{register-test-guids.ps1}) & « Unmapped GUID » publié comme un nom \\
 sceau / empreinte réelle du manifeste & retouche du manifeste \\
 fichiers de la consigne / contenu du manifeste & 209 pièces ajoutées après le scellement \\
+SHA-256 de fichiers lus en brut / \texttt{Get-FileHash} & garde-fou de la lecture par lots de clusters \\
+dates des Prefetch / dates données par Windows & 0 sur 335 conformes : dates de la copie de travail \\
+exécutables de System32 et SysWOW64 / manifeste d'un \opt{collect} \opt{binary} & 6~446 manquants sur 8~540 (\texttt{\$INDEX\_ROOT} en enregistrement d'extension, liens physiques) \\
+catalogues cités dans un verdict / pièces de la consigne & 170 sur 170 absents (libellé « catalog » cherché comme « catalogue ») \\
+verdicts Microsoft de \wac{} / \texttt{Get-AuthenticodeSignature} & garde-fou : un mauvais verdict laisserait un binaire hors de la consigne \\
+copie d'un paquet du Store (intact, modifié, ajouté) / verdicts & vérification par la carte des blocs signée \\
+deux conversions d'une même collecte & dates lues sur la copie de travail, refaite à chaque conversion \\
 \bottomrule
 \end{longtable}
 
@@ -389,7 +406,8 @@ heure répétée, changement de règle au 1\textsuperscript{er} janvier) de 1980
 à 2035 ; la lecture de \fichier{SYSTEM\textbackslash...\textbackslash
 TimeZoneInformation}, dont les dates de changement d'heure sont des
 \texttt{TIME\_FIELDS} et non des \texttt{SYSTEMTIME} ; des règles forgées au
-hasard. Il vérifie aussi le
+hasard ; la relecture des dates ISO~8601 du manifeste (\texttt{iso8601UtcToFiletime},
+exacte au 100~ns sur 200\,000 instants, et refus des dates mal formées). Il vérifie aussi le
 décalage horaire du suspect dans les deux sens : une date locale convertie en
 UTC doit l'être avec le fuseau de la machine examinée, et non avec celui de la
 machine qui exécute \wac{}. Une date impossible (mois 13, heure 25) donne une
@@ -401,7 +419,7 @@ générée depuis le schéma d'un Windows de référence par
 system_conversions_test.exe
 \end{lstlisting}
 
-À lancer sous Windows (la VM). Référence : 9~661~562 comparaisons, aucun écart.
+À lancer sous Windows (la VM). Référence : 9~861~570 comparaisons, aucun écart.
 Deux écarts voulus : \wac{} refuse un SID écrit que Windows tronquerait
 (sous-autorité de $2^{32}$ ou plus, seizième sous-autorité), et une date NaN,
 pour laquelle Windows rend une heure dénuée de sens.
@@ -412,7 +430,9 @@ Rejoue la chaîne de production — empreintes, manifeste, copie vérifiée, rej
 des ruches — sur des ruches données en argument, et vérifie ce qu'aucune
 compilation ne révèle : la consigne reste identique octet pour octet pendant que
 la copie de travail est modifiée, et le sceau porte l'empreinte réelle du
-manifeste.
+manifeste. Il vérifie enfin qu'un chemin de pièce lu dans un manifeste reste
+dans la consigne : un composant \texttt{..} est refusé, un nom de WinSxS qui
+contient \texttt{..} (\texttt{i..sermode}) est accepté.
 
 \begin{lstlisting}
 cd build-windows/tests
