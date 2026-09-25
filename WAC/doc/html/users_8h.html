@@ -212,17 +212,7 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>"S-1-5-21-a-b-c", or "" on failure</dd></dl>
-<p>Rebuilds the machine's SID from <code>SAM\Domains\Account</code>, value <code>V</code>.</p>
-<p>The three subauthorities of the local domain SID occupy the last 12 bytes of the value. Without them, only the RID would be known — and a RID cannot be interpreted on its own, nor correlated with any other artefact.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">hSam</td><td>the open SAM hive </td></tr>
-    <tr><td class="paramname">base</td><td>key prefix ("SAM\\" or "", see &lt;tt&gt;samRoot&lt;/tt&gt;)
-@return "S-1-5-21-a-b-c", or "" on failure </td></tr>
-  </table>
-  </dd>
-</dl>
+<dl class="section return"><dt>Returns</dt><dd>"S-1-5-21-a-b-c", or "" on failure </dd></dl>
 
 </div>
 </div>

@@ -104,15 +104,11 @@ std::wstring profileOfSid(const std::wstring& sid) {
 
 } // namespace
 
-/*! Rebuilds the machine's SID from `SAM\Domains\Account`, value `V`.
+/* Rebuilds the machine's SID (documented in users.h) from `SAM\Domains\Account`, value `V`.
 *
 * The three subauthorities of the local domain SID occupy the last 12 bytes of
 * the value. Without them, only the RID would be known — and a RID cannot be
 * interpreted on its own, nor correlated with any other artefact.
-*
-* @param hSam the open SAM hive
-* @param base key prefix ("SAM\\" or "", see `samRoot`)
-* @return "S-1-5-21-a-b-c", or "" on failure
 */
 std::wstring readMachineSid(ORHKEY hSam, const std::wstring& base) {
 	LPBYTE data = NULL;
