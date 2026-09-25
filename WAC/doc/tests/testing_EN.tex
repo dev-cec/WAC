@@ -491,7 +491,7 @@ authenticode_test --catalogs <folder>
 authenticode_test --catalogs <folder> --files <list>
 \end{lstlisting}
 
-\section{Trust lists: \texttt{inflate\_test}, \texttt{cab\_test}, \texttt{zip\_test}, \texttt{trust\_list\_test}}
+\section{Trust lists: \texttt{inflate\_test}, \texttt{cab\_test}, \texttt{zip\_test}, \texttt{csv\_reader\_test}, \texttt{trust\_list\_test}}
 
 \opt{update-trust} decompresses and reads what Microsoft publishes; an error
 would give a valid and wrong output. Each link therefore has its independent
@@ -508,6 +508,10 @@ reference, and is built on Linux with AddressSanitizer and UBSan:
     synthetic archives (stored, compressed, comment, folders, empty file); a
     damaged archive never returns an altered content, refused by its CRC-32
     (1,717 checks);
+  \item \texttt{csv\_reader\_test}: the CCADB CSV report, read field by
+    field as Python's \texttt{csv} module reads it (10,284 records, SHA-256
+    of every field), then doubled quotes, line breaks in a field, CRLF, a
+    quote left open, a short record;
   \item \texttt{trust\_list\_test}: the counts of \fichier{authroot.stl} (roots
     for code signing, for time stamping, and for code signing not distrusted),
     computed apart by a DER reading in Python; the certificates Chromium blocks
@@ -531,7 +535,9 @@ The end-to-end result is checked in the VM: the 562 roots \opt{update-trust}
 writes are identical, byte for byte, to those \texttt{certutil
 -generateSSTFromWU} produces. The vulnerable driver lists are cross-checked by
 a Python reading of the downloaded XML and JSON: the same 1,086 Microsoft
-fingerprints, 217 denied signers, 8,151 LOLDrivers fingerprints.
+fingerprints, 217 denied signers, 8,151 LOLDrivers fingerprints. The CRLs
+are checked with openssl: each one reads, and its issuer is the authority the
+CCADB associates with it (387 out of 387).
 
 % ============================================================ 5
 \chapter{The robustness harnesses}\label{ch:robustesse}

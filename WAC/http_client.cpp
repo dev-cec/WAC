@@ -83,10 +83,27 @@ bool HttpClient::ready() const {
 	return api_->session != nullptr;
 }
 
-bool HttpClient::get(const std::wstring& url, std::vector<uint8_t>& body, size_t maxSize, std::string& reason) const {
+namespace {
+
+/*! "http://host?query" — no path before the query, as some revocation list
+ *  addresses of the CCADB are written — becomes "http://host/?query":
+ *  WinHttpCrackUrl would otherwise take the query for part of the host name. */
+std::wstring withPath(const std::wstring& url) {
+	const size_t scheme = url.find(L"://");
+	if (scheme == std::wstring::npos) return url;
+	const size_t after = url.find_first_of(L"/?#", scheme + 3);
+	if (after == std::wstring::npos) return url + L"/";
+	if (url[after] == L'/') return url;
+	return url.substr(0, after) + L"/" + url.substr(after);
+}
+
+} // namespace
+
+bool HttpClient::get(const std::wstring& address, std::vector<uint8_t>& body, size_t maxSize, std::string& reason) const {
 	body.clear();
 	if (!ready()) { reason = reason_; return false; }
 	const Api& a = *api_;
+	const std::wstring url = withPath(address);
 	URL_COMPONENTS parts = {};
 	parts.dwStructSize = sizeof(parts);
 	parts.dwHostNameLength = parts.dwUrlPathLength = parts.dwExtraInfoLength = (DWORD)-1;

@@ -7,11 +7,13 @@
 #include "http_client.h"
 #include "xml_light.h"
 #include "zip.h"
+#include "csv_reader.h"
 #include "json.h"
 #include "sha.h"
 #include "tools.h"
 #include <filesystem>
 #include <fstream>
+#include <algorithm>
 #include <atomic>
 #include <cwctype>
 #include <functional>
@@ -33,6 +35,12 @@ const std::wstring DRIVER_BLOCKLIST_URL = L"https://aka.ms/VulnerableDriverBlock
 const std::wstring LOLDRIVERS_URL = L"https://www.loldrivers.io/api/drivers.json";
 const size_t DRIVER_LIST_MAX = 128 * 1024 * 1024;   //!< LOLDrivers is ~33 MiB in 2026
 const char DRIVERS[] = "vulnerable-drivers.json";
+/*! The Common CA Database's report of every authority of the root programs:
+ *  capabilities, status, and the revocation lists each issues. */
+const std::wstring CCADB_URL = L"https://ccadb.my.salesforce-sites.com/ccadb/AllCertificateRecordsCSVFormatv4";
+const size_t CCADB_MAX = 256 * 1024 * 1024;         //!< ~10 MiB in 2026
+const size_t CRL_MAX = 64 * 1024 * 1024;            //!< the largest code signing CRL is ~6 MiB in 2026
+const char REVOCATION[] = "revocation.json";
 const unsigned DOWNLOAD_THREADS = 8;           //!< requests at once: few enough not to burden the server
 
 //! A file of the set, kept in memory until everything is checked.
@@ -73,41 +81,53 @@ std::wstring thumbprint(const TrustListEntry& entry) {
 	return toHexadecimal((const uint8_t*)entry.identifier.data(), entry.identifier.size());
 }
 
-/*! Downloads every root authroot.stl names; each must be the certificate
- *  the signed list names — FindInTrustList by its SHA-1. Several requests at
- *  once: one after the other, the 562 roots took 5 min 20 s, each waiting
- *  about 0.6 s on the server.
- *  @param missing receives the roots not obtained, with why
- *  @return the certificates, in the list's order */
-std::vector<SetFile> fetchRoots(const HttpClient& http, const TrustList& roots,
-                                std::map<std::wstring, std::string>& missing) {
-	const size_t count = roots.entries.size();
-	std::vector<SetFile> slots(count);
-	std::vector<std::string> reasons(count);
+//! One download of a batch: its address, then its content or why it failed.
+struct Download {
+	std::wstring url;
+	std::vector<uint8_t> content;
+	std::string reason;
+	bool obtained = false;
+};
+
+/*! Downloads a batch, several requests at once: one after the other, the
+ *  562 roots took 5 min 20 s, each waiting about 0.6 s on the server.
+ *  @param batch the downloads, filled in place
+ *  @param maxSize limit of each content
+ *  @param label what is downloaded, for the progress line */
+void downloadAll(const HttpClient& http, std::vector<Download>& batch, size_t maxSize, const std::wstring& label) {
 	std::atomic<size_t> next{ 0 }, done{ 0 };
 	auto worker = [&]() {
-		for (size_t k = next++; k < count; k = next++) {
-			const TrustListEntry& entry = roots.entries[k];
-			const std::wstring name = thumbprint(entry);
-			std::vector<uint8_t> certificate;
-			if (http.get(TRUSTED_ROOTS_URL + name + L".crt", certificate, CERTIFICATE_MAX, reasons[k])) {
-				if (FindInTrustList(roots, certificate.data(), certificate.size()) == &entry)
-					slots[k] = { L"roots\\" + name + L".crt", std::move(certificate) };
-				else
-					reasons[k] = "not the certificate authroot.stl names: SHA-1 differs";
-			}
-			if (++done % 50 == 0) wprintf(L"\r - Root certificates : %zu / %zu", done.load(), count);
+		for (size_t k = next++; k < batch.size(); k = next++) {
+			batch[k].obtained = http.get(batch[k].url, batch[k].content, maxSize, batch[k].reason);
+			if (++done % 50 == 0) wprintf(L"\r - %ls : %zu / %zu", label.c_str(), done.load(), batch.size());
 		}
 	};
 	std::vector<std::thread> threads;
 	for (unsigned t = 0; t < DOWNLOAD_THREADS; ++t) threads.emplace_back(worker);
 	for (std::thread& t : threads) t.join();
+	size_t obtained = 0;
+	for (const Download& d : batch) obtained += d.obtained;
+	wprintf(L"\r - %ls : %zu / %zu, %zu obtained\n", label.c_str(), batch.size(), batch.size(), obtained);
+}
+
+/*! Downloads every root authroot.stl names; each must be the certificate
+ *  the signed list names — FindInTrustList by its SHA-1.
+ *  @param missing receives the roots not obtained, with why
+ *  @return the certificates, in the list's order */
+std::vector<SetFile> fetchRoots(const HttpClient& http, const TrustList& roots,
+                                std::map<std::wstring, std::string>& missing) {
+	std::vector<Download> batch(roots.entries.size());
+	for (size_t k = 0; k < batch.size(); ++k) batch[k].url = TRUSTED_ROOTS_URL + thumbprint(roots.entries[k]) + L".crt";
+	downloadAll(http, batch, CERTIFICATE_MAX, L"Root certificates");
 	std::vector<SetFile> files;
-	for (size_t k = 0; k < count; ++k) {
-		if (!slots[k].content.empty()) files.push_back(std::move(slots[k]));
-		else missing[thumbprint(roots.entries[k])] = reasons[k];
+	for (size_t k = 0; k < batch.size(); ++k) {
+		const TrustListEntry& entry = roots.entries[k];
+		Download& d = batch[k];
+		if (d.obtained && FindInTrustList(roots, d.content.data(), d.content.size()) != &entry)
+			d = { d.url, {}, "not the certificate authroot.stl names: SHA-1 differs", false };
+		if (d.obtained) files.push_back({ L"roots\\" + thumbprint(entry) + L".crt", std::move(d.content) });
+		else missing[thumbprint(entry)] = d.reason;
 	}
-	wprintf(L"\r - Root certificates : %zu / %zu, %zu obtained\n", count, count, files.size());
 	return files;
 }
 
@@ -244,6 +264,117 @@ std::vector<DriverList> fetchDriverLists(const HttpClient& http) {
 	return lists;
 }
 
+/*! What the CCADB report gives, and the revocation lists downloaded from it.
+ *  The report is not signed — HTTPS only —; each CRL is signed by its
+ *  authority, a signature checked where the CRL is used, against the
+ *  authority's certificate in the chain of the binary. */
+struct Revocation {
+	bool obtained = false;
+	std::string reason;
+	std::vector<uint8_t> report;                     //!< the CSV, as downloaded
+	//! Each CRL address, and the authorities that name it (name, SHA-256 of the certificate).
+	std::map<std::wstring, std::vector<std::pair<std::wstring, std::wstring>>> crls;
+	Json revokedAuthorities = Json::arr();           //!< authorities the CCADB says revoked
+	std::vector<Download> downloads;
+};
+
+//! The columns of the report read here; the report is refused if one is missing.
+struct CcadbColumns {
+	size_t name, sha256, codeSigning, status, fullCrl, partitionedCrls;
+};
+
+/*! Locates the columns by their header names, not by position: the report
+ *  gains columns over time.
+ *  @return false if one is missing */
+bool locateColumns(const std::vector<std::string>& header, CcadbColumns& c) {
+	const char* NAMES[] = { "Certificate Name", "SHA-256 Fingerprint", "Code Signing Capable", "Revocation Status",
+	                        "Full CRL Issued By This CA", "JSON Array of Partitioned CRLs" };
+	size_t* targets[] = { &c.name, &c.sha256, &c.codeSigning, &c.status, &c.fullCrl, &c.partitionedCrls };
+	for (size_t k = 0; k < 6; ++k) {
+		const auto found = std::find(header.begin(), header.end(), NAMES[k]);
+		if (found == header.end()) return false;
+		*targets[k] = (size_t)(found - header.begin());
+	}
+	return true;
+}
+
+/*! Reads the report: the CRLs of every authority capable of code signing
+ *  and not revoked, full and partitioned; and every revoked authority,
+ *  whatever its capabilities — one in a chain invalidates the signature.
+ *  @return false if the report cannot be read */
+bool readCcadb(Revocation& r) {
+	std::vector<std::vector<std::string>> records;
+	CcadbColumns c{};
+	if (!CsvRead(std::string(r.report.begin(), r.report.end()), records, r.reason)) return false;
+	if (records.size() < 2 || !locateColumns(records[0], c)) { r.reason = "CCADB report without its expected columns"; return false; }
+	for (size_t k = 1; k < records.size(); ++k) {
+		const std::vector<std::string>& row = records[k];
+		const std::wstring name = decodeText(row[c.name], CP_UTF8), sha256 = decodeText(row[c.sha256], CP_UTF8);
+		if (row[c.status] == "Revoked" || row[c.status] == "Parent Cert Revoked") {
+			r.revokedAuthorities.push(Json::obj().add(L"SHA256", Json::str(sha256)).add(L"Name", Json::str(name))
+			                                     .add(L"Status", Json::str(decodeText(row[c.status], CP_UTF8))));
+			continue;
+		}
+		if (row[c.codeSigning] != "True" || (!row[c.status].empty() && row[c.status] != "Not Revoked")) continue;
+		std::vector<std::wstring> urls;
+		if (!row[c.fullCrl].empty()) urls.push_back(decodeText(row[c.fullCrl], CP_UTF8));
+		Json partitioned = Json::null();
+		std::wstring error;
+		if (!row[c.partitionedCrls].empty() && Json::parse(decodeText(row[c.partitionedCrls], CP_UTF8), partitioned, error))
+			for (const auto& [unused, url] : partitioned.members()) urls.push_back(url.text());
+		for (std::wstring& url : urls) {
+			url.erase(url.find_last_not_of(L" \t\r\n") + 1);
+			if (!url.empty()) r.crls[url].push_back({ name, sha256 });
+		}
+	}
+	return true;
+}
+
+/*! Downloads the report, then every CRL it names. A report not obtained
+ *  leaves the set without revocation: the collection then cannot clear a
+ *  signature, and collects the binary. */
+Revocation fetchRevocation(const HttpClient& http) {
+	Revocation r;
+	printStep(L" - Certificate authorities (CCADB) : ");
+	r.obtained = http.get(CCADB_URL, r.report, CCADB_MAX, r.reason) && readCcadb(r);
+	if (!r.obtained) { printError(decodeText(r.reason, CP_UTF8)); return r; }
+	printSuccess();
+	for (const auto& [url, unused] : r.crls) r.downloads.push_back({ url, {}, {}, false });
+	downloadAll(http, r.downloads, CRL_MAX, L"Revocation lists (CRL)");
+	return r;
+}
+
+//! The file of a CRL in the set: named by the SHA-256 of its address, which may hold anything.
+std::wstring crlFile(const std::wstring& url) {
+	const std::string bytes = encodeText(url);
+	uint8_t digest[32];
+	sha256Bytes((const uint8_t*)bytes.data(), bytes.size(), digest);
+	return L"crl\\" + toHexadecimal(digest, 16) + L".crl";
+}
+
+/*! revocation.json: each CRL with the authorities that issue it, the CRLs
+ *  not obtained, and the revoked authorities — what the collection reads. */
+SetFile revocationFile(const Revocation& r) {
+	Json crls = Json::arr(), missing = Json::arr();
+	for (const Download& d : r.downloads) {
+		Json issuers = Json::arr();
+		for (const auto& [name, sha256] : r.crls.at(d.url))
+			issuers.push(Json::obj().add(L"Name", Json::str(name)).add(L"SHA256", Json::str(sha256)));
+		if (d.obtained)
+			crls.push(Json::obj().add(L"Url", Json::str(d.url)).add(L"File", Json::str(crlFile(d.url)))
+			                     .add(L"Bytes", Json::num(d.content.size())).add(L"IssuedBy", std::move(issuers)));
+		else
+			missing.push(Json::obj().add(L"Url", Json::str(d.url)).add(L"Reason", Json::str(decodeText(d.reason, CP_UTF8)))
+			                        .add(L"IssuedBy", std::move(issuers)));
+	}
+	Json file = Json::obj();
+	file.add(L"Crls", std::move(crls));
+	file.add(L"CrlsMissing", std::move(missing));
+	file.add(L"RevokedAuthorities", r.revokedAuthorities);
+	const std::string text = encodeText(file.dump(0));
+	return { decodeText(REVOCATION, CP_UTF8), std::vector<uint8_t>(text.begin(), text.end()) };
+}
+
 /*! roots.pem: the roots trusted for code signing, and not distrusted
  *  (property 104), for osslsigncode and openssl. A distrusted root may still
  *  validate a signature time-stamped before its date: only WAC's check
@@ -295,7 +426,7 @@ std::wstring isoUtc(uint64_t filetime) {
 }
 
 //! trust-manifest.json: what the set is, and the SHA-256 of every file.
-Json manifest(const std::vector<Source>& sources, const std::vector<DriverList>& drivers,
+Json manifest(const std::vector<Source>& sources, const std::vector<DriverList>& drivers, const Revocation& revocation,
               const std::vector<SetFile>& files, size_t rootsListed,
               const std::map<std::wstring, std::string>& missing) {
 	FILETIME now;
@@ -325,6 +456,17 @@ Json manifest(const std::vector<Source>& sources, const std::vector<DriverList>&
 		driverLists.push(std::move(l));
 	}
 	m.add(L"DriverLists", std::move(driverLists));
+	Json crl = Json::obj();
+	crl.add(L"Url", Json::str(CCADB_URL));
+	crl.add(L"Authenticity", Json::str(L"HTTPS only for the CCADB report; each CRL is signed by its authority, checked where it is used"));
+	crl.add(L"Obtained", Json::boolean(revocation.obtained));
+	if (!revocation.obtained) crl.add(L"Reason", Json::str(decodeText(revocation.reason, CP_UTF8)));
+	size_t crls = 0;
+	for (const Download& d : revocation.downloads) crls += d.obtained;
+	if (revocation.obtained)
+		crl.add(L"Crls", Json::num(crls)).add(L"CrlsMissing", Json::num(revocation.downloads.size() - crls))
+		   .add(L"RevokedAuthorities", Json::num(revocation.revokedAuthorities.members().size()));
+	m.add(L"Revocation", std::move(crl));
 	m.add(L"RootsListed", Json::num(rootsListed));
 	Json absent = Json::arr();
 	for (const auto& [name, reason] : missing)
@@ -371,11 +513,16 @@ bool writeSet(const std::filesystem::path& folder, const std::vector<SetFile>& f
 	if (ec) { reason = "previous manifest not removed"; return false; }
 	std::filesystem::create_directories(folder / "roots", ec);
 	if (!ec) std::filesystem::create_directories(folder / "sources", ec);
+	if (!ec) std::filesystem::create_directories(folder / "crl", ec);
 	if (ec) { reason = "folder not created"; return false; }
 	std::filesystem::remove(folder / "sources" / "VulnerableDriverBlockList.zip", ec);
 	std::filesystem::remove(folder / "sources" / "loldrivers.json", ec);
 	for (const auto& old : std::filesystem::directory_iterator(folder / "roots", ec))
 		if (old.path().extension() == ".crt") std::filesystem::remove(old.path(), ec);
+	for (const auto& old : std::filesystem::directory_iterator(folder / "crl", ec))
+		if (old.path().extension() == ".crl") std::filesystem::remove(old.path(), ec);
+	std::filesystem::remove(folder / REVOCATION, ec);
+	std::filesystem::remove(folder / "sources" / "ccadb.csv", ec);
 	for (const SetFile& f : files)
 		if (!writeFile(folder / f.path, f.content)) { reason = "not written: " + encodeText(f.path); return false; }
 	const std::string text = encodeText(m.dump(0));
@@ -426,9 +573,16 @@ int UpdateTrust(const std::wstring& folder) {
 	files.push_back(driversFile(drivers));
 	for (DriverList& d : drivers)
 		if (d.obtained) files.push_back({ d.file, std::move(d.raw) });
+	Revocation revocation = fetchRevocation(http);
+	if (revocation.obtained) {
+		files.push_back(revocationFile(revocation));
+		files.push_back({ L"sources\\ccadb.csv", std::move(revocation.report) });
+		for (Download& d : revocation.downloads)
+			if (d.obtained) files.push_back({ crlFile(d.url), std::move(d.content) });
+	}
 
 	printStep(L" - Writing the trust set : ");
-	const Json m = manifest(sources, drivers, files, sources[0].parsed.entries.size(), missing);
+	const Json m = manifest(sources, drivers, revocation, files, sources[0].parsed.entries.size(), missing);
 	if (!writeSet(folder, files, m, reason)) { printError(decodeText(reason, CP_UTF8)); return 1; }
 	printSuccess();
 	if (!missing.empty())

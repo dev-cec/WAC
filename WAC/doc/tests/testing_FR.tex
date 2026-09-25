@@ -509,7 +509,7 @@ authenticode_test --catalogs <dossier>
 authenticode_test --catalogs <dossier> --files <liste>
 \end{lstlisting}
 
-\section{Listes de confiance : \texttt{inflate\_test}, \texttt{cab\_test}, \texttt{zip\_test}, \texttt{trust\_list\_test}}
+\section{Listes de confiance : \texttt{inflate\_test}, \texttt{cab\_test}, \texttt{zip\_test}, \texttt{csv\_reader\_test}, \texttt{trust\_list\_test}}
 
 \opt{update-trust} décompresse et lit ce que Microsoft publie ; une erreur
 donnerait une sortie valide et fausse. Chaque maillon a donc sa référence
@@ -526,6 +526,11 @@ indépendante, et se construit sous Linux avec AddressSanitizer et UBSan :
     Microsoft et deux archives synthétiques (stockée, compressée, commentaire,
     dossiers, fichier vide) ; une archive abîmée ne rend jamais un contenu
     altéré, refusé par son CRC-32 (1\,717 contrôles) ;
+  \item \texttt{csv\_reader\_test} : le rapport CSV de la CCADB, lu champ
+    pour champ comme par le module \texttt{csv} de Python (10\,284
+    enregistrements, empreinte SHA-256 de chaque champ), puis guillemets
+    doublés, sauts de ligne dans un champ, CRLF, guillemet non fermé,
+    enregistrement incomplet ;
   \item \texttt{trust\_list\_test} : les comptes de \fichier{authroot.stl}
     (racines pour la signature de code, pour l'horodatage, et pour la signature
     de code non désapprouvées), calculés à part par une lecture DER en Python ;
@@ -551,7 +556,8 @@ Le résultat de bout en bout se contrôle dans la VM : les 562 racines écrites 
 \texttt{certutil -generateSSTFromWU}. Les listes de pilotes vulnérables se
 recoupent par une lecture Python du XML et du JSON téléchargés : mêmes
 1\,086 empreintes Microsoft, 217 signataires refusés, 8\,151 empreintes
-LOLDrivers.
+LOLDrivers. Les CRL se contrôlent par openssl : chacune se lit, et son
+émetteur est l'autorité que lui associe la CCADB (387 sur 387).
 
 % ============================================================ 5
 \chapter{Les harnais de robustesse}\label{ch:robustesse}

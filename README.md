@@ -204,18 +204,20 @@ workstation, before leaving for the collection:
 | `roots\<SHA-1>.crt` | every root `authroot.stl` names (562 on 2026-08-25) |
 | `roots.pem` | those trusted for code signing and not distrusted, for `osslsigncode` or `openssl` on Linux |
 | `vulnerable-drivers.json` | the fingerprints (file and Authenticode) of vulnerable or malicious drivers, from Microsoft's blocklist (1,086) and LOLDrivers (8,151), and the 217 signers Microsoft's blocklist denies, with the files each is restricted to |
-| `sources\` | both driver lists as downloaded: `VulnerableDriverBlockList.zip`, `loldrivers.json` |
+| `crl\` , `revocation.json` | the revocation lists (CRL) of every authority capable of code signing that the Common CA Database lists (387 in 2026), each with the authorities that issue it; and the 2,935 authorities the CCADB says revoked |
+| `sources\` | the unsigned lists as downloaded: `VulnerableDriverBlockList.zip`, `loldrivers.json`, `ccadb.csv` |
 | `trust-manifest.json` | date, sources, counts, SHA-256 of every file; written last, so that an interrupted set is seen as absent |
 
 The set can be carried without being trusted: both trust lists are signed by
 Microsoft's trust list publisher, checked up to a Microsoft root embedded in
 WAC, and every root must have the SHA-1 the signed list names — an altered set
-is refused. The driver lists are not signed: their authenticity is that of
-HTTPS, and the manifest says so; a list that cannot be obtained is recorded as
-missing. It is the only mode that uses the network, through WinHTTP loaded
+is refused. Each CRL is signed by its authority, a signature checked where it
+is used. The driver lists and the CCADB report are not signed: their
+authenticity is that of HTTPS, and the manifest says so; a list that cannot be
+obtained is recorded as missing. It is the only mode that uses the network, through WinHTTP loaded
 at run time; the build refuses a `WAC.exe` that imports a network library.
-On a Linux workstation it runs under wine. About 40 seconds (LOLDrivers is
-33 MB); the 562 roots are
+On a Linux workstation it runs under wine. About 70 seconds for 64 MB; the
+562 roots are
 identical, byte for byte, to those of Windows' `certutil -generateSSTFromWU`.
 
 ## 🔀 COLLECT HERE, CONVERT ELSEWHERE

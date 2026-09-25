@@ -21,10 +21,15 @@
  *      drivers (Microsoft's blocklist, LOLDrivers) and the signers Microsoft
  *      denies — lists NOT signed, authenticated by HTTPS alone, as the
  *      manifest says; a list not obtained is recorded as missing;
- *    - sources\: those two lists as downloaded;
+ *    - crl\, revocation.json: the revocation lists of every authority
+ *      capable of code signing the Common CA Database lists, each with the
+ *      authorities that issue it, and the authorities it says revoked. Each
+ *      CRL is signed by its authority, checked where it is used; the CCADB
+ *      report itself is authenticated by HTTPS alone;
+ *    - sources\: the unsigned lists as downloaded (drivers, CCADB);
  *    - trust-manifest.json: date, sources, counts, SHA-256 of every file.
  *
- *  WHY IT CAN BE CARRIED WITHOUT BEING TRUSTED. Both lists are signed by
+ *  WHY IT CAN BE CARRIED WITHOUT BEING TRUSTED. Both trust lists are signed by
  *  Microsoft's trust list publisher, checked up to a Microsoft root embedded
  *  in WAC; every root certificate must have the SHA-1 the signed list names.
  *  The set is checked again where it is used: altered on the key, it is
