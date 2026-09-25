@@ -2,6 +2,7 @@
  *  \brief Reading of the automatic jump lists (see jumplist_automatic.h).
  */
 #include "jumplist_automatic.h"
+#include "consigne.h"
 
 AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wstring _sid) {
 	Sid = _sid;
@@ -40,31 +41,10 @@ AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wst
 		LPBYTE buffer = bufferOwner.get();
 		file.read(reinterpret_cast<CHAR*>(buffer), size);
 		file.close();
-		// read the dates
-		log(3, L"🔈CreateFile hFile");
-		HANDLE hFile = CreateFile(_path.wstring().c_str(),  // name of the write
-			GENERIC_READ,          // open for reading
-			0,                      // do not share
-			NULL,                   // default security
-			OPEN_EXISTING,          // open existing file only
-			FILE_ATTRIBUTE_NORMAL,  // normal file
-			NULL);                  // no attr. template
-		if (hFile != INVALID_HANDLE_VALUE) {
-			FILE_BASIC_INFO fileInfo;
-			log(3, L"🔈GetFileInformationByHandleEx hFile");
-			if (GetFileInformationByHandleEx(hFile, FileBasicInfo, &fileInfo, sizeof(FILE_BASIC_INFO))) {
-				memcpy(&createdUtc, &fileInfo.CreationTime, sizeof(createdUtc));
-				memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
-				memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
-			}
-			else {
-				log(2, L"🔥GetFileInformationByHandleEx hFile", GetLastError());// show cause of failure
-			}
-		}
-		else {
-			log(2, L"🔥CreateFile hFile", GetLastError());// show cause of failure
-		}
-		if (hFile != INVALID_HANDLE_VALUE) CloseHandle(hFile);
+		// The dates of the file ON THE EXAMINED MACHINE, as the raw reading recorded
+		// them: the working copy's own are those of the collection (ExhibitSourceTimes).
+		if (!ExhibitSourceTimes(_path.wstring(), createdUtc, modifiedUtc, accessedUtc))
+			log(2, L"🔥Source timestamps not recorded: " + _path.wstring());
 		parse(buffer, size);
 		// The buffer is released by its unique_ptr.
 	}

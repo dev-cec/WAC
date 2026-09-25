@@ -59,7 +59,8 @@ struct Session {
 	 *  @param id LUID of the session, as `LsaEnumerateLogonSessions` gives it. */
 	Session(LUID* id);
 
-	/*! Converts the session to JSON.
+	/*! Converts the session to JSON, as observed: the start time as raw
+	 *  ticks (StartTime100ns), formatted by writeSessionsFromSnapshot.
 	 *  @return its JSON object. */
 	Json toJson() const;
 

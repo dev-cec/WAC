@@ -34,6 +34,12 @@
 #include <string>
 
 /*! SHA-1, computed incrementally. */
+/*! Bytes in uppercase hexadecimal, the project's convention for digests
+ *  (see Md5Stream).
+ *  @param bytes,length the bytes
+ *  @return two digits per byte */
+std::wstring toHexadecimal(const uint8_t* bytes, size_t length);
+
 class Sha1Stream final {
 public:
 	/*! Adds bytes to the computation.

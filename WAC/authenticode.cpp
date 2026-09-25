@@ -242,10 +242,17 @@ bool attach(const Certificate& leaf, const std::vector<Certificate>& pool) {
 	return false;
 }
 
+/*! Signers whose binaries are authentic Microsoft ones, identical on every
+ *  machine of the same build. ".NET": the runtime Microsoft ships with
+ *  Windows and its applications (544 files of a plain Windows 11 were
+ *  collected for want of it). Not accepted: "Microsoft Windows Hardware
+ *  Compatibility Publisher" and "Microsoft 3rd Party Application Component",
+ *  which Microsoft grants to OTHER vendors' drivers and components — a
+ *  vulnerable third-party driver is a classic intrusion tool. */
 bool signerAccepted(const std::wstring& cn, const std::wstring& o) {
 	if (o != L"Microsoft Corporation") return false;
 	return cn == L"Microsoft Windows" || cn == L"Microsoft Corporation"
-	    || cn == L"Microsoft Windows Publisher";
+	    || cn == L"Microsoft Windows Publisher" || cn == L".NET";
 }
 
 } // namespace
@@ -339,12 +346,15 @@ VerifiedSignature VerifyPkcs7(const uint8_t* data, size_t size) {
 namespace {
 
 /*! Digest carried by a SpcIndirectDataContent: SEQUENCE { data,
- *  messageDigest DigestInfo SEQUENCE { AlgorithmIdentifier, OCTET STRING } }. */
-bool indirectDigest(const Tlv& spc, std::string& output) {
+ *  messageDigest DigestInfo SEQUENCE { AlgorithmIdentifier, OCTET STRING } }.
+ *  @param anyLength false: a SHA-1 or SHA-256 digest only (a file's); true:
+ *         any length (the "APPX" digest of a package, a sequence of records) */
+bool indirectDigest(const Tlv& spc, std::string& output, bool anyLength = false) {
 	const std::vector<Tlv> e = children(spc);
 	if (e.size() < 2) return false;
 	const std::vector<Tlv> di = children(e[1]);
-	if (di.size() < 2 || di[1].tag != 0x04 || (di[1].len != 20 && di[1].len != 32)) return false;
+	if (di.size() < 2 || di[1].tag != 0x04) return false;
+	if (!anyLength && di[1].len != 20 && di[1].len != 32) return false;
 	output.assign((const char*)di[1].val, di[1].len);
 	return true;
 }
@@ -517,6 +527,7 @@ VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalog
 		if (const std::wstring* cat = catalogues.find(e.first, (size_t)e.second)) {
 			v.microsoft = true;
 			v.source = L"catalog " + *cat;
+			v.catalog = *cat;
 			return v;
 		}
 	}
@@ -557,6 +568,7 @@ VerdictMicrosoft EvaluateByCatalog(const uint8_t sha256[32], const IndexCatalogu
 	if (const std::wstring* cat = catalogues.find(sha256, 32)) {
 		v.microsoft = true;
 		v.source = L"catalog " + *cat;
+		v.catalog = *cat;
 	}
 	else v.reason = "absent from the catalogs";
 	return v;
@@ -634,6 +646,40 @@ int base64Value(char32_t c) {
 }
 
 } // namespace
+
+std::vector<uint8_t> DecodeBase64(const std::string& text) {
+	std::vector<uint8_t> bytes;
+	uint32_t acc = 0; int bits = 0;
+	for (char c : text) {
+		const int b = base64Value((char32_t)(unsigned char)c);
+		if (b < 0) continue;                               // "=" padding, spaces
+		acc = (acc << 6) | (uint32_t)b; bits += 6;
+		if (bits >= 8) { bits -= 8; bytes.push_back((uint8_t)(acc >> bits)); }
+	}
+	return bytes;
+}
+
+PackageSignature VerifyPackageSignature(const uint8_t* bytes, size_t size) {
+	PackageSignature p;
+	if (size < 4 || memcmp(bytes, "PKCX", 4) != 0) { p.reason = "not a package signature (PKCX)"; return p; }
+	const VerifiedSignature s = VerifyPkcs7(bytes + 4, size - 4);
+	if (!s.valid) { p.reason = s.reason; return p; }
+	if (s.contentOid != std::string((const char*)OID_SPC_INDIRECT, sizeof(OID_SPC_INDIRECT))) {
+		p.reason = "unexpected signed content"; return p;
+	}
+	Tlv spc; spc.tag = 0x30; spc.val = s.content; spc.len = s.contentSize;
+	std::string digest;
+	if (!indirectDigest(spc, digest, true) || digest.compare(0, 4, "APPX") != 0) {
+		p.reason = "signed digest is not an APPX one"; return p;
+	}
+	// "APPX", then records of a 4-byte tag and a SHA-256: AXPC, AXCD, AXCT, AXBM, AXCI…
+	for (size_t at = 4; at + 36 <= digest.size(); at += 36)
+		if (digest.compare(at, 4, "AXBM") == 0) p.blockMapSha256 = digest.substr(at + 4, 32);
+	if (p.blockMapSha256.empty()) { p.reason = "no block map digest (AXBM) in the signature"; return p; }
+	p.valid = true;
+	p.signer = s.signer;
+	return p;
+}
 
 VerdictMicrosoft EvaluatePowerShellScript(const uint8_t* bytes, size_t size) {
 	VerdictMicrosoft v;

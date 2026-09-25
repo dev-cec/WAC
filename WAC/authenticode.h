@@ -140,7 +140,8 @@ private:
 /*! Microsoft authenticity verdict on an analysed PE. */
 struct VerdictMicrosoft {
 	bool microsoft = false;       //!< authentic: hash without collecting
-	std::wstring source;          //!< "catalog <name>" or "embedded signature"
+	std::wstring source;          //!< "catalog <path>" or "embedded signature"
+	std::wstring catalog;         //!< the catalog that listed the digest (its path); empty otherwise
 	std::wstring signer;      //!< signer's CN (embedded signature)
 	std::string reason;            //!< why not, for the log
 };
@@ -154,6 +155,32 @@ VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalog
  *  BYTES, whatever its encoding — established on 463 PowerShell and WSH scripts
  *  of Windows 11, all found that way. */
 VerdictMicrosoft EvaluateByCatalog(const uint8_t sha256[32], const IndexCatalogues& catalogues);
+
+/*! Base64 (the standard alphabet) to bytes; padding and characters outside
+ *  the alphabet are skipped.
+ *  @param text the encoded text
+ *  @return the bytes */
+std::vector<uint8_t> DecodeBase64(const std::string& text);
+
+/*! Signature of an AppX / MSIX package (AppxSignature.p7x) and what it
+ *  guarantees: the SHA-256 of the package's block map, which gives in turn
+ *  the SHA-256 of every 64 KiB block of every file of the package. */
+struct PackageSignature {
+	bool valid = false;          //!< PKCS#7 verified, chain up to a Microsoft root
+	/*! CN of the signing certificate. The Store signs, under its Microsoft
+	 *  chain, the packages of other publishers: the name is theirs. */
+	std::wstring signer;
+	std::string reason;          //!< why not valid, for the log
+	std::string blockMapSha256;  //!< AppxBlockMap.xml's SHA-256, as signed (32 bytes)
+};
+
+/*! Verifies a package signature: the "PKCX" header, then a PKCS#7 whose
+ *  chain reaches an embedded Microsoft root — the Store's signature, or
+ *  Microsoft's own; a package signed under another root is not valid here —,
+ *  whose signed content is an "APPX" digest carrying the block map's.
+ *  @param bytes,size the content of AppxSignature.p7x
+ *  @return the verdict */
+PackageSignature VerifyPackageSignature(const uint8_t* bytes, size_t size);
 
 /*! EMBEDDED signature of a PowerShell script (.ps1, .psm1, .psd1, .ps1xml…).
  *

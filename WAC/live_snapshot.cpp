@@ -74,8 +74,12 @@ HRESULT readLiveSnapshot(const std::string& name, Json& value) {
 
 bool snapshotInteger(const Json& object, const wchar_t* key, long long& out) {
 	const Json* v = object.find(key);
-	if (!v || v->kind() != Json::Kind::Num) return false;
-	const std::wstring& digits = v->text();
+	return v && snapshotInteger(*v, out);
+}
+
+bool snapshotInteger(const Json& value, long long& out) {
+	if (value.kind() != Json::Kind::Num) return false;
+	const std::wstring& digits = value.text();
 	// Integers only: a fraction or an exponent is not what WAC wrote.
 	if (digits.empty() || digits.find_first_not_of(L"-0123456789") != std::wstring::npos) return false;
 	try {

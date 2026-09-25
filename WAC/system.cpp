@@ -3,6 +3,7 @@
  */
 #include "system.h"
 #include "live_snapshot.h"
+#include "running_machine.h"
 
 namespace {
 
@@ -334,20 +335,19 @@ HRESULT SystemInfo::toJson() {
 		o.add(L"TimeZoneSource",    Json::str(L"SYSTEM hive of the examined machine"));
 	}
 	else {
-		/* Fallback: the running machine. Right in a live collection, wrong on an
-		   image mounted elsewhere — hence the explicit mention. */
-		TIME_ZONE_INFORMATION tz = { 0 };
-		const DWORD r = GetTimeZoneInformation(&tz);
-		if (r != TIME_ZONE_ID_INVALID) {
-			const bool wasSummer = (r == TIME_ZONE_ID_DAYLIGHT);
+		/* Fallback: the running examined machine, as observed live in the
+		   collection (running_machine.h) — never the machine that converts. */
+		const RunningMachine& machine = runningMachine();
+		if (machine.timeZoneId != TIME_ZONE_ID_INVALID) {
+			const TIME_ZONE_INFORMATION& tz = machine.timeZone;
+			const bool wasSummer = (machine.timeZoneId == TIME_ZONE_ID_DAYLIGHT);
 			o.add(L"CurrentTimeZoneCaption",
 			      Json::str(wasSummer ? tz.DaylightName : tz.StandardName));
 			o.add(L"CurrentBias",      Json::num((long long)(tz.Bias
 			                           + (wasSummer ? tz.DaylightBias : tz.StandardBias))));
 			o.add(L"DaylightInEffect", Json::boolean(wasSummer));
+			o.add(L"TimeZoneSource",   Json::str(L"examined machine observed live (SYSTEM hive unreadable)"));
 		}
-		o.add(L"TimeZoneSource", Json::str(L"running machine (SYSTEM hive unreadable) "
-		                                   L"— only valid if the collection is live"));
 	}
 
 	/* ANSI code page used to decode the non-Unicode text of the artefacts,
@@ -356,10 +356,9 @@ HRESULT SystemInfo::toJson() {
 		o.add(L"AnsiCodePage",       Json::num((unsigned long long)conf.ansiCodePage));
 		o.add(L"AnsiCodePageSource", Json::str(L"SYSTEM hive of the examined machine"));
 	}
-	else {
-		o.add(L"AnsiCodePage",       Json::num((unsigned long long)GetACP()));
-		o.add(L"AnsiCodePageSource", Json::str(L"running machine (SYSTEM hive unreadable) "
-		                                       L"— only valid if the collection is live"));
+	else if (runningMachine().ansiCodePage) {
+		o.add(L"AnsiCodePage",       Json::num((unsigned long long)runningMachine().ansiCodePage));
+		o.add(L"AnsiCodePageSource", Json::str(L"examined machine observed live (SYSTEM hive unreadable)"));
 	}
 
 	return writeJsonFile("OperatingSystem.json", o);

@@ -169,6 +169,8 @@
     <ClCompile Include="asciiart.cpp" />
     <ClCompile Include="account_names.cpp" />
     <ClCompile Include="live_snapshot.cpp" />
+    <ClCompile Include="running_machine.cpp" />
+    <ClCompile Include="exhibit_reader.cpp" />
     <ClCompile Include="audit.cpp" />
     <ClCompile Include="events.cpp" />
     <ClCompile Include="hive_recover.cpp" />
@@ -225,6 +227,8 @@
     <ClInclude Include="asciiart.h" />
     <ClInclude Include="account_names.h" />
     <ClInclude Include="live_snapshot.h" />
+    <ClInclude Include="running_machine.h" />
+    <ClInclude Include="exhibit_reader.h" />
     <ClInclude Include="audit.h" />
     <ClInclude Include="events.h" />
     <ClInclude Include="hive_recover.h" />

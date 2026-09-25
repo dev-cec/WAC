@@ -9,6 +9,8 @@
     <ClCompile Include="asciiart.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="account_names.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="live_snapshot.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="running_machine.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="exhibit_reader.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="audit.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="events.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="hive_recover.cpp"><Filter>Fichiers sources</Filter></ClCompile>
@@ -61,6 +63,8 @@
     <ClInclude Include="asciiart.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="account_names.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="live_snapshot.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="running_machine.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="exhibit_reader.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="audit.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="events.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="hive_recover.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>

@@ -71,8 +71,12 @@ Json Session::toJson() const {
 	o.add(L"LogonType",             Json::num(logonType));      // a number, not a string
 	o.add(L"LogonTypeName",         Json::str(logonTypeName));
 	o.add(L"AuthenticationPackage", Json::str(authenticationPackage));
-	o.add(L"StartTime",             Json::str(utcTimeToIso8601Local(startTimeUtc)));
-	o.add(L"StartTimeUtc",          Json::str(timeToIso8601Utc(startTimeUtc)));
+	/* The instant as observed, in 100 ns ticks: its local form depends on the
+	   suspect's time zone, read from the hives at CONVERSION — formatted here,
+	   in the live phase, it took the offset of whatever was known then. */
+	if (startTimeUtc.dwHighDateTime || startTimeUtc.dwLowDateTime)
+		o.add(L"StartTime100ns", Json::num(((unsigned long long)startTimeUtc.dwHighDateTime << 32)
+		                                  | startTimeUtc.dwLowDateTime));
 	return o;
 }
 
@@ -117,7 +121,23 @@ HRESULT writeSessionsFromSnapshot() {
 	Json snapshot = Json::null();
 	const HRESULT hresult = readLiveSnapshot("sessions.json", snapshot);
 	if (hresult != ERROR_SUCCESS) return hresult;
-	return writeJsonFile("Sessions.json", snapshot);
+	// The start time, local (suspect's offset at that date) and UTC, in place of the raw ticks.
+	Json arr = Json::arr();
+	for (const auto& session : snapshot.members()) {
+		Json o = Json::obj();
+		for (const auto& field : session.second.members()) {
+			long long ticks = 0;
+			if (field.first != L"StartTime100ns") o.add(field.first, field.second);
+			else if (snapshotInteger(field.second, ticks) && ticks > 0) {
+				const FILETIME start = { (DWORD)((unsigned long long)ticks & 0xFFFFFFFFULL),
+				                         (DWORD)((unsigned long long)ticks >> 32) };
+				o.add(L"StartTime",    Json::str(utcTimeToIso8601Local(start)));
+				o.add(L"StartTimeUtc", Json::str(timeToIso8601Utc(start)));
+			}
+		}
+		arr.push(std::move(o));
+	}
+	return writeJsonFile("Sessions.json", arr);
 }
 
 void Sessions::clear() {

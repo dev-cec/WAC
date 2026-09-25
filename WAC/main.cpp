@@ -43,14 +43,18 @@
 #include "services.h"
 #include "users.h"
 #include "events.h"
+#include "event_messages.h"
+#include "running_machine.h"
 
 AppliConf conf; //!< the application's configuration, shared by every collector
 
 //! Prints the command-line help.
 void showHelp() {
 	SetConsoleTextAttribute(conf.hConsole, 7); // white
-	wprintf(L"%ls%ls%ls\n", L"\nusage: ", conf.name.c_str(), L" [--debug] [--dump] [--events] [--binary] [--output=output] [--loglevel=2]");
+	wprintf(L"%ls%ls%ls\n", L"\nusage: ", conf.name.c_str(), L" [--collect | --convert=folder] [--debug] [--dump] [--events] [--binary] [--output=output] [--loglevel=2]");
 	wprintf(L"%ls\n", L"\t--help or /? : show this help ");
+	wprintf(L"%ls\n", L"\t--collect : collection only, on the examined machine: live snapshots and raw extraction into the sealed exhibit store; nothing is converted. With --events, the resource files of every event provider are taken; with --binary, every executable and signature catalog of the system volume");
+	wprintf(L"%ls\n", L"\t--convert=folder : conversion only, on an analysis workstation, of the collection made with --collect in that folder: the seal and every fingerprint are checked first, then the JSON files are written next to the exhibit store, with conversion.json as the log. Give the same --events and --binary as the collection");
 	wprintf(L"%ls\n", L"\t--debug : trace the raw NTFS parser on stderr (path resolution, index blocks, data runs)");
 	wprintf(L"%ls\n", L"\t--dump : add hexa value in json files for shellbags and LNK files ");
 	wprintf(L"%ls\n", L"\t--events : extract and parse the .evtx event logs (adds ~117 MB to the collection)");
@@ -64,160 +68,9 @@ void showHelp() {
 	wprintf(L"%ls\n", L"\t loglevel = 3 => activate logging for each subfunction called (used for debug only)");
 };
 
-/*! Runs a collection.
- *  wmain: the runtime hands the arguments in UTF-16, as Windows holds them —
- *  CommandLineToArgvW (shell32) is no longer needed for that.
- * @param argc,argv the command line (see showHelp())
- * @return 0 once the collection has run to the end, an error code otherwise */
-int wmain(int argc, wchar_t* argv[])
-{
-	HRESULT hresult;
-	Services services;
-	Usbstors usbs;
-	MountedDevices mounteddevices;
-	Bams bams;
-	Muicaches muicaches;
-	AmcacheApplications amcacheapplications;
-	AmcacheApplicationFiles amcacheapplicationfiles;
-	UserAssists userassists;
-	Runs runs;
-	Shimcaches shimcaches;
-	Prefetchs prefetchs;
-	RecentDocs recentdocs;
-	Shellbags shellbags;
-	Mrus mrus;
-	MruApps mruapps;
-	JumplistAutomatics jumplistAutomatics;
-	JumplistCustoms jumplistCustoms;
-	ScheduledTasks scheduledTasks;
-	SystemInfo systemInfo;
-	Sessions sessions;
-	Processes processes;
-	Users users;
-	Events events;
-
-	time_t start = 0, end = 0;
-
-	/************************
-	* useful functions
-	*************************/
-	//ASCII ART
-	SetConsoleOutputCP(CP_UTF8); // UTF-8, so that accented characters come out right in the console
-
-	/* UNBUFFERED output.
-	 * wprintf goes through a buffer, whereas SetConsoleTextAttribute (colours)
-	 * acts at once: the text therefore came out out of step with its colour and
-	 * with the progress display, which does force an fflush. One saw "OK" then
-	 * the label of the step, in the wrong order.
-	 * Step labels are written without a newline, waiting for their "OK": a line
-	 * buffer would therefore not be enough. */
-	setvbuf(stdout, NULL, _IONBF, 0);
-
-	system("cls");//clear screen
-
-	log(3, L"🔈asciiart");
-	asciiart();
-
-	start = time(nullptr);// start time of the program, for the benchmark
-
-	/************************
-	* Arguments
-	*************************/
-
-	conf.name = argv[0];
-	/* The arguments in UTF-16: through a narrow `argv` they were converted to
-	   the process's ANSI code page, and an output directory whose name the
-	   code page cannot represent was lost. */
-	const std::vector<std::wstring> commandLine(argv, argv + argc);
-	if (commandLine.size() > 1) { // at least one argument, the first being the program's own name
-		// command-line arguments
-		for (size_t i = 1; i < commandLine.size(); ++i) {
-			const std::wstring& arg = commandLine[i];
-
-			if (arg == L"--debug") conf._debug = true;
-			else if (arg == L"--dump") conf._dump = true;
-			else if (arg == L"--events") conf._events = true;
-			else if (arg == L"--binary") conf.binary = true;
-			else if (arg.substr(0, 9) == L"--output=") {
-				std::wstring temp = arg.substr(9);
-				if (temp.length() > 0) conf._outputDir = temp;
-				else {
-					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
-					wprintf(L"%ls%ls\n", L"Invalid length for output param ", arg.c_str());
-					log(3, L"🔈showHelp");
-					showHelp();
-					exit(1);
-				}
-				if (conf._outputDir.find(L"\\") != std::wstring::npos) {
-					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
-					wprintf(L"%ls%ls\n", L"Invalid character for param ", arg.c_str());
-					log(3, L"🔈showHelp");
-					showHelp();
-					exit(1);
-				}
-			}
-			else if (arg.substr(0, 11) == L"--loglevel=") {
-				std::wstring temp = arg.substr(11);
-				try {
-					conf.loglevel = std::stoi(temp);
-				}
-				catch (...)
-				{
-					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
-					wprintf(L"%ls%ls\n", L"Invalid numeric value for output param ", arg.c_str());
-					log(3, L"🔈showHelp");
-					showHelp();
-					exit(1);
-				}
-			}
-
-			else { // unknown argument
-				if (arg != L"--help" && arg != L"/?") { // anything that is neither --help nor /? is an invalid argument
-					printError(L"Invalid argument  " + arg);
-				}
-				log(3, L"🔈showHelp");
-				showHelp();
-				exit(1);
-			}
-		}
-	}
-
-	// Investigation log: opened as early as possible, so that the start timestamp
-	// really brackets the whole collection (see audit.h).
-	auditInit(commandLine);
-
-	/* Trace of the NTFS parser: SILENT by default, turned on by --debug.
-	   It writes to STDERR, hence separable from the normal output:
-	   WAC.exe --debug 2> raw.log
-	   It is what allowed the split `$INDEX_ALLOCATION` defect to be located; in
-	   ordinary use it would drown the console. */
-	RawHiveSetVerbose(conf._debug);
-
-	// System drive: read before any extraction, since it decides which volume is
-	// read raw AND how the original paths are restored. Windows is not always
-	// installed on C:.
-	log(3, L"🔈loadSystemDrive");
-	loadSystemDrive();
-
-	/************************
-	* Prerequisites
-	*************************/
-
-	log(0, L"*******************************************************************************************************************");
-	log(0, L"ℹ️Prerequisites :");
-	log(0, L"*******************************************************************************************************************");
-
-	log(1, L"➕Check OS");
-	SetConsoleTextAttribute(conf.hConsole, 14);
-	wprintf(L"%ls\n", L"[PREREQUISITE VERIFICATION]");
-	SetConsoleTextAttribute(conf.hConsole, 7);
-	printStep(L" - Check OS >= Windows 10 : ");
-#if (_WIN32_WINNT >= _WIN32_WINNT_WIN10)
-	printSuccess();
-#else
-	printError(ERROR_APP_WRONG_OS);
-	return 1;
-#endif
+/*! Checks that WAC runs elevated: the raw reading of a volume requires it.
+ * @return 0 if so, otherwise the exit code of the refusal */
+int checkElevation() {
 	log(1, L"➕Check administrator rights");
 	printStep(L" - Check administrator rights : ");
 	/* A program using VSS must run in elevated mode */
@@ -233,6 +86,7 @@ int wmain(int argc, wchar_t* argv[])
 			if (!elevation.TokenIsElevated)
 			{
 				printError(ERROR_ELEVATION_REQUIRED);
+				CloseHandle(hToken);
 				return 3;
 			}
 			CloseHandle(hToken);
@@ -250,51 +104,101 @@ int wmain(int argc, wchar_t* argv[])
 		printError(GetLastError());
 		return GetLastError();
 	}
+	return 0;
+}
 
-
-	/* COM DROPPED (2026-09-15).
-	 * `scheduledTasks` was the ONLY consumer of COM in WAC: it now reads the XML
-	 * definitions of \Windows\System32\Tasks and the TaskCache history, offline.
-	 * Nothing justified CoInitializeEx / CoInitializeSecurity any more, and
-	 * dropping them removes:
-	 *   - the Schedule service being solicited;
-	 *   - the entries in Microsoft-Windows-TaskScheduler/Operational;
-	 *   - the COM walk task by task (several interface calls x 217).
-	 * The other live collectors (processes, sessions, services, users,
-	 * systemInfo) use direct Win32 API calls only.
-	 */
-
-	/************************
-	*  COLLECTION LOCATION, checked BEFORE the very first write
-	*************************/
-	/* Two refusals, both preferable to a collection that goes wrong midway: a
-	   working directory already populated would have a previous collection
-	   analysed, and a medium too small would give truncated copies.
-	   Checked HERE and no longer at the start of the raw extraction: with
-	   --binary, the first write is the collection of a process's executable, in
-	   the very next phase. The estimate is deliberately rough — hives, event
-	   logs and cited binaries when they are asked for; it does not have to be
-	   right, only to rule out a manifestly insufficient medium. Running out of
-	   space during the collection does not fail it: the binaries are then hashed
-	   without being copied. */
-	{
-		printStep(L" - Checking the collection medium : ");
-		unsigned long long need = 250ULL * 1024 * 1024;           // hives
-		if (conf._events) need += 150ULL * 1024 * 1024;           // event logs
-		if (conf.binary)     need += 1024ULL * 1024 * 1024;          // cited binaries
-		const HRESULT hrLieu = ExhibitStoreCheckLocation(need);
-		auditRecord(L"Check of the collection location ("
-		            + std::to_wstring(ExhibitStoreFreeSpace() / 1024 / 1024)
-		            + L" MiB free)",
-		            conf._outputDir,
-		            hrLieu, Footprint::USB_WRITE);
-		if (FAILED(hrLieu)) {
-			printError(hrLieu);
-			return hrLieu;
-		}
-		printSuccess();
+/*! Checks the collection medium before the very first write (see
+ *  ExhibitStoreCheckLocation).
+ * @return ERROR_SUCCESS, or the reason of the refusal */
+HRESULT checkCollectionLocation() {
+	printStep(L" - Checking the collection medium : ");
+	unsigned long long need = 250ULL * 1024 * 1024;           // hives
+	if (conf._events) need += 150ULL * 1024 * 1024;           // event logs
+	if (conf.binary)     need += 1024ULL * 1024 * 1024;          // cited binaries
+	const HRESULT hrLieu = ExhibitStoreCheckLocation(need);
+	auditRecord(L"Check of the collection location ("
+	            + std::to_wstring(ExhibitStoreFreeSpace() / 1024 / 1024)
+	            + L" MiB free)",
+	            conf._outputDir,
+	            hrLieu, Footprint::USB_WRITE);
+	if (FAILED(hrLieu)) {
+		printError(hrLieu);
+		return hrLieu;
 	}
+	printSuccess();
+	return ERROR_SUCCESS;
+}
 
+/*! --convert: checks the collection before anything is read from it — the
+ *  seal, then every exhibit's fingerprint —, then rebuilds the working copy
+ *  from the exhibit store, as the collection made it: copies verified against
+ *  the manifest, hives repaired. The working directory is derived data: an
+ *  earlier one, possibly altered by an analysis, is deleted rather than
+ *  trusted.
+ * @return ERROR_SUCCESS, or the reason of the refusal */
+HRESULT prepareConversion() {
+	SetConsoleTextAttribute(conf.hConsole, 14);
+	wprintf(L"%ls\n", L"[CHECKING THE COLLECTION]");
+	SetConsoleTextAttribute(conf.hConsole, 7);
+	printStep(L" - Checking the seal and the fingerprints of the exhibits : ");
+	ExhibitStoreCheck check;
+	HRESULT hr = ExhibitStoreLoad(check);
+	auditRecord(L"Check of the exhibit store (" + std::to_wstring(check.verified) + L" exhibit(s) verified, "
+	            + std::to_wstring(check.failedAtCollection) + L" failed at collection"
+	            + (check.reason.empty() ? L"" : L"; refused: " + check.reason) + L")",
+	            exhibitStoreFolder() + L"\\MANIFEST.json (SHA-256 " + check.manifestSha256 + L")",
+	            hr, Footprint::EXHIBIT_READ);
+	if (FAILED(hr)) {
+		printError(hr);
+		wprintf(L"   %ls\n", check.reason.c_str());
+		return hr;
+	}
+	printSuccess();
+
+	printStep(L" - Rebuilding the working copy from the exhibit store : ");
+	std::error_code ec;
+	std::filesystem::remove_all(workingFolder(), ec);
+	if (ec) {
+		hr = HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED);
+		auditRecord(L"Deletion of the previous working copy", workingFolder(), hr, Footprint::USB_WRITE);
+		printError(hr);
+		return hr;
+	}
+	size_t copies = 0;
+	unsigned long long bytes = 0;
+	hr = ExhibitStoreToWorking(&copies, &bytes, true);   // the binaries are read in the store
+	auditRecord(L"Copy of the exhibit store into the working directory (" + std::to_wstring(copies)
+	            + L" file(s), " + std::to_wstring(bytes / 1024 / 1024) + L" MiB)",
+	            exhibitStoreFolder() + L" -> " + workingFolder(), hr, Footprint::USB_WRITE);
+	// A copy that does not match the manifest: the conversion would bear on something else.
+	if (hr != ERROR_SUCCESS) {
+		if (!FAILED(hr)) hr = HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+		printError(hr);
+		return hr;
+	}
+	conf.mountpoint = workingFolder();
+	printSuccess();
+
+	printStep(L" - Repairing the hives of the working copy : ");
+	hr = RepairWorkingHives();          // S_FALSE = a hive stays unusable (tolerated, as in a collection)
+	auditRecord(L"Repair of the working hives (transaction logs)", workingFolder(), hr, Footprint::HIVE_REPLAY);
+	if (FAILED(hr)) printError(hr);
+	else printSuccess();
+
+	// The examined machine's system drive, as observed at collection time.
+	const std::wstring systemDrive = runningMachine().systemDrive;
+	if (!systemDrive.empty()) conf.systemDrive = systemDrive;
+	else log(2, L"🔥System drive of the examined machine not recorded: " + conf.systemDrive + L" assumed");
+	return ERROR_SUCCESS;
+}
+
+/*! Live phase: what can only be observed on the running system — sessions,
+ *  processes, service states, clock, settings —, recorded as sealed snapshots
+ *  (live_snapshot.h) that the conversion reads back. */
+void observeLiveState() {
+	HRESULT hresult;
+	Sessions sessions;
+	Processes processes;
 	/************************
 	* WIN32 API
 	*************************/
@@ -309,6 +213,16 @@ int wmain(int argc, wchar_t* argv[])
 	/* LIVE OBSERVATIONS, recorded as sealed snapshots (live_snapshot.h): the
 	   conversion reads them back, here or on an analysis workstation. What is
 	   interpretation — the owner's name of a process — is left to it. */
+	/* First: the other observations and their conversion fall back on it
+	   (time zone, code page) when the hives cannot be read. */
+	printStep(L" - Extraction of RUNNING MACHINE SETTINGS: ");
+	hresult = snapshotRunningMachine();
+	auditRecord(L"RUNNING MACHINE SETTINGS collection",
+	            L"GetSystemDirectoryW, GetACP, GetTimeZoneInformation, FindFirstVolumeW, GetVolumeInformationW",
+	            hresult, Footprint::SETTINGS);
+	if (hresult != ERROR_SUCCESS) printError(hresult);
+	else printSuccess();
+
 	printStep(L" - Extraction of SESSIONS: ");
 	hresult = sessions.getData();
 	auditRecord(L"SESSIONS collection", L"LSA / WTS", hresult, Footprint::SESSIONS);
@@ -337,6 +251,7 @@ int wmain(int argc, wchar_t* argv[])
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else printSuccess();
 
+
 	printStep(L" - Extraction of SYSTEM CLOCK: ");
 	hresult = snapshotSystemClock();
 	auditRecord(L"SYSTEM CLOCK collection",
@@ -345,20 +260,6 @@ int wmain(int argc, wchar_t* argv[])
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else printSuccess();
 
-	/* processes.json is published once the account names are loaded from the
-	   hives, or at the latest before the event logs if the SYSTEM hive could
-	   not be opened. */
-	bool processesPending = true;
-	auto writeProcesses = [&processesPending]() {
-		if (!processesPending) return;
-		processesPending = false;
-		printStep(L" - Writing PROCESS and SESSIONS : ");
-		HRESULT written = writeProcessesFromSnapshot();
-		const HRESULT sessionsWritten = writeSessionsFromSnapshot();
-		if (written == ERROR_SUCCESS) written = sessionsWritten;
-		if (written != ERROR_SUCCESS) printError(written);
-		else printSuccess();
-	};
 
 
 
@@ -374,7 +275,13 @@ int wmain(int argc, wchar_t* argv[])
 	// disk, so they are among the least volatile artefacts, and extracting them
 	// takes about twenty minutes under Windows 11.
 	// Putting them here delayed the raw copy of the disk by as much.
+}
 
+/*! Raw extraction of the system hives into the exhibit store and the
+ *  working copy.
+ * @return the result; a failure (the volume) stops the collection */
+HRESULT extractSystemHives() {
+	HRESULT hresult;
 	/************************
 	*  RAW EXTRACTION (offline, no VSS, output on the USB medium)
 	*************************/
@@ -394,62 +301,14 @@ int wmain(int argc, wchar_t* argv[])
 	else {
 		printSuccess();
 	}
+	return hresult;
+}
 
-	/* The SYSTEM and SOFTWARE hives are opened ON the first pass: SOFTWARE gives
-	   the list of profiles, without which the per-user hives cannot be
-	   extracted. */
-	//variables
-	ORHKEY hKey = NULL;
-	DWORD valueType = 0;
-	DWORD size = 0;
-
-	// load the HKLM\SYSTEM key
-	printStep(L" - loading the HKLM\\SYSTEM key : ");
-	std::wstring systemHive = conf.mountpoint + L"\\Windows\\system32\\config\\SYSTEM";
-	/* An unavailable hive must NOT stop the collection.
-	   Seen on a real system: SOFTWARE could not be extracted, and the `return`
-	   that followed gave up everything — including SYSTEM's artefacts, the files
-	   and the event logs, all of them collectable. The principle is to gather
-	   everything reachable and to record what is missing. */
-	log(3, L"🔈OROpenHive System");
-	hresult = OROpenHive(systemHive.c_str(), &conf.System);
-	const bool systemAvailable = (hresult == ERROR_SUCCESS);
-	if (!systemAvailable) {
-		printError(hresult);
-		log(2, L"🔥SYSTEM hive unavailable: the artefacts that depend on it are not collected", hresult);
-		auditRecord(L"Opening of the SYSTEM hive", systemHive, hresult, Footprint::HIVE_COPY);
-		for (const char* f : { "Usbstor.json", "mounted_device.json", "bams.json",
-		                       "shimcache.json", "services.json" })
-			writeNotCollected(f, L"depends on the SYSTEM hive, which is unavailable", hresult);
-	}
-	else printSuccess();
-
-	// load the HKLM\SOFTWARE key
-	printStep(L" - loading the HKLM\\SOFTWARE key : ");
-	std::wstring softwareHive = conf.mountpoint + L"\\Windows\\system32\\config\\SOFTWARE";
-	log(3, L"🔈OROpenHive Software");
-	hresult = OROpenHive(softwareHive.c_str(), &conf.Software);
-	const bool softwareAvailable = (hresult == ERROR_SUCCESS);
-	if (!softwareAvailable) {
-		printError(hresult);
-		log(2, L"🔥SOFTWARE hive unavailable: the artefacts that depend on it are not collected", hresult);
-		auditRecord(L"Opening of the SOFTWARE hive", softwareHive, hresult, Footprint::HIVE_COPY);
-		writeNotCollected("run.json", L"depends on the SOFTWARE hive, which is unavailable", hresult);
-	}
-	else printSuccess();
-
-	/* USER PROFILES, OFFLINE. The list is read in the SOFTWARE hive just opened,
-	   and no longer in the live registry: that is what makes the hives be
-	   extracted in two passes. See raw_collect.h. */
-	printStep(L" - Listing USER PROFILES (SOFTWARE hive) : ");
-	log(3, L"🔈loadProfileList");
-	hresult = loadProfileList();
-	auditRecord(L"Reading of the user profiles",
-	            L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList (copied hive, WAC's hive reader)",
-	            hresult, Footprint::HIVE_COPY);
-	if (hresult != ERROR_SUCCESS) printError(hresult);
-	else printSuccess();
-
+/*! Raw extraction of the user hives and of the file artefacts (Prefetch,
+ *  jump lists, recent documents, tasks, event logs). Requires the profile
+ *  list, read from the SOFTWARE hive. */
+void extractProfileArtefacts() {
+	HRESULT hresult;
 	printStep(L" - Extracting user hives (raw NTFS) : ");
 	log(3, L"🔈ExtractUserHivesRaw");
 	hresult = ExtractUserHivesRaw();      // S_FALSE = no profile, or missing files (tolerated)
@@ -469,7 +328,161 @@ int wmain(int argc, wchar_t* argv[])
 	   The registry artefacts stay collectable. */
 	if (FAILED(hresult)) printError(hresult);
 	else printSuccess();
+}
 
+/*! Closes the phase of the cited binaries: the volumes kept open to read them
+ *  are closed, the phase is recorded and, in a full run, the collected
+ *  exhibits are copied to the working directory — like any exhibit, even an
+ *  unmodified one: that is the procedure. A --collect run records its
+ *  collection itself (collectForConversion) and makes no working copy. */
+void closeBinaries() {
+	if (!conf.binary) return;
+	BinariesFinish();
+	if (conf.mode == RunMode::Collect) return;
+	const BinarySummary b = BinariesSummary();
+	std::wstring summary = std::to_wstring(b.files) + L" cited, " + std::to_wstring(b.read)
+	                   + L" read, " + std::to_wstring(b.authenticated) + L" authenticated as Microsoft";
+	if (conf.mode == RunMode::Full) {
+		summary += L" and not collected (" + std::to_wstring(b.authenticatedBytes / 1024 / 1024)
+		         + L" MiB saved), " + std::to_wstring(b.collectedCount) + L" collected ("
+		         + std::to_wstring(b.collectedBytes / 1024 / 1024) + L" MiB)";
+		if (b.duplicates) summary += L", " + std::to_wstring(b.duplicates) + L" duplicate content(s) not copied again";
+		if (b.sansPlace) summary += L", " + std::to_wstring(b.sansPlace) + L" hashed without a copy, medium full";
+	}
+	summary += L"; signature catalogs: " + std::to_wstring(b.catalogsRead) + L" read into memory";
+	if (conf.mode == RunMode::Full)
+		summary += L", " + std::to_wstring(b.catalogsUsed) + L" recorded as exhibit(s)";
+	if (conf.mode == RunMode::Convert) {
+		auditRecord(L"Fingerprints of the files cited by the artefacts (" + summary + L")",
+		            L"exhibit store of the collection, read-only; authenticity verified in memory "
+		            L"with the collected catalogs; a file the collection does not hold has no fingerprint",
+		            ERROR_SUCCESS, Footprint::EXHIBIT_READ);
+		return;
+	}
+	auditRecord(L"Fingerprints of the files cited by the artefacts (" + summary + L")",
+	            L"raw NTFS reading; authenticity verified in memory (Windows catalogs, "
+	            L"embedded signatures), with no API and no service; unauthenticated binaries "
+	            L"copied into " + exhibitStoreFolder(),
+	            ERROR_SUCCESS, Footprint::VOLUME_BRUT);
+	printStep(L" - Copying collected binaries to the working directory : ");
+	size_t copies = 0;
+	unsigned long long copiedBytes = 0;
+	const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &copiedBytes);
+	auditRecord(L"Copy of the exhibit store into the working directory ("
+	            + std::to_wstring(copies) + L" file(s), "
+	            + std::to_wstring(copiedBytes / 1024 / 1024) + L" MiB)",
+	            exhibitStoreFolder() + L" -> " + workingFolder(),
+	            hrCopy, Footprint::USB_WRITE);
+	if (FAILED(hrCopy)) printError(hrCopy);
+	else printSuccess();
+}
+
+/*! Writes the manifest and its seal: the last operation on the exhibit store
+ *  (see ExhibitStoreWriteManifest). */
+void sealExhibitStore() {
+	printStep(L" - Sealing the exhibit store (manifest + SHA-256) : ");
+	log(3, L"🔈ExhibitStoreWriteManifest");
+	{
+		size_t exhibits = 0, failures = 0;
+		unsigned long long bytes = 0;
+		ExhibitStoreSummary(&exhibits, &failures, &bytes);
+		const HRESULT hrManifest = ExhibitStoreWriteManifest();
+		auditRecord(L"Sealing of the exhibit store (" + std::to_wstring(exhibits)
+		            + L" exhibit(s), " + std::to_wstring(failures) + L" failure(s), "
+		            + std::to_wstring(bytes / 1024 / 1024) + L" MiB)",
+		            exhibitStoreFolder() + L"\\MANIFEST.json (+ .sha256)",
+		            hrManifest, Footprint::USB_WRITE);
+		if (FAILED(hrManifest)) printError(hrManifest);
+		else printSuccess();
+	}
+}
+
+/*! --collect: what the conversion will need and only it can tell — the
+ *  resource files of the event providers (--events) and the executables with
+ *  the signature catalogs (--binary) —, taken now, whole, since which of them
+ *  the artefacts cite is only known once they are converted. */
+void collectForConversion() {
+	SetConsoleTextAttribute(conf.hConsole, 14);
+	wprintf(L"%ls\n", L"[COLLECTION FOR THE CONVERSION]");
+	SetConsoleTextAttribute(conf.hConsole, 7);
+	if (conf._events) {
+		printStep(L" - Extracting the resource files of every event provider : ");
+		const HRESULT hr = MessagesCollectAll();
+		size_t providers = 0, failures = 0;
+		unsigned long long resolved = 0, bytes = 0;
+		MessagesSummary(&providers, &failures, &resolved, &bytes);
+		auditRecord(L"Raw extraction of the resource files of the event providers ("
+		            + std::to_wstring(providers) + L" provider(s), " + std::to_wstring(failures)
+		            + L" without usable resources, " + std::to_wstring(bytes / 1024 / 1024) + L" MiB)",
+		            L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WINEVT\\Publishers (copied hive); raw NTFS reading",
+		            hr, Footprint::VOLUME_BRUT);
+		MessagesRelease();
+		if (FAILED(hr)) printError(hr);
+		else printSuccess();
+	}
+	if (conf.binary) {
+		printStep(L" - Reading every executable, collecting the unauthenticated (raw NTFS) : ");
+		const HRESULT hr = BinariesCollectAll();
+		const BinarySummary b = BinariesSummary();
+		auditRecord(L"Raw reading of the executables, libraries, drivers, scripts and macro documents ("
+		            + std::to_wstring(b.read) + L" read, " + std::to_wstring(b.authenticated)
+		            + L" authenticated as Microsoft in memory and fingerprinted only, "
+		            + std::to_wstring(b.collectedCount) + L" collected ("
+		            + std::to_wstring(b.collectedBytes / 1024 / 1024) + L" MiB), "
+		            + std::to_wstring(b.duplicates) + L" identical content(s) not copied again; "
+		            + std::to_wstring(b.catalogsUsed) + L" signature catalog(s) recorded)",
+		            L"every fixed NTFS volume, raw reading; authenticity verified in memory, with no API and no service",
+		            hr, Footprint::VOLUME_BRUT);
+		if (FAILED(hr)) printError(hr);
+		else printSuccess();
+	}
+}
+
+/*! Converts the artefacts into JSON, from the working copy: registry, files,
+ *  event logs. Runs in a full run and under --convert; a --collect run stops
+ *  before it (see RunMode).
+ * @param systemAvailable the SYSTEM hive is open (conf.System) */
+void convertArtefacts(bool systemAvailable) {
+	HRESULT hresult;
+	Services services;
+	Usbstors usbs;
+	MountedDevices mounteddevices;
+	Bams bams;
+	Muicaches muicaches;
+	AmcacheApplications amcacheapplications;
+	AmcacheApplicationFiles amcacheapplicationfiles;
+	UserAssists userassists;
+	Runs runs;
+	Shimcaches shimcaches;
+	Prefetchs prefetchs;
+	RecentDocs recentdocs;
+	Shellbags shellbags;
+	Mrus mrus;
+	MruApps mruapps;
+	JumplistAutomatics jumplistAutomatics;
+	JumplistCustoms jumplistCustoms;
+	ScheduledTasks scheduledTasks;
+	SystemInfo systemInfo;
+	Users users;
+	Events events;
+	ORHKEY hKey = NULL;
+	DWORD valueType = 0;
+	DWORD size = 0;
+
+	/* processes.json is published once the account names are loaded from the
+	   hives, or at the latest before the event logs if the SYSTEM hive could
+	   not be opened. */
+	bool processesPending = true;
+	auto writeProcesses = [&processesPending]() {
+		if (!processesPending) return;
+		processesPending = false;
+		printStep(L" - Writing PROCESS and SESSIONS : ");
+		HRESULT written = writeProcessesFromSnapshot();
+		const HRESULT sessionsWritten = writeSessionsFromSnapshot();
+		if (written == ERROR_SUCCESS) written = sessionsWritten;
+		if (written != ERROR_SUCCESS) printError(written);
+		else printSuccess();
+	};
 
 	/************************
 	*  REGISTRY
@@ -870,6 +883,265 @@ int wmain(int argc, wchar_t* argv[])
 		}
 	}
 
+}
+
+/*! Runs a collection.
+ *  wmain: the runtime hands the arguments in UTF-16, as Windows holds them —
+ *  CommandLineToArgvW (shell32) is no longer needed for that.
+ * @param argc,argv the command line (see showHelp())
+ * @return 0 once the collection has run to the end, an error code otherwise */
+int wmain(int argc, wchar_t* argv[])
+{
+	HRESULT hresult;
+
+	time_t start = 0, end = 0;
+
+	/************************
+	* useful functions
+	*************************/
+	//ASCII ART
+	SetConsoleOutputCP(CP_UTF8); // UTF-8, so that accented characters come out right in the console
+
+	/* UNBUFFERED output.
+	 * wprintf goes through a buffer, whereas SetConsoleTextAttribute (colours)
+	 * acts at once: the text therefore came out out of step with its colour and
+	 * with the progress display, which does force an fflush. One saw "OK" then
+	 * the label of the step, in the wrong order.
+	 * Step labels are written without a newline, waiting for their "OK": a line
+	 * buffer would therefore not be enough. */
+	setvbuf(stdout, NULL, _IONBF, 0);
+
+	system("cls");//clear screen
+
+	log(3, L"🔈asciiart");
+	asciiart();
+
+	start = time(nullptr);// start time of the program, for the benchmark
+
+	/************************
+	* Arguments
+	*************************/
+
+	conf.name = argv[0];
+	/* The arguments in UTF-16: through a narrow `argv` they were converted to
+	   the process's ANSI code page, and an output directory whose name the
+	   code page cannot represent was lost. */
+	const std::vector<std::wstring> commandLine(argv, argv + argc);
+	bool collect = false, outputGiven = false;
+	std::wstring convertFolder;
+	if (commandLine.size() > 1) { // at least one argument, the first being the program's own name
+		// command-line arguments
+		for (size_t i = 1; i < commandLine.size(); ++i) {
+			const std::wstring& arg = commandLine[i];
+
+			if (arg == L"--debug") conf._debug = true;
+			else if (arg == L"--dump") conf._dump = true;
+			else if (arg == L"--events") conf._events = true;
+			else if (arg == L"--binary") conf.binary = true;
+			else if (arg == L"--collect") collect = true;
+			else if (arg.substr(0, 10) == L"--convert=" && arg.size() > 10) convertFolder = arg.substr(10);
+			else if (arg.substr(0, 9) == L"--output=") {
+				outputGiven = true;
+				std::wstring temp = arg.substr(9);
+				if (temp.length() > 0) conf._outputDir = temp;
+				else {
+					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
+					wprintf(L"%ls%ls\n", L"Invalid length for output param ", arg.c_str());
+					log(3, L"🔈showHelp");
+					showHelp();
+					exit(1);
+				}
+				if (conf._outputDir.find(L"\\") != std::wstring::npos) {
+					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
+					wprintf(L"%ls%ls\n", L"Invalid character for param ", arg.c_str());
+					log(3, L"🔈showHelp");
+					showHelp();
+					exit(1);
+				}
+			}
+			else if (arg.substr(0, 11) == L"--loglevel=") {
+				std::wstring temp = arg.substr(11);
+				try {
+					conf.loglevel = std::stoi(temp);
+				}
+				catch (...)
+				{
+					SetConsoleTextAttribute(conf.hConsole, 12); // rouge
+					wprintf(L"%ls%ls\n", L"Invalid numeric value for output param ", arg.c_str());
+					log(3, L"🔈showHelp");
+					showHelp();
+					exit(1);
+				}
+			}
+
+			else { // unknown argument
+				if (arg != L"--help" && arg != L"/?") { // anything that is neither --help nor /? is an invalid argument
+					printError(L"Invalid argument  " + arg);
+				}
+				log(3, L"🔈showHelp");
+				showHelp();
+				exit(1);
+			}
+		}
+	}
+
+	/* The mode. A conversion reads a collection and writes next to it: the
+	   collection's folder IS its output, hence --output makes no sense with it. */
+	if (!convertFolder.empty()) {
+		if (collect || outputGiven) {
+			printError(L"--convert excludes --collect and --output");
+			showHelp();
+			exit(1);
+		}
+		conf.mode = RunMode::Convert;
+		conf._outputDir = convertFolder;
+	}
+	else if (collect) conf.mode = RunMode::Collect;
+
+	// Investigation log: opened as early as possible, so that the start timestamp
+	// really brackets the whole collection (see audit.h).
+	auditInit(commandLine);
+
+	/* Trace of the NTFS parser: SILENT by default, turned on by --debug.
+	   It writes to STDERR, hence separable from the normal output:
+	   WAC.exe --debug 2> raw.log
+	   It is what allowed the split `$INDEX_ALLOCATION` defect to be located; in
+	   ordinary use it would drown the console. */
+	RawHiveSetVerbose(conf._debug);
+
+	// System drive: read before any extraction, since it decides which volume is
+	// read raw AND how the original paths are restored. Windows is not always
+	// installed on C:.
+	// Under --convert, the examined machine's is read from its snapshot (prepareConversion).
+	if (conf.mode != RunMode::Convert) {
+		log(3, L"🔈loadSystemDrive");
+		loadSystemDrive();
+	}
+
+	/************************
+	* Prerequisites
+	*************************/
+
+	log(0, L"*******************************************************************************************************************");
+	log(0, L"ℹ️Prerequisites :");
+	log(0, L"*******************************************************************************************************************");
+
+	log(1, L"➕Check OS");
+	SetConsoleTextAttribute(conf.hConsole, 14);
+	wprintf(L"%ls\n", L"[PREREQUISITE VERIFICATION]");
+	SetConsoleTextAttribute(conf.hConsole, 7);
+	printStep(L" - Check OS >= Windows 10 : ");
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN10)
+	printSuccess();
+#else
+	printError(ERROR_APP_WRONG_OS);
+	return 1;
+#endif
+	if (conf.mode != RunMode::Convert) {
+		const int refused = checkElevation();
+		if (refused) return refused;
+	}
+
+	/* COM DROPPED (2026-09-15).
+	 * `scheduledTasks` was the ONLY consumer of COM in WAC: it now reads the XML
+	 * definitions of \Windows\System32\Tasks and the TaskCache history, offline.
+	 * Nothing justified CoInitializeEx / CoInitializeSecurity any more, and
+	 * dropping them removes:
+	 *   - the Schedule service being solicited;
+	 *   - the entries in Microsoft-Windows-TaskScheduler/Operational;
+	 *   - the COM walk task by task (several interface calls x 217).
+	 * The other live collectors (processes, sessions, services, users,
+	 * systemInfo) use direct Win32 API calls only.
+	 */
+
+	/************************
+	*  COLLECTION LOCATION, checked BEFORE the very first write
+	*************************/
+	/* Two refusals, both preferable to a collection that goes wrong midway: a
+	   working directory already populated would have a previous collection
+	   analysed, and a medium too small would give truncated copies.
+	   Checked HERE and no longer at the start of the raw extraction: with
+	   --binary, the first write is the collection of a process's executable, in
+	   the very next phase. The estimate is deliberately rough — hives, event
+	   logs and cited binaries when they are asked for; it does not have to be
+	   right, only to rule out a manifestly insufficient medium. Running out of
+	   space during the collection does not fail it: the binaries are then hashed
+	   without being copied.
+	   A conversion writes no exhibit: it checks the collection instead. */
+	{
+		const HRESULT refused = conf.mode == RunMode::Convert ? prepareConversion() : checkCollectionLocation();
+		if (FAILED(refused)) {
+			// A refused conversion leaves its log, which says why.
+			if (conf.mode == RunMode::Convert && auditWrite() != ERROR_SUCCESS) printError(L"conversion.json not written");
+			return refused;
+		}
+	}
+
+	if (conf.mode != RunMode::Convert) observeLiveState();
+
+	if (conf.mode != RunMode::Convert) {
+		hresult = extractSystemHives();
+		if (FAILED(hresult)) return hresult;
+	}
+
+	/* The SYSTEM and SOFTWARE hives are opened ON the first pass: SOFTWARE gives
+	   the list of profiles, without which the per-user hives cannot be
+	   extracted. */
+
+	// load the HKLM\SYSTEM key
+	printStep(L" - loading the HKLM\\SYSTEM key : ");
+	std::wstring systemHive = conf.mountpoint + L"\\Windows\\system32\\config\\SYSTEM";
+	/* An unavailable hive must NOT stop the collection.
+	   Seen on a real system: SOFTWARE could not be extracted, and the `return`
+	   that followed gave up everything — including SYSTEM's artefacts, the files
+	   and the event logs, all of them collectable. The principle is to gather
+	   everything reachable and to record what is missing. */
+	log(3, L"🔈OROpenHive System");
+	hresult = OROpenHive(systemHive.c_str(), &conf.System);
+	const bool systemAvailable = (hresult == ERROR_SUCCESS);
+	if (!systemAvailable) {
+		printError(hresult);
+		log(2, L"🔥SYSTEM hive unavailable: the artefacts that depend on it are not collected", hresult);
+		auditRecord(L"Opening of the SYSTEM hive", systemHive, hresult, Footprint::HIVE_COPY);
+		if (conf.mode != RunMode::Collect)      // --collect converts nothing
+		for (const char* f : { "Usbstor.json", "mounted_device.json", "bams.json",
+		                       "shimcache.json", "services.json" })
+			writeNotCollected(f, L"depends on the SYSTEM hive, which is unavailable", hresult);
+	}
+	else printSuccess();
+
+	// load the HKLM\SOFTWARE key
+	printStep(L" - loading the HKLM\\SOFTWARE key : ");
+	std::wstring softwareHive = conf.mountpoint + L"\\Windows\\system32\\config\\SOFTWARE";
+	log(3, L"🔈OROpenHive Software");
+	hresult = OROpenHive(softwareHive.c_str(), &conf.Software);
+	const bool softwareAvailable = (hresult == ERROR_SUCCESS);
+	if (!softwareAvailable) {
+		printError(hresult);
+		log(2, L"🔥SOFTWARE hive unavailable: the artefacts that depend on it are not collected", hresult);
+		auditRecord(L"Opening of the SOFTWARE hive", softwareHive, hresult, Footprint::HIVE_COPY);
+		if (conf.mode != RunMode::Collect)
+			writeNotCollected("run.json", L"depends on the SOFTWARE hive, which is unavailable", hresult);
+	}
+	else printSuccess();
+
+	/* USER PROFILES, OFFLINE. The list is read in the SOFTWARE hive just opened,
+	   and no longer in the live registry: that is what makes the hives be
+	   extracted in two passes. See raw_collect.h. */
+	printStep(L" - Listing USER PROFILES (SOFTWARE hive) : ");
+	log(3, L"🔈loadProfileList");
+	hresult = loadProfileList();
+	auditRecord(L"Reading of the user profiles",
+	            L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList (copied hive, WAC's hive reader)",
+	            hresult, Footprint::HIVE_COPY);
+	if (hresult != ERROR_SUCCESS) printError(hresult);
+	else printSuccess();
+
+	if (conf.mode != RunMode::Convert) extractProfileArtefacts();
+
+	if (conf.mode == RunMode::Collect) collectForConversion();
+	else convertArtefacts(systemAvailable);
+
 	SetConsoleTextAttribute(conf.hConsole, 14);
 	wprintf(L"%ls\n", L"[EXHIBIT STORE]");
 	SetConsoleTextAttribute(conf.hConsole, 7);
@@ -888,55 +1160,9 @@ int wmain(int argc, wchar_t* argv[])
 	   also recorded there as "not read", the SYSTEM hive being read only
 	   afterwards. Sealing is therefore the last operation on the store, just
 	   before the investigation log. */
-	/* CITED BINARIES. No artefact cites a file any more: the volumes kept open to
-	   read them are closed, and the collected exhibits copied to the working
-	   directory — like any exhibit, even an unmodified one: that is the
-	   procedure. */
-	if (conf.binary) {
-		BinariesFinish();
-		const BinarySummary b = BinariesSummary();
-		std::wstring summary = std::to_wstring(b.files) + L" cited, " + std::to_wstring(b.read)
-		                   + L" read, " + std::to_wstring(b.authenticated) + L" authenticated as Microsoft and "
-		                   L"not collected (" + std::to_wstring(b.authenticatedBytes / 1024 / 1024)
-		                   + L" MiB saved), " + std::to_wstring(b.collectedCount) + L" collected ("
-		                   + std::to_wstring(b.collectedBytes / 1024 / 1024) + L" MiB)";
-		if (b.duplicates) summary += L", " + std::to_wstring(b.duplicates) + L" duplicate content(s) not copied again";
-		if (b.sansPlace) summary += L", " + std::to_wstring(b.sansPlace) + L" hashed without a copy, medium full";
-		summary += L"; signature catalogs: " + std::to_wstring(b.catalogsRead) + L" read into memory, "
-		       + std::to_wstring(b.catalogsUsed) + L" recorded as exhibit(s)";
-		auditRecord(L"Fingerprints of the files cited by the artefacts (" + summary + L")",
-		            L"raw NTFS reading; authenticity verified in memory (Windows catalogs, "
-		            L"embedded signatures), with no API and no service; unauthenticated binaries "
-		            L"copied into " + exhibitStoreFolder(),
-		            ERROR_SUCCESS, Footprint::VOLUME_BRUT);
-		printStep(L" - Copying collected binaries to the working directory : ");
-		size_t copies = 0;
-		unsigned long long copiedBytes = 0;
-		const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &copiedBytes);
-		auditRecord(L"Copy of the exhibit store into the working directory ("
-		            + std::to_wstring(copies) + L" file(s), "
-		            + std::to_wstring(copiedBytes / 1024 / 1024) + L" MiB)",
-		            exhibitStoreFolder() + L" -> " + workingFolder(),
-		            hrCopy, Footprint::USB_WRITE);
-		if (FAILED(hrCopy)) printError(hrCopy);
-		else printSuccess();
-	}
-
-	printStep(L" - Sealing the exhibit store (manifest + SHA-256) : ");
-	log(3, L"🔈ExhibitStoreWriteManifest");
-	{
-		size_t exhibits = 0, failures = 0;
-		unsigned long long bytes = 0;
-		ExhibitStoreSummary(&exhibits, &failures, &bytes);
-		const HRESULT hrManifest = ExhibitStoreWriteManifest();
-		auditRecord(L"Sealing of the exhibit store (" + std::to_wstring(exhibits)
-		            + L" exhibit(s), " + std::to_wstring(failures) + L" failure(s), "
-		            + std::to_wstring(bytes / 1024 / 1024) + L" MiB)",
-		            exhibitStoreFolder() + L"\\MANIFEST.json (+ .sha256)",
-		            hrManifest, Footprint::USB_WRITE);
-		if (FAILED(hrManifest)) printError(hrManifest);
-		else printSuccess();
-	}
+	closeBinaries();
+	// Under --convert the exhibit store is only read: its seal stays the collection's.
+	if (conf.mode != RunMode::Convert) sealExhibitStore();
 
 	/************************
 	*  INVESTIGATION LOG (last: it records the whole collection)
@@ -952,7 +1178,7 @@ int wmain(int argc, wchar_t* argv[])
 	            conf._outputDir, ERROR_SUCCESS,
 	            Footprint::USB_WRITE);
 
-	printStep(L" - Writing investigation.json : ");
+	printStep(conf.mode == RunMode::Convert ? L" - Writing conversion.json : " : L" - Writing investigation.json : ");
 	log(3, L"🔈auditWrite");
 	hresult = auditWrite();
 	if (hresult != ERROR_SUCCESS) printError(hresult);

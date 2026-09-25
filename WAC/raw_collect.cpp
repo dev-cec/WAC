@@ -2,6 +2,7 @@
  *  \brief Orchestration of the offline extraction of artefacts (see raw_collect.h).
  */
 #include "raw_collect.h"
+#include <set>
 #include "consigne.h"
 #include <string>
 #include <vector>
@@ -45,6 +46,104 @@ std::wstring exhibitTarget(const std::wstring& path) {
 void reportProgress(const wchar_t* item, unsigned long long done,
                           unsigned long long total) {
 	printProgress(item ? item : L"", done / 1024, total / 1024, L"KiB");
+}
+
+/*! Repairs the working copies of hives: transaction log replay, patch as a
+ *  fallback, each write recorded with the fingerprint of the copy before it.
+ *  @param hives working paths of the hives (missing files are skipped)
+ *  @param md5ByFile MD5 of each hive as extracted, by working path; a hive
+ *         absent from it is hashed before any write
+ *  @return ERROR_SUCCESS, or S_FALSE if a hive stays unusable */
+HRESULT repairHives(const std::vector<std::wstring>& hives,
+                    const std::map<std::wstring, std::wstring>& md5ByFile) {
+	// Repair each hive (dirty -> loadable), with traceability.
+	log(0, L"*******************************************************************************************************************");
+	log(0, L"ℹ️Hives recovery :");
+	log(0, L"*******************************************************************************************************************");
+	unsigned patchedHives = 0, failures = 0, replayed = 0;
+	unsigned long long replayedPages = 0, replayedBytes = 0;
+	/* This phase no longer re-reads the hives: the fingerprints come from the
+	   computation made while writing (see QuickDigest5::Stream). Previously,
+	   each hive was read back from the collection medium — about 150 MiB read a
+	   second time from a USB stick, almost half the extraction time, without
+	   any display. */
+	size_t iHive = 0;
+	for (const std::wstring& r : hives) {
+		std::error_code ec;
+		++iHive;
+		if (!std::filesystem::exists(r, ec)) continue;   // not extracted: already logged
+
+		printProgress(L"Repair of " + std::filesystem::path(r).filename().wstring(),
+		              iHive, hives.size(), L"hive");
+
+		/* Fingerprint BEFORE any modification: the raw copy stays identifiable.
+		   Taken from the computation made during extraction; the file is only
+		   re-read if it is missing (theoretical case of an item without one). */
+		std::wstring md5Before;
+		const auto found = md5ByFile.find(r);
+		if (found != md5ByFile.end()) md5Before = found->second;
+		else md5Before = QuickDigest5::fileToHash(r);
+
+		log(1, L"➕Hive");
+		log(2, L"❇️MD5 of the raw copy (before any write): " + md5Before);
+
+		/* REPLAY FIRST. The transaction logs hold the pages changed since the
+		   hive's last full write: applying them gives the machine's real state,
+		   and makes the hive clean by construction — hence no patch. The original
+		   content of each replaced page goes into an undo log, so that the
+		   raw copy stays rebuildable to the byte (verified on three real
+		   hives). */
+		const HiveReplayInfo replay = ReplayHiveLogs(r, md5Before);
+		log(2, L"❇️" + HiveReplayInfoToString(replay));
+		if (replay.applied) {
+			++replayed;
+			replayedPages  += replay.pages;
+			replayedBytes  += replay.bytes;
+			auditRecord(L"Replay of the transaction logs of a copied hive ("
+			            + std::to_wstring(replay.keptEntries) + L" entry(ies), "
+			            + std::to_wstring(replay.pages) + L" page(s))",
+			            r + L" | " + HiveReplayInfoToString(replay)
+			            + L" | MD5 before the replay: " + md5Before
+			            + L" | undo: " + replay.undoJournal,
+			            ERROR_SUCCESS, Footprint::HIVE_REPLAY);
+		}
+		else if (!replay.ok) {
+			// The replay wrote nothing: record it and fall back on the patch.
+			log(2, L"🔥Replay impossible: " + r + L" (" + replay.error + L")");
+			auditRecord(L"Replay of the transaction logs of a copied hive (not applied)",
+			            r + L" | " + HiveReplayInfoToString(replay),
+			            E_FAIL, Footprint::HIVE_COPY);
+		}
+
+		/* PATCH AS A FALLBACK. After a successful replay the hive is clean and
+		   MakeHiveLoadable does nothing; it only remains useful for hives
+		   without a usable log. */
+		HiveFixInfo info = MakeHiveLoadable(r);
+		log(2, L"❇️" + HiveFixInfoToString(info));
+
+		// ONE entry per hive: every write WAC makes on evidence is recorded,
+		// and the BEFORE fingerprint makes it verifiable to the byte. Hives that
+		// are already clean are recorded too — "not modified" is information,
+		// not a lack of information.
+		// Note: the internal name returned by HiveFixInfoToString is truncated to
+		// its last 31 characters, as the regf format stores it.
+		auditRecord(info.patched ? L"Repair of a copied hive (patch applied)"
+		                         : L"Check of a copied hive (already clean)",
+		            r + L" | " + HiveFixInfoToString(info) + L" | MD5 before the patch: " + md5Before,
+		            info.ok ? ERROR_SUCCESS : E_FAIL,
+		            info.patched ? Footprint::HIVE_PATCH : Footprint::HIVE_COPY);
+		if (!info.ok) { ++failures; log(2, L"🔥Hive not usable: " + r + L" (" + info.error + L")"); }
+		else if (info.patched) ++patchedHives;
+	}
+	printProgressEnd();
+	log(2, L"❇️Hives replayed: " + std::to_wstring(replayed)
+	     + L" (" + std::to_wstring(replayedPages) + L" pages, "
+	     + std::to_wstring(replayedBytes / 1024) + L" KiB applied)");
+	log(2, L"❇️Hives repaired by patch: " + std::to_wstring(patchedHives)
+	     + L", failures: " + std::to_wstring(failures));
+
+	// An unreadable hive blocks what follows (OROpenHive): report it.
+	return (failures == 0) ? ERROR_SUCCESS : S_FALSE;
 }
 
 /*! Raw extraction of a batch of hives, then repair of the working copies:
@@ -173,95 +272,9 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 		if (hrCopy == S_FALSE) hr = S_FALSE;
 	}
 
-	// Repair each hive (dirty -> loadable), with traceability.
-	log(0, L"*******************************************************************************************************************");
-	log(0, L"ℹ️Hives recovery :");
-	log(0, L"*******************************************************************************************************************");
-	unsigned patchedHives = 0, failures = 0, replayed = 0;
-	unsigned long long replayedPages = 0, replayedBytes = 0;
-	/* This phase no longer re-reads the hives: the fingerprints come from the
-	   computation made while writing (see QuickDigest5::Stream). Previously,
-	   each hive was read back from the collection medium — about 150 MiB read a
-	   second time from a USB stick, almost half the extraction time, without
-	   any display. */
-	size_t iHive = 0;
-	for (const std::wstring& r : hives) {
-		std::error_code ec;
-		++iHive;
-		if (!std::filesystem::exists(r, ec)) continue;   // not extracted: already logged
-
-		printProgress(L"Repair of " + std::filesystem::path(r).filename().wstring(),
-		              iHive, hives.size(), L"hive");
-
-		/* Fingerprint BEFORE any modification: the raw copy stays identifiable.
-		   Taken from the computation made during extraction; the file is only
-		   re-read if it is missing (theoretical case of an item without one). */
-		std::wstring md5Before;
-		const auto found = md5ByFile.find(r);
-		if (found != md5ByFile.end()) md5Before = found->second;
-		else md5Before = QuickDigest5::fileToHash(r);
-
-		log(1, L"➕Hive");
-		log(2, L"❇️MD5 of the raw copy (before any write): " + md5Before);
-
-		/* REPLAY FIRST. The transaction logs hold the pages changed since the
-		   hive's last full write: applying them gives the machine's real state,
-		   and makes the hive clean by construction — hence no patch. The original
-		   content of each replaced page goes into an undo log, so that the
-		   raw copy stays rebuildable to the byte (verified on three real
-		   hives). */
-		const HiveReplayInfo replay = ReplayHiveLogs(r, md5Before);
-		log(2, L"❇️" + HiveReplayInfoToString(replay));
-		if (replay.applied) {
-			++replayed;
-			replayedPages  += replay.pages;
-			replayedBytes  += replay.bytes;
-			auditRecord(L"Replay of the transaction logs of a copied hive ("
-			            + std::to_wstring(replay.keptEntries) + L" entry(ies), "
-			            + std::to_wstring(replay.pages) + L" page(s))",
-			            r + L" | " + HiveReplayInfoToString(replay)
-			            + L" | MD5 before the replay: " + md5Before
-			            + L" | undo: " + replay.undoJournal,
-			            ERROR_SUCCESS, Footprint::HIVE_REPLAY);
-		}
-		else if (!replay.ok) {
-			// The replay wrote nothing: record it and fall back on the patch.
-			log(2, L"🔥Replay impossible: " + r + L" (" + replay.error + L")");
-			auditRecord(L"Replay of the transaction logs of a copied hive (not applied)",
-			            r + L" | " + HiveReplayInfoToString(replay),
-			            E_FAIL, Footprint::HIVE_COPY);
-		}
-
-		/* PATCH AS A FALLBACK. After a successful replay the hive is clean and
-		   MakeHiveLoadable does nothing; it only remains useful for hives
-		   without a usable log. */
-		HiveFixInfo info = MakeHiveLoadable(r);
-		log(2, L"❇️" + HiveFixInfoToString(info));
-
-		// ONE entry per hive: every write WAC makes on evidence is recorded,
-		// and the BEFORE fingerprint makes it verifiable to the byte. Hives that
-		// are already clean are recorded too — "not modified" is information,
-		// not a lack of information.
-		// Note: the internal name returned by HiveFixInfoToString is truncated to
-		// its last 31 characters, as the regf format stores it.
-		auditRecord(info.patched ? L"Repair of a copied hive (patch applied)"
-		                         : L"Check of a copied hive (already clean)",
-		            r + L" | " + HiveFixInfoToString(info) + L" | MD5 before the patch: " + md5Before,
-		            info.ok ? ERROR_SUCCESS : E_FAIL,
-		            info.patched ? Footprint::HIVE_PATCH : Footprint::HIVE_COPY);
-		if (!info.ok) { ++failures; log(2, L"🔥Hive not usable: " + r + L" (" + info.error + L")"); }
-		else if (info.patched) ++patchedHives;
-	}
-	printProgressEnd();
-	log(2, L"❇️Hives replayed: " + std::to_wstring(replayed)
-	     + L" (" + std::to_wstring(replayedPages) + L" pages, "
-	     + std::to_wstring(replayedBytes / 1024) + L" KiB applied)");
-	log(2, L"❇️Hives repaired by patch: " + std::to_wstring(patchedHives)
-	     + L", failures: " + std::to_wstring(failures)
-	     + L", missing files: " + std::to_wstring(missing));
-
-	// An unreadable hive blocks what follows (OROpenHive): report it.
-	return (failures == 0) ? hr : S_FALSE;
+	log(2, L"❇️Hive files missing from the extraction: " + std::to_wstring(missing));
+	const HRESULT repaired = repairHives(hives, md5ByFile);
+	return (repaired == ERROR_SUCCESS) ? hr : repaired;
 }
 
 } // namespace
@@ -437,4 +450,22 @@ HRESULT ExtractFileArtefactsRaw() {
 		if (hrCopy == S_FALSE) global = S_FALSE;
 	}
 	return global;
+}
+
+HRESULT RepairWorkingHives() {
+	/* The hives of the working copy, found by their names: the same set the
+	   collection extracts (system hives, and each profile's ntuser.dat and
+	   UsrClass.dat), whatever the profiles' paths. */
+	static const std::set<std::wstring> NAMES = { L"system", L"software", L"sam", L"amcache.hve",
+	                                              L"ntuser.dat", L"usrclass.dat" };
+	std::vector<std::wstring> hives;
+	std::error_code ec;
+	for (const std::filesystem::directory_entry& e :
+	     std::filesystem::recursive_directory_iterator(workingFolder(), ec)) {
+		if (ec) break;
+		if (e.is_regular_file(ec) && NAMES.count(toLower(e.path().filename().wstring())))
+			hives.push_back(e.path().wstring());
+	}
+	log(2, L"❇️Hives of the working copy to repair: " + std::to_wstring(hives.size()));
+	return repairHives(hives, {});
 }

@@ -184,6 +184,17 @@ int wmain(int argc, wchar_t** argv){
 	             std::filesystem::path(workingFolder()) / L"MANIFEST.json", ec),
 	         "the manifest is not copied into the working directory");
 
+	// Exhibit paths of a manifest: contained, including WinSxS names with ".." inside.
+	check(exhibitPathContained(L"exhibits\\Windows\\WinSxS\\amd64_microsoft-onecore-i..sermode-kernel\\a.exe"),
+	      "a WinSxS name with \"..\" inside is contained");
+	check(exhibitPathContained(L"exhibits\\live\\processes.json"), "an ordinary exhibit path is contained");
+	check(!exhibitPathContained(L"exhibits\\..\\x.exe"), "\"..\" as a component is refused");
+	check(!exhibitPathContained(L"exhibits\\a\\..\\..\\x.exe"), "climbing two levels is refused");
+	check(!exhibitPathContained(L"exhibits/../x.exe"), "\"..\" behind a slash is refused");
+	check(!exhibitPathContained(L"exhibits\\C:\\x.exe"), "a drive inside the path is refused");
+	check(!exhibitPathContained(L"working\\x.exe"), "a path outside exhibits\\ is refused");
+	check(!exhibitPathContained(L"exhibits\\a\\.."), "a trailing \"..\" is refused");
+
 	std::cout << (failures ? "FAILURES: " : "all passed (failures: ") << failures
 	          << (failures ? "\n" : ")\n");
 	return failures ? 1 : 0;

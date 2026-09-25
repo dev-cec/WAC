@@ -156,7 +156,207 @@ def cross_checks(folder):
     found += check_key_names(folder)
     found += check_account_names(folder)
     found += check_guid_names(folder)
+    found += check_collected_executables(folder)
+    found += check_catalogs_recorded(folder)
+    found += check_package_verification(folder)
+    found += check_file_artefact_dates(folder)
     return found
+
+
+def check_file_artefact_dates(folder):
+    """The dates of a file artefact are those of the file on the examined
+    machine, not of its working copy. Independent source: the last write of
+    each Prefetch file as Windows gives it (reference/prefetch-times.txt),
+    against ModifiedUtc in prefetchs.json.
+
+    What it caught: the dates were read on the working copy, and the 335
+    Prefetch files of a collection all bore the minute of the collection.
+    A Prefetch rewritten between the collection and the reference (a program
+    run meanwhile) legitimately differs: 90 % must match to the 100 ns.
+    """
+    reference_path = os.path.join(folder, "reference", "prefetch-times.txt")
+    prefetchs = load(folder, "prefetchs.json")
+    if not os.path.exists(reference_path) or not isinstance(prefetchs, list):
+        print("  ⏭️  Prefetch reference or prefetchs.json absent: file artefact dates not checked")
+        return 0
+    with open(reference_path, encoding="utf-8", errors="replace") as f:
+        windows = dict(line.strip().split("|", 1) for line in f if "|" in line)
+    compared = same = 0
+    examples = []
+    for p in prefetchs:
+        name = ntpath.basename(str(p.get("Path", "")))
+        if name not in windows or not p.get("ModifiedUtc"):
+            continue
+        compared += 1
+        if p["ModifiedUtc"] == windows[name]:
+            same += 1
+        elif len(examples) < 3:
+            examples.append(f"{name}: WAC {p['ModifiedUtc']}, Windows {windows[name]}")
+    if not compared:
+        print("  ⏭️  no Prefetch in common with the reference: dates not checked")
+        return 0
+    if same < 0.9 * compared:
+        print(f"  ❌ Prefetch dates: {same}/{compared} equal to Windows' — dates of the working copy?")
+        for e in examples:
+            print(f"        {e}")
+        return 1
+    print(f"  ✅ Prefetch dates: {same}/{compared} equal to Windows' to the 100 ns "
+          f"(the others rewritten since the collection)")
+    return 0
+
+
+def check_package_verification(folder):
+    """A file of a signed Store package is not collected when its blocks match
+    the package's signed block map. The harness copies a package's signature
+    and block map with three scripts (make-fake-package.ps1): the untouched one
+    must be authenticated through the package, the modified one and the
+    intruder — absent from the block map — must be collected.
+    """
+    reference_path = os.path.join(folder, "reference", "fake-package.txt")
+    if not os.path.exists(reference_path):
+        print("  ⏭️  reference/fake-package.txt absent: package verification not checked")
+        return 0
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+    by_path = {str(i.get("SourcePath", "")).lower(): i for i in items}
+    faults = []
+    with open(reference_path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            if "|" not in line:
+                continue
+            case, path = line.strip().split("|", 1)
+            item = by_path.get(path.lower())
+            if not item or item.get("Result") != "OK":
+                faults.append(f"{case}: absent from the manifest ({path})")
+            elif case == "untouched":
+                if item.get("ContentStored") is not False or not str(item.get("Signature", "")).startswith("Package"):
+                    faults.append(f"untouched: not authenticated through its package ({path})")
+            elif item.get("ContentStored") is False:
+                faults.append(f"{case}: NOT collected, though its package does not vouch for it ({path})")
+    if faults:
+        print(f"  ❌ package verification: {len(faults)} fault(s)")
+        for fault in faults:
+            print(f"        {fault}")
+        return 1
+    print("  ✅ package verification: untouched file authenticated, modified file and intruder collected")
+    return 0
+
+
+def check_catalogs_recorded(folder):
+    """A binary authenticated through a catalog is not collected: the catalog
+    is what justifies it, and must be in the exhibit store for a third party
+    to check the decision. Every "Microsoft (catalog X)" verdict — in the
+    artefacts or in the manifest — must name a catalog the manifest holds.
+    What it caught: the prefix looked for ("catalogue ") no longer matched the
+    label ("catalog "), and no justifying catalog was ever recorded.
+    """
+    import re
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+    recorded = {str(i.get("SourcePath", "")).lower() for i in items
+                if i.get("Result") == "OK" and i.get("ContentStored") is not False}
+    recorded_names = {ntpath.basename(p) for p in recorded}
+    pattern = re.compile(r"Microsoft \(catalog (.+?)\)")
+    cited = set()
+    sources = [i.get("Signature") for i in items]
+    for file in glob.glob(os.path.join(folder, "*.json")):
+        try:
+            with open(file, encoding="utf-8-sig") as f:
+                sources += [v for _, v in walk(json.load(f)) if isinstance(v, str)]
+        except Exception:
+            continue
+    for value in sources:
+        for match in pattern.finditer(str(value or "")):
+            cited.add(match.group(1).lower())
+    if not cited:
+        print("  ⏭️  no catalog verdict: recording of the catalogs not checked")
+        return 0
+    missing = sorted(c for c in cited
+                     if c not in recorded and ntpath.basename(c) not in recorded_names)
+    if missing:
+        print(f"  ❌ {len(missing)} catalog(s) out of {len(cited)} justify an authentication "
+              f"but are not in the exhibit store, e.g. {missing[:3]}")
+        return 1
+    print(f"  ✅ the {len(cited)} catalog(s) that justify an authentication are all in the exhibit store")
+    return 0
+
+
+def check_collected_executables(folder):
+    """--collect --binary must take EVERY executable of the volume: which ones
+    the artefacts cite is only known at conversion, on another machine.
+
+    Independent reference: the executables, libraries and drivers of System32
+    and SysWOW64 as Windows lists them (reference/executables.txt), each of
+    which must be a source path of the manifest. What it caught: directories
+    whose $INDEX_ROOT NTFS had moved to an extension record (those carrying a
+    $TXF_DATA, thousands in WinSxS) were reported unreadable by the raw
+    reader, and their files never collected.
+    """
+    reference_path = os.path.join(folder, "reference", "executables.txt")
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+    if not any("--collect --binary" in str(i.get("Method", "")) for i in items):
+        print("  ⏭️  not a --collect --binary collection: completeness of the executables skipped")
+        return 0
+    if not os.path.exists(reference_path):
+        print("  ⏭️  reference/executables.txt absent: completeness of the executables skipped")
+        return 0
+    with open(reference_path, encoding="utf-8", errors="replace") as f:
+        reference = {line.strip().lower() for line in f if line.strip()}
+    collected = {str(i.get("SourcePath", "")).lower() for i in items if i.get("Result") == "OK"}
+    missing = sorted(reference - collected)
+    if missing:
+        print(f"  ❌ {len(missing)} executable(s) of System32/SysWOW64 out of {len(reference)} "
+              f"not collected, e.g.:")
+        for m in missing[:5]:
+            print(f"        {m}")
+        return 1
+    print(f"  ✅ the {len(reference)} executables of System32/SysWOW64 are all collected")
+    return check_authenticated_executables(folder, items)
+
+
+def check_authenticated_executables(folder, items):
+    """An executable WAC authenticates as Microsoft is fingerprinted and NOT
+    copied: a wrong verdict would leave an intruder's binary out of the
+    exhibit store. Independent source: Windows' own verification
+    (Get-AuthenticodeSignature, catalogs included) of the executables of
+    System32, in reference/authenticode.txt ("path|Status|Subject").
+
+    Every executable WAC declares authentic must be "Valid" and signed by
+    Microsoft for Windows. The reverse — valid for Windows, collected by WAC —
+    costs room but loses nothing: it is counted, not failed.
+    """
+    reference_path = os.path.join(folder, "reference", "authenticode.txt")
+    if not os.path.exists(reference_path):
+        print("  ⏭️  reference/authenticode.txt absent: signature verdicts not checked")
+        return 0
+    windows = {}
+    with open(reference_path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            parts = line.strip().split("|")
+            if len(parts) >= 3:
+                windows[parts[0].lower()] = (parts[1], parts[2])
+    verdict = {str(i.get("SourcePath", "")).lower(): i for i in items if i.get("Result") == "OK"}
+    wrong, stored_valid, compared = [], 0, 0
+    for path, (status, subject) in windows.items():
+        item = verdict.get(path)
+        if not item:
+            continue
+        compared += 1
+        microsoft_for_windows = status == "Valid" and "microsoft" in subject.lower()
+        if item.get("ContentStored") is False and str(item.get("Signature", "")).startswith("Microsoft"):
+            if not microsoft_for_windows:
+                wrong.append(f"{path} ({status}, {subject[:40]})")
+        elif microsoft_for_windows and item.get("ContentStored") is not False:
+            stored_valid += 1
+    if wrong:
+        print(f"  ❌ {len(wrong)} executable(s) declared authentic Microsoft by WAC, not by Windows:")
+        for w in wrong[:5]:
+            print(f"        {w}")
+        return 1
+    print(f"  ✅ {compared} System32 executables compared with Get-AuthenticodeSignature: every one WAC "
+          f"authenticated is Microsoft-valid for Windows ({stored_valid} valid for Windows yet collected)")
+    return 0
 
 
 def check_events(folder):
@@ -520,7 +720,11 @@ def check_exhibit_store(folder):
     if not isinstance(items, list) or not items:
         print("  ❌ exhibits: no exhibit in the manifest")
         return found + 1
-    collected = [i for i in items if i.get("Result") == "OK"]
+    # Copied exhibits carry the three fingerprints; a binary authenticated as
+    # Microsoft and NOT copied (ContentStored false) carries its Authenticode
+    # digest (a script: its SHA-256) and the verdict, and nothing else.
+    collected = [i for i in items if i.get("Result") == "OK" and i.get("ContentStored") is not False]
+    fingerprintOnly = [i for i in items if i.get("Result") == "OK" and i.get("ContentStored") is False]
     noFingerprint = [i.get("SourcePath") for i in collected
                      if not (i.get("MD5") and i.get("SHA1") and i.get("SHA256"))]
     if noFingerprint:
@@ -529,6 +733,18 @@ def check_exhibit_store(folder):
         found += 1
     else:
         print(f"  ✅ exhibits: {len(collected)} exhibit(s) carry MD5, SHA-1 and SHA-256")
+    if fingerprintOnly:
+        incomplete = [i.get("SourcePath") for i in fingerprintOnly
+                      if not ((i.get("AuthenticodeSHA256") or i.get("SHA256")) and i.get("Signature"))
+                      and "medium full" not in str(i.get("Method", ""))
+                      and not ("differential file" in str(i.get("Method", "")) and i.get("SHA256"))]
+        if incomplete:
+            print(f"  ❌ exhibits: {len(incomplete)} binarie(s) fingerprinted without a copy lack their "
+                  f"digest or verdict {[ntpath.basename(str(x)) for x in incomplete[:3]]}")
+            found += 1
+        else:
+            print(f"  ✅ exhibits: {len(fingerprintOnly)} binarie(s) authenticated without a copy carry "
+                  f"their digest and verdict")
 
     # 3. counts
     custody = m.get("Custody") or {}
@@ -1175,9 +1391,11 @@ def check_account_names(folder):
                 walk(v)
     for file in sorted(glob.glob(os.path.join(folder, "*.json"))):
         # users.json names its accounts from the SAM itself, Sessions.json from
-        # LSA at the time of the observation, investigation.json the operator
-        # running WAC: none goes through the table.
-        if os.path.basename(file) in ("events.json", "users.json", "Sessions.json", "investigation.json"):
+        # LSA at the time of the observation, investigation.json and
+        # conversion.json the operator running WAC, as HIS machine names him
+        # ("Système"): none goes through the table.
+        if os.path.basename(file) in ("events.json", "users.json", "Sessions.json", "investigation.json",
+                                      "conversion.json"):
             continue
         d = load(folder, os.path.basename(file))
         if d is not None:

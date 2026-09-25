@@ -36,17 +36,6 @@ const uint32_t K256[64] = {
 	0x748f82eeu,0x78a5636fu,0x84c87814u,0x8cc70208u,0x90befffau,0xa4506cebu,0xbef9a3f7u,0xc67178f2u
 };
 
-//! Digest in uppercase hexadecimal, the project's convention (see Md5Stream).
-std::wstring enHexa(const uint8_t* bytes, size_t n){
-	static const wchar_t* d = L"0123456789ABCDEF";
-	std::wstring r;
-	r.reserve(n * 2);
-	for (size_t i = 0; i < n; ++i){
-		r.push_back(d[bytes[i] >> 4]);
-		r.push_back(d[bytes[i] & 0x0F]);
-	}
-	return r;
-}
 
 /*! Padding shared by both algorithms: a 0x80 byte, zeros, then the message
  *  length IN BITS on 8 big-endian bytes.
@@ -88,6 +77,17 @@ void add(const uint8_t* data, size_t length, uint8_t* block, size_t& inBlock,
 
 } // namespace
 
+std::wstring toHexadecimal(const uint8_t* bytes, size_t n){
+	static const wchar_t* d = L"0123456789ABCDEF";
+	std::wstring r;
+	r.reserve(n * 2);
+	for (size_t i = 0; i < n; ++i){
+		r.push_back(d[bytes[i] >> 4]);
+		r.push_back(d[bytes[i] & 0x0F]);
+	}
+	return r;
+}
+
 // ---------------------------------------------------------------------------
 //  SHA-1
 // ---------------------------------------------------------------------------
@@ -124,7 +124,7 @@ void Sha1Stream::digest(uint8_t d[20]){
 std::wstring Sha1Stream::hexDigest(){
 	uint8_t d[20];
 	digest(d);
-	return enHexa(d, 20);
+	return toHexadecimal(d, 20);
 }
 
 void sha1Bytes(const uint8_t* data, size_t length, uint8_t output[20]){
@@ -173,7 +173,7 @@ void Sha256Stream::digest(uint8_t d[32]){
 std::wstring Sha256Stream::hexDigest(){
 	uint8_t d[32];
 	digest(d);
-	return enHexa(d, 32);
+	return toHexadecimal(d, 32);
 }
 
 void sha256Bytes(const uint8_t* data, size_t length, uint8_t output[32]){

@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <regex>
 #include "tools.h"
+#include "running_machine.h"
 #include <cstring>
 #include <climits>
 #include <cmath>
@@ -397,30 +398,29 @@ bool nullDate(const FILETIME& ft) {
 
 const long long MINUTE_100NS = 600000000LL;   //!< one minute, in hundreds of nanoseconds
 
-/*! Rules of the RUNNING machine: the fallback when the suspect's hive cannot
- *  be read, right in a live collection since the machine is then the same.
- *  Only its current rule; the rules per year come from the hive. Built once:
- *  the running machine does not change during the collection. */
+/*! Rules of the RUNNING examined machine, as its snapshot recorded them: the
+ *  fallback when the suspect's hive cannot be read. Only its current rule; the
+ *  rules per year come from the hive. Built once. */
 const TimeZoneRules& machineRules() {
-	static const TimeZoneRules rules = [] {
-		TimeZoneRules r;
-		TIME_ZONE_INFORMATION tz = {};
-		if (GetTimeZoneInformation(&tz) == TIME_ZONE_ID_INVALID) return r;
-		// Through the registry layout, to share the validation of parseTimeZoneRule.
-		BYTE tzi[44] = {};
-		const int32_t bias[3] = { (int32_t)tz.Bias, (int32_t)tz.StandardBias, (int32_t)tz.DaylightBias };
-		memcpy(tzi, bias, sizeof(bias));
-		memcpy(tzi + 12, &tz.StandardDate, sizeof(SYSTEMTIME));
-		memcpy(tzi + 28, &tz.DaylightDate, sizeof(SYSTEMTIME));
-		parseTimeZoneRule(tzi, sizeof(tzi), r.current);
-		return r;
-	}();
+	// Built once the snapshot exists: an empty rule is never kept (see runningMachine).
+	static TimeZoneRules rules;
+	static bool built = false;
+	if (built) return rules;
+	const RunningMachine& machine = runningMachine();
+	if (!machine.read) return rules;
+	built = true;
+	if (machine.timeZoneId == TIME_ZONE_ID_INVALID) return rules;
+	const TIME_ZONE_INFORMATION& tz = machine.timeZone;
+	// Through the registry layout, to share the validation of parseTimeZoneRule.
+	BYTE tzi[44] = {};
+	const int32_t bias[3] = { (int32_t)tz.Bias, (int32_t)tz.StandardBias, (int32_t)tz.DaylightBias };
+	memcpy(tzi, bias, sizeof(bias));
+	memcpy(tzi + 12, &tz.StandardDate, sizeof(SYSTEMTIME));
+	memcpy(tzi + 28, &tz.DaylightDate, sizeof(SYSTEMTIME));
+	parseTimeZoneRule(tzi, sizeof(tzi), rules.current);
 	return rules;
 }
 
-/*! The rules that date local times: the suspect's once its SYSTEM hive is
- *  read, the running machine's before. Not cached: the answer changes at the
- *  moment the hive becomes readable. */
 const TimeZoneRules& suspectRules() {
 	return conf.timeZone.valid ? conf.timeZone.rules : machineRules();
 }
@@ -906,6 +906,39 @@ FILETIME suspectLocalToUtc(const FILETIME& filetimeLocal) {
 	return shifted(filetimeLocal, biasAtLocal(suspectRules(), ticksOf(filetimeLocal)) * MINUTE_100NS);
 }
 
+bool iso8601UtcToFiletime(const std::wstring& text, FILETIME& filetime) {
+	// Fixed layout: 20 characters, or 21 + 1 to 7 fraction digits.
+	if (text.size() < 20 || text.back() != L'Z') return false;
+	auto digits = [&](size_t at, size_t count, WORD& out) {
+		unsigned v = 0;
+		for (size_t i = at; i < at + count; ++i) {
+			if (text[i] < L'0' || text[i] > L'9') return false;
+			v = v * 10 + (unsigned)(text[i] - L'0');
+		}
+		out = (WORD)v;
+		return true;
+	};
+	SYSTEMTIME st = {};
+	if (!digits(0, 4, st.wYear) || text[4] != L'-' || !digits(5, 2, st.wMonth) || text[7] != L'-'
+	    || !digits(8, 2, st.wDay) || text[10] != L'T' || !digits(11, 2, st.wHour) || text[13] != L':'
+	    || !digits(14, 2, st.wMinute) || text[16] != L':' || !digits(17, 2, st.wSecond)) return false;
+	unsigned long long ticks = 0;                 // fraction, in 100 ns
+	if (text.size() > 20) {
+		const size_t count = text.size() - 21;
+		if (text[19] != L'.' || count < 1 || count > 7) return false;
+		for (size_t i = 20; i < 20 + count; ++i) {
+			if (text[i] < L'0' || text[i] > L'9') return false;
+			ticks = ticks * 10 + (unsigned)(text[i] - L'0');
+		}
+		for (size_t i = count; i < 7; ++i) ticks *= 10;
+	}
+	FILETIME whole = {};
+	if (!SystemTimeToFileTime(&st, &whole)) return false;   // refuses a month 13, a day 32…
+	const unsigned long long value = (((unsigned long long)whole.dwHighDateTime << 32) | whole.dwLowDateTime) + ticks;
+	filetime = FILETIME{ (DWORD)(value & 0xFFFFFFFFULL), (DWORD)(value >> 32) };
+	return true;
+}
+
 std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc, Precision precision) {
 	if (nullDate(filetimeUtc)) return L"";
 	/* The bias of the UTC instant labels the result: in the hour repeated in
@@ -1302,81 +1335,12 @@ HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vec
 }
 
 std::wstring getVolumeLetter(std::wstring searchSerial) {
-	/*  REWRITTEN (2026-09-15). The original version piled up:
-	 *    - `return Names;` while `Names` was NULL and the function returns a
-	 *      `std::wstring`: building a string from a null pointer is undefined
-	 *      behaviour, on the failure path itself;
-	 *    - the `return` in the middle of the loop abandoned the `Names` buffer
-	 *      AND the volume search handle, never closed;
-	 *    - `while (Success == ERROR_MORE_DATA)` compared a BOOL (0 or 1) to the
-	 *      code 234: the condition was ALWAYS false, so the loop that resizes
-	 *      the buffer never ran. If the initial buffer was not enough, the
-	 *      string was built from uninitialised memory.
-	 *  The buffer is now a vector, the handle is closed on every path, and the
-	 *  resizing is tested correctly.
-	 */
-	WCHAR volume[MAX_PATH + 1] = L"";
-	log(3, L"🔈FindFirstVolumeW");
-	HANDLE recherche = FindFirstVolumeW(volume, ARRAYSIZE(volume));
-	if (recherche == INVALID_HANDLE_VALUE) {
-		log(2, L"🔥FindFirstVolumeW", GetLastError());
-		return L"";
-	}
-
-	std::wstring found;
-	do {
-		// Mount points of the volume. The buffer is grown as long as the API asks for
-		// it, which the original test never did.
-		std::vector<wchar_t> paths(MAX_PATH);
-		DWORD nbCar = (DWORD)paths.size();
-		BOOL ok = FALSE;
-		for (int attempt = 0; attempt < 3; ++attempt) {
-			log(3, L"🔈GetVolumePathNamesForVolumeNameW");
-			ok = GetVolumePathNamesForVolumeNameW(volume, paths.data(),
-			                                      (DWORD)paths.size(), &nbCar);
-			if (ok || GetLastError() != ERROR_MORE_DATA) break;
-			paths.assign(nbCar ? nbCar : paths.size() * 2, L'\0');
-		}
-		if (!ok) {
-			log(2, L"🔥GetVolumePathNamesForVolumeNameW " + std::wstring(volume),
-			    GetLastError());
-		}
-		else {
-			DWORD serialNumber = 0;
-			log(3, L"🔈GetVolumeInformationW");
-			/* The result was ignored. On a volume without media (an empty card
-			   reader, an optical drive), the call fails and serialNumber stays at
-			   zero: a null serial number was then compared, so that a search for
-			   "0" would have named a volume at random. */
-			if (!GetVolumeInformationW(volume, NULL, NULL, &serialNumber,
-			                           NULL, NULL, NULL, NULL)) {
-				log(2, L"🔥GetVolumeInformationW " + std::wstring(volume),
-				    GetLastError());
-			}
-			else {
-				/* %08X, in upper case and on eight digits: it is the canonical form
-				   of the serial number and, above all, the one the caller
-				   produces (see prefetchs.cpp). A `std::hex` stream without an
-				   imposed width returned "a1b2c3d" where the other side expected
-				   "0A1B2C3D": the comparison then failed in silence on every
-				   volume whose first byte is < 0x10. */
-				wchar_t hexa[9] = L"";
-				swprintf(hexa, 9, L"%08X", serialNumber);
-				if (std::wstring(hexa) == searchSerial) {
-					// First mount point, a zero-terminated string.
-					const std::wstring path(paths.data());
-					// Only "C:" is kept, without the backslash.
-					found = replaceAll(path, L"\\", L"");
-					break;
-				}
-			}
-		}
-		log(3, L"🔈FindNextVolumeW");
-	} while (FindNextVolumeW(recherche, volume, ARRAYSIZE(volume)));
-
-	log(3, L"🔈FindVolumeClose");
-	FindVolumeClose(recherche);   // closed on EVERY path, including success
-	return found;
+	/* From the snapshot of the running machine, not from the machine running
+	   WAC: under --convert, that one is the analysis workstation, whose
+	   volumes have nothing to do with the Prefetch files (running_machine.h). */
+	const std::map<std::wstring, std::wstring>& volumes = runningMachine().volumeBySerial;
+	const auto found = volumes.find(searchSerial);
+	return found == volumes.end() ? std::wstring() : found->second;
 }
 
 HRESULT writeJsonFile(const std::string& name, const Json& value) {

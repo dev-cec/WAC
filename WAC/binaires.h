@@ -47,8 +47,11 @@ struct BinaryFingerprint {
     std::wstring md5;        //!< empty if the file could not be read
     std::wstring sha1;       //!< empty if the file could not be read
     std::wstring sha256;     //!< empty if the file could not be read
+    /*! Authenticode SHA-256 of a PE: the digest the signature and the catalogs
+     *  cover. The only digest of an authentic Microsoft binary that --collect
+     *  fingerprinted without copying it (no MD5, SHA-1, SHA-256 then). */
+    std::wstring authenticodeSha256;
     HRESULT result = E_FAIL;   //!< outcome of the raw read
-    bool collected = false;    //!< copied into the exhibit store
     /*! Microsoft authenticity verified (Windows catalog or embedded signature):
      *  the binary is not collected. Empty otherwise. See authenticode.h. */
     std::wstring signature;
@@ -88,6 +91,19 @@ void addFingerprints(Json& o, const BinaryFingerprint& e,
 
 /*! Summary, for the investigation log. */
 BinarySummary BinariesSummary();
+
+/*! --collect --binary: collects EVERY executable, library, driver, script
+ *  and macro document of the system volume, and every signature catalog.
+ *
+ *  WHY ALL OF THEM. Which files the artefacts cite is only known once they
+ *  are converted — on the analysis workstation, from the exhibit store. The
+ *  collection must therefore take everything the conversion may ask for, and
+ *  the catalogs that let it verify the Microsoft signatures there (see
+ *  authenticode.h). Hard links (WinSxS) are read once, identical contents
+ *  stored once. When the medium runs short, the walk stops and says so.
+ *  @return ERROR_SUCCESS, S_FALSE if directories were unreadable,
+ *          ERROR_DISK_FULL (as HRESULT) if the medium ran short */
+HRESULT BinariesCollectAll();
 
 /*! Stores in the exhibit store the signature catalogs that justified not
  *  collecting a file, then closes the volumes kept open. To be called once no

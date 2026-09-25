@@ -2,6 +2,7 @@
  *  \brief Reading of the custom jump lists (see jumplist_custom.h).
  */
 #include "jumplist_custom.h"
+#include "consigne.h"
 
 CustomDestinationCategory::CustomDestinationCategory(LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid) {
 	/* The shortcuts are found by their header: the size 0x4C then the
@@ -65,27 +66,10 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 		file.read(reinterpret_cast<CHAR*>(buffer), size);
 		file.close();
 
-		// read the dates
-		log(3, L"🔈CreateFile hFile");
-		HANDLE hFile = CreateFile(path.c_str(),  // name of the write
-			GENERIC_READ,          // open for reading
-			0,                      // do not share
-			NULL,                   // default security
-			OPEN_EXISTING,          // open existing file only
-			FILE_ATTRIBUTE_NORMAL,  // normal file
-			NULL);                  // no attr. template
-		if (hFile != INVALID_HANDLE_VALUE) {
-			FILE_BASIC_INFO fileInfo = { 0 };
-
-			GetFileInformationByHandleEx(hFile, FileBasicInfo, &fileInfo, sizeof(FILE_BASIC_INFO));
-			memcpy(&createdUtc, &fileInfo.CreationTime, sizeof(createdUtc));
-			memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
-			memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
-		}
-		else {
-			log(2, L"🔥CreateFile hFile ",GetLastError());
-		}
-		CloseHandle(hFile);
+		// The dates of the file ON THE EXAMINED MACHINE, as the raw reading recorded
+		// them: the working copy's own are those of the collection (ExhibitSourceTimes).
+		if (!ExhibitSourceTimes(path, createdUtc, modifiedUtc, accessedUtc))
+			log(2, L"🔥Source timestamps not recorded: " + path);
 
 		// turn the AppID held in the file name into an application name
 		std::wstring baseName = _path.stem(); // file name without its extension

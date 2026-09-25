@@ -24,6 +24,8 @@
  *    date (month 13, hour 25...) must give a null FILETIME, not whatever the
  *    stack held;
  *  - wstring_to_filetime / SystemTimeToFileTime, valid and impossible dates;
+ *  - iso8601UtcToFiletime, the reverse of timeToIso8601Utc: 200,000 random
+ *    instants read back to the 100 ns, and malformed dates refused;
  *  - utcToSuspectLocal and suspectLocalToUtc: the SUSPECT's offset, not the
  *    running machine's, in both directions (LocalFileTimeToFileTime, used
  *    before, applied the machine's), and a null result out of range;
@@ -522,6 +524,26 @@ void precisions() {
 	      L"FAT date: " + timeToIso8601Utc(fat, Precision::Second));
 }
 
+/*! iso8601UtcToFiletime, the reading back of the manifest's dates
+ *  (--convert): the exact reverse of timeToIso8601Utc, to the 100 ns, and a
+ *  refusal of anything else. */
+void isoRoundTrip(std::mt19937_64& rng) {
+	// From 1602: the whole year 1601 is written as no date at all (formatIso8601).
+	std::uniform_int_distribution<unsigned long long> any(315360000000000ULL, 2650467743999999999ULL);   // 1602 to 9999
+	for (int n = 0; n < 200000; ++n) {
+		const FILETIME f = filetime(any(rng));
+		FILETIME back = {};
+		const std::wstring text = timeToIso8601Utc(f);
+		check(iso8601UtcToFiletime(text, back) && back.dwLowDateTime == f.dwLowDateTime
+		      && back.dwHighDateTime == f.dwHighDateTime, L"ISO 8601 read back: " + std::to_wstring(((unsigned long long)f.dwHighDateTime << 32) | f.dwLowDateTime) + L" " + text);
+	}
+	FILETIME ignored = {};
+	for (const wchar_t* bad : { L"", L"2026-13-01T00:00:00Z", L"2026-03-06T04:07:44+02:00",
+	                            L"2026-03-06T04:07:44.Z", L"2026-03-06T04:07:44.12345678Z",
+	                            L"2026-03-06 04:07:44Z", L"2026-02-30T00:00:00Z", L"2026-03-06T24:00:00Z" })
+		check(!iso8601UtcToFiletime(bad, ignored), L"ISO 8601 accepted: " + std::wstring(bad));
+}
+
 } // namespace
 
 /*! Runs every comparison.
@@ -538,6 +560,7 @@ int wmain() {
 	suspectOffset(rng);
 	timeZones(rng);
 	precisions();
+	isoRoundTrip(rng);
 	serviceSids();
 	seasonalOffsets();
 	systemTimeZoneKey();

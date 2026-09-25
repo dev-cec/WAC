@@ -63,6 +63,7 @@
 #include <windows.h>
 #include <string>
 #include <vector>
+#include <map>
 #include "raw_hive.h"
 
 /*! Root of the exhibit store: `<output>\exhibits`. */
@@ -118,7 +119,22 @@ void ExhibitStoreAdd(const std::vector<RawHiveExtraction>& reading,
  */
 void ExhibitStoreAddDuplicate(const RawHiveExtraction& e, const std::wstring& method);
 
+/*! Records a file FINGERPRINTED but not copied: an executable whose Microsoft
+ *  authenticity was verified in memory (--collect --binary). Identical on
+ *  every machine of the same build, its content does not serve the
+ *  investigation; its fingerprints and the verdict go into the manifest
+ *  ("ContentStored": false), so that the conversion knows every executable
+ *  an artefact may cite, and a third party can check the verdict against the
+ *  catalogs recorded.
+ *  @param e the reading, fingerprints included (outputPath ignored)
+ *  @param method collection method, as recorded
+ *  @param signature the verdict, e.g. "Microsoft (catalogue X.cat)" */
+void ExhibitStoreAddFingerprint(const RawHiveExtraction& e, const std::wstring& method,
+                                const std::wstring& signature);
+
 /*! Copies the exhibit store to the working directory, verifying the copy.
+ *  @param skipReadInPlace leaves out the exhibits marked READ_IN_PLACE
+ *         (--convert)
  *
  *  Each file is copied, then ITS COPY is hashed again and compared with the
  *  manifest's fingerprint. Without this check, a silently truncated copy — full
@@ -131,7 +147,79 @@ void ExhibitStoreAddDuplicate(const RawHiveExtraction& e, const std::wstring& me
  *  @return ERROR_SUCCESS, S_FALSE if at least one file could not be copied or
  *          verified, or an error code if the exhibit store is missing
  */
-HRESULT ExhibitStoreToWorking(size_t* copies = nullptr, unsigned long long* bytes = nullptr);
+HRESULT ExhibitStoreToWorking(size_t* copies = nullptr, unsigned long long* bytes = nullptr,
+                              bool skipReadInPlace = false);
+
+/*! Mark carried by the method of the exhibits a conversion reads IN PLACE,
+ *  from the exhibit store, and never from the working directory: the
+ *  executables and catalogs of --collect --binary (read by ExhibitReader),
+ *  the resource files of the event providers (copied on demand). Rebuilding
+ *  the working directory of a --convert without them spares copying some
+ *  twenty gigabytes to no purpose. */
+extern const wchar_t READ_IN_PLACE[];
+
+/*! Outcome of the check of an exhibit store before a conversion. */
+struct ExhibitStoreCheck {
+	std::wstring manifestSha256;     //!< actual fingerprint of the manifest (= its seal)
+	size_t verified = 0;             //!< exhibits whose content matches the manifest
+	size_t altered = 0;              //!< exhibits whose content no longer matches
+	size_t failedAtCollection = 0;   //!< items the collection itself could not extract
+	std::wstring firstAltered;       //!< the first altered exhibit, for the report
+	std::wstring reason;             //!< why the store is refused, if it is
+};
+
+/*! True if an exhibit path of a manifest stays inside the exhibit store: it
+ *  starts with "exhibits\\" and no component climbs out of it ("..", ".",
+ *  or a drive / stream ":"). A forged manifest could otherwise have files
+ *  elsewhere read.
+ *  @param relative the ExhibitPath of an item, relative to the output folder
+ *  @return true if contained */
+bool exhibitPathContained(const std::wstring& relative);
+
+/*! Reads back and checks the exhibit store of a collection, before converting
+ *  it (--convert): the seal must carry the manifest's real fingerprint, and
+ *  every exhibit's SHA-256 must be the one the manifest records. A store that
+ *  fails either check is refused — converting it would bear on something other
+ *  than the evidence. On success, the manifest's items are loaded, so that
+ *  ExhibitStoreToWorking verifies the working copies against them.
+ *  @param check receives the counts and, on refusal, the reason
+ *  @return ERROR_SUCCESS, or ERROR_FILE_NOT_FOUND / ERROR_INVALID_DATA (as
+ *          HRESULT) with check.reason */
+HRESULT ExhibitStoreLoad(ExhibitStoreCheck& check);
+
+/*! An exhibit of a loaded manifest (see ExhibitStoreIndex). */
+struct StoredExhibit {
+	std::wstring sourcePath;   //!< the file on the examined machine ("X:\…"), as recorded
+	std::wstring file;         //!< the file holding its content, in the exhibit store; empty if not stored
+	bool contentStored = true; //!< false: fingerprinted and authenticated only
+	std::wstring md5, sha1, sha256;   //!< its fingerprints, as recorded (absent for a fingerprint-only PE)
+	std::wstring authenticodeSha256;  //!< Authenticode SHA-256 of a PE, if recorded
+	std::wstring signature;    //!< Microsoft authenticity verdict, if recorded
+};
+
+/*! The exhibits of the manifest loaded by ExhibitStoreLoad, by source path in
+ *  lower case (NTFS is case-insensitive); failed extractions left out.
+ *
+ *  WHY BY THE MANIFEST. A file of the examined machine is not always stored
+ *  under its own path: a content already stored (deduplication), or another
+ *  name of the same $MFT record (hard links: System32 and WinSxS), is
+ *  declared as sharing an exhibit. Only the manifest ties every source path
+ *  to its content. Built on first call; to be called after ExhibitStoreLoad.
+ *  @return the index */
+const std::map<std::wstring, StoredExhibit>& ExhibitStoreIndex();
+
+/*! Timestamps of the SOURCE file of a working copy, as the raw reading
+ *  recorded them ($STANDARD_INFORMATION, in the manifest).
+ *
+ *  WHY. The working copy is a new file: its own dates are those of the
+ *  collection, or of the conversion that rebuilt it. Read on the copy, they
+ *  gave the 335 Prefetch files of a collection one and the same "Modified",
+ *  the minute of the collection — the last run of each program lost, in valid
+ *  JSON. The dates of the file on the examined machine are in the manifest.
+ *  @param workingCopy a file of the working directory
+ *  @param created,modified,accessed receive them (left untouched if absent)
+ *  @return false if the copy has no exhibit, or it recorded no date */
+bool ExhibitSourceTimes(const std::wstring& workingCopy, FILETIME& created, FILETIME& modified, FILETIME& accessed);
 
 /*! Writes `exhibits\MANIFEST.json` then its seal `exhibits\MANIFEST.sha256`.
  *

@@ -59,6 +59,12 @@ révélé des valeurs fausses dans du JSON valide :
 | chaque pièce collectée porte ses trois empreintes | une pièce sans empreinte n'est pas identifiée, donc inutilisable |
 | le lecteur système d'`OperatingSystem.json` figure dans les volumes lus du manifeste | deux sources indépendantes de la même information |
 | les fichiers réellement présents dans `exhibits/` sont exactement ceux du manifeste | 209 pièces ajoutées après le scellement, identifiées par rien, alors que tous les autres contrôles étaient verts |
+| exécutables de System32/SysWOW64 listés par Windows, tous présents dans le manifeste d'un `--collect --binary` | 6 446 manquants sur 8 540 : répertoires dont le `$INDEX_ROOT` est dans un enregistrement d'extension (4 569 illisibles), et noms de liens physiques non déclarés |
+| SHA-256 de fichiers lus en brut (petit, gros, WOF) comparé à `Get-FileHash` | garde-fou de la lecture par lots de clusters contigus, introduite pour la vitesse |
+| date de modification des Prefetch comparée à celle que donne Windows | 0 sur 335 conformes : les dates étaient celles de la copie de travail, soit la minute de la collecte |
+| tout catalogue cité dans un verdict « Microsoft (catalog …) » présent dans la consigne | 170 sur 170 absents : le préfixe cherché (« catalogue ») ne correspondait plus au libellé (« catalog ») |
+| binaires déclarés authentiques Microsoft par WAC confirmés par `Get-AuthenticodeSignature` | un mauvais verdict laisserait un binaire malveillant hors de la consigne |
+| copie d'un paquet du Store : fichier intact authentifié, fichier modifié et fichier ajouté prélevés | vérification des paquets par la carte des blocs signée |
 | identifiants d'enregistrement uniques dans CHAQUE fichier journal | l'invariant réel : un même canal peut être porté par plusieurs fichiers dont les numéros se recouvrent légitimement. Un doublon dans un même fichier, en revanche, signale un chunk périmé relu — le risque propre au parcours de tous les chunks physiques |
 | nom de machine MAJORITAIRE des événements conforme à `OperatingSystem.json` | un renommage de machine laisse légitimement d'anciens noms dans les journaux : c'est la majorité qui doit correspondre, pas la totalité |
 
@@ -143,6 +149,7 @@ ISO_WIN=~/Téléchargements/Win11_25H2_French_x64_v2.iso ./create-vm.sh
 # Tester WAC (à chaque itération de code)
 ./run-wac-test.sh --build        # rebuild + test complet
 ./run-wac-test.sh --raw-only     # juste la validation raw_hive
+./run-wac-test.sh --no-split     # sans l'étape 7 (--collect puis --convert, ~1 h)
 python3 qga.py ping              # l'agent répond ?
 python3 qga.py run --shell "dir C:\\"
 ```

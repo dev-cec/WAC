@@ -17,10 +17,11 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 OUTPUT="$HERE/results/$STAMP"
 mkdir -p "$OUTPUT"
 
-BUILD=0; RAWONLY=0
+BUILD=0; RAWONLY=0; SPLIT=1
 for a in "$@"; do
   [[ "$a" == "--build"    ]] && BUILD=1
   [[ "$a" == "--raw-only" ]] && RAWONLY=1
+  [[ "$a" == "--no-split" ]] && SPLIT=0
 done
 
 echo "== 0. Agent =="
@@ -121,6 +122,20 @@ clean() { tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'; }
   COUNT=$($QGA run --shell "cd /d $VMDIR && raw_hive_test.exe C \\Windows\\Prefetch x --list 2>&1" 2>/dev/null \
        | grep -a '^Total:' | clean || true)
   echo "LIST_PREFETCH=${COUNT:-(no output)}"
+
+  # The raw reading against Windows' own: the SHA-256 of a file extracted raw
+  # must be the one Get-FileHash computes on the file. Chosen to cover the
+  # ways a content is read: a small file, large binaries read by batches of
+  # contiguous clusters, a WOF-compressed ("Compact OS") binary.
+  for f in '\Windows\System32\drivers\etc\hosts' '\Windows\System32\ntoskrnl.exe' \
+           '\Windows\System32\shell32.dll' '\Windows\explorer.exe'; do
+    $QGA run --shell "cd /d $VMDIR && raw_hive_test.exe C $f $VMDIR\\hashcheck.bin > nul 2>&1" >/dev/null 2>&1 || true
+    SAME=$($QGA run -- powershell.exe -NoProfile -Command \
+      "if ((Get-FileHash 'C:$f').Hash -eq (Get-FileHash '$VMDIR\\hashcheck.bin').Hash) { 'SAME' } else { 'DIFFERENT' }" 2>/dev/null | clean || true)
+    echo "RAW_SHA256 $f=$SAME"
+    [[ "$SAME" == "SAME" ]] || echo "   ❌ raw reading of $f differs from Windows' (Get-FileHash)"
+  done
+  $QGA run --shell "del $VMDIR\\hashcheck.bin 2>nul & echo." >/dev/null 2>&1 || true
 } | tee "$OUTPUT/raw-validation.txt"
 $QGA read "$VMDIR\\raw.log" "$OUTPUT/raw.log" >/dev/null 2>&1 || true
 
@@ -153,39 +168,49 @@ else
     echo "   ✅ WAC went to the end (code $CODE)"
 fi
 
-echo "== 5. Fetch of the JSON files =="
-# The listing is retried: right after a long collection the guest agent has
-# once answered with an empty output while the JSON files were there, and the
-# whole run then looked like "no JSON produced".
-LIST=""
-for attempt in 1 2 3; do
-  LIST=$($QGA run --shell "dir /b $VMDIR\\out\\*.json 2>nul" || true)
-  [[ -n "${LIST// }" ]] && break
-  sleep 5
-done
-if [[ -z "${LIST// }" ]]; then
-  echo "   ⚠️ no JSON produced — see $OUTPUT/run.log"
-else
-  while read -r f; do
-    f="${f%$'\r'}"; [[ -z "$f" ]] && continue
-    $QGA read "$VMDIR\\out\\$f" "$OUTPUT/$f" >/dev/null && echo "   + $f"
-  done <<< "$LIST"
-fi
+# Fetches the JSON files of a WAC output folder of the VM, the exhibit manifest
+# and its seal, and the list of the exhibit store.
+#   $1 folder in the VM (under $VMDIR)   $2 folder on the host
+fetch_results() {
+  local vm="$VMDIR\\$1" host="$2" list="" attempt f
+  mkdir -p "$host/exhibits"
+  # The listing is retried: right after a long collection the guest agent has
+  # once answered with an empty output while the JSON files were there, and the
+  # whole run then looked like "no JSON produced".
+  for attempt in 1 2 3; do
+    list=$($QGA run --shell "dir /b $vm\\*.json 2>nul" || true)
+    [[ -n "${list// }" ]] && break
+    sleep 5
+  done
+  if [[ -z "${list// }" ]]; then
+    echo "   ⚠️ no JSON produced in $1"
+  else
+    while read -r f; do
+      f="${f%$'\r'}"; [[ -z "$f" ]] && continue
+      $QGA read "$vm\\$f" "$host/$f" >/dev/null && echo "   + $f"
+    done <<< "$list"
+  fi
+  # Exhibit manifest + its seal: small, and they are what identifies the exhibits.
+  # Without them, check-json.py cannot check the exhibit store (the exhibits
+  # themselves weigh hundreds of MiB and stay on the collection medium).
+  for f in MANIFEST.json MANIFEST.sha256; do
+    $QGA read "$vm\\exhibits\\$f" "$host/exhibits/$f" >/dev/null 2>&1 \
+      && echo "   + exhibits/$f" || echo "   ⚠️ exhibits/$f not fetched"
+  done
+  # List of the files really present in the exhibit store: without it, nothing
+  # checks that every exhibit is in the manifest. An exhibit added after the
+  # sealing went unnoticed (121 event provider binaries).
+  # Written to a file in the VM, then fetched: tens of thousands of lines
+  # (--collect --binary) exceed what the guest agent returns as output — the
+  # list came back empty, and every exhibit looked missing.
+  $QGA run --shell "chcp 65001 >nul & dir /s /b /a-d $vm\\exhibits > $VMDIR\\exhibit-list.txt" >/dev/null 2>&1 \
+    && $QGA read "$VMDIR\\exhibit-list.txt" "$host/exhibits/LIST.txt" >/dev/null 2>&1 \
+    && [[ -s "$host/exhibits/LIST.txt" ]] \
+    && echo "   + exhibits/LIST.txt" || echo "   ⚠️ list of the exhibit store not read"
+}
 
-# Exhibit manifest + its seal: small, and they are what identifies the exhibits.
-# Without them, check-json.py cannot check the exhibit store (the exhibits
-# themselves weigh hundreds of MiB and stay on the collection medium).
-mkdir -p "$OUTPUT/exhibits"
-for f in MANIFEST.json MANIFEST.sha256; do
-  $QGA read "$VMDIR\\out\\exhibits\\$f" "$OUTPUT/exhibits/$f" >/dev/null 2>&1 \
-    && echo "   + exhibits/$f" || echo "   ⚠️ exhibits/$f not fetched"
-done
-# List of the files really present in the exhibit store: without it, nothing
-# checks that every exhibit is in the manifest. An exhibit added after the
-# sealing went unnoticed (121 event provider binaries).
-$QGA run --shell "chcp 65001 >nul & dir /s /b /a-d $VMDIR\\out\\exhibits" \
-  > "$OUTPUT/exhibits/LIST.txt" 2>/dev/null \
-  && echo "   + exhibits/LIST.txt" || echo "   ⚠️ list of the exhibit store not read"
+echo "== 5. Fetch of the JSON files =="
+fetch_results out "$OUTPUT"
 
 # References read by Windows itself, for the cross-checks of check-json.py:
 # the MountedDevices values through the live registry API (WAC reads them in
@@ -209,6 +234,13 @@ $QGA run -- powershell.exe -NoProfile -Command \
   > "$OUTPUT/reference/pe-timestamps.txt" 2>/dev/null \
   && echo "   + reference/pe-timestamps.txt" || echo "   ⚠️ PE timestamps reference not read"
 
+# The last write of each Prefetch file as Windows gives it, for the dates of
+# the file artefacts (WAC reads them in the manifest, from the raw $MFT).
+$QGA run -- powershell.exe -NoProfile -Command \
+  'Get-ChildItem C:\Windows\Prefetch\*.pf | ForEach-Object { "{0}|{1}" -f $_.Name, $_.LastWriteTimeUtc.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ") }' \
+  > "$OUTPUT/reference/prefetch-times.txt" 2>/dev/null \
+  && echo "   + reference/prefetch-times.txt" || echo "   ⚠️ Prefetch times reference not read"
+
 # Local accounts and groups as Windows names them, for the offline naming of
 # the SIDs (WAC reads them in the SAM; Windows through its account API).
 $QGA run -- powershell.exe -NoProfile -Command \
@@ -218,6 +250,95 @@ $QGA run -- powershell.exe -NoProfile -Command \
 
 echo "== 6. JSON validity check =="
 python3 "$HERE/check-json.py" "$OUTPUT" || echo "   ⚠️ some JSON files are invalid (see above)"
+
+if [[ $SPLIT -eq 1 ]]; then
+  echo "== 7. Collection (--collect), then conversion (--convert) =="
+  # The same VM plays both roles; what is checked is what the separation must
+  # guarantee:
+  #   - the collection converts nothing, and seals its exhibit store;
+  #   - the conversion refuses a retouched exhibit, and says why;
+  #   - the JSON of the conversion pass the checks of a full run;
+  #   - two conversions of one collection give the same JSON (determinism).
+  SPLIT_OUT="$OUTPUT/split"
+  # Runs WAC in the VM. $1 name of its console log, then its arguments.
+  run_wac() {
+    local label="$1" code=0; shift
+    $QGA run --shell "cd /d $VMDIR && WAC.exe $* > $label.log 2>&1" || code=$?
+    $QGA read "$VMDIR\\$label.log" "$OUTPUT/$label.log" >/dev/null 2>&1 || true
+    return $code
+  }
+  json_count() { $QGA run --shell "dir /b $VMDIR\\split\\*.json 2>nul" 2>/dev/null | grep -c '\.json' || true; }
+
+  $QGA run --shell "cd /d $VMDIR && rmdir /s /q split 2>nul & echo." >/dev/null
+  # A copy of a signed Store package with one untouched, one modified and one
+  # intruding script: the package verification must tell them apart.
+  $QGA write "$HERE/make-fake-package.ps1" "$VMDIR\\make-fake-package.ps1" >/dev/null
+  $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\make-fake-package.ps1" \
+    > "$OUTPUT/reference/fake-package.txt" 2>/dev/null \
+    && echo "   + reference/fake-package.txt" || echo "   ⚠️ copy of a Store package not prepared"
+  # taskkill just before the collection, as in step 2: the BAM check expects
+  # its execution within minutes of the collection, and the references above
+  # take several.
+  $QGA run --shell "taskkill /f /im WAC.exe >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
+  if run_wac collect --collect --output=split --events --binary --loglevel=2; then
+    echo "   ✅ collection went to the end"
+  else
+    echo "   ❌ collection ended abnormally"; ABNORMAL_STOP=1
+  fi
+  N_JSON=$(json_count)
+  [[ "$N_JSON" == "1" ]] && echo "   ✅ collection: investigation.json only, nothing converted" \
+                         || echo "   ❌ collection: $N_JSON JSON file(s) written, 1 expected"
+
+  # Independent reference for the completeness of the collection: the
+  # executables of System32 and SysWOW64 as Windows lists them.
+  $QGA run -- powershell.exe -NoProfile -Command \
+    '[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-ChildItem C:\Windows\System32, C:\Windows\SysWOW64 -Recurse -File -Force -Include *.exe, *.dll, *.sys -ErrorAction SilentlyContinue | ForEach-Object FullName; exit 0' \
+    > "$OUTPUT/reference/executables.txt" 2>/dev/null \
+    && echo "   + reference/executables.txt" || echo "   ⚠️ executables reference not read"
+
+  # Windows' own verdict on the signatures of System32's executables, for the
+  # executables WAC authenticates in memory and does not copy.
+  $QGA run -- powershell.exe -NoProfile -Command \
+    '[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-ChildItem C:\Windows\System32\*.exe | ForEach-Object { $s = Get-AuthenticodeSignature $_.FullName; "{0}|{1}|{2}" -f $_.FullName, $s.Status, $s.SignerCertificate.Subject }' \
+    > "$OUTPUT/reference/authenticode.txt" 2>/dev/null \
+    && echo "   + reference/authenticode.txt" || echo "   ⚠️ authenticode reference not read"
+
+  # A retouched snapshot: one byte appended. The conversion must refuse it.
+  LIVE="$VMDIR\\split\\exhibits\\live\\system-clock.json"
+  $QGA run --shell "copy /y $LIVE $VMDIR\\clock.bak >nul & echo x>> $LIVE" >/dev/null
+  if run_wac convert-tampered --convert=split --events --binary; then
+    echo "   ❌ conversion of a retouched collection ACCEPTED"
+  elif [[ "$(json_count)" == "2" ]] && grep -qa "no longer match" "$OUTPUT/convert-tampered.log"; then
+    echo "   ✅ retouched exhibit refused, before any conversion, with its reason"
+  else
+    echo "   ❌ retouched exhibit refused, but without conversion.json or its reason"
+  fi
+  $QGA run --shell "copy /y $VMDIR\\clock.bak $LIVE >nul & del $VMDIR\\clock.bak & del $VMDIR\\split\\conversion.json" >/dev/null
+
+  if run_wac convert --convert=split --events --binary --loglevel=2; then
+    echo "   ✅ conversion went to the end"
+  else
+    echo "   ❌ conversion ended abnormally"; ABNORMAL_STOP=1
+  fi
+  fetch_results split "$SPLIT_OUT"
+  cp -r "$OUTPUT/reference" "$SPLIT_OUT/"
+  echo "   -- checks of the converted JSON --"
+  python3 "$HERE/check-json.py" "$SPLIT_OUT" || echo "   ⚠️ the converted JSON fail some checks (see above)"
+
+  if run_wac convert-again --convert=split --events --binary --loglevel=2; then
+    AGAIN="$OUTPUT/split-again"
+    fetch_results split "$AGAIN" >/dev/null
+    # conversion.json is the log of each conversion: its times differ by nature.
+    DIFFERENT=$(cd "$SPLIT_OUT" && for f in *.json; do
+                  [[ "$f" == "conversion.json" ]] && continue
+                  cmp -s "$f" "$AGAIN/$f" || echo "$f"
+                done)
+    [[ -z "$DIFFERENT" ]] && echo "   ✅ second conversion: identical JSON (deterministic)" \
+                          || echo "   ❌ second conversion differs: $(echo $DIFFERENT)"
+  else
+    echo "   ❌ second conversion ended abnormally"
+  fi
+fi
 
 echo
 if [[ "${ABNORMAL_STOP:-0}" == "1" ]]; then

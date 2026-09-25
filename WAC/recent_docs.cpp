@@ -2,6 +2,7 @@
  *  \brief Decoding of the .lnk shortcuts of the Recent folder (see recent_docs.h).
  */
 #include "recent_docs.h"
+#include "consigne.h"
 
 namespace {
 
@@ -300,23 +301,10 @@ RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 		}
 	}
 
-	// read the dates
-	HANDLE hFile = CreateFile(_path.wstring().c_str(),  // name of the write
-		GENERIC_READ,          // open for reading
-		0,                      // do not share
-		NULL,                   // default security
-		OPEN_EXISTING,          // open existing file only
-		FILE_ATTRIBUTE_NORMAL,  // normal file
-		NULL);                  // no attr. template
-	if (hFile != INVALID_HANDLE_VALUE) {
-		FILE_BASIC_INFO fileInfo;
-		log(3, L"🔈GetFileInformationByHandleEx hFile");
-		GetFileInformationByHandleEx(hFile, FileBasicInfo, &fileInfo, sizeof(FILE_BASIC_INFO));
-		memcpy(&sourceCreatedUtc, &fileInfo.CreationTime, sizeof(sourceCreatedUtc));
-		memcpy(&sourceModifiedUtc, &fileInfo.LastWriteTime, sizeof(sourceModifiedUtc));
-		memcpy(&sourceAccessedUtc, &fileInfo.LastAccessTime, sizeof(sourceAccessedUtc));
-	}
-	CloseHandle(hFile);
+	// The dates of the file ON THE EXAMINED MACHINE, as the raw reading recorded
+	// them: the working copy's own are those of the collection (ExhibitSourceTimes).
+	if (!ExhibitSourceTimes(_path.wstring(), sourceCreatedUtc, sourceModifiedUtc, sourceAccessedUtc))
+		log(2, L"🔥Source timestamps not recorded: " + _path.wstring());
 }
 
 RecentDoc::RecentDoc(LPBYTE buffer, size_t size, std::wstring _path, std::wstring _sid) {

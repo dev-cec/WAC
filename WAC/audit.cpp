@@ -33,6 +33,10 @@ const wchar_t* USB_WRITE = L"Write to the collection medium only. No write "
                               L"to the examined system.";
 const wchar_t* CLOCK        = L"Reading of the system clock, of the uptime and of the kernel's "
                               L"time-of-day information: in-memory queries, no artefact touched.";
+const wchar_t* SETTINGS     = L"Queries of the running system's settings (system drive, code page, "
+                              L"time zone, volumes): in-memory, no artefact touched.";
+const wchar_t* EXHIBIT_READ = L"Reading of the sealed exhibit store on the analysis workstation: "
+                              L"the examined system is not involved.";
 } // namespace Footprint
 
 namespace {
@@ -243,5 +247,8 @@ HRESULT auditWrite() {
 	}
 	root.add(L"Operations", std::move(operations));
 
-	return writeJsonFile("investigation.json", root);
+	/* A conversion has its own log: the collection's investigation.json, made
+	   on the examined machine, is part of the collection and is never
+	   overwritten by an analysis made later. */
+	return writeJsonFile(conf.mode == RunMode::Convert ? "conversion.json" : "investigation.json", root);
 }

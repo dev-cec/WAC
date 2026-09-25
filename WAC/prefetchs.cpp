@@ -3,6 +3,7 @@
  */
 #include "prefetchs.h"
 #include <map>
+#include "consigne.h"
 
 MFTInformation::MFTInformation(LPBYTE data) {
 	sequenceNumber = *reinterpret_cast<unsigned int*>(data + 6);
@@ -183,28 +184,10 @@ HRESULT Prefetch::read() {
 	file.read(reinterpret_cast<char*>(buffer), size);
 	file.close();
 
-	// read the dates
-	HANDLE hFile = CreateFile(path.c_str(),  // name of the write
-		GENERIC_READ,          // open for writing
-		0,                      // do not share
-		NULL,                   // default security
-		OPEN_EXISTING,          // open existing file only
-		FILE_ATTRIBUTE_NORMAL,  // normal file
-		NULL);                  // no attr. template
-	if (hFile != INVALID_HANDLE_VALUE) {
-		FILE_BASIC_INFO fileInfo;
-		log(3, L"🔈GetFileInformationByHandleEx hFile");
-		// The result was ignored: on failure, uninitialised bytes became dates.
-		if (GetFileInformationByHandleEx(hFile, FileBasicInfo, &fileInfo, sizeof(FILE_BASIC_INFO))) {
-			memcpy(&createdUtc, &fileInfo.CreationTime, sizeof(createdUtc));
-			memcpy(&modifiedUtc, &fileInfo.LastWriteTime, sizeof(modifiedUtc));
-			memcpy(&accessedUtc, &fileInfo.LastAccessTime, sizeof(accessedUtc));
-		}
-		else {
-			log(2, L"🔥GetFileInformationByHandleEx " + pathOriginal, GetLastError());
-		}
-		CloseHandle(hFile);
-	}
+	// The dates of the file ON THE EXAMINED MACHINE, as the raw reading recorded
+	// them: the working copy's own are those of the collection (ExhibitSourceTimes).
+	if (!ExhibitSourceTimes(path, createdUtc, modifiedUtc, accessedUtc))
+		log(2, L"🔥Source timestamps not recorded: " + path);
 
 	return parse(buffer, size);
 }

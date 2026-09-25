@@ -46,3 +46,9 @@ HRESULT readLiveSnapshot(const std::string& name, Json& value);
  *  @param out receives its value
  *  @return false if absent, not a number, or out of range (out untouched) */
 bool snapshotInteger(const Json& object, const wchar_t* key, long long& out);
+
+/*! An integer value of a snapshot (an element of an array).
+ *  @param value the value
+ *  @param out receives it
+ *  @return false if not an integer, or out of range (out untouched) */
+bool snapshotInteger(const Json& value, long long& out);

@@ -138,8 +138,19 @@ what it is and, where it matters, why it is trustworthy.
 To minimize disk traces, this standalone tool should be run **as administrator** from a USB stick using the command:
 
 ```
-usage: wac [--dump] [--events] [--binary] [--output=output] [--loglevel=2] [--debug]
+usage: wac [--collect | --convert=folder] [--dump] [--events] [--binary] [--output=output] [--loglevel=2] [--debug]
         --help or /? : show this help
+        --collect : collection only, on the examined machine: live snapshots and
+                    raw extraction into the sealed exhibit store; nothing is
+                    converted. With --events, the resource files of every event
+                    provider; with --binary, every executable of every fixed
+                    NTFS volume is read and verified in memory, and only those
+                    not authenticated (catalog, embedded signature, Store
+                    package) are copied (~0.7 GB on a plain Windows 11)
+        --convert=folder : conversion only, on an analysis workstation, of the
+                    collection made with --collect in that folder: seal and
+                    every fingerprint checked first, JSON written next to the
+                    exhibit store, conversion.json as its log
         --dump : add hexa value in json files for shellbags and LNK files
         --events : extract and parse the .evtx event logs (adds ~117 MB to the collection)
         --binary : fingerprint (MD5, SHA-1, SHA-256) every file referenced in

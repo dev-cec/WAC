@@ -75,3 +75,10 @@ HRESULT ExtractUserHivesRaw();
  *          an error code if the volume cannot be opened.
  */
 HRESULT ExtractFileArtefactsRaw();
+
+/*! Repairs the hives of a working copy rebuilt from an exhibit store
+ *  (--convert): transaction log replay, patch as a fallback, as the collection
+ *  does right after extracting them. The hives are found by name in the
+ *  working directory.
+ *  @return ERROR_SUCCESS, or S_FALSE if a hive stays unusable */
+HRESULT RepairWorkingHives();

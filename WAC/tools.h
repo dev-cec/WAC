@@ -54,6 +54,19 @@ struct TimeZoneInfo {
 	bool  valid = false;           //!< true if the reading succeeded
 };
 
+/*! What a run of WAC does.
+ *
+ *  WHY THREE MODES. Good forensic practice separates the collection, on the
+ *  examined machine, from the analysis, on a controlled workstation (ISO/IEC
+ *  27037 and 27042): the fewer actions on the examined system, the fewer
+ *  traces; and a conversion made from the sealed exhibit store can be redone,
+ *  by anyone, with a corrected WAC. */
+enum class RunMode {
+	Full,     //!< collection and conversion in one run, on the examined machine (default)
+	Collect,  //!< --collect: live snapshots, raw extraction, sealed exhibit store; nothing converted
+	Convert   //!< --convert=<folder>: conversion of a collection made earlier, from its checked exhibit store
+};
+
 //! Holds the application's configuration.
 struct AppliConf {
 	/*! Diagnostic mode (--debug). Turns on the detailed trace of the NTFS parser
@@ -77,6 +90,7 @@ struct AppliConf {
 	std::ofstream log;//!< handle of the output log file, for the debug mode (UTF-8 bytes)
 	int loglevel = 0; //!< log level (0 by default), set on the command line
 	bool binary = false; //!< --binary: fingerprints of the cited files, and collection of the binaries
+	RunMode mode = RunMode::Full; //!< what this run does (see RunMode)
 	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)
 	/*! System drive of the examined machine, with its colon ("C:").
 	*
@@ -500,6 +514,15 @@ enum class Precision {
 */
 std::wstring timeToIso8601Utc(const FILETIME& filetime, Precision precision = Precision::HundredNanoseconds);
 
+/*! Reverse of timeToIso8601Utc: "YYYY-MM-DDTHH:MM:SS[.f…]Z" to a FILETIME,
+ *  exactly, to the 100 ns. Used to read back the dates of the manifest
+ *  (--convert). Anything else — an offset instead of "Z", a digit missing, a
+ *  month 13 — is refused.
+ *  @param text the date
+ *  @param filetime receives it
+ *  @return false if the text is not such a date (filetime untouched) */
+bool iso8601UtcToFiletime(const std::wstring& text, FILETIME& filetime);
+
 /*! Formats a FILETIME **expressed in local time** as ISO 8601, with the
 * offset in force at that local time on the examined machine (e.g. "+01:00" in
 * winter, "+02:00" in summer) — the one suspectLocalToUtc applies.
@@ -827,9 +850,10 @@ HRESULT getRegQwordValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, unsigned l
 HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vector<std::wstring>* out);
 
 
-/*! Drive letter a volume is mounted on, from its serial number.
-* @param searchSerial serial number of the volume to look for
-* @return the drive letter of the volume's mount point.
+/*! Drive letter a volume of the examined machine was mounted on at
+* collection time, from its serial number (snapshot of the running machine).
+* @param searchSerial serial number of the volume, "%08X"
+* @return its mount point ("C:"), or an empty string if none matched
 */
 std::wstring getVolumeLetter(std::wstring searchSerial);
 

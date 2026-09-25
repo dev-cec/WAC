@@ -62,6 +62,12 @@ namespace Footprint {
 	extern const wchar_t* USB_WRITE;
 	//! reading of the clock and of the boot time: in-memory queries, no artefact touched
 	extern const wchar_t* CLOCK;
+	//! Queries of the running system's settings (system drive, code page, time
+	//! zone, volumes): in-memory, no artefact touched.
+	extern const wchar_t* SETTINGS;
+	//! --convert: reading of the sealed exhibit store, on the analysis
+	//! workstation; the examined system is not involved.
+	extern const wchar_t* EXHIBIT_READ;
 }
 
 /*! Opens the log: reads the context of the collection (machine, operator, time
@@ -82,7 +88,9 @@ void auditRecord(const std::wstring& operation,
                  HRESULT result,
                  const wchar_t* footprint);
 
-/*! Closes the log (end timestamp, duration) and writes `investigation.json`.
+/*! Closes the log (end timestamp, duration) and writes `investigation.json`
+ *  — or `conversion.json` for a --convert run, which never overwrites the
+ *  collection's log.
  *  To be called at the very end of the collection, after the last collector.
  *  @return ERROR_SUCCESS, or a write error code
  */

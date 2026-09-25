@@ -94,6 +94,19 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 		std::filesystem::copy_file(target, working, std::filesystem::copy_options::skip_existing, ec);
 		return ec ? std::wstring() : working;
 	}
+	/* A conversion reads the collection, never a volume: the file is found
+	   through the manifest (it may share an exhibit stored under another
+	   name, see ExhibitStoreIndex), and a file the collection does not hold is
+	   absent — the analysis workstation's own copy would give the messages of
+	   another build. */
+	if (conf.mode == RunMode::Convert) {
+		const std::map<std::wstring, StoredExhibit>& index = ExhibitStoreIndex();
+		const auto stored = index.find(toLower(absolutePath));
+		if (stored == index.end() || !isValidPe(stored->second.file)) return std::wstring();
+		std::filesystem::create_directories(std::filesystem::path(working).parent_path(), ec);
+		std::filesystem::copy_file(stored->second.file, working, std::filesystem::copy_options::skip_existing, ec);
+		return ec ? std::wstring() : working;
+	}
 	std::filesystem::create_directories(std::filesystem::path(target).parent_path(), ec);
 
 	std::vector<HRESULT> res;
@@ -109,7 +122,7 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 		return std::wstring();
 	}
 	ExhibitStoreAdd(reading, L"Raw NTFS reading (\\\\.\\" + volume
-	                        + L": — resource file of an event provider)");
+	                        + L": — resource file of an event provider)" + READ_IN_PLACE);
 	const bool rawReadOk = SUCCEEDED(hr) && !res.empty() && SUCCEEDED(res[0]);
 	if (!rawReadOk)
 		log(3, L"🔈Raw reading unsuccessful, fallback expected: " + absolutePath);
@@ -394,6 +407,33 @@ std::wstring EventMessage(const std::wstring& providerGuid,
 	const std::wstring phrase = formatMessage(messageTemplate, resolved);
 	if (!phrase.empty()) ++g_resolved;
 	return phrase;
+}
+
+HRESULT MessagesCollectAll() {
+	MessagesInit();
+	if (!g_ready) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	ORHKEY publishers = NULL;
+	HRESULT hr = OROpenKey(conf.Software, L"Microsoft\\Windows\\CurrentVersion\\WINEVT\\Publishers", &publishers);
+	if (hr != ERROR_SUCCESS) {
+		log(2, L"🔥WINEVT\\Publishers unreadable: no event provider collected", hr);
+		return hr;
+	}
+	for (DWORD i = 0;; ++i) {
+		WCHAR guid[MAX_KEY_NAME] = L"";
+		DWORD size = MAX_KEY_NAME;
+		hr = OREnumKey(publishers, i, guid, &size, NULL, NULL, NULL);
+		if (hr == ERROR_NO_MORE_ITEMS) { hr = ERROR_SUCCESS; break; }
+		if (hr != ERROR_SUCCESS) {
+			log(2, L"🔥WINEVT\\Publishers: enumeration stopped at " + std::to_wstring(i), hr);
+			break;
+		}
+		load(normalizeGuid(guid));   // extracts its resource, parameter and .mui files
+	}
+	ORCloseKey(publishers);
+	log(2, L"❇️Event providers collected: " + std::to_wstring(g_cache.size()) + L", "
+	     + std::to_wstring(g_failures) + L" without usable resources, "
+	     + std::to_wstring(g_bytes / 1024 / 1024) + L" MiB");
+	return hr;
 }
 
 void MessagesSummary(size_t* providers, size_t* failures,

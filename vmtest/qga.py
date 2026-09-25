@@ -14,16 +14,17 @@ Usage:
   qga.py read  <guest_path> <host_output>
   qga.py write <host_file> <guest_path>
 """
-import argparse, base64, json, subprocess, sys, time
+import argparse, base64, json, os, subprocess, sys, time
 
 CONN = "qemu:///session"
 
 # Transient agent errors (service busy or restarting): retried.
 TRANSIENT = ("not responding", "not available", "not connected", "Broken pipe")
 
-def qga(dom, cmd, attempts=6):
+def qga(dom, cmd, attempts=6, fatal=True):
     """Sends a qemu-agent-command and returns its 'return' field.
-    Retries with a backoff on the agent's transient unavailability."""
+    Retries with a backoff on the agent's transient unavailability.
+    fatal=False: a refusal by the agent returns None instead of exiting."""
     last = ""
     for n in range(attempts):
         out = subprocess.run(
@@ -33,6 +34,8 @@ def qga(dom, cmd, attempts=6):
             return json.loads(out.stdout).get("return")
         last = out.stderr.strip()
         if not any(t in last for t in TRANSIENT):
+            if not fatal:
+                return None
             sys.exit(f"[qga] virsh error: {last}")
         time.sleep(2 * (n + 1))          # 2, 4, 6, 8, 10 s
     sys.exit(f"[qga] agent unreachable after {attempts} attempts: {last}")
@@ -50,15 +53,60 @@ def ping(dom):
     qga(dom, {"execute": "guest-ping"})
     print("agent OK")
 
+# STALE OUTPUTS. The agent keeps a finished process until its status has been
+# read once, and looks a status up by PID. A run interrupted before reading it
+# (a harness stopped midway) leaves that process behind; Windows reuses PIDs
+# quickly, and a later command given the same PID got the OLD command's
+# output: a SHA-256 comparison answered with a list of JSON files. Every PID
+# launched is therefore recorded until its status is read, and those left
+# behind are read — hence released — before any new command.
+PENDING = os.path.join(os.path.expanduser("~"), ".cache", "wac-qga")
+
+
+def pending_path(dom):
+    return os.path.join(PENDING, f"{dom}.pending.json")
+
+
+def pending_load(dom):
+    try:
+        with open(pending_path(dom), encoding="utf-8") as f:
+            return [int(p) for p in json.load(f)]
+    except (OSError, ValueError, TypeError):
+        return []
+
+
+def pending_save(dom, pids):
+    os.makedirs(PENDING, exist_ok=True)
+    temporary = pending_path(dom) + ".tmp"
+    with open(temporary, "w", encoding="utf-8") as f:
+        json.dump(sorted(set(pids)), f)
+    os.replace(temporary, pending_path(dom))       # never half-written
+
+
+def release_pending(dom):
+    """Reads the status of the processes a previous run left unread: a
+    finished one is thereby released; a running one keeps its PID, which no
+    new process can then share."""
+    kept = []
+    for pid in pending_load(dom):
+        st = qga(dom, {"execute": "guest-exec-status", "arguments": {"pid": pid}}, fatal=False)
+        if st is not None and not st.get("exited"):
+            kept.append(pid)
+    pending_save(dom, kept)
+
+
 def run(dom, argv, capture=True, timeout=DEFAULT_TIMEOUT):
     """Runs argv[0] with argv[1:] in the VM; returns (code, stdout, stderr)."""
+    release_pending(dom)
     pid = qga(dom, {"execute": "guest-exec", "arguments": {
         "path": argv[0], "arg": argv[1:],
         "capture-output": capture}})["pid"]
+    pending_save(dom, pending_load(dom) + [pid])
     t0 = time.time()
     while True:
         st = qga(dom, {"execute": "guest-exec-status", "arguments": {"pid": pid}})
         if st.get("exited"):
+            pending_save(dom, [p for p in pending_load(dom) if p != pid])
             out = base64.b64decode(st.get("out-data", "")).decode("utf-8", "replace")
             err = base64.b64decode(st.get("err-data", "")).decode("utf-8", "replace")
             return st.get("exitcode", 0), out, err

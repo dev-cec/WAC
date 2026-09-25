@@ -58,6 +58,14 @@ std::wstring EventMessage(const std::wstring& providerGuid,
                               uint8_t version,
                               const std::vector<std::wstring>& values);
 
+/*! --collect: extracts the resource files of EVERY provider declared in
+ *  SOFTWARE\...\WINEVT\Publishers — binary, parameter file, localised .mui
+ *  satellites —, since which of them the event logs cite is only known at
+ *  conversion. The same search as on demand (the conversion then finds each
+ *  file where the collection put it). Requires the SOFTWARE hive open.
+ *  @return ERROR_SUCCESS, or the error of the hive's reading */
+HRESULT MessagesCollectAll();
+
 /*! Summary, for the log and the report.
 *  @param providers number of providers whose resources were read
 *  @param failures number of providers whose file could not be read

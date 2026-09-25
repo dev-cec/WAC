@@ -7,8 +7,10 @@
 #include "json.h"
 #include "sha.h"
 #include <fstream>
+#include <sstream>
 #include <filesystem>
 #include <map>
+#include <set>
 
 /*  exhibitStore.cpp — see exhibitStore.h for the procedure and the manifest's content.
  *  Here, the implementation.
@@ -21,6 +23,10 @@ struct Exhibit {
 	RawHiveExtraction extracted;
 	std::wstring   method;
 	bool           shared = false;   //!< content already stored under another exhibit
+	/*! false: fingerprinted and authenticated, content NOT copied (an
+	 *  authentic Microsoft binary, see ExhibitStoreAddFingerprint). */
+	bool           contentStored = true;
+	std::wstring   signature;        //!< verdict of the Microsoft authenticity check, if made
 };
 
 std::vector<Exhibit> g_exhibits;
@@ -157,21 +163,68 @@ void ExhibitStoreAddDuplicate(const RawHiveExtraction& e, const std::wstring& me
 	g_exhibits.push_back(Exhibit{ e, method, true });
 }
 
+void ExhibitStoreAddFingerprint(const RawHiveExtraction& e, const std::wstring& method,
+                                const std::wstring& signature) {
+	Exhibit p{ e, method, false, false, signature };
+	p.extracted.outputPath.clear();
+	g_exhibits.push_back(std::move(p));
+}
+
+bool ExhibitSourceTimes(const std::wstring& workingCopy, FILETIME& created, FILETIME& modified, FILETIME& accessed) {
+	// Exhibit files by path, rebuilt when exhibits were added since.
+	static std::map<std::wstring, size_t> byFile;
+	static size_t builtFor = 0;
+	if (builtFor != g_exhibits.size()) {
+		byFile.clear();
+		for (size_t i = 0; i < g_exhibits.size(); ++i)
+			if (SUCCEEDED(g_exhibits[i].extracted.result) && g_exhibits[i].contentStored && !g_exhibits[i].shared)
+				byFile.emplace(toLower(g_exhibits[i].extracted.outputPath), i);
+		builtFor = g_exhibits.size();
+	}
+	const std::wstring working = workingFolder();
+	if (toLower(workingCopy).compare(0, working.size(), toLower(working)) != 0) return false;
+	const auto found = byFile.find(toLower(exhibitStoreFolder() + workingCopy.substr(working.size())));
+	if (found == byFile.end()) return false;
+	const RawHiveFingerprints& m = g_exhibits[found->second].extracted.fingerprints;
+	if (!m.creeUtc && !m.modifiedUtc && !m.accedeUtc) return false;
+	created = toFiletime(m.creeUtc);
+	modified = toFiletime(m.modifiedUtc);
+	accessed = toFiletime(m.accedeUtc);
+	return true;
+}
+
+const std::map<std::wstring, StoredExhibit>& ExhibitStoreIndex() {
+	static const std::map<std::wstring, StoredExhibit> index = [] {
+		std::map<std::wstring, StoredExhibit> built;
+		for (const Exhibit& p : g_exhibits)
+			if (SUCCEEDED(p.extracted.result) && !p.extracted.volumePath.empty())
+				built.emplace(toLower(p.extracted.volumePath),
+				              StoredExhibit{ p.extracted.volumePath, p.extracted.outputPath, p.contentStored,
+				                             p.extracted.fingerprints.md5, p.extracted.fingerprints.sha1,
+				                             p.extracted.fingerprints.sha256, p.extracted.fingerprints.authenticodeSha256,
+				                             p.signature });
+		return built;
+	}();
+	return index;
+}
+
 void ExhibitStoreSummary(size_t* exhibits, size_t* failures, unsigned long long* bytes) {
 	size_t count = 0, failed = 0;
 	unsigned long long total = 0;
 	for (const Exhibit& p : g_exhibits) {
 		++count;
 		if (FAILED(p.extracted.result)) ++failed;
-		// Shared content takes room in the exhibit store only once.
-		else if (!p.shared) total += p.extracted.fingerprints.bytes;
+		// Shared content takes room in the exhibit store only once; a fingerprint alone, none.
+		else if (!p.shared && p.contentStored) total += p.extracted.fingerprints.bytes;
 	}
 	if (exhibits) *exhibits = count;
 	if (failures) *failures = failed;
 	if (bytes) *bytes = total;
 }
 
-HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes) {
+const wchar_t READ_IN_PLACE[] = L" [read in place by the conversion]";
+
+HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes, bool skipReadInPlace) {
 	if (copies) *copies = 0;
 	if (bytes) *bytes = 0;
 
@@ -190,8 +243,12 @@ HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes) {
 	 *  too. */
 	std::map<std::wstring, std::wstring> expected;   // path -> SHA-256
 	for (const Exhibit& p : g_exhibits)
-		if (SUCCEEDED(p.extracted.result) && !p.extracted.fingerprints.sha256.empty())
+		if (SUCCEEDED(p.extracted.result) && p.contentStored && !p.extracted.fingerprints.sha256.empty())
 			expected.emplace(p.extracted.outputPath, p.extracted.fingerprints.sha256);
+	std::set<std::wstring> inPlace;                  // exhibit files the conversion reads from the store
+	if (skipReadInPlace)
+		for (const Exhibit& p : g_exhibits)
+			if (p.method.find(READ_IN_PLACE) != std::wstring::npos) inPlace.insert(p.extracted.outputPath);
 
 	size_t count = 0, failed = 0, verified = 0, existing = 0;
 	unsigned long long volume = 0;
@@ -209,6 +266,7 @@ HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes) {
 		// them to the working directory would invite changing them.
 		const std::wstring name = relative.filename().wstring();
 		if (name == L"MANIFEST.json" || name == L"MANIFEST.sha256") continue;
+		if (inPlace.count(e.path().wstring())) continue;
 
 		const std::filesystem::path target = working / relative;
 		/*  AN EXISTING WORKING COPY IS NOT OVERWRITTEN. The function is called
@@ -318,7 +376,10 @@ HRESULT ExhibitStoreWriteManifest() {
 		const RawHiveFingerprints& m = e.fingerprints;
 		Json o = Json::obj();
 		o.add(L"SourcePath",  Json::str(e.volumePath));
-		o.add(L"ExhibitPath", Json::str(outputRelative(e.outputPath)));
+		/* An authentic Microsoft binary is fingerprinted, not copied: no exhibit
+		   file, and the manifest says so rather than point to nothing. */
+		if (p.contentStored) o.add(L"ExhibitPath", Json::str(outputRelative(e.outputPath)));
+		else                 o.add(L"ContentStored", Json::boolean(false));
 		o.add(L"Method",      Json::str(p.method));
 		if (FAILED(e.result)) {
 			// An exhibit missing from the manifest would read as never looked for.
@@ -328,15 +389,20 @@ HRESULT ExhibitStoreWriteManifest() {
 			continue;
 		}
 		o.add(L"Result",        Json::str(L"OK"));
-		o.add(L"MD5",           Json::str(m.md5));
-		o.add(L"SHA1",          Json::str(m.sha1));
-		o.add(L"SHA256",        Json::str(m.sha256));
+		/* An authentic Microsoft binary fingerprinted without a copy carries its
+		   Authenticode digests only (see readAndAuthenticate in binaires.cpp). */
+		if (!m.md5.empty())    o.add(L"MD5",    Json::str(m.md5));
+		if (!m.sha1.empty())   o.add(L"SHA1",   Json::str(m.sha1));
+		if (!m.sha256.empty()) o.add(L"SHA256", Json::str(m.sha256));
+		if (!m.authenticodeSha1.empty())   o.add(L"AuthenticodeSHA1",   Json::str(m.authenticodeSha1));
+		if (!m.authenticodeSha256.empty()) o.add(L"AuthenticodeSHA256", Json::str(m.authenticodeSha256));
 		o.add(L"Bytes",         Json::num(m.bytes));
 		/* Content identical, byte for byte (SHA-256), to an exhibit already
 		   stored: ExhibitPath points to it, and it was not copied again. The source
 		   remains an exhibit in its own right — its path, $MFT entry and timestamps
 		   are its own. */
 		if (p.shared) o.add(L"SharedExhibit", Json::boolean(true));
+		if (!p.signature.empty()) o.add(L"Signature", Json::str(p.signature));
 		// The two sizes diverging = truncated extraction, which a fingerprint
 		// alone would not reveal (it would just be... the truncated file's).
 		if (m.declaredSize != m.bytes)
@@ -395,5 +461,126 @@ HRESULT ExhibitStoreWriteManifest() {
 	     + std::to_wstring(failed) + L" failure(s), "
 	     + std::to_wstring(total / 1024 / 1024) + L" MiB");
 	log(2, L"❇️Manifest seal (SHA-256): " + fingerprint);
+	return ERROR_SUCCESS;
+}
+
+bool exhibitPathContained(const std::wstring& relative) {
+	if (relative.rfind(L"exhibits\\", 0) != 0) return false;
+	/* By COMPONENT: WinSxS shortens its names with ".." inside them
+	   ("amd64_microsoft-onecore-i..sermode-kernel…"), and refusing the
+	   substring refused every conversion of a --binary collection. */
+	size_t start = 0;
+	while (start <= relative.size()) {
+		const size_t end = relative.find_first_of(L"\\/", start);
+		const std::wstring component = relative.substr(start, end == std::wstring::npos ? std::wstring::npos : end - start);
+		if (component == L".." || component == L"." || component.find(L':') != std::wstring::npos) return false;
+		if (end == std::wstring::npos) break;
+		start = end + 1;
+	}
+	return true;
+}
+
+HRESULT ExhibitStoreLoad(ExhibitStoreCheck& check) {
+	check = ExhibitStoreCheck{};
+	g_exhibits.clear();
+	const std::filesystem::path exhibitStore = exhibitStoreFolder();
+	const std::filesystem::path manifestPath = exhibitStore / L"MANIFEST.json";
+	const std::filesystem::path sealPath = exhibitStore / L"MANIFEST.sha256";
+
+	// 1. The seal: the manifest's real fingerprint must be the one recorded.
+	std::ifstream sealFile(sealPath);
+	std::string sealLine;
+	if (!sealFile || !std::getline(sealFile, sealLine)) {
+		check.reason = L"seal MANIFEST.sha256 absent or unreadable";
+		return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	}
+	const std::wstring recorded = toLower(decodeText(sealLine.substr(0, sealLine.find(' ')), CP_UTF8));
+	check.manifestSha256 = sha256OfFile(manifestPath.wstring());
+	if (check.manifestSha256.empty() || toLower(check.manifestSha256) != recorded) {
+		check.reason = L"the manifest does not match its seal (recorded " + recorded
+		             + L", actual " + check.manifestSha256 + L")";
+		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+	}
+
+	// 2. The manifest, read back: every item as it was recorded.
+	std::ifstream manifestFile(manifestPath, std::ios::binary);
+	std::stringstream buffer;
+	buffer << manifestFile.rdbuf();
+	Json manifest = Json::null();
+	std::wstring error;
+	if (!Json::parse(decodeText(buffer.str(), CP_UTF8), manifest, error)) {
+		check.reason = L"manifest unreadable: " + error;
+		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+	}
+	const Json* items = manifest.find(L"Items");
+	if (!items || items->kind() != Json::Kind::Arr) {
+		check.reason = L"manifest without Items";
+		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+	}
+	for (const auto& member : items->members()) {
+		const Json& item = member.second;
+		auto text = [&](const wchar_t* key) { const Json* v = item.find(key); return v ? v->text() : std::wstring(); };
+		Exhibit p;
+		p.method = text(L"Method");
+		p.shared = item.find(L"SharedExhibit") != nullptr;
+		p.extracted.volumePath = text(L"SourcePath");
+		p.signature = text(L"Signature");
+		p.contentStored = text(L"ContentStored") != L"false";
+		if (p.contentStored) {
+			const std::wstring relative = text(L"ExhibitPath");
+			/* The exhibit must stay INSIDE the exhibit store: a path climbing out of
+			   it ("..") in a forged manifest would have files elsewhere read. */
+			if (!exhibitPathContained(relative)) {
+				check.reason = L"exhibit path outside the exhibit store: " + relative;
+				return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+			}
+			p.extracted.outputPath = (std::filesystem::path(conf._outputDir) / relative).wstring();
+		}
+		if (text(L"Result") != L"OK") {
+			p.extracted.result = E_FAIL;
+			++check.failedAtCollection;
+		}
+		else {
+			p.extracted.result = ERROR_SUCCESS;
+			p.extracted.fingerprints.md5 = text(L"MD5");
+			p.extracted.fingerprints.sha1 = text(L"SHA1");
+			p.extracted.fingerprints.sha256 = text(L"SHA256");
+			p.extracted.fingerprints.authenticodeSha1 = text(L"AuthenticodeSHA1");
+			p.extracted.fingerprints.authenticodeSha256 = text(L"AuthenticodeSHA256");
+			// The source's timestamps, for the dates of the file artefacts (ExhibitSourceTimes).
+			auto date = [&](const wchar_t* key, uint64_t& out) {
+				FILETIME f = {};
+				if (iso8601UtcToFiletime(text(key), f)) out = ((uint64_t)f.dwHighDateTime << 32) | f.dwLowDateTime;
+			};
+			date(L"SourceCreatedUtc", p.extracted.fingerprints.creeUtc);
+			date(L"SourceModifiedUtc", p.extracted.fingerprints.modifiedUtc);
+			date(L"SourceMftModifiedUtc", p.extracted.fingerprints.mftModifiedUtc);
+			date(L"SourceAccessedUtc", p.extracted.fingerprints.accedeUtc);
+		}
+		g_exhibits.push_back(std::move(p));
+	}
+
+	// 3. Every exhibit: its content must still be the one the manifest attests.
+	std::map<std::wstring, std::wstring> checked;   // exhibit file -> SHA-256 (shared contents once)
+	for (const Exhibit& p : g_exhibits) {
+		if (FAILED(p.extracted.result) || !p.contentStored) continue;   // a fingerprint alone: no content to check
+		std::wstring actual;
+		const auto found = checked.find(p.extracted.outputPath);
+		if (found != checked.end()) actual = found->second;
+		else {
+			actual = sha256OfFile(p.extracted.outputPath);
+			checked.emplace(p.extracted.outputPath, actual);
+		}
+		if (toLower(actual) == toLower(p.extracted.fingerprints.sha256)) ++check.verified;
+		else {
+			++check.altered;
+			if (check.firstAltered.empty()) check.firstAltered = p.extracted.outputPath;
+		}
+	}
+	if (check.altered) {
+		check.reason = std::to_wstring(check.altered) + L" exhibit(s) no longer match the manifest, e.g. "
+		             + check.firstAltered;
+		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+	}
 	return ERROR_SUCCESS;
 }
