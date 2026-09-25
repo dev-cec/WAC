@@ -196,8 +196,26 @@ const std::vector<Certificate>& roots() {
 /*! Certificates already chained to a root, by SHA-256 of their DER.
  *  The 5,308 catalogs of a machine are signed by a handful of certificates:
  *  without this cache, the same chain would be verified again every time, the
- *  RSA-4096 root included. */
-std::set<std::string>& validChains() { static std::set<std::string> s; return s; }
+ *  RSA-4096 root included. Shared by the analysis threads of --collect
+ *  --binary, which verify signatures at once: hence its lock — a std::set
+ *  written by two threads is undefined behaviour, which no test shows. */
+class ChainCache {
+public:
+	//! @return true if `key` is known to chain to a root
+	bool known(const std::string& key) {
+		std::lock_guard<std::mutex> lock(mutex_);
+		return keys_.count(key) != 0;
+	}
+	//! Records keys that chain to a root.
+	void add(const std::vector<std::string>& keys) {
+		std::lock_guard<std::mutex> lock(mutex_);
+		keys_.insert(keys.begin(), keys.end());
+	}
+private:
+	std::mutex mutex_;
+	std::set<std::string> keys_;
+};
+ChainCache& validChains() { static ChainCache cache; return cache; }
 
 std::string certKey(const Certificate& c) {
 	uint8_t h[32];
@@ -212,8 +230,8 @@ bool attach(const Certificate& leaf, const std::vector<Certificate>& pool) {
 	std::vector<std::string> walked;
 	for (int level = 0; level < 6; ++level) {
 		const std::string key = certKey(*current);
-		if (validChains().count(key)) {
-			for (const std::string& p : walked) validChains().insert(p);
+		if (validChains().known(key)) {
+			validChains().add(walked);
 			return true;
 		}
 		walked.push_back(key);
@@ -223,11 +241,11 @@ bool attach(const Certificate& leaf, const std::vector<Certificate>& pool) {
 			// The certificate IS the root (same key): nothing more to verify.
 			if (current->rsa && current->module.len == r.module.len
 			    && std::memcmp(current->module.val, r.module.val, r.module.len) == 0) {
-				for (const std::string& p : walked) validChains().insert(p);
+				validChains().add(walked);
 				return true;
 			}
 			if (signedBy(*current, r)) {
-				for (const std::string& p : walked) validChains().insert(p);
+				validChains().add(walked);
 				return true;
 			}
 		}

@@ -516,7 +516,12 @@ reference, and is built on Linux with AddressSanitizer and UBSan:
     for code signing, for time stamping, and for code signing not distrusted),
     computed apart by a DER reading in Python; the certificates Chromium blocks
     (\fichier{net/data/ssl/blocklist}), recognised by
-    \fichier{disallowedcert.stl}; a list with one byte changed, refused.
+    \fichier{disallowedcert.stl}; a list with one byte changed, refused; both
+    lists read by eight threads at once, the chain cache empty, as the
+    analysis threads of \opt{collect} \opt{binary} do. Built again with
+    \texttt{-fsanitize=thread} (run through \texttt{setarch -R}, which
+    ThreadSanitizer needs on recent kernels), it reported eleven data races on
+    that cache before its lock.
 \end{itemize}
 
 \begin{lstlisting}
@@ -525,7 +530,7 @@ g++ -std=c++17 -g -fsanitize=address,undefined -I. authenticode.cpp rsa.cpp \
 /tmp/trust_list_test authroot.stl 313 335 145 disallowedcert.stl blocklist 36
 \end{lstlisting}
 
-Reference (lists of 25~August~2026 and 5~September~2025): 41 checks, no
+Reference (lists of 25~August~2026 and 5~September~2025): 80 checks, no
 failure. This test established what \fichier{disallowedcert.stl} holds, which
 Microsoft does not document: its 16-byte entries are the MD5 of the
 \textbf{public key} (not of the signed part, as the property's name suggests),

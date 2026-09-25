@@ -16,18 +16,24 @@
  *      (net/data/ssl/blocklist), an independent set, must be recognised: at
  *      least as many as measured when the rule was established;
  *    - a list with one byte changed anywhere in its signed content must be
- *      refused: its signature no longer holds.
+ *      refused: its signature no longer holds;
+ *    - lists read from several threads at once give the same result: the
+ *      analysis threads of --collect --binary verify signatures together,
+ *      and share the cache of verified chains. Built with ThreadSanitizer,
+ *      a race on that cache is reported (it was, before its lock).
  *
  *  Usage: trust_list_test `<authroot.stl>` `<code-signing count>` `<time-stamping count>`
  *                         `<code-signing and not distrusted count>`
  *                         `<disallowedcert.stl>` `<blocklist folder>` `<minimum recognised>`
  *  Native build (Linux): g++ -std=c++17 -g -fsanitize=address,undefined -I. authenticode.cpp rsa.cpp sha.cpp quickdigest5.cpp trust_list_test.cpp -o trust_list_test
+ *  and again with -fsanitize=thread in place of address,undefined, for the concurrent reading.
  */
 #include "authenticode.h"
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace {
@@ -70,6 +76,32 @@ void checkAltered(const std::vector<uint8_t>& list, const std::string& name) {
 	}
 }
 
+/*! Reads both lists from several threads at once, repeatedly, BEFORE any
+ *  other read — the cache of verified chains empty, as when a collection
+ *  starts: the threads then fill it together. Each read must be valid, and
+ *  all give the same entries. */
+void checkConcurrent(const std::vector<uint8_t>& authroot, const std::vector<uint8_t>& disallowed) {
+	const unsigned THREADS = 8, ROUNDS = 4;
+	std::vector<size_t> rootEntries(THREADS * ROUNDS), disallowedEntries(THREADS * ROUNDS);
+	std::vector<int> invalid(THREADS, 0);
+	std::vector<std::thread> threads;
+	for (unsigned t = 0; t < THREADS; ++t)
+		threads.emplace_back([&, t] {
+			for (unsigned r = 0; r < ROUNDS; ++r) {
+				const TrustList a = ReadTrustList(authroot.data(), authroot.size());
+				const TrustList d = ReadTrustList(disallowed.data(), disallowed.size());
+				invalid[t] += !a.valid || !d.valid;
+				rootEntries[t * ROUNDS + r] = a.entries.size();
+				disallowedEntries[t * ROUNDS + r] = d.entries.size();
+			}
+		});
+	for (std::thread& t : threads) t.join();
+	for (unsigned t = 0; t < THREADS; ++t) check(invalid[t] == 0, "concurrent reading, thread " + std::to_string(t) + ": refused");
+	for (size_t k = 1; k < rootEntries.size(); ++k)
+		check(rootEntries[k] == rootEntries[0] && disallowedEntries[k] == disallowedEntries[0],
+		      "concurrent reading: entries differ between threads");
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -79,6 +111,7 @@ int main(int argc, char** argv) {
 		return 2;
 	}
 	const std::vector<uint8_t> authroot = readFile(argv[1]);
+	checkConcurrent(authroot, readFile(argv[5]));             // first: see its comment
 	const TrustList roots = ReadTrustList(authroot.data(), authroot.size());
 	check(roots.valid, std::string("authroot.stl refused: ") + roots.reason);
 	check(roots.identifier == 3, "authroot.stl: identifier " + std::to_string(roots.identifier) + ", 3 expected");

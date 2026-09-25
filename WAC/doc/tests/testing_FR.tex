@@ -536,7 +536,11 @@ indépendante, et se construit sous Linux avec AddressSanitizer et UBSan :
     de code non désapprouvées), calculés à part par une lecture DER en Python ;
     les certificats que bloque Chromium (\fichier{net/data/ssl/blocklist}),
     reconnus par \fichier{disallowedcert.stl} ; une liste modifiée d'un octet,
-    refusée.
+    refusée ; les deux listes lues par huit fils à la fois, cache des chaînes
+    vide, comme les fils d'analyse de \opt{collect} \opt{binary}. Construit
+    une seconde fois avec \texttt{-fsanitize=thread} (lancé par
+    \texttt{setarch -R}, que ThreadSanitizer exige sur les noyaux récents), il
+    signalait onze courses de données sur ce cache avant son verrou.
 \end{itemize}
 
 \begin{lstlisting}
@@ -545,7 +549,7 @@ g++ -std=c++17 -g -fsanitize=address,undefined -I. authenticode.cpp rsa.cpp \
 /tmp/trust_list_test authroot.stl 313 335 145 disallowedcert.stl blocklist 36
 \end{lstlisting}
 
-Référence (listes du 25~août~2026 et du 5~septembre~2025) : 41 contrôles, aucun
+Référence (listes du 25~août~2026 et du 5~septembre~2025) : 80 contrôles, aucun
 échec. C'est ce test qui a établi ce que contient \fichier{disallowedcert.stl},
 que Microsoft ne documente pas : ses entrées de 16~octets sont le MD5 de la
 \textbf{clé publique} (et non de la partie signée, comme le nom de la propriété
