@@ -339,26 +339,32 @@ Three details in this output are deliberate, and illustrate the rules above:
 
 ## 🚀 PERFORMANCE
 
-A collection takes about **2 minutes** with the default options, up to roughly
-**20 minutes** with `--events`, and longer still with `--binary`. The figure
-depends heavily on the hardware: USB 2 or USB 3, processor, memory, disk.
+Measured on the Windows 11 test VM (NVMe-backed, 25 September 2026, version
+1.3.1), each run checked by the harness with no failure:
 
-**`--binary` was dominated by the size of what it collects** — before
-authentic Microsoft binaries were left in place (see below: 99 files, 336 MB,
-since). Measured on the Windows 11 test VM without that check: 6 432 files
-referenced by the artefacts, 4 874 read, 2 131 executables, libraries, drivers
-and scripts collected — **3.3 GB**, written
-twice (exhibit store and working copy), so about 6.5 GB on the collection
-medium; the whole collection went from 70 s to about 310 s on a VM backed by
-NVMe. On a USB stick, writing is the cost. The volume is very concentrated: a
-handful of files above 100 MB (`msedge.dll`, 332 MB, `mrt.exe`,
-`OneDriveSetup.exe`) weigh over a gigabyte.
+| Run | Duration | Exhibit store | What it holds |
+|---|---|---|---|
+| full, `--events --binary` | **273 s** | 0.74 GB, 1 640 exhibits | 24 JSON files; 170 344 events from 404 logs; 6 698 cited files, 2 146 authenticated and not collected, 75 collected (250 MB) |
+| `--collect --events --binary` | **999 s** | 1.81 GB, 6 060 files | 43 513 executables of the volume read and verified, 27 958 authenticated (not copied), 12 700 Windows differential files, 2 508 collected (676 MB); resources of all 934 event providers (649 MB) |
+| `--convert` of that collection | **43 s** | read only | seal and 6 461 fingerprints checked first; identical JSON on a second run |
+| `--collect --events --binary-all` | **1 305 s** | 20.0 GB | 58 509 executables copied, each with its signature verdict (previous cycle) |
+
+**Where the time goes** in a `--collect --binary`, as WAC's log records it per
+phase: reading and verifying the 43 513 executables takes **646 s** — of which
+loading the 13 817 signature catalogs 32 s, Store packages 8 s — and copying the
+unauthenticated ones **29 s**; hives, event logs, provider resources and sealing
+take the rest. The cost is reading and hashing the whole volume, not writing:
+the raw reader fetches contiguous clusters by batches of 1 MiB, and an
+authenticated binary gets its Authenticode digest only, its MD5, SHA-1 and
+SHA-256 being computed solely for what is collected. The duration depends
+heavily on the hardware: USB 2 or USB 3, processor, disk.
 
 **Authentic Microsoft binaries are hashed, not collected.** Most referenced
 binaries are Windows components, identical on every machine of the same build.
 Their origin is provable on the machine itself, with no list to carry: Windows'
-own **catalogs** (`System32\CatRoot`, signed by Microsoft, listing the
-fingerprint of every system file) and the **embedded signature** of individually
+own **catalogs** (`System32\CatRoot`, `WinSxS\Catalogs` and
+`servicing\Packages`, over 13 000 on Windows 11, signed by Microsoft, listing
+the fingerprint of every system file) and the **embedded signature** of individually
 signed binaries (Edge, OneDrive, Office). A file whose Authenticode digest is in
 a validly Microsoft-signed catalog, or whose embedded signature is a valid
 Microsoft one, is fingerprinted and left in place; everything else is collected
@@ -382,9 +388,11 @@ or its XML form) signs the UTF-16LE text that precedes it — verified on every
 signed script of the test VM, and a one-word change makes it rejected. A WSH
 script (`.vbs`, `.js`, `.wsf`) signed only inline is still collected: its
 signed digest covers a normalised form of the text that could not be
-established with certainty. On the test VM, collected binaries went from 2 131
-(3.3 GB) to 92 (335 MB), in the same time; the scripts still collected are the
-unsigned ones.
+established with certainty. On the test VM, a full run's cited binaries went
+from 2 131 collected (3.3 GB) before this check to 75 (250 MB) now; the scripts
+still collected are the unsigned ones. Store applications, signed per package
+rather than per file, are verified through the package signature and its block
+map, 64 KiB block by block.
 
 **Identical content is stored once.** A file's SHA-256 is only known once it
 has been read, so it is first written to a staging directory next to the
@@ -392,8 +400,9 @@ exhibit store, then *renamed* into it if new, or dropped if that content is
 already there under another path. The exhibit store thus only ever receives
 final pieces. The other paths stay exhibits in their own right — their own
 path, `$MFT` entry and timestamps — declared `SharedExhibit` in the manifest,
-pointing to the stored copy. On the test VM: 90 duplicates, 528 MB not written
-twice (Edge and WebView2 ship the same `msedge.dll`). Each file is read
+pointing to the stored copy. Measured when every cited binary was still
+collected: 90 duplicates, 528 MB not written twice (Edge and WebView2 ship the
+same `msedge.dll`). Each file is read
 once however many artefacts cite it, and hashing a file costs no more trace than
 collecting it — only space. When space runs short (under 1 GB left, counting the
 working copies still owed), files are hashed without being copied, and the
@@ -440,8 +449,10 @@ point is not the ratio but the shape: the streamed figure does not grow with the
 size of the logs, so it cannot reach the level where Windows starts paging — and
 paging writes to `pagefile.sys`, on the disk one is trying not to modify.
 
-The **~20 minutes** quoted above is the measured figure for the *old* API path;
-the offline path has not yet been timed end to end on physical hardware.
+End to end, the offline path now takes **273 s** for a full run with `--events`
+and `--binary` on the test VM (170 344 events from 404 logs), against about
+20 minutes for the old API path; it has not yet been timed on physical
+hardware.
 
 What replaces them is the extraction itself: the `.evtx` files must be copied to
 the collection medium first (~117 MB on an ordinary installation), and on a USB
@@ -464,6 +475,8 @@ results are worth stating:
   into the `%1 %2 …` marks. Resource files are extracted **on demand**, once per
   provider that actually produced an event: extracting all of the ~930 declared
   publishers would cost hundreds of megabytes for providers that were silent.
+  A `--collect` run does take them all (934 providers, 649 MB): which ones the
+  logs cite is only known at conversion, on another machine.
   **This required reading WOF — and it is read raw, with no fallback.** Windows
   10 and 11 store their system binaries compressed by "Compact OS": the file's
   `$DATA` attribute is **sparse** and the payload lives in a named stream

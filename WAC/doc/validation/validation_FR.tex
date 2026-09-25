@@ -157,7 +157,19 @@ vérifiée avant d'être utilisée :
     erreur, pas une donnée tronquée en silence ;
   \item taille extraite comparée à la taille déclarée par l'attribut
     \texttt{\$DATA} : leur écart, publié dans le manifeste, révèle une
-    extraction tronquée qu'une empreinte seule ne montrerait pas.
+    extraction tronquée qu'une empreinte seule ne montrerait pas ;
+  \item attributs cherchés aussi dans les enregistrements d'extension
+    (\texttt{\$ATTRIBUTE\_LIST}) : un répertoire dont NTFS a déplacé le
+    \texttt{\$INDEX\_ROOT}, cas de milliers de composants WinSxS, était
+    déclaré illisible (4~569 répertoires d'un Windows~11) ;
+  \item blocs d'index libérés ignorés, d'après le \texttt{\$BITMAP} de
+    l'index : ils peuvent garder des entrées périmées ;
+  \item chaque lecture d'attribut bornée par la taille réelle de l'attribut,
+    \texttt{\$STANDARD\_INFORMATION} compris ;
+  \item dates du fichier source relevées dans \texttt{\$STANDARD\_INFORMATION}
+    \emph{et} dans \texttt{\$FILE\_NAME} : un programme qui falsifie les
+    premières (\emph{timestomping}) ne touche pas les secondes, et l'écart se
+    voit au manifeste.
 \end{itemize}
 
 \section{Ruches du registre}
@@ -192,14 +204,22 @@ rouverte en écriture ; tout le travail se fait sur une seconde copie.
   \item le manifeste qui identifie les pièces est scellé par un second fichier
     portant son empreinte : un manifeste retouché se détecte ;
   \item un échec d'extraction est consigné lui aussi : une pièce absente du
-    manifeste se lirait comme jamais cherchée.
+    manifeste se lirait comme jamais cherchée ;
+  \item les dates d'un artefact fichier (Prefetch, raccourci, liste de sauts)
+    sont celles du fichier source, relevées au manifeste, jamais celles de la
+    copie de travail, qui sont celles de la collecte ;
+  \item une conversion séparée (\opt{convert}) vérifie le sceau et le
+    SHA-256 de chaque pièce \emph{avant} toute lecture, refuse la consigne au
+    premier écart, et n'accepte que des chemins de pièces qui restent dans la
+    consigne.
 \end{itemize}
 
 Un tiers peut vérifier la consigne sans \wac{}, avec les scripts
 \fichier{verify-exhibits.ps1} (messages en anglais) et
 \fichier{verifier-consigne.ps1} (messages en français), livrés avec la
 documentation utilisateur : ils contrôlent le sceau puis l'empreinte de chaque
-pièce.
+pièce ; un binaire authentifié lu mais non copié (« empreinte seule ») est
+compté à part, faute de fichier.
 
 \section{Authenticité des binaires}
 
@@ -208,8 +228,18 @@ artefacts, sauf ceux dont il établit qu'ils sont signés par Microsoft. Cette
 décision repose sur une vérification complète, faite par \wac{} lui-même :
 signature RSA de chaque catalogue de sécurité, chaîne de certificats jusqu'à
 une racine Microsoft, empreinte Authenticode du fichier retrouvée dans un
-catalogue vérifié, ou signature intégrée. Un fichier dont l'authenticité n'est
-pas établie est prélevé : le doute conduit à collecter, jamais à écarter.
+catalogue vérifié, ou signature intégrée. Les catalogues lus sont ceux de
+\path|CatRoot|, des composants (\path|WinSxS\Catalogs|) et des paquets de
+maintenance ; les signataires acceptés, ceux de Microsoft pour son propre code,
+\texttt{.NET} compris. Les fichiers d'une application du Store sont vérifiés par
+la signature de leur paquet et la carte de ses blocs, bloc de 64~Kio par bloc.
+Un fichier dont l'authenticité n'est pas établie est prélevé : le doute conduit
+à collecter, jamais à écarter. Les catalogues, signatures et cartes qui ont
+justifié un non-prélèvement sont consignés ; chaque PE porte au manifeste sa
+version (\texttt{TimeDateStamp}, \texttt{SizeOfImage}), clé du serveur de
+symboles de Microsoft qui permet d'en retrouver le contenu identique. Avec
+\opt{binary-all}, tout est prélevé, et le verdict est consigné pour chaque
+exécutable.
 
 \section{Journaux d'événements}
 
@@ -276,10 +306,10 @@ lui.
   18 ruches, dont dix d'une machine réelle : 1~273~652 clés et 2~456~139
   valeurs identiques \\
 \texttt{system\_conversions\_test} & fonctions Windows remplacées &
-  9~661~562 comparaisons, aucun écart (détail ci-dessous) \\
+  9~861~570 comparaisons, aucun écart (détail ci-dessous) \\
 \texttt{consigne\_test} & la consigne elle-même, avant et après &
   consigne identique octet pour octet après modification de la copie de
-  travail ; sceau conforme \\
+  travail ; sceau conforme ; chemins de pièces confinés à la consigne \\
 \texttt{ntfs\_fixup\_test} & enregistrements construits, vérification indépendante &
   enregistrements sains restitués à l'octet, enregistrements déchirés et
   tableaux malformés refusés, 20~000 enregistrements aléatoires contre une page
@@ -371,7 +401,13 @@ registre) :
     vérifié, et la trace est cherchée pour toute exception non traitée ;
   \item rapatriement des sorties, du journal de collecte et de la liste des
     fichiers réellement présents dans la consigne ;
-  \item exécution de \fichier{check-json.py}.
+  \item exécution de \fichier{check-json.py} ;
+  \item collecte seule (\opt{collect} \opt{events} \opt{binary}, ou
+    \opt{binary-all}), qui ne doit rien convertir ; vérification de la consigne
+    par \fichier{verify-exhibits.ps1} ; conversion d'une consigne dont une pièce
+    a été retouchée, qui doit être refusée avant toute lecture ; conversion,
+    contrôlée par \fichier{check-json.py} ; seconde conversion, dont les JSON
+    doivent être identiques à la première, octet pour octet.
 \end{enumerate}
 
 \section{Les contrôles de \texttt{check-json.py}}
@@ -456,21 +492,58 @@ aucune ruche à la fois rejouée et réparée & rejeu qui n'aligne pas les
   séquences \\
 un journal d'annulation pour chaque rejeu & copie brute impossible à
   reconstituer \\
+\multicolumn{2}{@{}l}{\textit{Lecture brute, collecte et conversion séparées}} \\
+SHA-256 de fichiers lus en brut / \texttt{Get-FileHash} & garde-fou de la
+  lecture par lots de clusters contigus \\
+dates des Prefetch / dates données par Windows & 0 sur 335 conformes : dates de
+  la copie de travail, soit la minute de la collecte \\
+exécutables de System32 et SysWOW64 / manifeste d'un \opt{collect} \opt{binary}
+  & 6~446 manquants sur 8~540 (\texttt{\$INDEX\_ROOT} en enregistrement
+  d'extension, noms de liens physiques non déclarés) \\
+catalogues cités dans un verdict / pièces de la consigne & 170 sur 170 absents
+  (libellé « catalog » cherché comme « catalogue ») \\
+verdicts Microsoft de \wac{} / \texttt{Get-AuthenticodeSignature} & garde-fou :
+  un mauvais verdict laisserait un binaire hors de la consigne \\
+copie d'un paquet du Store : fichier intact, modifié, ajouté & vérification par
+  la carte des blocs signée \\
+dates d'un script reculées à 2001 / \texttt{\$STANDARD\_INFORMATION} et
+  \texttt{\$FILE\_NAME} & garde-fou : une falsification doit rester visible \\
+clés de récupération / en-têtes PE lus par PowerShell & garde-fou du contenu
+  récupérable \\
+\opt{binary-all} : copie et verdict de chaque exécutable & contrôle des
+  paquets trop strict en \opt{binary-all} \\
+pièce retouchée / refus de la conversion & garde-fou de la vérification avant
+  lecture \\
+deux conversions d'une même collecte & dates lues sur la copie de travail,
+  refaite à chaque conversion \\
 \bottomrule
 \end{longtable}
 
 \section{Résultat de référence}
 
-Dernier cycle, sur la version 1.3.1 (Windows~11, fuseau de Paris) :
+Dernier cycle, le 25 septembre 2026, sur la version 1.3.1 (Windows~11, fuseau
+de Paris), sans aucun échec ni avertissement :
 
 \begin{itemize}
-  \item 24 fichiers JSON valides sur 24 produits, USBSTOR compris : le
-    harnais branche une clé USB virtuelle à chaque cycle, si bien qu'une
-    machine de test recréée la connaît aussi ;
-  \item 36 contrôles croisés passés, aucun échec, dont 4~068 dates locales
-    confrontées à la base IANA et 145~645 événements décodés ;
-  \item 1~336 pièces dans la consigne, exactement celles du manifeste, sceau
-    conforme.
+  \item \textbf{exécution complète} (\opt{events} \opt{binary}, 273~s) :
+    24 fichiers JSON valides sur 24 produits, USBSTOR compris (le harnais
+    branche une clé USB virtuelle à chaque cycle, si bien qu'une machine de
+    test recréée la connaît aussi) ; 62 contrôles passés, dont 4~090 dates
+    locales confrontées à la base IANA et 170~344 événements décodés dans
+    404 journaux ; 1~640 pièces, exactement celles du manifeste, sceau conforme ;
+  \item \textbf{collecte seule} (\opt{collect} \opt{events} \opt{binary},
+    999~s) : rien converti ; 43~513 exécutables lus, 27~958 authentifiés et non
+    copiés, 12~700 fichiers différentiels de Windows, 2~508 prélevés (676~Mo) ;
+    6~461 pièces vérifiées par \fichier{verify-exhibits.ps1} ; une pièce
+    retouchée refusée avant toute lecture ;
+  \item \textbf{conversion} (\opt{convert}, 43~s) : 75 contrôles passés, dont
+    les 8~539 exécutables de System32 et SysWOW64 présents au manifeste,
+    637 clés de récupération égales aux en-têtes PE, un script aux dates
+    falsifiées démasqué (\texttt{\$STANDARD\_\allowbreak INFORMATION} de 2001, \texttt{\$FILE\_NAME} du jour), la
+    vérification des paquets du Store ; une seconde conversion donne des JSON
+    identiques, octet pour octet ;
+  \item \textbf{\opt{binary-all}} (cycle précédent) : 58~509 exécutables
+    copiés, chacun avec le verdict de sa signature.
 \end{itemize}
 
 % ============================================================ 5

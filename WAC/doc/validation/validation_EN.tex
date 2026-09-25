@@ -154,7 +154,19 @@ Windows file system. Every structure read is checked before use:
     data silently truncated;
   \item extracted size compared with the size declared by the \texttt{\$DATA}
     attribute: their difference, published in the manifest, reveals a
-    truncated extraction a fingerprint alone would not show.
+    truncated extraction a fingerprint alone would not show;
+  \item attributes looked for in the extension records too
+    (\texttt{\$ATTRIBUTE\_LIST}): a directory whose \texttt{\$INDEX\_ROOT}
+    NTFS had moved, the case of thousands of WinSxS components, was reported
+    unreadable (4,569 directories of a Windows~11);
+  \item released index blocks skipped, per the index's \texttt{\$BITMAP}:
+    they can keep stale entries;
+  \item every attribute read bounded by the attribute's real size,
+    \texttt{\$STANDARD\_INFORMATION} included;
+  \item the source file's dates read in \texttt{\$STANDARD\_INFORMATION}
+    \emph{and} in \texttt{\$FILE\_NAME}: a program forging the former
+    (\emph{timestomping}) leaves the latter untouched, and the gap shows in the
+    manifest.
 \end{itemize}
 
 \section{Registry hives}
@@ -189,13 +201,21 @@ reopened for writing; all the work is done on a second copy.
   \item the manifest identifying the exhibits is sealed by a second file
     carrying its fingerprint: a retouched manifest is detected;
   \item a failed extraction is recorded too: an exhibit missing from the
-    manifest would read as never looked for.
+    manifest would read as never looked for;
+  \item the dates of a file artefact (Prefetch, shortcut, jump list) are the
+    source file's, recorded in the manifest, never those of the working copy,
+    which are the collection's;
+  \item a separate conversion (\opt{convert}) checks the seal and every
+    exhibit's SHA-256 \emph{before} any read, refuses the store at the first
+    difference, and only accepts exhibit paths that stay inside the store.
 \end{itemize}
 
 A third party can check the exhibit store without \wac{}, with the scripts
 \fichier{verify-exhibits.ps1} (English messages) and
 \fichier{verifier-consigne.ps1} (French messages), shipped with the user
-documentation: they check the seal, then the fingerprint of every exhibit.
+documentation: they check the seal, then the fingerprint of every exhibit; an
+authenticated binary read but not copied (``fingerprint only'') is counted
+apart, having no file.
 
 \section{Authenticity of binaries}
 
@@ -203,9 +223,18 @@ With the \opt{binary} option, \wac{} takes the binaries cited by the
 artefacts, except those it establishes as signed by Microsoft. That decision
 rests on a complete verification, done by \wac{} itself: RSA signature of each
 security catalog, certificate chain up to a Microsoft root, Authenticode
-digest of the file found in a verified catalog, or embedded signature. A file
-whose authenticity is not established is collected: doubt leads to collecting,
-never to discarding.
+digest of the file found in a verified catalog, or embedded signature. The
+catalogs read are those of \path|CatRoot|, of the components
+(\path|WinSxS\Catalogs|) and of the servicing packages; the signers accepted,
+those Microsoft uses for its own code, \texttt{.NET} included. The files of a
+Store application are verified through their package's signature and block
+map, 64~KiB block by block. A file whose authenticity is not established is
+collected: doubt leads to collecting, never to discarding. The catalogs,
+signatures and maps that justified not collecting a file go into the store;
+every PE carries its build in the manifest (\texttt{TimeDateStamp},
+\texttt{SizeOfImage}), the key of Microsoft's symbol server from which its
+identical content can be fetched again. With \opt{binary-all}, everything is
+collected, and the verdict is recorded for each executable.
 
 \section{Event logs}
 
@@ -270,10 +299,10 @@ with it.
   18 hives, ten of them from a real machine: 1,273,652 keys and 2,456,139
   values identical \\
 \texttt{system\_conversions\_test} & the Windows functions replaced &
-  9,661,562 comparisons, no difference (details below) \\
+  9,861,570 comparisons, no difference (details below) \\
 \texttt{consigne\_test} & the exhibit store itself, before and after &
   exhibit store byte-identical after the working copy was modified; seal
-  conforms \\
+  conforms; exhibit paths confined to the store \\
 \texttt{ntfs\_fixup\_test} & hand-built records, independent check &
   sound records restored to the byte, torn records and malformed arrays
   refused, 20,000 random records against a forbidden page: 44,610 checks, no
@@ -361,7 +390,13 @@ collection in a Windows~11 virtual machine (real NTFS, real registry):
     trace is searched for any unhandled exception;
   \item retrieval of the outputs, of the collection log and of the list of
     files actually present in the exhibit store;
-  \item run of \fichier{check-json.py}.
+  \item run of \fichier{check-json.py};
+  \item collection only (\opt{collect} \opt{events} \opt{binary}, or
+    \opt{binary-all}), which must convert nothing; check of the store by
+    \fichier{verify-exhibits.ps1}; conversion of a store with one retouched
+    exhibit, which must be refused before any read; conversion, checked by
+    \fichier{check-json.py}; second conversion, whose JSON files must be
+    identical to the first's, byte for byte.
 \end{enumerate}
 
 \section{The checks of \texttt{check-json.py}}
@@ -441,21 +476,58 @@ files present in the exhibit store / manifest & 209 exhibits added after
 no hive both replayed and repaired & a replay that does not align the
   sequences \\
 an undo journal for every replay & a raw copy impossible to rebuild \\
+\multicolumn{2}{@{}l}{\textit{Raw reading, separate collection and conversion}} \\
+SHA-256 of files read raw / \texttt{Get-FileHash} & safeguard of the reading by
+  batches of contiguous clusters \\
+Prefetch dates / dates given by Windows & 0 out of 335 matching: dates of the
+  working copy, the minute of the collection \\
+executables of System32 and SysWOW64 / manifest of a \opt{collect} \opt{binary}
+  & 6,446 missing out of 8,540 (\texttt{\$INDEX\_ROOT} in an extension
+  record, names of hard links not declared) \\
+catalogs cited in a verdict / exhibits of the store & 170 out of 170 missing
+  (label ``catalog'' looked for as ``catalogue'') \\
+\wac{}'s Microsoft verdicts / \texttt{Get-AuthenticodeSignature} & safeguard: a
+  wrong verdict would leave a binary out of the store \\
+copy of a Store package: untouched, modified, added file & verification through
+  the signed block map \\
+dates of a script forged back to 2001 / \texttt{\$STANDARD\_INFORMATION} and
+  \texttt{\$FILE\_NAME} & safeguard: a forgery must stay visible \\
+retrieval keys / PE headers read by PowerShell & safeguard of the retrievable
+  content \\
+\opt{binary-all}: copy and verdict of every executable & package check too
+  strict under \opt{binary-all} \\
+retouched exhibit / refusal of the conversion & safeguard of the check before
+  reading \\
+two conversions of one collection & dates read on the working copy, rebuilt at
+  each conversion \\
 \bottomrule
 \end{longtable}
 
 \section{Reference result}
 
-Last cycle, on version 1.3.1 (Windows~11, Paris time zone):
+Last cycle, 25 September 2026, on version 1.3.1 (Windows~11, Paris time zone),
+no failure and no warning:
 
 \begin{itemize}
-  \item 24 valid JSON files out of 24 produced, USBSTOR included: the harness
-    attaches a virtual USB key on every cycle, so that a recreated test
-    machine knows one too;
-  \item 36 cross-checks passed, no failure, among them 4,068 local dates
-    confronted with the IANA database and 145,645 events decoded;
-  \item 1,336 exhibits in the exhibit store, exactly those of the manifest,
-    seal conforms.
+  \item \textbf{full run} (\opt{events} \opt{binary}, 273~s): 24 valid JSON
+    files out of 24 produced, USBSTOR included (the harness attaches a virtual
+    USB key on every cycle, so that a recreated test machine knows one too);
+    62 checks passed, among them 4,090 local dates confronted with the IANA
+    database and 170,344 events decoded from 404 logs; 1,640 exhibits, exactly
+    those of the manifest, seal conforms;
+  \item \textbf{collection only} (\opt{collect} \opt{events} \opt{binary},
+    999~s): nothing converted; 43,513 executables read, 27,958 authenticated
+    and not copied, 12,700 Windows differential files, 2,508 collected
+    (676~MB); 6,461 exhibits verified by \fichier{verify-exhibits.ps1}; a
+    retouched exhibit refused before any read;
+  \item \textbf{conversion} (\opt{convert}, 43~s): 75 checks passed, among
+    them the 8,539 executables of System32 and SysWOW64 present in the
+    manifest, 637 retrieval keys equal to the PE headers, a timestomped script
+    visible (\texttt{\$STANDARD\_\allowbreak INFORMATION} of 2001, \texttt{\$FILE\_NAME} of the day), the Store
+    package verification; a second conversion gives identical JSON files, byte
+    for byte;
+  \item \textbf{\opt{binary-all}} (previous cycle): 58,509 executables copied,
+    each with its signature verdict.
 \end{itemize}
 
 % ============================================================ 5
