@@ -299,6 +299,10 @@ Toutes les options sont facultatives et désactivées par défaut.
   par un artefact, par lecture directe du disque. Les exécutables, bibliothèques,
   pilotes et scripts cités sont en outre \textbf{prélevés} dans la consigne. Voir
   section~\ref{sec:binary}. \\
+-{}-binary-all & Comme \opt{binary}, mais \textbf{tout} exécutable est prélevé,
+  authentifié ou non ; la signature est tout de même vérifiée, et le manifeste
+  dit pour chacun si elle est valide. Pour les dossiers où le contenu même doit
+  figurer dans la consigne. \\
 -{}-dump & Ajoute la valeur hexadécimale brute des éléments de shellbags et de
   raccourcis \fichier{.lnk}, pour un décodage ultérieur. \\
 -{}-output=dossier & Dossier de sortie, relatif au répertoire courant. Par défaut :
@@ -660,7 +664,26 @@ MftEntry & Numéro d'enregistrement NTFS : identifie le fichier indépendamment
   de son nom. \\
 Extracted(Utc) & Instant de l'extraction de cette pièce. \\
 SourceCreated, SourceModified, SourceMftModified, SourceAccessed & Les quatre
-  horodatages NTFS du fichier d'origine, en UTC et en heure locale du suspect. \\
+  horodatages NTFS du fichier d'origine (\path|$STANDARD_INFORMATION|), en UTC et
+  en heure locale du suspect. Ce sont eux, et non les dates des copies, qui
+  datent le fichier. \\
+SourceFileName\newline Created, Modified, MftModified, Accessed &
+  Les quatre horodatages de l'attribut \path|$FILE_NAME| du nom lu. NTFS les
+  tient à part, et une modification des dates par programme ne les touche pas :
+  un \champ{SourceCreated} antérieur à \champ{SourceFileNameCreated} est le signe
+  classique de dates falsifiées après coup (\emph{timestomping}). \\
+ContentStored & \texttt{false} : binaire authentifié lu mais non copié
+  (\opt{collect} \opt{binary}) ; il n'a pas de \champ{ExhibitPath}. \\
+AuthenticodeSHA1, AuthenticodeSHA256 & Empreintes Authenticode d'un PE, celles
+  que couvrent sa signature et les catalogues ; seules empreintes d'un binaire
+  authentifié non copié. \\
+SignatureVerified & Résultat de la vérification de signature d'un exécutable :
+  \texttt{true} avec \champ{Signature} (ce qui l'authentifie), \texttt{false}
+  avec \champ{SignatureReason} (pourquoi). \\
+PeTimeDateStamp, PeSizeOfImage, SymbolServerKey & Version d'un PE et clé
+  (\texttt{nom/HORODATAGEtaille/nom}) sous laquelle le serveur de symboles de
+  Microsoft la conserve : un binaire Microsoft authentique non copié peut en
+  être retéléchargé, identique, et son empreinte revérifiée. \\
 \bottomrule
 \end{longtable}
 

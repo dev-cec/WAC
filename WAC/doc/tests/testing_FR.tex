@@ -190,6 +190,7 @@ cd vmtest
 ./run-wac-test.sh             # cycle complet avec les binaires déjà construits
 ./run-wac-test.sh --raw-only  # seulement la validation de la lecture brute
 ./run-wac-test.sh --no-split  # sans l'étape 7 (collecte puis conversion)
+./run-wac-test.sh --binary-all  # étape 7 avec --binary-all
 \end{lstlisting}
 
 Le cycle enchaîne : envoi de \fichier{WAC.exe} et \fichier{raw\_hive\_test.exe}
@@ -257,6 +258,10 @@ catalogues cités dans un verdict / pièces de la consigne & 170 sur 170 absents
 verdicts Microsoft de \wac{} / \texttt{Get-AuthenticodeSignature} & garde-fou : un mauvais verdict laisserait un binaire hors de la consigne \\
 copie d'un paquet du Store (intact, modifié, ajouté) / verdicts & vérification par la carte des blocs signée \\
 deux conversions d'une même collecte & dates lues sur la copie de travail, refaite à chaque conversion \\
+dates falsifiées d'un script / \path|$STANDARD_INFORMATION| et \path|$FILE_NAME| & garde-fou : la falsification doit rester visible \\
+clés de récupération / en-têtes PE lus par PowerShell & garde-fou du contenu récupérable \\
+\opt{binary-all} / copie et verdict de chaque exécutable & contrôle des paquets trop strict en \opt{binary-all} \\
+\fichier{verify-exhibits.ps1} / collecte séparée & pièces « empreinte seule » déclarées altérées \\
 \bottomrule
 \end{longtable}
 

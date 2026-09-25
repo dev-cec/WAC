@@ -296,6 +296,10 @@ Every option is optional and disabled by default.
   artefact, by reading the disk directly. Referenced executables, libraries,
   drivers and scripts are also \textbf{collected} into the exhibit store. See
   section~\ref{sec:binary}. \\
+-{}-binary-all & Like \opt{binary}, but \textbf{every} executable is collected,
+  authenticated or not; the signature is checked all the same, and the manifest
+  says for each whether it holds. For the cases where the content itself must
+  be in the exhibit store. \\
 -{}-dump & Adds the raw hexadecimal value of shellbag and \fichier{.lnk} shortcut
   items, for later decoding. \\
 -{}-output=folder & Output folder, relative to the current directory. Default:
@@ -654,7 +658,25 @@ SharedExhibit & \texttt{true} when the content, identical byte for byte, is
 MftEntry & NTFS record number: identifies the file independently of its name. \\
 Extracted(Utc) & When this exhibit was extracted. \\
 SourceCreated, SourceModified, SourceMftModified, SourceAccessed & The four NTFS
-  timestamps of the original file, in UTC and in the suspect's local time. \\
+  timestamps of the original file (\path|$STANDARD_INFORMATION|), in UTC and in
+  the suspect's local time. They, not the dates of the copies, date the file. \\
+SourceFileName\newline Created, Modified, MftModified, Accessed &
+  The four timestamps of the \path|$FILE_NAME| attribute of the name read. NTFS
+  keeps them apart, and a change of the dates by a program leaves them
+  untouched: a \champ{SourceCreated} earlier than \champ{SourceFileNameCreated}
+  is the classic sign of dates forged after the fact (\emph{timestomping}). \\
+ContentStored & \texttt{false}: authenticated binary read but not copied
+  (\opt{collect} \opt{binary}); it has no \champ{ExhibitPath}. \\
+AuthenticodeSHA1, AuthenticodeSHA256 & Authenticode digests of a PE, those its
+  signature and the catalogs cover; the only digests of an authenticated binary
+  that was not copied. \\
+SignatureVerified & Outcome of an executable's signature check: \texttt{true}
+  with \champ{Signature} (what authenticates it), \texttt{false} with
+  \champ{SignatureReason} (why not). \\
+PeTimeDateStamp, PeSizeOfImage, SymbolServerKey & Build of a PE and the key
+  (\texttt{name/TIMESTAMPsize/name}) under which Microsoft's symbol server keeps
+  it: an authentic Microsoft binary that was not copied can be fetched again
+  from it, identical, and its fingerprint checked. \\
 \bottomrule
 \end{longtable}
 

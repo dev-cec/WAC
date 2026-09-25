@@ -182,6 +182,7 @@ cd vmtest
 ./run-wac-test.sh             # full cycle with the binaries already built
 ./run-wac-test.sh --raw-only  # only the validation of the raw reading
 ./run-wac-test.sh --no-split  # without step 7 (collection then conversion)
+./run-wac-test.sh --binary-all  # step 7 with --binary-all
 \end{lstlisting}
 
 The cycle chains: upload of \fichier{WAC.exe} and \fichier{raw\_hive\_test.exe}
@@ -246,6 +247,10 @@ catalogs cited in a verdict / exhibits of the store & 170 out of 170 missing (la
 \wac{}'s Microsoft verdicts / \texttt{Get-AuthenticodeSignature} & safeguard: a wrong verdict would leave a binary out of the store \\
 copy of a Store package (untouched, modified, added) / verdicts & verification through the signed block map \\
 two conversions of one collection & dates read on the working copy, rebuilt at each conversion \\
+forged dates of a script / \path|$STANDARD_INFORMATION| and \path|$FILE_NAME| & safeguard: the forgery must stay visible \\
+retrieval keys / PE headers read by PowerShell & safeguard of the retrievable content \\
+\opt{binary-all} / copy and verdict of every executable & package check too strict under \opt{binary-all} \\
+\fichier{verify-exhibits.ps1} / separate collection & fingerprint-only exhibits reported altered \\
 \bottomrule
 \end{longtable}
 
