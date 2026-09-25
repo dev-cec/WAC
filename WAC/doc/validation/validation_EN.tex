@@ -230,7 +230,11 @@ reported and skipped; it no longer stops the reading of the file.
     service SIDs, profiles), never by asking the system or the network:
     \texttt{LookupAccountSidW} queried the domain controller for a SID the
     machine did not know, a trace of the collection on another machine. The
-    build fails if \fichier{WAC.exe} imports a name-resolution function.
+    build fails if \fichier{WAC.exe} imports a name-resolution function;
+  \item a GUID the reference table does not know is named from the examined
+    machine's hives (machine classes, known folders, each user's classes);
+    unknown everywhere, it is published without a name, never with a
+    placeholder text.
 \end{itemize}
 
 % ============================================================ 3
@@ -423,6 +427,9 @@ mounts / Windows' reading of the key (\texttt{reg query}) and partitions
 SID names / \texttt{Get-LocalUser}, \texttt{Get-LocalGroup} & names asked
   of the running system, even of the domain controller, and translated into
   the workstation's language (``Système'') \\
+GUIDs unknown to the table / three GUIDs registered by the harness, one per
+  source & ``Unmapped GUID'' published as a name, among them 18 COM handlers of
+  the VM's tasks, named in its hive \\
 \multicolumn{2}{@{}l}{\textit{Exhibit store and replay}} \\
 seal / real fingerprint of the manifest & a retouched manifest \\
 three fingerprints per exhibit, consistent counts & an unidentified exhibit \\
@@ -442,7 +449,7 @@ Last cycle, on version 1.3.1 (Windows~11, Paris time zone):
   \item 24 valid JSON files out of 24 produced, USBSTOR included: the harness
     attaches a virtual USB key on every cycle, so that a recreated test
     machine knows one too;
-  \item 35 cross-checks passed, no failure, among them 4,068 local dates
+  \item 36 cross-checks passed, no failure, among them 4,068 local dates
     confronted with the IANA database and 145,645 events decoded;
   \item 1,336 exhibits in the exhibit store, exactly those of the manifest,
     seal conforms.

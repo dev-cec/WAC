@@ -716,6 +716,16 @@ machine examinée), SID bien connus sous leur nom canonique
 compte de domaine. Un SID qu'aucune de ces sources ne nomme est publié sans
 nom : le SID reste la preuve, à rapprocher du domaine par l'analyste.
 
+\section{Noms des GUID}
+
+Les champs qui nomment un GUID (classe COM, dossier connu, gestionnaire d'une
+tâche) viennent d'abord d'une table de référence, puis des ruches de la machine
+examinée : ses classes (\fichier{SOFTWARE\textbackslash Classes\textbackslash
+CLSID}), ses dossiers connus (\fichier{FolderDescriptions}), et les classes de
+chaque utilisateur (\fichier{UsrClass.dat}). Un composant installé sur la
+machine y est donc nommé, avec le module qui le sert. Un GUID que rien ne nomme
+est publié sans nom.
+
 \section{Un champ absent n'est pas un champ vide}
 
 Une valeur sans source n'est pas émise du tout. Une clé vide se lirait comme une

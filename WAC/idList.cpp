@@ -428,7 +428,7 @@ static Json streamContent(LPBYTE data, size_t size, unsigned int level) {
 	if (size >= 16) {
 		const std::wstring clsid = guid_to_wstring(*reinterpret_cast<const GUID*>(data));
 		const std::wstring name = trans_guid_to_wstring(clsid);
-		if (name != L"Unmapped GUID") {
+		if (!name.empty()) {
 			o.add(L"ObjectClass",     Json::str(clsid));
 			o.add(L"ObjectClassName", Json::str(name));
 		}

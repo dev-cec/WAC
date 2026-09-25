@@ -155,6 +155,7 @@ def cross_checks(folder):
     found += check_utc_sources(folder)
     found += check_key_names(folder)
     found += check_account_names(folder)
+    found += check_guid_names(folder)
     return found
 
 
@@ -1190,6 +1191,63 @@ def check_account_names(folder):
     named = sum(1 for s, _ in pairs if s in expected)
     print(f"  ✅ SID names: {named} local account(s)/group(s) as Windows names them, S-1-5-18 = SYSTEM, none unnamed")
     return 0
+
+
+def check_guid_names(folder):
+    """GUIDs the reference table does not know are named from the evidence.
+
+    WHY. WAC named GUIDs from a table built on a reference Windows: a component
+    or a folder installed on the examined machine came out as "Unmapped GUID" —
+    a placeholder published as if it were the name; 18 COM handlers of the
+    scheduled tasks of the test VM itself. They are now read in the examined
+    machine's hives (WAC/trans_id.cpp). run-wac-test.sh registers three GUIDs,
+    one per source (machine classes, user classes, known folders), each the
+    COM handler of a disabled task: WAC must give exactly their names. And no
+    output may carry the placeholder any more.
+    """
+    found = 0
+    placeholder = []
+    for file in sorted(glob.glob(os.path.join(folder, "*.json"))):
+        if os.path.basename(file) == "events.json":
+            continue
+        with open(file, encoding="utf-8", errors="replace") as f:
+            if "Unmapped GUID\"" in f.read():
+                placeholder.append(os.path.basename(file))
+    if placeholder:
+        print(f"  ❌ \"Unmapped GUID\" published as a name in {placeholder}")
+        found += 1
+    path = os.path.join(folder, "reference", "test-guids.txt")
+    tasks = load(folder, "ScheduledTasks.json")
+    if not os.path.exists(path) or not isinstance(tasks, list):
+        print("  ⏭️  test GUIDs or scheduled tasks absent: names from the hives not confronted")
+        return found
+    expected = {}
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            parts = line.strip().split("|", 1)
+            if len(parts) == 2 and parts[0].startswith("{"):
+                expected[parts[0].upper()] = parts[1]
+    handlers = {}
+    def walk(o):
+        if isinstance(o, dict):
+            if o.get("Type") == "ComHandler" and o.get("ClassId"):
+                handlers[o["ClassId"].upper()] = o.get("ClassIdName")
+            for v in o.values():
+                walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v)
+    walk(tasks)
+    module = r" (C:\wactest\wac-test-handler.dll)"
+    wrong = [f"{g}: {handlers.get(g)!r}, expected {n!r}" for g, n in expected.items()
+             if handlers.get(g) not in (n, n + module)]
+    if wrong:
+        print(f"  ❌ GUID names from the hives: {wrong[0]} ({len(wrong)} difference(s))")
+        found += 1
+    else:
+        print(f"  ✅ {len(expected)} test GUID(s) named from the examined machine's hives "
+              "(machine classes, user classes, known folders); no placeholder name")
+    return found
 
 
 def process_name(p):

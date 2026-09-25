@@ -81,6 +81,15 @@ $QGA run --shell "reg unload HKLM\\WAC_TEST >nul 2>&1 & exit /b 0" >/dev/null 2>
 $QGA write "$ROOT/build-windows/WAC.exe"           "$VMDIR\\WAC.exe"
 $QGA write "$ROOT/build-windows/raw_hive_test.exe" "$VMDIR\\raw_hive_test.exe"
 
+# GUIDs the reference table does not know, one per source WAC reads them from
+# (see register-test-guids.ps1): the names it prints are those check-json.py
+# expects in ScheduledTasks.json.
+mkdir -p "$OUTPUT/reference"
+$QGA write "$HERE/register-test-guids.ps1" "$VMDIR\\register-test-guids.ps1" >/dev/null
+$QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\register-test-guids.ps1" \
+  > "$OUTPUT/reference/test-guids.txt" 2>/dev/null \
+  && echo "   test GUIDs registered" || echo "   ⚠️ test GUIDs not registered"
+
 echo "== 3. raw_hive validation (raw extraction + reg load) =="
 # Tested BOTH ways. A hive copied live is always "dirty":
 #   - without --fix, `reg load` MUST refuse it (ERROR_BADDB): that is what proves

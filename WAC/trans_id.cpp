@@ -4,6 +4,8 @@
 #include "tools.h"
 #include "trans_id.h"
 #include <unordered_map>
+#include <map>
+#include <vector>
 
 
 namespace {
@@ -34,8 +36,10 @@ std::wstring find(const Translation* table, size_t size,
 		index.reserve(size);
 		for (size_t i = 0; i < size; ++i) index.emplace(table[i].key, table[i].value);
 	}
+	// Not found: an empty name, hence not emitted — never a placeholder text
+	// ("Unmapped GUID" was published as if it were the name).
 	const auto found = index.find(key);
-	return found != index.end() ? found->second : std::wstring(L"Unmapped GUID");
+	return found != index.end() ? found->second : std::wstring();
 }
 
 std::unordered_map<std::wstring, const wchar_t*> indexGuid;
@@ -17351,7 +17355,6 @@ const Translation TABLE_GUID[] = {
 	{L"{00020d76-0000-0000-c000-000000000046}", L"Inbox"},
 	{L"{00028b00-0000-0000-c000-000000000046}", L"History"},
 	{L"{0875dcb6-c686-4243-9432-adccf0b9f2d7}", L"Microsoft OneNote Namespace Extension for Windows Desktop Search"},
-	{L"{09f581a3-1f64-4e5b-8db3-88f5593080cc}", L"Unmapped GUID"},
 	{L"{0bd8e793-d371-11d1-b0b5-0060972919d7}", L"SolidWorks Enterprise PDM"},
 	{L"{13e7f612-f261-4391-bea2-39df4f3fa311}", L"Windows Desktop Search"},
 	{L"{1723d66a-7a12-443e-88c7-05e1bfe79983}", L"Previous Versions Delegate Folder"},
@@ -17381,11 +17384,9 @@ const Translation TABLE_GUID[] = {
 	{L"{cce6191f-13b2-44fa-8d14-324728beef2c}", L"Unmapped GUID, linked to search results"},
 	{L"{d426cfd0-87fc-4906-98d9-a23f5d515d61}", L"Windows Search Service Outlook Express Protocol Handler"},
 	{L"{d5b1944e-db4e-482e-b3f1-db05827f0978}", L"Softex OmniPass Encrypted Folder"},
-	{L"{dfd52831-23a3-2823-0400-000000001f28}", L"Unmapped GUID"},
 	{L"{e17d4fc0-5564-11d1-83f2-00a0c90dc849}", L"Search Results"},
 	{L"{e773f1af-3a65-4866-857d-846fc9c4598a}", L"Shell Storage Folder Viewer"},
 	{L"{f3f5824c-ad58-4728-af59-a1ebe3392799}", L"Sticky Notes Namespace Extension for Windows Desktop Search"},
-	{L"{f874310e-b6b7-47dc-bc84-b9e6b38f5903}", L"Unmapped GUID"},
 	{L"{f90c627b-7280-45db-bc26-cce7bdd620a4}", L"All Tasks"},
 	{L"{fb0c9c8a-6c50-11d1-9f1d-0000f8757fcd}", L"Scanners & Cameras"},
 	{L"{fbf23b42-e3f0-101b-8488-00aa003e56f8}", L"Internet Explorer"},
@@ -19297,7 +19298,7 @@ std::wstring to_FriendlyName(std::wstring guid, unsigned int key) {
 	}
 	const std::wstring name = find(TABLE_PROPERTY, sizeof(TABLE_PROPERTY) / sizeof(*TABLE_PROPERTY),
 	                               guid + L"/" + std::to_wstring(key), indexProperty);
-	if (name != L"Unmapped GUID") return name;
+	if (!name.empty()) return name;
 	/* NOT "(Undefined)": that label read as a failure of the tool, whereas the
 	   data is read perfectly — only its NAME is unknown. The raw key is
 	   returned, verifiable, and the property's VALUE stays emitted. */
@@ -19502,11 +19503,88 @@ std::wstring shell_item_class(unsigned char i) {
 	return L"UNKNOWN";
 }
 
+namespace {
+
+/*! A string value of the examined machine's registry, read quietly: a GUID
+ *  absent from a hive is the common case, not an error to log.
+ *  @return the value, or "" if absent, of another type, or empty */
+std::wstring quietString(ORHKEY root, const std::wstring& path, PCWSTR value) {
+	DWORD type = 0, size = 0;
+	if (!root || ORGetValue(root, path.c_str(), value, &type, nullptr, &size) != ERROR_SUCCESS
+	    || (type != REG_SZ && type != REG_EXPAND_SZ) || size < sizeof(wchar_t) || size > 65536) return L"";
+	std::wstring text(size / sizeof(wchar_t), L'\0');
+	if (ORGetValue(root, path.c_str(), value, &type, &text[0], &size) != ERROR_SUCCESS) return L"";
+	text.resize(size / sizeof(wchar_t));
+	while (!text.empty() && text.back() == L'\0') text.pop_back();
+	return text;
+}
+
+/*! The name a class registration gives a CLSID: its description, and the
+ *  module that serves it — the form of the reference table.
+ *  @param root the classes root (SOFTWARE\Classes, or a UsrClass.dat hive)
+ *  @param prefix path of the classes under root ("Classes\\" or "")
+ *  @param guid the GUID, braced */
+std::wstring registeredClass(ORHKEY root, const std::wstring& prefix, const std::wstring& guid) {
+	const std::wstring key = prefix + L"CLSID\\" + guid;
+	const std::wstring name = quietString(root, key, L"");
+	if (name.empty()) return L"";
+	std::wstring module = quietString(root, key + L"\\InprocServer32", L"");
+	if (module.empty()) module = quietString(root, key + L"\\LocalServer32", L"");
+	return module.empty() ? name : name + L" (" + module + L")";
+}
+
+/*! The UsrClass.dat hives of the users (per-user COM registrations, such as
+ *  OneDrive's), from the working copies. Opened on first use, closed at exit. */
+struct UserClassHives {
+	std::vector<ORHKEY> hives;
+	bool opened = false;
+	~UserClassHives() { for (ORHKEY h : hives) ORCloseHive(h); }
+	const std::vector<ORHKEY>& get() {
+		if (opened) return hives;
+		opened = true;
+		for (const std::tuple<std::wstring, std::wstring>& p : conf.profiles) {
+			const std::wstring path = extractedPath(std::get<1>(p)) + L"\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat";
+			ORHKEY hive = NULL;
+			if (OROpenHive(path.c_str(), &hive) == ERROR_SUCCESS) hives.push_back(hive);
+		}
+		return hives;
+	}
+};
+
+/*! The name the EXAMINED machine gives a GUID, for one the reference table
+ *  does not know — a component or a folder installed there, which a table
+ *  built on another Windows cannot know. In order: a class of the machine
+ *  (SOFTWARE\Classes\CLSID), a known folder (Explorer\FolderDescriptions),
+ *  a class of a user (UsrClass.dat). Read in the evidence, not in the running
+ *  system: a conversion elsewhere gives the same names.
+ *  @param guid the GUID, braced, lower case
+ *  @return the name, or "" if no hive names it */
+std::wstring evidenceGuidName(const std::wstring& guid) {
+	static std::map<std::wstring, std::wstring> cache;
+	static UserClassHives userClasses;
+	const auto cached = cache.find(guid);
+	if (cached != cache.end()) return cached->second;
+	std::wstring name = registeredClass(conf.Software, L"Classes\\", guid);
+	if (name.empty())
+		name = quietString(conf.Software, L"Microsoft\\Windows\\CurrentVersion\\Explorer\\FolderDescriptions\\" + guid, L"Name");
+	for (ORHKEY hive : userClasses.get()) {
+		if (!name.empty()) break;
+		name = registeredClass(hive, L"", guid);
+	}
+	cache.emplace(guid, name);
+	return name;
+}
+
+} // namespace
+
 std::wstring trans_guid_to_wstring(std::wstring guid) {
 	log(3, L"🔈trans_guid_to_wstring");
 	
 	transform(guid.begin(), guid.end(), guid.begin(), ::tolower);
 
 	// The table covers CLSIDs, FMTIDs, special folders, device AppIDs…
-	return find(TABLE_GUID, sizeof(TABLE_GUID)/sizeof(*TABLE_GUID), guid, indexGuid);
+	const std::wstring name = find(TABLE_GUID, sizeof(TABLE_GUID)/sizeof(*TABLE_GUID), guid, indexGuid);
+	if (!name.empty()) return name;
+	// …of a reference Windows: the examined machine's own registrations next.
+	return evidenceGuidName(guid);
 }

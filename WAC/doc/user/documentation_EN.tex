@@ -703,6 +703,16 @@ of the examined machine), well-known SIDs under their canonical names
 domain account. A SID none of them names is published without a name: the SID
 remains the evidence, for the analyst to resolve against the domain.
 
+\section{GUID names}
+
+The fields that name a GUID (COM class, known folder, handler of a task) come
+first from a reference table, then from the examined machine's hives: its
+classes (\fichier{SOFTWARE\textbackslash Classes\textbackslash CLSID}), its
+known folders (\fichier{FolderDescriptions}), and each user's classes
+(\fichier{UsrClass.dat}). A component installed on the machine is therefore
+named, with the module that serves it. A GUID nothing names is published
+without a name.
+
 \section{A missing field is not an empty field}
 
 A value with no source is not emitted at all. An empty key would read as a

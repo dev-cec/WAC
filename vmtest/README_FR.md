@@ -16,6 +16,7 @@ en SYSTEM : droits admin, aucun UAC).
 | `autounattend.xml` | Install Windows muette (FR, Win11 Pro, compte admin local `wac`/`wac`, OOBE zappée, autologon) **et auto-installation du guest-agent** au 1er logon depuis le CD virtio-win. |
 | `qga.py` | Helper guest-agent : `ping`, `run` (exécuter), `read`/`write` (échanger des fichiers). |
 | `run-wac-test.sh` | Cycle de test complet : build → branchement d'une clé USB virtuelle (`~/vms/wac-usb-test.img`, numéro de série `WACUSB0001`, pour que USBSTOR soit peuplé même sur une VM recréée) → envoi des binaires → validation `raw_hive` (extraction brute + `reg load`) → exécution de WAC → rapatriement du log et des JSON dans `results/<horodatage>/`. |
+| `register-test-guids.ps1` | Enregistre dans la VM, à chaque cycle, trois GUID que la table de WAC ignore — un par source où WAC lit les noms de GUID —, chacun référencé par une tâche ComHandler désactivée. |
 | `check-json.py` | Contrôle les sorties : validité JSON, chemins Windows, et **contrôles croisés** (cf. ci-dessous). S'utilise aussi seul : `python3 check-json.py results/<horodatage>`. |
 
 ## Ce que le harnais valide — et ce qu'il ne valide pas
@@ -53,6 +54,7 @@ révélé des valeurs fausses dans du JSON valide :
 | dates FAT des shell items sans fraction et à secondes paires ; dates Amcache lues en texte sans fraction | toutes les dates écrites avec sept chiffres de fraction — `…:30.0000000` pour une date FAT précise à deux secondes (808 dates) |
 | BAM (`taskkill.exe` lancé par le harnais), UserAssist (exécutions Prefetch), USBSTOR (`Get-PnpDeviceProperty` sur la clé USB virtuelle que branche le harnais), Amcache `LinkDate` (en-têtes PE) | les quatre stockent de l'UTC, lu comme une heure locale : toutes les dates fausses de 2 h ; BAM et UserAssist ensuite vidés par une régression de la lecture des valeurs |
 | noms des SID / `Get-LocalUser`, `Get-LocalGroup`, et S-1-5-18 = `SYSTEM` | noms demandés au système en marche (LookupAccountSidW, qui peut interroger le contrôleur de domaine) et traduits dans sa langue (`Système`) |
+| trois GUID inconnus de la table de WAC, enregistrés par `register-test-guids.ps1` (classes de la machine, classes utilisateur, dossiers connus), nommés exactement ; aucun « Unmapped GUID » | le texte de remplacement « Unmapped GUID » publié comme un nom — 18 gestionnaires COM des tâches de la VM elle-même, tous décrits dans sa ruche SOFTWARE |
 | `MANIFEST.sha256` porte l'empreinte réelle de `MANIFEST.json` | seul contrôle qui détecte une retouche du manifeste, lequel est précisément ce qui atteste des pièces |
 | chaque pièce collectée porte ses trois empreintes | une pièce sans empreinte n'est pas identifiée, donc inutilisable |
 | le lecteur système d'`OperatingSystem.json` figure dans les volumes lus du manifeste | deux sources indépendantes de la même information |

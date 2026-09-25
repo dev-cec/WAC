@@ -235,7 +235,11 @@ n'interrompt plus la lecture du fichier.
     \texttt{LookupAccountSidW} interrogeait le contrôleur de domaine pour un
     SID inconnu de la machine, une trace de la collecte sur une autre machine.
     La compilation échoue si \fichier{WAC.exe} importe une fonction de
-    résolution de noms.
+    résolution de noms ;
+  \item un GUID inconnu de la table de référence est nommé d'après les ruches
+    de la machine examinée (classes de la machine, dossiers connus, classes de
+    chaque utilisateur) ; inconnu partout, il est publié sans nom, jamais avec
+    un texte de remplacement.
 \end{itemize}
 
 % ============================================================ 3
@@ -437,6 +441,9 @@ montages / lecture de la clé par Windows (\texttt{reg query}) et
 noms des SID / \texttt{Get-LocalUser}, \texttt{Get-LocalGroup} & noms
   demandés au système en marche, voire au contrôleur de domaine, et traduits
   dans la langue du poste (« Système ») \\
+GUID inconnus de la table / trois GUID enregistrés par le harnais, un par
+  source & « Unmapped GUID » publié comme un nom, dont 18 gestionnaires COM de
+  tâches de la VM, nommés dans sa ruche \\
 \multicolumn{2}{@{}l}{\textit{Consigne et rejeu}} \\
 sceau / empreinte réelle du manifeste & retouche du manifeste \\
 trois empreintes par pièce, comptes cohérents & pièce non identifiée \\
@@ -457,7 +464,7 @@ Dernier cycle, sur la version 1.3.1 (Windows~11, fuseau de Paris) :
   \item 24 fichiers JSON valides sur 24 produits, USBSTOR compris : le
     harnais branche une clé USB virtuelle à chaque cycle, si bien qu'une
     machine de test recréée la connaît aussi ;
-  \item 35 contrôles croisés passés, aucun échec, dont 4~068 dates locales
+  \item 36 contrôles croisés passés, aucun échec, dont 4~068 dates locales
     confrontées à la base IANA et 145~645 événements décodés ;
   \item 1~336 pièces dans la consigne, exactement celles du manifeste, sceau
     conforme.
