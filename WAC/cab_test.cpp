@@ -44,16 +44,16 @@ int main(int argc, char** argv) {
 	std::mt19937_64 rng(20260926);
 	for (int a = 1; a + 1 < argc; a += 2) {
 		const std::vector<uint8_t> cab = readAll(argv[a]);
-		std::vector<CabFile> files;
+		std::vector<ArchiveFile> files;
 		std::string reason;
 		check(CabExtract(cab, files, reason), std::string(argv[a]) + ": refused: " + reason);
-		for (const CabFile& f : files)
+		for (const ArchiveFile& f : files)
 			check(f.content == readAll(std::string(argv[a + 1]) + "/" + f.name),
 			      std::string(argv[a]) + ": " + f.name + " differs from cabextract's");
 		check(!files.empty(), std::string(argv[a]) + ": no file");
 		for (size_t cut = 0; cut < cab.size(); cut += 1 + cab.size() / 64) {
 			std::vector<uint8_t> truncated(cab.begin(), cab.begin() + (long)cut);
-			std::vector<CabFile> out;
+			std::vector<ArchiveFile> out;
 			CabExtract(truncated, out, reason);
 			++g_checks;
 		}
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 			std::vector<uint8_t> damaged = cab;
 			const int edits = 1 + (int)(rng() % 6);
 			for (int k = 0; k < edits; ++k) damaged[rng() % damaged.size()] = (uint8_t)rng();
-			std::vector<CabFile> out;
+			std::vector<ArchiveFile> out;
 			CabExtract(damaged, out, reason);
 			++g_checks;
 		}

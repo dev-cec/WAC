@@ -18,15 +18,7 @@
  */
 #pragma once
 
-#include <cstdint>
-#include <string>
-#include <vector>
-
-/*! A file of a cabinet. */
-struct CabFile {
-	std::string name;              //!< its name, as the cabinet gives it
-	std::vector<uint8_t> content;  //!< its content
-};
+#include "archive.h"
 
 /*! Extracts every file of a single-part cabinet.
  *  @param cabinet the cabinet's bytes
@@ -34,4 +26,4 @@ struct CabFile {
  *  @param reason receives why the cabinet is refused
  *  @return false if it is malformed, split over several parts, or compressed
  *          otherwise than MSZIP */
-bool CabExtract(const std::vector<uint8_t>& cabinet, std::vector<CabFile>& files, std::string& reason);
+bool CabExtract(const std::vector<uint8_t>& cabinet, std::vector<ArchiveFile>& files, std::string& reason);
