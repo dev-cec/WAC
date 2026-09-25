@@ -97,6 +97,7 @@ $(document).ready(function(){initNavTree('classJson.html',''); initResizable(); 
 
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
@@ -139,6 +140,12 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a7b6af011a3f229790cc957012bfd0240"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a880c78940fddf6cbc5e3a68eb026863c" id="r_a880c78940fddf6cbc5e3a68eb026863c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html#a880c78940fddf6cbc5e3a68eb026863c">dump</a> (int level=0) const</td></tr>
 <tr class="separator:a880c78940fddf6cbc5e3a68eb026863c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64c0aca20e18d831b02d7653d6ec4007" id="r_a64c0aca20e18d831b02d7653d6ec4007"><td class="memItemLeft" align="right" valign="top">const std::wstring &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html#a64c0aca20e18d831b02d7653d6ec4007">text</a> () const</td></tr>
+<tr class="separator:a64c0aca20e18d831b02d7653d6ec4007"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af91ba489780c09f4fa251f0ed9acf85a" id="r_af91ba489780c09f4fa251f0ed9acf85a"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classJson.html">Json</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html#af91ba489780c09f4fa251f0ed9acf85a">find</a> (const std::wstring &amp;key) const</td></tr>
+<tr class="separator:af91ba489780c09f4fa251f0ed9acf85a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0fa68c7b4a3ba2f12454aead4e76cfbf" id="r_a0fa68c7b4a3ba2f12454aead4e76cfbf"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; std::pair&lt; std::wstring, <a class="el" href="classJson.html">Json</a> &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html#a0fa68c7b4a3ba2f12454aead4e76cfbf">members</a> () const</td></tr>
+<tr class="separator:a0fa68c7b4a3ba2f12454aead4e76cfbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -155,6 +162,8 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a1ac8a14ed178ba686fb561b6f6921e3a" id="r_a1ac8a14ed178ba686fb561b6f6921e3a"><td class="memTemplParams" colspan="2">template&lt;typename T , typename  = std::enable_if_t&lt;std::is_integral_v&lt;T&gt; &amp;&amp; !std::is_same_v&lt;T, bool&gt;&gt;&gt; </td></tr>
 <tr class="memitem:a1ac8a14ed178ba686fb561b6f6921e3a"><td class="memTemplItemLeft" align="right" valign="top">static <a class="el" href="classJson.html">Json</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classJson.html#a1ac8a14ed178ba686fb561b6f6921e3a">num</a> (T v)</td></tr>
 <tr class="separator:a1ac8a14ed178ba686fb561b6f6921e3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac903a965330a365eafdd789477f6ff62" id="r_ac903a965330a365eafdd789477f6ff62"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html#ac903a965330a365eafdd789477f6ff62">parse</a> (const std::wstring &amp;<a class="el" href="classJson.html#a64c0aca20e18d831b02d7653d6ec4007">text</a>, <a class="el" href="classJson.html">Json</a> &amp;out, std::wstring &amp;error)</td></tr>
+<tr class="separator:ac903a965330a365eafdd789477f6ff62"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A JSON value: object, array or scalar. Insertion order is preserved.</p>
@@ -364,6 +373,39 @@ that value". The rule used to be applied collector by collector, hence unevenly:
 
 </div>
 </div>
+<a id="af91ba489780c09f4fa251f0ed9acf85a" name="af91ba489780c09f4fa251f0ed9acf85a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af91ba489780c09f4fa251f0ed9acf85a">&#9670;&#160;</a></span>find()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="classJson.html">Json</a> * Json::find </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>key</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>A member of an object. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">key</td><td>the key </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the value, or nullptr if the object has no such key (or this is not an object) </dd></dl>
+
+</div>
+</div>
 <a id="aea15e40fabe25dd183f74d9f9996c7cf" name="aea15e40fabe25dd183f74d9f9996c7cf"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aea15e40fabe25dd183f74d9f9996c7cf">&#9670;&#160;</a></span>isEmptyValue()</h2>
 
@@ -413,6 +455,32 @@ that value". The rule used to be applied collector by collector, hence unevenly:
 </table>
 </div><div class="memdoc">
 <dl class="section return"><dt>Returns</dt><dd>the nature of the value, to adapt a treatment to it (for instance wrapping a scalar in an array when the output schema requires an array). </dd></dl>
+
+</div>
+</div>
+<a id="a0fa68c7b4a3ba2f12454aead4e76cfbf" name="a0fa68c7b4a3ba2f12454aead4e76cfbf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0fa68c7b4a3ba2f12454aead4e76cfbf">&#9670;&#160;</a></span>members()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::vector&lt; std::pair&lt; std::wstring, <a class="el" href="classJson.html">Json</a> &gt; &gt; &amp; Json::members </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>The members of an object (key, value) or the elements of an array (empty key, value), in order. </p>
 
 </div>
 </div>
@@ -536,6 +604,58 @@ template&lt;typename T , typename  = std::enable_if_t&lt;std::is_integral_v&lt;T
 
 </div>
 </div>
+<a id="ac903a965330a365eafdd789477f6ff62" name="ac903a965330a365eafdd789477f6ff62"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac903a965330a365eafdd789477f6ff62">&#9670;&#160;</a></span>parse()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static bool Json::parse </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>text</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classJson.html">Json</a> &amp;&#160;</td>
+          <td class="paramname"><em>out</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>error</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Reads a JSON text — the exhibit manifest, the snapshot of the live state — back into a value.</p>
+<p>HOSTILE INPUT. The file comes from a collection medium: strict grammar (RFC 8259), every read bounded by the text's length, nesting limited (MAX_DEPTH), and nothing accepted after the value. A malformed text is refused whole, never half read. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">text</td><td>the JSON text </td></tr>
+    <tr><td class="paramname">out</td><td>receives the value </td></tr>
+    <tr><td class="paramname">error</td><td>receives the reason of a refusal, with its position </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true if the whole text is one valid JSON value </dd></dl>
+
+</div>
+</div>
 <a id="a2d8d3cd489e1b9d9716322bdd88db40f" name="a2d8d3cd489e1b9d9716322bdd88db40f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2d8d3cd489e1b9d9716322bdd88db40f">&#9670;&#160;</a></span>push()</h2>
 
@@ -625,6 +745,32 @@ template&lt;typename T , typename  = std::enable_if_t&lt;std::is_integral_v&lt;T
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>that string as a JSON value. </dd></dl>
+
+</div>
+</div>
+<a id="a64c0aca20e18d831b02d7653d6ec4007" name="a64c0aca20e18d831b02d7653d6ec4007"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a64c0aca20e18d831b02d7653d6ec4007">&#9670;&#160;</a></span>text()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::wstring &amp; Json::text </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>The text of a scalar: the raw string of a Str, the digits of a Num, "true"/"false" of a Bool; empty for the other kinds. </p>
 
 </div>
 </div>

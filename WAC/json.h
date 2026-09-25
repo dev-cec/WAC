@@ -1,5 +1,6 @@
 /*! \file
- *  \brief Centralised JSON serialiser for WAC.
+ *  \brief Centralised JSON serialiser for WAC, and the reader of the JSON it
+ *         writes back (exhibit manifest, snapshot of the live state).
  *
  *  WHY. Every artefact used to build its JSON by hand, concatenating strings.
  *  What that produced, as found in testing: forgotten or inconsistent escaping
@@ -177,8 +178,162 @@ public:
         return r;
     }
 
+    // --- reading -----------------------------------------------------------
+    /*! The text of a scalar: the raw string of a Str, the digits of a Num,
+     *  "true"/"false" of a Bool; empty for the other kinds. */
+    const std::wstring& text() const { return scalar_; }
+    /*! A member of an object.
+     *  @param key the key
+     *  @return the value, or nullptr if the object has no such key (or this is
+     *          not an object) */
+    const Json* find(const std::wstring& key) const {
+        if (kind_ != Kind::Obj) return nullptr;
+        for (const auto& kv : items_) if (kv.first == key) return &kv.second;
+        return nullptr;
+    }
+    /*! The members of an object (key, value) or the elements of an array (empty
+     *  key, value), in order. */
+    const std::vector<std::pair<std::wstring, Json>>& members() const { return items_; }
+
+    /*! Reads a JSON text — the exhibit manifest, the snapshot of the live
+     *  state — back into a value.
+     *
+     *  HOSTILE INPUT. The file comes from a collection medium: strict grammar
+     *  (RFC 8259), every read bounded by the text's length, nesting limited
+     *  (MAX_DEPTH), and nothing accepted after the value. A malformed text is
+     *  refused whole, never half read.
+     *  @param text the JSON text
+     *  @param out receives the value
+     *  @param error receives the reason of a refusal, with its position
+     *  @return true if the whole text is one valid JSON value */
+    static bool parse(const std::wstring& text, Json& out, std::wstring& error) {
+        Reader r{ text, 0, 0, L"" };
+        out = Json(Kind::Null);
+        if (!r.value(out)) { error = r.error; return false; }
+        r.blank();
+        if (r.pos != text.size()) { error = L"unexpected text after the value at " + std::to_wstring(r.pos); return false; }
+        return true;
+    }
+
 private:
     explicit Json(Kind k) : kind_(k) {}
+
+    //! Depth beyond which a text is refused: WAC writes a few levels only.
+    static constexpr int MAX_DEPTH = 64;
+
+    //! The recursive-descent reader behind parse().
+    struct Reader {
+        const std::wstring& s;
+        size_t pos;
+        int depth;
+        std::wstring error;
+
+        bool fail(const wchar_t* why) { error = std::wstring(why) + L" at " + std::to_wstring(pos); return false; }
+        void blank() { while (pos < s.size() && (s[pos] == L' ' || s[pos] == L'\t' || s[pos] == L'\n' || s[pos] == L'\r')) ++pos; }
+        bool literal(const wchar_t* word) {
+            for (size_t k = 0; word[k]; ++k, ++pos)
+                if (pos >= s.size() || s[pos] != word[k]) return fail(L"invalid literal");
+            return true;
+        }
+        bool hex4(unsigned& v) {
+            if (s.size() - pos < 4) return fail(L"truncated \\u escape");
+            v = 0;
+            for (int k = 0; k < 4; ++k, ++pos) {
+                const wchar_t c = s[pos];
+                v <<= 4;
+                if (c >= L'0' && c <= L'9') v |= (unsigned)(c - L'0');
+                else if (c >= L'a' && c <= L'f') v |= (unsigned)(c - L'a' + 10);
+                else if (c >= L'A' && c <= L'F') v |= (unsigned)(c - L'A' + 10);
+                else return fail(L"invalid \\u escape");
+            }
+            return true;
+        }
+        bool string(std::wstring& out) {
+            ++pos;   // the opening quote
+            out.clear();
+            while (true) {
+                if (pos >= s.size()) return fail(L"unterminated string");
+                const wchar_t c = s[pos++];
+                if (c == L'"') return true;
+                if (c < 0x20) return fail(L"control character in a string");
+                if (c != L'\\') { out += c; continue; }
+                if (pos >= s.size()) return fail(L"truncated escape");
+                const wchar_t e = s[pos++];
+                switch (e) {
+                case L'"': out += L'"'; break;
+                case L'\\': out += L'\\'; break;
+                case L'/': out += L'/'; break;
+                case L'b': out += L'\b'; break;
+                case L'f': out += L'\f'; break;
+                case L'n': out += L'\n'; break;
+                case L'r': out += L'\r'; break;
+                case L't': out += L'\t'; break;
+                case L'u': { unsigned v = 0; if (!hex4(v)) return false; out += (wchar_t)v; break; }
+                default: return fail(L"invalid escape");
+                }
+            }
+        }
+        bool number(Json& out) {
+            const size_t start = pos;
+            if (pos < s.size() && s[pos] == L'-') ++pos;
+            if (pos >= s.size()) return fail(L"truncated number");
+            if (s[pos] == L'0') ++pos;
+            else if (s[pos] >= L'1' && s[pos] <= L'9') { while (pos < s.size() && s[pos] >= L'0' && s[pos] <= L'9') ++pos; }
+            else return fail(L"invalid number");
+            if (pos < s.size() && s[pos] == L'.') {
+                ++pos;
+                if (pos >= s.size() || s[pos] < L'0' || s[pos] > L'9') return fail(L"invalid fraction");
+                while (pos < s.size() && s[pos] >= L'0' && s[pos] <= L'9') ++pos;
+            }
+            if (pos < s.size() && (s[pos] == L'e' || s[pos] == L'E')) {
+                ++pos;
+                if (pos < s.size() && (s[pos] == L'+' || s[pos] == L'-')) ++pos;
+                if (pos >= s.size() || s[pos] < L'0' || s[pos] > L'9') return fail(L"invalid exponent");
+                while (pos < s.size() && s[pos] >= L'0' && s[pos] <= L'9') ++pos;
+            }
+            out = Json(Kind::Num);
+            out.scalar_ = s.substr(start, pos - start);
+            return true;
+        }
+        bool value(Json& out) {
+            blank();
+            if (pos >= s.size()) return fail(L"missing value");
+            const wchar_t c = s[pos];
+            if (c == L'{' || c == L'[') {
+                if (++depth > MAX_DEPTH) return fail(L"nesting too deep");
+                const bool object = (c == L'{');
+                out = Json(object ? Kind::Obj : Kind::Arr);
+                ++pos;
+                blank();
+                if (pos < s.size() && s[pos] == (object ? L'}' : L']')) { ++pos; --depth; return true; }
+                while (true) {
+                    std::wstring key;
+                    if (object) {
+                        blank();
+                        if (pos >= s.size() || s[pos] != L'"') return fail(L"expected a key");
+                        if (!string(key)) return false;
+                        blank();
+                        if (pos >= s.size() || s[pos] != L':') return fail(L"expected ':'");
+                        ++pos;
+                    }
+                    Json member(Kind::Null);
+                    if (!value(member)) return false;
+                    out.items_.emplace_back(std::move(key), std::move(member));
+                    blank();
+                    if (pos >= s.size()) return fail(object ? L"unterminated object" : L"unterminated array");
+                    if (s[pos] == L',') { ++pos; continue; }
+                    if (s[pos] == (object ? L'}' : L']')) { ++pos; --depth; return true; }
+                    return fail(L"expected ',' or a closing bracket");
+                }
+            }
+            if (c == L'"') { out = Json(Kind::Str); return string(out.scalar_); }
+            if (c == L't') { if (!literal(L"true")) return false;  out = Json(Kind::Bool); out.scalar_ = L"true";  return true; }
+            if (c == L'f') { if (!literal(L"false")) return false; out = Json(Kind::Bool); out.scalar_ = L"false"; return true; }
+            if (c == L'n') { if (!literal(L"null")) return false;  out = Json(Kind::Null); return true; }
+            if (c == L'-' || (c >= L'0' && c <= L'9')) return number(out);
+            return fail(L"unexpected character");
+        }
+    };
     static std::wstring tabs(int n) { return std::wstring(n < 0 ? 0 : n, L'\t'); }
 
     Kind kind_;

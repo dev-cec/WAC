@@ -86,7 +86,7 @@ test.
   \item[The checks built into \wac{}] (chapter~\ref{ch:integres}): run during
     every collection, on the examined machine. They refuse inconsistent data
     rather than publish it, and attest the integrity of the exhibits taken.
-  \item[The test programs] (chapter~\ref{ch:harnais}): fourteen executables
+  \item[The test programs] (chapter~\ref{ch:harnais}): fifteen executables
     that confront each decoder with a reference (the Microsoft function it
     replaces, a published standard, another implementation), or that prove a
     parser never reads outside its buffer.
@@ -240,7 +240,7 @@ reported and skipped; it no longer stops the reading of the file.
 % ============================================================ 3
 \chapter{The test programs}\label{ch:harnais}
 
-Fourteen executables, left out of \wac{}'s build by their
+Fifteen executables, left out of \wac{}'s build by their
 \fichier{\_test.cpp} suffix and built by \texttt{build-windows.sh --test}.
 Each targets one component and confronts it with a judge that shares nothing
 with it.
@@ -278,6 +278,9 @@ with it.
   sound records restored to the byte, torn records and malformed arrays
   refused, 20,000 random records against a forbidden page: 44,610 checks, no
   failure \\
+\texttt{json\_test} & WAC's JSON writer & identical round trip, 26 files of a
+  collection read back and rewritten to the byte, malformed texts refused,
+  200,000 mutations without an out-of-bounds read (sanitizers) \\
 \texttt{raw\_hive\_test} & Windows's \texttt{reg load} &
   the extracted hive is refused before repair and accepted after: the test
   fails both ways if it must \\

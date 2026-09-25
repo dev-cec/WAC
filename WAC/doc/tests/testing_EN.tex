@@ -266,6 +266,20 @@ otherwise correct implementation goes wrong.
 cd WAC && g++ -std=c++17 -I. sha.cpp sha_test.cpp -o /tmp/sha_test && /tmp/sha_test
 \end{lstlisting}
 
+\section{JSON reading: \texttt{json\_test}}
+
+\texttt{--convert} reads back what \texttt{--collect} wrote: the exhibit
+manifest and the snapshot of the live state. The harness checks that
+everything WAC's writer produces reads back identical, that the files of a real
+collection read back and rewrite to the byte, that malformed texts are refused,
+and that 200,000 random mutations never make the reader read out of bounds
+(AddressSanitizer, UBSan).
+
+\begin{lstlisting}
+cd WAC && g++ -std=c++17 -g -fsanitize=address,undefined -I. json_test.cpp -o /tmp/json_test
+/tmp/json_test ../vmtest/results/<timestamp>/*.json
+\end{lstlisting}
+
 \section{Decompression: \texttt{lznt1\_test} and \texttt{xpress\_test}}
 
 Check the NTFS (LZNT1) and WOF (XPRESS Huffman) decompressors against

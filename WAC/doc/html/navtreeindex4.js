@@ -1,5 +1,10 @@
 var NAVTREEINDEX4 =
 {
+"structFileEntryShellItem.html#a6264263822b03115256d93c172301683":[1,0,56,0],
+"structFileEntryShellItem.html#a68596544bcc9cd5cc255759bce8f9be9":[1,0,56,5],
+"structFileEntryShellItem.html#a795365da4da6187560c2707073d584d2":[1,0,56,6],
+"structFileEntryShellItem.html#a88688915df04fbe394ff6e08539ea6a7":[1,0,56,4],
+"structFileEntryShellItem.html#acc3ae8eefcfb7047bf7a386d72066600":[1,0,56,9],
 "structFileEntryShellItem.html#ad65e0bc3fd8010e4b4a52161a8ab2f73":[1,0,56,2],
 "structFilename.html":[1,0,57],
 "structFilename.html#a17e37c78149b31a06f3830646c96ff1d":[1,0,57,2],
@@ -244,10 +249,5 @@ var NAVTREEINDEX4 =
 "structProcesses.html#a347fc32cc3833bf305a41d92591ba956":[1,0,92,2],
 "structProcesses.html#a8f07281c5922d2b9cf33c0a23a897d7e":[1,0,92,1],
 "structProcesses.html#aec2682819405725b35aa644149a97524":[1,0,92,0],
-"structProcesses.html#af68300476a00d587b43fb2da2c5e541c":[1,0,92,3],
-"structProperty.html":[1,0,93],
-"structProperty.html#a1746e45a53911810a954b8a9b49a358a":[1,0,93,2],
-"structProperty.html#a22ee278ce42b51bdbf6fcb884845a6d6":[1,0,93,4],
-"structProperty.html#a2de148f6f87d0e8288f201c6edb52a36":[1,0,93,5],
-"structProperty.html#a31a5c8b48d1c0d194f64f62de9bb009e":[1,0,93,9]
+"structProcesses.html#af68300476a00d587b43fb2da2c5e541c":[1,0,92,3]
 };

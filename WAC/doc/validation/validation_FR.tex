@@ -87,7 +87,7 @@ La validation de \wac{} repose donc sur ce principe : toute donnée qui peut
     exécutés à chaque collecte, sur la machine examinée. Ils refusent une
     donnée incohérente plutôt que de la publier, et attestent l'intégrité des
     pièces prélevées.
-  \item[Les programmes de test] (chapitre~\ref{ch:harnais}) : quatorze
+  \item[Les programmes de test] (chapitre~\ref{ch:harnais}) : quinze
     exécutables qui confrontent chaque décodeur à une référence (la fonction de
     Microsoft qu'il remplace, une norme publiée, une autre implémentation), ou
     qui prouvent qu'un analyseur ne lit jamais hors de son tampon.
@@ -245,7 +245,7 @@ n'interrompt plus la lecture du fichier.
 % ============================================================ 3
 \chapter{Les programmes de test}\label{ch:harnais}
 
-Quatorze exécutables, exclus de la compilation de \wac{} par leur suffixe
+Quinze exécutables, exclus de la compilation de \wac{} par leur suffixe
 \fichier{\_test.cpp} et construits par \texttt{build-windows.sh --test}.
 Chacun vise un composant et le confronte à un juge qui ne partage rien avec
 lui.
@@ -284,6 +284,9 @@ lui.
   enregistrements sains restitués à l'octet, enregistrements déchirés et
   tableaux malformés refusés, 20~000 enregistrements aléatoires contre une page
   interdite : 44~610 contrôles, aucun échec \\
+\texttt{json\_test} & l'écrivain JSON de \wac{} & aller-retour identique,
+  26 fichiers d'une collecte relus et réécrits à l'octet, textes malformés
+  refusés, 200~000 mutations sans lecture hors borne (sanitizers) \\
 \texttt{raw\_hive\_test} & \texttt{reg load} de Windows &
   la ruche extraite est refusée avant réparation et acceptée après : le test
   échoue dans les deux sens s'il le faut \\

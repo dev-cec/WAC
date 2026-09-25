@@ -278,6 +278,20 @@ implémentation par ailleurs juste se trompe.
 cd WAC && g++ -std=c++17 -I. sha.cpp sha_test.cpp -o /tmp/sha_test && /tmp/sha_test
 \end{lstlisting}
 
+\section{Lecture JSON : \texttt{json\_test}}
+
+\texttt{--convert} relit ce que \texttt{--collect} a écrit : le manifeste des
+pièces et l'instantané de l'état en direct. Le harnais vérifie que tout ce que
+l'écrivain de \wac{} produit se relit à l'identique, que les fichiers d'une
+vraie collecte se relisent et se réécrivent à l'octet près, que les textes
+malformés sont refusés, et que 200~000 mutations aléatoires ne font jamais lire
+hors borne (AddressSanitizer, UBSan).
+
+\begin{lstlisting}
+cd WAC && g++ -std=c++17 -g -fsanitize=address,undefined -I. json_test.cpp -o /tmp/json_test
+/tmp/json_test ../vmtest/results/<horodatage>/*.json
+\end{lstlisting}
+
 \section{Décompression : \texttt{lznt1\_test} et \texttt{xpress\_test}}
 
 Vérifient les décompresseurs NTFS (LZNT1) et WOF (XPRESS Huffman) contre le

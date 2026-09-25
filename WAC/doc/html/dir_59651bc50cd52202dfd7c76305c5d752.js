@@ -28,6 +28,7 @@ var dir_59651bc50cd52202dfd7c76305c5d752 =
     [ "idList.cpp", "idList_8cpp.html", "idList_8cpp" ],
     [ "idList.h", "idList_8h.html", "idList_8h" ],
     [ "json.h", "json_8h.html", "json_8h" ],
+    [ "json_test.cpp", "json__test_8cpp.html", "json__test_8cpp" ],
     [ "jumplist_automatic.cpp", "jumplist__automatic_8cpp.html", null ],
     [ "jumplist_automatic.h", "jumplist__automatic_8h.html", "jumplist__automatic_8h" ],
     [ "jumplist_custom.cpp", "jumplist__custom_8cpp.html", null ],

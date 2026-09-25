@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>WAC (Windows Artefacts Collector): /var/www/html/WAC/WAC/json.h File Reference</title>
+<title>WAC (Windows Artefacts Collector): /var/www/html/WAC/WAC/json_test.cpp File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search/",'.html');
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('json_8h.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('json__test_8cpp.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -97,68 +97,67 @@ $(document).ready(function(){initNavTree('json_8h.html',''); initResizable(); })
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
 <a href="#func-members">Functions</a>  </div>
-  <div class="headertitle"><div class="title">json.h File Reference</div></div>
+  <div class="headertitle"><div class="title">json_test.cpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Centralised JSON serialiser for WAC, and the reader of the JSON it writes back (exhibit manifest, snapshot of the live state).  
+<p>Checks the JSON reader (<a class="el" href="classJson.html#ac903a965330a365eafdd789477f6ff62">Json::parse</a>) against the JSON writer.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;type_traits&gt;</code><br />
+<div class="textblock"><code>#include &quot;<a class="el" href="json_8h_source.html">json.h</a>&quot;</code><br />
+<code>#include &lt;cstdio&gt;</code><br />
+<code>#include &lt;fstream&gt;</code><br />
+<code>#include &lt;random&gt;</code><br />
+<code>#include &lt;sstream&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
-<code>#include &lt;vector&gt;</code><br />
-<code>#include &lt;utility&gt;</code><br />
-</div>
-<p><a href="json_8h_source.html">Go to the source code of this file.</a></p>
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html">Json</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a498b432e8aac8982cb39271297a2b733" id="r_a498b432e8aac8982cb39271297a2b733"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="json_8h.html#a498b432e8aac8982cb39271297a2b733">jsonEscape</a> (const std::wstring &amp;s)</td></tr>
-<tr class="separator:a498b432e8aac8982cb39271297a2b733"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3c04138a5bfe5d72780bb7e82a18e627" id="r_a3c04138a5bfe5d72780bb7e82a18e627"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="json__test_8cpp.html#a3c04138a5bfe5d72780bb7e82a18e627">main</a> (int argc, char **argv)</td></tr>
+<tr class="separator:a3c04138a5bfe5d72780bb7e82a18e627"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Centralised JSON serialiser for WAC, and the reader of the JSON it writes back (exhibit manifest, snapshot of the live state). </p>
-<p>WHY. Every artefact used to build its JSON by hand, concatenating strings. What that produced, as found in testing: forgotten or inconsistent escaping (<a class="el" href="structScheduledTasks.html">ScheduledTasks</a>, mounted_device), an invalid trailing comma (<a class="el" href="structSessions.html">Sessions</a>), numbers emitted as strings, indentation kept by hand. This writer makes those mistakes structurally impossible.</p>
-<p>PRINCIPLE. Values are stored RAW in memory (real paths, usable as they are for file I/O); escaping happens ONLY HERE, at serialisation time, and only once.</p>
-<p>Self-contained (no dependency on the rest of WAC): testable under Linux.</p>
-<p>Example: <a class="el" href="classJson.html">Json</a> o = <a class="el" href="classJson.html#a2d01c95f7974c2348717c56917dd11b7">Json::obj()</a>; o.add(L"SessionId", Json::num(sessionId)); // a number, unquoted o.add(L"LogonName", Json::str(logonName)); // escaped automatically o.add(L"Path", Json::str(rawPath)); // raw path, escaped here return o.dump(1); </p>
+<div class="textblock"><p>Checks the JSON reader (<a class="el" href="classJson.html#ac903a965330a365eafdd789477f6ff62">Json::parse</a>) against the JSON writer. </p>
+<p>WHY THIS TEST. &ndash;convert reads back what &ndash;collect wrote: the exhibit manifest, whose fingerprints decide whether the evidence is still intact, and the snapshot of the live state. A reader that loses or alters a value would make a conversion wrong without an error; one that accepts a malformed text would convert a damaged snapshot. Checked:</p><ul>
+<li>every value the writer produces reads back identical (dump, parse, dump again: the same text);</li>
+<li>the real output of a collection, given as arguments, reads back and rewrites to the same text;</li>
+<li>malformed texts are refused (trailing comma, unquoted key, leading zero, control character, bad escape, excessive nesting, text after the value…);</li>
+<li>random mutations of valid texts never make the reader crash or read out of bounds — built with AddressSanitizer and UBSan.</li>
+</ul>
+<p>Build (Linux): g++ -std=c++17 -g -fsanitize=address,undefined -I. <a class="el" href="json__test_8cpp.html" title="Checks the JSON reader (Json::parse) against the JSON writer.">json_test.cpp</a> -o json_test Usage: json_test [file.json ...] </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a498b432e8aac8982cb39271297a2b733" name="a498b432e8aac8982cb39271297a2b733"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a498b432e8aac8982cb39271297a2b733">&#9670;&#160;</a></span>jsonEscape()</h2>
+<a id="a3c04138a5bfe5d72780bb7e82a18e627" name="a3c04138a5bfe5d72780bb7e82a18e627"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3c04138a5bfe5d72780bb7e82a18e627">&#9670;&#160;</a></span>main()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::wstring jsonEscape </td>
+          <td class="memname">int main </td>
           <td>(</td>
-          <td class="paramtype">const std::wstring &amp;&#160;</td>
-          <td class="paramname"><em>s</em></td><td>)</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>argc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">char **&#160;</td>
+          <td class="paramname"><em>argv</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
-<p>Escapes a string for use as a JSON value (\ , " , controls &lt; 0x20). </p><dl class="params"><dt>Parameters</dt><dd>
+<p><a class="el" href="structRuns.html">Runs</a> every check. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">s</td><td>the raw string. </td></tr>
+    <tr><td class="paramname">argc,argv</td><td>files of a real collection to read back </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the escaped string, without the surrounding quotes. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>0 if all passed </dd></dl>
 
 </div>
 </div>
@@ -167,7 +166,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="json_8h.html">json.h</a></li>
+    <li class="navelem"><a class="el" href="dir_59651bc50cd52202dfd7c76305c5d752.html">WAC</a></li><li class="navelem"><a class="el" href="json__test_8cpp.html">json_test.cpp</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>
