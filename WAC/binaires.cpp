@@ -47,6 +47,10 @@ private:
 };
 unsigned long long g_authenticatedBytes = 0;
 std::set<std::wstring> g_catalogsUsed;
+/*! Catalogs read but not signed by Microsoft — third-party drivers and
+ *  software (oemNN.cat): they are what signs a third-party binary WAC
+ *  collects, and the analysis needs them to check that signature. */
+std::set<std::wstring> g_thirdPartyCatalogs;
 const size_t CATALOGUE_MAX = 64 * 1024 * 1024;       // a catalog beyond that: ignored
 unsigned long long g_incoming = 0;                      // counter of incoming files
 
@@ -285,7 +289,8 @@ IndexCatalogues& catalogues() {
 			RawHiveExtraction line;
 			if (FAILED(g_reader->read(path, std::wstring(), line, &c))) continue;
 			++read;
-			index.add(path, c.bytes.data(), c.bytes.size());   // named by its path: two folders may share a name
+			// Named by its path: two folders may share a name.
+			if (!index.add(path, c.bytes.data(), c.bytes.size())) g_thirdPartyCatalogs.insert(path);
 		}
 	}
 	g_catalogsRead = read;
@@ -577,6 +582,11 @@ SignatureVerdict recordedVerdict(const VerdictMicrosoft& verdict) {
 	v.valid = verdict.microsoft;
 	if (v.valid) v.label = signatureLabel(verdict);
 	else v.reason = decodeText(verdict.reason);
+	if (!verdict.signer.empty()) {
+		v.embeddedSigner = verdict.signer
+		                 + (verdict.signerOrganization.empty() ? L"" : L", " + verdict.signerOrganization);
+		v.embeddedIntact = verdict.signatureIntact;
+	}
 	return v;
 }
 
@@ -896,6 +906,10 @@ void BinariesFinish() {
 		recordJustifications(packageFiles,
 		                     method + L"signature and block map of a package that justified not "
 		                              L"collecting its files (--binary)" + inPlace);
+		recordJustifications(std::vector<std::wstring>(g_thirdPartyCatalogs.begin(), g_thirdPartyCatalogs.end()),
+		                     method + L"signature catalog NOT signed by Microsoft (third-party drivers and "
+		                              L"software), for the verification of their signatures at analysis (--binary)"
+		                              + inPlace);
 	}
 	g_reader.reset();
 	std::error_code ec;

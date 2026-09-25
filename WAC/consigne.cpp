@@ -410,6 +410,13 @@ HRESULT ExhibitStoreWriteManifest() {
 			o.add(L"SignatureVerified", Json::boolean(p.verdict.valid));
 			if (p.verdict.valid && !p.verdict.label.empty()) o.add(L"Signature", Json::str(p.verdict.label));
 			if (!p.verdict.valid && !p.verdict.reason.empty()) o.add(L"SignatureReason", Json::str(p.verdict.reason));
+			/* Who signed, and whether the file is as signed — for a third
+			   party too. For the analyst: the chain is not verified up to a
+			   trusted root, anyone can sign with a certificate of their own. */
+			if (!p.verdict.embeddedSigner.empty()) {
+				o.add(L"EmbeddedSigner", Json::str(p.verdict.embeddedSigner));
+				o.add(L"EmbeddedSignatureIntact", Json::boolean(p.verdict.embeddedIntact));
+			}
 		}
 		/* A PE's build: TimeDateStamp and SizeOfImage, the key of Microsoft's
 		   symbol server. An authentic Microsoft binary that was not copied can

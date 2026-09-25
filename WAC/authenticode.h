@@ -105,6 +105,12 @@ struct VerifiedSignature {
 	bool valid = false;          //!< signature and chain verified up to a Microsoft root
 	bool signerAccepted = false; //!< and signer compliant with the rule (see the header)
 	std::wstring signer;      //!< name (CN) of the signing certificate
+	std::wstring signerOrganization; //!< its organisation (O)
+	/*! The signature itself holds: content digest and RSA signature verified,
+	 *  WHATEVER the chain. Informative only for a third-party signer: the
+	 *  chain is not verified up to a trusted root, and anyone can sign with a
+	 *  certificate of their own. */
+	bool intact = false;
 	std::string reason;            //!< reason for a rejection, for the log
 	std::string contentOid;       //!< type of the signed content (DER bytes of the OID)
 	const uint8_t* content = nullptr; //!< signed content (value, without header)
@@ -150,7 +156,12 @@ struct VerdictMicrosoft {
 	bool microsoft = false;       //!< authentic: hash without collecting
 	std::wstring source;          //!< "catalog <path>" or "embedded signature"
 	std::wstring catalog;         //!< the catalog that listed the digest (its path); empty otherwise
-	std::wstring signer;      //!< signer's CN (embedded signature)
+	std::wstring signer;      //!< signer's CN (embedded signature), whoever it is
+	std::wstring signerOrganization; //!< signer's organisation (O)
+	/*! Embedded signature intact — RSA signature valid and the signed
+	 *  Authenticode digest the file's: the file is as its signer signed it.
+	 *  Says nothing about who the signer is (see VerifiedSignature::intact). */
+	bool signatureIntact = false;
 	std::string reason;            //!< why not, for the log
 };
 

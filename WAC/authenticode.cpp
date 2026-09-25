@@ -245,14 +245,14 @@ bool attach(const Certificate& leaf, const std::vector<Certificate>& pool) {
 /*! Signers whose binaries are authentic Microsoft ones, identical on every
  *  machine of the same build. ".NET": the runtime Microsoft ships with
  *  Windows and its applications (544 files of a plain Windows 11 were
- *  collected for want of it). Not accepted: "Microsoft Windows Hardware
+ *  collected for want of it), and ".NET DAC", its data access component. Not accepted: "Microsoft Windows Hardware
  *  Compatibility Publisher" and "Microsoft 3rd Party Application Component",
  *  which Microsoft grants to OTHER vendors' drivers and components — a
  *  vulnerable third-party driver is a classic intrusion tool. */
 bool signerAccepted(const std::wstring& cn, const std::wstring& o) {
 	if (o != L"Microsoft Corporation") return false;
 	return cn == L"Microsoft Windows" || cn == L"Microsoft Corporation"
-	    || cn == L"Microsoft Windows Publisher" || cn == L".NET";
+	    || cn == L"Microsoft Windows Publisher" || cn == L".NET" || cn == L".NET DAC";
 }
 
 } // namespace
@@ -330,13 +330,15 @@ VerifiedSignature VerifyPkcs7(const uint8_t* data, size_t size) {
 	                      signature.val, signature.len, algo, ha, lha)) {
 		r.reason = "RSA signature invalid"; return r;
 	}
+	// The signature holds, whoever signed: who, for the record.
+	r.intact = true;
+	r.signer = attributeNameField(signer->subject, OID_CN, sizeof(OID_CN));
+	r.signerOrganization = attributeNameField(signer->subject, OID_O, sizeof(OID_O));
 	// 3. The chain up to an embedded Microsoft root.
 	if (!attach(*signer, pool)) { r.reason = "chain not tied to a Microsoft root"; return r; }
 
 	r.valid = true;
-	r.signer = attributeNameField(signer->subject, OID_CN, sizeof(OID_CN));
-	const std::wstring o = attributeNameField(signer->subject, OID_O, sizeof(OID_O));
-	r.signerAccepted = signerAccepted(r.signer, o);
+	r.signerAccepted = signerAccepted(r.signer, r.signerOrganization);
 	if (!r.signerAccepted) r.reason = "signer not accepted";
 	return r;
 }
@@ -541,6 +543,19 @@ VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalog
 	const uint16_t type = lu16(t.data() + 6);
 	if (type != 0x0002 || length < 8 || length > t.size()) { v.reason = "unexpected certificate table"; return v; }
 	const VerifiedSignature s = VerifyPkcs7(t.data() + 8, length - 8);
+	/* Whoever signed, and whether the file is as signed: recorded for every
+	   signed binary, a third party's included — for the analyst, not for the
+	   decision, which only a Microsoft chain settles. */
+	v.signer = s.signer;
+	v.signerOrganization = s.signerOrganization;
+	if (s.intact && s.contentOid == std::string((const char*)OID_SPC_INDIRECT, sizeof(OID_SPC_INDIRECT))) {
+		Tlv signedContent;
+		signedContent.tag = 0x30; signedContent.val = s.content; signedContent.len = s.contentSize;
+		std::string digest;
+		v.signatureIntact = indirectDigest(signedContent, digest)
+			&& ((digest.size() == 32 && std::memcmp(digest.data(), pe.sha256(), 32) == 0)
+			 || (digest.size() == 20 && std::memcmp(digest.data(), pe.sha1(), 20) == 0));
+	}
 	if (!s.valid) { v.reason = s.reason; return v; }
 	if (s.contentOid != std::string((const char*)OID_SPC_INDIRECT, sizeof(OID_SPC_INDIRECT))) {
 		v.reason = "unexpected signed content"; return v;
@@ -556,7 +571,6 @@ VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalog
 		(declared.size() == 32 && std::memcmp(declared.data(), pe.sha256(), 32) == 0)
 	 || (declared.size() == 20 && std::memcmp(declared.data(), pe.sha1(), 20) == 0);
 	if (!wellFormed) { v.reason = "file modified since it was signed"; return v; }
-	v.signer = s.signer;
 	if (!s.signerAccepted) { v.reason = "signer not accepted: " + std::string(s.signer.begin(), s.signer.end()); return v; }
 	v.microsoft = true;
 	v.source = L"embedded signature";

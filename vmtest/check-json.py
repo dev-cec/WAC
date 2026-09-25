@@ -164,7 +164,49 @@ def cross_checks(folder):
     found += check_binary_all(folder)
     found += check_timestomping(folder)
     found += check_macro_document(folder)
+    found += check_embedded_signers(folder)
     return found
+
+
+def check_embedded_signers(folder):
+    """For a collected binary signed by a third party, the manifest records who
+    signed (EmbeddedSigner) and whether the file is as signed
+    (EmbeddedSignatureIntact) — information for the analyst. Independent
+    source: Get-AuthenticodeSignature on the third-party binaries of the VM
+    (reference/third-party-signatures.txt): the signer's name must be in the
+    subject Windows reads, and a file WAC says intact must not be a
+    HashMismatch for Windows.
+    """
+    reference_path = os.path.join(folder, "reference", "third-party-signatures.txt")
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+    signed = {str(i.get("SourcePath", "")).lower(): i for i in items if i.get("EmbeddedSigner")}
+    if not os.path.exists(reference_path) or not signed:
+        print("  ⏭️  no third-party signer recorded, or no reference: embedded signers not checked")
+        return 0
+    compared, wrong = 0, []
+    with open(reference_path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            parts = line.strip().split("|", 2)
+            if len(parts) != 3 or parts[0].lower() not in signed:
+                continue
+            item = signed[parts[0].lower()]
+            compared += 1
+            name = str(item["EmbeddedSigner"]).split(",")[0].strip()
+            if name.lower() not in parts[2].lower():
+                wrong.append(f"{parts[0]}: WAC signer {name!r}, Windows {parts[2][:60]!r}")
+            if item.get("EmbeddedSignatureIntact") is True and parts[1] == "HashMismatch":
+                wrong.append(f"{parts[0]}: intact for WAC, HashMismatch for Windows")
+    if not compared:
+        print("  ⏭️  no third-party signed binary in common with the reference: not checked")
+        return 0
+    if wrong:
+        print(f"  ❌ {len(wrong)} embedded signer(s) out of {compared} differ from Windows':")
+        for w in wrong[:5]:
+            print(f"        {w}")
+        return 1
+    print(f"  ✅ {compared} third-party signed binaries: signer and integrity agree with Get-AuthenticodeSignature")
+    return 0
 
 
 def check_macro_document(folder):

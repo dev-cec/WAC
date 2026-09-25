@@ -105,6 +105,11 @@ struct SignatureVerdict {
 	bool valid = false;       //!< the signature holds (catalog, embedded, package)
 	std::wstring label;       //!< what authenticated it, e.g. "Microsoft (catalog X.cat)"
 	std::wstring reason;      //!< why not, when not valid
+	/*! The embedded signature's signer, whoever it is ("CN, O"), and whether
+	 *  it is intact (file as signed). Informative: the chain is not verified up
+	 *  to a trusted root — anyone can sign with a certificate of their own. */
+	std::wstring embeddedSigner;
+	bool embeddedIntact = false;
 };
 
 /*! Records an extraction result in the exhibit store manifest.

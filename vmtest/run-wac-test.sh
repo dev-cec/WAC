@@ -347,6 +347,13 @@ if [[ $SPLIT -eq 1 ]]; then
     echo "   ❌ verify-exhibits.ps1 refuses the collection: $(tail -3 "$OUTPUT/verify-exhibits.log" | tr -d '\r')"
   fi
 
+  # Windows' reading of the embedded signatures of third-party binaries, for
+  # the signer and the integrity WAC records of those it collects.
+  $QGA run -- powershell.exe -NoProfile -Command \
+    '[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-ChildItem "C:\Program Files\Qemu-ga", "C:\Program Files\Virtio-Win" -Recurse -File -Include *.exe, *.dll, *.sys -ErrorAction SilentlyContinue | ForEach-Object { $s = Get-AuthenticodeSignature $_.FullName; "{0}|{1}|{2}" -f $_.FullName, $s.Status, $s.SignerCertificate.Subject }; exit 0' \
+    > "$OUTPUT/reference/third-party-signatures.txt" 2>/dev/null \
+    && echo "   + reference/third-party-signatures.txt" || echo "   ⚠️ third-party signatures reference not read"
+
   # A retouched snapshot: one byte appended. The conversion must refuse it.
   LIVE="$VMDIR\\split\\exhibits\\live\\system-clock.json"
   $QGA run --shell "copy /y $LIVE $VMDIR\\clock.bak >nul & echo x>> $LIVE" >/dev/null
