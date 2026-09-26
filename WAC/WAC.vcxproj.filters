@@ -58,6 +58,21 @@
     <ClCompile Include="sha.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="wevt.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="xpress.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="cab.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="config.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="csv_reader.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="http_client.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="inflate.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="lzx.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="trust_set.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="trust_update.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="version_info.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="yaml_light.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="zip.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="..\third_party\libyaml-0.2.5\src\api.c"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="..\third_party\libyaml-0.2.5\src\reader.c"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="..\third_party\libyaml-0.2.5\src\scanner.c"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="..\third_party\libyaml-0.2.5\src\parser.c"><Filter>Fichiers sources</Filter></ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asciiart.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
@@ -114,6 +129,20 @@
     <ClInclude Include="sha.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="wevt.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="xpress.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="archive.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="cab.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="config.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="csv_reader.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="guard_page.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="http_client.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="inflate.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="lzx.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="trust_set.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="trust_update.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="version_info.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="yaml_light.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="zip.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="..\third_party\libyaml-0.2.5\include\yaml.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WAC.rc"><Filter>Fichiers de ressources</Filter></ResourceCompile>

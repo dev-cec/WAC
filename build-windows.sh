@@ -178,6 +178,22 @@ if x86_64-w64-mingw32-objdump -p "$BUILD/WAC.exe" | grep -iE "DLL Name: ($NETWOR
 fi
 echo "No network library imported."
 
+# --- The Visual Studio project knows every source ----------------------------
+# This script finds the sources by itself; WAC.vcxproj does not, and a file
+# forgotten there broke the MSVC build for several commits, unnoticed — 22
+# files were missing when this check came. Refused, not warned.
+UNLISTED=$(cd "$SRC" && for f in $(ls *.cpp *.h | grep -v '_test\.cpp$'); do
+  grep -q "Include=\"$f\"" WAC.vcxproj || echo "$f"
+done)
+for c in api reader scanner parser; do
+  grep -q "libyaml-0.2.5\\\\src\\\\$c.c" "$SRC/WAC.vcxproj" || UNLISTED="$UNLISTED libyaml/$c.c"
+done
+if [[ -n "${UNLISTED// }" ]]; then
+  echo "ERROR: missing from WAC/WAC.vcxproj (and its .filters): $(echo $UNLISTED)"
+  exit 1
+fi
+echo "Visual Studio project: every source listed."
+
 # --- WAC/bin: the last build, ready to download ------------------------------
 # The executables and the reference configuration (WAC/wac.yml, also built
 # into WAC.exe), copied where the repository keeps them, and staged — not

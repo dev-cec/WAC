@@ -90,7 +90,8 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>YAML_DECLARE_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\third_party\libyaml-0.2.5\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -104,7 +105,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>YAML_DECLARE_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\third_party\libyaml-0.2.5\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -118,12 +120,11 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_WCSTOK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>YAML_DECLARE_STATIC;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_WCSTOK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\third_party\libyaml-0.2.5\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,10 +143,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_WCSTOK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>YAML_DECLARE_STATIC;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_WCSTOK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\third_party\libyaml-0.2.5\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -218,6 +218,33 @@
     <ClCompile Include="sha.cpp" />
     <ClCompile Include="wevt.cpp" />
     <ClCompile Include="xpress.cpp" />
+    <ClCompile Include="cab.cpp" />
+    <ClCompile Include="config.cpp" />
+    <ClCompile Include="csv_reader.cpp" />
+    <ClCompile Include="http_client.cpp" />
+    <ClCompile Include="inflate.cpp" />
+    <ClCompile Include="lzx.cpp" />
+    <ClCompile Include="trust_set.cpp" />
+    <ClCompile Include="trust_update.cpp" />
+    <ClCompile Include="version_info.cpp" />
+    <ClCompile Include="yaml_light.cpp" />
+    <ClCompile Include="zip.cpp" />
+    <ClCompile Include="..\third_party\libyaml-0.2.5\src\api.c">
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>YAML_VERSION_MAJOR=0;YAML_VERSION_MINOR=2;YAML_VERSION_PATCH=5;YAML_VERSION_STRING=\"0.2.5\";_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\third_party\libyaml-0.2.5\src\reader.c">
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>YAML_VERSION_MAJOR=0;YAML_VERSION_MINOR=2;YAML_VERSION_PATCH=5;YAML_VERSION_STRING=\"0.2.5\";_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\third_party\libyaml-0.2.5\src\scanner.c">
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>YAML_VERSION_MAJOR=0;YAML_VERSION_MINOR=2;YAML_VERSION_PATCH=5;YAML_VERSION_STRING=\"0.2.5\";_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\third_party\libyaml-0.2.5\src\parser.c">
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>YAML_VERSION_MAJOR=0;YAML_VERSION_MINOR=2;YAML_VERSION_PATCH=5;YAML_VERSION_STRING=\"0.2.5\";_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
@@ -278,6 +305,20 @@
     <ClInclude Include="sha.h" />
     <ClInclude Include="wevt.h" />
     <ClInclude Include="xpress.h" />
+    <ClInclude Include="archive.h" />
+    <ClInclude Include="cab.h" />
+    <ClInclude Include="config.h" />
+    <ClInclude Include="csv_reader.h" />
+    <ClInclude Include="guard_page.h" />
+    <ClInclude Include="http_client.h" />
+    <ClInclude Include="inflate.h" />
+    <ClInclude Include="lzx.h" />
+    <ClInclude Include="trust_set.h" />
+    <ClInclude Include="trust_update.h" />
+    <ClInclude Include="version_info.h" />
+    <ClInclude Include="yaml_light.h" />
+    <ClInclude Include="zip.h" />
+    <ClInclude Include="..\third_party\libyaml-0.2.5\include\yaml.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon\WAC.ico" />
