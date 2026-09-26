@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -144,12 +144,41 @@ $(document).ready(function(){initNavTree('main_8cpp.html',''); initResizable(); 
 <code>#include &quot;<a class="el" href="services_8h_source.html">services.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="users_8h_source.html">users.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="events_8h_source.html">events.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="event__messages_8h_source.html">event_messages.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="running__machine_8h_source.html">running_machine.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="trust__update_8h_source.html">trust_update.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="trust__set_8h_source.html">trust_set.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="config_8h_source.html">config.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:aec315d77f5c38417289a0e311d2a9d31" id="r_aec315d77f5c38417289a0e311d2a9d31"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#aec315d77f5c38417289a0e311d2a9d31">showHelp</a> ()</td></tr>
 <tr class="memdesc:aec315d77f5c38417289a0e311d2a9d31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints the command-line help.  <br /></td></tr>
 <tr class="separator:aec315d77f5c38417289a0e311d2a9d31"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf0c2410a6a37c230e8d9aa2b2dbbd83" id="r_adf0c2410a6a37c230e8d9aa2b2dbbd83"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#adf0c2410a6a37c230e8d9aa2b2dbbd83">checkElevation</a> ()</td></tr>
+<tr class="separator:adf0c2410a6a37c230e8d9aa2b2dbbd83"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6fa7f1d05238966f7cd1751cf2a70d8a" id="r_a6fa7f1d05238966f7cd1751cf2a70d8a"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a6fa7f1d05238966f7cd1751cf2a70d8a">checkCollectionLocation</a> ()</td></tr>
+<tr class="separator:a6fa7f1d05238966f7cd1751cf2a70d8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e4df6ca58374098de76031e0f5de8c0" id="r_a3e4df6ca58374098de76031e0f5de8c0"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a3e4df6ca58374098de76031e0f5de8c0">prepareConversion</a> ()</td></tr>
+<tr class="separator:a3e4df6ca58374098de76031e0f5de8c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf95a119fd979b0724dd942b4352a2b5" id="r_abf95a119fd979b0724dd942b4352a2b5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#abf95a119fd979b0724dd942b4352a2b5">requested</a> (bool wanted, const char *file, const wchar_t *label, const wchar_t *key)</td></tr>
+<tr class="separator:abf95a119fd979b0724dd942b4352a2b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a116d5d86f6d30fc1417bccf78e7535c9" id="r_a116d5d86f6d30fc1417bccf78e7535c9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a116d5d86f6d30fc1417bccf78e7535c9">observeLiveState</a> ()</td></tr>
+<tr class="separator:a116d5d86f6d30fc1417bccf78e7535c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe4ba75075919666d6f8b6acd549c133" id="r_abe4ba75075919666d6f8b6acd549c133"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#abe4ba75075919666d6f8b6acd549c133">extractSystemHives</a> ()</td></tr>
+<tr class="separator:abe4ba75075919666d6f8b6acd549c133"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac198b6a7ba23e0f645b02ef4b42dc4d8" id="r_ac198b6a7ba23e0f645b02ef4b42dc4d8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#ac198b6a7ba23e0f645b02ef4b42dc4d8">extractProfileArtefacts</a> ()</td></tr>
+<tr class="separator:ac198b6a7ba23e0f645b02ef4b42dc4d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a106329315ad98d43b1cd41255eec62e2" id="r_a106329315ad98d43b1cd41255eec62e2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a106329315ad98d43b1cd41255eec62e2">loadTrustSet</a> ()</td></tr>
+<tr class="separator:a106329315ad98d43b1cd41255eec62e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ca8bbcc202416b303082b5d371a4f28" id="r_a2ca8bbcc202416b303082b5d371a4f28"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a2ca8bbcc202416b303082b5d371a4f28">closeBinaries</a> ()</td></tr>
+<tr class="separator:a2ca8bbcc202416b303082b5d371a4f28"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae7ed5c323d3bb4779eebecfb18a1ff68" id="r_ae7ed5c323d3bb4779eebecfb18a1ff68"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#ae7ed5c323d3bb4779eebecfb18a1ff68">sealExhibitStore</a> ()</td></tr>
+<tr class="separator:ae7ed5c323d3bb4779eebecfb18a1ff68"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0256b719b5ad5be6f6d4a5172395fa46" id="r_a0256b719b5ad5be6f6d4a5172395fa46"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a0256b719b5ad5be6f6d4a5172395fa46">collectForConversion</a> ()</td></tr>
+<tr class="separator:a0256b719b5ad5be6f6d4a5172395fa46"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a177385e8857c5db1f20026a012c0c4ec" id="r_a177385e8857c5db1f20026a012c0c4ec"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a177385e8857c5db1f20026a012c0c4ec">convertArtefacts</a> (bool systemAvailable)</td></tr>
+<tr class="separator:a177385e8857c5db1f20026a012c0c4ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae1325efcce4a4b1b4ea52247f0a0a0c1" id="r_ae1325efcce4a4b1b4ea52247f0a0a0c1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#ae1325efcce4a4b1b4ea52247f0a0a0c1">wmain</a> (int argc, wchar_t *argv[])</td></tr>
 <tr class="separator:ae1325efcce4a4b1b4ea52247f0a0a0c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -162,6 +191,260 @@ Variables</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Entry point: parses the command line, then runs the collection phases in order — prerequisites, live artefacts, raw extraction, registry, files, event logs, sealing of the exhibit store, investigation log. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a6fa7f1d05238966f7cd1751cf2a70d8a" name="a6fa7f1d05238966f7cd1751cf2a70d8a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6fa7f1d05238966f7cd1751cf2a70d8a">&#9670;&#160;</a></span>checkCollectionLocation()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT checkCollectionLocation </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Checks the collection medium before the very first write (see ExhibitStoreCheckLocation). </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the reason of the refusal </dd></dl>
+
+</div>
+</div>
+<a id="adf0c2410a6a37c230e8d9aa2b2dbbd83" name="adf0c2410a6a37c230e8d9aa2b2dbbd83"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adf0c2410a6a37c230e8d9aa2b2dbbd83">&#9670;&#160;</a></span>checkElevation()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int checkElevation </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Checks that WAC runs elevated: the raw reading of a volume requires it. </p><dl class="section return"><dt>Returns</dt><dd>0 if so, otherwise the exit code of the refusal </dd></dl>
+
+</div>
+</div>
+<a id="a2ca8bbcc202416b303082b5d371a4f28" name="a2ca8bbcc202416b303082b5d371a4f28"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2ca8bbcc202416b303082b5d371a4f28">&#9670;&#160;</a></span>closeBinaries()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void closeBinaries </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Closes the phase of the cited binaries: the volumes kept open to read them are closed, the phase is recorded and, in a full run, the collected exhibits are copied to the working directory — like any exhibit, even an unmodified one: that is the procedure. A &ndash;collect run records its collection itself (collectForConversion) and makes no working copy. </p>
+
+</div>
+</div>
+<a id="a0256b719b5ad5be6f6d4a5172395fa46" name="a0256b719b5ad5be6f6d4a5172395fa46"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0256b719b5ad5be6f6d4a5172395fa46">&#9670;&#160;</a></span>collectForConversion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void collectForConversion </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>&ndash;collect: what the conversion will need and only it can tell — the resource files of the event providers (&ndash;events) and the executables with the signature catalogs (&ndash;binary) —, taken now, whole, since which of them the artefacts cite is only known once they are converted. </p>
+
+</div>
+</div>
+<a id="a177385e8857c5db1f20026a012c0c4ec" name="a177385e8857c5db1f20026a012c0c4ec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a177385e8857c5db1f20026a012c0c4ec">&#9670;&#160;</a></span>convertArtefacts()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void convertArtefacts </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>systemAvailable</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Converts the artefacts into JSON, from the working copy: registry, files, event logs. <a class="el" href="structRuns.html">Runs</a> in a full run and under &ndash;convert; a &ndash;collect run stops before it (see RunMode). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">systemAvailable</td><td>the SYSTEM hive is open (conf.System) </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ac198b6a7ba23e0f645b02ef4b42dc4d8" name="ac198b6a7ba23e0f645b02ef4b42dc4d8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac198b6a7ba23e0f645b02ef4b42dc4d8">&#9670;&#160;</a></span>extractProfileArtefacts()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void extractProfileArtefacts </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Raw extraction of the user hives and of the file artefacts (<a class="el" href="structPrefetch.html">Prefetch</a>, jump lists, recent documents, tasks, event logs). Requires the profile list, read from the SOFTWARE hive. </p>
+
+</div>
+</div>
+<a id="abe4ba75075919666d6f8b6acd549c133" name="abe4ba75075919666d6f8b6acd549c133"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abe4ba75075919666d6f8b6acd549c133">&#9670;&#160;</a></span>extractSystemHives()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT extractSystemHives </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Raw extraction of the system hives into the exhibit store and the working copy. </p><dl class="section return"><dt>Returns</dt><dd>the result; a failure (the volume) stops the collection </dd></dl>
+
+</div>
+</div>
+<a id="a106329315ad98d43b1cd41255eec62e2" name="a106329315ad98d43b1cd41255eec62e2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a106329315ad98d43b1cd41255eec62e2">&#9670;&#160;</a></span>loadTrustSet()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void loadTrustSet </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Loads the trust set of the key, which clears third-party signatures (&ndash;binary), and records what it is — or that there is none, and why: the third-party binaries are then all collected. Loaded before the first executable is read, so that one set judges them all. </p>
+
+</div>
+</div>
+<a id="a116d5d86f6d30fc1417bccf78e7535c9" name="a116d5d86f6d30fc1417bccf78e7535c9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a116d5d86f6d30fc1417bccf78e7535c9">&#9670;&#160;</a></span>observeLiveState()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void observeLiveState </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a3e4df6ca58374098de76031e0f5de8c0" name="a3e4df6ca58374098de76031e0f5de8c0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3e4df6ca58374098de76031e0f5de8c0">&#9670;&#160;</a></span>prepareConversion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT prepareConversion </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>&ndash;convert: checks the collection before anything is read from it — the seal, then every exhibit's fingerprint —, then rebuilds the working copy from the exhibit store, as the collection made it: copies verified against the manifest, hives repaired. The working directory is derived data: an earlier one, possibly altered by an analysis, is deleted rather than trusted. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the reason of the refusal </dd></dl>
+
+</div>
+</div>
+<a id="abf95a119fd979b0724dd942b4352a2b5" name="abf95a119fd979b0724dd942b4352a2b5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abf95a119fd979b0724dd942b4352a2b5">&#9670;&#160;</a></span>requested()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool requested </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>wanted</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>file</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const wchar_t *&#160;</td>
+          <td class="paramname"><em>label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const wchar_t *&#160;</td>
+          <td class="paramname"><em>key</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Live phase: what can only be observed on the running system — sessions, processes, service states, clock, settings —, recorded as sealed snapshots (<a class="el" href="live__snapshot_8h.html" title="Snapshot of the LIVE state: what WAC observes on the running system (processes, sessions,...">live_snapshot.h</a>) that the conversion reads back.</p>
+<p>Whether the configuration asks for an artefact (wac.yml, artefacts:); when it does not, says so on the console and in the artefact's file — switched off, not failed, not empty. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">wanted</td><td>the switch </td></tr>
+    <tr><td class="paramname">file</td><td>the artefact's JSON file </td></tr>
+    <tr><td class="paramname">label</td><td>the artefact </td></tr>
+    <tr><td class="paramname">key</td><td>its configuration key </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><code>wanted</code> </dd></dl>
+
+</div>
+</div>
+<a id="ae7ed5c323d3bb4779eebecfb18a1ff68" name="ae7ed5c323d3bb4779eebecfb18a1ff68"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae7ed5c323d3bb4779eebecfb18a1ff68">&#9670;&#160;</a></span>sealExhibitStore()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sealExhibitStore </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Writes the manifest and its seal: the last operation on the exhibit store (see ExhibitStoreWriteManifest). </p>
+
+</div>
+</div>
 <a id="aec315d77f5c38417289a0e311d2a9d31" name="aec315d77f5c38417289a0e311d2a9d31"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aec315d77f5c38417289a0e311d2a9d31">&#9670;&#160;</a></span>showHelp()</h2>
 

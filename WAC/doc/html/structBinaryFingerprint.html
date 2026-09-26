@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -119,31 +119,29 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:aafab5914020753a8dd0f12fc2b35f88d" id="r_aafab5914020753a8dd0f12fc2b35f88d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBinaryFingerprint.html#aafab5914020753a8dd0f12fc2b35f88d">sha256</a></td></tr>
 <tr class="memdesc:aafab5914020753a8dd0f12fc2b35f88d"><td class="mdescLeft">&#160;</td><td class="mdescRight">empty if the file could not be read  <br /></td></tr>
 <tr class="separator:aafab5914020753a8dd0f12fc2b35f88d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aefb7432f58c3a167ae28416efb7551a5" id="r_aefb7432f58c3a167ae28416efb7551a5"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBinaryFingerprint.html#aefb7432f58c3a167ae28416efb7551a5">authenticodeSha256</a></td></tr>
+<tr class="separator:aefb7432f58c3a167ae28416efb7551a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a04e6b16e429ee48c2cd57aadbf2ae9fc" id="r_a04e6b16e429ee48c2cd57aadbf2ae9fc"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBinaryFingerprint.html#a04e6b16e429ee48c2cd57aadbf2ae9fc">result</a> = E_FAIL</td></tr>
 <tr class="memdesc:a04e6b16e429ee48c2cd57aadbf2ae9fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">outcome of the raw read  <br /></td></tr>
 <tr class="separator:a04e6b16e429ee48c2cd57aadbf2ae9fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf75e98fd260ad59aa762dd074d35be1" id="r_acf75e98fd260ad59aa762dd074d35be1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBinaryFingerprint.html#acf75e98fd260ad59aa762dd074d35be1">collected</a> = false</td></tr>
-<tr class="memdesc:acf75e98fd260ad59aa762dd074d35be1"><td class="mdescLeft">&#160;</td><td class="mdescRight">copied into the exhibit store  <br /></td></tr>
-<tr class="separator:acf75e98fd260ad59aa762dd074d35be1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa4e502ceaff5381b38b99c228c618da3" id="r_aa4e502ceaff5381b38b99c228c618da3"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBinaryFingerprint.html#aa4e502ceaff5381b38b99c228c618da3">signature</a></td></tr>
 <tr class="separator:aa4e502ceaff5381b38b99c228c618da3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Fingerprints of a cited file, and what was done with it. </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
-<a id="acf75e98fd260ad59aa762dd074d35be1" name="acf75e98fd260ad59aa762dd074d35be1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acf75e98fd260ad59aa762dd074d35be1">&#9670;&#160;</a></span>collected</h2>
+<a id="aefb7432f58c3a167ae28416efb7551a5" name="aefb7432f58c3a167ae28416efb7551a5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aefb7432f58c3a167ae28416efb7551a5">&#9670;&#160;</a></span>authenticodeSha256</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool BinaryFingerprint::collected = false</td>
+          <td class="memname">std::wstring BinaryFingerprint::authenticodeSha256</td>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>copied into the exhibit store </p>
+<p>Authenticode SHA-256 of a PE: the digest the signature and the catalogs cover. The only digest of an authentic Microsoft binary that &ndash;collect fingerprinted without copying it (no MD5, SHA-1, SHA-256 then). </p>
 
 </div>
 </div>

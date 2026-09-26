@@ -8,5 +8,7 @@ var classPeAnalyser =
     [ "sha1Complete", "classPeAnalyser.html#a3adc9c4fb143d37cd056486b3e114fe1", null ],
     [ "sha256", "classPeAnalyser.html#a524ce107911df3deedd8a222df22cf8d", null ],
     [ "sha256Complete", "classPeAnalyser.html#a37e30d74f48d3045bdc6312f8aac9f60", null ],
+    [ "sizeOfImage", "classPeAnalyser.html#a73d6872f1a88ed4e1de7e4068beff6a0", null ],
+    [ "timeDateStamp", "classPeAnalyser.html#a94b63cf5dd480b47947129013f1c588a", null ],
     [ "xsputn", "classPeAnalyser.html#a93bba585f76ca343b50d9e526b76970a", null ]
 ];

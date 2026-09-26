@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -109,16 +109,16 @@ $(document).ready(function(){initNavTree('rsa_8cpp.html',''); initResizable(); }
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:aff9f02be5a63f968c0ca6547abf80128" id="r_aff9f02be5a63f968c0ca6547abf80128"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rsa_8cpp.html#aff9f02be5a63f968c0ca6547abf80128">RsaVerifyPkcs1</a> (const uint8_t *module, size_t modulusSize, const uint8_t *exponent, size_t exponentSize, const uint8_t *signature, size_t signatureSize, <a class="el" href="rsa_8h.html#ac45c14ed73917e022d33ef6818a2d9b7">DigestAlgorithm</a> algo, const uint8_t *fingerprint, size_t digestSize)</td></tr>
-<tr class="separator:aff9f02be5a63f968c0ca6547abf80128"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7209b2b547d0b4b9ab1540bdf92e645d" id="r_a7209b2b547d0b4b9ab1540bdf92e645d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rsa_8cpp.html#a7209b2b547d0b4b9ab1540bdf92e645d">RsaVerifyPkcs1</a> (const uint8_t *module, size_t modulusSize, const uint8_t *exponent, size_t exponentSize, const uint8_t *signature, size_t signatureSize, <a class="el" href="rsa_8h.html#ac45c14ed73917e022d33ef6818a2d9b7">DigestAlgorithm</a> algo, const uint8_t *fingerprint, size_t digestSize, <a class="el" href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6">DigestEncoding</a> encoding)</td></tr>
+<tr class="separator:a7209b2b547d0b4b9ab1540bdf92e645d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>RSA PKCS#1 v1.5 signature verification, in memory. </p>
 <p>See <a class="el" href="rsa_8h.html" title="RSA PKCS#1 v1.5 signature verification, in memory, with no API.">rsa.h</a>.</p>
 <p>Numbers are held in 32-bit words, least significant first. Exponentiation by Montgomery multiplication (CIOS variant): it avoids any long division, the only tricky part of multi-precision arithmetic. The RSA modulus is odd, which Montgomery requires. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="aff9f02be5a63f968c0ca6547abf80128" name="aff9f02be5a63f968c0ca6547abf80128"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aff9f02be5a63f968c0ca6547abf80128">&#9670;&#160;</a></span>RsaVerifyPkcs1()</h2>
+<a id="a7209b2b547d0b4b9ab1540bdf92e645d" name="a7209b2b547d0b4b9ab1540bdf92e645d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7209b2b547d0b4b9ab1540bdf92e645d">&#9670;&#160;</a></span>RsaVerifyPkcs1()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -175,7 +175,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>digestSize</em>&#160;</td>
+          <td class="paramname"><em>digestSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6">DigestEncoding</a>&#160;</td>
+          <td class="paramname"><em>encoding</em> = <code><a class="el" href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6a63cfd610b80e6d7af61bd4d40616033d">DigestEncoding::DigestInfo</a></code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -192,6 +198,7 @@ Functions</h2></td></tr>
     <tr><td class="paramname">signature,signatureSize</td><td>signature, big-endian </td></tr>
     <tr><td class="paramname">algo</td><td>algorithm of the signed digest </td></tr>
     <tr><td class="paramname">fingerprint,digestSize</td><td>expected digest </td></tr>
+    <tr><td class="paramname">encoding</td><td>whether a bare digest is accepted too (see DigestEncoding) </td></tr>
   </table>
   </dd>
 </dl>

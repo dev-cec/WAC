@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -106,12 +106,28 @@ $(document).ready(function(){initNavTree('binaires_8cpp.html',''); initResizable
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="binaires_8h_source.html">binaires.h</a>&quot;</code><br />
 <code>#include &lt;map&gt;</code><br />
+<code>#include &lt;fstream&gt;</code><br />
+<code>#include &lt;chrono&gt;</code><br />
+<code>#include &lt;deque&gt;</code><br />
+<code>#include &lt;atomic&gt;</code><br />
+<code>#include &lt;condition_variable&gt;</code><br />
+<code>#include &lt;mutex&gt;</code><br />
+<code>#include &lt;thread&gt;</code><br />
 <code>#include &lt;memory&gt;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
 <code>#include &quot;<a class="el" href="tools_8h_source.html">tools.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="raw__hive_8h_source.html">raw_hive.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="exhibit__reader_8h_source.html">exhibit_reader.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="consigne_8h_source.html">consigne.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="running__machine_8h_source.html">running_machine.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="authenticode_8h_source.html">authenticode.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="trust__set_8h_source.html">trust_set.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="audit_8h_source.html">audit.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="pe__resource_8h_source.html">pe_resource.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="version__info_8h_source.html">version_info.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="sha_8h_source.html">sha.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="quickdigest5_8h_source.html">quickdigest5.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="xml__light_8h_source.html">xml_light.h</a>&quot;</code><br />
 <code>#include &lt;set&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
 </div><table class="memberdecls">
@@ -123,6 +139,10 @@ Functions</h2></td></tr>
 <tr class="separator:ac8731c2371091c6290d353fd98aa3e59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abec213e18f991fd799f47dfecc884a20" id="r_abec213e18f991fd799f47dfecc884a20"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structBinarySummary.html">BinarySummary</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8cpp.html#abec213e18f991fd799f47dfecc884a20">BinariesSummary</a> ()</td></tr>
 <tr class="separator:abec213e18f991fd799f47dfecc884a20"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e65fdf5f12a059cc9fd26d884adbc6c" id="r_a3e65fdf5f12a059cc9fd26d884adbc6c"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8cpp.html#a3e65fdf5f12a059cc9fd26d884adbc6c">BinariesCollectAll</a> ()</td></tr>
+<tr class="separator:a3e65fdf5f12a059cc9fd26d884adbc6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34664c60e401d227b487dc96c610a55a" id="r_a34664c60e401d227b487dc96c610a55a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8cpp.html#a34664c60e401d227b487dc96c610a55a">recordMissingCrls</a> ()</td></tr>
+<tr class="separator:a34664c60e401d227b487dc96c610a55a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab4ce0b0aacbea8daa28752e26ef0e57b" id="r_ab4ce0b0aacbea8daa28752e26ef0e57b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8cpp.html#ab4ce0b0aacbea8daa28752e26ef0e57b">BinariesFinish</a> ()</td></tr>
 <tr class="separator:ab4ce0b0aacbea8daa28752e26ef0e57b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -167,6 +187,25 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Adds the three fingerprints to a JSON object, under the keys <code>&lt;prefix&gt;Md5&lt;suffix&gt;</code>, <code>&lt;prefix&gt;Sha1&lt;suffix&gt;</code>, <code>&lt;prefix&gt;Sha256&lt;suffix&gt;</code>. A missing fingerprint is not emitted: an empty field would read as a software defect. </p>
+
+</div>
+</div>
+<a id="a3e65fdf5f12a059cc9fd26d884adbc6c" name="a3e65fdf5f12a059cc9fd26d884adbc6c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3e65fdf5f12a059cc9fd26d884adbc6c">&#9670;&#160;</a></span>BinariesCollectAll()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT BinariesCollectAll </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>&ndash;collect &ndash;binary: collects EVERY executable, library, driver, script and macro document of the system volume, and every signature catalog.</p>
+<p>WHY ALL OF THEM. Which files the artefacts cite is only known once they are converted — on the analysis workstation, from the exhibit store. The collection must therefore take everything the conversion may ask for, and the catalogs that let it verify the Microsoft signatures there (see <a class="el" href="authenticode_8h.html" title="Microsoft authenticity of a binary, verified without any API.">authenticode.h</a>). Hard links (WinSxS) are read once, identical contents stored once. When the medium runs short, the walk stops and says so. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, S_FALSE if directories were unreadable, ERROR_DISK_FULL (as HRESULT) if the medium ran short </dd></dl>
 
 </div>
 </div>
@@ -224,6 +263,24 @@ Functions</h2></td></tr>
 <p>Fingerprints of the file an artefact points to.</p>
 <p>The path is normalised by <code>normalizeFilePath</code>; a path that does not designate a determinable local file gives an empty result. Each file is read only ONCE for the whole collection, however many artefacts cite it.</p>
 <p>Without <code>--binary</code>, returns an empty result without reading anything. </p>
+
+</div>
+</div>
+<a id="a34664c60e401d227b487dc96c610a55a" name="a34664c60e401d227b487dc96c610a55a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a34664c60e401d227b487dc96c610a55a">&#9670;&#160;</a></span>recordMissingCrls()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void recordMissingCrls </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The CRL addresses this collection lacked, added to wanted-crls.txt in the trust set's folder, on the key: the next &ndash;update-trust fetches them too, so that the CRLs of authorities the CCADB does not list — Microsoft's own code signing authorities, first — fill in by themselves. Written to the collection medium only; the manifest of the set does not list the file, whose content is only addresses, each CRL checked by its signature where it is used. </p>
 
 </div>
 </div>

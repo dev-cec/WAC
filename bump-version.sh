@@ -40,5 +40,12 @@ PY
 
 "$HERE/build-windows.sh"
 git -C "$HERE" add "$RC"
-echo "Staged: WAC/WAC.rc and WAC/bin. Commit them: git commit -m \"chore : version $(python3 -c "
-import re; t=open('$RC','rb').read()[2:].decode('utf-16-le'); print('.'.join(re.search(r' FILEVERSION (\d+),(\d+),(\d+),0', t).groups()))")\""
+# The code documentation (WAC/doc/html), its version read from WAC.rc too (Doxyfile: $(WAC_VERSION)).
+VERSION=$(python3 -c "import re; t=open('$RC','rb').read()[2:].decode('utf-16-le'); print('.'.join(re.search(r' FILEVERSION (\d+),(\d+),(\d+),0', t).groups()))")
+if command -v doxygen >/dev/null; then
+  ( cd "$HERE/Doxygen" && WAC_VERSION="$VERSION" doxygen Doxyfile >/dev/null 2>&1 ) && git -C "$HERE" add -A "$HERE/WAC/doc/html" \
+    && echo "Code documentation regenerated (WAC/doc/html)"
+else
+  echo "doxygen absent: WAC/doc/html not regenerated"
+fi
+echo "Staged: WAC/WAC.rc, WAC/bin and WAC/doc/html. Commit them: git commit -m \"chore : version $VERSION\""

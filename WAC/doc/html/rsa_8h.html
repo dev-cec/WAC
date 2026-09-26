@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -123,11 +123,15 @@ Enumerations</h2></td></tr>
 <br />
  }</td></tr>
 <tr class="separator:ac45c14ed73917e022d33ef6818a2d9b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a733e754a329021ae5cec0a1a3acb89e6" id="r_a733e754a329021ae5cec0a1a3acb89e6"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6">DigestEncoding</a> { <a class="el" href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6a63cfd610b80e6d7af61bd4d40616033d">DigestInfo</a>
+, <a class="el" href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6ab98b288858b251ba938becabac551604">DigestInfoOrBare</a>
+ }</td></tr>
+<tr class="separator:a733e754a329021ae5cec0a1a3acb89e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:aff9f02be5a63f968c0ca6547abf80128" id="r_aff9f02be5a63f968c0ca6547abf80128"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rsa_8h.html#aff9f02be5a63f968c0ca6547abf80128">RsaVerifyPkcs1</a> (const uint8_t *module, size_t modulusSize, const uint8_t *exponent, size_t exponentSize, const uint8_t *signature, size_t signatureSize, <a class="el" href="rsa_8h.html#ac45c14ed73917e022d33ef6818a2d9b7">DigestAlgorithm</a> algo, const uint8_t *fingerprint, size_t digestSize)</td></tr>
-<tr class="separator:aff9f02be5a63f968c0ca6547abf80128"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a772da6154de51a110cab9407b0b79f8c" id="r_a772da6154de51a110cab9407b0b79f8c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rsa_8h.html#a772da6154de51a110cab9407b0b79f8c">RsaVerifyPkcs1</a> (const uint8_t *module, size_t modulusSize, const uint8_t *exponent, size_t exponentSize, const uint8_t *signature, size_t signatureSize, <a class="el" href="rsa_8h.html#ac45c14ed73917e022d33ef6818a2d9b7">DigestAlgorithm</a> algo, const uint8_t *fingerprint, size_t digestSize, <a class="el" href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6">DigestEncoding</a> encoding=<a class="el" href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6a63cfd610b80e6d7af61bd4d40616033d">DigestEncoding::DigestInfo</a>)</td></tr>
+<tr class="separator:a772da6154de51a110cab9407b0b79f8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>RSA PKCS#1 v1.5 signature verification, in memory, with no API. </p>
@@ -169,9 +173,38 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a733e754a329021ae5cec0a1a3acb89e6" name="a733e754a329021ae5cec0a1a3acb89e6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a733e754a329021ae5cec0a1a3acb89e6">&#9670;&#160;</a></span>DigestEncoding</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum class <a class="el" href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6">DigestEncoding</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>How the digest is wrapped in the signed block. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a733e754a329021ae5cec0a1a3acb89e6a63cfd610b80e6d7af61bd4d40616033d" name="a733e754a329021ae5cec0a1a3acb89e6a63cfd610b80e6d7af61bd4d40616033d"></a>DigestInfo&#160;</td><td class="fielddoc"><p>PKCS#1 v1.5 proper: the digest within a DigestInfo naming its algorithm. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a733e754a329021ae5cec0a1a3acb89e6ab98b288858b251ba938becabac551604" name="a733e754a329021ae5cec0a1a3acb89e6ab98b288858b251ba938becabac551604"></a>DigestInfoOrBare&#160;</td><td class="fielddoc"><p>Also the bare digest, without DigestInfo: what the time stamping services of VeriSign and Symantec produced for Authenticode counter-signatures (measured on LOLDrivers samples: the decrypted block is 00 01 FF… 00 then the SHA-1 alone), and Windows accepts. For those counter-signatures only. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="aff9f02be5a63f968c0ca6547abf80128" name="aff9f02be5a63f968c0ca6547abf80128"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aff9f02be5a63f968c0ca6547abf80128">&#9670;&#160;</a></span>RsaVerifyPkcs1()</h2>
+<a id="a772da6154de51a110cab9407b0b79f8c" name="a772da6154de51a110cab9407b0b79f8c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a772da6154de51a110cab9407b0b79f8c">&#9670;&#160;</a></span>RsaVerifyPkcs1()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -228,7 +261,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>digestSize</em>&#160;</td>
+          <td class="paramname"><em>digestSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6">DigestEncoding</a>&#160;</td>
+          <td class="paramname"><em>encoding</em> = <code><a class="el" href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6a63cfd610b80e6d7af61bd4d40616033d">DigestEncoding::DigestInfo</a></code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -245,6 +284,7 @@ Functions</h2></td></tr>
     <tr><td class="paramname">signature,signatureSize</td><td>signature, big-endian </td></tr>
     <tr><td class="paramname">algo</td><td>algorithm of the signed digest </td></tr>
     <tr><td class="paramname">fingerprint,digestSize</td><td>expected digest </td></tr>
+    <tr><td class="paramname">encoding</td><td>whether a bare digest is accepted too (see DigestEncoding) </td></tr>
   </table>
   </dd>
 </dl>

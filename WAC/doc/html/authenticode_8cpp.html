@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -97,6 +97,7 @@ $(document).ready(function(){initNavTree('authenticode_8cpp.html',''); initResiz
 
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
 <a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">authenticode.cpp File Reference</div></div>
@@ -108,11 +109,19 @@ $(document).ready(function(){initNavTree('authenticode_8cpp.html',''); initResiz
 <div class="textblock"><code>#include &quot;<a class="el" href="authenticode_8h_source.html">authenticode.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rsa_8h_source.html">rsa.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="racines__microsoft_8h_source.html">racines_microsoft.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="quickdigest5_8h_source.html">quickdigest5.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="json_8h_source.html">json.h</a>&quot;</code><br />
 <code>#include &lt;cstring&gt;</code><br />
 <code>#include &lt;map&gt;</code><br />
 <code>#include &lt;set&gt;</code><br />
 <code>#include &lt;mutex&gt;</code><br />
 </div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structThirdPartyRoots_1_1Impl.html">ThirdPartyRoots::Impl</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The roots of the set, parsed once; the other lists as given.  <a href="structThirdPartyRoots_1_1Impl.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:ae704f2b5d19827712440881c47410819" id="r_ae704f2b5d19827712440881c47410819"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="authenticode_8cpp.html#ae704f2b5d19827712440881c47410819">OID</a>(name, ...)&#160;&#160;&#160;const uint8_t name[] = { __VA_ARGS__ }</td></tr>
@@ -126,10 +135,24 @@ Macros</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:aff6f45f79fbde34f4269c14ccbafcc7a" id="r_aff6f45f79fbde34f4269c14ccbafcc7a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structVerifiedSignature.html">VerifiedSignature</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="authenticode_8cpp.html#aff6f45f79fbde34f4269c14ccbafcc7a">VerifyPkcs7</a> (const uint8_t *data, size_t size)</td></tr>
 <tr class="separator:aff6f45f79fbde34f4269c14ccbafcc7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afcc0097b06999e19cc5505f4abc2a9d8" id="r_afcc0097b06999e19cc5505f4abc2a9d8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structVerdictMicrosoft.html">VerdictMicrosoft</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="authenticode_8cpp.html#afcc0097b06999e19cc5505f4abc2a9d8">EvaluatePe</a> (const <a class="el" href="classPeAnalyser.html">PeAnalyser</a> &amp;pe, const <a class="el" href="classIndexCatalogues.html">IndexCatalogues</a> &amp;catalogues)</td></tr>
-<tr class="separator:afcc0097b06999e19cc5505f4abc2a9d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d7cba8706ee4e9dd595091f4843a89b" id="r_a6d7cba8706ee4e9dd595091f4843a89b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structVerdictMicrosoft.html">VerdictMicrosoft</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="authenticode_8cpp.html#a6d7cba8706ee4e9dd595091f4843a89b">EvaluatePe</a> (const <a class="el" href="classPeAnalyser.html">PeAnalyser</a> &amp;pe, const <a class="el" href="classIndexCatalogues.html">IndexCatalogues</a> &amp;catalogues, const <a class="el" href="classThirdPartyRoots.html">ThirdPartyRoots</a> *thirdParty)</td></tr>
+<tr class="separator:a6d7cba8706ee4e9dd595091f4843a89b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a86de202069e82af1cdd735d0c61e088a" id="r_a86de202069e82af1cdd735d0c61e088a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structVerdictMicrosoft.html">VerdictMicrosoft</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="authenticode_8cpp.html#a86de202069e82af1cdd735d0c61e088a">EvaluateByCatalog</a> (const uint8_t sha256[32], const <a class="el" href="classIndexCatalogues.html">IndexCatalogues</a> &amp;catalogues)</td></tr>
 <tr class="separator:a86de202069e82af1cdd735d0c61e088a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a944559601c177789607972e5b9a61609" id="r_a944559601c177789607972e5b9a61609"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structTrustList.html">TrustList</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="authenticode_8cpp.html#a944559601c177789607972e5b9a61609">ReadTrustList</a> (const uint8_t *bytes, size_t size)</td></tr>
+<tr class="separator:a944559601c177789607972e5b9a61609"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99febd3b2eb3b577b749e9b1abd8c069" id="r_a99febd3b2eb3b577b749e9b1abd8c069"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structTrustListEntry.html">TrustListEntry</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="authenticode_8cpp.html#a99febd3b2eb3b577b749e9b1abd8c069">FindInTrustList</a> (const <a class="el" href="structTrustList.html">TrustList</a> &amp;list, const uint8_t *certificate, size_t size)</td></tr>
+<tr class="separator:a99febd3b2eb3b577b749e9b1abd8c069"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0387a073066c6fb9b52293e4c266d46f" id="r_a0387a073066c6fb9b52293e4c266d46f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="authenticode_8cpp.html#a0387a073066c6fb9b52293e4c266d46f">VulnerableDriversFromJson</a> (const <a class="el" href="classJson.html">Json</a> &amp;file, std::set&lt; std::wstring &gt; &amp;hashes, std::vector&lt; <a class="el" href="structDeniedSigner.html">DeniedSigner</a> &gt; &amp;signers, std::vector&lt; std::wstring &gt; &amp;missing)</td></tr>
+<tr class="separator:a0387a073066c6fb9b52293e4c266d46f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d805f7fad7e42895eeab98424568470" id="r_a4d805f7fad7e42895eeab98424568470"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="authenticode_8cpp.html#a4d805f7fad7e42895eeab98424568470">CertificateCrlAddresses</a> (const uint8_t *der, size_t size)</td></tr>
+<tr class="separator:a4d805f7fad7e42895eeab98424568470"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaf839eb54d4a765bfb310f4590ac5197" id="r_aaf839eb54d4a765bfb310f4590ac5197"><td class="memItemLeft" align="right" valign="top">std::vector&lt; uint8_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="authenticode_8cpp.html#aaf839eb54d4a765bfb310f4590ac5197">DecodeBase64</a> (const std::string &amp;text)</td></tr>
+<tr class="separator:aaf839eb54d4a765bfb310f4590ac5197"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9085a38b12e3458a01c175d4d6ef0537" id="r_a9085a38b12e3458a01c175d4d6ef0537"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="authenticode_8cpp.html#a9085a38b12e3458a01c175d4d6ef0537">EncodeBase64</a> (const uint8_t *bytes, size_t size, size_t lineLength)</td></tr>
+<tr class="separator:a9085a38b12e3458a01c175d4d6ef0537"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3f303a3387b074f26467864672c254b" id="r_ae3f303a3387b074f26467864672c254b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structPackageSignature.html">PackageSignature</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="authenticode_8cpp.html#ae3f303a3387b074f26467864672c254b">VerifyPackageSignature</a> (const uint8_t *bytes, size_t size)</td></tr>
+<tr class="separator:ae3f303a3387b074f26467864672c254b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abde9d2ad75240e98cf8f07b62a1b9513" id="r_abde9d2ad75240e98cf8f07b62a1b9513"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structVerdictMicrosoft.html">VerdictMicrosoft</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="authenticode_8cpp.html#abde9d2ad75240e98cf8f07b62a1b9513">EvaluatePowerShellScript</a> (const uint8_t *bytes, size_t size)</td></tr>
 <tr class="separator:abde9d2ad75240e98cf8f07b62a1b9513"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -200,6 +223,108 @@ Authenticode Portable Executable Signature Format" (Microsoft), and the CTL stru
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="a4d805f7fad7e42895eeab98424568470" name="a4d805f7fad7e42895eeab98424568470"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4d805f7fad7e42895eeab98424568470">&#9670;&#160;</a></span>CertificateCrlAddresses()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; std::string &gt; CertificateCrlAddresses </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>der</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The addresses a certificate names for its revocation list (CRL Distribution Points, URIs) — how &ndash;update-trust finds the CRLs of authorities the CCADB does not list. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">der,size</td><td>the certificate </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the addresses; empty if none, or if it is not a certificate </dd></dl>
+
+</div>
+</div>
+<a id="aaf839eb54d4a765bfb310f4590ac5197" name="aaf839eb54d4a765bfb310f4590ac5197"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaf839eb54d4a765bfb310f4590ac5197">&#9670;&#160;</a></span>DecodeBase64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; uint8_t &gt; DecodeBase64 </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>text</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Base64 (the standard alphabet) to bytes; padding and characters outside the alphabet are skipped. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">text</td><td>the encoded text </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the bytes </dd></dl>
+
+</div>
+</div>
+<a id="a9085a38b12e3458a01c175d4d6ef0537" name="a9085a38b12e3458a01c175d4d6ef0537"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9085a38b12e3458a01c175d4d6ef0537">&#9670;&#160;</a></span>EncodeBase64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string EncodeBase64 </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>bytes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>lineLength</em> = <code>0</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Bytes to Base64 (the standard alphabet, padded), for the PEM files &ndash;update-trust writes. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bytes,size</td><td>the bytes </td></tr>
+    <tr><td class="paramname">lineLength</td><td>characters per line, a line feed after each; 0: one line </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the encoded text </dd></dl>
+
+</div>
+</div>
 <a id="a86de202069e82af1cdd735d0c61e088a" name="a86de202069e82af1cdd735d0c61e088a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a86de202069e82af1cdd735d0c61e088a">&#9670;&#160;</a></span>EvaluateByCatalog()</h2>
 
@@ -230,8 +355,8 @@ Authenticode Portable Executable Signature Format" (Microsoft), and the CTL stru
 
 </div>
 </div>
-<a id="afcc0097b06999e19cc5505f4abc2a9d8" name="afcc0097b06999e19cc5505f4abc2a9d8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afcc0097b06999e19cc5505f4abc2a9d8">&#9670;&#160;</a></span>EvaluatePe()</h2>
+<a id="a6d7cba8706ee4e9dd595091f4843a89b" name="a6d7cba8706ee4e9dd595091f4843a89b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6d7cba8706ee4e9dd595091f4843a89b">&#9670;&#160;</a></span>EvaluatePe()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -246,7 +371,13 @@ Authenticode Portable Executable Signature Format" (Microsoft), and the CTL stru
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="classIndexCatalogues.html">IndexCatalogues</a> &amp;&#160;</td>
-          <td class="paramname"><em>catalogues</em>&#160;</td>
+          <td class="paramname"><em>catalogues</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classThirdPartyRoots.html">ThirdPartyRoots</a> *&#160;</td>
+          <td class="paramname"><em>thirdParty</em> = <code>nullptr</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -255,7 +386,7 @@ Authenticode Portable Executable Signature Format" (Microsoft), and the CTL stru
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Decides whether a PE is an authentic Microsoft binary. </p>
+<p>Decides whether a PE is an authentic Microsoft binary; a third-party signature, intact, is checked against <code>thirdParty</code> when given. </p>
 
 </div>
 </div>
@@ -290,6 +421,118 @@ Authenticode Portable Executable Signature Format" (Microsoft), and the CTL stru
 
 </div>
 </div>
+<a id="a99febd3b2eb3b577b749e9b1abd8c069" name="a99febd3b2eb3b577b749e9b1abd8c069"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a99febd3b2eb3b577b749e9b1abd8c069">&#9670;&#160;</a></span>FindInTrustList()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="structTrustListEntry.html">TrustListEntry</a> * FindInTrustList </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structTrustList.html">TrustList</a> &amp;&#160;</td>
+          <td class="paramname"><em>list</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>certificate</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Looks a certificate up in a trust list, by the identifiers the list's kind uses (see <a class="el" href="structTrustList.html#ac6bef77bfc930aa916addc7a45a5d7b5">TrustList::identifier</a>). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">list</td><td>the list, as ReadTrustList returned it </td></tr>
+    <tr><td class="paramname">certificate,size</td><td>the certificate, DER </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>its entry; nullptr if the list does not name it, or if the certificate cannot be read </dd></dl>
+
+</div>
+</div>
+<a id="a944559601c177789607972e5b9a61609" name="a944559601c177789607972e5b9a61609"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a944559601c177789607972e5b9a61609">&#9670;&#160;</a></span>ReadTrustList()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structTrustList.html">TrustList</a> ReadTrustList </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>bytes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads a Microsoft trust list and checks its signature: valid, up to an embedded Microsoft root, by "Microsoft Certificate Trust List Publisher" of Microsoft Corporation — the only signer accepted for a trust list, and for nothing else. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bytes,size</td><td>the .stl file </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the list; <code>valid</code> false if its signature does not hold </dd></dl>
+
+</div>
+</div>
+<a id="ae3f303a3387b074f26467864672c254b" name="ae3f303a3387b074f26467864672c254b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae3f303a3387b074f26467864672c254b">&#9670;&#160;</a></span>VerifyPackageSignature()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structPackageSignature.html">PackageSignature</a> VerifyPackageSignature </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>bytes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Verifies a package signature: the "PKCX" header, then a PKCS#7 whose chain reaches an embedded Microsoft root — the Store's signature, or Microsoft's own; a package signed under another root is not valid here —, whose signed content is an "APPX" digest carrying the block map's. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bytes,size</td><td>the content of AppxSignature.p7x </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the verdict </dd></dl>
+
+</div>
+</div>
 <a id="aff6f45f79fbde34f4269c14ccbafcc7a" name="aff6f45f79fbde34f4269c14ccbafcc7a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aff6f45f79fbde34f4269c14ccbafcc7a">&#9670;&#160;</a></span>VerifyPkcs7()</h2>
 
@@ -316,6 +559,55 @@ Authenticode Portable Executable Signature Format" (Microsoft), and the CTL stru
       </table>
 </div><div class="memdoc">
 <p>Verifies a PKCS#7 SignedData (catalog or embedded signature): content digest, signer's signature, chain up to an embedded Microsoft root. The returned pointers point into <code>data</code>. </p>
+
+</div>
+</div>
+<a id="a0387a073066c6fb9b52293e4c266d46f" name="a0387a073066c6fb9b52293e4c266d46f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0387a073066c6fb9b52293e4c266d46f">&#9670;&#160;</a></span>VulnerableDriversFromJson()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void VulnerableDriversFromJson </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classJson.html">Json</a> &amp;&#160;</td>
+          <td class="paramname"><em>file</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::set&lt; std::wstring &gt; &amp;&#160;</td>
+          <td class="paramname"><em>hashes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structDeniedSigner.html">DeniedSigner</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>signers</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; std::wstring &gt; &amp;&#160;</td>
+          <td class="paramname"><em>missing</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads vulnerable-drivers.json, as &ndash;update-trust wrote it. A version bound that does not read is left open — the rule then matches more, never less. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">file</td><td>the file, parsed </td></tr>
+    <tr><td class="paramname">hashes</td><td>receives the fingerprints </td></tr>
+    <tr><td class="paramname">signers</td><td>receives the denied signers </td></tr>
+    <tr><td class="paramname">missing</td><td>receives the lists &ndash;update-trust could not obtain </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

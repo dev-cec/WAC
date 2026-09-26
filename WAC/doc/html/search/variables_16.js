@@ -1,4 +1,21 @@
 var searchData=
 [
-  ['xml_0',['xml',['../structEvtxRecord.html#add3b36b24f347ee5b2470cb853f107f4',1,'EvtxRecord']]]
+  ['valid_0',['valid',['../structTrustList.html#a31baea0e53d61850051b849bdd923fcf',1,'TrustList::valid'],['../structPackageSignature.html#afcceaa0b21be855ff32803694c8ae14d',1,'PackageSignature::valid'],['../structSignatureVerdict.html#afd35c9917d5962d7b110b56c95c72122',1,'SignatureVerdict::valid'],['../structTimeZoneInfo.html#af3ab45034d4ad2f6487bbe38b6e33c38',1,'TimeZoneInfo::valid'],['../structVerifiedSignature.html#a9616a32c6a523e1e2bd84bcd2ea4e9cf',1,'VerifiedSignature::valid']]],
+  ['validdatalength_1',['validDataLength',['../structRawHiveFingerprints.html#a001ac0c5ef993f39cfdc367e8c2b3115',1,'RawHiveFingerprints']]],
+  ['value_2',['value',['../structRun.html#adb6a6b9a227dce24fcafb241b8208b93',1,'Run::Value'],['../structProperty.html#a31a5c8b48d1c0d194f64f62de9bb009e',1,'Property::value'],['../structBeef0016.html#ab818a483e9d30199a70c82d4d805799e',1,'Beef0016::value'],['../structSPSValue.html#a394dce8467565811daf296846d96517a',1,'SPSValue::value']]],
+  ['values_3',['values',['../structSPS.html#aeb937ecfffc8f3c17ed6f4fb5b7863ec',1,'SPS']]],
+  ['valuetype_4',['valueType',['../structSPSValue.html#a08795fe7743adc3538099542841bdeaa',1,'SPSValue']]],
+  ['vendor_5',['vendor',['../structUsbstor.html#a64a052a61c0b8c5b68d4137c5d53358f',1,'Usbstor']]],
+  ['verified_6',['verified',['../structThirdPartyRoots_1_1Impl.html#a813ebb76fe8cc27f85371b9f5c104e94',1,'ThirdPartyRoots::Impl::verified'],['../structExhibitStoreCheck.html#a886bc0bce361c89505d0cbdc0fde970f',1,'ExhibitStoreCheck::verified']]],
+  ['verifiedmutex_7',['verifiedMutex',['../structThirdPartyRoots_1_1Impl.html#ad3a0d8d0bf7b386f97ea104bc5c94c6c',1,'ThirdPartyRoots::Impl']]],
+  ['version_8',['version',['../structAmcacheApplication.html#a37dbf1bc8d32eded67b95e09d478b330',1,'AmcacheApplication::Version'],['../structSystemInfo.html#abdd27a19219607efb8eaae5f908f4617',1,'SystemInfo::version'],['../structAmcacheApplicationFile.html#a076573e70dfd1e9cd549f41ab4a54266',1,'AmcacheApplicationFile::version'],['../structPrefetch.html#a9aee39b5276aa88928b595c5209b10ab',1,'Prefetch::version'],['../structSPS.html#a60b03ba6df5a61dcbe02c1167dd5dd61',1,'SPS::version'],['../structDriverFacts.html#a27653e780efaa9b96855ca7bd2ba6267',1,'DriverFacts::version']]],
+  ['versionmajor_9',['versionMajor',['../structoleHeader.html#a21807321c18b05a795a67fe5dc86c747',1,'oleHeader']]],
+  ['versionpourmessage_10',['versionPourMessage',['../structEvent.html#a1fca9d1921fc196a3480851cde860211',1,'Event']]],
+  ['volume_5fbrut_11',['VOLUME_BRUT',['../namespaceFootprint.html#a21fbd02fcf0cef0f33e637a0c51ddfc2',1,'Footprint']]],
+  ['volumebyserial_12',['volumeBySerial',['../structRunningMachine.html#aa6d79ca43a537d9a3c667f0028d628a1',1,'RunningMachine']]],
+  ['volumedrivetype_13',['volumeDriveType',['../structRecentDoc.html#a61273f968fccbd29d381eca133ade648',1,'RecentDoc']]],
+  ['volumelabel_14',['volumeLabel',['../structRecentDoc.html#a416af338d58ea9ba73fd34efb0e31f6d',1,'RecentDoc']]],
+  ['volumepath_15',['volumePath',['../structRawHiveExtraction.html#ac11503698433105810844fa1fee7502b',1,'RawHiveExtraction']]],
+  ['volumes_16',['volumes',['../structPrefetch.html#a77b4dfb38277a26b079563c7a8fe911a',1,'Prefetch::volumes'],['../structRawReader_1_1Impl.html#a711e4a88e3ba64c217b6bf4e470241ed',1,'RawReader::Impl::volumes'],['../structRunningMachine.html#a0cfecf16e1dddbac15c0669b319a22c8',1,'RunningMachine::volumes']]],
+  ['volumeserial_17',['volumeSerial',['../structRecentDoc.html#a280d45cab21459d7460a80763bb8b4a9',1,'RecentDoc']]]
 ];

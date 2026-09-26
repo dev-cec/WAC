@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -131,8 +131,11 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:aa29ec966d8023f72f56fa7fb8e4d861b" id="r_aa29ec966d8023f72f56fa7fb8e4d861b"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBinarySummary.html#aa29ec966d8023f72f56fa7fb8e4d861b">authenticated</a> = 0</td></tr>
 <tr class="memdesc:aa29ec966d8023f72f56fa7fb8e4d861b"><td class="mdescLeft">&#160;</td><td class="mdescRight">authentic Microsoft binaries, not collected  <br /></td></tr>
 <tr class="separator:aa29ec966d8023f72f56fa7fb8e4d861b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8f8ad904d012a54cf5edc16547a90518" id="r_a8f8ad904d012a54cf5edc16547a90518"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBinarySummary.html#a8f8ad904d012a54cf5edc16547a90518">thirdPartyCleared</a> = 0</td></tr>
+<tr class="memdesc:a8f8ad904d012a54cf5edc16547a90518"><td class="mdescLeft">&#160;</td><td class="mdescRight">third-party binaries cleared by their chain (trust set), not collected  <br /></td></tr>
+<tr class="separator:a8f8ad904d012a54cf5edc16547a90518"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5acb741ee6eddaf8f6700264576d88bf" id="r_a5acb741ee6eddaf8f6700264576d88bf"><td class="memItemLeft" align="right" valign="top">unsigned long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBinarySummary.html#a5acb741ee6eddaf8f6700264576d88bf">authenticatedBytes</a> = 0</td></tr>
-<tr class="memdesc:a5acb741ee6eddaf8f6700264576d88bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">bytes saved by that rule alone  <br /></td></tr>
+<tr class="memdesc:a5acb741ee6eddaf8f6700264576d88bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">bytes saved by those two rules alone  <br /></td></tr>
 <tr class="separator:a5acb741ee6eddaf8f6700264576d88bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a37b441c1b7b500db3ebc620b22d2c97d" id="r_a37b441c1b7b500db3ebc620b22d2c97d"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBinarySummary.html#a37b441c1b7b500db3ebc620b22d2c97d">catalogsRead</a> = 0</td></tr>
 <tr class="memdesc:a37b441c1b7b500db3ebc620b22d2c97d"><td class="mdescLeft">&#160;</td><td class="mdescRight">CatRoot catalogs parsed.  <br /></td></tr>
@@ -172,7 +175,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>bytes saved by that rule alone </p>
+<p>bytes saved by those two rules alone </p>
 
 </div>
 </div>
@@ -317,6 +320,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>hashed only, medium full </p>
+
+</div>
+</div>
+<a id="a8f8ad904d012a54cf5edc16547a90518" name="a8f8ad904d012a54cf5edc16547a90518"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8f8ad904d012a54cf5edc16547a90518">&#9670;&#160;</a></span>thirdPartyCleared</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t BinarySummary::thirdPartyCleared = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>third-party binaries cleared by their chain (trust set), not collected </p>
 
 </div>
 </div>

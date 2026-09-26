@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -97,7 +97,8 @@ $(document).ready(function(){initNavTree('consigne_8cpp.html',''); initResizable
 
 <div class="header">
   <div class="summary">
-<a href="#func-members">Functions</a>  </div>
+<a href="#func-members">Functions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">consigne.cpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -110,8 +111,10 @@ $(document).ready(function(){initNavTree('consigne_8cpp.html',''); initResizable
 <code>#include &quot;<a class="el" href="json_8h_source.html">json.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="sha_8h_source.html">sha.h</a>&quot;</code><br />
 <code>#include &lt;fstream&gt;</code><br />
+<code>#include &lt;sstream&gt;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
 <code>#include &lt;map&gt;</code><br />
+<code>#include &lt;set&gt;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -123,22 +126,112 @@ Functions</h2></td></tr>
 <tr class="separator:ad9c067276db577f8eb0c52df71620dc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac7c990e675e55b36529d931af2ef06fd" id="r_ac7c990e675e55b36529d931af2ef06fd"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#ac7c990e675e55b36529d931af2ef06fd">ExhibitStoreCheckLocation</a> (unsigned long long estimatedNeed)</td></tr>
 <tr class="separator:ac7c990e675e55b36529d931af2ef06fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a4d589bd7be0997758fd5d1d7a04a2e" id="r_a7a4d589bd7be0997758fd5d1d7a04a2e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#a7a4d589bd7be0997758fd5d1d7a04a2e">ExhibitStoreAdd</a> (const std::vector&lt; <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &gt; &amp;reading, const std::wstring &amp;method)</td></tr>
-<tr class="separator:a7a4d589bd7be0997758fd5d1d7a04a2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abfd10f908be7d83cb461ef3549f42216" id="r_abfd10f908be7d83cb461ef3549f42216"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#abfd10f908be7d83cb461ef3549f42216">ExhibitStoreAddDuplicate</a> (const <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &amp;e, const std::wstring &amp;method)</td></tr>
-<tr class="separator:abfd10f908be7d83cb461ef3549f42216"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a25d26c12360861fb12b3fbe80ec4ee6b" id="r_a25d26c12360861fb12b3fbe80ec4ee6b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#a25d26c12360861fb12b3fbe80ec4ee6b">ExhibitStoreAdd</a> (const std::vector&lt; <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &gt; &amp;reading, const std::wstring &amp;method, const <a class="el" href="structSignatureVerdict.html">SignatureVerdict</a> &amp;verdict)</td></tr>
+<tr class="separator:a25d26c12360861fb12b3fbe80ec4ee6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7333e88a038e5f9ea97111f94dd523bc" id="r_a7333e88a038e5f9ea97111f94dd523bc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#a7333e88a038e5f9ea97111f94dd523bc">ExhibitStoreAddDuplicate</a> (const <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &amp;e, const std::wstring &amp;method, const <a class="el" href="structSignatureVerdict.html">SignatureVerdict</a> &amp;verdict)</td></tr>
+<tr class="separator:a7333e88a038e5f9ea97111f94dd523bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af69ede93fe083f34a2a5f7728b35e06e" id="r_af69ede93fe083f34a2a5f7728b35e06e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#af69ede93fe083f34a2a5f7728b35e06e">ExhibitStoreAddFingerprint</a> (const <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &amp;e, const std::wstring &amp;method, const <a class="el" href="structSignatureVerdict.html">SignatureVerdict</a> &amp;verdict)</td></tr>
+<tr class="separator:af69ede93fe083f34a2a5f7728b35e06e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d81cf6fbf82e5322d1974fc1518c20f" id="r_a1d81cf6fbf82e5322d1974fc1518c20f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#a1d81cf6fbf82e5322d1974fc1518c20f">ExhibitSourceTimes</a> (const std::wstring &amp;workingCopy, FILETIME &amp;created, FILETIME &amp;modified, FILETIME &amp;accessed)</td></tr>
+<tr class="separator:a1d81cf6fbf82e5322d1974fc1518c20f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a658885cea2e09b14156aaefecfb662f2" id="r_a658885cea2e09b14156aaefecfb662f2"><td class="memItemLeft" align="right" valign="top">const std::map&lt; std::wstring, <a class="el" href="structStoredExhibit.html">StoredExhibit</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#a658885cea2e09b14156aaefecfb662f2">ExhibitStoreIndex</a> ()</td></tr>
+<tr class="separator:a658885cea2e09b14156aaefecfb662f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ffd259a4f3605e24082adbb7ae7453c" id="r_a3ffd259a4f3605e24082adbb7ae7453c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#a3ffd259a4f3605e24082adbb7ae7453c">ExhibitStoreSummary</a> (size_t *exhibits, size_t *failures, unsigned long long *bytes)</td></tr>
 <tr class="separator:a3ffd259a4f3605e24082adbb7ae7453c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a66e92f1c7a87aefdbc1589b2324d8722" id="r_a66e92f1c7a87aefdbc1589b2324d8722"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#a66e92f1c7a87aefdbc1589b2324d8722">ExhibitStoreToWorking</a> (size_t *copies, unsigned long long *bytes)</td></tr>
-<tr class="separator:a66e92f1c7a87aefdbc1589b2324d8722"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed32385e3b3ff13dcd1291f962012309" id="r_aed32385e3b3ff13dcd1291f962012309"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#aed32385e3b3ff13dcd1291f962012309">ExhibitStoreToWorking</a> (size_t *copies, unsigned long long *bytes, bool skipReadInPlace)</td></tr>
+<tr class="separator:aed32385e3b3ff13dcd1291f962012309"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f176470396b33b7d2713a4c19c110fb" id="r_a0f176470396b33b7d2713a4c19c110fb"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#a0f176470396b33b7d2713a4c19c110fb">ExhibitStoreWriteManifest</a> ()</td></tr>
 <tr class="separator:a0f176470396b33b7d2713a4c19c110fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a83f5e85d37dc2f3d62c500471046e7b3" id="r_a83f5e85d37dc2f3d62c500471046e7b3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#a83f5e85d37dc2f3d62c500471046e7b3">exhibitPathContained</a> (const std::wstring &amp;relative)</td></tr>
+<tr class="separator:a83f5e85d37dc2f3d62c500471046e7b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3b79ccd3f5d997668e6ae371176efee0" id="r_a3b79ccd3f5d997668e6ae371176efee0"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#a3b79ccd3f5d997668e6ae371176efee0">ExhibitStoreLoad</a> (<a class="el" href="structExhibitStoreCheck.html">ExhibitStoreCheck</a> &amp;check)</td></tr>
+<tr class="separator:a3b79ccd3f5d997668e6ae371176efee0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
+Variables</h2></td></tr>
+<tr class="memitem:af7a5a1dec9a47f47e1cda3c7dd6a04bd" id="r_af7a5a1dec9a47f47e1cda3c7dd6a04bd"><td class="memItemLeft" align="right" valign="top">const wchar_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#af7a5a1dec9a47f47e1cda3c7dd6a04bd">READ_IN_PLACE</a> [] = L&quot; [read in place by the conversion]&quot;</td></tr>
+<tr class="separator:af7a5a1dec9a47f47e1cda3c7dd6a04bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Implementation of the exhibit store and of its sealed manifest (see <a class="el" href="consigne_8h.html" title="EXHIBIT STORE AND WORKING DIRECTORY.">consigne.h</a> for the procedure and the manifest's content). </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a7a4d589bd7be0997758fd5d1d7a04a2e" name="a7a4d589bd7be0997758fd5d1d7a04a2e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7a4d589bd7be0997758fd5d1d7a04a2e">&#9670;&#160;</a></span>ExhibitStoreAdd()</h2>
+<a id="a83f5e85d37dc2f3d62c500471046e7b3" name="a83f5e85d37dc2f3d62c500471046e7b3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a83f5e85d37dc2f3d62c500471046e7b3">&#9670;&#160;</a></span>exhibitPathContained()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool exhibitPathContained </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>relative</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>True if an exhibit path of a manifest stays inside the exhibit store: it starts with "exhibits\\" and no component climbs out of it ("..", ".",
+or a drive / stream ":"). A forged manifest could otherwise have files elsewhere read. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">relative</td><td>the ExhibitPath of an item, relative to the output folder </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true if contained </dd></dl>
+
+</div>
+</div>
+<a id="a1d81cf6fbf82e5322d1974fc1518c20f" name="a1d81cf6fbf82e5322d1974fc1518c20f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1d81cf6fbf82e5322d1974fc1518c20f">&#9670;&#160;</a></span>ExhibitSourceTimes()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ExhibitSourceTimes </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>workingCopy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">FILETIME &amp;&#160;</td>
+          <td class="paramname"><em>created</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">FILETIME &amp;&#160;</td>
+          <td class="paramname"><em>modified</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">FILETIME &amp;&#160;</td>
+          <td class="paramname"><em>accessed</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Timestamps of the SOURCE file of a working copy, as the raw reading recorded them ($STANDARD_INFORMATION, in the manifest).</p>
+<p>WHY. The working copy is a new file: its own dates are those of the collection, or of the conversion that rebuilt it. Read on the copy, they gave the 335 <a class="el" href="structPrefetch.html">Prefetch</a> files of a collection one and the same "Modified", the minute of the collection — the last run of each program lost, in valid JSON. The dates of the file on the examined machine are in the manifest. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">workingCopy</td><td>a file of the working directory </td></tr>
+    <tr><td class="paramname">created,modified,accessed</td><td>receive them (left untouched if absent) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if the copy has no exhibit, or it recorded no date </dd></dl>
+
+</div>
+</div>
+<a id="a25d26c12360861fb12b3fbe80ec4ee6b" name="a25d26c12360861fb12b3fbe80ec4ee6b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a25d26c12360861fb12b3fbe80ec4ee6b">&#9670;&#160;</a></span>ExhibitStoreAdd()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -153,7 +246,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::wstring &amp;&#160;</td>
-          <td class="paramname"><em>method</em>&#160;</td>
+          <td class="paramname"><em>method</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structSignatureVerdict.html">SignatureVerdict</a> &amp;&#160;</td>
+          <td class="paramname"><em>verdict</em> = <code>{}</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -174,8 +273,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="abfd10f908be7d83cb461ef3549f42216" name="abfd10f908be7d83cb461ef3549f42216"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abfd10f908be7d83cb461ef3549f42216">&#9670;&#160;</a></span>ExhibitStoreAddDuplicate()</h2>
+<a id="a7333e88a038e5f9ea97111f94dd523bc" name="a7333e88a038e5f9ea97111f94dd523bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7333e88a038e5f9ea97111f94dd523bc">&#9670;&#160;</a></span>ExhibitStoreAddDuplicate()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -190,7 +289,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::wstring &amp;&#160;</td>
-          <td class="paramname"><em>method</em>&#160;</td>
+          <td class="paramname"><em>method</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structSignatureVerdict.html">SignatureVerdict</a> &amp;&#160;</td>
+          <td class="paramname"><em>verdict</em> = <code>{}</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -201,6 +306,48 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Records an exhibit whose CONTENT is already stored under another one.</p>
 <p><code>e.outputPath</code> points to the existing exhibit; the file is not copied again. The manifest declares it (<code>SharedExhibit</code>) and does not count its bytes twice. Used to deduplicate cited binaries (see <a class="el" href="binaires_8h.html" title="Fingerprinting and collection of the files cited by artefacts.">binaires.h</a>): three identical 332 MB copies of msedge.dll took 996 MB. </p>
+
+</div>
+</div>
+<a id="af69ede93fe083f34a2a5f7728b35e06e" name="af69ede93fe083f34a2a5f7728b35e06e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af69ede93fe083f34a2a5f7728b35e06e">&#9670;&#160;</a></span>ExhibitStoreAddFingerprint()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ExhibitStoreAddFingerprint </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &amp;&#160;</td>
+          <td class="paramname"><em>e</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>method</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structSignatureVerdict.html">SignatureVerdict</a> &amp;&#160;</td>
+          <td class="paramname"><em>verdict</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Records a file FINGERPRINTED but not copied: an executable whose Microsoft authenticity was verified in memory (&ndash;collect &ndash;binary). Identical on every machine of the same build, its content does not serve the investigation; its fingerprints and the verdict go into the manifest ("ContentStored": false), so that the conversion knows every executable an artefact may cite, and a third party can check the verdict against the catalogs recorded. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">e</td><td>the reading, fingerprints included (outputPath ignored) </td></tr>
+    <tr><td class="paramname">method</td><td>collection method, as recorded </td></tr>
+    <tr><td class="paramname">verdict</td><td>the signature check (valid, for an authentic binary) </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -271,6 +418,50 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a658885cea2e09b14156aaefecfb662f2" name="a658885cea2e09b14156aaefecfb662f2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a658885cea2e09b14156aaefecfb662f2">&#9670;&#160;</a></span>ExhibitStoreIndex()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::map&lt; std::wstring, <a class="el" href="structStoredExhibit.html">StoredExhibit</a> &gt; &amp; ExhibitStoreIndex </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The exhibits of the manifest loaded by ExhibitStoreLoad, by source path in lower case (NTFS is case-insensitive); failed extractions left out.</p>
+<p>WHY BY THE MANIFEST. A file of the examined machine is not always stored under its own path: a content already stored (deduplication), or another name of the same $MFT record (hard links: System32 and WinSxS), is declared as sharing an exhibit. Only the manifest ties every source path to its content. Built on first call; to be called after ExhibitStoreLoad. </p><dl class="section return"><dt>Returns</dt><dd>the index </dd></dl>
+
+</div>
+</div>
+<a id="a3b79ccd3f5d997668e6ae371176efee0" name="a3b79ccd3f5d997668e6ae371176efee0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3b79ccd3f5d997668e6ae371176efee0">&#9670;&#160;</a></span>ExhibitStoreLoad()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT ExhibitStoreLoad </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structExhibitStoreCheck.html">ExhibitStoreCheck</a> &amp;&#160;</td>
+          <td class="paramname"><em>check</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads back and checks the exhibit store of a collection, before converting it (&ndash;convert): the seal must carry the manifest's real fingerprint, and every exhibit's SHA-256 must be the one the manifest records. A store that fails either check is refused — converting it would bear on something other than the evidence. On success, the manifest's items are loaded, so that ExhibitStoreToWorking verifies the working copies against them. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">check</td><td>receives the counts and, on refusal, the reason </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or ERROR_FILE_NOT_FOUND / ERROR_INVALID_DATA (as HRESULT) with check.reason </dd></dl>
+
+</div>
+</div>
 <a id="a3ffd259a4f3605e24082adbb7ae7453c" name="a3ffd259a4f3605e24082adbb7ae7453c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3ffd259a4f3605e24082adbb7ae7453c">&#9670;&#160;</a></span>ExhibitStoreSummary()</h2>
 
@@ -306,8 +497,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a66e92f1c7a87aefdbc1589b2324d8722" name="a66e92f1c7a87aefdbc1589b2324d8722"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a66e92f1c7a87aefdbc1589b2324d8722">&#9670;&#160;</a></span>ExhibitStoreToWorking()</h2>
+<a id="aed32385e3b3ff13dcd1291f962012309" name="aed32385e3b3ff13dcd1291f962012309"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aed32385e3b3ff13dcd1291f962012309">&#9670;&#160;</a></span>ExhibitStoreToWorking()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -322,7 +513,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">unsigned long long *&#160;</td>
-          <td class="paramname"><em>bytes</em> = <code>nullptr</code>&#160;</td>
+          <td class="paramname"><em>bytes</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>skipReadInPlace</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -331,7 +528,12 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Copies the exhibit store to the working directory, verifying the copy.</p>
+<p>Copies the exhibit store to the working directory, verifying the copy. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">skipReadInPlace</td><td>leaves out the exhibits marked READ_IN_PLACE (&ndash;convert)</td></tr>
+  </table>
+  </dd>
+</dl>
 <p>Each file is copied, then ITS COPY is hashed again and compared with the manifest's fingerprint. Without this check, a silently truncated copy — full medium, write error — would give a working directory that does not match the exhibit store, and the whole analysis would bear on something other than the exhibit.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -379,6 +581,22 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Root of the working directory: <code>&lt;output&gt;\working</code>. It is the value of <code>conf.mountpoint</code>: the collectors read from here. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
+<a id="af7a5a1dec9a47f47e1cda3c7dd6a04bd" name="af7a5a1dec9a47f47e1cda3c7dd6a04bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af7a5a1dec9a47f47e1cda3c7dd6a04bd">&#9670;&#160;</a></span>READ_IN_PLACE</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const wchar_t READ_IN_PLACE[] = L&quot; [read in place by the conversion]&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Mark carried by the method of the exhibits a conversion reads IN PLACE, from the exhibit store, and never from the working directory: the executables and catalogs of &ndash;collect &ndash;binary (read by <a class="el" href="classExhibitReader.html">ExhibitReader</a>), the resource files of the event providers (copied on demand). Rebuilding the working directory of a &ndash;convert without them spares copying some twenty gigabytes to no purpose. </p>
 
 </div>
 </div>

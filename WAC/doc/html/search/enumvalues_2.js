@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['hundrednanoseconds_0',['HundredNanoseconds',['../tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b',1,'tools.h']]]
+  ['collect_0',['Collect',['../tools_8h.html#a3dfe11cf1a3a8121f6cd7fec4bf5947eae7ca851922b13f555127b04b70435ca9',1,'tools.h']]],
+  ['convert_1',['Convert',['../tools_8h.html#a3dfe11cf1a3a8121f6cd7fec4bf5947ea920f4a0c5c8b9a0747380cf7c7f0b3c5',1,'tools.h']]]
 ];

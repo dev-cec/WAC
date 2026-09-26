@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -106,72 +106,75 @@ $(document).ready(function(){initNavTree('sha_8h_source.html',''); initResizable
 <div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="preprocessor">#include &lt;cstddef&gt;</span></div>
 <div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="preprocessor">#include &lt;string&gt;</span></div>
 <div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
-<div class="foldopen" id="foldopen00037" data-start="{" data-end="};">
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno"><a class="line" href="classSha1Stream.html">   37</a></span><span class="keyword">class </span><a class="code hl_class" href="classSha1Stream.html">Sha1Stream</a> final {</div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classSha1Stream.html#ae05788314fac1ee85ceb7494ee4bbb2e">update</a>(<span class="keyword">const</span> uint8_t* data, <span class="keywordtype">size_t</span> length);</div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    std::wstring <a class="code hl_function" href="classSha1Stream.html#a788ca19c7ee03a39151f252430b37cd3">hexDigest</a>();</div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classSha1Stream.html#a8315b7ee1a188a5b8de90d17e7fc3c13">digest</a>(uint8_t output[20]);</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="keyword">private</span>:</div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    uint32_t state_[5] = { 0x67452301u, 0xEFCDAB89u, 0x98BADCFEu, 0x10325476u, 0xC3D2E1F0u };</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    uint8_t  block_[64] = { 0 };</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <span class="keywordtype">size_t</span>   inBlock_ = 0;</div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    uint64_t bytes_ = 0;</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    <span class="keywordtype">void</span> compress(<span class="keyword">const</span> uint8_t* block);</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>};</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>std::wstring <a class="code hl_function" href="sha_8h.html#a0a1e95bb940526e86f0a6346bb073a92">toHexadecimal</a>(<span class="keyword">const</span> uint8_t* bytes, <span class="keywordtype">size_t</span> length);</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
+<div class="foldopen" id="foldopen00043" data-start="{" data-end="};">
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno"><a class="line" href="classSha1Stream.html">   43</a></span><span class="keyword">class </span><a class="code hl_class" href="classSha1Stream.html">Sha1Stream</a> final {</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classSha1Stream.html#ae05788314fac1ee85ceb7494ee4bbb2e">update</a>(<span class="keyword">const</span> uint8_t* data, <span class="keywordtype">size_t</span> length);</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    std::wstring <a class="code hl_function" href="classSha1Stream.html#a788ca19c7ee03a39151f252430b37cd3">hexDigest</a>();</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classSha1Stream.html#a8315b7ee1a188a5b8de90d17e7fc3c13">digest</a>(uint8_t output[20]);</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    uint32_t state_[5] = { 0x67452301u, 0xEFCDAB89u, 0x98BADCFEu, 0x10325476u, 0xC3D2E1F0u };</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    uint8_t  block_[64] = { 0 };</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    <span class="keywordtype">size_t</span>   inBlock_ = 0;</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    uint64_t bytes_ = 0;</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    <span class="keywordtype">void</span> compress(<span class="keyword">const</span> uint8_t* block);</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>};</div>
 </div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
-<div class="foldopen" id="foldopen00059" data-start="{" data-end="};">
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno"><a class="line" href="classSha256Stream.html">   59</a></span><span class="keyword">class </span><a class="code hl_class" href="classSha256Stream.html">Sha256Stream</a> final {</div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classSha256Stream.html#a4888b86c9ff4a46997d01b8c88ccfead">update</a>(<span class="keyword">const</span> uint8_t* data, <span class="keywordtype">size_t</span> length);</div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    std::wstring <a class="code hl_function" href="classSha256Stream.html#aee5563e00caf3167d2a906a8cee2399e">hexDigest</a>();</div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classSha256Stream.html#ab46124339d61730d54a1895f9f4b9f2e">digest</a>(uint8_t output[32]);</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="keyword">private</span>:</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    uint32_t state_[8] = { 0x6A09E667u, 0xBB67AE85u, 0x3C6EF372u, 0xA54FF53Au,</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>                          0x510E527Fu, 0x9B05688Cu, 0x1F83D9ABu, 0x5BE0CD19u };</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    uint8_t  block_[64] = { 0 };</div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    <span class="keywordtype">size_t</span>   inBlock_ = 0;</div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    uint64_t bytes_ = 0;</div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    <span class="keywordtype">void</span> compress(<span class="keyword">const</span> uint8_t* block);</div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>};</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
+<div class="foldopen" id="foldopen00065" data-start="{" data-end="};">
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno"><a class="line" href="classSha256Stream.html">   65</a></span><span class="keyword">class </span><a class="code hl_class" href="classSha256Stream.html">Sha256Stream</a> final {</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classSha256Stream.html#a4888b86c9ff4a46997d01b8c88ccfead">update</a>(<span class="keyword">const</span> uint8_t* data, <span class="keywordtype">size_t</span> length);</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    std::wstring <a class="code hl_function" href="classSha256Stream.html#aee5563e00caf3167d2a906a8cee2399e">hexDigest</a>();</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classSha256Stream.html#ab46124339d61730d54a1895f9f4b9f2e">digest</a>(uint8_t output[32]);</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    uint32_t state_[8] = { 0x6A09E667u, 0xBB67AE85u, 0x3C6EF372u, 0xA54FF53Au,</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>                          0x510E527Fu, 0x9B05688Cu, 0x1F83D9ABu, 0x5BE0CD19u };</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    uint8_t  block_[64] = { 0 };</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    <span class="keywordtype">size_t</span>   inBlock_ = 0;</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    uint64_t bytes_ = 0;</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    <span class="keywordtype">void</span> compress(<span class="keyword">const</span> uint8_t* block);</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>};</div>
 </div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span> </div>
-<div class="foldopen" id="foldopen00089" data-start="{" data-end="};">
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno"><a class="line" href="classSha512Stream.html">   89</a></span><span class="keyword">class </span><a class="code hl_class" href="classSha512Stream.html">Sha512Stream</a> final {</div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>    <span class="keyword">explicit</span> <a class="code hl_class" href="classSha512Stream.html">Sha512Stream</a>(<span class="keywordtype">bool</span> variant384 = <span class="keyword">false</span>);</div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classSha512Stream.html#a320c95ec76ad5f7a82480604fb4a0b44">update</a>(<span class="keyword">const</span> uint8_t* data, <span class="keywordtype">size_t</span> length);</div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classSha512Stream.html#a1524226e78c946c3c411f88f5e82b9fb">digest</a>(uint8_t* output);</div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno"><a class="line" href="classSha512Stream.html#add6e1d45fdf955fd5f79445cf992e35d">   99</a></span>    <span class="keywordtype">size_t</span> <a class="code hl_function" href="classSha512Stream.html#add6e1d45fdf955fd5f79445cf992e35d">size</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> variant384_ ? 48 : 64; }</div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span><span class="keyword">private</span>:</div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    uint64_t state_[8];</div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    uint8_t  block_[128] = { 0 };</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    <span class="keywordtype">size_t</span>   inBlock_ = 0;</div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    uint64_t bytes_ = 0;</div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>    <span class="keywordtype">bool</span>     variant384_;</div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    <span class="keywordtype">void</span> compress(<span class="keyword">const</span> uint8_t* block);</div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>};</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span> </div>
+<div class="foldopen" id="foldopen00095" data-start="{" data-end="};">
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno"><a class="line" href="classSha512Stream.html">   95</a></span><span class="keyword">class </span><a class="code hl_class" href="classSha512Stream.html">Sha512Stream</a> final {</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    <span class="keyword">explicit</span> <a class="code hl_class" href="classSha512Stream.html">Sha512Stream</a>(<span class="keywordtype">bool</span> variant384 = <span class="keyword">false</span>);</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classSha512Stream.html#a320c95ec76ad5f7a82480604fb4a0b44">update</a>(<span class="keyword">const</span> uint8_t* data, <span class="keywordtype">size_t</span> length);</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classSha512Stream.html#a1524226e78c946c3c411f88f5e82b9fb">digest</a>(uint8_t* output);</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno"><a class="line" href="classSha512Stream.html#add6e1d45fdf955fd5f79445cf992e35d">  105</a></span>    <span class="keywordtype">size_t</span> <a class="code hl_function" href="classSha512Stream.html#add6e1d45fdf955fd5f79445cf992e35d">size</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> variant384_ ? 48 : 64; }</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    uint64_t state_[8];</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>    uint8_t  block_[128] = { 0 };</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    <span class="keywordtype">size_t</span>   inBlock_ = 0;</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    uint64_t bytes_ = 0;</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    <span class="keywordtype">bool</span>     variant384_;</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    <span class="keywordtype">void</span> compress(<span class="keyword">const</span> uint8_t* block);</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>};</div>
 </div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span><span class="keywordtype">void</span> <a class="code hl_function" href="sha_8h.html#ad01a2635c4cbba7e51a1e6ae9fc52115">sha1Bytes</a>(<span class="keyword">const</span> uint8_t* data, <span class="keywordtype">size_t</span> length, uint8_t output[20]);</div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span><span class="keywordtype">void</span> <a class="code hl_function" href="sha_8h.html#abb60cb0cab7f428f2d34747ffd0fd8e9">sha256Bytes</a>(<span class="keyword">const</span> uint8_t* data, <span class="keywordtype">size_t</span> length, uint8_t output[32]);</div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span><span class="keywordtype">void</span> <a class="code hl_function" href="sha_8h.html#a35bdce620b7c300f61662f7c210f428d">sha384Bytes</a>(<span class="keyword">const</span> uint8_t* data, <span class="keywordtype">size_t</span> length, uint8_t output[48]);</div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span><span class="keywordtype">void</span> <a class="code hl_function" href="sha_8h.html#a31532027000681967e33a2d9d20fc8e7">sha512Bytes</a>(<span class="keyword">const</span> uint8_t* data, <span class="keywordtype">size_t</span> length, uint8_t output[64]);</div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span> </div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>std::wstring <a class="code hl_function" href="sha_8h.html#a8108f1743905ec91dfca930fbbc6ac53">sha256OfFile</a>(<span class="keyword">const</span> std::wstring&amp; path);</div>
-<div class="ttc" id="aclassSha1Stream_html"><div class="ttname"><a href="classSha1Stream.html">Sha1Stream</a></div><div class="ttdef"><b>Definition</b> sha.h:37</div></div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span> </div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span><span class="keywordtype">void</span> <a class="code hl_function" href="sha_8h.html#ad01a2635c4cbba7e51a1e6ae9fc52115">sha1Bytes</a>(<span class="keyword">const</span> uint8_t* data, <span class="keywordtype">size_t</span> length, uint8_t output[20]);</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span><span class="keywordtype">void</span> <a class="code hl_function" href="sha_8h.html#abb60cb0cab7f428f2d34747ffd0fd8e9">sha256Bytes</a>(<span class="keyword">const</span> uint8_t* data, <span class="keywordtype">size_t</span> length, uint8_t output[32]);</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span><span class="keywordtype">void</span> <a class="code hl_function" href="sha_8h.html#a35bdce620b7c300f61662f7c210f428d">sha384Bytes</a>(<span class="keyword">const</span> uint8_t* data, <span class="keywordtype">size_t</span> length, uint8_t output[48]);</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span><span class="keywordtype">void</span> <a class="code hl_function" href="sha_8h.html#a31532027000681967e33a2d9d20fc8e7">sha512Bytes</a>(<span class="keyword">const</span> uint8_t* data, <span class="keywordtype">size_t</span> length, uint8_t output[64]);</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span> </div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>std::wstring <a class="code hl_function" href="sha_8h.html#a8108f1743905ec91dfca930fbbc6ac53">sha256OfFile</a>(<span class="keyword">const</span> std::wstring&amp; path);</div>
+<div class="ttc" id="aclassSha1Stream_html"><div class="ttname"><a href="classSha1Stream.html">Sha1Stream</a></div><div class="ttdef"><b>Definition</b> sha.h:43</div></div>
 <div class="ttc" id="aclassSha1Stream_html_a788ca19c7ee03a39151f252430b37cd3"><div class="ttname"><a href="classSha1Stream.html#a788ca19c7ee03a39151f252430b37cd3">Sha1Stream::hexDigest</a></div><div class="ttdeci">std::wstring hexDigest()</div><div class="ttdef"><b>Definition</b> sha.cpp:124</div></div>
 <div class="ttc" id="aclassSha1Stream_html_a8315b7ee1a188a5b8de90d17e7fc3c13"><div class="ttname"><a href="classSha1Stream.html#a8315b7ee1a188a5b8de90d17e7fc3c13">Sha1Stream::digest</a></div><div class="ttdeci">void digest(uint8_t output[20])</div><div class="ttdef"><b>Definition</b> sha.cpp:118</div></div>
 <div class="ttc" id="aclassSha1Stream_html_ae05788314fac1ee85ceb7494ee4bbb2e"><div class="ttname"><a href="classSha1Stream.html#ae05788314fac1ee85ceb7494ee4bbb2e">Sha1Stream::update</a></div><div class="ttdeci">void update(const uint8_t *data, size_t length)</div><div class="ttdef"><b>Definition</b> sha.cpp:113</div></div>
-<div class="ttc" id="aclassSha256Stream_html"><div class="ttname"><a href="classSha256Stream.html">Sha256Stream</a></div><div class="ttdef"><b>Definition</b> sha.h:59</div></div>
+<div class="ttc" id="aclassSha256Stream_html"><div class="ttname"><a href="classSha256Stream.html">Sha256Stream</a></div><div class="ttdef"><b>Definition</b> sha.h:65</div></div>
 <div class="ttc" id="aclassSha256Stream_html_a4888b86c9ff4a46997d01b8c88ccfead"><div class="ttname"><a href="classSha256Stream.html#a4888b86c9ff4a46997d01b8c88ccfead">Sha256Stream::update</a></div><div class="ttdeci">void update(const uint8_t *data, size_t length)</div><div class="ttdef"><b>Definition</b> sha.cpp:162</div></div>
 <div class="ttc" id="aclassSha256Stream_html_ab46124339d61730d54a1895f9f4b9f2e"><div class="ttname"><a href="classSha256Stream.html#ab46124339d61730d54a1895f9f4b9f2e">Sha256Stream::digest</a></div><div class="ttdeci">void digest(uint8_t output[32])</div><div class="ttdef"><b>Definition</b> sha.cpp:167</div></div>
 <div class="ttc" id="aclassSha256Stream_html_aee5563e00caf3167d2a906a8cee2399e"><div class="ttname"><a href="classSha256Stream.html#aee5563e00caf3167d2a906a8cee2399e">Sha256Stream::hexDigest</a></div><div class="ttdeci">std::wstring hexDigest()</div><div class="ttdef"><b>Definition</b> sha.cpp:173</div></div>
-<div class="ttc" id="aclassSha512Stream_html"><div class="ttname"><a href="classSha512Stream.html">Sha512Stream</a></div><div class="ttdef"><b>Definition</b> sha.h:89</div></div>
+<div class="ttc" id="aclassSha512Stream_html"><div class="ttname"><a href="classSha512Stream.html">Sha512Stream</a></div><div class="ttdef"><b>Definition</b> sha.h:95</div></div>
 <div class="ttc" id="aclassSha512Stream_html_a1524226e78c946c3c411f88f5e82b9fb"><div class="ttname"><a href="classSha512Stream.html#a1524226e78c946c3c411f88f5e82b9fb">Sha512Stream::digest</a></div><div class="ttdeci">void digest(uint8_t *output)</div><div class="ttdef"><b>Definition</b> sha.cpp:260</div></div>
 <div class="ttc" id="aclassSha512Stream_html_a320c95ec76ad5f7a82480604fb4a0b44"><div class="ttname"><a href="classSha512Stream.html#a320c95ec76ad5f7a82480604fb4a0b44">Sha512Stream::update</a></div><div class="ttdeci">void update(const uint8_t *data, size_t length)</div><div class="ttdef"><b>Definition</b> sha.cpp:250</div></div>
-<div class="ttc" id="aclassSha512Stream_html_add6e1d45fdf955fd5f79445cf992e35d"><div class="ttname"><a href="classSha512Stream.html#add6e1d45fdf955fd5f79445cf992e35d">Sha512Stream::size</a></div><div class="ttdeci">size_t size() const</div><div class="ttdef"><b>Definition</b> sha.h:99</div></div>
+<div class="ttc" id="aclassSha512Stream_html_add6e1d45fdf955fd5f79445cf992e35d"><div class="ttname"><a href="classSha512Stream.html#add6e1d45fdf955fd5f79445cf992e35d">Sha512Stream::size</a></div><div class="ttdeci">size_t size() const</div><div class="ttdef"><b>Definition</b> sha.h:105</div></div>
+<div class="ttc" id="asha_8h_html_a0a1e95bb940526e86f0a6346bb073a92"><div class="ttname"><a href="sha_8h.html#a0a1e95bb940526e86f0a6346bb073a92">toHexadecimal</a></div><div class="ttdeci">std::wstring toHexadecimal(const uint8_t *bytes, size_t length)</div><div class="ttdef"><b>Definition</b> sha.cpp:80</div></div>
 <div class="ttc" id="asha_8h_html_a31532027000681967e33a2d9d20fc8e7"><div class="ttname"><a href="sha_8h.html#a31532027000681967e33a2d9d20fc8e7">sha512Bytes</a></div><div class="ttdeci">void sha512Bytes(const uint8_t *data, size_t length, uint8_t output[64])</div><div class="ttdef"><b>Definition</b> sha.cpp:280</div></div>
 <div class="ttc" id="asha_8h_html_a35bdce620b7c300f61662f7c210f428d"><div class="ttname"><a href="sha_8h.html#a35bdce620b7c300f61662f7c210f428d">sha384Bytes</a></div><div class="ttdeci">void sha384Bytes(const uint8_t *data, size_t length, uint8_t output[48])</div><div class="ttdef"><b>Definition</b> sha.cpp:276</div></div>
 <div class="ttc" id="asha_8h_html_a8108f1743905ec91dfca930fbbc6ac53"><div class="ttname"><a href="sha_8h.html#a8108f1743905ec91dfca930fbbc6ac53">sha256OfFile</a></div><div class="ttdeci">std::wstring sha256OfFile(const std::wstring &amp;path)</div><div class="ttdef"><b>Definition</b> sha.cpp:183</div></div>

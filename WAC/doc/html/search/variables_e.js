@@ -1,10 +1,20 @@
 var searchData=
 [
-  ['offline_0',['Offline',['../structFileAttributes.html#a7524f1cdb271b689b17ee6fb59303574',1,'FileAttributes']]],
-  ['ok_1',['ok',['../structHiveFixInfo.html#ac4fc2a03b317a544f3a6eb769e5e1517',1,'HiveFixInfo::ok'],['../structHiveReplayInfo.html#af3e4b4fba01e1cbfe903c3f1407b5c87',1,'HiveReplayInfo::ok']]],
-  ['oldchecksum_2',['oldChecksum',['../structHiveFixInfo.html#a6bd14d92ef35249ca9a9f3fa9c4e22dd',1,'HiveFixInfo']]],
-  ['ole_3',['ole',['../structAutomaticDestination.html#adf146dff12607de34518ef2d43227c1d',1,'AutomaticDestination']]],
-  ['osarchitecture_4',['osArchitecture',['../structSystemInfo.html#affa03a18f5068286ef3f96a0c0253f8f',1,'SystemInfo']]],
-  ['osname_5',['osName',['../structSystemInfo.html#aff3597fd715ac85f438d5e6d8915deae',1,'SystemInfo']]],
-  ['outputpath_6',['outputPath',['../structRawHiveExtraction.html#a60093f9a582fc55b9a8ff748182afe38',1,'RawHiveExtraction']]]
+  ['name_0',['name',['../structRun.html#a8aac1b40b1c849c309b727cb2c7dc10e',1,'Run::Name'],['../structXmlNode.html#ab505348ec21ac9dc2fcb2d9b1d0830bc',1,'XmlNode::name'],['../structUser.html#a93d06e58d3cebfe8b1c73ac0fe2a3b64',1,'User::name'],['../structAppliConf.html#a5213c22a5d55c36782dabbeda4791e48',1,'AppliConf::name'],['../structScheduledTask.html#a469228bd4ec5786557e5e63825e75418',1,'ScheduledTask::name'],['../structMuicache.html#a4a410c185199ddb48554ad7fb544c584',1,'Muicache::name'],['../structMruApp.html#a48f7da71b5e9c95df0ac5be8d6fca4e8',1,'MruApp::name'],['../structBam.html#a62df0c7472866bcde757b66e7e7d40b5',1,'Bam::name'],['../structAmcacheApplicationFile.html#a1f6a5a8fc06355c4660c112a430a7809',1,'AmcacheApplicationFile::name'],['../structRawDirEntry.html#a3979cd607bda6bbb5da87daee84ee80a',1,'RawDirEntry::name'],['../structRawAttribute.html#a54bddb794ac7263c7820996e29b1176c',1,'RawAttribute::name'],['../structDirectory.html#a675745b99eab576cb7073f673a64d751',1,'Directory::name'],['../structCustomDestinationCategory.html#a6ed876b503cffcbcc7a1f2de50c6b3ca',1,'CustomDestinationCategory::name'],['../structArchiveFileContent.html#a086c1c0c645060250c20f3ff45624507',1,'ArchiveFileContent::name'],['../structUserPropertyView0x10312005.html#aa3bad99bee6adcc3fee6d8a72e7e1b29',1,'UserPropertyView0x10312005::name'],['../structVolumeShellItem.html#a39b498d60b79fe1dde88826d6d064748',1,'VolumeShellItem::name'],['../structSPSValue.html#a097501533faec7e0df86bdfc0dfc37fe',1,'SPSValue::name'],['../structDeniedSigner.html#a18c5d4b4dc2938924c6f1b4300b4c54e',1,'DeniedSigner::name'],['../structArchiveFile.html#aba72fa751a603247f02a551b7228c01e',1,'ArchiveFile::name'],['../structUserAssist.html#a18873e5bb3412c2d67535bd436a42669',1,'UserAssist::Name'],['../structAmcacheApplication.html#a4fa818b805a270cf8a274fe27196add2',1,'AmcacheApplication::Name'],['../structMicrosoftRoot.html#afc3ff1e01ed493603cf48d6f163ac123',1,'MicrosoftRoot::name']]],
+  ['names_1',['names',['../structBeef0000.html#a03dbd4eb7e148efa705364d1ba45b3e4',1,'Beef0000::names'],['../structBeef0019.html#ad3c6c709332e17912a2850451ef8ad2f',1,'Beef0019::names']]],
+  ['namesize_2',['nameSize',['../structCustomDestinationCategory.html#ad24e8a9379efa06c8cf3f898ee9df61e',1,'CustomDestinationCategory']]],
+  ['nbentries_3',['nbentries',['../structCustomDestinationCategory.html#a0a2b51aa2ce01db7376e08939fda8d61',1,'CustomDestinationCategory']]],
+  ['netbiosname_4',['netbiosName',['../structSystemInfo.html#a120e6ab17b88f69bbc14598501ecfeeb',1,'SystemInfo']]],
+  ['netdevicename_5',['netDeviceName',['../structRecentDoc.html#a59f0c7d8e36b3bd01ced2498786c592b',1,'RecentDoc']]],
+  ['netname_6',['netName',['../structRecentDoc.html#a32eed3664b67b62f799e4ed4decd3eb9',1,'RecentDoc']]],
+  ['netprovidertype_7',['netProviderType',['../structRecentDoc.html#adbced5afce9df0450e353d412c1270a4',1,'RecentDoc']]],
+  ['newchecksum_8',['newChecksum',['../structHiveFixInfo.html#a1b8cc7d6584fcfa1a1e40a0a67653445',1,'HiveFixInfo']]],
+  ['none_9',['None',['../structShellVolumeFlags.html#a5a71a3850d964e464e418f63f1b965e2',1,'ShellVolumeFlags']]],
+  ['nopidlalias_10',['NoPidlAlias',['../structLinkFlags.html#a53b9119e3c9fd7cb41667a9044743447',1,'LinkFlags']]],
+  ['normal_11',['Normal',['../structFileAttributes.html#a7f804972ce8c834ba7740e3fdbad96f5',1,'FileAttributes']]],
+  ['notcontentindexed_12',['NotContentIndexed',['../structFileAttributes.html#ad3bfd1988eec70dcb64a5e17e75edea2',1,'FileAttributes']]],
+  ['now_13',['now',['../structThirdPartyRoots_1_1Impl.html#ae6ce649228f2192ed72bc7f4e9924c4f',1,'ThirdPartyRoots::Impl']]],
+  ['numberofentries_14',['numberOfEntries',['../structDestFileDirectory.html#a269efd98d7c418d2fdede6af62c5a422',1,'DestFileDirectory']]],
+  ['numberpinnedentries_15',['numberPinnedEntries',['../structDestFileDirectory.html#a23fef3f089255d2f37d3ee8ee70e3761',1,'DestFileDirectory']]],
+  ['nwalked_16',['nwalked',['../structMrus.html#a71153f68a590613a340c9694fff314d4',1,'Mrus::nWalked'],['../structMruApps.html#acaa00c2ac8eff120dd71dc2511c7de0a',1,'MruApps::nWalked'],['../structShellbags.html#a15e4476517c99bcae359b6b07e723d31',1,'Shellbags::nWalked']]]
 ];

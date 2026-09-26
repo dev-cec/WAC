@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -116,6 +116,11 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:ad9d35101e2b399caf7873a0bcffff223" id="r_ad9d35101e2b399caf7873a0bcffff223"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerifiedSignature.html#ad9d35101e2b399caf7873a0bcffff223">signer</a></td></tr>
 <tr class="memdesc:ad9d35101e2b399caf7873a0bcffff223"><td class="mdescLeft">&#160;</td><td class="mdescRight">name (CN) of the signing certificate  <br /></td></tr>
 <tr class="separator:ad9d35101e2b399caf7873a0bcffff223"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a60b73e3c0a864d1776a32e7dcb868309" id="r_a60b73e3c0a864d1776a32e7dcb868309"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerifiedSignature.html#a60b73e3c0a864d1776a32e7dcb868309">signerOrganization</a></td></tr>
+<tr class="memdesc:a60b73e3c0a864d1776a32e7dcb868309"><td class="mdescLeft">&#160;</td><td class="mdescRight">its organisation (O)  <br /></td></tr>
+<tr class="separator:a60b73e3c0a864d1776a32e7dcb868309"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a57f04b4d0fcc9763f7f1250ce6c2dc" id="r_a4a57f04b4d0fcc9763f7f1250ce6c2dc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerifiedSignature.html#a4a57f04b4d0fcc9763f7f1250ce6c2dc">intact</a> = false</td></tr>
+<tr class="separator:a4a57f04b4d0fcc9763f7f1250ce6c2dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7729e684b97cd56cf5dd5cb478d24f5b" id="r_a7729e684b97cd56cf5dd5cb478d24f5b"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerifiedSignature.html#a7729e684b97cd56cf5dd5cb478d24f5b">reason</a></td></tr>
 <tr class="memdesc:a7729e684b97cd56cf5dd5cb478d24f5b"><td class="mdescLeft">&#160;</td><td class="mdescRight">reason for a rejection, for the log  <br /></td></tr>
 <tr class="separator:a7729e684b97cd56cf5dd5cb478d24f5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -126,12 +131,45 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:ae9a58ae36e01bbfba76b807c4de343cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">signed content (value, without header)  <br /></td></tr>
 <tr class="separator:ae9a58ae36e01bbfba76b807c4de343cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0ce6ab6bf406ce52411460e75431cf1b" id="r_a0ce6ab6bf406ce52411460e75431cf1b"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerifiedSignature.html#a0ce6ab6bf406ce52411460e75431cf1b">contentSize</a> = 0</td></tr>
-<tr class="memdesc:a0ce6ab6bf406ce52411460e75431cf1b"><td class="mdescLeft">&#160;</td><td class="mdescRight">size of <code>content</code>, in bytes  <br /></td></tr>
 <tr class="separator:a0ce6ab6bf406ce52411460e75431cf1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a24a13d11e67eb0548dbbe91ab718c912" id="r_a24a13d11e67eb0548dbbe91ab718c912"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::pair&lt; const uint8_t *, size_t &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerifiedSignature.html#a24a13d11e67eb0548dbbe91ab718c912">certificates</a></td></tr>
+<tr class="memdesc:a24a13d11e67eb0548dbbe91ab718c912"><td class="mdescLeft">&#160;</td><td class="mdescRight">The certificates the SignedData carries, DER (pointers into the data).  <br /></td></tr>
+<tr class="separator:a24a13d11e67eb0548dbbe91ab718c912"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a62f9da29ad660269471b4b759e26b848" id="r_a62f9da29ad660269471b4b759e26b848"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerifiedSignature.html#a62f9da29ad660269471b4b759e26b848">signerIndex</a> = SIZE_MAX</td></tr>
+<tr class="memdesc:a62f9da29ad660269471b4b759e26b848"><td class="mdescLeft">&#160;</td><td class="mdescRight">the signer's among them; SIZE_MAX if not found  <br /></td></tr>
+<tr class="separator:a62f9da29ad660269471b4b759e26b848"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a293638c628c7302d0f40ed1631e85d6f" id="r_a293638c628c7302d0f40ed1631e85d6f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerifiedSignature.html#a293638c628c7302d0f40ed1631e85d6f">programName</a></td></tr>
+<tr class="separator:a293638c628c7302d0f40ed1631e85d6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59b517a1dd902f743fa82443c7ba628b" id="r_a59b517a1dd902f743fa82443c7ba628b"><td class="memItemLeft" align="right" valign="top">const uint8_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerifiedSignature.html#a59b517a1dd902f743fa82443c7ba628b">signatureValue</a> = nullptr</td></tr>
+<tr class="memdesc:a59b517a1dd902f743fa82443c7ba628b"><td class="mdescLeft">&#160;</td><td class="mdescRight">the signer's encryptedDigest, what a time stamp covers  <br /></td></tr>
+<tr class="separator:a59b517a1dd902f743fa82443c7ba628b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe3ab13b91a2aa41afc4c3c5b0ee7a49" id="r_afe3ab13b91a2aa41afc4c3c5b0ee7a49"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerifiedSignature.html#afe3ab13b91a2aa41afc4c3c5b0ee7a49">signatureValueSize</a> = 0</td></tr>
+<tr class="separator:afe3ab13b91a2aa41afc4c3c5b0ee7a49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6b68084310cb9961803a816ea5fb296c" id="r_a6b68084310cb9961803a816ea5fb296c"><td class="memItemLeft" align="right" valign="top">const uint8_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerifiedSignature.html#a6b68084310cb9961803a816ea5fb296c">unsignedAttributes</a> = nullptr</td></tr>
+<tr class="memdesc:a6b68084310cb9961803a816ea5fb296c"><td class="mdescLeft">&#160;</td><td class="mdescRight">the signer's unsigned attributes ([1], DER), time stamps; null if none  <br /></td></tr>
+<tr class="separator:a6b68084310cb9961803a816ea5fb296c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7aae61576d430bcadb9111b7c8065095" id="r_a7aae61576d430bcadb9111b7c8065095"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerifiedSignature.html#a7aae61576d430bcadb9111b7c8065095">unsignedAttributesSize</a> = 0</td></tr>
+<tr class="separator:a7aae61576d430bcadb9111b7c8065095"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Result of verifying a PKCS#7 signature. </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
+<a id="a24a13d11e67eb0548dbbe91ab718c912" name="a24a13d11e67eb0548dbbe91ab718c912"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a24a13d11e67eb0548dbbe91ab718c912">&#9670;&#160;</a></span>certificates</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;std::pair&lt;const uint8_t*, size_t&gt; &gt; VerifiedSignature::certificates</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The certificates the SignedData carries, DER (pointers into the data). </p>
+
+</div>
+</div>
 <a id="ae9a58ae36e01bbfba76b807c4de343cb" name="ae9a58ae36e01bbfba76b807c4de343cb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae9a58ae36e01bbfba76b807c4de343cb">&#9670;&#160;</a></span>content</h2>
 
@@ -175,8 +213,37 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>size of <code>content</code>, in bytes </p>
+
+</div>
+</div>
+<a id="a4a57f04b4d0fcc9763f7f1250ce6c2dc" name="a4a57f04b4d0fcc9763f7f1250ce6c2dc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4a57f04b4d0fcc9763f7f1250ce6c2dc">&#9670;&#160;</a></span>intact</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool VerifiedSignature::intact = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The signature itself holds: content digest and RSA signature verified, WHATEVER the chain. Informative only for a third-party signer: the chain is not verified up to a trusted root, and anyone can sign with a certificate of their own. </p>
+
+</div>
+</div>
+<a id="a293638c628c7302d0f40ed1631e85d6f" name="a293638c628c7302d0f40ed1631e85d6f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a293638c628c7302d0f40ed1631e85d6f">&#9670;&#160;</a></span>programName</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring VerifiedSignature::programName</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The program name its SpcSpOpusInfo attribute gives — for a WHQL signature, the manufacturer (measured: "Red Hat, Inc." on virtio drivers), what Microsoft's blocklist calls CertOemID. </p>
 
 </div>
 </div>
@@ -193,6 +260,36 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>reason for a rejection, for the log </p>
+
+</div>
+</div>
+<a id="a59b517a1dd902f743fa82443c7ba628b" name="a59b517a1dd902f743fa82443c7ba628b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a59b517a1dd902f743fa82443c7ba628b">&#9670;&#160;</a></span>signatureValue</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const uint8_t* VerifiedSignature::signatureValue = nullptr</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the signer's encryptedDigest, what a time stamp covers </p>
+
+</div>
+</div>
+<a id="afe3ab13b91a2aa41afc4c3c5b0ee7a49" name="afe3ab13b91a2aa41afc4c3c5b0ee7a49"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afe3ab13b91a2aa41afc4c3c5b0ee7a49">&#9670;&#160;</a></span>signatureValueSize</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t VerifiedSignature::signatureValueSize = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -225,6 +322,68 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>and signer compliant with the rule (see the header) </p>
+
+</div>
+</div>
+<a id="a62f9da29ad660269471b4b759e26b848" name="a62f9da29ad660269471b4b759e26b848"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a62f9da29ad660269471b4b759e26b848">&#9670;&#160;</a></span>signerIndex</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t VerifiedSignature::signerIndex = SIZE_MAX</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the signer's among them; SIZE_MAX if not found </p>
+
+</div>
+</div>
+<a id="a60b73e3c0a864d1776a32e7dcb868309" name="a60b73e3c0a864d1776a32e7dcb868309"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a60b73e3c0a864d1776a32e7dcb868309">&#9670;&#160;</a></span>signerOrganization</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring VerifiedSignature::signerOrganization</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>its organisation (O) </p>
+
+</div>
+</div>
+<a id="a6b68084310cb9961803a816ea5fb296c" name="a6b68084310cb9961803a816ea5fb296c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6b68084310cb9961803a816ea5fb296c">&#9670;&#160;</a></span>unsignedAttributes</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const uint8_t* VerifiedSignature::unsignedAttributes = nullptr</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the signer's unsigned attributes ([1], DER), time stamps; null if none </p>
+
+</div>
+</div>
+<a id="a7aae61576d430bcadb9111b7c8065095" name="a7aae61576d430bcadb9111b7c8065095"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7aae61576d430bcadb9111b7c8065095">&#9670;&#160;</a></span>unsignedAttributesSize</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t VerifiedSignature::unsignedAttributesSize = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>

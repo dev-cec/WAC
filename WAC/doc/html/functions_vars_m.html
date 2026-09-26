@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -100,7 +100,10 @@ $(document).ready(function(){initNavTree('functions_vars_m.html',''); initResiza
 
 <h3><a id="index_m" name="index_m"></a>- m -</h3><ul>
 <li>machineGuid&#160;:&#160;<a class="el" href="structSystemInfo.html#a7c355fcf690a6fd92b54f0a3696054c1">SystemInfo</a></li>
-<li>md5&#160;:&#160;<a class="el" href="structBinaryFingerprint.html#a8c695575fb1421caa1d5b9b87204a37f">BinaryFingerprint</a>, <a class="el" href="structRawHiveFingerprints.html#a977602fceac05b016bf89e936e8e57b1">RawHiveFingerprints</a></li>
+<li>manifestSha256&#160;:&#160;<a class="el" href="structExhibitStoreCheck.html#af2b62bec8808ec8c60813b0108f17374">ExhibitStoreCheck</a>, <a class="el" href="structTrustSet.html#ac0a5ec568e574c109d6fa71372b54a00">TrustSet</a></li>
+<li>mapping&#160;:&#160;<a class="el" href="structYamlNode.html#a57d1527b4f6cd12d2aeca8831c30827c">YamlNode</a></li>
+<li>maximumVersion&#160;:&#160;<a class="el" href="structDeniedFile.html#a006d3d7d22fef2663d6c532057a54b7c">DeniedFile</a></li>
+<li>md5&#160;:&#160;<a class="el" href="structBinaryFingerprint.html#a8c695575fb1421caa1d5b9b87204a37f">BinaryFingerprint</a>, <a class="el" href="structRawHiveFingerprints.html#a977602fceac05b016bf89e936e8e57b1">RawHiveFingerprints</a>, <a class="el" href="structStoredExhibit.html#a22a9f859adcd72a297b2be15e5bfdb4b">StoredExhibit</a></li>
 <li>md5Source&#160;:&#160;<a class="el" href="structRecentDoc.html#a2ce46f17b97a3b1b2701f27d1e18145f">RecentDoc</a></li>
 <li>message&#160;:&#160;<a class="el" href="structBeef0001.html#a5577fff2c00e9832f7d092637f14ed9c">Beef0001</a>, <a class="el" href="structBeef0002.html#aff7011415a0ea9926e94ad6bcd8a5e6c">Beef0002</a>, <a class="el" href="structBeef0008.html#ab91bd0755658697a9b4a042a36fbcd87">Beef0008</a>, <a class="el" href="structBeef0009.html#a2692d9463f630f289922105319cc653e">Beef0009</a>, <a class="el" href="structBeef000a.html#afde41e40684c863cd73b1b31fb249cef">Beef000a</a>, <a class="el" href="structBeef000c.html#a73d5ba7eb9c6ee12f769b44eb8f18ce9">Beef000c</a>, <a class="el" href="structBeef000e.html#ab82e2de7a25056fcab3fd064e7c64b95">Beef000e</a>, <a class="el" href="structBeef0013.html#acf57743cbdf82a0c5cc9efff183d05c2">Beef0013</a>, <a class="el" href="structBeef0014.html#a76a399b471c5491e53fbce5a94cfd788">Beef0014</a>, <a class="el" href="structBeef0017.html#a447d8a5d992cd90438f9e2984700b7d6">Beef0017</a>, <a class="el" href="structBeef0029.html#a04fad3eda760970e59d2b9841af44c1c">Beef0029</a></li>
 <li>mftEntry&#160;:&#160;<a class="el" href="structRawHiveFingerprints.html#a8b8fecf9df975b08ae679777df1c77ca">RawHiveFingerprints</a></li>
@@ -111,12 +114,15 @@ $(document).ready(function(){initNavTree('functions_vars_m.html',''); initResiza
 <li>mftSequenceNumber&#160;:&#160;<a class="el" href="structBeef0004.html#aa2ce1326d5469f582f74ddd213328c8c">Beef0004</a></li>
 <li>microsoft&#160;:&#160;<a class="el" href="structVerdictMicrosoft.html#a8e7b4c165009f71c1310172eb3ed948b">VerdictMicrosoft</a></li>
 <li>minimumStandardStreamSize&#160;:&#160;<a class="el" href="structoleHeader.html#a95f3f018eedadcfc590a935364ddf8dc">oleHeader</a></li>
+<li>minimumVersion&#160;:&#160;<a class="el" href="structDeniedFile.html#a30d75511fae6bc325900cc4e064fc196">DeniedFile</a></li>
+<li>missingCrls&#160;:&#160;<a class="el" href="structChainVerdict.html#a12b4072605a80cd094ccc270d6c58821">ChainVerdict</a></li>
+<li>mode&#160;:&#160;<a class="el" href="structAppliConf.html#aa7462d66b1466aa238705cd47937f19c">AppliConf</a></li>
 <li>modified&#160;:&#160;<a class="el" href="structArchiveFileContent.html#a2674cbc81e3ffaea41ad1c299e4f623e">ArchiveFileContent</a>, <a class="el" href="structUsersFilesFolder.html#aae6ac650d00b245f9f0f0ec74201417d">UsersFilesFolder</a></li>
 <li>modifiedPrecision&#160;:&#160;<a class="el" href="structArchiveFileContent.html#aa24a318a8ee970943d7feab3db1a52f6">ArchiveFileContent</a></li>
 <li>modifiedUtc&#160;:&#160;<a class="el" href="structArchiveFileContent.html#ae49757caacda8dec6dd21fa70ebceb1e">ArchiveFileContent</a>, <a class="el" href="structAutomaticDestination.html#ac5f1fdadf2e68d631a045c1127f097a4">AutomaticDestination</a>, <a class="el" href="structCustomDestination.html#a0fc65047c3d8798ddbd2b30a47be824a">CustomDestination</a>, <a class="el" href="structNetworkShellItem.html#a83abc0a914e1d508f698ffa3bc87decc">NetworkShellItem</a>, <a class="el" href="structPrefetch.html#a96b51b7081c0b73ba84582857c6b81d5">Prefetch</a>, <a class="el" href="structRawHiveFingerprints.html#a270ddbbddbe855e9f14e8347d241d805">RawHiveFingerprints</a>, <a class="el" href="structUserPropertyView0x07192006.html#a9fa4ef5c193f9d96df1e08ccfad7face">UserPropertyView0x07192006</a>, <a class="el" href="structUsersFilesFolder.html#adf50fc84a8d4a6f43e2c9213de09fa02">UsersFilesFolder</a></li>
 <li>mounteddevices&#160;:&#160;<a class="el" href="structMountedDevices.html#a9edaabb53e5d72bbf057538a7d907076">MountedDevices</a></li>
 <li>mountpoint&#160;:&#160;<a class="el" href="structAppliConf.html#a9968074249a92e938580e34c7769e46d">AppliConf</a></li>
-<li>mountPoint&#160;:&#160;<a class="el" href="structVolumeInfo.html#a98dfd8029023e1dc638a6bbccc79f37c">VolumeInfo</a></li>
+<li>mountPoint&#160;:&#160;<a class="el" href="structRunningMachine_1_1Volume.html#a30d03405a91e81012d741bd1ed0e53f2">RunningMachine::Volume</a>, <a class="el" href="structVolumeInfo.html#a98dfd8029023e1dc638a6bbccc79f37c">VolumeInfo</a></li>
 <li>mruApps&#160;:&#160;<a class="el" href="structMruApps.html#a6a3a81fd67ec3c76d13dd38f3b37593f">MruApps</a></li>
 <li>mrus&#160;:&#160;<a class="el" href="structMrus.html#a236067bb8507251c4a3a749a11dc8723">Mrus</a></li>
 <li>MSATFirstSectorId&#160;:&#160;<a class="el" href="structoleHeader.html#a1e423b8fd484e7c3ca45bc5c206ec777">oleHeader</a></li>

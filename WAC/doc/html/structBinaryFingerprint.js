@@ -1,6 +1,6 @@
 var structBinaryFingerprint =
 [
-    [ "collected", "structBinaryFingerprint.html#acf75e98fd260ad59aa762dd074d35be1", null ],
+    [ "authenticodeSha256", "structBinaryFingerprint.html#aefb7432f58c3a167ae28416efb7551a5", null ],
     [ "md5", "structBinaryFingerprint.html#a8c695575fb1421caa1d5b9b87204a37f", null ],
     [ "path", "structBinaryFingerprint.html#affa1b78a36cf267a506a674e95eadbc2", null ],
     [ "result", "structBinaryFingerprint.html#a04e6b16e429ee48c2cd57aadbf2ae9fc", null ],

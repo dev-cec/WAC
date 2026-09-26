@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -126,6 +126,8 @@ Functions</h2></td></tr>
 <tr class="separator:a90260ec2659d6e6ac339c5119c8023c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abec213e18f991fd799f47dfecc884a20" id="r_abec213e18f991fd799f47dfecc884a20"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structBinarySummary.html">BinarySummary</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8h.html#abec213e18f991fd799f47dfecc884a20">BinariesSummary</a> ()</td></tr>
 <tr class="separator:abec213e18f991fd799f47dfecc884a20"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e65fdf5f12a059cc9fd26d884adbc6c" id="r_a3e65fdf5f12a059cc9fd26d884adbc6c"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8h.html#a3e65fdf5f12a059cc9fd26d884adbc6c">BinariesCollectAll</a> ()</td></tr>
+<tr class="separator:a3e65fdf5f12a059cc9fd26d884adbc6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab4ce0b0aacbea8daa28752e26ef0e57b" id="r_ab4ce0b0aacbea8daa28752e26ef0e57b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8h.html#ab4ce0b0aacbea8daa28752e26ef0e57b">BinariesFinish</a> ()</td></tr>
 <tr class="separator:ab4ce0b0aacbea8daa28752e26ef0e57b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -175,6 +177,25 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Adds the three fingerprints to a JSON object, under the keys <code>&lt;prefix&gt;Md5&lt;suffix&gt;</code>, <code>&lt;prefix&gt;Sha1&lt;suffix&gt;</code>, <code>&lt;prefix&gt;Sha256&lt;suffix&gt;</code>. A missing fingerprint is not emitted: an empty field would read as a software defect. </p>
+
+</div>
+</div>
+<a id="a3e65fdf5f12a059cc9fd26d884adbc6c" name="a3e65fdf5f12a059cc9fd26d884adbc6c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3e65fdf5f12a059cc9fd26d884adbc6c">&#9670;&#160;</a></span>BinariesCollectAll()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT BinariesCollectAll </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>&ndash;collect &ndash;binary: collects EVERY executable, library, driver, script and macro document of the system volume, and every signature catalog.</p>
+<p>WHY ALL OF THEM. Which files the artefacts cite is only known once they are converted — on the analysis workstation, from the exhibit store. The collection must therefore take everything the conversion may ask for, and the catalogs that let it verify the Microsoft signatures there (see <a class="el" href="authenticode_8h.html" title="Microsoft authenticity of a binary, verified without any API.">authenticode.h</a>). Hard links (WinSxS) are read once, identical contents stored once. When the medium runs short, the walk stops and says so. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, S_FALSE if directories were unreadable, ERROR_DISK_FULL (as HRESULT) if the medium ran short </dd></dl>
 
 </div>
 </div>

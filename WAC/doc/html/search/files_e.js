@@ -34,5 +34,7 @@ var searchData=
   ['reg_5fuserassists_2eh_31',['reg_userassists.h',['../reg__userassists_8h.html',1,'']]],
   ['resource_2eh_32',['resource.h',['../resource_8h.html',1,'']]],
   ['rsa_2ecpp_33',['rsa.cpp',['../rsa_8cpp.html',1,'']]],
-  ['rsa_2eh_34',['rsa.h',['../rsa_8h.html',1,'']]]
+  ['rsa_2eh_34',['rsa.h',['../rsa_8h.html',1,'']]],
+  ['running_5fmachine_2ecpp_35',['running_machine.cpp',['../running__machine_8cpp.html',1,'']]],
+  ['running_5fmachine_2eh_36',['running_machine.h',['../running__machine_8h.html',1,'']]]
 ];

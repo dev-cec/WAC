@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -111,18 +111,230 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a8e7b4c165009f71c1310172eb3ed948b"><td class="mdescLeft">&#160;</td><td class="mdescRight">authentic: hash without collecting  <br /></td></tr>
 <tr class="separator:a8e7b4c165009f71c1310172eb3ed948b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a22182a384c9b2711c59eaaf6eba0a1b9" id="r_a22182a384c9b2711c59eaaf6eba0a1b9"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerdictMicrosoft.html#a22182a384c9b2711c59eaaf6eba0a1b9">source</a></td></tr>
-<tr class="memdesc:a22182a384c9b2711c59eaaf6eba0a1b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">"catalog &lt;name&gt;" or "embedded signature"  <br /></td></tr>
+<tr class="memdesc:a22182a384c9b2711c59eaaf6eba0a1b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">"catalog &lt;path&gt;" or "embedded signature"  <br /></td></tr>
 <tr class="separator:a22182a384c9b2711c59eaaf6eba0a1b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5619658bffcb55ea95ea2e7a521a773d" id="r_a5619658bffcb55ea95ea2e7a521a773d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerdictMicrosoft.html#a5619658bffcb55ea95ea2e7a521a773d">catalog</a></td></tr>
+<tr class="memdesc:a5619658bffcb55ea95ea2e7a521a773d"><td class="mdescLeft">&#160;</td><td class="mdescRight">the catalog that listed the digest (its path); empty otherwise  <br /></td></tr>
+<tr class="separator:a5619658bffcb55ea95ea2e7a521a773d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a967cc5a36c8754f0bcc3446e516601c5" id="r_a967cc5a36c8754f0bcc3446e516601c5"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerdictMicrosoft.html#a967cc5a36c8754f0bcc3446e516601c5">signer</a></td></tr>
-<tr class="memdesc:a967cc5a36c8754f0bcc3446e516601c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">signer's CN (embedded signature)  <br /></td></tr>
+<tr class="memdesc:a967cc5a36c8754f0bcc3446e516601c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">signer's CN (embedded signature), whoever it is  <br /></td></tr>
 <tr class="separator:a967cc5a36c8754f0bcc3446e516601c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19cb74b98d5c40038ec79063784c3ec7" id="r_a19cb74b98d5c40038ec79063784c3ec7"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerdictMicrosoft.html#a19cb74b98d5c40038ec79063784c3ec7">signerOrganization</a></td></tr>
+<tr class="memdesc:a19cb74b98d5c40038ec79063784c3ec7"><td class="mdescLeft">&#160;</td><td class="mdescRight">signer's organisation (O)  <br /></td></tr>
+<tr class="separator:a19cb74b98d5c40038ec79063784c3ec7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7e825a0adad0366477266afa1149b5f" id="r_ab7e825a0adad0366477266afa1149b5f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerdictMicrosoft.html#ab7e825a0adad0366477266afa1149b5f">signatureIntact</a> = false</td></tr>
+<tr class="separator:ab7e825a0adad0366477266afa1149b5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a65ce9ad236d7fb064e19727a82943541" id="r_a65ce9ad236d7fb064e19727a82943541"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerdictMicrosoft.html#a65ce9ad236d7fb064e19727a82943541">reason</a></td></tr>
 <tr class="memdesc:a65ce9ad236d7fb064e19727a82943541"><td class="mdescLeft">&#160;</td><td class="mdescRight">why not, for the log  <br /></td></tr>
 <tr class="separator:a65ce9ad236d7fb064e19727a82943541"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acca3828f9e4295fe57b16e16100e2aef" id="r_acca3828f9e4295fe57b16e16100e2aef"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerdictMicrosoft.html#acca3828f9e4295fe57b16e16100e2aef">chainChecked</a> = false</td></tr>
+<tr class="separator:acca3828f9e4295fe57b16e16100e2aef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd240f166161b6bff43b6219e41e6cfc" id="r_abd240f166161b6bff43b6219e41e6cfc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerdictMicrosoft.html#abd240f166161b6bff43b6219e41e6cfc">chainTrusted</a> = false</td></tr>
+<tr class="separator:abd240f166161b6bff43b6219e41e6cfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae02438696eb3b2e1eed2c5ca031543d3" id="r_ae02438696eb3b2e1eed2c5ca031543d3"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerdictMicrosoft.html#ae02438696eb3b2e1eed2c5ca031543d3">chainRoot</a></td></tr>
+<tr class="memdesc:ae02438696eb3b2e1eed2c5ca031543d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">CN of the root reached, when trusted.  <br /></td></tr>
+<tr class="separator:ae02438696eb3b2e1eed2c5ca031543d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeda74fd858c553edf53ddca831a73657" id="r_aeda74fd858c553edf53ddca831a73657"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerdictMicrosoft.html#aeda74fd858c553edf53ddca831a73657">chainReason</a></td></tr>
+<tr class="memdesc:aeda74fd858c553edf53ddca831a73657"><td class="mdescLeft">&#160;</td><td class="mdescRight">why not trusted  <br /></td></tr>
+<tr class="separator:aeda74fd858c553edf53ddca831a73657"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a47742801a249a783f308c198510afc" id="r_a4a47742801a249a783f308c198510afc"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerdictMicrosoft.html#a4a47742801a249a783f308c198510afc">chainSignedAt</a> = 0</td></tr>
+<tr class="memdesc:a4a47742801a249a783f308c198510afc"><td class="mdescLeft">&#160;</td><td class="mdescRight">FILETIME (UTC) of its verified time stamp; 0 if none.  <br /></td></tr>
+<tr class="separator:a4a47742801a249a783f308c198510afc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a87176c1a9d29fe5660d9072b4bf9e26f" id="r_a87176c1a9d29fe5660d9072b4bf9e26f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerdictMicrosoft.html#a87176c1a9d29fe5660d9072b4bf9e26f">chainTimeStampAuthority</a></td></tr>
+<tr class="memdesc:a87176c1a9d29fe5660d9072b4bf9e26f"><td class="mdescLeft">&#160;</td><td class="mdescRight">CN of the time stamp's authority.  <br /></td></tr>
+<tr class="separator:a87176c1a9d29fe5660d9072b4bf9e26f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee6c8eeb88d6b3ba0c4cbaea1212e6c1" id="r_aee6c8eeb88d6b3ba0c4cbaea1212e6c1"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerdictMicrosoft.html#aee6c8eeb88d6b3ba0c4cbaea1212e6c1">chainRevocationListsIssued</a> = 0</td></tr>
+<tr class="memdesc:aee6c8eeb88d6b3ba0c4cbaea1212e6c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">FILETIME (UTC) of the oldest CRL its revocation was checked by.  <br /></td></tr>
+<tr class="separator:aee6c8eeb88d6b3ba0c4cbaea1212e6c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a57517944b321092886d77daba2646657" id="r_a57517944b321092886d77daba2646657"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerdictMicrosoft.html#a57517944b321092886d77daba2646657">chainMissingCrls</a></td></tr>
+<tr class="memdesc:a57517944b321092886d77daba2646657"><td class="mdescLeft">&#160;</td><td class="mdescRight">CRL addresses missing from the set (see <a class="el" href="structChainVerdict.html">ChainVerdict</a>)  <br /></td></tr>
+<tr class="separator:a57517944b321092886d77daba2646657"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a591fa1fd4f7f07ed556f321d9df19a95" id="r_a591fa1fd4f7f07ed556f321d9df19a95"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerdictMicrosoft.html#a591fa1fd4f7f07ed556f321d9df19a95">chainTbsHashes</a></td></tr>
+<tr class="memdesc:a591fa1fd4f7f07ed556f321d9df19a95"><td class="mdescLeft">&#160;</td><td class="mdescRight">see <a class="el" href="structChainVerdict.html#aa8af6fc2afc2c00ad07805055f5ec749" title="SHA-1 and SHA-256 (uppercase hexadecimal) of the signed part of every certificate of the chain,...">ChainVerdict::tbsHashes</a>  <br /></td></tr>
+<tr class="separator:a591fa1fd4f7f07ed556f321d9df19a95"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ba31c90f80c6867cb5f04300ce6eb4d" id="r_a6ba31c90f80c6867cb5f04300ce6eb4d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerdictMicrosoft.html#a6ba31c90f80c6867cb5f04300ce6eb4d">chainSignerName</a></td></tr>
+<tr class="memdesc:a6ba31c90f80c6867cb5f04300ce6eb4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">see <a class="el" href="structChainVerdict.html#a56f8fb1c95494dcccd43008b82ba8cb1">ChainVerdict::signerName</a>  <br /></td></tr>
+<tr class="separator:a6ba31c90f80c6867cb5f04300ce6eb4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d293720881fee25dece0f3712c339bd" id="r_a7d293720881fee25dece0f3712c339bd"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVerdictMicrosoft.html#a7d293720881fee25dece0f3712c339bd">signerProgramName</a></td></tr>
+<tr class="memdesc:a7d293720881fee25dece0f3712c339bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">see <a class="el" href="structVerifiedSignature.html#a293638c628c7302d0f40ed1631e85d6f">VerifiedSignature::programName</a>  <br /></td></tr>
+<tr class="separator:a7d293720881fee25dece0f3712c339bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Microsoft authenticity verdict on an analysed PE. </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
+<a id="a5619658bffcb55ea95ea2e7a521a773d" name="a5619658bffcb55ea95ea2e7a521a773d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5619658bffcb55ea95ea2e7a521a773d">&#9670;&#160;</a></span>catalog</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring VerdictMicrosoft::catalog</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the catalog that listed the digest (its path); empty otherwise </p>
+
+</div>
+</div>
+<a id="acca3828f9e4295fe57b16e16100e2aef" name="acca3828f9e4295fe57b16e16100e2aef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acca3828f9e4295fe57b16e16100e2aef">&#9670;&#160;</a></span>chainChecked</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool VerdictMicrosoft::chainChecked = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A third-party signature, intact, checked against the trust set (see <a class="el" href="classThirdPartyRoots.html">ThirdPartyRoots</a>): whether it was, whether its chain holds, to which root, or why not. </p>
+
+</div>
+</div>
+<a id="a57517944b321092886d77daba2646657" name="a57517944b321092886d77daba2646657"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a57517944b321092886d77daba2646657">&#9670;&#160;</a></span>chainMissingCrls</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;std::string&gt; VerdictMicrosoft::chainMissingCrls</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>CRL addresses missing from the set (see <a class="el" href="structChainVerdict.html">ChainVerdict</a>) </p>
+
+</div>
+</div>
+<a id="aeda74fd858c553edf53ddca831a73657" name="aeda74fd858c553edf53ddca831a73657"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeda74fd858c553edf53ddca831a73657">&#9670;&#160;</a></span>chainReason</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string VerdictMicrosoft::chainReason</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>why not trusted </p>
+
+</div>
+</div>
+<a id="aee6c8eeb88d6b3ba0c4cbaea1212e6c1" name="aee6c8eeb88d6b3ba0c4cbaea1212e6c1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aee6c8eeb88d6b3ba0c4cbaea1212e6c1">&#9670;&#160;</a></span>chainRevocationListsIssued</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint64_t VerdictMicrosoft::chainRevocationListsIssued = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>FILETIME (UTC) of the oldest CRL its revocation was checked by. </p>
+
+</div>
+</div>
+<a id="ae02438696eb3b2e1eed2c5ca031543d3" name="ae02438696eb3b2e1eed2c5ca031543d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae02438696eb3b2e1eed2c5ca031543d3">&#9670;&#160;</a></span>chainRoot</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring VerdictMicrosoft::chainRoot</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>CN of the root reached, when trusted. </p>
+
+</div>
+</div>
+<a id="a4a47742801a249a783f308c198510afc" name="a4a47742801a249a783f308c198510afc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4a47742801a249a783f308c198510afc">&#9670;&#160;</a></span>chainSignedAt</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint64_t VerdictMicrosoft::chainSignedAt = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>FILETIME (UTC) of its verified time stamp; 0 if none. </p>
+
+</div>
+</div>
+<a id="a6ba31c90f80c6867cb5f04300ce6eb4d" name="a6ba31c90f80c6867cb5f04300ce6eb4d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ba31c90f80c6867cb5f04300ce6eb4d">&#9670;&#160;</a></span>chainSignerName</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring VerdictMicrosoft::chainSignerName</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>see <a class="el" href="structChainVerdict.html#a56f8fb1c95494dcccd43008b82ba8cb1">ChainVerdict::signerName</a> </p>
+
+</div>
+</div>
+<a id="a591fa1fd4f7f07ed556f321d9df19a95" name="a591fa1fd4f7f07ed556f321d9df19a95"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a591fa1fd4f7f07ed556f321d9df19a95">&#9670;&#160;</a></span>chainTbsHashes</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;std::wstring&gt; VerdictMicrosoft::chainTbsHashes</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>see <a class="el" href="structChainVerdict.html#aa8af6fc2afc2c00ad07805055f5ec749" title="SHA-1 and SHA-256 (uppercase hexadecimal) of the signed part of every certificate of the chain,...">ChainVerdict::tbsHashes</a> </p>
+
+</div>
+</div>
+<a id="a87176c1a9d29fe5660d9072b4bf9e26f" name="a87176c1a9d29fe5660d9072b4bf9e26f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a87176c1a9d29fe5660d9072b4bf9e26f">&#9670;&#160;</a></span>chainTimeStampAuthority</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring VerdictMicrosoft::chainTimeStampAuthority</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>CN of the time stamp's authority. </p>
+
+</div>
+</div>
+<a id="abd240f166161b6bff43b6219e41e6cfc" name="abd240f166161b6bff43b6219e41e6cfc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abd240f166161b6bff43b6219e41e6cfc">&#9670;&#160;</a></span>chainTrusted</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool VerdictMicrosoft::chainTrusted = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a8e7b4c165009f71c1310172eb3ed948b" name="a8e7b4c165009f71c1310172eb3ed948b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8e7b4c165009f71c1310172eb3ed948b">&#9670;&#160;</a></span>microsoft</h2>
 
@@ -155,6 +367,21 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="ab7e825a0adad0366477266afa1149b5f" name="ab7e825a0adad0366477266afa1149b5f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab7e825a0adad0366477266afa1149b5f">&#9670;&#160;</a></span>signatureIntact</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool VerdictMicrosoft::signatureIntact = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Embedded signature intact — RSA signature valid and the signed Authenticode digest the file's: the file is as its signer signed it. Says nothing about who the signer is (see <a class="el" href="structVerifiedSignature.html#a4a57f04b4d0fcc9763f7f1250ce6c2dc">VerifiedSignature::intact</a>). </p>
+
+</div>
+</div>
 <a id="a967cc5a36c8754f0bcc3446e516601c5" name="a967cc5a36c8754f0bcc3446e516601c5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a967cc5a36c8754f0bcc3446e516601c5">&#9670;&#160;</a></span>signer</h2>
 
@@ -167,7 +394,39 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>signer's CN (embedded signature) </p>
+<p>signer's CN (embedded signature), whoever it is </p>
+
+</div>
+</div>
+<a id="a19cb74b98d5c40038ec79063784c3ec7" name="a19cb74b98d5c40038ec79063784c3ec7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a19cb74b98d5c40038ec79063784c3ec7">&#9670;&#160;</a></span>signerOrganization</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring VerdictMicrosoft::signerOrganization</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>signer's organisation (O) </p>
+
+</div>
+</div>
+<a id="a7d293720881fee25dece0f3712c339bd" name="a7d293720881fee25dece0f3712c339bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7d293720881fee25dece0f3712c339bd">&#9670;&#160;</a></span>signerProgramName</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring VerdictMicrosoft::signerProgramName</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>see <a class="el" href="structVerifiedSignature.html#a293638c628c7302d0f40ed1631e85d6f">VerifiedSignature::programName</a> </p>
 
 </div>
 </div>
@@ -183,7 +442,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>"catalog &lt;name&gt;" or "embedded signature" </p>
+<p>"catalog &lt;path&gt;" or "embedded signature" </p>
 
 </div>
 </div>

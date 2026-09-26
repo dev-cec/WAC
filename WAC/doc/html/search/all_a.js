@@ -11,5 +11,6 @@ var searchData=
   ['jumplist_5fcustom_2eh_8',['jumplist_custom.h',['../jumplist__custom_8h.html',1,'']]],
   ['jumplistautomatics_9',['JumplistAutomatics',['../structJumplistAutomatics.html',1,'']]],
   ['jumplistcustoms_10',['JumplistCustoms',['../structJumplistCustoms.html',1,'']]],
-  ['jumplistentry_11',['JumplistEntry',['../structAutomaticDestination_1_1JumplistEntry.html',1,'AutomaticDestination']]]
+  ['jumplistentry_11',['JumplistEntry',['../structAutomaticDestination_1_1JumplistEntry.html',1,'AutomaticDestination']]],
+  ['jumplists_12',['jumpLists',['../structAppliConf_1_1CollectedArtefacts.html#ac9909a2a47ba2359430987b6a1f03a19',1,'AppliConf::CollectedArtefacts']]]
 ];

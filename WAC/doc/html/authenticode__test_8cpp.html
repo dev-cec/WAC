@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -106,12 +106,16 @@ $(document).ready(function(){initNavTree('authenticode__test_8cpp.html',''); ini
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="authenticode_8h_source.html">authenticode.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rsa_8h_source.html">rsa.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="json_8h_source.html">json.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="pe__resource_8h_source.html">pe_resource.h</a>&quot;</code><br />
 <code>#include &lt;cstdio&gt;</code><br />
 <code>#include &lt;cstring&gt;</code><br />
 <code>#include &lt;fstream&gt;</code><br />
 <code>#include &lt;iostream&gt;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
 <code>#include &lt;map&gt;</code><br />
+<code>#include &lt;memory&gt;</code><br />
+<code>#include &lt;set&gt;</code><br />
 <code>#include &lt;sstream&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
 <code>#include &lt;chrono&gt;</code><br />
@@ -123,7 +127,7 @@ Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Confronts WAC's authenticity verification with Windows's own. </p>
-<p>Usage: authenticode_test &ndash;catalogs <code>&lt;folder&gt;</code> verifies and indexes every .cat of the folder, and summarises it; authenticode_test &ndash;catalogs <code>&lt;folder&gt;</code> &ndash;files <code>&lt;list&gt;</code> then returns a verdict per file. <code>&lt;list&gt;</code>: one line per file, "identifier|local path". Output: "identifier|MICROSOFT|source" or "identifier|COLLECT|reason". authenticode_test &ndash;rsa <code>&lt;modulus hex&gt;</code> <code>&lt;exponent hex&gt;</code> <code>&lt;signature hex&gt;</code> <code>&lt;sha256 hex&gt;</code> verifies an isolated RSA signature (confronted with OpenSSL).</p>
+<p>Usage: authenticode_test &ndash;catalogs <code>&lt;folder&gt;</code> verifies and indexes every .cat of the folder, and summarises it; authenticode_test &ndash;catalogs <code>&lt;folder&gt;</code> &ndash;files <code>&lt;list&gt;</code> then returns a verdict per file. <code>&lt;list&gt;</code>: one line per file, "identifier|local path". Output: "identifier|MICROSOFT|source" or "identifier|COLLECT|reason". authenticode_test &ndash;catalogs <code>&lt;folder&gt;</code> &ndash;files <code>&lt;list&gt;</code> &ndash;trust <code>&lt;trust set folder&gt;</code> the same, and for a signature that is not Microsoft's but intact, its chain against the trust set &ndash;update-trust wrote (authroot.stl, disallowedcert.stl, roots): "|CHAIN|TRUSTED|&lt;root&gt;" or "|CHAIN|UNTRUSTED|&lt;reason&gt;" appended. Judged by openssl verify with the set's roots.pem, and by Get-AuthenticodeSignature; authenticode_test &ndash;rsa <code>&lt;modulus hex&gt;</code> <code>&lt;exponent hex&gt;</code> <code>&lt;signature hex&gt;</code> <code>&lt;sha256 hex&gt;</code> verifies an isolated RSA signature (confronted with OpenSSL).</p>
 <p>The judge is Get-AuthenticodeSignature, run in the VM on the same files (see vmtest/README.md). This program reads the files through the API: it is a test tool, not the collection.</p>
 <p>Build (Linux): g++ -std=c++17 -O2 -I. <a class="el" href="authenticode_8cpp.html" title="Authenticode digests, PKCS#7 verification and catalog index.">authenticode.cpp</a> <a class="el" href="rsa_8cpp.html" title="RSA PKCS#1 v1.5 signature verification, in memory.">rsa.cpp</a> <a class="el" href="sha_8cpp.html" title="SHA-1, SHA-256, SHA-384 and SHA-512, computed incrementally.">sha.cpp</a> <a class="el" href="authenticode__test_8cpp.html" title="Confronts WAC&#39;s authenticity verification with Windows&#39;s own.">authenticode_test.cpp</a> </p>
 </div><h2 class="groupheader">Function Documentation</h2>

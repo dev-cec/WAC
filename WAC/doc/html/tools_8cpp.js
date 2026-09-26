@@ -20,6 +20,7 @@ var tools_8cpp =
     [ "getVolumeLetter", "tools_8cpp.html#af3090b036c360d75cf1d37179cd99bee", null ],
     [ "guid_to_wstring", "tools_8cpp.html#af5b5c7829f1299c3b6e2f28f2d543282", null ],
     [ "isMuiReference", "tools_8cpp.html#a2b4cfa2b19dd3138efd1cdca232d614e", null ],
+    [ "iso8601UtcToFiletime", "tools_8cpp.html#ad48ff1f0177182c63a18c27fae85c405", null ],
     [ "listFilesByExtension", "tools_8cpp.html#abc796ef7b3c37280836660e1376c2594", null ],
     [ "loadProfileList", "tools_8cpp.html#a8dd0bb51cdc854f2137aba256aae3d9c", null ],
     [ "loadSuspectAnsiCodePage", "tools_8cpp.html#a39f06ea897c5d9cfa9c5db5deb82bab0", null ],
@@ -56,7 +57,9 @@ var tools_8cpp =
     [ "utcTimeToIso8601Local", "tools_8cpp.html#abc0f1497d47e582d91bb5ffcf40a7c17", null ],
     [ "utcToSuspectLocal", "tools_8cpp.html#a2db11fd993cf754bcb19e0731955b6ab", null ],
     [ "volumeOfPath", "tools_8cpp.html#a7bc73c77c8a53c18c6a5457fbb42c13e", null ],
+    [ "WacVersion", "tools_8cpp.html#a0c6b8b7a0b0376c0bf1886a07334c105", null ],
     [ "writeJsonFile", "tools_8cpp.html#a745cace5ec6e835950164e2b0a222c8e", null ],
     [ "writeNotCollected", "tools_8cpp.html#afe66d0a52585ae4970e185056c1a7c23", null ],
+    [ "writeNotRequested", "tools_8cpp.html#ae015dab0338f7763e473365f24e90784", null ],
     [ "wstring_to_filetime", "tools_8cpp.html#ac15b36c9a117f211860abb5d7f86d8d4", null ]
 ];

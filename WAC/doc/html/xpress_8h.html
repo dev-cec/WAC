@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -120,7 +120,7 @@ Functions</h2></td></tr>
 0x80 WofCompressedData    667,578 bytes             &lt;- the real data
 0xC0 reparse point           0x80000017   algorithm 2
 </pre><p> A raw read that ignores this returns a file of the right size, entirely zero. On a Windows 11 VM, the 121 event-provider binaries were in that case: no event message could be rebuilt without opening the files through the API — which this module avoids.</p>
-<p>WOF HAS FOUR ALGORITHMS, named by the reparse point: XPRESS on 4, 8 or 16 KiB chunks, and LZX on 32 KiB. The first three use THE SAME coding, XPRESS Huffman, handled here; only the chunk size differs. LZX is a distinct, far more complex format, which is not implemented: a file compressed that way is reported as unreadable rather than returned wrong.</p>
+<p>WOF HAS FOUR ALGORITHMS, named by the reparse point: XPRESS on 4, 8 or 16 KiB chunks, and LZX on 32 KiB. The first three use THE SAME coding, XPRESS Huffman, handled here; only the chunk size differs. LZX is a distinct, far more complex format, handled by <a class="el" href="lzx_8h.html" title="LZX DECOMPRESSION (WOF / &quot;Compact OS&quot;, algorithm 1).">lzx.h</a>.</p>
 <p>THE CODING, and its two subtleties.</p>
 <p>Each chunk starts with a 256-byte Huffman table: 512 code lengths on 4 bits, one per symbol. A bit stream follows, from which symbols are decoded; below 256 it is a literal byte, above it is a back-reference whose high bits give the number of distance bits and whose low four give the length.</p>
 <ul>

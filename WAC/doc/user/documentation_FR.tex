@@ -40,7 +40,7 @@
 {\color{bleu}Documentation utilisateur}\par
 \medskip
 \begin{tabular}{@{}ll@{}}
-Version du logiciel & 1.3.1 \\
+Version du logiciel & 1.4.0 \\
 Édition du document & septembre 2026 \\
 Éditeur & Centre d'Excellence Cyberdéfense Aérospatiale (CEC) \\
         & École de l'air et de l'espace, base aérienne 701, Salon-de-Provence \\
@@ -282,6 +282,13 @@ WAC.exe --update-trust[=dossier]
 Toutes les options sont facultatives et désactivées par défaut.
 
 \section{Fichier de configuration : \fichier{wac.yml}}
+
+\textbf{Version.} \wac{} numérote ses versions \texttt{<majeur>.<mineure>.<correctif>} :
+majeur pour une refonte, mineure pour un ajout de fonctionnalités, correctif
+pour des corrections. La version se lit dans les propriétés de
+\fichier{WAC.exe} (onglet Détails), s'affiche au lancement, et est consignée
+dans \fichier{investigation.json} (\champ{Tool.Version}) : une collecte dit par
+quelle version elle a été faite. Ce document décrit la version 1.4.0.
 
 La dernière version compilée se trouve dans \fichier{WAC/bin} du dépôt :
 \fichier{WAC.exe}, le \fichier{wac.yml} de référence et \fichier{SHA256SUMS}

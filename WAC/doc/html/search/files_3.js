@@ -7,5 +7,7 @@ var searchData=
   ['events_2eh_4',['events.h',['../events_8h.html',1,'']]],
   ['evtx_2ecpp_5',['evtx.cpp',['../evtx_8cpp.html',1,'']]],
   ['evtx_2eh_6',['evtx.h',['../evtx_8h.html',1,'']]],
-  ['evtx_5ftest_2ecpp_7',['evtx_test.cpp',['../evtx__test_8cpp.html',1,'']]]
+  ['evtx_5ftest_2ecpp_7',['evtx_test.cpp',['../evtx__test_8cpp.html',1,'']]],
+  ['exhibit_5freader_2ecpp_8',['exhibit_reader.cpp',['../exhibit__reader_8cpp.html',1,'']]],
+  ['exhibit_5freader_2eh_9',['exhibit_reader.h',['../exhibit__reader_8h.html',1,'']]]
 ];

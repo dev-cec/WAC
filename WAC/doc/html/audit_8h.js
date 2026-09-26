@@ -1,5 +1,6 @@
 var audit_8h =
 [
+    [ "auditConfiguration", "audit_8h.html#a1d196b4f077a8cb0e4ddb8e2a1527273", null ],
     [ "auditContext", "audit_8h.html#a9358f102721b6f721d594f511279ecbd", null ],
     [ "auditInit", "audit_8h.html#ab304e84db82b142bdaa33b0e1a06f7a4", null ],
     [ "auditRecord", "audit_8h.html#acdc6ae467d9f91baf1c9208377cbe50c", null ],

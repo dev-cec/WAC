@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -112,14 +112,17 @@ $(document).ready(function(){initNavTree('event__messages_8h_source.html',''); i
 <div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>                              uint8_t version,</div>
 <div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>                              <span class="keyword">const</span> std::vector&lt;std::wstring&gt;&amp; values);</div>
 <div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="keywordtype">void</span> <a class="code hl_function" href="event__messages_8h.html#aede18008c46311a8c1f48fa7c3c4e6b7">MessagesSummary</a>(<span class="keywordtype">size_t</span>* providers, <span class="keywordtype">size_t</span>* failures,</div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>                   <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>* resolved, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>* bytes);</div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="keywordtype">void</span> <a class="code hl_function" href="event__messages_8h.html#a639749714167717db9e16c2bae357636">MessagesRelease</a>();</div>
-<div class="ttc" id="aevent__messages_8h_html_a3f3680eee7a2ea96511ecf89666db325"><div class="ttname"><a href="event__messages_8h.html#a3f3680eee7a2ea96511ecf89666db325">MessagesInit</a></div><div class="ttdeci">void MessagesInit()</div><div class="ttdef"><b>Definition</b> event_messages.cpp:342</div></div>
-<div class="ttc" id="aevent__messages_8h_html_a639749714167717db9e16c2bae357636"><div class="ttname"><a href="event__messages_8h.html#a639749714167717db9e16c2bae357636">MessagesRelease</a></div><div class="ttdeci">void MessagesRelease()</div><div class="ttdef"><b>Definition</b> event_messages.cpp:407</div></div>
-<div class="ttc" id="aevent__messages_8h_html_a8468e52e30bf9107781ce309a8eb1487"><div class="ttname"><a href="event__messages_8h.html#a8468e52e30bf9107781ce309a8eb1487">EventMessage</a></div><div class="ttdeci">std::wstring EventMessage(const std::wstring &amp;providerGuid, uint16_t eventId, uint8_t version, const std::vector&lt; std::wstring &gt; &amp;values)</div><div class="ttdef"><b>Definition</b> event_messages.cpp:354</div></div>
-<div class="ttc" id="aevent__messages_8h_html_aede18008c46311a8c1f48fa7c3c4e6b7"><div class="ttname"><a href="event__messages_8h.html#aede18008c46311a8c1f48fa7c3c4e6b7">MessagesSummary</a></div><div class="ttdeci">void MessagesSummary(size_t *providers, size_t *failures, unsigned long long *resolved, unsigned long long *bytes)</div><div class="ttdef"><b>Definition</b> event_messages.cpp:399</div></div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>HRESULT <a class="code hl_function" href="event__messages_8h.html#aec038619f875af3c141dff2590e2ac7a">MessagesCollectAll</a>();</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span> </div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="keywordtype">void</span> <a class="code hl_function" href="event__messages_8h.html#aede18008c46311a8c1f48fa7c3c4e6b7">MessagesSummary</a>(<span class="keywordtype">size_t</span>* providers, <span class="keywordtype">size_t</span>* failures,</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>                   <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>* resolved, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>* bytes);</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span> </div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span><span class="keywordtype">void</span> <a class="code hl_function" href="event__messages_8h.html#a639749714167717db9e16c2bae357636">MessagesRelease</a>();</div>
+<div class="ttc" id="aevent__messages_8h_html_a3f3680eee7a2ea96511ecf89666db325"><div class="ttname"><a href="event__messages_8h.html#a3f3680eee7a2ea96511ecf89666db325">MessagesInit</a></div><div class="ttdeci">void MessagesInit()</div><div class="ttdef"><b>Definition</b> event_messages.cpp:355</div></div>
+<div class="ttc" id="aevent__messages_8h_html_a639749714167717db9e16c2bae357636"><div class="ttname"><a href="event__messages_8h.html#a639749714167717db9e16c2bae357636">MessagesRelease</a></div><div class="ttdeci">void MessagesRelease()</div><div class="ttdef"><b>Definition</b> event_messages.cpp:447</div></div>
+<div class="ttc" id="aevent__messages_8h_html_a8468e52e30bf9107781ce309a8eb1487"><div class="ttname"><a href="event__messages_8h.html#a8468e52e30bf9107781ce309a8eb1487">EventMessage</a></div><div class="ttdeci">std::wstring EventMessage(const std::wstring &amp;providerGuid, uint16_t eventId, uint8_t version, const std::vector&lt; std::wstring &gt; &amp;values)</div><div class="ttdef"><b>Definition</b> event_messages.cpp:367</div></div>
+<div class="ttc" id="aevent__messages_8h_html_aec038619f875af3c141dff2590e2ac7a"><div class="ttname"><a href="event__messages_8h.html#aec038619f875af3c141dff2590e2ac7a">MessagesCollectAll</a></div><div class="ttdeci">HRESULT MessagesCollectAll()</div><div class="ttdef"><b>Definition</b> event_messages.cpp:412</div></div>
+<div class="ttc" id="aevent__messages_8h_html_aede18008c46311a8c1f48fa7c3c4e6b7"><div class="ttname"><a href="event__messages_8h.html#aede18008c46311a8c1f48fa7c3c4e6b7">MessagesSummary</a></div><div class="ttdeci">void MessagesSummary(size_t *providers, size_t *failures, unsigned long long *resolved, unsigned long long *bytes)</div><div class="ttdef"><b>Definition</b> event_messages.cpp:439</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

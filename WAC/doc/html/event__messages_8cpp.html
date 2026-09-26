@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -123,6 +123,8 @@ Functions</h2></td></tr>
 <tr class="separator:a3f3680eee7a2ea96511ecf89666db325"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8468e52e30bf9107781ce309a8eb1487" id="r_a8468e52e30bf9107781ce309a8eb1487"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8cpp.html#a8468e52e30bf9107781ce309a8eb1487">EventMessage</a> (const std::wstring &amp;providerGuid, uint16_t eventId, uint8_t version, const std::vector&lt; std::wstring &gt; &amp;values)</td></tr>
 <tr class="separator:a8468e52e30bf9107781ce309a8eb1487"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec038619f875af3c141dff2590e2ac7a" id="r_aec038619f875af3c141dff2590e2ac7a"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8cpp.html#aec038619f875af3c141dff2590e2ac7a">MessagesCollectAll</a> ()</td></tr>
+<tr class="separator:aec038619f875af3c141dff2590e2ac7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aede18008c46311a8c1f48fa7c3c4e6b7" id="r_aede18008c46311a8c1f48fa7c3c4e6b7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8cpp.html#aede18008c46311a8c1f48fa7c3c4e6b7">MessagesSummary</a> (size_t *providers, size_t *failures, unsigned long long *resolved, unsigned long long *bytes)</td></tr>
 <tr class="separator:aede18008c46311a8c1f48fa7c3c4e6b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a639749714167717db9e16c2bae357636" id="r_a639749714167717db9e16c2bae357636"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8cpp.html#a639749714167717db9e16c2bae357636">MessagesRelease</a> ()</td></tr>
@@ -180,6 +182,24 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the sentence, or an empty string if it could not be rebuilt </dd></dl>
+
+</div>
+</div>
+<a id="aec038619f875af3c141dff2590e2ac7a" name="aec038619f875af3c141dff2590e2ac7a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aec038619f875af3c141dff2590e2ac7a">&#9670;&#160;</a></span>MessagesCollectAll()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT MessagesCollectAll </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>&ndash;collect: extracts the resource files of EVERY provider declared in SOFTWARE...\WINEVT\Publishers — binary, parameter file, localised .mui satellites —, since which of them the event logs cite is only known at conversion. The same search as on demand (the conversion then finds each file where the collection put it). Requires the SOFTWARE hive open. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the error of the hive's reading </dd></dl>
 
 </div>
 </div>

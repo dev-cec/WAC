@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -113,6 +113,8 @@ $(document).ready(function(){initNavTree('sha_8cpp.html',''); initResizable(); }
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a38384ef7235085db07afaf535b0af0ac" id="r_a38384ef7235085db07afaf535b0af0ac"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sha_8cpp.html#a38384ef7235085db07afaf535b0af0ac">toHexadecimal</a> (const uint8_t *bytes, size_t n)</td></tr>
+<tr class="separator:a38384ef7235085db07afaf535b0af0ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad01a2635c4cbba7e51a1e6ae9fc52115" id="r_ad01a2635c4cbba7e51a1e6ae9fc52115"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sha_8cpp.html#ad01a2635c4cbba7e51a1e6ae9fc52115">sha1Bytes</a> (const uint8_t *data, size_t length, uint8_t output[20])</td></tr>
 <tr class="separator:ad01a2635c4cbba7e51a1e6ae9fc52115"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abb60cb0cab7f428f2d34747ffd0fd8e9" id="r_abb60cb0cab7f428f2d34747ffd0fd8e9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sha_8cpp.html#abb60cb0cab7f428f2d34747ffd0fd8e9">sha256Bytes</a> (const uint8_t *data, size_t length, uint8_t output[32])</td></tr>
@@ -314,6 +316,42 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a38384ef7235085db07afaf535b0af0ac" name="a38384ef7235085db07afaf535b0af0ac"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a38384ef7235085db07afaf535b0af0ac">&#9670;&#160;</a></span>toHexadecimal()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring toHexadecimal </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>bytes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>SHA-1, computed incrementally.</p>
+<p>Bytes in uppercase hexadecimal, the project's convention for digests (see <a class="el" href="classMd5Stream.html">Md5Stream</a>). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bytes,length</td><td>the bytes </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>two digits per byte </dd></dl>
 
 </div>
 </div>

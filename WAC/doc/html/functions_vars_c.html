@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -99,10 +99,25 @@ $(document).ready(function(){initNavTree('functions_vars_c.html',''); initResiza
 <div class="textblock">Here is a list of all variables with links to the classes they belong to:</div>
 
 <h3><a id="index_c" name="index_c"></a>- c -</h3><ul>
+<li>catalog&#160;:&#160;<a class="el" href="structVerdictMicrosoft.html#a5619658bffcb55ea95ea2e7a521a773d">VerdictMicrosoft</a></li>
 <li>catalogsRead&#160;:&#160;<a class="el" href="structBinarySummary.html#a37b441c1b7b500db3ebc620b22d2c97d">BinarySummary</a></li>
 <li>catalogsUsed&#160;:&#160;<a class="el" href="structBinarySummary.html#a801885cfa116913b4d797942871e6225">BinarySummary</a></li>
 <li>category&#160;:&#160;<a class="el" href="structCustomDestination.html#a5006acc81c834f3e50cb4b7da7efd2b6">CustomDestination</a></li>
-<li>children&#160;:&#160;<a class="el" href="structXmlNode.html#a1a701732ed28a14ebb6b717ba3694784">XmlNode</a></li>
+<li>certificates&#160;:&#160;<a class="el" href="structVerifiedSignature.html#a24a13d11e67eb0548dbbe91ab718c912">VerifiedSignature</a></li>
+<li>chainChecked&#160;:&#160;<a class="el" href="structSignatureVerdict.html#a41d5ee72989e7cd20bba0e02c72af4ee">SignatureVerdict</a>, <a class="el" href="structVerdictMicrosoft.html#acca3828f9e4295fe57b16e16100e2aef">VerdictMicrosoft</a></li>
+<li>chainMissingCrls&#160;:&#160;<a class="el" href="structVerdictMicrosoft.html#a57517944b321092886d77daba2646657">VerdictMicrosoft</a></li>
+<li>chainReason&#160;:&#160;<a class="el" href="structSignatureVerdict.html#abd609f868ac4f72b12f557d004b9d6f6">SignatureVerdict</a>, <a class="el" href="structVerdictMicrosoft.html#aeda74fd858c553edf53ddca831a73657">VerdictMicrosoft</a></li>
+<li>chainRevocationListsIssued&#160;:&#160;<a class="el" href="structVerdictMicrosoft.html#aee6c8eeb88d6b3ba0c4cbaea1212e6c1">VerdictMicrosoft</a></li>
+<li>chainRevocationListsUtc&#160;:&#160;<a class="el" href="structSignatureVerdict.html#a87832f22d6e8762e472f93f963cd0a65">SignatureVerdict</a></li>
+<li>chainRoot&#160;:&#160;<a class="el" href="structSignatureVerdict.html#ad8e748fb85e0deead638e53e16ded121">SignatureVerdict</a>, <a class="el" href="structVerdictMicrosoft.html#ae02438696eb3b2e1eed2c5ca031543d3">VerdictMicrosoft</a></li>
+<li>chainSignedAt&#160;:&#160;<a class="el" href="structVerdictMicrosoft.html#a4a47742801a249a783f308c198510afc">VerdictMicrosoft</a></li>
+<li>chainSignedUtc&#160;:&#160;<a class="el" href="structSignatureVerdict.html#a5a38e01f6fc326a7fb78e1a26282b06c">SignatureVerdict</a></li>
+<li>chainSignerName&#160;:&#160;<a class="el" href="structVerdictMicrosoft.html#a6ba31c90f80c6867cb5f04300ce6eb4d">VerdictMicrosoft</a></li>
+<li>chainTbsHashes&#160;:&#160;<a class="el" href="structDriverFacts.html#a9d126bb30628014ba5260aa86513dcc2">DriverFacts</a>, <a class="el" href="structVerdictMicrosoft.html#a591fa1fd4f7f07ed556f321d9df19a95">VerdictMicrosoft</a></li>
+<li>chainTimeStampAuthority&#160;:&#160;<a class="el" href="structSignatureVerdict.html#a5b1cfefac903275aa2dd39aec2bcf8bd">SignatureVerdict</a>, <a class="el" href="structVerdictMicrosoft.html#a87176c1a9d29fe5660d9072b4bf9e26f">VerdictMicrosoft</a></li>
+<li>chainTrusted&#160;:&#160;<a class="el" href="structSignatureVerdict.html#a7b2078260921c5ac59038aeadcecc614">SignatureVerdict</a>, <a class="el" href="structVerdictMicrosoft.html#abd240f166161b6bff43b6219e41e6cfc">VerdictMicrosoft</a></li>
+<li>checked&#160;:&#160;<a class="el" href="structSignatureVerdict.html#a8bffe7a30ca43c5d2d3909c9e1e3b4c9">SignatureVerdict</a></li>
+<li>children&#160;:&#160;<a class="el" href="structXmlNode.html#a1a701732ed28a14ebb6b717ba3694784">XmlNode</a>, <a class="el" href="structYamlNode.html#a325d193f9b9ee88ed4f53f6d889529ab">YamlNode</a></li>
 <li>childs&#160;:&#160;<a class="el" href="structShellbag.html#a2043681af0c230a086f829280dfa79cd">Shellbag</a></li>
 <li>chunks&#160;:&#160;<a class="el" href="structEvtxSummary.html#afd77a86fe1fd2a0fc0dd5e9b87751702">EvtxSummary</a></li>
 <li>chunksIgnores&#160;:&#160;<a class="el" href="structEvtxSummary.html#a31b6a625228249108e4f7f7d9b3d4d72">EvtxSummary</a></li>
@@ -112,7 +127,8 @@ $(document).ready(function(){initNavTree('functions_vars_c.html',''); initResiza
 <li>ClassGuid&#160;:&#160;<a class="el" href="structUsbstor.html#a493c78ec85ab590646638663a8ce3010">Usbstor</a></li>
 <li>classId&#160;:&#160;<a class="el" href="structAction.html#af1fdaf541114523c6fc64161de0d7c55">Action</a></li>
 <li>clockCorrection100ns&#160;:&#160;<a class="el" href="structSystemInfo.html#ac573bb7051da162b9ba045a7bfe42a0e">SystemInfo</a></li>
-<li>collected&#160;:&#160;<a class="el" href="structBinaryFingerprint.html#acf75e98fd260ad59aa762dd074d35be1">BinaryFingerprint</a></li>
+<li>closeHandle&#160;:&#160;<a class="el" href="structHttpClient_1_1Api.html#ab38bb35aa4c3ec81cbb138f91f710cb4">HttpClient::Api</a></li>
+<li>codeSigningExcluded&#160;:&#160;<a class="el" href="structTrustListEntry.html#a0dab11e4a2a2a315aa6775c9cf5038da">TrustListEntry</a></li>
 <li>collectedBytes&#160;:&#160;<a class="el" href="structBinarySummary.html#adff7cc32123161b8edf9cba3655b3a66">BinarySummary</a></li>
 <li>collectedCount&#160;:&#160;<a class="el" href="structBinarySummary.html#aef99380727cb7f8b83a42710c3e62de7">BinarySummary</a></li>
 <li>collectionTimeUtc&#160;:&#160;<a class="el" href="structSystemInfo.html#ae8917699c8642fcea60d8821d39807cb">SystemInfo</a></li>
@@ -122,16 +138,22 @@ $(document).ready(function(){initNavTree('functions_vars_c.html',''); initResiza
 <li>comments&#160;:&#160;<a class="el" href="structNetworkShellItem.html#a83e38becadc7d467f1a25368a048ebee">NetworkShellItem</a></li>
 <li>CompatibleIds&#160;:&#160;<a class="el" href="structUsbstor.html#af80cbbf4c1954b349d8b599e0704c8da">Usbstor</a></li>
 <li>Compressed&#160;:&#160;<a class="el" href="structFileAttributes.html#ab6f23132dd4d25d359437f701afda504">FileAttributes</a></li>
+<li>computeHashes&#160;:&#160;<a class="el" href="structRawHiveFingerprints.html#ad8a2652abbcea1e38d30f8399497b702">RawHiveFingerprints</a></li>
 <li>computerName&#160;:&#160;<a class="el" href="structSystemInfo.html#a076b6619e9293c8f3a6d122d5e96b7fc">SystemInfo</a></li>
-<li>content&#160;:&#160;<a class="el" href="structVerifiedSignature.html#ae9a58ae36e01bbfba76b807c4de343cb">VerifiedSignature</a></li>
+<li>connect&#160;:&#160;<a class="el" href="structHttpClient_1_1Api.html#a12bce8c320c6999aa9858532e01e6fe5">HttpClient::Api</a></li>
+<li>content&#160;:&#160;<a class="el" href="structArchiveFile.html#a2e9ea08485c069fbca3fdeb34ba4b9ce">ArchiveFile</a>, <a class="el" href="structVerifiedSignature.html#ae9a58ae36e01bbfba76b807c4de343cb">VerifiedSignature</a></li>
 <li>contentOid&#160;:&#160;<a class="el" href="structVerifiedSignature.html#a608eff452d5439129fa8f22774322aaf">VerifiedSignature</a></li>
 <li>contentSize&#160;:&#160;<a class="el" href="structVerifiedSignature.html#a0ce6ab6bf406ce52411460e75431cf1b">VerifiedSignature</a></li>
+<li>contentStored&#160;:&#160;<a class="el" href="structStoredExhibit.html#a7ff94f59dce5b5360f124a04fa488a00">StoredExhibit</a></li>
 <li>Count&#160;:&#160;<a class="el" href="structUserAssist.html#a25f060e1fa0a1ad2b68a711fd6f56db5">UserAssist</a></li>
-<li>createdUtc&#160;:&#160;<a class="el" href="structAutomaticDestination.html#ab3f03a5fec0fa2b4fa81cbee1fbc42df">AutomaticDestination</a>, <a class="el" href="structCustomDestination.html#adaac772e30c7185b10fb0b6243b11691">CustomDestination</a>, <a class="el" href="structPrefetch.html#ab7a1741d109c27bbd72b516b79435cb8">Prefetch</a>, <a class="el" href="structUserPropertyView0x07192006.html#a023644572160cb601b4bf6ef2fb88482">UserPropertyView0x07192006</a></li>
+<li>crackUrl&#160;:&#160;<a class="el" href="structHttpClient_1_1Api.html#ade27ef2f4d7ac5643310bfabc6f7be26">HttpClient::Api</a></li>
+<li>createdUtc&#160;:&#160;<a class="el" href="structAutomaticDestination.html#ab3f03a5fec0fa2b4fa81cbee1fbc42df">AutomaticDestination</a>, <a class="el" href="structCustomDestination.html#adaac772e30c7185b10fb0b6243b11691">CustomDestination</a>, <a class="el" href="structPrefetch.html#ab7a1741d109c27bbd72b516b79435cb8">Prefetch</a>, <a class="el" href="structTrustSet.html#a6ee8fc50715261995d0de9099122e520">TrustSet</a>, <a class="el" href="structUserPropertyView0x07192006.html#a023644572160cb601b4bf6ef2fb88482">UserPropertyView0x07192006</a></li>
 <li>creationDate&#160;:&#160;<a class="el" href="structBeef0004.html#aee25527734903ddac642d84517941133">Beef0004</a></li>
 <li>creationDateUtc&#160;:&#160;<a class="el" href="structBeef0004.html#aadd2f5be135d9bb4fbb5e2513894aadb">Beef0004</a></li>
 <li>creationTimeUtc&#160;:&#160;<a class="el" href="structVolumeInfo.html#a176d1cb6073a84b8904b31725c98291b">VolumeInfo</a></li>
 <li>creeUtc&#160;:&#160;<a class="el" href="structRawHiveFingerprints.html#af885913ae9c44b9bf3a93cef15fa922a">RawHiveFingerprints</a></li>
+<li>crlByUrl&#160;:&#160;<a class="el" href="structThirdPartyRoots_1_1Impl.html#a1cb366a9534275ba51cc898b1d24dc52">ThirdPartyRoots::Impl</a></li>
+<li>crls&#160;:&#160;<a class="el" href="structThirdPartyRoots_1_1Impl.html#a504ef8a8b4f220823f1c3dccd7a01b4b">ThirdPartyRoots::Impl</a></li>
 <li>ctimeUtc&#160;:&#160;<a class="el" href="structBeef0026.html#a4b54cad68e3fef78a0fc5cdb1a122fef">Beef0026</a></li>
 <li>current&#160;:&#160;<a class="el" href="structTimeZoneRules.html#aa78913234a7ca545aeec96819884e256">TimeZoneRules</a></li>
 <li>CurrentControlSet&#160;:&#160;<a class="el" href="structAppliConf.html#a0de471ec727ec98a44470b1804c959de">AppliConf</a></li>

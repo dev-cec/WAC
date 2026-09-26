@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -142,6 +142,7 @@ Variables</h2></td></tr>
 <li>to_FriendlyName / PSGetNameFromPropertyKey, on every property of the table: a name WAC gives must be the one Windows gives;</li>
 <li><a class="el" href="structFatDateTime.html#a0d149a27110e93ff0a8a39851bd4d0f9">FatDateTime::toFileTime</a> / DosDateTimeToFileTime, on every date with a sample of times and every time with a sample of dates: an impossible date (month 13, hour 25...) must give a null FILETIME, not whatever the stack held;</li>
 <li>wstring_to_filetime / SystemTimeToFileTime, valid and impossible dates;</li>
+<li>iso8601UtcToFiletime, the reverse of timeToIso8601Utc: 200,000 random instants read back to the 100 ns, and malformed dates refused;</li>
 <li>utcToSuspectLocal and suspectLocalToUtc: the SUSPECT's offset, not the running machine's, in both directions (LocalFileTimeToFileTime, used before, applied the machine's), and a null result out of range;</li>
 <li>biasAtUtc / SystemTimeToTzSpecificLocalTimeEx and biasAtLocal / TzSpecificLocalTimeToSystemTimeEx, on EVERY time zone of Windows, with the rules read in the registry as WAC reads them in the suspect's hives: random instants from 1970 to 2040, and every transition (the hour skipped, the hour repeated) from 1980 to 2035;</li>
 <li>the rule read in <code>SYSTEM\...\TimeZoneInformation</code> (transition dates in the kernel's TIME_FIELDS layout) against GetTimeZoneInformation;</li>

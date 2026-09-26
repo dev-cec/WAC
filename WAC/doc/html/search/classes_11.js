@@ -15,7 +15,9 @@ var searchData=
   ['shellvolumeflags_12',['ShellVolumeFlags',['../structShellVolumeFlags.html',1,'']]],
   ['shimcache_13',['Shimcache',['../structShimcache.html',1,'']]],
   ['shimcaches_14',['Shimcaches',['../structShimcaches.html',1,'']]],
-  ['sps_15',['SPS',['../structSPS.html',1,'']]],
-  ['spsvalue_16',['SPSValue',['../structSPSValue.html',1,'']]],
-  ['systeminfo_17',['SystemInfo',['../structSystemInfo.html',1,'']]]
+  ['signatureverdict_15',['SignatureVerdict',['../structSignatureVerdict.html',1,'']]],
+  ['sps_16',['SPS',['../structSPS.html',1,'']]],
+  ['spsvalue_17',['SPSValue',['../structSPSValue.html',1,'']]],
+  ['storedexhibit_18',['StoredExhibit',['../structStoredExhibit.html',1,'']]],
+  ['systeminfo_19',['SystemInfo',['../structSystemInfo.html',1,'']]]
 ];

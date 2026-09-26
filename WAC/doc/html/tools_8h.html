@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -130,6 +130,8 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf.html">AppliConf</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Holds the application's configuration.  <a href="structAppliConf.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html">AppliConf::CollectedArtefacts</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFatDateTime.html">FatDateTime</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJsonArrayWriter.html">JsonArrayWriter</a></td></tr>
@@ -164,6 +166,11 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
 Enumerations</h2></td></tr>
+<tr class="memitem:a3dfe11cf1a3a8121f6cd7fec4bf5947e" id="r_a3dfe11cf1a3a8121f6cd7fec4bf5947e"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a3dfe11cf1a3a8121f6cd7fec4bf5947e">RunMode</a> { <a class="el" href="tools_8h.html#a3dfe11cf1a3a8121f6cd7fec4bf5947eabbd47109890259c0127154db1af26c75">Full</a>
+, <a class="el" href="tools_8h.html#a3dfe11cf1a3a8121f6cd7fec4bf5947eae7ca851922b13f555127b04b70435ca9">Collect</a>
+, <a class="el" href="tools_8h.html#a3dfe11cf1a3a8121f6cd7fec4bf5947ea920f4a0c5c8b9a0747380cf7c7f0b3c5">Convert</a>
+ }</td></tr>
+<tr class="separator:a3dfe11cf1a3a8121f6cd7fec4bf5947e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad1fbd6a28bdb0f04414d526ebeaed0e2" id="r_ad1fbd6a28bdb0f04414d526ebeaed0e2"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a> { <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">HundredNanoseconds</a>
 , <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a988bbeeb80e7e0a6b4651aab5a76b413">Millisecond</a>
 , <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2ac22cf8376b1893dcfcef0649fe1a7d87">Second</a>
@@ -234,6 +241,8 @@ Functions</h2></td></tr>
 <tr class="separator:ac15b36c9a117f211860abb5d7f86d8d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a89cc7be3be8d6e85f9b70d4fabcab57b" id="r_a89cc7be3be8d6e85f9b70d4fabcab57b"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a89cc7be3be8d6e85f9b70d4fabcab57b">timeToIso8601Utc</a> (const FILETIME &amp;filetime, <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a> precision=<a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a>)</td></tr>
 <tr class="separator:a89cc7be3be8d6e85f9b70d4fabcab57b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad48ff1f0177182c63a18c27fae85c405" id="r_ad48ff1f0177182c63a18c27fae85c405"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ad48ff1f0177182c63a18c27fae85c405">iso8601UtcToFiletime</a> (const std::wstring &amp;text, FILETIME &amp;filetime)</td></tr>
+<tr class="separator:ad48ff1f0177182c63a18c27fae85c405"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a339f3424e4771fcd9cd009e2e5a35f23" id="r_a339f3424e4771fcd9cd009e2e5a35f23"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a339f3424e4771fcd9cd009e2e5a35f23">timeToIso8601Local</a> (const FILETIME &amp;filetime, <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a> precision=<a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a>)</td></tr>
 <tr class="separator:a339f3424e4771fcd9cd009e2e5a35f23"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a57a8108b142ebeea349023b6170a00c2" id="r_a57a8108b142ebeea349023b6170a00c2"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a57a8108b142ebeea349023b6170a00c2">localTimeToIso8601Utc</a> (const FILETIME &amp;filetimeLocal, <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a> precision=<a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a>)</td></tr>
@@ -294,6 +303,10 @@ Functions</h2></td></tr>
 <tr class="separator:a745cace5ec6e835950164e2b0a222c8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afe66d0a52585ae4970e185056c1a7c23" id="r_afe66d0a52585ae4970e185056c1a7c23"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#afe66d0a52585ae4970e185056c1a7c23">writeNotCollected</a> (const std::string &amp;name, const std::wstring &amp;artefact, HRESULT result)</td></tr>
 <tr class="separator:afe66d0a52585ae4970e185056c1a7c23"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae015dab0338f7763e473365f24e90784" id="r_ae015dab0338f7763e473365f24e90784"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#ae015dab0338f7763e473365f24e90784">writeNotRequested</a> (const std::string &amp;name, const std::wstring &amp;artefact, const std::wstring &amp;key)</td></tr>
+<tr class="separator:ae015dab0338f7763e473365f24e90784"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0c6b8b7a0b0376c0bf1886a07334c105" id="r_a0c6b8b7a0b0376c0bf1886a07334c105"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#a0c6b8b7a0b0376c0bf1886a07334c105">WacVersion</a> ()</td></tr>
+<tr class="separator:a0c6b8b7a0b0376c0bf1886a07334c105"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abc796ef7b3c37280836660e1376c2594" id="r_abc796ef7b3c37280836660e1376c2594"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::filesystem::path &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8h.html#abc796ef7b3c37280836660e1376c2594">listFilesByExtension</a> (const std::filesystem::path &amp;directory, const std::vector&lt; std::wstring &gt; &amp;extensions)</td></tr>
 <tr class="separator:abc796ef7b3c37280836660e1376c2594"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -461,6 +474,38 @@ Variables</h2></td></tr>
 <tr><td class="fieldname"><a id="ad1fbd6a28bdb0f04414d526ebeaed0e2a988bbeeb80e7e0a6b4651aab5a76b413" name="ad1fbd6a28bdb0f04414d526ebeaed0e2a988bbeeb80e7e0a6b4651aab5a76b413"></a>Millisecond&#160;</td><td class="fielddoc"><p>SYSTEMTIME (event data): three digits. </p>
 </td></tr>
 <tr><td class="fieldname"><a id="ad1fbd6a28bdb0f04414d526ebeaed0e2ac22cf8376b1893dcfcef0649fe1a7d87" name="ad1fbd6a28bdb0f04414d526ebeaed0e2ac22cf8376b1893dcfcef0649fe1a7d87"></a>Second&#160;</td><td class="fielddoc"><p>FAT date (2 s), Unix time, text date, OLE date as converted: no fraction. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<a id="a3dfe11cf1a3a8121f6cd7fec4bf5947e" name="a3dfe11cf1a3a8121f6cd7fec4bf5947e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3dfe11cf1a3a8121f6cd7fec4bf5947e">&#9670;&#160;</a></span>RunMode</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum class <a class="el" href="tools_8h.html#a3dfe11cf1a3a8121f6cd7fec4bf5947e">RunMode</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>What a run of WAC does.</p>
+<p>WHY THREE MODES. Good forensic practice separates the collection, on the examined machine, from the analysis, on a controlled workstation (ISO/IEC 27037 and 27042): the fewer actions on the examined system, the fewer traces; and a conversion made from the sealed exhibit store can be redone, by anyone, with a corrected WAC. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a3dfe11cf1a3a8121f6cd7fec4bf5947eabbd47109890259c0127154db1af26c75" name="a3dfe11cf1a3a8121f6cd7fec4bf5947eabbd47109890259c0127154db1af26c75"></a>Full&#160;</td><td class="fielddoc"><p>collection and conversion in one run, on the examined machine (default) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a3dfe11cf1a3a8121f6cd7fec4bf5947eae7ca851922b13f555127b04b70435ca9" name="a3dfe11cf1a3a8121f6cd7fec4bf5947eae7ca851922b13f555127b04b70435ca9"></a>Collect&#160;</td><td class="fielddoc"><p>&ndash;collect: live snapshots, raw extraction, sealed exhibit store; nothing converted </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a3dfe11cf1a3a8121f6cd7fec4bf5947ea920f4a0c5c8b9a0747380cf7c7f0b3c5" name="a3dfe11cf1a3a8121f6cd7fec4bf5947ea920f4a0c5c8b9a0747380cf7c7f0b3c5"></a>Convert&#160;</td><td class="fielddoc"><p>&ndash;convert=&lt;folder&gt;: conversion of a collection made earlier, from its checked exhibit store </p>
 </td></tr>
 </table>
 
@@ -1265,13 +1310,13 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Drive letter a volume is mounted on, from its serial number. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Drive letter a volume of the examined machine was mounted on at collection time, from its serial number (snapshot of the running machine). </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">searchSerial</td><td>serial number of the volume to look for </td></tr>
+    <tr><td class="paramname">searchSerial</td><td>serial number of the volume, "%08X" </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the drive letter of the volume's mount point. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>its mount point ("C:"), or an empty string if none matched </dd></dl>
 
 </div>
 </div>
@@ -1325,6 +1370,42 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if it is a resource reference </dd></dl>
+
+</div>
+</div>
+<a id="ad48ff1f0177182c63a18c27fae85c405" name="ad48ff1f0177182c63a18c27fae85c405"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad48ff1f0177182c63a18c27fae85c405">&#9670;&#160;</a></span>iso8601UtcToFiletime()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool iso8601UtcToFiletime </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>text</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">FILETIME &amp;&#160;</td>
+          <td class="paramname"><em>filetime</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reverse of timeToIso8601Utc: "YYYY-MM-DDTHH:MM:SS[.f…]Z" to a FILETIME, exactly, to the 100 ns. Used to read back the dates of the manifest (&ndash;convert). Anything else — an offset instead of "Z", a digit missing, a month 13 — is refused. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">text</td><td>the date </td></tr>
+    <tr><td class="paramname">filetime</td><td>receives it </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if the text is not such a date (filetime untouched) </dd></dl>
 
 </div>
 </div>
@@ -2451,6 +2532,24 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
+<a id="a0c6b8b7a0b0376c0bf1886a07334c105" name="a0c6b8b7a0b0376c0bf1886a07334c105"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0c6b8b7a0b0376c0bf1886a07334c105">&#9670;&#160;</a></span>WacVersion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring WacVersion </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>WAC's version, &lt;major&gt;.&lt;minor&gt;.&lt;bugfix&gt;, read in the program's own version resource (WAC.rc): the one place it is written, the one Windows shows in the executable's properties. </p><dl class="section return"><dt>Returns</dt><dd>e.g. L"1.4.0"; empty if the resource cannot be read </dd></dl>
+
+</div>
+</div>
 <a id="a745cace5ec6e835950164e2b0a222c8e" name="a745cace5ec6e835950164e2b0a222c8e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a745cace5ec6e835950164e2b0a222c8e">&#9670;&#160;</a></span>writeJsonFile()</h2>
 
@@ -2525,6 +2624,49 @@ template&lt;typename T &gt; </div>
     <tr><td class="paramname">name</td><td>name of the file (e.g. "Usbstor.json") </td></tr>
     <tr><td class="paramname">artefact</td><td>label of the artefact concerned </td></tr>
     <tr><td class="paramname">result</td><td>error code met </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS if the file could be written </dd></dl>
+
+</div>
+</div>
+<a id="ae015dab0338f7763e473365f24e90784" name="ae015dab0338f7763e473365f24e90784"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae015dab0338f7763e473365f24e90784">&#9670;&#160;</a></span>writeNotRequested()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT writeNotRequested </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>artefact</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>key</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Writes an artefact the configuration switched off (wac.yml, <code>artefacts:</code>): not collected on purpose — neither a failure nor an absence of traces, and the file says which. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>name of the file (e.g. "prefetchs.json") </td></tr>
+    <tr><td class="paramname">artefact</td><td>label of the artefact </td></tr>
+    <tr><td class="paramname">key</td><td>the configuration key, e.g. L"artefacts.prefetch" </td></tr>
   </table>
   </dd>
 </dl>

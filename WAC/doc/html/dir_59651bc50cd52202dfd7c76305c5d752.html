@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -108,6 +108,9 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="account__names_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="account__names_8h.html">account_names.h</a></td></tr>
 <tr class="memdesc:account__names_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Names of the SIDs, resolved OFFLINE from the examined machine's hives — never by asking the running system or the network. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="archive_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="archive_8h.html">archive.h</a></td></tr>
+<tr class="memdesc:archive_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">A file taken out of an archive — cabinet (<a class="el" href="cab_8h.html" title="CABINET (.cab) EXTRACTION, for the trust lists –update-trust downloads.">cab.h</a>) or ZIP (<a class="el" href="zip_8h.html" title="ZIP EXTRACTION, for the list of vulnerable drivers –update-trust downloads.">zip.h</a>), the two containers &ndash;update-trust downloads. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="asciiart_8cpp.html">asciiart.cpp</a></td></tr>
 <tr class="memdesc:asciiart_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">WAC's console banner. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -135,6 +138,24 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="binaires_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8h.html">binaires.h</a></td></tr>
 <tr class="memdesc:binaires_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fingerprinting and collection of the files cited by artefacts. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cab_8cpp.html">cab.cpp</a></td></tr>
+<tr class="memdesc:cab_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cabinet extraction (see <a class="el" href="cab_8h.html" title="CABINET (.cab) EXTRACTION, for the trust lists –update-trust downloads.">cab.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="cab_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cab_8h.html">cab.h</a></td></tr>
+<tr class="memdesc:cab_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">CABINET (.cab) EXTRACTION, for the trust lists &ndash;update-trust downloads. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cab__test_8cpp.html">cab_test.cpp</a></td></tr>
+<tr class="memdesc:cab__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confronts the cabinet extraction with cabextract, then with damaged cabinets. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8cpp.html">config.cpp</a></td></tr>
+<tr class="memdesc:config_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">The configuration file, wac.yml (see <a class="el" href="config_8h.html" title="THE CONFIGURATION FILE, wac.yml: the collection&#39;s procedure, written once, applied the same way every...">config.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="config_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html">config.h</a></td></tr>
+<tr class="memdesc:config_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">THE CONFIGURATION FILE, wac.yml: the collection's procedure, written once, applied the same way every time. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config__test_8cpp.html">config_test.cpp</a></td></tr>
+<tr class="memdesc:config__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks that wac.yml is applied exactly, and refused when it holds what WAC does not understand. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html">consigne.cpp</a></td></tr>
 <tr class="memdesc:consigne_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Implementation of the exhibit store and of its sealed manifest (see <a class="el" href="consigne_8h.html" title="EXHIBIT STORE AND WORKING DIRECTORY.">consigne.h</a> for the procedure and the manifest's content). <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -143,6 +164,15 @@ Files</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne__test_8cpp.html">consigne_test.cpp</a></td></tr>
 <tr class="memdesc:consigne__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks the exhibit-store / working-directory procedure. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="csv__reader_8cpp.html">csv_reader.cpp</a></td></tr>
+<tr class="memdesc:csv__reader_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">CSV reading (see <a class="el" href="csv__reader_8h.html" title="CSV READING (RFC 4180), for the CCADB report –update-trust downloads.">csv_reader.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="csv__reader_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="csv__reader_8h.html">csv_reader.h</a></td></tr>
+<tr class="memdesc:csv__reader_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">CSV READING (RFC 4180), for the CCADB report &ndash;update-trust downloads. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="csv__reader__test_8cpp.html">csv_reader_test.cpp</a></td></tr>
+<tr class="memdesc:csv__reader__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confronts the CSV reading with Python's csv module, then with malformed texts. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8cpp.html">event_messages.cpp</a></td></tr>
 <tr class="memdesc:event__messages_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finding, extracting and caching the providers' resource files. <br /></td></tr>
@@ -168,6 +198,12 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="evtx__test_8cpp.html">evtx_test.cpp</a></td></tr>
 <tr class="memdesc:evtx__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validation harness for the EVTX parser, outside WAC. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="exhibit__reader_8cpp.html">exhibit_reader.cpp</a></td></tr>
+<tr class="memdesc:exhibit__reader_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Files of the examined machine read from the exhibit store (see <a class="el" href="exhibit__reader_8h.html" title="Files of the examined machine, read from the exhibit store of a collection made earlier (–convert).">exhibit_reader.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="exhibit__reader_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="exhibit__reader_8h.html">exhibit_reader.h</a></td></tr>
+<tr class="memdesc:exhibit__reader_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Files of the examined machine, read from the exhibit store of a collection made earlier (&ndash;convert). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="guard__page_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="guard__page_8h.html">guard_page.h</a></td></tr>
 <tr class="memdesc:guard__page_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Test support: an input placed against a PAGE_NOACCESS page. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -177,11 +213,26 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="hive__recover_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hive__recover_8h.html">hive_recover.h</a></td></tr>
 <tr class="memdesc:hive__recover_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Makes a hive copied live ("dirty") usable. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="http__client_8cpp.html">http_client.cpp</a></td></tr>
+<tr class="memdesc:http__client_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">HTTP download through WinHTTP loaded at run time (see <a class="el" href="http__client_8h.html" title="HTTP DOWNLOAD for –update-trust, through WinHTTP loaded at run time.">http_client.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="http__client_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="http__client_8h.html">http_client.h</a></td></tr>
+<tr class="memdesc:http__client_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">HTTP DOWNLOAD for &ndash;update-trust, through WinHTTP loaded at run time. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="idList_8cpp.html">idList.cpp</a></td></tr>
 <tr class="memdesc:idList_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decoding of shell items, ID lists, property stores and extension blocks (see <a class="el" href="idList_8h.html" title="Shell items, ID lists and extension blocks: the structures behind shortcuts, shellbags,...">idList.h</a>). <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="idList_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="idList_8h.html">idList.h</a></td></tr>
 <tr class="memdesc:idList_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shell items, ID lists and extension blocks: the structures behind shortcuts, shellbags, MRU lists and jump lists. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="inflate_8cpp.html">inflate.cpp</a></td></tr>
+<tr class="memdesc:inflate_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">DEFLATE decompression (see <a class="el" href="inflate_8h.html" title="DEFLATE DECOMPRESSION (RFC 1951), for the archives –update-trust downloads.">inflate.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="inflate_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="inflate_8h.html">inflate.h</a></td></tr>
+<tr class="memdesc:inflate_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">DEFLATE DECOMPRESSION (RFC 1951), for the archives &ndash;update-trust downloads. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="inflate__test_8cpp.html">inflate_test.cpp</a></td></tr>
+<tr class="memdesc:inflate__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confronts the DEFLATE decompression with zlib, then with damaged input. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="json_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="json_8h.html">json.h</a></td></tr>
 <tr class="memdesc:json_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Centralised JSON serialiser for WAC, and the reader of the JSON it writes back (exhibit manifest, snapshot of the live state). <br /></td></tr>
@@ -218,6 +269,15 @@ Files</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lznt1__test_8cpp.html">lznt1_test.cpp</a></td></tr>
 <tr class="memdesc:lznt1__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confronts the LZNT1 decompression with Windows's own compressor. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lzx_8cpp.html">lzx.cpp</a></td></tr>
+<tr class="memdesc:lzx_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">LZX decompression of WOF chunks (see <a class="el" href="lzx_8h.html" title="LZX DECOMPRESSION (WOF / &quot;Compact OS&quot;, algorithm 1).">lzx.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="lzx_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lzx_8h.html">lzx.h</a></td></tr>
+<tr class="memdesc:lzx_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">LZX DECOMPRESSION (WOF / "Compact OS", algorithm 1). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lzx__test_8cpp.html">lzx_test.cpp</a></td></tr>
+<tr class="memdesc:lzx__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confronts the LZX decompression with Windows' own compressor, then with damaged input. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html">main.cpp</a></td></tr>
 <tr class="memdesc:main_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Entry point: parses the command line, then runs the collection phases in order — prerequisites, live artefacts, raw extraction, registry, files, event logs, sealing of the exhibit store, investigation log. <br /></td></tr>
@@ -372,6 +432,12 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="rsa_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rsa_8h.html">rsa.h</a></td></tr>
 <tr class="memdesc:rsa_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">RSA PKCS#1 v1.5 signature verification, in memory, with no API. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="running__machine_8cpp.html">running_machine.cpp</a></td></tr>
+<tr class="memdesc:running__machine_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Snapshot of the running examined machine (see <a class="el" href="running__machine_8h.html" title="What the conversion needs to know of the RUNNING examined machine, observed live and recorded as a se...">running_machine.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="running__machine_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="running__machine_8h.html">running_machine.h</a></td></tr>
+<tr class="memdesc:running__machine_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">What the conversion needs to know of the RUNNING examined machine, observed live and recorded as a sealed snapshot. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduledTasks_8cpp.html">scheduledTasks.cpp</a></td></tr>
 <tr class="memdesc:scheduledTasks_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Offline reading of the scheduled tasks (see <a class="el" href="scheduledTasks_8h.html" title="Scheduled tasks, read OFFLINE: what the machine runs on its own.">scheduledTasks.h</a>). <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -408,6 +474,9 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="system__conversions__test_8cpp.html">system_conversions_test.cpp</a></td></tr>
 <tr class="memdesc:system__conversions__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confronts WAC's own conversions with the Windows functions they replaced, which WAC no longer imports. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="third__party__chain__test_8cpp.html">third_party_chain_test.cpp</a></td></tr>
+<tr class="memdesc:third__party__chain__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks each rule of <a class="el" href="classThirdPartyRoots.html">ThirdPartyRoots</a> on chains made to break it. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="time__zone_8cpp.html">time_zone.cpp</a></td></tr>
 <tr class="memdesc:time__zone_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Implementation of the daylight saving rules (see <a class="el" href="time__zone_8h.html" title="The daylight saving rules of a Windows time zone, and the offset they give at a given instant — in UT...">time_zone.h</a>). <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -425,11 +494,41 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="trans__id_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="trans__id_8h.html">trans_id.h</a></td></tr>
 <tr class="memdesc:trans__id_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Lookup tables: a raw identifier -&gt; a readable label. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="trust__list__test_8cpp.html">trust_list_test.cpp</a></td></tr>
+<tr class="memdesc:trust__list__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confronts the reading of Microsoft's trust lists with independent references, then with altered lists. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="trust__set_8cpp.html">trust_set.cpp</a></td></tr>
+<tr class="memdesc:trust__set_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">The trust set, read and checked at the collection (see <a class="el" href="trust__set_8h.html" title="THE TRUST SET, read at the collection: the one –update-trust prepared on the analysis workstation (se...">trust_set.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="trust__set_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="trust__set_8h.html">trust_set.h</a></td></tr>
+<tr class="memdesc:trust__set_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">THE TRUST SET, read at the collection: the one &ndash;update-trust prepared on the analysis workstation (see <a class="el" href="trust__update_8h.html" title="–update-trust: THE TRUST SET, prepared on the analysis workstation BEFORE the collection.">trust_update.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="trust__set__test_8cpp.html">trust_set_test.cpp</a></td></tr>
+<tr class="memdesc:trust__set__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks that the collection refuses a trust set altered on the key. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="trust__update_8cpp.html">trust_update.cpp</a></td></tr>
+<tr class="memdesc:trust__update_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">&ndash;update-trust (see <a class="el" href="trust__update_8h.html" title="–update-trust: THE TRUST SET, prepared on the analysis workstation BEFORE the collection.">trust_update.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="trust__update_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="trust__update_8h.html">trust_update.h</a></td></tr>
+<tr class="memdesc:trust__update_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">&ndash;update-trust: THE TRUST SET, prepared on the analysis workstation BEFORE the collection. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="users_8cpp.html">users.cpp</a></td></tr>
 <tr class="memdesc:users_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Offline reading of the local accounts in the SAM hive (see <a class="el" href="users_8h.html" title="Local accounts of the examined machine, read from the SAM hive.">users.h</a>). <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="users_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="users_8h.html">users.h</a></td></tr>
 <tr class="memdesc:users_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Local accounts of the examined machine, read from the SAM hive. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="version__info_8cpp.html">version_info.cpp</a></td></tr>
+<tr class="memdesc:version__info_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">The version resource of a PE (see <a class="el" href="version__info_8h.html" title="THE VERSION RESOURCE of a PE (VS_VERSIONINFO): what a binary says it is.">version_info.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="version__info_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="version__info_8h.html">version_info.h</a></td></tr>
+<tr class="memdesc:version__info_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">THE VERSION RESOURCE of a PE (VS_VERSIONINFO): what a binary says it is. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="version__info__test_8cpp.html">version_info_test.cpp</a></td></tr>
+<tr class="memdesc:version__info__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confronts the reading of version resources with Windows's, then with damaged resources. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vulnerable__drivers__test_8cpp.html">vulnerable_drivers_test.cpp</a></td></tr>
+<tr class="memdesc:vulnerable__drivers__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks each rule of <a class="el" href="classVulnerableDrivers.html">VulnerableDrivers</a>, one at a time. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="wevt_8cpp.html">wevt.cpp</a></td></tr>
 <tr class="memdesc:wevt_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parsing of MESSAGETABLE and WEVT_TEMPLATE, and substitution of the marks. <br /></td></tr>
@@ -454,6 +553,24 @@ Files</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xpress__test_8cpp.html">xpress_test.cpp</a></td></tr>
 <tr class="memdesc:xpress__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confronts the XPRESS Huffman decompression with Windows's own compressor. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="yaml__light_8cpp.html">yaml_light.cpp</a></td></tr>
+<tr class="memdesc:yaml__light_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">WAC's configuration file read strictly, through libyaml's events (see <a class="el" href="yaml__light_8h.html" title="WAC&#39;S CONFIGURATION FILE (wac.yml), read strictly.">yaml_light.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="yaml__light_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="yaml__light_8h.html">yaml_light.h</a></td></tr>
+<tr class="memdesc:yaml__light_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">WAC'S CONFIGURATION FILE (wac.yml), read strictly. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="yaml__light__test_8cpp.html">yaml_light_test.cpp</a></td></tr>
+<tr class="memdesc:yaml__light__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks the strict reading of wac.yml: what it accepts, what it refuses and at which line, and that damaged texts never break it. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="zip_8cpp.html">zip.cpp</a></td></tr>
+<tr class="memdesc:zip_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">ZIP extraction (see <a class="el" href="zip_8h.html" title="ZIP EXTRACTION, for the list of vulnerable drivers –update-trust downloads.">zip.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="zip_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="zip_8h.html">zip.h</a></td></tr>
+<tr class="memdesc:zip_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">ZIP EXTRACTION, for the list of vulnerable drivers &ndash;update-trust downloads. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="zip__test_8cpp.html">zip_test.cpp</a></td></tr>
+<tr class="memdesc:zip__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confronts the ZIP extraction with Python's zipfile, then with damaged archives. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->

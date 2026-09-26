@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -117,7 +117,7 @@ Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Validation harness for the raw NTFS reading. To be run on Windows, as an administrator (raw volume access). </p>
-<p>Usage: raw_hive_test.exe [volume] [path] [output] [&ndash;fix] [&ndash;list] [&ndash;attrs] &ndash;fix applies <a class="el" href="hive__recover_8cpp.html#abfdcef62f94d212392944c4002628be4">MakeHiveLoadable()</a> on the extracted hive &ndash;list lists a directory instead of extracting a file &ndash;attrs lists the $MFT ATTRIBUTES of the file, without interpreting anything</p>
+<p>Usage: raw_hive_test.exe [volume] [path] [output] [&ndash;fix] [&ndash;list] [&ndash;attrs] [&ndash;wof] &ndash;fix applies <a class="el" href="hive__recover_8cpp.html#abfdcef62f94d212392944c4002628be4">MakeHiveLoadable()</a> on the extracted hive &ndash;list lists a directory instead of extracting a file &ndash;attrs lists the $MFT ATTRIBUTES of the file, without interpreting anything &ndash;wof writes the COMPRESSED stream of a WOF file as it is on the disk, and prints its algorithm: test data for lzx_test, compressed by Windows</p>
 <p>WHY &ndash;attrs. What the Windows API shows of a file and what the disk holds can differ entirely: a "Compact OS" binary presents itself as an ordinary file while it carries a reparse point, a sparse $DATA and a named stream that holds everything. Without that direct look, a file extracted entirely as zeros stays unexplainable.</p>
 <p>WHY &ndash;fix. A hive copied live is always "dirty": without the patch, <code>reg load</code> refuses it with ERROR_BADDB. The harness must therefore test BOTH ways — without &ndash;fix the load must fail (which proves the patch is necessary), with &ndash;fix it must succeed. A test that fails by construction ends up being ignored, which is worse than its absence. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
@@ -148,7 +148,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p><a class="el" href="structRuns.html">Runs</a> the test. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">argc,argv</td><td>[volume] [path] [output] [&ndash;fix] [&ndash;list] [&ndash;attrs] </td></tr>
+    <tr><td class="paramname">argc,argv</td><td>[volume] [path] [output] [&ndash;fix] [&ndash;list] [&ndash;attrs] [&ndash;wof] </td></tr>
   </table>
   </dd>
 </dl>

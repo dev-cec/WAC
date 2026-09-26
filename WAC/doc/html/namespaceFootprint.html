@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -129,6 +129,13 @@ Variables</h2></td></tr>
 <tr class="memitem:a2851d886859c5bd0d3cd4136f8b2cffe" id="r_a2851d886859c5bd0d3cd4136f8b2cffe"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#a2851d886859c5bd0d3cd4136f8b2cffe">CLOCK</a></td></tr>
 <tr class="memdesc:a2851d886859c5bd0d3cd4136f8b2cffe"><td class="mdescLeft">&#160;</td><td class="mdescRight">reading of the clock and of the boot time: in-memory queries, no artefact touched  <br /></td></tr>
 <tr class="separator:a2851d886859c5bd0d3cd4136f8b2cffe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6765d3c5ba3bca05084e36ad1ff23d5d" id="r_a6765d3c5ba3bca05084e36ad1ff23d5d"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#a6765d3c5ba3bca05084e36ad1ff23d5d">SETTINGS</a></td></tr>
+<tr class="separator:a6765d3c5ba3bca05084e36ad1ff23d5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a104acfde7d6813bf67974791c7f9da2f" id="r_a104acfde7d6813bf67974791c7f9da2f"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#a104acfde7d6813bf67974791c7f9da2f">EXHIBIT_READ</a></td></tr>
+<tr class="separator:a104acfde7d6813bf67974791c7f9da2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0dc368424e2a7e47397559e08900d041" id="r_a0dc368424e2a7e47397559e08900d041"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#a0dc368424e2a7e47397559e08900d041">TRUST_SET</a></td></tr>
+<tr class="memdesc:a0dc368424e2a7e47397559e08900d041"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reading of the trust set (&ndash;update-trust) on the collection medium.  <br /></td></tr>
+<tr class="separator:a0dc368424e2a7e47397559e08900d041"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Expected footprint of an operation: the trace it leaves on the examined system. Used to fill the log's <code><a class="el" href="namespaceFootprint.html">Footprint</a></code> field.</p>
@@ -149,6 +156,23 @@ Variables</h2></td></tr>
 <div class="line">                              L<span class="stringliteral">&quot;time-of-day information: in-memory queries, no artefact touched.&quot;</span></div>
 </div><!-- fragment -->
 <p>reading of the clock and of the boot time: in-memory queries, no artefact touched </p>
+
+</div>
+</div>
+<a id="a104acfde7d6813bf67974791c7f9da2f" name="a104acfde7d6813bf67974791c7f9da2f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a104acfde7d6813bf67974791c7f9da2f">&#9670;&#160;</a></span>EXHIBIT_READ</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const wchar_t * Footprint::EXHIBIT_READ</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">= L<span class="stringliteral">&quot;Reading of the sealed exhibit store on the analysis workstation: &quot;</span></div>
+<div class="line">                              L<span class="stringliteral">&quot;the examined system is not involved.&quot;</span></div>
+</div><!-- fragment --><p>&ndash;convert: reading of the sealed exhibit store, on the analysis workstation; the examined system is not involved. </p>
 
 </div>
 </div>
@@ -277,6 +301,41 @@ Variables</h2></td></tr>
 <div class="line">                              L<span class="stringliteral">&quot;solicits LSASS, without modifying any artefact.&quot;</span></div>
 </div><!-- fragment -->
 <p>Query of the open sessions through LSA / Terminal <a class="el" href="structServices.html">Services</a>. </p>
+
+</div>
+</div>
+<a id="a6765d3c5ba3bca05084e36ad1ff23d5d" name="a6765d3c5ba3bca05084e36ad1ff23d5d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6765d3c5ba3bca05084e36ad1ff23d5d">&#9670;&#160;</a></span>SETTINGS</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const wchar_t * Footprint::SETTINGS</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">= L<span class="stringliteral">&quot;Queries of the running system&#39;s settings (system drive, code page, &quot;</span></div>
+<div class="line">                              L<span class="stringliteral">&quot;time zone, volumes): in-memory, no artefact touched.&quot;</span></div>
+</div><!-- fragment --><p>Queries of the running system's settings (system drive, code page, time zone, volumes): in-memory, no artefact touched. </p>
+
+</div>
+</div>
+<a id="a0dc368424e2a7e47397559e08900d041" name="a0dc368424e2a7e47397559e08900d041"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0dc368424e2a7e47397559e08900d041">&#9670;&#160;</a></span>TRUST_SET</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const wchar_t * Footprint::TRUST_SET</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">= L<span class="stringliteral">&quot;Reading of the trust set on the collection medium: &quot;</span></div>
+<div class="line">                              L<span class="stringliteral">&quot;the examined system is not involved.&quot;</span></div>
+</div><!-- fragment -->
+<p>Reading of the trust set (&ndash;update-trust) on the collection medium. </p>
 
 </div>
 </div>

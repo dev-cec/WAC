@@ -2,6 +2,7 @@ var tools_8h =
 [
     [ "TimeZoneInfo", "structTimeZoneInfo.html", "structTimeZoneInfo" ],
     [ "AppliConf", "structAppliConf.html", "structAppliConf" ],
+    [ "AppliConf::CollectedArtefacts", "structAppliConf_1_1CollectedArtefacts.html", "structAppliConf_1_1CollectedArtefacts" ],
     [ "FatDateTime", "structFatDateTime.html", "structFatDateTime" ],
     [ "JsonArrayWriter", "classJsonArrayWriter.html", "classJsonArrayWriter" ],
     [ "LOG_TYPE_ARTEFACT", "tools_8h.html#a6420c1d8d984de90fa1add81a3785b8c", null ],
@@ -16,6 +17,11 @@ var tools_8h =
       [ "HundredNanoseconds", "tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b", null ],
       [ "Millisecond", "tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a988bbeeb80e7e0a6b4651aab5a76b413", null ],
       [ "Second", "tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2ac22cf8376b1893dcfcef0649fe1a7d87", null ]
+    ] ],
+    [ "RunMode", "tools_8h.html#a3dfe11cf1a3a8121f6cd7fec4bf5947e", [
+      [ "Full", "tools_8h.html#a3dfe11cf1a3a8121f6cd7fec4bf5947eabbd47109890259c0127154db1af26c75", null ],
+      [ "Collect", "tools_8h.html#a3dfe11cf1a3a8121f6cd7fec4bf5947eae7ca851922b13f555127b04b70435ca9", null ],
+      [ "Convert", "tools_8h.html#a3dfe11cf1a3a8121f6cd7fec4bf5947ea920f4a0c5c8b9a0747380cf7c7f0b3c5", null ]
     ] ],
     [ "binaryPath", "tools_8h.html#a30395273a71242bd8f62d969fc250085", null ],
     [ "bool_to_wstring", "tools_8h.html#a60ee9433903019ec436ff2efcef4ea0d", null ],
@@ -39,6 +45,7 @@ var tools_8h =
     [ "getVolumeLetter", "tools_8h.html#af3090b036c360d75cf1d37179cd99bee", null ],
     [ "guid_to_wstring", "tools_8h.html#af5b5c7829f1299c3b6e2f28f2d543282", null ],
     [ "isMuiReference", "tools_8h.html#a2b4cfa2b19dd3138efd1cdca232d614e", null ],
+    [ "iso8601UtcToFiletime", "tools_8h.html#ad48ff1f0177182c63a18c27fae85c405", null ],
     [ "listFilesByExtension", "tools_8h.html#abc796ef7b3c37280836660e1376c2594", null ],
     [ "loadProfileList", "tools_8h.html#a8dd0bb51cdc854f2137aba256aae3d9c", null ],
     [ "loadSuspectAnsiCodePage", "tools_8h.html#a39f06ea897c5d9cfa9c5db5deb82bab0", null ],
@@ -75,8 +82,10 @@ var tools_8h =
     [ "utcTimeToIso8601Local", "tools_8h.html#a0eab7996fa09bca54687f5a91454722d", null ],
     [ "utcToSuspectLocal", "tools_8h.html#a2db11fd993cf754bcb19e0731955b6ab", null ],
     [ "volumeOfPath", "tools_8h.html#a7bc73c77c8a53c18c6a5457fbb42c13e", null ],
+    [ "WacVersion", "tools_8h.html#a0c6b8b7a0b0376c0bf1886a07334c105", null ],
     [ "writeJsonFile", "tools_8h.html#a745cace5ec6e835950164e2b0a222c8e", null ],
     [ "writeNotCollected", "tools_8h.html#afe66d0a52585ae4970e185056c1a7c23", null ],
+    [ "writeNotRequested", "tools_8h.html#ae015dab0338f7763e473365f24e90784", null ],
     [ "wstring_to_filetime", "tools_8h.html#ac15b36c9a117f211860abb5d7f86d8d4", null ],
     [ "conf", "tools_8h.html#a0696b00a72abe9d549204f9b105514bc", null ]
 ];

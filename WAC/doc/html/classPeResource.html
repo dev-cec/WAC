@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -110,6 +110,8 @@ $(document).ready(function(){initNavTree('classPeResource.html',''); initResizab
 Public Member Functions</h2></td></tr>
 <tr class="memitem:aa0625d54954bd88b13f9548e8d5e7647" id="r_aa0625d54954bd88b13f9548e8d5e7647"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPeResource.html#aa0625d54954bd88b13f9548e8d5e7647">open</a> (const std::wstring &amp;path)</td></tr>
 <tr class="separator:aa0625d54954bd88b13f9548e8d5e7647"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac53f7859405af7b5ad3aeb92a2e49793" id="r_ac53f7859405af7b5ad3aeb92a2e49793"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPeResource.html#ac53f7859405af7b5ad3aeb92a2e49793">load</a> (std::vector&lt; uint8_t &gt; bytes)</td></tr>
+<tr class="separator:ac53f7859405af7b5ad3aeb92a2e49793"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a81eabe906502ed86cc1f205ceab298c6" id="r_a81eabe906502ed86cc1f205ceab298c6"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPeResource.html#a81eabe906502ed86cc1f205ceab298c6">isOpen</a> () const</td></tr>
 <tr class="memdesc:a81eabe906502ed86cc1f205ceab298c6"><td class="mdescLeft">&#160;</td><td class="mdescRight">True if <code>open</code> succeeded.  <br /></td></tr>
 <tr class="separator:a81eabe906502ed86cc1f205ceab298c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -177,6 +179,31 @@ Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>True if <code>open</code> succeeded. </p>
+
+</div>
+</div>
+<a id="ac53f7859405af7b5ad3aeb92a2e49793" name="ac53f7859405af7b5ad3aeb92a2e49793"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac53f7859405af7b5ad3aeb92a2e49793">&#9670;&#160;</a></span>load()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool PeResource::load </td>
+          <td>(</td>
+          <td class="paramtype">std::vector&lt; uint8_t &gt;&#160;</td>
+          <td class="paramname"><em>bytes</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The same, from a binary already in memory — the analysis threads of &ndash;collect &ndash;binary hold each executable read raw. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bytes</td><td>the binary, taken over </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true if it is a PE whose resource directory is usable </dd></dl>
 
 </div>
 </div>

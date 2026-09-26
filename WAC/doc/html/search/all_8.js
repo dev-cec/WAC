@@ -25,12 +25,16 @@ var searchData=
   ['hive_5frecover_2eh_22',['hive_recover.h',['../hive__recover_8h.html',1,'']]],
   ['hive_5freplay_23',['HIVE_REPLAY',['../namespaceFootprint.html#a092968a8d58bd9077dcbdab010c501a7',1,'Footprint']]],
   ['hivefixinfo_24',['HiveFixInfo',['../structHiveFixInfo.html',1,'']]],
-  ['hivefixinfotostring_25',['hivefixinfotostring',['../hive__recover_8h.html#aeede55581b96ea19bbf2f99ae6a71bac',1,'HiveFixInfoToString(const HiveFixInfo &amp;i):&#160;hive_recover.cpp'],['../hive__recover_8cpp.html#aeede55581b96ea19bbf2f99ae6a71bac',1,'HiveFixInfoToString(const HiveFixInfo &amp;i):&#160;hive_recover.cpp']]],
+  ['hivefixinfotostring_25',['hivefixinfotostring',['../hive__recover_8cpp.html#aeede55581b96ea19bbf2f99ae6a71bac',1,'HiveFixInfoToString(const HiveFixInfo &amp;i):&#160;hive_recover.cpp'],['../hive__recover_8h.html#aeede55581b96ea19bbf2f99ae6a71bac',1,'HiveFixInfoToString(const HiveFixInfo &amp;i):&#160;hive_recover.cpp']]],
   ['hivelogentry_26',['HiveLogEntry',['../structHiveLogEntry.html',1,'']]],
   ['hivename_27',['hiveName',['../structHiveFixInfo.html#ae2ef604e15c46bb88454ba69a0b877ce',1,'HiveFixInfo']]],
   ['hivereplayinfo_28',['HiveReplayInfo',['../structHiveReplayInfo.html',1,'']]],
   ['hivereplayinfotostring_29',['hivereplayinfotostring',['../hive__recover_8cpp.html#aed27fc60a5eff5f8813438a08f198e97',1,'HiveReplayInfoToString(const HiveReplayInfo &amp;i):&#160;hive_recover.cpp'],['../hive__recover_8h.html#aed27fc60a5eff5f8813438a08f198e97',1,'HiveReplayInfoToString(const HiveReplayInfo &amp;i):&#160;hive_recover.cpp']]],
   ['hivesequence_30',['hiveSequence',['../structHiveReplayInfo.html#ae43ae6b6509c52eff3e9a16b10e20e6a',1,'HiveReplayInfo']]],
-  ['hostname_31',['hostname',['../structDestFile.html#a37d1db53e5c3ee0b5d945d850cc657a3',1,'DestFile']]],
-  ['hundrednanoseconds_32',['HundredNanoseconds',['../tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b',1,'tools.h']]]
+  ['holdsat_31',['holdsAt',['../structThirdPartyRoots_1_1Impl.html#a60d60b88a75716bf44f9097b17c6c0e1',1,'ThirdPartyRoots::Impl']]],
+  ['hostname_32',['hostname',['../structDestFile.html#a37d1db53e5c3ee0b5d945d850cc657a3',1,'DestFile']]],
+  ['http_5fclient_2ecpp_33',['http_client.cpp',['../http__client_8cpp.html',1,'']]],
+  ['http_5fclient_2eh_34',['http_client.h',['../http__client_8h.html',1,'']]],
+  ['httpclient_35',['httpclient',['../classHttpClient.html#a30fe3a951e8f7a0c6e58755c91f3a1d4',1,'HttpClient::HttpClient()'],['../classHttpClient.html#ae55090fefd2a0daf5ce6be7e3914be0c',1,'HttpClient::HttpClient(const HttpClient &amp;)=delete'],['../classHttpClient.html',1,'HttpClient']]],
+  ['hundrednanoseconds_36',['HundredNanoseconds',['../tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b',1,'tools.h']]]
 ];

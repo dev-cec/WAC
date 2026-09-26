@@ -10,5 +10,6 @@ var structBinarySummary =
     [ "duplicates", "structBinarySummary.html#a702bb0c63d1fe5e4c19b8b00520996c7", null ],
     [ "files", "structBinarySummary.html#a5abf4ec55c514416351b4b6acc8d2776", null ],
     [ "read", "structBinarySummary.html#ad2e551311f9c1595f61a7048c7880a40", null ],
-    [ "sansPlace", "structBinarySummary.html#a52535aaae6eb2133278322f0b2846b49", null ]
+    [ "sansPlace", "structBinarySummary.html#a52535aaae6eb2133278322f0b2846b49", null ],
+    [ "thirdPartyCleared", "structBinarySummary.html#a8f8ad904d012a54cf5edc16547a90518", null ]
 ];

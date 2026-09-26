@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -127,6 +127,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a3adc9c4fb143d37cd056486b3e114fe1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a37e30d74f48d3045bdc6312f8aac9f60" id="r_a37e30d74f48d3045bdc6312f8aac9f60"><td class="memItemLeft" align="right" valign="top">const uint8_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPeAnalyser.html#a37e30d74f48d3045bdc6312f8aac9f60">sha256Complete</a> () const</td></tr>
 <tr class="separator:a37e30d74f48d3045bdc6312f8aac9f60"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94b63cf5dd480b47947129013f1c588a" id="r_a94b63cf5dd480b47947129013f1c588a"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPeAnalyser.html#a94b63cf5dd480b47947129013f1c588a">timeDateStamp</a> () const</td></tr>
+<tr class="separator:a94b63cf5dd480b47947129013f1c588a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a73d6872f1a88ed4e1de7e4068beff6a0" id="r_a73d6872f1a88ed4e1de7e4068beff6a0"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPeAnalyser.html#a73d6872f1a88ed4e1de7e4068beff6a0">sizeOfImage</a> () const</td></tr>
+<tr class="separator:a73d6872f1a88ed4e1de7e4068beff6a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5f53b95888f8c94c7291f293884c5008" id="r_a5f53b95888f8c94c7291f293884c5008"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; uint8_t &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPeAnalyser.html#a5f53b95888f8c94c7291f293884c5008">certificateTable</a> () const</td></tr>
 <tr class="separator:a5f53b95888f8c94c7291f293884c5008"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -345,6 +349,58 @@ Protected Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 <dl class="section return"><dt>Returns</dt><dd>the SHA-256, same padding. </dd></dl>
+
+</div>
+</div>
+<a id="a73d6872f1a88ed4e1de7e4068beff6a0" name="a73d6872f1a88ed4e1de7e4068beff6a0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a73d6872f1a88ed4e1de7e4068beff6a0">&#9670;&#160;</a></span>sizeOfImage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t PeAnalyser::sizeOfImage </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>SizeOfImage of the optional header (valid if <a class="el" href="classPeAnalyser.html#a53b7dd7c59be097bb2aef804e2e3932f" title="Whether the headers read identify a PE file.">isPe()</a>). </dd></dl>
+
+</div>
+</div>
+<a id="a94b63cf5dd480b47947129013f1c588a" name="a94b63cf5dd480b47947129013f1c588a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a94b63cf5dd480b47947129013f1c588a">&#9670;&#160;</a></span>timeDateStamp()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t PeAnalyser::timeDateStamp </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>TimeDateStamp of the COFF header (valid if <a class="el" href="classPeAnalyser.html#a53b7dd7c59be097bb2aef804e2e3932f" title="Whether the headers read identify a PE file.">isPe()</a>). With <a class="el" href="classPeAnalyser.html#a73d6872f1a88ed4e1de7e4068beff6a0">sizeOfImage()</a>, the key under which Microsoft's symbol server keeps every build of its binaries: an authentic Microsoft binary that was not copied can be fetched again, identical, from it. </dd></dl>
 
 </div>
 </div>

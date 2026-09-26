@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -115,18 +115,29 @@ $(document).ready(function(){initNavTree('rsa_8h_source.html',''); initResizable
 <div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>};</div>
 </div>
 <div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span><span class="keywordtype">bool</span> <a class="code hl_function" href="rsa_8h.html#aff9f02be5a63f968c0ca6547abf80128">RsaVerifyPkcs1</a>(<span class="keyword">const</span> uint8_t* module, <span class="keywordtype">size_t</span> modulusSize,</div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>                      <span class="keyword">const</span> uint8_t* exponent, <span class="keywordtype">size_t</span> exponentSize,</div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>                      <span class="keyword">const</span> uint8_t* signature, <span class="keywordtype">size_t</span> signatureSize,</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>                      <a class="code hl_enumeration" href="rsa_8h.html#ac45c14ed73917e022d33ef6818a2d9b7">DigestAlgorithm</a> algo,</div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>                      <span class="keyword">const</span> uint8_t* fingerprint, <span class="keywordtype">size_t</span> digestSize);</div>
+<div class="foldopen" id="foldopen00031" data-start="{" data-end="};">
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno"><a class="line" href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6">   31</a></span><span class="keyword">enum class</span> <a class="code hl_enumeration" href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6">DigestEncoding</a> {</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <a class="code hl_enumvalue" href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6a63cfd610b80e6d7af61bd4d40616033d">DigestInfo</a>,      </div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <a class="code hl_enumvalue" href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6ab98b288858b251ba938becabac551604">DigestInfoOrBare</a></div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>};</div>
+</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="keywordtype">bool</span> <a class="code hl_function" href="rsa_8h.html#a772da6154de51a110cab9407b0b79f8c">RsaVerifyPkcs1</a>(<span class="keyword">const</span> uint8_t* module, <span class="keywordtype">size_t</span> modulusSize,</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>                      <span class="keyword">const</span> uint8_t* exponent, <span class="keywordtype">size_t</span> exponentSize,</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>                      <span class="keyword">const</span> uint8_t* signature, <span class="keywordtype">size_t</span> signatureSize,</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>                      <a class="code hl_enumeration" href="rsa_8h.html#ac45c14ed73917e022d33ef6818a2d9b7">DigestAlgorithm</a> algo,</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>                      <span class="keyword">const</span> uint8_t* fingerprint, <span class="keywordtype">size_t</span> digestSize,</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>                      <a class="code hl_enumeration" href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6">DigestEncoding</a> encoding = <a class="code hl_enumvalue" href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6a63cfd610b80e6d7af61bd4d40616033d">DigestEncoding::DigestInfo</a>);</div>
+<div class="ttc" id="arsa_8h_html_a733e754a329021ae5cec0a1a3acb89e6"><div class="ttname"><a href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6">DigestEncoding</a></div><div class="ttdeci">DigestEncoding</div><div class="ttdef"><b>Definition</b> rsa.h:31</div></div>
+<div class="ttc" id="arsa_8h_html_a733e754a329021ae5cec0a1a3acb89e6a63cfd610b80e6d7af61bd4d40616033d"><div class="ttname"><a href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6a63cfd610b80e6d7af61bd4d40616033d">DigestEncoding::DigestInfo</a></div><div class="ttdeci">@ DigestInfo</div><div class="ttdoc">PKCS#1 v1.5 proper: the digest within a DigestInfo naming its algorithm.</div></div>
+<div class="ttc" id="arsa_8h_html_a733e754a329021ae5cec0a1a3acb89e6ab98b288858b251ba938becabac551604"><div class="ttname"><a href="rsa_8h.html#a733e754a329021ae5cec0a1a3acb89e6ab98b288858b251ba938becabac551604">DigestEncoding::DigestInfoOrBare</a></div><div class="ttdeci">@ DigestInfoOrBare</div></div>
+<div class="ttc" id="arsa_8h_html_a772da6154de51a110cab9407b0b79f8c"><div class="ttname"><a href="rsa_8h.html#a772da6154de51a110cab9407b0b79f8c">RsaVerifyPkcs1</a></div><div class="ttdeci">bool RsaVerifyPkcs1(const uint8_t *module, size_t modulusSize, const uint8_t *exponent, size_t exponentSize, const uint8_t *signature, size_t signatureSize, DigestAlgorithm algo, const uint8_t *fingerprint, size_t digestSize, DigestEncoding encoding=DigestEncoding::DigestInfo)</div><div class="ttdef"><b>Definition</b> rsa.cpp:129</div></div>
 <div class="ttc" id="arsa_8h_html_ac45c14ed73917e022d33ef6818a2d9b7"><div class="ttname"><a href="rsa_8h.html#ac45c14ed73917e022d33ef6818a2d9b7">DigestAlgorithm</a></div><div class="ttdeci">DigestAlgorithm</div><div class="ttdef"><b>Definition</b> rsa.h:22</div></div>
 <div class="ttc" id="arsa_8h_html_ac45c14ed73917e022d33ef6818a2d9b7a15c0db5566b4b1794251c08e46022245"><div class="ttname"><a href="rsa_8h.html#ac45c14ed73917e022d33ef6818a2d9b7a15c0db5566b4b1794251c08e46022245">DigestAlgorithm::Sha256</a></div><div class="ttdeci">@ Sha256</div><div class="ttdoc">SHA-256.</div></div>
 <div class="ttc" id="arsa_8h_html_ac45c14ed73917e022d33ef6818a2d9b7a4890f9f3d100b411117303667dbe67c8"><div class="ttname"><a href="rsa_8h.html#ac45c14ed73917e022d33ef6818a2d9b7a4890f9f3d100b411117303667dbe67c8">DigestAlgorithm::Sha384</a></div><div class="ttdeci">@ Sha384</div><div class="ttdoc">SHA-384.</div></div>
 <div class="ttc" id="arsa_8h_html_ac45c14ed73917e022d33ef6818a2d9b7a88183b946cc5f0e8c96b2e66e1c74a7e"><div class="ttname"><a href="rsa_8h.html#ac45c14ed73917e022d33ef6818a2d9b7a88183b946cc5f0e8c96b2e66e1c74a7e">DigestAlgorithm::Unknown</a></div><div class="ttdeci">@ Unknown</div><div class="ttdoc">not recognised: the signature is not verified</div></div>
 <div class="ttc" id="arsa_8h_html_ac45c14ed73917e022d33ef6818a2d9b7a89305d971a8d86cf8aeee61cc1a85d4b"><div class="ttname"><a href="rsa_8h.html#ac45c14ed73917e022d33ef6818a2d9b7a89305d971a8d86cf8aeee61cc1a85d4b">DigestAlgorithm::Sha1</a></div><div class="ttdeci">@ Sha1</div><div class="ttdoc">SHA-1.</div></div>
 <div class="ttc" id="arsa_8h_html_ac45c14ed73917e022d33ef6818a2d9b7ae304cb0386a040917fdb6a4b4b738cee"><div class="ttname"><a href="rsa_8h.html#ac45c14ed73917e022d33ef6818a2d9b7ae304cb0386a040917fdb6a4b4b738cee">DigestAlgorithm::Sha512</a></div><div class="ttdeci">@ Sha512</div><div class="ttdoc">SHA-512.</div></div>
-<div class="ttc" id="arsa_8h_html_aff9f02be5a63f968c0ca6547abf80128"><div class="ttname"><a href="rsa_8h.html#aff9f02be5a63f968c0ca6547abf80128">RsaVerifyPkcs1</a></div><div class="ttdeci">bool RsaVerifyPkcs1(const uint8_t *module, size_t modulusSize, const uint8_t *exponent, size_t exponentSize, const uint8_t *signature, size_t signatureSize, DigestAlgorithm algo, const uint8_t *fingerprint, size_t digestSize)</div><div class="ttdef"><b>Definition</b> rsa.cpp:129</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

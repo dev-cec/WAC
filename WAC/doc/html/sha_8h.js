@@ -7,5 +7,6 @@ var sha_8h =
     [ "sha256Bytes", "sha_8h.html#abb60cb0cab7f428f2d34747ffd0fd8e9", null ],
     [ "sha256OfFile", "sha_8h.html#a8108f1743905ec91dfca930fbbc6ac53", null ],
     [ "sha384Bytes", "sha_8h.html#a35bdce620b7c300f61662f7c210f428d", null ],
-    [ "sha512Bytes", "sha_8h.html#a31532027000681967e33a2d9d20fc8e7", null ]
+    [ "sha512Bytes", "sha_8h.html#a31532027000681967e33a2d9d20fc8e7", null ],
+    [ "toHexadecimal", "sha_8h.html#a0a1e95bb940526e86f0a6346bb073a92", null ]
 ];

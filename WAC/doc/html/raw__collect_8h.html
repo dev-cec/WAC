@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -116,6 +116,8 @@ Functions</h2></td></tr>
 <tr class="separator:aa5703c897d2cb36c0d59690f4844a51d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af9979687d9c2b542a94076e0201c54e6" id="r_af9979687d9c2b542a94076e0201c54e6"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__collect_8h.html#af9979687d9c2b542a94076e0201c54e6">ExtractFileArtefactsRaw</a> ()</td></tr>
 <tr class="separator:af9979687d9c2b542a94076e0201c54e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af0de7ffdec832eb1431c73ede66b0334" id="r_af0de7ffdec832eb1431c73ede66b0334"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__collect_8h.html#af0de7ffdec832eb1431c73ede66b0334">RepairWorkingHives</a> ()</td></tr>
+<tr class="separator:af0de7ffdec832eb1431c73ede66b0334"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Orchestration of the offline extraction of artefacts (WAC). </p>
@@ -184,6 +186,24 @@ the machine". The count per directory is therefore logged, so that the report te
 <p>Extracts the hives of each user PROFILE listed in <code>conf.profiles</code>, under the same rules as <code>ExtractSystemHivesRaw</code>.</p>
 <p>To be called AFTER <code><a class="el" href="tools_8cpp.html#a8dd0bb51cdc854f2137aba256aae3d9c">loadProfileList()</a></code>, which fills <code>conf.profiles</code> from the SOFTWARE hive extracted by the previous pass.</p>
 <dl class="section return"><dt>Returns</dt><dd>S_OK if everything succeeds, S_FALSE if no profile was found or some files are missing, or an error code if the volume cannot be opened. </dd></dl>
+
+</div>
+</div>
+<a id="af0de7ffdec832eb1431c73ede66b0334" name="af0de7ffdec832eb1431c73ede66b0334"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af0de7ffdec832eb1431c73ede66b0334">&#9670;&#160;</a></span>RepairWorkingHives()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT RepairWorkingHives </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Repairs the hives of a working copy rebuilt from an exhibit store (&ndash;convert): transaction log replay, patch as a fallback, as the collection does right after extracting them. The hives are found by name in the working directory. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or S_FALSE if a hive stays unusable </dd></dl>
 
 </div>
 </div>

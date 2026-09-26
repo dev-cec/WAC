@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -120,6 +120,9 @@ Classes</h2></td></tr>
 Variables</h2></td></tr>
 <tr class="memitem:ad6c84aba885b49c4ca9695396fe8e4b3" id="r_ad6c84aba885b49c4ca9695396fe8e4b3"><td class="memItemLeft" align="right" valign="top">const uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pe__resource_8h.html#ad6c84aba885b49c4ca9695396fe8e4b3">PE_RT_MESSAGETABLE</a> = 11</td></tr>
 <tr class="separator:ad6c84aba885b49c4ca9695396fe8e4b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a327f913369267cffd2621e3e4b65b0ec" id="r_a327f913369267cffd2621e3e4b65b0ec"><td class="memItemLeft" align="right" valign="top">const uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pe__resource_8h.html#a327f913369267cffd2621e3e4b65b0ec">PE_RT_VERSION</a> = 16</td></tr>
+<tr class="memdesc:a327f913369267cffd2621e3e4b65b0ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">RT_VERSION: the VS_VERSIONINFO of a binary (see <a class="el" href="version__info_8h.html" title="THE VERSION RESOURCE of a PE (VS_VERSIONINFO): what a binary says it is.">version_info.h</a>).  <br /></td></tr>
+<tr class="separator:a327f913369267cffd2621e3e4b65b0ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Reading the resources of a PE binary, offline. </p>
@@ -143,6 +146,22 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Resource types useful here. RT_MESSAGETABLE is standard (11); WEVT_TEMPLATE is a NAMED type, specific to the event providers. </p>
+
+</div>
+</div>
+<a id="a327f913369267cffd2621e3e4b65b0ec" name="a327f913369267cffd2621e3e4b65b0ec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a327f913369267cffd2621e3e4b65b0ec">&#9670;&#160;</a></span>PE_RT_VERSION</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const uint32_t PE_RT_VERSION = 16</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>RT_VERSION: the VS_VERSIONINFO of a binary (see <a class="el" href="version__info_8h.html" title="THE VERSION RESOURCE of a PE (VS_VERSIONINFO): what a binary says it is.">version_info.h</a>). </p>
 
 </div>
 </div>

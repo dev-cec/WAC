@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -118,9 +118,13 @@ $(document).ready(function(){initNavTree('raw__hive_8h.html',''); initResizable(
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawReadTimes.html">RawReadTimes</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveFingerprints.html">RawHiveFingerprints</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classFileSource.html">FileSource</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRawReader.html">RawReader</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -138,6 +142,8 @@ Typedefs</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:a4f20293fac920e310bfb3c0342a01348" id="r_a4f20293fac920e310bfb3c0342a01348"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a4f20293fac920e310bfb3c0342a01348">RawHiveSetVerbose</a> (bool on)</td></tr>
 <tr class="separator:a4f20293fac920e310bfb3c0342a01348"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a76c0a8bbc2520c48d139b83d02f303e0" id="r_a76c0a8bbc2520c48d139b83d02f303e0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structRawReadTimes.html">RawReadTimes</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a76c0a8bbc2520c48d139b83d02f303e0">RawHiveTimes</a> ()</td></tr>
+<tr class="separator:a76c0a8bbc2520c48d139b83d02f303e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab0f5ca400aaa1626345f2f1bf4b7f5fa" id="r_ab0f5ca400aaa1626345f2f1bf4b7f5fa"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#ab0f5ca400aaa1626345f2f1bf4b7f5fa">applyNtfsFixup</a> (uint8_t *record, size_t size)</td></tr>
 <tr class="separator:ab0f5ca400aaa1626345f2f1bf4b7f5fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c6fcb004a257a7b9bfb351d435286b7" id="r_a7c6fcb004a257a7b9bfb351d435286b7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a7c6fcb004a257a7b9bfb351d435286b7">RawHiveSetProgress</a> (<a class="el" href="raw__hive_8h.html#a8077cabec9441f4ac6617ed5bbe50d02">RawHiveProgressFn</a> fn)</td></tr>
@@ -146,6 +152,8 @@ Functions</h2></td></tr>
 <tr class="separator:aff3f1529d81703425b03fe383f20d88d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a05a06ee1bac073498c6c086ac1f6c925" id="r_a05a06ee1bac073498c6c086ac1f6c925"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a05a06ee1bac073498c6c086ac1f6c925">ExtractFilesRaw</a> (const std::wstring &amp;volumeLetter, const std::vector&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;items, std::vector&lt; HRESULT &gt; *perItem=nullptr, std::vector&lt; <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &gt; *reading=nullptr)</td></tr>
 <tr class="separator:a05a06ee1bac073498c6c086ac1f6c925"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a24ea0d8ea40d581e472dbbaf14af682d" id="r_a24ea0d8ea40d581e472dbbaf14af682d"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a24ea0d8ea40d581e472dbbaf14af682d">ExtractWofStreamRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;pathOnVolume, const std::wstring &amp;outFile, uint32_t *algorithm=nullptr)</td></tr>
+<tr class="separator:a24ea0d8ea40d581e472dbbaf14af682d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a80f45d2b127d66b0a056a29cf3b80523" id="r_a80f45d2b127d66b0a056a29cf3b80523"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a80f45d2b127d66b0a056a29cf3b80523">ListAttributesRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;pathOnVolume, std::vector&lt; <a class="el" href="structRawAttribute.html">RawAttribute</a> &gt; &amp;out)</td></tr>
 <tr class="separator:a80f45d2b127d66b0a056a29cf3b80523"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4bc3af8df20ef0f72d1b33dfacc078cd" id="r_a4bc3af8df20ef0f72d1b33dfacc078cd"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a4bc3af8df20ef0f72d1b33dfacc078cd">ListDirectoryRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;dirPathOnVolume, std::vector&lt; <a class="el" href="structRawDirEntry.html">RawDirEntry</a> &gt; &amp;out)</td></tr>
@@ -461,6 +469,56 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a24ea0d8ea40d581e472dbbaf14af682d" name="a24ea0d8ea40d581e472dbbaf14af682d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a24ea0d8ea40d581e472dbbaf14af682d">&#9670;&#160;</a></span>ExtractWofStreamRaw()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT ExtractWofStreamRaw </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>volumeLetter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>pathOnVolume</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>outFile</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t *&#160;</td>
+          <td class="paramname"><em>algorithm</em> = <code>nullptr</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Writes the compressed stream of a WOF ("Compact OS") file as it lies on the disk: the test data of the decompressors, compressed by Windows itself (raw_hive_test &ndash;wof, lzx_test). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">volumeLetter</td><td>volume letter, e.g. L"C" </td></tr>
+    <tr><td class="paramname">pathOnVolume</td><td>path of the file on that volume </td></tr>
+    <tr><td class="paramname">outFile</td><td>where to write the stream </td></tr>
+    <tr><td class="paramname">algorithm</td><td>(optional) receives the WOF algorithm: 0, 2, 3 XPRESS on 4, 8, 16 KiB chunks, 1 LZX on 32 KiB </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>S_OK, or an error code (ERROR_NOT_SUPPORTED if the file is not WOF) </dd></dl>
+
+</div>
+</div>
 <a id="a80f45d2b127d66b0a056a29cf3b80523" name="a80f45d2b127d66b0a056a29cf3b80523"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a80f45d2b127d66b0a056a29cf3b80523">&#9670;&#160;</a></span>ListAttributesRaw()</h2>
 
@@ -585,6 +643,24 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Enables diagnostic messages on stderr (silent by default). </p>
+
+</div>
+</div>
+<a id="a76c0a8bbc2520c48d139b83d02f303e0" name="a76c0a8bbc2520c48d139b83d02f303e0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a76c0a8bbc2520c48d139b83d02f303e0">&#9670;&#160;</a></span>RawHiveTimes()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structRawReadTimes.html">RawReadTimes</a> RawHiveTimes </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>the time spent so far, per activity </dd></dl>
 
 </div>
 </div>

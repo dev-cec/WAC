@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -145,6 +145,25 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a25b709e3c6ccb4eb187982d791fcf62b" id="r_a25b709e3c6ccb4eb187982d791fcf62b"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveFingerprints.html#a25b709e3c6ccb4eb187982d791fcf62b">extractedUtc</a> = 0</td></tr>
 <tr class="memdesc:a25b709e3c6ccb4eb187982d791fcf62b"><td class="mdescLeft">&#160;</td><td class="mdescRight">when THIS exhibit was extracted (FILETIME UTC)  <br /></td></tr>
 <tr class="separator:a25b709e3c6ccb4eb187982d791fcf62b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa59842f88d78bab81f753abf0950a92b" id="r_aa59842f88d78bab81f753abf0950a92b"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveFingerprints.html#aa59842f88d78bab81f753abf0950a92b">fnCreatedUtc</a> = 0</td></tr>
+<tr class="separator:aa59842f88d78bab81f753abf0950a92b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ada029b4bf9a4d9ae980e875c9070ea7c" id="r_ada029b4bf9a4d9ae980e875c9070ea7c"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveFingerprints.html#ada029b4bf9a4d9ae980e875c9070ea7c">fnModifiedUtc</a> = 0</td></tr>
+<tr class="separator:ada029b4bf9a4d9ae980e875c9070ea7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aba2de693b89c7f26547afe9430ec3509" id="r_aba2de693b89c7f26547afe9430ec3509"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveFingerprints.html#aba2de693b89c7f26547afe9430ec3509">fnMftModifiedUtc</a> = 0</td></tr>
+<tr class="separator:aba2de693b89c7f26547afe9430ec3509"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab81608696b3dacbb471b4f8f194d1d96" id="r_ab81608696b3dacbb471b4f8f194d1d96"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveFingerprints.html#ab81608696b3dacbb471b4f8f194d1d96">fnAccessedUtc</a> = 0</td></tr>
+<tr class="separator:ab81608696b3dacbb471b4f8f194d1d96"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad8a2652abbcea1e38d30f8399497b702" id="r_ad8a2652abbcea1e38d30f8399497b702"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveFingerprints.html#ad8a2652abbcea1e38d30f8399497b702">computeHashes</a> = true</td></tr>
+<tr class="separator:ad8a2652abbcea1e38d30f8399497b702"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a41b6170367b9f1300bfa13ae59349c11" id="r_a41b6170367b9f1300bfa13ae59349c11"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveFingerprints.html#a41b6170367b9f1300bfa13ae59349c11">authenticodeSha1</a></td></tr>
+<tr class="memdesc:a41b6170367b9f1300bfa13ae59349c11"><td class="mdescLeft">&#160;</td><td class="mdescRight">Authenticode digests of a PE (hexadecimal), when the caller computed them.  <br /></td></tr>
+<tr class="separator:a41b6170367b9f1300bfa13ae59349c11"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3c07ffc2357ab66f12f875286ce27611" id="r_a3c07ffc2357ab66f12f875286ce27611"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveFingerprints.html#a3c07ffc2357ab66f12f875286ce27611">authenticodeSha256</a></td></tr>
+<tr class="separator:a3c07ffc2357ab66f12f875286ce27611"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a012d1dc69bf14fccb8f9837b8411799c" id="r_a012d1dc69bf14fccb8f9837b8411799c"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveFingerprints.html#a012d1dc69bf14fccb8f9837b8411799c">peTimeDateStamp</a> = 0</td></tr>
+<tr class="separator:a012d1dc69bf14fccb8f9837b8411799c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13542870bfd02b47133a78194c79358d" id="r_a13542870bfd02b47133a78194c79358d"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveFingerprints.html#a13542870bfd02b47133a78194c79358d">peSizeOfImage</a> = 0</td></tr>
+<tr class="separator:a13542870bfd02b47133a78194c79358d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>What is recorded about a file when it is extracted.</p>
@@ -168,6 +187,36 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a41b6170367b9f1300bfa13ae59349c11" name="a41b6170367b9f1300bfa13ae59349c11"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a41b6170367b9f1300bfa13ae59349c11">&#9670;&#160;</a></span>authenticodeSha1</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RawHiveFingerprints::authenticodeSha1</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Authenticode digests of a PE (hexadecimal), when the caller computed them. </p>
+
+</div>
+</div>
+<a id="a3c07ffc2357ab66f12f875286ce27611" name="a3c07ffc2357ab66f12f875286ce27611"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3c07ffc2357ab66f12f875286ce27611">&#9670;&#160;</a></span>authenticodeSha256</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RawHiveFingerprints::authenticodeSha256</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a662f273e19e7eacf718321e0b2554ff4" name="a662f273e19e7eacf718321e0b2554ff4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a662f273e19e7eacf718321e0b2554ff4">&#9670;&#160;</a></span>bytes</h2>
 
@@ -181,6 +230,21 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>size actually extracted </p>
+
+</div>
+</div>
+<a id="ad8a2652abbcea1e38d30f8399497b702" name="ad8a2652abbcea1e38d30f8399497b702"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad8a2652abbcea1e38d30f8399497b702">&#9670;&#160;</a></span>computeHashes</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool RawHiveFingerprints::computeHashes = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>INPUT, set before the read: false to skip MD5, SHA-1 and SHA-256 when only the content is needed (authenticating an executable, whose Authenticode digest the caller computes itself). </p>
 
 </div>
 </div>
@@ -229,6 +293,63 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>when THIS exhibit was extracted (FILETIME UTC) </p>
+
+</div>
+</div>
+<a id="ab81608696b3dacbb471b4f8f194d1d96" name="ab81608696b3dacbb471b4f8f194d1d96"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab81608696b3dacbb471b4f8f194d1d96">&#9670;&#160;</a></span>fnAccessedUtc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint64_t RawHiveFingerprints::fnAccessedUtc = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aa59842f88d78bab81f753abf0950a92b" name="aa59842f88d78bab81f753abf0950a92b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa59842f88d78bab81f753abf0950a92b">&#9670;&#160;</a></span>fnCreatedUtc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint64_t RawHiveFingerprints::fnCreatedUtc = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The four timestamps of the $FILE_NAME attribute of the name read (UTC, 0 if absent). Updated by NTFS itself, not by SetFileTime: an earlier $STANDARD_INFORMATION reveals forged timestamps (timestomping). </p>
+
+</div>
+</div>
+<a id="aba2de693b89c7f26547afe9430ec3509" name="aba2de693b89c7f26547afe9430ec3509"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aba2de693b89c7f26547afe9430ec3509">&#9670;&#160;</a></span>fnMftModifiedUtc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint64_t RawHiveFingerprints::fnMftModifiedUtc = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ada029b4bf9a4d9ae980e875c9070ea7c" name="ada029b4bf9a4d9ae980e875c9070ea7c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ada029b4bf9a4d9ae980e875c9070ea7c">&#9670;&#160;</a></span>fnModifiedUtc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint64_t RawHiveFingerprints::fnModifiedUtc = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -293,6 +414,35 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>last content change </p>
+
+</div>
+</div>
+<a id="a13542870bfd02b47133a78194c79358d" name="a13542870bfd02b47133a78194c79358d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a13542870bfd02b47133a78194c79358d">&#9670;&#160;</a></span>peSizeOfImage</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t RawHiveFingerprints::peSizeOfImage = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a012d1dc69bf14fccb8f9837b8411799c" name="a012d1dc69bf14fccb8f9837b8411799c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a012d1dc69bf14fccb8f9837b8411799c">&#9670;&#160;</a></span>peTimeDateStamp</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t RawHiveFingerprints::peTimeDateStamp = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>TimeDateStamp and SizeOfImage of a PE's headers, when the caller read them (0 otherwise): the key under which Microsoft's symbol server keeps every build of its binaries (see <a class="el" href="classPeAnalyser.html#a94b63cf5dd480b47947129013f1c588a">PeAnalyser::timeDateStamp</a>). </p>
 
 </div>
 </div>

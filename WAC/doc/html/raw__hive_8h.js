@@ -1,7 +1,9 @@
 var raw__hive_8h =
 [
+    [ "RawReadTimes", "structRawReadTimes.html", "structRawReadTimes" ],
     [ "RawHiveFingerprints", "structRawHiveFingerprints.html", "structRawHiveFingerprints" ],
     [ "RawHiveExtraction", "structRawHiveExtraction.html", "structRawHiveExtraction" ],
+    [ "FileSource", "classFileSource.html", "classFileSource" ],
     [ "RawReader", "classRawReader.html", "classRawReader" ],
     [ "RawAttribute", "structRawAttribute.html", "structRawAttribute" ],
     [ "RawDirEntry", "structRawDirEntry.html", "structRawDirEntry" ],
@@ -11,8 +13,10 @@ var raw__hive_8h =
     [ "ExtractDirectoryTreeRaw", "raw__hive_8h.html#a187df02989f72f88af784e873d740b05", null ],
     [ "ExtractFileRaw", "raw__hive_8h.html#aff3f1529d81703425b03fe383f20d88d", null ],
     [ "ExtractFilesRaw", "raw__hive_8h.html#a05a06ee1bac073498c6c086ac1f6c925", null ],
+    [ "ExtractWofStreamRaw", "raw__hive_8h.html#a24ea0d8ea40d581e472dbbaf14af682d", null ],
     [ "ListAttributesRaw", "raw__hive_8h.html#a80f45d2b127d66b0a056a29cf3b80523", null ],
     [ "ListDirectoryRaw", "raw__hive_8h.html#a4bc3af8df20ef0f72d1b33dfacc078cd", null ],
     [ "RawHiveSetProgress", "raw__hive_8h.html#a7c6fcb004a257a7b9bfb351d435286b7", null ],
-    [ "RawHiveSetVerbose", "raw__hive_8h.html#a4f20293fac920e310bfb3c0342a01348", null ]
+    [ "RawHiveSetVerbose", "raw__hive_8h.html#a4f20293fac920e310bfb3c0342a01348", null ],
+    [ "RawHiveTimes", "raw__hive_8h.html#a76c0a8bbc2520c48d139b83d02f303e0", null ]
 ];

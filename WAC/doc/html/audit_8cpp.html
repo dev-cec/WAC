@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -121,6 +121,8 @@ Functions</h2></td></tr>
 <tr class="separator:ab304e84db82b142bdaa33b0e1a06f7a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acdc6ae467d9f91baf1c9208377cbe50c" id="r_acdc6ae467d9f91baf1c9208377cbe50c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="audit_8cpp.html#acdc6ae467d9f91baf1c9208377cbe50c">auditRecord</a> (const std::wstring &amp;operation, const std::wstring &amp;target, HRESULT result, const wchar_t *footprint)</td></tr>
 <tr class="separator:acdc6ae467d9f91baf1c9208377cbe50c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d196b4f077a8cb0e4ddb8e2a1527273" id="r_a1d196b4f077a8cb0e4ddb8e2a1527273"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="audit_8cpp.html#a1d196b4f077a8cb0e4ddb8e2a1527273">auditConfiguration</a> (const std::wstring &amp;searched, bool present, const std::wstring &amp;sha256, const std::string &amp;text)</td></tr>
+<tr class="separator:a1d196b4f077a8cb0e4ddb8e2a1527273"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9358f102721b6f721d594f511279ecbd" id="r_a9358f102721b6f721d594f511279ecbd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="audit_8cpp.html#a9358f102721b6f721d594f511279ecbd">auditContext</a> ()</td></tr>
 <tr class="separator:a9358f102721b6f721d594f511279ecbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae2e721b9365f0c478ae3b918763725d5" id="r_ae2e721b9365f0c478ae3b918763725d5"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="audit_8cpp.html#ae2e721b9365f0c478ae3b918763725d5">auditStartUtc</a> ()</td></tr>
@@ -157,10 +159,66 @@ Variables</h2></td></tr>
 <tr class="memitem:a2851d886859c5bd0d3cd4136f8b2cffe" id="r_a2851d886859c5bd0d3cd4136f8b2cffe"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#a2851d886859c5bd0d3cd4136f8b2cffe">Footprint::CLOCK</a></td></tr>
 <tr class="memdesc:a2851d886859c5bd0d3cd4136f8b2cffe"><td class="mdescLeft">&#160;</td><td class="mdescRight">reading of the clock and of the boot time: in-memory queries, no artefact touched  <br /></td></tr>
 <tr class="separator:a2851d886859c5bd0d3cd4136f8b2cffe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6765d3c5ba3bca05084e36ad1ff23d5d" id="r_a6765d3c5ba3bca05084e36ad1ff23d5d"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#a6765d3c5ba3bca05084e36ad1ff23d5d">Footprint::SETTINGS</a></td></tr>
+<tr class="separator:a6765d3c5ba3bca05084e36ad1ff23d5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a104acfde7d6813bf67974791c7f9da2f" id="r_a104acfde7d6813bf67974791c7f9da2f"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#a104acfde7d6813bf67974791c7f9da2f">Footprint::EXHIBIT_READ</a></td></tr>
+<tr class="separator:a104acfde7d6813bf67974791c7f9da2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0dc368424e2a7e47397559e08900d041" id="r_a0dc368424e2a7e47397559e08900d041"><td class="memItemLeft" align="right" valign="top">const wchar_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceFootprint.html#a0dc368424e2a7e47397559e08900d041">Footprint::TRUST_SET</a></td></tr>
+<tr class="memdesc:a0dc368424e2a7e47397559e08900d041"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reading of the trust set (&ndash;update-trust) on the collection medium.  <br /></td></tr>
+<tr class="separator:a0dc368424e2a7e47397559e08900d041"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Implementation of the investigation log (see <a class="el" href="audit_8h.html" title="Investigation log: what WAC did, when, and what it left behind.">audit.h</a>). </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a1d196b4f077a8cb0e4ddb8e2a1527273" name="a1d196b4f077a8cb0e4ddb8e2a1527273"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1d196b4f077a8cb0e4ddb8e2a1527273">&#9670;&#160;</a></span>auditConfiguration()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void auditConfiguration </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>searched</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>present</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>sha256</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>text</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Records the configuration file the run applied (see <a class="el" href="config_8h.html" title="THE CONFIGURATION FILE, wac.yml: the collection&#39;s procedure, written once, applied the same way every...">config.h</a>): the procedure is part of the evidence. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">searched</td><td>where it was looked for </td></tr>
+    <tr><td class="paramname">present</td><td>whether one was found and applied </td></tr>
+    <tr><td class="paramname">sha256</td><td>its fingerprint </td></tr>
+    <tr><td class="paramname">text</td><td>its content, UTF-8 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a9358f102721b6f721d594f511279ecbd" name="a9358f102721b6f721d594f511279ecbd"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a9358f102721b6f721d594f511279ecbd">&#9670;&#160;</a></span>auditContext()</h2>
 
@@ -305,7 +363,7 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Closes the log (end timestamp, duration) and writes <code>investigation.json</code>. To be called at the very end of the collection, after the last collector. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or a write error code </dd></dl>
+<p>Closes the log (end timestamp, duration) and writes <code>investigation.json</code> — or <code>conversion.json</code> for a &ndash;convert run, which never overwrites the collection's log. To be called at the very end of the collection, after the last collector. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or a write error code </dd></dl>
 
 </div>
 </div>

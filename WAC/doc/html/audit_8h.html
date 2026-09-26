@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -123,6 +123,8 @@ Functions</h2></td></tr>
 <tr class="separator:ab304e84db82b142bdaa33b0e1a06f7a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acdc6ae467d9f91baf1c9208377cbe50c" id="r_acdc6ae467d9f91baf1c9208377cbe50c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="audit_8h.html#acdc6ae467d9f91baf1c9208377cbe50c">auditRecord</a> (const std::wstring &amp;operation, const std::wstring &amp;target, HRESULT result, const wchar_t *footprint)</td></tr>
 <tr class="separator:acdc6ae467d9f91baf1c9208377cbe50c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d196b4f077a8cb0e4ddb8e2a1527273" id="r_a1d196b4f077a8cb0e4ddb8e2a1527273"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="audit_8h.html#a1d196b4f077a8cb0e4ddb8e2a1527273">auditConfiguration</a> (const std::wstring &amp;searched, bool present, const std::wstring &amp;sha256, const std::string &amp;text)</td></tr>
+<tr class="separator:a1d196b4f077a8cb0e4ddb8e2a1527273"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac7c50c38d38c2f3b3ccc78f72570d6df" id="r_ac7c50c38d38c2f3b3ccc78f72570d6df"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="audit_8h.html#ac7c50c38d38c2f3b3ccc78f72570d6df">auditWrite</a> ()</td></tr>
 <tr class="separator:ac7c50c38d38c2f3b3ccc78f72570d6df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9358f102721b6f721d594f511279ecbd" id="r_a9358f102721b6f721d594f511279ecbd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="audit_8h.html#a9358f102721b6f721d594f511279ecbd">auditContext</a> ()</td></tr>
@@ -144,6 +146,55 @@ Functions</h2></td></tr>
 <p>Output: <code>investigation.json</code>, in the output directory, in the same format as the other artefacts (see <a class="el" href="json_8h.html" title="Centralised JSON serialiser for WAC, and the reader of the JSON it writes back (exhibit manifest,...">json.h</a>).</p>
 <p>References: RFC 3227 (evidence collecting and archiving), ISO/IEC 27037 (identification, collection and preservation of digital evidence). </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a1d196b4f077a8cb0e4ddb8e2a1527273" name="a1d196b4f077a8cb0e4ddb8e2a1527273"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1d196b4f077a8cb0e4ddb8e2a1527273">&#9670;&#160;</a></span>auditConfiguration()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void auditConfiguration </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>searched</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>present</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>sha256</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>text</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Records the configuration file the run applied (see <a class="el" href="config_8h.html" title="THE CONFIGURATION FILE, wac.yml: the collection&#39;s procedure, written once, applied the same way every...">config.h</a>): the procedure is part of the evidence. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">searched</td><td>where it was looked for </td></tr>
+    <tr><td class="paramname">present</td><td>whether one was found and applied </td></tr>
+    <tr><td class="paramname">sha256</td><td>its fingerprint </td></tr>
+    <tr><td class="paramname">text</td><td>its content, UTF-8 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a9358f102721b6f721d594f511279ecbd" name="a9358f102721b6f721d594f511279ecbd"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a9358f102721b6f721d594f511279ecbd">&#9670;&#160;</a></span>auditContext()</h2>
 
@@ -288,7 +339,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Closes the log (end timestamp, duration) and writes <code>investigation.json</code>. To be called at the very end of the collection, after the last collector. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or a write error code </dd></dl>
+<p>Closes the log (end timestamp, duration) and writes <code>investigation.json</code> — or <code>conversion.json</code> for a &ndash;convert run, which never overwrites the collection's log. To be called at the very end of the collection, after the last collector. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or a write error code </dd></dl>
 
 </div>
 </div>

@@ -1,7 +1,20 @@
 var searchData=
 [
-  ['wasdirty_0',['wasDirty',['../structHiveFixInfo.html#a4a1e11b834a122a20c74f08167eed134',1,'HiveFixInfo']]],
-  ['workingdir_1',['workingDir',['../structAction.html#aad978d105e67835d43aa85d9c4ef9177',1,'Action']]],
-  ['workingdirectory_2',['workingDirectory',['../structRecentDoc.html#acd48e8314380f759b7b471c3d59294c7',1,'RecentDoc']]],
-  ['writtenutc_3',['writtenUtc',['../structEvtxRecord.html#a127107950963dc6fe6e75113919c3180',1,'EvtxRecord']]]
+  ['unaliasonsave_0',['UnaliasOnSave',['../structLinkFlags.html#a0db25c0778961c460b27d967645befaa',1,'LinkFlags']]],
+  ['undojournal_1',['undoJournal',['../structHiveReplayInfo.html#a0837b4e8c2d14b8db3801c9af0487116',1,'HiveReplayInfo']]],
+  ['unknown_2',['UNKNOWN',['../structFsFlags.html#a5e77eeb5c1d889a5ce926377282b318f',1,'FsFlags']]],
+  ['unreadable_3',['unreadable',['../structEvents.html#a4d4d41ecfb8c0b81be14aad775883c4b',1,'Events::unreadable'],['../structEvtxSummary.html#a279b72d04f530520e4986b24b7bbfe11',1,'EvtxSummary::unreadable']]],
+  ['unsignedattributes_4',['unsignedAttributes',['../structVerifiedSignature.html#a6b68084310cb9961803a816ea5fb296c',1,'VerifiedSignature']]],
+  ['unsignedattributessize_5',['unsignedAttributesSize',['../structVerifiedSignature.html#a7aae61576d430bcadb9111b7c8065095',1,'VerifiedSignature']]],
+  ['unused1_6',['Unused1',['../structLinkFlags.html#a7c0e960fe7a58088c794d5f5e226200c',1,'LinkFlags']]],
+  ['unused2_7',['Unused2',['../structLinkFlags.html#a99d1b57c67543696de8410e944021a48',1,'LinkFlags']]],
+  ['uptimeseconds_8',['uptimeSeconds',['../structSystemInfo.html#a2552f53a3a8dd307872dd737f4f8d9f7',1,'SystemInfo']]],
+  ['upv_9',['UPV',['../structFavoriteShellitem.html#af86c81a19e4be493cf7854a558a3592f',1,'FavoriteShellitem']]],
+  ['uri_10',['uri',['../structURIShellItem.html#aba2d73a847f23a630740b92ec5e72574',1,'URIShellItem']]],
+  ['usable_11',['usable',['../structTrustSet.html#ab263dd67a03fb2a474ce9710b5438084',1,'TrustSet']]],
+  ['usb_5fwrite_12',['USB_WRITE',['../namespaceFootprint.html#a0f4e23dd36a28a486fe8d93c7f381d9d',1,'Footprint']]],
+  ['usbs_13',['usbs',['../structUsbstors.html#a8db49a85aca68f8604cca00b453b974d',1,'Usbstors']]],
+  ['userassists_14',['userassists',['../structUserAssists.html#a29e9396d468ac93eb48e19e559fd2d7e',1,'UserAssists']]],
+  ['username_15',['username',['../structBeef0006.html#ae57bdb7ebd3dfdd6c959b038fb1d9800',1,'Beef0006']]],
+  ['users_16',['users',['../structUsers.html#aa199d134aef8fb6e2d33762ab0db551e',1,'Users']]]
 ];
