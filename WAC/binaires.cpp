@@ -20,6 +20,8 @@
 #include "authenticode.h"
 #include "trust_set.h"
 #include "audit.h"
+#include "pe_resource.h"
+#include "version_info.h"
 #include "sha.h"
 #include "quickdigest5.h"
 #include "xml_light.h"
@@ -617,6 +619,76 @@ void noteVerdict(const VerdictMicrosoft& verdict, const RawHiveExtraction& line,
  *  @param windowsDelta receives whether the file is a Windows differential file
  *  @param output file to write the content to, in the same read (--binary-all)
  *  @return the result of the read */
+/*! The lists of vulnerable drivers of the trust set, when it is usable;
+ *  nullptr otherwise. Built on first use, before the analysis threads start
+ *  (BinariesCollectAll), which only read it. */
+const VulnerableDrivers* vulnerableDrivers() {
+	static std::unique_ptr<VulnerableDrivers> drivers;
+	static bool done = false;
+	if (done) return drivers.get();
+	done = true;
+	const TrustSet& set = CollectionTrustSet();
+	if (set.usable) drivers.reset(new VulnerableDrivers(set.driverHashes, set.deniedSigners));
+	return drivers.get();
+}
+
+/*! A third-party binary whose chain holds is still not cleared when it is
+ *  a vulnerable or malicious driver (see VulnerableDrivers) — or a driver
+ *  while a list of them is missing from the trust set: what a list would
+ *  have caught cannot be ruled out.
+ *  @param path the file, for its extension
+ *  @param line its record: the fingerprints
+ *  @param verdict the verdict, whose chain is withdrawn when listed
+ *  @param content the binary, for its version resource; null when not held
+ *         in memory — the version is then unknown, and a file rule matches */
+void checkVulnerableDriver(const std::wstring& path, const RawHiveExtraction& line, VerdictMicrosoft& verdict,
+                           const std::vector<uint8_t>* content) {
+	const VulnerableDrivers* drivers = vulnerableDrivers();
+	if (!verdict.chainTrusted || !drivers) return;
+	const std::wstring lower = toLower(path);
+	if (!CollectionTrustSet().driverListsMissing.empty() && lower.size() > 4 && lower.compare(lower.size() - 4, 4, L".sys") == 0) {
+		verdict.chainTrusted = false;
+		verdict.chainReason = "a list of vulnerable drivers is missing from the trust set: a driver cannot be cleared";
+		return;
+	}
+	VersionInfo version;
+	bool versioned = false;
+	if (content) {
+		PeResource pe;
+		versioned = pe.load(*content) && ReadVersionInfo(pe.resource(PE_RT_VERSION), version);
+	}
+	DriverFacts facts;
+	facts.authenticodeSha1 = line.fingerprints.authenticodeSha1;
+	facts.authenticodeSha256 = line.fingerprints.authenticodeSha256;
+	facts.fileSha1 = line.fingerprints.sha1;
+	facts.fileSha256 = line.fingerprints.sha256;
+	facts.chainTbsHashes = verdict.chainTbsHashes;
+	facts.signerName = verdict.chainSignerName;
+	facts.programName = verdict.signerProgramName;
+	facts.version = versioned ? &version : nullptr;
+	facts.read = content != nullptr;
+	const std::string why = drivers->match(facts);
+	if (why.empty()) return;
+	verdict.chainTrusted = false;
+	verdict.chainReason = why;
+}
+
+/*! A binary read in stream — a full run's cited binaries —, whose chain
+ *  holds: read again, raw, into memory, for its version resource, so that the
+ *  file rules of the driver lists are judged on it rather than assumed.
+ *  Candidates to being cleared only, and bounded in size.
+ *  @return its content, complete; null if not read again */
+std::unique_ptr<std::vector<uint8_t>> readForVersion(const std::wstring& path, const RawHiveExtraction& line,
+                                                    const VerdictMicrosoft& verdict) {
+	if (!verdict.chainTrusted || !vulnerableDrivers() || line.fingerprints.bytes > CATALOGUE_MAX) return nullptr;
+	Collector content;
+	RawHiveExtraction again;
+	again.fingerprints.computeHashes = false;
+	if (FAILED(g_reader->read(path, std::wstring(), again, &content)) || content.bytes.size() != line.fingerprints.bytes)
+		return nullptr;
+	return std::make_unique<std::vector<uint8_t>>(std::move(content.bytes));
+}
+
 HRESULT readAndAuthenticate(const std::wstring& path, RawHiveExtraction& line, VerdictMicrosoft& verdict,
                             bool fileHashes = true, bool* windowsDelta = nullptr,
                             const std::wstring& output = std::wstring()) {
@@ -633,6 +705,7 @@ HRESULT readAndAuthenticate(const std::wstring& path, RawHiveExtraction& line, V
 	bool delta = false;
 	analysis.conclude(line, verdict, delta);
 	if (windowsDelta) *windowsDelta = delta;
+	checkVulnerableDriver(path, line, verdict, readForVersion(path, line, verdict).get());
 	noteVerdict(verdict, line, package);
 	return hr;
 }
@@ -868,6 +941,7 @@ void analyseInMemory(WalkItem& item) {
 	if (!analysis.isPe() || conf.binaryAll) setFileHashes(item.line, item.content);
 	analysis.conclude(item.line, item.verdict, item.windowsDelta);
 	if (!item.verdict.microsoft && item.line.fingerprints.sha256.empty()) setFileHashes(item.line, item.content);
+	checkVulnerableDriver(item.path, item.line, item.verdict, &item.content);
 	g_analysisMs += (unsigned long long)std::chrono::duration_cast<std::chrono::milliseconds>(
 		std::chrono::steady_clock::now() - start).count();
 }
@@ -1092,6 +1166,7 @@ HRESULT BinariesCollectAll() {
 	   they only read them. */
 	catalogues();
 	thirdPartyRoots();
+	vulnerableDrivers();
 	const unsigned threads = conf.threads ? conf.threads
 	                       : std::max(1u, std::thread::hardware_concurrency() > 1 ? std::thread::hardware_concurrency() - 1 : 1u);
 	AnalysisPool pool(threads);

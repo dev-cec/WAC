@@ -230,8 +230,14 @@ addresses a collection lacked are written to `trust\wanted-crls.txt` on the
 key, and the next `--update-trust` fetches them. The manifest records it all
 (`EmbeddedChainTrusted`, `EmbeddedChainRoot`, `EmbeddedChainReason`,
 `EmbeddedTimeStampUtc`, `EmbeddedTimeStampAuthority`,
-`EmbeddedRevocationListsUtc`); the collection rule itself does not change
-yet — vulnerable drivers come first.
+`EmbeddedRevocationListsUtc`). A binary whose chain holds is still not
+cleared when it is a vulnerable or malicious driver: its fingerprint
+(Authenticode — equal to LOLDrivers' Authentihash, measured — or of the file)
+in Microsoft's blocklist or LOLDrivers, or a signer Microsoft denies, with
+every narrowing it gives (signer, WHQL manufacturer, original file name read
+in the version resource — not the name on disk, which an attacker changes —,
+version bounds). A list of drivers missing from the set: no driver can be
+cleared. The collection rule itself does not change yet.
 
 On a Linux workstation it runs under wine. About 70 seconds for 64 MB; the
 562 roots are

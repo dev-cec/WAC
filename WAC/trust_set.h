@@ -39,6 +39,7 @@ struct TrustSet {
 	//! The root certificates, DER, by the identifier of their entry in `roots` (SHA-1).
 	std::map<std::string, std::vector<uint8_t>> rootCertificates;
 	std::set<std::wstring> driverHashes;          //!< vulnerable drivers: fingerprints, uppercase hexadecimal
+	std::vector<DeniedSigner> deniedSigners;      //!< the signers Microsoft's blocklist denies
 	std::vector<std::wstring> driverListsMissing; //!< driver lists --update-trust could not obtain
 	std::set<std::wstring> revokedAuthorities;    //!< SHA-256 of the authorities the CCADB says revoked
 	RevocationLists revocationLists;              //!< the CRLs, loaded; empty if the CCADB was not obtained

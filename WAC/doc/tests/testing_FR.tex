@@ -545,6 +545,30 @@ pas par \texttt{Get-AuthenticodeSignature}.
 /tmp/third_party_chain_test /tmp/chain
 \end{lstlisting}
 
+\section{Pilotes vulnérables : \texttt{version\_info\_test}, \texttt{vulnerable\_drivers\_test}}
+
+\texttt{version\_info\_test} confronte la lecture de la ressource de version
+(nom d'origine, nom interne, produit, description, version) à celle de
+Windows (\texttt{VersionInfo} de PowerShell dans la VM) sur 58 binaires :
+versions et textes identiques, hors textes qu'un binaire localisé tient de son
+satellite \fichier{.mui} — que la liste de blocage ne lit pas —, puis
+ressources tronquées et abîmées (11\,852 contrôles).
+\texttt{vulnerable\_drivers\_test} prend chaque règle seule : empreinte
+Authenticode ou du fichier, autorité refusée dans la chaîne, restreinte au
+signataire, au fabricant WHQL, au nom d'origine, au produit, aux bornes de
+version ; binaire sans ressource de version (la règle de fichier ne s'applique
+pas, comme chez Windows) ou non lu (elle s'applique) — neuf mutations toutes
+détectées. Sur des échantillons réels de LOLDrivers, l'empreinte Authenticode
+de \wac{} est leur « Authentihash » (4 sur 4), et deux pilotes vulnérables dont
+la chaîne tient sont refusés ; dans la VM, un pilote vulnérable déposé (jamais
+chargé) doit être reconnu.
+
+\begin{lstlisting}
+g++ -std=c++17 -g -fsanitize=address,undefined -I. pe_resource.cpp \
+    version_info.cpp version_info_test.cpp -o /tmp/version_info_test
+/tmp/version_info_test <reference> <dossier>
+\end{lstlisting}
+
 \section{Listes de confiance : \texttt{inflate\_test}, \texttt{cab\_test}, \texttt{zip\_test}, \texttt{csv\_reader\_test}, \texttt{trust\_list\_test}}
 
 \opt{update-trust} décompresse et lit ce que Microsoft publie ; une erreur

@@ -11,6 +11,7 @@
 #include "rsa.h"
 #include "racines_microsoft.h"
 #include "quickdigest5.h"
+#include "json.h"
 #include <cstring>
 #include <map>
 #include <set>
@@ -86,6 +87,7 @@ OID(OID_RFC3161_TIME_STAMP, 0x2B,0x06,0x01,0x04,0x01,0x82,0x37,0x03,0x03,0x01);
 OID(OID_COUNTER_SIGNATURE, 0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x09,0x06);
 OID(OID_SIGNING_TIME,   0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x09,0x05);
 OID(OID_CRL_DISTRIBUTION_POINTS, 0x55,0x1D,0x1F);
+OID(OID_SPC_SP_OPUS_INFO, 0x2B,0x06,0x01,0x04,0x01,0x82,0x37,0x02,0x01,0x0C);
 OID(OID_CRL_REASON,     0x55,0x1D,0x15);
 OID(OID_TST_INFO,       0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x09,0x10,0x01,0x04);
 //! True if the DER element `t` is the OID constant `o`.
@@ -429,6 +431,21 @@ VerifiedSignature VerifyPkcs7(const uint8_t* data, size_t size) {
 	r.reason = checkSignerInfo(signers[0], r.content, r.contentSize, pool, check);
 	if (!r.reason.empty()) return r;
 	r.signerIndex = check.signerIndex;
+	// SpcSpOpusInfo { [0] programName SpcString { [0] BMPString | [1] IA5String } } — the WHQL manufacturer.
+	for (const Tlv& a : children(check.attributes)) {
+		const std::vector<Tlv> av = children(a);
+		if (av.size() < 2 || !IS_OID(av[0], OID_SPC_SP_OPUS_INFO)) continue;
+		const std::vector<Tlv> values = children(av[1]);
+		if (values.empty()) continue;
+		for (const Tlv& field : children(values[0])) {
+			if (field.tag != 0xA0) continue;
+			const std::vector<Tlv> name = children(field);
+			if (name.empty()) continue;
+			if (name[0].tag == 0x80)
+				for (size_t k = 0; k + 1 < name[0].len; k += 2) r.programName += (wchar_t)((name[0].val[k] << 8) | name[0].val[k + 1]);
+			else if (name[0].tag == 0x81) r.programName.assign(name[0].val, name[0].val + name[0].len);
+		}
+	}
 	r.signatureValue = check.signatureValue.val;
 	r.signatureValueSize = check.signatureValue.len;
 	if (check.unsignedAttributes.start) {
@@ -915,6 +932,17 @@ ChainVerdict ThirdPartyRoots::verify(const VerifiedSignature& signature) const {
 		}
 	}
 	v.revocationListsIssued = oldest;
+	// For the lists of vulnerable drivers: the signed part of each certificate, by both digests the blocklist uses.
+	std::vector<const Certificate*> all = chain.certificates;
+	all.push_back(&chain.root->first);
+	for (const Certificate* c : all) {
+		uint8_t h1[20], h2[32];
+		sha1Bytes(c->tbs.start, c->tbs.total, h1);
+		sha256Bytes(c->tbs.start, c->tbs.total, h2);
+		v.tbsHashes.push_back(toHexadecimal(h1, sizeof(h1)));
+		v.tbsHashes.push_back(toHexadecimal(h2, sizeof(h2)));
+	}
+	if (!chain.certificates.empty()) v.signerName = attributeNameField(chain.certificates[0]->subject, OID_CN, sizeof(OID_CN));
 	v.trusted = true;
 	v.root = attributeNameField(chain.root->first.subject, OID_CN, sizeof(OID_CN));
 	if (stamp.verified) {
@@ -1148,6 +1176,9 @@ VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalog
 		v.chainTimeStampAuthority = chain.timeStampAuthority;
 		v.chainRevocationListsIssued = chain.revocationListsIssued;
 		v.chainMissingCrls = chain.missingCrls;
+		v.chainTbsHashes = chain.tbsHashes;
+		v.chainSignerName = chain.signerName;
+		v.signerProgramName = s.programName;
 	}
 	if (!s.valid) { v.reason = s.reason; return v; }
 	if (s.contentOid != std::string((const char*)OID_SPC_INDIRECT, sizeof(OID_SPC_INDIRECT))) {
@@ -1370,6 +1401,91 @@ const TrustListEntry* FindInTrustList(const TrustList& list, const uint8_t* cert
 		for (const std::string& identifier : identifiers)
 			if (entry.identifier == identifier) return &entry;
 	return nullptr;
+}
+
+namespace {
+
+//! Equal, ignoring the case of ASCII letters — how the blocklist compares names.
+bool sameName(const std::wstring& a, const std::wstring& b) {
+	if (a.size() != b.size()) return false;
+	for (size_t k = 0; k < a.size(); ++k) {
+		const wchar_t x = a[k] >= L'A' && a[k] <= L'Z' ? a[k] + 32 : a[k];
+		const wchar_t y = b[k] >= L'A' && b[k] <= L'Z' ? b[k] + 32 : b[k];
+		if (x != y) return false;
+	}
+	return true;
+}
+
+/*! A file rule against a version resource: every attribute given equal,
+ *  the version within bounds. Not read: matched; read and absent: not (see
+ *  VulnerableDrivers). */
+bool fileMatches(const DeniedFile& rule, const VersionInfo* version, bool read) {
+	if (!read) return true;
+	if (!version) return false;
+	auto text = [&](const wchar_t* key) {
+		const auto found = version->strings.find(key);
+		return found == version->strings.end() ? std::wstring() : found->second;
+	};
+	if (!rule.fileName.empty() && !sameName(rule.fileName, text(L"OriginalFilename"))) return false;
+	if (!rule.internalName.empty() && !sameName(rule.internalName, text(L"InternalName"))) return false;
+	if (!rule.productName.empty() && !sameName(rule.productName, text(L"ProductName"))) return false;
+	if (!rule.fileDescription.empty() && !sameName(rule.fileDescription, text(L"FileDescription"))) return false;
+	if (version->fixed && (version->fileVersion < rule.minimumVersion || version->fileVersion > rule.maximumVersion)) return false;
+	return true;
+}
+
+std::string narrowText(const std::wstring& w) { return std::string(w.begin(), w.end()); }
+
+} // namespace
+
+void VulnerableDriversFromJson(const Json& file, std::set<std::wstring>& hashes, std::vector<DeniedSigner>& signers,
+                               std::vector<std::wstring>& missing) {
+	auto text = [](const Json& object, const wchar_t* key) {
+		const Json* member = object.find(key);
+		return member ? member->text() : std::wstring();
+	};
+	if (const Json* list = file.find(L"Hashes"))
+		for (const auto& [unused, h] : list->members()) hashes.insert(text(h, L"Hash"));
+	if (const Json* list = file.find(L"ListsMissing"))
+		for (const auto& [unused, m] : list->members()) missing.push_back(text(m, L"List"));
+	const Json* list = file.find(L"Signers");
+	if (!list) return;
+	for (const auto& [unused, s] : list->members()) {
+		DeniedSigner signer;
+		signer.name = text(s, L"Name");
+		signer.tbsHash = text(s, L"TbsHash");
+		signer.publisher = text(s, L"CertPublisher");
+		signer.oemId = text(s, L"CertOemID");
+		if (const Json* files = s.find(L"Files"))
+			for (const auto& [unused2, f] : files->members()) {
+				DeniedFile rule;
+				rule.fileName = text(f, L"FileName");
+				rule.internalName = text(f, L"InternalName");
+				rule.productName = text(f, L"ProductName");
+				rule.fileDescription = text(f, L"FileDescription");
+				ParseFileVersion(text(f, L"MinimumFileVersion"), rule.minimumVersion);
+				ParseFileVersion(text(f, L"MaximumFileVersion"), rule.maximumVersion);
+				signer.files.push_back(rule);
+			}
+		signers.push_back(std::move(signer));
+	}
+}
+
+std::string VulnerableDrivers::match(const DriverFacts& facts) const {
+	for (const std::wstring* h : { &facts.authenticodeSha256, &facts.authenticodeSha1, &facts.fileSha256, &facts.fileSha1 })
+		if (!h->empty() && hashes_.count(*h)) return "listed as a vulnerable or malicious driver (fingerprint " + narrowText(*h) + ")";
+	for (const DeniedSigner& signer : signers_) {
+		if (signer.tbsHash.empty()) continue;
+		bool inChain = false;
+		for (const std::wstring& h : facts.chainTbsHashes) inChain |= sameName(h, signer.tbsHash);
+		if (!inChain) continue;
+		if (!signer.publisher.empty() && !sameName(signer.publisher, facts.signerName)) continue;
+		if (!signer.oemId.empty() && !sameName(signer.oemId, facts.programName)) continue;
+		bool fileMatched = signer.files.empty();
+		for (const DeniedFile& rule : signer.files) fileMatched |= fileMatches(rule, facts.version, facts.read);
+		if (fileMatched) return "signer denied by Microsoft's vulnerable driver blocklist: " + narrowText(signer.name);
+	}
+	return std::string();
 }
 
 std::vector<std::string> CertificateCrlAddresses(const uint8_t* der, size_t size) {

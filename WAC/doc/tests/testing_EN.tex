@@ -526,6 +526,29 @@ the VM, no chain \wac{} trusts is untrusted by
 /tmp/third_party_chain_test /tmp/chain
 \end{lstlisting}
 
+\section{Vulnerable drivers: \texttt{version\_info\_test}, \texttt{vulnerable\_drivers\_test}}
+
+\texttt{version\_info\_test} checks the reading of the version resource
+(original name, internal name, product, description, version) against
+Windows' (PowerShell's \texttt{VersionInfo} in the VM) on 58 binaries:
+versions and texts identical, except the texts a localised binary takes from
+its \fichier{.mui} satellite — which the blocklist does not read —, then
+truncated and damaged resources (11,852 checks).
+\texttt{vulnerable\_drivers\_test} takes each rule alone: an Authenticode or
+file fingerprint, a denied authority in the chain, narrowed to the signer, the
+WHQL manufacturer, the original name, the product, the version bounds; a
+binary without version resource (the file rule does not apply, as with
+Windows) or not read (it applies) — nine mutations all detected. On real
+LOLDrivers samples, \wac{}'s Authenticode digest is their ``Authentihash'' (4
+out of 4), and two vulnerable drivers whose chain holds are refused; in the
+VM, a vulnerable driver placed there (never loaded) must be recognised.
+
+\begin{lstlisting}
+g++ -std=c++17 -g -fsanitize=address,undefined -I. pe_resource.cpp \
+    version_info.cpp version_info_test.cpp -o /tmp/version_info_test
+/tmp/version_info_test <reference> <folder>
+\end{lstlisting}
+
 \section{Trust lists: \texttt{inflate\_test}, \texttt{cab\_test}, \texttt{zip\_test}, \texttt{csv\_reader\_test}, \texttt{trust\_list\_test}}
 
 \opt{update-trust} decompresses and reads what Microsoft publishes; an error

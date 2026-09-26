@@ -102,10 +102,7 @@ bool loadLists(const std::filesystem::path& folder, TrustSet& set) {
 bool loadUnsignedLists(const std::filesystem::path& folder, TrustSet& set) {
 	Json drivers = Json::null();
 	if (!readSetJson(folder / "vulnerable-drivers.json", drivers)) { set.reason = "vulnerable-drivers.json unreadable"; return false; }
-	if (const Json* hashes = drivers.find(L"Hashes"))
-		for (const auto& [unused, h] : hashes->members()) set.driverHashes.insert(textOf(h, L"Hash"));
-	if (const Json* missing = drivers.find(L"ListsMissing"))
-		for (const auto& [unused, m] : missing->members()) set.driverListsMissing.push_back(textOf(m, L"List"));
+	VulnerableDriversFromJson(drivers, set.driverHashes, set.deniedSigners, set.driverListsMissing);
 	Json revocation = Json::null();
 	std::error_code ec;
 	if (!std::filesystem::exists(folder / "revocation.json", ec)) return true;   // CCADB not obtained

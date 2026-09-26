@@ -166,6 +166,7 @@ def cross_checks(folder):
     found += check_macro_document(folder)
     found += check_embedded_signers(folder)
     found += check_third_party_chains(folder)
+    found += check_vulnerable_driver(folder)
     return found
 
 
@@ -264,6 +265,31 @@ def check_third_party_chains(folder):
         print("  ⏭️  no checked chain in common with the reference")
         return 0
     print(f"  ✅ {compared} third-party chains: none trusted by WAC that Windows does not trust")
+    return 0
+
+
+def check_vulnerable_driver(folder):
+    """A vulnerable driver placed in the VM (reference/vulnerable-driver.txt):
+    signed, its chain holds — and it must still not be cleared: the manifest
+    must say its chain is not trusted, because it is a listed driver."""
+    reference_path = os.path.join(folder, "reference", "vulnerable-driver.txt")
+    if not os.path.exists(reference_path):
+        print("  ⏭️  no vulnerable driver placed: not checked")
+        return 0
+    with open(reference_path, encoding="utf-8", errors="replace") as f:
+        path = f.read().strip().lower()
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+    found = [i for i in items if str(i.get("SourcePath", "")).lower() == path]
+    if not found:
+        print(f"  ⏭️  vulnerable driver absent from the manifest (removed by Defender?): {path}")
+        return 0
+    item = found[0]
+    reason = str(item.get("EmbeddedChainReason") or "")
+    if item.get("EmbeddedChainTrusted") is not False or "vulnerable" not in reason:
+        print(f"  ❌ vulnerable driver not recognised: trusted={item.get('EmbeddedChainTrusted')}, reason={reason!r}")
+        return 1
+    print(f"  ✅ vulnerable driver recognised despite its valid chain: {reason[:90]}")
     return 0
 
 

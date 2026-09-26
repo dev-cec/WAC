@@ -316,6 +316,27 @@ if [[ $SPLIT -eq 1 ]]; then
     '$f = "C:\Users\wac\Documents\wac-macro-test.docm"; Set-Content $f "PK wac macro document test $(Get-Date -Format o)"; $f' \
     > "$OUTPUT/reference/macro-document.txt" 2>/dev/null \
     && echo "   + reference/macro-document.txt" || echo "   ⚠️ macro document not prepared"
+  # A VULNERABLE DRIVER, as an intruder brings one to open the kernel (BYOVD):
+  # EVGA's, signed and genuine — its chain holds —, listed by LOLDrivers and
+  # Microsoft. Only copied, never loaded. The collection must not clear it.
+  # Fetched once from LOLDrivers, checked by its SHA-256; Defender may remove
+  # it from the VM, the check then says so.
+  VULN_SHA256=33da2ce240b4559cc6e847d56c5fbeaa3d644ec160841920ea0a098dcee28d0e
+  VULN_CACHE="$HOME/.cache/wac-test/evga_kernel_driver-x64.sys"
+  if [[ ! -f "$VULN_CACHE" ]]; then
+    mkdir -p "$(dirname "$VULN_CACHE")"
+    curl -sSfL --max-time 60 -o "$VULN_CACHE.part" \
+      "https://github.com/magicsword-io/LOLDrivers/raw/main/drivers/8dc9504fb5eda1a354971bacffe61ccc.bin" \
+      && mv "$VULN_CACHE.part" "$VULN_CACHE" || rm -f "$VULN_CACHE.part"
+  fi
+  if [[ -f "$VULN_CACHE" ]] && echo "$VULN_SHA256  $VULN_CACHE" | sha256sum -c --status; then
+    $QGA run --shell "mkdir C:\\wactest\\vuln 2>nul & echo." >/dev/null 2>&1 || true
+    $QGA write "$VULN_CACHE" "C:\\wactest\\vuln\\evga_kernel_driver-x64.sys" >/dev/null \
+      && echo 'C:\wactest\vuln\evga_kernel_driver-x64.sys' > "$OUTPUT/reference/vulnerable-driver.txt" \
+      && echo "   + reference/vulnerable-driver.txt" || echo "   ⚠️ vulnerable driver not placed"
+  else
+    echo "   ⚠️ vulnerable driver sample not obtained: its check will be skipped"
+  fi
 
   # taskkill just before the collection, as in step 2: the BAM check expects
   # its execution within minutes of the collection, and the references above

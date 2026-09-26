@@ -27,6 +27,7 @@
 #include "authenticode.h"
 #include "rsa.h"
 #include "json.h"
+#include "pe_resource.h"
 #include <cstdio>
 #include <cstring>
 #include <fstream>
@@ -113,6 +114,10 @@ int main(int argc, char** argv) {
 	std::map<std::string, std::vector<uint8_t>> rootCertificates;
 	const std::set<std::wstring> noRevoked;
 	RevocationLists revocation;
+	std::set<std::wstring> driverHashes;
+	std::vector<DeniedSigner> deniedSigners;
+	std::vector<std::wstring> driverListsMissing;
+	std::unique_ptr<VulnerableDrivers> drivers;
 	std::unique_ptr<ThirdPartyRoots> thirdParty;
 	if (!trust.empty()) {
 		const std::vector<uint8_t> a = readFile(std::filesystem::path(trust) / "authroot.stl");
@@ -140,6 +145,14 @@ int main(int argc, char** argv) {
 							revocation.byAuthority[issuer.find(L"SHA256")->text()].push_back(std::string(url.begin(), url.end()));
 				}
 		std::cerr << revocation.byUrl.size() << " revocation list(s)\n";
+		// The lists of vulnerable drivers (names are read as bytes: ASCII is all the rules need).
+		const std::vector<uint8_t> driversFile = readFile(std::filesystem::path(trust) / "vulnerable-drivers.json");
+		Json driverLists = Json::null();
+		if (Json::parse(std::wstring(driversFile.begin(), driversFile.end()), driverLists, error)) {
+			VulnerableDriversFromJson(driverLists, driverHashes, deniedSigners, driverListsMissing);
+			drivers.reset(new VulnerableDrivers(driverHashes, deniedSigners));
+		}
+		std::cerr << driverHashes.size() << " driver fingerprint(s), " << deniedSigners.size() << " denied signer(s)\n";
 		// Judged now, as a collection would be.
 		const uint64_t now = ((uint64_t)std::chrono::duration_cast<std::chrono::seconds>(
 			std::chrono::system_clock::now().time_since_epoch()).count() + 11644473600ULL) * 10000000ULL;
@@ -173,11 +186,32 @@ int main(int argc, char** argv) {
 				if (ps.microsoft || ps.reason != "no embedded signature") v = ps;
 			}
 		}
+		// As the collection does: a chain that holds, checked against the lists of vulnerable drivers.
+		if (drivers && v.chainTrusted) {
+			PeResource resources;
+			VersionInfo version;
+			const bool versioned = resources.load(bytes) && ReadVersionInfo(resources.resource(PE_RT_VERSION), version);
+			uint8_t f1[20], f2[32];
+			sha1Bytes(bytes.data(), bytes.size(), f1);
+			sha256Bytes(bytes.data(), bytes.size(), f2);
+			DriverFacts facts;
+			facts.authenticodeSha1 = toHexadecimal(pe.sha1(), 20);
+			facts.authenticodeSha256 = toHexadecimal(pe.sha256(), 32);
+			facts.fileSha1 = toHexadecimal(f1, 20);
+			facts.fileSha256 = toHexadecimal(f2, 32);
+			facts.chainTbsHashes = v.chainTbsHashes;
+			facts.signerName = v.chainSignerName;
+			facts.programName = v.signerProgramName;
+			facts.version = versioned ? &version : nullptr;
+			const std::string why = drivers->match(facts);
+			if (!why.empty()) { v.chainTrusted = false; v.chainReason = why; }
+		}
 		if (v.microsoft) { ++ms; std::cout << id << "|MICROSOFT|" << utf8(v.source) << "\n"; }
 		else {
 			++others;
 			std::cout << id << "|COLLECT|" << v.reason;
 			if (v.chainChecked) std::cout << "|CHAIN|" << (v.chainTrusted ? "TRUSTED|" + utf8(v.chainRoot) : "UNTRUSTED|" + v.chainReason);
+			if (!v.signerProgramName.empty()) std::cout << "|PROGRAM|" << utf8(v.signerProgramName);
 			if (v.chainSignedAt)
 				std::cout << "|STAMP|" << (v.chainSignedAt / 10000000ULL - 11644473600ULL) << "|" << utf8(v.chainTimeStampAuthority);
 			std::cout << "\n";

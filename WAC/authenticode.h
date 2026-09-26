@@ -50,6 +50,7 @@
 #include <ostream>
 #include <unordered_map>
 #include "sha.h"
+#include "version_info.h"
 
 /*! Analysis of a PE file fed as a stream: Authenticode digests and certificate
  *  table, computed while reading, without reading the file again.
@@ -121,6 +122,10 @@ struct VerifiedSignature {
 	//! The certificates the SignedData carries, DER (pointers into the data).
 	std::vector<std::pair<const uint8_t*, size_t>> certificates;
 	size_t signerIndex = SIZE_MAX; //!< the signer's among them; SIZE_MAX if not found
+	/*! The program name its SpcSpOpusInfo attribute gives — for a WHQL
+	 *  signature, the manufacturer (measured: "Red Hat, Inc." on virtio
+	 *  drivers), what Microsoft's blocklist calls CertOemID. */
+	std::wstring programName;
 	const uint8_t* signatureValue = nullptr;     //!< the signer's encryptedDigest, what a time stamp covers
 	size_t signatureValueSize = 0;
 	const uint8_t* unsignedAttributes = nullptr; //!< the signer's unsigned attributes ([1], DER), time stamps; null if none
@@ -184,6 +189,83 @@ struct VerdictMicrosoft {
 	std::wstring chainTimeStampAuthority; //!< CN of the time stamp's authority
 	uint64_t chainRevocationListsIssued = 0; //!< FILETIME (UTC) of the oldest CRL its revocation was checked by
 	std::vector<std::string> chainMissingCrls; //!< CRL addresses missing from the set (see ChainVerdict)
+	std::vector<std::wstring> chainTbsHashes;  //!< see ChainVerdict::tbsHashes
+	std::wstring chainSignerName;              //!< see ChainVerdict::signerName
+	std::wstring signerProgramName;            //!< see VerifiedSignature::programName
+};
+
+/*! A file a denied signer of Microsoft's blocklist is restricted to: each
+ *  attribute given must match the binary's version resource, its version
+ *  within the bounds. */
+struct DeniedFile {
+	std::wstring fileName;         //!< the ORIGINAL file name (OriginalFilename), not the name on disk
+	std::wstring internalName, productName, fileDescription;
+	uint64_t minimumVersion = 0;
+	uint64_t maximumVersion = UINT64_MAX;
+};
+
+/*! A signer Microsoft's blocklist denies: an authority's certificate (the
+ *  digest of its signed part), narrowed by the signer's certificate name, the
+ *  WHQL manufacturer, and files — each when given. */
+struct DeniedSigner {
+	std::wstring name;             //!< the rule's name, for the reason
+	std::wstring tbsHash;          //!< uppercase hexadecimal: SHA-1 (40) or SHA-256 (64)
+	std::wstring publisher;        //!< CertPublisher: the signer's certificate CN
+	std::wstring oemId;            //!< CertOemID: the WHQL signature's program name
+	std::vector<DeniedFile> files; //!< empty: every file
+};
+
+/*! What a binary is, for the lists of vulnerable drivers. */
+struct DriverFacts {
+	std::wstring authenticodeSha1, authenticodeSha256;   //!< uppercase hexadecimal
+	std::wstring fileSha1, fileSha256;                   //!< uppercase hexadecimal; empty if not computed
+	std::vector<std::wstring> chainTbsHashes;            //!< see ChainVerdict::tbsHashes
+	std::wstring signerName, programName;
+	const VersionInfo* version = nullptr;                //!< its version resource; null if it has none, or was not read
+	bool read = true;                                    //!< the binary was read for its version resource (false: unknown)
+};
+
+class Json;
+
+/*! Reads vulnerable-drivers.json, as --update-trust wrote it. A version
+ *  bound that does not read is left open — the rule then matches more, never
+ *  less.
+ *  @param file the file, parsed
+ *  @param hashes receives the fingerprints
+ *  @param signers receives the denied signers
+ *  @param missing receives the lists --update-trust could not obtain */
+void VulnerableDriversFromJson(const Json& file, std::set<std::wstring>& hashes, std::vector<DeniedSigner>& signers,
+                               std::vector<std::wstring>& missing);
+
+/*! THE LISTS OF VULNERABLE DRIVERS, at the collection: a binary whose
+ *  signature holds may still be a driver an attacker brings to open the
+ *  kernel (BYOVD) — signed, genuine, and vulnerable. Such a binary is not
+ *  cleared.
+ *
+ *  A binary is listed when one of its fingerprints — Authenticode, or of the
+ *  file — is in Microsoft's blocklist or LOLDrivers (the Authenticode digest
+ *  of WAC is LOLDrivers' Authentihash: measured equal on four samples), or
+ *  when a denied signer of Microsoft's blocklist matches: its authority in the
+ *  chain, and every narrowing it gives. A file rule is judged on the version
+ *  resource, as Windows judges it: a binary that has none does not match it
+ *  (its fingerprints still count — and the resource cannot be taken out
+ *  without breaking the signature). A binary NOT READ for it — too large to
+ *  be held in memory — matches it: what cannot be told apart is not
+ *  cleared.
+ *
+ *  Built once, shared by the analysis threads (read only). */
+class VulnerableDrivers {
+public:
+	/*! @param hashes the fingerprints, uppercase hexadecimal
+	 *  @param signers the denied signers
+	 *  Both must outlive this object. */
+	VulnerableDrivers(const std::set<std::wstring>& hashes, const std::vector<DeniedSigner>& signers)
+		: hashes_(hashes), signers_(signers) {}
+	/*! @return why the binary is listed, or "" if it is not */
+	std::string match(const DriverFacts& facts) const;
+private:
+	const std::set<std::wstring>& hashes_;
+	const std::vector<DeniedSigner>& signers_;
 };
 
 struct TrustList;
@@ -205,6 +287,9 @@ struct ChainVerdict {
 	uint64_t signedAt = 0;         //!< FILETIME (UTC) of the verified time stamp; 0 if none
 	std::wstring timeStampAuthority; //!< CN of its authority
 	uint64_t revocationListsIssued = 0; //!< FILETIME (UTC) of the oldest CRL the revocation was checked by
+	//! SHA-1 and SHA-256 (uppercase hexadecimal) of the signed part of every certificate of the chain, root included.
+	std::vector<std::wstring> tbsHashes;
+	std::wstring signerName;       //!< CN of the signer's certificate
 	//! Revocation not verifiable: the CRL addresses the certificate names, none of which the set holds.
 	std::vector<std::string> missingCrls;
 };
