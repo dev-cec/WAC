@@ -117,6 +117,8 @@ struct SignatureVerdict {
 	bool chainTrusted = false;
 	std::wstring chainRoot;
 	std::wstring chainReason;
+	std::wstring chainSignedUtc;          //!< the verified time stamp, ISO 8601 UTC; empty if none
+	std::wstring chainTimeStampAuthority; //!< its authority
 };
 
 /*! Records an extraction result in the exhibit store manifest.

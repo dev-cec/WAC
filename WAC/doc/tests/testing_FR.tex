@@ -517,7 +517,16 @@ chaîne saine acceptée ; racine absente, exclue de la signature de code,
 désapprouvée ; clé d'autorité désapprouvée par Microsoft ; autorité révoquée
 selon la CCADB ; émetteur sans \texttt{cA} ; signataire réservé au web ;
 autorité du bon nom mais d'une autre clé ; autorité ECDSA (non vérifiée).
-Chaque règle neutralisée tour à tour fait échouer le test (huit mutations).
+Puis l'heure à laquelle une chaîne est jugée, avec un vrai jeton RFC~3161 fait
+par \texttt{openssl ts} et l'heure de collecte portée en 2040 : signataire
+valide de 2020 à 2035 accepté sans horodatage aujourd'hui, refusé en 2040,
+accepté en 2040 s'il est horodaté aujourd'hui ; jeton sur une autre
+signature, ou altéré, refusé ; autorité d'horodatage sous une racine non
+admise pour cet usage, refusée ; racine désapprouvée après 2030 acceptée pour
+une signature horodatée avant, refusée sinon. Chaque règle neutralisée tour à
+tour fait échouer le test (quinze mutations). Les horodatages des installeurs
+réels concordent à la seconde avec une lecture indépendante (\texttt{openssl
+ts} pour les jetons RFC~3161, DER pour les contre-signatures).
 Les signatures réelles se recoupent par \texttt{authenticode\_test --trust},
 face à \texttt{openssl verify} avec le \fichier{roots.pem} du jeu (installeurs
 de Git, Notepad++, PuTTY, Python, VLC ; jeu complet et jeu privé des racines

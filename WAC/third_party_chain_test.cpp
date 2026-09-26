@@ -13,7 +13,14 @@
  *      according to the CCADB;
  *    - an issuer without cA; a signer certificate for the web only;
  *    - an authority with the right name and another key (a forger's);
- *    - an ECDSA authority: not verified, hence not accepted.
+ *    - an ECDSA authority: not verified, hence not accepted;
+ *    - THE TIME a chain is judged at, with a real RFC 3161 token made by
+ *      openssl ts over a signature value, the collection's time moved to
+ *      2040: a signer valid 2020-2035 is accepted without time stamp in 2026,
+ *      refused in 2040, accepted in 2040 when stamped in 2026; a token over
+ *      another signature, or altered, refused; its authority's root not
+ *      trusted for time stamping, refused; a root distrusted after 2030
+ *      accepted for a signature stamped before, refused otherwise.
  *  The trust lists are built here, entry by entry: what is tested is the
  *  chain, the lists' own reading being trust_list_test's.
  *
@@ -24,6 +31,7 @@
 #include "authenticode.h"
 #include "quickdigest5.h"
 #include <cstdio>
+#include <ctime>
 #include <filesystem>
 #include <fstream>
 
@@ -76,6 +84,36 @@ std::string keyMd5(const std::vector<uint8_t>& der) {
 	return raw;
 }
 
+//! A fixture file, whole.
+std::vector<uint8_t> fixture(const char* name) {
+	std::ifstream f(g_folder / name, std::ios::binary);
+	return std::vector<uint8_t>((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+}
+
+//! DER: `content` under `tag`, with its length.
+std::vector<uint8_t> der(uint8_t tag, const std::vector<uint8_t>& content) {
+	std::vector<uint8_t> out{ tag };
+	const size_t n = content.size();
+	if (n < 0x80) out.push_back((uint8_t)n);
+	else if (n < 0x100) { out.push_back(0x81); out.push_back((uint8_t)n); }
+	else { out.push_back(0x82); out.push_back((uint8_t)(n >> 8)); out.push_back((uint8_t)n); }
+	out.insert(out.end(), content.begin(), content.end());
+	return out;
+}
+
+/*! The unsigned attributes of a SignerInfo carrying an RFC 3161 token:
+ *  [1] { SEQUENCE { OID 1.3.6.1.4.1.311.3.3.1, SET { token } } }. */
+std::vector<uint8_t> stampAttributes(const std::vector<uint8_t>& token) {
+	const std::vector<uint8_t> oid = { 0x06, 0x0A, 0x2B, 0x06, 0x01, 0x04, 0x01, 0x82, 0x37, 0x03, 0x03, 0x01 };
+	std::vector<uint8_t> attribute = oid;
+	const std::vector<uint8_t> values = der(0x31, token);
+	attribute.insert(attribute.end(), values.begin(), values.end());
+	return der(0xA1, der(0x30, attribute));
+}
+
+//! A Unix time as a FILETIME.
+uint64_t filetime(long long unixSeconds) { return (uint64_t)(unixSeconds + 11644473600LL) * 10000000ULL; }
+
 //! A signature as VerifyPkcs7 would give it: intact, these certificates, the first the signer.
 VerifiedSignature signatureOf(const std::vector<const std::vector<uint8_t>*>& pool) {
 	VerifiedSignature s;
@@ -113,6 +151,8 @@ int main(int argc, char** argv) {
 	disallowed.valid = true;
 	disallowed.identifier = 15;
 	std::set<std::wstring> revoked;
+	// Now: the fixtures, made just before, are valid from their making, for ten years.
+	const uint64_t NOW = filetime((long long)std::time(nullptr) + 60);
 
 	const Case sound[] = {
 		{ "sound chain", { &leaf, &ca }, "" },
@@ -123,7 +163,7 @@ int main(int argc, char** argv) {
 		{ "ECDSA authority", { &ecleaf, &ecca }, "not RSA" },
 	};
 	for (const Case& c : sound) {
-		const ThirdPartyRoots trust(roots, certificates, disallowed, revoked);
+		const ThirdPartyRoots trust(roots, certificates, disallowed, revoked, NOW);
 		const ChainVerdict v = trust.verify(signatureOf(c.pool));
 		if (!*c.expected) check(v.trusted && v.root == L"WAC Test Root", std::string(c.what) + ": refused: " + v.reason);
 		else check(!v.trusted && v.reason.find(c.expected) != std::string::npos,
@@ -133,7 +173,7 @@ int main(int argc, char** argv) {
 	// The same sound chain, each list changed to refuse it.
 	auto expectRefused = [&](const TrustList& r, const TrustList& d, const std::set<std::wstring>& rv,
 	                         const char* expected, const char* what) {
-		const ThirdPartyRoots trust(r, certificates, d, rv);
+		const ThirdPartyRoots trust(r, certificates, d, rv, NOW);
 		const ChainVerdict v = trust.verify(signatureOf({ &leaf, &ca }));
 		check(!v.trusted && v.reason.find(expected) != std::string::npos,
 		      std::string(what) + ": " + (v.trusted ? "accepted" : "refused for \"" + v.reason + "\""));
@@ -156,7 +196,51 @@ int main(int argc, char** argv) {
 	// Not intact: nothing to check.
 	VerifiedSignature broken = signatureOf({ &leaf, &ca });
 	broken.intact = false;
-	check(!ThirdPartyRoots(roots, certificates, disallowed, revoked).verify(broken).trusted, "signature not intact: accepted");
+	check(!ThirdPartyRoots(roots, certificates, disallowed, revoked, NOW).verify(broken).trusted, "signature not intact: accepted");
+
+	// THE TIME. A signer valid 2020-2035; a token made now over signature.bin.
+	const std::vector<uint8_t> old = certificate("old");
+	const std::vector<uint8_t> value = fixture("signature.bin"), other = fixture("other-signature.bin");
+	const std::vector<uint8_t> token = fixture("token.bin");
+	std::vector<uint8_t> altered = token;
+	altered[altered.size() - 20] ^= 0x01;                     // within the token's RSA signature
+	const std::vector<uint8_t> stamped = stampAttributes(token), stampedAltered = stampAttributes(altered);
+	const uint64_t IN_2040 = filetime(2208988800);
+	auto timed = [&](const std::vector<uint8_t>& signatureValue, const std::vector<uint8_t>* attributes) {
+		VerifiedSignature v = signatureOf({ &old, &ca });
+		v.signatureValue = signatureValue.data();
+		v.signatureValueSize = signatureValue.size();
+		if (attributes) { v.unsignedAttributes = attributes->data(); v.unsignedAttributesSize = attributes->size(); }
+		return v;
+	};
+	auto judge = [&](const TrustList& r, uint64_t now, const VerifiedSignature& v, const char* expected, const char* what) {
+		const ChainVerdict c = ThirdPartyRoots(r, certificates, disallowed, revoked, now).verify(v);
+		if (!*expected) check(c.trusted, std::string(what) + ": refused: " + c.reason);
+		else check(!c.trusted && c.reason.find(expected) != std::string::npos,
+		           std::string(what) + ": " + (c.trusted ? "accepted" : "refused for \"" + c.reason + "\""));
+		return c;
+	};
+	judge(roots, NOW, timed(value, nullptr), "", "valid signer, no time stamp, judged in 2026");
+	judge(roots, IN_2040, timed(value, nullptr), "not valid at the collection time", "expired signer, no time stamp");
+	const ChainVerdict ok = judge(roots, IN_2040, timed(value, &stamped), "", "expired signer, stamped while valid");
+	// The token was made when the fixtures were, a moment ago.
+	check(ok.signedAt > NOW - 86400ULL * 10000000ULL && ok.signedAt <= NOW && ok.timeStampAuthority == L"WAC Test Time Stamping",
+	      "stamped: time or authority not recorded");
+	judge(roots, IN_2040, timed(other, &stamped), "not over this signature", "time stamp over another signature");
+	judge(roots, IN_2040, timed(value, &stampedAltered), "time stamp token", "time stamp token altered");
+	TrustList noStamping = roots;
+	noStamping.entries[0].timeStampingExcluded = true;
+	judge(noStamping, NOW, timed(value, &stamped), "root not trusted by Microsoft for time stamping",
+	      "time stamping authority under a root not trusted for it");
+	TrustList distrustedLater = roots;
+	distrustedLater.entries[0].distrusted = true;
+	distrustedLater.entries[0].distrustedAfter = filetime(1893456000);   // 2030
+	judge(distrustedLater, IN_2040, timed(value, &stamped), "", "root distrusted after 2030, stamped before");
+	judge(distrustedLater, NOW, timed(value, nullptr), "root distrusted", "root distrusted after 2030, not stamped");
+	TrustList distrustedEarlier = distrustedLater;
+	distrustedEarlier.entries[0].distrustedAfter = filetime(1577836800);  // 2020
+	judge(distrustedEarlier, NOW, timed(value, &stamped), "before the signing time", "root distrusted before the time stamp");
+
 
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;

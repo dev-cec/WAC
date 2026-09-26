@@ -285,8 +285,11 @@ const ThirdPartyRoots* thirdPartyRoots() {
 	if (done) return roots.get();
 	done = true;
 	const TrustSet& set = CollectionTrustSet();
+	FILETIME now;
+	GetSystemTimeAsFileTime(&now);
 	if (set.usable)
-		roots.reset(new ThirdPartyRoots(set.roots, set.rootCertificates, set.disallowed, set.revokedAuthorities));
+		roots.reset(new ThirdPartyRoots(set.roots, set.rootCertificates, set.disallowed, set.revokedAuthorities,
+		                                ((uint64_t)now.dwHighDateTime << 32) | now.dwLowDateTime));
 	return roots.get();
 }
 
@@ -660,6 +663,11 @@ SignatureVerdict recordedVerdict(const VerdictMicrosoft& verdict) {
 	v.chainTrusted = verdict.chainTrusted;
 	v.chainRoot = verdict.chainRoot;
 	v.chainReason = decodeText(verdict.chainReason);
+	if (verdict.chainSignedAt) {
+		const FILETIME at = { (DWORD)verdict.chainSignedAt, (DWORD)(verdict.chainSignedAt >> 32) };
+		v.chainSignedUtc = timeToIso8601Utc(at, Precision::Second);
+		v.chainTimeStampAuthority = verdict.chainTimeStampAuthority;
+	}
 	return v;
 }
 

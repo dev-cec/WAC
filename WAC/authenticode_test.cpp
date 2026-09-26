@@ -122,7 +122,10 @@ int main(int argc, char** argv) {
 			const std::vector<uint8_t> c = readFile(e.path());
 			if (const TrustListEntry* entry = FindInTrustList(roots, c.data(), c.size())) rootCertificates[entry->identifier] = c;
 		}
-		thirdParty.reset(new ThirdPartyRoots(roots, rootCertificates, disallowed, noRevoked));
+		// Judged now, as a collection would be.
+		const uint64_t now = ((uint64_t)std::chrono::duration_cast<std::chrono::seconds>(
+			std::chrono::system_clock::now().time_since_epoch()).count() + 11644473600ULL) * 10000000ULL;
+		thirdParty.reset(new ThirdPartyRoots(roots, rootCertificates, disallowed, noRevoked, now));
 		std::cerr << rootCertificates.size() << " root(s) of the trust set\n";
 	}
 	std::ifstream l(list);
@@ -157,6 +160,8 @@ int main(int argc, char** argv) {
 			++others;
 			std::cout << id << "|COLLECT|" << v.reason;
 			if (v.chainChecked) std::cout << "|CHAIN|" << (v.chainTrusted ? "TRUSTED|" + utf8(v.chainRoot) : "UNTRUSTED|" + v.chainReason);
+			if (v.chainSignedAt)
+				std::cout << "|STAMP|" << (v.chainSignedAt / 10000000ULL - 11644473600ULL) << "|" << utf8(v.chainTimeStampAuthority);
 			std::cout << "\n";
 		}
 	}

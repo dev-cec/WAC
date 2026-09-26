@@ -498,8 +498,16 @@ break it (\fichier{third\_party\_chain\_fixtures.sh}): a sound chain accepted;
 the root absent, excluded from code signing, distrusted; an authority's key
 disallowed by Microsoft; an authority revoked according to the CCADB; an
 issuer without \texttt{cA}; a signer for the web only; an authority with the
-right name and another key; an ECDSA authority (not verified). Each rule
-disabled in turn fails the test (eight mutations). Real signatures are
+right name and another key; an ECDSA authority (not verified). Then the time
+a chain is judged at, with a real RFC~3161 token made by \texttt{openssl ts}
+and the collection's time moved to 2040: a signer valid 2020 to 2035 accepted
+without time stamp today, refused in 2040, accepted in 2040 when stamped
+today; a token over another signature, or altered, refused; a time stamping
+authority under a root not trusted for it, refused; a root distrusted after
+2030 accepted for a signature stamped before, refused otherwise. Each rule
+disabled in turn fails the test (fifteen mutations). The time stamps of the
+real installers agree to the second with an independent reading
+(\texttt{openssl ts} for RFC~3161 tokens, DER for counter-signatures). Real signatures are
 cross-checked by \texttt{authenticode\_test --trust}, against \texttt{openssl
 verify} with the set's \fichier{roots.pem} (installers of Git, Notepad++,
 PuTTY, Python, VLC; the whole set and the set without the Sectigo roots); in

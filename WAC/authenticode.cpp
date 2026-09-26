@@ -81,6 +81,11 @@ OID(OID_BASIC_CONSTRAINTS, 0x55,0x1D,0x13);
 OID(OID_EXT_KEY_USAGE,  0x55,0x1D,0x25);
 OID(OID_ANY_KEY_USAGE,  0x55,0x1D,0x25,0x00);
 OID(OID_CODE_SIGNING,   0x2B,0x06,0x01,0x05,0x05,0x07,0x03,0x03);
+OID(OID_TIME_STAMPING,  0x2B,0x06,0x01,0x05,0x05,0x07,0x03,0x08);
+OID(OID_RFC3161_TIME_STAMP, 0x2B,0x06,0x01,0x04,0x01,0x82,0x37,0x03,0x03,0x01);
+OID(OID_COUNTER_SIGNATURE, 0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x09,0x06);
+OID(OID_SIGNING_TIME,   0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x09,0x05);
+OID(OID_TST_INFO,       0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x09,0x10,0x01,0x04);
 //! True if the DER element `t` is the OID constant `o`.
 #define IS_OID(t, o) isOid((t), (o), sizeof(o))
 
@@ -136,6 +141,42 @@ bool sameBytes(const Tlv& a, const Tlv& b) {
 
 // ============================================================ X.509
 
+/*! An ASN.1 time to a FILETIME in UTC: UTCTime "YYMMDDHHMMSSZ" (RFC 5280:
+ *  years 50 to 99 are 19xx), or GeneralizedTime "YYYYMMDDHHMMSS[.f...]Z" —
+ *  the time of an RFC 3161 time stamp, whose fraction is dropped. Computed
+ *  here rather than by the system: the module is portable, and tested on
+ *  Linux.
+ *  @return false if the text is not such a time (filetime untouched) */
+bool asn1TimeToFiletime(const Tlv& time, uint64_t& filetime) {
+	const size_t yearDigits = time.tag == 0x17 ? 2 : time.tag == 0x18 ? 4 : 0;
+	const size_t digitCount = yearDigits + 10;
+	if (!yearDigits || time.len < digitCount + 1 || time.val[time.len - 1] != 'Z') return false;
+	if (time.len > digitCount + 1 && (yearDigits == 2 || time.val[digitCount] != '.')) return false;
+	int digits[14];
+	for (size_t k = 0; k < digitCount; ++k) {
+		if (time.val[k] < '0' || time.val[k] > '9') return false;
+		digits[k] = time.val[k] - '0';
+	}
+	auto two = [&](size_t at) { return digits[at] * 10 + digits[at + 1]; };
+	const int year = yearDigits == 4 ? two(0) * 100 + two(2) : two(0) + (two(0) >= 50 ? 1900 : 2000);
+	const size_t m = yearDigits;
+	const int month = two(m), day = two(m + 2), hour = two(m + 4), minute = two(m + 6), second = two(m + 8);
+	if (year < 1601 || month < 1 || month > 12 || day < 1 || day > 31 || hour > 23 || minute > 59 || second > 59)
+		return false;
+	// Days since 1601-01-01 (proleptic Gregorian): days from civil, H. Hinnant's method.
+	const int y = year - (month <= 2);
+	const int era = y / 400;
+	const int yearOfEra = y - era * 400;
+	const int dayOfYear = (153 * (month + (month > 2 ? -3 : 9)) + 2) / 5 + day - 1;
+	const int dayOfEra = yearOfEra * 365 + yearOfEra / 4 - yearOfEra / 100 + dayOfYear;
+	const long long daysSince1970 = (long long)era * 146097 + dayOfEra - 719468;
+	const long long DAYS_1601_TO_1970 = 134774;
+	const long long seconds = (daysSince1970 + DAYS_1601_TO_1970) * 86400 + hour * 3600 + minute * 60 + second;
+	filetime = (uint64_t)seconds * 10000000ULL;
+	return true;
+}
+
+
 struct Certificate {
 	Tlv integer, tbs, issuer, subject, serial;
 	Tlv module, exponent;          // RSA key
@@ -143,6 +184,7 @@ struct Certificate {
 	const uint8_t* signature = nullptr;
 	size_t signatureSize = 0;
 	bool rsa = false;
+	uint64_t notBefore = 0, notAfter = 0;   // FILETIME (UTC); 0 if unreadable
 };
 
 bool analyseCertificate(const Tlv& c, Certificate& r) {
@@ -160,6 +202,9 @@ bool analyseCertificate(const Tlv& c, Certificate& r) {
 	r.serial = t[i];                                           // serialNumber
 	r.issuer = t[i + 2];                                    // issuer
 	r.subject = t[i + 4];                                       // subject
+	const std::vector<Tlv> validity = children(t[i + 3]);
+	if (validity.size() == 2 && (!asn1TimeToFiletime(validity[0], r.notBefore) || !asn1TimeToFiletime(validity[1], r.notAfter)))
+		r.notBefore = r.notAfter = 0;
 	const std::vector<Tlv> spki = children(t[i + 5]);
 	if (spki.size() < 2 || spki[1].tag != 0x03 || spki[1].len < 2) return true;
 	const std::vector<Tlv> alg = children(spki[0]);
@@ -278,6 +323,66 @@ bool signerAccepted(const std::wstring& cn, const std::wstring& o) {
 	    || cn == L"Microsoft Windows Publisher" || cn == L".NET" || cn == L".NET DAC";
 }
 
+/*! What checkSignerInfo gives of a SignerInfo that holds. */
+struct SignerInfoCheck {
+	size_t signerIndex = SIZE_MAX;   //!< the signer's certificate, in the pool
+	Tlv attributes;                  //!< its authenticated attributes ([0])
+	Tlv signatureValue;              //!< its encryptedDigest
+	Tlv unsignedAttributes;          //!< its unsigned attributes ([1]); start null if none
+};
+
+/*! A SignerInfo — of a signature, a counter-signature or a time stamp
+ *  token: the messageDigest attribute must be the digest of `content`, and
+ *  the signature over the attributes, re-encoded as a SET, must hold with
+ *  the certificate of `pool` it names (RSA).
+ *  @return "" if it holds, otherwise why not */
+std::string checkSignerInfo(const Tlv& signerInfo, const uint8_t* content, size_t contentSize,
+                            const std::vector<Certificate>& pool, SignerInfoCheck& out) {
+	const std::vector<Tlv> si = children(signerInfo);
+	// version, issuerAndSerialNumber, digestAlgorithm, [0] attributes, digestEncryptionAlgorithm, encryptedDigest, [1] unsigned
+	if (si.size() < 5) return "SignerInfo incomplete";
+	const std::vector<Tlv> ias = children(si[1]);
+	if (ias.size() < 2) return "signer's issuer unreadable";
+	const DigestAlgorithm algo = algoDe(si[2]);
+	if (algo == DigestAlgorithm::Unknown) return "digest algorithm not supported";
+	size_t k = 3;
+	const Tlv* attributes = nullptr;
+	if (si[k].tag == 0xA0) attributes = &si[k++];
+	if (k + 1 >= si.size() || si[k + 1].tag != 0x04) return "signature absent";
+	const Tlv& signature = si[k + 1];
+	if (!attributes) return "authenticated attributes absent";
+	if (k + 2 < si.size() && si[k + 2].tag == 0xA1) out.unsignedAttributes = si[k + 2];
+
+	// 1. The content's digest must be the one announced in the attributes.
+	uint8_t hc[64];
+	const size_t lhc = fingerprint(algo, content, contentSize, hc);
+	bool digestOk = false;
+	for (const Tlv& a : children(*attributes)) {
+		const std::vector<Tlv> av = children(a);
+		if (av.size() < 2 || !IS_OID(av[0], OID_MESSAGE_DIGEST)) continue;
+		const std::vector<Tlv> vals = children(av[1]);
+		if (!vals.empty() && vals[0].tag == 0x04 && vals[0].len == lhc
+		    && std::memcmp(vals[0].val, hc, lhc) == 0) digestOk = true;
+	}
+	if (!digestOk) return "content digest does not match";
+
+	// 2. The signature covers the attributes, re-encoded as a SET (0x31).
+	std::vector<uint8_t> signedBytes(attributes->start, attributes->start + attributes->total);
+	signedBytes[0] = 0x31;
+	uint8_t ha[64];
+	const size_t lha = fingerprint(algo, signedBytes.data(), signedBytes.size(), ha);
+	for (size_t c = 0; c < pool.size(); ++c)
+		if (sameBytes(pool[c].issuer, ias[0]) && sameBytes(pool[c].serial, ias[1])) { out.signerIndex = c; break; }
+	if (out.signerIndex == SIZE_MAX || !pool[out.signerIndex].rsa) return "signer certificate absent or not RSA";
+	const Certificate& signer = pool[out.signerIndex];
+	if (!RsaVerifyPkcs1(signer.module.val, signer.module.len, signer.exponent.val, signer.exponent.len,
+	                    signature.val, signature.len, algo, ha, lha))
+		return "RSA signature invalid";
+	out.attributes = *attributes;
+	out.signatureValue = signature;
+	return std::string();
+}
+
 } // namespace
 
 // ============================================================ PKCS#7
@@ -316,52 +421,17 @@ VerifiedSignature VerifyPkcs7(const uint8_t* data, size_t size) {
 	if (!infos) { r.reason = "no signer"; return r; }
 	const std::vector<Tlv> signers = children(*infos);
 	if (signers.empty()) { r.reason = "no signer"; return r; }
-	const std::vector<Tlv> si = children(signers[0]);
-	// version, issuerAndSerialNumber, digestAlgorithm, [0] attributes, digestEncryptionAlgorithm, encryptedDigest
-	if (si.size() < 5) { r.reason = "SignerInfo incomplete"; return r; }
-	const std::vector<Tlv> ias = children(si[1]);
-	if (ias.size() < 2) { r.reason = "signer's issuer unreadable"; return r; }
-	const DigestAlgorithm algo = algoDe(si[2]);
-	if (algo == DigestAlgorithm::Unknown) { r.reason = "digest algorithm not supported"; return r; }
-	size_t k = 3;
-	const Tlv* attributes = nullptr;
-	if (si[k].tag == 0xA0) attributes = &si[k++];
-	if (k + 1 >= si.size() || si[k + 1].tag != 0x04) { r.reason = "signature absent"; return r; }
-	const Tlv& signature = si[k + 1];
-	if (!attributes) { r.reason = "authenticated attributes absent"; return r; }
-
-	// 1. The content's digest must be the one announced in the attributes.
-	uint8_t hc[64];
-	const size_t lhc = fingerprint(algo, r.content, r.contentSize, hc);
-	bool digestOk = false;
-	for (const Tlv& a : children(*attributes)) {
-		const std::vector<Tlv> av = children(a);
-		if (av.size() < 2 || !IS_OID(av[0], OID_MESSAGE_DIGEST)) continue;
-		const std::vector<Tlv> vals = children(av[1]);
-		if (!vals.empty() && vals[0].tag == 0x04 && vals[0].len == lhc
-		    && std::memcmp(vals[0].val, hc, lhc) == 0) digestOk = true;
+	SignerInfoCheck check;
+	r.reason = checkSignerInfo(signers[0], r.content, r.contentSize, pool, check);
+	if (!r.reason.empty()) return r;
+	r.signerIndex = check.signerIndex;
+	r.signatureValue = check.signatureValue.val;
+	r.signatureValueSize = check.signatureValue.len;
+	if (check.unsignedAttributes.start) {
+		r.unsignedAttributes = check.unsignedAttributes.start;
+		r.unsignedAttributesSize = check.unsignedAttributes.total;
 	}
-	if (!digestOk) { r.reason = "content digest does not match"; return r; }
-
-	// 2. The signature covers the attributes, re-encoded as a SET (0x31).
-	std::vector<uint8_t> signedBytes(attributes->start, attributes->start + attributes->total);
-	signedBytes[0] = 0x31;
-	uint8_t ha[64];
-	const size_t lha = fingerprint(algo, signedBytes.data(), signedBytes.size(), ha);
-
-	const Certificate* signer = nullptr;
-	for (size_t c = 0; c < pool.size(); ++c)
-		if (sameBytes(pool[c].issuer, ias[0]) && sameBytes(pool[c].serial, ias[1])) {
-			signer = &pool[c];
-			r.signerIndex = c;
-			break;
-		}
-	if (!signer || !signer->rsa) { r.reason = "signer certificate absent or not RSA"; return r; }
-	if (!RsaVerifyPkcs1(signer->module.val, signer->module.len,
-	                      signer->exponent.val, signer->exponent.len,
-	                      signature.val, signature.len, algo, ha, lha)) {
-		r.reason = "RSA signature invalid"; return r;
-	}
+	const Certificate* signer = &pool[check.signerIndex];
 	// The signature holds, whoever signed: who, for the record.
 	r.intact = true;
 	r.signer = attributeNameField(signer->subject, OID_CN, sizeof(OID_CN));
@@ -406,12 +476,14 @@ bool isAuthority(const Certificate& c) {
 	return !b.empty() && b[0].tag == 0x01 && b[0].len == 1 && b[0].val[0] != 0;
 }
 
-//! The certificate allows code signing: no extended key usage, or one listing code signing or any use.
-bool allowsCodeSigning(const Certificate& c) {
+/*! The certificate allows a use (code signing, time stamping): no extended
+ *  key usage, or one listing that use or any use. */
+bool allowsUse(const Certificate& c, const uint8_t* use, size_t useSize) {
 	Tlv usages;
 	if (!extensionOf(c, OID_EXT_KEY_USAGE, sizeof(OID_EXT_KEY_USAGE), usages)) return true;
 	for (const Tlv& oid : children(usages))
-		if (IS_OID(oid, OID_CODE_SIGNING) || IS_OID(oid, OID_ANY_KEY_USAGE)) return true;
+		if ((oid.tag == 0x06 && oid.len == useSize && std::memcmp(oid.val, use, useSize) == 0) || IS_OID(oid, OID_ANY_KEY_USAGE))
+			return true;
 	return false;
 }
 
@@ -422,6 +494,52 @@ std::wstring certificateSha256(const Certificate& c) {
 	return toHexadecimal(h, sizeof(h));
 }
 
+//! Its CN, for a reason.
+std::string narrowName(const Certificate& c) {
+	const std::wstring cn = attributeNameField(c.subject, OID_CN, sizeof(OID_CN));
+	return std::string(cn.begin(), cn.end());
+}
+
+//! The certificates of a signature, parsed.
+std::vector<Certificate> parsePool(const std::vector<std::pair<const uint8_t*, size_t>>& certificates) {
+	std::vector<Certificate> pool;
+	for (const auto& [der, size] : certificates) {
+		Tlv t;
+		Certificate c;
+		if (readTlv(der, size, t) && analyseCertificate(t, c)) pool.push_back(c);
+	}
+	return pool;
+}
+
+//! A root of the set: its certificate, and its entry in authroot.stl.
+using SetRoot = std::pair<Certificate, const TrustListEntry*>;
+
+//! A chain from a signer up to a root of the set, or why there is none.
+struct Chain {
+	std::vector<const Certificate*> certificates;   //!< signer first, the root excluded
+	const SetRoot* root = nullptr;
+	std::string reason;
+};
+
+//! The use a chain is built for: code signing, or time stamping — each with its own trust in authroot.stl.
+struct Use {
+	const uint8_t* oid;
+	size_t oidSize;
+	bool TrustListEntry::* excluded;
+	const char* name;
+};
+const Use CODE_SIGNING_USE = { OID_CODE_SIGNING, sizeof(OID_CODE_SIGNING), &TrustListEntry::codeSigningExcluded, "code signing" };
+const Use TIME_STAMPING_USE = { OID_TIME_STAMPING, sizeof(OID_TIME_STAMPING), &TrustListEntry::timeStampingExcluded, "time stamping" };
+
+//! A time stamp of a signature: when it was made, by whom — or why it does not hold.
+struct TimeStamp {
+	bool present = false;            //!< the signature carries one
+	bool verified = false;           //!< and it holds
+	uint64_t at = 0;                 //!< FILETIME (UTC) it gives
+	std::wstring authority;          //!< CN of the time stamping authority
+	std::string reason;              //!< why it does not hold
+};
+
 } // namespace
 
 //! The roots of the set, parsed once; the other lists as given.
@@ -429,8 +547,8 @@ struct ThirdPartyRoots::Impl {
 	const TrustList& roots;
 	const TrustList& disallowed;
 	const std::set<std::wstring>& revoked;
-	//! Each root certificate parsed, with its entry in authroot.stl.
-	std::vector<std::pair<Certificate, const TrustListEntry*>> parsed;
+	uint64_t now;                                    //!< the collection's time, for a signature without time stamp
+	std::vector<SetRoot> parsed;
 
 	/*! A certificate of the chain that must stop it: disallowed by Microsoft,
 	 *  or an authority the CCADB says revoked.
@@ -441,25 +559,153 @@ struct ThirdPartyRoots::Impl {
 		if (revoked.count(certificateSha256(c))) return "authority revoked (CCADB): " + narrowName(c);
 		return std::string();
 	}
-	//! Its CN, for a reason.
-	static std::string narrowName(const Certificate& c) {
-		const std::wstring cn = attributeNameField(c.subject, OID_CN, sizeof(OID_CN));
-		return std::string(cn.begin(), cn.end());
-	}
 	/*! The root of the set that `c` is, or is issued by.
 	 *  @return it, or nullptr */
-	const std::pair<Certificate, const TrustListEntry*>* rootOf(const Certificate& c) const {
-		for (const auto& root : parsed) {
+	const SetRoot* rootOf(const Certificate& c) const {
+		for (const SetRoot& root : parsed) {
 			if (sameBytes(c.integer, root.first.integer)) return &root;        // the root itself, in the signature
 			if (sameBytes(c.issuer, root.first.subject) && signedBy(c, root.first)) return &root;
 		}
 		return nullptr;
 	}
+
+	/*! From a signer up to a root of the set, for a use: each certificate
+	 *  signed by the next, each issuer an authority, the signer allowing the
+	 *  use, the root trusted by Microsoft for it, no certificate disallowed or
+	 *  revoked. Neither dates nor the root's distrust: they depend on the
+	 *  time the signature was made, see verify. */
+	Chain build(const std::vector<Certificate>& pool, size_t signerIndex, const Use& use) const {
+		Chain chain;
+		if (signerIndex >= pool.size()) { chain.reason = "signer certificate absent"; return chain; }
+		const Certificate* current = &pool[signerIndex];
+		if (!allowsUse(*current, use.oid, use.oidSize)) { chain.reason = std::string("signer certificate not for ") + use.name; return chain; }
+		const size_t MAX_DEPTH = 8;
+		for (size_t depth = 0; depth < MAX_DEPTH; ++depth) {
+			if (const std::string why = distrusted(*current); !why.empty()) { chain.reason = why; return chain; }
+			if (const SetRoot* root = rootOf(*current)) {
+				if (const std::string why = distrusted(root->first); !why.empty()) { chain.reason = why; return chain; }
+				if (root->second->*use.excluded) { chain.reason = std::string("root not trusted by Microsoft for ") + use.name; return chain; }
+				if (!sameBytes(current->integer, root->first.integer)) chain.certificates.push_back(current);
+				chain.root = root;
+				return chain;
+			}
+			chain.certificates.push_back(current);
+			const Certificate* next = nullptr;
+			bool issuerNotRsa = false;
+			for (const Certificate& c : pool) {
+				if (&c == current || !sameBytes(current->issuer, c.subject)) continue;
+				issuerNotRsa |= !c.rsa;
+				if (signedBy(*current, c)) { next = &c; break; }
+			}
+			for (const SetRoot& root : parsed) issuerNotRsa |= sameBytes(current->issuer, root.first.subject) && !root.first.rsa;
+			if (!next) {
+				// WAC verifies RSA signatures only: another algorithm is not a forgery, but not a proof either.
+				if (issuerNotRsa) chain.reason = "issuer key not RSA: chain not verified";
+				else if (current->algoSignature == DigestAlgorithm::Unknown) chain.reason = "certificate signed by an algorithm not verified";
+				else chain.reason = "chain not tied to a root of the trust set";
+				return chain;
+			}
+			if (!isAuthority(*next)) { chain.reason = "issuer not an authority: " + narrowName(*next); return chain; }
+			current = next;
+		}
+		chain.reason = "chain longer than " + std::to_string(MAX_DEPTH) + " certificates";
+		return chain;
+	}
+
+	/*! The time-dependent rules of a chain, at `at`: every certificate within
+	 *  its validity, the root not distrusted — or distrusted only after a
+	 *  date, and `at` a verified time stamp before it.
+	 *  @return why not, or "" */
+	static std::string holdsAt(const Chain& chain, uint64_t at, bool stamped, const char* when) {
+		for (const Certificate* c : chain.certificates)
+			if (!c->notBefore || at < c->notBefore || at > c->notAfter)
+				return "certificate not valid at the " + std::string(when) + ": " + narrowName(*c);
+		const TrustListEntry& root = *chain.root->second;
+		if (root.distrusted && !(root.distrustedAfter && stamped && at < root.distrustedAfter))
+			return stamped ? "root distrusted by Microsoft before the signing time" : "root distrusted by Microsoft";
+		return std::string();
+	}
+
+	/*! The time stamp of a signature, RFC 3161 or counter-signature: its
+	 *  signature over the signer's, and its authority's chain, for time
+	 *  stamping, valid at the time it gives. */
+	TimeStamp timeStampOf(const VerifiedSignature& signature, const std::vector<Certificate>& pool) const {
+		TimeStamp stamp;
+		Tlv unsignedAttributes;
+		if (!signature.unsignedAttributes || !readTlv(signature.unsignedAttributes, signature.unsignedAttributesSize, unsignedAttributes))
+			return stamp;
+		for (const Tlv& attribute : children(unsignedAttributes)) {
+			const std::vector<Tlv> av = children(attribute);
+			if (av.size() < 2 || av[0].tag != 0x06) continue;
+			const std::vector<Tlv> values = children(av[1]);
+			if (values.empty()) continue;
+			if (IS_OID(av[0], OID_RFC3161_TIME_STAMP)) stamp = rfc3161(signature, values[0]);
+			else if (IS_OID(av[0], OID_COUNTER_SIGNATURE)) stamp = counterSignature(signature, values[0], pool);
+			else continue;
+			if (stamp.verified) return stamp;
+		}
+		return stamp;
+	}
+
+	//! An RFC 3161 token: a SignedData of a TSTInfo, whose imprint is the digest of the signer's signature.
+	TimeStamp rfc3161(const VerifiedSignature& signature, const Tlv& token) const {
+		TimeStamp stamp;
+		stamp.present = true;
+		const VerifiedSignature t = VerifyPkcs7(token.start, token.total);
+		if (!t.intact) { stamp.reason = "time stamp token: " + t.reason; return stamp; }
+		if (t.contentOid != std::string((const char*)OID_TST_INFO, sizeof(OID_TST_INFO))) { stamp.reason = "time stamp token without TSTInfo"; return stamp; }
+		Tlv info;
+		std::vector<Tlv> fields;
+		if (readTlv(t.content, t.contentSize, info)) fields = children(info);
+		// version, policy, messageImprint, serialNumber, genTime, ...
+		if (fields.size() < 5) { stamp.reason = "TSTInfo incomplete"; return stamp; }
+		const std::vector<Tlv> imprint = children(fields[2]);
+		const DigestAlgorithm algo = imprint.size() == 2 ? algoDe(imprint[0]) : DigestAlgorithm::Unknown;
+		uint8_t h[64];
+		const size_t lh = fingerprint(algo, signature.signatureValue, signature.signatureValueSize, h);
+		if (!lh || imprint[1].tag != 0x04 || imprint[1].len != lh || std::memcmp(imprint[1].val, h, lh) != 0) {
+			stamp.reason = "time stamp not over this signature";
+			return stamp;
+		}
+		if (!asn1TimeToFiletime(fields[4], stamp.at)) { stamp.reason = "time stamp without a readable time"; return stamp; }
+		return authorityHolds(parsePool(t.certificates), t.signerIndex, stamp);
+	}
+
+	//! A counter-signature: a SignerInfo whose content is the signer's signature, dated by its signingTime.
+	TimeStamp counterSignature(const VerifiedSignature& signature, const Tlv& signerInfo, const std::vector<Certificate>& pool) const {
+		TimeStamp stamp;
+		stamp.present = true;
+		SignerInfoCheck check;
+		stamp.reason = checkSignerInfo(signerInfo, signature.signatureValue, signature.signatureValueSize, pool, check);
+		if (!stamp.reason.empty()) { stamp.reason = "counter-signature: " + stamp.reason; return stamp; }
+		bool dated = false;
+		for (const Tlv& a : children(check.attributes)) {
+			const std::vector<Tlv> av = children(a);
+			if (av.size() < 2 || !IS_OID(av[0], OID_SIGNING_TIME)) continue;
+			const std::vector<Tlv> vals = children(av[1]);
+			dated = !vals.empty() && asn1TimeToFiletime(vals[0], stamp.at);
+		}
+		if (!dated) { stamp.reason = "counter-signature without a readable signing time"; return stamp; }
+		return authorityHolds(pool, check.signerIndex, stamp);
+	}
+
+	//! The authority of a time stamp: its chain for time stamping, holding at the time it gives.
+	TimeStamp authorityHolds(const std::vector<Certificate>& pool, size_t signerIndex, TimeStamp stamp) const {
+		const Chain chain = build(pool, signerIndex, TIME_STAMPING_USE);
+		if (!chain.reason.empty()) { stamp.reason = "time stamping authority: " + chain.reason; return stamp; }
+		if (const std::string why = holdsAt(chain, stamp.at, true, "time stamp"); !why.empty()) {
+			stamp.reason = "time stamping authority: " + why;
+			return stamp;
+		}
+		stamp.authority = attributeNameField(pool[signerIndex].subject, OID_CN, sizeof(OID_CN));
+		stamp.verified = true;
+		return stamp;
+	}
 };
 
 ThirdPartyRoots::ThirdPartyRoots(const TrustList& roots, const std::map<std::string, std::vector<uint8_t>>& certificates,
-                                 const TrustList& disallowed, const std::set<std::wstring>& revokedAuthorities)
-	: impl_(new Impl{ roots, disallowed, revokedAuthorities, {} }) {
+                                 const TrustList& disallowed, const std::set<std::wstring>& revokedAuthorities, uint64_t now)
+	: impl_(new Impl{ roots, disallowed, revokedAuthorities, now, {} }) {
 	for (const auto& [sha1, der] : certificates) {
 		Tlv t;
 		Certificate c;
@@ -472,46 +718,29 @@ ThirdPartyRoots::~ThirdPartyRoots() = default;
 
 ChainVerdict ThirdPartyRoots::verify(const VerifiedSignature& signature) const {
 	ChainVerdict v;
-	std::vector<Certificate> pool;
-	for (const auto& [der, size] : signature.certificates) {
-		Tlv t;
-		Certificate c;
-		if (readTlv(der, size, t) && analyseCertificate(t, c)) pool.push_back(c);
+	if (!signature.intact) { v.reason = "signature not intact"; return v; }
+	const std::vector<Certificate> pool = parsePool(signature.certificates);
+	const Chain chain = impl_->build(pool, signature.signerIndex, CODE_SIGNING_USE);
+	if (!chain.reason.empty()) { v.reason = chain.reason; return v; }
+	/* THE TIME THE CHAIN IS JUDGED AT. Time-stamped by an authority that
+	   holds: the signing time — a certificate expired since, a root
+	   distrusted since, do not undo a signature made before. Otherwise: the
+	   collection's time, as Windows judges a signature without time stamp. A
+	   time stamp that does not hold is not ignored: it is refused. */
+	const TimeStamp stamp = impl_->timeStampOf(signature, pool);
+	if (stamp.present && !stamp.verified) { v.reason = stamp.reason; return v; }
+	const uint64_t at = stamp.verified ? stamp.at : impl_->now;
+	if (const std::string why = Impl::holdsAt(chain, at, stamp.verified, stamp.verified ? "signing time" : "collection time");
+	    !why.empty()) {
+		v.reason = why;
+		return v;
 	}
-	if (!signature.intact || signature.signerIndex >= pool.size()) { v.reason = "signature not intact"; return v; }
-	const Certificate* current = &pool[signature.signerIndex];
-	if (!allowsCodeSigning(*current)) { v.reason = "signer certificate not for code signing"; return v; }
-	const size_t MAX_DEPTH = 8;
-	for (size_t depth = 0; depth < MAX_DEPTH; ++depth) {
-		if (const std::string why = impl_->distrusted(*current); !why.empty()) { v.reason = why; return v; }
-		if (const auto* root = impl_->rootOf(*current)) {
-			if (const std::string why = impl_->distrusted(root->first); !why.empty()) { v.reason = why; return v; }
-			if (root->second->codeSigningExcluded) { v.reason = "root not trusted by Microsoft for code signing"; return v; }
-			if (root->second->distrusted) { v.reason = "root distrusted by Microsoft"; return v; }
-			v.trusted = true;
-			v.root = attributeNameField(root->first.subject, OID_CN, sizeof(OID_CN));
-			return v;
-		}
-		const Certificate* next = nullptr;
-		bool issuerNotRsa = false;
-		for (const Certificate& c : pool) {
-			if (&c == current || !sameBytes(current->issuer, c.subject)) continue;
-			issuerNotRsa |= !c.rsa;
-			if (signedBy(*current, c)) { next = &c; break; }
-		}
-		for (const auto& root : impl_->parsed)
-			issuerNotRsa |= sameBytes(current->issuer, root.first.subject) && !root.first.rsa;
-		if (!next) {
-			// WAC verifies RSA signatures only: another algorithm is not a forgery, but not a proof either.
-			if (issuerNotRsa) v.reason = "issuer key not RSA: chain not verified";
-			else if (current->algoSignature == DigestAlgorithm::Unknown) v.reason = "certificate signed by an algorithm not verified";
-			else v.reason = "chain not tied to a root of the trust set";
-			return v;
-		}
-		if (!isAuthority(*next)) { v.reason = "issuer not an authority: " + Impl::narrowName(*next); return v; }
-		current = next;
+	v.trusted = true;
+	v.root = attributeNameField(chain.root->first.subject, OID_CN, sizeof(OID_CN));
+	if (stamp.verified) {
+		v.signedAt = stamp.at;
+		v.timeStampAuthority = stamp.authority;
 	}
-	v.reason = "chain longer than " + std::to_string(MAX_DEPTH) + " certificates";
 	return v;
 }
 
@@ -735,6 +964,8 @@ VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalog
 		v.chainTrusted = chain.trusted;
 		v.chainRoot = chain.root;
 		v.chainReason = chain.reason;
+		v.chainSignedAt = chain.signedAt;
+		v.chainTimeStampAuthority = chain.timeStampAuthority;
 	}
 	if (!s.valid) { v.reason = s.reason; return v; }
 	if (s.contentOid != std::string((const char*)OID_SPC_INDIRECT, sizeof(OID_SPC_INDIRECT))) {
@@ -830,34 +1061,6 @@ size_t findText(const std::u32string& t, const char* reason, size_t since = 0) {
 	std::u32string m;
 	for (const char* q = reason; *q; ++q) m += (char32_t)(unsigned char)*q;
 	return t.find(m, since);
-}
-
-/*! An ASN.1 UTCTime, "YYMMDDHHMMSSZ" (RFC 5280: years 50 to 99 are 19xx), to
- *  a FILETIME in UTC. Computed here rather than by the system: the module is
- *  portable, and tested on Linux.
- *  @return false if the text is not such a time (filetime untouched) */
-bool asn1TimeToFiletime(const Tlv& time, uint64_t& filetime) {
-	if (time.tag != 0x17 || time.len != 13 || time.val[12] != 'Z') return false;
-	int digits[12];
-	for (int k = 0; k < 12; ++k) {
-		if (time.val[k] < '0' || time.val[k] > '9') return false;
-		digits[k] = time.val[k] - '0';
-	}
-	auto two = [&](int at) { return digits[at] * 10 + digits[at + 1]; };
-	const int year = two(0) + (two(0) >= 50 ? 1900 : 2000);
-	const int month = two(2), day = two(4), hour = two(6), minute = two(8), second = two(10);
-	if (month < 1 || month > 12 || day < 1 || day > 31 || hour > 23 || minute > 59 || second > 59) return false;
-	// Days since 1601-01-01 (proleptic Gregorian): days from civil, H. Hinnant's method.
-	const int y = year - (month <= 2);
-	const int era = y / 400;
-	const int yearOfEra = y - era * 400;
-	const int dayOfYear = (153 * (month + (month > 2 ? -3 : 9)) + 2) / 5 + day - 1;
-	const int dayOfEra = yearOfEra * 365 + yearOfEra / 4 - yearOfEra / 100 + dayOfYear;
-	const long long daysSince1970 = (long long)era * 146097 + dayOfEra - 719468;
-	const long long DAYS_1601_TO_1970 = 134774;
-	const long long seconds = (daysSince1970 + DAYS_1601_TO_1970) * 86400 + hour * 3600 + minute * 60 + second;
-	filetime = (uint64_t)seconds * 10000000ULL;
-	return true;
 }
 
 int base64Value(char32_t c) {

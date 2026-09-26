@@ -45,6 +45,55 @@ openssl ecparam -name prime256v1 -genkey -noout -out ecca.key
 sign ecca "WAC Test EC CA" root ca.ext
 key ecleaf; sign ecleaf "WAC Test EC Signer" ecca leaf.ext
 
+# Certificates with chosen dates, through `openssl ca`: a signer valid from
+# 2020 to 2035 — expired at a collection judged in 2040 —, and an authority
+# for time stamping.
+cat > ca.cnf <<'CNF'
+[ca]
+default_ca = test
+[test]
+database = index.txt
+new_certs_dir = issued
+serial = serial.txt
+default_md = sha256
+policy = anything
+unique_subject = no
+[anything]
+commonName = supplied
+CNF
+mkdir -p issued       # openssl ca keeps a copy of each certificate there
+: > index.txt
+echo 1000 > serial.txt
+# dated <name> <subject> <issuer> <extensions> <start> <end>
+dated() {
+  openssl req -new -key "$1.key" -subj "/CN=$2" -out "$1.csr" 2>/dev/null
+  openssl ca -batch -config ca.cnf -cert "$3.pem" -keyfile "$3.key" -in "$1.csr" -out "$1.pem" -notext \
+    -extfile "$4" -startdate "$5" -enddate "$6" 2>/dev/null
+}
+ext tsa.ext "basicConstraints=CA:FALSE" "extendedKeyUsage=critical,timeStamping"
+ext leaf2.ext "basicConstraints=CA:FALSE" "extendedKeyUsage=codeSigning"
+key old;  dated old "WAC Test Signer 2020-2035" ca leaf2.ext 20200101000000Z 20351231000000Z
+key tsa;  dated tsa "WAC Test Time Stamping" root tsa.ext 20200101000000Z 20451231000000Z
+
+# A signature value, and an RFC 3161 time stamp over it, made now by that authority.
+head -c 256 /dev/urandom > signature.bin
+head -c 256 /dev/urandom > other-signature.bin
+cat > ts.cnf <<'CNF'
+[tsa]
+default_tsa = test
+[test]
+serial = tsaserial.txt
+signer_digest = sha256
+default_policy = 1.2.3.4.1
+digests = sha256
+accuracy = secs:1
+ess_cert_id_alg = sha256
+CNF
+echo 01 > tsaserial.txt
+openssl ts -query -data signature.bin -sha256 -cert -out query.tsq 2>/dev/null
+openssl ts -reply -config ts.cnf -queryfile query.tsq -signer tsa.pem -inkey tsa.key -chain root.pem \
+  -token_out -out token.bin 2>/dev/null
+
 for p in *.pem; do openssl x509 -in "$p" -outform DER -out "${p%.pem}.der"; done
-rm -f ./*.csr ./*.srl ./*.ext
+rm -f ./*.csr ./*.srl ./*.ext ./*.cnf index.txt* serial.txt* tsaserial.txt* query.tsq && rm -rf issued
 echo "fixtures in $OUT"

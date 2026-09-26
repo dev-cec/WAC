@@ -121,6 +121,10 @@ struct VerifiedSignature {
 	//! The certificates the SignedData carries, DER (pointers into the data).
 	std::vector<std::pair<const uint8_t*, size_t>> certificates;
 	size_t signerIndex = SIZE_MAX; //!< the signer's among them; SIZE_MAX if not found
+	const uint8_t* signatureValue = nullptr;     //!< the signer's encryptedDigest, what a time stamp covers
+	size_t signatureValueSize = 0;
+	const uint8_t* unsignedAttributes = nullptr; //!< the signer's unsigned attributes ([1], DER), time stamps; null if none
+	size_t unsignedAttributesSize = 0;
 };
 
 /*! Verifies a PKCS#7 SignedData (catalog or embedded signature): content
@@ -176,6 +180,8 @@ struct VerdictMicrosoft {
 	bool chainTrusted = false;
 	std::wstring chainRoot;        //!< CN of the root reached, when trusted
 	std::string chainReason;       //!< why not trusted
+	uint64_t chainSignedAt = 0;    //!< FILETIME (UTC) of its verified time stamp; 0 if none
+	std::wstring chainTimeStampAuthority; //!< CN of the time stamp's authority
 };
 
 struct TrustList;
@@ -185,6 +191,8 @@ struct ChainVerdict {
 	bool trusted = false;
 	std::wstring root;             //!< CN of the root reached
 	std::string reason;            //!< why not trusted
+	uint64_t signedAt = 0;         //!< FILETIME (UTC) of the verified time stamp; 0 if none
+	std::wstring timeStampAuthority; //!< CN of its authority
 };
 
 /*! THE ROOTS A THIRD-PARTY SIGNATURE IS TIED TO: those of the trust set
@@ -199,8 +207,15 @@ struct ChainVerdict {
  *      when present);
  *    - the root is trusted by Microsoft for code signing, and not distrusted;
  *    - no certificate is disallowed by Microsoft (disallowedcert.stl), no
- *      authority revoked according to the CCADB.
- *  Not yet: the validity dates and the time stamp, the revocation lists.
+ *      authority revoked according to the CCADB;
+ *    - every certificate is within its validity, and the root not
+ *      distrusted, AT THE SIGNING TIME when a time stamp gives it — RFC 3161
+ *      token or counter-signature, itself verified: its signature over the
+ *      signer's, its authority's chain for time stamping, valid then —,
+ *      otherwise at the collection's time, as Windows judges. A root
+ *      distrusted after a date still validates a signature stamped before
+ *      it; a time stamp that does not hold makes the chain refused.
+ *  Not yet: the revocation lists.
  *
  *  Built once, then shared by the analysis threads (read only). */
 class ThirdPartyRoots {
@@ -209,9 +224,10 @@ public:
 	 *  @param certificates the root certificates, DER, by their SHA-1
 	 *  @param disallowed disallowedcert.stl
 	 *  @param revokedAuthorities SHA-256 (uppercase hexadecimal) of the authorities the CCADB says revoked
+	 *  @param now FILETIME (UTC) of the collection: when a signature without time stamp is judged
 	 *  All must outlive this object. */
 	ThirdPartyRoots(const TrustList& roots, const std::map<std::string, std::vector<uint8_t>>& certificates,
-	                const TrustList& disallowed, const std::set<std::wstring>& revokedAuthorities);
+	                const TrustList& disallowed, const std::set<std::wstring>& revokedAuthorities, uint64_t now);
 	~ThirdPartyRoots();
 	ThirdPartyRoots(const ThirdPartyRoots&) = delete;
 	ThirdPartyRoots& operator=(const ThirdPartyRoots&) = delete;

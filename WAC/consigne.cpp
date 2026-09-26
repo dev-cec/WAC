@@ -422,6 +422,9 @@ HRESULT ExhibitStoreWriteManifest() {
 				o.add(L"EmbeddedChainTrusted", Json::boolean(p.verdict.chainTrusted));
 				o.add(L"EmbeddedChainRoot", Json::str(p.verdict.chainRoot));
 				o.add(L"EmbeddedChainReason", Json::str(p.verdict.chainReason));
+				// When it was signed, by a time stamp that holds: the time the chain was judged at.
+				o.add(L"EmbeddedTimeStampUtc", Json::str(p.verdict.chainSignedUtc));
+				o.add(L"EmbeddedTimeStampAuthority", Json::str(p.verdict.chainTimeStampAuthority));
 			}
 		}
 		/* A PE's build: TimeDateStamp and SizeOfImage, the key of Microsoft's
