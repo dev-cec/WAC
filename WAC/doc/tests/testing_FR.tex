@@ -509,6 +509,26 @@ authenticode_test --catalogs <dossier>
 authenticode_test --catalogs <dossier> --files <liste>
 \end{lstlisting}
 
+\section{Chaînes tierces : \texttt{third\_party\_chain\_test}}
+
+Chaque règle de la vérification des chaînes tierces sur des chaînes
+fabriquées par openssl pour l'enfreindre (\fichier{third\_party\_chain\_fixtures.sh}) :
+chaîne saine acceptée ; racine absente, exclue de la signature de code,
+désapprouvée ; clé d'autorité désapprouvée par Microsoft ; autorité révoquée
+selon la CCADB ; émetteur sans \texttt{cA} ; signataire réservé au web ;
+autorité du bon nom mais d'une autre clé ; autorité ECDSA (non vérifiée).
+Chaque règle neutralisée tour à tour fait échouer le test (huit mutations).
+Les signatures réelles se recoupent par \texttt{authenticode\_test --trust},
+face à \texttt{openssl verify} avec le \fichier{roots.pem} du jeu (installeurs
+de Git, Notepad++, PuTTY, Python, VLC ; jeu complet et jeu privé des racines
+Sectigo) ; dans la VM, aucune chaîne jugée de confiance par \wac{} ne l'est
+pas par \texttt{Get-AuthenticodeSignature}.
+
+\begin{lstlisting}
+./third_party_chain_fixtures.sh /tmp/chain
+/tmp/third_party_chain_test /tmp/chain
+\end{lstlisting}
+
 \section{Listes de confiance : \texttt{inflate\_test}, \texttt{cab\_test}, \texttt{zip\_test}, \texttt{csv\_reader\_test}, \texttt{trust\_list\_test}}
 
 \opt{update-trust} décompresse et lit ce que Microsoft publie ; une erreur

@@ -41,6 +41,9 @@
 #pragma once
 #include <cstdint>
 #include <cstddef>
+#include <map>
+#include <memory>
+#include <set>
 #include <string>
 #include <vector>
 #include <streambuf>
@@ -115,6 +118,9 @@ struct VerifiedSignature {
 	std::string contentOid;       //!< type of the signed content (DER bytes of the OID)
 	const uint8_t* content = nullptr; //!< signed content (value, without header)
 	size_t contentSize = 0;     //!< size of `content`, in bytes
+	//! The certificates the SignedData carries, DER (pointers into the data).
+	std::vector<std::pair<const uint8_t*, size_t>> certificates;
+	size_t signerIndex = SIZE_MAX; //!< the signer's among them; SIZE_MAX if not found
 };
 
 /*! Verifies a PKCS#7 SignedData (catalog or embedded signature): content
@@ -163,10 +169,66 @@ struct VerdictMicrosoft {
 	 *  Says nothing about who the signer is (see VerifiedSignature::intact). */
 	bool signatureIntact = false;
 	std::string reason;            //!< why not, for the log
+	/*! A third-party signature, intact, checked against the trust set (see
+	 *  ThirdPartyRoots): whether it was, whether its chain holds, to which
+	 *  root, or why not. */
+	bool chainChecked = false;
+	bool chainTrusted = false;
+	std::wstring chainRoot;        //!< CN of the root reached, when trusted
+	std::string chainReason;       //!< why not trusted
 };
 
-/*! Decides whether a PE is an authentic Microsoft binary. */
-VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalogues);
+struct TrustList;
+
+/*! Result of checking the chain of a third-party signature. */
+struct ChainVerdict {
+	bool trusted = false;
+	std::wstring root;             //!< CN of the root reached
+	std::string reason;            //!< why not trusted
+};
+
+/*! THE ROOTS A THIRD-PARTY SIGNATURE IS TIED TO: those of the trust set
+ *  (trust_set.h), which Microsoft's root program trusts for code signing —
+ *  never the examined machine's, which an attacker could have added to.
+ *
+ *  A chain holds when, from the signer up to a root of the set:
+ *    - each certificate is signed by the next (RSA; another algorithm is not
+ *      verified, and the chain does not hold);
+ *    - each issuer is an authority (basic constraints, cA);
+ *    - the signer's certificate allows code signing (extended key usage,
+ *      when present);
+ *    - the root is trusted by Microsoft for code signing, and not distrusted;
+ *    - no certificate is disallowed by Microsoft (disallowedcert.stl), no
+ *      authority revoked according to the CCADB.
+ *  Not yet: the validity dates and the time stamp, the revocation lists.
+ *
+ *  Built once, then shared by the analysis threads (read only). */
+class ThirdPartyRoots {
+public:
+	/*! @param roots authroot.stl
+	 *  @param certificates the root certificates, DER, by their SHA-1
+	 *  @param disallowed disallowedcert.stl
+	 *  @param revokedAuthorities SHA-256 (uppercase hexadecimal) of the authorities the CCADB says revoked
+	 *  All must outlive this object. */
+	ThirdPartyRoots(const TrustList& roots, const std::map<std::string, std::vector<uint8_t>>& certificates,
+	                const TrustList& disallowed, const std::set<std::wstring>& revokedAuthorities);
+	~ThirdPartyRoots();
+	ThirdPartyRoots(const ThirdPartyRoots&) = delete;
+	ThirdPartyRoots& operator=(const ThirdPartyRoots&) = delete;
+
+	/*! @param signature an intact signature, as VerifyPkcs7 returned it
+	 *  @return whether its chain holds (see the class) */
+	ChainVerdict verify(const VerifiedSignature& signature) const;
+
+private:
+	struct Impl;
+	std::unique_ptr<Impl> impl_;
+};
+
+/*! Decides whether a PE is an authentic Microsoft binary; a third-party
+ *  signature, intact, is checked against `thirdParty` when given. */
+VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalogues,
+                            const ThirdPartyRoots* thirdParty = nullptr);
 
 /*! Non-PE file (script, document) listed in a Microsoft catalog?
  *

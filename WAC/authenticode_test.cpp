@@ -8,6 +8,12 @@
  *        then returns a verdict per file. `<list>`: one line per file,
  *        "identifier|local path". Output: "identifier|MICROSOFT|source" or
  *        "identifier|COLLECT|reason".
+ *    authenticode_test --catalogs `<folder>` --files `<list>` --trust `<trust set folder>`
+ *        the same, and for a signature that is not Microsoft's but intact,
+ *        its chain against the trust set --update-trust wrote (authroot.stl,
+ *        disallowedcert.stl, roots\): "|CHAIN|TRUSTED|<root>" or
+ *        "|CHAIN|UNTRUSTED|<reason>" appended. Judged by openssl verify with
+ *        the set's roots.pem, and by Get-AuthenticodeSignature;
  *    authenticode_test --rsa `<modulus hex>` `<exponent hex>` `<signature hex>` `<sha256 hex>`
  *        verifies an isolated RSA signature (confronted with OpenSSL).
  *
@@ -26,6 +32,8 @@
 #include <iostream>
 #include <filesystem>
 #include <map>
+#include <memory>
+#include <set>
 #include <sstream>
 #include <vector>
 #include <chrono>
@@ -66,10 +74,11 @@ int main(int argc, char** argv) {
 		std::cout << (ok ? "VALID" : "INVALID") << "\n";
 		return ok ? 0 : 1;
 	}
-	std::string folder, list;
+	std::string folder, list, trust;
 	for (int i = 1; i + 1 < argc; i += 2) {
 		if (std::strcmp(argv[i], "--catalogs") == 0) folder = argv[i + 1];
 		else if (std::strcmp(argv[i], "--files") == 0) list = argv[i + 1];
+		else if (std::strcmp(argv[i], "--trust") == 0) trust = argv[i + 1];
 	}
 	if (folder.empty()) { std::cerr << "usage: see the header of the file\n"; return 2; }
 
@@ -98,6 +107,24 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 	if (list.empty()) return 0;
+	// The trust set, read here without its manifest: the test judges the chain, not the set.
+	TrustList roots, disallowed;
+	std::map<std::string, std::vector<uint8_t>> rootCertificates;
+	const std::set<std::wstring> noRevoked;
+	std::unique_ptr<ThirdPartyRoots> thirdParty;
+	if (!trust.empty()) {
+		const std::vector<uint8_t> a = readFile(std::filesystem::path(trust) / "authroot.stl");
+		const std::vector<uint8_t> d = readFile(std::filesystem::path(trust) / "disallowedcert.stl");
+		roots = ReadTrustList(a.data(), a.size());
+		disallowed = ReadTrustList(d.data(), d.size());
+		if (!roots.valid || !disallowed.valid) { std::cerr << "trust set lists refused\n"; return 2; }
+		for (const auto& e : std::filesystem::directory_iterator(std::filesystem::path(trust) / "roots")) {
+			const std::vector<uint8_t> c = readFile(e.path());
+			if (const TrustListEntry* entry = FindInTrustList(roots, c.data(), c.size())) rootCertificates[entry->identifier] = c;
+		}
+		thirdParty.reset(new ThirdPartyRoots(roots, rootCertificates, disallowed, noRevoked));
+		std::cerr << rootCertificates.size() << " root(s) of the trust set\n";
+	}
 	std::ifstream l(list);
 	std::string line;
 	size_t ms = 0, others = 0;
@@ -113,7 +140,7 @@ int main(int argc, char** argv) {
 		pe.sputn((const char*)bytes.data(), (std::streamsize)bytes.size());
 		pe.finish();
 		VerdictMicrosoft v;
-		if (pe.isPe()) v = EvaluatePe(pe, index);
+		if (pe.isPe()) v = EvaluatePe(pe, index, thirdParty.get());
 		else {
 			// A script or a document: the catalog (raw bytes), then the embedded
 			// PowerShell signature.
@@ -126,7 +153,12 @@ int main(int argc, char** argv) {
 			}
 		}
 		if (v.microsoft) { ++ms; std::cout << id << "|MICROSOFT|" << utf8(v.source) << "\n"; }
-		else { ++others; std::cout << id << "|COLLECT|" << v.reason << "\n"; }
+		else {
+			++others;
+			std::cout << id << "|COLLECT|" << v.reason;
+			if (v.chainChecked) std::cout << "|CHAIN|" << (v.chainTrusted ? "TRUSTED|" + utf8(v.chainRoot) : "UNTRUSTED|" + v.chainReason);
+			std::cout << "\n";
+		}
 	}
 	std::cerr << ms << " authenticated as Microsoft, " << others << " to collect\n";
 	return 0;

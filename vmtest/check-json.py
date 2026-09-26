@@ -165,6 +165,7 @@ def cross_checks(folder):
     found += check_timestomping(folder)
     found += check_macro_document(folder)
     found += check_embedded_signers(folder)
+    found += check_third_party_chains(folder)
     return found
 
 
@@ -206,6 +207,63 @@ def check_embedded_signers(folder):
             print(f"        {w}")
         return 1
     print(f"  ✅ {compared} third-party signed binaries: signer and integrity agree with Get-AuthenticodeSignature")
+    return 0
+
+
+def check_third_party_chains(folder):
+    """With a trust set next to WAC.exe (prepared in the VM by --update-trust),
+    the chain of every intact third-party signature is checked against it
+    (EmbeddedChainTrusted). The log must say which set was used. Independent
+    source: Get-AuthenticodeSignature on the third-party binaries of the VM.
+    The rule that matters: a chain WAC trusts must be Valid for Windows — the
+    reverse only informs, WAC being stricter (RSA only, no machine roots).
+    """
+    inv = load(folder, "investigation.json")
+    ops = (inv or {}).get("Operations") if isinstance(inv, dict) else None
+    trust_ops = [str(o.get("Operation") or "") for o in ops or [] if "rust set" in str(o.get("Operation") or "")]
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+    checked = {str(i.get("SourcePath", "")).lower(): i for i in items if "EmbeddedChainTrusted" in i}
+    if not trust_ops:
+        print("  ⏭️  no trust set recorded in the log (run without --binary?): third-party chains not checked")
+        return 0
+    if trust_ops[0].startswith("No usable trust set"):
+        print(f"  ❌ the trust set was not usable: {trust_ops[0][:120]}")
+        return 1
+    if not checked:
+        print("  ❌ trust set usable, yet no third-party chain checked in the manifest")
+        return 1
+    reference_path = os.path.join(folder, "reference", "third-party-signatures.txt")
+    if not os.path.exists(reference_path):
+        trusted = sum(1 for i in checked.values() if i.get("EmbeddedChainTrusted") is True)
+        print(f"  ⏭️  {len(checked)} third-party chain(s) checked, {trusted} trusted; "
+              "no Windows reference in this output: not compared")
+        return 0
+    compared, false_trust, stricter = 0, [], []
+    with open(reference_path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            parts = line.strip().split("|", 2)
+            if len(parts) != 3 or parts[0].lower() not in checked:
+                continue
+            item = checked[parts[0].lower()]
+            compared += 1
+            if item.get("EmbeddedChainTrusted") is True and parts[1] != "Valid":
+                false_trust.append(f"{parts[0]}: trusted by WAC ({item.get('EmbeddedChainRoot')}), {parts[1]} for Windows")
+            if item.get("EmbeddedChainTrusted") is False and parts[1] == "Valid":
+                stricter.append(f"{parts[0]}: {item.get('EmbeddedChainReason')}")
+    trusted = sum(1 for i in checked.values() if i.get("EmbeddedChainTrusted") is True)
+    print(f"  ℹ️  {len(checked)} third-party chain(s) checked, {trusted} trusted; {compared} in the reference")
+    for w in stricter[:5]:
+        print(f"  ℹ️  refused by WAC, Valid for Windows: {w}")
+    if false_trust:
+        print(f"  ❌ {len(false_trust)} chain(s) trusted by WAC and not by Windows:")
+        for w in false_trust[:5]:
+            print(f"        {w}")
+        return 1
+    if not compared:
+        print("  ⏭️  no checked chain in common with the reference")
+        return 0
+    print(f"  ✅ {compared} third-party chains: none trusted by WAC that Windows does not trust")
     return 0
 
 

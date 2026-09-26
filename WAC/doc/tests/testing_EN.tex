@@ -491,6 +491,26 @@ authenticode_test --catalogs <folder>
 authenticode_test --catalogs <folder> --files <list>
 \end{lstlisting}
 
+\section{Third-party chains: \texttt{third\_party\_chain\_test}}
+
+Each rule of the check of third-party chains, on chains made by openssl to
+break it (\fichier{third\_party\_chain\_fixtures.sh}): a sound chain accepted;
+the root absent, excluded from code signing, distrusted; an authority's key
+disallowed by Microsoft; an authority revoked according to the CCADB; an
+issuer without \texttt{cA}; a signer for the web only; an authority with the
+right name and another key; an ECDSA authority (not verified). Each rule
+disabled in turn fails the test (eight mutations). Real signatures are
+cross-checked by \texttt{authenticode\_test --trust}, against \texttt{openssl
+verify} with the set's \fichier{roots.pem} (installers of Git, Notepad++,
+PuTTY, Python, VLC; the whole set and the set without the Sectigo roots); in
+the VM, no chain \wac{} trusts is untrusted by
+\texttt{Get-AuthenticodeSignature}.
+
+\begin{lstlisting}
+./third_party_chain_fixtures.sh /tmp/chain
+/tmp/third_party_chain_test /tmp/chain
+\end{lstlisting}
+
 \section{Trust lists: \texttt{inflate\_test}, \texttt{cab\_test}, \texttt{zip\_test}, \texttt{csv\_reader\_test}, \texttt{trust\_list\_test}}
 
 \opt{update-trust} decompresses and reads what Microsoft publishes; an error

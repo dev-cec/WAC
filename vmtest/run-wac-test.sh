@@ -84,6 +84,13 @@ $QGA run --shell "reg unload HKLM\\WAC_TEST >nul 2>&1 & exit /b 0" >/dev/null 2>
 $QGA write "$ROOT/build-windows/WAC.exe"           "$VMDIR\\WAC.exe"
 $QGA write "$ROOT/build-windows/raw_hive_test.exe" "$VMDIR\\raw_hive_test.exe"
 
+# The trust set, as the analysis workstation prepares it before a collection:
+# --update-trust, into `trust` next to WAC.exe, where the collection reads it.
+# Here in the VM itself, which checks the download under Windows at each cycle.
+$QGA run --shell "cd /d $VMDIR && WAC.exe --update-trust > update-trust.log 2>&1" >/dev/null 2>&1 \
+  && echo "   trust set prepared (--update-trust)" || echo "   ⚠️ trust set not prepared"
+$QGA read "$VMDIR\\update-trust.log" "$OUTPUT/update-trust.log" >/dev/null 2>&1 || true
+
 # GUIDs the reference table does not know, one per source WAC reads them from
 # (see register-test-guids.ps1): the names it prints are those check-json.py
 # expects in ScheduledTasks.json.

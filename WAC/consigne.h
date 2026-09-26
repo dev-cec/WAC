@@ -110,6 +110,13 @@ struct SignatureVerdict {
 	 *  to a trusted root — anyone can sign with a certificate of their own. */
 	std::wstring embeddedSigner;
 	bool embeddedIntact = false;
+	/*! That signature's chain, checked against the trust set of the key
+	 *  (see ThirdPartyRoots): whether it was, whether it holds, to which
+	 *  root, or why not. Not checked without a usable set. */
+	bool chainChecked = false;
+	bool chainTrusted = false;
+	std::wstring chainRoot;
+	std::wstring chainReason;
 };
 
 /*! Records an extraction result in the exhibit store manifest.

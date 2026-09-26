@@ -77,6 +77,10 @@ OID(OID_CN,           0x55,0x04,0x03);
 OID(OID_O,            0x55,0x04,0x0A);
 OID(OID_SPC_INDIRECT, 0x2B,0x06,0x01,0x04,0x01,0x82,0x37,0x02,0x01,0x04);
 OID(OID_CTL,          0x2B,0x06,0x01,0x04,0x01,0x82,0x37,0x0A,0x01);
+OID(OID_BASIC_CONSTRAINTS, 0x55,0x1D,0x13);
+OID(OID_EXT_KEY_USAGE,  0x55,0x1D,0x25);
+OID(OID_ANY_KEY_USAGE,  0x55,0x1D,0x25,0x00);
+OID(OID_CODE_SIGNING,   0x2B,0x06,0x01,0x05,0x05,0x07,0x03,0x03);
 //! True if the DER element `t` is the OID constant `o`.
 #define IS_OID(t, o) isOid((t), (o), sizeof(o))
 
@@ -301,7 +305,12 @@ VerifiedSignature VerifyPkcs7(const uint8_t* data, size_t size) {
 	const Tlv* infos = nullptr;
 	for (size_t i = 3; i < sd.size(); ++i) {
 		if (sd[i].tag == 0xA0)
-			for (const Tlv& c : children(sd[i])) { Certificate x; if (analyseCertificate(c, x)) pool.push_back(x); }
+			for (const Tlv& c : children(sd[i])) {
+				Certificate x;
+				if (!analyseCertificate(c, x)) continue;
+				pool.push_back(x);
+				r.certificates.push_back({ c.start, c.total });
+			}
 		else if (sd[i].tag == 0x31) infos = &sd[i];
 	}
 	if (!infos) { r.reason = "no signer"; return r; }
@@ -341,8 +350,12 @@ VerifiedSignature VerifyPkcs7(const uint8_t* data, size_t size) {
 	const size_t lha = fingerprint(algo, signedBytes.data(), signedBytes.size(), ha);
 
 	const Certificate* signer = nullptr;
-	for (const Certificate& c : pool)
-		if (sameBytes(c.issuer, ias[0]) && sameBytes(c.serial, ias[1])) { signer = &c; break; }
+	for (size_t c = 0; c < pool.size(); ++c)
+		if (sameBytes(pool[c].issuer, ias[0]) && sameBytes(pool[c].serial, ias[1])) {
+			signer = &pool[c];
+			r.signerIndex = c;
+			break;
+		}
 	if (!signer || !signer->rsa) { r.reason = "signer certificate absent or not RSA"; return r; }
 	if (!RsaVerifyPkcs1(signer->module.val, signer->module.len,
 	                      signer->exponent.val, signer->exponent.len,
@@ -360,6 +373,146 @@ VerifiedSignature VerifyPkcs7(const uint8_t* data, size_t size) {
 	r.signerAccepted = signerAccepted(r.signer, r.signerOrganization);
 	if (!r.signerAccepted) r.reason = "signer not accepted";
 	return r;
+}
+
+// ============================================================ third-party chains
+
+namespace {
+
+/*! The value of an extension of a certificate (the content of its
+ *  extnValue OCTET STRING), found by its OID.
+ *  @return false if the certificate has no such extension */
+bool extensionOf(const Certificate& c, const uint8_t* oid, size_t oidSize, Tlv& value) {
+	for (const Tlv& field : children(c.tbs)) {
+		if (field.tag != 0xA3) continue;                         // [3] extensions
+		const std::vector<Tlv> wrapper = children(field);
+		if (wrapper.empty()) return false;
+		for (const Tlv& extension : children(wrapper[0])) {
+			const std::vector<Tlv> e = children(extension);
+			if (e.size() < 2 || e[0].tag != 0x06 || e[0].len != oidSize || std::memcmp(e[0].val, oid, oidSize) != 0)
+				continue;
+			const Tlv& octets = e.back();                        // critical flag optional, in between
+			return octets.tag == 0x04 && readTlv(octets.val, octets.len, value);
+		}
+	}
+	return false;
+}
+
+//! An authority: basic constraints present, cA true.
+bool isAuthority(const Certificate& c) {
+	Tlv constraints;
+	if (!extensionOf(c, OID_BASIC_CONSTRAINTS, sizeof(OID_BASIC_CONSTRAINTS), constraints)) return false;
+	const std::vector<Tlv> b = children(constraints);
+	return !b.empty() && b[0].tag == 0x01 && b[0].len == 1 && b[0].val[0] != 0;
+}
+
+//! The certificate allows code signing: no extended key usage, or one listing code signing or any use.
+bool allowsCodeSigning(const Certificate& c) {
+	Tlv usages;
+	if (!extensionOf(c, OID_EXT_KEY_USAGE, sizeof(OID_EXT_KEY_USAGE), usages)) return true;
+	for (const Tlv& oid : children(usages))
+		if (IS_OID(oid, OID_CODE_SIGNING) || IS_OID(oid, OID_ANY_KEY_USAGE)) return true;
+	return false;
+}
+
+//! SHA-256 of a certificate, in uppercase hexadecimal: how the CCADB names it.
+std::wstring certificateSha256(const Certificate& c) {
+	uint8_t h[32];
+	sha256Bytes(c.integer.start, c.integer.total, h);
+	return toHexadecimal(h, sizeof(h));
+}
+
+} // namespace
+
+//! The roots of the set, parsed once; the other lists as given.
+struct ThirdPartyRoots::Impl {
+	const TrustList& roots;
+	const TrustList& disallowed;
+	const std::set<std::wstring>& revoked;
+	//! Each root certificate parsed, with its entry in authroot.stl.
+	std::vector<std::pair<Certificate, const TrustListEntry*>> parsed;
+
+	/*! A certificate of the chain that must stop it: disallowed by Microsoft,
+	 *  or an authority the CCADB says revoked.
+	 *  @return why, or "" if none */
+	std::string distrusted(const Certificate& c) const {
+		if (FindInTrustList(disallowed, c.integer.start, c.integer.total))
+			return "certificate disallowed by Microsoft: " + narrowName(c);
+		if (revoked.count(certificateSha256(c))) return "authority revoked (CCADB): " + narrowName(c);
+		return std::string();
+	}
+	//! Its CN, for a reason.
+	static std::string narrowName(const Certificate& c) {
+		const std::wstring cn = attributeNameField(c.subject, OID_CN, sizeof(OID_CN));
+		return std::string(cn.begin(), cn.end());
+	}
+	/*! The root of the set that `c` is, or is issued by.
+	 *  @return it, or nullptr */
+	const std::pair<Certificate, const TrustListEntry*>* rootOf(const Certificate& c) const {
+		for (const auto& root : parsed) {
+			if (sameBytes(c.integer, root.first.integer)) return &root;        // the root itself, in the signature
+			if (sameBytes(c.issuer, root.first.subject) && signedBy(c, root.first)) return &root;
+		}
+		return nullptr;
+	}
+};
+
+ThirdPartyRoots::ThirdPartyRoots(const TrustList& roots, const std::map<std::string, std::vector<uint8_t>>& certificates,
+                                 const TrustList& disallowed, const std::set<std::wstring>& revokedAuthorities)
+	: impl_(new Impl{ roots, disallowed, revokedAuthorities, {} }) {
+	for (const auto& [sha1, der] : certificates) {
+		Tlv t;
+		Certificate c;
+		const TrustListEntry* entry = FindInTrustList(roots, der.data(), der.size());
+		if (entry && readTlv(der.data(), der.size(), t) && analyseCertificate(t, c)) impl_->parsed.push_back({ c, entry });
+	}
+}
+
+ThirdPartyRoots::~ThirdPartyRoots() = default;
+
+ChainVerdict ThirdPartyRoots::verify(const VerifiedSignature& signature) const {
+	ChainVerdict v;
+	std::vector<Certificate> pool;
+	for (const auto& [der, size] : signature.certificates) {
+		Tlv t;
+		Certificate c;
+		if (readTlv(der, size, t) && analyseCertificate(t, c)) pool.push_back(c);
+	}
+	if (!signature.intact || signature.signerIndex >= pool.size()) { v.reason = "signature not intact"; return v; }
+	const Certificate* current = &pool[signature.signerIndex];
+	if (!allowsCodeSigning(*current)) { v.reason = "signer certificate not for code signing"; return v; }
+	const size_t MAX_DEPTH = 8;
+	for (size_t depth = 0; depth < MAX_DEPTH; ++depth) {
+		if (const std::string why = impl_->distrusted(*current); !why.empty()) { v.reason = why; return v; }
+		if (const auto* root = impl_->rootOf(*current)) {
+			if (const std::string why = impl_->distrusted(root->first); !why.empty()) { v.reason = why; return v; }
+			if (root->second->codeSigningExcluded) { v.reason = "root not trusted by Microsoft for code signing"; return v; }
+			if (root->second->distrusted) { v.reason = "root distrusted by Microsoft"; return v; }
+			v.trusted = true;
+			v.root = attributeNameField(root->first.subject, OID_CN, sizeof(OID_CN));
+			return v;
+		}
+		const Certificate* next = nullptr;
+		bool issuerNotRsa = false;
+		for (const Certificate& c : pool) {
+			if (&c == current || !sameBytes(current->issuer, c.subject)) continue;
+			issuerNotRsa |= !c.rsa;
+			if (signedBy(*current, c)) { next = &c; break; }
+		}
+		for (const auto& root : impl_->parsed)
+			issuerNotRsa |= sameBytes(current->issuer, root.first.subject) && !root.first.rsa;
+		if (!next) {
+			// WAC verifies RSA signatures only: another algorithm is not a forgery, but not a proof either.
+			if (issuerNotRsa) v.reason = "issuer key not RSA: chain not verified";
+			else if (current->algoSignature == DigestAlgorithm::Unknown) v.reason = "certificate signed by an algorithm not verified";
+			else v.reason = "chain not tied to a root of the trust set";
+			return v;
+		}
+		if (!isAuthority(*next)) { v.reason = "issuer not an authority: " + Impl::narrowName(*next); return v; }
+		current = next;
+	}
+	v.reason = "chain longer than " + std::to_string(MAX_DEPTH) + " certificates";
+	return v;
 }
 
 // ============================================================ catalogues
@@ -540,7 +693,7 @@ void PeAnalyser::finish() {
 
 // ============================================================ verdict
 
-VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalogues) {
+VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalogues, const ThirdPartyRoots* thirdParty) {
 	VerdictMicrosoft v;
 	if (!pe.isPe()) { v.reason = "not a PE"; return v; }
 
@@ -574,6 +727,14 @@ VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalog
 		v.signatureIntact = indirectDigest(signedContent, digest)
 			&& ((digest.size() == 32 && std::memcmp(digest.data(), pe.sha256(), 32) == 0)
 			 || (digest.size() == 20 && std::memcmp(digest.data(), pe.sha1(), 20) == 0));
+	}
+	// A third-party signature, the file as signed: its chain, against the trust set.
+	if (thirdParty && v.signatureIntact && !(s.valid && s.signerAccepted)) {
+		const ChainVerdict chain = thirdParty->verify(s);
+		v.chainChecked = true;
+		v.chainTrusted = chain.trusted;
+		v.chainRoot = chain.root;
+		v.chainReason = chain.reason;
 	}
 	if (!s.valid) { v.reason = s.reason; return v; }
 	if (s.contentOid != std::string((const char*)OID_SPC_INDIRECT, sizeof(OID_SPC_INDIRECT))) {

@@ -417,6 +417,12 @@ HRESULT ExhibitStoreWriteManifest() {
 				o.add(L"EmbeddedSigner", Json::str(p.verdict.embeddedSigner));
 				o.add(L"EmbeddedSignatureIntact", Json::boolean(p.verdict.embeddedIntact));
 			}
+			// Its chain, against the trust set of the key: tied to a trusted root, or why not.
+			if (p.verdict.chainChecked) {
+				o.add(L"EmbeddedChainTrusted", Json::boolean(p.verdict.chainTrusted));
+				o.add(L"EmbeddedChainRoot", Json::str(p.verdict.chainRoot));
+				o.add(L"EmbeddedChainReason", Json::str(p.verdict.chainReason));
+			}
 		}
 		/* A PE's build: TimeDateStamp and SizeOfImage, the key of Microsoft's
 		   symbol server. An authentic Microsoft binary that was not copied can

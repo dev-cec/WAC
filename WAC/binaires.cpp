@@ -18,6 +18,7 @@
 #include "consigne.h"
 #include "running_machine.h"
 #include "authenticode.h"
+#include "trust_set.h"
 #include "sha.h"
 #include "quickdigest5.h"
 #include "xml_light.h"
@@ -274,6 +275,21 @@ std::vector<std::wstring> catalogFolders() {
 /*! Index of the machine's Microsoft catalogs, built on first request — hence
  *  only if a binary to collect is met. Catalogs are read raw, IN MEMORY:
  *  nothing is written, and no service is solicited (see authenticode.h). */
+/*! The roots third-party signatures are tied to: those of the trust set of
+ *  the key, when it is usable; nullptr otherwise — third-party signatures are
+ *  then not checked. Built on first use, before the analysis threads start
+ *  (BinariesCollectAll), which only read it. */
+const ThirdPartyRoots* thirdPartyRoots() {
+	static std::unique_ptr<ThirdPartyRoots> roots;
+	static bool done = false;
+	if (done) return roots.get();
+	done = true;
+	const TrustSet& set = CollectionTrustSet();
+	if (set.usable)
+		roots.reset(new ThirdPartyRoots(set.roots, set.rootCertificates, set.disallowed, set.revokedAuthorities));
+	return roots.get();
+}
+
 IndexCatalogues& catalogues() {
 	static IndexCatalogues index;
 	static bool done = false;
@@ -530,7 +546,7 @@ public:
 		}
 		/* PE: Authenticode digest. Script or document: SHA-256 of the raw bytes in
 		   the catalogs, then embedded PowerShell signature. */
-		if (pe_.isPe()) verdict = EvaluatePe(pe_, catalogues());
+		if (pe_.isPe()) verdict = EvaluatePe(pe_, catalogues(), thirdPartyRoots());
 		else {
 			uint8_t h[32];
 			if (bytesFromHex(line.fingerprints.sha256, h)) verdict = EvaluateByCatalog(h, catalogues());
@@ -640,6 +656,10 @@ SignatureVerdict recordedVerdict(const VerdictMicrosoft& verdict) {
 		                 + (verdict.signerOrganization.empty() ? L"" : L", " + verdict.signerOrganization);
 		v.embeddedIntact = verdict.signatureIntact;
 	}
+	v.chainChecked = verdict.chainChecked;
+	v.chainTrusted = verdict.chainTrusted;
+	v.chainRoot = verdict.chainRoot;
+	v.chainReason = decodeText(verdict.chainReason);
 	return v;
 }
 
@@ -1049,8 +1069,10 @@ HRESULT BinariesCollectAll() {
 	   each executable in memory; the workers analyse it (PE, Authenticode,
 	   catalogs, packages, fingerprints); this thread records the results IN
 	   THE WALK'S ORDER, so that the manifest does not depend on the threads.
-	   The catalogs are loaded before the workers start: they only read them. */
+	   The catalogs and the trust set are loaded before the workers start:
+	   they only read them. */
 	catalogues();
+	thirdPartyRoots();
 	const unsigned threads = conf.threads ? conf.threads
 	                       : std::max(1u, std::thread::hardware_concurrency() > 1 ? std::thread::hardware_concurrency() - 1 : 1u);
 	AnalysisPool pool(threads);

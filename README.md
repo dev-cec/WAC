@@ -216,6 +216,15 @@ is used. The driver lists and the CCADB report are not signed: their
 authenticity is that of HTTPS, and the manifest says so; a list that cannot be
 obtained is recorded as missing. It is the only mode that uses the network, through WinHTTP loaded
 at run time; the build refuses a `WAC.exe` that imports a network library.
+At the collection (`--binary`), the set is checked again as a whole — an
+altered set is refused and treated as absent, as the investigation log says —
+and the chain of every intact third-party signature is verified against it:
+tied to a root Microsoft trusts for code signing, no certificate disallowed,
+no authority revoked. The manifest records it (`EmbeddedChainTrusted`,
+`EmbeddedChainRoot`, `EmbeddedChainReason`); the collection rule itself does
+not change yet — time stamps, revocation lists and vulnerable drivers come
+first.
+
 On a Linux workstation it runs under wine. About 70 seconds for 64 MB; the
 562 roots are
 identical, byte for byte, to those of Windows' `certutil -generateSSTFromWU`.
