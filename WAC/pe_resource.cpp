@@ -66,14 +66,20 @@ size_t PeResource::offsetDeRva(uint32_t rva) const {
 }
 
 bool PeResource::open(const std::wstring& path) {
+	std::ifstream f(std::filesystem::path(path), std::ios::binary);
+	if (!f) {
+		open_ = false;
+		error_ = L"cannot be opened";
+		return false;
+	}
+	return load(std::vector<uint8_t>((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>()));
+}
+
+bool PeResource::load(std::vector<uint8_t> bytes) {
 	open_ = false;
 	error_.clear();
 	sections_.clear();
-	file_.clear();
-
-	std::ifstream f(std::filesystem::path(path), std::ios::binary);
-	if (!f) { error_ = L"cannot be opened"; return false; }
-	file_.assign((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+	file_ = std::move(bytes);
 	if (file_.size() < 0x40) { error_ = L"file too short"; return false; }
 
 	if (file_[0] != 'M' || file_[1] != 'Z') { error_ = L"MZ signature absent"; return false; }

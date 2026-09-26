@@ -43,6 +43,8 @@
 //! Resource types useful here. RT_MESSAGETABLE is standard (11);
 //! WEVT_TEMPLATE is a NAMED type, specific to the event providers.
 const uint32_t PE_RT_MESSAGETABLE = 11;
+//! RT_VERSION: the VS_VERSIONINFO of a binary (see version_info.h).
+const uint32_t PE_RT_VERSION = 16;
 
 /*! Loads a PE binary into memory and gives access to its resources. */
 class PeResource {
@@ -51,6 +53,12 @@ public:
 	*  @param path the binary to read (an extracted copy, never the original)
 	*  @return true if the file is a PE whose resource directory is usable */
 	bool open(const std::wstring& path);
+
+	/*! The same, from a binary already in memory — the analysis threads of
+	 *  --collect --binary hold each executable read raw.
+	 *  @param bytes the binary, taken over
+	 *  @return true if it is a PE whose resource directory is usable */
+	bool load(std::vector<uint8_t> bytes);
 
 	//! True if `open` succeeded.
 	bool isOpen() const { return open_; }
