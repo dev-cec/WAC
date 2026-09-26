@@ -246,6 +246,13 @@ $QGA run -- powershell.exe -NoProfile -Command \
   > "$OUTPUT/reference/partitions.txt" 2>/dev/null \
   && echo "   + reference/partitions.txt" || echo "   ⚠️ partitions reference not read"
 
+# The TCP listeners as netstat gives them, right after the collection: a
+# listening socket outlives it, so WAC's network state must hold the same
+# address, port and owner (netstat formats through Winsock, WAC by itself).
+$QGA run -- netstat.exe -ano -p TCP > "$OUTPUT/reference/netstat-tcp.txt" 2>/dev/null \
+  && $QGA run -- netstat.exe -ano -p TCPv6 >> "$OUTPUT/reference/netstat-tcp.txt" 2>/dev/null \
+  && echo "   + reference/netstat-tcp.txt" || echo "   ⚠️ netstat reference not read"
+
 # USBSTOR dates as Windows gives them (UTC), and the PE header timestamps of
 # the executables of System32, for the dates of USBSTOR and of Amcache.
 $QGA run -- powershell.exe -NoProfile -Command \
@@ -437,6 +444,7 @@ artefacts:
   events: false
   prefetch: false
   sessions: false
+  network: false
   jump_lists: false
 YML
 $QGA write "$OUTPUT/wac.yml" "$VMDIR\\wac.yml" >/dev/null

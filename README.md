@@ -91,9 +91,9 @@ already in the process's memory — no disk access, no log entry. Scanning each
 volume's `$MFT` to find `\Windows` would be *more* intrusive, since it would
 mean opening a handle on every volume, and that is the auditable part.
 
-Only three readings remain live, because their subject *is* the instant of
-collection and no file can hold it: **running processes**, **open sessions**, and
-the current time. Everything else — event logs included — is read from a copy.
+Only four readings remain live, because their subject *is* the instant of
+collection and no file can hold it: **running processes**, **open sessions**, the
+**network state**, and the current time. Everything else — event logs included — is read from a copy.
 
 **WAC no longer opens any key of the examined machine's registry.** The last
 one was the profile list (`ProfileList`), needed to know where the per-user
@@ -113,7 +113,9 @@ installation.
 ## 📄 WHAT IS COLLECTED
 
 System and account information, scheduled tasks, services **and drivers**,
-running processes, open sessions, and optionally the event logs — plus the usual
+running processes, open sessions, the network state (TCP/UDP connections with
+their owning process and creation time, ARP/NDP neighbours, interfaces, routes),
+and optionally the event logs — plus the usual
 registry and file artefacts: UserAssist, MUICache, BAM, USB devices, Shellbags,
 MRU, Run keys, Shimcache, Amcache, jumplists, Prefetch and recent documents.
 
@@ -224,6 +226,7 @@ artefacts:              # one switch per artefact; all the hives are `registry`
   services: true
   processes: true
   sessions: true
+  network: true
   prefetch: true
   jump_lists: true
   recent_documents: true
@@ -429,6 +432,7 @@ does to the machine**, operation by operation — including what it cannot avoid
 | **Processes** (`CreateToolhelp32Snapshot`) | a kernel snapshot; no process handle is opened |
 | **Process owners** (1 × `WTSEnumerateProcessesEx`) | solicits the Terminal Services service, once |
 | **Sessions** (`LsaEnumerateLogonSessions`) | solicits LSASS; reads only |
+| **Network state** (`GetExtendedTcpTable`, `GetExtendedUdpTable`, `GetIpNetTable2`, `GetAdaptersAddresses`, `GetIpForwardTable2`) | reads the TCP/IP stack's tables in memory: **no packet sent**, no name resolved. `iphlpapi.dll` is loaded from System32 only when `artefacts.network` is on — `WAC.exe` imports no network library, which the build checks |
 | **Event logs** (`--events`) | reads `\Windows\System32\winevt\Logs\*.evtx` through the same raw volume handle as every other artefact — **no service is solicited**, and the parsing happens on the copy. The only cost left is the size: ~117 MB written to the collection medium |
 | **Event message resolution** (`--events`) | reads the resource file of each provider that actually produced an event, through the same raw volume handle. These are operating-system binaries, not exhibits, but they go into the exhibit store with their fingerprints like everything else — which records *which build's* wording was used. ~121 MB on an ordinary installation |
 | **Referenced files** (`--binary`) | read through the same raw volume handle, kept open for the whole phase — **no file is opened**, so no last-access timestamp is touched. The fingerprints used to come from opening each file through the API, which did update that timestamp where Windows maintains it — on the very document a shortcut proves was opened. A volume that is not NTFS (a CD-ROM, a FAT stick) cannot be read raw: its files are reported as unread, never opened another way |

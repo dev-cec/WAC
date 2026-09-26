@@ -52,6 +52,7 @@ bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error)
 	const Switch SWITCHES[] = {
 		{ "registry", &a.registry }, { "events", &conf._events }, { "scheduled_tasks", &a.scheduledTasks },
 		{ "services", &a.services }, { "processes", &a.processes }, { "sessions", &a.sessions },
+		{ "network", &a.network },
 		{ "prefetch", &a.prefetch }, { "jump_lists", &a.jumpLists }, { "recent_documents", &a.recentDocuments },
 	};
 	for (const auto& [key, node] : section.children) {

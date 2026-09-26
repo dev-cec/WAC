@@ -312,6 +312,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   services: true
   processes: true
   sessions: true
+  network: true
   prefetch: true
   jump_lists: true
   recent_documents: true
@@ -513,6 +514,7 @@ whatever is missing is recorded.
 [SEARCHING FOR ARTIFACTS IN WINDOWS API]
  - Extraction of SESSIONS: OK
  - Extraction of PROCESS: OK
+ - Extraction of NETWORK STATE: OK
 [RAW EXTRACTION]
  - Extracting system hives (raw NTFS) : OK
  - loading the HKLM\SYSTEM key : OK
@@ -897,6 +899,13 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
   \item[\fichier{processes.json}] running processes: name, identifiers (and
         parent), owner, session, loaded modules and, with \opt{binary}, the
         executable's fingerprints.
+  \item[\fichier{network.json}] network state at collection time:
+        \champ{Connections} (TCP and UDP, IPv4 and IPv6: addresses, ports,
+        state, owning process and its name, creation time local and UTC),
+        \champ{Neighbours} (ARP and NDP caches: the machines of the local network
+        spoken with lately), \champ{Interfaces} (addresses, gateways, DNS
+        servers, DHCP) and \champ{Routes}. \champ{TablesNotRead} names a table
+        Windows refused to give, which is not an empty table.
   \item[\fichier{services.json}] services and drivers, configuration read from
         the hive: type, start mode, account, binary and hosted DLL, failure
         command, dependencies, last write of the key; current state; with
@@ -1091,6 +1100,9 @@ Service state & One read-only query to the Service Control Manager. No service
 Processes & A kernel snapshot; no process is opened. Owners: one query to the
   Terminal Services service. \\
 Sessions & One read-only query to LSASS. \\
+Network state & Reads of the TCP/IP stack's tables in memory: no packet sent,
+  no name resolved. \texttt{iphlpapi.dll} is loaded only when
+  \texttt{artefacts.network} is on. \\
 Boot time & One in-memory query to the kernel. \\
 Event logs (\opt{events}) & Read through the same direct volume access: the
   logging service is not solicited. \\

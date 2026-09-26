@@ -107,6 +107,7 @@ struct AppliConf {
 		bool services = true;         //!< services and drivers: configuration and live states
 		bool processes = true;        //!< live
 		bool sessions = true;         //!< live
+		bool network = true;          //!< live: connections, neighbours, interfaces, routes
 		bool prefetch = true;
 		bool jumpLists = true;
 		bool recentDocuments = true;

@@ -21,6 +21,8 @@
     <ClCompile Include="oleparser.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="prefetchs.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="processes.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="network.cpp"><Filter>Fichiers sources</Filter></ClCompile>
+    <ClCompile Include="ip_address.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="quickdigest5.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="raw_hive.cpp"><Filter>Fichiers sources</Filter></ClCompile>
     <ClCompile Include="raw_collect.cpp"><Filter>Fichiers sources</Filter></ClCompile>
@@ -90,6 +92,8 @@
     <ClInclude Include="oleparser.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="prefetchs.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="processes.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="network.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
+    <ClInclude Include="ip_address.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="quickdigest5.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="raw_collect.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>
     <ClInclude Include="raw_hive.h"><Filter>Fichiers d%27en-tête</Filter></ClInclude>

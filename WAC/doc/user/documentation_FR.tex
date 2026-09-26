@@ -316,6 +316,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   services: true
   processes: true
   sessions: true
+  network: true
   prefetch: true
   jump_lists: true
   recent_documents: true
@@ -519,6 +520,7 @@ recueilli, et ce qui manque est consigné.
 [SEARCHING FOR ARTIFACTS IN WINDOWS API]
  - Extraction of SESSIONS: OK
  - Extraction of PROCESS: OK
+ - Extraction of NETWORK STATE: OK
 [RAW EXTRACTION]
  - Extracting system hives (raw NTFS) : OK
  - loading the HKLM\SYSTEM key : OK
@@ -908,6 +910,13 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
   \item[\fichier{processes.json}] processus en cours : nom, identifiants (et
         parent), propriétaire, session, modules chargés, et, avec \opt{binary},
         empreintes de l'exécutable.
+  \item[\fichier{network.json}] état réseau au moment de la collecte :
+        \champ{Connections} (TCP et UDP, IPv4 et IPv6 : adresses, ports, état,
+        processus propriétaire et son nom, heure de création locale et UTC),
+        \champ{Neighbours} (caches ARP et NDP : les machines du réseau local
+        contactées récemment), \champ{Interfaces} (adresses, passerelles,
+        serveurs DNS, DHCP) et \champ{Routes}. \champ{TablesNotRead} nomme une
+        table que Windows a refusé de donner, ce qui n'est pas une table vide.
   \item[\fichier{services.json}] services et pilotes, configuration lue dans la
         ruche : type, démarrage, compte, binaire et DLL hébergée, commande en cas
         d'échec, dépendances, dernière écriture de la clé ; état courant ; avec
@@ -1113,6 +1122,9 @@ Rejeu des journaux de ruche & Sur la copie de travail uniquement, avec journal
 Processus & Un instantané du noyau ; aucun processus n'est ouvert. Relevé des
   propriétaires : une requête au service Terminal Services. \\
 Sessions & Une requête en lecture à LSASS. \\
+État réseau & Lectures en mémoire des tables de la pile TCP/IP : aucun paquet
+  émis, aucun nom résolu. \texttt{iphlpapi.dll} n'est chargée que si
+  \texttt{artefacts.network} est activé. \\
 Heure de démarrage & Une requête en mémoire au noyau. \\
 Journaux d'événements (\opt{events}) & Lus par le même accès direct au volume :
   le service de journalisation n'est pas sollicité. \\

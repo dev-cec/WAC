@@ -28,6 +28,7 @@ artefacts:
   services: true          # services and drivers
   processes: true         # live
   sessions: true          # live
+  network: true           # live: connections, neighbours, interfaces, routes
   prefetch: true
   jump_lists: true
   recent_documents: true

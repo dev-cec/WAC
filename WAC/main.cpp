@@ -39,6 +39,7 @@
 #include "system.h"
 #include "sessions.h"
 #include "processes.h"
+#include "network.h"
 #include "account_names.h"
 #include "services.h"
 #include "users.h"
@@ -225,6 +226,7 @@ void observeLiveState() {
 	HRESULT hresult;
 	Sessions sessions;
 	Processes processes;
+	NetworkState network;
 	/************************
 	* WIN32 API
 	*************************/
@@ -273,6 +275,21 @@ void observeLiveState() {
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else printSuccess();
 			processes.clear(); // free memory
+		}
+	}
+
+	if (conf.artefacts.network) {
+		printStep(L" - Extraction of NETWORK STATE: ");
+		hresult = network.getData();
+		auditRecord(L"NETWORK STATE collection",
+		            L"iphlpapi: GetExtendedTcpTable, GetExtendedUdpTable, GetIpNetTable2, GetAdaptersAddresses, GetIpForwardTable2",
+		            hresult, Footprint::NETWORK);
+		if (hresult != ERROR_SUCCESS) printError(hresult);
+		else {
+			hresult = network.snapshot();
+			if (hresult != ERROR_SUCCESS) printError(hresult);
+			else printSuccess();
+			network.clear(); // free memory
 		}
 	}
 
@@ -543,14 +560,18 @@ void convertArtefacts(bool systemAvailable) {
 	auto writeProcesses = [&processesPending]() {
 		if (!processesPending) return;
 		processesPending = false;
-		HRESULT written = ERROR_SUCCESS, sessionsWritten = ERROR_SUCCESS;
+		HRESULT written = ERROR_SUCCESS, sessionsWritten = ERROR_SUCCESS, networkWritten = ERROR_SUCCESS;
 		const bool processesWanted = requested(conf.artefacts.processes, "processes.json", L"Processes", L"artefacts.processes");
 		const bool sessionsWanted = requested(conf.artefacts.sessions, "sessions.json", L"Sessions", L"artefacts.sessions");
-		if (!processesWanted && !sessionsWanted) return;
-		printStep(L" - Writing PROCESS and SESSIONS : ");
+		const bool networkWanted = requested(conf.artefacts.network, "network.json", L"Network", L"artefacts.network");
+		if (!processesWanted && !sessionsWanted && !networkWanted) return;
+		printStep(L" - Writing PROCESS, SESSIONS and NETWORK : ");
 		if (processesWanted) written = writeProcessesFromSnapshot();
 		if (sessionsWanted) sessionsWritten = writeSessionsFromSnapshot();
+		// The network last: its connections are named from the processes snapshot.
+		if (networkWanted) networkWritten = writeNetworkFromSnapshot();
 		if (written == ERROR_SUCCESS) written = sessionsWritten;
+		if (written == ERROR_SUCCESS) written = networkWritten;
 		if (written != ERROR_SUCCESS) printError(written);
 		else printSuccess();
 	};

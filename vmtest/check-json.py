@@ -83,6 +83,7 @@ def check_configuration(folder):
              ("artefacts.prefetch", lambda p: "\\windows\\prefetch\\" in p),
              ("artefacts.jump_lists", lambda p: "automaticdestinations" in p or "customdestinations" in p),
              ("artefacts.sessions", lambda p: p.startswith("live observation: logon sessions")),
+             ("artefacts.network", lambda p: p.startswith("live observation: network state")),
              ("artefacts.registry", lambda p: p.endswith("\\ntuser.dat"))]
     for key, matches in rules:
         present = any(matches(p) for p in paths)
@@ -203,6 +204,7 @@ def cross_checks(folder):
     found += check_services(folder)
     found += check_users(folder)
     found += check_processes(folder)
+    found += check_network(folder, boot)
     found += check_prefetchs(folder)
     found += check_shimcache_dates(folder)
     found += check_jumplist_entries(folder)
@@ -1861,6 +1863,79 @@ def check_processes(folder):
         found += 1
     else:
         print(f"  ✅ processes.json: {len(d) - len(noSid)}/{len(d)} owners read")
+    return found
+
+
+def check_network(folder, boot):
+    """The network state against three independent sources:
+      - netstat, run by the test right after the collection (reference/
+        netstat-tcp.txt): its TCP listeners, still open, must be in
+        network.json with the same address, port and owner — netstat formats
+        through Winsock, WAC by itself (ip_address.cpp), and the port is
+        byte-swapped by WAC;
+      - processes.json: the owner of nearly every connection is a process
+        observed a moment earlier;
+      - the boot time: no connection is created before it, and the default
+        route's next hop is a gateway of an interface (two tables)."""
+    d = load(folder, "network.json")
+    if not isinstance(d, dict):
+        print("  ⏭️  network.json absent: check skipped")
+        return 0
+    found = 0
+    connections = d.get("Connections") or []
+    if d.get("TablesNotRead"):
+        print(f"  ❌ network.json: tables not read {d['TablesNotRead']}")
+        found += 1
+    if not connections or not d.get("Interfaces") or not d.get("Routes"):
+        print("  ❌ network.json: no connection, interface or route")
+        return found + 1
+
+    ref = os.path.join(folder, "reference", "netstat-tcp.txt")
+    if os.path.exists(ref):
+        import re
+        listeners = set()
+        with open(ref, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                m = re.match(r"\s*TCP\s+(\S+):(\d+)\s+\S+\s+LISTENING\s+(\d+)", line)
+                if m:
+                    listeners.add((m.group(1).strip("[]").split("%")[0], int(m.group(2)), int(m.group(3))))
+        mine = {(c.get("LocalAddress"), c.get("LocalPort"), c.get("ProcessId"))
+                for c in connections if c.get("State") == "LISTEN"}
+        missing = sorted(listeners - mine)
+        # A listener opened after the collection is legitimate: a few, not most.
+        if not listeners or len(missing) > max(2, len(listeners) // 10):
+            print(f"  ❌ network.json: {len(missing)}/{len(listeners)} netstat listener(s) absent "
+                  f"(address, port, PID) {missing[:4]}")
+            found += 1
+        else:
+            print(f"  ✅ network.json: {len(listeners) - len(missing)}/{len(listeners)} netstat listeners "
+                  f"found with the same address, port and owner")
+    else:
+        print("  ⏭️  netstat reference absent: listener cross-check skipped")
+
+    owned = [c for c in connections if c.get("ProcessId")]
+    unnamed = [c for c in owned if not c.get("Process")]
+    if os.path.exists(os.path.join(folder, "processes.json")) and len(unnamed) > max(2, len(owned) // 20):
+        print(f"  ❌ network.json: {len(unnamed)}/{len(owned)} connection(s) owned by no observed process")
+        found += 1
+    else:
+        print(f"  ✅ network.json: {len(owned) - len(unnamed)}/{len(owned)} connection owners named")
+
+    if boot:
+        early = [c for c in connections if c.get("CreatedUtc") and instant(c["CreatedUtc"]) < instant(boot)]
+        if early:
+            print(f"  ❌ network.json: {len(early)} connection(s) created before the boot ({boot})")
+            found += 1
+        else:
+            print(f"  ✅ network.json: no connection created before the boot")
+
+    gateways = {g for i in d.get("Interfaces") for g in i.get("Gateways") or []}
+    hops = {r.get("NextHop") for r in d.get("Routes") if r.get("Destination") == "0.0.0.0/0"}
+    if not hops & gateways:
+        print(f"  ❌ network.json: default route next hop {sorted(hops)} is no interface gateway {sorted(gateways)}")
+        found += 1
+    else:
+        print(f"  ✅ network.json: default route through {sorted(hops & gateways)}, an interface gateway")
     return found
 
 

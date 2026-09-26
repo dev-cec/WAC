@@ -68,12 +68,13 @@ int wmain(int argc, wchar_t** argv) {
 		ConfigurationFile f;
 		std::string error;
 		const std::string text = "convert: false\nbinary: all\nthreads: 3\noutput: case42\nlog_level: 2\ndump: true\n"
-		                         "artefacts:\n  registry: false\n  events: true\n  prefetch: false\n  sessions: false\n";
+		                         "artefacts:\n  registry: false\n  events: true\n  prefetch: false\n  sessions: false\n"
+		                         "  network: false\n";
 		check(LoadConfiguration(file("all.yml", text), c, f, error), "all settings: refused: " + error);
 		check(c.mode == RunMode::Collect && c.binary && c.binaryAll && c.threads == 3 && c._outputDir == L"case42"
 		      && c.loglevel == 2 && c._dump, "top-level settings not applied");
 		check(!c.artefacts.registry && c._events && !c.artefacts.prefetch && !c.artefacts.sessions
-		      && c.artefacts.processes && c.artefacts.jumpLists, "artefact switches not applied, or others changed");
+		      && !c.artefacts.network && c.artefacts.processes && c.artefacts.jumpLists, "artefact switches not applied, or others changed");
 		check(f.present && f.text == text && f.sha256.size() == 64, "file not recorded for the log");
 	}
 	{

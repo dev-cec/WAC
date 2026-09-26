@@ -58,6 +58,9 @@ namespace Footprint {
 	extern const wchar_t* PROCESSES;
 	//! Query of the open sessions through LSA / Terminal Services.
 	extern const wchar_t* SESSIONS;
+	//! Reading of the TCP/IP stack's tables (connections, neighbours,
+	//! interfaces, routes): in-memory, no packet sent.
+	extern const wchar_t* NETWORK;
 	//! Write to the collection medium (the USB key), never to the target.
 	extern const wchar_t* USB_WRITE;
 	//! reading of the clock and of the boot time: in-memory queries, no artefact touched
