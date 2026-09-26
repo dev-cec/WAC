@@ -4,6 +4,7 @@
 #include "config.h"
 #include "sha.h"
 #include "yaml_light.h"
+#include "resource.h"
 #include <filesystem>
 #include <fstream>
 
@@ -133,38 +134,9 @@ bool LoadConfiguration(const std::wstring& path, AppliConf& conf, ConfigurationF
 }
 
 std::string DefaultConfiguration() {
-	return
-		"# WAC configuration — read from wac.yml, next to WAC.exe.\n"
-		"# The command line overrides it. An unknown key or value refuses the collection.\n"
-		"\n"
-		"# true: collect and convert on this machine; false: collect only (convert later, elsewhere, with --convert).\n"
-		"convert: false\n"
-		"\n"
-		"# Executables: none; unverified (collect those whose signature does not hold);\n"
-		"# all (collect every one, its signature verdict recorded).\n"
-		"binary: unverified\n"
-		"\n"
-		"# Threads analysing the executables; 0: the processor's threads minus one.\n"
-		"threads: 0\n"
-		"\n"
-		"# Output folder, in the current directory.\n"
-		"output: output\n"
-		"\n"
-		"# Detail of WAC.log: 0 (no log) to 3.\n"
-		"log_level: 0\n"
-		"\n"
-		"# Raw hexadecimal values of shellbags and shortcuts, in the JSON.\n"
-		"dump: false\n"
-		"\n"
-		"# The artefacts to collect.\n"
-		"artefacts:\n"
-		"  registry: true          # the hives, and every artefact read in them\n"
-		"  events: true            # the event logs, with their messages\n"
-		"  scheduled_tasks: true\n"
-		"  services: true          # services and drivers\n"
-		"  processes: true         # live\n"
-		"  sessions: true          # live\n"
-		"  prefetch: true\n"
-		"  jump_lists: true\n"
-		"  recent_documents: true\n";
+	// WAC/wac.yml, built into the executable (RCDATA): one source for the file WAC writes and the one WAC/bin holds.
+	HRSRC found = FindResourceW(nullptr, MAKEINTRESOURCEW(IDR_DEFAULT_CONFIGURATION), MAKEINTRESOURCEW(10));   // RT_RCDATA
+	HGLOBAL loaded = found ? LoadResource(nullptr, found) : nullptr;
+	const char* bytes = loaded ? static_cast<const char*>(LockResource(loaded)) : nullptr;
+	return bytes ? std::string(bytes, SizeofResource(nullptr, found)) : std::string();
 }

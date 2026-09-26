@@ -128,7 +128,7 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
   # README, had drifted and no longer linked. Both run under Wine.
   for t in evtx_test consigne_test trust_set_test config_test; do
     "$CXX" "${FLAGS[@]}" -municode -static -static-libgcc -static-libstdc++ \
-      "$SRC/$t.cpp" "${TEST_OBJS[@]}" -o "$TESTS/$t.exe" "${LIBS[@]}"
+      "$SRC/$t.cpp" "${TEST_OBJS[@]}" "$BUILD/WAC_res.o" -o "$TESTS/$t.exe" "${LIBS[@]}"
     echo "   -> $TESTS/$t.exe"
   done
 
@@ -175,3 +175,22 @@ if x86_64-w64-mingw32-objdump -p "$BUILD/WAC.exe" | grep -iE "DLL Name: ($NETWOR
   exit 1
 fi
 echo "No network library imported."
+
+# --- WAC/bin: the last build, ready to download ------------------------------
+# The executables and the reference configuration (WAC/wac.yml, also built
+# into WAC.exe), copied where the repository keeps them, and staged — not
+# committed: the commit stays a decision. The test executables stay in
+# build-windows/tests.
+BIN="$SRC/bin"
+mkdir -p "$BIN"
+for f in WAC.exe raw_hive_test.exe; do
+  [[ -f "$BUILD/$f" ]] && cp "$BUILD/$f" "$BIN/"
+done
+cp "$SRC/wac.yml" "$BIN/wac.yml"
+( cd "$BIN" && sha256sum WAC.exe $( [[ -f raw_hive_test.exe ]] && echo raw_hive_test.exe ) wac.yml > SHA256SUMS )
+if git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git -C "$ROOT" add -f "$BIN"
+  echo "WAC/bin updated and staged: $(cd "$BIN" && ls | tr '\n' ' ')"
+else
+  echo "WAC/bin updated: $(cd "$BIN" && ls | tr '\n' ' ')"
+fi

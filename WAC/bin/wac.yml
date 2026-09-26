@@ -1,0 +1,33 @@
+# WAC configuration — read from wac.yml, next to WAC.exe.
+# The command line overrides it. An unknown key or value refuses the collection.
+
+# true: collect and convert on this machine; false: collect only (convert later, elsewhere, with --convert).
+convert: false
+
+# Executables: none; unverified (collect those whose signature does not hold);
+# all (collect every one, its signature verdict recorded).
+binary: unverified
+
+# Threads analysing the executables; 0: the processor's threads minus one.
+threads: 0
+
+# Output folder, in the current directory.
+output: output
+
+# Detail of WAC.log: 0 (no log) to 3.
+log_level: 0
+
+# Raw hexadecimal values of shellbags and shortcuts, in the JSON.
+dump: false
+
+# The artefacts to collect.
+artefacts:
+  registry: true          # the hives, and every artefact read in them
+  events: true            # the event logs, with their messages
+  scheduled_tasks: true
+  services: true          # services and drivers
+  processes: true         # live
+  sessions: true          # live
+  prefetch: true
+  jump_lists: true
+  recent_documents: true

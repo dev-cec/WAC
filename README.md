@@ -135,6 +135,10 @@ what it is and, where it matters, why it is trustworthy.
 
 ## ▶️ USAGE
 
+**Ready to use:** `WAC/bin` holds the last build — `WAC.exe`, the reference
+`wac.yml` and `SHA256SUMS` to check them. Copy `WAC.exe` and `wac.yml` to the
+collection key; `build-windows.sh` refreshes the folder at every build.
+
 To minimize disk traces, this standalone tool should be run **as administrator** from a USB stick using the command:
 
 ```

@@ -51,7 +51,10 @@ struct ConfigurationFile {
  *  @return false if the file is present and refused */
 bool LoadConfiguration(const std::wstring& path, AppliConf& conf, ConfigurationFile& file, std::string& error);
 
-/*! @return the default configuration, commented — what --write-config writes */
+/*! @return the reference configuration, commented — what --write-config
+ *  writes: WAC/wac.yml, built into the executable as a resource (see WAC.rc),
+ *  the file build-windows.sh also copies to WAC/bin; empty if the resource is
+ *  missing */
 std::string DefaultConfiguration();
 
 /*! @return the default place of the file: wac.yml, next to WAC.exe */

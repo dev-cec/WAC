@@ -28,6 +28,8 @@ x86/
 [Aa][Rr][Mm]64/
 bld/
 [Bb]in/
+# WAC/bin holds the last build, kept in the repository to be downloaded ready (build-windows.sh).
+!/WAC/bin/
 [Oo]bj/
 [Oo]ut/
 [Ll]og/

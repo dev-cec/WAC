@@ -6,12 +6,13 @@
 // Used by WAC.rc
 //
 #define IDI_ICON1                       109 //!< the program's icon
+#define IDR_DEFAULT_CONFIGURATION       110 //!< the reference wac.yml (RCDATA), written by --write-config
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        110
+#define _APS_NEXT_RESOURCE_VALUE        111
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           101

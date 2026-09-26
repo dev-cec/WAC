@@ -1050,8 +1050,10 @@ int wmain(int argc, wchar_t* argv[])
 				printError(configurationPath + L" exists already: not overwritten");
 				return 1;
 			}
+			const std::string reference = DefaultConfiguration();
+			if (reference.empty()) { printError(L"reference configuration missing from WAC.exe"); return 1; }
 			std::ofstream out(std::filesystem::path(configurationPath), std::ios::binary);
-			out << DefaultConfiguration();
+			out << reference;
 			if (!out) { printError(L"not written: " + configurationPath); return 1; }
 			wprintf(L"%ls written\n", configurationPath.c_str());
 			return 0;
