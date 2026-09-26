@@ -17,7 +17,9 @@
  *    - THE TIME a chain is judged at, with a real RFC 3161 token made by
  *      openssl ts over a signature value, the collection's time moved to
  *      2040: a signer valid 2020-2035 is accepted without time stamp in 2026,
- *      refused in 2040, accepted in 2040 when stamped in 2026; a token over
+ *      refused in 2040, accepted in 2040 when stamped in 2026 — by an RFC
+ *      3161 token, or by a legacy counter-signature whose RSA block holds the
+ *      bare digest, as old VeriSign services made them; a token over
  *      another signature, or altered, refused; its authority's root not
  *      trusted for time stamping, refused; a root distrusted after 2030
  *      accepted for a signature stamped before, refused otherwise;
@@ -110,10 +112,12 @@ std::vector<uint8_t> der(uint8_t tag, const std::vector<uint8_t>& content) {
 	return out;
 }
 
-/*! The unsigned attributes of a SignerInfo carrying an RFC 3161 token:
- *  [1] { SEQUENCE { OID 1.3.6.1.4.1.311.3.3.1, SET { token } } }. */
-std::vector<uint8_t> stampAttributes(const std::vector<uint8_t>& token) {
-	const std::vector<uint8_t> oid = { 0x06, 0x0A, 0x2B, 0x06, 0x01, 0x04, 0x01, 0x82, 0x37, 0x03, 0x03, 0x01 };
+/*! The unsigned attributes of a SignerInfo carrying a time stamp:
+ *  [1] { SEQUENCE { OID, SET { value } } } — by default an RFC 3161 token
+ *  (1.3.6.1.4.1.311.3.3.1). */
+std::vector<uint8_t> stampAttributes(const std::vector<uint8_t>& token,
+                                     const std::vector<uint8_t>& oid = { 0x06, 0x0A, 0x2B, 0x06, 0x01, 0x04, 0x01,
+                                                                          0x82, 0x37, 0x03, 0x03, 0x01 }) {
 	std::vector<uint8_t> attribute = oid;
 	const std::vector<uint8_t> values = der(0x31, token);
 	attribute.insert(attribute.end(), values.begin(), values.end());
@@ -245,6 +249,14 @@ int main(int argc, char** argv) {
 	      "stamped: time or authority not recorded");
 	judge(roots, IN_2040, timed(other, &stamped), "not over this signature", "time stamp over another signature");
 	judge(roots, IN_2040, timed(value, &stampedAltered), "time stamp token", "time stamp token altered");
+	// A legacy counter-signature (PKCS#9), its RSA block holding the bare SHA-1: its authority in the outer pool.
+	const std::vector<uint8_t> counterSigned = stampAttributes(fixture("countersignature.bin"),
+		{ 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x09, 0x06 });
+	const std::vector<uint8_t> tsa = certificate("tsa");
+	VerifiedSignature legacy = timed(value, &counterSigned);
+	legacy.certificates.push_back({ tsa.data(), tsa.size() });
+	const ChainVerdict countersigned = judge(roots, IN_2040, legacy, "", "expired signer, legacy counter-signature over a bare digest");
+	check(countersigned.timeStampAuthority == L"WAC Test Time Stamping", "legacy counter-signature: authority not recorded");
 	TrustList noStamping = roots;
 	noStamping.entries[0].timeStampingExcluded = true;
 	judge(noStamping, NOW, timed(value, &stamped), "root not trusted by Microsoft for time stamping",

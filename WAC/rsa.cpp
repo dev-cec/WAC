@@ -120,7 +120,7 @@ bool blockIsWellFormed(const std::vector<uint8_t>& em, const uint8_t* prefix, si
 	if (em[0] != 0x00 || em[1] != 0x01) return false;
 	for (size_t i = 0; i < padding; ++i) if (em[2 + i] != 0xFF) return false;
 	if (em[2 + padding] != 0x00) return false;
-	if (std::memcmp(em.data() + 3 + padding, prefix, lp) != 0) return false;
+	if (lp && std::memcmp(em.data() + 3 + padding, prefix, lp) != 0) return false;
 	return std::memcmp(em.data() + 3 + padding + lp, h, lh) == 0;
 }
 
@@ -130,7 +130,7 @@ bool RsaVerifyPkcs1(const uint8_t* module, size_t modulusSize,
                       const uint8_t* exponent, size_t exponentSize,
                       const uint8_t* signature, size_t signatureSize,
                       DigestAlgorithm algo,
-                      const uint8_t* fingerprint, size_t digestSize) {
+                      const uint8_t* fingerprint, size_t digestSize, DigestEncoding encoding) {
 	// Leading zeros of the modulus (positive DER INTEGER).
 	while (modulusSize > 0 && *module == 0) { ++module; --modulusSize; }
 	if (modulusSize < 64 || modulusSize > 1024) return false;   // 512 to 8192 bits
@@ -171,6 +171,9 @@ bool RsaVerifyPkcs1(const uint8_t* module, size_t modulusSize,
 		const size_t rank = modulusSize - 1 - i;
 		em[i] = (uint8_t)(m[rank / 4] >> (8 * (rank % 4)));
 	}
+	if (encoding == DigestEncoding::DigestInfoOrBare && algo != DigestAlgorithm::Unknown
+	    && blockIsWellFormed(em, nullptr, 0, fingerprint, digestSize))
+		return true;
 	switch (algo) {
 	case DigestAlgorithm::Sha1:
 		if (digestSize != 20) return false;

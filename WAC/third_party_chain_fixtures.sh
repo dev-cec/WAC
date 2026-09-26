@@ -103,6 +103,46 @@ openssl ts -query -data signature.bin -sha256 -cert -out query.tsq 2>/dev/null
 openssl ts -reply -config ts.cnf -queryfile query.tsq -signer tsa.pem -inkey tsa.key -chain root.pem \
   -token_out -out token.bin 2>/dev/null
 
+# A LEGACY COUNTER-SIGNATURE over signature.bin, as old VeriSign and Symantec
+# services made them: a SignerInfo by the time stamping authority, its
+# signature over the attributes a PKCS#1 block of the BARE SHA-1, without
+# DigestInfo — openssl pkeyutl without a digest signs its input as it is.
+python3 - <<'PY'
+import hashlib, subprocess, datetime
+def der(tag, body):
+    n = len(body)
+    if n < 0x80: head = bytes([n])
+    else:
+        b = n.to_bytes((n.bit_length() + 7) // 8, 'big'); head = bytes([0x80 | len(b)]) + b
+    return bytes([tag]) + head + body
+def tlv(b, i):
+    t = b[i]; l = b[i + 1]; i += 2
+    if l & 0x80:
+        n = l & 0x7F; l = int.from_bytes(b[i:i + n], 'big'); i += n
+    return t, i, i + l
+def kids(b, start, end):
+    out = []
+    while start < end:
+        t, v, e = tlv(b, start); out.append((t, start, v, e)); start = e
+    return out
+tsa = subprocess.run(['openssl', 'x509', '-in', 'tsa.pem', '-outform', 'DER'], capture_output=True, check=True).stdout
+_, v, e = tlv(tsa, 0); _, tv, te = tlv(tsa, v)                 # Certificate > TBSCertificate
+f = kids(tsa, tv, te); f = f[1:] if f[0][0] == 0xA0 else f
+serial = tsa[f[0][1]:f[0][3]]; issuer = tsa[f[2][1]:f[2][3]]
+oid = lambda hexa: der(0x06, bytes.fromhex(hexa))
+when = datetime.datetime.now(datetime.timezone.utc).strftime('%y%m%d%H%M%SZ').encode()
+attributes = (der(0x30, oid('2a864886f70d010903') + der(0x31, oid('2a864886f70d010701')))
+            + der(0x30, oid('2a864886f70d010905') + der(0x31, der(0x17, when)))
+            + der(0x30, oid('2a864886f70d010904') + der(0x31, der(0x04, hashlib.sha1(open('signature.bin', 'rb').read()).digest()))))
+open('cs-digest.bin', 'wb').write(hashlib.sha1(der(0x31, attributes)).digest())
+subprocess.run(['openssl', 'pkeyutl', '-sign', '-inkey', 'tsa.key', '-in', 'cs-digest.bin', '-out', 'cs-signature.bin'], check=True)
+signer_info = der(0x30, der(0x02, b'\x01') + der(0x30, issuer + serial) + der(0x30, oid('2b0e03021a') + b'\x05\x00')
+                + der(0xA0, attributes) + der(0x30, oid('2a864886f70d010101') + b'\x05\x00')
+                + der(0x04, open('cs-signature.bin', 'rb').read()))
+open('countersignature.bin', 'wb').write(signer_info)
+PY
+rm -f cs-digest.bin cs-signature.bin
+
 # Revocation lists. Each authority keeps its own database: the root revokes
 # nothing; the authority revokes one signer for a key compromise, and
 # another as superseded AFTER the time stamp above.

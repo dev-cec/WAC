@@ -27,6 +27,17 @@ enum class DigestAlgorithm {
 	Sha512   //!< SHA-512
 };
 
+/*! How the digest is wrapped in the signed block. */
+enum class DigestEncoding {
+	DigestInfo,      //!< PKCS#1 v1.5 proper: the digest within a DigestInfo naming its algorithm
+	/*! Also the bare digest, without DigestInfo: what the time stamping
+	 *  services of VeriSign and Symantec produced for Authenticode
+	 *  counter-signatures (measured on LOLDrivers samples: the decrypted block
+	 *  is 00 01 FF… 00 then the SHA-1 alone), and Windows accepts. For those
+	 *  counter-signatures only. */
+	DigestInfoOrBare
+};
+
 /*! Verifies an RSA PKCS#1 v1.5 signature.
  *
  *  @param module, modulusSize  modulus n, big-endian (as in DER, possible
@@ -35,10 +46,12 @@ enum class DigestAlgorithm {
  *  @param signature, signatureSize  signature, big-endian
  *  @param algo  algorithm of the signed digest
  *  @param fingerprint, digestSize  expected digest
+ *  @param encoding  whether a bare digest is accepted too (see DigestEncoding)
  *  @return true if the signature is valid for this digest
  */
 bool RsaVerifyPkcs1(const uint8_t* module, size_t modulusSize,
                       const uint8_t* exponent, size_t exponentSize,
                       const uint8_t* signature, size_t signatureSize,
                       DigestAlgorithm algo,
-                      const uint8_t* fingerprint, size_t digestSize);
+                      const uint8_t* fingerprint, size_t digestSize,
+                      DigestEncoding encoding = DigestEncoding::DigestInfo);

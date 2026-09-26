@@ -337,9 +337,11 @@ struct SignerInfoCheck {
  *  token: the messageDigest attribute must be the digest of `content`, and
  *  the signature over the attributes, re-encoded as a SET, must hold with
  *  the certificate of `pool` it names (RSA).
+ *  @param encoding whether a bare digest is accepted (counter-signatures only)
  *  @return "" if it holds, otherwise why not */
 std::string checkSignerInfo(const Tlv& signerInfo, const uint8_t* content, size_t contentSize,
-                            const std::vector<Certificate>& pool, SignerInfoCheck& out) {
+                            const std::vector<Certificate>& pool, SignerInfoCheck& out,
+                            DigestEncoding encoding = DigestEncoding::DigestInfo) {
 	const std::vector<Tlv> si = children(signerInfo);
 	// version, issuerAndSerialNumber, digestAlgorithm, [0] attributes, digestEncryptionAlgorithm, encryptedDigest, [1] unsigned
 	if (si.size() < 5) return "SignerInfo incomplete";
@@ -378,7 +380,7 @@ std::string checkSignerInfo(const Tlv& signerInfo, const uint8_t* content, size_
 	if (out.signerIndex == SIZE_MAX || !pool[out.signerIndex].rsa) return "signer certificate absent or not RSA";
 	const Certificate& signer = pool[out.signerIndex];
 	if (!RsaVerifyPkcs1(signer.module.val, signer.module.len, signer.exponent.val, signer.exponent.len,
-	                    signature.val, signature.len, algo, ha, lha))
+	                    signature.val, signature.len, algo, ha, lha, encoding))
 		return "RSA signature invalid";
 	out.attributes = *attributes;
 	out.signatureValue = signature;
@@ -764,8 +766,10 @@ struct ThirdPartyRoots::Impl {
 			if (!c->notBefore || at < c->notBefore || at > c->notAfter)
 				return "certificate not valid at the " + std::string(when) + ": " + narrowName(*c);
 		const TrustListEntry& root = *chain.root->second;
-		if (root.distrusted && !(root.distrustedAfter && stamped && at < root.distrustedAfter))
+		if (root.distrusted && !(root.distrustedAfter && stamped && at < root.distrustedAfter)) {
+			if (!root.distrustedAfter) return "root distrusted by Microsoft, no date given";
 			return stamped ? "root distrusted by Microsoft before the signing time" : "root distrusted by Microsoft";
+		}
 		return std::string();
 	}
 
@@ -819,7 +823,9 @@ struct ThirdPartyRoots::Impl {
 		TimeStamp stamp;
 		stamp.present = true;
 		SignerInfoCheck check;
-		stamp.reason = checkSignerInfo(signerInfo, signature.signatureValue, signature.signatureValueSize, pool, check);
+		// Old VeriSign and Symantec services signed the bare digest: accepted here, and here only.
+		stamp.reason = checkSignerInfo(signerInfo, signature.signatureValue, signature.signatureValueSize, pool, check,
+		                               DigestEncoding::DigestInfoOrBare);
 		if (!stamp.reason.empty()) { stamp.reason = "counter-signature: " + stamp.reason; return stamp; }
 		bool dated = false;
 		for (const Tlv& a : children(check.attributes)) {
