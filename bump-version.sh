@@ -6,7 +6,8 @@
 # The version is written in ONE place, WAC/WAC.rc (FILEVERSION, PRODUCTVERSION
 # and their texts): Windows shows it in the executable's properties, and WAC
 # reads it there at run time. The usual cycle: commit the sources, run this,
-# commit what it staged (WAC.rc and WAC/bin). It commits nothing itself.
+# commit what it staged (WAC.rc, WAC/bin, and the documents that state the
+# version). It commits nothing itself.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 RC="$HERE/WAC/WAC.rc"
@@ -40,12 +41,24 @@ PY
 
 "$HERE/build-windows.sh"
 git -C "$HERE" add "$RC"
-# The code documentation (WAC/doc/html), its version read from WAC.rc too (Doxyfile: $(WAC_VERSION)).
 VERSION=$(python3 -c "import re; t=open('$RC','rb').read()[2:].decode('utf-16-le'); print('.'.join(re.search(r' FILEVERSION (\d+),(\d+),(\d+),0', t).groups()))")
+# The documents that state the version: the README badge, and the information
+# page of each manual (PDFs rebuilt when XeLaTeX is there).
+sed -i -E "s#badge/version-[0-9]+\.[0-9]+\.[0-9]+-green#badge/version-$VERSION-green#" "$HERE/README.md"
+DOCS=("$HERE"/WAC/doc/user/documentation_{FR,EN}.tex "$HERE"/WAC/doc/tests/testing_{FR,EN}.tex "$HERE"/WAC/doc/validation/validation_{FR,EN}.tex)
+sed -i -E "s#^(Version du logiciel|Software version) & [0-9]+\.[0-9]+\.[0-9]+ #\1 \& $VERSION #" "${DOCS[@]}"
+if command -v xelatex >/dev/null; then
+  for tex in "${DOCS[@]}"; do
+    ( cd "$(dirname "$tex")" && for pass in 1 2; do xelatex -interaction=nonstopmode -halt-on-error "$(basename "$tex")" >/dev/null 2>&1; done
+      rm -f "${tex%.tex}".aux "${tex%.tex}".out "${tex%.tex}".toc "${tex%.tex}".log )
+  done
+fi
+git -C "$HERE" add "$HERE/README.md" "${DOCS[@]}" "${DOCS[@]/%.tex/.pdf}"
+# The code documentation (WAC/doc/html), its version read from WAC.rc too (Doxyfile: $(WAC_VERSION)).
 if command -v doxygen >/dev/null; then
   ( cd "$HERE/Doxygen" && WAC_VERSION="$VERSION" doxygen Doxyfile >/dev/null 2>&1 ) && git -C "$HERE" add -A "$HERE/WAC/doc/html" \
     && echo "Code documentation regenerated (WAC/doc/html)"
 else
   echo "doxygen absent: WAC/doc/html not regenerated"
 fi
-echo "Staged: WAC/WAC.rc, WAC/bin and WAC/doc/html. Commit them: git commit -m \"chore : version $VERSION\""
+echo "Staged: WAC/WAC.rc, WAC/bin, README.md, the manuals and WAC/doc/html. Commit them: git commit -m \"chore : version $VERSION\""

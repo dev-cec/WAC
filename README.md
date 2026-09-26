@@ -1,5 +1,6 @@
 # WAC (Windows Artefact Collector) 🛠️  
-![version](https://img.shields.io/badge/Architecture-64bit-red)  
+![version](https://img.shields.io/badge/version-1.4.0-green)  
+![architecture](https://img.shields.io/badge/Architecture-64bit-red)  
 ![CPP](https://img.shields.io/badge/C%2B%2B-VS2022_%7C_MinGW--w64-blue)
 
 ## :thumbsup: PROVIDER
@@ -128,6 +129,18 @@ nothing about a binary nobody knows — the one that matters to the investigatio
 and a binary left behind may be gone by the time a detection comes in. Documents
 and data files are only hashed: they are not payloads, and copying them would
 turn the collection into a copy of the user's files.
+
+**Third-party executables are judged, not just hashed.** With a trust set on
+the key (`--update-trust`, run on the analysis workstation before leaving),
+each third-party signature is verified at collection against Microsoft's root
+program — chain, validity at the signing time, revocation lists, disallowed
+certificates, vulnerable driver lists (Microsoft, LOLDrivers) — and a binary
+whose signature holds is fingerprinted rather than copied, like a Microsoft
+one. Without a trust set, every third-party binary is collected.
+
+**What to collect is a file, not a command line.** `wac.yml`, next to
+`WAC.exe`, holds the procedure: collection or full run, binaries rule, and one
+switch per artefact. The file applied is recorded in `investigation.json`.
 
 One file per artefact, plus `investigation.json` (see below). The output schema
 is documented by the code itself: every field carries a doc comment explaining
@@ -1055,11 +1068,18 @@ cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
 - **Validation report**, in English and French:
   `WAC/doc/validation/validation_EN.pdf` and `validation_FR.pdf`. What
   establishes WAC's quality: the checks WAC runs itself during every
-  collection, the thirteen test programs and their judges, the VM cycle and the
+  collection, the test programs and their judges, the VM cycle and the
   cross-checks of `check-json.py`, the cross-checks on a real collection — with
   the reference result of each, the defects each one caught, and the limits of
   what they guarantee. Same template, cover retitled by `retitle-cover.py`.
-- `WAC/doc/BUILD-LINUX_EN.md` (French: `BUILD-LINUX_FR.md`) — cross-compilation details.
+- `WAC/doc/BUILD-LINUX_EN.md` (French: `BUILD-LINUX_FR.md`) — cross-compilation
+  details, the guards of the build, `WAC/bin`, releasing with `bump-version.sh`.
+- `WAC/wac.yml` — the reference configuration, built into `WAC.exe`
+  (`--write-config` writes it) and copied to `WAC/bin`.
+- `third_party/libyaml-0.2.5/VENDORED.md` — origin, fingerprint and reasons of
+  WAC's only third-party library.
+- Code documentation (Doxygen), generated in `WAC/doc/html` from the source
+  comments; `bump-version.sh` regenerates it.
 
 The design rationale lives **in the code**, next to what it explains: each
 non-obvious choice carries a comment saying why it is that way and what breaks
