@@ -352,7 +352,7 @@ void loadTrustSet() {
 		std::wstring lists = L"authroot.stl of " + isoUtcDate(set.roots.thisUpdate) + L", disallowedcert.stl of "
 		                   + isoUtcDate(set.disallowed.thisUpdate) + L", " + std::to_wstring(set.rootCertificates.size())
 		                   + L" roots, " + std::to_wstring(set.driverHashes.size()) + L" vulnerable driver fingerprints, "
-		                   + std::to_wstring(set.crlsByAuthority.size()) + L" authorities with a CRL";
+		                   + std::to_wstring(set.revocationLists.byUrl.size()) + L" revocation lists";
 		for (const std::wstring& missing : set.driverListsMissing) lists += L"; driver list missing: " + missing;
 		auditRecord(L"Trust set of " + set.createdUtc + L" (" + lists + L"; manifest SHA-256 " + set.manifestSha256
 		            + L"): third-party signatures are checked against it", set.folder, S_OK, Footprint::TRUST_SET);

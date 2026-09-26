@@ -113,10 +113,15 @@ bool loadUnsignedLists(const std::filesystem::path& folder, TrustSet& set) {
 	if (const Json* revoked = revocation.find(L"RevokedAuthorities"))
 		for (const auto& [unused, a] : revoked->members()) set.revokedAuthorities.insert(textOf(a, L"SHA256"));
 	if (const Json* crls = revocation.find(L"Crls"))
-		for (const auto& [unused, crl] : crls->members())
+		for (const auto& [unused, crl] : crls->members()) {
+			const std::string url = encodeText(textOf(crl, L"Url"));
+			std::vector<uint8_t> bytes;
+			if (!readSetFile(folder / textOf(crl, L"File"), bytes)) { set.reason = "revocation list missing: " + url; return false; }
+			set.revocationLists.byUrl[url] = std::move(bytes);
 			if (const Json* issuers = crl.find(L"IssuedBy"))
 				for (const auto& [unused2, issuer] : issuers->members())
-					set.crlsByAuthority[textOf(issuer, L"SHA256")].push_back(textOf(crl, L"File"));
+					set.revocationLists.byAuthority[textOf(issuer, L"SHA256")].push_back(url);
+		}
 	return true;
 }
 

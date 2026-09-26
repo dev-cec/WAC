@@ -504,8 +504,15 @@ and the collection's time moved to 2040: a signer valid 2020 to 2035 accepted
 without time stamp today, refused in 2040, accepted in 2040 when stamped
 today; a token over another signature, or altered, refused; a time stamping
 authority under a root not trusted for it, refused; a root distrusted after
-2030 accepted for a signature stamped before, refused otherwise. Each rule
-disabled in turn fails the test (fifteen mutations). The time stamps of the
+2030 accepted for a signature stamped before, refused otherwise. Last,
+revocation, with real CRLs made by \texttt{openssl ca}: a sound chain accepted
+with the authority's and the root's CRLs; without them, with the authority's
+missing or forged (right issuer name, another key), refused as not
+verifiable; a CRL found through the CCADB when the certificate's address is
+missing, the certificate's own prevailing; a signer revoked for a compromise
+refused even when stamped before; one revoked as superseded after the time
+stamp accepted when stamped, refused otherwise. Each rule disabled in turn
+fails the test (twenty-two mutations). The time stamps of the
 real installers agree to the second with an independent reading
 (\texttt{openssl ts} for RFC~3161 tokens, DER for counter-signatures). Real signatures are
 cross-checked by \texttt{authenticode\_test --trust}, against \texttt{openssl

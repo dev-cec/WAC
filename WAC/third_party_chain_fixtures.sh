@@ -13,9 +13,12 @@ key() { openssl genrsa -out "$1.key" 2048 2>/dev/null; }
 # ext <file> <lines...>: an extension file
 ext() { local f="$1"; shift; printf '%s\n' "$@" > "$f"; }
 
-ext ca.ext "basicConstraints=critical,CA:TRUE" "keyUsage=critical,keyCertSign,cRLSign"
+# Each certificate names its issuer's revocation list, as real ones do.
+ext ca.ext "basicConstraints=critical,CA:TRUE" "keyUsage=critical,keyCertSign,cRLSign" \
+  "crlDistributionPoints=URI:http://wac.test/root.crl"
 ext noca.ext "keyUsage=critical,digitalSignature"
-ext leaf.ext "basicConstraints=CA:FALSE" "extendedKeyUsage=codeSigning"
+ext leaf.ext "basicConstraints=CA:FALSE" "extendedKeyUsage=codeSigning" \
+  "crlDistributionPoints=URI:http://wac.test/ca.crl"
 ext web.ext "basicConstraints=CA:FALSE" "extendedKeyUsage=serverAuth"
 
 # The root, self-signed.
@@ -71,9 +74,15 @@ dated() {
     -extfile "$4" -startdate "$5" -enddate "$6" 2>/dev/null
 }
 ext tsa.ext "basicConstraints=CA:FALSE" "extendedKeyUsage=critical,timeStamping"
-ext leaf2.ext "basicConstraints=CA:FALSE" "extendedKeyUsage=codeSigning"
+ext leaf2.ext "basicConstraints=CA:FALSE" "extendedKeyUsage=codeSigning" \
+  "crlDistributionPoints=URI:http://wac.test/ca.crl"
 key old;  dated old "WAC Test Signer 2020-2035" ca leaf2.ext 20200101000000Z 20351231000000Z
 key tsa;  dated tsa "WAC Test Time Stamping" root tsa.ext 20200101000000Z 20451231000000Z
+
+# Two signers to be revoked below — made before the time stamp, so that it
+# falls within their validity.
+key revkey; sign revkey "WAC Test Signer Compromised" ca leaf.ext
+key revsup; sign revsup "WAC Test Signer Superseded" ca leaf.ext
 
 # A signature value, and an RFC 3161 time stamp over it, made now by that authority.
 head -c 256 /dev/urandom > signature.bin
@@ -94,6 +103,25 @@ openssl ts -query -data signature.bin -sha256 -cert -out query.tsq 2>/dev/null
 openssl ts -reply -config ts.cnf -queryfile query.tsq -signer tsa.pem -inkey tsa.key -chain root.pem \
   -token_out -out token.bin 2>/dev/null
 
+# Revocation lists. Each authority keeps its own database: the root revokes
+# nothing; the authority revokes one signer for a key compromise, and
+# another as superseded AFTER the time stamp above.
+sleep 2                            # the revocation strictly after the token's time
+# The authority's database is ca.cnf's: it issued the signers. The root, the
+# forger, and a second list of the authority get empty ones.
+for authority in root forged empty; do
+  : > "$authority-index.txt"
+  sed "s/^database = .*/database = $authority-index.txt/" ca.cnf > "$authority.cnf"
+done
+openssl ca -config ca.cnf -revoke revkey.pem -crl_reason keyCompromise -cert ca.pem -keyfile ca.key 2>/dev/null
+openssl ca -config ca.cnf -revoke revsup.pem -crl_reason superseded -cert ca.pem -keyfile ca.key 2>/dev/null
+crl() { openssl ca -gencrl -config "$1" -cert "$2.pem" -keyfile "$3.key" -crldays 30 -out "$4.pem" 2>/dev/null
+        openssl crl -in "$4.pem" -outform DER -out "$4.crl"; rm -f "$4.pem"; }
+crl ca.cnf ca ca ca-crl
+crl root.cnf root root root-crl
+crl forged.cnf forged-ca forged forged-crl   # "WAC Test CA" by name, another key
+crl empty.cnf ca ca ca-empty-crl             # the authority's, revoking nothing: another list of it
+
 for p in *.pem; do openssl x509 -in "$p" -outform DER -out "${p%.pem}.der"; done
-rm -f ./*.csr ./*.srl ./*.ext ./*.cnf index.txt* serial.txt* tsaserial.txt* query.tsq && rm -rf issued
+rm -f ./*.csr ./*.srl ./*.ext ./*.cnf ./*index.txt* serial.txt* tsaserial.txt* query.tsq ./*.old && rm -rf issued
 echo "fixtures in $OUT"

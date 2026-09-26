@@ -20,7 +20,16 @@
  *      refused in 2040, accepted in 2040 when stamped in 2026; a token over
  *      another signature, or altered, refused; its authority's root not
  *      trusted for time stamping, refused; a root distrusted after 2030
- *      accepted for a signature stamped before, refused otherwise.
+ *      accepted for a signature stamped before, refused otherwise;
+ *    - REVOCATION, with real CRLs made by openssl ca: the sound chain
+ *      accepted with its authority's and its root's CRLs; without them, or
+ *      with the authority's missing, or forged — the right issuer name,
+ *      another key —, refused as not verifiable; the CRL found through the
+ *      CCADB when the certificate's address is not in the set, and the
+ *      certificate's own prevailing over it; a signer
+ *      revoked for a key compromise refused even when stamped before; one
+ *      revoked as superseded after the time stamp accepted when stamped,
+ *      refused otherwise.
  *  The trust lists are built here, entry by entry: what is tested is the
  *  chain, the lists' own reading being trust_list_test's.
  *
@@ -153,6 +162,10 @@ int main(int argc, char** argv) {
 	std::set<std::wstring> revoked;
 	// Now: the fixtures, made just before, are valid from their making, for ten years.
 	const uint64_t NOW = filetime((long long)std::time(nullptr) + 60);
+	// The revocation lists, by the addresses the certificates name.
+	RevocationLists lists;
+	lists.byUrl["http://wac.test/ca.crl"] = fixture("ca-crl.crl");
+	lists.byUrl["http://wac.test/root.crl"] = fixture("root-crl.crl");
 
 	const Case sound[] = {
 		{ "sound chain", { &leaf, &ca }, "" },
@@ -163,7 +176,7 @@ int main(int argc, char** argv) {
 		{ "ECDSA authority", { &ecleaf, &ecca }, "not RSA" },
 	};
 	for (const Case& c : sound) {
-		const ThirdPartyRoots trust(roots, certificates, disallowed, revoked, NOW);
+		const ThirdPartyRoots trust(roots, certificates, disallowed, revoked, lists, NOW);
 		const ChainVerdict v = trust.verify(signatureOf(c.pool));
 		if (!*c.expected) check(v.trusted && v.root == L"WAC Test Root", std::string(c.what) + ": refused: " + v.reason);
 		else check(!v.trusted && v.reason.find(c.expected) != std::string::npos,
@@ -173,7 +186,7 @@ int main(int argc, char** argv) {
 	// The same sound chain, each list changed to refuse it.
 	auto expectRefused = [&](const TrustList& r, const TrustList& d, const std::set<std::wstring>& rv,
 	                         const char* expected, const char* what) {
-		const ThirdPartyRoots trust(r, certificates, d, rv, NOW);
+		const ThirdPartyRoots trust(r, certificates, d, rv, lists, NOW);
 		const ChainVerdict v = trust.verify(signatureOf({ &leaf, &ca }));
 		check(!v.trusted && v.reason.find(expected) != std::string::npos,
 		      std::string(what) + ": " + (v.trusted ? "accepted" : "refused for \"" + v.reason + "\""));
@@ -196,7 +209,7 @@ int main(int argc, char** argv) {
 	// Not intact: nothing to check.
 	VerifiedSignature broken = signatureOf({ &leaf, &ca });
 	broken.intact = false;
-	check(!ThirdPartyRoots(roots, certificates, disallowed, revoked, NOW).verify(broken).trusted, "signature not intact: accepted");
+	check(!ThirdPartyRoots(roots, certificates, disallowed, revoked, lists, NOW).verify(broken).trusted, "signature not intact: accepted");
 
 	// THE TIME. A signer valid 2020-2035; a token made now over signature.bin.
 	const std::vector<uint8_t> old = certificate("old");
@@ -213,12 +226,16 @@ int main(int argc, char** argv) {
 		if (attributes) { v.unsignedAttributes = attributes->data(); v.unsignedAttributesSize = attributes->size(); }
 		return v;
 	};
-	auto judge = [&](const TrustList& r, uint64_t now, const VerifiedSignature& v, const char* expected, const char* what) {
-		const ChainVerdict c = ThirdPartyRoots(r, certificates, disallowed, revoked, now).verify(v);
+	auto judgeWith = [&](const TrustList& r, const RevocationLists& crls, uint64_t now, const VerifiedSignature& v,
+	                     const char* expected, const char* what) {
+		const ChainVerdict c = ThirdPartyRoots(r, certificates, disallowed, revoked, crls, now).verify(v);
 		if (!*expected) check(c.trusted, std::string(what) + ": refused: " + c.reason);
 		else check(!c.trusted && c.reason.find(expected) != std::string::npos,
 		           std::string(what) + ": " + (c.trusted ? "accepted" : "refused for \"" + c.reason + "\""));
 		return c;
+	};
+	auto judge = [&](const TrustList& r, uint64_t now, const VerifiedSignature& v, const char* expected, const char* what) {
+		return judgeWith(r, lists, now, v, expected, what);
 	};
 	judge(roots, NOW, timed(value, nullptr), "", "valid signer, no time stamp, judged in 2026");
 	judge(roots, IN_2040, timed(value, nullptr), "not valid at the collection time", "expired signer, no time stamp");
@@ -240,6 +257,40 @@ int main(int argc, char** argv) {
 	TrustList distrustedEarlier = distrustedLater;
 	distrustedEarlier.entries[0].distrustedAfter = filetime(1577836800);  // 2020
 	judge(distrustedEarlier, NOW, timed(value, &stamped), "before the signing time", "root distrusted before the time stamp");
+
+	// REVOCATION.
+	auto signedBy = [&](const std::vector<uint8_t>& signer, const std::vector<uint8_t>* attributes) {
+		VerifiedSignature v = signatureOf({ &signer, &ca });
+		v.signatureValue = value.data();
+		v.signatureValueSize = value.size();
+		if (attributes) { v.unsignedAttributes = attributes->data(); v.unsignedAttributesSize = attributes->size(); }
+		return v;
+	};
+	const ChainVerdict checked = judge(roots, NOW, signedBy(leaf, nullptr), "", "sound chain, both CRLs");
+	check(checked.revocationListsIssued > 0, "sound chain: date of the CRLs not recorded");
+	judgeWith(roots, RevocationLists{}, NOW, signedBy(leaf, nullptr), "revocation not verifiable", "no revocation list");
+	RevocationLists rootOnly;
+	rootOnly.byUrl["http://wac.test/root.crl"] = lists.byUrl["http://wac.test/root.crl"];
+	judgeWith(roots, rootOnly, NOW, signedBy(leaf, nullptr), "revocation not verifiable", "authority's CRL missing");
+	RevocationLists forgedCrl = lists;
+	forgedCrl.byUrl["http://wac.test/ca.crl"] = fixture("forged-crl.crl");
+	judgeWith(roots, forgedCrl, NOW, signedBy(leaf, nullptr), "revocation not verifiable", "authority's CRL forged");
+	RevocationLists throughCcadb = rootOnly;
+	uint8_t caSha256[32];
+	sha256Bytes(ca.data(), ca.size(), caSha256);
+	throughCcadb.byUrl["http://elsewhere.test/full.crl"] = lists.byUrl["http://wac.test/ca.crl"];
+	throughCcadb.byAuthority[toHexadecimal(caSha256, 32)] = { "http://elsewhere.test/full.crl" };
+	judgeWith(roots, throughCcadb, NOW, signedBy(leaf, nullptr), "", "authority's CRL found through the CCADB");
+	const std::vector<uint8_t> compromised = certificate("revkey"), superseded = certificate("revsup");
+	// The list the certificate names prevails over the CCADB's, which here revokes nothing.
+	RevocationLists named = lists;
+	named.byUrl["http://elsewhere.test/empty.crl"] = fixture("ca-empty-crl.crl");
+	named.byAuthority[toHexadecimal(caSha256, 32)] = { "http://elsewhere.test/empty.crl" };
+	judgeWith(roots, named, NOW, signedBy(superseded, nullptr), "revoked before the signing time",
+	          "the certificate's CRL prevails over the CCADB's");
+	judge(roots, NOW, signedBy(compromised, &stamped), "compromise", "signer revoked for a key compromise, stamped before");
+	judge(roots, NOW, signedBy(superseded, nullptr), "revoked before the signing time", "signer superseded, not stamped");
+	judge(roots, NOW, signedBy(superseded, &stamped), "", "signer superseded after its time stamp");
 
 
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);

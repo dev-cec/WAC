@@ -182,9 +182,20 @@ struct VerdictMicrosoft {
 	std::string chainReason;       //!< why not trusted
 	uint64_t chainSignedAt = 0;    //!< FILETIME (UTC) of its verified time stamp; 0 if none
 	std::wstring chainTimeStampAuthority; //!< CN of the time stamp's authority
+	uint64_t chainRevocationListsIssued = 0; //!< FILETIME (UTC) of the oldest CRL its revocation was checked by
+	std::vector<std::string> chainMissingCrls; //!< CRL addresses missing from the set (see ChainVerdict)
 };
 
 struct TrustList;
+
+/*! The revocation lists a chain is checked against: those --update-trust
+ *  downloaded (trust_set.h). */
+struct RevocationLists {
+	//! Each CRL, as downloaded (DER, or PEM), by its address.
+	std::map<std::string, std::vector<uint8_t>> byUrl;
+	//! The full CRLs of an authority, by the SHA-256 (uppercase hexadecimal) of its certificate, per the CCADB.
+	std::map<std::wstring, std::vector<std::string>> byAuthority;
+};
 
 /*! Result of checking the chain of a third-party signature. */
 struct ChainVerdict {
@@ -193,6 +204,9 @@ struct ChainVerdict {
 	std::string reason;            //!< why not trusted
 	uint64_t signedAt = 0;         //!< FILETIME (UTC) of the verified time stamp; 0 if none
 	std::wstring timeStampAuthority; //!< CN of its authority
+	uint64_t revocationListsIssued = 0; //!< FILETIME (UTC) of the oldest CRL the revocation was checked by
+	//! Revocation not verifiable: the CRL addresses the certificate names, none of which the set holds.
+	std::vector<std::string> missingCrls;
 };
 
 /*! THE ROOTS A THIRD-PARTY SIGNATURE IS TIED TO: those of the trust set
@@ -215,7 +229,16 @@ struct ChainVerdict {
  *      otherwise at the collection's time, as Windows judges. A root
  *      distrusted after a date still validates a signature stamped before
  *      it; a time stamp that does not hold makes the chain refused.
- *  Not yet: the revocation lists.
+ *    - no certificate below the root is revoked, according to its issuer's
+ *      CRL — the one it names (CRL Distribution Points), or its issuer's full
+ *      CRL per the CCADB —, that CRL signed by the issuer. Revoked for a
+ *      compromise, or with no reason given: refused whatever the time.
+ *      Revoked for another reason: refused unless a verified time stamp puts
+ *      the signature before the revocation. NO SIGNED CRL FOR A CERTIFICATE:
+ *      its revocation is not verifiable, and the chain is refused — a binary
+ *      that cannot be cleared is collected. The CRLs are those of
+ *      --update-trust: a revocation after their issue is not known, which is
+ *      why their date is recorded.
  *
  *  Built once, then shared by the analysis threads (read only). */
 class ThirdPartyRoots {
@@ -224,10 +247,12 @@ public:
 	 *  @param certificates the root certificates, DER, by their SHA-1
 	 *  @param disallowed disallowedcert.stl
 	 *  @param revokedAuthorities SHA-256 (uppercase hexadecimal) of the authorities the CCADB says revoked
+	 *  @param revocation the revocation lists
 	 *  @param now FILETIME (UTC) of the collection: when a signature without time stamp is judged
 	 *  All must outlive this object. */
 	ThirdPartyRoots(const TrustList& roots, const std::map<std::string, std::vector<uint8_t>>& certificates,
-	                const TrustList& disallowed, const std::set<std::wstring>& revokedAuthorities, uint64_t now);
+	                const TrustList& disallowed, const std::set<std::wstring>& revokedAuthorities,
+	                const RevocationLists& revocation, uint64_t now);
 	~ThirdPartyRoots();
 	ThirdPartyRoots(const ThirdPartyRoots&) = delete;
 	ThirdPartyRoots& operator=(const ThirdPartyRoots&) = delete;
@@ -314,6 +339,13 @@ TrustList ReadTrustList(const uint8_t* bytes, size_t size);
  *  @return its entry; nullptr if the list does not name it, or if the
  *          certificate cannot be read */
 const TrustListEntry* FindInTrustList(const TrustList& list, const uint8_t* certificate, size_t size);
+
+/*! The addresses a certificate names for its revocation list (CRL
+ *  Distribution Points, URIs) — how --update-trust finds the CRLs of
+ *  authorities the CCADB does not list.
+ *  @param der,size the certificate
+ *  @return the addresses; empty if none, or if it is not a certificate */
+std::vector<std::string> CertificateCrlAddresses(const uint8_t* der, size_t size);
 
 /*! Base64 (the standard alphabet) to bytes; padding and characters outside
  *  the alphabet are skipped.

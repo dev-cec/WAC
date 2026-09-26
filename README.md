@@ -204,7 +204,7 @@ workstation, before leaving for the collection:
 | `roots\<SHA-1>.crt` | every root `authroot.stl` names (562 on 2026-08-25) |
 | `roots.pem` | those trusted for code signing and not distrusted, for `osslsigncode` or `openssl` on Linux |
 | `vulnerable-drivers.json` | the fingerprints (file and Authenticode) of vulnerable or malicious drivers, from Microsoft's blocklist (1,086) and LOLDrivers (8,151), and the 217 signers Microsoft's blocklist denies, with the files each is restricted to |
-| `crl\` , `revocation.json` | the revocation lists (CRL) of every authority capable of code signing that the Common CA Database lists (387 in 2026), each with the authorities that issue it; and the 2,935 authorities the CCADB says revoked |
+| `crl\` , `revocation.json` | the revocation lists (CRL) of every authority capable of code signing that the Common CA Database lists (387 in 2026), those of Microsoft's own code signing authorities (not in the CCADB: WHQL drivers, Store, Windows Phone…), and those earlier collections found missing (`wanted-crls.txt`); and the 2,935 authorities the CCADB says revoked |
 | `sources\` | the unsigned lists as downloaded: `VulnerableDriverBlockList.zip`, `loldrivers.json`, `ccadb.csv` |
 | `trust-manifest.json` | date, sources, counts, SHA-256 of every file; written last, so that an interrupted set is seen as absent |
 
@@ -222,10 +222,16 @@ and the chain of every intact third-party signature is verified against it:
 tied to a root Microsoft trusts for code signing, no certificate disallowed,
 no authority revoked, every certificate valid at the signing time given by a
 verified time stamp (RFC 3161 or counter-signature) — at the collection's
-time without one. The manifest records it (`EmbeddedChainTrusted`,
-`EmbeddedChainRoot`, `EmbeddedChainReason`, `EmbeddedTimeStampUtc`,
-`EmbeddedTimeStampAuthority`); the collection rule itself does not change
-yet — revocation lists and vulnerable drivers come first.
+time without one —, and none revoked according to its issuer's signed CRL:
+revoked for a compromise or without a reason, refused; for another reason,
+refused unless stamped before. No signed CRL for a certificate: its
+revocation is not verifiable, and the binary cannot be cleared. The CRL
+addresses a collection lacked are written to `trust\wanted-crls.txt` on the
+key, and the next `--update-trust` fetches them. The manifest records it all
+(`EmbeddedChainTrusted`, `EmbeddedChainRoot`, `EmbeddedChainReason`,
+`EmbeddedTimeStampUtc`, `EmbeddedTimeStampAuthority`,
+`EmbeddedRevocationListsUtc`); the collection rule itself does not change
+yet — vulnerable drivers come first.
 
 On a Linux workstation it runs under wine. About 70 seconds for 64 MB; the
 562 roots are

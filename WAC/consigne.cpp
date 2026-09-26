@@ -425,6 +425,8 @@ HRESULT ExhibitStoreWriteManifest() {
 				// When it was signed, by a time stamp that holds: the time the chain was judged at.
 				o.add(L"EmbeddedTimeStampUtc", Json::str(p.verdict.chainSignedUtc));
 				o.add(L"EmbeddedTimeStampAuthority", Json::str(p.verdict.chainTimeStampAuthority));
+				// The revocation lists are those of --update-trust: known up to their issue.
+				o.add(L"EmbeddedRevocationListsUtc", Json::str(p.verdict.chainRevocationListsUtc));
 			}
 		}
 		/* A PE's build: TimeDateStamp and SizeOfImage, the key of Microsoft's

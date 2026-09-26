@@ -119,6 +119,7 @@ struct SignatureVerdict {
 	std::wstring chainReason;
 	std::wstring chainSignedUtc;          //!< the verified time stamp, ISO 8601 UTC; empty if none
 	std::wstring chainTimeStampAuthority; //!< its authority
+	std::wstring chainRevocationListsUtc; //!< issue of the oldest CRL the revocation was checked by, ISO 8601 UTC
 };
 
 /*! Records an extraction result in the exhibit store manifest.

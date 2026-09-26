@@ -523,8 +523,15 @@ valide de 2020 à 2035 accepté sans horodatage aujourd'hui, refusé en 2040,
 accepté en 2040 s'il est horodaté aujourd'hui ; jeton sur une autre
 signature, ou altéré, refusé ; autorité d'horodatage sous une racine non
 admise pour cet usage, refusée ; racine désapprouvée après 2030 acceptée pour
-une signature horodatée avant, refusée sinon. Chaque règle neutralisée tour à
-tour fait échouer le test (quinze mutations). Les horodatages des installeurs
+une signature horodatée avant, refusée sinon. Enfin la révocation, avec de
+vraies CRL faites par \texttt{openssl ca} : chaîne saine acceptée avec les CRL
+de l'autorité et de la racine ; sans elles, avec celle de l'autorité absente ou
+forgée (bon nom d'émetteur, autre clé), refusée comme invérifiable ; CRL
+trouvée par la CCADB quand l'adresse du certificat manque, celle du certificat
+prévalant ; signataire révoqué pour compromission refusé même horodaté avant ;
+révoqué comme remplacé après l'horodatage, accepté s'il est horodaté, refusé
+sinon. Chaque règle neutralisée tour à tour fait échouer le test (vingt-deux
+mutations). Les horodatages des installeurs
 réels concordent à la seconde avec une lecture indépendante (\texttt{openssl
 ts} pour les jetons RFC~3161, DER pour les contre-signatures).
 Les signatures réelles se recoupent par \texttt{authenticode\_test --trust},

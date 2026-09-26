@@ -99,7 +99,9 @@ void downloadAll(const HttpClient& http, std::vector<Download>& batch, size_t ma
 	std::atomic<size_t> next{ 0 }, done{ 0 };
 	auto worker = [&]() {
 		for (size_t k = next++; k < batch.size(); k = next++) {
-			batch[k].obtained = http.get(batch[k].url, batch[k].content, maxSize, batch[k].reason);
+			// One retry: a server that times out once (seen on crl.microsoft.com) is not a missing list.
+			batch[k].obtained = http.get(batch[k].url, batch[k].content, maxSize, batch[k].reason)
+			                 || http.get(batch[k].url, batch[k].content, maxSize, batch[k].reason);
 			if (++done % 50 == 0) wprintf(L"\r - %ls : %zu / %zu", label.c_str(), done.load(), batch.size());
 		}
 	};
@@ -334,12 +336,75 @@ bool readCcadb(Revocation& r) {
 /*! Downloads the report, then every CRL it names. A report not obtained
  *  leaves the set without revocation: the collection then cannot clear a
  *  signature, and collects the binary. */
-Revocation fetchRevocation(const HttpClient& http) {
+/*! MICROSOFT'S OWN CODE SIGNING AUTHORITIES: not in the CCADB, which lists
+ *  the public ones, nor in Microsoft's PKI repository, which gives the CRLs of
+ *  its roots only. Seen on the chains of a Windows 11: WHQL drivers, Early
+ *  Launch, Store and Windows Phone components, enclaves. An authority missing
+ *  from these lists is learnt from the collections (wanted-crls.txt).
+ *
+ *  Two lists, because a certificate names the CRL of its ISSUER, not its own:
+ *    - the CRLs of these authorities, as the certificates they issue name
+ *      them (CRL Distribution Points, read on real signatures);
+ *    - their own certificates (Authority Information Access), which name the
+ *      CRL of the Microsoft root above them, for the authority's revocation. */
+const wchar_t* const MICROSOFT_AUTHORITY_CRLS[] = {
+	L"http://www.microsoft.com/pkiops/crl/Microsoft%20Windows%20Third%20Party%20Component%20CA%202012.crl",
+	L"http://www.microsoft.com/pkiops/crl/MicCodSigPCA2011_2011-07-08.crl",
+	L"http://www.microsoft.com/pkiops/crl/Microsoft%20Windows%20Third%20Party%20Component%20CA%202013.crl",
+	L"http://www.microsoft.com/pkiops/crl/Microsoft%20Windows%20Third%20Party%20Component%20CA%202014.crl",
+	L"http://www.microsoft.com/pkiops/crl/Microsoft%20Code%20Signing%20PCA%202024.crl",
+	L"http://www.microsoft.com/pkiops/crl/Microsoft%20Windows%20Code%20Signing%20PCA%202024.crl",
+	L"http://www.microsoft.com/pkiops/crl/Microsoft%20Windows%20Phone%20Production%20PCA%202012.crl",
+};
+const wchar_t* const MICROSOFT_AUTHORITIES[] = {
+	L"http://www.microsoft.com/pkiops/certs/Microsoft%20Windows%20Third%20Party%20Component%20CA%202013.crt",
+	L"http://www.microsoft.com/pkiops/certs/Microsoft%20Windows%20Third%20Party%20Component%20CA%202014.crt",
+	L"http://www.microsoft.com/pkiops/certs/Microsoft%20Code%20Signing%20PCA%202024.crt",
+	L"http://www.microsoft.com/pkiops/certs/Microsoft%20Windows%20Code%20Signing%20PCA%202024.crt",
+	L"http://www.microsoft.com/pkiops/certs/Microsoft%20Windows%20Phone%20Production%20PCA%202012.crt",
+};
+
+/*! The CRLs of Microsoft's code signing authorities (see
+ *  MICROSOFT_AUTHORITY_CRLS), and those of the roots above them, named by
+ *  their certificates — issued by the root, which the collection finds in the
+ *  chain: they are matched by address. */
+void addMicrosoftAuthorities(const HttpClient& http, Revocation& r) {
+	for (const wchar_t* url : MICROSOFT_AUTHORITY_CRLS) r.crls[url];
+	std::vector<Download> certificates;
+	for (const wchar_t* url : MICROSOFT_AUTHORITIES) certificates.push_back({ url, {}, {}, false });
+	downloadAll(http, certificates, CERTIFICATE_MAX, L"Microsoft code signing authorities");
+	for (const Download& d : certificates) {
+		if (!d.obtained) continue;
+		for (const std::string& crl : CertificateCrlAddresses(d.content.data(), d.content.size()))
+			r.crls[decodeText(crl, CP_UTF8)];
+	}
+}
+
+/*! The CRL addresses the collections lacked (wanted-crls.txt, written on
+ *  the key by the collection): fetched too, their issuer unknown here — the
+ *  collection matches them by the address its certificates name. */
+void addWantedCrls(const std::wstring& folder, Revocation& r) {
+	std::ifstream in(std::filesystem::path(folder) / "wanted-crls.txt");
+	size_t added = 0;
+	for (std::string line; std::getline(in, line);) {
+		if (!line.empty() && line.back() == '\r') line.pop_back();
+		if (line.compare(0, 7, "http://") != 0 && line.compare(0, 8, "https://") != 0) continue;
+		const std::wstring url = decodeText(line, CP_UTF8);
+		if (r.crls.count(url)) continue;                   // already fetched for its authority
+		r.crls[url];
+		++added;
+	}
+	if (added) wprintf(L" - Revocation lists wanted by earlier collections : %zu\n", added);
+}
+
+Revocation fetchRevocation(const HttpClient& http, const std::wstring& folder) {
 	Revocation r;
 	printStep(L" - Certificate authorities (CCADB) : ");
 	r.obtained = http.get(CCADB_URL, r.report, CCADB_MAX, r.reason) && readCcadb(r);
 	if (!r.obtained) { printError(decodeText(r.reason, CP_UTF8)); return r; }
 	printSuccess();
+	addMicrosoftAuthorities(http, r);
+	addWantedCrls(folder, r);
 	for (const auto& [url, unused] : r.crls) r.downloads.push_back({ url, {}, {}, false });
 	downloadAll(http, r.downloads, CRL_MAX, L"Revocation lists (CRL)");
 	return r;
@@ -567,7 +632,7 @@ int UpdateTrust(const std::wstring& folder) {
 	files.push_back(driversFile(drivers));
 	for (DriverList& d : drivers)
 		if (d.obtained) files.push_back({ d.file, std::move(d.raw) });
-	Revocation revocation = fetchRevocation(http);
+	Revocation revocation = fetchRevocation(http, folder);
 	if (revocation.obtained) {
 		files.push_back(revocationFile(revocation));
 		files.push_back({ L"sources\\ccadb.csv", std::move(revocation.report) });

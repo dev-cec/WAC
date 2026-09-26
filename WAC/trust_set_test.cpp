@@ -101,10 +101,10 @@ int wmain(int argc, wchar_t** argv) {
 
 	const TrustSet intact = LoadTrustSet(set.wstring());
 	check(intact.usable, "intact set refused: " + intact.reason);
-	check(intact.rootCertificates.size() > 500 && !intact.driverHashes.empty() && !intact.crlsByAuthority.empty()
+	check(intact.rootCertificates.size() > 500 && !intact.driverHashes.empty() && !intact.revocationLists.byUrl.empty()
 	      && !intact.revokedAuthorities.empty(), "intact set not loaded whole");
-	std::printf("  intact: %zu roots, %zu driver fingerprints, %zu authorities with a CRL, %zu revoked\n",
-	            intact.rootCertificates.size(), intact.driverHashes.size(), intact.crlsByAuthority.size(),
+	std::printf("  intact: %zu roots, %zu driver fingerprints, %zu revocation lists, %zu revoked authorities\n",
+	            intact.rootCertificates.size(), intact.driverHashes.size(), intact.revocationLists.byUrl.size(),
 	            intact.revokedAuthorities.size());
 
 	fs::path copy = copySet(set, scratch, "no-manifest");

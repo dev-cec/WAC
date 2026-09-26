@@ -26,6 +26,7 @@
  */
 #include "authenticode.h"
 #include "rsa.h"
+#include "json.h"
 #include <cstdio>
 #include <cstring>
 #include <fstream>
@@ -111,6 +112,7 @@ int main(int argc, char** argv) {
 	TrustList roots, disallowed;
 	std::map<std::string, std::vector<uint8_t>> rootCertificates;
 	const std::set<std::wstring> noRevoked;
+	RevocationLists revocation;
 	std::unique_ptr<ThirdPartyRoots> thirdParty;
 	if (!trust.empty()) {
 		const std::vector<uint8_t> a = readFile(std::filesystem::path(trust) / "authroot.stl");
@@ -122,10 +124,26 @@ int main(int argc, char** argv) {
 			const std::vector<uint8_t> c = readFile(e.path());
 			if (const TrustListEntry* entry = FindInTrustList(roots, c.data(), c.size())) rootCertificates[entry->identifier] = c;
 		}
+		// The revocation lists, by the index --update-trust wrote (addresses and fingerprints are ASCII).
+		const std::vector<uint8_t> index = readFile(std::filesystem::path(trust) / "revocation.json");
+		Json lists = Json::null();
+		std::wstring error;
+		if (Json::parse(std::wstring(index.begin(), index.end()), lists, error))
+			if (const Json* crls = lists.find(L"Crls"))
+				for (const auto& [unused, crl] : crls->members()) {
+					const std::wstring url = crl.find(L"Url")->text(), file = crl.find(L"File")->text();
+					std::string relative(file.begin(), file.end());
+					for (char& c : relative) if (c == '\\') c = '/';
+					revocation.byUrl[std::string(url.begin(), url.end())] = readFile(std::filesystem::path(trust) / relative);
+					if (const Json* issuers = crl.find(L"IssuedBy"))  // absent for a CRL wanted by a collection
+						for (const auto& [unused2, issuer] : issuers->members())
+							revocation.byAuthority[issuer.find(L"SHA256")->text()].push_back(std::string(url.begin(), url.end()));
+				}
+		std::cerr << revocation.byUrl.size() << " revocation list(s)\n";
 		// Judged now, as a collection would be.
 		const uint64_t now = ((uint64_t)std::chrono::duration_cast<std::chrono::seconds>(
 			std::chrono::system_clock::now().time_since_epoch()).count() + 11644473600ULL) * 10000000ULL;
-		thirdParty.reset(new ThirdPartyRoots(roots, rootCertificates, disallowed, noRevoked, now));
+		thirdParty.reset(new ThirdPartyRoots(roots, rootCertificates, disallowed, noRevoked, revocation, now));
 		std::cerr << rootCertificates.size() << " root(s) of the trust set\n";
 	}
 	std::ifstream l(list);

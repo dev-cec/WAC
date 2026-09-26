@@ -41,8 +41,7 @@ struct TrustSet {
 	std::set<std::wstring> driverHashes;          //!< vulnerable drivers: fingerprints, uppercase hexadecimal
 	std::vector<std::wstring> driverListsMissing; //!< driver lists --update-trust could not obtain
 	std::set<std::wstring> revokedAuthorities;    //!< SHA-256 of the authorities the CCADB says revoked
-	//! Revocation lists, by the SHA-256 of an authority that issues them: their files.
-	std::map<std::wstring, std::vector<std::wstring>> crlsByAuthority;
+	RevocationLists revocationLists;              //!< the CRLs, loaded; empty if the CCADB was not obtained
 };
 
 /*! Loads and checks the trust set.

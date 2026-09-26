@@ -85,6 +85,8 @@ OID(OID_TIME_STAMPING,  0x2B,0x06,0x01,0x05,0x05,0x07,0x03,0x08);
 OID(OID_RFC3161_TIME_STAMP, 0x2B,0x06,0x01,0x04,0x01,0x82,0x37,0x03,0x03,0x01);
 OID(OID_COUNTER_SIGNATURE, 0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x09,0x06);
 OID(OID_SIGNING_TIME,   0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x09,0x05);
+OID(OID_CRL_DISTRIBUTION_POINTS, 0x55,0x1D,0x1F);
+OID(OID_CRL_REASON,     0x55,0x1D,0x15);
 OID(OID_TST_INFO,       0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x09,0x10,0x01,0x04);
 //! True if the DER element `t` is the OID constant `o`.
 #define IS_OID(t, o) isOid((t), (o), sizeof(o))
@@ -540,6 +542,77 @@ struct TimeStamp {
 	std::string reason;              //!< why it does not hold
 };
 
+//! A revocation list, read: what it says, and what its signature covers.
+struct ParsedCrl {
+	std::string url;
+	Tlv tbs;                         //!< what the signature covers
+	DigestAlgorithm algo = DigestAlgorithm::Unknown;
+	const uint8_t* signature = nullptr;
+	size_t signatureSize = 0;
+	Tlv issuer;
+	uint64_t thisUpdate = 0;
+	//! Each revoked serial (the INTEGER's bytes): when, and why (RFC 5280 reason code; -1 when not given).
+	std::map<std::string, std::pair<uint64_t, int>> revoked;
+};
+
+// RFC 5280 reason codes that undo a signature whatever its time.
+const int REASON_UNSPECIFIED = 0, REASON_KEY_COMPROMISE = 1, REASON_CA_COMPROMISE = 2, REASON_AA_COMPROMISE = 10;
+
+/*! Reads a CRL: CertificateList { tbsCertList, signatureAlgorithm, signature }.
+ *  @return false if it is not one */
+bool parseCrl(const uint8_t* data, size_t size, ParsedCrl& crl) {
+	Tlv whole;
+	if (!readTlv(data, size, whole) || whole.tag != 0x30) return false;
+	const std::vector<Tlv> e = children(whole);
+	if (e.size() != 3 || e[0].tag != 0x30 || e[2].tag != 0x03 || e[2].len < 2) return false;
+	crl.tbs = e[0];
+	crl.algo = algoDe(e[1]);
+	crl.signature = e[2].val + 1;                            // unused-bits byte
+	crl.signatureSize = e[2].len - 1;
+	const std::vector<Tlv> t = children(e[0]);
+	size_t i = !t.empty() && t[0].tag == 0x02 ? 1 : 0;       // version
+	// signature, issuer, thisUpdate, [nextUpdate], [revokedCertificates], [0] extensions
+	if (i + 3 > t.size()) return false;
+	crl.issuer = t[i + 1];
+	if (!asn1TimeToFiletime(t[i + 2], crl.thisUpdate)) return false;
+	i += 3;
+	if (i < t.size() && (t[i].tag == 0x17 || t[i].tag == 0x18)) ++i;   // nextUpdate
+	if (i >= t.size() || t[i].tag != 0x30) return true;       // no revoked certificate
+	for (const Tlv& entry : children(t[i])) {
+		const std::vector<Tlv> f = children(entry);
+		uint64_t date = 0;
+		if (f.size() < 2 || f[0].tag != 0x02 || !asn1TimeToFiletime(f[1], date)) return false;
+		int reason = -1;
+		if (f.size() >= 3)
+			for (const Tlv& extension : children(f[2])) {
+				const std::vector<Tlv> x = children(extension);
+				Tlv code;
+				if (x.size() >= 2 && IS_OID(x[0], OID_CRL_REASON) && x.back().tag == 0x04
+				    && readTlv(x.back().val, x.back().len, code) && code.tag == 0x0A && code.len == 1)
+					reason = code.val[0];
+			}
+		crl.revoked[std::string((const char*)f[0].val, f[0].len)] = { date, reason };
+	}
+	return true;
+}
+
+/*! The addresses a certificate gives for its revocation list (CRL
+ *  Distribution Points, full names, URIs). */
+std::vector<std::string> crlAddressesOf(const Certificate& c) {
+	std::vector<std::string> urls;
+	Tlv points;
+	if (!extensionOf(c, OID_CRL_DISTRIBUTION_POINTS, sizeof(OID_CRL_DISTRIBUTION_POINTS), points)) return urls;
+	for (const Tlv& point : children(points)) {
+		const std::vector<Tlv> p = children(point);
+		if (p.empty() || p[0].tag != 0xA0) continue;            // [0] distributionPoint
+		const std::vector<Tlv> name = children(p[0]);
+		if (name.empty() || name[0].tag != 0xA0) continue;      // [0] fullName
+		for (const Tlv& general : children(name[0]))
+			if (general.tag == 0x86) urls.emplace_back((const char*)general.val, general.len);   // [6] URI
+	}
+	return urls;
+}
+
 } // namespace
 
 //! The roots of the set, parsed once; the other lists as given.
@@ -548,7 +621,77 @@ struct ThirdPartyRoots::Impl {
 	const TrustList& disallowed;
 	const std::set<std::wstring>& revoked;
 	uint64_t now;                                    //!< the collection's time, for a signature without time stamp
+	const RevocationLists& revocation;
 	std::vector<SetRoot> parsed;
+	std::vector<ParsedCrl> crls;                     //!< every CRL of the set that reads
+	std::vector<std::vector<uint8_t>> decodedPem;    //!< CRLs served as PEM, decoded: what `crls` points into
+	std::map<std::string, size_t> crlByUrl;
+	//! A CRL's signature checked against an issuer, by (CRL, SHA-256 of the issuer): shared by the threads, hence locked.
+	mutable std::mutex verifiedMutex;
+	mutable std::map<std::pair<size_t, std::wstring>, bool> verified;
+
+	//! Whether the CRL `k` is signed by `issuer`, checked once per pair.
+	bool crlSignedBy(size_t k, const Certificate& issuer) const {
+		const std::pair<size_t, std::wstring> key{ k, certificateSha256(issuer) };
+		{
+			std::lock_guard<std::mutex> lock(verifiedMutex);
+			const auto found = verified.find(key);
+			if (found != verified.end()) return found->second;
+		}
+		const ParsedCrl& crl = crls[k];
+		bool ok = false;
+		if (issuer.rsa && crl.algo != DigestAlgorithm::Unknown && sameBytes(crl.issuer, issuer.subject)) {
+			uint8_t h[64];
+			const size_t lh = fingerprint(crl.algo, crl.tbs.start, crl.tbs.total, h);
+			ok = RsaVerifyPkcs1(issuer.module.val, issuer.module.len, issuer.exponent.val, issuer.exponent.len,
+			                    crl.signature, crl.signatureSize, crl.algo, h, lh);
+		}
+		std::lock_guard<std::mutex> lock(verifiedMutex);
+		verified[key] = ok;
+		return ok;
+	}
+
+	/*! The revocation of `c`, issued by `issuer`, by the CRL it names — or,
+	 *  naming none the set holds, the full CRL of its issuer per the CCADB —,
+	 *  that CRL signed by the issuer. Revoked for a compromise, or without a
+	 *  reason given: refused whatever the time — a compromised key signs
+	 *  anything, at any date. Revoked for another reason: refused unless a
+	 *  verified time stamp puts the signature before the revocation.
+	 *  @param oldest receives the issue date of the CRL used, if older
+	 *  @param missing receives the addresses `c` names, when none of its CRLs is in the set
+	 *  @return why the chain must be refused, or "" */
+	std::string revocationOf(const Certificate& c, const Certificate& issuer, const TimeStamp& stamp, uint64_t& oldest,
+	                         std::vector<std::string>& missing) const {
+		std::vector<std::string> urls;
+		for (const std::string& url : crlAddressesOf(c))
+			if (crlByUrl.count(url)) urls.push_back(url);
+		if (urls.empty()) {
+			const auto full = revocation.byAuthority.find(certificateSha256(issuer));
+			if (full != revocation.byAuthority.end()) urls = full->second;
+		}
+		bool checked = false;
+		for (const std::string& url : urls) {
+			const auto k = crlByUrl.find(url);
+			if (k == crlByUrl.end() || !crlSignedBy(k->second, issuer)) continue;
+			checked = true;
+			const ParsedCrl& crl = crls[k->second];
+			if (!oldest || crl.thisUpdate < oldest) oldest = crl.thisUpdate;
+			const auto entry = crl.revoked.find(std::string((const char*)c.serial.val, c.serial.len));
+			if (entry == crl.revoked.end()) continue;
+			const auto [date, reason] = entry->second;
+			const bool compromise = reason < 0 || reason == REASON_UNSPECIFIED || reason == REASON_KEY_COMPROMISE
+			                     || reason == REASON_CA_COMPROMISE || reason == REASON_AA_COMPROMISE;
+			if (compromise) return "certificate revoked (compromise, or no reason given): " + narrowName(c);
+			if (!stamp.verified || stamp.at >= date) return "certificate revoked before the signing time: " + narrowName(c);
+		}
+		if (!checked) {
+			const std::vector<std::string> named = crlAddressesOf(c);
+			missing.insert(missing.end(), named.begin(), named.end());
+			return "revocation not verifiable, no signed revocation list: " + narrowName(c)
+			     + (named.empty() ? std::string(" (names none)") : " (" + named[0] + ")");
+		}
+		return std::string();
+	}
 
 	/*! A certificate of the chain that must stop it: disallowed by Microsoft,
 	 *  or an authority the CCADB says revoked.
@@ -704,8 +847,28 @@ struct ThirdPartyRoots::Impl {
 };
 
 ThirdPartyRoots::ThirdPartyRoots(const TrustList& roots, const std::map<std::string, std::vector<uint8_t>>& certificates,
-                                 const TrustList& disallowed, const std::set<std::wstring>& revokedAuthorities, uint64_t now)
-	: impl_(new Impl{ roots, disallowed, revokedAuthorities, now, {} }) {
+                                 const TrustList& disallowed, const std::set<std::wstring>& revokedAuthorities,
+                                 const RevocationLists& revocation, uint64_t now)
+	: impl_(new Impl{ roots, disallowed, revokedAuthorities, now, revocation, {}, {}, {}, {}, {}, {} }) {
+	static const char PEM[] = "-----BEGIN";
+	impl_->decodedPem.reserve(revocation.byUrl.size());      // `crls` points into it: no reallocation
+	for (const auto& [url, bytes] : revocation.byUrl) {
+		const uint8_t* data = bytes.data();
+		size_t size = bytes.size();
+		if (size > sizeof(PEM) && std::memcmp(data, PEM, sizeof(PEM) - 1) == 0) {
+			const std::string text(bytes.begin(), bytes.end());
+			const size_t begin = text.find('\n'), end = text.find("-----END");
+			if (begin == std::string::npos || end == std::string::npos || end < begin) continue;
+			impl_->decodedPem.push_back(DecodeBase64(text.substr(begin, end - begin)));
+			data = impl_->decodedPem.back().data();
+			size = impl_->decodedPem.back().size();
+		}
+		ParsedCrl crl;
+		if (!parseCrl(data, size, crl)) continue;
+		crl.url = url;
+		impl_->crlByUrl[url] = impl_->crls.size();
+		impl_->crls.push_back(std::move(crl));
+	}
 	for (const auto& [sha1, der] : certificates) {
 		Tlv t;
 		Certificate c;
@@ -735,6 +898,17 @@ ChainVerdict ThirdPartyRoots::verify(const VerifiedSignature& signature) const {
 		v.reason = why;
 		return v;
 	}
+	// Revocation: each certificate below the root, by its issuer's signed CRL.
+	uint64_t oldest = 0;
+	for (size_t k = 0; k < chain.certificates.size(); ++k) {
+		const Certificate& issuer = k + 1 < chain.certificates.size() ? *chain.certificates[k + 1] : chain.root->first;
+		if (const std::string why = impl_->revocationOf(*chain.certificates[k], issuer, stamp, oldest, v.missingCrls);
+		    !why.empty()) {
+			v.reason = why;
+			return v;
+		}
+	}
+	v.revocationListsIssued = oldest;
 	v.trusted = true;
 	v.root = attributeNameField(chain.root->first.subject, OID_CN, sizeof(OID_CN));
 	if (stamp.verified) {
@@ -966,6 +1140,8 @@ VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalog
 		v.chainReason = chain.reason;
 		v.chainSignedAt = chain.signedAt;
 		v.chainTimeStampAuthority = chain.timeStampAuthority;
+		v.chainRevocationListsIssued = chain.revocationListsIssued;
+		v.chainMissingCrls = chain.missingCrls;
 	}
 	if (!s.valid) { v.reason = s.reason; return v; }
 	if (s.contentOid != std::string((const char*)OID_SPC_INDIRECT, sizeof(OID_SPC_INDIRECT))) {
@@ -1188,6 +1364,13 @@ const TrustListEntry* FindInTrustList(const TrustList& list, const uint8_t* cert
 		for (const std::string& identifier : identifiers)
 			if (entry.identifier == identifier) return &entry;
 	return nullptr;
+}
+
+std::vector<std::string> CertificateCrlAddresses(const uint8_t* der, size_t size) {
+	Tlv t;
+	Certificate c;
+	if (!der || !readTlv(der, size, t) || !analyseCertificate(t, c)) return {};
+	return crlAddressesOf(c);
 }
 
 std::vector<uint8_t> DecodeBase64(const std::string& text) {

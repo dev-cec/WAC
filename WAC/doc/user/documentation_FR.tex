@@ -316,7 +316,8 @@ Toutes les options sont facultatives et désactivées par défaut.
   signatures et leurs empreintes, ainsi que les listes de pilotes vulnérables
   de Microsoft et de LOLDrivers (non signées : authentifiées par HTTPS seul)
   et les listes de révocation (CRL) des autorités de signature de code que
-  recense la CCADB, et les écrit dans \fichier{dossier} (par
+  recense la CCADB, de celles propres à Microsoft et de celles qu'une collecte
+  précédente a trouvées manquantes (\fichier{wanted-crls.txt}), et les écrit dans \fichier{dossier} (par
   défaut \fichier{trust}, à côté de \fichier{WAC.exe}), à emporter sur la clé
   avec \fichier{WAC.exe}. Seul mode qui utilise le réseau : la bibliothèque
   réseau n'est chargée que là. Refusée avec toute autre option. \\

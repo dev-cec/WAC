@@ -19,6 +19,7 @@
 #include "running_machine.h"
 #include "authenticode.h"
 #include "trust_set.h"
+#include "audit.h"
 #include "sha.h"
 #include "quickdigest5.h"
 #include "xml_light.h"
@@ -289,7 +290,7 @@ const ThirdPartyRoots* thirdPartyRoots() {
 	GetSystemTimeAsFileTime(&now);
 	if (set.usable)
 		roots.reset(new ThirdPartyRoots(set.roots, set.rootCertificates, set.disallowed, set.revokedAuthorities,
-		                                ((uint64_t)now.dwHighDateTime << 32) | now.dwLowDateTime));
+		                                set.revocationLists, ((uint64_t)now.dwHighDateTime << 32) | now.dwLowDateTime));
 	return roots.get();
 }
 
@@ -648,7 +649,13 @@ std::wstring signatureLabel(const VerdictMicrosoft& verdict) {
 	return L"Microsoft (" + verdict.source + L")";
 }
 
+/*! CRL addresses the chains named and the trust set lacked: what the next
+ *  --update-trust must also fetch (see recordMissingCrls). Main thread only,
+ *  like recordedVerdict. */
+std::set<std::string> g_missingCrls;
+
 SignatureVerdict recordedVerdict(const VerdictMicrosoft& verdict) {
+	g_missingCrls.insert(verdict.chainMissingCrls.begin(), verdict.chainMissingCrls.end());
 	SignatureVerdict v;
 	v.checked = true;
 	v.valid = verdict.microsoft;
@@ -667,6 +674,10 @@ SignatureVerdict recordedVerdict(const VerdictMicrosoft& verdict) {
 		const FILETIME at = { (DWORD)verdict.chainSignedAt, (DWORD)(verdict.chainSignedAt >> 32) };
 		v.chainSignedUtc = timeToIso8601Utc(at, Precision::Second);
 		v.chainTimeStampAuthority = verdict.chainTimeStampAuthority;
+	}
+	if (verdict.chainRevocationListsIssued) {
+		const FILETIME at = { (DWORD)verdict.chainRevocationListsIssued, (DWORD)(verdict.chainRevocationListsIssued >> 32) };
+		v.chainRevocationListsUtc = timeToIso8601Utc(at, Precision::Second);
 	}
 	return v;
 }
@@ -1213,7 +1224,32 @@ HRESULT BinariesCollectAll() {
 	return unreadable ? S_FALSE : ERROR_SUCCESS;
 }
 
+/*! The CRL addresses this collection lacked, added to wanted-crls.txt in the
+ *  trust set's folder, on the key: the next --update-trust fetches them too,
+ *  so that the CRLs of authorities the CCADB does not list — Microsoft's own
+ *  code signing authorities, first — fill in by themselves. Written to the
+ *  collection medium only; the manifest of the set does not list the file,
+ *  whose content is only addresses, each CRL checked by its signature where
+ *  it is used. */
+void recordMissingCrls() {
+	if (g_missingCrls.empty() || !CollectionTrustSet().usable) return;
+	const std::filesystem::path file = std::filesystem::path(CollectionTrustSet().folder) / "wanted-crls.txt";
+	std::set<std::string> all = g_missingCrls;
+	{
+		std::ifstream in(file);
+		for (std::string line; std::getline(in, line);)
+			if (!line.empty()) all.insert(line.back() == '\r' ? line.substr(0, line.size() - 1) : line);
+	}
+	std::ofstream out(file, std::ios::trunc);
+	for (const std::string& url : all) out << url << "\n";
+	const HRESULT result = out ? S_OK : E_FAIL;
+	auditRecord(L"Revocation lists missing from the trust set (" + std::to_wstring(g_missingCrls.size())
+	            + L" address(es)): added to wanted-crls.txt for the next --update-trust", file.wstring(), result,
+	            Footprint::USB_WRITE);
+}
+
 void BinariesFinish() {
+	if (conf.mode != RunMode::Convert) recordMissingCrls();
 	/* The catalogs and package signatures that JUSTIFIED not collecting a
 	   binary go into the exhibit store: without them, the decision could not
 	   be checked by a third party. Only those — not the machine's 13,000
