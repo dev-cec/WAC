@@ -955,6 +955,12 @@ HRESULT writeNotCollected(const std::string& name, const std::wstring& artefact,
  * @return ERROR_SUCCESS if the file could be written */
 HRESULT writeNotRequested(const std::string& name, const std::wstring& artefact, const std::wstring& key);
 
+/*! WAC's version, <major>.<minor>.<bugfix>, read in the program's own
+ *  version resource (WAC.rc): the one place it is written, the one Windows
+ *  shows in the executable's properties.
+ * @return e.g. L"1.4.0"; empty if the resource cannot be read */
+std::wstring WacVersion();
+
 /*! Lists the regular files of a directory, filtered by extension.
 * Never throws: a missing or unreadable directory returns an empty list. That is
 * the nominal case in a collection (not every profile has every folder, and the

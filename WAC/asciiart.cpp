@@ -2,6 +2,7 @@
  *  \brief WAC's console banner.
  */
 #include "asciiart.h"
+#include "tools.h"
 
 //! Prints WAC's banner on the console.
 void asciiart() {
@@ -29,7 +30,7 @@ void asciiart() {
 	╚██████╗╚██████╔╝███████╗███████╗███████╗╚██████╗   ██║   ╚██████╔╝██║  ██║
 	 ╚═════╝ ╚═════╝ ╚══════╝╚══════╝╚══════╝ ╚═════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝                                                                              
 
-	=> V 1.3.1 By Reygiss from CEC 
-
 	)");
+	// The version, from the executable's version resource (WAC.rc): written in one place only.
+	wprintf(L"\t=> V %ls By Reygiss from CEC \n\n\t", WacVersion().c_str());
 }

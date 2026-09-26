@@ -78,7 +78,9 @@ echo "== Link =="
 # the command line, the registry hives — are WAC's own code.
 LIBS=(-ladvapi32 -lwtsapi32 -lsecur32)
 # -municode: WAC's entry point is wmain (arguments in UTF-16).
-"$CXX" -municode -static -static-libgcc -static-libstdc++ \
+# --no-insert-timestamp: no link date in the PE header — the same sources give
+# the same WAC.exe, byte for byte; its version is in its resource (WAC.rc).
+"$CXX" -municode -static -static-libgcc -static-libstdc++ -Wl,--no-insert-timestamp \
   "${OBJS[@]}" "$BUILD/WAC_res.o" -o "$BUILD/WAC.exe" "${LIBS[@]}"
 
 # --- raw_hive test exe (optional) -------------------------------------------

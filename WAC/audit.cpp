@@ -174,7 +174,7 @@ Json auditContext() {
 	Json tool = Json::obj();
 	tool.add(L"Name",        Json::str(L"WAC"));
 	tool.add(L"CommandLine", Json::str(g_commandLine));
-	tool.add(L"BuildDate",   Json::str(decodeText(__DATE__) + L" " + decodeText(__TIME__)));
+	tool.add(L"Version",     Json::str(WacVersion()));   // from the executable's version resource (WAC.rc)
 	// The procedure applied: the configuration file, whole, or its absence — defaults and command line then.
 	if (!g_configurationPath.empty()) {
 		Json configuration = Json::obj();

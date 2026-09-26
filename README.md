@@ -735,6 +735,14 @@ results are worth stating:
 
 ## 🧰 BUILD REQUIREMENTS
 
+**Version**: `<major>.<minor>.<bugfix>` — major for a rework of the
+application, minor for features added, bugfix for fixes. It is written in one
+place, `WAC/WAC.rc` (shown in the executable's properties, read by WAC at run
+time, recorded in `investigation.json`). To release: commit the sources, run
+`./bump-version.sh --bugfix|--minor|--major` (it rebuilds and stages `WAC.rc`
+and `WAC/bin`), commit. The build is reproducible: the same sources give the
+same `WAC.exe`, byte for byte (no link date in the PE header).
+
 ### Visual Studio 2022 (Windows)
 - Requires **Windows SDK 10** and **Windows WDK 10**
 - 📥 Download: [Microsoft WDK](https://learn.microsoft.com/en-us/windows-hardware/drivers/download-the-wdk)

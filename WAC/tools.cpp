@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <regex>
 #include "tools.h"
+#include "version_info.h"
 #include "running_machine.h"
 #include <cstring>
 #include <climits>
@@ -1410,6 +1411,20 @@ HRESULT writeNotCollected(const std::string& name, const std::wstring& artefact,
 	                                     L"the absence of data above does NOT mean "
 	                                     L"that no trace exists on the system."));
 	return writeJsonFile(name, o);
+}
+
+std::wstring WacVersion() {
+	static const std::wstring version = [] {
+		HRSRC found = FindResourceW(nullptr, MAKEINTRESOURCEW(1), MAKEINTRESOURCEW(16));   // VS_VERSION_INFO, RT_VERSION
+		HGLOBAL loaded = found ? LoadResource(nullptr, found) : nullptr;
+		const uint8_t* bytes = loaded ? static_cast<const uint8_t*>(LockResource(loaded)) : nullptr;
+		if (!bytes) return std::wstring();
+		VersionInfo info;
+		if (!ReadVersionInfo(std::vector<uint8_t>(bytes, bytes + SizeofResource(nullptr, found)), info)) return std::wstring();
+		const auto product = info.strings.find(L"ProductVersion");
+		return product == info.strings.end() ? std::wstring() : product->second;
+	}();
+	return version;
 }
 
 HRESULT writeNotRequested(const std::string& name, const std::wstring& artefact, const std::wstring& key) {
