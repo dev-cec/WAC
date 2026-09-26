@@ -47,14 +47,19 @@
 #include "running_machine.h"
 #include "trust_update.h"
 #include "trust_set.h"
+#include "config.h"
 
 AppliConf conf; //!< the application's configuration, shared by every collector
 
 //! Prints the command-line help.
 void showHelp() {
 	SetConsoleTextAttribute(conf.hConsole, 7); // white
-	wprintf(L"%ls%ls%ls\n", L"\nusage: ", conf.name.c_str(), L" [--update-trust[=folder]] [--collect | --convert=folder] [--debug] [--dump] [--events] [--binary | --binary-all] [--output=output] [--loglevel=2]");
+	wprintf(L"%ls%ls%ls\n", L"\nusage: ", conf.name.c_str(), L" [--config=file | --write-config] [--update-trust[=folder]] [--collect | --full | --convert=folder] [--debug] [--dump] [--events] [--binary | --binary-all] [--output=output] [--loglevel=2]");
 	wprintf(L"%ls\n", L"\t--help or /? : show this help ");
+	wprintf(L"%ls\n", L"\twac.yml, next to WAC.exe : the collection's configuration, applied first; an option given below overrides it (see --write-config)");
+	wprintf(L"%ls\n", L"\t--write-config : write the reference wac.yml, commented, next to WAC.exe, and stop");
+	wprintf(L"%ls\n", L"\t--config=file : read the configuration from another file than wac.yml");
+	wprintf(L"%ls\n", L"\t--full : collect and convert here, although the configuration says convert: false");
 	wprintf(L"%ls\n", L"\t--collect : collection only, on the examined machine: live snapshots and raw extraction into the sealed exhibit store; nothing is converted. With --events, the resource files of every event provider are taken; with --binary, every executable and signature catalog of the system volume");
 	wprintf(L"%ls\n", L"\t--convert=folder : conversion only, on an analysis workstation, of the collection made with --collect in that folder: the seal and every fingerprint are checked first, then the JSON files are written next to the exhibit store, with conversion.json as the log. Give the same --events and --binary as the collection");
 	wprintf(L"%ls\n", L"\t--update-trust[=folder] : on the analysis workstation, BEFORE the collection, and alone: downloads Microsoft's trusted roots and disallowed certificates, checks their signatures, and writes them into folder (by default 'trust' next to WAC.exe), to be carried to the examined machine with WAC.exe");
@@ -200,6 +205,22 @@ HRESULT prepareConversion() {
 /*! Live phase: what can only be observed on the running system — sessions,
  *  processes, service states, clock, settings —, recorded as sealed snapshots
  *  (live_snapshot.h) that the conversion reads back. */
+/*! Whether the configuration asks for an artefact (wac.yml, artefacts:);
+ *  when it does not, says so on the console and in the artefact's file —
+ *  switched off, not failed, not empty.
+ *  @param wanted the switch
+ *  @param file the artefact's JSON file
+ *  @param label the artefact
+ *  @param key its configuration key
+ *  @return `wanted` */
+bool requested(bool wanted, const char* file, const wchar_t* label, const wchar_t* key) {
+	if (wanted) return true;
+	printStep(std::wstring(L" - ") + label + L" : ");
+	wprintf(L"%ls\n", (std::wstring(L"not requested (") + key + L": false)").c_str());
+	writeNotRequested(file, label, key);
+	return false;
+}
+
 void observeLiveState() {
 	HRESULT hresult;
 	Sessions sessions;
@@ -228,33 +249,40 @@ void observeLiveState() {
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else printSuccess();
 
-	printStep(L" - Extraction of SESSIONS: ");
-	hresult = sessions.getData();
-	auditRecord(L"SESSIONS collection", L"LSA / WTS", hresult, Footprint::SESSIONS);
-	if (hresult != ERROR_SUCCESS) printError(hresult);
-	else {
-		hresult = sessions.snapshot();
+	// Live observations switched off by the configuration are not made at all: no query, no trace.
+	if (conf.artefacts.sessions) {
+		printStep(L" - Extraction of SESSIONS: ");
+		hresult = sessions.getData();
+		auditRecord(L"SESSIONS collection", L"LSA / WTS", hresult, Footprint::SESSIONS);
 		if (hresult != ERROR_SUCCESS) printError(hresult);
-		else printSuccess();
-		sessions.clear();// free memory
+		else {
+			hresult = sessions.snapshot();
+			if (hresult != ERROR_SUCCESS) printError(hresult);
+			else printSuccess();
+			sessions.clear();// free memory
+		}
 	}
 
-	printStep(L" - Extraction of PROCESS: ");
-	hresult = processes.getData();
-	auditRecord(L"PROCESS collection", L"CreateToolhelp32Snapshot", hresult, Footprint::PROCESSES);
-	if (hresult != ERROR_SUCCESS) printError(hresult);
-	else {
-		hresult = processes.snapshot();
+	if (conf.artefacts.processes) {
+		printStep(L" - Extraction of PROCESS: ");
+		hresult = processes.getData();
+		auditRecord(L"PROCESS collection", L"CreateToolhelp32Snapshot", hresult, Footprint::PROCESSES);
 		if (hresult != ERROR_SUCCESS) printError(hresult);
-		else printSuccess();
-		processes.clear(); // free memory
+		else {
+			hresult = processes.snapshot();
+			if (hresult != ERROR_SUCCESS) printError(hresult);
+			else printSuccess();
+			processes.clear(); // free memory
+		}
 	}
 
-	printStep(L" - Extraction of SERVICE STATES: ");
-	hresult = snapshotServiceStates();
-	auditRecord(L"SERVICE STATES collection", L"EnumServicesStatusExW", hresult, Footprint::SCM);
-	if (hresult != ERROR_SUCCESS) printError(hresult);
-	else printSuccess();
+	if (conf.artefacts.services) {
+		printStep(L" - Extraction of SERVICE STATES: ");
+		hresult = snapshotServiceStates();
+		auditRecord(L"SERVICE STATES collection", L"EnumServicesStatusExW", hresult, Footprint::SCM);
+		if (hresult != ERROR_SUCCESS) printError(hresult);
+		else printSuccess();
+	}
 
 
 	printStep(L" - Extraction of SYSTEM CLOCK: ");
@@ -316,9 +344,12 @@ void extractProfileArtefacts() {
 	HRESULT hresult;
 	printStep(L" - Extracting user hives (raw NTFS) : ");
 	log(3, L"🔈ExtractUserHivesRaw");
-	hresult = ExtractUserHivesRaw();      // S_FALSE = no profile, or missing files (tolerated)
-	if (FAILED(hresult)) printError(hresult);   // the other artefacts stay collectable
-	else printSuccess();
+	if (!conf.artefacts.registry) wprintf(L"%ls\n", L"not requested (artefacts.registry: false)");
+	else {
+		hresult = ExtractUserHivesRaw();      // S_FALSE = no profile, or missing files (tolerated)
+		if (FAILED(hresult)) printError(hresult);   // the other artefacts stay collectable
+		else printSuccess();
+	}
 
 	// Prefetch, jump lists and recent documents: without this extraction their
 	// collectors find no file and return an empty artefact, which reads wrongly
@@ -512,9 +543,13 @@ void convertArtefacts(bool systemAvailable) {
 	auto writeProcesses = [&processesPending]() {
 		if (!processesPending) return;
 		processesPending = false;
+		HRESULT written = ERROR_SUCCESS, sessionsWritten = ERROR_SUCCESS;
+		const bool processesWanted = requested(conf.artefacts.processes, "processes.json", L"Processes", L"artefacts.processes");
+		const bool sessionsWanted = requested(conf.artefacts.sessions, "sessions.json", L"Sessions", L"artefacts.sessions");
+		if (!processesWanted && !sessionsWanted) return;
 		printStep(L" - Writing PROCESS and SESSIONS : ");
-		HRESULT written = writeProcessesFromSnapshot();
-		const HRESULT sessionsWritten = writeSessionsFromSnapshot();
+		if (processesWanted) written = writeProcessesFromSnapshot();
+		if (sessionsWanted) sessionsWritten = writeSessionsFromSnapshot();
 		if (written == ERROR_SUCCESS) written = sessionsWritten;
 		if (written != ERROR_SUCCESS) printError(written);
 		else printSuccess();
@@ -636,6 +671,7 @@ void convertArtefacts(bool systemAvailable) {
 
 			writeProcesses();
 
+			if (conf.artefacts.registry) {
 			printStep(L" - Extracting USBSTOR Registry Keys : ");
 			hresult = usbs.getData();
 			if (hresult != ERROR_SUCCESS) {
@@ -765,9 +801,20 @@ void convertArtefacts(bool systemAvailable) {
 				else printSuccess();
 				mruapps.clear();
 			}
+			}   // artefacts.registry
 		}
 	}
 	} while (0);   // end of the registry phase (see the single-exit block above)
+	if (!conf.artefacts.registry) {
+		const std::pair<const char*, const wchar_t*> REGISTRY[] = {
+			{ "Usbstor.json", L"USB devices" }, { "mounted_device.json", L"Mounted devices" }, { "bams.json", L"BAM" },
+			{ "muicache.json", L"MUICache" }, { "amcache_applications.json", L"Amcache applications" },
+			{ "amcache_application_files.json", L"Amcache application files" }, { "userassists.json", L"UserAssist" },
+			{ "run.json", L"Run keys" }, { "shimcache.json", L"Shimcache" }, { "shellbags.json", L"Shellbags" },
+			{ "mrus.json", L"MRU" }, { "mruApps.json", L"MRU applications" },
+		};
+		for (const auto& [file, label] : REGISTRY) requested(false, file, label, L"artefacts.registry");
+	}
 
 	/* SYSTEM INFORMATION, offline.
 	   OUTSIDE the single-exit block above, and not inside it: even without a
@@ -790,6 +837,7 @@ void convertArtefacts(bool systemAvailable) {
 	/* SERVICES, offline configuration + current state.
 	   Also outside the single-exit block: without a hive, getData() fails
 	   cleanly and writeNotCollected has already recorded the absence. */
+	if (requested(conf.artefacts.services, "services.json", L"Services", L"artefacts.services")) {
 	printStep(L" - Extraction of SERVICES: ");
 	hresult = services.getData();
 	auditRecord(L"SERVICES collection",
@@ -802,9 +850,11 @@ void convertArtefacts(bool systemAvailable) {
 		else printSuccess();
 		services.clear();//free memory
 	}
+	}   // artefacts.services
 
 	/* USERS, offline from the SAM hive. Independent of the SYSTEM and SOFTWARE
 	   hives: it opens its own. */
+	if (requested(conf.artefacts.registry, "users.json", L"Users", L"artefacts.registry")) {
 	printStep(L" - Extraction of USERS: ");
 	hresult = users.getData();
 	auditRecord(L"USERS collection", L"extracted SAM hive", hresult, Footprint::HIVE_COPY);
@@ -818,6 +868,7 @@ void convertArtefacts(bool systemAvailable) {
 		else printSuccess();
 		users.clear(); // free memory
 	}
+	}   // artefacts.registry
 
 
 	/************************
@@ -834,6 +885,7 @@ void convertArtefacts(bool systemAvailable) {
 	   registry's TaskCache. Moved from the "WINDOWS API" phase to here, since
 	   the collection now depends on the raw extraction — no longer on the
 	   Schedule service. */
+	if (requested(conf.artefacts.scheduledTasks, "ScheduledTasks.json", L"Scheduled tasks", L"artefacts.scheduled_tasks")) {
 	printStep(L" - Extracting SCHEDULED TASKS (offline) : ");
 	hresult = scheduledTasks.getData();
 	auditRecord(L"SCHEDULED TASKS collection",
@@ -850,7 +902,9 @@ void convertArtefacts(bool systemAvailable) {
 		else printSuccess();
 		scheduledTasks.clear(); // free memory
 	}
+	}   // artefacts.scheduled_tasks
 
+	if (requested(conf.artefacts.recentDocuments, "recentdocs.json", L"Recent documents", L"artefacts.recent_documents")) {
 	printStep(L" - Extracting RECENT DOCS : ");
 	hresult = recentdocs.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
@@ -860,7 +914,9 @@ void convertArtefacts(bool systemAvailable) {
 		else printSuccess();
 		recentdocs.clear();
 	}
+	}   // artefacts.recent_documents
 
+	if (requested(conf.artefacts.prefetch, "prefetchs.json", L"Prefetch", L"artefacts.prefetch")) {
 	printStep(L" - Extracting PREFETCHS : ");
 	hresult = prefetchs.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
@@ -870,7 +926,9 @@ void convertArtefacts(bool systemAvailable) {
 		else printSuccess();
 		prefetchs.clear();
 	}
+	}   // artefacts.prefetch
 
+	if (requested(conf.artefacts.jumpLists, "jumplistAutomaticDestinations.json", L"Jump lists (automatic)", L"artefacts.jump_lists")) {
 	printStep(L" - Extracting JUMPLIST AUTOMATIC: ");
 	hresult = jumplistAutomatics.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
@@ -880,7 +938,9 @@ void convertArtefacts(bool systemAvailable) {
 		else printSuccess();
 		jumplistAutomatics.clear();
 	}
+	}   // artefacts.jump_lists
 
+	if (requested(conf.artefacts.jumpLists, "jumplistCustomDestinations.json", L"Jump lists (custom)", L"artefacts.jump_lists")) {
 	printStep(L" - Extracting JUMPLIST CUSTOM: ");
 	hresult = jumplistCustoms.getData();
 	if (hresult != ERROR_SUCCESS) printError(hresult);
@@ -890,6 +950,7 @@ void convertArtefacts(bool systemAvailable) {
 		else printSuccess();
 		jumplistCustoms.clear();
 	}
+	}   // artefacts.jump_lists
 	writeProcesses();   // if the names could not be loaded (SYSTEM hive unreadable)
 
 	/************************
@@ -978,7 +1039,34 @@ int wmain(int argc, wchar_t* argv[])
 		}
 		return UpdateTrust(arg.size() > 15 ? arg.substr(15) : DefaultTrustFolder());
 	}
-	bool collect = false, outputGiven = false;
+	/* THE CONFIGURATION FILE first (see config.h), the command line after:
+	   an option given overrides the file. --write-config writes the reference
+	   file, commented, and stops; --config=<file> reads another one. */
+	std::wstring configurationPath = DefaultConfigurationPath();
+	for (size_t i = 1; i < commandLine.size(); ++i) {
+		if (commandLine[i] == L"--write-config") {
+			std::error_code ec;
+			if (std::filesystem::exists(configurationPath, ec)) {
+				printError(configurationPath + L" exists already: not overwritten");
+				return 1;
+			}
+			std::ofstream out(std::filesystem::path(configurationPath), std::ios::binary);
+			out << DefaultConfiguration();
+			if (!out) { printError(L"not written: " + configurationPath); return 1; }
+			wprintf(L"%ls written\n", configurationPath.c_str());
+			return 0;
+		}
+		if (commandLine[i].substr(0, 9) == L"--config=" && commandLine[i].size() > 9) configurationPath = commandLine[i].substr(9);
+	}
+	ConfigurationFile configuration;
+	{
+		std::string error;
+		if (!LoadConfiguration(configurationPath, conf, configuration, error)) {
+			printError(configurationPath + L": " + decodeText(error, CP_UTF8));
+			return 1;
+		}
+	}
+	bool collect = conf.mode == RunMode::Collect, outputGiven = false;
 	std::wstring convertFolder;
 	if (commandLine.size() > 1) { // at least one argument, the first being the program's own name
 		// command-line arguments
@@ -1003,6 +1091,8 @@ int wmain(int argc, wchar_t* argv[])
 				}
 			}
 			else if (arg == L"--collect") collect = true;
+			else if (arg.substr(0, 9) == L"--config=") continue;         // read above
+			else if (arg == L"--full") collect = false;                    // the file said collect only: not this time
 			else if (arg.substr(0, 10) == L"--convert=" && arg.size() > 10) convertFolder = arg.substr(10);
 			else if (arg.substr(0, 9) == L"--output=") {
 				outputGiven = true;
@@ -1060,11 +1150,12 @@ int wmain(int argc, wchar_t* argv[])
 		conf.mode = RunMode::Convert;
 		conf._outputDir = convertFolder;
 	}
-	else if (collect) conf.mode = RunMode::Collect;
+	else conf.mode = collect ? RunMode::Collect : RunMode::Full;   // the file's convert:, unless --collect or --full
 
 	// Investigation log: opened as early as possible, so that the start timestamp
 	// really brackets the whole collection (see audit.h).
 	auditInit(commandLine);
+	auditConfiguration(configurationPath, configuration.present, configuration.sha256, configuration.text);
 
 	/* Trace of the NTFS parser: SILENT by default, turned on by --debug.
 	   It writes to STDERR, hence separable from the normal output:

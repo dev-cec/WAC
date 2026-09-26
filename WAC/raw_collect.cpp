@@ -347,7 +347,8 @@ HRESULT ExtractFileArtefactsRaw() {
 		                   exhibitTarget(absolute), ext });
 	};
 
-	addTarget(L"\\Windows\\Prefetch", { L".pf" });
+	// Each artefact as the configuration asks (wac.yml, artefacts:): what is switched off is not read at all.
+	if (conf.artefacts.prefetch) addTarget(L"\\Windows\\Prefetch", { L".pf" });
 
 	/* Event logs: extracted ONLY on request (--events). They are the system's
 	   largest artefacts — over a hundred megabytes on an ordinary installation,
@@ -359,11 +360,15 @@ HRESULT ExtractFileArtefactsRaw() {
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
 		const std::wstring profile = std::get<1>(profileEntry);   // absolute, with its letter
 		const std::wstring recent = profile + L"\\AppData\\Roaming\\Microsoft\\Windows\\Recent";
-		addTarget(recent + L"\\AutomaticDestinations", { L".automaticDestinations-ms" });
-		addTarget(recent + L"\\CustomDestinations",    { L".customDestinations-ms" });
-		addTarget(recent,                              { L".lnk", L".url" });
-		addTarget(profile + L"\\AppData\\Roaming\\Microsoft\\Office\\Recent",
-		                                              { L".lnk", L".url" });
+		if (conf.artefacts.jumpLists) {
+			addTarget(recent + L"\\AutomaticDestinations", { L".automaticDestinations-ms" });
+			addTarget(recent + L"\\CustomDestinations",    { L".customDestinations-ms" });
+		}
+		if (conf.artefacts.recentDocuments) {
+			addTarget(recent,                              { L".lnk", L".url" });
+			addTarget(profile + L"\\AppData\\Roaming\\Microsoft\\Office\\Recent",
+			                                              { L".lnk", L".url" });
+		}
 	}
 
 	HRESULT global = S_OK;
@@ -374,7 +379,7 @@ HRESULT ExtractFileArtefactsRaw() {
 	   hence the recursive extraction without a filter. It replaces reading
 	   through the Task Scheduler COM interface, which removes both the
 	   execution trace and the dependency on COM. */
-	{
+	if (conf.artefacts.scheduledTasks) {
 		size_t extractedTasks = 0;
 		const std::wstring tasksPath = L"\\Windows\\System32\\Tasks";
 		std::vector<RawHiveExtraction> reading;

@@ -509,6 +509,20 @@ authenticode_test --catalogs <dossier>
 authenticode_test --catalogs <dossier> --files <liste>
 \end{lstlisting}
 
+\section{Configuration : \texttt{yaml\_light\_test}, \texttt{config\_test}}
+
+\texttt{yaml\_light\_test} (natif, libyaml compris, sous AddressSanitizer et
+UBSan) : lectures exactes (sections imbriquées, guillemets, commentaires,
+marque d'ordre des octets, fichier vide), refus avec la bonne ligne (clé en
+double, liste, ancre, alias, étiquette, second document, tabulation, guillemet
+non fermé, imbrication trop profonde), puis 3\,000 textes abîmés au hasard ;
+sept mutations toutes détectées. \texttt{config\_test} (sous wine) : chaque
+réglage appliqué, chaque sorte d'erreur refusée avec sa ligne, et le fichier
+de référence de \opt{write-config} relu tel qu'il se décrit ; trois mutations
+détectées. Dans la VM, une collecte pilotée par un \fichier{wac.yml}, sans
+aucune option, est confrontée au fichier consigné dans
+\fichier{investigation.json} (\texttt{check-json.py --configuration}).
+
 \section{Chaînes tierces : \texttt{third\_party\_chain\_test}}
 
 Chaque règle de la vérification des chaînes tierces sur des chaînes

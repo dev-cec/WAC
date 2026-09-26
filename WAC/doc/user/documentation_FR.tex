@@ -281,6 +281,51 @@ WAC.exe --update-trust[=dossier]
 
 Toutes les options sont facultatives et désactivées par défaut.
 
+\section{Fichier de configuration : \fichier{wac.yml}}
+
+Plutôt que de retaper les options à chaque collecte, la procédure s'écrit une
+fois dans \fichier{wac.yml}, à côté de \fichier{WAC.exe} : \wac{} l'applique
+d'abord, et une option donnée en ligne de commande la surcharge.
+\opt{write-config} écrit le fichier de référence, commenté — la procédure
+recommandée : collecte seule, binaires non vérifiés prélevés, journaux
+d'événements compris.
+
+\begin{lstlisting}
+convert: false          # true : collecte et conversion ici ; false : collecte seule
+binary: unverified      # none | unverified | all
+threads: 0              # fils d'analyse des binaires, 0 : automatique
+output: output
+log_level: 0
+dump: false
+artefacts:              # un interrupteur par artefact ; toutes les ruches = registry
+  registry: true
+  events: true
+  scheduled_tasks: true
+  services: true
+  processes: true
+  sessions: true
+  prefetch: true
+  jump_lists: true
+  recent_documents: true
+\end{lstlisting}
+
+\begin{itemize}
+  \item \textbf{Strict} : une clé inconnue, une valeur hors de celles admises
+    (\texttt{true}/\texttt{false} seulement, pas \texttt{yes}), une clé en
+    double, une liste : la collecte est refusée avant de commencer, avec la
+    ligne fautive. Une clé absente garde sa valeur par défaut.
+  \item \textbf{Consigné} : chemin, SHA-256 et contenu du fichier vont dans
+    \fichier{investigation.json} (\champ{Tool.Configuration}) — la procédure
+    appliquée fait partie de la preuve.
+  \item Un artefact désactivé n'est pas lu du tout, et son fichier JSON le dit
+    (\champ{CollectionStatus} \texttt{NotRequested}, avec la clé) : jamais
+    confondu avec un échec ou une absence de traces.
+  \item \opt{config=fichier} lit un autre fichier ; \opt{full} collecte et
+    convertit ici bien que le fichier dise \texttt{convert: false}.
+  \item Sans \fichier{wac.yml}, \wac{} se comporte comme avant : exécution
+    complète, options telles que données.
+\end{itemize}
+
 \section{Options}
 
 \begin{longtable}{@{}>{\ttfamily}L{3.2cm}L{11.2cm}@{}}

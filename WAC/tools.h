@@ -98,6 +98,19 @@ struct AppliConf {
 	 *  (PE, Authenticode, catalogs, fingerprints); 0 = the processor's
 	 *  threads minus one, the reading of the volume keeping its own. */
 	unsigned threads = 0;
+	/*! The artefacts to collect, one switch each (wac.yml, section
+	 *  `artefacts:`); the event logs are `_events`. All on by default but
+	 *  the event logs, as before the configuration file. */
+	struct CollectedArtefacts {
+		bool registry = true;         //!< the hives, and every artefact read in them
+		bool scheduledTasks = true;
+		bool services = true;         //!< services and drivers: configuration and live states
+		bool processes = true;        //!< live
+		bool sessions = true;         //!< live
+		bool prefetch = true;
+		bool jumpLists = true;
+		bool recentDocuments = true;
+	} artefacts;
 	RunMode mode = RunMode::Full; //!< what this run does (see RunMode)
 	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)
 	/*! System drive of the examined machine, with its colon ("C:").
@@ -932,6 +945,15 @@ private:
 */
 HRESULT writeNotCollected(const std::string& name, const std::wstring& artefact,
                           HRESULT result);
+
+/*! Writes an artefact the configuration switched off (wac.yml,
+ *  `artefacts:`): not collected on purpose — neither a failure nor an absence
+ *  of traces, and the file says which.
+ * @param name name of the file (e.g. "prefetchs.json")
+ * @param artefact label of the artefact
+ * @param key the configuration key, e.g. L"artefacts.prefetch"
+ * @return ERROR_SUCCESS if the file could be written */
+HRESULT writeNotRequested(const std::string& name, const std::wstring& artefact, const std::wstring& key);
 
 /*! Lists the regular files of a directory, filtered by extension.
 * Never throws: a missing or unreadable directory returns an empty list. That is

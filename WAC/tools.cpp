@@ -1412,6 +1412,15 @@ HRESULT writeNotCollected(const std::string& name, const std::wstring& artefact,
 	return writeJsonFile(name, o);
 }
 
+HRESULT writeNotRequested(const std::string& name, const std::wstring& artefact, const std::wstring& key) {
+	Json o = Json::obj();
+	o.add(L"Artifact",         Json::str(artefact));
+	o.add(L"CollectionStatus", Json::str(L"NotRequested"));
+	o.add(L"Note",             Json::str(L"Switched off by the configuration (" + key + L": false): not collected "
+	                                     L"on purpose. The absence of data says NOTHING about the system."));
+	return writeJsonFile(name, o);
+}
+
 //! ASCII lower case: enough for file extensions.
 static std::wstring toLowerAscii(std::wstring s) {
 	for (wchar_t& c : s) if (c >= L'A' && c <= L'Z') c = (wchar_t)(c - L'A' + L'a');

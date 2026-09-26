@@ -90,6 +90,14 @@ void auditRecord(const std::wstring& operation,
                  HRESULT result,
                  const wchar_t* footprint);
 
+/*! Records the configuration file the run applied (see config.h): the
+ *  procedure is part of the evidence.
+ *  @param searched where it was looked for
+ *  @param present whether one was found and applied
+ *  @param sha256 its fingerprint
+ *  @param text its content, UTF-8 */
+void auditConfiguration(const std::wstring& searched, bool present, const std::wstring& sha256, const std::string& text);
+
 /*! Closes the log (end timestamp, duration) and writes `investigation.json`
  *  — or `conversion.json` for a --convert run, which never overwrites the
  *  collection's log.

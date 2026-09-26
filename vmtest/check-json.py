@@ -42,7 +42,67 @@ def walk(obj, path=""):
     elif isinstance(obj, str):
         yield path, obj
 
+def check_configuration(folder):
+    """A collection driven by wac.yml, WAC.exe run without any option: it must
+    follow the file and record it. Independent of WAC's reading: the file's
+    content recorded in investigation.json (Tool.Configuration) is read here
+    line by line, its SHA-256 recomputed, and each switch checked against what
+    the exhibit store holds."""
+    import hashlib, re
+    inv = load(folder, "investigation.json")
+    cfg = ((inv or {}).get("Tool") or {}).get("Configuration") if isinstance(inv, dict) else None
+    if not isinstance(cfg, dict) or cfg.get("Applied") is not True:
+        print(f"  ❌ investigation.json does not record an applied configuration: {cfg!r}"[:160])
+        return 1
+    content = str(cfg.get("Content") or "")
+    if hashlib.sha256(content.encode("utf-8")).hexdigest().upper() != str(cfg.get("SHA256")):
+        print("  ❌ recorded SHA-256 is not the one of the recorded content")
+        return 1
+    settings, section = {}, ""
+    for line in content.splitlines():
+        m = re.match(r"^(\s*)([a-z_]+):\s*([^#]*?)\s*(#.*)?$", line)
+        if not m:
+            continue
+        if not m.group(1) and not m.group(3):
+            section = m.group(2) + "."
+            continue
+        settings[(section if m.group(1) else "") + m.group(2)] = m.group(3)
+        if not m.group(1):
+            section = ""
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+    paths = [str(i.get("SourcePath", "")).lower() for i in items]
+    wrong = []
+    if settings.get("convert") == "false":
+        converted = [f for f in os.listdir(folder) if f.endswith(".json") and f != "investigation.json"]
+        if converted:
+            wrong.append(f"convert: false, yet converted: {converted[:3]}")
+    if settings.get("binary") == "none" and any("--binary" in str(i.get("Method", "")) for i in items):
+        wrong.append("binary: none, yet executables collected")
+    rules = [("artefacts.events", lambda p: p.endswith(".evtx")),
+             ("artefacts.prefetch", lambda p: "\\windows\\prefetch\\" in p),
+             ("artefacts.jump_lists", lambda p: "automaticdestinations" in p or "customdestinations" in p),
+             ("artefacts.sessions", lambda p: p.startswith("live observation: logon sessions")),
+             ("artefacts.registry", lambda p: p.endswith("\\ntuser.dat"))]
+    for key, matches in rules:
+        present = any(matches(p) for p in paths)
+        if settings.get(key) == "false" and present:
+            wrong.append(f"{key}: false, yet collected")
+        if settings.get(key) == "true" and not present:
+            wrong.append(f"{key}: true, yet absent")
+    if not items:
+        wrong.append("no exhibit store manifest")
+    if wrong:
+        print(f"  ❌ the collection does not follow wac.yml: {wrong}")
+        return 1
+    print(f"  ✅ collection follows wac.yml ({len(settings)} setting(s) checked against {len(items)} exhibit(s)), "
+          f"file recorded with its SHA-256")
+    return 0
+
+
 def main():
+    if len(sys.argv) > 2 and sys.argv[1] == "--configuration":
+        sys.exit(check_configuration(sys.argv[2]))
     folder = sys.argv[1] if len(sys.argv) > 1 else "."
     ok = invalid = inconsistent = 0
 
@@ -232,7 +292,20 @@ def check_third_party_chains(folder):
         print(f"  ❌ the trust set was not usable: {trust_ops[0][:120]}")
         return 1
     if not checked:
-        print("  ❌ trust set usable, yet no third-party chain checked in the manifest")
+        # A full run records the binaries it clears in the artefacts, not in the manifest (B'6):
+        # their verdict, "Third party (...)", is in the artefacts' JSON.
+        cleared = 0
+        for name in glob.glob(os.path.join(folder, "*.json")):
+            try:
+                with open(name, encoding="utf-8-sig") as f:
+                    cleared += f.read().count('"Signature": "Third party (')
+            except OSError:
+                pass
+        if cleared:
+            print(f"  ✅ {cleared} third-party binaries cleared by their chain, recorded in the artefacts "
+                  "(none left to collect in the manifest)")
+            return 0
+        print("  ❌ trust set usable, yet no third-party chain checked, in the manifest or the artefacts")
         return 1
     reference_path = os.path.join(folder, "reference", "third-party-signatures.txt")
     if not os.path.exists(reference_path):

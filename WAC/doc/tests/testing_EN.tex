@@ -491,6 +491,20 @@ authenticode_test --catalogs <folder>
 authenticode_test --catalogs <folder> --files <list>
 \end{lstlisting}
 
+\section{Configuration: \texttt{yaml\_light\_test}, \texttt{config\_test}}
+
+\texttt{yaml\_light\_test} (native, libyaml included, under AddressSanitizer
+and UBSan): exact readings (nested sections, quotes, comments, byte order
+mark, empty file), refusals with the right line (duplicate key, list, anchor,
+alias, tag, second document, tab, quote left open, nesting too deep), then
+3,000 texts damaged at random; seven mutations all detected.
+\texttt{config\_test} (under wine): each setting applied, each kind of mistake
+refused with its line, and the reference file of \opt{write-config} read back
+as it describes itself; three mutations detected. In the VM, a collection
+driven by a \fichier{wac.yml}, without any option, is checked against the file
+recorded in \fichier{investigation.json} (\texttt{check-json.py
+--configuration}).
+
 \section{Third-party chains: \texttt{third\_party\_chain\_test}}
 
 Each rule of the check of third-party chains, on chains made by openssl to

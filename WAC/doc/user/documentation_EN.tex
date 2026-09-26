@@ -278,6 +278,51 @@ WAC.exe --update-trust[=folder]
 
 Every option is optional and disabled by default.
 
+\section{Configuration file: \fichier{wac.yml}}
+
+Rather than typing the options at every collection, the procedure is written
+once in \fichier{wac.yml}, next to \fichier{WAC.exe}: \wac{} applies it
+first, and an option given on the command line overrides it.
+\opt{write-config} writes the reference file, commented — the recommended
+procedure: collection only, unverified binaries collected, event logs
+included.
+
+\begin{lstlisting}
+convert: false          # true: collect and convert here; false: collect only
+binary: unverified      # none | unverified | all
+threads: 0              # analysis threads for the binaries, 0: automatic
+output: output
+log_level: 0
+dump: false
+artefacts:              # one switch per artefact; all the hives = registry
+  registry: true
+  events: true
+  scheduled_tasks: true
+  services: true
+  processes: true
+  sessions: true
+  prefetch: true
+  jump_lists: true
+  recent_documents: true
+\end{lstlisting}
+
+\begin{itemize}
+  \item \textbf{Strict}: an unknown key, a value outside the ones allowed
+    (\texttt{true}/\texttt{false} only, not \texttt{yes}), a duplicate key, a
+    list: the collection is refused before it starts, with the line at fault.
+    A key left out keeps its default.
+  \item \textbf{Recorded}: the file's path, SHA-256 and content go into
+    \fichier{investigation.json} (\champ{Tool.Configuration}) — the procedure
+    applied is part of the evidence.
+  \item An artefact switched off is not read at all, and its JSON file says so
+    (\champ{CollectionStatus} \texttt{NotRequested}, with the key): never
+    mistaken for a failure or an absence of traces.
+  \item \opt{config=file} reads another file; \opt{full} collects and converts
+    here although the file says \texttt{convert: false}.
+  \item Without \fichier{wac.yml}, \wac{} behaves as before: full run, options
+    as given.
+\end{itemize}
+
 \section{Options}
 
 \begin{longtable}{@{}>{\ttfamily}L{3.2cm}L{11.2cm}@{}}

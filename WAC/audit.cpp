@@ -155,6 +155,19 @@ void auditRecord(const std::wstring& operation, const std::wstring& target,
 	g_operations.push_back(std::move(o));
 }
 
+namespace {
+//! The configuration file applied (auditConfiguration).
+std::wstring g_configurationPath, g_configurationSha256, g_configurationText;
+bool g_configurationPresent = false;
+}
+
+void auditConfiguration(const std::wstring& searched, bool present, const std::wstring& sha256, const std::string& text) {
+	g_configurationPath = searched;
+	g_configurationPresent = present;
+	g_configurationSha256 = sha256;
+	g_configurationText = decodeText(text, CP_UTF8);
+}
+
 Json auditContext() {
 	Json root = Json::obj();
 
@@ -162,6 +175,15 @@ Json auditContext() {
 	tool.add(L"Name",        Json::str(L"WAC"));
 	tool.add(L"CommandLine", Json::str(g_commandLine));
 	tool.add(L"BuildDate",   Json::str(decodeText(__DATE__) + L" " + decodeText(__TIME__)));
+	// The procedure applied: the configuration file, whole, or its absence — defaults and command line then.
+	if (!g_configurationPath.empty()) {
+		Json configuration = Json::obj();
+		configuration.add(L"Path", Json::str(g_configurationPath));
+		configuration.add(L"Applied", Json::boolean(g_configurationPresent));
+		configuration.add(L"SHA256", Json::str(g_configurationSha256));
+		configuration.add(L"Content", Json::str(g_configurationText));
+		tool.add(L"Configuration", std::move(configuration));
+	}
 	root.add(L"Tool", std::move(tool));
 
 	Json host = Json::obj();

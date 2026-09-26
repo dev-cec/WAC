@@ -82,6 +82,9 @@ done
 $QGA run --shell "reg unload HKLM\\WAC_TEST >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
 
 $QGA write "$ROOT/build-windows/WAC.exe"           "$VMDIR\\WAC.exe"
+# No configuration file left by an earlier cycle: the runs below give their
+# options, and must behave as without wac.yml (step 8 tests the file).
+$QGA run --shell "del $VMDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
 $QGA write "$ROOT/build-windows/raw_hive_test.exe" "$VMDIR\\raw_hive_test.exe"
 
 # The trust set, as the analysis workstation prepares it before a collection:
@@ -418,6 +421,31 @@ if [[ $SPLIT -eq 1 ]]; then
     echo "   ❌ second conversion ended abnormally"
   fi
 fi
+
+echo "== 8. Collection driven by wac.yml, without any option =="
+# The procedure written in wac.yml next to WAC.exe, and WAC.exe run alone: the
+# collection must follow the file — collect only, no binaries, some artefacts
+# switched off — and record it (investigation.json, Tool.Configuration).
+CONFIG_OUT="$OUTPUT/configured"
+cat > "$OUTPUT/wac.yml" <<'YML'
+# wac.yml of the test cycle
+convert: false
+binary: none
+output: configured
+artefacts:
+  registry: true
+  events: false
+  prefetch: false
+  sessions: false
+  jump_lists: false
+YML
+$QGA write "$OUTPUT/wac.yml" "$VMDIR\\wac.yml" >/dev/null
+$QGA run --shell "cd /d $VMDIR && rmdir /s /q configured 2>nul & WAC.exe > configured.log 2>&1" \
+  && echo "   ✅ collection driven by wac.yml went to the end" || echo "   ❌ collection driven by wac.yml ended abnormally"
+$QGA read "$VMDIR\\configured.log" "$OUTPUT/configured.log" >/dev/null 2>&1 || true
+$QGA run --shell "del $VMDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
+fetch_results configured "$CONFIG_OUT" >/dev/null
+python3 "$HERE/check-json.py" --configuration "$CONFIG_OUT" || echo "   ⚠️ the configured collection fails its checks (see above)"
 
 echo
 if [[ "${ABNORMAL_STOP:-0}" == "1" ]]; then

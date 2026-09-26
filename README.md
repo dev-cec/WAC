@@ -138,7 +138,7 @@ what it is and, where it matters, why it is trustworthy.
 To minimize disk traces, this standalone tool should be run **as administrator** from a USB stick using the command:
 
 ```
-usage: wac [--collect | --convert=folder] [--dump] [--events] [--binary | --binary-all] [--threads=N] [--output=output] [--loglevel=2] [--debug]
+usage: wac [--config=file | --write-config] [--collect | --full | --convert=folder] [--dump] [--events] [--binary | --binary-all] [--threads=N] [--output=output] [--loglevel=2] [--debug]
        wac --update-trust[=folder]
         --help or /? : show this help
         --update-trust[=folder] : on the ANALYSIS WORKSTATION, BEFORE the
@@ -184,6 +184,48 @@ usage: wac [--collect | --convert=folder] [--dump] [--events] [--binary | --bina
 ```
 
 All options are optional and **disabled by default**.
+
+### The configuration file, `wac.yml`
+
+Rather than typing the options at every collection, write the procedure once
+in `wac.yml`, next to `WAC.exe`: WAC applies it first, and an option given on
+the command line overrides it. `WAC.exe --write-config` writes the reference
+file, commented — the recommended procedure: collection only, unverified
+binaries collected, event logs included.
+
+```yaml
+convert: false          # true: collect and convert here; false: collect only (--convert elsewhere)
+binary: unverified      # none | unverified | all
+threads: 0              # analysis threads for the binaries, 0: automatic
+output: output
+log_level: 0
+dump: false
+artefacts:              # one switch per artefact; all the hives are `registry`
+  registry: true
+  events: true
+  scheduled_tasks: true
+  services: true
+  processes: true
+  sessions: true
+  prefetch: true
+  jump_lists: true
+  recent_documents: true
+```
+
+- **Strict**: an unknown key, a value outside the ones allowed (`true`/`false`
+  only, not `yes`), a duplicate key, a list: the collection is refused before
+  it starts, with the line at fault. A key left out keeps its default.
+- **Recorded**: the file's path, SHA-256 and content go into
+  `investigation.json` (`Tool.Configuration`) — the procedure applied is part
+  of the evidence.
+- An artefact switched off is not read at all, and its JSON file says so
+  (`CollectionStatus: NotRequested`, with the key): never mistaken for a
+  failure or for an absence of traces.
+- `--config=<file>` reads another file; `--full` collects and converts here
+  although the file says `convert: false`.
+- Without `wac.yml`, WAC behaves as before: full run, options as given.
+- The YAML is read by libyaml 0.2.5, the reference implementation, compiled
+  into `WAC.exe` (`third_party/libyaml-0.2.5`, see its `VENDORED.md`).
 
 **Default output files are saved in :**
 - The `output` directory for standard results
