@@ -67,7 +67,8 @@ struct BinarySummary {
     unsigned long long collectedBytes = 0;   //!< bytes written to the medium
     unsigned long long avoidedBytes = 0;     //!< bytes saved by the three rules above
     size_t authenticated = 0;                 //!< authentic Microsoft binaries, not collected
-    unsigned long long authenticatedBytes = 0;  //!< bytes saved by that rule alone
+    size_t thirdPartyCleared = 0;             //!< third-party binaries cleared by their chain (trust set), not collected
+    unsigned long long authenticatedBytes = 0;  //!< bytes saved by those two rules alone
     size_t catalogsRead = 0;                //!< CatRoot catalogs parsed
     size_t catalogsUsed = 0;           //!< among them, those that authenticated a file
 };

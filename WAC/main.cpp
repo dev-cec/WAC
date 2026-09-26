@@ -375,7 +375,8 @@ void closeBinaries() {
 	if (conf.mode == RunMode::Collect) return;
 	const BinarySummary b = BinariesSummary();
 	std::wstring summary = std::to_wstring(b.files) + L" cited, " + std::to_wstring(b.read)
-	                   + L" read, " + std::to_wstring(b.authenticated) + L" authenticated as Microsoft";
+	                   + L" read, " + std::to_wstring(b.authenticated) + L" authenticated as Microsoft, "
+	                   + std::to_wstring(b.thirdPartyCleared) + L" third-party cleared by their chain";
 	if (conf.mode == RunMode::Full) {
 		summary += L" and not collected (" + std::to_wstring(b.authenticatedBytes / 1024 / 1024)
 		         + L" MiB saved), " + std::to_wstring(b.collectedCount) + L" collected ("
@@ -461,6 +462,7 @@ void collectForConversion() {
 		auditRecord(L"Raw reading of the executables, libraries, drivers, scripts and macro documents ("
 		            + std::to_wstring(b.read) + L" read, " + std::to_wstring(b.authenticated)
 		            + L" authenticated as Microsoft in memory and fingerprinted only, "
+		            + std::to_wstring(b.thirdPartyCleared) + L" third-party cleared by their chain and fingerprinted only, "
 		            + std::to_wstring(b.collectedCount) + L" collected ("
 		            + std::to_wstring(b.collectedBytes / 1024 / 1024) + L" MiB), "
 		            + std::to_wstring(b.duplicates) + L" identical content(s) not copied again; "

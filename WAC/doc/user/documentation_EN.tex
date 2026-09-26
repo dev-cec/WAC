@@ -601,10 +601,15 @@ takes \textbf{everything it will read}:
         \fichier{D:} included —, read directly and verified in memory, as in a
         full run (section~\ref{sec:binary}):
         \begin{itemize}
-          \item authenticated (catalog, embedded signature, Store package):
-                \textbf{not copied}; the manifest keeps its path, its
-                Authenticode digests and the verdict (\champ{ContentStored}
-                \texttt{false});
+          \item authenticated (catalog, embedded signature, Store package), or a
+                third-party binary whose signature holds against the trust set of
+                the key (\opt{update-trust}: chain to a root Microsoft trusts for
+                code signing, valid at the signing time, not revoked, not a
+                vulnerable driver): \textbf{not copied}; the manifest keeps its
+                path, its Authenticode digests and the verdict
+                (\champ{ContentStored} \texttt{false}); without a usable trust
+                set, every third-party binary is copied, as the investigation log
+                says;
           \item not authenticated: \textbf{copied}, with its three fingerprints
                 MD5, SHA-1, SHA-256, its Authenticode digest and the reason;
           \item Windows differential file (\texttt{PA30}/\texttt{PA31}, the

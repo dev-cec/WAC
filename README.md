@@ -237,7 +237,9 @@ in Microsoft's blocklist or LOLDrivers, or a signer Microsoft denies, with
 every narrowing it gives (signer, WHQL manufacturer, original file name read
 in the version resource — not the name on disk, which an attacker changes —,
 version bounds). A list of drivers missing from the set: no driver can be
-cleared. The collection rule itself does not change yet.
+cleared. Under `--binary`, a cleared third-party binary is fingerprinted, not
+copied, like a Microsoft one; without a usable trust set, every third-party
+binary is collected, as the investigation log says.
 
 On a Linux workstation it runs under wine. About 70 seconds for 64 MB; the
 562 roots are
@@ -320,8 +322,12 @@ D:\> WAC.exe --convert=E:\accounting-pc-01 --events --binary           (analysis
 its signature in memory; they differ in what they **copy**. An executable is
 *authenticated* when a Microsoft catalog lists it, when it carries a valid
 Microsoft signature, or when it belongs to a Store package whose signature and
-block map it matches; every other one — unsigned, signed by another vendor,
-modified, unknown — is *not authenticated*. The table describes a `--collect`;
+block map it matches. A third-party executable is *cleared* the same way when
+a trust set is on the key (`--update-trust`) and its signature holds against
+it: chain to a root Microsoft trusts for code signing, valid at the signing
+time, not revoked, not a vulnerable driver. Every other one — unsigned,
+modified, unknown, or third-party without a usable trust set — is *not
+authenticated*. The table describes a `--collect`;
 a full run applies the same rules to the executables the artefacts cite, the
 fingerprints of the authenticated ones going into the artefact JSON files
 instead of the manifest.
@@ -329,7 +335,7 @@ instead of the manifest.
 | | `--binary` (the usual choice) | `--binary-all` |
 |---|---|---|
 | Signature checked | yes, in memory | yes, in memory |
-| Authenticated executable | **not copied**: its Authenticode digest, its verdict and its build (`SymbolServerKey`) are recorded in the manifest — a Microsoft binary can be fetched again, identical, from Microsoft's symbol server | **copied**, with its three fingerprints and its verdict (`SignatureVerified`, `Signature`) |
+| Authenticated or cleared executable | **not copied**: its Authenticode digest, its verdict and its build (`SymbolServerKey`) are recorded in the manifest — a Microsoft binary can be fetched again, identical, from Microsoft's symbol server | **copied**, with its three fingerprints and its verdict (`SignatureVerified`, `Signature`) |
 | Not authenticated | **copied**, with MD5, SHA-1, SHA-256 (and the Authenticode digest of a PE) and the reason (`SignatureReason`) | **copied**, the same way |
 | Exhibit store, test VM (`--collect --events`) | 1.8 GB | 20.0 GB |
 | Collection time, test VM | 16 min 39 s | 21 min 45 s |

@@ -254,6 +254,26 @@ def check_third_party_chains(folder):
                 stricter.append(f"{parts[0]}: {item.get('EmbeddedChainReason')}")
     trusted = sum(1 for i in checked.values() if i.get("EmbeddedChainTrusted") is True)
     print(f"  ℹ️  {len(checked)} third-party chain(s) checked, {trusted} trusted; {compared} in the reference")
+    # The rule of the collection: under --binary, a chain that holds clears the binary (not copied),
+    # one that does not has it copied; under --binary-all everything is copied.
+    binary_all = any("--binary-all" in str(i.get("Method", "")) for i in items)
+    misapplied = []
+    for path, item in checked.items():
+        stored = item.get("ContentStored") is not False
+        if binary_all and not stored:
+            misapplied.append(f"{path}: not copied under --binary-all")
+        elif not binary_all and item.get("EmbeddedChainTrusted") is True and stored:
+            misapplied.append(f"{path}: chain trusted, yet copied")
+        elif not binary_all and item.get("EmbeddedChainTrusted") is False and not stored \
+                and "medium full" not in str(item.get("Method", "")) \
+                and not str(item.get("Signature", "")).startswith(("Microsoft", "Package")):
+            # (authenticated otherwise — catalog, Store package — a binary is rightly not copied)
+            misapplied.append(f"{path}: chain not trusted, yet not copied")
+    if misapplied:
+        print(f"  ❌ {len(misapplied)} third-party binaries against the collection rule:")
+        for w in misapplied[:5]:
+            print(f"        {w}")
+        return 1
     for w in stricter[:5]:
         print(f"  ℹ️  refused by WAC, Valid for Windows: {w}")
     if false_trust:
@@ -289,7 +309,10 @@ def check_vulnerable_driver(folder):
     if item.get("EmbeddedChainTrusted") is not False or "vulnerable" not in reason:
         print(f"  ❌ vulnerable driver not recognised: trusted={item.get('EmbeddedChainTrusted')}, reason={reason!r}")
         return 1
-    print(f"  ✅ vulnerable driver recognised despite its valid chain: {reason[:90]}")
+    if item.get("ContentStored") is False:
+        print("  ❌ vulnerable driver recognised, yet not copied")
+        return 1
+    print(f"  ✅ vulnerable driver recognised despite its valid chain, and copied: {reason[:80]}")
     return 0
 
 

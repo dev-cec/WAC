@@ -58,6 +58,7 @@ private:
 	const unsigned long long start_;
 };
 unsigned long long g_authenticatedBytes = 0;
+size_t g_thirdPartyCleared = 0;                          // third-party binaries cleared by their chain
 std::set<std::wstring> g_catalogsUsed;
 /*! Catalogs read but not signed by Microsoft — third-party drivers and
  *  software (oemNN.cat): they are what signs a third-party binary WAC
@@ -586,12 +587,28 @@ private:
 	Head head_;
 };
 
+/*! CLEARED — fingerprinted, not copied, under --binary: an authentic
+ *  Microsoft binary, or a third-party one whose chain holds against the trust
+ *  set of the key, after every check of ThirdPartyRoots and
+ *  VulnerableDrivers (decision of the user, 2026-09-25). Without a usable
+ *  trust set no third-party chain is checked, and every third-party binary
+ *  is collected — the investigation log says which case applied.
+ *  --binary-all copies everything regardless. */
+bool cleared(const VerdictMicrosoft& verdict) {
+	return verdict.microsoft || verdict.chainTrusted;
+}
+
 /*! Counts an authenticated file, and keeps what justified its authentication
  *  for the exhibit store (catalog, package). Main thread only.
  *  @param verdict the verdict
  *  @param line the file's record
  *  @param package its package entry, if any */
 void noteVerdict(const VerdictMicrosoft& verdict, const RawHiveExtraction& line, const PackageFile* package) {
+	if (verdict.chainTrusted && !verdict.microsoft) {
+		++g_thirdPartyCleared;
+		g_authenticatedBytes += line.fingerprints.bytes;
+		return;
+	}
 	if (!verdict.microsoft) return;
 	++g_authenticated;
 	g_authenticatedBytes += line.fingerprints.bytes;
@@ -715,9 +732,12 @@ HRESULT readAndAuthenticate(const std::wstring& path, RawHiveExtraction& line, V
  *  @return the recorded verdict */
 SignatureVerdict recordedVerdict(const VerdictMicrosoft& verdict);
 
-//! The verdict as recorded: "Microsoft (<source>)", or "Package (<source>)"
-//! for a file whose package the Store signed for its publisher.
+//! The verdict as recorded: "Microsoft (<source>)", "Package (<source>)"
+//! for a file whose package the Store signed for its publisher, or "Third
+//! party (<signer>, chain to <root>)" for one cleared by its chain.
 std::wstring signatureLabel(const VerdictMicrosoft& verdict) {
+	if (!verdict.microsoft && verdict.chainTrusted)
+		return L"Third party (" + verdict.chainSignerName + L", chain to " + verdict.chainRoot + L")";
 	if (verdict.source.compare(0, 8, L"package ") == 0) return L"Package (" + verdict.source + L")";
 	return L"Microsoft (" + verdict.source + L")";
 }
@@ -731,7 +751,7 @@ SignatureVerdict recordedVerdict(const VerdictMicrosoft& verdict) {
 	g_missingCrls.insert(verdict.chainMissingCrls.begin(), verdict.chainMissingCrls.end());
 	SignatureVerdict v;
 	v.checked = true;
-	v.valid = verdict.microsoft;
+	v.valid = cleared(verdict);
 	if (v.valid) v.label = signatureLabel(verdict);
 	else v.reason = decodeText(verdict.reason);
 	if (!verdict.signer.empty()) {
@@ -784,7 +804,8 @@ const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
 			e.authenticodeSha256 = stored->second.authenticodeSha256;
 			e.result = ERROR_SUCCESS;
 			++g_read;
-			if (!e.signature.empty()) ++g_authenticated;
+			if (e.signature.compare(0, 11, L"Third party") == 0) ++g_thirdPartyCleared;
+			else if (!e.signature.empty()) ++g_authenticated;
 			return g_cache.emplace(key, std::move(e)).first->second;
 		}
 	}
@@ -828,7 +849,7 @@ const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
 		}
 		++g_read;
 		keep(line);
-		if (v.microsoft) {
+		if (cleared(v)) {
 			e.signature = signatureLabel(v);
 			// --binary-all: collected all the same, the verdict recorded with it.
 			if (!conf.binaryAll) return g_cache.emplace(key, std::move(e)).first->second;
@@ -883,6 +904,7 @@ BinarySummary BinariesSummary() {
 	b.duplicates = g_duplicates;
 	b.avoidedBytes = g_avoidedBytes;
 	b.authenticated = g_authenticated;
+	b.thirdPartyCleared = g_thirdPartyCleared;
 	b.authenticatedBytes = g_authenticatedBytes;
 	b.catalogsRead = g_catalogsRead;
 	b.catalogsUsed = g_catalogsUsed.size();
@@ -1075,7 +1097,8 @@ public:
 		const std::wstring nature = item.windowsDelta
 		        ? L"Windows differential file (MSDELTA), not an executable"
 		        : item.verdict.microsoft ? L"authenticated in memory"
-		                                 : L"not authenticated: " + decodeText(item.verdict.reason);
+		        : item.verdict.chainTrusted ? L"third-party signature and chain verified in memory against the trust set"
+		                                    : L"not authenticated: " + decodeText(item.verdict.reason);
 		if (item.windowsDelta) ++g_deltas;
 
 		if (conf.binaryAll && roomLeft()) {
@@ -1088,11 +1111,11 @@ public:
 		}
 		if (!item.staged.empty()) std::filesystem::remove(item.staged, ec);
 
-		// Authentic, differential, or no room left: fingerprinted, not copied.
-		if (item.verdict.microsoft || item.windowsDelta || full || (full = !roomLeft())) {
-			if (!item.verdict.microsoft && !item.windowsDelta) ++g_sansPlace;
-			// Not authenticated and not copied: at least its three fingerprints.
-			if (!item.verdict.microsoft && item.line.fingerprints.sha256.empty()) {
+		// Cleared, differential, or no room left: fingerprinted, not copied.
+		if (cleared(item.verdict) || item.windowsDelta || full || (full = !roomLeft())) {
+			if (!cleared(item.verdict) && !item.windowsDelta) ++g_sansPlace;
+			// Not cleared and not copied: at least its three fingerprints.
+			if (!cleared(item.verdict) && item.line.fingerprints.sha256.empty()) {
 				RawHiveExtraction reread;   // keeping what the first read found
 				reread.fingerprints.authenticodeSha1 = item.line.fingerprints.authenticodeSha1;
 				reread.fingerprints.authenticodeSha256 = item.line.fingerprints.authenticodeSha256;
@@ -1102,7 +1125,7 @@ public:
 				item.line = std::move(reread);
 			}
 			const std::wstring fingerprintMethod = item.method + L"; " + nature
-			        + (item.verdict.microsoft || item.windowsDelta ? L"; fingerprinted, not copied"
+			        + (cleared(item.verdict) || item.windowsDelta ? L"; fingerprinted, not copied"
 			                                                       : L"; fingerprinted without a copy: collection medium full");
 			ExhibitStoreAddFingerprint(item.line, fingerprintMethod, recorded);
 			byRecord_.emplace(item.record, Recorded{ item.line, recorded, false, fingerprintMethod });
@@ -1279,7 +1302,8 @@ HRESULT BinariesCollectAll() {
 
 	log(2, L"❇️Executables of " + std::to_wstring(roots.size()) + L" volume(s): " + std::to_wstring(listed)
 	     + L" directorie(s) walked, " + std::to_wstring(unreadable) + L" unreadable, " + std::to_wstring(g_read)
-	     + L" read, " + std::to_wstring(g_authenticated) + L" authenticated"
+	     + L" read, " + std::to_wstring(g_authenticated) + L" authenticated as Microsoft and "
+	     + std::to_wstring(g_thirdPartyCleared) + L" third-party cleared by their chain"
 	     + (conf.binaryAll ? L" (copied all the same, --binary-all), " : L" (not copied), ")
 	     + std::to_wstring(g_collected) + L" collected (" + std::to_wstring(g_bytes / 1024 / 1024) + L" MiB), "
 	     + std::to_wstring(g_duplicates) + L" identical content(s) not copied again, " + std::to_wstring(recorder.links)

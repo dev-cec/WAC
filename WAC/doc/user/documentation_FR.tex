@@ -608,8 +608,13 @@ La conversion ne pouvant plus rien demander à la machine, la collecte prend
         NTFS} — un profil sur \fichier{D:} compris —, lus directement et
         vérifiés en mémoire, comme en exécution complète (section~\ref{sec:binary}) :
         \begin{itemize}
-          \item authentifié (catalogue, signature intégrée, paquet du Store) :
-                \textbf{non copié} ; le manifeste garde son chemin, ses empreintes
+          \item authentifié (catalogue, signature intégrée, paquet du Store), ou
+                binaire tiers dont la signature tient face au jeu de confiance de
+                la clé (\opt{update-trust} : chaîne vers une racine admise par
+                Microsoft pour la signature de code, valide à la date de
+                signature, non révoquée, pas un pilote vulnérable) :
+                \textbf{non copié} ; sans jeu de confiance utilisable, tout
+                binaire tiers est copié, et le journal d'investigation le dit ; le manifeste garde son chemin, ses empreintes
                 Authenticode et le verdict (\champ{ContentStored} à \texttt{false}) ;
           \item non authentifié : \textbf{copié}, avec ses trois empreintes
                 MD5, SHA-1, SHA-256, son empreinte Authenticode et la raison ;
