@@ -203,7 +203,7 @@ workstation, before leaving for the collection:
 | `disallowedcert.stl` | the keys and certificates Microsoft distrusts |
 | `roots\<SHA-1>.crt` | every root `authroot.stl` names (562 on 2026-08-25) |
 | `roots.pem` | those trusted for code signing and not distrusted, for `osslsigncode` or `openssl` on Linux |
-| `vulnerable-drivers.json` | the fingerprints (file and Authenticode) of vulnerable or malicious drivers, from Microsoft's blocklist (1,086) and LOLDrivers (8,151), and the 217 signers Microsoft's blocklist denies, with the files each is restricted to |
+| `vulnerable-drivers.json` | the fingerprints (file and Authenticode) of vulnerable or malicious drivers, from Microsoft's blocklist (1,086) and LOLDrivers (8,151), and the 217 signers Microsoft's blocklist denies, with what narrows each down: the signer's certificate name, the WHQL manufacturer, the files |
 | `crl\` , `revocation.json` | the revocation lists (CRL) of every authority capable of code signing that the Common CA Database lists (387 in 2026), those of Microsoft's own code signing authorities (not in the CCADB: WHQL drivers, Store, Windows Phone…), and those earlier collections found missing (`wanted-crls.txt`); and the 2,935 authorities the CCADB says revoked |
 | `sources\` | the unsigned lists as downloaded: `VulnerableDriverBlockList.zip`, `loldrivers.json`, `ccadb.csv` |
 | `trust-manifest.json` | date, sources, counts, SHA-256 of every file; written last, so that an interrupted set is seen as absent |

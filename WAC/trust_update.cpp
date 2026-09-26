@@ -154,11 +154,13 @@ Json driverHash(const std::wstring& hash, const wchar_t* of, const std::wstring&
 	return Json::obj().add(L"Hash", Json::str(upper)).add(L"Of", Json::str(of)).add(L"Name", Json::str(name));
 }
 
-/*! A denied signer of Microsoft's blocklist: its name, the digest of its
- *  certificate's signed part (TbsHash, by the certificate's own signature
- *  algorithm), and the file attributes that restrict it — file name,
- *  internal name, versions —, as the policy gives them. A signer without
- *  them is denied for every file. */
+/*! A denied signer of Microsoft's blocklist: its name, the digest of an
+ *  authority's certificate's signed part (TbsHash: SHA-256 for a certificate
+ *  signed with SHA-256, SHA-1 for SHA-1 — measured on Microsoft's Third Party
+ *  Component CAs), the signer's certificate name (CertPublisher) and WHQL
+ *  manufacturer (CertOemID) when given, and the file attributes that restrict
+ *  it — file name, internal name, product, versions —, as the policy gives
+ *  them. */
 Json deniedSigner(const XmlNode& signer, const std::map<std::wstring, const XmlNode*>& attributes) {
 	Json entry = Json::obj();
 	entry.add(L"Name", Json::str(signer.attribute(L"Name")));
@@ -166,6 +168,12 @@ Json deniedSigner(const XmlNode& signer, const std::map<std::wstring, const XmlN
 		if (root->attribute(L"Type") == L"TBS") entry.add(L"TbsHash", Json::str(root->attribute(L"Value")));
 		else entry.add(L"CertRoot", Json::str(root->attribute(L"Type") + L" " + root->attribute(L"Value")));
 	}
+	/* The conditions that narrow the authority down — without them, an entry
+	   on "Microsoft Windows Third Party Component CA 2014" would deny every
+	   WHQL driver: the signer's certificate name, and for a WHQL signature the
+	   manufacturer it names (OEM, in its SpcSpOpusInfo). */
+	if (const XmlNode* publisher = signer.child(L"CertPublisher")) entry.add(L"CertPublisher", Json::str(publisher->attribute(L"Value")));
+	if (const XmlNode* oem = signer.child(L"CertOemID")) entry.add(L"CertOemID", Json::str(oem->attribute(L"Value")));
 	Json files = Json::arr();
 	for (const auto& reference : signer.children) {
 		if (reference->name != L"FileAttribRef") continue;
