@@ -28,4 +28,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [ ] Comparaison des JSON
 
 ## Journal
-- (vide)
+- 2026-09-29 : décision utilisateur — les outils Zimmerman (et .NET) installés dans la VM de test ; KAPE écarté (inscription chez Kroll).

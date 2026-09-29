@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| fait (voir Journal) | P2 | faible |
+| fait (c0bf905) | P2 | faible |
 
 ## Pourquoi
 Seul le volume système est pris : un disque de données ou un profil sur D: échappe à la chronologie.

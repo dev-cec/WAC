@@ -25,4 +25,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [ ] Extraction des instances __EventFilter / __EventConsumer / __FilterToConsumerBinding
 
 ## Journal
-- (vide)
+- 2026-09-29 : décision utilisateur — lecteur complet du dépôt CIM (pages, correspondance, index, classes), pas une recherche de motifs.
