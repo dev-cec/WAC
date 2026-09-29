@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P1 | moyen |
+| en cours | P1 | moyen |
 
 ## Pourquoi
 Mécanismes de persistance courants absents : IFEO (Debugger, SilentProcessExit), AppInit_DLLs, Winlogon (Shell, Userinit), paquets LSA, moniteurs d'impression, détournements COM (HKCU\CLSID), tâches BITS.
