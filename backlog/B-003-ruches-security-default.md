@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P2 | faible |
+| en cours | P2 | faible |
 
 ## Pourquoi
 SECURITY porte la politique d'audit (PolAdtEv), le nombre de connexions mises en cache, les noms des secrets LSA ; DEFAULT la configuration du compte système ; RegBack d'anciennes copies des ruches.

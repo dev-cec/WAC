@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P2 | faible |
+| fait (581c377) | P2 | faible |
 
 ## Pourquoi
 Donne l'origine d'un fichier téléchargé (ZoneId, ReferrerUrl, HostUrl) : relie un binaire suspect à son URL.
@@ -21,9 +21,10 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Tous les flux Zone.Identifier du volume système lus en brut, sans ouvrir de fichier.
 
 ## Tâches
-- [ ] Lecture brute des flux nommés résidents et non résidents
-- [ ] Décodeur INI
-- [ ] Témoin VM
+- [x] Contenu lu dans la copie de la $MFT (flux résident) ; non résident signalé avec sa taille (ContentNotResident)
+- [x] Décodeur (UTF-8 ou UTF-16), noms de zones — file_artefacts_test 37/0
+- [x] Témoin VM : fichier marqué téléchargé par Set-Content -Stream, relu par Windows
 
 ## Journal
-- (vide)
+- 2026-09-29 : décision — lire le flux dans la copie de la $MFT (il y est résident) plutôt qu'extraire chaque flux : aucune lecture de plus sur la machine examinée. `Mft::forEachFile` ajouté (parcours public avec chemin) ; clé `zone_identifiers` ; la $MFT est prélevée dès que cet artefact est demandé. Cycle VM lancé.
+- 2026-09-29 : cycle VM vert (témoin retrouvé, zone 3, HostUrl) ; commité (581c377), fiche archivée.
