@@ -643,8 +643,9 @@ they target are absent, on the data they have seen.
     the zones whose rules agree with Windows's over the period checked
     (Western Europe, United States, UTC); the others are checked against
     Windows only.
-  \item \textbf{MSVC build}: the Visual Studio project is maintained, but the
-    checks are made on the MinGW build, the one delivered.
+  \item \textbf{Building on Windows}: \fichier{build-windows.sh} also runs in
+    the MSYS2 MINGW64 shell, but the checks are made on the Linux build, the
+    one delivered; the MSYS2 build is not run by the test cycle.
 \end{itemize}
 
 \end{document}

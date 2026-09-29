@@ -664,9 +664,10 @@ qu'ils visent sont absents, sur les données qu'ils ont vues.
     fuseaux dont les règles concordent avec celles de Windows sur la période
     vérifiée (Europe de l'Ouest, États-Unis, UTC) ; les autres sont vérifiés
     contre Windows seulement.
-  \item \textbf{Compilation MSVC} : le projet Visual Studio est maintenu, mais
-    les contrôles sont faits sur la version compilée par MinGW, celle qui est
-    livrée.
+  \item \textbf{Compilation sous Windows} : \fichier{build-windows.sh} tourne
+    aussi dans le shell MSYS2 MINGW64, mais les contrôles portent sur la
+    compilation faite sous Linux, celle qui est livrée ; la compilation MSYS2
+    n'est pas exécutée par le cycle de test.
 \end{itemize}
 
 \end{document}

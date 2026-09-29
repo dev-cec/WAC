@@ -19,7 +19,7 @@
 #include <filesystem>
 #include <fstream>
 #include <windows.h>
-#include <Sddl.h>
+#include <sddl.h>
 #include <wtsapi32.h>
 #include <winternl.h>
 #define _NTDEF_ // avoids the type conflicts between ntsecapi.h and winternl.h

@@ -765,16 +765,17 @@ time, recorded in `investigation.json`). To release: commit the sources, run
 and `bin`), commit. The build is reproducible: the same sources give the
 same `WAC.exe`, byte for byte (no link date in the PE header).
 
-### Visual Studio 2022 (Windows)
-- Requires **Windows SDK 10** and **Windows WDK 10**
-- 📥 Download: [Microsoft WDK](https://learn.microsoft.com/en-us/windows-hardware/drivers/download-the-wdk)
-- **Include path** and **lib path** of **project properties directories** must be updated with WDK correct path dependent of WDK installed version. Actually, the configured WDK version is 10.0.26100.0.
-
-### Cross-compiling from Linux (MinGW-w64)
+### One build, Linux or Windows (MinGW-w64)
 ```bash
 ./build-windows.sh          # produces build-windows/WAC.exe, self-contained
 ./build-windows.sh --test   # also builds raw_hive_test.exe, and the harnesses in tests/
 ```
+The same script on both systems: on Linux it cross-compiles
+(`apt install g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-tools`);
+on Windows it runs in the **MSYS2 MINGW64** shell
+(`pacman -S --needed mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils libiconv git`).
+The Visual Studio build has been removed: one toolchain, one program to verify.
+Details in `sources/doc/BUILD_EN.md`.
 The C++ runtime is linked statically: the executable depends only on Windows
 system DLLs — which matters for a tool run from a USB stick on a machine one must
 not install anything on. The registry hives are read by WAC's own reader
@@ -1089,7 +1090,7 @@ cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
   it never does, the evidence (import table of `WAC.exe`, guards of the build)
   and the validation procedure, including the VM cycle's witness files
   (`vmtest/harmlessness.ps1`).
-- `sources/doc/BUILD-LINUX_EN.md` (French: `BUILD-LINUX_FR.md`) — cross-compilation
+- `sources/doc/BUILD_EN.md` (French: `BUILD_FR.md`) — building on Linux or Windows,
   details, the guards of the build, `bin`, releasing with `bump-version.sh`.
 - `sources/wac.yml` — the reference configuration, built into `WAC.exe`
   (`--write-config` writes it) and copied to `bin`.

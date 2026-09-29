@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
-# Builds WAC.exe from Linux (MinGW-w64 cross-compilation), with no Windows machine.
+# Builds WAC.exe with MinGW-w64 — the one build procedure, the same on Linux and
+# on Windows.
+#
+#   Linux  : cross-compilation, no Windows machine needed.
+#            Prerequisites: packages  g++-mingw-w64-x86-64  binutils-mingw-w64-x86-64
+#            mingw-w64-tools
+#   Windows: the MSYS2 "MINGW64" shell (https://www.msys2.org).
+#            Prerequisites: pacman -S --needed mingw-w64-x86_64-gcc
+#            mingw-w64-x86_64-binutils libiconv git
 #
 # Produces a self-contained exe (static C++ runtime) that depends only on the
 # Windows system DLLs. The offline registry reader is WAC's own
 # (offline_registry.cpp): offreg.dll is no longer needed.
 #
-# Prerequisites: packages  g++-mingw-w64-x86-64  binutils-mingw-w64-x86-64  mingw-w64-tools
 # Usage: ./build-windows.sh [--clean] [--test]
 set -euo pipefail
 
@@ -14,9 +21,32 @@ SRC="$ROOT/sources"
 TP="$ROOT/third_party"
 BUILD="$ROOT/build-windows"
 
-CXX=x86_64-w64-mingw32-g++
-WINDRES=x86_64-w64-mingw32-windres
-command -v "$CXX" >/dev/null || { echo "MinGW-w64 missing: apt install g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-tools" >&2; exit 1; }
+# --- Toolchain ----------------------------------------------------------------
+# Chosen by the system, never by fallback: on Linux an unprefixed g++ is the
+# native compiler, which would build a Linux program. MINGW64 only, not UCRT64:
+# the UCRT runtime would change WAC.exe's imports (api-ms-win-crt-*.dll instead
+# of msvcrt.dll), which the harmlessness file lists.
+case "$(uname -s)" in
+  Linux)
+    TOOL_PREFIX=x86_64-w64-mingw32-
+    MISSING="apt install g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-tools" ;;
+  MINGW64_NT*)
+    TOOL_PREFIX=
+    MISSING="pacman -S --needed mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils libiconv git" ;;
+  *)
+    echo "Unsupported system $(uname -s): build on Linux, or in the MSYS2 MINGW64 shell on Windows." >&2
+    exit 1 ;;
+esac
+CXX=${TOOL_PREFIX}g++
+CC=${TOOL_PREFIX}gcc
+WINDRES=${TOOL_PREFIX}windres
+OBJDUMP=${TOOL_PREFIX}objdump
+for tool in "$CXX" "$CC" "$WINDRES" "$OBJDUMP" iconv; do
+  command -v "$tool" >/dev/null || { echo "$tool missing: $MISSING" >&2; exit 1; }
+done
+# The compiler must produce 64-bit Windows programs, whatever the shell.
+[[ "$("$CXX" -dumpmachine)" == x86_64-w64-mingw32 ]] \
+  || { echo "$CXX does not target x86_64-w64-mingw32 ($("$CXX" -dumpmachine)): $MISSING" >&2; exit 1; }
 
 [[ "${1:-}" == "--clean" ]] && rm -rf "$BUILD"
 mkdir -p "$BUILD"
@@ -47,7 +77,6 @@ iconv -f UTF-16LE -t UTF-8 "$SRC/WAC.rc" | tr -d '\r' | sed -E 's#\\+#/#g' > "$B
 # UNMODIFIED, compiled as C. The version macros are the ones autotools would
 # put in config.h. -Wall -Wextra apply here too: they build without a warning.
 echo "== libyaml =="
-CC=x86_64-w64-mingw32-gcc
 YAML="$TP/libyaml-0.2.5"
 YAML_FLAGS=(-O2 -Wall -Wextra -DYAML_DECLARE_STATIC -DYAML_VERSION_MAJOR=0 -DYAML_VERSION_MINOR=2
   -DYAML_VERSION_PATCH=5 '-DYAML_VERSION_STRING="0.2.5"' -I"$YAML/include")
@@ -150,7 +179,7 @@ fi
 
 echo
 echo "Executable: $BUILD/WAC.exe"
-x86_64-w64-mingw32-objdump -p "$BUILD/WAC.exe" | grep -qiE 'libstdc|libgcc|winpthread' \
+"$OBJDUMP" -p "$BUILD/WAC.exe" | grep -qiE 'libstdc|libgcc|winpthread' \
   && echo "WARNING: MinGW runtime dependency detected!" \
   || echo "Static C++ runtime: self-contained exe (Windows system DLLs only)."
 
@@ -159,9 +188,9 @@ x86_64-w64-mingw32-objdump -p "$BUILD/WAC.exe" | grep -qiE 'libstdc|libgcc|winpt
 # the output depend on the machine running WAC. The SIDs are named offline
 # from the hives (sources/account_names.cpp). A build that imports them fails.
 FORBIDDEN='LookupAccountSid|LookupAccountName|LsaLookupSids|LsaLookupNames'
-if x86_64-w64-mingw32-objdump -p "$BUILD/WAC.exe" | grep -qE "\\b($FORBIDDEN)"; then
+if "$OBJDUMP" -p "$BUILD/WAC.exe" | grep -qE "\\b($FORBIDDEN)"; then
   echo "ERROR: WAC.exe imports a name-resolution function that queries the domain:"
-  x86_64-w64-mingw32-objdump -p "$BUILD/WAC.exe" | grep -E "\\b($FORBIDDEN)"
+  "$OBJDUMP" -p "$BUILD/WAC.exe" | grep -E "\\b($FORBIDDEN)"
   exit 1
 fi
 echo "No network name resolution imported ($FORBIDDEN)."
@@ -173,28 +202,12 @@ echo "No network name resolution imported ($FORBIDDEN)."
 # network state (artefacts.network) reads the TCP/IP stack's tables through
 # iphlpapi, loaded dynamically too, and only when that artefact is asked for.
 NETWORK='winhttp\.dll|wininet\.dll|ws2_32\.dll|wsock32\.dll|iphlpapi\.dll'
-if x86_64-w64-mingw32-objdump -p "$BUILD/WAC.exe" | grep -iE "DLL Name: ($NETWORK)" >/dev/null; then
+if "$OBJDUMP" -p "$BUILD/WAC.exe" | grep -iE "DLL Name: ($NETWORK)" >/dev/null; then
   echo "ERROR: WAC.exe imports a network library statically:"
-  x86_64-w64-mingw32-objdump -p "$BUILD/WAC.exe" | grep -iE "DLL Name: ($NETWORK)"
+  "$OBJDUMP" -p "$BUILD/WAC.exe" | grep -iE "DLL Name: ($NETWORK)"
   exit 1
 fi
 echo "No network library imported."
-
-# --- The Visual Studio project knows every source ----------------------------
-# This script finds the sources by itself; WAC.vcxproj does not, and a file
-# forgotten there broke the MSVC build for several commits, unnoticed — 22
-# files were missing when this check came. Refused, not warned.
-UNLISTED=$(cd "$SRC" && for f in $(ls *.cpp *.h | grep -v '_test\.cpp$'); do
-  grep -q "Include=\"$f\"" WAC.vcxproj || echo "$f"
-done)
-for c in api reader scanner parser; do
-  grep -q "libyaml-0.2.5\\\\src\\\\$c.c" "$SRC/WAC.vcxproj" || UNLISTED="$UNLISTED libyaml/$c.c"
-done
-if [[ -n "${UNLISTED// }" ]]; then
-  echo "ERROR: missing from sources/WAC.vcxproj (and its .filters): $(echo $UNLISTED)"
-  exit 1
-fi
-echo "Visual Studio project: every source listed."
 
 # --- bin: the last build, ready to download ------------------------------
 # The executables, the reference configuration (sources/wac.yml, also built into

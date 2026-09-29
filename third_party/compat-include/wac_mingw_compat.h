@@ -1,36 +1,25 @@
-/* wac_mingw_compat.h — force-include pour build MinGW (cross-compil Linux).
- * Comble les écarts MSVC→MinGW sans modifier la logique de WAC.
- * Injecté via -include ; ne rien mettre ici de spécifique à MSVC.
+/* wac_mingw_compat.h — force-included by build-windows.sh (-include), on Linux
+ * and in MSYS2 alike. Fills the gaps between the Windows SDK, which WAC's code
+ * was first written against, and the MinGW-w64 headers, without changing any
+ * of WAC's logic. Only what the sources actually use: a definition nothing
+ * uses any more is removed.
  */
 #pragma once
-#include <math.h>       /* pow() utilisé non qualifié dans oleparser.hpp   */
-#include <cmath>
 #include <cstdlib>
-#include <filesystem>   /* std::filesystem::path pour les fstream à chemin large */
+#include <filesystem>   /* std::filesystem::path for wide-path fstreams */
 
-/* Constante NDIS absente des winerror.h MinGW (utilisée comme tag de log). */
+/* NDIS constant missing from MinGW's winerror.h (used as a log tag). */
 #ifndef ERROR_NDIS_BAD_VERSION
 #define ERROR_NDIS_BAD_VERSION 0x80340004L
 #endif
 
-/* Constantes de type de service absentes des winsvc.h/winnt.h MinGW (winnt.h). */
+/* Service type flags missing from MinGW's winnt.h, named by trans_id.cpp. */
 #ifndef SERVICE_USER_SERVICE
 #define SERVICE_USER_SERVICE          0x00000040
 #endif
 #ifndef SERVICE_USERSERVICE_INSTANCE
 #define SERVICE_USERSERVICE_INSTANCE  0x00000080
 #endif
-#ifndef SERVICE_USER_SHARE_PROCESS
-#define SERVICE_USER_SHARE_PROCESS    0x00000060  /* USER_SERVICE | WIN32_SHARE_PROCESS */
-#endif
-#ifndef SERVICE_USER_OWN_PROCESS
-#define SERVICE_USER_OWN_PROCESS      0x00000050  /* USER_SERVICE | WIN32_OWN_PROCESS   */
-#endif
 #ifndef SERVICE_PKG_SERVICE
 #define SERVICE_PKG_SERVICE           0x00000200
-#endif
-
-/* Valeur d'énumération TASK_TRIGGER_TYPE2 absente de mingw taskschd.h. */
-#ifndef TASK_TRIGGER_CUSTOM_TRIGGER_01
-#define TASK_TRIGGER_CUSTOM_TRIGGER_01 12
 #endif
