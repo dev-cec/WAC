@@ -44,9 +44,8 @@ Remplace `TODO.txt`.
 |---|---|---|---|---|
 | [B-005](B-005-mft-usn-autres-volumes.md) | $MFT et $UsnJrnl de chaque volume NTFS fixe | à faire | P2 | faible |
 | [B-006](B-006-defender-detections.md) | Defender : historique des détections et quarantaine | à faire | P2 | moyen |
-| [B-007](B-007-persistance-etendue.md) | Persistance étendue (registre, BITS) | à faire | P1 | moyen |
 | [B-008](B-008-wmi.md) | Abonnements WMI (dépôt CIM) | à faire | P1 | fort |
-| [B-009](B-009-srum-ese.md) | SRUM et Windows.edb (lecteur ESE) | à faire | P2 | fort |
+| [B-009](B-009-srum-ese.md) | SRUM, Windows.edb et tâches BITS (lecteur ESE) | à faire | P2 | fort |
 | [B-010](B-010-activitiescache.md) | Chronologie Windows (ActivitiesCache.db) | à faire | P3 | fort |
 | [B-011](B-011-rdp-cache.md) | Cache bitmap RDP et connexions RDP sortantes | à faire | P3 | moyen |
 | [B-012](B-012-lot2-registre.md) | Lot 2 : registre utilisateur et système | à faire | P2 | faible |

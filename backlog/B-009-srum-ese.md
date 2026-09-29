@@ -24,6 +24,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [ ] Lecteur ESE (pages, arbres B, colonnes longues)
 - [ ] Tables SRUM
 - [ ] Windows.edb
+- [ ] Tâches BITS (qmgr.db, reportées de B-007) : persistance par téléchargement planifié
 
 ## Journal
-- (vide)
+- 2026-09-29 : les tâches BITS (qmgr.db) rejoignent cette fiche, faute de lecteur ESE dans B-007.
