@@ -10,7 +10,8 @@
  *  WHERE IT IS READ. Machine-wide in SOFTWARE
  *  (`Microsoft\Windows\CurrentVersion\Run` and `RunOnce`), and per user in
  *  each NTUSER.DAT (`Software\Microsoft\Windows\CurrentVersion\Run`,
- *  `RunOnce`), which tells whose logon starts the program.
+ *  `RunOnce`), which tells whose logon starts the program, and in the DEFAULT
+ *  hive, the profile of the system account.
  *
  *  The key's last write time dates the last change to the whole key, not to one
  *  value: it bounds when the entry appeared, it does not date it.
@@ -32,11 +33,13 @@
 /*! One autostart entry: a command Windows runs at logon. */
 struct Run {
 public:
+	std::wstring Hive = L"";    //!< the hive it comes from: SOFTWARE, DEFAULT or NTUSER.DAT
 	std::wstring Sid = L"";     //!< SID of the user the entry belongs to, empty if machine-wide
 	std::wstring SidName = L"";	//!< name of that user
 	std::wstring Key = L"";     //!< the key it comes from: `Run` or `RunOnce`
 	std::wstring Name = L"";    //!< name of the value, which the entry chooses freely
-	std::wstring Value = L"";   //!< the command line started
+	std::wstring Type = L"";    //!< REG_SZ, or REG_EXPAND_SZ: the command holds %variables% Windows expands
+	std::wstring Value = L"";   //!< the command line started, as written
 	FILETIME lastWriteTimeUtc = { 0 }; //!< last write to the KEY, UTC (the local time is derived at output)
 
 	/*! Converts the entry to JSON.
@@ -52,7 +55,7 @@ struct Runs {
 public:
 	std::vector<Run> runs;  //!< the entries, in the order they were read
 
-	/*! Reads the four keys: SOFTWARE, then each user's NTUSER.DAT.
+	/*! Reads the keys: SOFTWARE, DEFAULT, then each user's NTUSER.DAT.
 	 *  @return S_OK, or the failure of the last read attempted. */
 	HRESULT getData();
 
