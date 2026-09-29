@@ -20,7 +20,7 @@ const wchar_t* HIVE_PATCH  = L"Change of 8 bytes in the base block of a COPIED h
 const wchar_t* HIVE_REPLAY  = L"Application of the transaction logs to the COPIED hive, "
                               L"never to the original one. The original content of every replaced page "
                               L"is kept in an undo journal: the raw copy stays "
-                              L"reconstructible a l'octet.";
+                              L"reconstructible byte for byte.";
 const wchar_t* SCM          = L"A single read-only enumeration of the service manager "
                               L"(EnumServicesStatusExW), to read the current state. No "
                               L"handle opened service by service: the configuration comes "
