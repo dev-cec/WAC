@@ -136,7 +136,7 @@ bool LoadConfiguration(const std::wstring& path, AppliConf& conf, ConfigurationF
 }
 
 std::string DefaultConfiguration() {
-	// WAC/wac.yml, built into the executable (RCDATA): one source for the file WAC writes and the one WAC/bin holds.
+	// WAC/wac.yml, built into the executable (RCDATA): one source for the file WAC writes and the one bin holds.
 	HRSRC found = FindResourceW(nullptr, MAKEINTRESOURCEW(IDR_DEFAULT_CONFIGURATION), MAKEINTRESOURCEW(10));   // RT_RCDATA
 	HGLOBAL loaded = found ? LoadResource(nullptr, found) : nullptr;
 	const char* bytes = loaded ? static_cast<const char*>(LockResource(loaded)) : nullptr;

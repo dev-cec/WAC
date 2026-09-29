@@ -53,7 +53,7 @@ bool LoadConfiguration(const std::wstring& path, AppliConf& conf, ConfigurationF
 
 /*! @return the reference configuration, commented — what --write-config
  *  writes: WAC/wac.yml, built into the executable as a resource (see WAC.rc),
- *  the file build-windows.sh also copies to WAC/bin; empty if the resource is
+ *  the file build-windows.sh also copies to bin; empty if the resource is
  *  missing */
 std::string DefaultConfiguration();
 

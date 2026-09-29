@@ -323,18 +323,18 @@ d'analyse, sans machine Windows.
 
 \begin{lstlisting}
 $ ./build-windows.sh
-$ sha256sum -c WAC/bin/SHA256SUMS
+$ sha256sum -c bin/SHA256SUMS
 \end{lstlisting}
 
 Attendu : la compilation se termine sans erreur, sans avertissement, et
 affiche les trois contrôles : « Static C++ runtime », « No network name
 resolution imported », « No network library imported ». \fichier{WAC.exe}
-compilé et celui de \fichier{WAC/bin} ont la même empreinte.
+compilé et celui de \fichier{bin} ont la même empreinte.
 
 \section{Étape 2 : la table des imports}
 
 \begin{lstlisting}
-$ x86_64-w64-mingw32-objdump -p WAC/bin/WAC.exe | grep -E 'DLL Name|^\s+[0-9a-f]+\s+[0-9]+ '
+$ x86_64-w64-mingw32-objdump -p bin/WAC.exe | grep -E 'DLL Name|^\s+[0-9a-f]+\s+[0-9]+ '
 \end{lstlisting}
 
 Attendu : les cinq bibliothèques et les fonctions de la

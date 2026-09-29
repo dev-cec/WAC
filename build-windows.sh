@@ -196,7 +196,7 @@ if [[ -n "${UNLISTED// }" ]]; then
 fi
 echo "Visual Studio project: every source listed."
 
-# --- WAC/bin: the last build, ready to download ------------------------------
+# --- bin: the last build, ready to download ------------------------------
 # The executables, the reference configuration (WAC/wac.yml, also built into
 # WAC.exe) and the scripts that verify a collection, copied where the
 # repository keeps them, and staged — not committed: the commit stays a
@@ -205,7 +205,7 @@ echo "Visual Studio project: every source listed."
 # with what came in the same folder, from Windows (.ps1) or from a Linux
 # investigation machine (.sh). Their source stays beside the user manual,
 # which lists them.
-BIN="$SRC/bin"
+BIN="$ROOT/bin"
 VERIFICATION_SCRIPTS=(verify-exhibits.ps1 verifier-consigne.ps1 verify-exhibits.sh verifier-consigne.sh)
 mkdir -p "$BIN"
 for f in WAC.exe raw_hive_test.exe; do
@@ -219,7 +219,7 @@ done
     "${VERIFICATION_SCRIPTS[@]}" > SHA256SUMS )
 if git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   git -C "$ROOT" add -f "$BIN"
-  echo "WAC/bin updated and staged: $(cd "$BIN" && ls | tr '\n' ' ')"
+  echo "bin updated and staged: $(cd "$BIN" && ls | tr '\n' ' ')"
 else
-  echo "WAC/bin updated: $(cd "$BIN" && ls | tr '\n' ' ')"
+  echo "bin updated: $(cd "$BIN" && ls | tr '\n' ' ')"
 fi

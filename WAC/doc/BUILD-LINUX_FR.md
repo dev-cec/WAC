@@ -32,13 +32,13 @@ sudo apt-get install -y g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64
 5. Vérifie les gardes : aucune bibliothèque réseau ni résolution de noms
    importée, et **chaque source listée dans `WAC.vcxproj`** (refus sinon).
 6. Copie `WAC.exe`, `raw_hive_test.exe`, `wac.yml` et `SHA256SUMS` dans
-   `WAC/bin` et les ajoute à l'index git (sans commit).
+   `bin` et les ajoute à l'index git (sans commit).
 
 ## Version et publication
 Format `<majeur>.<mineure>.<correctif>`, écrit dans `WAC/WAC.rc` seulement
 (propriétés de l'exécutable ; WAC la relit à l'exécution). Pour publier :
 commiter les sources, lancer `./bump-version.sh --bugfix|--minor|--major`
-(incrémente, recompile, indexe `WAC.rc` et `WAC/bin`, régénère la documentation du code `WAC/doc/html` avec la même version), commiter.
+(incrémente, recompile, indexe `WAC.rc` et `bin`, régénère la documentation du code `WAC/doc/html` avec la même version), commiter.
 
 ## Briques de compatibilité (dossier `third_party/`)
 | Élément | Rôle |

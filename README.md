@@ -150,7 +150,7 @@ what it is and, where it matters, why it is trustworthy.
 
 ## ▶️ USAGE
 
-**Ready to use:** `WAC/bin` holds the last build — `WAC.exe`, the reference
+**Ready to use:** `bin` holds the last build — `WAC.exe`, the reference
 `wac.yml`, the scripts that verify a collection (`verify-exhibits.ps1|.sh`,
 French messages: `verifier-consigne.ps1|.sh`) and `SHA256SUMS` to check them
 all. Copy `WAC.exe` and `wac.yml` to the collection key; `build-windows.sh`
@@ -762,7 +762,7 @@ application, minor for features added, bugfix for fixes. It is written in one
 place, `WAC/WAC.rc` (shown in the executable's properties, read by WAC at run
 time, recorded in `investigation.json`). To release: commit the sources, run
 `./bump-version.sh --bugfix|--minor|--major` (it rebuilds and stages `WAC.rc`
-and `WAC/bin`), commit. The build is reproducible: the same sources give the
+and `bin`), commit. The build is reproducible: the same sources give the
 same `WAC.exe`, byte for byte (no link date in the PE header).
 
 ### Visual Studio 2022 (Windows)
@@ -1090,9 +1090,9 @@ cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
   and the validation procedure, including the VM cycle's witness files
   (`vmtest/harmlessness.ps1`).
 - `WAC/doc/BUILD-LINUX_EN.md` (French: `BUILD-LINUX_FR.md`) — cross-compilation
-  details, the guards of the build, `WAC/bin`, releasing with `bump-version.sh`.
+  details, the guards of the build, `bin`, releasing with `bump-version.sh`.
 - `WAC/wac.yml` — the reference configuration, built into `WAC.exe`
-  (`--write-config` writes it) and copied to `WAC/bin`.
+  (`--write-config` writes it) and copied to `bin`.
 - `third_party/libyaml-0.2.5/VENDORED.md` — origin, fingerprint and reasons of
   WAC's only third-party library.
 - Code documentation (Doxygen), generated in `WAC/doc/html` from the source

@@ -6,7 +6,7 @@
 # The version is written in ONE place, WAC/WAC.rc (FILEVERSION, PRODUCTVERSION
 # and their texts): Windows shows it in the executable's properties, and WAC
 # reads it there at run time. The usual cycle: commit the sources, run this,
-# commit what it staged (WAC.rc, WAC/bin, and the documents that state the
+# commit what it staged (WAC.rc, bin, and the documents that state the
 # version). It commits nothing itself.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -61,4 +61,4 @@ if command -v doxygen >/dev/null; then
 else
   echo "doxygen absent: WAC/doc/html not regenerated"
 fi
-echo "Staged: WAC/WAC.rc, WAC/bin, README.md, the manuals and WAC/doc/html. Commit them: git commit -m \"chore : version $VERSION\""
+echo "Staged: WAC/WAC.rc, bin, README.md, the manuals and WAC/doc/html. Commit them: git commit -m \"chore : version $VERSION\""

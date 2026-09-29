@@ -32,13 +32,13 @@ sudo apt-get install -y g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64
 5. Checks the guards: no network library nor name resolution imported, and
    **every source listed in `WAC.vcxproj`** (refused otherwise).
 6. Copies `WAC.exe`, `raw_hive_test.exe`, `wac.yml` and `SHA256SUMS` to
-   `WAC/bin` and stages them (no commit).
+   `bin` and stages them (no commit).
 
 ## Version and release
 Format `<major>.<minor>.<bugfix>`, written in `WAC/WAC.rc` only (executable's
 properties; WAC reads it back at run time). To release: commit the sources,
 run `./bump-version.sh --bugfix|--minor|--major` (increments, rebuilds,
-stages `WAC.rc` and `WAC/bin`, regenerates the code documentation `WAC/doc/html` with the same version), commit.
+stages `WAC.rc` and `bin`, regenerates the code documentation `WAC/doc/html` with the same version), commit.
 
 ## Compatibility pieces (`third_party/` folder)
 | Item | Role |
