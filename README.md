@@ -759,7 +759,7 @@ results are worth stating:
 
 **Version**: `<major>.<minor>.<bugfix>` — major for a rework of the
 application, minor for features added, bugfix for fixes. It is written in one
-place, `WAC/WAC.rc` (shown in the executable's properties, read by WAC at run
+place, `sources/WAC.rc` (shown in the executable's properties, read by WAC at run
 time, recorded in `investigation.json`). To release: commit the sources, run
 `./bump-version.sh --bugfix|--minor|--major` (it rebuilds and stages `WAC.rc`
 and `bin`), commit. The build is reproducible: the same sources give the
@@ -778,7 +778,7 @@ same `WAC.exe`, byte for byte (no link date in the PE header).
 The C++ runtime is linked statically: the executable depends only on Windows
 system DLLs — which matters for a tool run from a USB stick on a machine one must
 not install anything on. The registry hives are read by WAC's own reader
-(`WAC/offline_registry.cpp`), linked into the executable: Microsoft's
+(`sources/offline_registry.cpp`), linked into the executable: Microsoft's
 `offreg.dll` is no longer used — a DLL that recent Windows versions ship in
 `System32`, so WAC used to read the evidence through a library of the examined
 machine. The reader keeps offreg's functions and contract; `offline_registry_test`
@@ -821,13 +821,13 @@ are what caught real errors in valid JSON: Prefetch path hashes against their ow
 file names, `X`/`XUtc` pairs holding the same wall-clock time, sessions starting
 before boot, impossible service states, `$MFT` references pointing at reserved
 entries. See `vmtest/README.md` (French: `vmtest/README_FR.md`), and the
-validation report (`WAC/doc/validation/`) for the whole list with its results.
+validation report (`sources/doc/validation/`) for the whole list with its results.
 
 ### Testing the EVTX parser outside Windows
 
 A VM only ever produces its own logs: one Windows version, all of them clean.
 The BinXML decoder needs the opposite — old logs, forwarded logs, logs closed
-abruptly, logs with a damaged chunk. `WAC/evtx_test.cpp` exists for that. It is
+abruptly, logs with a damaged chunk. `sources/evtx_test.cpp` exists for that. It is
 excluded from the build by the `_test.cpp` pattern and runs under `wine`, so a
 journal can be replayed on the development machine:
 
@@ -858,7 +858,7 @@ wrong (at 56 bytes the length no longer fits in the block and must move to the
 next one).
 
 ```bash
-cd WAC && g++ -std=c++17 -I. sha.cpp sha_test.cpp -o /tmp/sha_test && /tmp/sha_test
+cd sources && g++ -std=c++17 -I. sha.cpp sha_test.cpp -o /tmp/sha_test && /tmp/sha_test
 ```
 
 `lznt1_test.cpp` checks the NTFS decompressor against **Microsoft's own
@@ -883,7 +883,7 @@ mark substitution, including that a mark with no data **stays visible** —
 erasing it would suggest a complete sentence.
 
 ```bash
-cd WAC && g++ -std=c++17 -I. pe_resource.cpp wevt.cpp wevt_test.cpp -o /tmp/wevt_test
+cd sources && g++ -std=c++17 -I. pe_resource.cpp wevt.cpp wevt_test.cpp -o /tmp/wevt_test
 /tmp/wevt_test gpsvc.dll fr-FR/gpsvc.dll.mui "{aea1b4fa-97d1-45f2-a64c-4d69fffd92c9}" 1002 4001
 ```
 
@@ -1059,43 +1059,43 @@ cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
 ## 📚 DOCUMENTATION
 
 - **User manual**, in English and French, maintained together:
-  `WAC/doc/user/documentation_EN.pdf` and `WAC/doc/user/documentation_FR.pdf`,
+  `sources/doc/user/documentation_EN.pdf` and `sources/doc/user/documentation_FR.pdf`,
   built from the `.tex` files beside them with `latexmk -xelatex` (fonts: Noto
   Sans, DejaVu Sans Mono). They cover preparing a collection, the options,
   reading the output, verifying the exhibit store and the traces left on the
   examined machine. `verify-exhibits.ps1|.sh` (English) and
   `verifier-consigne.ps1|.sh` (French) check the seal and every exhibit of a
-  collection, from Windows or Linux; `WAC/verify_exhibits_test.sh` tests the
+  collection, from Windows or Linux; `sources/verify_exhibits_test.sh` tests the
   two `.sh` on forged collections. The English cover
-  page, `WAC/doc/cover_EN.png`, is generated from the French one by
-  `WAC/doc/translate-cover.py`, which repaints its text in the same fonts and
+  page, `sources/doc/cover_EN.png`, is generated from the French one by
+  `sources/doc/translate-cover.py`, which repaints its text in the same fonts and
   layout.
-- **Testing guide**, in English and French: `WAC/doc/tests/testing_EN.pdf` and
-  `WAC/doc/tests/testing_FR.pdf`. How to run each test by hand — the VM cycle
+- **Testing guide**, in English and French: `sources/doc/tests/testing_EN.pdf` and
+  `sources/doc/tests/testing_FR.pdf`. How to run each test by hand — the VM cycle
   and its cross-checks, the format harnesses, the robustness harnesses — what
   each one proves and does not prove, and how to read a failure. Its covers are
-  derived from the manual's by `WAC/doc/retitle-cover.py`, which changes only
-  the title. Every document shares one layout, `WAC/doc/wac-style.tex`.
+  derived from the manual's by `sources/doc/retitle-cover.py`, which changes only
+  the title. Every document shares one layout, `sources/doc/wac-style.tex`.
 - **Validation report**, in English and French:
-  `WAC/doc/validation/validation_EN.pdf` and `validation_FR.pdf`. What
+  `sources/doc/validation/validation_EN.pdf` and `validation_FR.pdf`. What
   establishes WAC's quality: the checks WAC runs itself during every
   collection, the test programs and their judges, the VM cycle and the
   cross-checks of `check-json.py`, the cross-checks on a real collection — with
   the reference result of each, the defects each one caught, and the limits of
   what they guarantee. Same template, cover retitled by `retitle-cover.py`.
 - **Harmlessness file**, in English and French:
-  `WAC/doc/harmlessness/harmlessness_EN.pdf` and `harmlessness_FR.pdf`. What
+  `sources/doc/harmlessness/harmlessness_EN.pdf` and `harmlessness_FR.pdf`. What
   WAC does to the examined machine: every trace, operation by operation, what
   it never does, the evidence (import table of `WAC.exe`, guards of the build)
   and the validation procedure, including the VM cycle's witness files
   (`vmtest/harmlessness.ps1`).
-- `WAC/doc/BUILD-LINUX_EN.md` (French: `BUILD-LINUX_FR.md`) — cross-compilation
+- `sources/doc/BUILD-LINUX_EN.md` (French: `BUILD-LINUX_FR.md`) — cross-compilation
   details, the guards of the build, `bin`, releasing with `bump-version.sh`.
-- `WAC/wac.yml` — the reference configuration, built into `WAC.exe`
+- `sources/wac.yml` — the reference configuration, built into `WAC.exe`
   (`--write-config` writes it) and copied to `bin`.
 - `third_party/libyaml-0.2.5/VENDORED.md` — origin, fingerprint and reasons of
   WAC's only third-party library.
-- Code documentation (Doxygen), generated in `WAC/doc/html` from the source
+- Code documentation (Doxygen), generated in `sources/doc/html` from the source
   comments; `bump-version.sh` regenerates it.
 
 The design rationale lives **in the code**, next to what it explains: each

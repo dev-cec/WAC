@@ -381,10 +381,10 @@ vmtest/results/
 
 # Fichiers auxiliaires de Doxygen, regeneres a chaque passe. Le HTML lui-meme
 # reste versionne (c'est la documentation livree), mais pas ces index binaires.
-WAC/doc/html/*.tmp
-WAC/doc/*.tag
+sources/doc/html/*.tmp
+sources/doc/*.tag
 
-# Sortie doxygen parasite a la racine : la configuration ecrit dans WAC/doc,
+# Sortie doxygen parasite a la racine : la configuration ecrit dans sources/doc,
 # mais un lancement depuis un autre repertoire courant depose une copie des
 # ressources HTML ici. Rien a versionner.
 /doc/

@@ -89,7 +89,7 @@ report said "collection probably incomplete" — which was true — but WAC had
 finished. The collection log (`run.log`, which ends with `END, Time elapsed`)
 settles it. Timeout raised to 30 min; to revisit if the collection gets longer.
 
-**Microsoft authenticity is confronted with Windows.** `WAC/authenticode_test.cpp`
+**Microsoft authenticity is confronted with Windows.** `sources/authenticode_test.cpp`
 verifies the catalogs of a folder, then gives a verdict per file; built for
 Windows, it runs in the VM on the binaries collected by a collection, and its
 verdicts are compared with `Get-AuthenticodeSignature` on the same files. Out of
@@ -107,17 +107,17 @@ binaries, extracted after sealing — stayed in the exhibit store identified by
 nothing, while every other check (seal, fingerprints, counts) was green: they
 only looked at the manifest itself.
 
-**The exhibit store is validated outside the VM too.** `WAC/consigne_test.cpp`
+**The exhibit store is validated outside the VM too.** `sources/consigne_test.cpp`
 replays the production chain (fingerprints, manifest, verified copy, replay) on
 hives given as arguments, and checks what no compilation reveals: that the
 exhibit store stays byte-identical while the working copy is modified.
-`WAC/sha_test.cpp` confronts the fingerprints with the FIPS 180-4 vectors and
+`sources/sha_test.cpp` confronts the fingerprints with the FIPS 180-4 vectors and
 with lengths 55 to 128, which exercise the padding — the one place where an
 otherwise correct implementation goes wrong. Both build natively on Linux.
 
 **The EVTX parser is validated outside the VM.** BinXML decoding is too fragile
 to be tried only on the logs of a fresh VM, all written by the same Windows
-build and all clean. `WAC/evtx_test.cpp` (left out of the build by the
+build and all clean. `sources/evtx_test.cpp` (left out of the build by the
 `_test.cpp` pattern) reads an `.evtx` and returns either a summary or the XML of
 each record (`--dump`); it runs under `wine`, which makes it possible to
 confront it with real logs — deliberately damaged ones included — and to compare

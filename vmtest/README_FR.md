@@ -91,7 +91,7 @@ derniers JSON : le rapport disait « collecte probablement incomplète » — ce
 qui se termine par `END, Time elapsed`) tranche entre les deux. Timeout porté à
 30 min ; il faudra le revoir si la collecte s'allonge encore.
 
-**L'authenticité Microsoft se confronte à Windows.** `WAC/authenticode_test.cpp`
+**L'authenticité Microsoft se confronte à Windows.** `sources/authenticode_test.cpp`
 vérifie les catalogues d'un dossier puis rend un verdict par fichier ; compilé
 pour Windows, il tourne dans la VM sur les binaires prélevés par une collecte,
 et ses verdicts se comparent à ceux de `Get-AuthenticodeSignature` sur les mêmes
@@ -111,18 +111,18 @@ consigne sans rien qui les identifie, alors que tous les autres contrôles
 (sceau, empreintes, décomptes) étaient verts : ils ne portaient que sur le
 manifeste lui-même.
 
-**La consigne se valide hors VM elle aussi.** `WAC/consigne_test.cpp` rejoue la
+**La consigne se valide hors VM elle aussi.** `sources/consigne_test.cpp` rejoue la
 chaîne de production (empreintes, manifeste, copie vérifiée, rejeu) sur des
 ruches fournies en argument, et vérifie ce qu'aucune compilation ne révèle : que
 la consigne reste intacte octet pour octet pendant que le travail est modifié.
-`WAC/sha_test.cpp` confronte les empreintes aux vecteurs de FIPS 180-4 et aux
+`sources/sha_test.cpp` confronte les empreintes aux vecteurs de FIPS 180-4 et aux
 longueurs 55 à 128, qui exercent le remplissage — seul endroit où une
 implémentation correcte par ailleurs se trompe. Les deux compilent nativement
 sous Linux.
 
 **Le parseur EVTX se valide hors VM.** Le décodage BinXML est trop fragile pour
 n'être éprouvé que sur les journaux d'une VM neuve, tous écrits par la même
-version de Windows et tous propres. `WAC/evtx_test.cpp` (exclu du build par le
+version de Windows et tous propres. `sources/evtx_test.cpp` (exclu du build par le
 motif `_test.cpp`) lit un `.evtx` et rend soit un bilan, soit le XML de chaque
 enregistrement (`--dump`) ; il tourne sous `wine`, ce qui permet de le confronter
 à des journaux réels — dont des journaux volontairement abîmés — et de comparer

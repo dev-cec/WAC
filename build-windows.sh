@@ -10,7 +10,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SRC="$ROOT/WAC"
+SRC="$ROOT/sources"
 TP="$ROOT/third_party"
 BUILD="$ROOT/build-windows"
 
@@ -157,7 +157,7 @@ x86_64-w64-mingw32-objdump -p "$BUILD/WAC.exe" | grep -qiE 'libstdc|libgcc|winpt
 # Functions WAC must never import: resolving a name through them may QUERY THE
 # DOMAIN CONTROLLER — a trace of the collection on another machine — and makes
 # the output depend on the machine running WAC. The SIDs are named offline
-# from the hives (WAC/account_names.cpp). A build that imports them fails.
+# from the hives (sources/account_names.cpp). A build that imports them fails.
 FORBIDDEN='LookupAccountSid|LookupAccountName|LsaLookupSids|LsaLookupNames'
 if x86_64-w64-mingw32-objdump -p "$BUILD/WAC.exe" | grep -qE "\\b($FORBIDDEN)"; then
   echo "ERROR: WAC.exe imports a name-resolution function that queries the domain:"
@@ -191,13 +191,13 @@ for c in api reader scanner parser; do
   grep -q "libyaml-0.2.5\\\\src\\\\$c.c" "$SRC/WAC.vcxproj" || UNLISTED="$UNLISTED libyaml/$c.c"
 done
 if [[ -n "${UNLISTED// }" ]]; then
-  echo "ERROR: missing from WAC/WAC.vcxproj (and its .filters): $(echo $UNLISTED)"
+  echo "ERROR: missing from sources/WAC.vcxproj (and its .filters): $(echo $UNLISTED)"
   exit 1
 fi
 echo "Visual Studio project: every source listed."
 
 # --- bin: the last build, ready to download ------------------------------
-# The executables, the reference configuration (WAC/wac.yml, also built into
+# The executables, the reference configuration (sources/wac.yml, also built into
 # WAC.exe) and the scripts that verify a collection, copied where the
 # repository keeps them, and staged — not committed: the commit stays a
 # decision. The test executables stay in build-windows/tests.

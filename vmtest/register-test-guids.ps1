@@ -3,7 +3,7 @@
 # disabled scheduled task per GUID that references it as its COM handler.
 #
 # WHY. WAC names a GUID its table does not know from the examined machine's
-# own registrations (WAC/trans_id.cpp, evidenceGuidName): the machine's classes
+# own registrations (sources/trans_id.cpp, evidenceGuidName): the machine's classes
 # (SOFTWARE\Classes\CLSID), its known folders (Explorer\FolderDescriptions),
 # each user's classes (UsrClass.dat). A reference Windows — the test VM — has
 # nothing its table misses on purpose: these three entries make each source

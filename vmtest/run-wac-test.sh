@@ -433,7 +433,7 @@ if [[ $SPLIT -eq 1 ]]; then
 
   # The verification script shipped with the documentation, on this
   # collection: seal and every exhibit, the fingerprint-only ones apart.
-  $QGA write "$ROOT/WAC/doc/user/verify-exhibits.ps1" "$VMDIR\\verify-exhibits.ps1" >/dev/null
+  $QGA write "$ROOT/sources/doc/user/verify-exhibits.ps1" "$VMDIR\\verify-exhibits.ps1" >/dev/null
   if $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\verify-exhibits.ps1" \
        -Output "$VMDIR\\split" > "$OUTPUT/verify-exhibits.log" 2>&1; then
     echo "   ✅ verify-exhibits.ps1: $(grep -a 'verified,' "$OUTPUT/verify-exhibits.log" | tr -d '\r')"

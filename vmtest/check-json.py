@@ -1793,7 +1793,7 @@ def check_account_names(folder):
     controller for a SID the machine does not know — a trace of the collection
     on another machine — and returns the names in the language of the machine
     asking ("Système" for S-1-5-18). They are now read offline: SAM, well-known
-    SIDs, service SIDs, profiles (WAC/account_names.cpp). Checked here:
+    SIDs, service SIDs, profiles (sources/account_names.cpp). Checked here:
       - every local account and group named in the output carries the name
         Windows gives it (Get-LocalUser, Get-LocalGroup, fetched in the VM);
       - S-1-5-18 is "SYSTEM", its canonical name, whatever the language;
@@ -1853,7 +1853,7 @@ def check_guid_names(folder):
     or a folder installed on the examined machine came out as "Unmapped GUID" —
     a placeholder published as if it were the name; 18 COM handlers of the
     scheduled tasks of the test VM itself. They are now read in the examined
-    machine's hives (WAC/trans_id.cpp). run-wac-test.sh registers three GUIDs,
+    machine's hives (sources/trans_id.cpp). run-wac-test.sh registers three GUIDs,
     one per source (machine classes, user classes, known folders), each the
     COM handler of a disabled task: WAC must give exactly their names. And no
     output may carry the placeholder any more.
