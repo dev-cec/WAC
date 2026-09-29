@@ -69,7 +69,8 @@ Remplace `TODO.txt`.
 
 ## Réalisé
 
-Par lot, avec les commits principaux (le détail est dans `git log`).
+**Inventaire par domaine, avec les décisions et leurs raisons : [REALISE.md](REALISE.md)**
+— à lire avant de reprendre le projet. Ci-dessous, les lots dans l'ordre.
 
 | Période | Réalisé | Commits |
 |---|---|---|
