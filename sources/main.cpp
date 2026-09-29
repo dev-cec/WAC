@@ -43,6 +43,7 @@
 #include "startup_folders.h"
 #include "zone_identifiers.h"
 #include "security_hive.h"
+#include "persistence.h"
 #include "recent_docs.h"
 #include "jumplist_automatic.h"
 #include "jumplist_custom.h"
@@ -855,6 +856,11 @@ void convertArtefacts(bool systemAvailable) {
 		};
 		for (const auto& [file, label] : REGISTRY) requested(false, file, label, L"artefacts.registry");
 	}
+
+	/* Registry persistence beyond Run: read while SOFTWARE and CurrentControlSet
+	   are still open (a missing one leaves its rules unread, not failed). */
+	convertFileArtefact<Persistence>(conf.artefacts.persistence, "persistence.json", Text::ArtefactPersistence,
+	                                 L"artefacts.persistence", Text::StepPersistence);
 
 	/* SYSTEM INFORMATION, offline.
 	   OUTSIDE the single-exit block above, and not inside it: even without a

@@ -1328,6 +1328,40 @@ def check_small_file_artefacts(folder):
                f"run.json: {name} of the DEFAULT hive, REG_EXPAND_SZ, as written ({value})",
                f"run.json: {name} of the DEFAULT hive missing or different: {match[:1]}")
 
+    persistence = load(folder, "persistence.json")
+    if isinstance(persistence, list) and "ifeo" in reference:
+        def find(mechanism, key_part, value):
+            return [p for p in persistence if p.get("Mechanism") == mechanism
+                    and key_part.lower() in (p.get("Key") or "").lower() and p.get("Value") == value]
+        exe, debugger = reference["ifeo"].split("|", 1)
+        report(bool(find("IFEO Debugger", exe, debugger)) and bool(find("IFEO GlobalFlag", exe, "0x00000200")),
+               f"persistence.json: IFEO Debugger and GlobalFlag of {exe} found",
+               f"persistence.json: IFEO witness of {exe} missing")
+        exe, monitor = reference["silent"].split("|", 1)
+        report(bool(find("SilentProcessExit MonitorProcess", exe, monitor)),
+               f"persistence.json: SilentProcessExit MonitorProcess of {exe} found",
+               "persistence.json: SilentProcessExit witness missing")
+        guid, stub = reference["activesetup"].split("|", 1)
+        report(bool(find("Active Setup StubPath", guid, stub)), "persistence.json: Active Setup StubPath witness found",
+               "persistence.json: Active Setup witness missing")
+        sid, clsid, dll = reference["comhijack"].split("|", 2)
+        com = [p for p in find("COM InprocServer32 (user)", clsid, dll) if p.get("SID") == sid]
+        report(bool(com), f"persistence.json: COM hijack of {clsid} in the user's classes found",
+               "persistence.json: COM hijack witness missing")
+        userinit = [p.get("Value") for p in persistence if p.get("Mechanism") == "Winlogon Userinit"]
+        report(userinit == [reference.get("userinit")], f"persistence.json: Winlogon Userinit as Windows reads it ({reference.get('userinit')})",
+               f"persistence.json: Winlogon Userinit {userinit} / Windows {reference.get('userinit')}")
+        lsa = [p.get("Values") or [p.get("Value")] for p in persistence if p.get("Mechanism") == "LSA Security Packages"]
+        # An empty list (Windows 11's default) leaves the reference line empty, hence absent.
+        report(bool(lsa) and "|".join(v for v in lsa[0] if v) == reference.get("lsa_security", ""),
+               "persistence.json: LSA Security Packages as Windows reads them",
+               f"persistence.json: LSA Security Packages {lsa} / Windows {reference.get('lsa_security')}")
+        monitors = sorted(p["Key"].split("\\")[-1] + "=" + (p.get("Value") or "") for p in persistence if p.get("Mechanism") == "Print monitor")
+        expected = reference.get("monitors", "").split("|")
+        report(sorted(monitors, key=str.lower) == sorted(expected, key=str.lower),
+               f"persistence.json: the {len(monitors)} print monitors and their DLL as Windows reads them",
+               f"persistence.json: print monitors {monitors} / Windows {expected}")
+
     security = load(folder, "security.json")
     if isinstance(security, dict) and "secrets" in reference:
         # Compared as sets: PowerShell sorts without case, Python with it.

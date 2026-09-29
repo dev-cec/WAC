@@ -352,6 +352,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   startup_folders: true # dossiers de démarrage : ce qui s'exécute à l'ouverture de session
   zone_identifiers: true  # flux Zone.Identifier : d'où viennent les fichiers téléchargés
   security: true        # ruche SECURITY : noms des secrets LSA, connexions en cache, audit
+  persistence: true     # persistance du registre : IFEO, AppInit, Winlogon, LSA, COM…
 \end{lstlisting}
 
 \begin{itemize}
@@ -1034,6 +1035,18 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         dans le NTUSER.DAT de chaque profil (\champ{Hive}). \champ{Type}
         \texttt{REG\_EXPAND\_SZ} : la commande contient des variables
         (\texttt{\%SystemRoot\%}\ldots), données telles qu'écrites.
+  \item[\fichier{persistence.json}] persistance du registre au-delà des clés
+        Run : IFEO (\texttt{Debugger}, \texttt{GlobalFlag}), SilentProcessExit,
+        AppInit\_DLLs et AppCertDlls, Winlogon (\texttt{Shell},
+        \texttt{Userinit}, \texttt{Taskman}, \texttt{Notify}), paquets LSA,
+        moniteurs d'impression, \texttt{BootExecute}, Active Setup, assistants
+        NetSh, et détournements COM des classes de chaque utilisateur
+        (UsrClass.dat). Pour chaque valeur : mécanisme (\champ{Mechanism}),
+        ruche, clé, nom, type, valeur telle qu'écrite, dernière écriture de la
+        clé, et avec \opt{binary} les empreintes du fichier visé. Toutes les
+        valeurs sont données, celles de Windows comprises : distinguer
+        l'ajouté du défaut revient à l'analyse. Les tâches BITS ne sont pas
+        encore lues.
   \item[\fichier{startup\_folders.json}] contenu des dossiers de démarrage, de
         tous les utilisateurs (\champ{Scope} \texttt{AllUsers}) et de chaque
         profil (\texttt{User}, avec \champ{SID}) : chaque fichier, ses dates et

@@ -47,3 +47,4 @@ artefacts:
   startup_folders: true   # startup folders: what runs at logon
   zone_identifiers: true  # Zone.Identifier streams (Mark of the Web): where downloaded files came from
   security: true          # SECURITY hive: LSA secrets' names and dates, cached logons, audit policy (never a secret)
+  persistence: true       # registry persistence beyond Run: IFEO, AppInit_DLLs, Winlogon, LSA packages, COM hijacking…

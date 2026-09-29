@@ -491,7 +491,10 @@ witnesses placed by the cycle (PowerShell history, file sent to the recycle
   \fichier{setupapi.dev.log} counted by Windows / \fichier{setupapi.json};
   LSA secret names, \texttt{PolAdtEv} and \texttt{NL\$} slots read live by
   Windows / \fichier{security.json}; \texttt{REG\_EXPAND\_SZ} Run value of
-  the DEFAULT hive / \fichier{run.json} &
+  the DEFAULT hive / \fichier{run.json}; persistence witnesses (IFEO,
+  SilentProcessExit, Active Setup, the user's COM hijack) and Windows' own
+  values read live (Userinit, LSA packages, print monitors) /
+  \fichier{persistence.json} &
   check added with these artefacts \\
 DestList entries / jump list shortcuts & the first 15 entries of every list
   lost (573 shortcuts published out of 1,522) \\

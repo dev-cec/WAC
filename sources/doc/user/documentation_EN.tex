@@ -347,6 +347,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   startup_folders: true # startup folders: what runs at logon
   zone_identifiers: true  # Zone.Identifier streams: where downloaded files came from
   security: true        # SECURITY hive: LSA secret names, cached logons, audit
+  persistence: true     # registry persistence: IFEO, AppInit, Winlogon, LSA, COM…
 \end{lstlisting}
 
 \begin{itemize}
@@ -1014,6 +1015,17 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         the DEFAULT hive (the system account) and in each profile's NTUSER.DAT
         (\champ{Hive}). \champ{Type} \texttt{REG\_EXPAND\_SZ}: the command
         holds variables (\texttt{\%SystemRoot\%}\ldots), given as written.
+  \item[\fichier{persistence.json}] registry persistence beyond the Run keys:
+        IFEO (\texttt{Debugger}, \texttt{GlobalFlag}), SilentProcessExit,
+        AppInit\_DLLs and AppCertDlls, Winlogon (\texttt{Shell},
+        \texttt{Userinit}, \texttt{Taskman}, \texttt{Notify}), LSA packages,
+        print monitors, \texttt{BootExecute}, Active Setup, NetSh helpers, and
+        COM hijacking in each user's classes (UsrClass.dat). For each value:
+        mechanism (\champ{Mechanism}), hive, key, name, type, value as written,
+        the key's last write, and with \opt{binary} the fingerprints of the
+        file it names. Every value is given, Windows' own included: telling the
+        added from the default is the analysis's work. BITS jobs are not read
+        yet.
   \item[\fichier{startup\_folders.json}] content of the startup folders, of all
         users (\champ{Scope} \texttt{AllUsers}) and of each profile
         (\texttt{User}, with \champ{SID}): every file, its dates and

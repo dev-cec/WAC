@@ -16,6 +16,10 @@
 #   secrets, audit, nl_slots  the SECURITY hive read live by Windows (as
 #                SYSTEM): names of the LSA secrets, PolAdtEv in hexadecimal,
 #                number of NL$n slots -> security.json
+#   ifeo, silent, activesetup, comhijack  persistence witnesses (harmless:
+#                they name executables and DLLs that do not exist) -> persistence.json
+#   userinit, lsa_security, monitors  values Windows set itself, read live,
+#                to compare -> persistence.json
 #   setupapi     number of sections of setupapi.dev*.log now; the collection,
 #                later, finds at least as many -> setupapi.json
 #   mplog        number of Defender support logs -> defender_log.json
@@ -86,7 +90,34 @@ Write-Output ("audit=" + (($audit | ForEach-Object { $_.ToString('X2') }) -join 
 $slots = @((Get-Item 'HKLM:\SECURITY\Cache' -ErrorAction SilentlyContinue).Property | Where-Object { $_ -match '^NL\$\d+$' }).Count
 Write-Output "nl_slots=$slots"
 
-# 8. Reference counts of the logs Windows writes itself.
+# 8. Persistence witnesses. Harmless: they name programs and DLLs that do not
+#    exist, for an executable name nothing runs. Written before the first
+#    collection, as the Run value above.
+$ifeo = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\wac-ifeo-test.exe'
+New-Item -Force $ifeo | Out-Null
+New-ItemProperty -Force -Path $ifeo -Name 'Debugger' -Value 'C:\wactest\wac-debugger.exe' | Out-Null
+New-ItemProperty -Force -Path $ifeo -Name 'GlobalFlag' -PropertyType DWord -Value 0x200 | Out-Null
+Write-Output "ifeo=wac-ifeo-test.exe|C:\wactest\wac-debugger.exe"
+$silent = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SilentProcessExit\wac-ifeo-test.exe'
+New-Item -Force $silent | Out-Null
+New-ItemProperty -Force -Path $silent -Name 'MonitorProcess' -Value 'C:\wactest\wac-monitor.exe' | Out-Null
+Write-Output "silent=wac-ifeo-test.exe|C:\wactest\wac-monitor.exe"
+$setup = 'HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{0000FACE-0000-4AC0-8000-000000000001}'
+New-Item -Force $setup | Out-Null
+New-ItemProperty -Force -Path $setup -Name 'StubPath' -Value 'C:\wactest\wac-stub.exe /once' | Out-Null
+Write-Output "activesetup={0000FACE-0000-4AC0-8000-000000000001}|C:\wactest\wac-stub.exe /once"
+$wacSid = (New-Object Security.Principal.NTAccount 'wac').Translate([Security.Principal.SecurityIdentifier]).Value
+$com = "Registry::HKEY_USERS\$($wacSid)_Classes\CLSID\{0000FACE-0000-4AC0-8000-000000000002}\InprocServer32"
+New-Item -Force $com | Out-Null
+Set-ItemProperty -Path $com -Name '(default)' -Value 'C:\wactest\wac-com.dll'
+Write-Output "comhijack=$wacSid|{0000FACE-0000-4AC0-8000-000000000002}|C:\wactest\wac-com.dll"
+# What Windows set itself, read live, to compare.
+Write-Output ("userinit=" + (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon').Userinit)
+Write-Output ("lsa_security=" + ((Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Lsa').'Security Packages' -join '|'))
+$monitors = Get-ChildItem 'HKLM:\SYSTEM\CurrentControlSet\Control\Print\Monitors' | ForEach-Object { $_.PSChildName + '=' + $_.GetValue('Driver') } | Sort-Object
+Write-Output ("monitors=" + ($monitors -join '|'))
+
+# 9. Reference counts of the logs Windows writes itself.
 $sections = (Select-String -Path 'C:\Windows\INF\setupapi.dev*.log' -Pattern '^>>>  \[' -ErrorAction SilentlyContinue | Measure-Object).Count
 Write-Output "setupapi=$sections"
 $mplog = @(Get-ChildItem -Force 'C:\ProgramData\Microsoft\Windows Defender\Support\MPLog-*.log' -ErrorAction SilentlyContinue).Count

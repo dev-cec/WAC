@@ -123,7 +123,9 @@ the device installations of `setupapi.dev.log`, the recycle bins' `$I` of every
 volume, the `hosts` file, the error reports (WER), Microsoft Defender's support
 logs, the startup folders, the Zone.Identifier streams (where a downloaded
 file came from) and the SECURITY hive (LSA secret names and dates, cached
-logons, audit policy — never a secret's value).
+logons, audit policy — never a secret's value) and the registry persistence
+beyond Run (IFEO, AppInit_DLLs, Winlogon, LSA packages, print monitors, COM
+hijacking…).
 
 With `--binary`, every file those artefacts point to — a process's executable, a
 service's binary and DLL, a scheduled task's command, the files a program loaded

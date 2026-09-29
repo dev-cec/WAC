@@ -97,6 +97,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepStartupFolders,        L"Dossiers de démarrage",                         L"Extracting STARTUP FOLDERS" },
 	{ Text::StepZoneIdentifiers,       L"Origine des fichiers téléchargés (Zone.Identifier)", L"Extracting ZONE.IDENTIFIER streams" },
 	{ Text::StepSecurityHive,          L"Ruche SECURITY (noms des secrets, connexions en cache, audit)", L"Extracting the SECURITY HIVE (secret names, cached logons, audit)" },
+	{ Text::StepPersistence,           L"Persistance dans le registre (IFEO, AppInit, Winlogon, LSA, COM…)", L"Extracting REGISTRY PERSISTENCE (IFEO, AppInit, Winlogon, LSA, COM…)" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },
@@ -134,6 +135,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactStartupFolders,    L"Dossiers de démarrage",                         L"Startup folders" },
 	{ Text::ArtefactZoneIdentifiers,   L"Origine des fichiers téléchargés",              L"Zone.Identifier streams" },
 	{ Text::ArtefactSecurityHive,      L"Ruche SECURITY",                                L"SECURITY hive" },
+	{ Text::ArtefactPersistence,       L"Persistance dans le registre",                  L"Registry persistence" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },
 
 	{ Text::TimeElapsed,               L"FIN, durée : %1 s",                             L"END, Time elapsed : %1 s" },

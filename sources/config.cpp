@@ -63,6 +63,7 @@ bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error)
 		{ "recycle_bin", &a.recycleBin }, { "hosts", &a.hosts }, { "error_reports", &a.errorReports },
 		{ "defender", &a.defender }, { "startup_folders", &a.startupFolders },
 		{ "zone_identifiers", &a.zoneIdentifiers }, { "security", &a.security },
+		{ "persistence", &a.persistence },
 	};
 	for (const auto& [key, node] : section.children) {
 		const Switch* found = nullptr;
