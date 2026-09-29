@@ -45,3 +45,10 @@ HRESULT snapshotRunningMachine();
 /*! The snapshot, read back once on first call.
  *  @return the machine; `read` false if there is no usable snapshot */
 const RunningMachine& runningMachine();
+
+/*! The fixed NTFS volumes of the examined machine, as observed: those WAC
+ *  reads raw beyond the system volume (binaries, recycle bins). Removable
+ *  volumes — the collection medium among them — are left out.
+ *  @return their mount points, "C:", "D:"…; the system drive alone if none
+ *          was observed */
+std::vector<std::wstring> fixedNtfsVolumes();

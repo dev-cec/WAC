@@ -165,3 +165,12 @@ const RunningMachine& runningMachine() {
 	}();
 	return machine;
 }
+
+std::vector<std::wstring> fixedNtfsVolumes() {
+	std::vector<std::wstring> volumes;
+	for (const RunningMachine::Volume& v : runningMachine().volumes)
+		if (v.driveType == DRIVE_FIXED && v.fileSystem == L"NTFS" && v.mountPoint.size() == 2)
+			volumes.push_back(v.mountPoint);
+	if (volumes.empty()) volumes.push_back(conf.systemDrive);
+	return volumes;
+}

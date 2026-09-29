@@ -39,16 +39,9 @@ FILETIME toFiletime(uint64_t v) {
 	return f;
 }
 
-/*! Adds a timestamp in both forms, UTC and the SUSPECT's local time.
- *  Nothing is written if the date is zero: an empty field would read as a date
- *  the format did not carry — which it indeed did not — but a "1601-01-01"
- *  would read as a real date.
- */
+//! addDate (tools.h) for a date kept as a 64-bit integer, as raw_hive returns them.
 void addDate(Json& o, const std::wstring& key, uint64_t filetimeUtc) {
-	if (filetimeUtc == 0) return;
-	const FILETIME f = toFiletime(filetimeUtc);
-	o.add(key + L"Utc", Json::str(timeToIso8601Utc(f)));
-	o.add(key,          Json::str(utcTimeToIso8601Local(f)));
+	addDate(o, key, toFiletime(filetimeUtc));
 }
 
 //! Records a volume's serial number and file system.

@@ -1169,14 +1169,10 @@ HRESULT BinariesCollectAll() {
 	g_reader = openReader();
 	std::error_code ec;
 	/* Every fixed NTFS volume: a profile on D: holds what an intruder drops
-	   there, and so do programs installed off the system volume. Removable
-	   volumes — the collection medium among them — are left out, and so is
-	   the output folder when it lies on a fixed volume. */
+	   there, and so do programs installed off the system volume. The output
+	   folder is left out when it lies on a fixed volume. */
 	std::vector<std::wstring> roots;
-	for (const RunningMachine::Volume& v : runningMachine().volumes)
-		if (v.driveType == DRIVE_FIXED && v.fileSystem == L"NTFS" && v.mountPoint.size() == 2)
-			roots.push_back(v.mountPoint + L"\\");
-	if (roots.empty()) roots.push_back(conf.systemDrive + L"\\");
+	for (const std::wstring& volume : fixedNtfsVolumes()) roots.push_back(volume + L"\\");
 	const std::wstring output = toLower(std::filesystem::absolute(conf._outputDir, ec).wstring());
 	const std::wstring option = conf.binaryAll ? L"--collect --binary-all" : L"--collect --binary";
 

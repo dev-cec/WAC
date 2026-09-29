@@ -14,6 +14,9 @@
 #include "raw_hive.h"
 #include "hive_recover.h"
 #include "quickdigest5.h"
+#include "powershell_history.h"
+#include "running_machine.h"
+#include "startup_folders.h"
 
 namespace {
 
@@ -356,6 +359,13 @@ HRESULT ExtractFileArtefactsRaw() {
 	   collection and fill the medium with data the operator did not ask for.
 	   Reading them offline replaces the EventLog API (see events.h). */
 	if (conf._events) addTarget(L"\\Windows\\System32\\winevt\\Logs", { L".evtx" });
+	// setupapi.dev.log and its rotations, with the other setup logs of the folder (a few, small).
+	if (conf.artefacts.setupApi) addTarget(L"\\Windows\\INF", { L".log" });
+	// hosts has no extension: the whole folder, a handful of small files.
+	if (conf.artefacts.hosts) addTarget(L"\\Windows\\System32\\drivers\\etc", {});
+	if (conf.artefacts.defender) addTarget(L"\\ProgramData\\Microsoft\\Windows Defender\\Support", { L".log" });
+	// Whatever the startup folders hold runs at logon: everything, whatever its extension.
+	if (conf.artefacts.startupFolders) addTarget(STARTUP_ALL_USERS, {});
 
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
 		const std::wstring profile = std::get<1>(profileEntry);   // absolute, with its letter
@@ -369,32 +379,50 @@ HRESULT ExtractFileArtefactsRaw() {
 			addTarget(profile + L"\\AppData\\Roaming\\Microsoft\\Office\\Recent",
 			                                              { L".lnk", L".url" });
 		}
+		if (conf.artefacts.powershellHistory) addTarget(profile + PSREADLINE_FOLDER, { L".txt" });
+		if (conf.artefacts.startupFolders) addTarget(profile + STARTUP_PROFILE, {});
 	}
 
 	HRESULT global = S_OK;
 	size_t total = 0;
 	RawHiveSetProgress(&reportProgress);
 
-	/* Scheduled task definitions: a tree, and the files have NO extension —
-	   hence the recursive extraction without a filter. It replaces reading
-	   through the Task Scheduler COM interface, which removes both the
-	   execution trace and the dependency on COM. */
-	if (conf.artefacts.scheduledTasks) {
-		size_t extractedTasks = 0;
-		const std::wstring tasksPath = L"\\Windows\\System32\\Tasks";
+	/* TREES, extracted recursively, their structure reproduced.
+	   Scheduled task definitions: the files have NO extension — hence no
+	   filter. It replaces reading through the Task Scheduler COM interface,
+	   which removes both the execution trace and the dependency on COM.
+	   Error reports: one folder per report, Report.wer inside. */
+	struct Tree {
+		std::wstring absolute;                 //!< the folder, with its letter or relative to the system volume
+		std::vector<std::wstring> extensions;  //!< filter, empty for every file
+		unsigned depth;                        //!< guard against an abnormal tree
+		const wchar_t* what;                   //!< for the investigation log
+	};
+	std::vector<Tree> trees;
+	if (conf.artefacts.scheduledTasks)
+		trees.push_back({ L"\\Windows\\System32\\Tasks", {}, 8, L"scheduled task definitions" });
+	if (conf.artefacts.errorReports) {
+		trees.push_back({ L"\\ProgramData\\Microsoft\\Windows\\WER", { L".wer" }, 3, L"error reports" });
+		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
+			trees.push_back({ std::get<1>(profileEntry) + L"\\AppData\\Local\\Microsoft\\Windows\\WER",
+			                  { L".wer" }, 3, L"error reports" });
+	}
+	for (const Tree& tree : trees) {
+		const std::wstring volume = volumeOfPath(tree.absolute), path = pathRelativeToVolume(tree.absolute);
+		size_t extractedFiles = 0;
 		std::vector<RawHiveExtraction> reading;
-		const HRESULT hrTasks = ExtractDirectoryTreeRaw(
-			systemVolume(), tasksPath, exhibitTarget(tasksPath),
-			{}, &extractedTasks, 8, &reading);
+		const HRESULT hrTree = ExtractDirectoryTreeRaw(volume, path, exhibitTarget(tree.absolute),
+		                                               tree.extensions, &extractedFiles, tree.depth, &reading);
 		ExhibitStoreAdd(reading, L"Recursive raw NTFS reading (\\\\.\\"
-		                        + systemVolume() + L": — $MFT, directory indexes); "
+		                        + volume + L": — $MFT, directory indexes); "
 		                        L"no file opened by the system");
-		auditRecord(L"Raw extraction of the scheduled task definitions ("
-		            + std::to_wstring(extractedTasks) + L" file(s))",
-		            std::wstring(L"\\\\.\\") + systemVolume() + L":" + tasksPath,
-		            hrTasks, Footprint::VOLUME_BRUT);
-		log(2, L"❇️" + tasksPath + L" : " + std::to_wstring(extractedTasks) + L" file(s)");
-		if (hrTasks == S_FALSE) global = S_FALSE;
+		auditRecord(L"Raw extraction of the " + std::wstring(tree.what) + L" ("
+		            + std::to_wstring(extractedFiles) + L" file(s))",
+		            std::wstring(L"\\\\.\\") + volume + L":" + path,
+		            hrTree, Footprint::VOLUME_BRUT);
+		log(2, L"❇️" + path + L" : " + std::to_wstring(extractedFiles) + L" file(s)");
+		total += extractedFiles;
+		if (hrTree == S_FALSE) global = S_FALSE;
 	}
 
 	for (const Target& target : targets) {
@@ -431,6 +459,41 @@ HRESULT ExtractFileArtefactsRaw() {
 		log(2, L"❇️" + target.path + L" : " + std::to_wstring(extractedFiles)
 		     + L" file(s) [" + diagnostic + L"]");
 	}
+	/* RECYCLE BINS: the `$I` of every user folder, on every fixed NTFS volume
+	   (each has its own `\$Recycle.Bin`). Only the `$I`: the `$R` are the
+	   deleted files themselves, of any size (see recycle_bin.h). */
+	if (conf.artefacts.recycleBin) {
+		for (const std::wstring& drive : fixedNtfsVolumes()) {
+			const std::wstring volume = drive.substr(0, 1);
+			const std::wstring bin = L"\\$Recycle.Bin";
+			std::vector<RawDirEntry> users;
+			if (FAILED(ListDirectoryRaw(volume, bin, users))) continue;   // no bin on this volume
+			std::vector<std::pair<std::wstring, std::wstring>> items;
+			for (const RawDirEntry& user : users) {
+				if (!user.isDirectory) continue;
+				std::vector<RawDirEntry> files;
+				if (FAILED(ListDirectoryRaw(volume, bin + L"\\" + user.name, files))) continue;
+				for (const RawDirEntry& f : files)
+					if (!f.isDirectory && f.name.size() > 2 && (f.name.compare(0, 2, L"$I") == 0 || f.name.compare(0, 2, L"$i") == 0)) {
+						const std::wstring onVolume = bin + L"\\" + user.name + L"\\" + f.name;
+						items.emplace_back(onVolume, exhibitTarget(drive + onVolume));
+					}
+			}
+			// ExtractFilesRaw writes into existing folders only, as for the hives.
+			std::error_code ec;
+			for (const auto& item : items)
+				std::filesystem::create_directories(std::filesystem::path(item.second).parent_path(), ec);
+			std::vector<RawHiveExtraction> reading;
+			const HRESULT hrBin = items.empty() ? S_OK : ExtractFilesRaw(volume, items, nullptr, &reading);
+			ExhibitStoreAdd(reading, L"Raw NTFS reading (\\\\.\\" + volume
+			                        + L": — $MFT, directory indexes, $DATA attribute); no file opened by the system");
+			auditRecord(L"Raw extraction of the recycle bin indexes $I (" + std::to_wstring(items.size()) + L" file(s))",
+			            std::wstring(L"\\\\.\\") + volume + L":" + bin, hrBin, Footprint::VOLUME_BRUT);
+			total += items.size();
+			if (hrBin == S_FALSE) global = S_FALSE;
+		}
+	}
+
 	RawHiveSetProgress(nullptr);
 	printProgressEnd();
 	log(2, L"❇️Files extracted in total: " + std::to_wstring(total));

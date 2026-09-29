@@ -343,6 +343,13 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   mft: true             # $MFT : chaque fichier, présent ou supprimé, et ses dates
   usn_journal: true     # $UsnJrnl:$J : créations, renommages, suppressions
   log_file: true        # $LogFile : journal de transactions NTFS, copie brute seule
+  powershell_history: true  # PSReadLine : les commandes tapées dans PowerShell
+  setupapi: true        # setupapi.dev.log : installations de périphériques
+  recycle_bin: true     # $I des corbeilles : quoi, par qui, quand
+  hosts: true           # le fichier hosts : noms détournés vers une adresse
+  error_reports: true   # rapports d'erreurs (WER) : programmes plantés, avec leur chemin
+  defender: true        # journaux de Defender (MPLog) : analyses, détections, exclusions
+  startup_folders: true # dossiers de démarrage : ce qui s'exécute à l'ouverture de session
 \end{lstlisting}
 
 \begin{itemize}
@@ -1012,6 +1019,28 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
   \item[\fichier{muicache.json}] noms d'affichage des programmes exécutés.
   \item[\fichier{run.json}] programmes lancés au démarrage ou à l'ouverture de
         session (clés Run), avec la dernière écriture de la clé.
+  \item[\fichier{startup\_folders.json}] contenu des dossiers de démarrage, de
+        tous les utilisateurs (\champ{Scope} \texttt{AllUsers}) et de chaque
+        profil (\texttt{User}, avec \champ{SID}) : chaque fichier, ses dates et
+        ses empreintes ; un raccourci est décodé (\champ{Shortcut}, comme dans
+        \fichier{recentdocs.json}).
+  \item[\fichier{powershell\_history.json}] historique PSReadLine de chaque
+        profil et de chaque hôte (\champ{Host} : \texttt{ConsoleHost},
+        l'ISE, VS~Code) : les commandes dans l'ordre où elles ont été tapées,
+        une commande sur plusieurs lignes réunie. Aucune date par commande :
+        \champ{SourceModified} date la dernière.
+  \item[\fichier{error\_reports.json}] rapports d'erreurs Windows
+        (\fichier{Report.wer}) de la machine et de chaque profil : programme,
+        chemin, instant (\champ{EventTimeUtc}), signature du problème
+        (module fautif, version), toutes les valeurs du rapport dans
+        \champ{Values}.
+  \item[\fichier{defender\_log.json}] journaux de support de Microsoft Defender
+        (\fichier{MPLog-*.log}) : chaque ligne telle qu'écrite, datée quand elle
+        commence par une date UTC. Analyses à l'exécution, détections,
+        exclusions, mises à jour. L'historique des détections (binaire) et la
+        quarantaine ne sont pas encore décodés.
+  \item[\fichier{hosts.json}] entrées du fichier \fichier{hosts} : adresse et
+        noms, numéro de ligne ; un Windows intact n'en a aucune.
 \end{description}
 
 \subsection{Fichiers et navigation}
@@ -1052,11 +1081,22 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         arborescence reconstituée.
   \item[\fichier{mrus.json}, \fichier{mruApps.json}] listes de fichiers et
         d'applications récemment utilisés.
+  \item[\fichier{recycle\_bin.json}] fichiers mis à la corbeille, sur chaque
+        volume NTFS fixe, d'après leur index \path|$I| : chemin d'origine,
+        taille, instant de la suppression (\champ{DeletedUtc}), et l'utilisateur
+        (\champ{SID}). Seuls les \path|$I| sont prélevés ; les fichiers eux-mêmes
+        (\path|$R|) figurent dans \fichier{mft.json}.
 \end{description}
 
 \subsection{Périphériques}
 
 \begin{description}[style=nextline,leftmargin=1.2em]
+  \item[\fichier{setupapi.json}] sections de \fichier{setupapi.dev.log} et de
+        ses rotations : opération (\champ{Operation}), périphérique ou pilote
+        (\champ{Subject}, avec le numéro de série d'une clé USB), début et fin
+        convertis depuis l'heure locale de la machine examinée, résultat. La
+        première connexion d'un périphérique s'y date, même quand la clé
+        \fichier{USBSTOR} a été nettoyée.
   \item[\fichier{Usbstor.json}] périphériques de stockage USB connus du système :
         \champ{Vendor}, \champ{Product}, \champ{Revision} et \champ{Type}, tirés
         de \champ{DeviceId} ; \champ{SerialNumber}, tiré de \champ{InstanceId}

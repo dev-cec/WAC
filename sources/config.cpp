@@ -59,6 +59,9 @@ bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error)
 		{ "network", &a.network },
 		{ "prefetch", &a.prefetch }, { "jump_lists", &a.jumpLists }, { "recent_documents", &a.recentDocuments },
 		{ "mft", &a.mft }, { "usn_journal", &a.usnJournal }, { "log_file", &a.logFile },
+		{ "powershell_history", &a.powershellHistory }, { "setupapi", &a.setupApi },
+		{ "recycle_bin", &a.recycleBin }, { "hosts", &a.hosts }, { "error_reports", &a.errorReports },
+		{ "defender", &a.defender }, { "startup_folders", &a.startupFolders },
 	};
 	for (const auto& [key, node] : section.children) {
 		const Switch* found = nullptr;

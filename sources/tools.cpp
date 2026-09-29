@@ -1493,3 +1493,22 @@ std::vector<std::filesystem::path> listFilesByExtension(const std::filesystem::p
 	}
 	return results;
 }
+
+void addDate(Json& o, const std::wstring& key, const FILETIME& utc) {
+	if (utc.dwLowDateTime == 0 && utc.dwHighDateTime == 0) return;
+	o.add(key + L"Utc", Json::str(timeToIso8601Utc(utc)));
+	o.add(key,          Json::str(utcTimeToIso8601Local(utc)));
+}
+
+std::vector<std::wstring> splitLines(const std::wstring& text) {
+	std::vector<std::wstring> lines;
+	size_t start = 0;
+	while (start < text.size()) {
+		size_t end = text.find(L'\n', start);
+		if (end == std::wstring::npos) end = text.size();
+		lines.push_back(text.substr(start, end - start));
+		if (!lines.back().empty() && lines.back().back() == L'\r') lines.back().pop_back();
+		start = end + 1;
+	}
+	return lines;
+}

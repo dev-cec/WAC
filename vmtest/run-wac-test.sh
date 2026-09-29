@@ -116,6 +116,15 @@ $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\reg
   > "$OUTPUT/reference/test-guids.txt" 2>/dev/null \
   && echo "   test GUIDs registered" || echo "   ⚠️ test GUIDs not registered"
 
+# Witnesses of the small file artefacts, placed before both collections: a
+# PowerShell history, a file sent to the recycle bin, a hosts entry, a startup
+# script, and the reference counts of setupapi and Defender (see
+# place-file-artefacts.ps1). check-json.py finds them in the JSON.
+$QGA write "$HERE/place-file-artefacts.ps1" "$VMDIR\\place-file-artefacts.ps1" >/dev/null
+$QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\place-file-artefacts.ps1" \
+  > "$OUTPUT/reference/file-artefacts.txt" 2>/dev/null \
+  && echo "   + reference/file-artefacts.txt" || echo "   ⚠️ file artefact witnesses not placed"
+
 echo "== 3. raw_hive validation (raw extraction + reg load) =="
 # Tested BOTH ways. A hive copied live is always "dirty":
 #   - without --fix, `reg load` MUST refuse it (ERROR_BADDB): that is what proves

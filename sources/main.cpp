@@ -34,6 +34,13 @@
 #include "prefetchs.h"
 #include "mft.h"
 #include "usn_journal.h"
+#include "powershell_history.h"
+#include "setupapi_log.h"
+#include "recycle_bin.h"
+#include "hosts_file.h"
+#include "error_reports.h"
+#include "defender_log.h"
+#include "startup_folders.h"
 #include "recent_docs.h"
 #include "jumplist_automatic.h"
 #include "jumplist_custom.h"
@@ -200,6 +207,32 @@ bool requested(bool wanted, const char* file, Text label, const wchar_t* key) {
 	// The artefact's file is in English, like every JSON, whatever the console's language.
 	writeNotRequested(file, text(label, Language::English).c_str(), key);
 	return false;
+}
+
+/*! Converts one file artefact read from the working copy or the exhibit
+ *  store: getData, then its JSON file — the same sequence for each of them.
+ *  An artefact that could not be read says so in its file (writeNotCollected).
+ *  @tparam Collector the artefact's class: getData(), toJson(), clear()
+ *  @param wanted the configuration's switch
+ *  @param file its JSON file
+ *  @param label its name, for the console and the file
+ *  @param key its configuration key
+ *  @param step the console's step */
+template <class Collector>
+void convertFileArtefact(bool wanted, const char* file, Text label, const wchar_t* key, Text step) {
+	if (!requested(wanted, file, label, key)) return;
+	Collector collector;
+	printStep(step);
+	HRESULT hresult = collector.getData();
+	if (hresult != ERROR_SUCCESS) {
+		printError(hresult);
+		writeNotCollected(file, text(label, Language::English), hresult);
+		return;
+	}
+	hresult = collector.toJson();
+	if (hresult != ERROR_SUCCESS) printError(hresult);
+	else printSuccess();
+	collector.clear();
 }
 
 void observeLiveState() {
@@ -991,6 +1024,22 @@ void convertArtefacts(bool systemAvailable) {
 		jumplistCustoms.clear();
 	}
 	}   // artefacts.jump_lists
+	convertFileArtefact<PowerShellHistories>(conf.artefacts.powershellHistory, "powershell_history.json",
+	                                         Text::ArtefactPowerShellHistory, L"artefacts.powershell_history",
+	                                         Text::StepPowerShellHistory);
+	convertFileArtefact<SetupApiLogs>(conf.artefacts.setupApi, "setupapi.json", Text::ArtefactSetupApi,
+	                                  L"artefacts.setupapi", Text::StepSetupApi);
+	convertFileArtefact<RecycleBin>(conf.artefacts.recycleBin, "recycle_bin.json", Text::ArtefactRecycleBin,
+	                                L"artefacts.recycle_bin", Text::StepRecycleBin);
+	convertFileArtefact<HostsFile>(conf.artefacts.hosts, "hosts.json", Text::ArtefactHosts,
+	                               L"artefacts.hosts", Text::StepHosts);
+	convertFileArtefact<ErrorReports>(conf.artefacts.errorReports, "error_reports.json", Text::ArtefactErrorReports,
+	                                  L"artefacts.error_reports", Text::StepErrorReports);
+	convertFileArtefact<DefenderLogs>(conf.artefacts.defender, "defender_log.json", Text::ArtefactDefenderLogs,
+	                                  L"artefacts.defender", Text::StepDefenderLogs);
+	convertFileArtefact<StartupFolders>(conf.artefacts.startupFolders, "startup_folders.json",
+	                                    Text::ArtefactStartupFolders, L"artefacts.startup_folders",
+	                                    Text::StepStartupFolders);
 	writeProcesses();   // if the names could not be loaded (SYSTEM hive unreadable)
 
 	/************************

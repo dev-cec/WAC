@@ -118,6 +118,13 @@ struct AppliConf {
 		bool mft = true;              //!< $MFT, raw, and mft.json: every file with its dates
 		bool usnJournal = true;       //!< $UsnJrnl:$J, raw, and usn_journal.json: the change journal
 		bool logFile = true;          //!< $LogFile, raw only: the NTFS transaction journal
+		bool powershellHistory = true; //!< PSReadLine histories of every profile
+		bool setupApi = true;         //!< setupapi.dev.log: device installations, first USB connections
+		bool recycleBin = true;       //!< the $I of every volume's recycle bin
+		bool hosts = true;            //!< the hosts file
+		bool errorReports = true;     //!< Windows Error Reporting: Report.wer of the machine and of each profile
+		bool defender = true;         //!< Microsoft Defender's support logs (MPLog)
+		bool startupFolders = true;   //!< startup folders of all users and of each profile
 	} artefacts;
 	RunMode mode = RunMode::Full; //!< what this run does (see RunMode)
 	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)
@@ -619,6 +626,14 @@ std::wstring localTimeToIso8601Utc(const FILETIME& filetimeLocal, Precision prec
 */
 std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc, Precision precision = Precision::HundredNanoseconds);
 
+/*! Adds a date in both forms: `<key>Utc` in UTC and `<key>` in the SUSPECT's
+* local time (utcTimeToIso8601Local). Nothing is written for a null date: a
+* "1601-01-01" would read as a real date the format never carried.
+* @param o the object
+* @param key the name of the local form; the UTC form is `key` + "Utc"
+* @param utc the date, UTC */
+void addDate(Json& o, const std::wstring& key, const FILETIME& utc);
+
 /*! Converts a UTC FILETIME to the local time of the EXAMINED machine.
 *
 * Replaces `FileTimeToLocalFileTime()`, which applies the time zone of the
@@ -719,6 +734,12 @@ HRESULT loadSuspectAnsiCodePage();
 * @return the string in lower case
 */
 std::wstring toLower(std::wstring s);
+
+/*! Splits a text file into its lines, "\r\n" or "\n", the end-of-line
+* characters removed; line n of the file is element n - 1.
+* @param text the text
+* @return its lines; a last line without a newline is a line */
+std::vector<std::wstring> splitLines(const std::wstring& text);
 
 /*! Says whether a registry value is a MUI resource REFERENCE rather than a
 * readable text.

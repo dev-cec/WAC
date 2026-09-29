@@ -213,6 +213,7 @@ def cross_checks(folder):
     found += check_exhibit_store(folder)
     found += check_mft_references(folder)
     found += check_mft_timeline(folder)
+    found += check_small_file_artefacts(folder)
     found += check_mounted_devices(folder)
     found += check_date_precision(folder)
     found += check_utc_sources(folder)
@@ -1224,6 +1225,81 @@ def check_mft_references(folder):
         return 1
     print(f"  ✅ {total} plausible $MFT reference(s)")
     return 0
+
+
+def check_small_file_artefacts(folder):
+    """The small file artefacts against the witnesses the harness placed.
+
+    place-file-artefacts.ps1 writes, before the collection, a PowerShell
+    history, a file sent to the recycle bin, a hosts entry and a startup
+    script, and counts the setupapi sections and the Defender logs: each JSON
+    must hold what was placed, as it was placed — a decoder that misses a case
+    gives valid JSON all the same. A JSON absent is skipped, not failed: a
+    collection made before these artefacts existed has none.
+    """
+    reference = {}
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if not os.path.exists(path):
+        print("  ⏭️  no reference/file-artefacts.txt: small file artefacts not confronted")
+        return 0
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            key, _, value = line.strip().partition("=")
+            if value:
+                reference[key] = value
+    found = 0
+
+    def report(ok, success, failure):
+        nonlocal found
+        print(f"  {'✅' if ok else '❌'} {success if ok else failure}")
+        found += 0 if ok else 1
+
+    history = load(folder, "powershell_history.json")
+    if isinstance(history, list) and "powershell" in reference:
+        host, count, first = reference["powershell"].split("|", 2)
+        mine = [h for h in history if h.get("Host") == host]
+        commands = mine[0].get("Commands", []) if mine else []
+        report(len(commands) == int(count) and commands[0].get("Command") == first
+               and "\n" in commands[1].get("Command", ""),
+               f"powershell_history.json: history {host} read, {count} commands, the one on two lines joined",
+               f"powershell_history.json: history {host} not as placed: {commands[:3]}")
+
+    recycled = load(folder, "recycle_bin.json")
+    if isinstance(recycled, list) and "recycled" in reference:
+        match = [r for r in recycled if (r.get("OriginalPath") or "").lower() == reference["recycled"].lower()]
+        report(bool(match) and match[0].get("DeletedUtc") and match[0].get("SID"),
+               f"recycle_bin.json: {reference['recycled']} found, deleted {match[0].get('DeletedUtc') if match else ''}",
+               f"recycle_bin.json: {reference['recycled']} missing among {len(recycled)} $I")
+
+    hosts = load(folder, "hosts.json")
+    if isinstance(hosts, dict) and "hosts" in reference:
+        address, name = reference["hosts"].split("|", 1)
+        report(any(e.get("Address") == address and name in (e.get("Names") or []) for e in hosts.get("Entries", [])),
+               f"hosts.json: {address} {name} found",
+               f"hosts.json: {address} {name} missing")
+
+    startup = load(folder, "startup_folders.json")
+    if isinstance(startup, list) and "startup" in reference:
+        where, digest = reference["startup"].split("|", 1)
+        match = [i for i in startup if (i.get("Path") or "").lower() == where.lower()]
+        report(bool(match) and match[0].get("SHA256") == digest and match[0].get("Scope") == "AllUsers",
+               "startup_folders.json: the startup witness found, its SHA-256 identical",
+               f"startup_folders.json: the startup witness missing or altered: {match[:1]}")
+
+    setupapi = load(folder, "setupapi.json")
+    if isinstance(setupapi, list) and "setupapi" in reference:
+        dated = sum(1 for s in setupapi if s.get("StartUtc"))
+        report(len(setupapi) >= int(reference["setupapi"]) and dated >= len(setupapi) * 0.9,
+               f"setupapi.json: {len(setupapi)} section(s), at least the {reference['setupapi']} counted before, {dated} dated",
+               f"setupapi.json: {len(setupapi)} section(s) ({dated} dated), {reference['setupapi']} counted before")
+
+    defender = load(folder, "defender_log.json")
+    if isinstance(defender, list) and "mplog" in reference:
+        lines = sum(len(d.get("Lines", [])) for d in defender)
+        report(len(defender) >= int(reference["mplog"]) and (lines > 0 or int(reference["mplog"]) == 0),
+               f"defender_log.json: {len(defender)} log(s), {lines} line(s)",
+               f"defender_log.json: {len(defender)} log(s) for {reference['mplog']} present, {lines} line(s)")
+    return found
 
 
 def check_mft_timeline(folder):

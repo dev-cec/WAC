@@ -117,7 +117,11 @@ running processes, open sessions, the network state (TCP/UDP connections with
 their owning process and creation time, ARP/NDP neighbours, interfaces, routes),
 and optionally the event logs — plus the usual
 registry and file artefacts: UserAssist, MUICache, BAM, USB devices, Shellbags,
-MRU, Run keys, Shimcache, Amcache, jumplists, Prefetch and recent documents.
+MRU, Run keys, Shimcache, Amcache, jumplists, Prefetch and recent documents;
+the `$MFT` and change journal; the PowerShell command history of each profile,
+the device installations of `setupapi.dev.log`, the recycle bins' `$I` of every
+volume, the `hosts` file, the error reports (WER), Microsoft Defender's support
+logs and the startup folders.
 
 With `--binary`, every file those artefacts point to — a process's executable, a
 service's binary and DLL, a scheduled task's command, the files a program loaded

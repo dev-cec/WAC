@@ -557,6 +557,28 @@ wine usn_journal_test.exe "Z:/tmp/mft"
 Référence : 275 contrôles pour \texttt{mft\_test}, 26 pour
 \texttt{usn\_journal\_test}, aucun échec.
 
+\section{Petits artefacts fichiers : \texttt{file\_artefacts\_test}}
+
+Vérifie les décodeurs de l'historique PowerShell, de
+\fichier{setupapi.dev.log}, des \path|$I| de la corbeille, de \fichier{hosts},
+de \fichier{Report.wer} et du MPLog de Defender sur des entrées écrites
+d'après la description de chaque format, avec le résultat attendu : une
+commande sur deux lignes réunie, un titre de section séparé en opération et
+sujet, le 31 février refusé comme date, un \path|$I| de version 1 et 2 lu, un
+\path|$I| tronqué ou de version inconnue refusé, une longueur de chemin
+mensongère bornée par le fichier, une signature de problème ordonnée par son
+indice quel que soit l'ordre du fichier, une date sans \texttt{Z} non prise
+pour de l'UTC. Aucune donnée nécessaire.
+
+\begin{lstlisting}
+cd build-windows/tests && wine file_artefacts_test.exe
+\end{lstlisting}
+
+Référence : 33 contrôles, aucun échec. Dans le cycle VM,
+\fichier{place-file-artefacts.ps1} dépose des témoins de contenu connu (un
+historique, un fichier mis à la corbeille, une entrée \fichier{hosts}, un
+script de démarrage) et \fichier{check-json.py} les retrouve dans les JSON.
+
 \section{Signatures : \texttt{authenticode\_test}}
 
 Vérifie les catalogues d'un dossier puis rend un verdict par fichier ; ses
