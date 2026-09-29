@@ -45,7 +45,7 @@ std::wstring exhibitTarget(const std::wstring& path) {
  *  hives of several tens of MiB. */
 void reportProgress(const wchar_t* item, unsigned long long done,
                           unsigned long long total) {
-	printProgress(item ? item : L"", done / 1024, total / 1024, L"KiB");
+	printProgress(item ? item : L"", done / 1024, total / 1024, text(Text::ProgressKibibytes));
 }
 
 /*! Repairs the working copies of hives: transaction log replay, patch as a
@@ -73,8 +73,8 @@ HRESULT repairHives(const std::vector<std::wstring>& hives,
 		++iHive;
 		if (!std::filesystem::exists(r, ec)) continue;   // not extracted: already logged
 
-		printProgress(L"Repair of " + std::filesystem::path(r).filename().wstring(),
-		              iHive, hives.size(), L"hive");
+		printProgress(text(Text::ProgressRepair, { std::filesystem::path(r).filename().wstring() }),
+		              iHive, hives.size(), text(Text::ProgressHive));
 
 		/* Fingerprint BEFORE any modification: the raw copy stays identifiable.
 		   Taken from the computation made during extraction; the file is only

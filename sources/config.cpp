@@ -12,16 +12,20 @@ namespace {
 
 const size_t CONFIGURATION_MAX = 64 * 1024;   //!< a configuration is a few hundred bytes
 
-//! "line N: why".
-bool refuse(std::string& error, const YamlNode& node, const std::string& why) {
-	error = "line " + std::to_string(node.line) + ": " + why;
+/*! "line N: why", in the console's language (the refusal is shown to the
+ *  operator, before any log exists), as UTF-8 like the YAML reader's. */
+bool refuse(std::string& error, const YamlNode& node, const std::wstring& why) {
+	error = encodeText(text(Text::ConfigurationLine, { std::to_wstring(node.line), why }));
 	return false;
 }
+
+//! A key or a value of the file, UTF-8, for a refusal.
+std::wstring wide(const std::string& utf8) { return decodeText(utf8, CP_UTF8); }
 
 //! A scalar setting, not a section. @return false with `error` otherwise
 bool scalar(const YamlNode& node, const std::string& key, std::string& error) {
 	if (!node.mapping) return true;
-	return refuse(error, node, key + " takes a value, not a section");
+	return refuse(error, node, text(Text::ConfigurationSectionNotValue, { wide(key) }));
 }
 
 //! true / false, nothing else — "yes", "on", "1" are refused: a value is written one way.
@@ -29,24 +33,24 @@ bool readBool(const YamlNode& node, const std::string& key, bool& value, std::st
 	if (!scalar(node, key, error)) return false;
 	if (node.scalar == "true") { value = true; return true; }
 	if (node.scalar == "false") { value = false; return true; }
-	return refuse(error, node, key + ": \"" + node.scalar + "\", true or false expected");
+	return refuse(error, node, text(Text::ConfigurationBooleanExpected, { wide(key), wide(node.scalar) }));
 }
 
 //! An integer within bounds.
 bool readInt(const YamlNode& node, const std::string& key, int low, int high, int& value, std::string& error) {
 	if (!scalar(node, key, error)) return false;
 	if (node.scalar.empty() || node.scalar.size() > 4 || node.scalar.find_first_not_of("0123456789") != std::string::npos)
-		return refuse(error, node, key + ": \"" + node.scalar + "\", a number expected");
+		return refuse(error, node, text(Text::ConfigurationNumberExpected, { wide(key), wide(node.scalar) }));
 	value = std::stoi(node.scalar);
 	if (value < low || value > high)
-		return refuse(error, node, key + ": " + node.scalar + ", between " + std::to_string(low) + " and "
-		                         + std::to_string(high) + " expected");
+		return refuse(error, node, text(Text::ConfigurationOutOfRange,
+		                                { wide(key), wide(node.scalar), std::to_wstring(low), std::to_wstring(high) }));
 	return true;
 }
 
 //! The `artefacts:` section: one switch per artefact.
 bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error) {
-	if (!section.mapping) return refuse(error, section, "artefacts is a section: one line per artefact");
+	if (!section.mapping) return refuse(error, section, text(Text::ConfigurationArtefactsSection));
 	struct Switch { const char* key; bool* value; };
 	AppliConf::CollectedArtefacts& a = conf.artefacts;
 	const Switch SWITCHES[] = {
@@ -59,7 +63,7 @@ bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error)
 	for (const auto& [key, node] : section.children) {
 		const Switch* found = nullptr;
 		for (const Switch& s : SWITCHES) if (key == s.key) found = &s;
-		if (!found) return refuse(error, *node, "unknown artefact \"" + key + "\"");
+		if (!found) return refuse(error, *node, text(Text::ConfigurationUnknownArtefact, { wide(key) }));
 		if (!readBool(*node, "artefacts." + key, *found->value, error)) return false;
 	}
 	return true;
@@ -79,7 +83,7 @@ bool applySettings(const YamlNode& root, AppliConf& conf, std::string& error) {
 			if (node->scalar == "none") conf.binary = conf.binaryAll = false;
 			else if (node->scalar == "unverified") { conf.binary = true; conf.binaryAll = false; }
 			else if (node->scalar == "all") conf.binary = conf.binaryAll = true;
-			else return refuse(error, *node, "binary: \"" + node->scalar + "\", none, unverified or all expected");
+			else return refuse(error, *node, text(Text::ConfigurationBinaryValue, { wide(node->scalar) }));
 		}
 		else if (key == "threads") {
 			int threads = 0;
@@ -90,7 +94,7 @@ bool applySettings(const YamlNode& root, AppliConf& conf, std::string& error) {
 			if (!scalar(*node, key, error)) return false;
 			// As for --output: a folder of the current directory, by its name.
 			if (node->scalar.empty() || node->scalar.find_first_of("\\/:") != std::string::npos)
-				return refuse(error, *node, "output: a folder name, without \\, / or :");
+				return refuse(error, *node, text(Text::ConfigurationOutputValue));
 			conf._outputDir = decodeText(node->scalar, CP_UTF8);
 		}
 		else if (key == "log_level") {
@@ -99,10 +103,15 @@ bool applySettings(const YamlNode& root, AppliConf& conf, std::string& error) {
 		else if (key == "dump") {
 			if (!readBool(*node, key, conf._dump, error)) return false;
 		}
+		else if (key == "language") {
+			if (!scalar(*node, key, error)) return false;
+			if (!languageFromCode(wide(node->scalar), conf.language))
+				return refuse(error, *node, text(Text::ConfigurationLanguageValue, { wide(node->scalar) }));
+		}
 		else if (key == "artefacts") {
 			if (!readArtefacts(*node, conf, error)) return false;
 		}
-		else return refuse(error, *node, "unknown setting \"" + key + "\"");
+		else return refuse(error, *node, text(Text::ConfigurationUnknownSetting, { wide(key) }));
 	}
 	return true;
 }
@@ -121,10 +130,10 @@ bool LoadConfiguration(const std::wstring& path, AppliConf& conf, ConfigurationF
 	std::error_code ec;
 	if (!std::filesystem::exists(path, ec)) return true;          // no file: the defaults, and the command line
 	const uintmax_t size = std::filesystem::file_size(path, ec);
-	if (ec || size > CONFIGURATION_MAX) { error = "configuration file unreadable or larger than 64 KiB"; return false; }
+	if (ec || size > CONFIGURATION_MAX) { error = encodeText(text(Text::ConfigurationTooLarge)); return false; }
 	std::ifstream in(std::filesystem::path(path), std::ios::binary);
 	file.text.assign((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-	if (!in && !in.eof()) { error = "configuration file unreadable"; return false; }
+	if (!in && !in.eof()) { error = encodeText(text(Text::ConfigurationUnreadable)); return false; }
 	file.path = path;
 	uint8_t digest[32];
 	sha256Bytes(reinterpret_cast<const uint8_t*>(file.text.data()), file.text.size(), digest);

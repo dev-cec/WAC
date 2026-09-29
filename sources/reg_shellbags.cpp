@@ -104,7 +104,7 @@ HRESULT Shellbags::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std
 		   (a few dozen) but each requires the recursive parsing of IdLists, that is
 		   several seconds. The step of 50 of printProgressStep would never have
 		   fired here — hence the impression of being stuck. */
-		printProgress(L"Shellbag (level " + std::to_wstring(level) + L")",
+		printProgress(text(Text::ProgressLevel, { L"Shellbag", std::to_wstring(level) }),
 		              ++nWalked, 0, L"bag");
 		Shellbag shellbag;
 		shellbag.id = id;

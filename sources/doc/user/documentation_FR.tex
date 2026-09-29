@@ -328,6 +328,7 @@ threads: 0              # fils d'analyse des binaires, 0 : automatique
 output: output
 log_level: 0
 dump: false
+language: fr            # fr | en : langue de la console ; les fichiers restent en anglais
 artefacts:              # un interrupteur par artefact ; toutes les ruches = registry
   registry: true
   events: true
@@ -405,6 +406,12 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   raccourcis \fichier{.lnk}, pour un décodage ultérieur. \\
 -{}-output=dossier & Dossier de sortie, relatif au répertoire courant. Par défaut :
   \fichier{output}. \\
+-{}-language=fr|en & Langue de la console : étapes, aide, messages d'erreur.
+  Français par défaut ; \texttt{language:} dans \fichier{wac.yml} la fixe
+  aussi. Les fichiers JSON, \fichier{investigation.json} et le journal texte
+  restent en anglais, quelle que soit la langue : ce sont des pièces lues par
+  des outils, et une collecte donne les mêmes fichiers quel que soit
+  l'opérateur. \\
 -{}-loglevel=N & Active un journal texte détaillé, dans le répertoire courant,
   nommé d'après le programme lancé (\fichier{WAC.exe.log} pour \fichier{WAC.exe}) : 0~aucun, 1~par type
   d'artefact, 2~par artefact, 3~par sous-fonction (mise au point). \\
@@ -535,36 +542,39 @@ seulement de la place sur le support.
 recueilli, et ce qui manque est consigné.
 
 \begin{lstlisting}
-[PREREQUISITE VERIFICATION]
- - Check OS >= Windows 10 : OK
- - Check administrator rights : OK
- - Checking the collection medium : OK
-[SEARCHING FOR ARTIFACTS IN WINDOWS API]
- - Extraction of SESSIONS: OK
- - Extraction of PROCESS: OK
- - Extraction of NETWORK STATE: OK
-[RAW EXTRACTION]
- - Extracting system hives (raw NTFS) : OK
- - loading the HKLM\SYSTEM key : OK
- - loading the HKLM\SOFTWARE key : OK
- - Listing USER PROFILES (SOFTWARE hive) : OK
- - Extracting user hives (raw NTFS) : OK
- - Extracting file artefacts (raw NTFS) : OK
-[SEARCHING FOR ARTIFACTS IN THE REGISTRY]
- - Extracting USERASSIST Registry Keys : OK
+[VÉRIFICATION DES PRÉREQUIS]
+ - Windows 10 ou ultérieur : OK
+ - Droits d'administrateur : OK
+ - Contrôle du support de collecte : OK
+[OBSERVATION DE LA MACHINE EN MARCHE]
+ - Sessions : OK
+ - Processus : OK
+ - État du réseau : OK
+[EXTRACTION BRUTE]
+ - Ruches du système (lecture brute NTFS) : OK
+ - Ouverture de la ruche SYSTEM : OK
+ - Ouverture de la ruche SOFTWARE : OK
+ - Profils des utilisateurs (ruche SOFTWARE) : OK
+ - Ruches des utilisateurs (lecture brute NTFS) : OK
+ - Artefacts fichiers (lecture brute NTFS) : OK
+[ARTEFACTS DU REGISTRE]
+ - Clés UserAssist du registre : OK
    ...
-[SEARCHING FOR ARTIFACTS IN FILES]
- - Extracting PREFETCHS : OK
+[ARTEFACTS DES FICHIERS]
+ - Prefetch : OK
    ...
-[SEARCHING FOR ARTIFACTS IN EVENT LOGS]
- - Extraction of EVENTS: OK
-[EXHIBIT STORE]
- - Copying collected binaries to the working directory : OK
- - Sealing the exhibit store (manifest + SHA-256) : OK
-[INVESTIGATION LOG]
- - Writing investigation.json : OK
-END, Time elapsed : 309 s
+[JOURNAUX D'ÉVÉNEMENTS]
+ - Journaux d'événements : OK
+[CONSIGNE]
+ - Copie des binaires prélevés dans la copie de travail : OK
+ - Scellement de la consigne (manifeste + SHA-256) : OK
+[JOURNAL D'INVESTIGATION]
+ - Écriture de investigation.json : OK
+FIN, durée : 309 s
 \end{lstlisting}
+
+Avec \opt{language=en}, ou \texttt{language: en} dans \fichier{wac.yml}, les
+mêmes étapes s'affichent en anglais.
 
 Le scellement de la consigne est la \textbf{dernière} opération sur celle-ci :
 toutes les pièces, y compris celles ajoutées pendant l'analyse des journaux, sont

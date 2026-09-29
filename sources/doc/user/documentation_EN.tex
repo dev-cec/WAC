@@ -323,6 +323,7 @@ threads: 0              # analysis threads for the binaries, 0: automatic
 output: output
 log_level: 0
 dump: false
+language: fr            # fr | en: language of the console; the files stay in English
 artefacts:              # one switch per artefact; all the hives = registry
   registry: true
   events: true
@@ -400,6 +401,11 @@ artefacts:              # one switch per artefact; all the hives = registry
   items, for later decoding. \\
 -{}-output=folder & Output folder, relative to the current directory. Default:
   \fichier{output}. \\
+-{}-language=fr|en & Language of the console: steps, help, error messages.
+  French by default; \texttt{language:} in \fichier{wac.yml} sets it too. The
+  JSON files, \fichier{investigation.json} and the text log stay in English
+  whatever the language: they are evidence read by tools, and a collection
+  gives the same files whoever the operator. \\
 -{}-loglevel=N & Enables a detailed text log in the current directory, named
   after the program run (\fichier{WAC.exe.log} for \fichier{WAC.exe}): 0~none,
   1~per artefact type, 2~per artefact, 3~per sub-function (debugging). \\
@@ -533,9 +539,9 @@ whatever is missing is recorded.
  - Check administrator rights : OK
  - Checking the collection medium : OK
 [SEARCHING FOR ARTIFACTS IN WINDOWS API]
- - Extraction of SESSIONS: OK
- - Extraction of PROCESS: OK
- - Extraction of NETWORK STATE: OK
+ - Extraction of SESSIONS : OK
+ - Extraction of PROCESS : OK
+ - Extraction of NETWORK STATE : OK
 [RAW EXTRACTION]
  - Extracting system hives (raw NTFS) : OK
  - loading the HKLM\SYSTEM key : OK
@@ -550,7 +556,7 @@ whatever is missing is recorded.
  - Extracting PREFETCHS : OK
    ...
 [SEARCHING FOR ARTIFACTS IN EVENT LOGS]
- - Extraction of EVENTS: OK
+ - Extraction of EVENTS : OK
 [EXHIBIT STORE]
  - Copying collected binaries to the working directory : OK
  - Sealing the exhibit store (manifest + SHA-256) : OK
@@ -558,6 +564,9 @@ whatever is missing is recorded.
  - Writing investigation.json : OK
 END, Time elapsed : 309 s
 \end{lstlisting}
+
+This is the display with \opt{language=en}, or \texttt{language: en} in
+\fichier{wac.yml}: by default the console is in French.
 
 Sealing the exhibit store is the \textbf{last} operation on it: every exhibit,
 including those added while the event logs are processed, is covered by the

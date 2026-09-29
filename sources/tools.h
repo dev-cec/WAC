@@ -10,6 +10,7 @@
 #include <sstream>
 #include "offline_registry.h"
 #include "time_zone.h"
+#include "translations.h"
 #include <vector>
 #include <filesystem>
 #include <time.h>
@@ -98,6 +99,9 @@ struct AppliConf {
 	 *  (PE, Authenticode, catalogs, fingerprints); 0 = the processor's
 	 *  threads minus one, the reading of the volume keeping its own. */
 	unsigned threads = 0;
+	/*! Language of the console (wac.yml, language:). The command line's
+	 *  --language= overrides it; the JSON files and the logs stay in English. */
+	Language language = Language::French;
 	/*! The artefacts to collect, one switch each (wac.yml, section
 	 *  `artefacts:`); the event logs are `_events`. All on by default but
 	 *  the event logs, as before the configuration file. */
@@ -328,7 +332,7 @@ void printSuccess();
 * @param unit unit to display (e.g. L"KiB", L"evt")
 */
 void printProgress(const std::wstring& label, unsigned long long done,
-                   unsigned long long total, const wchar_t* unit);
+                   unsigned long long total, const std::wstring& unit);
 
 /*! Ends a progress line and restores the step label.
 * Called automatically by printSuccess() and printError(): to be called directly
@@ -345,6 +349,21 @@ void printProgressEnd();
 */
 void printStep(const std::wstring& label);
 
+/*! Prints the label of a step, in the console's language, as " - label : ".
+* @param step the step
+*/
+void printStep(Text step);
+
+/*! Prints the heading of a phase, in yellow, in the console's language.
+* @param heading the heading, e.g. Text::HeadingRawExtraction
+*/
+void printHeading(Text heading);
+
+/*! Writes text to the console, accents included (see writeConsole in tools.cpp).
+* @param text the text, newlines included
+*/
+void writeConsole(const std::wstring& text);
+
 /*! Progress of an artefact, rate-limited.
 *
 * Meant for the collection loops. The rate limiting is done by printProgress, BY
@@ -358,7 +377,8 @@ void printStep(const std::wstring& label);
 void printProgressStep(const std::wstring& artefact, unsigned long long done,
                        unsigned long long total);
 
-/*! Prints the error message of an HRESULT in RED on the console.
+/*! Prints the error message of an HRESULT in RED on the console, in the
+* console's language when Windows has it.
 * @param hresult the result a command returned
 */
 void printError( HRESULT  hresult);
@@ -368,11 +388,20 @@ void printError( HRESULT  hresult);
 */
 void printError( std::wstring  errorText);
 
-/*! Extracts the error message of an HRESULT returned by a command.
+/*! Extracts the error message of an HRESULT returned by a command, in
+* English — the message that goes into the JSON files and the logs.
 * @param hresult the result a command returned
 * @return the text attached to that HRESULT error code
 */
 std::wstring getErrorMessage(HRESULT hresult);
+
+/*! The error message of an HRESULT in a given language, English when Windows
+* does not have it, the system's own language failing that.
+* @param hresult the result a command returned
+* @param language the language wanted
+* @return the text attached to that HRESULT error code
+*/
+std::wstring getErrorMessage(HRESULT hresult, Language language);
 
 /*! Records a message in the output log file.
 * log(0, L""); => plain message

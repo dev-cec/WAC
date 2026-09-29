@@ -108,7 +108,7 @@ HRESULT MruApps::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::
 	for (int id : ids) {
 		bool Parentiszip = false | _Parentiszip;
 		log(1, L"➕MruApp");
-		printProgress(L"MruApp (level " + std::to_wstring(level) + L")",
+		printProgress(text(Text::ProgressLevel, { L"MruApp", std::to_wstring(level) }),
 		              ++nWalked, 0, L"mru");
 		MruApp mruApp;
 		mruApp.id = id;

@@ -20,6 +20,9 @@ log_level: 0
 # Raw hexadecimal values of shellbags and shortcuts, in the JSON.
 dump: false
 
+# Language of the console: fr or en. The JSON files and the logs stay in English.
+language: fr
+
 # The artefacts to collect.
 artefacts:
   registry: true          # the hives, and every artefact read in them

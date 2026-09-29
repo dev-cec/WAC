@@ -8,6 +8,8 @@
  *  unknown key, unknown artefact, value outside the ones allowed, a section
  *  where a value is expected — must refuse the file, naming the line; the
  *  reference file WAC writes (--write-config) must read back as it says.
+ *  The refusals are shown in the console's language: checked in English, and
+ *  once in French, with its values placed where the French wording puts them.
  *
  *  Usage (runs under wine): config_test.exe `<scratch folder>`
  */
@@ -36,14 +38,16 @@ std::wstring file(const char* name, const std::string& text) {
 	return path.wstring();
 }
 
-//! The text must be refused, the message naming `line` and containing `expected`.
-void refused(const char* name, const std::string& text, int line, const std::string& expected) {
+/*! The text must be refused, the message naming `line` and containing
+ *  `expected` (UTF-8). @param lineWord "line", or "ligne" in French */
+void refused(const char* name, const std::string& text, int line, const std::string& expected,
+             const std::string& lineWord = "line") {
 	AppliConf c;
 	ConfigurationFile f;
 	std::string error;
 	const bool read = LoadConfiguration(file(name, text), c, f, error);
 	check(!read, std::string(name) + ": accepted");
-	check(error.find("line " + std::to_string(line)) == 0 && error.find(expected) != std::string::npos,
+	check(error.find(lineWord + " " + std::to_string(line)) == 0 && error.find(expected) != std::string::npos,
 	      std::string(name) + ": refused as \"" + error + "\"");
 }
 
@@ -53,6 +57,7 @@ int wmain(int argc, wchar_t** argv) {
 	if (argc != 2) { std::printf("usage: config_test <scratch folder>\n"); return 2; }
 	g_folder = argv[1];
 	std::filesystem::create_directories(g_folder);
+	setLanguage(Language::English);   // the refusals below are checked in English, one in French at the end
 
 	// Absent: nothing applied, the defaults kept.
 	{
@@ -67,12 +72,12 @@ int wmain(int argc, wchar_t** argv) {
 		AppliConf c;
 		ConfigurationFile f;
 		std::string error;
-		const std::string text = "convert: false\nbinary: all\nthreads: 3\noutput: case42\nlog_level: 2\ndump: true\n"
+		const std::string text = "convert: false\nbinary: all\nthreads: 3\noutput: case42\nlog_level: 2\ndump: true\nlanguage: en\n"
 		                         "artefacts:\n  registry: false\n  events: true\n  prefetch: false\n  sessions: false\n"
 		                         "  network: false\n";
 		check(LoadConfiguration(file("all.yml", text), c, f, error), "all settings: refused: " + error);
 		check(c.mode == RunMode::Collect && c.binary && c.binaryAll && c.threads == 3 && c._outputDir == L"case42"
-		      && c.loglevel == 2 && c._dump, "top-level settings not applied");
+		      && c.loglevel == 2 && c._dump && c.language == Language::English, "top-level settings not applied");
 		check(!c.artefacts.registry && c._events && !c.artefacts.prefetch && !c.artefacts.sessions
 		      && !c.artefacts.network && c.artefacts.processes && c.artefacts.jumpLists, "artefact switches not applied, or others changed");
 		check(f.present && f.text == text && f.sha256.size() == 64, "file not recorded for the log");
@@ -92,8 +97,8 @@ int wmain(int argc, wchar_t** argv) {
 		ConfigurationFile f;
 		std::string error;
 		check(LoadConfiguration(file("reference.yml", DefaultConfiguration()), c, f, error), "reference file refused: " + error);
-		check(c.mode == RunMode::Collect && c.binary && !c.binaryAll && c._events && c.artefacts.registry,
-		      "reference file not applied as it says");
+		check(c.mode == RunMode::Collect && c.binary && !c.binaryAll && c._events && c.artefacts.registry
+		      && c.language == Language::French, "reference file not applied as it says");
 	}
 	refused("unknown.yml", "convert: false\nbinaries: all\n", 2, "unknown setting");
 	refused("artefact.yml", "artefacts:\n  registry: true\n  prefetchs: true\n", 3, "unknown artefact");
@@ -103,6 +108,11 @@ int wmain(int argc, wchar_t** argv) {
 	refused("output.yml", "output: C:\\\\temp\n", 1, "a folder name");
 	refused("section.yml", "binary:\n  method: all\n", 1, "takes a value");
 	refused("duplicate.yml", "artefacts:\n  events: true\n  events: false\n", 3, "given twice");
+	refused("language.yml", "language: de\n", 1, "fr or en expected");
+	// In French: the words, and the values in their places ("entre 0 et 256").
+	setLanguage(Language::French);
+	refused("threads_fr.yml", "threads: 9999\n", 1, "threads : 9999, entre 0 et 256 attendu", "ligne");
+	refused("bool_fr.yml", "dump: oui\n", 1, "true ou false attendu", "ligne");
 
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;

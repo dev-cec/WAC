@@ -123,7 +123,7 @@ HRESULT Mrus::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vec
 	for (int id : ids) {
 		bool Parentiszip = false | _Parentiszip;
 		log(1, L"➕Mru");
-		printProgress(L"Mru (level " + std::to_wstring(level) + L")",
+		printProgress(text(Text::ProgressLevel, { L"Mru", std::to_wstring(level) }),
 		              ++nWalked, 0, L"mru");
 		Mru mru;
 		mru.id = id;

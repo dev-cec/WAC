@@ -97,13 +97,39 @@ bool g_progressRunning = false;
 std::wstring g_currentStep;          //!< last label set by printStep
 } // namespace
 
+/*  WHY NOT wprintf. It converts the wchar_t through the program's C locale,
+    which is not UTF-8 although the console is: every accented letter of the
+    French texts came out as ideograms. On a console the text goes through
+    WriteConsoleW, in UTF-16; redirected to a file, where WriteConsoleW writes
+    nothing, it goes through stdout in UTF-8. */
+void writeConsole(const std::wstring& text) {
+	if (outputIsConsole()) {
+		WriteConsoleW(conf.hConsole, text.c_str(), (DWORD)text.length(), NULL, NULL);
+	}
+	else {
+		const std::string utf8 = encodeText(text);
+		fwrite(utf8.data(), 1, utf8.size(), stdout);
+		fflush(stdout);
+	}
+}
+
 void printStep(const std::wstring& label) {
 	g_currentStep = label;
-	wprintf(L"%ls", label.c_str());
+	writeConsole(label);
+}
+
+void printStep(Text step) {
+	printStep(L" - " + text(step) + L" : ");
+}
+
+void printHeading(Text heading) {
+	SetConsoleTextAttribute(conf.hConsole, 14);
+	writeConsole(text(heading) + L"\n");
+	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
 void printProgress(const std::wstring& label, unsigned long long done,
-                   unsigned long long total, const wchar_t* unit) {
+                   unsigned long long total, const std::wstring& unit) {
 	if (!outputIsConsole()) return;
 
 	/* Rate-limited by TIME, and not by number of elements.
@@ -125,12 +151,14 @@ void printProgress(const std::wstring& label, unsigned long long done,
 	std::wstring court = label;
 	if (court.size() > 40) court = L"..." + court.substr(court.size() - 37);
 
+	court.resize(40, L' ');
+	std::wstring line = L"\r   " + court + L" " + std::to_wstring(done);
 	if (total > 0)
-		wprintf(L"\r   %-40ls %llu/%llu %ls (%llu%%)   ", court.c_str(), done, total,
-		        unit, (unsigned long long)(done * 100ULL / total));
+		line += L"/" + std::to_wstring(total) + L" " + unit + L" ("
+		      + std::to_wstring(done * 100ULL / total) + L"%)   ";
 	else
-		wprintf(L"\r   %-40ls %llu %ls   ", court.c_str(), done, unit);
-	fflush(stdout);
+		line += L" " + unit + L"   ";
+	writeConsole(line);
 	g_progressRunning = true;
 }
 
@@ -138,9 +166,7 @@ void printProgressEnd() {
 	if (!outputIsConsole() || !g_progressRunning) return;
 	// Erases the progress line, then puts the step label back: without it the "OK"
 	// that follows would appear alone, without saying what it refers to.
-	wprintf(L"\r%-100ls\r", L"");
-	if (!g_currentStep.empty()) wprintf(L"%ls", g_currentStep.c_str());
-	fflush(stdout);
+	writeConsole(L"\r" + std::wstring(100, L' ') + L"\r" + g_currentStep);
 	g_progressRunning = false;
 }
 
@@ -149,7 +175,7 @@ void printSuccess() {
 	// attached to its step.
 	printProgressEnd();
 	SetConsoleTextAttribute(conf.hConsole, 10);
-	wprintf(L"OK\n");
+	writeConsole(L"OK\n");
 	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
@@ -157,11 +183,8 @@ void printProgressStep(const std::wstring& artefact, unsigned long long done,
                        unsigned long long total) {
 	/* The rate limiting is done by printProgress (by time): it holds for every
 	   pace, from the shellbag of several seconds to the thousands of
-	   instantaneous amcache entries.
-	   The unit is in pure ASCII, without accents: the console is in CP_UTF8, but
-	   wprintf converts the wchar_t according to the program's C locale, which is
-	   not — an accented character would come out there as ideograms. */
-	printProgress(artefact, done, total, L"elem");
+	   instantaneous amcache entries. */
+	printProgress(artefact, done, total, text(Text::ProgressUnit));
 }
 
 void printError(std::wstring errorText) {
@@ -174,37 +197,38 @@ void printError(std::wstring errorText) {
 	   UTF-8. */
 	errorText += L"\n";
 	SetConsoleTextAttribute(conf.hConsole, 12);
-	if (outputIsConsole()) {
-		WriteConsoleW(conf.hConsole, errorText.c_str(), (DWORD)errorText.length(), NULL, NULL);
-	}
-	else {
-		const std::string utf8 = encodeText(errorText);
-		fwrite(utf8.data(), 1, utf8.size(), stdout);
-		fflush(stdout);
-	}
+	writeConsole(errorText);
 	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
 void printError(HRESULT  hresult) {
-	printError(L"0x" + to_hex(hresult) + L" " + getErrorMessage(hresult));
+	printError(L"0x" + to_hex(hresult) + L" " + getErrorMessage(hresult, currentLanguage()));
 }
 
 std::wstring getErrorMessage(HRESULT hresult)
 {
+	// The files (JSON, logs) are in English whatever the console's language.
+	return getErrorMessage(hresult, Language::English);
+}
+
+std::wstring getErrorMessage(HRESULT hresult, Language language)
+{
 	// used by log(), so it must not log itself
-	/* The message is asked in ENGLISH first, like the rest of WAC's output; a
-	   system without the English messages falls back on its own language.
+	/* The message is asked in the language wanted first, then in English, then
+	   in the system's own language (0), which a system without either has.
 	   FormatMessageW can fail (a code without a message): the result was then
 	   built from a null pointer, which is undefined behaviour. The buffer the
 	   system allocates is released, which it never was. */
-	const DWORD languages[2] = { MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), 0 };
-	for (DWORD language : languages) {
+	const DWORD english = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
+	const DWORD languages[3] = {
+		language == Language::French ? (DWORD)MAKELANGID(LANG_FRENCH, SUBLANG_FRENCH) : english, english, 0 };
+	for (DWORD identifier : languages) {
 		LPWSTR errorText = NULL;
 		const DWORD n = FormatMessageW(
 			FORMAT_MESSAGE_FROM_SYSTEM
 			| FORMAT_MESSAGE_ALLOCATE_BUFFER
 			| FORMAT_MESSAGE_IGNORE_INSERTS,
-			NULL, hresult, language, (LPWSTR)&errorText, 0, NULL);
+			NULL, hresult, identifier, (LPWSTR)&errorText, 0, NULL);
 		if (n == 0 || errorText == NULL) continue;
 		std::wstring result(errorText, n);
 		LocalFree(errorText);

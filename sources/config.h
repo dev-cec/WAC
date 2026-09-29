@@ -17,6 +17,7 @@
  *      output: output
  *      log_level: 0
  *      dump: false
+ *      language: fr           # fr | en: the console; the files stay in English
  *      artefacts:
  *        registry: true
  *        events: false

@@ -161,9 +161,12 @@ Windows program of the collection cannot run there.
 To minimize disk traces, this standalone tool should be run **as administrator** from a USB stick using the command:
 
 ```
-usage: wac [--config=file | --write-config] [--collect | --full | --convert=folder] [--dump] [--events] [--binary | --binary-all] [--threads=N] [--output=output] [--loglevel=2] [--debug]
+usage: wac [--config=file | --write-config] [--collect | --full | --convert=folder] [--language=fr|en] [--dump] [--events] [--binary | --binary-all] [--threads=N] [--output=output] [--loglevel=2] [--debug]
        wac --update-trust[=folder]
         --help or /? : show this help
+        --language=fr|en : language of the console (French by default; also
+                    `language:` in wac.yml). The JSON files, investigation.json
+                    and the text log stay in English whatever the language
         --update-trust[=folder] : on the ANALYSIS WORKSTATION, BEFORE the
                     collection, and alone: downloads Microsoft's trusted roots
                     and disallowed certificates, checks their signatures, and
@@ -223,6 +226,7 @@ threads: 0              # analysis threads for the binaries, 0: automatic
 output: output
 log_level: 0
 dump: false
+language: fr            # fr | en: the console; the files stay in English
 artefacts:              # one switch per artefact; all the hives are `registry`
   registry: true
   events: true

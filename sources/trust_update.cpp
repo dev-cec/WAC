@@ -102,7 +102,9 @@ void downloadAll(const HttpClient& http, std::vector<Download>& batch, size_t ma
 			// One retry: a server that times out once (seen on crl.microsoft.com) is not a missing list.
 			batch[k].obtained = http.get(batch[k].url, batch[k].content, maxSize, batch[k].reason)
 			                 || http.get(batch[k].url, batch[k].content, maxSize, batch[k].reason);
-			if (++done % 50 == 0) wprintf(L"\r - %ls : %zu / %zu", label.c_str(), done.load(), batch.size());
+			if (++done % 50 == 0)
+				writeConsole(L"\r" + text(Text::TrustDownloading,
+				             { label, std::to_wstring(done.load()), std::to_wstring(batch.size()) }));
 		}
 	};
 	std::vector<std::thread> threads;
@@ -110,7 +112,8 @@ void downloadAll(const HttpClient& http, std::vector<Download>& batch, size_t ma
 	for (std::thread& t : threads) t.join();
 	size_t obtained = 0;
 	for (const Download& d : batch) obtained += d.obtained;
-	wprintf(L"\r - %ls : %zu / %zu, %zu obtained\n", label.c_str(), batch.size(), batch.size(), obtained);
+	writeConsole(L"\r" + text(Text::TrustObtained, { label, std::to_wstring(batch.size()),
+	             std::to_wstring(batch.size()), std::to_wstring(obtained) }) + L"\n");
 }
 
 /*! Downloads every root authroot.stl names; each must be the certificate
@@ -121,7 +124,7 @@ std::vector<SetFile> fetchRoots(const HttpClient& http, const TrustList& roots,
                                 std::map<std::wstring, std::string>& missing) {
 	std::vector<Download> batch(roots.entries.size());
 	for (size_t k = 0; k < batch.size(); ++k) batch[k].url = TRUSTED_ROOTS_URL + thumbprint(roots.entries[k]) + L".crt";
-	downloadAll(http, batch, CERTIFICATE_MAX, L"Root certificates");
+	downloadAll(http, batch, CERTIFICATE_MAX, text(Text::TrustRootCertificates));
 	std::vector<SetFile> files;
 	for (size_t k = 0; k < batch.size(); ++k) {
 		const TrustListEntry& entry = roots.entries[k];
@@ -263,7 +266,8 @@ std::vector<DriverList> fetchDriverLists(const HttpClient& http) {
 	lists[1] = { L"LOLDrivers", LOLDRIVERS_URL, L"sources\\loldrivers.json" };
 	for (size_t k = 0; k < lists.size(); ++k) {
 		DriverList& list = lists[k];
-		printStep(L" - " + list.name + L" : ");
+		// The name stays English in the manifest; the console shows it in its language.
+		printStep(L" - " + (k == 0 ? text(Text::TrustDriverBlocklist) : list.name) + L" : ");
 		list.obtained = http.get(list.url, list.raw, DRIVER_LIST_MAX, list.reason)
 		             && (k == 0 ? readDriverBlocklist(list) : readLolDrivers(list));
 		if (list.obtained) printSuccess();
@@ -380,7 +384,7 @@ void addMicrosoftAuthorities(const HttpClient& http, Revocation& r) {
 	for (const wchar_t* url : MICROSOFT_AUTHORITY_CRLS) r.crls[url];
 	std::vector<Download> certificates;
 	for (const wchar_t* url : MICROSOFT_AUTHORITIES) certificates.push_back({ url, {}, {}, false });
-	downloadAll(http, certificates, CERTIFICATE_MAX, L"Microsoft code signing authorities");
+	downloadAll(http, certificates, CERTIFICATE_MAX, text(Text::TrustCodeSigningAuthorities));
 	for (const Download& d : certificates) {
 		if (!d.obtained) continue;
 		for (const std::string& crl : CertificateCrlAddresses(d.content.data(), d.content.size()))
@@ -402,19 +406,19 @@ void addWantedCrls(const std::wstring& folder, Revocation& r) {
 		r.crls[url];
 		++added;
 	}
-	if (added) wprintf(L" - Revocation lists wanted by earlier collections : %zu\n", added);
+	if (added) writeConsole(text(Text::TrustRevocationWanted, { std::to_wstring(added) }) + L"\n");
 }
 
 Revocation fetchRevocation(const HttpClient& http, const std::wstring& folder) {
 	Revocation r;
-	printStep(L" - Certificate authorities (CCADB) : ");
+	printStep(Text::TrustAuthorities);
 	r.obtained = http.get(CCADB_URL, r.report, CCADB_MAX, r.reason) && readCcadb(r);
 	if (!r.obtained) { printError(decodeText(r.reason, CP_UTF8)); return r; }
 	printSuccess();
 	addMicrosoftAuthorities(http, r);
 	addWantedCrls(folder, r);
 	for (const auto& [url, unused] : r.crls) r.downloads.push_back({ url, {}, {}, false });
-	downloadAll(http, r.downloads, CRL_MAX, L"Revocation lists (CRL)");
+	downloadAll(http, r.downloads, CRL_MAX, text(Text::TrustRevocationLists));
 	return r;
 }
 
@@ -611,20 +615,20 @@ bool writeSet(const std::filesystem::path& folder, const std::vector<SetFile>& f
 
 int UpdateTrust(const std::wstring& folder) {
 	std::string reason;
-	printStep(L" - Trust set folder : ");
+	printStep(Text::TrustFolder);
 	if (!folderAccepted(folder, reason)) { printError(folder + L": " + decodeText(reason, CP_UTF8)); return 1; }
 	printSuccess();
 	const HttpClient http;
 	if (!http.ready()) { printError(decodeText(http.reason(), CP_UTF8)); return 1; }
 
 	std::vector<Source> sources(2);
-	printStep(L" - Trusted roots list (authroot.stl) : ");
+	printStep(Text::TrustRoots);
 	if (!fetchList(http, L"authrootstl.cab", "authroot.stl", 3, sources[0], reason)) {
 		printError(decodeText(reason, CP_UTF8));
 		return 1;
 	}
 	printSuccess();
-	printStep(L" - Disallowed certificates list (disallowedcert.stl) : ");
+	printStep(Text::TrustDisallowed);
 	if (!fetchList(http, L"disallowedcertstl.cab", "disallowedcert.stl", 15, sources[1], reason)) {
 		printError(decodeText(reason, CP_UTF8));
 		return 1;
@@ -633,7 +637,7 @@ int UpdateTrust(const std::wstring& folder) {
 
 	std::map<std::wstring, std::string> missing;
 	std::vector<SetFile> files = fetchRoots(http, sources[0].parsed, missing);
-	if (files.empty()) { printError(L"no root certificate obtained"); return 1; }
+	if (files.empty()) { printError(text(Text::TrustNoRoot)); return 1; }
 	files.push_back(rootsPem(sources[0].parsed, files));
 	for (const Source& s : sources) files.push_back({ s.name, s.list });
 	std::vector<DriverList> drivers = fetchDriverLists(http);
@@ -648,12 +652,11 @@ int UpdateTrust(const std::wstring& folder) {
 			if (d.obtained) files.push_back({ crlFile(d.url), std::move(d.content) });
 	}
 
-	printStep(L" - Writing the trust set : ");
+	printStep(Text::TrustWriting);
 	const Json m = manifest(sources, drivers, revocation, files, sources[0].parsed.entries.size(), missing);
 	if (!writeSet(folder, files, m, reason)) { printError(decodeText(reason, CP_UTF8)); return 1; }
 	printSuccess();
 	if (!missing.empty())
-		wprintf(L"   %zu root(s) not obtained: listed in %hs; a signature chaining to one is not verified.\n",
-		        missing.size(), MANIFEST);
+		writeConsole(text(Text::TrustRootsMissing, { std::to_wstring(missing.size()), decodeText(MANIFEST, CP_UTF8) }) + L"\n");
 	return 0;
 }
