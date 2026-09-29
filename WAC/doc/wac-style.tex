@@ -101,3 +101,19 @@
 \newcommand{\opt}[1]{\texttt{-{}-#1}}
 \newcommand{\champ}[1]{\texttt{#1}}
 \newcommand{\fichier}[1]{\texttt{#1}}
+
+% ============================================================ COVER PAGE
+% The cover images are 2:3 (1024 x 1536), taller than an A4 page once widened
+% to it: centred, they lost 9 mm at the top — the CEC logo — and 9 mm at the
+% bottom. Raised 4 mm above the top of the page instead: the logo, which starts
+% 6 mm below the image's edge, stays whole, and the bottom row of text keeps
+% 7 mm to the page's edge; only a decorative corner below it is cut.
+% Usage: \coverpage{cover_FR.png}
+\newcommand{\coverpage}[1]{%
+  \begin{titlepage}
+  \thispagestyle{empty}
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[inner sep=0pt,anchor=north,yshift=4mm] at (current page.north)
+      {\includegraphics[width=\paperwidth]{#1}};
+  \end{tikzpicture}
+  \end{titlepage}}
