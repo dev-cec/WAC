@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider | P1 | faible |
+| en cours | P1 | faible |
 
 ## Pourquoi
 Sources attendues de toute collecte de réponse à incident (niveau KAPE !SANS_Triage), absentes de WAC.

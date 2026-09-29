@@ -13,8 +13,9 @@ Remplace `TODO.txt`.
   (commit cité). `à décider` quand un choix de principe précède tout
   développement.
 - **Priorités** : P1 attendu de toute collecte, P2 utile, P3 plus tard.
-- Un élément fini **quitte la table « Ouvert »** et rejoint « Réalisé » avec
-  son commit ; sa fiche est supprimée, l'historique restant dans git.
+- Un élément fini quitte la table « Ouvert » : sa fiche est **déplacée dans
+  `archives/`** avec le statut `fait (commit)` et son journal complété. Une
+  fiche n'est jamais supprimée : `archives/` est l'historique du projet.
 - On ne déclare pas fini ce qui n'a pas passé la définition ci-dessous.
 
 ## Définition de « fini » (tout élément)
@@ -68,15 +69,8 @@ Remplace `TODO.txt`.
 
 ## Réalisé
 
-**Inventaire par domaine, avec les décisions et leurs raisons : [REALISE.md](REALISE.md)**
-— à lire avant de reprendre le projet. Ci-dessous, les lots dans l'ordre.
-
-| Période | Réalisé | Commits |
-|---|---|---|
-| 2025-05 | Version d'origine (1.0 à 1.3.1) : collecte par VSS, COM et API, empreintes MD5 | 6508455 … 5ee5a1c |
-| 2026-09-15/17 | Collecte hors ligne : lecture NTFS brute, plus de VSS ni de COM ; journaux d'événements lus hors ligne ; rejeu des journaux de ruche ; consigne scellée et copie de travail ; décompression NTFS et WOF ; profils lus dans la ruche copiée | f3a6b3a, 1aab531, 958d35b, 6a41ed5, 6a61a8e, d812e20, 78e573f |
-| 2026-09-22 | `--binary` : empreintes et prélèvement des binaires cités, documents à macros, authentification Microsoft en mémoire ; aucun champ vide ; documentation LaTeX FR et EN | e6bf86f, 5934a3b, 886a765, 4f7666c, 7fba566, 88508c2 |
-| 2026-09-23 | Tout le code en anglais ; documentation doxygen complète ; lectures bornées (données tronquées ou forgées) ; listes de sauts, Prefetch, raccourcis corrigés ; guide des tests | 1984886, 8f23ad8, d88a4b5, 6f903a8, 973f5d0, bb84afd |
-| 2026-09-24/25 | Lecteur de ruches propre (plus d'offreg.dll) ; 5 DLL importées ; dates UTC exactes, heure d'été ; enregistrements NTFS déchirés refusés ; SID et GUID nommés hors ligne ; relevés en direct scellés ; collecte séparée de la conversion ; `--binary-all` ; LZX ; dossier de validation | 5eabec8, f989656, 50537d5, 66e5567, a3e27ec, 37bfea4, bae8b85, 5eb3517, 5c12c3a, 42a10df |
-| 2026-09-26 | Signatures tierces vérifiées (chaîne, horodatage, CRL, pilotes vulnérables) avec `--update-trust` ; analyse parallèle ; `wac.yml` ; version 1.4.0 ; relevé réseau direct | 3d06aa1, c341d31, fc0610b, 2d13f42, 73c23d0, 9fefefc, c6f1b57, c993162 |
-| 2026-09-29 | Clés JSON cohérentes (B-001) ; $MFT et journal USN ; volume lu sans cache, BAM de la collecte séparée ; scripts de vérification `.sh` et confinement des chemins ; dossier d'innocuité et contrôle par témoins ; `bin/` et `sources/` ; compilation unique MinGW (MSVC retiré) ; console FR/EN | 92b14e9, 01549c7, 49d27d3, 2901062, 654e2b8, 5d1a0e9, ec795f5, 84e60e7, 2742bbb |
+Dans [archives/](archives/) :
+- [B-000 — point de départ](archives/B-000-point-de-depart.md) : ce que WAC
+  faisait au 29 septembre 2026, de la version d'origine de 2025 à la migration,
+  avec les décisions, leurs raisons et les commits ;
+- puis une fiche par élément fini depuis, statut `fait` et commit cités.
