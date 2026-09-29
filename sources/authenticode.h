@@ -432,6 +432,23 @@ const TrustListEntry* FindInTrustList(const TrustList& list, const uint8_t* cert
  *  @return the addresses; empty if none, or if it is not a certificate */
 std::vector<std::string> CertificateCrlAddresses(const uint8_t* der, size_t size);
 
+/*! What identifies a certificate to a reader: names and validity. */
+struct CertificateSummary {
+	std::wstring subject;           //!< the subject's common name (CN)
+	std::wstring subjectOrganization; //!< the subject's organisation (O)
+	std::wstring issuer;            //!< the issuer's common name (CN)
+	std::wstring serialNumber;      //!< the serial number, hexadecimal
+	uint64_t notBefore = 0;         //!< start of validity, FILETIME UTC; 0 if unreadable
+	uint64_t notAfter = 0;          //!< end of validity, FILETIME UTC; 0 if unreadable
+};
+
+/*! Names and validity of a certificate — for the certificate stores of the
+ *  registry (root_certificates.json).
+ *  @param der,size the certificate, DER
+ *  @param summary receives what could be read
+ *  @return false if it is not a certificate */
+bool SummarizeCertificate(const uint8_t* der, size_t size, CertificateSummary& summary);
+
 /*! Base64 (the standard alphabet) to bytes; padding and characters outside
  *  the alphabet are skipped.
  *  @param text the encoded text

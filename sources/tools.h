@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <functional>
 #include <type_traits>
 #include <iomanip>
 #include <sstream>
@@ -128,6 +129,12 @@ struct AppliConf {
 		bool zoneIdentifiers = true;  //!< Zone.Identifier streams, read in the $MFT copy
 		bool security = true;         //!< SECURITY hive: LSA secrets' names and dates, cached logons, audit policy
 		bool persistence = true;      //!< registry persistence beyond Run: IFEO, AppInit, Winlogon, LSA, COM…
+		bool officeTrustRecords = true;          //!< Office trusted documents: macros enabled by the user, and when
+		bool typedPaths = true;          //!< paths typed in Explorer's address bar
+		bool wordWheelQuery = true;          //!< terms searched in Explorer
+		bool rootCertificates = true;          //!< root certificates of the machine and of each user
+		bool internetSettings = true;          //!< each user's proxy and automatic configuration script
+		bool firewall = true;          //!< firewall rules and profiles
 	} artefacts;
 	RunMode mode = RunMode::Full; //!< what this run does (see RunMode)
 	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)
@@ -894,6 +901,14 @@ HRESULT getRegBinaryValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vect
 * @param ids receives the ranks
 * @return ERROR_SUCCESS, or the error of the read */
 HRESULT readMruListEx(ORHKEY key, std::vector<unsigned int>& ids);
+
+/*! Opens a hive of each profile in the working copy, hands it over, closes it.
+* @param relativeHive the hive's file, relative to the profile
+*        (L"\\ntuser.dat", L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat")
+* @param visit called with the hive's root and the profile's SID; a hive that
+*        cannot be opened is skipped (logged) */
+void forEachProfileHive(const std::wstring& relativeHive,
+                        const std::function<void(ORHKEY root, const std::wstring& sid)>& visit);
 
 /*! Reads a boolean in the registry.
 * @param key the registry key

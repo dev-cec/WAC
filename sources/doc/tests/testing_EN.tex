@@ -554,7 +554,7 @@ needed.
 cd build-windows/tests && wine file_artefacts_test.exe
 \end{lstlisting}
 
-Reference: 37 checks, no failure. In the VM cycle,
+Reference: 43 checks, no failure (the second-lot registry values included: TrustRecords, firewall rule, certificate Blob). In the VM cycle,
 \fichier{place-file-artefacts.ps1} places witnesses whose content is known (a
 history, a file sent to the bin, a hosts entry, a startup script) and
 \fichier{check-json.py} finds them in the JSON.

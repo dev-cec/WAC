@@ -95,9 +95,9 @@ HRESULT Runs::getData() {
 	   (S-1-5-18) — what runs there starts with the system, whoever logs on. */
 	readRunKeysOfHive(conf.mountpoint + L"\\Windows\\system32\\config\\DEFAULT", L"DEFAULT", L"S-1-5-18", runs);
 	// Each user, in their NTUSER.DAT: whose logon starts the program.
-	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
-		readRunKeysOfHive(extractedPath(std::get<1>(profileEntry)) + L"\\ntuser.dat", L"NTUSER.DAT",
-		                  std::get<0>(profileEntry), runs);
+	forEachProfileHive(L"\\ntuser.dat", [this](ORHKEY root, const std::wstring& sid) {
+		readRunKeys(root, L"Software\\Microsoft\\Windows\\CurrentVersion\\", L"NTUSER.DAT", sid, getNameFromSid(sid), runs);
+	});
 	return ERROR_SUCCESS;
 }
 

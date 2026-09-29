@@ -348,6 +348,12 @@ artefacts:              # one switch per artefact; all the hives = registry
   zone_identifiers: true  # Zone.Identifier streams: where downloaded files came from
   security: true        # SECURITY hive: LSA secret names, cached logons, audit
   persistence: true     # registry persistence: IFEO, AppInit, Winlogon, LSA, COM…
+  office_trust_records: true  # Office trusted documents, macros enabled
+  typed_paths: true     # paths typed in Explorer
+  word_wheel_query: true  # Explorer searches
+  root_certificates: true # root certificates of the machine and users
+  internet_settings: true # users' proxy
+  firewall: true        # firewall rules and profiles
 \end{lstlisting}
 
 \begin{itemize}
@@ -1026,6 +1032,23 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         file it names. Every value is given, Windows' own included: telling the
         added from the default is the analysis's work. BITS jobs are not read
         yet.
+  \item[\fichier{office\_trust\_records.json}] Office documents a user trusted
+        (``Enable content''): application, version, document, date;
+        \champ{MacrosEnabled} when macros were enabled — the door of most macro
+        infections.
+  \item[\fichier{typed\_paths.json}, \fichier{word\_wheel\_query.json}] paths
+        typed in Explorer's address bar and terms searched there, per user and
+        rank (1 = the most recent).
+  \item[\fichier{root\_certificates.json}] certificates of the machine's and each
+        user's root stores: subject, issuer, validity; a root added makes Windows
+        trust whatever it signs (TLS interception, signed malware).
+        \champ{ThumbprintMismatch} flags a certificate whose SHA-1 is not its
+        key's name.
+  \item[\fichier{internet\_settings.json}] each user's proxy and automatic
+        configuration script.
+  \item[\fichier{firewall.json}] firewall rules (name, action, direction, ports,
+        program; every field in \champ{Fields}) and the domain, private and
+        public profile settings.
   \item[\fichier{startup\_folders.json}] content of the startup folders, of all
         users (\champ{Scope} \texttt{AllUsers}) and of each profile
         (\texttt{User}, with \champ{SID}): every file, its dates and

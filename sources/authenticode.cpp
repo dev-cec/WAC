@@ -1495,6 +1495,19 @@ std::vector<std::string> CertificateCrlAddresses(const uint8_t* der, size_t size
 	return crlAddressesOf(c);
 }
 
+bool SummarizeCertificate(const uint8_t* der, size_t size, CertificateSummary& summary) {
+	Tlv t;
+	Certificate c;
+	if (!der || !readTlv(der, size, t) || !analyseCertificate(t, c)) return false;
+	summary.subject = attributeNameField(c.subject, OID_CN, sizeof(OID_CN));
+	summary.subjectOrganization = attributeNameField(c.subject, OID_O, sizeof(OID_O));
+	summary.issuer = attributeNameField(c.issuer, OID_CN, sizeof(OID_CN));
+	if (c.serial.val) summary.serialNumber = toHexadecimal(c.serial.val, c.serial.len);
+	summary.notBefore = c.notBefore;
+	summary.notAfter = c.notAfter;
+	return true;
+}
+
 std::vector<uint8_t> DecodeBase64(const std::string& text) {
 	std::vector<uint8_t> bytes;
 	uint32_t acc = 0; int bits = 0;

@@ -47,6 +47,7 @@ enum class Text : unsigned {
 	StepJumpListsAutomatic, StepJumpListsCustom, StepEvents,
 	StepPowerShellHistory, StepSetupApi, StepRecycleBin, StepHosts, StepErrorReports, StepDefenderLogs,
 	StepStartupFolders, StepZoneIdentifiers, StepSecurityHive, StepPersistence,
+	StepOfficeTrustRecords, StepTypedPaths, StepWordWheelQueries, StepRootCertificates, StepInternetSettingsSet, StepFirewall,
 	// Steps: investigation log
 	StepWriteConversionLog, StepWriteInvestigationLog,
 	// Artefacts switched off by wac.yml (their name, then the message)
@@ -58,7 +59,7 @@ enum class Text : unsigned {
 	ArtefactJumpListsAutomatic, ArtefactJumpListsCustom,
 	ArtefactPowerShellHistory, ArtefactSetupApi, ArtefactRecycleBin, ArtefactHosts, ArtefactErrorReports,
 	ArtefactDefenderLogs, ArtefactStartupFolders, ArtefactZoneIdentifiers, ArtefactSecurityHive,
-	ArtefactPersistence,
+	ArtefactPersistence, ArtefactOfficeTrustRecords, ArtefactTypedPaths, ArtefactWordWheelQueries, ArtefactRootCertificates, ArtefactInternetSettingsSet, ArtefactFirewall,
 	NotRequested,
 	// End of the run
 	TimeElapsed, PressAnyKey, ConversionLogNotWritten,

@@ -20,6 +20,9 @@
 #                they name executables and DLLs that do not exist) -> persistence.json
 #   userinit, lsa_security, monitors  values Windows set itself, read live,
 #                to compare -> persistence.json
+#   trust, typedpath, search, proxy, fwrule  second-lot registry witnesses of
+#                the user "wac" and a firewall rule blocking an unused port;
+#   roots, fwcount  the machine's root store and rule count, read live
 #   setupapi     number of sections of setupapi.dev*.log now; the collection,
 #                later, finds at least as many -> setupapi.json
 #   mplog        number of Defender support logs -> defender_log.json
@@ -117,7 +120,43 @@ Write-Output ("lsa_security=" + ((Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlS
 $monitors = Get-ChildItem 'HKLM:\SYSTEM\CurrentControlSet\Control\Print\Monitors' | ForEach-Object { $_.PSChildName + '=' + $_.GetValue('Driver') } | Sort-Object
 Write-Output ("monitors=" + ($monitors -join '|'))
 
-# 9. Reference counts of the logs Windows writes itself.
+# 9. Second-lot registry witnesses, in the hive of the user "wac" (loaded: the
+#    user is logged on) and in the firewall policy. Harmless.
+$user = "Registry::HKEY_USERS\$wacSid"
+$trust = "$user\Software\Microsoft\Office\16.0\Word\Security\Trusted Documents\TrustRecords"
+New-Item -Force $trust | Out-Null
+$stamp = [BitConverter]::GetBytes([DateTime]::UtcNow.ToFileTimeUtc())
+$record = $stamp + (New-Object byte[] 12) + [byte[]](0xFF, 0xFF, 0xFF, 0x7F)
+New-ItemProperty -Force -Path $trust -Name '%USERPROFILE%/Documents/wac-macro-test.docm' -PropertyType Binary -Value $record | Out-Null
+Write-Output "trust=$wacSid|%USERPROFILE%/Documents/wac-macro-test.docm"
+$typed = "$user\Software\Microsoft\Windows\CurrentVersion\Explorer\TypedPaths"
+New-Item -Force $typed -ErrorAction SilentlyContinue | Out-Null
+New-ItemProperty -Force -Path $typed -Name 'url25' -Value '\\wac-test.invalid\share' | Out-Null
+Write-Output "typedpath=$wacSid|25|\\wac-test.invalid\share"
+$wheel = "$user\Software\Microsoft\Windows\CurrentVersion\Explorer\WordWheelQuery"
+if (-not (Test-Path $wheel)) { New-Item -Force $wheel | Out-Null }
+$term = [Text.Encoding]::Unicode.GetBytes('wac-secret-search') + [byte[]](0, 0)
+New-ItemProperty -Force -Path $wheel -Name '99' -PropertyType Binary -Value $term | Out-Null
+$order = (Get-ItemProperty $wheel -ErrorAction SilentlyContinue).MRUListEx
+$ids = @()
+if ($order) { for ($i = 0; $i + 4 -le $order.Length; $i += 4) { $v = [BitConverter]::ToUInt32($order, $i); if ($v -eq 0xFFFFFFFF) { break }; if ($v -ne 99) { $ids += $v } } }
+$bytes = @(); foreach ($v in @(99) + $ids) { $bytes += [BitConverter]::GetBytes([uint32]$v) }; $bytes += [BitConverter]::GetBytes([uint32]::MaxValue)
+New-ItemProperty -Force -Path $wheel -Name 'MRUListEx' -PropertyType Binary -Value ([byte[]]$bytes) | Out-Null
+Write-Output "search=$wacSid|wac-secret-search"
+$internet = "$user\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
+New-ItemProperty -Force -Path $internet -Name 'ProxyServer' -Value '127.0.0.1:3128' | Out-Null
+Write-Output "proxy=$wacSid|127.0.0.1:3128"
+Get-NetFirewallRule -DisplayName 'WAC test rule' -ErrorAction SilentlyContinue | Remove-NetFirewallRule
+New-NetFirewallRule -DisplayName 'WAC test rule' -Direction Inbound -Action Block -Protocol TCP -LocalPort 65001 | Out-Null
+Write-Output "fwrule=WAC test rule|Block|In|65001"
+$rules = 'HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\FirewallRules'
+Write-Output ("fwcount=" + (Get-Item $rules).ValueCount)
+$roots = Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\SystemCertificates\ROOT\Certificates' | ForEach-Object PSChildName | Sort-Object
+Write-Output ("roots=" + ($roots -join ','))
+$first = Get-ChildItem Cert:\LocalMachine\Root | Where-Object { $roots -contains $_.Thumbprint } | Select-Object -First 1
+if ($first) { Write-Output ("rootsubject=" + $first.Thumbprint + '|' + $first.GetNameInfo('SimpleName', $false)) }
+
+# 10. Reference counts of the logs Windows writes itself.
 $sections = (Select-String -Path 'C:\Windows\INF\setupapi.dev*.log' -Pattern '^>>>  \[' -ErrorAction SilentlyContinue | Measure-Object).Count
 Write-Output "setupapi=$sections"
 $mplog = @(Get-ChildItem -Force 'C:\ProgramData\Microsoft\Windows Defender\Support\MPLog-*.log' -ErrorAction SilentlyContinue).Count

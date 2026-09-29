@@ -1,7 +1,8 @@
 /*! \file
  *  \brief Checks the decoders of the small file artefacts on inputs whose
  *  result is known: PowerShell history, setupapi.dev.log, recycle bin `$I`,
- *  hosts, Report.wer, Defender's MPLog, Zone.Identifier.
+ *  hosts, Report.wer, Defender's MPLog, Zone.Identifier, and the registry
+ *  values of the second lot (TrustRecords, firewall rules, certificate Blob).
  *
  *  WHY THIS TEST. These formats are text or a few bytes, and a decoder that
  *  misses a case still gives valid JSON: a multi-line command cut in two, a
@@ -19,6 +20,7 @@
 #include "error_reports.h"
 #include "defender_log.h"
 #include "zone_identifiers.h"
+#include "registry_lot2.h"
 #include <cstdio>
 
 AppliConf conf; //!< WAC's global configuration, which tools.cpp references
@@ -169,6 +171,34 @@ void zoneIdentifier() {
 	      "zone identifier: zone names, unknown ones empty");
 }
 
+void registryLot2() {
+	// TrustRecords: a FILETIME, then the flag at the very end.
+	std::vector<uint8_t> record;
+	put64(record, 133280000000000000ULL);
+	record.resize(20, 0);
+	record.push_back(0xFF); record.push_back(0xFF); record.push_back(0xFF); record.push_back(0x7F);
+	FILETIME t; bool macros = false;
+	check(parseTrustRecord(record, t, macros) && macros && value(t) == 133280000000000000ULL, "trust record: macros enabled, date read");
+	record[23] = 0x00;
+	check(parseTrustRecord(record, t, macros) && !macros, "trust record: editing only, no macros");
+	check(!parseTrustRecord(std::vector<uint8_t>(8, 0), t, macros), "trust record: too short refused");
+	// Firewall rule: version, fields, a repeated field, empty trailing field.
+	std::wstring version;
+	const NameValues f = parseFirewallRule(L"v2.33|Action=Block|Active=TRUE|Dir=In|RA4=10.0.0.1|RA4=10.0.0.2|Name=WAC test|", version);
+	check(version == L"v2.33" && f.size() == 6 && f[1].second == L"TRUE" && f[3].first == L"RA4" && f[4].first == L"RA4"
+	      && f[5].second == L"WAC test", "firewall rule: version, six fields, the repeated one kept twice");
+	// Certificate Blob: a first property, then 0x20; a length that lies.
+	std::vector<uint8_t> blob;
+	auto put32 = [&](uint32_t v) { for (int i = 0; i < 4; ++i) blob.push_back((uint8_t)(v >> (8 * i))); };
+	put32(0x03); put32(1); put32(4); put32(0xDEADBEEF);
+	put32(0x20); put32(1); put32(3); blob.push_back(0x30); blob.push_back(0x01); blob.push_back(0x00);
+	size_t der = 0, size = 0;
+	check(certificateInBlob(blob, der, size) && der == 28 && size == 3, "certificate blob: property 0x20 found after another");
+	std::vector<uint8_t> lying = blob;
+	lying[8] = 0xFF; lying[9] = 0xFF;
+	check(!certificateInBlob(lying, der, size), "certificate blob: a length beyond the value refused");
+}
+
 } // namespace
 
 int wmain() {
@@ -179,6 +209,7 @@ int wmain() {
 	errorReport();
 	defender();
 	zoneIdentifier();
+	registryLot2();
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }

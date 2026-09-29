@@ -353,6 +353,12 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   zone_identifiers: true  # flux Zone.Identifier : d'où viennent les fichiers téléchargés
   security: true        # ruche SECURITY : noms des secrets LSA, connexions en cache, audit
   persistence: true     # persistance du registre : IFEO, AppInit, Winlogon, LSA, COM…
+  office_trust_records: true  # documents Office approuvés, macros activées
+  typed_paths: true     # chemins tapés dans l'Explorateur
+  word_wheel_query: true  # recherches de l'Explorateur
+  root_certificates: true # certificats racines de la machine et des utilisateurs
+  internet_settings: true # proxy des utilisateurs
+  firewall: true        # règles et profils du pare-feu
 \end{lstlisting}
 
 \begin{itemize}
@@ -1047,6 +1053,23 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         valeurs sont données, celles de Windows comprises : distinguer
         l'ajouté du défaut revient à l'analyse. Les tâches BITS ne sont pas
         encore lues.
+  \item[\fichier{office\_trust\_records.json}] documents Office qu'un utilisateur
+        a approuvés (« Activer le contenu ») : application, version, document,
+        date ; \champ{MacrosEnabled} quand il a activé les macros — la porte de
+        la plupart des infections par macro.
+  \item[\fichier{typed\_paths.json}, \fichier{word\_wheel\_query.json}] chemins
+        tapés dans la barre d'adresse de l'Explorateur et termes qui y ont été
+        cherchés, par utilisateur et par rang (1 = le plus récent).
+  \item[\fichier{root\_certificates.json}] certificats des magasins racines de la
+        machine et de chaque utilisateur : sujet, émetteur, validité ; une
+        racine ajoutée fait accepter tout ce qu'elle signe (interception TLS,
+        logiciel signé). \champ{ThumbprintMismatch} signale un certificat dont le
+        SHA-1 n'est pas le nom de sa clé.
+  \item[\fichier{internet\_settings.json}] proxy et script de configuration
+        automatique de chaque utilisateur.
+  \item[\fichier{firewall.json}] règles du pare-feu (nom, action, sens, ports,
+        programme ; tous les champs dans \champ{Fields}) et réglages des profils
+        domaine, privé et public.
   \item[\fichier{startup\_folders.json}] contenu des dossiers de démarrage, de
         tous les utilisateurs (\champ{Scope} \texttt{AllUsers}) et de chaque
         profil (\texttt{User}, avec \champ{SID}) : chaque fichier, ses dates et

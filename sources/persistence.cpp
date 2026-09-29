@@ -127,16 +127,12 @@ void apply(ORHKEY root, const Rule& rule, const std::wstring& hive, const std::w
 	for (const std::wstring& sub : subkeys) readKey(root, parent + L"\\" + sub + rest, rule, hive, sid, out);
 }
 
-/*! Opens a user hive of the working copy, applies its rules, closes it. */
-void readUserHive(const std::wstring& file, Hive kind, const std::wstring& hiveName, const std::wstring& sid,
-                  std::vector<PersistenceEntry>& out) {
-	ORHKEY root = NULL;
-	if (OROpenHive(file.c_str(), &root) != ERROR_SUCCESS) {
-		log(2, L"🔥OROpenHive " + file);
-		return;
-	}
-	for (const Rule& rule : RULES) if (rule.hive == kind) apply(root, rule, hiveName, sid, out);
-	ORCloseHive(root);
+//! Applies the rules of one kind of user hive to every profile's.
+void readUserHives(const std::wstring& relativeHive, Hive kind, const std::wstring& hiveName,
+                   std::vector<PersistenceEntry>& out) {
+	forEachProfileHive(relativeHive, [&](ORHKEY root, const std::wstring& sid) {
+		for (const Rule& rule : RULES) if (rule.hive == kind) apply(root, rule, hiveName, sid, out);
+	});
 }
 
 } // namespace
@@ -167,12 +163,8 @@ HRESULT Persistence::getData() {
 		if (rule.hive == Hive::Software && conf.Software) apply(conf.Software, rule, L"SOFTWARE", L"", entries_);
 		else if (rule.hive == Hive::System && conf.CurrentControlSet) apply(conf.CurrentControlSet, rule, L"SYSTEM", L"", entries_);
 	}
-	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
-		const std::wstring profile = extractedPath(std::get<1>(profileEntry));
-		readUserHive(profile + L"\\ntuser.dat", Hive::NtUser, L"NTUSER.DAT", std::get<0>(profileEntry), entries_);
-		readUserHive(profile + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat", Hive::UsrClass,
-		             L"UsrClass.dat", std::get<0>(profileEntry), entries_);
-	}
+	readUserHives(L"\\ntuser.dat", Hive::NtUser, L"NTUSER.DAT", entries_);
+	readUserHives(L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat", Hive::UsrClass, L"UsrClass.dat", entries_);
 	return ERROR_SUCCESS;
 }
 

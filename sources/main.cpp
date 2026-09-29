@@ -44,6 +44,7 @@
 #include "zone_identifiers.h"
 #include "security_hive.h"
 #include "persistence.h"
+#include "registry_lot2.h"
 #include "recent_docs.h"
 #include "jumplist_automatic.h"
 #include "jumplist_custom.h"
@@ -861,6 +862,18 @@ void convertArtefacts(bool systemAvailable) {
 	   are still open (a missing one leaves its rules unread, not failed). */
 	convertFileArtefact<Persistence>(conf.artefacts.persistence, "persistence.json", Text::ArtefactPersistence,
 	                                 L"artefacts.persistence", Text::StepPersistence);
+	convertFileArtefact<OfficeTrustRecords>(conf.artefacts.officeTrustRecords, "office_trust_records.json", Text::ArtefactOfficeTrustRecords,
+	                         L"artefacts.office_trust_records", Text::StepOfficeTrustRecords);
+	convertFileArtefact<TypedPaths>(conf.artefacts.typedPaths, "typed_paths.json", Text::ArtefactTypedPaths,
+	                         L"artefacts.typed_paths", Text::StepTypedPaths);
+	convertFileArtefact<WordWheelQueries>(conf.artefacts.wordWheelQuery, "word_wheel_query.json", Text::ArtefactWordWheelQueries,
+	                         L"artefacts.word_wheel_query", Text::StepWordWheelQueries);
+	convertFileArtefact<RootCertificates>(conf.artefacts.rootCertificates, "root_certificates.json", Text::ArtefactRootCertificates,
+	                         L"artefacts.root_certificates", Text::StepRootCertificates);
+	convertFileArtefact<InternetSettingsSet>(conf.artefacts.internetSettings, "internet_settings.json", Text::ArtefactInternetSettingsSet,
+	                         L"artefacts.internet_settings", Text::StepInternetSettingsSet);
+	convertFileArtefact<Firewall>(conf.artefacts.firewall, "firewall.json", Text::ArtefactFirewall,
+	                         L"artefacts.firewall", Text::StepFirewall);
 
 	/* SYSTEM INFORMATION, offline.
 	   OUTSIDE the single-exit block above, and not inside it: even without a

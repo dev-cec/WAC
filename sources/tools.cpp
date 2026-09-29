@@ -1497,3 +1497,18 @@ std::vector<std::wstring> splitLines(const std::wstring& text) {
 	}
 	return lines;
 }
+
+void forEachProfileHive(const std::wstring& relativeHive,
+                        const std::function<void(ORHKEY root, const std::wstring& sid)>& visit) {
+	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
+		const std::wstring file = extractedPath(std::get<1>(profileEntry)) + relativeHive;
+		ORHKEY root = NULL;
+		const HRESULT hresult = OROpenHive(file.c_str(), &root);
+		if (hresult != ERROR_SUCCESS) {
+			log(2, L"🔥OROpenHive " + file, hresult);
+			continue;
+		}
+		visit(root, std::get<0>(profileEntry));
+		ORCloseHive(root);
+	}
+}

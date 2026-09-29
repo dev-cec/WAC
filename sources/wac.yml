@@ -48,3 +48,9 @@ artefacts:
   zone_identifiers: true  # Zone.Identifier streams (Mark of the Web): where downloaded files came from
   security: true          # SECURITY hive: LSA secrets' names and dates, cached logons, audit policy (never a secret)
   persistence: true       # registry persistence beyond Run: IFEO, AppInit_DLLs, Winlogon, LSA packages, COM hijacking…
+  office_trust_records: true  # Office trusted documents: macros enabled by the user, and when
+  typed_paths: true           # paths typed in Explorer's address bar
+  word_wheel_query: true      # terms searched in Explorer
+  root_certificates: true     # root certificates of the machine and of each user
+  internet_settings: true     # each user's proxy and automatic configuration script
+  firewall: true              # firewall rules and profiles

@@ -1362,6 +1362,45 @@ def check_small_file_artefacts(folder):
                f"persistence.json: the {len(monitors)} print monitors and their DLL as Windows reads them",
                f"persistence.json: print monitors {monitors} / Windows {expected}")
 
+    def lot2(file, key, find, success, failure):
+        data = load(folder, file)
+        if data is not None and key in reference:
+            report(bool(find(data, reference[key].split("|"))), success, failure)
+    lot2("office_trust_records.json", "trust",
+         lambda d, r: [t for t in d if t.get("SID") == r[0] and t.get("Document") == r[1] and t.get("MacrosEnabled") is True and t.get("TrustedUtc")],
+         "office_trust_records.json: the document trusted with macros enabled found, dated",
+         "office_trust_records.json: the trusted document witness missing")
+    lot2("typed_paths.json", "typedpath",
+         lambda d, r: [t for t in d if t.get("SID") == r[0] and str(t.get("Rank")) == r[1] and t.get("Text") == r[2]],
+         "typed_paths.json: the typed path witness found at its rank", "typed_paths.json: the typed path witness missing")
+    lot2("word_wheel_query.json", "search",
+         lambda d, r: [t for t in d if t.get("SID") == r[0] and t.get("Rank") == 1 and t.get("Text") == r[1]],
+         "word_wheel_query.json: the searched term found first (MRUListEx)", "word_wheel_query.json: the searched term missing or not first")
+    lot2("internet_settings.json", "proxy",
+         lambda d, r: [t for t in d if t.get("SID") == r[0] and t.get("ProxyServer") == r[1]],
+         "internet_settings.json: the user's proxy found", "internet_settings.json: the user's proxy missing")
+    firewall = load(folder, "firewall.json")
+    if isinstance(firewall, dict) and "fwrule" in reference:
+        name, action, direction, port = reference["fwrule"].split("|")
+        rules = firewall.get("Rules", [])
+        report(any(r.get("Name") == name and r.get("Action") == action and r.get("Direction") == direction
+                   and r.get("LocalPort") == port for r in rules) and str(len(rules)) == reference.get("fwcount"),
+               f"firewall.json: {len(rules)} rules as Windows counts them, the witness rule found",
+               f"firewall.json: {len(rules)} rules (Windows {reference.get('fwcount')}), witness found: "
+               f"{any(r.get('Name') == name for r in rules)}")
+    roots = load(folder, "root_certificates.json")
+    if isinstance(roots, list) and "roots" in reference:
+        mine = sorted(c.get("Thumbprint", "").upper() for c in roots if c.get("Store") == "LocalMachine\\Root")
+        expected = sorted(t.upper() for t in reference["roots"].split(",") if t)
+        mismatched = [c.get("Thumbprint") for c in roots if c.get("ThumbprintMismatch") or c.get("CertificateUnreadable")]
+        subject_ok = True
+        if "rootsubject" in reference:
+            thumb, subject = reference["rootsubject"].split("|", 1)
+            subject_ok = any(c.get("Thumbprint", "").upper() == thumb.upper() and c.get("Subject") == subject for c in roots)
+        report(mine == expected and not mismatched and subject_ok,
+               f"root_certificates.json: the {len(mine)} roots of LocalMachine\\Root as Windows lists them, every SHA-1 = its thumbprint",
+               f"root_certificates.json: roots {len(mine)} / Windows {len(expected)}, mismatched {mismatched[:3]}, subject {subject_ok}")
+
     security = load(folder, "security.json")
     if isinstance(security, dict) and "secrets" in reference:
         # Compared as sets: PowerShell sorts without case, Python with it.
