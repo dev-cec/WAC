@@ -448,7 +448,7 @@ HRESULT ExhibitStoreWriteManifest() {
 		   zeros". */
 		if (!m.resident && m.validDataLength < m.declaredSize)
 			o.add(L"ValidDataBytes", Json::num(m.validDataLength));
-		o.add(L"MftEntry",      Json::num(m.mftEntry));
+		if (m.mftEntry) o.add(L"MftEntry", Json::num(*m.mftEntry));
 		if (m.resident) o.add(L"ResidentData", Json::boolean(true));
 		addDate(o, L"Extracted",         m.extractedUtc);
 		addDate(o, L"SourceCreated",     m.creeUtc);

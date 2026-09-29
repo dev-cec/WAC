@@ -14,6 +14,7 @@
  *  Privileges: administrator required (raw volume access).
  */
 #pragma once
+#include <optional>
 #include <windows.h>
 #include <string>
 #include <vector>
@@ -115,7 +116,9 @@ struct RawHiveFingerprints {
      *  for it (ExtractStreamRaw, the change journal): the copy starts at this
      *  offset of the stream. 0 for every other exhibit. */
     uint64_t leadingSparseBytes = 0;
-    uint64_t mftEntry = 0;       //!< record number in the $MFT
+    /*! Record number in the $MFT; absent for an exhibit not read from the
+     *  volume (a live observation). 0 is a real number — the $MFT's own. */
+    std::optional<uint64_t> mftEntry;
     bool     resident = false;   //!< data held inside the $MFT record
     // $STANDARD_INFORMATION of the source file, as FILETIME (UTC, 0 if absent).
     uint64_t creeUtc = 0;        //!< creation date

@@ -214,6 +214,7 @@ def cross_checks(folder):
     found += check_mft_references(folder)
     found += check_mft_timeline(folder)
     found += check_small_file_artefacts(folder)
+    found += check_mft_entries(folder)
     found += check_mounted_devices(folder)
     found += check_date_precision(folder)
     found += check_utc_sources(folder)
@@ -1225,6 +1226,30 @@ def check_mft_references(folder):
         return 1
     print(f"  ✅ {total} plausible $MFT reference(s)")
     return 0
+
+
+def check_mft_entries(folder):
+    """MftEntry in the manifest: present for what was read on the volume, absent
+    for a live observation.
+
+    A live observation (running-machine.json…) has no $MFT record; it used to
+    carry "MftEntry": 0, which reads as the record of the $MFT itself — a
+    value the source never had. The $MFT exhibit, whose record IS 0, must
+    keep it.
+    """
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    if not isinstance(manifest, dict):
+        return 0
+    items = [i for i in manifest.get("Items", []) if i.get("Result") == "OK"]
+    live = [i for i in items if str(i.get("Method", "")).startswith("Live observation")]
+    wrong = [i.get("ExhibitPath") for i in live if "MftEntry" in i]
+    mft = [i for i in items if str(i.get("SourcePath", "")).lower().endswith("\\$mft")]
+    ok = not wrong and all(i.get("MftEntry") == 0 for i in mft)
+    if ok:
+        print(f"  ✅ MANIFEST.json: {len(live)} live observation(s) without MftEntry, the $MFT's own entry 0 kept")
+    else:
+        print(f"  ❌ MANIFEST.json: MftEntry on live observations {wrong[:3]}, or the $MFT's entry lost")
+    return 0 if ok else 1
 
 
 def check_small_file_artefacts(folder):
