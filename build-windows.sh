@@ -197,17 +197,26 @@ fi
 echo "Visual Studio project: every source listed."
 
 # --- WAC/bin: the last build, ready to download ------------------------------
-# The executables and the reference configuration (WAC/wac.yml, also built
-# into WAC.exe), copied where the repository keeps them, and staged — not
-# committed: the commit stays a decision. The test executables stay in
-# build-windows/tests.
+# The executables, the reference configuration (WAC/wac.yml, also built into
+# WAC.exe) and the scripts that verify a collection, copied where the
+# repository keeps them, and staged — not committed: the commit stays a
+# decision. The test executables stay in build-windows/tests.
+# The scripts travel with the binary: the investigator verifies a collection
+# with what came in the same folder, from Windows (.ps1) or from a Linux
+# investigation machine (.sh). Their source stays beside the user manual,
+# which lists them.
 BIN="$SRC/bin"
+VERIFICATION_SCRIPTS=(verify-exhibits.ps1 verifier-consigne.ps1 verify-exhibits.sh verifier-consigne.sh)
 mkdir -p "$BIN"
 for f in WAC.exe raw_hive_test.exe; do
   [[ -f "$BUILD/$f" ]] && cp "$BUILD/$f" "$BIN/"
 done
 cp "$SRC/wac.yml" "$BIN/wac.yml"
-( cd "$BIN" && sha256sum WAC.exe $( [[ -f raw_hive_test.exe ]] && echo raw_hive_test.exe ) wac.yml > SHA256SUMS )
+for f in "${VERIFICATION_SCRIPTS[@]}"; do
+  cp "$SRC/doc/user/$f" "$BIN/$f"
+done
+( cd "$BIN" && sha256sum WAC.exe $( [[ -f raw_hive_test.exe ]] && echo raw_hive_test.exe ) wac.yml \
+    "${VERIFICATION_SCRIPTS[@]}" > SHA256SUMS )
 if git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   git -C "$ROOT" add -f "$BIN"
   echo "WAC/bin updated and staged: $(cd "$BIN" && ls | tr '\n' ' ')"

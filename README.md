@@ -151,8 +151,12 @@ what it is and, where it matters, why it is trustworthy.
 ## ▶️ USAGE
 
 **Ready to use:** `WAC/bin` holds the last build — `WAC.exe`, the reference
-`wac.yml` and `SHA256SUMS` to check them. Copy `WAC.exe` and `wac.yml` to the
-collection key; `build-windows.sh` refreshes the folder at every build.
+`wac.yml`, the scripts that verify a collection (`verify-exhibits.ps1|.sh`,
+French messages: `verifier-consigne.ps1|.sh`) and `SHA256SUMS` to check them
+all. Copy `WAC.exe` and `wac.yml` to the collection key; `build-windows.sh`
+refreshes the folder at every build. Verify a collection preferably from a
+Linux investigation machine (`bash verify-exhibits.sh /media/usb/output`): a
+Windows program of the collection cannot run there.
 
 To minimize disk traces, this standalone tool should be run **as administrator** from a USB stick using the command:
 
@@ -1059,8 +1063,10 @@ cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
   built from the `.tex` files beside them with `latexmk -xelatex` (fonts: Noto
   Sans, DejaVu Sans Mono). They cover preparing a collection, the options,
   reading the output, verifying the exhibit store and the traces left on the
-  examined machine. `verify-exhibits.ps1` (English) and `verifier-consigne.ps1`
-  (French) check the seal and every exhibit of a collection. The English cover
+  examined machine. `verify-exhibits.ps1|.sh` (English) and
+  `verifier-consigne.ps1|.sh` (French) check the seal and every exhibit of a
+  collection, from Windows or Linux; `WAC/verify_exhibits_test.sh` tests the
+  two `.sh` on forged collections. The English cover
   page, `WAC/doc/cover_EN.png`, is generated from the French one by
   `WAC/doc/translate-cover.py`, which repaints its text in the same fonts and
   layout.

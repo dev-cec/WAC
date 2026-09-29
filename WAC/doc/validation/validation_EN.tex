@@ -210,9 +210,19 @@ reopened for writing; all the work is done on a second copy.
 A third party can check the exhibit store without \wac{}, with the scripts
 \fichier{verify-exhibits.ps1} (English messages) and
 \fichier{verifier-consigne.ps1} (French messages), shipped with the user
-documentation: they check the seal, then the fingerprint of every exhibit; an
-authenticated binary read but not copied (``fingerprint only'') is counted
-apart, having no file.
+documentation, and their Linux counterparts \fichier{verify-exhibits.sh} and
+\fichier{verifier-consigne.sh}, which compute the fingerprints with
+\fichier{sha256sum}, not with \wac{}. All check the seal, then the fingerprint
+of every exhibit; an authenticated binary read but not copied (``fingerprint
+only'') is counted apart, having no file. The manifest coming from the examined
+machine, an exhibit path that leaves the collection (\texttt{..}, absolute
+path, symbolic link for the \fichier{.sh}) is refused without being read: the
+first versions of the \fichier{.ps1} counted as verified a file of the analysis
+workstation designated by
+\texttt{exhibits\textbackslash..\textbackslash..\textbackslash..}, provided
+its fingerprint was in the manifest — a defect caught by a counter-test in the
+test machine. \texttt{verify\_exhibits\_test.sh} checks the two \fichier{.sh}
+on forged collections (23~checks).
 
 \section{Authenticity of binaries}
 

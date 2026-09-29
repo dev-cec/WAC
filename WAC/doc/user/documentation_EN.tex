@@ -304,9 +304,10 @@ recorded in \fichier{investigation.json} (\champ{Tool.Version}): a collection
 says which version made it. This document describes version 1.4.0.
 
 The last build is in \fichier{WAC/bin} of the repository: \fichier{WAC.exe},
-the reference \fichier{wac.yml} and \fichier{SHA256SUMS} to check them.
+the reference \fichier{wac.yml}, the scripts that verify a collection
+(section~\ref{sec:verif}) and \fichier{SHA256SUMS} to check them all.
 Copying \fichier{WAC.exe} and \fichier{wac.yml} to the collection key is
-enough.
+enough; the scripts go with the investigator.
 
 Rather than typing the options at every collection, the procedure is written
 once in \fichier{wac.yml}, next to \fichier{WAC.exe}: \wac{} applies it
@@ -867,8 +868,31 @@ MANIFEST.json: OK
 
 \subsection{Each exhibit}
 
-The \fichier{verify-exhibits.ps1} script, supplied with this manual, checks the
-seal, then the SHA-256 of every exhibit:
+Two scripts, delivered with \fichier{WAC.exe} in \fichier{WAC/bin}, check the
+seal, then the SHA-256 of every exhibit: \fichier{verify-exhibits.ps1} on
+Windows, \fichier{verify-exhibits.sh} on Linux. Their French counterparts,
+\fichier{verifier-consigne.ps1} and \fichier{verifier-consigne.sh}, make the
+same checks with French messages.
+
+\textbf{Verify from a Linux machine.} This is the recommended way: the
+collection may hold what infected the examined machine, and a Linux
+investigation machine is a technological break — a Windows executable or macro
+document of the collection cannot run there. The script needs only
+\fichier{bash}, the coreutils and \fichier{python3} (which reads the JSON);
+the fingerprints are computed by \fichier{sha256sum}, not by \wac{}:
+
+\begin{lstlisting}
+$ bash verify-exhibits.sh /media/usb/output
+Seal verified (CEB489A143AE29EB9E3BC836F3D565B744F036AE1F3A72A3447408F31F8A5B67)
+1617 exhibit(s) verified, 0 mismatch(es)
+0 binarie(s) authenticated and fingerprinted only (no copy to verify)
+\end{lstlisting}
+
+The manifest comes from the examined machine: both scripts refuse an exhibit
+path that leaves the collection (\texttt{..}, absolute path, and for the
+\fichier{.sh} a symbolic link), and count it as a mismatch without reading it.
+
+\textbf{From Windows:}
 
 \begin{lstlisting}
 PS> powershell -ExecutionPolicy Bypass -File verify-exhibits.ps1 -Output E:\output
@@ -876,7 +900,9 @@ Seal verified (CEB489A143AE29EB9E3BC836F3D565B744F036AE1F3A72A3447408F31F8A5B67)
 1617 exhibit(s) verified, 0 mismatch(es)
 \end{lstlisting}
 
-Its exit code is~0 if everything matches, 1~otherwise.
+Their exit code is~0 if everything matches, 1~otherwise.
+
+\lstinputlisting[language={},caption={}]{verify-exhibits.sh}
 
 \lstinputlisting[language={},caption={}]{verify-exhibits.ps1}
 

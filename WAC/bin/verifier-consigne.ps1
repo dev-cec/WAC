@@ -1,0 +1,31 @@
+﻿# verifier-consigne.ps1 — checks the seal and every exhibit of a WAC collection
+# (French output messages.) Usage: powershell -ExecutionPolicy Bypass -File verifier-consigne.ps1 -Sortie E:\output
+# Exit code: 0 if everything matches, 1 otherwise.
+
+param([string]$Sortie = '.\output')
+
+# 1. The seal: the manifest's fingerprint must be the one recorded beside it.
+$annonce = ((Get-Content -Raw "$Sortie\exhibits\MANIFEST.sha256") -split '\s+')[0]
+$reel    = (Get-FileHash -Algorithm SHA256 "$Sortie\exhibits\MANIFEST.json").Hash
+if ($annonce -ne $reel) { Write-Output "SCEAU NON CONFORME : manifeste modifie"; exit 1 }
+Write-Output "Sceau conforme ($reel)"
+
+# 2. Every exhibit: its SHA-256 must be the one in the manifest.
+$m = Get-Content -Raw -Encoding UTF8 "$Sortie\exhibits\MANIFEST.json" | ConvertFrom-Json
+# The manifest comes from the examined machine: an exhibit path that leaves
+# the collection (.., absolute path) is refused, never read.
+$root = (Resolve-Path -LiteralPath $Sortie).ProviderPath.TrimEnd('\') + '\'
+$ok = 0; $ko = 0; $fingerprintOnly = 0
+foreach ($p in ($m.Items | Where-Object { $_.Result -eq 'OK' })) {
+    # An authenticated binary that was not copied (--collect --binary): no file.
+    if ($p.ContentStored -eq $false) { $fingerprintOnly++; continue }
+    try { $f = [IO.Path]::GetFullPath((Join-Path $root $p.ExhibitPath)) } catch { $f = '' }
+    $h = $null
+    if ($f.StartsWith($root, [StringComparison]::OrdinalIgnoreCase)) {
+        $h = (Get-FileHash -Algorithm SHA256 -LiteralPath $f -ErrorAction SilentlyContinue).Hash
+    }
+    if ($h -and $h -eq $p.SHA256) { $ok++ } else { $ko++; Write-Output "DIFFERENTE : $($p.ExhibitPath)" }
+}
+Write-Output "$ok piece(s) conforme(s), $ko differente(s)"
+Write-Output "$fingerprintOnly binaire(s) authentifie(s), empreinte seule (pas de copie a verifier)"
+if ($ko) { exit 1 }

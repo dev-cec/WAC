@@ -445,6 +445,26 @@ cd build-windows/tests
 wine consigne_test.exe "Z:/tmp/out" "Z:/path/SYSTEM" "Z:/path/ntuser.dat"
 \end{lstlisting}
 
+\section{Verification scripts: \texttt{verify\_exhibits\_test.sh}}
+
+Runs \fichier{verify-exhibits.sh} and \fichier{verifier-consigne.sh}, the
+Linux scripts delivered with \fichier{WAC.exe}, on forged collections whose
+verdict is known: an intact collection (a path with a space, a fingerprint in
+lower case, a fingerprint-only binary) is accepted; an altered, missing or
+unfingerprinted exhibit, a modified manifest and an unreadable one are refused.
+A manifest that names a file of the investigation machine — by \texttt{..}, by
+an absolute path or by a symbolic link — is refused without the file being
+read. Both scripts run every case, with the same exit code and counters
+expected: one cannot drift from the other unnoticed. Linux only, no data
+needed.
+
+\begin{lstlisting}
+bash WAC/verify_exhibits_test.sh
+\end{lstlisting}
+
+Reference: 23 checks, no failure. The \fichier{.ps1} scripts are run by the
+VM cycle on the separate collection.
+
 \section{Raw reading: \texttt{raw\_hive\_test}}
 
 Extracts a file by reading the NTFS volume directly. To be run on Windows, as an

@@ -309,9 +309,10 @@ dans \fichier{investigation.json} (\champ{Tool.Version}) : une collecte dit par
 quelle version elle a été faite. Ce document décrit la version 1.4.0.
 
 La dernière version compilée se trouve dans \fichier{WAC/bin} du dépôt :
-\fichier{WAC.exe}, le \fichier{wac.yml} de référence et \fichier{SHA256SUMS}
-pour les vérifier. Copier \fichier{WAC.exe} et \fichier{wac.yml} sur la clé
-de collecte suffit.
+\fichier{WAC.exe}, le \fichier{wac.yml} de référence, les scripts qui
+vérifient une collecte (section~\ref{sec:verif}) et \fichier{SHA256SUMS}
+pour vérifier le tout. Copier \fichier{WAC.exe} et \fichier{wac.yml} sur la
+clé de collecte suffit ; les scripts restent avec l'enquêteur.
 
 Plutôt que de retaper les options à chaque collecte, la procédure s'écrit une
 fois dans \fichier{wac.yml}, à côté de \fichier{WAC.exe} : \wac{} l'applique
@@ -870,15 +871,41 @@ Le manifeste ne peut pas contenir sa propre empreinte : elle est dans
 \fichier{MANIFEST.sha256}. Sous Linux :
 
 \begin{lstlisting}
-$ cd sortie/consigne
+$ cd sortie/exhibits
 $ sha256sum -c MANIFEST.sha256
 MANIFEST.json: OK
 \end{lstlisting}
 
 \subsection{Chaque pièce}
 
-Le script \fichier{verifier-consigne.ps1}, fourni avec cette documentation,
-vérifie le sceau puis le SHA-256 de chaque pièce :
+Deux scripts, livrés avec \fichier{WAC.exe} dans \fichier{WAC/bin},
+vérifient le sceau puis le SHA-256 de chaque pièce :
+\fichier{verifier-consigne.ps1} sous Windows, \fichier{verifier-consigne.sh}
+sous Linux. Leurs équivalents anglais, \fichier{verify-exhibits.ps1} et
+\fichier{verify-exhibits.sh}, font les mêmes contrôles avec des messages en
+anglais.
+
+\textbf{Vérifier depuis une machine Linux.} C'est la voie recommandée : la
+collecte peut contenir ce qui a infecté la machine examinée, et une machine
+d'investigation sous Linux constitue une rupture technologique — un exécutable
+ou un document à macro Windows de la collecte ne peut pas s'y exécuter. Le
+script ne demande que \fichier{bash}, les coreutils et \fichier{python3} (qui
+lit le JSON) ; les empreintes sont calculées par \fichier{sha256sum}, non par
+\wac{} :
+
+\begin{lstlisting}
+$ bash verifier-consigne.sh /media/usb/output
+Sceau conforme (DCFF53FAE709EC2E351FFFD02EC6EAD9945602265CF3363D0D928B0B452C3E32)
+3360 piece(s) conforme(s), 0 differente(s)
+0 binaire(s) authentifie(s), empreinte seule (pas de copie a verifier)
+\end{lstlisting}
+
+Le manifeste vient de la machine examinée : les deux scripts refusent un
+chemin de pièce qui sort de la collecte (\texttt{..}, chemin absolu, et pour
+le \fichier{.sh} un lien symbolique), et le comptent comme différent sans le
+lire.
+
+\textbf{Depuis Windows :}
 
 \begin{lstlisting}
 PS> powershell -ExecutionPolicy Bypass -File verifier-consigne.ps1 -Sortie E:\output
@@ -886,7 +913,9 @@ Sceau conforme (DCFF53FAE709EC2E351FFFD02EC6EAD9945602265CF3363D0D928B0B452C3E32
 3360 piece(s) conforme(s), 0 differente(s)
 \end{lstlisting}
 
-Son code de retour vaut~0 si tout est conforme, 1~sinon.
+Leur code de retour vaut~0 si tout est conforme, 1~sinon.
+
+\lstinputlisting[language={},caption={}]{verifier-consigne.sh}
 
 \lstinputlisting[language={},caption={}]{verifier-consigne.ps1}
 

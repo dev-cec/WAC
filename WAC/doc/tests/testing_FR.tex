@@ -461,6 +461,26 @@ cd build-windows/tests
 wine consigne_test.exe "Z:/tmp/sortie" "Z:/chemin/SYSTEM" "Z:/chemin/ntuser.dat"
 \end{lstlisting}
 
+\section{Scripts de vérification : \texttt{verify\_exhibits\_test.sh}}
+
+Lance \fichier{verify-exhibits.sh} et \fichier{verifier-consigne.sh}, les
+scripts Linux livrés avec \fichier{WAC.exe}, sur des collectes forgées dont le
+verdict est connu : une collecte intacte (un chemin avec une espace, une
+empreinte en minuscules, un binaire à empreinte seule) est acceptée ; une pièce
+altérée, absente ou sans empreinte, un manifeste modifié ou illisible sont
+refusés. Un manifeste qui désigne un fichier de la machine d'investigation —
+par \texttt{..}, par un chemin absolu ou par un lien symbolique — est refusé
+sans que le fichier soit lu. Les deux scripts passent chaque cas, avec le même
+code de retour et les mêmes compteurs attendus : l'un ne peut pas dériver de
+l'autre sans que cela se voie. Linux seulement, aucune donnée nécessaire.
+
+\begin{lstlisting}
+bash WAC/verify_exhibits_test.sh
+\end{lstlisting}
+
+Référence : 23 contrôles, aucun échec. Les scripts \fichier{.ps1} sont lancés
+par le cycle VM sur la collecte séparée.
+
 \section{Lecture brute : \texttt{raw\_hive\_test}}
 
 Extrait un fichier en lisant directement le volume NTFS. À lancer sous Windows,

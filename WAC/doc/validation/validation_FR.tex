@@ -215,9 +215,19 @@ rouverte en écriture ; tout le travail se fait sur une seconde copie.
 Un tiers peut vérifier la consigne sans \wac{}, avec les scripts
 \fichier{verify-exhibits.ps1} (messages en anglais) et
 \fichier{verifier-consigne.ps1} (messages en français), livrés avec la
-documentation utilisateur : ils contrôlent le sceau puis l'empreinte de chaque
-pièce ; un binaire authentifié lu mais non copié (« empreinte seule ») est
-compté à part, faute de fichier.
+documentation utilisateur, et leurs équivalents Linux
+\fichier{verify-exhibits.sh} et \fichier{verifier-consigne.sh}, qui calculent
+les empreintes par \fichier{sha256sum} et non par \wac{}. Tous contrôlent le
+sceau puis l'empreinte de chaque pièce ; un binaire authentifié lu mais non
+copié (« empreinte seule ») est compté à part, faute de fichier. Le manifeste
+venant de la machine examinée, un chemin de pièce qui sort de la collecte
+(\texttt{..}, chemin absolu, lien symbolique pour les \fichier{.sh}) est
+refusé sans être lu : les premières versions des \fichier{.ps1} comptaient
+comme vérifié un fichier du poste d'analyse désigné par
+\texttt{exhibits\textbackslash..\textbackslash..\textbackslash..}, pourvu
+que son empreinte figure au manifeste — défaut pris par une contre-épreuve
+dans la machine de test. \texttt{verify\_exhibits\_test.sh} vérifie les deux
+\fichier{.sh} sur des collectes forgées (23~contrôles).
 
 \section{Authenticité des binaires}
 
