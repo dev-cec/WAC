@@ -389,11 +389,12 @@ WAC/doc/*.tag
 # ressources HTML ici. Rien a versionner.
 /doc/
 
-# Fichiers intermédiaires LaTeX de la documentation utilisateur
-/WAC/doc/user/*.aux
-/WAC/doc/user/*.log
-/WAC/doc/user/*.toc
-/WAC/doc/user/*.out
-/WAC/doc/user/*.fls
-/WAC/doc/user/*.fdb_latexmk
-/WAC/doc/user/*.xdv
+# LaTeX intermediate files of every document (user manual, tests,
+# validation, harmlessness): only the .tex and the PDF are versioned.
+**/doc/*/*.aux
+**/doc/*/*.log
+**/doc/*/*.toc
+**/doc/*/*.out
+**/doc/*/*.fls
+**/doc/*/*.fdb_latexmk
+**/doc/*/*.xdv

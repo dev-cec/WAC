@@ -1,0 +1,393 @@
+% harmlessness_FR.tex — WAC (Windows Artefacts Collector) harmlessness file, French edition.
+% The English edition is harmlessness_EN.tex, in this folder: both are maintained together,
+% section for section.
+%
+% Build (XeLaTeX, two passes for the cover page and the table of contents):
+%     latexmk -xelatex harmlessness_FR.tex
+% The cover page is ../cover_harmlessness_FR.png, derived from ../cover_FR.png by
+% ../retitle-cover.py. The layout is ../wac-style.tex, shared with every WAC document.
+%
+% This file says WHAT WAC does to the examined machine, every trace included, and
+% HOW that is verified. It is to be revised with every change that touches a
+% system call, the build's guards or the harness's harmlessness check.
+
+\documentclass[11pt,a4paper,oneside]{report}
+
+% ---------------------------------------------------------------- language and labels
+\usepackage[french]{babel}
+\newcommand{\wacdoctitle}{Dossier d'innocuité}
+\newcommand{\wacpageof}{sur}
+\newcommand{\wacnotetitle}{À retenir}
+\newcommand{\wacwarningtitle}{Limite}
+% Layout shared with every WAC document.
+\input{../wac-style.tex}
+
+\hypersetup{pdftitle={WAC — Dossier d'innocuité},
+  pdfauthor={Centre d'Excellence Cyberdéfense Aérospatiale (CEC)},
+  pdfsubject={Les traces que WAC laisse sur la machine examinée, et la procédure qui le vérifie}}
+
+\begin{document}
+
+% ============================================================ COVER PAGE
+\pagenumbering{roman}
+\coverpage{cover_harmlessness_FR.png}
+
+% ============================================================ INFORMATION PAGE
+\thispagestyle{empty}
+\vspace*{\fill}
+{\color{marine}\Large\bfseries WAC — Windows Artefacts Collector}\par
+{\color{bleu}Dossier d'innocuité}\par
+\medskip
+\begin{tabular}{@{}ll@{}}
+Version du logiciel & 1.4.0 \\
+Édition du document & septembre 2026 \\
+Éditeur & Centre d'Excellence Cyberdéfense Aérospatiale (CEC) \\
+        & École de l'air et de l'espace, base aérienne 701, Salon-de-Provence \\
+\end{tabular}
+
+\bigskip
+{\small\color{gris}Ce document établit ce que \wac{} fait à la machine qu'il
+examine : chaque opération, la trace qu'elle laisse, et ce qu'il ne fait
+jamais. Il donne les preuves de ces affirmations — la table des fonctions que
+\fichier{WAC.exe} peut appeler, les contrôles qui refusent une compilation
+fautive, la mesure faite sur une machine de test — et la procédure qui permet
+à chacun de les refaire.}
+\vspace*{2cm}
+\clearpage
+
+\pagenumbering{arabic}
+\tableofcontents
+
+% ============================================================ 1
+\chapter{Objet}
+
+\section{Ce que « innocuité » veut dire ici}
+
+Une collecte se fait sur une machine qui est aussi un élément de preuve. Un
+outil qui la modifie détruit une partie de ce qu'il vient chercher, et mêle ses
+propres traces à celles de l'activité étudiée. \wac{} est dit \emph{inoffensif}
+au sens suivant :
+
+\begin{enumerate}
+  \item il \textbf{n'écrit rien} sur les volumes de la machine examinée — ni
+        fichier, ni registre, ni journal ;
+  \item il \textbf{ne modifie aucune métadonnée} des fichiers qu'il lit : ni
+        date d'accès, ni numéro de changement du journal NTFS ;
+  \item il \textbf{n'émet rien sur le réseau} et ne résout aucun nom ;
+  \item il \textbf{n'installe rien et ne persiste pas} : ni service, ni pilote,
+        ni tâche, ni clé de démarrage ; à sa sortie il ne reste de lui que
+        les traces que Windows produit pour tout programme lancé ;
+  \item il \textbf{n'altère pas le fonctionnement} de la machine : aucun
+        processus ouvert, aucun service arrêté ou reconfiguré, aucun privilège
+        modifié ;
+  \item ce qu'il ne peut pas éviter est \textbf{énuméré}, ici et, collecte par
+        collecte, dans le journal
+        \fichier{investigation.json}.
+\end{enumerate}
+
+\section{Ce que ce document ne couvre pas}
+
+\begin{itemize}
+  \item La justesse des données collectées : c'est l'objet du \emph{Dossier de
+        validation}.
+  \item L'exploitation courante de l'outil : c'est l'objet du \emph{Manuel
+        d'utilisation}.
+  \item La mise à jour des listes de confiance (\opt{update-trust}) : elle
+        s'exécute sur le poste d'analyse, jamais sur la machine examinée, et
+        c'est le seul mode qui ouvre une connexion réseau.
+\end{itemize}
+
+% ============================================================ 2
+\chapter{Inventaire des traces}\label{ch:traces}
+
+Les traces se rangent en trois familles : celles de l'intervention elle-même
+(brancher un support, ouvrir une session), celles que Windows produit pour tout
+programme lancé, et celles des opérations propres à \wac{}. Les deux premières
+existent quel que soit l'outil ; elles sont listées pour que l'analyste les
+reconnaisse au lieu de les prendre pour l'activité étudiée.
+
+\section{L'intervention}
+
+\begin{longtable}{@{}L{4.3cm}L{10.1cm}@{}}
+\toprule
+\bfseries Action & \bfseries Trace \\
+\midrule
+\endhead
+Brancher le support de collecte & Clés \fichier{USBSTOR}, \fichier{USB},
+  \fichier{MountedDevices}, \fichier{Windows Portable Devices},
+  \fichier{VolumeInfoCache} ; fichier \fichier{setupapi.dev.log} ; journaux
+  \fichier{Microsoft-Windows-Partition/Diagnostic} (1006),
+  \fichier{Kernel-PnP}, \fichier{DeviceSetupManager}. \\
+Ouvrir une session & Événements Security 4624 et 4672 (privilèges spéciaux) ;
+  pour un compte jamais connecté sur la machine, création de son profil. \\
+Élever l'invite de commandes & Exécution de \fichier{consent.exe} (contrôle de
+  compte d'utilisateur) et ses propres traces d'exécution. \\
+Lancer \fichier{cmd.exe} & Traces d'exécution de \fichier{cmd.exe}
+  (section suivante). \\
+\bottomrule
+\end{longtable}
+
+\section{L'exécution de WAC.exe par Windows}
+
+Windows les produit pour tout programme ; \wac{} n'y peut rien et ne tente pas
+de les effacer — les effacer serait écrire sur la machine.
+
+\begin{longtable}{@{}L{4.3cm}L{10.1cm}@{}}
+\toprule
+\bfseries Artefact & \bfseries Trace \\
+\midrule
+\endhead
+Prefetch & \fichier{C:\textbackslash Windows\textbackslash Prefetch\textbackslash
+  WAC.EXE-<empreinte>.pf}, écrit par Windows quelques secondes après le
+  lancement, puis à la fin. \\
+Amcache, ShimCache & Une entrée pour \fichier{WAC.exe} (chemin, taille, date,
+  empreinte SHA-1 pour Amcache). \\
+BAM & Une valeur pour \fichier{WAC.exe} sous la clé de l'utilisateur, datée de
+  la fin de l'exécution. \\
+SRUM & Consommation de ressources du processus, agrégée par Windows. \\
+Journaux & Security 4688 et 4689 si l'audit de création de processus est actif ;
+  Sysmon~1 si Sysmon est installé ; télémétrie de l'antivirus ou de l'EDR
+  (analyse de \fichier{WAC.exe}, et, pour un EDR, signalement possible de
+  l'ouverture du volume en lecture brute). \\
+Mémoire & Les pages de \wac{} occupent la mémoire pendant la collecte et
+  peuvent en évincer d'autres vers le fichier d'échange. \\
+\bottomrule
+\end{longtable}
+
+\begin{note}
+\wac{} collecte ces mêmes artefacts : il se retrouve donc dans ses propres
+résultats (Prefetch de la collecte suivante, BAM, Amcache). C'est attendu, et
+daté : l'intervalle \champ{Collection.StartUtc} --- \champ{EndUtc} de
+\fichier{investigation.json} permet de les isoler.
+\end{note}
+
+\section{Les opérations de WAC}
+
+Chaque opération est consignée dans \fichier{investigation.json} avec, dans le
+champ \champ{Footprint}, la trace qu'elle est censée laisser. Le tableau
+ci-dessous les reprend toutes.
+
+\begin{longtable}{@{}L{4.3cm}L{10.1cm}@{}}
+\toprule
+\bfseries Opération & \bfseries Trace \\
+\midrule
+\endhead
+Lecture directe du volume (\path|\\.\C:|) & Un descripteur ouvert en
+  \textbf{lecture seule}, sans cache (\texttt{FILE\_FLAG\_NO\_BUFFERING}),
+  sur chaque volume effectivement lu. Aucun fichier n'est ouvert par le
+  système : aucune date d'accès modifiée, aucune entrée du journal USN, aucun
+  verrou. Si l'audit d'accès aux objets est configuré sur le volume :
+  Security 4656/4663. Sans cache, la lecture ne remplace pas non plus le
+  contenu du cache de fichiers de la machine. \\
+Ruches du registre & Copiées par la lecture directe, puis lues sur la copie.
+  Aucune clé du registre vivant n'est ouverte : \fichier{WAC.exe} n'importe
+  aucune fonction \texttt{Reg*}. Le rejeu des journaux de transaction se fait
+  sur la copie, avec un journal d'annulation. \\
+Journaux d'événements (\opt{events}) & Lus par la lecture directe : le service
+  de journalisation n'est pas sollicité, aucun événement n'est produit. \\
+Binaires (\opt{binary}) & Lus par la lecture directe ; signatures et
+  catalogues vérifiés en mémoire. Aucun magasin de certificats ouvert, aucune
+  vérification de révocation en ligne. \\
+Processus & Un instantané du noyau (\texttt{CreateToolhelp32Snapshot}) et une
+  requête au service Terminal Services (\texttt{WTSEnumerateProcessesExW})
+  pour les propriétaires. Aucun processus n'est ouvert : \fichier{WAC.exe}
+  n'importe pas \texttt{OpenProcess}. \\
+Modules des processus & Un instantané par processus ; ceux que le noyau
+  protège (LSASS, antivirus) le refusent, et le refus est consigné. \\
+Sessions & Une requête en lecture à LSASS
+  (\texttt{LsaEnumerateLogonSessions}, \texttt{LsaGetLogonSessionData}). \\
+État des services & Une énumération en lecture seule du gestionnaire de
+  services, droits \texttt{SC\_MANAGER\_ENUMERATE\_SERVICE |
+  SC\_MANAGER\_CONNECT}. Aucun service n'est ouvert ; la configuration vient
+  de la ruche copiée. \\
+État réseau (\texttt{artefacts.network}) & Lecture en mémoire des tables de la
+  pile TCP/IP par \fichier{iphlpapi.dll}, chargée à ce moment seulement. Aucun
+  paquet émis, aucun nom résolu. \\
+Horloge et démarrage & Requêtes en mémoire au noyau
+  (\texttt{NtQuerySystemInformation}, \texttt{GetTickCount64}). \\
+Réglages de la machine & Lecteur système, page de code, fuseau horaire, volumes
+  et numéros de série : requêtes en mémoire, sans ouverture de fichier. \\
+Jeton du processus & Lecture des privilèges de \wac{} lui-même, pour vérifier
+  les droits d'administrateur. Aucun privilège n'est activé ni modifié. \\
+Écriture des résultats & Sur le dossier \opt{output} uniquement, relatif au
+  répertoire courant — le support de collecte. \\
+\bottomrule
+\end{longtable}
+
+\begin{attention}
+\wac{} écrit là où le désigne \opt{output}. Lancé depuis un dossier du disque
+examiné, ou avec un \opt{output} qui y pointe, il y écrirait ses résultats :
+fichiers créés, enregistrements du \path|$MFT| et du journal USN, blocs
+écrasés. \textbf{Lancez-le depuis le support de collecte}, qui doit être le
+répertoire courant.
+\end{attention}
+
+\section{Ce que WAC ne fait jamais}
+
+\begin{itemize}
+  \item Créer un cliché instantané (VSS), appeler COM ou WMI : aucune de ces
+        bibliothèques n'est importée.
+  \item Ouvrir une clé du registre vivant, ou le vider sur le disque
+        (\texttt{RegFlushKey}).
+  \item Charger un pilote, créer ou modifier un service, une tâche planifiée,
+        une clé de démarrage.
+  \item Ouvrir un processus, lire sa mémoire, injecter du code.
+  \item Activer un privilège (\texttt{AdjustTokenPrivileges}) : la lecture
+        directe d'un volume ne demande que les droits d'administrateur.
+  \item Ouvrir une connexion réseau, résoudre un nom de compte auprès du
+        contrôleur de domaine (\texttt{LookupAccountSid}) : les comptes sont
+        nommés hors ligne, depuis les ruches copiées.
+  \item Écrire dans un fichier temporaire du système.
+\end{itemize}
+
+% ============================================================ 3
+\chapter{Les preuves}\label{ch:preuves}
+
+\section{La table des imports de WAC.exe}
+
+Un programme Windows ne peut appeler une fonction du système que s'il
+l'importe, ou s'il charge sa bibliothèque dynamiquement. La table des imports
+de \fichier{WAC.exe} est donc la liste exhaustive de ce qu'il peut demander au
+système — hors les deux chargements dynamiques décrits plus bas. Elle se lit
+sans exécuter le programme, sous Linux :
+
+\begin{lstlisting}
+$ x86_64-w64-mingw32-objdump -p WAC.exe | grep -E 'DLL Name|^\s+[0-9a-f]+\s+[0-9]+ '
+\end{lstlisting}
+
+Pour la version 1.4.0, hors \fichier{msvcrt.dll} (la bibliothèque C) :
+
+\begin{description}[style=nextline,leftmargin=1.2em]
+  \item[ADVAPI32.dll] \texttt{OpenSCManagerW}, \texttt{EnumServicesStatusExW},
+    \texttt{CloseServiceHandle} (état des services) ; \texttt{OpenProcessToken},
+    \texttt{GetTokenInformation}, \texttt{GetUserNameW}, \texttt{GetLengthSid},
+    \texttt{IsValidSid} (le jeton de \wac{} lui-même). Aucune fonction
+    \texttt{Reg*}, aucune fonction de modification de service.
+  \item[Secur32.dll] \texttt{LsaEnumerateLogonSessions},
+    \texttt{LsaGetLogonSessionData}, \texttt{LsaFreeReturnBuffer}.
+  \item[WTSAPI32.dll] \texttt{WTSEnumerateProcessesExW},
+    \texttt{WTSFreeMemoryExW}.
+  \item[KERNEL32.dll] Fichiers, mémoire, fils d'exécution, heure, console,
+    volumes, instantané des processus. Les fonctions qui écrivent ou
+    suppriment (\texttt{DeleteFileW}, \texttt{MoveFileExW},
+    \texttt{RemoveDirectoryW}, \texttt{CreateHardLinkW}, \texttt{SetEndOfFile})
+    servent au dossier de sortie, ou appartiennent à la bibliothèque C++ liée
+    statiquement (\texttt{std::filesystem}) sans que \wac{} les appelle
+    ailleurs : chaque suppression ou renommage du code source porte sur le
+    dossier de sortie, sa copie de travail ou son dossier d'attente.
+\end{description}
+
+\textbf{Chargements dynamiques.} Deux bibliothèques seulement, depuis
+\path|System32| (\texttt{LOAD\_LIBRARY\_}\allowbreak\texttt{SEARCH\_SYSTEM32}) :
+\fichier{iphlpapi.dll}, pour l'état réseau, quand \texttt{artefacts.network}
+est demandé ; \fichier{winhttp.dll}, pour \opt{update-trust} seul, qui ne
+s'exécute pas sur la machine examinée.
+
+\section{Les garde-fous de la compilation}
+
+\fichier{build-windows.sh} refuse de produire un \fichier{WAC.exe} qui
+enfreindrait ces règles. Après l'édition de liens, il inspecte la table des
+imports et échoue :
+
+\begin{itemize}
+  \item si \fichier{WAC.exe} importe une fonction de résolution de noms qui
+        interroge le domaine (\texttt{LookupAccountSid},
+        \texttt{LookupAccountName}, \texttt{LsaLookupSids},
+        \texttt{LsaLookupNames}) ;
+  \item s'il importe statiquement une bibliothèque réseau
+        (\fichier{winhttp}, \fichier{wininet}, \fichier{ws2\_32},
+        \fichier{wsock32}, \fichier{iphlpapi}) ;
+  \item s'il dépend d'une bibliothèque d'exécution MinGW : l'exécutable doit se
+        suffire, pour ne rien déposer à côté de lui.
+\end{itemize}
+
+La compilation est reproductible : les mêmes sources donnent le même
+\fichier{WAC.exe}, octet pour octet, et \fichier{SHA256SUMS} l'atteste.
+
+\section{Le journal d'investigation}
+
+Chaque collecte écrit, dans \fichier{investigation.json}, la liste ordonnée
+de ses opérations, chacune avec sa cible, son résultat et son champ
+\champ{Footprint}. Un écart entre ce que dit ce dossier et ce que dit le
+journal d'une collecte réelle se voit donc collecte par collecte, et non
+seulement lors d'une campagne de test.
+
+% ============================================================ 4
+\chapter{Procédure de validation}\label{ch:procedure}
+
+Cette procédure est à refaire à chaque version, et à chaque modification qui
+touche un appel au système. Les deux premières étapes se font sur le poste
+d'analyse, sans machine Windows.
+
+\section{Étape 1 : le binaire livré est celui des sources}
+
+\begin{lstlisting}
+$ ./build-windows.sh
+$ sha256sum -c WAC/bin/SHA256SUMS
+\end{lstlisting}
+
+Attendu : la compilation se termine sans erreur, sans avertissement, et
+affiche les trois contrôles : « Static C++ runtime », « No network name
+resolution imported », « No network library imported ». \fichier{WAC.exe}
+compilé et celui de \fichier{WAC/bin} ont la même empreinte.
+
+\section{Étape 2 : la table des imports}
+
+\begin{lstlisting}
+$ x86_64-w64-mingw32-objdump -p WAC/bin/WAC.exe | grep -E 'DLL Name|^\s+[0-9a-f]+\s+[0-9]+ '
+\end{lstlisting}
+
+Attendu : les cinq bibliothèques et les fonctions de la
+section~\ref{ch:preuves}, et aucune autre. Une fonction nouvelle
+s'explique dans ce dossier avant la livraison.
+
+\section{Étape 3 : la mesure sur une machine de test}
+
+Le cycle automatique (\fichier{vmtest/run-wac-test.sh}, voir le \emph{Guide des
+tests}) lance \wac{} dans une machine virtuelle Windows~11 et vérifie, sur des
+fichiers témoins que \wac{} lit, qu'aucune de leurs métadonnées ne change :
+
+\begin{enumerate}
+  \item avant la collecte, le cycle crée des fichiers témoins que \wac{} lit
+        forcément (un document à macro et un script, que \opt{binary}
+        prélève) et relève, par PowerShell, leurs quatre dates et le numéro
+        de leur dernier changement dans le journal NTFS
+        (\texttt{fsutil usn readdata}) ;
+  \item il lance la collecte ;
+  \item il relève à nouveau les mêmes valeurs : elles doivent être identiques ;
+  \item pour prouver que le contrôle sait échouer, il lit ensuite un témoin
+        par l'API (\texttt{Get-Content}) et vérifie que son numéro USN, lui,
+        change quand Windows met à jour sa date d'accès.
+\end{enumerate}
+
+Le résultat figure dans le compte rendu du cycle (\fichier{harmlessness.txt}).
+
+\section{Étape 4 : le journal d'une collecte réelle}
+
+Sur une collecte réelle, relire \fichier{investigation.json} : chaque
+opération doit appartenir au tableau du chapitre~\ref{ch:traces}, avec le
+\champ{Footprint} correspondant. Une opération inconnue de ce dossier est un
+défaut à signaler.
+
+% ============================================================ 5
+\chapter{Limites}
+
+\begin{description}[style=nextline,leftmargin=1.2em]
+  \item[Dossier de sortie] \wac{} ne vérifie pas que \opt{output} désigne un
+        autre volume que ceux qu'il examine : c'est à l'opérateur de le lancer
+        depuis le support de collecte.
+  \item[Surveillance] Un EDR ou une politique d'audit peut journaliser
+        l'ouverture du volume en lecture brute, l'énumération des processus et
+        des sessions. Ces journaux sont écrits par la machine, non par \wac{} ;
+        ils sont attendus.
+  \item[Mémoire] \wac{} ne capture pas la mémoire, mais il en occupe : une
+        page évincée vers le fichier d'échange pendant la collecte n'est pas
+        une trace sur le disque que \wac{} lit, mais elle change l'état de la
+        mémoire que capturerait un outil lancé ensuite. Capturer la mémoire,
+        si elle est nécessaire, \textbf{avant} \wac{}.
+  \item[Mesure] L'étape~3 porte sur des fichiers témoins d'une machine
+        virtuelle : elle établit le comportement de la lecture, pas l'absence
+        de toute écriture de Windows lui-même pendant la collecte.
+\end{description}
+
+\end{document}

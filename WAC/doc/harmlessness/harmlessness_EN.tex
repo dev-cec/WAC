@@ -1,0 +1,386 @@
+% harmlessness_EN.tex — WAC (Windows Artefacts Collector) harmlessness file, English edition.
+% The French edition is harmlessness_FR.tex, in this folder: both are maintained together,
+% section for section.
+%
+% Build (XeLaTeX, two passes for the cover page and the table of contents):
+%     latexmk -xelatex harmlessness_EN.tex
+% The cover page is ../cover_harmlessness_EN.png, derived from ../cover_EN.png by
+% ../retitle-cover.py. The layout is ../wac-style.tex, shared with every WAC document.
+%
+% This file says WHAT WAC does to the examined machine, every trace included, and
+% HOW that is verified. It is to be revised with every change that touches a
+% system call, the build's guards or the harness's harmlessness check.
+
+\documentclass[11pt,a4paper,oneside]{report}
+
+% ---------------------------------------------------------------- language and labels
+\usepackage[english]{babel}
+\newcommand{\wacdoctitle}{Harmlessness file}
+\newcommand{\wacpageof}{of}
+\newcommand{\wacnotetitle}{Keep in mind}
+\newcommand{\wacwarningtitle}{Limit}
+% Layout shared with every WAC document.
+\input{../wac-style.tex}
+
+\hypersetup{pdftitle={WAC — Harmlessness file},
+  pdfauthor={Aerospace Cyber Defence Centre of Excellence (CEC)},
+  pdfsubject={The traces WAC leaves on the examined machine, and the procedure that verifies it}}
+
+\begin{document}
+
+% ============================================================ COVER PAGE
+\pagenumbering{roman}
+\coverpage{cover_harmlessness_EN.png}
+
+% ============================================================ INFORMATION PAGE
+\thispagestyle{empty}
+\vspace*{\fill}
+{\color{marine}\Large\bfseries WAC — Windows Artefacts Collector}\par
+{\color{bleu}Harmlessness file}\par
+\medskip
+\begin{tabular}{@{}ll@{}}
+Software version & 1.4.0 \\
+Document edition & September 2026 \\
+Publisher & Aerospace Cyber Defence Centre of Excellence (CEC) \\
+          & French Air and Space Force Academy, Air Base 701, Salon-de-Provence \\
+\end{tabular}
+
+\bigskip
+{\small\color{gris}This document establishes what \wac{} does to the machine
+it examines: every operation, the trace it leaves, and what it never does. It
+gives the evidence for these statements — the table of the functions
+\fichier{WAC.exe} can call, the checks that refuse a faulty build, the
+measurement made on a test machine — and the procedure that lets anyone redo
+them.}
+\vspace*{2cm}
+\clearpage
+
+\pagenumbering{arabic}
+\tableofcontents
+
+% ============================================================ 1
+\chapter{Purpose}
+
+\section{What ``harmless'' means here}
+
+A collection is made on a machine that is also evidence. A tool that changes
+it destroys part of what it came for, and mixes its own traces with those of
+the activity under study. \wac{} is said to be \emph{harmless} in the
+following sense:
+
+\begin{enumerate}
+  \item it \textbf{writes nothing} to the volumes of the examined machine —
+        no file, no registry, no log;
+  \item it \textbf{changes no metadata} of the files it reads: no access
+        date, no change number in the NTFS journal;
+  \item it \textbf{sends nothing over the network} and resolves no name;
+  \item it \textbf{installs nothing and does not persist}: no service, no
+        driver, no task, no start-up key; once it has exited, all that remains
+        of it are the traces Windows produces for any program run;
+  \item it \textbf{does not alter the running machine}: no process opened, no
+        service stopped or reconfigured, no privilege changed;
+  \item what it cannot avoid is \textbf{listed}, here and, collection by
+        collection, in \fichier{investigation.json}.
+\end{enumerate}
+
+\section{What this document does not cover}
+
+\begin{itemize}
+  \item The correctness of the data collected: that is the subject of the
+        \emph{Validation report}.
+  \item The day-to-day use of the tool: that is the subject of the \emph{User
+        manual}.
+  \item The update of the trust lists (\opt{update-trust}): it runs on the
+        analysis workstation, never on the examined machine, and it is the
+        only mode that opens a network connection.
+\end{itemize}
+
+% ============================================================ 2
+\chapter{Inventory of the traces}\label{ch:traces}
+
+The traces fall into three families: those of the intervention itself
+(plugging in a medium, opening a session), those Windows produces for any
+program run, and those of \wac{}'s own operations. The first two exist
+whatever the tool; they are listed so that the analyst recognises them rather
+than mistaking them for the activity under study.
+
+\section{The intervention}
+
+\begin{longtable}{@{}L{4.3cm}L{10.1cm}@{}}
+\toprule
+\bfseries Action & \bfseries Trace \\
+\midrule
+\endhead
+Plugging in the collection medium & Keys \fichier{USBSTOR}, \fichier{USB},
+  \fichier{MountedDevices}, \fichier{Windows Portable Devices},
+  \fichier{VolumeInfoCache}; file \fichier{setupapi.dev.log}; logs
+  \fichier{Microsoft-Windows-Partition/Diagnostic} (1006),
+  \fichier{Kernel-PnP}, \fichier{DeviceSetupManager}. \\
+Opening a session & Security events 4624 and 4672 (special privileges); for
+  an account never logged on to the machine, creation of its profile. \\
+Elevating the command prompt & Run of \fichier{consent.exe} (User Account
+  Control) and its own execution traces. \\
+Starting \fichier{cmd.exe} & Execution traces of \fichier{cmd.exe} (next
+  section). \\
+\bottomrule
+\end{longtable}
+
+\section{The run of WAC.exe by Windows}
+
+Windows produces them for any program; \wac{} cannot prevent them and does
+not try to erase them — erasing would be writing to the machine.
+
+\begin{longtable}{@{}L{4.3cm}L{10.1cm}@{}}
+\toprule
+\bfseries Artefact & \bfseries Trace \\
+\midrule
+\endhead
+Prefetch & \fichier{C:\textbackslash Windows\textbackslash Prefetch\textbackslash
+  WAC.EXE-<hash>.pf}, written by Windows a few seconds after the start, then
+  at the end. \\
+Amcache, ShimCache & One entry for \fichier{WAC.exe} (path, size, date, SHA-1
+  fingerprint for Amcache). \\
+BAM & One value for \fichier{WAC.exe} under the user's key, dated from the end
+  of the run. \\
+SRUM & Resource usage of the process, aggregated by Windows. \\
+Logs & Security 4688 and 4689 if process creation auditing is on; Sysmon~1 if
+  Sysmon is installed; telemetry of the antivirus or EDR (scan of
+  \fichier{WAC.exe} and, for an EDR, a possible alert on the raw opening of the
+  volume). \\
+Memory & \wac{}'s pages take up memory during the collection and may push
+  others out to the page file. \\
+\bottomrule
+\end{longtable}
+
+\begin{note}
+\wac{} collects these very artefacts: it therefore shows up in its own results
+(Prefetch of the next collection, BAM, Amcache). This is expected, and dated:
+the \champ{Collection.StartUtc} --- \champ{EndUtc} interval of
+\fichier{investigation.json} sets them apart.
+\end{note}
+
+\section{WAC's operations}
+
+Every operation is recorded in \fichier{investigation.json} with, in its
+\champ{Footprint} field, the trace it is expected to leave. The table below
+lists them all.
+
+\begin{longtable}{@{}L{4.3cm}L{10.1cm}@{}}
+\toprule
+\bfseries Operation & \bfseries Trace \\
+\midrule
+\endhead
+Raw reading of the volume (\path|\\.\C:|) & One handle opened
+  \textbf{read-only}, uncached (\texttt{FILE\_FLAG\_NO\_BUFFERING}), on each
+  volume actually read. No file is opened through the system: no access date
+  changed, no USN journal entry, no lock. If object-access auditing is set on
+  the volume: Security 4656/4663. Uncached, the reading does not replace the
+  content of the machine's file cache either. \\
+Registry hives & Copied by the raw reading, then read on the copy. No key of
+  the live registry is opened: \fichier{WAC.exe} imports no \texttt{Reg*}
+  function. The transaction logs are replayed on the copy, with an undo
+  journal. \\
+Event logs (\opt{events}) & Read by the raw reading: the event log service is
+  not called upon, no event is produced. \\
+Binaries (\opt{binary}) & Read by the raw reading; signatures and catalogues
+  verified in memory. No certificate store opened, no online revocation
+  check. \\
+Processes & One kernel snapshot (\texttt{CreateToolhelp32Snapshot}) and one
+  query to the Terminal Services service (\texttt{WTSEnumerateProcessesExW})
+  for the owners. No process is opened: \fichier{WAC.exe} does not import
+  \texttt{OpenProcess}. \\
+Process modules & One snapshot per process; those the kernel protects (LSASS,
+  antivirus) refuse it, and the refusal is recorded. \\
+Sessions & One read query to LSASS (\texttt{LsaEnumerateLogonSessions},
+  \texttt{LsaGetLogonSessionData}). \\
+State of the services & One read-only enumeration of the service manager,
+  rights \texttt{SC\_MANAGER\_ENUMERATE\_SERVICE | SC\_MANAGER\_CONNECT}. No
+  service is opened; the configuration comes from the copied hive. \\
+Network state (\texttt{artefacts.network}) & In-memory reading of the TCP/IP
+  stack's tables through \fichier{iphlpapi.dll}, loaded at that moment only.
+  No packet sent, no name resolved. \\
+Clock and boot & In-memory queries to the kernel
+  (\texttt{NtQuerySystemInformation}, \texttt{GetTickCount64}). \\
+Machine settings & System drive, code page, time zone, volumes and serial
+  numbers: in-memory queries, with no file opened. \\
+Process token & Reading of \wac{}'s own privileges, to check the administrator
+  rights. No privilege is enabled or changed. \\
+Writing the results & To the \opt{output} folder only, relative to the current
+  directory — the collection medium. \\
+\bottomrule
+\end{longtable}
+
+\begin{attention}
+\wac{} writes where \opt{output} points. Started from a folder of the examined
+disk, or with an \opt{output} that points there, it would write its results
+there: files created, records of the \path|$MFT| and of the USN journal,
+blocks overwritten. \textbf{Start it from the collection medium}, which must be
+the current directory.
+\end{attention}
+
+\section{What WAC never does}
+
+\begin{itemize}
+  \item Create a shadow copy (VSS), call COM or WMI: none of these libraries
+        is imported.
+  \item Open a key of the live registry, or flush it to the disk
+        (\texttt{RegFlushKey}).
+  \item Load a driver, create or change a service, a scheduled task, a
+        start-up key.
+  \item Open a process, read its memory, inject code.
+  \item Enable a privilege (\texttt{AdjustTokenPrivileges}): the raw reading
+        of a volume needs administrator rights only.
+  \item Open a network connection, resolve an account name with the domain
+        controller (\texttt{LookupAccountSid}): accounts are named offline,
+        from the copied hives.
+  \item Write to a temporary file of the system.
+\end{itemize}
+
+% ============================================================ 3
+\chapter{The evidence}\label{ch:preuves}
+
+\section{The import table of WAC.exe}
+
+A Windows program can only call a system function if it imports it, or if it
+loads its library dynamically. \fichier{WAC.exe}'s import table is therefore
+the exhaustive list of what it can ask of the system — apart from the two
+dynamic loads described below. It is read without running the program, on
+Linux:
+
+\begin{lstlisting}
+$ x86_64-w64-mingw32-objdump -p WAC.exe | grep -E 'DLL Name|^\s+[0-9a-f]+\s+[0-9]+ '
+\end{lstlisting}
+
+For version 1.4.0, apart from \fichier{msvcrt.dll} (the C library):
+
+\begin{description}[style=nextline,leftmargin=1.2em]
+  \item[ADVAPI32.dll] \texttt{OpenSCManagerW}, \texttt{EnumServicesStatusExW},
+    \texttt{CloseServiceHandle} (state of the services);
+    \texttt{OpenProcessToken}, \texttt{GetTokenInformation},
+    \texttt{GetUserNameW}, \texttt{GetLengthSid}, \texttt{IsValidSid}
+    (\wac{}'s own token). No \texttt{Reg*} function, no function that changes
+    a service.
+  \item[Secur32.dll] \texttt{LsaEnumerateLogonSessions},
+    \texttt{LsaGetLogonSessionData}, \texttt{LsaFreeReturnBuffer}.
+  \item[WTSAPI32.dll] \texttt{WTSEnumerateProcessesExW},
+    \texttt{WTSFreeMemoryExW}.
+  \item[KERNEL32.dll] Files, memory, threads, time, console, volumes, process
+    snapshot. The functions that write or delete (\texttt{DeleteFileW},
+    \texttt{MoveFileExW}, \texttt{RemoveDirectoryW}, \texttt{CreateHardLinkW},
+    \texttt{SetEndOfFile}) serve the output folder, or belong to the
+    statically linked C++ library (\texttt{std::filesystem}) without \wac{}
+    calling them elsewhere: every deletion or rename in the source code is on
+    the output folder, its working copy or its staging folder.
+\end{description}
+
+\textbf{Dynamic loads.} Two libraries only, from \path|System32|
+(\texttt{LOAD\_LIBRARY\_}\allowbreak\texttt{SEARCH\_SYSTEM32}): \fichier{iphlpapi.dll}, for the
+network state, when \texttt{artefacts.network} is asked for;
+\fichier{winhttp.dll}, for \opt{update-trust} alone, which does not run on the
+examined machine.
+
+\section{The guards of the build}
+
+\fichier{build-windows.sh} refuses to produce a \fichier{WAC.exe} that would
+break these rules. After the link, it inspects the import table and fails:
+
+\begin{itemize}
+  \item if \fichier{WAC.exe} imports a function that resolves names by
+        querying the domain (\texttt{LookupAccountSid},
+        \texttt{LookupAccountName}, \texttt{LsaLookupSids}, \texttt{LsaLookupNames});
+  \item if it imports a network library statically (\fichier{winhttp},
+        \fichier{wininet}, \fichier{ws2\_32}, \fichier{wsock32},
+        \fichier{iphlpapi});
+  \item if it depends on a MinGW runtime library: the executable must be
+        self-contained, so as to drop nothing beside it.
+\end{itemize}
+
+The build is reproducible: the same sources give the same \fichier{WAC.exe},
+byte for byte, and \fichier{SHA256SUMS} attests it.
+
+\section{The investigation log}
+
+Every collection writes, in \fichier{investigation.json}, the ordered list of
+its operations, each with its target, its result and its \champ{Footprint}
+field. A gap between what this file says and what the log of a real
+collection says therefore shows collection by collection, and not only during
+a test campaign.
+
+% ============================================================ 4
+\chapter{Validation procedure}\label{ch:procedure}
+
+This procedure is to be redone with every version, and with every change that
+touches a system call. The first two steps are done on the analysis
+workstation, with no Windows machine.
+
+\section{Step 1: the delivered binary is the one of the sources}
+
+\begin{lstlisting}
+$ ./build-windows.sh
+$ sha256sum -c WAC/bin/SHA256SUMS
+\end{lstlisting}
+
+Expected: the build ends with no error, no warning, and shows the three
+checks: ``Static C++ runtime'', ``No network name resolution imported'', ``No
+network library imported''. The \fichier{WAC.exe} built and the one in
+\fichier{WAC/bin} have the same fingerprint.
+
+\section{Step 2: the import table}
+
+\begin{lstlisting}
+$ x86_64-w64-mingw32-objdump -p WAC/bin/WAC.exe | grep -E 'DLL Name|^\s+[0-9a-f]+\s+[0-9]+ '
+\end{lstlisting}
+
+Expected: the five libraries and the functions of
+section~\ref{ch:preuves}, and no other. A new function is explained in this
+file before the release.
+
+\section{Step 3: the measurement on a test machine}
+
+The automatic cycle (\fichier{vmtest/run-wac-test.sh}, see the \emph{Testing
+guide}) runs \wac{} in a Windows~11 virtual machine and checks, on witness
+files that \wac{} reads, that none of their metadata changes:
+
+\begin{enumerate}
+  \item before the collection, the cycle creates witness files that \wac{} is
+        bound to read (a macro document and a script, which \opt{binary}
+        collects) and records, through PowerShell, their four dates and the
+        number of their last change in the NTFS journal
+        (\texttt{fsutil usn readdata});
+  \item it runs the collection;
+  \item it records the same values again: they must be identical;
+  \item to prove that the check can fail, it then reads a witness through the
+        API (\texttt{Get-Content}) and checks that its access date, for its
+        part, changes when Windows updates it.
+\end{enumerate}
+
+The result is in the cycle's report (\fichier{harmlessness.txt}).
+
+\section{Step 4: the log of a real collection}
+
+On a real collection, read \fichier{investigation.json} again: every operation
+must belong to the table of chapter~\ref{ch:traces}, with the matching
+\champ{Footprint}. An operation this file does not know is a defect to
+report.
+
+% ============================================================ 5
+\chapter{Limits}
+
+\begin{description}[style=nextline,leftmargin=1.2em]
+  \item[Output folder] \wac{} does not check that \opt{output} designates a
+        volume other than those it examines: it is up to the operator to start
+        it from the collection medium.
+  \item[Monitoring] An EDR or an audit policy may log the raw opening of the
+        volume, the enumeration of processes and sessions. These logs are
+        written by the machine, not by \wac{}; they are expected.
+  \item[Memory] \wac{} does not capture memory, but it occupies some: a page
+        pushed out to the page file during the collection is not a trace on
+        the disk \wac{} reads, but it changes the state of the memory a tool
+        started afterwards would capture. Capture memory, if it is needed,
+        \textbf{before} \wac{}.
+  \item[Measurement] Step~3 is about witness files of a virtual machine: it
+        establishes how the reading behaves, not that Windows itself writes
+        nothing during the collection.
+\end{description}
+
+\end{document}

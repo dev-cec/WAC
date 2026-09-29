@@ -368,10 +368,50 @@ if [[ $SPLIT -eq 1 ]]; then
   $QGA run --shell "taskkill /f /im WAC.exe >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
   wait_registry_on_disk
 
+  # HARMLESSNESS: witness files the collection is bound to read (--binary
+  # collects the macro document and the script) keep their dates and their
+  # USN — WAC reads the volume raw, never through the file. Recorded by
+  # harmlessness.ps1 before and after; see doc/harmlessness.
+  WITNESSES=('C:\Users\wac\Documents\wac-macro-test.docm' 'C:\wactest\stomped\stomped.ps1')
+  $QGA write "$HERE/harmlessness.ps1" "$VMDIR\\harmlessness.ps1" >/dev/null
+  witness_state() {
+    $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\harmlessness.ps1" \
+      "${WITNESSES[@]}" 2>/dev/null | tr -d '\r'
+  }
+  WITNESS_BEFORE=$(witness_state)
+
   if run_wac collect --collect --output=split --events $BINARY_OPTION --loglevel=2; then
     echo "   ✅ collection went to the end"
   else
     echo "   ❌ collection ended abnormally"; ABNORMAL_STOP=1
+  fi
+
+  WITNESS_AFTER=$(witness_state)
+  # The check must be able to fail: the script, read once through Windows,
+  # must show a new access date — its own, forged to 2001, is older than the
+  # hour below which NTFS does not update it. Where the volume keeps no access
+  # date (fsutil behavior disablelastaccess), the control says so.
+  $QGA run -- powershell.exe -NoProfile -Command 'Get-Content -LiteralPath C:\wactest\stomped\stomped.ps1 | Out-Null' >/dev/null 2>&1 || true
+  WITNESS_CONTROL=$(witness_state | sed -n 2p)
+  {
+    echo "== before the collection"; echo "$WITNESS_BEFORE"
+    echo "== after the collection";  echo "$WITNESS_AFTER"
+    echo "== after one read of the script through Windows (control)"; echo "$WITNESS_CONTROL"
+    echo "== fsutil behavior query disablelastaccess"
+    $QGA run --shell "fsutil behavior query disablelastaccess" 2>/dev/null | tr -d '\r'
+  } > "$OUTPUT/harmlessness.txt"
+  if [[ -z "$WITNESS_BEFORE" ]] || grep -q '|absent$' <<<"$WITNESS_BEFORE" \
+     || [[ $(grep -c . <<<"$WITNESS_BEFORE") -ne ${#WITNESSES[@]} ]]; then
+    echo "   ❌ harmlessness: witness files not recorded (see harmlessness.txt)"
+  elif [[ "$WITNESS_BEFORE" == "$WITNESS_AFTER" ]]; then
+    echo "   ✅ harmlessness: ${#WITNESSES[@]} witness file(s) read by the collection, dates and USN unchanged"
+  else
+    echo "   ❌ harmlessness: a witness file changed during the collection (see harmlessness.txt)"
+  fi
+  if [[ "$WITNESS_CONTROL" != "$(sed -n 2p <<<"$WITNESS_AFTER")" ]]; then
+    echo "   ✅ harmlessness control: one read through Windows changes the script's access date"
+  else
+    echo "   ⚠️ harmlessness control: a read through Windows changed nothing (access dates not kept?): the check proves the USN only"
   fi
   N_JSON=$(json_count)
   [[ "$N_JSON" == "1" ]] && echo "   ✅ collection: investigation.json only, nothing converted" \

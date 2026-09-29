@@ -416,7 +416,12 @@ collection in a Windows~11 virtual machine (real NTFS, real registry):
     \fichier{verify-exhibits.ps1}; conversion of a store with one retouched
     exhibit, which must be refused before any read; conversion, checked by
     \fichier{check-json.py}; second conversion, whose JSON files must be
-    identical to the first's, byte for byte.
+    identical to the first's, byte for byte;
+  \item harmlessness check: two witness files the collection is bound to read
+    keep, before and after it, their three dates and their USN number
+    (\fichier{harmlessness.txt}); a control read through Windows changes the
+    access date of one of them, proof that the check can fail. See the
+    \emph{Harmlessness file}.
 \end{enumerate}
 
 \section{The checks of \texttt{check-json.py}}

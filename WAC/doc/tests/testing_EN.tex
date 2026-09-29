@@ -202,6 +202,18 @@ a conversion, whose JSON files pass the checks below; a second conversion,
 whose JSON files must be identical to the first's, byte for byte. Results in
 \fichier{split/} and \fichier{split-again/}.
 
+Around this collection, the cycle checks that the reading is
+\textbf{harmless}: \fichier{vmtest/harmlessness.ps1} records, before and after,
+the three dates and the USN number of two witness files that \opt{binary}
+collects (a macro document, a script whose dates are forged to 2001). They must
+be identical. A read of the script through Windows (\texttt{Get-Content}) must
+then change its access date: otherwise the check would prove nothing about the
+dates. The records are in \fichier{harmlessness.txt}; the approach is in the
+\emph{Harmlessness file}. Before this collection, the cycle waits 90~s after
+its \texttt{taskkill}: Windows writes a registry change to the disk a minute or
+so after making it, and the BAM check looks for it in the hive read from the
+disk.
+
 \section{Checking the outputs}
 
 \begin{lstlisting}

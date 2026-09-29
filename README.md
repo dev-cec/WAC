@@ -1083,6 +1083,12 @@ cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
   cross-checks of `check-json.py`, the cross-checks on a real collection — with
   the reference result of each, the defects each one caught, and the limits of
   what they guarantee. Same template, cover retitled by `retitle-cover.py`.
+- **Harmlessness file**, in English and French:
+  `WAC/doc/harmlessness/harmlessness_EN.pdf` and `harmlessness_FR.pdf`. What
+  WAC does to the examined machine: every trace, operation by operation, what
+  it never does, the evidence (import table of `WAC.exe`, guards of the build)
+  and the validation procedure, including the VM cycle's witness files
+  (`vmtest/harmlessness.ps1`).
 - `WAC/doc/BUILD-LINUX_EN.md` (French: `BUILD-LINUX_FR.md`) — cross-compilation
   details, the guards of the build, `WAC/bin`, releasing with `bump-version.sh`.
 - `WAC/wac.yml` — the reference configuration, built into `WAC.exe`

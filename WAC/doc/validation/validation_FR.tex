@@ -428,7 +428,12 @@ registre) :
     par \fichier{verify-exhibits.ps1} ; conversion d'une consigne dont une pièce
     a été retouchée, qui doit être refusée avant toute lecture ; conversion,
     contrôlée par \fichier{check-json.py} ; seconde conversion, dont les JSON
-    doivent être identiques à la première, octet pour octet.
+    doivent être identiques à la première, octet pour octet ;
+  \item contrôle d'innocuité : deux fichiers témoins que la collecte seule
+    lit forcément gardent, avant et après elle, leurs trois dates et leur
+    numéro USN (\fichier{harmlessness.txt}) ; une lecture de contrôle par
+    Windows change la date d'accès de l'un d'eux, preuve que le contrôle sait
+    échouer. Voir le \emph{Dossier d'innocuité}.
 \end{enumerate}
 
 \section{Les contrôles de \texttt{check-json.py}}
