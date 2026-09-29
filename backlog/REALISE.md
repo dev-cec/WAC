@@ -9,6 +9,55 @@ Chaque entrée : **Capacité** — Décision et raison — *Code* — *Vérifica
 
 ---
 
+## 0. La version d'origine (2025, versions 1.0 à 1.3.1)
+
+WAC est né en mai 2025 (6508455 … 5ee5a1c) : un exécutable Visual Studio qui
+extrayait **vite**, en **JSON**, les artefacts d'une machine Windows 10 ou
+ultérieure en marche, pour les intégrer à un outil de surveillance ou
+d'analyse. La migration de 2026 a gardé tous ces artefacts et leur fichier de
+sortie, mais a changé **la façon de les lire** : plus de cliché instantané ni
+d'API, lecture brute du disque et des copies (sections suivantes).
+
+| Artefact (fichier JSON) | Ce qu'il prouve | Lu en 2025 par | Lu aujourd'hui par | Code |
+|---|---|---|---|---|
+| Informations système (`OperatingSystem.json`) | nom, version, domaine, fuseau, démarrage | API Win32 | ruches SYSTEM et SOFTWARE copiées, noyau pour le démarrage | system.cpp |
+| Tâches planifiées (`ScheduledTasks.json`) | persistance, commandes lancées | COM du Planificateur | XML de `System32\Tasks` et TaskCache, en brut | scheduledTasks.cpp |
+| Sessions ouvertes (`Sessions.json`) | qui est connecté, depuis quand | LSA | LSA, en instantané scellé | sessions.cpp |
+| Processus (`processes.json`) | ce qui tourne, parent, propriétaire | API, ouverture de chaque processus | instantané du noyau et WTS, sans `OpenProcess` | processes.cpp |
+| Comptes locaux (`users.json`) | comptes, dernières connexions, échecs | API | ruche SAM copiée | users.cpp |
+| Services et pilotes (`services.json`) | persistance, binaires chargés | gestionnaire de services, service par service | ruche SYSTEM copiée + une énumération de l'état | services.cpp |
+| Journaux d'événements (`events.json`, option) | toute l'activité journalisée | API `EvtQuery` (jusqu'à 20 min) | lecteur EVTX maison, fichiers copiés en brut | evtx.cpp, event_messages.cpp |
+| UserAssist (`userassists.json`) | programmes lancés par l'interface, compteur | registre via VSS | ruche NTUSER copiée | reg_userassists.cpp |
+| MUICache (`muicache.json`) | programmes exécutés, nom affiché | registre via VSS | ruche UsrClass copiée | reg_muicache.cpp |
+| BAM (`bams.json`) | dernière exécution par programme et utilisateur | registre via VSS | ruche SYSTEM copiée | reg_bams.cpp |
+| USBSTOR (`Usbstor.json`) | clés USB branchées, première et dernière fois | registre via VSS | ruche SYSTEM copiée ; numéro de série, fabricant, produit ajoutés | reg_usbstors.cpp |
+| MountedDevices (`mounted_device.json`) | lettres de lecteur et volumes | registre via VSS | ruche SYSTEM copiée ; chaque forme de valeur décodée | reg_mounted_devices.cpp |
+| Shellbags (`shellbags.json`) | dossiers parcourus, y compris disparus | registre via VSS | ruche UsrClass copiée | reg_shellbags.cpp, idList.cpp |
+| MRU (`mrus.json`, `mruApps.json`) | fichiers et applications récents | registre via VSS | ruche NTUSER copiée | reg_mru.cpp, reg_mru_apps.cpp |
+| Clés Run (`run.json`) | lancement au démarrage | registre via VSS | ruches copiées | reg_run.cpp |
+| Shimcache (`shimcache.json`) | présence d'un binaire | registre via VSS | ruche SYSTEM copiée ; UTC réel, sans faux indicateur d'exécution | reg_shimcache.cpp |
+| Amcache (`amcache_applications.json`, `amcache_application_files.json`) | inventaire des programmes, empreinte SHA-1 | ruche via VSS | Amcache.hve copiée en brut | reg_amcache_\*.cpp |
+| Listes de sauts (`jumplistAutomaticDestinations.json`, `jumplistCustomDestinations.json`) | fichiers ouverts par application | fichiers via VSS | copies brutes ; 15 premières entrées et DestList retrouvés | jumplist_\*.cpp, oleparser.cpp |
+| Prefetch (`prefetchs.json`) | exécutions, compteur, fichiers chargés | fichiers via VSS | copies brutes ; décompression, nom de l'exécutable | prefetchs.cpp |
+| Documents récents (`recentdocs.json`) | documents ouverts, même effacés | fichiers `.lnk` via VSS | copies brutes ; cible Unicode, horodatages UTC | recent_docs.cpp, idList.cpp |
+
+Autres acquis de 2025, conservés :
+- **dates de dernière écriture des clés de registre** pour les artefacts qui
+  en dépendent (ee3aafe) ;
+- **noms des GUID** connus (table `trans_id.cpp`, 4b59ba3 puis étendue) ;
+- **empreintes des fichiers cités** (option `--md5`, e462c83) — remplacée en
+  2026 par `--binary` (trois empreintes, lecture brute, prélèvement) ;
+- **valeur brute hexadécimale** des shellbags et raccourcis (`--dump`) ;
+- **dossier de sortie** (`--output`), **journal texte** par niveaux
+  (`--loglevel`), exécution depuis une clé USB (286230f).
+
+Ce que la migration a retiré de 2025, et pourquoi : le cliché instantané VSS
+(traces dans les journaux, service sollicité), COM et WMI, l'ouverture des
+processus et des services un par un, l'API des journaux d'événements, la
+lecture du registre vivant, `offreg.dll` et la compilation Visual Studio.
+
+---
+
 ## 1. Lecture du disque
 
 **Lecture NTFS brute, sans VSS ni API de fichiers.** WAC ouvre `\\.\X:` en
