@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P3 | faible |
+| fait (6789e0c) | P3 | faible |
 
 ## Pourquoi
 Reste de français dans un texte anglais d'investigation.json.
@@ -21,7 +21,8 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - aucun
 
 ## Tâches
-- [ ] Corriger
+- [x] Corriger : « reconstructible byte for byte »
 
 ## Journal
-- (vide)
+- 2026-09-29 : corrigé dans audit.cpp ; cycle VM lancé.
+- 2026-09-29 : cycle VM vert ; commité (6789e0c), fiche archivée.
