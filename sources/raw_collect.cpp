@@ -294,6 +294,11 @@ HRESULT ExtractSystemHivesRaw() {
 		   querying LSASS over RPC. See users.h. */
 		L"\\Windows\\system32\\config\\SAM",
 		L"\\Windows\\AppCompat\\Programs\\Amcache.hve",
+		/* SECURITY: LSA secrets' names and dates, cached logons, audit policy
+		   (security.json — never a secret's value). DEFAULT: the system
+		   account's profile, its Run keys. */
+		L"\\Windows\\system32\\config\\SECURITY",
+		L"\\Windows\\system32\\config\\DEFAULT",
 	};
 	return extractHiveSet(
 		hives,
@@ -363,6 +368,10 @@ HRESULT ExtractFileArtefactsRaw() {
 	if (conf.artefacts.setupApi) addTarget(L"\\Windows\\INF", { L".log" });
 	// hosts has no extension: the whole folder, a handful of small files.
 	if (conf.artefacts.hosts) addTarget(L"\\Windows\\System32\\drivers\\etc", {});
+	/* RegBack: the copies Windows made of the hives (task RegIdleBackup) —
+	   an older state of the registry. Empty files since Windows 10 1803 unless
+	   the task was switched back on; collected as they are, not converted. */
+	if (conf.artefacts.registry) addTarget(L"\\Windows\\System32\\config\\RegBack", {});
 	if (conf.artefacts.defender) addTarget(L"\\ProgramData\\Microsoft\\Windows Defender\\Support", { L".log" });
 	// Whatever the startup folders hold runs at logon: everything, whatever its extension.
 	if (conf.artefacts.startupFolders) addTarget(STARTUP_ALL_USERS, {});
@@ -561,13 +570,15 @@ HRESULT RepairWorkingHives() {
 	   collection extracts (system hives, and each profile's ntuser.dat and
 	   UsrClass.dat), whatever the profiles' paths. */
 	static const std::set<std::wstring> NAMES = { L"system", L"software", L"sam", L"amcache.hve",
-	                                              L"ntuser.dat", L"usrclass.dat" };
+	                                              L"security", L"default", L"ntuser.dat", L"usrclass.dat" };
 	std::vector<std::wstring> hives;
 	std::error_code ec;
 	for (const std::filesystem::directory_entry& e :
 	     std::filesystem::recursive_directory_iterator(workingFolder(), ec)) {
 		if (ec) break;
-		if (e.is_regular_file(ec) && NAMES.count(toLower(e.path().filename().wstring())))
+		// The RegBack copies are exhibits, not hives to replay: they have no logs of their own.
+		if (e.is_regular_file(ec) && NAMES.count(toLower(e.path().filename().wstring()))
+		    && toLower(e.path().parent_path().filename().wstring()) != L"regback")
 			hives.push_back(e.path().wstring());
 	}
 	log(2, L"❇️Hives of the working copy to repair: " + std::to_wstring(hives.size()));

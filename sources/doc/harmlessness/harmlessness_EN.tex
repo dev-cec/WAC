@@ -179,7 +179,8 @@ Raw reading of the volume (\path|\\.\C:|) & One handle opened
 Registry hives & Copied by the raw reading, then read on the copy. No key of
   the live registry is opened: \fichier{WAC.exe} imports no \texttt{Reg*}
   function. The transaction logs are replayed on the copy, with an undo
-  journal. \\
+  journal. In the SECURITY hive, only names, dates and counts are read: no
+  secret's value, no cached credential. \\
 Event logs (\opt{events}) & Read by the raw reading: the event log service is
   not called upon, no event is produced. \\
 Binaries (\opt{binary}) & Read by the raw reading; signatures and catalogues

@@ -11,6 +11,11 @@
 #                SHA-256 -> startup_folders.json
 #   zone         a file marked as downloaded (Zone.Identifier stream), the
 #                stream read back by Windows -> zone_identifiers.json
+#   run_default  a Run value of type REG_EXPAND_SZ in the DEFAULT hive (the
+#                system account's profile) -> run.json, unexpanded
+#   secrets, audit, nl_slots  the SECURITY hive read live by Windows (as
+#                SYSTEM): names of the LSA secrets, PolAdtEv in hexadecimal,
+#                number of NL$n slots -> security.json
 #   setupapi     number of sections of setupapi.dev*.log now; the collection,
 #                later, finds at least as many -> setupapi.json
 #   mplog        number of Defender support logs -> defender_log.json
@@ -66,7 +71,22 @@ Set-Content -Path $downloaded -Stream Zone.Identifier -Value "[ZoneTransfer]`r`n
 $hostUrl = (Get-Content -Path $downloaded -Stream Zone.Identifier | Where-Object { $_ -like 'HostUrl=*' }) -replace '^HostUrl=', ''
 Write-Output "zone=$downloaded|3|$hostUrl"
 
-# 6. Reference counts of the logs Windows writes itself.
+# 6. A Run value in the DEFAULT hive, REG_EXPAND_SZ: Windows writes the
+#    registry to the disk a minute or so later, before the first collection.
+$runKey = 'Registry::HKEY_USERS\.DEFAULT\Software\Microsoft\Windows\CurrentVersion\Run'
+New-Item -Force $runKey | Out-Null
+New-ItemProperty -Force -Path $runKey -Name 'WacTestDefault' -PropertyType ExpandString -Value '%SystemRoot%\wac-default.exe' | Out-Null
+Write-Output "run_default=WacTestDefault|%SystemRoot%\wac-default.exe"
+
+# 7. The SECURITY hive as Windows reads it live (the harness runs as SYSTEM).
+$secrets = (Get-ChildItem 'HKLM:\SECURITY\Policy\Secrets' | ForEach-Object PSChildName | Sort-Object) -join ','
+Write-Output "secrets=$secrets"
+$audit = (Get-Item 'HKLM:\SECURITY\Policy\PolAdtEv').GetValue('')
+Write-Output ("audit=" + (($audit | ForEach-Object { $_.ToString('X2') }) -join ''))
+$slots = @((Get-Item 'HKLM:\SECURITY\Cache' -ErrorAction SilentlyContinue).Property | Where-Object { $_ -match '^NL\$\d+$' }).Count
+Write-Output "nl_slots=$slots"
+
+# 8. Reference counts of the logs Windows writes itself.
 $sections = (Select-String -Path 'C:\Windows\INF\setupapi.dev*.log' -Pattern '^>>>  \[' -ErrorAction SilentlyContinue | Measure-Object).Count
 Write-Output "setupapi=$sections"
 $mplog = @(Get-ChildItem -Force 'C:\ProgramData\Microsoft\Windows Defender\Support\MPLog-*.log' -ErrorAction SilentlyContinue).Count

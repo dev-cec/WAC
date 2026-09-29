@@ -346,6 +346,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   defender: true        # Defender's logs (MPLog): scans, detections, exclusions
   startup_folders: true # startup folders: what runs at logon
   zone_identifiers: true  # Zone.Identifier streams: where downloaded files came from
+  security: true        # SECURITY hive: LSA secret names, cached logons, audit
 \end{lstlisting}
 
 \begin{itemize}
@@ -955,6 +956,14 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         from (kernel, or fallback estimate); \champ{ClockAdjustedSinceBootMs}
         gives the total clock corrections since boot — a few seconds is routine
         resynchronisation, a large value means a clock changed.
+  \item[\fichier{security.json}] \fichier{SECURITY} hive: \textbf{names} of the
+        LSA secrets and the dates of their values (\texttt{DefaultPassword}
+        reveals an automatic logon's stored password, \texttt{\_SC\_<service>}
+        a service running under an account), number of cached domain logon
+        slots and how many are used, audit policy (\champ{PolAdtEv}, as bytes:
+        its layout is not published). \textbf{No secret's value} is read, nor
+        any cached credential. The \path|config\RegBack| copies of the hives
+        are collected as they are.
   \item[\fichier{users.json}] local accounts, read from the \fichier{SAM} hive:
         SID and RID, state, flags, logon and failure counts, dates of last
         logon, last failure, password change and account change, profile.
@@ -1000,8 +1009,11 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
   \item[\fichier{userassists.json}] programs launched from the user interface:
         count, focus time, last execution.
   \item[\fichier{muicache.json}] display names of executed programs.
-  \item[\fichier{run.json}] programs started at boot or logon (Run keys), with
-        the key's last write.
+  \item[\fichier{run.json}] programs started at boot or logon (Run and RunOnce
+        keys), with the key's last write: in SOFTWARE (the whole machine), in
+        the DEFAULT hive (the system account) and in each profile's NTUSER.DAT
+        (\champ{Hive}). \champ{Type} \texttt{REG\_EXPAND\_SZ}: the command
+        holds variables (\texttt{\%SystemRoot\%}\ldots), given as written.
   \item[\fichier{startup\_folders.json}] content of the startup folders, of all
         users (\champ{Scope} \texttt{AllUsers}) and of each profile
         (\texttt{User}, with \champ{SID}): every file, its dates and

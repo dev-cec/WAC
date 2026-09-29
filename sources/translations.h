@@ -46,7 +46,7 @@ enum class Text : unsigned {
 	StepScheduledTasks, StepRecentDocuments, StepPrefetch, StepReadMft, StepWriteMft, StepUsnJournal,
 	StepJumpListsAutomatic, StepJumpListsCustom, StepEvents,
 	StepPowerShellHistory, StepSetupApi, StepRecycleBin, StepHosts, StepErrorReports, StepDefenderLogs,
-	StepStartupFolders, StepZoneIdentifiers,
+	StepStartupFolders, StepZoneIdentifiers, StepSecurityHive,
 	// Steps: investigation log
 	StepWriteConversionLog, StepWriteInvestigationLog,
 	// Artefacts switched off by wac.yml (their name, then the message)
@@ -57,7 +57,7 @@ enum class Text : unsigned {
 	ArtefactRecentDocuments, ArtefactPrefetch, ArtefactMft, ArtefactUsnJournal,
 	ArtefactJumpListsAutomatic, ArtefactJumpListsCustom,
 	ArtefactPowerShellHistory, ArtefactSetupApi, ArtefactRecycleBin, ArtefactHosts, ArtefactErrorReports,
-	ArtefactDefenderLogs, ArtefactStartupFolders, ArtefactZoneIdentifiers,
+	ArtefactDefenderLogs, ArtefactStartupFolders, ArtefactZoneIdentifiers, ArtefactSecurityHive,
 	NotRequested,
 	// End of the run
 	TimeElapsed, PressAnyKey, ConversionLogNotWritten,

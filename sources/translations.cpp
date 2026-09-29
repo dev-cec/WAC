@@ -96,6 +96,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepDefenderLogs,          L"Journaux de Defender (MPLog)",                  L"Extracting DEFENDER LOGS (MPLog)" },
 	{ Text::StepStartupFolders,        L"Dossiers de démarrage",                         L"Extracting STARTUP FOLDERS" },
 	{ Text::StepZoneIdentifiers,       L"Origine des fichiers téléchargés (Zone.Identifier)", L"Extracting ZONE.IDENTIFIER streams" },
+	{ Text::StepSecurityHive,          L"Ruche SECURITY (noms des secrets, connexions en cache, audit)", L"Extracting the SECURITY HIVE (secret names, cached logons, audit)" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },
@@ -132,6 +133,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactDefenderLogs,      L"Journaux de Defender",                          L"Defender logs" },
 	{ Text::ArtefactStartupFolders,    L"Dossiers de démarrage",                         L"Startup folders" },
 	{ Text::ArtefactZoneIdentifiers,   L"Origine des fichiers téléchargés",              L"Zone.Identifier streams" },
+	{ Text::ArtefactSecurityHive,      L"Ruche SECURITY",                                L"SECURITY hive" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },
 
 	{ Text::TimeElapsed,               L"FIN, durée : %1 s",                             L"END, Time elapsed : %1 s" },

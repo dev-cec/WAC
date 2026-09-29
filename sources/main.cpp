@@ -42,6 +42,7 @@
 #include "defender_log.h"
 #include "startup_folders.h"
 #include "zone_identifiers.h"
+#include "security_hive.h"
 #include "recent_docs.h"
 #include "jumplist_automatic.h"
 #include "jumplist_custom.h"
@@ -1055,6 +1056,8 @@ void convertArtefacts(bool systemAvailable) {
 	                                  L"artefacts.error_reports", Text::StepErrorReports);
 	convertFileArtefact<DefenderLogs>(conf.artefacts.defender, "defender_log.json", Text::ArtefactDefenderLogs,
 	                                  L"artefacts.defender", Text::StepDefenderLogs);
+	convertFileArtefact<SecurityHive>(conf.artefacts.security, "security.json", Text::ArtefactSecurityHive,
+	                                  L"artefacts.security", Text::StepSecurityHive);
 	convertFileArtefact<StartupFolders>(conf.artefacts.startupFolders, "startup_folders.json",
 	                                    Text::ArtefactStartupFolders, L"artefacts.startup_folders",
 	                                    Text::StepStartupFolders);

@@ -1320,6 +1320,32 @@ def check_small_file_artefacts(folder):
                f"zone_identifiers.json: {where} from {host_url}, zone {zone_id} (Internet), read in the $MFT",
                f"zone_identifiers.json: {where} missing or different among {len(zones)} stream(s): {match[:1]}")
 
+    runs = load(folder, "run.json")
+    if isinstance(runs, list) and "run_default" in reference:
+        name, value = reference["run_default"].split("|", 1)
+        match = [r for r in runs if r.get("Hive") == "DEFAULT" and r.get("Name") == name]
+        report(bool(match) and match[0].get("Type") == "REG_EXPAND_SZ" and match[0].get("Value") == value,
+               f"run.json: {name} of the DEFAULT hive, REG_EXPAND_SZ, as written ({value})",
+               f"run.json: {name} of the DEFAULT hive missing or different: {match[:1]}")
+
+    security = load(folder, "security.json")
+    if isinstance(security, dict) and "secrets" in reference:
+        # Compared as sets: PowerShell sorts without case, Python with it.
+        names = ",".join(sorted((s.get("Name", "") for s in security.get("LsaSecrets", [])), key=str.lower))
+        report(sorted(names.lower().split(",")) == sorted(reference["secrets"].lower().split(",")),
+               f"security.json: the {len(security.get('LsaSecrets', []))} LSA secret names read by Windows, no value",
+               f"security.json: secret names {names} / Windows {reference['secrets']}")
+        leaked = [s for s in security.get("LsaSecrets", []) if set(s) - {"Name", "KeyLastWrite", "KeyLastWriteUtc",
+                  "CurrentValueSet", "CurrentValueSetUtc", "PreviousValueSet", "PreviousValueSetUtc"}]
+        report(not leaked, "security.json: no field beyond names and dates", f"security.json: unexpected fields {leaked[:1]}")
+        report((security.get("AuditPolicy") or {}).get("PolAdtEv") == reference.get("audit"),
+               "security.json: PolAdtEv identical to Windows' byte for byte",
+               "security.json: PolAdtEv differs from Windows'")
+        slots = (security.get("CachedLogons") or {}).get("Slots", 0)
+        report(str(slots) == reference.get("nl_slots"),
+               f"security.json: {slots} cached logon slot(s), as Windows counts them",
+               f"security.json: {slots} cached logon slot(s), Windows {reference.get('nl_slots')}")
+
     setupapi = load(folder, "setupapi.json")
     if isinstance(setupapi, list) and "setupapi" in reference:
         dated = sum(1 for s in setupapi if s.get("StartUtc"))

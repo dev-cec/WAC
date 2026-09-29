@@ -121,8 +121,9 @@ MRU, Run keys, Shimcache, Amcache, jumplists, Prefetch and recent documents;
 the `$MFT` and change journal; the PowerShell command history of each profile,
 the device installations of `setupapi.dev.log`, the recycle bins' `$I` of every
 volume, the `hosts` file, the error reports (WER), Microsoft Defender's support
-logs, the startup folders and the Zone.Identifier streams (where a downloaded
-file came from).
+logs, the startup folders, the Zone.Identifier streams (where a downloaded
+file came from) and the SECURITY hive (LSA secret names and dates, cached
+logons, audit policy — never a secret's value).
 
 With `--binary`, every file those artefacts point to — a process's executable, a
 service's binary and DLL, a scheduled task's command, the files a program loaded

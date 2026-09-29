@@ -62,7 +62,7 @@ bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error)
 		{ "powershell_history", &a.powershellHistory }, { "setupapi", &a.setupApi },
 		{ "recycle_bin", &a.recycleBin }, { "hosts", &a.hosts }, { "error_reports", &a.errorReports },
 		{ "defender", &a.defender }, { "startup_folders", &a.startupFolders },
-		{ "zone_identifiers", &a.zoneIdentifiers },
+		{ "zone_identifiers", &a.zoneIdentifiers }, { "security", &a.security },
 	};
 	for (const auto& [key, node] : section.children) {
 		const Switch* found = nullptr;

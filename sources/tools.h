@@ -126,6 +126,7 @@ struct AppliConf {
 		bool defender = true;         //!< Microsoft Defender's support logs (MPLog)
 		bool startupFolders = true;   //!< startup folders of all users and of each profile
 		bool zoneIdentifiers = true;  //!< Zone.Identifier streams, read in the $MFT copy
+		bool security = true;         //!< SECURITY hive: LSA secrets' names and dates, cached logons, audit policy
 	} artefacts;
 	RunMode mode = RunMode::Full; //!< what this run does (see RunMode)
 	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)

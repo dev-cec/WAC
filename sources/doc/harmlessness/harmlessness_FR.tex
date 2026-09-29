@@ -182,7 +182,9 @@ Lecture directe du volume (\path|\\.\C:|) & Un descripteur ouvert en
 Ruches du registre & Copiées par la lecture directe, puis lues sur la copie.
   Aucune clé du registre vivant n'est ouverte : \fichier{WAC.exe} n'importe
   aucune fonction \texttt{Reg*}. Le rejeu des journaux de transaction se fait
-  sur la copie, avec un journal d'annulation. \\
+  sur la copie, avec un journal d'annulation. Dans la ruche SECURITY, seuls les
+  noms, dates et comptes sont lus : aucune valeur de secret, aucune donnée
+  d'authentification en cache. \\
 Journaux d'événements (\opt{events}) & Lus par la lecture directe : le service
   de journalisation n'est pas sollicité, aucun événement n'est produit. \\
 Binaires (\opt{binary}) & Lus par la lecture directe ; signatures et

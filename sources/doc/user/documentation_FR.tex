@@ -351,6 +351,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   defender: true        # journaux de Defender (MPLog) : analyses, détections, exclusions
   startup_folders: true # dossiers de démarrage : ce qui s'exécute à l'ouverture de session
   zone_identifiers: true  # flux Zone.Identifier : d'où viennent les fichiers téléchargés
+  security: true        # ruche SECURITY : noms des secrets LSA, connexions en cache, audit
 \end{lstlisting}
 
 \begin{itemize}
@@ -970,6 +971,15 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         estimation de repli) ; \champ{ClockAdjustedSinceBootMs} donne le cumul des
         corrections d'horloge depuis le démarrage — quelques secondes sont un
         recalage ordinaire, un grand écart signale une horloge modifiée.
+  \item[\fichier{security.json}] ruche \fichier{SECURITY} : \textbf{noms} des
+        secrets LSA et dates de leurs valeurs (\texttt{DefaultPassword} signale
+        un mot de passe de connexion automatique enregistré,
+        \texttt{\_SC\_<service>} un service qui tourne sous un compte),
+        nombre d'emplacements de connexions de domaine en cache et combien sont
+        occupés, politique d'audit (\champ{PolAdtEv}, en octets : son format
+        n'est pas publié). \textbf{Aucune valeur de secret} n'est lue, ni
+        aucune donnée d'authentification en cache. Les copies
+        \path|config\RegBack| des ruches sont prélevées telles quelles.
   \item[\fichier{users.json}] comptes locaux, lus dans la ruche \fichier{SAM} :
         SID et RID, état, drapeaux, nombre de connexions et d'échecs, dates de
         dernière connexion, de dernier échec, de changement de mot de passe et de
@@ -1019,7 +1029,11 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         compteur, temps de focus, dernière exécution.
   \item[\fichier{muicache.json}] noms d'affichage des programmes exécutés.
   \item[\fichier{run.json}] programmes lancés au démarrage ou à l'ouverture de
-        session (clés Run), avec la dernière écriture de la clé.
+        session (clés Run et RunOnce), avec la dernière écriture de la clé : dans
+        SOFTWARE (toute la machine), dans la ruche DEFAULT (le compte système) et
+        dans le NTUSER.DAT de chaque profil (\champ{Hive}). \champ{Type}
+        \texttt{REG\_EXPAND\_SZ} : la commande contient des variables
+        (\texttt{\%SystemRoot\%}\ldots), données telles qu'écrites.
   \item[\fichier{startup\_folders.json}] contenu des dossiers de démarrage, de
         tous les utilisateurs (\champ{Scope} \texttt{AllUsers}) et de chaque
         profil (\texttt{User}, avec \champ{SID}) : chaque fichier, ses dates et
