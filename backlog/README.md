@@ -42,7 +42,6 @@ Remplace `TODO.txt`.
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-002](B-002-petits-artefacts-fichiers.md) | Lot 1 : petits artefacts fichiers (7) | à valider | P1 | faible |
 | [B-003](B-003-ruches-security-default.md) | Ruches SECURITY et DEFAULT, RegBack | à faire | P2 | faible |
 | [B-004](B-004-zone-identifier.md) | Flux Zone.Identifier (Mark of the Web) | à faire | P2 | faible |
 | [B-005](B-005-mft-usn-autres-volumes.md) | $MFT et $UsnJrnl de chaque volume NTFS fixe | à faire | P2 | faible |
