@@ -350,6 +350,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   error_reports: true   # rapports d'erreurs (WER) : programmes plantés, avec leur chemin
   defender: true        # journaux de Defender (MPLog) : analyses, détections, exclusions
   startup_folders: true # dossiers de démarrage : ce qui s'exécute à l'ouverture de session
+  zone_identifiers: true  # flux Zone.Identifier : d'où viennent les fichiers téléchargés
 \end{lstlisting}
 
 \begin{itemize}
@@ -1081,6 +1082,14 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         arborescence reconstituée.
   \item[\fichier{mrus.json}, \fichier{mruApps.json}] listes de fichiers et
         d'applications récemment utilisés.
+  \item[\fichier{zone\_identifiers.json}] flux \fichier{Zone.Identifier}
+        (« marque du web ») que navigateurs et messageries écrivent sur ce qu'ils
+        téléchargent : fichier, zone (\champ{ZoneId}, \champ{ZoneName} —
+        \texttt{Internet} pour~3), page d'origine (\champ{ReferrerUrl}) et
+        adresse du fichier (\champ{HostUrl}), toutes les valeurs dans
+        \champ{Values}. Lus dans la copie de la \path|$MFT|, où ce petit flux
+        est résident : aucune lecture de plus sur la machine examinée ; un flux
+        non résident, rare, est signalé (\champ{ContentNotResident}).
   \item[\fichier{recycle\_bin.json}] fichiers mis à la corbeille, sur chaque
         volume NTFS fixe, d'après leur index \path|$I| : chemin d'origine,
         taille, instant de la suppression (\champ{DeletedUtc}), et l'utilisateur

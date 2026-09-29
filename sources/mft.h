@@ -38,6 +38,7 @@
 #include <vector>
 #include <map>
 #include <cstdint>
+#include <functional>
 #include "tools.h"
 
 /*! One record of the $MFT: a file or a directory, present or deleted. */
@@ -66,6 +67,14 @@ struct MftEntry {
 	bool sizeKnown = false;          //!< true if `size` was read
 	uint64_t size = 0;               //!< size of the content (unnamed $DATA)
 	std::vector<std::wstring> streams; //!< named $DATA streams: Zone.Identifier (downloaded), hidden data…
+	/*! The Zone.Identifier stream ("Mark of the Web", written by browsers and
+	 *  mail clients on what they download). Almost always resident — held in
+	 *  the record itself —, so the copy of the $MFT carries its content, with
+	 *  no further read of the examined machine. */
+	bool zoneIdentifier = false;          //!< the record has a Zone.Identifier stream
+	bool zoneIdentifierResident = false;  //!< its content is in the record (`zoneIdentifierContent`)
+	std::string zoneIdentifierContent;    //!< the stream's bytes, when resident
+	uint64_t zoneIdentifierSize = 0;      //!< the stream's size
 	uint32_t attributes = 0;         //!< file attributes of $STANDARD_INFORMATION (a field of bits)
 	FILETIME created = { 0 }, modified = { 0 }, mftModified = { 0 }, accessed = { 0 };  //!< $STANDARD_INFORMATION, UTC
 	FILETIME fileNameCreated = { 0 }, fileNameModified = { 0 },
@@ -111,6 +120,12 @@ struct Mft {
 	 *         (or never read): the path then starts with what is known
 	 *  @return "C:\…", or empty if the record itself cannot be named */
 	std::wstring pathOf(uint64_t entry, uint16_t sequence, bool& complete) const;
+
+	/*! Walks every file and directory of the $MFT, each completed with what
+	 *  its extension records carry, with its path.
+	 *  @param visit called with each record, its path and whether the path is complete
+	 *  @return ERROR_SUCCESS, or why the exhibit could not be read */
+	HRESULT forEachFile(const std::function<void(const MftEntry&, const std::wstring&, bool)>& visit) const;
 
 	//! Releases the memory held by the index.
 	void clear();

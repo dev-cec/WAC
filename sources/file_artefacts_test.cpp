@@ -1,7 +1,7 @@
 /*! \file
  *  \brief Checks the decoders of the small file artefacts on inputs whose
  *  result is known: PowerShell history, setupapi.dev.log, recycle bin `$I`,
- *  hosts, Report.wer, Defender's MPLog.
+ *  hosts, Report.wer, Defender's MPLog, Zone.Identifier.
  *
  *  WHY THIS TEST. These formats are text or a few bytes, and a decoder that
  *  misses a case still gives valid JSON: a multi-line command cut in two, a
@@ -18,6 +18,7 @@
 #include "hosts_file.h"
 #include "error_reports.h"
 #include "defender_log.h"
+#include "zone_identifiers.h"
 #include <cstdio>
 
 AppliConf conf; //!< WAC's global configuration, which tools.cpp references
@@ -153,6 +154,21 @@ void defender() {
 	check(!parseDefenderDate(L"2023-05-12T10:11:12.345 local", f), "defender: a date without Z is not taken");
 }
 
+void zoneIdentifier() {
+	ZoneIdentifier z;
+	check(parseZoneIdentifier("[ZoneTransfer]\r\nZoneId=3\r\nReferrerUrl=https://a.invalid/\r\nHostUrl=https://a.invalid/x.exe\r\n", z)
+	      && z.values.size() == 3 && z.values[0].first == L"ZoneId" && z.values[0].second == L"3"
+	      && z.values[2].second == L"https://a.invalid/x.exe", "zone identifier: section header skipped, three values");
+	ZoneIdentifier w;
+	std::string wide("\xFF\xFE", 2);
+	for (char c : std::string("[ZoneTransfer]\r\nZoneId=4\r\n")) { wide += c; wide += '\0'; }
+	check(parseZoneIdentifier(wide, w) && w.values.size() == 1 && w.values[0].second == L"4", "zone identifier: UTF-16 content read");
+	ZoneIdentifier e;
+	check(!parseZoneIdentifier("[ZoneTransfer]\r\n", e), "zone identifier: a header alone is refused");
+	check(zoneName(L"3") == L"Internet" && zoneName(L"0") == L"Local machine" && zoneName(L"7").empty() && zoneName(L"31").empty(),
+	      "zone identifier: zone names, unknown ones empty");
+}
+
 } // namespace
 
 int wmain() {
@@ -162,6 +178,7 @@ int wmain() {
 	hosts();
 	errorReport();
 	defender();
+	zoneIdentifier();
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }

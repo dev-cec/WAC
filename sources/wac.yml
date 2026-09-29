@@ -45,3 +45,4 @@ artefacts:
   error_reports: true     # Windows Error Reporting: programs that crashed, with their path
   defender: true          # Microsoft Defender's support logs (MPLog): scans, detections, exclusions
   startup_folders: true   # startup folders: what runs at logon
+  zone_identifiers: true  # Zone.Identifier streams (Mark of the Web): where downloaded files came from

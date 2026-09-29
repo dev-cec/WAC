@@ -521,7 +521,8 @@ HRESULT ExtractFileArtefactsRaw() {
 }
 
 HRESULT ExtractNtfsMetadataRaw() {
-	const bool mft = conf.artefacts.mft || conf.artefacts.usnJournal;
+	// The $MFT serves mft.json, the change journal's paths and the Zone.Identifier streams.
+	const bool mft = conf.artefacts.mft || conf.artefacts.usnJournal || conf.artefacts.zoneIdentifiers;
 	if (!mft && !conf.artefacts.logFile) return HRESULT_FROM_WIN32(ERROR_EMPTY);
 	const std::wstring volume = systemVolume();
 	const std::wstring method = L"Raw NTFS reading (\\\\.\\" + volume

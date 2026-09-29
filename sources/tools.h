@@ -125,6 +125,7 @@ struct AppliConf {
 		bool errorReports = true;     //!< Windows Error Reporting: Report.wer of the machine and of each profile
 		bool defender = true;         //!< Microsoft Defender's support logs (MPLog)
 		bool startupFolders = true;   //!< startup folders of all users and of each profile
+		bool zoneIdentifiers = true;  //!< Zone.Identifier streams, read in the $MFT copy
 	} artefacts;
 	RunMode mode = RunMode::Full; //!< what this run does (see RunMode)
 	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)

@@ -101,6 +101,15 @@ bool MftEntry::parse(const uint8_t* record, size_t recordSize, uint64_t number) 
 			if (nameLength && (uint64_t)nameOffset + 2u * nameLength <= length) {
 				std::wstring stream(nameLength, L'\0');
 				for (size_t k = 0; k < stream.size(); ++k) stream[k] = (wchar_t)rd16(a + nameOffset + 2 * k);
+				if (toLower(stream) == L"zone.identifier") {
+					zoneIdentifier = true;
+					if (resident && value) {
+						zoneIdentifierResident = true;
+						zoneIdentifierSize = valueLength;
+						zoneIdentifierContent.assign(reinterpret_cast<const char*>(value), valueLength);
+					}
+					else if (!resident && length >= 0x40 && rd64(a + 0x10) == 0) zoneIdentifierSize = rd64(a + 0x30);
+				}
 				streams.push_back(std::move(stream));
 			}
 			// The content's size: resident, or on the first fragment (starting VCN 0).
@@ -193,7 +202,7 @@ HRESULT Mft::getData() {
 	const HRESULT hresult = forEachRecord([this](const MftEntry& e) {
 		if (e.baseEntry) {
 			// An extension record: kept only if it carries what a base record may lack.
-			if (!e.name.empty() || e.sizeKnown || !e.streams.empty() || !e.links.empty()) {
+			if (!e.name.empty() || e.sizeKnown || !e.streams.empty() || !e.links.empty() || e.zoneIdentifier) {
 				MftEntry& kept = extensions_[e.baseEntry];
 				if (!e.name.empty() && e.nameRank < kept.nameRank) {
 					kept.name = e.name;
@@ -209,6 +218,12 @@ HRESULT Mft::getData() {
 				// A file with many names has some of them here.
 				kept.links.insert(kept.links.end(), e.links.begin(), e.links.end());
 				kept.streams.insert(kept.streams.end(), e.streams.begin(), e.streams.end());
+				if (e.zoneIdentifier && !kept.zoneIdentifier) {
+					kept.zoneIdentifier = true;
+					kept.zoneIdentifierResident = e.zoneIdentifierResident;
+					kept.zoneIdentifierContent = e.zoneIdentifierContent;
+					kept.zoneIdentifierSize = e.zoneIdentifierSize;
+				}
 			}
 			return;
 		}
@@ -296,6 +311,12 @@ void Mft::complete(MftEntry& entry) const {
 	}
 	if (extension.sizeKnown) { entry.size = extension.size; entry.sizeKnown = true; }
 	entry.streams.insert(entry.streams.end(), extension.streams.begin(), extension.streams.end());
+	if (extension.zoneIdentifier && !entry.zoneIdentifier) {
+		entry.zoneIdentifier = true;
+		entry.zoneIdentifierResident = extension.zoneIdentifierResident;
+		entry.zoneIdentifierContent = extension.zoneIdentifierContent;
+		entry.zoneIdentifierSize = extension.zoneIdentifierSize;
+	}
 	entry.links.insert(entry.links.end(), extension.links.begin(), extension.links.end());
 }
 
@@ -322,6 +343,16 @@ HRESULT Mft::toJson() {
 	});
 	const HRESULT closed = out.close();
 	return hresult != ERROR_SUCCESS ? hresult : closed;
+}
+
+HRESULT Mft::forEachFile(const std::function<void(const MftEntry&, const std::wstring&, bool)>& visit) const {
+	return forEachRecord([this, &visit](MftEntry& e) {
+		if (e.baseEntry) return;               // merged into its base record
+		complete(e);
+		bool pathComplete = true;
+		const std::wstring path = pathOf(e.entry, e.sequence, pathComplete);
+		visit(e, path, pathComplete);
+	});
 }
 
 void Mft::clear() {

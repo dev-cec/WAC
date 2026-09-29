@@ -339,7 +339,7 @@ lui.
   historique PowerShell, \fichier{setupapi.dev.log}, \path|$I| de la corbeille
   (versions 1 et 2), \fichier{hosts}, \fichier{Report.wer}, MPLog de Defender :
   cas ordinaires et hostiles (\path|$I| tronqué, longueur mensongère, date
-  impossible) ; 33 contrôles, aucun échec \\
+  impossible), flux \fichier{Zone.Identifier} ; 37 contrôles, aucun échec \\
 \texttt{json\_test} & l'écrivain JSON de \wac{} & aller-retour identique,
   26 fichiers d'une collecte relus et réécrits à l'octet, textes malformés
   refusés, 200~000 mutations sans lecture hors borne (sanitizers) \\
@@ -501,7 +501,9 @@ chemin et date de création de chaque pièce du volume système dans
 témoins déposés par le cycle (historique PowerShell, fichier mis à la
   corbeille, entrée \fichier{hosts}, script de démarrage avec son SHA-256) /
   \fichier{powershell\_history.json}, \fichier{recycle\_bin.json},
-  \fichier{hosts.json}, \fichier{startup\_folders.json} ; sections de
+  \fichier{hosts.json}, \fichier{startup\_folders.json} ; fichier marqué
+  téléchargé, son flux relu par Windows / \fichier{zone\_identifiers.json},
+  lu dans la \path|$MFT| ; sections de
   \fichier{setupapi.dev.log} comptées par Windows / \fichier{setupapi.json} &
   contrôle ajouté avec ces artefacts \\
 entrées DestList / raccourcis des listes de sauts & les 15 premières entrées de

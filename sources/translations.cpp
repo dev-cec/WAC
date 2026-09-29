@@ -95,6 +95,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepErrorReports,          L"Rapports d'erreurs (WER)",                      L"Extracting ERROR REPORTS (WER)" },
 	{ Text::StepDefenderLogs,          L"Journaux de Defender (MPLog)",                  L"Extracting DEFENDER LOGS (MPLog)" },
 	{ Text::StepStartupFolders,        L"Dossiers de démarrage",                         L"Extracting STARTUP FOLDERS" },
+	{ Text::StepZoneIdentifiers,       L"Origine des fichiers téléchargés (Zone.Identifier)", L"Extracting ZONE.IDENTIFIER streams" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },
@@ -130,6 +131,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactErrorReports,      L"Rapports d'erreurs",                            L"Error reports" },
 	{ Text::ArtefactDefenderLogs,      L"Journaux de Defender",                          L"Defender logs" },
 	{ Text::ArtefactStartupFolders,    L"Dossiers de démarrage",                         L"Startup folders" },
+	{ Text::ArtefactZoneIdentifiers,   L"Origine des fichiers téléchargés",              L"Zone.Identifier streams" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },
 
 	{ Text::TimeElapsed,               L"FIN, durée : %1 s",                             L"END, Time elapsed : %1 s" },

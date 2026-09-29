@@ -41,6 +41,7 @@
 #include "error_reports.h"
 #include "defender_log.h"
 #include "startup_folders.h"
+#include "zone_identifiers.h"
 #include "recent_docs.h"
 #include "jumplist_automatic.h"
 #include "jumplist_custom.h"
@@ -390,7 +391,7 @@ void extractProfileArtefacts() {
 	else printSuccess();
 
 	// $MFT, change journal, $LogFile: the file system's timeline (read in place by the conversion).
-	if (conf.artefacts.mft || conf.artefacts.usnJournal || conf.artefacts.logFile) {
+	if (conf.artefacts.mft || conf.artefacts.usnJournal || conf.artefacts.logFile || conf.artefacts.zoneIdentifiers) {
 		printStep(Text::StepNtfsMetadata);
 		log(3, L"🔈ExtractNtfsMetadataRaw");
 		hresult = ExtractNtfsMetadataRaw();   // S_FALSE = one could not be read (tolerated)
@@ -964,13 +965,16 @@ void convertArtefacts(bool systemAvailable) {
 	}
 	}   // artefacts.prefetch
 
-	/* The $MFT is loaded once for both artefacts: the change journal names
-	   its files through it. */
+	/* The $MFT is loaded once for three artefacts: the change journal names
+	   its files through it, and the Zone.Identifier streams are in its records. */
 	const bool mftWanted = requested(conf.artefacts.mft, "mft.json", Text::ArtefactMft, L"artefacts.mft");
 	const bool usnWanted = requested(conf.artefacts.usnJournal, "usn_journal.json", Text::ArtefactUsnJournal, L"artefacts.usn_journal");
-	if (mftWanted || usnWanted) {
+	const bool zonesWanted = requested(conf.artefacts.zoneIdentifiers, "zone_identifiers.json",
+	                                   Text::ArtefactZoneIdentifiers, L"artefacts.zone_identifiers");
+	if (mftWanted || usnWanted || zonesWanted) {
 	printStep(Text::StepReadMft);
-	hresult = mft.getData();
+	const HRESULT mftRead = mft.getData();
+	hresult = mftRead;
 	if (hresult != ERROR_SUCCESS) {
 		printError(hresult);
 		if (mftWanted) writeNotCollected("mft.json", L"$MFT", hresult);
@@ -998,8 +1002,22 @@ void convertArtefacts(bool systemAvailable) {
 			usnJournal.clear();
 		}
 	}
+	if (zonesWanted) {
+		printStep(Text::StepZoneIdentifiers);
+		ZoneIdentifiers zones;
+		hresult = mftRead == ERROR_SUCCESS ? zones.getData(mft) : mftRead;
+		if (hresult != ERROR_SUCCESS) {
+			printError(hresult);
+			writeNotCollected("zone_identifiers.json", L"Zone.Identifier streams ($MFT)", hresult);
+		}
+		else {
+			hresult = zones.toJson();
+			if (hresult != ERROR_SUCCESS) printError(hresult);
+			else printSuccess();
+		}
+	}
 	mft.clear();
-	}   // artefacts.mft, artefacts.usn_journal
+	}   // artefacts.mft, artefacts.usn_journal, artefacts.zone_identifiers
 
 	if (requested(conf.artefacts.jumpLists, "jumplistAutomaticDestinations.json", Text::ArtefactJumpListsAutomatic, L"artefacts.jump_lists")) {
 	printStep(Text::StepJumpListsAutomatic);

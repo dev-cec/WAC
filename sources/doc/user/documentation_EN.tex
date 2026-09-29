@@ -345,6 +345,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   error_reports: true   # error reports (WER): programs that crashed, with their path
   defender: true        # Defender's logs (MPLog): scans, detections, exclusions
   startup_folders: true # startup folders: what runs at logon
+  zone_identifiers: true  # Zone.Identifier streams: where downloaded files came from
 \end{lstlisting}
 
 \begin{itemize}
@@ -1060,6 +1061,14 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         tree.
   \item[\fichier{mrus.json}, \fichier{mruApps.json}] most-recently-used files
         and applications.
+  \item[\fichier{zone\_identifiers.json}] \fichier{Zone.Identifier} streams
+        (``Mark of the Web'') that browsers and mail clients write on what they
+        download: file, zone (\champ{ZoneId}, \champ{ZoneName} —
+        \texttt{Internet} for~3), page of origin (\champ{ReferrerUrl}) and the
+        file's address (\champ{HostUrl}), every value in \champ{Values}. Read in
+        the copy of the \path|$MFT|, where this small stream is resident: no
+        further read of the examined machine; a non-resident stream, rare, is
+        flagged (\champ{ContentNotResident}).
   \item[\fichier{recycle\_bin.json}] files sent to the recycle bin, on every
         fixed NTFS volume, from their \path|$I| index: original path, size,
         instant of the deletion (\champ{DeletedUtc}), and the user

@@ -4,11 +4,13 @@
 #
 #   powershell   a PSReadLine history of a host "WacTest", three commands, one
 #                on two lines (backtick) -> powershell_history.json
-#   recycled     a file sent to the recycle bin (as SYSTEM, since the harness
-#                runs as SYSTEM) -> recycle_bin.json, its original path
+#   recycled     a file of the user "wac" sent to the recycle bin from that
+#                user's interactive session -> recycle_bin.json, its original path
 #   hosts        an entry of the hosts file -> hosts.json
 #   startup      a script dropped in the startup folder of all users, with its
 #                SHA-256 -> startup_folders.json
+#   zone         a file marked as downloaded (Zone.Identifier stream), the
+#                stream read back by Windows -> zone_identifiers.json
 #   setupapi     number of sections of setupapi.dev*.log now; the collection,
 #                later, finds at least as many -> setupapi.json
 #   mplog        number of Defender support logs -> defender_log.json
@@ -55,7 +57,16 @@ $startup = 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\wac-sta
 Set-Content $startup '@echo WAC harness startup witness'
 Write-Output ("startup=$startup|" + (Get-FileHash -Algorithm SHA256 $startup).Hash)
 
-# 5. Reference counts of the logs Windows writes itself.
+# 5. A file marked as downloaded from the Internet: its Zone.Identifier
+#    stream, written and read back by Windows.
+$downloaded = 'C:\Users\wac\Downloads\wac-downloaded.exe'
+New-Item -ItemType Directory -Force 'C:\Users\wac\Downloads' | Out-Null
+Set-Content $downloaded 'MZ WAC harness download witness'
+Set-Content -Path $downloaded -Stream Zone.Identifier -Value "[ZoneTransfer]`r`nZoneId=3`r`nHostUrl=https://wac-test.invalid/wac-downloaded.exe"
+$hostUrl = (Get-Content -Path $downloaded -Stream Zone.Identifier | Where-Object { $_ -like 'HostUrl=*' }) -replace '^HostUrl=', ''
+Write-Output "zone=$downloaded|3|$hostUrl"
+
+# 6. Reference counts of the logs Windows writes itself.
 $sections = (Select-String -Path 'C:\Windows\INF\setupapi.dev*.log' -Pattern '^>>>  \[' -ErrorAction SilentlyContinue | Measure-Object).Count
 Write-Output "setupapi=$sections"
 $mplog = @(Get-ChildItem -Force 'C:\ProgramData\Microsoft\Windows Defender\Support\MPLog-*.log' -ErrorAction SilentlyContinue).Count

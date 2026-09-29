@@ -1311,6 +1311,15 @@ def check_small_file_artefacts(folder):
                "startup_folders.json: the startup witness found, its SHA-256 identical",
                f"startup_folders.json: the startup witness missing or altered: {match[:1]}")
 
+    zones = load(folder, "zone_identifiers.json")
+    if isinstance(zones, list) and "zone" in reference:
+        where, zone_id, host_url = reference["zone"].split("|", 2)
+        match = [z for z in zones if (z.get("Path") or "").lower() == where.lower()]
+        report(bool(match) and match[0].get("ZoneId") == zone_id and match[0].get("ZoneName") == "Internet"
+               and match[0].get("HostUrl") == host_url,
+               f"zone_identifiers.json: {where} from {host_url}, zone {zone_id} (Internet), read in the $MFT",
+               f"zone_identifiers.json: {where} missing or different among {len(zones)} stream(s): {match[:1]}")
+
     setupapi = load(folder, "setupapi.json")
     if isinstance(setupapi, list) and "setupapi" in reference:
         dated = sum(1 for s in setupapi if s.get("StartUtc"))
