@@ -887,10 +887,10 @@ const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
 
 void addFingerprints(Json& o, const BinaryFingerprint& e,
                        const std::wstring& prefix, const std::wstring& suffix) {
-	if (!e.md5.empty())    o.add(prefix + L"Md5"    + suffix, Json::str(e.md5));
-	if (!e.sha1.empty())   o.add(prefix + L"Sha1"   + suffix, Json::str(e.sha1));
-	if (!e.sha256.empty()) o.add(prefix + L"Sha256" + suffix, Json::str(e.sha256));
-	if (!e.authenticodeSha256.empty()) o.add(prefix + L"AuthenticodeSha256" + suffix, Json::str(e.authenticodeSha256));
+	if (!e.md5.empty())    o.add(prefix + L"MD5"    + suffix, Json::str(e.md5));
+	if (!e.sha1.empty())   o.add(prefix + L"SHA1"   + suffix, Json::str(e.sha1));
+	if (!e.sha256.empty()) o.add(prefix + L"SHA256" + suffix, Json::str(e.sha256));
+	if (!e.authenticodeSha256.empty()) o.add(prefix + L"AuthenticodeSHA256" + suffix, Json::str(e.authenticodeSha256));
 	if (!e.signature.empty()) o.add(prefix + L"Signature" + suffix, Json::str(e.signature));
 }
 

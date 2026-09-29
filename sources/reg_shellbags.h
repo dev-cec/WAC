@@ -40,7 +40,7 @@ public:
 	std::wstring sidName = L"";  //!< name of that user
 	std::wstring source = L"";   //!< the key the shellbag comes from
 	std::vector<std::unique_ptr<IdList>> shellitems; //!< the folder's PIDL, item by item
-	std::vector<Shellbag> childs;    //!< the folders browsed below this one
+	std::vector<Shellbag> children;    //!< the folders browsed below this one
 	FILETIME lastWriteTimeUtc = { 0 }; //!< last write to the KEY, UTC (the local time is derived at output)
 
 	/*! Converts the shellbag and its children to JSON.

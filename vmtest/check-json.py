@@ -1454,11 +1454,11 @@ def check_prefetch_paths(d):
     made that translation fail for EVERY file: 20,052 paths stayed empty, and
     the MD5 fingerprints with them.
     """
-    total = sum(len(p.get("FilesStrings") or []) for p in d)
+    total = sum(len(p.get("FileNames") or []) for p in d)
     if total == 0:
         print("  ⏭️  prefetchs.json: no file listed, check skipped")
         return 0
-    resolved = sum(1 for p in d for f in (p.get("FilesStrings") or [])
+    resolved = sum(1 for p in d for f in (p.get("FileNames") or [])
                    if f.get("FullPath"))
     # Nearly all of them must be resolved: only the volumes absent from the
     # system at collection time (an unplugged disk) legitimately escape.

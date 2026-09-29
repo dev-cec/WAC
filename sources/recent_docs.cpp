@@ -326,7 +326,7 @@ Json RecentDoc::toJson() {
 	log(3, L"🔈RecentDoc toJson");
 	Json o = Json::obj();
 	o.add(L"Path",              Json::str(path_original));
-	if (!md5Source.empty()) o.add(L"Md5Source", Json::str(md5Source));
+	if (!md5Source.empty()) o.add(L"MD5Source", Json::str(md5Source));
 	o.add(L"Target",            Json::str(target));
 	addFingerprints(o, targetFingerprint, L"", L"Target");
 	o.add(L"SourceCreated",     Json::str(utcTimeToIso8601Local(sourceCreatedUtc)));
@@ -341,7 +341,7 @@ Json RecentDoc::toJson() {
 	o.add(L"TargetModifiedUtc", Json::str(timeToIso8601Utc(targetModifiedUtc)));
 	o.add(L"TargetAccessed",    Json::str(utcTimeToIso8601Local(targetAccessedUtc)));
 	o.add(L"TargetAccessedUtc", Json::str(timeToIso8601Utc(targetAccessedUtc)));
-	o.add(L"LNKFlags",          Json::str(flags.to_wstring()));
+	o.add(L"LinkFlags",          Json::str(flags.to_wstring()));
 	o.add(L"FileAttributes",    Json::str(attributes.to_wstring()));
 	o.add(L"IconIndex",         Json::num((long long)iconIndex));   // count
 	o.add(L"CommandOption",     Json::str(commandOption));

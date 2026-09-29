@@ -41,7 +41,6 @@ Remplace `TODO.txt`.
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-001](B-001-cles-json.md) | Clés JSON cohérentes en anglais | à commiter | P1 | faible |
 | [B-002](B-002-petits-artefacts-fichiers.md) | Lot 1 : petits artefacts fichiers (7) | à valider | P1 | faible |
 | [B-003](B-003-ruches-security-default.md) | Ruches SECURITY et DEFAULT, RegBack | à faire | P2 | faible |
 | [B-004](B-004-zone-identifier.md) | Flux Zone.Identifier (Mark of the Web) | à faire | P2 | faible |
@@ -80,4 +79,4 @@ Remplace `TODO.txt`.
 | 2026-09-23 | Tout le code en anglais ; documentation doxygen complète ; lectures bornées (données tronquées ou forgées) ; listes de sauts, Prefetch, raccourcis corrigés ; guide des tests | 1984886, 8f23ad8, d88a4b5, 6f903a8, 973f5d0, bb84afd |
 | 2026-09-24/25 | Lecteur de ruches propre (plus d'offreg.dll) ; 5 DLL importées ; dates UTC exactes, heure d'été ; enregistrements NTFS déchirés refusés ; SID et GUID nommés hors ligne ; relevés en direct scellés ; collecte séparée de la conversion ; `--binary-all` ; LZX ; dossier de validation | 5eabec8, f989656, 50537d5, 66e5567, a3e27ec, 37bfea4, bae8b85, 5eb3517, 5c12c3a, 42a10df |
 | 2026-09-26 | Signatures tierces vérifiées (chaîne, horodatage, CRL, pilotes vulnérables) avec `--update-trust` ; analyse parallèle ; `wac.yml` ; version 1.4.0 ; relevé réseau direct | 3d06aa1, c341d31, fc0610b, 2d13f42, 73c23d0, 9fefefc, c6f1b57, c993162 |
-| 2026-09-29 | $MFT et journal USN ; volume lu sans cache, BAM de la collecte séparée ; scripts de vérification `.sh` et confinement des chemins ; dossier d'innocuité et contrôle par témoins ; `bin/` et `sources/` ; compilation unique MinGW (MSVC retiré) ; console FR/EN | 92b14e9, 01549c7, 49d27d3, 2901062, 654e2b8, 5d1a0e9, ec795f5, 84e60e7, 2742bbb |
+| 2026-09-29 | Clés JSON cohérentes (B-001) ; $MFT et journal USN ; volume lu sans cache, BAM de la collecte séparée ; scripts de vérification `.sh` et confinement des chemins ; dossier d'innocuité et contrôle par témoins ; `bin/` et `sources/` ; compilation unique MinGW (MSVC retiré) ; console FR/EN | 92b14e9, 01549c7, 49d27d3, 2901062, 654e2b8, 5d1a0e9, ec795f5, 84e60e7, 2742bbb |

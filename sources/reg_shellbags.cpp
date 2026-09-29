@@ -18,9 +18,9 @@ Json Shellbag::toJson() const {
 	Json items = Json::arr();
 	for (const std::unique_ptr<IdList>& item : shellitems) items.push(item->toJson());
 	o.add(L"ShellItems", std::move(items));
-	Json children = Json::arr();
-	for (const Shellbag& c : childs) children.push(c.toJson());
-	o.add(L"Childs", std::move(children));
+	Json subfolders = Json::arr();
+	for (const Shellbag& c : children) subfolders.push(c.toJson());
+	o.add(L"Children", std::move(subfolders));
 	return o;
 }
 
@@ -63,7 +63,7 @@ HRESULT Shellbags::getData(int _level) {
 
 HRESULT Shellbags::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vector<Shellbag>* out, unsigned int level, bool _Parentiszip,  unsigned int Parent) {
 	HRESULT hresult = NULL;
-	ORHKEY hKeyChilds;
+	ORHKEY hKeyChildren;
 	std::vector<unsigned int> ids;
 	// NULL: getRegBinaryValue allocates exactly the needed size (see reg_mru_apps.cpp).
 	// The 1 MiB allocated up front was wasted at every level of the recursion.
@@ -145,15 +145,15 @@ HRESULT Shellbags::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std
 		delete[] data;
 		data = NULL;
 
-		//Childs
+		// The folders browsed below this one
 		log(3, L"🔈OROpenKey hKey\\" + std::to_wstring(id));
-		hresult = OROpenKey(hKey, std::to_wstring(id).c_str(), &hKeyChilds);
+		hresult = OROpenKey(hKey, std::to_wstring(id).c_str(), &hKeyChildren);
 		if (hresult != ERROR_SUCCESS) {
 			log(2, L"🔥OROpenKey hKey\\" + std::to_wstring(id), hresult);
 			continue;
 		}
 		log(3, L"🔈parse");
-		hresult = parse(hKeyChilds, sid, source, &shellbag.childs, level + 3, Parentiszip, id);
+		hresult = parse(hKeyChildren, sid, source, &shellbag.children, level + 3, Parentiszip, id);
 		if (hresult != ERROR_SUCCESS) {
 			log(2, L"🔥parse", hresult);
 			continue;

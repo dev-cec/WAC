@@ -38,7 +38,7 @@ void MFTInformation::clear() {
 
 Json DirStrings::toJson() {
 	Json o = Json::obj();
-	o.add(L"Dir",      Json::str(dir));
+	o.add(L"Directory", Json::str(dir));
 	o.add(L"FullPath", Json::str(fullPath));
 	return o;
 }
@@ -136,7 +136,7 @@ Json VolumeInfo::toJson() {
 	Json dirs = Json::arr();
 	for (DirStrings& d : dirStrings) dirs.push(d.toJson());
 	o.add(L"DirectoryCount", Json::num((unsigned long long)dirStrings.size()));
-	o.add(L"Dirs",   std::move(dirs));
+	o.add(L"Directories", std::move(dirs));
 	// The file references (MFT) bring nothing to the investigation: not emitted.
 	return o;
 }
@@ -531,7 +531,7 @@ Json Prefetch::toJson() {
 	    it to know what to expect from the file. */
 	o.add(L"FormatVersion",  Json::num((long long)version));
 	o.add(L"FileCount", Json::num((unsigned long long)filenames.size()));
-	o.add(L"FilesStrings",   std::move(fns));
+	o.add(L"FileNames",      std::move(fns));
 	return o;
 }
 
