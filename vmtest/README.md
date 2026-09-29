@@ -147,6 +147,7 @@ ISO_WIN=~/Downloads/Win11_25H2_French_x64_v2.iso ./create-vm.sh
 # Test WAC (at every code iteration)
 ./run-wac-test.sh --build        # rebuild + full test
 ./run-wac-test.sh --raw-only     # raw_hive validation only
+./run-wac-test.sh --only=mft,usn_journal   # only these artefacts (generated wac.yml, the others' checks skipped)
 ./run-wac-test.sh --no-split     # without step 7 (--collect then --convert, ~1 h)
 ./run-wac-test.sh --binary-all   # step 7 with --binary-all (every executable copied)
 python3 qga.py ping              # is the agent answering?

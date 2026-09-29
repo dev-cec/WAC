@@ -186,7 +186,16 @@ cd vmtest
 ./run-wac-test.sh --raw-only  # seulement la validation de la lecture brute
 ./run-wac-test.sh --no-split  # sans l'étape 7 (collecte puis conversion)
 ./run-wac-test.sh --binary-all  # étape 7 avec --binary-all
+./run-wac-test.sh --only=mft,usn_journal  # seulement ces artefacts
 \end{lstlisting}
+
+\opt{only} prend des clés de la section \texttt{artefacts:} de
+\fichier{wac.yml} : le harnais place à côté de \fichier{WAC.exe} un
+\fichier{wac.yml} qui éteint tous les autres, pour un cycle de quelques minutes
+quand un seul artefact a changé. Les contrôles d'un artefact éteint sont
+sautés (son JSON dit \texttt{NotRequested}) ; les artefacts lus dans les ruches
+demandent aussi \texttt{registry}, et l'étape 8 (\fichier{wac.yml}) est
+sautée. Un cycle complet reste de règle avant un commit qui touche le cœur.
 
 Le cycle enchaîne : envoi de \fichier{WAC.exe} et \fichier{raw\_hive\_test.exe}
 dans la VM, validation de l'extraction brute d'une ruche (elle doit être refusée

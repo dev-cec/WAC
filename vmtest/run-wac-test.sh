@@ -6,7 +6,15 @@
 # and of the JSON files onto the host for inspection.
 #
 # Prerequisite: qemu-guest-agent installed and answering in the VM (`qga.py ping`).
-# Usage: ./run-wac-test.sh [--build] [--raw-only]
+# Usage: ./run-wac-test.sh [--build] [--raw-only] [--no-split] [--binary-all]
+#                          [--only=key,key…]
+#
+# --only=mft,usn_journal: collects only these artefacts (keys of the
+# `artefacts:` section of wac.yml), through a wac.yml placed next to WAC.exe for
+# steps 6 and 7 — a cycle a few minutes long to test one artefact. The checks
+# of the artefacts switched off are skipped (their JSON says NotRequested).
+# The artefacts read in the hives also need `registry`; step 8 (wac.yml) is
+# skipped, it tests the full configuration.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -17,8 +25,9 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 OUTPUT="$HERE/results/$STAMP"
 mkdir -p "$OUTPUT"
 
-BUILD=0; RAWONLY=0; SPLIT=1; BINARY_OPTION=--binary
+BUILD=0; RAWONLY=0; SPLIT=1; BINARY_OPTION=--binary; ONLY=""
 for a in "$@"; do
+  [[ "$a" == --only=* ]] && ONLY="${a#--only=}"
   [[ "$a" == "--build"    ]] && BUILD=1
   [[ "$a" == "--raw-only" ]] && RAWONLY=1
   [[ "$a" == "--no-split" ]] && SPLIT=0
@@ -98,6 +107,23 @@ $QGA write "$ROOT/build-windows/WAC.exe"           "$VMDIR\\WAC.exe"
 # No configuration file left by an earlier cycle: the runs below give their
 # options, and must behave as without wac.yml (step 8 tests the file).
 $QGA run --shell "del $VMDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
+# --only: every artefact of wac.yml switched off but those named. The keys come
+# from the reference wac.yml, so that a new artefact is switched off too.
+# --events would override `events: false`: it is given only when asked.
+EVENTS_OPTION=--events
+if [[ -n "$ONLY" ]]; then
+  KEYS="$(sed -n '/^artefacts:/,/^[^ #]/s/^  \([a-z_]*\):.*/\1/p' "$ROOT/sources/wac.yml")"
+  for k in ${ONLY//,/ }; do
+    grep -qx "$k" <<<"$KEYS" || { echo "❌ --only: unknown artefact $k (keys: $(echo $KEYS))"; exit 2; }
+  done
+  { echo "# wac.yml of a --only cycle: $ONLY"; echo "artefacts:"
+    for k in $KEYS; do
+      if [[ ",$ONLY," == *",$k,"* ]]; then echo "  $k: true"; else echo "  $k: false"; fi
+    done; } > "$OUTPUT/wac-only.yml"
+  [[ ",$ONLY," == *",events,"* ]] || EVENTS_OPTION=""
+  $QGA write "$OUTPUT/wac-only.yml" "$VMDIR\\wac.yml" >/dev/null
+  echo "   wac.yml: only $ONLY"
+fi
 $QGA write "$ROOT/build-windows/raw_hive_test.exe" "$VMDIR\\raw_hive_test.exe"
 
 # The trust set, as the analysis workstation prepares it before a collection:
@@ -199,7 +225,7 @@ CODE=0
 # the next (636 MiB seen after a series of runs), which makes fetching it
 # useless and hides the traces of the current run.
 $QGA run --shell "del $VMDIR\\WAC.exe.log 2>nul & echo." >/dev/null 2>&1 || true
-$QGA run --shell "cd /d $VMDIR && rmdir /s /q out 2>nul & WAC.exe --output=out --events --binary --loglevel=2 > run.log 2>&1" || CODE=$?
+$QGA run --shell "cd /d $VMDIR && rmdir /s /q out 2>nul & WAC.exe --output=out $EVENTS_OPTION --binary --loglevel=2 > run.log 2>&1" || CODE=$?
 $QGA read "$VMDIR\\run.log" "$OUTPUT/run.log" >/dev/null || echo "   ⚠️ run.log not fetched"
 
 if [[ -f "$OUTPUT/run.log" ]] && grep -qaiE 'terminate called|Unhandled exception|Exception non gérée' "$OUTPUT/run.log"; then
@@ -389,7 +415,7 @@ if [[ $SPLIT -eq 1 ]]; then
   }
   WITNESS_BEFORE=$(witness_state)
 
-  if run_wac collect --collect --output=split --events $BINARY_OPTION --loglevel=2; then
+  if run_wac collect --collect --output=split $EVENTS_OPTION $BINARY_OPTION --loglevel=2; then
     echo "   ✅ collection went to the end"
   else
     echo "   ❌ collection ended abnormally"; ABNORMAL_STOP=1
@@ -460,7 +486,7 @@ if [[ $SPLIT -eq 1 ]]; then
   # A retouched snapshot: one byte appended. The conversion must refuse it.
   LIVE="$VMDIR\\split\\exhibits\\live\\system-clock.json"
   $QGA run --shell "copy /y $LIVE $VMDIR\\clock.bak >nul & echo x>> $LIVE" >/dev/null
-  if run_wac convert-tampered --convert=split --events --binary; then
+  if run_wac convert-tampered --convert=split $EVENTS_OPTION --binary; then
     echo "   ❌ conversion of a retouched collection ACCEPTED"
   elif [[ "$(json_count)" == "2" ]] && grep -qa "no longer match" "$OUTPUT/convert-tampered.log"; then
     echo "   ✅ retouched exhibit refused, before any conversion, with its reason"
@@ -469,7 +495,7 @@ if [[ $SPLIT -eq 1 ]]; then
   fi
   $QGA run --shell "copy /y $VMDIR\\clock.bak $LIVE >nul & del $VMDIR\\clock.bak & del $VMDIR\\split\\conversion.json" >/dev/null
 
-  if run_wac convert --convert=split --events --binary --loglevel=2; then
+  if run_wac convert --convert=split $EVENTS_OPTION --binary --loglevel=2; then
     echo "   ✅ conversion went to the end"
   else
     echo "   ❌ conversion ended abnormally"; ABNORMAL_STOP=1
@@ -479,7 +505,7 @@ if [[ $SPLIT -eq 1 ]]; then
   echo "   -- checks of the converted JSON --"
   python3 "$HERE/check-json.py" "$SPLIT_OUT" || echo "   ⚠️ the converted JSON fail some checks (see above)"
 
-  if run_wac convert-again --convert=split --events --binary --loglevel=2; then
+  if run_wac convert-again --convert=split $EVENTS_OPTION --binary --loglevel=2; then
     AGAIN="$OUTPUT/split-again"
     fetch_results split "$AGAIN" >/dev/null
     # conversion.json is the log of each conversion: its times differ by nature.
@@ -494,6 +520,10 @@ if [[ $SPLIT -eq 1 ]]; then
   fi
 fi
 
+if [[ -n "$ONLY" ]]; then
+  echo "== 8. skipped (--only) =="
+  $QGA run --shell "del $VMDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
+else
 echo "== 8. Collection driven by wac.yml, without any option =="
 # The procedure written in wac.yml next to WAC.exe, and WAC.exe run alone: the
 # collection must follow the file — collect only, no binaries, some artefacts
@@ -519,6 +549,7 @@ $QGA read "$VMDIR\\configured.log" "$OUTPUT/configured.log" >/dev/null 2>&1 || t
 $QGA run --shell "del $VMDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
 fetch_results configured "$CONFIG_OUT" >/dev/null
 python3 "$HERE/check-json.py" --configuration "$CONFIG_OUT" || echo "   ⚠️ the configured collection fails its checks (see above)"
+fi
 
 echo
 if [[ "${ABNORMAL_STOP:-0}" == "1" ]]; then

@@ -125,6 +125,11 @@ def main():
             print(f"  ⏭️  {name:<34} NOT COLLECTED — {data.get('Error', '?')}")
             ok += 1
             continue
+        # Switched off by wac.yml (run-wac-test.sh --only): nothing to check.
+        if isinstance(data, dict) and data.get("CollectionStatus") == "NotRequested":
+            print(f"  ⏭️  {name:<34} not requested")
+            ok += 1
+            continue
 
         faults = [(p, v, m) for p, v in walk(data)
                             for m in [inconsistencies(v)] if m]
@@ -147,15 +152,35 @@ def main():
 
 
 def load(folder, name):
-    """Loads an output JSON file, or None if it is absent or unreadable."""
+    """Loads an output JSON file, or None if it is absent, unreadable, or
+    switched off by the configuration — its checks are then skipped, as for an
+    absent file (run-wac-test.sh --only collects a few artefacts)."""
     path = os.path.join(folder, name)
     if not os.path.exists(path):
         return None
     try:
         with open(path, encoding="utf-8-sig") as f:
-            return json.load(f)
+            data = json.load(f)
     except Exception:
         return None
+    if isinstance(data, dict) and data.get("CollectionStatus") == "NotRequested":
+        return None
+    return data
+
+
+def switched_off(folder, *names):
+    """Whether every named artefact was switched off by wac.yml (its JSON says
+    NotRequested): a check that needs them is skipped, not failed — an
+    absent file, on the other hand, stays a fault where a check expects it."""
+    for name in names:
+        try:
+            with open(os.path.join(folder, name), encoding="utf-8-sig") as f:
+                data = json.load(f)
+        except Exception:
+            return False
+        if not (isinstance(data, dict) and data.get("CollectionStatus") == "NotRequested"):
+            return False
+    return True
 
 
 def cross_checks(folder):
@@ -296,6 +321,11 @@ def check_third_party_chains(folder):
     if trust_ops[0].startswith("No usable trust set"):
         print(f"  ❌ the trust set was not usable: {trust_ops[0][:120]}")
         return 1
+    # The third-party binaries are those the services, drivers, processes and
+    # tasks name: with all of them switched off, none is fingerprinted.
+    if not checked and switched_off(folder, "services.json", "processes.json", "ScheduledTasks.json"):
+        print("  ⏭️  services, processes and tasks not requested: third-party chains not checked")
+        return 0
     if not checked:
         # A full run records the binaries it clears in the artefacts, not in the manifest (B'6):
         # their verdict, "Third party (...)", is in the artefacts' JSON.
@@ -1849,7 +1879,9 @@ def check_utc_sources(folder):
     # USBSTOR
     usb = load(folder, "Usbstor.json")
     path = os.path.join(ref, "usbstor.txt")
-    if os.path.exists(path):
+    if switched_off(folder, "Usbstor.json"):
+        print("  ⏭️  Usbstor.json not requested: USBSTOR not confronted")
+    elif os.path.exists(path):
         expected = {}
         with open(path, encoding="utf-8", errors="replace") as f:
             for line in f:
@@ -1917,7 +1949,9 @@ def check_utc_sources(folder):
     inv = load(folder, "investigation.json")
     inv = inv[0] if isinstance(inv, list) and inv else inv
     start = ((inv or {}).get("Collection") or {}).get("StartUtc") if isinstance(inv, dict) else None
-    if not isinstance(bams, list) or not bams:
+    if switched_off(folder, "bams.json"):
+        print("  ⏭️  bams.json not requested: BAM not checked")
+    elif not isinstance(bams, list) or not bams:
         print("  ❌ bams.json empty: the BAM keys hold at least the harness's own commands")
         found += 1
     elif start:
@@ -1934,7 +1968,9 @@ def check_utc_sources(folder):
     # UserAssist against the Prefetch run times
     ua = load(folder, "userassists.json")
     pf = load(folder, "prefetchs.json")
-    if not isinstance(ua, list) or not ua:
+    if switched_off(folder, "userassists.json"):
+        print("  ⏭️  userassists.json not requested: UserAssist not checked")
+    elif not isinstance(ua, list) or not ua:
         print("  ❌ userassists.json empty: the test profile holds UserAssist entries")
         found += 1
     elif isinstance(pf, list):

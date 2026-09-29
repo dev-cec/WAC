@@ -178,7 +178,16 @@ cd vmtest
 ./run-wac-test.sh --raw-only  # only the validation of the raw reading
 ./run-wac-test.sh --no-split  # without step 7 (collection then conversion)
 ./run-wac-test.sh --binary-all  # step 7 with --binary-all
+./run-wac-test.sh --only=mft,usn_journal  # only these artefacts
 \end{lstlisting}
+
+\opt{only} takes keys of the \texttt{artefacts:} section of \fichier{wac.yml}:
+the harness places next to \fichier{WAC.exe} a \fichier{wac.yml} that switches
+every other one off, for a cycle a few minutes long when a single artefact
+changed. The checks of an artefact switched off are skipped (its JSON says
+\texttt{NotRequested}); the artefacts read in the hives also need
+\texttt{registry}, and step 8 (\fichier{wac.yml}) is skipped. A full cycle
+remains the rule before a commit that touches the core.
 
 The cycle chains: upload of \fichier{WAC.exe} and \fichier{raw\_hive\_test.exe}
 into the VM, validation of the raw extraction of a hive (\texttt{reg load} must
