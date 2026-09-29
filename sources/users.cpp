@@ -111,17 +111,14 @@ std::wstring profileOfSid(const std::wstring& sid) {
 * interpreted on its own, nor correlated with any other artefact.
 */
 std::wstring readMachineSid(ORHKEY hSam, const std::wstring& base) {
-	LPBYTE data = NULL;
-	DWORD size = 0;
+	std::vector<BYTE> value;
 	log(3, L"🔈getRegBinaryValue " + base + L"Domains\\Account V");
-	if (getRegBinaryValue(hSam, (base + L"Domains\\Account").c_str(), L"V",
-	                      &data, &size) != ERROR_SUCCESS) {
+	if (getRegBinaryValue(hSam, (base + L"Domains\\Account").c_str(), L"V", value) != ERROR_SUCCESS) {
 		log(2, L"🔥Machine SID unreadable: the SIDs will be limited to the RID");
-		// getRegBinaryValue allocates the buffer BEFORE reading: it must be released
-		// even when the reading fails, otherwise the error path leaks.
-		delete[] data;
 		return L"";
 	}
+	const BYTE* data = value.data();
+	const size_t size = value.size();
 	std::wstring sid;
 	if (size >= 12) {
 		const BYTE* end = data + size - 12;
@@ -135,7 +132,6 @@ std::wstring readMachineSid(ORHKEY hSam, const std::wstring& base) {
 	}
 	else
 		log(2, L"🔥V value of SAM\\Domains\\Account too short");
-	delete[] data;
 	return sid;
 }
 
@@ -263,10 +259,11 @@ HRESULT Users::getData() {
 		               &u.keyLastWriteUtc);
 
 		// --- value F: timestamps, RID, flags, counters ---
-		LPBYTE f = NULL;
-		DWORD sizeF = 0;
-		if (getRegBinaryValue(hAccount, nullptr, L"F", &f, &sizeF) == ERROR_SUCCESS
-		    && sizeF >= F_MIN_SIZE) {
+		std::vector<BYTE> valueF;
+		const bool readF = getRegBinaryValue(hAccount, nullptr, L"F", valueF) == ERROR_SUCCESS;
+		const BYTE* f = valueF.data();
+		const DWORD sizeF = (DWORD)valueF.size();
+		if (readF && sizeF >= F_MIN_SIZE) {
 			u.lastLogonUtc       = readFiletime(f, sizeF, F_LAST_LOGON);
 			u.passwordLastSetUtc = readFiletime(f, sizeF, F_PASSWORD_SET);
 			u.accountExpiresUtc  = readFiletime(f, sizeF, F_EXPIRATION);
@@ -280,7 +277,6 @@ HRESULT Users::getData() {
 		}
 		else
 			log(2, L"🔥F value missing or too short for " + std::wstring(keyName));
-		delete[] f;
 
 		/* If `F` did not give the RID, the key's name carries it in hexadecimal: a
 		   fallback that avoids losing the account for a single unreadable
@@ -288,16 +284,18 @@ HRESULT Users::getData() {
 		if (u.rid == 0) u.rid = (DWORD)wcstoul(keyName, nullptr, 16);
 
 		// --- value V: name, full name, comment ---
-		LPBYTE v = NULL;
+		std::vector<BYTE> valueV;
+		const BYTE* v = nullptr;
 		DWORD sizeV = 0;
-		if (getRegBinaryValue(hAccount, nullptr, L"V", &v, &sizeV) == ERROR_SUCCESS) {
+		if (getRegBinaryValue(hAccount, nullptr, L"V", valueV) == ERROR_SUCCESS) {
+			v = valueV.data();
+			sizeV = (DWORD)valueV.size();
 			u.name     = readStringV(v, sizeV, V_NAME);
 			u.fullName = readStringV(v, sizeV, V_FULL_NAME);
 			u.comment  = readStringV(v, sizeV, V_COMMENT);
 		}
 		else
 			log(2, L"🔥V value missing for " + std::wstring(keyName));
-		delete[] v;
 		ORCloseKey(hAccount);
 
 		if (u.name.empty()) {

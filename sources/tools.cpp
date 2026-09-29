@@ -1205,47 +1205,53 @@ HRESULT enumRegistryValue(ORHKEY key, DWORD index, std::wstring& name, DWORD& ty
 	return ERROR_SUCCESS;
 }
 
-HRESULT getRegBinaryValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, LPBYTE* bytes, DWORD* size)
+/*  The value is asked for its size, then read into a buffer of that size; the
+    size may grow in between (ERROR_MORE_DATA), hence the loop. The buffer is a
+    vector: the former LPBYTE, allocated here and released by each caller,
+    leaked on every error path a caller forgot. */
+HRESULT getRegBinaryValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vector<BYTE>& bytes)
 {
-	// Mind that `bytes` must be large enough to hold the data: LPBYTE bytes = new BYTE[MAX_DATA]; when the size is not known
-	// REG_BINARY values are stored as bytes
-	DWORD valueType = 0;
-	HRESULT hresult = 0;
-	if (*bytes != NULL)
-		delete[] * bytes; // any buffer passed as a parameter is released, so as not to leak memory
-	do {
-		*bytes = new BYTE[*size];
-		memset(*bytes, 0, *size);
-		log(3, L"🔈ORGetValue");
-		hresult = ORGetValue(key, subKey, valueName, &valueType, *bytes, size); // read the data
-	} while (hresult == ERROR_MORE_DATA);
-
+	DWORD valueType = 0, size = 0;
+	log(3, L"🔈ORGetValue");
+	HRESULT hresult = ORGetValue(key, subKey, valueName, &valueType, nullptr, &size);
+	while (hresult == ERROR_SUCCESS || hresult == ERROR_MORE_DATA) {
+		bytes.assign(size, 0);
+		hresult = ORGetValue(key, subKey, valueName, &valueType, size ? bytes.data() : nullptr, &size);
+		if (hresult != ERROR_MORE_DATA) break;
+	}
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥ORGetValue", hresult);
+		bytes.clear();
+		return hresult;
 	}
+	bytes.resize(size);
+	return ERROR_SUCCESS;
+}
 
-	return hresult;
+HRESULT readMruListEx(ORHKEY key, std::vector<unsigned int>& ids)
+{
+	std::vector<BYTE> list;
+	const HRESULT hresult = getRegBinaryValue(key, L"", L"MRUListEx", list);
+	if (hresult != ERROR_SUCCESS) return hresult;
+	for (size_t pos = 0; pos + sizeof(DWORD) <= list.size(); pos += sizeof(DWORD)) {
+		DWORD id = 0;
+		memcpy(&id, list.data() + pos, sizeof(DWORD));
+		if (id == 0xFFFFFFFF) break;
+		ids.push_back(id);
+	}
+	return ERROR_SUCCESS;
 }
 
 
 // Read a boolean value from the registry
 HRESULT getRegboolValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, bool* value)
 {
-	// REG_BINARY values are stored as bytes
-	DWORD size = 0;
-	LPBYTE bytes = NULL;
-	HRESULT hresult = 0;
-	log(3, L"🔈getRegBinaryValue");
-	hresult = getRegBinaryValue(key, subKey, valueName, &bytes, &size);
-
-	if (hresult != ERROR_SUCCESS) {
-		log(2, L"🔥getRegBinaryValue", hresult);
-	}
-	else {
-		*value = (bool)bytes[0];
-	}
-	delete[] bytes;
-	return hresult;
+	std::vector<BYTE> bytes;
+	const HRESULT hresult = getRegBinaryValue(key, subKey, valueName, bytes);
+	if (hresult != ERROR_SUCCESS) return hresult;
+	if (bytes.empty()) return ERROR_INVALID_DATA;
+	*value = bytes[0] != 0;
+	return ERROR_SUCCESS;
 }
 
 // Read a FILETIME value from the registry
@@ -1272,51 +1278,34 @@ HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, FILETIM
 // Makes sure the string is printable and ends with \0. A character that is not printable is replaced by ?
 HRESULT getRegDwordValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, DWORD* pdword)
 {
-	DWORD size = 0;
-	LPBYTE data = NULL;
-	log(3, L"🔈getRegBinaryValue");
-	HRESULT hresult = getRegBinaryValue(key, subKey, valueName, &data, &size);
+	std::vector<BYTE> data;
+	const HRESULT hresult = getRegBinaryValue(key, subKey, valueName, data);
 	if (hresult != ERROR_SUCCESS) return hresult;
 	// A value shorter than 4 bytes is not a usable DWORD.
-	if (size < sizeof(DWORD)) { delete[] data; return ERROR_INVALID_DATA; }
-	*pdword = *reinterpret_cast<DWORD*>(data);
-	delete[] data;
+	if (data.size() < sizeof(DWORD)) return ERROR_INVALID_DATA;
+	memcpy(pdword, data.data(), sizeof(DWORD));
 	return ERROR_SUCCESS;
 }
 
 HRESULT getRegQwordValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, unsigned long long* pqword)
 {
-	DWORD size = 0;
-	LPBYTE data = NULL;
-	log(3, L"🔈getRegBinaryValue");
-	HRESULT hresult = getRegBinaryValue(key, subKey, valueName, &data, &size);
+	std::vector<BYTE> data;
+	const HRESULT hresult = getRegBinaryValue(key, subKey, valueName, data);
 	if (hresult != ERROR_SUCCESS) return hresult;
 	// A value shorter than 8 bytes is not a usable QWORD.
-	if (size < sizeof(unsigned long long)) { delete[] data; return ERROR_INVALID_DATA; }
-	memcpy(pqword, data, sizeof(unsigned long long));
-	delete[] data;
+	if (data.size() < sizeof(unsigned long long)) return ERROR_INVALID_DATA;
+	memcpy(pqword, data.data(), sizeof(unsigned long long));
 	return ERROR_SUCCESS;
 }
 
 HRESULT getRegSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::wstring* ws)
 {
-	// REG_SZ values are stored as wchar_t = 16 bits per character
-	DWORD size = 0;
-	LPWSTR data = NULL;
-	size_t nbChar = 0;
-	HRESULT hresult = 0;
-	log(3, L"🔈getRegBinaryValue");
-	hresult = getRegBinaryValue(key, subKey, valueName, (LPBYTE*)&data, &size);
-	if (hresult != ERROR_SUCCESS) {
-		log(2, L"🔥getRegBinaryValue", hresult);
-		return hresult;
-	}
-	else {
-		nbChar = size / sizeof(wchar_t);
-		*ws = std::wstring(data, data + nbChar).data();
-	}
-	delete[] data;
-	return hresult;
+	// REG_SZ: UTF-16, up to its first zero, within the value.
+	std::vector<BYTE> data;
+	const HRESULT hresult = getRegBinaryValue(key, subKey, valueName, data);
+	if (hresult != ERROR_SUCCESS) return hresult;
+	*ws = readWideZ(data.data(), data.size(), 0);
+	return ERROR_SUCCESS;
 }
 
 // Read a multi-string value from the registry. Each string ends with \0
@@ -1324,16 +1313,13 @@ HRESULT getRegSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::wstring*
 HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vector<std::wstring>* out)
 {
 	// REG_MULTI_SZ values are stored as wchar_t = 16 bits per character, a succession of strings separated by \0 and ended by \0\0
-	DWORD size = 0;
-	wchar_t* data = NULL;
-	HRESULT hresult = 0;
-	log(3, L"🔈getRegBinaryValue");
-	hresult = getRegBinaryValue(key, subKey, valueName, (LPBYTE*)&data, &size);
-	if (hresult != ERROR_SUCCESS) {
-		log(2, L"🔥getRegBinaryValue", hresult);
-		return hresult;
-	}
-	else {
+	std::vector<BYTE> bytes;
+	const HRESULT hresult = getRegBinaryValue(key, subKey, valueName, bytes);
+	if (hresult != ERROR_SUCCESS) return hresult;
+	std::vector<wchar_t> data(bytes.size() / sizeof(wchar_t));
+	if (!data.empty()) memcpy(data.data(), bytes.data(), data.size() * sizeof(wchar_t));
+	const DWORD size = (DWORD)bytes.size();
+	{
 		/* WHAT WAS WRONG. The loop re-read `data` at every turn without ever
 		   advancing the pointer: only the position counter progressed. Every
 		   REG_MULTI_SZ value therefore came out as its FIRST string, repeated as
@@ -1349,13 +1335,12 @@ HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vec
 		while (pos < nbCar) {
 			size_t end = pos;
 			while (end < nbCar && data[end] != L'\0') ++end;
-			if (end > pos) out->push_back(std::wstring(data + pos, end - pos));
+			if (end > pos) out->push_back(std::wstring(data.data() + pos, end - pos));
 			if (end >= nbCar) break;          // buffer exhausted
 			pos = end + 1;                    // after the \0 separator
 			if (pos < nbCar && data[pos] == L'\0') break;   // \0\0 = end of the list
 		}
 	}
-	delete[] data;
 	return ERROR_SUCCESS;
 }
 

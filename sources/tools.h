@@ -875,16 +875,22 @@ HRESULT getRegFiletimeValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, FILETIM
 */
 HRESULT enumRegistryValue(ORHKEY key, DWORD index, std::wstring& name, DWORD& type, std::vector<BYTE>& data);
 
-/*! Reads a binary value in the registry.
-* The caller must `delete[] bytes` to release the memory.
+/*! Reads a value of the registry, whatever its type, as its bytes.
 * @param key the registry key
 * @param subKey the registry subkey
 * @param valueName name of the value to read
-* @param bytes pointer to an array of BYTE receiving the value read
-* @param size on input the size of the buffer, on output that of the value read
+* @param bytes receives the value, exactly its size; emptied on failure
 * @return ERROR_SUCCESS on success, a registry error code otherwise
 */
-HRESULT getRegBinaryValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, LPBYTE* bytes, DWORD* size);
+HRESULT getRegBinaryValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vector<BYTE>& bytes);
+
+/*! Reads the MRUListEx value of a key: the ranks of its values, most recent
+* first, up to the 0xFFFFFFFF that ends the list. Each rank is read within the
+* value: a length that is not a multiple of 4 leaves the last bytes unread.
+* @param key the key holding MRUListEx
+* @param ids receives the ranks
+* @return ERROR_SUCCESS, or the error of the read */
+HRESULT readMruListEx(ORHKEY key, std::vector<unsigned int>& ids);
 
 /*! Reads a boolean in the registry.
 * @param key the registry key

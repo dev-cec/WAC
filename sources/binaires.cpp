@@ -292,8 +292,8 @@ const ThirdPartyRoots* thirdPartyRoots() {
 	FILETIME now;
 	GetSystemTimeAsFileTime(&now);
 	if (set.usable)
-		roots.reset(new ThirdPartyRoots(set.roots, set.rootCertificates, set.disallowed, set.revokedAuthorities,
-		                                set.revocationLists, ((uint64_t)now.dwHighDateTime << 32) | now.dwLowDateTime));
+		roots = std::make_unique<ThirdPartyRoots>(set.roots, set.rootCertificates, set.disallowed, set.revokedAuthorities,
+		                                set.revocationLists, ((uint64_t)now.dwHighDateTime << 32) | now.dwLowDateTime);
 	return roots.get();
 }
 
@@ -645,7 +645,7 @@ const VulnerableDrivers* vulnerableDrivers() {
 	if (done) return drivers.get();
 	done = true;
 	const TrustSet& set = CollectionTrustSet();
-	if (set.usable) drivers.reset(new VulnerableDrivers(set.driverHashes, set.deniedSigners));
+	if (set.usable) drivers = std::make_unique<VulnerableDrivers>(set.driverHashes, set.deniedSigners);
 	return drivers.get();
 }
 

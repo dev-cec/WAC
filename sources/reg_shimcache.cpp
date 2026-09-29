@@ -26,7 +26,6 @@ HRESULT Shimcaches::getData() {
 	//variables
 	HRESULT hresult=0;
 	ORHKEY hKey=NULL;
-	LPBYTE data = NULL;
 
 	log(3, L"🔈OROpenKey CurrentControlSet\\Control\\Session Manager\\AppCompatCache");
 	hresult = OROpenKey(conf.CurrentControlSet, L"Control\\Session Manager\\AppCompatCache", &hKey);
@@ -35,13 +34,15 @@ HRESULT Shimcaches::getData() {
 		return hresult;
 	}
 
-	DWORD size=0;
+	std::vector<BYTE> value;
 	log(3, L"🔈getRegBinaryValue AppCompatCache");
-	hresult = getRegBinaryValue(hKey, nullptr, L"AppCompatCache", &data, &size);
+	hresult = getRegBinaryValue(hKey, nullptr, L"AppCompatCache", value);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥getRegBinaryValue AppCompatCache", hresult );
 		return hresult;
 	}
+	const BYTE* data = value.data();
+	const size_t size = value.size();
 	/* Layout of the Windows 10/11 cache: a header whose first DWORD is its own
 	   size, then entries
 	       "10ts" (4), unknown (4), entry size (4), path size (2), path,
@@ -52,10 +53,9 @@ HRESULT Shimcaches::getData() {
 	   stay where it was, and the loop never ended. */
 	if (!fits(size, 0, 4)) {
 		log(2, L"🔥AppCompatCache: value too short for its header");
-		delete[] data;
 		return ERROR_INVALID_DATA;
 	}
-	size_t offset = *reinterpret_cast<DWORD*>(data);
+	size_t offset = *reinterpret_cast<const DWORD*>(data);
 	while (fits(size, offset, 14)) {
 		printProgressStep(L"Shimcache", (unsigned)offset, size);
 		if (std::memcmp(data + offset, "10ts", 4) != 0) {
@@ -64,9 +64,9 @@ HRESULT Shimcaches::getData() {
 			break;
 		}
 		const size_t entryStart = offset;
-		const DWORD entrySize = *reinterpret_cast<DWORD*>(data + offset + 8);
+		const DWORD entrySize = *reinterpret_cast<const DWORD*>(data + offset + 8);
 		offset += 12;
-		const unsigned short pathSize = *reinterpret_cast<unsigned short*>(data + offset);
+		const unsigned short pathSize = *reinterpret_cast<const unsigned short*>(data + offset);
 		offset += 2;
 		if (!fits(size, offset, (size_t)pathSize + 8 + 4)) {
 			log(2, L"🔥AppCompatCache: entry truncated at offset " + std::to_wstring(entryStart));
@@ -85,12 +85,12 @@ HRESULT Shimcaches::getData() {
 		   both keys came out shifted by the time-zone offset. Checked on the test
 		   VM against the NTFS dates of the same files: exactly -2 h before the
 		   fix, 0 after. */
-		const FILETIME filetime = *reinterpret_cast<FILETIME*>(data + offset);
+		const FILETIME filetime = *reinterpret_cast<const FILETIME*>(data + offset);
 		shimcache.lastModificationUtc = timeToIso8601Utc(filetime);
 		shimcache.lastModification = utcTimeToIso8601Local(filetime);
 		offset += 8;
 
-		const DWORD dataSize = *reinterpret_cast<DWORD*>(data + offset);
+		const DWORD dataSize = *reinterpret_cast<const DWORD*>(data + offset);
 		offset += 4;
 		if (!fits(size, offset, dataSize)) {
 			log(2, L"🔥AppCompatCache: data of the entry at offset " + std::to_wstring(entryStart)
@@ -107,7 +107,6 @@ HRESULT Shimcaches::getData() {
 		shimcaches.push_back(shimcache);
 	}
 
-	delete [] data;
 	return ERROR_SUCCESS;
 }
 

@@ -65,11 +65,6 @@ HRESULT Shellbags::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std
 	HRESULT hresult = NULL;
 	ORHKEY hKeyChildren;
 	std::vector<unsigned int> ids;
-	// NULL: getRegBinaryValue allocates exactly the needed size (see reg_mru_apps.cpp).
-	// The 1 MiB allocated up front was wasted at every level of the recursion.
-	LPBYTE data = NULL;
-	unsigned int pos = 0;
-	DWORD mruListSize = 0;
 	DWORD nSubkeys = 0, nValues = 0;;
 	FILETIME lastWriteTimeUtc = { 0 };
 
@@ -80,25 +75,11 @@ HRESULT Shellbags::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std
 	}
 
 	log(3, L"🔈getRegBinaryValue hKey\\MRUListEx");
-	hresult = getRegBinaryValue(hKey, L"", L"MRUListEx", &data, &mruListSize);
-	if (hresult == ERROR_SUCCESS) {
-		while (pos < mruListSize) {
-			int id = *reinterpret_cast<int*>(data + pos);
-			if (id == 0xffffffff) break;
-			ids.push_back(id);
-			pos += 4;
-		}
-	}
-	else {
-		log(2, L"🔥getRegBinaryValue hKey\\MRUListEx", hresult);
-	}
-
-	delete[] data;
-	data = NULL;
+	hresult = readMruListEx(hKey, ids);
+	if (hresult != ERROR_SUCCESS) log(2, L"🔥getRegBinaryValue hKey\\MRUListEx", hresult);
 
 	for (int id : ids) {
 		bool Parentiszip = false | _Parentiszip;
-		DWORD dataSize = 0;
 		log(1, L"➕Shellbag");
 		/* Displayed at EVERY shellbag, without rate limiting: there are few of them
 		   (a few dozen) but each requires the recursive parsing of IdLists, that is
@@ -117,12 +98,15 @@ HRESULT Shellbags::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std
 		shellbag.sidName = getNameFromSid(sid);
 		shellbag.source = source;
 		log(3, L"🔈getRegBinaryValue hKey\\" + std::to_wstring(id));
-		hresult = getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), &data, &dataSize);
+		std::vector<BYTE> value;
+		hresult = getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), value);
 		if (hresult != ERROR_SUCCESS) {
 			log(2, L"🔥getRegBinaryValue hKey\\" + std::to_wstring(id));
 		}
 
-		unsigned int offset = 0;
+		BYTE* data = value.data();
+		const size_t dataSize = value.size();
+		size_t offset = 0;
 		while (offset + 2 <= dataSize) {
 			unsigned short int size = *reinterpret_cast<unsigned short int*>(data + offset);
 			if (size == 0) break;
@@ -142,9 +126,6 @@ HRESULT Shellbags::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std
 				shellbag.shellitems.push_back(std::move(shellitem));
 			}
 		}
-		delete[] data;
-		data = NULL;
-
 		// The folders browsed below this one
 		log(3, L"🔈OROpenKey hKey\\" + std::to_wstring(id));
 		hresult = OROpenKey(hKey, std::to_wstring(id).c_str(), &hKeyChildren);

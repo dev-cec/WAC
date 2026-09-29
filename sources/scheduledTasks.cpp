@@ -95,13 +95,9 @@ std::map<std::wstring, History> readTaskCache() {
 
 	for (const std::pair<const std::wstring, std::wstring>& e : idByPath) {
 		const std::wstring taskKey = root + L"\\Tasks\\" + e.second;
-		LPBYTE data = NULL;
-		DWORD size = 0;
-		if (getRegBinaryValue(conf.Software, taskKey.c_str(), L"DynamicInfo",
-		                      &data, &size) == ERROR_SUCCESS) {
-			result.emplace(e.first, decoderDynamicInfo(data, size));
-			delete[] data;
-		}
+		std::vector<BYTE> data;
+		if (getRegBinaryValue(conf.Software, taskKey.c_str(), L"DynamicInfo", data) == ERROR_SUCCESS)
+			result.emplace(e.first, decoderDynamicInfo(data.data(), (DWORD)data.size()));
 	}
 	return result;
 }

@@ -91,12 +91,8 @@ HRESULT Mrus::getData(int _level) {
 HRESULT Mrus::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vector<Mru>* out, unsigned int level, bool _Parentiszip, std::wstring extension) {
 	HRESULT hresult = NULL;
 	std::vector<unsigned int> ids;
-	LPBYTE data = NULL;
 	FILETIME lastWriteTimeUtc = { 0 };
 	DWORD nSubkeys = 0, nValues = 0;
-
-	unsigned int pos = 0;
-	DWORD mruListSize = 0;
 
 	log(3, L"🔈ORQueryInfoKey hKey");
 	hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, &lastWriteTimeUtc);
@@ -106,20 +102,11 @@ HRESULT Mrus::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vec
 	}
 
 	log(3, L"🔈getRegBinaryValue hkey\\MRUListEx");
-	hresult = getRegBinaryValue(hKey, L"", L"MRUListEx", &data, &mruListSize);
+	hresult = readMruListEx(hKey, ids);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥getRegBinaryValue hkey\\MRUListEx", hresult);
 		return hresult;
 	}
-	while (pos < mruListSize) {
-		int id = *reinterpret_cast<int*>(data + pos);
-		if (id == 0xffffffff) break;
-		ids.push_back(id);
-		pos += 4;
-	}
-
-	delete[] data;
-	data = NULL;
 	for (int id : ids) {
 		bool Parentiszip = false | _Parentiszip;
 		log(1, L"➕Mru");
@@ -136,13 +123,15 @@ HRESULT Mrus::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vec
 		mru.sidName = getNameFromSid(sid);
 		mru.source = source;
 		log(3, L"🔈getRegBinaryValue hkey\\" + std::to_wstring(id));
-		DWORD dataSize = 0;
-		hresult = getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), &data, &dataSize);
+		std::vector<BYTE> value;
+		hresult = getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), value);
 		if (hresult != ERROR_SUCCESS) {
 			log(2, L"🔥getRegBinaryValue hkey\\" + std::to_wstring(id), hresult);
 			continue;
 		}
-		unsigned int offset = 0;
+		BYTE* data = value.data();
+		const size_t dataSize = value.size();
+		size_t offset = 0;
 		while (offset + 2 <= dataSize) {
 			unsigned short int size = *reinterpret_cast<unsigned short int*>(data + offset);
 			if (size == 0) break;
@@ -162,9 +151,6 @@ HRESULT Mrus::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vec
 				mru.shellitems.push_back(std::move(shellitem));
 			}
 		}
-		delete[] data;
-		data = NULL;
-
 		//save
 		out->push_back(std::move(mru));
 

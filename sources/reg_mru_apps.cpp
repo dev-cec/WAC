@@ -68,14 +68,6 @@ HRESULT MruApps::getData(int _level) {
 HRESULT MruApps::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vector<MruApp>* out, unsigned int level, bool _Parentiszip) {
 	HRESULT hresult = NULL;
 	std::vector<unsigned int> ids;
-	/* NULL, and not a buffer of MAX_DATA (1 MiB): `getRegBinaryValue` allocates
-	   the exact size of the value itself. The buffer allocated up front was lost
-	   at every call — and `parse` is RECURSIVE, so as many times as there are
-	   levels of keys. It leaked entirely, moreover, on the two error paths
-	   below, which released nothing. */
-	LPBYTE data = NULL;
-	unsigned int pos = 0;
-	DWORD mruListSize = 0;
 	FILETIME lastWriteTimeUtc = { 0 };
 	DWORD nSubkeys = 0, nValues = 0;
 
@@ -83,27 +75,15 @@ HRESULT MruApps::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::
 	hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, &lastWriteTimeUtc);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥ORQueryInfoKey hKey", hresult);
-		delete[] data;
 		return hresult;
 	}
 
 	log(3, L"🔈getRegBinaryValue hKey\\MRUListEx");
-	hresult = getRegBinaryValue(hKey, L"", L"MRUListEx", &data, &mruListSize);
+	hresult = readMruListEx(hKey, ids);
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥parse", hresult);
-		// getRegBinaryValue allocates BEFORE reading: the buffer exists even on failure.
-		delete[] data;
 		return hresult;
 	}
-	while (pos < mruListSize) {
-		int id = *reinterpret_cast<int*>(data + pos);
-		if (id == 0xffffffff) break;
-		ids.push_back(id);
-		pos += 4;
-	}
-
-	delete[] data;
-	data = NULL;
 
 	for (int id : ids) {
 		bool Parentiszip = false | _Parentiszip;
@@ -120,12 +100,14 @@ HRESULT MruApps::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::
 		mruApp.sidName = getNameFromSid(sid);
 		mruApp.source = source;
 		log(3, L"🔈getRegBinaryValue hKey\\" + std::to_wstring(id));
-		DWORD dataSize = 0;
-		hresult = getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), &data, &dataSize);
+		std::vector<BYTE> value;
+		hresult = getRegBinaryValue(hKey, L"", std::to_wstring(id).c_str(), value);
 		if (hresult != ERROR_SUCCESS) {
 			log(2, L"🔥getRegBinaryValue hKey\\" + std::to_wstring(id), hresult);
 			continue;
 		}
+		BYTE* data = value.data();
+		const size_t dataSize = value.size();
 		size_t offset = 0;
 		mruApp.name = readWideZ(data, dataSize, 0);   // bounded by the value
 		offset += mruApp.name.size() * 2 + 2;
@@ -148,9 +130,6 @@ HRESULT MruApps::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::
 				mruApp.shellitems.push_back(std::move(shellitem));
 			}
 		}
-		delete[] data;
-		data = NULL;
-
 		//save
 		out->push_back(std::move(mruApp));
 	}
