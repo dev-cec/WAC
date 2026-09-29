@@ -163,7 +163,11 @@ vérifiée avant d'être utilisée :
   \item dates du fichier source relevées dans \texttt{\$STANDARD\_INFORMATION}
     \emph{et} dans \texttt{\$FILE\_NAME} : un programme qui falsifie les
     premières (\emph{timestomping}) ne touche pas les secondes, et l'écart se
-    voit au manifeste.
+    voit au manifeste ;
+  \item volume ouvert sans cache (\texttt{FILE\_FLAG\_NO\_BUFFERING}) :
+    chaque lecture atteint le disque, jamais une copie en mémoire d'un
+    secteur lu plus tôt ; même durée de collecte mesurée (194~s contre
+    198~s).
 \end{itemize}
 
 \section{Ruches du registre}

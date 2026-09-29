@@ -184,9 +184,19 @@ public:
 
     HRESULT open(const std::wstring& volumeLetter){
         std::wstring path = L"\\\\.\\" + volumeLetter + L":";
+        /* WHY NO_BUFFERING. A buffered volume handle goes through the cache
+         * of the volume stream, which is not kept coherent with the writes
+         * made through the files: a sector read once may be served again
+         * from memory as it was, after Windows has rewritten it on the disk.
+         * Unbuffered, every read reaches the disk — what an acquisition must
+         * see — and the reading does not fill the examined machine's memory
+         * with gigabytes of cached sectors either. Measured on the test VM:
+         * no loss of speed (reads of up to 1 MiB, see readClusters).
+         * readBytes keeps offsets, lengths and buffer aligned as this mode
+         * requires. */
         h_ = CreateFileW(path.c_str(), GENERIC_READ,
                          FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                         NULL, OPEN_EXISTING, 0, NULL);
+                         NULL, OPEN_EXISTING, FILE_FLAG_NO_BUFFERING, NULL);
         if (h_ == INVALID_HANDLE_VALUE){
             DWORD e = GetLastError();
             RVLOG(L"[raw] open %ls: error %lu (admin rights needed?)\n", path.c_str(), e);
@@ -1186,24 +1196,38 @@ private:
     uint64_t mftLcn_ = 0;
     std::vector<Run> mftRuns_;
 
-    // sector-aligned raw read (volume handles require it)
+    /*! Alignment of an unbuffered read before the boot sector gives the
+     *  sector size, and of every buffer: a multiple of any sector size
+     *  (512-byte and 4Kn disks). */
+    static const uint32_t UNBUFFERED_ALIGNMENT = 4096;
+
+    /*! Reads `len` bytes at offset `off` of the volume.
+     *
+     *  The handle is unbuffered (see open): offset and length are widened to
+     *  whole sectors, and the read goes through a buffer aligned on
+     *  UNBUFFERED_ALIGNMENT, of which the requested bytes are copied out.
+     *  @return false on a read error or a short read */
     bool readBytes(uint64_t off, void* dst, uint32_t len){
         ActivityTimer timer(g_activityTimes.diskRead);
-        uint32_t sec = bytesPerSector_ ? bytesPerSector_ : 512;
+        uint32_t sec = bytesPerSector_ ? bytesPerSector_ : UNBUFFERED_ALIGNMENT;
         uint64_t start = off - (off % sec);
         uint64_t end   = off + len;
         if (end % sec) end += sec - (end % sec);
         uint32_t total = (uint32_t)(end - start);
-        std::vector<uint8_t> tmp(total);
+        std::vector<uint8_t> tmp((size_t)total + UNBUFFERED_ALIGNMENT);
+        void* aligned = tmp.data();
+        size_t room = tmp.size();
+        if (!std::align(UNBUFFERED_ALIGNMENT, total, aligned, room)) return false;
+        uint8_t* buffer = static_cast<uint8_t*>(aligned);
         LARGE_INTEGER li; li.QuadPart = (LONGLONG)start;
         if (!SetFilePointerEx(h_, li, NULL, FILE_BEGIN)) return false;
         uint32_t done = 0;
         while (done < total){
             DWORD got = 0;
-            if (!ReadFile(h_, tmp.data() + done, total - done, &got, NULL) || got == 0) return false;
+            if (!ReadFile(h_, buffer + done, total - done, &got, NULL) || got == 0) return false;
             done += got;
         }
-        memcpy(dst, tmp.data() + (off - start), len);
+        memcpy(dst, buffer + (off - start), len);
         return true;
     }
     bool readCluster(uint64_t lcn, void* dst){

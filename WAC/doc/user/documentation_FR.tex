@@ -962,7 +962,12 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         modification du fichier. Une entrée prouve que le binaire était présent,
         pas qu'il a été exécuté.
   \item[\fichier{bams.json}] dernière exécution par programme et par utilisateur
-        (Background Activity Moderator).
+        (Background Activity Moderator). Les ruches étant lues sur le disque,
+        une exécution de la ou des dernières minutes peut manquer : Windows
+        garde une modification du registre en mémoire avant de l'écrire (de
+        56 à 82~s mesurées sur la machine de test, que \texttt{RegFlushKey}
+        n'a pas avancées), et \wac{} ne force pas cette écriture, qui
+        modifierait le disque examiné.
   \item[\fichier{userassists.json}] programmes lancés depuis l'interface :
         compteur, temps de focus, dernière exécution.
   \item[\fichier{muicache.json}] noms d'affichage des programmes exécutés.
@@ -1204,9 +1209,10 @@ lieu de la prendre pour l'activité étudiée :
         \fichier{MountedDevices} et les journaux associés ;
   \item \textbf{ouvrir une session} pour lancer l'outil crée une session et ses
         entrées de journal ;
-  \item la lecture de plusieurs gigaoctets \textbf{vide le cache du système de
-        fichiers}, ce qui modifie l'état de performance de la machine (pas le
-        contenu de son disque).
+  \item \wac{} \textbf{occupe de la mémoire} pendant la collecte, ce qui peut
+        évincer des pages vers le fichier d'échange. Sa lecture du volume, elle,
+        contourne le cache (lecture non tamponnée) : les gigaoctets lus ne
+        remplacent pas le cache de fichiers de la machine.
 \end{itemize}
 
 % ============================================================ 8

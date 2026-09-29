@@ -948,7 +948,12 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
   \item[\fichier{shimcache.json}] compatibility cache: path and modification date
         of the file. An entry proves the binary was present, not that it ran.
   \item[\fichier{bams.json}] last execution per program and per user
-        (Background Activity Moderator).
+        (Background Activity Moderator). The hives being read from the disk,
+        an execution of the last minute or so may be missing: Windows keeps a
+        registry change in memory before writing it (56 to 82~s measured on
+        the test machine, which \texttt{RegFlushKey} did not bring forward),
+        and \wac{} does not force that write, which would modify the examined
+        disk.
   \item[\fichier{userassists.json}] programs launched from the user interface:
         count, focus time, last execution.
   \item[\fichier{muicache.json}] display names of executed programs.
@@ -1180,8 +1185,10 @@ instead of taking it for the activity under study:
         \fichier{MountedDevices} and the related logs;
   \item \textbf{logging on} to run the tool creates a session and its log
         entries;
-  \item reading several gigabytes \textbf{evicts the file-system cache}, which
-        changes the machine's performance state (not its disk content).
+  \item \wac{} \textbf{takes up memory} during the collection, which may push
+        pages out to the page file. Its reading of the volume bypasses the
+        cache (unbuffered reads): the gigabytes read do not replace the
+        machine's file cache.
 \end{itemize}
 
 % ============================================================ 8

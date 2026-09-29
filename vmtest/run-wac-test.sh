@@ -78,6 +78,19 @@ $QGA run --shell "if not exist $VMDIR mkdir $VMDIR" >/dev/null
 for exe in WAC.exe raw_hive_test.exe; do
   $QGA run --shell "taskkill /f /im $exe >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
 done
+
+# taskkill.exe is the program the BAM check looks for (check-json.py). WAC reads
+# the SYSTEM hive raw from the disk, with its transaction logs, and Windows keeps
+# a registry change in memory before writing it: measured in the VM, a taskkill
+# reached the disk 56 to 82 s after its run. RegFlushKey (RegistryKey.Flush)
+# did not bring it forward — a taskkill run and flushed seconds before a
+# collection was still absent from it. The harness therefore waits before a
+# collection that follows a taskkill closely. WAC itself must never flush: that
+# would write to the examined machine's disk.
+wait_registry_on_disk() {
+  sleep 90
+}
+
 # A `reg load` left mounted by an interrupted run locks the extracted hive.
 $QGA run --shell "reg unload HKLM\\WAC_TEST >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
 
@@ -350,8 +363,11 @@ if [[ $SPLIT -eq 1 ]]; then
 
   # taskkill just before the collection, as in step 2: the BAM check expects
   # its execution within minutes of the collection, and the references above
-  # take several.
+  # take several. In step 2 the upload and the raw validation leave Windows the
+  # time to write it; here the collection follows at once.
   $QGA run --shell "taskkill /f /im WAC.exe >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
+  wait_registry_on_disk
+
   if run_wac collect --collect --output=split --events $BINARY_OPTION --loglevel=2; then
     echo "   ✅ collection went to the end"
   else
