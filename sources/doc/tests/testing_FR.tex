@@ -197,6 +197,10 @@ sautés (son JSON dit \texttt{NotRequested}) ; les artefacts lus dans les ruches
 demandent aussi \texttt{registry}, et l'étape 8 (\fichier{wac.yml}) est
 sautée. Un cycle complet reste de règle avant un commit qui touche le cœur.
 
+Un second disque fixe de 2~Go (\fichier{create-vm.sh}) est formaté NTFS au
+premier cycle, étiquette \texttt{WACDATA} : il porte la \path|$MFT| et le
+journal d'un volume autre que le système, avec leurs témoins.
+
 Le cycle enchaîne : envoi de \fichier{WAC.exe} et \fichier{raw\_hive\_test.exe}
 dans la VM, validation de l'extraction brute d'une ruche (elle doit être refusée
 par \texttt{reg load} tant qu'elle n'est pas réparée, puis acceptée), exécution

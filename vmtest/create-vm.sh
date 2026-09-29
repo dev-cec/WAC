@@ -23,6 +23,10 @@ ISO_VIRTIO="${ISO_VIRTIO:-$VMS/virtio-win.iso}"
 ISO_ANS="$VMS/autounattend.iso"
 ISO_WAC="$VMS/wac-transfer.iso"
 DISK="$VMS/$DOM.qcow2"
+# A second fixed disk, 2 GB, for the NTFS metadata of a volume other than the
+# system's ($MFT, change journal): added once Windows is installed, so that
+# Setup sees one disk only; run-wac-test.sh formats it (label WACDATA).
+DATA_DISK="$VMS/$DOM-data.qcow2"
 
 [[ -f "$ISO_WIN"    ]] || { echo "Windows ISO missing: $ISO_WIN" >&2; exit 1; }
 [[ -f "$ISO_VIRTIO" ]] || { echo "virtio-win.iso missing: $ISO_VIRTIO" >&2; exit 1; }
@@ -96,6 +100,13 @@ for i in $(seq 1 120); do
   fi
   if python3 "$HERE/qga.py" --dom "$DOM" ping >/dev/null 2>&1; then
     echo "   ✅ agent operational after ~$((i / 4)) min — the VM can be driven"
+    [[ -f "$DATA_DISK" ]] || qemu-img create -f qcow2 "$DATA_DISK" 2G >/dev/null
+    # SATA has no hot plug: the disk goes into the definition, and the VM
+    # restarts to see it.
+    $C attach-disk "$DOM" "$DATA_DISK" sde --driver qemu --subdriver qcow2 --targetbus sata --config >/dev/null \
+      && $C shutdown "$DOM" >/dev/null && echo "   data disk added, the VM restarts" \
+      && until [[ "$($C domstate "$DOM")" == "shut off" ]]; do sleep 5; done \
+      && $C start "$DOM" >/dev/null
     exit 0
   fi
   sleep 15

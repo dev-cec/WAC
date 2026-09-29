@@ -38,6 +38,19 @@ done
 echo "== 0. Agent =="
 $QGA ping
 
+echo "== 0a. Data volume =="
+# The second fixed disk of create-vm.sh, formatted NTFS on first use (label
+# WACDATA): the $MFT and change journal of a volume other than the system's.
+DATA_STATE=$($QGA run -- powershell.exe -NoProfile -Command '
+  $v = Get-Volume -FileSystemLabel WACDATA -ErrorAction SilentlyContinue | Where-Object DriveLetter
+  if ($v) { "ready $($v.DriveLetter):" ; exit }
+  $d = Get-Disk | Where-Object PartitionStyle -eq RAW | Select-Object -First 1
+  if (-not $d) { "absent"; exit }
+  $d | Initialize-Disk -PartitionStyle GPT -PassThru | New-Partition -UseMaximumSize -AssignDriveLetter |
+    Format-Volume -FileSystem NTFS -NewFileSystemLabel WACDATA -Confirm:$false | Out-Null
+  "formatted"' 2>/dev/null | tr -d '\r' || true)
+echo "   ${DATA_STATE:-no answer} (without the disk, the second-volume checks are skipped)"
+
 echo "== 0b. USB key =="
 # A virtual USB key, attached on every run, so that USBSTOR is populated on any
 # test VM — including one recreated from scratch by create-vm.sh — and the USB

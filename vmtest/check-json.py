@@ -1341,6 +1341,21 @@ def check_small_file_artefacts(folder):
                "startup_folders.json: the startup witness found, its SHA-256 identical",
                f"startup_folders.json: the startup witness missing or altered: {match[:1]}")
 
+    if "datavolume" in reference:
+        letter, present, deleted = reference["datavolume"].split("|")
+        mft = load(folder, "mft.json")
+        usn = load(folder, "usn_journal.json")
+        if isinstance(mft, list):
+            report(any(r.get("Volume") == letter and (r.get("Path") or "").lower() == present.lower() and not r.get("Deleted")
+                       for r in mft if isinstance(r, dict)),
+                   f"mft.json: {present} found on the data volume {letter}",
+                   f"mft.json: {present} missing from the data volume {letter}")
+        if isinstance(usn, list):
+            report(any(r.get("Volume") == letter and (r.get("Name") or "").lower() == deleted.split("\\")[-1].lower()
+                       and "FILE_DELETE" in (r.get("Reasons") or "") for r in usn if isinstance(r, dict)),
+                   f"usn_journal.json: the deletion of {deleted} found in {letter}'s journal",
+                   f"usn_journal.json: the deletion of {deleted} missing from {letter}'s journal")
+
     zones = load(folder, "zone_identifiers.json")
     if isinstance(zones, list) and "zone" in reference:
         where, zone_id, host_url = reference["zone"].split("|", 2)
@@ -1490,9 +1505,11 @@ def check_mft_timeline(folder):
     if not isinstance(mft, list) or not mft:
         print("  ⏭️  mft.json absent or empty: $MFT check skipped")
     else:
-        by_entry = {r.get("Entry"): r for r in mft if isinstance(r, dict)}
-        drive = next((str(r["Path"])[:2].upper() for r in mft
-                      if isinstance(r, dict) and str(r.get("Path", "")).endswith("explorer.exe")), "C:")
+        # A record number only means something within its volume.
+        def volume_of(r):
+            return str(r.get("Volume") or str(r.get("Path", ""))[:2]).upper()
+        by_entry = {(volume_of(r), r.get("Entry")): r for r in mft if isinstance(r, dict)}
+        volumes = {volume_of(r) for r in mft if isinstance(r, dict)}
         manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
         items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
         compared, wrong = 0, []
@@ -1500,10 +1517,10 @@ def check_mft_timeline(folder):
             source = str(it.get("SourcePath") or "")
             entry = it.get("MftEntry")
             created = it.get("SourceCreatedUtc")
-            # The system volume's files, by name (not the metafiles, not a named stream).
-            if not source.upper().startswith(drive + "\\") or ":" in source[2:] or not entry or not created:
+            # Files of a volume whose $MFT was converted, by name (not the metafiles, not a named stream).
+            if source[:2].upper() not in volumes or ":" in source[2:] or not entry or not created:
                 continue
-            r = by_entry.get(entry)
+            r = by_entry.get((source[:2].upper(), entry))
             compared += 1
             if r is None:
                 wrong.append((source, "entry %s absent from mft.json" % entry))
@@ -1528,8 +1545,13 @@ def check_mft_timeline(folder):
     if not isinstance(usn, list) or not usn:
         print("  ⏭️  usn_journal.json absent or empty: change journal check skipped")
         return found
-    numbers = [r.get("Usn") for r in usn if isinstance(r, dict)]
-    falling = sum(1 for a, b in zip(numbers, numbers[1:]) if not (isinstance(a, int) and isinstance(b, int) and b > a))
+    # Each volume has its own journal: the numbers rise within a volume.
+    by_volume = {}
+    for r in usn:
+        if isinstance(r, dict):
+            by_volume.setdefault(str(r.get("Volume") or str(r.get("Path", ""))[:2]).upper(), []).append(r.get("Usn"))
+    falling = sum(1 for numbers in by_volume.values()
+                  for a, b in zip(numbers, numbers[1:]) if not (isinstance(a, int) and isinstance(b, int) and b > a))
     inv = load(folder, "investigation.json")
     coll = (inv or {}).get("Collection") if isinstance(inv, dict) else None
     end = (coll or {}).get("EndUtc") or (coll or {}).get("StartUtc") if isinstance(coll, dict) else None
@@ -1544,8 +1566,8 @@ def check_mft_timeline(folder):
         print(f"  ❌ usn_journal.json: {len(future)} change(s) dated after the collection ({end})")
         found += 1
     else:
-        print(f"  ✅ usn_journal.json: {len(usn)} record(s), numbers rising, none after the collection "
-              f"({incomplete} path(s) incomplete)")
+        print(f"  ✅ usn_journal.json: {len(usn)} record(s) on {len(by_volume)} volume(s), numbers rising, "
+              f"none after the collection ({incomplete} path(s) incomplete)")
     return found
 
 

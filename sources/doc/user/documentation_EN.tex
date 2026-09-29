@@ -1073,7 +1073,9 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
 \subsection{Files and browsing}
 
 \begin{description}[style=nextline,leftmargin=1.2em]
-  \item[\fichier{mft.json}] every file and directory of the system volume,
+  \item[\fichier{mft.json}] every file and directory of every fixed NTFS
+        volume (\champ{Volume}: \texttt{C:}, \texttt{G:}\ldots; a record
+        number only means something within its volume),
         present or \textbf{deleted} (\champ{Deleted}) as long as NTFS has not
         reused its record: rebuilt path, size, attributes, and two sets of four
         UTC dates — \champ{CreatedUtc}\ldots{} (the
@@ -1087,8 +1089,9 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         names — \path|System32\crypt32.dll| and its original under
         \path|WinSxS|: \champ{HardLinkPaths} gives its other paths, each one
         searchable.
-  \item[\fichier{usn\_journal.json}] the volume's change journal
-        (\path|$UsnJrnl:$J|): every creation, write, rename and
+  \item[\fichier{usn\_journal.json}] the change journal of every fixed NTFS
+        volume (\path|$UsnJrnl:$J|, \champ{Volume}; the \champ{Usn} numbers
+        rise within a volume): every creation, write, rename and
         \textbf{deletion}, dated, with its reasons (\champ{Reasons}, an unknown
         bit kept in hexadecimal) and the path rebuilt through the \path|$MFT|.
         It keeps the trace of files dropped then erased, which the \path|$MFT|

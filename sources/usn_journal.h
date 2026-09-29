@@ -60,20 +60,23 @@ struct UsnRecord {
 	Json toJson(const Mft& mft) const;
 };
 
-/*! The change journal of the system volume, read from its exhibit. */
+/*! The change journal of one NTFS volume, read from its exhibit. */
 struct UsnJournal {
 	std::vector<UsnRecord> records;  //!< the records, in the journal's order
 	uint64_t rangeRecords = 0;       //!< records of version 4, counted only
 
-	/*! Reads the journal's exhibit and decodes its records.
+	/*! Reads the journal's exhibit of a volume and decodes its records.
+	 *  @param volume the volume, "C:", "G:"…
 	 *  @return ERROR_SUCCESS, or ERROR_FILE_NOT_FOUND if the collection holds
 	 *          no journal (disabled on the machine, or not asked for) */
-	HRESULT getData();
+	HRESULT getData(const std::wstring& volume);
 
-	/*! Writes `usn_journal.json` as it goes, each file named by its full path.
-	 *  @param mft the $MFT of the same collection, loaded (Mft::getData)
-	 *  @return the result of the write */
-	HRESULT toJson(const Mft& mft);
+	/*! Writes the volume's records into usn_journal.json as it goes, each
+	 *  file named by its full path. Every volume goes into the same file.
+	 *  @param out the writer of usn_journal.json
+	 *  @param mft the $MFT of the same volume, loaded (Mft::getData)
+	 *  @return ERROR_SUCCESS */
+	HRESULT toJson(JsonArrayWriter& out, const Mft& mft) const;
 
 	//! Releases the memory held by the records.
 	void clear();

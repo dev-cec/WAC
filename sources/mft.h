@@ -93,25 +93,33 @@ struct MftEntry {
 	 *  @param path its path, rebuilt by Mft::pathOf
 	 *  @param pathComplete false if a parent could not be named
 	 *  @param hardLinkPaths the paths of its other names (hard links)
+	 *  @param volume the volume the record belongs to ("C:"): its numbers are
+	 *         only meaningful there
 	 *  @return its JSON object */
 	Json toJson(const std::wstring& path, bool pathComplete,
-	            const std::vector<std::wstring>& hardLinkPaths) const;
+	            const std::vector<std::wstring>& hardLinkPaths, const std::wstring& volume) const;
 
 	//! True if the link is the name shown as `name` (same directory, same name).
 	bool isShownName(const Link& link) const { return link.parentEntry == parentEntry && link.name == name; }
 };
 
-/*! The $MFT of the system volume, read from its exhibit. */
+/*! The $MFT of one NTFS volume, read from its exhibit. */
 struct Mft {
-	/*! Loads the $MFT exhibit and keeps each record's name and parent, for
-	 *  the paths (of mft.json and of the change journal).
+	/*! Loads the $MFT exhibit of a volume and keeps each record's name and
+	 *  parent, for the paths (of mft.json and of the change journal).
+	 *  @param volume the volume, "C:", "G:"…
 	 *  @return ERROR_SUCCESS, ERROR_FILE_NOT_FOUND if the collection holds no
-	 *          $MFT, or ERROR_INVALID_DATA if it is not one */
-	HRESULT getData();
+	 *          $MFT of that volume, or ERROR_INVALID_DATA if it is not one */
+	HRESULT getData(const std::wstring& volume);
 
-	/*! Writes `mft.json` as it goes: one object per record, present or deleted.
-	 *  @return the result of the write */
-	HRESULT toJson();
+	//! @return the volume loaded, "C:"…
+	const std::wstring& volume() const { return volume_; }
+
+	/*! Writes the volume's records into mft.json as it goes: one object per
+	 *  record, present or deleted. Every volume goes into the same file.
+	 *  @param out the writer of mft.json
+	 *  @return ERROR_SUCCESS, or why the exhibit could not be read */
+	HRESULT toJson(JsonArrayWriter& out) const;
 
 	/*! The path of a file on the examined machine, from a reference.
 	 *  @param entry record number of the file
@@ -143,6 +151,7 @@ private:
 		bool inUse = false;
 	};
 	std::wstring file_;             //!< the exhibit read
+	std::wstring volume_;           //!< its volume, "C:"
 	size_t recordSize_ = 0;         //!< bytes per record, from record 0
 	std::vector<Node> nodes_;       //!< by record number
 	std::wstring names_;            //!< every name, end to end

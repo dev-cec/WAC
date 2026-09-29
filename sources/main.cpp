@@ -541,6 +541,74 @@ void collectForConversion() {
 	}
 }
 
+/*! The $MFT, the change journal and the Zone.Identifier streams of every
+ *  fixed NTFS volume. Each volume's $MFT is loaded once for the three: the
+ *  journal names its files through it, and the streams are in its records.
+ *  Every volume goes into the same mft.json and usn_journal.json, each record
+ *  carrying its volume — record numbers only mean something within theirs.
+ *  An artefact is "not collected" only if no volume gave it. */
+void convertNtfsMetadata() {
+	const bool mftWanted = requested(conf.artefacts.mft, "mft.json", Text::ArtefactMft, L"artefacts.mft");
+	const bool usnWanted = requested(conf.artefacts.usnJournal, "usn_journal.json", Text::ArtefactUsnJournal, L"artefacts.usn_journal");
+	const bool zonesWanted = requested(conf.artefacts.zoneIdentifiers, "zone_identifiers.json",
+	                                   Text::ArtefactZoneIdentifiers, L"artefacts.zone_identifiers");
+	if (!mftWanted && !usnWanted && !zonesWanted) return;
+	std::unique_ptr<JsonArrayWriter> mftOut, usnOut;
+	if (mftWanted) mftOut = std::make_unique<JsonArrayWriter>("mft.json");
+	if (usnWanted) usnOut = std::make_unique<JsonArrayWriter>("usn_journal.json");
+	ZoneIdentifiers zones;
+	unsigned mftVolumes = 0, usnVolumes = 0, zoneVolumes = 0;
+	HRESULT mftFailure = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), usnFailure = mftFailure;
+	for (const std::wstring& volume : fixedNtfsVolumes()) {
+		const std::wstring suffix = L" (" + volume + L") : ";
+		Mft mft;
+		printStep(L" - " + text(Text::StepReadMft) + suffix);
+		HRESULT hresult = mft.getData(volume);
+		if (hresult != ERROR_SUCCESS) {
+			printError(hresult);
+			mftFailure = usnFailure = hresult;
+			continue;
+		}
+		printSuccess();
+		if (mftOut) {
+			printStep(L" - " + text(Text::StepWriteMft) + suffix);
+			hresult = mft.toJson(*mftOut);
+			if (hresult != ERROR_SUCCESS) { printError(hresult); mftFailure = hresult; }
+			else { printSuccess(); ++mftVolumes; }
+		}
+		if (usnOut) {
+			printStep(L" - " + text(Text::StepUsnJournal) + suffix);
+			UsnJournal journal;
+			hresult = journal.getData(volume);
+			if (hresult == ERROR_SUCCESS) hresult = journal.toJson(*usnOut, mft);
+			if (hresult != ERROR_SUCCESS) { printError(hresult); usnFailure = hresult; }   // a journal disabled on this volume
+			else { printSuccess(); ++usnVolumes; }
+		}
+		if (zonesWanted && zones.getData(mft) == ERROR_SUCCESS) ++zoneVolumes;
+		mft.clear();
+	}
+	if (mftOut) {
+		mftOut->close();
+		if (!mftVolumes) writeNotCollected("mft.json", L"$MFT", mftFailure);
+	}
+	if (usnOut) {
+		usnOut->close();
+		if (!usnVolumes) writeNotCollected("usn_journal.json", L"Change journal ($UsnJrnl:$J)", usnFailure);
+	}
+	if (zonesWanted) {
+		printStep(Text::StepZoneIdentifiers);
+		if (!zoneVolumes) {
+			printError(mftFailure);
+			writeNotCollected("zone_identifiers.json", L"Zone.Identifier streams ($MFT)", mftFailure);
+		}
+		else {
+			const HRESULT hresult = zones.toJson();
+			if (hresult != ERROR_SUCCESS) printError(hresult);
+			else printSuccess();
+		}
+	}
+}
+
 /*! Converts the artefacts into JSON, from the working copy: registry, files,
  *  event logs. Runs in a full run and under --convert; a --collect run stops
  *  before it (see RunMode).
@@ -558,8 +626,6 @@ void convertArtefacts(bool systemAvailable) {
 	Runs runs;
 	Shimcaches shimcaches;
 	Prefetchs prefetchs;
-	Mft mft;
-	UsnJournal usnJournal;
 	RecentDocs recentdocs;
 	Shellbags shellbags;
 	Mrus mrus;
@@ -985,59 +1051,7 @@ void convertArtefacts(bool systemAvailable) {
 	}
 	}   // artefacts.prefetch
 
-	/* The $MFT is loaded once for three artefacts: the change journal names
-	   its files through it, and the Zone.Identifier streams are in its records. */
-	const bool mftWanted = requested(conf.artefacts.mft, "mft.json", Text::ArtefactMft, L"artefacts.mft");
-	const bool usnWanted = requested(conf.artefacts.usnJournal, "usn_journal.json", Text::ArtefactUsnJournal, L"artefacts.usn_journal");
-	const bool zonesWanted = requested(conf.artefacts.zoneIdentifiers, "zone_identifiers.json",
-	                                   Text::ArtefactZoneIdentifiers, L"artefacts.zone_identifiers");
-	if (mftWanted || usnWanted || zonesWanted) {
-	printStep(Text::StepReadMft);
-	const HRESULT mftRead = mft.getData();
-	hresult = mftRead;
-	if (hresult != ERROR_SUCCESS) {
-		printError(hresult);
-		if (mftWanted) writeNotCollected("mft.json", L"$MFT", hresult);
-	}
-	else {
-		printSuccess();
-		if (mftWanted) {
-			printStep(Text::StepWriteMft);
-			hresult = mft.toJson();
-			if (hresult != ERROR_SUCCESS) printError(hresult);
-			else printSuccess();
-		}
-	}
-	if (usnWanted) {
-		printStep(Text::StepUsnJournal);
-		hresult = usnJournal.getData();
-		if (hresult != ERROR_SUCCESS) {
-			printError(hresult);
-			writeNotCollected("usn_journal.json", L"Change journal ($UsnJrnl:$J)", hresult);
-		}
-		else {
-			hresult = usnJournal.toJson(mft);
-			if (hresult != ERROR_SUCCESS) printError(hresult);
-			else printSuccess();
-			usnJournal.clear();
-		}
-	}
-	if (zonesWanted) {
-		printStep(Text::StepZoneIdentifiers);
-		ZoneIdentifiers zones;
-		hresult = mftRead == ERROR_SUCCESS ? zones.getData(mft) : mftRead;
-		if (hresult != ERROR_SUCCESS) {
-			printError(hresult);
-			writeNotCollected("zone_identifiers.json", L"Zone.Identifier streams ($MFT)", hresult);
-		}
-		else {
-			hresult = zones.toJson();
-			if (hresult != ERROR_SUCCESS) printError(hresult);
-			else printSuccess();
-		}
-	}
-	mft.clear();
-	}   // artefacts.mft, artefacts.usn_journal, artefacts.zone_identifiers
+	convertNtfsMetadata();
 
 	if (requested(conf.artefacts.jumpLists, "jumplistAutomaticDestinations.json", Text::ArtefactJumpListsAutomatic, L"artefacts.jump_lists")) {
 	printStep(Text::StepJumpListsAutomatic);

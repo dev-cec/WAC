@@ -125,8 +125,9 @@ bool MftEntry::parse(const uint8_t* record, size_t recordSize, uint64_t number) 
 }
 
 Json MftEntry::toJson(const std::wstring& path, bool pathComplete,
-                      const std::vector<std::wstring>& hardLinkPaths) const {
+                      const std::vector<std::wstring>& hardLinkPaths, const std::wstring& volume) const {
 	Json o = Json::obj();
+	o.add(L"Volume", Json::str(volume));
 	o.add(L"Entry", Json::num(entry));
 	o.add(L"Sequence", Json::num(sequence));
 	o.add(L"Path", Json::str(path));
@@ -182,12 +183,13 @@ HRESULT Mft::forEachRecord(Visit visit) const {
 	return ERROR_SUCCESS;
 }
 
-HRESULT Mft::getData() {
-	log(3, L"🔈mft getData");
+HRESULT Mft::getData(const std::wstring& volume) {
+	log(3, L"🔈mft getData " + volume);
 	const auto& index = ExhibitStoreIndex();
-	const auto found = index.find(toLower(conf.systemDrive.substr(0, 2) + L"\\$MFT"));
+	const auto found = index.find(toLower(volume.substr(0, 2) + L"\\$MFT"));
 	if (found == index.end() || found->second.file.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 	file_ = found->second.file;
+	volume_ = volume.substr(0, 2);
 	// Bytes per record, from record 0 ($MFT itself): 1024 or 4096 on the volumes Windows formats.
 	{
 		std::ifstream in(std::filesystem::path(file_), std::ios::binary);
@@ -290,7 +292,7 @@ std::wstring Mft::pathOf(uint64_t entry, uint16_t sequence, bool& complete) cons
 		complete = false;
 		if (parts.empty()) return std::wstring();
 	}
-	std::wstring path = complete ? conf.systemDrive.substr(0, 2) : std::wstring(L"?");
+	std::wstring path = complete ? volume_ : std::wstring(L"?");
 	for (auto it = parts.rbegin(); it != parts.rend(); ++it) path += L"\\" + *it;
 	return path;
 }
@@ -320,17 +322,15 @@ void Mft::complete(MftEntry& entry) const {
 	entry.links.insert(entry.links.end(), extension.links.begin(), extension.links.end());
 }
 
-HRESULT Mft::toJson() {
-	log(3, L"🔈mft toJson");
-	JsonArrayWriter out("mft.json");
-	if (!out.isOpen()) return E_FAIL;
-	const HRESULT hresult = forEachRecord([this, &out](MftEntry& e) {
+HRESULT Mft::toJson(JsonArrayWriter& out) const {
+	log(3, L"🔈mft toJson " + volume_);
+	return forEachRecord([this, &out](MftEntry& e) {
 		if (e.baseEntry) return;               // merged into its base record
 		complete(e);
 		bool pathComplete = true;
 		std::wstring path = pathOf(e.entry, e.sequence, pathComplete);
 		// The root itself, and a record of which nothing names the place.
-		if (e.entry == ROOT_ENTRY) path = conf.systemDrive.substr(0, 2) + L"\\";
+		if (e.entry == ROOT_ENTRY) path = volume_ + L"\\";
 		// The other names of the file, each through its own directory.
 		std::vector<std::wstring> others;
 		for (const MftEntry::Link& link : e.links) {
@@ -339,10 +339,8 @@ HRESULT Mft::toJson() {
 			const std::wstring folder = pathOf(link.parentEntry, link.parentSequence, complete);
 			others.push_back((folder.empty() ? std::wstring(L"?") : folder) + L"\\" + link.name);
 		}
-		out.add(e.toJson(path, pathComplete || e.entry == ROOT_ENTRY, others));
+		out.add(e.toJson(path, pathComplete || e.entry == ROOT_ENTRY, others, volume_));
 	});
-	const HRESULT closed = out.close();
-	return hresult != ERROR_SUCCESS ? hresult : closed;
 }
 
 HRESULT Mft::forEachFile(const std::function<void(const MftEntry&, const std::wstring&, bool)>& visit) const {

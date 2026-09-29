@@ -189,9 +189,9 @@ void journal(const std::wstring& folder) {
 	ExhibitStoreAdd({ mftLine, journalLine }, L"test");
 
 	Mft mft;
-	check(mft.getData() == ERROR_SUCCESS, "the $MFT exhibit is not loaded");
+	check(mft.getData(L"C:") == ERROR_SUCCESS, "the $MFT exhibit is not loaded");
 	UsnJournal usn;
-	check(usn.getData() == ERROR_SUCCESS, "the journal exhibit is not read");
+	check(usn.getData(L"C:") == ERROR_SUCCESS, "the journal exhibit is not read");
 	check(usn.records.size() == 3 && usn.rangeRecords == 1,
 	      "records found: " + std::to_string(usn.records.size()) + " + " + std::to_string(usn.rangeRecords) + " range");
 	if (usn.records.size() != 3) return;
@@ -199,6 +199,8 @@ void journal(const std::wstring& folder) {
 	const Json first = usn.records[0].toJson(mft), second = usn.records[1].toJson(mft), third = usn.records[2].toJson(mft);
 	const Json* path = first.find(L"Path");
 	check(path && path->text() == L"C:\\file1.bin" && !first.find(L"PathIncomplete"), "path of a file of the root");
+	const Json* volume = first.find(L"Volume");
+	check(volume && volume->text() == L"C:", "the record does not name its volume");
 	path = second.find(L"Path");
 	check(path && path->text() == L"C:\\$Extend\\$Quota", "path through $Extend");
 	const Json* reasons = second.find(L"Reasons");

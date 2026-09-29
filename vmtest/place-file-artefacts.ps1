@@ -156,7 +156,22 @@ Write-Output ("roots=" + ($roots -join ','))
 $first = Get-ChildItem Cert:\LocalMachine\Root | Where-Object { $roots -contains $_.Thumbprint } | Select-Object -First 1
 if ($first) { Write-Output ("rootsubject=" + $first.Thumbprint + '|' + $first.GetNameInfo('SimpleName', $false)) }
 
-# 10. Reference counts of the logs Windows writes itself.
+# 10. The data volume (a second fixed NTFS disk, label WACDATA): a file kept,
+#     a file created then deleted — the second $MFT and change journal.
+$data = Get-Volume -FileSystemLabel WACDATA -ErrorAction SilentlyContinue | Where-Object DriveLetter | Select-Object -First 1
+if ($data) {
+    $letter = "$($data.DriveLetter):"
+    # A data volume has no change journal until a service asks for one: the
+    # harness creates it (32 MB, as on C:), idempotent.
+    fsutil usn createjournal m=0x2000000 a=0x800000 $letter | Out-Null
+    Set-Content "$letter\wac-volume-test.txt" 'WAC harness data volume witness'
+    $gone = "$letter\wac-deleted-$(Get-Date -Format HHmmss).txt"
+    Set-Content $gone 'deleted by the WAC harness'
+    Remove-Item $gone
+    Write-Output "datavolume=$letter|$letter\wac-volume-test.txt|$gone"
+}
+
+# 11. Reference counts of the logs Windows writes itself.
 $sections = (Select-String -Path 'C:\Windows\INF\setupapi.dev*.log' -Pattern '^>>>  \[' -ErrorAction SilentlyContinue | Measure-Object).Count
 Write-Output "setupapi=$sections"
 $mplog = @(Get-ChildItem -Force 'C:\ProgramData\Microsoft\Windows Defender\Support\MPLog-*.log' -ErrorAction SilentlyContinue).Count

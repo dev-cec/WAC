@@ -327,12 +327,12 @@ lui.
   interdite : 44~610 contrôles, aucun échec \\
 \texttt{mft\_test} & \texttt{ntfsinfo} (ntfs-3g), implémentation NTFS indépendante &
   volume formaté par \texttt{mkntfs} : nom, parent, taille, huit dates et flux
-  nommés identiques pour chaque enregistrement ; 275 contrôles, aucun échec \\
+  nommés identiques pour chaque enregistrement ; 278 contrôles, second volume compris, aucun échec \\
 \texttt{usn\_journal\_test} & structures du compilateur (\texttt{USN\_RECORD}
   de MinGW, version~3 d'après Microsoft) &
   champs restitués tels qu'écrits, numéros égaux aux positions dans le flux
   entier, chemins par la \fichier{\$MFT}, enregistrements abîmés contre une
-  page interdite ; 26 contrôles, aucun échec. A révélé que la séquence de la
+  page interdite ; 27 contrôles, aucun échec. A révélé que la séquence de la
   racine n'était pas vérifiée : un parent désigné par une séquence périmée
   donnait un chemin affirmé à tort \\
 \texttt{file\_artefacts\_test} & description publiée de chaque format &

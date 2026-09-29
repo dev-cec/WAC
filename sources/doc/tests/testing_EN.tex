@@ -189,6 +189,10 @@ changed. The checks of an artefact switched off are skipped (its JSON says
 \texttt{registry}, and step 8 (\fichier{wac.yml}) is skipped. A full cycle
 remains the rule before a commit that touches the core.
 
+A second fixed disk of 2~GB (\fichier{create-vm.sh}) is formatted NTFS on the
+first cycle, label \texttt{WACDATA}: it holds the \path|$MFT| and journal of a
+volume other than the system's, with their witnesses.
+
 The cycle chains: upload of \fichier{WAC.exe} and \fichier{raw\_hive\_test.exe}
 into the VM, validation of the raw extraction of a hive (\texttt{reg load} must
 refuse it until it is repaired, then accept it), run of \wac{}, then fetch, into

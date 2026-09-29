@@ -1,5 +1,5 @@
 /*! \file
- *  \brief The change journal of the system volume, read from its exhibit (see usn_journal.h).
+ *  \brief The change journal of an NTFS volume, read from its exhibit (see usn_journal.h).
  */
 #include "usn_journal.h"
 #include "mft.h"
@@ -100,6 +100,7 @@ bool UsnRecord::parse(const uint8_t* record, size_t size, uint64_t usnBase) {
 
 Json UsnRecord::toJson(const Mft& mft) const {
 	Json o = Json::obj();
+	o.add(L"Volume", Json::str(mft.volume()));
 	o.add(L"Usn", Json::num(usn));
 	o.add(L"TimestampUtc", Json::str(timeToIso8601Utc(timestamp)));
 	o.add(L"Name", Json::str(name));
@@ -121,10 +122,10 @@ Json UsnRecord::toJson(const Mft& mft) const {
 	return o;
 }
 
-HRESULT UsnJournal::getData() {
-	log(3, L"🔈usn journal getData");
+HRESULT UsnJournal::getData(const std::wstring& volume) {
+	log(3, L"🔈usn journal getData " + volume);
 	const auto& index = ExhibitStoreIndex();
-	const auto found = index.find(toLower(conf.systemDrive.substr(0, 2) + L"\\$Extend\\$UsnJrnl:$J"));
+	const auto found = index.find(toLower(volume.substr(0, 2) + L"\\$Extend\\$UsnJrnl:$J"));
 	if (found == index.end() || found->second.file.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 	/* Read in one block, at the file's size: the journal's allocated part
 	   weighs tens to hundreds of megabytes on a busy machine, which a byte-wise
@@ -154,12 +155,10 @@ HRESULT UsnJournal::getData() {
 	return ERROR_SUCCESS;
 }
 
-HRESULT UsnJournal::toJson(const Mft& mft) {
-	log(3, L"🔈usn journal toJson");
-	JsonArrayWriter out("usn_journal.json");
-	if (!out.isOpen()) return E_FAIL;
+HRESULT UsnJournal::toJson(JsonArrayWriter& out, const Mft& mft) const {
+	log(3, L"🔈usn journal toJson " + mft.volume());
 	for (const UsnRecord& r : records) out.add(r.toJson(mft));
-	return out.close();
+	return ERROR_SUCCESS;
 }
 
 void UsnJournal::clear() {

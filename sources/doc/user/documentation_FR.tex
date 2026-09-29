@@ -1097,7 +1097,9 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
 \subsection{Fichiers et navigation}
 
 \begin{description}[style=nextline,leftmargin=1.2em]
-  \item[\fichier{mft.json}] chaque fichier et répertoire du volume système,
+  \item[\fichier{mft.json}] chaque fichier et répertoire de chaque volume NTFS
+        fixe (\champ{Volume} : \texttt{C:}, \texttt{G:}\ldots{} ; un numéro
+        d'enregistrement n'a de sens que dans son volume),
         présent ou \textbf{supprimé} (\champ{Deleted}) tant que NTFS n'a pas
         réutilisé son enregistrement : chemin reconstitué, taille, attributs, et
         deux jeux de quatre dates en UTC — \champ{CreatedUtc}\ldots{} (attribut
@@ -1111,8 +1113,9 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         enregistrement sous plusieurs noms — \path|System32\crypt32.dll| et son
         original sous \path|WinSxS| : \champ{HardLinkPaths} donne ses autres
         chemins, chacun cherchable.
-  \item[\fichier{usn\_journal.json}] journal des modifications du volume
-        (\path|$UsnJrnl:$J|) : chaque création, écriture, renommage et
+  \item[\fichier{usn\_journal.json}] journal des modifications de chaque
+        volume NTFS fixe (\path|$UsnJrnl:$J|, \champ{Volume} ; les numéros
+        \champ{Usn} croissent au sein d'un volume) : chaque création, écriture, renommage et
         \textbf{suppression}, daté, avec ses motifs (\champ{Reasons}, un bit
         inconnu rendu en hexadécimal) et le chemin reconstitué par la
         \path|$MFT|. Il garde la trace de fichiers déposés puis effacés, que la

@@ -116,9 +116,13 @@ void paths(const std::wstring& mftPath) {
 	line.volumePath = L"C:\\$MFT";
 	line.outputPath = mftPath;
 	line.result = ERROR_SUCCESS;
-	ExhibitStoreAdd({ line }, L"test");
+	// A second volume, G:, the same $MFT: the exhibit index is built once, on
+	// the first lookup, after every exhibit is registered — as in a conversion.
+	RawHiveExtraction second = line;
+	second.volumePath = L"G:\\$MFT";
+	ExhibitStoreAdd({ line, second }, L"test");
 	Mft mft;
-	check(mft.getData() == ERROR_SUCCESS, "the $MFT exhibit is not loaded");
+	check(mft.getData(L"C:") == ERROR_SUCCESS, "the $MFT exhibit is not loaded");
 	bool complete = false;
 	check(mft.pathOf(64, 1, complete) == L"C:\\file1.bin" && complete, "path of file1.bin");
 	check(mft.pathOf(24, 1, complete) == L"C:\\$Extend\\$Quota" && complete, "path through $Extend");
@@ -128,6 +132,13 @@ void paths(const std::wstring& mftPath) {
 	check(stale.empty() && !complete, "stale sequence number: path \"" + narrow(stale) + "\" made up");
 	// A record that does not exist.
 	check(mft.pathOf(1u << 30, 0, complete).empty() && !complete, "record beyond the $MFT named");
+
+	// A second volume: its own exhibit, its paths under its own letter.
+	Mft other;
+	check(other.getData(L"G:") == ERROR_SUCCESS && other.volume() == L"G:", "the $MFT exhibit of G: is not loaded");
+	check(other.pathOf(64, 1, complete) == L"G:\\file1.bin" && complete, "path on the second volume");
+	Mft absent;
+	check(absent.getData(L"H:") != ERROR_SUCCESS, "a volume without a $MFT exhibit is read");
 }
 
 /*! Every record, damaged at random, against a guard page on both sides. */

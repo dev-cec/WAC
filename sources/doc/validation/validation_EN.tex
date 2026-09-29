@@ -319,12 +319,12 @@ with it.
   failure \\
 \texttt{mft\_test} & \texttt{ntfsinfo} (ntfs-3g), an independent NTFS implementation &
   volume formatted by \texttt{mkntfs}: name, parent, size, eight dates and
-  named streams identical for every record; 275 checks, no failure \\
+  named streams identical for every record; 278 checks, a second volume included, no failure \\
 \texttt{usn\_journal\_test} & the compiler's structures (MinGW's
   \texttt{USN\_RECORD}, version~3 from Microsoft) &
   fields returned as written, numbers equal to the positions in the whole
   stream, paths through the \fichier{\$MFT}, damaged records against a
-  forbidden page; 26 checks, no failure. Revealed that the root's sequence was
+  forbidden page; 27 checks, no failure. Revealed that the root's sequence was
   not checked: a parent named by a stale sequence gave a path wrongly
   asserted \\
 \texttt{file\_artefacts\_test} & each format's published description &
