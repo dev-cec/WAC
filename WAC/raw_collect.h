@@ -76,6 +76,21 @@ HRESULT ExtractUserHivesRaw();
  */
 HRESULT ExtractFileArtefactsRaw();
 
+/*! Extracts the NTFS metadata of the system volume, for the file system's
+ *  timeline: `$MFT` (every file, present or deleted, with its dates),
+ *  `$Extend\$UsnJrnl:$J` (the change journal: creations, renames, deletions)
+ *  and `$LogFile` (the transaction journal, raw only), as wac.yml asks
+ *  (artefacts.mft, usn_journal, log_file). The change journal needs the
+ *  `$MFT` for its paths: it is extracted for either.
+ *
+ *  These files weigh up to gigabytes: they are read IN PLACE by the
+ *  conversion, from the exhibit store, and not copied to the working
+ *  directory (READ_IN_PLACE).
+ *
+ *  @return S_OK, S_FALSE if one could not be extracted, or ERROR_EMPTY if
+ *          none is asked for */
+HRESULT ExtractNtfsMetadataRaw();
+
 /*! Repairs the hives of a working copy rebuilt from an exhibit store
  *  (--convert): transaction log replay, patch as a fallback, as the collection
  *  does right after extracting them. The hives are found by name in the

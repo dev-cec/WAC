@@ -182,6 +182,8 @@
     <ClCompile Include="prefetchs.cpp" />
     <ClCompile Include="processes.cpp" />
     <ClCompile Include="network.cpp" />
+    <ClCompile Include="mft.cpp" />
+    <ClCompile Include="usn_journal.cpp" />
     <ClCompile Include="ip_address.cpp" />
     <ClCompile Include="quickdigest5.cpp" />
     <ClCompile Include="raw_hive.cpp" />
@@ -269,6 +271,8 @@
     <ClInclude Include="prefetchs.h" />
     <ClInclude Include="processes.h" />
     <ClInclude Include="network.h" />
+    <ClInclude Include="mft.h" />
+    <ClInclude Include="usn_journal.h" />
     <ClInclude Include="ip_address.h" />
     <ClInclude Include="quickdigest5.h" />
     <ClInclude Include="raw_collect.h" />

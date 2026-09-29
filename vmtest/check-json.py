@@ -212,6 +212,7 @@ def cross_checks(folder):
     found += check_hive_replay(folder)
     found += check_exhibit_store(folder)
     found += check_mft_references(folder)
+    found += check_mft_timeline(folder)
     found += check_mounted_devices(folder)
     found += check_date_precision(folder)
     found += check_utc_sources(folder)
@@ -1223,6 +1224,90 @@ def check_mft_references(folder):
         return 1
     print(f"  ✅ {total} plausible $MFT reference(s)")
     return 0
+
+
+def check_mft_timeline(folder):
+    """mft.json and usn_journal.json against sources read otherwise.
+
+    mft.json rebuilds each path from the parent references UP to the root; the
+    raw extraction of the exhibits found each file by walking the directory
+    indexes DOWN from the root, by name, and recorded its $MFT entry and dates
+    in the manifest. Two readings of the same volume: for every exhibit of the
+    system volume, the record of its entry in mft.json must carry its path and
+    its creation date. Only what cannot change during the collection is
+    compared: a hive in use is rewritten between its extraction and the copy
+    of the $MFT, so its modification date and size may move.
+
+    A file with hard links is one record under several names (System32 and
+    WinSxS): the exhibit's path must be its Path or one of its HardLinkPaths —
+    a name missing from both would be a file an analyst cannot find.
+
+    usn_journal.json: a record's number is its offset in the journal's stream,
+    so the numbers rise strictly in the order read; and no change is dated
+    after the collection.
+    """
+    found = 0
+    mft = load(folder, "mft.json")
+    if not isinstance(mft, list) or not mft:
+        print("  ⏭️  mft.json absent or empty: $MFT check skipped")
+    else:
+        by_entry = {r.get("Entry"): r for r in mft if isinstance(r, dict)}
+        drive = next((str(r["Path"])[:2].upper() for r in mft
+                      if isinstance(r, dict) and str(r.get("Path", "")).endswith("explorer.exe")), "C:")
+        manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+        items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+        compared, wrong = 0, []
+        for it in items:
+            source = str(it.get("SourcePath") or "")
+            entry = it.get("MftEntry")
+            created = it.get("SourceCreatedUtc")
+            # The system volume's files, by name (not the metafiles, not a named stream).
+            if not source.upper().startswith(drive + "\\") or ":" in source[2:] or not entry or not created:
+                continue
+            r = by_entry.get(entry)
+            compared += 1
+            if r is None:
+                wrong.append((source, "entry %s absent from mft.json" % entry))
+            elif source.lower() not in {str(p).lower() for p in [r.get("Path", "")] + (r.get("HardLinkPaths") or [])}:
+                wrong.append((source, "path %s, links %s" % (r.get("Path"), r.get("HardLinkPaths"))))
+            elif r.get("CreatedUtc") != created:
+                wrong.append((source, "created %s, manifest %s" % (r.get("CreatedUtc"), created)))
+        deleted = sum(1 for r in mft if isinstance(r, dict) and r.get("Deleted"))
+        linked = sum(1 for r in mft if isinstance(r, dict) and r.get("HardLinkPaths"))
+        if compared == 0:
+            print("  ⏭️  no exhibit of the system volume in the manifest: $MFT check skipped")
+        elif wrong:
+            print(f"  ❌ mft.json: {len(wrong)}/{compared} exhibit(s) disagree with the manifest")
+            for src, why in wrong[:3]:
+                print(f"        {src}: {why}")
+            found += 1
+        else:
+            print(f"  ✅ mft.json: {compared} exhibit(s) with the manifest's path and creation date "
+                  f"({len(mft)} record(s), {deleted} deleted, {linked} with hard links)")
+
+    usn = load(folder, "usn_journal.json")
+    if not isinstance(usn, list) or not usn:
+        print("  ⏭️  usn_journal.json absent or empty: change journal check skipped")
+        return found
+    numbers = [r.get("Usn") for r in usn if isinstance(r, dict)]
+    falling = sum(1 for a, b in zip(numbers, numbers[1:]) if not (isinstance(a, int) and isinstance(b, int) and b > a))
+    inv = load(folder, "investigation.json")
+    coll = (inv or {}).get("Collection") if isinstance(inv, dict) else None
+    end = (coll or {}).get("EndUtc") or (coll or {}).get("StartUtc") if isinstance(coll, dict) else None
+    future = [r.get("TimestampUtc") for r in usn
+              if end and isinstance(r, dict) and instant(r.get("TimestampUtc") or "") > instant(end)]
+    incomplete = sum(1 for r in usn if isinstance(r, dict) and r.get("PathIncomplete"))
+    if falling:
+        print(f"  ❌ usn_journal.json: {falling} record number(s) not above the previous one "
+              "— a record read out of step, or a wrong LeadingSparseBytes")
+        found += 1
+    elif future:
+        print(f"  ❌ usn_journal.json: {len(future)} change(s) dated after the collection ({end})")
+        found += 1
+    else:
+        print(f"  ✅ usn_journal.json: {len(usn)} record(s), numbers rising, none after the collection "
+              f"({incomplete} path(s) incomplete)")
+    return found
 
 
 def check_prefetchs(folder):

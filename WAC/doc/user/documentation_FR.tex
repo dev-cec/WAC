@@ -217,24 +217,48 @@ live}), où la conversion les relit :
 tous ses résultats. Choisissez un support \textbf{vide}, de préférence en USB~3 :
 l'écriture est le poste le plus coûteux d'une collecte.
 
-La place nécessaire dépend des options. Ordres de grandeur mesurés sur une
-installation Windows~11 ordinaire, pour les copies brutes seules :
+La place nécessaire dépend du mode et des options. Deux emplacements se
+remplissent : la \textbf{consigne} (copies brutes scellées) et la \textbf{copie
+de travail}, qui ne reprend que ce que les collecteurs modifient ou lisent
+pendant la collecte (ruches, Prefetch, raccourcis, listes de sauts, binaires
+cités). Les binaires prélevés par \opt{collect} \opt{binary} et les
+métadonnées NTFS ne sont jamais recopiés : la conversion les lit dans la
+consigne même. Mesures sur la machine virtuelle de test (Windows~11 sans
+logiciel ajouté, 1~volume) :
 
 \begin{center}
-\begin{tabular}{@{}L{9.6cm}r@{}}
+\begin{tabular}{@{}L{7.4cm}rrr@{}}
 \toprule
-Contenu & Volume des copies brutes \\
+Mode & Consigne & Copie de travail & Durée \\
 \midrule
-Ruches, Prefetch, raccourcis, listes de sauts (toujours) & environ 200 à 350~Mo \\
-Journaux d'événements et leurs binaires de messages (\opt{events}) & environ 250~Mo \\
-Binaires cités non authentifiés Microsoft (\opt{binary}) & quelques centaines de Mo \\
+Exécution complète, \opt{events} \opt{binary} (binaires cités) & 1,2~Go & 0,6~Go & 3~min~30 \\
+Collecte seule, \opt{collect} \opt{events} \opt{binary} (tous les exécutables) & 2,7~Go & 0,3~Go & 8~min~30 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-Chaque copie étant écrite deux fois (consigne et travail), \textbf{doublez ces
-chiffres}. Une collecte complète (\opt{events} \opt{binary}) occupe ainsi de
-l'ordre de 1,5 à 2~Go sur une installation ordinaire.
+Les postes les plus lourds de la consigne :
+
+\begin{center}
+\begin{tabular}{@{}L{9.6cm}r@{}}
+\toprule
+Contenu & Consigne \\
+\midrule
+Métadonnées NTFS : \path|$MFT| (380~Mo), \path|$LogFile| (64~Mo),
+  \path|$UsnJrnl:$J| (35~Mo, sur 3,6~Go logiques : NTFS a libéré le début,
+  qui n'est pas copié) & 480~Mo \\
+Binaires copiés, exécution complète : les 62 binaires cités non authentifiés & 250~Mo \\
+Binaires copiés, collecte seule : 2\,853 non authentifiés sur 44\,446 lus & 1,2~Go \\
+Journaux d'événements (\opt{events}) & 170~Mo \\
+Ruches, Prefetch, raccourcis, listes de sauts & 180 à 230~Mo \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Une machine utilisée depuis longtemps, ou chargée de logiciels, dépasse ces
+chiffres : la \path|$MFT| croît avec le nombre de fichiers, les binaires tiers
+non authentifiés avec les logiciels installés. Prévoir \textbf{au moins 5~Go
+libres} pour une collecte seule avec \opt{binary}.
 
 \wac{} vérifie l'emplacement \textbf{avant la toute première écriture} et refuse
 de démarrer :
@@ -314,6 +338,9 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   prefetch: true
   jump_lists: true
   recent_documents: true
+  mft: true             # $MFT : chaque fichier, présent ou supprimé, et ses dates
+  usn_journal: true     # $UsnJrnl:$J : créations, renommages, suppressions
+  log_file: true        # $LogFile : journal de transactions NTFS, copie brute seule
 \end{lstlisting}
 
 \begin{itemize}
@@ -617,8 +644,8 @@ Séparer les deux étapes apporte trois choses :
         fichiers \textbf{cités par les artefacts} sont lus ; un binaire du disque
         qu'aucun artefact ne cite n'est pas examiné. Avec \opt{collect}, ce sont
         \textbf{tous les exécutables de tous les volumes fixes NTFS}, cités ou non.
-        La collecte seule dure plus longtemps pour cette raison (16~min~39~s
-        contre 4~min~33~s sur la machine de test) : ce temps est de la lecture,
+        La collecte seule dure plus longtemps pour cette raison (8~min~30
+        contre 3~min~30 sur la machine de test) : ce temps est de la lecture,
         qui n'écrit rien sur la machine.
   \item \textbf{\opt{binary-all}} : quand le contenu de chaque exécutable doit
         figurer dans la consigne (analyse de logiciel malveillant, demande des
@@ -683,11 +710,12 @@ La conversion ne pouvant plus rien demander à la machine, la collecte prend
 \end{itemize}
 
 \begin{attention}
-Avec \opt{binary}, la collecte lit tout le volume : sur la machine virtuelle
-de test (Windows~11 sans logiciel ajouté), 43\,520~exécutables lus, dont
-27\,966 authentifiés et 12\,700 fichiers différentiels non copiés,
-2\,507 copiés (676~Mo), en 16~minutes ; la consigne entière, journaux
-d'événements compris, pèse 1,8~Go. Si la place vient à manquer, les fichiers
+Avec \opt{binary}, la collecte lit tous les volumes : sur la machine
+virtuelle de test (Windows~11 sans logiciel ajouté), 44\,446~exécutables lus,
+dont 41\,593 authentifiés (ou tiers à signature valide) non copiés et
+2\,853 copiés (1,2~Go) ; la collecte entière dure 8~minutes~30 et la consigne,
+journaux d'événements et métadonnées NTFS compris, pèse 2,7~Go (voir la
+section~\ref{sec:place}). Si la place vient à manquer, les fichiers
 restants sont hachés sans être copiés, et le manifeste l'indique.
 \end{attention}
 
@@ -945,6 +973,29 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
 \subsection{Fichiers et navigation}
 
 \begin{description}[style=nextline,leftmargin=1.2em]
+  \item[\fichier{mft.json}] chaque fichier et répertoire du volume système,
+        présent ou \textbf{supprimé} (\champ{Deleted}) tant que NTFS n'a pas
+        réutilisé son enregistrement : chemin reconstitué, taille, attributs, et
+        deux jeux de quatre dates en UTC — \champ{CreatedUtc}\ldots{} (attribut
+        \path|$STANDARD_INFORMATION|, ce que montre l'Explorateur et que
+        réécrit un outil d'antidatage) et \champ{FileNameCreatedUtc}\ldots{}
+        (attribut \path|$FILE_NAME|, écrit par NTFS seul). Une date
+        \path|$STANDARD_INFORMATION| antérieure à celle de \path|$FILE_NAME|
+        trahit un antidatage. \champ{PathIncomplete} marque un chemin dont un
+        répertoire parent a été réutilisé depuis : le chemin n'est pas inventé.
+        Un fichier à liens physiques (\champ{HardLinks}) est un seul
+        enregistrement sous plusieurs noms — \path|System32\crypt32.dll| et son
+        original sous \path|WinSxS| : \champ{HardLinkPaths} donne ses autres
+        chemins, chacun cherchable.
+  \item[\fichier{usn\_journal.json}] journal des modifications du volume
+        (\path|$UsnJrnl:$J|) : chaque création, écriture, renommage et
+        \textbf{suppression}, daté, avec ses motifs (\champ{Reasons}, un bit
+        inconnu rendu en hexadécimal) et le chemin reconstitué par la
+        \path|$MFT|. Il garde la trace de fichiers déposés puis effacés, que la
+        \path|$MFT| a déjà oubliés.
+        La \path|$MFT|, le journal des modifications et \path|$LogFile| (journal
+        de transactions, non converti) sont en outre copiés bruts dans la
+        consigne, pour refaire plus tard la chronologie avec un autre outil.
   \item[\fichier{recentdocs.json}] raccourcis de documents récents : cible,
         horodatages du raccourci et de la cible, volume (type, numéro de série,
         nom), chemin réseau, liste d'éléments du shell.

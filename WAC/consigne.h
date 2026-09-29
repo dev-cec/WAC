@@ -220,6 +220,7 @@ struct StoredExhibit {
 	std::wstring md5, sha1, sha256;   //!< its fingerprints, as recorded (absent for a fingerprint-only PE)
 	std::wstring authenticodeSha256;  //!< Authenticode SHA-256 of a PE, if recorded
 	std::wstring signature;    //!< Microsoft authenticity verdict, if recorded
+	uint64_t leadingSparseBytes = 0;  //!< offset of the copy in its stream (the change journal)
 };
 
 /*! The exhibits of the manifest loaded by ExhibitStoreLoad, by source path in

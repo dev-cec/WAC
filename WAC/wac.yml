@@ -32,3 +32,6 @@ artefacts:
   prefetch: true
   jump_lists: true
   recent_documents: true
+  mft: true               # $MFT: every file, present or deleted, with its dates (mft.json)
+  usn_journal: true       # $UsnJrnl:$J: creations, renames, deletions (usn_journal.json)
+  log_file: true          # $LogFile: NTFS transaction journal, raw copy only

@@ -272,12 +272,15 @@ public:
        clusters (0 = not compressed), also read on the VCN 0 fragment: only
        that one carries the full header.
        @param validDataLength if not null, receives the valid data length, read at
-       the same place (see extractData). */
+       the same place (see extractData).
+       @param streamName for $DATA, the named stream wanted ("$J"); empty for the
+       unnamed one, the file's content. */
     bool collectRunsFromAttributeList(const std::vector<uint8_t>& rec,
                                       std::vector<Run>& runs, uint64_t& realSize,
                                       uint32_t wantedType = 0x80,
                                       uint32_t* compressionUnit = nullptr,
-                                      uint64_t* validDataLength = nullptr){
+                                      uint64_t* validDataLength = nullptr,
+                                      const std::wstring& streamName = std::wstring()){
         // List content: resident, or to be read through its own runs (bounded).
         std::vector<uint8_t> content;
         if (!readListContent(rec, content)) return false;
@@ -290,15 +293,22 @@ public:
             const uint16_t len  = rd16(content.data() + pos + 4);
             if (len < 0x1A || pos + len > content.size()) break;
             const uint8_t nameLen = content[pos + 6];
-            /* The name is ignored in the comparison: $INDEX_ALLOCATION always
-               carries the name "$I30", unlike $DATA which is unnamed. */
-            if (type == wantedType && (wantedType != 0x80 || nameLen == 0)){
+            const uint8_t nameOffset = content[pos + 7];
+            /* The name is ignored in the comparison for the indexes:
+               $INDEX_ALLOCATION always carries the name "$I30". For $DATA it
+               selects the stream: unnamed (the content) or the one asked for. */
+            bool nameMatches = nameLen == streamName.size() && nameOffset + 2u * nameLen <= len;
+            for (size_t k = 0; nameMatches && k < nameLen; ++k)
+                nameMatches = (wchar_t)rd16(content.data() + pos + nameOffset + 2 * k) == streamName[k];
+            if (type == wantedType && (wantedType != 0x80 || nameMatches)){
                 const uint64_t vcn = rd64(content.data() + pos + 8);
                 const uint64_t ref = rd64(content.data() + pos + 0x10) & 0x0000FFFFFFFFFFFFULL;
                 std::vector<uint8_t> frag;
                 if (readMftRecord(ref, frag)){
                     // The fragment carries the non-resident attribute covering this VCN.
-                    const uint8_t* d = findAttr(frag, wantedType, wantedType == 0x80);
+                    const uint8_t* d = wantedType == 0x80 && !streamName.empty()
+                                     ? findNamedAttr(frag, wantedType, streamName.c_str())
+                                     : findAttr(frag, wantedType, wantedType == 0x80);
                     if (d && d[8] != 0){
                         /* NTFS COMPRESSION IN A FRAGMENT. Used to be refused:
                            Application.evtx, Security.evtx and two other logs of a
@@ -963,7 +973,9 @@ public:
                         const std::wstring& label = std::wstring(),
                         RawHiveFingerprints* emp = nullptr,
                         std::streambuf* observer = nullptr,
-                        const std::wstring& fileName = std::wstring()){
+                        const std::wstring& fileName = std::wstring(),
+                        const std::wstring& streamName = std::wstring(),
+                        bool skipLeadingSparse = false){
         std::vector<uint8_t> rec;
         if (!readMftRecord(index, rec)) return E_FAIL;
         TimedObserver timedObserver(observer);
@@ -1014,7 +1026,8 @@ public:
             fingerprint differed from that of any ordinary acquisition. */
         uint64_t validDataLength = UINT64_MAX;
 
-        const uint8_t* a = findAttr(rec, 0x80 /*$DATA*/);
+        const uint8_t* a = streamName.empty() ? findAttr(rec, 0x80 /*$DATA*/)
+                                              : findNamedAttr(rec, 0x80, streamName.c_str());
         if (a){
             if (a[8] == 0){                       // resident: the data is inside the record
                 resident = true;
@@ -1036,7 +1049,7 @@ public:
             }
         }
         else if (!collectRunsFromAttributeList(rec, runs, realSize, 0x80,
-                                               &compressionUnit, &validDataLength)){
+                                               &compressionUnit, &validDataLength, streamName)){
             RVLOG(L"[raw] no usable $DATA attribute\n");
             return E_FAIL;
         }
@@ -1080,7 +1093,8 @@ public:
             $ATTRIBUTE_LIST has neither its reparse point nor its named stream in
             the base record. Its $DATA is sparse, so neither plain reading nor NTFS
             decompression would return anything but zeros (see xpress.h). */
-        {
+        // WOF stores the unnamed stream only: a named stream is read as it lies.
+        if (streamName.empty()){
             WofContext wof;
             if (resolveWof(rec, wof) && wof.present){
                 const HRESULT h = extractWof(wof, realSize, out, label, emp);
@@ -1105,7 +1119,22 @@ public:
         // avoids reading the copy back from the collection medium, and they
         // bear on what was read from the VOLUME, not on a re-read.
         ContentHashes hashes(emp);
+        /* THE LEADING SPARSE REGION, skipped on request ($UsnJrnl:$J). NTFS
+           frees the start of the change journal as it grows: its logical size
+           reaches gigabytes, of which only the last tens of megabytes are
+           allocated, the rest being zeros by definition. It is not written;
+           its length is recorded (leadingSparseBytes), since the journal's
+           record numbers are offsets in the whole stream. */
+        uint64_t skipped = 0;
+        bool leading = skipLeadingSparse;
         for (const Run& r : runs){
+            if (leading && r.lcn < 0){
+                const uint64_t length = std::min<uint64_t>(r.count * bytesPerCluster_, realSize - written);
+                written += length;
+                skipped += length;
+                continue;
+            }
+            leading = false;
             for (uint64_t k = 0; k < r.count && written < realSize;){
                 uint64_t clusters = std::min<uint64_t>(batchClusters, r.count - k);
                 const size_t batchBytes = (size_t)(clusters * bytesPerCluster_);
@@ -1136,10 +1165,11 @@ public:
         if (g_progress && !label.empty()) g_progress(label.c_str(), written, realSize);
         hashes.finish(emp);
         if (emp){
-            emp->bytes = written;
+            emp->bytes = written - skipped;
             emp->declaredSize = realSize;
+            emp->leadingSparseBytes = skipped;
         }
-        RVLOG(L"[raw] extracted %llu bytes\n", (unsigned long long)written);
+        RVLOG(L"[raw] extracted %llu bytes\n", (unsigned long long)(written - skipped));
         return (written == realSize) ? S_OK : S_FALSE;
     }
 
@@ -1628,6 +1658,21 @@ HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
         if (FAILED(h)) overall = S_FALSE;
     }
     return overall;
+}
+
+HRESULT ExtractStreamRaw(const std::wstring& volumeLetter, const std::wstring& pathOnVolume,
+                         const std::wstring& streamName, const std::wstring& outFile,
+                         bool skipLeadingSparse, RawHiveExtraction& line){
+    line.volumePath = volumeLetter + L":" + pathOnVolume + L":" + streamName;
+    line.outputPath = outFile;
+    NtfsVolume vol;
+    line.result = vol.open(volumeLetter);
+    if (FAILED(line.result)) return line.result;
+    uint64_t index = 0;
+    if (!vol.resolvePath(pathOnVolume, index)) return line.result = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+    return line.result = vol.extractData(index, outFile, pathOnVolume, &line.fingerprints, nullptr,
+                                         pathOnVolume.substr(pathOnVolume.find_last_of(L'\\') + 1),
+                                         streamName, skipLeadingSparse);
 }
 
 HRESULT ListAttributesRaw(const std::wstring& volumeLetter,

@@ -203,7 +203,7 @@ const std::map<std::wstring, StoredExhibit>& ExhibitStoreIndex() {
 				              StoredExhibit{ p.extracted.volumePath, p.extracted.outputPath, p.contentStored,
 				                             p.extracted.fingerprints.md5, p.extracted.fingerprints.sha1,
 				                             p.extracted.fingerprints.sha256, p.extracted.fingerprints.authenticodeSha256,
-				                             p.verdict.label });
+				                             p.verdict.label, p.extracted.fingerprints.leadingSparseBytes });
 		return built;
 	}();
 	return index;
@@ -445,6 +445,10 @@ HRESULT ExhibitStoreWriteManifest() {
 		// alone would not reveal (it would just be... the truncated file's).
 		if (m.declaredSize != m.bytes)
 			o.add(L"DeclaredBytes", Json::num(m.declaredSize));
+		/* The change journal copied from its first allocated byte: the offset of
+		   the copy in the stream, which the journal's record numbers count from. */
+		if (m.leadingSparseBytes)
+			o.add(L"LeadingSparseBytes", Json::num(m.leadingSparseBytes));
 		/* Preallocated file: what follows was never written and is zero in the
 		   exhibit, whatever the clusters hold on the disk. To be declared, otherwise
 		   a 1 MiB exhibit of which only 135 KiB carry data simply looks "full of
@@ -604,6 +608,11 @@ HRESULT ExhibitStoreLoad(ExhibitStoreCheck& check) {
 			date(L"SourceModifiedUtc", p.extracted.fingerprints.modifiedUtc);
 			date(L"SourceMftModifiedUtc", p.extracted.fingerprints.mftModifiedUtc);
 			date(L"SourceAccessedUtc", p.extracted.fingerprints.accedeUtc);
+			// Where the copy of the change journal starts in its stream (see ExtractStreamRaw).
+			const std::wstring leading = text(L"LeadingSparseBytes");
+			wchar_t* end = nullptr;
+			const unsigned long long offset = leading.empty() ? 0 : wcstoull(leading.c_str(), &end, 10);
+			if (end && *end == L'\0') p.extracted.fingerprints.leadingSparseBytes = offset;
 		}
 		g_exhibits.push_back(std::move(p));
 	}

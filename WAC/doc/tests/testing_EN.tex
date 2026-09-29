@@ -127,6 +127,7 @@ pip install olefile          # independent OLE reader, for the cross-checks
 \fichier{tests/offline\_registry\_test.exe} & hive reader confronted with Microsoft's \\
 \fichier{tests/system\_conversions\_test.exe} & WAC's conversions confronted with Windows' \\
 \fichier{tests/ntfs\_fixup\_test.exe} & check of NTFS records (torn records) \\
+\fichier{tests/mft\_test.exe}, \fichier{usn\_journal\_test.exe} & \fichier{\$MFT} and change journal against ntfs-3g and the compiler's structures \\
 \bottomrule
 \end{longtable}
 
@@ -473,6 +474,37 @@ cd build-windows/tests && wine ntfs_fixup_test.exe
 
 Reference: 44,610 checks, no failure. On a real volume, the VM cycle confirms
 it: \fichier{raw.log} must hold no ``torn record''.
+
+\section{\fichier{\$MFT} and change journal: \texttt{mft\_test}, \texttt{usn\_journal\_test}}
+
+An offset error in reading the \fichier{\$MFT} or the change journal gives
+dates, names and references that are valid and false: no syntax check would
+see it. Both harnesses therefore compare \wac{} to an independent reference.
+
+\fichier{mft\_fixtures.sh} formats an NTFS volume in a file with
+\texttt{mkntfs}, drops files in it (resident, non-resident, a non-ASCII name)
+with \texttt{ntfscp}, without mounting or privilege, dumps its
+\fichier{\$MFT} with \texttt{ntfscat}, then has each record described by
+\texttt{ntfsinfo} — ntfs-3g, another implementation of NTFS.
+\texttt{mft\_test} compares, record by record, the name, the parent, the
+size, the eight dates and the named streams read by \wac{} to that
+description. \texttt{usn\_journal\_test} builds records of versions~2 and~3
+with structures whose layout comes from the compiler (MinGW's
+\texttt{USN\_RECORD}; version~3, which MinGW does not declare, from
+Microsoft's documentation, its offsets checked at compile time), lays them out
+as a journal the way NTFS leaves it (pages, zeros, a range record, a leading
+sparse region), checks the numbers, the reasons and the paths, then decodes
+every record damaged at random against a no-access page.
+
+\begin{lstlisting}
+bash WAC/mft_fixtures.sh /tmp/mft          # ntfs-3g: mkntfs, ntfscp, ntfsinfo
+cd build-windows/tests
+wine mft_test.exe "Z:/tmp/mft"
+wine usn_journal_test.exe "Z:/tmp/mft"
+\end{lstlisting}
+
+Reference: 275 checks for \texttt{mft\_test}, 26 for
+\texttt{usn\_journal\_test}, no failure.
 
 \section{Signatures: \texttt{authenticode\_test}}
 

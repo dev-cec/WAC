@@ -132,6 +132,7 @@ pip install olefile          # lecteur OLE indépendant, pour les recoupements
 \fichier{tests/offline\_registry\_test.exe} & lecteur de ruches confronté à celui de Microsoft \\
 \fichier{tests/system\_conversions\_test.exe} & conversions de WAC confrontées à celles de Windows \\
 \fichier{tests/ntfs\_fixup\_test.exe} & vérification des enregistrements NTFS (enregistrements déchirés) \\
+\fichier{tests/mft\_test.exe}, \fichier{usn\_journal\_test.exe} & \fichier{\$MFT} et journal des modifications confrontés à ntfs-3g et aux structures du compilateur \\
 \bottomrule
 \end{longtable}
 
@@ -490,6 +491,39 @@ cd build-windows/tests && wine ntfs_fixup_test.exe
 
 Référence : 44~610 contrôles, aucun échec. Sur un vrai volume, le cycle de la
 VM le confirme : \fichier{raw.log} ne doit contenir aucun « torn record ».
+
+\section{\fichier{\$MFT} et journal des modifications : \texttt{mft\_test}, \texttt{usn\_journal\_test}}
+
+Un défaut de décalage dans la lecture de la \fichier{\$MFT} ou du journal
+des modifications donne des dates, des noms et des références valides et
+faux : aucun contrôle de syntaxe ne le verrait. Les deux harnais comparent donc
+\wac{} à une référence indépendante.
+
+\fichier{mft\_fixtures.sh} formate un volume NTFS dans un fichier avec
+\texttt{mkntfs}, y dépose des fichiers (résidents, non résidents, nom non
+ASCII) avec \texttt{ntfscp}, sans montage ni privilège, extrait sa
+\fichier{\$MFT} avec \texttt{ntfscat}, puis fait décrire chaque enregistrement
+par \texttt{ntfsinfo} — ntfs-3g, une autre implémentation de NTFS.
+\texttt{mft\_test} confronte, enregistrement par enregistrement, le nom, le
+parent, la taille, les huit dates et les flux nommés lus par \wac{} à cette
+description. \texttt{usn\_journal\_test} construit des enregistrements de
+versions~2 et~3 avec des structures dont la disposition vient du compilateur
+(\texttt{USN\_RECORD} de MinGW ; la version~3, que MinGW ne déclare pas,
+d'après la documentation de Microsoft, ses décalages vérifiés à la
+compilation), les assemble en journal tel que NTFS le laisse (pages, zéros,
+enregistrement de plage, zone creuse de tête), vérifie les numéros, les motifs
+et les chemins, puis décode chaque enregistrement abîmé au hasard contre une
+page interdite.
+
+\begin{lstlisting}
+bash WAC/mft_fixtures.sh /tmp/mft          # ntfs-3g : mkntfs, ntfscp, ntfsinfo
+cd build-windows/tests
+wine mft_test.exe "Z:/tmp/mft"
+wine usn_journal_test.exe "Z:/tmp/mft"
+\end{lstlisting}
+
+Référence : 275 contrôles pour \texttt{mft\_test}, 26 pour
+\texttt{usn\_journal\_test}, aucun échec.
 
 \section{Signatures : \texttt{authenticode\_test}}
 

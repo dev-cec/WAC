@@ -457,6 +457,41 @@ HRESULT ExtractFileArtefactsRaw() {
 	return global;
 }
 
+HRESULT ExtractNtfsMetadataRaw() {
+	const bool mft = conf.artefacts.mft || conf.artefacts.usnJournal;
+	if (!mft && !conf.artefacts.logFile) return HRESULT_FROM_WIN32(ERROR_EMPTY);
+	const std::wstring volume = systemVolume();
+	const std::wstring method = L"Raw NTFS reading (\\\\.\\" + volume
+	                          + L": — $MFT record, $DATA attribute); no file opened by the system"
+	                          + READ_IN_PLACE;
+	RawHiveSetProgress(&reportProgress);
+	std::vector<std::pair<std::wstring, std::wstring>> items;
+	if (mft) items.push_back({ L"\\$MFT", exhibitTarget(L"\\$MFT") });
+	if (conf.artefacts.logFile) items.push_back({ L"\\$LogFile", exhibitTarget(L"\\$LogFile") });
+	std::error_code ec;
+	std::filesystem::create_directories(exhibitTarget(L"\\$Extend"), ec);   // the store's root included
+	std::vector<RawHiveExtraction> reading;
+	HRESULT global = ExtractFilesRaw(volume, items, nullptr, &reading);
+	if (conf.artefacts.usnJournal) {
+		/* The journal's stream is copied from its first allocated byte: before
+		   it, gigabytes of zeros NTFS freed (see ExtractStreamRaw). A machine
+		   whose journal is disabled has no $UsnJrnl: recorded as not found. */
+		RawHiveExtraction journal;
+		if (FAILED(ExtractStreamRaw(volume, L"\\$Extend\\$UsnJrnl", L"$J",
+		                            exhibitTarget(L"\\$Extend\\$J"), true, journal))) global = S_FALSE;
+		reading.push_back(std::move(journal));
+	}
+	RawHiveSetProgress(nullptr);
+	printProgressEnd();
+	ExhibitStoreAdd(reading, method);
+	for (const RawHiveExtraction& line : reading) {
+		auditRecord(L"Raw extraction of NTFS metadata (" + std::to_wstring(line.fingerprints.bytes / 1024 / 1024)
+		            + L" MiB)", L"\\\\.\\" + line.volumePath, line.result, Footprint::VOLUME_BRUT);
+		if (FAILED(line.result)) log(2, L"🔥Raw extraction impossible: " + line.volumePath, line.result);
+	}
+	return global;
+}
+
 HRESULT RepairWorkingHives() {
 	/* The hives of the working copy, found by their names: the same set the
 	   collection extracts (system hives, and each profile's ntuser.dat and

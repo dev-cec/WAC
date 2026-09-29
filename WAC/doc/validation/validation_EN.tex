@@ -304,6 +304,16 @@ with it.
   sound records restored to the byte, torn records and malformed arrays
   refused, 20,000 random records against a forbidden page: 44,610 checks, no
   failure \\
+\texttt{mft\_test} & \texttt{ntfsinfo} (ntfs-3g), an independent NTFS implementation &
+  volume formatted by \texttt{mkntfs}: name, parent, size, eight dates and
+  named streams identical for every record; 275 checks, no failure \\
+\texttt{usn\_journal\_test} & the compiler's structures (MinGW's
+  \texttt{USN\_RECORD}, version~3 from Microsoft) &
+  fields returned as written, numbers equal to the positions in the whole
+  stream, paths through the \fichier{\$MFT}, damaged records against a
+  forbidden page; 26 checks, no failure. Revealed that the root's sequence was
+  not checked: a parent named by a stale sequence gave a path wrongly
+  asserted \\
 \texttt{json\_test} & WAC's JSON writer & identical round trip, 26 files of a
   collection read back and rewritten to the byte, malformed texts refused,
   200,000 mutations without an out-of-bounds read (sanitizers) \\
@@ -442,6 +452,13 @@ Prefetch hash / suffix of its file name & 65 wrong hashes out of 270
   (hexadecimal without padding) \\
 Prefetch \texttt{\textbackslash VOLUME\{guid\}} paths resolved & 20,066 paths
   out of 20,066 unresolved \\
+path and creation date of every exhibit of the system volume in
+  \fichier{mft.json} / the exhibit store's manifest (the raw extraction walks
+  the directory indexes down); change journal numbers rising, none after the
+  collection & files with hard links (\path|System32| and \path|WinSxS|)
+  appeared under one name only (23,095 exhibits out of 61,242); directories
+  named by their 8.3 alias (\path|AM3B40~1.945|) when their long name was in
+  an extension record (6,346 exhibits) \\
 DestList entries / jump list shortcuts & the first 15 entries of every list
   lost (573 shortcuts published out of 1,522) \\
 machine name of the events / \fichier{OperatingSystem.json} & check of the

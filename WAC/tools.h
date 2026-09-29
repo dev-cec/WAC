@@ -111,6 +111,9 @@ struct AppliConf {
 		bool prefetch = true;
 		bool jumpLists = true;
 		bool recentDocuments = true;
+		bool mft = true;              //!< $MFT, raw, and mft.json: every file with its dates
+		bool usnJournal = true;       //!< $UsnJrnl:$J, raw, and usn_journal.json: the change journal
+		bool logFile = true;          //!< $LogFile, raw only: the NTFS transaction journal
 	} artefacts;
 	RunMode mode = RunMode::Full; //!< what this run does (see RunMode)
 	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)

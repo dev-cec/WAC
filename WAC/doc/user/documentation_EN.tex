@@ -213,24 +213,47 @@ where the conversion reads them back:
 results there. Choose an \textbf{empty} medium, preferably USB~3: writing is the
 most expensive part of a collection.
 
-The space needed depends on the options. Orders of magnitude measured on an
-ordinary Windows~11 installation, for the raw copies alone:
+The space needed depends on the mode and the options. Two places fill up: the
+\textbf{exhibit store} (sealed raw copies) and the \textbf{working copy}, which
+takes only what the collectors modify or read during the collection (hives,
+Prefetch, shortcuts, jump lists, referenced binaries). The binaries acquired by
+\opt{collect} \opt{binary} and the NTFS metadata are never copied again: the
+conversion reads them in the exhibit store itself. Measured on the test virtual
+machine (Windows~11 without added software, 1~volume):
 
 \begin{center}
-\begin{tabular}{@{}L{9.6cm}r@{}}
+\begin{tabular}{@{}L{7.4cm}rrr@{}}
 \toprule
-Content & Size of the raw copies \\
+Mode & Exhibit store & Working copy & Time \\
 \midrule
-Hives, Prefetch, shortcuts, jump lists (always) & about 200 to 350~MB \\
-Event logs and their message binaries (\opt{events}) & about 250~MB \\
-Referenced binaries not authenticated as Microsoft's (\opt{binary}) & a few hundred MB \\
+Full run, \opt{events} \opt{binary} (referenced binaries) & 1.2~GB & 0.6~GB & 3~min~30 \\
+Collection only, \opt{collect} \opt{events} \opt{binary} (every executable) & 2.7~GB & 0.3~GB & 8~min~30 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-Since every copy is written twice (exhibit store and working copy),
-\textbf{double these figures}. A full collection (\opt{events} \opt{binary})
-thus takes about 1.5 to 2~GB on an ordinary installation.
+The heaviest items of the exhibit store:
+
+\begin{center}
+\begin{tabular}{@{}L{9.6cm}r@{}}
+\toprule
+Content & Exhibit store \\
+\midrule
+NTFS metadata: \path|$MFT| (380~MB), \path|$LogFile| (64~MB),
+  \path|$UsnJrnl:$J| (35~MB, out of 3.6~GB logical: NTFS freed the start,
+  which is not copied) & 480~MB \\
+Binaries copied, full run: the 62 referenced binaries not authenticated & 250~MB \\
+Binaries copied, collection only: 2,853 not authenticated out of 44,446 read & 1.2~GB \\
+Event logs (\opt{events}) & 170~MB \\
+Hives, Prefetch, shortcuts, jump lists & 180 to 230~MB \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+A machine used for a long time, or loaded with software, exceeds these
+figures: the \path|$MFT| grows with the number of files, the unauthenticated
+third-party binaries with the installed software. Allow \textbf{at least
+5~GB free} for a collection only with \opt{binary}.
 
 \wac{} checks the location \textbf{before its very first write} and refuses to
 start:
@@ -310,6 +333,9 @@ artefacts:              # one switch per artefact; all the hives = registry
   prefetch: true
   jump_lists: true
   recent_documents: true
+  mft: true             # $MFT: every file, present or deleted, with its dates
+  usn_journal: true     # $UsnJrnl:$J: creations, renames, deletions
+  log_file: true        # $LogFile: NTFS transaction journal, raw copy only
 \end{lstlisting}
 
 \begin{itemize}
@@ -609,7 +635,7 @@ Separating the two stages brings three things:
         \textbf{cited by the artefacts} are read; a binary on the disk that no
         artefact cites is not examined. With \opt{collect}, it is \textbf{every
         executable of every fixed NTFS volume}, cited or not. The collection
-        alone takes longer for that reason (16~min~39~s against 4~min~33~s on the
+        alone takes longer for that reason (8~min~30 against 3~min~30 on the
         test machine): that time is reading, which writes nothing to the
         machine.
   \item \textbf{\opt{binary-all}}: when the content of every executable must be
@@ -676,11 +702,12 @@ takes \textbf{everything it will read}:
 \end{itemize}
 
 \begin{attention}
-With \opt{binary}, the collection reads the whole volume: on the test virtual
-machine (Windows~11 without added software), 43,520~executables read, of which
-27,966 authenticated and 12,700 differential files not copied, 2,507 copied
-(676~MB), in 16~minutes; the whole exhibit store, event logs included, weighs
-1.8~GB. If space runs short, the remaining files are hashed without being
+With \opt{binary}, the collection reads every volume: on the test virtual
+machine (Windows~11 without added software), 44,446~executables read, of which
+41,593 authenticated (or third-party with a valid signature) not copied and
+2,853 copied (1.2~GB); the whole collection takes 8~minutes~30 and the
+exhibit store, event logs and NTFS metadata included, weighs 2.7~GB (see
+section~\ref{sec:place}). If space runs short, the remaining files are hashed without being
 copied, and the manifest says so.
 \end{attention}
 
@@ -932,6 +959,29 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
 \subsection{Files and browsing}
 
 \begin{description}[style=nextline,leftmargin=1.2em]
+  \item[\fichier{mft.json}] every file and directory of the system volume,
+        present or \textbf{deleted} (\champ{Deleted}) as long as NTFS has not
+        reused its record: rebuilt path, size, attributes, and two sets of four
+        UTC dates — \champ{CreatedUtc}\ldots{} (the
+        \path|$STANDARD_INFORMATION| attribute, what Explorer shows and what a
+        timestomping tool rewrites) and \champ{FileNameCreatedUtc}\ldots{} (the
+        \path|$FILE_NAME| attribute, written by NTFS alone). A
+        \path|$STANDARD_INFORMATION| date earlier than the \path|$FILE_NAME|
+        one betrays timestomping. \champ{PathIncomplete} marks a path one of
+        whose parent directories was reused since: the path is not made up.
+        A file with hard links (\champ{HardLinks}) is one record under several
+        names — \path|System32\crypt32.dll| and its original under
+        \path|WinSxS|: \champ{HardLinkPaths} gives its other paths, each one
+        searchable.
+  \item[\fichier{usn\_journal.json}] the volume's change journal
+        (\path|$UsnJrnl:$J|): every creation, write, rename and
+        \textbf{deletion}, dated, with its reasons (\champ{Reasons}, an unknown
+        bit kept in hexadecimal) and the path rebuilt through the \path|$MFT|.
+        It keeps the trace of files dropped then erased, which the \path|$MFT|
+        has already forgotten.
+        The \path|$MFT|, the change journal and \path|$LogFile| (the
+        transaction journal, not converted) are also copied raw into the
+        exhibit store, to rebuild the timeline later with another tool.
   \item[\fichier{recentdocs.json}] recent-document shortcuts: target, timestamps
         of the shortcut and of the target, volume (type, serial number, label),
         network path, shell item list.

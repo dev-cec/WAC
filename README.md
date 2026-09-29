@@ -371,13 +371,13 @@ D:\> WAC.exe --convert=E:\accounting-pc-01 --events --binary           (analysis
 | `--binary` collects | the cited executables **not authenticated**, with their fingerprints; the authenticated ones are fingerprinted, not copied | the executables **not authenticated**, with their fingerprints; the authenticated ones are fingerprinted, not copied | — |
 | `--binary-all` collects | **every** cited executable, authenticated or not, with its signature verdict | **every** executable, authenticated or not, with its signature verdict | — |
 | Traces on the examined machine | the collection's **and the conversion's** (processing, memory, a longer process, a crash report if it crashes) | the collection's only | **none**: the machine is not involved |
-| Duration on the test VM (`--events --binary`) | 4 min 33 s | 16 min 39 s — the extra time is *reading* the whole volume, which writes nothing to it | 43 s |
+| Duration on the test VM (`--events --binary`) | 3 min 30 s | 8 min 30 s — the extra time is *reading* every volume, which writes nothing to it | 56 s |
 | Reproducible | partly: its exhibit store is sealed, but holds neither the authenticated binaries it cited nor any record of them, and converting it again is not a tested path | yes, through `--convert` | yes: two conversions give identical JSON files |
 
 **Use the full run only in specific cases, and say so in the report:**
 
 - the results are needed on the spot and no analysis workstation is at hand;
-- the machine must be released within minutes, and the 16 minutes of a
+- the machine must be released within minutes, and the 8 minutes of a
   `--collect --binary` cannot be afforded.
 
 **`--binary` or `--binary-all`.** Both read every executable raw and verify
@@ -399,8 +399,8 @@ instead of the manifest.
 | Signature checked | yes, in memory | yes, in memory |
 | Authenticated or cleared executable | **not copied**: its Authenticode digest, its verdict and its build (`SymbolServerKey`) are recorded in the manifest — a Microsoft binary can be fetched again, identical, from Microsoft's symbol server | **copied**, with its three fingerprints and its verdict (`SignatureVerified`, `Signature`) |
 | Not authenticated | **copied**, with MD5, SHA-1, SHA-256 (and the Authenticode digest of a PE) and the reason (`SignatureReason`) | **copied**, the same way |
-| Exhibit store, test VM (`--collect --events`) | 1.8 GB | 20.0 GB |
-| Collection time, test VM | 16 min 39 s | 21 min 45 s |
+| Exhibit store, test VM (`--collect --events`) | 2.7 GB, NTFS metadata included (0.5 GB) | 20.0 GB (25 September, before the NTFS metadata) |
+| Collection time, test VM | 8 min 30 s | 21 min 45 s (25 September) |
 | When | always, unless the case says otherwise | the content of every executable must itself be in the exhibit store |
 
 ## 🛡️ FOOTPRINT ON THE EXAMINED MACHINE
@@ -569,18 +569,19 @@ Three details in this output are deliberate, and illustrate the rules above:
 
 ## 🚀 PERFORMANCE
 
-Measured on the Windows 11 test VM (NVMe-backed, 25 September 2026, version
-1.3.1), each run checked by the harness with no failure:
+Measured on the Windows 11 test VM (NVMe-backed, 28 September 2026), each run
+checked by the harness; the `--binary-all` row and the phase breakdown below
+are from 25 September (version 1.3.1), before the NTFS metadata:
 
 | Run | Duration | Exhibit store | What it holds |
 |---|---|---|---|
-| full, `--events --binary` | **4 min 33 s** | 0.74 GB, 1 640 exhibits | 24 JSON files; 170 344 events from 404 logs; 6 698 cited files, 2 146 authenticated and not collected, 75 collected (250 MB) |
-| `--collect --events --binary` | **16 min 39 s** | 1.81 GB, 6 060 files | 43 513 executables of the volume read and verified, 27 958 authenticated (not copied), 12 700 Windows differential files, 2 508 collected (676 MB); resources of all 934 event providers (649 MB) |
-| `--convert` of that collection | **43 s** | read only | seal and 6 461 fingerprints checked first; identical JSON on a second run |
+| full, `--events --binary` | **3 min 28 s** | 1.2 GB, 1 667 exhibits | the cited binaries not authenticated (62, 250 MB); NTFS metadata: `$MFT` (380 MB, 361 936 records, 122 806 deleted), change journal (35 MB kept of 3.6 GB, 342 473 records), `$LogFile` (64 MB) |
+| `--collect --events --binary` | **8 min 24 s** | 2.7 GB, 6 087 files | 44 446 executables of every volume read and verified, 41 593 authenticated or cleared (not copied), 2 853 collected (1.2 GB); the same NTFS metadata |
+| `--convert` of that collection | **56 s** | read only | seal and every fingerprint checked first; identical JSON on a second run |
 | `--collect --events --binary-all` | **21 min 45 s** | 20.0 GB | 58 509 executables copied, each with its signature verdict (previous cycle) |
 
-**Where the time goes** in a `--collect --binary`, as WAC's log records it per
-phase: reading and verifying the 43 513 executables takes **10 min 46 s** — of which
+**Where the time goes** in a `--collect --binary` (25 September, single-threaded,
+before the analysis pipeline), as WAC's log records it per phase: reading and verifying the 43 513 executables takes **10 min 46 s** — of which
 loading the 13 817 signature catalogs 32 s, Store packages 8 s — and copying the
 unauthenticated ones **29 s**; hives, event logs, provider resources and sealing
 take the rest. The cost is reading and hashing the whole volume, not writing:

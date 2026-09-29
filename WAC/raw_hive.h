@@ -111,6 +111,10 @@ struct RawHiveFingerprints {
      *  zero by definition and is NOT read from the disk. Equal to `declaredSize`
      *  for an ordinary file; smaller for a preallocated file (event logs). */
     uint64_t validDataLength = 0;
+    /*! Length of the leading sparse region NOT written, when the caller asked
+     *  for it (ExtractStreamRaw, the change journal): the copy starts at this
+     *  offset of the stream. 0 for every other exhibit. */
+    uint64_t leadingSparseBytes = 0;
     uint64_t mftEntry = 0;       //!< record number in the $MFT
     bool     resident = false;   //!< data held inside the $MFT record
     // $STANDARD_INFORMATION of the source file, as FILETIME (UTC, 0 if absent).
@@ -157,6 +161,20 @@ HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
                         const std::vector<std::pair<std::wstring, std::wstring>>& items,
                         std::vector<HRESULT>* perItem = nullptr,
                         std::vector<RawHiveExtraction>* reading = nullptr);
+
+/*! Extracts a NAMED stream of a file ("$J" of `\\$Extend\\$UsnJrnl`), with a
+ *  single opening of the volume.
+ *  @param volumeLetter letter of the volume, without the colon (e.g. L"C")
+ *  @param pathOnVolume path of the file on that volume
+ *  @param streamName name of the stream
+ *  @param outFile file to write
+ *  @param skipLeadingSparse true to leave out the leading sparse region, whose
+ *         length is recorded in `line.fingerprints.leadingSparseBytes`
+ *  @param line receives the record, fingerprints included
+ *  @return the result, also carried by `line.result` */
+HRESULT ExtractStreamRaw(const std::wstring& volumeLetter, const std::wstring& pathOnVolume,
+                         const std::wstring& streamName, const std::wstring& outFile,
+                         bool skipLeadingSparse, RawHiveExtraction& line);
 
 /*! PERSISTENT raw reader, to read thousands of scattered files.
  *

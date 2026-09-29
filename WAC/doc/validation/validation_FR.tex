@@ -311,6 +311,16 @@ lui.
   enregistrements sains restitués à l'octet, enregistrements déchirés et
   tableaux malformés refusés, 20~000 enregistrements aléatoires contre une page
   interdite : 44~610 contrôles, aucun échec \\
+\texttt{mft\_test} & \texttt{ntfsinfo} (ntfs-3g), implémentation NTFS indépendante &
+  volume formaté par \texttt{mkntfs} : nom, parent, taille, huit dates et flux
+  nommés identiques pour chaque enregistrement ; 275 contrôles, aucun échec \\
+\texttt{usn\_journal\_test} & structures du compilateur (\texttt{USN\_RECORD}
+  de MinGW, version~3 d'après Microsoft) &
+  champs restitués tels qu'écrits, numéros égaux aux positions dans le flux
+  entier, chemins par la \fichier{\$MFT}, enregistrements abîmés contre une
+  page interdite ; 26 contrôles, aucun échec. A révélé que la séquence de la
+  racine n'était pas vérifiée : un parent désigné par une séquence périmée
+  donnait un chemin affirmé à tort \\
 \texttt{json\_test} & l'écrivain JSON de \wac{} & aller-retour identique,
   26 fichiers d'une collecte relus et réécrits à l'octet, textes malformés
   refusés, 200~000 mutations sans lecture hors borne (sanitizers) \\
@@ -456,6 +466,14 @@ empreinte d'un Prefetch / suffixe de son nom de fichier & 65 empreintes fausses
   sur 270 (hexadécimal sans remplissage) \\
 chemins \texttt{\textbackslash VOLUME\{guid\}} des Prefetch résolus & 20~066
   chemins sur 20~066 non résolus \\
+chemin et date de création de chaque pièce du volume système dans
+  \fichier{mft.json} / manifeste de la consigne (descente des index de
+  répertoires par l'extraction brute) ; numéros du journal des modifications
+  croissants, aucun postérieur à la collecte & les fichiers à liens physiques
+  (\path|System32| et \path|WinSxS|) n'apparaissaient que sous un nom
+  (23~095 pièces sur 61~242) ; des répertoires nommés par leur alias 8.3
+  (\path|AM3B40~1.945|) quand leur nom long était dans un enregistrement
+  d'extension (6~346 pièces) \\
 entrées DestList / raccourcis des listes de sauts & les 15 premières entrées de
   chaque liste perdues (573 raccourcis publiés sur 1~522) \\
 nom de machine des événements / \fichier{OperatingSystem.json} & contrôle du

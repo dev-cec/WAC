@@ -32,6 +32,8 @@
 #include "reg_mru.h"
 #include "reg_mru_apps.h"
 #include "prefetchs.h"
+#include "mft.h"
+#include "usn_journal.h"
 #include "recent_docs.h"
 #include "jumplist_automatic.h"
 #include "jumplist_custom.h"
@@ -381,6 +383,15 @@ void extractProfileArtefacts() {
 	   The registry artefacts stay collectable. */
 	if (FAILED(hresult)) printError(hresult);
 	else printSuccess();
+
+	// $MFT, change journal, $LogFile: the file system's timeline (read in place by the conversion).
+	if (conf.artefacts.mft || conf.artefacts.usnJournal || conf.artefacts.logFile) {
+		printStep(L" - Extracting NTFS metadata ($MFT, $UsnJrnl, $LogFile) (raw NTFS) : ");
+		log(3, L"🔈ExtractNtfsMetadataRaw");
+		hresult = ExtractNtfsMetadataRaw();   // S_FALSE = one could not be read (tolerated)
+		if (FAILED(hresult)) printError(hresult);
+		else printSuccess();
+	}
 }
 
 /*! Loads the trust set of the key, which clears third-party signatures
@@ -450,7 +461,8 @@ void closeBinaries() {
 	printStep(L" - Copying collected binaries to the working directory : ");
 	size_t copies = 0;
 	unsigned long long copiedBytes = 0;
-	const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &copiedBytes);
+	// What the conversion reads in place ($MFT, change journal) stays in the store.
+	const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &copiedBytes, true);
 	auditRecord(L"Copy of the exhibit store into the working directory ("
 	            + std::to_wstring(copies) + L" file(s), "
 	            + std::to_wstring(copiedBytes / 1024 / 1024) + L" MiB)",
@@ -539,6 +551,8 @@ void convertArtefacts(bool systemAvailable) {
 	Runs runs;
 	Shimcaches shimcaches;
 	Prefetchs prefetchs;
+	Mft mft;
+	UsnJournal usnJournal;
 	RecentDocs recentdocs;
 	Shellbags shellbags;
 	Mrus mrus;
@@ -948,6 +962,43 @@ void convertArtefacts(bool systemAvailable) {
 		prefetchs.clear();
 	}
 	}   // artefacts.prefetch
+
+	/* The $MFT is loaded once for both artefacts: the change journal names
+	   its files through it. */
+	const bool mftWanted = requested(conf.artefacts.mft, "mft.json", L"$MFT", L"artefacts.mft");
+	const bool usnWanted = requested(conf.artefacts.usnJournal, "usn_journal.json", L"Change journal", L"artefacts.usn_journal");
+	if (mftWanted || usnWanted) {
+	printStep(L" - Reading the $MFT : ");
+	hresult = mft.getData();
+	if (hresult != ERROR_SUCCESS) {
+		printError(hresult);
+		if (mftWanted) writeNotCollected("mft.json", L"$MFT", hresult);
+	}
+	else {
+		printSuccess();
+		if (mftWanted) {
+			printStep(L" - Writing the $MFT : ");
+			hresult = mft.toJson();
+			if (hresult != ERROR_SUCCESS) printError(hresult);
+			else printSuccess();
+		}
+	}
+	if (usnWanted) {
+		printStep(L" - Extracting the CHANGE JOURNAL : ");
+		hresult = usnJournal.getData();
+		if (hresult != ERROR_SUCCESS) {
+			printError(hresult);
+			writeNotCollected("usn_journal.json", L"Change journal ($UsnJrnl:$J)", hresult);
+		}
+		else {
+			hresult = usnJournal.toJson(mft);
+			if (hresult != ERROR_SUCCESS) printError(hresult);
+			else printSuccess();
+			usnJournal.clear();
+		}
+	}
+	mft.clear();
+	}   // artefacts.mft, artefacts.usn_journal
 
 	if (requested(conf.artefacts.jumpLists, "jumplistAutomaticDestinations.json", L"Jump lists (automatic)", L"artefacts.jump_lists")) {
 	printStep(L" - Extracting JUMPLIST AUTOMATIC: ");
