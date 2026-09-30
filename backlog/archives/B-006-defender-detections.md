@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| fait (voir Journal) | P2 | moyen |
+| fait (2c59d97) | P2 | moyen |
 
 ## Pourquoi
 Une détection effacée de l'observateur d'événements reste dans DetectionHistory ; la quarantaine garde le fichier malveillant (chiffré, clé RC4 publique).

@@ -25,4 +25,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [ ] Tables Activity, ActivityOperation
 
 ## Journal
-- (vide)
+- 2026-09-30 : décision utilisateur — SQLite par l'amalgamation officielle (sqlite3.c) épinglée et compilée dans WAC, ouverte en lecture seule sur la copie de la consigne.

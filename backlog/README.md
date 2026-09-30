@@ -42,7 +42,6 @@ Remplace `TODO.txt`.
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-006](B-006-defender-detections.md) | Defender : historique des détections et quarantaine | à faire | P2 | moyen |
 | [B-008](B-008-wmi.md) | Abonnements WMI (dépôt CIM) | à faire | P1 | fort |
 | [B-009](B-009-srum-ese.md) | SRUM, Windows.edb et tâches BITS (lecteur ESE) | à faire | P2 | fort |
 | [B-010](B-010-activitiescache.md) | Chronologie Windows (ActivitiesCache.db) | à faire | P3 | fort |
