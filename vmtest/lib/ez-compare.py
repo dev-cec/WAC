@@ -16,6 +16,8 @@ holding the EZ tool's CSV and WAC's JSON. Modes:
   amcache   AmcacheParser / amcache_applications.json, amcache_application_files.json, amcache_inventory.json
   shimcache AppCompatCacheParser / shimcache.json
   shellbags SBECmd   / shellbags.json
+  recycle_bin RBCmd  / recycle_bin.json
+  srum      SrumECmd / srum.json
 
 mft: record by record — paths (hard links included), deleted or not,
 directory, size, and the eight dates of $STANDARD_INFORMATION and
@@ -700,6 +702,86 @@ def compare_shellbags(ez_csv, wac_json):
     return 1 if c.report() or only_ez or only_wac else 0
 
 
+def compare_recycle_bin(ez_csv, wac_json):
+    """Each $I file: original path, size, deletion time."""
+    with open(ez_csv, encoding="utf-8-sig", newline="") as f:
+        ez = {r["SourceName"].rsplit("\\", 1)[-1].lower(): r for r in csv.DictReader(f)}
+    with open(wac_json, encoding="utf-8-sig") as f:
+        wac = {str(e["IndexFile"]).rsplit("\\", 1)[-1].lower(): e for e in json.load(f) if isinstance(e, dict) and "IndexFile" in e}
+    c = Comparison("RBCmd")
+    for key in sorted(set(ez) & set(wac)):
+        r, w = ez[key], wac[key]
+        c.note("original path", key, w.get("OriginalPath"), r["FileName"])
+        c.note("size", key, w.get("Size"), int(r["FileSize"]))
+        c.date("deleted", key, w.get("DeletedUtc"), r["DeletedOn"])
+    only_ez, only_wac = set(ez) - set(wac), set(wac) - set(ez)
+    print(f"$I files: WAC {len(wac)}, RBCmd {len(ez)}; only RBCmd {sorted(only_ez)[:3]}, only WAC {sorted(only_wac)[:3]}")
+    return 1 if c.report() or only_ez or only_wac else 0
+
+
+SRUM_TABLES = {  # SrumECmd's CSV -> SRUM's table
+    "AppResourceUseInfo": "{D10CA2FE-6FCF-4F6D-848E-B2E99266FA89}",
+    "AppTimelineProvider": "{5C8CF1C7-7257-4F13-B223-970EF5939312}",
+    "EnergyUsage": "{FEE4E14F-02A9-4550-B5CE-5FA2DA202E37}",
+    "NetworkConnections": "{DD6636C4-8929-4683-974E-22C046A43763}",
+    "NetworkUsages": "{973F5D5C-1D90-4944-BE8E-24B94231A174}",
+    "PushNotifications": "{D10CA2FE-6FCF-4F6D-848E-B2E99266FA89}PN",
+    "vfuprov": "{7ACBBAA3-D029-4BE4-9A7A-0885927F1D8F}",
+}
+SRUM_COLUMNS = {  # SrumECmd's column -> WAC's key, where the names differ
+    "Id": "AutoIncId", "Timestamp": "TimeStampUtc", "Sid": "UserSID", "BytesReceived": "BytesRecvd",
+    "DurationMs": "DurationMS", "EndTime": "EndTimeUtc", "StartTime": "StartTimeUtc",
+    "ConnectStartTime": "ConnectStartTimeUtc", "EventTimestamp": "EventTimestampUtc",
+}
+# SrumECmd's columns that are its readings, not SRUM's values.
+SRUM_DERIVED = {"ExeInfo", "ExeInfoDescription", "ExeTimestamp", "SidType", "UserName", "InterfaceType", "IsLt", "Duration", "ProfileName"}
+
+
+def compare_srum(folder):
+    """Every table SrumECmd writes, row by row (AutoIncId), column by column."""
+    with open(only(folder, "srum.json"), encoding="utf-8-sig") as f:
+        wac = collections.defaultdict(dict)
+        for e in json.load(f):
+            if isinstance(e, dict) and "AutoIncId" in e:
+                if "TimeStamp" in e and "TimeStampUtc" not in e:
+                    e["TimeStampUtc"] = e["TimeStamp"]
+                wac[e["Table"]][e["AutoIncId"]] = e
+    c = Comparison("SrumECmd")
+    unpaired = 0
+    for name, table in SRUM_TABLES.items():
+        with open(only(folder, f"*_SrumECmd_{name}_Output.csv"), encoding="utf-8-sig", newline="") as f:
+            rows = list(csv.DictReader(f))
+        paired = 0
+        for r in rows:
+            t = table + "LT" if r.get("IsLt") == "True" else table
+            w = wac.get(t, {}).get(int(r["Id"]))
+            if w is None:
+                unpaired += 1
+                continue
+            paired += 1
+            lower = {k.lower(): k for k in w}
+            for column, theirs in r.items():
+                if column in SRUM_DERIVED or theirs in ("", None):
+                    if column in SRUM_DERIVED and theirs:
+                        c.explained[f"{column}: SrumECmd's reading (WAC gives the raw App, UserSID and UserName)"] += 1
+                    continue
+                ours = SRUM_COLUMNS.get(column, column)
+                mine = w.get(lower.get(ours.lower(), ""))
+                if mine is None:
+                    if theirs in ("0", "False", "-1"):
+                        c.explained["value absent from the row: SrumECmd writes 0 or -1, WAC nothing"] += 1
+                    else:
+                        c.note(f"{name}.{column}", r["Id"], None, theirs)
+                    continue
+                if ours.endswith("Utc"):
+                    c.date(f"{name}.{column}", r["Id"], mine, theirs)
+                else:
+                    c.note(f"{name}.{column}", r["Id"], amcache_value(mine), amcache_value(theirs))
+        print(f"{name}: SrumECmd {len(rows)}, paired {paired}")
+    print("tables WAC only:", {t: len(v) for t, v in wac.items() if t not in SRUM_TABLES.values() and t[:-2] not in SRUM_TABLES.values()})
+    return 1 if c.report() or unpaired else 0
+
+
 def only(folder, pattern):
     """The one file of the folder matching pattern: the EZ tools prefix their CSV with a timestamp."""
     found = glob.glob(os.path.join(folder, pattern))
@@ -722,6 +804,10 @@ def main():
     if mode == "jumplist":
         return compare_jumplist(only(folder, "*_AutomaticDestinations.csv"), only(folder, "*_CustomDestinations.csv"),
                                 only(folder, "jumplistAutomaticDestinations.json"), only(folder, "jumplistCustomDestinations.json"))
+    if mode == "srum":
+        return compare_srum(folder)
+    if mode == "recycle_bin":
+        return compare_recycle_bin(only(folder, "*_RBCmd_Output.csv"), only(folder, "recycle_bin.json"))
     if mode == "shellbags":
         return compare_shellbags(only(folder, "Deduplicated.csv"), only(folder, "shellbags.json"))
     if mode == "shimcache":

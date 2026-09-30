@@ -26,6 +26,8 @@ $tools = @{
     prefetch = @{ Key = 'prefetch'; Exe = "$ez\PECmd\PECmd.exe";                 Args = @('-d', "$exhibits\Windows\Prefetch", '-q', '--mp'); Json = @('prefetchs.json') }
     shellbags = @{ Key = 'registry'; Exe = "$ez\SBECmd\SBECmd.exe";              Args = @('-d', "$exhibits\Users", '--dedupe', '--dt', 'yyyy-MM-dd HH:mm:ss.fffffff'); Json = @('shellbags.json') }
     shimcache = @{ Key = 'registry'; Exe = "$ez\AppCompatCacheParser\AppCompatCacheParser.exe"; Args = @('-f', "$hives\SYSTEM", '--dt', 'yyyy-MM-dd HH:mm:ss.fffffff'); Json = @('shimcache.json') }
+    recycle_bin = @{ Key = 'recycle_bin'; Exe = "$ez\RBCmd\RBCmd.exe"; Args = @('-d', "$exhibits\`$Recycle.Bin", '-q', '--dt', 'yyyy-MM-dd HH:mm:ss.fffffff'); Json = @('recycle_bin.json') }
+    srum     = @{ Key = 'srum'; Exe = "$ez\SrumECmd\SrumECmd.exe"; Args = @('-f', "$exhibits\Windows\system32\sru\SRUDB.dat", '-r', "$hives\SOFTWARE", '--dt', 'yyyy-MM-dd HH:mm:ss.fffffff'); Json = @('srum.json') }
     amcache  = @{ Key = 'registry'; Exe = "$ez\AmcacheParser\AmcacheParser.exe"; Args = @('-f', "$exhibits\Windows\AppCompat\Programs\Amcache.hve", '-i', '--mp'); Json = @('amcache_applications.json', 'amcache_application_files.json', 'amcache_inventory.json') }
 }
 $tool = $tools[$Comparison]

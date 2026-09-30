@@ -33,7 +33,9 @@ En plus de la définition de « fini » commune (backlog/README.md) :
   - [x] shellbags / SBECmd : 27 dossiers ; rang MRU, sous-dossiers, dates de clé, nom, dates et entrée MFT identiques. WAC publie désormais la date de la clé propre du dossier, le rang et NodeSlot : les « FirstInteracted/LastInteracted » de SBECmd se vérifient comme simples lectures de ces dates (28/28). SBECmd : NodeSlot 0 pour les dossiers de premier niveau (le registre porte 1, 2, 3, 6…), HasExplored toujours faux en ligne de commande. A révélé : dossier perdu avec sa descendance si sa clé ne s'ouvrait pas ; dossier « Accueil » de Windows 11 sans nom.
   - [x] Amcache / AmcacheParser : WAC ne lisait que 2 tables et 4 à 6 valeurs ; désormais toutes les tables et valeurs, SHA-1 compris — 124 colonnes identiques ; AmcacheParser écrit 2 340 valeurs par défaut absentes de la ruche ; SHA-1 limité aux 30 premiers Mio, signalé par WAC seul (Sha1CoversBytes).
   - [x] ShimCache / AppCompatCacheParser : 232 entrées, position, chemin, date identiques (tabulations des applications empaquetées rétablies). Indicateur d'exécution non relevé par WAC : « Yes » juste 12 fois sur 13, « No » faux pour 105 des 117 binaires dont le Prefetch prouve l'exécution.
-  - [ ] corbeille / RBCmd ; SRUM / SrumECmd ; registre / RECmd
+  - [x] corbeille / RBCmd : 19 fichiers $I, chemin, taille, date de suppression identiques.
+  - [x] SRUM / SrumECmd : 60 804 lignes de 7 tables appariées par AutoIncId ; valeurs identiques, sauf 17 lignes d'énergie sur 887 où SrumECmd se trompe (dissect.esedb donne raison à WAC) : 15 lignes portant le contenu d'une autre (toutes les 8 : 11, 19, 27…), 2 identifiants absents de la table (7 et 131 pour 1 et 5). SrumECmd écrit 0 ou -1 pour 7 086 valeurs absentes ; WAC couvre 2 tables de plus (21 692 + 2 lignes). A révélé : dates FILETIME (EndTime, StartTime, ConnectStartTime, EventTimestamp) laissées en nombres, Tag UTF-16 lu comme de l'ANSI.
+  - [ ] registre / RECmd
 
 ## Journal
 - 2026-09-29 : décision utilisateur — les outils Zimmerman (et .NET) installés dans la VM de test ; KAPE écarté (inscription chez Kroll).
@@ -43,3 +45,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-09-30 : temps prefetch, 380 fichiers : WAC 3,6 s, PECmd 0,7 s. Coût fixe de toute conversion WAC ≈ 3,4 s (mesuré avec la seule clé hosts) : copie de travail vérifiée des ruches, rejeu de leurs journaux, fuseau et profils du suspect — ce qui donne l'heure locale datée et la lettre de volume, que PECmd ne donne pas. Le prefetch lui-même : ≈ 0,1 s.
 - 2026-09-30 : temps raccourcis/jump lists (3 + 9 fichiers) : WAC 1,8 s par clé, LECmd et JLECmd 0,3 s chacun ; coût fixe de WAC sans ruche ≈ 1,5 s.
 - 2026-09-30 : temps registre (clé registry entière, toutes les ruches) : WAC 2,0 s ; AmcacheParser 0,5 à 0,9 s, AppCompatCacheParser 1,4 s, SBECmd 1,3 s, chacun pour son seul artefact.
+- 2026-09-30 : temps corbeille : WAC 1,9 s, RBCmd 0,5 s ; SRUM : WAC 3,2 s (base de 21 Mo, toutes les tables, identités résolues), SrumECmd 2,5 s.
