@@ -14,6 +14,7 @@ en SYSTEM : droits admin, aucun UAC).
 |---|---|---|
 | `vmtest/` | `create-vm.sh` | Crée la VM de zéro, sans interaction : autounattend + UEFI Secure Boot + TPM 2.0 + canal guest-agent, déblocage du boot par injection de touches, puis attente que l'agent réponde ; ajoute le disque de données de 2 Go. |
 | `vmtest/` | `run-wac-test.sh` | Cycle de test complet : build → volume de données et clé USB virtuelle (`~/vms/wac-usb-test.img`, numéro de série `WACUSB0001`) → envoi des binaires → validation `raw_hive` (extraction brute + `reg load`) → exécution de WAC → rapatriement du log et des JSON dans `results/<horodatage>/` → contrôles. `--only=clé,…` le restreint à quelques artefacts. |
+| `vmtest/` | `install-tools.sh` | Installe dans la VM les outils tiers des comparaisons (B-015, B-027) : KAPE et les outils en ligne de commande d'Eric Zimmerman depuis `tools/`, et le runtime .NET 9 qu'ils exigent. Idempotent. |
 | `lib/` (hôte) | `qga.py` | Helper guest-agent : `ping`, `run` (exécuter), `read`/`write` (échanger des fichiers). |
 | `lib/` (hôte) | `check-json.py` | Contrôle les sorties : validité JSON, chemins Windows, et **contrôles croisés** (cf. ci-dessous). S'utilise aussi seul : `python3 lib/check-json.py results/<horodatage>`. |
 | `lib/` (hôte) | `ese-compare.py` | Le lecteur ESE de WAC confronté à dissect.esedb, valeur par valeur, sur la même base. |

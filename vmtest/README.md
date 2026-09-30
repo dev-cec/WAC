@@ -14,6 +14,7 @@ administrator rights, no UAC).
 |---|---|---|
 | `vmtest/` | `create-vm.sh` | Creates the VM from scratch, unattended: autounattend + UEFI Secure Boot + TPM 2.0 + guest-agent channel, boot unblocked by key injection, then waits for the agent to answer; adds the 2 GB data disk. |
 | `vmtest/` | `run-wac-test.sh` | Full test cycle: build → data volume and virtual USB key (`~/vms/wac-usb-test.img`, serial `WACUSB0001`) → send the binaries → `raw_hive` validation (raw extraction + `reg load`) → run WAC → bring the log and the JSON back into `results/<timestamp>/` → checks. `--only=key,…` restricts it to some artefacts. |
+| `vmtest/` | `install-tools.sh` | Puts into the VM the third-party tools of the comparisons (B-015, B-027): KAPE and Eric Zimmerman's command-line tools from `tools/`, and the .NET 9 runtime they need. Idempotent. |
 | `lib/` (host) | `qga.py` | Guest-agent helper: `ping`, `run` (execute), `read`/`write` (exchange files). |
 | `lib/` (host) | `check-json.py` | Checks the outputs: JSON validity, Windows paths, and **cross-checks** (see below). Also usable alone: `python3 lib/check-json.py results/<timestamp>`. |
 | `lib/` (host) | `ese-compare.py` | WAC's ESE reader against dissect.esedb, value by value, on the same database. |
