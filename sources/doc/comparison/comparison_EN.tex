@@ -1,0 +1,370 @@
+% comparison_EN.tex — WAC confronted with KAPE and Eric Zimmerman's tools, English edition.
+% The French edition is comparison_FR.tex, in this folder: both are maintained together,
+% section for section.
+%
+% Build (XeLaTeX, two passes for the cover page and the table of contents):
+%     latexmk -xelatex comparison_EN.tex
+% The cover page is ../cover_comparison_EN.png, derived from ../cover_EN.png by
+% ../retitle-cover.py. The layout is ../wac-style.tex, shared with every WAC document.
+%
+% Every figure comes from backlog/B-015 and the runs of vmtest/ez-compare.sh and
+% vmtest/kape-compare.sh, which reproduce them.
+
+\documentclass[11pt,a4paper,oneside]{report}
+
+% ---------------------------------------------------------------- language and labels
+\usepackage[english]{babel}
+\newcommand{\wacdoctitle}{Against KAPE and the EZ tools}
+\newcommand{\wacpageof}{of}
+\newcommand{\wacnotetitle}{Key point}
+\newcommand{\wacwarningtitle}{Limit}
+% Layout shared with every WAC document.
+\input{../wac-style.tex}
+
+\hypersetup{pdftitle={WAC — Against KAPE and the EZ tools},
+  pdfauthor={Centre d'Excellence Cyberdéfense Aérospatiale (CEC)},
+  pdfsubject={WAC confronted with KAPE and Eric Zimmerman's tools: time, accuracy, formats}}
+
+\begin{document}
+
+% ============================================================ COVER PAGE
+\pagenumbering{roman}
+\coverpage{cover_comparison_EN.png}
+
+% ============================================================ INFORMATION PAGE
+\thispagestyle{empty}
+\vspace*{\fill}
+{\color{marine}\Large\bfseries WAC — Windows Artefacts Collector}\par
+{\color{bleu}Against KAPE and Eric Zimmerman's tools}\par
+\medskip
+\begin{tabular}{@{}ll@{}}
+Software version & 1.4.0 \\
+Document edition & October 2026 \\
+Publisher & Centre d'Excellence Cyberdéfense Aérospatiale (CEC) \\
+          & École de l'air et de l'espace, air base 701, Salon-de-Provence \\
+\end{tabular}
+
+\bigskip
+{\small\color{gris}This document confronts \wac{} with the community's
+reference tools: KAPE for collection, Eric Zimmerman's command-line tools for
+decoding. On the same exhibits of the same machine, it compares running times,
+the accuracy of the values --- every difference settled by an independent
+reference --- and the output formats. It says what the confrontation taught
+\wac{}, and what it still holds against it.}
+\vspace*{2cm}
+\clearpage
+
+\pagenumbering{arabic}
+\tableofcontents
+
+% ============================================================ 1
+\chapter{The method}
+
+\section{What is compared}
+
+Two questions, two comparisons.
+
+\begin{description}[style=nextline,leftmargin=1em]
+  \item[Collection: \wac{} against KAPE] Both tools collect the same machine
+        one after the other; what each copies is compared, the time it takes,
+        and the SHA-1 of the files both copy.
+  \item[Decoding: \wac{} against the EZ tools] On the \emph{same exhibits} ---
+        the exhibit store of a \wac{} collection ---, \wac{} converts an artefact
+        and the matching Eric Zimmerman tool decodes it; both outputs are compared
+        record by record and field by field.
+\end{description}
+
+\section{Who is right when they differ}
+
+A difference between two tools does not say which one is wrong. Every difference
+was therefore settled by a third source, independent of both:
+
+\begin{itemize}[nosep]
+  \item Windows itself: the XML it renders for an event (\texttt{Get-WinEvent}),
+        a file's date, the NTFS object identifier (\texttt{fsutil objectid}), the
+        live registry, a file's hash (\texttt{Get-FileHash});
+  \item another implementation: \texttt{dissect.esedb} (Fox-IT) for ESE
+        databases;
+  \item the format itself: sequence numbers and Marvin32 digests of the hive
+        logs, read byte by byte;
+  \item two artefacts of the same machine cross-checked: Prefetch for execution,
+        a row's timestamp for its other dates.
+\end{itemize}
+
+Each difference is then classed: \emph{defect of \wac{}} (fixed), \emph{error of
+the EZ tool} (checked), or \emph{convention} of either --- two forms of one value.
+
+\section{The test bench}
+
+\begin{tabular}{@{}ll@{}}
+Machine & Windows 11 Pro (build 26200), virtual machine \\
+EZ tools & version 2026.5.0 (.NET 9.0.20) \\
+KAPE & version 1.3.0.2, target \texttt{KapeTriage} \\
+\wac{} & version 1.4.0 with the fixes this confrontation brought \\
+\end{tabular}
+
+Everything can be replayed: \fichier{vmtest/ez-compare.sh <artefact>} times
+\wac{} and the EZ tool on the same exhibits then compares their outputs;
+\fichier{vmtest/kape-compare.sh} does the same for collection. The EZ tools ran
+with their full date precision (\opt{mp}, or \opt{dt} with seven decimals where
+\opt{mp} is not enough), so as not to blame them for a loss of precision a
+setting avoids.
+
+% ============================================================ 2
+\chapter{Summary}
+
+\begin{longtable}{@{}L{3.2cm}L{2.4cm}L{4.5cm}L{5.0cm}@{}}
+\toprule
+\textbf{Artefact} & \textbf{Volume} & \textbf{Result} & \textbf{Errors of the EZ tool, checked} \\
+\midrule\endhead
+\$MFT --- MFTECmd & 362,081 records & paths, states, 8 dates identical & sizes of 1,490 WOF files and 3 open logs: Windows gives \wac{}'s \\
+EVTX --- EvtxECmd & 190,613 events & system fields identical; values explained & 6 wrong values (Windows); 335 Perflib events unreadable; cleared logs ignored \\
+Prefetch --- PECmd & 379 files & all identical & hash without its leading zero (19) \\
+Shortcuts --- LECmd & 3 files & identical to 100\,ns & --- \\
+Jump lists --- JLECmd & 13 shortcuts & identical to 100\,ns & --- \\
+Shellbags --- SBECmd & 27 folders & identical & wrong NodeSlot at first level (7); HasExplored always false \\
+Amcache --- AmcacheParser & 1,258 entries & 124 columns identical & 2,340 invented values; partial SHA-1 not flagged \\
+ShimCache --- AppCompat\-Cache\-Parser & 232 entries & identical & misleading execution flag \\
+Recycle bin --- RBCmd & 19 files & identical & --- \\
+SRUM --- SrumECmd & 60,804 rows & identical & 17 wrong energy rows (dissect) \\
+Registry --- RECmd & 9 artefacts & identical & 4 hives rolled back to an older state \\
+Collection --- KAPE & 1,130 common files & SHA-1 identical & --- \\
+\bottomrule
+\end{longtable}
+
+\begin{note}
+On everything both sides read, \wac{} gives the same values as the reference
+tools, or more accurate ones, each time established by an independent source.
+The confrontation also revealed 23 defects of \wac{}, all fixed
+(chapter~\ref{chap:defects}), and coverage gaps, opened for follow-up
+(section~\ref{sec:coverage}).
+\end{note}
+
+% ============================================================ 3
+\chapter{Running times}
+
+\section{Decoding}
+
+Same machine, same exhibits; each tool handles its artefact only.
+
+\begin{longtable}{@{}L{3.6cm}L{2.2cm}L{2.2cm}L{7.0cm}@{}}
+\toprule
+\textbf{Artefact} & \textbf{\wac{}} & \textbf{EZ tool} & \textbf{What \wac{} does besides} \\
+\midrule\endhead
+\$MFT (380\,MB) & 7.3\,s & 8.1\,s & two volumes (C: and G:) against one \\
+EVTX (305 logs) & 16.8\,s & 22.0\,s & plain-text message rebuilt for every event \\
+Registry (Kroll batch) & 2.0\,s & 7.6 to 13.6\,s & every hive replayed, every registry artefact \\
+SRUM (21\,MB) & 3.2\,s & 2.5\,s & 2 more tables, identities resolved \\
+Prefetch (380) & 3.6\,s & 0.7\,s & dated local time, paths with drive letter \\
+Shortcuts, jump lists & 1.8\,s & 0.3\,s & \\
+Recycle bin & 1.9\,s & 0.5\,s & \\
+Amcache, ShimCache, shellbags & 2.0\,s & 0.5 to 1.4\,s & one pass for all three (registry key) \\
+\bottomrule
+\end{longtable}
+
+On the large artefacts, \wac{} is faster. On the small ones, the EZ tools are:
+every \wac{} conversion pays a fixed cost of 1.5 to 3.4\,s, measured with a
+trivial artefact. That cost is the verified working copy of the hives, the
+replay of their logs, and the reading of the suspect's time zone and profiles.
+It is what lets \wac{} date every local time with the offset in force at that
+date, and give the drive letter; the EZ tools give neither.
+
+\section{Collection}
+
+\begin{longtable}{@{}L{5.4cm}L{2.2cm}L{2.4cm}L{5.0cm}@{}}
+\toprule
+\textbf{Tool, setting} & \textbf{Time} & \textbf{Exhibits} & \textbf{Volume} \\
+\midrule\endhead
+KAPE, \texttt{KapeTriage} & 40\,s & 1,198 & 0.91\,GB \\
+\wac{}, kit, no binaries & 197\,s & 2,463 & 1.63\,GB \\
+\wac{}, kit, no event logs & 18\,s & 817 & --- \\
+\wac{}, full kit (\texttt{binary: unverified}) & 454\,s & 61,294 & 3.6\,GB \\
+\bottomrule
+\end{longtable}
+
+On a comparable scope, KAPE collects five times faster. Almost all of the gap
+comes from the event logs (180\,s): \wac{} adds the 1,225 message provider
+binaries (680\,MB) that rebuild every event's text offline. That time, spent on
+the examined machine, is to be reduced (item B-033). The full kit also checks
+the Authenticode signature of every executable on the machine and copies those
+whose signature does not hold, which KAPE does not do.
+
+% ============================================================ 4
+\chapter{Accuracy}
+
+\section{In favour of \wac{}}
+
+\begin{description}[style=nextline,leftmargin=1em]
+  \item[Hive logs replayed in order] The \fichier{.LOG1} and \fichier{.LOG2} logs
+        keep, behind the recent entries, leftovers of an earlier generation.
+        RECmd applies them in file order, hence after the newer ones. It thus
+        rolls SYSTEM, SECURITY, DEFAULT and a service profile's hive back to an
+        older state: in SYSTEM, sequence 0x3618 instead of 0x3620, and four last
+        BAM executions shown 13 minutes early. \wac{} sorts the entries by
+        sequence and stops at the break in the chain. The logs themselves confirm
+        it, Marvin32 digests included.
+  \item[Events of cleared logs] A cleared log keeps its records: \wac{} reads
+        them again and flags them \champ{EvtRecovered}, never presenting them as
+        live; EvtxECmd does not see them.
+  \item[Event values as Windows renders them] Hexadecimal \texttt{0x3e7}, GUIDs
+        in braces, booleans \texttt{true}, binary \texttt{69060000}, dates with
+        their \texttt{Z}, U+200E marks kept: the forms Event Viewer shows and one
+        searches for. EvtxECmd changes eight of them, and is wrong on six values,
+        such as a boolean \texttt{False} that Windows renders \texttt{true}.
+  \item[Nothing invented] A value absent from the source is not emitted.
+        AmcacheParser writes 2,340 default values absent from the hive
+        (\texttt{IsPeFile: False} for a PE executable), SrumECmd 7,086 (0 or
+        $-1$).
+  \item[Partial Amcache SHA-1 flagged] For a file larger than 30\,MiB, Amcache
+        hashes only the first 31,457,280 bytes (measured on \fichier{mrt.exe}).
+        \wac{} says so (\champ{Sha1CoversBytes}); without it, comparing with the
+        whole file's SHA-1 would wrongly conclude to a modification.
+  \item[No misleading field] The ShimCache ``executed'' flag, which
+        AppCompatCacheParser gives, says ``no'' for 105 of the 117 binaries that
+        Prefetch proves were run. \wac{} does not collect it: that ``no'' would
+        lead to conclude a program never ran.
+  \item[Precision to 100\,ns] \wac{} gives every date at its source's
+        precision. By default, PECmd, LECmd and SrumECmd round to the second, and
+        LECmd ignores \opt{mp} in its CSV.
+  \item[Dated local time] Every date is given in UTC and in the suspect's local
+        time, with the offset in force at that date. The EZ tools give UTC only,
+        without saying so by a \texttt{Z}.
+  \item[Others' readings checked] SBECmd's ``FirstInteracted'' and
+        ``LastInteracted'', RECmd's ``CreatedOn'' of an account, are readings of
+        key write times. \wac{} publishes those times themselves: anyone can draw
+        their own reading from them, without inheriting a ready-made one.
+        SBECmd also gives a wrong \texttt{NodeSlot} (0) to first-level folders.
+  \item[SrumECmd's ESE reading errors] 17 energy rows out of 887 carry the
+        content of another row or an identifier absent from the table;
+        dissect.esedb sides with \wac{}.
+  \item[Collection] Each \wac{} exhibit carries MD5, SHA-1 and SHA-256, the
+        eight NTFS dates of its original and its MFT entry, in a sealed manifest.
+        KAPE gives one SHA-1 and three dates.
+\end{description}
+
+\section{In favour of the EZ tools}\label{sec:coverage}
+
+\begin{description}[style=nextline,leftmargin=1em]
+  \item[Registry coverage] RECmd's Kroll batch reads keys \wac{} ignores:
+        installed programs, Defender exclusions, RecentDocs, MountPoints2, known
+        networks, the NTFS last-access update setting, shutdown time, among
+        others. Item B-031.
+  \item[File coverage] KapeTriage copies files \wac{} does not take: shortcuts
+        outside Recent (Start menu, Desktop, taskbar), the Default profile's hive,
+        \fichier{\$Secure:\$SDS} and other NTFS metadata, Defender traces (item
+        B-032); browsers and the Windows timeline, already planned (B-016,
+        B-010).
+  \item[Speed on small artefacts and in collection] See the previous chapter.
+  \item[Ready-to-read interpretations] The EZ tools split and name some fields:
+        executable, date and description of a SRUM application, known folder
+        names, a file's extension. \wac{} gives the raw value, as Windows stores
+        it.
+\end{description}
+
+\begin{attention}
+What \wac{} does not collect, it cannot weigh: KAPE's coverage remains wider on
+browsers and several registry keys, until B-016, B-031 and B-032 are done.
+\end{attention}
+
+% ============================================================ 5
+\chapter{Output formats}
+
+\section{What each tool writes}
+
+\begin{longtable}{@{}L{4.4cm}L{5.4cm}L{5.2cm}@{}}
+\toprule
+\textbf{Tool} & \textbf{Formats} & \textbf{Note} \\
+\midrule\endhead
+AmcacheParser & CSV & 8 files, one per table \\
+AppCompatCacheParser & CSV & \\
+RBCmd & CSV & \\
+SrumECmd & CSV & 7 files \\
+EvtxECmd & CSV, JSON, XML & \\
+JLECmd & CSV, JSON, HTML & \\
+LECmd & CSV, JSON, HTML, XML & \\
+MFTECmd & CSV, JSON, bodyfile & \\
+PECmd & CSV, JSON, HTML & \\
+RECmd & CSV, JSON & plus one CSV per plugin \\
+SBECmd & CSV, JSON & \\
+KAPE & copy of the files, CSV copy log & \\
+\wac{} & JSON for every artefact & one file per artefact, plus the sealed manifest \\
+\bottomrule
+\end{longtable}
+
+\section{What sets them apart}
+
+Four tools out of eleven write CSV only. In the others, the JSON transcribes the
+CSV line: one text line per record (JSON Lines), flat.
+
+\begin{description}[style=nextline,leftmargin=1em]
+  \item[Types] In the EZ tools, numbers are strings: a run count is written
+        \texttt{"RunCount":"458"}, a record number
+        \texttt{"EventRecordId":"21572"}. \wac{} writes numbers, booleans,
+        strings.
+  \item[Structures] In the EZ tools, a list becomes a comma-joined string (the
+        files a Prefetch loaded, its directories), and an event's data are JSON
+        escaped \emph{inside} a string (\texttt{Payload}), to decode a second
+        time. \wac{} nests: a Prefetch's volumes and their directories, a
+        shortcut's items, an event's \champ{Name}/\champ{Value} pairs.
+  \item[Dates] In the EZ tools, UTC is not flagged
+        (\texttt{2026-09-30 23:04:46}) and precision depends on an option. \wac{}
+        gives full ISO 8601, in UTC (\texttt{…Z}) and in local time with its
+        offset (\texttt{…+02:00}).
+  \item[Missing value] The EZ tools write a default value, or an empty cell.
+        \wac{} omits the field; an artefact not collected is declared so
+        (\texttt{NotRequested}, \texttt{NotCollected}), so that an empty list is
+        not taken for an absence of traces.
+  \item[Provenance] \wac{}'s manifest ties every value to the exhibit it comes
+        from, with its hashes and original dates.
+  \item[Console] The EZ tools detail their work on the console; some write the
+        decoding itself there when no file is asked for. \wac{} writes only its
+        progress there: everything it finds is in the files.
+\end{description}
+
+\begin{note}
+For an analyst, the difference shows at the first processing: a \wac{} JSON
+loads as it is into an analysis tool or into WAE, with nothing to split again;
+an EZ output is handled like a spreadsheet, whose numbers must be converted back,
+lists split again and event data decoded again.
+\end{note}
+
+% ============================================================ 6
+\chapter{What the confrontation taught \wac{}}\label{chap:defects}
+
+Each defect below produced a valid JSON that was wrong, or incomplete. All are
+fixed, with a check that would have caught them.
+
+\begin{longtable}{@{}L{3.0cm}L{12.0cm}@{}}
+\toprule
+\textbf{Artefact} & \textbf{Defect fixed} \\
+\midrule\endhead
+\$MFT & stale extension records merged with the base \\
+EVTX & floats cut to 6 digits; binary as ``69 06 00 00''; hexadecimal integers and GUIDs in the wrong form; ProcessingErrorData ignored (21 events without data); events of cleared logs not read \\
+Shortcuts & URI glued to the block after it; reading 2 bytes off without an ID list; ExtraData blocks not read (machine, tracking); target size not read; null DROIDs emitted \\
+Jump lists & open count and MRU rank not read; DestList format version 1 not supported; application name corrupted \\
+Shellbags & folder lost with everything below it; the folder's key time, rank and NodeSlot missing; ``Home'' folder without a name \\
+Amcache & 2 tables out of 14 and 4 to 6 values read: no SHA-1, size, driver or device \\
+ShimCache & tabs of packaged applications replaced by spaces \\
+SRUM & FILETIME dates left as numbers; UTF-16 text read as ANSI \\
+Registry & BAM limited to accounts with a profile (a deleted account lost its executions); UserAssist foreground time not read \\
+Test harness & a crashing check silently stopped every following one \\
+\bottomrule
+\end{longtable}
+
+% ============================================================ 7
+\chapter{Limits of the comparison}
+
+\begin{itemize}
+  \item One machine, virtual, running Windows 11: some artefacts are few there
+        (3 shortcuts in Recent, 2 USB keys). The formats are the same on a real
+        machine, but not every rare case is represented.
+  \item The two collections follow each other instead of being simultaneous: the
+        files written between them (\$MFT, logs, Prefetch) rightly differ.
+  \item The EZ tools ran with their maximum precision options; by default, they
+        lose more.
+  \item The comparison covers the common artefacts. What only one tool reads has
+        no reference here: its accuracy rests on the checks of the validation
+        report.
+\end{itemize}
+
+\end{document}

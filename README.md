@@ -1103,6 +1103,13 @@ cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
   it never does, the evidence (import table of `WAC.exe`, guards of the build)
   and the validation procedure, including the VM cycle's witness files
   (`vmtest/guest/harmlessness.ps1`).
+- **Against KAPE and the EZ tools**, in English and French:
+  `sources/doc/comparison/comparison_EN.pdf` and `comparison_FR.pdf`. WAC
+  confronted with KAPE (collection) and Eric Zimmerman's tools (decoding) on
+  the same exhibits: running times, accuracy — every difference settled by an
+  independent reference —, output formats, and the defects the confrontation
+  revealed in WAC. Replayed by `vmtest/ez-compare.sh` and
+  `vmtest/kape-compare.sh`.
 - `sources/doc/BUILD_EN.md` (French: `BUILD_FR.md`) — building on Linux or Windows,
   details, the guards of the build, `bin`, releasing with `bump-version.sh`.
 - `sources/wac.yml` — the reference configuration, built into `WAC.exe`
