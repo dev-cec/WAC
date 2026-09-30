@@ -261,6 +261,23 @@ void dump(LPBYTE buffer, int start, int end) {
 	wprintf(L"\n");
 }
 
+FILETIME unixToFiletime(unsigned long long seconds) {
+	const unsigned long long OFFSET_1601_1970 = 11644473600ULL;
+	const unsigned long long ticks = (seconds + OFFSET_1601_1970) * 10000000ULL;
+	return FILETIME{ (DWORD)(ticks & 0xFFFFFFFFULL), (DWORD)(ticks >> 32) };
+}
+
+std::wstring bytesToHex(const BYTE* data, size_t size) {
+	static const wchar_t DIGITS[] = L"0123456789ABCDEF";
+	std::wstring text;
+	text.reserve(size * 2);
+	for (size_t i = 0; i < size; ++i) {
+		text += DIGITS[data[i] >> 4];
+		text += DIGITS[data[i] & 0x0F];
+	}
+	return text;
+}
+
 std::wstring dump_wstring(LPBYTE buffer, int start, int length) {
 	// EXCLUSIVE bound: "length" bytes from "start" (see tools.h).
 	if (!buffer || length <= 0) return L"";

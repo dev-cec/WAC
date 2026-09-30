@@ -34,14 +34,6 @@ std::wstring architectureFromHive(const std::wstring& value) {
 	return value.empty() ? os_architecture(PROCESSOR_ARCHITECTURE_UNKNOWN) : value;
 }
 
-//! Converts a Unix time (seconds since 1970, UTC) to a FILETIME.
-FILETIME unixToFiletime(unsigned long long seconds) {
-	const unsigned long long OFFSET_1601_1970 = 11644473600ULL;
-	const unsigned long long cent_ns = (seconds + OFFSET_1601_1970) * 10000000ULL;
-	FILETIME ft = { (DWORD)(cent_ns & 0xFFFFFFFFULL), (DWORD)(cent_ns >> 32) };
-	return ft;
-}
-
 } // namespace
 
 HRESULT snapshotSystemClock() {

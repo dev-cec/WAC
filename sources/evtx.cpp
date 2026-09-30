@@ -22,20 +22,6 @@ std::wstring windowsHex(uint64_t value) {
 	return text;
 }
 
-/*! Binary data as Windows renders it in an event's XML: uppercase hexadecimal,
- *  without separator ("69060000", a policy hash "5B85256F…"). It was written
- *  "69 06 00 00", which no search for the value Event Viewer shows finds. */
-std::wstring windowsBinary(const BYTE* data, size_t size) {
-	static const wchar_t DIGITS[] = L"0123456789ABCDEF";
-	std::wstring text;
-	text.reserve(size * 2);
-	for (size_t i = 0; i < size; ++i) {
-		text += DIGITS[data[i] >> 4];
-		text += DIGITS[data[i] & 0x0F];
-	}
-	return text;
-}
-
 // ---------------------------------------------------------------------------
 //  Bounded reads
 // ---------------------------------------------------------------------------
@@ -254,7 +240,10 @@ private:
 		case T_BINARY:
 			// No conversion: the binary data of an event (4688, 4624) carry
 			// information that no interpretation replaces.
-			return windowsBinary(d, size);
+			// As Windows renders it in the event's XML: "69060000", a policy hash
+			// "5B85256F…". It was "69 06 00 00", which no search for the value
+			// Event Viewer shows finds.
+			return bytesToHex(d, size);
 		case T_GUID: {
 			if (size < 16) return L"";
 			GUID g; memcpy(&g, d, 16);

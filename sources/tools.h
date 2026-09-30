@@ -472,6 +472,12 @@ void dump(LPBYTE buffer, int start, int end);
 */
 std::wstring dump_wstring(LPBYTE buffer, int start, int length);
 
+/*! Bytes as uppercase hexadecimal without separator ("69060000"): the form
+*  Windows gives binary data in an event's XML and in regedit's export.
+* @param data,size the bytes
+* @return two digits per byte */
+std::wstring bytesToHex(const BYTE* data, size_t size);
+
 ///////////////////////////////////////////////////////
 // strings
 ///////////////////////////////////////////////////////
@@ -547,6 +553,12 @@ std::wstring bool_to_wstring(bool b);
 *         hold a valid date
 */
 FILETIME wstring_to_filetime(std::wstring input);
+
+/*! Converts a Unix time (seconds since 1970, UTC: a PE TimeDateStamp, a clock
+*  read in C) to a FILETIME.
+* @param seconds the Unix time
+* @return the same instant as a FILETIME */
+FILETIME unixToFiletime(unsigned long long seconds);
 
 ///////////////////////////////////////////////////////
 // Horodatages ISO 8601
