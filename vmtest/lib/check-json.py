@@ -185,6 +185,16 @@ def switched_off(folder, *names):
     return True
 
 
+def guarded(check, *args):
+    """Runs one check; a crash is that check's failure, shown by name — it used
+    to stop the whole script, and every later check went silently unrun."""
+    try:
+        return check(*args)
+    except Exception as e:
+        print(f"  ❌ {check.__name__} crashed: {type(e).__name__}: {e}")
+        return 1
+
+
 def cross_checks(folder):
     """CONSISTENCY checks between artefacts.
 
@@ -224,42 +234,42 @@ def cross_checks(folder):
             found += 1
         else:
             print(f"  ✅ no session earlier than the boot ({boot})")
-    found += check_boot_kernel_general(folder, boot)
+    found += guarded(check_boot_kernel_general, folder, boot)
 
-    found += check_date_pairs(folder, osj)
+    found += guarded(check_date_pairs, folder, osj)
 
-    found += check_services(folder)
-    found += check_users(folder)
-    found += check_processes(folder)
-    found += check_network(folder, boot)
-    found += check_prefetchs(folder)
-    found += check_shimcache_dates(folder)
-    found += check_jumplist_entries(folder)
-    found += check_events(folder)
-    found += check_hive_replay(folder)
-    found += check_exhibit_store(folder)
-    found += check_mft_references(folder)
-    found += check_mft_timeline(folder)
-    found += check_small_file_artefacts(folder)
-    found += check_mft_entries(folder)
-    found += check_mounted_devices(folder)
-    found += check_date_precision(folder)
-    found += check_shell_item_dates(folder)
-    found += check_utc_sources(folder)
-    found += check_key_names(folder)
-    found += check_account_names(folder)
-    found += check_guid_names(folder)
-    found += check_collected_executables(folder)
-    found += check_catalogs_recorded(folder)
-    found += check_package_verification(folder)
-    found += check_file_artefact_dates(folder)
-    found += check_symbol_server_keys(folder)
-    found += check_binary_all(folder)
-    found += check_timestomping(folder)
-    found += check_macro_document(folder)
-    found += check_embedded_signers(folder)
-    found += check_third_party_chains(folder)
-    found += check_vulnerable_driver(folder)
+    found += guarded(check_services, folder)
+    found += guarded(check_users, folder)
+    found += guarded(check_processes, folder)
+    found += guarded(check_network, folder, boot)
+    found += guarded(check_prefetchs, folder)
+    found += guarded(check_shimcache_dates, folder)
+    found += guarded(check_jumplist_entries, folder)
+    found += guarded(check_events, folder)
+    found += guarded(check_hive_replay, folder)
+    found += guarded(check_exhibit_store, folder)
+    found += guarded(check_mft_references, folder)
+    found += guarded(check_mft_timeline, folder)
+    found += guarded(check_small_file_artefacts, folder)
+    found += guarded(check_mft_entries, folder)
+    found += guarded(check_mounted_devices, folder)
+    found += guarded(check_date_precision, folder)
+    found += guarded(check_shell_item_dates, folder)
+    found += guarded(check_utc_sources, folder)
+    found += guarded(check_key_names, folder)
+    found += guarded(check_account_names, folder)
+    found += guarded(check_guid_names, folder)
+    found += guarded(check_collected_executables, folder)
+    found += guarded(check_catalogs_recorded, folder)
+    found += guarded(check_package_verification, folder)
+    found += guarded(check_file_artefact_dates, folder)
+    found += guarded(check_symbol_server_keys, folder)
+    found += guarded(check_binary_all, folder)
+    found += guarded(check_timestomping, folder)
+    found += guarded(check_macro_document, folder)
+    found += guarded(check_embedded_signers, folder)
+    found += guarded(check_third_party_chains, folder)
+    found += guarded(check_vulnerable_driver, folder)
     return found
 
 
