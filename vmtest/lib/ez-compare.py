@@ -6,8 +6,10 @@ reference of the forensic community; every difference is either a defect of
 WAC, a documented difference of convention, or one of theirs — each is
 counted, and shown with examples.
 
-Usage:
-  ez-compare.py mft <MFTECmd csv> <WAC mft.json> [volume]
+Usage: ez-compare.py <mode> <folder> — the folder ez-compare.sh brings back,
+holding the EZ tool's CSV and WAC's JSON. Modes:
+  mft       MFTECmd  / mft.json (volume C:)
+  evtx      EvtxECmd / events.json
 
 mft: record by record — paths (hard links included), deleted or not,
 directory, size, and the eight dates of $STANDARD_INFORMATION and
@@ -16,7 +18,11 @@ from the 0x10 ones: empty means "equal".
 """
 import collections
 import csv
+import glob
+import html
 import json
+import os
+import re
 import sys
 
 csv.field_size_limit(1 << 30)
@@ -123,9 +129,193 @@ def compare_mft(ez_csv, wac_json, volume):
     return 1 if failures or only_ez or unexplained_wac else 0
 
 
+LEVELS = {0: "LogAlways", 1: "Critical", 2: "Error", 3: "Warning", 4: "Info", 5: "Verbose"}
+
+
+def ez_payload_values(payload):
+    """Every leaf value of EvtxECmd's Payload (EventData or UserData), as text."""
+    out = []
+    def walk(o, key=""):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if k.startswith("@") and k != "@Name":
+                    continue
+                if k == "@Name":
+                    continue
+                walk(v, k)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v, key)
+        elif o is not None and key != "Binary":
+            out.append(str(o))
+    try:
+        walk(json.loads(payload) if payload else {})
+    except ValueError:
+        return None
+    return out
+
+
+# EvtxECmd's conventions of output, each against the form Windows gives in the
+# event's XML (and WAC with it): (description, pattern, rewrite to Windows'
+# form). Applied to both sides (see payload_verdict); the XML entities EvtxECmd
+# leaves escaped are undone on its side only — a text can hold "&amp;" itself.
+ENTITIES = "XML entities kept escaped (&gt;, &amp;)"
+EVTX_CONVENTIONS = (
+    ("hexadecimal in uppercase (0x3E7 for 0x3e7)", re.compile(r"\b0x[0-9A-F]*[A-F][0-9A-F]*\b"), lambda m: m.group(0).lower()),
+    ("GUID without braces", re.compile(r"(?<![{\w-])[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}(?![}\w-])"), lambda m: "{" + m.group(0).lower() + "}"),
+    ("booleans True/False (true/false)", re.compile(r"\b(?:True|False)\b"), lambda m: m.group(0).lower()),
+    ("date with a space, without Z", re.compile(r"\b(\d{4}-\d\d-\d\d) (\d\d:\d\d:\d\d(?:\.\d+)?)\b"), lambda m: f"{m.group(1)}T{m.group(2)}Z"),
+    ("text altered: left-to-right marks (U+200E) removed, value split — WAC keeps them, as Windows", re.compile("\u200e"), lambda m: ""),
+    ("binary data as AA-BB-CC (AABBCC)", re.compile(r"\b[0-9A-F]{2}(?:-[0-9A-F]{2})+\b"), lambda m: m.group(0).replace("-", "")),
+)
+ZERO_FILETIME = "1601-01-01T00:00:00.0000000Z"
+DATE_FRACTION = re.compile(r"(T\d\d:\d\d:\d\d)(?:\.(\d+))?Z")
+
+
+def canonical(text):
+    """Whitespace collapsed, dates to 7 fractional digits: forms that carry the same value."""
+    text = " ".join(text.split())
+    return DATE_FRACTION.sub(lambda m: f"{m.group(1)}.{(m.group(2) or '').ljust(7, '0')[:7]}Z", text)
+
+
+def payload_verdict(mine, theirs, valueless=0):
+    """Compares WAC's EventData values with EvtxECmd's.
+
+    Returns [] when identical, the list of EvtxECmd conventions that explain
+    the difference, or None when they do not. The conventions rewrite both
+    sides — a message can hold "0xC004F014" as text, on both — and one is
+    attributed when it changed EvtxECmd's text alone. EvtxECmd joins some
+    values with ", ", and reorders others: both sides are compared as the
+    multiset of their comma-separated pieces, then as their text without
+    separators. valueless: WAC's entries without a value — a zero FILETIME,
+    which WAC does not emit as a date and Windows gives as 1601-01-01."""
+    rules = set()
+    def rewrite(values, note):
+        out = []
+        for value in values:
+            for name, pattern, fix in EVTX_CONVENTIONS:
+                new = pattern.sub(fix, value)
+                if new != value:
+                    note.add(name)
+                    value = new
+            out.append(value)
+        return out
+    rules_mine = set()
+    unescaped = [html.unescape(v) for v in theirs]
+    if unescaped != theirs:
+        rules.add(ENTITIES)
+    mine2, theirs2 = rewrite(mine, rules_mine), rewrite(unescaped, rules)
+    def pieces(values):
+        return collections.Counter(p for v in values for p in (x.strip() for x in canonical(v).split(",")) if p)
+    def flat(values):
+        return "".join(canonical(v).replace(",", "").replace(" ", "") for v in values)
+    if pieces(mine) == pieces(theirs):
+        return []
+    theirs_pieces = pieces(theirs2)
+    if valueless and theirs_pieces[ZERO_FILETIME]:
+        theirs_pieces[ZERO_FILETIME] = max(0, theirs_pieces[ZERO_FILETIME] - valueless)
+        theirs_pieces += collections.Counter()          # drops the zero counts
+        rules.add("WAC convention — zero FILETIME not emitted as a date (Windows and EvtxECmd: 1601-01-01)")
+    if pieces(mine2) == theirs_pieces or flat(mine2) == flat(theirs2):
+        # A convention is EvtxECmd's when it rewrote its text alone: a left-to-right
+        # mark, kept by WAC as Windows does, is rewritten on WAC's side only.
+        rules ^= rules_mine
+        if not rules:
+            rules.add("values joined or reordered")
+        return sorted(rules)
+    return None
+
+
+def compare_evtx(ez_csv, wac_json):
+    ez = {}
+    per_log_ez = collections.Counter()
+    with open(ez_csv, encoding="utf-8-sig", newline="") as f:
+        for row in csv.DictReader(f):
+            log = row["SourceFile"].rsplit("\\", 1)[-1].lower()
+            ez[(log, int(row["EventRecordId"]))] = row
+            per_log_ez[log] += 1
+    with open(wac_json, encoding="utf-8-sig") as f:
+        wac = {}
+        recovered = collections.Counter()
+        per_log_wac = collections.Counter()
+        for e in json.load(f):
+            if not isinstance(e, dict) or "EvtSystemEventRecordId" not in e:
+                continue
+            log = str(e.get("EvtSourceLog", "")).lower()
+            if e.get("EvtRecovered"):
+                # Events of a cleared log, which neither Windows nor EvtxECmd reads.
+                recovered[log] += 1
+                continue
+            wac[(log, e["EvtSystemEventRecordId"])] = e
+            per_log_wac[log] += 1
+    diffs = collections.defaultdict(list)
+    compared = collections.Counter()
+    conventions = collections.Counter()
+    def note(field, key, mine, theirs):
+        compared[field] += 1
+        if mine != theirs:
+            diffs[field].append((key, mine, theirs))
+    for key in sorted(set(ez) & set(wac)):
+        r, e = ez[key], wac[key]
+        note("TimeCreated", key, str(e.get("EvtSystemTimeCreated", "")).rstrip("Z"), r["TimeCreated"].replace(" ", "T"))
+        note("EventId", key, e.get("EvtSystemEventID"), int(r["EventId"]))
+        note("Provider", key, e.get("EvtSystemProviderName"), r["Provider"])
+        note("Channel", key, e.get("EvtSystemChannel"), r["Channel"])
+        note("Computer", key, e.get("EvtSystemComputer"), r["Computer"])
+        # A level outside 0–5 is given as its number by WAC, named by EvtxECmd.
+        if e.get("EvtSystemLevel") in LEVELS:
+            note("Level", key, LEVELS[e["EvtSystemLevel"]], r["Level"])
+        note("ProcessId", key, e.get("EvtSystemProcessID"), int(r["ProcessId"] or 0))
+        note("ThreadId", key, e.get("EvtSystemThreadID"), int(r["ThreadId"] or 0))
+        theirs = ez_payload_values(r["Payload"])
+        if theirs is not None:
+            data = [d for d in e.get("EvtEventData") or [] if isinstance(d, dict) and d.get("Value") is not None]
+            mine = [str(d["Value"]) for d in data if d.get("Name") != "Binary"]
+            compared["EventData values"] += 1
+            verdict = payload_verdict(mine, theirs, sum(1 for d in e.get("EvtEventData") or []
+                                                         if isinstance(d, dict) and "Value" not in d and d.get("Name")))
+            if verdict is not None and len(mine) < len(data):
+                # A classic event's <Binary>, which Event Viewer shows: WAC keeps it.
+                verdict.append("the classic <Binary> element left out (WAC keeps it)")
+            if verdict is None:
+                diffs["EventData values"].append((key, mine, theirs))
+            elif verdict:
+                conventions.update(verdict)
+    only_ez = set(ez) - set(wac)
+    only_wac = set(wac) - set(ez)
+    print(f"records: WAC {len(wac)}, EvtxECmd {len(ez)}, common {len(set(ez) & set(wac))}")
+    print(f"  only in EvtxECmd: {len(only_ez)}, by log: {collections.Counter(k[0] for k in only_ez).most_common(5)}")
+    print(f"  only in WAC: {len(only_wac)}, by log: {collections.Counter(k[0] for k in only_wac).most_common(5)}")
+    for rule, count in conventions.most_common():
+        print(f"  ℹ️  {count} event(s): {rule if rule.startswith('WAC') else 'EvtxECmd convention — ' + rule}")
+    print(f"  ℹ️  recovered by WAC only (cleared logs, flagged EvtRecovered): {sum(recovered.values())} {dict(recovered)}")
+    failures = 0
+    for field in compared:
+        wrong = diffs[field]
+        print(f"  {'✅' if not wrong else '❌'} {field}: {compared[field] - len(wrong)}/{compared[field]} identical")
+        for key, mine, theirs in wrong[:3]:
+            print(f"        {key}: WAC {str(mine)[:160]!r}, EvtxECmd {str(theirs)[:160]!r}")
+        failures += len(wrong)
+    return 1 if failures or only_ez or only_wac else 0
+
+
+def only(folder, pattern):
+    """The one file of the folder matching pattern: the EZ tools prefix their CSV with a timestamp."""
+    found = glob.glob(os.path.join(folder, pattern))
+    if len(found) != 1:
+        sys.exit(f"{pattern}: {len(found)} file(s) in {folder}")
+    return found[0]
+
+
 def main():
-    if len(sys.argv) >= 4 and sys.argv[1] == "mft":
-        return compare_mft(sys.argv[2], sys.argv[3], sys.argv[4] if len(sys.argv) > 4 else "C:")
+    if len(sys.argv) != 3:
+        print(__doc__)
+        return 2
+    mode, folder = sys.argv[1:]
+    if mode == "mft":
+        return compare_mft(only(folder, "*_MFTECmd_*Output.csv"), only(folder, "mft.json"), "C:")
+    if mode == "evtx":
+        return compare_evtx(only(folder, "*_EvtxECmd_Output.csv"), only(folder, "events.json"))
     print(__doc__)
     return 2
 

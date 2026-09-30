@@ -15,11 +15,14 @@ administrator rights, no UAC).
 | `vmtest/` | `create-vm.sh` | Creates the VM from scratch, unattended: autounattend + UEFI Secure Boot + TPM 2.0 + guest-agent channel, boot unblocked by key injection, then waits for the agent to answer; adds the 2 GB data disk. |
 | `vmtest/` | `run-wac-test.sh` | Full test cycle: build → data volume and virtual USB key (`~/vms/wac-usb-test.img`, serial `WACUSB0001`) → send the binaries → `raw_hive` validation (raw extraction + `reg load`) → run WAC → bring the log and the JSON back into `results/<timestamp>/` → checks. `--only=key,…` restricts it to some artefacts. |
 | `vmtest/` | `install-tools.sh` | Puts into the VM the third-party tools of the comparisons (B-015, B-027): KAPE and Eric Zimmerman's command-line tools from `tools/`, and the .NET 9 runtime they need. Idempotent. |
+| `vmtest/` | `ez-compare.sh` | WAC against an Eric Zimmerman tool for one artefact (B-015): times both in the VM on the exhibits of the last cycle, brings the outputs back to `results/ez/<key>-<date>/`, compares them with `lib/ez-compare.py`. |
 | `lib/` (host) | `qga.py` | Guest-agent helper: `ping`, `run` (execute), `read`/`write` (exchange files). |
 | `lib/` (host) | `check-json.py` | Checks the outputs: JSON validity, Windows paths, and **cross-checks** (see below). Also usable alone: `python3 lib/check-json.py results/<timestamp>`. |
 | `lib/` (host) | `ese-compare.py` | WAC's ESE reader against dissect.esedb, value by value, on the same database. |
+| `lib/` (host) | `ez-compare.py` | Field-by-field comparison with the EZ tool's CSV; every difference is counted and classed: convention of one side (each checked against Windows), or defect. |
 | `guest/` (VM) | `autounattend.xml` | Silent Windows install (French, Win11 Pro, local admin account `wac`/`wac`, OOBE skipped, autologon) **and automatic guest-agent install** at first logon from the virtio-win CD. |
 | `guest/` (VM) | `place-file-artefacts.ps1` | Places the witnesses of the artefacts (files, registry, EICAR, WMI, data volume…) and prints the references Windows gives for them. |
+| `guest/` (VM) | `ez-time.ps1` | Run by `ez-compare.sh`: WAC's conversion (a `wac.yml` of the one key) and the EZ tool, each timed, on the same exhibits. |
 | `guest/` (VM) | `register-test-guids.ps1` | Registers, on every cycle, three GUIDs WAC's table does not know — one per source WAC reads GUID names from — each referenced by a disabled COM-handler task. |
 | `guest/` (VM) | `harmlessness.ps1`, `make-fake-package.ps1` | Dates and USN of witness files before/after a collection; a Store package altered on purpose. |
 | `guest/` (VM) | `property-schema.cpp` | Dumps the VM's property schema, the source of WAC's table of property names. |

@@ -25,9 +25,9 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Installer KAPE et les outils EZ sur la VM (vmtest/install-tools.sh, .NET 9.0.20)
 - [ ] Collectes simultanées
 - [ ] Comparaison fichiers et empreintes
-- [ ] Comparaison des JSON (vmtest/lib/ez-compare.py) :
+- [ ] Comparaison des JSON (vmtest/ez-compare.sh <clé> : temps et écarts, vmtest/lib/ez-compare.py) :
   - [x] mft.json / MFTECmd : 362 081 enregistrements, 8 dates, chemins, états identiques ; tailles : 1 490 WOF et 3 EVTX où WAC a raison (Windows), 5 métafichiers de convention. A révélé la fusion d'extensions périmées (fix).
-  - [ ] events.json / EvtxECmd
+  - [x] events.json / EvtxECmd : 190 613 événements, champs système identiques ; valeurs EventData expliquées (conventions d'EvtxECmd, chacune vérifiée contre le XML de Windows ; FILETIME nul non émis par WAC) ; 6 erreurs d'EvtxECmd confirmées par Windows ; 335 Perflib lus par WAC et Windows, pas par EvtxECmd. A révélé 4 défauts de rendu (flottants, binaire, ProcessingErrorData ignoré, hexa/GUID) et les événements des journaux vidés (EvtRecovered).
   - [ ] prefetchs.json / PECmd
   - [ ] raccourcis et jump lists / LECmd, JLECmd
   - [ ] shellbags / SBECmd
@@ -38,3 +38,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-09-29 : décision utilisateur — les outils Zimmerman (et .NET) installés dans la VM de test ; KAPE écarté (inscription chez Kroll).
 - 2026-09-30 : KAPE fourni par l'utilisateur : `vmtest/kape.zip` (exclu du dépôt par .gitignore, licence Kroll). La comparaison avec KAPE redevient possible.
 - 2026-09-30 : temps, même $MFT de 380 Mo dans la VM : WAC convertit C: et G: en 7,3 s, MFTECmd C: seul en 8,1 s (CSV).
+- 2026-09-30 : temps, mêmes pièces, 305 journaux : WAC convertit events.json (messages en clair compris) en 16,8 s, EvtxECmd produit son CSV en 22,0 s.
