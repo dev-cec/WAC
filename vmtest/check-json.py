@@ -22,7 +22,9 @@ import json, sys, glob, os, re, collections
 # escaping of a literal backslash. Only the patterns where the doubling is
 # certainly wrong are therefore reported.
 FAULTY_PATTERNS = (
-    re.compile(r'[A-Za-z]:\\\\'),          # C:\\Windows  (drive)
+    # A drive: one letter, not the end of a word ("Path:\\?\C:" in MPLog is a
+    # label then the Win32 namespace prefix, as Defender writes it).
+    re.compile(r'(?<![A-Za-z])[A-Za-z]:\\\\(?![?.]\\)'),   # C:\\Windows  (drive)
     re.compile(r'^\\\\\\\\[A-Za-z0-9]'),   # \\\\server  (UNC already doubled)
     re.compile(r'\\\\\\\\(?:Device|REGISTRY|SystemRoot|\?\?)\\\\', re.I),
 )
