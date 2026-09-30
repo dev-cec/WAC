@@ -16,7 +16,7 @@ KEY="${1:?usage: $0 <comparison>}"
 case "$KEY" in
   mft) MODE=mft ;; events) MODE=evtx ;; prefetch) MODE=prefetch ;;
   recent_documents) MODE=lnk ;; jump_lists) MODE=jumplist ;;
-  shimcache|amcache) MODE=$KEY ;;
+  shellbags|shimcache|amcache) MODE=$KEY ;;
   *) echo "no comparison known for '$KEY'" >&2; exit 2 ;;
 esac
 OUT="$HERE/results/ez/$KEY-$(date +%Y%m%d-%H%M%S)"

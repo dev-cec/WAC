@@ -15,6 +15,7 @@ holding the EZ tool's CSV and WAC's JSON. Modes:
   jumplist  JLECmd   / jumplistAutomaticDestinations.json, jumplistCustomDestinations.json
   amcache   AmcacheParser / amcache_applications.json, amcache_application_files.json, amcache_inventory.json
   shimcache AppCompatCacheParser / shimcache.json
+  shellbags SBECmd   / shellbags.json
 
 mft: record by record — paths (hard links included), deleted or not,
 directory, size, and the eight dates of $STANDARD_INFORMATION and
@@ -395,6 +396,8 @@ class Comparison:
     def date(self, field, key, mine, theirs):
         """A UTC date; EZ's to the second when it gives no fraction: compared to the second."""
         mine, theirs = wac_date(mine), ez_date(theirs)
+        if theirs.endswith(".0000000") and "." not in mine:
+            theirs = theirs[:-8]       # a date to the second, padded by the EZ tool
         if theirs and "." not in theirs and mine.startswith(theirs + "."):
             self.explained[f"{field}: to the second ({self.tool}), to the 100 ns (WAC)"] += 1
             mine = theirs
@@ -637,6 +640,66 @@ def compare_shimcache(ez_csv, wac_json):
     return 1 if c.report() or len(ez) != len(wac) else 0
 
 
+def compare_shellbags(ez_csv, wac_json):
+    """Folder by folder, paired by key path (BagMRU\\4\\0) and slot: rank,
+    NodeSlot, subfolders, key times, the last item's name, dates and MFT
+    entry. SBECmd's FirstInteracted and LastInteracted are readings of key
+    times: checked against the times WAC publishes, not as values of their own."""
+    with open(ez_csv, encoding="utf-8-sig", newline="") as f:
+        ez = {(r["BagPath"], int(r["Slot"])): r for r in csv.DictReader(f)}
+    with open(wac_json, encoding="utf-8-sig") as f:
+        roots = [b for b in json.load(f) if isinstance(b, dict)]
+    wac = {}
+    def walk(bag, path):
+        wac[(path, bag["ID"])] = bag
+        for child in bag.get("Children") or []:
+            walk(child, f"{path}\\{bag['ID']}")
+    for b in roots:
+        walk(b, b.get("Source", "BagMRU"))
+    c = Comparison("SBECmd")
+    for key in sorted(set(ez) & set(wac)):
+        r, w = ez[key], wac[key]
+        c.note("MRU position", key, w.get("MruPosition"), int(r["MRUPosition"]))
+        if r["BagPath"] == "BagMRU" and r["NodeSlot"] == "0" and w.get("NodeSlot"):
+            # Checked in the VM's registry: BagMRU\\0 holds NodeSlot 1, BagMRU\\4 NodeSlot 6…
+            c.explained["NodeSlot of a first-level folder: 0 in SBECmd, the registry's value in WAC (checked)"] += 1
+        elif r["NodeSlot"] == "0" and w.get("NodeSlot") is None:
+            c.explained["NodeSlot absent from the key: 0 in SBECmd, nothing in WAC"] += 1
+        else:
+            c.note("NodeSlot", key, w.get("NodeSlot"), int(r["NodeSlot"]) if r["NodeSlot"] else None)
+        c.note("subfolders", key, len(w.get("Children") or []), int(r["ChildBags"] or 0))
+        c.date("key last write", key, w.get("LastWriteTimeUtc"), r["LastWriteTime"])
+        if r["FirstInteracted"]:
+            c.date("FirstInteracted = the folder's own key time", key, w.get("KeyLastWriteTimeUtc"), r["FirstInteracted"])
+        if r["LastInteracted"]:
+            ours = w.get("LastWriteTimeUtc") if w.get("MruPosition") == 0 else w.get("KeyLastWriteTimeUtc")
+            c.date("LastInteracted = a key time", key, ours, r["LastInteracted"])
+        item = (w.get("ShellItems") or [{}])[-1]
+        blocks = [b for b in item.get("ExtensionBlocks") or [] if isinstance(b, dict)]
+        delegated = item.get("DelegatedItem") or {}
+        names = {str(x).lower().rstrip("\\") for x in (item.get("Name"), item.get("Identifier"), item.get("Uri"),
+                 delegated.get("Identifier"), *(b.get("LongName") for b in blocks)) if x}
+        names |= {n.split(" (")[0] for n in names}
+        if item.get("Type") == "ROOT_FOLDER" and r["Value"].lower().rstrip("\\") not in names:
+            c.explained[f"root folder named by its GUID: \"{r['Value']}\" (SBECmd), \"{sorted(names)[0] if names else item.get('GUID')}\" (WAC)"] += 1
+        else:
+            c.note("name", key, r["Value"].lower().rstrip("\\") in names, True)
+        if r["ModifiedOn"]:
+            c.date("modified", key, item.get("ModificationDateUtc"), r["ModifiedOn"])
+        for b in blocks:
+            if r["CreatedOn"] and b.get("CreatedDateUtc"):
+                c.date("created", key, b["CreatedDateUtc"], r["CreatedOn"])
+            if r["AccessedOn"] and b.get("AccessedDateUtc"):
+                c.date("accessed", key, b["AccessedDateUtc"], r["AccessedOn"])
+            if r["MFTSequenceNumber"] and b.get("MftEntryNumber") is not None:
+                c.note("MFT entry", key, (b["MftEntryNumber"], b.get("MftSequenceNumber")), (int(r["MFTEntry"]), int(r["MFTSequenceNumber"])))
+        if r["HasExplored"] == "False":
+            c.explained["HasExplored always False in SBECmd's command line (EricZimmerman/Issues#128): not compared"] += 1
+    only_ez, only_wac = set(ez) - set(wac), set(wac) - set(ez)
+    print(f"folders: WAC {len(wac)}, SBECmd {len(ez)}, common {len(set(ez) & set(wac))}; only SBECmd {sorted(only_ez)[:3]}, only WAC {sorted(only_wac)[:3]}")
+    return 1 if c.report() or only_ez or only_wac else 0
+
+
 def only(folder, pattern):
     """The one file of the folder matching pattern: the EZ tools prefix their CSV with a timestamp."""
     found = glob.glob(os.path.join(folder, pattern))
@@ -659,6 +722,8 @@ def main():
     if mode == "jumplist":
         return compare_jumplist(only(folder, "*_AutomaticDestinations.csv"), only(folder, "*_CustomDestinations.csv"),
                                 only(folder, "jumplistAutomaticDestinations.json"), only(folder, "jumplistCustomDestinations.json"))
+    if mode == "shellbags":
+        return compare_shellbags(only(folder, "Deduplicated.csv"), only(folder, "shellbags.json"))
     if mode == "shimcache":
         return compare_shimcache(only(folder, "*_AppCompatCache.csv"), only(folder, "shimcache.json"))
     if mode == "amcache":
