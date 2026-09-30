@@ -29,6 +29,7 @@
 #include "tools.h"
 #include "usb.h"
 #include "idList.h"
+#include <optional>
 
 /*! One shellbag: a folder that was browsed, and the folders browsed under it. */
 struct Shellbag {
@@ -41,7 +42,10 @@ public:
 	std::wstring source = L"";   //!< the key the shellbag comes from
 	std::vector<std::unique_ptr<IdList>> shellitems; //!< the folder's PIDL, item by item
 	std::vector<Shellbag> children;    //!< the folders browsed below this one
-	FILETIME lastWriteTimeUtc = { 0 }; //!< last write to the KEY, UTC (the local time is derived at output)
+	FILETIME lastWriteTimeUtc = { 0 }; //!< last write to the PARENT key, which holds this folder's value (UTC)
+	FILETIME keyLastWriteTimeUtc = { 0 }; //!< last write to the folder's OWN key: its addition, or the browsing of a subfolder (UTC)
+	int mruPosition = 0;      //!< rank among its siblings in MRUListEx, 0 for the most recently browsed
+	std::optional<unsigned int> nodeSlot; //!< NodeSlot: number of the Bags key holding the folder's view settings
 
 	/*! Converts the shellbag and its children to JSON.
 	 *  @return its JSON object. */

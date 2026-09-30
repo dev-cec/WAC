@@ -15,6 +15,10 @@ Json Shellbag::toJson() const {
 	o.add(L"LastWriteTime",    Json::str(utcTimeToIso8601Local(lastWriteTimeUtc)));
 	log(3, L"🔈timeToIso8601 lastWriteTimeUtc");
 	o.add(L"LastWriteTimeUtc", Json::str(timeToIso8601Utc(lastWriteTimeUtc)));
+	o.add(L"MruPosition",      Json::num(mruPosition));
+	o.add(L"KeyLastWriteTime",    Json::str(utcTimeToIso8601Local(keyLastWriteTimeUtc)));
+	o.add(L"KeyLastWriteTimeUtc", Json::str(timeToIso8601Utc(keyLastWriteTimeUtc)));
+	if (nodeSlot) o.add(L"NodeSlot", Json::num(*nodeSlot));
 	Json items = Json::arr();
 	for (const std::unique_ptr<IdList>& item : shellitems) items.push(item->toJson());
 	o.add(L"ShellItems", std::move(items));
@@ -48,15 +52,15 @@ HRESULT Shellbags::getData(int _level) {
 		hresult = OROpenKey(Offhive, L"Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU", &hKey);
 		if (hresult != ERROR_SUCCESS) {
 			log(2, L"🔥OROpenHive OROpenKey Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU", hresult);
+			ORCloseHive(Offhive);
 			continue;
 		}
 
 		log(3, L"🔈parse hKey");
 		hresult = parse(hKey, std::get<0>(profileEntry), L"BagMRU", &shellbags, 1, false);
-		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥parse hKey", hresult);
-			continue;
-		}
+		if (hresult != ERROR_SUCCESS) log(2, L"🔥parse hKey", hresult);
+		ORCloseKey(hKey);
+		ORCloseHive(Offhive);
 	}
 	return ERROR_SUCCESS;
 }
@@ -78,6 +82,7 @@ HRESULT Shellbags::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std
 	hresult = readMruListEx(hKey, ids);
 	if (hresult != ERROR_SUCCESS) log(2, L"🔥getRegBinaryValue hKey\\MRUListEx", hresult);
 
+	int mruPosition = 0;
 	for (int id : ids) {
 		bool Parentiszip = false | _Parentiszip;
 		log(1, L"➕Shellbag");
@@ -89,6 +94,7 @@ HRESULT Shellbags::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std
 		              ++nWalked, 0, L"bag");
 		Shellbag shellbag;
 		shellbag.id = id;
+		shellbag.mruPosition = mruPosition++;   // MRUListEx lists the most recent first
 		log(2, L"❇️Shellbag id : " + id);
 		shellbag.lastWriteTimeUtc = lastWriteTimeUtc;
 		shellbag.Parent = Parent;
@@ -126,18 +132,28 @@ HRESULT Shellbags::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std
 				shellbag.shellitems.push_back(std::move(shellitem));
 			}
 		}
-		// The folders browsed below this one
+		// The folders browsed below this one. The folder is kept even when its
+		// key cannot be opened: it used to be dropped with everything below it.
 		log(3, L"🔈OROpenKey hKey\\" + std::to_wstring(id));
 		hresult = OROpenKey(hKey, std::to_wstring(id).c_str(), &hKeyChildren);
 		if (hresult != ERROR_SUCCESS) {
 			log(2, L"🔥OROpenKey hKey\\" + std::to_wstring(id), hresult);
-			continue;
 		}
-		log(3, L"🔈parse");
-		hresult = parse(hKeyChildren, sid, source, &shellbag.children, level + 3, Parentiszip, id);
-		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥parse", hresult);
-			continue;
+		else {
+			/* The folder's own key: written when the folder is first added, and
+			   again only when a subfolder is browsed. SBECmd's "FirstInteracted"
+			   is this time for a folder without subfolders; its "LastInteracted"
+			   is the parent key's time for the folder at MRU position 0 — two
+			   readings of these times, published here as the times themselves. */
+			ORQueryInfoKey(hKeyChildren, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+			               nullptr, nullptr, nullptr, &shellbag.keyLastWriteTimeUtc);
+			DWORD nodeSlot = 0;
+			if (getRegDwordValue(hKeyChildren, nullptr, L"NodeSlot", &nodeSlot) == ERROR_SUCCESS)
+				shellbag.nodeSlot = nodeSlot;
+			log(3, L"🔈parse");
+			hresult = parse(hKeyChildren, sid, source, &shellbag.children, level + 3, Parentiszip, id);
+			if (hresult != ERROR_SUCCESS) log(2, L"🔥parse", hresult);
+			ORCloseKey(hKeyChildren);
 		}
 		//save
 		out->push_back(std::move(shellbag));

@@ -1189,7 +1189,12 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         openings \champ{InteractionCount}, rank \champ{MruPosition} — 0 for the
         most recent —, name of the known folder targeted).
   \item[\fichier{shellbags.json}] folders browsed in Explorer, as a rebuilt
-        tree.
+        tree; for each folder, its rank among its siblings
+        (\champ{MruPosition}, 0 for the most recent), the write time of the key
+        holding it (\champ{LastWriteTime}) and of its own key
+        (\champ{KeyLastWriteTime}: its addition, or the browsing of a
+        subfolder), and its \champ{NodeSlot}. The ``first'' and ``last
+        interaction'' of other tools are only readings of these two times.
   \item[\fichier{mrus.json}, \fichier{mruApps.json}] most-recently-used files
         and applications.
   \item[\fichier{zone\_identifiers.json}] \fichier{Zone.Identifier} streams

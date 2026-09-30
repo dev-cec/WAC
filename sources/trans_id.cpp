@@ -9719,6 +9719,7 @@ const Translation TABLE_GUID[] = {
 	{L"{f5bc0af0-63fc-468f-bc6f-d63eae129a33}", L"Reboot (C:\\Windows\\System32\\enterprisecsps.dll)"},
 	{L"{f5d3e63b-cb0f-4628-a478-6d8244be36b1}", L"(C:\\Windows\\system32\\windowscodecs.dll)"},
 	{L"{f5fb2c77-0e2f-4a16-a381-3e560c68bc83}", L"Removable Drives (C:\\Windows\\System32\\shell32.dll)"},
+	{L"{f874310e-b6b7-47dc-bc84-b9e6b38f5903}", L"Home (Windows 11 Explorer)"},
 	{L"{f60c3e02-214a-462b-9b07-56ea38545a13}", L"Move-To Menu (C:\\Windows\\system32\\shell32.dll)"},
 	{L"{f65817c8-dd85-4136-89f0-b9d12939f2c4}", L"IsolatedMessageDialogFactory (C:\\Windows\\System32\\PickerHost.exe)"},
 	{L"{f6976cf5-68a8-436c-975a-40be53616d59}", L"Defender Pua Shield Class (AppID: 2EB6D15C-5239-41CF-82FB-353D20B816CF )"},
