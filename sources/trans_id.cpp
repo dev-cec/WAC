@@ -271,7 +271,7 @@ const Translation TABLE_APPID[] = {
 	{L"59e86071b87ac1c3", L"CuteFTP 8.3 (Build 8.3.4.0007)"},
 	{L"59f56184c796cfd4", L"ACDSee Photo Manager 10 (Build 219)"},
 	{L"59fe1486d27aa9d0", L"Electronic Arts Origin"},
-	{L"5a2098e080cf7ac4", L"OneDrive ?? (ClassicMru)"},
+	{L"5a2098e080cf7ac4", L"OneDrive (ClassicMru)"},
 	{L"5b186fc4a0b40504", L"Dtella 1.2.5 (Purdue network only)"},
 	{L"5b72f67adcce9045", L"UltraVNC 1.2.1.0 Settings"},
 	{L"5b7f3287093c1623", L"Total Commander 8.52a 64-bit"},

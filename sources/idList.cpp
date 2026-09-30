@@ -2544,12 +2544,18 @@ URIShellItem::URIShellItem(LPBYTE buffer, int _level) {
 	level = _level;
 	isPresent = true;
 	// SIZE OF THE ITEM: it bounds the URI, which was read up to the first zero
-	// met — hence possibly beyond the item.
+	// met — hence possibly beyond the item. Within that bound, the URI still
+	// ends at its terminator: what follows can be an extension block
+	// (0xbeef001a in a jump list), which was glued to the URI (B-015, against
+	// JLECmd: "ms-gamingoverlay:///" followed by "V…AppX5nebv…").
 	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	unsigned short int datasize = *reinterpret_cast<unsigned short int*>(buffer + 4);
 	if (datasize == 0 && size > 8) {
-		uri = std::wstring((const wchar_t*)(buffer + 8), (size - 8) / sizeof(wchar_t));
-		while (!uri.empty() && uri.back() == L'\0') uri.pop_back();
+		const wchar_t* text = reinterpret_cast<const wchar_t*>(buffer + 8);
+		const size_t bound = (size - 8) / sizeof(wchar_t);
+		size_t length = 0;
+		while (length < bound && text[length] != L'\0') ++length;
+		uri.assign(text, length);
 	}
 }
 

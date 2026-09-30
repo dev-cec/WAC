@@ -122,7 +122,13 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 		// followed by 4 byte offset for skipping.
 		//-------------------------------------------------------------------------
 		unsigned int LinkInfo_size = 0;
-		int LinkInfo_offset = LinkTargetIDList_offset + 2 + LinkTargetIDList_size;
+		/* The ID list, with its 2-byte size, exists only if the flag says so.
+		   Its 2 bytes were skipped in any case: in a shortcut without an ID list,
+		   LinkInfo, StringData and ExtraData were all read 2 bytes too far
+		   (found by link_tracking_test). */
+		int LinkInfo_offset = flags.HasLinkTargetIDList
+			? LinkTargetIDList_offset + 2 + LinkTargetIDList_size
+			: (int)header_size;
 
 		if (flags.HasLinkInfo) {
 			LinkInfo_size = u32(LinkInfo_offset);
