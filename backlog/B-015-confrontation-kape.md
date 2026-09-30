@@ -23,8 +23,8 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Installer KAPE et les outils EZ sur la VM (vmtest/install-tools.sh, .NET 9.0.20)
-- [ ] Collectes simultanées
-- [ ] Comparaison fichiers et empreintes
+- [x] Collectes successives WAC puis KAPE, chronométrées (vmtest/kape-compare.sh)
+- [x] Comparaison fichiers et empreintes : 1 130 fichiers communs, SHA-1 identiques sauf ceux écrits entre les deux collectes ; couverture manquante : B-032 ; temps : B-033
 - [ ] Comparaison des JSON (vmtest/ez-compare.sh <clé> : temps et écarts, vmtest/lib/ez-compare.py) :
   - [x] mft.json / MFTECmd : 362 081 enregistrements, 8 dates, chemins, états identiques ; tailles : 1 490 WOF et 3 EVTX où WAC a raison (Windows), 5 métafichiers de convention. A révélé la fusion d'extensions périmées (fix).
   - [x] events.json / EvtxECmd : 190 613 événements, champs système identiques ; valeurs EventData expliquées (conventions d'EvtxECmd, chacune vérifiée contre le XML de Windows ; FILETIME nul non émis par WAC) ; 6 erreurs d'EvtxECmd confirmées par Windows ; 335 Perflib lus par WAC et Windows, pas par EvtxECmd. A révélé 4 défauts de rendu (flottants, binaire, ProcessingErrorData ignoré, hexa/GUID) et les événements des journaux vidés (EvtRecovered).
@@ -47,3 +47,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-09-30 : temps registre (clé registry entière, toutes les ruches) : WAC 2,0 s ; AmcacheParser 0,5 à 0,9 s, AppCompatCacheParser 1,4 s, SBECmd 1,3 s, chacun pour son seul artefact.
 - 2026-09-30 : temps corbeille : WAC 1,9 s, RBCmd 0,5 s ; SRUM : WAC 3,2 s (base de 21 Mo, toutes les tables, identités résolues), SrumECmd 2,5 s.
 - 2026-10-01 : temps registre : WAC 2,0 s (clé registry entière, toutes les ruches rejouées) ; RECmd, lot Kroll, 7,6 à 13,6 s.
+- 2026-10-01 : collecte complète, VM, KAPE cible KapeTriage (40 s, 0,91 Go, 1 198 fichiers dont 296 dédupliqués). WAC, configuration du kit : 454 s, 61 294 pièces (binary: unverified vérifie la signature de chaque exécutable) ; sans binaires : 197 s, 2 463 pièces (1,63 Go de pièces, dont 680 Mo de binaires fournisseurs de messages) ; sans journaux d'événements, 18 s. Chaque pièce de WAC porte MD5, SHA-1, SHA-256, les huit dates NTFS et son entrée MFT ; KAPE donne SHA-1 et trois dates.

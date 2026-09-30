@@ -18,6 +18,7 @@ holding the EZ tool's CSV and WAC's JSON. Modes:
   shellbags SBECmd   / shellbags.json
   recycle_bin RBCmd  / recycle_bin.json
   srum      SrumECmd / srum.json
+  kape      KAPE (KapeTriage) copy log / WAC's exhibit manifest: coverage and hashes
   registry  RECmd (Kroll batch) / userassists, bams, Usbstor, users, run, muicache, typed_paths,
             word_wheel_query, office_trust_records
 
@@ -897,6 +898,58 @@ def compare_registry(folder):
     return 1 if c.report() or unpaired else 0
 
 
+def kape_category(path):
+    """A file's family, for the coverage table: what an analyst would call it."""
+    p = path.lower()
+    rules = (("live observation", "live state (processes, sessions, network, clock)"),
+             ("\\winevt\\", "event logs"), ("$mft", "NTFS metadata"), ("$usnjrnl", "NTFS metadata"),
+             ("$logfile", "NTFS metadata"), ("$boot", "NTFS metadata"), ("$secure", "NTFS metadata"),
+             ("$txflog", "NTFS metadata"), ("$fatmetadata", "FAT/exFAT volumes (USB keys)"),
+             ("\\config\\", "hives"), ("ntuser.dat", "hives"), ("usrclass.dat", "hives"), ("amcache", "hives"),
+             ("\\prefetch\\", "Prefetch"), ("\\recent\\", "shortcuts and jump lists (Recent)"),
+             ("\\windows defender\\", "Microsoft Defender"), ("\\startup\\", "startup folders"),
+             ("\\start menu\\", "shortcuts outside Recent (Start menu, Desktop, Quick Launch)"),
+             ("\\quick launch\\", "shortcuts outside Recent (Start menu, Desktop, Quick Launch)"),
+             ("\\desktop\\", "shortcuts outside Recent (Start menu, Desktop, Quick Launch)"),
+             ("\\edge\\", "web browsers"), ("\\webcache\\", "web browsers"), ("\\inetcookies\\", "web browsers"),
+             ("\\internet explorer\\", "web browsers"), ("\\history\\", "web browsers"),
+             ("activitiescache", "Windows timeline (ActivitiesCache)"), ("\\protect\\", "DPAPI master keys"),
+             ("\\wer\\", "error reports (WER)"),
+             ("\\wbem\\", "WMI repository"), ("\\downloader\\", "BITS"), ("\\sru\\", "SRUM"),
+             ("psreadline", "PowerShell history"), ("\\inf\\setupapi", "setupapi logs"),
+             ("\\drivers\\etc\\", "hosts and network files"), ("\\tasks\\", "scheduled tasks"),
+             ("\\$recycle.bin\\", "recycle bin"))
+    for needle, name in rules:
+        if needle in p:
+            return name
+    if re.search(r"\.(dll|exe|sys|mui|cpl|ax|ocx|drv)$", p):
+        return "binaries (event message providers, services, drivers)"
+    return "other"
+
+
+def compare_kape(folder):
+    """KAPE's copy log (copied and deduplicated files) against WAC's exhibit manifest."""
+    kape = {}
+    for pattern in ("*_CopyLog.csv", "*SkipLog*.csv"):
+        for path in glob.glob(os.path.join(folder, pattern)):
+            with open(path, encoding="utf-8-sig", newline="") as f:
+                for r in csv.DictReader(f):
+                    kape.setdefault(r["SourceFile"].lower(), r)
+    with open(only(folder, "wac-manifest.json"), encoding="utf-8-sig") as f:
+        wac = {i["SourcePath"].lower(): i for i in json.load(f)["Items"]}
+    common = set(kape) & set(wac)
+    differ = sorted(k for k in common if (kape[k].get("SourceFileSha1") or "").upper() != (wac[k].get("SHA1") or "").upper())
+    print(f"files: KAPE {len(kape)}, WAC {len(wac)}, common {len(common)}, same SHA-1 {len(common) - len(differ)}")
+    print(f"  SHA-1 differ (files written between the two collections): {[k.rsplit(chr(92), 1)[-1] for k in differ]}")
+    rows = collections.defaultdict(lambda: [0, 0, 0])
+    for k in set(kape) | set(wac):
+        rows[kape_category(k)][0 if k in common else 1 if k in kape else 2] += 1
+    print(f"  {'family':62} {'both':>6} {'KAPE only':>10} {'WAC only':>9}")
+    for name, (both, k_only, w_only) in sorted(rows.items(), key=lambda x: -sum(x[1])):
+        print(f"  {name:62} {both:6} {k_only:10} {w_only:9}")
+    return 0
+
+
 def only(folder, pattern):
     """The one file of the folder matching pattern: the EZ tools prefix their CSV with a timestamp."""
     found = glob.glob(os.path.join(folder, pattern))
@@ -919,6 +972,8 @@ def main():
     if mode == "jumplist":
         return compare_jumplist(only(folder, "*_AutomaticDestinations.csv"), only(folder, "*_CustomDestinations.csv"),
                                 only(folder, "jumplistAutomaticDestinations.json"), only(folder, "jumplistCustomDestinations.json"))
+    if mode == "kape":
+        return compare_kape(folder)
     if mode == "registry":
         return compare_registry(folder)
     if mode == "srum":
