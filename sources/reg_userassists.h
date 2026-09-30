@@ -43,6 +43,7 @@ public:
 	                             //!< known folder GUIDs resolved to paths
 	int Count = 0;               //!< number of runs counted by Explorer
 	int FocusCount = 0;          //!< number of times the window received the focus
+	unsigned int FocusTimeMs = 0; //!< total time the window had the focus, in milliseconds (offset 12)
 	FILETIME lastRunUtc = { 0, 0 };   //!< last run, in UTC as the value stores it
 
 	/*! Size of an entry of Windows 7 and later: session (4), run count (4),

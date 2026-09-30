@@ -27,6 +27,10 @@ UserAssist::UserAssist(std::wstring hKey, const std::wstring& valueName, const s
 	if (data.size() < ENTRY_SIZE) return;
 	std::memcpy(&Count, data.data() + 4, 4);        // number of runs
 	std::memcpy(&FocusCount, data.data() + 8, 4);   // number of times the window got the focus
+	// Total time in the foreground, in milliseconds: how long the program was
+	// USED, which neither the run count nor the last run says (B-015, as
+	// RECmd reads it).
+	std::memcpy(&FocusTimeMs, data.data() + 12, 4);
 	/* The last run is a FILETIME in UTC. It used to be read as a LOCAL time:
 	   both keys came out shifted by the time-zone offset — measured on the
 	   test VM, raw_hive_test.exe started at 13:48:24 UTC (its Prefetch: 13:48:28)
@@ -43,6 +47,7 @@ Json UserAssist::toJson() {
 	o.add(L"Name",          Json::str(Name));
 	o.add(L"Count",         Json::num((long long)Count));
 	o.add(L"FocusCount",    Json::num((long long)FocusCount));
+	o.add(L"FocusTimeMs",   Json::num((long long)FocusTimeMs));
 	o.add(L"LastRun",       Json::str(utcTimeToIso8601Local(lastRunUtc)));
 	o.add(L"LastRunUtc",    Json::str(timeToIso8601Utc(lastRunUtc)));
 	return o;
