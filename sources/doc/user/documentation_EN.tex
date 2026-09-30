@@ -1063,7 +1063,9 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         applies the current one, hence an hour apart in summer for a winter
         date); exFAT keeps its offset (\champ{ModifiedOffset}\ldots), the UTC
         date is then exact. The collection copies only the volume's metadata
-        (boot sector, FAT, directories), not the files' content.
+        (boot sector, FAT, directories), not the files' content; with
+        \opt{binary}, a program of these volumes cited by an artefact (run
+        from a key, for instance) is fingerprinted and collected as on NTFS.
   \item[\fichier{srum.json}] resource usage (SRUM, \path|sru\SRUDB.dat|), one
         entry per row of every table: bytes sent and received per application
         and per interface (an exfiltration shows there, with the program), CPU

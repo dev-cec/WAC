@@ -10,7 +10,8 @@
 #                          [--only=key,key…]
 #
 # --only=mft,usn_journal: collects only these artefacts (keys of the
-# `artefacts:` section of wac.yml), through a wac.yml placed next to WAC.exe for
+# `artefacts:` section of wac.yml; the pseudo-key "binaries" adds --binary),
+# through a wac.yml placed next to WAC.exe for
 # steps 6 and 7 — a cycle a few minutes long to test one artefact. The checks
 # of the artefacts switched off are skipped (their JSON says NotRequested).
 # The artefacts read in the hives also need `registry`; step 8 (wac.yml) is
@@ -43,7 +44,11 @@ wants() { local k; for k in "$@"; do [[ -z "$ONLY" || ",$ONLY," == *",$k,"* ]] &
 # artefacts need.
 full_cycle() { [[ -z "$ONLY" ]]; }
 # --only: no binaries collected — they are no artefact's.
-[[ -n "$ONLY" ]] && BINARY_OPTION=""
+# The pseudo-key "binaries" keeps them: --only=fat_volumes,prefetch,binaries.
+if [[ -n "$ONLY" ]]; then
+  [[ ",$ONLY," == *",binaries,"* ]] || BINARY_OPTION=""
+  ONLY=$(tr ',' '\n' <<<"$ONLY" | grep -vx binaries | paste -sd, -)
+fi
 BINARY_FLAG=${BINARY_OPTION:+--binary}
 
 echo "== 0. Agent == ($(date +%H:%M:%S))"

@@ -1542,6 +1542,21 @@ def check_small_file_artefacts(folder):
             close = got and abs((instant(got + "Z") - instant(modified + "Z")).total_seconds()) <= 2
             if e is None or e.get("Size") != int(size) or not close:
                 wrong.append(f"{file}: {None if e is None else (e.get('Size'), got)} for ({size}, {modified})")
+        # The program run from the key, fingerprinted there through the FAT reader (--binary).
+        tool = next((l[8:].split("|") for l in lines if l.startswith("fattool=")), None)
+        prefetch = load(folder, "prefetchs.json")
+        if tool and isinstance(prefetch, list):
+            cited = [o for p in prefetch for o in [p] + (p.get("FileNames") or []) if isinstance(o, dict)
+                     and (o.get("FullPath") or "").lower() == tool[0].lower()]
+            if not cited:
+                wrong.append(f"{tool[0]} not cited by prefetchs.json")
+            # A --collect run records only the Authenticode digest of a binary
+            # authenticated as Microsoft (the collection rule): the copy of
+            # whoami.exe then carries its signature, not its file hashes.
+            elif not any(o.get("SHA256") == tool[1]
+                         or (str(o.get("Signature", "")).startswith("Microsoft") and o.get("AuthenticodeSHA256"))
+                         for o in cited):
+                wrong.append(f"{tool[0]}: SHA256 {[o.get('SHA256') for o in cited]} for {tool[1]}")
         report(not wrong, f"fat_volumes.json: {len(volumes)} volume(s) (FAT32, exFAT), {len(files)} file(s) as Windows lists them, deleted entries found",
                f"fat_volumes.json: {wrong[0] if wrong else ''}")
 

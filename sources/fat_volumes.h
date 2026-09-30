@@ -25,11 +25,23 @@
  */
 #pragma once
 
+#include <map>
+#include <memory>
 #include <string>
 #include <vector>
 #include <windows.h>
 #include "fat_volume.h"
+#include "raw_hive.h"
 #include "tools.h"
+
+/*! The FAT and exFAT volumes WAC reads: fixed and removable, the volume
+ *  holding the collection left out.
+ *  @return their mount points, "E:"… */
+std::vector<std::wstring> fatVolumesToRead();
+
+/*! True if a path lies on one of those volumes.
+ *  @param path "X:\\…" */
+bool onFatVolume(const std::wstring& path);
 
 /*! Copies the metadata of every FAT and exFAT volume into the exhibit store
  *  (collection phase).
@@ -41,6 +53,28 @@ struct FatVolumeEntry {
 	std::wstring volume, fileSystem, label;
 	FatEntry entry;
 	Json toJson() const;   //!< @return the entry as a JSON object
+};
+
+/*! The files a collection reads on the examined machine — cited binaries,
+ *  catalogs —, on NTFS volumes by RawReader, on FAT and exFAT volumes by
+ *  FatVolume: a program run from a suspect's key is fingerprinted and
+ *  collected like any other. */
+class FatAwareReader : public FileSource {
+public:
+	HRESULT read(const std::wstring& absolutePath, const std::wstring& output,
+	             RawHiveExtraction& line, std::streambuf* observer = nullptr) override;
+	HRESULT list(const std::wstring& absoluteFolder, std::vector<RawDirEntry>& entries) override;
+private:
+	//! A FAT or exFAT volume open for reading, its present entries by lower-case path.
+	struct Volume {
+		std::unique_ptr<FileVolumeSource> source;
+		FatVolume volume;
+		std::map<std::wstring, FatEntry> byPath;
+		std::map<std::wstring, uint64_t> ids;   //!< an identifier per entry, as $MFT numbers are for NTFS
+	};
+	Volume* fatVolume(const std::wstring& path);
+	RawReader ntfs_;
+	std::map<wchar_t, std::unique_ptr<Volume>> volumes_;   //!< nullptr: not FAT, or unreadable
 };
 
 //! FAT and exFAT volumes (fat_volumes.json).

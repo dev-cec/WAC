@@ -31,6 +31,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -53,8 +54,10 @@ public:
 class FileVolumeSource : public VolumeSource {
 public:
 	/*! @param path an image, or "\\\\.\\E:"
-	 *  @param size the volume's size (0: the file's) */
-	explicit FileVolumeSource(const std::wstring& path, uint64_t size = 0);
+	 *  @param size the volume's size (0: the file's)
+	 *  @param keep keep the bytes read (the metadata a collection copies);
+	 *         false to read files' contents without keeping them */
+	explicit FileVolumeSource(const std::wstring& path, uint64_t size = 0, bool keep = true);
 	~FileVolumeSource() override;
 	bool isOpen() const { return handle_ != INVALID_HANDLE_VALUE; }
 	bool read(uint64_t offset, size_t size, std::vector<uint8_t>& out) override;
@@ -65,6 +68,7 @@ public:
 private:
 	HANDLE handle_ = INVALID_HANDLE_VALUE;
 	uint64_t size_ = 0;
+	bool keep_ = true;
 	std::map<uint64_t, std::vector<uint8_t>> ranges_;
 };
 
@@ -118,6 +122,11 @@ public:
 	 *  directory.
 	 *  @return the entries, in the directories' order */
 	std::vector<FatEntry> entries();
+	/*! Reads a file's content, cluster run by cluster run, up to its size.
+	 *  @param e a present file of this volume
+	 *  @param sink receives the bytes in order; false stops the reading
+	 *  @return true if the whole content was read */
+	bool readContent(const FatEntry& e, const std::function<bool(const uint8_t*, size_t)>& sink);
 
 private:
 	uint32_t next(uint32_t cluster);

@@ -546,7 +546,7 @@ void collectForConversion() {
 		            + std::to_wstring(b.collectedBytes / 1024 / 1024) + L" MiB), "
 		            + std::to_wstring(b.duplicates) + L" identical content(s) not copied again; "
 		            + std::to_wstring(b.catalogsUsed) + L" signature catalog(s) recorded)",
-		            L"every fixed NTFS volume, raw reading; authenticity verified in memory, with no API and no service",
+		            L"every fixed NTFS volume and every FAT or exFAT volume, raw reading; authenticity verified in memory, with no API and no service",
 		            hr, Footprint::VOLUME_BRUT);
 		if (FAILED(hr)) printError(hr);
 		else printSuccess();

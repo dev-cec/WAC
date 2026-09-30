@@ -118,7 +118,7 @@ uint8_t fatShortNameChecksum(const uint8_t name[11]) {
 
 // ------------------------------------------------------------ sources
 
-FileVolumeSource::FileVolumeSource(const std::wstring& path, uint64_t size) {
+FileVolumeSource::FileVolumeSource(const std::wstring& path, uint64_t size, bool keep) : keep_(keep) {
 	handle_ = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
 	if (handle_ == INVALID_HANDLE_VALUE) return;
 	size_ = size;
@@ -149,6 +149,7 @@ bool FileVolumeSource::read(uint64_t offset, size_t size, std::vector<uint8_t>& 
 		return false;
 	const uint8_t* bytes = static_cast<const uint8_t*>(buffer.data);
 	out.assign(bytes + (offset - begin), bytes + (offset - begin) + size);
+	if (!keep_) return true;
 	// Kept, merged with its neighbours: the copy a collection writes.
 	std::vector<uint8_t> block(bytes, bytes + (end - begin));
 	uint64_t blockBegin = begin;
@@ -300,6 +301,29 @@ std::vector<uint8_t> FatVolume::chain(uint32_t first, uint64_t knownSize, bool c
 		c = contiguous ? c + 1 : next(c);
 	}
 	return data;
+}
+
+bool FatVolume::readContent(const FatEntry& e, const std::function<bool(const uint8_t*, size_t)>& sink) {
+	const size_t RUN_MAX = 1024 * 1024;           // consecutive clusters read at once, up to 1 MiB
+	uint64_t left = e.size;
+	std::set<uint32_t> seen;
+	std::vector<uint8_t> run;
+	for (uint32_t c = e.firstCluster; left > 0;) {
+		if (c < 2 || c >= clusterCount_ + 2 || !seen.insert(c).second) return false;
+		// The run of clusters that follow each other, on disk and in the chain.
+		uint32_t count = 1;
+		while ((uint64_t)count * clusterSize_ < left && (uint64_t)(count + 1) * clusterSize_ <= RUN_MAX) {
+			const uint32_t following = e.contiguous ? c + count : next(c + count - 1);
+			if (following != c + count || following >= clusterCount_ + 2 || !seen.insert(following).second) break;
+			++count;
+		}
+		const size_t bytes = (size_t)std::min<uint64_t>(left, (uint64_t)count * clusterSize_);
+		if (!source_->read(dataOffset_ + (uint64_t)(c - 2) * clusterSize_, bytes, run) || !sink(run.data(), run.size()))
+			return false;
+		left -= bytes;
+		c = e.contiguous ? c + count : next(c + count - 1);
+	}
+	return true;
 }
 
 std::vector<FatEntry> FatVolume::entries() {

@@ -5,7 +5,10 @@
 #include "audit.h"
 #include "consigne.h"
 #include "idList.h"
+#include "quickdigest5.h"
 #include "running_machine.h"
+#include "sha.h"
+#include <fstream>
 #include <filesystem>
 
 namespace {
@@ -44,22 +47,35 @@ void addFatDate(Json& o, const wchar_t* name, const FILETIME& date, bool utc, in
 
 } // namespace
 
-HRESULT ExtractFatVolumesRaw() {
+std::vector<std::wstring> fatVolumesToRead() {
 	std::error_code ec;
 	const std::wstring medium = std::filesystem::absolute(exhibitStoreFolder(), ec).root_name().wstring();
+	std::vector<std::wstring> out;
+	for (const RunningMachine::Volume& v : runningMachine().volumes)
+		if (isFat(v.fileSystem) && (v.driveType == DRIVE_FIXED || v.driveType == DRIVE_REMOVABLE)
+		    && v.mountPoint.size() == 2 && _wcsicmp(v.mountPoint.c_str(), medium.c_str()) != 0)
+			out.push_back(v.mountPoint);
+	return out;
+}
+
+bool onFatVolume(const std::wstring& path) {
+	if (path.size() < 3 || path[1] != L':') return false;
+	for (const std::wstring& v : fatVolumesToRead())
+		if (towupper(v[0]) == towupper(path[0])) return true;
+	return false;
+}
+
+HRESULT ExtractFatVolumesRaw() {
 	HRESULT global = ERROR_EMPTY;
-	for (const RunningMachine::Volume& v : runningMachine().volumes) {
-		if (!isFat(v.fileSystem) || (v.driveType != DRIVE_FIXED && v.driveType != DRIVE_REMOVABLE)
-		    || v.mountPoint.size() != 2 || _wcsicmp(v.mountPoint.c_str(), medium.c_str()) == 0)
-			continue;
-		const std::wstring device = L"\\\\.\\" + v.mountPoint;
+	for (const std::wstring& mountPoint : fatVolumesToRead()) {
+		const std::wstring device = L"\\\\.\\" + mountPoint;
 		FileVolumeSource source(device);
 		FatVolume volume;
 		// Walked once: every byte it reads — the metadata — is what is copied.
 		const bool read = source.isOpen() && volume.open(source);
 		if (read) volume.entries();
-		const HRESULT result = read ? ExhibitStoreProduce(pathUnder(exhibitStoreFolder(), v.mountPoint + METADATA),
-		                                                 volumeCopyBytes(source), v.mountPoint + METADATA,
+		const HRESULT result = read ? ExhibitStoreProduce(pathUnder(exhibitStoreFolder(), mountPoint + METADATA),
+		                                                 volumeCopyBytes(source), mountPoint + METADATA,
 		                                                 L"Raw reading of " + device + L" (" + volume.type()
 		                                                 + L"): boot sector, FAT and directories copied, no file opened")
 		                            : HRESULT_FROM_WIN32(ERROR_UNRECOGNIZED_VOLUME);
@@ -68,6 +84,94 @@ HRESULT ExtractFatVolumesRaw() {
 		global = FAILED(result) ? S_FALSE : (global == ERROR_EMPTY ? S_OK : global);
 	}
 	return global;
+}
+
+// ------------------------------------------------------------ files on FAT volumes
+
+namespace {
+
+//! A FILETIME as the manifest's 64-bit UTC value, a local one converted.
+uint64_t manifestTime(const FILETIME& date, bool utc) {
+	if (date.dwLowDateTime == 0 && date.dwHighDateTime == 0) return 0;
+	const FILETIME u = utc ? date : suspectLocalToUtc(date);
+	return ((uint64_t)u.dwHighDateTime << 32) | u.dwLowDateTime;
+}
+
+} // namespace
+
+FatAwareReader::Volume* FatAwareReader::fatVolume(const std::wstring& path) {
+	if (path.size() < 3 || path[1] != L':' || path[2] != L'\\') return nullptr;
+	const wchar_t letter = (wchar_t)towupper(path[0]);
+	const auto known = volumes_.find(letter);
+	if (known != volumes_.end()) return known->second.get();
+	std::unique_ptr<Volume> v;
+	if (onFatVolume(path)) {
+		v = std::make_unique<Volume>();
+		// Contents are read without being kept: only a collection's metadata copy keeps its bytes.
+		v->source = std::make_unique<FileVolumeSource>(L"\\\\.\\" + path.substr(0, 2), 0, false);
+		if (!v->source->isOpen() || !v->volume.open(*v->source)) v.reset();
+		else
+			for (const FatEntry& e : v->volume.entries())
+				if (!e.deleted && v->byPath.emplace(toLower(e.path), e).second) v->ids.emplace(toLower(e.path), v->ids.size() + 1);
+	}
+	return (volumes_[letter] = std::move(v)).get();
+}
+
+HRESULT FatAwareReader::read(const std::wstring& absolutePath, const std::wstring& output,
+                             RawHiveExtraction& line, std::streambuf* observer) {
+	Volume* v = fatVolume(absolutePath);
+	if (!v) return ntfs_.read(absolutePath, output, line, observer);
+	line.volumePath = absolutePath;
+	line.outputPath = output;
+	const auto found = v->byPath.find(toLower(absolutePath.substr(2)));
+	if (found == v->byPath.end() || found->second.directory) return line.result = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	const FatEntry& e = found->second;
+	std::ofstream file;
+	if (!output.empty()) file.open(std::filesystem::path(output), std::ios::binary);
+	Md5Stream md5;
+	Sha1Stream sha1;
+	Sha256Stream sha256;
+	const bool hashes = line.fingerprints.computeHashes;
+	uint64_t bytes = 0;
+	const bool whole = v->volume.readContent(e, [&](const uint8_t* data, size_t size) {
+		if (hashes) { md5.update(data, size); sha1.update(data, size); sha256.update(data, size); }
+		if (observer) observer->sputn(reinterpret_cast<const char*>(data), (std::streamsize)size);
+		if (file.is_open()) file.write(reinterpret_cast<const char*>(data), (std::streamsize)size);
+		bytes += size;
+		return !file.is_open() || (bool)file;
+	});
+	if (!whole || (file.is_open() && !file)) return line.result = HRESULT_FROM_WIN32(ERROR_READ_FAULT);
+	RawHiveFingerprints& f = line.fingerprints;
+	if (hashes) { f.md5 = md5.hexDigest(); f.sha1 = sha1.hexDigest(); f.sha256 = sha256.hexDigest(); }
+	f.bytes = bytes;
+	f.declaredSize = f.validDataLength = e.size;
+	f.creeUtc = manifestTime(e.created, e.createdUtc);
+	f.modifiedUtc = manifestTime(e.modified, e.modifiedUtc);
+	f.accedeUtc = manifestTime(e.accessed, e.accessedUtc);
+	FILETIME now = { 0, 0 };
+	GetSystemTimeAsFileTime(&now);
+	f.extractedUtc = ((uint64_t)now.dwHighDateTime << 32) | now.dwLowDateTime;
+	return line.result = ERROR_SUCCESS;
+}
+
+HRESULT FatAwareReader::list(const std::wstring& absoluteFolder, std::vector<RawDirEntry>& entries) {
+	Volume* v = fatVolume(absoluteFolder);
+	if (!v) return ntfs_.list(absoluteFolder, entries);
+	entries.clear();
+	std::wstring folder = toLower(absoluteFolder.substr(2));
+	if (!folder.empty() && folder.back() != L'\\') folder += L'\\';
+	for (const auto& [path, e] : v->byPath) {
+		if (path.size() <= folder.size() || path.compare(0, folder.size(), folder) != 0
+		    || path.find(L'\\', folder.size()) != std::wstring::npos)
+			continue;
+		RawDirEntry d;
+		d.name = e.path.substr(e.path.find_last_of(L'\\') + 1);
+		d.mftIndex = v->ids[path];
+		d.size = e.directory ? 0 : e.size;
+		d.isDirectory = e.directory;
+		entries.push_back(std::move(d));
+	}
+	return S_OK;
 }
 
 Json FatVolumeEntry::toJson() const {

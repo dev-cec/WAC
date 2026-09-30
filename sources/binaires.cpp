@@ -2,6 +2,7 @@
  *  \brief Implementation of the fingerprinting and collection of the files cited by artefacts (see binaires.h).
  */
 #include "binaires.h"
+#include "fat_volumes.h"
 #include <map>
 #include <fstream>
 #include <chrono>
@@ -427,7 +428,7 @@ void recordJustifications(const std::vector<std::wstring>& sources, const std::w
 /*! The file source of this run (see g_reader). */
 std::unique_ptr<FileSource> openReader() {
 	if (conf.mode == RunMode::Convert) return std::make_unique<ExhibitReader>();
-	return std::make_unique<RawReader>();
+	return std::make_unique<FatAwareReader>();
 }
 
 /*! True while the collection medium keeps its reserve. In a full run, each
@@ -1173,6 +1174,8 @@ HRESULT BinariesCollectAll() {
 	   folder is left out when it lies on a fixed volume. */
 	std::vector<std::wstring> roots;
 	for (const std::wstring& volume : fixedNtfsVolumes()) roots.push_back(volume + L"\\");
+	// And the FAT and exFAT volumes, a suspect's keys among them.
+	for (const std::wstring& volume : fatVolumesToRead()) roots.push_back(volume + L"\\");
 	const std::wstring output = toLower(std::filesystem::absolute(conf._outputDir, ec).wstring());
 	const std::wstring option = conf.binaryAll ? L"--collect --binary-all" : L"--collect --binary";
 
@@ -1247,8 +1250,9 @@ HRESULT BinariesCollectAll() {
 				item->order = nextOrder++;
 				item->path = path;
 				item->record = { volume, e.mftIndex };
-				item->method = L"Raw NTFS reading (\\\\.\\" + path.substr(0, 2)
-				             + L" — $MFT, directory indexes, $DATA attribute); executable, library, "
+				item->method = (onFatVolume(path) ? L"Raw FAT reading (\\\\.\\" + path.substr(0, 2) + L" — FAT, directories, clusters)"
+				                                  : L"Raw NTFS reading (\\\\.\\" + path.substr(0, 2) + L" — $MFT, directory indexes, $DATA attribute)")
+				             + L"; executable, library, "
 				               L"driver, script or macro document of the volume (" + option + L")";
 				if (readOnce.count(item->record)) {
 					item->link = true;

@@ -328,6 +328,18 @@ if (Wants 'fat_volumes') {
         (Get-Item -LiteralPath $long).LastWriteTimeUtc = [datetime]::new(2022, 7, 4, 5, 6, 8, [DateTimeKind]::Utc)
         New-Item -ItemType Directory -Path (Join-Path $root 'DIR1') | Out-Null
         [IO.File]::WriteAllBytes((Join-Path $root 'DIR1\sub file.bin'), [byte[]](1..5000 | ForEach-Object { $_ % 256 }))
+        # A program run from the key, as a suspect would: a copy of whoami.exe,
+        # run once (harmless). Its Prefetch cites it on the key: with --binary,
+        # WAC must fingerprint it there, through the FAT reader.
+        if ($key.FileSystem -eq 'FAT32') {
+            $tool = Join-Path $root 'wac-tool.exe'
+            Copy-Item C:\Windows\System32\whoami.exe $tool
+            # whoami.exe's date is kept by the copy: a summer one instead (see above).
+            (Get-Item -LiteralPath $tool).LastWriteTimeUtc = [datetime]::new(2022, 7, 4, 5, 6, 10, [DateTimeKind]::Utc)
+            & $tool | Out-Null
+            Write-Output "fattool=$tool|$((Get-FileHash $tool -Algorithm SHA256).Hash)"
+        }
+        # The deletions last: no entry created after them takes their places.
         [IO.File]::WriteAllText((Join-Path $root 'deleted-file.txt'), 'deleted by the harness')
         Remove-Item -LiteralPath (Join-Path $root 'deleted-file.txt')
         New-Item -ItemType Directory -Path (Join-Path $root 'DELDIR') | Out-Null
