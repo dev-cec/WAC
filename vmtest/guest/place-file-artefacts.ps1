@@ -436,6 +436,17 @@ if (Wants 'events') {
     }
 }
 
+# 17b. A cleared log: a classic log of its own, three events, then cleared.
+#      Windows then sees none, but the chunk keeps them past its free-space
+#      offset — events.json must give them flagged as recovered, never as live.
+if (Wants 'events') {
+    if (-not [System.Diagnostics.EventLog]::SourceExists('WACWitness')) { New-EventLog -LogName WACWitness -Source WACWitness }
+    1..3 | ForEach-Object { Write-EventLog -LogName WACWitness -Source WACWitness -EventId (4200 + $_) -Message "WAC witness cleared $_" }
+    Clear-EventLog -LogName WACWitness
+    $live = @(Get-WinEvent -LogName WACWitness -ErrorAction SilentlyContinue).Count
+    Write-Output "evtcleared=WACWitness.evtx|$live|4201,4202,4203"
+}
+
 # 18. Reference counts of the logs Windows writes itself.
 if (Wants 'setupapi', 'defender') {
     $sections = (Select-String -Path 'C:\Windows\INF\setupapi.dev*.log' -Pattern '^>>>  \[' -ErrorAction SilentlyContinue | Measure-Object).Count

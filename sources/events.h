@@ -79,6 +79,10 @@ struct Event {
 	*  and a reading defect.
 	*/
 	Json evtSourceLog = Json::null();
+	/*! `true` for a record read past the live area of its chunk (see
+	*  EvtxRecord::recovered): residue of a cleared log, which Windows' own
+	*  viewer no longer shows. Omitted for a live event. */
+	Json evtRecovered = Json::null();
 	/*! Plain-text message, rebuilt from the provider's resources.
 	*
 	*  Omitted when it could not be: provider not declared, resource binary

@@ -1613,6 +1613,19 @@ def check_small_file_artefacts(folder):
             report(compared and not wrong, f"events.json: {compared} event value(s) rendered as Windows renders them",
                    f"events.json: {wrong[0] if wrong else 'no reference event found'}")
 
+    # Cleared log: none live, as Windows sees it; the cleared events recovered.
+    if isinstance(events, list) and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            cleared = [l.strip()[11:].split("|") for l in f if l.startswith("evtcleared=")]
+        for log_name, windows_live, ids in cleared:
+            mine = [e for e in events if isinstance(e, dict) and str(e.get("EvtSourceLog", "")).lower() == log_name.lower()]
+            live = [e for e in mine if not e.get("EvtRecovered")]
+            recovered = {e.get("EvtSystemEventID") for e in mine if e.get("EvtRecovered") is True}
+            expected = {int(i) for i in ids.split(",")}
+            report(len(live) == int(windows_live) and expected <= recovered,
+                   f"events.json: {log_name} cleared — {len(live)} live event(s) as Windows, the {len(expected)} cleared ones recovered",
+                   f"events.json: {log_name} cleared — {len(live)} live (Windows {windows_live}), recovered IDs {sorted(recovered)}")
+
     # BITS: the harness's job, as Get-BitsTransfer gives it.
     bits = load(folder, "bits_jobs.json")
     if isinstance(bits, list) and "bits" in reference:

@@ -753,12 +753,22 @@ HRESULT EvtxReadFile(const std::wstring& path,
 		}
 		++b.chunks;
 
-		/*  "Free space offset" bounds the written records. A corrupt chunk can
-		 *  announce it out of range: the chunk size is then used, the rest being
-		 *  filtered by the record signature. */
-		size_t recordsEnd = read32(chunk.data(), read, 48);
-		if (recordsEnd <= RECORDS_START || recordsEnd > read)
-			recordsEnd = read;
+		/*  "Free space offset" bounds the live records: what Windows reads. A
+		 *  corrupt chunk can announce it out of range: the whole chunk is then
+		 *  read, filtered by the record signature.
+		 *
+		 *  Past it, residues are read ONLY in a chunk whose header declares no
+		 *  live record — a cleared log: Windows resets the header and the offset
+		 *  to 512 but does not wipe the records, whose templates are those of
+		 *  the same chunk. Elsewhere, what lies past the offset is a copy of the
+		 *  previous chunk's tail (measured: same offset, record live in that
+		 *  chunk), and decoding it against this chunk's templates gives a valid
+		 *  but FALSE event — another record's data. */
+		size_t liveEnd = read32(chunk.data(), read, 48);
+		if (liveEnd < RECORDS_START || liveEnd > read)
+			liveEnd = read;
+		const bool clearedChunk = read64(chunk.data(), read, 24) == UINT64_MAX;
+		const size_t recordsEnd = clearedChunk ? read : liveEnd;
 
 		Decoder decoder(chunk.data(), read);
 		size_t p = RECORDS_START;
@@ -770,6 +780,7 @@ HRESULT EvtxReadFile(const std::wstring& path,
 			if (size < 28 || p + size > recordsEnd) break;
 
 			EvtxRecord e;
+			e.recovered = p >= liveEnd;
 			e.id = read64(chunk.data(), read, p + 8);
 			const uint64_t v = read64(chunk.data(), read, p + 16);
 			e.writtenUtc.dwLowDateTime  = (DWORD)(v & 0xFFFFFFFFULL);
@@ -777,7 +788,13 @@ HRESULT EvtxReadFile(const std::wstring& path,
 
 			if (decoder.document(p + 24, p + size - 4, e.xml)) {
 				++b.read;
+				if (e.recovered) ++b.recovered;
 				if (!onRecord(e)) { goOn = false; break; }
+			}
+			else if (e.recovered) {
+				// A residue that no longer decodes ends the residues, and is not a
+				// defect of the live log.
+				break;
 			}
 			else {
 				++b.unreadable;
@@ -793,6 +810,7 @@ HRESULT EvtxReadFile(const std::wstring& path,
 	diag << b.chunks << L" chunk(s)";
 	if (nDeclaredChunks != b.chunks) diag << L" (" << nDeclaredChunks << L" declared)";
 	diag << L", " << b.read << L" record(s)";
+	if (b.recovered) diag << L" (" << b.recovered << L" recovered past the live area)";
 	if (b.unreadable) diag << L", " << b.unreadable << L" unreadable";
 	if (chunksIgnores) diag << L", " << chunksIgnores << L" damaged chunk(s)";
 	if (b.sale) diag << L", log not closed cleanly";

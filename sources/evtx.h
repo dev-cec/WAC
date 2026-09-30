@@ -59,6 +59,11 @@ struct EvtxRecord {
 	unsigned long long id = 0;   //!< record number
 	FILETIME writtenUtc = { 0, 0 };         //!< time written (UTC)
 	std::wstring xml;                     //!< event body, as XML
+	/*! Found past the free-space offset of a chunk whose header declares no
+	 *  live record: an event of a cleared log, which Windows no longer shows.
+	 *  Kept, since it is the trace the clearing meant to erase, but flagged so
+	 *  that it is never read as a live event. */
+	bool recovered = false;
 };
 
 /*! Result of reading an .evtx file: enough to tell, in the report, an empty
@@ -67,6 +72,7 @@ struct EvtxRecord {
 struct EvtxSummary {
 	unsigned long long chunks = 0;        //!< chunks walked
 	unsigned long long read = 0;           //!< decoded records
+	unsigned long long recovered = 0;      //!< of which read past the live area (see EvtxRecord::recovered)
 	unsigned long long unreadable = 0;    //!< discarded records
 	unsigned long long chunksIgnores = 0; //!< damaged chunks skipped (no signature)
 	bool headerValid = false;            //!< "ElfFile\0" signature found

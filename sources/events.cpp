@@ -199,6 +199,7 @@ Json Event::toJson() const {
 	o.add(L"EvtSystemVersion",           evtSystemVersion);
 	o.add(L"EvtEventData",               evtEventData);
 	o.add(L"EvtSourceLog",               evtSourceLog);
+	o.add(L"EvtRecovered",               evtRecovered);
 	o.add(L"EvtEventMessage",            evtEventMessage);
 	return o;
 }
@@ -248,6 +249,7 @@ HRESULT Events::getData() {
 					return true;
 				}
 				Event ev(*root, channel, e.id, fileName);
+				if (e.recovered) ev.evtRecovered = Json::boolean(true);
 				/*  PLAIN-TEXT MESSAGE. Rebuilt from the provider's resources, which
 				    only the API could do until now. The resource file is
 				    extracted on demand, once per provider (see
