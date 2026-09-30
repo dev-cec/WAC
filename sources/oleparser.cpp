@@ -2,6 +2,7 @@
  *  \brief Reading of OLE / CFB compound files, as automatic jump lists use them (see oleparser.h).
  */
 #include "oleparser.h"
+#include "trans_id.h"
 
 Directory::Directory(LPBYTE data) {
 	// The name field of a CFB directory entry is 64 bytes: the read stops there.
@@ -10,36 +11,29 @@ Directory::Directory(LPBYTE data) {
 	directorySize = *reinterpret_cast<unsigned int*>(data + 120);
 }
 
-DestFile::DestFile(LPBYTE buffer, size_t limit) {
-	// The fixed part of an entry is 130 bytes; below that the entry is truncated.
-	if (limit < 130) {
+DestFile::DestFile(LPBYTE buffer, size_t limit, int formatVersion) {
+	/* The fixed part: 130 bytes from version 3 (Windows 10), 114 before — the
+	   interaction count and 16 unknown bytes were added. The path follows,
+	   with, from version 3, 4 bytes after it (end of string, unknown). */
+	const bool version1 = formatVersion < 3;
+	const size_t fixedSize = version1 ? 114 : 130;
+	if (limit < fixedSize) {
 		size = 0;
 		return;
 	}
-	log(3, L"🔈guid_to_wstring guidDroidVolume");
-	guidDroidVolume = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8));
-	log(3, L"🔈guid_to_wstring guidDroidFile");
-	guidDroidFile = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 24));
-	log(3, L"🔈guid_to_wstring guidBirthDroidVolume");
-	// Birth droid volume at 40: it was read at 56, the offset of the birth droid
-	// FILE, so both birth GUIDs came out identical.
-	guidBirthDroidVolume = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 40));
-	log(3, L"🔈guid_to_wstring guidBirthDroidFile");
-	guidBirthDroidFile = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 56));
+	tracking = LinkTracking(buffer + 8);
 	log(3, L"🔈decodeText hostname");
 	hostname = decodeText(readNarrowZ(buffer, 88, 72));   // 16-byte NetBIOS field
 	entryNumber = *reinterpret_cast<unsigned int*>(buffer + 88);
 	lastModificationTimeUtc = *reinterpret_cast<FILETIME*>(buffer + 100);
-	log(3, L"🔈timeToIso8601 lastModificationTimeUtc");
-	if (timeToIso8601Utc(lastModificationTimeUtc) != L"") {
-	}
 	pinStatus = *reinterpret_cast<int*>(buffer + 108);
-	pathObjectSize = *reinterpret_cast<unsigned short int*>(buffer + 128);
+	if (!version1) interactionCount = *reinterpret_cast<unsigned int*>(buffer + 116);
+	pathObjectSize = *reinterpret_cast<unsigned short int*>(buffer + fixedSize - 2);
 	// The path is read on its DECLARED length, itself bounded by the stream.
-	const size_t chars = std::min<size_t>(pathObjectSize, (limit - 130) / 2);
-	pathObject = readWideZ(buffer, 130 + chars * 2, 130);
-	size = 130 + pathObjectSize * 2 + 4; // +2 end of string +2 unknown
-	if (size > limit) size = 0;          // truncated entry: the walk stops
+	const size_t chars = std::min<size_t>(pathObjectSize, (limit - fixedSize) / 2);
+	pathObject = readWideZ(buffer, fixedSize + chars * 2, fixedSize);
+	size = (int)(fixedSize + pathObjectSize * 2 + (version1 ? 0 : 4));
+	if ((size_t)size > limit) size = 0; // truncated entry: the walk stops
 };
 
 std::wstring DestFile::getPinnedStatus() {
@@ -52,10 +46,7 @@ std::wstring DestFile::getPinnedStatus() {
 Json DestFile::toJson() {
 	log(3, L"🔈DestFile toJson");
 	Json o = Json::obj();
-	o.add(L"GuidDroidVolume",         Json::str(guidDroidVolume));
-	o.add(L"GuidDroidFile",           Json::str(guidDroidFile));
-	o.add(L"GuidBirthDroidVolume",    Json::str(guidBirthDroidVolume));
-	o.add(L"GuidBirthDroidFile",      Json::str(guidBirthDroidFile));
+	tracking.addTo(o);
 	o.add(L"Hostname",                Json::str(hostname));
 	o.add(L"EntryNumber",             Json::num((long long)entryNumber));
 	o.add(L"LastModificationTimeUtc", Json::str(timeToIso8601Utc(lastModificationTimeUtc)));
@@ -63,6 +54,12 @@ Json DestFile::toJson() {
 	// FIX: "Pinned"/"Unpinned" was inserted without quotes -> invalid JSON
 	o.add(L"PinStatus",               Json::str(getPinnedStatus()));
 	o.add(L"PathObject",              Json::str(pathObject));
+	// "knownfolder:{GUID}": the folder's name, which the GUID alone does not say.
+	const std::wstring KNOWN_FOLDER = L"knownfolder:";
+	if (pathObject.compare(0, KNOWN_FOLDER.size(), KNOWN_FOLDER) == 0)
+		o.add(L"PathObjectKnownFolder", Json::str(trans_guid_to_wstring(pathObject.substr(KNOWN_FOLDER.size()))));
+	if (interactionCount) o.add(L"InteractionCount", Json::num((long long)*interactionCount));
+	o.add(L"MruPosition",             Json::num((long long)mruPosition));
 	return o;
 }
 
@@ -76,8 +73,9 @@ DestFileDirectory::DestFileDirectory(LPBYTE buffer, size_t size) {
 	// stream, and on an entry that does not fit.
 	for (int x = 0; x < numberOfEntries && offset < size; x++) {
 		log(3, L"🔈DestFile");
-		DestFile d = DestFile(buffer + offset, size - offset);
+		DestFile d = DestFile(buffer + offset, size - offset, formatVersion);
 		if (d.size == 0) break;
+		d.mruPosition = x;   // the entries are stored most recently used first
 		offset += d.size; // the size varies from one entry to the next, because of the path's length
 		destfiles.push_back(d);
 	}

@@ -374,6 +374,11 @@ if (Wants 'recent_documents') {
     $shortcut.TargetPath = $target
     $shortcut.Save()
     Write-Output "lnkwinter=$link|$target|2022-01-10T12:00:00|2022-01-05T08:00:00"
+    # The target's NTFS object identifier, as Windows gives it: the shortcut's
+    # tracker block carries the same identifiers (DROID). fsutil prints them as
+    # raw bytes, in the order object, birth volume, birth object.
+    $ids = @(fsutil objectid query $target | ForEach-Object { if ($_ -match '([0-9a-f]{32})\s*$') { $Matches[1] } })
+    if ($ids.Count -ge 3) { Write-Output ("lnkobjid=" + (@($link) + $ids[0..2] -join '|')) }
 }
 
 # 16. A folder inside a ZIP, opened by the user's Explorer: the shellbag's

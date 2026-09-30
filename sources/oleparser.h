@@ -4,12 +4,14 @@
 #include <cstdio>
 #include <windows.h>
 #include <fstream>
+#include <optional>
 #include <vector>
 #include <string>
 #include <filesystem>
 #include <stdexcept>
 #include <algorithm>
 #include "tools.h"
+#include "link_tracking.h"
 
 
 
@@ -43,18 +45,21 @@ struct Directory {
 	Directory(LPBYTE data);
 };
 
-/*! Represents a destfile structure. */
+/*! One entry of a jump list's DestList: the file the stream of the same number
+ *  points to, with its tracking identifiers and its use. */
 struct DestFile {
-	std::wstring guidDroidVolume=L"";//!< GUID containing an NTFS object identifier
-	std::wstring guidDroidFile=L"";//!< GUID containing an NTFS object identifier
-	std::wstring guidBirthDroidVolume=L"";//!< GUID containing an NTFS object identifier
-	std::wstring guidBirthDroidFile=L"";//!< GUID containing an NTFS object identifier
+	LinkTracking tracking;           //!< DROID and birth DROID of the file (see link_tracking.h)
 	std::wstring hostname=L"";//!< Contains an ASCII string unused characters are filled with 0 - byte values
 	std::wstring pathObject=L"";//!< Contains a UTF-16 little-endian string without an end-of-string character
 	FILETIME lastModificationTimeUtc = { 0 };//!< last modification date in UTC
 	short int pathObjectSize = 0; //!< size of the path object
 	unsigned int entryNumber = 0;//!< number of the entry
 	int pinStatus = 0;//!< Where a value of -1 (0xffffffff) indicates unpinned and a value of 0 or greater pinned.
+	/*! How many times the file was opened through the application (format
+	 *  version 3 and later, Windows 10): the frequency of use, which neither the
+	 *  shortcut nor the file's dates give. Absent from version 1. */
+	std::optional<unsigned int> interactionCount;
+	int mruPosition = 0; //!< rank in the DestList, most recently used first (0)
 	int size = 0;//!< size of the entry
 
 	/*! Builds an empty destfile.
@@ -66,8 +71,10 @@ struct DestFile {
 	* @param limit bytes available from `buffer` to the end of the DestList
 	*        stream: no read goes beyond; an entry that does not fit is left
 	*        with `size` 0, which stops the caller's walk
+	* @param formatVersion version of the DestList: 1 (Windows 7, 8) has a
+	*        shorter fixed part, without the interaction count
 	*/
-	DestFile(LPBYTE buffer, size_t limit);
+	DestFile(LPBYTE buffer, size_t limit, int formatVersion);
 
 	/*! Returns the pinned status from the integer value.
 	*/

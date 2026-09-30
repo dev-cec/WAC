@@ -1162,13 +1162,19 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         transaction journal, not converted) are also copied raw into the
         exhibit store, to rebuild the timeline later with another tool.
   \item[\fichier{recentdocs.json}] recent-document shortcuts: target, timestamps
-        of the shortcut and of the target, volume (type, serial number, label),
-        network path, shell item list.
+        of the shortcut and of the target, target size, volume (type, serial
+        number, label), network path, shell item list, and the extra data
+        blocks: the tracker block (\champ{Tracker}: NetBIOS name of the machine
+        the target was on, tracking identifiers, and what their version-1 GUID
+        reveals — when the tracking began and the machine's hardware address),
+        paths with environment variables, known folder, target properties.
   \item[\fichier{jumplistAutomaticDestinations.json},
         \fichier{jumplistCustomDestinations.json}] per-application jump lists,
         with the shortcuts they hold; in the automatic ones, each shortcut comes
         with its DestList entry (last access, machine name, tracking
-        identifiers, pin status).
+        identifiers with their date and hardware address, pin status, number of
+        openings \champ{InteractionCount}, rank \champ{MruPosition} — 0 for the
+        most recent —, name of the known folder targeted).
   \item[\fichier{shellbags.json}] folders browsed in Explorer, as a rebuilt
         tree.
   \item[\fichier{mrus.json}, \fichier{mruApps.json}] most-recently-used files
@@ -1226,7 +1232,12 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         it, rebuilt from the provider's resources collected on the machine;
   \item[\champ{EvtSourceLog}] the log file the event comes from. One channel can
         be carried by several files (current log and archives) whose record
-        numbers overlap.
+        numbers overlap;
+  \item[\champ{EvtRecovered}] \texttt{true} for an event of a \emph{cleared}
+        log: Windows resets the chunk header without wiping the records, which
+        WAC reads again. Event Viewer no longer shows them; they remain the
+        trace of what the clearing meant to erase, and must never be read as
+        live events.
 \end{description}
 
 \begin{note}[Incomplete messages]

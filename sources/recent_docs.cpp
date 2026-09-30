@@ -77,6 +77,7 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 		targetAccessedUtc = *reinterpret_cast<FILETIME*>(buffer + 36);
 
 		targetModifiedUtc = *reinterpret_cast<FILETIME*>(buffer + 44);
+		fileSize = u32(52);
 		iconIndex = u32(56);
 		log(3, L"🔈showCommandOption commandOption");
 		commandOption = showCommandOption(u32(60)); //
@@ -257,6 +258,79 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 		workingDirectory = flags.HasWorkingDir   ? readStringData(buffer, size, next, &next) : L"";
 		arguments        = flags.HasArguments    ? readStringData(buffer, size, next, &next) : L"";
 		iconLocation     = flags.HasIconLocation ? readStringData(buffer, size, next, &next) : L"";
+		parseExtraData(buffer, size, next);
+	}
+}
+
+void RecentDoc::parseExtraData(LPBYTE buffer, size_t size, size_t at) {
+	auto u32 = [&](size_t pos) -> unsigned int {
+		return (pos <= size && size - pos >= 4) ? *reinterpret_cast<unsigned int*>(buffer + pos) : 0u; };
+	/* Fixed-size text fields: ANSI or UTF-16, NUL-padded, read up to their
+	   terminator and never beyond the block. */
+	const size_t TEXT_UNICODE = 268;   // offset of the UTF-16 copy in the 0x314-byte blocks
+	while (at <= size && size - at >= 4) {
+		const unsigned int blockSize = u32(at);
+		if (blockSize < 4) break;                     // terminal block
+		if (blockSize < 8 || blockSize > size - at) {
+			log(2, L"🔥LNK: ExtraData block of " + std::to_wstring(blockSize)
+			     + L" bytes at offset " + std::to_wstring(at) + L" outside the file", ERROR_INVALID_DATA);
+			break;
+		}
+		const size_t end = at + blockSize;
+		switch (u32(at + 4)) {
+		case 0xA0000001:
+			extraDataBlocks.push_back(L"EnvironmentVariableDataBlock");
+			targetEnvironment = readWideZ(buffer, end, at + TEXT_UNICODE);
+			break;
+		case 0xA0000002: extraDataBlocks.push_back(L"ConsoleDataBlock"); break;
+		case 0xA0000003:
+			extraDataBlocks.push_back(L"TrackerDataBlock");
+			if (blockSize >= 0x60) {                 // MachineID at 16 (16 bytes), the DROIDs at 32 (64)
+				machineId = decodeText(readNarrowZ(buffer, at + 32, at + 16));
+				tracking = LinkTracking(buffer + at + 32);
+			}
+			break;
+		case 0xA0000004:
+			extraDataBlocks.push_back(L"ConsoleFEDataBlock");
+			if (blockSize >= 12) consoleCodePage = u32(at + 8);
+			break;
+		case 0xA0000005:
+			extraDataBlocks.push_back(L"SpecialFolderDataBlock");
+			if (blockSize >= 16) specialFolderId = u32(at + 8);
+			break;
+		case 0xA0000006:
+			extraDataBlocks.push_back(L"DarwinDataBlock");
+			darwinData = readWideZ(buffer, end, at + TEXT_UNICODE);
+			break;
+		case 0xA0000007:
+			extraDataBlocks.push_back(L"IconEnvironmentDataBlock");
+			iconEnvironment = readWideZ(buffer, end, at + TEXT_UNICODE);
+			break;
+		case 0xA0000008:
+			extraDataBlocks.push_back(L"ShimDataBlock");
+			shimLayer = readWideZ(buffer, end, at + 8);
+			break;
+		case 0xA0000009: {
+			extraDataBlocks.push_back(L"PropertyStoreDataBlock");
+			// A sequence of serialized property stores, ended by a zero size.
+			for (size_t p = at + 8; p < end;) {
+				SPS store(buffer + p, 0, end - p);
+				if (store.size == 0) break;
+				p += store.size;
+				propertyStores.push_back(std::move(store));
+			}
+			break;
+		}
+		case 0xA000000A: extraDataBlocks.push_back(L"VistaAndAboveIDListDataBlock"); break;
+		case 0xA000000B:
+			extraDataBlocks.push_back(L"KnownFolderDataBlock");
+			if (blockSize >= 0x1C) knownFolderId = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + at + 8));
+			break;
+		default:
+			// No silent loss: an unknown block is named by its signature.
+			extraDataBlocks.push_back(L"0x" + to_hex(u32(at + 4)));
+		}
+		at = end;
 	}
 }
 
@@ -328,6 +402,34 @@ RecentDoc::RecentDoc(LPBYTE buffer, size_t size, std::wstring _path, std::wstrin
 	parseLNK(buffer, size);
 }
 
+void RecentDoc::addExtraData(Json& o) {
+	if (extraDataBlocks.empty()) return;
+	Json names = Json::arr();
+	for (const std::wstring& n : extraDataBlocks) names.push(Json::str(n));
+	o.add(L"ExtraDataBlocks", std::move(names));
+	if (tracking) {
+		Json t = Json::obj();
+		t.add(L"MachineId", Json::str(machineId));
+		tracking->addTo(t);
+		o.add(L"Tracker", std::move(t));
+	}
+	o.add(L"TargetEnvironment", Json::str(targetEnvironment));
+	o.add(L"IconEnvironment",   Json::str(iconEnvironment));
+	o.add(L"DarwinData",        Json::str(darwinData));
+	o.add(L"ShimLayer",         Json::str(shimLayer));
+	if (!knownFolderId.empty()) {
+		o.add(L"KnownFolderId",   Json::str(knownFolderId));
+		o.add(L"KnownFolderName", Json::str(trans_guid_to_wstring(knownFolderId)));
+	}
+	if (specialFolderId) o.add(L"SpecialFolderId", Json::num((long long)*specialFolderId));
+	if (consoleCodePage) o.add(L"ConsoleCodePage", Json::num((long long)*consoleCodePage));
+	if (!propertyStores.empty()) {
+		Json stores = Json::arr();
+		for (SPS& store : propertyStores) stores.push(store.toJson());
+		o.add(L"PropertyStores", std::move(stores));
+	}
+}
+
 Json RecentDoc::toJson() {
 	log(3, L"🔈RecentDoc toJson");
 	Json o = Json::obj();
@@ -349,6 +451,10 @@ Json RecentDoc::toJson() {
 	o.add(L"TargetAccessedUtc", Json::str(timeToIso8601Utc(targetAccessedUtc)));
 	o.add(L"LinkFlags",          Json::str(flags.to_wstring()));
 	o.add(L"FileAttributes",    Json::str(attributes.to_wstring()));
+	// The size of a FILE target, as the header records it — 0 included, a real
+	// size. A folder's, or a target without attributes (a URI), is no size.
+	if (fileSize || (!attributes.Directory && !attributes.to_wstring().empty()))
+		o.add(L"TargetFileSize", Json::num((unsigned long long)fileSize));
 	o.add(L"IconIndex",         Json::num((long long)iconIndex));   // count
 	o.add(L"CommandOption",     Json::str(commandOption));
 	o.add(L"Description",       Json::str(description));
@@ -365,6 +471,7 @@ Json RecentDoc::toJson() {
 	Json ids = Json::arr();
 	for (IdList& id : idLists) ids.push(id.toJson());
 	o.add(L"IdList", std::move(ids));
+	addExtraData(o);
 	return o;
 }
 

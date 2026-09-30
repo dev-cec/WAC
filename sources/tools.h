@@ -831,6 +831,22 @@ std::string readNarrowZ(const BYTE* base, size_t limit, size_t offset);
 */
 std::wstring guid_to_wstring(GUID guid);
 
+/*! What a version-1 GUID (RFC 4122, time-based) carries: the instant it was
+*  made and the hardware address of the machine that made it. The link
+*  tracking service makes such GUIDs (DROID) when it first tracks a file: the
+*  instant is that of the tracking's birth, UTC, and the address that of the
+*  machine — the one where the file was then. */
+struct GuidV1 {
+	bool valid = false;         //!< version 1 and RFC 4122 variant; the rest is meaningless otherwise
+	FILETIME createdUtc = { 0, 0 }; //!< instant the GUID was made, UTC
+	uint8_t node[6] = { 0 };    //!< hardware address of the machine that made it
+};
+
+/*! Reads the time and hardware address of a version-1 GUID.
+* @param guid the GUID
+* @return its content; `valid` false if it is not a version-1 GUID */
+GuidV1 decodeGuidV1(const GUID& guid);
+
 /*! Text form of a binary SID ("S-1-5-21-…"), as ConvertSidToStringSidW writes
 * it — which this replaces — without any system call: an identifier authority
 * of 2^32 or more is written in hexadecimal without padding ("0x9B63132D1D0"),

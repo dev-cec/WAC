@@ -1191,13 +1191,21 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         de transactions, non converti) sont en outre copiés bruts dans la
         consigne, pour refaire plus tard la chronologie avec un autre outil.
   \item[\fichier{recentdocs.json}] raccourcis de documents récents : cible,
-        horodatages du raccourci et de la cible, volume (type, numéro de série,
-        nom), chemin réseau, liste d'éléments du shell.
+        horodatages du raccourci et de la cible, taille de la cible, volume
+        (type, numéro de série, nom), chemin réseau, liste d'éléments du shell,
+        et les blocs de données supplémentaires : le bloc de suivi
+        (\champ{Tracker} : nom NetBIOS de la machine où était la cible,
+        identifiants de suivi, et ce qu'en révèle le GUID de version 1 — la date
+        de début du suivi et l'adresse matérielle de la machine), chemins avec
+        variables d'environnement, dossier connu, propriétés de la cible.
   \item[\fichier{jumplistAutomaticDestinations.json},
         \fichier{jumplistCustomDestinations.json}] listes de sauts par
         application, avec les raccourcis qu'elles contiennent ; pour les listes
         automatiques, chaque raccourci est accompagné de son entrée DestList
-        (dernier accès, nom de la machine, identifiants de suivi, épinglage).
+        (dernier accès, nom de la machine, identifiants de suivi avec leur date
+        et leur adresse matérielle, épinglage, nombre d'ouvertures
+        \champ{InteractionCount}, rang \champ{MruPosition} — 0 pour le plus
+        récent —, nom du dossier connu visé).
   \item[\fichier{shellbags.json}] dossiers parcourus dans l'Explorateur,
         arborescence reconstituée.
   \item[\fichier{mrus.json}, \fichier{mruApps.json}] listes de fichiers et
@@ -1257,7 +1265,12 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         fournisseur prélevées sur la machine ;
   \item[\champ{EvtSourceLog}] le fichier journal dont provient l'événement. Un
         même canal peut être porté par plusieurs fichiers (journal courant et
-        archives) dont les numéros d'enregistrement se recouvrent.
+        archives) dont les numéros d'enregistrement se recouvrent ;
+  \item[\champ{EvtRecovered}] \texttt{true} pour un événement d'un journal
+        \emph{vidé} : Windows remet l'en-tête du bloc à zéro sans effacer les
+        enregistrements, que WAC relit. L'Observateur d'événements ne les montre
+        plus ; ils restent la trace de ce que l'effacement voulait faire
+        disparaître, et ne doivent jamais être lus comme des événements vivants.
 \end{description}
 
 \begin{note}[Messages incomplets]

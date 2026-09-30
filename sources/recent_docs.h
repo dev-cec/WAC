@@ -35,6 +35,8 @@
 #include "tools.h"
 #include "trans_id.h"
 #include "idList.h"
+#include "link_tracking.h"
+#include <optional>
 #include "quickdigest5.h"
 
 /*! One recent document: a .lnk shortcut, and the file it points to. */
@@ -81,6 +83,21 @@ public:
 	std::wstring netProviderType = L"";	//!< kind of network provider
 	std::vector<IdList> idLists;        //!< the target's PIDL, item by item
 
+	/*  EXTRA DATA (MS-SHLLINK 2.5): the blocks after the StringData. They were
+	    not read at all — among them the tracker block, which names the machine
+	    the target was on. */
+	std::vector<std::wstring> extraDataBlocks; //!< names of the blocks present, in order (unknown ones by signature)
+	std::optional<LinkTracking> tracking;      //!< TrackerDataBlock: DROID and birth DROID of the target
+	std::wstring machineId = L"";       //!< TrackerDataBlock: NetBIOS name of the machine the target was on
+	std::wstring targetEnvironment = L"";//!< EnvironmentVariableDataBlock: target path with its variables (%USERPROFILE%…)
+	std::wstring iconEnvironment = L""; //!< IconEnvironmentDataBlock: icon path with its variables
+	std::wstring darwinData = L"";      //!< DarwinDataBlock: Windows Installer descriptor of the target
+	std::wstring shimLayer = L"";       //!< ShimDataBlock: compatibility layer applied to the target
+	std::wstring knownFolderId = L"";   //!< KnownFolderDataBlock: GUID of the known folder of the target
+	std::optional<unsigned int> specialFolderId; //!< SpecialFolderDataBlock: CSIDL of the target's folder
+	std::optional<unsigned int> consoleCodePage; //!< ConsoleFEDataBlock: code page of the console
+	std::vector<SPS> propertyStores;    //!< PropertyStoreDataBlock: the target's properties
+
 	/*! Parses a LNK file.
 	*
 	* The SIZE is indispensable, and was missing: without it no read could be
@@ -92,6 +109,13 @@ public:
 	* @param size size of that buffer, in bytes.
 	*/
 	void parseLNK(LPBYTE buffer, size_t size);
+
+	/*! Reads the ExtraData blocks, up to the terminal block.
+	* @param buffer the bytes of the shortcut
+	* @param size size of that buffer
+	* @param at offset of the first block, just after the StringData
+	*/
+	void parseExtraData(LPBYTE buffer, size_t size, size_t at);
 
 
 	/*! Reads a shortcut from a file.
@@ -108,6 +132,10 @@ public:
 	* @param _sid SID of the user that file belongs to.
 	*/
 	RecentDoc(LPBYTE buffer, size_t size, std::wstring _path, std::wstring _sid);
+
+	/*! Adds the ExtraData fields to the shortcut's JSON: nothing if it has none.
+	 *  @param o the shortcut's object */
+	void addExtraData(Json& o);
 
 	/*! Converts the shortcut to JSON, shell items included.
 	 *  @return its JSON object. */

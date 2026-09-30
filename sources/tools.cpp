@@ -1077,6 +1077,25 @@ std::vector<std::wstring> multiWstring_to_vector(LPBYTE data, int size)
 	return out;
 }
 
+GuidV1 decodeGuidV1(const GUID& guid) {
+	GuidV1 v;
+	// The version is the high nibble of Data3; the RFC 4122 variant, the two
+	// high bits of Data4[0] set to 10.
+	if ((guid.Data3 >> 12) != 1 || (guid.Data4[0] & 0xC0) != 0x80) return v;
+	// 60-bit count of 100 ns since 1582-10-15, the Gregorian reform; FILETIME
+	// counts from 1601-01-01: 5,748,192,000,000,000 intervals later.
+	const uint64_t UUID_TO_FILETIME = 5748192000000000ULL;
+	const uint64_t ticks = ((uint64_t)(guid.Data3 & 0x0FFF) << 48)
+	                     | ((uint64_t)guid.Data2 << 32) | guid.Data1;
+	if (ticks < UUID_TO_FILETIME) return v;
+	const uint64_t filetime = ticks - UUID_TO_FILETIME;
+	v.createdUtc.dwLowDateTime  = (DWORD)(filetime & 0xFFFFFFFFULL);
+	v.createdUtc.dwHighDateTime = (DWORD)(filetime >> 32);
+	memcpy(v.node, guid.Data4 + 2, sizeof v.node);
+	v.valid = true;
+	return v;
+}
+
 std::wstring guid_to_wstring(GUID guid) {
 	wchar_t text[39];
 	swprintf(text, 39, L"{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",

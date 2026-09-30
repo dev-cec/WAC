@@ -14,7 +14,7 @@ checks WAC ran to the end.
 Non-zero exit if at least one file is invalid or inconsistent.
 """
 import ntpath
-import hashlib, json, sys, glob, os, re, collections
+import hashlib, json, sys, glob, os, re, collections, uuid
 
 # A double escaping is recognised on a PATH pattern, not on free text: the
 # content of an event (PowerShell script, regular expression, command line) may
@@ -1612,6 +1612,22 @@ def check_small_file_artefacts(folder):
                     wrong.append(f"{channel} {record} {name}: WAC {mine!r}, Windows {value!r}")
             report(compared and not wrong, f"events.json: {compared} event value(s) rendered as Windows renders them",
                    f"events.json: {wrong[0] if wrong else 'no reference event found'}")
+
+    # Shortcut tracker block: the target's DROID against its NTFS object
+    # identifier, as fsutil gives it (raw bytes: a GUID in on-disk order).
+    docs = load(folder, "recentdocs.json")
+    if isinstance(docs, list) and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            objids = [l.strip()[len("lnkobjid="):].split("|") for l in f if l.startswith("lnkobjid=")]
+        for link, obj, birth_volume, birth_obj in objids:
+            as_guid = lambda raw: "{" + str(uuid.UUID(bytes_le=bytes.fromhex(raw))).upper() + "}"
+            doc = next((d for d in docs if isinstance(d, dict) and str(d.get("Path", "")).lower() == link.lower()), None)
+            t = (doc or {}).get("Tracker") or {}
+            mine = (t.get("GuidDroidFile"), t.get("GuidBirthDroidVolume"), t.get("GuidBirthDroidFile"))
+            theirs = (as_guid(obj), as_guid(birth_volume), as_guid(birth_obj))
+            report(mine == theirs and bool(t.get("DroidFileCreatedUtc")),
+                   f"recentdocs.json: tracker block of {link.rsplit(chr(92), 1)[-1]} = the target's NTFS object identifier (fsutil), dated {t.get('DroidFileCreatedUtc')}",
+                   f"recentdocs.json: tracker {mine}, fsutil {theirs}")
 
     # Cleared log: none live, as Windows sees it; the cleared events recovered.
     if isinstance(events, list) and os.path.exists(path):
