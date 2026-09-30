@@ -35,7 +35,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
   - [x] ShimCache / AppCompatCacheParser : 232 entrées, position, chemin, date identiques (tabulations des applications empaquetées rétablies). Indicateur d'exécution non relevé par WAC : « Yes » juste 12 fois sur 13, « No » faux pour 105 des 117 binaires dont le Prefetch prouve l'exécution.
   - [x] corbeille / RBCmd : 19 fichiers $I, chemin, taille, date de suppression identiques.
   - [x] SRUM / SrumECmd : 60 804 lignes de 7 tables appariées par AutoIncId ; valeurs identiques, sauf 17 lignes d'énergie sur 887 où SrumECmd se trompe (dissect.esedb donne raison à WAC) : 15 lignes portant le contenu d'une autre (toutes les 8 : 11, 19, 27…), 2 identifiants absents de la table (7 et 131 pour 1 et 5). SrumECmd écrit 0 ou -1 pour 7 086 valeurs absentes ; WAC couvre 2 tables de plus (21 692 + 2 lignes). A révélé : dates FILETIME (EndTime, StartTime, ConnectStartTime, EventTimestamp) laissées en nombres, Tag UTF-16 lu comme de l'ANSI.
-  - [ ] registre / RECmd
+  - [x] registre / RECmd (lot Kroll) : UserAssist, BAM, USBSTOR, comptes SAM, Run, MuiCache, TypedPaths, WordWheelQuery, documents approuvés d'Office identiques. RECmd applique les entrées restantes d'une génération précédente des journaux APRÈS les plus récentes : il ramène SYSTEM, SECURITY, DEFAULT et NetworkService à un état plus ancien (SYSTEM : 0x3618 au lieu de 0x3620 ; 4 heures BAM en retard de 13 min) — vérifié sur les journaux eux-mêmes, sommes Marvin32 comprises. A révélé côté WAC : BAM limité aux SID ayant un profil (compte supprimé perdu), durée de premier plan UserAssist non lue. Couverture manquante : B-031.
 
 ## Journal
 - 2026-09-29 : décision utilisateur — les outils Zimmerman (et .NET) installés dans la VM de test ; KAPE écarté (inscription chez Kroll).
@@ -46,3 +46,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-09-30 : temps raccourcis/jump lists (3 + 9 fichiers) : WAC 1,8 s par clé, LECmd et JLECmd 0,3 s chacun ; coût fixe de WAC sans ruche ≈ 1,5 s.
 - 2026-09-30 : temps registre (clé registry entière, toutes les ruches) : WAC 2,0 s ; AmcacheParser 0,5 à 0,9 s, AppCompatCacheParser 1,4 s, SBECmd 1,3 s, chacun pour son seul artefact.
 - 2026-09-30 : temps corbeille : WAC 1,9 s, RBCmd 0,5 s ; SRUM : WAC 3,2 s (base de 21 Mo, toutes les tables, identités résolues), SrumECmd 2,5 s.
+- 2026-10-01 : temps registre : WAC 2,0 s (clé registry entière, toutes les ruches rejouées) ; RECmd, lot Kroll, 7,6 à 13,6 s.

@@ -18,6 +18,8 @@ holding the EZ tool's CSV and WAC's JSON. Modes:
   shellbags SBECmd   / shellbags.json
   recycle_bin RBCmd  / recycle_bin.json
   srum      SrumECmd / srum.json
+  registry  RECmd (Kroll batch) / userassists, bams, Usbstor, users, run, muicache, typed_paths,
+            word_wheel_query, office_trust_records
 
 mft: record by record — paths (hard links included), deleted or not,
 directory, size, and the eight dates of $STANDARD_INFORMATION and
@@ -782,6 +784,119 @@ def compare_srum(folder):
     return 1 if c.report() or unpaired else 0
 
 
+def recmd_rows(folder, description=None, detail=None):
+    """RECmd's main CSV rows of one description, or the rows of a plugin's detail files."""
+    if detail:
+        rows = []
+        for path in glob.glob(os.path.join(folder, "*", f"*_{detail}__*.csv")):
+            with open(path, encoding="utf-8-sig", newline="") as f:
+                rows += list(csv.DictReader(f))
+        return rows
+    with open(only(folder, "*_RECmd_Batch_*_Output.csv"), encoding="utf-8-sig", newline="") as f:
+        return [r for r in csv.DictReader(f) if r["Description"] == description]
+
+
+def wac_list(folder, name):
+    with open(only(folder, name), encoding="utf-8-sig") as f:
+        data = json.load(f)
+    return [e for e in data if isinstance(e, dict)] if isinstance(data, list) else []
+
+
+def compare_registry(folder):
+    """The artefacts WAC and RECmd's Kroll batch both read, value by value."""
+    c = Comparison("RECmd")
+    unpaired = collections.Counter()
+    def pair(label, theirs, mine, their_key, my_key):
+        index = {my_key(w): w for w in mine}
+        pairs = []
+        for r in theirs:
+            w = index.get(their_key(r))
+            if w is None:
+                unpaired[label] += 1
+            else:
+                pairs.append((their_key(r), r, w))
+        print(f"{label}: RECmd {len(theirs)}, WAC {len(mine)}, paired {len(pairs)}")
+        return pairs
+
+    def tail(name):
+        # "{System}\\cmd.exe" (RECmd) and "System32\\cmd.exe" (WAC) name the known folder
+        # differently: compared from the second component on.
+        parts = name.replace("{", "").replace("}", "").split("\\")
+        return "\\".join(parts[1:]).lower() if len(parts) > 1 else name.lower()
+    for key, r, w in pair("UserAssist", [r for r in recmd_rows(folder, detail="UserAssist") if r["ProgramName"] != "UEME_CTLSESSION"],
+                          wac_list(folder, "userassists.json"),
+                          lambda r: (r["BatchKeyPath"].split("\\")[-2], tail(r["ProgramName"])),
+                          lambda w: (w["Class"], tail(w["Name"]))):
+        c.note("UserAssist run count", key, w.get("Count"), int(r["RunCounter"]))
+        c.note("UserAssist focus count", key, w.get("FocusCount"), int(r["FocusCount"]))
+        d, h, m, sec = (int(x.strip()[:-1]) for x in r["FocusTime"].split(","))
+        c.note("UserAssist focus time (s)", key, (w.get("FocusTimeMs") or 0) // 1000, ((d * 24 + h) * 60 + m) * 60 + sec)
+        if r["LastExecuted"]:
+            c.date("UserAssist last run", key, w.get("LastRunUtc"), r["LastExecuted"])
+    c.explained["UserAssist UEME_CTLSESSION: session statistics, not a program (RECmd lists it, WAC not)"] += 2
+
+    for key, r, w in pair("BAM", recmd_rows(folder, detail="BamDam"), wac_list(folder, "bams.json"),
+                          lambda r: (r["BatchKeyPath"].rsplit("\\", 1)[-1], r["Program"].lower()),
+                          lambda w: (w["SID"], str(w["Name"]).lower())):
+        mine, theirs = wac_date(w.get("LastExecutionUtc")), ez_date(r["ExecutionTime"])
+        if mine > theirs:
+            # Checked on the logs themselves (2026-10-01): SYSTEM.LOG2 holds entry 0x3620
+            # then leftovers 0x3614-0x3618 of an earlier generation. RECmd applies them in
+            # file order, after the newer ones, and ends at 0x3618 — an older state. WAC
+            # sorts by sequence, stops at the break, ends at 0x3620.
+            c.explained["BAM: older time in RECmd, which replays stale log entries after newer ones (hive rolled back)"] += 1
+        else:
+            c.date("BAM last execution", key, w.get("LastExecutionUtc"), r["ExecutionTime"])
+
+    for key, r, w in pair("USBSTOR", recmd_rows(folder, detail="USBSTOR"), wac_list(folder, "Usbstor.json"),
+                          lambda r: r["SerialNumber"].lower(), lambda w: str(w.get("InstanceId", "")).lower()):
+        c.date("USBSTOR first install", key, w.get("FirstInsertionUtc"), r["FirstInstalled"])
+        c.date("USBSTOR last connected", key, w.get("LastInsertionUtc"), r["LastConnected"])
+        if r["LastRemoved"]:
+            c.date("USBSTOR last removed", key, w.get("LastRemovalUtc"), r["LastRemoved"])
+
+    for key, r, w in pair("SAM accounts", recmd_rows(folder, detail="UserAccounts"), wac_list(folder, "users.json"),
+                          lambda r: int(r["UserId"]), lambda w: w.get("RID")):
+        c.note("SAM name", key, w.get("Name"), r["UserName"])
+        c.note("SAM disabled", key, bool(w.get("Disabled")), r["AccountDisabled"] == "True")
+        c.note("SAM logon count", key, w.get("LogonCount"), int(r["TotalLoginCount"]))
+        c.note("SAM bad password count", key, w.get("BadPasswordCount"), int(r["InvalidLoginCount"]))
+        for column, ours in (("LastLoginTime", "LastLogonUtc"), ("LastPasswordChange", "PasswordLastSetUtc"),
+                             ("LastIncorrectPassword", "LastBadPasswordUtc")):
+            if r[column]:
+                c.date(f"SAM {column}", key, w.get(ours), r[column])
+        if r["CreatedOn"]:
+            c.explained["SAM CreatedOn: RECmd's reading of a key's write time, not a stored value"] += 1
+
+    run = recmd_rows(folder, "Run (NTUSER)") + recmd_rows(folder, "Run (SYSTEM)") \
+        + recmd_rows(folder, "RunOnce (NTUSER)") + recmd_rows(folder, "RunOnce (SYSTEM)")
+    for key, r, w in pair("Run and RunOnce", [r for r in run if r["ValueName"]], wac_list(folder, "run.json"),
+                          lambda r: (r["KeyPath"].rsplit("\\", 1)[-1], r["ValueName"]),
+                          lambda w: (w.get("Key"), w.get("Name"))):
+        c.note("Run value", key, w.get("Value"), r["ValueData"])
+    for w in wac_list(folder, "run.json"):
+        if w.get("Hive") == "DEFAULT":
+            c.explained["Run key of the DEFAULT hive (profile of the logon screen): read by WAC, not by the Kroll batch"] += 1
+
+    for key, r, w in pair("MuiCache", [r for r in recmd_rows(folder, "MuiCache (Vista+)") if r["ValueName"] != "LangID"],
+                          wac_list(folder, "muicache.json"), lambda r: r["ValueName"].lower(), lambda w: str(w.get("Name")).lower()):
+        c.note("MuiCache name", key, w.get("Data"), r["ValueData"])
+
+    for key, r, w in pair("TypedPaths", recmd_rows(folder, "TypedPaths"), wac_list(folder, "typed_paths.json"),
+                          lambda r: int(r["ValueName"][3:]) - 1, lambda w: w.get("MruPosition")):
+        c.note("TypedPaths text", key, w.get("Text"), r["ValueData"])
+
+    for key, r, w in pair("WordWheelQuery", recmd_rows(folder, detail="WordWheelQuery"), wac_list(folder, "word_wheel_query.json"),
+                          lambda r: int(r["MruPosition"]), lambda w: w.get("MruPosition")):
+        c.note("WordWheelQuery term", key, w.get("Text"), r["SearchTerm"])
+
+    for key, r, w in pair("Office trusted documents", recmd_rows(folder, detail="TrustedDocuments"),
+                          wac_list(folder, "office_trust_records.json"), lambda r: r["FileName"], lambda w: w.get("Document")):
+        c.date("trusted on", key, w.get("TrustedUtc"), r["Timestamp"])
+        c.note("macros enabled", key, bool(w.get("MacrosEnabled")), "Macros" in r["EventType"])
+    return 1 if c.report() or unpaired else 0
+
+
 def only(folder, pattern):
     """The one file of the folder matching pattern: the EZ tools prefix their CSV with a timestamp."""
     found = glob.glob(os.path.join(folder, pattern))
@@ -804,6 +919,8 @@ def main():
     if mode == "jumplist":
         return compare_jumplist(only(folder, "*_AutomaticDestinations.csv"), only(folder, "*_CustomDestinations.csv"),
                                 only(folder, "jumplistAutomaticDestinations.json"), only(folder, "jumplistCustomDestinations.json"))
+    if mode == "registry":
+        return compare_registry(folder)
     if mode == "srum":
         return compare_srum(folder)
     if mode == "recycle_bin":

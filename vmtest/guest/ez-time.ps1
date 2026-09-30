@@ -28,6 +28,7 @@ $tools = @{
     shimcache = @{ Key = 'registry'; Exe = "$ez\AppCompatCacheParser\AppCompatCacheParser.exe"; Args = @('-f', "$hives\SYSTEM", '--dt', 'yyyy-MM-dd HH:mm:ss.fffffff'); Json = @('shimcache.json') }
     recycle_bin = @{ Key = 'recycle_bin'; Exe = "$ez\RBCmd\RBCmd.exe"; Args = @('-d', "$exhibits\`$Recycle.Bin", '-q', '--dt', 'yyyy-MM-dd HH:mm:ss.fffffff'); Json = @('recycle_bin.json') }
     srum     = @{ Key = 'srum'; Exe = "$ez\SrumECmd\SrumECmd.exe"; Args = @('-f', "$exhibits\Windows\system32\sru\SRUDB.dat", '-r', "$hives\SOFTWARE", '--dt', 'yyyy-MM-dd HH:mm:ss.fffffff'); Json = @('srum.json') }
+    registry = @{ Key = 'registry'; Exe = "$ez\RECmd\RECmd\RECmd.exe"; Args = @('-d', $exhibits, '--bn', "$ez\RECmd\RECmd\BatchExamples\Kroll_Batch.reb", '--dt', 'yyyy-MM-dd HH:mm:ss.fffffff'); Json = @('userassists.json', 'bams.json', 'run.json', 'typed_paths.json', 'word_wheel_query.json', 'mounted_device.json', 'Usbstor.json', 'mrus.json', 'mruApps.json', 'muicache.json', 'services.json', 'persistence.json', 'internet_settings.json', 'firewall.json', 'OperatingSystem.json', 'users.json', 'office_trust_records.json') }
     amcache  = @{ Key = 'registry'; Exe = "$ez\AmcacheParser\AmcacheParser.exe"; Args = @('-f', "$exhibits\Windows\AppCompat\Programs\Amcache.hve", '-i', '--mp'); Json = @('amcache_applications.json', 'amcache_application_files.json', 'amcache_inventory.json') }
 }
 $tool = $tools[$Comparison]
