@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| fait (voir Journal) | P1 | fort |
+| fait (5e637df) | P1 | fort |
 
 ## Pourquoi
 Persistance WMI : filtre + consommateur + liaison, invisible au registre, prisée des intrusions.

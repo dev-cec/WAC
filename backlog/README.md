@@ -42,7 +42,6 @@ Remplace `TODO.txt`.
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-008](B-008-wmi.md) | Abonnements WMI (dépôt CIM) | à faire | P1 | fort |
 | [B-009](B-009-srum-ese.md) | SRUM, Windows.edb et tâches BITS (lecteur ESE) | à faire | P2 | fort |
 | [B-010](B-010-activitiescache.md) | Chronologie Windows (ActivitiesCache.db) | à faire | P3 | fort |
 | [B-011](B-011-rdp-cache.md) | Cache bitmap RDP et connexions RDP sortantes | à faire | P3 | moyen |
@@ -57,6 +56,7 @@ Remplace `TODO.txt`.
 | [B-024](B-024-msys2.md) | Compilation MSYS2 à éprouver sur un vrai Windows | à faire | P3 | faible |
 | [B-025](B-025-version-1-5.md) | Version 1.5.0 | à faire | P2 | faible |
 | [B-026](B-026-thumbcache.md) | Cache des miniatures (thumbcache) | à faire | P3 | moyen |
+| [B-027](B-027-empreinte-comparee.md) | Empreinte comparée WAC / KAPE / EZ sous bac à sable (Sysmon, audit en option) | à faire | P2 | fort |
 
 ## Réalisé
 
