@@ -1287,7 +1287,13 @@ une date de juillet à \texttt{+02:00}. \wac{} applique les règles de la machin
 examinée année par année (clé \fichier{Dynamic DST} de la ruche
 \fichier{SOFTWARE}) : une date de 2005 aux États-Unis suit les règles de 2005.
 L'heure locale écrite est toujours dérivée de l'heure UTC : un même instant se
-lit à la même heure dans tous les artefacts. Pour une valeur que l'artefact
+lit à la même heure dans tous les artefacts. Deux dates n'ont aucun fuseau
+connaissable et sont données \textbf{telles qu'écrites}, sans décalage ni UTC,
+avec \champ{TimeZone} qui le dit : la date d'un élément vu dans une archive
+(\champ{ModifiedAsWritten} ; une entrée ZIP garde l'heure d'horloge de la
+machine qui a fait l'archive) et une date OLE d'un magasin de propriétés
+(\champ{AsWritten}). Les placer sur une chronologie demande de connaître
+leur origine : \wac{} ne l'invente pas. Pour une valeur que l'artefact
 enregistre en heure locale (volume FAT, \fichier{setupapi.dev.log}), l'heure répétée à l'automne est lue comme sa première occurrence, et
 l'heure sautée au printemps avec le décalage d'avant le changement, comme le
 fait Windows.

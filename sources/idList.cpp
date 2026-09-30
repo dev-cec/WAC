@@ -490,11 +490,19 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 	if (valueType == VT_DATE) {
 		double t = *reinterpret_cast<double*>(buffer + *pos);
 		SYSTEMTIME st = { 0 };
-		FILETIME local = { 0, 0 };
 		*pos += 8;
-		if (!oleDateToSystemTime(t, st) || !SystemTimeToFileTime(&st, &local)) return Json::null();
-		// A VARIANT date (VT_DATE) is expressed in LOCAL time, by OLE convention.
-		return Json::str(timeToIso8601Local(local, Precision::Second));   // oleDateToSystemTime rounds to the second
+		if (!oleDateToSystemTime(t, st)) return Json::null();
+		/* An OLE date (VT_DATE) carries NO time zone: days since 30/12/1899,
+		   in whatever zone the program that wrote it chose. None occurred in
+		   a real collection or could be produced on the test VM to measure
+		   it: given as written, without offset nor UTC, rather than as an
+		   instant that could contradict the timeline (B-028). */
+		wchar_t text[24];
+		swprintf(text, 24, L"%04u-%02u-%02uT%02u:%02u:%02u", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+		Json date = Json::obj();
+		date.add(L"AsWritten", Json::str(text));
+		date.add(L"TimeZone", Json::str(L"None (OLE date)"));
+		return date;
 	}
 	if (valueType == VT_BOOL) {
 		unsigned short v = *reinterpret_cast<unsigned short*>(buffer + *pos); *pos += 2;
@@ -2483,6 +2491,14 @@ Json NetworkShellItem::toJson() {
 	return o;
 }
 
+/*! A file or folder inside an archive, as Explorer shows it.
+ *  THE DATE HAS NO TIME ZONE. It is the archive entry's own date — a ZIP
+ *  entry keeps the clock time of the machine that made the archive — which
+ *  Explorer copies as it is, in one of three forms (a FILETIME, a text, a
+ *  FAT date). Measured on the test VM (B-028): an entry dated 13:00 in a ZIP
+ *  gives 13:00 here, whatever the zone it was made in. It was read as UTC
+ *  (or as local time for the FAT form): an instant WAC cannot know, one or
+ *  two hours off. It is given as written, without offset. */
 ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _level) {
 	isPresent = true;
 	level = _level;
@@ -2493,24 +2509,18 @@ ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _level) {
 			log(2, L"🔥ArchiveFileContent: item too short for its date", ERROR_INVALID_DATA);
 		}
 		else if (*reinterpret_cast<unsigned int*>(buffer + 0x10) != 0) { // FILETIME
-			modifiedUtc = *reinterpret_cast<FILETIME*>(buffer + 0x10);
-
+			modifiedAsWritten = *reinterpret_cast<FILETIME*>(buffer + 0x10);
 			name = readWideZ(buffer, declaredSize(buffer), 0x20);
 		}
 		else { // date as text: precise to the second
-			log(3, L"🔈wstring_to_filetime modifiedUtc");
-			modifiedUtc = wstring_to_filetime(readWideZ(buffer, declaredSize(buffer), 0x24));
+			modifiedAsWritten = wstring_to_filetime(readWideZ(buffer, declaredSize(buffer), 0x24));
 			modifiedPrecision = Precision::Second;
 			name = readWideZ(buffer, declaredSize(buffer), 0x5C);
 		}
 	}
 	else {
-		// FAT date = LOCAL time: UTC is derived from it, not the reverse.
-		modified = FatDateTime(date).toFileTime();
+		modifiedAsWritten = FatDateTime(date).toFileTime();
 		modifiedPrecision = Precision::Second;
-		log(3, L"🔈suspectLocalToUtc modified");
-		modifiedUtc = suspectLocalToUtc(modified);
-		log(3, L"🔈decodeText modified");
 		name = decodeText(readNarrowZ(buffer, declaredSize(buffer), 0x1C));
 	}
 }
@@ -2519,11 +2529,13 @@ Json ArchiveFileContent::toJson() {
 	log(3, L"🔈ArchiveFileContent toJson");
 	Json o = Json::obj();
 	if (!isPresent) return o;
-	o.add(L"ModifiedUtc", Json::str(timeToIso8601Utc(modifiedUtc, modifiedPrecision)));
-	// A FAT date is local at the source and kept as written; otherwise the source is UTC.
-	const bool localSource = modified.dwLowDateTime != 0 || modified.dwHighDateTime != 0;
-	o.add(L"Modified",    Json::str(localSource ? timeToIso8601Local(modified, modifiedPrecision)
-	                                            : utcTimeToIso8601Local(modifiedUtc, modifiedPrecision)));
+	if (modifiedAsWritten.dwLowDateTime != 0 || modifiedAsWritten.dwHighDateTime != 0) {
+		// The clock time as written: the ISO form of a UTC date, without its "Z".
+		std::wstring written = timeToIso8601Utc(modifiedAsWritten, modifiedPrecision);
+		if (!written.empty() && written.back() == L'Z') written.pop_back();
+		o.add(L"ModifiedAsWritten", Json::str(written));
+		o.add(L"TimeZone", Json::str(L"None (archive entry)"));
+	}
 	o.add(L"Name",        Json::str(name));
 	return o;
 }

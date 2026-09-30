@@ -1573,6 +1573,26 @@ def check_small_file_artefacts(folder):
         report(not wrong, f"fat_volumes.json: {len(volumes)} volume(s) (FAT32, exFAT), {len(files)} file(s) as Windows lists them, deleted entries found",
                f"fat_volumes.json: {wrong[0] if wrong else ''}")
 
+    # The folder inside a ZIP: its shellbag item gives the entry's date as written, without zone.
+    bags = load(folder, "shellbags.json")
+    if isinstance(bags, list) and "zipentry" in reference:
+        name, written = reference["zipentry"].split("|")
+        items = []
+        def archive(o):
+            if isinstance(o, dict):
+                if o.get("Type") == "ARCHIVE_FILE_CONTENT" and o.get("Name") == name:
+                    items.append(o)
+                for v in o.values():
+                    archive(v)
+            elif isinstance(o, list):
+                for v in o:
+                    archive(v)
+        archive(bags)
+        ok = items and all(str(i.get("ModifiedAsWritten", "")).startswith(written) and "ModifiedUtc" not in i
+                           and "Modified" not in i for i in items)
+        report(ok, f"shellbags.json: the ZIP entry {name} dated {written} as written, without time zone",
+               f"shellbags.json: the ZIP entry {name}: {items[:1]}")
+
     # BITS: the harness's job, as Get-BitsTransfer gives it.
     bits = load(folder, "bits_jobs.json")
     if isinstance(bits, list) and "bits" in reference:

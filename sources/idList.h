@@ -1223,8 +1223,10 @@ struct ArchiveFileContent :IShellItem {
 	// `subtypename` and `location` removed: declared here but never filled
 	// (they belong to NetworkShellItem, which carries the same names).
 	std::wstring name = L"";//!< name of the archive
-	FILETIME modifiedUtc = { 0 };//!< modification date in UTC
-	FILETIME modified = { 0 };//!< modification date as a FAT date stores it, local time; null when the source is UTC
+	/*! The entry's modification as the archive holds it: the clock time of
+	 *  the machine that made the archive, in NO known time zone (see the
+	 *  constructor). */
+	FILETIME modifiedAsWritten = { 0 };
 	Precision modifiedPrecision = Precision::HundredNanoseconds; //!< precision of the source: a FILETIME, or the second (FAT or text date)
 
 	/*! Reads the item.

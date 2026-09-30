@@ -376,7 +376,38 @@ if (Wants 'recent_documents') {
     Write-Output "lnkwinter=$link|$target|2022-01-10T12:00:00|2022-01-05T08:00:00"
 }
 
-# 16. Reference counts of the logs Windows writes itself.
+# 16. A folder inside a ZIP, opened by the user's Explorer: the shellbag's
+#     archive item copies the ZIP entry's date, a clock time without time
+#     zone (13:00 here), which must be given as written. Made once: the
+#     shellbag stays.
+if (Wants 'registry') {
+    $zipPath = 'C:\Users\wac\Documents\wac-archive.zip'
+    if (-not (Test-Path $zipPath)) {
+        Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
+        $zip = [IO.Compression.ZipFile]::Open($zipPath, 'Create')
+        $dir = $zip.CreateEntry('winterdir/')
+        $dir.LastWriteTime = [DateTimeOffset]::new(2022, 1, 10, 13, 0, 0, [TimeSpan]::FromHours(1))
+        $file = $zip.CreateEntry('winterdir/inner.txt')
+        $file.LastWriteTime = [DateTimeOffset]::new(2022, 1, 10, 14, 30, 0, [TimeSpan]::FromHours(1))
+        $w = New-Object IO.StreamWriter($file.Open()); $w.Write('inside a zip'); $w.Close()
+        $zip.Dispose()
+        $script = 'C:\wactest\zipnav-user.ps1'
+        Set-Content $script @'
+Start-Process explorer.exe 'C:\Users\wac\Documents\wac-archive.zip\winterdir'
+Start-Sleep 12
+(New-Object -ComObject Shell.Application).Windows() | Where-Object { "$($_.LocationURL)$($_.LocationName)" -like '*winterdir*' } | ForEach-Object { $_.Quit() }
+'@
+        $action = New-ScheduledTaskAction -Execute powershell.exe -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File $script"
+        $principal = New-ScheduledTaskPrincipal -UserId 'wac' -LogonType Interactive
+        Register-ScheduledTask -TaskName WacZipNav -Action $action -Principal $principal -Force | Out-Null
+        Start-ScheduledTask -TaskName WacZipNav
+        Start-Sleep 25
+        Unregister-ScheduledTask -TaskName WacZipNav -Confirm:$false
+    }
+    Write-Output "zipentry=winterdir|2022-01-10T13:00:00"
+}
+
+# 17. Reference counts of the logs Windows writes itself.
 if (Wants 'setupapi', 'defender') {
     $sections = (Select-String -Path 'C:\Windows\INF\setupapi.dev*.log' -Pattern '^>>>  \[' -ErrorAction SilentlyContinue | Measure-Object).Count
     Write-Output "setupapi=$sections"

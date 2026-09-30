@@ -1255,7 +1255,13 @@ time included: a January date collected in summer in Paris is at
 the examined machine year by year (\fichier{Dynamic DST} key of the
 \fichier{SOFTWARE} hive): a 2005 date in the United States follows the rules
 of 2005. The local time written is always derived from the UTC time: one instant
-reads the same in every artefact. For a value the artefact stores in local
+reads the same in every artefact. Two dates have no knowable time zone and
+are given \textbf{as written}, without offset nor UTC, with \champ{TimeZone}
+saying so: the date of an item seen inside an archive
+(\champ{ModifiedAsWritten}; a ZIP entry keeps the clock time of the machine
+that made the archive) and an OLE date of a property store
+(\champ{AsWritten}). Placing them on a timeline needs their origin: \wac{}
+does not make it up. For a value the artefact stores in local
 time (FAT volume, \fichier{setupapi.dev.log}), the hour repeated in autumn is read as its first occurrence, and the
 hour skipped in spring with the offset before the change, as Windows does.
 

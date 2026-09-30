@@ -29,8 +29,9 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Mesure sur la VM : les dates des éléments de shell sont en UTC (dossier créé à 18:48:05 UTC stocké 18:48:06 ; cible d'hiver 08:00 UTC stockée 08:00). WAC les lisait comme locales : raccourcis, jump lists, shellbags et documents récents décalés d'1 à 2 h. Corrigé.
 - [x] Contrôle croisé dans check-json : élément de shell contre l'en-tête UTC du raccourci, et bloc 0xbeef0004 des shellbags contre la création de l'enregistrement MFT (17 dates, aucun écart)
 - [x] Témoin à cheval sur le changement d'heure : raccourci créé en été vers un fichier daté d'hiver
-- [ ] Élément de contenu d'archive (ArchiveFileContent) : date DOS d'une entrée ZIP, lue comme locale, à confronter sur un vrai ZIP ouvert dans l'Explorateur
-- [ ] Date OLE (VT_DATE) des magasins de propriétés : lue comme locale par convention OLE, à confronter
+- [x] Élément de contenu d'archive : mesuré (ZIP dont l'entrée est datée de 13:00, ouvert par l'Explorateur de l'utilisateur, élément à 13:00). C'est l'heure d'horloge de l'entrée, sans fuseau : elle est donnée telle qu'écrite (ModifiedAsWritten, TimeZone). Elle était lue comme UTC, décalée d'une heure.
+- [x] Date OLE (VT_DATE) : aucune dans la collecte réelle, aucune productible sur la VM. Sans fuseau par définition, elle est donnée telle qu'écrite (AsWritten, TimeZone).
+- [ ] Variante d'élément d'archive mal lue dans la collecte réelle (nom « \x10\x01 01/01/1980 00:00:00 », valeurs vides) : à reproduire
 
 ## Journal
 - 2026-09-30 : fiche créée à la demande de l'utilisateur, après la correction des dates FAT copiées.
