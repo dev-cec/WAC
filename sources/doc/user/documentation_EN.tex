@@ -1058,11 +1058,15 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         excepted): every entry, present or \textbf{deleted} (\champ{Deleted}),
         its path, 8.3 name, size, attributes and dates. A name deleted on FAT
         keeps its long name unless overwritten; otherwise its 8.3 name, first
-        letter lost (\champ{NameIncomplete}). FAT dates are local: given as
-        written and in UTC with the offset in force at their date (Explorer
-        applies the current one, hence an hour apart in summer for a winter
-        date); exFAT keeps its offset (\champ{ModifiedOffset}\ldots), the UTC
-        date is then exact. The collection copies only the volume's metadata
+        letter lost (\champ{NameIncomplete}). Each date is given in UTC and in
+        local time derived from UTC, as in every artefact: one instant reads
+        the same everywhere. FAT stores the local time Windows computed when it
+        wrote it: a modification earlier than the creation is a date kept by a
+        copy, written at the copy, and converted with the offset of that moment
+        (\champ{ModifiedWrittenAt} \texttt{Copy}, \champ{ModifiedOffsetApplied},
+        \champ{ModifiedAsStored}) — otherwise a winter file copied in summer
+        would be an hour off. exFAT keeps its offset (\champ{ModifiedOffset}\ldots),
+        the UTC date is exact. The collection copies only the volume's metadata
         (boot sector, FAT, directories), not the files' content; with
         \opt{binary}, a program of these volumes cited by an artefact (run
         from a key, for instance) is fingerprinted and collected as on NTFS.

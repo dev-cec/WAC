@@ -1542,6 +1542,18 @@ def check_small_file_artefacts(folder):
             close = got and abs((instant(got + "Z") - instant(modified + "Z")).total_seconds()) <= 2
             if e is None or e.get("Size") != int(size) or not close:
                 wrong.append(f"{file}: {None if e is None else (e.get('Size'), got)} for ({size}, {modified})")
+        # The winter file copied in summer: its UTC date exact, the copy said (FAT).
+        for letter, label, system in volumes:
+            copy = present.get((letter + "\\copied-winter.txt").lower())
+            if copy is None:
+                continue
+            if (copy.get("ModifiedUtc") or "")[:19] != "2022-01-10T12:00:00":
+                wrong.append(f"{letter}\\copied-winter.txt: ModifiedUtc {copy.get('ModifiedUtc')} for 2022-01-10T12:00:00")
+            if system == "FAT32" and copy.get("ModifiedWrittenAt") != "Copy":
+                wrong.append(f"{letter}\\copied-winter.txt: the copy not said")
+            local = str(copy.get("Modified", ""))
+            if not (local.startswith("2022-01-10T13:00:00") and local.endswith("+01:00")):
+                wrong.append(f"{letter}\\copied-winter.txt: local date {copy.get('Modified')} for 2022-01-10T13:00:00+01:00")
         # The program run from the key, fingerprinted there through the FAT reader (--binary).
         tool = next((l[8:].split("|") for l in lines if l.startswith("fattool=")), None)
         prefetch = load(folder, "prefetchs.json")

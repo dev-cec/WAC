@@ -1079,11 +1079,16 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         chaque entrée, présente ou \textbf{supprimée} (\champ{Deleted}), son
         chemin, son nom 8.3, sa taille, ses attributs et ses dates. Un nom
         supprimé en FAT garde son nom long s'il n'a pas été écrasé ; sinon son
-        nom 8.3, première lettre perdue (\champ{NameIncomplete}). Les dates FAT
-        sont locales : données telles qu'écrites et en UTC avec le décalage en
-        vigueur à leur date (l'Explorateur applique celui du moment, d'où une
-        heure d'écart en été pour une date d'hiver) ; exFAT garde son décalage
-        (\champ{ModifiedOffset}\ldots), la date UTC est alors exacte. La
+        nom 8.3, première lettre perdue (\champ{NameIncomplete}). Chaque date
+        est donnée en UTC et en heure locale dérivée de l'UTC, comme dans tous
+        les artefacts : un même instant se lit partout à la même heure. FAT
+        stocke l'heure locale calculée par Windows au moment où il l'écrit : une
+        date de modification antérieure à la création est une date conservée
+        par une copie, écrite au moment de la copie, et convertie avec le
+        décalage de ce moment (\champ{ModifiedWrittenAt} \texttt{Copy},
+        \champ{ModifiedOffsetApplied}, \champ{ModifiedAsStored}) — sans quoi un
+        fichier d'hiver copié en été serait décalé d'une heure. exFAT garde
+        son décalage (\champ{ModifiedOffset}\ldots), la date UTC est exacte. La
         collecte ne copie que les métadonnées du volume (secteur de démarrage,
         FAT, répertoires), pas le contenu des fichiers ; avec \opt{binary}, un
         programme de ces volumes cité par un artefact (lancé depuis une clé,

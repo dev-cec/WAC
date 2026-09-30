@@ -339,6 +339,13 @@ if (Wants 'fat_volumes') {
             & $tool | Out-Null
             Write-Output "fattool=$tool|$((Get-FileHash $tool -Algorithm SHA256).Hash)"
         }
+        # A winter file copied onto the key now, as an exfiltration would: the
+        # copy keeps its modification date, which Windows writes on FAT with the
+        # offset of the moment of the copy. Its UTC date must come back exact.
+        $winter = 'C:\wactest\wac-winter-source.txt'
+        [IO.File]::WriteAllText($winter, 'modified in winter, copied later')
+        (Get-Item -LiteralPath $winter).LastWriteTimeUtc = [datetime]::new(2022, 1, 10, 12, 0, 0, [DateTimeKind]::Utc)
+        Copy-Item -LiteralPath $winter -Destination (Join-Path $root 'copied-winter.txt')
         # The deletions last: no entry created after them takes their places.
         [IO.File]::WriteAllText((Join-Path $root 'deleted-file.txt'), 'deleted by the harness')
         Remove-Item -LiteralPath (Join-Path $root 'deleted-file.txt')

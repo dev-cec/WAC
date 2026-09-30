@@ -13,15 +13,19 @@
  *  `X:\$FatMetadata`; the conversion reads that copy, not the volume. Files'
  *  contents are not copied. The volume holding the collection is left out.
  *
- *  DATES. FAT keeps local time: each date is given as stored, with its
- *  offset (Created…), and in UTC (CreatedUtc…) by the examined machine's time
- *  zone, with the offset in force AT THAT DATE, as every local date of WAC.
- *  Windows converts a FAT time with the offset of the moment instead: in
- *  summer, it shows a winter date one hour off — measured in the test VM; a
- *  date written by SetFileTime in the other season is the one case where
- *  Windows' conversion is right and this one is not. exFAT keeps, when it
- *  can, the offset in force: the UTC date is then exact, and the offset is
- *  given (CreatedOffset…).
+ *  DATES. One instant must read the same in every artefact: each date is
+ *  given in UTC (CreatedUtc…) and in the examined machine's local time
+ *  derived from it (Created…), with the offset in force at that instant —
+ *  the rule of every local date of WAC.
+ *  FAT keeps local time, computed by Windows with the offset of the moment
+ *  it WROTE the date. For a creation, or a modification made on the volume,
+ *  that moment is the date itself. A modification earlier than the creation
+ *  is a date kept by a copy (Explorer, robocopy, Copy-Item): written at the
+ *  copy, which the creation dates, it is converted with the offset in force
+ *  at the creation, and said so (ModifiedWrittenAt "Copy",
+ *  ModifiedOffsetApplied, ModifiedAsStored). A winter file copied onto a key
+ *  in summer is otherwise an hour off — measured in the test VM.
+ *  exFAT keeps the offset it wrote (CreatedOffset…): the UTC date is exact.
  */
 #pragma once
 

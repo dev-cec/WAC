@@ -28,21 +28,43 @@ std::wstring offsetText(int minutes) {
 	return text;
 }
 
-/*! A date as the entry stores it: local (FAT, exFAT without offset) — as
- *  stored with the examined machine's offset, and in UTC by its time zone —,
- *  or UTC (exFAT with its offset) — exact, and the offset given. */
-void addFatDate(Json& o, const wchar_t* name, const FILETIME& date, bool utc, int offset, Precision precision) {
+//! A FILETIME as a signed count of 100 ns.
+int64_t ticks(const FILETIME& f) { return (int64_t)(((uint64_t)f.dwHighDateTime << 32) | f.dwLowDateTime); }
+
+FILETIME fromTicks(int64_t v) {
+	FILETIME f;
+	f.dwLowDateTime = (DWORD)(uint64_t)v;
+	f.dwHighDateTime = (DWORD)((uint64_t)v >> 32);
+	return f;
+}
+
+//! Two seconds, FAT's resolution for a modification, in 100 ns.
+const int64_t FAT_RESOLUTION = 2LL * 10000000;
+
+/*! A date as the entry stores it: local (FAT, exFAT without offset) or UTC
+ *  (exFAT with its offset, exact, the offset given). Either way the local
+ *  date written is derived from the UTC one by the examined machine's time
+ *  zone, with the offset in force at THAT instant — the same rule as every
+ *  other artefact, so that one instant reads the same everywhere.
+ *  A local date is converted with the offset of the moment it was WRITTEN:
+ *  `writtenAt`, the date itself unless told otherwise (a copy). */
+void addFatDate(Json& o, const wchar_t* name, const FILETIME& date, bool utc, int offset, Precision precision,
+                const FILETIME* writtenAt = nullptr) {
 	if (date.dwLowDateTime == 0 && date.dwHighDateTime == 0) return;
 	const std::wstring key = name;
-	if (utc) {
-		o.add(key + L"Utc", Json::str(timeToIso8601Utc(date, precision)));
-		o.add(key, Json::str(utcTimeToIso8601Local(date, precision)));
-		o.add(key + L"Offset", Json::str(offsetText(offset)));
-	}
+	FILETIME instant = date;
+	if (utc) o.add(key + L"Offset", Json::str(offsetText(offset)));
+	else if (!writtenAt) instant = suspectLocalToUtc(date);
 	else {
-		o.add(key + L"Utc", Json::str(timeToIso8601Utc(suspectLocalToUtc(date), precision)));
-		o.add(key, Json::str(timeToIso8601Local(date, precision)));
+		// The offset in force when the entry was written, applied to the date kept.
+		const int64_t bias = ticks(*writtenAt) - ticks(suspectLocalToUtc(*writtenAt));
+		instant = fromTicks(ticks(date) - bias);
+		o.add(key + L"WrittenAt", Json::str(L"Copy"));
+		o.add(key + L"OffsetApplied", Json::str(offsetText((int)(bias / 600000000))));
+		o.add(key + L"AsStored", Json::str(timeToIso8601Utc(date, precision).substr(0, 19)));
 	}
+	o.add(key + L"Utc", Json::str(timeToIso8601Utc(instant, precision)));
+	o.add(key, Json::str(utcTimeToIso8601Local(instant, precision)));
 }
 
 } // namespace
@@ -191,8 +213,16 @@ Json FatVolumeEntry::toJson() const {
 	if (e.contiguous) o.add(L"Contiguous", Json::boolean(true));
 	// FAT: creation to the hundredth, modification to two seconds, access to the day.
 	addFatDate(o, L"Created", e.created, e.createdUtc, e.createdOffset, Precision::HundredNanoseconds);
+	/* A modification earlier than the creation — beyond FAT's two seconds — is
+	   a date KEPT by a copy onto the volume (Explorer, robocopy, Copy-Item
+	   keep it): Windows wrote it with the offset in force at the copy, which
+	   the creation dates, not with that of the date kept. Converted with the
+	   offset of the date kept, a winter file copied in summer would be an
+	   hour off — the case of an exfiltration onto a key. */
+	const bool copied = !e.modifiedUtc && !e.createdUtc && ticks(e.created) != 0 && ticks(e.modified) != 0
+	                    && ticks(e.modified) < ticks(e.created) - FAT_RESOLUTION;
 	addFatDate(o, L"Modified", e.modified, e.modifiedUtc, e.modifiedOffset,
-	           fileSystem == L"exFAT" ? Precision::HundredNanoseconds : Precision::Second);
+	           fileSystem == L"exFAT" ? Precision::HundredNanoseconds : Precision::Second, copied ? &e.created : nullptr);
 	addFatDate(o, L"Accessed", e.accessed, e.accessedUtc, e.accessedOffset, Precision::Second);
 	return o;
 }
