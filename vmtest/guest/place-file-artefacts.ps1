@@ -40,6 +40,9 @@ function Wants([string[]]$keys) {
 }
 
 $ErrorActionPreference = 'Stop'
+# The SID of the test user "wac", whose loaded hive several sections write to.
+# Defined here: set inside one section, it was empty when --only skipped it.
+$wacSid = (New-Object Security.Principal.NTAccount 'wac').Translate([Security.Principal.SecurityIdentifier]).Value
 # The references go back in UTF-8: some name a file with accents.
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 
@@ -136,7 +139,6 @@ if (Wants 'persistence') {
     New-Item -Force $setup | Out-Null
     New-ItemProperty -Force -Path $setup -Name 'StubPath' -Value 'C:\wactest\wac-stub.exe /once' | Out-Null
     Write-Output "activesetup={0000FACE-0000-4AC0-8000-000000000001}|C:\wactest\wac-stub.exe /once"
-    $wacSid = (New-Object Security.Principal.NTAccount 'wac').Translate([Security.Principal.SecurityIdentifier]).Value
     $com = "Registry::HKEY_USERS\$($wacSid)_Classes\CLSID\{0000FACE-0000-4AC0-8000-000000000002}\InprocServer32"
     New-Item -Force $com | Out-Null
     Set-ItemProperty -Path $com -Name '(default)' -Value 'C:\wactest\wac-com.dll'
