@@ -10,14 +10,20 @@ network, no file share, no clicking in the VM (commands run as SYSTEM:
 administrator rights, no UAC).
 
 ## Files
-| File | Role |
-|---|---|
-| `create-vm.sh` | Creates the VM from scratch, unattended: autounattend + UEFI Secure Boot + TPM 2.0 + guest-agent channel, boot unblocked by key injection, then waits for the agent to answer. |
-| `autounattend.xml` | Silent Windows install (French, Win11 Pro, local admin account `wac`/`wac`, OOBE skipped, autologon) **and automatic guest-agent install** at first logon from the virtio-win CD. |
-| `qga.py` | Guest-agent helper: `ping`, `run` (execute), `read`/`write` (exchange files). |
-| `run-wac-test.sh` | Full test cycle: build → attach a virtual USB key (`~/vms/wac-usb-test.img`, serial `WACUSB0001`, so that USBSTOR is populated even on a recreated VM) → send the binaries → `raw_hive` validation (raw extraction + `reg load`) → run WAC → bring the log and the JSON back into `results/<timestamp>/`. |
-| `register-test-guids.ps1` | Registers in the VM, on every cycle, three GUIDs WAC's table does not know — one per source WAC reads GUID names from — each referenced by a disabled COM-handler task. |
-| `check-json.py` | Checks the outputs: JSON validity, Windows paths, and **cross-checks** (see below). Also usable alone: `python3 check-json.py results/<timestamp>`. |
+| Where | File | Role |
+|---|---|---|
+| `vmtest/` | `create-vm.sh` | Creates the VM from scratch, unattended: autounattend + UEFI Secure Boot + TPM 2.0 + guest-agent channel, boot unblocked by key injection, then waits for the agent to answer; adds the 2 GB data disk. |
+| `vmtest/` | `run-wac-test.sh` | Full test cycle: build → data volume and virtual USB key (`~/vms/wac-usb-test.img`, serial `WACUSB0001`) → send the binaries → `raw_hive` validation (raw extraction + `reg load`) → run WAC → bring the log and the JSON back into `results/<timestamp>/` → checks. `--only=key,…` restricts it to some artefacts. |
+| `lib/` (host) | `qga.py` | Guest-agent helper: `ping`, `run` (execute), `read`/`write` (exchange files). |
+| `lib/` (host) | `check-json.py` | Checks the outputs: JSON validity, Windows paths, and **cross-checks** (see below). Also usable alone: `python3 lib/check-json.py results/<timestamp>`. |
+| `lib/` (host) | `ese-compare.py` | WAC's ESE reader against dissect.esedb, value by value, on the same database. |
+| `guest/` (VM) | `autounattend.xml` | Silent Windows install (French, Win11 Pro, local admin account `wac`/`wac`, OOBE skipped, autologon) **and automatic guest-agent install** at first logon from the virtio-win CD. |
+| `guest/` (VM) | `place-file-artefacts.ps1` | Places the witnesses of the artefacts (files, registry, EICAR, WMI, data volume…) and prints the references Windows gives for them. |
+| `guest/` (VM) | `register-test-guids.ps1` | Registers, on every cycle, three GUIDs WAC's table does not know — one per source WAC reads GUID names from — each referenced by a disabled COM-handler task. |
+| `guest/` (VM) | `harmlessness.ps1`, `make-fake-package.ps1` | Dates and USN of witness files before/after a collection; a Store package altered on purpose. |
+| `guest/` (VM) | `property-schema.cpp` | Dumps the VM's property schema, the source of WAC's table of property names. |
+| `tools/` | KAPE, Eric Zimmerman's tools | Third-party tools for the comparisons (B-015, B-027): **not versioned** (`.gitignore`), each under its own licence. |
+| `results/` | `<timestamp>/` | Outputs of each cycle: **not versioned**; to be emptied now and then. |
 
 ## What the harness validates — and what it does not
 
@@ -150,8 +156,8 @@ ISO_WIN=~/Downloads/Win11_25H2_French_x64_v2.iso ./create-vm.sh
 ./run-wac-test.sh --only=mft,usn_journal   # only these artefacts (generated wac.yml, the others' checks skipped)
 ./run-wac-test.sh --no-split     # without step 7 (--collect then --convert, ~1 h)
 ./run-wac-test.sh --binary-all   # step 7 with --binary-all (every executable copied)
-python3 qga.py ping              # is the agent answering?
-python3 qga.py run --shell "dir C:\\"
+python3 lib/qga.py ping              # is the agent answering?
+python3 lib/qga.py run --shell "dir C:\\"
 ```
 
 ## Host requirements

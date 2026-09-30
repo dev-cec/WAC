@@ -35,7 +35,7 @@ mkdir -p "$VMS"
 # --- 1. Answer file (silent install + guest agent) -------------------------
 echo "== 1. autounattend.iso =="
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
-cp "$HERE/autounattend.xml" "$TMP/autounattend.xml"
+cp "$HERE/guest/autounattend.xml" "$TMP/autounattend.xml"
 xorriso -as mkisofs -J -R -V UNATTEND -o "$ISO_ANS" "$TMP" >/dev/null 2>&1
 
 # --- 2. ISO of the WAC binaries (if the build exists) ----------------------
@@ -98,7 +98,7 @@ for i in $(seq 1 120); do
   if [[ "$($C domstate "$DOM" 2>/dev/null)" != "running" ]]; then
     $C start "$DOM" >/dev/null 2>&1 || true
   fi
-  if python3 "$HERE/qga.py" --dom "$DOM" ping >/dev/null 2>&1; then
+  if python3 "$HERE/lib/qga.py" --dom "$DOM" ping >/dev/null 2>&1; then
     echo "   ✅ agent operational after ~$((i / 4)) min — the VM can be driven"
     [[ -f "$DATA_DISK" ]] || qemu-img create -f qcow2 "$DATA_DISK" 2G >/dev/null
     # SATA has no hot plug: the disk goes into the definition, and the VM

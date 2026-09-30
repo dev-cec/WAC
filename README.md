@@ -1010,7 +1010,7 @@ with the Windows functions it no longer imports: GUIDs (`StringFromGUID2`),
 SIDs in both directions (`ConvertSidToStringSidW`, `ConvertStringSidToSidW`),
 OLE dates (`VariantTimeToSystemTime`) and property names
 (`PSGetNameFromPropertyKey`, against the table generated from the Windows
-property schema by `vmtest/property-schema.cpp`). WAC.exe thus imports only
+property schema by `vmtest/guest/property-schema.cpp`). WAC.exe thus imports only
 what querying the running system requires: `ADVAPI32, KERNEL32, msvcrt,
 Secur32, WTSAPI32`. Getting the dates right took the test: Windows adds half a
 second TO THE DATE, then truncates — a rounding of the seconds of the day,
@@ -1102,7 +1102,7 @@ cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
   WAC does to the examined machine: every trace, operation by operation, what
   it never does, the evidence (import table of `WAC.exe`, guards of the build)
   and the validation procedure, including the VM cycle's witness files
-  (`vmtest/harmlessness.ps1`).
+  (`vmtest/guest/harmlessness.ps1`).
 - `sources/doc/BUILD_EN.md` (French: `BUILD_FR.md`) — building on Linux or Windows,
   details, the guards of the build, `bin`, releasing with `bump-version.sh`.
 - `sources/wac.yml` — the reference configuration, built into `WAC.exe`

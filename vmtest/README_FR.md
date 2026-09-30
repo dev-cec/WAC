@@ -10,14 +10,20 @@ de réseau, de partage de fichiers, ni de cliquer dans la VM (les commandes tour
 en SYSTEM : droits admin, aucun UAC).
 
 ## Fichiers
-| Fichier | Rôle |
-|---|---|
-| `create-vm.sh` | Crée la VM de zéro, sans interaction : autounattend + UEFI Secure Boot + TPM 2.0 + canal guest-agent, déblocage du boot par injection de touches, puis attente que l'agent réponde. |
-| `autounattend.xml` | Install Windows muette (FR, Win11 Pro, compte admin local `wac`/`wac`, OOBE zappée, autologon) **et auto-installation du guest-agent** au 1er logon depuis le CD virtio-win. |
-| `qga.py` | Helper guest-agent : `ping`, `run` (exécuter), `read`/`write` (échanger des fichiers). |
-| `run-wac-test.sh` | Cycle de test complet : build → branchement d'une clé USB virtuelle (`~/vms/wac-usb-test.img`, numéro de série `WACUSB0001`, pour que USBSTOR soit peuplé même sur une VM recréée) → envoi des binaires → validation `raw_hive` (extraction brute + `reg load`) → exécution de WAC → rapatriement du log et des JSON dans `results/<horodatage>/`. |
-| `register-test-guids.ps1` | Enregistre dans la VM, à chaque cycle, trois GUID que la table de WAC ignore — un par source où WAC lit les noms de GUID —, chacun référencé par une tâche ComHandler désactivée. |
-| `check-json.py` | Contrôle les sorties : validité JSON, chemins Windows, et **contrôles croisés** (cf. ci-dessous). S'utilise aussi seul : `python3 check-json.py results/<horodatage>`. |
+| Où | Fichier | Rôle |
+|---|---|---|
+| `vmtest/` | `create-vm.sh` | Crée la VM de zéro, sans interaction : autounattend + UEFI Secure Boot + TPM 2.0 + canal guest-agent, déblocage du boot par injection de touches, puis attente que l'agent réponde ; ajoute le disque de données de 2 Go. |
+| `vmtest/` | `run-wac-test.sh` | Cycle de test complet : build → volume de données et clé USB virtuelle (`~/vms/wac-usb-test.img`, numéro de série `WACUSB0001`) → envoi des binaires → validation `raw_hive` (extraction brute + `reg load`) → exécution de WAC → rapatriement du log et des JSON dans `results/<horodatage>/` → contrôles. `--only=clé,…` le restreint à quelques artefacts. |
+| `lib/` (hôte) | `qga.py` | Helper guest-agent : `ping`, `run` (exécuter), `read`/`write` (échanger des fichiers). |
+| `lib/` (hôte) | `check-json.py` | Contrôle les sorties : validité JSON, chemins Windows, et **contrôles croisés** (cf. ci-dessous). S'utilise aussi seul : `python3 lib/check-json.py results/<horodatage>`. |
+| `lib/` (hôte) | `ese-compare.py` | Le lecteur ESE de WAC confronté à dissect.esedb, valeur par valeur, sur la même base. |
+| `guest/` (VM) | `autounattend.xml` | Install Windows muette (FR, Win11 Pro, compte admin local `wac`/`wac`, OOBE zappée, autologon) **et auto-installation du guest-agent** au 1er logon depuis le CD virtio-win. |
+| `guest/` (VM) | `place-file-artefacts.ps1` | Pose les témoins des artefacts (fichiers, registre, EICAR, WMI, volume de données…) et imprime les références que Windows en donne. |
+| `guest/` (VM) | `register-test-guids.ps1` | Enregistre, à chaque cycle, trois GUID que la table de WAC ignore — un par source où WAC lit les noms de GUID —, chacun référencé par une tâche ComHandler désactivée. |
+| `guest/` (VM) | `harmlessness.ps1`, `make-fake-package.ps1` | Dates et USN de fichiers témoins avant/après une collecte ; un paquet Store altéré exprès. |
+| `guest/` (VM) | `property-schema.cpp` | Vide le schéma des propriétés de la VM, source de la table des noms de propriétés de WAC. |
+| `tools/` | KAPE, outils d'Eric Zimmerman | Outils tiers des comparaisons (B-015, B-027) : **non versionnés** (`.gitignore`), chacun sous sa licence. |
+| `results/` | `<horodatage>/` | Sorties de chaque cycle : **non versionnées** ; à vider de temps en temps. |
 
 ## Ce que le harnais valide — et ce qu'il ne valide pas
 
@@ -156,8 +162,8 @@ ISO_WIN=~/Téléchargements/Win11_25H2_French_x64_v2.iso ./create-vm.sh
 ./run-wac-test.sh --only=mft,usn_journal   # seulement ces artefacts (wac.yml généré, contrôles des autres sautés)
 ./run-wac-test.sh --no-split     # sans l'étape 7 (--collect puis --convert, ~1 h)
 ./run-wac-test.sh --binary-all   # étape 7 avec --binary-all (tout exécutable copié)
-python3 qga.py ping              # l'agent répond ?
-python3 qga.py run --shell "dir C:\\"
+python3 lib/qga.py ping              # l'agent répond ?
+python3 lib/qga.py run --shell "dir C:\\"
 ```
 
 ## Prérequis hôte

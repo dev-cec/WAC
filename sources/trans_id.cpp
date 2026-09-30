@@ -17575,7 +17575,7 @@ std::wstring from_appId(std::wstring appId) {
 *  static table is deterministic and works identically on a dead image.
 *
 *  Generated from the property schema of Windows 11 (build 26100) by
-*  vmtest/property-schema.cpp (PSEnumeratePropertyDescriptions, PDEF_ALL):
+*  vmtest/guest/property-schema.cpp (PSEnumeratePropertyDescriptions, PDEF_ALL):
 *  1698 properties. Keys in lower case: to_FriendlyName normalises
 *  before looking up. A property outside the table keeps its raw key.
 */

@@ -19,7 +19,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
-QGA="python3 $HERE/qga.py"
+QGA="python3 $HERE/lib/qga.py"
 VMDIR='C:\wactest'
 STAMP="$(date +%Y%m%d-%H%M%S)"
 OUTPUT="$HERE/results/$STAMP"
@@ -35,10 +35,22 @@ for a in "$@"; do
   [[ "$a" == "--binary-all" ]] && BINARY_OPTION=--binary-all
 done
 
-echo "== 0. Agent =="
+# A full cycle, or a --only one that asks for one of these artefacts.
+wants() { local k; for k in "$@"; do [[ -z "$ONLY" || ",$ONLY," == *",$k,"* ]] && return 0; done; return 1; }
+# What serves WAC's core rather than one artefact (binaries and trust set, raw
+# validation, Store package, timestomping, harmlessness, tampering,
+# determinism) belongs to full cycles: a --only cycle runs only what its
+# artefacts need.
+full_cycle() { [[ -z "$ONLY" ]]; }
+# --only: no binaries collected — they are no artefact's.
+[[ -n "$ONLY" ]] && BINARY_OPTION=""
+BINARY_FLAG=${BINARY_OPTION:+--binary}
+
+echo "== 0. Agent == ($(date +%H:%M:%S))"
 $QGA ping
 
-echo "== 0a. Data volume =="
+if wants mft usn_journal zone_identifiers; then
+echo "== 0a. Data volume == ($(date +%H:%M:%S))"
 # The second fixed disk of create-vm.sh, formatted NTFS on first use (label
 # WACDATA): the $MFT and change journal of a volume other than the system's.
 DATA_STATE=$($QGA run -- powershell.exe -NoProfile -Command '
@@ -50,8 +62,10 @@ DATA_STATE=$($QGA run -- powershell.exe -NoProfile -Command '
     Format-Volume -FileSystem NTFS -NewFileSystemLabel WACDATA -Confirm:$false | Out-Null
   "formatted"' 2>/dev/null | tr -d '\r' || true)
 echo "   ${DATA_STATE:-no answer} (without the disk, the second-volume checks are skipped)"
+fi
 
-echo "== 0b. USB key =="
+if wants registry setupapi; then
+echo "== 0b. USB key == ($(date +%H:%M:%S))"
 # A virtual USB key, attached on every run, so that USBSTOR is populated on any
 # test VM — including one recreated from scratch by create-vm.sh — and the USB
 # artefacts are checked on every cycle. Attached live only: the VM definition
@@ -82,14 +96,15 @@ for attempt in $(seq 1 30); do
   [[ "${N_USB:-0}" =~ ^[1-9] ]] && { echo "   USB key known to Windows"; break; }
   sleep 2
 done
+fi
 
 if [[ $BUILD -eq 1 ]]; then
-  echo "== 1. Build (Linux cross-compilation) =="
+  echo "== 1. Build (Linux cross-compilation) == ($(date +%H:%M:%S))"
   "$ROOT/build-windows.sh" --test >/dev/null
   echo "   WAC.exe + raw_hive_test.exe rebuilt"
 fi
 
-echo "== 2. Upload of the binaries into the VM =="
+echo "== 2. Upload of the binaries into the VM == ($(date +%H:%M:%S))"
 $QGA run --shell "if not exist $VMDIR mkdir $VMDIR" >/dev/null
 
 # A previous run that was interrupted (Ctrl+C on the host, stuck collection,
@@ -112,6 +127,8 @@ done
 wait_registry_on_disk() {
   sleep 90
 }
+
+
 
 # A `reg load` left mounted by an interrupted run locks the extracted hive.
 $QGA run --shell "reg unload HKLM\\WAC_TEST >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
@@ -137,34 +154,41 @@ if [[ -n "$ONLY" ]]; then
   $QGA write "$OUTPUT/wac-only.yml" "$VMDIR\\wac.yml" >/dev/null
   echo "   wac.yml: only $ONLY"
 fi
-$QGA write "$ROOT/build-windows/raw_hive_test.exe" "$VMDIR\\raw_hive_test.exe"
+full_cycle && $QGA write "$ROOT/build-windows/raw_hive_test.exe" "$VMDIR\\raw_hive_test.exe"
 
 # The trust set, as the analysis workstation prepares it before a collection:
 # --update-trust, into `trust` next to WAC.exe, where the collection reads it.
 # Here in the VM itself, which checks the download under Windows at each cycle.
+if full_cycle; then
 $QGA run --shell "cd /d $VMDIR && WAC.exe --update-trust > update-trust.log 2>&1" >/dev/null 2>&1 \
   && echo "   trust set prepared (--update-trust)" || echo "   ⚠️ trust set not prepared"
 $QGA read "$VMDIR\\update-trust.log" "$OUTPUT/update-trust.log" >/dev/null 2>&1 || true
+fi
 
 # GUIDs the reference table does not know, one per source WAC reads them from
 # (see register-test-guids.ps1): the names it prints are those check-json.py
 # expects in ScheduledTasks.json.
 mkdir -p "$OUTPUT/reference"
-$QGA write "$HERE/register-test-guids.ps1" "$VMDIR\\register-test-guids.ps1" >/dev/null
-$QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\register-test-guids.ps1" \
-  > "$OUTPUT/reference/test-guids.txt" 2>/dev/null \
-  && echo "   test GUIDs registered" || echo "   ⚠️ test GUIDs not registered"
+wants registry scheduled_tasks && $QGA write "$HERE/guest/register-test-guids.ps1" "$VMDIR\\register-test-guids.ps1" >/dev/null
+if wants registry scheduled_tasks; then
+  $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\register-test-guids.ps1" \
+    > "$OUTPUT/reference/test-guids.txt" 2>/dev/null \
+    && echo "   test GUIDs registered" || echo "   ⚠️ test GUIDs not registered"
+fi
 
 # Witnesses of the small file artefacts, placed before both collections: a
 # PowerShell history, a file sent to the recycle bin, a hosts entry, a startup
 # script, and the reference counts of setupapi and Defender (see
 # place-file-artefacts.ps1). check-json.py finds them in the JSON.
-$QGA write "$HERE/place-file-artefacts.ps1" "$VMDIR\\place-file-artefacts.ps1" >/dev/null
+$QGA write "$HERE/guest/place-file-artefacts.ps1" "$VMDIR\\place-file-artefacts.ps1" >/dev/null
 $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\place-file-artefacts.ps1" \
-  > "$OUTPUT/reference/file-artefacts.txt" 2>/dev/null \
+  ${ONLY:+-Only} ${ONLY:+$ONLY} > "$OUTPUT/reference/file-artefacts.txt" 2>/dev/null \
   && echo "   + reference/file-artefacts.txt" || echo "   ⚠️ file artefact witnesses not placed"
 
-echo "== 3. raw_hive validation (raw extraction + reg load) =="
+if ! full_cycle; then
+  echo "== 3. skipped (--only) == ($(date +%H:%M:%S))"
+else
+echo "== 3. raw_hive validation (raw extraction + reg load) == ($(date +%H:%M:%S))"
 # Tested BOTH ways. A hive copied live is always "dirty":
 #   - without --fix, `reg load` MUST refuse it (ERROR_BADDB): that is what proves
 #     hive_recover is necessary, and not a luxury;
@@ -222,13 +246,14 @@ clean() { tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'; }
   $QGA run --shell "del $VMDIR\\hashcheck.bin 2>nul & echo." >/dev/null 2>&1 || true
 } | tee "$OUTPUT/raw-validation.txt"
 $QGA read "$VMDIR\\raw.log" "$OUTPUT/raw.log" >/dev/null 2>&1 || true
+fi
 
 if [[ $RAWONLY -eq 1 ]]; then
-  echo "== Done (raw only). Results: $OUTPUT =="
+  echo "== Done (raw only). Results: $OUTPUT == ($(date +%H:%M:%S))"
   exit 0
 fi
 
-echo "== 4. Run of WAC (SYSTEM) =="
+echo "== 4. Run of WAC (SYSTEM) == ($(date +%H:%M:%S))"
 # --output must be a simple name (WAC refuses backslashes): created under cwd.
 # A collection that stops midway still produces valid JSON files: the absence
 # of JSON errors therefore does NOT prove that WAC went to the end.
@@ -238,7 +263,7 @@ CODE=0
 # the next (636 MiB seen after a series of runs), which makes fetching it
 # useless and hides the traces of the current run.
 $QGA run --shell "del $VMDIR\\WAC.exe.log 2>nul & echo." >/dev/null 2>&1 || true
-$QGA run --shell "cd /d $VMDIR && rmdir /s /q out 2>nul & WAC.exe --output=out $EVENTS_OPTION --binary --loglevel=2 > run.log 2>&1" || CODE=$?
+$QGA run --shell "cd /d $VMDIR && rmdir /s /q out 2>nul & WAC.exe --output=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 > run.log 2>&1" || CODE=$?
 $QGA read "$VMDIR\\run.log" "$OUTPUT/run.log" >/dev/null || echo "   ⚠️ run.log not fetched"
 
 if [[ -f "$OUTPUT/run.log" ]] && grep -qaiE 'terminate called|Unhandled exception|Exception non gérée' "$OUTPUT/run.log"; then
@@ -293,29 +318,34 @@ fetch_results() {
     && echo "   + exhibits/LIST.txt" || echo "   ⚠️ list of the exhibit store not read"
 }
 
-echo "== 5. Fetch of the JSON files =="
+echo "== 5. Fetch of the JSON files == ($(date +%H:%M:%S))"
 fetch_results out "$OUTPUT"
 
 # References read by Windows itself, for the cross-checks of check-json.py:
 # the MountedDevices values through the live registry API (WAC reads them in
 # the raw hive, with its own reader), and the partitions of the disks.
 mkdir -p "$OUTPUT/reference"
+if wants registry; then
 $QGA run reg.exe query 'HKLM\SYSTEM\MountedDevices' > "$OUTPUT/reference/mounted-devices.txt" 2>/dev/null \
   && echo "   + reference/mounted-devices.txt" || echo "   ⚠️ MountedDevices reference not read"
 $QGA run -- powershell.exe -NoProfile -Command \
   'Get-Partition | ForEach-Object { "{0}|{1}|{2}|{3}" -f $_.DriveLetter, $_.Guid, $_.Offset, ($_.AccessPaths -join ";") }' \
   > "$OUTPUT/reference/partitions.txt" 2>/dev/null \
   && echo "   + reference/partitions.txt" || echo "   ⚠️ partitions reference not read"
+fi
 
 # The TCP listeners as netstat gives them, right after the collection: a
 # listening socket outlives it, so WAC's network state must hold the same
 # address, port and owner (netstat formats through Winsock, WAC by itself).
+if wants network; then
 $QGA run -- netstat.exe -ano -p TCP > "$OUTPUT/reference/netstat-tcp.txt" 2>/dev/null \
   && $QGA run -- netstat.exe -ano -p TCPv6 >> "$OUTPUT/reference/netstat-tcp.txt" 2>/dev/null \
   && echo "   + reference/netstat-tcp.txt" || echo "   ⚠️ netstat reference not read"
+fi
 
 # USBSTOR dates as Windows gives them (UTC), and the PE header timestamps of
 # the executables of System32, for the dates of USBSTOR and of Amcache.
+if wants registry; then
 $QGA run -- powershell.exe -NoProfile -Command \
   'Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object InstanceId -like "USBSTOR*" | ForEach-Object { $i = $_.InstanceId; foreach ($k in "DEVPKEY_Device_InstallDate", "DEVPKEY_Device_LastArrivalDate") { $p = Get-PnpDeviceProperty -InstanceId $i -KeyName $k; if ($p.Data) { "{0}|{1}|{2}" -f $i, $k, $p.Data.ToUniversalTime().ToString("o") } } }' \
   > "$OUTPUT/reference/usbstor.txt" 2>/dev/null \
@@ -324,32 +354,39 @@ $QGA run -- powershell.exe -NoProfile -Command \
   'Get-ChildItem C:\Windows\System32\*.exe | ForEach-Object { try { $f = [IO.File]::OpenRead($_.FullName); $b = New-Object byte[] 1024; [void]$f.Read($b, 0, 1024); $f.Close(); $pe = [BitConverter]::ToInt32($b, 0x3C); if ($pe -gt 0 -and $pe -lt 1016) { "{0}|{1}" -f $_.FullName.ToLower(), [BitConverter]::ToUInt32($b, $pe + 8) } } catch {} }' \
   > "$OUTPUT/reference/pe-timestamps.txt" 2>/dev/null \
   && echo "   + reference/pe-timestamps.txt" || echo "   ⚠️ PE timestamps reference not read"
+fi
 # The build of each executable of System32 — TimeDateStamp and SizeOfImage,
 # the key of Microsoft's symbol server — as read in its header by PowerShell.
+if full_cycle; then
 $QGA run -- powershell.exe -NoProfile -Command \
   'Get-ChildItem C:\Windows\System32\*.exe | ForEach-Object { try { $f = [IO.File]::OpenRead($_.FullName); $b = New-Object byte[] 1024; [void]$f.Read($b, 0, 1024); $f.Close(); $pe = [BitConverter]::ToInt32($b, 0x3C); if ($pe -gt 0 -and $pe -lt 940) { "{0}|{1:X8}|{2:x}" -f $_.FullName.ToLower(), [BitConverter]::ToUInt32($b, $pe + 8), [BitConverter]::ToUInt32($b, $pe + 80) } } catch {} }; exit 0' \
   > "$OUTPUT/reference/pe-build.txt" 2>/dev/null \
   && echo "   + reference/pe-build.txt" || echo "   ⚠️ PE build reference not read"
+fi
 
 # The last write of each Prefetch file as Windows gives it, for the dates of
 # the file artefacts (WAC reads them in the manifest, from the raw $MFT).
+if wants prefetch; then
 $QGA run -- powershell.exe -NoProfile -Command \
   'Get-ChildItem C:\Windows\Prefetch\*.pf | ForEach-Object { "{0}|{1}" -f $_.Name, $_.LastWriteTimeUtc.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ") }' \
   > "$OUTPUT/reference/prefetch-times.txt" 2>/dev/null \
   && echo "   + reference/prefetch-times.txt" || echo "   ⚠️ Prefetch times reference not read"
+fi
 
 # Local accounts and groups as Windows names them, for the offline naming of
 # the SIDs (WAC reads them in the SAM; Windows through its account API).
+if wants registry; then
 $QGA run -- powershell.exe -NoProfile -Command \
   '[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-LocalUser | ForEach-Object { "{0}|{1}" -f $_.SID, $_.Name }; Get-LocalGroup | ForEach-Object { "{0}|{1}" -f $_.SID, $_.Name }' \
   > "$OUTPUT/reference/accounts.txt" 2>/dev/null \
   && echo "   + reference/accounts.txt" || echo "   ⚠️ accounts reference not read"
+fi
 
-echo "== 6. JSON validity check =="
-python3 "$HERE/check-json.py" "$OUTPUT" || echo "   ⚠️ some JSON files are invalid (see above)"
+echo "== 6. JSON validity check == ($(date +%H:%M:%S))"
+python3 "$HERE/lib/check-json.py" "$OUTPUT" || echo "   ⚠️ some JSON files are invalid (see above)"
 
 if [[ $SPLIT -eq 1 ]]; then
-  echo "== 7. Collection (--collect), then conversion (--convert) =="
+  echo "== 7. Collection (--collect), then conversion (--convert) == ($(date +%H:%M:%S))"
   # The same VM plays both roles; what is checked is what the separation must
   # guarantee:
   #   - the collection converts nothing, and seals its exhibit store;
@@ -367,9 +404,10 @@ if [[ $SPLIT -eq 1 ]]; then
   json_count() { $QGA run --shell "dir /b $VMDIR\\split\\*.json 2>nul" 2>/dev/null | grep -c '\.json' || true; }
 
   $QGA run --shell "cd /d $VMDIR && rmdir /s /q split 2>nul & echo." >/dev/null
+  if full_cycle; then
   # A copy of a signed Store package with one untouched, one modified and one
   # intruding script: the package verification must tell them apart.
-  $QGA write "$HERE/make-fake-package.ps1" "$VMDIR\\make-fake-package.ps1" >/dev/null
+  $QGA write "$HERE/guest/make-fake-package.ps1" "$VMDIR\\make-fake-package.ps1" >/dev/null
   $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\make-fake-package.ps1" \
     > "$OUTPUT/reference/fake-package.txt" 2>/dev/null \
     && echo "   + reference/fake-package.txt" || echo "   ⚠️ copy of a Store package not prepared"
@@ -409,24 +447,26 @@ if [[ $SPLIT -eq 1 ]]; then
     echo "   ⚠️ vulnerable driver sample not obtained: its check will be skipped"
   fi
 
+  fi
+
   # taskkill just before the collection, as in step 2: the BAM check expects
   # its execution within minutes of the collection, and the references above
   # take several. In step 2 the upload and the raw validation leave Windows the
   # time to write it; here the collection follows at once.
   $QGA run --shell "taskkill /f /im WAC.exe >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
-  wait_registry_on_disk
+  wants registry && wait_registry_on_disk
 
   # HARMLESSNESS: witness files the collection is bound to read (--binary
   # collects the macro document and the script) keep their dates and their
   # USN — WAC reads the volume raw, never through the file. Recorded by
   # harmlessness.ps1 before and after; see doc/harmlessness.
   WITNESSES=('C:\Users\wac\Documents\wac-macro-test.docm' 'C:\wactest\stomped\stomped.ps1')
-  $QGA write "$HERE/harmlessness.ps1" "$VMDIR\\harmlessness.ps1" >/dev/null
+  $QGA write "$HERE/guest/harmlessness.ps1" "$VMDIR\\harmlessness.ps1" >/dev/null
   witness_state() {
     $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\harmlessness.ps1" \
       "${WITNESSES[@]}" 2>/dev/null | tr -d '\r'
   }
-  WITNESS_BEFORE=$(witness_state)
+  full_cycle && WITNESS_BEFORE=$(witness_state)
 
   if run_wac collect --collect --output=split $EVENTS_OPTION $BINARY_OPTION --loglevel=2; then
     echo "   ✅ collection went to the end"
@@ -434,6 +474,7 @@ if [[ $SPLIT -eq 1 ]]; then
     echo "   ❌ collection ended abnormally"; ABNORMAL_STOP=1
   fi
 
+  if full_cycle; then
   WITNESS_AFTER=$(witness_state)
   # The check must be able to fail: the script, read once through Windows,
   # must show a new access date — its own, forged to 2001, is older than the
@@ -461,10 +502,12 @@ if [[ $SPLIT -eq 1 ]]; then
   else
     echo "   ⚠️ harmlessness control: a read through Windows changed nothing (access dates not kept?): the check proves the USN only"
   fi
+  fi
   N_JSON=$(json_count)
   [[ "$N_JSON" == "1" ]] && echo "   ✅ collection: investigation.json only, nothing converted" \
                          || echo "   ❌ collection: $N_JSON JSON file(s) written, 1 expected"
 
+  if full_cycle; then
   # Independent reference for the completeness of the collection: the
   # executables of System32 and SysWOW64 as Windows lists them.
   $QGA run -- powershell.exe -NoProfile -Command \
@@ -479,6 +522,9 @@ if [[ $SPLIT -eq 1 ]]; then
     > "$OUTPUT/reference/authenticode.txt" 2>/dev/null \
     && echo "   + reference/authenticode.txt" || echo "   ⚠️ authenticode reference not read"
 
+  fi
+
+  if full_cycle; then
   # The verification script shipped with the documentation, on this
   # collection: seal and every exhibit, the fingerprint-only ones apart.
   $QGA write "$ROOT/sources/doc/user/verify-exhibits.ps1" "$VMDIR\\verify-exhibits.ps1" >/dev/null
@@ -488,7 +534,9 @@ if [[ $SPLIT -eq 1 ]]; then
   else
     echo "   ❌ verify-exhibits.ps1 refuses the collection: $(tail -3 "$OUTPUT/verify-exhibits.log" | tr -d '\r')"
   fi
+  fi
 
+  if full_cycle; then
   # Windows' reading of the embedded signatures of third-party binaries, for
   # the signer and the integrity WAC records of those it collects.
   $QGA run -- powershell.exe -NoProfile -Command \
@@ -499,7 +547,7 @@ if [[ $SPLIT -eq 1 ]]; then
   # A retouched snapshot: one byte appended. The conversion must refuse it.
   LIVE="$VMDIR\\split\\exhibits\\live\\system-clock.json"
   $QGA run --shell "copy /y $LIVE $VMDIR\\clock.bak >nul & echo x>> $LIVE" >/dev/null
-  if run_wac convert-tampered --convert=split $EVENTS_OPTION --binary; then
+  if run_wac convert-tampered --convert=split $EVENTS_OPTION $BINARY_FLAG; then
     echo "   ❌ conversion of a retouched collection ACCEPTED"
   elif [[ "$(json_count)" == "2" ]] && grep -qa "no longer match" "$OUTPUT/convert-tampered.log"; then
     echo "   ✅ retouched exhibit refused, before any conversion, with its reason"
@@ -508,7 +556,9 @@ if [[ $SPLIT -eq 1 ]]; then
   fi
   $QGA run --shell "copy /y $VMDIR\\clock.bak $LIVE >nul & del $VMDIR\\clock.bak & del $VMDIR\\split\\conversion.json" >/dev/null
 
-  if run_wac convert --convert=split $EVENTS_OPTION --binary --loglevel=2; then
+  fi
+
+  if run_wac convert --convert=split $EVENTS_OPTION $BINARY_FLAG --loglevel=2; then
     echo "   ✅ conversion went to the end"
   else
     echo "   ❌ conversion ended abnormally"; ABNORMAL_STOP=1
@@ -516,9 +566,10 @@ if [[ $SPLIT -eq 1 ]]; then
   fetch_results split "$SPLIT_OUT"
   cp -r "$OUTPUT/reference" "$SPLIT_OUT/"
   echo "   -- checks of the converted JSON --"
-  python3 "$HERE/check-json.py" "$SPLIT_OUT" || echo "   ⚠️ the converted JSON fail some checks (see above)"
+  python3 "$HERE/lib/check-json.py" "$SPLIT_OUT" || echo "   ⚠️ the converted JSON fail some checks (see above)"
 
-  if run_wac convert-again --convert=split $EVENTS_OPTION --binary --loglevel=2; then
+  if full_cycle; then
+  if run_wac convert-again --convert=split $EVENTS_OPTION $BINARY_FLAG --loglevel=2; then
     AGAIN="$OUTPUT/split-again"
     fetch_results split "$AGAIN" >/dev/null
     # conversion.json is the log of each conversion: its times differ by nature.
@@ -531,13 +582,14 @@ if [[ $SPLIT -eq 1 ]]; then
   else
     echo "   ❌ second conversion ended abnormally"
   fi
+  fi
 fi
 
 if [[ -n "$ONLY" ]]; then
-  echo "== 8. skipped (--only) =="
+  echo "== 8. skipped (--only) == ($(date +%H:%M:%S))"
   $QGA run --shell "del $VMDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
 else
-echo "== 8. Collection driven by wac.yml, without any option =="
+echo "== 8. Collection driven by wac.yml, without any option == ($(date +%H:%M:%S))"
 # The procedure written in wac.yml next to WAC.exe, and WAC.exe run alone: the
 # collection must follow the file — collect only, no binaries, some artefacts
 # switched off — and record it (investigation.json, Tool.Configuration).
@@ -561,12 +613,12 @@ $QGA run --shell "cd /d $VMDIR && rmdir /s /q configured 2>nul & WAC.exe > confi
 $QGA read "$VMDIR\\configured.log" "$OUTPUT/configured.log" >/dev/null 2>&1 || true
 $QGA run --shell "del $VMDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
 fetch_results configured "$CONFIG_OUT" >/dev/null
-python3 "$HERE/check-json.py" --configuration "$CONFIG_OUT" || echo "   ⚠️ the configured collection fails its checks (see above)"
+python3 "$HERE/lib/check-json.py" --configuration "$CONFIG_OUT" || echo "   ⚠️ the configured collection fails its checks (see above)"
 fi
 
 echo
 if [[ "${ABNORMAL_STOP:-0}" == "1" ]]; then
-  echo "== ⚠️ ABNORMAL STOP OF WAC: the JSON files above are PARTIAL =="
+  echo "== ⚠️ ABNORMAL STOP OF WAC: the JSON files above are PARTIAL == ($(date +%H:%M:%S))"
 fi
-echo "== Results on the host: $OUTPUT =="
+echo "== Results on the host: $OUTPUT == ($(date +%H:%M:%S))"
 ls -la "$OUTPUT" | awk 'NR>1{print "   "$NF"  "$5" B"}'

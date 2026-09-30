@@ -161,10 +161,10 @@ décrits dans \fichier{vmtest/README\_FR.md} ; en résumé :
 \begin{lstlisting}
 cd vmtest
 ISO_WIN=~/Téléchargements/Win11_25H2_French_x64_v2.iso ./create-vm.sh   # une fois
-python3 qga.py ping                        # l'agent répond ?
-python3 qga.py run --shell "dir C:\\"      # exécuter une commande
-python3 qga.py write <hôte> <invité>       # envoyer un fichier
-python3 qga.py read  <invité> <hôte>       # rapatrier un fichier
+python3 lib/qga.py ping                        # l'agent répond ?
+python3 lib/qga.py run --shell "dir C:\\"      # exécuter une commande
+python3 lib/qga.py write <hôte> <invité>       # envoyer un fichier
+python3 lib/qga.py read  <invité> <hôte>       # rapatrier un fichier
 \end{lstlisting}
 
 \begin{note}
@@ -226,7 +226,7 @@ première, octet pour octet. Résultats dans \fichier{split/} et
 \fichier{split-again/}.
 
 Autour de cette collecte seule, le cycle contrôle l'\textbf{innocuité} de la
-lecture : \fichier{vmtest/harmlessness.ps1} relève, avant et après, les trois
+lecture : \fichier{vmtest/guest/harmlessness.ps1} relève, avant et après, les trois
 dates et le numéro USN de deux fichiers témoins que \opt{binary} prélève (un
 document à macro, un script aux dates falsifiées en 2001). Ils doivent être
 identiques. Une lecture du script par Windows (\texttt{Get-Content}) doit
@@ -240,7 +240,7 @@ dans la ruche lue sur le disque.
 \section{Contrôler les sorties}
 
 \begin{lstlisting}
-python3 check-json.py results/<horodatage>
+python3 lib/check-json.py results/<horodatage>
 \end{lstlisting}
 
 Chaque ligne commence par une coche verte (contrôle passé), une croix rouge
@@ -460,7 +460,7 @@ UTC doit l'être avec le fuseau de la machine examinée, et non avec celui de la
 machine qui exécute \wac{}. Une date impossible (mois 13, heure 25) donne une
 date nulle, donc non émise. La table des noms de propriétés est
 générée depuis le schéma d'un Windows de référence par
-\fichier{vmtest/property-schema.cpp}.
+\fichier{vmtest/guest/property-schema.cpp}.
 
 \begin{lstlisting}
 system_conversions_test.exe

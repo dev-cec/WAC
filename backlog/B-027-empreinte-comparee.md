@@ -28,7 +28,8 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [ ] Instantané de référence de la VM (avec et sans Sysmon et audit)
-- [ ] Obtenir KAPE (inscription chez Kroll : à faire par l'utilisateur) et les outils EZ (.NET)
+- [x] Obtenir KAPE : fourni par l'utilisateur, `vmtest/kape.zip` (exclu du dépôt)
+- [ ] Outils EZ (.NET) dans la VM
 - [ ] Script de différence hors VM : image montée en lecture seule, $MFT/USN, ruches, journaux
 - [ ] Une exécution par outil, chacune depuis l'instantané
 - [ ] Rapport comparatif FR + EN

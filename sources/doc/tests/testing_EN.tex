@@ -153,10 +153,10 @@ described in \fichier{vmtest/README.md}; in short:
 \begin{lstlisting}
 cd vmtest
 ISO_WIN=~/Downloads/Win11_25H2_English_x64.iso ./create-vm.sh   # once
-python3 qga.py ping                        # does the agent answer?
-python3 qga.py run --shell "dir C:\\"      # run a command
-python3 qga.py write <host> <guest>        # send a file
-python3 qga.py read  <guest> <host>        # fetch a file
+python3 lib/qga.py ping                        # does the agent answer?
+python3 lib/qga.py run --shell "dir C:\\"      # run a command
+python3 lib/qga.py write <host> <guest>        # send a file
+python3 lib/qga.py read  <guest> <host>        # fetch a file
 \end{lstlisting}
 
 \begin{note}
@@ -216,7 +216,7 @@ whose JSON files must be identical to the first's, byte for byte. Results in
 \fichier{split/} and \fichier{split-again/}.
 
 Around this collection, the cycle checks that the reading is
-\textbf{harmless}: \fichier{vmtest/harmlessness.ps1} records, before and after,
+\textbf{harmless}: \fichier{vmtest/guest/harmlessness.ps1} records, before and after,
 the three dates and the USN number of two witness files that \opt{binary}
 collects (a macro document, a script whose dates are forged to 2001). They must
 be identical. A read of the script through Windows (\texttt{Get-Content}) must
@@ -230,7 +230,7 @@ disk.
 \section{Checking the outputs}
 
 \begin{lstlisting}
-python3 check-json.py results/<timestamp>
+python3 lib/check-json.py results/<timestamp>
 \end{lstlisting}
 
 Each line starts with a green tick (check passed), a red cross (defect) or a
@@ -444,7 +444,7 @@ suspect's offset in both directions: a local
 date converted to UTC must be so with the time zone of the examined machine,
 not that of the machine running \wac{}. An impossible date (month 13, hour 25)
 gives a null date, hence not emitted. The table of property names is generated
-from the schema of a reference Windows by \fichier{vmtest/property-schema.cpp}.
+from the schema of a reference Windows by \fichier{vmtest/guest/property-schema.cpp}.
 
 \begin{lstlisting}
 system_conversions_test.exe
