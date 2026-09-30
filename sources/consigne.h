@@ -69,6 +69,17 @@
 /*! Root of the exhibit store: `<output>\exhibits`. */
 std::wstring exhibitStoreFolder();
 
+/*! Writes into the exhibit store bytes WAC produced — a live snapshot, the
+ *  metadata copied from a FAT volume —, fingerprints them and records them in
+ *  the manifest, like an exhibit read from a volume.
+ *  @param path the file to write, in the exhibit store
+ *  @param bytes its content
+ *  @param source what it stands for, as the manifest records it
+ *  @param method how it was obtained, as the manifest records it
+ *  @return ERROR_SUCCESS, or E_FAIL if the write failed */
+HRESULT ExhibitStoreProduce(const std::wstring& path, const std::string& bytes, const std::wstring& source,
+                            const std::wstring& method);
+
 /*! Root of the working directory: `<output>\working`.
  *  It is the value of `conf.mountpoint`: the collectors read from here. */
 std::wstring workingFolder();

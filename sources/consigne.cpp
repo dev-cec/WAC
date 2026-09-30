@@ -6,6 +6,7 @@
 #include "audit.h"
 #include "json.h"
 #include "sha.h"
+#include "quickdigest5.h"
 #include <fstream>
 #include <sstream>
 #include <filesystem>
@@ -632,5 +633,41 @@ HRESULT ExhibitStoreLoad(ExhibitStoreCheck& check) {
 		             + check.firstAltered;
 		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
 	}
+	return ERROR_SUCCESS;
+}
+
+HRESULT ExhibitStoreProduce(const std::wstring& path, const std::string& bytes, const std::wstring& source,
+                            const std::wstring& method) {
+	std::error_code ec;
+	std::filesystem::create_directories(std::filesystem::path(path).parent_path(), ec);
+	{
+		// Binary mode: the fingerprints are those of the bytes on the medium.
+		std::ofstream f(std::filesystem::path(path), std::ios::binary);
+		f.write(bytes.data(), (std::streamsize)bytes.size());
+		if (!f) {
+			log(2, L"🔥Exhibit not written: " + path);
+			return E_FAIL;
+		}
+	}
+	RawHiveExtraction e;
+	e.volumePath = source;
+	e.outputPath = path;
+	e.result = ERROR_SUCCESS;
+	Md5Stream md5;
+	Sha1Stream sha1;
+	Sha256Stream sha256;
+	md5.update(reinterpret_cast<const uint8_t*>(bytes.data()), bytes.size());
+	sha1.update(reinterpret_cast<const uint8_t*>(bytes.data()), bytes.size());
+	sha256.update(reinterpret_cast<const uint8_t*>(bytes.data()), bytes.size());
+	e.fingerprints.md5 = md5.hexDigest();
+	e.fingerprints.sha1 = sha1.hexDigest();
+	e.fingerprints.sha256 = sha256.hexDigest();
+	e.fingerprints.bytes = bytes.size();
+	e.fingerprints.declaredSize = bytes.size();
+	e.fingerprints.validDataLength = bytes.size();
+	FILETIME now = { 0, 0 };
+	GetSystemTimeAsFileTime(&now);
+	e.fingerprints.extractedUtc = ((uint64_t)now.dwHighDateTime << 32) | now.dwLowDateTime;
+	ExhibitStoreAdd({ e }, method);
 	return ERROR_SUCCESS;
 }
