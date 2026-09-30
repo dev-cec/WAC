@@ -10,6 +10,7 @@ Usage: ez-compare.py <mode> <folder> — the folder ez-compare.sh brings back,
 holding the EZ tool's CSV and WAC's JSON. Modes:
   mft       MFTECmd  / mft.json (volume C:)
   evtx      EvtxECmd / events.json
+  prefetch  PECmd    / prefetchs.json (PECmd run with --mp, full precision)
 
 mft: record by record — paths (hard links included), deleted or not,
 directory, size, and the eight dates of $STANDARD_INFORMATION and
@@ -299,6 +300,62 @@ def compare_evtx(ez_csv, wac_json):
     return 1 if failures or only_ez or only_wac else 0
 
 
+def compare_prefetch(ez_csv, wac_json):
+    """File by file: executable, hash, run count, the eight run times, volumes
+    (name, serial, creation), directories and files loaded. The dates of the
+    .pf file itself are left out: PECmd reads them on the copy it is given,
+    WAC gives the original's."""
+    with open(ez_csv, encoding="utf-8-sig", newline="") as f:
+        ez = {row["SourceFilename"].rsplit("\\", 1)[-1].lower(): row for row in csv.DictReader(f)}
+    with open(wac_json, encoding="utf-8-sig") as f:
+        wac = {str(p["Path"]).rsplit("\\", 1)[-1].lower(): p for p in json.load(f) if isinstance(p, dict) and "Path" in p}
+    diffs = collections.defaultdict(list)
+    compared = collections.Counter()
+    explained = collections.Counter()
+    def note(field, key, mine, theirs):
+        compared[field] += 1
+        if mine != theirs:
+            diffs[field].append((key, mine, theirs))
+    def split(text):
+        return sorted(x for x in (text or "").split(", ") if x)
+    for key in sorted(set(ez) & set(wac)):
+        r, p = ez[key], wac[key]
+        note("executable", key, p.get("Filename"), r["ExecutableName"])
+        # PECmd drops leading zeros ("BD30981"): Windows names the file with the
+        # eight digits ("CMD.EXE-0BD30981.pf"), and WAC gives them.
+        if p.get("Hash") != r["Hash"] and p.get("Hash") == r["Hash"].rjust(8, "0"):
+            explained["hash without its leading zeros (PECmd; WAC as the file name)"] += 1
+        else:
+            note("hash", key, p.get("Hash"), r["Hash"])
+        note("run count", key, p.get("RunCount"), int(r["RunCount"] or 0))
+        theirs = [ez_date(r[c]) for c in ["LastRun"] + [f"PreviousRun{i}" for i in range(7)] if r[c]]
+        note("run times", key, sorted(wac_date(d) for d in p.get("RunsUtc") or []), sorted(theirs))
+        volumes = p.get("Volumes") or []
+        for i in range(2):
+            if not r[f"Volume{i}Name"] and i >= len(volumes):
+                continue
+            v = volumes[i] if i < len(volumes) else {}
+            note("volume", key, (v.get("DeviceName"), v.get("SerialNumber"), wac_date(v.get("CreationTimeUtc"))),
+                 (r[f"Volume{i}Name"], r[f"Volume{i}Serial"], ez_date(r[f"Volume{i}Created"])))
+        note("directories", key, sorted(d.get("Directory") for v in volumes for d in v.get("Directories") or []), split(r["Directories"]))
+        note("files loaded", key, sorted(f.get("Filename") for f in p.get("FileNames") or []), split(r["FilesLoaded"]))
+    only_ez, only_wac = set(ez) - set(wac), set(wac) - set(ez)
+    failed = [k for k in only_ez if ez[k]["ParsingError"] == "True" or not ez[k]["ExecutableName"]]
+    print(f"files: WAC {len(wac)}, PECmd {len(ez)}, common {len(set(ez) & set(wac))}")
+    print(f"  only in PECmd: {len(only_ez)} {sorted(only_ez)[:5]} (of which unreadable for both: {len(failed)})")
+    print(f"  only in WAC: {len(only_wac)} {sorted(only_wac)[:5]}")
+    for reason, count in explained.items():
+        print(f"  ℹ️  {count} file(s): {reason}")
+    failures = 0
+    for field in compared:
+        wrong = diffs[field]
+        print(f"  {'✅' if not wrong else '❌'} {field}: {compared[field] - len(wrong)}/{compared[field]} identical")
+        for key, mine, theirs in wrong[:3]:
+            print(f"        {key}: WAC {str(mine)[:200]!r}, PECmd {str(theirs)[:200]!r}")
+        failures += len(wrong)
+    return 1 if failures or only_wac or len(only_ez) != len(failed) else 0
+
+
 def only(folder, pattern):
     """The one file of the folder matching pattern: the EZ tools prefix their CSV with a timestamp."""
     found = glob.glob(os.path.join(folder, pattern))
@@ -316,6 +373,8 @@ def main():
         return compare_mft(only(folder, "*_MFTECmd_*Output.csv"), only(folder, "mft.json"), "C:")
     if mode == "evtx":
         return compare_evtx(only(folder, "*_EvtxECmd_Output.csv"), only(folder, "events.json"))
+    if mode == "prefetch":
+        return compare_prefetch(only(folder, "*_PECmd_Output.csv"), only(folder, "prefetchs.json"))
     print(__doc__)
     return 2
 
