@@ -42,7 +42,6 @@ Remplace `TODO.txt`.
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-028](B-028-coherence-heures-locales.md) | Cohérence des heures locales à travers les artefacts | en cours | P1 | moyen |
 | [B-010](B-010-activitiescache.md) | Chronologie Windows (ActivitiesCache.db) | à faire | P3 | fort |
 | [B-011](B-011-rdp-cache.md) | Cache bitmap RDP et connexions RDP sortantes | à faire | P3 | moyen |
 | [B-014](B-014-vss-brut.md) | Clichés instantanés lus en brut | à décider | P3 | fort |
@@ -56,6 +55,7 @@ Remplace `TODO.txt`.
 | [B-025](B-025-version-1-5.md) | Version 1.5.0 | à faire | P2 | faible |
 | [B-026](B-026-thumbcache.md) | Cache des miniatures (thumbcache) | à faire | P3 | moyen |
 | [B-027](B-027-empreinte-comparee.md) | Empreinte comparée WAC / KAPE / EZ sous bac à sable (Sysmon, audit en option) | à faire | P2 | fort |
+| [B-029](B-029-variante-element-archive.md) | Variante d'élément d'archive mal décodée (à reproduire) | à faire | P3 | faible |
 
 ## Réalisé
 

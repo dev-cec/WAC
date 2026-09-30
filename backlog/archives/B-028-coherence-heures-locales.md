@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P1 | moyen |
+| fait (7ce205d, f922294, dc52e22) | P1 | moyen |
 
 ## Pourquoi
 « L'incohérence de date est le pire ennemi de l'investigation » (utilisateur, 2026-09-30). Un même instant doit se lire à la même heure dans chaque artefact. Certains artefacts stockent une heure locale calculée par Windows avec le décalage du moment où il l'ÉCRIT, et non de la date qu'elle représente. Une date d'hiver écrite en été est alors décalée d'une heure si on la convertit avec le décalage de sa date. B-013 l'a montré sur les copies vers FAT (corrigé, 7ce205d).
@@ -31,7 +31,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Témoin à cheval sur le changement d'heure : raccourci créé en été vers un fichier daté d'hiver
 - [x] Élément de contenu d'archive : mesuré (ZIP dont l'entrée est datée de 13:00, ouvert par l'Explorateur de l'utilisateur, élément à 13:00). C'est l'heure d'horloge de l'entrée, sans fuseau : elle est donnée telle qu'écrite (ModifiedAsWritten, TimeZone). Elle était lue comme UTC, décalée d'une heure.
 - [x] Date OLE (VT_DATE) : aucune dans la collecte réelle, aucune productible sur la VM. Sans fuseau par définition, elle est donnée telle qu'écrite (AsWritten, TimeZone).
-- [ ] Variante d'élément d'archive mal lue dans la collecte réelle (nom « \x10\x01 01/01/1980 00:00:00 », valeurs vides) : à reproduire
+- [x] Variante d'élément d'archive mal lue dans la collecte réelle : défaut de décodage et non de fuseau, reporté à B-029 (ruches brutes non conservées)
 
 ## Journal
 - 2026-09-30 : fiche créée à la demande de l'utilisateur, après la correction des dates FAT copiées.
