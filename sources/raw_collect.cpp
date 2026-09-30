@@ -359,6 +359,8 @@ HRESULT ExtractFileArtefactsRaw() {
 	   the task was switched back on; collected as they are, not converted. */
 	if (conf.artefacts.registry) addTarget(L"\\Windows\\System32\\config\\RegBack", {});
 	if (conf.artefacts.defender) addTarget(L"\\ProgramData\\Microsoft\\Windows Defender\\Support", { L".log" });
+	// The WMI repository: INDEX.BTR, OBJECTS.DATA and the MAPPING files, open by WMI, read raw.
+	if (conf.artefacts.wmi) addTarget(L"\\Windows\\System32\\wbem\\Repository", {});
 	// Whatever the startup folders hold runs at logon: everything, whatever its extension.
 	if (conf.artefacts.startupFolders) addTarget(STARTUP_ALL_USERS, {});
 

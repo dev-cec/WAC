@@ -124,7 +124,7 @@ struct AppliConf {
 		bool recycleBin = true;       //!< the $I of every volume's recycle bin
 		bool hosts = true;            //!< the hosts file
 		bool errorReports = true;     //!< Windows Error Reporting: Report.wer of the machine and of each profile
-		bool defender = true;         //!< Microsoft Defender's support logs (MPLog)
+		bool defender = true;         //!< Microsoft Defender: support logs (MPLog), detection history, quarantine
 		bool startupFolders = true;   //!< startup folders of all users and of each profile
 		bool zoneIdentifiers = true;  //!< Zone.Identifier streams, read in the $MFT copy
 		bool security = true;         //!< SECURITY hive: LSA secrets' names and dates, cached logons, audit policy
@@ -135,6 +135,7 @@ struct AppliConf {
 		bool rootCertificates = true;          //!< root certificates of the machine and of each user
 		bool internetSettings = true;          //!< each user's proxy and automatic configuration script
 		bool firewall = true;          //!< firewall rules and profiles
+		bool wmi = true;               //!< WMI repository: event subscriptions (filters, consumers, bindings), read offline
 	} artefacts;
 	RunMode mode = RunMode::Full; //!< what this run does (see RunMode)
 	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)

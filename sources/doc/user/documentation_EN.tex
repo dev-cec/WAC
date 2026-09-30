@@ -354,6 +354,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   root_certificates: true # root certificates of the machine and users
   internet_settings: true # users' proxy
   firewall: true        # firewall rules and profiles
+  wmi: true             # WMI repository read offline: subscriptions (filters, consumers, bindings)
 \end{lstlisting}
 
 \begin{itemize}
@@ -1049,6 +1050,15 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
   \item[\fichier{firewall.json}] firewall rules (name, action, direction, ports,
         program; every field in \champ{Fields}) and the domain, private and
         public profile settings.
+  \item[\fichier{wmi\_persistence.json}] WMI event subscriptions, read
+        \textbf{offline} in the CIM repository copied raw
+        (\path|wbem\Repository|): no WMI query, nothing run on the machine. In
+        \emph{every} namespace, each filter (WQL query), consumer (command
+        line, VBScript or JScript script, log, mail, and any class an intruder
+        defined), binding and timer, with all its properties
+        (\champ{Properties}: name and value; \champ{CreatorSID} in text). A
+        persistence invisible in the registry. The two dates at the start of
+        an instance are not emitted: they are not creation dates.
   \item[\fichier{startup\_folders.json}] content of the startup folders, of all
         users (\champ{Scope} \texttt{AllUsers}) and of each profile
         (\texttt{User}, with \champ{SID}): every file, its dates and

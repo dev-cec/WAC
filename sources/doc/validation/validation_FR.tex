@@ -335,6 +335,12 @@ lui.
   page interdite ; 27 contrôles, aucun échec. A révélé que la séquence de la
   racine n'était pas vérifiée : un parent désigné par une séquence périmée
   donnait un chemin affirmé à tort \\
+\texttt{cim\_test} & condensat d'un nom relevé dans l'\fichier{INDEX.BTR}
+  de la VM ; \texttt{Get-CimInstance} &
+  classe, ancêtre et instance construits selon le format (défaut hérité,
+  chaînes d'un octet et UTF-16, propriété non renseignée), longueurs
+  mensongères refusées ; sur le dépôt de la VM, chaque abonnement identique à
+  ce que rend WMI ; 14 contrôles, 15 avec ce dépôt, aucun échec \\
 \texttt{file\_artefacts\_test} & description publiée de chaque format &
   historique PowerShell, \fichier{setupapi.dev.log}, \path|$I| de la corbeille
   (versions 1 et 2), \fichier{hosts}, \fichier{Report.wer}, MPLog de Defender :

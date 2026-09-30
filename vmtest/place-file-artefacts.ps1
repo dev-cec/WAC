@@ -197,7 +197,50 @@ if ($detection) {
         $detection.DomainUser, $detection.ProcessName, $detection.ThreatID, $detection.CurrentThreatExecutionStatusID) -join '|'))
 }
 
-# 12. Reference counts of the logs Windows writes itself.
+# 12. WMI subscriptions, harmless: the filter waits for hour 99, which never
+#     comes, so neither consumer ever runs. Created once and kept — WMI
+#     writes its repository to disk minutes later, not at once. One filter
+#     more in root\default: subscriptions are not only in root\subscription.
+$sub = 'root\subscription'
+$filter = Get-CimInstance -Namespace $sub -ClassName __EventFilter -Filter "Name='WacTestFilter'"
+if (-not $filter) {
+    $filter = New-CimInstance -Namespace $sub -ClassName __EventFilter -Property @{
+        Name = 'WacTestFilter'; EventNamespace = 'root\cimv2'; QueryLanguage = 'WQL'
+        Query = "SELECT * FROM __InstanceModificationEvent WITHIN 3600 WHERE TargetInstance ISA 'Win32_LocalTime' AND TargetInstance.Hour = 99" }
+}
+$consumers = @(
+    @{ Class = 'CommandLineEventConsumer'; Name = 'WacTestConsumer'; Property = @{ CommandLineTemplate = 'cmd.exe /c echo wac-test-consumer' } },
+    @{ Class = 'ActiveScriptEventConsumer'; Name = 'WacTestScript'; Property = @{ ScriptingEngine = 'VBScript'; ScriptText = "' WAC test: never run" } })
+foreach ($c in $consumers) {
+    $consumer = Get-CimInstance -Namespace $sub -ClassName $c.Class -Filter "Name='$($c.Name)'"
+    if (-not $consumer) {
+        $properties = $c.Property + @{ Name = $c.Name }
+        $consumer = New-CimInstance -Namespace $sub -ClassName $c.Class -Property $properties
+    }
+    $bound = Get-CimInstance -Namespace $sub -ClassName __FilterToConsumerBinding |
+        Where-Object { "$($_.Consumer)" -like "*$($c.Name)*" }
+    if (-not $bound) { New-CimInstance -Namespace $sub -ClassName __FilterToConsumerBinding -Property @{ Filter = [ref]$filter; Consumer = [ref]$consumer } | Out-Null }
+}
+if (-not (Get-CimInstance -Namespace 'root\default' -ClassName __EventFilter -Filter "Name='WacTestFilterDefault'")) {
+    New-CimInstance -Namespace 'root\default' -ClassName __EventFilter -Property @{
+        Name = 'WacTestFilterDefault'; EventNamespace = 'root\cimv2'; QueryLanguage = 'WQL'
+        Query = "SELECT * FROM __InstanceCreationEvent WITHIN 3600 WHERE TargetInstance ISA 'Win32_LocalTime' AND TargetInstance.Hour = 99" } | Out-Null
+}
+Write-Output "wmi=$($filter.Query)"
+# Every namespace, from root: the reference counts of the four kinds.
+$counts = @{ Filter = 0; Consumer = 0; Binding = 0; Timer = 0; Namespaces = 0 }
+$pending = [System.Collections.Generic.Stack[string]]::new(); $pending.Push('root')
+while ($pending.Count) {
+    $ns = $pending.Pop(); $counts.Namespaces++
+    foreach ($child in @(Get-CimInstance -Namespace $ns -ClassName __NAMESPACE -ErrorAction SilentlyContinue)) { $pending.Push("$ns\$($child.Name)") }
+    $counts.Filter += @(Get-CimInstance -Namespace $ns -ClassName __EventFilter -ErrorAction SilentlyContinue).Count
+    $counts.Consumer += @(Get-CimInstance -Namespace $ns -ClassName __EventConsumer -ErrorAction SilentlyContinue).Count
+    $counts.Binding += @(Get-CimInstance -Namespace $ns -ClassName __FilterToConsumerBinding -ErrorAction SilentlyContinue).Count
+    $counts.Timer += @(Get-CimInstance -Namespace $ns -ClassName __TimerInstruction -ErrorAction SilentlyContinue).Count
+}
+Write-Output "wmicount=$($counts.Filter)|$($counts.Consumer)|$($counts.Binding)|$($counts.Timer)|$($counts.Namespaces)"
+
+# 13. Reference counts of the logs Windows writes itself.
 $sections = (Select-String -Path 'C:\Windows\INF\setupapi.dev*.log' -Pattern '^>>>  \[' -ErrorAction SilentlyContinue | Measure-Object).Count
 Write-Output "setupapi=$sections"
 $mplog = @(Get-ChildItem -Force 'C:\ProgramData\Microsoft\Windows Defender\Support\MPLog-*.log' -ErrorAction SilentlyContinue).Count

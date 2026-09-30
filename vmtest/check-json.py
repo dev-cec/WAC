@@ -1480,6 +1480,41 @@ def check_small_file_artefacts(folder):
                f"defender_log.json: {len(defender)} log(s), {lines} line(s)",
                f"defender_log.json: {len(defender)} log(s) for {reference['mplog']} present, {lines} line(s)")
 
+    # WMI subscriptions: the harness's, and every one of every namespace as
+    # Get-CimInstance counts them.
+    wmi = load(folder, "wmi_persistence.json")
+    if isinstance(wmi, list) and "wmi" in reference:
+        def props(o):
+            return {p.get("Name"): p.get("Value") for p in o.get("Properties") or []}
+        def named(kind, cls, name, space="root\\subscription"):
+            return next((props(o) for o in wmi if o.get("Kind") == kind and o.get("Class") == cls
+                         and o.get("Namespace", "").lower() == space and props(o).get("Name") == name), None)
+        f = named("Filter", "__EventFilter", "WacTestFilter")
+        c = named("Consumer", "CommandLineEventConsumer", "WacTestConsumer")
+        a = named("Consumer", "ActiveScriptEventConsumer", "WacTestScript")
+        other = named("Filter", "__EventFilter", "WacTestFilterDefault", "root\\default")
+        bound = {str(props(o).get("Consumer")) for o in wmi if o.get("Kind") == "Binding" and "WacTestFilter" in str(props(o).get("Filter"))}
+        wrong = []
+        if not f or f.get("Query") != reference["wmi"] or f.get("CreatorSID") != "S-1-5-18":
+            wrong.append(f"filter {f}")
+        if not c or c.get("CommandLineTemplate") != "cmd.exe /c echo wac-test-consumer" or c.get("Priority") != 32:
+            wrong.append(f"command line consumer {c}")
+        if not a or a.get("ScriptingEngine") != "VBScript" or a.get("ScriptText") != "' WAC test: never run":
+            wrong.append(f"script consumer {a}")
+        if not other:
+            wrong.append("filter of root\\default")
+        if not any("WacTestConsumer" in b for b in bound) or not any("WacTestScript" in b for b in bound):
+            wrong.append(f"bindings {sorted(bound)}")
+        report(not wrong, "wmi_persistence.json: the harness's filters, consumers (command line, VBScript) and bindings, as created",
+               f"wmi_persistence.json: {wrong[0] if wrong else ''}")
+        if "wmicount" in reference:
+            expected = dict(zip(("Filter", "Consumer", "Binding", "Timer"), map(int, reference["wmicount"].split("|")[:4])))
+            got = collections.Counter(o.get("Kind") for o in wmi)
+            spaces = int(reference["wmicount"].split("|")[4])
+            report(all(got.get(k, 0) == v for k, v in expected.items()),
+                   f"wmi_persistence.json: {dict(got)} across the {spaces} namespaces, as Get-CimInstance counts them",
+                   f"wmi_persistence.json: {dict(got)} for {expected} counted by Get-CimInstance")
+
     # The EICAR detection of the cycle, against MSFT_MpThreatDetection, and
     # its quarantine against the dates and content the harness gave the file.
     detections = load(folder, "defender_detections.json")

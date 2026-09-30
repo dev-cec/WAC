@@ -40,6 +40,7 @@
 #include "hosts_file.h"
 #include "error_reports.h"
 #include "defender_history.h"
+#include "wmi_persistence.h"
 #include "defender_log.h"
 #include "startup_folders.h"
 #include "zone_identifiers.h"
@@ -1094,6 +1095,8 @@ void convertArtefacts(bool systemAvailable) {
 	                                        L"artefacts.defender", Text::StepDefenderDetections);
 	convertFileArtefact<DefenderQuarantine>(conf.artefacts.defender, "defender_quarantine.json", Text::ArtefactDefenderQuarantine,
 	                                        L"artefacts.defender", Text::StepDefenderQuarantine);
+	convertFileArtefact<WmiPersistence>(conf.artefacts.wmi, "wmi_persistence.json", Text::ArtefactWmiPersistence,
+	                                    L"artefacts.wmi", Text::StepWmiPersistence);
 	convertFileArtefact<SecurityHive>(conf.artefacts.security, "security.json", Text::ArtefactSecurityHive,
 	                                  L"artefacts.security", Text::StepSecurityHive);
 	convertFileArtefact<StartupFolders>(conf.artefacts.startupFolders, "startup_folders.json",

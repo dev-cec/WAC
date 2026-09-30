@@ -359,6 +359,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   root_certificates: true # certificats racines de la machine et des utilisateurs
   internet_settings: true # proxy des utilisateurs
   firewall: true        # règles et profils du pare-feu
+  wmi: true             # dépôt WMI lu hors ligne : abonnements (filtres, consommateurs, liaisons)
 \end{lstlisting}
 
 \begin{itemize}
@@ -1070,6 +1071,16 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
   \item[\fichier{firewall.json}] règles du pare-feu (nom, action, sens, ports,
         programme ; tous les champs dans \champ{Fields}) et réglages des profils
         domaine, privé et public.
+  \item[\fichier{wmi\_persistence.json}] abonnements aux événements WMI, lus
+        \textbf{hors ligne} dans le dépôt CIM copié en brut
+        (\path|wbem\Repository|) : aucune requête WMI, rien exécuté sur la
+        machine. Dans \emph{chaque} espace de noms, chaque filtre (requête
+        WQL), consommateur (ligne de commande, script VBScript ou JScript,
+        journal, courriel, et toute classe qu'un intrus aurait définie),
+        liaison et minuterie, avec toutes ses propriétés (\champ{Properties} :
+        nom et valeur ; \champ{CreatorSID} en clair). C'est une persistance
+        invisible au registre. Les deux dates d'en-tête d'une instance ne sont
+        pas émises : ce ne sont pas des dates de création.
   \item[\fichier{startup\_folders.json}] contenu des dossiers de démarrage, de
         tous les utilisateurs (\champ{Scope} \texttt{AllUsers}) et de chaque
         profil (\texttt{User}, avec \champ{SID}) : chaque fichier, ses dates et

@@ -54,3 +54,4 @@ artefacts:
   root_certificates: true     # root certificates of the machine and of each user
   internet_settings: true     # each user's proxy and automatic configuration script
   firewall: true              # firewall rules and profiles
+  wmi: true                   # WMI repository: event subscriptions (filters, consumers, bindings), read offline
