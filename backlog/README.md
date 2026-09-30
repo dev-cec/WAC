@@ -45,7 +45,7 @@ Remplace `TODO.txt`.
 | [B-010](B-010-activitiescache.md) | Chronologie Windows (ActivitiesCache.db) | à faire | P3 | fort |
 | [B-011](B-011-rdp-cache.md) | Cache bitmap RDP et connexions RDP sortantes | à faire | P3 | moyen |
 | [B-014](B-014-vss-brut.md) | Clichés instantanés lus en brut | à décider | P3 | fort |
-| [B-015](B-015-confrontation-kape.md) | Confrontation à KAPE et aux outils Zimmerman | à faire | P1 | moyen |
+| [B-015](B-015-confrontation-kape.md) | Confrontation à KAPE et aux outils Zimmerman | en cours | P1 | moyen |
 | [B-016](B-016-web.md) | Navigateurs, téléchargements, code des sites | à faire | P1 | fort |
 | [B-017](B-017-emails.md) | Courriels et pièces jointes | à faire | P2 | fort |
 | [B-018](B-018-article-dfir.md) | Article de présentation (2 pages, magazine DFIR) | à faire | P3 | moyen |
