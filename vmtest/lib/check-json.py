@@ -2260,6 +2260,36 @@ def check_utc_sources(folder):
             print(f"  ✅ Usbstor.json: {len(expected)} device(s) identified as Windows names them, "
                   "serial number and insertion dates (UTC) identical")
 
+    # Amcache SHA-1 against the file's, for the executables of System32 of the
+    # size and version the entry records: Windows Update rewrites some, and an
+    # entry rewritten since can still describe the former version.
+    path = os.path.join(ref, "sha1-system32.txt")
+    files = load(folder, "amcache_application_files.json")
+    if os.path.exists(path) and isinstance(files, list):
+        hashes = {}
+        with open(path, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                parts = line.strip().split("|")
+                if len(parts) == 4 and len(parts[1]) == 40 and parts[2].isdigit():
+                    hashes[parts[0]] = (parts[1], int(parts[2]), parts[3])
+        equal, wrong = 0, []
+        for a in files:
+            known = hashes.get(str(a.get("LongPath") or "").lower())
+            if known and a.get("Sha1") and a.get("Size") == known[1] and a.get("BinFileVersion") == known[2]:
+                if a["Sha1"] != known[0]:
+                    wrong.append(f"{a['LongPath']}: {a['Sha1']}, file {known[0]}")
+                elif a["Size"] > 31457280 and a.get("Sha1CoversBytes") != 31457280:
+                    wrong.append(f"{a['LongPath']}: larger than 30 MiB, Sha1CoversBytes absent")
+                else:
+                    equal += 1
+        if wrong:
+            print(f"  ❌ amcache: {len(wrong)} Sha1 differ from the file's SHA-1, e.g. {wrong[0]}")
+            found += 1
+        elif equal:
+            print(f"  ✅ amcache: Sha1 of {equal} unchanged executable(s) of System32 identical to their SHA-1 (first 30 MiB, as Amcache)")
+        else:
+            print("  ⏭️  no Amcache executable of System32 of the size and version recorded: Sha1 not confronted")
+
     # Amcache LinkDate against the PE header
     path = os.path.join(ref, "pe-timestamps.txt")
     files = load(folder, "amcache_application_files.json")

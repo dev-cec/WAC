@@ -1024,8 +1024,17 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         d'exécution, volumes, et liste des fichiers chargés avec leur référence
         \path|$MFT| (et leurs empreintes avec \opt{binary}).
   \item[\fichier{amcache\_application\_files.json},
-        \fichier{amcache\_applications.json}] inventaire Amcache des exécutables et
-        applications : chemin, éditeur, version, dates.
+        \fichier{amcache\_applications.json},
+        \fichier{amcache\_inventory.json}] inventaire Amcache, table par
+        table et valeur par valeur, avec la date de dernière écriture de chaque
+        entrée : les exécutables (chemin, éditeur, version, taille, date
+        d'édition de liens, \champ{Sha1}), les applications installées, et dans
+        le troisième fichier les pilotes (avec leur \champ{Sha1}), périphériques,
+        conteneurs, paquets de pilotes et raccourcis, chacun avec sa
+        \champ{Table}. \textbf{Attention} : pour un fichier de plus de 30~Mio,
+        Amcache ne hache que les 31\,457\,280 premiers octets ;
+        \champ{Sha1CoversBytes} le signale, et ce SHA-1 ne se compare pas à celui
+        du fichier entier.
   \item[\fichier{shimcache.json}] cache de compatibilité : chemin et date de
         modification du fichier. Une entrée prouve que le binaire était présent,
         pas qu'il a été exécuté.

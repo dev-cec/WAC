@@ -40,7 +40,7 @@ enum class Text : unsigned {
 	// Steps: registry
 	StepWriteLiveState, StepFindControlSet, StepOpenControlSet, StepSuspectTimeZone,
 	StepSuspectCodePage, StepAccountNames, StepUsbstor, StepMountedDevices, StepBam, StepMuiCache,
-	StepAmcacheApplications, StepAmcacheApplicationFiles, StepUserAssist, StepRunKeys, StepShimcache,
+	StepAmcache, StepUserAssist, StepRunKeys, StepShimcache,
 	StepShellbags, StepMru, StepMruApps, StepSystemInformation, StepServices, StepUsers,
 	// Steps: files and event logs
 	StepScheduledTasks, StepRecentDocuments, StepPrefetch, StepReadMft, StepWriteMft, StepUsnJournal,
@@ -53,7 +53,7 @@ enum class Text : unsigned {
 	StepWriteConversionLog, StepWriteInvestigationLog,
 	// Artefacts switched off by wac.yml (their name, then the message)
 	ArtefactProcesses, ArtefactSessions, ArtefactNetwork, ArtefactUsbDevices, ArtefactMountedDevices,
-	ArtefactBam, ArtefactMuiCache, ArtefactAmcacheApplications, ArtefactAmcacheApplicationFiles,
+	ArtefactBam, ArtefactMuiCache, ArtefactAmcacheApplications, ArtefactAmcacheApplicationFiles, ArtefactAmcacheInventory,
 	ArtefactUserAssist, ArtefactRunKeys, ArtefactShimcache, ArtefactShellbags, ArtefactMru,
 	ArtefactMruApps, ArtefactServices, ArtefactUsers, ArtefactScheduledTasks,
 	ArtefactRecentDocuments, ArtefactPrefetch, ArtefactMft, ArtefactUsnJournal,

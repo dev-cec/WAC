@@ -377,6 +377,13 @@ $QGA run -- powershell.exe -NoProfile -Command \
   'Get-ChildItem C:\Windows\System32\*.exe | ForEach-Object { try { $f = [IO.File]::OpenRead($_.FullName); $b = New-Object byte[] 1024; [void]$f.Read($b, 0, 1024); $f.Close(); $pe = [BitConverter]::ToInt32($b, 0x3C); if ($pe -gt 0 -and $pe -lt 1016) { "{0}|{1}" -f $_.FullName.ToLower(), [BitConverter]::ToUInt32($b, $pe + 8) } } catch {} }' \
   > "$OUTPUT/reference/pe-timestamps.txt" 2>/dev/null \
   && echo "   + reference/pe-timestamps.txt" || echo "   ⚠️ PE timestamps reference not read"
+# SHA-1, size and version of the same executables: Amcache's FileId must hold
+# the SHA-1 of the files it inventoried and that did not change since — of
+# their first 30 MiB only, as Amcache hashes them (measured on mrt.exe).
+$QGA run -- powershell.exe -NoProfile -Command \
+  'Get-ChildItem C:\Windows\System32\*.exe | ForEach-Object { $f = [IO.File]::OpenRead($_.FullName); $b = New-Object byte[] ([Math]::Min($_.Length, 31457280)); $n = 0; while ($n -lt $b.Length) { $r = $f.Read($b, $n, $b.Length - $n); if ($r -le 0) { break }; $n += $r }; $f.Close(); "{0}|{1}|{2}|{3}" -f $_.FullName.ToLower(), ([BitConverter]::ToString([Security.Cryptography.SHA1]::Create().ComputeHash($b, 0, $n))).Replace("-", "").ToLower(), $_.Length, $_.VersionInfo.FileVersionRaw }' \
+  > "$OUTPUT/reference/sha1-system32.txt" 2>/dev/null \
+  && echo "   + reference/sha1-system32.txt" || echo "   ⚠️ SHA-1 reference not read"
 fi
 # The build of each executable of System32 — TimeDateStamp and SizeOfImage,
 # the key of Microsoft's symbol server — as read in its header by PowerShell.

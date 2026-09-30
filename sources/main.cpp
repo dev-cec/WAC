@@ -23,8 +23,7 @@
 #include "reg_mounted_devices.h"
 #include "reg_bams.h"
 #include "reg_muicache.h"
-#include "reg_amcache_application.h"
-#include "reg_amcache_applicationfile.h"
+#include "reg_amcache.h"
 #include "reg_userassists.h"
 #include "reg_run.h"
 #include "reg_shimcache.h"
@@ -632,8 +631,7 @@ void convertArtefacts(bool systemAvailable) {
 	MountedDevices mounteddevices;
 	Bams bams;
 	Muicaches muicaches;
-	AmcacheApplications amcacheapplications;
-	AmcacheApplicationFiles amcacheapplicationfiles;
+	Amcache amcache;
 	UserAssists userassists;
 	Runs runs;
 	Shimcaches shimcaches;
@@ -840,24 +838,14 @@ void convertArtefacts(bool systemAvailable) {
 				muicaches.clear();
 			}
 
-			printStep(Text::StepAmcacheApplications);
-			hresult = amcacheapplications.getData();
+			printStep(Text::StepAmcache);
+			hresult = amcache.getData();
 			if (hresult != ERROR_SUCCESS) printError(hresult);
 			else {
-				hresult = amcacheapplications.toJson();
+				hresult = amcache.toJson();
 				if (hresult != ERROR_SUCCESS) printError(hresult);
 				else printSuccess();
-				amcacheapplicationfiles.clear();
-			}
-
-			printStep(Text::StepAmcacheApplicationFiles);
-			hresult = amcacheapplicationfiles.getData();
-			if (hresult != ERROR_SUCCESS) printError(hresult);
-			else {
-				hresult = amcacheapplicationfiles.toJson();
-				if (hresult != ERROR_SUCCESS) printError(hresult);
-				else printSuccess();
-				amcacheapplicationfiles.clear();
+				amcache.clear();
 			}
 
 			printStep(Text::StepUserAssist);
@@ -929,6 +917,7 @@ void convertArtefacts(bool systemAvailable) {
 			{ "bams.json", Text::ArtefactBam }, { "muicache.json", Text::ArtefactMuiCache },
 			{ "amcache_applications.json", Text::ArtefactAmcacheApplications },
 			{ "amcache_application_files.json", Text::ArtefactAmcacheApplicationFiles },
+			{ "amcache_inventory.json", Text::ArtefactAmcacheInventory },
 			{ "userassists.json", Text::ArtefactUserAssist }, { "run.json", Text::ArtefactRunKeys },
 			{ "shimcache.json", Text::ArtefactShimcache }, { "shellbags.json", Text::ArtefactShellbags },
 			{ "mrus.json", Text::ArtefactMru }, { "mruApps.json", Text::ArtefactMruApps },
