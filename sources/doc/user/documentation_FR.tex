@@ -1036,8 +1036,12 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \champ{Sha1CoversBytes} le signale, et ce SHA-1 ne se compare pas à celui
         du fichier entier.
   \item[\fichier{shimcache.json}] cache de compatibilité : chemin et date de
-        modification du fichier. Une entrée prouve que le binaire était présent,
-        pas qu'il a été exécuté.
+        modification du fichier, position dans le cache (\champ{CachePosition},
+        0 pour la plus récente). Une entrée prouve que le binaire était présent,
+        pas qu'il a été exécuté. L'indicateur d'exécution que d'autres outils
+        publient n'est \emph{pas} relevé : mesuré contre le Prefetch, son « oui »
+        est presque toujours juste, mais son « non » est faux pour 9 binaires
+        exécutés sur 10 — il ferait conclure qu'un programme n'a jamais tourné.
   \item[\fichier{bams.json}] dernière exécution par programme et par utilisateur
         (Background Activity Moderator). Les ruches étant lues sur le disque,
         une exécution de la ou des dernières minutes peut manquer : Windows

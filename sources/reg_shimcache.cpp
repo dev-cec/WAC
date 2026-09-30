@@ -7,6 +7,7 @@ Json Shimcache::toJson() {
 	log(3, L"🔈Shimcache toJson");
 	Json o = Json::obj();
 	o.add(L"Path",                Json::str(path));      // raw path
+	o.add(L"CachePosition",       Json::num((unsigned long long)position));
 	addFingerprints(o, fingerprint);
 	o.add(L"LastModification",    Json::str(lastModification));
 	o.add(L"LastModificationUtc", Json::str(lastModificationUtc));
@@ -78,7 +79,12 @@ HRESULT Shimcaches::getData() {
 
 		// Fingerprint on the normalised path (quotes, \??\), read raw.
 		shimcache.fingerprint = FingerprintFile(shimcache.path);
-		shimcache.path = replaceAll(shimcache.path, L"\t", L" "); // replace tab by space. seen in values
+		/* A packaged application's entry is not a path but tab-separated fields
+		   (version, architecture, package name, publisher). The tabs were
+		   replaced by spaces "because JSON does not support them" — it escapes
+		   them: the value is now kept as Windows stores it (B-015, against
+		   AppCompatCacheParser). */
+		shimcache.position = shimcaches.size();
 
 		/* The last modification is a FILETIME, hence UTC — the file's own
 		   $STANDARD_INFORMATION date. It used to be formatted as a LOCAL time:

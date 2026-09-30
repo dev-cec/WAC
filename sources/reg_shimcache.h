@@ -38,7 +38,10 @@
 /*! One ShimCache entry: a binary the compatibility layer examined. */
 struct Shimcache {
 public:
-	std::wstring path = L"";     //!< path of the binary the entry names
+	std::wstring path = L"";     //!< path of the binary the entry names (tab-separated fields for a packaged application)
+	/*! Rank in the cache, 0 for the most recent entry: the order is the
+	 *  information, and survives a consumer that sorts the array. */
+	size_t position = 0;
 	BinaryFingerprint fingerprint;  //!< fingerprints of that file, if `--binary` was given
 	std::wstring lastModification = L"";    //!< the file's last modification, suspect's local time
 	std::wstring lastModificationUtc = L"";	//!< the same instant in UTC
@@ -46,7 +49,12 @@ public:
 	   emitted as "Executes"; confronted with Prefetch on the test VM, it said
 	   nothing: 12 % "true" among binaries Prefetch proves were run, 23 % among
 	   the others. A field that does not mean what its name says is worse than
-	   no field — the Windows 10/11 cache proves presence, not execution. */
+	   no field — the Windows 10/11 cache proves presence, not execution.
+	   Measured again on 2026-09-30 (B-015), against AppCompatCacheParser which
+	   gives it: "Yes" is nearly reliable (12 of 13 confirmed by Prefetch), "No"
+	   not at all (105 of the 117 binaries Prefetch proves were run). A "No"
+	   would lead the analysis to conclude that a program never ran: the flag
+	   is not collected. */
 
 	/*! Converts the entry to JSON.
 	 *  @return its JSON object. */
