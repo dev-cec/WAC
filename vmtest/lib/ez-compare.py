@@ -13,6 +13,8 @@ holding the EZ tool's CSV and WAC's JSON. Modes:
   prefetch  PECmd    / prefetchs.json (PECmd run with --mp, full precision)
   lnk       LECmd    / recentdocs.json
   jumplist  JLECmd   / jumplistAutomaticDestinations.json, jumplistCustomDestinations.json
+  amcache   AmcacheParser / amcache_applications.json, amcache_application_files.json, amcache_inventory.json
+  shimcache AppCompatCacheParser / shimcache.json
 
 mft: record by record — paths (hard links included), deleted or not,
 directory, size, and the eight dates of $STANDARD_INFORMATION and
@@ -519,6 +521,122 @@ def compare_jumplist(auto_csv, custom_csv, wac_auto, wac_custom):
     return 1 if failures or only_ez or only_wac or any(a != b for a, b in counts.values()) else 0
 
 
+# AmcacheParser's CSV -> (WAC's file, WAC's table, the column that pairs the entries, WAC's key for it).
+AMCACHE_TABLES = {
+    "ProgramEntries": ("amcache_applications.json", None, "ProgramId", "KeyName"),
+    "AssociatedFileEntries": ("amcache_application_files.json", None, ("ProgramId", "SHA1", "FullPath"), ("ProgramId", "Sha1", "LongPath")),
+    "UnassociatedFileEntries": ("amcache_application_files.json", None, ("ProgramId", "SHA1", "FullPath"), ("ProgramId", "Sha1", "LongPath")),
+    "DriveBinaries": ("amcache_inventory.json", "InventoryDriverBinary", "KeyName", "KeyName"),
+    "DevicePnps": ("amcache_inventory.json", "InventoryDevicePnp", "KeyName", "KeyName"),
+    "DeviceContainers": ("amcache_inventory.json", "InventoryDeviceContainer", "KeyName", "KeyName"),
+    "DriverPackages": ("amcache_inventory.json", "InventoryDriverPackage", "KeyName", "KeyName"),
+    "ShortCuts": ("amcache_inventory.json", "InventoryApplicationShortcut", "KeyName", "KeyName"),
+}
+# AmcacheParser's column -> WAC's key, where the names differ.
+AMCACHE_COLUMNS = {
+    "KeyLastWriteTimestamp": "KeyLastWriteTimeUtc", "FileKeyLastWriteTimestamp": "KeyLastWriteTimeUtc",
+    "SHA1": "Sha1", "FullPath": "LongPath", "LinkDate": "LinkDateUtc", "DriverTimeStamp": "DriverTimeStampUtc",
+    "LnkName": "ShortcutPath", "InstallDate": "InstallDateUtc", "DriverLastWriteTime": "DriverLastWriteTimeUtc",
+    ("DriveBinaries", "DriverId"): "Sha1",   # a driver's DriverId is its SHA-1: WAC names it so
+}
+
+
+def amcache_value(v):
+    """A value as comparable text: "True"/"False" and 1/0 alike, dates without T or Z."""
+    if isinstance(v, bool):
+        return "1" if v else "0"
+    if isinstance(v, list):
+        return ",".join(str(x) for x in v)
+    t = str(v)
+    if t in ("True", "False"):
+        return "1" if t == "True" else "0"
+    if re.match(r"^\d{4}-\d\d-\d\d[T ]\d", t):
+        # A date to the second: AmcacheParser adds ".0000000", WAC gives the precision stored.
+        t = t.replace("T", " ").rstrip("Z")
+        return t[:-8] if t.endswith(".0000000") else t
+    return t
+
+
+def compare_amcache(folder):
+    """Every table AmcacheParser writes, entry by entry, column by column:
+    identical values, differences, and the columns one side has and the
+    other not."""
+    c = Comparison("AmcacheParser")
+    wac_files = {}
+    for name in ("amcache_applications.json", "amcache_application_files.json", "amcache_inventory.json"):
+        with open(only(folder, name), encoding="utf-8-sig") as f:
+            wac_files[name] = [e for e in json.load(f) if isinstance(e, dict)]
+    failures = 0
+    for table, (wac_file, wac_table, ez_key, wac_key) in AMCACHE_TABLES.items():
+        with open(only(folder, f"*_Amcache_{table}.csv"), encoding="utf-8-sig", newline="") as f:
+            ez = [r for r in csv.DictReader(f)]
+        wac = [e for e in wac_files[wac_file] if wac_table is None or e.get("Table") == wac_table]
+        ez_key = ez_key if isinstance(ez_key, tuple) else (ez_key,)
+        wac_key = wac_key if isinstance(wac_key, tuple) else (wac_key,)
+        # Several entries can share the pairing key (one binary, no path, one
+        # program): among them, the one of the same key last write time.
+        index = collections.defaultdict(list)
+        for e in wac:
+            index[tuple(str(e.get(k, "")).lower() for k in wac_key)].append(e)
+        missing_columns, only_wac_keys, unmatched = collections.Counter(), collections.Counter(), 0
+        for r in ez:
+            candidates = index.get(tuple(r[k].lower() for k in ez_key)) or []
+            stamp = r.get("FileKeyLastWriteTimestamp") or r.get("KeyLastWriteTimestamp") or ""
+            w = next((e for e in candidates if amcache_value(e.get("KeyLastWriteTimeUtc", "")) == stamp), candidates[0] if candidates else None)
+            if w is None:
+                unmatched += 1
+                continue
+            lower = {k.lower(): k for k in w}
+            for column, theirs in r.items():
+                if not theirs or column in ("ApplicationName",):
+                    continue
+                ours = AMCACHE_COLUMNS.get((table, column), AMCACHE_COLUMNS.get(column, column))
+                mine = w.get(lower.get(ours.lower(), ""))
+                if mine is None:
+                    if column == "FileExtension":
+                        c.explained["FileExtension: derived from the path by AmcacheParser, not stored"] += 1
+                    elif theirs in ("False", "0"):
+                        c.explained["value absent from the hive: AmcacheParser writes a default (False, 0), WAC nothing"] += 1
+                    else:
+                        missing_columns[column] += 1
+                    continue
+                if table == "DriverPackages" and column == "Date" and re.match(r"^\d{4}-\d+-\d+$", str(mine)):
+                    c.explained["driver package Date: the day as written (WAC), completed with 00:00:00 (AmcacheParser)"] += 1
+                    continue
+                c.note(f"{table}.{column}", " ".join(r[k] for k in ez_key)[:90], amcache_value(mine), amcache_value(theirs))
+            columns = {AMCACHE_COLUMNS.get((table, k), AMCACHE_COLUMNS.get(k, k)).lower() for k in r}
+            for k in w:
+                # A local date beside its UTC form is the same value.
+                if k.lower() not in columns and not k.endswith("Utc") and k + "Utc" not in w and k not in ("Table", "KeyName"):
+                    only_wac_keys[k] += 1
+        print(f"{table}: AmcacheParser {len(ez)}, WAC {len(wac)}, unpaired {unmatched}")
+        if missing_columns:
+            print(f"  ⚠️  columns of AmcacheParser absent from WAC: {dict(missing_columns)}")
+        if only_wac_keys:
+            print(f"  ℹ️  values given by WAC only: {sorted(only_wac_keys)}")
+        failures += unmatched + sum(missing_columns.values())
+    return 1 if c.report() or failures else 0
+
+
+def compare_shimcache(ez_csv, wac_json):
+    """The cache entry by entry, in its order: position, path, date. The
+    execution flag AppCompatCacheParser gives is counted, not compared: WAC does
+    not collect it (its "No" is wrong for most binaries Prefetch proves ran)."""
+    with open(ez_csv, encoding="utf-8-sig", newline="") as f:
+        ez = list(csv.DictReader(f))
+    with open(wac_json, encoding="utf-8-sig") as f:
+        wac = [e for e in json.load(f) if isinstance(e, dict)]
+    c = Comparison("AppCompatCacheParser")
+    for r, w in zip(ez, wac):
+        key = int(r["CacheEntryPosition"])
+        c.note("position", key, w.get("CachePosition"), key)
+        c.note("path", key, w.get("Path"), r["Path"])
+        c.date("last modification", key, w.get("LastModificationUtc"), r["LastModifiedTimeUTC"])
+        c.explained[f"execution flag \"{r['Executed']}\": given by AppCompatCacheParser, not collected by WAC (unreliable)"] += 1
+    print(f"entries: WAC {len(wac)}, AppCompatCacheParser {len(ez)}")
+    return 1 if c.report() or len(ez) != len(wac) else 0
+
+
 def only(folder, pattern):
     """The one file of the folder matching pattern: the EZ tools prefix their CSV with a timestamp."""
     found = glob.glob(os.path.join(folder, pattern))
@@ -541,6 +659,10 @@ def main():
     if mode == "jumplist":
         return compare_jumplist(only(folder, "*_AutomaticDestinations.csv"), only(folder, "*_CustomDestinations.csv"),
                                 only(folder, "jumplistAutomaticDestinations.json"), only(folder, "jumplistCustomDestinations.json"))
+    if mode == "shimcache":
+        return compare_shimcache(only(folder, "*_AppCompatCache.csv"), only(folder, "shimcache.json"))
+    if mode == "amcache":
+        return compare_amcache(folder)
     if mode == "prefetch":
         return compare_prefetch(only(folder, "*_PECmd_Output.csv"), only(folder, "prefetchs.json"))
     print(__doc__)

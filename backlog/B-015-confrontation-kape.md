@@ -31,7 +31,8 @@ En plus de la définition de « fini » commune (backlog/README.md) :
   - [x] prefetchs.json / PECmd (--mp) : 379 fichiers, exécutable, compteur, 8 exécutions, volumes, répertoires et fichiers chargés identiques ; 19 empreintes où PECmd retire le zéro de tête (WAC comme le nom du fichier) ; un .pf entièrement nul, rejeté et journalisé par les deux.
   - [x] raccourcis et jump lists / LECmd (--dt à 7 décimales : --mp est ignoré dans son CSV), JLECmd (--mp --ld) : 3 raccourcis, 8 entrées DestList, 5 raccourcis de listes personnalisées ; tous les champs identiques au 100 ns, après ajout à WAC des blocs ExtraData, du suivi (machine, DROID, date et adresse du GUID v1), de la taille de la cible, du nombre d'ouvertures et du rang MRU. Convention : nom de dossier connu canonique (JLECmd « Personal ») ou affiché (WAC « Documents »). A révélé 3 défauts : URI collée au bloc suivant, décalage de 2 octets sans liste d'ID, DROID nuls émis.
   - [ ] shellbags / SBECmd
-  - [ ] Amcache, ShimCache / AmcacheParser, AppCompatCacheParser
+  - [x] Amcache / AmcacheParser : WAC ne lisait que 2 tables et 4 à 6 valeurs ; désormais toutes les tables et valeurs, SHA-1 compris — 124 colonnes identiques ; AmcacheParser écrit 2 340 valeurs par défaut absentes de la ruche ; SHA-1 limité aux 30 premiers Mio, signalé par WAC seul (Sha1CoversBytes).
+  - [x] ShimCache / AppCompatCacheParser : 232 entrées, position, chemin, date identiques (tabulations des applications empaquetées rétablies). Indicateur d'exécution non relevé par WAC : « Yes » juste 12 fois sur 13, « No » faux pour 105 des 117 binaires dont le Prefetch prouve l'exécution.
   - [ ] corbeille / RBCmd ; SRUM / SrumECmd ; registre / RECmd
 
 ## Journal
@@ -41,3 +42,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-09-30 : temps, mêmes pièces, 305 journaux : WAC convertit events.json (messages en clair compris) en 16,8 s, EvtxECmd produit son CSV en 22,0 s.
 - 2026-09-30 : temps prefetch, 380 fichiers : WAC 3,6 s, PECmd 0,7 s. Coût fixe de toute conversion WAC ≈ 3,4 s (mesuré avec la seule clé hosts) : copie de travail vérifiée des ruches, rejeu de leurs journaux, fuseau et profils du suspect — ce qui donne l'heure locale datée et la lettre de volume, que PECmd ne donne pas. Le prefetch lui-même : ≈ 0,1 s.
 - 2026-09-30 : temps raccourcis/jump lists (3 + 9 fichiers) : WAC 1,8 s par clé, LECmd et JLECmd 0,3 s chacun ; coût fixe de WAC sans ruche ≈ 1,5 s.
+- 2026-09-30 : temps registre (clé registry entière, toutes les ruches) : WAC 2,0 s ; AmcacheParser 0,5 à 0,9 s, AppCompatCacheParser 1,4 s, SBECmd 1,3 s, chacun pour son seul artefact.
