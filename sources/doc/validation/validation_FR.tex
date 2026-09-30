@@ -335,6 +335,14 @@ lui.
   page interdite ; 27 contrôles, aucun échec. A révélé que la séquence de la
   racine n'était pas vérifiée : un parent désigné par une séquence périmée
   donnait un chemin affirmé à tort \\
+\texttt{ese\_test} et \fichier{vmtest/lib/ese-compare.py} &
+  dissect.esedb (Fox-IT), lecteur ESE écrit indépendamment ; \texttt{Get-BitsTransfer} &
+  enregistrements construits selon le format (colonnes fixes, variables,
+  étiquetées, multivaluées), longueurs mensongères refusées, blobs BITS ; sur
+  \fichier{SRUDB.dat} et \fichier{qmgr.db} de la VM (pages de 4 et 16~Kio,
+  valeurs longues à identifiant de 64~bits), 1~064~268 valeurs identiques à
+  celles de dissect.esedb ; 19 contrôles, aucun échec. A révélé les
+  identifiants de valeurs longues de 8 octets \\
 \texttt{cim\_test} & condensat d'un nom relevé dans l'\fichier{INDEX.BTR}
   de la VM ; \texttt{Get-CimInstance} &
   classe, ancêtre et instance construits selon le format (défaut hérité,

@@ -26,3 +26,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Journal
 - 2026-09-30 : décision utilisateur — SQLite par l'amalgamation officielle (sqlite3.c) épinglée et compilée dans WAC, ouverte en lecture seule sur la copie de la consigne.
+- 2026-09-30 : l'index de recherche Windows rejoint cette fiche (reporté de B-009) : Windows.db et Windows-gather.db en SQLite sur Windows 11 ; Windows.edb (ESE, colonnes compressées XPRESS) sur Windows 10, à éprouver sur un vrai Windows 10.

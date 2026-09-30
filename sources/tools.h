@@ -136,6 +136,8 @@ struct AppliConf {
 		bool internetSettings = true;          //!< each user's proxy and automatic configuration script
 		bool firewall = true;          //!< firewall rules and profiles
 		bool wmi = true;               //!< WMI repository: event subscriptions (filters, consumers, bindings), read offline
+		bool srum = true;              //!< SRUDB.dat: network and resource usage per application and user, 30 to 60 days
+		bool bits = true;              //!< qmgr.db: BITS jobs, their files and notification command lines
 	} artefacts;
 	RunMode mode = RunMode::Full; //!< what this run does (see RunMode)
 	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)

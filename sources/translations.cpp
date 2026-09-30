@@ -107,6 +107,8 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepInternetSettingsSet, L"Réglages de proxy des utilisateurs", L"Extracting INTERNET SETTINGS (proxy) of the users" },
 	{ Text::StepFirewall, L"Règles et profils du pare-feu", L"Extracting FIREWALL rules and profiles" },
 	{ Text::StepWmiPersistence, L"Abonnements WMI (dépôt CIM lu hors ligne)", L"Extracting WMI SUBSCRIPTIONS (CIM repository, read offline)" },
+	{ Text::StepSrum, L"Usage des ressources (SRUM)", L"Extracting RESOURCE USAGE (SRUM)" },
+	{ Text::StepBitsJobs, L"Travaux BITS", L"Extracting BITS JOBS" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },
@@ -154,6 +156,8 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactInternetSettingsSet, L"Réglages de proxy", L"Internet settings" },
 	{ Text::ArtefactFirewall, L"Pare-feu", L"Firewall" },
 	{ Text::ArtefactWmiPersistence, L"Abonnements WMI", L"WMI subscriptions" },
+	{ Text::ArtefactSrum, L"Usage des ressources (SRUM)", L"Resource usage (SRUM)" },
+	{ Text::ArtefactBitsJobs, L"Travaux BITS", L"BITS jobs" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },
 
 	{ Text::TimeElapsed,               L"FIN, durée : %1 s",                             L"END, Time elapsed : %1 s" },

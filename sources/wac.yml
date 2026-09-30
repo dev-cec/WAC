@@ -55,3 +55,5 @@ artefacts:
   internet_settings: true     # each user's proxy and automatic configuration script
   firewall: true              # firewall rules and profiles
   wmi: true                   # WMI repository: event subscriptions (filters, consumers, bindings), read offline
+  srum: true                  # SRUDB.dat: bytes sent and received, resources used, per application and user, 30 to 60 days
+  bits: true                  # qmgr.db: BITS jobs — URLs, destinations, notification command lines

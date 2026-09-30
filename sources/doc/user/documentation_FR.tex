@@ -360,6 +360,8 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   internet_settings: true # proxy des utilisateurs
   firewall: true        # règles et profils du pare-feu
   wmi: true             # dépôt WMI lu hors ligne : abonnements (filtres, consommateurs, liaisons)
+  srum: true            # SRUDB.dat : réseau et ressources par application et utilisateur, 30 à 60 jours
+  bits: true            # qmgr.db : travaux BITS, URL, destinations, commandes de notification
 \end{lstlisting}
 
 \begin{itemize}
@@ -1071,6 +1073,24 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
   \item[\fichier{firewall.json}] règles du pare-feu (nom, action, sens, ports,
         programme ; tous les champs dans \champ{Fields}) et réglages des profils
         domaine, privé et public.
+  \item[\fichier{srum.json}] usage des ressources (SRUM, \path|sru\SRUDB.dat|),
+        une entrée par ligne de chaque table : octets envoyés et reçus par
+        application et par interface (une exfiltration s'y lit, avec le
+        programme), cycles processeur, octets lus et écrits, connexions ; 30 à
+        60 jours. \champ{Table} (GUID du fournisseur), \champ{Provider} (nom
+        documenté : \texttt{NetworkUsage}, \texttt{ApplicationResourceUsage}\ldots),
+        puis les colonnes par leur nom (lettres et chiffres seuls), et
+        \champ{App}, \champ{UserSID}, \champ{UserName} résolus par
+        \texttt{SruDbIdMapTable}. La base est copiée vivante : la dernière
+        heure est dans ses journaux \path|SRU*.log|, copiés dans la consigne pour
+        un rejeu (\texttt{esentutl /r}) sur une copie.
+  \item[\fichier{bits\_jobs.json}] travaux BITS (\path|qmgr.db|) : nom,
+        description, type, état, propriétaire, \textbf{commande de
+        notification} (lancée à la fin ou à l'échec du transfert : une
+        persistance), délais, dates, et chaque fichier : URL source,
+        destination, fichier temporaire, tailles. Le blob complet est donné en
+        hexadécimal : BITS~10 y garde plus (le programme créateur) à des
+        endroits non décrits.
   \item[\fichier{wmi\_persistence.json}] abonnements aux événements WMI, lus
         \textbf{hors ligne} dans le dépôt CIM copié en brut
         (\path|wbem\Repository|) : aucune requête WMI, rien exécuté sur la

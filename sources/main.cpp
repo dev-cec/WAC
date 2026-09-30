@@ -41,6 +41,8 @@
 #include "error_reports.h"
 #include "defender_history.h"
 #include "wmi_persistence.h"
+#include "srum.h"
+#include "bits_jobs.h"
 #include "defender_log.h"
 #include "startup_folders.h"
 #include "zone_identifiers.h"
@@ -1097,6 +1099,8 @@ void convertArtefacts(bool systemAvailable) {
 	                                        L"artefacts.defender", Text::StepDefenderQuarantine);
 	convertFileArtefact<WmiPersistence>(conf.artefacts.wmi, "wmi_persistence.json", Text::ArtefactWmiPersistence,
 	                                    L"artefacts.wmi", Text::StepWmiPersistence);
+	convertFileArtefact<Srum>(conf.artefacts.srum, "srum.json", Text::ArtefactSrum, L"artefacts.srum", Text::StepSrum);
+	convertFileArtefact<BitsJobs>(conf.artefacts.bits, "bits_jobs.json", Text::ArtefactBitsJobs, L"artefacts.bits", Text::StepBitsJobs);
 	convertFileArtefact<SecurityHive>(conf.artefacts.security, "security.json", Text::ArtefactSecurityHive,
 	                                  L"artefacts.security", Text::StepSecurityHive);
 	convertFileArtefact<StartupFolders>(conf.artefacts.startupFolders, "startup_folders.json",

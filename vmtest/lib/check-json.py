@@ -1515,6 +1515,44 @@ def check_small_file_artefacts(folder):
                    f"wmi_persistence.json: {dict(got)} across the {spaces} namespaces, as Get-CimInstance counts them",
                    f"wmi_persistence.json: {dict(got)} for {expected} counted by Get-CimInstance")
 
+    # BITS: the harness's job, as Get-BitsTransfer gives it.
+    bits = load(folder, "bits_jobs.json")
+    if isinstance(bits, list) and "bits" in reference:
+        job_id, description, state, created = reference["bits"].split("|")
+        j = next((x for x in bits if (x.get("JobId") or "").upper() == job_id.upper()), None)
+        files = (j or {}).get("Files") or []
+        wrong = []
+        if j is None:
+            wrong.append(f"job {job_id} absent among {len(bits)}")
+        else:
+            if j.get("Name") != "WacTestJob" or j.get("Description") != description or j.get("State") != state:
+                wrong.append(f"name/description/state {j.get('Name')!r}/{j.get('Description')!r}/{j.get('State')!r}")
+            if j.get("NotifyProgram") != "C:\\Windows\\System32\\cmd.exe" or j.get("NotifyArguments") != "/c echo wac-bits-test":
+                wrong.append(f"notification {j.get('NotifyProgram')!r} {j.get('NotifyArguments')!r}")
+            if j.get("OwnerSID") != "S-1-5-18" or (j.get("CreatedUtc") or "")[:19] != created:
+                wrong.append(f"owner/creation {j.get('OwnerSID')}/{j.get('CreatedUtc')} for {created}")
+            if not files or files[0].get("Source") != "https://wac-test.invalid/wac-bits.bin" \
+                    or files[0].get("Destination") != "C:\\wactest\\wac-bits.bin":
+                wrong.append(f"files {files}")
+        report(not wrong, f"bits_jobs.json: job {job_id} with its URL, destination and notification command, as BITS gives it",
+               f"bits_jobs.json: {wrong[0] if wrong else ''}")
+
+    # SRUM: every application and user resolved, every hour in the past.
+    srum = load(folder, "srum.json")
+    if isinstance(srum, list):
+        inv = load(folder, "investigation.json")
+        start = ((inv or {}).get("Collection") or {}).get("StartUtc") if isinstance(inv, dict) else None
+        network = [r for r in srum if r.get("Provider") == "NetworkUsage"]
+        # An identifier whose SruDbIdMapTable entry has no IdBlob has nothing to
+        # resolve (entries 1 and 2 on the test VM, as dissect.esedb reads them too).
+        with_blob = {r.get("IdIndex") for r in srum if r.get("Table") == "SruDbIdMapTable" and r.get("IdBlob")}
+        unresolved = sum(1 for r in srum if r.get("AppId") in with_blob and "App" not in r)
+        users = sum(1 for r in srum if r.get("UserId") in with_blob and "UserSID" not in r)
+        future = sum(1 for r in srum if start and r.get("TimeStamp") and r["TimeStamp"][:19] > start[:19])
+        report(network and not unresolved and not users and not future,
+               f"srum.json: {len(srum)} row(s), {len(network)} of network usage, every AppId and UserId resolved, none after the collection",
+               f"srum.json: {len(network)} network row(s), {unresolved} AppId and {users} UserId unresolved, {future} after the collection")
+
     # The EICAR detection of the cycle, against MSFT_MpThreatDetection, and
     # its quarantine against the dates and content the harness gave the file.
     detections = load(folder, "defender_detections.json")

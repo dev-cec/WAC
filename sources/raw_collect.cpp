@@ -361,6 +361,11 @@ HRESULT ExtractFileArtefactsRaw() {
 	if (conf.artefacts.defender) addTarget(L"\\ProgramData\\Microsoft\\Windows Defender\\Support", { L".log" });
 	// The WMI repository: INDEX.BTR, OBJECTS.DATA and the MAPPING files, open by WMI, read raw.
 	if (conf.artefacts.wmi) addTarget(L"\\Windows\\System32\\wbem\\Repository", {});
+	// The ESE databases with their transaction logs and checkpoint, for a
+	// replay by the analyst: copied live, what the last minutes changed is
+	// only in the logs.
+	if (conf.artefacts.srum) addTarget(L"\\Windows\\System32\\sru", {});
+	if (conf.artefacts.bits) addTarget(L"\\ProgramData\\Microsoft\\Network\\Downloader", {});
 	// Whatever the startup folders hold runs at logon: everything, whatever its extension.
 	if (conf.artefacts.startupFolders) addTarget(STARTUP_ALL_USERS, {});
 

@@ -355,6 +355,8 @@ artefacts:              # one switch per artefact; all the hives = registry
   internet_settings: true # users' proxy
   firewall: true        # firewall rules and profiles
   wmi: true             # WMI repository read offline: subscriptions (filters, consumers, bindings)
+  srum: true            # SRUDB.dat: network and resources per application and user, 30 to 60 days
+  bits: true            # qmgr.db: BITS jobs, URLs, destinations, notification command lines
 \end{lstlisting}
 
 \begin{itemize}
@@ -1050,6 +1052,23 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
   \item[\fichier{firewall.json}] firewall rules (name, action, direction, ports,
         program; every field in \champ{Fields}) and the domain, private and
         public profile settings.
+  \item[\fichier{srum.json}] resource usage (SRUM, \path|sru\SRUDB.dat|), one
+        entry per row of every table: bytes sent and received per application
+        and per interface (an exfiltration shows there, with the program), CPU
+        cycles, bytes read and written, connections; 30 to 60 days.
+        \champ{Table} (the provider's GUID), \champ{Provider} (documented name:
+        \texttt{NetworkUsage}, \texttt{ApplicationResourceUsage}\ldots), then the
+        columns by name (letters and digits only), and \champ{App},
+        \champ{UserSID}, \champ{UserName} resolved through
+        \texttt{SruDbIdMapTable}. The database is copied live: the last hour is
+        in its logs \path|SRU*.log|, copied into the exhibit store for a replay
+        (\texttt{esentutl /r}) on a copy.
+  \item[\fichier{bits\_jobs.json}] BITS jobs (\path|qmgr.db|): name,
+        description, type, state, owner, \textbf{notification command line}
+        (run when the transfer ends or fails: a persistence), delays, dates,
+        and each file: source URL, destination, temporary file, sizes. The
+        whole blob is given in hexadecimal: BITS~10 keeps more there (the
+        creating program) at places not described.
   \item[\fichier{wmi\_persistence.json}] WMI event subscriptions, read
         \textbf{offline} in the CIM repository copied raw
         (\path|wbem\Repository|): no WMI query, nothing run on the machine. In

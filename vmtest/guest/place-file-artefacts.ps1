@@ -274,7 +274,26 @@ if (Wants 'wmi') {
     Write-Output "wmicount=$($counts.Filter)|$($counts.Consumer)|$($counts.Binding)|$($counts.Timer)|$($counts.Namespaces)"
 }
 
-# 13. Reference counts of the logs Windows writes itself.
+# 13. A BITS job, harmless: never resumed, it never transfers, so its
+#     notification command never runs. Its properties are set BEFORE its
+#     file: BITS writes a job to qmgr.db when created and when a file is
+#     added, not when a property changes. BITS is restarted once, so that the
+#     database holds it (a live copy misses what is still in edb.log).
+if (Wants 'bits') {
+    $job = Get-BitsTransfer -AllUsers -ErrorAction SilentlyContinue | Where-Object DisplayName -eq 'WacTestJob' | Select-Object -First 1
+    if (-not $job) {
+        & bitsadmin /create WacTestJob | Out-Null
+        & bitsadmin /SetNotifyCmdLine WacTestJob 'C:\Windows\System32\cmd.exe' '/c echo wac-bits-test' | Out-Null
+        & bitsadmin /SetDescription WacTestJob 'WAC harness witness, never resumed' | Out-Null
+        & bitsadmin /addfile WacTestJob https://wac-test.invalid/wac-bits.bin C:\wactest\wac-bits.bin | Out-Null
+        Restart-Service BITS -Force -WarningAction SilentlyContinue
+        $job = Get-BitsTransfer -AllUsers | Where-Object DisplayName -eq 'WacTestJob' | Select-Object -First 1
+    }
+    Write-Output ("bits=" + (@($job.JobId.ToString('B').ToUpper(), $job.Description, $job.JobState,
+        $job.CreationTime.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss')) -join '|'))
+}
+
+# 14. Reference counts of the logs Windows writes itself.
 if (Wants 'setupapi', 'defender') {
     $sections = (Select-String -Path 'C:\Windows\INF\setupapi.dev*.log' -Pattern '^>>>  \[' -ErrorAction SilentlyContinue | Measure-Object).Count
     Write-Output "setupapi=$sections"

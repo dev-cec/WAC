@@ -327,6 +327,13 @@ with it.
   forbidden page; 27 checks, no failure. Revealed that the root's sequence was
   not checked: a parent named by a stale sequence gave a path wrongly
   asserted \\
+\texttt{ese\_test} and \fichier{vmtest/lib/ese-compare.py} &
+  dissect.esedb (Fox-IT), an ESE reader written independently; \texttt{Get-BitsTransfer} &
+  records built as the format lays them out (fixed, variable, tagged,
+  multi-valued columns), lying lengths refused, BITS blobs; on the VM's
+  \fichier{SRUDB.dat} and \fichier{qmgr.db} (4 and 16~KiB pages, long values
+  with 64-bit identifiers), 1,064,268 values identical to dissect.esedb's;
+  19 checks, no failure. Revealed the 8-byte long-value identifiers \\
 \texttt{cim\_test} & hash of a name read in the VM's \fichier{INDEX.BTR};
   \texttt{Get-CimInstance} &
   class, ancestor and instance built as the format lays them out
