@@ -73,11 +73,18 @@ Json eventData(const XmlNode& root, std::vector<std::wstring>* rawValues) {
 		return arr;
 	}
 
-	if (const XmlNode* ud = root.child(L"UserData")) {
+	/*  UserData, or ProcessingErrorData: the event log service writes the latter
+	 *  in place of the data when it could not lay them out by the provider's
+	 *  template (ErrorCode, DataItemName, and the raw EventPayload). Event
+	 *  Viewer shows it; it was dropped, and the event read as having no data
+	 *  (B-015, 21 events of AppModel-Runtime). */
+	const XmlNode* tree = root.child(L"UserData");
+	if (!tree) tree = root.child(L"ProcessingErrorData");
+	if (tree) {
 		/*  A free subtree: the leaves that carry text are read, prefixed by their
 		 *  element name. Without that name, "0x32cfb" on its own would not say
 		 *  that it is a session identifier. */
-		std::vector<const XmlNode*> pile{ ud };
+		std::vector<const XmlNode*> pile{ tree };
 		while (!pile.empty()) {
 			const XmlNode* n = pile.back();
 			pile.pop_back();
@@ -164,6 +171,10 @@ Event::Event(const XmlNode& root, const std::wstring& channel,
 		evtSystemUserID = string(s->attribute(L"UserID"));
 
 	evtEventData = eventData(root, &rawValues);
+	/*  Processing error: the values are the error's, not the template's; laid
+	    into the provider's message they would make a false sentence. No
+	    message, rather than a wrong one. */
+	if (root.child(L"ProcessingErrorData")) guidPourMessage.clear();
 }
 
 Json Event::toJson() const {

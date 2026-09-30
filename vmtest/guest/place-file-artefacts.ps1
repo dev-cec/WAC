@@ -407,7 +407,36 @@ Start-Sleep 12
     Write-Output "zipentry=winterdir|2022-01-10T13:00:00"
 }
 
-# 17. Reference counts of the logs Windows writes itself.
+# 17. Event values as Windows renders them in the event's XML (what the Event
+#     Viewer shows): hexadecimal integers, GUIDs, booleans, dates, floats,
+#     binary data, and the ProcessingErrorData the service writes when it could
+#     not lay out a provider's data — the forms events.json must give. One event
+#     of each kind, by its record number.
+if (Wants 'events') {
+    $picked = @()
+    foreach ($q in @(@('Security', '*[System[EventID=4624]]'), @('Security', '*[System[EventID=4672]]'),
+                     @('Microsoft-Windows-Ntfs/Operational', '*[System[EventID=170]]'),
+                     @('Microsoft-Windows-AppReadiness/Admin', "*[EventData[Data[@Name='Elapsed']]]"),
+                     @('Microsoft-Windows-CodeIntegrity/Operational', "*[EventData[Data[@Name='PolicyHash']]]"))) {
+        $picked += Get-WinEvent -LogName $q[0] -FilterXPath $q[1] -MaxEvents 1 -ErrorAction SilentlyContinue
+    }
+    # No XPath selects on ProcessingErrorData: the recent events are scanned.
+    $picked += Get-WinEvent -LogName 'Microsoft-Windows-AppModel-Runtime/Admin' -MaxEvents 500 -ErrorAction SilentlyContinue |
+        Where-Object { ([xml]$_.ToXml()).Event.ProcessingErrorData } | Select-Object -First 1
+    foreach ($e in $picked | Where-Object { $_ }) {
+        $xml = ([xml]$e.ToXml()).Event
+        $items = @($xml.EventData.Data | Where-Object { $_ } | ForEach-Object { , @($_.Name, $_.'#text') })
+        if ($xml.ProcessingErrorData) {
+            $items += @($xml.ProcessingErrorData.ChildNodes | ForEach-Object { , @($_.LocalName, $_.InnerText) })
+        }
+        foreach ($item in $items) {
+            $value = "$($item[1])" -replace '\s+', ' '
+            Write-Output ("evtval=" + (@($e.LogName, $e.RecordId, $item[0], $value) -join '|'))
+        }
+    }
+}
+
+# 18. Reference counts of the logs Windows writes itself.
 if (Wants 'setupapi', 'defender') {
     $sections = (Select-String -Path 'C:\Windows\INF\setupapi.dev*.log' -Pattern '^>>>  \[' -ErrorAction SilentlyContinue | Measure-Object).Count
     Write-Output "setupapi=$sections"

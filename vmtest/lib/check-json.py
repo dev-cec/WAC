@@ -1593,6 +1593,26 @@ def check_small_file_artefacts(folder):
         report(ok, f"shellbags.json: the ZIP entry {name} dated {written} as written, without time zone",
                f"shellbags.json: the ZIP entry {name}: {items[:1]}")
 
+    # Event values as Windows renders them (hexadecimal integers, GUIDs, booleans, dates).
+    events = load(folder, "events.json")
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if isinstance(events, list) and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            wanted = [l.strip()[7:].split("|", 3) for l in f if l.startswith("evtval=")]
+        if wanted:
+            index = {(str(e.get("EvtSourceLog", "")).lower(), e.get("EvtSystemEventRecordId")): e for e in events if isinstance(e, dict)}
+            wrong, compared = [], 0
+            for channel, record, name, value in wanted:
+                e = index.get((channel.replace("/", "%4").lower() + ".evtx", int(record)))
+                if e is None:
+                    continue
+                mine = next((d.get("Value") for d in e.get("EvtEventData") or [] if isinstance(d, dict) and d.get("Name") == name), None)
+                compared += 1
+                if " ".join(str(mine or "").split()) != value:
+                    wrong.append(f"{channel} {record} {name}: WAC {mine!r}, Windows {value!r}")
+            report(compared and not wrong, f"events.json: {compared} event value(s) rendered as Windows renders them",
+                   f"events.json: {wrong[0] if wrong else 'no reference event found'}")
+
     # BITS: the harness's job, as Get-BitsTransfer gives it.
     bits = load(folder, "bits_jobs.json")
     if isinstance(bits, list) and "bits" in reference:

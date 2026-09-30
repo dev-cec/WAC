@@ -1,5 +1,6 @@
 #include "evtx.h"
 #include "tools.h"
+#include <charconv>
 #include <cstring>
 #include <sstream>
 
@@ -11,6 +12,29 @@
  */
 
 namespace {
+
+/*! A hexadecimal integer as Windows renders it in an event's XML ("0x3e7",
+ *  "0x0"): the form an analyst reads in the Event Viewer and searches for.
+ *  It was written "3e7", and "00" for zero (B-015, against Windows' XML). */
+std::wstring windowsHex(uint64_t value) {
+	wchar_t text[24];
+	swprintf(text, 24, L"0x%llx", (unsigned long long)value);
+	return text;
+}
+
+/*! Binary data as Windows renders it in an event's XML: uppercase hexadecimal,
+ *  without separator ("69060000", a policy hash "5B85256F…"). It was written
+ *  "69 06 00 00", which no search for the value Event Viewer shows finds. */
+std::wstring windowsBinary(const BYTE* data, size_t size) {
+	static const wchar_t DIGITS[] = L"0123456789ABCDEF";
+	std::wstring text;
+	text.reserve(size * 2);
+	for (size_t i = 0; i < size; ++i) {
+		text += DIGITS[data[i] >> 4];
+		text += DIGITS[data[i] & 0x0F];
+	}
+	return text;
+}
 
 // ---------------------------------------------------------------------------
 //  Bounded reads
@@ -111,12 +135,15 @@ std::wstring escape(const std::wstring& s) {
 	return r;
 }
 
-//! Floating-point value in the format Event Viewer expects.
-std::wstring realToText(double v) {
-	std::wostringstream o;
-	o.precision(6);
-	o << std::fixed << v;
-	return o.str();
+/*! Floating-point value as Windows renders it: the shortest text that reads
+ *  back to the same value, per its own width — a float gives "0.0020121", zero
+ *  gives "0". A fixed 6 decimals ("0.002012") lost digits (B-015, against
+ *  Windows' XML). */
+template <typename Real>
+std::wstring realToText(Real v) {
+	char text[64];
+	const std::to_chars_result r = std::to_chars(text, text + sizeof text, v);
+	return r.ec == std::errc() ? std::wstring(text, r.ptr) : L"";
 }
 
 // ---------------------------------------------------------------------------
@@ -227,16 +254,19 @@ private:
 		case T_BINARY:
 			// No conversion: the binary data of an event (4688, 4624) carry
 			// information that no interpretation replaces.
-			return dump_wstring(const_cast<LPBYTE>(d), 0, (int)size);
+			return windowsBinary(d, size);
 		case T_GUID: {
 			if (size < 16) return L"";
 			GUID g; memcpy(&g, d, 16);
-			return guid_to_wstring(g);
+			// As Windows renders it in the event's XML: lower case, in braces.
+			std::wstring text = guid_to_wstring(g);
+			for (wchar_t& ch : text) ch = (wchar_t)towlower(ch);
+			return text;
 		}
 		case T_SIZE:
 			// Matched to a 32- or 64-bit hexadecimal integer depending on the size.
-			return size >= 8 ? to_hex(read64(c, tc, off))
-			     : size >= 4 ? to_hex(read32(c, tc, off)) : L"";
+			return size >= 8 ? windowsHex(read64(c, tc, off))
+			     : size >= 4 ? windowsHex(read32(c, tc, off)) : L"";
 		case T_FILETIME: {
 			if (size < 8) return L"";
 			const uint64_t v = read64(c, tc, off);
@@ -256,8 +286,8 @@ private:
 			return timeToIso8601Utc(ft, Precision::Millisecond);   // a SYSTEMTIME stops at the millisecond
 		}
 		case T_SID:  return sidToText(d, size);
-		case T_HEX32: return size >= 4 ? to_hex((uint32_t)read32(c, tc, off)) : L"";
-		case T_HEX64: return size >= 8 ? to_hex(read64(c, tc, off)) : L"";
+		case T_HEX32: return size >= 4 ? windowsHex((uint32_t)read32(c, tc, off)) : L"";
+		case T_HEX64: return size >= 8 ? windowsHex(read64(c, tc, off)) : L"";
 		case T_BINXML:
 		case T_EVTXML: {
 			/*  A value can hold a whole BinXML fragment: that is the case of
