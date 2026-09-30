@@ -268,6 +268,9 @@ if [[ $RAWONLY -eq 1 ]]; then
   exit 0
 fi
 
+# A --only cycle skips the raw validation that gives Windows the time to write
+# the registry: with the registry asked for, the BAM check needs that wait.
+if ! full_cycle && wants registry; then wait_registry_on_disk; fi
 echo "== 4. Run of WAC (SYSTEM) == ($(date +%H:%M:%S))"
 # --output must be a simple name (WAC refuses backslashes): created under cwd.
 # A collection that stops midway still produces valid JSON files: the absence
