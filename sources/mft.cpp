@@ -51,6 +51,7 @@ bool MftEntry::parse(const uint8_t* record, size_t recordSize, uint64_t number) 
 	inUse = (flags & 0x01) != 0;
 	directory = (flags & 0x02) != 0;
 	baseEntry = rd64(record + RECORD_BASE) & REFERENCE_ENTRY_MASK;
+	baseSequence = (uint16_t)(rd64(record + RECORD_BASE) >> 48);
 	for (size_t p = rd16(record + RECORD_ATTRIBUTES); p + 16 <= used;) {
 		const uint32_t type = rd32(record + p);
 		const uint32_t length = rd32(record + p + 4);
@@ -205,7 +206,7 @@ HRESULT Mft::getData(const std::wstring& volume) {
 		if (e.baseEntry) {
 			// An extension record: kept only if it carries what a base record may lack.
 			if (!e.name.empty() || e.sizeKnown || !e.streams.empty() || !e.links.empty() || e.zoneIdentifier) {
-				MftEntry& kept = extensions_[e.baseEntry];
+				MftEntry& kept = extensions_[((uint64_t)e.baseSequence << 48) | e.baseEntry];
 				if (!e.name.empty() && e.nameRank < kept.nameRank) {
 					kept.name = e.name;
 					kept.nameRank = e.nameRank;
@@ -246,9 +247,11 @@ HRESULT Mft::getData(const std::wstring& volume) {
 	   kept only its 8.3 alias there: the better name names the directory.
 	   Otherwise the paths under it read "AM3B40~1.945" where Windows shows
 	   the long name. */
-	for (const auto& [base, extension] : extensions_) {
+	for (const auto& [reference, extension] : extensions_) {
+		const uint64_t base = reference & REFERENCE_ENTRY_MASK;
 		if (base >= nodes_.size() || extension.name.empty()) continue;
 		Node& n = nodes_[(size_t)base];
+		if (extensionOf(base, n.sequence, n.inUse) != &extension) continue;   // a former file's
 		if (n.named && n.nameRank <= extension.nameRank) continue;
 		n.named = true;
 		n.nameRank = (uint8_t)extension.nameRank;
@@ -297,10 +300,17 @@ std::wstring Mft::pathOf(uint64_t entry, uint16_t sequence, bool& complete) cons
 	return path;
 }
 
+const MftEntry* Mft::extensionOf(uint64_t entry, uint16_t sequence, bool inUse) const {
+	auto found = extensions_.find(((uint64_t)sequence << 48) | entry);
+	if (found == extensions_.end() && !inUse)
+		found = extensions_.find(((uint64_t)(uint16_t)(sequence - 1) << 48) | entry);
+	return found == extensions_.end() ? nullptr : &found->second;
+}
+
 void Mft::complete(MftEntry& entry) const {
-	const auto found = extensions_.find(entry.entry);
-	if (found == extensions_.end()) return;
-	const MftEntry& extension = found->second;
+	const MftEntry* found = extensionOf(entry.entry, entry.sequence, entry.inUse);
+	if (!found) return;
+	const MftEntry& extension = *found;
 	if (!extension.name.empty() && extension.nameRank < entry.nameRank) {
 		entry.name = extension.name;
 		entry.nameRank = extension.nameRank;

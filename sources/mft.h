@@ -80,6 +80,7 @@ struct MftEntry {
 	FILETIME fileNameCreated = { 0 }, fileNameModified = { 0 },
 	         fileNameMftModified = { 0 }, fileNameAccessed = { 0 };                    //!< $FILE_NAME of `name`, UTC
 	uint64_t baseEntry = 0;          //!< for an extension record: the record it extends; 0 otherwise
+	uint16_t baseSequence = 0;       //!< …and that record's sequence number when it was extended
 
 	/*! Decodes a record whose fixups are applied. Every read is bounded by
 	 *  `size` and by the record's own used size.
@@ -156,8 +157,16 @@ private:
 	std::vector<Node> nodes_;       //!< by record number
 	std::wstring names_;            //!< every name, end to end
 	/*! What extension records carry for their base record, when the base
-	 *  lacks it: a file with many names has its $FILE_NAME moved there. */
+	 *  lacks it: a file with many names has its $FILE_NAME moved there.
+	 *  Keyed by the base's whole reference, number AND sequence: an
+	 *  extension left by a former file of the same record must not be
+	 *  merged into the present one (see baseOf). */
 	std::map<uint64_t, MftEntry> extensions_;
+	/*! The extensions of a base record: those of its present sequence; for a
+	 *  deleted record — NTFS increments the sequence when it frees one —
+	 *  those of the sequence before.
+	 *  @return nullptr if none */
+	const MftEntry* extensionOf(uint64_t entry, uint16_t sequence, bool inUse) const;
 
 	/*! Reads the exhibit record by record.
 	 *  @param visit called with each decoded record
