@@ -472,11 +472,6 @@ void dump(LPBYTE buffer, int start, int end);
 */
 std::wstring dump_wstring(LPBYTE buffer, int start, int length);
 
-/*! Bytes as uppercase hexadecimal without separator ("69060000"): the form
-*  Windows gives binary data in an event's XML and in regedit's export.
-* @param data,size the bytes
-* @return two digits per byte */
-std::wstring bytesToHex(const BYTE* data, size_t size);
 
 ///////////////////////////////////////////////////////
 // strings

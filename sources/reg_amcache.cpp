@@ -2,6 +2,7 @@
  *  \brief Reading of every Amcache table (see reg_amcache.h).
  */
 #include "reg_amcache.h"
+#include "sha.h"
 #include <cwctype>
 
 namespace {
@@ -30,7 +31,7 @@ Json registryValueToJson(DWORD type, const std::vector<BYTE>& data) {
 		if (data.size() >= 8) { uint64_t v; memcpy(&v, data.data(), 8); return Json::num((unsigned long long)v); }
 		break;
 	}
-	return Json::str(bytesToHex(data.data(), data.size()));
+	return Json::str(toHexadecimal(data.data(), data.size()));
 }
 
 /*! A text date Windows writes in UTC ("month/day/year hour:minute:second"):

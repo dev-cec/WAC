@@ -1,4 +1,5 @@
 #include "evtx.h"
+#include "sha.h"
 #include "tools.h"
 #include <charconv>
 #include <cstring>
@@ -243,7 +244,7 @@ private:
 			// As Windows renders it in the event's XML: "69060000", a policy hash
 			// "5B85256F…". It was "69 06 00 00", which no search for the value
 			// Event Viewer shows finds.
-			return bytesToHex(d, size);
+			return toHexadecimal(d, size);
 		case T_GUID: {
 			if (size < 16) return L"";
 			GUID g; memcpy(&g, d, 16);
