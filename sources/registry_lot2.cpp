@@ -129,7 +129,7 @@ void OfficeTrustRecords::clear() { records_.clear(); }
 Json ExplorerInput::toJson() const {
 	Json o = Json::obj();
 	addUser(o, sid);
-	o.add(L"Rank", Json::num(rank));
+	o.add(L"MruPosition", Json::num(mruPosition));
 	o.add(L"Text", Json::str(text));
 	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
 	return o;
@@ -145,12 +145,14 @@ HRESULT TypedPaths::getData() {
 			DWORD type = 0;
 			std::vector<BYTE> data;
 			if (enumRegistryValue(key, i, name, type, data) != ERROR_SUCCESS) break;
-			// url1 is the most recent; its number is its rank.
+			// url1 is the most recent: position 0.
 			if (name.size() < 4 || _wcsnicmp(name.c_str(), L"url", 3) != 0
 			    || name.find_first_not_of(L"0123456789", 3) != std::wstring::npos) continue;
+			const unsigned number = (unsigned)std::stoul(name.substr(3).substr(0, 9));
+			if (number == 0) continue;
 			ExplorerInput e;
 			e.sid = sid;
-			e.rank = (unsigned)std::stoul(name.substr(3).substr(0, 9));
+			e.mruPosition = number - 1;
 			e.text = valueText(type, data);
 			e.keyLastWriteUtc = written;
 			entries_.push_back(std::move(e));
@@ -171,13 +173,13 @@ HRESULT WordWheelQueries::getData() {
 		// The values "0", "1"… in the order of MRUListEx: the first is the most recent.
 		std::vector<unsigned int> order;
 		readMruListEx(key, order);
-		unsigned rank = 0;
+		unsigned position = 0;
 		for (unsigned int id : order) {
 			std::vector<BYTE> data;
 			if (getRegBinaryValue(key, nullptr, std::to_wstring(id).c_str(), data) != ERROR_SUCCESS) continue;
 			ExplorerInput e;
 			e.sid = sid;
-			e.rank = ++rank;
+			e.mruPosition = position++;
 			e.text = readWideZ(data.data(), data.size(), 0);   // UTF-16, bounded by the value
 			e.keyLastWriteUtc = written;
 			entries_.push_back(std::move(e));

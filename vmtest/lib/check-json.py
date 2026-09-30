@@ -1429,10 +1429,10 @@ def check_small_file_artefacts(folder):
          "office_trust_records.json: the document trusted with macros enabled found, dated",
          "office_trust_records.json: the trusted document witness missing")
     lot2("typed_paths.json", "typedpath",
-         lambda d, r: [t for t in d if t.get("SID") == r[0] and str(t.get("Rank")) == r[1] and t.get("Text") == r[2]],
-         "typed_paths.json: the typed path witness found at its rank", "typed_paths.json: the typed path witness missing")
+         lambda d, r: [t for t in d if t.get("SID") == r[0] and t.get("MruPosition") == int(r[1]) - 1 and t.get("Text") == r[2]],
+         "typed_paths.json: the typed path witness found at its position (url25: 24)", "typed_paths.json: the typed path witness missing")
     lot2("word_wheel_query.json", "search",
-         lambda d, r: [t for t in d if t.get("SID") == r[0] and t.get("Rank") == 1 and t.get("Text") == r[1]],
+         lambda d, r: [t for t in d if t.get("SID") == r[0] and t.get("MruPosition") == 0 and t.get("Text") == r[1]],
          "word_wheel_query.json: the searched term found first (MRUListEx)", "word_wheel_query.json: the searched term missing or not first")
     lot2("internet_settings.json", "proxy",
          lambda d, r: [t for t in d if t.get("SID") == r[0] and t.get("ProxyServer") == r[1]],

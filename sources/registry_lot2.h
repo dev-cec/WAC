@@ -69,9 +69,11 @@ private:
 /*! A path typed, or a term searched, in Explorer. */
 struct ExplorerInput {
 	std::wstring sid;
-	unsigned rank = 0;          //!< 1 = the most recent
+	/*! Position in the list, 0 for the most recent: the same name and origin
+	 *  as the shellbags' (it was a "Rank" from 1, a second name for one concept). */
+	unsigned mruPosition = 0;
 	std::wstring text;
-	FILETIME keyLastWriteUtc = { 0 };   //!< the key's last write: the date of rank 1
+	FILETIME keyLastWriteUtc = { 0 };   //!< the key's last write: the date of position 0
 	Json toJson() const;        //!< @return the entry as a JSON object
 };
 

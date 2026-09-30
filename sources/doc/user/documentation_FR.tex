@@ -1077,7 +1077,8 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         la plupart des infections par macro.
   \item[\fichier{typed\_paths.json}, \fichier{word\_wheel\_query.json}] chemins
         tapés dans la barre d'adresse de l'Explorateur et termes qui y ont été
-        cherchés, par utilisateur et par rang (1 = le plus récent).
+        cherchés, par utilisateur et par position (\champ{MruPosition}, 0 = le plus
+        récent, comme dans \fichier{shellbags.json}).
   \item[\fichier{root\_certificates.json}] certificats des magasins racines de la
         machine et de chaque utilisateur : sujet, émetteur, validité ; une
         racine ajoutée fait accepter tout ce qu'elle signe (interception TLS,

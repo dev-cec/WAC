@@ -1056,7 +1056,8 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         infections.
   \item[\fichier{typed\_paths.json}, \fichier{word\_wheel\_query.json}] paths
         typed in Explorer's address bar and terms searched there, per user and
-        rank (1 = the most recent).
+        position (\champ{MruPosition}, 0 = the most recent, as in
+        \fichier{shellbags.json}).
   \item[\fichier{root\_certificates.json}] certificates of the machine's and each
         user's root stores: subject, issuer, validity; a root added makes Windows
         trust whatever it signs (TLS interception, signed malware).
