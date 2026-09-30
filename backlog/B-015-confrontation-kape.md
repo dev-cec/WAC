@@ -29,7 +29,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
   - [x] mft.json / MFTECmd : 362 081 enregistrements, 8 dates, chemins, états identiques ; tailles : 1 490 WOF et 3 EVTX où WAC a raison (Windows), 5 métafichiers de convention. A révélé la fusion d'extensions périmées (fix).
   - [x] events.json / EvtxECmd : 190 613 événements, champs système identiques ; valeurs EventData expliquées (conventions d'EvtxECmd, chacune vérifiée contre le XML de Windows ; FILETIME nul non émis par WAC) ; 6 erreurs d'EvtxECmd confirmées par Windows ; 335 Perflib lus par WAC et Windows, pas par EvtxECmd. A révélé 4 défauts de rendu (flottants, binaire, ProcessingErrorData ignoré, hexa/GUID) et les événements des journaux vidés (EvtRecovered).
   - [x] prefetchs.json / PECmd (--mp) : 379 fichiers, exécutable, compteur, 8 exécutions, volumes, répertoires et fichiers chargés identiques ; 19 empreintes où PECmd retire le zéro de tête (WAC comme le nom du fichier) ; un .pf entièrement nul, rejeté et journalisé par les deux.
-  - [ ] raccourcis et jump lists / LECmd, JLECmd
+  - [x] raccourcis et jump lists / LECmd (--dt à 7 décimales : --mp est ignoré dans son CSV), JLECmd (--mp --ld) : 3 raccourcis, 8 entrées DestList, 5 raccourcis de listes personnalisées ; tous les champs identiques au 100 ns, après ajout à WAC des blocs ExtraData, du suivi (machine, DROID, date et adresse du GUID v1), de la taille de la cible, du nombre d'ouvertures et du rang MRU. Convention : nom de dossier connu canonique (JLECmd « Personal ») ou affiché (WAC « Documents »). A révélé 3 défauts : URI collée au bloc suivant, décalage de 2 octets sans liste d'ID, DROID nuls émis.
   - [ ] shellbags / SBECmd
   - [ ] Amcache, ShimCache / AmcacheParser, AppCompatCacheParser
   - [ ] corbeille / RBCmd ; SRUM / SrumECmd ; registre / RECmd
@@ -40,3 +40,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-09-30 : temps, même $MFT de 380 Mo dans la VM : WAC convertit C: et G: en 7,3 s, MFTECmd C: seul en 8,1 s (CSV).
 - 2026-09-30 : temps, mêmes pièces, 305 journaux : WAC convertit events.json (messages en clair compris) en 16,8 s, EvtxECmd produit son CSV en 22,0 s.
 - 2026-09-30 : temps prefetch, 380 fichiers : WAC 3,6 s, PECmd 0,7 s. Coût fixe de toute conversion WAC ≈ 3,4 s (mesuré avec la seule clé hosts) : copie de travail vérifiée des ruches, rejeu de leurs journaux, fuseau et profils du suspect — ce qui donne l'heure locale datée et la lettre de volume, que PECmd ne donne pas. Le prefetch lui-même : ≈ 0,1 s.
+- 2026-09-30 : temps raccourcis/jump lists (3 + 9 fichiers) : WAC 1,8 s par clé, LECmd et JLECmd 0,3 s chacun ; coût fixe de WAC sans ruche ≈ 1,5 s.

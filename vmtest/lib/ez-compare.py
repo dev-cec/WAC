@@ -11,6 +11,8 @@ holding the EZ tool's CSV and WAC's JSON. Modes:
   mft       MFTECmd  / mft.json (volume C:)
   evtx      EvtxECmd / events.json
   prefetch  PECmd    / prefetchs.json (PECmd run with --mp, full precision)
+  lnk       LECmd    / recentdocs.json
+  jumplist  JLECmd   / jumplistAutomaticDestinations.json, jumplistCustomDestinations.json
 
 mft: record by record — paths (hard links included), deleted or not,
 directory, size, and the eight dates of $STANDARD_INFORMATION and
@@ -356,6 +358,167 @@ def compare_prefetch(ez_csv, wac_json):
     return 1 if failures or only_wac or len(only_ez) != len(failed) else 0
 
 
+DRIVE_TYPES = {  # LECmd's wording -> WAC's (the Win32 constant)
+    "Fixed storage media (Hard drive)": "DRIVE_FIXED", "Removable storage media (Floppy, USB)": "DRIVE_REMOVABLE",
+    "Remote storage": "DRIVE_REMOTE", "CD-ROM": "DRIVE_CDROM", "Ram storage": "DRIVE_RAMDISK",
+    "No root directory": "DRIVE_NO_ROOT_DIR", "Unknown": "DRIVE_UNKNOWN", "(None)": None, "": None,
+}
+
+
+def words(text, strip=("fileattribute", "link", "_", " ")):
+    """A list of flags as a set of comparable words: "HAS_LINK_INFO" and "HasLinkInfo" both give "hasinfo"."""
+    out = set()
+    for w in (text or "").split(","):
+        w = w.strip().lower()
+        for s in strip:
+            w = w.replace(s, "")
+        if w and w != "0":
+            out.add(w)
+    return out
+
+
+class Comparison:
+    """Counts, field by field, identical values, differences, and the differences explained."""
+    def __init__(self, tool):
+        self.tool = tool
+        self.compared = collections.Counter()
+        self.diffs = collections.defaultdict(list)
+        self.explained = collections.Counter()
+
+    def note(self, field, key, mine, theirs):
+        self.compared[field] += 1
+        if mine != theirs:
+            self.diffs[field].append((key, mine, theirs))
+
+    def date(self, field, key, mine, theirs):
+        """A UTC date; EZ's to the second when it gives no fraction: compared to the second."""
+        mine, theirs = wac_date(mine), ez_date(theirs)
+        if theirs and "." not in theirs and mine.startswith(theirs + "."):
+            self.explained[f"{field}: to the second ({self.tool}), to the 100 ns (WAC)"] += 1
+            mine = theirs
+        self.note(field, key, mine, theirs)
+
+    def report(self):
+        for reason, count in self.explained.most_common():
+            print(f"  ℹ️  {count}: {reason}")
+        failures = 0
+        for field in self.compared:
+            wrong = self.diffs[field]
+            print(f"  {'✅' if not wrong else '❌'} {field}: {self.compared[field] - len(wrong)}/{self.compared[field]} identical")
+            for key, mine, theirs in wrong[:3]:
+                print(f"        {key}: WAC {str(mine)[:200]!r}, {self.tool} {str(theirs)[:200]!r}")
+            failures += len(wrong)
+        return failures
+
+
+def mac(text):
+    return (text or "").lower().replace("-", ":")
+
+
+def guid(text):
+    return (text or "").strip("{}").lower()
+
+
+def compare_shortcut(c, key, r, w):
+    """The fields of a .lnk, as LECmd and JLECmd give them, against WAC's."""
+    c.date("target created", key, w.get("TargetCreatedUtc"), r["TargetCreated"])
+    c.date("target modified", key, w.get("TargetModifiedUtc"), r["TargetModified"])
+    c.date("target accessed", key, w.get("TargetAccessedUtc"), r["TargetAccessed"])
+    c.note("target size", key, w.get("TargetFileSize", 0), int(r["FileSize"] or 0))
+    c.note("target attributes", key, words(w.get("FileAttributes")), words(r["FileAttributes"]))
+    c.note("link flags", key, words(w.get("LinkFlags")), words(r["HeaderFlags"]))
+    c.note("drive type", key, w.get("VolumeDriveType"), DRIVE_TYPES.get(r["DriveType"], r["DriveType"]))
+    c.note("volume serial and label", key, (w.get("VolumeSerial"), w.get("VolumeLabel")),
+           (r["VolumeSerialNumber"] or None, r["VolumeLabel"] or None))
+    if r["LocalPath"]:
+        c.note("target path", key, w.get("Target"), r["LocalPath"] + (r.get("CommonPath") or ""))
+    for field, ours in (("Arguments", "Arguments"), ("RelativePath", "RelativePath"), ("WorkingDirectory", "WorkingDirectory")):
+        c.note(field, key, w.get(ours), r[field] or None)
+    mft = [b for i in w.get("IdList") or [] if isinstance(i, dict)
+           for b in (i.get("ExtensionBlocks") or []) + [i.get("ExtensionBlock") or {}]
+           if isinstance(b, dict) and b.get("MftEntryNumber") is not None]
+    if r["TargetMFTEntryNumber"]:
+        c.note("target MFT entry and sequence", key,
+               (mft[-1].get("MftEntryNumber"), mft[-1].get("MftSequenceNumber")) if mft else None,
+               (int(r["TargetMFTEntryNumber"], 16), int(r["TargetMFTSequenceNumber"], 16)))
+    t = w.get("Tracker") or {}
+    if r["MachineID"] or t:
+        c.note("tracker: machine", key, t.get("MachineId"), r["MachineID"] or None)
+        c.note("tracker: hardware address", key, mac(t.get("DroidFileHardwareAddress")), mac(r["MachineMACAddress"]))
+        c.date("tracker: created", key, t.get("DroidFileCreatedUtc"), r["TrackerCreatedOn"])
+    c.note("extra data blocks", key, {b.lower() for b in w.get("ExtraDataBlocks") or []},
+           {b.strip().lower().replace("trackerdatabaseblock", "trackerdatablock") for b in r["ExtraBlocksPresent"].split(",") if b.strip()})
+
+
+def compare_lnk(ez_csv, wac_json):
+    """recentdocs.json against LECmd, shortcut by shortcut (file name)."""
+    with open(ez_csv, encoding="utf-8-sig", newline="") as f:
+        ez = {row["SourceFile"].rsplit("\\", 1)[-1].lower(): row for row in csv.DictReader(f)}
+    with open(wac_json, encoding="utf-8-sig") as f:
+        wac = {str(d["Path"]).rsplit("\\", 1)[-1].lower(): d for d in json.load(f) if isinstance(d, dict) and "Path" in d}
+    c = Comparison("LECmd")
+    for key in sorted(set(ez) & set(wac)):
+        compare_shortcut(c, key, ez[key], wac[key])
+    print(f"shortcuts: WAC {len(wac)}, LECmd {len(ez)}, common {len(set(ez) & set(wac))}")
+    print(f"  only in LECmd: {sorted(set(ez) - set(wac))[:5]}; only in WAC: {sorted(set(wac) - set(ez))[:5]}")
+    return 1 if c.report() or set(ez) ^ set(wac) else 0
+
+
+def compare_jumplist(auto_csv, custom_csv, wac_auto, wac_custom):
+    """Jump lists against JLECmd: automatic ones by (file, DestList entry), with
+    the DestList fields; custom ones by (file, rank)."""
+    c = Comparison("JLECmd")
+    with open(auto_csv, encoding="utf-8-sig", newline="") as f:
+        ez = {(r["SourceFile"].rsplit("\\", 1)[-1].lower(), int(r["EntryNumber"])): r for r in csv.DictReader(f)}
+    wac = {}
+    with open(wac_auto, encoding="utf-8-sig") as f:
+        for j in json.load(f):
+            if isinstance(j, dict):
+                for item in j.get("LNKs") or []:
+                    wac[(str(j["File"]).rsplit("\\", 1)[-1].lower(), item["DestList"]["EntryNumber"])] = item
+    for key in sorted(set(ez) & set(wac)):
+        r, w = ez[key], wac[key]
+        d = w["DestList"]
+        c.note("DestList: MRU position", key, d.get("MruPosition"), int(r["MRU"]))
+        c.date("DestList: last modified", key, d.get("LastModificationTimeUtc"), r["LastModified"])
+        c.note("DestList: host", key, d.get("Hostname"), r["Hostname"] or None)
+        theirs = r["Path"]
+        if " ==> " in theirs:
+            # JLECmd appends the known folder's name to the path; WAC gives it apart.
+            theirs, name = theirs.split(" ==> ", 1)
+            if d.get("PathObjectKnownFolder") and d.get("PathObjectKnownFolder") != name:
+                c.explained["known folder: registry canonical name (JLECmd, \"Personal\"), display name (WAC, \"Documents\")"] += 1
+            else:
+                c.note("DestList: known folder name", key, d.get("PathObjectKnownFolder"), name)
+        c.note("DestList: path", key, d.get("PathObject"), theirs)
+        c.note("DestList: interaction count", key, d.get("InteractionCount"), int(r["InteractionCount"] or 0))
+        c.note("DestList: pinned", key, d.get("PinStatus") == "Pinned", r["PinStatus"] == "True")
+        c.note("DestList: DROIDs", key, tuple(guid(d.get(k) or "") for k in ("GuidDroidVolume", "GuidDroidFile", "GuidBirthDroidVolume", "GuidBirthDroidFile")),
+               tuple(guid(r[k]) for k in ("VolumeDroid", "FileDroid", "VolumeBirthDroid", "FileBirthDroid")))
+        if r["CreationTime"]:
+            c.date("DestList: DROID created", key, d.get("DroidFileCreatedUtc"), r["CreationTime"])
+            c.note("DestList: DROID hardware address", key, mac(d.get("DroidFileHardwareAddress")), mac(r["MacAddress"]))
+        compare_shortcut(c, key, r, w)
+    only_ez, only_wac = set(ez) - set(wac), set(wac) - set(ez)
+    print(f"automatic entries: WAC {len(wac)}, JLECmd {len(ez)}, common {len(set(ez) & set(wac))}; only JLECmd {sorted(only_ez)[:3]}, only WAC {sorted(only_wac)[:3]}")
+    ez_custom = collections.defaultdict(list)
+    with open(custom_csv, encoding="utf-8-sig", newline="") as f:
+        for r in csv.DictReader(f):
+            ez_custom[r["SourceFile"].rsplit("\\", 1)[-1].lower()].append(r)
+    wac_custom_items = collections.defaultdict(list)
+    with open(wac_custom, encoding="utf-8-sig") as f:
+        for j in json.load(f):
+            if isinstance(j, dict):
+                wac_custom_items[str(j["Path"]).rsplit("\\", 1)[-1].lower()].extend(j.get("RecentDocs") or [])
+    counts = {k: (len(wac_custom_items.get(k, [])), len(ez_custom.get(k, []))) for k in set(ez_custom) | set(wac_custom_items)}
+    print(f"custom shortcuts per file (WAC, JLECmd): {counts}")
+    for name in set(ez_custom) & set(wac_custom_items):
+        for rank, (r, w) in enumerate(zip(ez_custom[name], wac_custom_items[name])):
+            compare_shortcut(c, (name, rank), r, w)
+    failures = c.report()
+    return 1 if failures or only_ez or only_wac or any(a != b for a, b in counts.values()) else 0
+
+
 def only(folder, pattern):
     """The one file of the folder matching pattern: the EZ tools prefix their CSV with a timestamp."""
     found = glob.glob(os.path.join(folder, pattern))
@@ -373,6 +536,11 @@ def main():
         return compare_mft(only(folder, "*_MFTECmd_*Output.csv"), only(folder, "mft.json"), "C:")
     if mode == "evtx":
         return compare_evtx(only(folder, "*_EvtxECmd_Output.csv"), only(folder, "events.json"))
+    if mode == "lnk":
+        return compare_lnk(only(folder, "*_LECmd_Output.csv"), only(folder, "recentdocs.json"))
+    if mode == "jumplist":
+        return compare_jumplist(only(folder, "*_AutomaticDestinations.csv"), only(folder, "*_CustomDestinations.csv"),
+                                only(folder, "jumplistAutomaticDestinations.json"), only(folder, "jumplistCustomDestinations.json"))
     if mode == "prefetch":
         return compare_prefetch(only(folder, "*_PECmd_Output.csv"), only(folder, "prefetchs.json"))
     print(__doc__)

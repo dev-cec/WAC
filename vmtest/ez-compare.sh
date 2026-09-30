@@ -15,6 +15,7 @@ QGA="python3 $HERE/lib/qga.py"
 KEY="${1:?usage: $0 <WAC key>}"
 case "$KEY" in
   mft) MODE=mft ;; events) MODE=evtx ;; prefetch) MODE=prefetch ;;
+  recent_documents) MODE=lnk ;; jump_lists) MODE=jumplist ;;
   *) echo "no comparison known for '$KEY'" >&2; exit 2 ;;
 esac
 OUT="$HERE/results/ez/$KEY-$(date +%Y%m%d-%H%M%S)"

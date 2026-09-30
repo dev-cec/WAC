@@ -19,6 +19,8 @@ $out = "C:\wactest\ez\$Artefact"
 $tools = @{
     mft      = @{ Exe = "$ez\MFTECmd\MFTECmd.exe";            Args = @('-f', "$exhibits\`$MFT");                          Json = @('mft.json') }
     events   = @{ Exe = "$ez\EvtxECmd\EvtxeCmd\EvtxECmd.exe"; Args = @('-d', "$exhibits\Windows\System32\winevt\Logs");  Json = @('events.json') }
+    recent_documents = @{ Exe = "$ez\LECmd\LECmd.exe";  Args = @('-d', "$exhibits\Users", '-q', '--all', '--dt', 'yyyy-MM-dd HH:mm:ss.fffffff');  Json = @('recentdocs.json') }
+    jump_lists = @{ Exe = "$ez\JLECmd\JLECmd.exe";          Args = @('-d', "$exhibits\Users", '-q', '--mp', '--ld'); Json = @('jumplistAutomaticDestinations.json', 'jumplistCustomDestinations.json') }
     prefetch = @{ Exe = "$ez\PECmd\PECmd.exe";                 Args = @('-d', "$exhibits\Windows\Prefetch", '-q', '--mp');Json = @('prefetchs.json') }
 }
 $tool = $tools[$Artefact]
