@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| fait (voir Journal) | P2 | fort |
+| fait (85bb6e8, 184bb28) | P2 | fort |
 
 ## Pourquoi
 Clés USB et partitions FAT/exFAT sont aujourd'hui signalées « non lues » : fichiers cités et binaires qui s'y trouvent échappent à la collecte.
