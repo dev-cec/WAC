@@ -42,7 +42,6 @@ Remplace `TODO.txt`.
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-009](B-009-srum-ese.md) | SRUM, Windows.edb et tâches BITS (lecteur ESE) | à faire | P2 | fort |
 | [B-010](B-010-activitiescache.md) | Chronologie Windows (ActivitiesCache.db) | à faire | P3 | fort |
 | [B-011](B-011-rdp-cache.md) | Cache bitmap RDP et connexions RDP sortantes | à faire | P3 | moyen |
 | [B-013](B-013-fat-exfat.md) | Lecture brute FAT et exFAT | à faire | P2 | fort |

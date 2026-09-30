@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| fait (voir Journal) | P2 | fort |
+| fait (50752ab) | P2 | fort |
 
 ## Pourquoi
 SRUM : octets envoyés et reçus par application sur 30 à 60 jours (exfiltration) ; Windows.edb : index de recherche.
