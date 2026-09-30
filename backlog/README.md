@@ -42,6 +42,7 @@ Remplace `TODO.txt`.
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
+| [B-028](B-028-coherence-heures-locales.md) | Cohérence des heures locales à travers les artefacts | en cours | P1 | moyen |
 | [B-010](B-010-activitiescache.md) | Chronologie Windows (ActivitiesCache.db) | à faire | P3 | fort |
 | [B-011](B-011-rdp-cache.md) | Cache bitmap RDP et connexions RDP sortantes | à faire | P3 | moyen |
 | [B-014](B-014-vss-brut.md) | Clichés instantanés lus en brut | à décider | P3 | fort |

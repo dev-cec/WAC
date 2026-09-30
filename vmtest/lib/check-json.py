@@ -244,6 +244,7 @@ def cross_checks(folder):
     found += check_mft_entries(folder)
     found += check_mounted_devices(folder)
     found += check_date_precision(folder)
+    found += check_shell_item_dates(folder)
     found += check_utc_sources(folder)
     found += check_key_names(folder)
     found += check_account_names(folder)
@@ -1993,6 +1994,79 @@ def check_mounted_devices(folder):
         else:
             print("  ⏭️  no GPT mount to confront with the partitions")
     return found
+
+
+def check_shell_item_dates(folder):
+    """The dates of a shortcut's target, twice: in UTC in the shortcut's
+    header, and in FAT format in the shell item of its ID list (the last file
+    entry, and its 0xbeef0004 block). Both describe the same instant.
+
+    WHY. Shell item dates were read as local time, as FAT's specification
+    says, when Windows writes them in UTC: every date of every shortcut, jump
+    list and shellbag was one or two hours off, in valid JSON (B-028). Every
+    shortcut of the machine — its own and the harness's winter witness —
+    confronts the two; FAT keeps two seconds, hence the margin.
+    """
+    compared, wrong = 0, []
+    def seconds(a, b):
+        return abs((instant(a) - instant(b)).total_seconds())
+    def visit(o, name):
+        nonlocal compared
+        if isinstance(o, dict):
+            items = [i for i in o.get("IdList") or [] if isinstance(i, dict) and i.get("Type") == "FILE_ENTRY_SHELL_ITEM"]
+            if items and o.get("TargetModifiedUtc"):
+                last = items[-1]
+                pairs = [("TargetModifiedUtc", o.get("TargetModifiedUtc"), last.get("ModificationDateUtc"))]
+                for block in last.get("ExtensionBlocks") or []:
+                    if isinstance(block, dict) and block.get("Signature") == "0xbeef0004":
+                        pairs.append(("TargetCreatedUtc", o.get("TargetCreatedUtc"), block.get("CreatedDateUtc")))
+                for key, header, item in pairs:
+                    if not header or not item or header.startswith("1601"):
+                        continue
+                    compared += 1
+                    if seconds(header, item) > 2:
+                        wrong.append(f"{name}: {o.get('Path') or o.get('Target')}: {key} {header}, shell item {item}")
+            for v in o.values():
+                visit(v, name)
+        elif isinstance(o, list):
+            for v in o:
+                visit(v, name)
+    for name in ("recentdocs.json", "jumplistAutomaticDestinations.json", "jumplistCustomDestinations.json"):
+        d = load(folder, name)
+        if d is not None:
+            visit(d, name)
+    # Shellbags have no header: their 0xbeef0004 blocks name the folder's $MFT
+    # record, whose creation mft.json gives — a second, independent source.
+    mft = load(folder, "mft.json")
+    bags = load(folder, "shellbags.json")
+    if isinstance(mft, list) and isinstance(bags, list):
+        created = {(r.get("Entry"), r.get("Sequence")): r.get("CreatedUtc") for r in mft
+                   if isinstance(r, dict) and str(r.get("Volume", "C:")).upper() == "C:"}
+        def bag(o):
+            nonlocal compared
+            if isinstance(o, dict):
+                if o.get("Signature") == "0xbeef0004" and o.get("MftNote") == "NTFS" and o.get("CreatedDateUtc"):
+                    record = created.get((o.get("MftEntryNumber"), o.get("MftSequenceNumber")))
+                    if record:
+                        compared += 1
+                        if seconds(record, o["CreatedDateUtc"]) > 2:
+                            wrong.append(f"shellbags.json: {o.get('LongName')}: $MFT creation {record}, shell item {o['CreatedDateUtc']}")
+                for v in o.values():
+                    bag(v)
+            elif isinstance(o, list):
+                for v in o:
+                    bag(v)
+        bag(bags)
+    if not compared:
+        print("  ⏭️  no shortcut with its target's dates: shell item dates not confronted")
+        return 0
+    if wrong:
+        for text in wrong[:3]:
+            print(f"  ❌ shell item date other than the header's: {text}")
+        print(f"  ❌ {len(wrong)} of {compared} shell item date(s) other than the shortcut header's UTC")
+        return 1
+    print(f"  ✅ {compared} shell item date(s) identical to their UTC source — shortcut header or $MFT record (to FAT's 2 s)")
+    return 0
 
 
 def check_date_precision(folder):

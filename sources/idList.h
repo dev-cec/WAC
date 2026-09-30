@@ -444,10 +444,8 @@ struct Beef0003 : IExtensionBlock {
 	* special format — and only the beef0004 extension blocks.
 */
 struct Beef0004 : IExtensionBlock {
-	FILETIME creationDate = { 0 }; //!< creation date
-	FILETIME creationDateUtc = { 0 };//!< creation date in UTC
-	FILETIME accessedDate = { 0 }; //!< access date
-	FILETIME accessedDateUtc = { 0 }; //!< access date in UTC
+	FILETIME creationDateUtc = { 0 };//!< creation date, UTC (a FAT-format date Windows writes in UTC)
+	FILETIME accessedDateUtc = { 0 }; //!< access date, UTC (idem)
 	unsigned short int ExtensionVersion=0; //!< version of the block: says which Windows wrote it
 	/*! Internal identifier of the block (offset 16), read but never emitted before. */
 	unsigned short int identifier = 0;
@@ -1264,8 +1262,7 @@ struct URIShellItem :IShellItem {
 struct FileEntryShellItem :IShellItem {
 	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
 	unsigned short int fsFileSize = 0; //!< size of the file
-	FILETIME fsFileModificationUtc = { 0 };//!< modification date in UTC
-	FILETIME fsFileModification = { 0 };//!< modification date
+	FILETIME fsFileModificationUtc = { 0 };//!< modification date, UTC (a FAT-format date Windows writes in UTC)
 	std::wstring fsPrimaryName = L"";//!< primary name
 	FsFlags fsFlags = { 0 }; //!< flags describing the options of the entry
 	FileAttributes fsFileAttributes = { 0 }; //!< flags describing the attributes of the entry
@@ -1291,8 +1288,7 @@ struct UsersFilesFolder :IShellItem {
 public:
 	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
 	std::wstring primaryName = L"";//!< primary name
-	FILETIME modifiedUtc = { 0 };//!< modification date in UTC
-	FILETIME modified = { 0 };//!< modification date
+	FILETIME modifiedUtc = { 0 };//!< modification date, UTC (a FAT-format date Windows writes in UTC)
 	std::unique_ptr<IExtensionBlock> extensionBlock; //!< block d'extension
 
 	/*! Reads the item.

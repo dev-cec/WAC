@@ -32,8 +32,9 @@
 /*! Time zone of the EXAMINED machine.
 *
 * WHY THE HIVE RATHER THAN THE API. The Windows artefacts that store a local
-* time (FAT dates, Amcache, BAM, shimcache, USBSTOR, UserAssist) can only be
-* interpreted with the **suspect's** time zone. `GetTimeZoneInformation()`
+* time (dates of FAT volumes, setupapi.dev.log, OLE dates) — and the local
+* dates WAC derives from every UTC one — can only be interpreted with the
+* **suspect's** time zone. `GetTimeZoneInformation()`
 * returns that of the machine running WAC: the same in a live collection, but
 * wrong as soon as an image is analysed elsewhere. The source of authority is
 * therefore `SYSTEM\CurrentControlSet\\Control\TimeZoneInformation`.
@@ -612,11 +613,12 @@ std::wstring timeToIso8601Local(const FILETIME& filetime, Precision precision = 
 
 /*! Converts a FILETIME **expressed in local time** to UTC, then formats it as
 * ISO 8601 with the "Z" suffix.
-* For the dates really stored in local time: FAT dates (shell items) and OLE
-* dates. Most Windows artefacts store UTC — BAM, UserAssist, USBSTOR, Amcache
-* and ShimCache were all once read through this function by mistake, each
-* shifted by the time-zone offset; each is now confronted with an
-* independent source by check-json.py or the test VM.
+* For the dates really stored in local time: the dates of FAT volumes,
+* setupapi.dev.log, OLE dates. Most Windows artefacts store UTC — BAM,
+* UserAssist, USBSTOR, Amcache, ShimCache, and the FAT-format dates of shell
+* items (shortcuts, jump lists, shellbags) were all once read as local time
+* by mistake, each shifted by the time-zone offset; each is now confronted
+* with an independent source by check-json.py or the test VM.
 * The offset is the suspect's (suspectLocalToUtc), not the running machine's.
 * @param filetimeLocal the instant, in the examined machine's local time
 * @param precision the precision of the source (see Precision): the digits of fraction written

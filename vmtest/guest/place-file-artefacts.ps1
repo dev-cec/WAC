@@ -359,7 +359,24 @@ if (Wants 'fat_volumes') {
     }
 }
 
-# 15. Reference counts of the logs Windows writes itself.
+# 15. A shortcut made now (summer) to a file dated in winter: its target's
+#     item keeps the target's dates in local time, computed by Windows with the
+#     offset of NOW; the shortcut's header keeps them in UTC. Both must give
+#     the same instant.
+if (Wants 'recent_documents') {
+    $target = 'C:\wactest\wac-winter-target.txt'
+    [IO.File]::WriteAllText($target, 'a file of winter')
+    $item = Get-Item -LiteralPath $target
+    $item.CreationTimeUtc = [datetime]::new(2022, 1, 5, 8, 0, 0, [DateTimeKind]::Utc)
+    $item.LastWriteTimeUtc = [datetime]::new(2022, 1, 10, 12, 0, 0, [DateTimeKind]::Utc)
+    $link = 'C:\Users\wac\AppData\Roaming\Microsoft\Windows\Recent\wac-winter-target.lnk'
+    $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut($link)
+    $shortcut.TargetPath = $target
+    $shortcut.Save()
+    Write-Output "lnkwinter=$link|$target|2022-01-10T12:00:00|2022-01-05T08:00:00"
+}
+
+# 16. Reference counts of the logs Windows writes itself.
 if (Wants 'setupapi', 'defender') {
     $sections = (Select-String -Path 'C:\Windows\INF\setupapi.dev*.log' -Pattern '^>>>  \[' -ErrorAction SilentlyContinue | Measure-Object).Count
     Write-Output "setupapi=$sections"

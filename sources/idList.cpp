@@ -1004,21 +1004,17 @@ Beef0004::Beef0004(LPBYTE buffer, int _level, bool* is_zip, bool is_file) {
 	   0x0009 (Windows 8.1 and later) — and decides which fields the block holds.
 	   Offset 2, just before the signature read at 4. */
 	ExtensionVersion = *reinterpret_cast<unsigned short int*>(buffer + 2);
-	/* FIX (a double shift on the FAT dates).
-	   A FAT/DOS date is stored in LOCAL TIME, by the format's specification. The
-	   code assigned that local value to `creationDateUtc`, then applied
-	   FileTimeToLocalFileTime to it — thus treating local time as UTC.
-	   The result: the *Utc key published a local time labelled UTC, and the local
-	   key a time shifted a SECOND time (+2 h in Paris in summer).
-	   The right way is the reverse: the native value is local, and UTC is
-	   derived from it. */
-	creationDate = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 8)).toFileTime();
-	log(3, L"🔈suspectLocalToUtc creationDate");
-	creationDateUtc = suspectLocalToUtc(creationDate);
-
-	accessedDate = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 12)).toFileTime();
-	log(3, L"🔈suspectLocalToUtc accessedDate");
-	accessedDateUtc = suspectLocalToUtc(accessedDate);
+	/* THE DATES ARE IN UTC, in the FAT format. Windows builds a shell item
+	   from the file's FILETIMEs and packs them into DOS dates WITHOUT converting
+	   them to local time — measured in the test VM against the files' own
+	   dates (B-028): a folder created at 18:48:05 UTC reads 18:48:06 here, a
+	   file created at 08:00 UTC in January reads 08:00.
+	   A former "fix" read them as local time, as FAT's specification would
+	   have it, from the specification and without a measure: every date of
+	   every shortcut, jump list and shellbag was then one or two hours off.
+	   The local date is derived from UTC, as everywhere. */
+	creationDateUtc = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 8)).toFileTime();
+	accessedDateUtc = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 12)).toFileTime();
 	/* IDENTIFIER AND $MFT REFERENCE (versions >= 7), and above all OFFSETS
 	 * COMPUTED FROM THE VERSION.
 	 *
@@ -1093,9 +1089,9 @@ Json Beef0004::toJson() {
 	// creationDate/creationDateUtc are indeed parsed. The creation date was
 	// therefore lost and replaced by the access date.
 	// FAT dates: precise to two seconds, hence written without a fraction.
-	o.add(L"CreatedDate",     Json::str(timeToIso8601Local(creationDate, Precision::Second)));
+	o.add(L"CreatedDate",     Json::str(utcTimeToIso8601Local(creationDateUtc, Precision::Second)));
 	o.add(L"CreatedDateUtc",  Json::str(timeToIso8601Utc(creationDateUtc, Precision::Second)));
-	o.add(L"AccessedDate",    Json::str(timeToIso8601Local(accessedDate, Precision::Second)));
+	o.add(L"AccessedDate",    Json::str(utcTimeToIso8601Local(accessedDateUtc, Precision::Second)));
 	o.add(L"AccessedDateUtc", Json::str(timeToIso8601Utc(accessedDateUtc, Precision::Second)));
 	o.add(L"LongName",        Json::str(longName));
 	o.add(L"LocalizedName",   Json::str(localizedName));
@@ -2557,10 +2553,8 @@ FileEntryShellItem::FileEntryShellItem(LPBYTE buffer, unsigned short int itemSiz
 	isPresent = true;
 	fsFileSize = *reinterpret_cast<unsigned int*>(buffer + 4);
 	log(3, L"🔈FatDateTime");
-	// FAT date = LOCAL time: UTC is derived from it, not the reverse.
-	fsFileModification = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 8)).toFileTime();
-	log(3, L"🔈suspectLocalToUtc fsFileModification");
-	fsFileModificationUtc = suspectLocalToUtc(fsFileModification);
+	// A FAT-format date in UTC, as in the 0xbeef0004 block (see there).
+	fsFileModificationUtc = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 8)).toFileTime();
 	log(3, L"🔈FsFlags");
 	fsFlags = FsFlags(shell_item_type_char);
 	log(3, L"🔈FileAttributes");
@@ -2597,7 +2591,7 @@ Json FileEntryShellItem::toJson() {
 	o.add(L"Attributes",          Json::str(fsFileAttributes.to_wstring()));
 	o.add(L"Flags",               Json::str(fsFlags.to_wstring()));
 	// FAT date: precise to two seconds, hence written without a fraction.
-	o.add(L"ModificationDate",    Json::str(timeToIso8601Local(fsFileModification, Precision::Second)));
+	o.add(L"ModificationDate",    Json::str(utcTimeToIso8601Local(fsFileModificationUtc, Precision::Second)));
 	o.add(L"ModificationDateUtc", Json::str(timeToIso8601Utc(fsFileModificationUtc, Precision::Second)));
 	o.add(L"Size",                Json::num((unsigned long long)fsFileSize));   // count
 	o.add(L"Name",                Json::str(fsPrimaryName));
@@ -2613,10 +2607,8 @@ UsersFilesFolder::UsersFilesFolder(LPBYTE buffer, int _level) {
 	isPresent = true;
 	unsigned short int size = *reinterpret_cast<unsigned short int*>(buffer);
 	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + size - 2);
-	// FAT date = LOCAL time: UTC is derived from it, not the reverse.
-	modified = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 0x12)).toFileTime();
-	log(3, L"🔈suspectLocalToUtc modified");
-	modifiedUtc = suspectLocalToUtc(modified);
+	// A FAT-format date in UTC, as in the 0xbeef0004 block (see there).
+	modifiedUtc = FatDateTime(*reinterpret_cast<unsigned int*>(buffer + 0x12)).toFileTime();
 	log(3, L"🔈decodeText primaryName");
 	primaryName = decodeText(readNarrowZ(buffer, size, 0x18));
 	// The block's offset and size come from the item: both must stay inside it.
@@ -2635,7 +2627,7 @@ Json UsersFilesFolder::toJson() {
 	o.add(L"PrimaryName",     Json::str(primaryName));
 	// FAT date: precise to two seconds, hence written without a fraction.
 	o.add(L"ModifiedDateUtc", Json::str(timeToIso8601Utc(modifiedUtc, Precision::Second)));
-	o.add(L"ModifiedDate",    Json::str(timeToIso8601Local(modified, Precision::Second)));
+	o.add(L"ModifiedDate",    Json::str(utcTimeToIso8601Local(modifiedUtc, Precision::Second)));
 	// guard: extensionBlock may be null
 	if (extensionBlock && extensionBlock->isPresent)
 		o.add(L"ExtensionBlock", extensionBlock->toJson());

@@ -206,9 +206,9 @@ live}), où la conversion les relit :
   \item Windows~10 ou ultérieur, 64~bits. \wac{} le vérifie au lancement.
   \item Des \textbf{droits d'administrateur} : la lecture directe d'un volume les
         exige. \wac{} le vérifie également.
-  \item Des volumes \textbf{NTFS}. Un fichier situé sur un autre système de
-        fichiers (CD-ROM, clé FAT) ne peut pas être lu directement ; il est signalé
-        comme non lu, jamais ouvert autrement.
+  \item Des volumes \textbf{NTFS}, \textbf{FAT} ou \textbf{exFAT}. Un fichier
+        situé sur un autre système de fichiers (CD-ROM) ne peut pas être lu
+        directement ; il est signalé comme non lu, jamais ouvert autrement.
 \end{itemize}
 
 \section{Le support de collecte}\label{sec:place}
@@ -1286,8 +1286,9 @@ comprise : une date de janvier relevée en été à Paris est à \texttt{+01:00}
 une date de juillet à \texttt{+02:00}. \wac{} applique les règles de la machine
 examinée année par année (clé \fichier{Dynamic DST} de la ruche
 \fichier{SOFTWARE}) : une date de 2005 aux États-Unis suit les règles de 2005.
-Pour une valeur que l'artefact enregistre en heure locale (date FAT, Amcache,
-BAM…), l'heure répétée à l'automne est lue comme sa première occurrence, et
+L'heure locale écrite est toujours dérivée de l'heure UTC : un même instant se
+lit à la même heure dans tous les artefacts. Pour une valeur que l'artefact
+enregistre en heure locale (volume FAT, \fichier{setupapi.dev.log}), l'heure répétée à l'automne est lue comme sa première occurrence, et
 l'heure sautée au printemps avec le décalage d'avant le changement, comme le
 fait Windows.
 
@@ -1427,8 +1428,8 @@ lieu de la prendre pour l'activité étudiée :
 \chapter{Limites connues}
 
 \begin{description}[style=nextline,leftmargin=1.2em]
-  \item[Volumes non NTFS] Un fichier situé sur un CD-ROM ou une clé FAT n'est pas
-        lu : il est signalé comme non lu.
+  \item[Volumes ni NTFS ni FAT] Un fichier situé sur un CD-ROM n'est pas lu :
+        il est signalé comme non lu.
   \item[Variables propres à un utilisateur] Un chemin exprimé avec
         \path|%APPDATA%|, \path|%LOCALAPPDATA%| ou \path|%USERPROFILE%| (dans une
         tâche planifiée, par exemple) n'est pas résolu : le compte concerné n'est

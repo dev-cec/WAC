@@ -202,9 +202,9 @@ where the conversion reads them back:
   \item Windows~10 or later, 64-bit. \wac{} checks it at start-up.
   \item \textbf{Administrator rights}: reading a volume directly requires them.
         \wac{} checks this too.
-  \item \textbf{NTFS} volumes. A file on another file system (CD-ROM, FAT stick)
-        cannot be read directly; it is reported as unread, never opened another
-        way.
+  \item \textbf{NTFS}, \textbf{FAT} or \textbf{exFAT} volumes. A file on another
+        file system (CD-ROM) cannot be read directly; it is reported as unread,
+        never opened another way.
 \end{itemize}
 
 \section{The collection medium}\label{sec:place}
@@ -1254,8 +1254,9 @@ time included: a January date collected in summer in Paris is at
 \texttt{+01:00}, a July date at \texttt{+02:00}. \wac{} applies the rules of
 the examined machine year by year (\fichier{Dynamic DST} key of the
 \fichier{SOFTWARE} hive): a 2005 date in the United States follows the rules
-of 2005. For a value the artefact stores in local time (FAT date, Amcache,
-BAM…), the hour repeated in autumn is read as its first occurrence, and the
+of 2005. The local time written is always derived from the UTC time: one instant
+reads the same in every artefact. For a value the artefact stores in local
+time (FAT volume, \fichier{setupapi.dev.log}), the hour repeated in autumn is read as its first occurrence, and the
 hour skipped in spring with the offset before the change, as Windows does.
 
 \section{Account names}
@@ -1388,7 +1389,7 @@ instead of taking it for the activity under study:
 \chapter{Known limitations}
 
 \begin{description}[style=nextline,leftmargin=1.2em]
-  \item[Non-NTFS volumes] A file on a CD-ROM or a FAT stick is not read: it is
+  \item[Volumes neither NTFS nor FAT] A file on a CD-ROM is not read: it is
         reported as unread.
   \item[Per-user variables] A path written with \path|%APPDATA%|,
         \path|%LOCALAPPDATA%| or \path|%USERPROFILE%| (in a scheduled task, for
