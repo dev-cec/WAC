@@ -339,7 +339,9 @@ lui.
   historique PowerShell, \fichier{setupapi.dev.log}, \path|$I| de la corbeille
   (versions 1 et 2), \fichier{hosts}, \fichier{Report.wer}, MPLog de Defender :
   cas ordinaires et hostiles (\path|$I| tronqué, longueur mensongère, date
-  impossible), flux \fichier{Zone.Identifier} ; 37 contrôles, aucun échec \\
+  impossible), flux \fichier{Zone.Identifier}, DetectionHistory et entrées de
+  quarantaine (clé RC4 éprouvée sur un en-tête écrit par Defender, longueurs
+  mensongères refusées) ; 62 contrôles, aucun échec \\
 \texttt{json\_test} & l'écrivain JSON de \wac{} & aller-retour identique,
   26 fichiers d'une collecte relus et réécrits à l'octet, textes malformés
   refusés, 200~000 mutations sans lecture hors borne (sanitizers) \\

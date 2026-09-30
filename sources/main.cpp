@@ -39,6 +39,7 @@
 #include "recycle_bin.h"
 #include "hosts_file.h"
 #include "error_reports.h"
+#include "defender_history.h"
 #include "defender_log.h"
 #include "startup_folders.h"
 #include "zone_identifiers.h"
@@ -1089,6 +1090,10 @@ void convertArtefacts(bool systemAvailable) {
 	                                  L"artefacts.error_reports", Text::StepErrorReports);
 	convertFileArtefact<DefenderLogs>(conf.artefacts.defender, "defender_log.json", Text::ArtefactDefenderLogs,
 	                                  L"artefacts.defender", Text::StepDefenderLogs);
+	convertFileArtefact<DefenderDetections>(conf.artefacts.defender, "defender_detections.json", Text::ArtefactDefenderDetections,
+	                                        L"artefacts.defender", Text::StepDefenderDetections);
+	convertFileArtefact<DefenderQuarantine>(conf.artefacts.defender, "defender_quarantine.json", Text::ArtefactDefenderQuarantine,
+	                                        L"artefacts.defender", Text::StepDefenderQuarantine);
 	convertFileArtefact<SecurityHive>(conf.artefacts.security, "security.json", Text::ArtefactSecurityHive,
 	                                  L"artefacts.security", Text::StepSecurityHive);
 	convertFileArtefact<StartupFolders>(conf.artefacts.startupFolders, "startup_folders.json",

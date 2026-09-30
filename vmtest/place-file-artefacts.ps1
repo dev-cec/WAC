@@ -171,7 +171,33 @@ if ($data) {
     Write-Output "datavolume=$letter|$letter\wac-volume-test.txt|$gone"
 }
 
-# 11. Reference counts of the logs Windows writes itself.
+# 11. A Defender detection and quarantine of known dates: the EICAR test
+#     string — harmless by design, made for this — written in a folder
+#     excluded for a moment, dated, then scanned once the exclusion is gone.
+#     MSFT_MpThreatDetection is the reference; the file's dates and its SHA-1
+#     are what the quarantine must give back.
+$held = 'C:\wactest\eicar-held'
+New-Item -ItemType Directory -Force $held | Out-Null
+$eicar = "$held\wac-eicar-$(Get-Date -Format HHmmss).txt"
+Add-MpPreference -ExclusionPath $held
+Start-Sleep 3
+[IO.File]::WriteAllText($eicar, 'X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR' + '-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*')
+$item = Get-Item $eicar
+$item.CreationTimeUtc = [datetime]::new(2021, 1, 2, 3, 4, 5, [DateTimeKind]::Utc)
+$item.LastWriteTimeUtc = [datetime]::new(2022, 3, 4, 5, 6, 7, [DateTimeKind]::Utc)
+Remove-MpPreference -ExclusionPath $held
+Start-Sleep 3
+Start-MpScan -ScanType CustomScan -ScanPath $eicar
+Start-Sleep 10
+$detection = Get-CimInstance -Namespace root/Microsoft/Windows/Defender -ClassName MSFT_MpThreatDetection |
+    Where-Object { $_.Resources -contains "file:_$eicar" } | Select-Object -First 1
+if ($detection) {
+    $iso = { param($d) $d.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fff') }
+    Write-Output ("defender=" + (@($detection.DetectionID, $eicar, (& $iso $detection.InitialDetectionTime),
+        $detection.DomainUser, $detection.ProcessName, $detection.ThreatID, $detection.CurrentThreatExecutionStatusID) -join '|'))
+}
+
+# 12. Reference counts of the logs Windows writes itself.
 $sections = (Select-String -Path 'C:\Windows\INF\setupapi.dev*.log' -Pattern '^>>>  \[' -ErrorAction SilentlyContinue | Measure-Object).Count
 Write-Output "setupapi=$sections"
 $mplog = @(Get-ChildItem -Force 'C:\ProgramData\Microsoft\Windows Defender\Support\MPLog-*.log' -ErrorAction SilentlyContinue).Count

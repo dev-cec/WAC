@@ -348,7 +348,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   recycle_bin: true     # $I des corbeilles : quoi, par qui, quand
   hosts: true           # le fichier hosts : noms détournés vers une adresse
   error_reports: true   # rapports d'erreurs (WER) : programmes plantés, avec leur chemin
-  defender: true        # journaux de Defender (MPLog) : analyses, détections, exclusions
+  defender: true        # Defender : journaux (MPLog), historique des détections, quarantaine (copiée chiffrée)
   startup_folders: true # dossiers de démarrage : ce qui s'exécute à l'ouverture de session
   zone_identifiers: true  # flux Zone.Identifier : d'où viennent les fichiers téléchargés
   security: true        # ruche SECURITY : noms des secrets LSA, connexions en cache, audit
@@ -1088,8 +1088,24 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
   \item[\fichier{defender\_log.json}] journaux de support de Microsoft Defender
         (\fichier{MPLog-*.log}) : chaque ligne telle qu'écrite, datée quand elle
         commence par une date UTC. Analyses à l'exécution, détections,
-        exclusions, mises à jour. L'historique des détections (binaire) et la
-        quarantaine ne sont pas encore décodés.
+        exclusions, mises à jour.
+  \item[\fichier{defender\_detections.json}] une entrée par fichier
+        DetectionHistory, qui survit à l'effacement du journal d'événements :
+        menace, ressource (fichier, clé), compte, processus, date de détection
+        initiale, entrée de quarantaine, et les propriétés nommées
+        \champ{ThreatTracking} (empreintes, taille, heure de début). Le format
+        n'est pas documenté : seuls les champs dont la position a été confirmée
+        contre \texttt{MSFT\_MpThreatDetection} sont nommés ; les autres sont
+        rendus tels que lus (\champ{UnnamedFields} : position, type, valeur),
+        sans signification inventée.
+  \item[\fichier{defender\_quarantine.json}] entrées de la quarantaine :
+        menace, instant de mise en quarantaine, chemin d'origine du fichier
+        retiré, ses dates de création et de modification, ses attributs, sa
+        taille, et l'empreinte de son contenu (\champ{ContentSha256}). La
+        quarantaine est copiée \textbf{chiffrée}, telle que Defender la garde :
+        rien de malveillant n'est écrit en clair, ni sur le support de collecte
+        ni sur le poste d'analyse. Le contenu n'est déchiffré qu'en mémoire,
+        pour son empreinte.
   \item[\fichier{hosts.json}] entrées du fichier \fichier{hosts} : adresse et
         noms, numéro de ligne ; un Windows intact n'en a aucune.
 \end{description}

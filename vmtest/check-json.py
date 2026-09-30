@@ -14,7 +14,7 @@ checks WAC ran to the end.
 Non-zero exit if at least one file is invalid or inconsistent.
 """
 import ntpath
-import json, sys, glob, os, re, collections
+import hashlib, json, sys, glob, os, re, collections
 
 # A double escaping is recognised on a PATH pattern, not on free text: the
 # content of an event (PowerShell script, regular expression, command line) may
@@ -1479,6 +1479,46 @@ def check_small_file_artefacts(folder):
         report(len(defender) >= int(reference["mplog"]) and (lines > 0 or int(reference["mplog"]) == 0),
                f"defender_log.json: {len(defender)} log(s), {lines} line(s)",
                f"defender_log.json: {len(defender)} log(s) for {reference['mplog']} present, {lines} line(s)")
+
+    # The EICAR detection of the cycle, against MSFT_MpThreatDetection, and
+    # its quarantine against the dates and content the harness gave the file.
+    detections = load(folder, "defender_detections.json")
+    quarantine = load(folder, "defender_quarantine.json")
+    if isinstance(detections, list) and "defender" in reference:
+        detection_id, path, initial, user, process, threat, status = reference["defender"].split("|")
+        d = next((x for x in detections if (x.get("DetectionId") or "").upper() == detection_id.upper()), None)
+        wrong = []
+        if d is None:
+            wrong.append(f"detection {detection_id} absent among {len(detections)}")
+        else:
+            resources = [(r.get("Type"), (r.get("Path") or "").lower()) for r in d.get("Resources") or []]
+            if ("file", path.lower()) not in resources:
+                wrong.append(f"resource {resources}")
+            if (d.get("InitialDetectionUtc") or "")[:23] != initial:
+                wrong.append(f"InitialDetectionUtc {d.get('InitialDetectionUtc')} for {initial}")
+            if str(d.get("ThreatId")) != threat or str(d.get("CurrentThreatExecutionStatusId")) != status:
+                wrong.append(f"ThreatId/CurrentThreatExecutionStatusId {d.get('ThreatId')}/{d.get('CurrentThreatExecutionStatusId')}")
+            if d.get("ProcessName") != process or (user.isascii() and d.get("DomainUser") != user):
+                wrong.append(f"account/process {d.get('DomainUser')!r}/{d.get('ProcessName')!r}")
+        report(not wrong, f"defender_detections.json: detection {detection_id} as MSFT_MpThreatDetection gives it",
+               f"defender_detections.json: {wrong[0] if wrong else ''}")
+        if d is not None and isinstance(quarantine, list):
+            entry = next((q for q in quarantine if (q.get("EntryId") or "").upper() == (d.get("QuarantineEntryId") or "").upper()), None)
+            r = next((r for r in (entry or {}).get("Resources") or [] if (r.get("Path") or "").lower() == path.lower()), None)
+            eicar_sha1 = hashlib.sha1(b"X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*").hexdigest().upper()
+            tracking = {t.get("Name"): t.get("Value") for t in d.get("ThreatTracking") or []}
+            wrong = []
+            if r is None:
+                wrong.append(f"entry {d.get('QuarantineEntryId')} or its resource absent")
+            else:
+                if (r.get("CreatedUtc") or "")[:19] != "2021-01-02T03:04:05" or (r.get("ModifiedUtc") or "")[:19] != "2022-03-04T05:06:07":
+                    wrong.append(f"dates {r.get('CreatedUtc')} / {r.get('ModifiedUtc')}")
+                if r.get("Size") != 68 or r.get("ContentSize") != 68 or r.get("ContentSha1") != eicar_sha1:
+                    wrong.append(f"size/content {r.get('Size')}/{r.get('ContentSize')}/{r.get('ContentSha1')}")
+                if (tracking.get("ThreatTrackingSha1") or "").upper() != r.get("ContentSha1"):
+                    wrong.append("ThreatTrackingSha1 of the detection differs from the quarantined content")
+            report(not wrong, f"defender_quarantine.json: {path} with its dates, size and SHA-1, decrypted in memory only",
+                   f"defender_quarantine.json: {wrong[0] if wrong else ''}")
     return found
 
 

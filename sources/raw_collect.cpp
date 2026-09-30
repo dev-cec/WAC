@@ -402,6 +402,14 @@ HRESULT ExtractFileArtefactsRaw() {
 			trees.push_back({ std::get<1>(profileEntry) + L"\\AppData\\Local\\Microsoft\\Windows\\WER",
 			                  { L".wer" }, 3, L"error reports" });
 	}
+	/* Defender: one DetectionHistory file per detection, and the quarantine —
+	   its entries and the removed files, copied ENCRYPTED as Defender keeps
+	   them: nothing malicious in clear on the collection medium. */
+	if (conf.artefacts.defender) {
+		trees.push_back({ L"\\ProgramData\\Microsoft\\Windows Defender\\Scans\\History\\Service\\DetectionHistory", {}, 2,
+		                  L"Defender detection history" });
+		trees.push_back({ L"\\ProgramData\\Microsoft\\Windows Defender\\Quarantine", {}, 3, L"Defender quarantine" });
+	}
 	for (const Tree& tree : trees) {
 		const std::wstring volume = volumeOfPath(tree.absolute), path = pathRelativeToVolume(tree.absolute);
 		size_t extractedFiles = 0;

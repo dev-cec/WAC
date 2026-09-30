@@ -1,8 +1,9 @@
 /*! \file
  *  \brief Checks the decoders of the small file artefacts on inputs whose
  *  result is known: PowerShell history, setupapi.dev.log, recycle bin `$I`,
- *  hosts, Report.wer, Defender's MPLog, Zone.Identifier, and the registry
- *  values of the second lot (TrustRecords, firewall rules, certificate Blob).
+ *  hosts, Report.wer, Defender's MPLog, DetectionHistory and quarantine,
+ *  Zone.Identifier, and the registry values of the second lot (TrustRecords,
+ *  firewall rules, certificate Blob).
  *
  *  WHY THIS TEST. These formats are text or a few bytes, and a decoder that
  *  misses a case still gives valid JSON: a multi-line command cut in two, a
@@ -18,6 +19,7 @@
 #include "recycle_bin.h"
 #include "hosts_file.h"
 #include "error_reports.h"
+#include "defender_history.h"
 #include "defender_log.h"
 #include "zone_identifiers.h"
 #include "registry_lot2.h"
@@ -156,6 +158,149 @@ void defender() {
 	check(!parseDefenderDate(L"2023-05-12T10:11:12.345 local", f), "defender: a date without Z is not taken");
 }
 
+//! Appends a DetectionHistory field: size, type, value, aligned on 8 bytes.
+void putField(std::vector<uint8_t>& b, uint32_t type, const std::vector<uint8_t>& value) {
+	const uint32_t size = (uint32_t)value.size();
+	for (int i = 0; i < 4; ++i) b.push_back((uint8_t)(size >> (8 * i)));
+	for (int i = 0; i < 4; ++i) b.push_back((uint8_t)(type >> (8 * i)));
+	b.insert(b.end(), value.begin(), value.end());
+	while (b.size() % 8) b.push_back(0);
+}
+std::vector<uint8_t> wide(const std::wstring& s) { std::vector<uint8_t> v; putWide(v, s); v.push_back(0); v.push_back(0); return v; }
+std::vector<uint8_t> number32(uint32_t n) { std::vector<uint8_t> v; for (int i = 0; i < 4; ++i) v.push_back((uint8_t)(n >> (8 * i))); return v; }
+std::vector<uint8_t> number64(uint64_t n) { std::vector<uint8_t> v; put64(v, n); return v; }
+
+/*! Defender: the quarantine key against an entry header Defender wrote in the
+ *  test VM (its lengths come out), then a DetectionHistory and an entry built
+ *  as the reference showed them, and their hostile variants. */
+void defenderHistory() {
+	// First 0x3C bytes of Entries\{80008A1B-0000-0000-9243-05FA81693319}, EICAR, 2026-09-30.
+	const uint8_t header[0x3C] = {
+		0xD3, 0x45, 0xC5, 0x99, 0x92, 0xFD, 0xDF, 0x68, 0xC2, 0xF9, 0x91, 0xC7, 0x81, 0xFA, 0xFC, 0x90,
+		0x8A, 0xA2, 0xAD, 0xB3, 0x68, 0x34, 0x03, 0x9C, 0x16, 0x61, 0xBC, 0xC2, 0xF0, 0xE8, 0xCA, 0xE7,
+		0xF1, 0xFF, 0xA3, 0x02, 0x72, 0x58, 0x32, 0xB2, 0x7E, 0xDB, 0xEF, 0xE0, 0x84, 0xBC, 0xBB, 0x0F,
+		0xED, 0x84, 0x08, 0xFD, 0x11, 0x35, 0xA6, 0xAC, 0x3E, 0x10, 0xD3, 0x5E };
+	const std::vector<uint8_t> clear = defenderDecrypt(header, sizeof header);
+	check(clear[0x28] == 0x4E && clear[0x2C] == 0xF8 && clear[0x29] == 0 && clear[0x2D] == 0,
+	      "quarantine key: the lengths Defender wrote (0x4E, 0xF8) do not come out");
+
+	// DetectionHistory, Magic.Version 1.2, one file resource.
+	const uint8_t guid[16] = { 0xD4, 0xF3, 0x7F, 0xC6, 0x8C, 0xCF, 0x6E, 0x49, 0x82, 0x78, 0x4E, 0x6C, 0x68, 0x2A, 0xAA, 0x69 };
+	const uint8_t entry[16] = { 0x1B, 0x8A, 0x00, 0x80, 0, 0, 0, 0, 0x92, 0x43, 0x05, 0xFA, 0x81, 0x69, 0x33, 0x19 };
+	std::vector<uint8_t> dh;
+	putField(dh, 0x08, number64(0x80008A1B));
+	putField(dh, 0x1E, std::vector<uint8_t>(guid, guid + 16));
+	putField(dh, 0x15, wide(L"Magic.Version:1.2"));
+	putField(dh, 0x15, wide(L"Virus:DOS/EICAR_Test_File"));
+	for (uint32_t n : { 0u, 5u, 42u, 110u }) putField(dh, 0x06, number32(n));
+	putField(dh, 0x15, wide(L"Magic.Version:1.2"));
+	putField(dh, 0x15, wide(L"file"));
+	putField(dh, 0x15, wide(L"C:\\wactest\\eicar\\wac-eicar.com"));
+	std::vector<uint8_t> bag(24, 0);
+	const std::wstring name = L"ThreatTrackingStartTime";
+	const std::vector<uint8_t> nameBytes = wide(name);
+	for (uint8_t b : number32((uint32_t)nameBytes.size())) bag.push_back(b);
+	bag.insert(bag.end(), nameBytes.begin(), nameBytes.end());
+	for (uint8_t b : number32(4)) bag.push_back(b);
+	put64(bag, 0x01DD50978AB992EBULL);
+	putField(dh, 0x28, bag);
+	putField(dh, 0x0A, number64(0x01DD5097915F0F1AULL));
+	putField(dh, 0x1E, std::vector<uint8_t>(entry, entry + 16));
+	putField(dh, 0x06, number32(1));
+	putField(dh, 0x06, number32(2));
+	putField(dh, 0x15, wide(L"NT AUTHORITY\\SYSTEM"));
+	putField(dh, 0x06, number32(3));
+	putField(dh, 0x15, wide(L"C:\\Windows\\System32\\cmd.exe"));
+	for (uint32_t n : { 3u, 1u, 0u }) putField(dh, 0x06, number32(n));
+	putField(dh, 0x0A, number64(0x01DD50978ABA0B12ULL));
+	DefenderDetection d;
+	check(parseDetectionHistory(dh, d), "DetectionHistory: a well-formed file refused");
+	check(d.threatId == 0x80008A1B && d.detectionId == L"{C67FF3D4-CF8C-496E-8278-4E6C682AAA69}"
+	      && d.threatName == L"Virus:DOS/EICAR_Test_File", "DetectionHistory: threat and detection identifiers");
+	check(d.severityKnown && d.severityId == 5 && d.categoryKnown && d.categoryId == 42, "DetectionHistory: severity and category");
+	check(d.resources.size() == 1 && d.resources[0].type == L"file" && d.resources[0].path == L"C:\\wactest\\eicar\\wac-eicar.com",
+	      "DetectionHistory: the resource");
+	check(d.quarantineEntryId == L"{80008A1B-0000-0000-9243-05FA81693319}" && d.executionStatusKnown && d.executionStatusId == 1
+	      && d.domainUser == L"NT AUTHORITY\\SYSTEM" && d.processName == L"C:\\Windows\\System32\\cmd.exe",
+	      "DetectionHistory: quarantine entry, execution status, account and process by their position");
+	check(value(d.initialDetectionUtc) == 0x01DD50978ABA0B12ULL, "DetectionHistory: InitialDetectionTime at +9");
+	check(d.threatTracking.size() == 1 && d.threatTracking[0].name == name, "DetectionHistory: the named bag");
+	// The date before the entry, and the numbers not confirmed, stay unnamed — as read.
+	size_t dates = 0;
+	for (const DetectionField& f : d.unnamed) dates += f.type == 0x0A;
+	check(dates == 1 && d.unnamed.size() == 8, "DetectionHistory: the fields not confirmed are given unnamed");
+	// A length that lies: what precedes is kept, nothing is read beyond.
+	std::vector<uint8_t> lying(dh.begin(), dh.begin() + 200);
+	lying[152] = 0xFF; lying[153] = 0xFF;
+	DefenderDetection partial;
+	check(parseDetectionHistory(lying, partial) && partial.threatName == L"Virus:DOS/EICAR_Test_File",
+	      "DetectionHistory: a lying length stops the reading");
+	std::vector<uint8_t> other = dh;
+	other[4] = 0x06;
+	DefenderDetection refused;
+	check(!parseDetectionHistory(other, refused), "DetectionHistory: another header accepted");
+
+	// A quarantine entry: threat, then one resource with its fields.
+	std::vector<uint8_t> threat;
+	put64(threat, 0x80008A1B);
+	threat.resize(0x20, 0);
+	put64(threat, 0x01DD5097915D8EC9ULL);
+	put64(threat, 0x80008A1B);
+	for (uint8_t b : number32(1)) threat.push_back(b);
+	for (char c : std::string("Virus:DOS/EICAR_Test_File")) threat.push_back((uint8_t)c);
+	threat.push_back(0);
+	std::vector<uint8_t> resources = number32(1);
+	for (uint8_t b : number32(8)) resources.push_back(b);
+	putWide(resources, L"\\\\?\\C:\\wactest\\wac-eicar.com");
+	resources.push_back(0); resources.push_back(0);
+	resources.push_back(5); resources.push_back(0);                     // five fields
+	for (char c : std::string("file")) resources.push_back((uint8_t)c);
+	resources.push_back(0);
+	while ((resources.size() - 8) % 4) resources.push_back(0);
+	auto putTagged = [&](uint16_t tag, const std::vector<uint8_t>& v) {
+		resources.push_back((uint8_t)v.size()); resources.push_back((uint8_t)(v.size() >> 8));
+		resources.push_back((uint8_t)tag); resources.push_back((uint8_t)(tag >> 8));
+		resources.insert(resources.end(), v.begin(), v.end());
+		while ((resources.size() - 8) % 4) resources.push_back(0);
+	};
+	putTagged(0x4002, std::vector<uint8_t>(20, 0xAB));
+	putTagged(0x6012, number64(68));
+	putTagged(0x6011, number64(0x01D82F8A0B72A780ULL));
+	putTagged(0x600F, number64(0x01D6E0B5C9A5D680ULL));
+	putTagged(0x300A, number32(0x20));
+	std::vector<uint8_t> head(0x3C, 0);
+	for (int i = 0; i < 4; ++i) head[0x28 + i] = (uint8_t)(threat.size() >> (8 * i));
+	for (int i = 0; i < 4; ++i) head[0x2C + i] = (uint8_t)(resources.size() >> (8 * i));
+	std::vector<uint8_t> file = defenderDecrypt(head.data(), head.size());
+	for (const std::vector<uint8_t>* part : { &threat, &resources }) {
+		const std::vector<uint8_t> encrypted = defenderDecrypt(part->data(), part->size());
+		file.insert(file.end(), encrypted.begin(), encrypted.end());
+	}
+	QuarantineEntry q;
+	check(parseQuarantineEntry(file, q), "quarantine entry: a well-formed entry refused");
+	check(q.threatId == 0x80008A1B && q.threatName == L"Virus:DOS/EICAR_Test_File" && value(q.quarantinedUtc) == 0x01DD5097915D8EC9ULL,
+	      "quarantine entry: threat and instant");
+	check(q.resources.size() == 1 && q.resources[0].path == L"C:\\wactest\\wac-eicar.com" && q.resources[0].type == L"file"
+	      && q.resources[0].fields.size() == 5, "quarantine entry: the resource, its \\\\?\\ prefix removed, its fields");
+	if (q.resources.size() == 1)
+		check(q.resources[0].resourceDataSha1() == L"ABABABABABABABABABABABABABABABABABABABAB", "quarantine entry: the ResourceData name");
+	// An entry whose announced length exceeds the file.
+	std::vector<uint8_t> shortFile(file.begin(), file.end() - 1);
+	QuarantineEntry truncated;
+	check(!parseQuarantineEntry(shortFile, truncated), "quarantine entry: a part beyond the file accepted");
+
+	// ResourceData: a 0x10-byte descriptor, then the length, then the content.
+	std::vector<uint8_t> data(0x38 + 5, 0);
+	data[8] = 0x10;
+	data[0x10 + 0x1C] = 5;
+	size_t offset = 0;
+	uint64_t size = 0;
+	check(quarantinedContent(data, data.size(), offset, size) && offset == 0x38 && size == 5, "ResourceData: content located");
+	check(!quarantinedContent(data, data.size() - 1, offset, size), "ResourceData: a content beyond the file accepted");
+	data[8] = 0xF0;
+	check(!quarantinedContent(data, data.size(), offset, size), "ResourceData: a descriptor beyond the data accepted");
+}
+
 void zoneIdentifier() {
 	ZoneIdentifier z;
 	check(parseZoneIdentifier("[ZoneTransfer]\r\nZoneId=3\r\nReferrerUrl=https://a.invalid/\r\nHostUrl=https://a.invalid/x.exe\r\n", z)
@@ -208,6 +353,7 @@ int wmain() {
 	hosts();
 	errorReport();
 	defender();
+	defenderHistory();
 	zoneIdentifier();
 	registryLot2();
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);

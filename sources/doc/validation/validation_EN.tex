@@ -331,7 +331,9 @@ with it.
   PowerShell history, \fichier{setupapi.dev.log}, recycle bin \path|$I|
   (versions 1 and 2), \fichier{hosts}, \fichier{Report.wer}, Defender's MPLog:
   ordinary and hostile cases (truncated \path|$I|, lying length, impossible
-  date), \fichier{Zone.Identifier} streams; 37 checks, no failure \\
+  date), \fichier{Zone.Identifier} streams, DetectionHistory and quarantine
+  entries (RC4 key proven on a header Defender wrote, lying lengths refused);
+  62 checks, no failure \\
 \texttt{json\_test} & WAC's JSON writer & identical round trip, 26 files of a
   collection read back and rewritten to the byte, malformed texts refused,
   200,000 mutations without an out-of-bounds read (sanitizers) \\

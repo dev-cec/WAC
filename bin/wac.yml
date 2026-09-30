@@ -43,7 +43,7 @@ artefacts:
   recycle_bin: true       # $I of every volume's recycle bin: what was deleted, by whom, when
   hosts: true             # the hosts file: names diverted to an address
   error_reports: true     # Windows Error Reporting: programs that crashed, with their path
-  defender: true          # Microsoft Defender's support logs (MPLog): scans, detections, exclusions
+  defender: true          # Microsoft Defender: support logs (MPLog), detection history, quarantine (copied encrypted)
   startup_folders: true   # startup folders: what runs at logon
   zone_identifiers: true  # Zone.Identifier streams (Mark of the Web): where downloaded files came from
   security: true          # SECURITY hive: LSA secrets' names and dates, cached logons, audit policy (never a secret)

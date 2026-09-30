@@ -343,7 +343,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   recycle_bin: true     # $I of the recycle bins: what, by whom, when
   hosts: true           # the hosts file: names diverted to an address
   error_reports: true   # error reports (WER): programs that crashed, with their path
-  defender: true        # Defender's logs (MPLog): scans, detections, exclusions
+  defender: true        # Defender: logs (MPLog), detection history, quarantine (copied encrypted)
   startup_folders: true # startup folders: what runs at logon
   zone_identifiers: true  # Zone.Identifier streams: where downloaded files came from
   security: true        # SECURITY hive: LSA secret names, cached logons, audit
@@ -1064,8 +1064,23 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         version), every value of the report in \champ{Values}.
   \item[\fichier{defender\_log.json}] Microsoft Defender's support logs
         (\fichier{MPLog-*.log}): every line as written, dated when it starts with
-        a UTC date. Run-time scans, detections, exclusions, updates. The
-        detection history (binary) and the quarantine are not decoded yet.
+        a UTC date. Run-time scans, detections, exclusions, updates.
+  \item[\fichier{defender\_detections.json}] one entry per DetectionHistory
+        file, which survives the clearing of the event log: threat, resource
+        (file, key), account, process, initial detection date, quarantine
+        entry, and the named \champ{ThreatTracking} properties (fingerprints,
+        size, start time). The format is undocumented: only the fields whose
+        position was confirmed against \texttt{MSFT\_MpThreatDetection} are
+        named; the others are given as read (\champ{UnnamedFields}: offset,
+        type, value), without a meaning made up.
+  \item[\fichier{defender\_quarantine.json}] quarantine entries: threat,
+        instant of the quarantine, original path of the removed file, its
+        creation and modification dates, attributes, size, and the
+        fingerprint of its content (\champ{ContentSha256}). The quarantine is
+        copied \textbf{encrypted}, as Defender keeps it: nothing malicious is
+        written in clear, on the collection medium or on the analysis
+        workstation. The content is decrypted in memory only, for its
+        fingerprint.
   \item[\fichier{hosts.json}] entries of the \fichier{hosts} file: address and
         names, line number; an untouched Windows has none.
 \end{description}

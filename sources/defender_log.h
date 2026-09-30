@@ -13,7 +13,7 @@
  *  ("2023-05-12T10:11:12.345Z"), some with no date. Every line is kept, as
  *  written: which of them matter is the analysis's decision (WAE).
  *
- *  NOT HERE YET: DetectionHistory (binary) and the quarantine (encrypted).
+ *  The detection history and the quarantine are read in defender_history.h.
  */
 #pragma once
 
