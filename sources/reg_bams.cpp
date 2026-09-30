@@ -41,8 +41,24 @@ HRESULT Bams::getData() {
 
 	const std::wstring bamKeys[2] = { L"bam", L"bam\\state" };
 	for (const std::wstring& key : bamKeys) {
-		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
-			const std::wstring subkey = L"Services\\" + key + L"\\UserSettings\\" + std::get<0>(profileEntry);
+		/* EVERY SID under UserSettings, not only those with a profile: the
+		   executions of an account deleted since, or never logged on
+		   interactively, were dropped — precisely the ones an investigation
+		   looks for (B-015, against RECmd: S-1-5-21-…-1001, absent from the
+		   SAM). */
+		std::vector<std::wstring> sids;
+		ORHKEY settings = NULL;
+		if (OROpenKey(conf.CurrentControlSet, (L"Services\\" + key + L"\\UserSettings").c_str(), &settings) == ERROR_SUCCESS) {
+			wchar_t name[MAX_VALUE_NAME];
+			for (DWORD i = 0;; ++i) {
+				DWORD length = MAX_VALUE_NAME;
+				if (OREnumKey(settings, i, name, &length, nullptr, nullptr, nullptr) != ERROR_SUCCESS) break;
+				sids.emplace_back(name, length);
+			}
+			ORCloseKey(settings);
+		}
+		for (const std::wstring& sid : sids) {
+			const std::wstring subkey = L"Services\\" + key + L"\\UserSettings\\" + sid;
 			ORHKEY hKey = NULL;
 			log(3, L"🔈OROpenKey CurrentControlSet\\" + subkey);
 			HRESULT hresult = OROpenKey(conf.CurrentControlSet, subkey.c_str(), &hKey);
@@ -67,7 +83,7 @@ HRESULT Bams::getData() {
 					continue;
 				}
 				log(1, L"➕Bam");
-				bams.push_back(Bam(data, valueName, std::get<0>(profileEntry)));
+				bams.push_back(Bam(data, valueName, sid));
 			}
 			ORCloseKey(hKey);
 		}
