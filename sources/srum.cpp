@@ -77,6 +77,41 @@ HRESULT Srum::getData() {
 	return ERROR_SUCCESS;
 }
 
+namespace {
+
+/*! Columns SRUM stores as a 64-bit integer that is a FILETIME: ESE does not
+ *  type them as dates. Checked against the row's own TimeStamp: an EndTime of
+ *  134346735000047273 is 2026-09-23 21:45:00.0047 UTC, the row being of
+ *  21:45:00 (B-015, as SrumECmd reads them). */
+bool isFiletimeColumn(const std::wstring& name) {
+	return name == L"EndTime" || name == L"StartTime" || name == L"ConnectStartTime" || name == L"EventTimestamp";
+}
+
+/*! One cell of a row: as ESE types it, but a FILETIME column as its date, UTC
+ *  and local, and the Tag text, declared one byte per character, as the UTF-16
+ *  it holds. */
+void addSrumValue(Json& row, const EseColumn& c, const EseCell& cell) {
+	const std::wstring key = srumKey(c.name);
+	if (cell.values.size() == 1 && cell.values.front().size() == 8 && isFiletimeColumn(c.name)) {
+		uint64_t ticks;
+		memcpy(&ticks, cell.values.front().data(), 8);
+		const FILETIME utc = { (DWORD)(ticks & 0xFFFFFFFFULL), (DWORD)(ticks >> 32) };
+		if (ticks) {
+			row.add(key + L"Utc", Json::str(timeToIso8601Utc(utc)));
+			row.add(key, Json::str(utcTimeToIso8601Local(utc)));
+		}
+		return;
+	}
+	if (c.name == L"Tag" && cell.values.size() == 1 && (c.type == 10 || c.type == 12)) {
+		const std::vector<uint8_t>& v = cell.values.front();
+		row.add(key, Json::str(readWideZ(v.data(), v.size() & ~(size_t)1, 0)));
+		return;
+	}
+	row.add(key, eseCellToJson(c, cell));
+}
+
+} // namespace
+
 HRESULT Srum::toJson() {
 	JsonArrayWriter out("srum.json");
 	for (const EseTable& table : database_.tables()) {
@@ -90,7 +125,7 @@ HRESULT Srum::toJson() {
 			for (const EseCell& cell : r)
 				for (const EseColumn& c : table.columns) {
 					if (c.id != cell.columnId) continue;
-					row.add(srumKey(c.name), eseCellToJson(c, cell));
+					addSrumValue(row, c, cell);
 					// The identities behind AppId and UserId.
 					const auto identity = (c.name == L"AppId" || c.name == L"UserId") && !cell.values.empty()
 					                      ? identities_.find(integerOf(cell)) : identities_.end();
