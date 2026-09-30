@@ -53,6 +53,11 @@ BINARY_FLAG=${BINARY_OPTION:+--binary}
 
 echo "== 0. Agent == ($(date +%H:%M:%S))"
 $QGA ping
+# The checks must at least compile: a syntax error in check-json.py showed only
+# as the generic "some checks fail", after a whole cycle.
+for script in "$HERE"/lib/*.py; do
+  python3 -m py_compile "$script" || { echo "   ❌ $(basename "$script") does not compile"; exit 1; }
+done
 
 if wants mft usn_journal zone_identifiers; then
 echo "== 0a. Data volume == ($(date +%H:%M:%S))"
