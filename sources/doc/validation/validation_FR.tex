@@ -335,6 +335,14 @@ lui.
   page interdite ; 27 contrôles, aucun échec. A révélé que la séquence de la
   racine n'était pas vérifiée : un parent désigné par une séquence périmée
   donnait un chemin affirmé à tort \\
+\texttt{fat\_test} et \fichier{vmtest/lib/fat-compare.py} &
+  dissect.fat (Fox-IT) ; la liste que Windows donne des clés &
+  images FAT12, FAT16 (mkfs.vfat, pyfatfs), FAT32 et exFAT (formatées par
+  Windows) : entrées présentes identiques à celles de dissect.fat, noms longs
+  accentués, entrées supprimées retrouvées ; la copie des métadonnées rend
+  les mêmes entrées que le volume ; chaîne FAT en boucle terminée ; 17
+  contrôles, aucun échec. A révélé les noms longs supprimés tronqués par une
+  entrée plus récente, désormais signalés \\
 \texttt{ese\_test} et \fichier{vmtest/lib/ese-compare.py} &
   dissect.esedb (Fox-IT), lecteur ESE écrit indépendamment ; \texttt{Get-BitsTransfer} &
   enregistrements construits selon le format (colonnes fixes, variables,

@@ -57,3 +57,4 @@ artefacts:
   wmi: true                   # WMI repository: event subscriptions (filters, consumers, bindings), read offline
   srum: true                  # SRUDB.dat: bytes sent and received, resources used, per application and user, 30 to 60 days
   bits: true                  # qmgr.db: BITS jobs — URLs, destinations, notification command lines
+  fat_volumes: true           # FAT and exFAT volumes, a suspect's USB keys included: every entry, deleted ones too

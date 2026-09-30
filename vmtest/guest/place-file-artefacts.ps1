@@ -40,6 +40,8 @@ function Wants([string[]]$keys) {
 }
 
 $ErrorActionPreference = 'Stop'
+# The references go back in UTF-8: some name a file with accents.
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
 
 # 1. PowerShell history of the user "wac", under a host name of its own.
 if (Wants 'powershell_history') {
@@ -293,7 +295,52 @@ if (Wants 'bits') {
         $job.CreationTime.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss')) -join '|'))
 }
 
-# 14. Reference counts of the logs Windows writes itself.
+# 14. FAT32 and exFAT volumes, on the two virtual USB keys (a suspect's keys):
+#     formatted by Windows itself on first use, then filled on every cycle
+#     with known content — a long name with accents, a subfolder, a file and a
+#     folder deleted —, and listed back by Windows: what fat_volumes.json must
+#     give, deleted entries included.
+if (Wants 'fat_volumes') {
+    foreach ($key in @(@{ Serial = 'WACUSB0001'; Label = 'WACFAT'; FileSystem = 'FAT32' },
+                       @{ Serial = 'WACUSB0002'; Label = 'WACEXFAT'; FileSystem = 'exFAT' })) {
+        $disk = Get-Disk | Where-Object { $_.SerialNumber -like "*$($key.Serial)*" } | Select-Object -First 1
+        if (-not $disk) { continue }
+        $volume = $disk | Get-Partition -ErrorAction SilentlyContinue | Get-Volume -ErrorAction SilentlyContinue |
+            Where-Object { $_.FileSystemLabel -eq $key.Label -and $_.DriveLetter } | Select-Object -First 1
+        if (-not $volume) {
+            # The key's partition, created if none, given a letter if it has none.
+            if ($disk.PartitionStyle -eq 'RAW') { $disk | Initialize-Disk -PartitionStyle MBR }
+            $part = $disk | Get-Partition -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $part) { $part = $disk | New-Partition -UseMaximumSize }
+            if (-not $part.DriveLetter) {
+                $part | Add-PartitionAccessPath -AssignDriveLetter
+                $part = Get-Partition -DiskNumber $part.DiskNumber -PartitionNumber $part.PartitionNumber
+            }
+            $volume = $part | Format-Volume -FileSystem $key.FileSystem -NewFileSystemLabel $key.Label -Confirm:$false
+        }
+        $root = "$($volume.DriveLetter):\"
+        Get-ChildItem -LiteralPath $root -Force | Where-Object Name -ne 'System Volume Information' | Remove-Item -Recurse -Force
+        # Built by code points: PowerShell 5.1 reads this script as ANSI.
+        $long = Join-Path $root "Wac Long Name $([char]0x2013) $([char]0xE9)t$([char]0xE9).txt"
+        [IO.File]::WriteAllText($long, 'wac fat witness')
+        # A summer date: Windows writes a FAT local time with the offset of the
+        # moment, WAC reads it with the offset of its date — the same in summer.
+        (Get-Item -LiteralPath $long).LastWriteTimeUtc = [datetime]::new(2022, 7, 4, 5, 6, 8, [DateTimeKind]::Utc)
+        New-Item -ItemType Directory -Path (Join-Path $root 'DIR1') | Out-Null
+        [IO.File]::WriteAllBytes((Join-Path $root 'DIR1\sub file.bin'), [byte[]](1..5000 | ForEach-Object { $_ % 256 }))
+        [IO.File]::WriteAllText((Join-Path $root 'deleted-file.txt'), 'deleted by the harness')
+        Remove-Item -LiteralPath (Join-Path $root 'deleted-file.txt')
+        New-Item -ItemType Directory -Path (Join-Path $root 'DELDIR') | Out-Null
+        [IO.File]::WriteAllText((Join-Path $root 'DELDIR\inner.txt'), 'inside a deleted folder')
+        Remove-Item -LiteralPath (Join-Path $root 'DELDIR') -Recurse
+        Write-Output "fat=$($volume.DriveLetter):|$($key.Label)|$($key.FileSystem)"
+        foreach ($f in Get-ChildItem -LiteralPath $root -Recurse -Force -File | Where-Object FullName -notlike '*System Volume Information*') {
+            Write-Output ("fatfile=" + (@($f.FullName, $f.Length, $f.LastWriteTimeUtc.ToString('yyyy-MM-ddTHH:mm:ss')) -join '|'))
+        }
+    }
+}
+
+# 15. Reference counts of the logs Windows writes itself.
 if (Wants 'setupapi', 'defender') {
     $sections = (Select-String -Path 'C:\Windows\INF\setupapi.dev*.log' -Pattern '^>>>  \[' -ErrorAction SilentlyContinue | Measure-Object).Count
     Write-Output "setupapi=$sections"

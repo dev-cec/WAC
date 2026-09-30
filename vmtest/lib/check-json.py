@@ -1515,6 +1515,36 @@ def check_small_file_artefacts(folder):
                    f"wmi_persistence.json: {dict(got)} across the {spaces} namespaces, as Get-CimInstance counts them",
                    f"wmi_persistence.json: {dict(got)} for {expected} counted by Get-CimInstance")
 
+    # FAT and exFAT: the two keys as Windows lists them, and what the harness deleted.
+    fats = load(folder, "fat_volumes.json")
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if isinstance(fats, list) and "fat" in reference and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            lines = [l.strip() for l in f if l.strip()]
+        volumes = [l[4:].split("|") for l in lines if l.startswith("fat=")]
+        files = [l[8:].split("|") for l in lines if l.startswith("fatfile=")]
+        present = {(e.get("Path") or "").lower(): e for e in fats if not e.get("Deleted")}
+        wrong = []
+        for letter, label, system in volumes:
+            if not any(e.get("Volume") == letter and e.get("FileSystem") == system and e.get("Label") == label for e in fats):
+                wrong.append(f"volume {letter} {system} {label} absent")
+            # On FAT, a deleted long name may be overwritten by a later entry (the witnesses are
+            # recreated at each cycle): its 8.3 name remains, first letter lost.
+            deleted = [(e.get("Path") or "") + "|" + (e.get("ShortName") or "") for e in fats
+                       if e.get("Volume") == letter and e.get("Deleted")]
+            if not any(p.split("|")[0].endswith("eleted-file.txt") or p.endswith("ELETE~1.TXT") for p in deleted) \
+                    or not any(p.split("|")[0].endswith("nner.txt") for p in deleted):
+                wrong.append(f"{letter}: the deleted file or folder not found among {len(deleted)} deleted entries")
+        for file, size, modified in files:
+            e = present.get(file.lower())
+            got = (e or {}).get("ModifiedUtc", "")[:19]
+            # FAT keeps two seconds: a write at an odd second is rounded up.
+            close = got and abs((instant(got + "Z") - instant(modified + "Z")).total_seconds()) <= 2
+            if e is None or e.get("Size") != int(size) or not close:
+                wrong.append(f"{file}: {None if e is None else (e.get('Size'), got)} for ({size}, {modified})")
+        report(not wrong, f"fat_volumes.json: {len(volumes)} volume(s) (FAT32, exFAT), {len(files)} file(s) as Windows lists them, deleted entries found",
+               f"fat_volumes.json: {wrong[0] if wrong else ''}")
+
     # BITS: the harness's job, as Get-BitsTransfer gives it.
     bits = load(folder, "bits_jobs.json")
     if isinstance(bits, list) and "bits" in reference:

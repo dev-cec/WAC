@@ -46,6 +46,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepFileArtefacts,         L"Artefacts fichiers (lecture brute NTFS)",       L"Extracting file artefacts (raw NTFS)" },
 	{ Text::StepNtfsMetadata,          L"Métadonnées NTFS ($MFT, $UsnJrnl, $LogFile) (lecture brute NTFS)",
 	                                   L"Extracting NTFS metadata ($MFT, $UsnJrnl, $LogFile) (raw NTFS)" },
+	{ Text::StepFatMetadata,           L"Volumes FAT et exFAT (lecture brute des métadonnées)", L"FAT and exFAT volumes (raw reading of the metadata)" },
 	{ Text::StepTrustSet,              L"Jeu de confiance",                              L"Trust set" },
 	{ Text::StepCopyBinaries,          L"Copie des binaires prélevés dans la copie de travail", L"Copying collected binaries to the working directory" },
 	{ Text::StepSealExhibitStore,      L"Scellement de la consigne (manifeste + SHA-256)", L"Sealing the exhibit store (manifest + SHA-256)" },
@@ -109,6 +110,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepWmiPersistence, L"Abonnements WMI (dépôt CIM lu hors ligne)", L"Extracting WMI SUBSCRIPTIONS (CIM repository, read offline)" },
 	{ Text::StepSrum, L"Usage des ressources (SRUM)", L"Extracting RESOURCE USAGE (SRUM)" },
 	{ Text::StepBitsJobs, L"Travaux BITS", L"Extracting BITS JOBS" },
+	{ Text::StepFatVolumes, L"Volumes FAT et exFAT", L"Extracting FAT AND EXFAT VOLUMES" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },
@@ -158,6 +160,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactWmiPersistence, L"Abonnements WMI", L"WMI subscriptions" },
 	{ Text::ArtefactSrum, L"Usage des ressources (SRUM)", L"Resource usage (SRUM)" },
 	{ Text::ArtefactBitsJobs, L"Travaux BITS", L"BITS jobs" },
+	{ Text::ArtefactFatVolumes, L"Volumes FAT et exFAT", L"FAT and exFAT volumes" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },
 
 	{ Text::TimeElapsed,               L"FIN, durée : %1 s",                             L"END, Time elapsed : %1 s" },

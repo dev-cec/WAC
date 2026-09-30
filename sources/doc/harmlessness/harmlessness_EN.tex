@@ -183,6 +183,10 @@ Registry hives & Copied by the raw reading, then read on the copy. No key of
   secret's value, no cached credential. \\
 Event logs (\opt{events}) & Read by the raw reading: the event log service is
   not called upon, no event is produced. \\
+FAT and exFAT volumes & Read raw through the volume device
+  (\path|\\.\X:|), read only, fixed and removable volumes alike: boot sector,
+  FAT and directories, never a file opened, no access date updated. The
+  volume holding the collection is not read. \\
 Binaries (\opt{binary}) & Read by the raw reading; signatures and catalogues
   verified in memory. No certificate store opened, no online revocation
   check. \\

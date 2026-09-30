@@ -66,6 +66,7 @@ bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error)
 		{ "persistence", &a.persistence },
 		{ "office_trust_records", &a.officeTrustRecords }, { "typed_paths", &a.typedPaths }, { "word_wheel_query", &a.wordWheelQuery }, { "root_certificates", &a.rootCertificates }, { "internet_settings", &a.internetSettings }, { "firewall", &a.firewall },
 		{ "wmi", &a.wmi }, { "srum", &a.srum }, { "bits", &a.bits },
+		{ "fat_volumes", &a.fatVolumes },
 	};
 	for (const auto& [key, node] : section.children) {
 		const Switch* found = nullptr;

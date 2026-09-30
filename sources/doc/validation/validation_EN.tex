@@ -327,6 +327,13 @@ with it.
   forbidden page; 27 checks, no failure. Revealed that the root's sequence was
   not checked: a parent named by a stale sequence gave a path wrongly
   asserted \\
+\texttt{fat\_test} and \fichier{vmtest/lib/fat-compare.py} &
+  dissect.fat (Fox-IT); the keys as Windows lists them &
+  FAT12, FAT16 (mkfs.vfat, pyfatfs), FAT32 and exFAT images (formatted by
+  Windows): present entries identical to dissect.fat's, accented long names,
+  deleted entries found; the metadata copy gives the same entries as the
+  volume; a looping FAT chain ends; 17 checks, no failure. Revealed deleted
+  long names cut by a newer entry, now flagged \\
 \texttt{ese\_test} and \fichier{vmtest/lib/ese-compare.py} &
   dissect.esedb (Fox-IT), an ESE reader written independently; \texttt{Get-BitsTransfer} &
   records built as the format lays them out (fixed, variable, tagged,

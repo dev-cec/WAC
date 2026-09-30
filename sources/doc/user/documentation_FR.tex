@@ -362,6 +362,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   wmi: true             # dépôt WMI lu hors ligne : abonnements (filtres, consommateurs, liaisons)
   srum: true            # SRUDB.dat : réseau et ressources par application et utilisateur, 30 à 60 jours
   bits: true            # qmgr.db : travaux BITS, URL, destinations, commandes de notification
+  fat_volumes: true     # volumes FAT et exFAT, clés USB du suspect comprises : entrées, supprimées aussi
 \end{lstlisting}
 
 \begin{itemize}
@@ -1073,6 +1074,18 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
   \item[\fichier{firewall.json}] règles du pare-feu (nom, action, sens, ports,
         programme ; tous les champs dans \champ{Fields}) et réglages des profils
         domaine, privé et public.
+  \item[\fichier{fat\_volumes.json}] volumes FAT12, FAT16, FAT32 et exFAT, clés
+        USB et cartes du suspect comprises (le volume de la collecte excepté) :
+        chaque entrée, présente ou \textbf{supprimée} (\champ{Deleted}), son
+        chemin, son nom 8.3, sa taille, ses attributs et ses dates. Un nom
+        supprimé en FAT garde son nom long s'il n'a pas été écrasé ; sinon son
+        nom 8.3, première lettre perdue (\champ{NameIncomplete}). Les dates FAT
+        sont locales : données telles qu'écrites et en UTC avec le décalage en
+        vigueur à leur date (l'Explorateur applique celui du moment, d'où une
+        heure d'écart en été pour une date d'hiver) ; exFAT garde son décalage
+        (\champ{ModifiedOffset}\ldots), la date UTC est alors exacte. La
+        collecte ne copie que les métadonnées du volume (secteur de démarrage,
+        FAT, répertoires), pas le contenu des fichiers.
   \item[\fichier{srum.json}] usage des ressources (SRUM, \path|sru\SRUDB.dat|),
         une entrée par ligne de chaque table : octets envoyés et reçus par
         application et par interface (une exfiltration s'y lit, avec le

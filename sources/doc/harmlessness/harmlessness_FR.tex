@@ -187,6 +187,10 @@ Ruches du registre & Copiées par la lecture directe, puis lues sur la copie.
   d'authentification en cache. \\
 Journaux d'événements (\opt{events}) & Lus par la lecture directe : le service
   de journalisation n'est pas sollicité, aucun événement n'est produit. \\
+Volumes FAT et exFAT & Lus en brut par le périphérique du volume
+  (\path|\\.\X:|), en lecture seule, volumes fixes comme amovibles : secteur
+  de démarrage, FAT et répertoires, jamais un fichier ouvert, aucune date
+  d'accès modifiée. Le volume qui reçoit la collecte n'est pas lu. \\
 Binaires (\opt{binary}) & Lus par la lecture directe ; signatures et
   catalogues vérifiés en mémoire. Aucun magasin de certificats ouvert, aucune
   vérification de révocation en ligne. \\

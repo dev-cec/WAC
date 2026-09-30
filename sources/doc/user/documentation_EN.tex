@@ -357,6 +357,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   wmi: true             # WMI repository read offline: subscriptions (filters, consumers, bindings)
   srum: true            # SRUDB.dat: network and resources per application and user, 30 to 60 days
   bits: true            # qmgr.db: BITS jobs, URLs, destinations, notification command lines
+  fat_volumes: true     # FAT and exFAT volumes, the suspect's USB keys included: entries, deleted ones too
 \end{lstlisting}
 
 \begin{itemize}
@@ -1052,6 +1053,17 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
   \item[\fichier{firewall.json}] firewall rules (name, action, direction, ports,
         program; every field in \champ{Fields}) and the domain, private and
         public profile settings.
+  \item[\fichier{fat\_volumes.json}] FAT12, FAT16, FAT32 and exFAT volumes, the
+        suspect's USB keys and cards included (the collection's volume
+        excepted): every entry, present or \textbf{deleted} (\champ{Deleted}),
+        its path, 8.3 name, size, attributes and dates. A name deleted on FAT
+        keeps its long name unless overwritten; otherwise its 8.3 name, first
+        letter lost (\champ{NameIncomplete}). FAT dates are local: given as
+        written and in UTC with the offset in force at their date (Explorer
+        applies the current one, hence an hour apart in summer for a winter
+        date); exFAT keeps its offset (\champ{ModifiedOffset}\ldots), the UTC
+        date is then exact. The collection copies only the volume's metadata
+        (boot sector, FAT, directories), not the files' content.
   \item[\fichier{srum.json}] resource usage (SRUM, \path|sru\SRUDB.dat|), one
         entry per row of every table: bytes sent and received per application
         and per interface (an exfiltration shows there, with the program), CPU

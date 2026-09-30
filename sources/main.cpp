@@ -43,6 +43,7 @@
 #include "wmi_persistence.h"
 #include "srum.h"
 #include "bits_jobs.h"
+#include "fat_volumes.h"
 #include "defender_log.h"
 #include "startup_folders.h"
 #include "zone_identifiers.h"
@@ -403,6 +404,13 @@ void extractProfileArtefacts() {
 		log(3, L"🔈ExtractNtfsMetadataRaw");
 		hresult = ExtractNtfsMetadataRaw();   // S_FALSE = one could not be read (tolerated)
 		if (FAILED(hresult)) printError(hresult);
+		else printSuccess();
+	}
+	// FAT and exFAT volumes, a suspect's keys among them: their metadata, read raw.
+	if (conf.artefacts.fatVolumes) {
+		printStep(Text::StepFatMetadata);
+		hresult = ExtractFatVolumesRaw();     // S_FALSE = one could not be read (tolerated)
+		if (FAILED(hresult) && hresult != HRESULT_FROM_WIN32(ERROR_EMPTY)) printError(hresult);
 		else printSuccess();
 	}
 }
@@ -1101,6 +1109,8 @@ void convertArtefacts(bool systemAvailable) {
 	                                    L"artefacts.wmi", Text::StepWmiPersistence);
 	convertFileArtefact<Srum>(conf.artefacts.srum, "srum.json", Text::ArtefactSrum, L"artefacts.srum", Text::StepSrum);
 	convertFileArtefact<BitsJobs>(conf.artefacts.bits, "bits_jobs.json", Text::ArtefactBitsJobs, L"artefacts.bits", Text::StepBitsJobs);
+	convertFileArtefact<FatVolumes>(conf.artefacts.fatVolumes, "fat_volumes.json", Text::ArtefactFatVolumes,
+	                                L"artefacts.fat_volumes", Text::StepFatVolumes);
 	convertFileArtefact<SecurityHive>(conf.artefacts.security, "security.json", Text::ArtefactSecurityHive,
 	                                  L"artefacts.security", Text::StepSecurityHive);
 	convertFileArtefact<StartupFolders>(conf.artefacts.startupFolders, "startup_folders.json",

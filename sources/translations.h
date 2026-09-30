@@ -34,7 +34,7 @@ enum class Text : unsigned {
 	// Steps: live state
 	StepRunningMachine, StepSessions, StepProcesses, StepNetworkState, StepServiceStates, StepSystemClock,
 	// Steps: raw extraction
-	StepSystemHives, StepUserHives, StepFileArtefacts, StepNtfsMetadata, StepTrustSet,
+	StepSystemHives, StepUserHives, StepFileArtefacts, StepNtfsMetadata, StepFatMetadata, StepTrustSet,
 	StepCopyBinaries, StepSealExhibitStore, StepEventResources, StepAllExecutables,
 	StepOpenSystemHive, StepOpenSoftwareHive, StepUserProfiles,
 	// Steps: registry
@@ -48,7 +48,7 @@ enum class Text : unsigned {
 	StepPowerShellHistory, StepSetupApi, StepRecycleBin, StepHosts, StepErrorReports, StepDefenderLogs,
 	StepDefenderDetections, StepDefenderQuarantine,
 	StepStartupFolders, StepZoneIdentifiers, StepSecurityHive, StepPersistence,
-	StepOfficeTrustRecords, StepTypedPaths, StepWordWheelQueries, StepRootCertificates, StepInternetSettingsSet, StepFirewall, StepWmiPersistence, StepSrum, StepBitsJobs,
+	StepOfficeTrustRecords, StepTypedPaths, StepWordWheelQueries, StepRootCertificates, StepInternetSettingsSet, StepFirewall, StepWmiPersistence, StepSrum, StepBitsJobs, StepFatVolumes,
 	// Steps: investigation log
 	StepWriteConversionLog, StepWriteInvestigationLog,
 	// Artefacts switched off by wac.yml (their name, then the message)
@@ -60,7 +60,7 @@ enum class Text : unsigned {
 	ArtefactJumpListsAutomatic, ArtefactJumpListsCustom,
 	ArtefactPowerShellHistory, ArtefactSetupApi, ArtefactRecycleBin, ArtefactHosts, ArtefactErrorReports,
 	ArtefactDefenderLogs, ArtefactDefenderDetections, ArtefactDefenderQuarantine, ArtefactStartupFolders, ArtefactZoneIdentifiers, ArtefactSecurityHive,
-	ArtefactPersistence, ArtefactOfficeTrustRecords, ArtefactTypedPaths, ArtefactWordWheelQueries, ArtefactRootCertificates, ArtefactInternetSettingsSet, ArtefactFirewall, ArtefactWmiPersistence, ArtefactSrum, ArtefactBitsJobs,
+	ArtefactPersistence, ArtefactOfficeTrustRecords, ArtefactTypedPaths, ArtefactWordWheelQueries, ArtefactRootCertificates, ArtefactInternetSettingsSet, ArtefactFirewall, ArtefactWmiPersistence, ArtefactSrum, ArtefactBitsJobs, ArtefactFatVolumes,
 	NotRequested,
 	// End of the run
 	TimeElapsed, PressAnyKey, ConversionLogNotWritten,

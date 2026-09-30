@@ -64,38 +64,48 @@ DATA_STATE=$($QGA run -- powershell.exe -NoProfile -Command '
 echo "   ${DATA_STATE:-no answer} (without the disk, the second-volume checks are skipped)"
 fi
 
-if wants registry setupapi; then
-echo "== 0b. USB key == ($(date +%H:%M:%S))"
-# A virtual USB key, attached on every run, so that USBSTOR is populated on any
-# test VM — including one recreated from scratch by create-vm.sh — and the USB
-# artefacts are checked on every cycle. Attached live only: the VM definition
-# is left unchanged, and a VM restart simply gets it attached again here.
+if wants registry setupapi fat_volumes; then
+echo "== 0b. USB keys == ($(date +%H:%M:%S))"
+# Two virtual USB keys, attached on every run, so that USBSTOR is populated on
+# any test VM — including one recreated from scratch by create-vm.sh — and the
+# USB artefacts are checked on every cycle: WACUSB0001 formatted FAT32,
+# WACUSB0002 exFAT by the witnesses (a suspect's keys, read raw). Attached
+# live only: the VM definition is left unchanged, and a VM restart simply gets
+# them attached again here.
 DOM="${WAC_VM:-win11-test}"
 CONN="qemu:///session"
-USB_IMG="${WAC_USB_IMG:-$HOME/vms/wac-usb-test.img}"
-mkdir -p "$(dirname "$USB_IMG")"
-[[ -f "$USB_IMG" ]] || truncate -s 64M "$USB_IMG"
-if ! virsh -c "$CONN" domblklist "$DOM" 2>/dev/null | grep -qF "$USB_IMG"; then
-  USB_XML="$(mktemp)"
-  cat > "$USB_XML" <<EOF
+# $1 image file, $2 serial number, $3 target device of the definition.
+attach_usb_key() {
+  local image="$1" serial="$2" target="$3" xml
+  mkdir -p "$(dirname "$image")"
+  [[ -f "$image" ]] || truncate -s 64M "$image"
+  if ! virsh -c "$CONN" domblklist "$DOM" 2>/dev/null | grep -qF "$image"; then
+    xml="$(mktemp)"
+    cat > "$xml" <<EOF
 <disk type='file' device='disk'>
   <driver name='qemu' type='raw'/>
-  <source file='$USB_IMG'/>
-  <target dev='sdz' bus='usb' removable='on'/>
-  <serial>WACUSB0001</serial>
+  <source file='$image'/>
+  <target dev='$target' bus='usb' removable='on'/>
+  <serial>$serial</serial>
 </disk>
 EOF
-  virsh -c "$CONN" attach-device "$DOM" "$USB_XML" --live >/dev/null && echo "   USB key WACUSB0001 attached"
-  rm -f "$USB_XML"
-fi
-# Windows installs the device asynchronously: wait until it is enumerated.
-for attempt in $(seq 1 30); do
-  N_USB=$($QGA run -- powershell.exe -NoProfile -Command \
-    '(Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object InstanceId -like "USBSTOR*WACUSB0001*" | Measure-Object).Count' \
-    2>/dev/null | tr -d '\r\n ' || true)
-  [[ "${N_USB:-0}" =~ ^[1-9] ]] && { echo "   USB key known to Windows"; break; }
-  sleep 2
-done
+    virsh -c "$CONN" attach-device "$DOM" "$xml" --live >/dev/null && echo "   USB key $serial attached"
+    rm -f "$xml"
+  fi
+  # Windows installs the device asynchronously: wait until it is enumerated.
+  local attempt count
+  for attempt in $(seq 1 30); do
+    count=$($QGA run -- powershell.exe -NoProfile -Command \
+      "(Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object InstanceId -like 'USBSTOR*$serial*' | Measure-Object).Count" \
+      2>/dev/null | tr -d '\r\n ' || true)
+    [[ "${count:-0}" =~ ^[1-9] ]] && { echo "   USB key $serial known to Windows"; return 0; }
+    sleep 2
+  done
+}
+USB_IMG="${WAC_USB_IMG:-$HOME/vms/wac-usb-test.img}"
+USB_EXFAT_IMG="${WAC_USB_EXFAT_IMG:-$HOME/vms/wac-usb-exfat.img}"
+attach_usb_key "$USB_IMG" WACUSB0001 sdz
+attach_usb_key "$USB_EXFAT_IMG" WACUSB0002 sdy
 fi
 
 if [[ $BUILD -eq 1 ]]; then
