@@ -712,3 +712,116 @@ HRESULT NetworkShares::getData() {
 
 HRESULT NetworkShares::toJson() { return writeList("network_shares.json", shares_); }
 void NetworkShares::clear() { shares_.clear(); }
+
+// ------------------------------------------------------------ Network configuration
+
+namespace {
+
+/*! Every value of a key, the DHCP lease times — Unix times, seconds since
+ *  1970 UTC — as dates.
+ *  @param root,path the key
+ *  @param out receives the values
+ *  @param written receives the key's last write, if asked */
+void readInterfaceValues(ORHKEY root, const std::wstring& path, std::vector<std::pair<std::wstring, Json>>& out,
+                         FILETIME* written = nullptr) {
+	ORHKEY key = NULL;
+	if (OROpenKey(root, path.c_str(), &key) != ERROR_SUCCESS) return;
+	if (written) *written = lastWrite(key);
+	const wchar_t* LEASE_TIMES[] = { L"LeaseObtainedTime", L"LeaseTerminatesTime", L"T1", L"T2" };
+	for (DWORD i = 0;; ++i) {
+		std::wstring name;
+		DWORD type = 0;
+		std::vector<BYTE> data;
+		if (enumRegistryValue(key, i, name, type, data) != ERROR_SUCCESS) break;
+		const bool leaseTime = std::any_of(std::begin(LEASE_TIMES), std::end(LEASE_TIMES),
+		                                   [&](const wchar_t* t) { return name == t; });
+		if (leaseTime && type == REG_DWORD && data.size() >= 4) {
+			DWORD seconds;
+			memcpy(&seconds, data.data(), 4);
+			const FILETIME utc = unixToFiletime(seconds);
+			out.emplace_back(name + L"Utc", Json::str(timeToIso8601Utc(utc, Precision::Second)));
+			out.emplace_back(name, Json::str(utcTimeToIso8601Local(utc, Precision::Second)));
+		}
+		else if ((name == L"CurrentAddress" || name == L"PermanentAddress") && type == REG_BINARY)
+			// The adapter's hardware address, in the form WAC gives every one.
+			out.emplace_back(name, Json::str(HardwareAddressText(data.data(), data.size())));
+		else out.emplace_back(registryNameToJsonKey(name), registryValueToJson(type, data));
+	}
+	ORCloseKey(key);
+}
+
+//! A list of name/value pairs as one JSON object; nothing for an empty list.
+void addSection(Json& o, const wchar_t* key, const std::vector<std::pair<std::wstring, Json>>& values) {
+	if (values.empty()) return;
+	Json section = Json::obj();
+	for (const auto& [n, v] : values) section.add(n, v);
+	o.add(key, std::move(section));
+}
+
+} // namespace
+
+Json NetworkAdapterConfiguration::toJson() const {
+	Json o = Json::obj();
+	o.add(L"InterfaceGuid", Json::str(guid));
+	addSection(o, L"Adapter", adapter);
+	addSection(o, L"Ipv4", ipv4);
+	addDate(o, L"Ipv4KeyLastWrite", ipv4LastWriteUtc);
+	addSection(o, L"Ipv6", ipv6);
+	addSection(o, L"Kernel", kernel);
+	return o;
+}
+
+HRESULT NetworkConfiguration::getData() {
+	if (!conf.CurrentControlSet) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	const std::wstring TCPIP = L"Services\\Tcpip\\Parameters";
+	ORHKEY key = NULL;
+	if (OROpenKey(conf.CurrentControlSet, TCPIP.c_str(), &key) == ERROR_SUCCESS) {
+		for (const wchar_t* name : { L"Hostname", L"NV Hostname", L"Domain", L"NV Domain", L"SearchList", L"DhcpDomain", L"NameServer" }) {
+			DWORD type = 0, size = 0;
+			if (ORGetValue(key, nullptr, name, &type, nullptr, &size) != ERROR_SUCCESS) continue;
+			std::vector<BYTE> data(size);
+			if (ORGetValue(key, nullptr, name, &type, data.data(), &size) == ERROR_SUCCESS)
+				global_.emplace_back(registryNameToJsonKey(name), registryValueToJson(type, data));
+		}
+		ORCloseKey(key);
+	}
+	// The adapters, by their GUID: the class entry names them, Tcpip holds their settings.
+	const std::wstring CLASS = L"Control\\Class\\{4d36e972-e325-11ce-bfc1-08002be10318}";
+	auto adapterFor = [&](const std::wstring& guid) -> NetworkAdapterConfiguration& {
+		for (NetworkAdapterConfiguration& a : adapters_) if (_wcsicmp(a.guid.c_str(), guid.c_str()) == 0) return a;
+		adapters_.push_back(NetworkAdapterConfiguration{});
+		adapters_.back().guid = guid;
+		return adapters_.back();
+	};
+	for (const std::wstring& index : subkeys(conf.CurrentControlSet, CLASS)) {
+		std::wstring guid;
+		if (getRegSzValue(conf.CurrentControlSet, (CLASS + L"\\" + index).c_str(), L"NetCfgInstanceId", &guid) != ERROR_SUCCESS || guid.empty()) continue;
+		std::vector<std::pair<std::wstring, Json>> values;
+		ORHKEY k = NULL;
+		if (OROpenKey(conf.CurrentControlSet, (CLASS + L"\\" + index).c_str(), &k) == ERROR_SUCCESS) {
+			readAllValues(k, values);
+			ORCloseKey(k);
+		}
+		adapterFor(guid).adapter = std::move(values);
+	}
+	for (const std::wstring& guid : subkeys(conf.CurrentControlSet, TCPIP + L"\\Interfaces")) {
+		NetworkAdapterConfiguration& a = adapterFor(guid);
+		readInterfaceValues(conf.CurrentControlSet, TCPIP + L"\\Interfaces\\" + guid, a.ipv4, &a.ipv4LastWriteUtc);
+	}
+	for (NetworkAdapterConfiguration& a : adapters_) {
+		readInterfaceValues(conf.CurrentControlSet, L"Services\\Tcpip6\\Parameters\\Interfaces\\" + a.guid, a.ipv6);
+		readInterfaceValues(conf.CurrentControlSet, L"Control\\NetworkSetup2\\Interfaces\\" + a.guid + L"\\Kernel", a.kernel);
+	}
+	return ERROR_SUCCESS;
+}
+
+HRESULT NetworkConfiguration::toJson() {
+	Json o = Json::obj();
+	addSection(o, L"Global", global_);
+	Json adapters = Json::arr();
+	for (const NetworkAdapterConfiguration& a : adapters_) adapters.push(a.toJson());
+	o.add(L"Adapters", std::move(adapters));
+	return writeJsonFile("network_configuration.json", o);
+}
+
+void NetworkConfiguration::clear() { global_.clear(); adapters_.clear(); }

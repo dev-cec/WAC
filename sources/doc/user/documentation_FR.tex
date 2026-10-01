@@ -371,6 +371,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   program_usage: true           # programmes lancés ou utilisés (FeatureUsage, JumplistData, compatibilité, épinglés)
   devices: true                 # périphériques USB et SCSI et leurs dates, portables, noms de volumes
   network_shares: true          # partages réseau de la machine, chemin et droits
+  network_configuration: true   # cartes réseau, dernière configuration IPv4/IPv6, baux DHCP (hors ligne)
 \end{lstlisting}
 
 \begin{itemize}
@@ -1173,6 +1174,13 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         chaque entrée de la liste de contrôle d'accès son type, son masque, le
         SID et son nom. Les partages administratifs (\texttt{C\$},
         \texttt{ADMIN\$}) n'y figurent pas : Windows ne les stocke pas.
+  \item[\fichier{network\_configuration.json}] configuration réseau lue dans
+        les ruches : nom d'hôte et domaine (\champ{Global}), et pour chaque carte
+        sa description et son pilote, une adresse matérielle forcée
+        (\texttt{NetworkAddress}), son adresse matérielle courante et
+        d'origine, sa dernière configuration IPv4 et IPv6, et son bail DHCP
+        (obtention et fin, en UTC). Elle reste lisible quand la machine est
+        débranchée ou le bail expiré, ce que le relevé vivant ne montre plus.
   \item[\fichier{fat\_volumes.json}] volumes FAT12, FAT16, FAT32 et exFAT, clés
         USB et cartes du suspect comprises (le volume de la collecte excepté) :
         chaque entrée, présente ou \textbf{supprimée} (\champ{Deleted}), son

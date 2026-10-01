@@ -658,3 +658,13 @@ if (Wants 'network_shares') {
         Write-Output ("shareaccess=WacShare|$sid|" + $_.AccessControlType)
     }
 }
+
+# 29. B-031 — network configuration: each present adapter as Windows lists it
+#     live (GUID, description, MAC, IPv4 address and how it was obtained).
+#     Nothing is changed.
+if (Wants 'network_configuration') {
+    Get-NetAdapter -ErrorAction SilentlyContinue | ForEach-Object {
+        $ip = Get-NetIPAddress -InterfaceIndex $_.ifIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue | Select-Object -First 1
+        Write-Output ("adapter=" + $_.InterfaceGuid + '|' + $_.InterfaceDescription + '|' + $_.MacAddress + '|' + $ip.IPAddress + '|' + $ip.PrefixOrigin)
+    }
+}

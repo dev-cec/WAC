@@ -34,6 +34,10 @@
  *   - Network shares: the folders the machine shares (LanmanServer\\Shares),
  *     a way in or out for data; the administrative ones (C$, ADMIN$) are not
  *     stored there.
+ *   - Network configuration, read offline: each adapter (description, driver,
+ *     a forced hardware address), its last IPv4 and IPv6 settings and DHCP
+ *     lease — what the live state no longer shows once the machine is
+ *     unplugged or the lease gone.
  */
 #pragma once
 
@@ -239,4 +243,28 @@ public:
 	void clear();               //!< releases the shares
 private:
 	std::vector<NetworkShare> shares_;
+};
+
+// ------------------------------------------------------------ Network configuration
+
+/*! One network adapter and its last configuration. */
+struct NetworkAdapterConfiguration {
+	std::wstring guid;          //!< the interface's GUID (NetCfgInstanceId)
+	std::vector<std::pair<std::wstring, Json>> adapter; //!< its Control\\Class values (DriverDesc, ProviderName, NetworkAddress…)
+	std::vector<std::pair<std::wstring, Json>> ipv4;    //!< Tcpip\\Parameters\\Interfaces\\{guid}, lease times as dates
+	std::vector<std::pair<std::wstring, Json>> ipv6;    //!< Tcpip6\\Parameters\\Interfaces\\{guid}
+	std::vector<std::pair<std::wstring, Json>> kernel;  //!< NetworkSetup2\\Interfaces\\{guid}\\Kernel (PermanentAddress…)
+	FILETIME ipv4LastWriteUtc = { 0 };  //!< last write of its IPv4 key: its last configuration
+	Json toJson() const;        //!< @return the adapter as a JSON object
+};
+
+//! The machine's network configuration, read offline (network_configuration.json).
+class NetworkConfiguration {
+public:
+	HRESULT getData();          //!< @return ERROR_SUCCESS, or why SYSTEM is missing
+	HRESULT toJson();           //!< @return the result of the write
+	void clear();               //!< releases what was read
+private:
+	std::vector<std::pair<std::wstring, Json>> global_;  //!< Tcpip\\Parameters (Hostname, Domain, SearchList…)
+	std::vector<NetworkAdapterConfiguration> adapters_;
 };

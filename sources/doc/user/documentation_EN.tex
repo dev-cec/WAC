@@ -366,6 +366,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   program_usage: true           # programs launched or used (FeatureUsage, JumplistData, compatibility, pinned)
   devices: true                 # USB and SCSI devices with their dates, portable devices, volume labels
   network_shares: true          # the machine's network shares, path and rights
+  network_configuration: true   # network adapters, last IPv4/IPv6 settings, DHCP leases (offline)
 \end{lstlisting}
 
 \begin{itemize}
@@ -1148,6 +1149,13 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         access control entry its type, mask, SID and name. The administrative
         shares (\texttt{C\$}, \texttt{ADMIN\$}) are not there: Windows does not
         store them.
+  \item[\fichier{network\_configuration.json}] network configuration read in
+        the hives: host name and domain (\champ{Global}), and for each adapter
+        its description and driver, a forced hardware address
+        (\texttt{NetworkAddress}), its current and permanent hardware address,
+        its last IPv4 and IPv6 settings, and its DHCP lease (obtained and end,
+        UTC). It stays readable once the machine is unplugged or the lease
+        expired, which the live state no longer shows.
   \item[\fichier{fat\_volumes.json}] FAT12, FAT16, FAT32 and exFAT volumes, the
         suspect's USB keys and cards included (the collection's volume
         excepted): every entry, present or \textbf{deleted} (\champ{Deleted}),

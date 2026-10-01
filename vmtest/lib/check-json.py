@@ -1824,6 +1824,27 @@ def check_small_file_artefacts(folder):
                f"network_shares.json: the {len(theirs)} share(s) Get-SmbShare lists, with their path; the witness's DACL as Get-SmbShareAccess reads it",
                f"network_shares.json: WAC only {sorted(mine - theirs)}, Windows only {sorted(theirs - mine)}; DACL {sorted(aces)}, Windows {sorted(access)}")
 
+    # Network configuration: each adapter Windows lists, with its description,
+    # its hardware address and its DHCP address, from the offline hives (B-031).
+    netconf = load(folder, "network_configuration.json")
+    if isinstance(netconf, dict) and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            live = [l.strip()[len("adapter="):].split("|") for l in f if l.startswith("adapter=")]
+        mine = {str(a.get("InterfaceGuid", "")).upper(): a for a in netconf.get("Adapters") or []}
+        wrong = []
+        for guid, description, mac, ip, origin in live:
+            a = mine.get(guid.upper(), {})
+            adapter, ipv4, kernel = a.get("Adapter") or {}, a.get("Ipv4") or {}, a.get("Kernel") or {}
+            if adapter.get("DriverDesc") != description:
+                wrong.append(f"{guid}: description {adapter.get('DriverDesc')!r}, Windows {description!r}")
+            if kernel.get("CurrentAddress") != mac:
+                wrong.append(f"{guid}: hardware address {kernel.get('CurrentAddress')}, Windows {mac}")
+            if origin == "Dhcp" and ipv4.get("DhcpIPAddress") != ip:
+                wrong.append(f"{guid}: DHCP address {ipv4.get('DhcpIPAddress')}, Windows {ip}")
+        report(live and not wrong,
+               f"network_configuration.json: the {len(live)} adapter(s) Windows lists, description, hardware address and DHCP address identical",
+               f"network_configuration.json: {wrong[:2]}")
+
     # Cleared log: none live, as Windows sees it; the cleared events recovered.
     if isinstance(events, list) and os.path.exists(path):
         with open(path, encoding="utf-8", errors="replace") as f:
@@ -2562,6 +2583,11 @@ def check_utc_sources(folder):
     return found
 
 
+# Registry value names WAC publishes as Windows writes them (registryNameToJsonKey
+# only drops their separators), whose abbreviation is Windows' choice, not WAC's.
+WINDOWS_VALUE_NAMES = {"NumRssQueues"}
+
+
 def check_key_names(folder):
     """Every key of the output is in PascalCase, English, without abbreviation.
 
@@ -2574,6 +2600,9 @@ def check_key_names(folder):
     def walk(o, name):
         if isinstance(o, dict):
             for k, v in o.items():
+                # Names of Windows' own values, kept as Windows writes them.
+                if k in WINDOWS_VALUE_NAMES:
+                    continue
                 if not re.match(r"^[A-Z][A-Za-z0-9]*$", k) or re.match(r"^(Nb|Num|Tmp)[A-Z]", k) \
                         or re.search(r"(Locale|Nom|Chemin|Taille|Valeur|Fichier)", k):
                     bad.setdefault(k, name)

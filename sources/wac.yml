@@ -66,3 +66,4 @@ artefacts:
   program_usage:              true  # programs each user launched or used: FeatureUsage, JumplistData, compatibility store and layers, RADAR, pinned items
   devices:                    true  # USB and SCSI devices with their dates, portable devices, volume labels per drive letter, device interfaces
   network_shares:             true  # folders the machine shares, with their path and permissions (LanmanServer)
+  network_configuration:      true  # network adapters and their last IPv4/IPv6 settings and DHCP leases, read offline
