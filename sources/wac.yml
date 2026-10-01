@@ -58,3 +58,4 @@ artefacts:
   srum: true                  # SRUDB.dat: bytes sent and received, resources used, per application and user, 30 to 60 days
   bits: true                  # qmgr.db: BITS jobs — URLs, destinations, notification command lines
   fat_volumes: true           # FAT and exFAT volumes, a suspect's USB keys included: every entry, deleted ones too
+  installed_programs:         true  # installed programs (Uninstall) of the machine and of each user

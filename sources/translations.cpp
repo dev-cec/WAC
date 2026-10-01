@@ -110,6 +110,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepSrum, L"Usage des ressources (SRUM)", L"Extracting RESOURCE USAGE (SRUM)" },
 	{ Text::StepBitsJobs, L"Travaux BITS", L"Extracting BITS JOBS" },
 	{ Text::StepFatVolumes, L"Volumes FAT et exFAT", L"Extracting FAT AND EXFAT VOLUMES" },
+	{ Text::StepInstalledPrograms, L"Programmes installés", L"Extracting INSTALLED PROGRAMS (Uninstall)" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },
@@ -161,6 +162,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactSrum, L"Usage des ressources (SRUM)", L"Resource usage (SRUM)" },
 	{ Text::ArtefactBitsJobs, L"Travaux BITS", L"BITS jobs" },
 	{ Text::ArtefactFatVolumes, L"Volumes FAT et exFAT", L"FAT and exFAT volumes" },
+	{ Text::ArtefactInstalledPrograms, L"Programmes installés", L"Installed programs" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },
 
 	{ Text::TimeElapsed,               L"FIN, durée : %1 s",                             L"END, Time elapsed : %1 s" },

@@ -140,6 +140,18 @@ struct AppliConf {
 		bool srum = true;              //!< SRUDB.dat: network and resource usage per application and user, 30 to 60 days
 		bool bits = true;              //!< qmgr.db: BITS jobs, their files and notification command lines
 		bool fatVolumes = true;        //!< FAT and exFAT volumes (a suspect's keys included): entries, deleted ones too
+		bool installedPrograms = true;  //!< installed programs: Uninstall keys of the machine and of each user
+
+		/*! Whether an artefact asked for reads the users' hives (ntuser.dat,
+		 *  usrClass.dat): they are copied then. They used to be copied only
+		 *  with `registry` — a configuration of typed_paths alone gave an
+		 *  empty typed_paths.json, read as "nothing typed". A new artefact read
+		 *  in a user's hive is added here.
+		 *  @return true if one of them is switched on */
+		bool needsUserHives() const {
+			return registry || persistence || officeTrustRecords || typedPaths || wordWheelQuery
+			    || rootCertificates || internetSettings || installedPrograms;
+		}
 	} artefacts;
 	RunMode mode = RunMode::Full; //!< what this run does (see RunMode)
 	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)

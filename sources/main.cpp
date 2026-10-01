@@ -49,6 +49,7 @@
 #include "security_hive.h"
 #include "persistence.h"
 #include "registry_lot2.h"
+#include "registry_lot3.h"
 #include "recent_docs.h"
 #include "jumplist_automatic.h"
 #include "jumplist_custom.h"
@@ -377,7 +378,7 @@ void extractProfileArtefacts() {
 	HRESULT hresult;
 	printStep(Text::StepUserHives);
 	log(3, L"🔈ExtractUserHivesRaw");
-	if (!conf.artefacts.registry) writeConsole(text(Text::NotRequested, { L"artefacts.registry" }) + L"\n");
+	if (!conf.artefacts.needsUserHives()) writeConsole(text(Text::NotRequested, { L"artefacts.registry" }) + L"\n");
 	else {
 		hresult = ExtractUserHivesRaw();      // S_FALSE = no profile, or missing files (tolerated)
 		if (FAILED(hresult)) printError(hresult);   // the other artefacts stay collectable
@@ -941,6 +942,9 @@ void convertArtefacts(bool systemAvailable) {
 	                         L"artefacts.internet_settings", Text::StepInternetSettingsSet);
 	convertFileArtefact<Firewall>(conf.artefacts.firewall, "firewall.json", Text::ArtefactFirewall,
 	                         L"artefacts.firewall", Text::StepFirewall);
+
+	convertFileArtefact<InstalledPrograms>(conf.artefacts.installedPrograms, "installed_programs.json", Text::ArtefactInstalledPrograms,
+	                         L"artefacts.installed_programs", Text::StepInstalledPrograms);
 
 	/* SYSTEM INFORMATION, offline.
 	   OUTSIDE the single-exit block above, and not inside it: even without a

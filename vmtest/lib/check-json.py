@@ -1639,6 +1639,21 @@ def check_small_file_artefacts(folder):
                    f"recentdocs.json: tracker block of {link.rsplit(chr(92), 1)[-1]} = the target's NTFS object identifier (fsutil), dated {t.get('DroidFileCreatedUtc')}",
                    f"recentdocs.json: tracker {mine}, fsutil {theirs}")
 
+    # Installed programs: the witness program with its values, and as many
+    # programs per Uninstall key as Windows lists (B-031).
+    programs = load(folder, "installed_programs.json")
+    if isinstance(programs, list) and "program" in reference and "programs" in reference:
+        key, name, publisher, version, date = reference["program"].split("|")
+        witness = next((p for p in programs if p.get("KeyName") == key and p.get("Scope") == "Machine"), {})
+        machine, machine32, sid, user = reference["programs"].split("|")
+        counts = collections.Counter((p.get("Scope"), p.get("SID", "")) for p in programs)
+        mine = (counts[("Machine", "")], counts[("Machine (32-bit)", "")], counts[("User", sid)])
+        theirs = (int(machine), int(machine32), int(user))
+        report((witness.get("DisplayName"), witness.get("Publisher"), witness.get("DisplayVersion"), witness.get("InstallDate")) == (name, publisher, version, date)
+               and witness.get("KeyLastWriteUtc") and mine == theirs,
+               f"installed_programs.json: the witness program with its values; programs per key {mine} as Windows lists them",
+               f"installed_programs.json: witness {witness or 'absent'}; programs per key {mine}, Windows {theirs}")
+
     # Cleared log: none live, as Windows sees it; the cleared events recovered.
     if isinstance(events, list) and os.path.exists(path):
         with open(path, encoding="utf-8", errors="replace") as f:

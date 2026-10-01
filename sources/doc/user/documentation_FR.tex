@@ -363,6 +363,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   srum: true            # SRUDB.dat : réseau et ressources par application et utilisateur, 30 à 60 jours
   bits: true            # qmgr.db : travaux BITS, URL, destinations, commandes de notification
   fat_volumes: true     # volumes FAT et exFAT, clés USB du suspect comprises : entrées, supprimées aussi
+  installed_programs: true  # programmes installés (Uninstall) de la machine et de chaque utilisateur
 \end{lstlisting}
 
 \begin{itemize}
@@ -1089,6 +1090,12 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
   \item[\fichier{firewall.json}] règles du pare-feu (nom, action, sens, ports,
         programme ; tous les champs dans \champ{Fields}) et réglages des profils
         domaine, privé et public.
+  \item[\fichier{installed\_programs.json}] programmes installés, lus dans les
+        clés \texttt{Uninstall} de la machine (64 et 32~bits) et de chaque
+        utilisateur (\champ{Scope}) : toutes leurs valeurs (nom, éditeur,
+        version, dossier, commande de désinstallation, \champ{InstallDate} --- le
+        jour seul, tel qu'écrit) et la date d'écriture de la clé. Un outil
+        d'accès à distance installé, puis désinstallé, y laisse souvent sa trace.
   \item[\fichier{fat\_volumes.json}] volumes FAT12, FAT16, FAT32 et exFAT, clés
         USB et cartes du suspect comprises (le volume de la collecte excepté) :
         chaque entrée, présente ou \textbf{supprimée} (\champ{Deleted}), son

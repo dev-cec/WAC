@@ -461,3 +461,21 @@ if (Wants 'setupapi', 'defender') {
     $mplog = @(Get-ChildItem -Force 'C:\ProgramData\Microsoft\Windows Defender\Support\MPLog-*.log' -ErrorAction SilentlyContinue).Count
     Write-Output "mplog=$mplog"
 }
+
+# 19. B-031 — installed programs: a witness program in the machine's Uninstall
+#     key (harmless: values only, nothing installed), and the number of
+#     programs Windows lists in each Uninstall key — machine, 32-bit, user.
+if (Wants 'installed_programs') {
+    $witness = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\WacTestProgram'
+    New-Item -Force $witness | Out-Null
+    Set-ItemProperty $witness -Name DisplayName -Value 'WAC test program'
+    Set-ItemProperty $witness -Name Publisher -Value 'WAC test publisher'
+    Set-ItemProperty $witness -Name DisplayVersion -Value '1.2.3'
+    Set-ItemProperty $witness -Name InstallDate -Value '20260930'
+    Set-ItemProperty $witness -Name InstallLocation -Value 'C:\wactest\wac-program'
+    Write-Output "program=WacTestProgram|WAC test program|WAC test publisher|1.2.3|20260930"
+    $machine = @(Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall' -ErrorAction SilentlyContinue).Count
+    $machine32 = @(Get-ChildItem 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall' -ErrorAction SilentlyContinue).Count
+    $user = @(Get-ChildItem "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Windows\CurrentVersion\Uninstall" -ErrorAction SilentlyContinue).Count
+    Write-Output "programs=$machine|$machine32|$wacSid|$user"
+}

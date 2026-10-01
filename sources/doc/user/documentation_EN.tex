@@ -358,6 +358,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   srum: true            # SRUDB.dat: network and resources per application and user, 30 to 60 days
   bits: true            # qmgr.db: BITS jobs, URLs, destinations, notification command lines
   fat_volumes: true     # FAT and exFAT volumes, the suspect's USB keys included: entries, deleted ones too
+  installed_programs: true  # installed programs (Uninstall) of the machine and of each user
 \end{lstlisting}
 
 \begin{itemize}
@@ -1068,6 +1069,12 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
   \item[\fichier{firewall.json}] firewall rules (name, action, direction, ports,
         program; every field in \champ{Fields}) and the domain, private and
         public profile settings.
+  \item[\fichier{installed\_programs.json}] installed programs, read in the
+        \texttt{Uninstall} keys of the machine (64- and 32-bit) and of each user
+        (\champ{Scope}): all their values (name, publisher, version, folder,
+        uninstall command, \champ{InstallDate} --- the day only, as written) and
+        the key's write time. A remote access tool installed, then uninstalled,
+        often leaves its trace there.
   \item[\fichier{fat\_volumes.json}] FAT12, FAT16, FAT32 and exFAT volumes, the
         suspect's USB keys and cards included (the collection's volume
         excepted): every entry, present or \textbf{deleted} (\champ{Deleted}),
