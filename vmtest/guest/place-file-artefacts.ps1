@@ -670,9 +670,13 @@ if (Wants 'network_configuration') {
 }
 
 # 30. B-031 — event log configuration: each log as Windows lists it live, with
-#     its state (enabled or not). Nothing is changed.
+#     its state (enabled or not), and each boot ETW session with its Start.
+#     Nothing is changed.
 if (Wants 'event_log_configuration') {
     Get-WinEvent -ListLog * -ErrorAction SilentlyContinue | ForEach-Object {
         Write-Output ("eventlog=" + $_.LogName + '|' + $_.IsEnabled)
+    }
+    Get-AutologgerConfig -ErrorAction SilentlyContinue | ForEach-Object {
+        Write-Output ("autologger=" + $_.Name + '|' + $_.Start)
     }
 }

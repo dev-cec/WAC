@@ -1867,6 +1867,15 @@ def check_small_file_artefacts(folder):
         report(live and not wrong,
                f"event_log_configuration.json: the {len(live)} log(s) Get-WinEvent lists, each with the same enabled state",
                f"event_log_configuration.json: {len(wrong)} difference(s), {wrong[:3]}")
+        with open(path, encoding="utf-8", errors="replace") as f:
+            sessions = [l.strip()[len("autologger="):].rsplit("|", 1) for l in f if l.startswith("autologger=")]
+        boot = {str(c.get("Name", "")).lower(): c for c in logconf if c.get("Source") == "WMI\\Autologger"}
+        wrong = [f"{name}: Start {boot.get(name.lower(), {}).get('Start')}, Windows {start}"
+                 for name, start in sessions
+                 if name.lower() not in boot or str(boot[name.lower()].get("Start", "")) != start]  # no Start value: both empty
+        report(sessions and not wrong,
+               f"event_log_configuration.json: the {len(sessions)} boot ETW session(s) Get-AutologgerConfig lists, same Start",
+               f"event_log_configuration.json: {len(wrong)} session difference(s), {wrong[:3]}")
 
     # Cleared log: none live, as Windows sees it; the cleared events recovered.
     if isinstance(events, list) and os.path.exists(path):

@@ -67,4 +67,4 @@ artefacts:
   devices:                    true  # USB and SCSI devices with their dates, portable devices, volume labels per drive letter, device interfaces
   network_shares:             true  # folders the machine shares, with their path and permissions (LanmanServer)
   network_configuration:      true  # network adapters and their last IPv4/IPv6 settings and DHCP leases, read offline
-  event_log_configuration:    true  # each event log channel's state: enabled, size, retention, access (a disabled channel is a trace)
+  event_log_configuration:    true  # each event log and boot ETW session: enabled, size, retention, access (a disabled one is a trace)

@@ -841,7 +841,8 @@ HRESULT EventLogConfiguration::getData() {
 	auto read = [this](ORHKEY root, const std::wstring& base, const wchar_t* source) {
 		for (const std::wstring& name : subkeys(root, base)) {
 			// Under Services\\EventLog, "Parameters" and "State" are the service's
-			// own keys, not logs: its DLL is in services.json.
+			// own keys, not logs: its DLL is in services.json. (No Autologger
+			// session bears these names.)
 			if (name == L"Parameters" || name == L"State") continue;
 			ORHKEY key = NULL;
 			if (OROpenKey(root, (base + L"\\" + name).c_str(), &key) != ERROR_SUCCESS) continue;
@@ -856,6 +857,9 @@ HRESULT EventLogConfiguration::getData() {
 	};
 	if (conf.Software) read(conf.Software, L"Microsoft\\Windows\\CurrentVersion\\WINEVT\\Channels", L"WINEVT\\Channels");
 	if (conf.CurrentControlSet) read(conf.CurrentControlSet, L"Services\\EventLog", L"Services\\EventLog");
+	// The ETW sessions started at boot (EventLog-Security, DefenderApiLogger…):
+	// Start 0 stops one, a known way to blind the logs without touching them.
+	if (conf.CurrentControlSet) read(conf.CurrentControlSet, L"Control\\WMI\\Autologger", L"WMI\\Autologger");
 	return ERROR_SUCCESS;
 }
 

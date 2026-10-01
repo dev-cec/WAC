@@ -367,7 +367,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   devices: true                 # USB and SCSI devices with their dates, portable devices, volume labels
   network_shares: true          # the machine's network shares, path and rights
   network_configuration: true   # network adapters, last IPv4/IPv6 settings, DHCP leases (offline)
-  event_log_configuration: true # state of each event log: enabled, size, retention, access (offline)
+  event_log_configuration: true # state of each event log and boot ETW session: enabled, size, retention, access (offline)
 \end{lstlisting}
 
 \begin{itemize}
@@ -1162,8 +1162,11 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         Channels}: \champ{Enabled}, \champ{Type}, \champ{OwningPublisher},
         access rights \champ{ChannelAccess}, size and retention when set) and
         the classic logs (\texttt{Services\textbackslash EventLog}: file,
-        \champ{MaxSize}, \champ{Retention}, access). An intruder who disables a
-        channel, shrinks a log or opens its access leaves the trace there;
+        \champ{MaxSize}, \champ{Retention}, access) and the ETW sessions
+        started at boot (\texttt{WMI\textbackslash Autologger}: \champ{Start},
+        file, size). An intruder who disables a channel, shrinks a log, opens
+        its access or stops a session such as \texttt{EventLog-Security} leaves
+        the trace there;
         \champ{KeyLastWrite} dates the last change of each.
   \item[\fichier{fat\_volumes.json}] FAT12, FAT16, FAT32 and exFAT volumes, the
         suspect's USB keys and cards included (the collection's volume

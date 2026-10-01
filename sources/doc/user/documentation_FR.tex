@@ -372,7 +372,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   devices: true                 # périphériques USB et SCSI et leurs dates, portables, noms de volumes
   network_shares: true          # partages réseau de la machine, chemin et droits
   network_configuration: true   # cartes réseau, dernière configuration IPv4/IPv6, baux DHCP (hors ligne)
-  event_log_configuration: true # état de chaque journal d'événements : actif, taille, rétention, accès (hors ligne)
+  event_log_configuration: true # état de chaque journal et session ETW de démarrage : actif, taille, rétention, accès (hors ligne)
 \end{lstlisting}
 
 \begin{itemize}
@@ -1188,9 +1188,11 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \champ{Type}, \champ{OwningPublisher}, droits d'accès
         \champ{ChannelAccess}, taille et rétention si elles sont fixées) et les
         journaux classiques (\texttt{Services\textbackslash EventLog} :
-        fichier, \champ{MaxSize}, \champ{Retention}, accès). Un intrus qui
-        coupe un canal, réduit un journal ou en ouvre l'accès y laisse sa
-        trace ; \champ{KeyLastWrite} date la dernière modification de chacun.
+        fichier, \champ{MaxSize}, \champ{Retention}, accès) et les sessions
+        ETW lancées au démarrage (\texttt{WMI\textbackslash Autologger} :
+        \champ{Start}, fichier, taille). Un intrus qui coupe un canal, réduit
+        un journal, en ouvre l'accès ou arrête une session comme
+        \texttt{EventLog-Security} y laisse sa trace ; \champ{KeyLastWrite} date la dernière modification de chacun.
   \item[\fichier{fat\_volumes.json}] volumes FAT12, FAT16, FAT32 et exFAT, clés
         USB et cartes du suspect comprises (le volume de la collecte excepté) :
         chaque entrée, présente ou \textbf{supprimée} (\champ{Deleted}), son
