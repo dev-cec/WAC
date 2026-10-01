@@ -2,6 +2,7 @@
  *  \brief Registry artefacts of the third lot (see registry_lot3.h).
  */
 #include "registry_lot3.h"
+#include "idList.h"
 
 namespace {
 
@@ -148,3 +149,73 @@ HRESULT DefenderConfiguration::toJson() {
 }
 
 void DefenderConfiguration::clear() { exclusions_.clear(); settings_.clear(); }
+
+// ------------------------------------------------------------ Explorer RecentDocs
+
+namespace {
+
+/*! Reads one RecentDocs list: the values named by MRUListEx, most recent
+ *  first. A value is the file's name in UTF-16, then the shell item of the
+ *  shortcut Explorer made in Recent.
+ *  @param key the list's key
+ *  @param sid,extension what the entries belong to
+ *  @param out receives the entries */
+void readRecentDocsList(ORHKEY key, const std::wstring& sid, const std::wstring& extension,
+                        std::vector<ExplorerRecentDoc>& out) {
+	std::vector<unsigned int> order;
+	if (readMruListEx(key, order) != ERROR_SUCCESS) return;
+	const FILETIME written = lastWrite(key);
+	unsigned position = 0;
+	for (unsigned int id : order) {
+		std::vector<BYTE> data;
+		if (getRegBinaryValue(key, nullptr, std::to_wstring(id).c_str(), data) != ERROR_SUCCESS) continue;
+		ExplorerRecentDoc e;
+		e.sid = sid;
+		e.extension = extension;
+		e.mruPosition = position++;
+		e.name = readWideZ(data.data(), data.size(), 0);
+		e.keyLastWriteUtc = written;
+		// The shell item, bounded by its own size and by the value.
+		const size_t at = (e.name.size() + 1) * sizeof(wchar_t);
+		if (at + 2 <= data.size()) {
+			const unsigned short itemSize = *reinterpret_cast<const unsigned short*>(data.data() + at);
+			if (itemSize >= 3 && itemSize <= data.size() - at) {
+				std::vector<BYTE> item(data.begin() + at, data.begin() + at + itemSize);
+				e.shortcut = IdList(item.data(), 2).toJson();
+			}
+		}
+		out.push_back(std::move(e));
+	}
+}
+
+} // namespace
+
+Json ExplorerRecentDoc::toJson() const {
+	Json o = Json::obj();
+	addUser(o, sid);
+	o.add(L"Extension", Json::str(extension));
+	o.add(L"MruPosition", Json::num(mruPosition));
+	o.add(L"Name", Json::str(name));
+	o.add(L"Shortcut", shortcut);
+	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
+	return o;
+}
+
+HRESULT ExplorerRecentDocs::getData() {
+	const std::wstring RECENT_DOCS = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RecentDocs";
+	forEachProfileHive(L"\\ntuser.dat", [this, &RECENT_DOCS](ORHKEY root, const std::wstring& sid) {
+		ORHKEY key = NULL;
+		if (OROpenKey(root, RECENT_DOCS.c_str(), &key) != ERROR_SUCCESS) return;
+		readRecentDocsList(key, sid, L"", entries_);
+		ORCloseKey(key);
+		for (const std::wstring& extension : subkeys(root, RECENT_DOCS)) {
+			if (OROpenKey(root, (RECENT_DOCS + L"\\" + extension).c_str(), &key) != ERROR_SUCCESS) continue;
+			readRecentDocsList(key, sid, extension, entries_);
+			ORCloseKey(key);
+		}
+	});
+	return ERROR_SUCCESS;
+}
+
+HRESULT ExplorerRecentDocs::toJson() { return writeList("explorer_recent_docs.json", entries_); }
+void ExplorerRecentDocs::clear() { entries_.clear(); }

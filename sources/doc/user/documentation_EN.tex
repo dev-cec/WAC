@@ -360,6 +360,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   fat_volumes: true     # FAT and exFAT volumes, the suspect's USB keys included: entries, deleted ones too
   installed_programs: true  # installed programs (Uninstall) of the machine and of each user
   defender_configuration: true  # Microsoft Defender exclusions and protection settings
+  explorer_recent_docs: true    # files each user opened (Explorer's RecentDocs)
 \end{lstlisting}
 
 \begin{itemize}
@@ -1082,6 +1083,13 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         \texttt{Policy}), which an intruder adds so that their tools are not
         scanned, and the values that set or switch off protection (real time,
         tamper protection, sample submission\ldots).
+  \item[\fichier{explorer\_recent\_docs.json}] files each user opened, as
+        Explorer keeps them (\texttt{RecentDocs}): by extension
+        (\champ{Extension}) and for every extension together, with their rank
+        (\champ{MruPosition}, 0 for the most recent), the shell item of the
+        shortcut made in Recent, and the list's write time, which is when the
+        file at position~0 was opened. The name outlives the file and the
+        shortcut.
   \item[\fichier{fat\_volumes.json}] FAT12, FAT16, FAT32 and exFAT volumes, the
         suspect's USB keys and cards included (the collection's volume
         excepted): every entry, present or \textbf{deleted} (\champ{Deleted}),

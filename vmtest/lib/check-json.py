@@ -1667,6 +1667,18 @@ def check_small_file_artefacts(folder):
                f"defender_configuration.json: the {len(theirs)} exclusion(s) Defender lists, of their kind, the 3 witnesses among them",
                f"defender_configuration.json: WAC only {sorted(mine - theirs)[:3]}, Defender only {sorted(theirs - mine)[:3]}")
 
+    # Explorer's RecentDocs: the witness file, added by the shell, first of its
+    # extension's list and of the list of every extension (B-031).
+    recent = load(folder, "explorer_recent_docs.json")
+    if isinstance(recent, list) and "recentdoc" in reference:
+        sid, extension, name = reference["recentdoc"].split("|")
+        mine = {(e.get("Extension", ""), e.get("MruPosition")) for e in recent
+                if e.get("SID") == sid and e.get("Name") == name}
+        shortcut = next((e.get("Shortcut") for e in recent if e.get("SID") == sid and e.get("Name") == name), {})
+        report({(extension, 0), ("", 0)} <= mine and bool(shortcut),
+               f"explorer_recent_docs.json: {name} first of the {extension} list and of the list of every extension, with its shortcut's shell item",
+               f"explorer_recent_docs.json: {name} at {sorted(mine)} (expected first of {extension} and of the whole list)")
+
     # Cleared log: none live, as Windows sees it; the cleared events recovered.
     if isinstance(events, list) and os.path.exists(path):
         with open(path, encoding="utf-8", errors="replace") as f:

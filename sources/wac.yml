@@ -60,3 +60,4 @@ artefacts:
   fat_volumes: true           # FAT and exFAT volumes, a suspect's USB keys included: every entry, deleted ones too
   installed_programs:         true  # installed programs (Uninstall) of the machine and of each user
   defender_configuration:     true  # Microsoft Defender exclusions and protection settings, its own and by policy
+  explorer_recent_docs:       true  # files each user opened, by extension, most recent first (Explorer's RecentDocs)

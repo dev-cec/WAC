@@ -365,6 +365,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   fat_volumes: true     # volumes FAT et exFAT, clés USB du suspect comprises : entrées, supprimées aussi
   installed_programs: true  # programmes installés (Uninstall) de la machine et de chaque utilisateur
   defender_configuration: true  # exclusions et réglages de protection de Microsoft Defender
+  explorer_recent_docs: true    # fichiers ouverts par chaque utilisateur (RecentDocs de l'Explorateur)
 \end{lstlisting}
 
 \begin{itemize}
@@ -1103,6 +1104,13 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \texttt{Policy}), qu'un intrus ajoute pour que ses outils ne soient pas
         analysés, et les valeurs qui règlent ou coupent la protection (temps
         réel, protection contre la falsification, envoi d'échantillons\ldots).
+  \item[\fichier{explorer\_recent\_docs.json}] fichiers ouverts par chaque
+        utilisateur, tels que l'Explorateur les retient (\texttt{RecentDocs}) :
+        par extension (\champ{Extension}) et pour toutes extensions confondues,
+        avec leur rang (\champ{MruPosition}, 0 pour le plus récent), l'élément de
+        shell du raccourci créé dans Recent, et la date d'écriture de la liste,
+        qui est celle de l'ouverture du fichier en position~0. Le nom survit au
+        fichier et au raccourci.
   \item[\fichier{fat\_volumes.json}] volumes FAT12, FAT16, FAT32 et exFAT, clés
         USB et cartes du suspect comprises (le volume de la collecte excepté) :
         chaque entrée, présente ou \textbf{supprimée} (\champ{Deleted}), son

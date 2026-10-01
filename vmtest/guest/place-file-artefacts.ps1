@@ -490,3 +490,25 @@ if (Wants 'defender_configuration') {
         Write-Output ("exclusions=" + $kind[0] + '|' + (@($kind[1] | Where-Object { $_ }) -join '|'))
     }
 }
+
+# 21. B-031 — Explorer's RecentDocs: a file of a unique extension (.wacrd)
+#     added to the user's recent documents by the shell itself
+#     (SHAddToRecentDocs), in their interactive session. Harmless: a text file
+#     of the test folder, and the shortcut Explorer makes in Recent.
+if (Wants 'explorer_recent_docs') {
+    $doc = 'C:\Users\wac\Documents\wac-recent-witness.wacrd'
+    Set-Content -Path $doc -Value 'a recent document'
+    $script = 'C:\wactest\recentdocs-user.ps1'
+    Set-Content $script @'
+Add-Type -Namespace Wac -Name Shell -MemberDefinition '[DllImport("shell32.dll", CharSet = CharSet.Unicode)] public static extern void SHAddToRecentDocs(uint flags, string path);'
+[Wac.Shell]::SHAddToRecentDocs(3, 'C:\Users\wac\Documents\wac-recent-witness.wacrd')
+Start-Sleep 3
+'@
+    $action = New-ScheduledTaskAction -Execute powershell.exe -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File $script"
+    $principal = New-ScheduledTaskPrincipal -UserId 'wac' -LogonType Interactive
+    Register-ScheduledTask -TaskName WacRecentDocs -Action $action -Principal $principal -Force | Out-Null
+    Start-ScheduledTask -TaskName WacRecentDocs
+    Start-Sleep 15
+    Unregister-ScheduledTask -TaskName WacRecentDocs -Confirm:$false
+    Write-Output "recentdoc=$wacSid|.wacrd|wac-recent-witness.wacrd"
+}

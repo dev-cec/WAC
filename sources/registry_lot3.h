@@ -14,6 +14,8 @@
  *     addresses) an intruder adds so that their tools are not scanned, and the
  *     values that switch protection off — set in Defender's own settings or
  *     by a policy.
+ *   - Explorer's RecentDocs: the files each user opened, by extension, most
+ *     recent first — the names survive the files and the shortcuts of Recent.
  */
 #pragma once
 
@@ -75,4 +77,27 @@ public:
 private:
 	std::vector<DefenderExclusion> exclusions_;
 	std::vector<DefenderSettings> settings_;
+};
+
+// ------------------------------------------------------------ Explorer RecentDocs
+
+/*! One file of a user's RecentDocs list. */
+struct ExplorerRecentDoc {
+	std::wstring sid;
+	std::wstring extension;     //!< the subkey (".docx", "Folder"); empty for the list of every extension
+	unsigned mruPosition = 0;   //!< position in its list, 0 for the most recent (MRUListEx)
+	std::wstring name;          //!< the file's name, as Explorer recorded it
+	Json shortcut = Json::obj();//!< the shell item that follows: the shortcut created in Recent
+	FILETIME keyLastWriteUtc = { 0 };   //!< the list key's last write: when the file at position 0 was opened
+	Json toJson() const;        //!< @return the entry as a JSON object
+};
+
+//! RecentDocs of every user (explorer_recent_docs.json).
+class ExplorerRecentDocs {
+public:
+	HRESULT getData();          //!< @return ERROR_SUCCESS, even without any entry
+	HRESULT toJson();           //!< @return the result of the write
+	void clear();               //!< releases the entries
+private:
+	std::vector<ExplorerRecentDoc> entries_;
 };
