@@ -612,6 +612,13 @@ HRESULT ExtractNtfsMetadataRaw() {
 			if (FAILED(ExtractDirectoryTreeRaw(volume, L"\\$Extend\\$RmMetadata\\$TxfLog",
 			                                   exhibitTarget(drive + L"\\$Extend\\$RmMetadata\\$TxfLog"),
 			                                   {}, &extracted, 0, &reading))) result = S_FALSE;
+			/* $Tops keeps its content in a NAMED stream, $T, which the tree's
+			   copy of the unnamed one leaves out. A volume without TxF metadata
+			   has none: not an error. */
+			RawHiveExtraction tops;
+			if (SUCCEEDED(ExtractStreamRaw(volume, L"\\$Extend\\$RmMetadata\\$TxfLog\\$Tops", L"$T",
+			                               exhibitTarget(drive + L"\\$Extend\\$RmMetadata\\$TxfLog\\$Tops_$T"), false, tops)))
+				reading.push_back(std::move(tops));
 		}
 		RawHiveSetProgress(nullptr);
 		printProgressEnd();

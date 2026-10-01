@@ -1396,7 +1396,7 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \path|$MFT| a déjà oubliés.
         La \path|$MFT|, le journal des modifications, \path|$LogFile| (journal
         de transactions, non converti) et \path|$TxfLog| (journal de NTFS
-        transactionnel, journal CLFS et ses conteneurs, non converti) sont en
+        transactionnel, journal CLFS, ses conteneurs et le flux \path|$Tops:$T|, non converti) sont en
         outre copiés bruts dans la consigne, pour refaire plus tard la
         chronologie avec un autre outil.
   \item[\fichier{ntfs\_volumes.json}] chaque volume NTFS fixe, lu dans son

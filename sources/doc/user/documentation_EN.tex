@@ -1356,7 +1356,7 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         has already forgotten.
         The \path|$MFT|, the change journal, \path|$LogFile| (the
         transaction journal, not converted) and \path|$TxfLog| (the journal of
-        transactional NTFS, a CLFS log and its containers, not converted) are
+        transactional NTFS, a CLFS log, its containers and the \path|$Tops:$T| stream, not converted) are
         also copied raw into the exhibit store, to rebuild the timeline later
         with another tool.
   \item[\fichier{ntfs\_volumes.json}] every fixed NTFS volume, read in its
