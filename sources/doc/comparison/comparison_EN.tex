@@ -128,7 +128,7 @@ ShimCache --- AppCompat\-Cache\-Parser & 232 entries & identical & misleading ex
 Recycle bin --- RBCmd & 19 files & identical & --- \\
 SRUM --- SrumECmd & 60,804 rows & identical & 17 wrong energy rows (dissect) \\
 Registry --- RECmd & 9 artefacts & identical & 4 hives rolled back to an older state \\
-Collection --- KAPE & 1,130 common files & SHA-1 identical & --- \\
+Collection --- KAPE & 1,173 common files & SHA-1 identical & --- \\
 \bottomrule
 \end{longtable}
 
@@ -175,8 +175,8 @@ date, and give the drive letter; the EZ tools give neither.
 \toprule
 \textbf{Tool, setting} & \textbf{Time} & \textbf{Exhibits} & \textbf{Volume} \\
 \midrule\endhead
-KAPE, \texttt{KapeTriage} & 40\,s & 1,198 & 0.91\,GB \\
-\wac{}, kit, no binaries & 197\,s & 2,463 & 1.63\,GB \\
+KAPE, \texttt{KapeTriage} & 41\,s & 1,217 & 0.91\,GB \\
+\wac{}, kit, no binaries & 212\,s & 2,622 & 1.69\,GB \\
 \wac{}, kit, no event logs & 18\,s & 817 & --- \\
 \wac{}, full kit (\texttt{binary: unverified}) & 454\,s & 61,294 & 3.6\,GB \\
 \bottomrule
@@ -249,11 +249,13 @@ whose signature does not hold, which KAPE does not do.
         installed programs, Defender exclusions, RecentDocs, MountPoints2, known
         networks, the NTFS last-access update setting, shutdown time, among
         others. Item B-031.
-  \item[File coverage] KapeTriage copies files \wac{} does not take: shortcuts
-        outside Recent (Start menu, Desktop, taskbar), the Default profile's hive,
-        \fichier{\$Secure:\$SDS} and other NTFS metadata, Defender traces (item
-        B-032); browsers and the Windows timeline, already planned (B-016,
-        B-010).
+  \item[File coverage] Against \wac{}, KapeTriage now only copies the browsers
+        and the Windows timeline, planned (B-016, B-010), and the
+        \fichier{desktop.ini} files, left out. The shortcuts outside Recent, the
+        Default profile's hive, \fichier{\$Secure:\$SDS}, \fichier{\$Boot},
+        \fichier{\$UsnJrnl:\$Max}, \fichier{\$TxfLog}, Defender's WPP traces
+        and the DPAPI master keys, which it alone took, are collected and
+        converted since item B-032.
   \item[Speed on small artefacts and in collection] See the previous chapter.
   \item[Ready-to-read interpretations] The EZ tools split and name some fields:
         executable, date and description of a SRUM application, known folder

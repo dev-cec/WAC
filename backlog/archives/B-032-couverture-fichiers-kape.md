@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P2 | moyen |
+| fait (3b0a5c0 … 563cc8b) | P2 | moyen |
 
 ## Pourquoi
 B-015 a confronté la collecte de WAC (configuration du kit, sans binaires) à celle de KAPE, cible KapeTriage, sur la VM (`vmtest/kape-compare.sh --no-binary`). 1 130 fichiers communs, SHA-1 identiques sauf ceux écrits entre les deux collectes. Chaque écart de couverture doit être ajouté ou écarté avec sa raison.
@@ -56,3 +56,5 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-01 : point 5 commité (39fe780).
 - 2026-10-01 : point 6 — `user_shell_folders.json` (clé `user_shell_folders`) : chaque valeur de User Shell Folders de chaque profil, brute et résolue (`%USERPROFILE%` = chemin du profil ; un partage ou une autre variable d'utilisateur ne sont pas suivis), date de la clé. Les raccourcis suivent un Bureau redirigé sur un disque local (`shortcutLocations()`, partagé par collecte et conversion). Référence : Bureau de « wac » redirigé vers `OneDrive\Desktop` dans la VM, ses 20 valeurs lues non développées par Windows identiques, le raccourci posé sur le Bureau redirigé retrouvé (93 raccourcis). Harnais : une valeur du registre posée juste avant la collecte doit être écrite (`RegistryKey.Flush`, RegFlushKey), sans quoi la copie brute de la ruche ne l'a pas encore.
 - 2026-10-01 : cycle complet — un seul ❌, hors WAC : firewall.json de la seconde collecte (--collect, ~10 min après la référence) compte 505 règles contre 504 relevées au début ; Edge WebView s'est mis à jour entre-temps et a créé « Microsoft Edge (mDNS-In) ». La première collecte en compte bien 504. Le contrôle compare à un compte pris au début du cycle : fragilité du harnais à corriger (compter avant chaque collecte).
+- 2026-10-01 : point 6 commité (bf05868). `$TxfLog\$Tops:$T`, flux nommé que la copie récursive laissait, copié brut (563cc8b).
+- 2026-10-01 : **close**. kape-compare.sh --no-binary (results/kape/KapeTriage-nobinary-20261001-195541) : KAPE seul = navigateurs (35, B-016), ActivitiesCache (3, B-010), desktop.ini (5, écartés) ; ez-compare.py les nomme ainsi, plus aucune famille « KAPE seul » non classée. Les 5 journaux SRU qui diffèrent sont ceux qu'ESE a fait tourner entre les deux collectes, tout le dossier étant pris des deux côtés. Cycle complet vert (results/20261001-200101 : 0 ❌, 389 ✅), innocuité et déterminisme compris. Dossier de comparaison FR/EN mis à jour (couverture, tableau de collecte). Commits : 3b0a5c0 (raccourcis), c8a9200 (refactor addUser), 36f0e14 (profil Default), 5c714fa (descripteurs de sécurité), 5b7dc5f (harnais), bbcfeef (volumes NTFS), 277ff6b (série des raccourcis), 273c0b0 (traces WPP), 39fe780 (clés DPAPI), bf05868 (User Shell Folders), 563cc8b ($Tops:$T).

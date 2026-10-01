@@ -901,6 +901,10 @@ def compare_registry(folder):
 def kape_category(path):
     """A file's family, for the coverage table: what an analyst would call it."""
     p = path.lower()
+    # What KAPE alone takes and B-032 classified: left out with its reason, or
+    # an artefact of its own in the backlog.
+    if p.endswith("\\desktop.ini"):
+        return "classified: desktop.ini, no investigative value (B-032)"
     rules = (("live observation", "live state (processes, sessions, network, clock)"),
              ("\\winevt\\", "event logs"), ("$mft", "NTFS metadata"), ("$usnjrnl", "NTFS metadata"),
              ("$logfile", "NTFS metadata"), ("$boot", "NTFS metadata"), ("$secure", "NTFS metadata"),
@@ -911,9 +915,9 @@ def kape_category(path):
              ("\\start menu\\", "shortcuts outside Recent (Start menu, Desktop, Quick Launch)"),
              ("\\quick launch\\", "shortcuts outside Recent (Start menu, Desktop, Quick Launch)"),
              ("\\desktop\\", "shortcuts outside Recent (Start menu, Desktop, Quick Launch)"),
-             ("\\edge\\", "web browsers"), ("\\webcache\\", "web browsers"), ("\\inetcookies\\", "web browsers"),
-             ("\\internet explorer\\", "web browsers"), ("\\history\\", "web browsers"),
-             ("activitiescache", "Windows timeline (ActivitiesCache)"), ("\\protect\\", "DPAPI master keys"),
+             ("\\edge\\", "web browsers (B-016)"), ("\\webcache\\", "web browsers (B-016)"), ("\\inetcookies\\", "web browsers (B-016)"),
+             ("\\internet explorer\\", "web browsers (B-016)"), ("\\history\\", "web browsers (B-016)"),
+             ("activitiescache", "Windows timeline (ActivitiesCache, B-010)"), ("\\protect\\", "DPAPI master keys"),
              ("\\wer\\", "error reports (WER)"),
              ("\\wbem\\", "WMI repository"), ("\\downloader\\", "BITS"), ("\\sru\\", "SRUM"),
              ("psreadline", "PowerShell history"), ("\\inf\\setupapi", "setupapi logs"),

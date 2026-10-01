@@ -130,7 +130,7 @@ ShimCache --- AppCompat\-Cache\-Parser & 232 entrées & identiques & indicateur 
 Corbeille --- RBCmd & 19 fichiers & identiques & --- \\
 SRUM --- SrumECmd & 60\,804 lignes & identiques & 17 lignes d'énergie fausses (dissect) \\
 Registre --- RECmd & 9 artefacts & identiques & 4 ruches ramenées à un état ancien \\
-Collecte --- KAPE & 1\,130 fichiers communs & SHA-1 identiques & --- \\
+Collecte --- KAPE & 1\,173 fichiers communs & SHA-1 identiques & --- \\
 \bottomrule
 \end{longtable}
 
@@ -178,8 +178,8 @@ donnent pas.
 \toprule
 \textbf{Outil, réglage} & \textbf{Durée} & \textbf{Pièces} & \textbf{Volume} \\
 \midrule\endhead
-KAPE, \texttt{KapeTriage} & 40\,s & 1\,198 & 0,91\,Go \\
-\wac{}, kit, sans binaires & 197\,s & 2\,463 & 1,63\,Go \\
+KAPE, \texttt{KapeTriage} & 41\,s & 1\,217 & 0,91\,Go \\
+\wac{}, kit, sans binaires & 212\,s & 2\,622 & 1,69\,Go \\
 \wac{}, kit, sans journaux d'événements & 18\,s & 817 & --- \\
 \wac{}, kit complet (\texttt{binary: unverified}) & 454\,s & 61\,294 & 3,6\,Go \\
 \bottomrule
@@ -257,11 +257,13 @@ ne tient pas, ce que KAPE ne fait pas.
         ignore : programmes installés, exclusions de Defender, RecentDocs,
         MountPoints2, réseaux connus, état de la mise à jour des dates d'accès
         NTFS, heure d'arrêt, entre autres. Fiche B-031.
-  \item[Couverture de fichiers] KapeTriage copie des fichiers que \wac{} ne prend
-        pas : raccourcis hors de Recent (menu Démarrer, Bureau, barre des tâches),
-        ruche du profil Default, \fichier{\$Secure:\$SDS} et d'autres métadonnées
-        NTFS, traces de Defender (fiche B-032) ; navigateurs et chronologie
-        Windows, déjà prévus (B-016, B-010).
+  \item[Couverture de fichiers] KapeTriage ne copie plus, face à \wac{}, que
+        les navigateurs et la chronologie Windows, prévus (B-016, B-010), et les
+        \fichier{desktop.ini}, écartés. Les raccourcis hors de Recent, la ruche
+        du profil Default, \fichier{\$Secure:\$SDS}, \fichier{\$Boot},
+        \fichier{\$UsnJrnl:\$Max}, \fichier{\$TxfLog}, les traces WPP de
+        Defender et les clés maîtresses DPAPI, qu'il était seul à prendre, sont
+        collectés et convertis depuis la fiche B-032.
   \item[Vitesse sur les petits artefacts et en collecte] Voir le chapitre
         précédent.
   \item[Interprétations prêtes à lire] Les outils EZ découpent et nomment certains
