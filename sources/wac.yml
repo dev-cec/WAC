@@ -50,6 +50,7 @@ artefacts:
   ntfs_volumes: true      # $Boot and $UsnJrnl:$Max: volume serial and geometry, creation of the change journal
   dpapi_master_keys: true # DPAPI master keys of each user and of the system, copied still encrypted; JSON: owner, GUID, dates, never the key
   user_shell_folders: true  # where each user's desktop, documents, downloads really are (OneDrive, another disk, a share)
+  web_client: true        # browsers: visits, downloads, searches (Edge, Chrome, Brave, Vivaldi, Opera); their databases copied raw
   zone_identifiers: true  # Zone.Identifier streams (Mark of the Web): where downloaded files came from
   security: true          # SECURITY hive: LSA secrets' names and dates, cached logons, audit policy (never a secret)
   persistence: true       # registry persistence beyond Run: IFEO, AppInit_DLLs, Winlogon, LSA packages, COM hijacking…

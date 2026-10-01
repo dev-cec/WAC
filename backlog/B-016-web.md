@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P1 | fort |
+| en cours | P1 | fort |
 
 ## Pourquoi
 Ce que l'utilisateur a fait sur le web : historique de navigation, recherches, fichiers téléchargés (le fichier et sa provenance), identifiants et cookies enregistrés. Le côté serveur (journaux, code du site, base de données) est un artefact distinct : B-035.
@@ -22,12 +22,18 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Clé `web_client` dans `wac.yml`, indépendante de `web_server` (B-035).
 
 ## Tâches
-- [ ] Lecteur SQLite
-- [ ] Historiques et recherches
-- [ ] Téléchargements + Zone.Identifier (B-004)
+- [x] Lecteur SQLite (9d4dc54) — copie privée, journal rejoué
+- [x] Historiques et recherches — Chromium (Edge, Chrome, Brave, Vivaldi, Chromium, Opera)
+- [ ] Historiques et recherches — Firefox (places.sqlite)
+- [x] Téléchargements Chromium (chaîne de redirections, référent, état, SHA-256)
+- [ ] Lien téléchargement ↔ Zone.Identifier (B-004) et fichier sur le disque (mft.json)
+- [ ] Login Data (identifiants enregistrés : origine, compte, dates — jamais le mot de passe), cookies
 - [ ] WebCache (ESE)
 - [ ] TypedURLs et TypedURLsTime (NTUSER), venus de B-031
 
 ## Journal
 - 2026-09-30 : décision utilisateur — SQLite par l'amalgamation officielle (sqlite3.c) épinglée et compilée dans WAC, ouverte en lecture seule sur la copie de la consigne.
 - 2026-10-01 : décision utilisateur — le web est séparé en deux artefacts, chacun avec sa clé dans `wac.yml` : client (cette fiche) et serveur (B-035).
+- 2026-10-01 : SQLite 3.53.4 intégré (amalgamation, SHA3-256 vérifiée, 9d4dc54) ; une base est lue sur une copie privée de la copie de travail avec son -wal ou -journal, que SQLite rejoue — jamais sur la pièce.
+- 2026-10-01 : `toHexadecimal` sorti de sha.h vers `conversions.h` (1b2adee, B-030) avant d'en avoir besoin ici.
+- 2026-10-01 : Chromium — collecte brute par RawReader (un volume ouvert une fois) de chaque profil de navigateur trouvé par listage (History, Login Data, Web Data, Cookies, Shortcuts, Top Sites, Bookmarks, Preferences, avec journaux ; Local State) sans les caches ; `web_client.json` : Url, Visit (transition nommée d'après ui::PageTransition), Download (chaîne, référent, onglet, état, SHA-256 ; DangerType et InterruptReason bruts — la numérotation de la base n'est pas l'énumération du code), SearchTerm. Référence : la base History d'Edge de la VM, rapatriée par le harnais et relue par le SQLite de Python : 5 URL, 7 visites identiques (URL, instant, transition). La VM n'a ni téléchargement ni recherche : couverts par le test unitaire (vu échouer : chaîne lue sans tri).

@@ -373,6 +373,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   ntfs_volumes: true            # $Boot and $UsnJrnl:$Max: serial and geometry, creation of the journal
   dpapi_master_keys: true       # DPAPI master keys copied encrypted; JSON: owner, GUID, dates, never the key
   user_shell_folders: true      # where each user's desktop, documents, downloads really are
+  web_client: true              # Chromium browsers: visits, downloads, searches; their databases copied raw
 \end{lstlisting}
 
 \begin{itemize}
@@ -1243,6 +1244,26 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         (\champ{Properties}: name and value; \champ{CreatorSID} in text). A
         persistence invisible in the registry. The two dates at the start of
         an instance are not emitted: they are not creation dates.
+  \item[\fichier{web\_client.json}] each user's browsing in the Chromium
+        browsers (Edge, Chrome, Brave, Vivaldi, Chromium, Opera), read in the
+        \fichier{History} database of each browser profile. One record per URL
+        (\champ{Type} \texttt{Url}: title, visit and typed counts, last
+        visit), per visit (\texttt{Visit}: instant, \champ{Transition} —
+        \texttt{typed}, \texttt{link}, \texttt{reload}\ldots{} — and its
+        qualifiers, the visit it came from \champ{FromUrl}, duration), per
+        download (\texttt{Download}: whole redirection chain
+        \champ{UrlChain}, page and tab of origin, destination path, bytes
+        received, state, opened, raw \champ{DangerType}, SHA-256 when the
+        browser computed it) and per term searched in the address bar
+        (\texttt{SearchTerm}). Every record carries \champ{Browser},
+        \champ{BrowserProfile}, \champ{SID} and \champ{Source}. Chromium's
+        times (microseconds since 1601, UTC) are converted exactly. The
+        databases are read on a private copy with their journal, replayed as
+        the browser would. Beside \fichier{History}, the exhibit store receives
+        raw the profile's other databases (\fichier{Login Data},
+        \fichier{Web Data}, cookies, shortcuts, bookmarks, preferences) and
+        \fichier{Local State}, whose DPAPI-protected key encrypts the saved
+        passwords; never the caches.
   \item[\fichier{dpapi\_master\_keys.json}] DPAPI master keys of the system
         (\path|System32\Microsoft\Protect|, \champ{Scope} \texttt{System})
         and of each profile (\path|AppData\Roaming\Microsoft\Protect|,

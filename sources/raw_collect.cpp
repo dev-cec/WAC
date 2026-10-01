@@ -19,6 +19,7 @@
 #include "startup_folders.h"
 #include "shortcuts.h"
 #include "dpapi_master_keys.h"
+#include "web_client.h"
 
 namespace {
 
@@ -319,6 +320,72 @@ HRESULT ExtractUserHivesRaw() {
 		L"Raw extraction of the per-user hives (+ .LOG1/.LOG2 logs)");
 }
 
+namespace {
+
+/*! The browsers' databases: for every Chromium user data folder of every
+ *  profile, its Local State, and in each browser profile the files of
+ *  CHROMIUM_PROFILE_FILES with their -journal and -wal. Found by listing the
+ *  folders raw, through ONE RawReader: each volume is opened once, and the
+ *  caches beside the databases are never walked.
+ *  @return S_OK, or S_FALSE if a file could not be read */
+HRESULT extractBrowserFiles() {
+	RawReader reader;
+	std::vector<RawHiveExtraction> reading;
+	HRESULT result = S_OK;
+	// A folder's entries by lower-case name, listed once.
+	auto listing = [&](const std::wstring& folder, std::map<std::wstring, RawDirEntry>& out) {
+		out.clear();
+		std::vector<RawDirEntry> entries;
+		if (FAILED(reader.list(folder, entries))) return false;
+		for (const RawDirEntry& e : entries) out.emplace(toLower(e.name), e);
+		return true;
+	};
+	auto take = [&](const std::wstring& folder, const std::map<std::wstring, RawDirEntry>& entries, const std::wstring& name) {
+		for (const wchar_t* suffix : { L"", L"-journal", L"-wal" }) {
+			const auto found = entries.find(toLower(name + suffix));
+			if (found == entries.end() || found->second.isDirectory) continue;
+			const std::wstring absolute = folder + L"\\" + found->second.name;
+			std::error_code ec;
+			std::filesystem::create_directories(std::filesystem::path(exhibitTarget(absolute)).parent_path(), ec);
+			RawHiveExtraction line;
+			if (FAILED(reader.read(absolute, exhibitTarget(absolute), line))) result = S_FALSE;
+			reading.push_back(std::move(line));
+		}
+	};
+	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
+		for (size_t i = 0; i < CHROMIUM_ROOT_COUNT; ++i) {
+			const std::wstring root = std::get<1>(profileEntry) + CHROMIUM_ROOTS[i].relative;
+			std::map<std::wstring, RawDirEntry> rootEntries;
+			if (!listing(root, rootEntries)) continue;   // no such browser for this user
+			for (const std::wstring& name : CHROMIUM_ROOT_FILES) take(root, rootEntries, name);
+			std::vector<std::wstring> folders = { root };   // Opera keeps a profile at its root
+			for (const auto& e : rootEntries) if (e.second.isDirectory) folders.push_back(root + L"\\" + e.second.name);
+			for (const std::wstring& folder : folders) {
+				std::map<std::wstring, RawDirEntry> entries;
+				if (folder == root) entries = rootEntries;
+				else if (!listing(folder, entries)) continue;
+				std::vector<std::wstring> names;
+				for (const auto& e : entries) names.push_back(e.second.name);
+				if (!isChromiumProfile(names)) continue;
+				std::map<std::wstring, RawDirEntry> network;
+				const bool hasNetwork = entries.count(L"network") && listing(folder + L"\\Network", network);
+				for (const std::wstring& file : CHROMIUM_PROFILE_FILES) {
+					const size_t slash = file.find(L'\\');
+					if (slash == std::wstring::npos) take(folder, entries, file);
+					else if (hasNetwork) take(folder + L"\\Network", network, file.substr(slash + 1));
+				}
+			}
+		}
+	ExhibitStoreAdd(reading, L"Raw NTFS reading (RawReader — $MFT, directory indexes, $DATA attribute); "
+	                         L"no file opened by the system");
+	for (const RawHiveExtraction& line : reading)
+		auditRecord(L"Raw extraction of a browser database", L"\\\\.\\" + line.volumePath, line.result, Footprint::VOLUME_BRUT);
+	log(2, L"❇️Browser files: " + std::to_wstring(reading.size()));
+	return result;
+}
+
+} // namespace
+
 HRESULT ExtractFileArtefactsRaw() {
 	if (conf.mountpoint.empty()) conf.mountpoint = workingFolder();
 
@@ -432,6 +499,8 @@ HRESULT ExtractFileArtefactsRaw() {
 		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
 			trees.push_back({ std::get<1>(profileEntry) + DPAPI_PROFILE_FOLDER, {}, 2, L"DPAPI master keys" });
 	}
+	// The browsers: their profiles found by listing, their databases only.
+	if (conf.artefacts.webClient && extractBrowserFiles() != S_OK) global = S_FALSE;
 	/* Shortcuts outside Recent: the Start menu and Quick Launch are trees, the
 	   desktops plain folders. The Startup folder inside the Start menu is left
 	   to the startup folders, which take it whole. */

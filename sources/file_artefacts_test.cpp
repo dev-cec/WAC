@@ -7,7 +7,7 @@
  *  $Secure:$SDS, the NTFS boot sector and change journal header, and the
  *  volume serial of a shortcut, the DPAPI master key header and Preferred,
  *  the paths of User Shell Folders, and the reading of an SQLite database
- *  on a private copy, its write-ahead log replayed.
+ *  on a private copy, its write-ahead log replayed, and a Chromium History.
  *
  *  WHY THIS TEST. These formats are text or a few bytes, and a decoder that
  *  misses a case still gives valid JSON: a multi-line command cut in two, a
@@ -33,6 +33,7 @@
 #include "dpapi_master_keys.h"
 #include "user_shell_folders.h"
 #include "sqlite_reader.h"
+#include "web_client.h"
 #include "sqlite3.h"
 #include "sha.h"
 #include <filesystem>
@@ -651,6 +652,94 @@ void sqliteReader() {
 	std::filesystem::remove_all(root, ec);
 }
 
+//! @return the record of a type whose field `key` is `value`, or nullptr
+const WebClientRecord* findRecord(const std::vector<WebClientRecord>& records, const wchar_t* type,
+                                  const wchar_t* key, const std::wstring& value) {
+	for (const WebClientRecord& r : records)
+		if (r.type == type && r.fields.find(key) && r.fields.find(key)->text() == value) return &r;
+	return nullptr;
+}
+
+//! @return a field's text, "" if absent
+std::wstring field(const WebClientRecord* r, const wchar_t* key) {
+	return r && r->fields.find(key) ? r->fields.find(key)->text() : L"";
+}
+
+/*! A Chromium History built here with Chromium's tables: a typed visit, a
+ *  link from it, a download through a redirection, a search. */
+void chromiumHistory() {
+	check(transitionCore(1) == L"typed" && transitionCore(0x30000000 | 0) == L"link" && transitionCore(0x20) == L"32",
+	      "chromium: transition core types, an unknown one as its number");
+	check(transitionQualifiers(0x02000001 | 0x10000000 | 0x20000000) == L"from_address_bar, chain_start, chain_end"
+	      && transitionQualifiers(0x00000100) == L"0x00000100" && transitionQualifiers(1).empty(),
+	      "chromium: transition qualifiers, an unknown bit in hexadecimal");
+	const FILETIME t = chromiumTime(13370000000000000LL);
+	check(value(t) == 133700000000000000ULL && value(chromiumTime(0)) == 0 && value(chromiumTime(-5)) == 0,
+	      "chromium: microseconds since 1601 made a FILETIME, 0 and negative are none");
+
+	const std::filesystem::path root = std::filesystem::temp_directory_path() / L"wac-history-test";
+	std::error_code ec;
+	std::filesystem::remove_all(root, ec);
+	std::filesystem::create_directories(root, ec);
+	conf._outputDir = (root / L"output").wstring();
+	const std::filesystem::path db = root / L"History";
+	sqlite3* writer = nullptr;
+	sqlite3_open_v2(encodeText(db.wstring()).c_str(), &writer, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+	sqlite3_exec(writer,
+		"CREATE TABLE urls(id INTEGER PRIMARY KEY, url TEXT, title TEXT, visit_count INTEGER, typed_count INTEGER, last_visit_time INTEGER, hidden INTEGER);"
+		"CREATE TABLE visits(id INTEGER PRIMARY KEY, url INTEGER, visit_time INTEGER, from_visit INTEGER, transition INTEGER, segment_id INTEGER, visit_duration INTEGER);"
+		"CREATE TABLE downloads(id INTEGER PRIMARY KEY, guid TEXT, current_path TEXT, target_path TEXT, start_time INTEGER, received_bytes INTEGER, total_bytes INTEGER,"
+		" state INTEGER, danger_type INTEGER, interrupt_reason INTEGER, hash BLOB, end_time INTEGER, opened INTEGER, last_access_time INTEGER, transient INTEGER,"
+		" referrer TEXT, site_url TEXT, tab_url TEXT, tab_referrer_url TEXT, mime_type TEXT, original_mime_type TEXT);"
+		"CREATE TABLE downloads_url_chains(id INTEGER, chain_index INTEGER, url TEXT);"
+		"CREATE TABLE keyword_search_terms(keyword_id INTEGER, url_id INTEGER, term TEXT, normalized_term TEXT);"
+		"INSERT INTO urls VALUES(1, 'https://search.invalid/?q=mimikatz', 'mimikatz - Recherche', 1, 0, 13370000000000000, 0);"
+		"INSERT INTO urls VALUES(2, 'https://tools.invalid/get', 'Téléchargement', 1, 1, 13370000060000000, 0);"
+		"INSERT INTO visits VALUES(10, 1, 13370000000000000, 0, 33554433, 0, 5000000);"   /* typed | from_address_bar */
+		"INSERT INTO visits VALUES(11, 2, 13370000060000000, 10, 805306368, 0, 0);"        /* link | chain_start | chain_end */
+		"INSERT INTO downloads VALUES(1, 'g-1', 'C:\\Users\\wac\\Downloads\\m.zip.crdownload', 'C:\\Users\\wac\\Downloads\\m.zip',"
+		" 13370000070000000, 1024, 1024, 1, 0, 0, x'00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF', 13370000080000000, 1, 0, 0,"
+		" 'https://tools.invalid/get', 'https://tools.invalid/', 'https://tools.invalid/get', '', 'application/zip', 'application/zip');"
+		"INSERT INTO downloads_url_chains VALUES(1, 1, 'https://cdn.invalid/m.zip');"
+		"INSERT INTO downloads_url_chains VALUES(1, 0, 'https://tools.invalid/dl?id=7');"
+		"INSERT INTO keyword_search_terms VALUES(2, 1, 'mimikatz', 'mimikatz');",
+		nullptr, nullptr, nullptr);
+	sqlite3_close(writer);
+
+	WebClientRecord base;
+	base.browser = L"Edge";
+	base.browserProfile = L"Default";
+	base.sid = L"S-1-5-21-1-2-3-1001";
+	base.source = L"C:\\Users\\wac\\AppData\\Local\\Microsoft\\Edge\\User Data\\Default\\History";
+	std::vector<WebClientRecord> records;
+	check(readChromiumHistory(db.wstring(), base, records) == ERROR_SUCCESS && records.size() == 6,
+	      "chromium: 2 URLs, 2 visits, 1 download, 1 search term read");
+	const WebClientRecord* typed = findRecord(records, L"Visit", L"Url", L"https://search.invalid/?q=mimikatz");
+	check(field(typed, L"Transition") == L"typed" && field(typed, L"TransitionQualifiers") == L"from_address_bar"
+	      && field(typed, L"VisitUtc") == timeToIso8601Utc(chromiumTime(13370000000000000LL)) && field(typed, L"DurationMicroseconds") == L"5000000"
+	      && typed && !typed->fields.find(L"FromVisitId"), "chromium: the typed visit, its instant and duration");
+	const WebClientRecord* link = findRecord(records, L"Visit", L"Url", L"https://tools.invalid/get");
+	check(field(link, L"Transition") == L"link" && field(link, L"FromVisitId") == L"10"
+	      && field(link, L"FromUrl") == L"https://search.invalid/?q=mimikatz" && field(link, L"Title") == L"T\u00e9l\u00e9chargement",
+	      "chromium: the link visit names the visit it came from");
+	const WebClientRecord* download = findRecord(records, L"Download", L"Guid", L"g-1");
+	const Json* chain = download ? download->fields.find(L"UrlChain") : nullptr;
+	check(field(download, L"Url") == L"https://cdn.invalid/m.zip" && chain && chain->members().size() == 2
+	      && chain->members()[0].second.text() == L"https://tools.invalid/dl?id=7",
+	      "chromium: the download's chain in its order, the final URL last");
+	check(field(download, L"State") == L"complete" && field(download, L"Opened") == L"true" && field(download, L"DangerType") == L"0"
+	      && field(download, L"CurrentPath") == L"C:\\Users\\wac\\Downloads\\m.zip.crdownload"
+	      && field(download, L"SHA256") == L"00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF"
+	      && download && !download->fields.find(L"OriginalMimeType") && !download->fields.find(L"InterruptReason"),
+	      "chromium: the download's state, paths, hash; equal or zero fields not emitted");
+	check(findRecord(records, L"SearchTerm", L"Term", L"mimikatz") && !findRecord(records, L"SearchTerm", L"Term", L"mimikatz")->fields.find(L"NormalizedTerm"),
+	      "chromium: the search term, its normalized form only when it differs");
+	const Json whole = records[0].toJson();
+	check(whole.find(L"Browser") && whole.find(L"Browser")->text() == L"Edge" && whole.find(L"SID") && whole.find(L"Source"),
+	      "chromium: each record carries its browser, profile, SID and source");
+	std::filesystem::remove_all(root, ec);
+}
+
 } // namespace
 
 int wmain() {
@@ -669,6 +758,7 @@ int wmain() {
 	dpapiMasterKeys();
 	userShellFolders();
 	sqliteReader();
+	chromiumHistory();
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }

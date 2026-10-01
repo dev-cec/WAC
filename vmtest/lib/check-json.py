@@ -303,6 +303,7 @@ def cross_checks(folder):
     found += guarded(check_embedded_signers, folder)
     found += guarded(check_third_party_chains, folder)
     found += guarded(check_vulnerable_driver, folder)
+    found += guarded(check_web_client, folder)
     return found
 
 
@@ -2143,6 +2144,73 @@ def check_small_file_artefacts(folder):
                     wrong.append("ThreatTrackingSha1 of the detection differs from the quarantined content")
             report(not wrong, f"defender_quarantine.json: {path} with its dates, size and SHA-1, decrypted in memory only",
                    f"defender_quarantine.json: {wrong[0] if wrong else ''}")
+    return found
+
+
+def check_web_client(folder):
+    """web_client.json against Python's own SQLite reading the same History.
+
+    The harness fetches each browser profile's History from the exhibit store
+    (with its -journal or -wal); it is copied aside and read here by Python's
+    sqlite3 — the journal replayed by that engine, the Chromium times
+    converted here. Every URL, visit (instant and transition), download and
+    search term must be in web_client.json, no more, no less: a column read
+    at the wrong index, a time scaled wrongly, a join that drops rows would
+    all give valid JSON.
+    """
+    import shutil, sqlite3, tempfile
+    records = load(folder, "web_client.json")
+    store = os.path.join(folder, store_folder(folder))
+    databases = [p for p in glob.glob(os.path.join(store, "**", "History"), recursive=True)
+                 if os.sep + "User Data" + os.sep in p]
+    if not isinstance(records, list) or not databases:
+        print("  ⏭️  no web_client.json or no History fetched: browsers not confronted")
+        return 0
+    found = 0
+    def chromium(us):
+        if not us or us <= 0:
+            return None
+        t = datetime.datetime(1601, 1, 1) + datetime.timedelta(microseconds=us)
+        return t.strftime("%Y-%m-%dT%H:%M:%S.%f") + "0Z"
+    cores = ["link", "typed", "auto_bookmark", "auto_subframe", "manual_subframe", "generated",
+             "auto_toplevel", "form_submit", "reload", "keyword", "keyword_generated"]
+    for database in databases:
+        source = "C:\\" + os.path.relpath(database, store).replace(os.sep, "\\")
+        mine = [r for r in records if (r.get("Source") or "").lower() == source.lower()]
+        with tempfile.TemporaryDirectory() as aside:
+            for suffix in ("", "-journal", "-wal"):
+                if os.path.exists(database + suffix):
+                    shutil.copy(database + suffix, os.path.join(aside, "History" + suffix))
+            db = sqlite3.connect(os.path.join(aside, "History"))
+            urls = db.execute("SELECT url FROM urls").fetchall()
+            visits = db.execute("SELECT v.id, u.url, v.visit_time, v.transition FROM visits v JOIN urls u ON u.id = v.url").fetchall()
+            downloads = db.execute("SELECT guid, target_path, start_time, received_bytes FROM downloads").fetchall()
+            terms = db.execute("SELECT term FROM keyword_search_terms").fetchall()
+            db.close()
+        by_type = collections.Counter(r.get("Type") for r in mine)
+        counts = {"Url": len(urls), "Visit": len(visits), "Download": len(downloads), "SearchTerm": len(terms)}
+        ok = all(by_type.get(t, 0) == n for t, n in counts.items())
+        parts = source.split(chr(92))   # …\<browser>\User Data\<profile>\History
+        print(f"  {'✅' if ok else '❌'} web_client.json: {parts[-4]}/{parts[-2]} — "
+              f"{counts} as Python's SQLite reads them, WAC {dict(by_type)}")
+        found += 0 if ok else 1
+        wac_visits = {r.get("Id"): r for r in mine if r.get("Type") == "Visit"}
+        wrong = []
+        for vid, url, when, transition in visits:
+            r = wac_visits.get(vid, {})
+            core = transition & 0xFF
+            if (r.get("Url") != url or r.get("VisitUtc") != chromium(when)
+                    or r.get("Transition") != (cores[core] if core < len(cores) else str(core))):
+                wrong.append(f"visit {vid}: {url} {chromium(when)}, WAC {r.get('Url')} {r.get('VisitUtc')} {r.get('Transition')}")
+        wac_downloads = {r.get("Guid"): r for r in mine if r.get("Type") == "Download"}
+        for guid, target, start, received in downloads:
+            r = wac_downloads.get(guid, {})
+            if r.get("TargetPath") != target or r.get("StartUtc") != chromium(start) or r.get("ReceivedBytes") != received:
+                wrong.append(f"download {guid}: {target} {chromium(start)} {received}, WAC {r}")
+        ok = not wrong
+        print(f"  {'✅' if ok else '❌'} web_client.json: every visit (URL, instant, transition) and download (path, start, bytes) identical"
+              + ("" if ok else f": {wrong[:3]}"))
+        found += 0 if ok else 1
     return found
 
 
