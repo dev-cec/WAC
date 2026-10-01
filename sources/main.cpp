@@ -52,6 +52,7 @@
 #include "registry_lot3.h"
 #include "recent_docs.h"
 #include "shortcuts.h"
+#include "security_descriptors.h"
 #include "jumplist_automatic.h"
 #include "jumplist_custom.h"
 #include "scheduledTasks.h"
@@ -401,7 +402,8 @@ void extractProfileArtefacts() {
 	else printSuccess();
 
 	// $MFT, change journal, $LogFile: the file system's timeline (read in place by the conversion).
-	if (conf.artefacts.mft || conf.artefacts.usnJournal || conf.artefacts.logFile || conf.artefacts.zoneIdentifiers) {
+	if (conf.artefacts.mft || conf.artefacts.usnJournal || conf.artefacts.logFile || conf.artefacts.zoneIdentifiers
+	    || conf.artefacts.securityDescriptors) {
 		printStep(Text::StepNtfsMetadata);
 		log(3, L"🔈ExtractNtfsMetadataRaw");
 		hresult = ExtractNtfsMetadataRaw();   // S_FALSE = one could not be read (tolerated)
@@ -1159,6 +1161,9 @@ void convertArtefacts(bool systemAvailable) {
 	                                    Text::StepStartupFolders);
 	convertFileArtefact<Shortcuts>(conf.artefacts.shortcuts, "shortcuts.json", Text::ArtefactShortcuts,
 	                               L"artefacts.shortcuts", Text::StepShortcuts);
+	convertFileArtefact<SecurityDescriptors>(conf.artefacts.securityDescriptors, "security_descriptors.json",
+	                                         Text::ArtefactSecurityDescriptors, L"artefacts.security_descriptors",
+	                                         Text::StepSecurityDescriptors);
 	writeProcesses();   // if the names could not be loaded (SYSTEM hive unreadable)
 
 	/************************

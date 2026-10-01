@@ -29,3 +29,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Journal
 - 2026-09-30 : créée à la demande de l'utilisateur, à faire en fin de refactoring.
+- 2026-10-01 : `readLittleEndian<T>` ajouté à tools.h (B-032) ; les copies locales `rd16/rd32/rd64` (mft.cpp, fat_volume.cpp, ese_database.cpp, bits_jobs.cpp, defender_history.cpp, cim_repository.cpp, hive_recover.cpp, pe_resource.cpp) sont à y ramener.

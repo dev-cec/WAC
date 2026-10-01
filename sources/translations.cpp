@@ -122,6 +122,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepNetworkConfiguration, L"Configuration réseau (hors ligne)", L"Extracting NETWORK CONFIGURATION (offline)" },
 	{ Text::StepEventLogConfiguration, L"Configuration des journaux d'événements", L"Extracting EVENT LOG CONFIGURATION" },
 	{ Text::StepShortcuts, L"Raccourcis (menu Démarrer, Bureau, barre des tâches)", L"Extracting SHORTCUTS" },
+	{ Text::StepSecurityDescriptors, L"Descripteurs de sécurité NTFS ($Secure)", L"Extracting NTFS SECURITY DESCRIPTORS" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },
@@ -185,6 +186,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactNetworkConfiguration, L"Configuration réseau", L"Network configuration" },
 	{ Text::ArtefactEventLogConfiguration, L"Configuration des journaux d'événements", L"Event log configuration" },
 	{ Text::ArtefactShortcuts, L"Raccourcis (menu Démarrer, Bureau, barre des tâches)", L"Shortcuts (Start menu, desktop, task bar)" },
+	{ Text::ArtefactSecurityDescriptors, L"Descripteurs de sécurité NTFS ($Secure)", L"NTFS security descriptors ($Secure)" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },
 
 	{ Text::TimeElapsed,               L"FIN, durée : %1 s",                             L"END, Time elapsed : %1 s" },

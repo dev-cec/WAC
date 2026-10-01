@@ -558,7 +558,7 @@ HRESULT ExtractFileArtefactsRaw() {
 HRESULT ExtractNtfsMetadataRaw() {
 	// The $MFT serves mft.json, the change journal's paths and the Zone.Identifier streams.
 	const bool mft = conf.artefacts.mft || conf.artefacts.usnJournal || conf.artefacts.zoneIdentifiers;
-	if (!mft && !conf.artefacts.logFile) return HRESULT_FROM_WIN32(ERROR_EMPTY);
+	if (!mft && !conf.artefacts.logFile && !conf.artefacts.securityDescriptors) return HRESULT_FROM_WIN32(ERROR_EMPTY);
 	HRESULT global = S_OK;
 	/* EVERY fixed NTFS volume, not only the system's: a data disk, a profile
 	   on D: have their own $MFT and journal, and what happened there is not in
@@ -584,6 +584,13 @@ HRESULT ExtractNtfsMetadataRaw() {
 			if (FAILED(ExtractStreamRaw(volume, L"\\$Extend\\$UsnJrnl", L"$J",
 			                            exhibitTarget(drive + L"\\$Extend\\$J"), true, journal))) result = S_FALSE;
 			reading.push_back(std::move(journal));
+		}
+		if (conf.artefacts.securityDescriptors) {
+			// $Secure:$SDS: every distinct security descriptor of the volume, files point to them by number.
+			RawHiveExtraction descriptors;
+			if (FAILED(ExtractStreamRaw(volume, L"\\$Secure", L"$SDS",
+			                            exhibitTarget(drive + L"\\$Secure_$SDS"), false, descriptors))) result = S_FALSE;
+			reading.push_back(std::move(descriptors));
 		}
 		RawHiveSetProgress(nullptr);
 		printProgressEnd();

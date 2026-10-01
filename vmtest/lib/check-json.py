@@ -1407,6 +1407,38 @@ def check_small_file_artefacts(folder):
                f"shortcuts.json: the {len(live)} shortcut(s) Windows lists in the Start menus, desktops and Quick Launch, no more, no less",
                f"shortcuts.json: missing {sorted(live - set(mine))[:3]}, extra {sorted(set(mine) - live)[:3]}")
 
+    # NTFS security descriptors (B-032): every hash NTFS stored matches its
+    # descriptor; the witness file and the files Get-Acl read lead, through
+    # mft.json's SecurityId, to the owner Windows gives.
+    descriptors = load(folder, "security_descriptors.json")
+    if isinstance(descriptors, list) and os.path.exists(path):
+        mismatched = [d.get("SecurityId") for d in descriptors if d.get("HashMismatch")]
+        report(descriptors and not mismatched,
+               f"security_descriptors.json: {len(descriptors)} descriptor(s), every NTFS hash recomputed identical",
+               f"security_descriptors.json: {len(mismatched)} hash mismatch(es) among {len(descriptors)}: {mismatched[:5]}")
+        with open(path, encoding="utf-8", errors="replace") as f:
+            lines = f.read().splitlines()
+        owners = {l[len("sdsowner="):].rsplit("|", 1)[0].lower(): l.rsplit("|", 1)[1]
+                  for l in lines if l.startswith("sdsowner=")}
+        witness = next((l[len("sdswitness="):].split("|") for l in lines if l.startswith("sdswitness=")), None)
+        if witness:
+            owners[witness[0].lower()] = witness[1]
+        mft_files = load(folder, "mft.json")
+        if owners and isinstance(mft_files, list):
+            by_id = {(d.get("Volume"), d.get("SecurityId")): d for d in descriptors}
+            ids = {(r.get("Path") or "").lower(): (r.get("Volume"), r.get("SecurityId"))
+                   for r in mft_files if not r.get("Deleted") and (r.get("Path") or "").lower() in owners}
+            wrong = [f"{p}: Windows {o}, WAC {by_id.get(ids.get(p), {}).get('Owner')}"
+                     for p, o in owners.items() if by_id.get(ids.get(p), {}).get("Owner") != o]
+            report(not wrong,
+                   f"security_descriptors.json: the owner of {len(owners)} file(s) as Get-Acl gives it, through mft.json's SecurityId",
+                   f"security_descriptors.json: {len(wrong)} owner difference(s), {wrong[:3]}")
+            if witness:
+                d = by_id.get(ids.get(witness[0].lower()), {})
+                report(any(a.get("Type") == "Allow" and a.get("Sid") == "S-1-1-0" for a in d.get("Dacl") or []),
+                       "security_descriptors.json: the witness's DACL grants Everyone, as icacls set it",
+                       f"security_descriptors.json: the witness's Everyone ACE missing: {d}")
+
     if "datavolume" in reference:
         letter, present, deleted = reference["datavolume"].split("|")
         mft = load(folder, "mft.json")

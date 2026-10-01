@@ -21,6 +21,7 @@ const size_t RECORD_ALLOCATED_SIZE = 0x1C; //!< uint32 bytes of the record
 const size_t RECORD_BASE = 0x20;           //!< uint64 reference of the base record, 0 for a base record
 const uint32_t ATTRIBUTE_END = 0xFFFFFFFF;
 const uint32_t STANDARD_INFORMATION = 0x10, FILE_NAME = 0x30, DATA = 0x80;
+const size_t SI_SECURITY_ID = 0x34;      //!< uint32 in $STANDARD_INFORMATION: number of the descriptor in $Secure
 const uint64_t ROOT_ENTRY = 5;             //!< the root directory's record
 const uint64_t REFERENCE_ENTRY_MASK = 0x0000FFFFFFFFFFFFULL;   //!< low 48 bits of a reference: the record
 const unsigned MAX_PATH_DEPTH = 255;       //!< a longer parent chain is a loop, or a forged record
@@ -73,6 +74,8 @@ bool MftEntry::parse(const uint8_t* record, size_t recordSize, uint64_t number) 
 			mftModified = filetime(rd64(value + 0x10));
 			accessed = filetime(rd64(value + 0x18));
 			attributes = rd32(value + 0x20);
+			// The long form (NTFS 3.0, 0x48 bytes) carries the security descriptor's number.
+			if (valueLength >= SI_SECURITY_ID + 4) securityId = rd32(value + SI_SECURITY_ID);
 		}
 		else if (type == FILE_NAME && value && valueLength >= 0x42
 		         && 0x42u + 2u * value[0x40] <= valueLength) {
@@ -140,6 +143,7 @@ Json MftEntry::toJson(const std::wstring& path, bool pathComplete,
 	if (directory) o.add(L"Directory", Json::boolean(true));
 	else if (sizeKnown) o.add(L"Size", Json::num(size));
 	o.add(L"Attributes", Json::str(FileAttributes(attributes).to_wstring()));
+	if (securityId) o.add(L"SecurityId", Json::num((unsigned long long)securityId));
 	addDate(o, L"CreatedUtc", created);
 	addDate(o, L"ModifiedUtc", modified);
 	addDate(o, L"MftModifiedUtc", mftModified);

@@ -128,6 +128,7 @@ struct AppliConf {
 		bool defender = true;         //!< Microsoft Defender: support logs (MPLog), detection history, quarantine
 		bool startupFolders = true;   //!< startup folders of all users and of each profile
 		bool shortcuts = true;        //!< shortcuts outside Recent: Start menu, desktops, Quick Launch, pinned task bar
+		bool securityDescriptors = true; //!< $Secure:$SDS of every NTFS volume: owner and ACLs of every file
 		bool zoneIdentifiers = true;  //!< Zone.Identifier streams, read in the $MFT copy
 		bool security = true;         //!< SECURITY hive: LSA secrets' names and dates, cached logons, audit policy
 		bool persistence = true;      //!< registry persistence beyond Run: IFEO, AppInit, Winlogon, LSA, COM…
@@ -927,6 +928,21 @@ std::wstring sidToText(const BYTE* sid, size_t size);
 * @param size their number
 * @return the JSON object, empty if the descriptor's header does not fit */
 Json securityDescriptorToJson(const BYTE* sd, size_t size);
+
+/*! An unsigned integer stored little-endian, as every on-disk Windows format
+*  holds them, read without alignment requirement. The ONE reader for new
+*  code; the per-module copies (rd32 in mft.cpp, fat_volume.cpp, ese_database.cpp…)
+*  are to come back to it (backlog B-030).
+* @tparam T uint16_t, uint32_t or uint64_t
+* @param p its first byte; the caller has checked that sizeof(T) bytes are there
+* @return the value */
+template <class T>
+T readLittleEndian(const uint8_t* p) {
+	static_assert(std::is_unsigned<T>::value, "an unsigned integer");
+	T value = 0;
+	for (size_t i = 0; i < sizeof(T); ++i) value |= (T)((T)p[i] << (8 * i));
+	return value;
+}
 
 /*! Binary form of a SID written as text — the reverse of sidToText, replacing
 * ConvertStringSidToSidW.

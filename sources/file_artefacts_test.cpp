@@ -3,7 +3,8 @@
  *  result is known: PowerShell history, setupapi.dev.log, recycle bin `$I`,
  *  hosts, Report.wer, Defender's MPLog, DetectionHistory and quarantine,
  *  Zone.Identifier, and the registry values of the second lot (TrustRecords,
- *  firewall rules, certificate Blob).
+ *  firewall rules, certificate Blob), and the NTFS security descriptors of
+ *  $Secure:$SDS.
  *
  *  WHY THIS TEST. These formats are text or a few bytes, and a decoder that
  *  misses a case still gives valid JSON: a multi-line command cut in two, a
@@ -23,6 +24,8 @@
 #include "defender_log.h"
 #include "zone_identifiers.h"
 #include "registry_lot2.h"
+#include "security_descriptors.h"
+#include "guard_page.h"
 #include <cstdio>
 
 AppliConf conf; //!< WAC's global configuration, which tools.cpp references
@@ -344,6 +347,84 @@ void registryLot2() {
 	check(!certificateInBlob(lying, der, size), "certificate blob: a length beyond the value refused");
 }
 
+/*! A self-relative descriptor: owner S-1-5-21-1-2-3-1001, a DACL of one ACE
+ *  granting Everyone (S-1-1-0) full control, 0x001F01FF. */
+std::vector<uint8_t> testDescriptor() {
+	std::vector<uint8_t> d;
+	auto put16 = [&](uint16_t v) { d.push_back((uint8_t)v); d.push_back((uint8_t)(v >> 8)); };
+	auto put32 = [&](uint32_t v) { for (int i = 0; i < 4; ++i) d.push_back((uint8_t)(v >> (8 * i))); };
+	d.push_back(1); d.push_back(0); put16(0x8004);         // revision, self-relative + DACL present
+	put32(20); put32(0); put32(0); put32(48);               // owner, group, SACL, DACL offsets
+	for (uint8_t c : { 1, 5, 0, 0, 0, 0, 0, 5 }) d.push_back(c);  // S-1-5-…, five sub-authorities
+	for (uint32_t sub : { 21u, 1u, 2u, 3u, 1001u }) put32(sub);
+	d.push_back(2); d.push_back(0); put16(28); put16(1); put16(0);  // ACL: revision, size, one ACE
+	d.push_back(0); d.push_back(0); put16(20); put32(0x001F01FF);   // ACCESS_ALLOWED, size, mask
+	for (uint8_t c : { 1, 1, 0, 0, 0, 0, 0, 1 }) d.push_back(c);  // S-1-1-0
+	put32(0);
+	return d;
+}
+
+/*! Writes an $SDS entry at `at`: hash, SecurityId, its offset, its length, the descriptor.
+ *  @return the offset of the next entry, aligned on 16 bytes */
+size_t putSdsEntry(std::vector<uint8_t>& sds, size_t at, uint32_t securityId, const std::vector<uint8_t>& sd) {
+	std::vector<uint8_t> e;
+	put64(e, 0);   // room for hash and SecurityId
+	put64(e, at);
+	const uint32_t length = (uint32_t)(20 + sd.size());
+	for (int i = 0; i < 4; ++i) e.push_back((uint8_t)(length >> (8 * i)));
+	const uint32_t hash = securityDescriptorHash(sd.data(), sd.size());
+	for (int i = 0; i < 4; ++i) { e[i] = (uint8_t)(hash >> (8 * i)); e[4 + i] = (uint8_t)(securityId >> (8 * i)); }
+	e.insert(e.end(), sd.begin(), sd.end());
+	std::copy(e.begin(), e.end(), sds.begin() + at);
+	return (at + e.size() + 15) / 16 * 16;
+}
+
+void securityDescriptors() {
+	const size_t BLOCK = 0x40000;
+	const std::vector<uint8_t> sd = testDescriptor();
+	std::vector<uint8_t> sds(3 * BLOCK, 0);
+	size_t next = putSdsEntry(sds, 0, 0x100, sd);
+	next = putSdsEntry(sds, next, 0x101, sd);
+	std::copy(sds.begin(), sds.begin() + BLOCK, sds.begin() + BLOCK);   // the mirror of block 0
+	// A mirror holds copies whose recorded offset is their original's; this one
+	// is consistent with its own place, and must be skipped all the same.
+	putSdsEntry(sds, BLOCK, 0x999, sd);
+	next = putSdsEntry(sds, 2 * BLOCK, 0x102, sd);
+	next = putSdsEntry(sds, next, 0x100, sd);          // a SecurityId met again: kept once
+	const size_t lying = next;
+	putSdsEntry(sds, lying, 0x103, sd);
+	sds[lying + 16] = 0xF0; sds[lying + 17] = 0xFF; sds[lying + 18] = 0xFF; sds[lying + 19] = 0xFF;  // a length past the block
+	sds[0x60] ^= 1;                                    // entry 0x101: its stored hash damaged
+
+	for (GuardSide side : { GuardSide::After, GuardSide::Before }) {
+		GuardedCopy copy(sds, side);
+		const std::vector<SecurityDescriptorEntry> e = parseSds(copy.data(), copy.size(), L"C:");
+		check(e.size() == 3 && e[0].securityId == 0x100 && e[1].securityId == 0x101 && e[2].securityId == 0x102,
+		      "sds: three descriptors, the mirror skipped, a repeated SecurityId kept once, the lying entry refused");
+		check(e.size() == 3 && e[0].hashMatches && !e[1].hashMatches && e[2].hashMatches,
+		      "sds: the stored hash checked against the descriptor's bytes");
+		if (e.size() == 3) {
+			const Json first = e[0].toJson();
+			const Json* owner = first.find(L"Owner");
+			const Json* dacl = first.find(L"Dacl");
+			const Json* ace = dacl && dacl->members().size() == 1 ? &dacl->members()[0].second : nullptr;
+			check(owner && owner->text() == L"S-1-5-21-1-2-3-1001" && ace && ace->find(L"Sid")
+			      && ace->find(L"Sid")->text() == L"S-1-1-0" && ace->find(L"Mask")
+			      && ace->find(L"Mask")->text() == L"0x001f01ff",
+			      "sds: owner, ACE SID and mask decoded");
+			const Json* mismatch = e[1].toJson().find(L"HashMismatch");
+			check(!first.find(L"HashMismatch") && mismatch && mismatch->text() == L"true",
+			      "sds: HashMismatch emitted only for the damaged descriptor");
+		}
+	}
+	// Truncated streams: never read past the bytes given.
+	for (size_t size : { (size_t)0, (size_t)19, (size_t)0x70, BLOCK + 3 }) {
+		GuardedCopy copy(std::vector<uint8_t>(sds.begin(), sds.begin() + size), GuardSide::After);
+		const std::vector<SecurityDescriptorEntry> e = parseSds(copy.data(), copy.size(), L"C:");
+		check(e.size() <= 2, "sds: a truncated stream read within its bytes");
+	}
+}
+
 } // namespace
 
 int wmain() {
@@ -356,6 +437,7 @@ int wmain() {
 	defenderHistory();
 	zoneIdentifier();
 	registryLot2();
+	securityDescriptors();
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }

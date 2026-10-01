@@ -581,13 +581,18 @@ sujet, le 31 février refusé comme date, un \path|$I| de version 1 et 2 lu, un
 \path|$I| tronqué ou de version inconnue refusé, une longueur de chemin
 mensongère bornée par le fichier, une signature de problème ordonnée par son
 indice quel que soit l'ordre du fichier, une date sans \texttt{Z} non prise
-pour de l'UTC. Aucune donnée nécessaire.
+pour de l'UTC. Pour \path|$Secure:$SDS| : un flux construit bloc par bloc, où
+le bloc miroir est sauté même quand son entrée paraît cohérente, un
+\champ{SecurityId} répété gardé une fois, une longueur qui sort du bloc
+refusée, un condensat abîmé signalé (\champ{HashMismatch}), le propriétaire et
+l'ACE décodés, chaque lecture contre une page interdite des deux côtés.
+Aucune donnée nécessaire.
 
 \begin{lstlisting}
 cd build-windows/tests && wine file_artefacts_test.exe
 \end{lstlisting}
 
-Référence : 43 contrôles, aucun échec (dont les valeurs du lot 2 du registre : TrustRecords, règle de pare-feu, blob de certificat). Dans le cycle VM,
+Référence : 74 contrôles, aucun échec (dont les valeurs du lot 2 du registre : TrustRecords, règle de pare-feu, blob de certificat). Dans le cycle VM,
 \fichier{place-file-artefacts.ps1} dépose des témoins de contenu connu (un
 historique, un fichier mis à la corbeille, une entrée \fichier{hosts}, un
 script de démarrage) et \fichier{check-json.py} les retrouve dans les JSON.

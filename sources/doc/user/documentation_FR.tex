@@ -374,6 +374,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   network_configuration: true   # cartes réseau, dernière configuration IPv4/IPv6, baux DHCP (hors ligne)
   event_log_configuration: true # état de chaque journal et session ETW de démarrage : actif, taille, rétention, accès (hors ligne)
   shortcuts: true               # raccourcis hors de Recent : menu Démarrer, Bureaux, Quick Launch, barre des tâches
+  security_descriptors: true    # $Secure:$SDS : propriétaire et droits de chaque fichier, chaque descripteur une fois
 \end{lstlisting}
 
 \begin{itemize}
@@ -1341,7 +1342,20 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         Un fichier à liens physiques (\champ{HardLinks}) est un seul
         enregistrement sous plusieurs noms — \path|System32\crypt32.dll| et son
         original sous \path|WinSxS| : \champ{HardLinkPaths} donne ses autres
-        chemins, chacun cherchable.
+        chemins, chacun cherchable. \champ{SecurityId} est le numéro de son
+        descripteur de sécurité dans \fichier{security\_descriptors.json}.
+  \item[\fichier{security\_descriptors.json}] descripteurs de sécurité de
+        chaque volume NTFS fixe (\path|$Secure:$SDS|) : chacun une seule fois,
+        quel que soit le nombre de fichiers qui le partagent, repéré par
+        \champ{Volume} et \champ{SecurityId} — la clé que porte chaque fichier
+        de \fichier{mft.json}. Il donne le \textbf{propriétaire}
+        (\champ{Owner}, \champ{OwnerName}), le groupe, et chaque entrée de la
+        DACL et de la SACL (type, drapeaux, masque d'accès, SID et nom). L'outil
+        d'un intrus déposé par son compte, un fichier système qui n'appartient
+        plus à TrustedInstaller, une ACL ouverte à Everyone s'y lisent, fichiers
+        supprimés compris. NTFS range avec chaque descripteur un condensat de
+        ses octets : WAC le recalcule, et \champ{HashMismatch} signale un
+        descripteur qui ne lui correspond pas.
   \item[\fichier{usn\_journal.json}] journal des modifications de chaque
         volume NTFS fixe (\path|$UsnJrnl:$J|, \champ{Volume} ; les numéros
         \champ{Usn} croissent au sein d'un volume) : chaque création, écriture, renommage et

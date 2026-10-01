@@ -76,6 +76,10 @@ struct MftEntry {
 	std::string zoneIdentifierContent;    //!< the stream's bytes, when resident
 	uint64_t zoneIdentifierSize = 0;      //!< the stream's size
 	uint32_t attributes = 0;         //!< file attributes of $STANDARD_INFORMATION (a field of bits)
+	/*! Number of the file's security descriptor in $Secure:$SDS
+	 *  (security_descriptors.json): owner and ACLs. 0 when the
+	 *  $STANDARD_INFORMATION is the short one of NTFS 1.2, without it. */
+	uint32_t securityId = 0;
 	FILETIME created = { 0 }, modified = { 0 }, mftModified = { 0 }, accessed = { 0 };  //!< $STANDARD_INFORMATION, UTC
 	FILETIME fileNameCreated = { 0 }, fileNameModified = { 0 },
 	         fileNameMftModified = { 0 }, fileNameAccessed = { 0 };                    //!< $FILE_NAME of `name`, UTC

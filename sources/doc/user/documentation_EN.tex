@@ -369,6 +369,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   network_configuration: true   # network adapters, last IPv4/IPv6 settings, DHCP leases (offline)
   event_log_configuration: true # state of each event log and boot ETW session: enabled, size, retention, access (offline)
   shortcuts: true               # shortcuts outside Recent: Start menu, desktops, Quick Launch, task bar
+  security_descriptors: true    # $Secure:$SDS: owner and rights of every file, each descriptor once
 \end{lstlisting}
 
 \begin{itemize}
@@ -1304,7 +1305,19 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         A file with hard links (\champ{HardLinks}) is one record under several
         names — \path|System32\crypt32.dll| and its original under
         \path|WinSxS|: \champ{HardLinkPaths} gives its other paths, each one
-        searchable.
+        searchable. \champ{SecurityId} is the number of its security
+        descriptor in \fichier{security\_descriptors.json}.
+  \item[\fichier{security\_descriptors.json}] security descriptors of every
+        fixed NTFS volume (\path|$Secure:$SDS|): each once, however many files
+        share it, identified by \champ{Volume} and \champ{SecurityId} — the key
+        every file of \fichier{mft.json} carries. It gives the \textbf{owner}
+        (\champ{Owner}, \champ{OwnerName}), the group, and each entry of the
+        DACL and SACL (type, flags, access mask, SID and name). An intruder's
+        tool dropped by their account, a system file no longer owned by
+        TrustedInstaller, an ACL opened to Everyone are read there, deleted
+        files included. NTFS stores with each descriptor a hash of its bytes:
+        WAC recomputes it, and \champ{HashMismatch} flags a descriptor that
+        does not match it.
   \item[\fichier{usn\_journal.json}] the change journal of every fixed NTFS
         volume (\path|$UsnJrnl:$J|, \champ{Volume}; the \champ{Usn} numbers
         rise within a volume): every creation, write, rename and

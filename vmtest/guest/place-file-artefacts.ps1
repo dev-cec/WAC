@@ -16,6 +16,9 @@
 #                stream read back by Windows -> zone_identifiers.json
 #   run_default  a Run value of type REG_EXPAND_SZ in the DEFAULT hive (the
 #                system account's profile) -> run.json, unexpanded
+#   sdswitness, sdsowner  a file owned by "wac" whose DACL grants Everyone
+#                read, and the owner Get-Acl gives for a few dozen files
+#                -> mft.json SecurityId -> security_descriptors.json
 #   rundefault   a Run value in the NTUSER.DAT of the Default profile (template
 #                of new profiles) -> run.json, SID S-0-0-0, Profile "Default"
 #   secrets, audit, nl_slots  the SECURITY hive read live by Windows (as
@@ -824,4 +827,20 @@ if (Wants 'registry') {
         reg unload 'HKU\WacDefault' 2>$null | Out-Null
         Write-Output 'rundefault=WacDefaultWitness|C:\wactest\wac-default-witness.exe'
     } else { Write-Output 'rundefaulterror=reg load failed' }
+}
+
+# 34. B-032 — NTFS security descriptors: a witness file whose owner is set to
+#     "wac" and whose DACL grants Everyone read, then the owner Windows gives
+#     for a few dozen files (Get-Acl). mft.json's SecurityId must lead, through
+#     security_descriptors.json, to the same owner.
+if (Wants 'security_descriptors') {
+    $witness = 'C:\wactest\wac-sds-witness.txt'
+    Set-Content $witness 'WAC security descriptor witness'
+    icacls $witness /setowner wac | Out-Null
+    icacls $witness /grant '*S-1-1-0:(R)' | Out-Null
+    Write-Output ("sdswitness=" + $witness + '|' + $wacSid)
+    $files = @(Get-ChildItem 'C:\Windows\System32\drivers\etc', 'C:\Users\wac\Documents', 'C:\wactest' -File -Force -ErrorAction SilentlyContinue | Select-Object -First 40)
+    foreach ($f in $files) {
+        try { Write-Output ("sdsowner=" + $f.FullName + '|' + (Get-Acl -LiteralPath $f.FullName).GetOwner([Security.Principal.SecurityIdentifier]).Value) } catch {}
+    }
 }

@@ -46,6 +46,7 @@ artefacts:
   defender: true          # Microsoft Defender: support logs (MPLog), detection history, quarantine (copied encrypted)
   startup_folders: true   # startup folders: what runs at logon
   shortcuts: true         # shortcuts outside Recent: Start menu, desktops, Quick Launch, pinned task bar
+  security_descriptors: true  # $Secure:$SDS: owner and access rights of every file, each descriptor once (mft.json: SecurityId)
   zone_identifiers: true  # Zone.Identifier streams (Mark of the Web): where downloaded files came from
   security: true          # SECURITY hive: LSA secrets' names and dates, cached logons, audit policy (never a secret)
   persistence: true       # registry persistence beyond Run: IFEO, AppInit_DLLs, Winlogon, LSA packages, COM hijacking…

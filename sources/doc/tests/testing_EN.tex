@@ -560,14 +560,18 @@ the expected result: a command on two lines joined, a section title split into
 operation and subject, 31 February refused as a date, a \path|$I| of version 1
 and 2 read, a \path|$I| truncated or of unknown version refused, a path length
 that lies bounded by the file, a problem signature ordered by its index
-whatever the file's order, a date without \texttt{Z} not taken as UTC. No data
-needed.
+whatever the file's order, a date without \texttt{Z} not taken as UTC. For
+\path|$Secure:$SDS|: a stream built block by block, where the mirror block is
+skipped even when its entry looks consistent, a repeated \champ{SecurityId}
+kept once, a length leaving the block refused, a damaged hash flagged
+(\champ{HashMismatch}), the owner and the ACE decoded, every read against a
+no-access page on both sides. No data needed.
 
 \begin{lstlisting}
 cd build-windows/tests && wine file_artefacts_test.exe
 \end{lstlisting}
 
-Reference: 43 checks, no failure (the second-lot registry values included: TrustRecords, firewall rule, certificate Blob). In the VM cycle,
+Reference: 74 checks, no failure (the second-lot registry values included: TrustRecords, firewall rule, certificate Blob). In the VM cycle,
 \fichier{place-file-artefacts.ps1} places witnesses whose content is known (a
 history, a file sent to the bin, a hosts entry, a startup script) and
 \fichier{check-json.py} finds them in the JSON.
