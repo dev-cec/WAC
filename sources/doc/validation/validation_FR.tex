@@ -588,7 +588,7 @@ journaux de \texttt{Get-WinEvent -ListLog} et leur état actif /
 raccourci témoin du Bureau public et raccourci épinglé à la barre des tâches
   (cible, arguments, emplacement) ; raccourcis listés par Windows dans les
   menus Démarrer, Bureaux et Quick Launch / \fichier{shortcuts.json}
-  (92 raccourcis avec ceux du profil Default, ni plus ni moins) &
+  (93 raccourcis avec ceux du profil Default et du Bureau redirigé, ni plus ni moins) &
   contrôle ajouté avec l'artefact \\
 valeur Run posée dans le \fichier{NTUSER.DAT} du profil Default /
   \fichier{run.json}, SID \texttt{S-0-0-0} et \champ{Profile} \texttt{Default} &
@@ -610,6 +610,11 @@ traces WPP de Defender listées par Windows / manifeste de la consigne, copiées
 fichiers de clés maîtresses DPAPI listés par Windows, GUID de l'en-tête égal
   au nom ; clé désignée par chaque \fichier{Preferred} et son expiration, lus
   par Windows / \fichier{dpapi\_master\_keys.json} (5 clés, 3 dossiers) &
+  contrôle ajouté avec l'artefact \\
+valeurs de \path|User Shell Folders| de « wac » lues non développées par
+  Windows, son Bureau redirigé vers \path|OneDrive\Desktop| /
+  \fichier{user\_shell\_folders.json} (20 valeurs) ; raccourci posé sur le
+  Bureau redirigé / \fichier{shortcuts.json} &
   contrôle ajouté avec l'artefact \\
 entrées DestList / raccourcis des listes de sauts & les 15 premières entrées de
   chaque liste perdues (573 raccourcis publiés sur 1~522) \\

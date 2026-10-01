@@ -5,7 +5,8 @@
  *  Zone.Identifier, and the registry values of the second lot (TrustRecords,
  *  firewall rules, certificate Blob), the NTFS security descriptors of
  *  $Secure:$SDS, the NTFS boot sector and change journal header, and the
- *  volume serial of a shortcut, and the DPAPI master key header and Preferred.
+ *  volume serial of a shortcut, the DPAPI master key header and Preferred,
+ *  and the paths of User Shell Folders.
  *
  *  WHY THIS TEST. These formats are text or a few bytes, and a decoder that
  *  misses a case still gives valid JSON: a multi-line command cut in two, a
@@ -29,6 +30,7 @@
 #include "ntfs_volumes.h"
 #include "recent_docs.h"
 #include "dpapi_master_keys.h"
+#include "user_shell_folders.h"
 #include "guard_page.h"
 #include <cstdio>
 #include <cstring>
@@ -574,6 +576,20 @@ void dpapiMasterKeys() {
 	check(!parseDpapiPreferred(preferred.data(), 23, named, expires), "dpapi: a Preferred of 23 bytes refused");
 }
 
+void userShellFolders() {
+	const std::wstring profile = L"C:\\Users\\wac";
+	check(resolveUserShellFolder(L"%USERPROFILE%\\OneDrive\\Desktop", profile) == L"C:\\Users\\wac\\OneDrive\\Desktop",
+	      "user shell folders: %USERPROFILE% is the profile's path");
+	check(resolveUserShellFolder(L"%userprofile%\\Desktop", profile) == L"C:\\Users\\wac\\Desktop",
+	      "user shell folders: the variable's case ignored");
+	check(resolveUserShellFolder(L"D:\\Data\\Desktop", profile) == L"D:\\Data\\Desktop",
+	      "user shell folders: a path on another disk kept");
+	check(resolveUserShellFolder(L"\\\\server\\share\\Desktop", profile).empty(),
+	      "user shell folders: a share is not a local path");
+	check(resolveUserShellFolder(L"%APPDATA%\\Desktop", profile).empty(),
+	      "user shell folders: another user variable is not guessed");
+}
+
 } // namespace
 
 int wmain() {
@@ -590,6 +606,7 @@ int wmain() {
 	ntfsVolumes();
 	shortcutVolumeSerial();
 	dpapiMasterKeys();
+	userShellFolders();
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }

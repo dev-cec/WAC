@@ -44,11 +44,20 @@ extern const size_t SHORTCUT_FOLDER_COUNT;
  *  bound, in case a corrupt index loops. */
 constexpr unsigned SHORTCUT_TREE_DEPTH = 6;
 
-/*! The Startup folder that lies inside a shortcut folder, left to the startup folders.
- *  @param folder the folder of shortcuts
- *  @param profile the profile's absolute path; ignored for a folder of the machine
- *  @return the absolute path of its Startup folder, or empty if it has none */
-std::wstring startupInside(const ShortcutFolder& folder, const std::wstring& profile);
+/*! One folder of shortcuts on the examined machine: an entry of
+ *  SHORTCUT_FOLDERS for the machine or for one profile, or a profile's
+ *  desktop redirected elsewhere (User Shell Folders). */
+struct ShortcutLocation {
+	const ShortcutFolder* folder;   //!< its kind: recursive or not, location name
+	std::wstring absolute;          //!< its absolute path, letter included
+	std::wstring sid;               //!< the profile's SID; empty for the folders of all users
+	std::wstring startup;           //!< the Startup folder inside it, absolute; empty for none
+};
+
+/*! Every folder of shortcuts, for the collection and for the conversion alike.
+ *  @return the folders of the machine, then each profile's, a redirected
+ *          desktop after its profile's default one */
+std::vector<ShortcutLocation> shortcutLocations();
 
 /*! One shortcut. */
 struct ShortcutItem {

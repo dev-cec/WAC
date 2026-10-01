@@ -24,6 +24,8 @@
 #   defenderwpp  Defender's WPP traces (Support\*.bin) -> the exhibit manifest
 #   dpapikey, dpapipreferred  every DPAPI master key file and what each
 #                Preferred names -> dpapi_master_keys.json
+#   usf          each User Shell Folders value of "wac", unexpanded; its
+#                Desktop redirected to OneDrive\Desktop -> user_shell_folders.json
 #   rundefault   a Run value in the NTUSER.DAT of the Default profile (template
 #                of new profiles) -> run.json, SID S-0-0-0, Profile "Default"
 #   secrets, audit, nl_slots  the SECURITY hive read live by Windows (as
@@ -785,6 +787,30 @@ if (Wants 'registry') {
     } catch { Write-Output ("userrighterror=" + $_.Exception.Message) }
 }
 
+# 31b. B-032 — a desktop redirected, as OneDrive does: the Desktop of "wac"
+#     moved to C:\Users\wac\OneDrive\Desktop (once; it stays), a shortcut
+#     dropped there. Then every User Shell Folders value of the loaded hive of
+#     "wac", unexpanded, for user_shell_folders.json.
+if (Wants 'shortcuts', 'user_shell_folders') {
+    $shellFolders = "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders"
+    New-Item -ItemType Directory -Force 'C:\Users\wac\OneDrive\Desktop' | Out-Null
+    Set-ItemProperty -Path $shellFolders -Name Desktop -Value '%USERPROFILE%\OneDrive\Desktop' -Type ExpandString
+    # WAC copies the hive raw seconds later: the change is written to it now
+    # (RegFlushKey), not left in memory for Windows' lazy flush.
+    $writable = [Microsoft.Win32.Registry]::Users.OpenSubKey("$wacSid\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders", $true)
+    $writable.Flush()
+    $writable.Close()
+    $link = (New-Object -ComObject WScript.Shell).CreateShortcut('C:\Users\wac\OneDrive\Desktop\wac-redirected-test.lnk')
+    $link.TargetPath = 'C:\Windows\System32\calc.exe'
+    $link.Save()
+    Write-Output 'shortcut=C:\Users\wac\OneDrive\Desktop\wac-redirected-test.lnk|C:\Windows\System32\calc.exe||Desktop'
+    $key = [Microsoft.Win32.Registry]::Users.OpenSubKey("$wacSid\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders")
+    foreach ($name in $key.GetValueNames()) {
+        Write-Output ("usf=" + $wacSid + '|' + $name + '|' + $key.GetValue($name, $null, 'DoNotExpandEnvironmentNames'))
+    }
+    $key.Close()
+}
+
 # 32. B-032 — shortcuts outside Recent: one on the public desktop with a known
 #     target and arguments, one pinned to the task bar of "wac". Then every
 #     .lnk and .url Windows lists in the folders shortcuts.json covers — Start
@@ -813,6 +839,16 @@ if (Wants 'shortcuts') {
         $folders += ,@("$profile\AppData\Roaming\Microsoft\Windows\Start Menu", $true)
         $folders += ,@("$profile\Desktop", $false)
         $folders += ,@("$profile\AppData\Roaming\Microsoft\Internet Explorer\Quick Launch", $true)
+    }
+    # A desktop moved elsewhere, as each loaded hive says (Explorer's own view).
+    # The value is read unexpanded: expanded here, %USERPROFILE% would be SYSTEM's.
+    foreach ($hku in Get-ChildItem 'Registry::HKEY_USERS' | Where-Object { $_.PSChildName -match '^S-1-5-21-[\d-]+$' }) {
+        $usf = [Microsoft.Win32.Registry]::Users.OpenSubKey("$($hku.PSChildName)\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders")
+        $profileHome = (Get-ItemProperty "$profileList\$($hku.PSChildName)" -ErrorAction SilentlyContinue).ProfileImagePath
+        if (-not $usf -or -not $profileHome) { continue }
+        $desktop = [string]$usf.GetValue('Desktop', $null, 'DoNotExpandEnvironmentNames') -replace '^%USERPROFILE%', $profileHome
+        $usf.Close()
+        if ($desktop -and $desktop -ne "$profileHome\Desktop") { $folders += ,@($desktop, $false) }
     }
     foreach ($f in $folders) {
         if (-not (Test-Path -LiteralPath $f[0])) { continue }

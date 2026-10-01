@@ -4,6 +4,7 @@
 #include "shortcuts.h"
 #include "startup_folders.h"
 #include "consigne.h"
+#include "user_shell_folders.h"
 #include <filesystem>
 
 const ShortcutFolder SHORTCUT_FOLDERS[] = {
@@ -54,17 +55,15 @@ std::vector<std::filesystem::path> listShortcuts(const std::filesystem::path& ro
 	return files;
 }
 
-/*! Reads the shortcuts of one folder of SHORTCUT_FOLDERS.
- *  @param folder the folder
- *  @param absolute its absolute path on the examined machine, letter included
- *  @param startup the Startup folder inside it, absolute; empty for none
- *  @param sid the profile's SID, empty for a folder of the machine
+/*! Reads the shortcuts of one folder.
+ *  @param where the folder
  *  @param items receives the shortcuts */
-void readFolder(const ShortcutFolder& folder, const std::wstring& absolute, const std::wstring& startup,
-                const std::wstring& sid, std::vector<ShortcutItem>& items) {
-	const std::wstring root = extractedPath(absolute);
+void readFolder(const ShortcutLocation& where, std::vector<ShortcutItem>& items) {
+	const ShortcutFolder& folder = *where.folder;
+	const std::wstring& sid = where.sid;
+	const std::wstring root = extractedPath(where.absolute);
 	const std::vector<std::filesystem::path> files =
-		listShortcuts(root, folder.recursive, startup.empty() ? L"" : extractedPath(startup));
+		listShortcuts(root, folder.recursive, where.startup.empty() ? L"" : extractedPath(where.startup));
 	size_t iFile = 0;
 	for (const std::filesystem::path& file : files) {
 		printProgress(L"Shortcut " + file.filename().wstring(), ++iFile, files.size(), L"lnk");
@@ -81,10 +80,30 @@ void readFolder(const ShortcutFolder& folder, const std::wstring& absolute, cons
 
 } // namespace
 
-std::wstring startupInside(const ShortcutFolder& folder, const std::wstring& profile) {
-	const std::wstring base = folder.perProfile ? profile + folder.relative : folder.relative;
-	const std::wstring startup = folder.perProfile ? profile + STARTUP_PROFILE : STARTUP_ALL_USERS;
-	return isInside(startup, base) ? startup : L"";
+std::vector<ShortcutLocation> shortcutLocations() {
+	std::vector<ShortcutLocation> locations;
+	for (size_t i = 0; i < SHORTCUT_FOLDER_COUNT; ++i) {
+		const ShortcutFolder& folder = SHORTCUT_FOLDERS[i];
+		if (!folder.perProfile) {
+			const std::wstring base = conf.systemDrive + folder.relative;
+			const std::wstring startup = conf.systemDrive + STARTUP_ALL_USERS;
+			locations.push_back({ &folder, base, L"", isInside(startup, base) ? startup : L"" });
+			continue;
+		}
+		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
+			const std::wstring& sid = std::get<0>(profileEntry);
+			const std::wstring& profile = std::get<1>(profileEntry);   // absolute, with its letter
+			const std::wstring base = profile + folder.relative;
+			const std::wstring startup = profile + STARTUP_PROFILE;
+			locations.push_back({ &folder, base, sid, isInside(startup, base) ? startup : L"" });
+			// A desktop moved elsewhere (OneDrive, another disk): its shortcuts are there.
+			if (std::wstring(folder.location) == L"Desktop") {
+				const std::wstring moved = redirectedDesktop(sid, profile);
+				if (!moved.empty()) locations.push_back({ &folder, moved, sid, L"" });
+			}
+		}
+	}
+	return locations;
 }
 
 Json ShortcutItem::toJson() const {
@@ -98,20 +117,7 @@ Json ShortcutItem::toJson() const {
 
 HRESULT Shortcuts::getData() {
 	log(0, L"ℹ️Shortcuts :");
-	for (size_t i = 0; i < SHORTCUT_FOLDER_COUNT; ++i) {
-		const ShortcutFolder& folder = SHORTCUT_FOLDERS[i];
-		if (!folder.perProfile) {
-			const std::wstring startup = startupInside(folder, L"");
-			readFolder(folder, conf.systemDrive + folder.relative,
-			           startup.empty() ? L"" : conf.systemDrive + startup, L"", items_);
-			continue;
-		}
-		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
-			const std::wstring& profile = std::get<1>(profileEntry);   // absolute, with its letter
-			readFolder(folder, profile + folder.relative, startupInside(folder, profile),
-			           std::get<0>(profileEntry), items_);
-		}
-	}
+	for (const ShortcutLocation& where : shortcutLocations()) readFolder(where, items_);
 	return ERROR_SUCCESS;
 }
 

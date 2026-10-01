@@ -372,6 +372,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   security_descriptors: true    # $Secure:$SDS: owner and rights of every file, each descriptor once
   ntfs_volumes: true            # $Boot and $UsnJrnl:$Max: serial and geometry, creation of the journal
   dpapi_master_keys: true       # DPAPI master keys copied encrypted; JSON: owner, GUID, dates, never the key
+  user_shell_folders: true      # where each user's desktop, documents, downloads really are
 \end{lstlisting}
 
 \begin{itemize}
@@ -1270,7 +1271,17 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         leaves its shortcut there; an intruder plants a command line there, or
         retargets an existing shortcut at their binary while keeping the icon.
         The Start menu's Startup folder is not in it: it belongs to
-        \fichier{startup\_folders.json}.
+        \fichier{startup\_folders.json}. A desktop redirected elsewhere on a
+        local disk (OneDrive, another volume, see
+        \fichier{user\_shell\_folders.json}) is read there too.
+  \item[\fichier{user\_shell\_folders.json}] each user's folders
+        (\path|User Shell Folders| of their \fichier{NTUSER.DAT}): name
+        (\champ{Name}, and \champ{FolderName} for those a GUID names, as the
+        Downloads), value as written (\champ{Value}), resolved path
+        (\champ{Path}, absent for a network share) and last write of the key.
+        OneDrive moves the desktop and the documents, a company redirects them
+        to a share: that is where the user's files are to be looked for, and a
+        redirection set quietly is itself a trace.
   \item[\fichier{powershell\_history.json}] PSReadLine history of each profile
         and each host (\champ{Host}: \texttt{ConsoleHost}, the ISE, VS~Code):
         the commands in the order they were typed, a command on several lines

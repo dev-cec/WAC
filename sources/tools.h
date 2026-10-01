@@ -131,6 +131,7 @@ struct AppliConf {
 		bool securityDescriptors = true; //!< $Secure:$SDS of every NTFS volume: owner and ACLs of every file
 		bool ntfsVolumes = true;      //!< $Boot and $UsnJrnl:$Max of every NTFS volume: serial, geometry, journal creation
 		bool dpapiMasterKeys = true;  //!< DPAPI master keys of each profile and of the system, copied encrypted; their metadata
+		bool userShellFolders = true; //!< each user's shell folders (User Shell Folders): where desktop and documents really are
 		bool zoneIdentifiers = true;  //!< Zone.Identifier streams, read in the $MFT copy
 		bool security = true;         //!< SECURITY hive: LSA secrets' names and dates, cached logons, audit policy
 		bool persistence = true;      //!< registry persistence beyond Run: IFEO, AppInit, Winlogon, LSA, COM…
@@ -163,7 +164,9 @@ struct AppliConf {
 		 *  @return true if one of them is switched on */
 		bool needsUserHives() const {
 			return registry || persistence || officeTrustRecords || typedPaths || wordWheelQuery
-			    || rootCertificates || internetSettings || installedPrograms || explorerRecentDocs || mountPoints || programUsages;
+			    || rootCertificates || internetSettings || installedPrograms || explorerRecentDocs || mountPoints || programUsages
+			    || userShellFolders
+			    || shortcuts;   // a desktop redirected elsewhere is read in NTUSER.DAT (user_shell_folders.h)
 		}
 	} artefacts;
 	RunMode mode = RunMode::Full; //!< what this run does (see RunMode)

@@ -377,6 +377,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   security_descriptors: true    # $Secure:$SDS : propriétaire et droits de chaque fichier, chaque descripteur une fois
   ntfs_volumes: true            # $Boot et $UsnJrnl:$Max : numéro de série et géométrie, création du journal
   dpapi_master_keys: true       # clés maîtresses DPAPI copiées chiffrées ; JSON : propriétaire, GUID, dates, jamais la clé
+  user_shell_folders: true      # où sont vraiment le Bureau, les Documents, les Téléchargements de chacun
 \end{lstlisting}
 
 \begin{itemize}
@@ -1304,7 +1305,18 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         y laisse son raccourci ; un intrus y pose une ligne de commande, ou
         redirige un raccourci existant vers son binaire en gardant l'icône. Le
         dossier Startup du menu Démarrer n'y figure pas : il relève de
-        \fichier{startup\_folders.json}.
+        \fichier{startup\_folders.json}. Un Bureau redirigé ailleurs sur un
+        disque local (OneDrive, un autre volume, voir
+        \fichier{user\_shell\_folders.json}) est lu là aussi.
+  \item[\fichier{user\_shell\_folders.json}] dossiers de chaque utilisateur
+        (\path|User Shell Folders| de son \fichier{NTUSER.DAT}) : nom
+        (\champ{Name}, et \champ{FolderName} pour ceux qu'un GUID désigne,
+        comme les Téléchargements), valeur telle qu'écrite (\champ{Value}),
+        chemin résolu (\champ{Path}, absent pour un partage réseau) et date de
+        dernière écriture de la clé. OneDrive déplace le Bureau et les
+        Documents, une entreprise les redirige vers un partage : c'est là qu'il
+        faut chercher les fichiers de l'utilisateur, et une redirection posée
+        en silence est elle-même une trace.
   \item[\fichier{powershell\_history.json}] historique PSReadLine de chaque
         profil et de chaque hôte (\champ{Host} : \texttt{ConsoleHost},
         l'ISE, VS~Code) : les commandes dans l'ordre où elles ont été tapées,

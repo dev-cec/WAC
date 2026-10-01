@@ -55,6 +55,7 @@
 #include "security_descriptors.h"
 #include "ntfs_volumes.h"
 #include "dpapi_master_keys.h"
+#include "user_shell_folders.h"
 #include "jumplist_automatic.h"
 #include "jumplist_custom.h"
 #include "scheduledTasks.h"
@@ -1171,6 +1172,9 @@ void convertArtefacts(bool systemAvailable) {
 	convertFileArtefact<DpapiMasterKeys>(conf.artefacts.dpapiMasterKeys, "dpapi_master_keys.json",
 	                                     Text::ArtefactDpapiMasterKeys, L"artefacts.dpapi_master_keys",
 	                                     Text::StepDpapiMasterKeys);
+	convertFileArtefact<UserShellFolders>(conf.artefacts.userShellFolders, "user_shell_folders.json",
+	                                      Text::ArtefactUserShellFolders, L"artefacts.user_shell_folders",
+	                                      Text::StepUserShellFolders);
 	writeProcesses();   // if the names could not be loaded (SYSTEM hive unreadable)
 
 	/************************

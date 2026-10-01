@@ -1500,6 +1500,20 @@ def check_small_file_artefacts(folder):
                f"dpapi_master_keys.json: the preferred key of {count} folder(s) and its expiry, as Windows reads Preferred",
                f"dpapi_master_keys.json: {wrong[:2]}")
 
+    # User Shell Folders (B-032): every value of the hive of "wac", unexpanded,
+    # as Windows reads it; its Desktop, redirected to OneDrive, resolved.
+    shell = load(folder, "user_shell_folders.json")
+    if isinstance(shell, list) and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            live = [l.strip()[len("usf="):].split("|", 2) for l in f if l.startswith("usf=")]
+        mine = {(s.get("SID"), s.get("Name")): s for s in shell}
+        wrong = [f"{name}: Windows {value}, WAC {mine.get((sid, name), {}).get('Value')}"
+                 for sid, name, value in live if mine.get((sid, name), {}).get("Value") != value]
+        desktop = next((mine.get((sid, "Desktop"), {}) for sid, _, _ in live), {})
+        report(live and not wrong and desktop.get("Path", "").lower().endswith("\\onedrive\\desktop"),
+               f"user_shell_folders.json: the {len(live)} value(s) of User Shell Folders of wac, the redirected Desktop resolved",
+               f"user_shell_folders.json: {wrong[:3]}, Desktop {desktop}")
+
     if "datavolume" in reference:
         letter, present, deleted = reference["datavolume"].split("|")
         mft = load(folder, "mft.json")

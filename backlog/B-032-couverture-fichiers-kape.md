@@ -36,7 +36,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] 3 $Secure:$SDS (security_descriptors.json, SecurityId dans mft.json), $UsnJrnl:$Max et $Boot (ntfs_volumes.json), $TxfLog (brut)
 - [x] 4 Traces WPP de Defender — copie brute (filtre .bin du dossier Support)
 - [x] 5 Clés maîtresses DPAPI (utilisateurs et système) — copiées chiffrées, dpapi_master_keys.json sans la clé
-- [ ] 6 User Shell Folders (venu de B-031) : suivre les dossiers redirigés (Bureau, Documents, OneDrive) pour y chercher les fichiers de l'utilisateur
+- [x] 6 User Shell Folders (venu de B-031) : user_shell_folders.json, et le Bureau redirigé suivi par shortcuts
 
 ## Journal
 - 2026-10-01 : ouverte depuis B-015.
@@ -53,3 +53,6 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-01 : point 4 — traces WPP de Defender (`Support\MpWpp*.bin`, ≈ 18 Mo en VM) copiées brutes sous la clé `defender`, sans conversion (traces ETW binaires, symboles privés). Contrôle : les 3 fichiers que Windows liste sont au manifeste.
 - 2026-10-01 : point 4 commité (273c0b0).
 - 2026-10-01 : point 5 — clés maîtresses DPAPI copiées telles quelles (chiffrées), avec Preferred et CREDHIST, du système (`System32\Microsoft\Protect`, `S-1-5-18` et `S-1-5-18\User`) et de chaque profil ; `dpapi_master_keys.json` : propriétaire, GUID de l'en-tête (vérifié égal au nom du fichier), version, politique, tailles des blocs (domaine ou non), dates, clé préférée et expiration — aucun matériau de clé. Référence : les 5 fichiers que Windows liste et ce que lit Windows dans les 3 Preferred, identiques. Test vu échouer (contrôle des tailles de blocs retiré).
+- 2026-10-01 : point 5 commité (39fe780).
+- 2026-10-01 : point 6 — `user_shell_folders.json` (clé `user_shell_folders`) : chaque valeur de User Shell Folders de chaque profil, brute et résolue (`%USERPROFILE%` = chemin du profil ; un partage ou une autre variable d'utilisateur ne sont pas suivis), date de la clé. Les raccourcis suivent un Bureau redirigé sur un disque local (`shortcutLocations()`, partagé par collecte et conversion). Référence : Bureau de « wac » redirigé vers `OneDrive\Desktop` dans la VM, ses 20 valeurs lues non développées par Windows identiques, le raccourci posé sur le Bureau redirigé retrouvé (93 raccourcis). Harnais : une valeur du registre posée juste avant la collecte doit être écrite (`RegistryKey.Flush`, RegFlushKey), sans quoi la copie brute de la ruche ne l'a pas encore.
+- 2026-10-01 : cycle complet — un seul ❌, hors WAC : firewall.json de la seconde collecte (--collect, ~10 min après la référence) compte 505 règles contre 504 relevées au début ; Edge WebView s'est mis à jour entre-temps et a créé « Microsoft Edge (mDNS-In) ». La première collecte en compte bien 504. Le contrôle compare à un compte pris au début du cycle : fragilité du harnais à corriger (compter avant chaque collecte).

@@ -435,23 +435,12 @@ HRESULT ExtractFileArtefactsRaw() {
 	/* Shortcuts outside Recent: the Start menu and Quick Launch are trees, the
 	   desktops plain folders. The Startup folder inside the Start menu is left
 	   to the startup folders, which take it whole. */
-	if (conf.artefacts.shortcuts) {
-		for (size_t i = 0; i < SHORTCUT_FOLDER_COUNT; ++i) {
-			const ShortcutFolder& folder = SHORTCUT_FOLDERS[i];
-			std::vector<std::wstring> profiles = { L"" };   // a folder of the machine: once, relative to the system volume
-			if (folder.perProfile) {
-				profiles.clear();
-				for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
-					profiles.push_back(std::get<1>(profileEntry));
-			}
-			for (const std::wstring& profile : profiles) {
-				if (folder.recursive)
-					trees.push_back({ profile + folder.relative, { L".lnk", L".url" }, SHORTCUT_TREE_DEPTH,
-					                  L"shortcuts", startupInside(folder, profile) });
-				else addTarget(profile + folder.relative, { L".lnk", L".url" });
-			}
+	if (conf.artefacts.shortcuts)
+		for (const ShortcutLocation& where : shortcutLocations()) {
+			if (where.folder->recursive)
+				trees.push_back({ where.absolute, { L".lnk", L".url" }, SHORTCUT_TREE_DEPTH, L"shortcuts", where.startup });
+			else addTarget(where.absolute, { L".lnk", L".url" });
 		}
-	}
 	for (const Tree& tree : trees) {
 		const std::wstring volume = volumeOfPath(tree.absolute), path = pathRelativeToVolume(tree.absolute);
 		size_t extractedFiles = 0;
