@@ -30,3 +30,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 ## Journal
 - 2026-09-30 : créée à la demande de l'utilisateur, à faire en fin de refactoring.
 - 2026-10-01 : `readLittleEndian<T>` ajouté à tools.h (B-032) ; les copies locales `rd16/rd32/rd64` (mft.cpp, fat_volume.cpp, ese_database.cpp, bits_jobs.cpp, defender_history.cpp, cim_repository.cpp, hive_recover.cpp, pe_resource.cpp) sont à y ramener.
+- 2026-10-01 : `conversions.h` créé, en-tête autonome inclus par tools.h et sha.h : `toHexadecimal` (sorti de sha.h/sha.cpp) et `readLittleEndian` y sont. Plus besoin d'inclure sha.h pour afficher des octets ; les `#include "sha.h"` des modules qui ne l'utilisaient que pour cela restent à retirer, et les `rd16/rd32/rd64` locaux à ramener. 66 JSON identiques avant/après sur une même collecte.

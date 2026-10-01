@@ -16,6 +16,7 @@
 #include <filesystem>
 #include <time.h>
 #include "json.h"
+#include "conversions.h"
 
 // global constants
 #define MAX_KEY_NAME 255 //!< longest key name in the registry
@@ -933,21 +934,6 @@ std::wstring sidToText(const BYTE* sid, size_t size);
 * @param size their number
 * @return the JSON object, empty if the descriptor's header does not fit */
 Json securityDescriptorToJson(const BYTE* sd, size_t size);
-
-/*! An unsigned integer stored little-endian, as every on-disk Windows format
-*  holds them, read without alignment requirement. The ONE reader for new
-*  code; the per-module copies (rd32 in mft.cpp, fat_volume.cpp, ese_database.cpp…)
-*  are to come back to it (backlog B-030).
-* @tparam T uint16_t, uint32_t or uint64_t
-* @param p its first byte; the caller has checked that sizeof(T) bytes are there
-* @return the value */
-template <class T>
-T readLittleEndian(const uint8_t* p) {
-	static_assert(std::is_unsigned<T>::value, "an unsigned integer");
-	T value = 0;
-	for (size_t i = 0; i < sizeof(T); ++i) value |= (T)((T)p[i] << (8 * i));
-	return value;
-}
 
 /*! Binary form of a SID written as text — the reverse of sidToText, replacing
 * ConvertStringSidToSidW.

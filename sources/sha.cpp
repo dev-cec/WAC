@@ -77,17 +77,6 @@ void add(const uint8_t* data, size_t length, uint8_t* block, size_t& inBlock,
 
 } // namespace
 
-std::wstring toHexadecimal(const uint8_t* bytes, size_t n){
-	static const wchar_t* d = L"0123456789ABCDEF";
-	std::wstring r;
-	r.reserve(n * 2);
-	for (size_t i = 0; i < n; ++i){
-		r.push_back(d[bytes[i] >> 4]);
-		r.push_back(d[bytes[i] & 0x0F]);
-	}
-	return r;
-}
-
 // ---------------------------------------------------------------------------
 //  SHA-1
 // ---------------------------------------------------------------------------
