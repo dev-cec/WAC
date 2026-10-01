@@ -182,9 +182,13 @@ Lecture directe du volume (\path|\\.\C:|) & Un descripteur ouvert en
 Ruches du registre & Copiées par la lecture directe, puis lues sur la copie.
   Aucune clé du registre vivant n'est ouverte : \fichier{WAC.exe} n'importe
   aucune fonction \texttt{Reg*}. Le rejeu des journaux de transaction se fait
-  sur la copie, avec un journal d'annulation. Dans la ruche SECURITY, seuls les
-  noms, dates et comptes sont lus : aucune valeur de secret, aucune donnée
-  d'authentification en cache. \\
+  sur la copie, avec un journal d'annulation. Dans la ruche SECURITY, sont lus
+  les noms et dates des secrets LSA (jamais leur valeur), les comptes de
+  connexions en cache (jamais leur contenu) et les droits des comptes. Dans la
+  ruche SAM, les condensats des mots de passe sont déchiffrés et les questions
+  de réinitialisation lues en clair : une collecte voulue, pour que WAE repère
+  les mots de passe faibles. Tout se fait sur la copie, en lecture seule ; la
+  machine examinée n'est pas touchée, et un condensat est à sens unique. \\
 Journaux d'événements (\opt{events}) & Lus par la lecture directe : le service
   de journalisation n'est pas sollicité, aucun événement n'est produit. \\
 Volumes FAT et exFAT & Lus en brut par le périphérique du volume

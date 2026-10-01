@@ -179,8 +179,12 @@ Raw reading of the volume (\path|\\.\C:|) & One handle opened
 Registry hives & Copied by the raw reading, then read on the copy. No key of
   the live registry is opened: \fichier{WAC.exe} imports no \texttt{Reg*}
   function. The transaction logs are replayed on the copy, with an undo
-  journal. In the SECURITY hive, only names, dates and counts are read: no
-  secret's value, no cached credential. \\
+  journal. In the SECURITY hive, the LSA secret names and dates (never their
+  value), the cached-logon counts (never their content) and the account rights
+  are read. In the SAM hive, the password hashes are decrypted and the reset
+  security questions read in the clear: a deliberate collection, so that WAE can
+  flag weak passwords. All of it on the copy, read-only; the examined machine is
+  not touched, and a hash is one-way. \\
 Event logs (\opt{events}) & Read by the raw reading: the event log service is
   not called upon, no event is produced. \\
 FAT and exFAT volumes & Read raw through the volume device
