@@ -993,7 +993,16 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         are collected as they are.
   \item[\fichier{users.json}] local accounts, read from the \fichier{SAM} hive:
         SID and RID, state, flags, logon and failure counts, dates of last
-        logon, last failure, password change and account change, profile.
+        logon, last failure, password change and account change, profile, and the
+        password's NT and LM hashes (\champ{NtHash}, \champ{LmHash}, hex), with
+        their history (\champ{NtHashHistory}, \champ{LmHashHistory}). A hash is
+        one-way: it names a password without revealing it. A weak or empty
+        password used by an intruder reads as a legitimate logon; \textbf{WAC
+        judges nothing}, it converts, and WAE confronts the hashes, offline, with
+        those of known weak passwords. The hashes are decrypted on the spot (the
+        boot key from \fichier{SYSTEM}, the hashed boot key from the \fichier{SAM},
+        the AES scheme of Windows~10 and later or the older RC4, then a DES layer
+        keyed on the RID).
   \item[\fichier{Sessions.json}] sessions open at collection time: user, logon
         type, authentication package, start time.
   \item[\fichier{processes.json}] running processes: name, identifiers (and

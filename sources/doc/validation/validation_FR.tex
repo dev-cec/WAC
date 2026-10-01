@@ -593,6 +593,9 @@ identifiants d'enregistrement uniques par journal & relecture d'un bloc
 références \texttt{\%\%nnnn} non résolues dans les messages & fichier de
   paramètres d'un fournisseur non chargé (3~780 messages) \\
 RID retrouvé à la fin du SID reconstruit & lecture de la base SAM \\
+condensat NT d'un compte témoin à mot de passe connu, et l'ancien dans
+  l'historique / \fichier{users.json} & MD4 du mot de passe en UTF-16LE,
+  recalculé à part (chaîne clé de démarrage / AES / DES vérifiée de bout en bout) \\
 états et types des services, présence des pilotes & filtres d'énumération
   confondus avec des états \\
 aucun processus ne porte \fichier{WAC.exe} parmi ses modules & modules de

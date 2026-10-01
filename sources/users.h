@@ -25,11 +25,13 @@
  *  carrying two binary values:
  *    - `F`: the fixed-size fields — timestamps, RID, account flags, logon
  *      counters (offsets documented below);
- *    - `V`: the variable-size fields — name, full name, comment, paths,
- *      preceded by a table of offsets relative to 0xCC.
- *  The password hashes (`V`, offsets 0x9C and 0xA8) are DELIBERATELY IGNORED:
- *  they establish no fact useful to the investigation, and their presence in an
- *  output file would create a risk for nothing in return.
+ *    - `V`: the variable-size fields — name, full name, comment, paths, and the
+ *      encrypted NT and LM hashes (offsets 0x9C and 0xA8), preceded by a table
+ *      of offsets relative to 0xCC.
+ *  The NT and LM hashes are decrypted and emitted (sam_secrets.h): a weak or
+ *  empty password used by an attacker reads as a legitimate logon, and WAE
+ *  confronts the hashes, offline, with those of known weak passwords. A hash is
+ *  one-way — it names a password without revealing it.
  *
  *  The full SID is rebuilt from the machine SID, read in the `V` value of
  *  `SAM\\Domains\\Account`, and the account's RID.
@@ -42,6 +44,7 @@
 #include "offline_registry.h"
 #include "tools.h"
 #include "trans_id.h"
+#include "sam_secrets.h"
 #include "json.h"
 
 /*! One local account of the examined machine. */
@@ -61,6 +64,13 @@ struct User {
 	FILETIME     accountExpiresUtc = { 0, 0 };   //!< expiry of the account, in UTC
 	FILETIME     lastBadPasswordUtc = { 0, 0 };  //!< last failed authentication, in UTC
 	FILETIME     keyLastWriteUtc = { 0, 0 };     //!< creation / modification of the account
+
+	// Password hashes, decrypted from the SAM (see sam_secrets.h). Hex, empty
+	// where the account carries none. WAC converts them; WAE judges them.
+	std::wstring ntHash;                          //!< current NT hash
+	std::wstring lmHash;                          //!< current LM hash
+	std::vector<std::wstring> ntHistory;          //!< previous NT hashes, newest first
+	std::vector<std::wstring> lmHistory;          //!< previous LM hashes, newest first
 
 	/*! Converts the account to JSON.
 	 *  @return its JSON object. */

@@ -697,3 +697,29 @@ if (Wants 'event_log_configuration') {
         Write-Output ("autologger=" + $_.Name + '|' + $_.Start)
     }
 }
+
+# 31. B-034 — SAM hashes: two witness accounts, one with a known password, one
+#     with an empty one. WAC must decrypt their NT hashes; the check confronts
+#     each with MD4 of the password (the empty one gives the known constant).
+#     The password is synthetic, for a throwaway VM account — not a real secret.
+if (Wants 'registry') {
+    # A witness account with a known password: WAC must decrypt its NT hash to
+    # MD4 of that password (checked in check-json.py), which exercises the whole
+    # boot key / AES / DES chain against an independent computation. The password
+    # is synthetic, for a throwaway VM account — not a real secret. Wrapped so a
+    # failure here cannot break the rest of the witness script.
+    # The account is given a first password then a second, so the SAM holds a
+    # hash history: WAC must decrypt the current hash (MD4 of the second) and the
+    # history (MD4 of the first among it).
+    # A standalone machine keeps no password history by default (policy 0), so
+    # the SAM would store no previous hash: the policy is raised first, then the
+    # password changed through `net user`, which honours it.
+    try {
+        $pwOld = 'Wac-Old-2026!'; $pwNew = 'Wac-Test-2026!'
+        net accounts /uniquepw:5 | Out-Null
+        if (Get-LocalUser -Name 'wacpw' -ErrorAction SilentlyContinue) { Remove-LocalUser -Name 'wacpw' }
+        New-LocalUser -Name 'wacpw' -Password (ConvertTo-SecureString $pwOld -AsPlainText -Force) -PasswordNeverExpires -ErrorAction Stop | Out-Null
+        net user wacpw $pwNew | Out-Null
+        Write-Output ("samhash=wacpw|" + $pwNew + '|' + $pwOld)
+    } catch { Write-Output ("samhasherror=" + $_.Exception.Message) }
+}

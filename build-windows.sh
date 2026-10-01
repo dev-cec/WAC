@@ -105,7 +105,7 @@ echo "== Link =="
 # services (advapi32), the process list (wtsapi32), the logon sessions
 # (secur32). Formatting and parsing — GUIDs, SIDs, OLE dates, property names,
 # the command line, the registry hives — are WAC's own code.
-LIBS=(-ladvapi32 -lwtsapi32 -lsecur32)
+LIBS=(-ladvapi32 -lwtsapi32 -lsecur32 -lbcrypt)
 # -municode: WAC's entry point is wmain (arguments in UTF-16).
 # --no-insert-timestamp: no link date in the PE header — the same sources give
 # the same WAC.exe, byte for byte; its version is in its resource (WAC.rc).

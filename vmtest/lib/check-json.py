@@ -16,6 +16,37 @@ Non-zero exit if at least one file is invalid or inconsistent.
 import ntpath
 import hashlib, json, sys, glob, os, re, collections, uuid, datetime
 
+def md4(data):
+    """MD4 (RFC 1320), pure Python: OpenSSL 3 drops it from hashlib, and the NT
+    hash is MD4 of the password in UTF-16LE. Used only to confront WAC's
+    decrypted NT hash with a witness account's known password."""
+    def lrot(x, n): return ((x << n) | (x >> (32 - n))) & 0xffffffff
+    msg = bytearray(data)
+    bitlen = (8 * len(data)) & 0xffffffffffffffff
+    msg.append(0x80)
+    while len(msg) % 64 != 56: msg.append(0)
+    msg += bitlen.to_bytes(8, "little")
+    a, b, c, d = 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476
+    for off in range(0, len(msg), 64):
+        x = [int.from_bytes(msg[off + 4 * i:off + 4 * i + 4], "little") for i in range(16)]
+        aa, bb, cc, dd = a, b, c, d
+        for k, s in zip(range(16), [3, 7, 11, 19] * 4):          # round 1
+            v = (a + ((b & c) | (~b & d)) + x[k]) & 0xffffffff
+            a, b, c, d = d, lrot(v, s), b, c
+        order2 = [i + j for j in range(4) for i in (0, 4, 8, 12)]
+        for k, s in zip(order2, [3, 5, 9, 13] * 4):              # round 2
+            v = (a + ((b & c) | (b & d) | (c & d)) + x[k] + 0x5a827999) & 0xffffffff
+            a, b, c, d = d, lrot(v, s), b, c
+        order3 = [i + j for j in (0, 2, 1, 3) for i in (0, 8, 4, 12)]
+        for k, s in zip(order3, [3, 9, 11, 15] * 4):             # round 3
+            v = (a + (b ^ c ^ d) + x[k] + 0x6ed9eba1) & 0xffffffff
+            a, b, c, d = d, lrot(v, s), b, c
+        a = (a + aa) & 0xffffffff; b = (b + bb) & 0xffffffff
+        c = (c + cc) & 0xffffffff; d = (d + dd) & 0xffffffff
+    return b"".join(v.to_bytes(4, "little") for v in (a, b, c, d))
+
+
+
 # A double escaping is recognised on a PATH pattern, not on free text: the
 # content of an event (PowerShell script, regular expression, command line) may
 # legitimately hold "\\" — for instance 'TIP\\(?:' where "\\" is PowerShell's
@@ -2970,6 +3001,38 @@ def check_users(folder):
         found += 1
     else:
         print("  ✅ users.json: RIDs consistent with the SIDs")
+
+    # SAM hashes (B-034): WAC decrypts the NT hash of each account from the SAM.
+    # The witness accounts have a known password, so their NT hash must equal
+    # MD4 of that password in UTF-16LE — the whole boot key / AES / DES chain
+    # verified end to end, against an independent computation (empty password
+    # gives the well-known constant 31d6cfe0...).
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            # samhash=<name>|<current password>[|<previous password>]
+            witnesses = [l.strip()[len("samhash="):].split("|")
+                         for l in f if l.startswith("samhash=")]
+        by_name = {str(u.get("Name", "")).lower(): u for u in d}
+        wrong = []
+        for parts in witnesses:
+            name, current = parts[0], parts[1]
+            account = by_name.get(name.lower(), {})
+            expected = md4(current.encode("utf-16-le")).hex()
+            got = str(account.get("NtHash", "")).lower()
+            if got != expected:
+                wrong.append(f"{name}: NtHash {got or '(absent)'}, expected {expected}")
+            # A previous password: its hash must be somewhere in the NT history.
+            if len(parts) > 2 and parts[2]:
+                previous = md4(parts[2].encode("utf-16-le")).hex()
+                history = {h.lower() for h in account.get("NtHashHistory") or []}
+                if previous not in history:
+                    wrong.append(f"{name}: previous hash {previous} not in NtHashHistory {sorted(history)}")
+        if witnesses and not wrong:
+            print(f"  ✅ users.json: NT hash and history of {len(witnesses)} witness account(s) match MD4 of their passwords")
+        elif witnesses:
+            print(f"  ❌ users.json: {wrong}")
+            found += 1
     return found
 
 

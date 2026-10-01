@@ -1011,7 +1011,16 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
   \item[\fichier{users.json}] comptes locaux, lus dans la ruche \fichier{SAM} :
         SID et RID, état, drapeaux, nombre de connexions et d'échecs, dates de
         dernière connexion, de dernier échec, de changement de mot de passe et de
-        modification du compte, profil.
+        modification du compte, profil, et les condensats NT et LM du mot de passe
+        (\champ{NtHash}, \champ{LmHash}, en hexadécimal), avec leur historique
+        (\champ{NtHashHistory}, \champ{LmHashHistory}). Un condensat est à sens
+        unique : il désigne un mot de passe sans le révéler. Un mot de passe vide
+        ou faible utilisé par un intrus se lit comme une connexion légitime ;
+        \textbf{WAC ne juge rien}, il convertit, et c'est WAE qui confronte les
+        condensats, hors ligne, à ceux des mots de passe faibles connus. Les
+        condensats sont déchiffrés sur place (clé de démarrage de \fichier{SYSTEM},
+        clé de hachage de la \fichier{SAM}, schéma AES de Windows~10 et suivants
+        ou RC4 plus ancien, puis couche DES par RID).
   \item[\fichier{Sessions.json}] sessions ouvertes au moment de la collecte :
         utilisateur, type d'ouverture, paquet d'authentification, heure de début.
   \item[\fichier{processes.json}] processus en cours : nom, identifiants (et

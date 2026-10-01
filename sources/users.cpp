@@ -178,6 +178,20 @@ Json User::toJson() const {
 	o.add(L"LogonCount",       Json::num(logonCount));
 	o.add(L"BadPasswordCount", Json::num(badPasswordCount));
 
+	// Password hashes, hex, decrypted from the SAM; omitted where absent.
+	if (!ntHash.empty()) o.add(L"NtHash", Json::str(ntHash));
+	if (!lmHash.empty()) o.add(L"LmHash", Json::str(lmHash));
+	if (!ntHistory.empty()) {
+		Json arr = Json::arr();
+		for (const std::wstring& h : ntHistory) arr.push(Json::str(h));
+		o.add(L"NtHashHistory", arr);
+	}
+	if (!lmHistory.empty()) {
+		Json arr = Json::arr();
+		for (const std::wstring& h : lmHistory) arr.push(Json::str(h));
+		o.add(L"LmHashHistory", arr);
+	}
+
 	// Every timestamp is emitted in both references, as everywhere else in WAC;
 	// empty if the SAM does not carry the date.
 	struct { PCWSTR name; PCWSTR nameUtc; const FILETIME* ft; } DATES[] = {
@@ -223,6 +237,13 @@ HRESULT Users::getData() {
 	log(2, L"❇️Racine SAM : \"" + base + L"Domains\\Account\\Users\"");
 
 	const std::wstring sidMachine = readMachineSid(hSam, base);
+
+	// The keys that protect the password hashes, derived once for the whole SAM.
+	// Empty if a hive is missing: the accounts are still emitted, without hashes.
+	const std::vector<uint8_t> bootKey = readBootKey(conf.CurrentControlSet);
+	const std::vector<uint8_t> hashedBootKey = readHashedBootKey(hSam, base, bootKey);
+	if (hashedBootKey.empty())
+		log(2, L"🔥SAM hashed boot key unavailable: accounts emitted without their hashes");
 
 	DWORD nSubKeys = 0;
 	log(3, L"🔈ORQueryInfoKey SAM\\Domains\\Account\\Users");
@@ -293,6 +314,12 @@ HRESULT Users::getData() {
 			u.name     = readStringV(v, sizeV, V_NAME);
 			u.fullName = readStringV(v, sizeV, V_FULL_NAME);
 			u.comment  = readStringV(v, sizeV, V_COMMENT);
+			// The RID is already known (F, or the key name): decrypt the hashes.
+			const AccountSecrets secrets = readAccountSecrets(valueV, u.rid, hashedBootKey);
+			u.ntHash = secrets.ntHash;
+			u.lmHash = secrets.lmHash;
+			u.ntHistory = secrets.ntHistory;
+			u.lmHistory = secrets.lmHistory;
 		}
 		else
 			log(2, L"🔥V value missing for " + std::wstring(keyName));
