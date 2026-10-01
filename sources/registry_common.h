@@ -32,12 +32,6 @@ std::wstring valueText(DWORD type, const std::vector<BYTE>& data);
  *  @return them as a JSON array of {Name, Value} */
 Json pairs(const NameValues& values);
 
-/*! Adds the user an entry belongs to: `SID`, and `SIDName` as resolved
- *  offline in the examined machine's hives.
- *  @param o the entry's object
- *  @param sid the user's SID */
-void addUser(Json& o, const std::wstring& sid);
-
 /*! Writes an array of elements that have toJson().
  *  @param file the JSON file, in the output directory
  *  @param elements the elements

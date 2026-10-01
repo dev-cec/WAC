@@ -45,7 +45,6 @@ struct Run {
 public:
 	std::wstring Hive = L"";    //!< the hive it comes from: SOFTWARE, DEFAULT or NTUSER.DAT
 	std::wstring Sid = L"";     //!< SID of the user the entry belongs to, empty if machine-wide
-	std::wstring SidName = L"";	//!< name of that user
 	std::wstring Key = L"";     //!< the key it comes from: `Run` or `RunOnce`
 	std::wstring Name = L"";    //!< name of the value, which the entry chooses freely
 	std::wstring Type = L"";    //!< REG_SZ, or REG_EXPAND_SZ: the command holds %variables% Windows expands

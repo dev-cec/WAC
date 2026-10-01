@@ -59,8 +59,7 @@ Json PowerShellCommand::toJson() const {
 
 Json PowerShellHistory::toJson() const {
 	Json o = Json::obj();
-	o.add(L"SID", Json::str(sid));
-	o.add(L"SIDName", Json::str(getNameFromSid(sid)));
+	addUser(o, sid);
 	o.add(L"Path", Json::str(path));
 	o.add(L"Host", Json::str(host));
 	addDate(o, L"SourceCreated", sourceCreatedUtc);

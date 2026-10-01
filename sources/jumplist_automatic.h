@@ -40,7 +40,6 @@ struct AutomaticDestination {
 	std::wstring path = L"";         //!< path of the file in the working directory
 	std::wstring pathOriginal = L"";	//!< path it was read from on the examined volume
 	std::wstring Sid = L"";     //!< SID of the user the jump list belongs to
-	std::wstring SidName = L"";	//!< name of that user
 	std::wstring application = L"";//!< the application, resolved from the AppID when known
 
 	/*! One DestList entry and the shortcut its number points to. */

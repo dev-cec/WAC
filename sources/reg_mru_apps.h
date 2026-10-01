@@ -37,7 +37,6 @@ public:
 	unsigned int level = 0;  //!< depth in the tree, which the output JSON reproduces
 	std::wstring name = L"";  //!< name of the application's executable
 	std::wstring sid = L"";   //!< SID of the user who used it
-	std::wstring sidName = L"";  //!< name of that user
 	std::wstring source = L"";   //!< the key it comes from, of the three read
 	FILETIME lastWriteTimeUtc = { 0 }; //!< last write to the KEY, UTC (the local time is derived at output)
 	std::vector<std::unique_ptr<IdList>> shellitems; //!< the folder's PIDL, item by item

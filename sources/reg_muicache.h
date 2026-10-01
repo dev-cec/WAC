@@ -29,7 +29,6 @@
 struct Muicache {
 public:
 	std::wstring sid = L"";      //!< SID of the user whose hive holds the entry
-	std::wstring sidName = L"";  //!< name of that user
 	std::wstring name = L"";     //!< path and file name of the executable
 	std::wstring data = L"";     //!< display name, as read from the binary's resources
 

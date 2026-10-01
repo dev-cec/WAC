@@ -69,7 +69,6 @@ struct CustomDestinationCategory {
 /*! One custom jump list: an application, and the entries it pinned. */
 struct CustomDestination {
 	std::wstring Sid = L"";     //!< SID of the user the jump list belongs to
-	std::wstring SidName = L"";	//!< name of that user
 	std::wstring application = L"";//!< the application, resolved from the AppID when known
 	std::wstring path = L"";       //!< path of the file in the working directory
 	std::wstring pathOriginal = L"";//!< path it was read from on the examined volume

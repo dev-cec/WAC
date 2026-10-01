@@ -42,8 +42,7 @@ void readFolder(const std::filesystem::path& folder, const std::wstring& sid, st
 Json StartupItem::toJson() const {
 	Json o = Json::obj();
 	o.add(L"Scope", Json::str(sid.empty() ? L"AllUsers" : L"User"));
-	o.add(L"SID", Json::str(sid));
-	if (!sid.empty()) o.add(L"SIDName", Json::str(getNameFromSid(sid)));
+	addUser(o, sid);
 	o.add(L"Path", Json::str(path));
 	addDate(o, L"SourceCreated", sourceCreatedUtc);
 	addDate(o, L"SourceModified", sourceModifiedUtc);

@@ -44,8 +44,6 @@ void CustomDestinationCategory::clear() {
 
 CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _sid) {
 	Sid = _sid;
-	log(3, L"🔈getNameFromSid Sid");
-	SidName = getNameFromSid(Sid);
 	// the path in UTF-16, as Windows holds it
 	path = _path.wstring();
 	log(3, L"🔈replaceAll pathOriginal");
@@ -110,8 +108,7 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 Json CustomDestination::toJson() {
 	log(3, L"🔈CustomDestination toJson");
 	Json o = Json::obj();
-	o.add(L"SID",         Json::str(Sid));
-	o.add(L"SIDName",     Json::str(SidName));
+	addUser(o, Sid);
 	o.add(L"Application", Json::str(application));
 	o.add(L"Path",        Json::str(pathOriginal));
 	o.add(L"Type",        Json::str(type));

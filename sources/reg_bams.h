@@ -33,7 +33,6 @@
 struct Bam {
 public:
 	std::wstring sid = L"";      //!< SID of the user who ran the binary
-	std::wstring sidName = L"";  //!< name of that user
 	std::wstring name = L"";     //!< path of the executable, as the value names it
 	FILETIME executionTimeUtc = { 0, 0 }; //!< last execution, in UTC as the value stores it
 

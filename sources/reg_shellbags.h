@@ -38,7 +38,6 @@ public:
 	unsigned int Parent = 0;  //!< `id` of the folder it was browsed from, 0 at the root
 	unsigned int level = 0;  //!< depth in the tree, which the output JSON reproduces
 	std::wstring sid = L"";      //!< SID of the user who browsed the folder
-	std::wstring sidName = L"";  //!< name of that user
 	std::wstring source = L"";   //!< the key the shellbag comes from
 	std::vector<std::unique_ptr<IdList>> shellitems; //!< the folder's PIDL, item by item
 	std::vector<Shellbag> children;    //!< the folders browsed below this one

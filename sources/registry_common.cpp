@@ -44,7 +44,3 @@ Json pairs(const NameValues& values) {
 	return list;
 }
 
-void addUser(Json& o, const std::wstring& sid) {
-	o.add(L"SID", Json::str(sid));
-	o.add(L"SIDName", Json::str(getNameFromSid(sid)));
-}

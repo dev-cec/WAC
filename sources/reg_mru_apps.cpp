@@ -8,8 +8,7 @@ Json MruApp::toJson() const {
 	Json o = Json::obj();
 	o.add(L"ID",      Json::num(id));
 	o.add(L"Name",    Json::str(name));
-	o.add(L"SID",     Json::str(sid));
-	o.add(L"SIDName", Json::str(sidName));
+	addUser(o, sid);
 	o.add(L"Source",  Json::str(source));
 	log(3, L"🔈timeToIso8601 lastWriteTime");
 	o.add(L"LastWriteTime",    Json::str(utcTimeToIso8601Local(lastWriteTimeUtc)));
@@ -96,8 +95,6 @@ HRESULT MruApps::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::
 		mruApp.lastWriteTimeUtc = lastWriteTimeUtc;
 		mruApp.level = level;
 		mruApp.sid = sid;
-		log(3, L"🔈getNameFromSid sidName");
-		mruApp.sidName = getNameFromSid(sid);
 		mruApp.source = source;
 		log(3, L"🔈getRegBinaryValue hKey\\" + std::to_wstring(id));
 		std::vector<BYTE> value;

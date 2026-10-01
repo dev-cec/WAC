@@ -10,8 +10,6 @@ Muicache::Muicache(ORHKEY hKey, std::wstring valueName, std::wstring profile) {
 	name = valueName;
 	log(2, L"❇️muicache Name : " + name);
 	sid = profile;
-	log(3, L"🔈getNameFromSid sidName");
-	sidName = getNameFromSid(sid);
 
 	log(3, L"🔈getRegSzValue valueName");
 	hresult = getRegSzValue(hKey, nullptr, valueName.c_str(), &data);
@@ -25,8 +23,7 @@ Muicache::Muicache(ORHKEY hKey, std::wstring valueName, std::wstring profile) {
 Json Muicache::toJson() {
 	log(3, L"🔈Muicache toJson");
 	Json o = Json::obj();
-	o.add(L"SID",     Json::str(sid));
-	o.add(L"SIDName", Json::str(sidName));
+	addUser(o, sid);
 	o.add(L"Name",    Json::str(name));    // raw path
 	o.add(L"Data",    Json::str(data));
 	return o;

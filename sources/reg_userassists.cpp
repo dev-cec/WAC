@@ -9,8 +9,6 @@ UserAssist::UserAssist(std::wstring hKey, const std::wstring& valueName, const s
 	Name = ROT13(valueName); // ROT13 of the value's name, to recover the executable's name
 	log(2, L"❇️UserAssist Name : " + Name);
 	Sid = _sid;
-	log(3, L"🔈getNameFromSid SidName");
-	SidName = getNameFromSid(Sid);
 	Class = hKey;
 	// conversion of the known folder GUIDs
 	std::wsmatch pieces_match;
@@ -41,8 +39,7 @@ UserAssist::UserAssist(std::wstring hKey, const std::wstring& valueName, const s
 Json UserAssist::toJson() {
 	log(3, L"🔈UserAssist toJson");
 	Json o = Json::obj();
-	o.add(L"SID",           Json::str(Sid));
-	o.add(L"SIDName",       Json::str(SidName));
+	addUser(o, Sid);
 	o.add(L"Class",         Json::str(Class));
 	o.add(L"Name",          Json::str(Name));
 	o.add(L"Count",         Json::num((long long)Count));

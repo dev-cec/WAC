@@ -37,7 +37,6 @@ public:
 	unsigned int level = 0;  //!< depth in the tree, which the output JSON reproduces
 	std::wstring extension = L"";  //!< extension of the list the entry belongs to
 	std::wstring sid = L"";        //!< SID of the user who opened the file
-	std::wstring sidName = L"";    //!< name of that user
 	std::wstring source = L"";     //!< the key it comes from: `OpenSavePidlMRU` or `OpenSaveMRU`
 	FILETIME lastWriteTimeUtc = { 0 }; //!< last write to the KEY, UTC (the local time is derived at output)
 	std::vector<std::unique_ptr<IdList>> shellitems; //!< the PIDL, item by item

@@ -14,10 +14,6 @@ AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wst
 	pathOriginal = originalPath(path);
 	log(2, L"❇️AutomaticDestination Path : " + pathOriginal);
 
-	// get user name
-	log(3, L"🔈getNameFromSid SidName");
-	SidName = getNameFromSid(Sid);
-
 	// turn the AppID held in the file name into an application name
 	std::wstring::size_type const p(_path.filename().wstring().find_last_of('.'));
 	std::wstring baseName = _path.filename().wstring().substr(0, p);
@@ -125,8 +121,7 @@ Json AutomaticDestination::toJson() {
 	log(3, L"🔈AutomaticDestination toJson");
 	Json o = Json::obj();
 	o.add(L"File",        Json::str(pathOriginal));
-	o.add(L"SID",         Json::str(Sid));
-	o.add(L"SIDName",     Json::str(SidName));
+	addUser(o, Sid);
 	o.add(L"Application", Json::str(application));
 	o.add(L"Created",     Json::str(utcTimeToIso8601Local(createdUtc)));
 	o.add(L"CreatedUtc",  Json::str(timeToIso8601Utc(createdUtc)));

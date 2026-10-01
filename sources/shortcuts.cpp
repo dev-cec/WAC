@@ -91,8 +91,7 @@ Json ShortcutItem::toJson() const {
 	Json o = Json::obj();
 	o.add(L"Location", Json::str(location));
 	o.add(L"Scope", Json::str(sid.empty() ? L"AllUsers" : L"User"));
-	o.add(L"SID", Json::str(sid));
-	if (!sid.empty()) o.add(L"SIDName", Json::str(getNameFromSid(sid)));
+	addUser(o, sid);
 	o.merge(shortcut->toJson());
 	return o;
 }

@@ -556,6 +556,14 @@ std::wstring tab(int i);
 */
 std::wstring getNameFromSid(std::wstring _sid);
 
+/*! Adds the user an entry belongs to: `SID`, and `SIDName` as resolved
+ *  offline in the examined machine's hives. The one place that writes them,
+ *  for every artefact.
+ *  @param o the entry's object
+ *  @param sid the user's SID; empty for an entry of the machine (nothing emitted)
+ *  Implemented in account_names.cpp. */
+void addUser(Json& o, const std::wstring& sid);
+
 
 /*! Converts a boolean to the string "true" or "false".
 * @param b the boolean to convert

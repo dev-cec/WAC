@@ -157,8 +157,7 @@ Json PersistenceEntry::toJson() const {
 	Json o = Json::obj();
 	o.add(L"Mechanism", Json::str(mechanism));
 	o.add(L"Hive", Json::str(hive));
-	o.add(L"SID", Json::str(sid));
-	if (!sid.empty()) o.add(L"SIDName", Json::str(getNameFromSid(sid)));
+	addUser(o, sid);
 	o.add(L"Key", Json::str(key));
 	o.add(L"Name", Json::str(name));
 	o.add(L"Type", Json::str(type));

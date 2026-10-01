@@ -14,15 +14,12 @@ Bam::Bam(const std::vector<BYTE>& data, std::wstring valueName, std::wstring psi
 	if (data.size() >= sizeof(executionTimeUtc))
 		std::memcpy(&executionTimeUtc, data.data(), sizeof(executionTimeUtc));
 	sid = psid;
-	log(3, L"🔈getNameFromSid sidName");
-	sidName = getNameFromSid(sid);
 }
 
 Json Bam::toJson() const {
 	log(3, L"🔈Bam toJson");
 	Json o = Json::obj();
-	o.add(L"SID",              Json::str(sid));
-	o.add(L"SIDName",          Json::str(sidName));
+	addUser(o, sid);
 	o.add(L"Name",             Json::str(name));      // raw path
 	o.add(L"LastExecution",    Json::str(utcTimeToIso8601Local(executionTimeUtc)));
 	o.add(L"LastExecutionUtc", Json::str(timeToIso8601Utc(executionTimeUtc)));

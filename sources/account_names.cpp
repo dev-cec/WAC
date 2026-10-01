@@ -179,3 +179,8 @@ std::wstring getNameFromSid(std::wstring _sid) {
 	if (found != g_names.end()) return found->second;
 	return patternName(upper(_sid));
 }
+
+void addUser(Json& o, const std::wstring& sid) {
+	o.add(L"SID", Json::str(sid));
+	o.add(L"SIDName", Json::str(getNameFromSid(sid)));
+}

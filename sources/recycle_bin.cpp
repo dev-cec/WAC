@@ -50,8 +50,7 @@ bool parseRecycleBinIndex(const std::vector<uint8_t>& bytes, RecycledFile& recyc
 
 Json RecycledFile::toJson() const {
 	Json o = Json::obj();
-	o.add(L"SID", Json::str(sid));
-	o.add(L"SIDName", Json::str(getNameFromSid(sid)));
+	addUser(o, sid);
 	o.add(L"OriginalPath", Json::str(originalPath));
 	o.add(L"Size", Json::num(size));
 	addDate(o, L"Deleted", deletedUtc);
