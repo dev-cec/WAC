@@ -1088,8 +1088,9 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         AppInit\_DLLs et AppCertDlls, Winlogon (\texttt{Shell},
         \texttt{Userinit}, \texttt{Taskman}, \texttt{Notify}), paquets LSA,
         moniteurs d'impression, \texttt{BootExecute}, Active Setup, assistants
-        NetSh, et détournements COM des classes de chaque utilisateur
-        (UsrClass.dat). Pour chaque valeur : mécanisme (\champ{Mechanism}),
+        NetSh, commandes d'ouverture des types exécutables (\texttt{exefile},
+        \texttt{batfile}, \texttt{cmdfile}\ldots, machine et utilisateur), et
+        détournements COM des classes de chaque utilisateur (UsrClass.dat). Pour chaque valeur : mécanisme (\champ{Mechanism}),
         ruche, clé, nom, type, valeur telle qu'écrite, dernière écriture de la
         clé, et avec \opt{binary} les empreintes du fichier visé. Toutes les
         valeurs sont données, celles de Windows comprises : distinguer

@@ -44,6 +44,22 @@ const Rule RULES[] = {
 	{ L"NetSh helper", Hive::Software, L"Microsoft\\NetSh", L"", true },
 	{ L"COM InprocServer32 (user)", Hive::UsrClass, L"CLSID\\*\\InprocServer32", L"(default)", true },
 	{ L"COM LocalServer32 (user)", Hive::UsrClass, L"CLSID\\*\\LocalServer32", L"(default)", true },
+	/* The open command of the executable file types: changed, every launch of
+	   such a file goes through the intruder's program first (B-031, against
+	   RECmd's Kroll batch, "Exefile Shell Open Command"). Machine-wide and per
+	   user, whose UsrClass.dat overrides it. */
+	{ L"File type open command", Hive::Software, L"Classes\\exefile\\shell\\open\\command", L"(default)", false },
+	{ L"File type open command", Hive::Software, L"Classes\\comfile\\shell\\open\\command", L"(default)", false },
+	{ L"File type open command", Hive::Software, L"Classes\\batfile\\shell\\open\\command", L"(default)", false },
+	{ L"File type open command", Hive::Software, L"Classes\\cmdfile\\shell\\open\\command", L"(default)", false },
+	{ L"File type open command", Hive::Software, L"Classes\\htafile\\shell\\open\\command", L"(default)", false },
+	{ L"File type open command", Hive::Software, L"Classes\\scrfile\\shell\\open\\command", L"(default)", false },
+	{ L"File type open command (user)", Hive::UsrClass, L"exefile\\shell\\open\\command", L"(default)", false },
+	{ L"File type open command (user)", Hive::UsrClass, L"comfile\\shell\\open\\command", L"(default)", false },
+	{ L"File type open command (user)", Hive::UsrClass, L"batfile\\shell\\open\\command", L"(default)", false },
+	{ L"File type open command (user)", Hive::UsrClass, L"cmdfile\\shell\\open\\command", L"(default)", false },
+	{ L"File type open command (user)", Hive::UsrClass, L"htafile\\shell\\open\\command", L"(default)", false },
+	{ L"File type open command (user)", Hive::UsrClass, L"scrfile\\shell\\open\\command", L"(default)", false },
 };
 
 //! A value's type as its name.

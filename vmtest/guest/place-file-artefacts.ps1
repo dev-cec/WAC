@@ -145,6 +145,7 @@ if (Wants 'persistence') {
     Write-Output "comhijack=$wacSid|{0000FACE-0000-4AC0-8000-000000000002}|C:\wactest\wac-com.dll"
     # What Windows set itself, read live, to compare.
     Write-Output ("userinit=" + (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon').Userinit)
+    Write-Output ("exefile=" + (Get-ItemProperty 'HKLM:\SOFTWARE\Classes\exefile\shell\open\command').'(default)')
     Write-Output ("lsa_security=" + ((Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Lsa').'Security Packages' -join '|'))
     $monitors = Get-ChildItem 'HKLM:\SYSTEM\CurrentControlSet\Control\Print\Monitors' | ForEach-Object { $_.PSChildName + '=' + $_.GetValue('Driver') } | Sort-Object
     Write-Output ("monitors=" + ($monitors -join '|'))

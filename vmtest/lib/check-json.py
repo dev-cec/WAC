@@ -1406,6 +1406,10 @@ def check_small_file_artefacts(folder):
         com = [p for p in find("COM InprocServer32 (user)", clsid, dll) if p.get("SID") == sid]
         report(bool(com), f"persistence.json: COM hijack of {clsid} in the user's classes found",
                "persistence.json: COM hijack witness missing")
+        exefile = [p.get("Value") for p in persistence if p.get("Mechanism") == "File type open command"
+                   and "exefile" in (p.get("Key") or "").lower()]
+        report(exefile == [reference.get("exefile")], f"persistence.json: the open command of exefile as Windows reads it ({reference.get('exefile')})",
+               f"persistence.json: exefile open command {exefile} / Windows {reference.get('exefile')}")
         userinit = [p.get("Value") for p in persistence if p.get("Mechanism") == "Winlogon Userinit"]
         report(userinit == [reference.get("userinit")], f"persistence.json: Winlogon Userinit as Windows reads it ({reference.get('userinit')})",
                f"persistence.json: Winlogon Userinit {userinit} / Windows {reference.get('userinit')}")

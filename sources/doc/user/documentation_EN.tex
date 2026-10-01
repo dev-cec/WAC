@@ -1066,8 +1066,10 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         IFEO (\texttt{Debugger}, \texttt{GlobalFlag}), SilentProcessExit,
         AppInit\_DLLs and AppCertDlls, Winlogon (\texttt{Shell},
         \texttt{Userinit}, \texttt{Taskman}, \texttt{Notify}), LSA packages,
-        print monitors, \texttt{BootExecute}, Active Setup, NetSh helpers, and
-        COM hijacking in each user's classes (UsrClass.dat). For each value:
+        print monitors, \texttt{BootExecute}, Active Setup, NetSh helpers, the
+        open commands of the executable file types (\texttt{exefile},
+        \texttt{batfile}, \texttt{cmdfile}\ldots, machine and user), and COM
+        hijacking in each user's classes (UsrClass.dat). For each value:
         mechanism (\champ{Mechanism}), hive, key, name, type, value as written,
         the key's last write, and with \opt{binary} the fingerprints of the
         file it names. Every value is given, Windows' own included: telling the
