@@ -530,7 +530,8 @@ témoins déposés par le cycle (historique PowerShell, fichier mis à la
   lu dans la \path|$MFT| ; sections de
   \fichier{setupapi.dev.log} comptées par Windows / \fichier{setupapi.json} ;
   noms des secrets LSA, \texttt{PolAdtEv} et emplacements \texttt{NL\$} lus en
-  direct par Windows / \fichier{security.json} ; valeur Run
+  direct par Windows ; droits des comptes (\champ{AccountRights}) face à
+  \texttt{secedit /export} (33 droits) / \fichier{security.json} ; valeur Run
   \texttt{REG\_EXPAND\_SZ} de la ruche DEFAULT / \fichier{run.json} ; témoins de
   persistance (IFEO, SilentProcessExit, Active Setup, détournement COM de
   l'utilisateur) et valeurs de Windows lues en direct (Userinit, paquets LSA,

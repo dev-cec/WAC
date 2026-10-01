@@ -733,4 +733,24 @@ if (Wants 'registry') {
             Write-Output ("localgroup=" + $g.SID.Value + '|' + ($m -join ','))
         } catch { Write-Output ("localgrouperror=" + $g.Name) }
     }
+
+    # Account rights: Windows' own export of the user-rights assignment, to
+    # confront with security.json (Policy\Accounts). Each line maps a privilege
+    # or logon right to the SIDs that hold it.
+    try {
+        $inf = 'C:\wactest\secedit-rights.inf'
+        secedit /export /areas USER_RIGHTS /cfg $inf /quiet 2>$null | Out-Null
+        foreach ($line in Get-Content $inf -Encoding Unicode) {
+            if ($line -match '^\s*(Se\w+)\s*=\s*(.+)$') {
+                # secedit writes a holder either as *<SID> or as an account name:
+                # every name is resolved to its SID so the check compares SIDs.
+                $sids = foreach ($a in ($matches[2] -split ',')) {
+                    $a = $a.Trim()
+                    if ($a.StartsWith('*')) { $a.Substring(1) }
+                    else { try { (New-Object System.Security.Principal.NTAccount($a)).Translate([System.Security.Principal.SecurityIdentifier]).Value } catch { $a } }
+                }
+                Write-Output ("userright=" + $matches[1] + '|' + ($sids -join ','))
+            }
+        }
+    } catch { Write-Output ("userrighterror=" + $_.Exception.Message) }
 }

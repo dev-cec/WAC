@@ -512,7 +512,8 @@ witnesses placed by the cycle (PowerShell history, file sent to the recycle
   read in the \path|$MFT|; sections of
   \fichier{setupapi.dev.log} counted by Windows / \fichier{setupapi.json};
   LSA secret names, \texttt{PolAdtEv} and \texttt{NL\$} slots read live by
-  Windows / \fichier{security.json}; \texttt{REG\_EXPAND\_SZ} Run value of
+  Windows; account rights (\champ{AccountRights}) against
+  \texttt{secedit /export} (33 rights) / \fichier{security.json}; \texttt{REG\_EXPAND\_SZ} Run value of
   the DEFAULT hive / \fichier{run.json}; persistence witnesses (IFEO,
   SilentProcessExit, Active Setup, the user's COM hijack) and Windows' own
   values read live (Userinit, LSA packages, print monitors) /

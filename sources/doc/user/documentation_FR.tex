@@ -1005,8 +1005,13 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \texttt{\_SC\_<service>} un service qui tourne sous un compte),
         nombre d'emplacements de connexions de domaine en cache et combien sont
         occupés, politique d'audit (\champ{PolAdtEv}, en octets : son format
-        n'est pas publié). \textbf{Aucune valeur de secret} n'est lue, ni
-        aucune donnée d'authentification en cache. Les copies
+        n'est pas publié), et les droits des comptes (\champ{AccountRights},
+        lus dans \texttt{Policy\textbackslash Accounts}) : pour chaque compte ou
+        groupe, ses privilèges (\champ{Privileges}, p.~ex. \texttt{SeDebugPrivilege},
+        \texttt{SeBackupPrivilege}) et ses droits de connexion (\champ{LogonRights}).
+        Un privilège sensible donné à un compte inattendu est une persistance.
+        \textbf{Aucune valeur de secret} n'est lue, ni aucune donnée
+        d'authentification en cache. Les copies
         \path|config\RegBack| des ruches sont prélevées telles quelles.
   \item[\fichier{users.json}] comptes locaux, lus dans la ruche \fichier{SAM} :
         SID et RID, état, drapeaux, nombre de connexions et d'échecs, dates de

@@ -14,6 +14,11 @@
  *     part, not read.
  *   - Audit policy (`Policy\\PolAdtEv`): what the machine logs. Its layout is
  *     not published: the value is kept as its bytes, undecoded.
+ *   - Account rights (`Policy\\Accounts\\<SID>`): the privileges
+ *     (`Privilgs`, a list of well-known LUIDs) and the logon rights
+ *     (`ActSysAc`, a bitmask) held by each account or group. SeDebugPrivilege,
+ *     SeBackupPrivilege or a remote-logon right granted to an unexpected
+ *     account is a persistence an attacker leaves here.
  *
  *  WHAT IS NEVER READ. No secret's value, no cached credential: WAC reads
  *  names, dates and counts, never what the encryption protects — the same
@@ -36,6 +41,16 @@ struct LsaSecret {
 	Json toJson() const;
 };
 
+/*! The rights held by one account or group, from Policy\Accounts\<SID>. */
+struct AccountRight {
+	std::wstring sid;                        //!< the account or group SID
+	std::vector<std::wstring> privileges;    //!< privilege names (Privilgs LUIDs)
+	std::vector<std::wstring> logonRights;    //!< logon rights (ActSysAc bitmask)
+	FILETIME keyLastWriteUtc = { 0 };        //!< last write of its key, UTC
+	//! @return the account's rights as a JSON object
+	Json toJson() const;
+};
+
 /*! What the SECURITY hive says (security.json). */
 class SecurityHive {
 public:
@@ -55,4 +70,5 @@ private:
 	FILETIME cacheLastWriteUtc_ = { 0 };    //!< last write of Cache, UTC: the last cached logon, at the latest
 	std::vector<BYTE> auditPolicy_;         //!< PolAdtEv, as its bytes
 	FILETIME auditPolicyLastWriteUtc_ = { 0 };   //!< last write of PolAdtEv's key, UTC
+	std::vector<AccountRight> accountRights_;     //!< Policy\Accounts, one per SID
 };

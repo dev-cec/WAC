@@ -272,6 +272,7 @@ def cross_checks(folder):
     found += guarded(check_services, folder)
     found += guarded(check_users, folder)
     found += guarded(check_local_groups, folder)
+    found += guarded(check_account_rights, folder)
     found += guarded(check_processes, folder)
     found += guarded(check_network, folder, boot)
     found += guarded(check_prefetchs, folder)
@@ -3017,6 +3018,51 @@ def check_local_groups(folder):
         print(f"  \u274c local_groups.json: witness wacpw ({wacpw}) absent from Administrators {sorted(admins)}")
         found += 1
     return found
+
+
+def check_account_rights(folder):
+    """Confronts security.json's AccountRights (Policy\\Accounts) with Windows'
+    own user-rights export (secedit /export): every privilege and logon right
+    must be held by the same SIDs on both sides."""
+    sec = load(folder, "security.json")
+    rights = (sec or {}).get("AccountRights") if isinstance(sec, dict) else None
+    if not rights:
+        print("  ⏭️  security.json AccountRights absent: check skipped")
+        return 0
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if not os.path.exists(path):
+        print("  ⏭️  no reference: account rights not confronted")
+        return 0
+    windows = {}
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for l in f:
+            if l.startswith("userright="):
+                name, sids = l.strip()[len("userright="):].split("|", 1)
+                windows[name] = {s.upper() for s in sids.split(",") if s.startswith("S-1-")}
+    mine = {}
+    for a in rights:
+        sid = str(a.get("Sid", "")).upper()
+        for name in (a.get("Privileges") or []) + (a.get("LogonRights") or []):
+            mine.setdefault(name, set()).add(sid)
+    # WAC reads Policy\Accounts, the authoritative store; secedit is a lossy
+    # export (it resolves some holders to a name it cannot always translate back,
+    # e.g. virtual service accounts). So every holder Windows lists must be in
+    # WAC (WAC complete and correct), and WAC's extras are allowed only for the
+    # virtual/service SID ranges secedit mangles (S-1-5-6/80/82/90/96/99).
+    virtual = ("S-1-5-6", "S-1-5-80-", "S-1-5-82-", "S-1-5-90-", "S-1-5-96-", "S-1-5-99-")
+    missing = {name: sorted(sids - mine.get(name, set()))
+               for name, sids in windows.items() if not sids <= mine.get(name, set())}
+    extra = {name: sorted(e) for name, sids in windows.items()
+             for e in [mine.get(name, set()) - sids]
+             if e and not all(x.startswith(virtual) for x in e)}
+    if missing:
+        print(f"  ❌ security.json AccountRights: holders missing {list(missing.items())[:3]}")
+        return 1
+    if extra:
+        print(f"  ❌ security.json AccountRights: unexpected extra holders {list(extra.items())[:3]}")
+        return 1
+    print(f"  ✅ security.json AccountRights: {len(windows)} right(s), every holder Windows lists present (virtual service SIDs aside)")
+    return 0
 
 
 def check_users(folder):

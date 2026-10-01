@@ -988,8 +988,12 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         reveals an automatic logon's stored password, \texttt{\_SC\_<service>}
         a service running under an account), number of cached domain logon
         slots and how many are used, audit policy (\champ{PolAdtEv}, as bytes:
-        its layout is not published). \textbf{No secret's value} is read, nor
-        any cached credential. The \path|config\RegBack| copies of the hives
+        its layout is not published), and the account rights (\champ{AccountRights},
+        read from \texttt{Policy\textbackslash Accounts}): for each account or
+        group, its privileges (\champ{Privileges}, e.g. \texttt{SeDebugPrivilege},
+        \texttt{SeBackupPrivilege}) and its logon rights (\champ{LogonRights}).
+        A sensitive privilege granted to an unexpected account is a persistence.
+        \textbf{No secret's value} is read, nor any cached credential. The \path|config\RegBack| copies of the hives
         are collected as they are.
   \item[\fichier{users.json}] local accounts, read from the \fichier{SAM} hive:
         SID and RID, state, flags, logon and failure counts, dates of last
