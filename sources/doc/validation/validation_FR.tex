@@ -623,6 +623,11 @@ URL, visites (URL, instant, transition) et téléchargements de la base
 deux \path|TypedURLs| de « wac » et leurs instants dans
   \path|TypedURLsTime| / \fichier{web\_client.json} &
   contrôle ajouté avec l'artefact \\
+entrées de \fichier{WebCacheV01.dat} relues par \texttt{dissect.esedb}
+  (URL, dates UTC ; heure locale des conteneurs \texttt{MSHist} convertie
+  par \texttt{zoneinfo}) / \fichier{web\_client.json} (28 entrées) &
+  le décalage de 2~h de l'heure locale de \texttt{MSHist}, relevé avant
+  d'écrire le décodeur \\
 entrées DestList / raccourcis des listes de sauts & les 15 premières entrées de
   chaque liste perdues (573 raccourcis publiés sur 1~522) \\
 nom de machine des événements / \fichier{OperatingSystem.json} & contrôle du

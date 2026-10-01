@@ -28,7 +28,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Téléchargements Chromium (chaîne de redirections, référent, état, SHA-256)
 - [ ] Lien téléchargement ↔ Zone.Identifier (B-004) et fichier sur le disque (mft.json)
 - [ ] Login Data (identifiants enregistrés : origine, compte, dates — jamais le mot de passe), cookies
-- [ ] WebCache (ESE)
+- [x] WebCache (ESE) — CacheEntry par conteneur
 - [x] TypedURLs et TypedURLsTime (NTUSER), venus de B-031
 
 ## Journal
@@ -41,3 +41,6 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-01 : Firefox — chaque dossier de `Profiles` : places.sqlite (Url, Visit avec type de visite, Download depuis les annotations destinationFileURI et metaData — fin en millisecondes, état brut —, TypedInput), formhistory.sqlite (FormEntry : formulaires et barre de recherche) ; copiés bruts : cookies, permissions, logins.json, key4.db, extensions, prefs.js, sessionstore.jsonlz4. Pas de Firefox dans la VM : vérifié par le test unitaire seul (vu échouer : fin lue sans la conversion des millisecondes).
 - 2026-10-01 : Firefox commité (d28d3a2).
 - 2026-10-01 : TypedURLs — `TypedUrl` dans web_client.json (Url, MruPosition, instant de TypedURLsTime, date de la clé), pour chaque NTUSER.DAT ; pas de `Browser` (IE et l'Explorateur y écrivent). L'analyse des noms `url<N>` est partagée avec TypedPaths (`urlValueNumber`, registry_common). Référence : deux TypedURLs posées dans la ruche de « wac » avec des instants connus, retrouvées ; typed_paths.json inchangé (témoin url25 à sa position).
+- 2026-10-01 : TypedURLs commité (68c24af).
+- 2026-10-01 : WebCache — dossier `WebCache` copié brut (base, journaux, point de contrôle) ; `CacheEntry` pour chaque entrée de chaque `Container_<n>` (History, MSHist, Content, iedownload, BackgroundTransferApi) : URL (User et Page pour l'historique), compteur, dates. Relevé AVANT d'écrire le décodeur, sur la base de la VM : la date de modification des conteneurs MSHist est en heure locale (7 200 s d'écart avec la même entrée de History) ; convertie par `suspectLocalToUtc`. Référence : dissect.esedb (Fox-IT) sur la même base, dans le harnais si installé — 28 entrées, URL et dates identiques, les 5 heures locales converties par zoneinfo ; 4 nœuds vides sans en-tête (que dissect ne sait pas lire non plus) écartés. Vu échouer : sans la conversion, 2 h d'écart.
+- Reste : Login Data / logins.json (identifiants : origine, compte, dates — jamais le mot de passe) et cookies en JSON ; lien téléchargement ↔ Zone.Identifier — proposé à WAE (rapprochement d'artefacts, WAC ne juge pas), à confirmer.

@@ -1277,7 +1277,18 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         \texttt{TypedUrl}: each address typed in Internet Explorer or File
         Explorer's address bar (\path|TypedURLs| of the \fichier{NTUSER.DAT},
         \champ{MruPosition} 0 for the most recent) with the instant it was
-        typed (\path|TypedURLsTime|, \champ{TypedUtc}).
+        typed (\path|TypedURLsTime|, \champ{TypedUtc}). And
+        \texttt{CacheEntry} (\champ{Browser} \texttt{WebCache}): each entry
+        of the \fichier{WebCacheV01.dat} database of Internet Explorer, Edge
+        Legacy and the WinINet applications, by container (\champ{Container}:
+        \texttt{History}, \texttt{MSHist\ldots}, \texttt{Content},
+        \texttt{iedownload}, \texttt{BackgroundTransferApi}) — URL, account
+        and page of a history entry (\champ{User}, \champ{Page}), access
+        count, dates, cache file. The modification time of the
+        \texttt{MSHist} containers, which Windows writes in local time, is
+        converted to UTC with the offset in force at its date. The database is
+        copied live with its logs: its last entries may be only there
+        (\texttt{esentutl /r} replay by the analyst).
   \item[\fichier{dpapi\_master\_keys.json}] DPAPI master keys of the system
         (\path|System32\Microsoft\Protect|, \champ{Scope} \texttt{System})
         and of each profile (\path|AppData\Roaming\Microsoft\Protect|,

@@ -1311,7 +1311,18 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         dans Internet Explorer ou la barre d'adresse de l'Explorateur
         (\path|TypedURLs| du \fichier{NTUSER.DAT}, \champ{MruPosition} 0 pour
         la plus récente) avec l'instant de sa saisie (\path|TypedURLsTime|,
-        \champ{TypedUtc}).
+        \champ{TypedUtc}). Et \texttt{CacheEntry} (\champ{Browser}
+        \texttt{WebCache}) : chaque entrée de la base
+        \fichier{WebCacheV01.dat} d'Internet Explorer, d'Edge Legacy et des
+        applications WinINet, par conteneur (\champ{Container} :
+        \texttt{History}, \texttt{MSHist\ldots}, \texttt{Content},
+        \texttt{iedownload}, \texttt{BackgroundTransferApi}) — URL, compte et
+        page d'une entrée d'historique (\champ{User}, \champ{Page}), nombre
+        d'accès, dates, fichier du cache. La date de modification des
+        conteneurs \texttt{MSHist}, que Windows écrit en heure locale, est
+        convertie en UTC avec le décalage en vigueur à sa date. La base est
+        copiée vivante avec ses journaux : ses dernières entrées peuvent n'être
+        que dans ceux-ci (rejeu \texttt{esentutl /r} par l'analyste).
   \item[\fichier{dpapi\_master\_keys.json}] clés maîtresses DPAPI du système
         (\path|System32\Microsoft\Protect|, \champ{Scope} \texttt{System}) et
         de chaque profil (\path|AppData\Roaming\Microsoft\Protect|,

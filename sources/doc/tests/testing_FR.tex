@@ -111,6 +111,7 @@ virtuelle.
 \begin{lstlisting}
 sudo apt install g++-mingw-w64-x86-64 wine64 python3 python3-pip
 pip install olefile          # lecteur OLE indépendant, pour les recoupements
+pip install dissect.esedb    # lecteur ESE indépendant : WebCache (sinon contrôle sauté)
 \end{lstlisting}
 
 \section{Construire WAC et les harnais}
@@ -616,7 +617,7 @@ Aucune donnée nécessaire.
 cd build-windows/tests && wine file_artefacts_test.exe
 \end{lstlisting}
 
-Référence : 127 contrôles, aucun échec (dont les valeurs du lot 2 du registre : TrustRecords, règle de pare-feu, blob de certificat). Dans le cycle VM,
+Référence : 128 contrôles, aucun échec (dont les valeurs du lot 2 du registre : TrustRecords, règle de pare-feu, blob de certificat). Dans le cycle VM,
 \fichier{place-file-artefacts.ps1} dépose des témoins de contenu connu (un
 historique, un fichier mis à la corbeille, une entrée \fichier{hosts}, un
 script de démarrage) et \fichier{check-json.py} les retrouve dans les JSON.

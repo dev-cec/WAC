@@ -33,7 +33,18 @@
  *  url1 the most recent, and `TypedURLsTime` the instant of each (Windows 8
  *  and later).
  *
- *  The WebCache of Internet Explorer and Edge Legacy follows (backlog B-016).
+ *  WEBCACHE. Internet Explorer, Edge Legacy and the applications built on
+ *  WinINet keep their history, their cache and their downloads in one ESE
+ *  database per user, `WebCacheV01.dat`. Its `Containers` table names each
+ *  `Container_<n>`: History, the daily and weekly `MSHist…`, Content (the
+ *  cache: the page or file each entry stored), iedownload,
+ *  BackgroundTransferApi. Each entry gives its URL and its times as FILETIME
+ *  — in UTC, EXCEPT the modification time of the `MSHist` containers,
+ *  written in the machine's local time: 7,200 s apart from the same entry of
+ *  `History` in summer on the test VM. It is converted with the offset in
+ *  force at its date (suspectLocalToUtc), never read as UTC. The database is
+ *  copied live, in "dirty" state: what WinINet wrote since its last
+ *  checkpoint is only in its logs, collected beside it (esentutl /r).
  */
 #pragma once
 
@@ -60,6 +71,8 @@ extern const std::vector<std::wstring> CHROMIUM_PROFILE_FILES;
  *  the key that encrypts the saved passwords and cookies, under DPAPI). */
 extern const std::vector<std::wstring> CHROMIUM_ROOT_FILES;
 
+//! The WebCache folder of Internet Explorer and Edge Legacy, relative to a Windows profile.
+extern const wchar_t WEBCACHE_FOLDER[];
 //! Firefox's profiles folder, relative to a Windows profile; each subfolder is a Firefox profile.
 extern const wchar_t FIREFOX_PROFILES[];
 //! The files collected in a Firefox profile, each with its -wal and -journal when present.
@@ -109,7 +122,7 @@ std::wstring transitionQualifiers(int64_t transition);
 
 /*! One record of web_client.json: a URL, a visit, a download or a search term. */
 struct WebClientRecord {
-	std::wstring type;              //!< Url, Visit, Download, SearchTerm, TypedInput, FormEntry (Firefox), TypedUrl (NTUSER.DAT)
+	std::wstring type;              //!< Url, Visit, Download, SearchTerm, TypedInput, FormEntry (Firefox), TypedUrl (NTUSER.DAT), CacheEntry (WebCache)
 	std::wstring browser;           //!< Edge, Chrome…
 	std::wstring browserProfile;    //!< the profile folder: Default, Profile 1…
 	std::wstring sid;               //!< the Windows profile it belongs to
@@ -140,11 +153,27 @@ HRESULT readFirefoxPlaces(const std::wstring& file, const WebClientRecord& base,
  *  @return ERROR_SUCCESS, or the failure to open the database */
 HRESULT readFirefoxFormHistory(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records);
 
+/*! Splits a WebCache history URL — "Visited: user@page" (History) or
+ *  ":2026090720260914: user@page" (MSHist) — into its user and its page.
+ *  @param url the entry's URL
+ *  @param user receives the account name, empty if the URL has no such prefix
+ *  @param page receives the page, empty likewise
+ *  @return true if the URL had a history prefix */
+bool splitWebCacheUrl(const std::wstring& url, std::wstring& user, std::wstring& page);
+
+/*! Reads one WebCacheV01.dat: every entry of every container.
+ *  @param file the database, in the working copy
+ *  @param base SID and source copied into each record
+ *  @param records receives one CacheEntry per entry
+ *  @return ERROR_SUCCESS, or why the database cannot be read */
+HRESULT readWebCache(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records);
+
 /*! The web, client side (web_client.json). */
 class WebClient {
 public:
 	/*! Reads the History of every Chromium profile, the places and form
-	 *  history of every Firefox profile, and the TypedURLs, of every user.
+	 *  history of every Firefox profile, the TypedURLs and the WebCache, of
+	 *  every user.
 	 *  @return ERROR_SUCCESS, even without any browser */
 	HRESULT getData();
 	/*! Writes web_client.json.

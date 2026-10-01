@@ -469,6 +469,9 @@ HRESULT ExtractFileArtefactsRaw() {
 		}
 		if (conf.artefacts.powershellHistory) addTarget(profile + PSREADLINE_FOLDER, { L".txt" });
 		if (conf.artefacts.startupFolders) addTarget(profile + STARTUP_PROFILE, {});
+		/* The WebCache of Internet Explorer and Edge Legacy: an ESE database in
+		   use, copied raw with its transaction logs and checkpoint. */
+		if (conf.artefacts.webClient) addTarget(profile + WEBCACHE_FOLDER, {});
 	}
 
 	HRESULT global = S_OK;

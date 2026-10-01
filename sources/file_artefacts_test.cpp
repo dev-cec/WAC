@@ -831,6 +831,14 @@ int wmain() {
 	      && urlValueNumber(L"url1a") == 0 && urlValueNumber(L"urlx") == 0 && urlValueNumber(L"url1234567890") == 0
 	      && urlValueNumber(L"MRUList") == 0, "typed urls: url<N> numbered, anything else refused");
 	firefoxHistory();
+	{
+		std::wstring user, page;
+		check(splitWebCacheUrl(L"Visited: wac@https://x.invalid/a@b", user, page) && user == L"wac" && page == L"https://x.invalid/a@b"
+		      && splitWebCacheUrl(L":2026090720260914: wac@:Host: Ce PC", user, page) && user == L"wac" && page == L":Host: Ce PC"
+		      && !splitWebCacheUrl(L"https://x.invalid/", user, page) && !splitWebCacheUrl(L":20260907x: wac@y", user, page)
+		      && !splitWebCacheUrl(L"Visited: nouser", user, page),
+		      "webcache: history URLs split into user and page, others left whole");
+	}
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }

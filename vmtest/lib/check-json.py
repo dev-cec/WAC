@@ -2224,6 +2224,75 @@ def check_web_client(folder):
         print(f"  {'✅' if ok else '❌'} web_client.json: every visit (URL, instant, transition) and download (path, start, bytes) identical"
               + ("" if ok else f": {wrong[:3]}"))
         found += 0 if ok else 1
+    return found + check_webcache(folder, records)
+
+
+def check_webcache(folder, records):
+    """The WebCache entries of web_client.json against dissect.esedb (Fox-IT,
+    written independently of WAC's ESE reader) on the same WebCacheV01.dat.
+
+    Every entry of every Container_<n>, its URL and its UTC times identical;
+    the modification time of the MSHist containers, written in local time,
+    converted here with the tz database (zoneinfo) for the VM's time zone —
+    not with WAC's rules. Skipped when dissect.esedb is not installed
+    (pip install dissect.esedb).
+    """
+    try:
+        from dissect.esedb import EseDB
+        from zoneinfo import ZoneInfo
+    except ImportError:
+        print("  ⏭️  dissect.esedb not installed: WebCache not confronted")
+        return 0
+    store = os.path.join(folder, store_folder(folder))
+    caches = glob.glob(os.path.join(store, "**", "WebCache", "WebCacheV01.dat"), recursive=True)
+    osj = load(folder, "OperatingSystem.json")
+    key = osj.get("CurrentTimeZoneId") if isinstance(osj, dict) else None
+    zone = ZoneInfo(WINDOWS_TO_IANA[key]) if key in WINDOWS_TO_IANA else None
+    def iso(ticks):
+        if not ticks:
+            return None
+        t = datetime.datetime(1601, 1, 1) + datetime.timedelta(microseconds=ticks // 10)
+        return t.strftime("%Y-%m-%dT%H:%M:%S.%f") + str(ticks % 10) + "Z"
+    def local_to_utc(ticks):
+        if not ticks or zone is None:
+            return None
+        local = datetime.datetime(1601, 1, 1) + datetime.timedelta(microseconds=ticks // 10)
+        utc = local.replace(tzinfo=zone).astimezone(datetime.timezone.utc).replace(tzinfo=None)
+        return utc.strftime("%Y-%m-%dT%H:%M:%S.%f") + str(ticks % 10) + "Z"
+    found = 0
+    for cache in caches:
+        source = "C:\\" + os.path.relpath(cache, store).replace(os.sep, "\\")
+        mine = {(r.get("ContainerId"), r.get("EntryId")): r for r in records
+                if r.get("Type") == "CacheEntry" and (r.get("Source") or "").lower() == source.lower()}
+        db = EseDB(open(cache, "rb"))
+        names = {t.name for t in db.tables()}
+        theirs, wrong, local_checked, empty = 0, [], 0, 0
+        for c in db.table("Containers").records():
+            cid, name = c.get("ContainerId"), c.get("Name") or ""
+            if f"Container_{cid}" not in names:
+                continue
+            for e in db.table(f"Container_{cid}").records():
+                # A leaf entry without any column (one per empty Content
+                # container of the VM): dissect lists it, but cannot even
+                # read its header — no entry, WAC rightly gives none.
+                if e.get("EntryId") is None:
+                    empty += 1
+                    continue
+                theirs += 1
+                r = mine.get((cid, e.get("EntryId")), {})
+                modified = local_to_utc(e.get("ModifiedTime")) if name.startswith("MSHist") else iso(e.get("ModifiedTime"))
+                local_checked += 1 if name.startswith("MSHist") and e.get("ModifiedTime") else 0
+                expected = {"Url": e.get("Url"), "AccessedUtc": iso(e.get("AccessedTime")),
+                            "ExpiryUtc": iso(e.get("ExpiryTime")), "ModifiedUtc": modified}
+                for field, value in expected.items():
+                    if value is not None and r.get(field) != value:
+                        wrong.append(f"{name} {e.get('EntryId')} {field}: dissect {value}, WAC {r.get(field)}")
+        ok = theirs == len(mine) and not wrong
+        print(f"  {'✅' if ok else '❌'} web_client.json: {theirs} WebCache entr(ies) as dissect.esedb reads them "
+              f"(WAC {len(mine)}, {empty} empty leaf entr(ies) left out), URL and times identical, "
+              f"{local_checked} MSHist local time(s) converted by zoneinfo"
+              + ("" if ok else f": {wrong[:3]}"))
+        found += 0 if ok else 1
     return found
 
 

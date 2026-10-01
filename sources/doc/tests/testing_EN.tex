@@ -106,6 +106,7 @@ natively, under \texttt{wine}, or in the virtual machine.
 \begin{lstlisting}
 sudo apt install g++-mingw-w64-x86-64 wine64 python3 python3-pip
 pip install olefile          # independent OLE reader, for the cross-checks
+pip install dissect.esedb    # independent ESE reader: WebCache (check skipped otherwise)
 \end{lstlisting}
 
 \section{Building WAC and the harnesses}
@@ -591,7 +592,7 @@ Firefox: this test is its only check. No data needed.
 cd build-windows/tests && wine file_artefacts_test.exe
 \end{lstlisting}
 
-Reference: 127 checks, no failure (the second-lot registry values included: TrustRecords, firewall rule, certificate Blob). In the VM cycle,
+Reference: 128 checks, no failure (the second-lot registry values included: TrustRecords, firewall rule, certificate Blob). In the VM cycle,
 \fichier{place-file-artefacts.ps1} places witnesses whose content is known (a
 history, a file sent to the bin, a hosts entry, a startup script) and
 \fichier{check-json.py} finds them in the JSON.

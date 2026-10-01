@@ -4,6 +4,7 @@
 #include "web_client.h"
 #include "sqlite_reader.h"
 #include "registry_common.h"
+#include "ese_database.h"
 #include <filesystem>
 #include <cwchar>
 #include <map>
@@ -21,6 +22,7 @@ const std::vector<std::wstring> CHROMIUM_PROFILE_FILES = {
 	L"History", L"Login Data", L"Web Data", L"Shortcuts", L"Top Sites", L"Bookmarks",
 	L"Preferences", L"Secure Preferences", L"Cookies", L"Network\\Cookies" };
 const std::vector<std::wstring> CHROMIUM_ROOT_FILES = { L"Local State" };
+const wchar_t WEBCACHE_FOLDER[] = L"\\AppData\\Local\\Microsoft\\Windows\\WebCache";
 const wchar_t FIREFOX_PROFILES[] = L"\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles";
 const std::vector<std::wstring> FIREFOX_PROFILE_FILES = {
 	L"places.sqlite", L"formhistory.sqlite", L"cookies.sqlite", L"permissions.sqlite", L"logins.json",
@@ -273,7 +275,104 @@ void readTypedUrls(ORHKEY root, const std::wstring& sid, std::vector<WebClientRe
 	ORCloseKey(key);
 }
 
+/*! A cell of a record, by its column's name.
+ *  @param record the record
+ *  @param table its table
+ *  @param name the column
+ *  @param column receives the column's description
+ *  @return the cell, or nullptr if the record has no value there */
+const EseCell* cellOf(const EseRecord& record, const EseTable& table, const wchar_t* name, const EseColumn** column) {
+	for (const EseColumn& c : table.columns) {
+		if (c.name != name) continue;
+		*column = &c;
+		for (const EseCell& cell : record) if (cell.columnId == c.id) return &cell;
+		return nullptr;
+	}
+	return nullptr;
+}
+
+//! @return a text or number column as text, "" if absent or not decoded
+std::wstring cellText(const EseRecord& record, const EseTable& table, const wchar_t* name) {
+	const EseColumn* column = nullptr;
+	const EseCell* cell = cellOf(record, table, name, &column);
+	return cell ? eseCellToJson(*column, *cell).text() : L"";
+}
+
+//! @return an integer column (Long, LongLong, UnsignedLong…), 0 if absent
+int64_t cellInteger(const EseRecord& record, const EseTable& table, const wchar_t* name) {
+	const EseColumn* column = nullptr;
+	const EseCell* cell = cellOf(record, table, name, &column);
+	if (!cell || cell->values.empty() || cell->compressionScheme >= 0) return 0;
+	const std::vector<uint8_t>& v = cell->values.front();
+	if (v.size() >= 8) return (int64_t)readLittleEndian<uint64_t>(v.data());
+	if (v.size() >= 4) return (int64_t)readLittleEndian<uint32_t>(v.data());
+	return 0;
+}
+
+//! @return a FILETIME column, null if absent or zero
+FILETIME cellTime(const EseRecord& record, const EseTable& table, const wchar_t* name) {
+	const uint64_t ticks = (uint64_t)cellInteger(record, table, name);
+	return FILETIME{ (DWORD)(ticks & 0xFFFFFFFFULL), (DWORD)(ticks >> 32) };
+}
+
 } // namespace
+
+bool splitWebCacheUrl(const std::wstring& url, std::wstring& user, std::wstring& page) {
+	size_t start = std::wstring::npos;
+	if (url.compare(0, 9, L"Visited: ") == 0) start = 9;
+	else if (url.size() > 2 && url[0] == L':') {
+		const size_t close = url.find(L": ", 1);
+		if (close != std::wstring::npos && url.find_first_not_of(L"0123456789", 1) == close) start = close + 2;
+	}
+	if (start == std::wstring::npos) return false;
+	const size_t at = url.find(L'@', start);
+	if (at == std::wstring::npos) return false;
+	user = url.substr(start, at - start);
+	page = url.substr(at + 1);
+	return true;
+}
+
+HRESULT readWebCache(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records) {
+	EseDatabase db;
+	const HRESULT opened = db.open(file);
+	if (opened != ERROR_SUCCESS) return opened;
+	const EseTable* containers = db.table(L"Containers");
+	if (!containers) return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+	for (const EseRecord& c : db.records(*containers)) {
+		const int64_t id = cellInteger(c, *containers, L"ContainerId");
+		const std::wstring name = cellText(c, *containers, L"Name");
+		const EseTable* table = db.table(L"Container_" + std::to_wstring(id));
+		if (!table) continue;   // the cookies' containers keep their entries in CookieEntryEx_<n>
+		// The daily and weekly history write their modification time in local time.
+		const bool localModified = name.compare(0, 6, L"MSHist") == 0;
+		for (const EseRecord& e : db.records(*table)) {
+			WebClientRecord r = startRecord(base, L"CacheEntry");
+			r.fields.add(L"Container", Json::str(name));
+			r.fields.add(L"ContainerId", Json::num((long long)id));
+			r.fields.add(L"EntryId", Json::num((long long)cellInteger(e, *table, L"EntryId")));
+			const std::wstring url = cellText(e, *table, L"Url");
+			r.fields.add(L"Url", Json::str(url));
+			std::wstring user, page;
+			if (splitWebCacheUrl(url, user, page)) {
+				r.fields.add(L"User", Json::str(user));
+				r.fields.add(L"Page", Json::str(page));
+			}
+			r.fields.add(L"AccessCount", Json::num((long long)cellInteger(e, *table, L"AccessCount")));
+			const FILETIME modified = cellTime(e, *table, L"ModifiedTime");
+			addDate(r.fields, L"Modified", localModified ? suspectLocalToUtc(modified) : modified);
+			addDate(r.fields, L"Accessed", cellTime(e, *table, L"AccessedTime"));
+			addDate(r.fields, L"Created", cellTime(e, *table, L"CreationTime"));
+			addDate(r.fields, L"Expiry", cellTime(e, *table, L"ExpiryTime"));
+			addDate(r.fields, L"Sync", cellTime(e, *table, L"SyncTime"));
+			r.fields.add(L"Filename", Json::str(cellText(e, *table, L"Filename")));
+			if (const int64_t size = cellInteger(e, *table, L"FileSize")) r.fields.add(L"FileSize", Json::num((long long)size));
+			r.fields.add(L"RedirectUrl", Json::str(cellText(e, *table, L"RedirectUrl")));
+			records.push_back(std::move(r));
+		}
+	}
+	if (db.dirtyShutdown()) log(2, L"❇️WebCache copied live (dirty): the last entries may be in its logs only — " + base.source);
+	return ERROR_SUCCESS;
+}
 
 FILETIME firefoxTime(int64_t microseconds) {
 	if (microseconds <= 0) return FILETIME{ 0, 0 };
@@ -398,6 +497,16 @@ HRESULT WebClient::getData() {
 			}
 		}
 	forEachProfileHive(L"\\ntuser.dat", [this](ORHKEY root, const std::wstring& sid) { readTypedUrls(root, sid, records_); });
+	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
+		const std::filesystem::path cache = extractedPath(std::get<1>(profileEntry)) + WEBCACHE_FOLDER + L"\\WebCacheV01.dat";
+		std::error_code ec;
+		if (!std::filesystem::is_regular_file(cache, ec)) continue;
+		WebClientRecord base;
+		base.browser = L"WebCache";
+		base.sid = std::get<0>(profileEntry);
+		base.source = originalPath(cache.wstring());
+		if (readWebCache(cache.wstring(), base, records_) != ERROR_SUCCESS) log(2, L"🔥WebCache not read: " + base.source);
+	}
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
 		const std::filesystem::path root = extractedPath(std::get<1>(profileEntry)) + FIREFOX_PROFILES;
 		std::error_code ec;
