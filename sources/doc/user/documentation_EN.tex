@@ -1003,6 +1003,12 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         boot key from \fichier{SYSTEM}, the hashed boot key from the \fichier{SAM},
         the AES scheme of Windows~10 and later or the older RC4, then a DES layer
         keyed on the RID).
+  \item[\fichier{local\_groups.json}] local groups read from the \fichier{SAM}:
+        the built-in groups (\champ{Scope} \texttt{Builtin}, \texttt{S-1-5-32-…})
+        and the groups created on the machine (\texttt{Local}), each with its RID,
+        SID, name, description and direct members (SID and name resolved offline).
+        Membership is what says who is an administrator or a remote desktop user;
+        an account an intruder adds to a privileged group shows up here.
   \item[\fichier{Sessions.json}] sessions open at collection time: user, logon
         type, authentication package, start time.
   \item[\fichier{processes.json}] running processes: name, identifiers (and

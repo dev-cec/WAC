@@ -271,6 +271,7 @@ def cross_checks(folder):
 
     found += guarded(check_services, folder)
     found += guarded(check_users, folder)
+    found += guarded(check_local_groups, folder)
     found += guarded(check_processes, folder)
     found += guarded(check_network, folder, boot)
     found += guarded(check_prefetchs, folder)
@@ -2735,8 +2736,12 @@ def check_account_names(folder):
         # LSA at the time of the observation, investigation.json and
         # conversion.json the operator running WAC, as HIS machine names him
         # ("Système"): none goes through the table.
-        if os.path.basename(file) in ("events.json", "users.json", "Sessions.json", "investigation.json",
-                                      "conversion.json"):
+        # local_groups.json, like users.json, names its groups from the SAM
+        # itself (the C value), not through the table; its members' SIDName uses
+        # the shared table checked on the other files, and the membership is
+        # confronted with Get-LocalGroupMember in check_local_groups.
+        if os.path.basename(file) in ("events.json", "users.json", "local_groups.json", "Sessions.json",
+                                      "investigation.json", "conversion.json"):
             continue
         d = load(folder, os.path.basename(file))
         if d is not None:
@@ -2970,6 +2975,47 @@ def check_services(folder):
         found += 1
     else:
         print(f"  ✅ services.json: {drivers} driver(s) present")
+    return found
+
+
+def check_local_groups(folder):
+    """Confronts local_groups.json with Get-LocalGroupMember: every group's direct
+    members, by SID, must match, and the witness account wacpw must appear in the
+    Administrators group (S-1-5-32-544)."""
+    groups = load(folder, "local_groups.json")
+    if not isinstance(groups, list) or not groups:
+        print("  \u23ed\ufe0f  local_groups.json absent or empty: check skipped")
+        return 0
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if not os.path.exists(path):
+        print("  \u23ed\ufe0f  no reference: local groups not confronted")
+        return 0
+    ref = {}
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for l in f:
+            if l.startswith("localgroup="):
+                sid, members = l.strip()[len("localgroup="):].split("|", 1)
+                ref[sid.lower()] = {m.lower() for m in members.split(",") if m}
+    mine = {str(g.get("Sid", "")).lower():
+            {str(m.get("Sid", "")).lower() for m in (g.get("Members") or [])}
+            for g in groups}
+    found = 0
+    wrong = [f"{sid}: WAC only {sorted(mine.get(sid, set()) - want)[:3]}, "
+             f"Windows only {sorted(want - mine.get(sid, set()))[:3]}"
+             for sid, want in ref.items() if mine.get(sid, set()) != want]
+    if wrong:
+        print(f"  \u274c local_groups.json: {wrong[:3]}")
+        found += 1
+    else:
+        print(f"  \u2705 local_groups.json: {len(ref)} group(s), members identical to Get-LocalGroupMember")
+    users = load(folder, "users.json")
+    wacpw = next((str(u.get("SID", "")) for u in (users or []) if u.get("Name") == "wacpw"), "")
+    admins = mine.get("s-1-5-32-544", set())
+    if wacpw and wacpw.lower() in admins:
+        print("  \u2705 local_groups.json: witness wacpw present in Administrators")
+    elif wacpw:
+        print(f"  \u274c local_groups.json: witness wacpw ({wacpw}) absent from Administrators {sorted(admins)}")
+        found += 1
     return found
 
 

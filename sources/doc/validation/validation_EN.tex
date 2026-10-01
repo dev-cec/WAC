@@ -576,6 +576,8 @@ RID found at the end of the rebuilt SID & reading of the SAM database \\
 NT hash of a witness account with a known password, the previous one in the
   history / \fichier{users.json} & MD4 of the password in UTF-16LE, recomputed
   apart (the boot key / AES / DES chain verified end to end) \\
+direct members of each local group, witness account in Administrators /
+  \fichier{local\_groups.json} & \texttt{Get-LocalGroupMember} over the 21 groups \\
 service states and types, presence of drivers & enumeration filters mistaken
   for states \\
 no process carries \fichier{WAC.exe} among its modules & the tool's modules

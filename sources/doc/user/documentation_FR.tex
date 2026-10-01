@@ -1021,6 +1021,13 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         condensats sont déchiffrés sur place (clé de démarrage de \fichier{SYSTEM},
         clé de hachage de la \fichier{SAM}, schéma AES de Windows~10 et suivants
         ou RC4 plus ancien, puis couche DES par RID).
+  \item[\fichier{local\_groups.json}] groupes locaux lus dans la \fichier{SAM} :
+        groupes intégrés (\champ{Scope} \texttt{Builtin}, \texttt{S-1-5-32-…}) et
+        groupes créés sur la machine (\texttt{Local}), chacun avec son RID, son
+        SID, son nom, sa description et ses membres directs (SID et nom résolu
+        hors ligne). C'est l'appartenance qui dit qui est administrateur ou
+        membre des Bureaux à distance ; un compte ajouté à un groupe privilégié
+        par un intrus y figure.
   \item[\fichier{Sessions.json}] sessions ouvertes au moment de la collecte :
         utilisateur, type d'ouverture, paquet d'authentification, heure de début.
   \item[\fichier{processes.json}] processus en cours : nom, identifiants (et

@@ -61,6 +61,7 @@
 #include "account_names.h"
 #include "services.h"
 #include "users.h"
+#include "local_groups.h"
 #include "events.h"
 #include "event_messages.h"
 #include "running_machine.h"
@@ -646,6 +647,7 @@ void convertArtefacts(bool systemAvailable) {
 	ScheduledTasks scheduledTasks;
 	SystemInfo systemInfo;
 	Users users;
+	LocalGroups localGroups;
 	Events events;
 	ORHKEY hKey = NULL;
 	DWORD valueType = 0;
@@ -1024,6 +1026,24 @@ void convertArtefacts(bool systemAvailable) {
 		if (hresult != ERROR_SUCCESS) printError(hresult);
 		else printSuccess();
 		users.clear(); // free memory
+	}
+	}   // artefacts.registry
+
+	/* LOCAL GROUPS, offline from the SAM hive (same gate as users): who belongs
+	   to Administrators, Remote Desktop Users, and the other aliases. */
+	if (requested(conf.artefacts.registry, "local_groups.json", Text::ArtefactLocalGroups, L"artefacts.registry")) {
+	printStep(Text::StepLocalGroups);
+	hresult = localGroups.getData();
+	auditRecord(L"LOCAL GROUPS collection", L"extracted SAM hive", hresult, Footprint::HIVE_COPY);
+	if (hresult != ERROR_SUCCESS) {
+		printError(hresult);
+		writeNotCollected("local_groups.json", L"depends on the SAM hive, which is unavailable", hresult);
+	}
+	else {
+		hresult = localGroups.toJson();
+		if (hresult != ERROR_SUCCESS) printError(hresult);
+		else printSuccess();
+		localGroups.clear(); // free memory
 	}
 	}   // artefacts.registry
 

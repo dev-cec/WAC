@@ -41,7 +41,7 @@ enum class Text : unsigned {
 	StepWriteLiveState, StepFindControlSet, StepOpenControlSet, StepSuspectTimeZone,
 	StepSuspectCodePage, StepAccountNames, StepUsbstor, StepMountedDevices, StepBam, StepMuiCache,
 	StepAmcache, StepUserAssist, StepRunKeys, StepShimcache,
-	StepShellbags, StepMru, StepMruApps, StepSystemInformation, StepServices, StepUsers,
+	StepShellbags, StepMru, StepMruApps, StepSystemInformation, StepServices, StepUsers, StepLocalGroups,
 	// Steps: files and event logs
 	StepScheduledTasks, StepRecentDocuments, StepPrefetch, StepReadMft, StepWriteMft, StepUsnJournal,
 	StepJumpListsAutomatic, StepJumpListsCustom, StepEvents,
@@ -55,7 +55,7 @@ enum class Text : unsigned {
 	ArtefactProcesses, ArtefactSessions, ArtefactNetwork, ArtefactUsbDevices, ArtefactMountedDevices,
 	ArtefactBam, ArtefactMuiCache, ArtefactAmcacheApplications, ArtefactAmcacheApplicationFiles, ArtefactAmcacheInventory,
 	ArtefactUserAssist, ArtefactRunKeys, ArtefactShimcache, ArtefactShellbags, ArtefactMru,
-	ArtefactMruApps, ArtefactServices, ArtefactUsers, ArtefactScheduledTasks,
+	ArtefactMruApps, ArtefactServices, ArtefactUsers, ArtefactLocalGroups, ArtefactScheduledTasks,
 	ArtefactRecentDocuments, ArtefactPrefetch, ArtefactMft, ArtefactUsnJournal,
 	ArtefactJumpListsAutomatic, ArtefactJumpListsCustom,
 	ArtefactPowerShellHistory, ArtefactSetupApi, ArtefactRecycleBin, ArtefactHosts, ArtefactErrorReports,

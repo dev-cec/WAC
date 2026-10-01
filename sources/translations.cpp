@@ -78,6 +78,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepSystemInformation,     L"Informations sur le système",                   L"Extraction of SYSTEM INFORMATION" },
 	{ Text::StepServices,              L"Services",                                      L"Extraction of SERVICES" },
 	{ Text::StepUsers,                 L"Utilisateurs",                                  L"Extraction of USERS" },
+	{ Text::StepLocalGroups,           L"Groupes locaux (hors ligne)",                   L"Extracting LOCAL GROUPS (offline)" },
 
 	{ Text::StepScheduledTasks,        L"Tâches planifiées (hors ligne)",                L"Extracting SCHEDULED TASKS (offline)" },
 	{ Text::StepRecentDocuments,       L"Documents récents",                             L"Extracting RECENT DOCS" },
@@ -142,6 +143,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactMruApps,           L"MRU des applications",                          L"MRU applications" },
 	{ Text::ArtefactServices,          L"Services",                                      L"Services" },
 	{ Text::ArtefactUsers,             L"Utilisateurs",                                  L"Users" },
+	{ Text::ArtefactLocalGroups,       L"Groupes locaux",                                L"Local groups" },
 	{ Text::ArtefactScheduledTasks,    L"Tâches planifiées",                             L"Scheduled tasks" },
 	{ Text::ArtefactRecentDocuments,   L"Documents récents",                             L"Recent documents" },
 	{ Text::ArtefactPrefetch,          L"Prefetch",                                      L"Prefetch" },

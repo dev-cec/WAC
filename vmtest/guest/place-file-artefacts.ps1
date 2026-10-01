@@ -722,4 +722,15 @@ if (Wants 'registry') {
         net user wacpw $pwNew | Out-Null
         Write-Output ("samhash=wacpw|" + $pwNew + '|' + $pwOld)
     } catch { Write-Output ("samhasherror=" + $_.Exception.Message) }
+
+    # Local groups: wacpw added to Administrators (S-1-5-32-544), so a group has a
+    # non-trivial membership; each group's direct members (by SID) are recorded,
+    # for WAC's local_groups.json to be confronted with Get-LocalGroupMember.
+    try { Add-LocalGroupMember -SID 'S-1-5-32-544' -Member 'wacpw' -ErrorAction SilentlyContinue } catch {}
+    foreach ($g in Get-LocalGroup) {
+        try {
+            $m = Get-LocalGroupMember -SID $g.SID -ErrorAction Stop | ForEach-Object { $_.SID.Value }
+            Write-Output ("localgroup=" + $g.SID.Value + '|' + ($m -join ','))
+        } catch { Write-Output ("localgrouperror=" + $g.Name) }
+    }
 }
