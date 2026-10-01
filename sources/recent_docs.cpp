@@ -154,7 +154,9 @@ void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 				unsigned int serial = u32(LinkInfo_offset + volumeId_offset + 8);
 				
 				log(3, L"🔈to_hex volumeSerial");
-				volumeSerial = to_hex(serial);
+				// Eight digits, leading zeros kept: the form Prefetch, the live
+				// volumes and ntfs_volumes.json give, so the serials match.
+				volumeSerial = to_hex(serial, 8);
 				transform(volumeSerial.begin(), volumeSerial.end(), volumeSerial.begin(), ::toupper);
 				
 				/*  VOLUME LABEL. The .lnk specification is explicit: a value of 0x14

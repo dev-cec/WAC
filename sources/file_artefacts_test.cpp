@@ -4,7 +4,8 @@
  *  hosts, Report.wer, Defender's MPLog, DetectionHistory and quarantine,
  *  Zone.Identifier, and the registry values of the second lot (TrustRecords,
  *  firewall rules, certificate Blob), the NTFS security descriptors of
- *  $Secure:$SDS, and the NTFS boot sector and change journal header.
+ *  $Secure:$SDS, the NTFS boot sector and change journal header, and the
+ *  volume serial of a shortcut.
  *
  *  WHY THIS TEST. These formats are text or a few bytes, and a decoder that
  *  misses a case still gives valid JSON: a multi-line command cut in two, a
@@ -26,6 +27,7 @@
 #include "registry_lot2.h"
 #include "security_descriptors.h"
 #include "ntfs_volumes.h"
+#include "recent_docs.h"
 #include "guard_page.h"
 #include <cstdio>
 #include <cstring>
@@ -497,6 +499,36 @@ void ntfsVolumes() {
 	      && journal->find(L"CreatedUtc"), "ntfs volume: journal identifier, and its date");
 }
 
+/*! A shortcut with a LinkInfo only: its target on a fixed volume of serial
+ *  0x0A1B2C3D — a leading zero that must be kept, as Prefetch and
+ *  ntfs_volumes.json write it. */
+void shortcutVolumeSerial() {
+	std::vector<uint8_t> lnk(76, 0);
+	lnk[0] = 0x4C;
+	const uint8_t CLSID[16] = { 0x01, 0x14, 0x02, 0, 0, 0, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46 };
+	std::memcpy(lnk.data() + 4, CLSID, 16);
+	lnk[20] = 0x02;                                    // HasLinkInfo
+	auto put32 = [&](uint32_t v) { for (int i = 0; i < 4; ++i) lnk.push_back((uint8_t)(v >> (8 * i))); };
+	const std::string path = "C:\\a.txt";
+	const uint32_t volumeIdSize = 0x11, basePath = 0x1C + volumeIdSize;
+	const uint32_t suffix = basePath + (uint32_t)path.size() + 1;
+	put32(suffix + 1);                                 // LinkInfoSize
+	put32(0x1C);                                       // LinkInfoHeaderSize
+	put32(1);                                          // VolumeIDAndLocalBasePath
+	put32(0x1C);                                       // VolumeIDOffset
+	put32(basePath);                                   // LocalBasePathOffset
+	put32(0);                                          // CommonNetworkRelativeLinkOffset
+	put32(suffix);                                     // CommonPathSuffixOffset
+	put32(volumeIdSize); put32(3); put32(0x0A1B2C3D); put32(0x10);   // VolumeID: size, fixed, serial, label offset
+	lnk.push_back(0);                                  // empty label
+	for (char c : path) lnk.push_back((uint8_t)c);
+	lnk.push_back(0);
+	lnk.push_back(0);                                  // empty suffix
+	put32(0);                                          // terminal block
+	RecentDoc doc(lnk.data(), lnk.size(), L"C:\\test.lnk", L"");
+	check(doc.volumeSerial == L"0A1B2C3D", "shortcut: volume serial on eight digits, the leading zero kept");
+}
+
 } // namespace
 
 int wmain() {
@@ -511,6 +543,7 @@ int wmain() {
 	registryLot2();
 	securityDescriptors();
 	ntfsVolumes();
+	shortcutVolumeSerial();
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }
