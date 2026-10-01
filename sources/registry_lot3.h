@@ -19,6 +19,9 @@
  *   - MountPoints2: the volumes and network shares each user's Explorer saw
  *     (a USB key, \\\\server\\share), the last time it did, and the commands an
  *     entry may carry (Shell\\AutoRun\\command: an old persistence).
+ *   - Known networks (NetworkList): every network the machine joined — its
+ *     name, its kind, its gateway's hardware address, when it was first and
+ *     last connected: where the machine has been.
  */
 #pragma once
 
@@ -127,4 +130,33 @@ public:
 	void clear();               //!< releases the entries
 private:
 	std::vector<MountPoint> entries_;
+};
+
+// ------------------------------------------------------------ Known networks
+
+/*! One network the machine joined: a NetworkList profile, with what its
+ *  signature adds (gateway, DNS suffix). */
+struct KnownNetwork {
+	std::wstring profileGuid;   //!< the profile's key
+	FILETIME profileLastWriteUtc = { 0 };   //!< last write of the profile's key
+	std::vector<std::pair<std::wstring, Json>> values; //!< the profile's values but its dates (ProfileName, Category, NameType…)
+	FILETIME createdUtc = { 0 };        //!< DateCreated, a local SYSTEMTIME, converted
+	FILETIME lastConnectedUtc = { 0 };  //!< DateLastConnected, idem
+	struct Signature {
+		std::wstring kind;      //!< "Managed" or "Unmanaged"
+		std::vector<std::pair<std::wstring, Json>> values; //!< Description, DnsSuffix, FirstNetwork, Source…
+		std::wstring gatewayMac;//!< DefaultGatewayMac, as aa-bb-cc-dd-ee-ff
+	};
+	std::vector<Signature> signatures; //!< the signatures pointing to this profile
+	Json toJson() const;        //!< @return the network as a JSON object
+};
+
+//! Networks of NetworkList (known_networks.json).
+class KnownNetworks {
+public:
+	HRESULT getData();          //!< @return ERROR_SUCCESS, or why SOFTWARE is missing
+	HRESULT toJson();           //!< @return the result of the write
+	void clear();               //!< releases the networks
+private:
+	std::vector<KnownNetwork> networks_;
 };

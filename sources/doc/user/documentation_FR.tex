@@ -367,6 +367,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   defender_configuration: true  # exclusions et réglages de protection de Microsoft Defender
   explorer_recent_docs: true    # fichiers ouverts par chaque utilisateur (RecentDocs de l'Explorateur)
   mount_points: true            # volumes et partages vus par chaque utilisateur (MountPoints2)
+  known_networks: true          # réseaux auxquels la machine s'est connectée (NetworkList)
 \end{lstlisting}
 
 \begin{itemize}
@@ -1120,6 +1121,13 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         vue ---, ses valeurs, et ses sous-clés avec leur commande
         (\texttt{Shell\textbackslash AutoRun\textbackslash command} : une
         persistance ancienne).
+  \item[\fichier{known\_networks.json}] réseaux auxquels la machine s'est
+        connectée (\texttt{NetworkList}) : nom, type, catégorie, adresse
+        matérielle de la passerelle et suffixe DNS de chaque signature, première
+        et dernière connexion. Ces deux dates sont écrites par Windows en heure
+        locale : \wac{} les donne en UTC avec le décalage en vigueur à leur
+        date (mesuré contre le journal \texttt{NetworkProfile}). Elles disent où
+        la machine a été.
   \item[\fichier{fat\_volumes.json}] volumes FAT12, FAT16, FAT32 et exFAT, clés
         USB et cartes du suspect comprises (le volume de la collecte excepté) :
         chaque entrée, présente ou \textbf{supprimée} (\champ{Deleted}), son

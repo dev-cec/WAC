@@ -144,6 +144,7 @@ struct AppliConf {
 		bool defenderConfiguration = true;  //!< Defender configuration: exclusions and protection settings (registry)
 		bool explorerRecentDocs = true;  //!< files each user opened, by extension (Explorer's RecentDocs)
 		bool mountPoints = true;  //!< volumes and network shares each user's Explorer saw (MountPoints2)
+		bool knownNetworks = true;  //!< networks the machine joined (NetworkList): name, kind, gateway, first and last connection
 
 		/*! Whether an artefact asked for reads the users' hives (ntuser.dat,
 		 *  usrClass.dat): they are copied then. They used to be copied only

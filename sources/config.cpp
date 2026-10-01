@@ -71,6 +71,7 @@ bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error)
 		{ "defender_configuration", &a.defenderConfiguration },
 		{ "explorer_recent_docs", &a.explorerRecentDocs },
 		{ "mount_points", &a.mountPoints },
+		{ "known_networks", &a.knownNetworks },
 	};
 	for (const auto& [key, node] : section.children) {
 		const Switch* found = nullptr;

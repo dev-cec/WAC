@@ -1690,6 +1690,34 @@ def check_small_file_artefacts(folder):
                f"mount_points.json: the {len(mine)} entries the live registry lists, the share witness decoded as \\\\127.0.0.1\\WacShare",
                f"mount_points.json: WAC only {sorted(mine - set(names))[:3]}, registry only {sorted(set(names) - mine)[:3]}, share {share}")
 
+    # Known networks: the profiles and gateways the live registry lists, and
+    # DateLastConnected — stored in local time — equal, in UTC, to the last
+    # connection the NetworkProfile log records for that name (B-031).
+    networks = load(folder, "known_networks.json")
+    if isinstance(networks, list) and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            lines = f.read().splitlines()
+        listed = {l[len("network="):].split("|")[0].upper(): l[len("network="):].split("|") for l in lines if l.startswith("network=")}
+        connected = dict(l[len("netconnected="):].rsplit("|", 1) for l in lines if l.startswith("netconnected="))
+        wrong, dated = [], 0
+        mine = {str(n.get("ProfileGuid", "")).upper(): n for n in networks}
+        if set(mine) != set(listed):
+            wrong.append(f"profiles WAC {sorted(mine)}, registry {sorted(listed)}")
+        for guid, (_, name, macs) in listed.items():
+            n = mine.get(guid, {})
+            if n.get("ProfileName") != name:
+                wrong.append(f"{guid}: name {n.get('ProfileName')!r}, registry {name!r}")
+            ours = sorted(sig.get("DefaultGatewayMac", "") for sig in n.get("Signatures") or [])
+            if ours != sorted(m for m in macs.split(",") if m):
+                wrong.append(f"{guid}: gateways {ours}, registry {macs}")
+            if name in connected and n.get("DateLastConnectedUtc"):
+                dated += 1
+                if n["DateLastConnectedUtc"][:19] != connected[name]:
+                    wrong.append(f"{name}: DateLastConnected {n['DateLastConnectedUtc']}, event 10000 {connected[name]}Z")
+        report(listed and not wrong and dated,
+               f"known_networks.json: the {len(listed)} profile(s) and gateways of the registry; DateLastConnected of {dated} equal to its event 10000 (UTC)",
+               f"known_networks.json: {wrong[:2] if wrong else 'no network dated by an event'}")
+
     # Cleared log: none live, as Windows sees it; the cleared events recovered.
     if isinstance(events, list) and os.path.exists(path):
         with open(path, encoding="utf-8", errors="replace") as f:

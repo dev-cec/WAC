@@ -3,6 +3,8 @@
  */
 #include "registry_lot3.h"
 #include "idList.h"
+#include "ip_address.h"
+#include <algorithm>
 
 namespace {
 
@@ -313,3 +315,97 @@ HRESULT MountPoints::getData() {
 
 HRESULT MountPoints::toJson() { return writeList("mount_points.json", entries_); }
 void MountPoints::clear() { entries_.clear(); }
+
+// ------------------------------------------------------------ Known networks
+
+namespace {
+
+/*! A NetworkList date: a SYSTEMTIME in the machine's LOCAL time — measured on
+ *  the test VM, DateLastConnected 23:46:44 is the 21:46:44 UTC of the
+ *  NetworkProfile event 10000 of that connection (+2 h). Converted to UTC with
+ *  the offset in force at that date.
+ *  @param data the value's 16 bytes
+ *  @return the instant in UTC, or a null FILETIME */
+FILETIME networkListDate(const std::vector<BYTE>& data) {
+	FILETIME local = { 0, 0 };
+	if (data.size() < sizeof(SYSTEMTIME)) return local;
+	SYSTEMTIME st;
+	memcpy(&st, data.data(), sizeof(SYSTEMTIME));
+	if (!SystemTimeToFileTime(&st, &local)) return FILETIME{ 0, 0 };
+	return suspectLocalToUtc(local);
+}
+
+} // namespace
+
+Json KnownNetwork::toJson() const {
+	Json o = Json::obj();
+	o.add(L"ProfileGuid", Json::str(profileGuid));
+	for (const auto& [name, value] : values) o.add(name, value);
+	addDate(o, L"DateCreated", createdUtc);
+	addDate(o, L"DateLastConnected", lastConnectedUtc);
+	addDate(o, L"KeyLastWrite", profileLastWriteUtc);
+	if (!signatures.empty()) {
+		Json list = Json::arr();
+		for (const Signature& sig : signatures) {
+			Json g = Json::obj();
+			g.add(L"Kind", Json::str(sig.kind));
+			for (const auto& [name, value] : sig.values) g.add(name, value);
+			g.add(L"DefaultGatewayMac", Json::str(sig.gatewayMac));
+			list.push(std::move(g));
+		}
+		o.add(L"Signatures", std::move(list));
+	}
+	return o;
+}
+
+HRESULT KnownNetworks::getData() {
+	if (!conf.Software) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	const std::wstring LIST = L"Microsoft\\Windows NT\\CurrentVersion\\NetworkList";
+	for (const std::wstring& guid : subkeys(conf.Software, LIST + L"\\Profiles")) {
+		ORHKEY key = NULL;
+		if (OROpenKey(conf.Software, (LIST + L"\\Profiles\\" + guid).c_str(), &key) != ERROR_SUCCESS) continue;
+		KnownNetwork n;
+		n.profileGuid = guid;
+		n.profileLastWriteUtc = lastWrite(key);
+		for (DWORD i = 0;; ++i) {
+			std::wstring name;
+			DWORD type = 0;
+			std::vector<BYTE> data;
+			if (enumRegistryValue(key, i, name, type, data) != ERROR_SUCCESS) break;
+			if (name == L"DateCreated") n.createdUtc = networkListDate(data);
+			else if (name == L"DateLastConnected") n.lastConnectedUtc = networkListDate(data);
+			else n.values.emplace_back(registryNameToJsonKey(name), registryValueToJson(type, data));
+		}
+		ORCloseKey(key);
+		networks_.push_back(std::move(n));
+	}
+	// Signatures: one per network seen, pointing to its profile by ProfileGuid.
+	for (const wchar_t* kind : { L"Managed", L"Unmanaged" }) {
+		const std::wstring base = LIST + L"\\Signatures\\" + kind;
+		for (const std::wstring& id : subkeys(conf.Software, base)) {
+			ORHKEY key = NULL;
+			if (OROpenKey(conf.Software, (base + L"\\" + id).c_str(), &key) != ERROR_SUCCESS) continue;
+			KnownNetwork::Signature sig;
+			sig.kind = kind;
+			std::wstring profile;
+			for (DWORD i = 0;; ++i) {
+				std::wstring name;
+				DWORD type = 0;
+				std::vector<BYTE> data;
+				if (enumRegistryValue(key, i, name, type, data) != ERROR_SUCCESS) break;
+				if (name == L"ProfileGuid") profile = readWideZ(data.data(), data.size(), 0);
+				else if (name == L"DefaultGatewayMac") sig.gatewayMac = HardwareAddressText(data.data(), data.size());
+				else sig.values.emplace_back(registryNameToJsonKey(name), registryValueToJson(type, data));
+			}
+			ORCloseKey(key);
+			auto owner = std::find_if(networks_.begin(), networks_.end(),
+			                          [&](const KnownNetwork& n) { return _wcsicmp(n.profileGuid.c_str(), profile.c_str()) == 0; });
+			if (owner != networks_.end()) owner->signatures.push_back(std::move(sig));
+			else log(2, L"🔥NetworkList: signature " + id + L" points to no profile (" + profile + L")");
+		}
+	}
+	return ERROR_SUCCESS;
+}
+
+HRESULT KnownNetworks::toJson() { return writeList("known_networks.json", networks_); }
+void KnownNetworks::clear() { networks_.clear(); }

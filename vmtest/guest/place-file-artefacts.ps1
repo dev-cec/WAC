@@ -540,3 +540,25 @@ net use W: /delete /y | Out-Null
     $names = @(Get-ChildItem $base -ErrorAction SilentlyContinue | Where-Object PSChildName -ne 'CPC' | ForEach-Object PSChildName)
     Write-Output ("mountpoints=$wacSid|" + ($names -join '|'))
 }
+
+# 23. B-031 — known networks: every NetworkList profile as the live registry
+#     lists it (GUID, name, gateway hardware addresses of its signatures),
+#     and the last connection to each name in the NetworkProfile log
+#     (event 10000, UTC): the reference for DateLastConnected, stored in
+#     local time. Nothing is changed.
+if (Wants 'known_networks') {
+    $list = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList'
+    foreach ($k in Get-ChildItem "$list\Profiles") {
+        $guid = $k.PSChildName
+        $name = (Get-ItemProperty $k.PSPath).ProfileName
+        $macs = @(Get-ChildItem "$list\Signatures\Managed", "$list\Signatures\Unmanaged" -ErrorAction SilentlyContinue |
+            ForEach-Object { Get-ItemProperty $_.PSPath } | Where-Object { $_.ProfileGuid -eq $guid } |
+            ForEach-Object { ($_.DefaultGatewayMac | ForEach-Object { $_.ToString('X2') }) -join '-' })
+        Write-Output ("network=$guid|$name|" + ($macs -join ','))
+    }
+    Get-WinEvent -LogName Microsoft-Windows-NetworkProfile/Operational -FilterXPath '*[System[EventID=10000]]' -ErrorAction SilentlyContinue |
+        Group-Object { $_.Properties[0].Value } | ForEach-Object {
+            $last = $_.Group | Sort-Object TimeCreated -Descending | Select-Object -First 1
+            Write-Output ("netconnected=" + $_.Name + '|' + $last.TimeCreated.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss'))
+        }
+}

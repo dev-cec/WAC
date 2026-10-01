@@ -362,6 +362,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   defender_configuration: true  # Microsoft Defender exclusions and protection settings
   explorer_recent_docs: true    # files each user opened (Explorer's RecentDocs)
   mount_points: true            # volumes and shares each user saw (MountPoints2)
+  known_networks: true          # networks the machine joined (NetworkList)
 \end{lstlisting}
 
 \begin{itemize}
@@ -1099,6 +1100,12 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         and its subkeys with their command
         (\texttt{Shell\textbackslash AutoRun\textbackslash command}: an old
         persistence).
+  \item[\fichier{known\_networks.json}] networks the machine joined
+        (\texttt{NetworkList}): name, kind, category, gateway hardware address
+        and DNS suffix of each signature, first and last connection. Windows
+        writes these two dates in local time: \wac{} gives them in UTC with the
+        offset in force at their date (measured against the
+        \texttt{NetworkProfile} log). They tell where the machine has been.
   \item[\fichier{fat\_volumes.json}] FAT12, FAT16, FAT32 and exFAT volumes, the
         suspect's USB keys and cards included (the collection's volume
         excepted): every entry, present or \textbf{deleted} (\champ{Deleted}),
