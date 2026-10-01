@@ -512,3 +512,31 @@ Start-Sleep 3
     Unregister-ScheduledTask -TaskName WacRecentDocs -Confirm:$false
     Write-Output "recentdoc=$wacSid|.wacrd|wac-recent-witness.wacrd"
 }
+
+# 22. B-031 — MountPoints2: a share of the VM (WacShare, read-only for "wac", the test
+#     folder) mounted by the user in their session, which Explorer records as
+#     ##127.0.0.1#WacShare; then every entry of the user's MountPoints2 as the
+#     live registry lists it. Not the entries of CPC\Volume: they are
+#     volatile (reg save keeps the key, empty), never in the hive's file.
+if (Wants 'mount_points') {
+    if (-not (Get-SmbShare -Name WacShare -ErrorAction SilentlyContinue)) {
+        New-SmbShare -Name WacShare -Path 'C:\wactest' -ReadAccess 'wac' | Out-Null
+    }
+    $script = 'C:\wactest\mountpoints-user.ps1'
+    Set-Content $script @'
+net use W: \\127.0.0.1\WacShare | Out-Null
+Start-Process explorer.exe '\\127.0.0.1\WacShare'
+Start-Sleep 8
+(New-Object -ComObject Shell.Application).Windows() | Where-Object { "$($_.LocationURL)" -like '*WacShare*' } | ForEach-Object { $_.Quit() }
+net use W: /delete /y | Out-Null
+'@
+    $action = New-ScheduledTaskAction -Execute powershell.exe -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File $script"
+    $principal = New-ScheduledTaskPrincipal -UserId 'wac' -LogonType Interactive
+    Register-ScheduledTask -TaskName WacMountPoints -Action $action -Principal $principal -Force | Out-Null
+    Start-ScheduledTask -TaskName WacMountPoints
+    Start-Sleep 20
+    Unregister-ScheduledTask -TaskName WacMountPoints -Confirm:$false
+    $base = "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Windows\CurrentVersion\Explorer\MountPoints2"
+    $names = @(Get-ChildItem $base -ErrorAction SilentlyContinue | Where-Object PSChildName -ne 'CPC' | ForEach-Object PSChildName)
+    Write-Output ("mountpoints=$wacSid|" + ($names -join '|'))
+}

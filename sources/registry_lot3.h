@@ -16,6 +16,9 @@
  *     by a policy.
  *   - Explorer's RecentDocs: the files each user opened, by extension, most
  *     recent first — the names survive the files and the shortcuts of Recent.
+ *   - MountPoints2: the volumes and network shares each user's Explorer saw
+ *     (a USB key, \\\\server\\share), the last time it did, and the commands an
+ *     entry may carry (Shell\\AutoRun\\command: an old persistence).
  */
 #pragma once
 
@@ -100,4 +103,28 @@ public:
 	void clear();               //!< releases the entries
 private:
 	std::vector<ExplorerRecentDoc> entries_;
+};
+
+// ------------------------------------------------------------ MountPoints2
+
+/*! One entry of a user's MountPoints2: a volume or a share. */
+struct MountPoint {
+	std::wstring sid;
+	std::wstring name;          //!< the key: "{GUID}", "##server#share", or a CPC\\Volume entry
+	std::wstring kind;          //!< "Volume" or "NetworkShare"; empty for anything else
+	std::wstring share;         //!< for a share, "\\\\server\\share"
+	FILETIME keyLastWriteUtc = { 0 };   //!< last write of the entry: the last time Explorer saw it
+	std::vector<std::pair<std::wstring, Json>> values; //!< the entry's values (_LabelFromReg, BaseClass…)
+	NameValues subkeys;         //!< every subkey below it and its default value (Shell\\AutoRun\\command…)
+	Json toJson() const;        //!< @return the entry as a JSON object
+};
+
+//! MountPoints2 of every user (mount_points.json).
+class MountPoints {
+public:
+	HRESULT getData();          //!< @return ERROR_SUCCESS, even without any entry
+	HRESULT toJson();           //!< @return the result of the write
+	void clear();               //!< releases the entries
+private:
+	std::vector<MountPoint> entries_;
 };

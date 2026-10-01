@@ -219,3 +219,97 @@ HRESULT ExplorerRecentDocs::getData() {
 
 HRESULT ExplorerRecentDocs::toJson() { return writeList("explorer_recent_docs.json", entries_); }
 void ExplorerRecentDocs::clear() { entries_.clear(); }
+
+// ------------------------------------------------------------ MountPoints2
+
+namespace {
+
+/*! Every subkey below `path`, depth first, with its default value: an
+ *  entry's commands (Shell\\AutoRun\\command) are in it.
+ *  @param root the hive's root
+ *  @param path the entry's key
+ *  @param relative the path below the entry, "" at the start
+ *  @param out receives "relative path" / default value
+ *  @param depth guards against a forged hive's loop (a key is not its own
+ *         descendant, but a corrupt cell can make it look so) */
+void readSubkeys(ORHKEY root, const std::wstring& path, const std::wstring& relative, NameValues& out, int depth = 0) {
+	const int MAX_DEPTH = 8;
+	if (depth >= MAX_DEPTH) return;
+	for (const std::wstring& name : subkeys(root, path)) {
+		const std::wstring child = relative.empty() ? name : relative + L"\\" + name;
+		ORHKEY key = NULL;
+		std::wstring value;
+		if (OROpenKey(root, (path + L"\\" + name).c_str(), &key) == ERROR_SUCCESS) {
+			getRegSzValue(key, nullptr, L"", &value);
+			ORCloseKey(key);
+		}
+		out.emplace_back(child, value);
+		readSubkeys(root, path + L"\\" + name, child, out, depth + 1);
+	}
+}
+
+/*! Reads the entries of one MountPoints2 key (or of its CPC\\Volume).
+ *  @param root the hive's root
+ *  @param path the key
+ *  @param sid the user
+ *  @param out receives the entries */
+void readMountPoints(ORHKEY root, const std::wstring& path, const std::wstring& sid, std::vector<MountPoint>& out) {
+	for (const std::wstring& name : subkeys(root, path)) {
+		if (name == L"CPC") continue;          // a container, read on its own
+		ORHKEY key = NULL;
+		if (OROpenKey(root, (path + L"\\" + name).c_str(), &key) != ERROR_SUCCESS) continue;
+		MountPoint m;
+		m.sid = sid;
+		m.name = name;
+		if (name.size() > 2 && name.compare(0, 2, L"##") == 0) {
+			// "##server#share": the share's path, # for each backslash.
+			m.kind = L"NetworkShare";
+			m.share = name;
+			for (wchar_t& c : m.share) if (c == L'#') c = L'\\';
+		}
+		else if (name.size() == 38 && name.front() == L'{' && name.back() == L'}') m.kind = L"Volume";
+		m.keyLastWriteUtc = lastWrite(key);
+		readAllValues(key, m.values);
+		ORCloseKey(key);
+		readSubkeys(root, path + L"\\" + name, L"", m.subkeys);
+		out.push_back(std::move(m));
+	}
+}
+
+} // namespace
+
+Json MountPoint::toJson() const {
+	Json o = Json::obj();
+	addUser(o, sid);
+	o.add(L"Name", Json::str(name));
+	o.add(L"Kind", Json::str(kind));
+	o.add(L"Share", Json::str(share));
+	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
+	for (const auto& [n, v] : values) o.add(n, v);
+	if (!subkeys.empty()) {
+		Json list = Json::arr();
+		for (const auto& [path, value] : subkeys) {
+			Json k = Json::obj();
+			k.add(L"Path", Json::str(path));
+			k.add(L"DefaultValue", Json::str(value));
+			list.push(std::move(k));
+		}
+		o.add(L"Subkeys", std::move(list));
+	}
+	return o;
+}
+
+HRESULT MountPoints::getData() {
+	const std::wstring MOUNT_POINTS = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MountPoints2";
+	forEachProfileHive(L"\\ntuser.dat", [this, &MOUNT_POINTS](ORHKEY root, const std::wstring& sid) {
+		readMountPoints(root, MOUNT_POINTS, sid, entries_);
+		// CPC\\Volume: its entries are volatile on Windows 11 (measured: reg save
+		// keeps the key, empty), so absent from the hive's file; read in case
+		// another version keeps them.
+		readMountPoints(root, MOUNT_POINTS + L"\\CPC\\Volume", sid, entries_);
+	});
+	return ERROR_SUCCESS;
+}
+
+HRESULT MountPoints::toJson() { return writeList("mount_points.json", entries_); }
+void MountPoints::clear() { entries_.clear(); }

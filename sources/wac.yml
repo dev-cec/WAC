@@ -61,3 +61,4 @@ artefacts:
   installed_programs:         true  # installed programs (Uninstall) of the machine and of each user
   defender_configuration:     true  # Microsoft Defender exclusions and protection settings, its own and by policy
   explorer_recent_docs:       true  # files each user opened, by extension, most recent first (Explorer's RecentDocs)
+  mount_points:               true  # volumes and network shares each user's Explorer saw, with their commands (MountPoints2)

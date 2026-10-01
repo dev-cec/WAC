@@ -952,6 +952,9 @@ void convertArtefacts(bool systemAvailable) {
 	convertFileArtefact<ExplorerRecentDocs>(conf.artefacts.explorerRecentDocs, "explorer_recent_docs.json", Text::ArtefactExplorerRecentDocs,
 	                         L"artefacts.explorer_recent_docs", Text::StepExplorerRecentDocs);
 
+	convertFileArtefact<MountPoints>(conf.artefacts.mountPoints, "mount_points.json", Text::ArtefactMountPoints,
+	                         L"artefacts.mount_points", Text::StepMountPoints);
+
 	/* SYSTEM INFORMATION, offline.
 	   OUTSIDE the single-exit block above, and not inside it: even without a
 	   usable hive the collector stays useful, since it records the instant of the

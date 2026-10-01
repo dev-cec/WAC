@@ -366,6 +366,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   installed_programs: true  # programmes installés (Uninstall) de la machine et de chaque utilisateur
   defender_configuration: true  # exclusions et réglages de protection de Microsoft Defender
   explorer_recent_docs: true    # fichiers ouverts par chaque utilisateur (RecentDocs de l'Explorateur)
+  mount_points: true            # volumes et partages vus par chaque utilisateur (MountPoints2)
 \end{lstlisting}
 
 \begin{itemize}
@@ -1111,6 +1112,14 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         shell du raccourci créé dans Recent, et la date d'écriture de la liste,
         qui est celle de l'ouverture du fichier en position~0. Le nom survit au
         fichier et au raccourci.
+  \item[\fichier{mount\_points.json}] volumes et partages réseau qu'a vus
+        l'Explorateur de chaque utilisateur (\texttt{MountPoints2}) : volume
+        (GUID, à rapprocher de \fichier{mounted\_device.json} pour une clé USB)
+        ou partage (\champ{Share}, \texttt{\textbackslash\textbackslash serveur\textbackslash partage}),
+        date d'écriture de l'entrée --- la dernière fois que l'Explorateur l'a
+        vue ---, ses valeurs, et ses sous-clés avec leur commande
+        (\texttt{Shell\textbackslash AutoRun\textbackslash command} : une
+        persistance ancienne).
   \item[\fichier{fat\_volumes.json}] volumes FAT12, FAT16, FAT32 et exFAT, clés
         USB et cartes du suspect comprises (le volume de la collecte excepté) :
         chaque entrée, présente ou \textbf{supprimée} (\champ{Deleted}), son

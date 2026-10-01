@@ -143,6 +143,7 @@ struct AppliConf {
 		bool installedPrograms = true;  //!< installed programs: Uninstall keys of the machine and of each user
 		bool defenderConfiguration = true;  //!< Defender configuration: exclusions and protection settings (registry)
 		bool explorerRecentDocs = true;  //!< files each user opened, by extension (Explorer's RecentDocs)
+		bool mountPoints = true;  //!< volumes and network shares each user's Explorer saw (MountPoints2)
 
 		/*! Whether an artefact asked for reads the users' hives (ntuser.dat,
 		 *  usrClass.dat): they are copied then. They used to be copied only
@@ -152,7 +153,7 @@ struct AppliConf {
 		 *  @return true if one of them is switched on */
 		bool needsUserHives() const {
 			return registry || persistence || officeTrustRecords || typedPaths || wordWheelQuery
-			    || rootCertificates || internetSettings || installedPrograms || explorerRecentDocs;
+			    || rootCertificates || internetSettings || installedPrograms || explorerRecentDocs || mountPoints;
 		}
 	} artefacts;
 	RunMode mode = RunMode::Full; //!< what this run does (see RunMode)

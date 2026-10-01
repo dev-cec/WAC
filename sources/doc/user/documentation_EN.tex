@@ -361,6 +361,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   installed_programs: true  # installed programs (Uninstall) of the machine and of each user
   defender_configuration: true  # Microsoft Defender exclusions and protection settings
   explorer_recent_docs: true    # files each user opened (Explorer's RecentDocs)
+  mount_points: true            # volumes and shares each user saw (MountPoints2)
 \end{lstlisting}
 
 \begin{itemize}
@@ -1090,6 +1091,14 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         shortcut made in Recent, and the list's write time, which is when the
         file at position~0 was opened. The name outlives the file and the
         shortcut.
+  \item[\fichier{mount\_points.json}] volumes and network shares each
+        user's Explorer saw (\texttt{MountPoints2}): volume (GUID, to match with
+        \fichier{mounted\_device.json} for a USB key) or share (\champ{Share},
+        \texttt{\textbackslash\textbackslash server\textbackslash share}), the
+        entry's write time --- the last time Explorer saw it ---, its values,
+        and its subkeys with their command
+        (\texttt{Shell\textbackslash AutoRun\textbackslash command}: an old
+        persistence).
   \item[\fichier{fat\_volumes.json}] FAT12, FAT16, FAT32 and exFAT volumes, the
         suspect's USB keys and cards included (the collection's volume
         excepted): every entry, present or \textbf{deleted} (\champ{Deleted}),

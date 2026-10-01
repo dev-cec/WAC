@@ -1679,6 +1679,17 @@ def check_small_file_artefacts(folder):
                f"explorer_recent_docs.json: {name} first of the {extension} list and of the list of every extension, with its shortcut's shell item",
                f"explorer_recent_docs.json: {name} at {sorted(mine)} (expected first of {extension} and of the whole list)")
 
+    # MountPoints2: the same entries as the live registry lists, the
+    # harness's share among them, decoded as a share (B-031).
+    mounts = load(folder, "mount_points.json")
+    if isinstance(mounts, list) and "mountpoints" in reference:
+        sid, *names = reference["mountpoints"].split("|")
+        mine = {m.get("Name") for m in mounts if m.get("SID") == sid}
+        share = next((m for m in mounts if m.get("SID") == sid and m.get("Name") == "##127.0.0.1#WacShare"), {})
+        report(mine == set(names) and share.get("Kind") == "NetworkShare" and share.get("Share") == "\\\\127.0.0.1\\WacShare",
+               f"mount_points.json: the {len(mine)} entries the live registry lists, the share witness decoded as \\\\127.0.0.1\\WacShare",
+               f"mount_points.json: WAC only {sorted(mine - set(names))[:3]}, registry only {sorted(set(names) - mine)[:3]}, share {share}")
+
     # Cleared log: none live, as Windows sees it; the cleared events recovered.
     if isinstance(events, list) and os.path.exists(path):
         with open(path, encoding="utf-8", errors="replace") as f:
