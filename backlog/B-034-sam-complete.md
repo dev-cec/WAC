@@ -23,6 +23,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [ ] Inventaire de ce que users.json ne donne pas encore
+- [ ] Alias (groupes locaux) et leurs membres ; droits des comptes de SECURITY\Policy\Accounts (SeDebugPrivilege, SeRemoteInteractiveLogonRight…), venus de B-031
 - [ ] Conversion
 - [ ] Témoins dans la VM
 

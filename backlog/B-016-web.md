@@ -26,6 +26,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [ ] Historiques et recherches
 - [ ] Téléchargements + Zone.Identifier (B-004)
 - [ ] WebCache (ESE)
+- [ ] TypedURLs et TypedURLsTime (NTUSER), venus de B-031
 
 ## Journal
 - 2026-09-30 : décision utilisateur — SQLite par l'amalgamation officielle (sqlite3.c) épinglée et compilée dans WAC, ouverte en lecture seule sur la copie de la consigne.

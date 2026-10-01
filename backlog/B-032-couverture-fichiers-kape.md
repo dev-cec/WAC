@@ -36,6 +36,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [ ] 3 $Secure:$SDS (et sa lecture dans mft.json : propriétaire de chaque fichier), $UsnJrnl:$Max, $Boot, $TxfLog
 - [ ] 4 Traces WPP de Defender
 - [ ] 5 Clés maîtresses DPAPI (utilisateurs et système)
+- [ ] 6 User Shell Folders (venu de B-031) : suivre les dossiers redirigés (Bureau, Documents, OneDrive) pour y chercher les fichiers de l'utilisateur
 
 ## Journal
 - 2026-10-01 : ouverte depuis B-015.
