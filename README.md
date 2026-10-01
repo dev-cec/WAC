@@ -1114,8 +1114,10 @@ cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
   details, the guards of the build, `bin`, releasing with `bump-version.sh`.
 - `sources/wac.yml` — the reference configuration, built into `WAC.exe`
   (`--write-config` writes it) and copied to `bin`.
-- `third_party/libyaml-0.2.5/VENDORED.md` — origin, fingerprint and reasons of
-  WAC's only third-party library.
+- `third_party/libyaml-0.2.5/VENDORED.md` and `third_party/sqlite-3.53.4/VENDORED.md`
+  — origin, fingerprint and reasons of WAC's two third-party libraries: libyaml
+  reads `wac.yml`, SQLite the browsers' databases (always on a private copy of
+  the collected file, never on the exhibit).
 - Code documentation (Doxygen), generated in `sources/doc/html` from the source
   comments; `bump-version.sh` regenerates it.
 

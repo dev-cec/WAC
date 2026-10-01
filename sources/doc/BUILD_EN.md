@@ -47,7 +47,7 @@ distribution's and MSYS2's) may give two different executables, both correct:
    (icon) and compiles the resource (version, icon, reference `wac.yml`).
 2. Compiles every translation unit found in `sources/` (except `*_test.cpp`)
    with a **force-included compatibility header**.
-3. Compiles libyaml (reading of `wac.yml`, see below) as C.
+3. Compiles libyaml (reading of `wac.yml`) and SQLite (the browsers' databases), see below, as C.
 4. Links statically (`-static -static-libgcc -static-libstdc++`) against the
    system import libraries, **without a timestamp** (`--no-insert-timestamp`).
 5. Checks the guards: static runtime, no network library nor domain name
@@ -66,7 +66,8 @@ rebuilds, stages `WAC.rc` and `bin`, regenerates the code documentation
 | Item | Role |
 |---|---|
 | `compat-include/wac_mingw_compat.h` | Force-included: `<filesystem>`, and the constants the MinGW headers lack and WAC uses. |
-| `libyaml-0.2.5/` | Reading of `wac.yml`: the 4 parser files of libyaml 0.2.5, unmodified (origin and fingerprint in `VENDORED.md`). WAC's only third-party library. |
+| `libyaml-0.2.5/` | Reading of `wac.yml`: the 4 parser files of libyaml 0.2.5, unmodified (origin and fingerprint in `VENDORED.md`). |
+| `sqlite-3.53.4/` | Reading of the browsers' databases: the SQLite 3.53.4 amalgamation, unmodified (origin, SHA3-256 and options in `VENDORED.md`); its one warning exclusion, `-Wno-unused-parameter`, is documented in `build-windows.sh`. |
 
 ## Verified standalone
 `WAC.exe` imports only: `ADVAPI32, KERNEL32, msvcrt, Secur32, WTSAPI32` — what

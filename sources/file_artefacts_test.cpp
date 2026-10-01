@@ -6,7 +6,8 @@
  *  firewall rules, certificate Blob), the NTFS security descriptors of
  *  $Secure:$SDS, the NTFS boot sector and change journal header, and the
  *  volume serial of a shortcut, the DPAPI master key header and Preferred,
- *  and the paths of User Shell Folders.
+ *  the paths of User Shell Folders, and the reading of an SQLite database
+ *  on a private copy, its write-ahead log replayed.
  *
  *  WHY THIS TEST. These formats are text or a few bytes, and a decoder that
  *  misses a case still gives valid JSON: a multi-line command cut in two, a
@@ -31,6 +32,11 @@
 #include "recent_docs.h"
 #include "dpapi_master_keys.h"
 #include "user_shell_folders.h"
+#include "sqlite_reader.h"
+#include "sqlite3.h"
+#include "sha.h"
+#include <filesystem>
+#include <fstream>
 #include "guard_page.h"
 #include <cstdio>
 #include <cstring>
@@ -590,6 +596,61 @@ void userShellFolders() {
 	      "user shell folders: another user variable is not guessed");
 }
 
+/*! A browser's database as a running browser leaves it: write-ahead log
+ *  mode, the last rows only in the -wal, the writer still open. Read through
+ *  SqliteDatabase, the rows of the log must come back, and neither the
+ *  database nor its log may change. */
+void sqliteReader() {
+	const std::filesystem::path root = std::filesystem::temp_directory_path() / L"wac-sqlite-test";
+	std::error_code ec;
+	std::filesystem::remove_all(root, ec);
+	std::filesystem::create_directories(root / L"exhibit", ec);
+	conf._outputDir = (root / L"output").wstring();
+	const std::filesystem::path db = root / L"exhibit" / L"History";
+
+	sqlite3* writer = nullptr;
+	check(sqlite3_open_v2(encodeText(db.wstring()).c_str(), &writer, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr) == SQLITE_OK,
+	      "sqlite: the test database created");
+	sqlite3_exec(writer, "PRAGMA journal_mode=WAL; PRAGMA wal_autocheckpoint=0;"
+	                     "CREATE TABLE urls(id INTEGER PRIMARY KEY, url TEXT, title TEXT, last_visit_time INTEGER, favicon BLOB);"
+	                     "INSERT INTO urls VALUES(1, 'https://example.org/', 'Exemple été', 13370000000000000, x'00FF10');"
+	                     "INSERT INTO urls VALUES(2, 'https://wac.invalid/a', NULL, 13380000000000000, NULL);",
+	             nullptr, nullptr, nullptr);
+	check(std::filesystem::exists(db.wstring() + L"-wal") && std::filesystem::file_size(db.wstring() + L"-wal") > 0,
+	      "sqlite: the rows are in the write-ahead log, as a running browser leaves them");
+	const std::wstring dbBefore = sha256OfFile(db.wstring()), walBefore = sha256OfFile(db.wstring() + L"-wal");
+	{
+		SqliteDatabase reader;
+		check(reader.open(db.wstring()) == ERROR_SUCCESS, "sqlite: opened on its private copy");
+		check(reader.hasTable("urls") && !reader.hasTable("visits"), "sqlite: tables told apart");
+		std::vector<std::wstring> urls, titles;
+		std::vector<int64_t> times;
+		std::vector<std::vector<uint8_t>> blobs;
+		std::vector<bool> nullTitles;
+		check(reader.query("SELECT url, title, last_visit_time, favicon FROM urls ORDER BY id", [&](const SqliteRow& r) {
+			urls.push_back(r.text(0)); titles.push_back(r.text(1)); nullTitles.push_back(r.isNull(1));
+			times.push_back(r.integer(2)); blobs.push_back(r.blob(3)); }) == ERROR_SUCCESS,
+		      "sqlite: query run");
+		check(urls.size() == 2 && urls[0] == L"https://example.org/" && titles[0] == L"Exemple \u00e9t\u00e9"
+		      && times[1] == 13380000000000000LL && nullTitles[1] && !nullTitles[0]
+		      && blobs[0] == std::vector<uint8_t>({ 0x00, 0xFF, 0x10 }) && blobs[1].empty(),
+		      "sqlite: the log's rows read, UTF-8 text, integer, NULL and BLOB");
+		check(reader.query("SELECT missing_column FROM urls", [](const SqliteRow&) {}) == HRESULT_FROM_WIN32(ERROR_INVALID_DATA),
+		      "sqlite: a query on another schema refused, not crashing");
+	}
+	check(sha256OfFile(db.wstring()) == dbBefore && sha256OfFile(db.wstring() + L"-wal") == walBefore,
+	      "sqlite: the database and its log unchanged by the reading");
+	check(!std::filesystem::exists(std::filesystem::path(conf._outputDir) / L"working" / L"sqlite-copies" / L"1"),
+	      "sqlite: the private copy deleted when closed");
+	sqlite3_close(writer);   // only now: closing it checkpoints the log into the database
+
+	std::ofstream(root / L"exhibit" / L"notadb") << "this is not an SQLite database, only text";
+	SqliteDatabase notDatabase;
+	check(notDatabase.open((root / L"exhibit" / L"notadb").wstring()) == HRESULT_FROM_WIN32(ERROR_INVALID_DATA),
+	      "sqlite: a file that is no database refused at the opening");
+	std::filesystem::remove_all(root, ec);
+}
+
 } // namespace
 
 int wmain() {
@@ -607,6 +668,7 @@ int wmain() {
 	shortcutVolumeSerial();
 	dpapiMasterKeys();
 	userShellFolders();
+	sqliteReader();
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }

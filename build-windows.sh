@@ -72,7 +72,7 @@ echo "== Resource =="
 iconv -f UTF-16LE -t UTF-8 "$SRC/WAC.rc" | tr -d '\r' | sed -E 's#\\+#/#g' > "$BUILD/WAC.utf8.rc"
 "$WINDRES" -I"$SRC" -I"$TP/compat-include" -c 65001 "$BUILD/WAC.utf8.rc" -O coff -o "$BUILD/WAC_res.o"
 
-# --- libyaml, WAC's one third-party library (third_party/libyaml-0.2.5) ------
+# --- libyaml, the reading of wac.yml (third_party/libyaml-0.2.5) -------------
 # The reading of wac.yml (see its VENDORED.md): the parser's four files only,
 # UNMODIFIED, compiled as C. The version macros are the ones autotools would
 # put in config.h. -Wall -Wextra apply here too: they build without a warning.
@@ -80,19 +80,34 @@ echo "== libyaml =="
 YAML="$TP/libyaml-0.2.5"
 YAML_FLAGS=(-O2 -Wall -Wextra -DYAML_DECLARE_STATIC -DYAML_VERSION_MAJOR=0 -DYAML_VERSION_MINOR=2
   -DYAML_VERSION_PATCH=5 '-DYAML_VERSION_STRING="0.2.5"' -I"$YAML/include")
-YAML_OBJS=()
+THIRD_PARTY_OBJS=()
 for c in api reader scanner parser; do
   "$CC" "${YAML_FLAGS[@]}" -c "$YAML/src/$c.c" -o "$BUILD/yaml_$c.o"
-  YAML_OBJS+=("$BUILD/yaml_$c.o")
+  THIRD_PARTY_OBJS+=("$BUILD/yaml_$c.o")
 done
 FLAGS+=(-DYAML_DECLARE_STATIC -I"$YAML/include")
+
+# --- SQLite, the browsers' databases (third_party/sqlite-3.53.4) -------------
+# The amalgamation, UNMODIFIED, compiled as C (see its VENDORED.md). Options:
+# no thread safety (WAC reads one database at a time, from one thread), no
+# extension loading, no deprecated interfaces, double-quoted strings refused.
+# The ONE documented warning exclusion: -Wno-unused-parameter, for two
+# parameters SQLite's Windows layer leaves unused (winUnfetch, the busy
+# timeout) — upstream code, not to be patched.
+echo "== SQLite =="
+SQLITE="$TP/sqlite-3.53.4"
+SQLITE_OPTIONS=(-DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION -DSQLITE_OMIT_DEPRECATED
+  -DSQLITE_DEFAULT_MEMSTATUS=0 -DSQLITE_DQS=0 -DSQLITE_OMIT_SHARED_CACHE)
+"$CC" -O2 -Wall -Wextra -Wno-unused-parameter "${SQLITE_OPTIONS[@]}" -c "$SQLITE/sqlite3.c" -o "$BUILD/sqlite3.o"
+THIRD_PARTY_OBJS+=("$BUILD/sqlite3.o")   # linked with WAC and every test harness
+FLAGS+=("${SQLITE_OPTIONS[@]}" -I"$SQLITE")
 
 # --- Compilation units -----------------------------------------------------
 echo "== Compilation =="
 # Compilation units: discovered automatically (main.cpp last, test harnesses
 # excluded). No list to keep by hand any more.
 mapfile -t TUS < <(cd "$SRC" && ls *.cpp | grep -v -e '^main\.cpp$' -e '_test\.cpp$'; echo main.cpp)
-OBJS=("${YAML_OBJS[@]}")
+OBJS=("${THIRD_PARTY_OBJS[@]}")
 for tu in "${TUS[@]}"; do
   echo "   - $tu"
   "$CXX" "${FLAGS[@]}" -c "$SRC/$tu" -o "$BUILD/${tu%.cpp}.o"

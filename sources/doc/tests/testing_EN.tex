@@ -573,13 +573,17 @@ key: header read, block sizes beyond the file or wrapping when added refused,
 a truncated header refused; \fichier{Preferred} given in the form of the key
 files' names. For \path|User Shell Folders|: \texttt{\%USERPROFILE\%}
 replaced by the profile whatever its case, a path on another disk kept, a share
-or another user variable not followed. No data needed.
+or another user variable not followed. For the SQLite reading: a database in
+WAL mode whose writer is still open, as a running browser leaves it, read on
+its private copy with its log's rows (UTF-8 text, integer, NULL, BLOB), the
+database and its log unchanged, the copy deleted, a query of another schema
+and a file that is no database refused. No data needed.
 
 \begin{lstlisting}
 cd build-windows/tests && wine file_artefacts_test.exe
 \end{lstlisting}
 
-Reference: 98 checks, no failure (the second-lot registry values included: TrustRecords, firewall rule, certificate Blob). In the VM cycle,
+Reference: 108 checks, no failure (the second-lot registry values included: TrustRecords, firewall rule, certificate Blob). In the VM cycle,
 \fichier{place-file-artefacts.ps1} places witnesses whose content is known (a
 history, a file sent to the bin, a hosts entry, a startup script) and
 \fichier{check-json.py} finds them in the JSON.

@@ -49,7 +49,7 @@ produit par la compilation livrée, qui fait foi.
    (icône) et compile la ressource (version, icône, `wac.yml` de référence).
 2. Compile chaque unité trouvée dans `sources/` (hors `*_test.cpp`) avec un
    en-tête de **compatibilité inclus d'office**.
-3. Compile libyaml (lecture de `wac.yml`, voir ci-dessous) en C.
+3. Compile libyaml (lecture de `wac.yml`) et SQLite (bases des navigateurs), voir ci-dessous, en C.
 4. Lie en statique (`-static -static-libgcc -static-libstdc++`) avec les
    bibliothèques d'import système, **sans horodatage** (`--no-insert-timestamp`).
 5. Vérifie les gardes : runtime statique, aucune bibliothèque réseau ni
@@ -69,7 +69,8 @@ code `sources/doc/html` avec la même version), commiter.
 | Élément | Rôle |
 |---|---|
 | `compat-include/wac_mingw_compat.h` | Inclus d'office : `<filesystem>`, et les constantes que les en-têtes MinGW n'ont pas et que WAC utilise. |
-| `libyaml-0.2.5/` | Lecture de `wac.yml` : les 4 fichiers du lecteur de libyaml 0.2.5, non modifiés (origine et empreinte dans `VENDORED.md`). Seule bibliothèque tierce de WAC. |
+| `libyaml-0.2.5/` | Lecture de `wac.yml` : les 4 fichiers du lecteur de libyaml 0.2.5, non modifiés (origine et empreinte dans `VENDORED.md`). |
+| `sqlite-3.53.4/` | Lecture des bases des navigateurs : l'amalgamation SQLite 3.53.4, non modifiée (origine, SHA3-256 et options dans `VENDORED.md`) ; sa seule exclusion d'avertissement, `-Wno-unused-parameter`, est documentée dans `build-windows.sh`. |
 
 ## Autonomie vérifiée
 `WAC.exe` n'importe que : `ADVAPI32, KERNEL32, msvcrt, Secur32, WTSAPI32` — ce

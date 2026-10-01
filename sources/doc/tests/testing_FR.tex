@@ -595,14 +595,18 @@ débordent en s'additionnant refusées, un en-tête tronqué refusé ;
 \fichier{Preferred} rendu sous la forme du nom des fichiers de clés. Pour
 \path|User Shell Folders| : \texttt{\%USERPROFILE\%} remplacé par le profil
 quelle que soit sa casse, un chemin sur un autre disque gardé, un partage ou
-une autre variable d'utilisateur non suivis.
+une autre variable d'utilisateur non suivis. Pour la lecture SQLite : une base
+en mode WAL dont l'écrivain est encore ouvert, comme un navigateur en marche,
+lue sur sa copie privée avec les lignes de son journal (texte UTF-8, entier,
+NULL, BLOB), la base et le journal inchangés, la copie supprimée, une requête
+d'un autre schéma et un fichier qui n'est pas une base refusés.
 Aucune donnée nécessaire.
 
 \begin{lstlisting}
 cd build-windows/tests && wine file_artefacts_test.exe
 \end{lstlisting}
 
-Référence : 98 contrôles, aucun échec (dont les valeurs du lot 2 du registre : TrustRecords, règle de pare-feu, blob de certificat). Dans le cycle VM,
+Référence : 108 contrôles, aucun échec (dont les valeurs du lot 2 du registre : TrustRecords, règle de pare-feu, blob de certificat). Dans le cycle VM,
 \fichier{place-file-artefacts.ps1} dépose des témoins de contenu connu (un
 historique, un fichier mis à la corbeille, une entrée \fichier{hosts}, un
 script de démarrage) et \fichier{check-json.py} les retrouve dans les JSON.
