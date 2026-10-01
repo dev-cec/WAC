@@ -51,6 +51,7 @@
 #include "registry_lot2.h"
 #include "registry_lot3.h"
 #include "recent_docs.h"
+#include "shortcuts.h"
 #include "jumplist_automatic.h"
 #include "jumplist_custom.h"
 #include "scheduledTasks.h"
@@ -1156,6 +1157,8 @@ void convertArtefacts(bool systemAvailable) {
 	convertFileArtefact<StartupFolders>(conf.artefacts.startupFolders, "startup_folders.json",
 	                                    Text::ArtefactStartupFolders, L"artefacts.startup_folders",
 	                                    Text::StepStartupFolders);
+	convertFileArtefact<Shortcuts>(conf.artefacts.shortcuts, "shortcuts.json", Text::ArtefactShortcuts,
+	                               L"artefacts.shortcuts", Text::StepShortcuts);
 	writeProcesses();   // if the names could not be loaded (SYSTEM hive unreadable)
 
 	/************************

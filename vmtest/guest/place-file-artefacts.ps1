@@ -9,6 +9,9 @@
 #   hosts        an entry of the hosts file -> hosts.json
 #   startup      a script dropped in the startup folder of all users, with its
 #                SHA-256 -> startup_folders.json
+#   shortcut, shortcutfile  a shortcut on the public desktop and one pinned to
+#                the task bar of "wac", then every shortcut Windows lists in the
+#                Start menus, desktops and Quick Launch -> shortcuts.json
 #   zone         a file marked as downloaded (Zone.Identifier stream), the
 #                stream read back by Windows -> zone_identifiers.json
 #   run_default  a Run value of type REG_EXPAND_SZ in the DEFAULT hive (the
@@ -766,4 +769,39 @@ if (Wants 'registry') {
             }
         }
     } catch { Write-Output ("userrighterror=" + $_.Exception.Message) }
+}
+
+# 32. B-032 — shortcuts outside Recent: one on the public desktop with a known
+#     target and arguments, one pinned to the task bar of "wac". Then every
+#     .lnk and .url Windows lists in the folders shortcuts.json covers — Start
+#     menu (Startup aside, it belongs to startup_folders.json), desktops, Quick
+#     Launch — for the machine and each profile of ProfileList: shortcuts.json
+#     must hold the same files, no more, no less.
+if (Wants 'shortcuts') {
+    $wsh = New-Object -ComObject WScript.Shell
+    $witnesses = @(
+        @('C:\Users\Public\Desktop\wac-shortcut-test.lnk', 'C:\Windows\System32\cmd.exe', '/c echo wac-shortcut-witness', 'Desktop'),
+        @('C:\Users\wac\AppData\Roaming\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar\wac-pinned-test.lnk', 'C:\Windows\System32\notepad.exe', '', 'TaskBar'))
+    foreach ($w in $witnesses) {
+        New-Item -ItemType Directory -Force (Split-Path $w[0]) | Out-Null
+        $link = $wsh.CreateShortcut($w[0])
+        $link.TargetPath = $w[1]
+        $link.Arguments = $w[2]
+        $link.Save()
+        Write-Output ("shortcut=" + ($w -join '|'))
+    }
+    $folders = @(@('C:\ProgramData\Microsoft\Windows\Start Menu', $true), @('C:\Users\Public\Desktop', $false))
+    Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList' | ForEach-Object {
+        $profile = [Environment]::ExpandEnvironmentVariables((Get-ItemProperty $_.PSPath).ProfileImagePath)
+        $folders += ,@("$profile\AppData\Roaming\Microsoft\Windows\Start Menu", $true)
+        $folders += ,@("$profile\Desktop", $false)
+        $folders += ,@("$profile\AppData\Roaming\Microsoft\Internet Explorer\Quick Launch", $true)
+    }
+    foreach ($f in $folders) {
+        if (-not (Test-Path -LiteralPath $f[0])) { continue }
+        $found = if ($f[1]) { Get-ChildItem -LiteralPath $f[0] -Force -File -Recurse -Depth 6 -ErrorAction SilentlyContinue }
+                 else { Get-ChildItem -LiteralPath $f[0] -Force -File -ErrorAction SilentlyContinue }
+        $found | Where-Object { $_.Extension -in '.lnk', '.url' -and $_.FullName -notmatch '\\Start Menu\\Programs\\Startup\\' } |
+            ForEach-Object { Write-Output ("shortcutfile=" + $_.FullName) }
+    }
 }

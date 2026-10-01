@@ -1387,6 +1387,26 @@ def check_small_file_artefacts(folder):
                "startup_folders.json: the startup witness found, its SHA-256 identical",
                f"startup_folders.json: the startup witness missing or altered: {match[:1]}")
 
+    # Shortcuts outside Recent (B-032): the two witnesses with their target,
+    # arguments and location; then the files themselves, the same set as the
+    # .lnk and .url Windows lists in those folders, Startup aside.
+    shortcuts = load(folder, "shortcuts.json")
+    if isinstance(shortcuts, list) and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            lines = f.read().splitlines()
+        mine = {(s.get("Path") or "").lower(): s for s in shortcuts}
+        for line in (l for l in lines if l.startswith("shortcut=")):
+            where, target, arguments, location = line[len("shortcut="):].split("|", 3)
+            s = mine.get(where.lower(), {})
+            report((s.get("Target") or "").lower() == target.lower() and (s.get("Arguments") or "") == arguments
+                   and s.get("Location") == location,
+                   f"shortcuts.json: {location} witness found, target and arguments identical",
+                   f"shortcuts.json: {location} witness missing or altered: {where} -> {s or 'absent'}")
+        live = {l[len("shortcutfile="):].lower() for l in lines if l.startswith("shortcutfile=")}
+        report(live and live == set(mine),
+               f"shortcuts.json: the {len(live)} shortcut(s) Windows lists in the Start menus, desktops and Quick Launch, no more, no less",
+               f"shortcuts.json: missing {sorted(live - set(mine))[:3]}, extra {sorted(set(mine) - live)[:3]}")
+
     if "datavolume" in reference:
         letter, present, deleted = reference["datavolume"].split("|")
         mft = load(folder, "mft.json")

@@ -62,6 +62,7 @@ bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error)
 		{ "powershell_history", &a.powershellHistory }, { "setupapi", &a.setupApi },
 		{ "recycle_bin", &a.recycleBin }, { "hosts", &a.hosts }, { "error_reports", &a.errorReports },
 		{ "defender", &a.defender }, { "startup_folders", &a.startupFolders },
+		{ "shortcuts", &a.shortcuts },
 		{ "zone_identifiers", &a.zoneIdentifiers }, { "security", &a.security },
 		{ "persistence", &a.persistence },
 		{ "office_trust_records", &a.officeTrustRecords }, { "typed_paths", &a.typedPaths }, { "word_wheel_query", &a.wordWheelQuery }, { "root_certificates", &a.rootCertificates }, { "internet_settings", &a.internetSettings }, { "firewall", &a.firewall },

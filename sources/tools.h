@@ -127,6 +127,7 @@ struct AppliConf {
 		bool errorReports = true;     //!< Windows Error Reporting: Report.wer of the machine and of each profile
 		bool defender = true;         //!< Microsoft Defender: support logs (MPLog), detection history, quarantine
 		bool startupFolders = true;   //!< startup folders of all users and of each profile
+		bool shortcuts = true;        //!< shortcuts outside Recent: Start menu, desktops, Quick Launch, pinned task bar
 		bool zoneIdentifiers = true;  //!< Zone.Identifier streams, read in the $MFT copy
 		bool security = true;         //!< SECURITY hive: LSA secrets' names and dates, cached logons, audit policy
 		bool persistence = true;      //!< registry persistence beyond Run: IFEO, AppInit, Winlogon, LSA, COM…

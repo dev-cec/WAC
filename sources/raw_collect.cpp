@@ -17,6 +17,7 @@
 #include "powershell_history.h"
 #include "running_machine.h"
 #include "startup_folders.h"
+#include "shortcuts.h"
 
 namespace {
 
@@ -399,6 +400,7 @@ HRESULT ExtractFileArtefactsRaw() {
 		std::vector<std::wstring> extensions;  //!< filter, empty for every file
 		unsigned depth;                        //!< guard against an abnormal tree
 		const wchar_t* what;                   //!< for the investigation log
+		std::wstring skipped = L"";            //!< a subfolder another artefact extracts, same form as absolute; empty for none
 	};
 	std::vector<Tree> trees;
 	if (conf.artefacts.scheduledTasks)
@@ -417,12 +419,35 @@ HRESULT ExtractFileArtefactsRaw() {
 		                  L"Defender detection history" });
 		trees.push_back({ L"\\ProgramData\\Microsoft\\Windows Defender\\Quarantine", {}, 3, L"Defender quarantine" });
 	}
+	/* Shortcuts outside Recent: the Start menu and Quick Launch are trees, the
+	   desktops plain folders. The Startup folder inside the Start menu is left
+	   to the startup folders, which take it whole. */
+	if (conf.artefacts.shortcuts) {
+		for (size_t i = 0; i < SHORTCUT_FOLDER_COUNT; ++i) {
+			const ShortcutFolder& folder = SHORTCUT_FOLDERS[i];
+			std::vector<std::wstring> profiles = { L"" };   // a folder of the machine: once, relative to the system volume
+			if (folder.perProfile) {
+				profiles.clear();
+				for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
+					profiles.push_back(std::get<1>(profileEntry));
+			}
+			for (const std::wstring& profile : profiles) {
+				if (folder.recursive)
+					trees.push_back({ profile + folder.relative, { L".lnk", L".url" }, SHORTCUT_TREE_DEPTH,
+					                  L"shortcuts", startupInside(folder, profile) });
+				else addTarget(profile + folder.relative, { L".lnk", L".url" });
+			}
+		}
+	}
 	for (const Tree& tree : trees) {
 		const std::wstring volume = volumeOfPath(tree.absolute), path = pathRelativeToVolume(tree.absolute);
 		size_t extractedFiles = 0;
 		std::vector<RawHiveExtraction> reading;
+		std::vector<std::wstring> skipped;
+		if (!tree.skipped.empty()) skipped.push_back(pathRelativeToVolume(tree.skipped));
 		const HRESULT hrTree = ExtractDirectoryTreeRaw(volume, path, exhibitTarget(tree.absolute),
-		                                               tree.extensions, &extractedFiles, tree.depth, &reading);
+		                                               tree.extensions, &extractedFiles, tree.depth, &reading,
+		                                               skipped);
 		ExhibitStoreAdd(reading, L"Recursive raw NTFS reading (\\\\.\\"
 		                        + volume + L": — $MFT, directory indexes); "
 		                        L"no file opened by the system");

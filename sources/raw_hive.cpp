@@ -1836,13 +1836,27 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
    subdirectory. */
 namespace {
 
+/*! Whether a subdirectory is one the caller asked to leave out.
+ *  @param volumePath the subdirectory, as a path on the volume
+ *  @param skipped the paths left out, case ignored
+ *  @return true to not descend into it */
+bool isSkipped(const std::wstring& volumePath, const std::vector<std::wstring>& skipped){
+    for (const std::wstring& s : skipped)
+        if (s.size() == volumePath.size()
+            && std::equal(s.begin(), s.end(), volumePath.begin(),
+                          [](wchar_t a, wchar_t b){ return std::towlower(a) == std::towlower(b); }))
+            return true;
+    return false;
+}
+
 HRESULT extractTree(NtfsVolume& vol, uint64_t dirIndex,
                              const std::wstring& volumePath,
                              const std::wstring& outDir,
                              const std::vector<std::wstring>& extensions,
                              size_t* extracted, unsigned depthLeft,
                              const std::wstring& volumeLetter,
-                             std::vector<RawHiveExtraction>* reading){
+                             std::vector<RawHiveExtraction>* reading,
+                             const std::vector<std::wstring>& skipped){
     std::vector<RawDirEntry> entries;
     if (!vol.listDir(dirIndex, entries)){
         RVLOG(L"[raw] tree: index unreadable for %ls\n", volumePath.c_str());
@@ -1861,10 +1875,11 @@ HRESULT extractTree(NtfsVolume& vol, uint64_t dirIndex,
                 RVLOG(L"[raw] tree: maximum depth reached at %ls\n", e.name.c_str());
                 continue;
             }
+            if (isSkipped(volumePath + L"\\" + e.name, skipped)) continue;
             const HRESULT h = extractTree(
                 vol, e.mftIndex, volumePath + L"\\" + e.name,
                 outDir + L"\\" + e.name, extensions, extracted, depthLeft - 1,
-                volumeLetter, reading);
+                volumeLetter, reading, skipped);
             if (h == S_FALSE) global = S_FALSE;
             continue;
         }
@@ -1895,7 +1910,8 @@ HRESULT ExtractDirectoryTreeRaw(const std::wstring& volumeLetter,
                                 const std::vector<std::wstring>& extensions,
                                 size_t* extracted,
                                 unsigned maxDepth,
-                                std::vector<RawHiveExtraction>* reading){
+                                std::vector<RawHiveExtraction>* reading,
+                                const std::vector<std::wstring>& skipped){
     if (extracted) *extracted = 0;
 
     NtfsVolume vol;
@@ -1910,5 +1926,5 @@ HRESULT ExtractDirectoryTreeRaw(const std::wstring& volumeLetter,
     }
     return extractTree(vol, dirIndex, dirPathOnVolume, outDir,
                                 extensions, extracted, maxDepth,
-                                volumeLetter, reading);
+                                volumeLetter, reading, skipped);
 }

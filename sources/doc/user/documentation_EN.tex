@@ -368,6 +368,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   network_shares: true          # the machine's network shares, path and rights
   network_configuration: true   # network adapters, last IPv4/IPv6 settings, DHCP leases (offline)
   event_log_configuration: true # state of each event log and boot ETW session: enabled, size, retention, access (offline)
+  shortcuts: true               # shortcuts outside Recent: Start menu, desktops, Quick Launch, task bar
 \end{lstlisting}
 
 \begin{itemize}
@@ -1243,6 +1244,17 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         (\texttt{User}, with \champ{SID}): every file, its dates and
         fingerprints; a shortcut is decoded (\champ{Shortcut}, as in
         \fichier{recentdocs.json}).
+  \item[\fichier{shortcuts.json}] shortcuts put there to be clicked, outside
+        the Recent folder: Start menu of all users and of each profile, desktop
+        of each profile and public desktop, Quick Launch and items pinned to the
+        task bar (\champ{Location}: \texttt{StartMenu}, \texttt{Desktop},
+        \texttt{QuickLaunch}, \texttt{TaskBar}; \champ{Scope} and \champ{SID}
+        as above). Each shortcut is decoded as in \fichier{recentdocs.json}:
+        target, arguments, volume and machine of origin. An uninstalled program
+        leaves its shortcut there; an intruder plants a command line there, or
+        retargets an existing shortcut at their binary while keeping the icon.
+        The Start menu's Startup folder is not in it: it belongs to
+        \fichier{startup\_folders.json}.
   \item[\fichier{powershell\_history.json}] PSReadLine history of each profile
         and each host (\champ{Host}: \texttt{ConsoleHost}, the ISE, VS~Code):
         the commands in the order they were typed, a command on several lines

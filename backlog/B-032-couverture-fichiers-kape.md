@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P2 | moyen |
+| en cours | P2 | moyen |
 
 ## Pourquoi
 B-015 a confronté la collecte de WAC (configuration du kit, sans binaires) à celle de KAPE, cible KapeTriage, sur la VM (`vmtest/kape-compare.sh --no-binary`). 1 130 fichiers communs, SHA-1 identiques sauf ceux écrits entre les deux collectes. Chaque écart de couverture doit être ajouté ou écarté avec sa raison.
@@ -31,7 +31,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - kape-compare.sh ne montre plus de fichier « KAPE seul » non classé.
 
 ## Tâches
-- [ ] 1 Raccourcis hors de Recent
+- [x] 1 Raccourcis hors de Recent — artefact `shortcuts` (shortcuts.json)
 - [ ] 2 Ruche Default
 - [ ] 3 $Secure:$SDS (et sa lecture dans mft.json : propriétaire de chaque fichier), $UsnJrnl:$Max, $Boot, $TxfLog
 - [ ] 4 Traces WPP de Defender
@@ -41,3 +41,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 ## Journal
 - 2026-10-01 : ouverte depuis B-015.
 - 2026-10-01 : décision utilisateur — les clés maîtresses DPAPI sont prises (elles servent l'enquête), au lieu d'être écartées.
+- 2026-10-01 : point 1 fait — nouvel artefact `shortcuts` (clé `shortcuts`, `shortcuts.json`) : menu Démarrer commun et de chaque profil, Bureau de chaque profil et public, Quick Launch ; emplacement `TaskBar` pour `User Pinned\TaskBar`. Décodage par celui de recentdocs. Le dossier Startup est exclu de l'extraction et de la conversion (paramètre `skipped` de `ExtractDirectoryTreeRaw`) : il relève de startup_folders, et le prendre deux fois doublait les pièces du manifeste. Référence indépendante : deux témoins (Bureau public, épinglé de « wac ») et la liste des .lnk/.url que Windows donne dans ces dossiers pour chaque profil de ProfileList — 78 raccourcis, ensembles identiques.

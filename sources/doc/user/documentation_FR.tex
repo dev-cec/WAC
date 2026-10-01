@@ -373,6 +373,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   network_shares: true          # partages réseau de la machine, chemin et droits
   network_configuration: true   # cartes réseau, dernière configuration IPv4/IPv6, baux DHCP (hors ligne)
   event_log_configuration: true # état de chaque journal et session ETW de démarrage : actif, taille, rétention, accès (hors ligne)
+  shortcuts: true               # raccourcis hors de Recent : menu Démarrer, Bureaux, Quick Launch, barre des tâches
 \end{lstlisting}
 
 \begin{itemize}
@@ -1275,6 +1276,18 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         profil (\texttt{User}, avec \champ{SID}) : chaque fichier, ses dates et
         ses empreintes ; un raccourci est décodé (\champ{Shortcut}, comme dans
         \fichier{recentdocs.json}).
+  \item[\fichier{shortcuts.json}] raccourcis posés pour être cliqués, hors du
+        dossier Recent : menu Démarrer de tous les utilisateurs et de chaque
+        profil, Bureau de chaque profil et Bureau public, Quick Launch et
+        éléments épinglés à la barre des tâches (\champ{Location} :
+        \texttt{StartMenu}, \texttt{Desktop}, \texttt{QuickLaunch},
+        \texttt{TaskBar} ; \champ{Scope} et \champ{SID} comme ci-dessus).
+        Chaque raccourci est décodé comme dans \fichier{recentdocs.json} :
+        cible, arguments, volume et machine d'origine. Un programme désinstallé
+        y laisse son raccourci ; un intrus y pose une ligne de commande, ou
+        redirige un raccourci existant vers son binaire en gardant l'icône. Le
+        dossier Startup du menu Démarrer n'y figure pas : il relève de
+        \fichier{startup\_folders.json}.
   \item[\fichier{powershell\_history.json}] historique PSReadLine de chaque
         profil et de chaque hôte (\champ{Host} : \texttt{ConsoleHost},
         l'ISE, VS~Code) : les commandes dans l'ordre où elles ont été tapées,
