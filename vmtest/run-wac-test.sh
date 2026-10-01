@@ -147,6 +147,11 @@ done
 wait_registry_on_disk() {
   sleep 90
 }
+# The artefacts read in the hives whose witnesses the harness writes in the
+# live registry: a --only cycle of one of them waits too. The witnesses of the
+# third lot (installed_programs…) were absent from their collection without it.
+REGISTRY_WITNESSES="registry persistence office_trust_records typed_paths word_wheel_query root_certificates internet_settings firewall installed_programs"
+wants_registry_witness() { wants $REGISTRY_WITNESSES; }
 
 
 
@@ -275,7 +280,7 @@ fi
 
 # A --only cycle skips the raw validation that gives Windows the time to write
 # the registry: with the registry asked for, the BAM check needs that wait.
-if ! full_cycle && wants registry; then wait_registry_on_disk; fi
+if ! full_cycle && wants_registry_witness; then wait_registry_on_disk; fi
 echo "== 4. Run of WAC (SYSTEM) == ($(date +%H:%M:%S))"
 # --output must be a simple name (WAC refuses backslashes): created under cwd.
 # A collection that stops midway still produces valid JSON files: the absence
@@ -484,7 +489,7 @@ if [[ $SPLIT -eq 1 ]]; then
   # take several. In step 2 the upload and the raw validation leave Windows the
   # time to write it; here the collection follows at once.
   $QGA run --shell "taskkill /f /im WAC.exe >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
-  wants registry && wait_registry_on_disk
+  wants_registry_witness && wait_registry_on_disk
 
   # HARMLESSNESS: witness files the collection is bound to read (--binary
   # collects the macro document and the script) keep their dates and their
