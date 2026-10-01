@@ -24,8 +24,9 @@
  *     last connected: where the machine has been.
  *   - Program usage: what each user launched or used — FeatureUsage counts,
  *     JumplistData's last use, the Program Compatibility Assistant's store of
- *     programs run, compatibility layers, RADAR's diagnosed programs, and the
- *     taskbar's pinned items (Taskband, each a whole shortcut).
+ *     programs run, compatibility layers, RADAR's diagnosed programs, the
+ *     taskbar's pinned items (Taskband, each a whole shortcut), and the
+ *     programs chosen to open each file type (FileExts).
  *   - Devices: the USB and SCSI devices the machine enumerated (Enum\\USB,
  *     Enum\\SCSI) with their install, first install, last arrival and last
  *     removal dates; the portable devices (a phone, a camera); the volume
@@ -185,7 +186,7 @@ private:
 
 /*! One trace of a program's use, from one of the sources of ProgramUsage. */
 struct ProgramUsage {
-	std::wstring source;        //!< the key it comes from (FeatureUsage\\AppLaunch, JumplistData…)
+	std::wstring source;        //!< the key it comes from (FeatureUsage\\AppLaunch, JumplistData, FileExts\\OpenWithList…)
 	std::wstring sid;           //!< the user; empty for a machine-wide source
 	std::wstring name;          //!< the program (path, application ID or name)
 	std::vector<std::pair<std::wstring, Json>> values; //!< what the source says of it (Count, LastUsed, Layers…)

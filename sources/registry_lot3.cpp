@@ -521,6 +521,51 @@ void readTaskband(ORHKEY root, const std::wstring& sid, std::vector<ProgramUsage
 	}
 }
 
+/*! The programs a user chose to open each file type with, under
+ *  Explorer\\FileExts\\<extension>: OpenWithList, whose values "a", "b"… name
+ *  the programs and MRUList orders their letters, most recent first; and
+ *  UserChoice, the program set as default. OpenWithProgids is left out:
+ *  installers fill it, it is not the user's doing.
+ *  @param root the user's hive
+ *  @param sid the user
+ *  @param out receives one trace per program and extension */
+void readFileExts(ORHKEY root, const std::wstring& sid, std::vector<ProgramUsage>& out) {
+	const std::wstring base = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\";
+	auto add = [&](const wchar_t* source, const std::wstring& program, const std::wstring& extension, FILETIME written) {
+		ProgramUsage u;
+		u.source = source;
+		u.sid = sid;
+		u.name = program;
+		u.values.emplace_back(L"Extension", Json::str(extension));
+		u.keyLastWriteUtc = written;
+		out.push_back(std::move(u));
+		return &out.back();
+	};
+	for (const std::wstring& extension : subkeys(root, base.substr(0, base.size() - 1))) {
+		ORHKEY key = NULL;
+		if (OROpenKey(root, (base + extension + L"\\OpenWithList").c_str(), &key) == ERROR_SUCCESS) {
+			const FILETIME written = lastWrite(key);
+			std::wstring order;
+			if (getRegSzValue(key, L"", L"MRUList", &order) == ERROR_SUCCESS) {
+				for (size_t position = 0; position < order.size(); ++position) {
+					std::wstring program;
+					const std::wstring letter(1, order[position]);
+					if (getRegSzValue(key, L"", letter.c_str(), &program) != ERROR_SUCCESS || program.empty()) continue;
+					add(L"FileExts\\OpenWithList", program, extension, written)
+						->values.emplace_back(L"MruPosition", Json::num(position));
+				}
+			}
+			ORCloseKey(key);
+		}
+		if (OROpenKey(root, (base + extension + L"\\UserChoice").c_str(), &key) == ERROR_SUCCESS) {
+			std::wstring progId;
+			if (getRegSzValue(key, L"", L"ProgId", &progId) == ERROR_SUCCESS && !progId.empty())
+				add(L"FileExts\\UserChoice", progId, extension, lastWrite(key));
+			ORCloseKey(key);
+		}
+	}
+}
+
 } // namespace
 
 Json ProgramUsage::toJson() const {
@@ -569,6 +614,7 @@ HRESULT ProgramUsages::getData() {
 		readUsageKey(root, L"Software\\" + NT + L"Compatibility Assistant\\Store", L"CompatibilityAssistant\\Store", sid, asStored(L"Data"), usages_);
 		readUsageKey(root, L"Software\\" + NT + L"Layers", L"AppCompatFlags\\Layers", sid, asStored(L"Layers"), usages_);
 		readTaskband(root, sid, usages_);
+		readFileExts(root, sid, usages_);
 	});
 	return ERROR_SUCCESS;
 }

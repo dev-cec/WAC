@@ -1134,8 +1134,13 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         switches, taskbar clicks, per application, \champ{Count}),
         \texttt{JumplistData} (last use, \champ{LastUsed}), the Program
         Compatibility Assistant's store (programs run), compatibility layers
-        (\texttt{Layers}), the programs RADAR diagnosed, and the taskbar's
-        pinned items (\texttt{Taskband}), each decoded as a whole shortcut.
+        (\texttt{Layers}), the programs RADAR diagnosed, the taskbar's pinned
+        items (\texttt{Taskband}), each decoded as a whole shortcut, and the
+        programs chosen to open each file type (\texttt{FileExts}:
+        \texttt{OpenWithList} with \champ{Extension} and \champ{MruPosition},
+        0 for the most recent; \texttt{UserChoice}, the default program).
+        \texttt{OpenWithProgids} is not collected: installers fill it, the user
+        has no part in it.
   \item[\fichier{devices.json}] devices the machine knew (\champ{Source}):
         USB and SCSI (\texttt{Enum}), with their values and their install, first
         install, last arrival and last removal dates (\champ{Install},

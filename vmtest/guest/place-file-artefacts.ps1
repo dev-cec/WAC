@@ -629,6 +629,23 @@ if (Wants 'program_usage') {
     $count = 0; $o = 0
     while ($fav -and $o + 4 -le $fav.Length) { $n = [BitConverter]::ToUInt32($fav, $o); if ($n -lt 76 -or $o + 4 + $n -gt $fav.Length) { break }; $count++; $o += 4 + $n }
     Write-Output "pinned=$wacSid|$count"
+    # FileExts: a witness extension opened with two programs, wordpad the most
+    # recent; then every OpenWithList of the user, in its MRUList order.
+    $exts = "$u\Windows\CurrentVersion\Explorer\FileExts"
+    $witness = "$exts\.wacwitness\OpenWithList"
+    New-Item -Force $witness | Out-Null
+    Set-ItemProperty $witness -Name a -Value 'notepad.exe'
+    Set-ItemProperty $witness -Name b -Value 'wordpad.exe'
+    Set-ItemProperty $witness -Name MRUList -Value 'ba'
+    foreach ($e in Get-ChildItem $exts -ErrorAction SilentlyContinue) {
+        $list = Get-Item "$($e.PSPath)\OpenWithList" -ErrorAction SilentlyContinue
+        if (-not $list) { continue }
+        $order = [string]$list.GetValue('MRUList')
+        for ($p = 0; $p -lt $order.Length; $p++) {
+            $program = $list.GetValue([string]$order[$p])
+            if ($program) { Write-Output ("openwith=" + $e.PSChildName + '|' + $program + '|' + $p) }
+        }
+    }
 }
 
 # 27. B-031 — devices: every USB and SCSI device Windows knows, present or not,

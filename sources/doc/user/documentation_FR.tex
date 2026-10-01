@@ -1157,9 +1157,14 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \champ{Count}), \texttt{JumplistData} (dernière utilisation,
         \champ{LastUsed}), le magasin de l'Assistant de compatibilité des
         programmes (programmes exécutés), les modes de compatibilité
-        (\texttt{Layers}), les programmes diagnostiqués par RADAR, et les éléments
+        (\texttt{Layers}), les programmes diagnostiqués par RADAR, les éléments
         épinglés à la barre des tâches (\texttt{Taskband}), chacun décodé comme
-        un raccourci complet.
+        un raccourci complet, et les programmes choisis pour ouvrir chaque type
+        de fichier (\texttt{FileExts} : \texttt{OpenWithList} avec
+        \champ{Extension} et \champ{MruPosition}, 0 pour le plus récent ;
+        \texttt{UserChoice}, le programme par défaut). \texttt{OpenWithProgids}
+        n'est pas relevé : les installeurs le remplissent, l'utilisateur n'y
+        est pour rien.
   \item[\fichier{devices.json}] périphériques que la machine a connus
         (\champ{Source}) : USB et SCSI (\texttt{Enum}), avec leurs valeurs et les
         dates d'installation, de première installation, de dernière arrivée et

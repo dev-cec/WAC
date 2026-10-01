@@ -1762,7 +1762,8 @@ def check_small_file_artefacts(folder):
 
     # Program usage: per source, the names the live registry holds for the user
     # "wac", the witness layer among them; as many pinned items as
-    # FavoritesResolve chains; every date in the past (B-031).
+    # FavoritesResolve chains; each OpenWithList program at its MRUList
+    # position, the witness extension's among them; every date in the past (B-031).
     usage = load(folder, "program_usage.json")
     if isinstance(usage, list) and "pinned" in reference:
         sid, pinned = reference["pinned"].split("|")
@@ -1777,6 +1778,12 @@ def check_small_file_artefacts(folder):
         layer = next((u for u in usage if u.get("Name") == "C:\\wactest\\wac-layer.exe"), {})
         if layer.get("Layers") != "~ WIN7RTM":
             wrong.append(f"witness layer {layer}")
+        with open(path, encoding="utf-8", errors="replace") as f:
+            openwith = {tuple(l.strip()[len("openwith="):].split("|")) for l in f if l.startswith("openwith=")}
+        mine_openwith = {(u.get("Extension"), u.get("Name"), str(u.get("MruPosition")))
+                         for u in usage if u.get("Source") == "FileExts\\OpenWithList" and u.get("SID") == sid}
+        if mine_openwith != openwith or (".wacwitness", "wordpad.exe", "0") not in openwith:
+            wrong.append(f"OpenWithList: WAC only {sorted(mine_openwith - openwith)[:2]}, registry only {sorted(openwith - mine_openwith)[:2]}")
         mine_pinned = sum(1 for u in usage if u.get("Source") == "Taskband" and u.get("SID") == sid)
         if mine_pinned != int(pinned):
             wrong.append(f"pinned items {mine_pinned}, FavoritesResolve {pinned}")
@@ -1785,7 +1792,7 @@ def check_small_file_artefacts(folder):
         if future:
             wrong.append(f"date after the collection: {future[0]}")
         report(sources and not wrong,
-               f"program_usage.json: {len(sources)} source(s) as the live registry holds them, the witness layer, {mine_pinned} pinned item(s) decoded",
+               f"program_usage.json: {len(sources)} source(s) as the live registry holds them, the witness layer, {mine_pinned} pinned item(s) decoded, {len(openwith)} OpenWithList program(s) in MRU order",
                f"program_usage.json: {wrong[:2]}")
 
     # Devices: every USB and SCSI device Windows lists, with its first install,
