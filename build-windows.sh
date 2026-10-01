@@ -134,7 +134,9 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
   # decompression (lznt1, xpress). This list must be kept up to date — it has
   # drifted once already, and a test exe that no longer links is only noticed
   # at the moment it is needed.
-  "$CXX" "${FLAGS[@]}" -municode -static -static-libgcc -static-libstdc++ \
+  # --no-insert-timestamp, as WAC.exe: it goes to bin, and must be the same
+  # file from the same sources (it was not — its link date changed each build).
+  "$CXX" "${FLAGS[@]}" -municode -static -static-libgcc -static-libstdc++ -Wl,--no-insert-timestamp \
     "$SRC/raw_hive.cpp" "$SRC/hive_recover.cpp" "$SRC/quickdigest5.cpp" \
     "$SRC/sha.cpp" "$SRC/lznt1.cpp" "$SRC/xpress.cpp" "$SRC/lzx.cpp" \
     "$SRC/raw_hive_test.cpp" -o "$BUILD/raw_hive_test.exe"
