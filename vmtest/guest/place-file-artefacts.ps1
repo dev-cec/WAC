@@ -210,6 +210,10 @@ if (Wants 'mft', 'usn_journal') {
         $gone = "$letter\wac-deleted-$(Get-Date -Format HHmmss).txt"
         Set-Content $gone 'deleted by the WAC harness'
         Remove-Item $gone
+        # WAC reads the volume raw: a journal record still in Windows' cache is
+        # not on the disk yet. A --only cycle collects seconds later, so the
+        # cache is written now — what the minutes of a full cycle did by chance.
+        Write-VolumeCache -DriveLetter $data.DriveLetter
         Write-Output "datavolume=$letter|$letter\wac-volume-test.txt|$gone"
     }
 }
