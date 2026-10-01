@@ -607,6 +607,8 @@ std::wstring expandProfilePath(const std::wstring& path) {
 
 } // namespace
 
+const wchar_t DEFAULT_PROFILE_SID[] = L"S-0-0-0";
+
 HRESULT loadProfileList() {
 	if (!conf.Software) {
 		log(2, L"🔥SOFTWARE hive unavailable: user profiles not read",
@@ -651,6 +653,19 @@ HRESULT loadProfileList() {
 
 		conf.profiles.push_back({ sid, expanded });
 		log(2, L"❇️Profile: " + std::wstring(sid) + L" -> " + expanded);
+	}
+	/* The Default profile: the template every new profile is copied from. It
+	   belongs to no account, yet a Run value or a shortcut planted there
+	   reaches every user created afterwards — read like the others, under a
+	   SID that cannot be one (DEFAULT_PROFILE_SID). Its path is a value of
+	   ProfileList itself, not a subkey. */
+	std::wstring defaultPath;
+	if (getRegSzValue(hKey, NULL, L"Default", &defaultPath) == ERROR_SUCCESS) {
+		const std::wstring expanded = expandProfilePath(defaultPath);
+		if (!expanded.empty()) {
+			conf.profiles.push_back({ DEFAULT_PROFILE_SID, expanded });
+			log(2, L"❇️Default profile -> " + expanded);
+		}
 	}
 	ORCloseKey(hKey);
 	log(2, L"❇️" + std::to_wstring(conf.profiles.size()) + L" user profiles read");

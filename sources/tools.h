@@ -205,6 +205,13 @@ void loadSystemDrive();
 */
 HRESULT loadProfileList();
 
+/*! SID given to the Default profile (`\\Users\\Default`), the template of
+*  every new profile, which belongs to no account: "S-0-0-0", zeros only. It
+*  has a SID's form, so the readers that link entries by SID keep working, and
+*  its revision 0 makes it no real SID. Not S-1-0-0: that is Windows' NULL SID,
+*  a real one. Its entries also carry `Profile: "Default"` (see addUser). */
+extern const wchar_t DEFAULT_PROFILE_SID[];
+
 /*! Volume letter of an absolute path, without the colon ("C").
 *
 * WHY THIS FUNCTION EXISTS. WAC assumed ONE SINGLE volume, the Windows one. But
@@ -557,8 +564,9 @@ std::wstring tab(int i);
 std::wstring getNameFromSid(std::wstring _sid);
 
 /*! Adds the user an entry belongs to: `SID`, and `SIDName` as resolved
- *  offline in the examined machine's hives. The one place that writes them,
- *  for every artefact.
+ *  offline in the examined machine's hives — or, for the Default profile,
+ *  `Profile: "Default"` (see DEFAULT_PROFILE_SID). The one place that writes
+ *  them, for every artefact.
  *  @param o the entry's object
  *  @param sid the user's SID; empty for an entry of the machine (nothing emitted)
  *  Implemented in account_names.cpp. */

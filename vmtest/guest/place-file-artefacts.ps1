@@ -16,6 +16,8 @@
 #                stream read back by Windows -> zone_identifiers.json
 #   run_default  a Run value of type REG_EXPAND_SZ in the DEFAULT hive (the
 #                system account's profile) -> run.json, unexpanded
+#   rundefault   a Run value in the NTUSER.DAT of the Default profile (template
+#                of new profiles) -> run.json, SID S-0-0-0, Profile "Default"
 #   secrets, audit, nl_slots  the SECURITY hive read live by Windows (as
 #                SYSTEM): names of the LSA secrets, PolAdtEv in hexadecimal,
 #                number of NL$n slots -> security.json
@@ -791,8 +793,11 @@ if (Wants 'shortcuts') {
         Write-Output ("shortcut=" + ($w -join '|'))
     }
     $folders = @(@('C:\ProgramData\Microsoft\Windows\Start Menu', $true), @('C:\Users\Public\Desktop', $false))
-    Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList' | ForEach-Object {
-        $profile = [Environment]::ExpandEnvironmentVariables((Get-ItemProperty $_.PSPath).ProfileImagePath)
+    # Every profile of ProfileList, and the Default profile, a value of the key itself.
+    $profileList = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList'
+    $paths = @((Get-ChildItem $profileList | ForEach-Object { (Get-ItemProperty $_.PSPath).ProfileImagePath }) + (Get-ItemProperty $profileList).Default)
+    $paths | ForEach-Object {
+        $profile = [Environment]::ExpandEnvironmentVariables($_)
         $folders += ,@("$profile\AppData\Roaming\Microsoft\Windows\Start Menu", $true)
         $folders += ,@("$profile\Desktop", $false)
         $folders += ,@("$profile\AppData\Roaming\Microsoft\Internet Explorer\Quick Launch", $true)
@@ -804,4 +809,19 @@ if (Wants 'shortcuts') {
         $found | Where-Object { $_.Extension -in '.lnk', '.url' -and $_.FullName -notmatch '\\Start Menu\\Programs\\Startup\\' } |
             ForEach-Object { Write-Output ("shortcutfile=" + $_.FullName) }
     }
+}
+
+# 33. B-032 — the Default profile, template of every new profile: a Run value
+#     planted in its NTUSER.DAT (loaded, written, unloaded), which run.json must
+#     give under the SID S-0-0-0 with Profile "Default". Harmless: it names an
+#     executable that does not exist.
+if (Wants 'registry') {
+    $hive = 'C:\Users\Default\NTUSER.DAT'
+    reg load 'HKU\WacDefault' $hive 2>$null | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+        reg add 'HKU\WacDefault\Software\Microsoft\Windows\CurrentVersion\Run' /v WacDefaultWitness /t REG_SZ /d 'C:\wactest\wac-default-witness.exe' /f | Out-Null
+        [GC]::Collect()
+        reg unload 'HKU\WacDefault' 2>$null | Out-Null
+        Write-Output 'rundefault=WacDefaultWitness|C:\wactest\wac-default-witness.exe'
+    } else { Write-Output 'rundefaulterror=reg load failed' }
 }

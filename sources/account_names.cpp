@@ -122,7 +122,8 @@ void addServiceNames() {
 void addProfileNames() {
 	for (const std::tuple<std::wstring, std::wstring>& p : conf.profiles) {
 		const std::wstring folder = std::filesystem::path(std::get<1>(p)).filename().wstring();
-		if (!folder.empty()) g_names.emplace(upper(std::get<0>(p)), folder);
+		// The Default profile is no account: it is told by Profile, not by a name.
+		if (!folder.empty() && std::get<0>(p) != DEFAULT_PROFILE_SID) g_names.emplace(upper(std::get<0>(p)), folder);
 	}
 }
 
@@ -182,5 +183,6 @@ std::wstring getNameFromSid(std::wstring _sid) {
 
 void addUser(Json& o, const std::wstring& sid) {
 	o.add(L"SID", Json::str(sid));
-	o.add(L"SIDName", Json::str(getNameFromSid(sid)));
+	if (sid == DEFAULT_PROFILE_SID) o.add(L"Profile", Json::str(L"Default"));
+	else o.add(L"SIDName", Json::str(getNameFromSid(sid)));
 }

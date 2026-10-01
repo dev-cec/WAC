@@ -1446,6 +1446,15 @@ of the examined machine), well-known SIDs under their canonical names
 domain account. A SID none of them names is published without a name: the SID
 remains the evidence, for the analyst to resolve against the domain.
 
+\paragraph{The Default profile.} \path|C:\Users\Default| is the template
+copied for every new profile: a Run value, a shortcut or an association put
+there reaches every account created afterwards. WAC reads it as a profile
+(\fichier{NTUSER.DAT} and \fichier{UsrClass.dat} hives, desktop, Start menu,
+Recent\ldots). Belonging to no account, it has no SID: its entries carry the
+SID \texttt{S-0-0-0}, zeros only, in a SID's form so that tools link them,
+but no SID at all (revision 0), and \champ{Profile}: \texttt{Default} instead
+of \champ{SIDName}. It is not \texttt{S-1-0-0}, Windows' real NULL SID.
+
 \section{GUID names}
 
 The fields that name a GUID (COM class, known folder, handler of a task) come

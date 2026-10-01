@@ -1489,6 +1489,16 @@ machine examinée), SID bien connus sous leur nom canonique
 compte de domaine. Un SID qu'aucune de ces sources ne nomme est publié sans
 nom : le SID reste la preuve, à rapprocher du domaine par l'analyste.
 
+\paragraph{Le profil Default.} \path|C:\Users\Default| est le modèle copié
+pour chaque nouveau profil : une valeur Run, un raccourci ou une association
+posés là atteignent tous les comptes créés ensuite. WAC le lit comme un profil
+(ruches \fichier{NTUSER.DAT} et \fichier{UsrClass.dat}, Bureau, menu
+Démarrer, Recent\ldots). N'appartenant à aucun compte, il n'a pas de SID : ses
+entrées portent le SID \texttt{S-0-0-0}, fait de zéros, au format d'un SID
+pour que les outils les lient, mais qui n'en est pas un (révision 0), et
+\champ{Profile}~: \texttt{Default} à la place de \champ{SIDName}. Ce n'est pas
+\texttt{S-1-0-0}, le vrai SID nul de Windows.
+
 \section{Noms des GUID}
 
 Les champs qui nomment un GUID (classe COM, dossier connu, gestionnaire d'une

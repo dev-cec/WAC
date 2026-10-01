@@ -1438,6 +1438,15 @@ def check_small_file_artefacts(folder):
         report(bool(match) and match[0].get("Type") == "REG_EXPAND_SZ" and match[0].get("Value") == value,
                f"run.json: {name} of the DEFAULT hive, REG_EXPAND_SZ, as written ({value})",
                f"run.json: {name} of the DEFAULT hive missing or different: {match[:1]}")
+    # The Default profile (B-032): its NTUSER.DAT read as a profile's, under the
+    # SID S-0-0-0 that cannot be one, told by Profile and without SIDName.
+    if isinstance(runs, list) and "rundefault" in reference:
+        name, value = reference["rundefault"].split("|", 1)
+        match = [r for r in runs if r.get("Name") == name]
+        report(bool(match) and match[0].get("SID") == "S-0-0-0" and match[0].get("Profile") == "Default"
+               and "SIDName" not in match[0] and match[0].get("Value") == value,
+               f"run.json: {name} of the Default profile, SID S-0-0-0, Profile Default ({value})",
+               f"run.json: {name} of the Default profile missing or different: {match[:1]}")
 
     persistence = load(folder, "persistence.json")
     if isinstance(persistence, list) and "ifeo" in reference:

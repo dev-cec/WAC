@@ -32,7 +32,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] 1 Raccourcis hors de Recent — artefact `shortcuts` (shortcuts.json)
-- [ ] 2 Ruche Default
+- [x] 2 Ruche Default — profil Default lu comme un profil, SID `S-0-0-0`, `Profile: "Default"`
 - [ ] 3 $Secure:$SDS (et sa lecture dans mft.json : propriétaire de chaque fichier), $UsnJrnl:$Max, $Boot, $TxfLog
 - [ ] 4 Traces WPP de Defender
 - [ ] 5 Clés maîtresses DPAPI (utilisateurs et système)
@@ -42,3 +42,5 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-01 : ouverte depuis B-015.
 - 2026-10-01 : décision utilisateur — les clés maîtresses DPAPI sont prises (elles servent l'enquête), au lieu d'être écartées.
 - 2026-10-01 : point 1 fait — nouvel artefact `shortcuts` (clé `shortcuts`, `shortcuts.json`) : menu Démarrer commun et de chaque profil, Bureau de chaque profil et public, Quick Launch ; emplacement `TaskBar` pour `User Pinned\TaskBar`. Décodage par celui de recentdocs. Le dossier Startup est exclu de l'extraction et de la conversion (paramètre `skipped` de `ExtractDirectoryTreeRaw`) : il relève de startup_folders, et le prendre deux fois doublait les pièces du manifeste. Référence indépendante : deux témoins (Bureau public, épinglé de « wac ») et la liste des .lnk/.url que Windows donne dans ces dossiers pour chaque profil de ProfileList — 78 raccourcis, ensembles identiques.
+- 2026-10-01 : point 1 commité (3b0a5c0).
+- 2026-10-01 : décision utilisateur — le profil Default est lu comme un profil complet (ruches, Bureau, menu Démarrer, Recent…). Sans SID réel, il porte le SID `S-0-0-0` (zéros seuls : forme d'un SID pour que les outils lient les entrées, révision 0 donc aucun compte ; pas `S-1-0-0`, vrai SID nul de Windows) et `Profile: "Default"` à la place de `SIDName`. Préalable : `addUser` devient la seule fonction qui émet SID et SIDName (refactor c8a9200, 62 JSON identiques avant/après sur la même collecte). Référence indépendante : une valeur Run posée dans le NTUSER.DAT de Default (reg load), retrouvée dans run.json ; les raccourcis du profil Default s'ajoutent à la liste de Windows (92, ensembles identiques).
