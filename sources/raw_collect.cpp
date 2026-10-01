@@ -359,7 +359,11 @@ HRESULT ExtractFileArtefactsRaw() {
 	   an older state of the registry. Empty files since Windows 10 1803 unless
 	   the task was switched back on; collected as they are, not converted. */
 	if (conf.artefacts.registry) addTarget(L"\\Windows\\System32\\config\\RegBack", {});
-	if (conf.artefacts.defender) addTarget(L"\\ProgramData\\Microsoft\\Windows Defender\\Support", { L".log" });
+	/* Defender's support folder: the MPLog text logs, converted, and the WPP
+	   traces (.bin), copied raw only — their format, ETW binary traces decoded
+	   with Microsoft's private symbols, is not documented. */
+	if (conf.artefacts.defender)
+		addTarget(L"\\ProgramData\\Microsoft\\Windows Defender\\Support", { L".log", L".bin" });
 	// The WMI repository: INDEX.BTR, OBJECTS.DATA and the MAPPING files, open by WMI, read raw.
 	if (conf.artefacts.wmi) addTarget(L"\\Windows\\System32\\wbem\\Repository", {});
 	// The ESE databases with their transaction logs and checkpoint, for a

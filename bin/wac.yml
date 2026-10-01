@@ -43,7 +43,7 @@ artefacts:
   recycle_bin: true       # $I of every volume's recycle bin: what was deleted, by whom, when
   hosts: true             # the hosts file: names diverted to an address
   error_reports: true     # Windows Error Reporting: programs that crashed, with their path
-  defender: true          # Microsoft Defender: support logs (MPLog), detection history, quarantine (copied encrypted)
+  defender: true          # Microsoft Defender: support logs (MPLog, raw WPP traces), detection history, quarantine (copied encrypted)
   startup_folders: true   # startup folders: what runs at logon
   shortcuts: true         # shortcuts outside Recent: Start menu, desktops, Quick Launch, pinned task bar
   security_descriptors: true  # $Secure:$SDS: owner and access rights of every file, each descriptor once (mft.json: SecurityId)

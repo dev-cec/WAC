@@ -34,7 +34,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] 1 Raccourcis hors de Recent — artefact `shortcuts` (shortcuts.json)
 - [x] 2 Ruche Default — profil Default lu comme un profil, SID `S-0-0-0`, `Profile: "Default"`
 - [x] 3 $Secure:$SDS (security_descriptors.json, SecurityId dans mft.json), $UsnJrnl:$Max et $Boot (ntfs_volumes.json), $TxfLog (brut)
-- [ ] 4 Traces WPP de Defender
+- [x] 4 Traces WPP de Defender — copie brute (filtre .bin du dossier Support)
 - [ ] 5 Clés maîtresses DPAPI (utilisateurs et système)
 - [ ] 6 User Shell Folders (venu de B-031) : suivre les dossiers redirigés (Bureau, Documents, OneDrive) pour y chercher les fichiers de l'utilisateur
 
@@ -49,3 +49,5 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-01 : `$Secure:$SDS` commité (5c714fa).
 - 2026-10-01 : `$Boot` et `$UsnJrnl:$Max` → `ntfs_volumes.json` (clé `ntfs_volumes`) : numéro de série (32 bits comme les raccourcis le relèvent, et 64 bits), géométrie, en-tête du journal dont `UsnJournalId` = date de création (un journal recréé par `fsutil usn deletejournal` se voit). `$TxfLog` copié brut sous `log_file`. Référence indépendante : DeviceIoControl (FSCTL_GET_NTFS_VOLUME_DATA, FSCTL_QUERY_USN_JOURNAL) dans la VM — fsutil y est localisé — valeurs identiques sur C: et G:. Test vu échouer (série prise dans les 32 bits hauts). Harnais : `Write-VolumeCache` après le témoin du volume de données — en cycle --only, la suppression témoin était encore dans le cache et absente de la lecture brute du journal.
 - Relevé en passant : `recent_docs.cpp` écrit le numéro de série d'un volume sans zéros de tête (`to_hex(serial)`), un série `0A1B2C3D` sort `A1B2C3D` — correctif à part.
+- 2026-10-01 : `ntfs_volumes` commité (bbcfeef), correctif du harnais (5b7dc5f), série des raccourcis sur 8 chiffres (277ff6b).
+- 2026-10-01 : point 4 — traces WPP de Defender (`Support\MpWpp*.bin`, ≈ 18 Mo en VM) copiées brutes sous la clé `defender`, sans conversion (traces ETW binaires, symboles privés). Contrôle : les 3 fichiers que Windows liste sont au manifeste.

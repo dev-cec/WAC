@@ -1465,6 +1465,17 @@ def check_small_file_artefacts(folder):
                f"ntfs_volumes.json: serial, geometry and journal header of {len(mine)} volume(s), as DeviceIoControl gives them ({seen} reading(s))",
                f"ntfs_volumes.json: {wrong[:3]}")
 
+    # Defender's WPP traces (B-032): copied raw, every one Windows lists.
+    if os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            traces = {l.strip()[len("defenderwpp="):].lower() for l in f if l.startswith("defenderwpp=")}
+        manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+        if traces and isinstance(manifest, dict):
+            copied = {(i.get("SourcePath") or "").lower() for i in manifest.get("Items", []) if i.get("Result") == "OK"}
+            report(traces <= copied,
+                   f"exhibits: the {len(traces)} Defender WPP trace(s) Windows lists, copied raw",
+                   f"exhibits: Defender WPP traces not copied: {sorted(traces - copied)[:3]}")
+
     if "datavolume" in reference:
         letter, present, deleted = reference["datavolume"].split("|")
         mft = load(folder, "mft.json")

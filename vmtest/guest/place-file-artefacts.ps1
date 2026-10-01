@@ -21,6 +21,7 @@
 #                -> mft.json SecurityId -> security_descriptors.json
 #   ntfsvolume, usnjournal  each fixed NTFS volume as Windows describes it
 #                (DeviceIoControl) -> ntfs_volumes.json, read raw in $Boot and $Max
+#   defenderwpp  Defender's WPP traces (Support\*.bin) -> the exhibit manifest
 #   rundefault   a Run value in the NTUSER.DAT of the Default profile (template
 #                of new profiles) -> run.json, SID S-0-0-0, Profile "Default"
 #   secrets, audit, nl_slots  the SECURITY hive read live by Windows (as
@@ -892,4 +893,12 @@ public static class WacNtfs {
                 [BitConverter]::ToUInt64($j, 40) + '|' + [BitConverter]::ToUInt64($j, 48) + '|' + [BitConverter]::ToUInt64($j, 24))
         }
     }
+}
+
+# 36. B-032 — Defender's WPP traces (Support\*.bin), copied raw only: the
+#     names Windows lists, each to be found in the exhibit manifest. Their
+#     content changes as Defender writes, so only their presence is compared.
+if (Wants 'defender') {
+    Get-ChildItem 'C:\ProgramData\Microsoft\Windows Defender\Support' -Filter *.bin -Force -ErrorAction SilentlyContinue |
+        ForEach-Object { Write-Output ("defenderwpp=" + $_.FullName) }
 }

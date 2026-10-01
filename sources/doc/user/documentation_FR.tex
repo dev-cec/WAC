@@ -348,7 +348,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   recycle_bin: true     # $I des corbeilles : quoi, par qui, quand
   hosts: true           # le fichier hosts : noms détournés vers une adresse
   error_reports: true   # rapports d'erreurs (WER) : programmes plantés, avec leur chemin
-  defender: true        # Defender : journaux (MPLog), historique des détections, quarantaine (copiée chiffrée)
+  defender: true        # Defender : journaux (MPLog, traces WPP brutes), historique des détections, quarantaine (copiée chiffrée)
   startup_folders: true # dossiers de démarrage : ce qui s'exécute à l'ouverture de session
   zone_identifiers: true  # flux Zone.Identifier : d'où viennent les fichiers téléchargés
   security: true        # ruche SECURITY : noms des secrets LSA, connexions en cache, audit
@@ -1303,7 +1303,10 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
   \item[\fichier{defender\_log.json}] journaux de support de Microsoft Defender
         (\fichier{MPLog-*.log}) : chaque ligne telle qu'écrite, datée quand elle
         commence par une date UTC. Analyses à l'exécution, détections,
-        exclusions, mises à jour.
+        exclusions, mises à jour. Les traces WPP du même dossier
+        (\fichier{MpWpp*.bin}, traces ETW binaires que seuls les symboles
+        privés de Microsoft décodent) sont copiées brutes dans la consigne, sans
+        conversion.
   \item[\fichier{defender\_detections.json}] une entrée par fichier
         DetectionHistory, qui survit à l'effacement du journal d'événements :
         menace, ressource (fichier, clé), compte, processus, date de détection

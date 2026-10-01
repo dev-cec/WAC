@@ -343,7 +343,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   recycle_bin: true     # $I of the recycle bins: what, by whom, when
   hosts: true           # the hosts file: names diverted to an address
   error_reports: true   # error reports (WER): programs that crashed, with their path
-  defender: true        # Defender: logs (MPLog), detection history, quarantine (copied encrypted)
+  defender: true        # Defender: logs (MPLog, raw WPP traces), detection history, quarantine (copied encrypted)
   startup_folders: true # startup folders: what runs at logon
   zone_identifiers: true  # Zone.Identifier streams: where downloaded files came from
   security: true        # SECURITY hive: LSA secret names, cached logons, audit
@@ -1267,7 +1267,10 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         version), every value of the report in \champ{Values}.
   \item[\fichier{defender\_log.json}] Microsoft Defender's support logs
         (\fichier{MPLog-*.log}): every line as written, dated when it starts with
-        a UTC date. Run-time scans, detections, exclusions, updates.
+        a UTC date. Run-time scans, detections, exclusions, updates. The WPP
+        traces of the same folder (\fichier{MpWpp*.bin}, binary ETW traces only
+        Microsoft's private symbols decode) are copied raw into the exhibit
+        store, not converted.
   \item[\fichier{defender\_detections.json}] one entry per DetectionHistory
         file, which survives the clearing of the event log: threat, resource
         (file, key), account, process, initial detection date, quarantine
