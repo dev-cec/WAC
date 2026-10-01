@@ -972,6 +972,12 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         from (kernel, or fallback estimate); \champ{ClockAdjustedSinceBootMs}
         gives the total clock corrections since boot — a few seconds is routine
         resynchronisation, a large value means a clock changed.
+        \champ{ShutdownTime}: the last orderly shutdown.
+        \champ{NtfsLastAccessUpdated}: false, NTFS does not update last access
+        dates, which then say nothing. \champ{Settings}: the settings that
+        decide how the other artefacts read, as stored --- NTFS last access and
+        short names, Prefetch on, page file and memory dumps, control sets,
+        remote desktop, Windows timeline, last user who logged on.
   \item[\fichier{security.json}] \fichier{SECURITY} hive: \textbf{names} of the
         LSA secrets and the dates of their values (\texttt{DefaultPassword}
         reveals an automatic logon's stored password, \texttt{\_SC\_<service>}

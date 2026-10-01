@@ -987,6 +987,13 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         estimation de repli) ; \champ{ClockAdjustedSinceBootMs} donne le cumul des
         corrections d'horloge depuis le démarrage — quelques secondes sont un
         recalage ordinaire, un grand écart signale une horloge modifiée.
+        \champ{ShutdownTime} : le dernier arrêt ordonné.
+        \champ{NtfsLastAccessUpdated} : faux, les dates d'accès NTFS ne sont pas
+        mises à jour et ne disent rien. \champ{Settings} : les réglages qui
+        conditionnent la lecture des autres artefacts, tels que stockés --- dates
+        d'accès et noms courts NTFS, Prefetch actif, fichier d'échange et vidages
+        mémoire, jeux de contrôle, bureau à distance, chronologie Windows,
+        dernier utilisateur connecté.
   \item[\fichier{security.json}] ruche \fichier{SECURITY} : \textbf{noms} des
         secrets LSA et dates de leurs valeurs (\texttt{DefaultPassword} signale
         un mot de passe de connexion automatique enregistré,

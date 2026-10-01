@@ -235,6 +235,8 @@ HRESULT SystemInfo::getData() {
 	else
 		log(2, L"🔥SOFTWARE hive unavailable: installation information not read");
 
+	readSettings();
+
 	/*******************************************************************
 	* 3. Instant of the collection and boot time — observed live by
 	*    snapshotSystemClock, read back from the snapshot
@@ -253,6 +255,51 @@ HRESULT SystemInfo::getData() {
 	else
 		log(2, L"🔥System clock snapshot absent: collection and boot times not published");
 	return ERROR_SUCCESS;
+}
+
+void SystemInfo::readSettings() {
+	/* The settings that change how the other artefacts read, each for a reason:
+	   last access dates (NTFS), 8.3 names, Prefetch on or off, page file and
+	   crash dumps, the control sets, remote desktop, the Windows timeline, the
+	   last user who logged on. Values as stored; absent ones are not emitted. */
+	struct Wanted { const wchar_t* hive; const wchar_t* key; std::vector<const wchar_t*> names; };
+	const Wanted WANTED[] = {
+		{ L"SYSTEM", L"Control\\FileSystem", { L"NtfsDisableLastAccessUpdate", L"NtfsDisable8dot3NameCreation",
+		  L"LongPathsEnabled", L"NtfsDisableCompression", L"NtfsDisableEncryption", L"DisableDeleteNotification" } },
+		{ L"SYSTEM", L"Control\\Session Manager\\Memory Management", { L"ClearPageFileAtShutdown", L"PagingFiles", L"ExistingPageFiles" } },
+		{ L"SYSTEM", L"Control\\Session Manager\\Memory Management\\PrefetchParameters", { L"EnablePrefetcher", L"EnableSuperfetch" } },
+		{ L"SYSTEM", L"Control\\CrashControl", { L"CrashDumpEnabled", L"DumpFile" } },
+		{ L"SYSTEM", L"Control\\Terminal Server", { L"fDenyTSConnections" } },
+		{ L"SYSTEM", L"Control\\Terminal Server\\WinStations\\RDP-Tcp", { L"UserAuthentication", L"SecurityLayer", L"PortNumber" } },
+		{ L"SYSTEM", L"Select", { L"Current", L"Default", L"LastKnownGood", L"Failed" } },
+		{ L"SOFTWARE", L"Policies\\Microsoft\\Windows\\System", { L"EnableActivityFeed", L"PublishUserActivities", L"UploadUserActivities" } },
+		{ L"SOFTWARE", L"Microsoft\\Windows\\CurrentVersion\\Authentication\\LogonUI",
+		  { L"LastLoggedOnUser", L"LastLoggedOnSAMUser", L"LastLoggedOnDisplayName", L"LastLoggedOnUserSID" } },
+	};
+	for (const Wanted& w : WANTED) {
+		// Select is at the root of SYSTEM; the other SYSTEM keys under CurrentControlSet.
+		const ORHKEY root = std::wstring(w.hive) == L"SOFTWARE" ? conf.Software
+		                  : std::wstring(w.key) == L"Select" ? conf.System : conf.CurrentControlSet;
+		if (!root) continue;
+		for (const wchar_t* name : w.names) {
+			DWORD type = 0, size = 0;
+			if (ORGetValue(root, w.key, name, &type, nullptr, &size) != ERROR_SUCCESS) continue;
+			std::vector<BYTE> data(size);
+			if (ORGetValue(root, w.key, name, &type, data.data(), &size) != ERROR_SUCCESS) continue;
+			data.resize(size);
+			settings.push_back({ w.hive, w.key, name, registryValueToJson(type, data) });
+			if (std::wstring(name) == L"NtfsDisableLastAccessUpdate" && type == REG_DWORD && size >= 4) {
+				DWORD v;
+				memcpy(&v, data.data(), 4);
+				ntfsLastAccessUpdated = (v & 1) == 0;
+			}
+		}
+	}
+	// The last orderly shutdown: a FILETIME, binary.
+	std::vector<BYTE> shutdown;
+	if (conf.CurrentControlSet && getRegBinaryValue(conf.CurrentControlSet, L"Control\\Windows", L"ShutdownTime", shutdown) == ERROR_SUCCESS
+	    && shutdown.size() >= sizeof(FILETIME))
+		memcpy(&shutdownTimeUtc, shutdown.data(), sizeof(FILETIME));
 }
 
 HRESULT SystemInfo::toJson() {
@@ -302,6 +349,21 @@ HRESULT SystemInfo::toJson() {
 	   Positive: the clock was moved forward since the boot. */
 	if (bootFromKernel && clockCorrection100ns != 0)
 		o.add(L"ClockAdjustedSinceBootMs", Json::num(clockCorrection100ns / 10000LL));
+
+	addDate(o, L"ShutdownTime", shutdownTimeUtc);
+	if (ntfsLastAccessUpdated) o.add(L"NtfsLastAccessUpdated", Json::boolean(*ntfsLastAccessUpdated));
+	if (!settings.empty()) {
+		Json list = Json::arr();
+		for (const Setting& st : settings) {
+			Json e = Json::obj();
+			e.add(L"Hive", Json::str(st.hive));
+			e.add(L"Key", Json::str(st.key));
+			e.add(L"Name", Json::str(st.name));
+			e.add(L"Value", st.value);
+			list.push(std::move(e));
+		}
+		o.add(L"Settings", std::move(list));
+	}
 
 	/* Time zone: the SUSPECT's when the hive could be read. The TimeZoneSource
 	   field says which of the two origins served — without it, an unexpected

@@ -1,4 +1,5 @@
 #pragma once
+#include <optional>
 
 #include <string>
 #include <windows.h>
@@ -81,11 +82,30 @@ struct SystemInfo {
 	long long clockCorrection100ns = 0;
 	bool bootFromKernel = false;               //!< true: time read in the kernel, otherwise estimated
 
+	// --- settings that decide how the other artefacts read (B-031) ---
+	/*! One setting: a value of the SYSTEM or SOFTWARE hive, as stored. */
+	struct Setting {
+		std::wstring hive;      //!< "SYSTEM" (CurrentControlSet, or the root for Select) or "SOFTWARE"
+		std::wstring key;       //!< the key, under the hive's root or CurrentControlSet
+		std::wstring name;      //!< the value's name
+		Json value;             //!< its value, typed as stored
+	};
+	std::vector<Setting> settings;          //!< the settings found (see the table in system.cpp)
+	FILETIME shutdownTimeUtc = { 0, 0 };    //!< Control\\Windows\\ShutdownTime: the last orderly shutdown (UTC)
+	/*! Whether NTFS updates the files' last access time: NtfsDisableLastAccessUpdate
+	 *  with its low bit clear (0, 0x80000000: on; 1, 0x80000001: off). Absent
+	 *  when the value is. With it off, a last access date says nothing. */
+	std::optional<bool> ntfsLastAccessUpdated;
+
 	/*! Reads the system information in the hives already open.
 	* Requires `conf.System`; `conf.Software` and `conf.CurrentControlSet` are
 	* used if available. A field without a source stays empty and is not emitted.
 	*/
 	HRESULT getData();
+
+	/*! Reads the settings that decide how the other artefacts read
+	 *  (`settings`, `shutdownTimeUtc`, `ntfsLastAccessUpdated`). */
+	void readSettings();
 
 	/*! Writes `OperatingSystem.json` into the output directory.
 *  @return the result of the write. */

@@ -1718,6 +1718,23 @@ def check_small_file_artefacts(folder):
                f"known_networks.json: the {len(listed)} profile(s) and gateways of the registry; DateLastConnected of {dated} equal to its event 10000 (UTC)",
                f"known_networks.json: {wrong[:2] if wrong else 'no network dated by an event'}")
 
+    # System settings (OperatingSystem.json): the values of the live registry,
+    # and ShutdownTime within a minute of the System log's last shutdown (B-031).
+    osj = load(folder, "OperatingSystem.json")
+    if isinstance(osj, dict) and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            lines = f.read().splitlines()
+        live = dict(l[len("setting="):].split("|", 1) for l in lines if l.startswith("setting="))
+        mine = {st.get("Name"): str(st.get("Value")) for st in osj.get("Settings") or []}
+        wrong = [f"{n}: WAC {mine.get(n)!r}, registry {v!r}" for n, v in live.items() if mine.get(n) != v]
+        down = next((l[len("shutdown="):] for l in lines if l.startswith("shutdown=")), None)
+        gap = abs(instant(osj["ShutdownTimeUtc"]).timestamp() - instant(down + "Z").timestamp()) if down and osj.get("ShutdownTimeUtc") else None
+        if gap is None or gap > 60:
+            wrong.append(f"ShutdownTime {osj.get('ShutdownTimeUtc')}, System log {down}Z")
+        report(live and not wrong,
+               f"OperatingSystem.json: {len(live)} setting(s) as the live registry holds them; ShutdownTime {gap:.0f} s from the System log's shutdown" if gap is not None else "",
+               f"OperatingSystem.json: {wrong[:2]}")
+
     # Cleared log: none live, as Windows sees it; the cleared events recovered.
     if isinstance(events, list) and os.path.exists(path):
         with open(path, encoding="utf-8", errors="replace") as f:

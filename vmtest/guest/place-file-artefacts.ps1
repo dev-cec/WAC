@@ -562,3 +562,21 @@ if (Wants 'known_networks') {
             Write-Output ("netconnected=" + $_.Name + '|' + $last.TimeCreated.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss'))
         }
 }
+
+# 24. B-031 — settings that decide how the other artefacts read, from the live
+#     registry (OperatingSystem.json, Settings), and the last shutdown as the
+#     System log records it (Kernel-General 13, "the operating system is
+#     shutting down", UTC): the reference for ShutdownTime. Nothing is changed.
+if (Wants 'registry') {
+    $cs = 'HKLM:\SYSTEM\CurrentControlSet\Control'
+    foreach ($w in @(@("$cs\FileSystem", 'NtfsDisableLastAccessUpdate'), @("$cs\Session Manager\Memory Management\PrefetchParameters", 'EnablePrefetcher'),
+                     @("$cs\Terminal Server", 'fDenyTSConnections'), @('HKLM:\SYSTEM\Select', 'Current'),
+                     @('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI', 'LastLoggedOnSAMUser'))) {
+        $v = (Get-ItemProperty $w[0] -ErrorAction SilentlyContinue).($w[1])
+        if ($null -ne $v) { Write-Output ("setting=" + $w[1] + '|' + $v) }
+    }
+    $boot = (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
+    $down = Get-WinEvent -LogName System -FilterXPath "*[System[Provider[@Name='Microsoft-Windows-Kernel-General'] and EventID=13]]" -MaxEvents 20 -ErrorAction SilentlyContinue |
+        Where-Object { $_.TimeCreated -lt $boot } | Select-Object -First 1
+    if ($down) { Write-Output ("shutdown=" + $down.TimeCreated.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss')) }
+}
