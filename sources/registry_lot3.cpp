@@ -575,3 +575,97 @@ HRESULT ProgramUsages::getData() {
 
 HRESULT ProgramUsages::toJson() { return writeList("program_usage.json", usages_); }
 void ProgramUsages::clear() { usages_.clear(); }
+
+// ------------------------------------------------------------ Devices
+
+namespace {
+
+/*! Reads the four dates of a device's properties: DEVPROP_TYPE_FILETIME
+ *  values, UTC (the USBSTOR ones were confronted with Get-PnpDeviceProperty),
+ *  under Properties\\{83da6326-97a6-4088-9453-a1923f573b29}.
+ *  @param key the device instance's key
+ *  @param d receives the dates */
+void readDeviceDates(ORHKEY key, DeviceTrace& d) {
+	const std::wstring PROPERTIES = L"Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\";
+	const std::pair<const wchar_t*, FILETIME*> DATES[] = {
+		{ L"0064", &d.installUtc }, { L"0065", &d.firstInstallUtc },
+		{ L"0066", &d.lastArrivalUtc }, { L"0067", &d.lastRemovalUtc } };
+	for (const auto& [id, date] : DATES)
+		if (getRegFiletimeValue(key, (PROPERTIES + id).c_str(), L"", date) != ERROR_SUCCESS) *date = FILETIME{ 0, 0 };
+}
+
+/*! Reads every device of one enumerator: Enum\\<enumerator>\\<device>\\<instance>.
+ *  @param enumerator "USB", "SCSI"
+ *  @param out receives the devices */
+void readEnumerator(const std::wstring& enumerator, std::vector<DeviceTrace>& out) {
+	const std::wstring base = L"Enum\\" + enumerator;
+	for (const std::wstring& device : subkeys(conf.CurrentControlSet, base))
+		for (const std::wstring& instance : subkeys(conf.CurrentControlSet, base + L"\\" + device)) {
+			ORHKEY key = NULL;
+			if (OROpenKey(conf.CurrentControlSet, (base + L"\\" + device + L"\\" + instance).c_str(), &key) != ERROR_SUCCESS) continue;
+			DeviceTrace d;
+			d.source = base;
+			d.name = device + L"\\" + instance;
+			d.keyLastWriteUtc = lastWrite(key);
+			readAllValues(key, d.values);
+			readDeviceDates(key, d);
+			ORCloseKey(key);
+			out.push_back(std::move(d));
+		}
+}
+
+/*! Reads the subkeys of `path` in `root` as traces of one source: each its
+ *  values and its key's last write.
+ *  @param root,path where
+ *  @param source the traces' source
+ *  @param out receives them */
+void readKeysAsTraces(ORHKEY root, const std::wstring& path, const std::wstring& source, std::vector<DeviceTrace>& out) {
+	for (const std::wstring& name : subkeys(root, path)) {
+		ORHKEY key = NULL;
+		if (OROpenKey(root, (path + L"\\" + name).c_str(), &key) != ERROR_SUCCESS) continue;
+		DeviceTrace d;
+		d.source = source;
+		d.name = name;
+		d.keyLastWriteUtc = lastWrite(key);
+		readAllValues(key, d.values);
+		ORCloseKey(key);
+		out.push_back(std::move(d));
+	}
+}
+
+} // namespace
+
+Json DeviceTrace::toJson() const {
+	Json o = Json::obj();
+	o.add(L"Source", Json::str(source));
+	o.add(L"Name", Json::str(name));
+	for (const auto& [n, v] : values) o.add(n, v);
+	addDate(o, L"Install", installUtc);
+	addDate(o, L"FirstInstall", firstInstallUtc);
+	addDate(o, L"LastArrival", lastArrivalUtc);
+	addDate(o, L"LastRemoval", lastRemovalUtc);
+	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
+	return o;
+}
+
+HRESULT Devices::getData() {
+	if (!conf.CurrentControlSet) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	readEnumerator(L"USB", devices_);
+	readEnumerator(L"SCSI", devices_);
+	/* The disk, volume and portable-device interfaces: one subkey per device
+	   that exposed one, written when it first did. */
+	const wchar_t* INTERFACES[] = { L"{53f56307-b6bf-11d0-94f2-00a0c91efb8b}",   // disks
+	                                L"{53f5630d-b6bf-11d0-94f2-00a0c91efb8b}",   // volumes
+	                                L"{6ac27878-a6fa-4155-ba85-f98f491d4f33}" }; // portable devices
+	for (const wchar_t* guid : INTERFACES)
+		readKeysAsTraces(conf.CurrentControlSet, std::wstring(L"Control\\DeviceClasses\\") + guid,
+		                 std::wstring(L"DeviceClasses\\") + guid, devices_);
+	if (conf.Software) {
+		readKeysAsTraces(conf.Software, L"Microsoft\\Windows Portable Devices\\Devices", L"WindowsPortableDevices", devices_);
+		readKeysAsTraces(conf.Software, L"Microsoft\\Windows Search\\VolumeInfoCache", L"VolumeInfoCache", devices_);
+	}
+	return ERROR_SUCCESS;
+}
+
+HRESULT Devices::toJson() { return writeList("devices.json", devices_); }
+void Devices::clear() { devices_.clear(); }

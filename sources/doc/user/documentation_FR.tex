@@ -369,6 +369,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   mount_points: true            # volumes et partages vus par chaque utilisateur (MountPoints2)
   known_networks: true          # réseaux auxquels la machine s'est connectée (NetworkList)
   program_usage: true           # programmes lancés ou utilisés (FeatureUsage, JumplistData, compatibilité, épinglés)
+  devices: true                 # périphériques USB et SCSI et leurs dates, portables, noms de volumes
 \end{lstlisting}
 
 \begin{itemize}
@@ -1155,6 +1156,15 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         (\texttt{Layers}), les programmes diagnostiqués par RADAR, et les éléments
         épinglés à la barre des tâches (\texttt{Taskband}), chacun décodé comme
         un raccourci complet.
+  \item[\fichier{devices.json}] périphériques que la machine a connus
+        (\champ{Source}) : USB et SCSI (\texttt{Enum}), avec leurs valeurs et les
+        dates d'installation, de première installation, de dernière arrivée et
+        de dernier retrait (\champ{Install}, \champ{FirstInstall},
+        \champ{LastArrival}, \champ{LastRemoval}, en UTC) ; périphériques
+        portables (téléphone, appareil photo) ; noms de volume que la recherche
+        Windows a retenus par lettre de lecteur (\texttt{VolumeInfoCache}) ;
+        interfaces de disque, de volume et de périphérique portable
+        (\texttt{DeviceClasses}), écrites à leur première apparition.
   \item[\fichier{fat\_volumes.json}] volumes FAT12, FAT16, FAT32 et exFAT, clés
         USB et cartes du suspect comprises (le volume de la collecte excepté) :
         chaque entrée, présente ou \textbf{supprimée} (\champ{Deleted}), son

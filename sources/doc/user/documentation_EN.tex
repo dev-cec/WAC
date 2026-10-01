@@ -364,6 +364,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   mount_points: true            # volumes and shares each user saw (MountPoints2)
   known_networks: true          # networks the machine joined (NetworkList)
   program_usage: true           # programs launched or used (FeatureUsage, JumplistData, compatibility, pinned)
+  devices: true                 # USB and SCSI devices with their dates, portable devices, volume labels
 \end{lstlisting}
 
 \begin{itemize}
@@ -1130,6 +1131,14 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         Compatibility Assistant's store (programs run), compatibility layers
         (\texttt{Layers}), the programs RADAR diagnosed, and the taskbar's
         pinned items (\texttt{Taskband}), each decoded as a whole shortcut.
+  \item[\fichier{devices.json}] devices the machine knew (\champ{Source}):
+        USB and SCSI (\texttt{Enum}), with their values and their install, first
+        install, last arrival and last removal dates (\champ{Install},
+        \champ{FirstInstall}, \champ{LastArrival}, \champ{LastRemoval}, UTC);
+        portable devices (a phone, a camera); volume labels Windows Search kept
+        per drive letter (\texttt{VolumeInfoCache}); disk, volume and
+        portable-device interfaces (\texttt{DeviceClasses}), written when they
+        first appeared.
   \item[\fichier{fat\_volumes.json}] FAT12, FAT16, FAT32 and exFAT volumes, the
         suspect's USB keys and cards included (the collection's volume
         excepted): every entry, present or \textbf{deleted} (\champ{Deleted}),

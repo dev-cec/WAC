@@ -26,6 +26,11 @@
  *     JumplistData's last use, the Program Compatibility Assistant's store of
  *     programs run, compatibility layers, RADAR's diagnosed programs, and the
  *     taskbar's pinned items (Taskband, each a whole shortcut).
+ *   - Devices: the USB and SCSI devices the machine enumerated (Enum\\USB,
+ *     Enum\\SCSI) with their install, first install, last arrival and last
+ *     removal dates; the portable devices (a phone, a camera); the volume
+ *     labels Windows Search cached per drive letter; the disk, volume and
+ *     portable-device interfaces of DeviceClasses.
  */
 #pragma once
 
@@ -185,4 +190,29 @@ public:
 	void clear();               //!< releases the traces
 private:
 	std::vector<ProgramUsage> usages_;
+};
+
+// ------------------------------------------------------------ Devices
+
+/*! One device or device trace, from one of the sources of Devices. */
+struct DeviceTrace {
+	std::wstring source;        //!< Enum\\USB, Enum\\SCSI, WindowsPortableDevices, VolumeInfoCache, DeviceClasses
+	std::wstring name;          //!< the device (device\\instance), the drive letter, the interface
+	std::vector<std::pair<std::wstring, Json>> values; //!< its values, as stored (FriendlyName, Mfg, VolumeLabel…)
+	FILETIME installUtc = { 0 };        //!< DEVPKEY_Device_InstallDate (property 0064)
+	FILETIME firstInstallUtc = { 0 };   //!< DEVPKEY_Device_FirstInstallDate (0065)
+	FILETIME lastArrivalUtc = { 0 };    //!< DEVPKEY_Device_LastArrivalDate (0066)
+	FILETIME lastRemovalUtc = { 0 };    //!< DEVPKEY_Device_LastRemovalDate (0067)
+	FILETIME keyLastWriteUtc = { 0 };   //!< last write of its key
+	Json toJson() const;        //!< @return the trace as a JSON object
+};
+
+//! Devices the machine has known (devices.json).
+class Devices {
+public:
+	HRESULT getData();          //!< @return ERROR_SUCCESS, or why SYSTEM is missing
+	HRESULT toJson();           //!< @return the result of the write
+	void clear();               //!< releases the traces
+private:
+	std::vector<DeviceTrace> devices_;
 };

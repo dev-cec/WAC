@@ -629,3 +629,17 @@ if (Wants 'program_usage') {
     while ($fav -and $o + 4 -le $fav.Length) { $n = [BitConverter]::ToUInt32($fav, $o); if ($n -lt 76 -or $o + 4 + $n -gt $fav.Length) { break }; $count++; $o += 4 + $n }
     Write-Output "pinned=$wacSid|$count"
 }
+
+# 27. B-031 — devices: every USB and SCSI device Windows knows, present or not,
+#     with its first install, last arrival and last removal dates as
+#     Get-PnpDeviceProperty gives them (UTC). Nothing is changed.
+if (Wants 'devices') {
+    Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object { $_.InstanceId -like 'USB\*' -or $_.InstanceId -like 'SCSI\*' } | ForEach-Object {
+        $id = $_.InstanceId
+        $dates = foreach ($key in 'DEVPKEY_Device_FirstInstallDate', 'DEVPKEY_Device_LastArrivalDate', 'DEVPKEY_Device_LastRemovalDate') {
+            $p = Get-PnpDeviceProperty -InstanceId $id -KeyName $key -ErrorAction SilentlyContinue
+            if ($p.Data) { $p.Data.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss') } else { '' }
+        }
+        Write-Output ("device=" + $id + '|' + ($dates -join '|'))
+    }
+}

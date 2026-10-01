@@ -146,6 +146,7 @@ struct AppliConf {
 		bool mountPoints = true;  //!< volumes and network shares each user's Explorer saw (MountPoints2)
 		bool knownNetworks = true;  //!< networks the machine joined (NetworkList): name, kind, gateway, first and last connection
 		bool programUsages = true;  //!< what each user launched or used: FeatureUsage, JumplistData, compatibility store and layers, RADAR, pinned items
+		bool devices = true;  //!< devices the machine knew: Enum USB and SCSI with their dates, portable devices, volume labels, DeviceClasses
 
 		/*! Whether an artefact asked for reads the users' hives (ntuser.dat,
 		 *  usrClass.dat): they are copied then. They used to be copied only

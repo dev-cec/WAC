@@ -1784,6 +1784,27 @@ def check_small_file_artefacts(folder):
                f"program_usage.json: {len(sources)} source(s) as the live registry holds them, the witness layer, {mine_pinned} pinned item(s) decoded",
                f"program_usage.json: {wrong[:2]}")
 
+    # Devices: every USB and SCSI device Windows lists, with its first install,
+    # last arrival and last removal dates as Get-PnpDeviceProperty gives them (B-031).
+    devices = load(folder, "devices.json")
+    if isinstance(devices, list) and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            listed = [l.strip()[len("device="):].split("|") for l in f if l.startswith("device=")]
+        mine = {(d.get("Source", "")[len("Enum\\"):] + "\\" + str(d.get("Name"))).upper(): d
+                for d in devices if str(d.get("Source", "")).startswith("Enum\\")}
+        wrong = []
+        for instance, first, arrival, removal in listed:
+            d = mine.get(instance.upper())
+            if d is None:
+                wrong.append(f"{instance} absent")
+                continue
+            for field, theirs in (("FirstInstallUtc", first), ("LastArrivalUtc", arrival), ("LastRemovalUtc", removal)):
+                if str(d.get(field, ""))[:19] != theirs:
+                    wrong.append(f"{instance} {field}: WAC {d.get(field)}, Windows {theirs or 'none'}")
+        report(listed and not wrong,
+               f"devices.json: the {len(listed)} USB and SCSI device(s) Windows lists, their three dates identical (UTC)",
+               f"devices.json: {wrong[:2]}")
+
     # Cleared log: none live, as Windows sees it; the cleared events recovered.
     if isinstance(events, list) and os.path.exists(path):
         with open(path, encoding="utf-8", errors="replace") as f:
