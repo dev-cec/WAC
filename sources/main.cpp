@@ -54,6 +54,7 @@
 #include "shortcuts.h"
 #include "security_descriptors.h"
 #include "ntfs_volumes.h"
+#include "dpapi_master_keys.h"
 #include "jumplist_automatic.h"
 #include "jumplist_custom.h"
 #include "scheduledTasks.h"
@@ -1167,6 +1168,9 @@ void convertArtefacts(bool systemAvailable) {
 	                                         Text::StepSecurityDescriptors);
 	convertFileArtefact<NtfsVolumes>(conf.artefacts.ntfsVolumes, "ntfs_volumes.json", Text::ArtefactNtfsVolumes,
 	                                 L"artefacts.ntfs_volumes", Text::StepNtfsVolumes);
+	convertFileArtefact<DpapiMasterKeys>(conf.artefacts.dpapiMasterKeys, "dpapi_master_keys.json",
+	                                     Text::ArtefactDpapiMasterKeys, L"artefacts.dpapi_master_keys",
+	                                     Text::StepDpapiMasterKeys);
 	writeProcesses();   // if the names could not be loaded (SYSTEM hive unreadable)
 
 	/************************

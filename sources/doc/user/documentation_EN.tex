@@ -371,6 +371,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   shortcuts: true               # shortcuts outside Recent: Start menu, desktops, Quick Launch, task bar
   security_descriptors: true    # $Secure:$SDS: owner and rights of every file, each descriptor once
   ntfs_volumes: true            # $Boot and $UsnJrnl:$Max: serial and geometry, creation of the journal
+  dpapi_master_keys: true       # DPAPI master keys copied encrypted; JSON: owner, GUID, dates, never the key
 \end{lstlisting}
 
 \begin{itemize}
@@ -1241,6 +1242,19 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         (\champ{Properties}: name and value; \champ{CreatorSID} in text). A
         persistence invisible in the registry. The two dates at the start of
         an instance are not emitted: they are not creation dates.
+  \item[\fichier{dpapi\_master\_keys.json}] DPAPI master keys of the system
+        (\path|System32\Microsoft\Protect|, \champ{Scope} \texttt{System})
+        and of each profile (\path|AppData\Roaming\Microsoft\Protect|,
+        \texttt{User}). The files are copied as they are into the exhibit
+        store, still encrypted by the user's password or the system's DPAPI
+        secret, with \fichier{Preferred} and \fichier{CREDHIST}: with that
+        password, the analysis can later decrypt the saved secrets (browser
+        passwords, Wi-Fi, credential manager). The JSON gives their metadata
+        only, never the key: owner (\champ{SID}), \champ{Guid} (the header's,
+        checked equal to the file's name), version, policy, size of each block
+        — a non-zero \champ{DomainKeyLength}: a domain account —, the file's
+        dates, and \champ{Preferred} with \champ{PreferredExpiresUtc} for the
+        key in use.
   \item[\fichier{startup\_folders.json}] content of the startup folders, of all
         users (\champ{Scope} \texttt{AllUsers}) and of each profile
         (\texttt{User}, with \champ{SID}): every file, its dates and

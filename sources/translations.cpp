@@ -124,6 +124,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepShortcuts, L"Raccourcis (menu Démarrer, Bureau, barre des tâches)", L"Extracting SHORTCUTS" },
 	{ Text::StepSecurityDescriptors, L"Descripteurs de sécurité NTFS ($Secure)", L"Extracting NTFS SECURITY DESCRIPTORS" },
 	{ Text::StepNtfsVolumes, L"Volumes NTFS ($Boot, journal des modifications)", L"Extracting NTFS VOLUMES" },
+	{ Text::StepDpapiMasterKeys, L"Clés maîtresses DPAPI", L"Extracting DPAPI MASTER KEYS" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },
@@ -189,6 +190,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactShortcuts, L"Raccourcis (menu Démarrer, Bureau, barre des tâches)", L"Shortcuts (Start menu, desktop, task bar)" },
 	{ Text::ArtefactSecurityDescriptors, L"Descripteurs de sécurité NTFS ($Secure)", L"NTFS security descriptors ($Secure)" },
 	{ Text::ArtefactNtfsVolumes, L"Volumes NTFS ($Boot, journal des modifications)", L"NTFS volumes ($Boot, change journal)" },
+	{ Text::ArtefactDpapiMasterKeys, L"Clés maîtresses DPAPI", L"DPAPI master keys" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },
 
 	{ Text::TimeElapsed,               L"FIN, durée : %1 s",                             L"END, Time elapsed : %1 s" },

@@ -18,6 +18,7 @@
 #include "running_machine.h"
 #include "startup_folders.h"
 #include "shortcuts.h"
+#include "dpapi_master_keys.h"
 
 namespace {
 
@@ -422,6 +423,14 @@ HRESULT ExtractFileArtefactsRaw() {
 		trees.push_back({ L"\\ProgramData\\Microsoft\\Windows Defender\\Scans\\History\\Service\\DetectionHistory", {}, 2,
 		                  L"Defender detection history" });
 		trees.push_back({ L"\\ProgramData\\Microsoft\\Windows Defender\\Quarantine", {}, 3, L"Defender quarantine" });
+	}
+	/* DPAPI master keys, copied as they are — encrypted by the user's password
+	   or the system's DPAPI secret —, with Preferred and CREDHIST beside them:
+	   with that password, the analysis decrypts the user's saved secrets. */
+	if (conf.artefacts.dpapiMasterKeys) {
+		trees.push_back({ DPAPI_SYSTEM_FOLDER, {}, 3, L"DPAPI master keys" });
+		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
+			trees.push_back({ std::get<1>(profileEntry) + DPAPI_PROFILE_FOLDER, {}, 2, L"DPAPI master keys" });
 	}
 	/* Shortcuts outside Recent: the Start menu and Quick Launch are trees, the
 	   desktops plain folders. The Startup folder inside the Start menu is left

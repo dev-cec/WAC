@@ -48,6 +48,7 @@ artefacts:
   shortcuts: true         # shortcuts outside Recent: Start menu, desktops, Quick Launch, pinned task bar
   security_descriptors: true  # $Secure:$SDS: owner and access rights of every file, each descriptor once (mft.json: SecurityId)
   ntfs_volumes: true      # $Boot and $UsnJrnl:$Max: volume serial and geometry, creation of the change journal
+  dpapi_master_keys: true # DPAPI master keys of each user and of the system, copied still encrypted; JSON: owner, GUID, dates, never the key
   zone_identifiers: true  # Zone.Identifier streams (Mark of the Web): where downloaded files came from
   security: true          # SECURITY hive: LSA secrets' names and dates, cached logons, audit policy (never a secret)
   persistence: true       # registry persistence beyond Run: IFEO, AppInit_DLLs, Winlogon, LSA packages, COM hijacking…

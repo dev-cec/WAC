@@ -1476,6 +1476,30 @@ def check_small_file_artefacts(folder):
                    f"exhibits: the {len(traces)} Defender WPP trace(s) Windows lists, copied raw",
                    f"exhibits: Defender WPP traces not copied: {sorted(traces - copied)[:3]}")
 
+    # DPAPI master keys (B-032): the key files Windows lists, each with its
+    # header's GUID = its name; the key each Preferred names, and its expiry.
+    keys = load(folder, "dpapi_master_keys.json")
+    if isinstance(keys, list) and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            lines = f.read().splitlines()
+        live = {l[len("dpapikey="):].lower() for l in lines if l.startswith("dpapikey=")}
+        mine = {(k.get("Path") or "").lower(): k for k in keys}
+        unnamed = [p for p, k in mine.items() if k.get("Guid") != ntpath.basename(p)]
+        report(live and live == set(mine) and not unnamed,
+               f"dpapi_master_keys.json: the {len(live)} master key file(s) Windows lists, each header naming its file",
+               f"dpapi_master_keys.json: missing {sorted(live - set(mine))[:2]}, extra {sorted(set(mine) - live)[:2]}, header not its name {unnamed[:2]}")
+        wrong, count = [], 0
+        for l in (l for l in lines if l.startswith("dpapipreferred=")):
+            where, guid, ticks = l[len("dpapipreferred="):].split("|")
+            count += 1
+            expires = (datetime.datetime(1601, 1, 1) + datetime.timedelta(microseconds=int(ticks) // 10)).strftime("%Y-%m-%dT%H:%M:%S")
+            k = mine.get(ntpath.join(where, guid).lower(), {})
+            if not k.get("Preferred") or not (k.get("PreferredExpiresUtc") or "").startswith(expires):
+                wrong.append(f"{where}: {guid} expiring {expires}, WAC {k.get('Preferred')} {k.get('PreferredExpiresUtc')}")
+        report(count and not wrong,
+               f"dpapi_master_keys.json: the preferred key of {count} folder(s) and its expiry, as Windows reads Preferred",
+               f"dpapi_master_keys.json: {wrong[:2]}")
+
     if "datavolume" in reference:
         letter, present, deleted = reference["datavolume"].split("|")
         mft = load(folder, "mft.json")

@@ -22,6 +22,8 @@
 #   ntfsvolume, usnjournal  each fixed NTFS volume as Windows describes it
 #                (DeviceIoControl) -> ntfs_volumes.json, read raw in $Boot and $Max
 #   defenderwpp  Defender's WPP traces (Support\*.bin) -> the exhibit manifest
+#   dpapikey, dpapipreferred  every DPAPI master key file and what each
+#                Preferred names -> dpapi_master_keys.json
 #   rundefault   a Run value in the NTUSER.DAT of the Default profile (template
 #                of new profiles) -> run.json, SID S-0-0-0, Profile "Default"
 #   secrets, audit, nl_slots  the SECURITY hive read live by Windows (as
@@ -901,4 +903,32 @@ public static class WacNtfs {
 if (Wants 'defender') {
     Get-ChildItem 'C:\ProgramData\Microsoft\Windows Defender\Support' -Filter *.bin -Force -ErrorAction SilentlyContinue |
         ForEach-Object { Write-Output ("defenderwpp=" + $_.FullName) }
+}
+
+# 37. B-032 — DPAPI master keys: every key file Windows lists in the Protect
+#     folder of the system and of each profile, and what each Preferred file
+#     names (read here by Windows, raw by WAC). Nothing is decrypted.
+if (Wants 'dpapi_master_keys') {
+    $profileList = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList'
+    $folders = @('C:\Windows\System32\Microsoft\Protect') + @(Get-ChildItem $profileList | ForEach-Object {
+        [Environment]::ExpandEnvironmentVariables((Get-ItemProperty $_.PSPath).ProfileImagePath) + '\AppData\Roaming\Microsoft\Protect' })
+    foreach ($protect in $folders) {
+        if (-not (Test-Path -LiteralPath $protect)) { continue }
+        foreach ($sidFolder in Get-ChildItem -LiteralPath $protect -Directory -Force -Filter 'S-1-*' -ErrorAction SilentlyContinue) {
+            foreach ($folder in @($sidFolder.FullName, (Join-Path $sidFolder.FullName 'User'))) {
+                if (-not (Test-Path -LiteralPath $folder)) { continue }
+                Get-ChildItem -LiteralPath $folder -File -Force -ErrorAction SilentlyContinue |
+                    Where-Object { $_.Name -match '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' } |
+                    ForEach-Object { Write-Output ("dpapikey=" + $_.FullName) }
+                $preferred = Join-Path $folder 'Preferred'
+                if (Test-Path -LiteralPath $preferred) {
+                    $b = [IO.File]::ReadAllBytes($preferred)
+                    if ($b.Length -eq 24) {
+                        $guid = New-Object Guid (,[byte[]]$b[0..15])
+                        Write-Output ("dpapipreferred=" + $folder + '|' + $guid + '|' + [BitConverter]::ToInt64($b, 16))
+                    }
+                }
+            }
+        }
+    }
 }

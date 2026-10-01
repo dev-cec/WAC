@@ -568,13 +568,16 @@ kept once, a length leaving the block refused, a damaged hash flagged
 no-access page on both sides. For \path|$Boot|: geometry and serial read, a
 sectors-per-cluster count above 0x80 taken as a power of two, a sector without
 0x55AA, of another file system, of 100 bytes or truncated refused; for
-\path|$Max|: the four fields, a stream too short refused. No data needed.
+\path|$Max|: the four fields, a stream too short refused. For a DPAPI master
+key: header read, block sizes beyond the file or wrapping when added refused,
+a truncated header refused; \fichier{Preferred} given in the form of the key
+files' names. No data needed.
 
 \begin{lstlisting}
 cd build-windows/tests && wine file_artefacts_test.exe
 \end{lstlisting}
 
-Reference: 86 checks, no failure (the second-lot registry values included: TrustRecords, firewall rule, certificate Blob). In the VM cycle,
+Reference: 93 checks, no failure (the second-lot registry values included: TrustRecords, firewall rule, certificate Blob). In the VM cycle,
 \fichier{place-file-artefacts.ps1} places witnesses whose content is known (a
 history, a file sent to the bin, a hosts entry, a startup script) and
 \fichier{check-json.py} finds them in the JSON.

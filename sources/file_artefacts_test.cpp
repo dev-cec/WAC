@@ -5,7 +5,7 @@
  *  Zone.Identifier, and the registry values of the second lot (TrustRecords,
  *  firewall rules, certificate Blob), the NTFS security descriptors of
  *  $Secure:$SDS, the NTFS boot sector and change journal header, and the
- *  volume serial of a shortcut.
+ *  volume serial of a shortcut, and the DPAPI master key header and Preferred.
  *
  *  WHY THIS TEST. These formats are text or a few bytes, and a decoder that
  *  misses a case still gives valid JSON: a multi-line command cut in two, a
@@ -28,6 +28,7 @@
 #include "security_descriptors.h"
 #include "ntfs_volumes.h"
 #include "recent_docs.h"
+#include "dpapi_master_keys.h"
 #include "guard_page.h"
 #include <cstdio>
 #include <cstring>
@@ -529,6 +530,50 @@ void shortcutVolumeSerial() {
 	check(doc.volumeSerial == L"0A1B2C3D", "shortcut: volume serial on eight digits, the leading zero kept");
 }
 
+/*! A master key file: version 2, its GUID, policy 5, blocks of 0xB0, 0x90,
+ *  0x14 and no domain copy — zeros standing for the encrypted blocks. */
+std::vector<uint8_t> testMasterKey(const std::wstring& guid) {
+	std::vector<uint8_t> k;
+	auto put32 = [&](uint32_t v) { for (int i = 0; i < 4; ++i) k.push_back((uint8_t)(v >> (8 * i))); };
+	put32(2); put32(0); put32(0);
+	for (wchar_t c : guid) { k.push_back((uint8_t)c); k.push_back((uint8_t)(c >> 8)); }
+	put32(0); put32(0); put32(5);
+	for (uint64_t length : { 0xB0ULL, 0x90ULL, 0x14ULL, 0ULL }) put64(k, length);
+	k.resize(k.size() + 0xB0 + 0x90 + 0x14, 0);
+	return k;
+}
+
+void dpapiMasterKeys() {
+	const std::wstring guid = L"1b9c8e2a-4d3f-4a5b-9c6d-7e8f90a1b2c3";
+	const std::vector<uint8_t> key = testMasterKey(guid);
+	for (GuardSide side : { GuardSide::After, GuardSide::Before }) {
+		GuardedCopy copy(key, side);
+		DpapiMasterKeyHeader h;
+		check(parseDpapiMasterKeyHeader(copy.data(), copy.size(), h) && h.version == 2 && h.guid == guid
+		      && h.policy == 5 && h.masterKeyLength == 0xB0 && h.backupKeyLength == 0x90
+		      && h.credHistLength == 0x14 && h.domainKeyLength == 0, "dpapi: header of a master key read");
+	}
+	DpapiMasterKeyHeader h;
+	std::vector<uint8_t> lying = key;
+	lying[0x78] = 0xFF;                                // a domain block beyond the file
+	check(!parseDpapiMasterKeyHeader(lying.data(), lying.size(), h), "dpapi: block sizes beyond the file refused");
+	std::vector<uint8_t> huge = key;
+	for (int i = 0; i < 8; ++i) huge[0x60 + i] = 0xFF;  // a length near 2^64, which an addition would wrap
+	check(!parseDpapiMasterKeyHeader(huge.data(), huge.size(), h), "dpapi: a wrapping block size refused");
+	GuardedCopy truncated(std::vector<uint8_t>(key.begin(), key.begin() + 0x7F), GuardSide::After);
+	check(!parseDpapiMasterKeyHeader(truncated.data(), truncated.size(), h), "dpapi: a header of 127 bytes refused");
+
+	// Preferred: the GUID in binary form (mixed endianness), then the expiry.
+	std::vector<uint8_t> preferred = { 0x2a, 0x8e, 0x9c, 0x1b, 0x3f, 0x4d, 0x5b, 0x4a,
+	                                   0x9c, 0x6d, 0x7e, 0x8f, 0x90, 0xa1, 0xb2, 0xc3 };
+	put64(preferred, 0x01DB000000000000ULL);
+	std::wstring named;
+	FILETIME expires = { 0 };
+	check(parseDpapiPreferred(preferred.data(), preferred.size(), named, expires) && named == guid
+	      && value(expires) == 0x01DB000000000000ULL, "dpapi: Preferred names the key as its file is named, with its expiry");
+	check(!parseDpapiPreferred(preferred.data(), 23, named, expires), "dpapi: a Preferred of 23 bytes refused");
+}
+
 } // namespace
 
 int wmain() {
@@ -544,6 +589,7 @@ int wmain() {
 	securityDescriptors();
 	ntfsVolumes();
 	shortcutVolumeSerial();
+	dpapiMasterKeys();
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }

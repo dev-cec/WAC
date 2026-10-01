@@ -376,6 +376,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   shortcuts: true               # raccourcis hors de Recent : menu Démarrer, Bureaux, Quick Launch, barre des tâches
   security_descriptors: true    # $Secure:$SDS : propriétaire et droits de chaque fichier, chaque descripteur une fois
   ntfs_volumes: true            # $Boot et $UsnJrnl:$Max : numéro de série et géométrie, création du journal
+  dpapi_master_keys: true       # clés maîtresses DPAPI copiées chiffrées ; JSON : propriétaire, GUID, dates, jamais la clé
 \end{lstlisting}
 
 \begin{itemize}
@@ -1273,6 +1274,20 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         nom et valeur ; \champ{CreatorSID} en clair). C'est une persistance
         invisible au registre. Les deux dates d'en-tête d'une instance ne sont
         pas émises : ce ne sont pas des dates de création.
+  \item[\fichier{dpapi\_master\_keys.json}] clés maîtresses DPAPI du système
+        (\path|System32\Microsoft\Protect|, \champ{Scope} \texttt{System}) et
+        de chaque profil (\path|AppData\Roaming\Microsoft\Protect|,
+        \texttt{User}). Les fichiers sont copiés tels quels dans la consigne,
+        toujours chiffrés par le mot de passe de l'utilisateur ou par le secret
+        DPAPI du système, avec \fichier{Preferred} et \fichier{CREDHIST} :
+        avec ce mot de passe, l'analyse peut déchiffrer plus tard les secrets
+        enregistrés (mots de passe des navigateurs, Wi-Fi, gestionnaire
+        d'identifiants). Le JSON n'en donne que les métadonnées, jamais la clé :
+        propriétaire (\champ{SID}), \champ{Guid} (celui de l'en-tête, vérifié
+        égal au nom du fichier), version, politique, taille de chaque bloc —
+        \champ{DomainKeyLength} non nul : compte d'un domaine —, dates du
+        fichier, et \champ{Preferred} avec \champ{PreferredExpiresUtc} pour la
+        clé en usage.
   \item[\fichier{startup\_folders.json}] contenu des dossiers de démarrage, de
         tous les utilisateurs (\champ{Scope} \texttt{AllUsers}) et de chaque
         profil (\texttt{User}, avec \champ{SID}) : chaque fichier, ses dates et

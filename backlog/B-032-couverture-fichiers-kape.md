@@ -35,7 +35,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] 2 Ruche Default — profil Default lu comme un profil, SID `S-0-0-0`, `Profile: "Default"`
 - [x] 3 $Secure:$SDS (security_descriptors.json, SecurityId dans mft.json), $UsnJrnl:$Max et $Boot (ntfs_volumes.json), $TxfLog (brut)
 - [x] 4 Traces WPP de Defender — copie brute (filtre .bin du dossier Support)
-- [ ] 5 Clés maîtresses DPAPI (utilisateurs et système)
+- [x] 5 Clés maîtresses DPAPI (utilisateurs et système) — copiées chiffrées, dpapi_master_keys.json sans la clé
 - [ ] 6 User Shell Folders (venu de B-031) : suivre les dossiers redirigés (Bureau, Documents, OneDrive) pour y chercher les fichiers de l'utilisateur
 
 ## Journal
@@ -51,3 +51,5 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Relevé en passant : `recent_docs.cpp` écrit le numéro de série d'un volume sans zéros de tête (`to_hex(serial)`), un série `0A1B2C3D` sort `A1B2C3D` — correctif à part.
 - 2026-10-01 : `ntfs_volumes` commité (bbcfeef), correctif du harnais (5b7dc5f), série des raccourcis sur 8 chiffres (277ff6b).
 - 2026-10-01 : point 4 — traces WPP de Defender (`Support\MpWpp*.bin`, ≈ 18 Mo en VM) copiées brutes sous la clé `defender`, sans conversion (traces ETW binaires, symboles privés). Contrôle : les 3 fichiers que Windows liste sont au manifeste.
+- 2026-10-01 : point 4 commité (273c0b0).
+- 2026-10-01 : point 5 — clés maîtresses DPAPI copiées telles quelles (chiffrées), avec Preferred et CREDHIST, du système (`System32\Microsoft\Protect`, `S-1-5-18` et `S-1-5-18\User`) et de chaque profil ; `dpapi_master_keys.json` : propriétaire, GUID de l'en-tête (vérifié égal au nom du fichier), version, politique, tailles des blocs (domaine ou non), dates, clé préférée et expiration — aucun matériau de clé. Référence : les 5 fichiers que Windows liste et ce que lit Windows dans les 3 Preferred, identiques. Test vu échouer (contrôle des tailles de blocs retiré).

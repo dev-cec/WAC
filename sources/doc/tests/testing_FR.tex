@@ -589,14 +589,17 @@ l'ACE décodés, chaque lecture contre une page interdite des deux côtés. Pour
 \path|$Boot| : géométrie et numéro de série lus, un nombre de secteurs par
 cluster au-delà de 0x80 pris comme puissance de deux, un secteur sans 0x55AA,
 d'un autre système de fichiers, de 100 octets ou tronqué refusé ; pour
-\path|$Max| : les quatre champs, un flux trop court refusé.
+\path|$Max| : les quatre champs, un flux trop court refusé. Pour une clé
+maîtresse DPAPI : en-tête lu, des tailles de blocs au-delà du fichier ou qui
+débordent en s'additionnant refusées, un en-tête tronqué refusé ;
+\fichier{Preferred} rendu sous la forme du nom des fichiers de clés.
 Aucune donnée nécessaire.
 
 \begin{lstlisting}
 cd build-windows/tests && wine file_artefacts_test.exe
 \end{lstlisting}
 
-Référence : 86 contrôles, aucun échec (dont les valeurs du lot 2 du registre : TrustRecords, règle de pare-feu, blob de certificat). Dans le cycle VM,
+Référence : 93 contrôles, aucun échec (dont les valeurs du lot 2 du registre : TrustRecords, règle de pare-feu, blob de certificat). Dans le cycle VM,
 \fichier{place-file-artefacts.ps1} dépose des témoins de contenu connu (un
 historique, un fichier mis à la corbeille, une entrée \fichier{hosts}, un
 script de démarrage) et \fichier{check-json.py} les retrouve dans les JSON.
