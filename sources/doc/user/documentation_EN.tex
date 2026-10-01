@@ -373,7 +373,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   ntfs_volumes: true            # $Boot and $UsnJrnl:$Max: serial and geometry, creation of the journal
   dpapi_master_keys: true       # DPAPI master keys copied encrypted; JSON: owner, GUID, dates, never the key
   user_shell_folders: true      # where each user's desktop, documents, downloads really are
-  web_client: true              # Chromium browsers: visits, downloads, searches; their databases copied raw
+  web_client: true              # Chromium browsers and Firefox: visits, downloads, searches; their databases copied raw
 \end{lstlisting}
 
 \begin{itemize}
@@ -1263,7 +1263,17 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         raw the profile's other databases (\fichier{Login Data},
         \fichier{Web Data}, cookies, shortcuts, bookmarks, preferences) and
         \fichier{Local State}, whose DPAPI-protected key encrypts the saved
-        passwords; never the caches.
+        passwords; never the caches. Firefox (\champ{Browser}
+        \texttt{Firefox}, each folder of \path|Profiles|) gives the same
+        records from \fichier{places.sqlite} — visits with their type
+        (\texttt{typed}, \texttt{link}, \texttt{download}\ldots), downloads
+        with their destination, end and size —, plus \texttt{TypedInput} (what
+        was typed in the address bar and the page reached) and, from
+        \fichier{formhistory.sqlite}, \texttt{FormEntry}: each value typed in
+        a form or the search bar (\champ{FieldName}
+        \texttt{searchbar-history}), with its dates. Copied raw beside them:
+        cookies, \fichier{logins.json} and \fichier{key4.db} (saved logins,
+        encrypted), extensions, preferences, session.
   \item[\fichier{dpapi\_master\_keys.json}] DPAPI master keys of the system
         (\path|System32\Microsoft\Protect|, \champ{Scope} \texttt{System})
         and of each profile (\path|AppData\Roaming\Microsoft\Protect|,

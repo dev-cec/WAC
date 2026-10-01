@@ -603,14 +603,20 @@ d'un autre schéma et un fichier qui n'est pas une base refusés. Pour
 l'historique Chromium : une base \fichier{History} construite avec les tables
 de Chromium, une visite saisie puis un lien qui la cite, un téléchargement
 redirigé dont la chaîne est rendue dans son ordre, un terme cherché ; nature
-et qualificatifs des transitions, temps de Chromium convertis.
+et qualificatifs des transitions, temps de Chromium convertis. Pour Firefox :
+\fichier{places.sqlite} et \fichier{formhistory.sqlite} construits avec les
+tables de Firefox, une visite de téléchargement qui cite sa visite d'origine,
+la destination d'un téléchargement décodée de son URI \texttt{file:///}
+(UTF-8, espace), sa fin en millisecondes, une saisie de la barre d'adresse et
+une recherche de la barre de recherche. La VM n'a pas Firefox : ce test est sa
+seule vérification.
 Aucune donnée nécessaire.
 
 \begin{lstlisting}
 cd build-windows/tests && wine file_artefacts_test.exe
 \end{lstlisting}
 
-Référence : 118 contrôles, aucun échec (dont les valeurs du lot 2 du registre : TrustRecords, règle de pare-feu, blob de certificat). Dans le cycle VM,
+Référence : 126 contrôles, aucun échec (dont les valeurs du lot 2 du registre : TrustRecords, règle de pare-feu, blob de certificat). Dans le cycle VM,
 \fichier{place-file-artefacts.ps1} dépose des témoins de contenu connu (un
 historique, un fichier mis à la corbeille, une entrée \fichier{hosts}, un
 script de démarrage) et \fichier{check-json.py} les retrouve dans les JSON.

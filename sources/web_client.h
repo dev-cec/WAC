@@ -1,5 +1,5 @@
 /*! \file
- *  \brief The web, client side: what each user did in the Chromium browsers (Edge, Chrome, Brave, Vivaldi, Opera).
+ *  \brief The web, client side: what each user did in the Chromium browsers (Edge, Chrome, Brave, Vivaldi, Opera) and Firefox.
  *
  *  WHAT THE ARTEFACT PROVES. The `History` database of each browser profile
  *  holds the pages visited — each visit with its instant, how it was reached
@@ -21,8 +21,15 @@
  *  TIMES. Chromium counts microseconds since 1601-01-01 UTC — FILETIME's
  *  origin, a tenth of its resolution: converted exactly, without a time zone.
  *
- *  Firefox, the WebCache of Internet Explorer and Edge Legacy, and TypedURLs
- *  follow (backlog B-016).
+ *  FIREFOX. `places.sqlite` holds the same story under other names — places,
+ *  visits with a visit type, downloads as annotations of the place they came
+ *  from — and `formhistory.sqlite` what was typed in forms and the search bar.
+ *  Its times are microseconds since 1970 (milliseconds for a download's end).
+ *  Collected raw beside them: cookies, logins.json and key4.db (saved
+ *  logins, encrypted), extensions, preferences, the session.
+ *
+ *  The WebCache of Internet Explorer and Edge Legacy, and TypedURLs, follow
+ *  (backlog B-016).
  */
 #pragma once
 
@@ -48,6 +55,28 @@ extern const std::vector<std::wstring> CHROMIUM_PROFILE_FILES;
 /*! The files collected at the root of a browser's user data (Local State:
  *  the key that encrypts the saved passwords and cookies, under DPAPI). */
 extern const std::vector<std::wstring> CHROMIUM_ROOT_FILES;
+
+//! Firefox's profiles folder, relative to a Windows profile; each subfolder is a Firefox profile.
+extern const wchar_t FIREFOX_PROFILES[];
+//! The files collected in a Firefox profile, each with its -wal and -journal when present.
+extern const std::vector<std::wstring> FIREFOX_PROFILE_FILES;
+
+/*! A Firefox time — microseconds since 1970-01-01 UTC — as a FILETIME.
+ *  @param microseconds the value; 0 or negative for none
+ *  @return the FILETIME, null for none */
+FILETIME firefoxTime(int64_t microseconds);
+
+/*! The name of a Firefox visit type (nsINavHistoryService): link, typed,
+ *  bookmark, embed, redirect_permanent, redirect_temporary, download,
+ *  framed_link, reload.
+ *  @param type the column's value
+ *  @return the name, or the number for a type Firefox does not define */
+std::wstring firefoxVisitType(int64_t type);
+
+/*! The local path of a `file:///` URI, as Firefox records a download's destination.
+ *  @param uri the URI, percent-encoded UTF-8
+ *  @return the path with backslashes, or the URI unchanged if it is no file URI */
+std::wstring fileUriToPath(const std::wstring& uri);
 
 /*! Whether a folder of a browser's user data is a browser profile: it holds
  *  a History or a Preferences file.
@@ -76,7 +105,7 @@ std::wstring transitionQualifiers(int64_t transition);
 
 /*! One record of web_client.json: a URL, a visit, a download or a search term. */
 struct WebClientRecord {
-	std::wstring type;              //!< Url, Visit, Download, SearchTerm
+	std::wstring type;              //!< Url, Visit, Download, SearchTerm, TypedInput (Firefox), FormEntry (Firefox)
 	std::wstring browser;           //!< Edge, Chrome…
 	std::wstring browserProfile;    //!< the profile folder: Default, Profile 1…
 	std::wstring sid;               //!< the Windows profile it belongs to
@@ -93,10 +122,25 @@ struct WebClientRecord {
  *  @return ERROR_SUCCESS, or the failure to open the database */
 HRESULT readChromiumHistory(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records);
 
+/*! Reads one Firefox places.sqlite: places, visits, downloads, typed inputs.
+ *  @param file the database, in the working copy
+ *  @param base browser, profile, SID and source copied into each record
+ *  @param records receives the records
+ *  @return ERROR_SUCCESS, or the failure to open the database */
+HRESULT readFirefoxPlaces(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records);
+
+/*! Reads one Firefox formhistory.sqlite: each value typed in a form field or the search bar.
+ *  @param file the database, in the working copy
+ *  @param base browser, profile, SID and source copied into each record
+ *  @param records receives the records
+ *  @return ERROR_SUCCESS, or the failure to open the database */
+HRESULT readFirefoxFormHistory(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records);
+
 /*! The web, client side (web_client.json). */
 class WebClient {
 public:
-	/*! Reads the History of every Chromium profile of every user.
+	/*! Reads the History of every Chromium profile and the places and form
+	 *  history of every Firefox profile, of every user.
 	 *  @return ERROR_SUCCESS, even without any browser */
 	HRESULT getData();
 	/*! Writes web_client.json.

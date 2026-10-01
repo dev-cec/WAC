@@ -7,7 +7,8 @@
  *  $Secure:$SDS, the NTFS boot sector and change journal header, and the
  *  volume serial of a shortcut, the DPAPI master key header and Preferred,
  *  the paths of User Shell Folders, and the reading of an SQLite database
- *  on a private copy, its write-ahead log replayed, and a Chromium History.
+ *  on a private copy, its write-ahead log replayed, a Chromium History and
+ *  Firefox's places and form history.
  *
  *  WHY THIS TEST. These formats are text or a few bytes, and a decoder that
  *  misses a case still gives valid JSON: a multi-line command cut in two, a
@@ -740,6 +741,72 @@ void chromiumHistory() {
 	std::filesystem::remove_all(root, ec);
 }
 
+/*! Firefox's places.sqlite and formhistory.sqlite built here with Firefox's
+ *  tables: a typed visit, a link from it, a download whose destination is a
+ *  percent-encoded file URI, an address bar input, a search bar entry. */
+void firefoxHistory() {
+	check(firefoxVisitType(2) == L"typed" && firefoxVisitType(7) == L"download" && firefoxVisitType(0) == L"0"
+	      && firefoxVisitType(10) == L"10", "firefox: visit types, an unknown one as its number");
+	check(value(firefoxTime(1700000000000000LL)) == 133444736000000000ULL && value(firefoxTime(0)) == 0,
+	      "firefox: microseconds since 1970 made a FILETIME");
+	check(fileUriToPath(L"file:///C:/Users/wac/T%C3%A9l%C3%A9chargements/m%20k.zip") == L"C:\\Users\\wac\\T\u00e9l\u00e9chargements\\m k.zip"
+	      && fileUriToPath(L"https://x.invalid/a") == L"https://x.invalid/a", "firefox: a file URI made a path, UTF-8 decoded");
+
+	const std::filesystem::path root = std::filesystem::temp_directory_path() / L"wac-firefox-test";
+	std::error_code ec;
+	std::filesystem::remove_all(root, ec);
+	std::filesystem::create_directories(root, ec);
+	conf._outputDir = (root / L"output").wstring();
+	sqlite3* writer = nullptr;
+	sqlite3_open_v2(encodeText((root / L"places.sqlite").wstring()).c_str(), &writer, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+	sqlite3_exec(writer,
+		"CREATE TABLE moz_places(id INTEGER PRIMARY KEY, url TEXT, title TEXT, rev_host TEXT, visit_count INTEGER, hidden INTEGER, typed INTEGER, frecency INTEGER, last_visit_date INTEGER);"
+		"CREATE TABLE moz_historyvisits(id INTEGER PRIMARY KEY, from_visit INTEGER, place_id INTEGER, visit_date INTEGER, visit_type INTEGER, session INTEGER);"
+		"CREATE TABLE moz_anno_attributes(id INTEGER PRIMARY KEY, name TEXT);"
+		"CREATE TABLE moz_annos(id INTEGER PRIMARY KEY, place_id INTEGER, anno_attribute_id INTEGER, content TEXT, flags INTEGER, expiration INTEGER, type INTEGER, dateAdded INTEGER, lastModified INTEGER);"
+		"CREATE TABLE moz_inputhistory(place_id INTEGER, input TEXT, use_count REAL);"
+		"INSERT INTO moz_places VALUES(1, 'https://search.invalid/?q=psexec', 'psexec', '', 1, 0, 1, 0, 1700000000000000);"
+		"INSERT INTO moz_places VALUES(2, 'https://tools.invalid/m.zip', NULL, '', 1, 0, 0, 0, 1700000060000000);"
+		"INSERT INTO moz_historyvisits VALUES(20, 0, 1, 1700000000000000, 2, 0);"
+		"INSERT INTO moz_historyvisits VALUES(21, 20, 2, 1700000060000000, 7, 0);"
+		"INSERT INTO moz_anno_attributes VALUES(1, 'downloads/destinationFileURI');"
+		"INSERT INTO moz_anno_attributes VALUES(2, 'downloads/metaData');"
+		"INSERT INTO moz_annos VALUES(1, 2, 1, 'file:///C:/Users/wac/Downloads/m%20k.zip', 0, 4, 3, 1700000061000000, 0);"
+		"INSERT INTO moz_annos VALUES(2, 2, 2, '{\"state\":1,\"deleted\":false,\"endTime\":1700000065000,\"fileSize\":4096}', 0, 4, 3, 1700000065000000, 0);"
+		"INSERT INTO moz_inputhistory VALUES(1, 'psex', 1.0);",
+		nullptr, nullptr, nullptr);
+	sqlite3_close(writer);
+	sqlite3_open_v2(encodeText((root / L"formhistory.sqlite").wstring()).c_str(), &writer, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+	sqlite3_exec(writer,
+		"CREATE TABLE moz_formhistory(id INTEGER PRIMARY KEY, fieldname TEXT, value TEXT, timesUsed INTEGER, firstUsed INTEGER, lastUsed INTEGER, guid TEXT);"
+		"INSERT INTO moz_formhistory VALUES(1, 'searchbar-history', 'dump lsass', 3, 1700000000000000, 1700000300000000, 'x');",
+		nullptr, nullptr, nullptr);
+	sqlite3_close(writer);
+
+	WebClientRecord base;
+	base.browser = L"Firefox";
+	base.browserProfile = L"abcd.default-release";
+	std::vector<WebClientRecord> records;
+	check(readFirefoxPlaces((root / L"places.sqlite").wstring(), base, records) == ERROR_SUCCESS && records.size() == 6,
+	      "firefox: 2 places, 2 visits, 1 download, 1 typed input read");
+	const WebClientRecord* visit = findRecord(records, L"Visit", L"Url", L"https://tools.invalid/m.zip");
+	check(field(visit, L"Transition") == L"download" && field(visit, L"FromUrl") == L"https://search.invalid/?q=psexec"
+	      && field(visit, L"VisitUtc") == timeToIso8601Utc(firefoxTime(1700000060000000LL)),
+	      "firefox: the download visit, its instant, the visit it came from");
+	const WebClientRecord* download = findRecord(records, L"Download", L"Url", L"https://tools.invalid/m.zip");
+	check(field(download, L"TargetPath") == L"C:\\Users\\wac\\Downloads\\m k.zip" && field(download, L"State") == L"1"
+	      && field(download, L"ReceivedBytes") == L"4096" && field(download, L"EndUtc") == timeToIso8601Utc(firefoxTime(1700000065000000LL))
+	      && download && !download->fields.find(L"Deleted"),
+	      "firefox: the download's destination, state, size, end in milliseconds");
+	check(field(findRecord(records, L"TypedInput", L"Input", L"psex"), L"Url") == L"https://search.invalid/?q=psexec",
+	      "firefox: what was typed in the address bar, and where it led");
+	std::vector<WebClientRecord> forms;
+	check(readFirefoxFormHistory((root / L"formhistory.sqlite").wstring(), base, forms) == ERROR_SUCCESS && forms.size() == 1
+	      && field(&forms[0], L"FieldName") == L"searchbar-history" && field(&forms[0], L"Value") == L"dump lsass"
+	      && field(&forms[0], L"TimesUsed") == L"3", "firefox: a search bar entry of the form history");
+	std::filesystem::remove_all(root, ec);
+}
+
 } // namespace
 
 int wmain() {
@@ -759,6 +826,7 @@ int wmain() {
 	userShellFolders();
 	sqliteReader();
 	chromiumHistory();
+	firefoxHistory();
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }

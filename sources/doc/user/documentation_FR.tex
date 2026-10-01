@@ -378,7 +378,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   ntfs_volumes: true            # $Boot et $UsnJrnl:$Max : numéro de série et géométrie, création du journal
   dpapi_master_keys: true       # clés maîtresses DPAPI copiées chiffrées ; JSON : propriétaire, GUID, dates, jamais la clé
   user_shell_folders: true      # où sont vraiment le Bureau, les Documents, les Téléchargements de chacun
-  web_client: true              # navigateurs Chromium : visites, téléchargements, recherches ; leurs bases copiées brutes
+  web_client: true              # navigateurs Chromium et Firefox : visites, téléchargements, recherches ; leurs bases copiées brutes
 \end{lstlisting}
 
 \begin{itemize}
@@ -1296,7 +1296,18 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         du profil (\fichier{Login Data}, \fichier{Web Data}, cookies,
         raccourcis, signets, préférences) et \fichier{Local State}, dont la clé
         protégée par DPAPI chiffre les mots de passe enregistrés ; jamais les
-        caches.
+        caches. Firefox (\champ{Browser} \texttt{Firefox}, chaque dossier de
+        \path|Profiles|) donne les mêmes enregistrements depuis
+        \fichier{places.sqlite} — visites avec leur type (\texttt{typed},
+        \texttt{link}, \texttt{download}\ldots), téléchargements avec leur
+        destination, leur fin et leur taille —, plus \texttt{TypedInput} (ce
+        qui a été tapé dans la barre d'adresse et la page atteinte) et, depuis
+        \fichier{formhistory.sqlite}, \texttt{FormEntry} : chaque valeur
+        saisie dans un formulaire ou la barre de recherche
+        (\champ{FieldName} \texttt{searchbar-history}), avec ses dates. Sont
+        copiés bruts à côté : cookies, \fichier{logins.json} et
+        \fichier{key4.db} (identifiants enregistrés, chiffrés), extensions,
+        préférences, session.
   \item[\fichier{dpapi\_master\_keys.json}] clés maîtresses DPAPI du système
         (\path|System32\Microsoft\Protect|, \champ{Scope} \texttt{System}) et
         de chaque profil (\path|AppData\Roaming\Microsoft\Protect|,

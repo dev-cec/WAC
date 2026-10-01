@@ -24,7 +24,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 ## Tâches
 - [x] Lecteur SQLite (9d4dc54) — copie privée, journal rejoué
 - [x] Historiques et recherches — Chromium (Edge, Chrome, Brave, Vivaldi, Chromium, Opera)
-- [ ] Historiques et recherches — Firefox (places.sqlite)
+- [x] Historiques et recherches — Firefox (places.sqlite, formhistory.sqlite)
 - [x] Téléchargements Chromium (chaîne de redirections, référent, état, SHA-256)
 - [ ] Lien téléchargement ↔ Zone.Identifier (B-004) et fichier sur le disque (mft.json)
 - [ ] Login Data (identifiants enregistrés : origine, compte, dates — jamais le mot de passe), cookies
@@ -37,3 +37,5 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-01 : SQLite 3.53.4 intégré (amalgamation, SHA3-256 vérifiée, 9d4dc54) ; une base est lue sur une copie privée de la copie de travail avec son -wal ou -journal, que SQLite rejoue — jamais sur la pièce.
 - 2026-10-01 : `toHexadecimal` sorti de sha.h vers `conversions.h` (1b2adee, B-030) avant d'en avoir besoin ici.
 - 2026-10-01 : Chromium — collecte brute par RawReader (un volume ouvert une fois) de chaque profil de navigateur trouvé par listage (History, Login Data, Web Data, Cookies, Shortcuts, Top Sites, Bookmarks, Preferences, avec journaux ; Local State) sans les caches ; `web_client.json` : Url, Visit (transition nommée d'après ui::PageTransition), Download (chaîne, référent, onglet, état, SHA-256 ; DangerType et InterruptReason bruts — la numérotation de la base n'est pas l'énumération du code), SearchTerm. Référence : la base History d'Edge de la VM, rapatriée par le harnais et relue par le SQLite de Python : 5 URL, 7 visites identiques (URL, instant, transition). La VM n'a ni téléchargement ni recherche : couverts par le test unitaire (vu échouer : chaîne lue sans tri).
+- 2026-10-01 : Chromium commité (6174f52). Défaut de procédure : le WAC.exe de ce commit venait de la compilation mutante (chaîne non triée), sources restaurées sans recompilation ; recompilé et commité (93a32f5). raw_hive_test.exe rendu reproductible au passage (103adef).
+- 2026-10-01 : Firefox — chaque dossier de `Profiles` : places.sqlite (Url, Visit avec type de visite, Download depuis les annotations destinationFileURI et metaData — fin en millisecondes, état brut —, TypedInput), formhistory.sqlite (FormEntry : formulaires et barre de recherche) ; copiés bruts : cookies, permissions, logins.json, key4.db, extensions, prefs.js, sessionstore.jsonlz4. Pas de Firefox dans la VM : vérifié par le test unitaire seul (vu échouer : fin lue sans la conversion des millisecondes).

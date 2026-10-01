@@ -580,14 +580,18 @@ database and its log unchanged, the copy deleted, a query of another schema
 and a file that is no database refused. For the Chromium history: a
 \fichier{History} built with Chromium's tables, a typed visit then a link
 citing it, a redirected download whose chain comes back in its order, a
-searched term; transition types and qualifiers, Chromium times converted. No
-data needed.
+searched term; transition types and qualifiers, Chromium times converted. For
+Firefox: \fichier{places.sqlite} and \fichier{formhistory.sqlite} built with
+Firefox's tables, a download visit citing the visit it came from, a download's
+destination decoded from its \texttt{file:///} URI (UTF-8, a space), its end
+in milliseconds, an address bar input and a search bar entry. The VM has no
+Firefox: this test is its only check. No data needed.
 
 \begin{lstlisting}
 cd build-windows/tests && wine file_artefacts_test.exe
 \end{lstlisting}
 
-Reference: 118 checks, no failure (the second-lot registry values included: TrustRecords, firewall rule, certificate Blob). In the VM cycle,
+Reference: 126 checks, no failure (the second-lot registry values included: TrustRecords, firewall rule, certificate Blob). In the VM cycle,
 \fichier{place-file-artefacts.ps1} places witnesses whose content is known (a
 history, a file sent to the bin, a hosts entry, a startup script) and
 \fichier{check-json.py} finds them in the JSON.

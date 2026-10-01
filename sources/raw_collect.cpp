@@ -376,6 +376,19 @@ HRESULT extractBrowserFiles() {
 				}
 			}
 		}
+	// Firefox: every subfolder of Profiles is a profile.
+	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
+		const std::wstring profiles = std::get<1>(profileEntry) + FIREFOX_PROFILES;
+		std::map<std::wstring, RawDirEntry> folders;
+		if (!listing(profiles, folders)) continue;
+		for (const auto& f : folders) {
+			if (!f.second.isDirectory) continue;
+			const std::wstring folder = profiles + L"\\" + f.second.name;
+			std::map<std::wstring, RawDirEntry> entries;
+			if (!listing(folder, entries)) continue;
+			for (const std::wstring& file : FIREFOX_PROFILE_FILES) take(folder, entries, file);
+		}
+	}
 	ExhibitStoreAdd(reading, L"Raw NTFS reading (RawReader — $MFT, directory indexes, $DATA attribute); "
 	                         L"no file opened by the system");
 	for (const RawHiveExtraction& line : reading)
