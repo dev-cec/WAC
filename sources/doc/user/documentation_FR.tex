@@ -1070,7 +1070,16 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         SOFTWARE (toute la machine), dans la ruche DEFAULT (le compte système) et
         dans le NTUSER.DAT de chaque profil (\champ{Hive}). \champ{Type}
         \texttt{REG\_EXPAND\_SZ} : la commande contient des variables
-        (\texttt{\%SystemRoot\%}\ldots), données telles qu'écrites.
+        (\texttt{\%SystemRoot\%}\ldots), données telles qu'écrites. Aussi :
+        les clés Run des programmes 32~bits (\texttt{SOFTWARE (32-bit)}) ;
+        \texttt{StartupApproved} (\champ{Key} \texttt{StartupApproved\textbackslash Run},
+        \texttt{Run32}, \texttt{StartupFolder}), l'état d'une entrée tel que
+        l'utilisateur l'a réglé dans le Gestionnaire des tâches ou les Paramètres :
+        \champ{Status}, les 4 premiers octets tels que stockés (leur sens n'est pas
+        mesuré, donc pas interprété), et \champ{Changed}, l'instant du
+        changement ; \texttt{RunNotification}, une entrée de démarrage que Windows
+        a remarquée (\champ{Notification}). Un nom sans valeur Run correspondante
+        est une entrée retirée depuis.
   \item[\fichier{persistence.json}] persistance du registre au-delà des clés
         Run : IFEO (\texttt{Debugger}, \texttt{GlobalFlag}), SilentProcessExit,
         AppInit\_DLLs et AppCertDlls, Winlogon (\texttt{Shell},

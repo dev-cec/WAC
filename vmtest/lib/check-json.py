@@ -1735,6 +1735,22 @@ def check_small_file_artefacts(folder):
                f"OperatingSystem.json: {len(live)} setting(s) as the live registry holds them; ShutdownTime {gap:.0f} s from the System log's shutdown" if gap is not None else "",
                f"OperatingSystem.json: {wrong[:2]}")
 
+    # Startup state (run.json): every StartupApproved and RunNotification value
+    # of the live registry, with its status code or value (B-031).
+    runs = load(folder, "run.json")
+    if isinstance(runs, list) and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            states = [l.strip()[len("startupstate="):].split("|") for l in f if l.startswith("startupstate=")]
+        mine = {}
+        for e in runs:
+            owner = "HKLM" if e.get("SIDName") == "HKLM" else e.get("SID")
+            value = e.get("Status") if "Status" in e else str(e.get("Notification", ""))
+            mine[(owner, e.get("Key"), e.get("Name"))] = value
+        wrong = [f"{owner} {key} {name}: WAC {mine.get((owner, key, name))!r}, registry {value!r}"
+                 for owner, key, name, value in states if mine.get((owner, key, name)) != value]
+        report(states and not wrong, f"run.json: the {len(states)} StartupApproved and RunNotification value(s) of the live registry, codes identical",
+               f"run.json: {wrong[:2] if wrong else 'no startup state listed'}")
+
     # Cleared log: none live, as Windows sees it; the cleared events recovered.
     if isinstance(events, list) and os.path.exists(path):
         with open(path, encoding="utf-8", errors="replace") as f:

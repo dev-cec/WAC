@@ -2,6 +2,7 @@
  *  \brief Reading of the Run and RunOnce keys (see reg_run.h).
  */
 #include "reg_run.h"
+#include "sha.h"
 
 Json Run::toJson() {
 	log(3, L"🔈Run toJson");
@@ -13,6 +14,9 @@ Json Run::toJson() {
 	o.add(L"Name",             Json::str(Name));
 	o.add(L"Type",             Json::str(Type));
 	o.add(L"Value",            Json::str(Value));      // raw command line
+	o.add(L"Status",           Json::str(status));
+	addDate(o, L"Changed", changedUtc);
+	if (notification) o.add(L"Notification", Json::num((unsigned long long)*notification));
 	o.add(L"LastWriteTime",    Json::str(utcTimeToIso8601Local(lastWriteTimeUtc)));
 	o.add(L"LastWriteTimeUtc", Json::str(timeToIso8601Utc(lastWriteTimeUtc)));
 	return o;
@@ -71,6 +75,59 @@ void readRunKeys(ORHKEY root, const std::wstring& base, const std::wstring& hive
 	}
 }
 
+/*! Reads StartupApproved (Run, Run32, StartupFolder) and RunNotification under
+ *  `base` in one hive: the state of each startup entry as the user set it,
+ *  and the entries Windows noticed.
+ *  @param root,base,hive,sid,sidName as readRunKeys
+ *  @param runs receives the entries */
+void readStartupState(ORHKEY root, const std::wstring& base, const std::wstring& hive,
+                      const std::wstring& sid, const std::wstring& sidName, std::vector<Run>& runs) {
+	auto entry = [&](const std::wstring& key, const std::wstring& name, const FILETIME& written) {
+		Run run;
+		run.Hive = hive;
+		run.Sid = sid;
+		run.SidName = sidName;
+		run.Key = key;
+		run.Name = name;
+		run.lastWriteTimeUtc = written;
+		return run;
+	};
+	for (const wchar_t* sub : { L"Run", L"Run32", L"StartupFolder" }) {
+		const std::wstring key = std::wstring(L"Explorer\\StartupApproved\\") + sub;
+		ORHKEY hKey = NULL;
+		if (OROpenKey(root, (base + key).c_str(), &hKey) != ERROR_SUCCESS) continue;
+		FILETIME written = { 0 };
+		ORQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &written);
+		for (DWORD i = 0;; ++i) {
+			std::wstring name;
+			DWORD type = 0;
+			std::vector<BYTE> data;
+			if (enumRegistryValue(hKey, i, name, type, data) != ERROR_SUCCESS) break;
+			Run run = entry(L"StartupApproved\\" + std::wstring(sub), name, written);
+			// 12 bytes: a status code (4), then the instant of the change (8).
+			if (data.size() >= 4) run.status = toHexadecimal(data.data(), 4);
+			if (data.size() >= 12) memcpy(&run.changedUtc, data.data() + 4, sizeof(FILETIME));
+			runs.push_back(run);
+		}
+		ORCloseKey(hKey);
+	}
+	ORHKEY hKey = NULL;
+	if (OROpenKey(root, (base + L"RunNotification").c_str(), &hKey) == ERROR_SUCCESS) {
+		FILETIME written = { 0 };
+		ORQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &written);
+		for (DWORD i = 0;; ++i) {
+			std::wstring name;
+			DWORD type = 0;
+			std::vector<BYTE> data;
+			if (enumRegistryValue(hKey, i, name, type, data) != ERROR_SUCCESS) break;
+			Run run = entry(L"RunNotification", name, written);
+			if (type == REG_DWORD && data.size() >= 4) { DWORD v; memcpy(&v, data.data(), 4); run.notification = v; }
+			runs.push_back(run);
+		}
+		ORCloseKey(hKey);
+	}
+}
+
 //! Opens a hive file of the working copy, reads its Run keys, closes it.
 void readRunKeysOfHive(const std::wstring& file, const std::wstring& hive,
                        const std::wstring& sid, std::vector<Run>& runs) {
@@ -90,13 +147,19 @@ void readRunKeysOfHive(const std::wstring& file, const std::wstring& hive,
 HRESULT Runs::getData() {
 	log(0, L"ℹ️Runs :");
 	// Machine-wide, in SOFTWARE (already open).
-	if (conf.Software) readRunKeys(conf.Software, L"Microsoft\\Windows\\CurrentVersion\\", L"SOFTWARE", L"", L"HKLM", runs);
+	if (conf.Software) {
+		readRunKeys(conf.Software, L"Microsoft\\Windows\\CurrentVersion\\", L"SOFTWARE", L"", L"HKLM", runs);
+		// 32-bit programs: their Run keys are redirected under WOW6432Node.
+		readRunKeys(conf.Software, L"WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\", L"SOFTWARE (32-bit)", L"", L"HKLM", runs);
+		readStartupState(conf.Software, L"Microsoft\\Windows\\CurrentVersion\\", L"SOFTWARE", L"", L"HKLM", runs);
+	}
 	/* The DEFAULT hive: HKEY_USERS\.DEFAULT, the profile of the system account
 	   (S-1-5-18) — what runs there starts with the system, whoever logs on. */
 	readRunKeysOfHive(conf.mountpoint + L"\\Windows\\system32\\config\\DEFAULT", L"DEFAULT", L"S-1-5-18", runs);
 	// Each user, in their NTUSER.DAT: whose logon starts the program.
 	forEachProfileHive(L"\\ntuser.dat", [this](ORHKEY root, const std::wstring& sid) {
 		readRunKeys(root, L"Software\\Microsoft\\Windows\\CurrentVersion\\", L"NTUSER.DAT", sid, getNameFromSid(sid), runs);
+		readStartupState(root, L"Software\\Microsoft\\Windows\\CurrentVersion\\", L"NTUSER.DAT", sid, getNameFromSid(sid), runs);
 	});
 	return ERROR_SUCCESS;
 }

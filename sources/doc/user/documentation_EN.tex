@@ -1050,6 +1050,15 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         the DEFAULT hive (the system account) and in each profile's NTUSER.DAT
         (\champ{Hive}). \champ{Type} \texttt{REG\_EXPAND\_SZ}: the command
         holds variables (\texttt{\%SystemRoot\%}\ldots), given as written.
+        Also: the 32-bit programs' Run keys (\texttt{SOFTWARE (32-bit)});
+        \texttt{StartupApproved} (\champ{Key}
+        \texttt{StartupApproved\textbackslash Run}, \texttt{Run32},
+        \texttt{StartupFolder}), an entry's state as the user set it in Task
+        Manager or Settings: \champ{Status}, the first 4 bytes as stored (their
+        meaning is not measured, so not interpreted), and \champ{Changed}, the
+        instant of the change; \texttt{RunNotification}, a startup entry Windows
+        noticed (\champ{Notification}). A name without a matching Run value is
+        an entry since removed.
   \item[\fichier{persistence.json}] registry persistence beyond the Run keys:
         IFEO (\texttt{Debugger}, \texttt{GlobalFlag}), SilentProcessExit,
         AppInit\_DLLs and AppCertDlls, Winlogon (\texttt{Shell},

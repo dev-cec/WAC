@@ -15,6 +15,15 @@
  *
  *  The key's last write time dates the last change to the whole key, not to one
  *  value: it bounds when the entry appeared, it does not date it.
+ *
+ *  ALSO READ (B-031, against RECmd's Kroll batch): the 32-bit programs' Run and
+ *  RunOnce (`WOW6432Node`, machine-wide); `Explorer\StartupApproved\Run`,
+ *  `Run32` and `StartupFolder`, where Windows records an entry's state as the
+ *  user set it in Task Manager or Settings — a status code (the first four
+ *  bytes, as stored: their meaning is not measured, so not interpreted) and
+ *  the instant of the change; `RunNotification`, one `StartupTNoti<name>` per
+ *  startup entry Windows noticed, its state as stored. A StartupApproved or
+ *  RunNotification name without a Run value is an entry since removed.
  */
 #pragma once
 #include <iostream>
@@ -22,6 +31,7 @@
 #include <stdio.h>
 #include "offline_registry.h"
 #include <string>
+#include <optional>
 #include <vector>
 #include <filesystem>
 #include <fstream>
@@ -41,6 +51,9 @@ public:
 	std::wstring Type = L"";    //!< REG_SZ, or REG_EXPAND_SZ: the command holds %variables% Windows expands
 	std::wstring Value = L"";   //!< the command line started, as written
 	FILETIME lastWriteTimeUtc = { 0 }; //!< last write to the KEY, UTC (the local time is derived at output)
+	std::wstring status = L"";  //!< StartupApproved: the status code, first 4 bytes in hexadecimal as stored
+	FILETIME changedUtc = { 0 };  //!< StartupApproved: when the user changed the state (bytes 4 to 12, a FILETIME)
+	std::optional<DWORD> notification; //!< RunNotification: the value, as stored
 
 	/*! Converts the entry to JSON.
 	 *  @return its JSON object. */

@@ -580,3 +580,23 @@ if (Wants 'registry') {
         Where-Object { $_.TimeCreated -lt $boot } | Select-Object -First 1
     if ($down) { Write-Output ("shutdown=" + $down.TimeCreated.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss')) }
 }
+
+# 25. B-031 — startup state: every StartupApproved and RunNotification value of
+#     the machine and of the user "wac", as the live registry holds it (the
+#     status code's first 4 bytes, or the notification's value). Nothing is
+#     changed.
+if (Wants 'registry') {
+    $roots = @(@('HKLM', 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion'),
+               @($wacSid, "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Windows\CurrentVersion"))
+    foreach ($r in $roots) {
+        foreach ($sub in @('Explorer\StartupApproved\Run', 'Explorer\StartupApproved\Run32', 'Explorer\StartupApproved\StartupFolder', 'RunNotification')) {
+            $k = Get-Item (Join-Path $r[1] $sub) -ErrorAction SilentlyContinue
+            if (-not $k) { continue }
+            foreach ($n in $k.GetValueNames()) {
+                $v = $k.GetValue($n)
+                $text = if ($v -is [byte[]]) { (($v | Select-Object -First 4) | ForEach-Object { $_.ToString('X2') }) -join '' } else { "$v" }
+                Write-Output ("startupstate=" + $r[0] + '|' + ($sub -replace '^Explorer\\', '') + '|' + $n + '|' + $text)
+            }
+        }
+    }
+}
