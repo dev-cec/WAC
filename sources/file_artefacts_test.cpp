@@ -808,6 +808,78 @@ void firefoxHistory() {
 	std::filesystem::remove_all(root, ec);
 }
 
+/*! Saved logins and cookies, Chromium's and Firefox's, built here: what
+ *  they say is read, their secrets — password, cookie value — never. */
+void loginsAndCookies() {
+	const std::filesystem::path root = std::filesystem::temp_directory_path() / L"wac-logins-test";
+	std::error_code ec;
+	std::filesystem::remove_all(root, ec);
+	std::filesystem::create_directories(root, ec);
+	conf._outputDir = (root / L"output").wstring();
+	auto make = [&](const wchar_t* name, const char* sql) {
+		sqlite3* w = nullptr;
+		sqlite3_open_v2(encodeText((root / name).wstring()).c_str(), &w, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+		sqlite3_exec(w, sql, nullptr, nullptr, nullptr);
+		sqlite3_close(w);
+	};
+	make(L"Login Data",
+		"CREATE TABLE logins(origin_url TEXT, action_url TEXT, username_element TEXT, username_value TEXT, password_element TEXT,"
+		" password_value BLOB, signon_realm TEXT, date_created INTEGER, blacklisted_by_user INTEGER, times_used INTEGER,"
+		" date_last_used INTEGER, date_password_modified INTEGER);"
+		"INSERT INTO logins VALUES('https://mail.invalid/', 'https://mail.invalid/login', 'u', 'alice', 'p', x'763130DEADBEEF', 'https://mail.invalid/',"
+		" 13370000000000000, 0, 4, 13380000000000000, 13370000000000000);");
+	make(L"Cookies",
+		"CREATE TABLE cookies(creation_utc INTEGER, host_key TEXT, name TEXT, value TEXT, path TEXT, expires_utc INTEGER, is_secure INTEGER,"
+		" is_httponly INTEGER, last_access_utc INTEGER, has_expires INTEGER, is_persistent INTEGER, encrypted_value BLOB);"
+		"INSERT INTO cookies VALUES(13370000000000000, '.mail.invalid', 'SID', 'secret-token', '/', 13400000000000000, 1, 1, 13380000000000000, 1, 0, x'763130AA');");
+	make(L"cookies.sqlite",
+		"CREATE TABLE moz_cookies(id INTEGER PRIMARY KEY, name TEXT, value TEXT, host TEXT, path TEXT, expiry INTEGER, lastAccessed INTEGER,"
+		" creationTime INTEGER, isSecure INTEGER, isHttpOnly INTEGER);"
+		"INSERT INTO moz_cookies VALUES(1, 'sess', 'secret-token', '.forum.invalid', '/', 1800000000, 1700000300000000, 1700000000000000, 0, 1);");
+	WebClientRecord base;
+	base.browser = L"Edge";
+	std::vector<WebClientRecord> records;
+	check(readChromiumLogins((root / L"Login Data").wstring(), base, records) == ERROR_SUCCESS
+	      && readChromiumCookies((root / L"Cookies").wstring(), base, records) == ERROR_SUCCESS && records.size() == 2,
+	      "logins: Chromium's saved login and cookie read");
+	const WebClientRecord* login = findRecord(records, L"SavedLogin", L"UserName", L"alice");
+	check(field(login, L"Origin") == L"https://mail.invalid/" && field(login, L"Action") == L"https://mail.invalid/login"
+	      && field(login, L"TimesUsed") == L"4" && field(login, L"LastUsedUtc") == timeToIso8601Utc(chromiumTime(13380000000000000LL)),
+	      "logins: Chromium's login: site, account, uses, last use");
+	const WebClientRecord* cookie = findRecord(records, L"Cookie", L"Name", L"SID");
+	check(field(cookie, L"Host") == L".mail.invalid" && field(cookie, L"Session") == L"true" && field(cookie, L"Secure") == L"true",
+	      "logins: Chromium's cookie: site, name, flags");
+	records.clear();
+	base.browser = L"Firefox";
+	check(readFirefoxLogins(L"{\"nextId\":2,\"logins\":[{\"id\":1,\"hostname\":\"https://bank.invalid\",\"httpRealm\":null,"
+	                        L"\"formSubmitURL\":\"https://bank.invalid\",\"encryptedUsername\":\"MDoEEPgAAA\",\"encryptedPassword\":\"MDoEEPgBBB\","
+	                        L"\"timeCreated\":1700000000000,\"timeLastUsed\":1700000100000,\"timePasswordChanged\":1700000000000,\"timesUsed\":2}]}",
+	                        base, records) == ERROR_SUCCESS
+	      && readFirefoxCookies((root / L"cookies.sqlite").wstring(), base, records) == ERROR_SUCCESS && records.size() == 2,
+	      "logins: Firefox's saved login and cookie read");
+	const WebClientRecord* firefoxLogin = findRecord(records, L"SavedLogin", L"Origin", L"https://bank.invalid");
+	check(field(firefoxLogin, L"TimesUsed") == L"2" && field(firefoxLogin, L"LastUsedUtc") == timeToIso8601Utc(firefoxTime(1700000100000000LL))
+	      && firefoxLogin && !firefoxLogin->fields.find(L"Realm") && !firefoxLogin->fields.find(L"UserName"),
+	      "logins: Firefox's login: site, uses, last use; its encrypted account not given");
+	const WebClientRecord* firefoxCookie = findRecord(records, L"Cookie", L"Name", L"sess");
+	check(field(firefoxCookie, L"ExpiresUtc") == timeToIso8601Utc(firefoxTime(1800000000000000LL)) && field(firefoxCookie, L"HttpOnly") == L"true",
+	      "logins: Firefox's cookie: its expiry in seconds converted");
+	check(readFirefoxLogins(L"not json", base, records) == HRESULT_FROM_WIN32(ERROR_INVALID_DATA), "logins: a logins.json that is no JSON refused");
+	// No secret in any record: neither the passwords nor the cookie values.
+	bool clean = true;
+	std::vector<WebClientRecord> all;
+	readChromiumLogins((root / L"Login Data").wstring(), base, all);
+	readChromiumCookies((root / L"Cookies").wstring(), base, all);
+	readFirefoxCookies((root / L"cookies.sqlite").wstring(), base, all);
+	for (const WebClientRecord& r : all) {
+		const std::wstring text = r.toJson().dump();
+		if (text.find(L"secret-token") != std::wstring::npos || text.find(L"763130") != std::wstring::npos
+		    || text.find(L"MDoEEPg") != std::wstring::npos) clean = false;
+	}
+	check(clean, "logins: no password and no cookie value in the JSON");
+	std::filesystem::remove_all(root, ec);
+}
+
 } // namespace
 
 int wmain() {
@@ -831,6 +903,7 @@ int wmain() {
 	      && urlValueNumber(L"url1a") == 0 && urlValueNumber(L"urlx") == 0 && urlValueNumber(L"url1234567890") == 0
 	      && urlValueNumber(L"MRUList") == 0, "typed urls: url<N> numbered, anything else refused");
 	firefoxHistory();
+	loginsAndCookies();
 	{
 		std::wstring user, page;
 		check(splitWebCacheUrl(L"Visited: wac@https://x.invalid/a@b", user, page) && user == L"wac" && page == L"https://x.invalid/a@b"

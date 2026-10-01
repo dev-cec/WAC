@@ -6,6 +6,7 @@
 #include "registry_common.h"
 #include "ese_database.h"
 #include <filesystem>
+#include <fstream>
 #include <cwchar>
 #include <map>
 
@@ -317,6 +318,97 @@ FILETIME cellTime(const EseRecord& record, const EseTable& table, const wchar_t*
 
 } // namespace
 
+HRESULT readChromiumLogins(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records) {
+	SqliteDatabase db;
+	const HRESULT opened = db.open(file);
+	if (opened != ERROR_SUCCESS) return opened;
+	// password_value is never selected: it stays encrypted in the exhibit.
+	db.query("SELECT origin_url, action_url, signon_realm, username_value, date_created, date_last_used, "
+	         "date_password_modified, times_used, blacklisted_by_user FROM logins ORDER BY date_created",
+	         [&](const SqliteRow& row) {
+		WebClientRecord r = startRecord(base, L"SavedLogin");
+		r.fields.add(L"Origin", Json::str(row.text(0)));
+		if (row.text(1) != row.text(0)) r.fields.add(L"Action", Json::str(row.text(1)));
+		r.fields.add(L"Realm", Json::str(row.text(2)));
+		r.fields.add(L"UserName", Json::str(row.text(3)));
+		addDate(r.fields, L"Created", chromiumTime(row.integer(4)));
+		addDate(r.fields, L"LastUsed", chromiumTime(row.integer(5)));
+		addDate(r.fields, L"PasswordModified", chromiumTime(row.integer(6)));
+		r.fields.add(L"TimesUsed", Json::num((long long)row.integer(7)));
+		if (row.integer(8)) r.fields.add(L"NeverSave", Json::boolean(true));   // the user refused to save it here
+		records.push_back(std::move(r));
+	});
+	return ERROR_SUCCESS;
+}
+
+HRESULT readChromiumCookies(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records) {
+	SqliteDatabase db;
+	const HRESULT opened = db.open(file);
+	if (opened != ERROR_SUCCESS) return opened;
+	// value and encrypted_value are never selected.
+	db.query("SELECT host_key, name, path, creation_utc, expires_utc, last_access_utc, is_secure, is_httponly, is_persistent "
+	         "FROM cookies ORDER BY creation_utc",
+	         [&](const SqliteRow& row) {
+		WebClientRecord r = startRecord(base, L"Cookie");
+		r.fields.add(L"Host", Json::str(row.text(0)));
+		r.fields.add(L"Name", Json::str(row.text(1)));
+		r.fields.add(L"Path", Json::str(row.text(2)));
+		addDate(r.fields, L"Created", chromiumTime(row.integer(3)));
+		addDate(r.fields, L"Expires", chromiumTime(row.integer(4)));
+		addDate(r.fields, L"LastAccess", chromiumTime(row.integer(5)));
+		r.fields.add(L"Secure", Json::boolean(row.integer(6) != 0));
+		r.fields.add(L"HttpOnly", Json::boolean(row.integer(7) != 0));
+		if (!row.integer(8)) r.fields.add(L"Session", Json::boolean(true));
+		records.push_back(std::move(r));
+	});
+	return ERROR_SUCCESS;
+}
+
+HRESULT readFirefoxLogins(const std::wstring& text, const WebClientRecord& base, std::vector<WebClientRecord>& records) {
+	Json root = Json::obj();
+	std::wstring error;
+	if (!Json::parse(text, root, error) || !root.find(L"logins")) {
+		log(2, L"🔥logins.json not read: " + error);
+		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+	}
+	auto fieldText = [](const Json& o, const wchar_t* key) { const Json* v = o.find(key); return v ? v->text() : std::wstring(); };
+	auto milliseconds = [&](const Json& o, const wchar_t* key) {
+		return firefoxTime((int64_t)std::wcstoll(fieldText(o, key).c_str(), nullptr, 10) * 1000); };
+	for (const auto& member : root.find(L"logins")->members()) {
+		const Json& login = member.second;
+		WebClientRecord r = startRecord(base, L"SavedLogin");
+		r.fields.add(L"Origin", Json::str(fieldText(login, L"hostname")));
+		r.fields.add(L"Action", Json::str(fieldText(login, L"formSubmitURL")));
+		r.fields.add(L"Realm", Json::str(fieldText(login, L"httpRealm")));
+		addDate(r.fields, L"Created", milliseconds(login, L"timeCreated"));
+		addDate(r.fields, L"LastUsed", milliseconds(login, L"timeLastUsed"));
+		addDate(r.fields, L"PasswordModified", milliseconds(login, L"timePasswordChanged"));
+		r.fields.add(L"TimesUsed", Json::num((long long)std::wcstoll(fieldText(login, L"timesUsed").c_str(), nullptr, 10)));
+		records.push_back(std::move(r));
+	}
+	return ERROR_SUCCESS;
+}
+
+HRESULT readFirefoxCookies(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records) {
+	SqliteDatabase db;
+	const HRESULT opened = db.open(file);
+	if (opened != ERROR_SUCCESS) return opened;
+	db.query("SELECT host, name, path, creationTime, expiry, lastAccessed, isSecure, isHttpOnly FROM moz_cookies ORDER BY creationTime",
+	         [&](const SqliteRow& row) {
+		WebClientRecord r = startRecord(base, L"Cookie");
+		r.fields.add(L"Host", Json::str(row.text(0)));
+		r.fields.add(L"Name", Json::str(row.text(1)));
+		r.fields.add(L"Path", Json::str(row.text(2)));
+		addDate(r.fields, L"Created", firefoxTime(row.integer(3)));
+		addDate(r.fields, L"Expires", firefoxTime(row.integer(4) * 1000000));   // seconds there
+		addDate(r.fields, L"LastAccess", firefoxTime(row.integer(5)));
+		r.fields.add(L"Secure", Json::boolean(row.integer(6) != 0));
+		r.fields.add(L"HttpOnly", Json::boolean(row.integer(7) != 0));
+		records.push_back(std::move(r));
+	});
+	return ERROR_SUCCESS;
+}
+
 bool splitWebCacheUrl(const std::wstring& url, std::wstring& user, std::wstring& page) {
 	size_t start = std::wstring::npos;
 	if (url.compare(0, 9, L"Visited: ") == 0) start = 9;
@@ -494,6 +586,18 @@ HRESULT WebClient::getData() {
 				base.source = originalPath(history.wstring());
 				if (readChromiumHistory(history.wstring(), base, records_) != ERROR_SUCCESS)
 					log(2, L"🔥History not read: " + base.source);
+				const std::filesystem::path logins = folder / L"Login Data";
+				if (std::filesystem::is_regular_file(logins, ec)) {
+					base.source = originalPath(logins.wstring());
+					if (readChromiumLogins(logins.wstring(), base, records_) != ERROR_SUCCESS) log(2, L"🔥Login Data not read: " + base.source);
+				}
+				// Network\Cookies since Chromium 96, Cookies before.
+				for (const std::filesystem::path& cookies : { folder / L"Network" / L"Cookies", folder / L"Cookies" }) {
+					if (!std::filesystem::is_regular_file(cookies, ec)) continue;
+					base.source = originalPath(cookies.wstring());
+					if (readChromiumCookies(cookies.wstring(), base, records_) != ERROR_SUCCESS) log(2, L"🔥Cookies not read: " + base.source);
+					break;
+				}
 			}
 		}
 	forEachProfileHive(L"\\ntuser.dat", [this](ORHKEY root, const std::wstring& sid) { readTypedUrls(root, sid, records_); });
@@ -524,6 +628,17 @@ HRESULT WebClient::getData() {
 			if (std::filesystem::is_regular_file(forms, ec)) {
 				base.source = originalPath(forms.wstring());
 				if (readFirefoxFormHistory(forms.wstring(), base, records_) != ERROR_SUCCESS) log(2, L"🔥formhistory.sqlite not read: " + base.source);
+			}
+			const std::filesystem::path cookies = e.path() / L"cookies.sqlite", logins = e.path() / L"logins.json";
+			if (std::filesystem::is_regular_file(cookies, ec)) {
+				base.source = originalPath(cookies.wstring());
+				if (readFirefoxCookies(cookies.wstring(), base, records_) != ERROR_SUCCESS) log(2, L"🔥cookies.sqlite not read: " + base.source);
+			}
+			if (std::filesystem::is_regular_file(logins, ec)) {
+				base.source = originalPath(logins.wstring());
+				std::ifstream in(logins, std::ios::binary);
+				const std::string bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+				readFirefoxLogins(decodeText(bytes, CP_UTF8), base, records_);
 			}
 		}
 	}

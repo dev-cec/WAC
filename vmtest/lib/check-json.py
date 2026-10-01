@@ -2224,6 +2224,28 @@ def check_web_client(folder):
         print(f"  {'✅' if ok else '❌'} web_client.json: every visit (URL, instant, transition) and download (path, start, bytes) identical"
               + ("" if ok else f": {wrong[:3]}"))
         found += 0 if ok else 1
+        # Saved logins and cookies of the same profile, when fetched: as many
+        # as Python's SQLite reads, and the same sites.
+        profile = os.path.dirname(database)
+        for name, table, column, kind in (("Login Data", "logins", "origin_url", "SavedLogin"),
+                                          (os.path.join("Network", "Cookies"), "cookies", "host_key", "Cookie")):
+            path_db = os.path.join(profile, name)
+            if not os.path.exists(path_db):
+                continue
+            source_db = "C:\\" + os.path.relpath(path_db, store).replace(os.sep, "\\")
+            with tempfile.TemporaryDirectory() as aside:
+                for suffix in ("", "-journal", "-wal"):
+                    if os.path.exists(path_db + suffix):
+                        shutil.copy(path_db + suffix, os.path.join(aside, "db" + suffix))
+                db = sqlite3.connect(os.path.join(aside, "db"))
+                theirs = sorted(r[0] for r in db.execute(f"SELECT {column} FROM {table}"))
+                db.close()
+            key = "Origin" if kind == "SavedLogin" else "Host"
+            ours = sorted(r.get(key) for r in records if r.get("Type") == kind and (r.get("Source") or "").lower() == source_db.lower())
+            ok = theirs == ours
+            print(f"  {'✅' if ok else '❌'} web_client.json: {parts[-4]}/{parts[-2]} — {len(theirs)} {table} row(s) as Python's SQLite reads them, "
+                  f"same sites in WAC ({len(ours)})" + ("" if ok else f": {sorted(set(theirs) ^ set(ours))[:3]}"))
+            found += 0 if ok else 1
     return found + check_webcache(folder, records)
 
 

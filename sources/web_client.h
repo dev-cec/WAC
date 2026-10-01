@@ -28,6 +28,14 @@
  *  Collected raw beside them: cookies, logins.json and key4.db (saved
  *  logins, encrypted), extensions, preferences, the session.
  *
+ *  SAVED LOGINS AND COOKIES, NEVER THEIR SECRETS. Chromium's `Login Data`
+ *  and Firefox's `logins.json` say on which sites the user saved a login,
+ *  under which account name (Chromium keeps it in clear, Firefox encrypted),
+ *  since when and how often used; the cookies, which sites set one and when
+ *  it was last sent. Passwords and cookie values are encrypted and are NOT
+ *  decoded: the databases are in the exhibit store for an analysis that holds
+ *  the user's DPAPI key (dpapi_master_keys.h).
+ *
  *  TYPED URLS. What was typed in Internet Explorer's address bar — and in
  *  File Explorer's, which writes there too: `TypedURLs` of each NTUSER.DAT,
  *  url1 the most recent, and `TypedURLsTime` the instant of each (Windows 8
@@ -122,7 +130,7 @@ std::wstring transitionQualifiers(int64_t transition);
 
 /*! One record of web_client.json: a URL, a visit, a download or a search term. */
 struct WebClientRecord {
-	std::wstring type;              //!< Url, Visit, Download, SearchTerm, TypedInput, FormEntry (Firefox), TypedUrl (NTUSER.DAT), CacheEntry (WebCache)
+	std::wstring type;              //!< Url, Visit, Download, SearchTerm, TypedInput, FormEntry, SavedLogin, Cookie, TypedUrl (NTUSER.DAT), CacheEntry (WebCache)
 	std::wstring browser;           //!< Edge, Chrome…
 	std::wstring browserProfile;    //!< the profile folder: Default, Profile 1…
 	std::wstring sid;               //!< the Windows profile it belongs to
@@ -152,6 +160,35 @@ HRESULT readFirefoxPlaces(const std::wstring& file, const WebClientRecord& base,
  *  @param records receives the records
  *  @return ERROR_SUCCESS, or the failure to open the database */
 HRESULT readFirefoxFormHistory(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records);
+
+/*! Reads Chromium's `Login Data`: each saved login, never its password.
+ *  @param file the database, in the working copy
+ *  @param base browser, profile, SID and source copied into each record
+ *  @param records receives one SavedLogin per login
+ *  @return ERROR_SUCCESS, or the failure to open the database */
+HRESULT readChromiumLogins(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records);
+
+/*! Reads Chromium's cookies database: each cookie's site, name and dates, never its value.
+ *  @param file the database, in the working copy
+ *  @param base browser, profile, SID and source copied into each record
+ *  @param records receives one Cookie per cookie
+ *  @return ERROR_SUCCESS, or the failure to open the database */
+HRESULT readChromiumCookies(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records);
+
+/*! Reads Firefox's `logins.json`: each saved login's site and dates (its
+ *  account name and password are encrypted: neither is given).
+ *  @param text the file's content
+ *  @param base browser, profile, SID and source copied into each record
+ *  @param records receives one SavedLogin per login
+ *  @return ERROR_SUCCESS, or ERROR_INVALID_DATA if the file is not that JSON */
+HRESULT readFirefoxLogins(const std::wstring& text, const WebClientRecord& base, std::vector<WebClientRecord>& records);
+
+/*! Reads Firefox's `cookies.sqlite`: each cookie's site, name and dates, never its value.
+ *  @param file the database, in the working copy
+ *  @param base browser, profile, SID and source copied into each record
+ *  @param records receives one Cookie per cookie
+ *  @return ERROR_SUCCESS, or the failure to open the database */
+HRESULT readFirefoxCookies(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records);
 
 /*! Splits a WebCache history URL — "Visited: user@page" (History) or
  *  ":2026090720260914: user@page" (MSHist) — into its user and its page.

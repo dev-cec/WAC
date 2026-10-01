@@ -348,7 +348,7 @@ fetch_results() {
   # fetched so that check-json.py reads them with Python's own SQLite and
   # confronts web_client.json with that independent reading.
   if [[ -s "$host/exhibits/LIST.txt" ]]; then
-    tr -d '\r' < "$host/exhibits/LIST.txt" | grep -E '\\User Data\\[^\\]+\\History(-journal|-wal)?$|\\WebCache\\WebCacheV01\.dat$' | while read -r f; do
+    tr -d '\r' < "$host/exhibits/LIST.txt" | grep -E '\\User Data\\[^\\]+\\(History|Login Data|Network\\Cookies)(-journal|-wal)?$|\\WebCache\\WebCacheV01\.dat$' | while read -r f; do
       local relative="${f#*\\exhibits\\}"
       mkdir -p "$host/exhibits/$(dirname "${relative//\\//}")"
       $QGA read "$f" "$host/exhibits/${relative//\\//}" >/dev/null 2>&1 && echo "   + exhibits/${relative//\\//}"

@@ -1277,7 +1277,14 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         \texttt{TypedUrl}: each address typed in Internet Explorer or File
         Explorer's address bar (\path|TypedURLs| of the \fichier{NTUSER.DAT},
         \champ{MruPosition} 0 for the most recent) with the instant it was
-        typed (\path|TypedURLsTime|, \champ{TypedUtc}). And
+        typed (\path|TypedURLsTime|, \champ{TypedUtc}). \texttt{SavedLogin}:
+        each saved login (Chromium's \fichier{Login Data}, Firefox's
+        \fichier{logins.json}) — site, account (in clear in Chromium,
+        encrypted and so absent in Firefox), creation, last use, use count,
+        refusal to save (\champ{NeverSave}); \texttt{Cookie}: site, name,
+        path, dates, flags. The passwords and the cookies' values, encrypted,
+        are never decoded: the databases are in the exhibit store for an
+        analysis that would hold the user's DPAPI key. And
         \texttt{CacheEntry} (\champ{Browser} \texttt{WebCache}): each entry
         of the \fichier{WebCacheV01.dat} database of Internet Explorer, Edge
         Legacy and the WinINet applications, by container (\champ{Container}:

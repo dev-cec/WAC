@@ -1311,7 +1311,15 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         dans Internet Explorer ou la barre d'adresse de l'Explorateur
         (\path|TypedURLs| du \fichier{NTUSER.DAT}, \champ{MruPosition} 0 pour
         la plus récente) avec l'instant de sa saisie (\path|TypedURLsTime|,
-        \champ{TypedUtc}). Et \texttt{CacheEntry} (\champ{Browser}
+        \champ{TypedUtc}). \texttt{SavedLogin} : chaque identifiant enregistré
+        (\fichier{Login Data} de Chromium, \fichier{logins.json} de Firefox) —
+        site, compte (en clair chez Chromium, chiffré et donc absent chez
+        Firefox), création, dernier usage, nombre d'usages, refus
+        d'enregistrer (\champ{NeverSave}) ; \texttt{Cookie} : site, nom,
+        chemin, dates, drapeaux. Les mots de passe et les valeurs des cookies,
+        chiffrés, ne sont jamais décodés : les bases sont dans la consigne pour
+        une analyse qui détiendrait la clé DPAPI de l'utilisateur. Et
+        \texttt{CacheEntry} (\champ{Browser}
         \texttt{WebCache}) : chaque entrée de la base
         \fichier{WebCacheV01.dat} d'Internet Explorer, d'Edge Legacy et des
         applications WinINet, par conteneur (\champ{Container} :
