@@ -9,6 +9,8 @@
 #include <sstream>
 #include <array>
 #include <map>
+#include "sha.h"
+#include <cwctype>
 #include <windows.h>
 #include <stdio.h>
 #include <regex>
@@ -260,6 +262,45 @@ void dump(LPBYTE buffer, int start, int end) {
 		wprintf(L"%02X ",static_cast<int>(buffer[x]));
 	wprintf(L"\n");
 }
+
+Json registryValueToJson(DWORD type, const std::vector<BYTE>& data) {
+	switch (type) {
+	case REG_SZ:
+	case REG_EXPAND_SZ:
+		return Json::str(readWideZ(data.data(), data.size(), 0));
+	case REG_MULTI_SZ: {
+		Json list = Json::arr();
+		for (size_t at = 0; at + 1 < data.size();) {
+			const std::wstring s = readWideZ(data.data(), data.size(), at);
+			if (s.empty()) break;
+			list.push(Json::str(s));
+			at += (s.size() + 1) * sizeof(wchar_t);
+		}
+		return list;
+	}
+	case REG_DWORD:
+		if (data.size() >= 4) { DWORD v; memcpy(&v, data.data(), 4); return Json::num((unsigned long long)v); }
+		break;
+	case REG_QWORD:
+		if (data.size() >= 8) { uint64_t v; memcpy(&v, data.data(), 8); return Json::num((unsigned long long)v); }
+		break;
+	}
+	return Json::str(toHexadecimal(data.data(), data.size()));
+}
+
+
+std::wstring registryNameToJsonKey(const std::wstring& valueName) {
+	if (valueName.empty()) return L"DefaultValue";
+	std::wstring key;
+	bool wordStart = true;
+	for (wchar_t c : valueName) {
+		if (!iswalnum(c)) { wordStart = true; continue; }
+		key += wordStart ? (wchar_t)towupper(c) : c;
+		wordStart = false;
+	}
+	return key.empty() ? L"DefaultValue" : key;
+}
+
 
 FILETIME unixToFiletime(unsigned long long seconds) {
 	const unsigned long long OFFSET_1601_1970 = 11644473600ULL;

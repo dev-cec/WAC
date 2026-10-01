@@ -555,6 +555,22 @@ FILETIME wstring_to_filetime(std::wstring input);
 * @return the same instant as a FILETIME */
 FILETIME unixToFiletime(unsigned long long seconds);
 
+/*! A registry value as JSON, as the hive stores it: a string (REG_SZ,
+*  REG_EXPAND_SZ), a list of strings (REG_MULTI_SZ), a number (REG_DWORD,
+*  REG_QWORD), or the bytes in hexadecimal (any other type).
+* @param type the value's registry type
+* @param data its bytes
+* @return its JSON form */
+Json registryValueToJson(DWORD type, const std::vector<BYTE>& data);
+
+/*! A registry value name as a JSON key, PascalCase like every key WAC writes:
+*  the separators dropped, each word capitalised ("Audio_CaptureDriver" ->
+*  "AudioCaptureDriver"); the key's default value, which has no name, is
+*  "DefaultValue".
+* @param valueName the registry name
+* @return the JSON key */
+std::wstring registryNameToJsonKey(const std::wstring& valueName);
+
 ///////////////////////////////////////////////////////
 // Horodatages ISO 8601
 ///////////////////////////////////////////////////////

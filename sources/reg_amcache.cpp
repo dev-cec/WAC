@@ -2,37 +2,8 @@
  *  \brief Reading of every Amcache table (see reg_amcache.h).
  */
 #include "reg_amcache.h"
-#include "sha.h"
-#include <cwctype>
 
 namespace {
-
-/*! A registry value as JSON, as the hive stores it: a string, a list of
- *  strings, a number, or the bytes in hexadecimal. */
-Json registryValueToJson(DWORD type, const std::vector<BYTE>& data) {
-	switch (type) {
-	case REG_SZ:
-	case REG_EXPAND_SZ:
-		return Json::str(readWideZ(data.data(), data.size(), 0));
-	case REG_MULTI_SZ: {
-		Json list = Json::arr();
-		for (size_t at = 0; at + 1 < data.size();) {
-			const std::wstring s = readWideZ(data.data(), data.size(), at);
-			if (s.empty()) break;
-			list.push(Json::str(s));
-			at += (s.size() + 1) * sizeof(wchar_t);
-		}
-		return list;
-	}
-	case REG_DWORD:
-		if (data.size() >= 4) { DWORD v; memcpy(&v, data.data(), 4); return Json::num((unsigned long long)v); }
-		break;
-	case REG_QWORD:
-		if (data.size() >= 8) { uint64_t v; memcpy(&v, data.data(), 8); return Json::num((unsigned long long)v); }
-		break;
-	}
-	return Json::str(toHexadecimal(data.data(), data.size()));
-}
 
 /*! A text date Windows writes in UTC ("month/day/year hour:minute:second"):
  *  its UTC and local forms, to the second. */
@@ -40,22 +11,6 @@ void addUtcTextDate(std::vector<std::pair<std::wstring, Json>>& values, const st
 	const FILETIME utc = wstring_to_filetime(text);
 	values.emplace_back(name, Json::str(utcTimeToIso8601Local(utc, Precision::Second)));
 	values.emplace_back(name + L"Utc", Json::str(timeToIso8601Utc(utc, Precision::Second)));
-}
-
-/*! A registry value name as a JSON key, PascalCase like every key WAC writes:
- *  the separators dropped, each word capitalised ("Audio_CaptureDriver" ->
- *  "AudioCaptureDriver"); the key's default value, which has no name, is
- *  "DefaultValue". */
-std::wstring jsonKey(const std::wstring& valueName) {
-	if (valueName.empty()) return L"DefaultValue";
-	std::wstring key;
-	bool wordStart = true;
-	for (wchar_t c : valueName) {
-		if (!iswalnum(c)) { wordStart = true; continue; }
-		key += wordStart ? (wchar_t)towupper(c) : c;
-		wordStart = false;
-	}
-	return key.empty() ? L"DefaultValue" : key;
 }
 
 /*! Converts one value by its name (see the file's header), or as stored. */
@@ -79,7 +34,7 @@ void addValue(AmcacheEntry& e, const std::wstring& name, DWORD type, const std::
 	else if (name == L"LowerCaseLongPath")
 		e.values.emplace_back(L"LongPath", value);
 	else
-		e.values.emplace_back(jsonKey(name), value);
+		e.values.emplace_back(registryNameToJsonKey(name), value);
 }
 
 } // namespace
