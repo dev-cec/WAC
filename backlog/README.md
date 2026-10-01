@@ -57,7 +57,7 @@ Remplace `TODO.txt`.
 | [B-027](B-027-empreinte-comparee.md) | Empreinte comparée WAC / KAPE / EZ sous bac à sable (Sysmon, audit en option) | à faire | P2 | fort |
 | [B-029](B-029-variante-element-archive.md) | Variante d'élément d'archive mal décodée (à reproduire) | à faire | P3 | faible |
 | [B-030](B-030-conversions-dans-tools.md) | Regrouper toutes les fonctions de conversion dans tools (fin de refactoring) | à faire | P2 | moyen |
-| [B-031](B-031-couverture-registre-kroll.md) | Couverture du registre face au lot Kroll de RECmd (Uninstall, exclusions Defender, RecentDocs, MountPoints2, réseaux connus…) | à faire | P1 | moyen |
+| [B-031](B-031-couverture-registre-kroll.md) | Couverture du registre face au lot Kroll de RECmd (Uninstall, exclusions Defender, RecentDocs, MountPoints2, réseaux connus…) | en cours | P1 | moyen |
 | [B-032](B-032-couverture-fichiers-kape.md) | Couverture de fichiers face à KapeTriage (raccourcis hors Recent, ruche Default, $Secure:$SDS…) | à faire | P2 | moyen |
 | [B-033](B-033-temps-collecte-evenements.md) | Temps de collecte des journaux d'événements (≈ 180 s) | à faire | P2 | moyen |
 | [B-034](B-034-sam-complete.md) | La base SAM convertie en entier (mots de passe jugés par WAE) | à faire | P1 | moyen |

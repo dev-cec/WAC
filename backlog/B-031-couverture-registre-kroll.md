@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P1 | moyen |
+| en cours | P1 | moyen |
 
 ## Pourquoi
 B-015 a confronté WAC au lot `Kroll_Batch.reb` de RECmd (celui que KAPE lance). Sur les artefacts communs, les valeurs sont identiques. Mais ce lot lit des clés que WAC ignore, dont plusieurs ont une vraie valeur d'enquête. Chaque écart de couverture doit être ajouté ou écarté avec sa raison (critère de B-015).
@@ -33,8 +33,9 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Comparaison à RECmd identique sur les clés ajoutées.
 
 ## Tâches
-- [ ] 1 à 5 (P1)
+- [x] 1 à 5 (P1) : installed_programs (8bb296b), defender_configuration (2016305), explorer_recent_docs (fee24cf), mount_points (7272671), known_networks (255c026) ; Products (MSI) restant, avec le point 8
 - [ ] 6 à 10
 
 ## Journal
 - 2026-10-01 : ouverte depuis B-015.
+- 2026-10-01 : points 1 à 5 faits, chacun avec sa clé de wac.yml et son témoin. En chemin : ruches utilisateur copiées seulement avec la clé registry (corrigé, needsUserHives) ; entrées CPC\Volume de MountPoints2 volatiles (mesuré) ; dates de NetworkList en heure locale (mesuré contre l'événement 10000).
