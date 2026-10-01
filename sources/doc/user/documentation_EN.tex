@@ -1273,7 +1273,11 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         a form or the search bar (\champ{FieldName}
         \texttt{searchbar-history}), with its dates. Copied raw beside them:
         cookies, \fichier{logins.json} and \fichier{key4.db} (saved logins,
-        encrypted), extensions, preferences, session.
+        encrypted), extensions, preferences, session. Finally
+        \texttt{TypedUrl}: each address typed in Internet Explorer or File
+        Explorer's address bar (\path|TypedURLs| of the \fichier{NTUSER.DAT},
+        \champ{MruPosition} 0 for the most recent) with the instant it was
+        typed (\path|TypedURLsTime|, \champ{TypedUtc}).
   \item[\fichier{dpapi\_master\_keys.json}] DPAPI master keys of the system
         (\path|System32\Microsoft\Protect|, \champ{Scope} \texttt{System})
         and of each profile (\path|AppData\Roaming\Microsoft\Protect|,

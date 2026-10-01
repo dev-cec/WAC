@@ -35,6 +35,7 @@
 #include "user_shell_folders.h"
 #include "sqlite_reader.h"
 #include "web_client.h"
+#include "registry_common.h"
 #include "sqlite3.h"
 #include "sha.h"
 #include <filesystem>
@@ -826,6 +827,9 @@ int wmain() {
 	userShellFolders();
 	sqliteReader();
 	chromiumHistory();
+	check(urlValueNumber(L"url1") == 1 && urlValueNumber(L"URL25") == 25 && urlValueNumber(L"url") == 0
+	      && urlValueNumber(L"url1a") == 0 && urlValueNumber(L"urlx") == 0 && urlValueNumber(L"url1234567890") == 0
+	      && urlValueNumber(L"MRUList") == 0, "typed urls: url<N> numbered, anything else refused");
 	firefoxHistory();
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;

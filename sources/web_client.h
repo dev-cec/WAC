@@ -28,8 +28,12 @@
  *  Collected raw beside them: cookies, logins.json and key4.db (saved
  *  logins, encrypted), extensions, preferences, the session.
  *
- *  The WebCache of Internet Explorer and Edge Legacy, and TypedURLs, follow
- *  (backlog B-016).
+ *  TYPED URLS. What was typed in Internet Explorer's address bar — and in
+ *  File Explorer's, which writes there too: `TypedURLs` of each NTUSER.DAT,
+ *  url1 the most recent, and `TypedURLsTime` the instant of each (Windows 8
+ *  and later).
+ *
+ *  The WebCache of Internet Explorer and Edge Legacy follows (backlog B-016).
  */
 #pragma once
 
@@ -105,7 +109,7 @@ std::wstring transitionQualifiers(int64_t transition);
 
 /*! One record of web_client.json: a URL, a visit, a download or a search term. */
 struct WebClientRecord {
-	std::wstring type;              //!< Url, Visit, Download, SearchTerm, TypedInput (Firefox), FormEntry (Firefox)
+	std::wstring type;              //!< Url, Visit, Download, SearchTerm, TypedInput, FormEntry (Firefox), TypedUrl (NTUSER.DAT)
 	std::wstring browser;           //!< Edge, Chrome…
 	std::wstring browserProfile;    //!< the profile folder: Default, Profile 1…
 	std::wstring sid;               //!< the Windows profile it belongs to
@@ -139,8 +143,8 @@ HRESULT readFirefoxFormHistory(const std::wstring& file, const WebClientRecord& 
 /*! The web, client side (web_client.json). */
 class WebClient {
 public:
-	/*! Reads the History of every Chromium profile and the places and form
-	 *  history of every Firefox profile, of every user.
+	/*! Reads the History of every Chromium profile, the places and form
+	 *  history of every Firefox profile, and the TypedURLs, of every user.
 	 *  @return ERROR_SUCCESS, even without any browser */
 	HRESULT getData();
 	/*! Writes web_client.json.

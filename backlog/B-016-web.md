@@ -29,7 +29,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [ ] Lien téléchargement ↔ Zone.Identifier (B-004) et fichier sur le disque (mft.json)
 - [ ] Login Data (identifiants enregistrés : origine, compte, dates — jamais le mot de passe), cookies
 - [ ] WebCache (ESE)
-- [ ] TypedURLs et TypedURLsTime (NTUSER), venus de B-031
+- [x] TypedURLs et TypedURLsTime (NTUSER), venus de B-031
 
 ## Journal
 - 2026-09-30 : décision utilisateur — SQLite par l'amalgamation officielle (sqlite3.c) épinglée et compilée dans WAC, ouverte en lecture seule sur la copie de la consigne.
@@ -39,3 +39,5 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-01 : Chromium — collecte brute par RawReader (un volume ouvert une fois) de chaque profil de navigateur trouvé par listage (History, Login Data, Web Data, Cookies, Shortcuts, Top Sites, Bookmarks, Preferences, avec journaux ; Local State) sans les caches ; `web_client.json` : Url, Visit (transition nommée d'après ui::PageTransition), Download (chaîne, référent, onglet, état, SHA-256 ; DangerType et InterruptReason bruts — la numérotation de la base n'est pas l'énumération du code), SearchTerm. Référence : la base History d'Edge de la VM, rapatriée par le harnais et relue par le SQLite de Python : 5 URL, 7 visites identiques (URL, instant, transition). La VM n'a ni téléchargement ni recherche : couverts par le test unitaire (vu échouer : chaîne lue sans tri).
 - 2026-10-01 : Chromium commité (6174f52). Défaut de procédure : le WAC.exe de ce commit venait de la compilation mutante (chaîne non triée), sources restaurées sans recompilation ; recompilé et commité (93a32f5). raw_hive_test.exe rendu reproductible au passage (103adef).
 - 2026-10-01 : Firefox — chaque dossier de `Profiles` : places.sqlite (Url, Visit avec type de visite, Download depuis les annotations destinationFileURI et metaData — fin en millisecondes, état brut —, TypedInput), formhistory.sqlite (FormEntry : formulaires et barre de recherche) ; copiés bruts : cookies, permissions, logins.json, key4.db, extensions, prefs.js, sessionstore.jsonlz4. Pas de Firefox dans la VM : vérifié par le test unitaire seul (vu échouer : fin lue sans la conversion des millisecondes).
+- 2026-10-01 : Firefox commité (d28d3a2).
+- 2026-10-01 : TypedURLs — `TypedUrl` dans web_client.json (Url, MruPosition, instant de TypedURLsTime, date de la clé), pour chaque NTUSER.DAT ; pas de `Browser` (IE et l'Explorateur y écrivent). L'analyse des noms `url<N>` est partagée avec TypedPaths (`urlValueNumber`, registry_common). Référence : deux TypedURLs posées dans la ruche de « wac » avec des instants connus, retrouvées ; typed_paths.json inchangé (témoin url25 à sa position).

@@ -33,6 +33,12 @@ std::wstring valueText(DWORD type, const std::vector<BYTE>& data) {
 	return L"";
 }
 
+unsigned urlValueNumber(const std::wstring& name) {
+	if (name.size() < 4 || name.size() > 12 || _wcsnicmp(name.c_str(), L"url", 3) != 0
+	    || name.find_first_not_of(L"0123456789", 3) != std::wstring::npos) return 0;
+	return (unsigned)std::stoul(name.substr(3));   // at most 9 digits: no overflow
+}
+
 Json pairs(const NameValues& values) {
 	Json list = Json::arr();
 	for (const auto& [name, value] : values) {

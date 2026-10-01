@@ -3,6 +3,7 @@
  */
 #include "web_client.h"
 #include "sqlite_reader.h"
+#include "registry_common.h"
 #include <filesystem>
 #include <cwchar>
 #include <map>
@@ -230,6 +231,48 @@ void readFirefoxInputs(SqliteDatabase& db, const WebClientRecord& base, std::vec
 	});
 }
 
+/*! TypedURLs and TypedURLsTime of one profile's NTUSER.DAT.
+ *  @param root the hive's root
+ *  @param sid the profile
+ *  @param records receives one TypedUrl per url<N> value */
+void readTypedUrls(ORHKEY root, const std::wstring& sid, std::vector<WebClientRecord>& records) {
+	const wchar_t KEY[] = L"Software\\Microsoft\\Internet Explorer\\TypedURLs";
+	ORHKEY key = NULL;
+	if (OROpenKey(root, KEY, &key) != ERROR_SUCCESS) return;
+	const FILETIME written = lastWrite(key);
+	// The instants, by the same value names, in the sibling key.
+	std::map<unsigned, FILETIME> typed;
+	ORHKEY times = NULL;
+	if (OROpenKey(root, L"Software\\Microsoft\\Internet Explorer\\TypedURLsTime", &times) == ERROR_SUCCESS) {
+		std::wstring name;
+		DWORD type = 0;
+		std::vector<BYTE> data;
+		for (DWORD i = 0; enumRegistryValue(times, i, name, type, data) == ERROR_SUCCESS; ++i)
+			if (urlValueNumber(name) && type == REG_BINARY && data.size() == sizeof(FILETIME))
+				typed[urlValueNumber(name)] = FILETIME{ readLittleEndian<uint32_t>(data.data()),
+				                                        readLittleEndian<uint32_t>(data.data() + 4) };
+		ORCloseKey(times);
+	}
+	std::wstring name;
+	DWORD type = 0;
+	std::vector<BYTE> data;
+	for (DWORD i = 0; enumRegistryValue(key, i, name, type, data) == ERROR_SUCCESS; ++i) {
+		const unsigned number = urlValueNumber(name);
+		if (!number) continue;
+		WebClientRecord r;
+		r.type = L"TypedUrl";
+		r.sid = sid;
+		r.source = L"NTUSER.DAT\\" + std::wstring(KEY);
+		r.fields.add(L"Url", Json::str(valueText(type, data)));
+		r.fields.add(L"MruPosition", Json::num((long long)number - 1));   // 0: the most recent
+		const auto at = typed.find(number);
+		if (at != typed.end()) addDate(r.fields, L"Typed", at->second);
+		addDate(r.fields, L"KeyLastWrite", written);
+		records.push_back(std::move(r));
+	}
+	ORCloseKey(key);
+}
+
 } // namespace
 
 FILETIME firefoxTime(int64_t microseconds) {
@@ -354,6 +397,7 @@ HRESULT WebClient::getData() {
 					log(2, L"🔥History not read: " + base.source);
 			}
 		}
+	forEachProfileHive(L"\\ntuser.dat", [this](ORHKEY root, const std::wstring& sid) { readTypedUrls(root, sid, records_); });
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
 		const std::filesystem::path root = extractedPath(std::get<1>(profileEntry)) + FIREFOX_PROFILES;
 		std::error_code ec;

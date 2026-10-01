@@ -1307,7 +1307,11 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         (\champ{FieldName} \texttt{searchbar-history}), avec ses dates. Sont
         copiés bruts à côté : cookies, \fichier{logins.json} et
         \fichier{key4.db} (identifiants enregistrés, chiffrés), extensions,
-        préférences, session.
+        préférences, session. Enfin \texttt{TypedUrl} : chaque adresse tapée
+        dans Internet Explorer ou la barre d'adresse de l'Explorateur
+        (\path|TypedURLs| du \fichier{NTUSER.DAT}, \champ{MruPosition} 0 pour
+        la plus récente) avec l'instant de sa saisie (\path|TypedURLsTime|,
+        \champ{TypedUtc}).
   \item[\fichier{dpapi\_master\_keys.json}] clés maîtresses DPAPI du système
         (\path|System32\Microsoft\Protect|, \champ{Scope} \texttt{System}) et
         de chaque profil (\path|AppData\Roaming\Microsoft\Protect|,

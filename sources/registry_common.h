@@ -28,6 +28,12 @@ std::vector<std::wstring> subkeys(ORHKEY root, const std::wstring& path);
  *  @return a string as written, a DWORD as its number, "" for any other type */
 std::wstring valueText(DWORD type, const std::vector<BYTE>& data);
 
+/*! The number of a value named `url<N>` — TypedPaths, TypedURLs, their
+ *  TypedURLsTime —, url1 being the most recent.
+ *  @param name the value's name
+ *  @return N, or 0 if the name is not url followed by digits only */
+unsigned urlValueNumber(const std::wstring& name);
+
 /*! @param values Name/Value pairs
  *  @return them as a JSON array of {Name, Value} */
 Json pairs(const NameValues& values);

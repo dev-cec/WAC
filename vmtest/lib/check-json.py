@@ -1515,6 +1515,19 @@ def check_small_file_artefacts(folder):
                f"user_shell_folders.json: the {len(live)} value(s) of User Shell Folders of wac, the redirected Desktop resolved",
                f"user_shell_folders.json: {wrong[:3]}, Desktop {desktop}")
 
+    # TypedURLs (B-016): the two addresses typed, their position and instant.
+    web = load(folder, "web_client.json")
+    if isinstance(web, list) and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            typed = [l.strip()[len("typedurl="):].split("|") for l in f if l.startswith("typedurl=")]
+        mine = {(r.get("Url"), r.get("SIDName")): r for r in web if r.get("Type") == "TypedUrl"}
+        wrong = [f"{name} {url}: WAC {mine.get((url, 'wac'))}" for name, url, when in typed
+                 if mine.get((url, "wac"), {}).get("MruPosition") != int(name[3:]) - 1
+                 or not (mine.get((url, "wac"), {}).get("TypedUtc") or "").startswith(when)]
+        report(typed and not wrong,
+               f"web_client.json: the {len(typed)} TypedURLs of wac, position and instant of TypedURLsTime",
+               f"web_client.json: {wrong[:2]}")
+
     if "datavolume" in reference:
         letter, present, deleted = reference["datavolume"].split("|")
         mft = load(folder, "mft.json")

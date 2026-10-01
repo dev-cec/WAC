@@ -26,6 +26,7 @@
 #                Preferred names -> dpapi_master_keys.json
 #   usf          each User Shell Folders value of "wac", unexpanded; its
 #                Desktop redirected to OneDrive\Desktop -> user_shell_folders.json
+#   typedurl     two TypedURLs of "wac" with their TypedURLsTime -> web_client.json
 #   rundefault   a Run value in the NTUSER.DAT of the Default profile (template
 #                of new profiles) -> run.json, SID S-0-0-0, Profile "Default"
 #   secrets, audit, nl_slots  the SECURITY hive read live by Windows (as
@@ -966,5 +967,26 @@ if (Wants 'dpapi_master_keys') {
                 }
             }
         }
+    }
+}
+
+# 38. B-016 — TypedURLs: two addresses typed by "wac", with their instants in
+#     TypedURLsTime (FILETIME, known values), written to the hive at once.
+if (Wants 'web_client') {
+    $typed = "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Internet Explorer\TypedURLs"
+    $times = "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Internet Explorer\TypedURLsTime"
+    New-Item -Force $typed | Out-Null
+    New-Item -Force $times | Out-Null
+    $witnesses = @(@('url1', 'http://wac-typed.invalid/recent', [datetime]::new(2026, 3, 4, 5, 6, 7, [DateTimeKind]::Utc)),
+                   @('url2', 'http://wac-typed.invalid/older', [datetime]::new(2025, 11, 12, 13, 14, 15, [DateTimeKind]::Utc)))
+    foreach ($w in $witnesses) {
+        Set-ItemProperty -Path $typed -Name $w[0] -Value $w[1]
+        Set-ItemProperty -Path $times -Name $w[0] -Value ([BitConverter]::GetBytes($w[2].ToFileTimeUtc())) -Type Binary
+        Write-Output ("typedurl=" + $w[0] + '|' + $w[1] + '|' + $w[2].ToString('yyyy-MM-ddTHH:mm:ss'))
+    }
+    foreach ($k in @('TypedURLs', 'TypedURLsTime')) {
+        $writable = [Microsoft.Win32.Registry]::Users.OpenSubKey("$wacSid\Software\Microsoft\Internet Explorer\$k", $true)
+        $writable.Flush()
+        $writable.Close()
     }
 }

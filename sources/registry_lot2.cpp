@@ -87,9 +87,7 @@ HRESULT TypedPaths::getData() {
 			std::vector<BYTE> data;
 			if (enumRegistryValue(key, i, name, type, data) != ERROR_SUCCESS) break;
 			// url1 is the most recent: position 0.
-			if (name.size() < 4 || _wcsnicmp(name.c_str(), L"url", 3) != 0
-			    || name.find_first_not_of(L"0123456789", 3) != std::wstring::npos) continue;
-			const unsigned number = (unsigned)std::stoul(name.substr(3).substr(0, 9));
+			const unsigned number = urlValueNumber(name);
 			if (number == 0) continue;
 			ExplorerInput e;
 			e.sid = sid;

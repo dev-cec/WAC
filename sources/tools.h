@@ -167,7 +167,7 @@ struct AppliConf {
 		bool needsUserHives() const {
 			return registry || persistence || officeTrustRecords || typedPaths || wordWheelQuery
 			    || rootCertificates || internetSettings || installedPrograms || explorerRecentDocs || mountPoints || programUsages
-			    || userShellFolders
+			    || userShellFolders || webClient   // web client: TypedURLs
 			    || shortcuts;   // a desktop redirected elsewhere is read in NTUSER.DAT (user_shell_folders.h)
 		}
 	} artefacts;
