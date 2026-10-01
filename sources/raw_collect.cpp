@@ -558,7 +558,8 @@ HRESULT ExtractFileArtefactsRaw() {
 HRESULT ExtractNtfsMetadataRaw() {
 	// The $MFT serves mft.json, the change journal's paths and the Zone.Identifier streams.
 	const bool mft = conf.artefacts.mft || conf.artefacts.usnJournal || conf.artefacts.zoneIdentifiers;
-	if (!mft && !conf.artefacts.logFile && !conf.artefacts.securityDescriptors) return HRESULT_FROM_WIN32(ERROR_EMPTY);
+	if (!mft && !conf.artefacts.logFile && !conf.artefacts.securityDescriptors && !conf.artefacts.ntfsVolumes)
+		return HRESULT_FROM_WIN32(ERROR_EMPTY);
 	HRESULT global = S_OK;
 	/* EVERY fixed NTFS volume, not only the system's: a data disk, a profile
 	   on D: have their own $MFT and journal, and what happened there is not in
@@ -572,6 +573,7 @@ HRESULT ExtractNtfsMetadataRaw() {
 		std::vector<std::pair<std::wstring, std::wstring>> items;
 		if (mft) items.push_back({ L"\\$MFT", exhibitTarget(drive + L"\\$MFT") });
 		if (conf.artefacts.logFile) items.push_back({ L"\\$LogFile", exhibitTarget(drive + L"\\$LogFile") });
+		if (conf.artefacts.ntfsVolumes) items.push_back({ L"\\$Boot", exhibitTarget(drive + L"\\$Boot") });
 		std::error_code ec;
 		std::filesystem::create_directories(exhibitTarget(drive + L"\\$Extend"), ec);   // the store's folder of the volume included
 		std::vector<RawHiveExtraction> reading;
@@ -591,6 +593,23 @@ HRESULT ExtractNtfsMetadataRaw() {
 			if (FAILED(ExtractStreamRaw(volume, L"\\$Secure", L"$SDS",
 			                            exhibitTarget(drive + L"\\$Secure_$SDS"), false, descriptors))) result = S_FALSE;
 			reading.push_back(std::move(descriptors));
+		}
+		if (conf.artefacts.ntfsVolumes) {
+			/* $UsnJrnl:$Max, the journal's header: its identifier is its creation
+			   date. A volume whose journal is disabled has none: recorded as not
+			   found, as $J. */
+			RawHiveExtraction header;
+			if (FAILED(ExtractStreamRaw(volume, L"\\$Extend\\$UsnJrnl", L"$Max",
+			                            exhibitTarget(drive + L"\\$Extend\\$Max"), false, header))) result = S_FALSE;
+			reading.push_back(std::move(header));
+		}
+		if (conf.artefacts.logFile) {
+			/* $TxfLog: the journal of transactional NTFS (TxF), a CLFS log and its
+			   containers. Copied raw only, as $LogFile: no conversion. */
+			size_t extracted = 0;
+			if (FAILED(ExtractDirectoryTreeRaw(volume, L"\\$Extend\\$RmMetadata\\$TxfLog",
+			                                   exhibitTarget(drive + L"\\$Extend\\$RmMetadata\\$TxfLog"),
+			                                   {}, &extracted, 0, &reading))) result = S_FALSE;
 		}
 		RawHiveSetProgress(nullptr);
 		printProgressEnd();

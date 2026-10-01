@@ -19,6 +19,8 @@
 #   sdswitness, sdsowner  a file owned by "wac" whose DACL grants Everyone
 #                read, and the owner Get-Acl gives for a few dozen files
 #                -> mft.json SecurityId -> security_descriptors.json
+#   ntfsvolume, usnjournal  each fixed NTFS volume as Windows describes it
+#                (DeviceIoControl) -> ntfs_volumes.json, read raw in $Boot and $Max
 #   rundefault   a Run value in the NTUSER.DAT of the Default profile (template
 #                of new profiles) -> run.json, SID S-0-0-0, Profile "Default"
 #   secrets, audit, nl_slots  the SECURITY hive read live by Windows (as
@@ -846,5 +848,48 @@ if (Wants 'security_descriptors') {
     $files = @(Get-ChildItem 'C:\Windows\System32\drivers\etc', 'C:\Users\wac\Documents', 'C:\wactest' -File -Force -ErrorAction SilentlyContinue | Select-Object -First 40)
     foreach ($f in $files) {
         try { Write-Output ("sdsowner=" + $f.FullName + '|' + (Get-Acl -LiteralPath $f.FullName).GetOwner([Security.Principal.SecurityIdentifier]).Value) } catch {}
+    }
+}
+
+# 35. B-032 — NTFS volumes: what Windows itself says of each fixed NTFS volume
+#     (FSCTL_GET_NTFS_VOLUME_DATA, FSCTL_QUERY_USN_JOURNAL — what fsutil shows,
+#     without its localised text): serial, sector, cluster and record sizes,
+#     $MFT and $MFTMirr clusters, and the journal's identifier, size, delta and
+#     lowest valid USN. ntfs_volumes.json reads them raw in $Boot and $Max.
+if (Wants 'ntfs_volumes') {
+    Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class WacNtfs {
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    static extern IntPtr CreateFile(string name, uint access, uint share, IntPtr sa, uint disposition, uint flags, IntPtr template);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern bool DeviceIoControl(IntPtr h, uint code, IntPtr inBuf, uint inSize, byte[] outBuf, uint outSize, out uint returned, IntPtr ov);
+    [DllImport("kernel32.dll")]
+    static extern bool CloseHandle(IntPtr h);
+    public static byte[] Query(string letter, uint code) {
+        IntPtr h = CreateFile(@"\\.\" + letter, 0x80000000, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);   // GENERIC_READ: the two queries need it
+        if (h == new IntPtr(-1)) return null;
+        byte[] buffer = new byte[256];
+        uint returned;
+        bool ok = DeviceIoControl(h, code, IntPtr.Zero, 0, buffer, (uint)buffer.Length, out returned, IntPtr.Zero);
+        CloseHandle(h);
+        return ok ? buffer : null;
+    }
+}
+'@
+    foreach ($v in Get-Volume | Where-Object { $_.FileSystem -eq 'NTFS' -and $_.DriveType -eq 'Fixed' -and $_.DriveLetter }) {
+        $letter = "$($v.DriveLetter):"
+        $d = [WacNtfs]::Query($letter, 0x00090064)
+        if ($d) {
+            Write-Output ("ntfsvolume=" + $letter + '|' + ('{0:X16}' -f [BitConverter]::ToUInt64($d, 0)) + '|' +
+                [BitConverter]::ToUInt32($d, 40) + '|' + [BitConverter]::ToUInt32($d, 44) + '|' + [BitConverter]::ToUInt32($d, 48) + '|' +
+                [BitConverter]::ToUInt64($d, 64) + '|' + [BitConverter]::ToUInt64($d, 72))
+        }
+        $j = [WacNtfs]::Query($letter, 0x000900F4)
+        if ($j) {
+            Write-Output ("usnjournal=" + $letter + '|' + ('{0:X16}' -f [BitConverter]::ToUInt64($j, 0)) + '|' +
+                [BitConverter]::ToUInt64($j, 40) + '|' + [BitConverter]::ToUInt64($j, 48) + '|' + [BitConverter]::ToUInt64($j, 24))
+        }
     }
 }

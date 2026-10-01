@@ -1439,6 +1439,32 @@ def check_small_file_artefacts(folder):
                        "security_descriptors.json: the witness's DACL grants Everyone, as icacls set it",
                        f"security_descriptors.json: the witness's Everyone ACE missing: {d}")
 
+    # NTFS volumes (B-032): $Boot and $Max read raw, against what Windows says
+    # of each volume through DeviceIoControl (FSCTL_GET_NTFS_VOLUME_DATA,
+    # FSCTL_QUERY_USN_JOURNAL).
+    volumes = load(folder, "ntfs_volumes.json")
+    if isinstance(volumes, list) and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            lines = f.read().splitlines()
+        mine = {v.get("Volume"): v for v in volumes}
+        wrong, seen = [], 0
+        for l in (l for l in lines if l.startswith("ntfsvolume=")):
+            letter, serial, sector, cluster, record, mft_lcn, mirror_lcn = l[len("ntfsvolume="):].split("|")
+            v, seen = mine.get(letter, {}), seen + 1
+            got = (v.get("VolumeSerial64"), v.get("BytesPerSector"), v.get("BytesPerCluster"), v.get("BytesPerRecord"),
+                   v.get("MftCluster"), v.get("MftMirrorCluster"))
+            if got != (serial, int(sector), int(cluster), int(record), int(mft_lcn), int(mirror_lcn)):
+                wrong.append(f"{letter}: Windows {serial} {sector} {cluster} {record} {mft_lcn} {mirror_lcn}, WAC {got}")
+        for l in (l for l in lines if l.startswith("usnjournal=")):
+            letter, journal_id, maximum, delta, lowest = l[len("usnjournal="):].split("|")
+            j, seen = mine.get(letter, {}).get("UsnJournal", {}), seen + 1
+            got = (j.get("UsnJournalId"), j.get("MaximumSize"), j.get("AllocationDelta"), j.get("LowestValidUsn"))
+            if got != (journal_id, int(maximum), int(delta), int(lowest)):
+                wrong.append(f"{letter} journal: Windows {journal_id} {maximum} {delta} {lowest}, WAC {got}")
+        report(seen and not wrong,
+               f"ntfs_volumes.json: serial, geometry and journal header of {len(mine)} volume(s), as DeviceIoControl gives them ({seen} reading(s))",
+               f"ntfs_volumes.json: {wrong[:3]}")
+
     if "datavolume" in reference:
         letter, present, deleted = reference["datavolume"].split("|")
         mft = load(folder, "mft.json")

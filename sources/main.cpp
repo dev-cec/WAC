@@ -53,6 +53,7 @@
 #include "recent_docs.h"
 #include "shortcuts.h"
 #include "security_descriptors.h"
+#include "ntfs_volumes.h"
 #include "jumplist_automatic.h"
 #include "jumplist_custom.h"
 #include "scheduledTasks.h"
@@ -403,7 +404,7 @@ void extractProfileArtefacts() {
 
 	// $MFT, change journal, $LogFile: the file system's timeline (read in place by the conversion).
 	if (conf.artefacts.mft || conf.artefacts.usnJournal || conf.artefacts.logFile || conf.artefacts.zoneIdentifiers
-	    || conf.artefacts.securityDescriptors) {
+	    || conf.artefacts.securityDescriptors || conf.artefacts.ntfsVolumes) {
 		printStep(Text::StepNtfsMetadata);
 		log(3, L"🔈ExtractNtfsMetadataRaw");
 		hresult = ExtractNtfsMetadataRaw();   // S_FALSE = one could not be read (tolerated)
@@ -1164,6 +1165,8 @@ void convertArtefacts(bool systemAvailable) {
 	convertFileArtefact<SecurityDescriptors>(conf.artefacts.securityDescriptors, "security_descriptors.json",
 	                                         Text::ArtefactSecurityDescriptors, L"artefacts.security_descriptors",
 	                                         Text::StepSecurityDescriptors);
+	convertFileArtefact<NtfsVolumes>(conf.artefacts.ntfsVolumes, "ntfs_volumes.json", Text::ArtefactNtfsVolumes,
+	                                 L"artefacts.ntfs_volumes", Text::StepNtfsVolumes);
 	writeProcesses();   // if the names could not be loaded (SYSTEM hive unreadable)
 
 	/************************

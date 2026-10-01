@@ -565,13 +565,16 @@ whatever the file's order, a date without \texttt{Z} not taken as UTC. For
 skipped even when its entry looks consistent, a repeated \champ{SecurityId}
 kept once, a length leaving the block refused, a damaged hash flagged
 (\champ{HashMismatch}), the owner and the ACE decoded, every read against a
-no-access page on both sides. No data needed.
+no-access page on both sides. For \path|$Boot|: geometry and serial read, a
+sectors-per-cluster count above 0x80 taken as a power of two, a sector without
+0x55AA, of another file system, of 100 bytes or truncated refused; for
+\path|$Max|: the four fields, a stream too short refused. No data needed.
 
 \begin{lstlisting}
 cd build-windows/tests && wine file_artefacts_test.exe
 \end{lstlisting}
 
-Reference: 74 checks, no failure (the second-lot registry values included: TrustRecords, firewall rule, certificate Blob). In the VM cycle,
+Reference: 85 checks, no failure (the second-lot registry values included: TrustRecords, firewall rule, certificate Blob). In the VM cycle,
 \fichier{place-file-artefacts.ps1} places witnesses whose content is known (a
 history, a file sent to the bin, a hosts entry, a startup script) and
 \fichier{check-json.py} finds them in the JSON.

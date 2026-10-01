@@ -337,7 +337,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   recent_documents: true
   mft: true             # $MFT: every file, present or deleted, with its dates
   usn_journal: true     # $UsnJrnl:$J: creations, renames, deletions
-  log_file: true        # $LogFile: NTFS transaction journal, raw copy only
+  log_file: true        # $LogFile and $TxfLog: NTFS and TxF transaction journals, raw copy only
   powershell_history: true  # PSReadLine: the commands typed in PowerShell
   setupapi: true        # setupapi.dev.log: device installations
   recycle_bin: true     # $I of the recycle bins: what, by whom, when
@@ -370,6 +370,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   event_log_configuration: true # state of each event log and boot ETW session: enabled, size, retention, access (offline)
   shortcuts: true               # shortcuts outside Recent: Start menu, desktops, Quick Launch, task bar
   security_descriptors: true    # $Secure:$SDS: owner and rights of every file, each descriptor once
+  ntfs_volumes: true            # $Boot and $UsnJrnl:$Max: serial and geometry, creation of the journal
 \end{lstlisting}
 
 \begin{itemize}
@@ -1325,9 +1326,22 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         bit kept in hexadecimal) and the path rebuilt through the \path|$MFT|.
         It keeps the trace of files dropped then erased, which the \path|$MFT|
         has already forgotten.
-        The \path|$MFT|, the change journal and \path|$LogFile| (the
-        transaction journal, not converted) are also copied raw into the
-        exhibit store, to rebuild the timeline later with another tool.
+        The \path|$MFT|, the change journal, \path|$LogFile| (the
+        transaction journal, not converted) and \path|$TxfLog| (the journal of
+        transactional NTFS, a CLFS log and its containers, not converted) are
+        also copied raw into the exhibit store, to rebuild the timeline later
+        with another tool.
+  \item[\fichier{ntfs\_volumes.json}] every fixed NTFS volume, read in its
+        boot sector (\path|$Boot|, recognised by its signatures before any
+        field): serial number (\champ{VolumeSerial}, the 32 bits shortcuts,
+        jump lists and Prefetch files record of their target's volume, and
+        \champ{VolumeSerial64} whole), sector, cluster, record and index block
+        sizes, place of the \path|$MFT| and of its mirror. Then the change
+        journal's header (\path|$UsnJrnl:$Max|, \champ{UsnJournal}): maximum
+        size, allocation delta, \champ{UsnJournalId}, which is the journal's
+        \textbf{creation} date (\champ{Created}), and the first number still
+        present. A journal deleted and recreated (\texttt{fsutil usn
+        deletejournal}) shows a creation far later than the installation.
   \item[\fichier{recentdocs.json}] recent-document shortcuts: target, timestamps
         of the shortcut and of the target, target size, volume (type, serial
         number, label), network path, shell item list, and the extra data

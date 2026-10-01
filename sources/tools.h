@@ -119,7 +119,7 @@ struct AppliConf {
 		bool recentDocuments = true;
 		bool mft = true;              //!< $MFT, raw, and mft.json: every file with its dates
 		bool usnJournal = true;       //!< $UsnJrnl:$J, raw, and usn_journal.json: the change journal
-		bool logFile = true;          //!< $LogFile, raw only: the NTFS transaction journal
+		bool logFile = true;          //!< $LogFile and $TxfLog, raw only: the NTFS and transactional NTFS journals
 		bool powershellHistory = true; //!< PSReadLine histories of every profile
 		bool setupApi = true;         //!< setupapi.dev.log: device installations, first USB connections
 		bool recycleBin = true;       //!< the $I of every volume's recycle bin
@@ -129,6 +129,7 @@ struct AppliConf {
 		bool startupFolders = true;   //!< startup folders of all users and of each profile
 		bool shortcuts = true;        //!< shortcuts outside Recent: Start menu, desktops, Quick Launch, pinned task bar
 		bool securityDescriptors = true; //!< $Secure:$SDS of every NTFS volume: owner and ACLs of every file
+		bool ntfsVolumes = true;      //!< $Boot and $UsnJrnl:$Max of every NTFS volume: serial, geometry, journal creation
 		bool zoneIdentifiers = true;  //!< Zone.Identifier streams, read in the $MFT copy
 		bool security = true;         //!< SECURITY hive: LSA secrets' names and dates, cached logons, audit policy
 		bool persistence = true;      //!< registry persistence beyond Run: IFEO, AppInit, Winlogon, LSA, COM…

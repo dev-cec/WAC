@@ -579,6 +579,11 @@ NTFS hash of every descriptor of \path|$Secure:$SDS|, recomputed (2,818
   through the \champ{SecurityId} of \fichier{mft.json}; Everyone ACE set by
   \texttt{icacls} / \fichier{security\_descriptors.json} &
   check added with the artefact \\
+serial number, sector, cluster and record sizes, clusters of the \path|$MFT|
+  and of its mirror, identifier, size, delta and first USN of the journal,
+  given by Windows (\texttt{DeviceIoControl}) / \fichier{ntfs\_volumes.json},
+  read raw in \path|$Boot| and \path|$Max| (2 volumes) &
+  check added with the artefact \\
 DestList entries / jump list shortcuts & the first 15 entries of every list
   lost (573 shortcuts published out of 1,522) \\
 machine name of the events / \fichier{OperatingSystem.json} & check of the

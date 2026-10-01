@@ -3,8 +3,8 @@
  *  result is known: PowerShell history, setupapi.dev.log, recycle bin `$I`,
  *  hosts, Report.wer, Defender's MPLog, DetectionHistory and quarantine,
  *  Zone.Identifier, and the registry values of the second lot (TrustRecords,
- *  firewall rules, certificate Blob), and the NTFS security descriptors of
- *  $Secure:$SDS.
+ *  firewall rules, certificate Blob), the NTFS security descriptors of
+ *  $Secure:$SDS, and the NTFS boot sector and change journal header.
  *
  *  WHY THIS TEST. These formats are text or a few bytes, and a decoder that
  *  misses a case still gives valid JSON: a multi-line command cut in two, a
@@ -25,8 +25,10 @@
 #include "zone_identifiers.h"
 #include "registry_lot2.h"
 #include "security_descriptors.h"
+#include "ntfs_volumes.h"
 #include "guard_page.h"
 #include <cstdio>
+#include <cstring>
 
 AppliConf conf; //!< WAC's global configuration, which tools.cpp references
 
@@ -425,6 +427,76 @@ void securityDescriptors() {
 	}
 }
 
+/*! An NTFS boot sector: 512-byte sectors, 8 per cluster, 1 KiB records
+ *  (0xF6 = -10), one-cluster index blocks, serial 0x1122334455667788. */
+std::vector<uint8_t> testBootSector() {
+	std::vector<uint8_t> b(512, 0);
+	std::memcpy(b.data() + 3, "NTFS    ", 8);
+	b[0x0B] = 0x00; b[0x0C] = 0x02;   // 512
+	b[0x0D] = 8;
+	auto at64 = [&](size_t at, uint64_t v) { for (int i = 0; i < 8; ++i) b[at + i] = (uint8_t)(v >> (8 * i)); };
+	at64(0x28, 125829119);
+	at64(0x30, 786432);
+	at64(0x38, 2);
+	b[0x40] = 0xF6;
+	b[0x44] = 1;
+	at64(0x48, 0x1122334455667788ULL);
+	b[0x1FE] = 0x55; b[0x1FF] = 0xAA;
+	return b;
+}
+
+void ntfsVolumes() {
+	const std::vector<uint8_t> sector = testBootSector();
+	for (GuardSide side : { GuardSide::After, GuardSide::Before }) {
+		GuardedCopy copy(sector, side);
+		NtfsBootSector boot;
+		check(parseNtfsBootSector(copy.data(), copy.size(), boot) && boot.bytesPerSector == 512
+		      && boot.bytesPerCluster == 4096 && boot.totalSectors == 125829119 && boot.mftCluster == 786432
+		      && boot.mftMirrorCluster == 2 && boot.bytesPerRecord == 1024 && boot.bytesPerIndexBlock == 4096
+		      && boot.serialNumber == 0x1122334455667788ULL, "boot sector: geometry and serial read");
+	}
+	NtfsBootSector boot;
+	std::vector<uint8_t> big = sector;
+	big[0x0D] = 0xF8;                                   // 2^8 sectors: 128 KiB clusters
+	check(parseNtfsBootSector(big.data(), big.size(), boot) && boot.bytesPerCluster == 131072,
+	      "boot sector: a cluster count above 0x80 is a power of two");
+	std::vector<uint8_t> unsigned_ = sector;
+	unsigned_[0x1FF] = 0;
+	check(!parseNtfsBootSector(unsigned_.data(), unsigned_.size(), boot), "boot sector: without 0x55AA refused");
+	std::vector<uint8_t> fat = sector;
+	std::memcpy(fat.data() + 3, "MSDOS5.0", 8);
+	check(!parseNtfsBootSector(fat.data(), fat.size(), boot), "boot sector: another file system refused");
+	std::vector<uint8_t> odd = sector;
+	odd[0x0B] = 100; odd[0x0C] = 0;
+	check(!parseNtfsBootSector(odd.data(), odd.size(), boot), "boot sector: a 100-byte sector refused");
+	GuardedCopy truncated(std::vector<uint8_t>(sector.begin(), sector.begin() + 511), GuardSide::After);
+	check(!parseNtfsBootSector(truncated.data(), truncated.size(), boot), "boot sector: 511 bytes refused, not read past");
+
+	// $Max: maximum size, allocation delta, journal identifier (a FILETIME), lowest valid USN.
+	std::vector<uint8_t> max;
+	for (uint64_t v : { 33554432ULL, 8388608ULL, 0x01DB1C2D3E4F5061ULL, 1234567ULL }) put64(max, v);
+	UsnJournalHeader header;
+	check(parseUsnJournalHeader(max.data(), max.size(), header) && header.maximumSize == 33554432
+	      && header.allocationDelta == 8388608 && header.journalId == 0x01DB1C2D3E4F5061ULL
+	      && header.lowestValidUsn == 1234567, "usn $Max: the four fields read");
+	check(!parseUsnJournalHeader(max.data(), 31, header), "usn $Max: 31 bytes refused");
+
+	NtfsVolumeInfo info;
+	info.volume = L"C:";
+	parseNtfsBootSector(sector.data(), sector.size(), boot);
+	info.boot = boot;
+	parseUsnJournalHeader(max.data(), max.size(), header);
+	info.journal = header;
+	const Json o = info.toJson();
+	const Json* serial = o.find(L"VolumeSerial");
+	const Json* serial64 = o.find(L"VolumeSerial64");
+	const Json* journal = o.find(L"UsnJournal");
+	check(serial && serial->text() == L"55667788" && serial64 && serial64->text() == L"1122334455667788",
+	      "ntfs volume: serial as Windows shows it (low 32 bits), and whole");
+	check(journal && journal->find(L"UsnJournalId") && journal->find(L"UsnJournalId")->text() == L"01DB1C2D3E4F5061"
+	      && journal->find(L"CreatedUtc"), "ntfs volume: journal identifier, and its date");
+}
+
 } // namespace
 
 int wmain() {
@@ -438,6 +510,7 @@ int wmain() {
 	zoneIdentifier();
 	registryLot2();
 	securityDescriptors();
+	ntfsVolumes();
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }

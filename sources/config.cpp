@@ -64,6 +64,7 @@ bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error)
 		{ "defender", &a.defender }, { "startup_folders", &a.startupFolders },
 		{ "shortcuts", &a.shortcuts },
 		{ "security_descriptors", &a.securityDescriptors },
+		{ "ntfs_volumes", &a.ntfsVolumes },
 		{ "zone_identifiers", &a.zoneIdentifiers }, { "security", &a.security },
 		{ "persistence", &a.persistence },
 		{ "office_trust_records", &a.officeTrustRecords }, { "typed_paths", &a.typedPaths }, { "word_wheel_query", &a.wordWheelQuery }, { "root_certificates", &a.rootCertificates }, { "internet_settings", &a.internetSettings }, { "firewall", &a.firewall },

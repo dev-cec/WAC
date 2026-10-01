@@ -342,7 +342,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   recent_documents: true
   mft: true             # $MFT : chaque fichier, présent ou supprimé, et ses dates
   usn_journal: true     # $UsnJrnl:$J : créations, renommages, suppressions
-  log_file: true        # $LogFile : journal de transactions NTFS, copie brute seule
+  log_file: true        # $LogFile et $TxfLog : journaux de transactions NTFS et TxF, copie brute seule
   powershell_history: true  # PSReadLine : les commandes tapées dans PowerShell
   setupapi: true        # setupapi.dev.log : installations de périphériques
   recycle_bin: true     # $I des corbeilles : quoi, par qui, quand
@@ -375,6 +375,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   event_log_configuration: true # état de chaque journal et session ETW de démarrage : actif, taille, rétention, accès (hors ligne)
   shortcuts: true               # raccourcis hors de Recent : menu Démarrer, Bureaux, Quick Launch, barre des tâches
   security_descriptors: true    # $Secure:$SDS : propriétaire et droits de chaque fichier, chaque descripteur une fois
+  ntfs_volumes: true            # $Boot et $UsnJrnl:$Max : numéro de série et géométrie, création du journal
 \end{lstlisting}
 
 \begin{itemize}
@@ -1363,9 +1364,24 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         inconnu rendu en hexadécimal) et le chemin reconstitué par la
         \path|$MFT|. Il garde la trace de fichiers déposés puis effacés, que la
         \path|$MFT| a déjà oubliés.
-        La \path|$MFT|, le journal des modifications et \path|$LogFile| (journal
-        de transactions, non converti) sont en outre copiés bruts dans la
-        consigne, pour refaire plus tard la chronologie avec un autre outil.
+        La \path|$MFT|, le journal des modifications, \path|$LogFile| (journal
+        de transactions, non converti) et \path|$TxfLog| (journal de NTFS
+        transactionnel, journal CLFS et ses conteneurs, non converti) sont en
+        outre copiés bruts dans la consigne, pour refaire plus tard la
+        chronologie avec un autre outil.
+  \item[\fichier{ntfs\_volumes.json}] chaque volume NTFS fixe, lu dans son
+        secteur d'amorçage (\path|$Boot|, reconnu à ses signatures avant tout
+        champ) : numéro de série (\champ{VolumeSerial}, les 32 bits que les
+        raccourcis, listes de sauts et fichiers Prefetch relèvent du volume de
+        leur cible, et \champ{VolumeSerial64} en entier), tailles de secteur,
+        de cluster, d'enregistrement et de bloc d'index, emplacement de la
+        \path|$MFT| et de son miroir. Puis l'en-tête du journal des
+        modifications (\path|$UsnJrnl:$Max|, \champ{UsnJournal}) : taille
+        maximale, pas d'allocation, \champ{UsnJournalId}, qui est la date de
+        \textbf{création} du journal (\champ{Created}), et premier numéro
+        encore présent. Un journal supprimé puis recréé (\texttt{fsutil usn
+        deletejournal}) se lit à une création bien postérieure à
+        l'installation.
   \item[\fichier{recentdocs.json}] raccourcis de documents récents : cible,
         horodatages du raccourci et de la cible, taille de la cible, volume
         (type, numéro de série, nom), chemin réseau, liste d'éléments du shell,
