@@ -479,3 +479,14 @@ if (Wants 'installed_programs') {
     $user = @(Get-ChildItem "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Windows\CurrentVersion\Uninstall" -ErrorAction SilentlyContinue).Count
     Write-Output "programs=$machine|$machine32|$wacSid|$user"
 }
+
+# 20. B-031 — Defender exclusions: a path, an extension and a process
+#     excluded from scanning (harmless: test names, nothing placed there),
+#     then every exclusion Defender lists, kind by kind.
+if (Wants 'defender_configuration') {
+    Add-MpPreference -ExclusionPath 'C:\wactest\wac-excluded' -ExclusionExtension 'wactestext' -ExclusionProcess 'wac-excluded.exe'
+    $p = Get-MpPreference
+    foreach ($kind in @(@('Paths', $p.ExclusionPath), @('Extensions', $p.ExclusionExtension), @('Processes', $p.ExclusionProcess), @('IpAddresses', $p.ExclusionIpAddress))) {
+        Write-Output ("exclusions=" + $kind[0] + '|' + (@($kind[1] | Where-Object { $_ }) -join '|'))
+    }
+}

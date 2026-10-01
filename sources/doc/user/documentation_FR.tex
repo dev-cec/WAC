@@ -364,6 +364,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   bits: true            # qmgr.db : travaux BITS, URL, destinations, commandes de notification
   fat_volumes: true     # volumes FAT et exFAT, clés USB du suspect comprises : entrées, supprimées aussi
   installed_programs: true  # programmes installés (Uninstall) de la machine et de chaque utilisateur
+  defender_configuration: true  # exclusions et réglages de protection de Microsoft Defender
 \end{lstlisting}
 
 \begin{itemize}
@@ -1096,6 +1097,12 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         version, dossier, commande de désinstallation, \champ{InstallDate} --- le
         jour seul, tel qu'écrit) et la date d'écriture de la clé. Un outil
         d'accès à distance installé, puis désinstallé, y laisse souvent sa trace.
+  \item[\fichier{defender\_configuration.json}] configuration de Microsoft
+        Defender lue dans le registre : les \textbf{exclusions} (chemins,
+        extensions, processus, adresses ; \champ{Source} \texttt{Settings} ou
+        \texttt{Policy}), qu'un intrus ajoute pour que ses outils ne soient pas
+        analysés, et les valeurs qui règlent ou coupent la protection (temps
+        réel, protection contre la falsification, envoi d'échantillons\ldots).
   \item[\fichier{fat\_volumes.json}] volumes FAT12, FAT16, FAT32 et exFAT, clés
         USB et cartes du suspect comprises (le volume de la collecte excepté) :
         chaque entrée, présente ou \textbf{supprimée} (\champ{Deleted}), son

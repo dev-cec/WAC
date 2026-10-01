@@ -68,6 +68,7 @@ bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error)
 		{ "wmi", &a.wmi }, { "srum", &a.srum }, { "bits", &a.bits },
 		{ "fat_volumes", &a.fatVolumes },
 		{ "installed_programs", &a.installedPrograms },
+		{ "defender_configuration", &a.defenderConfiguration },
 	};
 	for (const auto& [key, node] : section.children) {
 		const Switch* found = nullptr;

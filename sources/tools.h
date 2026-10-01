@@ -141,6 +141,7 @@ struct AppliConf {
 		bool bits = true;              //!< qmgr.db: BITS jobs, their files and notification command lines
 		bool fatVolumes = true;        //!< FAT and exFAT volumes (a suspect's keys included): entries, deleted ones too
 		bool installedPrograms = true;  //!< installed programs: Uninstall keys of the machine and of each user
+		bool defenderConfiguration = true;  //!< Defender configuration: exclusions and protection settings (registry)
 
 		/*! Whether an artefact asked for reads the users' hives (ntuser.dat,
 		 *  usrClass.dat): they are copied then. They used to be copied only

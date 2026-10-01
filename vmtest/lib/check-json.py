@@ -1654,6 +1654,19 @@ def check_small_file_artefacts(folder):
                f"installed_programs.json: the witness program with its values; programs per key {mine} as Windows lists them",
                f"installed_programs.json: witness {witness or 'absent'}; programs per key {mine}, Windows {theirs}")
 
+    # Defender exclusions: every exclusion Get-MpPreference lists, of its kind,
+    # the harness's three witnesses among them (B-031).
+    defender = load(folder, "defender_configuration.json")
+    if isinstance(defender, dict) and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            listed = [l.strip()[len("exclusions="):].split("|") for l in f if l.startswith("exclusions=")]
+        mine = {(e.get("Kind"), str(e.get("Value", "")).lower()) for e in defender.get("Exclusions") or [] if e.get("Source") == "Settings"}
+        theirs = {(kind, v.lower()) for kind, *values in listed for v in values if v}
+        witnesses = {("Paths", "c:\\wactest\\wac-excluded"), ("Extensions", "wactestext"), ("Processes", "wac-excluded.exe")}
+        report(listed and mine == theirs and witnesses <= mine,
+               f"defender_configuration.json: the {len(theirs)} exclusion(s) Defender lists, of their kind, the 3 witnesses among them",
+               f"defender_configuration.json: WAC only {sorted(mine - theirs)[:3]}, Defender only {sorted(theirs - mine)[:3]}")
+
     # Cleared log: none live, as Windows sees it; the cleared events recovered.
     if isinstance(events, list) and os.path.exists(path):
         with open(path, encoding="utf-8", errors="replace") as f:

@@ -111,6 +111,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepBitsJobs, L"Travaux BITS", L"Extracting BITS JOBS" },
 	{ Text::StepFatVolumes, L"Volumes FAT et exFAT", L"Extracting FAT AND EXFAT VOLUMES" },
 	{ Text::StepInstalledPrograms, L"Programmes installés", L"Extracting INSTALLED PROGRAMS (Uninstall)" },
+	{ Text::StepDefenderConfiguration, L"Configuration de Defender : exclusions et protection", L"Extracting DEFENDER CONFIGURATION (exclusions, protection)" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },
@@ -163,6 +164,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactBitsJobs, L"Travaux BITS", L"BITS jobs" },
 	{ Text::ArtefactFatVolumes, L"Volumes FAT et exFAT", L"FAT and exFAT volumes" },
 	{ Text::ArtefactInstalledPrograms, L"Programmes installés", L"Installed programs" },
+	{ Text::ArtefactDefenderConfiguration, L"Configuration de Defender", L"Defender configuration" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },
 
 	{ Text::TimeElapsed,               L"FIN, durée : %1 s",                             L"END, Time elapsed : %1 s" },

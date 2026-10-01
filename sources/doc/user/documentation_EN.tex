@@ -359,6 +359,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   bits: true            # qmgr.db: BITS jobs, URLs, destinations, notification command lines
   fat_volumes: true     # FAT and exFAT volumes, the suspect's USB keys included: entries, deleted ones too
   installed_programs: true  # installed programs (Uninstall) of the machine and of each user
+  defender_configuration: true  # Microsoft Defender exclusions and protection settings
 \end{lstlisting}
 
 \begin{itemize}
@@ -1075,6 +1076,12 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         uninstall command, \champ{InstallDate} --- the day only, as written) and
         the key's write time. A remote access tool installed, then uninstalled,
         often leaves its trace there.
+  \item[\fichier{defender\_configuration.json}] Microsoft Defender's
+        configuration read in the registry: the \textbf{exclusions} (paths,
+        extensions, processes, addresses; \champ{Source} \texttt{Settings} or
+        \texttt{Policy}), which an intruder adds so that their tools are not
+        scanned, and the values that set or switch off protection (real time,
+        tamper protection, sample submission\ldots).
   \item[\fichier{fat\_volumes.json}] FAT12, FAT16, FAT32 and exFAT volumes, the
         suspect's USB keys and cards included (the collection's volume
         excepted): every entry, present or \textbf{deleted} (\champ{Deleted}),

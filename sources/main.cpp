@@ -946,6 +946,9 @@ void convertArtefacts(bool systemAvailable) {
 	convertFileArtefact<InstalledPrograms>(conf.artefacts.installedPrograms, "installed_programs.json", Text::ArtefactInstalledPrograms,
 	                         L"artefacts.installed_programs", Text::StepInstalledPrograms);
 
+	convertFileArtefact<DefenderConfiguration>(conf.artefacts.defenderConfiguration, "defender_configuration.json", Text::ArtefactDefenderConfiguration,
+	                         L"artefacts.defender_configuration", Text::StepDefenderConfiguration);
+
 	/* SYSTEM INFORMATION, offline.
 	   OUTSIDE the single-exit block above, and not inside it: even without a
 	   usable hive the collector stays useful, since it records the instant of the
