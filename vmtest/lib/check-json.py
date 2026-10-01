@@ -3125,6 +3125,27 @@ def check_users(folder):
         elif witnesses:
             print(f"  ❌ users.json: {wrong}")
             found += 1
+
+        # Security questions (ResetData): the witness JSON written to wacpw must
+        # come back, questions and answers, in its SecurityQuestions.
+        expected_line = None
+        with open(path, encoding="utf-8", errors="replace") as f:
+            for l in f:
+                if l.startswith("resetdata="):
+                    expected_line = l.strip()[len("resetdata="):]
+        if expected_line:
+            try:
+                want = {(q.get("question"), q.get("answer"))
+                        for q in json.loads(expected_line).get("questions", [])}
+            except ValueError:
+                want = set()
+            account = by_name.get("wacpw", {})
+            got = {(q.get("Question"), q.get("Answer")) for q in account.get("SecurityQuestions") or []}
+            if want and got == want:
+                print(f"  ✅ users.json: {len(want)} security question(s) and answer(s) of wacpw read from ResetData")
+            else:
+                print(f"  ❌ users.json: security questions of wacpw {sorted(got)}, expected {sorted(want)}")
+                found += 1
     return found
 
 

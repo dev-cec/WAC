@@ -72,6 +72,11 @@ struct User {
 	std::vector<std::wstring> ntHistory;          //!< previous NT hashes, newest first
 	std::vector<std::wstring> lmHistory;          //!< previous LM hashes, newest first
 
+	// Password-reset security questions (ResetData): the questions and their
+	// answers, as the SAM stores them in the clear. A trivial answer is a
+	// weakness WAE judges, like a weak password.
+	std::vector<std::pair<std::wstring, std::wstring>> securityQuestions;
+
 	/*! Converts the account to JSON.
 	 *  @return its JSON object. */
 	Json toJson() const;

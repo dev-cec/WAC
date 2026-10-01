@@ -1006,7 +1006,10 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         those of known weak passwords. The hashes are decrypted on the spot (the
         boot key from \fichier{SYSTEM}, the hashed boot key from the \fichier{SAM},
         the AES scheme of Windows~10 and later or the older RC4, then a DES layer
-        keyed on the RID).
+        keyed on the RID). If the account carries password-reset security
+        questions (\champ{SecurityQuestions}, the \texttt{ResetData} value), they
+        are converted as they are, questions AND answers: stored in the clear, a
+        trivial answer is a weakness WAE judges like a weak password.
   \item[\fichier{local\_groups.json}] local groups read from the \fichier{SAM}:
         the built-in groups (\champ{Scope} \texttt{Builtin}, \texttt{S-1-5-32-…})
         and the groups created on the machine (\texttt{Local}), each with its RID,

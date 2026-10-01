@@ -723,6 +723,19 @@ if (Wants 'registry') {
         Write-Output ("samhash=wacpw|" + $pwNew + '|' + $pwOld)
     } catch { Write-Output ("samhasherror=" + $_.Exception.Message) }
 
+    # Security questions (ResetData): not scriptable through a cmdlet, so written
+    # straight into wacpw's SAM key (SYSTEM can) as the system stores them, a
+    # REG_BINARY of the JSON in UTF-16LE, for WAC to read back.
+    try {
+        $rid = [int]((Get-LocalUser wacpw).SID.Value.Split('-')[-1])
+        $ridHex = '{0:X8}' -f $rid
+        $qjson = '{"version":1,"questions":[{"question":"First pet name?","answer":"rex"},{"question":"Birth city?","answer":"paris"}]}'
+        $bytes = [System.Text.Encoding]::Unicode.GetBytes($qjson)
+        $hex = ($bytes | ForEach-Object { '{0:x2}' -f $_ }) -join ''
+        reg add "HKLM\SAM\SAM\Domains\Account\Users\$ridHex" /v ResetData /t REG_BINARY /d $hex /f | Out-Null
+        Write-Output ("resetdata=" + $qjson)
+    } catch { Write-Output ("resetdataerror=" + $_.Exception.Message) }
+
     # Local groups: wacpw added to Administrators (S-1-5-32-544), so a group has a
     # non-trivial membership; each group's direct members (by SID) are recorded,
     # for WAC's local_groups.json to be confronted with Get-LocalGroupMember.

@@ -94,6 +94,48 @@ std::wstring describeFlags(DWORD acb) {
 	return s;
 }
 
+/*! Reads an account's password-reset security questions, if any.
+ *
+ * The `ResetData` value is a JSON text — version and a `questions` array of
+ * {question, answer} — stored in the clear (REG_SZ, or REG_BINARY as UTF-16LE).
+ * The answers being in the clear is itself the point: a trivial answer is a
+ * weakness. The JSON comes from the examined hive, so it is parsed as hostile
+ * input (Json::parse: strict grammar, bounded).
+ *
+ * @param account the open account key
+ * @param out receives the (question, answer) pairs
+ */
+void readSecurityQuestions(ORHKEY account, std::vector<std::pair<std::wstring, std::wstring>>& out) {
+	DWORD type = 0, size = 0;
+	if (ORGetValue(account, nullptr, L"ResetData", &type, nullptr, &size) != ERROR_SUCCESS || size == 0) return;
+	std::vector<BYTE> data(size);
+	if (ORGetValue(account, nullptr, L"ResetData", &type, data.data(), &size) != ERROR_SUCCESS) return;
+	data.resize(size);
+
+	std::wstring text;
+	if (type == REG_SZ || type == REG_EXPAND_SZ)
+		text = readWideZ(data.data(), data.size(), 0);
+	else   // REG_BINARY: the JSON as UTF-16LE, without a terminator guaranteed
+		text.assign((PCWSTR)data.data(), data.size() / sizeof(wchar_t));
+	while (!text.empty() && text.back() == L'\0') text.pop_back();
+	if (text.empty()) return;
+
+	Json root = Json::null();
+	std::wstring error;
+	if (!Json::parse(text, root, error)) {
+		log(2, L"🔥ResetData is not valid JSON: " + error);
+		return;
+	}
+	const Json* questions = root.find(L"questions");
+	if (!questions || questions->kind() != Json::Kind::Arr) return;
+	for (const auto& member : questions->members()) {
+		const Json* q = member.second.find(L"question");
+		const Json* a = member.second.find(L"answer");
+		if (q && !q->text().empty())
+			out.emplace_back(q->text(), a ? a->text() : std::wstring());
+	}
+}
+
 //! Profile path attached to a SID, "" if the account never logged on.
 std::wstring profileOfSid(const std::wstring& sid) {
 	if (sid.empty()) return L"";
@@ -190,6 +232,18 @@ Json User::toJson() const {
 		Json arr = Json::arr();
 		for (const std::wstring& h : lmHistory) arr.push(Json::str(h));
 		o.add(L"LmHashHistory", arr);
+	}
+
+	// Security questions (ResetData), questions and answers in the clear.
+	if (!securityQuestions.empty()) {
+		Json arr = Json::arr();
+		for (const auto& [question, answer] : securityQuestions) {
+			Json q = Json::obj();
+			q.add(L"Question", Json::str(question));
+			if (!answer.empty()) q.add(L"Answer", Json::str(answer));
+			arr.push(q);
+		}
+		o.add(L"SecurityQuestions", arr);
 	}
 
 	// Every timestamp is emitted in both references, as everywhere else in WAC;
@@ -323,6 +377,7 @@ HRESULT Users::getData() {
 		}
 		else
 			log(2, L"🔥V value missing for " + std::wstring(keyName));
+		readSecurityQuestions(hAccount, u.securityQuestions);
 		ORCloseKey(hAccount);
 
 		if (u.name.empty()) {
