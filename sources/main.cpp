@@ -970,6 +970,9 @@ void convertArtefacts(bool systemAvailable) {
 	convertFileArtefact<NetworkConfiguration>(conf.artefacts.networkConfiguration, "network_configuration.json", Text::ArtefactNetworkConfiguration,
 	                         L"artefacts.network_configuration", Text::StepNetworkConfiguration);
 
+	convertFileArtefact<EventLogConfiguration>(conf.artefacts.eventLogConfiguration, "event_log_configuration.json", Text::ArtefactEventLogConfiguration,
+	                         L"artefacts.event_log_configuration", Text::StepEventLogConfiguration);
+
 	/* SYSTEM INFORMATION, offline.
 	   OUTSIDE the single-exit block above, and not inside it: even without a
 	   usable hive the collector stays useful, since it records the instant of the

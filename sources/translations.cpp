@@ -119,6 +119,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepDevices, L"Périphériques (USB, SCSI, portables, volumes)", L"Extracting DEVICES (USB, SCSI, portable, volumes)" },
 	{ Text::StepNetworkShares, L"Partages réseau de la machine", L"Extracting NETWORK SHARES" },
 	{ Text::StepNetworkConfiguration, L"Configuration réseau (hors ligne)", L"Extracting NETWORK CONFIGURATION (offline)" },
+	{ Text::StepEventLogConfiguration, L"Configuration des journaux d'événements", L"Extracting EVENT LOG CONFIGURATION" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },
@@ -179,6 +180,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactDevices, L"Périphériques", L"Devices" },
 	{ Text::ArtefactNetworkShares, L"Partages réseau", L"Network shares" },
 	{ Text::ArtefactNetworkConfiguration, L"Configuration réseau", L"Network configuration" },
+	{ Text::ArtefactEventLogConfiguration, L"Configuration des journaux d'événements", L"Event log configuration" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },
 
 	{ Text::TimeElapsed,               L"FIN, durée : %1 s",                             L"END, Time elapsed : %1 s" },

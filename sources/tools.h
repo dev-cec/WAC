@@ -149,6 +149,7 @@ struct AppliConf {
 		bool devices = true;  //!< devices the machine knew: Enum USB and SCSI with their dates, portable devices, volume labels, DeviceClasses
 		bool networkShares = true;  //!< folders the machine shares (LanmanServer Shares)
 		bool networkConfiguration = true;  //!< network configuration read offline: adapters, last IPv4 and IPv6 settings, DHCP leases
+		bool eventLogConfiguration = true;  //!< configuration of each event log channel: enabled, size, retention, access
 
 		/*! Whether an artefact asked for reads the users' hives (ntuser.dat,
 		 *  usrClass.dat): they are copied then. They used to be copied only

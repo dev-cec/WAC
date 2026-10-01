@@ -1845,6 +1845,29 @@ def check_small_file_artefacts(folder):
                f"network_configuration.json: the {len(live)} adapter(s) Windows lists, description, hardware address and DHCP address identical",
                f"network_configuration.json: {wrong[:2]}")
 
+    # Event log configuration: each log Windows lists, with the same state
+    # (enabled or not), read from WINEVT\Channels in the offline hive; a
+    # classic log (Services\EventLog) has no such switch and is always on (B-031).
+    logconf = load(folder, "event_log_configuration.json")
+    if isinstance(logconf, list) and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            live = [l.strip()[len("eventlog="):].rsplit("|", 1) for l in f if l.startswith("eventlog=")]
+        mine = {str(c.get("Name", "")).lower(): c for c in logconf if c.get("Source") == "WINEVT\\Channels"}
+        classic = {str(c.get("Name", "")).lower() for c in logconf if c.get("Source") == "Services\\EventLog"}
+        wrong = []
+        for name, enabled in live:
+            c = mine.get(name.lower())
+            if c is None and name.lower() in classic:
+                if enabled != "True":
+                    wrong.append(f"{name}: classic log, Windows {enabled}")
+            elif c is None:
+                wrong.append(f"{name}: absent")
+            elif bool(c.get("Enabled")) != (enabled == "True"):
+                wrong.append(f"{name}: Enabled {c.get('Enabled')}, Windows {enabled}")
+        report(live and not wrong,
+               f"event_log_configuration.json: the {len(live)} log(s) Get-WinEvent lists, each with the same enabled state",
+               f"event_log_configuration.json: {len(wrong)} difference(s), {wrong[:3]}")
+
     # Cleared log: none live, as Windows sees it; the cleared events recovered.
     if isinstance(events, list) and os.path.exists(path):
         with open(path, encoding="utf-8", errors="replace") as f:

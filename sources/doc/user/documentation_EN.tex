@@ -367,6 +367,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   devices: true                 # USB and SCSI devices with their dates, portable devices, volume labels
   network_shares: true          # the machine's network shares, path and rights
   network_configuration: true   # network adapters, last IPv4/IPv6 settings, DHCP leases (offline)
+  event_log_configuration: true # state of each event log: enabled, size, retention, access (offline)
 \end{lstlisting}
 
 \begin{itemize}
@@ -1156,6 +1157,14 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         its last IPv4 and IPv6 settings, and its DHCP lease (obtained and end,
         UTC). It stays readable once the machine is unplugged or the lease
         expired, which the live state no longer shows.
+  \item[\fichier{event\_log\_configuration.json}] configuration of every event
+        log read in the hives: the channels (\texttt{WINEVT\textbackslash
+        Channels}: \champ{Enabled}, \champ{Type}, \champ{OwningPublisher},
+        access rights \champ{ChannelAccess}, size and retention when set) and
+        the classic logs (\texttt{Services\textbackslash EventLog}: file,
+        \champ{MaxSize}, \champ{Retention}, access). An intruder who disables a
+        channel, shrinks a log or opens its access leaves the trace there;
+        \champ{KeyLastWrite} dates the last change of each.
   \item[\fichier{fat\_volumes.json}] FAT12, FAT16, FAT32 and exFAT volumes, the
         suspect's USB keys and cards included (the collection's volume
         excepted): every entry, present or \textbf{deleted} (\champ{Deleted}),

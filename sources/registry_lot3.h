@@ -38,6 +38,9 @@
  *     a forced hardware address), its last IPv4 and IPv6 settings and DHCP
  *     lease — what the live state no longer shows once the machine is
  *     unplugged or the lease gone.
+ *   - Event log configuration: each channel's state (enabled or not, size,
+ *     retention, access) and the classic logs' — an intruder who disables a
+ *     channel or shrinks a log leaves it there.
  */
 #pragma once
 
@@ -267,4 +270,25 @@ public:
 private:
 	std::vector<std::pair<std::wstring, Json>> global_;  //!< Tcpip\\Parameters (Hostname, Domain, SearchList…)
 	std::vector<NetworkAdapterConfiguration> adapters_;
+};
+
+// ------------------------------------------------------------ Event log configuration
+
+/*! The configuration of one event log channel. */
+struct EventLogChannel {
+	std::wstring source;        //!< "WINEVT\\Channels" (SOFTWARE) or "Services\\EventLog" (SYSTEM, the classic logs)
+	std::wstring name;          //!< the channel ("Microsoft-Windows-PowerShell/Operational", "Security")
+	std::vector<std::pair<std::wstring, Json>> values; //!< its values, as stored (Enabled, MaxSize, Retention, ChannelAccess, File…)
+	FILETIME keyLastWriteUtc = { 0 };   //!< last write of its key: its last configuration change
+	Json toJson() const;        //!< @return the channel as a JSON object
+};
+
+//! The configuration of every event log (event_log_configuration.json).
+class EventLogConfiguration {
+public:
+	HRESULT getData();          //!< @return ERROR_SUCCESS, even without any channel
+	HRESULT toJson();           //!< @return the result of the write
+	void clear();               //!< releases the channels
+private:
+	std::vector<EventLogChannel> channels_;
 };

@@ -825,3 +825,39 @@ HRESULT NetworkConfiguration::toJson() {
 }
 
 void NetworkConfiguration::clear() { global_.clear(); adapters_.clear(); }
+
+// ------------------------------------------------------------ Event log configuration
+
+Json EventLogChannel::toJson() const {
+	Json o = Json::obj();
+	o.add(L"Source", Json::str(source));
+	o.add(L"Name", Json::str(name));
+	for (const auto& [n, v] : values) o.add(n, v);
+	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
+	return o;
+}
+
+HRESULT EventLogConfiguration::getData() {
+	auto read = [this](ORHKEY root, const std::wstring& base, const wchar_t* source) {
+		for (const std::wstring& name : subkeys(root, base)) {
+			// Under Services\\EventLog, "Parameters" and "State" are the service's
+			// own keys, not logs: its DLL is in services.json.
+			if (name == L"Parameters" || name == L"State") continue;
+			ORHKEY key = NULL;
+			if (OROpenKey(root, (base + L"\\" + name).c_str(), &key) != ERROR_SUCCESS) continue;
+			EventLogChannel c;
+			c.source = source;
+			c.name = name;
+			c.keyLastWriteUtc = lastWrite(key);
+			readAllValues(key, c.values);
+			ORCloseKey(key);
+			channels_.push_back(std::move(c));
+		}
+	};
+	if (conf.Software) read(conf.Software, L"Microsoft\\Windows\\CurrentVersion\\WINEVT\\Channels", L"WINEVT\\Channels");
+	if (conf.CurrentControlSet) read(conf.CurrentControlSet, L"Services\\EventLog", L"Services\\EventLog");
+	return ERROR_SUCCESS;
+}
+
+HRESULT EventLogConfiguration::toJson() { return writeList("event_log_configuration.json", channels_); }
+void EventLogConfiguration::clear() { channels_.clear(); }
