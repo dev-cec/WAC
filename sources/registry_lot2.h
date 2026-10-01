@@ -31,9 +31,8 @@
 #include <vector>
 #include <windows.h>
 #include "tools.h"
+#include "registry_common.h"
 
-//! Name/Value pairs, in the order read.
-using NameValues = std::vector<std::pair<std::wstring, std::wstring>>;
 
 // ------------------------------------------------------------ Office TrustRecords
 

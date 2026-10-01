@@ -7,65 +7,6 @@
 
 namespace {
 
-//! The key's last write, or zero.
-FILETIME lastWrite(ORHKEY key) {
-	FILETIME f = { 0, 0 };
-	ORQueryInfoKey(key, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &f);
-	return f;
-}
-
-//! The names of the subkeys of `path` under `root`.
-std::vector<std::wstring> subkeys(ORHKEY root, const std::wstring& path) {
-	std::vector<std::wstring> names;
-	ORHKEY key = NULL;
-	if (OROpenKey(root, path.c_str(), &key) != ERROR_SUCCESS) return names;
-	wchar_t name[512];
-	for (DWORD i = 0;; ++i) {
-		DWORD length = (DWORD)(sizeof(name) / sizeof(name[0]));
-		if (OREnumKey(key, i, name, &length, NULL, NULL, NULL) != ERROR_SUCCESS) break;
-		names.emplace_back(name, length);
-	}
-	ORCloseKey(key);
-	return names;
-}
-
-//! A value as text: a string as written, a DWORD as its number.
-std::wstring valueText(DWORD type, const std::vector<BYTE>& data) {
-	if (type == REG_SZ || type == REG_EXPAND_SZ) return readWideZ(data.data(), data.size(), 0);
-	if (type == REG_DWORD && data.size() >= sizeof(DWORD)) {
-		DWORD v = 0;
-		memcpy(&v, data.data(), sizeof(DWORD));
-		return std::to_wstring(v);
-	}
-	return L"";
-}
-
-//! Name/Value pairs as a JSON array.
-Json pairs(const NameValues& values) {
-	Json list = Json::arr();
-	for (const auto& [name, value] : values) {
-		Json p = Json::obj();
-		p.add(L"Name", Json::str(name));
-		p.add(L"Value", Json::str(value));
-		list.push(std::move(p));
-	}
-	return list;
-}
-
-//! Writes an array of elements that have toJson().
-template <class Element>
-HRESULT writeList(const char* file, const std::vector<Element>& elements) {
-	Json list = Json::arr();
-	for (const Element& e : elements) list.push(e.toJson());
-	return writeJsonFile(file, list);
-}
-
-//! What the Explorer inputs and the settings add about their user.
-void addUser(Json& o, const std::wstring& sid) {
-	o.add(L"SID", Json::str(sid));
-	o.add(L"SIDName", Json::str(getNameFromSid(sid)));
-}
-
 const DWORD MACROS_ENABLED = 0x7FFFFFFF;   //!< last DWORD of a TrustRecords value: "Enable macros"
 const DWORD CERT_CERT_PROP_ID = 0x20;      //!< the property holding the certificate, DER
 
