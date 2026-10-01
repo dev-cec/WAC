@@ -643,3 +643,17 @@ if (Wants 'devices') {
         Write-Output ("device=" + $id + '|' + ($dates -join '|'))
     }
 }
+
+# 28. B-031 — network shares: the WacShare of section 22 (read-only for "wac",
+#     the test folder), then every non-administrative share Windows lists.
+if (Wants 'network_shares') {
+    if (-not (Get-SmbShare -Name WacShare -ErrorAction SilentlyContinue)) {
+        New-SmbShare -Name WacShare -Path 'C:\wactest' -ReadAccess 'wac' | Out-Null
+    }
+    Get-SmbShare | Where-Object { -not $_.Special } | ForEach-Object { Write-Output ("share=" + $_.Name + '|' + $_.Path) }
+    # Who may use the witness, as Windows reads its security descriptor.
+    Get-SmbShareAccess -Name WacShare | ForEach-Object {
+        $sid = (New-Object Security.Principal.NTAccount $_.AccountName).Translate([Security.Principal.SecurityIdentifier]).Value
+        Write-Output ("shareaccess=WacShare|$sid|" + $_.AccessControlType)
+    }
+}

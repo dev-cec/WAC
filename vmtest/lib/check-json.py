@@ -1805,6 +1805,21 @@ def check_small_file_artefacts(folder):
                f"devices.json: the {len(listed)} USB and SCSI device(s) Windows lists, their three dates identical (UTC)",
                f"devices.json: {wrong[:2]}")
 
+    # Network shares: the non-administrative shares Get-SmbShare lists, with
+    # their path, the witness among them (B-031).
+    shares = load(folder, "network_shares.json")
+    if isinstance(shares, list) and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            theirs = {tuple(l.strip()[len("share="):].split("|", 1)) for l in f if l.startswith("share=")}
+        mine = {(sh.get("Name"), sh.get("Path")) for sh in shares}
+        with open(path, encoding="utf-8", errors="replace") as f:
+            access = {tuple(l.strip()[len("shareaccess="):].split("|")[1:]) for l in f if l.startswith("shareaccess=")}
+        witness = next((sh for sh in shares if sh.get("Name") == "WacShare"), {})
+        aces = {(a.get("Sid"), a.get("Type")) for a in (witness.get("SecurityDescriptor") or {}).get("Dacl") or []}
+        report(theirs and mine == theirs and ("WacShare", "C:\\wactest") in mine and access and aces == access,
+               f"network_shares.json: the {len(theirs)} share(s) Get-SmbShare lists, with their path; the witness's DACL as Get-SmbShareAccess reads it",
+               f"network_shares.json: WAC only {sorted(mine - theirs)}, Windows only {sorted(theirs - mine)}; DACL {sorted(aces)}, Windows {sorted(access)}")
+
     # Cleared log: none live, as Windows sees it; the cleared events recovered.
     if isinstance(events, list) and os.path.exists(path):
         with open(path, encoding="utf-8", errors="replace") as f:

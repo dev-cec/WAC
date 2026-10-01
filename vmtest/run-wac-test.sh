@@ -150,7 +150,7 @@ wait_registry_on_disk() {
 # The artefacts read in the hives whose witnesses the harness writes in the
 # live registry: a --only cycle of one of them waits too. The witnesses of the
 # third lot (installed_programs…) were absent from their collection without it.
-REGISTRY_WITNESSES="registry persistence office_trust_records typed_paths word_wheel_query root_certificates internet_settings firewall installed_programs defender_configuration explorer_recent_docs mount_points program_usage"
+REGISTRY_WITNESSES="registry persistence office_trust_records typed_paths word_wheel_query root_certificates internet_settings firewall installed_programs defender_configuration explorer_recent_docs mount_points program_usage network_shares"
 wants_registry_witness() { wants $REGISTRY_WITNESSES; }
 
 

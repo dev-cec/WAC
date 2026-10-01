@@ -302,6 +302,73 @@ std::wstring registryNameToJsonKey(const std::wstring& valueName) {
 }
 
 
+namespace {
+
+//! One SID of a descriptor, with its name; nothing if it does not fit.
+void addSidField(Json& o, const wchar_t* key, const BYTE* base, size_t size, size_t offset) {
+	if (offset == 0 || offset >= size) return;
+	const std::wstring sid = sidToText(base + offset, size - offset);
+	if (sid.empty()) return;
+	o.add(key, Json::str(sid));
+	o.add(std::wstring(key) + L"Name", Json::str(getNameFromSid(sid)));
+}
+
+//! The ACEs of one ACL at `offset`, bounded by the ACL's declared size.
+Json aclToJson(const BYTE* sd, size_t size, size_t offset) {
+	Json aces = Json::arr();
+	const size_t ACL_HEADER = 8, ACE_HEADER = 4;
+	if (offset == 0 || offset > size || size - offset < ACL_HEADER) return aces;
+	uint16_t aclSize, count;
+	memcpy(&aclSize, sd + offset + 2, 2);
+	memcpy(&count, sd + offset + 4, 2);
+	const size_t end = std::min(size, offset + aclSize);
+	size_t at = offset + ACL_HEADER;
+	for (uint16_t i = 0; i < count && at + ACE_HEADER <= end; ++i) {
+		const BYTE type = sd[at], flags = sd[at + 1];
+		uint16_t aceSize;
+		memcpy(&aceSize, sd + at + 2, 2);
+		if (aceSize < ACE_HEADER || aceSize > end - at) break;
+		Json ace = Json::obj();
+		static const wchar_t* TYPES[] = { L"Allow", L"Deny", L"Audit", L"Alarm" };
+		ace.add(L"Type", type < 4 ? Json::str(TYPES[type]) : Json::num((unsigned)type));
+		ace.add(L"Flags", Json::str(to_hex(flags)));
+		// Allow, Deny, Audit, Alarm: a mask then the SID; other kinds carry GUIDs first.
+		if (type < 4 && aceSize >= ACE_HEADER + 4) {
+			uint32_t mask;
+			memcpy(&mask, sd + at + 4, 4);
+			ace.add(L"Mask", Json::str(L"0x" + to_hex(mask, 8)));
+			const std::wstring sid = sidToText(sd + at + 8, aceSize - 8);
+			ace.add(L"Sid", Json::str(sid));
+			if (!sid.empty()) ace.add(L"SidName", Json::str(getNameFromSid(sid)));
+		}
+		else ace.add(L"Size", Json::num((unsigned)aceSize));
+		aces.push(std::move(ace));
+		at += aceSize;
+	}
+	return aces;
+}
+
+} // namespace
+
+Json securityDescriptorToJson(const BYTE* sd, size_t size) {
+	Json o = Json::obj();
+	const size_t HEADER = 20;   // revision, Sbz1, control, then four offsets
+	if (size < HEADER || sd[0] != 1) return o;
+	uint16_t control;
+	uint32_t owner, group, sacl, dacl;
+	memcpy(&control, sd + 2, 2);
+	memcpy(&owner, sd + 4, 4);
+	memcpy(&group, sd + 8, 4);
+	memcpy(&sacl, sd + 12, 4);
+	memcpy(&dacl, sd + 16, 4);
+	o.add(L"Control", Json::str(L"0x" + to_hex(control, 4)));
+	addSidField(o, L"Owner", sd, size, owner);
+	addSidField(o, L"Group", sd, size, group);
+	if (control & SE_DACL_PRESENT) o.add(L"Dacl", aclToJson(sd, size, dacl));
+	if (control & SE_SACL_PRESENT) o.add(L"Sacl", aclToJson(sd, size, sacl));
+	return o;
+}
+
 FILETIME unixToFiletime(unsigned long long seconds) {
 	const unsigned long long OFFSET_1601_1970 = 11644473600ULL;
 	const unsigned long long ticks = (seconds + OFFSET_1601_1970) * 10000000ULL;

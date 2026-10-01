@@ -669,3 +669,46 @@ HRESULT Devices::getData() {
 
 HRESULT Devices::toJson() { return writeList("devices.json", devices_); }
 void Devices::clear() { devices_.clear(); }
+
+// ------------------------------------------------------------ Network shares
+
+Json NetworkShare::toJson() const {
+	Json o = Json::obj();
+	o.add(L"Name", Json::str(name));
+	for (const auto& [field, value] : fields) o.add(registryNameToJsonKey(field), Json::str(value));
+	o.add(L"SecurityDescriptor", securityDescriptor);
+	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
+	return o;
+}
+
+HRESULT NetworkShares::getData() {
+	if (!conf.CurrentControlSet) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	const std::wstring SHARES = L"Services\\LanmanServer\\Shares";
+	ORHKEY key = NULL;
+	if (OROpenKey(conf.CurrentControlSet, SHARES.c_str(), &key) != ERROR_SUCCESS) return ERROR_SUCCESS;
+	const FILETIME written = lastWrite(key);
+	for (DWORD i = 0;; ++i) {
+		NetworkShare share;
+		DWORD type = 0;
+		std::vector<BYTE> data;
+		if (enumRegistryValue(key, i, share.name, type, data) != ERROR_SUCCESS) break;
+		share.keyLastWriteUtc = written;
+		// A REG_MULTI_SZ of "Name=Value" lines.
+		const Json lines = registryValueToJson(type, data);
+		if (lines.kind() == Json::Kind::Arr)
+			for (const auto& [unused, line] : lines.members()) {
+				const std::wstring text = line.text();
+				const size_t equal = text.find(L'=');
+				if (equal != std::wstring::npos) share.fields.emplace_back(text.substr(0, equal), text.substr(equal + 1));
+			}
+		std::vector<BYTE> sd;
+		if (getRegBinaryValue(conf.CurrentControlSet, (SHARES + L"\\Security").c_str(), share.name.c_str(), sd) == ERROR_SUCCESS)
+			share.securityDescriptor = securityDescriptorToJson(sd.data(), sd.size());
+		shares_.push_back(std::move(share));
+	}
+	ORCloseKey(key);
+	return ERROR_SUCCESS;
+}
+
+HRESULT NetworkShares::toJson() { return writeList("network_shares.json", shares_); }
+void NetworkShares::clear() { shares_.clear(); }

@@ -65,3 +65,4 @@ artefacts:
   known_networks:             true  # networks the machine joined: name, kind, gateway, first and last connection (NetworkList)
   program_usage:              true  # programs each user launched or used: FeatureUsage, JumplistData, compatibility store and layers, RADAR, pinned items
   devices:                    true  # USB and SCSI devices with their dates, portable devices, volume labels per drive letter, device interfaces
+  network_shares:             true  # folders the machine shares, with their path and permissions (LanmanServer)

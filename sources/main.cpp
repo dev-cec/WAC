@@ -964,6 +964,9 @@ void convertArtefacts(bool systemAvailable) {
 	convertFileArtefact<Devices>(conf.artefacts.devices, "devices.json", Text::ArtefactDevices,
 	                         L"artefacts.devices", Text::StepDevices);
 
+	convertFileArtefact<NetworkShares>(conf.artefacts.networkShares, "network_shares.json", Text::ArtefactNetworkShares,
+	                         L"artefacts.network_shares", Text::StepNetworkShares);
+
 	/* SYSTEM INFORMATION, offline.
 	   OUTSIDE the single-exit block above, and not inside it: even without a
 	   usable hive the collector stays useful, since it records the instant of the

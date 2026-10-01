@@ -147,6 +147,7 @@ struct AppliConf {
 		bool knownNetworks = true;  //!< networks the machine joined (NetworkList): name, kind, gateway, first and last connection
 		bool programUsages = true;  //!< what each user launched or used: FeatureUsage, JumplistData, compatibility store and layers, RADAR, pinned items
 		bool devices = true;  //!< devices the machine knew: Enum USB and SCSI with their dates, portable devices, volume labels, DeviceClasses
+		bool networkShares = true;  //!< folders the machine shares (LanmanServer Shares)
 
 		/*! Whether an artefact asked for reads the users' hives (ntuser.dat,
 		 *  usrClass.dat): they are copied then. They used to be copied only
@@ -896,6 +897,17 @@ GuidV1 decodeGuidV1(const GUID& guid);
 * @param size the bytes available: nothing beyond is read
 * @return the text, or "" if the SID does not fit in `size` */
 std::wstring sidToText(const BYTE* sid, size_t size);
+
+/*! A self-relative security descriptor as JSON: its owner and group (SID, and
+*  name as resolved offline), and each access control entry of its DACL and
+*  SACL — type ("Allow", "Deny", "Audit", or the number), flags, access mask,
+*  SID and name. An ACE of another kind (object ACEs…) is given by its type
+*  and size. Every read is bounded by `size` and by the sizes the descriptor
+*  declares; what does not fit is left out.
+* @param sd the descriptor's bytes
+* @param size their number
+* @return the JSON object, empty if the descriptor's header does not fit */
+Json securityDescriptorToJson(const BYTE* sd, size_t size);
 
 /*! Binary form of a SID written as text — the reverse of sidToText, replacing
 * ConvertStringSidToSidW.

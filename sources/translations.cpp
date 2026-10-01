@@ -117,6 +117,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepKnownNetworks, L"Réseaux connus (NetworkList)", L"Extracting KNOWN NETWORKS (NetworkList)" },
 	{ Text::StepProgramUsages, L"Usage des programmes (FeatureUsage, JumplistData, compatibilité, épinglés)", L"Extracting PROGRAM USAGE (FeatureUsage, JumplistData, compatibility, pinned)" },
 	{ Text::StepDevices, L"Périphériques (USB, SCSI, portables, volumes)", L"Extracting DEVICES (USB, SCSI, portable, volumes)" },
+	{ Text::StepNetworkShares, L"Partages réseau de la machine", L"Extracting NETWORK SHARES" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },
@@ -175,6 +176,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactKnownNetworks, L"Réseaux connus", L"Known networks" },
 	{ Text::ArtefactProgramUsages, L"Usage des programmes", L"Program usage" },
 	{ Text::ArtefactDevices, L"Périphériques", L"Devices" },
+	{ Text::ArtefactNetworkShares, L"Partages réseau", L"Network shares" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },
 
 	{ Text::TimeElapsed,               L"FIN, durée : %1 s",                             L"END, Time elapsed : %1 s" },

@@ -31,6 +31,9 @@
  *     removal dates; the portable devices (a phone, a camera); the volume
  *     labels Windows Search cached per drive letter; the disk, volume and
  *     portable-device interfaces of DeviceClasses.
+ *   - Network shares: the folders the machine shares (LanmanServer\\Shares),
+ *     a way in or out for data; the administrative ones (C$, ADMIN$) are not
+ *     stored there.
  */
 #pragma once
 
@@ -215,4 +218,25 @@ public:
 	void clear();               //!< releases the traces
 private:
 	std::vector<DeviceTrace> devices_;
+};
+
+// ------------------------------------------------------------ Network shares
+
+/*! One folder the machine shares. */
+struct NetworkShare {
+	std::wstring name;          //!< the share's name
+	NameValues fields;          //!< its "Name=Value" lines, as stored (Path, Remark, Permissions, Type, MaxUses…)
+	Json securityDescriptor = Json::obj(); //!< Shares\\Security\\<name>, decoded: who may use it
+	FILETIME keyLastWriteUtc = { 0 };   //!< last write of the Shares key
+	Json toJson() const;        //!< @return the share as a JSON object
+};
+
+//! The machine's shares (network_shares.json).
+class NetworkShares {
+public:
+	HRESULT getData();          //!< @return ERROR_SUCCESS, or why SYSTEM is missing
+	HRESULT toJson();           //!< @return the result of the write
+	void clear();               //!< releases the shares
+private:
+	std::vector<NetworkShare> shares_;
 };

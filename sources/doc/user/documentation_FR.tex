@@ -370,6 +370,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   known_networks: true          # réseaux auxquels la machine s'est connectée (NetworkList)
   program_usage: true           # programmes lancés ou utilisés (FeatureUsage, JumplistData, compatibilité, épinglés)
   devices: true                 # périphériques USB et SCSI et leurs dates, portables, noms de volumes
+  network_shares: true          # partages réseau de la machine, chemin et droits
 \end{lstlisting}
 
 \begin{itemize}
@@ -1165,6 +1166,12 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         Windows a retenus par lettre de lecteur (\texttt{VolumeInfoCache}) ;
         interfaces de disque, de volume et de périphérique portable
         (\texttt{DeviceClasses}), écrites à leur première apparition.
+  \item[\fichier{network\_shares.json}] dossiers que la machine partage
+        (\texttt{LanmanServer\textbackslash Shares}) : nom, chemin, réglages tels
+        que stockés, et descripteur de sécurité décodé --- propriétaire, et pour
+        chaque entrée de la liste de contrôle d'accès son type, son masque, le
+        SID et son nom. Les partages administratifs (\texttt{C\$},
+        \texttt{ADMIN\$}) n'y figurent pas : Windows ne les stocke pas.
   \item[\fichier{fat\_volumes.json}] volumes FAT12, FAT16, FAT32 et exFAT, clés
         USB et cartes du suspect comprises (le volume de la collecte excepté) :
         chaque entrée, présente ou \textbf{supprimée} (\champ{Deleted}), son
