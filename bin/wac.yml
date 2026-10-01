@@ -63,3 +63,4 @@ artefacts:
   explorer_recent_docs:       true  # files each user opened, by extension, most recent first (Explorer's RecentDocs)
   mount_points:               true  # volumes and network shares each user's Explorer saw, with their commands (MountPoints2)
   known_networks:             true  # networks the machine joined: name, kind, gateway, first and last connection (NetworkList)
+  program_usage:              true  # programs each user launched or used: FeatureUsage, JumplistData, compatibility store and layers, RADAR, pinned items

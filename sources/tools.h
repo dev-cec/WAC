@@ -145,6 +145,7 @@ struct AppliConf {
 		bool explorerRecentDocs = true;  //!< files each user opened, by extension (Explorer's RecentDocs)
 		bool mountPoints = true;  //!< volumes and network shares each user's Explorer saw (MountPoints2)
 		bool knownNetworks = true;  //!< networks the machine joined (NetworkList): name, kind, gateway, first and last connection
+		bool programUsages = true;  //!< what each user launched or used: FeatureUsage, JumplistData, compatibility store and layers, RADAR, pinned items
 
 		/*! Whether an artefact asked for reads the users' hives (ntuser.dat,
 		 *  usrClass.dat): they are copied then. They used to be copied only
@@ -154,7 +155,7 @@ struct AppliConf {
 		 *  @return true if one of them is switched on */
 		bool needsUserHives() const {
 			return registry || persistence || officeTrustRecords || typedPaths || wordWheelQuery
-			    || rootCertificates || internetSettings || installedPrograms || explorerRecentDocs || mountPoints;
+			    || rootCertificates || internetSettings || installedPrograms || explorerRecentDocs || mountPoints || programUsages;
 		}
 	} artefacts;
 	RunMode mode = RunMode::Full; //!< what this run does (see RunMode)

@@ -958,6 +958,9 @@ void convertArtefacts(bool systemAvailable) {
 	convertFileArtefact<KnownNetworks>(conf.artefacts.knownNetworks, "known_networks.json", Text::ArtefactKnownNetworks,
 	                         L"artefacts.known_networks", Text::StepKnownNetworks);
 
+	convertFileArtefact<ProgramUsages>(conf.artefacts.programUsages, "program_usage.json", Text::ArtefactProgramUsages,
+	                         L"artefacts.program_usage", Text::StepProgramUsages);
+
 	/* SYSTEM INFORMATION, offline.
 	   OUTSIDE the single-exit block above, and not inside it: even without a
 	   usable hive the collector stays useful, since it records the instant of the

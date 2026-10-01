@@ -363,6 +363,7 @@ artefacts:              # one switch per artefact; all the hives = registry
   explorer_recent_docs: true    # files each user opened (Explorer's RecentDocs)
   mount_points: true            # volumes and shares each user saw (MountPoints2)
   known_networks: true          # networks the machine joined (NetworkList)
+  program_usage: true           # programs launched or used (FeatureUsage, JumplistData, compatibility, pinned)
 \end{lstlisting}
 
 \begin{itemize}
@@ -1121,6 +1122,13 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         writes these two dates in local time: \wac{} gives them in UTC with the
         offset in force at their date (measured against the
         \texttt{NetworkProfile} log). They tell where the machine has been.
+  \item[\fichier{program\_usage.json}] what each user launched or used,
+        source by source (\champ{Source}): \texttt{FeatureUsage} (launches,
+        switches, taskbar clicks, per application, \champ{Count}),
+        \texttt{JumplistData} (last use, \champ{LastUsed}), the Program
+        Compatibility Assistant's store (programs run), compatibility layers
+        (\texttt{Layers}), the programs RADAR diagnosed, and the taskbar's
+        pinned items (\texttt{Taskband}), each decoded as a whole shortcut.
   \item[\fichier{fat\_volumes.json}] FAT12, FAT16, FAT32 and exFAT volumes, the
         suspect's USB keys and cards included (the collection's volume
         excepted): every entry, present or \textbf{deleted} (\champ{Deleted}),

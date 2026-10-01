@@ -22,6 +22,10 @@
  *   - Known networks (NetworkList): every network the machine joined — its
  *     name, its kind, its gateway's hardware address, when it was first and
  *     last connected: where the machine has been.
+ *   - Program usage: what each user launched or used — FeatureUsage counts,
+ *     JumplistData's last use, the Program Compatibility Assistant's store of
+ *     programs run, compatibility layers, RADAR's diagnosed programs, and the
+ *     taskbar's pinned items (Taskband, each a whole shortcut).
  */
 #pragma once
 
@@ -159,4 +163,26 @@ public:
 	void clear();               //!< releases the networks
 private:
 	std::vector<KnownNetwork> networks_;
+};
+
+// ------------------------------------------------------------ Program usage
+
+/*! One trace of a program's use, from one of the sources of ProgramUsage. */
+struct ProgramUsage {
+	std::wstring source;        //!< the key it comes from (FeatureUsage\\AppLaunch, JumplistData…)
+	std::wstring sid;           //!< the user; empty for a machine-wide source
+	std::wstring name;          //!< the program (path, application ID or name)
+	std::vector<std::pair<std::wstring, Json>> values; //!< what the source says of it (Count, LastUsed, Layers…)
+	FILETIME keyLastWriteUtc = { 0 };   //!< last write of the source's key
+	Json toJson() const;        //!< @return the trace as a JSON object
+};
+
+//! Program usage of the machine and of each user (program_usage.json).
+class ProgramUsages {
+public:
+	HRESULT getData();          //!< @return ERROR_SUCCESS, even without any trace
+	HRESULT toJson();           //!< @return the result of the write
+	void clear();               //!< releases the traces
+private:
+	std::vector<ProgramUsage> usages_;
 };

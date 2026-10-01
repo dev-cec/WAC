@@ -14,7 +14,7 @@ checks WAC ran to the end.
 Non-zero exit if at least one file is invalid or inconsistent.
 """
 import ntpath
-import hashlib, json, sys, glob, os, re, collections, uuid
+import hashlib, json, sys, glob, os, re, collections, uuid, datetime
 
 # A double escaping is recognised on a PATH pattern, not on free text: the
 # content of an event (PowerShell script, regular expression, command line) may
@@ -1721,10 +1721,13 @@ def check_small_file_artefacts(folder):
     # System settings (OperatingSystem.json): the values of the live registry,
     # and ShutdownTime within a minute of the System log's last shutdown (B-031).
     osj = load(folder, "OperatingSystem.json")
-    if isinstance(osj, dict) and os.path.exists(path):
+    lines = []
+    if os.path.exists(path):
         with open(path, encoding="utf-8", errors="replace") as f:
             lines = f.read().splitlines()
-        live = dict(l[len("setting="):].split("|", 1) for l in lines if l.startswith("setting="))
+    live = dict(l[len("setting="):].split("|", 1) for l in lines if l.startswith("setting="))
+    # The reference is written by the registry witnesses: without them, nothing to confront.
+    if isinstance(osj, dict) and live:
         mine = {st.get("Name"): str(st.get("Value")) for st in osj.get("Settings") or []}
         wrong = [f"{n}: WAC {mine.get(n)!r}, registry {v!r}" for n, v in live.items() if mine.get(n) != v]
         down = next((l[len("shutdown="):] for l in lines if l.startswith("shutdown=")), None)
@@ -1750,6 +1753,34 @@ def check_small_file_artefacts(folder):
                  for owner, key, name, value in states if mine.get((owner, key, name)) != value]
         report(states and not wrong, f"run.json: the {len(states)} StartupApproved and RunNotification value(s) of the live registry, codes identical",
                f"run.json: {wrong[:2] if wrong else 'no startup state listed'}")
+
+    # Program usage: per source, the names the live registry holds for the user
+    # "wac", the witness layer among them; as many pinned items as
+    # FavoritesResolve chains; every date in the past (B-031).
+    usage = load(folder, "program_usage.json")
+    if isinstance(usage, list) and "pinned" in reference:
+        sid, pinned = reference["pinned"].split("|")
+        with open(path, encoding="utf-8", errors="replace") as f:
+            sources = {l.strip()[len("usage="):].split("|")[0]: set(l.strip()[len("usage="):].split("|")[1:]) - {""}
+                       for l in f if l.startswith("usage=")}
+        wrong = []
+        for source, names in sources.items():
+            mine = {u.get("Name") for u in usage if u.get("Source") == source and u.get("SID") == sid}
+            if mine != names:
+                wrong.append(f"{source}: WAC only {sorted(mine - names)[:2]}, registry only {sorted(names - mine)[:2]}")
+        layer = next((u for u in usage if u.get("Name") == "C:\\wactest\\wac-layer.exe"), {})
+        if layer.get("Layers") != "~ WIN7RTM":
+            wrong.append(f"witness layer {layer}")
+        mine_pinned = sum(1 for u in usage if u.get("Source") == "Taskband" and u.get("SID") == sid)
+        if mine_pinned != int(pinned):
+            wrong.append(f"pinned items {mine_pinned}, FavoritesResolve {pinned}")
+        now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+        future = [u for u in usage for k, v in u.items() if k.endswith("Utc") and isinstance(v, str) and v[:19] > now]
+        if future:
+            wrong.append(f"date after the collection: {future[0]}")
+        report(sources and not wrong,
+               f"program_usage.json: {len(sources)} source(s) as the live registry holds them, the witness layer, {mine_pinned} pinned item(s) decoded",
+               f"program_usage.json: {wrong[:2]}")
 
     # Cleared log: none live, as Windows sees it; the cleared events recovered.
     if isinstance(events, list) and os.path.exists(path):

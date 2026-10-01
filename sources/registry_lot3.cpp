@@ -3,6 +3,7 @@
  */
 #include "registry_lot3.h"
 #include "idList.h"
+#include "recent_docs.h"
 #include "ip_address.h"
 #include <algorithm>
 
@@ -409,3 +410,143 @@ HRESULT KnownNetworks::getData() {
 
 HRESULT KnownNetworks::toJson() { return writeList("known_networks.json", networks_); }
 void KnownNetworks::clear() { networks_.clear(); }
+
+// ------------------------------------------------------------ Program usage
+
+namespace {
+
+//! A FILETIME stored as a QWORD (JumplistData, RADAR) as its two dates.
+void addQwordDate(std::vector<std::pair<std::wstring, Json>>& values, const std::wstring& key,
+                  const std::vector<BYTE>& data) {
+	if (data.size() < sizeof(FILETIME)) return;
+	FILETIME utc;
+	memcpy(&utc, data.data(), sizeof(FILETIME));
+	if (!utc.dwLowDateTime && !utc.dwHighDateTime) return;
+	values.emplace_back(key + L"Utc", Json::str(timeToIso8601Utc(utc)));
+	values.emplace_back(key, Json::str(utcTimeToIso8601Local(utc)));
+}
+
+/*! Reads one key whose values are programs: `convert` turns a value into the
+ *  trace's fields.
+ *  @param root,path the key
+ *  @param source,sid what the traces belong to
+ *  @param convert fills the values of one trace from the registry value
+ *  @param out receives the traces */
+void readUsageKey(ORHKEY root, const std::wstring& path, const std::wstring& source, const std::wstring& sid,
+                  const std::function<void(DWORD, const std::vector<BYTE>&, std::vector<std::pair<std::wstring, Json>>&)>& convert,
+                  std::vector<ProgramUsage>& out) {
+	ORHKEY key = NULL;
+	if (OROpenKey(root, path.c_str(), &key) != ERROR_SUCCESS) return;
+	const FILETIME written = lastWrite(key);
+	for (DWORD i = 0;; ++i) {
+		ProgramUsage u;
+		DWORD type = 0;
+		std::vector<BYTE> data;
+		if (enumRegistryValue(key, i, u.name, type, data) != ERROR_SUCCESS) break;
+		u.source = source;
+		u.sid = sid;
+		u.keyLastWriteUtc = written;
+		convert(type, data, u.values);
+		out.push_back(std::move(u));
+	}
+	ORCloseKey(key);
+}
+
+//! The value as stored, under a fixed name.
+auto asStored(const wchar_t* field) {
+	return [field](DWORD type, const std::vector<BYTE>& data, std::vector<std::pair<std::wstring, Json>>& values) {
+		values.emplace_back(field, registryValueToJson(type, data));
+	};
+}
+
+/*! The taskbar's pinned items: FavoritesResolve is a sequence of whole
+ *  shortcuts, each after its size (measured: four of 824, 1267, 1706 and
+ *  1780 bytes fill its 5593 exactly). Each is decoded as a .lnk.
+ *  @param root the user's hive
+ *  @param sid the user
+ *  @param out receives one trace per pinned item */
+void readTaskband(ORHKEY root, const std::wstring& sid, std::vector<ProgramUsage>& out) {
+	const std::wstring path = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Taskband";
+	ORHKEY key = NULL;
+	if (OROpenKey(root, path.c_str(), &key) != ERROR_SUCCESS) return;
+	const FILETIME written = lastWrite(key);
+	std::vector<BYTE> data;
+	const bool read = getRegBinaryValue(key, nullptr, L"FavoritesResolve", data) == ERROR_SUCCESS;
+	ORCloseKey(key);
+	if (!read) return;
+	const size_t LNK_HEADER = 76;
+	size_t at = 0;
+	for (unsigned index = 0; at + 4 <= data.size(); ++index) {
+		DWORD size;
+		memcpy(&size, data.data() + at, 4);
+		if (size < LNK_HEADER || size > data.size() - at - 4) {
+			log(2, L"🔥Taskband: pinned item of " + std::to_wstring(size) + L" bytes at " + std::to_wstring(at) + L", walk stopped");
+			break;
+		}
+		std::vector<BYTE> lnk(data.begin() + at + 4, data.begin() + at + 4 + size);
+		RecentDoc shortcut(lnk.data(), lnk.size(), L"Taskband\\FavoritesResolve", sid);
+		ProgramUsage u;
+		u.source = L"Taskband";
+		u.sid = sid;
+		u.name = shortcut.target.empty() ? L"pinned item " + std::to_wstring(index) : shortcut.target;
+		u.keyLastWriteUtc = written;
+		u.values.emplace_back(L"Shortcut", shortcut.toJson());
+		out.push_back(std::move(u));
+		at += 4 + size;
+	}
+}
+
+} // namespace
+
+Json ProgramUsage::toJson() const {
+	Json o = Json::obj();
+	o.add(L"Source", Json::str(source));
+	if (!sid.empty()) addUser(o, sid);
+	o.add(L"Name", Json::str(name));
+	for (const auto& [n, v] : values) o.add(n, v);
+	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
+	return o;
+}
+
+HRESULT ProgramUsages::getData() {
+	const std::wstring NT = L"Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\";
+	auto lastUsed = [](DWORD, const std::vector<BYTE>& data, std::vector<std::pair<std::wstring, Json>>& values) {
+		addQwordDate(values, L"LastUsed", data);
+	};
+	if (conf.Software) {
+		readUsageKey(conf.Software, NT + L"Layers", L"AppCompatFlags\\Layers", L"", asStored(L"Layers"), usages_);
+		// RADAR: one subkey per program diagnosed for a memory leak.
+		const std::wstring radar = L"Microsoft\\RADAR\\HeapLeakDetection\\DiagnosedApplications";
+		for (const std::wstring& program : subkeys(conf.Software, radar)) {
+			ORHKEY key = NULL;
+			if (OROpenKey(conf.Software, (radar + L"\\" + program).c_str(), &key) != ERROR_SUCCESS) continue;
+			ProgramUsage u;
+			u.source = L"RADAR";
+			u.name = program;
+			u.keyLastWriteUtc = lastWrite(key);
+			for (DWORD i = 0;; ++i) {
+				std::wstring name;
+				DWORD type = 0;
+				std::vector<BYTE> data;
+				if (enumRegistryValue(key, i, name, type, data) != ERROR_SUCCESS) break;
+				if (name == L"LastDetectionTime" && type == REG_QWORD) addQwordDate(u.values, L"LastDetectionTime", data);
+				else u.values.emplace_back(registryNameToJsonKey(name), registryValueToJson(type, data));
+			}
+			ORCloseKey(key);
+			usages_.push_back(std::move(u));
+		}
+	}
+	forEachProfileHive(L"\\ntuser.dat", [&](ORHKEY root, const std::wstring& sid) {
+		const std::wstring explorer = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FeatureUsage";
+		for (const std::wstring& kind : subkeys(root, explorer))
+			readUsageKey(root, explorer + L"\\" + kind, L"FeatureUsage\\" + kind, sid, asStored(L"Count"), usages_);
+		readUsageKey(root, L"Software\\Microsoft\\Windows\\CurrentVersion\\Search\\JumplistData", L"JumplistData", sid, lastUsed, usages_);
+		readUsageKey(root, L"Software\\" + NT + L"Compatibility Assistant\\Store", L"CompatibilityAssistant\\Store", sid, asStored(L"Data"), usages_);
+		readUsageKey(root, L"Software\\" + NT + L"Layers", L"AppCompatFlags\\Layers", sid, asStored(L"Layers"), usages_);
+		readTaskband(root, sid, usages_);
+	});
+	return ERROR_SUCCESS;
+}
+
+HRESULT ProgramUsages::toJson() { return writeList("program_usage.json", usages_); }
+void ProgramUsages::clear() { usages_.clear(); }

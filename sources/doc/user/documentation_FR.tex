@@ -368,6 +368,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   explorer_recent_docs: true    # fichiers ouverts par chaque utilisateur (RecentDocs de l'Explorateur)
   mount_points: true            # volumes et partages vus par chaque utilisateur (MountPoints2)
   known_networks: true          # réseaux auxquels la machine s'est connectée (NetworkList)
+  program_usage: true           # programmes lancés ou utilisés (FeatureUsage, JumplistData, compatibilité, épinglés)
 \end{lstlisting}
 
 \begin{itemize}
@@ -1144,6 +1145,15 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         locale : \wac{} les donne en UTC avec le décalage en vigueur à leur
         date (mesuré contre le journal \texttt{NetworkProfile}). Elles disent où
         la machine a été.
+  \item[\fichier{program\_usage.json}] ce que chaque utilisateur a lancé ou
+        utilisé, source par source (\champ{Source}) : \texttt{FeatureUsage}
+        (lancements, bascules, clics sur la barre des tâches, par application,
+        \champ{Count}), \texttt{JumplistData} (dernière utilisation,
+        \champ{LastUsed}), le magasin de l'Assistant de compatibilité des
+        programmes (programmes exécutés), les modes de compatibilité
+        (\texttt{Layers}), les programmes diagnostiqués par RADAR, et les éléments
+        épinglés à la barre des tâches (\texttt{Taskband}), chacun décodé comme
+        un raccourci complet.
   \item[\fichier{fat\_volumes.json}] volumes FAT12, FAT16, FAT32 et exFAT, clés
         USB et cartes du suspect comprises (le volume de la collecte excepté) :
         chaque entrée, présente ou \textbf{supprimée} (\champ{Deleted}), son

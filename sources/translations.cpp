@@ -115,6 +115,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepExplorerRecentDocs, L"Fichiers ouverts (RecentDocs de l'Explorateur)", L"Extracting EXPLORER RECENTDOCS" },
 	{ Text::StepMountPoints, L"Volumes et partages vus (MountPoints2)", L"Extracting MOUNTPOINTS2 (volumes and shares)" },
 	{ Text::StepKnownNetworks, L"Réseaux connus (NetworkList)", L"Extracting KNOWN NETWORKS (NetworkList)" },
+	{ Text::StepProgramUsages, L"Usage des programmes (FeatureUsage, JumplistData, compatibilité, épinglés)", L"Extracting PROGRAM USAGE (FeatureUsage, JumplistData, compatibility, pinned)" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },
@@ -171,6 +172,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactExplorerRecentDocs, L"Fichiers ouverts (RecentDocs)", L"Opened files (RecentDocs)" },
 	{ Text::ArtefactMountPoints, L"Volumes et partages vus (MountPoints2)", L"Volumes and shares seen (MountPoints2)" },
 	{ Text::ArtefactKnownNetworks, L"Réseaux connus", L"Known networks" },
+	{ Text::ArtefactProgramUsages, L"Usage des programmes", L"Program usage" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },
 
 	{ Text::TimeElapsed,               L"FIN, durée : %1 s",                             L"END, Time elapsed : %1 s" },

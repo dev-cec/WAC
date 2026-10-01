@@ -600,3 +600,28 @@ if (Wants 'registry') {
         }
     }
 }
+
+# 26. B-031 — program usage: a compatibility layer set by the user "wac" on a
+#     test program (harmless: a value, no program there), then the names each
+#     source of program_usage.json holds in the live registry, and the number
+#     of the taskbar's pinned items (FavoritesResolve: one size, one shortcut).
+if (Wants 'program_usage') {
+    $u = "Registry::HKEY_USERS\$wacSid\Software\Microsoft"
+    $layers = "$u\Windows NT\CurrentVersion\AppCompatFlags\Layers"
+    if (-not (Test-Path $layers)) { New-Item -Force $layers | Out-Null }
+    Set-ItemProperty $layers -Name 'C:\wactest\wac-layer.exe' -Value '~ WIN7RTM'
+    $sources = @(@('JumplistData', "$u\Windows\CurrentVersion\Search\JumplistData"),
+                 @('CompatibilityAssistant\Store', "$u\Windows NT\CurrentVersion\AppCompatFlags\Compatibility Assistant\Store"),
+                 @('AppCompatFlags\Layers', $layers))
+    foreach ($k in Get-ChildItem "$u\Windows\CurrentVersion\Explorer\FeatureUsage" -ErrorAction SilentlyContinue) {
+        $sources += ,@("FeatureUsage\$($k.PSChildName)", $k.PSPath)
+    }
+    foreach ($s in $sources) {
+        $i = Get-Item $s[1] -ErrorAction SilentlyContinue
+        if ($i) { Write-Output ("usage=" + $s[0] + '|' + (($i.GetValueNames() | Sort-Object) -join '|')) }
+    }
+    $fav = (Get-Item "$u\Windows\CurrentVersion\Explorer\Taskband" -ErrorAction SilentlyContinue).GetValue('FavoritesResolve')
+    $count = 0; $o = 0
+    while ($fav -and $o + 4 -le $fav.Length) { $n = [BitConverter]::ToUInt32($fav, $o); if ($n -lt 76 -or $o + 4 + $n -gt $fav.Length) { break }; $count++; $o += 4 + $n }
+    Write-Output "pinned=$wacSid|$count"
+}
