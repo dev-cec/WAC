@@ -1649,10 +1649,12 @@ def check_small_file_artefacts(folder):
         counts = collections.Counter((p.get("Scope"), p.get("SID", "")) for p in programs)
         mine = (counts[("Machine", "")], counts[("Machine (32-bit)", "")], counts[("User", sid)])
         theirs = (int(machine), int(machine32), int(user))
+        msi_theirs = {p.split(":")[0]: int(p.split(":")[1]) for p in reference.get("msiproducts", "").split("|") if ":" in p}
+        msi_mine = {sid_: counts[("MSI product", sid_)] for sid_ in msi_theirs}
         report((witness.get("DisplayName"), witness.get("Publisher"), witness.get("DisplayVersion"), witness.get("InstallDate")) == (name, publisher, version, date)
-               and witness.get("KeyLastWriteUtc") and mine == theirs,
-               f"installed_programs.json: the witness program with its values; programs per key {mine} as Windows lists them",
-               f"installed_programs.json: witness {witness or 'absent'}; programs per key {mine}, Windows {theirs}")
+               and witness.get("KeyLastWriteUtc") and mine == theirs and msi_mine == msi_theirs,
+               f"installed_programs.json: the witness program with its values; programs per key {mine} and MSI products {msi_mine} as Windows lists them",
+               f"installed_programs.json: witness {witness or 'absent'}; programs per key {mine}, Windows {theirs}; MSI {msi_mine}, Windows {msi_theirs}")
 
     # Defender exclusions: every exclusion Get-MpPreference lists, of its kind,
     # the harness's three witnesses among them (B-031).

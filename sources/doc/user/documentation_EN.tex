@@ -1091,7 +1091,8 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         public profile settings.
   \item[\fichier{installed\_programs.json}] installed programs, read in the
         \texttt{Uninstall} keys of the machine (64- and 32-bit) and of each user
-        (\champ{Scope}): all their values (name, publisher, version, folder,
+        and Windows Installer products (\champ{Scope} \texttt{MSI product},
+        with the cached package \champ{LocalPackage}): all their values (name, publisher, version, folder,
         uninstall command, \champ{InstallDate} --- the day only, as written) and
         the key's write time. A remote access tool installed, then uninstalled,
         often leaves its trace there.

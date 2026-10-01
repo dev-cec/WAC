@@ -48,6 +48,30 @@ void readUninstall(ORHKEY root, const std::wstring& path, const wchar_t* scope, 
 	}
 }
 
+/*! Reads the MSI products Windows Installer registered: one subkey per SID
+ *  under Installer\\UserData, one per product under it, its InstallProperties
+ *  holding the same values as an Uninstall key (and LocalPackage, the cached
+ *  .msi).
+ *  @param out receives the products, Scope "MSI product" */
+void readMsiProducts(std::vector<InstalledProgram>& out) {
+	const std::wstring USER_DATA = L"Microsoft\\Windows\\CurrentVersion\\Installer\\UserData";
+	for (const std::wstring& sid : subkeys(conf.Software, USER_DATA)) {
+		const std::wstring products = USER_DATA + L"\\" + sid + L"\\Products";
+		for (const std::wstring& code : subkeys(conf.Software, products)) {
+			ORHKEY key = NULL;
+			if (OROpenKey(conf.Software, (products + L"\\" + code + L"\\InstallProperties").c_str(), &key) != ERROR_SUCCESS) continue;
+			InstalledProgram p;
+			p.scope = L"MSI product";
+			p.sid = sid;
+			p.keyName = code;
+			p.keyLastWriteUtc = lastWrite(key);
+			readAllValues(key, p.values);
+			ORCloseKey(key);
+			out.push_back(std::move(p));
+		}
+	}
+}
+
 } // namespace
 
 // ------------------------------------------------------------ Installed programs
@@ -68,6 +92,7 @@ HRESULT InstalledPrograms::getData() {
 	if (conf.Software) {
 		readUninstall(conf.Software, UNINSTALL, L"Machine", L"", programs_);
 		readUninstall(conf.Software, L"WOW6432Node\\" + UNINSTALL, L"Machine (32-bit)", L"", programs_);
+		readMsiProducts(programs_);
 	}
 	forEachProfileHive(L"\\ntuser.dat", [this, &UNINSTALL](ORHKEY root, const std::wstring& sid) {
 		readUninstall(root, L"Software\\" + UNINSTALL, L"User", sid, programs_);

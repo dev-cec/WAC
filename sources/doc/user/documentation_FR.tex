@@ -1113,7 +1113,8 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         domaine, privé et public.
   \item[\fichier{installed\_programs.json}] programmes installés, lus dans les
         clés \texttt{Uninstall} de la machine (64 et 32~bits) et de chaque
-        utilisateur (\champ{Scope}) : toutes leurs valeurs (nom, éditeur,
+        utilisateur, et produits Windows Installer (\champ{Scope} \texttt{MSI
+        product}, avec le paquet mis en cache \champ{LocalPackage}) : toutes leurs valeurs (nom, éditeur,
         version, dossier, commande de désinstallation, \champ{InstallDate} --- le
         jour seul, tel qu'écrit) et la date d'écriture de la clé. Un outil
         d'accès à distance installé, puis désinstallé, y laisse souvent sa trace.

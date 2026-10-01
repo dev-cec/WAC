@@ -478,6 +478,10 @@ if (Wants 'installed_programs') {
     $machine32 = @(Get-ChildItem 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall' -ErrorAction SilentlyContinue).Count
     $user = @(Get-ChildItem "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Windows\CurrentVersion\Uninstall" -ErrorAction SilentlyContinue).Count
     Write-Output "programs=$machine|$machine32|$wacSid|$user"
+    $msi = foreach ($k in Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData' -ErrorAction SilentlyContinue) {
+        $k.PSChildName + ':' + @(Get-ChildItem "$($k.PSPath)\Products" -ErrorAction SilentlyContinue | Where-Object { Test-Path "$($_.PSPath)\InstallProperties" }).Count
+    }
+    Write-Output ("msiproducts=" + ($msi -join '|'))
 }
 
 # 20. B-031 — Defender exclusions: a path, an extension and a process
