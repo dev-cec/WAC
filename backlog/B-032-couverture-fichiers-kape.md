@@ -17,7 +17,8 @@ KAPE seul, à ajouter :
 3. **Métadonnées NTFS** : `$Secure:$SDS` (descripteurs de sécurité : propriétaires et ACL de chaque fichier de la $MFT), `$UsnJrnl:$Max`, `$Boot`, `$TxfLog`.
 4. **Traces WPP de Defender** (`Support\*.bin`) : copie brute seulement, faute de format documenté.
 Déjà au backlog : ActivitiesCache (B-010) ; navigateurs Edge et IE, WebCache, INetCookies (B-016).
-Écartés : **clés maîtresses DPAPI** (`AppData\Roaming\Microsoft\Protect`) — matériau de clé qui permet de déchiffrer les secrets de l'utilisateur ; contraire à la règle de WAC de ne jamais prélever de secret. `desktop.ini` : sans valeur d'enquête.
+5. **Clés maîtresses DPAPI** (`AppData\Roaming\Microsoft\Protect\<SID>\*`, `Preferred`, et celles du système sous `Windows\System32\Microsoft\Protect`) : copiées telles quelles (chiffrées par le mot de passe de l'utilisateur ou la clé DPAPI_SYSTEM). Elles permettent, à l'analyse et avec le mot de passe ou la clé, de déchiffrer les secrets de l'utilisateur : mots de passe enregistrés, identifiants, cookies. Décision utilisateur du 2026-10-01 : utiles à l'enquête, donc prises. Leur JSON : SID, GUID de la clé, dates, clé préférée et sa date d'expiration — jamais la clé.
+Écartés : `desktop.ini`, sans valeur d'enquête.
 
 WAC seul, pour mémoire (couverture que KapeTriage n'a pas) : historique PowerShell (PSReadLine), dépôt WMI, file BITS, rapports WER, historique de détection et quarantaine de Defender, journaux setupapi, fichiers hosts et réseau, dossiers de démarrage, ruches des profils de service et systemprofile, second volume et clés USB (FAT/exFAT), état vivant (processus, sessions, réseau, horloge), binaires des fournisseurs de messages.
 
@@ -26,7 +27,7 @@ KAPE sur la même VM, même instant (`vmtest/kape-compare.sh`).
 
 ## Critères d'acceptation
 En plus de la définition de « fini » commune (backlog/README.md) :
-- Les points 1 à 4 ajoutés, avec leur JSON en --convert (sauf le 4, copie brute justifiée), ou écartés avec leur raison.
+- Les points 1 à 5 ajoutés, avec leur JSON en --convert (sauf le 4, copie brute justifiée), ou écartés avec leur raison.
 - kape-compare.sh ne montre plus de fichier « KAPE seul » non classé.
 
 ## Tâches
@@ -34,6 +35,8 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [ ] 2 Ruche Default
 - [ ] 3 $Secure:$SDS (et sa lecture dans mft.json : propriétaire de chaque fichier), $UsnJrnl:$Max, $Boot, $TxfLog
 - [ ] 4 Traces WPP de Defender
+- [ ] 5 Clés maîtresses DPAPI (utilisateurs et système)
 
 ## Journal
 - 2026-10-01 : ouverte depuis B-015.
+- 2026-10-01 : décision utilisateur — les clés maîtresses DPAPI sont prises (elles servent l'enquête), au lieu d'être écartées.

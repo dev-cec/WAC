@@ -59,6 +59,7 @@ Remplace `TODO.txt`.
 | [B-031](B-031-couverture-registre-kroll.md) | Couverture du registre face au lot Kroll de RECmd (Uninstall, exclusions Defender, RecentDocs, MountPoints2, réseaux connus…) | à faire | P1 | moyen |
 | [B-032](B-032-couverture-fichiers-kape.md) | Couverture de fichiers face à KapeTriage (raccourcis hors Recent, ruche Default, $Secure:$SDS…) | à faire | P2 | moyen |
 | [B-033](B-033-temps-collecte-evenements.md) | Temps de collecte des journaux d'événements (≈ 180 s) | à faire | P2 | moyen |
+| [B-034](B-034-sam-complete.md) | La base SAM convertie en entier (mots de passe jugés par WAE) | à faire | P1 | moyen |
 
 ## Réalisé
 
