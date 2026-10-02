@@ -26,7 +26,7 @@ Une VM par version passée par le harnais (création sans interaction comme `cre
 Images ISO disponibles, toutes 32 bits, dans `vmtest/tools/isos/` (non versionné) :
 - Windows XP Professionnel RTM, SP1, SP2 et SP3 (x86) ;
 - Windows 8 (x86).
-Manquent pour couvrir l'historique : Server 2003, Vista, 7, 8.1 et un Windows 10 32 bits.
+Une seule VM par version suffit, en 32 ou en 64 bits : les artefacts sont les mêmes dans les deux architectures (décision utilisateur du 2026-10-02). Le WAC 32 bits est éprouvé sur les versions fournies en 32 bits (XP, 8), le WAC 64 bits l'est déjà sur Windows 10 et 11. Manquent pour couvrir l'historique : Server 2003, Vista, 7 et 8.1, dans l'une ou l'autre architecture.
 
 ## Critères d'acceptation
 En plus de la définition de « fini » commune (backlog/README.md) :
@@ -44,4 +44,5 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Journal
 - 2026-10-02 : créée à la demande de l'utilisateur — compatibilité depuis Windows XP SP1, à faire en dernier.
+- 2026-10-02 : décision utilisateur — une version de Windows suffit dans une seule architecture, 32 ou 64 bits, les artefacts étant les mêmes.
 - 2026-10-02 : images ISO fournies par l'utilisateur (XP RTM, SP1, SP2, SP3, Windows 8 — toutes x86) ; une version 32 bits de WAC est nécessaire (demande utilisateur). La chaîne i686 a été installée par l'utilisateur le même jour (`i686-w64-mingw32-g++` 13, variante win32).
