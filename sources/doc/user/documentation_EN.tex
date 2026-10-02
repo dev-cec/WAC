@@ -1291,7 +1291,14 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         \texttt{History}, \texttt{MSHist\ldots}, \texttt{Content},
         \texttt{iedownload}, \texttt{BackgroundTransferApi}) — URL, account
         and page of a history entry (\champ{User}, \champ{Page}), access
-        count, dates, cache file. The modification time of the
+        count, dates, cache file (\champ{CachedFile}: its path, through the
+        subfolder the entry names). Internet Explorer's engine (WinINet)
+        still serves \texttt{mshta.exe} and scripts even when IE is
+        redirected to Edge: each profile's cache (\path|INetCache\IE|) is
+        collected, limited to the types an investigation needs — HTA,
+        scripts, executables, archives, documents with macros, PDF —, and the
+        HTA an attack had run is found there with its entry. The modification
+        time of the
         \texttt{MSHist} containers, which Windows writes in local time, is
         converted to UTC with the offset in force at its date. The database is
         copied live with its logs: its last entries may be only there

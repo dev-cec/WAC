@@ -1326,7 +1326,14 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \texttt{History}, \texttt{MSHist\ldots}, \texttt{Content},
         \texttt{iedownload}, \texttt{BackgroundTransferApi}) — URL, compte et
         page d'une entrée d'historique (\champ{User}, \champ{Page}), nombre
-        d'accès, dates, fichier du cache. La date de modification des
+        d'accès, dates, fichier du cache (\champ{CachedFile} : son chemin, par
+        le sous-dossier que l'entrée désigne). Le moteur d'Internet Explorer
+        (WinINet) reste utilisé par \texttt{mshta.exe} et des scripts même
+        quand IE est redirigé vers Edge : le cache de chaque profil
+        (\path|INetCache\IE|) est collecté, limité aux types utiles à
+        l'enquête — HTA, scripts, exécutables, archives, documents à macros,
+        PDF —, et l'HTA qu'une attaque a fait exécuter s'y retrouve avec son
+        entrée. La date de modification des
         conteneurs \texttt{MSHist}, que Windows écrit en heure locale, est
         convertie en UTC avec le décalage en vigueur à sa date. La base est
         copiée vivante avec ses journaux : ses dernières entrées peuvent n'être

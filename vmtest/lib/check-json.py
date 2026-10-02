@@ -1534,11 +1534,15 @@ def check_small_file_artefacts(folder):
             report(match and (match[0].get("TargetPath") or "").lower() == target.lower(),
                    f"web_client.json: {browser} download found, its URL and destination as the browser wrote them",
                    f"web_client.json: {browser} download {url} -> {target} missing or different: {match[:1]}")
+        manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+        exhibits = {(i.get("SourcePath") or "").lower(): i for i in (manifest or {}).get("Items", [])} if isinstance(manifest, dict) else {}
         for l in (l for l in lines if l.startswith("webhta=")):
-            url = l[len("webhta="):]
-            report(any(r.get("Type") == "CacheEntry" and r.get("Url") == url for r in web),
-                   "web_client.json: the HTA run by mshta.exe found in the WebCache",
-                   f"web_client.json: WebCache entry of {url} missing")
+            url, digest = (l[len("webhta="):].split("|", 1) + [""])[:2]
+            entry = next((r for r in web if r.get("Type") == "CacheEntry" and r.get("Url") == url), {})
+            cached = exhibits.get((entry.get("CachedFile") or "").lower(), {})
+            report(entry and cached.get("SHA256") == digest,
+                   f"web_client.json: the HTA run by mshta.exe found in the WebCache, its cached copy {ntpath.basename(entry.get('CachedFile', ''))} collected, same SHA-256",
+                   f"web_client.json: HTA {url}: entry {entry.get('CachedFile') if entry else 'missing'}, exhibit {cached.get('SHA256')}")
 
     # TypedURLs (B-016): the two addresses typed, their position and instant.
     web = load(folder, "web_client.json")

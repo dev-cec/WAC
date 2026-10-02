@@ -519,6 +519,91 @@ if (Wants 'defender_configuration') {
     }
 }
 
+# 39. B-016 — real browsing by "wac", in the session open on the console: a
+#     local HTTP server (HttpListener, 127.0.0.1:8765, this script's job)
+#     serves a page, a file sent as an attachment and an HTA. Chrome (headless)
+#     visits the page and searches Google; Chrome and Firefox (windows) each
+#     download the file; Firefox (headless) visits the page; mshta.exe runs the
+#     HTA, as an attack would — WinINet caches it. Names are unique to the
+#     cycle. Each browser is stopped hard afterwards: its databases keep their
+#     journals, as on a machine seized running. Placed BEFORE section 21:
+#     the downloads enter Explorer's RecentDocs, whose witness must stay the
+#     most recent entry.
+if (Wants 'web_client') {
+    $token = Get-Date -Format 'yyyyMMddHHmmss'
+    $server = Start-Job -ScriptBlock {
+        $listener = New-Object Net.HttpListener
+        $listener.Prefixes.Add('http://127.0.0.1:8765/')
+        $listener.Start()
+        $deadline = (Get-Date).AddSeconds(180)
+        while ((Get-Date) -lt $deadline) {
+            $task = $listener.GetContextAsync()
+            while (-not $task.Wait(500) -and (Get-Date) -lt $deadline) { }
+            if (-not $task.IsCompleted) { break }
+            $context = $task.Result
+            $path = $context.Request.Url.AbsolutePath
+            if ($path -like '*.txt') {
+                $context.Response.AddHeader('Content-Disposition', 'attachment; filename="' + [IO.Path]::GetFileName($path) + '"')
+                $body = 'WAC download witness'; $context.Response.ContentType = 'text/plain'
+            } elseif ($path -like '*.hta') {
+                $body = '<html><head><title>WAC HTA</title><HTA:APPLICATION/></head><body><script>window.close();</script></body></html>'
+                $context.Response.ContentType = 'application/hta'
+            } else {
+                $body = '<html><head><title>WAC witness page</title></head><body>WAC</body></html>'; $context.Response.ContentType = 'text/html'
+            }
+            $bytes = [Text.Encoding]::ASCII.GetBytes($body)
+            $context.Response.OutputStream.Write($bytes, 0, $bytes.Length)
+            $context.Response.Close()
+        }
+        $listener.Stop()
+    }
+    Start-Sleep 2
+    $base = 'http://127.0.0.1:8765'
+    $script = 'C:\wactest\browse-witness.ps1'
+    Set-Content $script (@'
+$chrome = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
+$firefox = 'C:\Program Files\Mozilla Firefox\firefox.exe'
+$data = "$env:LOCALAPPDATA\Google\Chrome\User Data"
+if (Test-Path $chrome) {
+    & $chrome --headless=new --disable-gpu --no-first-run --user-data-dir="$data" --dump-dom "BASE/page?wac=chrome-TOKEN" | Out-Null
+    & $chrome --headless=new --disable-gpu --no-first-run --user-data-dir="$data" --dump-dom "https://www.google.com/search?q=wacsearchTOKEN" | Out-Null
+    Start-Process $chrome -ArgumentList '--no-first-run', "BASE/c/wac-dl-chrome-TOKEN.txt"; Start-Sleep 12
+    Get-Process chrome -ErrorAction SilentlyContinue | Stop-Process -Force
+}
+if (Test-Path $firefox) {
+    Start-Process $firefox -ArgumentList '-headless', "BASE/page?wac=firefox-TOKEN"; Start-Sleep 12
+    Get-Process firefox -ErrorAction SilentlyContinue | Stop-Process -Force
+    Start-Process $firefox -ArgumentList "BASE/f/wac-dl-firefox-TOKEN.txt"; Start-Sleep 15
+    Get-Process firefox -ErrorAction SilentlyContinue | Stop-Process -Force
+}
+Start-Process mshta.exe -ArgumentList "BASE/wac-TOKEN.hta"; Start-Sleep 8
+Get-Process mshta -ErrorAction SilentlyContinue | Stop-Process -Force
+'done' | Set-Content C:\wactest\browse-witness.done
+'@).Replace('BASE', $base).Replace('TOKEN', $token)
+    Remove-Item C:\wactest\browse-witness.done -ErrorAction SilentlyContinue
+    $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File $script"
+    $principal = New-ScheduledTaskPrincipal -UserId 'wac' -LogonType Interactive
+    Register-ScheduledTask -TaskName 'WacBrowseWitness' -Action $action -Principal $principal -Force | Out-Null
+    Start-ScheduledTask -TaskName 'WacBrowseWitness'
+    for ($i = 0; $i -lt 240 -and -not (Test-Path C:\wactest\browse-witness.done); $i++) { Start-Sleep -Milliseconds 500 }
+    Unregister-ScheduledTask -TaskName 'WacBrowseWitness' -Confirm:$false
+    Stop-Job $server; Remove-Job $server -Force
+    Remove-Item $script, C:\wactest\browse-witness.done -ErrorAction SilentlyContinue
+    if (Test-Path 'C:\Program Files\Google\Chrome\Application\chrome.exe') {
+        Write-Output "webvisit=Chrome|$base/page?wac=chrome-$token"
+        Write-Output "websearch=Chrome|wacsearch$token"
+        Write-Output "webdownload=Chrome|$base/c/wac-dl-chrome-$token.txt|C:\Users\wac\Downloads\wac-dl-chrome-$token.txt"
+    }
+    if (Test-Path 'C:\Program Files\Mozilla Firefox\firefox.exe') {
+        Write-Output "webvisit=Firefox|$base/page?wac=firefox-$token"
+        Write-Output "webdownload=Firefox|$base/f/wac-dl-firefox-$token.txt|C:\Users\wac\Downloads\wac-dl-firefox-$token.txt"
+    }
+    # The HTA's SHA-256, the body the server sent: its cached copy must be the same bytes.
+    $hta = [Text.Encoding]::ASCII.GetBytes('<html><head><title>WAC HTA</title><HTA:APPLICATION/></head><body><script>window.close();</script></body></html>')
+    $digest = -join ([Security.Cryptography.SHA256]::Create().ComputeHash($hta) | ForEach-Object { $_.ToString('X2') })
+    Write-Output "webhta=$base/wac-$token.hta|$digest"
+}
+
 # 21. B-031 — Explorer's RecentDocs: a file of a unique extension (.wacrd)
 #     added to the user's recent documents by the shell itself
 #     (SHAddToRecentDocs), in their interactive session. Harmless: a text file
@@ -992,84 +1077,4 @@ if (Wants 'web_client') {
         $writable.Flush()
         $writable.Close()
     }
-}
-
-# 39. B-016 — real browsing by "wac", in the session open on the console: a
-#     local HTTP server (HttpListener, 127.0.0.1:8765, this script's job)
-#     serves a page, a file sent as an attachment and an HTA. Chrome (headless)
-#     visits the page and searches Google; Chrome and Firefox (windows) each
-#     download the file; Firefox (headless) visits the page; mshta.exe runs the
-#     HTA, as an attack would — WinINet caches it. Names are unique to the
-#     cycle. Each browser is stopped hard afterwards: its databases keep their
-#     journals, as on a machine seized running.
-if (Wants 'web_client') {
-    $token = Get-Date -Format 'yyyyMMddHHmmss'
-    $server = Start-Job -ScriptBlock {
-        $listener = New-Object Net.HttpListener
-        $listener.Prefixes.Add('http://127.0.0.1:8765/')
-        $listener.Start()
-        $deadline = (Get-Date).AddSeconds(180)
-        while ((Get-Date) -lt $deadline) {
-            $task = $listener.GetContextAsync()
-            while (-not $task.Wait(500) -and (Get-Date) -lt $deadline) { }
-            if (-not $task.IsCompleted) { break }
-            $context = $task.Result
-            $path = $context.Request.Url.AbsolutePath
-            if ($path -like '*.txt') {
-                $context.Response.AddHeader('Content-Disposition', 'attachment; filename="' + [IO.Path]::GetFileName($path) + '"')
-                $body = 'WAC download witness'; $context.Response.ContentType = 'text/plain'
-            } elseif ($path -like '*.hta') {
-                $body = '<html><head><title>WAC HTA</title><HTA:APPLICATION/></head><body><script>window.close();</script></body></html>'
-                $context.Response.ContentType = 'application/hta'
-            } else {
-                $body = '<html><head><title>WAC witness page</title></head><body>WAC</body></html>'; $context.Response.ContentType = 'text/html'
-            }
-            $bytes = [Text.Encoding]::ASCII.GetBytes($body)
-            $context.Response.OutputStream.Write($bytes, 0, $bytes.Length)
-            $context.Response.Close()
-        }
-        $listener.Stop()
-    }
-    Start-Sleep 2
-    $base = 'http://127.0.0.1:8765'
-    $script = 'C:\wactest\browse-witness.ps1'
-    Set-Content $script (@'
-$chrome = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
-$firefox = 'C:\Program Files\Mozilla Firefox\firefox.exe'
-$data = "$env:LOCALAPPDATA\Google\Chrome\User Data"
-if (Test-Path $chrome) {
-    & $chrome --headless=new --disable-gpu --no-first-run --user-data-dir="$data" --dump-dom "BASE/page?wac=chrome-TOKEN" | Out-Null
-    & $chrome --headless=new --disable-gpu --no-first-run --user-data-dir="$data" --dump-dom "https://www.google.com/search?q=wacsearchTOKEN" | Out-Null
-    Start-Process $chrome -ArgumentList '--no-first-run', "BASE/c/wac-dl-chrome-TOKEN.txt"; Start-Sleep 12
-    Get-Process chrome -ErrorAction SilentlyContinue | Stop-Process -Force
-}
-if (Test-Path $firefox) {
-    Start-Process $firefox -ArgumentList '-headless', "BASE/page?wac=firefox-TOKEN"; Start-Sleep 12
-    Get-Process firefox -ErrorAction SilentlyContinue | Stop-Process -Force
-    Start-Process $firefox -ArgumentList "BASE/f/wac-dl-firefox-TOKEN.txt"; Start-Sleep 15
-    Get-Process firefox -ErrorAction SilentlyContinue | Stop-Process -Force
-}
-Start-Process mshta.exe -ArgumentList "BASE/wac-TOKEN.hta"; Start-Sleep 8
-Get-Process mshta -ErrorAction SilentlyContinue | Stop-Process -Force
-'done' | Set-Content C:\wactest\browse-witness.done
-'@).Replace('BASE', $base).Replace('TOKEN', $token)
-    Remove-Item C:\wactest\browse-witness.done -ErrorAction SilentlyContinue
-    $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File $script"
-    $principal = New-ScheduledTaskPrincipal -UserId 'wac' -LogonType Interactive
-    Register-ScheduledTask -TaskName 'WacBrowseWitness' -Action $action -Principal $principal -Force | Out-Null
-    Start-ScheduledTask -TaskName 'WacBrowseWitness'
-    for ($i = 0; $i -lt 240 -and -not (Test-Path C:\wactest\browse-witness.done); $i++) { Start-Sleep -Milliseconds 500 }
-    Unregister-ScheduledTask -TaskName 'WacBrowseWitness' -Confirm:$false
-    Stop-Job $server; Remove-Job $server -Force
-    Remove-Item $script, C:\wactest\browse-witness.done -ErrorAction SilentlyContinue
-    if (Test-Path 'C:\Program Files\Google\Chrome\Application\chrome.exe') {
-        Write-Output "webvisit=Chrome|$base/page?wac=chrome-$token"
-        Write-Output "websearch=Chrome|wacsearch$token"
-        Write-Output "webdownload=Chrome|$base/c/wac-dl-chrome-$token.txt|C:\Users\wac\Downloads\wac-dl-chrome-$token.txt"
-    }
-    if (Test-Path 'C:\Program Files\Mozilla Firefox\firefox.exe') {
-        Write-Output "webvisit=Firefox|$base/page?wac=firefox-$token"
-        Write-Output "webdownload=Firefox|$base/f/wac-dl-firefox-$token.txt|C:\Users\wac\Downloads\wac-dl-firefox-$token.txt"
-    }
-    Write-Output "webhta=$base/wac-$token.hta"
 }

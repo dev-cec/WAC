@@ -53,6 +53,17 @@
  *  force at its date (suspectLocalToUtc), never read as UTC. The database is
  *  copied live, in "dirty" state: what WinINet wrote since its last
  *  checkpoint is only in its logs, collected beside it (esentutl /r).
+ *
+ *  THE CACHED FILES. A Content entry names the file WinINet stored: the
+ *  container's directory, one of its 8-character subfolders (the
+ *  `SecureDirectories` list of the container, indexed from 1 by the entry's
+ *  `SecureDirectory`) and the file name, `name[1].ext`. That is where the HTA
+ *  that mshta.exe ran, the script a document fetched, lie: Internet
+ *  Explorer is redirected to Edge on Windows 11, but its engine (WinINet,
+ *  MSHTML) still serves mshta.exe and the scripts that use it. The cache of
+ *  each profile (`INetCache\IE`) is collected, filtered on the types an
+ *  investigation needs (INETCACHE_EXTENSIONS): its images and style sheets
+ *  are left.
  */
 #pragma once
 
@@ -81,6 +92,20 @@ extern const std::vector<std::wstring> CHROMIUM_ROOT_FILES;
 
 //! The WebCache folder of Internet Explorer and Edge Legacy, relative to a Windows profile.
 extern const wchar_t WEBCACHE_FOLDER[];
+//! WinINet's cache (Internet Explorer, mshta.exe), relative to a Windows profile.
+extern const wchar_t INETCACHE_FOLDER[];
+//! The cached files collected: HTA, scripts, executables, archives, documents with macros, PDF.
+extern const std::vector<std::wstring> INETCACHE_EXTENSIONS;
+
+/*! The cached file of a Content entry of the WebCache.
+ *  @param directory the container's directory (ends with a backslash)
+ *  @param secureDirectories the container's list of 8-character subfolders, concatenated
+ *  @param index the entry's SecureDirectory, from 1
+ *  @param filename the entry's file name
+ *  @return the file's path, or "" if the index is outside the list or a part is missing */
+std::wstring webCacheFile(const std::wstring& directory, const std::wstring& secureDirectories, int64_t index,
+                          const std::wstring& filename);
+
 //! Firefox's profiles folder, relative to a Windows profile; each subfolder is a Firefox profile.
 extern const wchar_t FIREFOX_PROFILES[];
 //! The files collected in a Firefox profile, each with its -wal and -journal when present.

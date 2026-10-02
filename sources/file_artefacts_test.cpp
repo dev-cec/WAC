@@ -912,6 +912,11 @@ int wmain() {
 		      && !splitWebCacheUrl(L"Visited: nouser", user, page),
 		      "webcache: history URLs split into user and page, others left whole");
 	}
+	check(webCacheFile(L"C:\\c\\IE\\", L"L4YBWS0NA4VP7Z24E5E1CFPFBODANLF1", 3, L"wac[1].hta") == L"C:\\c\\IE\\E5E1CFPF\\wac[1].hta"
+	      && webCacheFile(L"C:\\c\\IE\\", L"L4YBWS0NA4VP7Z24E5E1CFPFBODANLF1", 4, L"x") == L"C:\\c\\IE\\BODANLF1\\x"
+	      && webCacheFile(L"C:\\c\\IE\\", L"L4YBWS0NA4VP7Z24E5E1CFPFBODANLF1", 5, L"x").empty()
+	      && webCacheFile(L"C:\\c\\IE\\", L"L4YBWS0N", 0, L"x").empty() && webCacheFile(L"C:\\c\\IE\\", L"L4YBWS0N", 1, L"").empty(),
+	      "webcache: the cached file found by its subfolder, indexed from 1; outside the list, none");
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }

@@ -24,6 +24,11 @@ const std::vector<std::wstring> CHROMIUM_PROFILE_FILES = {
 	L"Preferences", L"Secure Preferences", L"Cookies", L"Network\\Cookies" };
 const std::vector<std::wstring> CHROMIUM_ROOT_FILES = { L"Local State" };
 const wchar_t WEBCACHE_FOLDER[] = L"\\AppData\\Local\\Microsoft\\Windows\\WebCache";
+const wchar_t INETCACHE_FOLDER[] = L"\\AppData\\Local\\Microsoft\\Windows\\INetCache\\IE";
+const std::vector<std::wstring> INETCACHE_EXTENSIONS = {
+	L".hta", L".htm", L".html", L".js", L".jse", L".vbs", L".vbe", L".wsf", L".wsh", L".ps1", L".psm1", L".bat", L".cmd",
+	L".exe", L".dll", L".scr", L".cpl", L".msi", L".jar", L".zip", L".rar", L".7z", L".cab", L".iso", L".img", L".lnk",
+	L".doc", L".docm", L".xls", L".xlsm", L".ppt", L".pptm", L".rtf", L".pdf" };
 const wchar_t FIREFOX_PROFILES[] = L"\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles";
 const std::vector<std::wstring> FIREFOX_PROFILE_FILES = {
 	L"places.sqlite", L"formhistory.sqlite", L"cookies.sqlite", L"permissions.sqlite", L"logins.json",
@@ -409,6 +414,13 @@ HRESULT readFirefoxCookies(const std::wstring& file, const WebClientRecord& base
 	return ERROR_SUCCESS;
 }
 
+std::wstring webCacheFile(const std::wstring& directory, const std::wstring& secureDirectories, int64_t index,
+                          const std::wstring& filename) {
+	const size_t NAME = 8;   // each subfolder's name: 8 characters, no separator
+	if (directory.empty() || filename.empty() || index < 1 || (uint64_t)index * NAME > secureDirectories.size()) return L"";
+	return directory + secureDirectories.substr((size_t)(index - 1) * NAME, NAME) + L"\\" + filename;
+}
+
 bool splitWebCacheUrl(const std::wstring& url, std::wstring& user, std::wstring& page) {
 	size_t start = std::wstring::npos;
 	if (url.compare(0, 9, L"Visited: ") == 0) start = 9;
@@ -433,6 +445,8 @@ HRESULT readWebCache(const std::wstring& file, const WebClientRecord& base, std:
 	for (const EseRecord& c : db.records(*containers)) {
 		const int64_t id = cellInteger(c, *containers, L"ContainerId");
 		const std::wstring name = cellText(c, *containers, L"Name");
+		const std::wstring directory = cellText(c, *containers, L"Directory");
+		const std::wstring secureDirectories = cellText(c, *containers, L"SecureDirectories");
 		const EseTable* table = db.table(L"Container_" + std::to_wstring(id));
 		if (!table) continue;   // the cookies' containers keep their entries in CookieEntryEx_<n>
 		// The daily and weekly history write their modification time in local time.
@@ -456,7 +470,10 @@ HRESULT readWebCache(const std::wstring& file, const WebClientRecord& base, std:
 			addDate(r.fields, L"Created", cellTime(e, *table, L"CreationTime"));
 			addDate(r.fields, L"Expiry", cellTime(e, *table, L"ExpiryTime"));
 			addDate(r.fields, L"Sync", cellTime(e, *table, L"SyncTime"));
-			r.fields.add(L"Filename", Json::str(cellText(e, *table, L"Filename")));
+			const std::wstring filename = cellText(e, *table, L"Filename");
+			r.fields.add(L"Filename", Json::str(filename));
+			r.fields.add(L"CachedFile", Json::str(webCacheFile(directory, secureDirectories,
+			                                                   cellInteger(e, *table, L"SecureDirectory"), filename)));
 			if (const int64_t size = cellInteger(e, *table, L"FileSize")) r.fields.add(L"FileSize", Json::num((long long)size));
 			r.fields.add(L"RedirectUrl", Json::str(cellText(e, *table, L"RedirectUrl")));
 			records.push_back(std::move(r));

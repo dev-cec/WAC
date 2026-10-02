@@ -507,6 +507,12 @@ HRESULT ExtractFileArtefactsRaw() {
 		                  L"Defender detection history" });
 		trees.push_back({ L"\\ProgramData\\Microsoft\\Windows Defender\\Quarantine", {}, 3, L"Defender quarantine" });
 	}
+	/* WinINet's cache of each profile — Internet Explorer's engine, which
+	   mshta.exe still uses —, its active content only: what was run or opened
+	   from the web, not the pages' images. */
+	if (conf.artefacts.webClient)
+		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
+			trees.push_back({ std::get<1>(profileEntry) + INETCACHE_FOLDER, INETCACHE_EXTENSIONS, 2, L"WinINet cache" });
 	/* DPAPI master keys, copied as they are — encrypted by the user's password
 	   or the system's DPAPI secret —, with Preferred and CREDHIST beside them:
 	   with that password, the analysis decrypts the user's saved secrets. */
