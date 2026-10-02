@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P1 | fort |
+| à faire | P3 | fort |
 
 ## Pourquoi
 Sur un serveur web, la compromission passe par le site : un webshell déposé, une requête qui l'appelle, un compte ajouté à l'application. Les journaux disent qui a appelé quoi, le code montre ce qui a été déposé, la base de données dit qui pouvait se connecter (un compte ajouté, un mot de passe faible font passer une connexion pour légitime).
@@ -35,3 +35,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 ## Journal
 - 2026-09-26 : décision utilisateur, copier le code du site complet plutôt que trier.
 - 2026-10-01 : décision utilisateur — prélever la base de données du site si elle est présente (taille à étudier) ; le web est séparé en deux artefacts, chacun avec sa clé dans `wac.yml` : client (B-016) et serveur (cette fiche).
+- 2026-10-02 : décision utilisateur — passée en P3 : peu de serveurs web sous Windows ; tout ce qui touche au client d'abord.
