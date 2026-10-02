@@ -1515,6 +1515,31 @@ def check_small_file_artefacts(folder):
                f"user_shell_folders.json: the {len(live)} value(s) of User Shell Folders of wac, the redirected Desktop resolved",
                f"user_shell_folders.json: {wrong[:3]}, Desktop {desktop}")
 
+    # Real browsing (B-016): what Chrome, Firefox and mshta.exe did as "wac".
+    web = load(folder, "web_client.json")
+    if isinstance(web, list) and os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            lines = f.read().splitlines()
+        for l in (l for l in lines if l.startswith("webvisit=")):
+            browser, url = l[len("webvisit="):].split("|", 1)
+            report(any(r.get("Type") == "Visit" and r.get("Browser") == browser and r.get("Url") == url for r in web),
+                   f"web_client.json: {browser} visit of the witness page found", f"web_client.json: {browser} visit {url} missing")
+        for l in (l for l in lines if l.startswith("websearch=")):
+            browser, term = l[len("websearch="):].split("|", 1)
+            report(any(r.get("Type") == "SearchTerm" and r.get("Browser") == browser and r.get("Term") == term for r in web),
+                   f"web_client.json: {browser} search term {term} found", f"web_client.json: {browser} search term {term} missing")
+        for l in (l for l in lines if l.startswith("webdownload=")):
+            browser, url, target = l[len("webdownload="):].split("|", 2)
+            match = [r for r in web if r.get("Type") == "Download" and r.get("Browser") == browser and r.get("Url") == url]
+            report(match and (match[0].get("TargetPath") or "").lower() == target.lower(),
+                   f"web_client.json: {browser} download found, its URL and destination as the browser wrote them",
+                   f"web_client.json: {browser} download {url} -> {target} missing or different: {match[:1]}")
+        for l in (l for l in lines if l.startswith("webhta=")):
+            url = l[len("webhta="):]
+            report(any(r.get("Type") == "CacheEntry" and r.get("Url") == url for r in web),
+                   "web_client.json: the HTA run by mshta.exe found in the WebCache",
+                   f"web_client.json: WebCache entry of {url} missing")
+
     # TypedURLs (B-016): the two addresses typed, their position and instant.
     web = load(folder, "web_client.json")
     if isinstance(web, list) and os.path.exists(path):
@@ -2176,9 +2201,10 @@ def check_web_client(folder):
     store = os.path.join(folder, store_folder(folder))
     databases = [p for p in glob.glob(os.path.join(store, "**", "History"), recursive=True)
                  if os.sep + "User Data" + os.sep in p]
+    found_firefox = check_firefox_places(folder, store, records if isinstance(records, list) else [])
     if not isinstance(records, list) or not databases:
         print("  ⏭️  no web_client.json or no History fetched: browsers not confronted")
-        return 0
+        return found_firefox
     found = 0
     def chromium(us):
         if not us or us <= 0:
@@ -2246,7 +2272,39 @@ def check_web_client(folder):
             print(f"  {'✅' if ok else '❌'} web_client.json: {parts[-4]}/{parts[-2]} — {len(theirs)} {table} row(s) as Python's SQLite reads them, "
                   f"same sites in WAC ({len(ours)})" + ("" if ok else f": {sorted(set(theirs) ^ set(ours))[:3]}"))
             found += 0 if ok else 1
-    return found + check_webcache(folder, records)
+    return found + found_firefox + check_webcache(folder, records)
+
+
+def check_firefox_places(folder, store, records):
+    """web_client.json against Python's SQLite on each fetched places.sqlite,
+    its write-ahead log replayed by that engine: every place and visit
+    (URL, instant), no more, no less."""
+    import shutil, sqlite3, tempfile
+    found = 0
+    for database in glob.glob(os.path.join(store, "**", "Profiles", "*", "places.sqlite"), recursive=True):
+        source = "C:\\" + os.path.relpath(database, store).replace(os.sep, "\\")
+        mine = [r for r in records if (r.get("Source") or "").lower() == source.lower()]
+        with tempfile.TemporaryDirectory() as aside:
+            for suffix in ("", "-wal", "-journal"):
+                if os.path.exists(database + suffix):
+                    shutil.copy(database + suffix, os.path.join(aside, "places.sqlite" + suffix))
+            db = sqlite3.connect(os.path.join(aside, "places.sqlite"))
+            places = db.execute("SELECT count(*) FROM moz_places").fetchone()[0]
+            visits = db.execute("SELECT v.id, p.url, v.visit_date FROM moz_historyvisits v JOIN moz_places p ON p.id = v.place_id").fetchall()
+            db.close()
+        by_type = collections.Counter(r.get("Type") for r in mine)
+        def iso(us):
+            t = datetime.datetime(1970, 1, 1) + datetime.timedelta(microseconds=us)
+            return t.strftime("%Y-%m-%dT%H:%M:%S.%f") + "0Z"
+        wac_visits = {r.get("Id"): r for r in mine if r.get("Type") == "Visit"}
+        wrong = [f"visit {i}: {u} {iso(t)}, WAC {wac_visits.get(i, {}).get('Url')} {wac_visits.get(i, {}).get('VisitUtc')}"
+                 for i, u, t in visits if wac_visits.get(i, {}).get("Url") != u or wac_visits.get(i, {}).get("VisitUtc") != iso(t)]
+        ok = by_type.get("Url", 0) == places and by_type.get("Visit", 0) == len(visits) and not wrong
+        print(f"  {'✅' if ok else '❌'} web_client.json: Firefox {source.split(chr(92))[-2]} — {places} place(s), {len(visits)} visit(s) "
+              f"as Python's SQLite reads them (WAL replayed), WAC {by_type.get('Url', 0)}/{by_type.get('Visit', 0)}, URL and instant identical"
+              + ("" if ok else f": {wrong[:3]}"))
+        found += 0 if ok else 1
+    return found
 
 
 def check_webcache(folder, records):

@@ -12,6 +12,7 @@ en SYSTEM : droits admin, aucun UAC).
 ## Fichiers
 | Où | Fichier | Rôle |
 |---|---|---|
+| `vmtest/` | `install-browsers.sh` | Installe Google Chrome (MSI entreprise) et Mozilla Firefox dans la VM, en silence, téléchargés par la VM elle-même (`guest/install-browsers.ps1`) ; idempotent. Nécessaire aux témoins de navigation réelle de `web_client` (B-016). |
 | `vmtest/` | `create-vm.sh` | Crée la VM de zéro, sans interaction : autounattend + UEFI Secure Boot + TPM 2.0 + canal guest-agent, déblocage du boot par injection de touches, puis attente que l'agent réponde ; ajoute le disque de données de 2 Go. |
 | `vmtest/` | `run-wac-test.sh` | Cycle de test complet : build → volume de données et clé USB virtuelle (`~/vms/wac-usb-test.img`, numéro de série `WACUSB0001`) → envoi des binaires → validation `raw_hive` (extraction brute + `reg load`) → exécution de WAC → rapatriement du log et des JSON dans `results/<horodatage>/` → contrôles. `--only=clé,…` le restreint à quelques artefacts. |
 | `vmtest/` | `install-tools.sh` | Installe dans la VM les outils tiers des comparaisons (B-015, B-027) : KAPE et les outils en ligne de commande d'Eric Zimmerman depuis `tools/`, et le runtime .NET 9 qu'ils exigent. Idempotent. |

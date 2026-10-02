@@ -154,6 +154,7 @@ described in \fichier{vmtest/README.md}; in short:
 \begin{lstlisting}
 cd vmtest
 ISO_WIN=~/Downloads/Win11_25H2_English_x64.iso ./create-vm.sh   # once
+./install-browsers.sh                          # Chrome and Firefox, for web_client (once)
 python3 lib/qga.py ping                        # does the agent answer?
 python3 lib/qga.py run --shell "dir C:\\"      # run a command
 python3 lib/qga.py write <host> <guest>        # send a file

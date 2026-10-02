@@ -611,6 +611,13 @@ rows of Edge's \fichier{Login Data} and \fichier{Network\textbackslash Cookies}
   read again by Python's SQLite, same sites / \fichier{web\_client.json}
   (0 login, 10 cookies) &
   check added with the artefact \\
+real browsing of ``wac'' (Chrome and Firefox installed by
+  \texttt{install-browsers.sh}): visit of a witness page, a Google search, a
+  file served as an attachment downloaded by Chrome and by Firefox, an HTA run
+  by \texttt{mshta.exe}; Chrome's databases and Firefox's
+  \fichier{places.sqlite} (WAL replayed) read again by Python's SQLite /
+  \fichier{web\_client.json} &
+  check added with the VM's browsers \\
 DestList entries / jump list shortcuts & the first 15 entries of every list
   lost (573 shortcuts published out of 1,522) \\
 machine name of the events / \fichier{OperatingSystem.json} & check of the

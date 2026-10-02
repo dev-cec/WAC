@@ -162,6 +162,7 @@ décrits dans \fichier{vmtest/README\_FR.md} ; en résumé :
 \begin{lstlisting}
 cd vmtest
 ISO_WIN=~/Téléchargements/Win11_25H2_French_x64_v2.iso ./create-vm.sh   # une fois
+./install-browsers.sh                          # Chrome et Firefox, pour web_client (une fois)
 python3 lib/qga.py ping                        # l'agent répond ?
 python3 lib/qga.py run --shell "dir C:\\"      # exécuter une commande
 python3 lib/qga.py write <hôte> <invité>       # envoyer un fichier

@@ -632,6 +632,13 @@ lignes de \fichier{Login Data} et de \fichier{Network\textbackslash Cookies}
   d'Edge relues par le SQLite de Python, mêmes sites /
   \fichier{web\_client.json} (0 identifiant, 10 cookies) &
   contrôle ajouté avec l'artefact \\
+navigation réelle de « wac » (Chrome et Firefox installés par
+  \texttt{install-browsers.sh}) : visite d'une page témoin, recherche Google,
+  téléchargement servi en pièce jointe par Chrome et par Firefox, HTA lancée
+  par \texttt{mshta.exe} ; bases de Chrome et \fichier{places.sqlite} de
+  Firefox (journal WAL rejoué) relues par le SQLite de Python /
+  \fichier{web\_client.json} &
+  contrôle ajouté avec les navigateurs de la VM \\
 entrées DestList / raccourcis des listes de sauts & les 15 premières entrées de
   chaque liste perdues (573 raccourcis publiés sur 1~522) \\
 nom de machine des événements / \fichier{OperatingSystem.json} & contrôle du
