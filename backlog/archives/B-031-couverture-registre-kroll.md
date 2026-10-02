@@ -8,7 +8,7 @@
 B-015 a confronté WAC au lot `Kroll_Batch.reb` de RECmd (celui que KAPE lance). Sur les artefacts communs, les valeurs sont identiques. Mais ce lot lit des clés que WAC ignore, dont plusieurs ont une vraie valeur d'enquête. Chaque écart de couverture doit être ajouté ou écarté avec sa raison (critère de B-015).
 
 ## Source
-Le CSV de RECmd dans `vmtest/results/ez/registry-*` et `lib/ez-compare.py registry`.
+La sortie de RECmd (lot Kroll) sur les ruches de la VM, comparée par `vmtest/ez-compare.sh registry` (`lib/ez-compare.py registry`).
 
 ## Sortie attendue
 Par ordre de valeur pour l'enquête. Chaque clé ajoutée reçoit son JSON en `--convert`, avec la forme des artefacts voisins :
