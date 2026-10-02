@@ -340,7 +340,10 @@ fetch_results() {
   # Written to a file in the VM, then fetched: tens of thousands of lines
   # (--collect --binary) exceed what the guest agent returns as output — the
   # list came back empty, and every exhibit looked missing.
-  $QGA run --shell "chcp 65001 >nul & dir /s /b /a-d $vm\\exhibits > $VMDIR\\exhibit-list.txt" >/dev/null 2>&1 \
+  # Written by PowerShell in UTF-8 without BOM: cmd's dir, even after chcp
+  # 65001, wrote accented names in another code page ("Navigation priv?e de
+  # Firefox.lnk"), and they no longer matched the manifest.
+  $QGA run -- powershell.exe -NoProfile -Command "[IO.File]::WriteAllLines('$VMDIR\\exhibit-list.txt', [string[]](Get-ChildItem -LiteralPath '$vm\\exhibits' -Recurse -File -Force | ForEach-Object FullName))" >/dev/null 2>&1 \
     && $QGA read "$VMDIR\\exhibit-list.txt" "$host/exhibits/LIST.txt" >/dev/null 2>&1 \
     && [[ -s "$host/exhibits/LIST.txt" ]] \
     && echo "   + exhibits/LIST.txt" || echo "   ⚠️ list of the exhibit store not read"
