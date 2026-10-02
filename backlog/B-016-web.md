@@ -26,7 +26,8 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Historiques et recherches — Chromium (Edge, Chrome, Brave, Vivaldi, Chromium, Opera)
 - [x] Historiques et recherches — Firefox (places.sqlite, formhistory.sqlite)
 - [x] Téléchargements Chromium (chaîne de redirections, référent, état, SHA-256)
-- [ ] Lien téléchargement ↔ Zone.Identifier (B-004) et fichier sur le disque (mft.json)
+- [x] Lien téléchargement ↔ Zone.Identifier (B-004) et fichier sur le disque (mft.json) — confié à WAE (décision utilisateur du 2026-10-02)
+- [ ] index.dat d'IE ≤ 9 (Windows 7) : historique, cache, cookies
 - [x] Login Data / logins.json (identifiants enregistrés : origine, compte, dates — jamais le mot de passe), cookies (jamais la valeur)
 - [x] WebCache (ESE) — CacheEntry par conteneur
 - [x] TypedURLs et TypedURLsTime (NTUSER), venus de B-031
@@ -45,4 +46,5 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-01 : WebCache — dossier `WebCache` copié brut (base, journaux, point de contrôle) ; `CacheEntry` pour chaque entrée de chaque `Container_<n>` (History, MSHist, Content, iedownload, BackgroundTransferApi) : URL (User et Page pour l'historique), compteur, dates. Relevé AVANT d'écrire le décodeur, sur la base de la VM : la date de modification des conteneurs MSHist est en heure locale (7 200 s d'écart avec la même entrée de History) ; convertie par `suspectLocalToUtc`. Référence : dissect.esedb (Fox-IT) sur la même base, dans le harnais si installé — 28 entrées, URL et dates identiques, les 5 heures locales converties par zoneinfo ; 4 nœuds vides sans en-tête (que dissect ne sait pas lire non plus) écartés. Vu échouer : sans la conversion, 2 h d'écart.
 - 2026-10-01 : WebCache commité (1995603).
 - 2026-10-02 : SavedLogin (Chromium Login Data, Firefox logins.json) et Cookie (Chromium Network\Cookies ou Cookies, Firefox cookies.sqlite) — métadonnées seulement : mots de passe et valeurs de cookies jamais sélectionnés (test : aucun secret dans le JSON). Référence : Login Data (0 ligne) et Network\Cookies (10 lignes) d'Edge rapatriés et relus par Python, mêmes sites. Vu échouer : expiration Firefox lue sans la conversion des secondes.
-- Reste : lien téléchargement ↔ Zone.Identifier ↔ fichier sur le disque — proposé à WAE (rapprochement d'artefacts ; WAC collecte et convertit, il ne juge pas), à confirmer par l'utilisateur.
+- 2026-10-02 : identifiants et cookies commités (ad88b4c) ; navigation réelle Chrome, Firefox et mshta dans la VM (24f54e2) ; cache de WinINet collecté, CachedFile (d7d2a5f).
+- 2026-10-02 : décision utilisateur — la mise en corrélation des preuves (téléchargement ↔ Zone.Identifier ↔ fichier sur le disque) est faite dans WAE ; WAC collecte et convertit. Demande utilisateur : Internet Explorer reste présent et utilisé (mshta, HTA) — WebCache et INetCache faits, index.dat d'IE ≤ 9 à faire.
