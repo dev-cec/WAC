@@ -59,6 +59,7 @@ Remplace `TODO.txt`.
 | [B-030](B-030-conversions-dans-tools.md) | Regrouper toutes les fonctions de conversion dans tools (fin de refactoring) | à faire | P2 | moyen |
 | [B-033](B-033-temps-collecte-evenements.md) | Temps de collecte des journaux d'événements (≈ 180 s) | à faire | P2 | moyen |
 | [B-036](B-036-recuperation-fichiers-supprimes.md) | Récupération des fichiers supprimés par lecture brute du disque, sans trace | à décider (étude) | P2 | fort |
+| [B-037](B-037-compatibilite-windows-xp.md) | Collecte compatible avec toutes les versions de Windows depuis XP SP1 (en dernier) | à faire | P3 | fort |
 
 ## Réalisé
 
