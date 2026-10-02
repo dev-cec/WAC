@@ -572,6 +572,33 @@ wine usn_journal_test.exe "Z:/tmp/mft"
 Référence : 275 contrôles pour \texttt{mft\_test}, 26 pour
 \texttt{usn\_journal\_test}, aucun échec.
 
+\section{Index d'Internet Explorer : \texttt{ie\_index\_dat\_test}}
+
+Vérifie le décodeur des \fichier{index.dat} d'Internet Explorer 5 à 9
+(Windows 7 et antérieurs) sur quatre vrais fichiers des données de test
+publiques du projet plaso — historique, cache, historique journalier, et un
+cache de plus de mille enregistrements avec des redirections, des entrées
+abandonnées (\texttt{LEAK}) et des entrées récupérées. La référence est
+\texttt{pymsiecf}, le lecteur de libmsiecf, écrit indépendamment de \wac{} :
+chaque enregistrement qu'il donne doit revenir avec les mêmes champs (URL,
+fichier, répertoire de cache, temps, expiration, dernière vérification, hits,
+taille des données), et aucun de plus. Ce test a pris un défaut réel : un
+enregistrement récupéré, en partie écrasé par un plus récent, rendait comme
+siennes les données de l'autre. Puis chaque fichier est décodé tronqué et
+altéré au hasard, contre une page interdite des deux côtés ; enfin la
+conversion (conteneur, compte et page, fichier en cache, en-têtes, dates)
+est vérifiée.
+
+\begin{lstlisting}
+pip install libmsiecf-python              # pymsiecf, pour la référence
+PYTHON=python3 sources/ie_index_fixtures.sh /tmp/iefx
+cd build-windows/tests && wine ie_index_dat_test.exe Z:/tmp/iefx
+\end{lstlisting}
+
+Les fichiers ne sont pas versionnés : le script les télécharge et les refuse
+si leur SHA-256 diffère. Référence : 22 contrôles, aucun échec (1~110
+enregistrements identiques à ceux de \texttt{pymsiecf}).
+
 \section{Petits artefacts fichiers : \texttt{file\_artefacts\_test}}
 
 Vérifie les décodeurs de l'historique PowerShell, de

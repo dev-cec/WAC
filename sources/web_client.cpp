@@ -5,8 +5,10 @@
 #include "sqlite_reader.h"
 #include "registry_common.h"
 #include "ese_database.h"
+#include "ie_index_dat.h"
 #include <filesystem>
 #include <fstream>
+#include <cstring>
 #include <cwchar>
 #include <map>
 
@@ -29,6 +31,13 @@ const std::vector<std::wstring> INETCACHE_EXTENSIONS = {
 	L".hta", L".htm", L".html", L".js", L".jse", L".vbs", L".vbe", L".wsf", L".wsh", L".ps1", L".psm1", L".bat", L".cmd",
 	L".exe", L".dll", L".scr", L".cpl", L".msi", L".jar", L".zip", L".rar", L".7z", L".cab", L".iso", L".img", L".lnk",
 	L".doc", L".docm", L".xls", L".xlsm", L".ppt", L".pptm", L".rtf", L".pdf" };
+const std::vector<IeIndexFolder> IE_INDEX_FOLDERS = {
+	{ L"\\AppData\\Local\\Microsoft\\Windows\\Temporary Internet Files\\Content.IE5", true },
+	{ L"\\AppData\\Local\\Microsoft\\Windows\\Temporary Internet Files\\Low\\Content.IE5", true },
+	{ L"\\AppData\\Local\\Microsoft\\Windows\\History\\History.IE5", false },
+	{ L"\\AppData\\Local\\Microsoft\\Windows\\History\\Low\\History.IE5", false },
+	{ L"\\AppData\\Roaming\\Microsoft\\Windows\\Cookies", false },   // its Low subfolder within
+	{ L"\\AppData\\Roaming\\Microsoft\\Windows\\IEDownloadHistory", false } };
 const wchar_t FIREFOX_PROFILES[] = L"\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles";
 const std::vector<std::wstring> FIREFOX_PROFILE_FILES = {
 	L"places.sqlite", L"formhistory.sqlite", L"cookies.sqlite", L"permissions.sqlite", L"logins.json",
@@ -421,6 +430,105 @@ std::wstring webCacheFile(const std::wstring& directory, const std::wstring& sec
 	return directory + secureDirectories.substr((size_t)(index - 1) * NAME, NAME) + L"\\" + filename;
 }
 
+namespace {
+
+//! A FAT date-time as written, a clock time without a time zone; "" for none or an impossible one.
+std::wstring fatAsWritten(uint32_t value) {
+	if (!value) return L"";
+	const FILETIME clock = FatDateTime(value).toFileTime();
+	std::wstring text = timeToIso8601Utc(clock);
+	if (!text.empty() && text.back() == L'Z') text.pop_back();   // no zone: not an instant
+	return text;
+}
+
+//! @return the FILETIME of a 64-bit value
+FILETIME asFiletime(uint64_t ticks) { return FILETIME{ (DWORD)(ticks & 0xFFFFFFFFULL), (DWORD)(ticks >> 32) }; }
+
+/*! The container of an index.dat, from its folder: Content, History,
+ *  MSHist01<from><to>, Cookies, iedownload.
+ *  @param path the file's path
+ *  @param weekly receives true for a weekly history (its range spans more than a day)
+ *  @return the container's name */
+std::wstring ieContainer(const std::wstring& path, bool& weekly) {
+	weekly = false;
+	const std::wstring lower = toLower(path);
+	const size_t hist = lower.find(L"\\mshist01");
+	if (hist != std::wstring::npos) {
+		const std::wstring name = path.substr(hist + 1, 24);   // MSHist01 + two dates
+		if (name.size() == 24) {
+			SYSTEMTIME a = {}, b = {};
+			a.wYear = (WORD)_wtoi(name.substr(8, 4).c_str()); a.wMonth = (WORD)_wtoi(name.substr(12, 2).c_str()); a.wDay = (WORD)_wtoi(name.substr(14, 2).c_str());
+			b.wYear = (WORD)_wtoi(name.substr(16, 4).c_str()); b.wMonth = (WORD)_wtoi(name.substr(20, 2).c_str()); b.wDay = (WORD)_wtoi(name.substr(22, 2).c_str());
+			FILETIME fa = {}, fb = {};
+			if (SystemTimeToFileTime(&a, &fa) && SystemTimeToFileTime(&b, &fb)) {
+				const uint64_t ta = ((uint64_t)fa.dwHighDateTime << 32) | fa.dwLowDateTime, tb = ((uint64_t)fb.dwHighDateTime << 32) | fb.dwLowDateTime;
+				weekly = tb > ta && tb - ta > 864000000000ULL;   // more than one day
+			}
+		}
+		return name;
+	}
+	if (lower.find(L"\\content.ie5\\") != std::wstring::npos) return L"Content";
+	if (lower.find(L"\\history.ie5\\") != std::wstring::npos) return L"History";
+	if (lower.find(L"\\iedownloadhistory\\") != std::wstring::npos) return L"iedownload";
+	if (lower.find(L"\\cookies\\") != std::wstring::npos) return L"Cookies";
+	return L"";
+}
+
+} // namespace
+
+HRESULT readIeIndexDat(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records) {
+	std::ifstream in(std::filesystem::path(file), std::ios::binary);
+	const std::vector<uint8_t> bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+	IeIndexFile index;
+	if (!parseIeIndexDat(bytes.data(), bytes.size(), index)) return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+	bool weekly = false;
+	const std::wstring container = ieContainer(base.source, weekly);
+	const std::wstring folder = base.source.substr(0, base.source.find_last_of(L'\\') + 1);
+	for (const IeIndexRecord& e : index.records) {
+		WebClientRecord r = startRecord(base, L"CacheEntry");
+		r.fields.add(L"Container", Json::str(container));
+		if (e.kind != L"URL") r.fields.add(L"RecordKind", Json::str(e.kind));   // REDR, LEAK
+		if (e.recovered) r.fields.add(L"Recovered", Json::boolean(true));
+		r.fields.add(L"Url", Json::str(e.location));
+		std::wstring user, page;
+		if (splitWebCacheUrl(e.location, user, page)) {
+			r.fields.add(L"User", Json::str(user));
+			r.fields.add(L"Page", Json::str(page));
+		}
+		if (e.kind == L"URL") {
+			r.fields.add(L"AccessCount", Json::num((long long)e.hits));
+			/* The two times by container (libmsiecf): the cache and the cookies,
+			   last access then the server's modification; a history, the last
+			   visit — in a weekly one the primary is the index's creation, the
+			   visit is the secondary, in LOCAL time; the downloads, the start. */
+			if (weekly) {
+				addDate(r.fields, L"IndexCreated", asFiletime(e.primaryTime));
+				addDate(r.fields, L"Accessed", suspectLocalToUtc(asFiletime(e.secondaryTime)));
+			}
+			else if (container == L"iedownload") addDate(r.fields, L"Created", asFiletime(e.primaryTime));
+			else {
+				addDate(r.fields, L"Accessed", asFiletime(e.primaryTime));
+				if (container == L"Content" || container == L"Cookies") addDate(r.fields, L"Modified", asFiletime(e.secondaryTime));
+			}
+			r.fields.add(L"ExpiresAsWritten", Json::str(fatAsWritten(e.expiry)));
+			r.fields.add(L"LastCheckedAsWritten", Json::str(fatAsWritten(e.lastChecked)));
+			r.fields.add(L"Flags", Json::str(L"0x" + to_hex(e.flags, 8)));
+			// A cache entry's data: the server's response headers, text.
+			if (e.data.size() > 5 && std::memcmp(e.data.data(), "HTTP/", 5) == 0) {
+				size_t end = e.data.size();
+				while (end > 0 && e.data[end - 1] == 0) --end;
+				r.fields.add(L"ResponseHeaders", Json::str(decodeText(std::string(e.data.begin(), e.data.begin() + end))));
+			}
+		}
+		r.fields.add(L"Filename", Json::str(e.filename));
+		if (e.cacheDirectory >= 0 && (size_t)e.cacheDirectory < index.cacheDirectories.size() && !e.filename.empty())
+			r.fields.add(L"CachedFile", Json::str(folder + index.cacheDirectories[e.cacheDirectory] + L"\\" + e.filename));
+		if (e.fileSize) r.fields.add(L"FileSize", Json::num((unsigned long long)e.fileSize));
+		records.push_back(std::move(r));
+	}
+	return ERROR_SUCCESS;
+}
+
 bool splitWebCacheUrl(const std::wstring& url, std::wstring& user, std::wstring& page) {
 	size_t start = std::wstring::npos;
 	if (url.compare(0, 9, L"Visited: ") == 0) start = 9;
@@ -618,6 +726,21 @@ HRESULT WebClient::getData() {
 			}
 		}
 	forEachProfileHive(L"\\ntuser.dat", [this](ORHKEY root, const std::wstring& sid) { readTypedUrls(root, sid, records_); });
+	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
+		for (const IeIndexFolder& f : IE_INDEX_FOLDERS) {
+			const std::filesystem::path root = extractedPath(std::get<1>(profileEntry)) + f.relative;
+			std::error_code ec;
+			std::filesystem::recursive_directory_iterator it(root, ec), end;
+			for (; !ec && it != end; it.increment(ec)) {
+				if (it.depth() > 1) { it.disable_recursion_pending(); continue; }   // MSHist01…\index.dat: one level
+				if (!it->is_regular_file(ec) || toLower(it->path().filename().wstring()) != L"index.dat") continue;
+				WebClientRecord base;
+				base.browser = L"Internet Explorer";
+				base.sid = std::get<0>(profileEntry);
+				base.source = originalPath(it->path().wstring());
+				if (readIeIndexDat(it->path().wstring(), base, records_) != ERROR_SUCCESS) log(2, L"🔥index.dat not read: " + base.source);
+			}
+		}
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
 		const std::filesystem::path cache = extractedPath(std::get<1>(profileEntry)) + WEBCACHE_FOLDER + L"\\WebCacheV01.dat";
 		std::error_code ec;

@@ -513,6 +513,16 @@ HRESULT ExtractFileArtefactsRaw() {
 	if (conf.artefacts.webClient)
 		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
 			trees.push_back({ std::get<1>(profileEntry) + INETCACHE_FOLDER, INETCACHE_EXTENSIONS, 2, L"WinINet cache" });
+	/* Internet Explorer 5 to 9's index.dat files (Windows 7 and earlier): the
+	   cache with its active content, the history and its MSHist01 folders,
+	   the cookies' and the downloads' index. */
+	if (conf.artefacts.webClient)
+		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
+			for (const IeIndexFolder& f : IE_INDEX_FOLDERS) {
+				std::vector<std::wstring> extensions = { L".dat" };
+				if (f.cache) extensions.insert(extensions.end(), INETCACHE_EXTENSIONS.begin(), INETCACHE_EXTENSIONS.end());
+				trees.push_back({ std::get<1>(profileEntry) + f.relative, extensions, 1, L"Internet Explorer index.dat" });
+			}
 	/* DPAPI master keys, copied as they are — encrypted by the user's password
 	   or the system's DPAPI secret —, with Preferred and CREDHIST beside them:
 	   with that password, the analysis decrypts the user's saved secrets. */

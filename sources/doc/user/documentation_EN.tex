@@ -1297,7 +1297,15 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         redirected to Edge: each profile's cache (\path|INetCache\IE|) is
         collected, limited to the types an investigation needs — HTA,
         scripts, executables, archives, documents with macros, PDF —, and the
-        HTA an attack had run is found there with its entry. The modification
+        HTA an attack had run is found there with its entry. On Windows 7 and
+        earlier, Internet Explorer 5 to 9 kept the same data in
+        \fichier{index.dat} files (cache, history and its \texttt{MSHist01}
+        folders, cookies, downloads): they are collected and converted into
+        \texttt{CacheEntry} (\champ{Browser} \texttt{Internet Explorer}),
+        recovered (\champ{Recovered}) and dropped (\champ{RecordKind}
+        \texttt{LEAK}) entries included; a weekly history's visit time, local,
+        is converted, the expiry and last check, FAT dates without a time zone,
+        are given as written. The modification
         time of the
         \texttt{MSHist} containers, which Windows writes in local time, is
         converted to UTC with the offset in force at its date. The database is

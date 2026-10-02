@@ -165,6 +165,27 @@ struct WebClientRecord {
 	Json toJson() const;
 };
 
+/*! Internet Explorer 5 to 9's folders of index.dat files (Windows 7 and
+ *  earlier), relative to a Windows profile, each with the extensions
+ *  collected there: the cache keeps its index and its active content, the
+ *  others their index only. */
+struct IeIndexFolder {
+	const wchar_t* relative;                   //!< e.g. \\AppData\\Local\\Microsoft\\Windows\\History\\History.IE5
+	bool cache;                                //!< the cache: its files filtered by INETCACHE_EXTENSIONS, besides index.dat
+};
+//! The folders of index.dat files.
+extern const std::vector<IeIndexFolder> IE_INDEX_FOLDERS;
+
+/*! Reads one index.dat into CacheEntry records (Browser "Internet Explorer").
+ *  The container — Content, History, MSHist01…, Cookies, iedownload — comes
+ *  from the file's folder, and decides what its two times mean (see
+ *  ie_index_dat.h): a weekly history's visit time is local and converted.
+ *  @param file the index.dat, in the working copy
+ *  @param base SID and source copied into each record
+ *  @param records receives one CacheEntry per record
+ *  @return ERROR_SUCCESS, or ERROR_INVALID_DATA if it is not an MSIE Cache File 5.2 */
+HRESULT readIeIndexDat(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records);
+
 /*! Reads one Chromium History database.
  *  @param file the database, in the working copy
  *  @param base browser, profile, SID and source copied into each record

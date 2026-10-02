@@ -27,7 +27,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Historiques et recherches — Firefox (places.sqlite, formhistory.sqlite)
 - [x] Téléchargements Chromium (chaîne de redirections, référent, état, SHA-256)
 - [x] Lien téléchargement ↔ Zone.Identifier (B-004) et fichier sur le disque (mft.json) — confié à WAE (décision utilisateur du 2026-10-02)
-- [ ] index.dat d'IE ≤ 9 (Windows 7) : historique, cache, cookies
+- [x] index.dat d'IE ≤ 9 (Windows 7) : historique, cache, cookies, téléchargements
 - [x] Login Data / logins.json (identifiants enregistrés : origine, compte, dates — jamais le mot de passe), cookies (jamais la valeur)
 - [x] WebCache (ESE) — CacheEntry par conteneur
 - [x] TypedURLs et TypedURLsTime (NTUSER), venus de B-031
@@ -48,3 +48,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-02 : SavedLogin (Chromium Login Data, Firefox logins.json) et Cookie (Chromium Network\Cookies ou Cookies, Firefox cookies.sqlite) — métadonnées seulement : mots de passe et valeurs de cookies jamais sélectionnés (test : aucun secret dans le JSON). Référence : Login Data (0 ligne) et Network\Cookies (10 lignes) d'Edge rapatriés et relus par Python, mêmes sites. Vu échouer : expiration Firefox lue sans la conversion des secondes.
 - 2026-10-02 : identifiants et cookies commités (ad88b4c) ; navigation réelle Chrome, Firefox et mshta dans la VM (24f54e2) ; cache de WinINet collecté, CachedFile (d7d2a5f).
 - 2026-10-02 : décision utilisateur — la mise en corrélation des preuves (téléchargement ↔ Zone.Identifier ↔ fichier sur le disque) est faite dans WAE ; WAC collecte et convertit. Demande utilisateur : Internet Explorer reste présent et utilisé (mshta, HTA) — WebCache et INetCache faits, index.dat d'IE ≤ 9 à faire.
+- 2026-10-02 : index.dat d'IE 5 à 9 — décodeur `ie_index_dat` (format 5.2 de libmsiecf) : tables de hachage, URL/REDR/LEAK, entrées récupérées ; conversion en CacheEntry (Browser « Internet Explorer ») avec le sens des deux temps selon le conteneur (heure locale de l'historique hebdomadaire convertie ; dates FAT telles qu'écrites). Collecte des dossiers de Windows 7 (Content.IE5 et Low avec le contenu actif, History.IE5 et MSHist01, Cookies, IEDownloadHistory). Référence : pymsiecf sur quatre index.dat réels des données de test de plaso (`ie_index_fixtures.sh`, SHA-256 épinglés) — 1 110 enregistrements identiques ; le test a pris un défaut réel (enregistrement récupéré en partie écrasé rendant les données d'un autre). Pas d'index.dat sur la VM Windows 11 : pas de témoin en cycle VM. Le format 4.7 (IE 4) n'est pas lu. Les données binaires des téléchargements (iedownload) ne sont pas décodées, faute d'échantillon.
