@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P1 | fort |
+| fait (9d4dc54 … 4514267) | P1 | fort |
 
 ## Pourquoi
 Ce que l'utilisateur a fait sur le web : historique de navigation, recherches, fichiers téléchargés (le fichier et sa provenance), identifiants et cookies enregistrés. Le côté serveur (journaux, code du site, base de données) est un artefact distinct : B-035.
@@ -49,3 +49,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-02 : identifiants et cookies commités (ad88b4c) ; navigation réelle Chrome, Firefox et mshta dans la VM (24f54e2) ; cache de WinINet collecté, CachedFile (d7d2a5f).
 - 2026-10-02 : décision utilisateur — la mise en corrélation des preuves (téléchargement ↔ Zone.Identifier ↔ fichier sur le disque) est faite dans WAE ; WAC collecte et convertit. Demande utilisateur : Internet Explorer reste présent et utilisé (mshta, HTA) — WebCache et INetCache faits, index.dat d'IE ≤ 9 à faire.
 - 2026-10-02 : index.dat d'IE 5 à 9 — décodeur `ie_index_dat` (format 5.2 de libmsiecf) : tables de hachage, URL/REDR/LEAK, entrées récupérées ; conversion en CacheEntry (Browser « Internet Explorer ») avec le sens des deux temps selon le conteneur (heure locale de l'historique hebdomadaire convertie ; dates FAT telles qu'écrites). Collecte des dossiers de Windows 7 (Content.IE5 et Low avec le contenu actif, History.IE5 et MSHist01, Cookies, IEDownloadHistory). Référence : pymsiecf sur quatre index.dat réels des données de test de plaso (`ie_index_fixtures.sh`, SHA-256 épinglés) — 1 110 enregistrements identiques ; le test a pris un défaut réel (enregistrement récupéré en partie écrasé rendant les données d'un autre). Pas d'index.dat sur la VM Windows 11 : pas de témoin en cycle VM. Le format 4.7 (IE 4) n'est pas lu. Les données binaires des téléchargements (iedownload) ne sont pas décodées, faute d'échantillon.
+- 2026-10-02 : index.dat commité (4514267). **Close**. Cycle complet vert (0 ❌), innocuité et déterminisme compris. web_client.json : Chromium (Edge, Chrome, Brave, Vivaldi, Chromium, Opera), Firefox, TypedURLs, WebCache et cache de WinINet, index.dat d'IE 5 à 9 ; identifiants et cookies sans leurs secrets. Références indépendantes : SQLite de Python sur les bases réelles de la VM (navigation réelle de « wac » dans Chrome, Firefox et mshta), dissect.esedb pour le WebCache, pymsiecf pour les index.dat. La corrélation des preuves est faite dans WAE. Commits : 9d4dc54 (SQLite), 1b2adee (conversions.h), 6174f52 et 93a32f5 (Chromium), 103adef, d28d3a2 (Firefox), 68c24af (TypedURLs), 1995603 (WebCache), ad88b4c (identifiants, cookies), 24f54e2 (navigation réelle en VM), 6490539, d7d2a5f (cache WinINet), 4514267 (index.dat).
