@@ -912,6 +912,37 @@ int wmain() {
 		      && !splitWebCacheUrl(L"Visited: nouser", user, page),
 		      "webcache: history URLs split into user and page, others left whole");
 	}
+	{
+		// An iedownload record laid out as Internet Explorer 11 wrote it on the test VM.
+		auto blob = [](const std::wstring& last) {
+			std::vector<uint8_t> b(0x158, 0);
+			b[0] = 0x8C;
+			b[0x50] = 23;                                       // the file's size
+			b[0xA0] = 2; b[0xA4] = 127; b[0xA7] = 1;            // AF_INET, 127.0.0.1
+			for (const std::wstring& t : { std::wstring(L"text/plain"), std::wstring(L"C:\\Users\\wac\\AppData\\Local\\Microsoft\\Windows\\INetCache\\Low\\IE\\0VDERP2C\\w[1].txt"),
+			                               std::wstring(L"http://127.0.0.1:8765/w.txt"), last }) {
+				for (wchar_t c : t) { b.push_back((uint8_t)c); b.push_back((uint8_t)(c >> 8)); }
+				b.push_back(0); b.push_back(0);
+			}
+			return b;
+		};
+		Json saved = Json::obj(), unsaved = Json::obj();
+		auto text = [](const Json& o, const wchar_t* k) { const Json* v = o.find(k); return v ? v->text() : std::wstring(); };
+		check(decodeIeDownload(blob(L"C:\\Users\\wac\\Downloads\\w.txt"), saved) && text(saved, L"Url") == L"http://127.0.0.1:8765/w.txt"
+		      && text(saved, L"TargetPath") == L"C:\\Users\\wac\\Downloads\\w.txt" && text(saved, L"FileSize") == L"23"
+		      && text(saved, L"ServerAddress") == L"127.0.0.1" && text(saved, L"MimeType") == L"text/plain" && !saved.find(L"SuggestedName"),
+		      "iedownload: a saved download — URL, path, size, server, MIME type");
+		check(decodeIeDownload(blob(L"w.txt"), unsaved) && text(unsaved, L"SuggestedName") == L"w.txt" && !unsaved.find(L"TargetPath"),
+		      "iedownload: not saved — only the name it would take");
+		const std::vector<uint8_t> whole = blob(L"C:\\Users\\wac\\Downloads\\w.txt");
+		bool refused = true;
+		for (size_t cut : { (size_t)0, (size_t)0x100, (size_t)0x158, whole.size() - 3 }) {
+			GuardedCopy copy(std::vector<uint8_t>(whole.begin(), whole.begin() + cut), GuardSide::After);
+			Json none = Json::obj();
+			refused = refused && !decodeIeDownload(std::vector<uint8_t>(copy.data(), copy.data() + copy.size()), none) && !none.find(L"Url");
+		}
+		check(refused, "iedownload: a truncated record refused, nothing emitted");
+	}
 	check(webCacheFile(L"C:\\c\\IE\\", L"L4YBWS0NA4VP7Z24E5E1CFPFBODANLF1", 3, L"wac[1].hta") == L"C:\\c\\IE\\E5E1CFPF\\wac[1].hta"
 	      && webCacheFile(L"C:\\c\\IE\\", L"L4YBWS0NA4VP7Z24E5E1CFPFBODANLF1", 4, L"x") == L"C:\\c\\IE\\BODANLF1\\x"
 	      && webCacheFile(L"C:\\c\\IE\\", L"L4YBWS0NA4VP7Z24E5E1CFPFBODANLF1", 5, L"x").empty()

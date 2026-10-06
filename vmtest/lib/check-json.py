@@ -1534,6 +1534,14 @@ def check_small_file_artefacts(folder):
             report(match and (match[0].get("TargetPath") or "").lower() == target.lower(),
                    f"web_client.json: {browser} download found, its URL and destination as the browser wrote them",
                    f"web_client.json: {browser} download {url} -> {target} missing or different: {match[:1]}")
+        for l in (l for l in lines if l.startswith("webiedownload=")):
+            url, target = l[len("webiedownload="):].split("|", 1)
+            match = [r.get("Download", {}) for r in web if r.get("Type") == "CacheEntry" and r.get("Container") == "iedownload"
+                     and r.get("Download", {}).get("Url") == url]
+            report(match and (match[0].get("TargetPath") or "").lower() == target.lower() and match[0].get("FileSize") == 20
+                   and match[0].get("ServerAddress") == "127.0.0.1",
+                   "web_client.json: Internet Explorer's download found in iedownload — URL, saved path, size, server",
+                   f"web_client.json: Internet Explorer's download {url} -> {target} missing or different: {match[:1]}")
         manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
         exhibits = {(i.get("SourcePath") or "").lower(): i for i in (manifest or {}).get("Items", [])} if isinstance(manifest, dict) else {}
         for l in (l for l in lines if l.startswith("webhta=")):

@@ -27,9 +27,10 @@
 #   usf          each User Shell Folders value of "wac", unexpanded; its
 #                Desktop redirected to OneDrive\Desktop -> user_shell_folders.json
 #   typedurl     two TypedURLs of "wac" with their TypedURLsTime -> web_client.json
-#   webvisit, websearch, webdownload, webhta  real browsing of "wac": Chrome
-#                and Firefox visits and downloads, a Google search, an HTA run
-#                by mshta.exe -> web_client.json (install-browsers.sh first)
+#   webvisit, websearch, webdownload, webhta, webiedownload  real browsing of
+#                "wac": Chrome and Firefox visits and downloads, a Google
+#                search, an HTA run by mshta.exe, a download by Internet
+#                Explorer -> web_client.json (install-browsers.sh first)
 #   rundefault   a Run value in the NTUSER.DAT of the Default profile (template
 #                of new profiles) -> run.json, SID S-0-0-0, Profile "Default"
 #   secrets, audit, nl_slots  the SECURITY hive read live by Windows (as
@@ -535,7 +536,7 @@ if (Wants 'web_client') {
         $listener = New-Object Net.HttpListener
         $listener.Prefixes.Add('http://127.0.0.1:8765/')
         $listener.Start()
-        $deadline = (Get-Date).AddSeconds(180)
+        $deadline = (Get-Date).AddSeconds(240)
         while ((Get-Date) -lt $deadline) {
             $task = $listener.GetContextAsync()
             while (-not $task.Wait(500) -and (Get-Date) -lt $deadline) { }
@@ -578,6 +579,44 @@ if (Test-Path $firefox) {
 }
 Start-Process mshta.exe -ArgumentList "BASE/wac-TOKEN.hta"; Start-Sleep 8
 Get-Process mshta -ErrorAction SilentlyContinue | Stop-Process -Force
+# Internet Explorer itself (its COM server; iexplore.exe alone opens Edge): its
+# download manager asks "Open / Save", answered by a click on Save — the dialog
+# shows no buttons to UI Automation — then IE is closed as a user would, when
+# it writes the saved path into the WebCache's iedownload container.
+Add-Type -TypeDefinition @"
+using System; using System.Runtime.InteropServices;
+public static class WacUi {
+  [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left, Top, Right, Bottom; }
+  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r);
+  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
+  [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
+  [DllImport("user32.dll")] public static extern void mouse_event(uint f, uint x, uint y, uint d, UIntPtr e);
+  [DllImport("user32.dll")] public static extern IntPtr PostMessage(IntPtr h, uint m, IntPtr w, IntPtr l);
+}
+"@
+try {
+    $ie = New-Object -ComObject InternetExplorer.Application
+    $ie.Visible = $true
+    $ie.Navigate("BASE/ie/wac-dl-ie-TOKEN.txt")
+    $window = $null
+    for ($try = 0; $try -lt 30 -and -not $window; $try++) {
+        Start-Sleep -Milliseconds 500
+        $window = Get-Process iexplore -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -like '*Internet Explorer*' } | Select-Object -First 1
+    }
+    if ($window) {
+        $rect = New-Object WacUi+RECT
+        [WacUi]::GetWindowRect($window.MainWindowHandle, [ref]$rect) | Out-Null
+        [WacUi]::SetForegroundWindow($window.MainWindowHandle) | Out-Null; Start-Sleep 1
+        # "Save", 517 x 139 from the "View downloads" dialog's corner (100 % scaling).
+        [WacUi]::SetCursorPos($rect.Left + 517, $rect.Top + 139) | Out-Null; Start-Sleep -Milliseconds 300
+        [WacUi]::mouse_event(2, 0, 0, 0, [UIntPtr]::Zero); [WacUi]::mouse_event(4, 0, 0, 0, [UIntPtr]::Zero)
+        Start-Sleep 8
+    }
+} catch { }
+Get-Process iexplore -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } |
+    ForEach-Object { [WacUi]::PostMessage($_.MainWindowHandle, 0x10, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null }
+Start-Sleep 20
+Get-Process iexplore -ErrorAction SilentlyContinue | Stop-Process -Force
 'done' | Set-Content C:\wactest\browse-witness.done
 '@).Replace('BASE', $base).Replace('TOKEN', $token)
     Remove-Item C:\wactest\browse-witness.done -ErrorAction SilentlyContinue
@@ -585,7 +624,7 @@ Get-Process mshta -ErrorAction SilentlyContinue | Stop-Process -Force
     $principal = New-ScheduledTaskPrincipal -UserId 'wac' -LogonType Interactive
     Register-ScheduledTask -TaskName 'WacBrowseWitness' -Action $action -Principal $principal -Force | Out-Null
     Start-ScheduledTask -TaskName 'WacBrowseWitness'
-    for ($i = 0; $i -lt 240 -and -not (Test-Path C:\wactest\browse-witness.done); $i++) { Start-Sleep -Milliseconds 500 }
+    for ($i = 0; $i -lt 400 -and -not (Test-Path C:\wactest\browse-witness.done); $i++) { Start-Sleep -Milliseconds 500 }
     Unregister-ScheduledTask -TaskName 'WacBrowseWitness' -Confirm:$false
     Stop-Job $server; Remove-Job $server -Force
     Remove-Item $script, C:\wactest\browse-witness.done -ErrorAction SilentlyContinue
@@ -602,6 +641,8 @@ Get-Process mshta -ErrorAction SilentlyContinue | Stop-Process -Force
     $hta = [Text.Encoding]::ASCII.GetBytes('<html><head><title>WAC HTA</title><HTA:APPLICATION/></head><body><script>window.close();</script></body></html>')
     $digest = -join ([Security.Cryptography.SHA256]::Create().ComputeHash($hta) | ForEach-Object { $_.ToString('X2') })
     Write-Output "webhta=$base/wac-$token.hta|$digest"
+    $ieTarget = "C:\Users\wac\Downloads\wac-dl-ie-$token.txt"
+    if (Test-Path $ieTarget) { Write-Output "webiedownload=$base/ie/wac-dl-ie-$token.txt|$ieTarget" }
 }
 
 # 21. B-031 — Explorer's RecentDocs: a file of a unique extension (.wacrd)

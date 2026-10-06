@@ -529,6 +529,38 @@ HRESULT readIeIndexDat(const std::wstring& file, const WebClientRecord& base, st
 	return ERROR_SUCCESS;
 }
 
+bool decodeIeDownload(const std::vector<uint8_t>& blob, Json& fields) {
+	const size_t SIZE = 0x50, ADDRESS = 0xA0, STRINGS = 0x158;
+	if (blob.size() <= STRINGS) return false;
+	// The four strings, each ending with its NUL, within the blob.
+	std::vector<std::wstring> strings;
+	for (size_t at = STRINGS; strings.size() < 4 && at + 2 <= blob.size();) {
+		std::wstring text;
+		size_t end = at;
+		while (end + 2 <= blob.size() && readLittleEndian<uint16_t>(blob.data() + end) != 0) {
+			text += (wchar_t)readLittleEndian<uint16_t>(blob.data() + end);
+			end += 2;
+		}
+		if (end + 2 > blob.size()) break;   // no terminator: not that layout
+		strings.push_back(text);
+		at = end + 2;
+	}
+	if (strings.size() < 4 || strings[2].find(L"://") == std::wstring::npos) return false;
+	fields.add(L"Url", Json::str(strings[2]));
+	fields.add(L"MimeType", Json::str(strings[0]));
+	fields.add(L"CachePath", Json::str(strings[1]));
+	// A full path once saved, the name it would take otherwise.
+	const bool path = strings[3].size() > 2 && strings[3][1] == L':' && strings[3][2] == L'\\';
+	fields.add(path ? L"TargetPath" : L"SuggestedName", Json::str(strings[3]));
+	fields.add(L"FileSize", Json::num((unsigned long long)readLittleEndian<uint64_t>(blob.data() + SIZE)));
+	if (readLittleEndian<uint32_t>(blob.data() + ADDRESS) == 2) {   // AF_INET, then the address in network order
+		const uint8_t* ip = blob.data() + ADDRESS + 4;
+		fields.add(L"ServerAddress", Json::str(std::to_wstring(ip[0]) + L"." + std::to_wstring(ip[1]) + L"."
+		                                       + std::to_wstring(ip[2]) + L"." + std::to_wstring(ip[3])));
+	}
+	return true;
+}
+
 bool splitWebCacheUrl(const std::wstring& url, std::wstring& user, std::wstring& page) {
 	size_t start = std::wstring::npos;
 	if (url.compare(0, 9, L"Visited: ") == 0) start = 9;
@@ -584,6 +616,15 @@ HRESULT readWebCache(const std::wstring& file, const WebClientRecord& base, std:
 			                                                   cellInteger(e, *table, L"SecureDirectory"), filename)));
 			if (const int64_t size = cellInteger(e, *table, L"FileSize")) r.fields.add(L"FileSize", Json::num((long long)size));
 			r.fields.add(L"RedirectUrl", Json::str(cellText(e, *table, L"RedirectUrl")));
+			// A download of Internet Explorer: its URL, file and path are in a blob of its own.
+			if (name == L"iedownload") {
+				const EseColumn* column = nullptr;
+				const EseCell* blob = cellOf(e, *table, L"ResponseHeaders", &column);
+				Json download = Json::obj();
+				if (blob && !blob->values.empty() && blob->compressionScheme < 0 && decodeIeDownload(blob->values.front(), download))
+					r.fields.add(L"Download", std::move(download));
+				else log(2, L"🔥iedownload entry without the known layout: " + url);
+			}
 			records.push_back(std::move(r));
 		}
 	}

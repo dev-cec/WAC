@@ -1333,7 +1333,13 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         (\path|INetCache\IE|) est collecté, limité aux types utiles à
         l'enquête — HTA, scripts, exécutables, archives, documents à macros,
         PDF —, et l'HTA qu'une attaque a fait exécuter s'y retrouve avec son
-        entrée. Sur Windows 7 et antérieurs, Internet Explorer 5 à 9 tenait ces
+        entrée. Un téléchargement d'Internet Explorer 10 et 11 (conteneur
+        \texttt{iedownload}) donne en outre \champ{Download} : son URL, son
+        type MIME, sa copie temporaire dans le cache, le chemin où il a été
+        enregistré (\champ{TargetPath}, ou seulement \champ{SuggestedName}
+        s'il ne l'a pas été), sa taille et l'adresse du serveur — format non
+        documenté par Microsoft, établi sur un vrai téléchargement d'IE~11
+        dans la machine de test. Sur Windows 7 et antérieurs, Internet Explorer 5 à 9 tenait ces
         mêmes données dans des \fichier{index.dat} (cache, historique et ses
         dossiers \texttt{MSHist01}, cookies, téléchargements) : ils sont
         collectés et convertis en \texttt{CacheEntry} (\champ{Browser}
