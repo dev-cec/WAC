@@ -472,6 +472,18 @@ std::wstring EventMessage(const std::wstring& providerGuid,
 	const std::wstring messageTemplate = f->messages.text(idMessage);
 	if (messageTemplate.empty()) return std::wstring();
 
+	/* Each value as Windows shows it, by its template item: a value map's
+	   label, hexadecimal in upper case (see formatItemValue). Only when the
+	   data and the template have as many values: otherwise the values are not
+	   the items', and a label would be put on the wrong one. */
+	const std::vector<WevtItem>* items = f->metadata.items(eventId, version);
+	if (items && items->size() == values.size()) {
+		std::vector<std::wstring> shown;
+		shown.reserve(values.size());
+		for (size_t i = 0; i < values.size(); ++i)
+			shown.push_back(formatItemValue((*items)[i], f->metadata.valueMap((*items)[i].map), f->messages, values[i]));
+		return render(messageTemplate, f->parameters, { &f->messages }, shown);
+	}
 	return render(messageTemplate, f->parameters, { &f->messages }, values);
 }
 

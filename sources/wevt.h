@@ -68,6 +68,18 @@ private:
 	std::map<uint32_t, std::wstring> messages_;
 };
 
+/*! One item of an event's template: how its value is to be shown. */
+struct WevtItem {
+	uint8_t  inType = 0;    //!< input type (win:UInt32 = 0x08, win:HexInt64 = 0x15…)
+	uint8_t  outType = 0;   //!< output type (xs:unsignedInt = 0x08, win:HexInt32 = 0x12…)
+	uint32_t map = 0;       //!< offset of its value map in the resource, 0 for none
+};
+
+/*! A value map of a provider (VMAP): a value's label is a message. */
+struct WevtValueMap {
+	std::map<uint32_t, uint32_t> labels;   //!< value -> message identifier of its label
+};
+
 /*! Event metadata of a provider (the WEVT_TEMPLATE resource). */
 class WevtMetadata {
 public:
@@ -92,10 +104,39 @@ public:
 	//! Number of events described.
 	size_t size() const { return parIdEtVersion_.size(); }
 
+	/*! The items of an event's template, in the order of its data — the
+	 *  version tried first, then the identifier alone, as messageId.
+	 *  @return the items, or nullptr if the event has no template */
+	const std::vector<WevtItem>* items(uint16_t eventId, uint8_t version) const;
+
+	/*! @param offset a map's offset, as an item gives it
+	 *  @return the value map, or nullptr (none, or a bitmap: not read) */
+	const WevtValueMap* valueMap(uint32_t offset) const;
+
 private:
 	std::map<uint32_t, uint32_t> parIdEtVersion_;   //!< (id << 8 | version) -> message
 	std::map<uint16_t, uint32_t> parId_;            //!< id -> message (first version seen)
+	std::map<uint32_t, uint32_t> templateByIdVersion_;   //!< (id << 8 | version) -> template offset
+	std::map<uint16_t, uint32_t> templateById_;          //!< id -> template offset (first version seen)
+	std::map<uint32_t, std::vector<WevtItem>> templates_;   //!< template offset -> its items
+	std::map<uint32_t, WevtValueMap> valueMaps_;            //!< map offset -> value map
 };
+
+/*! An event's value as Windows shows it in the message, from its template
+ *  item: a value map's label, a hexadecimal type as 0x and upper-case
+ *  digits. Anything else is given as the log holds it.
+ *
+ *  Measured on the test VM against EvtFormatMessage (B-023): "État : 2"
+ *  became "État : Disconnected" with Kernel-Power's map, "0x3e7" "0x3E7".
+ *  A value that is no number, or a value absent from its map, stays as it is.
+ *
+ *  @param item the value's template item
+ *  @param map its value map, or nullptr
+ *  @param messages the provider's message table, where the labels are
+ *  @param value the value, as the log holds it (decimal, or "0x…")
+ *  @return the value to put in the message */
+std::wstring formatItemValue(const WevtItem& item, const WevtValueMap* map,
+                             const TableMessages& messages, const std::wstring& value);
 
 /*! Replaces the %1 %2 … marks by the event's data.
 *

@@ -982,6 +982,39 @@ int wmain() {
 		TableMessages messages;
 		check(messages.analyse(table) == 2 && messages.text(1) == L"OK" && messages.text(2) == L"d\u00e9j\u00e0",
 		      "message table: UTF-16 and UTF-8 entries decoded");
+		{
+			/* Template items and a value map, laid out as Windows 11's
+			   providers have them (measured on Kernel-Power): the event's
+			   template at 20 in its descriptor, the item's map at 8, the MAPS
+			   offset array of one entry per map, a VMAP header of 20 bytes. */
+			std::vector<uint8_t> w(64, 0);
+			auto at32 = [&](size_t at, uint32_t v) { if (w.size() < at + 4) w.resize(at + 4, 0); for (int i = 0; i < 4; ++i) w[at + i] = (uint8_t)(v >> (8 * i)); };
+			memcpy(w.data(), "CRIM", 4);
+			at32(12, 1); at32(32, 40);
+			memcpy(w.data() + 40, "WEVT", 4);
+			at32(52, 2); at32(60, 80); at32(68, 200);              // EVNT at 80, MAPS at 200
+			w.resize(400, 0);
+			memcpy(w.data() + 80, "EVNT", 4); at32(84, 16 + 48); at32(88, 1);
+			w[96] = 7; at32(96 + 16, 0x30); at32(96 + 20, 300);    // event 7 v0, message 0x30, template at 300
+			memcpy(w.data() + 200, "MAPS", 4); at32(204, 52); at32(208, 1); at32(212, 216);
+			memcpy(w.data() + 216, "VMAP", 4); at32(220, 36); at32(232, 2);
+			at32(236, 0); at32(240, 0x10); at32(244, 2); at32(248, 0x12);   // 0 -> Connected, 2 -> Disconnected
+			memcpy(w.data() + 300, "TEMP", 4); at32(308, 2); at32(316, 340);
+			w[344] = 0x08; w[345] = 0x08; at32(348, 216);           // item 0: UInt32 with the map
+			w[364] = 0x15;                                          // item 1: HexInt64
+			const std::vector<uint8_t> labels = { 2, 0, 0, 0,  0x10, 0, 0, 0,  0x10, 0, 0, 0,  28, 0, 0, 0,
+			                                      0x12, 0, 0, 0,  0x12, 0, 0, 0,  36, 0, 0, 0,
+			                                      8, 0, 2, 0, 'O', 'n', 0, 0,  12, 0, 2, 0, 'O', 'f', 'f', '\r', '\n', 0, 0, 0 };
+			TableMessages labelTable;
+			WevtMetadata typed;
+			const bool parsed = typed.analyse(w, L"") == 1 && labelTable.analyse(labels) == 2;
+			const std::vector<WevtItem>* items = typed.items(7, 0);
+			check(parsed && items && items->size() == 2
+			      && formatItemValue((*items)[0], typed.valueMap((*items)[0].map), labelTable, L"2") == L"Off"
+			      && formatItemValue((*items)[0], typed.valueMap((*items)[0].map), labelTable, L"5") == L"5"
+			      && formatItemValue((*items)[1], typed.valueMap((*items)[1].map), labelTable, L"0x3e7") == L"0x3E7",
+			      "wevt: template items read, a value map's label shown, an unmapped value kept, hexadecimal in upper case");
+		}
 		WevtMetadata meta;
 		check(meta.analyse(d, L"") == 3 && meta.messageId(1, 0) == 0xB0000001u && meta.messageId(2, 0) == 0xB0000002u
 		      && meta.messageId(3, 0) == 0xB0000003u,

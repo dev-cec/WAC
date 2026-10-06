@@ -147,10 +147,128 @@ std::wstring TableMessages::text(uint32_t id) const {
 //  WEVT_TEMPLATE
 // ---------------------------------------------------------------------------
 
+namespace {
+
+/*! Reads a MAPS block's value maps. Measured on Windows 11's providers, and
+ *  not as libfwevt's description says: the block's offset array has ONE
+ *  ENTRY PER MAP (not one less), and a VMAP's header is 20 bytes — signature,
+ *  size, offset of its name, a field of four bytes, count — before its
+ *  entries { value, message identifier } (Kernel-Power: 124 = 20 + 13 x 8).
+ *  Bitmaps (BMAP) are not read: how Windows joins their labels is not
+ *  measured, their values stay as the log holds them.
+ *  @param d the resource
+ *  @param block the MAPS block's offset
+ *  @param maps receives the value maps, by offset */
+void readMaps(const std::vector<uint8_t>& d, size_t block, std::map<uint32_t, WevtValueMap>& maps) {
+	const uint32_t count = rd32(d, block + 8);
+	if (count > MAX_ENTRIES) return;
+	for (uint32_t i = 0; i < count; ++i) {
+		const size_t entry = block + 12 + (size_t)i * 4;
+		if (entry + 4 > d.size()) return;
+		const uint32_t map = rd32(d, entry);
+		if ((size_t)map + 20 > d.size() || std::memcmp(d.data() + map, "VMAP", 4) != 0) continue;
+		const uint32_t size = rd32(d, map + 4);
+		const uint32_t labels = rd32(d, map + 16);
+		if (labels > MAX_ENTRIES || size < 20 || (size_t)map + size > d.size() || (size - 20) / 8 < labels) continue;
+		WevtValueMap& m = maps[map];
+		for (uint32_t k = 0; k < labels; ++k)
+			m.labels.emplace(rd32(d, map + 20 + (size_t)k * 8), rd32(d, map + 24 + (size_t)k * 8));
+	}
+}
+
+/*! Reads a template's items (TEMP): 20 bytes each — input type at 4, output
+ *  type at 5, the offset of its value map at 8 (measured; libfwevt calls the
+ *  field unknown), count at 12, length at 14, name offset at 16.
+ *  @param d the resource
+ *  @param at the template's offset
+ *  @param templates receives its items, by offset
+ *  @return true if the template was read */
+bool readTemplate(const std::vector<uint8_t>& d, uint32_t at, std::map<uint32_t, std::vector<WevtItem>>& templates) {
+	if (templates.count(at)) return true;
+	if ((size_t)at + 40 > d.size() || std::memcmp(d.data() + at, "TEMP", 4) != 0) return false;
+	const uint32_t count = rd32(d, at + 8);
+	const uint32_t itemsAt = rd32(d, at + 16);
+	if (count > MAX_ENTRIES || (count > 0 && ((size_t)itemsAt + (size_t)count * 20 > d.size()))) return false;
+	std::vector<WevtItem> items;
+	for (uint32_t k = 0; k < count; ++k) {
+		const size_t item = itemsAt + (size_t)k * 20;
+		WevtItem w;
+		w.inType = d[item + 4];
+		w.outType = d[item + 5];
+		w.map = rd32(d, item + 8);
+		items.push_back(w);
+	}
+	templates.emplace(at, std::move(items));
+	return true;
+}
+
+//! @return the value as a number, from its decimal or "0x" form; false if it is none
+bool parseNumber(const std::wstring& text, uint64_t& value) {
+	if (text.empty()) return false;
+	const bool hex = text.size() > 2 && text[0] == L'0' && (text[1] == L'x' || text[1] == L'X');
+	value = 0;
+	for (size_t i = hex ? 2 : 0; i < text.size(); ++i) {
+		const wchar_t c = text[i];
+		unsigned digit;
+		if (c >= L'0' && c <= L'9') digit = (unsigned)(c - L'0');
+		else if (hex && c >= L'a' && c <= L'f') digit = (unsigned)(c - L'a' + 10);
+		else if (hex && c >= L'A' && c <= L'F') digit = (unsigned)(c - L'A' + 10);
+		else return false;
+		value = value * (hex ? 16 : 10) + digit;
+	}
+	return true;
+}
+
+} // namespace
+
+std::wstring formatItemValue(const WevtItem& item, const WevtValueMap* map,
+                             const TableMessages& messages, const std::wstring& value) {
+	uint64_t number = 0;
+	if (!parseNumber(value, number)) return value;
+	if (map) {
+		const auto label = map->labels.find((uint32_t)number);
+		if (label == map->labels.end()) return value;
+		std::wstring text = messages.text(label->second);
+		while (!text.empty() && (text.back() == L'\n' || text.back() == L'\r' || text.back() == L' ')) text.pop_back();
+		return text.empty() ? value : text;
+	}
+	// win:HexInt32, win:HexInt64 in; win:HexInt8 to win:HexInt64 out.
+	const bool hexadecimal = item.inType == 0x14 || item.inType == 0x15 || (item.outType >= 0x10 && item.outType <= 0x13);
+	if (hexadecimal) {
+		static const wchar_t DIGITS[] = L"0123456789ABCDEF";
+		std::wstring digits;
+		do { digits.insert(digits.begin(), DIGITS[number & 0xF]); number >>= 4; } while (number);
+		return L"0x" + digits;
+	}
+	return value;
+}
+
+const std::vector<WevtItem>* WevtMetadata::items(uint16_t eventId, uint8_t version) const {
+	auto it = templateByIdVersion_.find(((uint32_t)eventId << 8) | version);
+	uint32_t at = 0;
+	if (it != templateByIdVersion_.end()) at = it->second;
+	else {
+		const auto byId = templateById_.find(eventId);
+		if (byId == templateById_.end()) return nullptr;
+		at = byId->second;
+	}
+	const auto t = templates_.find(at);
+	return t != templates_.end() ? &t->second : nullptr;
+}
+
+const WevtValueMap* WevtMetadata::valueMap(uint32_t offset) const {
+	const auto m = valueMaps_.find(offset);
+	return m != valueMaps_.end() ? &m->second : nullptr;
+}
+
 size_t WevtMetadata::analyse(const std::vector<uint8_t>& d,
                                  const std::wstring& providerGuid) {
 	parIdEtVersion_.clear();
 	parId_.clear();
+	templateByIdVersion_.clear();
+	templateById_.clear();
+	templates_.clear();
+	valueMaps_.clear();
 	if (d.size() < 16 || std::memcmp(d.data(), "CRIM", 4) != 0) return 0;
 
 	const uint32_t nProviders = rd32(d, 12);
@@ -180,6 +298,7 @@ size_t WevtMetadata::analyse(const std::vector<uint8_t>& d,
 			if (dd + 4 > d.size()) break;
 			const uint32_t block = rd32(d, dd);
 			if (block + 16 > d.size()) continue;
+			if (std::memcmp(d.data() + block, "MAPS", 4) == 0) { readMaps(d, block, valueMaps_); continue; }
 			if (std::memcmp(d.data() + block, "EVNT", 4) != 0) continue;
 
 			const uint32_t blockSize   = rd32(d, block + 4);
@@ -209,6 +328,11 @@ size_t WevtMetadata::analyse(const std::vector<uint8_t>& d,
 				if (message == 0 || message == 0xFFFFFFFFu) continue;
 				parIdEtVersion_.emplace(((uint32_t)id << 8) | version, message);
 				parId_.emplace(id, message);
+				const uint32_t templateOffset = rd32(d, ev + 20);   // 0: no template
+				if (templateOffset != 0 && readTemplate(d, templateOffset, templates_)) {
+					templateByIdVersion_.emplace(((uint32_t)id << 8) | version, templateOffset);
+					templateById_.emplace(id, templateOffset);
+				}
 			}
 		}
 		if (!providerGuid.empty()) break;   // provider found
