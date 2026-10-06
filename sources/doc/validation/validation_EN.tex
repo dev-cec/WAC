@@ -250,6 +250,33 @@ of the file is walked, not only those the header declares: a log not properly
 closed thus yields the records it does not count. An unreadable chunk is
 reported and skipped; it no longer stops the reading of the file.
 
+\subsection*{Messages: the residual differences with Windows}
+
+The cycle compares the message of each kind of event with the one Windows
+renders itself (\texttt{check-json.py}, threshold of 90~\% of identical kinds;
+measured: 887 of 898). The dates inserted are compared without the direction
+marks (U+200E) Windows puts in them and to the hundred nanoseconds. The same
+score is reached when the collection (\texttt{-{}-collect}) and the conversion
+are separate. The differences left are explained, kind by kind:
+\begin{itemize}
+  \item \textbf{a hexadecimal value tied to a map}: Windows does not apply the
+        map as the manifest says. \texttt{DehPhase} = \texttt{0x1} is
+        ``PerMachine'' by UndockedDeh's manifest, Windows writes ``PerUser''
+        (the label of 0); a flags map on \texttt{0x2} stays ``0x2'' with
+        Windows (SMB 30950, 1080). \wac{} follows the manifest (4 kinds);
+  \item \textbf{a satellite older than its binary}: the machine's
+        \fichier{fr-FR\textbackslash audioses.dll.mui} (version 10.0.26100.1)
+        holds these three messages in English, and the faulty text ``Signature
+        utilisée :chiffrement'' is the one of the \fichier{mrxsmb.sys.mui} on
+        the disk; Windows shows a French text absent from those files, whose
+        origin was not found (4 kinds);
+  \item \textbf{a null FILETIME}: Windows writes 1601-01-01, \wac{} inserts
+        nothing (Wininit 25);
+  \item \textbf{no message with \wac{}}: an event whose data Windows could not
+        lay out (\texttt{ProcessingErrorData}, AppModel-Runtime 219) and
+        Perflib 0 (2 kinds).
+\end{itemize}
+
 \section{Decoding the artefacts}
 
 \begin{itemize}
@@ -576,6 +603,19 @@ witness document indexed by Windows; Windows' query of its own index
   (OLE DB, \texttt{Search.CollatorDSO}): URL, modification, size of each
   item / \fichier{search\_index.json} (515 identical items) &
   check added with the artefact \\
+message rendered by Windows itself (\texttt{EvtFormatMessage}, through
+  \texttt{Get-WinEvent}) for each kind of event of the VM — provider,
+  identifier, version, qualifiers — on the same record /
+  \champ{EvtEventMessage} of \fichier{events.json} (887 kinds of 898
+  identical) &
+  messages for 28~\% of the events only: step of the \texttt{WEVT\_TEMPLATE}
+  descriptors deduced from the block's size (52 bytes instead of 48); classic
+  sources ignored; UTF-8 tables read byte by byte; \texttt{en-US} satellite
+  preferred to \texttt{fr-FR}, the language not read in SYSTEM; the data's
+  spaces stripped; values not typed (maps, flags, error codes); data shifted
+  by an array or an empty leaf; manifests moved to \fichier{SystemResources};
+  in a separate collection, classic sources and system tables not collected,
+  \texttt{CurrentControlSet} never opened \\
 witness shortcut on the public desktop and shortcut pinned to the task bar
   (target, arguments, location); shortcuts Windows lists in the Start menus,
   desktops and Quick Launch / \fichier{shortcuts.json} (93 shortcuts with those of the Default profile and of the redirected desktop, no

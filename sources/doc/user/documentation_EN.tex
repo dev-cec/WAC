@@ -1548,7 +1548,13 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
   \item[\champ{EvtEventData}] the event's data, as a list of \champ{Name} /
         \champ{Value} pairs;
   \item[\champ{EvtEventMessage}] the readable message, as Event Viewer would show
-        it, rebuilt from the provider's resources collected on the machine;
+        it, rebuilt from the provider's resources collected on the machine:
+        manifest (\texttt{WEVT\_TEMPLATE}, or its twin
+        \fichier{SystemResources\textbackslash*.mun} on Windows~11) and message
+        table in the machine's interface language, or a classic source's
+        \texttt{EventMessageFile} files. Each value is shown as Windows shows
+        it: label of its value map or of its flags, hexadecimal, text of a
+        Win32, HRESULT or NTSTATUS error code, network address;
   \item[\champ{EvtSourceLog}] the log file the event comes from. One channel can
         be carried by several files (current log and archives) whose record
         numbers overlap;
@@ -1742,8 +1748,10 @@ instead of taking it for the activity under study:
         guessing would fingerprint another file.
   \item[Deleted executable] A process whose executable has been deleted from the
         disk has no fingerprint: only memory is left, outside \wac{}'s scope.
-  \item[Event messages] About a third of the events get a readable message on
-        the test machine; the other providers ship no usable resources. The data
+  \item[Event messages] On the test machine, 99.6~\% of the events get a
+        readable message, identical to Windows' for 98~\% of the kinds of event.
+        The rest is explained in the validation file: Windows' own deviations
+        from the manifest, language satellites older than their binary. The data
         themselves are always complete.
   \item[Signed but not authenticated] A few kinds of genuinely signed files are
         still collected, the cautious side: Microsoft Store applications (signed

@@ -1601,7 +1601,13 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \champ{Name} / \champ{Value} ;
   \item[\champ{EvtEventMessage}] le message lisible, tel que l'Observateur
         d'événements l'afficherait, reconstitué à partir des ressources du
-        fournisseur prélevées sur la machine ;
+        fournisseur prélevées sur la machine : manifeste (\texttt{WEVT\_TEMPLATE},
+        ou son jumeau \fichier{SystemResources\textbackslash*.mun} sous
+        Windows~11) et table de messages dans la langue de l'interface de la
+        machine, ou fichiers \texttt{EventMessageFile} d'une source classique.
+        Chaque donnée y est montrée comme Windows la montre : libellé de sa
+        table de valeurs ou de ses drapeaux, hexadécimal, texte d'un code
+        d'erreur Win32, HRESULT ou NTSTATUS, adresse réseau ;
   \item[\champ{EvtSourceLog}] le fichier journal dont provient l'événement. Un
         même canal peut être porté par plusieurs fichiers (journal courant et
         archives) dont les numéros d'enregistrement se recouvrent ;
@@ -1806,9 +1812,11 @@ lieu de la prendre pour l'activité étudiée :
   \item[Exécutable supprimé] Un processus dont l'exécutable a été effacé du disque
         n'a pas d'empreinte : il ne reste que la mémoire, hors du périmètre de
         \wac{}.
-  \item[Messages d'événements] Environ un tiers des événements reçoivent un
-        message lisible sur la machine de test ; les autres fournisseurs ne livrent
-        pas de ressources exploitables. Les données, elles, sont toujours
+  \item[Messages d'événements] Sur la machine de test, 99,6~\% des événements
+        reçoivent un message lisible, identique à celui de Windows pour 98~\% des
+        sortes d'événements. Le reste est expliqué dans le dossier de validation :
+        écarts de Windows lui-même par rapport au manifeste, satellites de langue
+        plus anciens que leur binaire. Les données, elles, sont toujours
         complètes.
   \item[Signés mais non authentifiés] Quelques sortes de fichiers réellement
         signés restent prélevées, dans le sens prudent : les applications du

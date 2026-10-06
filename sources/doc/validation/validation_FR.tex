@@ -257,6 +257,35 @@ seulement ceux que l'en-tête déclare : un journal mal fermé livre ainsi les
 enregistrements qu'il ne compte pas. Un bloc illisible est signalé et sauté ; il
 n'interrompt plus la lecture du fichier.
 
+\subsection*{Messages : les écarts résiduels avec Windows}
+
+Le cycle compare le message de chaque sorte d'événement à celui que Windows rend
+lui-même (\texttt{check-json.py}, seuil de 90~\% de sortes identiques ; mesuré :
+887 sur 898). Les dates insérées sont comparées sans les marques de direction
+(U+200E) que Windows y place et à la centaine de nanosecondes. Le même score est
+obtenu quand la collecte (\texttt{-{}-collect}) et la conversion sont séparées.
+Les écarts qui restent sont expliqués, sorte par sorte :
+\begin{itemize}
+  \item \textbf{une donnée hexadécimale reliée à une table} : Windows n'applique
+        pas la table selon le manifeste. \texttt{DehPhase} = \texttt{0x1} est
+        \og PerMachine \fg{} selon le manifeste d'UndockedDeh, Windows écrit
+        \og PerUser \fg{} (libellé de 0) ; une table de drapeaux sur
+        \texttt{0x2} reste \og 0x2 \fg{} chez Windows (SMB 30950, 1080).
+        \wac{} suit le manifeste (4 sortes) ;
+  \item \textbf{satellite plus ancien que son binaire} : le
+        \fichier{fr-FR\textbackslash audioses.dll.mui} de la machine (version
+        10.0.26100.1) porte ces trois messages en anglais, et le texte
+        défectueux \og Signature utilisée :chiffrement \fg{} est celui du
+        \fichier{mrxsmb.sys.mui} présent sur le disque ; Windows affiche un texte
+        français absent de ces fichiers, dont l'origine n'a pas été trouvée
+        (4 sortes) ;
+  \item \textbf{date FILETIME nulle} : Windows écrit 1601-01-01, \wac{}
+        n'insère rien (Wininit 25) ;
+  \item \textbf{sans message chez \wac{}} : un événement dont Windows n'a pu
+        mettre les données en forme (\texttt{ProcessingErrorData},
+        AppModel-Runtime 219) et Perflib 0 (2 sortes).
+\end{itemize}
+
 \section{Décodage des artefacts}
 
 \begin{itemize}
@@ -595,6 +624,20 @@ document témoin indexé par Windows ; requête de Windows sur son propre index
   (OLE DB, \texttt{Search.CollatorDSO}) : URL, modification, taille de chaque
   élément / \fichier{search\_index.json} (515 éléments identiques) &
   contrôle ajouté avec l'artefact \\
+message rendu par Windows lui-même (\texttt{EvtFormatMessage}, par
+  \texttt{Get-WinEvent}) pour chaque sorte d'événement de la VM — fournisseur,
+  identifiant, version, qualificatifs — sur le même enregistrement /
+  \champ{EvtEventMessage} de \fichier{events.json} (887 sortes sur 898
+  identiques) &
+  messages de 28~\% des événements seulement : pas des descripteurs du
+  \texttt{WEVT\_TEMPLATE} déduit de la taille du bloc (52 octets au lieu de
+  48) ; sources classiques ignorées ; tables UTF-8 lues octet par octet ;
+  satellite \texttt{en-US} préféré au \texttt{fr-FR} faute de lire la langue
+  dans SYSTEM ; espaces des données rognés ; valeurs non typées (tables,
+  drapeaux, codes d'erreur) ; données décalées par un tableau ou une feuille
+  vide ; manifestes déplacés dans \fichier{SystemResources} ; en collecte
+  séparée, sources classiques et tables du système non prélevées,
+  \texttt{CurrentControlSet} jamais ouvert \\
 raccourci témoin du Bureau public et raccourci épinglé à la barre des tâches
   (cible, arguments, emplacement) ; raccourcis listés par Windows dans les
   menus Démarrer, Bureaux et Quick Launch / \fichier{shortcuts.json}
