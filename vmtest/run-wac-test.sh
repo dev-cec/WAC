@@ -351,11 +351,15 @@ fetch_results() {
   # with their journals: a few hundred KiB to a few MiB, fetched so that
   # check-json.py reads them with Python's own SQLite and confronts
   # web_client.json and activities_cache.json with that independent reading.
+  # grep finds nothing when no such database was collected (an --only cycle
+  # without browsers nor Timeline): under pipefail that status ended the
+  # whole harness before its checks — hence `|| true`.
   if [[ -s "$host/exhibits/LIST.txt" ]]; then
-    tr -d '\r' < "$host/exhibits/LIST.txt" | grep -E '\\User Data\\[^\\]+\\(History|Login Data|Network\\Cookies)(-journal|-wal)?$|\\WebCache\\WebCacheV01\.dat$|\\Profiles\\[^\\]+\\places\.sqlite(-wal|-journal)?$|\\ConnectedDevicesPlatform\\[^\\]+\\ActivitiesCache\.db(-wal|-journal)?$' | while read -r f; do
+    tr -d '\r' < "$host/exhibits/LIST.txt" | { grep -E '\\User Data\\[^\\]+\\(History|Login Data|Network\\Cookies)(-journal|-wal)?$|\\WebCache\\WebCacheV01\.dat$|\\Profiles\\[^\\]+\\places\.sqlite(-wal|-journal)?$|\\ConnectedDevicesPlatform\\[^\\]+\\ActivitiesCache\.db(-wal|-journal)?$' || true; } | while read -r f; do
       local relative="${f#*\\exhibits\\}"
       mkdir -p "$host/exhibits/$(dirname "${relative//\\//}")"
-      $QGA read "$f" "$host/exhibits/${relative//\\//}" >/dev/null 2>&1 && echo "   + exhibits/${relative//\\//}"
+      $QGA read "$f" "$host/exhibits/${relative//\\//}" >/dev/null 2>&1 && echo "   + exhibits/${relative//\\//}" \
+        || echo "   ⚠️ exhibits/${relative//\\//} not fetched"
     done
   fi
 }
