@@ -178,20 +178,29 @@ donnent pas.
 \toprule
 \textbf{Outil, réglage} & \textbf{Durée} & \textbf{Pièces} & \textbf{Volume} \\
 \midrule\endhead
-KAPE, \texttt{KapeTriage} & 41\,s & 1\,217 & 0,91\,Go \\
-\wac{}, kit, sans binaires & 212\,s & 2\,622 & 1,69\,Go \\
-\wac{}, kit, sans journaux d'événements & 18\,s & 817 & --- \\
-\wac{}, kit complet (\texttt{binary: unverified}) & 454\,s & 61\,294 & 3,6\,Go \\
+KAPE, \texttt{KapeTriage} & 58\,s & 1\,047 & 0,97\,Go \\
+\wac{}, kit, sans binaires & 47\,s & 1\,898 & 2,54\,Go \\
+\wac{}, kit, sans binaires, avant B-033 & 212\,s & 2\,622 & 1,69\,Go \\
+\wac{}, kit complet (\texttt{binary: unverified}), avant B-033 & 454\,s & 61\,294 & 3,6\,Go \\
 \bottomrule
 \end{longtable}
 
-À périmètre comparable, KAPE collecte cinq fois plus vite. L'écart vient presque
-entièrement des journaux d'événements (180\,s) : \wac{} y joint les 1\,225
-binaires fournisseurs de messages (680\,Mo), qui servent à reconstituer hors
-ligne le texte de chaque événement. Cette durée, passée sur la machine examinée,
-est à réduire (fiche B-033). Le kit complet vérifie en outre la signature
-Authenticode de chaque exécutable de la machine et copie ceux dont la signature
-ne tient pas, ce que KAPE ne fait pas.
+Les deux premières lignes sont mesurées dans la même exécution, l'une après
+l'autre. À périmètre comparable, \wac{} collecte désormais plus vite que KAPE,
+en ramenant plus de deux fois plus de données. Il était cinq fois plus lent au
+départ (fiche B-033) :
+\begin{itemize}
+  \item chaque lecture brute rouvrait son volume et reparcourait ses chemins
+        depuis la racine ; les volumes sont maintenant ouverts une fois, avec le
+        cache de leurs répertoires ;
+  \item la collecte prenait les fichiers des 1\,426 fournisseurs d'événements
+        déclarés (739\,Mo, 61\,s) ; elle ne prend plus que ceux des fournisseurs
+        que citent les journaux collectés (324 sur la VM, 178\,Mo, 15\,s), ce qui
+        suffit à reconstituer le texte de chaque événement.
+\end{itemize}
+Le kit complet vérifie en outre la signature Authenticode de chaque exécutable
+de la machine et copie ceux dont la signature ne tient pas, ce que KAPE ne fait
+pas.
 
 % ============================================================ 4
 \chapter{Précision}

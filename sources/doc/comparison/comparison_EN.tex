@@ -175,19 +175,27 @@ date, and give the drive letter; the EZ tools give neither.
 \toprule
 \textbf{Tool, setting} & \textbf{Time} & \textbf{Exhibits} & \textbf{Volume} \\
 \midrule\endhead
-KAPE, \texttt{KapeTriage} & 41\,s & 1,217 & 0.91\,GB \\
-\wac{}, kit, no binaries & 212\,s & 2,622 & 1.69\,GB \\
-\wac{}, kit, no event logs & 18\,s & 817 & --- \\
-\wac{}, full kit (\texttt{binary: unverified}) & 454\,s & 61,294 & 3.6\,GB \\
+KAPE, \texttt{KapeTriage} & 58\,s & 1,047 & 0.97\,GB \\
+\wac{}, kit, no binaries & 47\,s & 1,898 & 2.54\,GB \\
+\wac{}, kit, no binaries, before B-033 & 212\,s & 2,622 & 1.69\,GB \\
+\wac{}, full kit (\texttt{binary: unverified}), before B-033 & 454\,s & 61,294 & 3.6\,GB \\
 \bottomrule
 \end{longtable}
 
-On a comparable scope, KAPE collects five times faster. Almost all of the gap
-comes from the event logs (180\,s): \wac{} adds the 1,225 message provider
-binaries (680\,MB) that rebuild every event's text offline. That time, spent on
-the examined machine, is to be reduced (item B-033). The full kit also checks
-the Authenticode signature of every executable on the machine and copies those
-whose signature does not hold, which KAPE does not do.
+The first two rows are measured in the same run, one after the other. On a
+comparable scope, \wac{} now collects faster than KAPE, bringing back more than
+twice as much data. It was five times slower at first (item B-033):
+\begin{itemize}
+  \item each raw reading opened its volume again and walked its paths from the
+        root; the volumes are now opened once, with the cache of their
+        directories;
+  \item the collection took the files of the 1,426 declared event providers
+        (739\,MB, 61\,s); it now takes only those of the providers the
+        collected logs cite (324 on the VM, 178\,MB, 15\,s), which is enough to
+        rebuild every event's text.
+\end{itemize}
+The full kit also checks the Authenticode signature of every executable on the
+machine and copies those whose signature does not hold, which KAPE does not do.
 
 % ============================================================ 4
 \chapter{Accuracy}
