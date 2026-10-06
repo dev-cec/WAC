@@ -42,7 +42,6 @@ Remplace `TODO.txt`.
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-010](B-010-activitiescache.md) | Chronologie Windows (ActivitiesCache.db) et index de recherche | en cours | P3 | fort |
 | [B-011](B-011-rdp-cache.md) | Cache bitmap RDP et connexions RDP sortantes | à faire | P3 | moyen |
 | [B-014](B-014-vss-brut.md) | Clichés instantanés lus en brut | à décider | P3 | fort |
 | [B-039](B-039-artefacts-par-version-windows.md) | Artefacts organisés par version de Windows et par disponibilité (prérequis de B-035, B-037, B-038) | à faire | P3 | moyen |
