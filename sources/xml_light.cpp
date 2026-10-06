@@ -61,7 +61,7 @@ std::wstring withoutPrefix(const std::wstring& name) {
 
 /*! Parses an element from `pos`, positioned just after its '<'.
  *  Returns nullptr on a malformed document. */
-std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigned depth) {
+std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigned depth, bool keepText) {
 	if (depth > MAX_DEPTH) return nullptr;
 
 	// --- name of the tag
@@ -131,11 +131,11 @@ std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigne
 			const size_t f = s.find(L'>', pos);
 			if (f == std::wstring::npos) return nullptr;
 			pos = f + 1;
-			node->text = decodeEntities(trim(text));
+			node->text = decodeEntities(keepText ? text : trim(text));
 			return node;
 		}
 		++pos;                                              // past the '<'
-		auto child = readElement(s, pos, depth + 1);
+		auto child = readElement(s, pos, depth + 1, keepText);
 		if (!child) return nullptr;
 		node->children.push_back(std::move(child));
 	}
@@ -186,7 +186,7 @@ std::vector<const XmlNode*> XmlNode::descendants(const std::wstring& wantedName)
 	return found;
 }
 
-std::unique_ptr<XmlNode> xmlParse(const std::wstring& content) {
+std::unique_ptr<XmlNode> xmlParse(const std::wstring& content, bool keepText) {
 	size_t pos = 0;
 	while (pos < content.size()) {
 		if (content[pos] != L'<') { ++pos; continue; }
@@ -204,7 +204,7 @@ std::unique_ptr<XmlNode> xmlParse(const std::wstring& content) {
 			continue;
 		}
 		++pos;
-		return readElement(content, pos, 0);
+		return readElement(content, pos, 0, keepText);
 	}
 	return nullptr;
 }

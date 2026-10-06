@@ -240,7 +240,7 @@ HRESULT Events::getData() {
 		EvtxSummary summary;
 		const HRESULT hr = EvtxReadFile(logFile.wstring(),
 			[&](const EvtxRecord& e) {
-				const std::unique_ptr<XmlNode> root = xmlParse(e.xml);
+				const std::unique_ptr<XmlNode> root = xmlParse(e.xml, true);
 				if (!root) {
 					/* The XML is rebuilt by evtx.cpp: if it cannot be parsed, it is the
 					   decoding that went wrong, not the log. That is reported

@@ -47,9 +47,15 @@ struct XmlNode {
 
 /*! Parses an XML document in memory.
  *  @param content the complete document (UTF-16; the caller handles the decoding)
+ *  @param keepText true to keep each node's text as it is; false (the
+ *         default) strips the spaces and line breaks at its edges, which an
+ *         indented document adds. An event's XML, rebuilt compact by
+ *         evtx.cpp, is read with true: its data's own spaces and line breaks
+ *         are data — stripped, "'Insert '" became "'Insert'" in the message
+ *         and in EvtEventData (B-023).
  *  @return the root, or nullptr if the document is malformed or empty
  */
-std::unique_ptr<XmlNode> xmlParse(const std::wstring& content);
+std::unique_ptr<XmlNode> xmlParse(const std::wstring& content, bool keepText = false);
 
 /*! Reads an XML file encoded in UTF-8 or UTF-16 and parses it.
  *  The encoding is deduced from the byte-order mark, UTF-8 by default: the

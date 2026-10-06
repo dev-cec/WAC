@@ -1,4 +1,5 @@
 #include "event_messages.h"
+#include "registry_common.h"
 #include "tools.h"
 #include "consigne.h"
 #include "raw_hive.h"
@@ -174,18 +175,30 @@ const std::vector<std::wstring>& interfaceLanguages() {
 	if (done) return languages;
 	done = true;
 
+	auto add = [](const std::wstring& l) {
+		if (l.empty()) return;
+		for (const std::wstring& d : languages) if (_wcsicmp(d.c_str(), l.c_str()) == 0) return;
+		languages.push_back(l);
+	};
+	/* The machine's interface language is declared in the SYSTEM hive
+	   (Control\MUI\Settings, then the installed languages under
+	   Control\MUI\UILanguages); SOFTWARE's MUI\Settings is often empty. Reading
+	   only the latter, WAC fell back on its list, en-US first: messages in
+	   English on a French machine whenever an en-US satellite existed —
+	   MsiInstaller, Defender (B-023). */
 	std::vector<std::wstring> declared;
+	if (conf.CurrentControlSet && getRegMultiSzValue(conf.CurrentControlSet, L"Control\\MUI\\Settings",
+	        L"PreferredUILanguages", &declared) == ERROR_SUCCESS)
+		for (const std::wstring& l : declared) add(l);
+	declared.clear();
 	if (conf.Software && getRegMultiSzValue(conf.Software,
 	        L"Microsoft\\Windows\\CurrentVersion\\MUI\\Settings",
 	        L"PreferredUILanguages", &declared) == ERROR_SUCCESS)
-		for (const std::wstring& l : declared)
-			if (!l.empty()) languages.push_back(l);
+		for (const std::wstring& l : declared) add(l);
+	if (conf.CurrentControlSet)
+		for (const std::wstring& l : subkeys(conf.CurrentControlSet, L"Control\\MUI\\UILanguages")) add(l);
 
-	for (PCWSTR l : { L"en-US", L"fr-FR", L"de-DE", L"es-ES", L"it-IT" }) {
-		bool already = false;
-		for (const std::wstring& d : languages) if (d == l) { already = true; break; }
-		if (!already) languages.push_back(l);
-	}
+	for (PCWSTR l : { L"en-US", L"fr-FR", L"de-DE", L"es-ES", L"it-IT" }) add(l);
 	log(2, L"❇️Interface languages tried for the .mui satellites: "
 	     + std::to_wstring(languages.size()) + L" (" + (languages.empty() ? L"-" : languages[0]) + L"…)");
 	return languages;
@@ -403,6 +416,23 @@ ClassicSource* loadClassic(const std::wstring& logName, const std::wstring& sour
 	return result;
 }
 
+/*! The system's message tables, loaded once: kernelbase's for the Win32
+ *  errors and HRESULTs, ntdll's for the NTSTATUS codes, each from its
+ *  satellite in the interface's language first, as FormatMessage reads them.
+ *  @return the tables; a missing one is null */
+const SystemMessages& systemMessages() {
+	static TableMessages errors, ntStatus;
+	static SystemMessages tables;
+	static bool loaded = false;
+	if (loaded) return tables;
+	loaded = true;
+	if (loadTable(L"%SystemRoot%\\System32\\kernelbase.dll", errors, nullptr) > 0) tables.errors = &errors;
+	else log(2, L"🔥System message table of kernelbase.dll unreadable: error codes left as numbers");
+	if (loadTable(L"%SystemRoot%\\System32\\ntdll.dll", ntStatus, nullptr) > 0) tables.ntStatus = &ntStatus;
+	else log(2, L"🔥System message table of ntdll.dll unreadable: NTSTATUS codes left as numbers");
+	return tables;
+}
+
 /*! Fills a message template with the event's values.
  *
  *  A value of the form "%%1234" is not a text but a REFERENCE to another
@@ -417,27 +447,34 @@ ClassicSource* loadClassic(const std::wstring& logName, const std::wstring& sour
  *  @return the sentence, or an empty string */
 std::wstring render(const std::wstring& messageTemplate, const TableMessages& parameters,
                     const std::vector<const TableMessages*>& own, const std::vector<std::wstring>& values) {
+	/* Every "%%nnnn" of a value is replaced where it stands: a value may hold
+	   several — the account-control flags of a 4720 are "%%2080 %%2082
+	   %%2084", one label per flag set. Resolving only a value that was a
+	   single reference left those raw (B-023). */
+	auto label = [&](uint32_t id) {
+		std::wstring t = parameters.text(id);
+		for (const TableMessages* table : own) if (t.empty()) t = table->text(id);
+		// A table label ends with "\r\n": inserted into a sentence, it would cut it.
+		while (!t.empty() && (t.back() == L'\n' || t.back() == L'\r' || t.back() == L' ')) t.pop_back();
+		return t;
+	};
 	std::vector<std::wstring> resolved;
 	resolved.reserve(values.size());
 	for (const std::wstring& v : values) {
-		if (v.size() > 2 && v[0] == L'%' && v[1] == L'%') {
-			bool digits = true;
-			for (size_t i = 2; i < v.size(); ++i)
-				if (v[i] < L'0' || v[i] > L'9') { digits = false; break; }
-			if (digits) {
-				const uint32_t id = (uint32_t)wcstoul(v.c_str() + 2, nullptr, 10);
-				std::wstring t = parameters.text(id);
-				for (const TableMessages* table : own) if (t.empty()) t = table->text(id);
-				// A table label ends with "\r\n": inserted into a sentence, it would
-				// cut it.
-				while (!t.empty() && (t.back() == L'\n' || t.back() == L'\r' || t.back() == L' '))
-					t.pop_back();
-				resolved.push_back(t.empty() ? v : t);
-				continue;
-			}
+		std::wstring out;
+		size_t i = 0;
+		while (i < v.size()) {
+			size_t digits = i + 2;
+			while (digits < v.size() && v[digits] >= L'0' && v[digits] <= L'9' && digits - i < 12) ++digits;
+			if (v.compare(i, 2, L"%%") == 0 && digits > i + 2) {
+				const std::wstring text = label((uint32_t)wcstoul(v.substr(i + 2, digits - i - 2).c_str(), nullptr, 10));
+				out += text.empty() ? v.substr(i, digits - i) : text;   // an unknown reference stays as written
+				i = digits;
+			} else out += v[i++];
 		}
-		resolved.push_back(v);
+		resolved.push_back(out);
 	}
+
 	const std::wstring phrase = formatMessage(messageTemplate, resolved);
 	if (!phrase.empty()) ++g_resolved;
 	return phrase;
@@ -481,7 +518,7 @@ std::wstring EventMessage(const std::wstring& providerGuid,
 		std::vector<std::wstring> shown;
 		shown.reserve(values.size());
 		for (size_t i = 0; i < values.size(); ++i)
-			shown.push_back(formatItemValue((*items)[i], f->metadata.valueMap((*items)[i].map), f->messages, values[i]));
+			shown.push_back(formatItemValue((*items)[i], f->metadata.valueMap((*items)[i].map), f->messages, systemMessages(), values[i]));
 		return render(messageTemplate, f->parameters, { &f->messages }, shown);
 	}
 	return render(messageTemplate, f->parameters, { &f->messages }, values);

@@ -154,8 +154,8 @@ namespace {
  *  ENTRY PER MAP (not one less), and a VMAP's header is 20 bytes — signature,
  *  size, offset of its name, a field of four bytes, count — before its
  *  entries { value, message identifier } (Kernel-Power: 124 = 20 + 13 x 8).
- *  Bitmaps (BMAP) are not read: how Windows joins their labels is not
- *  measured, their values stay as the log holds them.
+ *  A BMAP has the same layout, its entries one flag each (AppX: 276 = 20 +
+ *  32 x 8); the field of four bytes is 1 there, 0 in a VMAP.
  *  @param d the resource
  *  @param block the MAPS block's offset
  *  @param maps receives the value maps, by offset */
@@ -166,11 +166,14 @@ void readMaps(const std::vector<uint8_t>& d, size_t block, std::map<uint32_t, We
 		const size_t entry = block + 12 + (size_t)i * 4;
 		if (entry + 4 > d.size()) return;
 		const uint32_t map = rd32(d, entry);
-		if ((size_t)map + 20 > d.size() || std::memcmp(d.data() + map, "VMAP", 4) != 0) continue;
+		if ((size_t)map + 20 > d.size()) continue;
+		const bool bitmap = std::memcmp(d.data() + map, "BMAP", 4) == 0;
+		if (!bitmap && std::memcmp(d.data() + map, "VMAP", 4) != 0) continue;
 		const uint32_t size = rd32(d, map + 4);
 		const uint32_t labels = rd32(d, map + 16);
 		if (labels > MAX_ENTRIES || size < 20 || (size_t)map + size > d.size() || (size - 20) / 8 < labels) continue;
 		WevtValueMap& m = maps[map];
+		m.bitmap = bitmap;
 		for (uint32_t k = 0; k < labels; ++k)
 			m.labels.emplace(rd32(d, map + 20 + (size_t)k * 8), rd32(d, map + 24 + (size_t)k * 8));
 	}
@@ -202,13 +205,17 @@ bool readTemplate(const std::vector<uint8_t>& d, uint32_t at, std::map<uint32_t,
 	return true;
 }
 
-//! @return the value as a number, from its decimal or "0x" form; false if it is none
+/*! @return the value as a number, from its decimal, negative decimal or
+ *  "0x" form; false if it is none. A negative value — an HRESULT logged as
+ *  win:Int32, "-2147009295" — comes back in two's complement. */
 bool parseNumber(const std::wstring& text, uint64_t& value) {
-	if (text.empty()) return false;
-	const bool hex = text.size() > 2 && text[0] == L'0' && (text[1] == L'x' || text[1] == L'X');
+	const bool negative = !text.empty() && text[0] == L'-';
+	const std::wstring digitsText = negative ? text.substr(1) : text;
+	if (digitsText.empty()) return false;
+	const bool hex = !negative && digitsText.size() > 2 && digitsText[0] == L'0' && (digitsText[1] == L'x' || digitsText[1] == L'X');
 	value = 0;
-	for (size_t i = hex ? 2 : 0; i < text.size(); ++i) {
-		const wchar_t c = text[i];
+	for (size_t i = hex ? 2 : 0; i < digitsText.size(); ++i) {
+		const wchar_t c = digitsText[i];
 		unsigned digit;
 		if (c >= L'0' && c <= L'9') digit = (unsigned)(c - L'0');
 		else if (hex && c >= L'a' && c <= L'f') digit = (unsigned)(c - L'a' + 10);
@@ -216,29 +223,87 @@ bool parseNumber(const std::wstring& text, uint64_t& value) {
 		else return false;
 		value = value * (hex ? 16 : 10) + digit;
 	}
+	if (negative) value = (uint64_t)0 - value;
 	return true;
 }
 
 } // namespace
 
-std::wstring formatItemValue(const WevtItem& item, const WevtValueMap* map,
-                             const TableMessages& messages, const std::wstring& value) {
+namespace {
+
+//! @return a table's text without the line break that ends it; "" if absent
+std::wstring tableText(const TableMessages* table, uint32_t id) {
+	if (!table) return std::wstring();
+	std::wstring text = table->text(id);
+	while (!text.empty() && (text.back() == L'\n' || text.back() == L'\r' || text.back() == L' ')) text.pop_back();
+	return text;
+}
+
+//! @return the number in hexadecimal, "0x" and its digits in the given case
+std::wstring hexadecimal(uint64_t number, bool upper) {
+	const wchar_t* digits = upper ? L"0123456789ABCDEF" : L"0123456789abcdef";
+	std::wstring text;
+	do { text.insert(text.begin(), digits[number & 0xF]); number >>= 4; } while (number);
+	return L"0x" + text;
+}
+
+} // namespace
+
+std::wstring formatItemValue(const WevtItem& item, const WevtValueMap* map, const TableMessages& messages,
+                             const SystemMessages& system, const std::wstring& value) {
+	// Input types (wtypes of the manifest) and output types, as libfwevt numbers them.
+	const uint8_t IN_POINTER = 0x10, IN_HEX32 = 0x14, IN_HEX64 = 0x15;
+	const uint8_t OUT_HEX_FIRST = 0x10, OUT_HEX_LAST = 0x13, OUT_ERROR_CODE = 0x1D, OUT_WIN32 = 0x1E,
+	              OUT_NTSTATUS = 0x1F, OUT_HRESULT = 0x20;
+	const uint8_t IN_BINARY = 0x0E, OUT_HEX_BINARY = 0x0F, OUT_SOCKET_ADDRESS = 0x19;
+	if (item.inType == IN_BINARY) {
+		// An AF_INET sockaddr, as hexadecimal text: family (2, little-endian), port and address in network order.
+		if (item.outType == OUT_SOCKET_ADDRESS && value.size() >= 16 && value.compare(0, 4, L"0200") == 0) {
+			uint64_t port = 0, address = 0;
+			if (parseNumber(L"0x" + value.substr(4, 4), port) && parseNumber(L"0x" + value.substr(8, 8), address))
+				return std::to_wstring((address >> 24) & 0xFF) + L"." + std::to_wstring((address >> 16) & 0xFF) + L"."
+				       + std::to_wstring((address >> 8) & 0xFF) + L"." + std::to_wstring(address & 0xFF) + L":" + std::to_wstring(port);
+		}
+		if (item.outType == OUT_HEX_BINARY && !value.empty() && value.compare(0, 2, L"0x") != 0) return L"0x" + value;
+		return value;
+	}
 	uint64_t number = 0;
 	if (!parseNumber(value, number)) return value;
+	if (map && map->bitmap && number != 0) {
+		std::wstring labels;
+		for (const auto& [flag, message] : map->labels) {
+			if (flag == 0 || (number & flag) != flag) continue;
+			const std::wstring text = tableText(&messages, message);
+			if (text.empty()) continue;
+			if (!labels.empty()) labels += L',';
+			labels += text;
+		}
+		return labels.empty() ? value : labels;
+	}
 	if (map) {
 		const auto label = map->labels.find((uint32_t)number);
 		if (label == map->labels.end()) return value;
-		std::wstring text = messages.text(label->second);
-		while (!text.empty() && (text.back() == L'\n' || text.back() == L'\r' || text.back() == L' ')) text.pop_back();
+		const std::wstring text = tableText(&messages, label->second);
 		return text.empty() ? value : text;
 	}
-	// win:HexInt32, win:HexInt64 in; win:HexInt8 to win:HexInt64 out.
-	const bool hexadecimal = item.inType == 0x14 || item.inType == 0x15 || (item.outType >= 0x10 && item.outType <= 0x13);
-	if (hexadecimal) {
-		static const wchar_t DIGITS[] = L"0123456789ABCDEF";
-		std::wstring digits;
-		do { digits.insert(digits.begin(), DIGITS[number & 0xF]); number >>= 4; } while (number);
-		return L"0x" + digits;
+	const uint32_t code = (uint32_t)number;   // an Int32 logged negative comes back to its 32 bits
+	if (item.outType == OUT_WIN32 || item.outType == OUT_HRESULT) {
+		std::wstring text = tableText(system.errors, code);
+		if (text.empty() && (code >> 16) == 0x8007) text = tableText(system.errors, code & 0xFFFF);
+		if (!text.empty()) return text;
+		return item.outType == OUT_HRESULT && system.errors ? L"Unknown HResult Error code: " + hexadecimal(code, false) : value;
+	}
+	if (item.outType == OUT_NTSTATUS) {
+		const std::wstring text = tableText(system.ntStatus, code);
+		return text.empty() ? value : text;
+	}
+	if (item.outType == OUT_ERROR_CODE) return hexadecimal(code, true);
+	if (item.inType == IN_POINTER) return value;
+	if (item.inType == IN_HEX32 || item.inType == IN_HEX64 || (item.outType >= OUT_HEX_FIRST && item.outType <= OUT_HEX_LAST)) {
+		// An input of 32 bits or less shows its own bits: a negative Int32 is not 64 bits wide.
+		const uint8_t IN_UINT32 = 0x08;
+		if (item.inType <= IN_UINT32 || item.inType == IN_HEX32) number &= 0xFFFFFFFFu;
+		return hexadecimal(number, true);
 	}
 	return value;
 }

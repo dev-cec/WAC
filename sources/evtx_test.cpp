@@ -73,7 +73,7 @@ int wmain(int argc, wchar_t** argv) {
 		for (const std::filesystem::path& j : listFilesByExtension(directory, { L".evtx" })) {
 			const std::wstring channel = EvtxChannelFromFileName(j.filename().wstring());
 			EvtxReadFile(j.wstring(), [&](const EvtxRecord& e) {
-				const std::unique_ptr<XmlNode> root = xmlParse(e.xml);
+				const std::unique_ptr<XmlNode> root = xmlParse(e.xml, true);
 				if (root) { all.push_back(Event(*root, channel, e.id,
 				                     j.filename().wstring()).toJson()); ++read; }
 				return true;

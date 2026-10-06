@@ -75,9 +75,11 @@ struct WevtItem {
 	uint32_t map = 0;       //!< offset of its value map in the resource, 0 for none
 };
 
-/*! A value map of a provider (VMAP): a value's label is a message. */
+/*! A value map of a provider: a value's label is a message. A VMAP labels
+ *  each value, a BMAP each bit. */
 struct WevtValueMap {
-	std::map<uint32_t, uint32_t> labels;   //!< value -> message identifier of its label
+	bool bitmap = false;                   //!< BMAP: the value is a set of flags
+	std::map<uint32_t, uint32_t> labels;   //!< value (VMAP) or flag (BMAP) -> message identifier of its label
 };
 
 /*! Event metadata of a provider (the WEVT_TEMPLATE resource). */
@@ -110,7 +112,7 @@ public:
 	const std::vector<WevtItem>* items(uint16_t eventId, uint8_t version) const;
 
 	/*! @param offset a map's offset, as an item gives it
-	 *  @return the value map, or nullptr (none, or a bitmap: not read) */
+	 *  @return the value map, or nullptr */
 	const WevtValueMap* valueMap(uint32_t offset) const;
 
 private:
@@ -122,21 +124,41 @@ private:
 	std::map<uint32_t, WevtValueMap> valueMaps_;            //!< map offset -> value map
 };
 
+/*! The system's own message tables, which give an error code its text. */
+struct SystemMessages {
+	const TableMessages* errors = nullptr;     //!< kernelbase's: Win32 errors and HRESULTs
+	const TableMessages* ntStatus = nullptr;   //!< ntdll's: NTSTATUS codes
+};
+
 /*! An event's value as Windows shows it in the message, from its template
- *  item: a value map's label, a hexadecimal type as 0x and upper-case
- *  digits. Anything else is given as the log holds it.
- *
- *  Measured on the test VM against EvtFormatMessage (B-023): "État : 2"
- *  became "État : Disconnected" with Kernel-Power's map, "0x3e7" "0x3E7".
- *  A value that is no number, or a value absent from its map, stays as it is.
+ *  item. Measured on the test VM against EvtFormatMessage (B-023), item
+ *  types read in the providers' manifests:
+ *    - a value map's label: "État : 2" -> "État : Disconnected" (Kernel-Power);
+ *      a bitmap's labels of the flags set, joined by commas without space
+ *      ("67108880" -> "BackgroundTaskOption,LowPriorityRequest", AppX); a
+ *      zero takes the map's label of 0 if it has one;
+ *    - a hexadecimal input type (win:HexInt32, win:HexInt64), or a
+ *      hexadecimal output type of an integer, and win:ErrorCode, as 0x and
+ *      upper-case digits: "0x3e7" -> "0x3E7", "2147746053" -> "0x80040105".
+ *      A pointer keeps the log's form ("0x1b3c");
+ *    - an error code by its text: win:Win32Error and win:HResult from the
+ *      system's table ("87" -> "Paramètre incorrect."), a Win32 HRESULT
+ *      (0x8007xxxx) absent from it by its Win32 code, an unknown HRESULT
+ *      "Unknown HResult Error code: 0x…" as Windows writes it; win:NTSTATUS
+ *      from ntdll's ("0" -> "STATUS_SUCCESS");
+ *    - binary data as xs:hexBinary: "0x" before its digits; as
+ *      win:SocketAddress, an IPv4 address and its port ("127.0.0.1:58241").
+ *  A value that is no number, absent from its map or from the tables, stays
+ *  as it is.
  *
  *  @param item the value's template item
  *  @param map its value map, or nullptr
  *  @param messages the provider's message table, where the labels are
+ *  @param system the system's tables (either may be missing)
  *  @param value the value, as the log holds it (decimal, or "0x…")
  *  @return the value to put in the message */
-std::wstring formatItemValue(const WevtItem& item, const WevtValueMap* map,
-                             const TableMessages& messages, const std::wstring& value);
+std::wstring formatItemValue(const WevtItem& item, const WevtValueMap* map, const TableMessages& messages,
+                             const SystemMessages& system, const std::wstring& value);
 
 /*! Replaces the %1 %2 … marks by the event's data.
 *

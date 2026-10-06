@@ -1009,11 +1009,56 @@ int wmain() {
 			WevtMetadata typed;
 			const bool parsed = typed.analyse(w, L"") == 1 && labelTable.analyse(labels) == 2;
 			const std::vector<WevtItem>* items = typed.items(7, 0);
+			const SystemMessages none;
 			check(parsed && items && items->size() == 2
-			      && formatItemValue((*items)[0], typed.valueMap((*items)[0].map), labelTable, L"2") == L"Off"
-			      && formatItemValue((*items)[0], typed.valueMap((*items)[0].map), labelTable, L"5") == L"5"
-			      && formatItemValue((*items)[1], typed.valueMap((*items)[1].map), labelTable, L"0x3e7") == L"0x3E7",
+			      && formatItemValue((*items)[0], typed.valueMap((*items)[0].map), labelTable, none, L"2") == L"Off"
+			      && formatItemValue((*items)[0], typed.valueMap((*items)[0].map), labelTable, none, L"5") == L"5"
+			      && formatItemValue((*items)[1], typed.valueMap((*items)[1].map), labelTable, none, L"0x3e7") == L"0x3E7",
 			      "wevt: template items read, a value map's label shown, an unmapped value kept, hexadecimal in upper case");
+			// A MESSAGETABLE of UTF-16 entries, one block per message.
+			auto messageTable = [](const std::vector<std::pair<uint32_t, std::wstring>>& entries) {
+				std::vector<uint8_t> t(4 + entries.size() * 12, 0);
+				auto at32 = [&](size_t at, uint32_t v) { for (int i = 0; i < 4; ++i) t[at + i] = (uint8_t)(v >> (8 * i)); };
+				at32(0, (uint32_t)entries.size());
+				for (size_t b = 0; b < entries.size(); ++b) {
+					at32(4 + b * 12, entries[b].first); at32(8 + b * 12, entries[b].first); at32(12 + b * 12, (uint32_t)t.size());
+					const std::wstring text = entries[b].second + L"\r\n";
+					const size_t length = 4 + (text.size() + 1) * 2;
+					t.push_back((uint8_t)length); t.push_back((uint8_t)(length >> 8)); t.push_back(1); t.push_back(0);
+					for (wchar_t c : text) { t.push_back((uint8_t)c); t.push_back((uint8_t)(c >> 8)); }
+					t.push_back(0); t.push_back(0);
+				}
+				return t;
+			};
+			TableMessages errors, ntStatus;
+			errors.analyse(messageTable({ { 0, L"L'opération a réussi." }, { 2, L"Le fichier spécifié est introuvable." },
+			                              { 87, L"Paramètre incorrect." }, { 0x80073CF1u, L"Le package est introuvable." } }));
+			ntStatus.analyse(messageTable({ { 0, L"STATUS_SUCCESS" } }));
+			SystemMessages system;
+			system.errors = &errors;
+			system.ntStatus = &ntStatus;
+			auto typedAs = [](uint8_t in, uint8_t out) { WevtItem i; i.inType = in; i.outType = out; return i; };
+			check(formatItemValue(typedAs(0x08, 0x1E), nullptr, labelTable, system, L"87") == L"Paramètre incorrect."
+			      && formatItemValue(typedAs(0x07, 0x20), nullptr, labelTable, system, L"-2147009295") == L"Le package est introuvable."
+			      && formatItemValue(typedAs(0x08, 0x20), nullptr, labelTable, system, L"0x80070002") == L"Le fichier spécifié est introuvable."
+			      && formatItemValue(typedAs(0x08, 0x20), nullptr, labelTable, system, L"4026531839") == L"Unknown HResult Error code: 0xefffffff"
+			      && formatItemValue(typedAs(0x08, 0x1F), nullptr, labelTable, system, L"0") == L"STATUS_SUCCESS"
+			      && formatItemValue(typedAs(0x10, 0x13), nullptr, labelTable, system, L"0x1b3c") == L"0x1b3c"
+			      && formatItemValue(typedAs(0x08, 0x12), nullptr, labelTable, system, L"2147746053") == L"0x80040105"
+			      && formatItemValue(typedAs(0x07, 0x12), nullptr, labelTable, system, L"-2147221243") == L"0x80040105"
+			      && formatItemValue(typedAs(0x08, 0x1D), nullptr, labelTable, system, L"2147746053") == L"0x80040105"
+			      && formatItemValue(typedAs(0x14, 0x1E), nullptr, labelTable, system, L"0x80070002") == L"Le fichier spécifié est introuvable."
+			      && formatItemValue(typedAs(0x0E, 0x0F), nullptr, labelTable, system, L"A57F6B1D") == L"0xA57F6B1D"
+			      && formatItemValue(typedAs(0x0E, 0x19), nullptr, labelTable, system, L"0200E3817F0000010000000000000000") == L"127.0.0.1:58241",
+			      "wevt: error codes by the system's text (Win32, HRESULT, its Win32 family, unknown, NTSTATUS), ErrorCode and integer in hexadecimal, pointer kept, binary and socket address");
+			// A bitmap: the flags set, labelled, joined by commas; 0 by the map's label of 0.
+			WevtValueMap flags;
+			flags.bitmap = true;
+			flags.labels = { { 0x0, 0x10 }, { 0x10, 0x12 }, { 0x4000000, 0x10 } };
+			check(formatItemValue(typedAs(0x08, 0x08), &flags, labelTable, system, L"67108880") == L"Off,On"
+			      && formatItemValue(typedAs(0x08, 0x08), &flags, labelTable, system, L"0") == L"On"
+			      && formatItemValue(typedAs(0x08, 0x08), &flags, labelTable, system, L"1") == L"1",
+			      "wevt: a bitmap's labels of the flags set, comma-joined; zero by the label of 0; no flag known: the value");
 		}
 		WevtMetadata meta;
 		check(meta.analyse(d, L"") == 3 && meta.messageId(1, 0) == 0xB0000001u && meta.messageId(2, 0) == 0xB0000002u
