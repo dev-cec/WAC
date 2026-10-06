@@ -114,9 +114,9 @@ struct Event {
 	/*  Fields kept in their native form for the resolution of the message.
 	    The JSON versions are already formatted; decoding them back would be both
 	    useless and fragile. */
-	std::wstring guidPourMessage;     //!< GUID of the provider
-	uint16_t     idPourMessage = 0;   //!< identifier of the event
-	uint8_t      versionPourMessage = 0; //!< version of the schema
+	std::wstring messageProviderGuid;     //!< GUID of the provider
+	uint16_t     messageEventId = 0;   //!< identifier of the event
+	uint8_t      messageVersion = 0; //!< version of the schema
 
 	/*! Converts the event to JSON.
 *  @return its JSON object. */

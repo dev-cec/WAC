@@ -128,7 +128,7 @@ Event::Event(const XmlNode& root, const std::wstring& channel,
 	if (const XmlNode* p = sys->child(L"Provider")) {
 		evtSystemProviderName = string(p->attribute(L"Name"));
 		evtSystemProviderGuid = string(p->attribute(L"Guid"));
-		guidPourMessage = p->attribute(L"Guid");
+		messageProviderGuid = p->attribute(L"Guid");
 		// Some classic providers carry only EventSourceName.
 		if (evtSystemProviderName.kind() == Json::Kind::Null)
 			evtSystemProviderName = string(p->attribute(L"EventSourceName"));
@@ -136,13 +136,13 @@ Event::Event(const XmlNode& root, const std::wstring& channel,
 	if (const XmlNode* e = sys->child(L"EventID")) {
 		evtSystemEventID = count(e->text);
 		evtSystemQualifiers = count(e->attribute(L"Qualifiers"));
-		idPourMessage = (uint16_t)wcstoul(e->text.c_str(), nullptr, 10);
+		messageEventId = (uint16_t)wcstoul(e->text.c_str(), nullptr, 10);
 	}
 	evtSystemLevel   = count(sys->textOf(L"Level"));
 	evtSystemTask    = count(sys->textOf(L"Task"));
 	evtSystemOpcode  = count(sys->textOf(L"Opcode"));
 	evtSystemVersion = count(sys->textOf(L"Version"));
-	versionPourMessage = (uint8_t)wcstoul(sys->textOf(L"Version").c_str(), nullptr, 10);
+	messageVersion = (uint8_t)wcstoul(sys->textOf(L"Version").c_str(), nullptr, 10);
 	// Keywords: kept as text, as written in the log — it is a bit field, whose
 	// numeric value says nothing more.
 	evtSystemKeywords = string(sys->textOf(L"Keywords"));
@@ -174,7 +174,7 @@ Event::Event(const XmlNode& root, const std::wstring& channel,
 	/*  Processing error: the values are the error's, not the template's; laid
 	    into the provider's message they would make a false sentence. No
 	    message, rather than a wrong one. */
-	if (root.child(L"ProcessingErrorData")) guidPourMessage.clear();
+	if (root.child(L"ProcessingErrorData")) messageProviderGuid.clear();
 }
 
 Json Event::toJson() const {
@@ -254,9 +254,9 @@ HRESULT Events::getData() {
 				    only the API could do until now. The resource file is
 				    extracted on demand, once per provider (see
 				    event_messages.h). */
-				if (!ev.guidPourMessage.empty() && ev.idPourMessage != 0) {
+				if (!ev.messageProviderGuid.empty() && ev.messageEventId != 0) {
 					const std::wstring phrase = EventMessage(
-						ev.guidPourMessage, ev.idPourMessage, ev.versionPourMessage,
+						ev.messageProviderGuid, ev.messageEventId, ev.messageVersion,
 						ev.rawValues);
 					if (!phrase.empty()) ev.evtEventMessage = Json::str(phrase);
 				}
