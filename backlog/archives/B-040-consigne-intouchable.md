@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P1 | moyen |
+| fait (e94949c) | P1 | moyen |
 
 ## Pourquoi
 La consigne (`exhibits`) est la pièce scellée. Une fois copiée dans la copie de travail (`working`), elle ne doit plus être touchée, ni en écriture ni en lecture : tout traitement lit la copie de travail. Un accès à la pièce après sa copie peut invalider une procédure (demande utilisateur du 2026-10-06).
@@ -17,7 +17,7 @@ Code existant qui lit la consigne après la copie de travail :
 Après `ExhibitStoreToWorking`, aucune lecture ni écriture dans `exhibits`, hormis la vérification d'intégrité prévue par la procédure. Chaque lecture d'un fichier collecté passe par sa copie de travail.
 
 ## Référence indépendante
-Contrôle du harnais : la date de dernier accès des fichiers de la consigne, relevée après leur copie de travail, ne change plus jusqu'à la fin de l'exécution (lecture seule NTFS du support, sans y écrire).
+L'audit d'accès de Windows : une règle d'audit de lecture (SACL) sur la consigne de la collecte séparée pendant sa conversion, les événements 4663 de `WAC.exe` comparés à l'instant de sa recopie dans `conversion.json`, à la centaine de nanosecondes (`vmtest/guest/exhibit-read-audit.ps1`, `check-json.py`). La date de dernier accès NTFS, mise à jour paresseusement par Windows, n'aurait rien prouvé.
 
 ## Critères d'acceptation
 En plus de la définition de « fini » commune (backlog/README.md) :
@@ -25,11 +25,13 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Cycle complet vert, collecte directe et séparée, sorties identiques à celles d'avant.
 
 ## Tâches
-- [ ] Chemin de la copie de travail dans `StoredExhibit`
-- [ ] Bascule de chaque module
-- [ ] Fichiers des fournisseurs d'événements
-- [ ] Binaires en `--convert`
-- [ ] Contrôle du harnais
+- [x] Chemin de la copie de travail dans `StoredExhibit` (`workingFile`, le chemin dans la consigne n'est plus exposé)
+- [x] Bascule de chaque module
+- [x] Fichiers des fournisseurs d'événements
+- [x] Binaires en `--convert`, `$MFT` et journal des modifications : tout est recopié
+- [x] Contrôle du harnais
 
 ## Journal
 - 2026-10-06 : créée à la demande de l'utilisateur, prioritaire, avant la suite de B-033.
+- 2026-10-06 : fait. Tout est recopié dans la copie de travail (plus d'exception « lu sur place ») : la `$MFT`, le journal des modifications et les binaires prélevés y occupent une seconde fois leur place. Ce que WAC produit est écrit dans les deux à la fois. « Déjà déposé ? » se répond par ce que WAC a enregistré, sans regarder la consigne. Audit de Windows : 1 458 lectures de la consigne en cycle `events`, 13 335 en cycle complet (binaires compris), toutes avant la recopie, aucune après.
+- 2026-10-06 : **Close**. Cycle complet vert (438 ✅, 0 ❌), innocuité comprise, conversion déterministe. Commit : e94949c.

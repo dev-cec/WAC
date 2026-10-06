@@ -42,7 +42,6 @@ Remplace `TODO.txt`.
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-040](B-040-consigne-intouchable.md) | La consigne n'est plus lue après la copie de travail | en cours | P1 | moyen |
 | [B-011](B-011-rdp-cache.md) | Cache bitmap RDP et connexions RDP sortantes | à faire | P3 | moyen |
 | [B-014](B-014-vss-brut.md) | Clichés instantanés lus en brut | à décider | P3 | fort |
 | [B-039](B-039-artefacts-par-version-windows.md) | Artefacts organisés par version de Windows et par disponibilité (prérequis de B-035, B-037, B-038) | à faire | P3 | moyen |
