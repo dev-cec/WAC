@@ -10,7 +10,9 @@
  *      describes 202.
  *    - an event descriptor is 48 bytes long, not 44. With a step of 44, only
  *      one record in twelve is coherent, and no error is raised.
- *      The step is therefore DEDUCED from the block's declared size.
+ *  A third was caught later (B-023): the step was then deduced from the EVNT
+ *  block's declared size, which also covers data after the descriptors —
+ *  52 bytes for AppReadiness.dll, 81 events of 175 kept. The step is 48.
  *
  *  Usage: wevt_test `<file.dll>` `<file.dll.mui>` `<guid>` [id[:version] ...]
  *    Both files are those of a real provider: the metadata are in the binary,

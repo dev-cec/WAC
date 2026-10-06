@@ -34,6 +34,14 @@ struct Provider {
 };
 
 std::map<std::wstring, std::unique_ptr<Provider>> g_cache;   // guid -> provider
+
+/*! A classic event source (ReportEvent): its message files, declared under
+ *  `Services\EventLog\<log>\<source>`, in the order Windows tries them. */
+struct ClassicSource {
+	std::vector<TableMessages> tables;   //!< one per file of EventMessageFile that has messages
+	TableMessages parameters;            //!< ParameterMessageFile: labels of the "%%nnnn" values
+};
+std::map<std::wstring, std::unique_ptr<ClassicSource>> g_classic;   // "<log>\<source>", lower case -> source
 bool g_ready = false;
 size_t g_failures = 0;
 unsigned long long g_resolved = 0, g_bytes = 0;
@@ -227,22 +235,34 @@ std::vector<std::wstring> candidatesFor(const std::wstring& declare) {
 	return candidates;
 }
 
-/*! Loads the message table of a declared file: from the binary, otherwise from
- *  its localised satellite. Returns the number of messages. */
+/*! Loads a message table as Windows chooses it: from the localised satellite
+ *  first, in the interface's language, then from the binary itself. The
+ *  binary's own table is the language-neutral fallback, usually English: read
+ *  first, it gave MsiInstaller's messages in English on a French system
+ *  (B-023).
+ *  @param absolutePath the binary, on the examined machine
+ *  @param working its copy in the working directory
+ *  @param table receives the messages
+ *  @return the number of messages */
+size_t loadLocalisedTable(const std::wstring& absolutePath, const std::wstring& working, TableMessages& table) {
+	const std::wstring mui = findMui(absolutePath);
+	PeResource peMui;
+	if (!mui.empty() && peMui.open(mui)) {
+		const size_t n = table.analyse(peMui.resource(PE_RT_MESSAGETABLE));
+		if (n > 0) return n;
+	}
+	PeResource pe;
+	return pe.open(working) ? table.analyse(pe.resource(PE_RT_MESSAGETABLE)) : 0;
+}
+
+/*! Loads the message table of a declared file (see loadLocalisedTable).
+ *  Returns the number of messages. */
 size_t loadTable(const std::wstring& declare, TableMessages& table, std::wstring* file) {
 	for (const std::wstring& c : candidatesFor(declare)) {
 		const std::wstring working = extractResource(c);
 		if (working.empty()) continue;
 		if (file) *file = c;
-		PeResource pe;
-		size_t n = pe.open(working) ? table.analyse(pe.resource(PE_RT_MESSAGETABLE)) : 0;
-		if (n == 0) {
-			const std::wstring mui = findMui(c);
-			PeResource peMui;
-			if (!mui.empty() && peMui.open(mui))
-				n = table.analyse(peMui.resource(PE_RT_MESSAGETABLE));
-		}
-		return n;
+		return loadLocalisedTable(c, working, table);
 	}
 	return 0;
 }
@@ -301,15 +321,7 @@ Provider* load(const std::wstring& guid) {
 	f->metadata.analyse(pe.namedResource(L"WEVT_TEMPLATE"), guid);
 
 	// 3. The texts: first in the localised satellite, otherwise in the binary.
-	size_t nbMessages = f->messages.analyse(pe.resource(PE_RT_MESSAGETABLE));
-	if (nbMessages == 0) {
-		const std::wstring mui = findMui(f->file);
-		if (!mui.empty()) {
-			PeResource peMui;
-			if (peMui.open(mui))
-				nbMessages = f->messages.analyse(peMui.resource(PE_RT_MESSAGETABLE));
-		}
-	}
+	const size_t nbMessages = loadLocalisedTable(f->file, workingDll, f->messages);
 
 	/* PARAMETER FILE. The enumerated values of an event are written "%%nnnn" in
 	   its DATA, and Windows resolves them in the provider's parameter file.
@@ -350,10 +362,92 @@ Provider* load(const std::wstring& guid) {
 	return provider;
 }
 
+/*! Loads a classic source's message files, only once.
+ *  @param logName the log the event is in (its channel: "Application")
+ *  @param source the event's provider name
+ *  @return the source; without any table when nothing usable is declared */
+ClassicSource* loadClassic(const std::wstring& logName, const std::wstring& source) {
+	std::wstring id = logName + L"\\" + source;
+	for (wchar_t& c : id) c = (wchar_t)towlower(c);
+	const auto it = g_classic.find(id);
+	if (it != g_classic.end()) return it->second.get();
+	std::unique_ptr<ClassicSource> s = std::make_unique<ClassicSource>();
+	const std::wstring key = L"Services\\EventLog\\" + logName + L"\\" + source;
+	std::wstring declared;
+	if (conf.CurrentControlSet
+	    && getRegSzValue(conf.CurrentControlSet, key.c_str(), L"EventMessageFile", &declared) == ERROR_SUCCESS) {
+		// Several files, separated by semicolons: each one is tried in turn.
+		size_t start = 0;
+		while (start <= declared.size()) {
+			const size_t end = std::min(declared.find(L';', start), declared.size());
+			const std::wstring file = declared.substr(start, end - start);
+			if (!file.empty()) {
+				TableMessages table;
+				std::wstring found;
+				if (loadTable(file, table, &found) > 0) s->tables.push_back(std::move(table));
+				else log(2, L"🔥Event source " + logName + L"/" + source + L": no message table in " + file);
+			}
+			start = end + 1;
+		}
+		std::wstring parameters;
+		if (getRegSzValue(conf.CurrentControlSet, key.c_str(), L"ParameterMessageFile", &parameters) == ERROR_SUCCESS
+		    && !parameters.empty())
+			loadTable(parameters, s->parameters, nullptr);
+	}
+	if (s->tables.empty()) {
+		++g_failures;
+		log(2, L"🔥Event source " + logName + L"/" + source + L": no message file declared or readable");
+	}
+	ClassicSource* result = s.get();
+	g_classic.emplace(id, std::move(s));
+	return result;
+}
+
+/*! Fills a message template with the event's values.
+ *
+ *  A value of the form "%%1234" is not a text but a REFERENCE to another
+ *  message — that is how Windows encodes enumerated values: looked for in the
+ *  parameter file first, as Windows does, then in the provider's own tables.
+ *  Without that resolution the message would show "%%1234" instead of the
+ *  label.
+ *  @param messageTemplate the template, with its %1 %2… marks
+ *  @param parameters the parameter file's table
+ *  @param own the provider's own tables
+ *  @param values the event's values
+ *  @return the sentence, or an empty string */
+std::wstring render(const std::wstring& messageTemplate, const TableMessages& parameters,
+                    const std::vector<const TableMessages*>& own, const std::vector<std::wstring>& values) {
+	std::vector<std::wstring> resolved;
+	resolved.reserve(values.size());
+	for (const std::wstring& v : values) {
+		if (v.size() > 2 && v[0] == L'%' && v[1] == L'%') {
+			bool digits = true;
+			for (size_t i = 2; i < v.size(); ++i)
+				if (v[i] < L'0' || v[i] > L'9') { digits = false; break; }
+			if (digits) {
+				const uint32_t id = (uint32_t)wcstoul(v.c_str() + 2, nullptr, 10);
+				std::wstring t = parameters.text(id);
+				for (const TableMessages* table : own) if (t.empty()) t = table->text(id);
+				// A table label ends with "\r\n": inserted into a sentence, it would
+				// cut it.
+				while (!t.empty() && (t.back() == L'\n' || t.back() == L'\r' || t.back() == L' '))
+					t.pop_back();
+				resolved.push_back(t.empty() ? v : t);
+				continue;
+			}
+		}
+		resolved.push_back(v);
+	}
+	const std::wstring phrase = formatMessage(messageTemplate, resolved);
+	if (!phrase.empty()) ++g_resolved;
+	return phrase;
+}
+
 } // namespace
 
 void MessagesInit() {
 	g_cache.clear();
+	g_classic.clear();
 	g_failures = 0;
 	g_resolved = 0;
 	g_bytes = 0;
@@ -378,35 +472,21 @@ std::wstring EventMessage(const std::wstring& providerGuid,
 	const std::wstring messageTemplate = f->messages.text(idMessage);
 	if (messageTemplate.empty()) return std::wstring();
 
-	/*  A piece of data of the form "%%1234" is not a text but a REFERENCE to
-	    another message of the same table — that is how Windows encodes
-	    enumerated values. Without that resolution, the final message would show
-	    "%%1234" instead of the label. */
-	std::vector<std::wstring> resolved;
-	resolved.reserve(values.size());
-	for (const std::wstring& v : values) {
-		if (v.size() > 2 && v[0] == L'%' && v[1] == L'%') {
-			bool digits = true;
-			for (size_t i = 2; i < v.size(); ++i)
-				if (v[i] < L'0' || v[i] > L'9') { digits = false; break; }
-			if (digits) {
-				const uint32_t id = (uint32_t)wcstoul(v.c_str() + 2, nullptr, 10);
-				std::wstring t = f->parameters.text(id);           // first: as Windows does
-				if (t.empty()) t = f->messages.text(id);
-				// A table label ends with "\r\n": inserted into a sentence, it would
-				// cut it.
-				while (!t.empty() && (t.back() == L'\n' || t.back() == L'\r' || t.back() == L' '))
-					t.pop_back();
-				resolved.push_back(t.empty() ? v : t);
-				continue;
-			}
-		}
-		resolved.push_back(v);
-	}
+	return render(messageTemplate, f->parameters, { &f->messages }, values);
+}
 
-	const std::wstring phrase = formatMessage(messageTemplate, resolved);
-	if (!phrase.empty()) ++g_resolved;
-	return phrase;
+std::wstring ClassicEventMessage(const std::wstring& logName, const std::wstring& source, uint32_t messageId,
+                                 const std::vector<std::wstring>& values) {
+	if (!g_ready || logName.empty() || source.empty()) return std::wstring();
+	const ClassicSource* s = loadClassic(logName, source);
+	std::vector<const TableMessages*> own;
+	for (const TableMessages& t : s->tables) own.push_back(&t);
+	// The files in the declared order: the first that has the message gives it.
+	for (const TableMessages* table : own) {
+		const std::wstring messageTemplate = table->text(messageId);
+		if (!messageTemplate.empty()) return render(messageTemplate, s->parameters, own, values);
+	}
+	return std::wstring();
 }
 
 HRESULT MessagesCollectAll() {
@@ -438,7 +518,7 @@ HRESULT MessagesCollectAll() {
 
 void MessagesSummary(size_t* providers, size_t* failures,
                    unsigned long long* resolved, unsigned long long* bytes) {
-	if (providers) *providers = g_cache.size();
+	if (providers) *providers = g_cache.size() + g_classic.size();
 	if (failures)       *failures = g_failures;
 	if (resolved)      *resolved = g_resolved;
 	if (bytes)       *bytes = g_bytes;
@@ -446,4 +526,5 @@ void MessagesSummary(size_t* providers, size_t* failures,
 
 void MessagesRelease() {
 	g_cache.clear();
+	g_classic.clear();
 }

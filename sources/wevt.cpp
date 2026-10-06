@@ -1,4 +1,5 @@
 #include "wevt.h"
+#include "conversions.h"
 #include <cstring>
 
 /*! \file
@@ -75,10 +76,6 @@ const size_t MAX_ENTRIES = 65536;   // guard on the file's counters
 
 } // namespace
 
-//! True if a resource declared a block size incompatible with its count of
-//! events: the resource is then ignored rather than read at random.
-bool log_wevt_pas_incoherent = false;
-
 // ---------------------------------------------------------------------------
 //  MESSAGETABLE
 // ---------------------------------------------------------------------------
@@ -117,6 +114,12 @@ size_t TableMessages::analyse(const std::vector<uint8_t>& d) {
 				text.reserve(textBytes / 2);
 				for (size_t i = 0; i + 1 < textBytes; i += 2)
 					text += (wchar_t)rd16(d, p + 4 + i);
+			}
+			else if (flags & 0x0002) {
+				/*  UTF-8 (MESSAGE_RESOURCE_UTF8), which recent tables use — ESENT's
+				    among them. Widened byte by byte, as the code-page case below,
+				    "données" came out "donnÃ©es" (B-023). */
+				text = utf8ToWide(d.data() + p + 4, textBytes);
 			}
 			else {
 				// Code page: the bytes are widened one by one, for want of knowing
@@ -183,23 +186,18 @@ size_t WevtMetadata::analyse(const std::vector<uint8_t>& d,
 			const uint32_t nEvents = rd32(d, block + 8);
 			if (nEvents == 0 || nEvents > MAX_ENTRIES) continue;
 
-			/*  THE STEP IS DEDUCED FROM THE DECLARED SIZE, and not hard-coded.
-			    An event descriptor is 48 bytes — identifier, version, channel,
+			/*  AN EVENT DESCRIPTOR IS 48 BYTES — identifier, version, channel,
 			    level, opcode, task, keywords, then eight fields of four bytes
-			    among which the message identifier.
-			    Deducing it makes the reading robust to a change of the format
-			    and, above all, makes it VERIFIABLE: a wrong step of four bytes
-			    (seen while writing this code) gives records of which only one in
-			    twelve is coherent, with no visible error. */
-			size_t pas = 48;
-			if (blockSize > 16) {
-				const size_t deduced = (size_t)(blockSize - 16) / nEvents;
-				if (deduced >= 40 && deduced <= 128) pas = deduced;
-				else {
-					log_wevt_pas_incoherent = true;
-					continue;               // size and count contradict each other
-				}
-			}
+			    among which the message identifier (libfwevt's description of the
+			    format). The block's declared size is NOT 16 + 48 × count: data
+			    follow the descriptors (716 bytes in AppReadiness.dll, whose 175
+			    descriptors take 8,400). Deducing the step from that size, as WAC
+			    did, gave 52 bytes there: every descriptor after the first read
+			    four bytes further, false message identifiers or none — 81 of 175
+			    events kept, and the messages of most manifest providers lost
+			    (B-023). The declared size only bounds the descriptors. */
+			const size_t pas = 48;
+			if (blockSize < 16 || (blockSize - 16) / pas < nEvents) continue;   // the block cannot hold its descriptors
 
 			for (uint32_t n = 0; n < nEvents; ++n) {
 				const size_t ev = block + 16 + (size_t)n * pas;

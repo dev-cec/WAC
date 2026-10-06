@@ -132,11 +132,13 @@ Event::Event(const XmlNode& root, const std::wstring& channel,
 		// Some classic providers carry only EventSourceName.
 		if (evtSystemProviderName.kind() == Json::Kind::Null)
 			evtSystemProviderName = string(p->attribute(L"EventSourceName"));
+		messageSource = p->attribute(L"Name").empty() ? p->attribute(L"EventSourceName") : p->attribute(L"Name");
 	}
 	if (const XmlNode* e = sys->child(L"EventID")) {
 		evtSystemEventID = count(e->text);
 		evtSystemQualifiers = count(e->attribute(L"Qualifiers"));
 		messageEventId = (uint16_t)wcstoul(e->text.c_str(), nullptr, 10);
+		messageQualifiers = (uint16_t)wcstoul(e->attribute(L"Qualifiers").c_str(), nullptr, 10);
 	}
 	evtSystemLevel   = count(sys->textOf(L"Level"));
 	evtSystemTask    = count(sys->textOf(L"Task"));
@@ -258,6 +260,16 @@ HRESULT Events::getData() {
 					const std::wstring phrase = EventMessage(
 						ev.messageProviderGuid, ev.messageEventId, ev.messageVersion,
 						ev.rawValues);
+					if (!phrase.empty()) ev.evtEventMessage = Json::str(phrase);
+				} else if (ev.messageProviderGuid.empty() && !ev.messageSource.empty()) {
+					/* A CLASSIC source (ReportEvent) has no GUID: its message files
+					   are declared in the SYSTEM hive under the log's name, and the
+					   message is keyed by the qualifiers and the identifier
+					   together. These were three events out of eight without a
+					   message (77,523 of 195,801 measured). */
+					const std::wstring logName = ev.evtSystemChannel.kind() == Json::Kind::Str ? ev.evtSystemChannel.text() : channel;
+					const std::wstring phrase = ClassicEventMessage(
+						logName, ev.messageSource, ((uint32_t)ev.messageQualifiers << 16) | ev.messageEventId, ev.rawValues);
 					if (!phrase.empty()) ev.evtEventMessage = Json::str(phrase);
 				}
 				/*  A record whose System section is incomplete is the sign of a

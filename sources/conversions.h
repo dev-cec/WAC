@@ -45,3 +45,36 @@ T readLittleEndian(const uint8_t* p) {
 	for (size_t i = 0; i < sizeof(T); ++i) value |= (T)((T)p[i] << (8 * i));
 	return value;
 }
+
+/*! UTF-8 bytes as UTF-16 text, without the system's API: a module that must
+ *  stay verifiable outside Windows (wevt.cpp) cannot call MultiByteToWideChar.
+ *  A malformed sequence (bad continuation, overlong form, surrogate, beyond
+ *  U+10FFFF, cut at the end) gives U+FFFD and the reading goes on at the
+ *  next byte, as MultiByteToWideChar does.
+ *  @param bytes the bytes
+ *  @param length their number
+ *  @return the text, characters beyond U+FFFF as surrogate pairs */
+inline std::wstring utf8ToWide(const uint8_t* bytes, size_t length) {
+	std::wstring text;
+	text.reserve(length);
+	for (size_t i = 0; i < length;) {
+		const uint8_t lead = bytes[i];
+		const size_t size = lead < 0x80 ? 1 : (lead >> 5) == 0x6 ? 2 : (lead >> 4) == 0xE ? 3 : (lead >> 3) == 0x1E ? 4 : 0;
+		uint32_t code = size == 1 ? lead : size == 2 ? (lead & 0x1Fu) : size == 3 ? (lead & 0x0Fu) : (lead & 0x07u);
+		bool valid = size != 0 && i + size <= length;
+		for (size_t k = 1; valid && k < size; ++k) {
+			if ((bytes[i + k] & 0xC0) != 0x80) valid = false;
+			else code = (code << 6) | (bytes[i + k] & 0x3Fu);
+		}
+		static const uint32_t SMALLEST[] = { 0, 0, 0x80, 0x800, 0x10000 };
+		if (valid && (code < SMALLEST[size] || code > 0x10FFFF || (code >= 0xD800 && code <= 0xDFFF))) valid = false;
+		if (!valid) { text += (wchar_t)0xFFFD; ++i; continue; }
+		if (code > 0xFFFF) {
+			code -= 0x10000;
+			text += (wchar_t)(0xD800 + (code >> 10));
+			text += (wchar_t)(0xDC00 + (code & 0x3FF));
+		} else text += (wchar_t)code;
+		i += size;
+	}
+	return text;
+}

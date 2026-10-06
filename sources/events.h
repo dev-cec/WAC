@@ -117,6 +117,8 @@ struct Event {
 	std::wstring messageProviderGuid;     //!< GUID of the provider
 	uint16_t     messageEventId = 0;   //!< identifier of the event
 	uint8_t      messageVersion = 0; //!< version of the schema
+	std::wstring messageSource;      //!< provider name: a classic source's key under Services\EventLog\<log>
+	uint16_t     messageQualifiers = 0;  //!< a classic event's qualifiers: high word of its message identifier
 
 	/*! Converts the event to JSON.
 *  @return its JSON object. */

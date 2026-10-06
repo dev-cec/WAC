@@ -36,6 +36,8 @@
 #include "sqlite_reader.h"
 #include "web_client.h"
 #include "search_index.h"
+#include "wevt.h"
+#include "conversions.h"
 #include "registry_common.h"
 #include "sqlite3.h"
 #include "sha.h"
@@ -943,6 +945,47 @@ int wmain() {
 			refused = refused && !decodeIeDownload(std::vector<uint8_t>(copy.data(), copy.data() + copy.size()), none) && !none.find(L"Url");
 		}
 		check(refused, "iedownload: a truncated record refused, nothing emitted");
+	}
+	{
+		/* A WEVT_TEMPLATE whose EVNT block, like AppReadiness.dll's, has data
+		   after its 48-byte descriptors: its declared size is not 16 + 48 x
+		   count. A step deduced from that size read every descriptor after the
+		   first at the wrong place (B-023). */
+		std::vector<uint8_t> d(64, 0);
+		auto put32 = [&](size_t at, uint32_t v) { for (int i = 0; i < 4; ++i) d[at + i] = (uint8_t)(v >> (8 * i)); };
+		memcpy(d.data(), "CRIM", 4);
+		put32(12, 1);                    // one provider
+		put32(32, 40);                   // its WEVT at 40 (GUID at 16 left zero)
+		memcpy(d.data() + 40, "WEVT", 4);
+		put32(52, 1);                    // one descriptor
+		put32(60, 64);                   // EVNT at 64
+		const uint32_t events = 3, trailing = 12;
+		d.resize(64 + 16 + events * 48 + trailing, 0);
+		memcpy(d.data() + 64, "EVNT", 4);
+		put32(68, 16 + events * 48 + trailing);
+		put32(72, events);
+		for (uint32_t n = 0; n < events; ++n) {
+			const size_t at = 80 + n * 48;
+			d[at] = (uint8_t)(n + 1);                // identifier, version 0
+			put32(at + 16, 0xB0000000u + n + 1);   // message identifier
+		}
+		for (uint32_t k = 0; k < trailing; ++k) d[80 + events * 48 + k] = 0xEE;
+		const uint8_t accented[] = { 'd', 'o', 'n', 'n', 0xC3, 0xA9, 'e', 's', ' ', 0xF0, 0x9F, 0x98, 0x80, ' ', 0xC3, 'x', 0xE2, 0x82 };
+		check(utf8ToWide(accented, sizeof accented) == std::wstring(L"donn\u00e9es \xD83D\xDE00 \xFFFDx\xFFFD\xFFFD"),
+		      "utf8ToWide: accent, character beyond U+FFFF as a surrogate pair, malformed bytes as U+FFFD");
+		// A MESSAGETABLE of two entries: one UTF-16 (flag 1), one UTF-8 (flag 2).
+		std::vector<uint8_t> table = { 1, 0, 0, 0,  1, 0, 0, 0,  2, 0, 0, 0,  16, 0, 0, 0 };
+		const std::vector<uint8_t> unicode = { 12, 0, 1, 0, 'O', 0, 'K', 0, 0, 0, 0, 0 };
+		const std::vector<uint8_t> utf8 = { 12, 0, 2, 0, 'd', 0xC3, 0xA9, 'j', 0xC3, 0xA0, 0, 0 };
+		table.insert(table.end(), unicode.begin(), unicode.end());
+		table.insert(table.end(), utf8.begin(), utf8.end());
+		TableMessages messages;
+		check(messages.analyse(table) == 2 && messages.text(1) == L"OK" && messages.text(2) == L"d\u00e9j\u00e0",
+		      "message table: UTF-16 and UTF-8 entries decoded");
+		WevtMetadata meta;
+		check(meta.analyse(d, L"") == 3 && meta.messageId(1, 0) == 0xB0000001u && meta.messageId(2, 0) == 0xB0000002u
+		      && meta.messageId(3, 0) == 0xB0000003u,
+		      "wevt: three 48-byte descriptors read, data after them in the block ignored");
 	}
 	{
 		// Property-store values as Windows 11's Windows.db stores them (measured on the test VM).

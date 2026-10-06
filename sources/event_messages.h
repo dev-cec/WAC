@@ -77,3 +77,19 @@ void MessagesSummary(size_t* providers, size_t* failures,
 
 /*! Releases the resources loaded. */
 void MessagesRelease();
+
+/*! Plain-text message of an event of a CLASSIC source (written by
+*  ReportEvent: no provider GUID in the event). Its message files are those
+*  `SYSTEM\CurrentControlSet\Services\EventLog\<log>\<source>` declares
+*  in EventMessageFile (several, separated by semicolons, tried in order), its
+*  parameter labels those of ParameterMessageFile.
+*
+*  @param logName the log the event is in, as the registry names it ("Application")
+*  @param source the event's provider name
+*  @param messageId the full identifier: qualifiers in the high word, event
+*         identifier in the low one — the message table's key
+*  @param values data of the event, in order
+*  @return the sentence, or an empty string if it could not be rebuilt
+*/
+std::wstring ClassicEventMessage(const std::wstring& logName, const std::wstring& source, uint32_t messageId,
+                                 const std::vector<std::wstring>& values);
