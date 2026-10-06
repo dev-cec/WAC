@@ -50,7 +50,6 @@ Remplace `TODO.txt`.
 | [B-017](B-017-emails.md) | Courriels et pièces jointes | à faire | P2 | fort |
 | [B-018](B-018-article-dfir.md) | Article de présentation (2 pages, magazine DFIR) | à faire | P3 | moyen |
 | [B-022](B-022-prefetch-metriques.md) | Prefetch : métriques absentes sur 124 fichiers sur 279 | à faire | P2 | moyen |
-| [B-023](B-023-messages-evenements.md) | Messages lisibles d'environ un tiers des événements seulement | à faire | P3 | moyen |
 | [B-024](B-024-msys2.md) | Compilation MSYS2 à éprouver sur un vrai Windows | à faire | P3 | faible |
 | [B-025](B-025-version-1-5.md) | Version 1.5.0 | à faire | P2 | faible |
 | [B-026](B-026-thumbcache.md) | Cache des miniatures (thumbcache) | à faire | P3 | moyen |
