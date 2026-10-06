@@ -51,12 +51,15 @@ void MessagesInit();
 *  @param version version of the event's schema
 *  @param values data of the event, in order: they are what fills the %1 %2 …
 *         marks of the template
+*  @param names the name of each value (its Data's Name), by which it is
+*         matched to its template item; may be empty
 *  @return the sentence, or an empty string if it could not be rebuilt
 */
 std::wstring EventMessage(const std::wstring& providerGuid,
                               uint16_t eventId,
                               uint8_t version,
-                              const std::vector<std::wstring>& values);
+                              const std::vector<std::wstring>& values,
+                              const std::vector<std::wstring>& names);
 
 /*! --collect: extracts the resource files of EVERY provider declared in
  *  SOFTWARE\...\WINEVT\Publishers — binary, parameter file, localised .mui

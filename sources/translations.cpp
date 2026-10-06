@@ -59,7 +59,6 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepUserProfiles,          L"Profils des utilisateurs (ruche SOFTWARE)",     L"Listing USER PROFILES (SOFTWARE hive)" },
 
 	{ Text::StepWriteLiveState,        L"Écriture des processus, sessions et réseau",    L"Writing PROCESS, SESSIONS and NETWORK" },
-	{ Text::StepFindControlSet,        L"Recherche de la sous-clé CurrentControlSet",    L"Searching for the CurrentControlSet subkey" },
 	{ Text::StepOpenControlSet,        L"Ouverture de la sous-clé CurrentControlSet",    L"Opening the CurrentControlSet subkey" },
 	{ Text::StepSuspectTimeZone,       L"Fuseau horaire de la machine examinée (ruche SYSTEM)", L"Reading suspect time zone (SYSTEM hive)" },
 	{ Text::StepSuspectCodePage,       L"Page de code ANSI de la machine examinée (ruche SYSTEM)", L"Reading suspect ANSI code page (SYSTEM hive)" },

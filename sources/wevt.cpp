@@ -181,7 +181,8 @@ void readMaps(const std::vector<uint8_t>& d, size_t block, std::map<uint32_t, We
 
 /*! Reads a template's items (TEMP): 20 bytes each — input type at 4, output
  *  type at 5, the offset of its value map at 8 (measured; libfwevt calls the
- *  field unknown), count at 12, length at 14, name offset at 16.
+ *  field unknown), count at 12, length at 14, name offset at 16 — the name
+ *  a size (itself included) then UTF-16.
  *  @param d the resource
  *  @param at the template's offset
  *  @param templates receives its items, by offset
@@ -199,6 +200,16 @@ bool readTemplate(const std::vector<uint8_t>& d, uint32_t at, std::map<uint32_t,
 		w.inType = d[item + 4];
 		w.outType = d[item + 5];
 		w.map = rd32(d, item + 8);
+		// Its name: a size (itself included), then UTF-16 with its terminator.
+		const uint32_t nameAt = rd32(d, item + 16);
+		if (nameAt != 0 && (size_t)nameAt + 4 <= d.size()) {   // 0: no name
+			const uint32_t nameSize = rd32(d, nameAt);
+			for (size_t c = nameAt + 4; nameSize >= 4 && c + 1 < d.size() && c + 1 < (size_t)nameAt + nameSize; c += 2) {
+				const wchar_t ch = (wchar_t)rd16(d, c);
+				if (ch == 0) break;
+				w.name += ch;
+			}
+		}
 		items.push_back(w);
 	}
 	templates.emplace(at, std::move(items));
@@ -269,7 +280,9 @@ std::wstring formatItemValue(const WevtItem& item, const WevtValueMap* map, cons
 	}
 	uint64_t number = 0;
 	if (!parseNumber(value, number)) return value;
-	if (map && map->bitmap && number != 0) {
+	// A bitmap's zero is no flag: Windows shows the number (Kernel-Boot 153: "0", not the label of 0).
+	if (map && map->bitmap && number == 0) return value;
+	if (map && map->bitmap) {
 		std::wstring labels;
 		for (const auto& [flag, message] : map->labels) {
 			if (flag == 0 || (number & flag) != flag) continue;
@@ -288,10 +301,15 @@ std::wstring formatItemValue(const WevtItem& item, const WevtValueMap* map, cons
 	}
 	const uint32_t code = (uint32_t)number;   // an Int32 logged negative comes back to its 32 bits
 	if (item.outType == OUT_WIN32 || item.outType == OUT_HRESULT) {
-		std::wstring text = tableText(system.errors, code);
-		if (text.empty() && (code >> 16) == 0x8007) text = tableText(system.errors, code & 0xFFFF);
+		/* A Win32 HRESULT (0x8007xxxx) by its Win32 code first, as Windows does:
+		   0x80070005 is "Accès refusé.", not the table's own entry for the
+		   HRESULT ("Erreur d'accès général refusé"). Unknown, Windows writes the
+		   code without its 0x10000000 bit: -1 shows "0xefffffff" (measured). */
+		std::wstring text = (code >> 16) == 0x8007 ? tableText(system.errors, code & 0xFFFF) : std::wstring();
+		if (text.empty()) text = tableText(system.errors, code);
 		if (!text.empty()) return text;
-		return item.outType == OUT_HRESULT && system.errors ? L"Unknown HResult Error code: " + hexadecimal(code, false) : value;
+		return item.outType == OUT_HRESULT && system.errors
+		       ? L"Unknown HResult Error code: " + hexadecimal(code & ~0x10000000u, false) : value;
 	}
 	if (item.outType == OUT_NTSTATUS) {
 		const std::wstring text = tableText(system.ntStatus, code);

@@ -110,6 +110,8 @@ struct Event {
 	*  names: getting them back out of the JSON would need accessors nobody else
 	*  needs, to recover information one already had at hand. */
 	std::vector<std::wstring> rawValues;
+	//! The name of each of rawValues (Data's Name, a UserData leaf's element); "" for a classic event's data
+	std::vector<std::wstring> rawNames;
 
 	/*  Fields kept in their native form for the resolution of the message.
 	    The JSON versions are already formatted; decoding them back would be both

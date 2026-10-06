@@ -331,7 +331,24 @@ Provider* load(const std::wstring& guid) {
 		g_cache.emplace(guid, std::move(f));
 		return provider;
 	}
-	f->metadata.analyse(pe.namedResource(L"WEVT_TEMPLATE"), guid);
+	/* Windows 11 moved some binaries' resources into a resource-only twin,
+	   %SystemRoot%\SystemResources\<name>.mun, where the loader looks for what
+	   the binary no longer holds: shsvcs.dll (Shell-Core) has no
+	   WEVT_TEMPLATE, its .mun has — 28 kinds of event without a message
+	   (B-023). The satellite in the interface's language stays beside the
+	   binary. */
+	std::vector<uint8_t> manifest = pe.namedResource(L"WEVT_TEMPLATE");
+	if (manifest.empty()) {
+		const std::wstring twin = conf.systemDrive + L"\\Windows\\SystemResources\\"
+		                        + std::filesystem::path(f->file).filename().wstring() + L".mun";
+		const std::wstring workingTwin = extractResource(twin);
+		PeResource peTwin;
+		if (!workingTwin.empty() && peTwin.open(workingTwin)) {
+			manifest = peTwin.namedResource(L"WEVT_TEMPLATE");
+			if (!manifest.empty()) log(2, L"❇️Provider " + guid + L": manifest read in " + twin);
+		}
+	}
+	f->metadata.analyse(manifest, guid);
 
 	// 3. The texts: first in the localised satellite, otherwise in the binary.
 	const size_t nbMessages = loadLocalisedTable(f->file, workingDll, f->messages);
@@ -387,8 +404,17 @@ ClassicSource* loadClassic(const std::wstring& logName, const std::wstring& sour
 	std::unique_ptr<ClassicSource> s = std::make_unique<ClassicSource>();
 	const std::wstring key = L"Services\\EventLog\\" + logName + L"\\" + source;
 	std::wstring declared;
-	if (conf.CurrentControlSet
-	    && getRegSzValue(conf.CurrentControlSet, key.c_str(), L"EventMessageFile", &declared) == ERROR_SUCCESS) {
+	/* A source registered with only a providerGuid ("COM+" for Complus) takes
+	   its messages in that provider's MessageFileName, by the same full
+	   identifier — as Windows does (Complus 781, B-023). */
+	std::wstring providerGuid;
+	if (conf.CurrentControlSet && conf.Software
+	    && getRegSzValue(conf.CurrentControlSet, key.c_str(), L"EventMessageFile", &declared) != ERROR_SUCCESS
+	    && getRegSzValue(conf.CurrentControlSet, key.c_str(), L"providerGuid", &providerGuid) == ERROR_SUCCESS
+	    && !providerGuid.empty())
+		getRegSzValue(conf.Software, (L"Microsoft\\Windows\\CurrentVersion\\WINEVT\\Publishers\\" + normalizeGuid(providerGuid)).c_str(),
+		              L"MessageFileName", &declared);
+	if (conf.CurrentControlSet && !declared.empty()) {
 		// Several files, separated by semicolons: each one is tried in turn.
 		size_t start = 0;
 		while (start <= declared.size()) {
@@ -498,7 +524,8 @@ void MessagesInit() {
 std::wstring EventMessage(const std::wstring& providerGuid,
                               uint16_t eventId,
                               uint8_t version,
-                              const std::vector<std::wstring>& values) {
+                              const std::vector<std::wstring>& values,
+                              const std::vector<std::wstring>& names) {
 	if (!g_ready || providerGuid.empty()) return std::wstring();
 
 	Provider* f = load(normalizeGuid(providerGuid));
@@ -509,19 +536,48 @@ std::wstring EventMessage(const std::wstring& providerGuid,
 	const std::wstring messageTemplate = f->messages.text(idMessage);
 	if (messageTemplate.empty()) return std::wstring();
 
-	/* Each value as Windows shows it, by its template item: a value map's
-	   label, hexadecimal in upper case (see formatItemValue). Only when the
-	   data and the template have as many values: otherwise the values are not
-	   the items', and a label would be put on the wrong one. */
 	const std::vector<WevtItem>* items = f->metadata.items(eventId, version);
-	if (items && items->size() == values.size()) {
-		std::vector<std::wstring> shown;
-		shown.reserve(values.size());
-		for (size_t i = 0; i < values.size(); ++i)
-			shown.push_back(formatItemValue((*items)[i], f->metadata.valueMap((*items)[i].map), f->messages, systemMessages(), values[i]));
-		return render(messageTemplate, f->parameters, { &f->messages }, shown);
+	if (!items) return render(messageTemplate, f->parameters, { &f->messages }, values);
+
+	/* THE VALUES OF EACH ITEM, BY NAME. %N is the template's N-th item, and an
+	   array item spreads over several Data of its name (Ntfs 170 version 13:
+	   101 Data for 86 items, its ExtentsCountArray 16): taken by position,
+	   every value after the array went to the wrong mark. Each item takes the
+	   consecutive values of its name; when the names do not line up with the
+	   items (data without names), the values are taken by position, and only
+	   when there are as many as items. */
+	std::vector<std::vector<std::wstring>> perItem(items->size());
+	bool aligned = names.size() == values.size();
+	size_t next = 0;
+	for (size_t i = 0; aligned && i < items->size(); ++i)
+		while (next < values.size() && !(*items)[i].name.empty() && names[next] == (*items)[i].name)
+			perItem[i].push_back(values[next++]);
+	aligned = aligned && next == values.size();
+	if (!aligned) {
+		if (items->size() != values.size()) return render(messageTemplate, f->parameters, { &f->messages }, values);
+		for (size_t i = 0; i < values.size(); ++i) perItem[i] = { values[i] };
 	}
-	return render(messageTemplate, f->parameters, { &f->messages }, values);
+	// Each item's first value, by which a map's label fills its own marks.
+	std::vector<std::wstring> firsts;
+	for (const std::vector<std::wstring>& v : perItem) firsts.push_back(v.empty() ? std::wstring() : v.front());
+	// Each value as Windows shows it, by its template item (see formatItemValue).
+	std::vector<std::wstring> shown;
+	shown.reserve(items->size());
+	for (size_t i = 0; i < items->size(); ++i) {
+		const WevtValueMap* map = f->metadata.valueMap((*items)[i].map);
+		std::wstring joined;
+		for (const std::wstring& v : perItem[i]) {
+			std::wstring value = formatItemValue((*items)[i], map, f->messages, systemMessages(), v);
+			/* A map's label may itself hold marks, filled with the event's
+			   values: SMBServer 1034's "…for interface %2. Current DadState: %6." */
+			if (map && value.find(L'%') != std::wstring::npos) value = formatMessage(value, firsts);
+			// An array's values joined by ", " — not measured: no message of the VM inserts one.
+			if (!joined.empty()) joined += L", ";
+			joined += value;
+		}
+		shown.push_back(joined);
+	}
+	return render(messageTemplate, f->parameters, { &f->messages }, shown);
 }
 
 std::wstring ClassicEventMessage(const std::wstring& logName, const std::wstring& source, uint32_t messageId,
@@ -559,7 +615,17 @@ HRESULT MessagesCollectAll() {
 		load(normalizeGuid(guid));   // extracts its resource, parameter and .mui files
 	}
 	ORCloseKey(publishers);
-	log(2, L"❇️Event providers collected: " + std::to_wstring(g_cache.size()) + L", "
+	/* The classic sources (Services\EventLog\<log>\<source>), whose message
+	   files are declared in SYSTEM, and the system's own tables (kernelbase,
+	   ntdll) that give an error code its text: a conversion reads only what
+	   was collected, and without them three events in eight lost their
+	   message (B-023). */
+	if (conf.CurrentControlSet)
+		for (const std::wstring& logName : subkeys(conf.CurrentControlSet, L"Services\\EventLog"))
+			for (const std::wstring& source : subkeys(conf.CurrentControlSet, L"Services\\EventLog\\" + logName))
+				loadClassic(logName, source);
+	systemMessages();
+	log(2, L"❇️Event providers collected: " + std::to_wstring(g_cache.size() + g_classic.size()) + L", "
 	     + std::to_wstring(g_failures) + L" without usable resources, "
 	     + std::to_wstring(g_bytes / 1024 / 1024) + L" MiB");
 	return hr;

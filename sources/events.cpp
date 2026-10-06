@@ -43,7 +43,7 @@ Json string(const std::wstring& text) {
  *
  *  Both forms are now read, each from its own subtree.
  */
-Json eventData(const XmlNode& root, std::vector<std::wstring>* rawValues) {
+Json eventData(const XmlNode& root, std::vector<std::wstring>* rawValues, std::vector<std::wstring>* rawNames) {
 	Json arr = Json::arr();
 
 	if (const XmlNode* ed = root.child(L"EventData")) {
@@ -61,6 +61,7 @@ Json eventData(const XmlNode& root, std::vector<std::wstring>* rawValues) {
 			o.add(L"Value", Json::str(d->text));
 			arr.push(std::move(o));
 			if (rawValues) rawValues->push_back(d->text);
+			if (rawNames) rawNames->push_back(name);
 		}
 		if (const XmlNode* bin = ed->child(L"Binary"))
 			if (!bin->text.empty()) {
@@ -69,6 +70,7 @@ Json eventData(const XmlNode& root, std::vector<std::wstring>* rawValues) {
 				o.add(L"Value", Json::str(bin->text));
 				arr.push(std::move(o));
 				if (rawValues) rawValues->push_back(bin->text);
+				if (rawNames) rawNames->push_back(L"Binary");
 			}
 		return arr;
 	}
@@ -97,8 +99,12 @@ Json eventData(const XmlNode& root, std::vector<std::wstring>* rawValues) {
 					o.add(L"Name",  Json::str(n->name));
 					o.add(L"Value", Json::str(n->text));
 					arr.push(std::move(o));
-					if (rawValues) rawValues->push_back(n->text);
 				}
+				/* An empty leaf is no field of the JSON, but it is a position of
+				   the message: dropped there, every following %N took the next
+				   value — SMBServer 1034 lost its sixth (B-023). */
+				if (rawValues) rawValues->push_back(n->text);
+				if (rawNames) rawNames->push_back(n->name);
 			}
 			else {
 				// Document order: the stack is filled the other way round.
@@ -121,7 +127,7 @@ Event::Event(const XmlNode& root, const std::wstring& channel,
 		// report does not lose it silently.
 		evtSystemEventRecordId = Json::num(id);
 		evtSystemChannel = string(channel);
-		evtEventData = eventData(root, &rawValues);
+		evtEventData = eventData(root, &rawValues, &rawNames);
 		return;
 	}
 
@@ -132,7 +138,10 @@ Event::Event(const XmlNode& root, const std::wstring& channel,
 		// Some classic providers carry only EventSourceName.
 		if (evtSystemProviderName.kind() == Json::Kind::Null)
 			evtSystemProviderName = string(p->attribute(L"EventSourceName"));
-		messageSource = p->attribute(L"Name").empty() ? p->attribute(L"EventSourceName") : p->attribute(L"Name");
+		/* A classic source is registered under its EventSourceName when the
+		   event carries one ("COM+" for Microsoft-Windows-Complus), else under
+		   its provider name. */
+		messageSource = p->attribute(L"EventSourceName").empty() ? p->attribute(L"Name") : p->attribute(L"EventSourceName");
 	}
 	if (const XmlNode* e = sys->child(L"EventID")) {
 		evtSystemEventID = count(e->text);
@@ -172,7 +181,7 @@ Event::Event(const XmlNode& root, const std::wstring& channel,
 	if (const XmlNode* s = sys->child(L"Security"))
 		evtSystemUserID = string(s->attribute(L"UserID"));
 
-	evtEventData = eventData(root, &rawValues);
+	evtEventData = eventData(root, &rawValues, &rawNames);
 	/*  Processing error: the values are the error's, not the template's; laid
 	    into the provider's message they would make a false sentence. No
 	    message, rather than a wrong one. */
@@ -256,22 +265,23 @@ HRESULT Events::getData() {
 				    only the API could do until now. The resource file is
 				    extracted on demand, once per provider (see
 				    event_messages.h). */
-				if (!ev.messageProviderGuid.empty() && ev.messageEventId != 0) {
-					const std::wstring phrase = EventMessage(
-						ev.messageProviderGuid, ev.messageEventId, ev.messageVersion,
-						ev.rawValues);
-					if (!phrase.empty()) ev.evtEventMessage = Json::str(phrase);
-				} else if (ev.messageProviderGuid.empty() && !ev.messageSource.empty()) {
-					/* A CLASSIC source (ReportEvent) has no GUID: its message files
-					   are declared in the SYSTEM hive under the log's name, and the
-					   message is keyed by the qualifiers and the identifier
-					   together. These were three events out of eight without a
-					   message (77,523 of 195,801 measured). */
+				std::wstring phrase;
+				if (!ev.messageProviderGuid.empty() && ev.messageEventId != 0)
+					phrase = EventMessage(ev.messageProviderGuid, ev.messageEventId, ev.messageVersion, ev.rawValues, ev.rawNames);
+				/* A CLASSIC source (ReportEvent): its message files are declared in
+				   the SYSTEM hive under the log's name, and the message is keyed by
+				   the qualifiers and the identifier together. These were three
+				   events out of eight without a message (77,523 of 195,801
+				   measured). An event of a source registered with a ProviderGuid
+				   carries that GUID, but its manifest does not describe it — CAPI2
+				   4097, Complus 781: Windows then takes the source's files, and so
+				   does WAC. */
+				if (phrase.empty() && !ev.messageSource.empty()) {
 					const std::wstring logName = ev.evtSystemChannel.kind() == Json::Kind::Str ? ev.evtSystemChannel.text() : channel;
-					const std::wstring phrase = ClassicEventMessage(
-						logName, ev.messageSource, ((uint32_t)ev.messageQualifiers << 16) | ev.messageEventId, ev.rawValues);
-					if (!phrase.empty()) ev.evtEventMessage = Json::str(phrase);
+					phrase = ClassicEventMessage(logName, ev.messageSource,
+					                             ((uint32_t)ev.messageQualifiers << 16) | ev.messageEventId, ev.rawValues);
 				}
+				if (!phrase.empty()) ev.evtEventMessage = Json::str(phrase);
 				/*  A record whose System section is incomplete is the sign of a
 				    decoding that went wrong on THAT record. The raw XML goes to
 				    the log: without it, the event reads as poor in data whereas

@@ -73,6 +73,7 @@ struct WevtItem {
 	uint8_t  inType = 0;    //!< input type (win:UInt32 = 0x08, win:HexInt64 = 0x15…)
 	uint8_t  outType = 0;   //!< output type (xs:unsignedInt = 0x08, win:HexInt32 = 0x12…)
 	uint32_t map = 0;       //!< offset of its value map in the resource, 0 for none
+	std::wstring name;      //!< its name, as the event's Data carry it
 };
 
 /*! A value map of a provider: a value's label is a message. A VMAP labels
@@ -136,15 +137,16 @@ struct SystemMessages {
  *    - a value map's label: "État : 2" -> "État : Disconnected" (Kernel-Power);
  *      a bitmap's labels of the flags set, joined by commas without space
  *      ("67108880" -> "BackgroundTaskOption,LowPriorityRequest", AppX); a
- *      zero takes the map's label of 0 if it has one;
+ *      bitmap's zero stays the number (Kernel-Boot 153);
  *    - a hexadecimal input type (win:HexInt32, win:HexInt64), or a
  *      hexadecimal output type of an integer, and win:ErrorCode, as 0x and
  *      upper-case digits: "0x3e7" -> "0x3E7", "2147746053" -> "0x80040105".
  *      A pointer keeps the log's form ("0x1b3c");
  *    - an error code by its text: win:Win32Error and win:HResult from the
  *      system's table ("87" -> "Paramètre incorrect."), a Win32 HRESULT
- *      (0x8007xxxx) absent from it by its Win32 code, an unknown HRESULT
- *      "Unknown HResult Error code: 0x…" as Windows writes it; win:NTSTATUS
+ *      (0x8007xxxx) by its Win32 code first, an unknown HRESULT "Unknown
+ *      HResult Error code: 0x…" without its 0x10000000 bit, as Windows
+ *      writes it; win:NTSTATUS
  *      from ntdll's ("0" -> "STATUS_SUCCESS");
  *    - binary data as xs:hexBinary: "0x" before its digits; as
  *      win:SocketAddress, an IPv4 address and its port ("127.0.0.1:58241").

@@ -523,6 +523,29 @@ void sealExhibitStore() {
 	}
 }
 
+/*! Opens SYSTEM's CurrentControlSet: the ControlSetNNN that Select\Current
+ *  names, in conf.CurrentControlSet. Needed by the conversion and by
+ *  --collect alike: without it, a collection for a later conversion took the
+ *  event messages' satellites in en-US instead of the machine's language,
+ *  and found no classic event source (B-023).
+ *  @return ERROR_SUCCESS, or the failure of the reading */
+HRESULT openCurrentControlSet() {
+	if (conf.CurrentControlSet) return ERROR_SUCCESS;
+	if (!conf.System) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	ORHKEY select = NULL;
+	HRESULT hresult = OROpenKey(conf.System, L"Select", &select);
+	if (hresult != ERROR_SUCCESS) return hresult;
+	DWORD current = 0, valueType = 0, size = sizeof current;
+	hresult = ORGetValue(select, nullptr, L"Current", &valueType, &current, &size);
+	ORCloseKey(select);
+	if (hresult != ERROR_SUCCESS) return hresult;
+	if (valueType != REG_DWORD || size != sizeof current) return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+	// the ControlSet number is on 3 digits, of the form 001
+	wchar_t subkey[32];
+	swprintf(subkey, 32, L"ControlSet%03lu", (unsigned long)current);
+	return OROpenKey(conf.System, subkey, &conf.CurrentControlSet);
+}
+
 /*! --collect: what the conversion will need and only it can tell — the
  *  resource files of the event providers (--events) and the executables with
  *  the signature catalogs (--binary) —, taken now, whole, since which of them
@@ -530,6 +553,11 @@ void sealExhibitStore() {
 void collectForConversion() {
 	printHeading(Text::HeadingForConversion);
 	if (conf._events) {
+		/* The machine's language and its classic event sources are read in
+		   SYSTEM's CurrentControlSet, which the conversion opens otherwise. */
+		const HRESULT hrControlSet = openCurrentControlSet();
+		if (hrControlSet != ERROR_SUCCESS)
+			log(2, L"🔥CurrentControlSet unavailable: event resources taken without the machine's language", hrControlSet);
 		printStep(Text::StepEventResources);
 		const HRESULT hr = MessagesCollectAll();
 		size_t providers = 0, failures = 0;
@@ -658,10 +686,6 @@ void convertArtefacts(bool systemAvailable) {
 	Users users;
 	LocalGroups localGroups;
 	Events events;
-	ORHKEY hKey = NULL;
-	DWORD valueType = 0;
-	DWORD size = 0;
-
 	/* processes.json is published once the account names are loaded from the
 	   hives, or at the latest before the event logs if the SYSTEM hive could
 	   not be opened. */
@@ -702,56 +726,17 @@ void convertArtefacts(bool systemAvailable) {
 	do {
 	if (!systemAvailable) break;   // without SYSTEM, the registry phase is meaningless
 
-	// find the ControlSet subkey that CurrentControlSet points to
-	printStep(Text::StepFindControlSet);
-	log(3, L"🔈OROpenKey System/Select");
-	hresult = OROpenKey(conf.System, L"Select", &hKey);
-	if (hresult != ERROR_SUCCESS) {
-		printError(hresult);
-		break;
-	}
-	hresult = ORGetValue(hKey, nullptr, L"Current", &valueType, nullptr, &size);
-	if (hresult != ERROR_SUCCESS)
-	{
-		printError(hresult);
-		break;
-	}
-
-	DWORD current = 0;
-
-	log(3, L"🔈ORGetValue System/Select/Current");
-	hresult = ORGetValue(hKey, nullptr, L"Current", &valueType, &current, &size);
+	// open the ControlSet subkey that CurrentControlSet points to
+	printStep(Text::StepOpenControlSet);
+	log(3, L"🔈openCurrentControlSet");
+	hresult = openCurrentControlSet();
 	if (hresult != ERROR_SUCCESS)
 	{
 		printError(hresult);
 		break;
 	}
 	else {
-
-		// the ControlSet number is on 3 digits, of the form 001
-		std::wstring controlSet;
-		if ((int)(current) < 10) {
-			controlSet = L"00" + std::to_wstring(current);
-		}
-		else if ((int)(current) < 100) {
-			controlSet = L"0" + std::to_wstring(current);
-		}
-		else {
-			controlSet = std::to_wstring(current);
-		}
-		// full name of the ControlSet key we are interested in
-		std::wstring subkey = L"ControlSet" + controlSet;
-		printSuccess();
-
-		// open the HKLM\\SYSTEM\\CurrentControlSet key
-		printStep(Text::StepOpenControlSet);
-		log(3, L"🔈OROpenKey System/CurrentControlSet");
-		hresult = OROpenKey(conf.System, subkey.c_str(), &conf.CurrentControlSet);
-		if (hresult != ERROR_SUCCESS) {
-			printError(hresult);
-			break;
-		}
-		else {
+		{
 			printSuccess();
 
 			/* Time zone of the SUSPECT, read in his SYSTEM hive.
