@@ -1,0 +1,39 @@
+# B-038 — Collecte compatible avec les versions serveur de Windows, de Server 2003 à 2026
+
+| Statut | Priorité | Effort |
+|---|---|---|
+| à faire (prérequis : B-039) | P3 | fort |
+
+## Pourquoi
+Les serveurs sont une cible de premier ordre (contrôleurs de domaine, serveurs web, de fichiers, d'applications), et beaucoup tournent sous des versions anciennes. WAC est développé et éprouvé sur Windows 10 et 11, des postes clients. Demande utilisateur du 2026-10-06 : la collecte doit fonctionner sur les versions serveur, de Windows Server 2003 à 2026. Les artefacts sont sensiblement les mêmes que ceux du client de la même génération. Prérequis de B-035 (web côté serveur).
+
+## Source
+Ce qui distingue un serveur du client de même noyau :
+- **les versions et leur client jumeau** : Server 2003 (NT 5.2, XP), 2008 (Vista), 2008 R2 (7), 2012 (8), 2012 R2 (8.1), 2016, 2019, 2022 et 2025 (10 et 11), 2026 ;
+- **les rôles** : IIS (journaux, configuration — B-035), DNS, DHCP, partages de fichiers, services Bureau à distance (connexions RDP entrantes nombreuses), Hyper-V ;
+- **le mode Server Core**, sans interface graphique : pas d'Explorateur, donc pas de ShellBags, de jump lists, de Chronologie ni d'index de recherche — artefacts absents, à déclarer comme tels ;
+- **un contrôleur de domaine** : comptes du domaine dans `NTDS.dit` et non dans la SAM (qui n'y contient que le compte de restauration) ; SYSVOL et stratégies de groupe ;
+- **les profils** : nombreux comptes de service et d'administrateurs, connexions de nombreux utilisateurs.
+
+## Sortie attendue
+Le même WAC.exe (64 bits, et WAC32.exe pour Server 2003 et 2008 en 32 bits) collecte chaque version serveur. Chaque artefact absent d'une version ou d'une installation Server Core le dit (`CollectionStatus`) au lieu d'échouer, d'après la table de B-039.
+
+## Référence indépendante
+Une VM par version serveur passée par le harnais (création sans interaction, comme `create-vm.sh`), avec les outils de référence déjà utilisés (EZ, plaso/libyal) sur les mêmes pièces, et un rôle IIS témoin pour B-035.
+
+## Critères d'acceptation
+En plus de la définition de « fini » commune (backlog/README.md) :
+- Cycle VM vert sur au moins une version de chaque génération (2003, 2008/2008 R2, 2012/2012 R2, 2016 et suivantes).
+- Une installation Server Core collectée sans erreur, ses artefacts absents déclarés.
+
+## Tâches
+- [ ] Images des versions serveur et VM dans le harnais
+- [ ] Artefacts propres aux rôles (à répartir avec B-035 pour IIS)
+- [ ] Server Core
+- [ ] Contrôleur de domaine : `NTDS.dit` (à étudier)
+
+## Point ouvert
+Server 2003 a le noyau de XP (NT 5.2) : il demande la version 32 bits de WAC et la compatibilité des API de B-037, qui est planifiée en dernier. À décider : avancer cette partie de B-037, ou traiter d'abord Server 2008 et suivants et faire suivre Server 2003 avec B-037.
+
+## Journal
+- 2026-10-06 : créée à la demande de l'utilisateur — compatibilité avec les versions serveur de Windows, de 2003 à 2026, avant B-035 ; les artefacts sont sensiblement ceux du client de même génération.

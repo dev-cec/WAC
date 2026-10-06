@@ -10,6 +10,10 @@ Sur un serveur web, la compromission passe par le site : un webshell déposé, u
 ## Source
 Serveurs IIS, Apache et nginx trouvés sur la machine, et leur configuration : racines des sites, emplacement des journaux, chaînes de connexion de l'application (web.config, wp-config.php, .env…).
 
+## Prérequis
+- B-039 : artefacts organisés par version de Windows et par disponibilité.
+- B-038 : compatibilité avec les versions serveur de Windows, depuis Server 2003.
+
 ## Sortie attendue
 Un artefact à sa propre clé de `wac.yml` (`web_server`), indépendante de `web_client` (B-016) :
 - journaux d'accès et d'erreurs copiés, et convertis en JSON (requête, client, statut, date en UTC et en heure locale) ;
@@ -36,3 +40,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-09-26 : décision utilisateur, copier le code du site complet plutôt que trier.
 - 2026-10-01 : décision utilisateur — prélever la base de données du site si elle est présente (taille à étudier) ; le web est séparé en deux artefacts, chacun avec sa clé dans `wac.yml` : client (B-016) et serveur (cette fiche).
 - 2026-10-02 : décision utilisateur — passée en P3 : peu de serveurs web sous Windows ; tout ce qui touche au client d'abord.
+- 2026-10-06 : prérequis ajoutés à la demande de l'utilisateur : B-039 (artefacts par version de Windows), puis B-038 (versions serveur, de 2003 à 2026).

@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire (en dernier) | P3 | fort |
+| à faire (en dernier ; prérequis : B-039) | P3 | fort |
 
 ## Pourquoi
 Les machines examinées ne sont pas toutes récentes : postes industriels, caisses, serveurs oubliés tournent encore sous Windows XP, Server 2003, Vista ou 7. WAC est aujourd'hui développé et éprouvé sur Windows 10 et 11. Demande utilisateur du 2026-10-02 : la collecte doit fonctionner depuis Windows XP SP1. Pas prioritaire, à faire après les autres fiches.
@@ -46,3 +46,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-02 : créée à la demande de l'utilisateur — compatibilité depuis Windows XP SP1, à faire en dernier.
 - 2026-10-02 : décision utilisateur — une version de Windows suffit dans une seule architecture, 32 ou 64 bits, les artefacts étant les mêmes.
 - 2026-10-02 : images ISO fournies par l'utilisateur (XP RTM, SP1, SP2, SP3, Windows 8 — toutes x86) ; une version 32 bits de WAC est nécessaire (demande utilisateur). La chaîne i686 a été installée par l'utilisateur le même jour (`i686-w64-mingw32-g++` 13, variante win32).
+- 2026-10-06 : prérequis ajouté à la demande de l'utilisateur : B-039 (artefacts organisés par version de Windows et par disponibilité). Server 2003 relève aussi de B-038.
