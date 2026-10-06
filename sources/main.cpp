@@ -34,6 +34,7 @@
 #include "mft.h"
 #include "usn_journal.h"
 #include "powershell_history.h"
+#include "activities_cache.h"
 #include "setupapi_log.h"
 #include "recycle_bin.h"
 #include "hosts_file.h"
@@ -981,6 +982,9 @@ void convertArtefacts(bool systemAvailable) {
 
 	convertFileArtefact<EventLogConfiguration>(conf.artefacts.eventLogConfiguration, "event_log_configuration.json", Text::ArtefactEventLogConfiguration,
 	                         L"artefacts.event_log_configuration", Text::StepEventLogConfiguration);
+
+	convertFileArtefact<ActivitiesCaches>(conf.artefacts.activitiesCache, "activities_cache.json", Text::ArtefactActivitiesCache,
+	                         L"artefacts.activities_cache", Text::StepActivitiesCache);
 
 	/* SYSTEM INFORMATION, offline.
 	   OUTSIDE the single-exit block above, and not inside it: even without a

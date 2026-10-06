@@ -74,3 +74,4 @@ artefacts:
   network_shares:             true  # folders the machine shares, with their path and permissions (LanmanServer)
   network_configuration:      true  # network adapters and their last IPv4/IPv6 settings and DHCP leases, read offline
   event_log_configuration:    true  # each event log and boot ETW session: enabled, size, retention, access (a disabled one is a trace)
+  activities_cache:           true  # Windows Timeline: applications, files, pages, clipboard (ActivitiesCache.db)

@@ -37,6 +37,22 @@ std::vector<uint8_t> SqliteRow::blob(int column) const {
 	return std::vector<uint8_t>(bytes, bytes + size);
 }
 
+int SqliteRow::columnCount() const {
+	return sqlite3_column_count(statement_);
+}
+
+std::wstring SqliteRow::name(int column) const {
+	const char* text = sqlite3_column_name(statement_, column);
+	return text ? decodeText(text, CP_UTF8) : L"";
+}
+
+std::string SqliteRow::declaredType(int column) const {
+	const char* text = sqlite3_column_decltype(statement_, column);
+	std::string type = text ? text : "";
+	for (char& c : type) c = (char)toupper((unsigned char)c);
+	return type;
+}
+
 SqliteDatabase::~SqliteDatabase() {
 	close();
 }

@@ -15,6 +15,7 @@
 #include "hive_recover.h"
 #include "quickdigest5.h"
 #include "powershell_history.h"
+#include "activities_cache.h"
 #include "running_machine.h"
 #include "startup_folders.h"
 #include "shortcuts.h"
@@ -531,6 +532,13 @@ HRESULT ExtractFileArtefactsRaw() {
 		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
 			trees.push_back({ std::get<1>(profileEntry) + DPAPI_PROFILE_FOLDER, {}, 2, L"DPAPI master keys" });
 	}
+	/* The Timeline: the Connected Devices Platform folder of each profile,
+	   whole and small — ActivitiesCache.db with its -wal (the last activities
+	   are often only there) in one folder per account, and the platform's
+	   settings files beside them. */
+	if (conf.artefacts.activitiesCache)
+		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
+			trees.push_back({ std::get<1>(profileEntry) + CONNECTED_DEVICES_FOLDER, {}, 2, L"Timeline (ActivitiesCache.db)" });
 	// The browsers: their profiles found by listing, their databases only.
 	if (conf.artefacts.webClient && extractBrowserFiles() != S_OK) global = S_FALSE;
 	/* Shortcuts outside Recent: the Start menu and Quick Launch are trees, the

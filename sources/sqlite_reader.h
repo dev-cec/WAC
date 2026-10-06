@@ -41,6 +41,15 @@ public:
 	std::wstring text(int column) const;
 	//! @return the column's bytes (empty for NULL)
 	std::vector<uint8_t> blob(int column) const;
+	//! @return the number of columns of the result
+	int columnCount() const;
+	//! @return the column's name, as the query or the table names it
+	std::wstring name(int column) const;
+	/*! @return the type the table's schema declares for the column ("GUID",
+	 *          "DATETIME"…), upper case; "" for an expression. SQLite stores
+	 *          any value in any column: the declared type is what says how the
+	 *          application meant it — a Unix time, a GUID's bytes. */
+	std::string declaredType(int column) const;
 private:
 	sqlite3_stmt* statement_;   //!< owned by SqliteDatabase::query
 };

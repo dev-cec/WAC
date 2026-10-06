@@ -599,6 +599,28 @@ Les fichiers ne sont pas versionnés : le script les télécharge et les refuse
 si leur SHA-256 diffère. Référence : 22 contrôles, aucun échec (1~110
 enregistrements identiques à ceux de \texttt{pymsiecf}).
 
+\section{Chronologie Windows : \texttt{activities\_cache\_test}}
+
+Vérifie la lecture de \fichier{ActivitiesCache.db} sur une vraie base de
+Windows~10 des données de test publiques du projet plaso (112 activités :
+applications, pages, temps au premier plan). La référence est le
+\texttt{sqlite3} de Python, chaque colonne convertie par les règles de
+\fichier{activities\_cache.h} réécrites dans le script, indépendamment de
+\wac{} : temps Unix en UTC, GUID dans l'ordre d'octets de .NET, charges
+utiles JSON analysées, valeurs nulles omises. Chaque ligne doit revenir avec
+les mêmes colonnes et valeurs, et aucune de plus ; les formes locales des
+dates ne sont pas comparées (elles dépendent du fuseau de la machine
+examinée). Puis une copie tronquée est lue sans plantage. Réintroduire un
+décalage d'une heure dans la conversion des dates fait échouer 113 contrôles.
+
+\begin{lstlisting}
+sources/activities_cache_fixtures.sh /tmp/acfx
+cd build-windows/tests && wine activities_cache_test.exe Z:/tmp/acfx
+\end{lstlisting}
+
+La base n'est pas versionnée : le script la télécharge et la refuse si son
+SHA-256 diffère. Référence : 118 contrôles, aucun échec.
+
 \section{Petits artefacts fichiers : \texttt{file\_artefacts\_test}}
 
 Vérifie les décodeurs de l'historique PowerShell, de

@@ -566,6 +566,12 @@ logs of \texttt{Get-WinEvent -ListLog} and their enabled state /
   \fichier{event\_log\_configuration.json} (490 logs); sessions of
   \texttt{Get-AutologgerConfig} and their \champ{Start} (39 sessions) &
   check added with the artefact \\
+Windows~10 \fichier{ActivitiesCache.db} (plaso test data, 112 activities)
+  read by Python's \texttt{sqlite3}, each column converted independently;
+  the VM's real database, its \texttt{-wal} log replayed /
+  \fichier{activities\_cache.json} &
+  check added with the artefact; a date shifted by one hour is caught
+  (113 failures) \\
 witness shortcut on the public desktop and shortcut pinned to the task bar
   (target, arguments, location); shortcuts Windows lists in the Start menus,
   desktops and Quick Launch / \fichier{shortcuts.json} (93 shortcuts with those of the Default profile and of the redirected desktop, no

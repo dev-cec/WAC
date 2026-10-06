@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P3 | fort |
+| en cours | P3 | fort |
 
 ## Pourquoi
 Activités par application et document, horodatées.
@@ -14,16 +14,18 @@ Activités par application et document, horodatées.
 `activities.json`.
 
 ## Référence indépendante
-Lecteur SQLite confronté à `sqlite3` sur le même fichier.
+Lecteur SQLite confronté à `sqlite3` sur le même fichier : base Windows 10 de plaso (112 activités, `activities_cache_fixtures.sh`, SHA-256 épinglé) et base réelle de la VM, journal `-wal` rejoué.
 
 ## Critères d'acceptation
 En plus de la définition de « fini » commune (backlog/README.md) :
 - Décider : lecteur SQLite maison ou dépendance justifiée (sqlite amalgamation).
 
 ## Tâches
-- [ ] Décision lecteur
-- [ ] Tables Activity, ActivityOperation
+- [x] Décision lecteur (amalgamation SQLite, déjà intégrée par B-016)
+- [x] Tables Activity, ActivityOperation
+- [ ] Index de recherche Windows (Windows.db, Windows-gather.db ; Windows.edb sous Windows 10)
 
 ## Journal
 - 2026-09-30 : décision utilisateur — SQLite par l'amalgamation officielle (sqlite3.c) épinglée et compilée dans WAC, ouverte en lecture seule sur la copie de la consigne.
 - 2026-09-30 : l'index de recherche Windows rejoint cette fiche (reporté de B-009) : Windows.db et Windows-gather.db en SQLite sur Windows 11 ; Windows.edb (ESE, colonnes compressées XPRESS) sur Windows 10, à éprouver sur un vrai Windows 10.
+- 2026-10-06 : Chronologie faite — `activities_cache` (clé de `wac.yml`, `activities_cache.json`). Dossier `ConnectedDevicesPlatform` de chaque profil collecté en brut (base, `-wal`, réglages de la plateforme). Toutes les colonnes de `Activity` et `ActivityOperation`, converties par leur type déclaré (DATETIME = temps Unix UTC, GUID dans l'ordre .NET, charges utiles JSON analysées) : le schéma change selon la version de Windows. Mesuré dans la VM : Windows 11 n'enregistre plus que les réglages synchronisés (type 11, 3 lignes) ; les activités d'applications, le temps au premier plan et le presse-papiers ne sont que sous Windows 10, d'où la base de plaso. Test `activities_cache_test` : 118 contrôles, 112 enregistrements identiques à Python ; une date décalée d'une heure fait échouer 113 contrôles. Cycle VM `--only=activities_cache` vert, 3 lignes sur 3 identiques à Python.

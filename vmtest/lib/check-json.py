@@ -304,6 +304,7 @@ def cross_checks(folder):
     found += guarded(check_third_party_chains, folder)
     found += guarded(check_vulnerable_driver, folder)
     found += guarded(check_web_client, folder)
+    found += guarded(check_activities_cache, folder)
     return found
 
 
@@ -2285,6 +2286,52 @@ def check_web_client(folder):
                   f"same sites in WAC ({len(ours)})" + ("" if ok else f": {sorted(set(theirs) ^ set(ours))[:3]}"))
             found += 0 if ok else 1
     return found + found_firefox + check_webcache(folder, records)
+
+
+def check_activities_cache(folder):
+    """activities_cache.json against Python's own SQLite on each fetched
+    ActivitiesCache.db, its write-ahead log replayed by that engine: every row
+    of Activity and ActivityOperation, no more, no less, with its identifier
+    (GUID in .NET byte order), type, application activity and Unix times
+    converted here — a time read in another unit or a GUID in the wrong order
+    would be valid JSON."""
+    import shutil, sqlite3, tempfile, uuid
+    records = load(folder, "activities_cache.json")
+    store = os.path.join(folder, store_folder(folder))
+    databases = glob.glob(os.path.join(store, "**", "ConnectedDevicesPlatform", "*", "ActivitiesCache.db"), recursive=True)
+    if not isinstance(records, list) or not databases:
+        print("  ⏭️  no activities_cache.json or no ActivitiesCache.db fetched: Timeline not confronted")
+        return 0
+    def utc(seconds):
+        if not seconds or seconds <= 0:
+            return None
+        return datetime.datetime.fromtimestamp(seconds, datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.0000000Z")
+    found = 0
+    for database in databases:
+        source = "C:\\" + os.path.relpath(database, store).replace(os.sep, "\\")
+        mine = {(r.get("Table"), r.get("Id")): r for r in records if (r.get("Path") or "").lower() == source.lower()}
+        theirs = []
+        with tempfile.TemporaryDirectory() as aside:
+            for suffix in ("", "-wal", "-journal"):
+                if os.path.exists(database + suffix):
+                    shutil.copy(database + suffix, os.path.join(aside, "ActivitiesCache.db" + suffix))
+            db = sqlite3.connect(os.path.join(aside, "ActivitiesCache.db"))
+            for table in ("Activity", "ActivityOperation"):
+                theirs += [(table,) + row for row in db.execute(
+                    f"SELECT Id, ActivityType, AppActivityId, StartTime, LastModifiedTime FROM {table}")]
+            db.close()
+        wrong = []
+        for table, guid, kind, app_activity, start, modified in theirs:
+            key = (table, "{" + str(uuid.UUID(bytes_le=guid)).upper() + "}")
+            r = mine.get(key, {})
+            if (r.get("ActivityType") != kind or (r.get("AppActivityId") or "") != (app_activity or "")
+                    or r.get("StartTimeUtc") != utc(start) or r.get("LastModifiedTimeUtc") != utc(modified)):
+                wrong.append(f"{key}: {kind} {app_activity} {utc(start)}, WAC {r.get('ActivityType')} {r.get('AppActivityId')} {r.get('StartTimeUtc')}")
+        ok = len(theirs) == len(mine) and not wrong
+        print(f"  {'✅' if ok else '❌'} activities_cache.json: {source.split(chr(92))[-2]} — {len(theirs)} row(s) as Python's SQLite reads them "
+              f"(WAL replayed), WAC {len(mine)}, identifier, type and times identical" + ("" if ok else f": {wrong[:3]}"))
+        found += 0 if ok else 1
+    return found
 
 
 def check_firefox_places(folder, store, records):

@@ -344,6 +344,7 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   usn_journal: true     # $UsnJrnl:$J : créations, renommages, suppressions
   log_file: true        # $LogFile et $TxfLog : journaux de transactions NTFS et TxF, copie brute seule
   powershell_history: true  # PSReadLine : les commandes tapées dans PowerShell
+  activities_cache: true    # Chronologie Windows : applications, fichiers, pages, presse-papiers (ActivitiesCache.db)
   setupapi: true        # setupapi.dev.log : installations de périphériques
   recycle_bin: true     # $I des corbeilles : quoi, par qui, quand
   hosts: true           # le fichier hosts : noms détournés vers une adresse
@@ -1400,6 +1401,22 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         l'ISE, VS~Code) : les commandes dans l'ordre où elles ont été tapées,
         une commande sur plusieurs lignes réunie. Aucune date par commande :
         \champ{SourceModified} date la dernière.
+  \item[\fichier{activities\_cache.json}] Chronologie Windows
+        (\fichier{ActivitiesCache.db} de chaque compte de chaque profil, avec
+        son journal \texttt{-wal}) : chaque ligne des tables
+        \texttt{Activity} et \texttt{ActivityOperation} (\champ{Table}),
+        toutes ses colonnes. Sous Windows~10, les applications ouvertes, les
+        fichiers et pages vus (\champ{Payload} : titre, URI), le temps passé
+        au premier plan (\champ{Payload} \texttt{UserEngaged}, de
+        \champ{StartTime} à \champ{EndTime}) et, si l'historique du
+        presse-papiers est actif, ce qui a été copié
+        (\champ{ClipboardPayload}) ; sous Windows~11, qui a retiré la
+        Chronologie, les seuls réglages synchronisés. Les dates sont des temps
+        Unix en UTC, donnés en UTC et en heure locale ; les GUID dans l'ordre
+        d'octets de .NET ; une date ou un GUID nul n'est pas émis. Les codes
+        (\champ{ActivityType}, \champ{ActivityStatus},
+        \champ{OperationType}) sont donnés tels quels : Microsoft ne les
+        documente pas.
   \item[\fichier{error\_reports.json}] rapports d'erreurs Windows
         (\fichier{Report.wer}) de la machine et de chaque profil : programme,
         chemin, instant (\champ{EventTimeUtc}), signature du problème

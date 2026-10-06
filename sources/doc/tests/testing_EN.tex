@@ -578,6 +578,28 @@ The files are not versioned: the script downloads them and refuses them if
 their SHA-256 differs. Reference: 22 checks, no failure (1,110 records
 identical to \texttt{pymsiecf}'s).
 
+\section{Windows Timeline: \texttt{activities\_cache\_test}}
+
+Checks the reading of \fichier{ActivitiesCache.db} on a real Windows~10
+database of the plaso project's public test data (112 activities:
+applications, pages, foreground time). The reference is Python's
+\texttt{sqlite3}, each column converted by the rules of
+\fichier{activities\_cache.h} written again in the script, independently of
+\wac{}: Unix times in UTC, GUIDs in .NET's byte order, JSON payloads parsed,
+null values left out. Every row must come back with the same columns and
+values, and none more; the local forms of the dates are not compared (they
+depend on the examined machine's time zone). Then a truncated copy is read
+without a crash. Reintroducing a one-hour shift in the conversion of the
+dates makes 113 checks fail.
+
+\begin{lstlisting}
+sources/activities_cache_fixtures.sh /tmp/acfx
+cd build-windows/tests && wine activities_cache_test.exe Z:/tmp/acfx
+\end{lstlisting}
+
+The database is not versioned: the script downloads it and refuses it if its
+SHA-256 differs. Reference: 118 checks, no failure.
+
 \section{Small file artefacts: \texttt{file\_artefacts\_test}}
 
 Checks the decoders of the PowerShell history, of \fichier{setupapi.dev.log},

@@ -585,6 +585,12 @@ journaux de \texttt{Get-WinEvent -ListLog} et leur état actif /
   \fichier{event\_log\_configuration.json} (490 journaux) ; sessions de
   \texttt{Get-AutologgerConfig} et leur \champ{Start} (39 sessions) &
   contrôle ajouté avec l'artefact \\
+\fichier{ActivitiesCache.db} de Windows~10 (données de test de plaso, 112
+  activités) lu par le \texttt{sqlite3} de Python, chaque colonne convertie
+  indépendamment ; base réelle de la VM, journal \texttt{-wal} rejoué /
+  \fichier{activities\_cache.json} &
+  contrôle ajouté avec l'artefact ; une date décalée d'une heure est prise
+  (113 échecs) \\
 raccourci témoin du Bureau public et raccourci épinglé à la barre des tâches
   (cible, arguments, emplacement) ; raccourcis listés par Windows dans les
   menus Démarrer, Bureaux et Quick Launch / \fichier{shortcuts.json}

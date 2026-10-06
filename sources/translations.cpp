@@ -127,6 +127,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepDpapiMasterKeys, L"Clés maîtresses DPAPI", L"Extracting DPAPI MASTER KEYS" },
 	{ Text::StepUserShellFolders, L"Dossiers de l'utilisateur (User Shell Folders)", L"Extracting USER SHELL FOLDERS" },
 	{ Text::StepWebClient, L"Navigateurs (historique, téléchargements, recherches)", L"Extracting WEB CLIENT (browsers)" },
+	{ Text::StepActivitiesCache, L"Chronologie Windows", L"Extracting WINDOWS TIMELINE" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },
@@ -195,6 +196,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactDpapiMasterKeys, L"Clés maîtresses DPAPI", L"DPAPI master keys" },
 	{ Text::ArtefactUserShellFolders, L"Dossiers de l'utilisateur (User Shell Folders)", L"User shell folders" },
 	{ Text::ArtefactWebClient, L"Navigateurs (historique, téléchargements, recherches)", L"Web client (browsers)" },
+	{ Text::ArtefactActivitiesCache, L"Chronologie Windows (ActivitiesCache)", L"Windows Timeline (ActivitiesCache)" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },
 
 	{ Text::TimeElapsed,               L"FIN, durée : %1 s",                             L"END, Time elapsed : %1 s" },
