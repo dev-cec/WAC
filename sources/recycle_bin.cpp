@@ -65,17 +65,17 @@ HRESULT RecycleBin::getData() {
 	   their path on the examined machine, "X:\$Recycle.Bin\<SID>\$I…", on
 	   whichever volume, in a full run as in a conversion. */
 	for (const auto& [key, exhibit] : ExhibitStoreIndex()) {
-		if (key.size() < 3 || key.compare(2, 14, L"\\$recycle.bin\\") != 0 || exhibit.file.empty()) continue;
+		if (key.size() < 3 || key.compare(2, 14, L"\\$recycle.bin\\") != 0 || exhibit.workingFile.empty()) continue;
 		const std::filesystem::path source(exhibit.sourcePath);
 		const std::wstring name = source.filename().wstring();
 		if (name.size() < 3 || (name.compare(0, 2, L"$I") != 0 && name.compare(0, 2, L"$i") != 0)) continue;
 		std::error_code ec;
-		const uintmax_t size = std::filesystem::file_size(exhibit.file, ec);
+		const uintmax_t size = std::filesystem::file_size(exhibit.workingFile, ec);
 		if (ec || size > INDEX_MAX) {
 			log(2, L"🔥Recycle bin index not read (unreadable or too large): " + exhibit.sourcePath);
 			continue;
 		}
-		std::ifstream in(std::filesystem::path(exhibit.file), std::ios::binary);
+		std::ifstream in(std::filesystem::path(exhibit.workingFile), std::ios::binary);
 		const std::vector<uint8_t> bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 		RecycledFile recycled;
 		recycled.indexFile = exhibit.sourcePath;

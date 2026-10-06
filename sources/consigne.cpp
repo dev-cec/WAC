@@ -165,6 +165,17 @@ void ExhibitStoreAddFingerprint(const RawHiveExtraction& e, const std::wstring& 
 	g_exhibits.push_back(std::move(p));
 }
 
+bool ExhibitStoreHolds(const std::wstring& storedPath) {
+	// The files written to the store so far, completed with the exhibits added since.
+	static std::set<std::wstring> held;
+	static size_t builtFor = 0;
+	if (builtFor > g_exhibits.size()) { held.clear(); builtFor = 0; }   // the store was reset
+	for (; builtFor < g_exhibits.size(); ++builtFor)
+		if (SUCCEEDED(g_exhibits[builtFor].extracted.result) && g_exhibits[builtFor].contentStored)
+			held.insert(toLower(g_exhibits[builtFor].extracted.outputPath));
+	return held.count(toLower(storedPath)) != 0;
+}
+
 bool ExhibitSourceTimes(const std::wstring& workingCopy, FILETIME& created, FILETIME& modified, FILETIME& accessed) {
 	// Exhibit files by path, rebuilt when exhibits were added since.
 	static std::map<std::wstring, size_t> byFile;
@@ -188,13 +199,24 @@ bool ExhibitSourceTimes(const std::wstring& workingCopy, FILETIME& created, FILE
 	return true;
 }
 
+/*! The working copy of a file of the exhibit store: the same path under the
+ *  working directory, where ExhibitStoreToWorking copied it.
+ *  @param stored the file in the exhibit store
+ *  @return its working copy; empty for an empty path */
+std::wstring workingCopyOf(const std::wstring& stored) {
+	if (stored.empty()) return std::wstring();
+	std::error_code ec;
+	const std::filesystem::path relative = std::filesystem::relative(stored, exhibitStoreFolder(), ec);
+	return ec ? std::wstring() : (std::filesystem::path(workingFolder()) / relative).wstring();
+}
+
 const std::map<std::wstring, StoredExhibit>& ExhibitStoreIndex() {
 	static const std::map<std::wstring, StoredExhibit> index = [] {
 		std::map<std::wstring, StoredExhibit> built;
 		for (const Exhibit& p : g_exhibits)
 			if (SUCCEEDED(p.extracted.result) && !p.extracted.volumePath.empty())
 				built.emplace(toLower(p.extracted.volumePath),
-				              StoredExhibit{ p.extracted.volumePath, p.extracted.outputPath, p.contentStored,
+				              StoredExhibit{ p.extracted.volumePath, workingCopyOf(p.extracted.outputPath), p.contentStored,
 				                             p.extracted.fingerprints.md5, p.extracted.fingerprints.sha1,
 				                             p.extracted.fingerprints.sha256, p.extracted.fingerprints.authenticodeSha256,
 				                             p.verdict.label, p.extracted.fingerprints.leadingSparseBytes });
@@ -217,9 +239,7 @@ void ExhibitStoreSummary(size_t* exhibits, size_t* failures, unsigned long long*
 	if (bytes) *bytes = total;
 }
 
-const wchar_t READ_IN_PLACE[] = L" [read in place by the conversion]";
-
-HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes, bool skipReadInPlace) {
+HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes) {
 	if (copies) *copies = 0;
 	if (bytes) *bytes = 0;
 
@@ -240,10 +260,6 @@ HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes, bool sk
 	for (const Exhibit& p : g_exhibits)
 		if (SUCCEEDED(p.extracted.result) && p.contentStored && !p.extracted.fingerprints.sha256.empty())
 			expected.emplace(p.extracted.outputPath, p.extracted.fingerprints.sha256);
-	std::set<std::wstring> inPlace;                  // exhibit files the conversion reads from the store
-	if (skipReadInPlace)
-		for (const Exhibit& p : g_exhibits)
-			if (p.method.find(READ_IN_PLACE) != std::wstring::npos) inPlace.insert(p.extracted.outputPath);
 
 	size_t count = 0, failed = 0, verified = 0, existing = 0;
 	unsigned long long volume = 0;
@@ -261,7 +277,6 @@ HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes, bool sk
 		// them to the working directory would invite changing them.
 		const std::wstring name = relative.filename().wstring();
 		if (name == L"MANIFEST.json" || name == L"MANIFEST.sha256") continue;
-		if (inPlace.count(e.path().wstring())) continue;
 
 		const std::filesystem::path target = working / relative;
 		/*  AN EXISTING WORKING COPY IS NOT OVERWRITTEN. The function is called
@@ -646,6 +661,19 @@ HRESULT ExhibitStoreProduce(const std::wstring& path, const std::string& bytes, 
 		f.write(bytes.data(), (std::streamsize)bytes.size());
 		if (!f) {
 			log(2, L"🔥Exhibit not written: " + path);
+			return E_FAIL;
+		}
+	}
+	/* Its working copy, written from the same bytes at once: what WAC
+	   produces is read back right away (the live state, by the detection of
+	   the volumes), and the exhibit store is not read again (backlog B-040). */
+	{
+		const std::wstring working = workingCopyOf(path);
+		std::filesystem::create_directories(std::filesystem::path(working).parent_path(), ec);
+		std::ofstream w(std::filesystem::path(working), std::ios::binary);
+		w.write(bytes.data(), (std::streamsize)bytes.size());
+		if (!w) {
+			log(2, L"🔥Working copy not written: " + working);
 			return E_FAIL;
 		}
 	}

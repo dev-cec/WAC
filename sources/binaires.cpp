@@ -416,7 +416,7 @@ void recordJustifications(const std::vector<std::wstring>& sources, const std::w
 	for (const std::wstring& source : sources) {
 		const std::wstring target = pathUnder(exhibitStoreFolder(), source);
 		std::error_code ec;
-		if (std::filesystem::exists(target, ec)) continue;
+		if (ExhibitStoreHolds(target)) continue;
 		std::filesystem::create_directories(std::filesystem::path(target).parent_path(), ec);
 		RawHiveExtraction line;
 		g_reader->read(source, target, line);    // a failure is recorded as such
@@ -512,8 +512,7 @@ HRESULT storeExhibit(const std::wstring& path, const std::wstring& purpose, RawH
 	const std::wstring staged = newStagingFile();
 	const HRESULT result = g_reader->read(path, staged, line);
 	const std::wstring method = L"Raw NTFS reading (\\\\.\\" + path.substr(0, 2)
-	                          + L" — $MFT, directory indexes, $DATA attribute); " + purpose
-	                          + (conf.mode == RunMode::Collect ? READ_IN_PLACE : L"");
+	                          + L" — $MFT, directory indexes, $DATA attribute); " + purpose;
 	return recordStaged(path, staged, result, line, method, verdict);
 }
 
@@ -858,9 +857,10 @@ const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
 		else log(3, L"🔈Collected (" + decodeText(v.reason) + L") : " + path);
 	}
 
-	/* Already in the exhibit store (extracted by another phase), or read from
-	   it (--convert: the store is sealed, nothing is written to it). */
-	if (conf.mode == RunMode::Convert || std::filesystem::exists(target, ec))
+	/* Already in the exhibit store (extracted by another phase) — known from
+	   what WAC recorded, the store itself is not looked at (backlog B-040) —,
+	   or --convert: the store is sealed, nothing is written to it. */
+	if (conf.mode == RunMode::Convert || ExhibitStoreHolds(target))
 		return g_cache.emplace(key, std::move(e)).first->second;
 
 	if (!roomLeft()) {
@@ -1076,7 +1076,7 @@ public:
 				// What the first name was found to be (authentic, differential, collected), and why.
 				const std::wstring linkMethod = first->second.method + L"; another name (hard link) of $MFT record "
 				                              + std::to_wstring(item.record.second) + L", read once";
-				if (first->second.stored) ExhibitStoreAddDuplicate(other, linkMethod + READ_IN_PLACE, first->second.verdict);
+				if (first->second.stored) ExhibitStoreAddDuplicate(other, linkMethod, first->second.verdict);
 				else ExhibitStoreAddFingerprint(other, linkMethod, first->second.verdict);
 				++links;
 				return;
@@ -1106,7 +1106,7 @@ public:
 			const std::wstring allMethod = item.method + L"; " + nature + L"; copied (--binary-all)";
 			const std::wstring staged = item.inMemory ? stageFromMemory(item.content) : item.staged;
 			if (SUCCEEDED(recordStaged(item.path, staged, staged.empty() ? HRESULT_FROM_WIN32(ERROR_WRITE_FAULT) : S_OK,
-			                           item.line, allMethod + READ_IN_PLACE, recorded)))
+			                           item.line, allMethod, recorded)))
 				byRecord_.emplace(item.record, Recorded{ item.line, recorded, true, allMethod });
 			return;
 		}
@@ -1141,7 +1141,7 @@ public:
 			// Copied from memory: the content already read, not the volume again.
 			const std::wstring staged = stageFromMemory(item.content);
 			const std::wstring method = L"Raw NTFS reading (\\\\.\\" + item.path.substr(0, 2)
-			                          + L" — $MFT, directory indexes, $DATA attribute); " + purpose + READ_IN_PLACE;
+			                          + L" — $MFT, directory indexes, $DATA attribute); " + purpose;
 			stored = recordStaged(item.path, staged, staged.empty() ? HRESULT_FROM_WIN32(ERROR_WRITE_FAULT) : S_OK,
 			                      item.line, method, recorded);
 			if (SUCCEEDED(stored)) byRecord_.emplace(item.record, Recorded{ item.line, recorded, true, item.method + L"; " + purpose });
@@ -1244,7 +1244,7 @@ HRESULT BinariesCollectAll() {
 				if (folder == root && (toLower(e.name) == L"pagefile.sys" || toLower(e.name) == L"swapfile.sys"
 				                       || toLower(e.name) == L"hiberfil.sys")) continue;
 				// Already an exhibit (resource file of an event provider): recorded once.
-				if (std::filesystem::exists(pathUnder(exhibitStoreFolder(), path), ec)) continue;
+				if (ExhibitStoreHolds(pathUnder(exhibitStoreFolder(), path))) continue;
 
 				std::unique_ptr<WalkItem> item(new WalkItem);
 				item->order = nextOrder++;
@@ -1354,7 +1354,6 @@ void BinariesFinish() {
 	   be checked by a third party. Only those — not the machine's 13,000
 	   catalogs. Under --convert, they were read FROM the store. */
 	if (g_reader && conf.mode != RunMode::Convert) {
-		const std::wstring inPlace = conf.mode == RunMode::Collect ? READ_IN_PLACE : L"";
 		const std::wstring method = L"Raw NTFS reading (\\\\.\\" + conf.systemDrive
 		                          + L" — $MFT, directory indexes, $DATA attribute); ";
 		std::vector<std::wstring> packageFiles;
@@ -1364,14 +1363,13 @@ void BinariesFinish() {
 		}
 		recordJustifications(std::vector<std::wstring>(g_catalogsUsed.begin(), g_catalogsUsed.end()),
 		                     method + L"signature catalog that justified not collecting binaries "
-		                              L"authenticated as Microsoft (--binary)" + inPlace);
+		                              L"authenticated as Microsoft (--binary)");
 		recordJustifications(packageFiles,
 		                     method + L"signature and block map of a package that justified not "
-		                              L"collecting its files (--binary)" + inPlace);
+		                              L"collecting its files (--binary)");
 		recordJustifications(std::vector<std::wstring>(g_thirdPartyCatalogs.begin(), g_thirdPartyCatalogs.end()),
 		                     method + L"signature catalog NOT signed by Microsoft (third-party drivers and "
-		                              L"software), for the verification of their signatures at analysis (--binary)"
-		                              + inPlace);
+		                              L"software), for the verification of their signatures at analysis (--binary)");
 	}
 	g_reader.reset();
 	std::error_code ec;

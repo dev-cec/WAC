@@ -13,7 +13,7 @@ const wchar_t REPOSITORY_FOLDER[] = L"\\windows\\system32\\wbem\\repository\\";
 std::wstring repositoryFile(const std::wstring& name) {
 	const auto& index = ExhibitStoreIndex();
 	const auto found = index.find(toLower(conf.systemDrive.substr(0, 2)) + REPOSITORY_FOLDER + name);
-	return found == index.end() ? std::wstring() : found->second.file;
+	return found == index.end() ? std::wstring() : found->second.workingFile;
 }
 
 //! A binary SID (an array of bytes, as CreatorSID is kept) in its text form.

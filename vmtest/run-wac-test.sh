@@ -622,11 +622,23 @@ if [[ $SPLIT -eq 1 ]]; then
 
   fi
 
+  # Windows' audit of the reads of the exhibit store around the conversion
+  # (B-040): it may read the store to check and copy it, never afterwards.
+  $QGA write "$HERE/guest/exhibit-read-audit.ps1" "$VMDIR\\exhibit-read-audit.ps1" >/dev/null
+  AUDIT_SINCE=$($QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\exhibit-read-audit.ps1" -Start "$VMDIR\\split\\exhibits" 2>/dev/null | tr -d '\r' | tail -1)
   if run_wac convert --convert=split $EVENTS_OPTION $BINARY_FLAG --loglevel=2; then
     echo "   ✅ conversion went to the end"
   else
     echo "   ❌ conversion ended abnormally"; ABNORMAL_STOP=1
   fi
+  if [[ -n "$AUDIT_SINCE" ]]; then
+    $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\exhibit-read-audit.ps1" -Stop "$VMDIR\\split\\exhibits" -Since "$AUDIT_SINCE" -Output "$VMDIR\\exhibit-reads.txt" >/dev/null 2>&1 \
+      && $QGA read "$VMDIR\\exhibit-reads.txt" "$OUTPUT/reference/exhibit-reads.txt" >/dev/null 2>&1 \
+      && echo "   + reference/exhibit-reads.txt" || echo "   ⚠️ reads of the exhibit store not listed"
+  else
+    echo "   ⚠️ read audit of the exhibit store not set"
+  fi
+  $QGA run --shell "del /q $VMDIR\\exhibit-reads.txt $VMDIR\\exhibit-read-audit.ps1 >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
   fetch_results split "$SPLIT_OUT"
   cp -r "$OUTPUT/reference" "$SPLIT_OUT/"
   echo "   -- checks of the converted JSON --"

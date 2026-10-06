@@ -402,8 +402,8 @@ Json DefenderDetection::toJson() const {
 HRESULT DefenderDetections::getData() {
 	log(0, L"ℹ️Defender detection history :");
 	for (const auto& [key, exhibit] : ExhibitStoreIndex()) {
-		if (exhibit.file.empty() || key.size() < 3 || key.compare(2, wcslen(DETECTION_FOLDER), DETECTION_FOLDER) != 0) continue;
-		const std::vector<uint8_t> bytes = readExhibit(exhibit.file, DESCRIPTION_MAX);
+		if (exhibit.workingFile.empty() || key.size() < 3 || key.compare(2, wcslen(DETECTION_FOLDER), DETECTION_FOLDER) != 0) continue;
+		const std::vector<uint8_t> bytes = readExhibit(exhibit.workingFile, DESCRIPTION_MAX);
 		DefenderDetection d;
 		d.file = exhibit.sourcePath;
 		if (bytes.empty() || !parseDetectionHistory(bytes, d)) {
@@ -517,8 +517,8 @@ HRESULT DefenderQuarantine::getData() {
 	const auto& index = ExhibitStoreIndex();
 	const std::wstring entries = std::wstring(QUARANTINE_FOLDER) + L"entries\\";
 	for (const auto& [key, exhibit] : index) {
-		if (exhibit.file.empty() || key.size() < 3 || key.compare(2, entries.size(), entries) != 0) continue;
-		const std::vector<uint8_t> bytes = readExhibit(exhibit.file, DESCRIPTION_MAX);
+		if (exhibit.workingFile.empty() || key.size() < 3 || key.compare(2, entries.size(), entries) != 0) continue;
+		const std::vector<uint8_t> bytes = readExhibit(exhibit.workingFile, DESCRIPTION_MAX);
 		QuarantineEntry entry;
 		entry.file = exhibit.sourcePath;
 		entry.entryId = std::filesystem::path(exhibit.sourcePath).filename().wstring();
@@ -531,7 +531,7 @@ HRESULT DefenderQuarantine::getData() {
 			const std::wstring sha1 = toLower(r.resourceDataSha1());
 			if (sha1.size() != 40) continue;
 			const auto data = index.find(key.substr(0, 2) + QUARANTINE_FOLDER + L"resourcedata\\" + sha1.substr(0, 2) + L"\\" + sha1);
-			if (data != index.end() && !data->second.file.empty() && !fingerprintContent(data->second.file, r))
+			if (data != index.end() && !data->second.workingFile.empty() && !fingerprintContent(data->second.workingFile, r))
 				log(2, L"🔥Quarantined content not read: " + data->second.sourcePath);
 		}
 		entries_.push_back(std::move(entry));

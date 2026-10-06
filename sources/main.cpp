@@ -181,7 +181,7 @@ HRESULT prepareConversion() {
 	}
 	size_t copies = 0;
 	unsigned long long bytes = 0;
-	hr = ExhibitStoreToWorking(&copies, &bytes, true);   // the binaries are read in the store
+	hr = ExhibitStoreToWorking(&copies, &bytes);
 	auditRecord(L"Copy of the exhibit store into the working directory (" + std::to_wstring(copies)
 	            + L" file(s), " + std::to_wstring(bytes / 1024 / 1024) + L" MiB)",
 	            exhibitStoreFolder() + L" -> " + workingFolder(), hr, Footprint::USB_WRITE);
@@ -407,7 +407,7 @@ void extractProfileArtefacts() {
 	if (FAILED(hresult)) printError(hresult);
 	else printSuccess();
 
-	// $MFT, change journal, $LogFile: the file system's timeline (read in place by the conversion).
+	// $MFT, change journal, $LogFile: the file system's timeline.
 	if (conf.artefacts.mft || conf.artefacts.usnJournal || conf.artefacts.logFile || conf.artefacts.zoneIdentifiers
 	    || conf.artefacts.securityDescriptors || conf.artefacts.ntfsVolumes) {
 		printStep(Text::StepNtfsMetadata);
@@ -423,6 +423,16 @@ void extractProfileArtefacts() {
 		if (FAILED(hresult) && hresult != HRESULT_FROM_WIN32(ERROR_EMPTY)) printError(hresult);
 		else printSuccess();
 	}
+	/* The last extractions ($MFT, change journal, FAT metadata) into the
+	   working directory too: the conversion reads every collected file there,
+	   never in the exhibit store (backlog B-040). */
+	size_t copies = 0;
+	unsigned long long bytes = 0;
+	const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &bytes);
+	auditRecord(L"Copy of the exhibit store into the working directory (" + std::to_wstring(copies)
+	            + L" file(s), " + std::to_wstring(bytes / 1024 / 1024) + L" MiB)",
+	            exhibitStoreFolder() + L" -> " + workingFolder(), hrCopy, Footprint::USB_WRITE);
+	if (FAILED(hrCopy)) log(2, L"🔥Working copy of the last extractions failed: their artefacts will be missing", hrCopy);
 }
 
 /*! Loads the trust set of the key, which clears third-party signatures
@@ -492,8 +502,7 @@ void closeBinaries() {
 	printStep(Text::StepCopyBinaries);
 	size_t copies = 0;
 	unsigned long long copiedBytes = 0;
-	// What the conversion reads in place ($MFT, change journal) stays in the store.
-	const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &copiedBytes, true);
+	const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &copiedBytes);
 	auditRecord(L"Copy of the exhibit store into the working directory ("
 	            + std::to_wstring(copies) + L" file(s), "
 	            + std::to_wstring(copiedBytes / 1024 / 1024) + L" MiB)",

@@ -92,15 +92,15 @@ HRESULT ErrorReports::getData() {
 	log(0, L"ℹ️Error reports :");
 	// Through the manifest: the machine's reports and every profile's, on whichever volume.
 	for (const auto& [key, exhibit] : ExhibitStoreIndex()) {
-		if (exhibit.file.empty() || key.size() < 11 || key.compare(key.size() - 11, 11, L"\\report.wer") != 0
+		if (exhibit.workingFile.empty() || key.size() < 11 || key.compare(key.size() - 11, 11, L"\\report.wer") != 0
 		    || key.find(L"\\microsoft\\windows\\wer\\") == std::wstring::npos) continue;
 		std::error_code ec;
-		const uintmax_t size = std::filesystem::file_size(exhibit.file, ec);
+		const uintmax_t size = std::filesystem::file_size(exhibit.workingFile, ec);
 		if (ec || size > REPORT_MAX) {
 			log(2, L"🔥Error report not read (unreadable or larger than 4 MiB): " + exhibit.sourcePath);
 			continue;
 		}
-		std::ifstream in(std::filesystem::path(exhibit.file), std::ios::binary);
+		std::ifstream in(std::filesystem::path(exhibit.workingFile), std::ios::binary);
 		const std::string bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 		ErrorReport report;
 		report.file = exhibit.sourcePath;

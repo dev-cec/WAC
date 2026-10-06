@@ -169,8 +169,11 @@ void ExhibitStoreAddFingerprint(const RawHiveExtraction& e, const std::wstring& 
                                 const SignatureVerdict& verdict);
 
 /*! Copies the exhibit store to the working directory, verifying the copy.
- *  @param skipReadInPlace leaves out the exhibits marked READ_IN_PLACE
- *         (--convert)
+ *  EVERYTHING is copied, the large files ($MFT, change journal, collected
+ *  binaries) included: once copied, the exhibit store is touched no more,
+ *  not even read — every reading of a collected file goes to its working
+ *  copy (backlog B-040). Called after each extraction phase; a file already
+ *  in the working directory is not copied again.
  *
  *  Each file is copied, then ITS COPY is hashed again and compared with the
  *  manifest's fingerprint. Without this check, a silently truncated copy — full
@@ -183,16 +186,7 @@ void ExhibitStoreAddFingerprint(const RawHiveExtraction& e, const std::wstring& 
  *  @return ERROR_SUCCESS, S_FALSE if at least one file could not be copied or
  *          verified, or an error code if the exhibit store is missing
  */
-HRESULT ExhibitStoreToWorking(size_t* copies = nullptr, unsigned long long* bytes = nullptr,
-                              bool skipReadInPlace = false);
-
-/*! Mark carried by the method of the exhibits a conversion reads IN PLACE,
- *  from the exhibit store, and never from the working directory: the
- *  executables and catalogs of --collect --binary (read by ExhibitReader),
- *  the resource files of the event providers (copied on demand). Rebuilding
- *  the working directory of a --convert without them spares copying some
- *  twenty gigabytes to no purpose. */
-extern const wchar_t READ_IN_PLACE[];
+HRESULT ExhibitStoreToWorking(size_t* copies = nullptr, unsigned long long* bytes = nullptr);
 
 /*! Outcome of the check of an exhibit store before a conversion. */
 struct ExhibitStoreCheck {
@@ -226,7 +220,7 @@ HRESULT ExhibitStoreLoad(ExhibitStoreCheck& check);
 /*! An exhibit of a loaded manifest (see ExhibitStoreIndex). */
 struct StoredExhibit {
 	std::wstring sourcePath;   //!< the file on the examined machine ("X:\…"), as recorded
-	std::wstring file;         //!< the file holding its content, in the exhibit store; empty if not stored
+	std::wstring workingFile;  //!< its WORKING copy, the only file to read; empty if its content was not stored
 	bool contentStored = true; //!< false: fingerprinted and authenticated only
 	std::wstring md5, sha1, sha256;   //!< its fingerprints, as recorded (absent for a fingerprint-only PE)
 	std::wstring authenticodeSha256;  //!< Authenticode SHA-256 of a PE, if recorded
@@ -257,6 +251,13 @@ const std::map<std::wstring, StoredExhibit>& ExhibitStoreIndex();
  *  @param created,modified,accessed receive them (left untouched if absent)
  *  @return false if the copy has no exhibit, or it recorded no date */
 bool ExhibitSourceTimes(const std::wstring& workingCopy, FILETIME& created, FILETIME& modified, FILETIME& accessed);
+
+/*! Whether a file of the exhibit store was written there by this run, from
+ *  what WAC recorded — the store itself is not looked at: once copied, it is
+ *  touched no more (backlog B-040).
+ *  @param storedPath the file in the exhibit store
+ *  @return true if an exhibit holds it */
+bool ExhibitStoreHolds(const std::wstring& storedPath);
 
 /*! Writes `exhibits\MANIFEST.json` then its seal `exhibits\MANIFEST.sha256`.
  *

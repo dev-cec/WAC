@@ -20,7 +20,8 @@ HRESULT writeLiveSnapshot(const std::string& name, const Json& value, const std:
 }
 
 HRESULT readLiveSnapshot(const std::string& name, Json& value) {
-	const std::wstring path = liveSnapshotFolder() + L"\\" + decodeText(name, CP_UTF8);
+	// Its working copy (written with it, or by the copy of the store): never the exhibit store.
+	const std::wstring path = workingFolder() + L"\\live\\" + decodeText(name, CP_UTF8);
 	std::ifstream f(std::filesystem::path(path), std::ios::binary);
 	if (!f) return ERROR_FILE_NOT_FOUND;
 	std::stringstream buffer;

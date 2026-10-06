@@ -126,14 +126,14 @@ HRESULT UsnJournal::getData(const std::wstring& volume) {
 	log(3, L"🔈usn journal getData " + volume);
 	const auto& index = ExhibitStoreIndex();
 	const auto found = index.find(toLower(volume.substr(0, 2) + L"\\$Extend\\$UsnJrnl:$J"));
-	if (found == index.end() || found->second.file.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	if (found == index.end() || found->second.workingFile.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 	/* Read in one block, at the file's size: the journal's allocated part
 	   weighs tens to hundreds of megabytes on a busy machine, which a byte-wise
 	   stream iterator reads slowly. */
 	std::error_code ec;
-	const uintmax_t size = std::filesystem::file_size(std::filesystem::path(found->second.file), ec);
+	const uintmax_t size = std::filesystem::file_size(std::filesystem::path(found->second.workingFile), ec);
 	if (ec) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-	std::ifstream in(std::filesystem::path(found->second.file), std::ios::binary);
+	std::ifstream in(std::filesystem::path(found->second.workingFile), std::ios::binary);
 	if (!in) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 	std::vector<uint8_t> data((size_t)size);
 	if (!in.read(reinterpret_cast<char*>(data.data()), (std::streamsize)data.size()))

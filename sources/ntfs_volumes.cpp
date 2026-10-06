@@ -39,8 +39,8 @@ uint32_t clustersOrPower(uint8_t raw, uint32_t bytesPerCluster) {
 bool readExhibit(const std::wstring& key, std::vector<uint8_t>& bytes) {
 	const auto& index = ExhibitStoreIndex();
 	const auto found = index.find(toLower(key));
-	if (found == index.end() || found->second.file.empty()) return false;
-	std::ifstream in(std::filesystem::path(found->second.file), std::ios::binary);
+	if (found == index.end() || found->second.workingFile.empty()) return false;
+	std::ifstream in(std::filesystem::path(found->second.workingFile), std::ios::binary);
 	bytes.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
 	return true;
 }

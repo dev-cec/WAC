@@ -231,10 +231,10 @@ HRESULT FatVolumes::getData() {
 	log(0, L"ℹ️FAT and exFAT volumes :");
 	const std::wstring suffix = toLower(METADATA);
 	for (const auto& [key, exhibit] : ExhibitStoreIndex()) {
-		if (exhibit.file.empty() || key.size() != 2 + suffix.size() || key.compare(2, suffix.size(), suffix) != 0) continue;
+		if (exhibit.workingFile.empty() || key.size() != 2 + suffix.size() || key.compare(2, suffix.size(), suffix) != 0) continue;
 		CopiedVolumeSource source;
 		FatVolume volume;
-		if (!source.load(exhibit.file) || !volume.open(source)) {
+		if (!source.load(exhibit.workingFile) || !volume.open(source)) {
 			log(2, L"🔥FAT/exFAT metadata not read: " + exhibit.sourcePath);
 			continue;
 		}

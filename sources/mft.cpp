@@ -192,8 +192,8 @@ HRESULT Mft::getData(const std::wstring& volume) {
 	log(3, L"🔈mft getData " + volume);
 	const auto& index = ExhibitStoreIndex();
 	const auto found = index.find(toLower(volume.substr(0, 2) + L"\\$MFT"));
-	if (found == index.end() || found->second.file.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-	file_ = found->second.file;
+	if (found == index.end() || found->second.workingFile.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	file_ = found->second.workingFile;
 	volume_ = volume.substr(0, 2);
 	// Bytes per record, from record 0 ($MFT itself): 1024 or 4096 on the volumes Windows formats.
 	{

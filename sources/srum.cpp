@@ -55,8 +55,8 @@ HRESULT Srum::getData() {
 	log(0, L"ℹ️SRUM :");
 	const auto& index = ExhibitStoreIndex();
 	const auto found = index.find(toLower(conf.systemDrive.substr(0, 2)) + DATABASE);
-	if (found == index.end() || found->second.file.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-	const HRESULT opened = database_.open(found->second.file);
+	if (found == index.end() || found->second.workingFile.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	const HRESULT opened = database_.open(found->second.workingFile);
 	if (opened != ERROR_SUCCESS) return opened;
 	if (database_.dirtyShutdown())
 		log(1, L"⚠️SRUDB.dat copied live (dirty shutdown): the last hour is in SRU*.log, in the exhibit store, not in srum.json");

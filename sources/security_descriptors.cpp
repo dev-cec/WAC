@@ -74,11 +74,11 @@ HRESULT SecurityDescriptors::getData() {
 	for (const std::wstring& drive : fixedNtfsVolumes()) {
 		const std::wstring volume = drive.substr(0, 2);
 		const auto found = index.find(toLower(volume + L"\\$Secure:$SDS"));
-		if (found == index.end() || found->second.file.empty()) {
+		if (found == index.end() || found->second.workingFile.empty()) {
 			log(2, L"🔥$SDS not collected for " + volume);
 			continue;
 		}
-		std::ifstream in(std::filesystem::path(found->second.file), std::ios::binary);
+		std::ifstream in(std::filesystem::path(found->second.workingFile), std::ios::binary);
 		const std::vector<uint8_t> stream((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 		std::vector<SecurityDescriptorEntry> entries = parseSds(stream.data(), stream.size(), volume);
 		log(2, L"❇️" + volume + L" : " + std::to_wstring(entries.size()) + L" descriptor(s)");

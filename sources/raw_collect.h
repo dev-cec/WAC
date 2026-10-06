@@ -83,9 +83,9 @@ HRESULT ExtractFileArtefactsRaw();
  *  (artefacts.mft, usn_journal, log_file). The change journal needs the
  *  `$MFT` for its paths: it is extracted for either.
  *
- *  These files weigh up to gigabytes: they are read IN PLACE by the
- *  conversion, from the exhibit store, and not copied to the working
- *  directory (READ_IN_PLACE).
+ *  These files weigh up to gigabytes, and are copied to the working
+ *  directory like every exhibit: the conversion reads them there, never in
+ *  the exhibit store (backlog B-040).
  *
  *  @return S_OK, S_FALSE if one could not be extracted, or ERROR_EMPTY if
  *          none is asked for */

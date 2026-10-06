@@ -616,6 +616,12 @@ message rendered by Windows itself (\texttt{EvtFormatMessage}, through
   by an array or an empty leaf; manifests moved to \fichier{SystemResources};
   in a separate collection, classic sources and system tables not collected,
   \texttt{CurrentControlSet} never opened \\
+Windows' access audit (read audit rule on the exhibit store of the separate
+  collection, Security events 4663) / reads of the store by \texttt{WAC.exe}
+  during the conversion, compared with the instant of its working copy
+  (\fichier{conversion.json}): 1,458 reads, all before, none after &
+  some fifteen modules read the exhibits in the store; the \fichier{\$MFT},
+  the change journal and the binaries stayed there ``read in place'' \\
 witness shortcut on the public desktop and shortcut pinned to the task bar
   (target, arguments, location); shortcuts Windows lists in the Start menus,
   desktops and Quick Launch / \fichier{shortcuts.json} (93 shortcuts with those of the Default profile and of the redirected desktop, no

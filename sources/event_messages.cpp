@@ -96,12 +96,13 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 	/* Already in the exhibit store — collected as a binary cited by an artefact
 	   (--binary), and not yet copied into the working directory: it is not
 	   extracted again, which would rewrite a sealed exhibit and declare it
-	   twice. */
-	if (std::filesystem::exists(target, ec)) {
-		if (!isValidPe(target)) return std::wstring();
+	   twice. Its working copy is made — its first and only reading in the
+	   store — and checked there (backlog B-040). A conversion has copied the
+	   whole store already and never comes here. */
+	if (conf.mode != RunMode::Convert && ExhibitStoreHolds(target)) {
 		std::filesystem::create_directories(std::filesystem::path(working).parent_path(), ec);
 		std::filesystem::copy_file(target, working, std::filesystem::copy_options::skip_existing, ec);
-		return ec ? std::wstring() : working;
+		return ec || !isValidPe(working) ? std::wstring() : working;
 	}
 	/* A conversion reads the collection, never a volume: the file is found
 	   through the manifest (it may share an exhibit stored under another
@@ -111,9 +112,9 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 	if (conf.mode == RunMode::Convert) {
 		const std::map<std::wstring, StoredExhibit>& index = ExhibitStoreIndex();
 		const auto stored = index.find(toLower(absolutePath));
-		if (stored == index.end() || !isValidPe(stored->second.file)) return std::wstring();
+		if (stored == index.end() || !isValidPe(stored->second.workingFile)) return std::wstring();
 		std::filesystem::create_directories(std::filesystem::path(working).parent_path(), ec);
-		std::filesystem::copy_file(stored->second.file, working, std::filesystem::copy_options::skip_existing, ec);
+		std::filesystem::copy_file(stored->second.workingFile, working, std::filesystem::copy_options::skip_existing, ec);
 		return ec ? std::wstring() : working;
 	}
 	std::filesystem::create_directories(std::filesystem::path(target).parent_path(), ec);
@@ -135,7 +136,7 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 		return std::wstring();
 	}
 	ExhibitStoreAdd(reading, L"Raw NTFS reading (\\\\.\\" + volume
-	                        + L": — resource file of an event provider)" + READ_IN_PLACE);
+	                        + L": — resource file of an event provider)");
 	const bool rawReadOk = SUCCEEDED(hr);
 	if (!rawReadOk)
 		log(3, L"🔈Raw reading unsuccessful, fallback expected: " + absolutePath);
@@ -149,17 +150,22 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 	    system. A file that stays unreadable is so for another reason — absent,
 	    or damaged — and it is reported as such rather than read by a route
 	    that would leave a trace. */
-	if (!rawReadOk || !isValidPe(target)) {
+	if (!rawReadOk) {
 		log(2, L"🔥Resource binary unreadable by raw reading: " + absolutePath);
 		return std::wstring();
 	}
 
-	// Copy into the working directory: that is where the reading will happen.
+	/* Copy into the working directory — the exhibit's first and only reading
+	   in the store —, where it is checked and read (backlog B-040). */
 	std::filesystem::create_directories(std::filesystem::path(working).parent_path(), ec);
 	std::filesystem::copy_file(target, working,
 	                           std::filesystem::copy_options::overwrite_existing, ec);
 	if (ec) {
 		log(2, L"🔥Cannot make the working copy: " + working);
+		return std::wstring();
+	}
+	if (!isValidPe(working)) {
+		log(2, L"🔥Resource binary unreadable by raw reading: " + absolutePath);
 		return std::wstring();
 	}
 	return working;

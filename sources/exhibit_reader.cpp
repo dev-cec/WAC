@@ -20,7 +20,7 @@ HRESULT ExhibitReader::read(const std::wstring& absolutePath, const std::wstring
 	const std::map<std::wstring, StoredExhibit>& index = ExhibitStoreIndex();
 	const auto found = index.find(toLower(absolutePath));
 	if (found == index.end()) return line.result = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-	std::ifstream in(std::filesystem::path(found->second.file), std::ios::binary);
+	std::ifstream in(std::filesystem::path(found->second.workingFile), std::ios::binary);
 	if (!in) return line.result = HRESULT_FROM_WIN32(ERROR_READ_FAULT);   // listed, yet missing: altered store
 	std::ofstream out;
 	if (!output.empty()) {
@@ -73,7 +73,7 @@ HRESULT ExhibitReader::list(const std::wstring& absoluteFolder, std::vector<RawD
 		d.name = name;
 		d.isDirectory = separator != std::wstring::npos;
 		std::error_code ec;
-		if (!d.isDirectory) d.size = (uint64_t)std::filesystem::file_size(std::filesystem::path(it->second.file), ec);
+		if (!d.isDirectory) d.size = (uint64_t)std::filesystem::file_size(std::filesystem::path(it->second.workingFile), ec);
 		d.mftIndex = ++rank;   // no $MFT here: a rank, unique within the listing
 		entries.push_back(std::move(d));
 	}

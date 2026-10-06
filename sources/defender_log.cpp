@@ -60,21 +60,21 @@ Json DefenderLog::toJson() const {
 HRESULT DefenderLogs::getData() {
 	log(0, L"ℹ️Defender support logs :");
 	for (const auto& [key, exhibit] : ExhibitStoreIndex()) {
-		if (exhibit.file.empty() || key.size() < 3 || key.compare(2, wcslen(SUPPORT_FOLDER), SUPPORT_FOLDER) != 0) continue;
+		if (exhibit.workingFile.empty() || key.size() < 3 || key.compare(2, wcslen(SUPPORT_FOLDER), SUPPORT_FOLDER) != 0) continue;
 		const std::wstring name = std::filesystem::path(key).filename().wstring();
 		if (name.compare(0, 6, L"mplog-") != 0) continue;
 		std::error_code ec;
-		const uintmax_t size = std::filesystem::file_size(exhibit.file, ec);
+		const uintmax_t size = std::filesystem::file_size(exhibit.workingFile, ec);
 		if (ec || size > LOG_MAX) {
 			log(2, L"🔥Defender log not read (unreadable or larger than 256 MiB): " + exhibit.sourcePath);
 			continue;
 		}
-		std::ifstream in(std::filesystem::path(exhibit.file), std::ios::binary);
+		std::ifstream in(std::filesystem::path(exhibit.workingFile), std::ios::binary);
 		const std::string bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 		DefenderLog logFile;
 		logFile.path = exhibit.sourcePath;
 		FILETIME created = { 0 }, accessed = { 0 };
-		ExhibitSourceTimes(exhibit.file, created, logFile.sourceModifiedUtc, accessed);
+		ExhibitSourceTimes(exhibit.workingFile, created, logFile.sourceModifiedUtc, accessed);
 		// UTF-16LE with its byte-order mark, as Defender writes it; UTF-8 otherwise.
 		const bool utf16 = bytes.size() >= 2 && (uint8_t)bytes[0] == 0xFF && (uint8_t)bytes[1] == 0xFE;
 		logFile.lines = parseDefenderLog(utf16 ? readWideZ(reinterpret_cast<const BYTE*>(bytes.data()), bytes.size(), 2)

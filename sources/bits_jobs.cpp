@@ -194,9 +194,9 @@ HRESULT BitsJobs::getData() {
 	log(0, L"ℹ️BITS jobs :");
 	const auto& index = ExhibitStoreIndex();
 	const auto found = index.find(toLower(conf.systemDrive.substr(0, 2)) + DATABASE);
-	if (found == index.end() || found->second.file.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	if (found == index.end() || found->second.workingFile.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 	EseDatabase database;
-	const HRESULT opened = database.open(found->second.file);
+	const HRESULT opened = database.open(found->second.workingFile);
 	if (opened != ERROR_SUCCESS) return opened;
 	// Each row: its GUID (column 1) and its blob (column 256).
 	auto rows = [&](const wchar_t* name, auto&& visit) {

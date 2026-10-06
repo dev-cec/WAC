@@ -307,6 +307,7 @@ def cross_checks(folder):
     found += guarded(check_activities_cache, folder)
     found += guarded(check_search_index, folder)
     found += guarded(check_event_messages, folder)
+    found += guarded(check_exhibit_reads_after_copy, folder)
     return found
 
 
@@ -2449,6 +2450,38 @@ def check_event_messages(folder):
     print(f"  {'✅' if ok else '❌'} events.json: {counts['identical']} kind(s) of event out of {rendered} with the message Windows renders "
           f"({share:.1%}; {counts['different']} different, {counts['missing']} without a message)"
           + ("" if ok else f": {differing[:5]}"))
+    return 0 if ok else 1
+
+
+def check_exhibit_reads_after_copy(folder):
+    """The exhibit store is not read once copied to the working directory
+    (B-040): every collected file is read in its working copy.
+
+    The reference is Windows' own object-access audit: before the conversion
+    of the separate collection, the harness puts a read audit (SACL) on its
+    exhibit store and lists afterwards each read by WAC.exe (Security event
+    4663, reference/exhibit-reads.txt: instant UTC|file). The conversion
+    reads the store to check it and to copy it — those reads must all come
+    before the last "Copy of the exhibit store into the working directory"
+    of conversion.json, and none after. No read at all would mean the audit
+    did not work: the check then fails rather than pass by default."""
+    path = os.path.join(folder, "reference", "exhibit-reads.txt")
+    log = load(folder, "conversion.json")
+    if not os.path.exists(path) or not isinstance(log, dict):
+        print("  ⏭️  reference/exhibit-reads.txt or conversion.json absent: reads of the exhibit store not checked")
+        return 0
+    copies = [o.get("TimestampUtc") for o in log.get("Operations", [])
+              if str(o.get("Operation", "")).startswith("Copy of the exhibit store into the working directory")]
+    if not copies:
+        print("  ❌ conversion.json: no copy of the exhibit store into the working directory recorded")
+        return 1
+    copied = max(copies)[:27]   # to the 100 ns, as both logs write it
+    with open(path, encoding="utf-8-sig", errors="replace") as f:
+        reads = [l.rstrip("\r\n").split("|", 1) for l in f if "|" in l]
+    after = [r for r in reads if r[0][:27] > copied]
+    ok = bool(reads) and not after
+    print(f"  {'✅' if ok else '❌'} exhibit store: {len(reads)} read(s) by WAC.exe before its working copy ({copied}Z), "
+          f"{len(after)} after" + ("" if ok else (": the audit recorded no read at all" if not reads else f": {after[:3]}")))
     return 0 if ok else 1
 
 

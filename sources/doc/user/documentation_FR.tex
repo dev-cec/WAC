@@ -140,14 +140,17 @@ abîme quelque chose, la copie scellée demeure et l'opération peut être refai
 ceux qu'il ne modifie pas :
 
 \begin{description}[style=nextline,leftmargin=1.2em]
-  \item[\fichier{exhibits/}] les copies brutes, telles que lues sur le volume. Ce
-        répertoire n'est plus jamais rouvert en écriture après l'extraction. Il
-        contient le manifeste qui identifie chaque pièce, et le sceau du
-        manifeste.
+  \item[\fichier{exhibits/}] les copies brutes, telles que lues sur le volume. Une
+        fois recopié dans la copie de travail, ce répertoire n'est plus touché,
+        ni en écriture ni en lecture : seule la vérification de son intégrité,
+        avant la recopie d'une conversion, le relit. Il contient le manifeste
+        qui identifie chaque pièce, et le sceau du manifeste.
   \item[\fichier{working/}] les copies de travail, recopiées depuis la consigne
-        et vérifiées par empreinte. C'est ici que sont faites les seules
-        modifications (rejeu des journaux de transaction des ruches), et c'est ici
-        que lisent tous les collecteurs.
+        et vérifiées par empreinte — toutes, \fichier{\$MFT}, journal des
+        modifications et binaires prélevés compris, ce qui double leur place sur
+        le support. C'est ici que sont faites les seules modifications (rejeu
+        des journaux de transaction des ruches), et c'est ici que lisent tous
+        les collecteurs.
 \end{description}
 
 \begin{note}
@@ -185,7 +188,7 @@ propre volume.
 Quelques informations décrivent l'instant même de la collecte et ne figurent
 dans aucun fichier. Elles sont lues en direct, en une seule requête chacune, et
 enregistrées telles que lues dans la consigne (\fichier{exhibits\textbackslash
-live}), où la conversion les relit :
+live}) et en même temps dans la copie de travail, où la conversion les relit :
 
 \begin{itemize}
   \item la liste des \textbf{processus} en cours (instantané du noyau) ;

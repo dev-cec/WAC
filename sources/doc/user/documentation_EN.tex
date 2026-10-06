@@ -140,12 +140,15 @@ it does not modify. The two directories keep their French names in the output:
 
 \begin{description}[style=nextline,leftmargin=1.2em]
   \item[\fichier{exhibits/} — the exhibit store] the raw copies, as read from
-        the volume. This directory is never reopened for writing after
-        extraction. It holds the manifest identifying each exhibit, and the
-        manifest's seal.
+        the volume. Once copied to the working copy, this directory is touched
+        no more, neither written nor read: only the check of its integrity,
+        before a conversion copies it, reads it again. It holds the manifest
+        identifying each exhibit, and the manifest's seal.
   \item[\fichier{working/} — the working copy] copied from the exhibit store and
-        verified by fingerprint. The only modifications (replay of the hives'
-        transaction logs) are made here, and every collector reads from here.
+        verified by fingerprint — all of it, \fichier{\$MFT}, change journal and
+        collected binaries included, which doubles their room on the medium.
+        The only modifications (replay of the hives' transaction logs) are made
+        here, and every collector reads from here.
 \end{description}
 
 \begin{note}
@@ -180,8 +183,8 @@ volume.
 
 A few pieces of information describe the very moment of the collection and
 are held in no file. They are read live, with a single query each, and
-recorded as read in the exhibit store (\fichier{exhibits\textbackslash live}),
-where the conversion reads them back:
+recorded as read in the exhibit store (\fichier{exhibits\textbackslash live})
+and at once in the working copy, where the conversion reads them back:
 
 \begin{itemize}
   \item the running \textbf{processes} (a kernel snapshot);

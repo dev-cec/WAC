@@ -685,8 +685,7 @@ HRESULT ExtractNtfsMetadataRaw() {
 	for (const std::wstring& drive : fixedNtfsVolumes()) {
 		const std::wstring volume = drive.substr(0, 1);
 		const std::wstring method = L"Raw NTFS reading (\\\\.\\" + volume
-		                          + L": — $MFT record, $DATA attribute); no file opened by the system"
-		                          + READ_IN_PLACE;
+		                          + L": — $MFT record, $DATA attribute); no file opened by the system";
 		RawHiveSetProgress(&reportProgress);
 		std::vector<std::pair<std::wstring, std::wstring>> items;
 		if (mft) items.push_back({ L"\\$MFT", exhibitTarget(drive + L"\\$MFT") });

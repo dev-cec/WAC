@@ -638,6 +638,14 @@ message rendu par Windows lui-même (\texttt{EvtFormatMessage}, par
   vide ; manifestes déplacés dans \fichier{SystemResources} ; en collecte
   séparée, sources classiques et tables du système non prélevées,
   \texttt{CurrentControlSet} jamais ouvert \\
+audit des accès de Windows (règle d'audit de lecture sur la consigne de la
+  collecte séparée, événements 4663 du journal Security) / lectures de la
+  consigne par \texttt{WAC.exe} pendant la conversion, comparées à l'instant
+  de sa recopie (\fichier{conversion.json}) : 1~458 lectures, toutes avant,
+  aucune après &
+  une quinzaine de modules lisaient les pièces dans la consigne, la
+  \fichier{\$MFT}, le journal des modifications et les binaires y restaient
+  « lus sur place » \\
 raccourci témoin du Bureau public et raccourci épinglé à la barre des tâches
   (cible, arguments, emplacement) ; raccourcis listés par Windows dans les
   menus Démarrer, Bureaux et Quick Launch / \fichier{shortcuts.json}
