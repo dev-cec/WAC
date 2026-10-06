@@ -435,6 +435,17 @@ $QGA run -- powershell.exe -NoProfile -Command \
   && echo "   + reference/accounts.txt" || echo "   ⚠️ accounts reference not read"
 fi
 
+# The message Windows itself renders (EvtFormatMessage) for each kind of
+# event of the machine, the reference of events.json's messages (B-023). The
+# script only reads the logs; its output is fetched, then removed from the VM.
+if wants events; then
+  $QGA write "$HERE/guest/event-messages-reference.ps1" "$VMDIR\\event-messages-reference.ps1" >/dev/null \
+  && $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\event-messages-reference.ps1" -Output "$VMDIR\\event-messages.txt" >/dev/null 2>&1 \
+  && $QGA read "$VMDIR\\event-messages.txt" "$OUTPUT/reference/event-messages.txt" >/dev/null 2>&1 \
+  && echo "   + reference/event-messages.txt" || echo "   ⚠️ event messages reference not read"
+  $QGA run --shell "del /q $VMDIR\\event-messages.txt $VMDIR\\event-messages-reference.ps1 >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
+fi
+
 echo "== 6. JSON validity check == ($(date +%H:%M:%S))"
 python3 "$HERE/lib/check-json.py" "$OUTPUT" || echo "   ⚠️ some JSON files are invalid (see above)"
 

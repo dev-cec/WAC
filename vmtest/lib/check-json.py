@@ -306,6 +306,7 @@ def cross_checks(folder):
     found += guarded(check_web_client, folder)
     found += guarded(check_activities_cache, folder)
     found += guarded(check_search_index, folder)
+    found += guarded(check_event_messages, folder)
     return found
 
 
@@ -2392,6 +2393,63 @@ def check_search_index(folder):
           f"(indexed again after Windows was asked {later}, Windows only {len(items) - both - later}, "
           f"WAC only {len(store) - both - later})" + ("" if ok else f": {mismatches[:3]}"))
     return found + (0 if ok else 1)
+
+
+def check_event_messages(folder):
+    """events.json's messages against the one Windows renders itself
+    (EvtFormatMessage, through Get-WinEvent) for each kind of event of the
+    machine — provider, identifier, version, qualifiers — on the same record.
+
+    The dates inserted in a message are compared without Windows' direction
+    marks (U+200E) and to the 100 ns (Windows writes 9 decimals, WAC 7): a
+    difference of presentation, not of value. The rest must be identical,
+    whitespace runs aside. A residue is explained (documented in the
+    validation file: Windows' own deviations from a manifest, a satellite on
+    disk older than its binary); the check fails below 90 % of identical
+    kinds among those Windows gives a message — the wrong step of the
+    WEVT_TEMPLATE once left 28 %."""
+    import re
+    path = os.path.join(folder, "reference", "event-messages.txt")
+    if not os.path.exists(path):
+        print("  ⏭️  reference/event-messages.txt absent: event messages not confronted")
+        return 0
+    def unescape(text):   # "\\" "\r" "\n", as event-messages-reference.ps1 writes them
+        return re.sub(r"\\(.)", lambda m: {"r": "\r", "n": "\n"}.get(m.group(1), m.group(1)), text)
+    reference = {}
+    with open(path, encoding="utf-8-sig", errors="replace") as f:
+        for line in f:
+            parts = line.rstrip("\r\n").split("|", 6)
+            if len(parts) == 7:
+                reference[(parts[4].lower(), parts[5])] = (parts[0], parts[1], unescape(parts[6]))
+    events = load(folder, "events.json")
+    if not isinstance(events, list):
+        print("  ⏭️  no events.json: event messages not confronted")
+        return 0
+    dates = re.compile(r"\u200e?(\d{4})\u200e?-\u200e?(\d\d)\u200e?-\u200e?(\d\dT\d\d:\d\d:\d\d)\.(\d{7})\d*Z")
+    def norm(text):
+        text = dates.sub(lambda m: f"{m.group(1)}-{m.group(2)}-{m.group(3)}.{m.group(4)}Z", text or "")
+        return re.sub(r"\s+", " ", text.replace("\u200e", "")).strip()
+    counts = collections.Counter()
+    differing = []
+    for e in events:
+        r = reference.get(((e.get("EvtSystemChannel") or "").lower(), str(e.get("EvtSystemEventRecordId"))))
+        if not r or not r[2]:
+            continue
+        mine = e.get("EvtEventMessage") or ""
+        if not mine:
+            counts["missing"] += 1
+        elif norm(mine) == norm(r[2]):
+            counts["identical"] += 1
+        else:
+            counts["different"] += 1
+            differing.append(f"{r[0]} {r[1]}")
+    rendered = sum(counts.values())
+    share = counts["identical"] / rendered if rendered else 0
+    ok = rendered > 0 and share >= 0.90
+    print(f"  {'✅' if ok else '❌'} events.json: {counts['identical']} kind(s) of event out of {rendered} with the message Windows renders "
+          f"({share:.1%}; {counts['different']} different, {counts['missing']} without a message)"
+          + ("" if ok else f": {differing[:5]}"))
+    return 0 if ok else 1
 
 
 def check_firefox_places(folder, store, records):
