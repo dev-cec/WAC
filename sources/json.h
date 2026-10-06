@@ -22,6 +22,8 @@
  *      return o.dump(1);
  */
 #pragma once
+#include <cmath>
+#include <cwchar>
 #include <type_traits>
 #include <string>
 #include <vector>
@@ -89,6 +91,17 @@ public:
     template <typename T,
               typename = std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>>>
     static Json num(T v)                   { Json j(Kind::Num);  j.scalar_ = std::to_wstring(v); return j; }
+    /*! A floating-point number, with the 17 significant digits that give the
+     *  same double back. NaN and infinities have no JSON form: null, which
+     *  `add` does not emit.
+     *  @param v the number.
+     *  @return that number, unquoted. */
+    static Json real(double v) {
+        if (!std::isfinite(v)) return Json(Kind::Null);
+        wchar_t text[32];
+        swprintf(text, 32, L"%.17g", v);
+        Json j(Kind::Num); j.scalar_ = text; return j;
+    }
 
     // --- construction ------------------------------------------------------
     /*! Adds a key/value pair to an object — UNLESS the value is empty.

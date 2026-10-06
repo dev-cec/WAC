@@ -35,6 +35,7 @@
 #include "usn_journal.h"
 #include "powershell_history.h"
 #include "activities_cache.h"
+#include "search_index.h"
 #include "setupapi_log.h"
 #include "recycle_bin.h"
 #include "hosts_file.h"
@@ -985,6 +986,9 @@ void convertArtefacts(bool systemAvailable) {
 
 	convertFileArtefact<ActivitiesCaches>(conf.artefacts.activitiesCache, "activities_cache.json", Text::ArtefactActivitiesCache,
 	                         L"artefacts.activities_cache", Text::StepActivitiesCache);
+
+	convertFileArtefact<SearchIndex>(conf.artefacts.searchIndex, "search_index.json", Text::ArtefactSearchIndex,
+	                         L"artefacts.search_index", Text::StepSearchIndex);
 
 	/* SYSTEM INFORMATION, offline.
 	   OUTSIDE the single-exit block above, and not inside it: even without a

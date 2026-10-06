@@ -5,6 +5,7 @@
 #include "consigne.h"
 #include "tools.h"
 #include <atomic>
+#include <cstring>
 #include <filesystem>
 #include "sqlite3.h"
 
@@ -35,6 +36,20 @@ std::vector<uint8_t> SqliteRow::blob(int column) const {
 	const int size = sqlite3_column_bytes(statement_, column);
 	if (!bytes || size <= 0) return {};
 	return std::vector<uint8_t>(bytes, bytes + size);
+}
+
+SqliteType SqliteRow::type(int column) const {
+	switch (sqlite3_column_type(statement_, column)) {
+	case SQLITE_INTEGER: return SqliteType::Integer;
+	case SQLITE_FLOAT:   return SqliteType::Real;
+	case SQLITE_TEXT:    return SqliteType::Text;
+	case SQLITE_BLOB:    return SqliteType::Blob;
+	default:             return SqliteType::Null;
+	}
+}
+
+double SqliteRow::real(int column) const {
+	return sqlite3_column_double(statement_, column);
 }
 
 int SqliteRow::columnCount() const {
@@ -96,6 +111,21 @@ HRESULT SqliteDatabase::open(const std::wstring& file) {
 		close();
 		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
 	}
+	/* Windows Search declares collations of its own ("UNICODE_en-US_LINGUISTIC_
+	   IGNORECASE"), which SQLite does not know: a statement touching such a
+	   column would not even prepare. Each one is declared on demand as a
+	   comparison of the bytes. The order it gives may differ from Windows':
+	   it only matters to a lookup through an index of that collation, and the
+	   readers here scan whole tables, never search them by such a key. */
+	const int declared = sqlite3_collation_needed(db_, nullptr, [](void*, sqlite3* db, int encoding, const char* name) {
+		const int created = sqlite3_create_collation(db, name, encoding, nullptr,
+		                                             [](void*, int sizeA, const void* a, int sizeB, const void* b) {
+			const int common = memcmp(a, b, (size_t)(sizeA < sizeB ? sizeA : sizeB));
+			return common ? common : sizeA - sizeB;
+		});
+		if (created != SQLITE_OK) log(2, L"🔥SQLite collation not declared: " + decodeText(name, CP_UTF8));
+	});
+	if (declared != SQLITE_OK) log(2, L"🔥SQLite: unknown collations will not be declared in " + file);
 	// A file that is no database only fails at its first read: check now.
 	if (query("SELECT count(*) FROM sqlite_master", [](const SqliteRow&) {}) != ERROR_SUCCESS) {
 		close();

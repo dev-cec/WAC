@@ -75,3 +75,4 @@ artefacts:
   network_configuration:      true  # network adapters and their last IPv4/IPv6 settings and DHCP leases, read offline
   event_log_configuration:    true  # each event log and boot ETW session: enabled, size, retention, access (a disabled one is a trace)
   activities_cache:           true  # Windows Timeline: applications, files, pages, clipboard (ActivitiesCache.db)
+  search_index:               true  # Windows Search index: path, dates, size, owner, summary of each indexed item, deleted ones included

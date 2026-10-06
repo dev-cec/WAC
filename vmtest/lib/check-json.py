@@ -305,6 +305,7 @@ def cross_checks(folder):
     found += guarded(check_vulnerable_driver, folder)
     found += guarded(check_web_client, folder)
     found += guarded(check_activities_cache, folder)
+    found += guarded(check_search_index, folder)
     return found
 
 
@@ -2332,6 +2333,58 @@ def check_activities_cache(folder):
               f"(WAL replayed), WAC {len(mine)}, identifier, type and times identical" + ("" if ok else f": {wrong[:3]}"))
         found += 0 if ok else 1
     return found
+
+
+def check_search_index(folder):
+    """search_index.json against what Windows' own query of its index
+    (OLE DB, Search.CollatorDSO) returned just before the collection.
+
+    The witness document (unique name and text) must be in the property
+    store with its size and its summary, and in the crawler's table. Every
+    item both list must have the same modification (UTC, to the second, as
+    OLE DB gives it) and size: a FILETIME or a 64-bit integer read wrongly
+    would be valid JSON. Items indexed after the query, or not visible to
+    it, are counted, not failed: the index lives on between the two."""
+    records = load(folder, "search_index.json")
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if not isinstance(records, list) or not os.path.exists(path):
+        print("  ⏭️  no search_index.json or no reference: search index not confronted")
+        return 0
+    with open(path, encoding="utf-8", errors="replace") as f:
+        lines = [l.rstrip("\r\n") for l in f]
+    witness = [l[len("searchwitness="):].split("|", 2) for l in lines if l.startswith("searchwitness=")]
+    items = [l[len("searchitem="):].split("|") for l in lines if l.startswith("searchitem=")]
+    if not items:
+        print("  ⏭️  Windows' query of its index returned nothing: search index not confronted")
+        return 0
+    store = {(r.get("ItemUrl") or "").lower(): r for r in records if r.get("Table") == "PropertyStore"}
+    found = 0
+    if witness:
+        url, size, summary = witness[0]
+        r = store.get(url.lower(), {})
+        name = url.rsplit("/", 1)[-1].lower()
+        gathered = any((g.get("Url") or "").lower().endswith("/users/wac/documents/" + name) for g in records if g.get("Table") == "Gather")
+        ok = str(r.get("Size")) == size and r.get("SearchAutoSummary") == summary and gathered
+        print(f"  {'✅' if ok else '❌'} search_index.json: the witness document found with its size and summary, and in the crawler's table"
+              + ("" if ok else f": {url} {size} {summary!r}, WAC {r.get('Size')} {r.get('SearchAutoSummary')!r}, gathered {gathered}"))
+        found += 0 if ok else 1
+    else:
+        print("  ❌ search index: the witness document was not indexed in time (reference without searchwitness=)")
+        found += 1
+    both = wrong = 0
+    mismatches = []
+    for url, modified, size in items:
+        r = store.get(url.lower())
+        if r is None:
+            continue
+        both += 1
+        if (modified and not (r.get("DateModifiedUtc") or "").startswith(modified)) or (size and str(r.get("Size")) != size):
+            wrong += 1
+            mismatches.append(f"{url}: {modified} {size}, WAC {r.get('DateModifiedUtc')} {r.get('Size')}")
+    ok = both > 0 and not wrong
+    print(f"  {'✅' if ok else '❌'} search_index.json: {both} item(s) listed by Windows and by WAC, modification and size identical "
+          f"(Windows only {len(items) - both}, WAC only {len(store) - both})" + ("" if ok else f": {mismatches[:3]}"))
+    return found + (0 if ok else 1)
 
 
 def check_firefox_places(folder, store, records):

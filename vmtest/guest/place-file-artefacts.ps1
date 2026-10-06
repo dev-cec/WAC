@@ -1119,3 +1119,38 @@ if (Wants 'web_client') {
         $writable.Close()
     }
 }
+
+# 39. B-010 — Windows Search index: a document of unique name and text in the
+#     Documents of "wac" (an indexed place), waited for until the indexer has
+#     it; then what Windows' own query (OLE DB, Search.CollatorDSO) returns of
+#     every item: URL, modification (UTC, to the second) and size, the
+#     reference of search_index.json.
+if (Wants 'search_index') {
+    $stamp = (Get-Date).ToString('yyyyMMddHHmmss')
+    $name = "wac-search-$stamp.txt"
+    $text = "wacsearchwitness$stamp contenu du document temoin"
+    [IO.File]::WriteAllText("C:\Users\wac\Documents\$name", $text)
+    $query = { param($sql)
+        $connection = New-Object -ComObject ADODB.Connection
+        $connection.Open("Provider=Search.CollatorDSO;Extended Properties='Application=Windows';")
+        $rows = $connection.Execute($sql)
+        $result = @()
+        while (-not $rows.EOF) {
+            $result += ,@(0..($rows.Fields.Count - 1) | ForEach-Object { $rows.Fields.Item($_).Value })
+            $rows.MoveNext()
+        }
+        $connection.Close()
+        return ,$result
+    }
+    $found = $null
+    for ($i = 0; $i -lt 60 -and -not $found; $i++) {
+        Start-Sleep 3
+        $rows = & $query "SELECT System.ItemUrl, System.Size, System.Search.AutoSummary FROM SystemIndex WHERE System.FileName = '$name'"
+        if ($rows.Count -gt 0 -and $rows[0][2]) { $found = $rows[0] }
+    }
+    if ($found) { Write-Output ("searchwitness=" + $found[0] + '|' + $found[1] + '|' + $found[2]) }
+    foreach ($row in (& $query "SELECT System.ItemUrl, System.DateModified, System.Size FROM SystemIndex")) {
+        $modified = if ($row[1] -is [datetime]) { $row[1].ToString('yyyy-MM-ddTHH:mm:ss') } else { '' }
+        Write-Output ("searchitem=" + $row[0] + '|' + $modified + '|' + $row[2])
+    }
+}

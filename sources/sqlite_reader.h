@@ -28,6 +28,10 @@
 struct sqlite3;
 struct sqlite3_stmt;
 
+/*! How SQLite stored one value — whatever the column's declared type, which
+ *  SQLite does not enforce. */
+enum class SqliteType { Null, Integer, Real, Text, Blob };
+
 /*! One row of a query's result. */
 class SqliteRow {
 public:
@@ -41,6 +45,10 @@ public:
 	std::wstring text(int column) const;
 	//! @return the column's bytes (empty for NULL)
 	std::vector<uint8_t> blob(int column) const;
+	//! @return how the value of the column is stored
+	SqliteType type(int column) const;
+	//! @return the column as a floating-point number (0 for NULL)
+	double real(int column) const;
 	//! @return the number of columns of the result
 	int columnCount() const;
 	//! @return the column's name, as the query or the table names it

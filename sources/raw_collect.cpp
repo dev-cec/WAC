@@ -16,6 +16,7 @@
 #include "quickdigest5.h"
 #include "powershell_history.h"
 #include "activities_cache.h"
+#include "search_index.h"
 #include "running_machine.h"
 #include "startup_folders.h"
 #include "shortcuts.h"
@@ -539,6 +540,12 @@ HRESULT ExtractFileArtefactsRaw() {
 	if (conf.artefacts.activitiesCache)
 		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
 			trees.push_back({ std::get<1>(profileEntry) + CONNECTED_DEVICES_FOLDER, {}, 2, L"Timeline (ActivitiesCache.db)" });
+	/* The Windows Search index: its SQLite databases with their -wal (Windows
+	   11), Windows.edb with its ESE logs and checkpoint (Windows 10 and
+	   earlier, collected, not converted), and the crawler's logs. */
+	if (conf.artefacts.searchIndex)
+		trees.push_back({ SEARCH_INDEX_FOLDER, { L".db", L".db-wal", L".db-journal", L".edb", L".log", L".chk", L".jrs",
+		                                         L".crwl", L".gthr" }, 4, L"Windows Search index" });
 	// The browsers: their profiles found by listing, their databases only.
 	if (conf.artefacts.webClient && extractBrowserFiles() != S_OK) global = S_FALSE;
 	/* Shortcuts outside Recent: the Start menu and Quick Launch are trees, the

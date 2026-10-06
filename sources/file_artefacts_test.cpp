@@ -35,6 +35,7 @@
 #include "user_shell_folders.h"
 #include "sqlite_reader.h"
 #include "web_client.h"
+#include "search_index.h"
 #include "registry_common.h"
 #include "sqlite3.h"
 #include "sha.h"
@@ -942,6 +943,24 @@ int wmain() {
 			refused = refused && !decodeIeDownload(std::vector<uint8_t>(copy.data(), copy.data() + copy.size()), none) && !none.find(L"Url");
 		}
 		check(refused, "iedownload: a truncated record refused, nothing emitted");
+	}
+	{
+		// Property-store values as Windows 11's Windows.db stores them (measured on the test VM).
+		Json o = Json::obj();
+		auto text = [&](const wchar_t* k) { const Json* v = o.find(k); return v ? v->text() : std::wstring(L"<absent>"); };
+		addSearchBlob(o, L"DateModified", 64, { 0x77, 0xDB, 0xD2, 0x8C, 0xC4, 0xAD, 0xDC, 0x01 });   // VT_FILETIME
+		addSearchBlob(o, L"Size", 21, { 0x22, 0x0B, 0, 0, 0, 0, 0, 0 });                              // VT_UI8: 2850
+		addSearchBlob(o, L"VolumeId", 72, { 0xFA, 0x16, 0xCA, 0x3D, 0xCE, 0x6C, 0x46, 0x15,
+		                                    0x9B, 0x57, 0x1D, 0x64, 0x41, 0xCB, 0x04, 0x88 });   // VT_CLSID
+		addSearchBlob(o, L"Kind", 65, { 'f', 0, 'o', 0, 'l', 0, 'd', 0, 'e', 0, 'r', 0 });      // UTF-16, no terminator
+		addSearchBlob(o, L"Keywords", 0x101F, { 'a', 0, 0, 0, 'b', 0, 0, 0 });                   // VT_VECTOR | VT_LPWSTR
+		addSearchBlob(o, L"Odd", 65, { 'f', 0, 'o' });                                           // odd size: not UTF-16
+		addSearchBlob(o, L"Zero", 64, { 0, 0, 0, 0, 0, 0, 0, 0 });                               // a zero date: nothing
+		const Json* keywords = o.find(L"Keywords");
+		check(text(L"DateModifiedUtc").compare(0, 19, L"2026-03-06T23:54:20") == 0 && text(L"Size") == L"2850"
+		      && text(L"VolumeId") == L"{3DCA16FA-6CCE-1546-9B57-1D6441CB0488}" && text(L"Kind") == L"folder"
+		      && keywords && keywords->size() == 2 && text(L"Odd") == L"66006F" && !o.find(L"ZeroUtc"),
+		      "search index: FILETIME, VT_UI8, CLSID, UTF-16 text and vector decoded; odd blob in hex; zero date left out");
 	}
 	check(webCacheFile(L"C:\\c\\IE\\", L"L4YBWS0NA4VP7Z24E5E1CFPFBODANLF1", 3, L"wac[1].hta") == L"C:\\c\\IE\\E5E1CFPF\\wac[1].hta"
 	      && webCacheFile(L"C:\\c\\IE\\", L"L4YBWS0NA4VP7Z24E5E1CFPFBODANLF1", 4, L"x") == L"C:\\c\\IE\\BODANLF1\\x"
