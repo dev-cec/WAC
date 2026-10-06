@@ -66,6 +66,19 @@ $wacSid = (New-Object Security.Principal.NTAccount 'wac').Translate([Security.Pr
 # The references go back in UTF-8: some name a file with accents.
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 
+# The Windows Search witness (section 39) is written FIRST: the indexer takes
+# it while the other witnesses are placed, and section 39 has nothing left to
+# wait for — waiting there delayed the collection past what the BAM check
+# allows after the harness's taskkill. One witness at a time: those of earlier
+# cycles are removed, or each cycle would leave one more document in the
+# profile and the index.
+if (Wants 'search_index') {
+    Get-ChildItem -LiteralPath C:\Users\wac\Documents -Filter 'wac-search-*.txt' -Force | Remove-Item -Force
+    $searchStamp = (Get-Date).ToString('yyyyMMddHHmmss')
+    $searchName = "wac-search-$searchStamp.txt"
+    [IO.File]::WriteAllText("C:\Users\wac\Documents\$searchName", "wacsearchwitness$searchStamp contenu du document temoin")
+}
+
 # 1. PowerShell history of the user "wac", under a host name of its own.
 if (Wants 'powershell_history') {
     $history = 'C:\Users\wac\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine'
@@ -1120,16 +1133,14 @@ if (Wants 'web_client') {
     }
 }
 
-# 39. B-010 — Windows Search index: a document of unique name and text in the
-#     Documents of "wac" (an indexed place), waited for until the indexer has
-#     it; then what Windows' own query (OLE DB, Search.CollatorDSO) returns of
-#     every item: URL, modification (UTC, to the second) and size, the
-#     reference of search_index.json.
+# 39. B-010 — Windows Search index: the document written at the start (unique
+#     name and text, in the Documents of "wac", an indexed place), waited for
+#     in case the indexer has not taken it yet; then what Windows' own query
+#     (OLE DB, Search.CollatorDSO) returns of every item — URL, modification
+#     (UTC, to the second), size — and the instant of that query: an item
+#     indexed again after it is no longer comparable.
 if (Wants 'search_index') {
-    $stamp = (Get-Date).ToString('yyyyMMddHHmmss')
-    $name = "wac-search-$stamp.txt"
-    $text = "wacsearchwitness$stamp contenu du document temoin"
-    [IO.File]::WriteAllText("C:\Users\wac\Documents\$name", $text)
+    $name = $searchName
     $query = { param($sql)
         $connection = New-Object -ComObject ADODB.Connection
         $connection.Open("Provider=Search.CollatorDSO;Extended Properties='Application=Windows';")
@@ -1149,6 +1160,7 @@ if (Wants 'search_index') {
         if ($rows.Count -gt 0 -and $rows[0][2]) { $found = $rows[0] }
     }
     if ($found) { Write-Output ("searchwitness=" + $found[0] + '|' + $found[1] + '|' + $found[2]) }
+    Write-Output ("searchquery=" + (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss'))
     foreach ($row in (& $query "SELECT System.ItemUrl, System.DateModified, System.Size FROM SystemIndex")) {
         $modified = if ($row[1] -is [datetime]) { $row[1].ToString('yyyy-MM-ddTHH:mm:ss') } else { '' }
         Write-Output ("searchitem=" + $row[0] + '|' + $modified + '|' + $row[2])

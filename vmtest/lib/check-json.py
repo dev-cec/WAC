@@ -2353,6 +2353,7 @@ def check_search_index(folder):
     with open(path, encoding="utf-8", errors="replace") as f:
         lines = [l.rstrip("\r\n") for l in f]
     witness = [l[len("searchwitness="):].split("|", 2) for l in lines if l.startswith("searchwitness=")]
+    queried = next((l[len("searchquery="):] for l in lines if l.startswith("searchquery=")), "")
     items = [l[len("searchitem="):].split("|") for l in lines if l.startswith("searchitem=")]
     if not items:
         print("  ⏭️  Windows' query of its index returned nothing: search index not confronted")
@@ -2371,11 +2372,16 @@ def check_search_index(folder):
     else:
         print("  ❌ search index: the witness document was not indexed in time (reference without searchwitness=)")
         found += 1
-    both = wrong = 0
+    both = wrong = later = 0
     mismatches = []
     for url, modified, size in items:
         r = store.get(url.lower())
         if r is None:
+            continue
+        # Indexed again after Windows was asked (a witness rewritten by this
+        # cycle): Windows' answer is older than WAC's, not comparable.
+        if queried and (r.get("SearchGatherTimeUtc") or "")[:19] >= queried:
+            later += 1
             continue
         both += 1
         if (modified and not (r.get("DateModifiedUtc") or "").startswith(modified)) or (size and str(r.get("Size")) != size):
@@ -2383,7 +2389,8 @@ def check_search_index(folder):
             mismatches.append(f"{url}: {modified} {size}, WAC {r.get('DateModifiedUtc')} {r.get('Size')}")
     ok = both > 0 and not wrong
     print(f"  {'✅' if ok else '❌'} search_index.json: {both} item(s) listed by Windows and by WAC, modification and size identical "
-          f"(Windows only {len(items) - both}, WAC only {len(store) - both})" + ("" if ok else f": {mismatches[:3]}"))
+          f"(indexed again after Windows was asked {later}, Windows only {len(items) - both - later}, "
+          f"WAC only {len(store) - both - later})" + ("" if ok else f": {mismatches[:3]}"))
     return found + (0 if ok else 1)
 
 
