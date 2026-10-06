@@ -598,41 +598,21 @@ std::wstring ClassicEventMessage(const std::wstring& logName, const std::wstring
 	return std::wstring();
 }
 
-HRESULT MessagesCollectAll() {
+HRESULT MessagesCollect(const std::set<std::wstring>& guids,
+                        const std::set<std::pair<std::wstring, std::wstring>>& sources) {
 	MessagesInit();
 	if (!g_ready) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-	ORHKEY publishers = NULL;
-	HRESULT hr = OROpenKey(conf.Software, L"Microsoft\\Windows\\CurrentVersion\\WINEVT\\Publishers", &publishers);
-	if (hr != ERROR_SUCCESS) {
-		log(2, L"🔥WINEVT\\Publishers unreadable: no event provider collected", hr);
-		return hr;
-	}
-	for (DWORD i = 0;; ++i) {
-		WCHAR guid[MAX_KEY_NAME] = L"";
-		DWORD size = MAX_KEY_NAME;
-		hr = OREnumKey(publishers, i, guid, &size, NULL, NULL, NULL);
-		if (hr == ERROR_NO_MORE_ITEMS) { hr = ERROR_SUCCESS; break; }
-		if (hr != ERROR_SUCCESS) {
-			log(2, L"🔥WINEVT\\Publishers: enumeration stopped at " + std::to_wstring(i), hr);
-			break;
-		}
-		load(normalizeGuid(guid));   // extracts its resource, parameter and .mui files
-	}
-	ORCloseKey(publishers);
-	/* The classic sources (Services\EventLog\<log>\<source>), whose message
-	   files are declared in SYSTEM, and the system's own tables (kernelbase,
-	   ntdll) that give an error code its text: a conversion reads only what
-	   was collected, and without them three events in eight lost their
-	   message (B-023). */
-	if (conf.CurrentControlSet)
-		for (const std::wstring& logName : subkeys(conf.CurrentControlSet, L"Services\\EventLog"))
-			for (const std::wstring& source : subkeys(conf.CurrentControlSet, L"Services\\EventLog\\" + logName))
-				loadClassic(logName, source);
+	for (const std::wstring& guid : guids) load(normalizeGuid(guid));   // its resource, parameter and .mui files
+	/* The classic sources of the events — also those of events that carry a
+	   GUID, whose manifest may not describe them (CAPI2 4097) —, and the
+	   system's own tables (kernelbase, ntdll) that give an error code its
+	   text: a conversion reads only what was collected. */
+	for (const auto& [logName, source] : sources) loadClassic(logName, source);
 	systemMessages();
 	log(2, L"❇️Event providers collected: " + std::to_wstring(g_cache.size() + g_classic.size()) + L", "
 	     + std::to_wstring(g_failures) + L" without usable resources, "
 	     + std::to_wstring(g_bytes / 1024 / 1024) + L" MiB");
-	return hr;
+	return ERROR_SUCCESS;
 }
 
 void MessagesSummary(size_t* providers, size_t* failures,

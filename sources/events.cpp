@@ -1,6 +1,7 @@
 #include "events.h"
 #include "evtx.h"
 #include "event_messages.h"
+#include <filesystem>
 #include "raw_hive.h"
 #include <chrono>
 #include <cwchar>
@@ -215,6 +216,32 @@ Json Event::toJson() const {
 	o.add(L"EvtRecovered",               evtRecovered);
 	o.add(L"EvtEventMessage",            evtEventMessage);
 	return o;
+}
+
+HRESULT EventProvidersCited(std::set<std::wstring>& guids, std::set<std::pair<std::wstring, std::wstring>>& sources) {
+	/* The working copy of the logs, as Events::getData reads them: the exhibit
+	   store is not touched again once copied — not even read. */
+	const std::wstring directory = extractedPath(L"\\Windows\\System32\\winevt\\Logs");
+	const std::vector<std::filesystem::path> logs = listFilesByExtension(directory, { L".evtx" });
+	if (logs.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	for (const std::filesystem::path& logFile : logs) {
+		const std::wstring channel = EvtxChannelFromFileName(logFile.filename().wstring());
+		const HRESULT hr = EvtxReadFile(logFile.wstring(), [&](const EvtxRecord& e) {
+			const std::unique_ptr<XmlNode> root = xmlParse(e.xml, true);
+			const XmlNode* system = root ? root->child(L"System") : nullptr;
+			const XmlNode* provider = system ? system->child(L"Provider") : nullptr;
+			if (!provider) return true;
+			if (!provider->attribute(L"Guid").empty()) guids.insert(provider->attribute(L"Guid"));
+			// As Events::getData looks a classic source up: its EventSourceName, else its name; its channel, else the file's.
+			const std::wstring source = provider->attribute(L"EventSourceName").empty() ? provider->attribute(L"Name")
+			                                                                            : provider->attribute(L"EventSourceName");
+			const std::wstring logName = system->textOf(L"Channel").empty() ? channel : system->textOf(L"Channel");
+			if (!source.empty()) sources.emplace(logName, source);
+			return true;
+		});
+		if (FAILED(hr)) log(2, L"🔥Log unreadable while listing its providers: " + logFile.wstring(), hr);
+	}
+	return ERROR_SUCCESS;
 }
 
 HRESULT Events::getData() {

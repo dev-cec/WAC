@@ -30,6 +30,8 @@
 #include <windows.h>
 #include <string>
 #include <vector>
+#include <set>
+#include <utility>
 #include "tools.h"
 #include "json.h"
 #include "xml_light.h"
@@ -136,6 +138,14 @@ struct Event {
  *  JsonArrayWriter). That is what brings the collection of the logs down to a
  *  constant memory footprint, whatever the size of the logs.
  */
+/*! The providers the collected event logs cite, for --collect: their GUIDs,
+ *  and the (log, source) pair of every event, read in the logs extracted to
+ *  the exhibit store — only the System section of each record, no message.
+ *  @param guids receives the providers' GUIDs
+ *  @param sources receives the (log, source) pairs
+ *  @return ERROR_SUCCESS, or ERROR_FILE_NOT_FOUND if no log was extracted */
+HRESULT EventProvidersCited(std::set<std::wstring>& guids, std::set<std::pair<std::wstring, std::wstring>>& sources);
+
 struct Events {
 	unsigned long long read = 0;          //!< records written
 	unsigned long long unreadable = 0;   //!< records discarded

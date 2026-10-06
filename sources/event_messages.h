@@ -35,6 +35,8 @@
 #include <windows.h>
 #include <string>
 #include <vector>
+#include <set>
+#include <utility>
 
 /*! Prepares the resolution of the messages.
 *  To be called once before the collection of the events. Without that call, the
@@ -61,13 +63,19 @@ std::wstring EventMessage(const std::wstring& providerGuid,
                               const std::vector<std::wstring>& values,
                               const std::vector<std::wstring>& names);
 
-/*! --collect: extracts the resource files of EVERY provider declared in
- *  SOFTWARE\...\WINEVT\Publishers — binary, parameter file, localised .mui
- *  satellites —, since which of them the event logs cite is only known at
- *  conversion. The same search as on demand (the conversion then finds each
- *  file where the collection put it). Requires the SOFTWARE hive open.
- *  @return ERROR_SUCCESS, or the error of the hive's reading */
-HRESULT MessagesCollectAll();
+/*! --collect: extracts the resource files of the providers the collected
+ *  logs cite — binary, its SystemResources twin, parameter file, localised
+ *  .mui satellites —, of the classic sources they cite, and the system's
+ *  message tables: what their conversion will look for, by the same search
+ *  as on demand (the conversion then finds each file where the collection
+ *  put it). Taking every declared provider instead cost 739 MiB and 61 s on
+ *  the test VM for 1,426 providers (backlog B-033). Requires the SOFTWARE
+ *  hive open.
+ *  @param guids the providers' GUIDs the logs cite
+ *  @param sources the (log, source) pairs of their events, for the classic sources
+ *  @return ERROR_SUCCESS, or ERROR_FILE_NOT_FOUND without the SOFTWARE hive */
+HRESULT MessagesCollect(const std::set<std::wstring>& guids,
+                        const std::set<std::pair<std::wstring, std::wstring>>& sources);
 
 /*! Summary, for the log and the report.
 *  @param providers number of providers whose resources were read

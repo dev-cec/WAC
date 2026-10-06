@@ -559,14 +559,17 @@ void collectForConversion() {
 		if (hrControlSet != ERROR_SUCCESS)
 			log(2, L"🔥CurrentControlSet unavailable: event resources taken without the machine's language", hrControlSet);
 		printStep(Text::StepEventResources);
-		const HRESULT hr = MessagesCollectAll();
+		std::set<std::wstring> guids;
+		std::set<std::pair<std::wstring, std::wstring>> sources;
+		HRESULT hr = EventProvidersCited(guids, sources);
+		if (hr == ERROR_SUCCESS) hr = MessagesCollect(guids, sources);
 		size_t providers = 0, failures = 0;
 		unsigned long long resolved = 0, bytes = 0;
 		MessagesSummary(&providers, &failures, &resolved, &bytes);
 		auditRecord(L"Raw extraction of the resource files of the event providers ("
 		            + std::to_wstring(providers) + L" provider(s), " + std::to_wstring(failures)
 		            + L" without usable resources, " + std::to_wstring(bytes / 1024 / 1024) + L" MiB)",
-		            L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WINEVT\\Publishers (copied hive); raw NTFS reading",
+		            L"Providers cited by the collected logs; SOFTWARE WINEVT\\Publishers and SYSTEM EventLog (copied hives); raw NTFS reading",
 		            hr, Footprint::VOLUME_BRUT);
 		MessagesRelease();
 		if (FAILED(hr)) printError(hr);
