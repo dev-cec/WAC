@@ -23,6 +23,18 @@
 #include <memory>
 #include <streambuf>
 
+/*! Opens the volumes once, as soon as they are detected, each with the cache
+ *  of its directory indexes: every raw reading of the run then goes through
+ *  them (see VolumeLease in raw_hive.cpp). A volume not named here is opened
+ *  at its first reading.
+ *  @param letters the volumes' letters ("C:")
+ *  @return S_OK, or S_FALSE if one could not be opened (it is retried by no one) */
+HRESULT RawVolumesOpen(const std::vector<std::wstring>& letters);
+
+/*! Closes the shared volumes and forgets their cache: at the end of the run,
+ *  or between two phases that must see the volumes afresh. */
+void RawVolumesClose();
+
 /*! Enables diagnostic messages on stderr (silent by default). */
 void RawHiveSetVerbose(bool on);
 
@@ -217,16 +229,11 @@ public:
     virtual HRESULT list(const std::wstring& absoluteFolder, std::vector<RawDirEntry>& entries) = 0;
 };
 
-/*! Persistent raw reader: reads files and lists directories on NTFS volumes
- *  kept open for the reader's whole lifetime.
- *
- *  Not copyable: it owns one handle per volume and the directory index cache. */
+/*! Raw reader: reads files and lists directories on the NTFS volumes, through
+ *  the volumes opened once for the whole run (see RawVolumesOpen). It holds
+ *  nothing of its own: two readers share the same volumes and cache. */
 class RawReader : public FileSource {
 public:
-    RawReader();
-    ~RawReader();
-    RawReader(const RawReader&) = delete;
-    RawReader& operator=(const RawReader&) = delete;
 
     /*! Reads a file by its absolute path.
      *  @param absolutePath the file, as "`X:\\…`"
@@ -244,13 +251,6 @@ public:
      *  @param entries receives its entries
      *  @return the result of the listing */
     HRESULT list(const std::wstring& absoluteFolder, std::vector<RawDirEntry>& entries) override;
-
-    //! @return the number of volumes actually opened (one handle each).
-    unsigned openVolumes() const;
-
-private:
-    struct Impl;
-    std::unique_ptr<Impl> impl_;
 };
 
 /*! An attribute of a $MFT record, as written on the disk. */

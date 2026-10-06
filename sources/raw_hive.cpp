@@ -19,6 +19,8 @@
 #include <atomic>
 #include <thread>
 #include <memory>
+#include <mutex>
+#include <chrono>
 #include <ostream>
 #include <unordered_map>
 #include "quickdigest5.h"
@@ -244,16 +246,40 @@ public:
             RVLOG(L"[raw] looking for \"%ls\" in MFT#%llu\n", comp.c_str(), (unsigned long long)cur);
             bool found = false;
             if (cacheActive_){
+                /* An entry of the cache is checked against its record: the
+                   directory was listed earlier, and the running system may
+                   have deleted the file since — a SQLite journal lives for one
+                   transaction — and NTFS given its record to another. Still
+                   in use and still named so in this directory, it is taken;
+                   otherwise the directory is listed again, once. */
                 auto it = cacheRep_.find(cur);
-                if (it == cacheRep_.end()){
-                    std::vector<RawDirEntry> entries;
-                    if (!listDir(cur, entries)) return false;
-                    std::unordered_map<std::wstring, uint64_t> index;
-                    for (const RawDirEntry& e : entries) index.emplace(lowercase(e.name), e.mftIndex);
-                    it = cacheRep_.emplace(cur, std::move(index)).first;
+                const bool listedBefore = it != cacheRep_.end();
+                for (int pass = 0; pass < 2 && !found; ++pass){
+                    if (it == cacheRep_.end()){
+                        std::vector<RawDirEntry> entries;
+                        if (!listDir(cur, entries)) return false;
+                        std::unordered_map<std::wstring, uint64_t> index;
+                        for (const RawDirEntry& e : entries) index.emplace(lowercase(e.name), e.mftIndex);
+                        it = cacheRep_.emplace(cur, std::move(index)).first;
+                        cacheListed_[cur] = std::chrono::steady_clock::now();
+                    }
+                    const auto it2 = it->second.find(lowercase(comp));
+                    const bool fresh = pass == 1 || !listedBefore;
+                    if (it2 != it->second.end() && (fresh || recordStillNamed(it2->second, cur, comp))){
+                        cur = it2->second; found = true;
+                        break;
+                    }
+                    /* A stale entry lists the directory again. An absent name
+                       too, but only past a few seconds: the absent names are
+                       many — a satellite looked for in several languages —,
+                       and relisting System32\fr-FR for each would undo the
+                       cache. A file created within those seconds is missed. */
+                    const bool stale = it2 != it->second.end();
+                    const bool old = std::chrono::steady_clock::now() - cacheListed_[cur] > std::chrono::seconds(5);
+                    if (fresh || (!stale && !old)) break;
+                    cacheRep_.erase(it);
+                    it = cacheRep_.end();
                 }
-                const auto it2 = it->second.find(lowercase(comp));
-                if (it2 != it->second.end()){ cur = it2->second; found = true; }
             }
             else {
                 std::vector<RawDirEntry> entries;
@@ -1191,6 +1217,7 @@ private:
     }
     bool cacheActive_ = false;
     std::map<uint64_t, std::unordered_map<std::wstring, uint64_t>> cacheRep_;
+    std::map<uint64_t, std::chrono::steady_clock::time_point> cacheListed_;   //!< when each cached directory was listed
     HANDLE   h_ = INVALID_HANDLE_VALUE;
     uint32_t bytesPerSector_ = 0, sectorsPerCluster_ = 0, bytesPerCluster_ = 0, bytesPerRecord_ = 0;
     uint64_t mftLcn_ = 0;
@@ -1302,6 +1329,30 @@ private:
     }
 
     // Reads and un-fixes the MFT record of the given index.
+    /*! Whether a record still holds the file a cached directory entry named:
+     *  in use, and with a $FILE_NAME of that name in that directory.
+     *  @param index the record
+     *  @param parent the directory's record
+     *  @param name the name looked for, compared without case
+     *  @return true if the entry is still right */
+    bool recordStillNamed(uint64_t index, uint64_t parent, const std::wstring& name){
+        std::vector<uint8_t> rec;
+        if (!readMftRecord(index, rec)) return false;
+        const uint16_t IN_USE = 0x01;
+        if (!(rd16(rec.data() + 0x16) & IN_USE)) return false;
+        bool named = false;
+        forEachResidentValue(rec, index, 0x30, [&](const uint8_t* value, uint32_t length){
+            if (named || length < 0x42) return;
+            const uint8_t characters = value[0x40];
+            if (0x42u + 2u * characters > length) return;
+            if ((rd64(value) & 0x0000FFFFFFFFFFFFULL) != parent) return;
+            std::wstring text;
+            for (unsigned k = 0; k < characters; ++k) text += (wchar_t)rd16(value + 0x42 + 2 * k);
+            named = iequals(text, name);
+        });
+        return named;
+    }
+
     bool readMftRecord(uint64_t index, std::vector<uint8_t>& rec){
         rec.assign(bytesPerRecord_, 0);
         if (!readVirtual(mftRuns_, index * bytesPerRecord_, bytesPerRecord_, rec.data())){
@@ -1557,47 +1608,87 @@ public:
     }
 };
 
-} // namespace
+/*  THE VOLUMES, OPENED ONCE AND SHARED (backlog B-033). Each raw reading
+    used to open its volume and walk its paths from the root again: every
+    small artefact re-read the indexes of the directories on its way — and
+    each event provider's file System32's 4,659 entries. The volumes are now
+    opened once, as soon as they are detected (RawVolumesOpen), with the
+    cache of their directory indexes, and every reading — artefacts, hives,
+    event providers, binaries — goes through them.
+    WHAT THE CACHE MEANS. A directory is listed once: a file the system
+    creates afterwards in an already-read directory is not seen. The
+    collection is the state of each directory when it is first read — what
+    an acquisition of a running machine is in any case. WAC itself writes
+    nothing on the examined volumes.
+    THREADS. The --binary walk reads in a thread of its own and decompresses
+    in helpers: each volume has a lock, held by a reading from its start to
+    its end (VolumeLease). */
+struct SharedVolume {
+    std::unique_ptr<NtfsVolume> volume;   //!< opened, its cache on; null if the opening failed
+    HRESULT failure = S_OK;               //!< why it could not be opened: not retried
+    std::mutex lock;                      //!< held by one reading at a time
+};
+std::mutex g_volumesLock;   //!< guards g_volumes itself
+std::map<wchar_t, std::unique_ptr<SharedVolume>> g_volumes;   //!< by upper-case letter
 
-/*! What the reader keeps between calls: the volumes it has opened, and the
- *  letters it has already failed to open. */
-struct RawReader::Impl {
-    std::map<std::wstring, std::unique_ptr<NtfsVolume>> volumes;  //!< by volume letter
-    std::map<std::wstring, HRESULT> failures;    //!< volume inaccessible: do not retry
-    /*! Returns the volume of a letter, opening it on first use.
-     *  @param letter the volume letter ("X:")
-     *  @param hr receives the result of the opening
-     *  @return the volume, or nullptr if it cannot be opened */
-    NtfsVolume* volume(const std::wstring& letter, HRESULT& hr);
+/*! A reading's hold on a shared volume: the volume, opened on first use,
+ *  and its lock for the lease's lifetime. */
+class VolumeLease {
+public:
+    //! @param letter the volume's letter ("C", "c", "C:" or "C:\…")
+    explicit VolumeLease(const std::wstring& letter){
+        if (letter.empty()){ result_ = HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME); return; }
+        const wchar_t key = (wchar_t)towupper(letter[0]);
+        SharedVolume* shared = nullptr;
+        {
+            std::lock_guard<std::mutex> registry(g_volumesLock);
+            std::unique_ptr<SharedVolume>& slot = g_volumes[key];
+            if (!slot){
+                slot.reset(new SharedVolume);
+                std::unique_ptr<NtfsVolume> v(new NtfsVolume);
+                const HRESULT hr = v->open(std::wstring(1, key));
+                if (FAILED(hr)) slot->failure = hr;
+                else { v->enableCache(); slot->volume = std::move(v); }
+            }
+            shared = slot.get();
+        }
+        if (!shared->volume){ result_ = shared->failure; return; }
+        hold_ = std::unique_lock<std::mutex>(shared->lock);
+        volume_ = shared->volume.get();
+    }
+    //! @return S_OK, or why the volume could not be opened
+    HRESULT result() const { return result_; }
+    //! The volume; only when result() succeeded.
+    NtfsVolume& operator*() const { return *volume_; }
+    NtfsVolume* operator->() const { return volume_; }
+private:
+    HRESULT result_ = S_OK;
+    NtfsVolume* volume_ = nullptr;
+    std::unique_lock<std::mutex> hold_;
 };
 
-RawReader::RawReader() : impl_(new Impl) {}
-RawReader::~RawReader() = default;
+} // namespace
 
-unsigned RawReader::openVolumes() const { return (unsigned)impl_->volumes.size(); }
-
-NtfsVolume* RawReader::Impl::volume(const std::wstring& letter, HRESULT& hr) {
-    const auto failure = failures.find(letter);
-    if (failure != failures.end()){ hr = failure->second; return nullptr; }
-    auto it = volumes.find(letter);
-    if (it == volumes.end()){
-        std::unique_ptr<NtfsVolume> v(new NtfsVolume);
-        hr = v->open(letter);
-        if (FAILED(hr)){ failures.emplace(letter, hr); return nullptr; }
-        v->enableCache();
-        it = volumes.emplace(letter, std::move(v)).first;
+HRESULT RawVolumesOpen(const std::vector<std::wstring>& letters){
+    HRESULT overall = S_OK;
+    for (const std::wstring& letter : letters){
+        const VolumeLease lease(letter);
+        if (FAILED(lease.result())) overall = S_FALSE;
     }
-    hr = S_OK;
-    return it->second.get();
+    return overall;
+}
+
+void RawVolumesClose(){
+    std::lock_guard<std::mutex> registry(g_volumesLock);
+    g_volumes.clear();
 }
 
 HRESULT RawReader::list(const std::wstring& absoluteFolder, std::vector<RawDirEntry>& entries){
     entries.clear();
     if (absoluteFolder.size() < 3 || absoluteFolder[1] != L':' || absoluteFolder[2] != L'\\')
         return HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME);
-    HRESULT hr;
-    NtfsVolume* v = impl_->volume(std::wstring(1, (wchar_t)towupper(absoluteFolder[0])), hr);
-    if (!v) return hr;
+    const VolumeLease v(absoluteFolder);
+    if (FAILED(v.result())) return v.result();
     uint64_t index = 0;
     if (!v->resolvePath(absoluteFolder.substr(2), index)) return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
     return v->listDir(index, entries) ? S_OK : E_FAIL;
@@ -1610,9 +1701,8 @@ HRESULT RawReader::read(const std::wstring& absolutePath, const std::wstring& ou
     line.result = HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME);
     if (absolutePath.size() < 3 || absolutePath[1] != L':' || absolutePath[2] != L'\\')
         return line.result;
-    HRESULT hr;
-    NtfsVolume* v = impl_->volume(std::wstring(1, (wchar_t)towupper(absolutePath[0])), hr);
-    if (!v) return line.result = hr;
+    const VolumeLease v(absolutePath);
+    if (FAILED(v.result())) return line.result = v.result();
     uint64_t index = 0;
     if (!v->resolvePath(absolutePath.substr(2), index))
         return line.result = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
@@ -1661,9 +1751,10 @@ HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
                         const std::vector<std::pair<std::wstring, std::wstring>>& items,
                         std::vector<HRESULT>* perItem,
                         std::vector<RawHiveExtraction>* reading){
-    NtfsVolume vol;                       // volume opened ONCE for all the items
-    HRESULT hr = vol.open(volumeLetter);
+    const VolumeLease lease(volumeLetter);
+    const HRESULT hr = lease.result();
     if (FAILED(hr)){ if (perItem) perItem->assign(items.size(), hr); return hr; }
+    NtfsVolume& vol = *lease;
     HRESULT overall = S_OK;
     for (const auto& it : items){
         uint64_t index = 0; HRESULT h;
@@ -1689,9 +1780,10 @@ HRESULT ExtractStreamRaw(const std::wstring& volumeLetter, const std::wstring& p
                          bool skipLeadingSparse, RawHiveExtraction& line){
     line.volumePath = volumeLetter + L":" + pathOnVolume + L":" + streamName;
     line.outputPath = outFile;
-    NtfsVolume vol;
-    line.result = vol.open(volumeLetter);
+    const VolumeLease lease(volumeLetter);
+    line.result = lease.result();
     if (FAILED(line.result)) return line.result;
+    NtfsVolume& vol = *lease;
     uint64_t index = 0;
     if (!vol.resolvePath(pathOnVolume, index)) return line.result = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
     return line.result = vol.extractData(index, outFile, pathOnVolume, &line.fingerprints, nullptr,
@@ -1703,9 +1795,10 @@ HRESULT ListAttributesRaw(const std::wstring& volumeLetter,
                           const std::wstring& pathOnVolume,
                           std::vector<RawAttribute>& out){
     out.clear();
-    NtfsVolume vol;
-    HRESULT hr = vol.open(volumeLetter);
+    const VolumeLease lease(volumeLetter);
+    HRESULT hr = lease.result();
     if (FAILED(hr)) return hr;
+    NtfsVolume& vol = *lease;
     uint64_t index = 0;
     if (!vol.resolvePath(pathOnVolume, index))
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
@@ -1714,9 +1807,10 @@ HRESULT ListAttributesRaw(const std::wstring& volumeLetter,
 
 HRESULT ExtractWofStreamRaw(const std::wstring& volumeLetter, const std::wstring& pathOnVolume,
                             const std::wstring& outFile, uint32_t* algorithm){
-    NtfsVolume vol;
-    HRESULT hr = vol.open(volumeLetter);
+    const VolumeLease lease(volumeLetter);
+    HRESULT hr = lease.result();
     if (FAILED(hr)) return hr;
+    NtfsVolume& vol = *lease;
     uint64_t index = 0;
     if (!vol.resolvePath(pathOnVolume, index)) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
     uint32_t found = 0;
@@ -1748,9 +1842,10 @@ HRESULT ListDirectoryRaw(const std::wstring& volumeLetter,
                          const std::wstring& dirPathOnVolume,
                          std::vector<RawDirEntry>& out){
     out.clear();
-    NtfsVolume vol;
-    HRESULT hr = vol.open(volumeLetter);
+    const VolumeLease lease(volumeLetter);
+    HRESULT hr = lease.result();
     if (FAILED(hr)) return hr;
+    NtfsVolume& vol = *lease;
 
     uint64_t index = 0;
     if (!vol.resolvePath(dirPathOnVolume, index))
@@ -1770,12 +1865,13 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
     if (extracted) *extracted = 0;
     if (diagnostic) diagnostic->clear();
 
-    NtfsVolume vol;                       // volume opened ONCE for the whole directory
-    HRESULT hr = vol.open(volumeLetter);
+    const VolumeLease lease(volumeLetter);
+    HRESULT hr = lease.result();
     if (FAILED(hr)){
         if (diagnostic) *diagnostic = L"volume inaccessible";
         return hr;
     }
+    NtfsVolume& vol = *lease;
 
     uint64_t dirIndex = 0;
     if (!vol.resolvePath(dirPathOnVolume, dirIndex)){
@@ -1914,9 +2010,10 @@ HRESULT ExtractDirectoryTreeRaw(const std::wstring& volumeLetter,
                                 const std::vector<std::wstring>& skipped){
     if (extracted) *extracted = 0;
 
-    NtfsVolume vol;
-    HRESULT hr = vol.open(volumeLetter);
+    const VolumeLease lease(volumeLetter);
+    HRESULT hr = lease.result();
     if (FAILED(hr)) return hr;
+    NtfsVolume& vol = *lease;
 
     uint64_t dirIndex = 0;
     if (!vol.resolvePath(dirPathOnVolume, dirIndex)){

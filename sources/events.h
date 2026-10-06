@@ -140,6 +140,7 @@ struct Events {
 	unsigned long long read = 0;          //!< records written
 	unsigned long long unreadable = 0;   //!< records discarded
 	unsigned long long files = 0;     //!< logs walked
+	std::wstring timePerStep;         //!< where the reading's time went, step by step (backlog B-033)
 
 	/*! Reads the extracted logs and writes `events.json` as it goes.
 	*  @return ERROR_SUCCESS, S_FALSE if some records were discarded, or an error

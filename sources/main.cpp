@@ -1186,7 +1186,7 @@ void convertArtefacts(bool systemAvailable) {
 		   lets one believe the API was solicited again. */
 		auditRecord(L"EVENT LOGS collection (" + std::to_wstring(events.read)
 		            + L" event(s) in " + std::to_wstring(events.files)
-		            + L" log(s))",
+		            + L" log(s); " + events.timePerStep + L")",
 		            L"\\Windows\\System32\\winevt\\Logs\\*.evtx (extracted copies)",
 		            hresult, Footprint::FILE_COPY);
 		if (hresult != ERROR_SUCCESS) printError(hresult);
@@ -1469,6 +1469,18 @@ int wmain(int argc, wchar_t* argv[])
 	loadTrustSet();
 	if (conf.mode != RunMode::Convert) observeLiveState();
 
+	/* The NTFS volumes, opened ONCE as soon as they are known, with the cache
+	   of their directory indexes: every raw reading of the run — hives,
+	   artefacts, event providers, binaries — goes through them, instead of
+	   opening its volume and walking its paths from the root again (B-033). */
+	if (conf.mode != RunMode::Convert) {
+		const std::vector<std::wstring> volumes = fixedNtfsVolumes();
+		std::wstring letters;
+		for (const std::wstring& v : volumes) letters += (letters.empty() ? L"" : L", ") + v;
+		auditRecord(L"Opening of the NTFS volumes for raw reading, once for the whole collection (" + letters + L")",
+		            L"\\\\.\\" + letters, RawVolumesOpen(volumes), Footprint::VOLUME_BRUT);
+	}
+
 	if (conf.mode != RunMode::Convert) {
 		hresult = extractSystemHives();
 		if (FAILED(hresult)) return hresult;
@@ -1550,7 +1562,10 @@ int wmain(int argc, wchar_t* argv[])
 	   before the investigation log. */
 	closeBinaries();
 	// Under --convert the exhibit store is only read: its seal stays the collection's.
-	if (conf.mode != RunMode::Convert) sealExhibitStore();
+	if (conf.mode != RunMode::Convert) {
+		sealExhibitStore();
+		RawVolumesClose();   // the last raw reading is behind
+	}
 
 	/************************
 	*  INVESTIGATION LOG (last: it records the whole collection)
@@ -1563,6 +1578,10 @@ int wmain(int argc, wchar_t* argv[])
 	auditRecord(L"Writing of the collection results",
 	            conf._outputDir, ERROR_SUCCESS,
 	            Footprint::USB_WRITE);
+
+	/* Where the run's time went, step by step (over half a second): what the
+	   dates of the operations alone could not tell (backlog B-033). */
+	auditRecord(L"Time per step: " + stepTimes(0.5), L"WAC's own steps, as printed", ERROR_SUCCESS, Footprint::NONE);
 
 	printStep(conf.mode == RunMode::Convert ? Text::StepWriteConversionLog : Text::StepWriteInvestigationLog);
 	log(3, L"🔈auditWrite");

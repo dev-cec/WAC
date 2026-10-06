@@ -1,6 +1,8 @@
 #include "events.h"
 #include "evtx.h"
 #include "event_messages.h"
+#include "raw_hive.h"
+#include <chrono>
 #include <cwchar>
 
 /*! \file
@@ -239,6 +241,14 @@ HRESULT Events::getData() {
 
 	unsigned long long unreadableLogs = 0, incomplete = 0;
 	size_t iFile = 0;
+	/* WHERE THE TIME GOES (backlog B-033): the reading of the logs is most of
+	   a collection's time on the examined machine. Each step of an event is
+	   timed, cumulated over all of them, and logged at the end: the decoding
+	   of the binary XML is what remains of the files' reading once the
+	   callback's steps are taken out. */
+	using Clock = std::chrono::steady_clock;
+	Clock::duration readingTime{}, parseTime{}, buildTime{}, messageTime{}, writeTime{};
+	const RawReadTimes rawBefore = RawHiveTimes();
 	for (const std::filesystem::path& logFile : logs) {
 		const std::wstring fileName = logFile.filename().wstring();
 		const std::wstring channel = EvtxChannelFromFileName(fileName);
@@ -247,9 +257,13 @@ HRESULT Events::getData() {
 		log(2, L"❇️Journal : " + channel);
 
 		EvtxSummary summary;
+		const Clock::time_point fileStart = Clock::now();
 		const HRESULT hr = EvtxReadFile(logFile.wstring(),
 			[&](const EvtxRecord& e) {
+				Clock::time_point step = Clock::now();
+				auto lap = [&](Clock::duration& counter) { const Clock::time_point now = Clock::now(); counter += now - step; step = now; };
 				const std::unique_ptr<XmlNode> root = xmlParse(e.xml, true);
+				lap(parseTime);
 				if (!root) {
 					/* The XML is rebuilt by evtx.cpp: if it cannot be parsed, it is the
 					   decoding that went wrong, not the log. That is reported
@@ -261,6 +275,7 @@ HRESULT Events::getData() {
 				}
 				Event ev(*root, channel, e.id, fileName);
 				if (e.recovered) ev.evtRecovered = Json::boolean(true);
+				lap(buildTime);
 				/*  PLAIN-TEXT MESSAGE. Rebuilt from the provider's resources, which
 				    only the API could do until now. The resource file is
 				    extracted on demand, once per provider (see
@@ -282,6 +297,7 @@ HRESULT Events::getData() {
 					                             ((uint32_t)ev.messageQualifiers << 16) | ev.messageEventId, ev.rawValues);
 				}
 				if (!phrase.empty()) ev.evtEventMessage = Json::str(phrase);
+				lap(messageTime);
 				/*  A record whose System section is incomplete is the sign of a
 				    decoding that went wrong on THAT record. The raw XML goes to
 				    the log: without it, the event reads as poor in data whereas
@@ -295,9 +311,11 @@ HRESULT Events::getData() {
 					log(3, L"🔈XML : " + e.xml.substr(0, 2000));
 				}
 				output.add(ev.toJson());
+				lap(writeTime);
 				++read;
 				return true;
 			}, &summary);
+		readingTime += Clock::now() - fileStart;
 
 		unreadable += summary.unreadable;
 		if (FAILED(hr)) {
@@ -310,6 +328,22 @@ HRESULT Events::getData() {
 		log(2, L"❇️" + channel + L" : " + summary.diagnostic);
 	}
 	printProgressEnd();
+	{
+		auto seconds = [](Clock::duration d) {
+			wchar_t text[32];
+			swprintf(text, 32, L"%.1f s", std::chrono::duration<double>(d).count());
+			return std::wstring(text);
+		};
+		const RawReadTimes rawAfter = RawHiveTimes();
+		wchar_t providers[64];
+		swprintf(providers, 64, L"%.1f s", (rawAfter.diskRead - rawBefore.diskRead) + (rawAfter.decompression - rawBefore.decompression)
+		                                   + (rawAfter.fileHashes - rawBefore.fileHashes) + (rawAfter.observers - rawBefore.observers));
+		timePerStep = L"binary XML decoded " + seconds(readingTime - parseTime - buildTime - messageTime - writeTime)
+		            + L", XML parsed " + seconds(parseTime) + L", event built " + seconds(buildTime)
+		            + L", message " + seconds(messageTime) + L" (of which raw extraction of the providers' files "
+		            + providers + L"), JSON written " + seconds(writeTime);
+		log(2, L"⏱️Events, time per step: " + timePerStep);
+	}
 
 	const HRESULT closing = output.close();
 	log(2, L"❇️Events written: " + std::to_wstring(read)

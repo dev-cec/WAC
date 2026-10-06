@@ -42,6 +42,7 @@ const wchar_t* EXHIBIT_READ = L"Reading of the sealed exhibit store on the analy
                               L"the examined system is not involved.";
 const wchar_t* TRUST_SET    = L"Reading of the trust set on the collection medium: "
                               L"the examined system is not involved.";
+const wchar_t* NONE         = L"None: WAC's own bookkeeping, nothing read or written on the examined system.";
 } // namespace Footprint
 
 namespace {

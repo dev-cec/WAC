@@ -73,6 +73,8 @@ namespace Footprint {
 	extern const wchar_t* EXHIBIT_READ;
 	//! Reading of the trust set (--update-trust) on the collection medium.
 	extern const wchar_t* TRUST_SET;
+	//! WAC's own bookkeeping (its time per step): nothing read or written.
+	extern const wchar_t* NONE;
 }
 
 /*! Opens the log: reads the context of the collection (machine, operator, time

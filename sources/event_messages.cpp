@@ -35,6 +35,7 @@ struct Provider {
 };
 
 std::map<std::wstring, std::unique_ptr<Provider>> g_cache;   // guid -> provider
+std::unique_ptr<RawReader> g_reader;   //!< the raw reader of the resource files, for the whole phase (see extractResource)
 
 /*! A classic event source (ReportEvent): its message files, declared under
  *  `Services\EventLog\<log>\<source>`, in the order Windows tries them. */
@@ -91,7 +92,6 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 	if (std::filesystem::exists(working, ec)) return working;   // already extracted
 
 	const std::wstring volume  = volumeOfPath(absolutePath);
-	const std::wstring relative = pathRelativeToVolume(absolutePath);
 	const std::wstring target   = pathUnder(exhibitStoreFolder(), absolutePath);
 	/* Already in the exhibit store — collected as a binary cited by an artefact
 	   (--binary), and not yet copied into the working directory: it is not
@@ -118,12 +118,16 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 	}
 	std::filesystem::create_directories(std::filesystem::path(target).parent_path(), ec);
 
-	std::vector<HRESULT> res;
-	std::vector<RawHiveExtraction> reading;
-	const HRESULT hr = ExtractFilesRaw(volume, { { relative, target } }, &res, &reading);
-	const bool absent = !res.empty()
-	                 && (res[0] == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)
-	                  || res[0] == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND));
+	/* ONE READER FOR THE WHOLE PHASE (backlog B-033): each volume opened once,
+	   each directory's index read once. Extracted one by one, each of the
+	   thousand-odd provider files re-opened the volume and re-read System32's
+	   index (4,659 entries): 26 s of a 44-s event phase on the test VM. The
+	   files read are system binaries, which the collection does not change. */
+	if (!g_reader) g_reader = std::make_unique<RawReader>();
+	RawHiveExtraction line;
+	const HRESULT hr = g_reader->read(absolutePath, target, line);
+	std::vector<RawHiveExtraction> reading{ line };
+	const bool absent = hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) || hr == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
 	if (absent) {
 		// A candidate that does not exist: neither an exhibit, nor an empty directory
 // in the exhibit store.
@@ -132,7 +136,7 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 	}
 	ExhibitStoreAdd(reading, L"Raw NTFS reading (\\\\.\\" + volume
 	                        + L": — resource file of an event provider)" + READ_IN_PLACE);
-	const bool rawReadOk = SUCCEEDED(hr) && !res.empty() && SUCCEEDED(res[0]);
+	const bool rawReadOk = SUCCEEDED(hr);
 	if (!rawReadOk)
 		log(3, L"🔈Raw reading unsuccessful, fallback expected: " + absolutePath);
 	else
@@ -641,5 +645,6 @@ void MessagesSummary(size_t* providers, size_t* failures,
 
 void MessagesRelease() {
 	g_cache.clear();
+	g_reader.reset();
 	g_classic.clear();
 }

@@ -371,6 +371,13 @@ struct FatDateTime {
 //! Prints the word OK in green on the console.
 void printSuccess();
 
+/*! The steps printed so far and their time, from printStep to their OK or
+ *  their error (backlog B-033): where a collection's time goes, artefact by
+ *  artefact.
+ *  @param minimum the shortest step given, in seconds
+ *  @return "label 12.3 s; label 4.0 s…", in the order of the run */
+std::wstring stepTimes(double minimum);
+
 /*! Prints a progress line rewritten in place (carriage return).
 *
 * WHY. On a real system, extracting a large hive or reading the System log takes

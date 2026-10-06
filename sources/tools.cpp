@@ -21,6 +21,7 @@
 #include <climits>
 #include <cmath>
 #include <filesystem>
+#include <chrono>
 
 /****************************************************
 *                   DATA FORMATS                   *
@@ -97,6 +98,27 @@ bool outputIsConsole() {
 }
 bool g_progressRunning = false;
 std::wstring g_currentStep;          //!< last label set by printStep
+/* THE TIME OF EACH STEP (backlog B-033). The investigation log dates its
+   operations, but most artefacts write no operation of their own: the time
+   of twenty of them was charged to the next one that does — 140 s to the
+   event logs, of which their reading took 25. Every step printed is timed
+   from printStep to its OK or its error. */
+std::chrono::steady_clock::time_point g_stepStart;                 //!< when the current step began
+std::wstring g_stepEnglish;   //!< the current step's label in English, when it is a translated text
+std::vector<std::pair<std::wstring, double>> g_stepTimes;         //!< each ended step and its seconds
+
+//! Records the time of the step being ended, once.
+void endStep() {
+	if (g_currentStep.empty()) return;
+	// The investigation log is in English whatever the console's language.
+	std::wstring label = g_stepEnglish.empty() ? g_currentStep : g_stepEnglish;
+	const wchar_t* blanks = L" -:";
+	label.erase(0, std::min(label.find_first_not_of(blanks), label.size()));
+	label.erase(std::min(label.find_last_not_of(blanks) + 1, label.size()));
+	g_stepTimes.emplace_back(label, std::chrono::duration<double>(std::chrono::steady_clock::now() - g_stepStart).count());
+	g_currentStep.clear();
+	g_stepEnglish.clear();
+}
 } // namespace
 
 /*  WHY NOT wprintf. It converts the wchar_t through the program's C locale,
@@ -117,11 +139,14 @@ void writeConsole(const std::wstring& text) {
 
 void printStep(const std::wstring& label) {
 	g_currentStep = label;
+	g_stepEnglish.clear();
+	g_stepStart = std::chrono::steady_clock::now();
 	writeConsole(label);
 }
 
 void printStep(Text step) {
 	printStep(L" - " + text(step) + L" : ");
+	g_stepEnglish = text(step, Language::English);
 }
 
 void printHeading(Text heading) {
@@ -176,9 +201,21 @@ void printSuccess() {
 	// Restores the step label if a progress erased it, so that the "OK" stays
 	// attached to its step.
 	printProgressEnd();
+	endStep();
 	SetConsoleTextAttribute(conf.hConsole, 10);
 	writeConsole(L"OK\n");
 	SetConsoleTextAttribute(conf.hConsole, 7);
+}
+
+std::wstring stepTimes(double minimum) {
+	std::wstring text;
+	for (const auto& [label, seconds] : g_stepTimes) {
+		if (seconds < minimum) continue;
+		wchar_t value[32];
+		swprintf(value, 32, L"%.1f s", seconds);
+		text += (text.empty() ? L"" : L"; ") + label + L" " + value;
+	}
+	return text;
 }
 
 void printProgressStep(const std::wstring& artefact, unsigned long long done,
@@ -198,6 +235,7 @@ void printError(std::wstring errorText) {
 	   the redirected log altogether: the text then goes through stdout, in
 	   UTF-8. */
 	errorText += L"\n";
+	endStep();
 	SetConsoleTextAttribute(conf.hConsole, 12);
 	writeConsole(errorText);
 	SetConsoleTextAttribute(conf.hConsole, 7);
