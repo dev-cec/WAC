@@ -28,12 +28,15 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 ## Tâches
 - [x] Inventaire complet sortie → clé → dépendances
 - [x] Renommage convertFileArtefact → convertArtefact (b4c6386)
-- [ ] Clés, conversion et cibles — écrit et compilé sans avertissement, non commité (tools.h, config.cpp, main.cpp, raw_collect.cpp, translations)
-- [ ] wac.yml livré et wac.yml du harnais
-- [ ] Contrôle `--configuration` étendu, cycle complet
+- [x] Clés, conversion et cibles (tools.h, config.cpp, main.cpp, raw_collect.cpp, translations) ; aide de --events et --convert corrigée
+- [x] wac.yml livré — c'est aussi celui de --write-config (ressource RCDATA, une seule source) ; config_test adapté (34 contrôles verts, `registry` refusée)
+- [x] Harnais : `wants registry` remplacés par les clés servies (run-wac-test.sh, place-file-artefacts.ps1) ; wac.yml configuré avec amcache et registry_backups à false
+- [x] Contrôle `--configuration` : règles amcache et registry_backups, dépendances (journaux, ruches des utilisateurs) présentes si et seulement si un artefact demandé les lit
+- [ ] Compilation, tests, cycle complet — non commité à ce stade
 - [ ] Documentation FR + EN
 
 ## Journal
 - 2026-10-07 : créée sur la règle de l'utilisateur ; clé absente = true (choix explicite). Dans l'immédiat, `rdp_server: false` ajouté au wac.yml configuré du harnais (161391c), sans exception dans le contrôle.
 - 2026-10-07 : inventaire. Clés nouvelles : `events` (ex-`conf._events`, désormais vrai par défaut comme les autres), `operating_system` (OperatingSystem.json, prélevé d'office jusqu'ici), `usbstor`, `mounted_devices`, `bam`, `muicache`, `amcache`, `userassist`, `run_keys`, `shimcache`, `shellbags`, `mru`, `mru_apps`, `users`, `local_groups`, `registry_backups` (RegBack) ; `registry` supprimée. Dépendances : ruches des utilisateurs si muicache, userassist, run_keys, shellbags, mru, mru_apps (+ les artefacts déjà listés dans needsUserHives) ; journaux si events ou rdp_server (needsEventLogs) ; Amcache.hve pour amcache seul ; SYSTEM, SOFTWARE, SAM, SECURITY, DEFAULT toujours (fuseau, profils, noms des comptes). Les treize blocs copiés de la phase registre remplacés par convertArtefact (version à plusieurs sorties pour Amcache) : chaque artefact en échec écrit désormais son fichier « non prélevé ».
 - 2026-10-07 : en cours — reste : wac.yml livré, wac.yml et `wants registry` du harnais, contrôle `--configuration`, tests, cycle, documentation.
+- 2026-10-07 : demande utilisateur — le wac.yml porte la version de WAC (écrite par --write-config) et un fichier d'une version précédente est refusé : il pourrait manquer de nouvelles options ou réutiliser des options obsolètes. Choix : version identique exigée (majeur.mineure.correctif) ; WAC.rc reste la seule source — `@WAC_VERSION@` dans sources/wac.yml, remplacé par --write-config et par la compilation pour bin/wac.yml ; le harnais écrit la version de WAC.rc dans ses wac.yml. État : code des clés, harnais et contrôle écrits, non commités, non compilés depuis les dernières retouches.

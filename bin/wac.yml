@@ -23,10 +23,25 @@ dump: false
 # Language of the console: fr or en. The JSON files and the logs stay in English.
 language: fr
 
-# The artefacts to collect.
+# The artefacts to collect, one key each; a missing key is true. The hives,
+# event logs and $MFT are dependencies, copied when an artefact asked for reads them.
 artefacts:
-  registry: true          # the hives, and every artefact read in them
   events: true            # the event logs, with their messages
+  operating_system: true  # version, installation, computer name, uptime
+  usbstor: true           # USB mass storage devices (Enum\USBSTOR)
+  mounted_devices: true   # volumes and drive letters the machine knew (MountedDevices)
+  bam: true               # last execution of each program per user (Background Activity Moderator)
+  muicache: true          # names of the programs each user launched
+  amcache: true           # Amcache.hve: applications, executables and drivers seen
+  userassist: true        # programs each user launched from Explorer, with count and date
+  run_keys: true          # Run and RunOnce keys of the machine and of each user
+  shimcache: true         # application compatibility cache (AppCompatCache)
+  shellbags: true         # folders each user browsed in Explorer
+  mru: true               # files each user opened or saved through the common dialogs
+  mru_apps: true          # programs used to open or save those files
+  users: true             # local accounts (SAM): logons, failures, flags, password hashes
+  local_groups: true      # members of each local group (SAM)
+  registry_backups: true  # RegBack: the machine's older hives, raw copy only
   scheduled_tasks: true
   services: true          # services and drivers
   processes: true         # live
