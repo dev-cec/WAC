@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P3 | faible |
+| fait (49851f7) | P3 | faible |
 
 ## Pourquoi
 Relevé le 2026-10-07 pendant B-026 : une quinzaine de modules lisent un fichier entier chacun à sa façon (istreambuf_iterator ou read sur la taille), certains sans borne de taille : defender_log, fat_volume, dpapi_master_keys, config, hive_recover, defender_history, powershell_history, pe_resource, recycle_bin, error_reports, setupapi_log, ntfs_volumes, web_client (deux), security_descriptors, xml_light. Une seule existe désormais dans tools : readWorkingFile(fichier, taille maximale), sortie de rdp_client (1a6f559).
@@ -21,10 +21,11 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Commit `refactor :` seul.
 
 ## Tâches
-- [ ] Remplacer les lectures entières
-- [ ] JSON comparés avant/après
+- [x] Remplacer les lectures entières (readWholeFile, whole_file.h) et les lecteurs little-endian locaux
+- [x] JSON comparés avant/après
 
 ## Journal
 - 2026-10-07 : créée pendant B-026.
 - 2026-10-07 (B-024) : lectures little-endian locales que l'inventaire de B-030 a manquées, faute de s'appeler rd* : lu16/lu32 d'authenticode.cpp, read16/32/64 bornées (pointeur, taille, décalage) d'evtx.cpp — à ramener à readLittleEndian<T> (une variante bornée sur pointeur et taille s'il le faut).
 - 2026-10-08 : en cours — inventaire. Ajout : archiveLe16/archiveLe32 de cab.cpp, lecteurs little-endian locaux vus pendant B-029.
+- 2026-10-08 : fait (49851f7). Vingt-deux lectures entières ramenées à readWholeFile(fichier, maximum, octets) — false si illisible ou trop gros, un fichier vide restant lisible (config le distingue) ; sept n'avaient aucune borne (jump lists automatiques et personnalisées, Prefetch, raccourcis, $SDS, index.dat, logins.json, XML des tâches) ; quatre fonctions privées identiques supprimées (readExhibit de defender_history, readSetFile, readAll de cim, la lecture d'usn_journal). fat_volume laissé : lecture structurée, déjà bornée, pas d'un fichier entier. Lecteurs little-endian : lu16/lu32, read8-64, archiveLe16/32, le16/le32 de version_info, lectures à la main de recycle_bin et inflate, FILETIME d'authenticode. Trouvé en chemin : sha.h incluait conversions.h, donc windows.h, depuis 1b2adee — sha_test et authenticode_test ne se compilaient plus hors Windows malgré leur en-tête ; portable_conversions.h (sans windows.h) le répare, et la ligne de compilation d'authenticode_test est mise à jour. Contrôles : même collecte (cycle complet 466 ✅) convertie par l'ancien et le nouveau WAC.exe, 73 JSON identiques à l'octet ; cab_test, zip_test, inflate_test natifs sous ASan/UBSan (cabinets de Microsoft contre cabextract, ZIP contre Python, deflate contre zlib) ; tests sous Wine sans échec.
