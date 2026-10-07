@@ -604,13 +604,6 @@ void addUser(Json& o, const std::wstring& sid);
 */
 std::wstring bool_to_wstring(bool b);
 
-/*! Converts a string holding a date ("month/day/year hour:minute:second")
-* to a FILETIME.
-* @param input the string to convert
-* @return the instant, or a null FILETIME (not emitted) if the string does not
-*         hold a valid date
-*/
-FILETIME wstring_to_filetime(std::wstring input);
 
 /*! Converts a Unix time (seconds since 1970, UTC: a PE TimeDateStamp, a clock
 *  read in C) to a FILETIME.
@@ -666,8 +659,21 @@ std::wstring registryNameToJsonKey(const std::wstring& valueName);
 enum class Precision {
 	HundredNanoseconds, //!< FILETIME: seven digits of fraction
 	Millisecond,        //!< SYSTEMTIME (event data): three digits
-	Second              //!< FAT date (2 s), Unix time, text date, OLE date as converted: no fraction
+	Second,             //!< FAT date (2 s), Unix time, text date, OLE date as converted: no fraction
+	Minute              //!< text date without seconds (Windows XP's archive items): no seconds written
 };
+
+/*! Converts a string holding a date ("month/day/year hour:minute:second")
+* to a FILETIME. A two-digit year is one of a FAT date's, 1980 to 2079
+* (Windows XP's archive items: "11/26/04  21:00").
+* @param input the string to convert
+* @param precision when given, the seconds may be absent, and it receives the
+*        precision written: Precision::Minute without them, Precision::Second
+*        with them; when not, a date without seconds is refused
+* @return the instant, or a null FILETIME (not emitted) if the string does not
+*         hold a valid date
+*/
+FILETIME wstring_to_filetime(std::wstring input, Precision* precision = nullptr);
 
 /*! Formats a FILETIME **already expressed in UTC** as ISO 8601, suffix "Z".
 * @param filetime the instant, in UTC

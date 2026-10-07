@@ -1222,12 +1222,18 @@ struct ArchiveFileContent :IShellItem {
 	bool isPresent = false; //!< whether the object is present, used to lay out the JSON
 	// `subtypename` and `location` removed: declared here but never filled
 	// (they belong to NetworkShellItem, which carries the same names).
-	std::wstring name = L"";//!< name of the archive
+	std::wstring name = L"";//!< name of the entry in the archive
+	std::wstring secondString; //!< a second string after the name, of unknown meaning (libfwsi's "String2")
 	/*! The entry's modification as the archive holds it: the clock time of
 	 *  the machine that made the archive, in NO known time zone (see the
 	 *  constructor). */
 	FILETIME modifiedAsWritten = { 0 };
-	Precision modifiedPrecision = Precision::HundredNanoseconds; //!< precision of the source: a FILETIME, or the second (FAT or text date)
+	Precision modifiedPrecision = Precision::Second; //!< the text's: to the second, to the minute under XP
+	FILETIME modifiedUtc = { 0 }; //!< the entry's modification, UTC, in the layout of the archives read through libarchive
+	uint64_t uncompressedSize = 0;   //!< the entry's size (not in the XP layout)
+	uint64_t compressedSize = 0;     //!< its size in the archive
+	uint16_t compressionMethod = 0;  //!< the ZIP method: 0 stored, 8 deflate
+	uint32_t crc32 = 0;              //!< the entry's CRC-32, 0 when not available
 
 	/*! Reads the item.
 	* @param buffer the bytes to parse

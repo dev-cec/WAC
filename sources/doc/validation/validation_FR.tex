@@ -393,6 +393,12 @@ lui.
   impossible), flux \fichier{Zone.Identifier}, DetectionHistory et entrées de
   quarantaine (clé RC4 éprouvée sur un en-tête écrit par Defender, longueurs
   mensongères refusées) ; 62 contrôles, aucun échec \\
+\texttt{shell\_items\_test} & octets écrits par l'Explorateur de la VM ;
+  libfwsi et la bibliothèque Lnk de SBECmd &
+  éléments de shellbag d'un contenu d'archive : ZIP (dossier réel, fichier
+  avec tailles, date absente, disposition XP) et 7z / tar.gz lus par
+  libarchive (éléments réels, date UTC), toutes leurs troncatures contre une
+  page interdite ; 683 contrôles, aucun échec \\
 \texttt{json\_test} & l'écrivain JSON de \wac{} & aller-retour identique,
   26 fichiers d'une collecte relus et réécrits à l'octet, textes malformés
   refusés, 200~000 mutations sans lecture hors borne (sanitizers) \\

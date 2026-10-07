@@ -1856,6 +1856,26 @@ def check_small_file_artefacts(folder):
         report(ok, f"shellbags.json: the ZIP entry {name} dated {written} as written, without time zone",
                f"shellbags.json: the ZIP entry {name}: {items[:1]}")
 
+    # A folder of a 7z and of a tar.gz (Windows 11 reads them through
+    # libarchive): another layout, whose date is a UTC instant (B-029).
+    if isinstance(bags, list) and "readerentry" in reference:
+        name, utc = reference["readerentry"].split("|")
+        entries = []
+        def reader(o):
+            if isinstance(o, dict):
+                if o.get("Type") == "ARCHIVE_FILE_CONTENT" and o.get("Name") == name:
+                    entries.append(o)
+                for v in o.values():
+                    reader(v)
+            elif isinstance(o, list):
+                for v in o:
+                    reader(v)
+        reader(bags)
+        ok = len(entries) >= 2 and all(str(i.get("ModifiedUtc", "")).startswith(utc) and "ModifiedAsWritten" not in i
+                                     for i in entries)
+        report(ok, f"shellbags.json: {len(entries)} folder(s) {name} of a 7z and a tar.gz, dated {utc} UTC",
+               f"shellbags.json: the libarchive folder {name}: {entries[:2]}")
+
     # Event values as Windows renders them (hexadecimal integers, GUIDs, booleans, dates).
     events = load(folder, "events.json")
     path = os.path.join(folder, "reference", "file-artefacts.txt")

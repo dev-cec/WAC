@@ -2493,38 +2493,127 @@ Json NetworkShellItem::toJson() {
 	return o;
 }
 
+namespace {
+
+/*! Where the fields of an archive item lie: two layouts, from libfwsi
+ *  ("Compressed folder shell item") and Zimmerman's Lnk library
+ *  (ShellBagZipContents), which SBECmd uses. */
+struct ArchiveItemLayout {
+	size_t date;        //!< the modification date, as text ("N/A" without one)
+	size_t dateBytes;   //!< room for that text, terminator included
+	size_t nameSizes;   //!< the two string sizes, in characters, then the strings
+};
+//! The one libfwsi gives for Windows 10, seen on Windows 11: the entry's sizes, method and CRC-32 at 0x08 to 0x1F.
+const ArchiveItemLayout ARCHIVE_ITEM_CURRENT = { 0x24, 42, 0x54 };
+//! Windows XP: no sizes, the date text sooner.
+const ArchiveItemLayout ARCHIVE_ITEM_XP = { 0x18, 32, 0x3C };
+
+}
+
+/*! The smallest archive item read: up to the name's size in the libarchive
+ *  layout, the shortest; each layout checks its own fields beyond. */
+const size_t ARCHIVE_ITEM_FIXED_PART = 0x20;
+
+namespace {
+
+/*! True if the item holds, at the layout's date, a date text or "N/A".
+ *  @param buffer the item
+ *  @param size its declared size
+ *  @param layout the layout tried
+ *  @param written receives the date, null for "N/A"
+ *  @param precision receives its precision */
+bool readArchiveItemDate(LPBYTE buffer, size_t size, const ArchiveItemLayout& layout,
+                         FILETIME& written, Precision& precision) {
+	if (!fits(size, layout.nameSizes, 8)) return false;
+	const std::wstring text = readWideZ(buffer, layout.date + layout.dateBytes, layout.date);
+	if (text == L"N/A") {
+		written = FILETIME{ 0, 0 };
+		return true;
+	}
+	written = wstring_to_filetime(text, &precision);
+	return written.dwLowDateTime != 0 || written.dwHighDateTime != 0;
+}
+
+/*! The layout of the archives Windows 11 reads itself (7z, tar, RAR…,
+ *  through libarchive), measured on the test VM: a FILETIME at 0x10, the
+ *  name's size in characters at 0x1C, the name at 0x20. Told by the name
+ *  ending exactly where its size says.
+ *  @param buffer the item
+ *  @param size its declared size
+ *  @return true if the item is in that layout */
+bool isReaderArchiveItem(LPBYTE buffer, size_t size) {
+	if (!fits(size, 0x20, 0)) return false;
+	const uint32_t characters = readLittleEndian<uint32_t>(buffer + 0x1C);
+	const size_t end = 0x20 + (size_t)characters * 2;
+	return characters != 0 && characters < size && fits(size, end, 2)
+	    && readLittleEndian<uint16_t>(buffer + end) == 0;
+}
+
+/*! A string of the item whose size, in characters, the item gives.
+ *  @param buffer the item
+ *  @param size its declared size
+ *  @param offset where the string starts
+ *  @param characters its size, terminator excluded
+ *  @return the string; empty if it does not fit in the item */
+std::wstring sizedWideString(LPBYTE buffer, size_t size, size_t offset, uint32_t characters) {
+	if (!fits(size, offset, (size_t)characters * 2)) return L"";
+	return std::wstring(reinterpret_cast<const wchar_t*>(buffer + offset), characters);
+}
+
+}
+
 /*! A file or folder inside an archive, as Explorer shows it.
+ *  THE LAYOUTS. A ZIP is read by Explorer's own ZIP folder: the date is a
+ *  text, at 0x24 since Windows 10 at least, at 0x18 under Windows XP, and
+ *  the layout is told by finding a date there. Any other archive Windows 11
+ *  opens (7z, tar…) is read through libarchive, whose item holds a FILETIME
+ *  and the name (isReaderArchiveItem). The bytes at
+ *  0x08 and 0x10 are the entry's sizes, not dates: they were read as a FAT
+ *  date and as a FILETIME, which gave, for any file with content, a date
+ *  taken from its sizes and the date text in place of the name (B-029, a real
+ *  machine's "\x10\x01 01/01/1980  00:00:00"); a folder, emulated by
+ *  Explorer, has no sizes, which hid the defect on the test VM.
  *  THE DATE HAS NO TIME ZONE. It is the archive entry's own date — a ZIP
  *  entry keeps the clock time of the machine that made the archive — which
- *  Explorer copies as it is, in one of three forms (a FILETIME, a text, a
- *  FAT date). Measured on the test VM (B-028): an entry dated 13:00 in a ZIP
- *  gives 13:00 here, whatever the zone it was made in. It was read as UTC
- *  (or as local time for the FAT form): an instant WAC cannot know, one or
- *  two hours off. It is given as written, without offset. */
+ *  Explorer copies as it is. Measured on the test VM (B-028): an entry dated
+ *  13:00 in a ZIP gives 13:00 here, whatever the zone it was made in. It is
+ *  given as written, without offset. */
 ArchiveFileContent::ArchiveFileContent(LPBYTE buffer, int _level) {
 	isPresent = true;
 	level = _level;
-	unsigned int date = *reinterpret_cast<unsigned int*>(buffer + 8);
-
-	if (date == 0) {
-		if (!fits(declaredSize(buffer), 0x10, 8)) {
-			log(2, L"🔥ArchiveFileContent: item too short for its date", ERROR_INVALID_DATA);
+	const size_t size = declaredSize(buffer);
+	const ArchiveItemLayout* layout = nullptr;
+	for (const ArchiveItemLayout* candidate : { &ARCHIVE_ITEM_CURRENT, &ARCHIVE_ITEM_XP })
+		if (readArchiveItemDate(buffer, size, *candidate, modifiedAsWritten, modifiedPrecision)) {
+			layout = candidate;
+			break;
 		}
-		else if (*reinterpret_cast<unsigned int*>(buffer + 0x10) != 0) { // FILETIME
-			modifiedAsWritten = *reinterpret_cast<FILETIME*>(buffer + 0x10);
-			name = readWideZ(buffer, declaredSize(buffer), 0x20);
+	if (layout == nullptr) {
+		modifiedAsWritten = FILETIME{ 0, 0 };
+		if (isReaderArchiveItem(buffer, size)) {
+			/* An instant in UTC: 7z and tar store one, copied as it is — a
+			   folder dated 09:15:30 in Paris in March gave 08:15:30. */
+			modifiedUtc = filetimeFromTicks(readLittleEndian<uint64_t>(buffer + 0x10));
+			name = sizedWideString(buffer, size, 0x20, readLittleEndian<uint32_t>(buffer + 0x1C));
+			return;
 		}
-		else { // date as text: precise to the second
-			modifiedAsWritten = wstring_to_filetime(readWideZ(buffer, declaredSize(buffer), 0x24));
-			modifiedPrecision = Precision::Second;
-			name = readWideZ(buffer, declaredSize(buffer), 0x5C);
-		}
+		log(2, L"🔥ArchiveFileContent: no date text at 0x24 nor 0x18, nor a name at 0x20: layout unknown, name not read", ERROR_INVALID_DATA);
+		return;
 	}
-	else {
-		modifiedAsWritten = FatDateTime(date).toFileTime();
-		modifiedPrecision = Precision::Second;
-		name = decodeText(readNarrowZ(buffer, declaredSize(buffer), 0x1C));
+	if (layout == &ARCHIVE_ITEM_CURRENT) {
+		uncompressedSize = readLittleEndian<uint64_t>(buffer + 0x08);
+		compressedSize = readLittleEndian<uint64_t>(buffer + 0x10);
+		compressionMethod = readLittleEndian<uint16_t>(buffer + 0x18);
+		crc32 = readLittleEndian<uint32_t>(buffer + 0x1C);
 	}
+	const uint32_t nameCharacters = readLittleEndian<uint32_t>(buffer + layout->nameSizes);
+	const uint32_t secondCharacters = readLittleEndian<uint32_t>(buffer + layout->nameSizes + 4);
+	const size_t nameOffset = layout->nameSizes + 8;
+	name = sizedWideString(buffer, size, nameOffset, nameCharacters);
+	if (nameCharacters != 0 && name.empty())
+		log(2, L"🔥ArchiveFileContent: name larger than the item", ERROR_INVALID_DATA);
+	else if (secondCharacters != 0)
+		secondString = sizedWideString(buffer, size, nameOffset + ((size_t)nameCharacters + 1) * 2, secondCharacters);
 }
 
 Json ArchiveFileContent::toJson() {
@@ -2538,7 +2627,19 @@ Json ArchiveFileContent::toJson() {
 		o.add(L"ModifiedAsWritten", Json::str(written));
 		o.add(L"TimeZone", Json::str(L"None (archive entry)"));
 	}
+	addDate(o, L"Modified", modifiedUtc);
 	o.add(L"Name",        Json::str(name));
+	o.add(L"SecondString", Json::str(secondString));
+	/* All four at zero: a folder, which Explorer emulates — a ZIP stores no
+	   folders —, not an entry of zero bytes with a CRC of 0. */
+	if (uncompressedSize != 0 || compressedSize != 0 || crc32 != 0) {
+		o.add(L"UncompressedSize", Json::num(uncompressedSize));
+		o.add(L"CompressedSize",   Json::num(compressedSize));
+		o.add(L"CompressionMethod", Json::str(compressionMethod == 0 ? L"Stored"
+		                                    : compressionMethod == 8 ? L"Deflate"
+		                                    : to_hex(compressionMethod, 4, HexLetters::Lower, true)));
+		if (crc32 != 0) o.add(L"Crc32", Json::str(to_hex(crc32, 8)));
+	}
 	return o;
 }
 
@@ -2822,7 +2923,7 @@ std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _level, bool Parent
 			{ L"USERS_PROPERTY_VIEW",    14 },   // sizes and signature, up to 14
 			{ L"FAVORITE_SHELL_ITEM",    14 },   // a users property view
 			{ L"URI",                     6 },   // data size at 4
-			{ L"ARCHIVE_FILE_CONTENT",   12 },   // FAT date at 8
+			{ L"ARCHIVE_FILE_CONTENT",   ARCHIVE_ITEM_FIXED_PART },
 			{ L"USERS_FILES_FOLDER",     22 },   // FAT date at 0x12
 		};
 		const auto fixedPart = FIXED_PART.find(type);
@@ -2900,13 +3001,13 @@ std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _level, bool Parent
 			return std::make_unique<UnknownShellItem>(buffer, _level);
 		}
 	}
-	else if (item_size >= 12) {   // FAT date at 8, as above
+	else if (item_size >= ARCHIVE_ITEM_FIXED_PART) {
 		log(3, L"🔈ArchiveFileContent");
 		return std::make_unique<ArchiveFileContent>(buffer, _level);
 	}
 	else {
 		log(2, L"🔥Archive content item of " + std::to_wstring(item_size)
-		     + L" bytes, shorter than its fixed part (12): kept raw", ERROR_INVALID_DATA);
+		     + L" bytes, shorter than its fixed part (" + std::to_wstring(ARCHIVE_ITEM_FIXED_PART) + L"): kept raw", ERROR_INVALID_DATA);
 		return std::make_unique<UnknownShellItem>(buffer, _level);
 	}
 	return nullptr;   // no type recognised: never an implicit return

@@ -526,7 +526,7 @@ std::wstring bool_to_wstring(bool b)
 	else return L"false";
 }
 
-FILETIME wstring_to_filetime(std::wstring input) {
+FILETIME wstring_to_filetime(std::wstring input, Precision* precision) {
 
 	std::istringstream istr(encodeText(input));   // digits and separators: ASCII
 	SYSTEMTIME st = { 0 };
@@ -536,12 +536,22 @@ FILETIME wstring_to_filetime(std::wstring input) {
 	istr >> st.wDay;
 	istr.ignore(1, '/');
 	istr >> st.wYear;
+	// Two digits: read as 1980 to 2079, a FAT date starting in 1980.
+	if (!istr.fail() && st.wYear < 100) st.wYear += st.wYear < 80 ? 2000 : 1900;
 	istr.ignore(1, ' ');
 	istr >> st.wHour;
 	istr.ignore(1, ':');
 	istr >> st.wMinute;
-	istr.ignore(1, ':');
-	istr >> st.wSecond;
+	// At the end already, the minute read last: std::ws would then fail the stream.
+	const bool withoutSeconds = !istr.fail() && (istr.eof() || (istr >> std::ws).eof());
+	if (withoutSeconds && precision != nullptr) {
+		*precision = Precision::Minute;
+	}
+	else {
+		istr.ignore(1, ':');
+		istr >> st.wSecond;
+		if (precision != nullptr) *precision = Precision::Second;
+	}
 	st.wMilliseconds = 0;
 	log(3, L"🔈SystemTimeToFileTime ft");
 	if (istr.fail() || !SystemTimeToFileTime(&st, &ft)) return FILETIME{ 0, 0 };
@@ -1002,8 +1012,11 @@ std::wstring formatIso8601(const SYSTEMTIME& st, long fraction100ns, const std::
 	twoDigits(s, st.wMonth);    s += L'-';
 	twoDigits(s, st.wDay);      s += L'T';
 	twoDigits(s, st.wHour);     s += L':';
-	twoDigits(s, st.wMinute);   s += L':';
-	twoDigits(s, st.wSecond);
+	twoDigits(s, st.wMinute);
+	if (precision != Precision::Minute) {
+		s += L':';
+		twoDigits(s, st.wSecond);
+	}
 	/*  The fraction is written HERE, between the seconds and the time-zone suffix.
 	    Inserting it afterwards meant finding the end of the seconds in the
 	    finished string: on the local variant, whose "+02:00" suffix ends with

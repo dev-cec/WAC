@@ -427,8 +427,8 @@ if (Wants 'recent_documents') {
 
 # 16. A folder inside a ZIP, opened by the user's Explorer: the shellbag's
 #     archive item copies the ZIP entry's date, a clock time without time
-#     zone (13:00 here), which must be given as written. Made once: the
-#     shellbag stays.
+#     zone (13:00 here), which must be given as written. Then a folder of a
+#     7z and of a tar.gz. Made once: the shellbags stay.
 if (Wants 'shellbags') {
     $zipPath = 'C:\Users\wac\Documents\wac-archive.zip'
     if (-not (Test-Path $zipPath)) {
@@ -454,6 +454,39 @@ Start-Sleep 12
         Unregister-ScheduledTask -TaskName WacZipNav -Confirm:$false
     }
     Write-Output "zipentry=winterdir|2022-01-10T13:00:00"
+
+    # The same for the archives Windows 11 reads through libarchive (B-029): a
+    # 7z and a tar.gz made by its own tar.exe. Their item is laid out
+    # otherwise, and its date is a UTC instant, given as such.
+    $sevenPath = 'C:\Users\wac\Documents\wac-seven.7z'
+    $tarPath = 'C:\Users\wac\Documents\wac-tarball.tar.gz'
+    if (-not (Test-Path $sevenPath)) {
+        $source = 'C:\wactest\archive-source'
+        New-Item -ItemType Directory "$source\sevendir" -Force | Out-Null
+        Set-Content "$source\sevendir\a.txt" 'seven'
+        (Get-Item "$source\sevendir").LastWriteTimeUtc = [datetime]::SpecifyKind([datetime]'2023-03-05 08:15:30', 'Utc')
+        Push-Location $source
+        & tar.exe --format 7zip -cf $sevenPath sevendir
+        & tar.exe -czf $tarPath sevendir
+        Pop-Location
+        Remove-Item -Recurse -Force $source
+        $script = 'C:\wactest\archivenav-user.ps1'
+        Set-Content $script @'
+foreach ($p in 'C:\Users\wac\Documents\wac-seven.7z\sevendir', 'C:\Users\wac\Documents\wac-tarball.tar.gz\sevendir') {
+    Start-Process explorer.exe $p
+    Start-Sleep 12
+}
+(New-Object -ComObject Shell.Application).Windows() | Where-Object { "$($_.LocationURL)$($_.LocationName)" -like '*sevendir*' } | ForEach-Object { $_.Quit() }
+'@
+        $action = New-ScheduledTaskAction -Execute powershell.exe -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File $script"
+        $principal = New-ScheduledTaskPrincipal -UserId 'wac' -LogonType Interactive
+        Register-ScheduledTask -TaskName WacArchiveNav -Action $action -Principal $principal -Force | Out-Null
+        Start-ScheduledTask -TaskName WacArchiveNav
+        Start-Sleep 40
+        Unregister-ScheduledTask -TaskName WacArchiveNav -Confirm:$false
+        Remove-Item $script
+    }
+    Write-Output "readerentry=sevendir|2023-03-05T08:15:30"
 }
 
 # 17. Event values as Windows renders them in the event's XML (what the Event

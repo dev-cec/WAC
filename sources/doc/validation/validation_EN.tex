@@ -381,6 +381,12 @@ with it.
   date), \fichier{Zone.Identifier} streams, DetectionHistory and quarantine
   entries (RC4 key proven on a header Defender wrote, lying lengths refused);
   62 checks, no failure \\
+\texttt{shell\_items\_test} & bytes the VM's Explorer wrote; libfwsi and
+  SBECmd's Lnk library &
+  shellbag items of an archive's content: ZIP (real folder, file with sizes,
+  no date, XP layout) and 7z / tar.gz read through libarchive (real items,
+  UTC date), every truncation against a forbidden page; 683 checks, no
+  failure \\
 \texttt{json\_test} & WAC's JSON writer & identical round trip, 26 files of a
   collection read back and rewritten to the byte, malformed texts refused,
   200,000 mutations without an out-of-bounds read (sanitizers) \\

@@ -239,6 +239,23 @@ void textDates() {
 	for (const wchar_t* impossible : { L"13/1/2026 0:00:00", L"2/30/2026 0:00:00", L"1/1/2026 25:00:00",
 	                                   L"1/1/2026 0:60:00", L"", L"garbage", L"1/1/1600 0:00:00" })
 		check(value(wstring_to_filetime(impossible)) == 0, L"text date \"" + std::wstring(impossible) + L"\" should give a null date");
+
+	// Windows XP's archive items: two-digit year, no seconds — accepted only
+	// when the caller takes the precision; a FAT year, so 04 is 2004, 99 1999.
+	const struct { const wchar_t* text; const wchar_t* iso; Precision precision; } written[] = {
+		{ L"11/26/04  21:00", L"2004-11-26T21:00Z", Precision::Minute },
+		{ L"12/31/99  23:59", L"1999-12-31T23:59Z", Precision::Minute },
+		{ L"06/15/2021  18:24:28", L"2021-06-15T18:24:28Z", Precision::Second },
+	};
+	for (const auto& w : written) {
+		Precision precision = Precision::HundredNanoseconds;
+		const FILETIME date = wstring_to_filetime(w.text, &precision);
+		check(timeToIso8601Utc(date, precision) == w.iso && precision == w.precision,
+		      L"text date \"" + std::wstring(w.text) + L"\": " + timeToIso8601Utc(date, precision));
+	}
+	check(value(wstring_to_filetime(L"11/26/04  21:00")) == 0, L"a date without seconds accepted without its precision");
+	Precision unused = Precision::Second;
+	check(value(wstring_to_filetime(L"11/26/04  ", &unused)) == 0, L"a date without minutes accepted");
 }
 
 void suspectOffset(std::mt19937_64& rng) {
