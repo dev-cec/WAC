@@ -586,6 +586,11 @@ if (Test-Path $chrome) {
     & $chrome --headless=new --disable-gpu --no-first-run --user-data-dir="$data" --dump-dom "BASE/page?wac=chrome-TOKEN" | Out-Null
     & $chrome --headless=new --disable-gpu --no-first-run --user-data-dir="$data" --dump-dom "https://www.google.com/search?q=wacsearchTOKEN" | Out-Null
     Start-Process $chrome -ArgumentList '--no-first-run', "BASE/c/wac-dl-chrome-TOKEN.txt"; Start-Sleep 12
+    # Closed as a user would first: Chrome commits the download's row in History
+    # when it quits; killed at once, the row could still be in a pending
+    # transaction (History-journal), the file downloaded but the trace absent.
+    Get-Process chrome -ErrorAction SilentlyContinue | Where-Object MainWindowHandle -ne 0 | ForEach-Object { $null = $_.CloseMainWindow() }
+    Start-Sleep 8
     Get-Process chrome -ErrorAction SilentlyContinue | Stop-Process -Force
 }
 if (Test-Path $firefox) {
