@@ -4,8 +4,7 @@
 #include "prefetchs.h"
 #include <map>
 #include "consigne.h"
-#include "ntfs_reference.h"
-#include <cstring>
+#include "conversions.h"
 
 /*  WHAT WAS WRONG. The reference was split by hand: the sequence read on FOUR
     bytes at offset 6 — its two bytes plus the first two of whatever followed
@@ -14,11 +13,9 @@
     unsigned short, hence always lost. Measured on the test machine: sequences
     of 770 703 362, and 3 652 references whose sequence was not the $MFT's.
     The eight bytes are now read as one integer and split by the only function
-    that does it (ntfs_reference.h). */
+    that does it (conversions.h). */
 MFTInformation::MFTInformation(LPBYTE data) {
-	uint64_t raw;
-	memcpy(&raw, data, sizeof raw);
-	const NtfsReference reference = splitNtfsReference(raw);
+	const NtfsReference reference = splitNtfsReference(readLittleEndian<uint64_t>(data));
 	entryIndex = reference.entry;
 	sequenceNumber = reference.sequence;
 }

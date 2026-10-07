@@ -3,7 +3,7 @@
  */
 #include "usn_journal.h"
 #include "mft.h"
-#include "ntfs_reference.h"
+#include "conversions.h"
 #include "consigne.h"
 #include "idList.h"
 #include <cstring>

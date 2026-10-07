@@ -2,7 +2,7 @@
  *  \brief The $MFT of the system volume, read from its exhibit (see mft.h).
  */
 #include "mft.h"
-#include "ntfs_reference.h"
+#include "conversions.h"
 #include "consigne.h"
 #include "idList.h"
 #include "raw_hive.h"

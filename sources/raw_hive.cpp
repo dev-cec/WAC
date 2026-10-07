@@ -7,7 +7,7 @@
  *  Built for hives/EVTX/Tasks: non-resident, medium-sized files.
  */
 #include "raw_hive.h"
-#include "ntfs_reference.h"
+#include "conversions.h"
 #include <vector>
 #include <cstdint>
 #include <cstring>

@@ -41,7 +41,7 @@
 #include "wevt.h"
 #include "conversions.h"
 #include "prefetchs.h"
-#include "ntfs_reference.h"
+#include "conversions.h"
 #include "registry_common.h"
 #include "sqlite3.h"
 #include "sha.h"

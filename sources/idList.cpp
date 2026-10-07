@@ -2,7 +2,7 @@
  *  \brief Decoding of shell items, ID lists, property stores and extension blocks (see idList.h).
  */
 #include "idList.h"
-#include "ntfs_reference.h"
+#include "conversions.h"
 #include <exception>
 #include <map>
 
