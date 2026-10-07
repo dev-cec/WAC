@@ -26,3 +26,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Journal
 - 2026-10-07 : créée pendant B-026.
+- 2026-10-07 (B-024) : lectures little-endian locales que l'inventaire de B-030 a manquées, faute de s'appeler rd* : lu16/lu32 d'authenticode.cpp, read16/32/64 bornées (pointeur, taille, décalage) d'evtx.cpp — à ramener à readLittleEndian<T> (une variante bornée sur pointeur et taille s'il le faut).
