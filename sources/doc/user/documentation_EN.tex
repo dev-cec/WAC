@@ -386,6 +386,7 @@ artefacts:              # one key per artefact; a missing key is true
   shortcuts:               true   # shortcuts outside Recent: Start menu, desktops, Quick Launch, pinned task bar
   srum:                    true   # SRUDB.dat: bytes sent and received, resources used, per application and user, 30 to 60 days
   startup_folders:         true   # startup folders: what runs at logon
+  thumbcache:              true   # Explorer's thumbnail and icon caches: what each user saw, even deleted since; images exported
   typed_paths:             true   # paths typed in Explorer's address bar
   usbstor:                 true   # USB mass storage devices (Enum\USBSTOR)
   userassist:              true   # programs each user launched from Explorer, with count and date
@@ -1450,6 +1451,19 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         \champ{Domain}, \champ{SourceAddress} and \champ{SessionId}, whatever
         name its log gives them. Of little use on a workstation, it is the
         first question on a server.
+  \item[\fichier{thumbcache.json}] Explorer's thumbnail and icon caches of
+        every profile (\fichier{thumbcache\_*.db}, \fichier{iconcache\_*.db}):
+        what the user had on screen, even if the file was deleted since. For
+        each entry: its cache and size, its hash (\champ{Hash} — the
+        \texttt{System.ThumbnailCacheId} Windows gives for the file, which ties
+        a thumbnail to its file), its identifier, its dimensions, its format
+        (\texttt{png}, \texttt{jpg}, \texttt{bmp}), the SHA-256 of the image, and
+        the image itself, exported next to the JSON
+        (\fichier{thumbcache\textbackslash<SID>\textbackslash<cache>\textbackslash<hash>.<ext>}).
+        The two checksums Windows writes for each entry are recomputed
+        (\champ{HeaderChecksumValid}, \champ{DataChecksumValid}): an entry read
+        wrong fails them. Windows 8 to 11; the layout of Vista and 7 is not
+        decoded.
   \item[\fichier{error\_reports.json}] Windows error reports
         (\fichier{Report.wer}) of the machine and of each profile: program, path,
         instant (\champ{EventTimeUtc}), problem signature (faulting module,

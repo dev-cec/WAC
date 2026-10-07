@@ -88,6 +88,7 @@ artefacts:
   shortcuts:               true   # shortcuts outside Recent: Start menu, desktops, Quick Launch, pinned task bar
   srum:                    true   # SRUDB.dat: bytes sent and received, resources used, per application and user, 30 to 60 days
   startup_folders:         true   # startup folders: what runs at logon
+  thumbcache:              true   # Explorer's thumbnail and icon caches: what each user saw, even deleted since; images exported
   typed_paths:             true   # paths typed in Explorer's address bar
   usbstor:                 true   # USB mass storage devices (Enum\USBSTOR)
   userassist:              true   # programs each user launched from Explorer, with count and date

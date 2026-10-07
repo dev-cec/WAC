@@ -48,7 +48,7 @@ enum class Text : unsigned {
 	StepPowerShellHistory, StepSetupApi, StepRecycleBin, StepHosts, StepErrorReports, StepDefenderLogs,
 	StepDefenderDetections, StepDefenderQuarantine,
 	StepStartupFolders, StepZoneIdentifiers, StepSecurityHive, StepPersistence,
-	StepOfficeTrustRecords, StepTypedPaths, StepWordWheelQueries, StepRootCertificates, StepInternetSettingsSet, StepFirewall, StepWmiPersistence, StepSrum, StepBitsJobs, StepFatVolumes, StepInstalledPrograms, StepDefenderConfiguration, StepExplorerRecentDocs, StepMountPoints, StepKnownNetworks, StepProgramUsages, StepDevices, StepNetworkShares, StepNetworkConfiguration, StepEventLogConfiguration, StepShortcuts, StepSecurityDescriptors, StepNtfsVolumes, StepDpapiMasterKeys, StepUserShellFolders, StepWebClient, StepActivitiesCache, StepSearchIndex, StepRdpClient, StepRdpServer,
+	StepOfficeTrustRecords, StepTypedPaths, StepWordWheelQueries, StepRootCertificates, StepInternetSettingsSet, StepFirewall, StepWmiPersistence, StepSrum, StepBitsJobs, StepFatVolumes, StepInstalledPrograms, StepDefenderConfiguration, StepExplorerRecentDocs, StepMountPoints, StepKnownNetworks, StepProgramUsages, StepDevices, StepNetworkShares, StepNetworkConfiguration, StepEventLogConfiguration, StepShortcuts, StepSecurityDescriptors, StepNtfsVolumes, StepDpapiMasterKeys, StepUserShellFolders, StepWebClient, StepActivitiesCache, StepSearchIndex, StepRdpClient, StepRdpServer, StepThumbcache,
 	// Steps: investigation log
 	StepWriteConversionLog, StepWriteInvestigationLog,
 	// Artefacts switched off by wac.yml (their name, then the message)
@@ -60,7 +60,7 @@ enum class Text : unsigned {
 	ArtefactJumpListsAutomatic, ArtefactJumpListsCustom,
 	ArtefactPowerShellHistory, ArtefactSetupApi, ArtefactRecycleBin, ArtefactHosts, ArtefactErrorReports,
 	ArtefactDefenderLogs, ArtefactDefenderDetections, ArtefactDefenderQuarantine, ArtefactStartupFolders, ArtefactZoneIdentifiers, ArtefactSecurityHive,
-	ArtefactPersistence, ArtefactOfficeTrustRecords, ArtefactTypedPaths, ArtefactWordWheelQueries, ArtefactRootCertificates, ArtefactInternetSettingsSet, ArtefactFirewall, ArtefactWmiPersistence, ArtefactSrum, ArtefactBitsJobs, ArtefactFatVolumes, ArtefactInstalledPrograms, ArtefactDefenderConfiguration, ArtefactExplorerRecentDocs, ArtefactMountPoints, ArtefactKnownNetworks, ArtefactProgramUsages, ArtefactDevices, ArtefactNetworkShares, ArtefactNetworkConfiguration, ArtefactEventLogConfiguration, ArtefactShortcuts, ArtefactSecurityDescriptors, ArtefactNtfsVolumes, ArtefactDpapiMasterKeys, ArtefactUserShellFolders, ArtefactWebClient, ArtefactActivitiesCache, ArtefactSearchIndex, ArtefactRdpClient, ArtefactRdpServer,
+	ArtefactPersistence, ArtefactOfficeTrustRecords, ArtefactTypedPaths, ArtefactWordWheelQueries, ArtefactRootCertificates, ArtefactInternetSettingsSet, ArtefactFirewall, ArtefactWmiPersistence, ArtefactSrum, ArtefactBitsJobs, ArtefactFatVolumes, ArtefactInstalledPrograms, ArtefactDefenderConfiguration, ArtefactExplorerRecentDocs, ArtefactMountPoints, ArtefactKnownNetworks, ArtefactProgramUsages, ArtefactDevices, ArtefactNetworkShares, ArtefactNetworkConfiguration, ArtefactEventLogConfiguration, ArtefactShortcuts, ArtefactSecurityDescriptors, ArtefactNtfsVolumes, ArtefactDpapiMasterKeys, ArtefactUserShellFolders, ArtefactWebClient, ArtefactActivitiesCache, ArtefactSearchIndex, ArtefactRdpClient, ArtefactRdpServer, ArtefactThumbcache,
 	ArtefactOperatingSystem, ArtefactEvents,
 	NotRequested, NotNeeded,
 	// End of the run

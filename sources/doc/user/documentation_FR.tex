@@ -391,6 +391,7 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   shortcuts:               true   # raccourcis hors de Recent : menu Démarrer, Bureaux, Quick Launch, barre des tâches
   srum:                    true   # SRUDB.dat : réseau et ressources par application et utilisateur, 30 à 60 jours
   startup_folders:         true   # dossiers de démarrage : ce qui s'exécute à l'ouverture de session
+  thumbcache:              true   # caches des miniatures et des icônes : ce que chacun a vu, même supprimé ; images exportées
   typed_paths:             true   # chemins tapés dans l'Explorateur
   usbstor:                 true   # périphériques de stockage USB (Enum\USBSTOR)
   userassist:              true   # programmes lancés depuis l'Explorateur, avec compteur et date
@@ -1496,6 +1497,20 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \champ{User}, \champ{Domain}, \champ{SourceAddress} et
         \champ{SessionId}, quel que soit le nom que lui donne son journal. Peu
         utile sur un poste, c'est la première question sur un serveur.
+  \item[\fichier{thumbcache.json}] caches des miniatures et des icônes de
+        l'Explorateur, de chaque profil (\fichier{thumbcache\_*.db},
+        \fichier{iconcache\_*.db}) : ce que l'utilisateur a eu sous les yeux,
+        même si le fichier a été supprimé depuis. Pour chaque entrée : son
+        cache et sa taille, son hachage (\champ{Hash} — le
+        \texttt{System.ThumbnailCacheId} que Windows donne pour le fichier, ce
+        qui relie une miniature à son fichier), son identifiant, ses
+        dimensions, son format (\texttt{png}, \texttt{jpg}, \texttt{bmp}), le
+        SHA-256 de l'image, et l'image elle-même, exportée à côté du JSON
+        (\fichier{thumbcache\textbackslash<SID>\textbackslash<cache>\textbackslash<hachage>.<ext>}).
+        Les deux sommes de contrôle que Windows écrit pour chaque entrée sont
+        recalculées (\champ{HeaderChecksumValid}, \champ{DataChecksumValid}) :
+        une entrée lue de travers les échoue. Windows 8 à 11 ; la disposition
+        de Vista et 7 n'est pas décodée.
   \item[\fichier{error\_reports.json}] rapports d'erreurs Windows
         (\fichier{Report.wer}) de la machine et de chaque profil : programme,
         chemin, instant (\champ{EventTimeUtc}), signature du problème

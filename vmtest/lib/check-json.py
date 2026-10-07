@@ -325,6 +325,7 @@ def cross_checks(folder):
     found += guarded(check_event_messages, folder)
     found += guarded(check_exhibit_reads_after_copy, folder)
     found += guarded(check_rdp, folder)
+    found += guarded(check_thumbcache, folder)
     return found
 
 
@@ -2511,6 +2512,61 @@ def check_exhibit_reads_after_copy(folder):
     print(f"  {'✅' if ok else '❌'} exhibit store: {len(reads)} read(s) by WAC.exe before its working copy ({copied}Z), "
           f"{len(after)} after" + ("" if ok else (": the audit recorded no read at all" if not reads else f": {after[:3]}")))
     return 0 if ok else 1
+
+
+def check_thumbcache(folder):
+    """thumbcache.json: the format's own checksums, and the picture witness.
+
+    Every entry carries two CRC-64 Windows computed when it wrote it, over
+    its header and over its image: WAC recomputes them, and an entry it reads
+    wrong — or reads from another file — fails them. An identifier of sixteen
+    hexadecimal digits is the hash written out: the two must agree. The
+    witness (place-file-artefacts.ps1, section 41) is a picture "wac" saw in
+    Explorer: Windows gives its System.ThumbnailCacheId, which must be the
+    hash of an entry holding an image, exported with the SHA-256 the JSON
+    gives."""
+    import hashlib, re
+    entries = load(folder, "thumbcache.json")
+    if not isinstance(entries, list):
+        print("  ⏭️  thumbcache.json absent or not collected: thumbnail caches not confronted")
+        return 0
+    found = 0
+    bad_header = [e for e in entries if e.get("HeaderChecksumValid") is not True]
+    bad_data = [e for e in entries if e.get("DataSize") and e.get("DataChecksumValid") is not True]
+    bad_id = [e for e in entries if re.fullmatch(r"[0-9a-f]{16}", str(e.get("Identifier", ""))) and e.get("Identifier") != e.get("Hash")]
+    with_data = sum(1 for e in entries if e.get("DataSize"))
+    if bad_header or bad_data or bad_id or not entries:
+        print(f"  ❌ thumbcache.json: {len(entries)} entry(ies), {len(bad_header)} header and {len(bad_data)} data "
+              f"checksum(s) failed, {len(bad_id)} identifier(s) not their hash")
+        for e in (bad_header + bad_data + bad_id)[:3]:
+            print(f"        {e.get('Cache')} @ {e.get('Offset')}: {e.get('Hash')}")
+        found += 1
+    else:
+        print(f"  ✅ thumbcache.json: {len(entries)} entry(ies) of {len({e.get('Cache') for e in entries})} cache(s), "
+              f"every header checksum and the {with_data} data checksum(s) as Windows wrote them")
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    witness = None
+    if os.path.exists(path):
+        with open(path, encoding="utf-8-sig", errors="replace") as f:
+            witness = next((l.strip()[len("thumbcache="):].split("|") for l in f if l.startswith("thumbcache=")), None)
+    if not witness:
+        print("  ⏭️  no thumbnail witness: its entry not looked for")
+        return found
+    cache_id, picture = witness[0], witness[1] if len(witness) > 1 else ""
+    entry = next((e for e in entries if e.get("Hash") == cache_id and e.get("DataSize")), None)
+    image = os.path.join(folder, str(entry.get("Image", "")).replace("\\", os.sep)) if entry and entry.get("Image") else None
+    same = False
+    if image and os.path.exists(image):
+        with open(image, "rb") as f:
+            same = hashlib.sha256(f.read()).hexdigest().upper() == str(entry.get("Sha256", "")).upper()
+    if entry and same and entry.get("Format") in ("png", "jpg", "bmp"):
+        print(f"  ✅ thumbcache.json: the thumbnail of {picture} (ThumbnailCacheId {cache_id}) in {entry.get('Cache')}, "
+              f"{entry.get('Width')}×{entry.get('Height')} {entry.get('Format')}, exported with its SHA-256")
+    else:
+        print(f"  ❌ thumbcache.json: the thumbnail of {picture} (ThumbnailCacheId {cache_id}) "
+              f"{'exported image missing or different' if entry else 'not found'}")
+        found += 1
+    return found
 
 
 def check_rdp(folder):

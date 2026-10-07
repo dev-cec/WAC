@@ -663,7 +663,7 @@ password nor cookie value in the JSON. No data needed.
 cd build-windows/tests && wine file_artefacts_test.exe
 \end{lstlisting}
 
-Reference: 153 checks, no failure (the second-lot registry values included: TrustRecords, firewall rule, certificate Blob). In the VM cycle,
+Reference: 164 checks, no failure (the second-lot registry values included: TrustRecords, firewall rule, certificate Blob; and the thumbnail caches: a real entry header of the VM and the checksum Windows wrote for it, a cache built here, forged lengths). In the VM cycle,
 \fichier{place-file-artefacts.ps1} places witnesses whose content is known (a
 history, a file sent to the bin, a hosts entry, a startup script) and
 \fichier{check-json.py} finds them in the JSON.

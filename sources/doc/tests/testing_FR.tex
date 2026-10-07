@@ -693,7 +693,7 @@ Aucune donnée nécessaire.
 cd build-windows/tests && wine file_artefacts_test.exe
 \end{lstlisting}
 
-Référence : 153 contrôles, aucun échec (dont les valeurs du lot 2 du registre : TrustRecords, règle de pare-feu, blob de certificat). Dans le cycle VM,
+Référence : 164 contrôles, aucun échec (dont les valeurs du lot 2 du registre : TrustRecords, règle de pare-feu, blob de certificat ; et les caches des miniatures : une en-tête d'entrée réelle de la VM et la somme que Windows lui a écrite, un cache construit, des longueurs forgées). Dans le cycle VM,
 \fichier{place-file-artefacts.ps1} dépose des témoins de contenu connu (un
 historique, un fichier mis à la corbeille, une entrée \fichier{hosts}, un
 script de démarrage) et \fichier{check-json.py} les retrouve dans les JSON.

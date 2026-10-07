@@ -38,6 +38,7 @@
 #include "search_index.h"
 #include "rdp_client.h"
 #include "rdp_server.h"
+#include "thumbcache.h"
 #include "wevt.h"
 #include "conversions.h"
 #include "prefetchs.h"
@@ -902,6 +903,72 @@ void prefetchReference() {
 	check(split.entry == 0x800000000005ULL && split.sequence == 0xFFFF, "ntfs reference: high bits to the sequence only");
 }
 
+/*! Explorer's caches (CMMM). The reference is Windows itself: the 48 bytes of
+ *  an entry header of the test VM's iconcache_48.db and the checksum Windows
+ *  wrote after them. Then a cache built here: decoded, its checksums found
+ *  valid, a byte the data checksum samples caught when changed, one it skips
+ *  not — the format's own choice —, and forged lengths stopping the reading. */
+void thumbcache() {
+	const uint8_t header[48] = { 0x43, 0x4D, 0x4D, 0x4D, 0xF0, 0x24, 0x00, 0x00, 0xB2, 0xB4, 0x6B, 0xFD, 0xC4, 0x35, 0x14, 0x59,
+	                             0x20, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x96, 0x24, 0x00, 0x00, 0x30, 0x00, 0x00, 0x00,
+	                             0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xBC, 0x4F, 0x4E, 0x58, 0xC0, 0x36, 0x67, 0xE7 };
+	check(thumbcacheCrc64(header, sizeof header, ~0ULL) == 0x209DE6BD12D112A4ULL, "thumbcache: header checksum as Windows wrote it");
+	// A cache of one entry: identifier "0123456789abcdef", 2 bytes of padding, a 2,000-byte PNG.
+	const std::wstring identifier = L"0123456789abcdef";
+	std::vector<uint8_t> data(2000);
+	for (size_t i = 0; i < data.size(); ++i) data[i] = (uint8_t)(i * 7 + 3);
+	const uint8_t png[4] = { 0x89, 'P', 'N', 'G' };
+	memcpy(data.data(), png, 4);
+	auto build = [&](const std::vector<uint8_t>& image, uint32_t identifierBytes) {
+		std::vector<uint8_t> f(24 + 56 + identifier.size() * 2 + 2 + image.size());
+		memcpy(f.data(), "CMMM", 4);
+		writeLittleEndian<uint32_t>(f.data() + 4, 0x20);
+		writeLittleEndian<uint32_t>(f.data() + 8, 4);                   // 256 pixels
+		writeLittleEndian<uint32_t>(f.data() + 16, 24);
+		writeLittleEndian<uint32_t>(f.data() + 20, (uint32_t)f.size());
+		uint8_t* e = f.data() + 24;
+		memcpy(e, "CMMM", 4);
+		writeLittleEndian<uint32_t>(e + 4, (uint32_t)(f.size() - 24));
+		writeLittleEndian<uint64_t>(e + 8, 0x0123456789ABCDEFULL);
+		writeLittleEndian<uint32_t>(e + 16, identifierBytes);
+		writeLittleEndian<uint32_t>(e + 20, 2);
+		writeLittleEndian<uint32_t>(e + 24, (uint32_t)image.size());
+		writeLittleEndian<uint32_t>(e + 28, 256);
+		writeLittleEndian<uint32_t>(e + 32, 192);
+		for (size_t i = 0; i < identifier.size(); ++i) writeLittleEndian<uint16_t>(e + 56 + 2 * i, (uint16_t)identifier[i]);
+		memcpy(e + 56 + identifier.size() * 2 + 2, data.data(), image.size());
+		writeLittleEndian<uint64_t>(e + 40, thumbcacheDataChecksum(data.data(), data.size()));
+		writeLittleEndian<uint64_t>(e + 48, thumbcacheCrc64(e, 48, ~0ULL));
+		return f;
+	};
+	std::vector<uint8_t> file = build(data, (uint32_t)identifier.size() * 2);
+	ThumbcacheFile cache;
+	check(decodeThumbcache(file, cache) && cache.entries.size() == 1 && cache.entries[0].hash == 0x0123456789ABCDEFULL
+	      && cache.entries[0].identifier == identifier && cache.entries[0].width == 256 && cache.entries[0].height == 192
+	      && cache.entries[0].dataSize == 2000 && cache.entries[0].headerChecksumValid && cache.entries[0].dataChecksumValid
+	      && thumbcacheSize(cache.type) == L"256", "thumbcache: an entry decoded, both checksums valid");
+	const size_t at = cache.entries.empty() ? 0 : cache.entries[0].dataOffset;
+	std::vector<uint8_t> sampled = file, skipped = file;
+	sampled[at + 1024] ^= 0xFF;   // the first of the four bytes taken every 400
+	skipped[at + 1030] ^= 0xFF;   // between two samples
+	ThumbcacheFile a, b;
+	check(decodeThumbcache(sampled, a) && a.entries.size() == 1 && !a.entries[0].dataChecksumValid,
+	      "thumbcache: a byte the data checksum covers, changed, is caught");
+	check(decodeThumbcache(skipped, b) && b.entries.size() == 1 && b.entries[0].dataChecksumValid,
+	      "thumbcache: a byte between the samples is not — as Windows computes it");
+	std::vector<uint8_t> forged = build(data, 0x7FFFFFFE);   // identifier longer than the entry
+	ThumbcacheFile c;
+	check(decodeThumbcache(forged, c) && c.entries.empty(), "thumbcache: a forged length stops the reading");
+	std::vector<uint8_t> cut(file.begin(), file.begin() + 100);
+	writeLittleEndian<uint32_t>(cut.data() + 20, 0xFFFFFFFF);   // first free place beyond the file
+	ThumbcacheFile d;
+	check(decodeThumbcache(cut, d) && d.entries.empty(), "thumbcache: a cut file read no further than its end");
+	std::vector<uint8_t> seven = file;
+	writeLittleEndian<uint32_t>(seven.data() + 4, 0x15);   // Windows 7: another entry layout
+	ThumbcacheFile g;
+	check(!decodeThumbcache(seven, g), "thumbcache: a Windows 7 layout not decoded as Windows 8 to 11's");
+}
+
 } // namespace
 
 int wmain() {
@@ -921,6 +988,7 @@ int wmain() {
 	userShellFolders();
 	sqliteReader();
 	prefetchReference();
+	thumbcache();
 	check(to_hex(0x0BD30981u, 8, HexLetters::Upper) == L"0BD30981" && to_hex(0x200u, 8, HexLetters::Upper, true) == L"0x00000200"
 	      && to_hex(0ULL, 1, HexLetters::Lower, true) == L"0x0" && to_hex((uint8_t)0xAB) == L"ab" && to_hex(-1, 1) == L"ffffffff",
 	      "to_hex: the forms it replaced (%08X, 0x%08X, 0x%llx), two digits by default, a negative as its unsigned bits");

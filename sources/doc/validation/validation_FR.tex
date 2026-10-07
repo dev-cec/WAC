@@ -632,6 +632,12 @@ document témoin indexé par Windows ; requête de Windows sur son propre index
   (OLE DB, \texttt{Search.CollatorDSO}) : URL, modification, taille de chaque
   élément / \fichier{search\_index.json} (515 éléments identiques) &
   contrôle ajouté avec l'artefact \\
+image vue par « wac » dans l'Explorateur, son \texttt{System.ThumbnailCacheId}
+  donné par Windows ; les deux sommes de contrôle CRC-64 que Windows écrit
+  pour chaque entrée, recalculées / \fichier{thumbcache.json} (835 entrées de
+  9 caches, toutes les sommes d'en-tête et les 777 sommes de données
+  identiques ; la miniature du témoin retrouvée, exportée avec son SHA-256) &
+  contrôle ajouté avec l'artefact \\
 session RDP réelle de « wac » vers 127.0.0.2 avec un compte de test, fermée
   comme un utilisateur le ferait ; serveur témoin de valeurs connues ; tuiles du
   cache lues par bmc-tools (ANSSI) ; événements entrants listés par

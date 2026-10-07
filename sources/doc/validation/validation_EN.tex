@@ -610,6 +610,12 @@ witness document indexed by Windows; Windows' query of its own index
   (OLE DB, \texttt{Search.CollatorDSO}): URL, modification, size of each
   item / \fichier{search\_index.json} (515 identical items) &
   check added with the artefact \\
+picture seen by "wac" in Explorer, its \texttt{System.ThumbnailCacheId} given
+  by Windows; the two CRC-64 checksums Windows writes for each entry,
+  recomputed / \fichier{thumbcache.json} (835 entries of 9 caches, every
+  header checksum and the 777 data checksums identical; the witness's
+  thumbnail found, exported with its SHA-256) &
+  check added with the artefact \\
 real RDP session of "wac" to 127.0.0.2 with a test account, closed as a user
   would; witness server of known values; cache tiles read by bmc-tools (ANSSI);
   incoming events listed by \texttt{Get-WinEvent} / \fichier{rdp\_client.json},

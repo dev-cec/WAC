@@ -37,6 +37,7 @@
 #include "activities_cache.h"
 #include "search_index.h"
 #include "rdp_client.h"
+#include "thumbcache.h"
 #include "rdp_server.h"
 #include "setupapi_log.h"
 #include "recycle_bin.h"
@@ -885,6 +886,8 @@ void convertArtefacts(bool systemAvailable) {
 	                     L"artefacts.rdp_client", Text::StepRdpClient);
 	convertArtefact<RdpServer>(conf.artefacts.rdpServer, "rdp_server.json", Text::ArtefactRdpServer,
 	                     L"artefacts.rdp_server", Text::StepRdpServer);
+	convertArtefact<Thumbcaches>(conf.artefacts.thumbcache, "thumbcache.json", Text::ArtefactThumbcache,
+	                             L"artefacts.thumbcache", Text::StepThumbcache);
 
 	/* SYSTEM INFORMATION, offline.
 	   OUTSIDE the single-exit block above, and not inside it: even without a

@@ -18,6 +18,7 @@
 #include "activities_cache.h"
 #include "search_index.h"
 #include "rdp_client.h"
+#include "thumbcache.h"
 #include "running_machine.h"
 #include "startup_folders.h"
 #include "shortcuts.h"
@@ -483,6 +484,8 @@ HRESULT ExtractFileArtefactsRaw() {
 			addTarget(profile + RDP_CACHE_FOLDER, { L".bin", L".bmc" });
 			addTarget(profile + L"\\Documents", { L".rdp" });
 		}
+		// Explorer's thumbnail and icon caches, with their index.
+		if (conf.artefacts.thumbcache) addTarget(profile + THUMBCACHE_FOLDER, { L".db" });
 	}
 
 	HRESULT global = S_OK;

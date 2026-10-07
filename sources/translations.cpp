@@ -130,6 +130,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepSearchIndex, L"Index de recherche Windows", L"Extracting WINDOWS SEARCH INDEX" },
 	{ Text::StepRdpClient, L"Connexions Bureau à distance sortantes", L"Extracting OUTGOING RDP CONNECTIONS" },
 	{ Text::StepRdpServer, L"Connexions Bureau à distance entrantes", L"Extracting INCOMING RDP CONNECTIONS" },
+	{ Text::StepThumbcache, L"Caches des miniatures et des icônes", L"Extracting THUMBNAIL AND ICON CACHES" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },
@@ -202,6 +203,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactSearchIndex, L"Index de recherche Windows", L"Windows Search index" },
 	{ Text::ArtefactRdpClient, L"Connexions Bureau à distance sortantes", L"Outgoing Remote Desktop connections" },
 	{ Text::ArtefactRdpServer, L"Connexions Bureau à distance entrantes", L"Incoming Remote Desktop connections" },
+	{ Text::ArtefactThumbcache, L"Caches des miniatures et des icônes", L"Thumbnail and icon caches" },
 	{ Text::ArtefactOperatingSystem,   L"Système d'exploitation",                        L"Operating system" },
 	{ Text::ArtefactEvents,            L"Journaux d'événements",                         L"Event logs" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },

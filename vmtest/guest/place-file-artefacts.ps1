@@ -46,6 +46,8 @@
 #   setupapi     number of sections of setupapi.dev*.log now; the collection,
 #                later, finds at least as many -> setupapi.json
 #   mplog        number of Defender support logs -> defender_log.json
+#   thumbcache   the witness picture's System.ThumbnailCacheId and path
+#                -> thumbcache.json
 #
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File place-file-artefacts.ps1
 
@@ -1247,4 +1249,43 @@ Remove-ItemProperty $client -Name AuthenticationLevelOverride -ErrorAction Silen
         $d = @{}; foreach ($x in ([xml]$e.ToXml()).Event.EventData.Data) { $d[$x.Name] = $x.'#text' }
         if ($d['LogonType'] -eq '10' -and $d['TargetUserName'] -eq 'wacrdp') { Write-Output ("rdpin=Security|" + $e.RecordId + "|wacrdp|" + $d['IpAddress']) }
     }
+}
+
+# 41. B-026 — a picture seen in Explorer: "wac" opens its Pictures, where a PNG
+#     witness lies (made once, never piled up), and Windows gives the
+#     picture's System.ThumbnailCacheId — the hash of its entry in
+#     thumbcache_<size>.db. The task, its script and its answer are removed.
+if (Wants 'thumbcache') {
+    $picture = 'C:\Users\wac\Pictures\wac-thumbcache-witness.png'
+    if (-not (Test-Path $picture)) {
+        Add-Type -AssemblyName System.Drawing
+        $bitmap = New-Object System.Drawing.Bitmap 320, 200
+        $g = [System.Drawing.Graphics]::FromImage($bitmap)
+        $g.Clear([System.Drawing.Color]::FromArgb(30, 90, 160))
+        $g.FillEllipse([System.Drawing.Brushes]::Orange, 60, 30, 200, 140)
+        $g.DrawString('WAC', (New-Object System.Drawing.Font 'Arial', 32), [System.Drawing.Brushes]::White, 105, 75)
+        $g.Dispose()
+        $bitmap.Save($picture, [System.Drawing.Imaging.ImageFormat]::Png)
+        $bitmap.Dispose()
+    }
+    $answer = 'C:\wactest\thumbcache-id.txt'
+    $script = 'C:\wactest\thumbcache-user.ps1'
+    Remove-Item $answer -ErrorAction SilentlyContinue
+    Set-Content $script @'
+$folder = 'C:\Users\wac\Pictures'
+Start-Process explorer.exe $folder
+Start-Sleep 12
+$item = (New-Object -ComObject Shell.Application).Namespace($folder).ParseName('wac-thumbcache-witness.png')
+$id = $item.ExtendedProperty('System.ThumbnailCacheId')
+if ($id) { Set-Content 'C:\wactest\thumbcache-id.txt' ('{0:x16}' -f [uint64]$id) }
+(New-Object -ComObject Shell.Application).Windows() | Where-Object { "$($_.LocationURL)" -like '*Pictures*' } | ForEach-Object { $_.Quit() }
+'@
+    $action = New-ScheduledTaskAction -Execute powershell.exe -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File $script"
+    $principal = New-ScheduledTaskPrincipal -UserId 'wac' -LogonType Interactive
+    Register-ScheduledTask -TaskName WacThumbcache -Action $action -Principal $principal -Force | Out-Null
+    Start-ScheduledTask -TaskName WacThumbcache
+    Start-Sleep 25
+    Unregister-ScheduledTask -TaskName WacThumbcache -Confirm:$false
+    if (Test-Path $answer) { Write-Output ("thumbcache=" + (Get-Content $answer).Trim() + "|" + $picture) }
+    Remove-Item $answer, $script -ErrorAction SilentlyContinue
 }

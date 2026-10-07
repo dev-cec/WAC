@@ -372,8 +372,12 @@ fetch_results() {
   # confront them with bmc-tools. None of them in an --only cycle without
   # rdp_client: PowerShell then ends in error, and without `|| true` that
   # status ended the whole harness before its checks.
+  # The thumbnail of the B-026 witness, exported by WAC: only its own, out of
+  # the thousands a cache holds.
+  local thumbnailId
+  thumbnailId=$(sed -n 's/^thumbcache=\([0-9a-f]\{16\}\)|.*/\1/p' "$OUTPUT/reference/file-artefacts.txt" 2>/dev/null | tr -d '\r' | head -1)
   local rdpFiles
-  rdpFiles=$($QGA run -- powershell.exe -NoProfile -Command "Get-ChildItem -LiteralPath '$vm\\working\\Users' -Recurse -File -Force -Filter 'Cache*.bin' -ErrorAction SilentlyContinue | Where-Object FullName -like '*Terminal Server Client*' | ForEach-Object FullName; Get-ChildItem -LiteralPath '$vm\\rdp_cache' -Recurse -File -Filter '*.bmp' -ErrorAction SilentlyContinue | ForEach-Object FullName" 2>/dev/null | tr -d '\r' || true)
+  rdpFiles=$($QGA run -- powershell.exe -NoProfile -Command "Get-ChildItem -LiteralPath '$vm\\working\\Users' -Recurse -File -Force -Filter 'Cache*.bin' -ErrorAction SilentlyContinue | Where-Object FullName -like '*Terminal Server Client*' | ForEach-Object FullName; Get-ChildItem -LiteralPath '$vm\\rdp_cache' -Recurse -File -Filter '*.bmp' -ErrorAction SilentlyContinue | ForEach-Object FullName${thumbnailId:+; Get-ChildItem -LiteralPath '$vm\\thumbcache' -Recurse -File -Filter '$thumbnailId.*' -ErrorAction SilentlyContinue | ForEach-Object FullName}" 2>/dev/null | tr -d '\r' || true)
   while read -r f; do
     [[ -z "$f" ]] && continue
     # The prefix quoted: unquoted, the backslashes of the VM's path are read as escapes.
