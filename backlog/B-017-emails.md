@@ -26,10 +26,19 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Pièce jointe de test retrouvée avec son message.
 
 ## Tâches
-- [ ] Format PST/OST
-- [ ] Caches
+- [x] Corpus de test et lecteur de référence (pypff dans vmtest/tools/pff-venv, non versionné)
+- [ ] Couche NDB du PST/OST : en-tête, B-arbres des nœuds et des blocs, blocs chiffrés (permutation, cyclique), arbres de blocs (XBLOCK/XXBLOCK), sous-nœuds ; pages de 4 Kio et blocs compressés (DEFLATE, inflate.cpp) de l'OST d'Outlook 2013+
+- [ ] Couche LTP : tas (HN), B-arbre sur tas (BTH), contexte de propriétés (PC), table (TC)
+- [ ] Messagerie : arborescence des dossiers, messages (propriétés), destinataires, pièces jointes exportées en pièces avec leurs empreintes — confrontés à pypff sur tout le corpus
+- [ ] Thunderbird : mbox des profils, MIME (en-têtes encodés, multipart, base64, quoted-printable), pièces jointes ; Thunderbird installé dans la VM, message témoin, confronté au module mailbox de Python
+- [ ] Copies ouvertes : Content.Outlook (INetCache), cache OLK, prélevées
+- [ ] Clé emails, prélèvement (Outlook Files, AppData\Local\Microsoft\Outlook, profils Thunderbird), conversion, documentation FR + EN, cycle complet
 
 ## Journal
 - (vide)
 - 2026-10-07 : portée décidée par l'utilisateur — Outlook (PST/OST décodés) et Thunderbird, plus les copies ouvertes.
 - 2026-10-07 : en cours. Décisions de l'utilisateur : PST d'un corpus public (référence pypff), Thunderbird installé dans la VM (référence mailbox de Python).
+- 2026-10-07 : corpus de test, non versionné, épinglé par SHA-256 :
+  - java-libpst (Apache 2.0) : dist-list.pst c86841da…28ac, passworded.pst e1085e21…f217 (Unicode, version 23), example-2013.ost b18ff390…853d (version 36, pages de 4 Kio, compressé) ; 8 éléments, l'OST d'Outlook 2013 couvert ;
+  - EDRM Enron v2 publié par intellekthq sur Hugging Face (CC-BY 3.0 US, retouché : données sensibles supprimées, espace libre écrasé) : zl_south-s_000.pst 852f2090…04ab, 246 messages, 65 pièces jointes, 4 éléments que pypff ne lit pas (structures abîmées : la robustesse de WAC y sera éprouvée).
+- 2026-10-07 : déjà dans WAC : DEFLATE (inflate.cpp), base64 (authenticode.h, à ramener dans conversions.h quand il servira hors d'Authenticode).
