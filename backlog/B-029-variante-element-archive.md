@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P3 | faible |
+| en cours | P3 | faible |
 
 ## Pourquoi
 Dans la collecte réelle du 15/09 (ravenwood), certains éléments de shell classés ARCHIVE_FILE_CONTENT (types 0x3b, 0x00) sortent avec un nom illisible (« \x10\x01 01/01/1980  00:00:00 »). La date sous forme de texte est lue à la place du nom : c'est une variante dont les décalages diffèrent. Vu dans B-028.
@@ -26,3 +26,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Journal
 - 2026-09-30 : sorti de B-028, qui traitait les fuseaux ; ce défaut est de décodage.
+- 2026-10-07 : en cours — recherche d'un échantillon de la variante et lecture du décodeur.

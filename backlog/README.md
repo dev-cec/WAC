@@ -47,7 +47,7 @@ Les fiches restantes, puis la montée de version (B-025), puis l'article (B-018)
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
 | [B-027](B-027-empreinte-comparee.md) | Empreinte comparée WAC / KAPE / EZ sous bac à sable (Sysmon, audit en option) | à faire | P2 | fort |
-| [B-029](B-029-variante-element-archive.md) | Variante d'élément d'archive mal décodée (à reproduire) | à faire | P3 | faible |
+| [B-029](B-029-variante-element-archive.md) | Variante d'élément d'archive mal décodée (à reproduire) | en cours | P3 | faible |
 | [B-036](B-036-recuperation-fichiers-supprimes.md) | Récupération des fichiers supprimés par lecture brute du disque, sans trace | à décider (étude) | P2 | fort |
 | [B-044](B-044-lecture-fichier-entier.md) | Une seule lecture d'un fichier entier (quinze copies) | à faire | P3 | faible |
 | [B-025](B-025-version-2-0.md) | Version 2.0.0 (montée majeure), juste avant l'article DFIR | à faire | P2 | faible |
