@@ -7,7 +7,9 @@
  *  shows it. Each setting is applied and checked; each kind of mistake —
  *  unknown key, unknown artefact, value outside the ones allowed, a section
  *  where a value is expected — must refuse the file, naming the line; the
- *  reference file WAC writes (--write-config) must read back as it says.
+ *  reference file WAC writes (--write-config) must read back as it says, and
+ *  carry the executable's version; a file of another version, or without
+ *  one, is refused before any of its settings is read.
  *  The refusals are shown in the console's language: checked in English, and
  *  once in French, with its values placed where the French wording puts them.
  *
@@ -31,11 +33,17 @@ void check(bool ok, const std::string& what) {
 	if (!ok && ++g_failures <= 20) std::printf("  FAILED  %s\n", what.c_str());
 }
 
-//! Writes `text` to a file of the scratch folder. @return its path
-std::wstring file(const char* name, const std::string& text) {
+//! Writes `text` to a file of the scratch folder, as given. @return its path
+std::wstring rawFile(const char* name, const std::string& text) {
 	const std::filesystem::path path = g_folder / name;
 	std::ofstream(path, std::ios::binary) << text;
 	return path.wstring();
+}
+
+/*! Writes `text` followed by the executable's version — last, so that the
+ *  line numbers the refusals name stay those of `text`. @return its path */
+std::wstring file(const char* name, const std::string& text) {
+	return rawFile(name, text + "wac_version: " + encodeText(WacVersion()) + "\n");
 }
 
 /*! The text must be refused, the message naming `line` and containing
@@ -65,7 +73,8 @@ int wmain(int argc, wchar_t** argv) {
 		ConfigurationFile f;
 		std::string error;
 		check(LoadConfiguration((g_folder / "absent.yml").wstring(), c, f, error) && !f.present, "absent file: refused or applied");
-		check(c.mode == RunMode::Full && !c.binary && c.artefacts.registry && !c._events, "absent file: defaults changed");
+		check(c.mode == RunMode::Full && !c.binary && c.artefacts.events && c.artefacts.amcache && c.artefacts.operatingSystem,
+		      "absent file: defaults changed — every artefact is on");
 	}
 	// Every setting applied.
 	{
@@ -73,14 +82,16 @@ int wmain(int argc, wchar_t** argv) {
 		ConfigurationFile f;
 		std::string error;
 		const std::string text = "convert: false\nbinary: all\nthreads: 3\noutput: case42\nlog_level: 2\ndump: true\nlanguage: en\n"
-		                         "artefacts:\n  registry: false\n  events: true\n  prefetch: false\n  sessions: false\n"
+		                         "artefacts:\n  amcache: false\n  events: false\n  prefetch: false\n  sessions: false\n"
 		                         "  network: false\n";
 		check(LoadConfiguration(file("all.yml", text), c, f, error), "all settings: refused: " + error);
 		check(c.mode == RunMode::Collect && c.binary && c.binaryAll && c.threads == 3 && c._outputDir == L"case42"
 		      && c.loglevel == 2 && c._dump && c.language == Language::English, "top-level settings not applied");
-		check(!c.artefacts.registry && c._events && !c.artefacts.prefetch && !c.artefacts.sessions
-		      && !c.artefacts.network && c.artefacts.processes && c.artefacts.jumpLists, "artefact switches not applied, or others changed");
-		check(f.present && f.text == text && f.sha256.size() == 64, "file not recorded for the log");
+		check(!c.artefacts.amcache && !c.artefacts.events && !c.artefacts.prefetch && !c.artefacts.sessions
+		      && !c.artefacts.network && c.artefacts.processes && c.artefacts.jumpLists && c.artefacts.shimcache,
+		      "artefact switches not applied, or others changed");
+		check(f.present && f.text == text + "wac_version: " + encodeText(WacVersion()) + "\n" && f.sha256.size() == 64,
+		      "file not recorded for the log");
 	}
 	{
 		AppliConf c;
@@ -96,12 +107,30 @@ int wmain(int argc, wchar_t** argv) {
 		AppliConf c;
 		ConfigurationFile f;
 		std::string error;
-		check(LoadConfiguration(file("reference.yml", DefaultConfiguration()), c, f, error), "reference file refused: " + error);
-		check(c.mode == RunMode::Collect && c.binary && !c.binaryAll && c._events && c.artefacts.registry
+		check(LoadConfiguration(rawFile("reference.yml", DefaultConfiguration()), c, f, error), "reference file refused: " + error);
+		check(c.mode == RunMode::Collect && c.binary && !c.binaryAll && c.artefacts.events && c.artefacts.users
 		      && c.language == Language::French, "reference file not applied as it says");
 	}
 	refused("unknown.yml", "convert: false\nbinaries: all\n", 2, "unknown setting");
-	refused("artefact.yml", "artefacts:\n  registry: true\n  prefetchs: true\n", 3, "unknown artefact");
+	// THE VERSION. Read from this executable's resources, as WAC.exe reads its own.
+	check(!WacVersion().empty(), "no version in the executable's resources");
+	{
+		AppliConf c;
+		ConfigurationFile f;
+		std::string error;
+		check(!LoadConfiguration(rawFile("noversion.yml", "binary: none\n"), c, f, error)
+		      && error.find("wac_version missing") != std::string::npos, "file without wac_version: " + error);
+		// An earlier version's file, with a key gone since: the version is the reason given.
+		check(!LoadConfiguration(rawFile("earlier.yml", "artefacts:\n  registry: true\nwac_version: 0.9.9\n"), c, f, error)
+		      && error.find("line 3") == 0 && error.find("written for WAC 0.9.9") != std::string::npos,
+		      "earlier version's file: " + error);
+		const std::string reference = DefaultConfiguration();
+		check(reference.find("\nwac_version: " + encodeText(WacVersion()) + "\n") != std::string::npos
+		      && reference.find("@WAC_VERSION@") == std::string::npos, "--write-config: the version not written in");
+	}
+	refused("artefact.yml", "artefacts:\n  events: true\n  prefetchs: true\n", 3, "unknown artefact");
+	// `registry` grouped sixteen artefacts and is gone (B-042): one key each now.
+	refused("registry.yml", "artefacts:\n  registry: true\n", 2, "unknown artefact");
 	refused("bool.yml", "dump: yes\n", 1, "true or false expected");
 	refused("binary.yml", "binary: everything\n", 1, "none, unverified or all");
 	refused("threads.yml", "threads: 9999\n", 1, "between 0 and 256");

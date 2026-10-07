@@ -82,7 +82,6 @@ struct AppliConf {
 	* located. */
 	bool _debug = false;
 	bool _dump = false;//!< True if dump is active
-	bool _events = false;//!< True is events must be extracted
 	std::wstring name = L""; //!< name of the program, obtained from the command line
 	std::wstring _outputDir = L"output"; //!< directory to store output JSON (UTF-16: any name the command line can carry)
 	std::wstring mountpoint = L""; //!< mount point path to access the snapshot made during execution
@@ -106,10 +105,27 @@ struct AppliConf {
 	 *  --language= overrides it; the JSON files and the logs stay in English. */
 	Language language = Language::French;
 	/*! The artefacts to collect, one switch each (wac.yml, section
-	 *  `artefacts:`); the event logs are `_events`. All on by default but
-	 *  the event logs, as before the configuration file. */
+	 *  `artefacts:`), all on by default: a key missing from the file is on.
+	 *  No artefact is collected without its key. The hives, the event logs and
+	 *  the $MFT are not artefacts but DEPENDENCIES, copied when an artefact
+	 *  asked for reads them (needsUserHives, rdp_server and the logs…). */
 	struct CollectedArtefacts {
-		bool registry = true;         //!< the hives, and every artefact read in them
+		bool events = true;           //!< the event logs, with their messages
+		bool operatingSystem = true;  //!< version, installation, computer name, uptime (SYSTEM, SOFTWARE)
+		bool usbstor = true;          //!< USB mass storage devices (Enum\USBSTOR)
+		bool mountedDevices = true;   //!< volumes and drive letters the machine knew (MountedDevices)
+		bool bam = true;              //!< last execution of each program per user (Background Activity Moderator)
+		bool muiCache = true;         //!< names of the programs each user launched (usrClass.dat)
+		bool amcache = true;          //!< Amcache.hve: applications, executables and drivers seen
+		bool userAssist = true;       //!< programs each user launched from Explorer, with count and date
+		bool runKeys = true;          //!< Run and RunOnce keys of the machine and of each user
+		bool shimcache = true;        //!< application compatibility cache (AppCompatCache)
+		bool shellbags = true;        //!< folders each user browsed in Explorer
+		bool mru = true;              //!< files each user opened or saved through the common dialogs
+		bool mruApps = true;          //!< programs used to open or save those files
+		bool users = true;            //!< local accounts (SAM): logons, failures, flags, password hashes
+		bool localGroups = true;      //!< members of each local group (SAM)
+		bool registryBackups = true;  //!< RegBack: the machine's older hives, raw copy only
 		bool scheduledTasks = true;
 		bool services = true;         //!< services and drivers: configuration and live states
 		bool processes = true;        //!< live
@@ -163,18 +179,25 @@ struct AppliConf {
 		bool rdpServer = true;  //!< incoming RDP connections, from the collected event logs
 
 		/*! Whether an artefact asked for reads the users' hives (ntuser.dat,
-		 *  usrClass.dat): they are copied then. They used to be copied only
-		 *  with `registry` — a configuration of typed_paths alone gave an
+		 *  usrClass.dat): they are a dependency, copied then. They used to be
+		 *  copied only with the former `registry` key — typed_paths alone gave an
 		 *  empty typed_paths.json, read as "nothing typed". A new artefact read
 		 *  in a user's hive is added here.
 		 *  @return true if one of them is switched on */
 		bool needsUserHives() const {
-			return registry || persistence || officeTrustRecords || typedPaths || wordWheelQuery
+			return muiCache || userAssist || runKeys || shellbags || mru || mruApps
+			    || persistence || officeTrustRecords || typedPaths || wordWheelQuery
 			    || rootCertificates || internetSettings || installedPrograms || explorerRecentDocs || mountPoints || programUsages
 			    || userShellFolders || webClient   // web client: TypedURLs
 			    || rdpClient   // the servers reached, in NTUSER.DAT
 			    || shortcuts;   // a desktop redirected elsewhere is read in NTUSER.DAT (user_shell_folders.h)
 		}
+
+		/*! Whether an artefact asked for reads the event logs: they are a
+		 *  dependency of `events` and of `rdp_server`, which finds the incoming
+		 *  connections in them.
+		 *  @return true if one of them is switched on */
+		bool needsEventLogs() const { return events || rdpServer; }
 	} artefacts;
 	RunMode mode = RunMode::Full; //!< what this run does (see RunMode)
 	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)

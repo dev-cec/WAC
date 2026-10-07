@@ -61,7 +61,8 @@ enum class Text : unsigned {
 	ArtefactPowerShellHistory, ArtefactSetupApi, ArtefactRecycleBin, ArtefactHosts, ArtefactErrorReports,
 	ArtefactDefenderLogs, ArtefactDefenderDetections, ArtefactDefenderQuarantine, ArtefactStartupFolders, ArtefactZoneIdentifiers, ArtefactSecurityHive,
 	ArtefactPersistence, ArtefactOfficeTrustRecords, ArtefactTypedPaths, ArtefactWordWheelQueries, ArtefactRootCertificates, ArtefactInternetSettingsSet, ArtefactFirewall, ArtefactWmiPersistence, ArtefactSrum, ArtefactBitsJobs, ArtefactFatVolumes, ArtefactInstalledPrograms, ArtefactDefenderConfiguration, ArtefactExplorerRecentDocs, ArtefactMountPoints, ArtefactKnownNetworks, ArtefactProgramUsages, ArtefactDevices, ArtefactNetworkShares, ArtefactNetworkConfiguration, ArtefactEventLogConfiguration, ArtefactShortcuts, ArtefactSecurityDescriptors, ArtefactNtfsVolumes, ArtefactDpapiMasterKeys, ArtefactUserShellFolders, ArtefactWebClient, ArtefactActivitiesCache, ArtefactSearchIndex, ArtefactRdpClient, ArtefactRdpServer,
-	NotRequested,
+	ArtefactOperatingSystem, ArtefactEvents,
+	NotRequested, NotNeeded,
 	// End of the run
 	TimeElapsed, PressAnyKey, ConversionLogNotWritten,
 	// Command line and configuration file
@@ -72,6 +73,7 @@ enum class Text : unsigned {
 	ConfigurationBooleanExpected, ConfigurationNumberExpected, ConfigurationOutOfRange,
 	ConfigurationArtefactsSection, ConfigurationUnknownArtefact, ConfigurationBinaryValue,
 	ConfigurationOutputValue, ConfigurationLanguageValue, ConfigurationUnknownSetting,
+	ConfigurationVersionMissing, ConfigurationVersionMismatch,
 	// Progress and trust set update (analysis workstation)
 	ProgressUnit, ProgressKibibytes, ProgressLevel, ProgressRepair, ProgressHive, TrustFolder, TrustRoots, TrustDisallowed, TrustAuthorities, TrustWriting,
 	TrustRevocationWanted, TrustRootsMissing, TrustNoRoot, TrustRootCertificates,

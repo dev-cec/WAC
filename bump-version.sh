@@ -41,13 +41,15 @@ PY
 
 "$HERE/build-windows.sh"
 git -C "$HERE" add "$RC"
-VERSION=$(python3 -c "import re; t=open('$RC','rb').read()[2:].decode('utf-16-le'); print('.'.join(re.search(r' FILEVERSION (\d+),(\d+),(\d+),0', t).groups()))")
+VERSION=$("$HERE/wac-version.sh")
 # The documents that state the version: the README badge, and the information
 # page of each manual (PDFs rebuilt when XeLaTeX is there).
 sed -i -E "s#badge/version-[0-9]+\.[0-9]+\.[0-9]+-green#badge/version-$VERSION-green#" "$HERE/README.md"
 DOCS=("$HERE"/sources/doc/user/documentation_{FR,EN}.tex "$HERE"/sources/doc/tests/testing_{FR,EN}.tex "$HERE"/sources/doc/validation/validation_{FR,EN}.tex
       "$HERE"/sources/doc/harmlessness/harmlessness_{FR,EN}.tex)
 sed -i -E "s#^(Version du logiciel|Software version) & [0-9]+\.[0-9]+\.[0-9]+ #\1 \& $VERSION #" "${DOCS[@]}"
+# The wac.yml shown in the user manuals carries the version, as --write-config writes it.
+sed -i -E "s#^wac_version: [0-9]+\.[0-9]+\.[0-9]+ #wac_version: $VERSION #" "$HERE"/sources/doc/user/documentation_{FR,EN}.tex "$HERE/README.md"
 if command -v xelatex >/dev/null; then
   for tex in "${DOCS[@]}"; do
     ( cd "$(dirname "$tex")" && for pass in 1 2; do xelatex -interaction=nonstopmode -halt-on-error "$(basename "$tex")" >/dev/null 2>&1; done

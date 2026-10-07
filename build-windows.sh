@@ -241,7 +241,11 @@ mkdir -p "$BIN"
 for f in WAC.exe raw_hive_test.exe; do
   [[ -f "$BUILD/$f" ]] && cp "$BUILD/$f" "$BIN/"
 done
-cp "$SRC/wac.yml" "$BIN/wac.yml"
+# The reference configuration with the executable's version in place of its
+# placeholder, as --write-config writes it: a wac.yml of another version is refused.
+VERSION="$("$ROOT/wac-version.sh")"
+sed "s/@WAC_VERSION@/$VERSION/" "$SRC/wac.yml" > "$BIN/wac.yml"
+grep -q "^wac_version: $VERSION\$" "$BIN/wac.yml" || { echo "bin/wac.yml: wac_version not written" >&2; exit 1; }
 for f in "${VERIFICATION_SCRIPTS[@]}"; do
   cp "$SRC/doc/user/$f" "$BIN/$f"
 done

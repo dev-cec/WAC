@@ -138,7 +138,7 @@ if (Wants 'zone_identifiers', 'mft') {
 
 # 6. A Run value in the DEFAULT hive, REG_EXPAND_SZ: Windows writes the
 #    registry to the disk a minute or so later, before the first collection.
-if (Wants 'registry') {
+if (Wants 'run_keys') {
     $runKey = 'Registry::HKEY_USERS\.DEFAULT\Software\Microsoft\Windows\CurrentVersion\Run'
     New-Item -Force $runKey | Out-Null
     New-ItemProperty -Force -Path $runKey -Name 'WacTestDefault' -PropertyType ExpandString -Value '%SystemRoot%\wac-default.exe' | Out-Null
@@ -425,7 +425,7 @@ if (Wants 'recent_documents') {
 #     archive item copies the ZIP entry's date, a clock time without time
 #     zone (13:00 here), which must be given as written. Made once: the
 #     shellbag stays.
-if (Wants 'registry') {
+if (Wants 'shellbags') {
     $zipPath = 'C:\Users\wac\Documents\wac-archive.zip'
     if (-not (Test-Path $zipPath)) {
         Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
@@ -734,7 +734,7 @@ if (Wants 'known_networks') {
 #     registry (OperatingSystem.json, Settings), and the last shutdown as the
 #     System log records it (Kernel-General 13, "the operating system is
 #     shutting down", UTC): the reference for ShutdownTime. Nothing is changed.
-if (Wants 'registry') {
+if (Wants 'operating_system') {
     $cs = 'HKLM:\SYSTEM\CurrentControlSet\Control'
     foreach ($w in @(@("$cs\FileSystem", 'NtfsDisableLastAccessUpdate'), @("$cs\Session Manager\Memory Management\PrefetchParameters", 'EnablePrefetcher'),
                      @("$cs\Terminal Server", 'fDenyTSConnections'), @('HKLM:\SYSTEM\Select', 'Current'),
@@ -752,7 +752,7 @@ if (Wants 'registry') {
 #     the machine and of the user "wac", as the live registry holds it (the
 #     status code's first 4 bytes, or the notification's value). Nothing is
 #     changed.
-if (Wants 'registry') {
+if (Wants 'run_keys') {
     $roots = @(@('HKLM', 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion'),
                @($wacSid, "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Windows\CurrentVersion"))
     foreach ($r in $roots) {
@@ -864,7 +864,7 @@ if (Wants 'event_log_configuration') {
 #     with an empty one. WAC must decrypt their NT hashes; the check confronts
 #     each with MD4 of the password (the empty one gives the known constant).
 #     The password is synthetic, for a throwaway VM account — not a real secret.
-if (Wants 'registry') {
+if (Wants 'users') {
     # A witness account with a known password: WAC must decrypt its NT hash to
     # MD4 of that password (checked in check-json.py), which exercises the whole
     # boot key / AES / DES chain against an independent computation. The password
@@ -1006,7 +1006,7 @@ if (Wants 'shortcuts') {
 #     planted in its NTUSER.DAT (loaded, written, unloaded), which run.json must
 #     give under the SID S-0-0-0 with Profile "Default". Harmless: it names an
 #     executable that does not exist.
-if (Wants 'registry') {
+if (Wants 'run_keys') {
     $hive = 'C:\Users\Default\NTUSER.DAT'
     reg load 'HKU\WacDefault' $hive 2>$null | Out-Null
     if ($LASTEXITCODE -eq 0) {

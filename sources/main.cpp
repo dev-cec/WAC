@@ -132,7 +132,7 @@ int checkElevation() {
 HRESULT checkCollectionLocation() {
 	printStep(Text::StepCollectionMedium);
 	unsigned long long need = 250ULL * 1024 * 1024;           // hives
-	if (conf._events) need += 150ULL * 1024 * 1024;           // event logs
+	if (conf.artefacts.needsEventLogs()) need += 150ULL * 1024 * 1024;   // event logs
 	if (conf.binary)     need += 1024ULL * 1024 * 1024;          // cited binaries
 	const HRESULT hrLieu = ExhibitStoreCheckLocation(need);
 	auditRecord(L"Check of the collection location ("
@@ -230,10 +230,36 @@ bool requested(bool wanted, const char* file, Text label, const wchar_t* key) {
 }
 
 /*! Converts one artefact read from the working copy — its files or the hives
- *  it lives in: getData, then its JSON file — the same sequence for each of
- *  them.
- *  An artefact that could not be read says so in its file (writeNotCollected).
+ *  it lives in: getData, then its JSON files — the same sequence for each of
+ *  them. An artefact that could not be read says so in each of its files
+ *  (writeNotCollected); one not asked for, likewise (requested).
  *  @tparam Collector the artefact's class: getData(), toJson(), clear()
+ *  @param wanted the configuration's switch
+ *  @param outputs its JSON files, each with its name for the console and the file
+ *  @param key its configuration key
+ *  @param step the console's step */
+template <class Collector>
+void convertArtefact(bool wanted, std::initializer_list<std::pair<const char*, Text>> outputs,
+                     const wchar_t* key, Text step) {
+	bool asked = true;
+	for (const auto& [file, label] : outputs) asked = requested(wanted, file, label, key) && asked;
+	if (!asked) return;
+	Collector collector;
+	printStep(step);
+	HRESULT hresult = collector.getData();
+	if (hresult != ERROR_SUCCESS) {
+		printError(hresult);
+		for (const auto& [file, label] : outputs) writeNotCollected(file, text(label, Language::English), hresult);
+		return;
+	}
+	hresult = collector.toJson();
+	if (hresult != ERROR_SUCCESS) printError(hresult);
+	else printSuccess();
+	collector.clear();
+}
+
+/*! The same, for an artefact written to a single JSON file — nearly all of them.
+ *  @tparam Collector the artefact's class
  *  @param wanted the configuration's switch
  *  @param file its JSON file
  *  @param label its name, for the console and the file
@@ -241,19 +267,7 @@ bool requested(bool wanted, const char* file, Text label, const wchar_t* key) {
  *  @param step the console's step */
 template <class Collector>
 void convertArtefact(bool wanted, const char* file, Text label, const wchar_t* key, Text step) {
-	if (!requested(wanted, file, label, key)) return;
-	Collector collector;
-	printStep(step);
-	HRESULT hresult = collector.getData();
-	if (hresult != ERROR_SUCCESS) {
-		printError(hresult);
-		writeNotCollected(file, text(label, Language::English), hresult);
-		return;
-	}
-	hresult = collector.toJson();
-	if (hresult != ERROR_SUCCESS) printError(hresult);
-	else printSuccess();
-	collector.clear();
+	convertArtefact<Collector>(wanted, { { file, label } }, key, step);
 }
 
 void observeLiveState() {
@@ -390,7 +404,7 @@ void extractProfileArtefacts() {
 	HRESULT hresult;
 	printStep(Text::StepUserHives);
 	log(3, L"🔈ExtractUserHivesRaw");
-	if (!conf.artefacts.needsUserHives()) writeConsole(text(Text::NotRequested, { L"artefacts.registry" }) + L"\n");
+	if (!conf.artefacts.needsUserHives()) writeConsole(text(Text::NotNeeded) + L"\n");
 	else {
 		hresult = ExtractUserHivesRaw();      // S_FALSE = no profile, or missing files (tolerated)
 		if (FAILED(hresult)) printError(hresult);   // the other artefacts stay collectable
@@ -564,7 +578,7 @@ HRESULT openCurrentControlSet() {
  *  the artefacts cite is only known once they are converted. */
 void collectForConversion() {
 	printHeading(Text::HeadingForConversion);
-	if (conf._events) {
+	if (conf.artefacts.events) {
 		/* The machine's language and its classic event sources are read in
 		   SYSTEM's CurrentControlSet, which the conversion opens otherwise. */
 		const HRESULT hrControlSet = openCurrentControlSet();
@@ -681,25 +695,11 @@ void convertNtfsMetadata() {
 void convertArtefacts(bool systemAvailable) {
 	HRESULT hresult;
 	Services services;
-	Usbstors usbs;
-	MountedDevices mounteddevices;
-	Bams bams;
-	Muicaches muicaches;
-	Amcache amcache;
-	UserAssists userassists;
-	Runs runs;
-	Shimcaches shimcaches;
 	Prefetchs prefetchs;
 	RecentDocs recentdocs;
-	Shellbags shellbags;
-	Mrus mrus;
-	MruApps mruapps;
 	JumplistAutomatics jumplistAutomatics;
 	JumplistCustoms jumplistCustoms;
 	ScheduledTasks scheduledTasks;
-	SystemInfo systemInfo;
-	Users users;
-	LocalGroups localGroups;
 	Events events;
 	/* processes.json is published once the account names are loaded from the
 	   hives, or at the latest before the event logs if the SYSTEM hive could
@@ -799,143 +799,35 @@ void convertArtefacts(bool systemAvailable) {
 
 			writeProcesses();
 
-			if (conf.artefacts.registry) {
-			printStep(Text::StepUsbstor);
-			hresult = usbs.getData();
-			if (hresult != ERROR_SUCCESS) {
-				printError(hresult);
-				// The Enum\USBSTOR key is absent from the systems where no mass
-				// storage device was ever plugged in: a legitimate failure, but
-				// one that must appear in the output rather than leave a missing
-				// file (see writeNotCollected).
-				writeNotCollected("Usbstor.json", L"USBSTOR (registry)", hresult);
-			}
-			else {
-				hresult = usbs.toJson();
-				if (hresult != ERROR_SUCCESS) printError(hresult);
-				else printSuccess();
-				usbs.clear();
-			}
-
-			printStep(Text::StepMountedDevices);
-			hresult = mounteddevices.getData();
-			if (hresult != ERROR_SUCCESS) {
-				printError(hresult);
-			}
-			else {
-				hresult = mounteddevices.toJson();
-				if (hresult != ERROR_SUCCESS) printError(hresult);
-				else printSuccess();
-				mounteddevices.clear();
-			}
-
-
-			printStep(Text::StepBam);
-			hresult = bams.getData();
-			if (hresult != ERROR_SUCCESS) printError(hresult);
-			else {
-				hresult = bams.toJson();
-				if (hresult != ERROR_SUCCESS) printError(hresult);
-				else printSuccess();
-				bams.clear();
-			}
-
-			printStep(Text::StepMuiCache);
-			hresult = muicaches.getData();
-			if (hresult != ERROR_SUCCESS) printError(hresult);
-			else {
-				hresult = muicaches.toJson();
-				if (hresult != ERROR_SUCCESS) printError(hresult);
-				else printSuccess();
-				muicaches.clear();
-			}
-
-			printStep(Text::StepAmcache);
-			hresult = amcache.getData();
-			if (hresult != ERROR_SUCCESS) printError(hresult);
-			else {
-				hresult = amcache.toJson();
-				if (hresult != ERROR_SUCCESS) printError(hresult);
-				else printSuccess();
-				amcache.clear();
-			}
-
-			printStep(Text::StepUserAssist);
-			hresult = userassists.getData();
-			if (hresult != ERROR_SUCCESS) printError(hresult);
-			else {
-				hresult = userassists.toJson();
-				if (hresult != ERROR_SUCCESS) printError(hresult);
-				else printSuccess();
-				userassists.clear();
-			}
-
-			printStep(Text::StepRunKeys);
-			hresult = runs.getData();
-			if (hresult != ERROR_SUCCESS) printError(hresult);
-			else {
-				hresult = runs.toJson();
-				if (hresult != ERROR_SUCCESS) printError(hresult);
-				else printSuccess();
-				runs.clear();
-			}
-
-			printStep(Text::StepShimcache);
-			hresult = shimcaches.getData();
-			if (hresult != ERROR_SUCCESS) printError(hresult);
-			else {
-				hresult = shimcaches.toJson();
-				if (hresult != ERROR_SUCCESS) printError(hresult);
-				else printSuccess();
-				shimcaches.clear();
-			}
-
-			printStep(Text::StepShellbags);
-			hresult = shellbags.getData();
-			if (hresult != ERROR_SUCCESS) printError(hresult);
-			else {
-				hresult = shellbags.toJson();
-				if (hresult != ERROR_SUCCESS) printError(hresult);
-				else printSuccess();
-				shellbags.clear();
-			}
-
-			printStep(Text::StepMru);
-			hresult = mrus.getData();
-			if (hresult != ERROR_SUCCESS) printError(hresult);
-			else {
-				hresult = mrus.toJson();
-				if (hresult != ERROR_SUCCESS) printError(hresult);
-				else printSuccess();
-				mrus.clear();
-			}
-
-			printStep(Text::StepMruApps);
-			hresult = mruapps.getData();
-			if (hresult != ERROR_SUCCESS) printError(hresult);
-			else {
-				hresult = mruapps.toJson();
-				if (hresult != ERROR_SUCCESS) printError(hresult);
-				else printSuccess();
-				mruapps.clear();
-			}
-			}   // artefacts.registry
+			/* One artefact per key, read in the hives this phase keeps open. A
+			   failed read says so in its file (USBSTOR, for instance, is absent
+			   where no mass storage device was ever plugged in). */
+			convertArtefact<Usbstors>(conf.artefacts.usbstor, "Usbstor.json", Text::ArtefactUsbDevices,
+			                          L"artefacts.usbstor", Text::StepUsbstor);
+			convertArtefact<MountedDevices>(conf.artefacts.mountedDevices, "mounted_device.json", Text::ArtefactMountedDevices,
+			                                L"artefacts.mounted_devices", Text::StepMountedDevices);
+			convertArtefact<Bams>(conf.artefacts.bam, "bams.json", Text::ArtefactBam, L"artefacts.bam", Text::StepBam);
+			convertArtefact<Muicaches>(conf.artefacts.muiCache, "muicache.json", Text::ArtefactMuiCache,
+			                           L"artefacts.muicache", Text::StepMuiCache);
+			convertArtefact<Amcache>(conf.artefacts.amcache,
+			                         { { "amcache_applications.json", Text::ArtefactAmcacheApplications },
+			                           { "amcache_application_files.json", Text::ArtefactAmcacheApplicationFiles },
+			                           { "amcache_inventory.json", Text::ArtefactAmcacheInventory } },
+			                         L"artefacts.amcache", Text::StepAmcache);
+			convertArtefact<UserAssists>(conf.artefacts.userAssist, "userassists.json", Text::ArtefactUserAssist,
+			                             L"artefacts.userassist", Text::StepUserAssist);
+			convertArtefact<Runs>(conf.artefacts.runKeys, "run.json", Text::ArtefactRunKeys,
+			                      L"artefacts.run_keys", Text::StepRunKeys);
+			convertArtefact<Shimcaches>(conf.artefacts.shimcache, "shimcache.json", Text::ArtefactShimcache,
+			                            L"artefacts.shimcache", Text::StepShimcache);
+			convertArtefact<Shellbags>(conf.artefacts.shellbags, "shellbags.json", Text::ArtefactShellbags,
+			                           L"artefacts.shellbags", Text::StepShellbags);
+			convertArtefact<Mrus>(conf.artefacts.mru, "mrus.json", Text::ArtefactMru, L"artefacts.mru", Text::StepMru);
+			convertArtefact<MruApps>(conf.artefacts.mruApps, "mruApps.json", Text::ArtefactMruApps,
+			                         L"artefacts.mru_apps", Text::StepMruApps);
 		}
 	}
 	} while (0);   // end of the registry phase (see the single-exit block above)
-	if (!conf.artefacts.registry) {
-		const std::pair<const char*, Text> REGISTRY[] = {
-			{ "Usbstor.json", Text::ArtefactUsbDevices }, { "mounted_device.json", Text::ArtefactMountedDevices },
-			{ "bams.json", Text::ArtefactBam }, { "muicache.json", Text::ArtefactMuiCache },
-			{ "amcache_applications.json", Text::ArtefactAmcacheApplications },
-			{ "amcache_application_files.json", Text::ArtefactAmcacheApplicationFiles },
-			{ "amcache_inventory.json", Text::ArtefactAmcacheInventory },
-			{ "userassists.json", Text::ArtefactUserAssist }, { "run.json", Text::ArtefactRunKeys },
-			{ "shimcache.json", Text::ArtefactShimcache }, { "shellbags.json", Text::ArtefactShellbags },
-			{ "mrus.json", Text::ArtefactMru }, { "mruApps.json", Text::ArtefactMruApps },
-		};
-		for (const auto& [file, label] : REGISTRY) requested(false, file, label, L"artefacts.registry");
-	}
 
 	/* Registry persistence beyond Run: read while SOFTWARE and CurrentControlSet
 	   are still open (a missing one leaves its rules unread, not failed). */
@@ -999,6 +891,9 @@ void convertArtefacts(bool systemAvailable) {
 	   usable hive the collector stays useful, since it records the instant of the
 	   collection and the uptime. It degrades its output instead of being
 	   skipped. */
+	if (requested(conf.artefacts.operatingSystem, "OperatingSystem.json", Text::ArtefactOperatingSystem,
+	              L"artefacts.operating_system")) {
+	SystemInfo systemInfo;
 	printStep(Text::StepSystemInformation);
 	hresult = systemInfo.getData();
 	auditRecord(L"SYSTEM INFORMATION collection",
@@ -1011,6 +906,7 @@ void convertArtefacts(bool systemAvailable) {
 		else printSuccess();
 		systemInfo.clear();// free memory
 	}
+	}   // artefacts.operating_system
 
 	/* SERVICES, offline configuration + current state.
 	   Also outside the single-exit block: without a hive, getData() fails
@@ -1032,7 +928,8 @@ void convertArtefacts(bool systemAvailable) {
 
 	/* USERS, offline from the SAM hive. Independent of the SYSTEM and SOFTWARE
 	   hives: it opens its own. */
-	if (requested(conf.artefacts.registry, "users.json", Text::ArtefactUsers, L"artefacts.registry")) {
+	if (requested(conf.artefacts.users, "users.json", Text::ArtefactUsers, L"artefacts.users")) {
+	Users users;
 	printStep(Text::StepUsers);
 	hresult = users.getData();
 	auditRecord(L"USERS collection", L"extracted SAM hive", hresult, Footprint::HIVE_COPY);
@@ -1046,11 +943,12 @@ void convertArtefacts(bool systemAvailable) {
 		else printSuccess();
 		users.clear(); // free memory
 	}
-	}   // artefacts.registry
+	}   // artefacts.users
 
 	/* LOCAL GROUPS, offline from the SAM hive (same gate as users): who belongs
 	   to Administrators, Remote Desktop Users, and the other aliases. */
-	if (requested(conf.artefacts.registry, "local_groups.json", Text::ArtefactLocalGroups, L"artefacts.registry")) {
+	if (requested(conf.artefacts.localGroups, "local_groups.json", Text::ArtefactLocalGroups, L"artefacts.local_groups")) {
+	LocalGroups localGroups;
 	printStep(Text::StepLocalGroups);
 	hresult = localGroups.getData();
 	auditRecord(L"LOCAL GROUPS collection", L"extracted SAM hive", hresult, Footprint::HIVE_COPY);
@@ -1064,7 +962,7 @@ void convertArtefacts(bool systemAvailable) {
 		else printSuccess();
 		localGroups.clear(); // free memory
 	}
-	}   // artefacts.registry
+	}   // artefacts.local_groups
 
 
 	/************************
@@ -1195,7 +1093,7 @@ void convertArtefacts(bool systemAvailable) {
 	/************************
 	*  EVENT LOGS (the least volatile: handled last)
 	*************************/
-	if (conf._events) {
+	if (requested(conf.artefacts.events, "events.json", Text::ArtefactEvents, L"artefacts.events")) {
 		printHeading(Text::HeadingEventLogs);
 		printStep(Text::StepEvents);
 
@@ -1332,7 +1230,7 @@ int wmain(int argc, wchar_t* argv[])
 
 			if (arg == L"--debug") conf._debug = true;
 			else if (arg == L"--dump") conf._dump = true;
-			else if (arg == L"--events") conf._events = true;
+			else if (arg == L"--events") conf.artefacts.events = true;
 			else if (arg == L"--binary") conf.binary = true;
 			else if (arg == L"--binary-all") conf.binary = conf.binaryAll = true;
 			else if (arg.substr(0, 10) == L"--threads=") {
@@ -1525,9 +1423,11 @@ int wmain(int argc, wchar_t* argv[])
 		log(2, L"🔥SYSTEM hive unavailable: the artefacts that depend on it are not collected", hresult);
 		auditRecord(L"Opening of the SYSTEM hive", systemHive, hresult, Footprint::HIVE_COPY);
 		if (conf.mode != RunMode::Collect)      // --collect converts nothing
-		for (const char* f : { "Usbstor.json", "mounted_device.json", "bams.json",
-		                       "shimcache.json", "services.json" })
-			writeNotCollected(f, L"depends on the SYSTEM hive, which is unavailable", hresult);
+		for (const auto& [file, wanted] : { std::pair<const char*, bool>{ "Usbstor.json", conf.artefacts.usbstor },
+		                                    { "mounted_device.json", conf.artefacts.mountedDevices },
+		                                    { "bams.json", conf.artefacts.bam }, { "shimcache.json", conf.artefacts.shimcache },
+		                                    { "services.json", conf.artefacts.services } })
+			if (wanted) writeNotCollected(file, L"depends on the SYSTEM hive, which is unavailable", hresult);
 	}
 	else printSuccess();
 

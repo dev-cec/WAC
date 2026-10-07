@@ -325,6 +325,7 @@ recommandée : collecte seule, binaires non vérifiés prélevés, journaux
 d'événements compris.
 
 \begin{lstlisting}
+wac_version: 1.4.0      # version de WAC pour laquelle le fichier est écrit (--write-config)
 convert: false          # true : collecte et conversion ici ; false : collecte seule
 binary: unverified      # none | unverified | all
 threads: 0              # fils d'analyse des binaires, 0 : automatique
@@ -332,67 +333,96 @@ output: output
 log_level: 0
 dump: false
 language: fr            # fr | en : langue de la console ; les fichiers restent en anglais
-artefacts:              # un interrupteur par artefact ; toutes les ruches = registry
-  registry: true
-  events: true
-  scheduled_tasks: true
-  services: true
-  processes: true
-  sessions: true
-  network: true
-  prefetch: true
-  jump_lists: true
-  recent_documents: true
-  mft: true             # $MFT : chaque fichier, présent ou supprimé, et ses dates
-  usn_journal: true     # $UsnJrnl:$J : créations, renommages, suppressions
-  log_file: true        # $LogFile et $TxfLog : journaux de transactions NTFS et TxF, copie brute seule
-  powershell_history: true  # PSReadLine : les commandes tapées dans PowerShell
-  activities_cache: true    # Chronologie Windows : applications, fichiers, pages, presse-papiers (ActivitiesCache.db)
-  search_index: true        # index de recherche Windows : chemin, dates, taille, résumé de chaque élément indexé
-  rdp_client: true          # Bureau à distance sortant : serveurs, fichiers .rdp, tuiles du cache bitmap
-  rdp_server: true          # Bureau à distance entrant : authentifications, sessions, adresses source
-  setupapi: true        # setupapi.dev.log : installations de périphériques
-  recycle_bin: true     # $I des corbeilles : quoi, par qui, quand
-  hosts: true           # le fichier hosts : noms détournés vers une adresse
-  error_reports: true   # rapports d'erreurs (WER) : programmes plantés, avec leur chemin
-  defender: true        # Defender : journaux (MPLog, traces WPP brutes), historique des détections, quarantaine (copiée chiffrée)
-  startup_folders: true # dossiers de démarrage : ce qui s'exécute à l'ouverture de session
-  zone_identifiers: true  # flux Zone.Identifier : d'où viennent les fichiers téléchargés
-  security: true        # ruche SECURITY : noms des secrets LSA, connexions en cache, audit
-  persistence: true     # persistance du registre : IFEO, AppInit, Winlogon, LSA, COM…
-  office_trust_records: true  # documents Office approuvés, macros activées
-  typed_paths: true     # chemins tapés dans l'Explorateur
-  word_wheel_query: true  # recherches de l'Explorateur
-  root_certificates: true # certificats racines de la machine et des utilisateurs
-  internet_settings: true # proxy des utilisateurs
-  firewall: true        # règles et profils du pare-feu
-  wmi: true             # dépôt WMI lu hors ligne : abonnements (filtres, consommateurs, liaisons)
-  srum: true            # SRUDB.dat : réseau et ressources par application et utilisateur, 30 à 60 jours
-  bits: true            # qmgr.db : travaux BITS, URL, destinations, commandes de notification
-  fat_volumes: true     # volumes FAT et exFAT, clés USB du suspect comprises : entrées, supprimées aussi
-  installed_programs: true  # programmes installés (Uninstall) de la machine et de chaque utilisateur
-  defender_configuration: true  # exclusions et réglages de protection de Microsoft Defender
-  explorer_recent_docs: true    # fichiers ouverts par chaque utilisateur (RecentDocs de l'Explorateur)
-  mount_points: true            # volumes et partages vus par chaque utilisateur (MountPoints2)
-  known_networks: true          # réseaux auxquels la machine s'est connectée (NetworkList)
-  program_usage: true           # programmes lancés ou utilisés (FeatureUsage, JumplistData, compatibilité, épinglés)
-  devices: true                 # périphériques USB et SCSI et leurs dates, portables, noms de volumes
-  network_shares: true          # partages réseau de la machine, chemin et droits
-  network_configuration: true   # cartes réseau, dernière configuration IPv4/IPv6, baux DHCP (hors ligne)
-  event_log_configuration: true # état de chaque journal et session ETW de démarrage : actif, taille, rétention, accès (hors ligne)
-  shortcuts: true               # raccourcis hors de Recent : menu Démarrer, Bureaux, Quick Launch, barre des tâches
-  security_descriptors: true    # $Secure:$SDS : propriétaire et droits de chaque fichier, chaque descripteur une fois
-  ntfs_volumes: true            # $Boot et $UsnJrnl:$Max : numéro de série et géométrie, création du journal
-  dpapi_master_keys: true       # clés maîtresses DPAPI copiées chiffrées ; JSON : propriétaire, GUID, dates, jamais la clé
-  user_shell_folders: true      # où sont vraiment le Bureau, les Documents, les Téléchargements de chacun
-  web_client: true              # navigateurs Chromium et Firefox : visites, téléchargements, recherches ; leurs bases copiées brutes
+artefacts:              # une clé par artefact ; une clé absente vaut true
+  activities_cache:        true   # Chronologie Windows : applications, fichiers, pages, presse-papiers (ActivitiesCache.db)
+  amcache:                 true   # Amcache.hve : applications, exécutables et pilotes vus
+  bam:                     true   # dernière exécution de chaque programme par utilisateur (BAM)
+  bits:                    true   # qmgr.db : travaux BITS, URL, destinations, commandes de notification
+  defender:                true   # Defender : journaux (MPLog, traces WPP brutes), historique des détections, quarantaine (copiée chiffrée)
+  defender_configuration:  true   # exclusions et réglages de protection de Microsoft Defender
+  devices:                 true   # périphériques USB et SCSI et leurs dates, portables, noms de volumes
+  dpapi_master_keys:       true   # clés maîtresses DPAPI copiées chiffrées ; JSON : propriétaire, GUID, dates, jamais la clé
+  error_reports:           true   # rapports d'erreurs (WER) : programmes plantés, avec leur chemin
+  event_log_configuration: true   # état de chaque journal et session ETW de démarrage : actif, taille, rétention, accès (hors ligne)
+  events:                  true   # journaux d'événements, avec leurs messages
+  explorer_recent_docs:    true   # fichiers ouverts par chaque utilisateur (RecentDocs de l'Explorateur)
+  fat_volumes:             true   # volumes FAT et exFAT, clés USB du suspect comprises : entrées, supprimées aussi
+  firewall:                true   # règles et profils du pare-feu
+  hosts:                   true   # le fichier hosts : noms détournés vers une adresse
+  installed_programs:      true   # programmes installés (Uninstall) de la machine et de chaque utilisateur
+  internet_settings:       true   # proxy des utilisateurs
+  jump_lists:              true   # listes de sauts : fichiers et lieux ouverts, par application
+  known_networks:          true   # réseaux auxquels la machine s'est connectée (NetworkList)
+  local_groups:            true   # membres de chaque groupe local (SAM)
+  log_file:                true   # $LogFile et $TxfLog : journaux de transactions NTFS et TxF, copie brute seule
+  mft:                     true   # $MFT : chaque fichier, présent ou supprimé, et ses dates
+  mounted_devices:         true   # volumes et lettres de lecteur connus de la machine (MountedDevices)
+  mount_points:            true   # volumes et partages vus par chaque utilisateur (MountPoints2)
+  mru:                     true   # fichiers ouverts ou enregistrés par les boîtes de dialogue communes
+  mru_apps:                true   # programmes qui ont ouvert ou enregistré ces fichiers
+  muicache:                true   # noms des programmes lancés par chaque utilisateur
+  network:                 true   # en direct : connexions, voisins, interfaces, routes
+  network_configuration:   true   # cartes réseau, dernière configuration IPv4/IPv6, baux DHCP (hors ligne)
+  network_shares:          true   # partages réseau de la machine, chemin et droits
+  ntfs_volumes:            true   # $Boot et $UsnJrnl:$Max : numéro de série et géométrie, création du journal
+  office_trust_records:    true   # documents Office approuvés, macros activées
+  operating_system:        true   # version, installation, nom de la machine, durée de fonctionnement
+  persistence:             true   # persistance du registre : IFEO, AppInit, Winlogon, LSA, COM…
+  powershell_history:      true   # PSReadLine : les commandes tapées dans PowerShell
+  prefetch:                true   # Prefetch : programmes lancés, compteur, huit dernières exécutions, fichiers chargés
+  processes:               true   # en direct
+  program_usage:           true   # programmes lancés ou utilisés (FeatureUsage, JumplistData, compatibilité, épinglés)
+  rdp_client:              true   # Bureau à distance sortant : serveurs, fichiers .rdp, tuiles du cache bitmap
+  rdp_server:              true   # Bureau à distance entrant : authentifications, sessions, adresses source
+  recent_documents:        true   # Recent : raccourcis vers les fichiers ouverts par chaque utilisateur
+  recycle_bin:             true   # $I des corbeilles : quoi, par qui, quand
+  registry_backups:        true   # RegBack : anciennes ruches de la machine, copie brute seule
+  root_certificates:       true   # certificats racines de la machine et des utilisateurs
+  run_keys:                true   # clés Run et RunOnce de la machine et de chaque utilisateur
+  scheduled_tasks:         true   # tâches planifiées : commandes, déclencheurs, auteurs, dates
+  search_index:            true   # index de recherche Windows : chemin, dates, taille, résumé de chaque élément indexé
+  security:                true   # ruche SECURITY : noms des secrets LSA, connexions en cache, audit
+  security_descriptors:    true   # $Secure:$SDS : propriétaire et droits de chaque fichier, chaque descripteur une fois
+  services:                true   # services et pilotes
+  sessions:                true   # en direct
+  setupapi:                true   # setupapi.dev.log : installations de périphériques
+  shellbags:               true   # dossiers parcourus par chaque utilisateur dans l'Explorateur
+  shimcache:               true   # cache de compatibilité des applications (AppCompatCache)
+  shortcuts:               true   # raccourcis hors de Recent : menu Démarrer, Bureaux, Quick Launch, barre des tâches
+  srum:                    true   # SRUDB.dat : réseau et ressources par application et utilisateur, 30 à 60 jours
+  startup_folders:         true   # dossiers de démarrage : ce qui s'exécute à l'ouverture de session
+  typed_paths:             true   # chemins tapés dans l'Explorateur
+  usbstor:                 true   # périphériques de stockage USB (Enum\USBSTOR)
+  userassist:              true   # programmes lancés depuis l'Explorateur, avec compteur et date
+  users:                   true   # comptes locaux (SAM) : connexions, échecs, indicateurs, condensats
+  user_shell_folders:      true   # où sont vraiment le Bureau, les Documents, les Téléchargements de chacun
+  usn_journal:             true   # $UsnJrnl:$J : créations, renommages, suppressions
+  web_client:              true   # navigateurs Chromium et Firefox : visites, téléchargements, recherches ; leurs bases copiées brutes
+  wmi:                     true   # dépôt WMI lu hors ligne : abonnements (filtres, consommateurs, liaisons)
+  word_wheel_query:        true   # recherches de l'Explorateur
+  zone_identifiers:        true   # flux Zone.Identifier : d'où viennent les fichiers téléchargés
 \end{lstlisting}
 
 \begin{itemize}
   \item \textbf{Strict} : une clé inconnue, une valeur hors de celles admises
     (\texttt{true}/\texttt{false} seulement, pas \texttt{yes}), une clé en
     double, une liste : la collecte est refusée avant de commencer, avec la
-    ligne fautive. Une clé absente garde sa valeur par défaut.
+    ligne fautive. Une clé absente garde sa valeur par défaut : \texttt{true}.
+  \item \textbf{Versionné} : \champ{wac\_version} porte la version de \wac{}
+    pour laquelle le fichier a été écrit (\opt{write-config} l'y met). Un
+    fichier d'une autre version, ou sans version, est refusé avant toute
+    lecture : il pourrait manquer des réglages ajoutés depuis, ou en porter qui
+    n'existent plus. Le refaire avec \opt{write-config}.
+  \item \textbf{Une clé par artefact}, aucun prélevé d'office. Les ruches, les
+    journaux d'événements et la \path|$MFT| ne sont pas des artefacts mais des
+    \emph{dépendances} : prises dès qu'un artefact demandé les lit, et
+    seulement alors. Les journaux servent à \texttt{events} et à
+    \texttt{rdp\_server} ; les ruches des utilisateurs à \texttt{muicache},
+    \texttt{userassist}, \texttt{run\_keys}, \texttt{shellbags},
+    \texttt{mru}, \texttt{mru\_apps} et aux autres artefacts lus dans
+    \fichier{NTUSER.DAT} ; \fichier{Amcache.hve} au seul \texttt{amcache}.
+    SYSTEM, SOFTWARE, SAM, SECURITY et DEFAULT sont toujours prises : elles
+    donnent le fuseau horaire, les profils et le nom des comptes.
   \item \textbf{Consigné} : chemin, SHA-256 et contenu du fichier vont dans
     \fichier{investigation.json} (\champ{Tool.Configuration}) — la procédure
     appliquée fait partie de la preuve.
@@ -401,8 +431,8 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
     confondu avec un échec ou une absence de traces.
   \item \opt{config=fichier} lit un autre fichier ; \opt{full} collecte et
     convertit ici bien que le fichier dise \texttt{convert: false}.
-  \item Sans \fichier{wac.yml}, \wac{} se comporte comme avant : exécution
-    complète, options telles que données.
+  \item Sans \fichier{wac.yml}, \wac{} fait une exécution complète de tous
+    les artefacts, journaux d'événements compris, options telles que données.
 \end{itemize}
 
 \section{Options}
@@ -418,9 +448,11 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
 -{}-convert=\newline dossier & Conversion seule, sur un poste d'analyse, de la collecte
   faite avec \opt{collect} dans ce dossier, après vérification du sceau et de
   chaque empreinte. Voir chapitre~\ref{chap:separation}. \\
--{}-events & Extrait et analyse les journaux d'événements (\fichier{.evtx}), et
-  reconstitue le message lisible de chaque événement à partir des ressources de
-  son fournisseur. Ajoute environ 250~Mo de copies. \\
+-{}-events & Prend les journaux d'événements (\fichier{.evtx}) même si
+  \fichier{wac.yml} dit \texttt{events: false} ; sans cela, ils sont pris par
+  défaut (clé \texttt{events}). Chaque événement reçoit son message lisible,
+  reconstitué à partir des ressources de son fournisseur. Environ 250~Mo de
+  copies. \\
 -{}-binary & Calcule les empreintes (MD5, SHA-1, SHA-256) de chaque fichier cité
   par un artefact, par lecture directe du disque. Les exécutables, bibliothèques,
   pilotes et scripts cités sont en outre \textbf{prélevés} dans la consigne. Voir
@@ -713,8 +745,8 @@ Sur la machine examinée, en administrateur :
 E:\> WAC.exe --collect --events --binary --output=poste-comptable-01
 \end{lstlisting}
 
-Sur le poste d'analyse, sans droits particuliers, avec les mêmes options
-\opt{events} et \opt{binary} que la collecte :
+Sur le poste d'analyse, sans droits particuliers, avec la même configuration
+(\texttt{events}, \opt{binary}) que la collecte :
 \begin{lstlisting}
 D:\> WAC.exe --convert=E:\poste-comptable-01 --events --binary
 \end{lstlisting}
@@ -733,7 +765,7 @@ La conversion ne pouvant plus rien demander à la machine, la collecte prend
         réglages de la machine (lecteur système, page de code, fuseau horaire,
         volumes et leurs numéros de série) ;
   \item les ruches et les fichiers d'artefacts, comme d'ordinaire ;
-  \item avec \opt{events}, les fichiers de ressources de \textbf{tous} les
+  \item avec les journaux d'événements (\texttt{events}), les fichiers de ressources de \textbf{tous} les
         fournisseurs d'événements déclarés (binaire, fichier de paramètres,
         satellites \fichier{.mui}), car on ne sait qu'à la conversion lesquels
         seront utiles. Cela représente environ 650~Mo sur Windows~11 ;
@@ -817,8 +849,8 @@ identiques, ce que le harnais de test vérifie à chaque cycle.
         SHA-256 — ceux-ci ne sont calculés que pour ce qui est prélevé.
   \item Un exécutable situé sur un volume amovible n'est pas prélevé par
         \opt{collect} \opt{binary}.
-  \item Les options \opt{events} et \opt{binary} de la conversion doivent être
-        celles de la collecte : ce que la collecte n'a pas pris ne peut pas être
+  \item La configuration (\texttt{events}, \opt{binary}) de la conversion doit
+        être celle de la collecte : ce que la collecte n'a pas pris ne peut pas être
         converti.
 \end{itemize}
 

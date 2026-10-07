@@ -202,7 +202,10 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactSearchIndex, L"Index de recherche Windows", L"Windows Search index" },
 	{ Text::ArtefactRdpClient, L"Connexions Bureau à distance sortantes", L"Outgoing Remote Desktop connections" },
 	{ Text::ArtefactRdpServer, L"Connexions Bureau à distance entrantes", L"Incoming Remote Desktop connections" },
+	{ Text::ArtefactOperatingSystem,   L"Système d'exploitation",                        L"Operating system" },
+	{ Text::ArtefactEvents,            L"Journaux d'événements",                         L"Event logs" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },
+	{ Text::NotNeeded,                 L"inutile : aucun artefact demandé ne les lit",   L"not needed: no artefact asked for reads them" },
 
 	{ Text::TimeElapsed,               L"FIN, durée : %1 s",                             L"END, Time elapsed : %1 s" },
 	{ Text::PressAnyKey,               L"<<< Appuyez sur une touche pour quitter >>>",   L"<<< Press any key to quit >>>" },
@@ -218,11 +221,11 @@ constexpr Wording WORDINGS[] = {
 	  L"\t--language=fr|en : langue de la console (fr par défaut) ; les fichiers JSON et les journaux restent en anglais\n"
 	  L"\t--full : collecte et convertit ici, même si la configuration dit convert: false\n"
 	  L"\t--collect : collecte seule, sur la machine examinée : observations en direct et extraction brute dans la consigne scellée ; "
-	  L"rien n'est converti. Avec --events, les fichiers de ressources de chaque fournisseur d'événements sont pris ; avec --binary, "
+	  L"rien n'est converti. Avec les journaux d'événements (artefacts.events), les fichiers de ressources de chaque fournisseur d'événements sont pris ; avec --binary, "
 	  L"chaque exécutable et catalogue de signatures du volume système\n"
 	  L"\t--convert=dossier : conversion seule, sur un poste d'analyse, de la collecte faite par --collect dans ce dossier : le sceau "
 	  L"et chaque empreinte sont vérifiés d'abord, puis les JSON sont écrits à côté de la consigne, avec conversion.json pour journal. "
-	  L"Donner les mêmes --events et --binary qu'à la collecte\n"
+	  L"Donner la même configuration et le même --binary qu'à la collecte\n"
 	  L"\t--update-trust[=dossier] : sur le poste d'analyse, AVANT la collecte, et seul : télécharge les racines de confiance et les "
 	  L"certificats révoqués de Microsoft, vérifie leurs signatures et les écrit dans le dossier (par défaut 'trust' à côté de WAC.exe), "
 	  L"à emporter sur la machine examinée avec WAC.exe\n"
@@ -231,7 +234,7 @@ constexpr Wording WORDINGS[] = {
 	  L"vérifiée et le verdict consigné au manifeste\n"
 	  L"\t--threads=N : fils d'exécution qui analysent les exécutables de --collect --binary (par défaut : ceux du processeur moins un)\n"
 	  L"\t--dump : ajoute la valeur hexadécimale brute des shellbags et des raccourcis dans les JSON\n"
-	  L"\t--events : extrait et décode les journaux d'événements .evtx (environ 117 Mo de plus)\n"
+	  L"\t--events : prend les journaux d'événements .evtx même si wac.yml dit events: false (environ 117 Mo de plus)\n"
 	  L"\t--binary : empreintes (MD5, SHA-1, SHA-256) de chaque fichier cité par les artefacts, lu en brut ; exécutables, "
 	  L"bibliothèques, pilotes et scripts sont aussi prélevés dans la consigne\n"
 	  L"\t--output=[nom de dossier] : dossier des résultats, dans le répertoire courant ('output' par défaut)\n"
@@ -250,11 +253,11 @@ constexpr Wording WORDINGS[] = {
 	  L"\t--language=fr|en : language of the console (fr by default); the JSON files and the logs stay in English\n"
 	  L"\t--full : collect and convert here, although the configuration says convert: false\n"
 	  L"\t--collect : collection only, on the examined machine: live snapshots and raw extraction into the sealed exhibit store; "
-	  L"nothing is converted. With --events, the resource files of every event provider are taken; with --binary, every "
+	  L"nothing is converted. With the event logs (artefacts.events), the resource files of every event provider are taken; with --binary, every "
 	  L"executable and signature catalog of the system volume\n"
 	  L"\t--convert=folder : conversion only, on an analysis workstation, of the collection made with --collect in that folder: "
 	  L"the seal and every fingerprint are checked first, then the JSON files are written next to the exhibit store, with "
-	  L"conversion.json as the log. Give the same --events and --binary as the collection\n"
+	  L"conversion.json as the log. Give the same configuration and --binary as the collection\n"
 	  L"\t--update-trust[=folder] : on the analysis workstation, BEFORE the collection, and alone: downloads Microsoft's trusted "
 	  L"roots and disallowed certificates, checks their signatures, and writes them into folder (by default 'trust' next to "
 	  L"WAC.exe), to be carried to the examined machine with WAC.exe\n"
@@ -263,7 +266,7 @@ constexpr Wording WORDINGS[] = {
 	  L"and the verdict recorded in the manifest\n"
 	  L"\t--threads=N : threads analysing the executables of --collect --binary (default: the processor's threads minus one)\n"
 	  L"\t--dump : add the raw hexadecimal value of shellbags and shortcuts to the JSON files\n"
-	  L"\t--events : extract and parse the .evtx event logs (adds ~117 MB to the collection)\n"
+	  L"\t--events : take the .evtx event logs even if wac.yml says events: false (adds ~117 MB to the collection)\n"
 	  L"\t--binary : fingerprint (MD5, SHA-1, SHA-256) every file referenced in artefacts, read raw; executables, libraries, "
 	  L"drivers and scripts are also collected into the exhibit store\n"
 	  L"\t--output=[directory name] : directory of the results, in the current directory ('output' by default)\n"
@@ -299,6 +302,10 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ConfigurationOutputValue,  L"output : un nom de dossier, sans \\, / ni :",   L"output: a folder name, without \\, / or :" },
 	{ Text::ConfigurationLanguageValue, L"language : \"%1\", fr ou en attendu",          L"language: \"%1\", fr or en expected" },
 	{ Text::ConfigurationUnknownSetting, L"réglage inconnu \"%1\"",                      L"unknown setting \"%1\"" },
+	{ Text::ConfigurationVersionMissing, L"wac_version absent : fichier d'une version précédente, à refaire par --write-config (WAC %1)",
+	                                     L"wac_version missing: a file from an earlier version, to be written again with --write-config (WAC %1)" },
+	{ Text::ConfigurationVersionMismatch, L"fichier écrit pour WAC %1, celui-ci est WAC %2 : des réglages peuvent manquer ou ne plus exister, à refaire par --write-config",
+	                                      L"file written for WAC %1, this is WAC %2: settings may be missing or gone, to be written again with --write-config" },
 
 	{ Text::ProgressUnit,              L"élém.",                                         L"elem" },
 	{ Text::ProgressKibibytes,         L"Kio",                                           L"KiB" },

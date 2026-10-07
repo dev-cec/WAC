@@ -320,6 +320,7 @@ procedure: collection only, unverified binaries collected, event logs
 included.
 
 \begin{lstlisting}
+wac_version: 1.4.0      # version of WAC the file is written for (--write-config)
 convert: false          # true: collect and convert here; false: collect only
 binary: unverified      # none | unverified | all
 threads: 0              # analysis threads for the binaries, 0: automatic
@@ -327,67 +328,95 @@ output: output
 log_level: 0
 dump: false
 language: fr            # fr | en: language of the console; the files stay in English
-artefacts:              # one switch per artefact; all the hives = registry
-  registry: true
-  events: true
-  scheduled_tasks: true
-  services: true
-  processes: true
-  sessions: true
-  network: true
-  prefetch: true
-  jump_lists: true
-  recent_documents: true
-  mft: true             # $MFT: every file, present or deleted, with its dates
-  usn_journal: true     # $UsnJrnl:$J: creations, renames, deletions
-  log_file: true        # $LogFile and $TxfLog: NTFS and TxF transaction journals, raw copy only
-  powershell_history: true  # PSReadLine: the commands typed in PowerShell
-  activities_cache: true    # Windows Timeline: applications, files, pages, clipboard (ActivitiesCache.db)
-  search_index: true        # Windows Search index: path, dates, size, summary of each indexed item
-  rdp_client: true          # outgoing Remote Desktop: servers, .rdp files, bitmap cache tiles
-  rdp_server: true          # incoming Remote Desktop: authentications, sessions, source addresses
-  setupapi: true        # setupapi.dev.log: device installations
-  recycle_bin: true     # $I of the recycle bins: what, by whom, when
-  hosts: true           # the hosts file: names diverted to an address
-  error_reports: true   # error reports (WER): programs that crashed, with their path
-  defender: true        # Defender: logs (MPLog, raw WPP traces), detection history, quarantine (copied encrypted)
-  startup_folders: true # startup folders: what runs at logon
-  zone_identifiers: true  # Zone.Identifier streams: where downloaded files came from
-  security: true        # SECURITY hive: LSA secret names, cached logons, audit
-  persistence: true     # registry persistence: IFEO, AppInit, Winlogon, LSA, COM…
-  office_trust_records: true  # Office trusted documents, macros enabled
-  typed_paths: true     # paths typed in Explorer
-  word_wheel_query: true  # Explorer searches
-  root_certificates: true # root certificates of the machine and users
-  internet_settings: true # users' proxy
-  firewall: true        # firewall rules and profiles
-  wmi: true             # WMI repository read offline: subscriptions (filters, consumers, bindings)
-  srum: true            # SRUDB.dat: network and resources per application and user, 30 to 60 days
-  bits: true            # qmgr.db: BITS jobs, URLs, destinations, notification command lines
-  fat_volumes: true     # FAT and exFAT volumes, the suspect's USB keys included: entries, deleted ones too
-  installed_programs: true  # installed programs (Uninstall) of the machine and of each user
-  defender_configuration: true  # Microsoft Defender exclusions and protection settings
-  explorer_recent_docs: true    # files each user opened (Explorer's RecentDocs)
-  mount_points: true            # volumes and shares each user saw (MountPoints2)
-  known_networks: true          # networks the machine joined (NetworkList)
-  program_usage: true           # programs launched or used (FeatureUsage, JumplistData, compatibility, pinned)
-  devices: true                 # USB and SCSI devices with their dates, portable devices, volume labels
-  network_shares: true          # the machine's network shares, path and rights
-  network_configuration: true   # network adapters, last IPv4/IPv6 settings, DHCP leases (offline)
-  event_log_configuration: true # state of each event log and boot ETW session: enabled, size, retention, access (offline)
-  shortcuts: true               # shortcuts outside Recent: Start menu, desktops, Quick Launch, task bar
-  security_descriptors: true    # $Secure:$SDS: owner and rights of every file, each descriptor once
-  ntfs_volumes: true            # $Boot and $UsnJrnl:$Max: serial and geometry, creation of the journal
-  dpapi_master_keys: true       # DPAPI master keys copied encrypted; JSON: owner, GUID, dates, never the key
-  user_shell_folders: true      # where each user's desktop, documents, downloads really are
-  web_client: true              # Chromium browsers and Firefox: visits, downloads, searches; their databases copied raw
+artefacts:              # one key per artefact; a missing key is true
+  activities_cache:        true   # Windows Timeline: applications, files, pages, clipboard (ActivitiesCache.db)
+  amcache:                 true   # Amcache.hve: applications, executables and drivers seen
+  bam:                     true   # last execution of each program per user (Background Activity Moderator)
+  bits:                    true   # qmgr.db: BITS jobs — URLs, destinations, notification command lines
+  defender:                true   # Microsoft Defender: support logs (MPLog, raw WPP traces), detection history, quarantine (copied encrypted)
+  defender_configuration:  true   # Microsoft Defender exclusions and protection settings, its own and by policy
+  devices:                 true   # USB and SCSI devices with their dates, portable devices, volume labels per drive letter, device interfaces
+  dpapi_master_keys:       true   # DPAPI master keys of each user and of the system, copied still encrypted; JSON: owner, GUID, dates, never the key
+  error_reports:           true   # Windows Error Reporting: programs that crashed, with their path
+  event_log_configuration: true   # each event log and boot ETW session: enabled, size, retention, access (a disabled one is a trace)
+  events:                  true   # the event logs, with their messages
+  explorer_recent_docs:    true   # files each user opened, by extension, most recent first (Explorer's RecentDocs)
+  fat_volumes:             true   # FAT and exFAT volumes, a suspect's USB keys included: every entry, deleted ones too
+  firewall:                true   # firewall rules and profiles
+  hosts:                   true   # the hosts file: names diverted to an address
+  installed_programs:      true   # installed programs (Uninstall) of the machine and of each user
+  internet_settings:       true   # each user's proxy and automatic configuration script
+  jump_lists:              true   # jump lists: files and places each user opened, per application
+  known_networks:          true   # networks the machine joined: name, kind, gateway, first and last connection (NetworkList)
+  local_groups:            true   # members of each local group (SAM)
+  log_file:                true   # $LogFile and $TxfLog: NTFS and transactional NTFS journals, raw copy only
+  mft:                     true   # $MFT: every file, present or deleted, with its dates (mft.json)
+  mounted_devices:         true   # volumes and drive letters the machine knew (MountedDevices)
+  mount_points:            true   # volumes and network shares each user's Explorer saw, with their commands (MountPoints2)
+  mru:                     true   # files each user opened or saved through the common dialogs
+  mru_apps:                true   # programs used to open or save those files
+  muicache:                true   # names of the programs each user launched
+  network:                 true   # live: connections, neighbours, interfaces, routes
+  network_configuration:   true   # network adapters and their last IPv4/IPv6 settings and DHCP leases, read offline
+  network_shares:          true   # folders the machine shares, with their path and permissions (LanmanServer)
+  ntfs_volumes:            true   # $Boot and $UsnJrnl:$Max: volume serial and geometry, creation of the change journal
+  office_trust_records:    true   # Office trusted documents: macros enabled by the user, and when
+  operating_system:        true   # version, installation, computer name, uptime
+  persistence:             true   # registry persistence beyond Run: IFEO, AppInit_DLLs, Winlogon, LSA packages, COM hijacking…
+  powershell_history:      true   # PSReadLine: the commands typed in PowerShell, per profile
+  prefetch:                true   # Prefetch: programs run, count, last eight runs, files loaded
+  processes:               true   # live
+  program_usage:           true   # programs each user launched or used: FeatureUsage, JumplistData, compatibility store and layers, RADAR, pinned items
+  rdp_client:              true   # outgoing RDP connections: servers reached, .rdp files, bitmap cache tiles
+  rdp_server:              true   # incoming RDP connections: authentications, sessions, sources (event logs)
+  recent_documents:        true   # Recent: shortcuts to the files each user opened
+  recycle_bin:             true   # $I of every volume's recycle bin: what was deleted, by whom, when
+  registry_backups:        true   # RegBack: the machine's older hives, raw copy only
+  root_certificates:       true   # root certificates of the machine and of each user
+  run_keys:                true   # Run and RunOnce keys of the machine and of each user
+  scheduled_tasks:         true   # scheduled tasks: commands, triggers, authors, dates
+  search_index:            true   # Windows Search index: path, dates, size, owner, summary of each indexed item, deleted ones included
+  security:                true   # SECURITY hive: LSA secrets' names and dates, cached logons, audit policy (never a secret)
+  security_descriptors:    true   # $Secure:$SDS: owner and access rights of every file, each descriptor once (mft.json: SecurityId)
+  services:                true   # services and drivers
+  sessions:                true   # live
+  setupapi:                true   # setupapi.dev.log: device installations, first connection of a USB key
+  shellbags:               true   # folders each user browsed in Explorer
+  shimcache:               true   # application compatibility cache (AppCompatCache)
+  shortcuts:               true   # shortcuts outside Recent: Start menu, desktops, Quick Launch, pinned task bar
+  srum:                    true   # SRUDB.dat: bytes sent and received, resources used, per application and user, 30 to 60 days
+  startup_folders:         true   # startup folders: what runs at logon
+  typed_paths:             true   # paths typed in Explorer's address bar
+  usbstor:                 true   # USB mass storage devices (Enum\USBSTOR)
+  userassist:              true   # programs each user launched from Explorer, with count and date
+  users:                   true   # local accounts (SAM): logons, failures, flags, password hashes
+  user_shell_folders:      true   # where each user's desktop, documents, downloads really are (OneDrive, another disk, a share)
+  usn_journal:             true   # $UsnJrnl:$J: creations, renames, deletions (usn_journal.json)
+  web_client:              true   # browsers: visits, downloads, searches (Edge, Chrome, Brave, Vivaldi, Opera); their databases copied raw
+  wmi:                     true   # WMI repository: event subscriptions (filters, consumers, bindings), read offline
+  word_wheel_query:        true   # terms searched in Explorer
+  zone_identifiers:        true   # Zone.Identifier streams (Mark of the Web): where downloaded files came from
 \end{lstlisting}
 
 \begin{itemize}
   \item \textbf{Strict}: an unknown key, a value outside the ones allowed
     (\texttt{true}/\texttt{false} only, not \texttt{yes}), a duplicate key, a
     list: the collection is refused before it starts, with the line at fault.
-    A key left out keeps its default.
+    A key left out keeps its default: \texttt{true}.
+  \item \textbf{Versioned}: \champ{wac\_version} carries the version of
+    \wac{} the file was written for (\opt{write-config} puts it there). A file
+    of another version, or without one, is refused before anything is read: it
+    may lack settings added since, or carry some that are gone. Write it again
+    with \opt{write-config}.
+  \item \textbf{One key per artefact}, none collected unasked. The hives, the
+    event logs and the \path|$MFT| are not artefacts but \emph{dependencies}:
+    taken when an artefact asked for reads them, and only then. The logs serve
+    \texttt{events} and \texttt{rdp\_server}; the users' hives
+    \texttt{muicache}, \texttt{userassist}, \texttt{run\_keys},
+    \texttt{shellbags}, \texttt{mru}, \texttt{mru\_apps} and the other
+    artefacts read in \fichier{NTUSER.DAT}; \fichier{Amcache.hve} only
+    \texttt{amcache}. SYSTEM, SOFTWARE, SAM, SECURITY and DEFAULT are always
+    taken: they give the time zone, the profiles and the accounts' names.
   \item \textbf{Recorded}: the file's path, SHA-256 and content go into
     \fichier{investigation.json} (\champ{Tool.Configuration}) — the procedure
     applied is part of the evidence.
@@ -396,8 +425,8 @@ artefacts:              # one switch per artefact; all the hives = registry
     mistaken for a failure or an absence of traces.
   \item \opt{config=file} reads another file; \opt{full} collects and converts
     here although the file says \texttt{convert: false}.
-  \item Without \fichier{wac.yml}, \wac{} behaves as before: full run, options
-    as given.
+  \item Without \fichier{wac.yml}, \wac{} runs every artefact, event logs
+    included, options as given.
 \end{itemize}
 
 \section{Options}
@@ -413,9 +442,10 @@ artefacts:              # one switch per artefact; all the hives = registry
 -{}-convert=folder & Conversion only, on an analysis workstation, of the
   collection made with \opt{collect} in that folder, after checking the seal
   and every fingerprint. See chapter~\ref{chap:separation}. \\
--{}-events & Extracts and parses the event logs (\fichier{.evtx}), and rebuilds
-  each event's readable message from its provider's resources. Adds about
-  250~MB of copies. \\
+-{}-events & Takes the event logs (\fichier{.evtx}) even if \fichier{wac.yml}
+  says \texttt{events: false}; otherwise they are taken by default (key
+  \texttt{events}). Each event gets its readable message, rebuilt from its
+  provider's resources. About 250~MB of copies. \\
 -{}-binary & Fingerprints (MD5, SHA-1, SHA-256) every file referenced by an
   artefact, by reading the disk directly. Referenced executables, libraries,
   drivers and scripts are also \textbf{collected} into the exhibit store. See
@@ -704,7 +734,7 @@ E:\> WAC.exe --collect --events --binary --output=accounting-pc-01
 \end{lstlisting}
 
 On the analysis workstation, with no particular rights, with the same
-\opt{events} and \opt{binary} options as the collection:
+configuration (\texttt{events}, \opt{binary}) as the collection:
 \begin{lstlisting}
 D:\> WAC.exe --convert=E:\accounting-pc-01 --events --binary
 \end{lstlisting}
@@ -723,7 +753,7 @@ takes \textbf{everything it will read}:
         settings (system drive, code page, time zone, volumes and their serial
         numbers);
   \item the hives and the file artefacts, as usual;
-  \item with \opt{events}, the resource files of \textbf{every} declared event
+  \item with the event logs (\texttt{events}), the resource files of \textbf{every} declared event
         provider (binary, parameter file, \fichier{.mui} satellites): which of
         them are needed is only known at conversion. About 650~MB on
         Windows~11;
@@ -808,8 +838,8 @@ which the test harness checks on every cycle.
         those are computed only for what is collected.
   \item An executable on a removable volume is not collected by
         \opt{collect} \opt{binary}.
-  \item The \opt{events} and \opt{binary} options of the conversion must be
-        those of the collection: what the collection did not take cannot be
+  \item The configuration (\texttt{events}, \opt{binary}) of the conversion
+        must be that of the collection: what the collection did not take cannot be
         converted.
 \end{itemize}
 

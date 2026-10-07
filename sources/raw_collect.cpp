@@ -285,13 +285,14 @@ HRESULT ExtractSystemHivesRaw() {
 		   offline (last logon dates, logon failures, account flags) instead of
 		   querying LSASS over RPC. See users.h. */
 		L"\\Windows\\system32\\config\\SAM",
-		L"\\Windows\\AppCompat\\Programs\\Amcache.hve",
 		/* SECURITY: LSA secrets' names and dates, cached logons, audit policy
 		   (security.json — never a secret's value). DEFAULT: the system
 		   account's profile, its Run keys. */
 		L"\\Windows\\system32\\config\\SECURITY",
 		L"\\Windows\\system32\\config\\DEFAULT",
 	};
+	/* Amcache.hve is the `amcache` artefact's alone: copied for it only. */
+	if (conf.artefacts.amcache) hives.push_back(L"\\Windows\\AppCompat\\Programs\\Amcache.hve");
 	return extractHiveSet(
 		hives,
 		L"Raw extraction of the system hives (+ .LOG1/.LOG2 logs)");
@@ -435,7 +436,7 @@ HRESULT ExtractFileArtefactsRaw() {
 	   collection and fill the medium with data the operator did not ask for.
 	   Reading them offline replaces the EventLog API (see events.h). */
 	// The event logs: for events.json, and for the incoming RDP connections read in them.
-	if (conf._events || conf.artefacts.rdpServer) addTarget(L"\\Windows\\System32\\winevt\\Logs", { L".evtx" });
+	if (conf.artefacts.needsEventLogs()) addTarget(L"\\Windows\\System32\\winevt\\Logs", { L".evtx" });
 	// setupapi.dev.log and its rotations, with the other setup logs of the folder (a few, small).
 	if (conf.artefacts.setupApi) addTarget(L"\\Windows\\INF", { L".log" });
 	// hosts has no extension: the whole folder, a handful of small files.
@@ -443,7 +444,7 @@ HRESULT ExtractFileArtefactsRaw() {
 	/* RegBack: the copies Windows made of the hives (task RegIdleBackup) —
 	   an older state of the registry. Empty files since Windows 10 1803 unless
 	   the task was switched back on; collected as they are, not converted. */
-	if (conf.artefacts.registry) addTarget(L"\\Windows\\System32\\config\\RegBack", {});
+	if (conf.artefacts.registryBackups) addTarget(L"\\Windows\\System32\\config\\RegBack", {});
 	/* Defender's support folder: the MPLog text logs, converted, and the WPP
 	   traces (.bin), copied raw only — their format, ETW binary traces decoded
 	   with Microsoft's private symbols, is not documented. */

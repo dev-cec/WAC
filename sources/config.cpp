@@ -11,6 +11,8 @@
 namespace {
 
 const size_t CONFIGURATION_MAX = 64 * 1024;   //!< a configuration is a few hundred bytes
+const char VERSION_KEY[] = "wac_version";      //!< the version of WAC the file was written for
+const char VERSION_PLACEHOLDER[] = "@WAC_VERSION@";   //!< its value in sources/wac.yml, filled when written
 
 /*! "line N: why", in the console's language (the refusal is shown to the
  *  operator, before any log exists), as UTF-8 like the YAML reader's. */
@@ -54,7 +56,12 @@ bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error)
 	struct Switch { const char* key; bool* value; };
 	AppliConf::CollectedArtefacts& a = conf.artefacts;
 	const Switch SWITCHES[] = {
-		{ "registry", &a.registry }, { "events", &conf._events }, { "scheduled_tasks", &a.scheduledTasks },
+		{ "events", &a.events }, { "operating_system", &a.operatingSystem },
+		{ "usbstor", &a.usbstor }, { "mounted_devices", &a.mountedDevices }, { "bam", &a.bam },
+		{ "muicache", &a.muiCache }, { "amcache", &a.amcache }, { "userassist", &a.userAssist },
+		{ "run_keys", &a.runKeys }, { "shimcache", &a.shimcache }, { "shellbags", &a.shellbags },
+		{ "mru", &a.mru }, { "mru_apps", &a.mruApps }, { "users", &a.users }, { "local_groups", &a.localGroups },
+		{ "registry_backups", &a.registryBackups }, { "scheduled_tasks", &a.scheduledTasks },
 		{ "services", &a.services }, { "processes", &a.processes }, { "sessions", &a.sessions },
 		{ "network", &a.network },
 		{ "prefetch", &a.prefetch }, { "jump_lists", &a.jumpLists }, { "recent_documents", &a.recentDocuments },
@@ -100,7 +107,22 @@ bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error)
 /*! The top-level settings. `convert` and `binary` map onto the run mode and
  *  the binaries' rule; the command line, applied after, overrides them. */
 bool applySettings(const YamlNode& root, AppliConf& conf, std::string& error) {
+	/* THE VERSION FIRST. A file written for another WAC may lack the settings
+	   added since — silently left at their defaults — or carry some that have
+	   gone or changed meaning: it is refused, before any of its settings is
+	   read, so that the reason given is the version and not a key it misses.
+	   The same version is required, bugfix included: --write-config writes it. */
+	const YamlNode* version = nullptr;
+	for (const auto& [key, node] : root.children) if (key == VERSION_KEY) version = node.get();
+	if (!version) {
+		error = encodeText(text(Text::ConfigurationVersionMissing, { WacVersion() }));
+		return false;
+	}
+	if (!scalar(*version, VERSION_KEY, error)) return false;
+	if (wide(version->scalar) != WacVersion())
+		return refuse(error, *version, text(Text::ConfigurationVersionMismatch, { wide(version->scalar), WacVersion() }));
 	for (const auto& [key, node] : root.children) {
+		if (key == VERSION_KEY) continue;
 		if (key == "convert") {
 			bool convert = true;
 			if (!readBool(*node, key, convert, error)) return false;
@@ -177,5 +199,12 @@ std::string DefaultConfiguration() {
 	HRSRC found = FindResourceW(nullptr, MAKEINTRESOURCEW(IDR_DEFAULT_CONFIGURATION), MAKEINTRESOURCEW(10));   // RT_RCDATA
 	HGLOBAL loaded = found ? LoadResource(nullptr, found) : nullptr;
 	const char* bytes = loaded ? static_cast<const char*>(LockResource(loaded)) : nullptr;
-	return bytes ? std::string(bytes, SizeofResource(nullptr, found)) : std::string();
+	if (!bytes) return std::string();
+	std::string reference(bytes, SizeofResource(nullptr, found));
+	/* The version is written in WAC.rc only: the file takes the executable's,
+	   read in its own resources, in place of the placeholder. */
+	const size_t at = reference.find(VERSION_PLACEHOLDER);
+	const std::wstring version = WacVersion();
+	if (at == std::string::npos || version.empty()) return std::string();
+	return reference.replace(at, sizeof(VERSION_PLACEHOLDER) - 1, encodeText(version));
 }

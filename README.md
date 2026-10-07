@@ -229,6 +229,7 @@ file, commented — the recommended procedure: collection only, unverified
 binaries collected, event logs included.
 
 ```yaml
+wac_version: 1.4.0      # version of WAC the file is written for (--write-config)
 convert: false          # true: collect and convert here; false: collect only (--convert elsewhere)
 binary: unverified      # none | unverified | all
 threads: 0              # analysis threads for the binaries, 0: automatic
@@ -236,22 +237,24 @@ output: output
 log_level: 0
 dump: false
 language: fr            # fr | en: the console; the files stay in English
-artefacts:              # one switch per artefact; all the hives are `registry`
-  registry: true
-  events: true
-  scheduled_tasks: true
-  services: true
-  processes: true
-  sessions: true
-  network: true
-  prefetch: true
-  jump_lists: true
-  recent_documents: true
+artefacts:              # one key per artefact; a missing key is true
+  events:                  true   # the event logs, with their messages
+  operating_system:        true   # version, installation, computer name, uptime
+  amcache:                 true   # Amcache.hve: applications, executables and drivers seen
+  shimcache:               true   # application compatibility cache (AppCompatCache)
+  prefetch:                true   # Prefetch: programs run, count, last eight runs, files loaded
+  …                               # one line per artefact: see the user manual
 ```
 
 - **Strict**: an unknown key, a value outside the ones allowed (`true`/`false`
   only, not `yes`), a duplicate key, a list: the collection is refused before
-  it starts, with the line at fault. A key left out keeps its default.
+  it starts, with the line at fault. A key left out keeps its default, `true`.
+- **Versioned**: `wac_version` is the version of WAC the file was written for.
+  A file of another version, or without one, is refused before anything is
+  read — it may lack settings added since or carry some that are gone: write
+  it again with `--write-config`.
+- **One key per artefact**, none collected unasked. The hives, the event logs
+  and the `$MFT` are dependencies, taken when an artefact asked for reads them.
 - **Recorded**: the file's path, SHA-256 and content go into
   `investigation.json` (`Tool.Configuration`) — the procedure applied is part
   of the evidence.

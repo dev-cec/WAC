@@ -14,8 +14,8 @@
 # through a wac.yml placed next to WAC.exe for
 # steps 6 and 7 — a cycle a few minutes long to test one artefact. The checks
 # of the artefacts switched off are skipped (their JSON says NotRequested).
-# The artefacts read in the hives also need `registry`; step 8 (wac.yml) is
-# skipped, it tests the full configuration.
+# The hives and the event logs are dependencies, taken when an artefact named
+# reads them; step 8 (wac.yml) is skipped, it tests the full configuration.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -74,7 +74,7 @@ DATA_STATE=$($QGA run -- powershell.exe -NoProfile -Command '
 echo "   ${DATA_STATE:-no answer} (without the disk, the second-volume checks are skipped)"
 fi
 
-if wants registry setupapi fat_volumes; then
+if wants usbstor mounted_devices devices setupapi fat_volumes; then
 echo "== 0b. USB keys == ($(date +%H:%M:%S))"
 # Two virtual USB keys, attached on every run, so that USBSTOR is populated on
 # any test VM — including one recreated from scratch by create-vm.sh — and the
@@ -150,7 +150,7 @@ wait_registry_on_disk() {
 # The artefacts read in the hives whose witnesses the harness writes in the
 # live registry: a --only cycle of one of them waits too. The witnesses of the
 # third lot (installed_programs…) were absent from their collection without it.
-REGISTRY_WITNESSES="registry persistence office_trust_records typed_paths word_wheel_query root_certificates internet_settings firewall installed_programs defender_configuration explorer_recent_docs mount_points program_usage network_shares rdp_client"
+REGISTRY_WITNESSES="run_keys shellbags persistence office_trust_records typed_paths word_wheel_query root_certificates internet_settings firewall installed_programs defender_configuration explorer_recent_docs mount_points program_usage network_shares rdp_client"
 wants_registry_witness() { wants $REGISTRY_WITNESSES; }
 
 
@@ -166,12 +166,15 @@ $QGA run --shell "del $VMDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
 # from the reference wac.yml, so that a new artefact is switched off too.
 # --events would override `events: false`: it is given only when asked.
 EVENTS_OPTION=--events
+# Every wac.yml written below carries the version of the WAC under test: WAC
+# refuses a file of another version (config.cpp).
+WAC_VERSION="$("$ROOT/wac-version.sh")"
 if [[ -n "$ONLY" ]]; then
   KEYS="$(sed -n '/^artefacts:/,/^[^ #]/s/^  \([a-z_]*\):.*/\1/p' "$ROOT/sources/wac.yml")"
   for k in ${ONLY//,/ }; do
     grep -qx "$k" <<<"$KEYS" || { echo "❌ --only: unknown artefact $k (keys: $(echo $KEYS))"; exit 2; }
   done
-  { echo "# wac.yml of a --only cycle: $ONLY"; echo "artefacts:"
+  { echo "# wac.yml of a --only cycle: $ONLY"; echo "wac_version: $WAC_VERSION"; echo "artefacts:"
     for k in $KEYS; do
       if [[ ",$ONLY," == *",$k,"* ]]; then echo "  $k: true"; else echo "  $k: false"; fi
     done; } > "$OUTPUT/wac-only.yml"
@@ -194,8 +197,8 @@ fi
 # (see register-test-guids.ps1): the names it prints are those check-json.py
 # expects in ScheduledTasks.json.
 mkdir -p "$OUTPUT/reference"
-wants registry scheduled_tasks && $QGA write "$HERE/guest/register-test-guids.ps1" "$VMDIR\\register-test-guids.ps1" >/dev/null
-if wants registry scheduled_tasks; then
+wants scheduled_tasks && $QGA write "$HERE/guest/register-test-guids.ps1" "$VMDIR\\register-test-guids.ps1" >/dev/null
+if wants scheduled_tasks; then
   $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\register-test-guids.ps1" \
     > "$OUTPUT/reference/test-guids.txt" 2>/dev/null \
     && echo "   test GUIDs registered" || echo "   ⚠️ test GUIDs not registered"
@@ -387,7 +390,7 @@ fetch_results out "$OUTPUT"
 # the MountedDevices values through the live registry API (WAC reads them in
 # the raw hive, with its own reader), and the partitions of the disks.
 mkdir -p "$OUTPUT/reference"
-if wants registry; then
+if wants mounted_devices; then
 $QGA run reg.exe query 'HKLM\SYSTEM\MountedDevices' > "$OUTPUT/reference/mounted-devices.txt" 2>/dev/null \
   && echo "   + reference/mounted-devices.txt" || echo "   ⚠️ MountedDevices reference not read"
 $QGA run -- powershell.exe -NoProfile -Command \
@@ -407,7 +410,7 @@ fi
 
 # USBSTOR dates as Windows gives them (UTC), and the PE header timestamps of
 # the executables of System32, for the dates of USBSTOR and of Amcache.
-if wants registry; then
+if wants usbstor amcache; then
 $QGA run -- powershell.exe -NoProfile -Command \
   'Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object InstanceId -like "USBSTOR*" | ForEach-Object { $i = $_.InstanceId; foreach ($k in "DEVPKEY_Device_InstallDate", "DEVPKEY_Device_LastArrivalDate") { $p = Get-PnpDeviceProperty -InstanceId $i -KeyName $k; if ($p.Data) { "{0}|{1}|{2}" -f $i, $k, $p.Data.ToUniversalTime().ToString("o") } } }' \
   > "$OUTPUT/reference/usbstor.txt" 2>/dev/null \
@@ -444,7 +447,7 @@ fi
 
 # Local accounts and groups as Windows names them, for the offline naming of
 # the SIDs (WAC reads them in the SAM; Windows through its account API).
-if wants registry; then
+if wants users local_groups; then
 $QGA run -- powershell.exe -NoProfile -Command \
   '[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-LocalUser | ForEach-Object { "{0}|{1}" -f $_.SID, $_.Name }; Get-LocalGroup | ForEach-Object { "{0}|{1}" -f $_.SID, $_.Name }' \
   > "$OUTPUT/reference/accounts.txt" 2>/dev/null \
@@ -686,15 +689,17 @@ echo "== 8. Collection driven by wac.yml, without any option == ($(date +%H:%M:%
 # collection must follow the file — collect only, no binaries, some artefacts
 # switched off — and record it (investigation.json, Tool.Configuration).
 CONFIG_OUT="$OUTPUT/configured"
-cat > "$OUTPUT/wac.yml" <<'YML'
+cat > "$OUTPUT/wac.yml" <<YML
 # wac.yml of the test cycle
+wac_version: $WAC_VERSION
 convert: false
 binary: none
 output: configured
 artefacts:
-  registry: true
   events: false
   rdp_server: false
+  amcache: false
+  registry_backups: false
   prefetch: false
   sessions: false
   network: false

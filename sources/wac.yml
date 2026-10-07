@@ -1,6 +1,11 @@
 # WAC configuration — read from wac.yml, next to WAC.exe.
 # The command line overrides it. An unknown key or value refuses the collection.
 
+# The version of WAC this file was written for (--write-config). A file of
+# another version is refused: it may lack settings added since, or carry
+# some that are gone. Write it again with --write-config.
+wac_version: @WAC_VERSION@
+
 # true: collect and convert on this machine; false: collect only (convert later, elsewhere, with --convert).
 convert: false
 
@@ -23,58 +28,73 @@ dump: false
 # Language of the console: fr or en. The JSON files and the logs stay in English.
 language: fr
 
-# The artefacts to collect.
+# The artefacts to collect, one key each; a missing key is true. The hives,
+# event logs and $MFT are dependencies, copied when an artefact asked for reads them.
 artefacts:
-  registry: true          # the hives, and every artefact read in them
-  events: true            # the event logs, with their messages
-  scheduled_tasks: true
-  services: true          # services and drivers
-  processes: true         # live
-  sessions: true          # live
-  network: true           # live: connections, neighbours, interfaces, routes
-  prefetch: true
-  jump_lists: true
-  recent_documents: true
-  mft: true               # $MFT: every file, present or deleted, with its dates (mft.json)
-  usn_journal: true       # $UsnJrnl:$J: creations, renames, deletions (usn_journal.json)
-  log_file: true          # $LogFile and $TxfLog: NTFS and transactional NTFS journals, raw copy only
-  powershell_history: true  # PSReadLine: the commands typed in PowerShell, per profile
-  setupapi: true          # setupapi.dev.log: device installations, first connection of a USB key
-  recycle_bin: true       # $I of every volume's recycle bin: what was deleted, by whom, when
-  hosts: true             # the hosts file: names diverted to an address
-  error_reports: true     # Windows Error Reporting: programs that crashed, with their path
-  defender: true          # Microsoft Defender: support logs (MPLog, raw WPP traces), detection history, quarantine (copied encrypted)
-  startup_folders: true   # startup folders: what runs at logon
-  shortcuts: true         # shortcuts outside Recent: Start menu, desktops, Quick Launch, pinned task bar
-  security_descriptors: true  # $Secure:$SDS: owner and access rights of every file, each descriptor once (mft.json: SecurityId)
-  ntfs_volumes: true      # $Boot and $UsnJrnl:$Max: volume serial and geometry, creation of the change journal
-  dpapi_master_keys: true # DPAPI master keys of each user and of the system, copied still encrypted; JSON: owner, GUID, dates, never the key
-  user_shell_folders: true  # where each user's desktop, documents, downloads really are (OneDrive, another disk, a share)
-  web_client: true        # browsers: visits, downloads, searches (Edge, Chrome, Brave, Vivaldi, Opera); their databases copied raw
-  zone_identifiers: true  # Zone.Identifier streams (Mark of the Web): where downloaded files came from
-  security: true          # SECURITY hive: LSA secrets' names and dates, cached logons, audit policy (never a secret)
-  persistence: true       # registry persistence beyond Run: IFEO, AppInit_DLLs, Winlogon, LSA packages, COM hijacking…
-  office_trust_records: true  # Office trusted documents: macros enabled by the user, and when
-  typed_paths: true           # paths typed in Explorer's address bar
-  word_wheel_query: true      # terms searched in Explorer
-  root_certificates: true     # root certificates of the machine and of each user
-  internet_settings: true     # each user's proxy and automatic configuration script
-  firewall: true              # firewall rules and profiles
-  wmi: true                   # WMI repository: event subscriptions (filters, consumers, bindings), read offline
-  srum: true                  # SRUDB.dat: bytes sent and received, resources used, per application and user, 30 to 60 days
-  bits: true                  # qmgr.db: BITS jobs — URLs, destinations, notification command lines
-  fat_volumes: true           # FAT and exFAT volumes, a suspect's USB keys included: every entry, deleted ones too
-  installed_programs:         true  # installed programs (Uninstall) of the machine and of each user
-  defender_configuration:     true  # Microsoft Defender exclusions and protection settings, its own and by policy
-  explorer_recent_docs:       true  # files each user opened, by extension, most recent first (Explorer's RecentDocs)
-  mount_points:               true  # volumes and network shares each user's Explorer saw, with their commands (MountPoints2)
-  known_networks:             true  # networks the machine joined: name, kind, gateway, first and last connection (NetworkList)
-  program_usage:              true  # programs each user launched or used: FeatureUsage, JumplistData, compatibility store and layers, RADAR, pinned items
-  devices:                    true  # USB and SCSI devices with their dates, portable devices, volume labels per drive letter, device interfaces
-  network_shares:             true  # folders the machine shares, with their path and permissions (LanmanServer)
-  network_configuration:      true  # network adapters and their last IPv4/IPv6 settings and DHCP leases, read offline
-  event_log_configuration:    true  # each event log and boot ETW session: enabled, size, retention, access (a disabled one is a trace)
-  activities_cache:           true  # Windows Timeline: applications, files, pages, clipboard (ActivitiesCache.db)
-  search_index:               true  # Windows Search index: path, dates, size, owner, summary of each indexed item, deleted ones included
-  rdp_client:                 true  # outgoing RDP connections: servers reached, .rdp files, bitmap cache tiles
-  rdp_server:                 true  # incoming RDP connections: authentications, sessions, sources (event logs)
+  activities_cache:        true   # Windows Timeline: applications, files, pages, clipboard (ActivitiesCache.db)
+  amcache:                 true   # Amcache.hve: applications, executables and drivers seen
+  bam:                     true   # last execution of each program per user (Background Activity Moderator)
+  bits:                    true   # qmgr.db: BITS jobs — URLs, destinations, notification command lines
+  defender:                true   # Microsoft Defender: support logs (MPLog, raw WPP traces), detection history, quarantine (copied encrypted)
+  defender_configuration:  true   # Microsoft Defender exclusions and protection settings, its own and by policy
+  devices:                 true   # USB and SCSI devices with their dates, portable devices, volume labels per drive letter, device interfaces
+  dpapi_master_keys:       true   # DPAPI master keys of each user and of the system, copied still encrypted; JSON: owner, GUID, dates, never the key
+  error_reports:           true   # Windows Error Reporting: programs that crashed, with their path
+  event_log_configuration: true   # each event log and boot ETW session: enabled, size, retention, access (a disabled one is a trace)
+  events:                  true   # the event logs, with their messages
+  explorer_recent_docs:    true   # files each user opened, by extension, most recent first (Explorer's RecentDocs)
+  fat_volumes:             true   # FAT and exFAT volumes, a suspect's USB keys included: every entry, deleted ones too
+  firewall:                true   # firewall rules and profiles
+  hosts:                   true   # the hosts file: names diverted to an address
+  installed_programs:      true   # installed programs (Uninstall) of the machine and of each user
+  internet_settings:       true   # each user's proxy and automatic configuration script
+  jump_lists:              true   # jump lists: files and places each user opened, per application
+  known_networks:          true   # networks the machine joined: name, kind, gateway, first and last connection (NetworkList)
+  local_groups:            true   # members of each local group (SAM)
+  log_file:                true   # $LogFile and $TxfLog: NTFS and transactional NTFS journals, raw copy only
+  mft:                     true   # $MFT: every file, present or deleted, with its dates (mft.json)
+  mounted_devices:         true   # volumes and drive letters the machine knew (MountedDevices)
+  mount_points:            true   # volumes and network shares each user's Explorer saw, with their commands (MountPoints2)
+  mru:                     true   # files each user opened or saved through the common dialogs
+  mru_apps:                true   # programs used to open or save those files
+  muicache:                true   # names of the programs each user launched
+  network:                 true   # live: connections, neighbours, interfaces, routes
+  network_configuration:   true   # network adapters and their last IPv4/IPv6 settings and DHCP leases, read offline
+  network_shares:          true   # folders the machine shares, with their path and permissions (LanmanServer)
+  ntfs_volumes:            true   # $Boot and $UsnJrnl:$Max: volume serial and geometry, creation of the change journal
+  office_trust_records:    true   # Office trusted documents: macros enabled by the user, and when
+  operating_system:        true   # version, installation, computer name, uptime
+  persistence:             true   # registry persistence beyond Run: IFEO, AppInit_DLLs, Winlogon, LSA packages, COM hijacking…
+  powershell_history:      true   # PSReadLine: the commands typed in PowerShell, per profile
+  prefetch:                true   # Prefetch: programs run, count, last eight runs, files loaded
+  processes:               true   # live
+  program_usage:           true   # programs each user launched or used: FeatureUsage, JumplistData, compatibility store and layers, RADAR, pinned items
+  rdp_client:              true   # outgoing RDP connections: servers reached, .rdp files, bitmap cache tiles
+  rdp_server:              true   # incoming RDP connections: authentications, sessions, sources (event logs)
+  recent_documents:        true   # Recent: shortcuts to the files each user opened
+  recycle_bin:             true   # $I of every volume's recycle bin: what was deleted, by whom, when
+  registry_backups:        true   # RegBack: the machine's older hives, raw copy only
+  root_certificates:       true   # root certificates of the machine and of each user
+  run_keys:                true   # Run and RunOnce keys of the machine and of each user
+  scheduled_tasks:         true   # scheduled tasks: commands, triggers, authors, dates
+  search_index:            true   # Windows Search index: path, dates, size, owner, summary of each indexed item, deleted ones included
+  security:                true   # SECURITY hive: LSA secrets' names and dates, cached logons, audit policy (never a secret)
+  security_descriptors:    true   # $Secure:$SDS: owner and access rights of every file, each descriptor once (mft.json: SecurityId)
+  services:                true   # services and drivers
+  sessions:                true   # live
+  setupapi:                true   # setupapi.dev.log: device installations, first connection of a USB key
+  shellbags:               true   # folders each user browsed in Explorer
+  shimcache:               true   # application compatibility cache (AppCompatCache)
+  shortcuts:               true   # shortcuts outside Recent: Start menu, desktops, Quick Launch, pinned task bar
+  srum:                    true   # SRUDB.dat: bytes sent and received, resources used, per application and user, 30 to 60 days
+  startup_folders:         true   # startup folders: what runs at logon
+  typed_paths:             true   # paths typed in Explorer's address bar
+  usbstor:                 true   # USB mass storage devices (Enum\USBSTOR)
+  userassist:              true   # programs each user launched from Explorer, with count and date
+  users:                   true   # local accounts (SAM): logons, failures, flags, password hashes
+  user_shell_folders:      true   # where each user's desktop, documents, downloads really are (OneDrive, another disk, a share)
+  usn_journal:             true   # $UsnJrnl:$J: creations, renames, deletions (usn_journal.json)
+  web_client:              true   # browsers: visits, downloads, searches (Edge, Chrome, Brave, Vivaldi, Opera); their databases copied raw
+  wmi:                     true   # WMI repository: event subscriptions (filters, consumers, bindings), read offline
+  word_wheel_query:        true   # terms searched in Explorer
+  zone_identifiers:        true   # Zone.Identifier streams (Mark of the Web): where downloaded files came from
