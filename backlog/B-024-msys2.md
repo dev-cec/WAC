@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P3 | faible |
+| en cours | P3 | faible |
 
 ## Pourquoi
 build-windows.sh gère MSYS2 MINGW64 mais n'y a jamais tourné.
@@ -21,8 +21,11 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Compilation sans avertissement ; imports identiques ; cycle VM vert.
 
 ## Tâches
-- [ ] Machine Windows avec MSYS2 (hors VM de test, pour ne pas la polluer)
+- [x] Clone de la VM : win11-msys2 (disque système copié, /home/sebastien/vms/win11-msys2.qcow2 ; disque de données, clés USB et ISO de transfert détachés : le clone ne touche aucun témoin)
+- [ ] MSYS2 MINGW64 installé dans le clone, sources copiées, build-windows.sh lancé
+- [ ] Imports comparés au binaire de Linux, cycle VM avec le binaire de MSYS2
 
 ## Journal
 - (vide)
 - 2026-10-07 : lieu décidé — clone dédié de la VM.
+- 2026-10-07 : en cours. win11-test arrêtée proprement pour le clonage, puis redémarrée ; elle ne démarrait plus — son ISO d'installation (Téléchargements/Win11_25H2_French_x64_v2.iso) n'existe plus : support éjecté de sa configuration et de celle du clone (virsh change-media … --eject --config), sans autre changement.
