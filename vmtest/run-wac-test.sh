@@ -694,6 +694,7 @@ output: configured
 artefacts:
   registry: true
   events: false
+  rdp_server: false
   prefetch: false
   sessions: false
   network: false
