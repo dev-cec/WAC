@@ -399,6 +399,20 @@ $QGA run -- powershell.exe -NoProfile -Command \
   && echo "   + reference/partitions.txt" || echo "   ⚠️ partitions reference not read"
 fi
 
+# The number of firewall rules Windows holds, read again right after a
+# collection: the one read when the witnesses were placed may have changed by
+# then — a component adds a rule while the machine runs (509 at the witnesses,
+# 510 at the collection, both right) — so the check accepts each count Windows
+# gave around the collections.
+record_firewall_count() {
+  wants firewall || return 0
+  local count
+  count=$($QGA run -- powershell.exe -NoProfile -Command "(Get-Item 'HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\FirewallRules').ValueCount" 2>/dev/null | tr -d '\r' || true)
+  [[ "$count" =~ ^[0-9]+$ ]] && echo "fwcount=$count" >> "$OUTPUT/reference/file-artefacts.txt"
+  return 0
+}
+record_firewall_count
+
 # The TCP listeners as netstat gives them, right after the collection: a
 # listening socket outlives it, so WAC's network state must hold the same
 # address, port and owner (netstat formats through Winsock, WAC by itself).
@@ -552,6 +566,7 @@ if [[ $SPLIT -eq 1 ]]; then
   full_cycle && WITNESS_BEFORE=$(witness_state)
 
   if run_wac collect --collect --output=split $EVENTS_OPTION $BINARY_OPTION --loglevel=2; then
+    record_firewall_count
     echo "   ✅ collection went to the end"
   else
     echo "   ❌ collection ended abnormally"; ABNORMAL_STOP=1

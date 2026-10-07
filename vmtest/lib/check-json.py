@@ -1365,11 +1365,14 @@ def check_small_file_artefacts(folder):
     if not os.path.exists(path):
         print("  ⏭️  no reference/file-artefacts.txt: small file artefacts not confronted")
         return 0
+    fwcounts = []   # the firewall's rule count, read more than once (record_firewall_count)
     with open(path, encoding="utf-8", errors="replace") as f:
         for line in f:
             key, _, value = line.strip().partition("=")
             if value:
                 reference[key] = value
+                if key == "fwcount":
+                    fwcounts.append(value)
     found = 0
 
     def report(ok, success, failure):
@@ -1686,10 +1689,12 @@ def check_small_file_artefacts(folder):
     if isinstance(firewall, dict) and "fwrule" in reference:
         name, action, direction, port = reference["fwrule"].split("|")
         rules = firewall.get("Rules", [])
+        # Every count Windows gave: at the witnesses, then after each collection.
+        counts = set(fwcounts)
         report(any(r.get("Name") == name and r.get("Action") == action and r.get("Direction") == direction
-                   and r.get("LocalPort") == port for r in rules) and str(len(rules)) == reference.get("fwcount"),
+                   and r.get("LocalPort") == port for r in rules) and str(len(rules)) in counts,
                f"firewall.json: {len(rules)} rules as Windows counts them, the witness rule found",
-               f"firewall.json: {len(rules)} rules (Windows {reference.get('fwcount')}), witness found: "
+               f"firewall.json: {len(rules)} rules (Windows {'/'.join(sorted(counts))}), witness found: "
                f"{any(r.get('Name') == name for r in rules)}")
     roots = load(folder, "root_certificates.json")
     if isinstance(roots, list) and "roots" in reference:
