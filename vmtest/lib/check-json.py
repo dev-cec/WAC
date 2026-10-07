@@ -2148,7 +2148,13 @@ def check_small_file_artefacts(folder):
     srum = load(folder, "srum.json")
     if isinstance(srum, list):
         inv = load(folder, "investigation.json")
-        start = ((inv or {}).get("Collection") or {}).get("StartUtc") if isinstance(inv, dict) else None
+        # The bound is the extraction of the SRUM database, not the start of the
+        # collection: the service flushes its rows at any time, and one flush
+        # fell between the two once (rows at 06:48:00, collection begun at
+        # 06:47:41, database read at 06:48:40). Its end serves otherwise.
+        operations = (inv or {}).get("Operations") or [] if isinstance(inv, dict) else []
+        extracted = [o.get("TimestampUtc") for o in operations if "\\sru" in str(o.get("Target", "")).lower()]
+        start = extracted[0] if extracted else (((inv or {}).get("Collection") or {}).get("EndUtc") if isinstance(inv, dict) else None)
         network = [r for r in srum if r.get("Provider") == "NetworkUsage"]
         # An identifier whose SruDbIdMapTable entry has no IdBlob has nothing to
         # resolve (entries 1 and 2 on the test VM, as dissect.esedb reads them too).
@@ -2157,8 +2163,8 @@ def check_small_file_artefacts(folder):
         users = sum(1 for r in srum if r.get("UserId") in with_blob and "UserSID" not in r)
         future = sum(1 for r in srum if start and r.get("TimeStamp") and r["TimeStamp"][:19] > start[:19])
         report(network and not unresolved and not users and not future,
-               f"srum.json: {len(srum)} row(s), {len(network)} of network usage, every AppId and UserId resolved, none after the collection",
-               f"srum.json: {len(network)} network row(s), {unresolved} AppId and {users} UserId unresolved, {future} after the collection")
+               f"srum.json: {len(srum)} row(s), {len(network)} of network usage, every AppId and UserId resolved, none after the database's extraction",
+               f"srum.json: {len(network)} network row(s), {unresolved} AppId and {users} UserId unresolved, {future} after the database's extraction ({start})")
 
     # The EICAR detection of the cycle, against MSFT_MpThreatDetection, and
     # its quarantine against the dates and content the harness gave the file.

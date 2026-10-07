@@ -209,6 +209,12 @@ $QGA write "$HERE/guest/place-file-artefacts.ps1" "$VMDIR\\place-file-artefacts.
 $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\place-file-artefacts.ps1" \
   ${ONLY:+-Only} ${ONLY:+$ONLY} > "$OUTPUT/reference/file-artefacts.txt" 2>/dev/null \
   && echo "   + reference/file-artefacts.txt" || echo "   ⚠️ file artefact witnesses not placed"
+# taskkill again once the witnesses are placed: they take minutes (real
+# browsing, an RDP session…), and the BAM check expects an execution within
+# 300 s of the collection; Windows writes it to the disk within 56 to 82 s,
+# hence the wait (and the registry witnesses' with it).
+$QGA run --shell "taskkill /f /im WAC.exe >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
+if wants_registry_witness; then wait_registry_on_disk; fi
 
 if ! full_cycle; then
   echo "== 3. skipped (--only) == ($(date +%H:%M:%S))"
@@ -278,9 +284,6 @@ if [[ $RAWONLY -eq 1 ]]; then
   exit 0
 fi
 
-# A --only cycle skips the raw validation that gives Windows the time to write
-# the registry: with the registry asked for, the BAM check needs that wait.
-if ! full_cycle && wants_registry_witness; then wait_registry_on_disk; fi
 echo "== 4. Run of WAC (SYSTEM) == ($(date +%H:%M:%S))"
 # --output must be a simple name (WAC refuses backslashes): created under cwd.
 # A collection that stops midway still produces valid JSON files: the absence
