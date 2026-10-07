@@ -149,7 +149,7 @@ Json valueToJson(const EseColumn& column, const std::vector<uint8_t>& v) {
 	case 6: if (n >= 4) { float f; memcpy(&f, p, 4); return Json::str(realText(f, 9)); } break;
 	case 7: if (n >= 8) { double d; memcpy(&d, p, 8); return Json::str(realText(d, 17)); } break;
 	case 8: if (n >= 8) { double d; memcpy(&d, p, 8); const std::wstring t = oleDateText(d); if (!t.empty()) return Json::str(t); } break;
-	case 16: if (n >= 16) { GUID g; memcpy(&g, p, 16); return Json::str(guid_to_wstring(g)); } break;
+	case 16: if (n >= 16) return Json::str(guid_to_wstring(p)); break;
 	case 10: case 12:
 		if (column.codePage == 1200) return Json::str(readWideZ(p, n & ~(size_t)1, 0));
 	{

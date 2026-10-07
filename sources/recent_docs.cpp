@@ -326,7 +326,7 @@ void RecentDoc::parseExtraData(LPBYTE buffer, size_t size, size_t at) {
 		case 0xA000000A: extraDataBlocks.push_back(L"VistaAndAboveIDListDataBlock"); break;
 		case 0xA000000B:
 			extraDataBlocks.push_back(L"KnownFolderDataBlock");
-			if (blockSize >= 0x1C) knownFolderId = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + at + 8));
+			if (blockSize >= 0x1C) knownFolderId = guid_to_wstring(buffer + at + 8);
 			break;
 		default:
 			// No silent loss: an unknown block is named by its signature.

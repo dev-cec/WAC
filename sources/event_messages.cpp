@@ -48,14 +48,6 @@ bool g_ready = false;
 size_t g_failures = 0;
 unsigned long long g_resolved = 0, g_bytes = 0;
 
-//! GUID in lower case, braces included: that is how the registry key writes it.
-std::wstring normalizeGuid(const std::wstring& g) {
-	std::wstring r;
-	for (wchar_t c : g) r += (c >= L'A' && c <= L'Z') ? (wchar_t)(c - L'A' + L'a') : c;
-	if (!r.empty() && r.front() != L'{') r = L"{" + r + L"}";
-	return r;
-}
-
 //! True if the file starts with the signature of a PE binary.
 bool isValidPe(const std::wstring& path) {
 	std::ifstream f(std::filesystem::path(path), std::ios::binary);

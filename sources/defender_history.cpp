@@ -67,13 +67,6 @@ private:
 	uint8_t i_ = 0, j_ = 0;
 };
 
-//! A GUID stored as Windows lays it out in memory (16 bytes).
-std::wstring guidAt(const uint8_t* p) {
-	GUID g;
-	memcpy(&g, p, sizeof g);
-	return guid_to_wstring(g);
-}
-
 //! Reads a whole exhibit, up to a bound; empty if larger or unreadable.
 std::vector<uint8_t> readExhibit(const std::wstring& file, uintmax_t maximum) {
 	std::error_code ec;
@@ -158,7 +151,7 @@ void nameFields(const std::vector<DetectionField>& f, DefenderDetection& d, std:
 	while (q < f.size() && !(f[q].type == FIELD_GUID && f[q].value.size() == 16)) ++q;
 	if (q >= f.size()) return;
 	static const uint8_t ZERO[16] = {};
-	if (memcmp(f[q].value.data(), ZERO, 16) != 0) d.quarantineEntryId = guidAt(f[q].value.data());
+	if (memcmp(f[q].value.data(), ZERO, 16) != 0) d.quarantineEntryId = guid_to_wstring(f[q].value.data());
 	named[q] = true;
 	if (at(q + 1, FIELD_NUMBER32) && f[q + 1].value.size() == 4) {
 		d.executionStatusId = readLittleEndian<uint32_t>(f[q + 1].value.data());
@@ -306,7 +299,7 @@ Json DetectionField::valueToJson() const {
 	if (type == FIELD_NUMBER64 && value.size() == 8) return Json::num(readLittleEndian<uint64_t>(v));
 	if (type == FIELD_FILETIME && value.size() == 8) return Json::str(timeToIso8601Utc(filetimeFromTicks(readLittleEndian<uint64_t>(v))));
 	if (type == FIELD_STRING) return Json::str(fieldString(*this));
-	if (type == FIELD_GUID && value.size() == 16) return Json::str(guidAt(v));
+	if (type == FIELD_GUID && value.size() == 16) return Json::str(guid_to_wstring(v));
 	return Json::str(hexOf(value));
 }
 
@@ -329,7 +322,7 @@ bool parseDetectionHistory(const std::vector<uint8_t>& bytes, DefenderDetection&
 	    || fields[1].type != FIELD_GUID || fields[1].value.size() != 16 || !isMagic(fields[2]))
 		return false;
 	d.threatId = readLittleEndian<uint64_t>(fields[0].value.data());
-	d.detectionId = guidAt(fields[1].value.data());
+	d.detectionId = guid_to_wstring(fields[1].value.data());
 	d.magicVersion = fieldString(fields[2]).substr(wcslen(MAGIC_PREFIX));
 	std::vector<bool> named(fields.size(), false);
 	named[0] = named[1] = true;

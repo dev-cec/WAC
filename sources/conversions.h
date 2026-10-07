@@ -12,6 +12,7 @@
 
 #include <windows.h>
 #include <cstddef>
+#include <cstring>
 #include <cstdint>
 #include <string>
 #include <type_traits>
@@ -136,4 +137,42 @@ inline FILETIME filetimeFromTicks(uint64_t ticks) {
  *  @return its 100-ns intervals since 1601 */
 inline uint64_t ticksFromFiletime(const FILETIME& filetime) {
 	return ((uint64_t)filetime.dwHighDateTime << 32) | filetime.dwLowDateTime;
+}
+
+/*! Converts a GUID to a wstring. The output is of the form
+* "{20D04FE0-3AEA-1069-A2D8-08002B30309D}", upper case — as StringFromCLSID
+* (ole32) wrote it, which this replaces: a formatting has no reason to go
+* through a library.
+* @param guid the GUID to convert
+* @return the wstring that results from the conversion
+*/
+inline std::wstring guid_to_wstring(GUID guid) {
+	wchar_t text[39];
+	swprintf(text, 39, L"{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+	         (unsigned long)guid.Data1, guid.Data2, guid.Data3,
+	         guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
+	         guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
+	return text;
+}
+
+/*! The same, from the 16 bytes as Windows lays a GUID out in memory (the
+ *  first three fields little-endian), wherever a format stores one: BITS,
+ *  Defender, WEVT_TEMPLATE, ESE columns.
+ *  @param bytes its 16 bytes; the caller has checked they are there
+ *  @return "{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}" */
+inline std::wstring guid_to_wstring(const uint8_t* bytes) {
+	GUID guid;
+	memcpy(&guid, bytes, sizeof guid);
+	return guid_to_wstring(guid);
+}
+
+/*! A GUID's text in the form the registry writes it — lower case, in braces —
+ *  whatever the form it came in: the one form two GUIDs are compared in.
+ *  @param guid its text, with or without braces, in any case
+ *  @return "{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}" */
+inline std::wstring normalizeGuid(const std::wstring& guid) {
+	std::wstring text;
+	for (wchar_t c : guid) text += (c >= L'A' && c <= L'Z') ? (wchar_t)(c - L'A' + L'a') : c;
+	if (!text.empty() && text.front() != L'{') text = L"{" + text + L"}";
+	return text;
 }

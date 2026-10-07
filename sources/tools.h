@@ -926,14 +926,6 @@ inline bool fits(size_t size, size_t offset, size_t length) {
 */
 std::string readNarrowZ(const BYTE* base, size_t limit, size_t offset);
 
-/*! Converts a GUID to a wstring. The output is of the form
-* "{20D04FE0-3AEA-1069-A2D8-08002B30309D}", upper case — as StringFromCLSID
-* (ole32) wrote it, which this replaces: a formatting has no reason to go
-* through a library.
-* @param guid the GUID to convert
-* @return the wstring that results from the conversion
-*/
-std::wstring guid_to_wstring(GUID guid);
 
 /*! What a version-1 GUID (RFC 4122, time-based) carries: the instant it was
 *  made and the hardware address of the machine that made it. The link

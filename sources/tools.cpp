@@ -1263,15 +1263,6 @@ GuidV1 decodeGuidV1(const GUID& guid) {
 	return v;
 }
 
-std::wstring guid_to_wstring(GUID guid) {
-	wchar_t text[39];
-	swprintf(text, 39, L"{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-	         (unsigned long)guid.Data1, guid.Data2, guid.Data3,
-	         guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
-	         guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
-	return text;
-}
-
 std::wstring sidToText(const BYTE* sid, size_t size) {
 	if (size < 8) return L"";
 	const unsigned revision = sid[0];

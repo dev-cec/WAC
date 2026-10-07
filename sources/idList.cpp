@@ -427,7 +427,7 @@ static Json streamContent(LPBYTE data, size_t size, unsigned int level) {
 		}
 	}
 	if (size >= 16) {
-		const std::wstring clsid = guid_to_wstring(*reinterpret_cast<const GUID*>(data));
+		const std::wstring clsid = guid_to_wstring(data);
 		const std::wstring name = trans_guid_to_wstring(clsid);
 		if (!name.empty()) {
 			o.add(L"ObjectClass",     Json::str(clsid));
@@ -682,7 +682,7 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 		return Json::str(v);
 	}
 	if (valueType == VT_CLSID) {
-		std::wstring guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + *pos));
+		std::wstring guid = guid_to_wstring(buffer + *pos);
 		*pos += 16;
 		Json o = Json::obj();
 		o.add(L"GUID",         Json::str(guid));
@@ -859,7 +859,7 @@ SPS::SPS(LPBYTE buffer, int _level, size_t limit) {
 	size = declared;
 	version = *reinterpret_cast<unsigned int*>(buffer + 4);
 	log(3, L"🔈guid_to_wstring guid");
-	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8));
+	guid = guid_to_wstring(buffer + 8);
 	log(3, L"🔈trans_guid_to_wstring FriendlyName");
 	FriendlyName = trans_guid_to_wstring(guid);
 	unsigned int pos = 24;
@@ -932,11 +932,11 @@ Beef0000::Beef0000(LPBYTE buffer, int _level) {
 	isPresent = true;
 	signature = L"0xbeef0000";
 	log(3, L"🔈guid_to_wstring guid1");
-	guid1 = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8));
+	guid1 = guid_to_wstring(buffer + 8);
 	log(3, L"🔈trans_guid_to_wstring identifier1");
 	identifier1 = trans_guid_to_wstring(guid1);
 	log(3, L"🔈guid_to_wstring guid2");
-	guid2 = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 24));
+	guid2 = guid_to_wstring(buffer + 24);
 	log(3, L"🔈trans_guid_to_wstring identifier2");
 	identifier2 = trans_guid_to_wstring(guid2);
 	names = folderTypeNames(guid1, guid2);
@@ -989,7 +989,7 @@ Beef0003::Beef0003(LPBYTE buffer, int _level) {
 	isPresent = true;
 	signature = L"0xbeef0003";
 	log(3, L"🔈guid_to_wstring guid");
-	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8));
+	guid = guid_to_wstring(buffer + 8);
 	log(3, L"🔈trans_guid_to_wstring identifier");
 	identifier = trans_guid_to_wstring(guid);
 }
@@ -1203,7 +1203,7 @@ Beef000e::Beef000e(LPBYTE buffer, int _level) {
 	isPresent = true;
 	signature = L"0xbeef000e";
 	log(3, L"🔈guid_to_wstring guid");
-	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 16));
+	guid = guid_to_wstring(buffer + 16);
 	log(3, L"🔈trans_guid_to_wstring identifier");
 	identifier = trans_guid_to_wstring(guid);
 	int pos = 50;
@@ -1358,11 +1358,11 @@ Beef0019::Beef0019(LPBYTE buffer, int _level) {
 	isPresent = true;
 	signature = L"0xbeef0019";
 	log(3, L"🔈guid_to_wstring guid1");
-	guid1 = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 8));
+	guid1 = guid_to_wstring(buffer + 8);
 	log(3, L"🔈trans_guid_to_wstring identifier1");
 	identifier1 = trans_guid_to_wstring(guid1);
 	log(3, L"🔈guid_to_wstring guid2");
-	guid2 = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 24));
+	guid2 = guid_to_wstring(buffer + 24);
 	log(3, L"🔈trans_guid_to_wstring identifier2");
 	identifier2 = trans_guid_to_wstring(guid2);
 	names = folderTypeNames(guid1, guid2);
@@ -1837,7 +1837,7 @@ VolumeShellItem::VolumeShellItem(LPBYTE buffer, unsigned char type_char, int _le
 	}
 	else if (flags.SystemFolder == true && fits(declaredSize(buffer), 4, 16)) {
 		log(3, L"🔈guid_to_wstring guid");
-		guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 4));
+		guid = guid_to_wstring(buffer + 4);
 		log(3, L"🔈trans_guid_to_wstring name");
 		name = trans_guid_to_wstring(guid);
 		log(3, L"🔈trans_guid_to_wstring identifier");
@@ -1866,7 +1866,7 @@ ControlPanel::ControlPanel(LPBYTE buffer, unsigned short int itemSize, int _leve
 	level = _level;
 	isPresent = true;
 	log(3, L"🔈guid_to_wstring guid");
-	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 14));
+	guid = guid_to_wstring(buffer + 14);
 	log(3, L"🔈trans_guid_to_wstring identifier");
 	identifier = trans_guid_to_wstring(guid);
 	unsigned short int extensionOffset = *reinterpret_cast<unsigned short int*>(buffer + itemSize - 2);
@@ -1958,7 +1958,7 @@ Property::Property(LPBYTE buffer, int _level, size_t limit) {
 		return;
 	}
 	log(3, L"🔈guid_to_wstring guid");
-	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + pos));
+	guid = guid_to_wstring(buffer + pos);
 	pos += 16;
 	id = *reinterpret_cast<unsigned int*>(buffer + pos);
 	pos += 4;
@@ -2021,7 +2021,7 @@ Json UserPropertyView0xC01::toJson() {
 UserPropertyView0x23febbee::UserPropertyView0x23febbee(LPBYTE buffer, int _level) {
 	level = _level;
 	log(3, L"🔈guid_to_wstring guid");
-	guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 0xE));
+	guid = guid_to_wstring(buffer + 0xE);
 	log(3, L"🔈trans_guid_to_wstring FriendlyName");
 	FriendlyName = trans_guid_to_wstring(guid);
 }
@@ -2062,7 +2062,7 @@ UserPropertyView0x07192006::UserPropertyView0x07192006(LPBYTE buffer, int _level
 		return;
 	}
 	log(3, L"🔈guid_to_wstring guidClass");
-	guidClass = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + pos));
+	guidClass = guid_to_wstring(buffer + pos);
 	log(3, L"🔈trans_guid_to_wstring FriendlyName");
 	FriendlyName = trans_guid_to_wstring(guidClass);
 	pos += 16;
@@ -2155,7 +2155,7 @@ UserPropertyView0x10312005::UserPropertyView0x10312005(LPBYTE buffer, int _level
 	}
 
 	log(3, L"🔈guid_to_wstring guidClass");
-	guidClass = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + pos));
+	guidClass = guid_to_wstring(buffer + pos);
 	log(3, L"🔈trans_guid_to_wstring FriendlyName");
 	FriendlyName = trans_guid_to_wstring(guidClass);
 	pos += 16;
@@ -2417,7 +2417,7 @@ RootFolder::RootFolder(LPBYTE buffer, int _level) {
 	else if (size >= (unsigned short int)0x14 && size <= (unsigned short int)0x3a) {
 		sortIndex = L"GUID";
 		log(3, L"🔈guid_to_wstring guid");
-		guid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + 4));
+		guid = guid_to_wstring(buffer + 4);
 		log(3, L"🔈trans_guid_to_wstring identifier");
 		identifier = trans_guid_to_wstring(guid);
 	}
@@ -2692,7 +2692,7 @@ DelegateFolder::DelegateFolder(LPBYTE buffer, unsigned short size, int _level) {
 	/* GUID of the delegating class: the last 16 bytes of the item. */
 	if (size >= 16) {
 		log(3, L"🔈guid_to_wstring classGuid");
-		classGuid = guid_to_wstring(*reinterpret_cast<GUID*>(buffer + size - 16));
+		classGuid = guid_to_wstring(buffer + size - 16);
 		log(3, L"🔈trans_guid_to_wstring classFriendlyName");
 		classFriendlyName = trans_guid_to_wstring(classGuid);
 	}

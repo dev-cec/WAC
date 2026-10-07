@@ -30,13 +30,6 @@ bool pascalString(const std::vector<uint8_t>& b, size_t& o, std::wstring& out) {
 	return true;
 }
 
-//! A GUID at an offset, in braces.
-std::wstring guidAt(const uint8_t* p) {
-	GUID g;
-	memcpy(&g, p, sizeof g);
-	return guid_to_wstring(g);
-}
-
 //! The position of the next XFER delimiter from `from`, or npos.
 size_t findXfer(const std::vector<uint8_t>& b, size_t from) {
 	if (from > b.size()) return std::string::npos;
@@ -90,7 +83,7 @@ bool parseBitsJob(const std::vector<uint8_t>& b, BitsJob& job) {
 	job.type = readLittleEndian<uint32_t>(b.data() + o);
 	job.priority = readLittleEndian<uint32_t>(b.data() + o + 4);
 	job.state = readLittleEndian<uint32_t>(b.data() + o + 8);
-	job.id = guidAt(b.data() + o + 16);
+	job.id = guid_to_wstring(b.data() + o + 16);
 	o += 32;
 	if (!pascalString(b, o, job.name) || !pascalString(b, o, job.description) || !pascalString(b, o, job.notifyProgram)
 	    || !pascalString(b, o, job.notifyArguments) || !pascalString(b, o, job.ownerSid) || !fits(b.size(), o, 4))
@@ -105,7 +98,7 @@ bool parseBitsJob(const std::vector<uint8_t>& b, BitsJob& job) {
 	if (!fits(b.size(), list, 4)) return true;
 	const size_t count = readLittleEndian<uint32_t>(b.data() + list);
 	if (count > (b.size() - list - 4) / 16) return true;
-	for (size_t i = 0; i < count; ++i) job.fileIds.push_back(guidAt(b.data() + list + 4 + 16 * i));
+	for (size_t i = 0; i < count; ++i) job.fileIds.push_back(guid_to_wstring(b.data() + list + 4 + 16 * i));
 	const size_t second = findXfer(b, list + 4 + 16 * count);
 	if (second != std::string::npos) job.metadataParsed = parseMetadata(b, second + sizeof XFER, job);
 	return true;
@@ -198,7 +191,7 @@ HRESULT BitsJobs::getData() {
 			const std::vector<uint8_t>* blob = nullptr;
 			for (const EseCell& c : r) {
 				if (c.values.empty() || c.compressionScheme >= 0 || c.longValueMissing) continue;
-				if (c.columnId == ID_COLUMN && c.values.front().size() == 16) id = guidAt(c.values.front().data());
+				if (c.columnId == ID_COLUMN && c.values.front().size() == 16) id = guid_to_wstring(c.values.front().data());
 				else if (c.columnId == BLOB_COLUMN) blob = &c.values.front();
 			}
 			if (blob) visit(id, *blob);

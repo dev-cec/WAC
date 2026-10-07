@@ -24,44 +24,6 @@
 
 namespace {
 
-//! GUID in the form "{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}", in lower case.
-std::wstring guidToText(const std::vector<uint8_t>& d, size_t o) {
-	if (o + 16 > d.size()) return std::wstring();
-	static const wchar_t* h = L"0123456789abcdef";
-	auto oct = [&](size_t i, std::wstring& s) {
-		s += h[d[o + i] >> 4];
-		s += h[d[o + i] & 0x0F];
-	};
-	std::wstring s = L"{";
-	// The first three fields are little-endian, the last two are not.
-	for (int i : { 3, 2, 1, 0 }) oct((size_t)i, s);
-	s += L'-';
-	for (int i : { 5, 4 }) oct((size_t)i, s);
-	s += L'-';
-	for (int i : { 7, 6 }) oct((size_t)i, s);
-	s += L'-';
-	for (int i : { 8, 9 }) oct((size_t)i, s);
-	s += L'-';
-	for (int i = 10; i < 16; ++i) oct((size_t)i, s);
-	s += L'}';
-	return s;
-}
-
-//! GUID comparison, without regard to case or braces.
-bool memeGuid(std::wstring a, std::wstring b) {
-	auto normalized = [](std::wstring& s) {
-		std::wstring r;
-		for (wchar_t c : s) {
-			if (c == L'{' || c == L'}' || c == L'-') continue;
-			r += (c >= L'A' && c <= L'Z') ? (wchar_t)(c - L'A' + L'a') : c;
-		}
-		s = r;
-	};
-	normalized(a);
-	normalized(b);
-	return !a.empty() && a == b;
-}
-
 const size_t MAX_ENTRIES = 65536;   // guard on the file's counters
 
 } // namespace
@@ -350,9 +312,9 @@ size_t WevtMetadata::analyse(const std::vector<uint8_t>& d,
 	for (uint32_t i = 0; i < nProviders; ++i) {
 		const size_t e = 16 + (size_t)i * 20;
 		if (e + 20 > d.size()) break;
-		const std::wstring guid = guidToText(d, e);
+		const std::wstring guid = guid_to_wstring(d.data() + e);   // e + 20 <= size, checked above
 		const uint32_t offset = readLittleEndian<uint32_t>(d, e + 16);
-		if (!providerGuid.empty() && !memeGuid(guid, providerGuid)) continue;
+		if (!providerGuid.empty() && normalizeGuid(guid) != normalizeGuid(providerGuid)) continue;
 		if (offset + 20 > d.size()) continue;
 		if (std::memcmp(d.data() + offset, "WEVT", 4) != 0) continue;
 
