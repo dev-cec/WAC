@@ -449,19 +449,6 @@ struct CertificateSummary {
  *  @return false if it is not a certificate */
 bool SummarizeCertificate(const uint8_t* der, size_t size, CertificateSummary& summary);
 
-/*! Base64 (the standard alphabet) to bytes; padding and characters outside
- *  the alphabet are skipped.
- *  @param text the encoded text
- *  @return the bytes */
-std::vector<uint8_t> DecodeBase64(const std::string& text);
-
-/*! Bytes to Base64 (the standard alphabet, padded), for the PEM files
- *  --update-trust writes.
- *  @param bytes,size the bytes
- *  @param lineLength characters per line, a line feed after each; 0: one line
- *  @return the encoded text */
-std::string EncodeBase64(const uint8_t* bytes, size_t size, size_t lineLength = 0);
-
 /*! Signature of an AppX / MSIX package (AppxSignature.p7x) and what it
  *  guarantees: the SHA-256 of the package's block map, which gives in turn
  *  the SHA-256 of every 64 KiB block of every file of the package. */

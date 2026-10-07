@@ -1276,15 +1276,6 @@ size_t findText(const std::u32string& t, const char* reason, size_t since = 0) {
 	return t.find(m, since);
 }
 
-int base64Value(char32_t c) {
-	if (c >= 'A' && c <= 'Z') return (int)(c - 'A');
-	if (c >= 'a' && c <= 'z') return (int)(c - 'a') + 26;
-	if (c >= '0' && c <= '9') return (int)(c - '0') + 52;
-	if (c == '+') return 62;
-	if (c == '/') return 63;
-	return -1;
-}
-
 } // namespace
 
 TrustList ReadTrustList(const uint8_t* bytes, size_t size) {
@@ -1508,36 +1499,6 @@ bool SummarizeCertificate(const uint8_t* der, size_t size, CertificateSummary& s
 	return true;
 }
 
-std::vector<uint8_t> DecodeBase64(const std::string& text) {
-	std::vector<uint8_t> bytes;
-	uint32_t acc = 0; int bits = 0;
-	for (char c : text) {
-		const int b = base64Value((char32_t)(unsigned char)c);
-		if (b < 0) continue;                               // "=" padding, spaces
-		acc = (acc << 6) | (uint32_t)b; bits += 6;
-		if (bits >= 8) { bits -= 8; bytes.push_back((uint8_t)(acc >> bits)); }
-	}
-	return bytes;
-}
-
-std::string EncodeBase64(const uint8_t* bytes, size_t size, size_t lineLength) {
-	static const char ALPHABET[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-	std::string text;
-	auto put = [&](char c) {
-		text += c;
-		if (lineLength && (text.size() + 1) % (lineLength + 1) == 0) text += '\n';
-	};
-	for (size_t i = 0; i < size; i += 3) {
-		const uint32_t group = (uint32_t)bytes[i] << 16 | (i + 1 < size ? (uint32_t)bytes[i + 1] << 8 : 0)
-		                     | (i + 2 < size ? bytes[i + 2] : 0);
-		put(ALPHABET[group >> 18 & 63]);
-		put(ALPHABET[group >> 12 & 63]);
-		put(i + 1 < size ? ALPHABET[group >> 6 & 63] : '=');
-		put(i + 2 < size ? ALPHABET[group & 63] : '=');
-	}
-	if (lineLength && !text.empty() && text.back() != '\n') text += '\n';
-	return text;
-}
 
 PackageSignature VerifyPackageSignature(const uint8_t* bytes, size_t size) {
 	PackageSignature p;
@@ -1576,9 +1537,8 @@ VerdictMicrosoft EvaluatePowerShellScript(const uint8_t* bytes, size_t size) {
 	const size_t end = findText(t, xml ? "<!-- SIG # End signature block -->" : "# SIG # End signature block", start);
 	if (end == std::u32string::npos) { v.reason = "signature block incomplete"; return v; }
 
-	// Base64 of the block's lines, prefixes and suffixes removed.
-	std::vector<uint8_t> der;
-	uint32_t acc = 0; int bits = 0;
+	// Base64 of the block's lines, prefixes and suffixes removed, decoded at once.
+	std::string encoded;
 	size_t i = t.find(U'\n', start);
 	while (i != std::u32string::npos && i < end) {
 		size_t j = t.find(U'\n', i + 1);
@@ -1588,15 +1548,13 @@ VerdictMicrosoft EvaluatePowerShellScript(const uint8_t* bytes, size_t size) {
 		const size_t pref = xml ? 5 : 2;                          // "<!--" or "#"
 		if (line.size() > pref && (xml ? line.compare(0, 5, U"<!-- ") == 0 : line.compare(0, 2, U"# ") == 0)) {
 			const size_t suff = (xml && line.size() >= 4 && line.compare(line.size() - 4, 4, U" -->") == 0) ? 4 : 0;
-			for (size_t k = pref; k + suff < line.size(); ++k) {
-				const int b = base64Value(line[k]);
-				if (b < 0) continue;                               // trailing "=", spaces
-				acc = (acc << 6) | (uint32_t)b; bits += 6;
-				if (bits >= 8) { bits -= 8; der.push_back((uint8_t)(acc >> bits)); }
-			}
+			for (size_t k = pref; k + suff < line.size(); ++k)
+				if (line[k] < 0x80) encoded += (char)line[k];   // DecodeBase64 skips what is not base64
+
 		}
 		i = j;
 	}
+	const std::vector<uint8_t> der = DecodeBase64(encoded);
 
 	const VerifiedSignature s = VerifyPkcs7(der.data(), der.size());
 	if (!s.valid) { v.reason = s.reason; return v; }

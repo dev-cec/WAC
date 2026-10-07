@@ -234,3 +234,54 @@ std::wstring shortestRealText(Real value) {
 	const std::to_chars_result r = std::to_chars(text, text + sizeof text, value);
 	return r.ec == std::errc() ? std::wstring(text, r.ptr) : L"";
 }
+
+//! The value of a base64 character (standard alphabet), -1 for any other.
+inline int base64Value(char32_t c) {
+	if (c >= 'A' && c <= 'Z') return (int)(c - 'A');
+	if (c >= 'a' && c <= 'z') return (int)(c - 'a') + 26;
+	if (c >= '0' && c <= '9') return (int)(c - '0') + 52;
+	if (c == '+') return 62;
+	if (c == '/') return 63;
+	return -1;
+}
+
+/*! Base64 (the standard alphabet) to bytes; padding and characters outside
+ *  the alphabet are skipped. Authenticode's certificates and signature
+ *  blocks, MIME parts and encoded words.
+ *  @param text the encoded text
+ *  @return the bytes */
+inline std::vector<uint8_t> DecodeBase64(const std::string& text) {
+	std::vector<uint8_t> bytes;
+	uint32_t acc = 0; int bits = 0;
+	for (char c : text) {
+		const int b = base64Value((char32_t)(unsigned char)c);
+		if (b < 0) continue;                               // "=" padding, spaces
+		acc = (acc << 6) | (uint32_t)b; bits += 6;
+		if (bits >= 8) { bits -= 8; bytes.push_back((uint8_t)(acc >> bits)); }
+	}
+	return bytes;
+}
+
+/*! Bytes to Base64 (the standard alphabet, padded), for the PEM files
+ *  --update-trust writes.
+ *  @param bytes,size the bytes
+ *  @param lineLength characters per line, a line feed after each; 0: one line
+ *  @return the encoded text */
+inline std::string EncodeBase64(const uint8_t* bytes, size_t size, size_t lineLength = 0) {
+	static const char ALPHABET[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+	std::string text;
+	auto put = [&](char c) {
+		text += c;
+		if (lineLength && (text.size() + 1) % (lineLength + 1) == 0) text += '\n';
+	};
+	for (size_t i = 0; i < size; i += 3) {
+		const uint32_t group = (uint32_t)bytes[i] << 16 | (i + 1 < size ? (uint32_t)bytes[i + 1] << 8 : 0)
+		                     | (i + 2 < size ? bytes[i + 2] : 0);
+		put(ALPHABET[group >> 18 & 63]);
+		put(ALPHABET[group >> 12 & 63]);
+		put(i + 1 < size ? ALPHABET[group >> 6 & 63] : '=');
+		put(i + 2 < size ? ALPHABET[group & 63] : '=');
+	}
+	if (lineLength && !text.empty() && text.back() != '\n') text += '\n';
+	return text;
+}
