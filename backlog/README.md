@@ -48,7 +48,6 @@ Les fiches restantes, puis la montée de version (B-025), puis l'article (B-018)
 |---|---|---|---|---|
 | [B-014](B-014-vss-brut.md) | Clichés instantanés lus en brut | à décider | P3 | fort |
 | [B-017](B-017-emails.md) | Courriels et pièces jointes | à faire | P2 | fort |
-| [B-022](B-022-prefetch-metriques.md) | Prefetch : métriques absentes sur 124 fichiers sur 279 | à faire | P2 | moyen |
 | [B-024](B-024-msys2.md) | Compilation MSYS2 à éprouver sur un vrai Windows | à faire | P3 | faible |
 | [B-026](B-026-thumbcache.md) | Cache des miniatures (thumbcache) | à faire | P3 | moyen |
 | [B-027](B-027-empreinte-comparee.md) | Empreinte comparée WAC / KAPE / EZ sous bac à sable (Sysmon, audit en option) | à faire | P2 | fort |
