@@ -1702,12 +1702,3 @@ void forEachProfileHive(const std::wstring& relativeHive,
 	}
 }
 
-std::vector<uint8_t> readWorkingFile(const std::filesystem::path& file, uintmax_t maximum) {
-	std::error_code ec;
-	const uintmax_t size = std::filesystem::file_size(file, ec);
-	if (ec || size > maximum) return {};
-	std::ifstream in(file, std::ios::binary);
-	std::vector<uint8_t> bytes((size_t)size);
-	if (!in.read(reinterpret_cast<char*>(bytes.data()), (std::streamsize)size)) return {};
-	return bytes;
-}

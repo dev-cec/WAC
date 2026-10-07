@@ -106,14 +106,11 @@ HRESULT SetupApiLogs::getData() {
 	for (const std::filesystem::path& path : listFilesByExtension(folder, { L".log" })) {
 		// setupapi.dev.log and its rotations setupapi.dev.<date>.log; the other logs of INF are not device installs.
 		if (toLower(path.filename().wstring()).compare(0, 13, L"setupapi.dev.") != 0) continue;
-		std::error_code ec;
-		const uintmax_t size = std::filesystem::file_size(path, ec);
-		if (ec || size > LOG_MAX) {
+		std::string bytes;
+		if (!readWholeFile(path, LOG_MAX, bytes)) {
 			log(2, L"🔥setupapi log not read (unreadable or larger than 256 MiB): " + path.wstring());
 			continue;
 		}
-		std::ifstream in(path, std::ios::binary);
-		const std::string bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 		/* Written in the machine's ANSI code page; the identifiers are ASCII,
 		   a device's friendly name may not be. */
 		std::vector<SetupApiSection> read = parseSetupApiLog(decodeText(bytes), originalPath(path.wstring()));

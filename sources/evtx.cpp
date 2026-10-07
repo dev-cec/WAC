@@ -12,35 +12,16 @@
 
 namespace {
 
-/*! A hexadecimal integer as Windows renders it in an event's XML ("0x3e7",
- *  "0x0"): the form an analyst reads in the Event Viewer and searches for.
- *  It was written "3e7", and "00" for zero (B-015, against Windows' XML). */
 // ---------------------------------------------------------------------------
 //  Bounded reads
 // ---------------------------------------------------------------------------
-/*  Every read goes through these accessors. The file comes from the examined
- *  machine: an announced offset can point anywhere, including outside the
- *  buffer. Rather than checking at every call site — and so forgetting some —
- *  they return 0 out of bounds and let the consistency check decide. A record
- *  whose fields are 0 fails validation; it is reported, it does not cause an
- *  out-of-range read.
+/*  Every read goes through readLittleEndian<T>(buffer, size, offset)
+ *  (conversions.h). The file comes from the examined machine: an announced
+ *  offset can point anywhere, including outside the buffer. Rather than
+ *  checking at every call site — and so forgetting some — it returns 0 out of
+ *  bounds and lets the consistency check decide. A record whose fields are 0
+ *  fails validation; it is reported, it does not cause an out-of-range read.
  */
-inline uint8_t  read8 (const BYTE* b, size_t size, size_t o) {
-	return (o + 1 <= size) ? b[o] : 0;
-}
-inline uint16_t read16(const BYTE* b, size_t size, size_t o) {
-	if (o + 2 > size) return 0;
-	return (uint16_t)(b[o] | ((uint16_t)b[o + 1] << 8));
-}
-inline uint32_t read32(const BYTE* b, size_t size, size_t o) {
-	if (o + 4 > size) return 0;
-	return (uint32_t)b[o] | ((uint32_t)b[o + 1] << 8)
-	     | ((uint32_t)b[o + 2] << 16) | ((uint32_t)b[o + 3] << 24);
-}
-inline uint64_t read64(const BYTE* b, size_t size, size_t o) {
-	if (o + 8 > size) return 0;
-	return (uint64_t)read32(b, size, o) | ((uint64_t)read32(b, size, o + 4) << 32);
-}
 
 // ---------------------------------------------------------------------------
 //  Format constants
@@ -151,14 +132,14 @@ private:
 	 */
 	std::wstring name(size_t offset) const {
 		if (offset + 8 > tc) return L"";
-		const uint16_t nbCar = read16(c, tc, offset + 6);
+		const uint16_t nbCar = readLittleEndian<uint16_t>(c, tc, offset + 6);
 		if (offset + 8 + 2ULL * nbCar > tc) return L"";
 		return std::wstring(reinterpret_cast<const wchar_t*>(c + offset + 8), nbCar);
 	}
 	//! Size taken by a name structure (terminator included).
 	size_t nameSize(size_t offset) const {
 		if (offset + 8 > tc) return 0;
-		return 8 + 2ULL * (read16(c, tc, offset + 6) + 1);
+		return 8 + 2ULL * (readLittleEndian<uint16_t>(c, tc, offset + 6) + 1);
 	}
 
 	// -- values -------------------------------------------------------------
@@ -200,25 +181,25 @@ private:
 		}
 		case T_INT8:   return size >= 1 ? std::to_wstring((int)(int8_t)d[0]) : L"";
 		case T_UINT8:  return size >= 1 ? std::to_wstring((unsigned)d[0]) : L"";
-		case T_INT16:  return size >= 2 ? std::to_wstring((int)(int16_t)read16(c, tc, off)) : L"";
-		case T_UINT16: return size >= 2 ? std::to_wstring((unsigned)read16(c, tc, off)) : L"";
-		case T_INT32:  return size >= 4 ? std::to_wstring((int32_t)read32(c, tc, off)) : L"";
-		case T_UINT32: return size >= 4 ? std::to_wstring((uint32_t)read32(c, tc, off)) : L"";
-		case T_INT64:  return size >= 8 ? std::to_wstring((int64_t)read64(c, tc, off)) : L"";
-		case T_UINT64: return size >= 8 ? std::to_wstring((uint64_t)read64(c, tc, off)) : L"";
+		case T_INT16:  return size >= 2 ? std::to_wstring((int)(int16_t)readLittleEndian<uint16_t>(c, tc, off)) : L"";
+		case T_UINT16: return size >= 2 ? std::to_wstring((unsigned)readLittleEndian<uint16_t>(c, tc, off)) : L"";
+		case T_INT32:  return size >= 4 ? std::to_wstring((int32_t)readLittleEndian<uint32_t>(c, tc, off)) : L"";
+		case T_UINT32: return size >= 4 ? std::to_wstring((uint32_t)readLittleEndian<uint32_t>(c, tc, off)) : L"";
+		case T_INT64:  return size >= 8 ? std::to_wstring((int64_t)readLittleEndian<uint64_t>(c, tc, off)) : L"";
+		case T_UINT64: return size >= 8 ? std::to_wstring((uint64_t)readLittleEndian<uint64_t>(c, tc, off)) : L"";
 		case T_REAL32: {
 			if (size < 4) return L"";
-			float f; uint32_t v = read32(c, tc, off); memcpy(&f, &v, 4);
+			float f; uint32_t v = readLittleEndian<uint32_t>(c, tc, off); memcpy(&f, &v, 4);
 			return shortestRealText(f);
 		}
 		case T_REAL64: {
 			if (size < 8) return L"";
-			double v; uint64_t u = read64(c, tc, off); memcpy(&v, &u, 8);
+			double v; uint64_t u = readLittleEndian<uint64_t>(c, tc, off); memcpy(&v, &u, 8);
 			return shortestRealText(v);
 		}
 		case T_BOOL:
 			// 32 bits, not a byte: "true" whatever the non-zero value.
-			return size >= 4 ? (read32(c, tc, off) ? L"true" : L"false") : L"";
+			return size >= 4 ? (readLittleEndian<uint32_t>(c, tc, off) ? L"true" : L"false") : L"";
 		case T_BINARY:
 			// No conversion: the binary data of an event (4688, 4624) carry
 			// information that no interpretation replaces.
@@ -236,11 +217,11 @@ private:
 		}
 		case T_SIZE:
 			// Matched to a 32- or 64-bit hexadecimal integer depending on the size.
-			return size >= 8 ? to_hex(read64(c, tc, off), 1, HexLetters::Lower, true)
-			     : size >= 4 ? to_hex(read32(c, tc, off), 1, HexLetters::Lower, true) : L"";
+			return size >= 8 ? to_hex(readLittleEndian<uint64_t>(c, tc, off), 1, HexLetters::Lower, true)
+			     : size >= 4 ? to_hex(readLittleEndian<uint32_t>(c, tc, off), 1, HexLetters::Lower, true) : L"";
 		case T_FILETIME: {
 			if (size < 8) return L"";
-			const uint64_t v = read64(c, tc, off);
+			const uint64_t v = readLittleEndian<uint64_t>(c, tc, off);
 			FILETIME ft = filetimeFromTicks(v);
 			// Log timestamps are in UTC.
 			return timeToIso8601Utc(ft);
@@ -248,17 +229,17 @@ private:
 		case T_SYSTIME: {
 			if (size < 16) return L"";
 			SYSTEMTIME st = { 0 };
-			st.wYear   = read16(c, tc, off);      st.wMonth        = read16(c, tc, off + 2);
-			st.wDayOfWeek = read16(c, tc, off + 4); st.wDay        = read16(c, tc, off + 6);
-			st.wHour   = read16(c, tc, off + 8);  st.wMinute       = read16(c, tc, off + 10);
-			st.wSecond = read16(c, tc, off + 12); st.wMilliseconds = read16(c, tc, off + 14);
+			st.wYear   = readLittleEndian<uint16_t>(c, tc, off);      st.wMonth        = readLittleEndian<uint16_t>(c, tc, off + 2);
+			st.wDayOfWeek = readLittleEndian<uint16_t>(c, tc, off + 4); st.wDay        = readLittleEndian<uint16_t>(c, tc, off + 6);
+			st.wHour   = readLittleEndian<uint16_t>(c, tc, off + 8);  st.wMinute       = readLittleEndian<uint16_t>(c, tc, off + 10);
+			st.wSecond = readLittleEndian<uint16_t>(c, tc, off + 12); st.wMilliseconds = readLittleEndian<uint16_t>(c, tc, off + 14);
 			FILETIME ft = { 0 };
 			if (!SystemTimeToFileTime(&st, &ft)) return L"";
 			return timeToIso8601Utc(ft, Precision::Millisecond);   // a SYSTEMTIME stops at the millisecond
 		}
 		case T_SID:  return sidToText(d, size);
-		case T_HEX32: return size >= 4 ? to_hex((uint32_t)read32(c, tc, off), 1, HexLetters::Lower, true) : L"";
-		case T_HEX64: return size >= 8 ? to_hex(read64(c, tc, off), 1, HexLetters::Lower, true) : L"";
+		case T_HEX32: return size >= 4 ? to_hex((uint32_t)readLittleEndian<uint32_t>(c, tc, off), 1, HexLetters::Lower, true) : L"";
+		case T_HEX64: return size >= 8 ? to_hex(readLittleEndian<uint64_t>(c, tc, off), 1, HexLetters::Lower, true) : L"";
 		case T_BINXML:
 		case T_EVTXML: {
 			/*  A value can hold a whole BinXML fragment: that is the case of
@@ -289,7 +270,7 @@ private:
 		if (base == T_STRING) {
 			size_t start = off;
 			for (size_t p = off; p + 2 <= off + size; p += 2) {
-				if (read16(c, tc, p) == 0) {
+				if (readLittleEndian<uint16_t>(c, tc, p) == 0) {
 					r.push_back(value(T_STRING, start, p - start, -1, depth));
 					start = p + 2;
 				}
@@ -360,7 +341,7 @@ private:
 	            std::wstring& output, unsigned depth) {
 		if (depth >= MAX_DEPTH) return false;
 		while (p < end) {
-			const uint8_t token = read8(c, tc, p) & 0x0f;
+			const uint8_t token = readLittleEndian<uint8_t>(c, tc, p) & 0x0f;
 			switch (token) {
 			case JET_EOF:
 				++p;
@@ -382,7 +363,7 @@ private:
 				break;
 			case TOKEN_SUBST_NORMAL:
 			case TOKEN_SUBST_OPTIONAL: {
-				const uint16_t id = read16(c, tc, p + 1);
+				const uint16_t id = readLittleEndian<uint16_t>(c, tc, p + 1);
 				p += 4;
 				if (subs && id < subs->size())
 					output += value((*subs)[id].type, (*subs)[id].offset,
@@ -390,31 +371,31 @@ private:
 				break;
 			}
 			case JET_CDATA: {
-				const uint16_t nbCar = read16(c, tc, p + 1);
+				const uint16_t nbCar = readLittleEndian<uint16_t>(c, tc, p + 1);
 				output += escape(name(p));   // same encoding: length + UTF-16
 				p += 3 + 2ULL * nbCar;
 				break;
 			}
 			case TOKEN_CHAR_REF:
-				output += L"&#" + std::to_wstring(read16(c, tc, p + 1)) + L";";
+				output += L"&#" + std::to_wstring(readLittleEndian<uint16_t>(c, tc, p + 1)) + L";";
 				p += 3;
 				break;
 			case TOKEN_ENTITY_REF: {
-				const std::wstring n = name(read32(c, tc, p + 1));
+				const std::wstring n = name(readLittleEndian<uint32_t>(c, tc, p + 1));
 				if (!n.empty()) output += L"&" + n + L";";
 				p += 5;
 				break;
 			}
 			case TOKEN_PI_TARGET: p += 5; break;
 			case TOKEN_PI_DATA: {
-				const uint16_t nbCar = read16(c, tc, p + 1);
+				const uint16_t nbCar = readLittleEndian<uint16_t>(c, tc, p + 1);
 				p += 3 + 2ULL * nbCar;
 				break;
 			}
 			default:
 				// Unknown token: going on would make the reading drift over arbitrary
 				// data. This record is abandoned.
-				log(3, L"🔈evtx: unknown token " + to_hex(read8(c, tc, p)));
+				log(3, L"🔈evtx: unknown token " + to_hex(readLittleEndian<uint8_t>(c, tc, p)));
 				return false;
 			}
 		}
@@ -423,9 +404,9 @@ private:
 
 	//! Value token (0x05/0x45): literal text in the content.
 	bool textValue(size_t& p, size_t end, std::wstring& output, unsigned depth) {
-		const uint8_t type = read8(c, tc, p + 1);
+		const uint8_t type = readLittleEndian<uint8_t>(c, tc, p + 1);
 		if (type == T_STRING) {
-			const uint16_t nbCar = read16(c, tc, p + 2);
+			const uint16_t nbCar = readLittleEndian<uint16_t>(c, tc, p + 2);
 			const size_t bytes = 2ULL * nbCar;
 			if (p + 4 + bytes > end) return false;
 			output += value(T_STRING, p + 4, bytes, -1, depth);
@@ -447,7 +428,7 @@ private:
 	bool element(size_t& p, size_t end, const std::vector<SubstValue>* subs,
 	             std::wstring& output, unsigned depth) {
 		if (depth >= MAX_DEPTH) return false;
-		const uint8_t token = read8(c, tc, p);
+		const uint8_t token = readLittleEndian<uint8_t>(c, tc, p);
 		const bool hasAttributes = (token & 0x40) != 0;
 
 		/*  The dependency identifier (2 bytes) is present in the logs, but absent
@@ -455,12 +436,12 @@ private:
 		 *  in the stream says so: the variant whose announced size and name offset
 		 *  are consistent is kept. */
 		size_t q = p + 3;                          // with dependency identifier
-		uint32_t dataSize = read32(c, tc, q);
-		uint32_t nameOffset = read32(c, tc, q + 4);
+		uint32_t dataSize = readLittleEndian<uint32_t>(c, tc, q);
+		uint32_t nameOffset = readLittleEndian<uint32_t>(c, tc, q + 4);
 		if (nameOffset + 8 > tc || q + 4 + dataSize > end) {
 			q = p + 1;                             // without dependency identifier
-			dataSize = read32(c, tc, q);
-			nameOffset = read32(c, tc, q + 4);
+			dataSize = readLittleEndian<uint32_t>(c, tc, q);
+			nameOffset = readLittleEndian<uint32_t>(c, tc, q + 4);
 			if (nameOffset + 8 > tc) return false;
 		}
 		const size_t finElement = q + 4 + dataSize;
@@ -473,13 +454,13 @@ private:
 
 		std::wstring attributes;
 		if (hasAttributes) {
-			const uint32_t listSize = read32(c, tc, q);
+			const uint32_t listSize = readLittleEndian<uint32_t>(c, tc, q);
 			q += 4;
 			const size_t listEnd = (q + listSize <= end) ? q + listSize : end;
 			while (q < listEnd) {
-				const uint8_t attrToken = read8(c, tc, q);
+				const uint8_t attrToken = readLittleEndian<uint8_t>(c, tc, q);
 				if ((attrToken & 0x0f) != TOKEN_ATTRIBUTE) break;
-				const uint32_t attrNameOffset = read32(c, tc, q + 1);
+				const uint32_t attrNameOffset = readLittleEndian<uint32_t>(c, tc, q + 1);
 				q += 5;
 				const std::wstring attrName = name(attrNameOffset);
 				if (attrNameOffset == q) q += nameSize(attrNameOffset);
@@ -497,7 +478,7 @@ private:
 			q = listEnd;
 		}
 
-		const uint8_t closing = read8(c, tc, q);
+		const uint8_t closing = readLittleEndian<uint8_t>(c, tc, q);
 		if ((closing & 0x0f) == TOKEN_CLOSE_EMPTY_ELEMENT) {
 			++q;
 			output += L"<" + elementName + attributes + L"/>";
@@ -513,10 +494,10 @@ private:
 		 *  when the substitution is the whole content, the only form Windows logs
 		 *  produce. */
 		if (subs) {
-			const uint8_t j = read8(c, tc, q) & 0x0f;
+			const uint8_t j = readLittleEndian<uint8_t>(c, tc, q) & 0x0f;
 			if ((j == TOKEN_SUBST_NORMAL || j == TOKEN_SUBST_OPTIONAL)
-			    && (read8(c, tc, q + 4) & 0x0f) == JET_FIN_ELEMENT) {
-				const uint16_t id = read16(c, tc, q + 1);
+			    && (readLittleEndian<uint8_t>(c, tc, q + 4) & 0x0f) == JET_FIN_ELEMENT) {
+				const uint16_t id = readLittleEndian<uint16_t>(c, tc, q + 1);
 
 				/*  OPTIONAL SUBSTITUTION WITH A NULL VALUE: the element is not
 				    created. That is the format's rule, and it carries meaning: an empty
@@ -562,14 +543,14 @@ private:
 	bool attributeData(size_t& p, size_t end, const std::vector<SubstValue>* subs,
 	                    std::wstring& val, unsigned depth) {
 		while (p < end) {
-			const uint8_t token = read8(c, tc, p);
+			const uint8_t token = readLittleEndian<uint8_t>(c, tc, p);
 			switch (token & 0x0f) {
 			case TOKEN_VALUE:
 				if (!textValue(p, end, val, depth)) return false;
 				break;
 			case TOKEN_SUBST_NORMAL:
 			case TOKEN_SUBST_OPTIONAL: {
-				const uint16_t id = read16(c, tc, p + 1);
+				const uint16_t id = readLittleEndian<uint16_t>(c, tc, p + 1);
 				p += 4;
 				if (subs && id < subs->size())
 					val += value((*subs)[id].type, (*subs)[id].offset,
@@ -577,11 +558,11 @@ private:
 				break;
 			}
 			case TOKEN_CHAR_REF:
-				val += L"&#" + std::to_wstring(read16(c, tc, p + 1)) + L";";
+				val += L"&#" + std::to_wstring(readLittleEndian<uint16_t>(c, tc, p + 1)) + L";";
 				p += 3;
 				break;
 			case TOKEN_ENTITY_REF: {
-				const std::wstring n = name(read32(c, tc, p + 1));
+				const std::wstring n = name(readLittleEndian<uint32_t>(c, tc, p + 1));
 				if (!n.empty()) val += L"&" + n + L";";
 				p += 5;
 				break;
@@ -605,7 +586,7 @@ private:
 	                      unsigned depth) {
 		if (depth >= MAX_DEPTH) return false;
 		const size_t token = p;
-		const uint32_t offsetDefinition = read32(c, tc, token + 6);
+		const uint32_t offsetDefinition = readLittleEndian<uint32_t>(c, tc, token + 6);
 
 		/*  "Right after this field" = token + 10: the definition follows, and the
 		 *  instance data start after the fragment. Otherwise the definition is
@@ -613,7 +594,7 @@ private:
 		const bool inPlace = (offsetDefinition == token + 10);
 		const size_t d = offsetDefinition;         // points to the "next" field
 		if (d + 24 > tc) return false;
-		const uint32_t fragmentSize = read32(c, tc, d + 20);
+		const uint32_t fragmentSize = readLittleEndian<uint32_t>(c, tc, d + 20);
 		const size_t fragmentStart = d + 24;
 		if (fragmentStart + fragmentSize > tc) return false;
 
@@ -621,15 +602,15 @@ private:
 		if (data + 4 > end) return false;
 
 		// Value array: 4-byte descriptors, then data.
-		const uint32_t nValues = read32(c, tc, data);
+		const uint32_t nValues = readLittleEndian<uint32_t>(c, tc, data);
 		data += 4;
 		// Guard: at least a 4-byte descriptor per announced value.
 		if (nValues > (end - data) / 4) return false;
 		std::vector<SubstValue> values(nValues);
 		size_t valueOffset = data + 4ULL * nValues;
 		for (uint32_t i = 0; i < nValues; ++i) {
-			values[i].size = read16(c, tc, data + 4ULL * i);
-			values[i].type   = read8(c, tc, data + 4ULL * i + 2);
+			values[i].size = readLittleEndian<uint16_t>(c, tc, data + 4ULL * i);
+			values[i].type   = readLittleEndian<uint8_t>(c, tc, data + 4ULL * i + 2);
 			values[i].offset = valueOffset;
 			valueOffset += values[i].size;
 			if (valueOffset > tc) return false;
@@ -696,9 +677,9 @@ HRESULT EvtxReadFile(const std::wstring& path,
 		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
 	}
 	b.headerValid = true;
-	const uint16_t flags = read16(header.data(), header.size(), 120);
+	const uint16_t flags = readLittleEndian<uint16_t>(header.data(), header.size(), 120);
 	b.sale = (flags & 0x0001) != 0;
-	const uint16_t nDeclaredChunks = read16(header.data(), header.size(), 42);
+	const uint16_t nDeclaredChunks = readLittleEndian<uint16_t>(header.data(), header.size(), 42);
 
 	/*  Chunks are walked to the end of the file, not just up to the announced
 	 *  count: a log closed abruptly often holds more, and those chunks carry the
@@ -735,25 +716,25 @@ HRESULT EvtxReadFile(const std::wstring& path,
 		 *  previous chunk's tail (measured: same offset, record live in that
 		 *  chunk), and decoding it against this chunk's templates gives a valid
 		 *  but FALSE event — another record's data. */
-		size_t liveEnd = read32(chunk.data(), read, 48);
+		size_t liveEnd = readLittleEndian<uint32_t>(chunk.data(), read, 48);
 		if (liveEnd < RECORDS_START || liveEnd > read)
 			liveEnd = read;
-		const bool clearedChunk = read64(chunk.data(), read, 24) == UINT64_MAX;
+		const bool clearedChunk = readLittleEndian<uint64_t>(chunk.data(), read, 24) == UINT64_MAX;
 		const size_t recordsEnd = clearedChunk ? read : liveEnd;
 
 		Decoder decoder(chunk.data(), read);
 		size_t p = RECORDS_START;
 		while (p + 24 <= recordsEnd) {
-			if (read32(chunk.data(), read, p) != SIGNATURE_ENREG) break;
-			const uint32_t size = read32(chunk.data(), read, p + 4);
+			if (readLittleEndian<uint32_t>(chunk.data(), read, p) != SIGNATURE_ENREG) break;
+			const uint32_t size = readLittleEndian<uint32_t>(chunk.data(), read, p + 4);
 			// A record takes at least the header (24) and the trailing size copy
 			// (4); an absurd size would stop the reading on arbitrary data.
 			if (size < 28 || p + size > recordsEnd) break;
 
 			EvtxRecord e;
 			e.recovered = p >= liveEnd;
-			e.id = read64(chunk.data(), read, p + 8);
-			const uint64_t v = read64(chunk.data(), read, p + 16);
+			e.id = readLittleEndian<uint64_t>(chunk.data(), read, p + 8);
+			const uint64_t v = readLittleEndian<uint64_t>(chunk.data(), read, p + 16);
 			e.writtenUtc.dwLowDateTime  = (DWORD)(v & 0xFFFFFFFFULL);
 			e.writtenUtc.dwHighDateTime = (DWORD)(v >> 32);
 

@@ -2,6 +2,7 @@
  *  \brief The version resource of a PE (see version_info.h).
  */
 #include "version_info.h"
+#include "portable_conversions.h"
 
 namespace {
 
@@ -9,8 +10,6 @@ const uint32_t FIXED_SIGNATURE = 0xFEEF04BD;
 const size_t HEADER = 6;                           //!< wLength, wValueLength, wType
 const int MAX_DEPTH = 4;                           //!< root, StringFileInfo, table, string
 
-uint16_t le16(const std::vector<uint8_t>& b, size_t at) { return (uint16_t)(b[at] | (b[at + 1] << 8)); }
-uint32_t le32(const std::vector<uint8_t>& b, size_t at) { return (uint32_t)le16(b, at) | ((uint32_t)le16(b, at + 2) << 16); }
 size_t align4(size_t at) { return (at + 3) & ~(size_t)3; }
 
 //! A node of the tree, located.
@@ -25,14 +24,14 @@ struct Node {
  *  @return false if it is malformed */
 bool readNode(const std::vector<uint8_t>& b, size_t at, size_t limit, Node& n) {
 	if (at + HEADER > limit) return false;
-	const size_t length = le16(b, at), valueLength = le16(b, at + 2);
-	n.text = le16(b, at + 4) == 1;
+	const size_t length = readLittleEndian<uint16_t>(b, at), valueLength = readLittleEndian<uint16_t>(b, at + 2);
+	n.text = readLittleEndian<uint16_t>(b, at + 4) == 1;
 	if (length < HEADER || at + length > limit) return false;
 	n.end = at + length;
 	size_t k = at + HEADER;
 	n.key.clear();
 	for (; k + 1 < n.end; k += 2) {
-		const uint16_t c = le16(b, k);
+		const uint16_t c = readLittleEndian<uint16_t>(b, k);
 		if (!c) break;
 		n.key += (wchar_t)c;
 	}
@@ -48,7 +47,7 @@ bool readNode(const std::vector<uint8_t>& b, size_t at, size_t limit, Node& n) {
 std::wstring textOf(const std::vector<uint8_t>& b, const Node& n) {
 	std::wstring text;
 	for (size_t k = n.value; k + 1 < n.value + n.valueSize; k += 2) {
-		const uint16_t c = le16(b, k);
+		const uint16_t c = readLittleEndian<uint16_t>(b, k);
 		if (!c) break;
 		text += (wchar_t)c;
 	}
@@ -78,9 +77,9 @@ bool ReadVersionInfo(const std::vector<uint8_t>& resource, VersionInfo& info) {
 	info = VersionInfo{};
 	Node root;
 	if (!readNode(resource, 0, resource.size(), root) || root.key != L"VS_VERSION_INFO") return false;
-	if (root.valueSize >= 52 && le32(resource, root.value) == FIXED_SIGNATURE) {
+	if (root.valueSize >= 52 && readLittleEndian<uint32_t>(resource, root.value) == FIXED_SIGNATURE) {
 		info.fixed = true;
-		info.fileVersion = ((uint64_t)le32(resource, root.value + 8) << 32) | le32(resource, root.value + 12);
+		info.fileVersion = ((uint64_t)readLittleEndian<uint32_t>(resource, root.value + 8) << 32) | readLittleEndian<uint32_t>(resource, root.value + 12);
 	}
 	walk(resource, root, 1, false, info);
 	return true;

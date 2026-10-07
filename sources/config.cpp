@@ -183,9 +183,10 @@ bool LoadConfiguration(const std::wstring& path, AppliConf& conf, ConfigurationF
 	if (!std::filesystem::exists(path, ec)) return true;          // no file: the defaults, and the command line
 	const uintmax_t size = std::filesystem::file_size(path, ec);
 	if (ec || size > CONFIGURATION_MAX) { error = encodeText(text(Text::ConfigurationTooLarge)); return false; }
-	std::ifstream in(std::filesystem::path(path), std::ios::binary);
-	file.text.assign((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-	if (!in && !in.eof()) { error = encodeText(text(Text::ConfigurationUnreadable)); return false; }
+	if (!readWholeFile(std::filesystem::path(path), CONFIGURATION_MAX, file.text)) {
+		error = encodeText(text(Text::ConfigurationUnreadable));
+		return false;
+	}
 	file.path = path;
 	uint8_t digest[32];
 	sha256Bytes(reinterpret_cast<const uint8_t*>(file.text.data()), file.text.size(), digest);

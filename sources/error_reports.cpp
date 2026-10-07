@@ -94,14 +94,11 @@ HRESULT ErrorReports::getData() {
 	for (const auto& [key, exhibit] : ExhibitStoreIndex()) {
 		if (exhibit.workingFile.empty() || key.size() < 11 || key.compare(key.size() - 11, 11, L"\\report.wer") != 0
 		    || key.find(L"\\microsoft\\windows\\wer\\") == std::wstring::npos) continue;
-		std::error_code ec;
-		const uintmax_t size = std::filesystem::file_size(exhibit.workingFile, ec);
-		if (ec || size > REPORT_MAX) {
+		std::string bytes;
+		if (!readWholeFile(std::filesystem::path(exhibit.workingFile), REPORT_MAX, bytes)) {
 			log(2, L"🔥Error report not read (unreadable or larger than 4 MiB): " + exhibit.sourcePath);
 			continue;
 		}
-		std::ifstream in(std::filesystem::path(exhibit.workingFile), std::ios::binary);
-		const std::string bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 		ErrorReport report;
 		report.file = exhibit.sourcePath;
 		if (!parseErrorReport(decodeReport(bytes), report)) {

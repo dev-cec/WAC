@@ -63,14 +63,11 @@ HRESULT DefenderLogs::getData() {
 		if (exhibit.workingFile.empty() || key.size() < 3 || key.compare(2, wcslen(SUPPORT_FOLDER), SUPPORT_FOLDER) != 0) continue;
 		const std::wstring name = std::filesystem::path(key).filename().wstring();
 		if (name.compare(0, 6, L"mplog-") != 0) continue;
-		std::error_code ec;
-		const uintmax_t size = std::filesystem::file_size(exhibit.workingFile, ec);
-		if (ec || size > LOG_MAX) {
+		std::string bytes;
+		if (!readWholeFile(std::filesystem::path(exhibit.workingFile), LOG_MAX, bytes)) {
 			log(2, L"🔥Defender log not read (unreadable or larger than 256 MiB): " + exhibit.sourcePath);
 			continue;
 		}
-		std::ifstream in(std::filesystem::path(exhibit.workingFile), std::ios::binary);
-		const std::string bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 		DefenderLog logFile;
 		logFile.path = exhibit.sourcePath;
 		FILETIME created = { 0 }, accessed = { 0 };

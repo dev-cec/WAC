@@ -4,6 +4,9 @@
 #include "jumplist_automatic.h"
 #include "consigne.h"
 
+//! The largest jump list read: an OLE file of hundreds of KiB, a few MiB at most.
+const uintmax_t JUMPLIST_MAX = 256ull * 1024 * 1024;
+
 AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wstring _sid) {
 	Sid = _sid;
 	
@@ -20,29 +23,21 @@ AutomaticDestination::AutomaticDestination(std::filesystem::path _path, std::wst
 	log(3, L"🔈from_appId application");
 	application = from_appId(baseName);
 
-	// open the file
-	std::ifstream file(_path, std::ios::binary);
-	if (file.good()) {
-		file.unsetf(std::ios::skipws);
-		file.seekg(0, std::ios::end);
-		const size_t size = file.tellg();
-		file.seekg(0, std::ios::beg);
-		/* OWNERSHIP GIVEN TO THE TYPE. The buffer was raw and was released only at
-		   the very end of the function, while FOUR early `return`s leave it
-		   before that: OLE parsing failure, DestList empty or unreadable. The
-		   whole content of the file — several hundred kilobytes — leaked every
-		   time, and those cases are frequent on a real machine, where many jump
-		   lists are empty or partial. */
-		std::unique_ptr<BYTE[]> bufferOwner = std::make_unique<BYTE[]>(size);
-		LPBYTE buffer = bufferOwner.get();
-		file.read(reinterpret_cast<CHAR*>(buffer), size);
-		file.close();
+	/* OWNERSHIP GIVEN TO THE TYPE. The buffer was raw and was released only at
+	   the very end of the function, while FOUR early `return`s leave it before
+	   that: OLE parsing failure, DestList empty or unreadable. The whole content
+	   of the file — several hundred kilobytes — leaked every time, and those
+	   cases are frequent on a real machine, where many jump lists are empty or
+	   partial. */
+	std::vector<BYTE> content;
+	if (readWholeFile(_path, JUMPLIST_MAX, content)) {
+		const size_t size = content.size();
+		LPBYTE buffer = content.data();
 		// The dates of the file ON THE EXAMINED MACHINE, as the raw reading recorded
 		// them: the working copy's own are those of the collection (ExhibitSourceTimes).
 		if (!ExhibitSourceTimes(_path.wstring(), createdUtc, modifiedUtc, accessedUtc))
 			log(2, L"🔥Source timestamps not recorded: " + _path.wstring());
 		parse(buffer, size);
-		// The buffer is released by its unique_ptr.
 	}
 };
 

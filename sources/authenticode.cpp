@@ -12,6 +12,7 @@
 #include "racines_microsoft.h"
 #include "quickdigest5.h"
 #include "json.h"
+#include "portable_conversions.h"
 #include <cstring>
 #include <map>
 #include <set>
@@ -1022,8 +1023,6 @@ const std::wstring* IndexCatalogues::find(const uint8_t* e, size_t n) const {
 // ============================================================ PE en stream
 
 namespace {
-inline uint16_t lu16(const uint8_t* p) { return (uint16_t)(p[0] | (p[1] << 8)); }
-inline uint32_t lu32(const uint8_t* p) { return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24); }
 const size_t HEAD = 64 * 1024;                  // headers expected within the first 64 KiB
 const size_t MAX_CERTIFICATES = 4 * 1024 * 1024; // certificate table: 4 MiB at most
 }
@@ -1057,25 +1056,25 @@ bool PeAnalyser::analyseHeaders() {
 	const uint8_t* t = head_.data();
 	const size_t n = head_.size();
 	if (n < 0x40 || t[0] != 'M' || t[1] != 'Z') return false;
-	const uint32_t pe = lu32(t + 0x3C);
+	const uint32_t pe = readLittleEndian<uint32_t>(t + 0x3C);
 	if (pe > n - 24 || std::memcmp(t + pe, "PE\0\0", 4) != 0) return false;
 	const uint32_t opt = pe + 24;
-	const uint16_t optionalHeaderSize = lu16(t + pe + 20);
+	const uint16_t optionalHeaderSize = readLittleEndian<uint16_t>(t + pe + 20);
 	if (opt + optionalHeaderSize > n || optionalHeaderSize < 2) return false;
-	const uint16_t magic = lu16(t + opt);
+	const uint16_t magic = readLittleEndian<uint16_t>(t + opt);
 	size_t directories;
 	if (magic == 0x10B) directories = opt + 96;         // PE32
 	else if (magic == 0x20B) directories = opt + 112;   // PE32+
 	else return false;
 	if (directories > opt + optionalHeaderSize) return false;
-	timeDateStamp_ = lu32(t + pe + 8);                  // COFF header
-	sizeOfImage_ = lu32(t + opt + 56);                 // same offset in PE32 and PE32+
-	const uint32_t nbRep = lu32(t + directories - 4);   // NumberOfRvaAndSizes
+	timeDateStamp_ = readLittleEndian<uint32_t>(t + pe + 8);                  // COFF header
+	sizeOfImage_ = readLittleEndian<uint32_t>(t + opt + 56);                 // same offset in PE32 and PE32+
+	const uint32_t nbRep = readLittleEndian<uint32_t>(t + directories - 4);   // NumberOfRvaAndSizes
 	checksum_ = opt + 64;
 	certEntry_ = directories + 4 * 8;                  // entry 4: certificate table
 	if (nbRep <= 4 || certEntry_ + 8 > opt + optionalHeaderSize) { certEntry_ = 0; return true; }
-	certStart_ = lu32(t + certEntry_);                 // position in the FILE
-	finCert_ = certStart_ + lu32(t + certEntry_ + 4);
+	certStart_ = readLittleEndian<uint32_t>(t + certEntry_);                 // position in the FILE
+	finCert_ = certStart_ + readLittleEndian<uint32_t>(t + certEntry_ + 4);
 	if (finCert_ == certStart_) certStart_ = finCert_ = 0;
 	return true;
 }
@@ -1151,8 +1150,8 @@ VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalog
 	// 2. Embedded signature: WIN_CERTIFICATE { dwLength, wRevision, wCertificateType, bCertificate }.
 	const std::vector<uint8_t>& t = pe.certificateTable();
 	if (t.size() < 8) { v.reason = "not signed (neither catalog nor embedded signature)"; return v; }
-	const uint32_t length = lu32(t.data());
-	const uint16_t type = lu16(t.data() + 6);
+	const uint32_t length = readLittleEndian<uint32_t>(t.data());
+	const uint16_t type = readLittleEndian<uint16_t>(t.data() + 6);
 	if (type != 0x0002 || length < 8 || length > t.size()) { v.reason = "unexpected certificate table"; return v; }
 	const VerifiedSignature s = VerifyPkcs7(t.data() + 8, length - 8);
 	/* Whoever signed, and whether the file is as signed: recorded for every
@@ -1348,9 +1347,7 @@ TrustList ReadTrustList(const uint8_t* bytes, size_t size) {
 					}
 					if (id == 104) entry.distrusted = true;
 					if (id == 104 && values[0].tag == 0x04 && values[0].len == 8) {
-						uint64_t filetime = 0;
-						for (int k = 7; k >= 0; --k) filetime = (filetime << 8) | values[0].val[k];
-						entry.distrustedAfter = filetime;
+						entry.distrustedAfter = readLittleEndian<uint64_t>(values[0].val);
 					}
 				}
 			list.entries.push_back(std::move(entry));

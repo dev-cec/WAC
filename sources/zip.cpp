@@ -3,6 +3,7 @@
  */
 #include "zip.h"
 #include "inflate.h"
+#include "portable_conversions.h"
 #include <array>
 
 namespace {
@@ -25,7 +26,7 @@ size_t findEnd(const std::vector<uint8_t>& zip) {
 	if (zip.size() < END_SIZE) return SIZE_MAX;
 	const size_t lowest = zip.size() - END_SIZE > COMMENT_MAX ? zip.size() - END_SIZE - COMMENT_MAX : 0;
 	for (size_t at = zip.size() - END_SIZE + 1; at-- > lowest;)
-		if (archiveLe32(&zip[at]) == END_SIGNATURE && at + END_SIZE + archiveLe16(&zip[at + 20]) == zip.size())
+		if (readLittleEndian<uint32_t>(&zip[at]) == END_SIGNATURE && at + END_SIZE + readLittleEndian<uint16_t>(&zip[at + 20]) == zip.size())
 			return at;
 	return SIZE_MAX;
 }
@@ -41,12 +42,12 @@ struct Entry {
  *  and checked against the directory's size and CRC.
  *  @return false with `reason` otherwise */
 bool readEntry(const std::vector<uint8_t>& zip, const Entry& e, std::vector<uint8_t>& out, std::string& reason) {
-	if ((size_t)e.localOffset + LOCAL_SIZE > zip.size() || archiveLe32(&zip[e.localOffset]) != LOCAL_SIGNATURE) {
+	if ((size_t)e.localOffset + LOCAL_SIZE > zip.size() || readLittleEndian<uint32_t>(&zip[e.localOffset]) != LOCAL_SIGNATURE) {
 		reason = e.name + ": local header missing";
 		return false;
 	}
-	const size_t data = (size_t)e.localOffset + LOCAL_SIZE + archiveLe16(&zip[e.localOffset + 26])
-	                  + archiveLe16(&zip[e.localOffset + 28]);
+	const size_t data = (size_t)e.localOffset + LOCAL_SIZE + readLittleEndian<uint16_t>(&zip[e.localOffset + 26])
+	                  + readLittleEndian<uint16_t>(&zip[e.localOffset + 28]);
 	if (data > zip.size() || e.packed > zip.size() - data) { reason = e.name + ": data outside the archive"; return false; }
 	if (e.method == STORED) {
 		if (e.packed != e.unpacked) { reason = e.name + ": stored with inconsistent sizes"; return false; }
@@ -67,10 +68,10 @@ bool readEntry(const std::vector<uint8_t>& zip, const Entry& e, std::vector<uint
 /*! The central directory's entries.
  *  @return false with `reason` if it leaves the archive or uses ZIP64 */
 bool readDirectory(const std::vector<uint8_t>& zip, size_t end, std::vector<Entry>& entries, std::string& reason) {
-	const uint16_t count = archiveLe16(&zip[end + 10]);
-	const uint32_t size = archiveLe32(&zip[end + 12]);
-	const uint32_t offset = archiveLe32(&zip[end + 16]);
-	if (archiveLe16(&zip[end + 4]) != 0 || archiveLe16(&zip[end + 6]) != 0 || archiveLe16(&zip[end + 8]) != count) {
+	const uint16_t count = readLittleEndian<uint16_t>(&zip[end + 10]);
+	const uint32_t size = readLittleEndian<uint32_t>(&zip[end + 12]);
+	const uint32_t offset = readLittleEndian<uint32_t>(&zip[end + 16]);
+	if (readLittleEndian<uint16_t>(&zip[end + 4]) != 0 || readLittleEndian<uint16_t>(&zip[end + 6]) != 0 || readLittleEndian<uint16_t>(&zip[end + 8]) != count) {
 		reason = "archive split over several parts";
 		return false;
 	}
@@ -78,20 +79,20 @@ bool readDirectory(const std::vector<uint8_t>& zip, size_t end, std::vector<Entr
 	if ((size_t)offset + size > end) { reason = "central directory outside the archive"; return false; }
 	size_t at = offset;
 	for (unsigned k = 0; k < count; ++k) {
-		if (at + ENTRY_SIZE > (size_t)offset + size || archiveLe32(&zip[at]) != ENTRY_SIGNATURE) {
+		if (at + ENTRY_SIZE > (size_t)offset + size || readLittleEndian<uint32_t>(&zip[at]) != ENTRY_SIGNATURE) {
 			reason = "central directory malformed";
 			return false;
 		}
-		const size_t nameSize = archiveLe16(&zip[at + 28]);
-		const size_t next = at + ENTRY_SIZE + nameSize + archiveLe16(&zip[at + 30]) + archiveLe16(&zip[at + 32]);
+		const size_t nameSize = readLittleEndian<uint16_t>(&zip[at + 28]);
+		const size_t next = at + ENTRY_SIZE + nameSize + readLittleEndian<uint16_t>(&zip[at + 30]) + readLittleEndian<uint16_t>(&zip[at + 32]);
 		if (next > (size_t)offset + size) { reason = "central directory malformed"; return false; }
 		Entry e;
-		e.flags = archiveLe16(&zip[at + 8]);
-		e.method = archiveLe16(&zip[at + 10]);
-		e.crc = archiveLe32(&zip[at + 16]);
-		e.packed = archiveLe32(&zip[at + 20]);
-		e.unpacked = archiveLe32(&zip[at + 24]);
-		e.localOffset = archiveLe32(&zip[at + 42]);
+		e.flags = readLittleEndian<uint16_t>(&zip[at + 8]);
+		e.method = readLittleEndian<uint16_t>(&zip[at + 10]);
+		e.crc = readLittleEndian<uint32_t>(&zip[at + 16]);
+		e.packed = readLittleEndian<uint32_t>(&zip[at + 20]);
+		e.unpacked = readLittleEndian<uint32_t>(&zip[at + 24]);
+		e.localOffset = readLittleEndian<uint32_t>(&zip[at + 42]);
 		e.name.assign((const char*)&zip[at + ENTRY_SIZE], nameSize);
 		if (e.packed == 0xFFFFFFFF || e.unpacked == 0xFFFFFFFF || e.localOffset == 0xFFFFFFFF) {
 			reason = "ZIP64 not read";

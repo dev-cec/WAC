@@ -6,6 +6,7 @@
 #include "consigne.h"
 #include "idList.h"
 #include "sha.h"
+#include "whole_file.h"
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -66,18 +67,6 @@ private:
 	uint8_t state_[256];
 	uint8_t i_ = 0, j_ = 0;
 };
-
-//! Reads a whole exhibit, up to a bound; empty if larger or unreadable.
-std::vector<uint8_t> readExhibit(const std::wstring& file, uintmax_t maximum) {
-	std::error_code ec;
-	const uintmax_t size = std::filesystem::file_size(file, ec);
-	if (ec || size > maximum) return {};
-	std::vector<uint8_t> bytes((size_t)size);
-	std::ifstream in(std::filesystem::path(file), std::ios::binary);
-	in.read(reinterpret_cast<char*>(bytes.data()), (std::streamsize)bytes.size());
-	if (in.gcount() != (std::streamsize)bytes.size()) return {};
-	return bytes;
-}
 
 // DetectionHistory field types.
 const uint32_t FIELD_NUMBER32 = 0x06, FIELD_NUMBER64 = 0x08, FIELD_FILETIME = 0x0A,
@@ -374,10 +363,11 @@ HRESULT DefenderDetections::getData() {
 	log(0, L"ℹ️Defender detection history :");
 	for (const auto& [key, exhibit] : ExhibitStoreIndex()) {
 		if (exhibit.workingFile.empty() || key.size() < 3 || key.compare(2, wcslen(DETECTION_FOLDER), DETECTION_FOLDER) != 0) continue;
-		const std::vector<uint8_t> bytes = readExhibit(exhibit.workingFile, DESCRIPTION_MAX);
+		std::vector<uint8_t> bytes;
 		DefenderDetection d;
 		d.file = exhibit.sourcePath;
-		if (bytes.empty() || !parseDetectionHistory(bytes, d)) {
+		if (!readWholeFile(std::filesystem::path(exhibit.workingFile), DESCRIPTION_MAX, bytes) || bytes.empty()
+		    || !parseDetectionHistory(bytes, d)) {
 			log(2, L"🔥Not a DetectionHistory file: " + exhibit.sourcePath);
 			continue;
 		}
@@ -489,11 +479,12 @@ HRESULT DefenderQuarantine::getData() {
 	const std::wstring entries = std::wstring(QUARANTINE_FOLDER) + L"entries\\";
 	for (const auto& [key, exhibit] : index) {
 		if (exhibit.workingFile.empty() || key.size() < 3 || key.compare(2, entries.size(), entries) != 0) continue;
-		const std::vector<uint8_t> bytes = readExhibit(exhibit.workingFile, DESCRIPTION_MAX);
+		std::vector<uint8_t> bytes;
 		QuarantineEntry entry;
 		entry.file = exhibit.sourcePath;
 		entry.entryId = std::filesystem::path(exhibit.sourcePath).filename().wstring();
-		if (bytes.empty() || !parseQuarantineEntry(bytes, entry)) {
+		if (!readWholeFile(std::filesystem::path(exhibit.workingFile), DESCRIPTION_MAX, bytes) || bytes.empty()
+		    || !parseQuarantineEntry(bytes, entry)) {
 			log(2, L"🔥Quarantine entry not read: " + exhibit.sourcePath);
 			continue;
 		}

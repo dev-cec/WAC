@@ -32,7 +32,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <string>
-#include "conversions.h"   // toHexadecimal, for the digests' text
+#include "portable_conversions.h"   // toHexadecimal, for the digests' text
 
 /*! SHA-1, computed incrementally. */
 class Sha1Stream final {

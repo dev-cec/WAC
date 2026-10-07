@@ -4,6 +4,9 @@
 #include "jumplist_custom.h"
 #include "consigne.h"
 
+//! The largest jump list read: a series of shortcuts, a few hundred KiB at most.
+const uintmax_t JUMPLIST_MAX = 256ull * 1024 * 1024;
+
 CustomDestinationCategory::CustomDestinationCategory(LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid) {
 	/* The shortcuts are found by their header: the size 0x4C then the
 	   ShellLink CLSID, 20 bytes in all. The walk used to run while
@@ -50,19 +53,12 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 	// RAW path: the escaping is centralised in json.h.
 	pathOriginal = originalPath(path);
 	log(2, L"❇️CustomDestination Path : " + pathOriginal);
-	std::ifstream file(std::filesystem::path(path), std::ios::binary);
-	if (file.good())
+	// Ownership carried by the type: every exit of the function releases the buffer.
+	std::vector<BYTE> content;
+	if (readWholeFile(std::filesystem::path(path), JUMPLIST_MAX, content))
 	{
-		file.unsetf(std::ios::skipws);
-		file.seekg(0, std::ios::end);
-		const size_t size = file.tellg();
-		file.seekg(0, std::ios::beg);
-		/* Same pattern as jumplist_automatic: ownership carried by the type, so
-		   that every exit of the function releases the buffer. */
-		std::unique_ptr<BYTE[]> bufferOwner = std::make_unique<BYTE[]>(size);
-		LPBYTE buffer = bufferOwner.get();
-		file.read(reinterpret_cast<CHAR*>(buffer), size);
-		file.close();
+		const size_t size = content.size();
+		LPBYTE buffer = content.data();
 
 		// The dates of the file ON THE EXAMINED MACHINE, as the raw reading recorded
 		// them: the working copy's own are those of the collection (ExhibitSourceTimes).

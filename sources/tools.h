@@ -17,6 +17,7 @@
 #include <time.h>
 #include "json.h"
 #include "conversions.h"
+#include "whole_file.h"
 
 // global constants
 #define MAX_KEY_NAME 255 //!< longest key name in the registry
@@ -1169,8 +1170,3 @@ std::wstring WacVersion();
 std::vector<std::filesystem::path> listFilesByExtension(const std::filesystem::path& directory,
 	const std::vector<std::wstring>& extensions);
 
-/*! A working copy's bytes, whole — for the decoders of a file artefact.
-* @param file the copy
-* @param maximum the largest size accepted: a file beyond it is not read
-* @return its bytes, or nothing if it is unreadable or beyond `maximum` */
-std::vector<uint8_t> readWorkingFile(const std::filesystem::path& file, uintmax_t maximum);

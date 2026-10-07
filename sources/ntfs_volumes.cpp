@@ -23,6 +23,7 @@ const size_t BOOT_SERIAL = 0x48;              //!< uint64
 const size_t BOOT_SIGNATURE = 0x1FE;          //!< 0x55, 0xAA
 const size_t BOOT_SECTOR_SIZE = 512;
 const size_t USN_MAX_SIZE = 32;               //!< four uint64
+const uintmax_t EXHIBIT_MAX = 1024 * 1024;    //!< $Boot is 8 KiB, $UsnJrnl:$Max 32 bytes
 
 /*! A size the boot sector gives in clusters, or as a power of two when negative.
  *  @return the size in bytes, 0 if impossible */
@@ -35,14 +36,12 @@ uint32_t clustersOrPower(uint8_t raw, uint32_t bytesPerCluster) {
 /*! The bytes of a file of the exhibit store, by its path on the examined machine.
  *  @param key the path, as the store's index holds it
  *  @param bytes receives the content
- *  @return false if the store has no such file */
+ *  @return false if the store has no such file, or it is unreadable or too large */
 bool readExhibit(const std::wstring& key, std::vector<uint8_t>& bytes) {
 	const auto& index = ExhibitStoreIndex();
 	const auto found = index.find(toLower(key));
 	if (found == index.end() || found->second.workingFile.empty()) return false;
-	std::ifstream in(std::filesystem::path(found->second.workingFile), std::ios::binary);
-	bytes.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
-	return true;
+	return readWholeFile(std::filesystem::path(found->second.workingFile), EXHIBIT_MAX, bytes);
 }
 
 /*! An integer in upper-case hexadecimal, zero-padded: the form Windows shows serials in.

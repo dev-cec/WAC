@@ -22,7 +22,8 @@
  *  tool, not the collection.
  *
  *  Build (Linux):
- *    g++ -std=c++17 -O2 -I. authenticode.cpp rsa.cpp sha.cpp authenticode_test.cpp
+ *    g++ -std=c++17 -O2 -I. authenticode.cpp rsa.cpp sha.cpp quickdigest5.cpp \
+ *        version_info.cpp pe_resource.cpp authenticode_test.cpp
  */
 #include "authenticode.h"
 #include "rsa.h"

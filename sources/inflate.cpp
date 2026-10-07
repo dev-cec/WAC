@@ -2,6 +2,7 @@
  *  \brief DEFLATE decompression (see inflate.h).
  */
 #include "inflate.h"
+#include "portable_conversions.h"
 #include <cstring>
 
 namespace {
@@ -149,8 +150,8 @@ bool Inflate(const uint8_t* compressed, size_t compressedSize, std::vector<uint8
 			bits.alignToByte();
 			uint8_t header[4];
 			if (!bits.bytes(header, 4)) return false;
-			const unsigned length = header[0] | (header[1] << 8);
-			const unsigned complement = header[2] | (header[3] << 8);
+			const unsigned length = readLittleEndian<uint16_t>(header);
+			const unsigned complement = readLittleEndian<uint16_t>(header + 2);
 			if ((length ^ 0xFFFF) != complement) return false;
 			if (length > maxOutput - (output.size() - base)) return false;
 			const size_t at = output.size();

@@ -1,5 +1,6 @@
-#include "conversions.h"
+#include "portable_conversions.h"
 #include "pe_resource.h"
+#include "whole_file.h"
 #include <fstream>
 #include <cstring>
 #include <filesystem>
@@ -57,13 +58,15 @@ size_t PeResource::offsetDeRva(uint32_t rva) const {
 }
 
 bool PeResource::open(const std::wstring& path) {
-	std::ifstream f(std::filesystem::path(path), std::ios::binary);
-	if (!f) {
+	// A PE image is limited to 4 GiB by its 32-bit offsets; the largest seen are under 2.
+	const uintmax_t PE_FILE_MAX = 2ull * 1024 * 1024 * 1024;
+	std::vector<uint8_t> bytes;
+	if (!readWholeFile(std::filesystem::path(path), PE_FILE_MAX, bytes)) {
 		open_ = false;
 		error_ = L"cannot be opened";
 		return false;
 	}
-	return load(std::vector<uint8_t>((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>()));
+	return load(std::move(bytes));
 }
 
 bool PeResource::load(std::vector<uint8_t> bytes) {

@@ -6,6 +6,9 @@
 #include "consigne.h"
 #include "conversions.h"
 
+//! The largest Prefetch file read: tens of KiB compressed, a few hundred once decompressed.
+const uintmax_t PREFETCH_MAX = 64ull * 1024 * 1024;
+
 /*  WHAT WAS WRONG. The reference was split by hand: the sequence read on FOUR
     bytes at offset 6 — its two bytes plus the first two of whatever followed
     (the next metric entry, or two bytes past the end of the volume's block of
@@ -162,22 +165,11 @@ HRESULT Prefetch::read() {
 	   uncompressed file is enough to corrupt the whole collection.
 	   `data` stays a plain VIEW: it names one buffer or the other without owning
 	   it. */
-	std::unique_ptr<BYTE[]> fileBuffer;      // raw content of the .pf file
-	LPBYTE buffer = NULL;  // view on the raw content
-	std::ifstream file(std::filesystem::path(path), std::ios::binary);
-	if (!file.good()) {
+	std::vector<BYTE> fileBuffer;      // raw content of the .pf file
+	if (!readWholeFile(std::filesystem::path(path), PREFETCH_MAX, fileBuffer) || fileBuffer.size() < 8)
 		return ERROR_FILE_CORRUPT;
-	}
-
-	file.unsetf(std::ios::skipws);
-	file.seekg(0, std::ios::end);
-	const ULONG size = (ULONG)file.tellg();
-	file.seekg(0, std::ios::beg);
-	if (size < 8) return ERROR_FILE_CORRUPT;
-	fileBuffer = std::make_unique<BYTE[]>(size);
-	buffer = fileBuffer.get();
-	file.read(reinterpret_cast<char*>(buffer), size);
-	file.close();
+	const ULONG size = (ULONG)fileBuffer.size();
+	LPBYTE buffer = fileBuffer.data();  // view on the raw content
 
 	// The dates of the file ON THE EXAMINED MACHINE, as the raw reading recorded
 	// them: the working copy's own are those of the collection (ExhibitSourceTimes).

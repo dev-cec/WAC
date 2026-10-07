@@ -39,6 +39,8 @@ const std::vector<IeIndexFolder> IE_INDEX_FOLDERS = {
 	{ L"\\AppData\\Roaming\\Microsoft\\Windows\\Cookies", false },   // its Low subfolder within
 	{ L"\\AppData\\Roaming\\Microsoft\\Windows\\IEDownloadHistory", false } };
 const wchar_t FIREFOX_PROFILES[] = L"\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles";
+const uintmax_t IE_INDEX_MAX = 1024ull * 1024 * 1024;   //!< an index.dat grows to hundreds of MiB at most
+const uintmax_t LOGINS_MAX = 64ull * 1024 * 1024;       //!< logins.json: a few KiB per saved password
 const std::vector<std::wstring> FIREFOX_PROFILE_FILES = {
 	L"places.sqlite", L"formhistory.sqlite", L"cookies.sqlite", L"permissions.sqlite", L"logins.json",
 	L"key4.db", L"extensions.json", L"prefs.js", L"sessionstore.jsonlz4" };
@@ -474,8 +476,8 @@ std::wstring ieContainer(const std::wstring& path, bool& weekly) {
 } // namespace
 
 HRESULT readIeIndexDat(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records) {
-	std::ifstream in(std::filesystem::path(file), std::ios::binary);
-	const std::vector<uint8_t> bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+	std::vector<uint8_t> bytes;
+	if (!readWholeFile(std::filesystem::path(file), IE_INDEX_MAX, bytes)) return HRESULT_FROM_WIN32(ERROR_READ_FAULT);
 	IeIndexFile index;
 	if (!parseIeIndexDat(bytes.data(), bytes.size(), index)) return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
 	bool weekly = false;
@@ -814,9 +816,9 @@ HRESULT WebClient::getData() {
 			}
 			if (std::filesystem::is_regular_file(logins, ec)) {
 				base.source = originalPath(logins.wstring());
-				std::ifstream in(logins, std::ios::binary);
-				const std::string bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-				readFirefoxLogins(decodeText(bytes, CP_UTF8), base, records_);
+				std::string bytes;
+				if (readWholeFile(logins, LOGINS_MAX, bytes)) readFirefoxLogins(decodeText(bytes, CP_UTF8), base, records_);
+				else log(2, L"🔥logins.json unreadable or larger than 64 MiB: " + base.source);
 			}
 		}
 	}

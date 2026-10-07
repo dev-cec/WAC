@@ -4,6 +4,9 @@
 #include "recent_docs.h"
 #include "consigne.h"
 
+//! The largest shortcut read: a few KiB, its extra data blocks included.
+const uintmax_t SHORTCUT_MAX = 16ull * 1024 * 1024;
+
 namespace {
 
 /*! Reads a StringData field of a .lnk shortcut.
@@ -346,18 +349,11 @@ RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 	log(2, L"❇️RecentDoc path " + path_original);
 	target = L"";
 	if (_path.extension() == ".lnk" || _path.extension() == ".LNK") {
-		std::ifstream file(_path, std::ios::binary);
-		if (file.good())
+		std::vector<BYTE> content;
+		if (readWholeFile(_path, SHORTCUT_MAX, content))
 		{
-			file.unsetf(std::ios::skipws);
-			file.seekg(0, std::ios::end);
-			const size_t size = file.tellg();
-			file.seekg(0, std::ios::beg);
-
-			std::vector<BYTE> content(size);
+			const size_t size = content.size();
 			LPBYTE buffer = content.data();
-			file.read(reinterpret_cast<CHAR*>(buffer), size);
-			file.close();
 			if (conf.binary) {
 				log(3, L"🔈fileToHash md5Source " + _path.wstring());
 				md5Source = QuickDigest5::fileToHash(_path);

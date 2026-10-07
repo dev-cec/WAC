@@ -6,6 +6,7 @@
  */
 #include "conversions.h"
 #include "hive_recover.h"
+#include "whole_file.h"
 #include <fstream>
 #include <vector>
 #include <cstring>
@@ -15,6 +16,8 @@
 namespace {
 
 constexpr size_t BASE_BLOCK = 4096;   // size of a hive's base block
+// A transaction log holds dirty pages of its hive, which stays under 2 GiB.
+constexpr uintmax_t LOG_MAX = 2ull * 1024 * 1024 * 1024;
 constexpr size_t OFF_PRIMARY   = 0x04;
 constexpr size_t OFF_SECONDARY = 0x08;
 constexpr size_t OFF_FILETYPE  = 0x1C;  // 0 = primary hive, 6 = log
@@ -164,10 +167,8 @@ std::vector<ReadEntry> readString(const std::filesystem::path& log,
     std::vector<ReadEntry> string;
     std::error_code ec;
     if (!std::filesystem::exists(log, ec)) return string;
-    std::ifstream f(log, std::ios::binary);
-    if (!f) return string;
-    std::vector<uint8_t> d((std::istreambuf_iterator<char>(f)),
-                            std::istreambuf_iterator<char>());
+    std::vector<uint8_t> d;
+    if (!readWholeFile(log, LOG_MAX, d)) return string;
     if (d.size() < LOG_HEADER || std::memcmp(d.data(), "regf", 4) != 0) return string;
 
     size_t off = LOG_HEADER;

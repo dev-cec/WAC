@@ -4,6 +4,7 @@
 #include "conversions.h"
 #include "cim_repository.h"
 #include "sha.h"
+#include "whole_file.h"
 #include <algorithm>
 #include <cstring>
 #include <cwctype>
@@ -131,17 +132,6 @@ bool defaultValue(const std::vector<const CimClass*>& chain, const CimProperty& 
 		return decodeValue(chain[level]->heap, p.type, p.array, defaults.data() + at, out);
 	}
 	return false;
-}
-
-//! Reads a whole file, up to a bound.
-bool readAll(const std::wstring& path, size_t maximum, std::vector<uint8_t>& out) {
-	std::error_code ec;
-	const uintmax_t size = std::filesystem::file_size(path, ec);
-	if (ec || size > maximum) return false;
-	out.resize((size_t)size);
-	std::ifstream in(std::filesystem::path(path), std::ios::binary);
-	in.read(reinterpret_cast<char*>(out.data()), (std::streamsize)out.size());
-	return in.gcount() == (std::streamsize)out.size();
 }
 
 //! "NS_<hash>" of a namespace.
@@ -291,7 +281,7 @@ HRESULT CimRepository::open(const std::wstring& index, const std::wstring& objec
 	for (const std::wstring& path : mappings) {
 		std::vector<uint8_t> file;
 		CimMapping data, idx;
-		if (!readAll(path, RECORD_MAX, file) || file.size() < 8 || !parseCimMappings(file, data, idx)) continue;
+		if (!readWholeFile(std::filesystem::path(path), RECORD_MAX, file) || file.size() < 8 || !parseCimMappings(file, data, idx)) continue;
 		const uint32_t version = readLittleEndian<uint32_t>(file.data() + 4);
 		if (found && version <= best) continue;
 		best = version;

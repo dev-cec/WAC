@@ -13,24 +13,11 @@ namespace {
 
 const size_t SET_FILE_MAX = 256u << 20;   //!< beyond: refused, the largest file of a set is ~33 MiB
 
-/*! Reads a file of the set, bounded.
- *  @return false if absent, unreadable, or larger than allowed */
-bool readSetFile(const std::filesystem::path& path, std::vector<uint8_t>& bytes) {
-	std::error_code ec;
-	const uintmax_t size = std::filesystem::file_size(path, ec);
-	if (ec || size > SET_FILE_MAX) return false;
-	std::ifstream in(path, std::ios::binary);
-	bytes.resize((size_t)size);
-	in.read((char*)bytes.data(), (std::streamsize)size);
-	return (bool)in;
-}
-
 //! A file of the set, read as UTF-8 JSON. @return false if it is not
 bool readSetJson(const std::filesystem::path& path, Json& value) {
-	std::vector<uint8_t> bytes;
+	std::string text;
 	std::wstring error;
-	return readSetFile(path, bytes)
-	    && Json::parse(decodeText(std::string(bytes.begin(), bytes.end()), CP_UTF8), value, error);
+	return readWholeFile(path, SET_FILE_MAX, text) && Json::parse(decodeText(text, CP_UTF8), value, error);
 }
 
 //! The text of a member, or "" if absent.
@@ -56,7 +43,7 @@ bool checkFiles(const std::filesystem::path& folder, const Json& manifest, std::
 			return false;
 		}
 		std::vector<uint8_t> bytes;
-		if (!readSetFile(folder / path, bytes)) { reason = "file missing: " + encodeText(path); return false; }
+		if (!readWholeFile(folder / path, SET_FILE_MAX, bytes)) { reason = "file missing: " + encodeText(path); return false; }
 		uint8_t digest[32];
 		sha256Bytes(bytes.data(), bytes.size(), digest);
 		if (toHexadecimal(digest, sizeof(digest)) != textOf(file, L"SHA256")) {
@@ -72,10 +59,10 @@ bool checkFiles(const std::filesystem::path& folder, const Json& manifest, std::
  *  @return false with `reason` otherwise */
 bool loadLists(const std::filesystem::path& folder, TrustSet& set) {
 	std::vector<uint8_t> bytes;
-	if (!readSetFile(folder / "authroot.stl", bytes)) { set.reason = "authroot.stl missing"; return false; }
+	if (!readWholeFile(folder / "authroot.stl", SET_FILE_MAX, bytes)) { set.reason = "authroot.stl missing"; return false; }
 	set.roots = ReadTrustList(bytes.data(), bytes.size());
 	if (!set.roots.valid || set.roots.identifier != 3) { set.reason = "authroot.stl refused: " + set.roots.reason; return false; }
-	if (!readSetFile(folder / "disallowedcert.stl", bytes)) { set.reason = "disallowedcert.stl missing"; return false; }
+	if (!readWholeFile(folder / "disallowedcert.stl", SET_FILE_MAX, bytes)) { set.reason = "disallowedcert.stl missing"; return false; }
 	set.disallowed = ReadTrustList(bytes.data(), bytes.size());
 	if (!set.disallowed.valid || set.disallowed.identifier != 15) {
 		set.reason = "disallowedcert.stl refused: " + set.disallowed.reason;
@@ -84,7 +71,7 @@ bool loadLists(const std::filesystem::path& folder, TrustSet& set) {
 	for (const TrustListEntry& entry : set.roots.entries) {
 		const std::wstring name = toHexadecimal((const uint8_t*)entry.identifier.data(), entry.identifier.size());
 		// A root --update-trust could not obtain is absent: a chain to it cannot be cleared.
-		if (!readSetFile(folder / "roots" / (name + L".crt"), bytes)) continue;
+		if (!readWholeFile(folder / "roots" / (name + L".crt"), SET_FILE_MAX, bytes)) continue;
 		if (FindInTrustList(set.roots, bytes.data(), bytes.size()) != &entry) {
 			set.reason = "root certificate not the one authroot.stl names: " + encodeText(name);
 			return false;
@@ -113,7 +100,7 @@ bool loadUnsignedLists(const std::filesystem::path& folder, TrustSet& set) {
 		for (const auto& [unused, crl] : crls->members()) {
 			const std::string url = encodeText(textOf(crl, L"Url"));
 			std::vector<uint8_t> bytes;
-			if (!readSetFile(folder / textOf(crl, L"File"), bytes)) { set.reason = "revocation list missing: " + url; return false; }
+			if (!readWholeFile(folder / textOf(crl, L"File"), SET_FILE_MAX, bytes)) { set.reason = "revocation list missing: " + url; return false; }
 			set.revocationLists.byUrl[url] = std::move(bytes);
 			if (const Json* issuers = crl.find(L"IssuedBy"))
 				for (const auto& [unused2, issuer] : issuers->members())
@@ -143,7 +130,7 @@ TrustSet LoadTrustSet(const std::wstring& folder) {
 	set.folder = folder;
 	const std::filesystem::path root(folder);
 	std::vector<uint8_t> manifestBytes;
-	if (!readSetFile(root / "trust-manifest.json", manifestBytes)) {
+	if (!readWholeFile(root / "trust-manifest.json", SET_FILE_MAX, manifestBytes)) {
 		set.reason = "absent: --update-trust was not run before the collection, or did not complete";
 		return set;
 	}

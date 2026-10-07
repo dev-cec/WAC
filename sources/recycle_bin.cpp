@@ -33,8 +33,7 @@ bool parseRecycleBinIndex(const std::vector<uint8_t>& bytes, RecycledFile& recyc
 	}
 	if (recycled.version == 2) {
 		if (bytes.size() < V2_PATH_OFFSET) return false;
-		const uint32_t announced = (uint32_t)(bytes[V2_LENGTH_OFFSET] | (bytes[V2_LENGTH_OFFSET + 1] << 8)
-		                           | (bytes[V2_LENGTH_OFFSET + 2] << 16) | ((uint32_t)bytes[V2_LENGTH_OFFSET + 3] << 24));
+		const uint32_t announced = readLittleEndian<uint32_t>(bytes, V2_LENGTH_OFFSET);
 		// The length is the file's word: bounded by what the file really holds.
 		const size_t available = (bytes.size() - V2_PATH_OFFSET) / 2;
 		const size_t characters = announced < available ? announced : available;
@@ -65,14 +64,11 @@ HRESULT RecycleBin::getData() {
 		const std::filesystem::path source(exhibit.sourcePath);
 		const std::wstring name = source.filename().wstring();
 		if (name.size() < 3 || (name.compare(0, 2, L"$I") != 0 && name.compare(0, 2, L"$i") != 0)) continue;
-		std::error_code ec;
-		const uintmax_t size = std::filesystem::file_size(exhibit.workingFile, ec);
-		if (ec || size > INDEX_MAX) {
+		std::vector<uint8_t> bytes;
+		if (!readWholeFile(std::filesystem::path(exhibit.workingFile), INDEX_MAX, bytes)) {
 			log(2, L"🔥Recycle bin index not read (unreadable or too large): " + exhibit.sourcePath);
 			continue;
 		}
-		std::ifstream in(std::filesystem::path(exhibit.workingFile), std::ios::binary);
-		const std::vector<uint8_t> bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 		RecycledFile recycled;
 		recycled.indexFile = exhibit.sourcePath;
 		recycled.sid = source.parent_path().filename().wstring();

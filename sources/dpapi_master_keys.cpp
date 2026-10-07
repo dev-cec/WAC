@@ -20,6 +20,7 @@ const size_t MK_POLICY = 0x5C;           //!< uint32
 const size_t MK_MASTER_KEY_LENGTH = 0x60;  //!< uint64, then backup, CREDHIST, domain key
 const size_t MK_HEADER_SIZE = 0x80;
 const size_t PREFERRED_SIZE = 24;        //!< GUID (16), then the expiry FILETIME (8)
+const uintmax_t KEY_FILE_MAX = 1024 * 1024;  //!< a key file is under 1 KiB, Preferred 24 bytes
 
 /*! Whether a file name is a key's: a GUID of 36 characters, 8-4-4-4-12.
  *  @param name the file name
@@ -33,12 +34,6 @@ bool isKeyFileName(const std::wstring& name) {
 	return true;
 }
 
-//! @return the content of a file of the working copy, empty if unreadable
-std::vector<uint8_t> readFile(const std::filesystem::path& file) {
-	std::ifstream in(file, std::ios::binary);
-	return std::vector<uint8_t>(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
-}
-
 /*! Reads one Protect\\<SID> folder of the working copy: its key files, and
  *  which of them `Preferred` names.
  *  @param folder the folder, in the working copy
@@ -49,8 +44,8 @@ void readSidFolder(const std::filesystem::path& folder, const std::wstring& scop
                    std::vector<DpapiMasterKey>& keys) {
 	std::wstring preferredGuid;
 	FILETIME preferredExpires = { 0 };
-	const std::vector<uint8_t> preferred = readFile(folder / L"Preferred");
-	if (!preferred.empty() && !parseDpapiPreferred(preferred.data(), preferred.size(), preferredGuid, preferredExpires))
+	std::vector<uint8_t> preferred;
+	if (readWholeFile(folder / L"Preferred", KEY_FILE_MAX, preferred) && !preferred.empty() && !parseDpapiPreferred(preferred.data(), preferred.size(), preferredGuid, preferredExpires))
 		log(2, L"🔥DPAPI: Preferred of " + sid + L" is not 24 bytes long");
 	const size_t first = keys.size();
 	std::error_code ec;
@@ -62,9 +57,9 @@ void readSidFolder(const std::filesystem::path& folder, const std::wstring& scop
 		key.sid = sid;
 		key.path = originalPath(e.path().wstring());
 		ExhibitSourceTimes(e.path().wstring(), key.sourceCreatedUtc, key.sourceModifiedUtc, key.sourceAccessedUtc);
-		const std::vector<uint8_t> bytes = readFile(e.path());
+		std::vector<uint8_t> bytes;
 		DpapiMasterKeyHeader header;
-		if (!parseDpapiMasterKeyHeader(bytes.data(), bytes.size(), header))
+		if (!readWholeFile(e.path(), KEY_FILE_MAX, bytes) || !parseDpapiMasterKeyHeader(bytes.data(), bytes.size(), header))
 			log(2, L"🔥DPAPI: unreadable header in " + key.path);
 		else if (toLower(header.guid) != toLower(name))
 			log(2, L"🔥DPAPI: " + key.path + L" names another key in its header (" + header.guid + L")");

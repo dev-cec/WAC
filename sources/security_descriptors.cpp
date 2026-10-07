@@ -11,6 +11,7 @@
 namespace {
 
 const size_t SDS_BLOCK = 0x40000;        //!< 256 KiB: a block of $SDS, then its mirror
+const uintmax_t SDS_MAX = 4ull * 1024 * 1024 * 1024;  //!< tens of MiB on a workstation, more on a file server
 const size_t SDS_ENTRY_HEADER = 20;      //!< hash, SecurityId, offset, length
 const size_t SDS_ALIGNMENT = 16;         //!< entries start on 16 bytes
 
@@ -78,8 +79,11 @@ HRESULT SecurityDescriptors::getData() {
 			log(2, L"🔥$SDS not collected for " + volume);
 			continue;
 		}
-		std::ifstream in(std::filesystem::path(found->second.workingFile), std::ios::binary);
-		const std::vector<uint8_t> stream((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+		std::vector<uint8_t> stream;
+		if (!readWholeFile(std::filesystem::path(found->second.workingFile), SDS_MAX, stream)) {
+			log(2, L"🔥$SDS unreadable or larger than 4 GiB for " + volume);
+			continue;
+		}
 		std::vector<SecurityDescriptorEntry> entries = parseSds(stream.data(), stream.size(), volume);
 		log(2, L"❇️" + volume + L" : " + std::to_wstring(entries.size()) + L" descriptor(s)");
 		for (SecurityDescriptorEntry& e : entries) entries_.push_back(std::move(e));

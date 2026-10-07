@@ -120,9 +120,9 @@ HRESULT Thumbcaches::getData() {
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
 		const std::wstring sid = std::get<0>(profileEntry), profile = std::get<1>(profileEntry);
 		for (const std::filesystem::path& path : listFilesByExtension(extractedPath(profile + THUMBCACHE_FOLDER), { L".db" })) {
-			const std::vector<uint8_t> bytes = readWorkingFile(path, FILE_MAX);
+			std::vector<uint8_t> bytes;
 			ThumbcacheFile cache;
-			if (!decodeThumbcache(bytes, cache)) continue;   // the index (IMMM), or a Vista/7 layout
+			if (!readWholeFile(path, FILE_MAX, bytes) || !decodeThumbcache(bytes, cache)) continue;   // the index (IMMM), or a Vista/7 layout
 			const std::wstring source = originalPath(path.wstring());
 			const std::wstring folder = L"thumbcache\\" + sid + L"\\" + path.filename().wstring();
 			std::error_code ec;

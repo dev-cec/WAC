@@ -17,6 +17,7 @@ const size_t RECORD_LENGTH = 0x00;        //!< uint32 length of the record, name
 const size_t RECORD_MAJOR = 0x04;         //!< uint16 version: 2, 3 or 4
 const size_t V2_MINIMUM = 0x3C, V3_MINIMUM = 0x4C;   //!< length of the fixed part
 const size_t ALIGNMENT = 8;               //!< every record starts on an 8-byte boundary
+const uintmax_t JOURNAL_MAX = 16ull * 1024 * 1024 * 1024;   //!< its maximum size is set per volume: 32 MiB by default, GiB on a server
 
 /*! USN_REASON_*: a FIELD OF BITS — a record gathers every change made to the
  *  file since it was opened, until it is closed (CLOSE). Each bit is named;
@@ -126,13 +127,8 @@ HRESULT UsnJournal::getData(const std::wstring& volume) {
 	/* Read in one block, at the file's size: the journal's allocated part
 	   weighs tens to hundreds of megabytes on a busy machine, which a byte-wise
 	   stream iterator reads slowly. */
-	std::error_code ec;
-	const uintmax_t size = std::filesystem::file_size(std::filesystem::path(found->second.workingFile), ec);
-	if (ec) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-	std::ifstream in(std::filesystem::path(found->second.workingFile), std::ios::binary);
-	if (!in) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-	std::vector<uint8_t> data((size_t)size);
-	if (!in.read(reinterpret_cast<char*>(data.data()), (std::streamsize)data.size()))
+	std::vector<uint8_t> data;
+	if (!readWholeFile(std::filesystem::path(found->second.workingFile), JOURNAL_MAX, data))
 		return HRESULT_FROM_WIN32(ERROR_READ_FAULT);
 	const uint64_t base = found->second.leadingSparseBytes;
 	for (size_t pos = 0; pos + V2_MINIMUM <= data.size();) {

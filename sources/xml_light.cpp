@@ -12,6 +12,7 @@ namespace {
 
 //! Maximum depth: a guard against a document forged with extreme nesting.
 constexpr unsigned MAX_DEPTH = 64;
+constexpr uintmax_t XML_FILE_MAX = 64ull * 1024 * 1024;   //!< a task definition is a few KiB
 
 //! Strips the spaces, tabulations and line breaks at both edges.
 std::wstring trim(const std::wstring& s) {
@@ -210,11 +211,8 @@ std::unique_ptr<XmlNode> xmlParse(const std::wstring& content, bool keepText) {
 }
 
 std::unique_ptr<XmlNode> xmlReadFile(const std::wstring& path) {
-	std::ifstream f(std::filesystem::path(path), std::ios::binary);
-	if (!f) return nullptr;
-	const std::string bytes((std::istreambuf_iterator<char>(f)),
-	                          std::istreambuf_iterator<char>());
-	if (bytes.empty()) return nullptr;
+	std::string bytes;
+	if (!readWholeFile(std::filesystem::path(path), XML_FILE_MAX, bytes) || bytes.empty()) return nullptr;
 
 	// UTF-16LE with a BOM: the format the task scheduler writes.
 	if (bytes.size() >= 2 && (unsigned char)bytes[0] == 0xFF

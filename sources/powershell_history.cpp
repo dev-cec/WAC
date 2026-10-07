@@ -80,16 +80,9 @@ HRESULT PowerShellHistories::getData() {
 			const std::wstring name = file.filename().wstring();
 			const size_t suffix = name.size() >= wcslen(HISTORY_SUFFIX) ? name.size() - wcslen(HISTORY_SUFFIX) : std::wstring::npos;
 			if (suffix == std::wstring::npos || toLower(name.substr(suffix)) != HISTORY_SUFFIX) continue;
-			std::error_code ec;
-			const uintmax_t size = std::filesystem::file_size(file, ec);
-			if (ec || size > HISTORY_MAX) {
+			std::string bytes;
+			if (!readWholeFile(file, HISTORY_MAX, bytes)) {
 				log(2, L"🔥PowerShell history not read (unreadable or larger than 64 MiB): " + file.wstring());
-				continue;
-			}
-			std::ifstream in(file, std::ios::binary);
-			const std::string bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-			if (!in && !in.eof()) {
-				log(2, L"🔥PowerShell history unreadable: " + file.wstring());
 				continue;
 			}
 			PowerShellHistory history;

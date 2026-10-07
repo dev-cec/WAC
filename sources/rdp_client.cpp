@@ -142,8 +142,8 @@ HRESULT RdpClient::getData() {
 		const std::wstring sid = std::get<0>(profileEntry), profile = std::get<1>(profileEntry);
 		// The connection files of the profile's Documents, Default.rdp among them.
 		for (const std::filesystem::path& file : listFilesByExtension(extractedPath(profile + L"\\Documents"), { L".rdp" })) {
-			const std::vector<uint8_t> bytes = readWorkingFile(file, FILE_MAX);
-			if (bytes.empty()) continue;
+			std::vector<uint8_t> bytes;
+			if (!readWholeFile(file, FILE_MAX, bytes) || bytes.empty()) continue;
 			// mstsc writes them in UTF-16 with a byte-order mark; a hand-made one may be in ANSI.
 			const bool utf16 = bytes.size() >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE;
 			std::wstring text;
@@ -162,7 +162,11 @@ HRESULT RdpClient::getData() {
 		}
 		// The bitmap caches, each tile exported as an image next to the JSON.
 		for (const std::filesystem::path& file : listFilesByExtension(extractedPath(profile + RDP_CACHE_FOLDER), { L".bin" })) {
-			const std::vector<uint8_t> bytes = readWorkingFile(file, FILE_MAX);
+			std::vector<uint8_t> bytes;
+			if (!readWholeFile(file, FILE_MAX, bytes)) {
+				log(2, L"🔥RDP bitmap cache unreadable or too large: " + file.wstring());
+				continue;
+			}
 			uint32_t version = 0;
 			std::vector<RdpCacheTile> tiles;
 			if (!decodeRdpBitmapCache(bytes, version, tiles)) {
