@@ -35,3 +35,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-07 : ouverte sur le ❌ du cycle de B-042 ; contenu de la pièce vérifié (`hbin` en tête, SHA-256 24754FD5… identique au manifeste).
 - 2026-10-07 : correctif écrit et compilé sans avertissement, test vu échouer sur l'ancien binaire ; non commité. Reste : guide des tests et dossier de validation FR + EN, cycle complet.
 - 2026-10-07 : **Close**. Cycle complet vert (452 ✅). Commit : afeb9d7.
+- 2026-10-07 : note — les binaires corrigés (bin/) sont partis dans le commit de fiche 8acdaf1 (build-windows.sh les met dans l'index) ; afeb9d7 porte le code. Historique non réécrit ; les commits de fiche se font désormais par chemin.
