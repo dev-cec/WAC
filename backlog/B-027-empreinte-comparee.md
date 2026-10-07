@@ -18,7 +18,11 @@ Chaque exécution depuis un support externe, comme sur le terrain.
 Rapport `doc/footprint/` (FR + EN) : par outil, chaque trace laissée, sa nature (fichier, clé, événement, entrée d'artefact) et sa gravité pour l'analyse. Tableau comparatif. Script de différence rejouable dans `vmtest/`.
 
 ## Référence indépendante
-La différence entre l'instantané avant et l'état après, lue HORS de la VM (image disque montée en lecture seule sur l'hôte) : $MFT et journal USN comparés, ruches comparées clé par clé, journaux d'événements comparés. Option : Sysmon (configuration complète : processus, fichiers, registre, pilotes) et politique d'audit étendue (création de processus avec ligne de commande, accès aux objets, registre) activés dans l'instantané de départ — ils nomment l'auteur de chaque trace.
+**Le journal des modifications (USN) borné**, source principale pour les fichiers (décision utilisateur 2026-10-07) : numéro USN courant relevé juste avant l'outil, puis lecture des enregistrements depuis ce numéro jusqu'à la fin de l'outil. Il liste chaque fichier créé, modifié, renommé ou supprimé, avec sa date et sa raison — y compris ceux créés puis supprimés pendant l'exécution, qu'une différence de $MFT avant/après manquerait. La lecture peut se faire dans la VM : ce qu'elle écrit porte des USN postérieurs à la borne de fin. WAC décode déjà ce journal (`usn_journal.json`).
+Ce que l'USN ne dit pas, et qui le complète :
+- **l'auteur** : Windows écrit en permanence (indexation, Defender, SRUM). **Sysmon** (processus, fichiers, registre, pilotes) dans l'instantané de départ attribue chaque écriture à un processus ;
+- **le contenu** d'une ruche ou d'un journal d'événements : l'USN dit que `NTUSER.DAT`, `Amcache.hve` ou `Security.evtx` ont changé, pas quelle clé (BAM, ShimCache, UserAssist) ni quel événement (4688, 7045). Différence ciblée sur les seules ruches et journaux que l'USN désigne, clé par clé et événement par événement.
+Ce choix remplace la différence complète hors VM (image montée, $MFT comparée en entier), plus lourde.
 
 ## Critères d'acceptation
 En plus de la définition de « fini » commune (backlog/README.md) :
@@ -27,13 +31,14 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Le dossier d'innocuité (FR + EN) mis à jour avec la comparaison.
 
 ## Tâches
-- [ ] Instantané de référence de la VM (avec et sans Sysmon et audit)
+- [ ] Instantané de référence de la VM, avec Sysmon
 - [x] Obtenir KAPE : fourni par l'utilisateur, `vmtest/kape.zip` (exclu du dépôt)
 - [ ] Outils EZ (.NET) dans la VM
-- [ ] Script de différence hors VM : image montée en lecture seule, $MFT/USN, ruches, journaux
+- [ ] Script : USN borné (avant/après l'outil), attribution Sysmon, différence ciblée des ruches et journaux désignés
 - [ ] Une exécution par outil, chacune depuis l'instantané
 - [ ] Rapport comparatif FR + EN
 
 ## Journal
 - 2026-09-30 : demande utilisateur — dernière tâche, comparaison WAC / KAPE / EZ sous bac à sable ; Sysmon et audit en option.
 - Lien : B-015 compare le contenu prélevé ; B-027 compare les traces laissées.
+- 2026-10-07 : méthode révisée sur proposition de l'utilisateur — USN borné comme source des fichiers, Sysmon pour l'auteur, différence ciblée des ruches et journaux ; plus de montage d'image ni de différence complète de la $MFT.
