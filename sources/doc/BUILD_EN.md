@@ -17,14 +17,51 @@ unnoticed.
 sudo apt-get install -y g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-tools
 ```
 
-**Windows**: install MSYS2 (https://www.msys2.org), open the **MSYS2 MINGW64**
-shell (not UCRT64: its runtime would change `WAC.exe`'s imports), then:
-```bash
-pacman -S --needed mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils libiconv git
+**Windows** — optional: the `WAC.exe` published in `bin/` is the Linux
+build's, and that is the one to download. To build on Windows anyway, two
+installations:
+
+1. **Git for Windows** (https://git-scm.com), needed anyway to clone the
+   repository: it also brings the bash and the Unix tools (`sed`, `grep`,
+   `tar`, `sha256sum`…) `build-windows.sh` needs. The repository keeps its
+   `.sh` scripts with LF line endings (`.gitattributes`), even with Git for
+   Windows' default setting (`core.autocrlf=true`).
+2. **The MinGW-Builds compiler** (niXman's project):
+   `x86_64-13.2.0-release-win32-seh-msvcrt-rt_v11-rev1.7z`
+   (https://github.com/niXman/mingw-builds-binaries/releases, release
+   `13.2.0-rt_v11-rev1`), unpacked with 7-Zip into `C:\mingw-win32` — or
+   elsewhere, naming the folder in the `WAC_MINGW` variable. It is exactly
+   Debian's toolchain: GCC 13.2.0, MinGW-w64 v11, **win32** threads,
+   **msvcrt** runtime. No checksum is published; the one recorded for WAC is
+   `15b914f38f2f2e2d6f7b9b8425ff22b7e406878b01920190b09ce0dd8259c6aa`.
+
+Then, at the root of the repository, from `cmd`, PowerShell or a
+double-click:
 ```
+build-windows.cmd            :: or build-windows.cmd --test
+```
+`build-windows.cmd` only puts MinGW-Builds' compiler first in the path and
+runs `build-windows.sh` in Git's bash: the build procedure stays one.
+
+**Why this compiler and not another** — MSYS2's, for instance. The latter's
+*thread model* is "posix": it links winpthreads
+into `WAC.exe`, and with it **38 imports** WAC never calls but its import
+table shows — `SetSystemTime`, `SetThreadContext`, `SuspendThread`,
+`TerminateProcess`, `OpenProcess`, `SetProcessAffinityMask`… An analysis or
+defence tool sees them: a wider footprint than the harmlessness file
+describes, and names that draw attention on the examined machine. With
+"win32" threads (Windows' own threads) those imports are gone: measured on
+Windows, the same six DLLs as the Linux build, and eight msvcrt input/output
+functions of difference (`_exit` on one side, `fgetpos`, `fsetpos`, `getwc`,
+`putc`, `putwc`, `ungetwc`, `_filelengthi64` on the other). "win32" is the
+thread model's name, not an architecture: the program is x86_64 either way.
+The **msvcrt** runtime matters too: UCRT64 would change the imported DLLs
+(`api-ms-win-crt-*`). `build-windows.sh` refuses any compiler whose thread
+model is not "win32".
 
 ## Building
-From the root of the repository, in the Linux or MSYS2 MINGW64 shell:
+From the root of the repository, on Linux (on Windows: `build-windows.cmd`,
+same options):
 ```bash
 ./build-windows.sh            # incremental
 ./build-windows.sh --clean    # from scratch
@@ -33,18 +70,21 @@ From the root of the repository, in the Linux or MSYS2 MINGW64 shell:
 ```
 
 The script picks the toolchain by the system — the compiler prefixed
-`x86_64-w64-mingw32-` on Linux, MSYS2's on Windows — and checks that it does
-produce 64-bit Windows programs (`-dumpmachine`). Never by fallback: on Linux,
-an unprefixed `g++` would produce a Linux program.
+`x86_64-w64-mingw32-` on Linux, the `g++` of the path on Windows — and checks
+that it does produce 64-bit Windows programs (`-dumpmachine`) with "win32"
+threads (`-v`). Never by fallback: on Linux, an unprefixed `g++` would produce
+a Linux program.
 
 The build is reproducible for a given GCC version: the same sources give the
-same `WAC.exe`, byte for byte. Two different GCC versions (the Linux
-distribution's and MSYS2's) may give two different executables, both correct:
+same `WAC.exe`, byte for byte. Two different GCC versions, or two builds of
+the same one (Debian's and MinGW-Builds'), may give two different
+executables, both correct:
 `bin/SHA256SUMS`, produced by the delivered build, is the reference.
 
 ## What the script does
-1. Converts `WAC.rc` (UTF-16) to UTF-8 for `windres`, normalises its paths
-   (icon) and compiles the resource (version, icon, reference `wac.yml`).
+1. Compiles the resource (version, icon, reference `wac.yml`): `WAC.rc`, in
+   UTF-8, given to `windres` as code page 65001, its line ends and the icon's
+   path normalised.
 2. Compiles every translation unit found in `sources/` (except `*_test.cpp`)
    with a **force-included compatibility header**.
 3. Compiles libyaml (reading of `wac.yml`) and SQLite (the browsers' databases), see below, as C.
@@ -78,5 +118,5 @@ the command line are handled by WAC itself, checked against Windows by
 `system_conversions_test`). The full list of imported functions, and what it
 proves, is in the harmlessness file. Check with:
 ```bash
-x86_64-w64-mingw32-objdump -p build-windows/WAC.exe | grep "DLL Name"   # in MSYS2: objdump
+x86_64-w64-mingw32-objdump -p build-windows/WAC.exe | grep "DLL Name"   # on Windows (Git Bash, MinGW-Builds first in the path): objdump
 ```

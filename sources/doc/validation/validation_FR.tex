@@ -926,10 +926,13 @@ qu'ils visent sont absents, sur les données qu'ils ont vues.
     fuseaux dont les règles concordent avec celles de Windows sur la période
     vérifiée (Europe de l'Ouest, États-Unis, UTC) ; les autres sont vérifiés
     contre Windows seulement.
-  \item \textbf{Compilation sous Windows} : \fichier{build-windows.sh} tourne
-    aussi dans le shell MSYS2 MINGW64, mais les contrôles portent sur la
-    compilation faite sous Linux, celle qui est livrée ; la compilation MSYS2
-    n'est pas exécutée par le cycle de test.
+  \item \textbf{Compilation sous Windows} : \fichier{build-windows.cmd} lance
+    \fichier{build-windows.sh} dans le bash de Git for Windows, avec le gcc
+    13.2.0 de MinGW-Builds (modèle de fils \og win32 \fg{}, msvcrt). Le cycle
+    complet a été passé une fois avec l'exécutable compilé ainsi, sans écart
+    avec celui compilé sous Linux ; les cycles courants portent sur la
+    compilation Linux, celle qui est livrée. Un gcc au modèle \og posix \fg{}
+    (MSYS2) est refusé : il ajoute 38 importations à \fichier{WAC.exe}.
 \end{itemize}
 
 \end{document}

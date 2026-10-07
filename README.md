@@ -788,8 +788,13 @@ same `WAC.exe`, byte for byte (no link date in the PE header).
 ```
 The same script on both systems: on Linux it cross-compiles
 (`apt install g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-tools`);
-on Windows it runs in the **MSYS2 MINGW64** shell
-(`pacman -S --needed mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils libiconv git`).
+on Windows — optional, the published `WAC.exe` being the Linux build's —
+`build-windows.cmd` runs it in the bash of **Git for Windows** with
+**MinGW-Builds'** gcc 13.2.0 (`win32-seh-msvcrt`), the same toolchain as
+Debian's. Another gcc, MSYS2's for instance, has "posix" threads that add 38
+imports to `WAC.exe` (`SetSystemTime`, `SetThreadContext`, `OpenProcess`…)
+WAC never calls: a wider footprint on the examined machine. The script
+refuses any compiler whose thread model is not "win32".
 The Visual Studio build has been removed: one toolchain, one program to verify.
 Details in `sources/doc/BUILD_EN.md`.
 The C++ runtime is linked statically: the executable depends only on Windows

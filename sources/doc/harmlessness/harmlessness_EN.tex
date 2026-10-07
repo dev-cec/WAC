@@ -304,6 +304,20 @@ break these rules. After the link, it inspects the import table and fails:
         self-contained, so as to drop nothing beside it.
 \end{itemize}
 
+Before even building, it refuses a compiler whose \emph{thread model} is not
+``win32''. A gcc with ``posix'' threads — MSYS2's on Windows — links
+winpthreads into \fichier{WAC.exe}, and with it 38 imports \wac{} never
+calls: \texttt{SetSystemTime}, \texttt{SetThreadContext},
+\texttt{SuspendThread}, \texttt{TerminateProcess}, \texttt{OpenProcess},
+\texttt{SetProcessAffinityMask}\ldots{} They change nothing in what \wac{}
+does, but they widen what it \emph{could} ask of the system, and they are
+precisely the names a defence tool or an analyst notices on the examined
+machine. Measured: with Debian's gcc (Linux) or MinGW-Builds' (Windows), both
+with ``win32'' threads and on msvcrt, those imports are absent, and the two
+tables differ only by eight input/output functions of the C library.
+``win32'' names the thread model, not an architecture: \fichier{WAC.exe} is
+x86\_64 either way.
+
 The build is reproducible: the same sources give the same \fichier{WAC.exe},
 byte for byte, and \fichier{SHA256SUMS} attests it.
 

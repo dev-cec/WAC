@@ -311,6 +311,21 @@ imports et échoue :
         suffire, pour ne rien déposer à côté de lui.
 \end{itemize}
 
+Avant même de compiler, il refuse un compilateur dont le \emph{modèle de
+threads} n'est pas « win32 ». Un gcc en threads « posix » — celui de MSYS2
+sous Windows — intègre winpthreads à \fichier{WAC.exe}, et avec lui 38
+imports que \wac{} n'appelle jamais : \texttt{SetSystemTime},
+\texttt{SetThreadContext}, \texttt{SuspendThread},
+\texttt{TerminateProcess}, \texttt{OpenProcess},
+\texttt{SetProcessAffinityMask}\ldots{} Ils ne changent rien à ce que fait
+\wac{}, mais ils élargissent ce qu'il \emph{pourrait} demander au système, et
+ce sont précisément les noms qu'un outil de défense ou un analyste remarque
+sur la machine examinée. Mesuré : avec le gcc de Debian (Linux) ou celui de
+MinGW-Builds (Windows), tous deux en threads « win32 » et sur msvcrt, ces
+imports sont absents, et les deux tables ne diffèrent que de huit fonctions
+d'entrée-sortie de la bibliothèque C. « win32 » nomme le modèle de threads,
+pas une architecture : \fichier{WAC.exe} est x86\_64 dans tous les cas.
+
 La compilation est reproductible : les mêmes sources donnent le même
 \fichier{WAC.exe}, octet pour octet, et \fichier{SHA256SUMS} l'atteste.
 

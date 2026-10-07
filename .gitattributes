@@ -1,0 +1,8 @@
+# Shell scripts keep LF line endings on every checkout: Git for Windows
+# converts text files to CRLF by default (core.autocrlf), and bash refuses a
+# script whose lines end in "\r" — build-windows.sh is run from Git Bash on
+# Windows (sources/doc/BUILD_EN.md, B-024).
+*.sh text eol=lf
+
+# The Windows launcher keeps CRLF, as cmd.exe expects it.
+*.cmd text eol=crlf

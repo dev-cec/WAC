@@ -892,9 +892,13 @@ they target are absent, on the data they have seen.
     the zones whose rules agree with Windows's over the period checked
     (Western Europe, United States, UTC); the others are checked against
     Windows only.
-  \item \textbf{Building on Windows}: \fichier{build-windows.sh} also runs in
-    the MSYS2 MINGW64 shell, but the checks are made on the Linux build, the
-    one delivered; the MSYS2 build is not run by the test cycle.
+  \item \textbf{Building on Windows}: \fichier{build-windows.cmd} runs
+    \fichier{build-windows.sh} in Git for Windows' bash, with MinGW-Builds' gcc
+    13.2.0 (``win32'' thread model, msvcrt). The full cycle was passed once with
+    the executable built this way, with no difference from the Linux build; the
+    routine cycles are made on the Linux build, the one delivered. A gcc with
+    the ``posix'' thread model (MSYS2) is refused: it adds 38 imports to
+    \fichier{WAC.exe}.
 \end{itemize}
 
 \end{document}

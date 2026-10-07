@@ -5,9 +5,10 @@
 #   Linux  : cross-compilation, no Windows machine needed.
 #            Prerequisites: packages  g++-mingw-w64-x86-64  binutils-mingw-w64-x86-64
 #            mingw-w64-tools
-#   Windows: the MSYS2 "MINGW64" shell (https://www.msys2.org).
-#            Prerequisites: pacman -S --needed mingw-w64-x86_64-gcc
-#            mingw-w64-x86_64-binutils libiconv git
+#   Windows: optional — the published WAC.exe is the Linux build's. Through
+#            build-windows.cmd: the bash of Git for Windows, and MinGW-Builds'
+#            gcc 13.2.0 (win32-seh-msvcrt) first in the PATH; not MSYS2's
+#            gcc, whose posix threads add 38 imports (see THREAD MODEL below).
 #
 # Produces a self-contained exe (static C++ runtime) that depends only on the
 # Windows system DLLs. The offline registry reader is WAC's own
@@ -32,8 +33,9 @@ case "$(uname -s)" in
     MISSING="apt install g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-tools" ;;
   MINGW64_NT*)
     TOOL_PREFIX=
-    # iconv is the MINGW64 package's: MSYS2's libiconv holds only the libraries (B-024).
-    MISSING="pacman -S --needed mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils mingw-w64-x86_64-iconv git" ;;
+    # Git Bash (Git for Windows), with MinGW-Builds' compiler — win32 threads,
+    # msvcrt — first in the PATH: build-windows.cmd sets it (sources/doc/BUILD_EN.md, B-024).
+    MISSING="MinGW-Builds x86_64-13.2.0-release-win32-seh-msvcrt first in the PATH (build-windows.cmd, sources/doc/BUILD_EN.md)" ;;
   *)
     echo "Unsupported system $(uname -s): build on Linux, or in the MSYS2 MINGW64 shell on Windows." >&2
     exit 1 ;;
@@ -42,12 +44,22 @@ CXX=${TOOL_PREFIX}g++
 CC=${TOOL_PREFIX}gcc
 WINDRES=${TOOL_PREFIX}windres
 OBJDUMP=${TOOL_PREFIX}objdump
-for tool in "$CXX" "$CC" "$WINDRES" "$OBJDUMP" iconv; do
+for tool in "$CXX" "$CC" "$WINDRES" "$OBJDUMP"; do
   command -v "$tool" >/dev/null || { echo "$tool missing: $MISSING" >&2; exit 1; }
 done
 # The compiler must produce 64-bit Windows programs, whatever the shell.
 [[ "$("$CXX" -dumpmachine)" == x86_64-w64-mingw32 ]] \
   || { echo "$CXX does not target x86_64-w64-mingw32 ($("$CXX" -dumpmachine)): $MISSING" >&2; exit 1; }
+# Its THREAD MODEL must be "win32" — Windows' own threads —, not "posix":
+# a posix gcc (MSYS2's) links winpthreads into WAC.exe, and with it 38
+# imports WAC never calls but its import table shows — SetSystemTime,
+# SetThreadContext, SuspendThread, TerminateProcess, OpenProcess… —, a wider
+# footprint than the harmlessness file states, and one a defender watches
+# (measured, B-024). "win32" has nothing to do with 32 bits: the program is
+# x86_64 either way.
+THREAD_MODEL="$("$CXX" -v 2>&1 | sed -n 's/^Thread model: //p')"
+[[ "$THREAD_MODEL" == win32 ]] \
+  || { echo "$CXX: thread model \"$THREAD_MODEL\", win32 expected (a posix gcc adds 38 imports to WAC.exe): $MISSING" >&2; exit 1; }
 
 [[ "${1:-}" == "--clean" ]] && rm -rf "$BUILD"
 mkdir -p "$BUILD"
@@ -68,9 +80,12 @@ FLAGS=(-std=c++17 -O2
   -Wno-sign-compare -Wno-cast-function-type
   -Wno-unknown-pragmas -Wno-deprecated -Wno-conversion-null)
 
-# --- Resource (VS .rc in UTF-16 -> UTF-8 for windres) ----------------------
+# --- Resource (WAC.rc, UTF-8, read by windres as code page 65001) ----------
+# Kept in UTF-8 since B-024 — it was Visual Studio's UTF-16, which needed
+# iconv. Carriage returns removed (a Windows checkout may add them), backslashes
+# of its paths made forward slashes.
 echo "== Resource =="
-iconv -f UTF-16LE -t UTF-8 "$SRC/WAC.rc" | tr -d '\r' | sed -E 's#\\+#/#g' > "$BUILD/WAC.utf8.rc"
+tr -d '\r' < "$SRC/WAC.rc" | sed -E 's#\\+#/#g' > "$BUILD/WAC.utf8.rc"
 "$WINDRES" -I"$SRC" -I"$TP/compat-include" -c 65001 "$BUILD/WAC.utf8.rc" -O coff -o "$BUILD/WAC_res.o"
 
 # --- libyaml, the reading of wac.yml (third_party/libyaml-0.2.5) -------------

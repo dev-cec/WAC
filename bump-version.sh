@@ -17,11 +17,8 @@ python3 - "$RC" "$1" <<'PY'
 import re, sys
 path, part = sys.argv[1], sys.argv[2]
 try:
-    raw = open(path, 'rb').read()
-    if raw[:2] != b'\xff\xfe':
-        sys.exit("WAC.rc is not UTF-16 LE with its byte order mark: not touched")
-    text = raw[2:].decode('utf-16-le')
-    m = re.search(r' FILEVERSION (\d+),(\d+),(\d+),0\r\n', text)
+    text = open(path, encoding='utf-8', newline='').read()
+    m = re.search(r' FILEVERSION (\d+),(\d+),(\d+),0\r?\n', text)
     if not m:
         sys.exit("FILEVERSION not found in WAC.rc")
     major, minor, bugfix = map(int, m.groups())
@@ -33,7 +30,7 @@ try:
     new, texts = re.subn(r'(VALUE "(?:File|Product)Version", ")[^"]*(")', lambda g: g.group(1) + dotted + g.group(2), new)
     if count != 2 or texts != 2:
         sys.exit(f"WAC.rc: {count} version number(s) and {texts} text(s) found, 2 and 2 expected: not touched")
-    open(path, 'wb').write(b'\xff\xfe' + new.encode('utf-16-le'))
+    open(path, 'w', encoding='utf-8', newline='').write(new)
     print(f"version {dotted}")
 except OSError as e:
     sys.exit(f"WAC.rc not updated: {e}")
