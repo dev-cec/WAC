@@ -112,18 +112,33 @@ def check_configuration(folder):
             wrong.append(f"convert: false, yet converted: {converted[:3]}")
     if settings.get("binary") == "none" and any("--binary" in str(i.get("Method", "")) for i in items):
         wrong.append("binary: none, yet executables collected")
-    rules = [("artefacts.events", lambda p: p.endswith(".evtx")),
-             ("artefacts.prefetch", lambda p: "\\windows\\prefetch\\" in p),
+    rules = [("artefacts.prefetch", lambda p: "\\windows\\prefetch\\" in p),
              ("artefacts.jump_lists", lambda p: "automaticdestinations" in p or "customdestinations" in p),
              ("artefacts.sessions", lambda p: p.startswith("live observation: logon sessions")),
              ("artefacts.network", lambda p: p.startswith("live observation: network state")),
-             ("artefacts.registry", lambda p: p.endswith("\\ntuser.dat"))]
+             ("artefacts.amcache", lambda p: p.endswith("\\amcache.hve")),
+             ("artefacts.registry_backups", lambda p: "\\config\\regback\\" in p)]
     for key, matches in rules:
         present = any(matches(p) for p in paths)
         if settings.get(key) == "false" and present:
             wrong.append(f"{key}: false, yet collected")
         if settings.get(key) == "true" and not present:
             wrong.append(f"{key}: true, yet absent")
+    # Dependencies (B-042): not artefacts, taken when an artefact asked for
+    # reads them — and only then. A key missing from the file is true.
+    def asked(*keys):
+        return any(settings.get("artefacts." + k) != "false" for k in keys)
+    dependencies = [("event logs", lambda p: p.endswith(".evtx"), asked("events", "rdp_server")),
+                    ("user hives", lambda p: p.endswith("\\ntuser.dat"),
+                     asked("muicache", "userassist", "run_keys", "shellbags", "mru", "mru_apps", "persistence",
+                           "office_trust_records", "typed_paths", "word_wheel_query", "root_certificates",
+                           "internet_settings", "installed_programs", "explorer_recent_docs", "mount_points",
+                           "program_usage", "user_shell_folders", "web_client", "rdp_client", "shortcuts"))]
+    for name, matches, needed in dependencies:
+        present = any(matches(p) for p in paths)
+        if present != needed:
+            wrong.append(f"{name}: {'collected' if present else 'absent'} although "
+                         f"{'an' if needed else 'no'} artefact asked for reads them")
     if not items:
         wrong.append("no exhibit store manifest")
     if wrong:
@@ -2699,7 +2714,7 @@ def check_mft_timeline(folder):
         volumes = {volume_of(r) for r in mft if isinstance(r, dict)}
         manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
         items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
-        compared, wrong = 0, []
+        compared, wrong, renamed = 0, [], 0
         for it in items:
             source = str(it.get("SourcePath") or "")
             entry = it.get("MftEntry")
@@ -2709,6 +2724,15 @@ def check_mft_timeline(folder):
                 continue
             r = by_entry.get((source[:2].upper(), entry))
             compared += 1
+            # The same file renamed since the exhibit was taken — same record,
+            # same creation date, another name: ESE rotates its logs by renaming
+            # them (SRU.log -> SRU00B2B.log) while the machine keeps running, and
+            # the $MFT is read later. A record that names ANOTHER file is still a
+            # failure: the exhibit's content may be that file's (B-043).
+            if (r is not None and r.get("CreatedUtc") == created
+                    and source.lower() not in {str(p).lower() for p in [r.get("Path", "")] + (r.get("HardLinkPaths") or [])}):
+                renamed += 1
+                continue
             if r is None:
                 wrong.append((source, "entry %s absent from mft.json" % entry))
             elif source.lower() not in {str(p).lower() for p in [r.get("Path", "")] + (r.get("HardLinkPaths") or [])}:
@@ -2725,8 +2749,9 @@ def check_mft_timeline(folder):
                 print(f"        {src}: {why}")
             found += 1
         else:
-            print(f"  ✅ mft.json: {compared} exhibit(s) with the manifest's path and creation date "
-                  f"({len(mft)} record(s), {deleted} deleted, {linked} with hard links)")
+            print(f"  ✅ mft.json: {compared - renamed} exhibit(s) with the manifest's path and creation date "
+                  f"({len(mft)} record(s), {deleted} deleted, {linked} with hard links"
+                  f"{f'; {renamed} renamed since their exhibit was taken' if renamed else ''})")
 
     usn = load(folder, "usn_journal.json")
     if not isinstance(usn, list) or not usn:
