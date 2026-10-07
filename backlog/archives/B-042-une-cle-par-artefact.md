@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P2 | moyen |
+| fait (8b1deaa) | P2 | moyen |
 
 ## Pourquoi
 Règle de l'utilisateur (2026-10-07) : aucun artefact n'est prélevé systématiquement, chacun a sa clé sous `artefacts:` de `wac.yml`. Les ruches, les catalogues — et les journaux d'événements quand un autre artefact les lit — ne sont pas des artefacts mais des **dépendances**, prélevées dès qu'un artefact demandé en a besoin (comme la $MFT pour `usn_journal` ou `zone_identifiers`). Une clé absente vaut `true` (décision du même jour).
@@ -32,8 +32,8 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] wac.yml livré — c'est aussi celui de --write-config (ressource RCDATA, une seule source) ; config_test adapté (34 contrôles verts, `registry` refusée)
 - [x] Harnais : `wants registry` remplacés par les clés servies (run-wac-test.sh, place-file-artefacts.ps1) ; wac.yml configuré avec amcache et registry_backups à false
 - [x] Contrôle `--configuration` : règles amcache et registry_backups, dépendances (journaux, ruches des utilisateurs) présentes si et seulement si un artefact demandé les lit
-- [ ] Cycle complet — lancé, en cours
-- [ ] Documentation FR + EN (liste des clés, dépendances, wac_version) — non commité à ce stade
+- [x] Cycle complet : 451 ✅ ; collecte configurée conforme (12 réglages, dépendances contrôlées) ; un ❌ étranger à B-042 (B-043)
+- [x] Documentation : manuel FR + EN (liste des clés régénérée du wac.yml, règles « versionné » et « une clé par artefact », --events), README, PDF ; bump-version.sh met à jour wac_version dans les manuels et le README — non commité à ce stade
 - [ ] Documentation FR + EN
 
 ## Journal
@@ -42,3 +42,6 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-07 : en cours — reste : wac.yml livré, wac.yml et `wants registry` du harnais, contrôle `--configuration`, tests, cycle, documentation.
 - 2026-10-07 : demande utilisateur — le wac.yml porte la version de WAC (écrite par --write-config) et un fichier d'une version précédente est refusé : il pourrait manquer de nouvelles options ou réutiliser des options obsolètes. Choix : version identique exigée (majeur.mineure.correctif) ; WAC.rc reste la seule source — `@WAC_VERSION@` dans sources/wac.yml, remplacé par --write-config et par la compilation pour bin/wac.yml ; le harnais écrit la version de WAC.rc dans ses wac.yml. État : code des clés, harnais et contrôle écrits, non commités, non compilés depuis les dernières retouches.
 - 2026-10-07 : tout le code de la fiche écrit, compilé sans avertissement, config_test et file_artefacts_test verts ; rien de commité de ce code. Cycle complet lancé.
+- 2026-10-07 : tri alphabétique fait après le lancement du cycle complet : recompiler (wac.yml intégré) et relancer config_test une fois le cycle fini.
+- 2026-10-07 : cycle complet : 451 ✅, collecte pilotée par un wac.yml versionné conforme. Un ❌ dans la collecte séparée — mft.json contre le manifeste — a révélé un défaut de la lecture brute, sans lien avec cette fiche : B-043. Le contrôle tolère désormais un renommage (ESE fait tourner ses journaux en les renommant) mais pas un enregistrement qui désigne un autre fichier. Recompilé après le tri alphabétique ; config_test 38 et file_artefacts_test 156 verts.
+- 2026-10-07 : **Close**. Commits : b4c6386 (renommage convertArtefact), 8b1deaa (clés, dépendances, version, harnais, documentation), 60441fd (harnais : contrôle --configuration des dépendances et tolérance des renommages — son message attribue à tort le premier au commit précédent ; historique non réécrit).
