@@ -582,22 +582,27 @@ if (Wants 'web_client') {
 $chrome = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
 $firefox = 'C:\Program Files\Mozilla Firefox\firefox.exe'
 $data = "$env:LOCALAPPDATA\Google\Chrome\User Data"
+# A browser closed as a user would, then killed if still there: killed at
+# once, it may not have written its history yet — Chrome's download row left
+# in a pending transaction (History-journal), a headless Firefox's visit
+# never written to places.sqlite (both measured): the file there, the trace
+# absent, and WAC reading the disk right.
+function Close-Browser([string]$name) {
+    Get-Process $name -ErrorAction SilentlyContinue | Where-Object MainWindowHandle -ne 0 | ForEach-Object { $null = $_.CloseMainWindow() }
+    Start-Sleep 8
+    Get-Process $name -ErrorAction SilentlyContinue | Stop-Process -Force
+}
 if (Test-Path $chrome) {
     & $chrome --headless=new --disable-gpu --no-first-run --user-data-dir="$data" --dump-dom "BASE/page?wac=chrome-TOKEN" | Out-Null
     & $chrome --headless=new --disable-gpu --no-first-run --user-data-dir="$data" --dump-dom "https://www.google.com/search?q=wacsearchTOKEN" | Out-Null
     Start-Process $chrome -ArgumentList '--no-first-run', "BASE/c/wac-dl-chrome-TOKEN.txt"; Start-Sleep 12
-    # Closed as a user would first: Chrome commits the download's row in History
-    # when it quits; killed at once, the row could still be in a pending
-    # transaction (History-journal), the file downloaded but the trace absent.
-    Get-Process chrome -ErrorAction SilentlyContinue | Where-Object MainWindowHandle -ne 0 | ForEach-Object { $null = $_.CloseMainWindow() }
-    Start-Sleep 8
-    Get-Process chrome -ErrorAction SilentlyContinue | Stop-Process -Force
+    Close-Browser chrome
 }
 if (Test-Path $firefox) {
-    Start-Process $firefox -ArgumentList '-headless', "BASE/page?wac=firefox-TOKEN"; Start-Sleep 12
-    Get-Process firefox -ErrorAction SilentlyContinue | Stop-Process -Force
+    Start-Process $firefox -ArgumentList "BASE/page?wac=firefox-TOKEN"; Start-Sleep 12
+    Close-Browser firefox
     Start-Process $firefox -ArgumentList "BASE/f/wac-dl-firefox-TOKEN.txt"; Start-Sleep 15
-    Get-Process firefox -ErrorAction SilentlyContinue | Stop-Process -Force
+    Close-Browser firefox
 }
 Start-Process mshta.exe -ArgumentList "BASE/wac-TOKEN.hta"; Start-Sleep 8
 Get-Process mshta -ErrorAction SilentlyContinue | Stop-Process -Force
