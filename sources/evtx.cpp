@@ -1,7 +1,6 @@
 #include "evtx.h"
 #include "sha.h"
 #include "tools.h"
-#include <charconv>
 #include <cstring>
 #include <sstream>
 
@@ -116,17 +115,6 @@ std::wstring escape(const std::wstring& s) {
 	return r;
 }
 
-/*! Floating-point value as Windows renders it: the shortest text that reads
- *  back to the same value, per its own width — a float gives "0.0020121", zero
- *  gives "0". A fixed 6 decimals ("0.002012") lost digits (B-015, against
- *  Windows' XML). */
-template <typename Real>
-std::wstring realToText(Real v) {
-	char text[64];
-	const std::to_chars_result r = std::to_chars(text, text + sizeof text, v);
-	return r.ec == std::errc() ? std::wstring(text, r.ptr) : L"";
-}
-
 // ---------------------------------------------------------------------------
 //  Decoder
 // ---------------------------------------------------------------------------
@@ -222,12 +210,12 @@ private:
 		case T_REAL32: {
 			if (size < 4) return L"";
 			float f; uint32_t v = read32(c, tc, off); memcpy(&f, &v, 4);
-			return realToText(f);
+			return shortestRealText(f);
 		}
 		case T_REAL64: {
 			if (size < 8) return L"";
 			double v; uint64_t u = read64(c, tc, off); memcpy(&v, &u, 8);
-			return realToText(v);
+			return shortestRealText(v);
 		}
 		case T_BOOL:
 			// 32 bits, not a byte: "true" whatever the non-zero value.

@@ -12,6 +12,8 @@
 
 #include <windows.h>
 #include <cstddef>
+#include <cstdio>
+#include <charconv>
 #include <cstring>
 #include <cstdint>
 #include <string>
@@ -202,4 +204,29 @@ std::wstring to_hex(T value, int minDigits = 2, HexLetters letters = HexLetters:
 	do { text.insert(text.begin(), digits[bits & 0xF]); bits >>= 4; } while (bits);
 	if ((int)text.size() < minDigits) text.insert(0, (size_t)minDigits - text.size(), L'0');
 	return prefixed ? L"0x" + text : text;
+}
+
+/*! A real in text with `digits` significant digits (printf's %g): 9 give a
+ *  float back exactly, 17 a double. ESE and CIM columns.
+ *  @param value the real
+ *  @param digits the significant digits
+ *  @return its text */
+inline std::wstring realText(double value, int digits) {
+	wchar_t text[40];
+	swprintf(text, 40, L"%.*g", digits, value);
+	return text;
+}
+
+/*! A real as Windows renders it in an event: the shortest text that reads
+ *  back to the same value, per its own width — a float gives "0.0020121",
+ *  zero gives "0". A fixed 6 decimals ("0.002012") lost digits (B-015,
+ *  against Windows' XML).
+ *  @tparam Real float or double: the width decides the digits
+ *  @param value the real
+ *  @return its text, empty if it cannot be written */
+template <typename Real>
+std::wstring shortestRealText(Real value) {
+	char text[64];
+	const std::to_chars_result r = std::to_chars(text, text + sizeof text, value);
+	return r.ec == std::errc() ? std::wstring(text, r.ptr) : L"";
 }

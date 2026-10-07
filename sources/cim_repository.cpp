@@ -52,13 +52,6 @@ bool skipQualifiers(const std::vector<uint8_t>& b, size_t& o) {
 	return true;
 }
 
-//! A real in text, with `digits` significant digits.
-std::wstring realText(double value, int digits) {
-	wchar_t text[40];
-	swprintf(text, 40, L"%.*g", digits, value);
-	return text;
-}
-
 /*! One value of a table, decoded: a number, a boolean, a string or a
  *  reference from the heap, an array from the heap. A type WAC does not
  *  decode (an embedded object) comes back as false. */

@@ -127,13 +127,6 @@ std::wstring oleDateText(double date) {
 	return timeToIso8601Utc(ft);
 }
 
-//! A real, in text with every digit needed to give it back.
-std::wstring realText(double value, int digits) {
-	wchar_t text[40];
-	swprintf(text, 40, L"%.*g", digits, value);
-	return text;
-}
-
 //! One value of a column in JSON.
 Json valueToJson(const EseColumn& column, const std::vector<uint8_t>& v) {
 	const uint8_t* p = v.data();
