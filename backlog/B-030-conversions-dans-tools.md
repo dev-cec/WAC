@@ -26,7 +26,8 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Inventaire (grep des conversions locales et des en-têtes inclus pour une seule fonction) — voir le journal du 2026-10-07
 - [x] Lecture little-endian : 13 copies → readLittleEndian<T> (pointeur ou vecteur borné), writeLittleEndian<T> (d8005c5)
 - [x] FILETIME ↔ 64 bits : 7 fonctions locales et 39 assemblages → filetimeFromTicks / ticksFromFiletime (conversions.h) (4171c6a)
-- [x] GUID : guid_to_wstring (GUID ou 16 octets) et normalizeGuid dans conversions.h ; guidAt ×2, guidToText, memeGuid, normalizeGuid local, 18 lectures non alignées retirés
+- [x] GUID : guid_to_wstring (GUID ou 16 octets) et normalizeGuid dans conversions.h ; guidAt ×2, guidToText, memeGuid, normalizeGuid local, 18 lectures non alignées retirés (564dec6)
+- [x] Hexadécimal : to_hex(valeur, chiffres, casse, préfixe) dans conversions.h ; windowsHex, hexOf, tagText, upperHex, hexadecimal et 10 swprintf retirés (dd24b26)
 - [ ] Déplacement dans tools, suppression des doublons
 - [ ] Conversion d'une collecte avant/après, JSON comparés
 
