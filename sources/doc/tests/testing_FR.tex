@@ -569,8 +569,32 @@ wine mft_test.exe "Z:/tmp/mft"
 wine usn_journal_test.exe "Z:/tmp/mft"
 \end{lstlisting}
 
-Référence : 275 contrôles pour \texttt{mft\_test}, 26 pour
+Référence : 278 contrôles pour \texttt{mft\_test}, 27 pour
 \texttt{usn\_journal\_test}, aucun échec.
+
+\section{Lecture brute sur un vrai volume : \texttt{raw\_volume\_test.sh}}
+
+L'index d'un répertoire désigne un fichier par son numéro d'enregistrement
+\emph{et} un numéro de séquence, que NTFS incrémente chaque fois qu'il libère
+l'enregistrement. Sur le système en marche, un fichier peut être supprimé entre
+la lecture de son répertoire et celle de son contenu, et son enregistrement
+donné à un autre fichier : \wac{} le lisait quand même, et scellait le contenu
+de cet autre fichier sous le nom du premier (un \fichier{SRU*.log} contenant
+les blocs \texttt{hbin} d'une ruche, relevé dans la VM de test). Le script
+sert à Wine le volume de \fichier{mft\_fixtures.sh} comme lecteur
+\texttt{T:}, dans un préfixe Wine à lui, et le fait lire par
+\texttt{raw\_hive\_test} comme \wac{} lit un disque : un fichier dont les
+octets doivent être ceux que lit \texttt{ntfscat}, puis le même fichier une
+fois son enregistrement doté d'une autre séquence que son entrée d'index —
+refusé, sans copie laissée.
+
+\begin{lstlisting}
+bash sources/mft_fixtures.sh /tmp/mft
+bash sources/raw_volume_test.sh /tmp/mft build-windows/raw_hive_test.exe
+\end{lstlisting}
+
+Référence : 3 contrôles, aucun échec ; le lecteur d'avant le correctif en
+échoue 2.
 
 \section{Index d'Internet Explorer : \texttt{ie\_index\_dat\_test}}
 

@@ -550,8 +550,29 @@ wine mft_test.exe "Z:/tmp/mft"
 wine usn_journal_test.exe "Z:/tmp/mft"
 \end{lstlisting}
 
-Reference: 275 checks for \texttt{mft\_test}, 26 for
+Reference: 278 checks for \texttt{mft\_test}, 27 for
 \texttt{usn\_journal\_test}, no failure.
+
+\section{Raw reading on a real volume: \texttt{raw\_volume\_test.sh}}
+
+The directory index names a file by its record number \emph{and} a sequence
+number, which NTFS increments every time it frees the record. On the running
+system a file can be deleted between the listing of its directory and its
+read, and its record given to another file: \wac{} used to read it anyway,
+and sealed that other file's content under the first one's name (an
+\fichier{SRU*.log} holding a hive's \texttt{hbin} blocks, found in the test
+VM). The script serves the volume of \fichier{mft\_fixtures.sh} to Wine as
+drive \texttt{T:}, in a Wine prefix of its own, and has
+\texttt{raw\_hive\_test} read it as \wac{} reads a disk: a file whose bytes
+must be those \texttt{ntfscat} reads, then the same file once its record has
+another sequence number than its index entry — refused, no copy left.
+
+\begin{lstlisting}
+bash sources/mft_fixtures.sh /tmp/mft
+bash sources/raw_volume_test.sh /tmp/mft build-windows/raw_hive_test.exe
+\end{lstlisting}
+
+Reference: 3 checks, no failure; the reader before the fix fails 2 of them.
 
 \section{Internet Explorer's indexes: \texttt{ie\_index\_dat\_test}}
 

@@ -533,7 +533,11 @@ path and creation date of every exhibit of the system volume in
   collection & files with hard links (\path|System32| and \path|WinSxS|)
   appeared under one name only (23,095 exhibits out of 61,242); directories
   named by their 8.3 alias (\path|AM3B40~1.945|) when their long name was in
-  an extension record (6,346 exhibits) \\
+  an extension record (6,346 exhibits); one exhibit
+  (\path|sru\SRU00B25.log|, 64~KiB) holding another file's content — a
+  hive's \texttt{hbin} blocks —, its record freed by SRUM and reused between
+  the listing of the directory and the read of the file, read without its
+  sequence being checked \\
 witnesses placed by the cycle (PowerShell history, file sent to the recycle
   bin, \fichier{hosts} entry, startup script with its SHA-256) /
   \fichier{powershell\_history.json}, \fichier{recycle\_bin.json},

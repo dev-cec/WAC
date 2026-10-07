@@ -302,6 +302,7 @@ HRESULT ListAttributesRaw(const std::wstring& volumeLetter,
 struct RawDirEntry {
     std::wstring name;          //!< name of the file or directory (without a path)
     uint64_t mftIndex = 0;      //!< index of its record in the $MFT
+    uint16_t sequence = 0;      //!< sequence number the index gives with it: the record is this file only under it
     uint64_t size = 0;          //!< real size in bytes (0 for a directory)
     bool isDirectory = false;   //!< true if the entry is a directory
 };

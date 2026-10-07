@@ -233,9 +233,12 @@ public:
      *  an already-read directory would not be seen. */
     void enableCache(){ cacheActive_ = true; }
 
-    // Resolves a path (\a\b\c) into a MFT record index.
-    bool resolvePath(const std::wstring& path, uint64_t& outIndex){
+    /* Resolves a path (\a\b\c) into a MFT record index, and the sequence
+       number the directory index gives with it: extractData checks it against
+       the record when it reads it (B-043). */
+    bool resolvePath(const std::wstring& path, uint64_t& outIndex, uint16_t* outSequence = nullptr){
         uint64_t cur = 5; // root \ = MFT #5
+        uint16_t sequence = 5;
         size_t i = 0;
         while (i < path.size()){
             while (i < path.size() && (path[i] == L'\\' || path[i] == L'/')) ++i;
@@ -259,15 +262,15 @@ public:
                     if (it == cacheRep_.end()){
                         std::vector<RawDirEntry> entries;
                         if (!listDir(cur, entries)) return false;
-                        std::unordered_map<std::wstring, uint64_t> index;
-                        for (const RawDirEntry& e : entries) index.emplace(lowercase(e.name), e.mftIndex);
+                        std::unordered_map<std::wstring, NtfsReference> index;
+                        for (const RawDirEntry& e : entries) index.emplace(lowercase(e.name), NtfsReference{ e.mftIndex, e.sequence });
                         it = cacheRep_.emplace(cur, std::move(index)).first;
                         cacheListed_[cur] = std::chrono::steady_clock::now();
                     }
                     const auto it2 = it->second.find(lowercase(comp));
                     const bool fresh = pass == 1 || !listedBefore;
-                    if (it2 != it->second.end() && (fresh || recordStillNamed(it2->second, cur, comp))){
-                        cur = it2->second; found = true;
+                    if (it2 != it->second.end() && (fresh || recordStillNamed(it2->second.entry, cur, comp))){
+                        cur = it2->second.entry; sequence = it2->second.sequence; found = true;
                         break;
                     }
                     /* A stale entry lists the directory again. An absent name
@@ -286,11 +289,13 @@ public:
                 std::vector<RawDirEntry> entries;
                 if (!listDir(cur, entries)) return false;
                 for (const RawDirEntry& e : entries)
-                    if (iequals(e.name, comp)){ cur = e.mftIndex; found = true; break; }
+                    if (iequals(e.name, comp)){ cur = e.mftIndex; sequence = e.sequence; found = true; break; }
             }
             if (!found){ RVLOG(L"[raw] component not found: %ls\n", comp.c_str()); return false; }
         }
-        outIndex = cur; return true;
+        outIndex = cur;
+        if (outSequence) *outSequence = sequence;
+        return true;
     }
 
     // Extracts the (unnamed) $DATA attribute of the record to a file.
@@ -1006,7 +1011,67 @@ public:
         });
     }
 
-    HRESULT extractData(uint64_t index, const std::wstring& outFile,
+    /*! Whether record `index` is still in use under `sequence`: NTFS increments
+     *  the sequence when it frees a record, so the same pair is the same file. */
+    bool recordHasSequence(uint64_t index, uint16_t sequence){
+        std::vector<uint8_t> rec;
+        if (!readMftRecord(index, rec)) return false;
+        const uint16_t IN_USE = 0x01;
+        return (rd16(rec.data() + 0x16) & IN_USE) && rd16(rec.data() + 0x10) == sequence;
+    }
+
+    /*! Runs `read` — a copy of record `index` to `outFile` — only if the record
+     *  is still the file the directory index named, before the read and after
+     *  it.
+     *  WHAT WENT WRONG (B-043). The index gives a record number AND a sequence;
+     *  only the number was kept. On the running system, a file deleted between
+     *  the listing of its directory and its read — SRUM rotates its logs within
+     *  seconds — leaves a record NTFS gives to another file: its content was
+     *  sealed in the exhibit store under the first file's name (an SRU*.log
+     *  holding a hive's "hbin" blocks, measured in the test VM). A file deleted
+     *  or replaced in between is now refused, ERROR_FILE_INVALID, and its
+     *  partial copy removed: the manifest records the failure, never another
+     *  file's content.
+     *  @param index the record
+     *  @param sequence the sequence number the index gave with `index`
+     *  @param outFile the copy, removed if the record changed during the read
+     *  @param read the copy itself, an HRESULT
+     *  @return its result, or ERROR_FILE_INVALID */
+    template <class Read>
+    HRESULT readAsIndexed(uint64_t index, uint16_t sequence, const std::wstring& outFile, Read read){
+        if (!recordHasSequence(index, sequence)){
+            RVLOG(L"[raw] MFT#%llu: no longer the file indexed (sequence %u): not read\n",
+                  (unsigned long long)index, (unsigned)sequence);
+            return HRESULT_FROM_WIN32(ERROR_FILE_INVALID);
+        }
+        const HRESULT h = read();
+        if (!recordHasSequence(index, sequence)){
+            RVLOG(L"[raw] MFT#%llu: freed or reused during its read: copy discarded\n", (unsigned long long)index);
+            std::error_code ec;
+            if (!outFile.empty()) std::filesystem::remove(std::filesystem::path(outFile), ec);
+            return HRESULT_FROM_WIN32(ERROR_FILE_INVALID);
+        }
+        return h;
+    }
+
+    /*! Extracts a file's data, checked against its index (readAsIndexed).
+     *  @param sequence the sequence number the index gave with `index`
+     *  The other parameters: see extractDataUnchecked. */
+    HRESULT extractData(uint64_t index, uint16_t sequence, const std::wstring& outFile,
+                        const std::wstring& label = std::wstring(),
+                        RawHiveFingerprints* emp = nullptr,
+                        std::streambuf* observer = nullptr,
+                        const std::wstring& fileName = std::wstring(),
+                        const std::wstring& streamName = std::wstring(),
+                        bool skipLeadingSparse = false){
+        return readAsIndexed(index, sequence, outFile, [&]{
+            return extractDataUnchecked(index, outFile, label, emp, observer, fileName, streamName, skipLeadingSparse);
+        });
+    }
+
+    /*! Extracts the data of record `index` without checking that it is still
+     *  the file asked for: only through extractData. */
+    HRESULT extractDataUnchecked(uint64_t index, const std::wstring& outFile,
                         const std::wstring& label = std::wstring(),
                         RawHiveFingerprints* emp = nullptr,
                         std::streambuf* observer = nullptr,
@@ -1217,7 +1282,7 @@ private:
         return r;
     }
     bool cacheActive_ = false;
-    std::map<uint64_t, std::unordered_map<std::wstring, uint64_t>> cacheRep_;
+    std::map<uint64_t, std::unordered_map<std::wstring, NtfsReference>> cacheRep_;
     std::map<uint64_t, std::chrono::steady_clock::time_point> cacheListed_;   //!< when each cached directory was listed
     HANDLE   h_ = INVALID_HANDLE_VALUE;
     uint32_t bytesPerSector_ = 0, sectorsPerCluster_ = 0, bytesPerCluster_ = 0, bytesPerRecord_ = 0;
@@ -1429,7 +1494,7 @@ private:
         uint32_t firstOff = rd32(nodeHdr);
         const uint8_t* e = nodeHdr + firstOff;
         while (e + 0x10 <= limit){
-            uint64_t ref   = splitNtfsReference(rd64(e)).entry;
+            const NtfsReference ref = splitNtfsReference(rd64(e));
             uint16_t eLen  = rd16(e + 8);
             uint16_t flags = rd16(e + 0x0C);
             if (!(flags & 0x02)){ // not the last entry -> has a $FILE_NAME key
@@ -1444,7 +1509,8 @@ private:
                         RawDirEntry entry;
                         entry.name.resize(nameLen);
                         for (uint8_t k = 0; k < nameLen; ++k) entry.name[k] = (wchar_t)rd16(nm + 2 * k);
-                        entry.mftIndex    = ref;
+                        entry.mftIndex    = ref.entry;
+                        entry.sequence    = ref.sequence;
                         entry.isDirectory = (fileAttrs & 0x10000000u) != 0; // FILE_ATTRIBUTE_DIRECTORY
                         entry.size        = entry.isDirectory ? 0 : realSize;
                         out.push_back(std::move(entry));
@@ -1705,9 +1771,10 @@ HRESULT RawReader::read(const std::wstring& absolutePath, const std::wstring& ou
     const VolumeLease v(absolutePath);
     if (FAILED(v.result())) return line.result = v.result();
     uint64_t index = 0;
-    if (!v->resolvePath(absolutePath.substr(2), index))
+    uint16_t sequence = 0;
+    if (!v->resolvePath(absolutePath.substr(2), index, &sequence))
         return line.result = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-    return line.result = v->extractData(index, output, std::wstring(), &line.fingerprints, observer,
+    return line.result = v->extractData(index, sequence, output, std::wstring(), &line.fingerprints, observer,
                                          absolutePath.substr(absolutePath.find_last_of(L'\\') + 1));
 }
 
@@ -1758,12 +1825,12 @@ HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
     NtfsVolume& vol = *lease;
     HRESULT overall = S_OK;
     for (const auto& it : items){
-        uint64_t index = 0; HRESULT h;
+        uint64_t index = 0; uint16_t sequence = 0; HRESULT h;
         RawHiveExtraction line;
         line.volumePath = volumeLetter + L":" + it.first;
         line.outputPath = it.second;
-        if (!vol.resolvePath(it.first, index)) h = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-        else h = vol.extractData(index, it.second, it.first,
+        if (!vol.resolvePath(it.first, index, &sequence)) h = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+        else h = vol.extractData(index, sequence, it.second, it.first,
                                  reading ? &line.fingerprints : nullptr, nullptr,
                                  it.first.substr(it.first.find_last_of(L'\\') + 1));
         line.result = h;
@@ -1786,8 +1853,9 @@ HRESULT ExtractStreamRaw(const std::wstring& volumeLetter, const std::wstring& p
     if (FAILED(line.result)) return line.result;
     NtfsVolume& vol = *lease;
     uint64_t index = 0;
-    if (!vol.resolvePath(pathOnVolume, index)) return line.result = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-    return line.result = vol.extractData(index, outFile, pathOnVolume, &line.fingerprints, nullptr,
+    uint16_t sequence = 0;
+    if (!vol.resolvePath(pathOnVolume, index, &sequence)) return line.result = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+    return line.result = vol.extractData(index, sequence, outFile, pathOnVolume, &line.fingerprints, nullptr,
                                          pathOnVolume.substr(pathOnVolume.find_last_of(L'\\') + 1),
                                          streamName, skipLeadingSparse);
 }
@@ -1813,9 +1881,10 @@ HRESULT ExtractWofStreamRaw(const std::wstring& volumeLetter, const std::wstring
     if (FAILED(hr)) return hr;
     NtfsVolume& vol = *lease;
     uint64_t index = 0;
-    if (!vol.resolvePath(pathOnVolume, index)) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+    uint16_t sequence = 0;
+    if (!vol.resolvePath(pathOnVolume, index, &sequence)) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
     uint32_t found = 0;
-    hr = vol.dumpWofStream(index, outFile, found);
+    hr = vol.readAsIndexed(index, sequence, outFile, [&]{ return vol.dumpWofStream(index, outFile, found); });
     if (algorithm) *algorithm = found;
     return hr;
 }
@@ -1905,7 +1974,7 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
         RawHiveExtraction line;
         line.volumePath = volumeLetter + L":" + dirPathOnVolume + L"\\" + e.name;
         line.outputPath = target;
-        HRESULT h = vol.extractData(e.mftIndex, target, std::wstring(),
+        HRESULT h = vol.extractData(e.mftIndex, e.sequence, target, std::wstring(),
                                     reading ? &line.fingerprints : nullptr, nullptr, e.name);
         line.result = h;
         if (reading) reading->push_back(std::move(line));
@@ -1987,7 +2056,7 @@ HRESULT extractTree(NtfsVolume& vol, uint64_t dirIndex,
         line.outputPath = outDir + L"\\" + e.name;
         // Fingerprints are ALWAYS computed: they cost nothing beyond the read
         // already made, and without them the exhibit is unidentified.
-        line.result = vol.extractData(e.mftIndex, line.outputPath,
+        line.result = vol.extractData(e.mftIndex, e.sequence, line.outputPath,
                                          volumePath + L"\\" + e.name, &line.fingerprints, nullptr, e.name);
         if (FAILED(line.result)){
             RVLOG(L"[raw] tree: extraction failed %ls\n", e.name.c_str());
