@@ -25,10 +25,11 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Le cas vu en VM documenté dans le dossier de validation.
 
 ## Tâches
-- [ ] Localiser la résolution nom → référence et la lecture de l'enregistrement
-- [ ] Garder la référence complète, vérifier séquence + en usage (+ nom et parent) à la lecture
-- [ ] Test unitaire vu échouer sans le correctif
+- [x] Localiser la résolution nom → référence et la lecture de l'enregistrement (raw_hive.cpp : parseIndexNode, resolvePath et son cache, extractData, dumpWofStream)
+- [x] Garder la référence complète (RawDirEntry.sequence, cache, resolvePath), vérifier « en usage + même séquence » avant ET après la lecture (readAsIndexed, une seule fonction pour extractData et WOF) ; écart → ERROR_FILE_INVALID, copie partielle effacée. Le nom et le parent ne sont pas revérifiés : la séquence suffit (NTFS l'incrémente à chaque libération), et un renommage garde le même fichier
+- [x] Test sources/raw_volume_test.sh : l'image de mft_fixtures servie par Wine comme lecteur T: ; extraction comparée à ntfscat ; séquence de l'enregistrement changée → refus, aucune copie. Nouveau binaire 3/0, ancien (HEAD:bin/raw_hive_test.exe) 2 échecs sur 3
 - [ ] Cycle complet, documentation FR + EN
 
 ## Journal
 - 2026-10-07 : ouverte sur le ❌ du cycle de B-042 ; contenu de la pièce vérifié (`hbin` en tête, SHA-256 24754FD5… identique au manifeste).
+- 2026-10-07 : correctif écrit et compilé sans avertissement, test vu échouer sur l'ancien binaire ; non commité. Reste : guide des tests et dossier de validation FR + EN, cycle complet.
