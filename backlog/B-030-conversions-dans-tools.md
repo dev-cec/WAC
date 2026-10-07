@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire (fin de refactoring, avant B-027) | P2 | moyen |
+| en cours | P2 | moyen |
 
 ## Pourquoi
 Des fonctions de conversion générales vivent dans des modules qui n'ont rien à voir avec elles : `toHexadecimal` dans `sha.h`, qu'evtx.cpp et reg_amcache.cpp doivent inclure pour afficher des octets ; `unixToFiletime` était enfermée dans system.cpp ; `realToText`, `windowsHex` (evtx.cpp), `realText`, `oleDateText` (ese_database.cpp) et d'autres restent locales. Résultat : on ne les trouve pas, on les recopie (un `bytesToHex` a failli doubler `toHexadecimal`). Demande utilisateur du 2026-09-30.
@@ -32,3 +32,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-01 : `readLittleEndian<T>` ajouté à tools.h (B-032) ; les copies locales `rd16/rd32/rd64` (mft.cpp, fat_volume.cpp, ese_database.cpp, bits_jobs.cpp, defender_history.cpp, cim_repository.cpp, hive_recover.cpp, pe_resource.cpp) sont à y ramener.
 - 2026-10-01 : `conversions.h` créé, en-tête autonome inclus par tools.h et sha.h : `toHexadecimal` (sorti de sha.h/sha.cpp) et `readLittleEndian` y sont. Plus besoin d'inclure sha.h pour afficher des octets ; les `#include "sha.h"` des modules qui ne l'utilisaient que pour cela restent à retirer, et les `rd16/rd32/rd64` locaux à ramener. 66 JSON identiques avant/après sur une même collecte.
 - 2026-10-07 : `splitNtfsReference` (B-022) ajouté à `conversions.h` : le découpage d'une référence de fichier NTFS, écrit dix-sept fois à la main (mft, usn_journal, raw_hive, idList, prefetchs), y est ramené ; celui de prefetchs était faux. Copies locales `rd64` encore présentes dans bits_jobs, fat_volume, cim_repository, defender_history, ese_database, hive_recover, recycle_bin, mft, usn_journal, raw_hive.
+- 2026-10-07 : en cours — inventaire.
