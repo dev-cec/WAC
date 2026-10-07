@@ -610,6 +610,18 @@ witness document indexed by Windows; Windows' query of its own index
   (OLE DB, \texttt{Search.CollatorDSO}): URL, modification, size of each
   item / \fichier{search\_index.json} (515 identical items) &
   check added with the artefact \\
+pinned public PST (EDRM Enron) placed in the \fichier{Outlook Files} of
+  "wac", read by pypff (libpff); Outlook 2013 OST and encrypted PSTs of the
+  java-libpst corpus (\texttt{pst\_test}) / \fichier{emails.json} (the 246
+  messages pypff reads identical: subject, sender, delivery, 65 attachments
+  by name, size and SHA-256, body; 250 read by \wac{}) &
+  check added with the artefact \\
+message fetched by Thunderbird itself (local POP3 server, subject in an
+  encoded word, base64 attachment with an RFC~2231 name), mbox read by
+  Python's \texttt{mailbox} and \texttt{email} modules / \fichier{emails.json}
+  (subject and attachment by name and SHA-256 identical) &
+  check added with the artefact; Thunderbird does not fetch without
+  authentication, and in NTLM asks for a password too \\
 picture seen by "wac" in Explorer, its \texttt{System.ThumbnailCacheId} given
   by Windows; the two CRC-64 checksums Windows writes for each entry,
   recomputed / \fichier{thumbcache.json} (835 entries of 9 caches, every

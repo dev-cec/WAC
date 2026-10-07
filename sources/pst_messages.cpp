@@ -80,8 +80,7 @@ bool PstMessage::time(uint16_t id, FILETIME& utc) const {
 	return true;
 }
 
-bool readPstMessages(PstFile& file, std::vector<PstMessage>& messages, size_t& unreadable) {
-	messages.clear();
+bool forEachPstMessage(PstFile& file, const std::function<void(PstMessage&)>& onMessage, size_t& unreadable) {
 	unreadable = 0;
 	std::vector<PstNode> nodes;
 	const bool whole = file.allNodes(nodes);
@@ -135,7 +134,7 @@ bool readPstMessages(PstFile& file, std::vector<PstMessage>& messages, size_t& u
 			}
 			else m.readWhole = false;
 		}
-		messages.push_back(std::move(m));
+		onMessage(m);
 	}
 	return whole;
 }

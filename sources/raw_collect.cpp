@@ -19,6 +19,7 @@
 #include "search_index.h"
 #include "rdp_client.h"
 #include "thumbcache.h"
+#include "emails.h"
 #include "running_machine.h"
 #include "startup_folders.h"
 #include "shortcuts.h"
@@ -486,6 +487,11 @@ HRESULT ExtractFileArtefactsRaw() {
 		}
 		// Explorer's thumbnail and icon caches, with their index.
 		if (conf.artefacts.thumbcache) addTarget(profile + THUMBCACHE_FOLDER, { L".db" });
+		// Outlook's mailboxes: PST archives and the OST of an Exchange or Microsoft 365 account.
+		if (conf.artefacts.emails) {
+			addTarget(profile + OUTLOOK_FILES_FOLDER, { L".pst" });
+			addTarget(profile + OUTLOOK_DATA_FOLDER, { L".pst", L".ost" });
+		}
 	}
 
 	HRESULT global = S_OK;
@@ -552,6 +558,15 @@ HRESULT ExtractFileArtefactsRaw() {
 	if (conf.artefacts.activitiesCache)
 		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
 			trees.push_back({ std::get<1>(profileEntry) + CONNECTED_DEVICES_FOLDER, {}, 2, L"Timeline (ActivitiesCache.db)" });
+	/* The files Outlook opened from a message: one random folder per batch, the
+	   copies inside, whatever their kind. */
+	if (conf.artefacts.emails)
+		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
+			trees.push_back({ std::get<1>(profileEntry) + OUTLOOK_OPENED_FOLDER, {}, 2, L"attachments opened from Outlook" });
+			// Thunderbird's profiles whole: the mbox folders, the address book, the accounts' settings.
+			trees.push_back({ std::get<1>(profileEntry) + THUNDERBIRD_FOLDER, {}, 12, L"Thunderbird profiles" });
+			trees.push_back({ std::get<1>(profileEntry) + OUTLOOK_NEW_FOLDER, {}, 8, L"new Outlook's local data" });
+		}
 	/* The Windows Search index: its SQLite databases with their -wal (Windows
 	   11), Windows.edb with its ESE logs and checkpoint (Windows 10 and
 	   earlier, collected, not converted), and the crawler's logs. */

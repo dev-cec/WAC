@@ -90,17 +90,16 @@ int wmain(int argc, wchar_t** argv) {
 		const bool opened = file.open(folder + L"\\" + decodeText(name, CP_UTF8), why);
 		check(opened, std::string(name) + ": not opened: " + utf8(why));
 		if (!opened) continue;
-		std::vector<PstMessage> messages;
+		std::map<uint32_t, std::vector<std::string>> byNid;   // what WAC read of each message
 		size_t unreadable = 0;
-		check(readPstMessages(file, messages, unreadable), std::string(name) + ": node tree not walked whole");
-		std::map<uint32_t, const PstMessage*> byNid;
-		for (const PstMessage& m : messages) byNid[m.nid] = &m;
+		check(forEachPstMessage(file, [&](PstMessage& m) { byNid[m.nid] = fieldsOf(m); }, unreadable),
+		      std::string(name) + ": node tree not walked whole");
 		size_t same = 0;
 		for (const std::vector<std::string>& ref : reference[name]) {
 			const auto it = byNid.find((uint32_t)std::stoul(ref[1]));
 			check(it != byNid.end(), std::string(name) + ": message " + ref[1] + " (" + ref[2] + ") not read");
 			if (it == byNid.end()) continue;
-			const std::vector<std::string> mine = fieldsOf(*it->second);
+			const std::vector<std::string>& mine = it->second;
 			bool all = true;
 			for (size_t k = 0; k < 6; ++k) {
 				const bool ok = mine[k] == ref[2 + k];
@@ -111,7 +110,7 @@ int wmain(int argc, wchar_t** argv) {
 			if (all) ++same;
 		}
 		std::printf("%s: %zu message(s) read, %zu identical to pypff's %zu; %zu unreadable for WAC, %zu for pypff\n",
-		            name, messages.size(), same, reference[name].size(), unreadable, pyUnreadable[name]);
+		            name, byNid.size(), same, reference[name].size(), unreadable, pyUnreadable[name]);
 	}
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;

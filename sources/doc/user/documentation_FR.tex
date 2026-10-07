@@ -342,6 +342,7 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   defender_configuration:  true   # exclusions et réglages de protection de Microsoft Defender
   devices:                 true   # périphériques USB et SCSI et leurs dates, portables, noms de volumes
   dpapi_master_keys:       true   # clés maîtresses DPAPI copiées chiffrées ; JSON : propriétaire, GUID, dates, jamais la clé
+  emails:                  true   # Outlook (PST, OST) et Thunderbird (mbox) : messages, destinataires, dates ; corps et pièces jointes exportés
   error_reports:           true   # rapports d'erreurs (WER) : programmes plantés, avec leur chemin
   event_log_configuration: true   # état de chaque journal et session ETW de démarrage : actif, taille, rétention, accès (hors ligne)
   events:                  true   # journaux d'événements, avec leurs messages
@@ -1497,6 +1498,36 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \champ{User}, \champ{Domain}, \champ{SourceAddress} et
         \champ{SessionId}, quel que soit le nom que lui donne son journal. Peu
         utile sur un poste, c'est la première question sur un serveur.
+  \item[\fichier{emails.json}] courriels d'Outlook de chaque profil : les PST
+        (\fichier{Documents\textbackslash Outlook Files}) et les OST, copie
+        hors connexion d'un compte Exchange ou Microsoft~365
+        (\fichier{AppData\textbackslash Local\textbackslash Microsoft\textbackslash Outlook}),
+        lus par le code de \wac{} — PST Unicode d'Outlook 2003 et suivants, OST
+        d'Outlook 2013 et suivants (pages de 4~Kio, blocs compressés). Une fiche
+        par boîte (type, version, nombre de messages lus, de messages
+        illisibles) et une par message : dossier, classe, objet, expéditeur,
+        destinataires (\champ{Recipients} : nom, adresse, To/Cc/Bcc), dates
+        d'envoi, de remise, de création et de modification, identifiant
+        Internet du message, en-têtes de transport. Le corps (texte, HTML) et
+        chaque pièce jointe sont écrits à côté du JSON
+        (\fichier{emails\textbackslash<SID>\textbackslash<fichier>\textbackslash<message>\textbackslash}),
+        avec leur taille et leur SHA-256 ; le nom d'une pièce jointe, choisi
+        par l'expéditeur, n'est jamais pris pour un chemin : le fichier porte
+        son rang et, si elle est simple, son extension. Un message joint (un
+        rendez-vous, un courriel transféré en pièce jointe) donne son objet et
+        sa classe. Les fichiers qu'Outlook a ouverts depuis un message
+        (\fichier{INetCache\textbackslash Content.Outlook}) et les données
+        locales du nouvel Outlook (\fichier{AppData\textbackslash Local\textbackslash Microsoft\textbackslash Olk})
+        sont prélevés tels quels. Non décodés : le chiffrement « élevé »
+        (cyclique) et le format ANSI d'Outlook~97 à 2002, sans échantillon pour
+        les vérifier — la fiche de la boîte le dit. Thunderbird : ses profils
+        (\fichier{AppData\textbackslash Roaming\textbackslash Thunderbird\textbackslash Profiles})
+        sont prélevés entiers — carnet d'adresses et réglages des comptes
+        compris — et chaque dossier de courrier, un fichier mbox, est décodé :
+        en-têtes (mots encodés compris), date d'envoi en UTC, corps texte et
+        HTML, pièces jointes (base64, quoted-printable, noms RFC~2231), dans
+        les mêmes champs que pour Outlook, avec \champ{Offset} (position du
+        message dans le fichier) au lieu de \champ{NodeId}.
   \item[\fichier{thumbcache.json}] caches des miniatures et des icônes de
         l'Explorateur, de chaque profil (\fichier{thumbcache\_*.db},
         \fichier{iconcache\_*.db}) : ce que l'utilisateur a eu sous les yeux,

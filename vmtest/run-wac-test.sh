@@ -204,6 +204,21 @@ if wants scheduled_tasks; then
     && echo "   test GUIDs registered" || echo "   ⚠️ test GUIDs not registered"
 fi
 
+# The mail witness (B-017): no Outlook in the VM, so a PST of the public corpus
+# sources/pst_fixtures.sh pins (EDRM Enron, CC-BY 3.0 US), placed once in the
+# Outlook Files of "wac" — never piled up. check-json.py reads the same file
+# with pypff (vmtest/tools/pff-venv) and confronts emails.json with it.
+PST_WITNESS="$HERE/tools/pst-corpus/zl_south-s_000.pst"
+PST_WITNESS_VM='C:\Users\wac\Documents\Outlook Files\wac-witness.pst'
+if wants emails && [[ -f "$PST_WITNESS" ]]; then
+  # PowerShell, not cmd: the folder's name has a space, which cmd's quoting
+  # through the agent does not carry.
+  if [[ "$($QGA run -- powershell.exe -NoProfile -Command "New-Item -ItemType Directory -Force 'C:\Users\wac\Documents\Outlook Files' | Out-Null; Test-Path '$PST_WITNESS_VM'" 2>/dev/null | tr -d '\r')" != True ]]; then
+    $QGA write "$PST_WITNESS" "$PST_WITNESS_VM" >/dev/null && echo "   + mail witness placed (wac-witness.pst)"
+  fi
+  echo "pst=$PST_WITNESS_VM|$PST_WITNESS" > "$OUTPUT/reference/emails.txt"
+fi
+
 # Witnesses of the small file artefacts, placed before both collections: a
 # PowerShell history, a file sent to the recycle bin, a hosts entry, a startup
 # script, and the reference counts of setupapi and Defender (see
@@ -373,11 +388,12 @@ fetch_results() {
   # rdp_client: PowerShell then ends in error, and without `|| true` that
   # status ended the whole harness before its checks.
   # The thumbnail of the B-026 witness, exported by WAC: only its own, out of
-  # the thousands a cache holds.
+  # the thousands a cache holds. And the working copy of Thunderbird's Inbox
+  # (B-017), which check-json.py reads with Python's mailbox module.
   local thumbnailId
   thumbnailId=$(sed -n 's/^thumbcache=\([0-9a-f]\{16\}\)|.*/\1/p' "$OUTPUT/reference/file-artefacts.txt" 2>/dev/null | tr -d '\r' | head -1)
   local rdpFiles
-  rdpFiles=$($QGA run -- powershell.exe -NoProfile -Command "Get-ChildItem -LiteralPath '$vm\\working\\Users' -Recurse -File -Force -Filter 'Cache*.bin' -ErrorAction SilentlyContinue | Where-Object FullName -like '*Terminal Server Client*' | ForEach-Object FullName; Get-ChildItem -LiteralPath '$vm\\rdp_cache' -Recurse -File -Filter '*.bmp' -ErrorAction SilentlyContinue | ForEach-Object FullName${thumbnailId:+; Get-ChildItem -LiteralPath '$vm\\thumbcache' -Recurse -File -Filter '$thumbnailId.*' -ErrorAction SilentlyContinue | ForEach-Object FullName}" 2>/dev/null | tr -d '\r' || true)
+  rdpFiles=$($QGA run -- powershell.exe -NoProfile -Command "Get-ChildItem -LiteralPath '$vm\\working\\Users' -Recurse -File -Force -Filter 'Cache*.bin' -ErrorAction SilentlyContinue | Where-Object FullName -like '*Terminal Server Client*' | ForEach-Object FullName; Get-ChildItem -LiteralPath '$vm\\rdp_cache' -Recurse -File -Filter '*.bmp' -ErrorAction SilentlyContinue | ForEach-Object FullName${thumbnailId:+; Get-ChildItem -LiteralPath '$vm\\thumbcache' -Recurse -File -Filter '$thumbnailId.*' -ErrorAction SilentlyContinue | ForEach-Object FullName}; Get-ChildItem -LiteralPath '$vm\\working\\Users' -Recurse -File -Force -Filter 'Inbox' -ErrorAction SilentlyContinue | Where-Object FullName -like '*Thunderbird*' | ForEach-Object FullName" 2>/dev/null | tr -d '\r' || true)
   while read -r f; do
     [[ -z "$f" ]] && continue
     # The prefix quoted: unquoted, the backslashes of the VM's path are read as escapes.

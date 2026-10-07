@@ -95,6 +95,7 @@ bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error)
 		{ "rdp_client", &a.rdpClient },
 		{ "rdp_server", &a.rdpServer },
 		{ "thumbcache", &a.thumbcache },
+		{ "emails", &a.emails },
 	};
 	for (const auto& [key, node] : section.children) {
 		const Switch* found = nullptr;

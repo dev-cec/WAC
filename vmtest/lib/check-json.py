@@ -326,6 +326,8 @@ def cross_checks(folder):
     found += guarded(check_exhibit_reads_after_copy, folder)
     found += guarded(check_rdp, folder)
     found += guarded(check_thumbcache, folder)
+    found += guarded(check_emails, folder)
+    found += guarded(check_thunderbird, folder)
     return found
 
 
@@ -2512,6 +2514,112 @@ def check_exhibit_reads_after_copy(folder):
     print(f"  {'✅' if ok else '❌'} exhibit store: {len(reads)} read(s) by WAC.exe before its working copy ({copied}Z), "
           f"{len(after)} after" + ("" if ok else (": the audit recorded no read at all" if not reads else f": {after[:3]}")))
     return 0 if ok else 1
+
+
+def check_thunderbird(folder):
+    """emails.json against Python's own mailbox and email modules, on the
+    Inbox Thunderbird wrote in the test VM (place-file-artefacts.ps1, section
+    42): every message of the working copy's mbox — subject, attachments by
+    name and SHA-256 — must be in emails.json, the witness among them with
+    the attachment it was sent."""
+    import email, email.header, email.policy, glob, hashlib, mailbox, urllib.parse
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    records = load(folder, "emails.json")
+    if not os.path.exists(path) or not isinstance(records, list):
+        return 0
+    with open(path, encoding="utf-8-sig", errors="replace") as f:
+        witness = next((l.strip()[len("thunderbird="):].split("|") for l in f if l.startswith("thunderbird=")), None)
+    if not witness:
+        print("  ⏭️  no Thunderbird witness (Thunderbird not installed in the VM?): mbox not confronted")
+        return 0
+    token, encoded_name, sha, vm_inbox = witness
+    copies = glob.glob(os.path.join(folder, "working", "**", "Thunderbird", "**", "Inbox"), recursive=True)
+    mine = [r for r in records if r.get("Type") == "Message" and str(r.get("Source", "")).lower() == vm_inbox.lower()]
+    if not copies:
+        print("  ❌ emails.json: the Inbox's working copy was not fetched: Thunderbird not confronted")
+        return 1
+    expected = []
+    for message in mailbox.mbox(copies[0], factory=lambda f: email.message_from_binary_file(f, policy=email.policy.default)):
+        attachments = [(part.get_filename() or "", hashlib.sha256(part.get_payload(decode=True) or b"").hexdigest())
+                       for part in message.walk() if part.get_filename()]
+        expected.append((str(message["subject"] or ""), attachments))
+    got = [(r.get("Subject", ""), [(a.get("FileName", ""), str(a.get("Sha256", "")).lower()) for a in r.get("Attachments", [])])
+           for r in mine]
+    name = urllib.parse.unquote(encoded_name)
+    found = any(token in subject and (name, sha) in attachments for subject, attachments in got)
+    if sorted(got) != sorted(expected) or not found:
+        print(f"  ❌ emails.json: {len(mine)} message(s) of the Inbox, Python's mailbox reads {len(expected)}; "
+              f"witness {token} {'found' if found else 'missing'}")
+        for e in [e for e in expected if e not in got][:2]:
+            print(f"        mailbox: {e!r}")
+        for g in [g for g in got if g not in expected][:2]:
+            print(f"        WAC:     {g!r}")
+        return 1
+    print(f"  ✅ emails.json: the {len(expected)} message(s) of the Inbox Thunderbird wrote, as Python's mailbox reads them "
+          f"(subject, attachments by name and SHA-256); the witness {token} with {name}")
+    return 0
+
+
+def check_emails(folder):
+    """emails.json against pypff, on the mail witness: a PST of the public
+    corpus pst_fixtures.sh pins, placed in the Outlook Files of "wac".
+
+    pypff (libpff, written independently of WAC) read the same file when
+    pst_fixtures.sh made pst-reference.txt: for every message it reads, the
+    subject, the sender, the delivery time, each attachment's name, size and
+    SHA-256 and the body's SHA-256 must be WAC's. The items pypff cannot read
+    must not stop WAC."""
+    import datetime
+    path = os.path.join(folder, "reference", "emails.txt")
+    records = load(folder, "emails.json")
+    if not os.path.exists(path) or not isinstance(records, list):
+        print("  ⏭️  no mail witness or no emails.json: mail not confronted")
+        return 0
+    with open(path, encoding="utf-8") as f:
+        vm_path, local = f.read().strip()[len("pst="):].split("|", 1)
+    reference_file = os.path.join(os.path.dirname(local), "pst-reference.txt")
+    if not os.path.exists(reference_file):
+        print("  ⏭️  pst-reference.txt absent (sources/pst_fixtures.sh): mail not confronted")
+        return 0
+    name = os.path.basename(local)
+    expected = {}
+    with open(reference_file, encoding="utf-8") as f:
+        for line in f:
+            parts = line.rstrip("\n").split("|")
+            if parts[0] == name and parts[1] != "-" and len(parts) == 8:
+                expected[int(parts[1])] = parts[2:]
+    def iso(ticks):
+        if not ticks or ticks == "0":
+            return None
+        moment = datetime.datetime(1601, 1, 1) + datetime.timedelta(microseconds=int(ticks) // 10)
+        return moment.strftime("%Y-%m-%dT%H:%M:%S")
+    mine = {r.get("NodeId"): r for r in records
+            if r.get("Type") == "Message" and str(r.get("Source", "")).lower() == vm_path.lower()}
+    store = next((r for r in records if r.get("Type") == "Mailbox" and str(r.get("Source", "")).lower() == vm_path.lower()), {})
+    wrong = []
+    for nid, (subject, sender, delivered, submitted, attachments, body) in expected.items():
+        r = mine.get(nid)
+        if r is None:
+            wrong.append((nid, "not read"))
+            continue
+        clean = lambda t: (t or "").replace("|", " ").replace("\n", " ").replace("\r", " ")
+        got = ";".join(f"{clean(a.get('FileName'))}:{a.get('Size', 0)}:{str(a.get('Sha256', '')).lower()}"
+                       for a in r.get("Attachments", []))
+        when = str(r.get("DeliveredUtc", ""))[:19] or None
+        if clean(r.get("Subject")) != subject: wrong.append((nid, f"subject {r.get('Subject')!r}, pypff {subject!r}"))
+        if clean(r.get("SenderName")) != sender: wrong.append((nid, f"sender {r.get('SenderName')!r}, pypff {sender!r}"))
+        if when != iso(delivered): wrong.append((nid, f"delivered {when}, pypff {iso(delivered)}"))
+        if got != attachments: wrong.append((nid, f"attachments {got[:80]!r}, pypff {attachments[:80]!r}"))
+        if str((r.get("Body") or {}).get("Sha256", "")).lower() != body: wrong.append((nid, "body differs"))
+    attachments = sum(len(r.get("Attachments", [])) for r in mine.values())
+    if wrong or not expected:
+        print(f"  ❌ emails.json: {len(wrong)} difference(s) with pypff on {vm_path} ({len(expected)} message(s) expected)")
+        for nid, why in wrong[:3]:
+            print(f"        {nid}: {why}")
+        return 1
+    print(f"  ✅ emails.json: the {len(expected)} message(s) pypff reads in {name} identical (subject, sender, delivery, "
+          f"{attachments} attachment(s) by name, size and SHA-256, body); {store.get('MessageCount')} read by WAC")
+    return 0
 
 
 def check_thumbcache(folder):

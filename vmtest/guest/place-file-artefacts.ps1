@@ -48,6 +48,8 @@
 #   mplog        number of Defender support logs -> defender_log.json
 #   thumbcache   the witness picture's System.ThumbnailCacheId and path
 #                -> thumbcache.json
+#   thunderbird  token, attachment name (RFC 2231 encoded), its SHA-256 and the
+#                Inbox Thunderbird wrote -> emails.json
 #
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File place-file-artefacts.ps1
 
@@ -1288,4 +1290,151 @@ if ($id) { Set-Content 'C:\wactest\thumbcache-id.txt' ('{0:x16}' -f [uint64]$id)
     Unregister-ScheduledTask -TaskName WacThumbcache -Confirm:$false
     if (Test-Path $answer) { Write-Output ("thumbcache=" + (Get-Content $answer).Trim() + "|" + $picture) }
     Remove-Item $answer, $script -ErrorAction SilentlyContinue
+}
+
+# 42. B-017 — a message written by Thunderbird itself: a witness profile of
+#     "wac" with a POP3 account on 127.0.0.1:1110 (no first-run dialog), a POP3
+#     server here serving one message — a subject in an
+#     RFC 2047 encoded word, an accented quoted-printable body, an attachment
+#     in base64 whose name is RFC 2231 —, Thunderbird run by "wac" on that
+#     profile, fetching it into its Inbox, then closed as a user would. The
+#     Inbox is emptied first: the witness is never piled up.
+if (Wants 'emails') {
+    $thunderbird = 'C:\Program Files\Mozilla Thunderbird\thunderbird.exe'
+    if (Test-Path $thunderbird) {
+        $token = Get-Date -Format 'yyyyMMddHHmmss'
+        $profileDir = 'C:\Users\wac\AppData\Roaming\Thunderbird\Profiles\wacwitness.default'
+        $inbox = Join-Path $profileDir 'Mail\127.0.0.1\Inbox'
+        New-Item -ItemType Directory -Force (Split-Path $inbox) | Out-Null
+        Remove-Item "$inbox", "$inbox.msf" -Force -ErrorAction SilentlyContinue
+        Set-Content -Encoding ASCII (Join-Path $profileDir 'user.js') @'
+user_pref("mail.accountmanager.accounts", "account1,account2");
+user_pref("mail.accountmanager.defaultaccount", "account1");
+user_pref("mail.accountmanager.localfoldersserver", "server2");
+user_pref("mail.account.account1.identities", "id1");
+user_pref("mail.account.account1.server", "server1");
+user_pref("mail.account.account2.server", "server2");
+user_pref("mail.identity.id1.useremail", "wac@wac-test.invalid");
+user_pref("mail.identity.id1.fullName", "WAC");
+user_pref("mail.server.server1.type", "pop3");
+user_pref("mail.server.server1.hostname", "127.0.0.1");
+user_pref("mail.server.server1.port", 1110);
+user_pref("mail.server.server1.userName", "wac");
+user_pref("mail.server.server1.name", "wac@127.0.0.1");
+user_pref("mail.server.server1.socketType", 0);
+user_pref("mail.server.server1.authMethod", 3);
+user_pref("mail.server.server1.download_on_biff", true);
+user_pref("mail.server.server1.login_at_startup", true);
+user_pref("mail.server.server1.leave_on_server", false);
+user_pref("mail.server.server1.directory-rel", "[ProfD]Mail/127.0.0.1");
+user_pref("mail.server.server2.type", "none");
+user_pref("mail.server.server2.hostname", "Local Folders");
+user_pref("mail.server.server2.userName", "nobody");
+user_pref("mail.server.server2.directory-rel", "[ProfD]Mail/Local Folders");
+user_pref("mail.shell.checkDefaultClient", false);
+user_pref("mail.rights.version", 1);
+user_pref("mailnews.start_page.enabled", false);
+user_pref("mail.provider.enabled", false);
+user_pref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
+user_pref("app.update.disabledForTesting", true);
+'@
+        # The message: unique by its token; the attachment's bytes known.
+        $attachment = [Text.Encoding]::UTF8.GetBytes("WAC mail attachment witness $token")
+        $sha = (([Security.Cryptography.SHA256]::Create()).ComputeHash($attachment) | ForEach-Object { $_.ToString('x2') }) -join ''
+        # Accents through [char]: Windows PowerShell reads a script without BOM as cp1252.
+        $subject = "T$([char]0xE9)moin WAC $token"
+        $encodedSubject = '=?UTF-8?B?' + [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($subject)) + '?='
+        $name = "r%C3%A9sum%C3%A9-$token.bin"
+        $message = @"
+From: =?UTF-8?Q?T=C3=A9moin?= <temoin@wac-test.invalid>
+To: WAC <wac@wac-test.invalid>
+Subject: $encodedSubject
+Date: $((Get-Date).ToUniversalTime().ToString('ddd, dd MMM yyyy HH:mm:ss +0000', [Globalization.CultureInfo]::InvariantCulture))
+Message-ID: <wac-$token@wac-test.invalid>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="wac-boundary-$token"
+
+--wac-boundary-$token
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Corps du t=C3=A9moin $token
+--wac-boundary-$token
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename*=UTF-8''$name
+
+$([Convert]::ToBase64String($attachment))
+--wac-boundary-$token--
+"@ -replace "`r?`n", "`r`n"
+        $server = 'C:\wactest\pop3-witness.ps1'
+        Set-Content -Encoding UTF8 $server @'
+param([string]$MessageFile)
+$message = [IO.File]::ReadAllText($MessageFile)
+$listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 1110)
+$listener.Start()
+$deadline = (Get-Date).AddSeconds(90)
+while ((Get-Date) -lt $deadline) {
+    if (-not $listener.Pending()) { Start-Sleep -Milliseconds 200; continue }
+    $client = $listener.AcceptTcpClient()
+    $stream = $client.GetStream()
+    $reader = New-Object IO.StreamReader($stream, [Text.Encoding]::ASCII)
+    $writer = New-Object IO.StreamWriter($stream, [Text.Encoding]::ASCII)
+    $writer.NewLine = "`r`n"; $writer.AutoFlush = $true
+    $writer.WriteLine('+OK WAC witness')
+    while (($line = $reader.ReadLine()) -ne $null) {
+        $command = ($line -split ' ')[0].ToUpper()
+        switch ($command) {
+            'CAPA' { $writer.WriteLine("+OK`r`nUIDL`r`nUSER`r`n.") }
+            'STAT' { $writer.WriteLine("+OK 1 $($message.Length)") }
+            'LIST' { $writer.WriteLine("+OK`r`n1 $($message.Length)`r`n.") }
+            'UIDL' { $writer.WriteLine("+OK`r`n1 wac-$([IO.Path]::GetFileNameWithoutExtension($MessageFile))`r`n.") }
+            'RETR' {
+                $writer.WriteLine("+OK $($message.Length) octets")
+                $writer.Write($message -replace "(?m)^\.", '..')
+                # The terminating "." on a line of its own, after the message's own last line break.
+                if ($message.EndsWith("`r`n")) { $writer.WriteLine('.') } else { $writer.WriteLine("`r`n.") }
+            }
+            'QUIT' { $writer.WriteLine('+OK'); break }
+            default { $writer.WriteLine('+OK') }
+        }
+        if ($command -eq 'QUIT') { break }
+    }
+    $client.Close()
+}
+$listener.Stop()
+'@
+        $messageFile = "C:\wactest\pop3-$token.eml"
+        [IO.File]::WriteAllText($messageFile, $message)
+        $pop = Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File $server -MessageFile $messageFile" -WindowStyle Hidden -PassThru
+        $script = 'C:\wactest\thunderbird-user.ps1'
+        # Thunderbird fetches without authentication from no POP3 server, and in
+        # NTLM it asks for a password too (measured): the account authenticates
+        # by USER/PASS, and the user answers the prompt — a dummy password the
+        # server does not check, not a secret.
+        Set-Content $script @"
+`$tb = Start-Process '$thunderbird' -ArgumentList '-profile "$profileDir"' -PassThru
+Start-Sleep 12
+`$shell = New-Object -ComObject WScript.Shell
+`$null = `$shell.AppActivate(`$tb.Id)
+Start-Sleep 1
+`$shell.SendKeys('witness{ENTER}')
+Start-Sleep 30
+`$tb.CloseMainWindow() | Out-Null
+Start-Sleep 10
+if (-not `$tb.HasExited) { `$tb | Stop-Process -Force }
+"@
+        $action = New-ScheduledTaskAction -Execute powershell.exe -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File $script"
+        $principal = New-ScheduledTaskPrincipal -UserId 'wac' -LogonType Interactive
+        Register-ScheduledTask -TaskName WacThunderbird -Action $action -Principal $principal -Force | Out-Null
+        Start-ScheduledTask -TaskName WacThunderbird
+        Start-Sleep 60
+        Unregister-ScheduledTask -TaskName WacThunderbird -Confirm:$false
+        if (-not $pop.HasExited) { $pop | Stop-Process -Force }
+        Remove-Item $server, $script, $messageFile -ErrorAction SilentlyContinue
+        if ((Test-Path $inbox) -and (Select-String -LiteralPath $inbox -SimpleMatch "wac-$token@" -Quiet)) {
+            # The name as the message encodes it (RFC 2231): no accent through the agent's console.
+            Write-Output "thunderbird=$token|$name|$sha|$inbox"
+        }
+    }
 }

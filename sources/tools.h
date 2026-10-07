@@ -178,6 +178,7 @@ struct AppliConf {
 		bool rdpClient = true;  //!< outgoing RDP connections: servers, connection files, bitmap cache
 		bool rdpServer = true;  //!< incoming RDP connections, from the collected event logs
 		bool thumbcache = true; //!< Explorer's thumbnail and icon caches: what each user had on screen
+		bool emails = true;     //!< Outlook's PST and OST: messages, recipients, attachments
 
 		/*! Whether an artefact asked for reads the users' hives (ntuser.dat,
 		 *  usrClass.dat): they are a dependency, copied then. They used to be

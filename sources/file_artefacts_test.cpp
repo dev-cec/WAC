@@ -39,6 +39,8 @@
 #include "rdp_client.h"
 #include "rdp_server.h"
 #include "thumbcache.h"
+#include "emails.h"
+#include "mbox_mail.h"
 #include "wevt.h"
 #include "conversions.h"
 #include "prefetchs.h"
@@ -969,6 +971,66 @@ void thumbcache() {
 	check(!decodeThumbcache(seven, g), "thumbcache: a Windows 7 layout not decoded as Windows 8 to 11's");
 }
 
+/*! Thunderbird's mail: an mbox of two messages written here, decoded. What a
+ *  sender controls is all there: encoded words (B and Q), a quoted-printable
+ *  body, a base64 attachment with an RFC 2231 name, a nested multipart, a
+ *  multipart without its boundary, a ">From" line in a body, a Date with its
+ *  offset. The VM cycle confronts the real thing with Python's mailbox. */
+void mboxMail() {
+	check(decodeEncodedWords("=?UTF-8?B?VMOpbW9pbg==?= =?ISO-8859-1?Q?caf=E9_cr=E8me?= fin") == L"T\u00e9moincaf\u00e9 cr\u00e8me fin",
+	      "mail: encoded words B and Q, the space between two of them dropped");
+	FILETIME t{};
+	check(parseMailDate("Wed, 07 Oct 2026 21:05:09 +0200", t) && timeToIso8601Utc(t) == L"2026-10-07T19:05:09.0000000Z",
+	      "mail: a Date with its offset, in UTC");
+	check(!parseMailDate("not a date", t), "mail: a Date that is none refused");
+	const std::string first =
+		"From - Wed Oct 07 19:05:09 2026\r\n"
+		"From: =?UTF-8?Q?T=C3=A9moin?= <temoin@wac-test.invalid>\r\n"
+		"To: WAC <wac@wac-test.invalid>\r\n"
+		"Subject: =?UTF-8?B?VMOpbW9pbiBXQUM=?=\r\n"
+		"Date: Wed, 07 Oct 2026 19:05:09 +0000\r\n"
+		"Message-ID: <one@wac-test.invalid>\r\n"
+		"Content-Type: multipart/mixed; boundary=\"outer\"\r\n\r\n"
+		"--outer\r\n"
+		"Content-Type: multipart/alternative; boundary=inner\r\n\r\n"
+		"--inner\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n"
+		"Corps du t=C3=A9moin, ligne =\r\ncoup=C3=A9e\r\n"
+		"--inner\r\nContent-Type: text/html\r\n\r\n<p>t</p>\r\n--inner--\r\n"
+		"--outer\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: base64\r\n"
+		"Content-Disposition: attachment; filename*=UTF-8''r%C3%A9sum%C3%A9.bin\r\n\r\nV0FD\r\n"
+		"--outer--\r\n\r\n";
+	const std::string second =
+		"From - Wed Oct 07 19:06:00 2026\r\n"
+		"Subject: plain\r\nContent-Type: multipart/mixed\r\n\r\n"   // no boundary: no part read, no failure
+		">From the start of a line\r\n";
+	const std::filesystem::path box = std::filesystem::temp_directory_path() / "wac-mbox-test";
+	{ std::ofstream(box, std::ios::binary) << first << second; }
+	std::vector<MimeMessage> messages;
+	size_t skipped = 0;
+	const bool read = forEachMboxMessage(box.wstring(), [&](MimeMessage& m) { messages.push_back(m); }, skipped);
+	check(read && messages.size() == 2 && skipped == 0, "mail: an mbox of two messages split at its From lines");
+	if (messages.size() == 2) {
+		const MimeMessage& m = messages[0];
+		check(m.subject == L"T\u00e9moin WAC" && m.from == L"T\u00e9moin <temoin@wac-test.invalid>" && m.messageId == L"<one@wac-test.invalid>"
+		      && timeToIso8601Utc(m.dateUtc) == L"2026-10-07T19:05:09.0000000Z", "mail: headers decoded");
+		// The line break before a boundary belongs to the boundary (RFC 2046 §5.1.1), not to the part.
+		check(m.body == L"Corps du t\u00e9moin, ligne coup\u00e9e" && std::string(m.html.begin(), m.html.end()) == "<p>t</p>",
+		      "mail: quoted-printable body with a soft break, and the HTML part, out of a nested multipart");
+		check(m.attachments.size() == 1 && m.attachments[0].fileName == L"r\u00e9sum\u00e9.bin"
+		      && std::string(m.attachments[0].data.begin(), m.attachments[0].data.end()) == "WAC",
+		      "mail: a base64 attachment with its RFC 2231 name");
+		check(messages[1].subject == L"plain" && messages[1].attachments.empty() && messages[0].offset == first.find('\n') + 1,
+		      "mail: a multipart without boundary read without parts; the offset after the From line");
+	}
+	std::error_code ec;
+	std::filesystem::remove(box, ec);
+	const std::filesystem::path other = std::filesystem::temp_directory_path() / "wac-not-mbox";
+	{ std::ofstream(other, std::ios::binary) << "SQLite format 3"; }
+	size_t none = 0;
+	check(!forEachMboxMessage(other.wstring(), [](MimeMessage&) {}, none), "mail: a file that is not an mbox refused");
+	std::filesystem::remove(other, ec);
+}
+
 } // namespace
 
 int wmain() {
@@ -989,6 +1051,11 @@ int wmain() {
 	sqliteReader();
 	prefetchReference();
 	thumbcache();
+	mboxMail();
+	check(plainExtension(L"report.PDF") == L"pdf" && plainExtension(L"..\\..\\Windows\\evil.exe") == L"exe"
+	      && plainExtension(L"x.<script>") == L"" && plainExtension(L"noextension") == L"" && plainExtension(L"a.toolongext") == L""
+	      && plainExtension(L"a.") == L"" && plainExtension(L"a.\u00e9t\u00e9") == L"",
+	      "mail: an attachment's name gives at most a plain extension, never a path");
 	check(to_hex(0x0BD30981u, 8, HexLetters::Upper) == L"0BD30981" && to_hex(0x200u, 8, HexLetters::Upper, true) == L"0x00000200"
 	      && to_hex(0ULL, 1, HexLetters::Lower, true) == L"0x0" && to_hex((uint8_t)0xAB) == L"ab" && to_hex(-1, 1) == L"ffffffff",
 	      "to_hex: the forms it replaced (%08X, 0x%08X, 0x%llx), two digits by default, a negative as its unsigned bits");

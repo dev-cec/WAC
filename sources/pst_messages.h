@@ -16,6 +16,7 @@
 
 #include "pst_file.h"
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <vector>
 #include <windows.h>
@@ -58,13 +59,15 @@ struct PstMessage {
 	bool time(uint16_t id, FILETIME& utc) const;
 };
 
-/*! Every message of a file, its attachments' data read.
+/*! Every message of a file, one at a time, its attachments' data read: a
+ *  mailbox of gigabytes is never held whole in memory.
  *  @param file the opened file
- *  @param messages receives them, in the node tree's order
+ *  @param onMessage called for each message, in the node tree's order; the
+ *         message is released when it returns
  *  @param unreadable receives the number of messages whose properties could
- *         not be read at all (left out of `messages`)
+ *         not be read at all (not passed to onMessage)
  *  @return false if the node tree itself could not be walked */
-bool readPstMessages(PstFile& file, std::vector<PstMessage>& messages, size_t& unreadable);
+bool forEachPstMessage(PstFile& file, const std::function<void(PstMessage&)>& onMessage, size_t& unreadable);
 
 // The properties read, by identifier ([MS-OXPROPS]).
 const uint16_t PST_SUBJECT = 0x0037;

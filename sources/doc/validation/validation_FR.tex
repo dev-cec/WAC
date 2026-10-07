@@ -632,6 +632,18 @@ document témoin indexé par Windows ; requête de Windows sur son propre index
   (OLE DB, \texttt{Search.CollatorDSO}) : URL, modification, taille de chaque
   élément / \fichier{search\_index.json} (515 éléments identiques) &
   contrôle ajouté avec l'artefact \\
+PST public épinglé (EDRM Enron) déposé dans les \fichier{Outlook Files} de
+  « wac », lu par pypff (libpff) ; OST d'Outlook 2013 et PST chiffrés du corpus
+  java-libpst (\texttt{pst\_test}) / \fichier{emails.json} (les 246 messages
+  que lit pypff identiques : objet, expéditeur, remise, 65 pièces jointes par
+  nom, taille et SHA-256, corps ; 250 lus par \wac{}) &
+  contrôle ajouté avec l'artefact \\
+message relevé par Thunderbird lui-même (serveur POP3 local, objet en mot
+  encodé, pièce jointe base64 au nom RFC~2231), boîte mbox lue par les modules
+  \texttt{mailbox} et \texttt{email} de Python / \fichier{emails.json} (objet
+  et pièce jointe par nom et SHA-256 identiques) &
+  contrôle ajouté avec l'artefact ; Thunderbird ne relève pas sans
+  authentification, et en NTLM demande aussi un mot de passe \\
 image vue par « wac » dans l'Explorateur, son \texttt{System.ThumbnailCacheId}
   donné par Windows ; les deux sommes de contrôle CRC-64 que Windows écrit
   pour chaque entrée, recalculées / \fichier{thumbcache.json} (835 entrées de

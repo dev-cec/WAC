@@ -131,6 +131,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepRdpClient, L"Connexions Bureau à distance sortantes", L"Extracting OUTGOING RDP CONNECTIONS" },
 	{ Text::StepRdpServer, L"Connexions Bureau à distance entrantes", L"Extracting INCOMING RDP CONNECTIONS" },
 	{ Text::StepThumbcache, L"Caches des miniatures et des icônes", L"Extracting THUMBNAIL AND ICON CACHES" },
+	{ Text::StepEmails, L"Courriels (PST, OST)", L"Extracting MAIL (PST, OST)" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },
@@ -204,6 +205,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactRdpClient, L"Connexions Bureau à distance sortantes", L"Outgoing Remote Desktop connections" },
 	{ Text::ArtefactRdpServer, L"Connexions Bureau à distance entrantes", L"Incoming Remote Desktop connections" },
 	{ Text::ArtefactThumbcache, L"Caches des miniatures et des icônes", L"Thumbnail and icon caches" },
+	{ Text::ArtefactEmails, L"Courriels (PST, OST)", L"Mail (PST, OST)" },
 	{ Text::ArtefactOperatingSystem,   L"Système d'exploitation",                        L"Operating system" },
 	{ Text::ArtefactEvents,            L"Journaux d'événements",                         L"Event logs" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },

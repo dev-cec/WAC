@@ -39,6 +39,7 @@ artefacts:
   defender_configuration:  true   # Microsoft Defender exclusions and protection settings, its own and by policy
   devices:                 true   # USB and SCSI devices with their dates, portable devices, volume labels per drive letter, device interfaces
   dpapi_master_keys:       true   # DPAPI master keys of each user and of the system, copied still encrypted; JSON: owner, GUID, dates, never the key
+  emails:                  true   # Outlook (PST, OST) and Thunderbird (mbox): messages, recipients, times; bodies and attachments exported
   error_reports:           true   # Windows Error Reporting: programs that crashed, with their path
   event_log_configuration: true   # each event log and boot ETW session: enabled, size, retention, access (a disabled one is a trace)
   events:                  true   # the event logs, with their messages

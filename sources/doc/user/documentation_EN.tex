@@ -337,6 +337,7 @@ artefacts:              # one key per artefact; a missing key is true
   defender_configuration:  true   # Microsoft Defender exclusions and protection settings, its own and by policy
   devices:                 true   # USB and SCSI devices with their dates, portable devices, volume labels per drive letter, device interfaces
   dpapi_master_keys:       true   # DPAPI master keys of each user and of the system, copied still encrypted; JSON: owner, GUID, dates, never the key
+  emails:                  true   # Outlook (PST, OST) and Thunderbird (mbox): messages, recipients, times; bodies and attachments exported
   error_reports:           true   # Windows Error Reporting: programs that crashed, with their path
   event_log_configuration: true   # each event log and boot ETW session: enabled, size, retention, access (a disabled one is a trace)
   events:                  true   # the event logs, with their messages
@@ -1451,6 +1452,36 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         \champ{Domain}, \champ{SourceAddress} and \champ{SessionId}, whatever
         name its log gives them. Of little use on a workstation, it is the
         first question on a server.
+  \item[\fichier{emails.json}] Outlook's mail of every profile: the PSTs
+        (\fichier{Documents\textbackslash Outlook Files}) and the OSTs, the
+        offline copy of an Exchange or Microsoft~365 account
+        (\fichier{AppData\textbackslash Local\textbackslash Microsoft\textbackslash Outlook}),
+        read by \wac{}'s own code — Unicode PSTs of Outlook 2003 and later,
+        OSTs of Outlook 2013 and later (4~KiB pages, compressed blocks). A
+        record per mailbox (kind, version, number of messages read, of
+        unreadable ones) and one per message: folder, class, subject, sender,
+        recipients (\champ{Recipients}: name, address, To/Cc/Bcc), submission,
+        delivery, creation and modification times, Internet message
+        identifier, transport headers. The body (text, HTML) and every
+        attachment are written next to the JSON
+        (\fichier{emails\textbackslash<SID>\textbackslash<file>\textbackslash<message>\textbackslash}),
+        with their size and SHA-256; an attachment's name, chosen by the
+        sender, is never taken as a path: the file bears its rank and, when it
+        is a plain one, its extension. An attached message (an appointment, a
+        mail forwarded as attachment) gives its subject and class. The files
+        Outlook opened from a message (\fichier{INetCache\textbackslash
+        Content.Outlook}) and the new Outlook's local data
+        (\fichier{AppData\textbackslash Local\textbackslash Microsoft\textbackslash Olk})
+        are collected as they are. Not decoded: the ``high'' (cyclic)
+        encryption and the ANSI format of Outlook~97 to 2002, with no sample to
+        check them on — the mailbox's record says so. Thunderbird: its profiles
+        (\fichier{AppData\textbackslash Roaming\textbackslash Thunderbird\textbackslash Profiles})
+        are collected whole — address book and accounts' settings included —
+        and each mail folder, an mbox file, is decoded: headers (encoded words
+        included), sending date in UTC, text and HTML bodies, attachments
+        (base64, quoted-printable, RFC~2231 names), in the same fields as for
+        Outlook, with \champ{Offset} (the message's position in the file)
+        instead of \champ{NodeId}.
   \item[\fichier{thumbcache.json}] Explorer's thumbnail and icon caches of
         every profile (\fichier{thumbcache\_*.db}, \fichier{iconcache\_*.db}):
         what the user had on screen, even if the file was deleted since. For
