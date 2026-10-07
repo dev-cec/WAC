@@ -1135,9 +1135,12 @@ VerdictMicrosoft EvaluatePe(const PeAnalyser& pe, const IndexCatalogues& catalog
 	if (!pe.isPe()) { v.reason = "not a PE"; return v; }
 
 	// 1. Catalogs: is the digest, in one of its forms, listed there?
-	for (const auto& e : { std::make_pair(pe.sha256(), 32), std::make_pair(pe.sha1(), 20),
-	                       std::make_pair(pe.sha256Complete(), 32), std::make_pair(pe.sha1Complete(), 20) }) {
-		if (const std::wstring* cat = catalogues.find(e.first, (size_t)e.second)) {
+	// A named array rather than a braced list in the loop: g++ 16 takes the
+	// references to its elements for dangling (-Wdangling-reference, B-024).
+	const std::pair<const uint8_t*, size_t> forms[] = { { pe.sha256(), 32 }, { pe.sha1(), 20 },
+	                                                    { pe.sha256Complete(), 32 }, { pe.sha1Complete(), 20 } };
+	for (const auto& [digest, size] : forms) {
+		if (const std::wstring* cat = catalogues.find(digest, size)) {
 			v.microsoft = true;
 			v.source = L"catalog " + *cat;
 			v.catalog = *cat;

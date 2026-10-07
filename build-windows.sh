@@ -32,7 +32,8 @@ case "$(uname -s)" in
     MISSING="apt install g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-tools" ;;
   MINGW64_NT*)
     TOOL_PREFIX=
-    MISSING="pacman -S --needed mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils libiconv git" ;;
+    # iconv is the MINGW64 package's: MSYS2's libiconv holds only the libraries (B-024).
+    MISSING="pacman -S --needed mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils mingw-w64-x86_64-iconv git" ;;
   *)
     echo "Unsupported system $(uname -s): build on Linux, or in the MSYS2 MINGW64 shell on Windows." >&2
     exit 1 ;;
@@ -91,14 +92,15 @@ FLAGS+=(-DYAML_DECLARE_STATIC -I"$YAML/include")
 # The amalgamation, UNMODIFIED, compiled as C (see its VENDORED.md). Options:
 # no thread safety (WAC reads one database at a time, from one thread), no
 # extension loading, no deprecated interfaces, double-quoted strings refused.
-# The ONE documented warning exclusion: -Wno-unused-parameter, for two
-# parameters SQLite's Windows layer leaves unused (winUnfetch, the busy
-# timeout) — upstream code, not to be patched.
+# The documented warning exclusions, upstream code not to be patched:
+# -Wno-unused-parameter, for two parameters SQLite's Windows layer leaves
+# unused (winUnfetch, the busy timeout); -Wno-unused-but-set-variable, for a
+# variable g++ 16 (MSYS2) finds set and never read (nIdx), g++ 13 not (B-024).
 echo "== SQLite =="
 SQLITE="$TP/sqlite-3.53.4"
 SQLITE_OPTIONS=(-DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION -DSQLITE_OMIT_DEPRECATED
   -DSQLITE_DEFAULT_MEMSTATUS=0 -DSQLITE_DQS=0 -DSQLITE_OMIT_SHARED_CACHE)
-"$CC" -O2 -Wall -Wextra -Wno-unused-parameter "${SQLITE_OPTIONS[@]}" -c "$SQLITE/sqlite3.c" -o "$BUILD/sqlite3.o"
+"$CC" -O2 -Wall -Wextra -Wno-unused-parameter -Wno-unused-but-set-variable "${SQLITE_OPTIONS[@]}" -c "$SQLITE/sqlite3.c" -o "$BUILD/sqlite3.o"
 THIRD_PARTY_OBJS+=("$BUILD/sqlite3.o")   # linked with WAC and every test harness
 FLAGS+=("${SQLITE_OPTIONS[@]}" -I"$SQLITE")
 
