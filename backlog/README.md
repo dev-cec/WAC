@@ -46,7 +46,7 @@ Les fiches restantes, puis la montée de version (B-025), puis l'article (B-018)
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-017](B-017-emails.md) | Courriels et pièces jointes | à faire | P2 | fort |
+| [B-017](B-017-emails.md) | Courriels et pièces jointes | en cours | P2 | fort |
 | [B-024](B-024-msys2.md) | Compilation MSYS2 à éprouver sur un vrai Windows | à faire | P3 | faible |
 | [B-027](B-027-empreinte-comparee.md) | Empreinte comparée WAC / KAPE / EZ sous bac à sable (Sysmon, audit en option) | à faire | P2 | fort |
 | [B-029](B-029-variante-element-archive.md) | Variante d'élément d'archive mal décodée (à reproduire) | à faire | P3 | faible |
