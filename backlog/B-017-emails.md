@@ -36,9 +36,10 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Cycle --only=emails : les 246 messages que lit pypff identiques dans emails.json (65 pièces jointes, corps), 250 lus par WAC, dans les deux collectes ; dépôt du PST corrigé (chemin à espace : PowerShell, pas cmd)
 - [x] Documentation de la partie Outlook FR + EN (manuel, validation), PDF
 - [x] Cycle complet de la partie Outlook : 462 ✅, aucun ❌ (binaire d'avant la partie Thunderbird)
-- [ ] Thunderbird : mbox des profils, MIME (en-têtes encodés, multipart, base64, quoted-printable), pièces jointes ; Thunderbird installé dans la VM, message témoin, confronté au module mailbox de Python
-- [ ] Copies ouvertes : Content.Outlook (INetCache), cache OLK, prélevées
-- [ ] Clé emails, prélèvement (Outlook Files, AppData\Local\Microsoft\Outlook, profils Thunderbird), conversion, documentation FR + EN, cycle complet
+- [x] Thunderbird : mbox_mail (mbox lu ligne à ligne, MIME, mots encodés, base64 — passé dans conversions.h, 965bf62 —, quoted-printable, RFC 2231, date en UTC) ; profils prélevés entiers ; Thunderbird 157.0.1 installé dans la VM ; témoin section 42 (serveur POP3 local, USER/PASS, mot de passe factice tapé à l'invite) ; check_thunderbird par mailbox/email de Python : vert en cycle court dans les deux collectes
+- [x] Copies ouvertes : Content.Outlook et données du nouvel Outlook (Olk), prélevées sans décodage
+- [x] Documentation FR + EN (manuel, guide des tests : 174 contrôles, validation), PDF
+- [ ] Cycle complet — lancé
 
 ## Journal
 - (vide)
@@ -52,3 +53,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-07 : lecteur écrit (pst_file, pst_messages, pst_test, pst_fixtures.sh). Deux écarts du premier passage expliqués : (1) les pièces jointes d'un rendez-vous sont des objets intégrés (PtypObject, méthode 5) — la valeur nomme un sous-nœud, dont pypff rend les octets ; WAC aussi, et décode en plus ses propriétés comme un message ; (2) pypff ne donne pas d'attribut subject à un élément de disponibilité (IPM.Microsoft.ScheduleData.FreeBusy) bien que le fichier porte « LocalFreebusy » : la référence lit alors la propriété 0x0037 dans le jeu d'enregistrements de pypff. Non commité.
 - 2026-10-07 : artefact Outlook écrit et compilé, témoin et contrôle écrits ; non commité.
 - 2026-10-07 : partie Thunderbird écrite (mbox_mail, lecture des profils dans emails, témoin section 42 avec serveur POP3 local, check_thunderbird par mailbox/email de Python, tests unitaires) ; non compilée. Installeur Thunderbird 157.0.1 (win64, fr) dans vmtest/tools/thunderbird, SHA-256 b0096146…d52b identique au SHA256SUMS de Mozilla. L'artefact sera commité d'un seul tenant (Outlook + Thunderbird) une fois Thunderbird validé.
+- 2026-10-07 : le témoin Thunderbird mis au point dans la VM : Thunderbird ne relève pas sans authentification (pop3AuthMechNotSupported) ; en NTLM (SSPI) il demande aussi un mot de passe, et la relève au démarrage n'est qu'une vérification sans download_on_biff. Retenu : USER/PASS, réponse à l'invite par SendKeys depuis la session de « wac ». Fichiers de débogage retirés de la VM.
