@@ -26,7 +26,6 @@ const size_t SI_SECURITY_ID = 0x34;      //!< uint32 in $STANDARD_INFORMATION: n
 const uint64_t ROOT_ENTRY = 5;             //!< the root directory's record
 const unsigned MAX_PATH_DEPTH = 255;       //!< a longer parent chain is a loop, or a forged record
 
-FILETIME filetime(uint64_t v) { return { (DWORD)(v & 0xFFFFFFFFULL), (DWORD)(v >> 32) }; }
 
 //! A UTC date, not emitted when the record holds none.
 void addDate(Json& o, const wchar_t* key, const FILETIME& f) {
@@ -67,10 +66,10 @@ bool MftEntry::parse(const uint8_t* record, size_t recordSize, uint64_t number) 
 			if ((uint64_t)offset + valueLength <= length) value = a + offset;
 		}
 		if (type == STANDARD_INFORMATION && value && valueLength >= 0x24) {
-			created = filetime(readLittleEndian<uint64_t>(value));
-			modified = filetime(readLittleEndian<uint64_t>(value + 0x08));
-			mftModified = filetime(readLittleEndian<uint64_t>(value + 0x10));
-			accessed = filetime(readLittleEndian<uint64_t>(value + 0x18));
+			created = filetimeFromTicks(readLittleEndian<uint64_t>(value));
+			modified = filetimeFromTicks(readLittleEndian<uint64_t>(value + 0x08));
+			mftModified = filetimeFromTicks(readLittleEndian<uint64_t>(value + 0x10));
+			accessed = filetimeFromTicks(readLittleEndian<uint64_t>(value + 0x18));
 			attributes = readLittleEndian<uint32_t>(value + 0x20);
 			// The long form (NTFS 3.0, 0x48 bytes) carries the security descriptor's number.
 			if (valueLength >= SI_SECURITY_ID + 4) securityId = readLittleEndian<uint32_t>(value + SI_SECURITY_ID);
@@ -91,10 +90,10 @@ bool MftEntry::parse(const uint8_t* record, size_t recordSize, uint64_t number) 
 				nameRank = namePreference(space);
 				parentEntry = parent.entry;
 				parentSequence = parent.sequence;
-				fileNameCreated = filetime(readLittleEndian<uint64_t>(value + 0x08));
-				fileNameModified = filetime(readLittleEndian<uint64_t>(value + 0x10));
-				fileNameMftModified = filetime(readLittleEndian<uint64_t>(value + 0x18));
-				fileNameAccessed = filetime(readLittleEndian<uint64_t>(value + 0x20));
+				fileNameCreated = filetimeFromTicks(readLittleEndian<uint64_t>(value + 0x08));
+				fileNameModified = filetimeFromTicks(readLittleEndian<uint64_t>(value + 0x10));
+				fileNameMftModified = filetimeFromTicks(readLittleEndian<uint64_t>(value + 0x18));
+				fileNameAccessed = filetimeFromTicks(readLittleEndian<uint64_t>(value + 0x20));
 				name.assign(value[0x40], L'\0');
 				for (size_t k = 0; k < name.size(); ++k) name[k] = (wchar_t)readLittleEndian<uint16_t>(value + 0x42 + 2 * k);
 			}

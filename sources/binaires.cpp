@@ -294,7 +294,7 @@ const ThirdPartyRoots* thirdPartyRoots() {
 	GetSystemTimeAsFileTime(&now);
 	if (set.usable)
 		roots = std::make_unique<ThirdPartyRoots>(set.roots, set.rootCertificates, set.disallowed, set.revokedAuthorities,
-		                                set.revocationLists, ((uint64_t)now.dwHighDateTime << 32) | now.dwLowDateTime);
+		                                set.revocationLists, ticksFromFiletime(now));
 	return roots.get();
 }
 

@@ -95,7 +95,7 @@ void addSrumValue(Json& row, const EseColumn& c, const EseCell& cell) {
 	if (cell.values.size() == 1 && cell.values.front().size() == 8 && isFiletimeColumn(c.name)) {
 		uint64_t ticks;
 		memcpy(&ticks, cell.values.front().data(), 8);
-		const FILETIME utc = { (DWORD)(ticks & 0xFFFFFFFFULL), (DWORD)(ticks >> 32) };
+		const FILETIME utc = filetimeFromTicks(ticks);
 		if (ticks) {
 			row.add(key + L"Utc", Json::str(timeToIso8601Utc(utc)));
 			row.add(key, Json::str(utcTimeToIso8601Local(utc)));

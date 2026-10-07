@@ -106,7 +106,7 @@ Json NtfsVolumeInfo::toJson() const {
 		j.add(L"AllocationDelta", Json::num((unsigned long long)journal->allocationDelta));
 		j.add(L"UsnJournalId", Json::str(upperHex(journal->journalId, 16)));
 		// The journal's identifier is the FILETIME of its creation.
-		const FILETIME created = { (DWORD)(journal->journalId & 0xFFFFFFFFULL), (DWORD)(journal->journalId >> 32) };
+		const FILETIME created = filetimeFromTicks(journal->journalId);
 		addDate(j, L"Created", created);
 		j.add(L"LowestValidUsn", Json::num((unsigned long long)journal->lowestValidUsn));
 		o.add(L"UsnJournal", std::move(j));

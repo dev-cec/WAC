@@ -260,7 +260,7 @@ private:
 		case T_FILETIME: {
 			if (size < 8) return L"";
 			const uint64_t v = read64(c, tc, off);
-			FILETIME ft = { (DWORD)(v & 0xFFFFFFFFULL), (DWORD)(v >> 32) };
+			FILETIME ft = filetimeFromTicks(v);
 			// Log timestamps are in UTC.
 			return timeToIso8601Utc(ft);
 		}

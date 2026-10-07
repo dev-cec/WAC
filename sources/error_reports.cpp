@@ -40,7 +40,7 @@ bool parseErrorReport(const std::wstring& text, ErrorReport& report) {
 			// A FILETIME in decimal; anything else is not a date and is left in `values` only.
 			if (!value.empty() && value.size() <= 20 && value.find_first_not_of(L"0123456789") == std::wstring::npos) {
 				const unsigned long long t = std::stoull(value);
-				report.eventTimeUtc = { (DWORD)(t & 0xFFFFFFFFULL), (DWORD)(t >> 32) };
+				report.eventTimeUtc = filetimeFromTicks(t);
 			}
 		}
 		// Sig[n].Name / Sig[n].Value, n below 100.

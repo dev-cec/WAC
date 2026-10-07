@@ -69,8 +69,7 @@ HRESULT snapshotSystemClock() {
 	log(3, L"🔈GetTickCount64");
 	const ULONGLONG uptimeMs = GetTickCount64();
 	const unsigned long long uptimeSeconds = uptimeMs / 1000ULL;
-	const ULONGLONG now100ns = ((ULONGLONG)collectionTimeUtc.dwHighDateTime << 32)
-	                                | collectionTimeUtc.dwLowDateTime;
+	const ULONGLONG now100ns = ticksFromFiletime(collectionTimeUtc);
 	ULONGLONG boot100ns = 0;
 	{
 		struct TimeOfDay {                     // SYSTEM_TIMEOFDAY_INFORMATION
@@ -95,7 +94,7 @@ HRESULT snapshotSystemClock() {
 	if (!bootFromKernel && now100ns > uptimeMs * 10000ULL)
 		boot100ns = now100ns - uptimeMs * 10000ULL;
 	if (boot100ns)
-		log(2, L"❇️Last boot (UTC) : " + timeToIso8601Utc(FILETIME{ (DWORD)(boot100ns & 0xFFFFFFFFULL), (DWORD)(boot100ns >> 32) }));
+		log(2, L"❇️Last boot (UTC) : " + timeToIso8601Utc(filetimeFromTicks(boot100ns)));
 	else
 		log(2, L"🔥Uptime inconsistent with the system time: boot time not computed");
 
@@ -245,9 +244,9 @@ HRESULT SystemInfo::getData() {
 	if (readLiveSnapshot("system-clock.json", clock) == ERROR_SUCCESS) {
 		long long collection = 0, boot = 0, correction = 0, uptime = 0, kernel = 0;
 		if (snapshotInteger(clock, L"CollectionTime100ns", collection) && collection > 0)
-			collectionTimeUtc = FILETIME{ (DWORD)((ULONGLONG)collection & 0xFFFFFFFFULL), (DWORD)((ULONGLONG)collection >> 32) };
+			collectionTimeUtc = filetimeFromTicks(collection);
 		if (snapshotInteger(clock, L"BootTime100ns", boot) && boot > 0)
-			lastBootUpTimeUtc = FILETIME{ (DWORD)((ULONGLONG)boot & 0xFFFFFFFFULL), (DWORD)((ULONGLONG)boot >> 32) };
+			lastBootUpTimeUtc = filetimeFromTicks(boot);
 		if (snapshotInteger(clock, L"UptimeSeconds", uptime) && uptime >= 0) uptimeSeconds = (unsigned long long)uptime;
 		if (snapshotInteger(clock, L"ClockCorrection100ns", correction)) clockCorrection100ns = correction;
 		if (snapshotInteger(clock, L"BootTimeFromKernel", kernel)) bootFromKernel = kernel != 0;

@@ -75,8 +75,7 @@ Json Session::toJson() const {
 	   suspect's time zone, read from the hives at CONVERSION — formatted here,
 	   in the live phase, it took the offset of whatever was known then. */
 	if (startTimeUtc.dwHighDateTime || startTimeUtc.dwLowDateTime)
-		o.add(L"StartTime100ns", Json::num(((unsigned long long)startTimeUtc.dwHighDateTime << 32)
-		                                  | startTimeUtc.dwLowDateTime));
+		o.add(L"StartTime100ns", Json::num(ticksFromFiletime(startTimeUtc)));
 	return o;
 }
 
@@ -129,8 +128,7 @@ HRESULT writeSessionsFromSnapshot() {
 			long long ticks = 0;
 			if (field.first != L"StartTime100ns") o.add(field.first, field.second);
 			else if (snapshotInteger(field.second, ticks) && ticks > 0) {
-				const FILETIME start = { (DWORD)((unsigned long long)ticks & 0xFFFFFFFFULL),
-				                         (DWORD)((unsigned long long)ticks >> 32) };
+				const FILETIME start = filetimeFromTicks(ticks);
 				o.add(L"StartTime",    Json::str(utcTimeToIso8601Local(start)));
 				o.add(L"StartTimeUtc", Json::str(timeToIso8601Utc(start)));
 			}

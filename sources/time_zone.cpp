@@ -6,6 +6,7 @@
  *  kernel32, which consult no time zone.
  */
 #include "time_zone.h"
+#include "conversions.h"
 #include <cstdint>
 #include <cstring>
 #include <algorithm>
@@ -27,14 +28,14 @@ const long long SAFE_MARGIN_100NS = 4LL * MAX_OFFSET_MINUTES * MINUTE_100NS;
 bool toTicks(const SYSTEMTIME& st, long long& ticks) {
 	FILETIME ft = { 0, 0 };
 	if (!SystemTimeToFileTime(&st, &ft)) return false;
-	ticks = (long long)(((ULONGLONG)ft.dwHighDateTime << 32) | ft.dwLowDateTime);
+	ticks = (long long)(ticksFromFiletime(ft));
 	return true;
 }
 
 //! Calendar year of a 100 ns count, or 0 if it is out of range.
 int yearOf(long long ticks) {
 	if (ticks < 0) return 0;
-	const FILETIME ft = { (DWORD)((ULONGLONG)ticks & 0xFFFFFFFFULL), (DWORD)((ULONGLONG)ticks >> 32) };
+	const FILETIME ft = filetimeFromTicks(ticks);
 	SYSTEMTIME st = {};
 	if (!FileTimeToSystemTime(&ft, &st)) return 0;
 	return st.wYear;
@@ -77,7 +78,7 @@ bool transition(const SYSTEMTIME& rule, int year, long long& ticks) {
 	st.wDay = 1;
 	long long first = 0;
 	if (!toTicks(st, first)) return false;
-	const FILETIME ft = { (DWORD)((ULONGLONG)first & 0xFFFFFFFFULL), (DWORD)((ULONGLONG)first >> 32) };
+	const FILETIME ft = filetimeFromTicks(first);
 	SYSTEMTIME firstDay = {};
 	if (!FileTimeToSystemTime(&ft, &firstDay)) return false;
 	st.wDay = (WORD)(1 + (rule.wDayOfWeek + 7 - firstDay.wDayOfWeek) % 7 + (rule.wDay - 1) * 7);

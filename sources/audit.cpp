@@ -244,8 +244,8 @@ HRESULT auditWrite() {
 	FILETIME end = { 0, 0 };
 	now(finUtc, finLocal, &end);
 
-	const ULONGLONG d = ((ULONGLONG)g_start.dwHighDateTime << 32) | g_start.dwLowDateTime;
-	const ULONGLONG f = ((ULONGLONG)end.dwHighDateTime << 32) | end.dwLowDateTime;
+	const ULONGLONG d = ticksFromFiletime(g_start);
+	const ULONGLONG f = ticksFromFiletime(end);
 	const ULONGLONG duration = (f > d) ? (f - d) / 10000000ULL : 0ULL;   // 100 ns -> s
 
 	// The SAME context as the exhibit manifest: one single construction, so that

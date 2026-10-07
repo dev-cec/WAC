@@ -327,7 +327,7 @@ int64_t cellInteger(const EseRecord& record, const EseTable& table, const wchar_
 //! @return a FILETIME column, null if absent or zero
 FILETIME cellTime(const EseRecord& record, const EseTable& table, const wchar_t* name) {
 	const uint64_t ticks = (uint64_t)cellInteger(record, table, name);
-	return FILETIME{ (DWORD)(ticks & 0xFFFFFFFFULL), (DWORD)(ticks >> 32) };
+	return filetimeFromTicks(ticks);
 }
 
 } // namespace
@@ -441,9 +441,6 @@ std::wstring fatAsWritten(uint32_t value) {
 	return text;
 }
 
-//! @return the FILETIME of a 64-bit value
-FILETIME asFiletime(uint64_t ticks) { return FILETIME{ (DWORD)(ticks & 0xFFFFFFFFULL), (DWORD)(ticks >> 32) }; }
-
 /*! The container of an index.dat, from its folder: Content, History,
  *  MSHist01<from><to>, Cookies, iedownload.
  *  @param path the file's path
@@ -461,7 +458,7 @@ std::wstring ieContainer(const std::wstring& path, bool& weekly) {
 			b.wYear = (WORD)_wtoi(name.substr(16, 4).c_str()); b.wMonth = (WORD)_wtoi(name.substr(20, 2).c_str()); b.wDay = (WORD)_wtoi(name.substr(22, 2).c_str());
 			FILETIME fa = {}, fb = {};
 			if (SystemTimeToFileTime(&a, &fa) && SystemTimeToFileTime(&b, &fb)) {
-				const uint64_t ta = ((uint64_t)fa.dwHighDateTime << 32) | fa.dwLowDateTime, tb = ((uint64_t)fb.dwHighDateTime << 32) | fb.dwLowDateTime;
+				const uint64_t ta = ticksFromFiletime(fa), tb = ticksFromFiletime(fb);
 				weekly = tb > ta && tb - ta > 864000000000ULL;   // more than one day
 			}
 		}
@@ -502,13 +499,13 @@ HRESULT readIeIndexDat(const std::wstring& file, const WebClientRecord& base, st
 			   visit — in a weekly one the primary is the index's creation, the
 			   visit is the secondary, in LOCAL time; the downloads, the start. */
 			if (weekly) {
-				addDate(r.fields, L"IndexCreated", asFiletime(e.primaryTime));
-				addDate(r.fields, L"Accessed", suspectLocalToUtc(asFiletime(e.secondaryTime)));
+				addDate(r.fields, L"IndexCreated", filetimeFromTicks(e.primaryTime));
+				addDate(r.fields, L"Accessed", suspectLocalToUtc(filetimeFromTicks(e.secondaryTime)));
 			}
-			else if (container == L"iedownload") addDate(r.fields, L"Created", asFiletime(e.primaryTime));
+			else if (container == L"iedownload") addDate(r.fields, L"Created", filetimeFromTicks(e.primaryTime));
 			else {
-				addDate(r.fields, L"Accessed", asFiletime(e.primaryTime));
-				if (container == L"Content" || container == L"Cookies") addDate(r.fields, L"Modified", asFiletime(e.secondaryTime));
+				addDate(r.fields, L"Accessed", filetimeFromTicks(e.primaryTime));
+				if (container == L"Content" || container == L"Cookies") addDate(r.fields, L"Modified", filetimeFromTicks(e.secondaryTime));
 			}
 			r.fields.add(L"ExpiresAsWritten", Json::str(fatAsWritten(e.expiry)));
 			r.fields.add(L"LastCheckedAsWritten", Json::str(fatAsWritten(e.lastChecked)));
@@ -688,7 +685,7 @@ FILETIME chromiumTime(int64_t microseconds) {
 	// A FILETIME counts 100 ns from the same origin: ten per microsecond.
 	if (microseconds <= 0 || microseconds > INT64_MAX / 10) return FILETIME{ 0, 0 };
 	const uint64_t ticks = (uint64_t)microseconds * 10;
-	return FILETIME{ (DWORD)(ticks & 0xFFFFFFFFULL), (DWORD)(ticks >> 32) };
+	return filetimeFromTicks(ticks);
 }
 
 std::wstring transitionCore(int64_t transition) {

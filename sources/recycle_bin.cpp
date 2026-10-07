@@ -25,7 +25,7 @@ bool parseRecycleBinIndex(const std::vector<uint8_t>& bytes, RecycledFile& recyc
 	recycled.version = readLittleEndian<uint64_t>(bytes.data());
 	recycled.size = readLittleEndian<uint64_t>(bytes.data() + 8);
 	const uint64_t deleted = readLittleEndian<uint64_t>(bytes.data() + 16);
-	recycled.deletedUtc = { (DWORD)(deleted & 0xFFFFFFFFULL), (DWORD)(deleted >> 32) };
+	recycled.deletedUtc = filetimeFromTicks(deleted);
 	if (recycled.version == 1) {
 		if (bytes.size() < HEADER_SIZE + V1_PATH_BYTES) return false;
 		recycled.originalPath = readWideZ(bytes.data(), HEADER_SIZE + V1_PATH_BYTES, HEADER_SIZE);

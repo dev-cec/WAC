@@ -28,16 +28,6 @@ std::wstring offsetText(int minutes) {
 	return text;
 }
 
-//! A FILETIME as a signed count of 100 ns.
-int64_t ticks(const FILETIME& f) { return (int64_t)(((uint64_t)f.dwHighDateTime << 32) | f.dwLowDateTime); }
-
-FILETIME fromTicks(int64_t v) {
-	FILETIME f;
-	f.dwLowDateTime = (DWORD)(uint64_t)v;
-	f.dwHighDateTime = (DWORD)((uint64_t)v >> 32);
-	return f;
-}
-
 //! Two seconds, FAT's resolution for a modification, in 100 ns.
 const int64_t FAT_RESOLUTION = 2LL * 10000000;
 
@@ -57,8 +47,8 @@ void addFatDate(Json& o, const wchar_t* name, const FILETIME& date, bool utc, in
 	else if (!writtenAt) instant = suspectLocalToUtc(date);
 	else {
 		// The offset in force when the entry was written, applied to the date kept.
-		const int64_t bias = ticks(*writtenAt) - ticks(suspectLocalToUtc(*writtenAt));
-		instant = fromTicks(ticks(date) - bias);
+		const int64_t bias = (int64_t)ticksFromFiletime(*writtenAt) - (int64_t)ticksFromFiletime(suspectLocalToUtc(*writtenAt));
+		instant = filetimeFromTicks((uint64_t)((int64_t)ticksFromFiletime(date) - bias));
 		o.add(key + L"WrittenAt", Json::str(L"Copy"));
 		o.add(key + L"OffsetApplied", Json::str(offsetText((int)(bias / 600000000))));
 		o.add(key + L"AsStored", Json::str(timeToIso8601Utc(date, precision).substr(0, 19)));
@@ -116,7 +106,7 @@ namespace {
 uint64_t manifestTime(const FILETIME& date, bool utc) {
 	if (date.dwLowDateTime == 0 && date.dwHighDateTime == 0) return 0;
 	const FILETIME u = utc ? date : suspectLocalToUtc(date);
-	return ((uint64_t)u.dwHighDateTime << 32) | u.dwLowDateTime;
+	return ticksFromFiletime(u);
 }
 
 } // namespace
@@ -172,7 +162,7 @@ HRESULT FatAwareReader::read(const std::wstring& absolutePath, const std::wstrin
 	f.accedeUtc = manifestTime(e.accessed, e.accessedUtc);
 	FILETIME now = { 0, 0 };
 	GetSystemTimeAsFileTime(&now);
-	f.extractedUtc = ((uint64_t)now.dwHighDateTime << 32) | now.dwLowDateTime;
+	f.extractedUtc = ticksFromFiletime(now);
 	return line.result = ERROR_SUCCESS;
 }
 
@@ -219,8 +209,8 @@ Json FatVolumeEntry::toJson() const {
 	   the creation dates, not with that of the date kept. Converted with the
 	   offset of the date kept, a winter file copied in summer would be an
 	   hour off — the case of an exfiltration onto a key. */
-	const bool copied = !e.modifiedUtc && !e.createdUtc && ticks(e.created) != 0 && ticks(e.modified) != 0
-	                    && ticks(e.modified) < ticks(e.created) - FAT_RESOLUTION;
+	const bool copied = !e.modifiedUtc && !e.createdUtc && (int64_t)ticksFromFiletime(e.created) != 0 && (int64_t)ticksFromFiletime(e.modified) != 0
+	                    && (int64_t)ticksFromFiletime(e.modified) < (int64_t)ticksFromFiletime(e.created) - FAT_RESOLUTION;
 	addFatDate(o, L"Modified", e.modified, e.modifiedUtc, e.modifiedOffset,
 	           fileSystem == L"exFAT" ? Precision::HundredNanoseconds : Precision::Second, copied ? &e.created : nullptr);
 	addFatDate(o, L"Accessed", e.accessed, e.accessedUtc, e.accessedOffset, Precision::Second);

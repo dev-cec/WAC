@@ -410,7 +410,7 @@ Json securityDescriptorToJson(const BYTE* sd, size_t size) {
 FILETIME unixToFiletime(unsigned long long seconds) {
 	const unsigned long long OFFSET_1601_1970 = 11644473600ULL;
 	const unsigned long long ticks = (seconds + OFFSET_1601_1970) * 10000000ULL;
-	return FILETIME{ (DWORD)(ticks & 0xFFFFFFFFULL), (DWORD)(ticks >> 32) };
+	return filetimeFromTicks(ticks);
 }
 
 std::wstring dump_wstring(LPBYTE buffer, int start, int length) {
@@ -1039,13 +1039,13 @@ std::wstring formatIso8601(const SYSTEMTIME& st, long fraction100ns, const std::
  */
 //! Fraction of a second of a FILETIME, in hundreds of nanoseconds (0..9999999).
 long fraction100ns(const FILETIME& ft) {
-	const ULONGLONG v = ((ULONGLONG)ft.dwHighDateTime << 32) | ft.dwLowDateTime;
+	const ULONGLONG v = ticksFromFiletime(ft);
 	return (long)(v % 10000000ULL);
 }
 
 //! A FILETIME as a signed count of 100 ns (negative if bit 63 is set: not a date for Windows).
 long long ticksOf(const FILETIME& ft) {
-	return (long long)(((ULONGLONG)ft.dwHighDateTime << 32) | ft.dwLowDateTime);
+	return (long long)(ticksFromFiletime(ft));
 }
 
 /*! Shifts a FILETIME by an offset.
@@ -1058,7 +1058,7 @@ FILETIME shifted(const FILETIME& filetime, long long offset100ns) {
 	if (offset100ns < 0 ? value < -offset100ns : value > LLONG_MAX - offset100ns)
 		return FILETIME{ 0, 0 };
 	const ULONGLONG result = (ULONGLONG)(value + offset100ns);
-	return FILETIME{ (DWORD)(result & 0xFFFFFFFFULL), (DWORD)(result >> 32) };
+	return filetimeFromTicks(result);
 }
 
 //! Formats a local FILETIME with the bias that goes with it.
@@ -1126,8 +1126,8 @@ bool iso8601UtcToFiletime(const std::wstring& text, FILETIME& filetime) {
 	}
 	FILETIME whole = {};
 	if (!SystemTimeToFileTime(&st, &whole)) return false;   // refuses a month 13, a day 32…
-	const unsigned long long value = (((unsigned long long)whole.dwHighDateTime << 32) | whole.dwLowDateTime) + ticks;
-	filetime = FILETIME{ (DWORD)(value & 0xFFFFFFFFULL), (DWORD)(value >> 32) };
+	const unsigned long long value = (ticksFromFiletime(whole)) + ticks;
+	filetime = filetimeFromTicks(value);
 	return true;
 }
 

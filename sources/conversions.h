@@ -10,6 +10,7 @@
  */
 #pragma once
 
+#include <windows.h>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -119,4 +120,20 @@ struct NtfsReference {
  *  @return the record number and the sequence */
 inline NtfsReference splitNtfsReference(uint64_t reference) {
 	return { reference & 0x0000FFFFFFFFFFFFULL, (uint16_t)(reference >> 48) };
+}
+
+/*! A FILETIME from its 64-bit value — 100-ns intervals since 1601 — the form
+ *  the raw readers, ESE, SRUM and the event logs give dates in. The only
+ *  place where the two halves are put together (B-030).
+ *  @param ticks the 64-bit value
+ *  @return the FILETIME */
+inline FILETIME filetimeFromTicks(uint64_t ticks) {
+	return FILETIME{ (DWORD)(ticks & 0xFFFFFFFFULL), (DWORD)(ticks >> 32) };
+}
+
+/*! The reverse: a FILETIME's 64-bit value.
+ *  @param filetime the FILETIME
+ *  @return its 100-ns intervals since 1601 */
+inline uint64_t ticksFromFiletime(const FILETIME& filetime) {
+	return ((uint64_t)filetime.dwHighDateTime << 32) | filetime.dwLowDateTime;
 }

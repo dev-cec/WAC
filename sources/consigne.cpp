@@ -34,15 +34,9 @@ std::vector<Exhibit> g_exhibits;
 //! Volumes actually read, by letter: recorded once each.
 std::map<std::wstring, std::wstring> g_volumes;   // letter -> "serial | file system"
 
-//! FILETIME from a 64-bit integer, the form raw_hive returns them in.
-FILETIME toFiletime(uint64_t v) {
-	FILETIME f = { (DWORD)(v & 0xFFFFFFFFULL), (DWORD)(v >> 32) };
-	return f;
-}
-
 //! addDate (tools.h) for a date kept as a 64-bit integer, as raw_hive returns them.
 void addDate(Json& o, const std::wstring& key, uint64_t filetimeUtc) {
-	addDate(o, key, toFiletime(filetimeUtc));
+	addDate(o, key, filetimeFromTicks(filetimeUtc));
 }
 
 //! Records a volume's serial number and file system.
@@ -193,9 +187,9 @@ bool ExhibitSourceTimes(const std::wstring& workingCopy, FILETIME& created, FILE
 	if (found == byFile.end()) return false;
 	const RawHiveFingerprints& m = g_exhibits[found->second].extracted.fingerprints;
 	if (!m.creeUtc && !m.modifiedUtc && !m.accedeUtc) return false;
-	created = toFiletime(m.creeUtc);
-	modified = toFiletime(m.modifiedUtc);
-	accessed = toFiletime(m.accedeUtc);
+	created = filetimeFromTicks(m.creeUtc);
+	modified = filetimeFromTicks(m.modifiedUtc);
+	accessed = filetimeFromTicks(m.accedeUtc);
 	return true;
 }
 
@@ -611,7 +605,7 @@ HRESULT ExhibitStoreLoad(ExhibitStoreCheck& check) {
 			// The source's timestamps, for the dates of the file artefacts (ExhibitSourceTimes).
 			auto date = [&](const wchar_t* key, uint64_t& out) {
 				FILETIME f = {};
-				if (iso8601UtcToFiletime(text(key), f)) out = ((uint64_t)f.dwHighDateTime << 32) | f.dwLowDateTime;
+				if (iso8601UtcToFiletime(text(key), f)) out = ticksFromFiletime(f);
 			};
 			date(L"SourceCreatedUtc", p.extracted.fingerprints.creeUtc);
 			date(L"SourceModifiedUtc", p.extracted.fingerprints.modifiedUtc);
@@ -695,7 +689,7 @@ HRESULT ExhibitStoreProduce(const std::wstring& path, const std::string& bytes, 
 	e.fingerprints.validDataLength = bytes.size();
 	FILETIME now = { 0, 0 };
 	GetSystemTimeAsFileTime(&now);
-	e.fingerprints.extractedUtc = ((uint64_t)now.dwHighDateTime << 32) | now.dwLowDateTime;
+	e.fingerprints.extractedUtc = ticksFromFiletime(now);
 	ExhibitStoreAdd({ e }, method);
 	return ERROR_SUCCESS;
 }

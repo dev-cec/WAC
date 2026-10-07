@@ -67,13 +67,6 @@ private:
 	uint8_t i_ = 0, j_ = 0;
 };
 
-FILETIME toFiletime(uint64_t v) {
-	FILETIME f;
-	f.dwLowDateTime = (DWORD)v;
-	f.dwHighDateTime = (DWORD)(v >> 32);
-	return f;
-}
-
 //! A GUID stored as Windows lays it out in memory (16 bytes).
 std::wstring guidAt(const uint8_t* p) {
 	GUID g;
@@ -128,7 +121,7 @@ void parseBag(const std::vector<uint8_t>& bag, std::vector<DetectionProperty>& o
 		else if (type == 4 && fits(size, p, 8)) {
 			const uint64_t v = readLittleEndian<uint64_t>(b + p);
 			const bool time = property.name.size() > 4 && property.name.compare(property.name.size() - 4, 4, L"Time") == 0;
-			property.value = time ? Json::str(timeToIso8601Utc(toFiletime(v))) : Json::num(v);
+			property.value = time ? Json::str(timeToIso8601Utc(filetimeFromTicks(v))) : Json::num(v);
 			p += 8;
 		}
 		else if (type == 5 && fits(size, p, 1)) { property.value = Json::num((unsigned)b[p]); p += 1; }
@@ -174,7 +167,7 @@ void nameFields(const std::vector<DetectionField>& f, DefenderDetection& d, std:
 	if (at(q + 3, FIELD_STRING)) { d.domainUser = fieldString(f[q + 3]); named[q + 3] = true; }
 	if (at(q + 5, FIELD_STRING)) { d.processName = fieldString(f[q + 5]); named[q + 5] = true; }
 	if (at(q + 9, FIELD_FILETIME) && f[q + 9].value.size() == 8) {
-		d.initialDetectionUtc = toFiletime(readLittleEndian<uint64_t>(f[q + 9].value.data()));
+		d.initialDetectionUtc = filetimeFromTicks(readLittleEndian<uint64_t>(f[q + 9].value.data()));
 		named[q + 9] = true;
 	}
 }
@@ -311,7 +304,7 @@ Json DetectionField::valueToJson() const {
 	const uint8_t* v = value.data();
 	if (type == FIELD_NUMBER32 && value.size() == 4) return Json::num(readLittleEndian<uint32_t>(v));
 	if (type == FIELD_NUMBER64 && value.size() == 8) return Json::num(readLittleEndian<uint64_t>(v));
-	if (type == FIELD_FILETIME && value.size() == 8) return Json::str(timeToIso8601Utc(toFiletime(readLittleEndian<uint64_t>(v))));
+	if (type == FIELD_FILETIME && value.size() == 8) return Json::str(timeToIso8601Utc(filetimeFromTicks(readLittleEndian<uint64_t>(v))));
 	if (type == FIELD_STRING) return Json::str(fieldString(*this));
 	if (type == FIELD_GUID && value.size() == 16) return Json::str(guidAt(v));
 	return Json::str(hexOf(value));
@@ -445,8 +438,8 @@ Json QuarantineResource::toJson() const {
 	o.add(L"ResourceDataSha1", Json::str(resourceDataSha1()));
 	uint64_t v = 0;
 	if (field64(fields, TAG_SIZE, v)) o.add(L"Size", Json::num(v));
-	if (field64(fields, TAG_CREATED, v)) addDate(o, L"Created", toFiletime(v));
-	if (field64(fields, TAG_MODIFIED, v)) addDate(o, L"Modified", toFiletime(v));
+	if (field64(fields, TAG_CREATED, v)) addDate(o, L"Created", filetimeFromTicks(v));
+	if (field64(fields, TAG_MODIFIED, v)) addDate(o, L"Modified", filetimeFromTicks(v));
 	const QuarantineField* attributes = fieldOf(fields, TAG_ATTRIBUTES);
 	if (attributes && attributes->value.size() == 4)
 		o.add(L"Attributes", Json::str(FileAttributes(readLittleEndian<uint32_t>(attributes->value.data())).to_wstring()));
@@ -495,7 +488,7 @@ bool parseQuarantineEntry(const std::vector<uint8_t>& bytes, QuarantineEntry& en
 	const std::vector<uint8_t> threat = defenderDecrypt(bytes.data() + ENTRY_HEADER, first);
 	if (threat.size() < 0x34) return false;
 	entry.threatId = readLittleEndian<uint64_t>(threat.data());
-	entry.quarantinedUtc = toFiletime(readLittleEndian<uint64_t>(threat.data() + 0x20));
+	entry.quarantinedUtc = filetimeFromTicks(readLittleEndian<uint64_t>(threat.data() + 0x20));
 	entry.threatName = decodeText(readNarrowZ(threat.data(), threat.size(), 0x34), CP_UTF8);
 	// The resources: their number, their offsets, each one.
 	const std::vector<uint8_t> list = defenderDecrypt(bytes.data() + ENTRY_HEADER + first, second);

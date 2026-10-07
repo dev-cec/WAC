@@ -76,11 +76,6 @@ std::wstring ipv4(DWORD address) {
 	return Ipv4Text(bytes);
 }
 
-//! A creation time as the tables hold it: FILETIME ticks in a LARGE_INTEGER.
-FILETIME filetime(const LARGE_INTEGER& time) {
-	return { time.LowPart, (DWORD)time.HighPart };
-}
-
 //! MIB_TCP_STATE: an ENUMERATION (1 to 12), not a field of bits.
 std::wstring tcpState(DWORD state) {
 	static const wchar_t* const NAMES[] = { L"", L"CLOSED", L"LISTEN", L"SYN_SENT", L"SYN_RCVD", L"ESTABLISHED",
@@ -141,7 +136,7 @@ bool readConnections(const IpHelper& api, std::vector<Connection>& connections) 
 		for (DWORD k = 0; k < t->dwNumEntries; ++k) {
 			const MIB_TCPROW_OWNER_MODULE& r = t->table[k];
 			connections.push_back({ L"TCP", ipv4(r.dwLocalAddr), port(r.dwLocalPort), ipv4(r.dwRemoteAddr),
-			                        port(r.dwRemotePort), tcpState(r.dwState), r.dwOwningPid, filetime(r.liCreateTimestamp) });
+			                        port(r.dwRemotePort), tcpState(r.dwState), r.dwOwningPid, filetimeFromTicks((uint64_t)r.liCreateTimestamp.QuadPart) });
 		}
 	}
 	if (!tcp6.empty()) {
@@ -149,7 +144,7 @@ bool readConnections(const IpHelper& api, std::vector<Connection>& connections) 
 		for (DWORD k = 0; k < t->dwNumEntries; ++k) {
 			const MIB_TCP6ROW_OWNER_MODULE& r = t->table[k];
 			connections.push_back({ L"TCP6", Ipv6Text(r.ucLocalAddr), port(r.dwLocalPort), Ipv6Text(r.ucRemoteAddr),
-			                        port(r.dwRemotePort), tcpState(r.dwState), r.dwOwningPid, filetime(r.liCreateTimestamp) });
+			                        port(r.dwRemotePort), tcpState(r.dwState), r.dwOwningPid, filetimeFromTicks((uint64_t)r.liCreateTimestamp.QuadPart) });
 		}
 	}
 	if (!udp4.empty()) {
@@ -157,7 +152,7 @@ bool readConnections(const IpHelper& api, std::vector<Connection>& connections) 
 		for (DWORD k = 0; k < t->dwNumEntries; ++k) {
 			const MIB_UDPROW_OWNER_MODULE& r = t->table[k];
 			connections.push_back({ L"UDP", ipv4(r.dwLocalAddr), port(r.dwLocalPort), L"", 0, L"", r.dwOwningPid,
-			                        filetime(r.liCreateTimestamp) });
+			                        filetimeFromTicks((uint64_t)r.liCreateTimestamp.QuadPart) });
 		}
 	}
 	if (!udp6.empty()) {
@@ -165,7 +160,7 @@ bool readConnections(const IpHelper& api, std::vector<Connection>& connections) 
 		for (DWORD k = 0; k < t->dwNumEntries; ++k) {
 			const MIB_UDP6ROW_OWNER_MODULE& r = t->table[k];
 			connections.push_back({ L"UDP6", Ipv6Text(r.ucLocalAddr), port(r.dwLocalPort), L"", 0, L"", r.dwOwningPid,
-			                        filetime(r.liCreateTimestamp) });
+			                        filetimeFromTicks((uint64_t)r.liCreateTimestamp.QuadPart) });
 		}
 	}
 	return !tcp4.empty() && !tcp6.empty() && !udp4.empty() && !udp6.empty();
@@ -235,7 +230,7 @@ Json Connection::toJson() const {
 	o.add(L"ProcessId", Json::num(processId));
 	// Raw ticks, as sessions.json: the conversion writes them local (the
 	// examined machine's offset at that date) and UTC.
-	const unsigned long long ticks = ((unsigned long long)createdUtc.dwHighDateTime << 32) | createdUtc.dwLowDateTime;
+	const unsigned long long ticks = ticksFromFiletime(createdUtc);
 	if (ticks) o.add(L"Created100ns", Json::num(ticks));
 	return o;
 }
@@ -344,8 +339,7 @@ HRESULT writeNetworkFromSnapshot() {
 				long long ticks = 0;
 				if (field.first != L"Created100ns") o.add(field.first, field.second);
 				else if (snapshotInteger(field.second, ticks) && ticks > 0) {
-					const FILETIME created = { (DWORD)((unsigned long long)ticks & 0xFFFFFFFFULL),
-					                           (DWORD)((unsigned long long)ticks >> 32) };
+					const FILETIME created = filetimeFromTicks(ticks);
 					o.add(L"Created",    Json::str(utcTimeToIso8601Local(created)));
 					o.add(L"CreatedUtc", Json::str(timeToIso8601Utc(created)));
 				}

@@ -1083,8 +1083,7 @@ public:
                what it dates. */
             FILETIME now = { 0, 0 };
             GetSystemTimeAsFileTime(&now);
-            emp->extractedUtc = ((uint64_t)now.dwHighDateTime << 32)
-                            | now.dwLowDateTime;
+            emp->extractedUtc = ticksFromFiletime(now);
             /* $STANDARD_INFORMATION (type 0x10): the four timestamps of the
                SOURCE file. They describe the target, not the copy — and that is
                precisely what attests that a raw read changes no date: the copy

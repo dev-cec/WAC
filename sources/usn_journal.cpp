@@ -80,7 +80,7 @@ bool UsnRecord::parse(const uint8_t* record, size_t size, uint64_t usnBase) {
 	parentSequence = parentReference.sequence;
 	usn = readLittleEndian<uint64_t>(p);
 	const uint64_t ticks = readLittleEndian<uint64_t>(p + 8);
-	timestamp = { (DWORD)(ticks & 0xFFFFFFFFULL), (DWORD)(ticks >> 32) };
+	timestamp = filetimeFromTicks(ticks);
 	reason = readLittleEndian<uint32_t>(p + 16);
 	sourceInfo = readLittleEndian<uint32_t>(p + 20);
 	securityId = readLittleEndian<uint32_t>(p + 24);

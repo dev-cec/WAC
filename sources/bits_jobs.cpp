@@ -19,13 +19,6 @@ const uint8_t XFER[16] = { 0x36, 0xDA, 0x56, 0x77, 0x6F, 0x51, 0x5A, 0x43, 0xAC,
 const size_t ERROR_RECORD = 25;                //!< code (8), four 32-bit statuses, a byte
 const uint32_t ID_COLUMN = 1, BLOB_COLUMN = 256;
 
-FILETIME filetime(uint64_t v) {
-	FILETIME f;
-	f.dwLowDateTime = (DWORD)v;
-	f.dwHighDateTime = (DWORD)(v >> 32);
-	return f;
-}
-
 //! A UTF-16 string preceded by its length in characters, terminator included.
 bool pascalString(const std::vector<uint8_t>& b, size_t& o, std::wstring& out) {
 	if (!fits(b.size(), o, 4)) return false;
@@ -82,8 +75,8 @@ bool parseMetadata(const std::vector<uint8_t>& b, size_t o, BitsJob& job) {
 	job.transientErrorCount = readLittleEndian<uint32_t>(b.data() + o);
 	job.retryDelay = readLittleEndian<uint32_t>(b.data() + o + 4);
 	job.noProgressTimeout = readLittleEndian<uint32_t>(b.data() + o + 8);
-	job.createdUtc = filetime(readLittleEndian<uint64_t>(b.data() + o + 12));
-	job.modifiedUtc = filetime(readLittleEndian<uint64_t>(b.data() + o + 20));
+	job.createdUtc = filetimeFromTicks(readLittleEndian<uint64_t>(b.data() + o + 12));
+	job.modifiedUtc = filetimeFromTicks(readLittleEndian<uint64_t>(b.data() + o + 20));
 	return true;
 }
 
