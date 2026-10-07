@@ -150,7 +150,7 @@ wait_registry_on_disk() {
 # The artefacts read in the hives whose witnesses the harness writes in the
 # live registry: a --only cycle of one of them waits too. The witnesses of the
 # third lot (installed_programs…) were absent from their collection without it.
-REGISTRY_WITNESSES="registry persistence office_trust_records typed_paths word_wheel_query root_certificates internet_settings firewall installed_programs defender_configuration explorer_recent_docs mount_points program_usage network_shares"
+REGISTRY_WITNESSES="registry persistence office_trust_records typed_paths word_wheel_query root_certificates internet_settings firewall installed_programs defender_configuration explorer_recent_docs mount_points program_usage network_shares rdp_client"
 wants_registry_witness() { wants $REGISTRY_WITNESSES; }
 
 
@@ -361,7 +361,18 @@ fetch_results() {
       $QGA read "$f" "$host/exhibits/${relative//\\//}" >/dev/null 2>&1 && echo "   + exhibits/${relative//\\//}" \
         || echo "   ⚠️ exhibits/${relative//\\//} not fetched"
     done
-  fi
+  fi  # The RDP bitmap caches as WAC read them — their working copy, not the
+  # exhibit store (B-040) — and the tiles WAC exported, for check-json.py to
+  # confront them with bmc-tools.
+  local rdpFiles
+  rdpFiles=$($QGA run -- powershell.exe -NoProfile -Command "Get-ChildItem -LiteralPath '$vm\\working\\Users' -Recurse -File -Force -Filter 'Cache*.bin' -ErrorAction SilentlyContinue | Where-Object FullName -like '*Terminal Server Client*' | ForEach-Object FullName; Get-ChildItem -LiteralPath '$vm\\rdp_cache' -Recurse -File -Filter '*.bmp' -ErrorAction SilentlyContinue | ForEach-Object FullName" 2>/dev/null | tr -d '\r')
+  while read -r f; do
+    [[ -z "$f" ]] && continue
+    # The prefix quoted: unquoted, the backslashes of the VM's path are read as escapes.
+    local relative="${f#"$vm"\\}"
+    mkdir -p "$host/$(dirname "${relative//\\//}")"
+    $QGA read "$f" "$host/${relative//\\//}" >/dev/null 2>&1 || echo "   ⚠️ ${relative//\\//} not fetched"
+  done <<< "$rdpFiles"
 }
 
 echo "== 5. Fetch of the JSON files == ($(date +%H:%M:%S))"

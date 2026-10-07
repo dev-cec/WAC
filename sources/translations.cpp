@@ -128,6 +128,8 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepWebClient, L"Navigateurs (historique, téléchargements, recherches)", L"Extracting WEB CLIENT (browsers)" },
 	{ Text::StepActivitiesCache, L"Chronologie Windows", L"Extracting WINDOWS TIMELINE" },
 	{ Text::StepSearchIndex, L"Index de recherche Windows", L"Extracting WINDOWS SEARCH INDEX" },
+	{ Text::StepRdpClient, L"Connexions Bureau à distance sortantes", L"Extracting OUTGOING RDP CONNECTIONS" },
+	{ Text::StepRdpServer, L"Connexions Bureau à distance entrantes", L"Extracting INCOMING RDP CONNECTIONS" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },
@@ -198,6 +200,8 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactWebClient, L"Navigateurs (historique, téléchargements, recherches)", L"Web client (browsers)" },
 	{ Text::ArtefactActivitiesCache, L"Chronologie Windows (ActivitiesCache)", L"Windows Timeline (ActivitiesCache)" },
 	{ Text::ArtefactSearchIndex, L"Index de recherche Windows", L"Windows Search index" },
+	{ Text::ArtefactRdpClient, L"Connexions Bureau à distance sortantes", L"Outgoing Remote Desktop connections" },
+	{ Text::ArtefactRdpServer, L"Connexions Bureau à distance entrantes", L"Incoming Remote Desktop connections" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },
 
 	{ Text::TimeElapsed,               L"FIN, durée : %1 s",                             L"END, Time elapsed : %1 s" },

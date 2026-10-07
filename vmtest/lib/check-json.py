@@ -308,6 +308,7 @@ def cross_checks(folder):
     found += guarded(check_search_index, folder)
     found += guarded(check_event_messages, folder)
     found += guarded(check_exhibit_reads_after_copy, folder)
+    found += guarded(check_rdp, folder)
     return found
 
 
@@ -2483,6 +2484,79 @@ def check_exhibit_reads_after_copy(folder):
     print(f"  {'✅' if ok else '❌'} exhibit store: {len(reads)} read(s) by WAC.exe before its working copy ({copied}Z), "
           f"{len(after)} after" + ("" if ok else (": the audit recorded no read at all" if not reads else f": {after[:3]}")))
     return 0 if ok else 1
+
+
+def check_rdp(folder):
+    """rdp_client.json and rdp_server.json against the RDP witness: a real
+    session of "wac" to 127.0.0.2 (place-file-artefacts.ps1, section 40).
+
+    Outgoing: the server of known values (UsernameHint, CertHash), the MRU
+    the session wrote, and the bitmap cache — bmc-tools (ANSSI, written
+    independently of WAC) reads the cache's working copy, and every tile WAC
+    exported must have the same pixels. Incoming: every authentication (1149),
+    connection (131) and Security logon of type 10 Windows lists for the
+    session is in rdp_server.json, same record, user and source."""
+    import glob, subprocess, tempfile
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    client, server = load(folder, "rdp_client.json"), load(folder, "rdp_server.json")
+    if not os.path.exists(path) or (not isinstance(client, list) and not isinstance(server, list)):
+        print("  ⏭️  no RDP witness or no rdp_*.json: RDP not confronted")
+        return 0
+    with open(path, encoding="utf-8-sig", errors="replace") as f:
+        lines = [l.rstrip("\r\n") for l in f]
+    def report(ok, success, failure):
+        print(f"  ✅ {success}" if ok else f"  ❌ {failure}")
+    found = 0
+    if isinstance(client, list):
+        for l in (l for l in lines if l.startswith("rdpserver=")):
+            host, hint, cert = l[len("rdpserver="):].split("|")
+            r = next((c for c in client if c.get("Type") == "Server" and c.get("Host") == host), {})
+            ok = r.get("UsernameHint") == hint and (r.get("CertHash") or "").upper() == cert
+            report(ok, f"rdp_client.json: server {host}, its user name and certificate hash",
+                   f"rdp_client.json: server {host} missing or different: {r}")
+            found += 0 if ok else 1
+        for l in (l for l in lines if l.startswith("rdpmru=")):
+            target = l[len("rdpmru="):]
+            ok = any(c.get("Type") == "RecentConnection" and c.get("Target") == target and c.get("MruPosition") == 0 for c in client)
+            report(ok, f"rdp_client.json: the recent connection to {target}, first of the MRU",
+                   f"rdp_client.json: recent connection {target} missing")
+            found += 0 if ok else 1
+        bmc = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools", "bmc-tools", "bmc-tools.py")
+        caches = glob.glob(os.path.join(folder, "working", "**", "Cache*.bin"), recursive=True)
+        if not os.path.exists(bmc) or not caches:
+            print("  ⏭️  bmc-tools (vmtest/tools/bmc-tools) or the cache's working copy absent: tiles not confronted")
+        else:
+            from PIL import Image
+            for cache in caches:
+                name = os.path.basename(cache)
+                record = next((c for c in client if c.get("Type") == "BitmapCache" and c.get("Source", "").endswith("\\" + name)), {})
+                with tempfile.TemporaryDirectory() as out:
+                    subprocess.run(["python3", bmc, "-s", cache, "-d", out], capture_output=True)
+                    theirs = sorted(glob.glob(os.path.join(out, name + "_*.bmp")))
+                    wrong = []
+                    for i, image in enumerate(theirs):
+                        mine = next((t.get("Image") for t in record.get("Tiles", []) if t.get("Index") == i), None)
+                        mine = os.path.join(folder, mine.replace("\\", os.sep)) if mine else None
+                        if not mine or not os.path.exists(mine) \
+                                or Image.open(image).convert("RGB").tobytes() != Image.open(mine).convert("RGB").tobytes():
+                            wrong.append(i)
+                ok = bool(theirs) and record.get("TileCount") == len(theirs) and not wrong
+                report(ok, f"rdp_client.json: {name}, {len(theirs)} tile(s) as bmc-tools reads them, same pixels",
+                       f"rdp_client.json: {name}: bmc-tools {len(theirs)} tile(s), WAC {record.get('TileCount')}, different: {wrong[:5]}")
+                found += 0 if ok else 1
+    if isinstance(server, list):
+        incoming = [l[len("rdpin="):].split("|") for l in lines if l.startswith("rdpin=")]
+        wrong = []
+        for log, record_id, user, source in incoming:
+            r = next((e for e in server if (e.get("EvtSystemChannel") or "").lower() == log.lower()
+                      and str(e.get("EvtSystemEventRecordId")) == record_id), None)
+            if r is None or (user and r.get("User") != user) or (source and r.get("SourceAddress") != source):
+                wrong.append(f"{log} {record_id}: {user} {source}, WAC {r and (r.get('User'), r.get('SourceAddress'))}")
+        ok = bool(incoming) and not wrong
+        report(ok, f"rdp_server.json: the {len(incoming)} incoming trace(s) Windows lists for the session, same user and source",
+               f"rdp_server.json: {len(incoming)} expected, {wrong[:3]}")
+        found += 0 if ok else 1
+    return found
 
 
 def check_firefox_places(folder, store, records):

@@ -17,6 +17,7 @@
 #include "powershell_history.h"
 #include "activities_cache.h"
 #include "search_index.h"
+#include "rdp_client.h"
 #include "running_machine.h"
 #include "startup_folders.h"
 #include "shortcuts.h"
@@ -433,7 +434,8 @@ HRESULT ExtractFileArtefactsRaw() {
 	   more on a server. Extracting them systematically would lengthen every
 	   collection and fill the medium with data the operator did not ask for.
 	   Reading them offline replaces the EventLog API (see events.h). */
-	if (conf._events) addTarget(L"\\Windows\\System32\\winevt\\Logs", { L".evtx" });
+	// The event logs: for events.json, and for the incoming RDP connections read in them.
+	if (conf._events || conf.artefacts.rdpServer) addTarget(L"\\Windows\\System32\\winevt\\Logs", { L".evtx" });
 	// setupapi.dev.log and its rotations, with the other setup logs of the folder (a few, small).
 	if (conf.artefacts.setupApi) addTarget(L"\\Windows\\INF", { L".log" });
 	// hosts has no extension: the whole folder, a handful of small files.
@@ -474,6 +476,12 @@ HRESULT ExtractFileArtefactsRaw() {
 		/* The WebCache of Internet Explorer and Edge Legacy: an ESE database in
 		   use, copied raw with its transaction logs and checkpoint. */
 		if (conf.artefacts.webClient) addTarget(profile + WEBCACHE_FOLDER, {});
+		/* Outgoing RDP: the bitmap cache, whatever its format (.bin read, .bmc
+		   kept as it is), and the connection files of the Documents. */
+		if (conf.artefacts.rdpClient) {
+			addTarget(profile + RDP_CACHE_FOLDER, { L".bin", L".bmc" });
+			addTarget(profile + L"\\Documents", { L".rdp" });
+		}
 	}
 
 	HRESULT global = S_OK;

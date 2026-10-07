@@ -603,6 +603,13 @@ witness document indexed by Windows; Windows' query of its own index
   (OLE DB, \texttt{Search.CollatorDSO}): URL, modification, size of each
   item / \fichier{search\_index.json} (515 identical items) &
   check added with the artefact \\
+real RDP session of "wac" to 127.0.0.2 with a test account, closed as a user
+  would; witness server of known values; cache tiles read by bmc-tools (ANSSI);
+  incoming events listed by \texttt{Get-WinEvent} / \fichier{rdp\_client.json},
+  \fichier{rdp\_server.json} (4 tiles with the same pixels, 3 incoming traces,
+  same user and source) &
+  check added with the artefact; the cache is written only when the client
+  closes, and Windows now asks before opening a \fichier{.rdp} file \\
 message rendered by Windows itself (\texttt{EvtFormatMessage}, through
   \texttt{Get-WinEvent}) for each kind of event of the VM — provider,
   identifier, version, qualifiers — on the same record /

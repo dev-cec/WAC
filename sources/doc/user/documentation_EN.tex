@@ -344,6 +344,8 @@ artefacts:              # one switch per artefact; all the hives = registry
   powershell_history: true  # PSReadLine: the commands typed in PowerShell
   activities_cache: true    # Windows Timeline: applications, files, pages, clipboard (ActivitiesCache.db)
   search_index: true        # Windows Search index: path, dates, size, summary of each indexed item
+  rdp_client: true          # outgoing Remote Desktop: servers, .rdp files, bitmap cache tiles
+  rdp_server: true          # incoming Remote Desktop: authentications, sessions, source addresses
   setupapi: true        # setupapi.dev.log: device installations
   recycle_bin: true     # $I of the recycle bins: what, by whom, when
   hosts: true           # the hosts file: names diverted to an address
@@ -1394,6 +1396,28 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         document may still show there. On Windows~10, the index
         (\fichier{Windows.edb}, ESE) is collected with its logs but not
         converted.
+  \item[\fichier{rdp\_client.json}] \emph{outgoing} Remote Desktop connections of
+        each profile: recent connections (\champ{RecentConnection},
+        \champ{MruPosition} 0 for the latest) and servers reached
+        (\champ{Server}: user name offered \champ{UsernameHint}, hash of the
+        certificate accepted \champ{CertHash}, the key's last write), the
+        \fichier{.rdp} files of the Documents (\champ{ConnectionFile},
+        \fichier{Default.rdp} included, each setting), and the bitmap cache
+        (\champ{BitmapCache}): each tile of \fichier{Cache*.bin}, a piece of the
+        remote screen as the client drew it, is exported as an image in
+        \fichier{rdp\_cache\textbackslash<SID>\textbackslash<file>}, with its
+        size, keys and the SHA-256 of its pixels. The older
+        \fichier{bcache*.bmc} are collected but not decoded, for want of a
+        sample.
+  \item[\fichier{rdp\_server.json}] \emph{incoming} Remote Desktop connections,
+        read in the collected logs: connection received and authentication
+        (RemoteConnectionManager 261 and 1149), TCP connection accepted
+        (RdpCoreTS 131), sessions (LocalSessionManager 21 to 25, 39 to 41), logons
+        and logoffs of type~10 and reconnections (Security 4624, 4625, 4634,
+        4778, 4779). Each event keeps its data and is given \champ{User},
+        \champ{Domain}, \champ{SourceAddress} and \champ{SessionId}, whatever
+        name its log gives them. Of little use on a workstation, it is the
+        first question on a server.
   \item[\fichier{error\_reports.json}] Windows error reports
         (\fichier{Report.wer}) of the machine and of each profile: program, path,
         instant (\champ{EventTimeUtc}), problem signature (faulting module,

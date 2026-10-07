@@ -36,6 +36,8 @@
 #include "powershell_history.h"
 #include "activities_cache.h"
 #include "search_index.h"
+#include "rdp_client.h"
+#include "rdp_server.h"
 #include "setupapi_log.h"
 #include "recycle_bin.h"
 #include "hosts_file.h"
@@ -986,6 +988,10 @@ void convertArtefacts(bool systemAvailable) {
 
 	convertFileArtefact<SearchIndex>(conf.artefacts.searchIndex, "search_index.json", Text::ArtefactSearchIndex,
 	                         L"artefacts.search_index", Text::StepSearchIndex);
+	convertFileArtefact<RdpClient>(conf.artefacts.rdpClient, "rdp_client.json", Text::ArtefactRdpClient,
+	                         L"artefacts.rdp_client", Text::StepRdpClient);
+	convertFileArtefact<RdpServer>(conf.artefacts.rdpServer, "rdp_server.json", Text::ArtefactRdpServer,
+	                         L"artefacts.rdp_server", Text::StepRdpServer);
 
 	/* SYSTEM INFORMATION, offline.
 	   OUTSIDE the single-exit block above, and not inside it: even without a

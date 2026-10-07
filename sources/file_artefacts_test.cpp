@@ -36,6 +36,8 @@
 #include "sqlite_reader.h"
 #include "web_client.h"
 #include "search_index.h"
+#include "rdp_client.h"
+#include "rdp_server.h"
 #include "wevt.h"
 #include "conversions.h"
 #include "registry_common.h"
@@ -945,6 +947,51 @@ int wmain() {
 			refused = refused && !decodeIeDownload(std::vector<uint8_t>(copy.data(), copy.data() + copy.size()), none) && !none.find(L"Url");
 		}
 		check(refused, "iedownload: a truncated record refused, nothing emitted");
+	}
+	{
+		/* An RDP bitmap cache laid out as mstsc wrote it on the test VM: the
+		   header, then a 2 x 1 tile and a 1 x 2 tile (64 x 64 and 64 x 32 there). */
+		std::vector<uint8_t> cache = { 'R', 'D', 'P', '8', 'b', 'm', 'p', 0, 6, 0, 0, 0 };
+		auto tile = [&](uint32_t key, uint16_t w, uint16_t h, uint8_t first) {
+			for (int i = 0; i < 4; ++i) cache.push_back((uint8_t)(key >> (8 * i)));
+			for (int i = 0; i < 4; ++i) cache.push_back(0);
+			cache.push_back((uint8_t)w); cache.push_back((uint8_t)(w >> 8));
+			cache.push_back((uint8_t)h); cache.push_back((uint8_t)(h >> 8));
+			for (int p = 0; p < 4 * w * h; ++p) cache.push_back((uint8_t)(first + p));
+		};
+		tile(0xBFB017F6u, 2, 1, 10);
+		tile(0x80BF8DA0u, 1, 2, 50);
+		uint32_t version = 0;
+		std::vector<RdpCacheTile> tiles;
+		const bool decoded = decodeRdpBitmapCache(cache, version, tiles);
+		check(decoded && version == 6 && tiles.size() == 2 && tiles[0].key1 == 0xBFB017F6u && tiles[0].width == 2
+		      && tiles[0].height == 1 && tiles[0].pixels.size() == 8 && tiles[0].pixels[0] == 10
+		      && tiles[1].height == 2 && tiles[1].pixels[7] == 57,
+		      "rdp cache: header, two tiles of their own sizes, pixels where the file has them");
+		std::vector<uint8_t> cut(cache.begin(), cache.end() - 3);
+		std::vector<RdpCacheTile> partial;
+		check(decodeRdpBitmapCache(cut, version, partial) && partial.size() == 1,
+		      "rdp cache: a tile cut by the end of the file ends the reading, the tiles before it kept");
+		std::vector<RdpCacheTile> none;
+		std::vector<uint8_t> other(cache);
+		other[0] = 'X';
+		check(!decodeRdpBitmapCache(other, version, none) && none.empty(), "rdp cache: a file without the header refused");
+		// The 1 x 2 tile as a BMP: rows from the bottom — the second row first.
+		const std::vector<uint8_t> bmp = rdpTileBmp(tiles[1]);
+		check(bmp.size() == 54 + 8 && bmp[0] == 'B' && bmp[1] == 'M' && bmp[28] == 32 && bmp[54] == 54 && bmp[58] == 50,
+		      "rdp cache: a tile as a 32-bit BMP, its rows from the bottom");
+		Json settings = Json::obj();
+		parseRdpFile(L"screen mode id:i:2\r\nfull address:s:srv.example:3389\r\nusername:s:CORP\\admin\r\nnot a setting\r\n", settings);
+		const Json* address = settings.find(L"FullAddress");
+		const Json* user = settings.find(L"Username");
+		check(address && address->text() == L"srv.example:3389" && user && user->text() == L"CORP\\admin"
+		      && settings.find(L"ScreenModeId") && settings.size() == 3,
+		      "rdp file: name:type:value lines, a value holding colons kept whole, other lines ignored");
+		check(isIncomingRdpEvent(L"Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational", 1149, L"")
+		      && isIncomingRdpEvent(L"Security", 4624, L"10") && !isIncomingRdpEvent(L"Security", 4624, L"3")
+		      && isIncomingRdpEvent(L"Security", 4778, L"") && !isIncomingRdpEvent(L"System", 1149, L"")
+		      && !isIncomingRdpEvent(L"Microsoft-Windows-TerminalServices-LocalSessionManager/Operational", 42, L""),
+		      "rdp server: the RDP events of their logs kept, Security's logons of type 10 only");
 	}
 	{
 		/* A WEVT_TEMPLATE whose EVNT block, like AppReadiness.dll's, has data

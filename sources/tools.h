@@ -159,6 +159,8 @@ struct AppliConf {
 		bool eventLogConfiguration = true;  //!< configuration of each event log channel: enabled, size, retention, access
 		bool activitiesCache = true;  //!< Windows Timeline: ActivitiesCache.db of every profile
 		bool searchIndex = true;  //!< Windows Search index: what the indexer recorded of each file
+		bool rdpClient = true;  //!< outgoing RDP connections: servers, connection files, bitmap cache
+		bool rdpServer = true;  //!< incoming RDP connections, from the collected event logs
 
 		/*! Whether an artefact asked for reads the users' hives (ntuser.dat,
 		 *  usrClass.dat): they are copied then. They used to be copied only
@@ -170,6 +172,7 @@ struct AppliConf {
 			return registry || persistence || officeTrustRecords || typedPaths || wordWheelQuery
 			    || rootCertificates || internetSettings || installedPrograms || explorerRecentDocs || mountPoints || programUsages
 			    || userShellFolders || webClient   // web client: TypedURLs
+			    || rdpClient   // the servers reached, in NTUSER.DAT
 			    || shortcuts;   // a desktop redirected elsewhere is read in NTUSER.DAT (user_shell_folders.h)
 		}
 	} artefacts;

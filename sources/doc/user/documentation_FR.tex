@@ -349,6 +349,8 @@ artefacts:              # un interrupteur par artefact ; toutes les ruches = reg
   powershell_history: true  # PSReadLine : les commandes tapées dans PowerShell
   activities_cache: true    # Chronologie Windows : applications, fichiers, pages, presse-papiers (ActivitiesCache.db)
   search_index: true        # index de recherche Windows : chemin, dates, taille, résumé de chaque élément indexé
+  rdp_client: true          # Bureau à distance sortant : serveurs, fichiers .rdp, tuiles du cache bitmap
+  rdp_server: true          # Bureau à distance entrant : authentifications, sessions, adresses source
   setupapi: true        # setupapi.dev.log : installations de périphériques
   recycle_bin: true     # $I des corbeilles : quoi, par qui, quand
   hosts: true           # le fichier hosts : noms détournés vers une adresse
@@ -1437,6 +1439,28 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         passage suivant : un document supprimé peut encore y paraître. Sous
         Windows~10, l'index (\fichier{Windows.edb}, ESE) est collecté avec
         ses journaux mais pas converti.
+  \item[\fichier{rdp\_client.json}] connexions Bureau à distance \emph{sortantes} de
+        chaque profil : connexions récentes (\champ{RecentConnection},
+        \champ{MruPosition} 0 pour la plus récente) et serveurs contactés
+        (\champ{Server} : nom d'utilisateur proposé \champ{UsernameHint},
+        empreinte du certificat accepté \champ{CertHash}, dernière écriture de
+        la clé), fichiers \fichier{.rdp} des Documents (\champ{ConnectionFile},
+        \fichier{Default.rdp} compris, chaque réglage), et cache bitmap
+        (\champ{BitmapCache}) : chaque tuile de \fichier{Cache*.bin}, morceau de
+        l'écran distant tel que le client l'a dessiné, est exportée en image
+        dans \fichier{rdp\_cache\textbackslash<SID>\textbackslash<fichier>}, avec
+        sa taille, ses clés et le SHA-256 de ses pixels. L'ancien format
+        \fichier{bcache*.bmc} est collecté mais pas décodé, faute
+        d'échantillon.
+  \item[\fichier{rdp\_server.json}] connexions Bureau à distance \emph{entrantes},
+        lues dans les journaux collectés : connexion reçue et authentification
+        (RemoteConnectionManager 261 et 1149), connexion TCP acceptée (RdpCoreTS
+        131), sessions (LocalSessionManager 21 à 25, 39 à 41), ouvertures et
+        fermetures de session de type~10 et reconnexions (Security 4624, 4625,
+        4634, 4778, 4779). Chaque événement garde ses données et reçoit
+        \champ{User}, \champ{Domain}, \champ{SourceAddress} et
+        \champ{SessionId}, quel que soit le nom que lui donne son journal. Peu
+        utile sur un poste, c'est la première question sur un serveur.
   \item[\fichier{error\_reports.json}] rapports d'erreurs Windows
         (\fichier{Report.wer}) de la machine et de chaque profil : programme,
         chemin, instant (\champ{EventTimeUtc}), signature du problème

@@ -624,6 +624,15 @@ document témoin indexé par Windows ; requête de Windows sur son propre index
   (OLE DB, \texttt{Search.CollatorDSO}) : URL, modification, taille de chaque
   élément / \fichier{search\_index.json} (515 éléments identiques) &
   contrôle ajouté avec l'artefact \\
+session RDP réelle de « wac » vers 127.0.0.2 avec un compte de test, fermée
+  comme un utilisateur le ferait ; serveur témoin de valeurs connues ; tuiles du
+  cache lues par bmc-tools (ANSSI) ; événements entrants listés par
+  \texttt{Get-WinEvent} / \fichier{rdp\_client.json}, \fichier{rdp\_server.json}
+  (4 tuiles aux mêmes pixels, 3 traces entrantes, même utilisateur et même
+  source) &
+  contrôle ajouté avec l'artefact ; le cache n'est écrit qu'à la fermeture du
+  client, et Windows demande désormais une confirmation à l'ouverture d'un
+  fichier \fichier{.rdp} \\
 message rendu par Windows lui-même (\texttt{EvtFormatMessage}, par
   \texttt{Get-WinEvent}) pour chaque sorte d'événement de la VM — fournisseur,
   identifiant, version, qualificatifs — sur le même enregistrement /

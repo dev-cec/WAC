@@ -1166,3 +1166,85 @@ if (Wants 'search_index') {
         Write-Output ("searchitem=" + $row[0] + '|' + $modified + '|' + $row[2])
     }
 }
+
+# 40. B-011 — Remote Desktop, outgoing and incoming at once: "wac" opens a real
+#     session to this very machine (127.0.0.2) with a test account, then
+#     closes its client as a user would — mstsc writes its bitmap cache only
+#     then (Cache0000.bin), and the MRU of its recent connections. The machine
+#     logs the incoming side (authentication, session, Security logons). A
+#     server of known values is added to "wac"'s Servers key (a real logon
+#     writes its own only once the session is open). Everything the witness
+#     needs is undone afterwards: credential, RDP, firewall rule, account.
+#     `mstsc /v:` and not a .rdp file: Windows now asks before opening one.
+if (Wants 'rdp_client', 'rdp_server') {
+    # One cache at a time: those of earlier cycles are removed, or each cycle
+    # would add a Cache<NNNN>.bin to the profile.
+    Remove-Item 'C:\Users\wac\AppData\Local\Microsoft\Terminal Server Client\Cache\*' -Force -ErrorAction SilentlyContinue
+    $rdpSince = (Get-Date).ToUniversalTime()
+    $tsKey = 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server'
+    $denied = (Get-ItemProperty $tsKey).fDenyTSConnections
+    Set-ItemProperty $tsKey -Name fDenyTSConnections -Value 0
+    Enable-NetFirewallRule -DisplayGroup '@FirewallAPI.dll,-28752' -ErrorAction SilentlyContinue
+    $rdpPassword = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object { [char]$_ }) + '!a1'
+    if (Get-LocalUser wacrdp -ErrorAction SilentlyContinue) { Set-LocalUser wacrdp -Password (ConvertTo-SecureString $rdpPassword -AsPlainText -Force) }
+    else { New-LocalUser -Name wacrdp -Password (ConvertTo-SecureString $rdpPassword -AsPlainText -Force) -PasswordNeverExpires | Out-Null }
+    $rdpUsers = (New-Object Security.Principal.SecurityIdentifier 'S-1-5-32-555').Translate([Security.Principal.NTAccount]).Value.Split('\')[1]
+    Add-LocalGroupMember -Group $rdpUsers -Member wacrdp -ErrorAction SilentlyContinue
+    $rdpTask = @'
+cmdkey /generic:TERMSRV/127.0.0.2 /user:wacrdp /pass:PASSWORD | Out-Null
+$client = 'HKCU:\Software\Microsoft\Terminal Server Client'
+New-Item -Force $client | Out-Null
+Set-ItemProperty $client -Name AuthenticationLevelOverride -Value 0 -Type DWord
+Start-Process mstsc.exe -ArgumentList '/v:127.0.0.2'
+Start-Sleep 25
+Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public static class WacRdpUi { [DllImport("user32.dll")] public static extern IntPtr PostMessage(IntPtr h, uint m, IntPtr w, IntPtr l); }'
+Get-Process mstsc -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } |
+    ForEach-Object { [WacRdpUi]::PostMessage($_.MainWindowHandle, 0x10, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null }
+Start-Sleep 10
+Get-Process mstsc -ErrorAction SilentlyContinue | Stop-Process -Force
+cmdkey /delete:TERMSRV/127.0.0.2 | Out-Null
+Remove-ItemProperty $client -Name AuthenticationLevelOverride -ErrorAction SilentlyContinue
+'done' | Set-Content C:\wactest\rdp-witness.done
+'@
+    [IO.File]::WriteAllText('C:\wactest\rdp-witness.ps1', $rdpTask.Replace('PASSWORD', $rdpPassword))
+    Remove-Item C:\wactest\rdp-witness.done -ErrorAction SilentlyContinue
+    $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -ExecutionPolicy Bypass -File C:\wactest\rdp-witness.ps1'
+    $principal = New-ScheduledTaskPrincipal -UserId 'wac' -LogonType Interactive
+    Register-ScheduledTask -TaskName 'WacRdpWitness' -Action $action -Principal $principal -Force | Out-Null
+    Start-ScheduledTask -TaskName 'WacRdpWitness'
+    for ($i = 0; $i -lt 120 -and -not (Test-Path C:\wactest\rdp-witness.done); $i++) { Start-Sleep 1 }
+    Unregister-ScheduledTask -TaskName 'WacRdpWitness' -Confirm:$false
+    Remove-Item C:\wactest\rdp-witness.ps1, C:\wactest\rdp-witness.done -ErrorAction SilentlyContinue
+    Set-ItemProperty $tsKey -Name fDenyTSConnections -Value $denied
+    if ($denied) { Disable-NetFirewallRule -DisplayGroup '@FirewallAPI.dll,-28752' -ErrorAction SilentlyContinue }
+    Remove-LocalUser wacrdp -ErrorAction SilentlyContinue
+
+    # A server of known values in "wac"'s hive, flushed to the disk.
+    $servers = "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Terminal Server Client\Servers\wac-rdp-witness.invalid"
+    New-Item -Force $servers | Out-Null
+    Set-ItemProperty $servers -Name UsernameHint -Value 'WACTEST\witness'
+    Set-ItemProperty $servers -Name CertHash -Value ([byte[]](0xDE, 0xAD, 0xBE, 0xEF, 0x01, 0x02)) -Type Binary
+    $writable = [Microsoft.Win32.Registry]::Users.OpenSubKey("$wacSid\Software\Microsoft\Terminal Server Client\Servers\wac-rdp-witness.invalid", $true)
+    $writable.Flush(); $writable.Close()
+    Write-Output 'rdpserver=wac-rdp-witness.invalid|WACTEST\witness|DEADBEEF0102'
+    $mru = (Get-ItemProperty "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Terminal Server Client\Default" -ErrorAction SilentlyContinue).MRU0
+    if ($mru) { Write-Output "rdpmru=$mru" }
+    $cache = Get-ChildItem 'C:\Users\wac\AppData\Local\Microsoft\Terminal Server Client\Cache' -Filter 'Cache*.bin' -ErrorAction SilentlyContinue
+    foreach ($c in $cache) { Write-Output ("rdpcache=" + $c.FullName + '|' + $c.Length) }
+
+    # The incoming side, as Windows lists it: record, user, source.
+    $logs = @{ 'Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational' = 1149
+               'Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Operational' = 131 }
+    foreach ($log in $logs.Keys) {
+        foreach ($e in (Get-WinEvent -FilterHashtable @{ LogName = $log; Id = $logs[$log]; StartTime = $rdpSince.ToLocalTime() } -ErrorAction SilentlyContinue)) {
+            $d = @{}; foreach ($x in ([xml]$e.ToXml()).Event.EventData.Data) { $d[$x.Name] = $x.'#text' }
+            $who = if ($d['Param1']) { $d['Param1'] } else { '' }
+            $from = if ($d['Param3']) { $d['Param3'] } else { $d['ClientIP'] }
+            Write-Output ("rdpin=$log|" + $e.RecordId + "|$who|$from")
+        }
+    }
+    foreach ($e in (Get-WinEvent -FilterHashtable @{ LogName = 'Security'; Id = 4624; StartTime = $rdpSince.ToLocalTime() } -ErrorAction SilentlyContinue)) {
+        $d = @{}; foreach ($x in ([xml]$e.ToXml()).Event.EventData.Data) { $d[$x.Name] = $x.'#text' }
+        if ($d['LogonType'] -eq '10' -and $d['TargetUserName'] -eq 'wacrdp') { Write-Output ("rdpin=Security|" + $e.RecordId + "|wacrdp|" + $d['IpAddress']) }
+    }
+}
