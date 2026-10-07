@@ -19,17 +19,6 @@ const char CACHE_MAGIC[] = "RDP8bmp";              // then a NUL: 8 bytes
 const size_t CACHE_HEADER = 12, TILE_HEADER = 12;
 const uintmax_t FILE_MAX = 512ull * 1024 * 1024;   // a bitmap cache is tens of MiB at most
 
-//! @return a working copy's bytes, or nothing if it is unreadable or beyond FILE_MAX
-std::vector<uint8_t> readWorkingFile(const std::filesystem::path& file) {
-	std::error_code ec;
-	const uintmax_t size = std::filesystem::file_size(file, ec);
-	if (ec || size > FILE_MAX) return {};
-	std::ifstream in(file, std::ios::binary);
-	std::vector<uint8_t> bytes((size_t)size);
-	if (!in.read(reinterpret_cast<char*>(bytes.data()), (std::streamsize)size)) return {};
-	return bytes;
-}
-
 /*! The recent connections and the servers of one profile's NTUSER.DAT.
  *  @param root the hive's root
  *  @param sid the profile
@@ -153,7 +142,7 @@ HRESULT RdpClient::getData() {
 		const std::wstring sid = std::get<0>(profileEntry), profile = std::get<1>(profileEntry);
 		// The connection files of the profile's Documents, Default.rdp among them.
 		for (const std::filesystem::path& file : listFilesByExtension(extractedPath(profile + L"\\Documents"), { L".rdp" })) {
-			const std::vector<uint8_t> bytes = readWorkingFile(file);
+			const std::vector<uint8_t> bytes = readWorkingFile(file, FILE_MAX);
 			if (bytes.empty()) continue;
 			// mstsc writes them in UTF-16 with a byte-order mark; a hand-made one may be in ANSI.
 			const bool utf16 = bytes.size() >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE;
@@ -173,7 +162,7 @@ HRESULT RdpClient::getData() {
 		}
 		// The bitmap caches, each tile exported as an image next to the JSON.
 		for (const std::filesystem::path& file : listFilesByExtension(extractedPath(profile + RDP_CACHE_FOLDER), { L".bin" })) {
-			const std::vector<uint8_t> bytes = readWorkingFile(file);
+			const std::vector<uint8_t> bytes = readWorkingFile(file, FILE_MAX);
 			uint32_t version = 0;
 			std::vector<RdpCacheTile> tiles;
 			if (!decodeRdpBitmapCache(bytes, version, tiles)) {
