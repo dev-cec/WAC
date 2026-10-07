@@ -1,6 +1,7 @@
 /*! \file
  *  \brief Background Intelligent Transfer Service jobs (see bits_jobs.h).
  */
+#include "conversions.h"
 #include "bits_jobs.h"
 #include "consigne.h"
 #include "ese_database.h"
@@ -18,9 +19,6 @@ const uint8_t XFER[16] = { 0x36, 0xDA, 0x56, 0x77, 0x6F, 0x51, 0x5A, 0x43, 0xAC,
 const size_t ERROR_RECORD = 25;                //!< code (8), four 32-bit statuses, a byte
 const uint32_t ID_COLUMN = 1, BLOB_COLUMN = 256;
 
-uint32_t rd32(const uint8_t* p) { uint32_t v; memcpy(&v, p, 4); return v; }
-uint64_t rd64(const uint8_t* p) { uint64_t v; memcpy(&v, p, 8); return v; }
-
 FILETIME filetime(uint64_t v) {
 	FILETIME f;
 	f.dwLowDateTime = (DWORD)v;
@@ -31,7 +29,7 @@ FILETIME filetime(uint64_t v) {
 //! A UTF-16 string preceded by its length in characters, terminator included.
 bool pascalString(const std::vector<uint8_t>& b, size_t& o, std::wstring& out) {
 	if (!fits(b.size(), o, 4)) return false;
-	const size_t chars = rd32(b.data() + o);
+	const size_t chars = readLittleEndian<uint32_t>(b.data() + o);
 	o += 4;
 	if (chars > b.size() / 2 || !fits(b.size(), o, chars * 2)) return false;
 	out = readWideZ(b.data(), o + chars * 2, o);
@@ -75,17 +73,17 @@ std::wstring notifyFlagNames(uint32_t flags) {
 /*! The metadata after the files' list: errors, retry delay, timeout, dates. */
 bool parseMetadata(const std::vector<uint8_t>& b, size_t o, BitsJob& job) {
 	if (!fits(b.size(), o, 4)) return false;
-	job.errorCount = rd32(b.data() + o);
+	job.errorCount = readLittleEndian<uint32_t>(b.data() + o);
 	o += 4;
 	if (job.errorCount > (b.size() - o) / ERROR_RECORD) return false;
 	o += job.errorCount * ERROR_RECORD;
 	// transient errors, retry delay, timeout (3 × 4), creation, modification (2 × 8)
 	if (!fits(b.size(), o, 12 + 16)) return false;
-	job.transientErrorCount = rd32(b.data() + o);
-	job.retryDelay = rd32(b.data() + o + 4);
-	job.noProgressTimeout = rd32(b.data() + o + 8);
-	job.createdUtc = filetime(rd64(b.data() + o + 12));
-	job.modifiedUtc = filetime(rd64(b.data() + o + 20));
+	job.transientErrorCount = readLittleEndian<uint32_t>(b.data() + o);
+	job.retryDelay = readLittleEndian<uint32_t>(b.data() + o + 4);
+	job.noProgressTimeout = readLittleEndian<uint32_t>(b.data() + o + 8);
+	job.createdUtc = filetime(readLittleEndian<uint64_t>(b.data() + o + 12));
+	job.modifiedUtc = filetime(readLittleEndian<uint64_t>(b.data() + o + 20));
 	return true;
 }
 
@@ -96,15 +94,15 @@ bool parseBitsJob(const std::vector<uint8_t>& b, BitsJob& job) {
 	// Header, type, priority, state, a 32-bit field, the job's GUID.
 	size_t o = BLOB_HEADER;
 	if (!fits(b.size(), o, 16 + 16)) return false;
-	job.type = rd32(b.data() + o);
-	job.priority = rd32(b.data() + o + 4);
-	job.state = rd32(b.data() + o + 8);
+	job.type = readLittleEndian<uint32_t>(b.data() + o);
+	job.priority = readLittleEndian<uint32_t>(b.data() + o + 4);
+	job.state = readLittleEndian<uint32_t>(b.data() + o + 8);
 	job.id = guidAt(b.data() + o + 16);
 	o += 32;
 	if (!pascalString(b, o, job.name) || !pascalString(b, o, job.description) || !pascalString(b, o, job.notifyProgram)
 	    || !pascalString(b, o, job.notifyArguments) || !pascalString(b, o, job.ownerSid) || !fits(b.size(), o, 4))
 		return false;
-	job.notifyFlags = rd32(b.data() + o);
+	job.notifyFlags = readLittleEndian<uint32_t>(b.data() + o);
 	o += 4;
 	job.parsed = true;
 	// The files: between two delimiters, a count then their GUIDs.
@@ -112,7 +110,7 @@ bool parseBitsJob(const std::vector<uint8_t>& b, BitsJob& job) {
 	if (first == std::string::npos) return true;
 	const size_t list = first + sizeof XFER;
 	if (!fits(b.size(), list, 4)) return true;
-	const size_t count = rd32(b.data() + list);
+	const size_t count = readLittleEndian<uint32_t>(b.data() + list);
 	if (count > (b.size() - list - 4) / 16) return true;
 	for (size_t i = 0; i < count; ++i) job.fileIds.push_back(guidAt(b.data() + list + 4 + 16 * i));
 	const size_t second = findXfer(b, list + 4 + 16 * count);
@@ -126,8 +124,8 @@ bool parseBitsFile(const std::vector<uint8_t>& b, BitsFile& file) {
 	if (!pascalString(b, o, file.destination) || !pascalString(b, o, file.source) || !pascalString(b, o, file.temporary)
 	    || !fits(b.size(), o, 8 + 8 + 1))
 		return false;
-	file.downloadedBytes = rd64(b.data() + o);
-	file.totalBytes = rd64(b.data() + o + 8);
+	file.downloadedBytes = readLittleEndian<uint64_t>(b.data() + o);
+	file.totalBytes = readLittleEndian<uint64_t>(b.data() + o + 8);
 	o += 17;
 	if (!pascalString(b, o, file.drive) || !pascalString(b, o, file.volume)) return false;
 	file.parsed = true;

@@ -18,10 +18,6 @@ const size_t RECORD_MAJOR = 0x04;         //!< uint16 version: 2, 3 or 4
 const size_t V2_MINIMUM = 0x3C, V3_MINIMUM = 0x4C;   //!< length of the fixed part
 const size_t ALIGNMENT = 8;               //!< every record starts on an 8-byte boundary
 
-uint16_t rd16(const uint8_t* p) { return (uint16_t)(p[0] | (p[1] << 8)); }
-uint32_t rd32(const uint8_t* p) { return (uint32_t)rd16(p) | ((uint32_t)rd16(p + 2) << 16); }
-uint64_t rd64(const uint8_t* p) { return (uint64_t)rd32(p) | ((uint64_t)rd32(p + 4) << 32); }
-
 /*! USN_REASON_*: a FIELD OF BITS — a record gathers every change made to the
  *  file since it was opened, until it is closed (CLOSE). Each bit is named;
  *  a bit Windows adds later is written in hexadecimal, not dropped. */
@@ -67,14 +63,14 @@ std::wstring sourceNames(uint32_t source) {
 
 bool UsnRecord::parse(const uint8_t* record, size_t size, uint64_t usnBase) {
 	if (size < V2_MINIMUM) return false;
-	const uint32_t length = rd32(record + RECORD_LENGTH);
-	const uint16_t major = rd16(record + RECORD_MAJOR);
+	const uint32_t length = readLittleEndian<uint32_t>(record + RECORD_LENGTH);
+	const uint16_t major = readLittleEndian<uint16_t>(record + RECORD_MAJOR);
 	if (length > size || (major != 2 && major != 3) || length < (major == 2 ? V2_MINIMUM : V3_MINIMUM)) return false;
 	// Version 3 carries 128-bit references (ReFS); on NTFS their low 64 bits are the NTFS reference.
 	const size_t referenceSize = major == 2 ? 8 : 16;
 	const uint8_t* p = record + 8;
-	const uint64_t file = rd64(p);
-	const uint64_t parent = rd64(p + referenceSize);
+	const uint64_t file = readLittleEndian<uint64_t>(p);
+	const uint64_t parent = readLittleEndian<uint64_t>(p + referenceSize);
 	p += 2 * referenceSize;
 	const NtfsReference fileReference = splitNtfsReference(file);
 	const NtfsReference parentReference = splitNtfsReference(parent);
@@ -82,18 +78,18 @@ bool UsnRecord::parse(const uint8_t* record, size_t size, uint64_t usnBase) {
 	fileSequence = fileReference.sequence;
 	parentEntry = parentReference.entry;
 	parentSequence = parentReference.sequence;
-	usn = rd64(p);
-	const uint64_t ticks = rd64(p + 8);
+	usn = readLittleEndian<uint64_t>(p);
+	const uint64_t ticks = readLittleEndian<uint64_t>(p + 8);
 	timestamp = { (DWORD)(ticks & 0xFFFFFFFFULL), (DWORD)(ticks >> 32) };
-	reason = rd32(p + 16);
-	sourceInfo = rd32(p + 20);
-	securityId = rd32(p + 24);
-	attributes = rd32(p + 28);
-	const uint16_t nameLength = rd16(p + 32);
-	const uint16_t nameOffset = rd16(p + 34);
+	reason = readLittleEndian<uint32_t>(p + 16);
+	sourceInfo = readLittleEndian<uint32_t>(p + 20);
+	securityId = readLittleEndian<uint32_t>(p + 24);
+	attributes = readLittleEndian<uint32_t>(p + 28);
+	const uint16_t nameLength = readLittleEndian<uint16_t>(p + 32);
+	const uint16_t nameOffset = readLittleEndian<uint16_t>(p + 34);
 	if ((size_t)nameOffset + nameLength > length || (nameLength & 1)) return false;
 	name.assign(nameLength / 2, L'\0');
-	for (size_t k = 0; k < name.size(); ++k) name[k] = (wchar_t)rd16(record + nameOffset + 2 * k);
+	for (size_t k = 0; k < name.size(); ++k) name[k] = (wchar_t)readLittleEndian<uint16_t>(record + nameOffset + 2 * k);
 	/* The record's number is its offset in the stream: the value written in
 	   it is checked against the place it was read from, which catches a
 	   misplaced offset (LeadingSparseBytes) or a record read out of step. */
@@ -142,8 +138,8 @@ HRESULT UsnJournal::getData(const std::wstring& volume) {
 		return HRESULT_FROM_WIN32(ERROR_READ_FAULT);
 	const uint64_t base = found->second.leadingSparseBytes;
 	for (size_t pos = 0; pos + V2_MINIMUM <= data.size();) {
-		const uint32_t length = rd32(data.data() + pos + RECORD_LENGTH);
-		const uint16_t major = rd16(data.data() + pos + RECORD_MAJOR);
+		const uint32_t length = readLittleEndian<uint32_t>(data.data() + pos + RECORD_LENGTH);
+		const uint16_t major = readLittleEndian<uint16_t>(data.data() + pos + RECORD_MAJOR);
 		// Zeros between records (the end of a page, a region freed): the next boundary.
 		if (length < V2_MINIMUM || length % ALIGNMENT || length > data.size() - pos) { pos += ALIGNMENT; continue; }
 		if (major == 4) ++rangeRecords;

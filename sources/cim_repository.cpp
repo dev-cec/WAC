@@ -1,6 +1,7 @@
 /*! \file
  *  \brief Offline reader of the WMI repository (see cim_repository.h).
  */
+#include "conversions.h"
 #include "cim_repository.h"
 #include "sha.h"
 #include <algorithm>
@@ -17,10 +18,6 @@ const unsigned DEPTH_MAX = 64;                //!< B-tree, namespaces, inheritan
 const size_t RECORD_MAX = 64 * 1024 * 1024;   //!< a class or an instance is a few kilobytes
 const size_t INSTANCE_HASH = 0x80;            //!< an instance starts with its class's hash, 64 UTF-16 characters
 const char SYSTEM_NAMESPACE[] = "__SystemClass";
-
-uint32_t rd32(const uint8_t* p) { uint32_t v; memcpy(&v, p, 4); return v; }
-uint16_t rd16(const uint8_t* p) { uint16_t v; memcpy(&v, p, 2); return v; }
-uint64_t rd64(const uint8_t* p) { uint64_t v; memcpy(&v, p, 8); return v; }
 
 //! Size of a value in a value table: 4 bytes (a heap offset) for an array, a string, a reference, a date.
 size_t valueSize(uint8_t type, bool array) {
@@ -49,7 +46,7 @@ bool heapString(const std::vector<uint8_t>& heap, size_t ref, std::wstring& out)
 //! Skips a qualifier list: its size, counted from its own start.
 bool skipQualifiers(const std::vector<uint8_t>& b, size_t& o) {
 	if (!fits(b.size(), o, 4)) return false;
-	const size_t size = rd32(b.data() + o);
+	const size_t size = readLittleEndian<uint32_t>(b.data() + o);
 	if (size < 4 || !fits(b.size(), o, size)) return false;
 	o += size;
 	return true;
@@ -67,9 +64,9 @@ std::wstring realText(double value, int digits) {
  *  decode (an embedded object) comes back as false. */
 bool decodeValue(const std::vector<uint8_t>& heap, uint8_t type, bool array, const uint8_t* raw, Json& out) {
 	if (array) {
-		const size_t ref = rd32(raw);
+		const size_t ref = readLittleEndian<uint32_t>(raw);
 		if (!fits(heap.size(), ref, 4)) return false;
-		const size_t count = rd32(heap.data() + ref), size = valueSize(type, false);
+		const size_t count = readLittleEndian<uint32_t>(heap.data() + ref), size = valueSize(type, false);
 		if (count > (heap.size() - ref - 4) / size) return false;
 		out = Json::arr();
 		for (size_t i = 0; i < count; ++i) {
@@ -82,19 +79,19 @@ bool decodeValue(const std::vector<uint8_t>& heap, uint8_t type, bool array, con
 	switch (type) {
 	case 0x08: case 0x65: case 0x66: {         // string, date (DMTF text), reference (object path)
 		std::wstring text;
-		if (!heapString(heap, rd32(raw), text)) return false;
+		if (!heapString(heap, readLittleEndian<uint32_t>(raw), text)) return false;
 		out = Json::str(text);
 		return true;
 	}
-	case 0x0B: out = Json::boolean(rd16(raw) != 0); return true;
+	case 0x0B: out = Json::boolean(readLittleEndian<uint16_t>(raw) != 0); return true;
 	case 0x10: out = Json::num((int)(int8_t)raw[0]); return true;
 	case 0x11: out = Json::num((unsigned)raw[0]); return true;
-	case 0x02: out = Json::num((int)(int16_t)rd16(raw)); return true;
-	case 0x12: out = Json::num((unsigned)rd16(raw)); return true;
-	case 0x03: out = Json::num((int32_t)rd32(raw)); return true;
-	case 0x13: out = Json::num(rd32(raw)); return true;
-	case 0x14: out = Json::num((long long)rd64(raw)); return true;
-	case 0x15: out = Json::num((unsigned long long)rd64(raw)); return true;
+	case 0x02: out = Json::num((int)(int16_t)readLittleEndian<uint16_t>(raw)); return true;
+	case 0x12: out = Json::num((unsigned)readLittleEndian<uint16_t>(raw)); return true;
+	case 0x03: out = Json::num((int32_t)readLittleEndian<uint32_t>(raw)); return true;
+	case 0x13: out = Json::num(readLittleEndian<uint32_t>(raw)); return true;
+	case 0x14: out = Json::num((long long)readLittleEndian<uint64_t>(raw)); return true;
+	case 0x15: out = Json::num((unsigned long long)readLittleEndian<uint64_t>(raw)); return true;
 	// Reals, as text: every digit needed to give the same value back (JSON numbers here are integers).
 	case 0x04: { float f; memcpy(&f, raw, 4); out = Json::str(realText(f, 9)); return true; }
 	case 0x05: { double d; memcpy(&d, raw, 8); out = Json::str(realText(d, 17)); return true; }
@@ -181,7 +178,7 @@ bool parseCimClass(const std::vector<uint8_t>& b, CimClass& c) {
 	const size_t size = b.size();
 	size_t o = 0;
 	if (!fits(size, o, 4)) return false;
-	const size_t superChars = rd32(b.data());
+	const size_t superChars = readLittleEndian<uint32_t>(b.data());
 	o += 4;
 	if (superChars > size / 2 || !fits(size, o, superChars * 2)) return false;
 	c.superName.assign(reinterpret_cast<const wchar_t*>(b.data() + o), superChars);   // wchar_t is 2 bytes on Windows
@@ -189,14 +186,14 @@ bool parseCimClass(const std::vector<uint8_t>& b, CimClass& c) {
 	// Timestamp (8), length of what follows (4), a byte, class name's heap offset (4), defaults' length (4).
 	if (!fits(size, o, 8 + 4 + 1 + 4 + 4 + 4)) return false;
 	o += 13;
-	const size_t nameRef = rd32(b.data() + o), defaultsLength = rd32(b.data() + o + 4);
+	const size_t nameRef = readLittleEndian<uint32_t>(b.data() + o), defaultsLength = readLittleEndian<uint32_t>(b.data() + o + 4);
 	o += 8;
 	// The superclass's name again, in one byte per character, with its length: 4 when there is none.
-	const size_t superAscii = rd32(b.data() + o);
+	const size_t superAscii = readLittleEndian<uint32_t>(b.data() + o);
 	if (superAscii < 4 || !fits(size, o, superAscii)) return false;
 	o += superAscii;
 	if (!skipQualifiers(b, o) || !fits(size, o, 4)) return false;
-	const size_t count = rd32(b.data() + o);
+	const size_t count = readLittleEndian<uint32_t>(b.data() + o);
 	o += 4;
 	if (count > (size - o) / 8) return false;
 	const size_t references = o;
@@ -205,13 +202,13 @@ bool parseCimClass(const std::vector<uint8_t>& b, CimClass& c) {
 	c.defaults.assign(b.begin() + o, b.begin() + o + defaultsLength);
 	o += defaultsLength;
 	if (!fits(size, o, 4)) return false;
-	const size_t heapSize = rd32(b.data() + o) & 0x7FFFFFFF;
+	const size_t heapSize = readLittleEndian<uint32_t>(b.data() + o) & 0x7FFFFFFF;
 	o += 4;
 	if (!fits(size, o, heapSize)) return false;
 	c.heap.assign(b.begin() + o, b.begin() + o + heapSize);
 	if (!heapString(c.heap, nameRef, c.name)) return false;
 	for (size_t i = 0; i < count; ++i) {
-		const uint32_t nameOffset = rd32(b.data() + references + 8 * i), structure = rd32(b.data() + references + 8 * i + 4);
+		const uint32_t nameOffset = readLittleEndian<uint32_t>(b.data() + references + 8 * i), structure = readLittleEndian<uint32_t>(b.data() + references + 8 * i + 4);
 		CimProperty p;
 		// A name with its high bit set is one of WMI's built-in names, by number.
 		if (nameOffset & 0x80000000) p.name = L"BuiltinProperty" + std::to_wstring(nameOffset & 0x7FFFFFFF);
@@ -220,8 +217,8 @@ bool parseCimClass(const std::vector<uint8_t>& b, CimClass& c) {
 		if (!fits(c.heap.size(), structure, 14)) return false;
 		p.type = c.heap[structure];
 		p.array = (c.heap[structure + 1] & 0x20) != 0;
-		p.index = rd16(c.heap.data() + structure + 4);
-		p.offset = rd32(c.heap.data() + structure + 6);
+		p.index = readLittleEndian<uint16_t>(c.heap.data() + structure + 4);
+		p.offset = readLittleEndian<uint32_t>(c.heap.data() + structure + 6);
 		c.properties.push_back(std::move(p));
 	}
 	return true;
@@ -244,7 +241,7 @@ bool parseCimInstance(const std::vector<uint8_t>& b, const std::vector<const Cim
 	if (b[o] != 1) return false;
 	++o;
 	if (!fits(size, o, 4)) return false;
-	const size_t heapSize = rd32(b.data() + o) & 0x7FFFFFFF;
+	const size_t heapSize = readLittleEndian<uint32_t>(b.data() + o) & 0x7FFFFFFF;
 	o += 4;
 	if (!fits(size, o, heapSize)) return false;
 	const std::vector<uint8_t> heap(b.begin() + o, b.begin() + o + heapSize);
@@ -272,21 +269,21 @@ bool parseCimMappings(const std::vector<uint8_t>& file, CimMapping& data, CimMap
 	size_t o = 0;
 	for (CimMapping* m : { &data, &index }) {
 		// Signature, version, two identifiers, physical page count, entry count.
-		if (!fits(file.size(), o, 24) || rd32(file.data() + o) != MAPPING_START) return false;
-		const size_t count = rd32(file.data() + o + 20);
+		if (!fits(file.size(), o, 24) || readLittleEndian<uint32_t>(file.data() + o) != MAPPING_START) return false;
+		const size_t count = readLittleEndian<uint32_t>(file.data() + o + 20);
 		o += 24;
 		if (count > (file.size() - o) / MAPPING_ENTRY) return false;
 		m->physical.resize(count);
-		for (size_t i = 0; i < count; ++i) m->physical[i] = rd32(file.data() + o + i * MAPPING_ENTRY) & CimMapping::UNMAPPED;
+		for (size_t i = 0; i < count; ++i) m->physical[i] = readLittleEndian<uint32_t>(file.data() + o + i * MAPPING_ENTRY) & CimMapping::UNMAPPED;
 		// For the index, entry 0's "used space" field holds the root's logical page.
-		if (count) m->indexRoot = rd32(file.data() + o + 12);
+		if (count) m->indexRoot = readLittleEndian<uint32_t>(file.data() + o + 12);
 		o += count * MAPPING_ENTRY;
 		if (!fits(file.size(), o, 4)) return false;
-		const size_t free = rd32(file.data() + o);
+		const size_t free = readLittleEndian<uint32_t>(file.data() + o);
 		o += 4;
 		if (free > (file.size() - o) / 4) return false;
 		o += free * 4;
-		if (!fits(file.size(), o, 4) || rd32(file.data() + o) != MAPPING_END) return false;
+		if (!fits(file.size(), o, 4) || readLittleEndian<uint32_t>(file.data() + o) != MAPPING_END) return false;
 		o += 4;
 	}
 	return true;
@@ -302,7 +299,7 @@ HRESULT CimRepository::open(const std::wstring& index, const std::wstring& objec
 		std::vector<uint8_t> file;
 		CimMapping data, idx;
 		if (!readAll(path, RECORD_MAX, file) || file.size() < 8 || !parseCimMappings(file, data, idx)) continue;
-		const uint32_t version = rd32(file.data() + 4);
+		const uint32_t version = readLittleEndian<uint32_t>(file.data() + 4);
 		if (found && version <= best) continue;
 		best = version;
 		found = true;
@@ -344,8 +341,8 @@ void CimRepository::collectKeys(uint32_t logical, unsigned depth, std::vector<bo
 	if (depth > DEPTH_MAX || logical >= visited.size() || visited[logical]) return;
 	visited[logical] = true;
 	std::vector<uint8_t> page;
-	if (!readPage(indexFile_, indexSize_, index_, logical, page) || rd32(page.data()) != INDEX_PAGE_ACTIVE) return;
-	const size_t count = rd32(page.data() + 16);
+	if (!readPage(indexFile_, indexSize_, index_, logical, page) || readLittleEndian<uint32_t>(page.data()) != INDEX_PAGE_ACTIVE) return;
+	const size_t count = readLittleEndian<uint32_t>(page.data() + 16);
 	// 20 bytes of header, then 10 bytes per key and 4 for the last child, before the counts.
 	if (count > (PAGE - 30) / 10) return;
 	size_t o = 20 + 4 * count;
@@ -354,18 +351,18 @@ void CimRepository::collectKeys(uint32_t logical, unsigned depth, std::vector<bo
 	const size_t keyTable = o;
 	o += 2 * count;
 	if (!fits(PAGE, o, 2)) return;
-	const size_t definitions = rd16(page.data() + o);
+	const size_t definitions = readLittleEndian<uint16_t>(page.data() + o);
 	const size_t definitionTable = o + 2;
 	o += 2 + 2 * definitions;
 	if (!fits(PAGE, o, 2)) return;
-	const size_t parts = rd16(page.data() + o);
+	const size_t parts = readLittleEndian<uint16_t>(page.data() + o);
 	const size_t partTable = o + 2;
 	o += 2 + 2 * ((size_t)parts + 1);
 	if (o > PAGE) return;
 	const size_t text = o;
 	auto part = [&](size_t n, std::string& out) {
 		if (n > parts) return false;
-		const size_t at = text + rd16(page.data() + partTable + 2 * n);
+		const size_t at = text + readLittleEndian<uint16_t>(page.data() + partTable + 2 * n);
 		if (at >= PAGE) return false;
 		const uint8_t* end = static_cast<const uint8_t*>(memchr(page.data() + at, 0, PAGE - at));
 		if (!end) return false;
@@ -373,19 +370,19 @@ void CimRepository::collectKeys(uint32_t logical, unsigned depth, std::vector<bo
 		return true;
 	};
 	auto child = [&](size_t i) {
-		const uint32_t c = rd32(page.data() + children + 4 * i);
+		const uint32_t c = readLittleEndian<uint32_t>(page.data() + children + 4 * i);
 		if (c != 0 && c != 0xFFFFFFFF) collectKeys(c, depth + 1, visited);
 	};
 	for (size_t i = 0; i < count; ++i) {
 		child(i);
-		const size_t definition = rd16(page.data() + keyTable + 2 * i);
+		const size_t definition = readLittleEndian<uint16_t>(page.data() + keyTable + 2 * i);
 		if (definition >= definitions) continue;
-		const size_t partCount = rd16(page.data() + definitionTable + 2 * definition);
+		const size_t partCount = readLittleEndian<uint16_t>(page.data() + definitionTable + 2 * definition);
 		if (definition + partCount >= definitions) continue;
 		std::string key, piece;
 		bool whole = true;
 		for (size_t j = 0; j < partCount && whole; ++j) {
-			whole = part(rd16(page.data() + definitionTable + 2 * (definition + 1 + j)), piece);
+			whole = part(readLittleEndian<uint16_t>(page.data() + definitionTable + 2 * (definition + 1 + j)), piece);
 			key += (j ? "/" : "") + piece;
 		}
 		if (whole) keys_.push_back(std::move(key));
@@ -412,7 +409,7 @@ bool CimRepository::object(const std::string& key, std::vector<uint8_t>& out) {
 	std::vector<uint8_t> buffer;
 	if (!readPage(objectsFile_, objectsSize_, data_, (uint32_t)page, buffer)) return false;
 	for (size_t o = 0; fits(PAGE, o, 16); o += 16) {
-		const uint32_t record = rd32(buffer.data() + o), offset = rd32(buffer.data() + o + 4), length = rd32(buffer.data() + o + 8);
+		const uint32_t record = readLittleEndian<uint32_t>(buffer.data() + o), offset = readLittleEndian<uint32_t>(buffer.data() + o + 4), length = readLittleEndian<uint32_t>(buffer.data() + o + 8);
 		if (record == 0 && offset == 0 && length == 0) return false;
 		if (record != id) continue;
 		if (offset >= PAGE || length < size) return false;

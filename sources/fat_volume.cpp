@@ -1,6 +1,7 @@
 /*! \file
  *  \brief Raw reader of FAT12, FAT16, FAT32 and exFAT volumes (see fat_volume.h).
  */
+#include "conversions.h"
 #include "fat_volume.h"
 #include <winioctl.h>
 #include <algorithm>
@@ -20,10 +21,6 @@ const unsigned DEPTH_MAX = 64;
 const uint8_t ATTR_DIRECTORY = 0x10, ATTR_VOLUME = 0x08, ATTR_LONG_NAME = 0x0F;
 const uint8_t DELETED = 0xE5;
 const char COPY_MAGIC[8] = { 'W', 'A', 'C', 'F', 'A', 'T', 'M', '1' };
-
-uint16_t rd16(const uint8_t* p) { uint16_t v; memcpy(&v, p, 2); return v; }
-uint32_t rd32(const uint8_t* p) { uint32_t v; memcpy(&v, p, 4); return v; }
-uint64_t rd64(const uint8_t* p) { uint64_t v; memcpy(&v, p, 8); return v; }
 
 //! A page-aligned buffer, as a device opened without cache requires.
 struct AlignedBuffer {
@@ -68,7 +65,7 @@ void exfatTime(uint32_t stamp, unsigned hundredths, uint8_t offset, FILETIME& ou
 //! UTF-16 characters of a name entry, up to its terminator or its padding.
 void appendName(std::wstring& name, const uint8_t* p, size_t chars) {
 	for (size_t i = 0; i < chars; ++i) {
-		const wchar_t c = (wchar_t)rd16(p + 2 * i);
+		const wchar_t c = (wchar_t)readLittleEndian<uint16_t>(p + 2 * i);
 		if (c == 0 || c == 0xFFFF) return;
 		name.push_back(c);
 	}
@@ -229,20 +226,20 @@ bool FatVolume::open(VolumeSource& source) {
 		const unsigned sectorShift = b[108], clusterShift = b[109];
 		if (sectorShift < 9 || sectorShift > 12 || clusterShift > 25 - sectorShift) return false;
 		const uint32_t bps = 1u << sectorShift;
-		fatOffset = (uint64_t)rd32(b.data() + 80) * bps;
-		fatLength = (uint64_t)rd32(b.data() + 84) * bps;
-		dataOffset_ = (uint64_t)rd32(b.data() + 88) * bps;
-		clusterCount_ = rd32(b.data() + 92);
-		rootCluster_ = rd32(b.data() + 96);
+		fatOffset = (uint64_t)readLittleEndian<uint32_t>(b.data() + 80) * bps;
+		fatLength = (uint64_t)readLittleEndian<uint32_t>(b.data() + 84) * bps;
+		dataOffset_ = (uint64_t)readLittleEndian<uint32_t>(b.data() + 88) * bps;
+		clusterCount_ = readLittleEndian<uint32_t>(b.data() + 92);
+		rootCluster_ = readLittleEndian<uint32_t>(b.data() + 96);
 		clusterSize_ = bps << clusterShift;
 		fatBits_ = 32;
 		type_ = L"exFAT";
 	}
 	else {
-		const uint32_t bps = rd16(b.data() + 11), spc = b[13], reserved = rd16(b.data() + 14), fats = b[16];
-		const uint32_t rootEntries = rd16(b.data() + 17);
-		const uint32_t total = rd16(b.data() + 19) ? rd16(b.data() + 19) : rd32(b.data() + 32);
-		const uint32_t fatSectors = rd16(b.data() + 22) ? rd16(b.data() + 22) : rd32(b.data() + 36);
+		const uint32_t bps = readLittleEndian<uint16_t>(b.data() + 11), spc = b[13], reserved = readLittleEndian<uint16_t>(b.data() + 14), fats = b[16];
+		const uint32_t rootEntries = readLittleEndian<uint16_t>(b.data() + 17);
+		const uint32_t total = readLittleEndian<uint16_t>(b.data() + 19) ? readLittleEndian<uint16_t>(b.data() + 19) : readLittleEndian<uint32_t>(b.data() + 32);
+		const uint32_t fatSectors = readLittleEndian<uint16_t>(b.data() + 22) ? readLittleEndian<uint16_t>(b.data() + 22) : readLittleEndian<uint32_t>(b.data() + 36);
 		if ((bps != 512 && bps != 1024 && bps != 2048 && bps != 4096) || spc == 0 || (spc & (spc - 1))
 		    || reserved == 0 || fats == 0 || fatSectors == 0)
 			return false;
@@ -259,7 +256,7 @@ bool FatVolume::open(VolumeSource& source) {
 		// The type by the count of clusters, as the specification says.
 		fatBits_ = clusterCount_ < 4085 ? 12 : clusterCount_ < 65525 ? 16 : 32;
 		type_ = fatBits_ == 12 ? L"FAT12" : fatBits_ == 16 ? L"FAT16" : L"FAT32";
-		if (fatBits_ == 32) rootCluster_ = rd32(b.data() + 44);
+		if (fatBits_ == 32) rootCluster_ = readLittleEndian<uint32_t>(b.data() + 44);
 	}
 	if (clusterSize_ == 0 || clusterCount_ == 0 || fatLength > FAT_MAX) return false;
 	return source.read(fatOffset, (size_t)fatLength, fat_);
@@ -270,18 +267,18 @@ uint32_t FatVolume::next(uint32_t cluster) {
 	if (fatBits_ == 12) {
 		const size_t at = cluster + cluster / 2;
 		if (!fits(fat_.size(), at, 2)) return 0;
-		value = rd16(fat_.data() + at);
+		value = readLittleEndian<uint16_t>(fat_.data() + at);
 		value = (cluster & 1) ? value >> 4 : value & 0x0FFF;
 		if (value >= 0xFF7) return 0;
 	}
 	else if (fatBits_ == 16) {
 		if (!fits(fat_.size(), (size_t)cluster * 2, 2)) return 0;
-		value = rd16(fat_.data() + (size_t)cluster * 2);
+		value = readLittleEndian<uint16_t>(fat_.data() + (size_t)cluster * 2);
 		if (value >= 0xFFF7) return 0;
 	}
 	else {
 		if (!fits(fat_.size(), (size_t)cluster * 4, 4)) return 0;
-		value = rd32(fat_.data() + (size_t)cluster * 4);
+		value = readLittleEndian<uint32_t>(fat_.data() + (size_t)cluster * 4);
 		if (type_ != L"exFAT") value &= 0x0FFFFFFF;
 		if (value >= (type_ == L"exFAT" ? 0xFFFFFFF7u : 0x0FFFFFF7u)) return 0;
 	}
@@ -396,11 +393,11 @@ void FatVolume::fatDirectory(const std::vector<uint8_t>& data, const std::wstrin
 		entry.path = path + L"\\" + (longName.empty() ? entry.shortName : longName);
 		entry.attributes = e[11];
 		entry.directory = (e[11] & ATTR_DIRECTORY) != 0;
-		entry.firstCluster = ((fatBits_ == 32 ? (uint32_t)rd16(e + 20) : 0) << 16) | rd16(e + 26);
-		entry.size = rd32(e + 28);
-		entry.created = dosTime(rd16(e + 16), rd16(e + 14), e[13]);
-		entry.modified = dosTime(rd16(e + 24), rd16(e + 22), 0);
-		entry.accessed = dosTime(rd16(e + 18), 0, 0);
+		entry.firstCluster = ((fatBits_ == 32 ? (uint32_t)readLittleEndian<uint16_t>(e + 20) : 0) << 16) | readLittleEndian<uint16_t>(e + 26);
+		entry.size = readLittleEndian<uint32_t>(e + 28);
+		entry.created = dosTime(readLittleEndian<uint16_t>(e + 16), readLittleEndian<uint16_t>(e + 14), e[13]);
+		entry.modified = dosTime(readLittleEndian<uint16_t>(e + 24), readLittleEndian<uint16_t>(e + 22), 0);
+		entry.accessed = dosTime(readLittleEndian<uint16_t>(e + 18), 0, 0);
 		out.push_back(entry);
 		descend(entry, depth, out);
 	}
@@ -435,14 +432,14 @@ void FatVolume::exfatDirectory(const std::vector<uint8_t>& data, const std::wstr
 			appendName(name, n + 2, std::min<size_t>(15, length - name.size()));
 		}
 		entry.path = path + L"\\" + name;
-		entry.attributes = rd16(e + 4);
+		entry.attributes = readLittleEndian<uint16_t>(e + 4);
 		entry.directory = (entry.attributes & ATTR_DIRECTORY) != 0;
 		entry.contiguous = (stream[1] & 0x02) != 0;
-		entry.firstCluster = rd32(stream + 20);
-		entry.size = rd64(stream + 24);
-		exfatTime(rd32(e + 8), e[20], e[22], entry.created, entry.createdUtc, entry.createdOffset);
-		exfatTime(rd32(e + 12), e[21], e[23], entry.modified, entry.modifiedUtc, entry.modifiedOffset);
-		exfatTime(rd32(e + 16), 0, e[24], entry.accessed, entry.accessedUtc, entry.accessedOffset);
+		entry.firstCluster = readLittleEndian<uint32_t>(stream + 20);
+		entry.size = readLittleEndian<uint64_t>(stream + 24);
+		exfatTime(readLittleEndian<uint32_t>(e + 8), e[20], e[22], entry.created, entry.createdUtc, entry.createdOffset);
+		exfatTime(readLittleEndian<uint32_t>(e + 12), e[21], e[23], entry.modified, entry.modifiedUtc, entry.modifiedOffset);
+		exfatTime(readLittleEndian<uint32_t>(e + 16), 0, e[24], entry.accessed, entry.accessedUtc, entry.accessedOffset);
 		out.push_back(entry);
 		descend(entry, depth, out);
 		o += 32 * secondaries;

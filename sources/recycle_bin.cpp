@@ -1,6 +1,7 @@
 /*! \file
  *  \brief Recycle bin (see recycle_bin.h).
  */
+#include "conversions.h"
 #include "recycle_bin.h"
 #include "consigne.h"
 #include <filesystem>
@@ -15,20 +16,15 @@ const size_t V2_PATH_OFFSET = 28;       //!< version 2: the path
 //! Largest `$I`: version 2 with a path of 32,767 characters (28 + 65,534 bytes), rounded up.
 const uint64_t INDEX_MAX = 64 * 1024 + 64;
 
-uint64_t rd64(const uint8_t* p) {
-	uint64_t v = 0;
-	for (int i = 7; i >= 0; --i) v = (v << 8) | p[i];
-	return v;
-}
 
 
 } // namespace
 
 bool parseRecycleBinIndex(const std::vector<uint8_t>& bytes, RecycledFile& recycled) {
 	if (bytes.size() < HEADER_SIZE) return false;
-	recycled.version = rd64(bytes.data());
-	recycled.size = rd64(bytes.data() + 8);
-	const uint64_t deleted = rd64(bytes.data() + 16);
+	recycled.version = readLittleEndian<uint64_t>(bytes.data());
+	recycled.size = readLittleEndian<uint64_t>(bytes.data() + 8);
+	const uint64_t deleted = readLittleEndian<uint64_t>(bytes.data() + 16);
 	recycled.deletedUtc = { (DWORD)(deleted & 0xFFFFFFFFULL), (DWORD)(deleted >> 32) };
 	if (recycled.version == 1) {
 		if (bytes.size() < HEADER_SIZE + V1_PATH_BYTES) return false;

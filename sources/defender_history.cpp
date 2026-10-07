@@ -1,6 +1,7 @@
 /*! \file
  *  \brief Microsoft Defender's detection history and quarantine (see defender_history.h).
  */
+#include "conversions.h"
 #include "defender_history.h"
 #include "consigne.h"
 #include "idList.h"
@@ -66,10 +67,6 @@ private:
 	uint8_t i_ = 0, j_ = 0;
 };
 
-uint32_t rd32(const uint8_t* p) { uint32_t v; memcpy(&v, p, 4); return v; }
-uint64_t rd64(const uint8_t* p) { uint64_t v; memcpy(&v, p, 8); return v; }
-uint16_t rd16(const uint8_t* p) { uint16_t v; memcpy(&v, p, 2); return v; }
-
 FILETIME toFiletime(uint64_t v) {
 	FILETIME f;
 	f.dwLowDateTime = (DWORD)v;
@@ -119,24 +116,24 @@ void parseBag(const std::vector<uint8_t>& bag, std::vector<DetectionProperty>& o
 	const size_t size = bag.size();
 	const uint8_t* b = bag.data();
 	for (size_t p = 24; fits(size, p, 4);) {
-		const uint32_t nameBytes = rd32(b + p);
+		const uint32_t nameBytes = readLittleEndian<uint32_t>(b + p);
 		p += 4;
 		if (nameBytes == 0 || !fits(size, p, nameBytes) || !fits(size, p + nameBytes, 4)) return;
 		DetectionProperty property;
 		property.name = readWideZ(b, p + nameBytes, p);
 		p += nameBytes;
-		const uint32_t type = rd32(b + p);
+		const uint32_t type = readLittleEndian<uint32_t>(b + p);
 		p += 4;
-		if (type == 3 && fits(size, p, 4)) { property.value = Json::num(rd32(b + p)); p += 4; }
+		if (type == 3 && fits(size, p, 4)) { property.value = Json::num(readLittleEndian<uint32_t>(b + p)); p += 4; }
 		else if (type == 4 && fits(size, p, 8)) {
-			const uint64_t v = rd64(b + p);
+			const uint64_t v = readLittleEndian<uint64_t>(b + p);
 			const bool time = property.name.size() > 4 && property.name.compare(property.name.size() - 4, 4, L"Time") == 0;
 			property.value = time ? Json::str(timeToIso8601Utc(toFiletime(v))) : Json::num(v);
 			p += 8;
 		}
 		else if (type == 5 && fits(size, p, 1)) { property.value = Json::num((unsigned)b[p]); p += 1; }
-		else if (type == 6 && fits(size, p, 4) && fits(size, p + 4, rd32(b + p))) {
-			const uint32_t bytes = rd32(b + p);
+		else if (type == 6 && fits(size, p, 4) && fits(size, p + 4, readLittleEndian<uint32_t>(b + p))) {
+			const uint32_t bytes = readLittleEndian<uint32_t>(b + p);
 			property.value = Json::str(readWideZ(b, p + 4 + bytes, p + 4));
 			p += 4 + bytes;
 		}
@@ -155,8 +152,8 @@ void parseBag(const std::vector<uint8_t>& bag, std::vector<DetectionProperty>& o
 void nameFields(const std::vector<DetectionField>& f, DefenderDetection& d, std::vector<bool>& named) {
 	auto at = [&](size_t i, uint32_t type) { return i < f.size() && f[i].type == type; };
 	if (at(3, FIELD_STRING)) { d.threatName = fieldString(f[3]); named[3] = true; }
-	if (at(5, FIELD_NUMBER32) && f[5].value.size() == 4) { d.severityId = rd32(f[5].value.data()); d.severityKnown = named[5] = true; }
-	if (at(6, FIELD_NUMBER32) && f[6].value.size() == 4) { d.categoryId = rd32(f[6].value.data()); d.categoryKnown = named[6] = true; }
+	if (at(5, FIELD_NUMBER32) && f[5].value.size() == 4) { d.severityId = readLittleEndian<uint32_t>(f[5].value.data()); d.severityKnown = named[5] = true; }
+	if (at(6, FIELD_NUMBER32) && f[6].value.size() == 4) { d.categoryId = readLittleEndian<uint32_t>(f[6].value.data()); d.categoryKnown = named[6] = true; }
 	size_t last = 3;
 	for (size_t i = 4; i + 2 < f.size(); ++i) {
 		if (!isMagic(f[i]) || !at(i + 1, FIELD_STRING) || !at(i + 2, FIELD_STRING)) continue;
@@ -171,13 +168,13 @@ void nameFields(const std::vector<DetectionField>& f, DefenderDetection& d, std:
 	if (memcmp(f[q].value.data(), ZERO, 16) != 0) d.quarantineEntryId = guidAt(f[q].value.data());
 	named[q] = true;
 	if (at(q + 1, FIELD_NUMBER32) && f[q + 1].value.size() == 4) {
-		d.executionStatusId = rd32(f[q + 1].value.data());
+		d.executionStatusId = readLittleEndian<uint32_t>(f[q + 1].value.data());
 		d.executionStatusKnown = named[q + 1] = true;
 	}
 	if (at(q + 3, FIELD_STRING)) { d.domainUser = fieldString(f[q + 3]); named[q + 3] = true; }
 	if (at(q + 5, FIELD_STRING)) { d.processName = fieldString(f[q + 5]); named[q + 5] = true; }
 	if (at(q + 9, FIELD_FILETIME) && f[q + 9].value.size() == 8) {
-		d.initialDetectionUtc = toFiletime(rd64(f[q + 9].value.data()));
+		d.initialDetectionUtc = toFiletime(readLittleEndian<uint64_t>(f[q + 9].value.data()));
 		named[q + 9] = true;
 	}
 }
@@ -209,7 +206,7 @@ const QuarantineField* fieldOf(const std::vector<QuarantineField>& fields, uint1
 bool field64(const std::vector<QuarantineField>& fields, uint16_t id, uint64_t& v) {
 	const QuarantineField* f = fieldOf(fields, id);
 	if (!f || f->value.size() != 8) return false;
-	v = rd64(f->value.data());
+	v = readLittleEndian<uint64_t>(f->value.data());
 	return true;
 }
 
@@ -222,7 +219,7 @@ bool parseResource(const uint8_t* d, size_t size, size_t start, QuarantineResour
 	if (!fits(size, p, 2)) return false;
 	if (path.compare(0, 4, L"\\\\?\\") == 0) path.erase(0, 4);
 	r.path = std::move(path);
-	const uint16_t count = rd16(d + p);
+	const uint16_t count = readLittleEndian<uint16_t>(d + p);
 	p += 2;
 	const std::string type = readNarrowZ(d, size, p);
 	r.type = decodeText(type, CP_UTF8);
@@ -231,8 +228,8 @@ bool parseResource(const uint8_t* d, size_t size, size_t start, QuarantineResour
 	for (uint16_t n = 0; n < count; ++n) {
 		if (!fits(size, p, 4)) return false;
 		QuarantineField f;
-		const uint16_t length = rd16(d + p);
-		f.tag = rd16(d + p + 2);
+		const uint16_t length = readLittleEndian<uint16_t>(d + p);
+		f.tag = readLittleEndian<uint16_t>(d + p + 2);
 		p += 4;
 		if (!fits(size, p, length)) return false;
 		f.value.assign(d + p, d + p + length);
@@ -269,7 +266,7 @@ bool fingerprintContent(const std::wstring& file, QuarantineResource& r) {
 		if (!located) {
 			head.insert(head.end(), block.begin(), block.begin() + got);
 			// The security descriptor's length is at 8; the content's length follows it.
-			if (head.size() >= 12 && head.size() >= (size_t)rd32(head.data() + 8) + 0x24) {
+			if (head.size() >= 12 && head.size() >= (size_t)readLittleEndian<uint32_t>(head.data() + 8) + 0x24) {
 				if (!quarantinedContent(head, total, offset, length)) return false;
 				located = true;
 				const size_t available = head.size() > offset ? (size_t)std::min<uint64_t>(head.size() - offset, length) : 0;
@@ -312,9 +309,9 @@ std::vector<uint8_t> defenderDecrypt(const uint8_t* data, size_t size) {
 
 Json DetectionField::valueToJson() const {
 	const uint8_t* v = value.data();
-	if (type == FIELD_NUMBER32 && value.size() == 4) return Json::num(rd32(v));
-	if (type == FIELD_NUMBER64 && value.size() == 8) return Json::num(rd64(v));
-	if (type == FIELD_FILETIME && value.size() == 8) return Json::str(timeToIso8601Utc(toFiletime(rd64(v))));
+	if (type == FIELD_NUMBER32 && value.size() == 4) return Json::num(readLittleEndian<uint32_t>(v));
+	if (type == FIELD_NUMBER64 && value.size() == 8) return Json::num(readLittleEndian<uint64_t>(v));
+	if (type == FIELD_FILETIME && value.size() == 8) return Json::str(timeToIso8601Utc(toFiletime(readLittleEndian<uint64_t>(v))));
 	if (type == FIELD_STRING) return Json::str(fieldString(*this));
 	if (type == FIELD_GUID && value.size() == 16) return Json::str(guidAt(v));
 	return Json::str(hexOf(value));
@@ -325,8 +322,8 @@ bool parseDetectionHistory(const std::vector<uint8_t>& bytes, DefenderDetection&
 	const size_t size = bytes.size();
 	for (size_t p = 0; fits(size, p, 8);) {
 		DetectionField f;
-		const uint32_t length = rd32(bytes.data() + p);
-		f.type = rd32(bytes.data() + p + 4);
+		const uint32_t length = readLittleEndian<uint32_t>(bytes.data() + p);
+		f.type = readLittleEndian<uint32_t>(bytes.data() + p + 4);
 		f.offset = p;
 		if (!fits(size, p + 8, length)) break;          // truncated: what precedes is kept
 		f.value.assign(bytes.begin() + p + 8, bytes.begin() + p + 8 + length);
@@ -338,7 +335,7 @@ bool parseDetectionHistory(const std::vector<uint8_t>& bytes, DefenderDetection&
 	if (fields.size() < 3 || fields[0].type != FIELD_NUMBER64 || fields[0].value.size() != 8
 	    || fields[1].type != FIELD_GUID || fields[1].value.size() != 16 || !isMagic(fields[2]))
 		return false;
-	d.threatId = rd64(fields[0].value.data());
+	d.threatId = readLittleEndian<uint64_t>(fields[0].value.data());
 	d.detectionId = guidAt(fields[1].value.data());
 	d.magicVersion = fieldString(fields[2]).substr(wcslen(MAGIC_PREFIX));
 	std::vector<bool> named(fields.size(), false);
@@ -429,9 +426,9 @@ void DefenderDetections::clear() {
 
 bool quarantinedContent(const std::vector<uint8_t>& head, uint64_t total, size_t& offset, uint64_t& size) {
 	if (!fits(head.size(), 8, 4)) return false;
-	const size_t descriptor = rd32(head.data() + 8);
+	const size_t descriptor = readLittleEndian<uint32_t>(head.data() + 8);
 	if (!fits(head.size(), descriptor + 0x1C, 8)) return false;
-	size = rd64(head.data() + descriptor + 0x1C);
+	size = readLittleEndian<uint64_t>(head.data() + descriptor + 0x1C);
 	offset = 0x28 + descriptor;
 	return offset <= total && size <= total - offset;
 }
@@ -452,7 +449,7 @@ Json QuarantineResource::toJson() const {
 	if (field64(fields, TAG_MODIFIED, v)) addDate(o, L"Modified", toFiletime(v));
 	const QuarantineField* attributes = fieldOf(fields, TAG_ATTRIBUTES);
 	if (attributes && attributes->value.size() == 4)
-		o.add(L"Attributes", Json::str(FileAttributes(rd32(attributes->value.data())).to_wstring()));
+		o.add(L"Attributes", Json::str(FileAttributes(readLittleEndian<uint32_t>(attributes->value.data())).to_wstring()));
 	Json others = Json::arr();
 	for (const QuarantineField& f : fields) {
 		const uint16_t id = f.tag & 0x0FFF;
@@ -462,8 +459,8 @@ Json QuarantineResource::toJson() const {
 		// Type 2 a UTF-16 string, 3 a 32-bit number, 5 and 6 a 64-bit one (6 also holds the dates).
 		const unsigned kind = f.tag >> 12;
 		if (kind == 2) item.add(L"Value", Json::str(readWideZ(f.value.data(), f.value.size(), 0)));
-		else if (kind == 3 && f.value.size() == 4) item.add(L"Value", Json::num(rd32(f.value.data())));
-		else if ((kind == 5 || kind == 6) && f.value.size() == 8) item.add(L"Value", Json::num(rd64(f.value.data())));
+		else if (kind == 3 && f.value.size() == 4) item.add(L"Value", Json::num(readLittleEndian<uint32_t>(f.value.data())));
+		else if ((kind == 5 || kind == 6) && f.value.size() == 8) item.add(L"Value", Json::num(readLittleEndian<uint64_t>(f.value.data())));
 		else item.add(L"Value", Json::str(hexOf(f.value)));
 		others.push(std::move(item));
 	}
@@ -492,22 +489,22 @@ Json QuarantineEntry::toJson() const {
 bool parseQuarantineEntry(const std::vector<uint8_t>& bytes, QuarantineEntry& entry) {
 	if (bytes.size() < ENTRY_HEADER) return false;
 	const std::vector<uint8_t> header = defenderDecrypt(bytes.data(), ENTRY_HEADER);
-	const size_t first = rd32(header.data() + 0x28), second = rd32(header.data() + 0x2C);
+	const size_t first = readLittleEndian<uint32_t>(header.data() + 0x28), second = readLittleEndian<uint32_t>(header.data() + 0x2C);
 	if (!fits(bytes.size(), ENTRY_HEADER, first) || !fits(bytes.size(), ENTRY_HEADER + first, second)) return false;
 	// The threat: its identifier, the instant of the quarantine, its name.
 	const std::vector<uint8_t> threat = defenderDecrypt(bytes.data() + ENTRY_HEADER, first);
 	if (threat.size() < 0x34) return false;
-	entry.threatId = rd64(threat.data());
-	entry.quarantinedUtc = toFiletime(rd64(threat.data() + 0x20));
+	entry.threatId = readLittleEndian<uint64_t>(threat.data());
+	entry.quarantinedUtc = toFiletime(readLittleEndian<uint64_t>(threat.data() + 0x20));
 	entry.threatName = decodeText(readNarrowZ(threat.data(), threat.size(), 0x34), CP_UTF8);
 	// The resources: their number, their offsets, each one.
 	const std::vector<uint8_t> list = defenderDecrypt(bytes.data() + ENTRY_HEADER + first, second);
 	if (list.size() < 4) return false;
-	const size_t count = rd32(list.data());
+	const size_t count = readLittleEndian<uint32_t>(list.data());
 	if (count > (list.size() - 4) / 4) return false;
 	for (size_t n = 0; n < count; ++n) {
 		QuarantineResource r;
-		if (parseResource(list.data(), list.size(), rd32(list.data() + 4 + 4 * n), r)) entry.resources.push_back(std::move(r));
+		if (parseResource(list.data(), list.size(), readLittleEndian<uint32_t>(list.data() + 4 + 4 * n), r)) entry.resources.push_back(std::move(r));
 	}
 	return true;
 }

@@ -4,6 +4,7 @@
  *  See hive_recover.h.
  *  Portable C++ (no Windows dependency): testable on Linux too.
  */
+#include "conversions.h"
 #include "hive_recover.h"
 #include <fstream>
 #include <vector>
@@ -20,19 +21,11 @@ constexpr size_t OFF_FILETYPE  = 0x1C;  // 0 = primary hive, 6 = log
 constexpr size_t OFF_NAME      = 0x30;  // internal name, UTF-16, 64 bytes
 constexpr size_t OFF_CHECKSUM  = 508;   // XOR of the first 127 uint32
 
-inline uint32_t rd32(const uint8_t* p){
-    return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
-}
-inline void wr32(uint8_t* p, uint32_t v){
-    p[0] = (uint8_t)(v); p[1] = (uint8_t)(v >> 8);
-    p[2] = (uint8_t)(v >> 16); p[3] = (uint8_t)(v >> 24);
-}
-
 /* Base block checksum: XOR of the first 127 uint32.
    0 and 0xFFFFFFFF are forbidden and replaced (format specification). */
 uint32_t baseBlockChecksum(const uint8_t* bb){
     uint32_t x = 0;
-    for (int i = 0; i < 127; ++i) x ^= rd32(bb + i * 4);
+    for (int i = 0; i < 127; ++i) x ^= readLittleEndian<uint32_t>(bb + i * 4);
     if (x == 0)          return 1;
     if (x == 0xFFFFFFFF) return 0xFFFFFFFE;
     return x;
@@ -50,11 +43,11 @@ HiveFixInfo MakeHiveLoadable(const std::filesystem::path& hive){
     if (f.gcount() != (std::streamsize)BASE_BLOCK){ r.error = L"base block truncated"; return r; }
 
     if (std::memcmp(bb.data(), "regf", 4) != 0){ r.error = L"regf signature absent"; return r; }
-    if (rd32(bb.data() + OFF_FILETYPE) != 0){ r.error = L"is not a primary hive"; return r; }
+    if (readLittleEndian<uint32_t>(bb.data() + OFF_FILETYPE) != 0){ r.error = L"is not a primary hive"; return r; }
 
-    r.primarySeq   = rd32(bb.data() + OFF_PRIMARY);
-    r.secondarySeq = rd32(bb.data() + OFF_SECONDARY);
-    r.oldChecksum  = rd32(bb.data() + OFF_CHECKSUM);
+    r.primarySeq   = readLittleEndian<uint32_t>(bb.data() + OFF_PRIMARY);
+    r.secondarySeq = readLittleEndian<uint32_t>(bb.data() + OFF_SECONDARY);
+    r.oldChecksum  = readLittleEndian<uint32_t>(bb.data() + OFF_CHECKSUM);
 
     // internal name (UTF-16, terminated or full)
     for (size_t i = 0; i < 32; ++i){
@@ -67,9 +60,9 @@ HiveFixInfo MakeHiveLoadable(const std::filesystem::path& hive){
     if (!r.wasDirty){ r.ok = true; r.newChecksum = r.oldChecksum; return r; }
 
     // Set secondary := primary, then recompute the checksum.
-    wr32(bb.data() + OFF_SECONDARY, r.primarySeq);
+    writeLittleEndian<uint32_t>(bb.data() + OFF_SECONDARY, r.primarySeq);
     r.newChecksum = baseBlockChecksum(bb.data());
-    wr32(bb.data() + OFF_CHECKSUM, r.newChecksum);
+    writeLittleEndian<uint32_t>(bb.data() + OFF_CHECKSUM, r.newChecksum);
 
     f.seekp(0, std::ios::beg);
     f.write(reinterpret_cast<const char*>(bb.data()), BASE_BLOCK);
@@ -138,7 +131,7 @@ uint64_t marvin32(const uint8_t* data, size_t size){
         hi = rotl32(hi, 19);
     };
     size_t i = 0;
-    for (; size - i >= 4; i += 4){ lo += rd32(data + i); mix(); }
+    for (; size - i >= 4; i += 4){ lo += readLittleEndian<uint32_t>(data + i); mix(); }
     // Finalization: the remaining bytes followed by a 0x80.
     uint32_t rest = 0;
     size_t k = 0;
@@ -147,11 +140,6 @@ uint64_t marvin32(const uint8_t* data, size_t size){
     lo += rest; mix(); mix();
     return ((uint64_t)hi << 32) | lo;
 }
-
-inline uint64_t rd64(const uint8_t* p){
-    return (uint64_t)rd32(p) | ((uint64_t)rd32(p + 4) << 32);
-}
-inline void wr64(uint8_t* p, uint64_t v){ wr32(p, (uint32_t)v); wr32(p + 4, (uint32_t)(v >> 32)); }
 
 //! An entry read from a log, with its position and its verdict.
 struct ReadEntry {
@@ -188,17 +176,17 @@ std::vector<ReadEntry> readString(const std::filesystem::path& log,
     bool first = true;
     while (off + ENTRY_HEADER <= d.size()){
         if (std::memcmp(d.data() + off, "HvLE", 4) != 0) break;
-        const uint32_t size = rd32(d.data() + off + 4);
+        const uint32_t size = readLittleEndian<uint32_t>(d.data() + off + 4);
         if (size < LOG_HEADER || off + size > d.size()) break;
 
         if (broken){ ++*leftover; off += size; continue; }
 
         ReadEntry e;
-        e.sequence   = rd32(d.data() + off + 12);
-        e.binsSize = rd32(d.data() + off + 16);
-        e.nbPages    = rd32(d.data() + off + 20);
-        const uint64_t h1 = rd64(d.data() + off + 24);
-        const uint64_t h2 = rd64(d.data() + off + 32);
+        e.sequence   = readLittleEndian<uint32_t>(d.data() + off + 12);
+        e.binsSize = readLittleEndian<uint32_t>(d.data() + off + 16);
+        e.nbPages    = readLittleEndian<uint32_t>(d.data() + off + 20);
+        const uint64_t h1 = readLittleEndian<uint64_t>(d.data() + off + 24);
+        const uint64_t h2 = readLittleEndian<uint64_t>(d.data() + off + 32);
 
         // Bounds BEFORE any other read: nbPages comes from the examined file.
         if (e.nbPages > (size - ENTRY_HEADER) / 8) e.reason = L"inconsistent number of pages";
@@ -208,8 +196,8 @@ std::vector<ReadEntry> readString(const std::filesystem::path& log,
         else {
             uint64_t sum = 0;
             for (uint32_t i = 0; i < e.nbPages; ++i){
-                const uint32_t o = rd32(d.data() + off + ENTRY_HEADER + 8 * i);
-                const uint32_t t = rd32(d.data() + off + ENTRY_HEADER + 8 * i + 4);
+                const uint32_t o = readLittleEndian<uint32_t>(d.data() + off + ENTRY_HEADER + 8 * i);
+                const uint32_t t = readLittleEndian<uint32_t>(d.data() + off + ENTRY_HEADER + 8 * i + 4);
                 e.pages.emplace_back(o, t);
                 sum += t;
             }
@@ -254,10 +242,10 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
     f.read(reinterpret_cast<char*>(bb.data()), BASE_BLOCK);
     if (f.gcount() != (std::streamsize)BASE_BLOCK){ r.error = L"base block truncated"; return r; }
     if (std::memcmp(bb.data(), "regf", 4) != 0){ r.error = L"regf signature absent"; return r; }
-    if (rd32(bb.data() + OFF_FILETYPE) != 0){ r.error = L"is not a primary hive"; return r; }
+    if (readLittleEndian<uint32_t>(bb.data() + OFF_FILETYPE) != 0){ r.error = L"is not a primary hive"; return r; }
 
-    const uint32_t primarySeq   = rd32(bb.data() + OFF_PRIMARY);
-    const uint32_t secondarySeq = rd32(bb.data() + OFF_SECONDARY);
+    const uint32_t primarySeq   = readLittleEndian<uint32_t>(bb.data() + OFF_PRIMARY);
+    const uint32_t secondarySeq = readLittleEndian<uint32_t>(bb.data() + OFF_SECONDARY);
     r.hiveSequence  = primarySeq;
     r.finalSequence = primarySeq;
 
@@ -362,13 +350,13 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
         std::memcpy(ent.data(), "WACUNDO1", 8);
         for (size_t i = 0; i < 32; ++i)
             ent[8 + i] = (uint8_t)(i < md5Before.size() ? (char)md5Before[i] : ' ');
-        wr32(ent.data() + 40, (uint32_t)undo.size());
-        wr64(ent.data() + 44, hiveSize);
+        writeLittleEndian<uint32_t>(ent.data() + 40, (uint32_t)undo.size());
+        writeLittleEndian<uint64_t>(ent.data() + 44, hiveSize);
         u.write(reinterpret_cast<const char*>(ent.data()), (std::streamsize)ent.size());
         for (const Page& p : undo){
             uint8_t line[12];
-            wr64(line, p.offset);
-            wr32(line + 8, p.size);
+            writeLittleEndian<uint64_t>(line, p.offset);
+            writeLittleEndian<uint32_t>(line + 8, p.size);
             u.write(reinterpret_cast<const char*>(line), 12);
         }
         for (const Page& p : undo)
@@ -388,9 +376,9 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
             pos += p.second;
         }
     }
-    wr32(bb.data() + OFF_PRIMARY,   r.finalSequence);
-    wr32(bb.data() + OFF_SECONDARY, r.finalSequence);
-    wr32(bb.data() + OFF_CHECKSUM,  baseBlockChecksum(bb.data()));
+    writeLittleEndian<uint32_t>(bb.data() + OFF_PRIMARY,   r.finalSequence);
+    writeLittleEndian<uint32_t>(bb.data() + OFF_SECONDARY, r.finalSequence);
+    writeLittleEndian<uint32_t>(bb.data() + OFF_CHECKSUM,  baseBlockChecksum(bb.data()));
     f.seekp(0, std::ios::beg);
     f.write(reinterpret_cast<const char*>(bb.data()), BASE_BLOCK);
     f.flush();

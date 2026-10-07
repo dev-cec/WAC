@@ -26,9 +26,6 @@ const size_t SI_SECURITY_ID = 0x34;      //!< uint32 in $STANDARD_INFORMATION: n
 const uint64_t ROOT_ENTRY = 5;             //!< the root directory's record
 const unsigned MAX_PATH_DEPTH = 255;       //!< a longer parent chain is a loop, or a forged record
 
-uint16_t rd16(const uint8_t* p) { return (uint16_t)(p[0] | (p[1] << 8)); }
-uint32_t rd32(const uint8_t* p) { return (uint32_t)rd16(p) | ((uint32_t)rd16(p + 2) << 16); }
-uint64_t rd64(const uint8_t* p) { return (uint64_t)rd32(p) | ((uint64_t)rd32(p + 4) << 32); }
 FILETIME filetime(uint64_t v) { return { (DWORD)(v & 0xFFFFFFFFULL), (DWORD)(v >> 32) }; }
 
 //! A UTC date, not emitted when the record holds none.
@@ -45,18 +42,18 @@ int namePreference(uint8_t space) { return space == 1 || space == 3 ? 0 : space 
 
 bool MftEntry::parse(const uint8_t* record, size_t recordSize, uint64_t number) {
 	if (recordSize < 0x30 || std::memcmp(record, "FILE", 4) != 0) return false;
-	const size_t used = std::min<size_t>(rd32(record + RECORD_USED_SIZE), recordSize);
+	const size_t used = std::min<size_t>(readLittleEndian<uint32_t>(record + RECORD_USED_SIZE), recordSize);
 	entry = number;
-	sequence = rd16(record + RECORD_SEQUENCE);
-	const uint16_t flags = rd16(record + RECORD_FLAGS);
+	sequence = readLittleEndian<uint16_t>(record + RECORD_SEQUENCE);
+	const uint16_t flags = readLittleEndian<uint16_t>(record + RECORD_FLAGS);
 	inUse = (flags & 0x01) != 0;
 	directory = (flags & 0x02) != 0;
-	const NtfsReference base = splitNtfsReference(rd64(record + RECORD_BASE));
+	const NtfsReference base = splitNtfsReference(readLittleEndian<uint64_t>(record + RECORD_BASE));
 	baseEntry = base.entry;
 	baseSequence = base.sequence;
-	for (size_t p = rd16(record + RECORD_ATTRIBUTES); p + 16 <= used;) {
-		const uint32_t type = rd32(record + p);
-		const uint32_t length = rd32(record + p + 4);
+	for (size_t p = readLittleEndian<uint16_t>(record + RECORD_ATTRIBUTES); p + 16 <= used;) {
+		const uint32_t type = readLittleEndian<uint32_t>(record + p);
+		const uint32_t length = readLittleEndian<uint32_t>(record + p + 4);
 		if (type == ATTRIBUTE_END || length < 16 || p + length > used) break;
 		const uint8_t* a = record + p;
 		const bool resident = a[8] == 0;
@@ -65,48 +62,48 @@ bool MftEntry::parse(const uint8_t* record, size_t recordSize, uint64_t number) 
 		const uint8_t* value = nullptr;
 		uint32_t valueLength = 0;
 		if (resident && length >= 0x18) {
-			valueLength = rd32(a + 0x10);
-			const uint16_t offset = rd16(a + 0x14);
+			valueLength = readLittleEndian<uint32_t>(a + 0x10);
+			const uint16_t offset = readLittleEndian<uint16_t>(a + 0x14);
 			if ((uint64_t)offset + valueLength <= length) value = a + offset;
 		}
 		if (type == STANDARD_INFORMATION && value && valueLength >= 0x24) {
-			created = filetime(rd64(value));
-			modified = filetime(rd64(value + 0x08));
-			mftModified = filetime(rd64(value + 0x10));
-			accessed = filetime(rd64(value + 0x18));
-			attributes = rd32(value + 0x20);
+			created = filetime(readLittleEndian<uint64_t>(value));
+			modified = filetime(readLittleEndian<uint64_t>(value + 0x08));
+			mftModified = filetime(readLittleEndian<uint64_t>(value + 0x10));
+			accessed = filetime(readLittleEndian<uint64_t>(value + 0x18));
+			attributes = readLittleEndian<uint32_t>(value + 0x20);
 			// The long form (NTFS 3.0, 0x48 bytes) carries the security descriptor's number.
-			if (valueLength >= SI_SECURITY_ID + 4) securityId = rd32(value + SI_SECURITY_ID);
+			if (valueLength >= SI_SECURITY_ID + 4) securityId = readLittleEndian<uint32_t>(value + SI_SECURITY_ID);
 		}
 		else if (type == FILE_NAME && value && valueLength >= 0x42
 		         && 0x42u + 2u * value[0x40] <= valueLength) {
 			const uint8_t space = value[0x41];
-			const NtfsReference parent = splitNtfsReference(rd64(value));
+			const NtfsReference parent = splitNtfsReference(readLittleEndian<uint64_t>(value));
 			if (space != 2) {
 				Link link;
 				link.parentEntry = parent.entry;
 				link.parentSequence = parent.sequence;
 				link.name.assign(value[0x40], L'\0');
-				for (size_t k = 0; k < link.name.size(); ++k) link.name[k] = (wchar_t)rd16(value + 0x42 + 2 * k);
+				for (size_t k = 0; k < link.name.size(); ++k) link.name[k] = (wchar_t)readLittleEndian<uint16_t>(value + 0x42 + 2 * k);
 				links.push_back(std::move(link));
 			}
 			if (namePreference(space) < nameRank) {
 				nameRank = namePreference(space);
 				parentEntry = parent.entry;
 				parentSequence = parent.sequence;
-				fileNameCreated = filetime(rd64(value + 0x08));
-				fileNameModified = filetime(rd64(value + 0x10));
-				fileNameMftModified = filetime(rd64(value + 0x18));
-				fileNameAccessed = filetime(rd64(value + 0x20));
+				fileNameCreated = filetime(readLittleEndian<uint64_t>(value + 0x08));
+				fileNameModified = filetime(readLittleEndian<uint64_t>(value + 0x10));
+				fileNameMftModified = filetime(readLittleEndian<uint64_t>(value + 0x18));
+				fileNameAccessed = filetime(readLittleEndian<uint64_t>(value + 0x20));
 				name.assign(value[0x40], L'\0');
-				for (size_t k = 0; k < name.size(); ++k) name[k] = (wchar_t)rd16(value + 0x42 + 2 * k);
+				for (size_t k = 0; k < name.size(); ++k) name[k] = (wchar_t)readLittleEndian<uint16_t>(value + 0x42 + 2 * k);
 			}
 		}
 		else if (type == DATA) {
-			const uint16_t nameOffset = rd16(a + 10);
+			const uint16_t nameOffset = readLittleEndian<uint16_t>(a + 10);
 			if (nameLength && (uint64_t)nameOffset + 2u * nameLength <= length) {
 				std::wstring stream(nameLength, L'\0');
-				for (size_t k = 0; k < stream.size(); ++k) stream[k] = (wchar_t)rd16(a + nameOffset + 2 * k);
+				for (size_t k = 0; k < stream.size(); ++k) stream[k] = (wchar_t)readLittleEndian<uint16_t>(a + nameOffset + 2 * k);
 				if (toLower(stream) == L"zone.identifier") {
 					zoneIdentifier = true;
 					if (resident && value) {
@@ -114,13 +111,13 @@ bool MftEntry::parse(const uint8_t* record, size_t recordSize, uint64_t number) 
 						zoneIdentifierSize = valueLength;
 						zoneIdentifierContent.assign(reinterpret_cast<const char*>(value), valueLength);
 					}
-					else if (!resident && length >= 0x40 && rd64(a + 0x10) == 0) zoneIdentifierSize = rd64(a + 0x30);
+					else if (!resident && length >= 0x40 && readLittleEndian<uint64_t>(a + 0x10) == 0) zoneIdentifierSize = readLittleEndian<uint64_t>(a + 0x30);
 				}
 				streams.push_back(std::move(stream));
 			}
 			// The content's size: resident, or on the first fragment (starting VCN 0).
 			else if (!nameLength && resident && value) { size = valueLength; sizeKnown = true; }
-			else if (!nameLength && !resident && length >= 0x40 && rd64(a + 0x10) == 0) { size = rd64(a + 0x30); sizeKnown = true; }
+			else if (!nameLength && !resident && length >= 0x40 && readLittleEndian<uint64_t>(a + 0x10) == 0) { size = readLittleEndian<uint64_t>(a + 0x30); sizeKnown = true; }
 		}
 		p += length;
 	}
@@ -203,7 +200,7 @@ HRESULT Mft::getData(const std::wstring& volume) {
 		uint8_t header[0x20] = {};
 		in.read(reinterpret_cast<char*>(header), sizeof header);
 		recordSize_ = in.gcount() == (std::streamsize)sizeof header && std::memcmp(header, "FILE", 4) == 0
-		            ? rd32(header + RECORD_ALLOCATED_SIZE) : 0;
+		            ? readLittleEndian<uint32_t>(header + RECORD_ALLOCATED_SIZE) : 0;
 		if (recordSize_ != 1024 && recordSize_ != 2048 && recordSize_ != 4096) return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
 		in.seekg(0, std::ios::end);
 		nodes_.resize((size_t)((uint64_t)in.tellg() / recordSize_));

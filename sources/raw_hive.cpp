@@ -39,13 +39,6 @@ bool g_verbose = false;
 RawHiveProgressFn g_progress = nullptr;      // progress reporter, optional
 
 // --- little-endian integer reads ------------------------------------------
-inline uint16_t rd16(const uint8_t* p){ return (uint16_t)(p[0] | (p[1] << 8)); }
-inline uint32_t rd32(const uint8_t* p){
-    return (uint32_t)p[0] | ((uint32_t)p[1]<<8) | ((uint32_t)p[2]<<16) | ((uint32_t)p[3]<<24);
-}
-inline uint64_t rd64(const uint8_t* p){
-    uint64_t v = 0; for (int i = 7; i >= 0; --i) v = (v << 8) | p[i]; return v;
-}
 
 // case-insensitive name comparison (ASCII/BMP is enough for these paths)
 bool iequals(const std::wstring& a, const std::wstring& b){
@@ -210,10 +203,10 @@ public:
         if (memcmp(vbr + 3, "NTFS    ", 8) != 0){
             RVLOG(L"[raw] NTFS signature absent\n"); return E_FAIL;
         }
-        bytesPerSector_    = rd16(vbr + 0x0B);
+        bytesPerSector_    = readLittleEndian<uint16_t>(vbr + 0x0B);
         sectorsPerCluster_ = vbr[0x0D];
         bytesPerCluster_   = bytesPerSector_ * sectorsPerCluster_;
-        mftLcn_            = rd64(vbr + 0x30);
+        mftLcn_            = readLittleEndian<uint64_t>(vbr + 0x30);
         int8_t cpr = (int8_t)vbr[0x40];   // clusters/record, or 2^(-cpr) bytes
         bytesPerRecord_ = (cpr >= 0) ? (uint32_t)cpr * bytesPerCluster_
                                      : (uint32_t)(1u << (-cpr));
@@ -331,8 +324,8 @@ public:
         std::vector<std::pair<uint64_t, std::vector<Run>>> fragments;
         size_t pos = 0;
         while (pos + 0x1A <= content.size()){
-            const uint32_t type = rd32(content.data() + pos);
-            const uint16_t len  = rd16(content.data() + pos + 4);
+            const uint32_t type = readLittleEndian<uint32_t>(content.data() + pos);
+            const uint16_t len  = readLittleEndian<uint16_t>(content.data() + pos + 4);
             if (len < 0x1A || pos + len > content.size()) break;
             const uint8_t nameLen = content[pos + 6];
             const uint8_t nameOffset = content[pos + 7];
@@ -341,10 +334,10 @@ public:
                selects the stream: unnamed (the content) or the one asked for. */
             bool nameMatches = nameLen == streamName.size() && nameOffset + 2u * nameLen <= len;
             for (size_t k = 0; nameMatches && k < nameLen; ++k)
-                nameMatches = (wchar_t)rd16(content.data() + pos + nameOffset + 2 * k) == streamName[k];
+                nameMatches = (wchar_t)readLittleEndian<uint16_t>(content.data() + pos + nameOffset + 2 * k) == streamName[k];
             if (type == wantedType && (wantedType != 0x80 || nameMatches)){
-                const uint64_t vcn = rd64(content.data() + pos + 8);
-                const uint64_t ref = splitNtfsReference(rd64(content.data() + pos + 0x10)).entry;
+                const uint64_t vcn = readLittleEndian<uint64_t>(content.data() + pos + 8);
+                const uint64_t ref = splitNtfsReference(readLittleEndian<uint64_t>(content.data() + pos + 0x10)).entry;
                 std::vector<uint8_t> frag;
                 if (readMftRecord(ref, frag)){
                     // The fragment carries the non-resident attribute covering this VCN.
@@ -357,18 +350,18 @@ public:
                            Windows 11 VM were not extracted at all. The most active
                            compressed file is also the most fragmented, hence the first
                            to switch to an $ATTRIBUTE_LIST. */
-                        if ((rd16(d + 0x0C) & 0x0001) && !compressionUnit){
+                        if ((readLittleEndian<uint16_t>(d + 0x0C) & 0x0001) && !compressionUnit){
                             RVLOG(L"[raw] NTFS-compressed $DATA in a fragment: not supported here\n");
                             return false;
                         }
                         if (vcn == 0){
-                            realSize = rd64(d + 0x30);
-                            if (validDataLength) *validDataLength = rd64(d + 0x38);
+                            realSize = readLittleEndian<uint64_t>(d + 0x30);
+                            if (validDataLength) *validDataLength = readLittleEndian<uint64_t>(d + 0x38);
                             if (compressionUnit)
-                                *compressionUnit = (rd16(d + 0x0C) & 0x0001)
-                                                  ? (uint32_t)1u << rd16(d + 0x22) : 0;
+                                *compressionUnit = (readLittleEndian<uint16_t>(d + 0x0C) & 0x0001)
+                                                  ? (uint32_t)1u << readLittleEndian<uint16_t>(d + 0x22) : 0;
                         }
-                        fragments.emplace_back(vcn, decodeRuns(d + rd16(d + 0x20), d + rd32(d + 0x04)));
+                        fragments.emplace_back(vcn, decodeRuns(d + readLittleEndian<uint16_t>(d + 0x20), d + readLittleEndian<uint32_t>(d + 0x04)));
                     }
                 }
                 else RVLOG(L"[raw] MFT fragment #%llu unreadable\n", (unsigned long long)ref);
@@ -416,10 +409,10 @@ public:
         std::vector<uint8_t> content;
         if (!readListContent(rec, content)) return nullptr;
         for (size_t pos = 0; pos + 0x1A <= content.size();){
-            const uint16_t len = rd16(content.data() + pos + 4);
+            const uint16_t len = readLittleEndian<uint16_t>(content.data() + pos + 4);
             if (len < 0x1A || pos + len > content.size()) break;
-            if (rd32(content.data() + pos) == type){
-                const uint64_t ref = splitNtfsReference(rd64(content.data() + pos + 0x10)).entry;
+            if (readLittleEndian<uint32_t>(content.data() + pos) == type){
+                const uint64_t ref = splitNtfsReference(readLittleEndian<uint64_t>(content.data() + pos + 0x10)).entry;
                 if (readMftRecord(ref, holder)){
                     a = findAttr(holder, type, false);
                     if (a && a[8] == 0) return a;
@@ -435,15 +428,15 @@ public:
         const uint8_t* al = findAttr(rec, 0x20, false);
         if (!al) return false;
         if (al[8] == 0){
-            const uint32_t vlen = rd32(al + 0x10);
-            const uint16_t voff = rd16(al + 0x14);
+            const uint32_t vlen = readLittleEndian<uint32_t>(al + 0x10);
+            const uint16_t voff = readLittleEndian<uint16_t>(al + 0x14);
             if (voff + (size_t)vlen > rec.size()) return false;
             content.assign(al + voff, al + voff + vlen);
             return true;
         }
-        const uint64_t size = rd64(al + 0x30);
+        const uint64_t size = readLittleEndian<uint64_t>(al + 0x30);
         if (size == 0 || size > (16ULL << 20)) return false;
-        const std::vector<Run> alRuns = decodeRuns(al + rd16(al + 0x20), al + rd32(al + 0x04));
+        const std::vector<Run> alRuns = decodeRuns(al + readLittleEndian<uint16_t>(al + 0x20), al + readLittleEndian<uint32_t>(al + 0x04));
         content.resize((size_t)size);
         return readVirtual(alRuns, 0, (uint32_t)size, content.data());
     }
@@ -469,11 +462,11 @@ public:
             if (readListContent(rec, content)){
                 size_t pos = 0;
                 while (pos + 0x1A <= content.size()){
-                    const uint32_t type = rd32(content.data() + pos);
-                    const uint16_t len  = rd16(content.data() + pos + 4);
+                    const uint32_t type = readLittleEndian<uint32_t>(content.data() + pos);
+                    const uint16_t len  = readLittleEndian<uint16_t>(content.data() + pos + 4);
                     if (len < 0x1A || pos + len > content.size()) break;
                     if (type == 0xC0){
-                        const uint64_t ref = splitNtfsReference(rd64(content.data() + pos + 0x10)).entry;
+                        const uint64_t ref = splitNtfsReference(readLittleEndian<uint64_t>(content.data() + pos + 0x10)).entry;
                         if (readMftRecord(ref, fragRp)){
                             rp = findAttr(fragRp, 0xC0);
                             if (rp) break;
@@ -484,17 +477,17 @@ public:
             }
         }
         if (!rp || rp[8] != 0) return false;
-        const uint8_t* reparseContent = rp + rd16(rp + 0x14);
-        if (rd32(rp + 0x10) < 24) return false;
-        if (rd32(reparseContent) != 0x80000017u) return false;     // not WOF
-        if (rd32(reparseContent + 12) != 2) return false;          // provider not handled
-        ctx.algorithm = rd32(reparseContent + 20);
+        const uint8_t* reparseContent = rp + readLittleEndian<uint16_t>(rp + 0x14);
+        if (readLittleEndian<uint32_t>(rp + 0x10) < 24) return false;
+        if (readLittleEndian<uint32_t>(reparseContent) != 0x80000017u) return false;     // not WOF
+        if (readLittleEndian<uint32_t>(reparseContent + 12) != 2) return false;          // provider not handled
+        ctx.algorithm = readLittleEndian<uint32_t>(reparseContent + 20);
 
         // 2. The named stream: in the base record, or in fragments.
         const uint8_t* stream = findNamedAttr(rec, 0x80, L"WofCompressedData");
         if (stream && stream[8] != 0){
-            ctx.streamSize = rd64(stream + 0x30);
-            ctx.runs = decodeRuns(stream + rd16(stream + 0x20), stream + rd32(stream + 0x04));
+            ctx.streamSize = readLittleEndian<uint64_t>(stream + 0x30);
+            ctx.runs = decodeRuns(stream + readLittleEndian<uint16_t>(stream + 0x20), stream + readLittleEndian<uint32_t>(stream + 0x04));
             ctx.present = !ctx.runs.empty() && ctx.streamSize > 0;
             return ctx.present;
         }
@@ -504,18 +497,18 @@ public:
         std::vector<std::pair<uint64_t, std::vector<Run>>> fragments;
         size_t pos = 0;
         while (pos + 0x1A <= content.size()){
-            const uint32_t type = rd32(content.data() + pos);
-            const uint16_t len  = rd16(content.data() + pos + 4);
+            const uint32_t type = readLittleEndian<uint32_t>(content.data() + pos);
+            const uint16_t len  = readLittleEndian<uint16_t>(content.data() + pos + 4);
             if (len < 0x1A || pos + len > content.size()) break;
             if (type == 0x80 && content[pos + 6] != 0){       // NAMED $DATA
-                const uint64_t vcn = rd64(content.data() + pos + 8);
-                const uint64_t ref = splitNtfsReference(rd64(content.data() + pos + 0x10)).entry;
+                const uint64_t vcn = readLittleEndian<uint64_t>(content.data() + pos + 8);
+                const uint64_t ref = splitNtfsReference(readLittleEndian<uint64_t>(content.data() + pos + 0x10)).entry;
                 std::vector<uint8_t> frag;
                 if (readMftRecord(ref, frag)){
                     const uint8_t* d = findNamedAttr(frag, 0x80, L"WofCompressedData");
                     if (d && d[8] != 0){
-                        if (vcn == 0) ctx.streamSize = rd64(d + 0x30);
-                        fragments.emplace_back(vcn, decodeRuns(d + rd16(d + 0x20), d + rd32(d + 0x04)));
+                        if (vcn == 0) ctx.streamSize = readLittleEndian<uint64_t>(d + 0x30);
+                        fragments.emplace_back(vcn, decodeRuns(d + readLittleEndian<uint16_t>(d + 0x20), d + readLittleEndian<uint32_t>(d + 0x04)));
                     }
                 }
             }
@@ -536,9 +529,9 @@ public:
     //! Reads a non-resident attribute into a buffer (its runs, its real size).
     bool readNonResidentAttribute(const uint8_t* a, std::vector<uint8_t>& out){
         if (a[8] == 0) return false;                 // resident: no runs
-        const uint64_t size = rd64(a + 0x30);
+        const uint64_t size = readLittleEndian<uint64_t>(a + 0x30);
         if (size == 0 || size > (256ULL << 20)) return false;   // guard
-        const std::vector<Run> runs = decodeRuns(a + rd16(a + 0x20), a + rd32(a + 0x04));
+        const std::vector<Run> runs = decodeRuns(a + readLittleEndian<uint16_t>(a + 0x20), a + readLittleEndian<uint32_t>(a + 0x04));
         out.assign((size_t)size, 0);
         uint64_t written = 0;
         for (const Run& r : runs){
@@ -688,8 +681,8 @@ public:
 
         std::vector<uint64_t> starts(nChunks + 1, 0);
         for (size_t i = 1; i < nChunks; ++i)
-            starts[i] = (inputSize == 4) ? (uint64_t)rd32(data.data() + (i - 1) * 4)
-                                            : rd64(data.data() + (i - 1) * 8);
+            starts[i] = (inputSize == 4) ? (uint64_t)readLittleEndian<uint32_t>(data.data() + (i - 1) * 4)
+                                            : readLittleEndian<uint64_t>(data.data() + (i - 1) * 8);
         starts[nChunks] = data.size() - tableSize;
 
         ContentHashes hashes(emp);
@@ -900,39 +893,39 @@ public:
         if (!readMftRecord(index, rec)) return E_FAIL;
         if (rec.size() < 0x30) return E_FAIL;
 
-        size_t off = rd16(rec.data() + 0x14);        // first attribute
+        size_t off = readLittleEndian<uint16_t>(rec.data() + 0x14);        // first attribute
         while (off + 4 <= rec.size()){
-            const uint32_t type = rd32(rec.data() + off);
+            const uint32_t type = readLittleEndian<uint32_t>(rec.data() + off);
             if (type == 0xFFFFFFFFu) break;          // end of the list
             if (off + 16 > rec.size()) break;
-            const uint32_t size = rd32(rec.data() + off + 4);
+            const uint32_t size = readLittleEndian<uint32_t>(rec.data() + off + 4);
             if (size < 16 || off + size > rec.size()) break;
 
             RawAttribute a;
             a.type = type;
             a.resident = (rec[off + 8] == 0);
             const uint8_t nameLength = rec[off + 9];
-            const uint16_t nameOffset  = rd16(rec.data() + off + 10);
-            a.flags = rd16(rec.data() + off + 12);
+            const uint16_t nameOffset  = readLittleEndian<uint16_t>(rec.data() + off + 10);
+            a.flags = readLittleEndian<uint16_t>(rec.data() + off + 12);
             for (uint8_t k = 0; k < nameLength; ++k){
                 const size_t p = off + nameOffset + 2ULL * k;
                 if (p + 2 > rec.size()) break;
-                a.name.push_back((wchar_t)rd16(rec.data() + p));
+                a.name.push_back((wchar_t)readLittleEndian<uint16_t>(rec.data() + p));
             }
             if (a.resident){
-                a.actualSize = rd32(rec.data() + off + 0x10);
-                const uint16_t contentOffset = rd16(rec.data() + off + 0x14);
+                a.actualSize = readLittleEndian<uint32_t>(rec.data() + off + 0x10);
+                const uint16_t contentOffset = readLittleEndian<uint16_t>(rec.data() + off + 0x14);
                 const size_t start = off + contentOffset;
                 const size_t n = (a.actualSize < 64) ? (size_t)a.actualSize : 64;
                 for (size_t k = 0; k < n && start + k < rec.size(); ++k)
                     a.preview.push_back(rec[start + k]);
                 // A reparse point carries its tag at the start of its content.
                 if (type == 0xC0 && a.preview.size() >= 4)
-                    a.tagReparse = rd32(a.preview.data());
+                    a.tagReparse = readLittleEndian<uint32_t>(a.preview.data());
             }
             else if (off + 0x40 <= rec.size()){
-                a.actualSize      = rd64(rec.data() + off + 0x30);
-                a.initializedSize = rd64(rec.data() + off + 0x38);
+                a.actualSize      = readLittleEndian<uint64_t>(rec.data() + off + 0x30);
+                a.initializedSize = readLittleEndian<uint64_t>(rec.data() + off + 0x38);
             }
 
             out.push_back(std::move(a));
@@ -952,16 +945,16 @@ public:
     template <typename Visit>
     void forEachResidentValue(const std::vector<uint8_t>& rec, uint64_t baseIndex, uint32_t type, Visit visit){
         auto inRecord = [&](const std::vector<uint8_t>& r){
-            const uint8_t* p = r.data() + rd16(r.data() + 0x14);
+            const uint8_t* p = r.data() + readLittleEndian<uint16_t>(r.data() + 0x14);
             const uint8_t* end = r.data() + r.size();
             while (p + 0x18 <= end){
-                const uint32_t t = rd32(p);
+                const uint32_t t = readLittleEndian<uint32_t>(p);
                 if (t == 0xFFFFFFFF) break;
-                const uint32_t len = rd32(p + 4);
+                const uint32_t len = readLittleEndian<uint32_t>(p + 4);
                 if (len < 0x18 || p + len > end) break;
                 if (t == type && p[8] == 0){
-                    const uint32_t vlen = rd32(p + 0x10);
-                    const uint16_t voff = rd16(p + 0x14);
+                    const uint32_t vlen = readLittleEndian<uint32_t>(p + 0x10);
+                    const uint16_t voff = readLittleEndian<uint16_t>(p + 0x14);
                     if ((uint64_t)voff + vlen <= len) visit(p + voff, vlen);
                 }
                 p += len;
@@ -972,11 +965,11 @@ public:
         if (!readListContent(rec, content)) return;
         std::set<uint64_t> done{ baseIndex };
         for (size_t pos = 0; pos + 0x1A <= content.size();){
-            const uint16_t len = rd16(content.data() + pos + 4);
+            const uint16_t len = readLittleEndian<uint16_t>(content.data() + pos + 4);
             if (len < 0x1A || pos + len > content.size()) break;
-            const uint64_t ref = splitNtfsReference(rd64(content.data() + pos + 0x10)).entry;
+            const uint64_t ref = splitNtfsReference(readLittleEndian<uint64_t>(content.data() + pos + 0x10)).entry;
             std::vector<uint8_t> extension;
-            if (rd32(content.data() + pos) == type && done.insert(ref).second && readMftRecord(ref, extension))
+            if (readLittleEndian<uint32_t>(content.data() + pos) == type && done.insert(ref).second && readMftRecord(ref, extension))
                 inRecord(extension);
             pos += len;
         }
@@ -1000,13 +993,13 @@ public:
             const uint8_t nameLength = v[0x40], nameSpace = v[0x41];
             if (nameSpace == 2 || 0x42u + 2u * nameLength > length) return;   // 2 = DOS 8.3 only
             std::wstring name(nameLength, L'\0');
-            for (uint8_t k = 0; k < nameLength; ++k) name[k] = (wchar_t)rd16(v + 0x42 + 2 * k);
+            for (uint8_t k = 0; k < nameLength; ++k) name[k] = (wchar_t)readLittleEndian<uint16_t>(v + 0x42 + 2 * k);
             const bool same = fileName.empty() || lowercase(name) == lowercase(fileName);
             if (!same && emp.fnCreatedUtc) return;          // keep the first as a fallback
-            emp.fnCreatedUtc     = rd64(v + 0x08);
-            emp.fnModifiedUtc    = rd64(v + 0x10);
-            emp.fnMftModifiedUtc = rd64(v + 0x18);
-            emp.fnAccessedUtc    = rd64(v + 0x20);
+            emp.fnCreatedUtc     = readLittleEndian<uint64_t>(v + 0x08);
+            emp.fnModifiedUtc    = readLittleEndian<uint64_t>(v + 0x10);
+            emp.fnMftModifiedUtc = readLittleEndian<uint64_t>(v + 0x18);
+            emp.fnAccessedUtc    = readLittleEndian<uint64_t>(v + 0x20);
             matched = same;
         });
     }
@@ -1017,7 +1010,7 @@ public:
         std::vector<uint8_t> rec;
         if (!readMftRecord(index, rec)) return false;
         const uint16_t IN_USE = 0x01;
-        return (rd16(rec.data() + 0x16) & IN_USE) && rd16(rec.data() + 0x10) == sequence;
+        return (readLittleEndian<uint16_t>(rec.data() + 0x16) & IN_USE) && readLittleEndian<uint16_t>(rec.data() + 0x10) == sequence;
     }
 
     /*! Runs `read` — a copy of record `index` to `outFile` — only if the record
@@ -1098,13 +1091,13 @@ public:
                will carry the current dates. */
             const uint8_t* si = findAttr(rec, 0x10, false);
             // Always resident; its value holds at least the four timestamps (0x20 bytes).
-            if (si && si[8] == 0 && rd32(si + 0x10) >= 0x20
-                && (uint64_t)rd16(si + 0x14) + 0x20 <= rd32(si + 4)){
-                const uint8_t* d = si + rd16(si + 0x14);
-                emp->creeUtc       = rd64(d + 0x00);
-                emp->modifiedUtc    = rd64(d + 0x08);
-                emp->mftModifiedUtc = rd64(d + 0x10);
-                emp->accedeUtc     = rd64(d + 0x18);
+            if (si && si[8] == 0 && readLittleEndian<uint32_t>(si + 0x10) >= 0x20
+                && (uint64_t)readLittleEndian<uint16_t>(si + 0x14) + 0x20 <= readLittleEndian<uint32_t>(si + 4)){
+                const uint8_t* d = si + readLittleEndian<uint16_t>(si + 0x14);
+                emp->creeUtc       = readLittleEndian<uint64_t>(d + 0x00);
+                emp->modifiedUtc    = readLittleEndian<uint64_t>(d + 0x08);
+                emp->mftModifiedUtc = readLittleEndian<uint64_t>(d + 0x10);
+                emp->accedeUtc     = readLittleEndian<uint64_t>(d + 0x18);
             }
             readFileNameTimes(rec, index, fileName, *emp);
         }
@@ -1133,8 +1126,8 @@ public:
         if (a){
             if (a[8] == 0){                       // resident: the data is inside the record
                 resident = true;
-                residentLen  = rd32(a + 0x10);
-                residentData = a + rd16(a + 0x14);
+                residentLen  = readLittleEndian<uint32_t>(a + 0x10);
+                residentData = a + readLittleEndian<uint16_t>(a + 0x14);
             }
             else {
                 /*  NTFS COMPRESSION. Windows 11 turns it on for
@@ -1142,11 +1135,11 @@ public:
                     unusable (400 out of 404 measured on a Windows 11 VM). The attribute
                     declares the compression unit size as a power of two of clusters;
                     the format's details are in lznt1.h. */
-                if (rd16(a + 0x0C) & 0x0001)
-                    compressionUnit = (uint32_t)1u << rd16(a + 0x22);
-                realSize = rd64(a + 0x30);
-                validDataLength = rd64(a + 0x38);
-                runs = decodeRuns(a + rd16(a + 0x20), a + rd32(a + 0x04));
+                if (readLittleEndian<uint16_t>(a + 0x0C) & 0x0001)
+                    compressionUnit = (uint32_t)1u << readLittleEndian<uint16_t>(a + 0x22);
+                realSize = readLittleEndian<uint64_t>(a + 0x30);
+                validDataLength = readLittleEndian<uint64_t>(a + 0x38);
+                runs = decodeRuns(a + readLittleEndian<uint16_t>(a + 0x20), a + readLittleEndian<uint32_t>(a + 0x04));
 
             }
         }
@@ -1386,8 +1379,8 @@ private:
         if (!applyNtfsFixup(rec.data(), bytesPerRecord_)){ RVLOG(L"[raw] MFT#0: torn record (fixups)\n"); return false; }
         const uint8_t* a = findAttr(rec, 0x80);
         if (!a || a[8] == 0){ RVLOG(L"[raw] $MFT $DATA not found / resident\n"); return false; }
-        uint16_t runsOff = rd16(a + 0x20);
-        uint32_t attrLen = rd32(a + 0x04);
+        uint16_t runsOff = readLittleEndian<uint16_t>(a + 0x20);
+        uint32_t attrLen = readLittleEndian<uint32_t>(a + 0x04);
         mftRuns_ = decodeRuns(a + runsOff, a + attrLen);
         RVLOG(L"[raw] $MFT: %u runs, 1er lcn=%lld count=%llu\n", (unsigned)mftRuns_.size(),
               mftRuns_.empty()?0:(long long)mftRuns_[0].lcn, mftRuns_.empty()?0ULL:(unsigned long long)mftRuns_[0].count);
@@ -1405,15 +1398,15 @@ private:
         std::vector<uint8_t> rec;
         if (!readMftRecord(index, rec)) return false;
         const uint16_t IN_USE = 0x01;
-        if (!(rd16(rec.data() + 0x16) & IN_USE)) return false;
+        if (!(readLittleEndian<uint16_t>(rec.data() + 0x16) & IN_USE)) return false;
         bool named = false;
         forEachResidentValue(rec, index, 0x30, [&](const uint8_t* value, uint32_t length){
             if (named || length < 0x42) return;
             const uint8_t characters = value[0x40];
             if (0x42u + 2u * characters > length) return;
-            if (splitNtfsReference(rd64(value)).entry != parent) return;
+            if (splitNtfsReference(readLittleEndian<uint64_t>(value)).entry != parent) return;
             std::wstring text;
-            for (unsigned k = 0; k < characters; ++k) text += (wchar_t)rd16(value + 0x42 + 2 * k);
+            for (unsigned k = 0; k < characters; ++k) text += (wchar_t)readLittleEndian<uint16_t>(value + 0x42 + 2 * k);
             named = iequals(text, name);
         });
         return named;
@@ -1443,20 +1436,20 @@ private:
     static const uint8_t* findNamedAttr(const std::vector<uint8_t>& rec, uint32_t type,
                                         const wchar_t* wantedName){
         const size_t wantedLength = wcslen(wantedName);
-        uint16_t off = rd16(rec.data() + 0x14);
+        uint16_t off = readLittleEndian<uint16_t>(rec.data() + 0x14);
         const uint8_t* p = rec.data() + off;
         const uint8_t* end = rec.data() + rec.size();
         while (p + 16 <= end){
-            const uint32_t t = rd32(p);
+            const uint32_t t = readLittleEndian<uint32_t>(p);
             if (t == 0xFFFFFFFF) break;
-            const uint32_t len = rd32(p + 4);
+            const uint32_t len = readLittleEndian<uint32_t>(p + 4);
             if (len < 16 || p + len > end) break;
             if (t == type && p[9] == wantedLength){
-                const uint16_t nameOffset = rd16(p + 10);
+                const uint16_t nameOffset = readLittleEndian<uint16_t>(p + 10);
                 bool same = true;
                 for (size_t k = 0; k < wantedLength; ++k){
                     if (p + nameOffset + 2 * k + 2 > end){ same = false; break; }
-                    if ((wchar_t)rd16(p + nameOffset + 2 * k) != wantedName[k]){ same = false; break; }
+                    if ((wchar_t)readLittleEndian<uint16_t>(p + nameOffset + 2 * k) != wantedName[k]){ same = false; break; }
                 }
                 if (same) return p;
             }
@@ -1467,13 +1460,13 @@ private:
 
     static const uint8_t* findAttr(const std::vector<uint8_t>& rec, uint32_t type,
                                    bool unnamedOnly = true){
-        uint16_t off = rd16(rec.data() + 0x14);
+        uint16_t off = readLittleEndian<uint16_t>(rec.data() + 0x14);
         const uint8_t* p = rec.data() + off;
         const uint8_t* end = rec.data() + rec.size();
         while (p + 8 <= end){
-            uint32_t t = rd32(p);
+            uint32_t t = readLittleEndian<uint32_t>(p);
             if (t == 0xFFFFFFFF) break;
-            uint32_t len = rd32(p + 4);
+            uint32_t len = readLittleEndian<uint32_t>(p + 4);
             if (len < 8 || p + len > end) break;
             if (t == type && (!unnamedOnly || p[9] == 0)) return p;
             p += len;
@@ -1491,24 +1484,24 @@ private:
        file would be extracted twice, under two names. */
     static void parseIndexNode(const uint8_t* nodeHdr, const uint8_t* limit,
                                std::vector<RawDirEntry>& out){
-        uint32_t firstOff = rd32(nodeHdr);
+        uint32_t firstOff = readLittleEndian<uint32_t>(nodeHdr);
         const uint8_t* e = nodeHdr + firstOff;
         while (e + 0x10 <= limit){
-            const NtfsReference ref = splitNtfsReference(rd64(e));
-            uint16_t eLen  = rd16(e + 8);
-            uint16_t flags = rd16(e + 0x0C);
+            const NtfsReference ref = splitNtfsReference(readLittleEndian<uint64_t>(e));
+            uint16_t eLen  = readLittleEndian<uint16_t>(e + 8);
+            uint16_t flags = readLittleEndian<uint16_t>(e + 0x0C);
             if (!(flags & 0x02)){ // not the last entry -> has a $FILE_NAME key
                 const uint8_t* fn = e + 0x10;
                 if (fn + 0x42 <= limit){
-                    uint32_t fileAttrs = rd32(fn + 0x38);
-                    uint64_t realSize  = rd64(fn + 0x30);
+                    uint32_t fileAttrs = readLittleEndian<uint32_t>(fn + 0x38);
+                    uint64_t realSize  = readLittleEndian<uint64_t>(fn + 0x30);
                     uint8_t  nameLen   = fn[0x40];
                     uint8_t  nameSpace = fn[0x41];
                     const uint8_t* nm  = fn + 0x42;
                     if (nameSpace != 2 && nm + 2 * nameLen <= limit){   // 2 = 8.3 short name
                         RawDirEntry entry;
                         entry.name.resize(nameLen);
-                        for (uint8_t k = 0; k < nameLen; ++k) entry.name[k] = (wchar_t)rd16(nm + 2 * k);
+                        for (uint8_t k = 0; k < nameLen; ++k) entry.name[k] = (wchar_t)readLittleEndian<uint16_t>(nm + 2 * k);
                         entry.mftIndex    = ref.entry;
                         entry.sequence    = ref.sequence;
                         entry.isDirectory = (fileAttrs & 0x10000000u) != 0; // FILE_ATTRIBUTE_DIRECTORY
@@ -1536,16 +1529,16 @@ public:
         std::vector<uint8_t> extension;
         const uint8_t* ir = findResidentAttr(rec, 0x90, extension);   // "$I30"
         if (!ir){ RVLOG(L"[raw] listDir(%llu): resident $INDEX_ROOT absent\n", (unsigned long long)dirIndex); return false; }
-        uint32_t irValLen = rd32(ir + 0x10); uint16_t irValOff = rd16(ir + 0x14);
+        uint32_t irValLen = readLittleEndian<uint32_t>(ir + 0x10); uint16_t irValOff = readLittleEndian<uint16_t>(ir + 0x14);
         // The value must hold the index root header (0x10) and the node header (0x10).
-        if (irValLen < 0x20 || (uint64_t)irValOff + irValLen > rd32(ir + 4)){
+        if (irValLen < 0x20 || (uint64_t)irValOff + irValLen > readLittleEndian<uint32_t>(ir + 4)){
             RVLOG(L"[raw] listDir(%llu): $INDEX_ROOT inconsistent\n", (unsigned long long)dirIndex);
             return false;
         }
         const uint8_t* val = ir + irValOff;
-        uint32_t idxBlockSize = rd32(val + 8);
+        uint32_t idxBlockSize = readLittleEndian<uint32_t>(val + 8);
         const uint8_t* nodeHdr = val + 0x10;
-        uint32_t usedSize = rd32(nodeHdr + 4);
+        uint32_t usedSize = readLittleEndian<uint32_t>(nodeHdr + 4);
         const uint8_t* irEnd = val + irValLen;
         const uint8_t* limit = nodeHdr + usedSize;
         if (limit > irEnd) limit = irEnd;
@@ -1589,8 +1582,8 @@ public:
               ia ? (ia[8] != 0 ? L"non-resident" : L"RESIDENT (unexpected)") : L"absent",
               idxBlockSize);
         if (ia && ia[8] != 0 && idxBlockSize){
-            uint64_t realSize = rd64(ia + 0x30);
-            std::vector<Run> runs = decodeRuns(ia + rd16(ia + 0x20), ia + rd32(ia + 0x04));
+            uint64_t realSize = readLittleEndian<uint64_t>(ia + 0x30);
+            std::vector<Run> runs = decodeRuns(ia + readLittleEndian<uint16_t>(ia + 0x20), ia + readLittleEndian<uint32_t>(ia + 0x04));
             readIndexBlocks(runs, realSize, idxBlockSize, bitmap(), out);
         }
         return true;
@@ -1617,17 +1610,17 @@ public:
         if (!b && !collectRunsFromAttributeList(rec, runs, size, 0xB0))
             b = findResidentAttr(rec, 0xB0, extension);
         if (b){
-            const uint32_t attributeLength = rd32(b + 4);
+            const uint32_t attributeLength = readLittleEndian<uint32_t>(b + 4);
             if (b[8] == 0){
-                const uint32_t vlen = rd32(b + 0x10);
-                const uint16_t voff = rd16(b + 0x14);
+                const uint32_t vlen = readLittleEndian<uint32_t>(b + 0x10);
+                const uint16_t voff = readLittleEndian<uint16_t>(b + 0x14);
                 if ((uint64_t)voff + vlen > attributeLength) return false;
                 bits.assign(b + voff, b + voff + vlen);
                 return true;
             }
             if (attributeLength < 0x40) return false;
-            size = rd64(b + 0x30);
-            runs = decodeRuns(b + rd16(b + 0x20), b + attributeLength);
+            size = readLittleEndian<uint64_t>(b + 0x30);
+            runs = decodeRuns(b + readLittleEndian<uint16_t>(b + 0x20), b + attributeLength);
         }
         if (runs.empty() || size == 0 || size > MAX_BITMAP) return false;
         bits.resize((size_t)size);
@@ -1661,7 +1654,7 @@ public:
             // A torn index block would list entries of two versions of the directory.
             if (!applyNtfsFixup(blk.data(), idxBlockSize)){ ++blocksTorn; continue; }
             const uint8_t* nh = blk.data() + 0x18;      // node header after the INDX header
-            uint32_t used = rd32(nh + 4);
+            uint32_t used = readLittleEndian<uint32_t>(nh + 4);
             const uint8_t* lim = nh + used;
             if (lim > blk.data() + idxBlockSize) lim = blk.data() + idxBlockSize;
             parseIndexNode(nh, lim, out);
@@ -1795,17 +1788,17 @@ RawReadTimes RawHiveTimes(){
 bool applyNtfsFixup(uint8_t* record, size_t size){
     const size_t STRIDE = 512;        // fixed by NTFS, not the volume's sector size
     if (!record || size < STRIDE || size % STRIDE) return false;
-    const uint16_t arrayOffset = rd16(record + 4), arrayCount = rd16(record + 6);
+    const uint16_t arrayOffset = readLittleEndian<uint16_t>(record + 4), arrayCount = readLittleEndian<uint16_t>(record + 6);
     /* One entry for the sequence number, then one per stride. The array lies
        in the first stride, after the signature and its own two fields, at an
        even offset (the checks of ntfs3's ntfs_fix_post_read). */
     if (arrayOffset < 8 || (arrayOffset & 1) || arrayCount != size / STRIDE + 1
         || arrayOffset + 2u * arrayCount > STRIDE) return false;
     const uint8_t* array = record + arrayOffset;
-    const uint16_t sequence = rd16(array);
+    const uint16_t sequence = readLittleEndian<uint16_t>(array);
     // Every stride checked BEFORE anything is written: a torn record stays as read.
     for (size_t i = 1; i < arrayCount; ++i)
-        if (rd16(record + i * STRIDE - 2) != sequence) return false;
+        if (readLittleEndian<uint16_t>(record + i * STRIDE - 2) != sequence) return false;
     for (size_t i = 1; i < arrayCount; ++i){
         uint8_t* end = record + i * STRIDE - 2;
         end[0] = array[2 * i];

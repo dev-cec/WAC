@@ -24,16 +24,6 @@
 
 namespace {
 
-inline uint16_t rd16(const std::vector<uint8_t>& d, size_t o) {
-	if (o + 2 > d.size()) return 0;
-	return (uint16_t)(d[o] | (d[o + 1] << 8));
-}
-inline uint32_t rd32(const std::vector<uint8_t>& d, size_t o) {
-	if (o + 4 > d.size()) return 0;
-	return (uint32_t)d[o] | ((uint32_t)d[o + 1] << 8)
-	     | ((uint32_t)d[o + 2] << 16) | ((uint32_t)d[o + 3] << 24);
-}
-
 //! GUID in the form "{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}", in lower case.
 std::wstring guidToText(const std::vector<uint8_t>& d, size_t o) {
 	if (o + 16 > d.size()) return std::wstring();
@@ -83,22 +73,22 @@ const size_t MAX_ENTRIES = 65536;   // guard on the file's counters
 size_t TableMessages::analyse(const std::vector<uint8_t>& d) {
 	messages_.clear();
 	if (d.size() < 4) return 0;
-	const uint32_t nBlocks = rd32(d, 0);
+	const uint32_t nBlocks = readLittleEndian<uint32_t>(d, 0);
 	if (nBlocks == 0 || nBlocks > MAX_ENTRIES) return 0;
 
 	for (uint32_t b = 0; b < nBlocks; ++b) {
 		const size_t e = 4 + (size_t)b * 12;
 		if (e + 12 > d.size()) break;
-		const uint32_t first = rd32(d, e);
-		const uint32_t last = rd32(d, e + 4);
-		const uint32_t offset = rd32(d, e + 8);
+		const uint32_t first = readLittleEndian<uint32_t>(d, e);
+		const uint32_t last = readLittleEndian<uint32_t>(d, e + 4);
+		const uint32_t offset = readLittleEndian<uint32_t>(d, e + 8);
 		if (last < first || last - first > MAX_ENTRIES) continue;
 
 		size_t p = offset;
 		for (uint32_t id = first; id <= last; ++id) {
 			if (p + 4 > d.size()) break;
-			const uint16_t length = rd16(d, p);
-			const uint16_t flags = rd16(d, p + 2);
+			const uint16_t length = readLittleEndian<uint16_t>(d, p);
+			const uint16_t flags = readLittleEndian<uint16_t>(d, p + 2);
 			if (length < 4 || p + length > d.size()) break;
 			const size_t textBytes = (size_t)length - 4;
 
@@ -113,7 +103,7 @@ size_t TableMessages::analyse(const std::vector<uint8_t>& d) {
 				    reading must be too. */
 				text.reserve(textBytes / 2);
 				for (size_t i = 0; i + 1 < textBytes; i += 2)
-					text += (wchar_t)rd16(d, p + 4 + i);
+					text += (wchar_t)readLittleEndian<uint16_t>(d, p + 4 + i);
 			}
 			else if (flags & 0x0002) {
 				/*  UTF-8 (MESSAGE_RESOURCE_UTF8), which recent tables use — ESENT's
@@ -160,22 +150,22 @@ namespace {
  *  @param block the MAPS block's offset
  *  @param maps receives the value maps, by offset */
 void readMaps(const std::vector<uint8_t>& d, size_t block, std::map<uint32_t, WevtValueMap>& maps) {
-	const uint32_t count = rd32(d, block + 8);
+	const uint32_t count = readLittleEndian<uint32_t>(d, block + 8);
 	if (count > MAX_ENTRIES) return;
 	for (uint32_t i = 0; i < count; ++i) {
 		const size_t entry = block + 12 + (size_t)i * 4;
 		if (entry + 4 > d.size()) return;
-		const uint32_t map = rd32(d, entry);
+		const uint32_t map = readLittleEndian<uint32_t>(d, entry);
 		if ((size_t)map + 20 > d.size()) continue;
 		const bool bitmap = std::memcmp(d.data() + map, "BMAP", 4) == 0;
 		if (!bitmap && std::memcmp(d.data() + map, "VMAP", 4) != 0) continue;
-		const uint32_t size = rd32(d, map + 4);
-		const uint32_t labels = rd32(d, map + 16);
+		const uint32_t size = readLittleEndian<uint32_t>(d, map + 4);
+		const uint32_t labels = readLittleEndian<uint32_t>(d, map + 16);
 		if (labels > MAX_ENTRIES || size < 20 || (size_t)map + size > d.size() || (size - 20) / 8 < labels) continue;
 		WevtValueMap& m = maps[map];
 		m.bitmap = bitmap;
 		for (uint32_t k = 0; k < labels; ++k)
-			m.labels.emplace(rd32(d, map + 20 + (size_t)k * 8), rd32(d, map + 24 + (size_t)k * 8));
+			m.labels.emplace(readLittleEndian<uint32_t>(d, map + 20 + (size_t)k * 8), readLittleEndian<uint32_t>(d, map + 24 + (size_t)k * 8));
 	}
 }
 
@@ -190,8 +180,8 @@ void readMaps(const std::vector<uint8_t>& d, size_t block, std::map<uint32_t, We
 bool readTemplate(const std::vector<uint8_t>& d, uint32_t at, std::map<uint32_t, std::vector<WevtItem>>& templates) {
 	if (templates.count(at)) return true;
 	if ((size_t)at + 40 > d.size() || std::memcmp(d.data() + at, "TEMP", 4) != 0) return false;
-	const uint32_t count = rd32(d, at + 8);
-	const uint32_t itemsAt = rd32(d, at + 16);
+	const uint32_t count = readLittleEndian<uint32_t>(d, at + 8);
+	const uint32_t itemsAt = readLittleEndian<uint32_t>(d, at + 16);
 	if (count > MAX_ENTRIES || (count > 0 && ((size_t)itemsAt + (size_t)count * 20 > d.size()))) return false;
 	std::vector<WevtItem> items;
 	for (uint32_t k = 0; k < count; ++k) {
@@ -199,13 +189,13 @@ bool readTemplate(const std::vector<uint8_t>& d, uint32_t at, std::map<uint32_t,
 		WevtItem w;
 		w.inType = d[item + 4];
 		w.outType = d[item + 5];
-		w.map = rd32(d, item + 8);
+		w.map = readLittleEndian<uint32_t>(d, item + 8);
 		// Its name: a size (itself included), then UTF-16 with its terminator.
-		const uint32_t nameAt = rd32(d, item + 16);
+		const uint32_t nameAt = readLittleEndian<uint32_t>(d, item + 16);
 		if (nameAt != 0 && (size_t)nameAt + 4 <= d.size()) {   // 0: no name
-			const uint32_t nameSize = rd32(d, nameAt);
+			const uint32_t nameSize = readLittleEndian<uint32_t>(d, nameAt);
 			for (size_t c = nameAt + 4; nameSize >= 4 && c + 1 < d.size() && c + 1 < (size_t)nameAt + nameSize; c += 2) {
-				const wchar_t ch = (wchar_t)rd16(d, c);
+				const wchar_t ch = (wchar_t)readLittleEndian<uint16_t>(d, c);
 				if (ch == 0) break;
 				w.name += ch;
 			}
@@ -354,19 +344,19 @@ size_t WevtMetadata::analyse(const std::vector<uint8_t>& d,
 	valueMaps_.clear();
 	if (d.size() < 16 || std::memcmp(d.data(), "CRIM", 4) != 0) return 0;
 
-	const uint32_t nProviders = rd32(d, 12);
+	const uint32_t nProviders = readLittleEndian<uint32_t>(d, 12);
 	if (nProviders == 0 || nProviders > MAX_ENTRIES) return 0;
 
 	for (uint32_t i = 0; i < nProviders; ++i) {
 		const size_t e = 16 + (size_t)i * 20;
 		if (e + 20 > d.size()) break;
 		const std::wstring guid = guidToText(d, e);
-		const uint32_t offset = rd32(d, e + 16);
+		const uint32_t offset = readLittleEndian<uint32_t>(d, e + 16);
 		if (!providerGuid.empty() && !memeGuid(guid, providerGuid)) continue;
 		if (offset + 20 > d.size()) continue;
 		if (std::memcmp(d.data() + offset, "WEVT", 4) != 0) continue;
 
-		const uint32_t nDescriptors = rd32(d, offset + 12);
+		const uint32_t nDescriptors = readLittleEndian<uint32_t>(d, offset + 12);
 		if (nDescriptors > MAX_ENTRIES) continue;
 
 		/*  The descriptors are typed BY THE SIGNATURE found at their offset,
@@ -379,13 +369,13 @@ size_t WevtMetadata::analyse(const std::vector<uint8_t>& d,
 		for (uint32_t k = 0; k < nDescriptors; ++k) {
 			const size_t dd = offset + 20 + (size_t)k * 8;
 			if (dd + 4 > d.size()) break;
-			const uint32_t block = rd32(d, dd);
+			const uint32_t block = readLittleEndian<uint32_t>(d, dd);
 			if (block + 16 > d.size()) continue;
 			if (std::memcmp(d.data() + block, "MAPS", 4) == 0) { readMaps(d, block, valueMaps_); continue; }
 			if (std::memcmp(d.data() + block, "EVNT", 4) != 0) continue;
 
-			const uint32_t blockSize   = rd32(d, block + 4);
-			const uint32_t nEvents = rd32(d, block + 8);
+			const uint32_t blockSize   = readLittleEndian<uint32_t>(d, block + 4);
+			const uint32_t nEvents = readLittleEndian<uint32_t>(d, block + 8);
 			if (nEvents == 0 || nEvents > MAX_ENTRIES) continue;
 
 			/*  AN EVENT DESCRIPTOR IS 48 BYTES — identifier, version, channel,
@@ -404,14 +394,14 @@ size_t WevtMetadata::analyse(const std::vector<uint8_t>& d,
 			for (uint32_t n = 0; n < nEvents; ++n) {
 				const size_t ev = block + 16 + (size_t)n * pas;
 				if (ev + pas > d.size()) break;
-				const uint16_t id      = rd16(d, ev);
+				const uint16_t id      = readLittleEndian<uint16_t>(d, ev);
 				const uint8_t  version = d[ev + 2];
-				const uint32_t message = rd32(d, ev + 16);
+				const uint32_t message = readLittleEndian<uint32_t>(d, ev + 16);
 				// 0 and 0xFFFFFFFF both mark "no message".
 				if (message == 0 || message == 0xFFFFFFFFu) continue;
 				parIdEtVersion_.emplace(((uint32_t)id << 8) | version, message);
 				parId_.emplace(id, message);
-				const uint32_t templateOffset = rd32(d, ev + 20);   // 0: no template
+				const uint32_t templateOffset = readLittleEndian<uint32_t>(d, ev + 20);   // 0: no template
 				if (templateOffset != 0 && readTemplate(d, templateOffset, templates_)) {
 					templateByIdVersion_.emplace(((uint32_t)id << 8) | version, templateOffset);
 					templateById_.emplace(id, templateOffset);

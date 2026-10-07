@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 /*! Bytes in uppercase hexadecimal, the project's convention for digests
  *  (see Md5Stream).
@@ -33,8 +34,9 @@ inline std::wstring toHexadecimal(const uint8_t* bytes, size_t length) {
 
 /*! An unsigned integer stored little-endian, as every on-disk Windows format
  *  holds them, read without alignment requirement. The ONE reader for new
- *  code; the per-module copies (rd32 in mft.cpp, fat_volume.cpp,
- *  ese_database.cpp…) are to come back to it (backlog B-030).
+ *  code and the old alike: the thirteen per-module copies (rd16, rd32, rd64,
+ *  two of them copied word for word between pe_resource.cpp and wevt.cpp)
+ *  came back to it (backlog B-030).
  *  @tparam T uint16_t, uint32_t or uint64_t
  *  @param p its first byte; the caller has checked that sizeof(T) bytes are there
  *  @return the value */
@@ -44,6 +46,28 @@ T readLittleEndian(const uint8_t* p) {
 	T value = 0;
 	for (size_t i = 0; i < sizeof(T); ++i) value |= (T)((T)p[i] << (8 * i));
 	return value;
+}
+
+/*! The same, bounded by the buffer: for the readers that walk a structure by
+ *  offsets read in the data itself (PE resources, WEVT_TEMPLATE).
+ *  @tparam T uint16_t, uint32_t or uint64_t
+ *  @param bytes the buffer
+ *  @param offset position of the value
+ *  @return the value, or 0 if it does not lie entirely inside the buffer */
+template <class T>
+T readLittleEndian(const std::vector<uint8_t>& bytes, size_t offset) {
+	if (offset > bytes.size() || sizeof(T) > bytes.size() - offset) return 0;
+	return readLittleEndian<T>(bytes.data() + offset);
+}
+
+/*! An unsigned integer written little-endian, the reverse of readLittleEndian.
+ *  @tparam T uint16_t, uint32_t or uint64_t
+ *  @param p its first byte; the caller has checked that sizeof(T) bytes are there
+ *  @param value the value */
+template <class T>
+void writeLittleEndian(uint8_t* p, T value) {
+	static_assert(std::is_unsigned<T>::value, "an unsigned integer");
+	for (size_t i = 0; i < sizeof(T); ++i) p[i] = (uint8_t)(value >> (8 * i));
 }
 
 /*! UTF-8 bytes as UTF-16 text, without the system's API: a module that must

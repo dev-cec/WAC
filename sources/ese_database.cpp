@@ -1,6 +1,7 @@
 /*! \file
  *  \brief Reader of ESE databases (see ese_database.h).
  */
+#include "conversions.h"
 #include "ese_database.h"
 #include "sha.h"
 #include <algorithm>
@@ -17,10 +18,6 @@ const unsigned DEPTH_MAX = 64;
 const size_t VALUE_MAX = 256 * 1024 * 1024;           //!< a long value beyond this is not assembled
 // Tagged value header flags.
 const uint8_t TAGGED_COMPRESSED = 0x02, TAGGED_SEPARATED = 0x04, TAGGED_MULTI = 0x08, TAGGED_TWO = 0x10, TAGGED_NULL = 0x20;
-
-uint16_t rd16(const uint8_t* p) { uint16_t v; memcpy(&v, p, 2); return v; }
-uint32_t rd32(const uint8_t* p) { uint32_t v; memcpy(&v, p, 4); return v; }
-uint64_t rd64(const uint8_t* p) { uint64_t v; memcpy(&v, p, 8); return v; }
 
 //! Size of a fixed column of a type (JET_coltyp), when the catalog gives none.
 uint32_t typeSize(uint32_t type) {
@@ -78,11 +75,11 @@ bool splitValues(const uint8_t* p, size_t size, uint8_t flags, EseCell& cell) {
 		return true;
 	}
 	if (size < 2) return false;
-	const size_t first = rd16(p) & 0x7FFF, count = first / 2;
+	const size_t first = readLittleEndian<uint16_t>(p) & 0x7FFF, count = first / 2;
 	if (count == 0 || first > size) return false;
 	for (size_t i = 0; i < count; ++i) {
-		const uint16_t raw = rd16(p + 2 * i);
-		const size_t begin = raw & 0x7FFF, end = i + 1 < count ? (rd16(p + 2 * (i + 1)) & 0x7FFF) : size;
+		const uint16_t raw = readLittleEndian<uint16_t>(p + 2 * i);
+		const size_t begin = raw & 0x7FFF, end = i + 1 < count ? (readLittleEndian<uint16_t>(p + 2 * (i + 1)) & 0x7FFF) : size;
 		if (begin > end || end > size) return false;
 		cell.values.emplace_back(p + begin, p + end);
 		cell.separated.push_back((raw & 0x8000) != 0);
@@ -95,12 +92,12 @@ void parseTagged(const uint8_t* d, size_t size, size_t start, const std::vector<
                  bool smallPages, EseRecord& out) {
 	if (!fits(size, start, 4)) return;
 	const uint16_t mask = smallPages ? 0x1FFF : 0x7FFF;
-	const size_t count = (rd16(d + start + 2) & mask) / 4;
+	const size_t count = (readLittleEndian<uint16_t>(d + start + 2) & mask) / 4;
 	if (count == 0 || !fits(size, start, count * 4)) return;
 	for (size_t i = 0; i < count; ++i) {
-		const uint16_t id = rd16(d + start + 4 * i), field = rd16(d + start + 4 * i + 2);
+		const uint16_t id = readLittleEndian<uint16_t>(d + start + 4 * i), field = readLittleEndian<uint16_t>(d + start + 4 * i + 2);
 		const size_t begin = start + (field & mask);
-		const size_t end = i + 1 < count ? start + (rd16(d + start + 4 * (i + 1) + 2) & mask) : size;
+		const size_t end = i + 1 < count ? start + (readLittleEndian<uint16_t>(d + start + 4 * (i + 1) + 2) & mask) : size;
 		if (begin > end || end > size) return;
 		const bool extended = !smallPages || (field & 0x4000);
 		const uint8_t flags = extended && begin < end ? d[begin] : 0;
@@ -144,11 +141,11 @@ Json valueToJson(const EseColumn& column, const std::vector<uint8_t>& v) {
 	switch (column.type) {
 	case 1: if (n >= 1) return Json::boolean(p[0] != 0); break;
 	case 2: if (n >= 1) return Json::num((unsigned)p[0]); break;
-	case 3: if (n >= 2) return Json::num((int)(int16_t)rd16(p)); break;
-	case 17: if (n >= 2) return Json::num((unsigned)rd16(p)); break;
-	case 4: if (n >= 4) return Json::num((int32_t)rd32(p)); break;
-	case 14: if (n >= 4) return Json::num(rd32(p)); break;
-	case 5: case 15: if (n >= 8) return Json::num((long long)rd64(p)); break;
+	case 3: if (n >= 2) return Json::num((int)(int16_t)readLittleEndian<uint16_t>(p)); break;
+	case 17: if (n >= 2) return Json::num((unsigned)readLittleEndian<uint16_t>(p)); break;
+	case 4: if (n >= 4) return Json::num((int32_t)readLittleEndian<uint32_t>(p)); break;
+	case 14: if (n >= 4) return Json::num(readLittleEndian<uint32_t>(p)); break;
+	case 5: case 15: if (n >= 8) return Json::num((long long)readLittleEndian<uint64_t>(p)); break;
 	case 6: if (n >= 4) { float f; memcpy(&f, p, 4); return Json::str(realText(f, 9)); } break;
 	case 7: if (n >= 8) { double d; memcpy(&d, p, 8); return Json::str(realText(d, 17)); } break;
 	case 8: if (n >= 8) { double d; memcpy(&d, p, 8); const std::wstring t = oleDateText(d); if (!t.empty()) return Json::str(t); } break;
@@ -190,7 +187,7 @@ EseRecord parseEseRecord(const std::vector<uint8_t>& data, const std::vector<Ese
 	const size_t size = data.size();
 	if (size < 4) return out;
 	const unsigned lastFixed = d[0], lastVariable = d[1];
-	const size_t endOfFixed = rd16(d + 2), bitmapBytes = (lastFixed + 7) / 8;
+	const size_t endOfFixed = readLittleEndian<uint16_t>(d + 2), bitmapBytes = (lastFixed + 7) / 8;
 	if (endOfFixed > size || endOfFixed < 4 + bitmapBytes) return out;
 	const size_t bitmap = endOfFixed - bitmapBytes;
 	const size_t variables = lastVariable >= 128 ? lastVariable - 127 : 0;
@@ -207,9 +204,9 @@ EseRecord parseEseRecord(const std::vector<uint8_t>& data, const std::vector<Ese
 		else if (c.id <= 255) {
 			if (c.id > lastVariable) continue;
 			const size_t index = c.id - 128;
-			const uint16_t end = rd16(d + endOfFixed + 2 * index);
+			const uint16_t end = readLittleEndian<uint16_t>(d + endOfFixed + 2 * index);
 			if (end & 0x8000) continue;
-			const size_t begin = index == 0 ? 0 : (rd16(d + endOfFixed + 2 * (index - 1)) & 0x7FFF);
+			const size_t begin = index == 0 ? 0 : (readLittleEndian<uint16_t>(d + endOfFixed + 2 * (index - 1)) & 0x7FFF);
 			if (begin > end || !fits(size, variableData + begin, end - begin) || begin == end) continue;
 			cell.values.emplace_back(d + variableData + begin, d + variableData + end);
 		}
@@ -217,7 +214,7 @@ EseRecord parseEseRecord(const std::vector<uint8_t>& data, const std::vector<Ese
 		cell.separated.push_back(false);
 		out.push_back(std::move(cell));
 	}
-	const size_t tagged = variableData + (variables ? (rd16(d + endOfFixed + 2 * (variables - 1)) & 0x7FFF) : 0);
+	const size_t tagged = variableData + (variables ? (readLittleEndian<uint16_t>(d + endOfFixed + 2 * (variables - 1)) & 0x7FFF) : 0);
 	if (newFormat && tagged < size) parseTagged(d, size, tagged, columns, smallPages, out);
 	return out;
 }
@@ -231,10 +228,10 @@ HRESULT EseDatabase::open(const std::wstring& path) {
 	file_.open(std::filesystem::path(path), std::ios::binary);
 	uint8_t header[240] = {};
 	file_.read(reinterpret_cast<char*>(header), sizeof header);
-	if (file_.gcount() != (std::streamsize)sizeof header || rd32(header + 4) != 0x89ABCDEF)
+	if (file_.gcount() != (std::streamsize)sizeof header || readLittleEndian<uint32_t>(header + 4) != 0x89ABCDEF)
 		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
-	state_ = rd32(header + 52);
-	pageSize_ = rd32(header + 236);
+	state_ = readLittleEndian<uint32_t>(header + 52);
+	pageSize_ = readLittleEndian<uint32_t>(header + 236);
 	if (pageSize_ != 4096 && pageSize_ != 8192 && pageSize_ != 16384 && pageSize_ != 32768)
 		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
 	pageCount_ = (uint32_t)std::min<uint64_t>(fileSize_ / pageSize_, UINT32_MAX);
@@ -294,15 +291,15 @@ void EseDatabase::walk(uint32_t number, unsigned depth, std::vector<bool>& visit
 	if (!readPage(number, page)) return;
 	const bool small = pageSize_ <= 8192;
 	const size_t header = small ? HEADER_SMALL : HEADER_LARGE;
-	const uint32_t flags = rd32(page.data() + 36);
-	const size_t dataSize = std::min<size_t>(rd16(page.data() + 32), pageSize_ - header);
-	const unsigned tags = rd16(page.data() + 34) & 0x0FFF, reserved = std::max(1u, (unsigned)(rd16(page.data() + 34) >> 12));
+	const uint32_t flags = readLittleEndian<uint32_t>(page.data() + 36);
+	const size_t dataSize = std::min<size_t>(readLittleEndian<uint16_t>(page.data() + 32), pageSize_ - header);
+	const unsigned tags = readLittleEndian<uint16_t>(page.data() + 34) & 0x0FFF, reserved = std::max(1u, (unsigned)(readLittleEndian<uint16_t>(page.data() + 34) >> 12));
 	if (tags == 0 || (size_t)tags * 4 > pageSize_ - header) return;
 	const uint16_t mask = small ? 0x1FFF : 0x7FFF;
 	auto tag = [&](unsigned i, size_t& offset, size_t& size) {
 		const uint8_t* t = page.data() + pageSize_ - 4 * (i + 1);
-		size = rd16(t) & mask;
-		offset = rd16(t + 2) & mask;
+		size = readLittleEndian<uint16_t>(t) & mask;
+		offset = readLittleEndian<uint16_t>(t + 2) & mask;
 		return fits(dataSize, offset, size);
 	};
 	size_t prefixOffset = 0, prefixSize = 0;
@@ -314,12 +311,12 @@ void EseDatabase::walk(uint32_t number, unsigned depth, std::vector<bool>& visit
 		size_t offset = 0, size = 0;
 		if (!tag(i, offset, size) || size < 2) continue;
 		const uint8_t* e = data + offset;
-		const uint16_t first = rd16(e);
-		const uint16_t tagFlags = small ? (rd16(page.data() + pageSize_ - 4 * (i + 1) + 2) >> 13) : (first >> 13);
+		const uint16_t first = readLittleEndian<uint16_t>(e);
+		const uint16_t tagFlags = small ? (readLittleEndian<uint16_t>(page.data() + pageSize_ - 4 * (i + 1) + 2) >> 13) : (first >> 13);
 		size_t o = 0, shared = 0;
 		if (tagFlags & TAG_COMPRESSED_KEY) { shared = std::min<size_t>(first & 0x1FFF, prefixSize); o = 2; }
 		if (!fits(size, o, 2)) continue;
-		const size_t suffix = rd16(e + o) & 0x1FFF;
+		const size_t suffix = readLittleEndian<uint16_t>(e + o) & 0x1FFF;
 		o += 2;
 		if (!fits(size, o, suffix)) continue;
 		Entry entry;
@@ -331,7 +328,7 @@ void EseDatabase::walk(uint32_t number, unsigned depth, std::vector<bool>& visit
 			entry.newFormat = (flags & PAGE_NEW_RECORD_FORMAT) != 0;
 			out.push_back(std::move(entry));
 		}
-		else if (entry.data.size() >= 4) walk(rd32(entry.data.data()), depth + 1, visited, out, lastLeaf);
+		else if (entry.data.size() >= 4) walk(readLittleEndian<uint32_t>(entry.data.data()), depth + 1, visited, out, lastLeaf);
 	}
 	if (leaf) lastLeaf = number;
 }
@@ -344,7 +341,7 @@ void EseDatabase::leaves(uint32_t root, std::vector<Entry>& out) {
 	// last leaf's successors, as ESE chains them.
 	std::vector<uint8_t> page;
 	while (lastLeaf && readPage(lastLeaf, page)) {
-		const uint32_t next = rd32(page.data() + 20);
+		const uint32_t next = readLittleEndian<uint32_t>(page.data() + 20);
 		if (next == 0 || next >= visited.size() || visited[next]) break;
 		const uint32_t before = lastLeaf;
 		walk(next, 0, visited, out, lastLeaf);
@@ -383,7 +380,7 @@ bool assembleLongValue(const std::map<std::string, std::vector<uint8_t>>& tree, 
 	const std::string id(reference.rbegin(), reference.rend());
 	const auto header = tree.find(id);
 	if (header == tree.end() || header->second.size() < 8) return false;
-	const uint32_t total = rd32(header->second.data() + 4);
+	const uint32_t total = readLittleEndian<uint32_t>(header->second.data() + 4);
 	if (total > VALUE_MAX) return false;
 	auto isChunk = [&](std::map<std::string, std::vector<uint8_t>>::const_iterator it) {
 		return it != tree.end() && it->first.size() == id.size() + 4 && it->first.compare(0, id.size(), id) == 0;
