@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P3 | moyen |
+| en cours | P3 | moyen |
 
 ## Pourquoi
 Les miniatures d'images et de documents vus dans l'Explorateur restent dans le cache après la suppression du fichier : elles montrent ce qu'un utilisateur a eu sous les yeux.
@@ -27,3 +27,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Journal
 - 2026-09-29 : détaché de B-012.
+- 2026-10-07 : en cours — étude du format (CMMM) et de la référence indépendante.
