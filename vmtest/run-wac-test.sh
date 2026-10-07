@@ -366,9 +366,11 @@ fetch_results() {
     done
   fi  # The RDP bitmap caches as WAC read them — their working copy, not the
   # exhibit store (B-040) — and the tiles WAC exported, for check-json.py to
-  # confront them with bmc-tools.
+  # confront them with bmc-tools. None of them in an --only cycle without
+  # rdp_client: PowerShell then ends in error, and without `|| true` that
+  # status ended the whole harness before its checks.
   local rdpFiles
-  rdpFiles=$($QGA run -- powershell.exe -NoProfile -Command "Get-ChildItem -LiteralPath '$vm\\working\\Users' -Recurse -File -Force -Filter 'Cache*.bin' -ErrorAction SilentlyContinue | Where-Object FullName -like '*Terminal Server Client*' | ForEach-Object FullName; Get-ChildItem -LiteralPath '$vm\\rdp_cache' -Recurse -File -Filter '*.bmp' -ErrorAction SilentlyContinue | ForEach-Object FullName" 2>/dev/null | tr -d '\r')
+  rdpFiles=$($QGA run -- powershell.exe -NoProfile -Command "Get-ChildItem -LiteralPath '$vm\\working\\Users' -Recurse -File -Force -Filter 'Cache*.bin' -ErrorAction SilentlyContinue | Where-Object FullName -like '*Terminal Server Client*' | ForEach-Object FullName; Get-ChildItem -LiteralPath '$vm\\rdp_cache' -Recurse -File -Filter '*.bmp' -ErrorAction SilentlyContinue | ForEach-Object FullName" 2>/dev/null | tr -d '\r' || true)
   while read -r f; do
     [[ -z "$f" ]] && continue
     # The prefix quoted: unquoted, the backslashes of the VM's path are read as escapes.
