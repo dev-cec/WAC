@@ -3,6 +3,7 @@
  */
 #include "usn_journal.h"
 #include "mft.h"
+#include "ntfs_reference.h"
 #include "consigne.h"
 #include "idList.h"
 #include <cstring>
@@ -16,7 +17,6 @@ const size_t RECORD_LENGTH = 0x00;        //!< uint32 length of the record, name
 const size_t RECORD_MAJOR = 0x04;         //!< uint16 version: 2, 3 or 4
 const size_t V2_MINIMUM = 0x3C, V3_MINIMUM = 0x4C;   //!< length of the fixed part
 const size_t ALIGNMENT = 8;               //!< every record starts on an 8-byte boundary
-const uint64_t REFERENCE_ENTRY_MASK = 0x0000FFFFFFFFFFFFULL;
 
 uint16_t rd16(const uint8_t* p) { return (uint16_t)(p[0] | (p[1] << 8)); }
 uint32_t rd32(const uint8_t* p) { return (uint32_t)rd16(p) | ((uint32_t)rd16(p + 2) << 16); }
@@ -76,10 +76,12 @@ bool UsnRecord::parse(const uint8_t* record, size_t size, uint64_t usnBase) {
 	const uint64_t file = rd64(p);
 	const uint64_t parent = rd64(p + referenceSize);
 	p += 2 * referenceSize;
-	fileEntry = file & REFERENCE_ENTRY_MASK;
-	fileSequence = (uint16_t)(file >> 48);
-	parentEntry = parent & REFERENCE_ENTRY_MASK;
-	parentSequence = (uint16_t)(parent >> 48);
+	const NtfsReference fileReference = splitNtfsReference(file);
+	const NtfsReference parentReference = splitNtfsReference(parent);
+	fileEntry = fileReference.entry;
+	fileSequence = fileReference.sequence;
+	parentEntry = parentReference.entry;
+	parentSequence = parentReference.sequence;
 	usn = rd64(p);
 	const uint64_t ticks = rd64(p + 8);
 	timestamp = { (DWORD)(ticks & 0xFFFFFFFFULL), (DWORD)(ticks >> 32) };

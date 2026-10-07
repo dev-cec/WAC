@@ -2,6 +2,7 @@
  *  \brief The $MFT of the system volume, read from its exhibit (see mft.h).
  */
 #include "mft.h"
+#include "ntfs_reference.h"
 #include "consigne.h"
 #include "idList.h"
 #include "raw_hive.h"
@@ -23,7 +24,6 @@ const uint32_t ATTRIBUTE_END = 0xFFFFFFFF;
 const uint32_t STANDARD_INFORMATION = 0x10, FILE_NAME = 0x30, DATA = 0x80;
 const size_t SI_SECURITY_ID = 0x34;      //!< uint32 in $STANDARD_INFORMATION: number of the descriptor in $Secure
 const uint64_t ROOT_ENTRY = 5;             //!< the root directory's record
-const uint64_t REFERENCE_ENTRY_MASK = 0x0000FFFFFFFFFFFFULL;   //!< low 48 bits of a reference: the record
 const unsigned MAX_PATH_DEPTH = 255;       //!< a longer parent chain is a loop, or a forged record
 
 uint16_t rd16(const uint8_t* p) { return (uint16_t)(p[0] | (p[1] << 8)); }
@@ -51,8 +51,9 @@ bool MftEntry::parse(const uint8_t* record, size_t recordSize, uint64_t number) 
 	const uint16_t flags = rd16(record + RECORD_FLAGS);
 	inUse = (flags & 0x01) != 0;
 	directory = (flags & 0x02) != 0;
-	baseEntry = rd64(record + RECORD_BASE) & REFERENCE_ENTRY_MASK;
-	baseSequence = (uint16_t)(rd64(record + RECORD_BASE) >> 48);
+	const NtfsReference base = splitNtfsReference(rd64(record + RECORD_BASE));
+	baseEntry = base.entry;
+	baseSequence = base.sequence;
 	for (size_t p = rd16(record + RECORD_ATTRIBUTES); p + 16 <= used;) {
 		const uint32_t type = rd32(record + p);
 		const uint32_t length = rd32(record + p + 4);
@@ -80,18 +81,19 @@ bool MftEntry::parse(const uint8_t* record, size_t recordSize, uint64_t number) 
 		else if (type == FILE_NAME && value && valueLength >= 0x42
 		         && 0x42u + 2u * value[0x40] <= valueLength) {
 			const uint8_t space = value[0x41];
+			const NtfsReference parent = splitNtfsReference(rd64(value));
 			if (space != 2) {
 				Link link;
-				link.parentEntry = rd64(value) & REFERENCE_ENTRY_MASK;
-				link.parentSequence = rd16(value + 6);
+				link.parentEntry = parent.entry;
+				link.parentSequence = parent.sequence;
 				link.name.assign(value[0x40], L'\0');
 				for (size_t k = 0; k < link.name.size(); ++k) link.name[k] = (wchar_t)rd16(value + 0x42 + 2 * k);
 				links.push_back(std::move(link));
 			}
 			if (namePreference(space) < nameRank) {
 				nameRank = namePreference(space);
-				parentEntry = rd64(value) & REFERENCE_ENTRY_MASK;
-				parentSequence = rd16(value + 6);
+				parentEntry = parent.entry;
+				parentSequence = parent.sequence;
 				fileNameCreated = filetime(rd64(value + 0x08));
 				fileNameModified = filetime(rd64(value + 0x10));
 				fileNameMftModified = filetime(rd64(value + 0x18));
@@ -252,7 +254,7 @@ HRESULT Mft::getData(const std::wstring& volume) {
 	   Otherwise the paths under it read "AM3B40~1.945" where Windows shows
 	   the long name. */
 	for (const auto& [reference, extension] : extensions_) {
-		const uint64_t base = reference & REFERENCE_ENTRY_MASK;
+		const uint64_t base = splitNtfsReference(reference).entry;
 		if (base >= nodes_.size() || extension.name.empty()) continue;
 		Node& n = nodes_[(size_t)base];
 		if (extensionOf(base, n.sequence, n.inUse) != &extension) continue;   // a former file's

@@ -2,6 +2,7 @@
  *  \brief Decoding of shell items, ID lists, property stores and extension blocks (see idList.h).
  */
 #include "idList.h"
+#include "ntfs_reference.h"
 #include <exception>
 #include <map>
 
@@ -1044,8 +1045,9 @@ Beef0004::Beef0004(LPBYTE buffer, int _level, bool* is_zip, bool is_file) {
 		/* File reference: 6 bytes of entry index, 2 of sequence. */
 		if (fits(blockSize, off, 8)) {
 			const unsigned long long reference = *reinterpret_cast<unsigned long long*>(buffer + off);
-			mftEntryNumber    = reference & 0x0000FFFFFFFFFFFFULL;
-			mftSequenceNumber = (unsigned short int)(reference >> 48);
+			const NtfsReference split = splitNtfsReference(reference);
+			mftEntryNumber    = split.entry;
+			mftSequenceNumber = split.sequence;
 			if (mftEntryNumber != 0 && mftSequenceNumber != 0)      mftNote = L"NTFS";
 			else if (mftEntryNumber != 0 && mftSequenceNumber == 0) mftNote = L"FAT";
 			else                                                    mftNote = L"Network/special item";

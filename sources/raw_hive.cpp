@@ -7,6 +7,7 @@
  *  Built for hives/EVTX/Tasks: non-resident, medium-sized files.
  */
 #include "raw_hive.h"
+#include "ntfs_reference.h"
 #include <vector>
 #include <cstdint>
 #include <cstring>
@@ -338,7 +339,7 @@ public:
                 nameMatches = (wchar_t)rd16(content.data() + pos + nameOffset + 2 * k) == streamName[k];
             if (type == wantedType && (wantedType != 0x80 || nameMatches)){
                 const uint64_t vcn = rd64(content.data() + pos + 8);
-                const uint64_t ref = rd64(content.data() + pos + 0x10) & 0x0000FFFFFFFFFFFFULL;
+                const uint64_t ref = splitNtfsReference(rd64(content.data() + pos + 0x10)).entry;
                 std::vector<uint8_t> frag;
                 if (readMftRecord(ref, frag)){
                     // The fragment carries the non-resident attribute covering this VCN.
@@ -413,7 +414,7 @@ public:
             const uint16_t len = rd16(content.data() + pos + 4);
             if (len < 0x1A || pos + len > content.size()) break;
             if (rd32(content.data() + pos) == type){
-                const uint64_t ref = rd64(content.data() + pos + 0x10) & 0x0000FFFFFFFFFFFFULL;
+                const uint64_t ref = splitNtfsReference(rd64(content.data() + pos + 0x10)).entry;
                 if (readMftRecord(ref, holder)){
                     a = findAttr(holder, type, false);
                     if (a && a[8] == 0) return a;
@@ -467,7 +468,7 @@ public:
                     const uint16_t len  = rd16(content.data() + pos + 4);
                     if (len < 0x1A || pos + len > content.size()) break;
                     if (type == 0xC0){
-                        const uint64_t ref = rd64(content.data() + pos + 0x10) & 0x0000FFFFFFFFFFFFULL;
+                        const uint64_t ref = splitNtfsReference(rd64(content.data() + pos + 0x10)).entry;
                         if (readMftRecord(ref, fragRp)){
                             rp = findAttr(fragRp, 0xC0);
                             if (rp) break;
@@ -503,7 +504,7 @@ public:
             if (len < 0x1A || pos + len > content.size()) break;
             if (type == 0x80 && content[pos + 6] != 0){       // NAMED $DATA
                 const uint64_t vcn = rd64(content.data() + pos + 8);
-                const uint64_t ref = rd64(content.data() + pos + 0x10) & 0x0000FFFFFFFFFFFFULL;
+                const uint64_t ref = splitNtfsReference(rd64(content.data() + pos + 0x10)).entry;
                 std::vector<uint8_t> frag;
                 if (readMftRecord(ref, frag)){
                     const uint8_t* d = findNamedAttr(frag, 0x80, L"WofCompressedData");
@@ -968,7 +969,7 @@ public:
         for (size_t pos = 0; pos + 0x1A <= content.size();){
             const uint16_t len = rd16(content.data() + pos + 4);
             if (len < 0x1A || pos + len > content.size()) break;
-            const uint64_t ref = rd64(content.data() + pos + 0x10) & 0x0000FFFFFFFFFFFFULL;
+            const uint64_t ref = splitNtfsReference(rd64(content.data() + pos + 0x10)).entry;
             std::vector<uint8_t> extension;
             if (rd32(content.data() + pos) == type && done.insert(ref).second && readMftRecord(ref, extension))
                 inRecord(extension);
@@ -1345,7 +1346,7 @@ private:
             if (named || length < 0x42) return;
             const uint8_t characters = value[0x40];
             if (0x42u + 2u * characters > length) return;
-            if ((rd64(value) & 0x0000FFFFFFFFFFFFULL) != parent) return;
+            if (splitNtfsReference(rd64(value)).entry != parent) return;
             std::wstring text;
             for (unsigned k = 0; k < characters; ++k) text += (wchar_t)rd16(value + 0x42 + 2 * k);
             named = iequals(text, name);
@@ -1428,7 +1429,7 @@ private:
         uint32_t firstOff = rd32(nodeHdr);
         const uint8_t* e = nodeHdr + firstOff;
         while (e + 0x10 <= limit){
-            uint64_t ref   = rd64(e) & 0x0000FFFFFFFFFFFFULL;
+            uint64_t ref   = splitNtfsReference(rd64(e)).entry;
             uint16_t eLen  = rd16(e + 8);
             uint16_t flags = rd16(e + 0x0C);
             if (!(flags & 0x02)){ // not the last entry -> has a $FILE_NAME key
