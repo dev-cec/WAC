@@ -33,7 +33,9 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Mutation vue échouer (déchiffrement retiré : 253 échecs) ; lecteur commité (9b81061), guide des tests FR + EN
 - [x] Artefact emails (Outlook) : emails.json (une fiche par boîte, une par message), corps et pièces jointes exportés avec leur SHA-256, nom de pièce jointe jamais pris pour chemin (rang + extension simple) ; parcours message par message (un OST de plusieurs Go jamais tenu en mémoire) ; clé emails, prélèvement Outlook Files, AppData\Local\Microsoft\Outlook, Content.Outlook
 - [x] Témoin VM : le PST Enron épinglé déposé une fois dans Outlook Files de « wac » ; check_emails confronte emails.json à la référence pypff
-- [ ] Cycle --only=emails
+- [x] Cycle --only=emails : les 246 messages que lit pypff identiques dans emails.json (65 pièces jointes, corps), 250 lus par WAC, dans les deux collectes ; dépôt du PST corrigé (chemin à espace : PowerShell, pas cmd)
+- [x] Documentation de la partie Outlook FR + EN (manuel, validation), PDF
+- [ ] Cycle complet de la partie Outlook — lancé
 - [ ] Thunderbird : mbox des profils, MIME (en-têtes encodés, multipart, base64, quoted-printable), pièces jointes ; Thunderbird installé dans la VM, message témoin, confronté au module mailbox de Python
 - [ ] Copies ouvertes : Content.Outlook (INetCache), cache OLK, prélevées
 - [ ] Clé emails, prélèvement (Outlook Files, AppData\Local\Microsoft\Outlook, profils Thunderbird), conversion, documentation FR + EN, cycle complet
