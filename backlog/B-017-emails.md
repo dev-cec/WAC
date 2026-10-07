@@ -30,7 +30,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Couche NDB du PST/OST (pst_file) : en-tête, B-arbres des nœuds et des blocs, permutation, arbres de blocs et de sous-nœuds ; pages de 4 Kio et blocs zlib (Adler-32 vérifié) de l'OST d'Outlook 2013+
 - [x] Couche LTP : tas (HN), B-arbre sur tas (BTH), contexte de propriétés (PC), table (TC)
 - [x] Messagerie (pst_messages) : dossiers, messages, destinataires, pièces jointes, objets intégrés (méthode 5) — pst_test : 1 800 contrôles, les 256 messages lus par pypff identiques champ par champ (objet, expéditeur, dates, pièces jointes nom/taille/SHA-256, corps), et les 4 que pypff ne lit pas lus par WAC
-- [ ] Mutation vue échouer ; commit du lecteur
+- [x] Mutation vue échouer (déchiffrement retiré : 253 échecs) ; lecteur commité (9b81061), guide des tests FR + EN
 - [ ] Artefact emails : export des pièces jointes et des corps, JSON
 - [ ] Thunderbird : mbox des profils, MIME (en-têtes encodés, multipart, base64, quoted-printable), pièces jointes ; Thunderbird installé dans la VM, message témoin, confronté au module mailbox de Python
 - [ ] Copies ouvertes : Content.Outlook (INetCache), cache OLK, prélevées
