@@ -2,7 +2,6 @@
  *  \brief Reading of the Run and RunOnce keys (see reg_run.h).
  */
 #include "reg_run.h"
-#include "sha.h"
 
 Json Run::toJson() {
 	log(3, L"🔈Run toJson");

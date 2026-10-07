@@ -62,7 +62,7 @@ const wchar_t* const DOWNLOAD_STATES[] = { L"in_progress", L"complete", L"cancel
 // Firefox's visit types (nsINavHistoryService::TRANSITION_*), 1 to 9.
 const wchar_t* const FIREFOX_VISIT_TYPES[] = { L"link", L"typed", L"bookmark", L"embed", L"redirect_permanent",
 	L"redirect_temporary", L"download", L"framed_link", L"reload" };
-const uint64_t MICROSECONDS_1601_TO_1970 = 11644473600ULL * 1000000ULL;
+const uint64_t MICROSECONDS_1601_TO_1970 = SECONDS_1601_TO_1970 * 1000000ULL;
 
 //! The common fields of a record: browser, profile, SID, source.
 WebClientRecord startRecord(const WebClientRecord& base, const wchar_t* type) {

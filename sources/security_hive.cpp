@@ -2,7 +2,6 @@
  *  \brief The SECURITY hive (see security_hive.h).
  */
 #include "security_hive.h"
-#include "sha.h"
 #include <cstring>
 #include <cstdint>
 

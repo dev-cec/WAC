@@ -125,6 +125,10 @@ inline NtfsReference splitNtfsReference(uint64_t reference) {
 	return { reference & 0x0000FFFFFFFFFFFFULL, (uint16_t)(reference >> 48) };
 }
 
+/*! Seconds from 1601-01-01, the FILETIME's origin, to 1970-01-01, Unix's —
+ *  the one constant every conversion between the two starts from. */
+const uint64_t SECONDS_1601_TO_1970 = 11644473600ULL;
+
 /*! A FILETIME from its 64-bit value — 100-ns intervals since 1601 — the form
  *  the raw readers, ESE, SRUM and the event logs give dates in. The only
  *  place where the two halves are put together (B-030).

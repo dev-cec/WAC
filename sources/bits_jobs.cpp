@@ -5,7 +5,6 @@
 #include "bits_jobs.h"
 #include "consigne.h"
 #include "ese_database.h"
-#include "sha.h"
 #include <algorithm>
 #include <cstring>
 

@@ -408,8 +408,7 @@ Json securityDescriptorToJson(const BYTE* sd, size_t size) {
 }
 
 FILETIME unixToFiletime(unsigned long long seconds) {
-	const unsigned long long OFFSET_1601_1970 = 11644473600ULL;
-	const unsigned long long ticks = (seconds + OFFSET_1601_1970) * 10000000ULL;
+	const unsigned long long ticks = (seconds + SECONDS_1601_TO_1970) * 10000000ULL;
 	return filetimeFromTicks(ticks);
 }
 

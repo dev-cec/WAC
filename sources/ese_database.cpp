@@ -3,7 +3,6 @@
  */
 #include "conversions.h"
 #include "ese_database.h"
-#include "sha.h"
 #include <algorithm>
 #include <cstring>
 #include <filesystem>

@@ -1,5 +1,4 @@
 #include "evtx.h"
-#include "sha.h"
 #include "tools.h"
 #include <cstring>
 #include <sstream>
